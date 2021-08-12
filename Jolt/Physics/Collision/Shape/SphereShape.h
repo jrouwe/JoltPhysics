@@ -30,14 +30,12 @@ public:
 class SphereShape final : public ConvexShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SphereShape)
-
 	/// Constructor
-							SphereShape() = default;
+							SphereShape() : ConvexShape(EShapeSubType::Sphere) { }
 							SphereShape(const SphereShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Create a sphere with radius inRadius
-							SphereShape(float inRadius, const PhysicsMaterial *inMaterial = nullptr)			: ConvexShape(inMaterial), mRadius(inRadius) { JPH_ASSERT(inRadius > 0.0f); }
+							SphereShape(float inRadius, const PhysicsMaterial *inMaterial = nullptr)			: ConvexShape(EShapeSubType::Sphere, inMaterial), mRadius(inRadius) { JPH_ASSERT(inRadius > 0.0f); }
 
 	/// Radius of the sphere
 	float					GetRadius() const																	{ return mRadius; }
@@ -98,6 +96,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool			IsValidScale(Vec3Arg inScale) const override;
+
+	// Register shape functions with the registry
+	static void				sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

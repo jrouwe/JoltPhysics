@@ -30,14 +30,9 @@ public:
 class StaticCompoundShape final : public CompoundShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(StaticCompoundShape)
-
 	/// Constructor
-									StaticCompoundShape() = default;
+									StaticCompoundShape() : CompoundShape(EShapeType::StaticCompound, EShapeSubType::StaticCompound) { }
 									StaticCompoundShape(const StaticCompoundShapeSettings &inSettings, TempAllocator &inTempAllocator, ShapeResult &outResult);
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::StaticCompound; }
 
 	// See Shape::CastRay
 	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
@@ -67,6 +62,9 @@ public:
 
 	// See Shape::GetStats
 	virtual Stats					GetStats() const override								{ return Stats(sizeof(*this) + mSubShapes.size() * sizeof(SubShape) + mNodes.size() * sizeof(Node), 0); }
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

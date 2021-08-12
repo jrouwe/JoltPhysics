@@ -33,11 +33,6 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(CompoundShapeSettings::SubShapeSettings)
 	JPH_ADD_ATTRIBUTE(CompoundShapeSettings::SubShapeSettings, mUserData)
 }
 
-JPH_IMPLEMENT_RTTI_ABSTRACT(CompoundShape)
-{
-	JPH_ADD_BASE_CLASS(CompoundShape, Shape)
-}
-
 void CompoundShapeSettings::AddShape(Vec3Arg inPosition, QuatArg inRotation, const ShapeSettings *inShape, uint32 inUserData)
 {
 	// Add shape

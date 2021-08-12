@@ -46,7 +46,7 @@ using ShapeList = vector<RefConst<Shape>>;
 using PhysicsMaterialList = vector<RefConst<PhysicsMaterial>>;
 
 /// Shapes are categorized in groups, each shape can return which group it belongs to through its Shape::GetType function.
-enum class EShapeType
+enum class EShapeType : uint8
 {
 	Convex,							///< All shapes that use the generic convex vs convex collision detection system (box, sphere, capsule, tapered capsule, cylinder, triangle)
 	Mesh,							///< Used only by MeshShape
@@ -57,6 +57,28 @@ enum class EShapeType
 	Scaled,							///< Used only by ScaledShape
 	OffsetCenterOfMass,				///< Used only by OffsetCenterOfMassShape
 };
+
+/// This enumerates all shape types, each shape can return its type through Shape::GetSubType
+enum class EShapeSubType : uint8
+{
+	Sphere,
+	Box,
+	Triangle,
+	Capsule,
+	TaperedCapsule,
+	Cylinder,
+	ConvexHull,
+	Mesh,
+	HeightField,
+	StaticCompound,
+	MutableCompound,
+	RotatedTranslated,
+	Scaled,
+	OffsetCenterOfMass,
+};
+
+/// How many shape types we support
+static constexpr int NumShapeTypes = 14;
 
 /// Class that can construct shapes and that is serializable using the ObjectStream system.
 /// Can be used to store shape data in 'uncooked' form (i.e. in a form that is still human readable and authorable).
@@ -81,23 +103,36 @@ protected:
 	mutable ShapeResult				mCachedResult;
 };
 
+/// Function table for functions on shapes
+class ShapeFunctions
+{
+public:
+	/// Construct a shape
+	Shape *							(*mConstruct)() = nullptr;
+
+	/// Get an entry in the registry for a particular sub type
+	static inline ShapeFunctions &	sGet(EShapeSubType inSubType)										{ return sRegistry[(int)inSubType]; }
+
+private:
+	static ShapeFunctions 			sRegistry[NumShapeTypes];
+};
+
 /// Base class for all shapes (collision volume of a body). Defines a virtual interface for collision detection.
 class Shape : public RefTarget<Shape>
 {
 public:
-	JPH_DECLARE_RTTI_ABSTRACT_BASE(Shape)
-
 	using ShapeResult = ShapeSettings::ShapeResult;
 
 	/// Constructor
-									Shape() = default;
-									Shape(const ShapeSettings &inSettings, ShapeResult &outResult)		: mUserData(inSettings.mUserData) { }
+									Shape(EShapeType inType, EShapeSubType inSubType) : mShapeType(inType), mShapeSubType(inSubType) { }
+									Shape(EShapeType inType, EShapeSubType inSubType, const ShapeSettings &inSettings, ShapeResult &outResult) : mShapeType(inType), mShapeSubType(inSubType), mUserData(inSettings.mUserData) { }
 
 	/// Destructor
 	virtual							~Shape()															{ }
 
 	/// Get type
-	virtual EShapeType				GetType() const = 0;
+	inline EShapeType				GetType() const														{ return mShapeType; }
+	inline EShapeSubType			GetSubType() const													{ return mShapeSubType; }
 
 	/// User data (to be used freely by the application)
 	uint32							GetUserData() const													{ return mUserData; }
@@ -297,6 +332,8 @@ protected:
 	virtual void					RestoreBinaryState(StreamIn &inStream);
 
 private:
+	EShapeType						mShapeType;
+	EShapeSubType					mShapeSubType;
 	uint32							mUserData = 0;
 };
 

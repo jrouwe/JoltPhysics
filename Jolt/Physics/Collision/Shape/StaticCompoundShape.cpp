@@ -19,11 +19,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(StaticCompoundShapeSettings)
 	JPH_ADD_BASE_CLASS(StaticCompoundShapeSettings, CompoundShapeSettings)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(StaticCompoundShape)
-{
-	JPH_ADD_BASE_CLASS(StaticCompoundShape, CompoundShape)
-}
-
 ShapeSettings::ShapeResult StaticCompoundShapeSettings::Create(TempAllocator &inTempAllocator) const
 { 
 	if (mCachedResult.IsEmpty())
@@ -165,7 +160,7 @@ void StaticCompoundShape::sPartition4(uint *ioBodyIdx, AABox *ioBounds, int inBe
 }
 
 StaticCompoundShape::StaticCompoundShape(const StaticCompoundShapeSettings &inSettings, TempAllocator &inTempAllocator, ShapeResult &outResult) :
-	CompoundShape(inSettings, outResult)
+	CompoundShape(EShapeType::StaticCompound, EShapeSubType::StaticCompound, inSettings, outResult)
 {
 	// Check that there's at least 1 shape
 	uint num_subshapes = (uint)inSettings.mSubShapes.size();
@@ -680,6 +675,12 @@ void StaticCompoundShape::RestoreBinaryState(StreamIn &inStream)
 	CompoundShape::RestoreBinaryState(inStream);
 
 	inStream.Read(mNodes);
+}
+
+void StaticCompoundShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::StaticCompound);
+	f.mConstruct = []() -> Shape * { return new StaticCompoundShape; };
 }
 
 } // JPH

@@ -37,14 +37,9 @@ public:
 class RotatedTranslatedShape final : public DecoratedShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(RotatedTranslatedShape)
-
 	/// Constructor
-									RotatedTranslatedShape() = default;
+									RotatedTranslatedShape() : DecoratedShape(EShapeType::RotatedTranslated, EShapeSubType::RotatedTranslated) { }
 									RotatedTranslatedShape(const RotatedTranslatedShapeSettings &inSettings, ShapeResult &outResult);
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::RotatedTranslated; }
 
 	/// Access the rotation that is applied to the inner shape
 	const Quat						GetRotation() const										{ return mRotation; }
@@ -136,6 +131,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool					IsValidScale(Vec3Arg inScale) const override;
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

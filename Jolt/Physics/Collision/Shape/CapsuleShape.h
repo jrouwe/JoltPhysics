@@ -35,14 +35,12 @@ class CapsuleShapeSettings final : public ConvexShapeSettings
 class CapsuleShape final : public ConvexShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CapsuleShape)
-
 	/// Constructor
-							CapsuleShape() = default;
+							CapsuleShape() : ConvexShape(EShapeSubType::Capsule) { }
 							CapsuleShape(const CapsuleShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Create a capsule centered around the origin with one sphere cap at (0, -inHalfHeightOfCylinder, 0) and the other at (0, inHalfHeightOfCylinder, 0)
-							CapsuleShape(float inHalfHeightOfCylinder, float inRadius, const PhysicsMaterial *inMaterial = nullptr) : ConvexShape(inMaterial), mRadius(inRadius), mHalfHeightOfCylinder(inHalfHeightOfCylinder) { JPH_ASSERT(inHalfHeightOfCylinder > 0.0f); JPH_ASSERT(inRadius > 0.0f); }
+							CapsuleShape(float inHalfHeightOfCylinder, float inRadius, const PhysicsMaterial *inMaterial = nullptr) : ConvexShape(EShapeSubType::Capsule, inMaterial), mRadius(inRadius), mHalfHeightOfCylinder(inHalfHeightOfCylinder) { JPH_ASSERT(inHalfHeightOfCylinder > 0.0f); JPH_ASSERT(inRadius > 0.0f); }
 
 	/// Radius of the cylinder
 	float					GetRadius() const														{ return mRadius; }
@@ -102,6 +100,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool			IsValidScale(Vec3Arg inScale) const override;
+
+	// Register shape functions with the registry
+	static void				sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

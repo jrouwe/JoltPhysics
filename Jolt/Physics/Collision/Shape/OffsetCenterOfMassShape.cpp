@@ -21,11 +21,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(OffsetCenterOfMassShapeSettings)
 	JPH_ADD_ATTRIBUTE(OffsetCenterOfMassShapeSettings, mOffset)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(OffsetCenterOfMassShape)
-{
-	JPH_ADD_BASE_CLASS(OffsetCenterOfMassShape, DecoratedShape)
-}
-
 ShapeSettings::ShapeResult OffsetCenterOfMassShapeSettings::Create() const
 { 
 	if (mCachedResult.IsEmpty())
@@ -34,7 +29,7 @@ ShapeSettings::ShapeResult OffsetCenterOfMassShapeSettings::Create() const
 }
 
 OffsetCenterOfMassShape::OffsetCenterOfMassShape(const OffsetCenterOfMassShapeSettings &inSettings, ShapeResult &outResult) :
-	DecoratedShape(inSettings, outResult),
+	DecoratedShape(EShapeType::OffsetCenterOfMass, EShapeSubType::OffsetCenterOfMass, inSettings, outResult),
 	mOffset(inSettings.mOffset)
 {
 	if (outResult.HasError())
@@ -170,6 +165,12 @@ void OffsetCenterOfMassShape::RestoreBinaryState(StreamIn &inStream)
 	DecoratedShape::RestoreBinaryState(inStream);
 
 	inStream.Read(mOffset);
+}
+
+void OffsetCenterOfMassShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::OffsetCenterOfMass);
+	f.mConstruct = []() -> Shape * { return new OffsetCenterOfMassShape; };
 }
 
 } // JPH

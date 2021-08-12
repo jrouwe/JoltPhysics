@@ -33,10 +33,8 @@ public:
 class CylinderShape final : public ConvexShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CylinderShape)
-
 	/// Constructor
-							CylinderShape() = default;
+							CylinderShape() : ConvexShape(EShapeSubType::Cylinder) { }
 							CylinderShape(const CylinderShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Create a shape centered around the origin with one top at (0, -inHalfHeight, 0) and the other at (0, inHalfHeight, 0) and radius inRadius.
@@ -98,6 +96,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool			IsValidScale(Vec3Arg inScale) const override;
+
+	// Register shape functions with the registry
+	static void				sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

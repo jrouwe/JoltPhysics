@@ -38,11 +38,6 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(ConvexShapeSettings)
 	JPH_ADD_ATTRIBUTE(ConvexShapeSettings, mMaterial)
 }
 
-JPH_IMPLEMENT_RTTI_ABSTRACT(ConvexShape)
-{
-	JPH_ADD_BASE_CLASS(ConvexShape, Shape)
-}
-
 const vector<Vec3> ConvexShape::sUnitSphereTriangles = []() { 
 	const int level = 2;
 

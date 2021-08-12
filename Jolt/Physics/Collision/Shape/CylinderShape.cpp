@@ -29,11 +29,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(CylinderShapeSettings)
 	JPH_ADD_ATTRIBUTE(CylinderShapeSettings, mConvexRadius)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CylinderShape)
-{
-	JPH_ADD_BASE_CLASS(CylinderShape, ConvexShape)
-}
-
 // Approximation of top face with 8 vertices
 static const float cSin45 = 0.70710678118654752440084436210485f;
 static const Vec3 cTopFace[] =
@@ -92,7 +87,7 @@ ShapeSettings::ShapeResult CylinderShapeSettings::Create() const
 }
 
 CylinderShape::CylinderShape(const CylinderShapeSettings &inSettings, ShapeResult &outResult) : 
-	ConvexShape(inSettings, outResult),
+	ConvexShape(EShapeSubType::Cylinder, inSettings, outResult),
 	mHalfHeight(inSettings.mHalfHeight), 
 	mRadius(inSettings.mRadius),
 	mConvexRadius(inSettings.mConvexRadius)
@@ -119,7 +114,7 @@ CylinderShape::CylinderShape(const CylinderShapeSettings &inSettings, ShapeResul
 }
 
 CylinderShape::CylinderShape(float inHalfHeight, float inRadius, float inConvexRadius, const PhysicsMaterial *inMaterial) : 
-	ConvexShape(inMaterial),
+	ConvexShape(EShapeSubType::Cylinder, inMaterial),
 	mHalfHeight(inHalfHeight), 
 	mRadius(inRadius),
 	mConvexRadius(inConvexRadius)
@@ -342,6 +337,12 @@ bool CylinderShape::IsValidScale(Vec3Arg inScale) const
 	// X and Z need same scale
 	Vec3 abs_scale = inScale.Abs();
 	return ConvexShape::IsValidScale(inScale) && abs_scale.Swizzle<SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_X>().IsClose(abs_scale, ScaleHelpers::cScaleToleranceSq);
+}
+
+void CylinderShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Cylinder);
+	f.mConstruct = []() -> Shape * { return new CylinderShape; };
 }
 
 } // JPH

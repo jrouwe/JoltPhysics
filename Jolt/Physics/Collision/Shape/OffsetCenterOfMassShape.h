@@ -34,14 +34,9 @@ public:
 class OffsetCenterOfMassShape final : public DecoratedShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(OffsetCenterOfMassShape)
-
 	/// Constructor
-									OffsetCenterOfMassShape() = default;
+									OffsetCenterOfMassShape() : DecoratedShape(EShapeType::OffsetCenterOfMass, EShapeSubType::OffsetCenterOfMass) { }
 									OffsetCenterOfMassShape(const OffsetCenterOfMassShapeSettings &inSettings, ShapeResult &outResult);
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::OffsetCenterOfMass; }
 
 	/// Access the offset that is applied to the center of mass
 	const Vec3						GetOffset() const										{ return mOffset; }
@@ -130,6 +125,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool					IsValidScale(Vec3Arg inScale) const override			{ return mInnerShape->IsValidScale(inScale); }
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

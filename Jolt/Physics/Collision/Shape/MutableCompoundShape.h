@@ -29,16 +29,11 @@ public:
 class MutableCompoundShape final : public CompoundShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(MutableCompoundShape)
-
 	/// Constructor
-									MutableCompoundShape() = default;
+									MutableCompoundShape() : CompoundShape(EShapeType::MutableCompound, EShapeSubType::MutableCompound) { }
 									MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult);
-	virtual							~MutableCompoundShape() override;
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::MutableCompound; }
-
+	virtual							~MutableCompoundShape();
+		
 	// See Shape::CastRay
 	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
 	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) const override;
@@ -98,6 +93,9 @@ public:
 	void							AdjustCenterOfMass();
 
 	///@}
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

@@ -47,8 +47,6 @@ public:
 class CompoundShape : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_ABSTRACT(CompoundShape)
-
 	/// Constructor
 	using Shape::Shape;
 

@@ -22,13 +22,11 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT_BASE(ShapeSettings)
 	JPH_ADD_ATTRIBUTE(ShapeSettings, mUserData)
 }
 
-JPH_IMPLEMENT_RTTI_ABSTRACT_BASE(Shape)
-{
-}
-
 #ifdef JPH_DEBUG_RENDERER
 bool Shape::sDrawSubmergedVolumes = false;
 #endif // JPH_DEBUG_RENDERER
+
+ShapeFunctions ShapeFunctions::sRegistry[NumShapeTypes];
 
 TransformedShape Shape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {
@@ -59,7 +57,7 @@ void Shape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCol
 
 void Shape::SaveBinaryState(StreamOut &inStream) const
 { 
-	inStream.Write(GetRTTI()->GetHash());
+	inStream.Write(mShapeSubType);
 	inStream.Write(mUserData);
 }
 
@@ -74,24 +72,16 @@ Shape::ShapeResult Shape::sRestoreFromBinaryState(StreamIn &inStream)
 	ShapeResult result;
 
 	// Read the type of the shape
-	uint32 hash;
-	inStream.Read(hash);
+	EShapeSubType shape_sub_type;
+	inStream.Read(shape_sub_type);
 	if (inStream.IsEOF() || inStream.IsFailed())
 	{
 		result.SetError("Failed to read type id");
 		return result;
 	}
 
-	// Get the RTTI for the shape
-	const RTTI *rtti = Factory::sInstance.Find(hash);
-	if (rtti == nullptr)
-	{
-		result.SetError("Failed to resolve type. Type not registered in factory?");
-		return result;
-	}
-
 	// Construct and read the data of the shape
-	Ref<Shape> shape = reinterpret_cast<Shape *>(rtti->CreateObject());
+	Ref<Shape> shape = ShapeFunctions::sGet(shape_sub_type).mConstruct();
 	shape->RestoreBinaryState(inStream);
 	if (inStream.IsEOF() || inStream.IsFailed())
 	{

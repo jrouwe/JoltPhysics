@@ -47,11 +47,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(HeightFieldShapeSettings)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mMaterials)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(HeightFieldShape)
-{
-	JPH_ADD_BASE_CLASS(HeightFieldShape, Shape)
-}
-
 const uint HeightFieldShape::sGridOffsets[] = 
 {
 	0,			// level:  0, max x/y:     0, offset: 0
@@ -100,7 +95,7 @@ ShapeSettings::ShapeResult HeightFieldShapeSettings::Create() const
 }
 
 HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult) :
-	Shape(inSettings, outResult),
+	Shape(EShapeType::HeightField, EShapeSubType::HeightField, inSettings, outResult),
 	mOffset(inSettings.mOffset),
 	mScale(inSettings.mScale),
 	mMaterials(inSettings.mMaterials),
@@ -1484,6 +1479,12 @@ Shape::Stats HeightFieldShape::GetStats() const
 			+ mActiveEdges.size() * sizeof(uint8) 
 			+ mMaterialIndices.size() * sizeof(uint8), 
 		Square(mSampleCount - 1) * 2); 
+}
+
+void HeightFieldShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::HeightField);
+	f.mConstruct = []() -> Shape * { return new HeightFieldShape; };
 }
 
 } // JPH

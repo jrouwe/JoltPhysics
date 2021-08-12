@@ -19,11 +19,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ScaledShapeSettings)
 	JPH_ADD_ATTRIBUTE(ScaledShapeSettings, mScale)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledShape)
-{
-	JPH_ADD_BASE_CLASS(ScaledShape, DecoratedShape)
-}
-
 ShapeSettings::ShapeResult ScaledShapeSettings::Create() const
 { 
 	if (mCachedResult.IsEmpty())
@@ -32,7 +27,7 @@ ShapeSettings::ShapeResult ScaledShapeSettings::Create() const
 }
 
 ScaledShape::ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult) :
-	DecoratedShape(inSettings, outResult),
+	DecoratedShape(EShapeType::Scaled, EShapeSubType::Scaled, inSettings, outResult),
 	mScale(inSettings.mScale)
 {
 	if (outResult.HasError())
@@ -158,6 +153,12 @@ float ScaledShape::GetVolume() const
 bool ScaledShape::IsValidScale(Vec3Arg inScale) const
 {
 	return mInnerShape->IsValidScale(inScale * mScale);
+}
+
+void ScaledShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Scaled);
+	f.mConstruct = []() -> Shape * { return new ScaledShape; };
 }
 
 } // JPH

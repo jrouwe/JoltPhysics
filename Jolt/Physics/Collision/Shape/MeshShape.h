@@ -48,14 +48,9 @@ public:
 class MeshShape final : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(MeshShape)
-
 	/// Constructor
-									MeshShape() = default;
+									MeshShape() : Shape(EShapeType::Mesh, EShapeSubType::Mesh) { }
 									MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult);
-
-	/// Get type
-	virtual EShapeType				GetType() const override									{ return EShapeType::Mesh; }
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override								{ return true; }
@@ -121,6 +116,9 @@ public:
 	static bool						sDrawTriangleGroups;
 	static bool						sDrawTriangleOutlines;
 #endif // JPH_DEBUG_RENDERER
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

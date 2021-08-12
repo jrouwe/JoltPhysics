@@ -17,11 +17,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MutableCompoundShapeSettings)
 	JPH_ADD_BASE_CLASS(MutableCompoundShapeSettings, CompoundShapeSettings)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(MutableCompoundShape)
-{
-	JPH_ADD_BASE_CLASS(MutableCompoundShape, CompoundShape)
-}
-
 ShapeSettings::ShapeResult MutableCompoundShapeSettings::Create() const
 { 
 	// Build a mutable compound shape
@@ -32,7 +27,7 @@ ShapeSettings::ShapeResult MutableCompoundShapeSettings::Create() const
 }
 
 MutableCompoundShape::MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult) :
-	CompoundShape(inSettings, outResult)
+	CompoundShape(EShapeType::MutableCompound, EShapeSubType::MutableCompound, inSettings, outResult)
 {
 	mSubShapes.reserve(inSettings.mSubShapes.size());
 	for (const CompoundShapeSettings::SubShapeSettings &shape : inSettings.mSubShapes)
@@ -546,6 +541,12 @@ void MutableCompoundShape::RestoreBinaryState(StreamIn &inStream)
 	uint bounds_size = AlignUp((uint)mSubShapes.size(), 4) * sizeof(float);
 	for (int i = 0; i < 6; ++i)
 		inStream.ReadBytes(mSubShapeBounds[i], bounds_size);
+}
+
+void MutableCompoundShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::MutableCompound);
+	f.mConstruct = []() -> Shape * { return new MutableCompoundShape; };
 }
 
 } // JPH

@@ -27,12 +27,10 @@ class DecoratedShapeSettings : public ShapeSettings
 class DecoratedShape : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(DecoratedShape)
-
 	/// Constructor
-									DecoratedShape() = default;
-									DecoratedShape(const Shape *inInnerShape) : mInnerShape(inInnerShape) { }
-									DecoratedShape(const DecoratedShapeSettings &inSettings, ShapeResult &outResult);
+									DecoratedShape(EShapeType inType, EShapeSubType inSubType) : Shape(inType, inSubType) { }
+									DecoratedShape(EShapeType inType, EShapeSubType inSubType, const Shape *inInnerShape) : Shape(inType, inSubType), mInnerShape(inInnerShape) { }
+									DecoratedShape(EShapeType inType, EShapeSubType inSubType, const DecoratedShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Access to the decorated inner shape
 	const Shape *					GetInnerShape() const									{ return mInnerShape; }

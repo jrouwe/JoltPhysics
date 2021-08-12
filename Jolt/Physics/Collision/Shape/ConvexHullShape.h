@@ -39,10 +39,8 @@ public:
 class ConvexHullShape final : public ConvexShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ConvexHullShape)
-
 	/// Constructor
-							ConvexHullShape() = default;
+							ConvexHullShape() : ConvexShape(EShapeSubType::ConvexHull) { }
 							ConvexHullShape(const ConvexHullShapeSettings &inSettings, ShapeResult &outResult);
 
 	// See Shape::GetCenterOfMass
@@ -104,6 +102,9 @@ public:
 
 	/// Get the planes of this convex hull
 	const vector<Plane> &	GetPlanes() const													{ return mPlanes; }
+
+	// Register shape functions with the registry
+	static void				sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

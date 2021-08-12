@@ -48,11 +48,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(MeshShape)
-{
-	JPH_ADD_BASE_CLASS(MeshShape, Shape)
-}
-
 // Codecs this mesh shape is using
 using TriangleCodec = TriangleCodecIndexed8BitPackSOA4Flags;
 using NodeCodec = NodeCodecQuadTreeHalfFloat<1>;
@@ -107,7 +102,7 @@ ShapeSettings::ShapeResult MeshShapeSettings::Create() const
 }
 
 MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult) : 
-	Shape(inSettings, outResult)
+	Shape(EShapeType::Mesh, EShapeSubType::Mesh, inSettings, outResult)
 {
 	// Check if there are any triangles
 	if (inSettings.mIndexedTriangles.empty())
@@ -1106,6 +1101,12 @@ Shape::Stats MeshShape::GetStats() const
 	WalkTree(visitor);
 	
 	return Stats(sizeof(*this) + mMaterials.size() * sizeof(Ref<PhysicsMaterial>) + mTree.size() * sizeof(uint8), visitor.mNumTriangles);
+}
+
+void MeshShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Mesh);
+	f.mConstruct = []() -> Shape * { return new MeshShape; };
 }
 
 } // JPH

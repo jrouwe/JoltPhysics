@@ -38,15 +38,10 @@ public:
 class ConvexShape : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_ABSTRACT(ConvexShape)
-
 	/// Constructor
-									ConvexShape() = default;
-									ConvexShape(const ConvexShapeSettings &inSettings, ShapeResult &outResult) : Shape(inSettings, outResult), mMaterial(inSettings.mMaterial), mDensity(inSettings.mDensity) { }
-									ConvexShape(const PhysicsMaterial *inMaterial) : mMaterial(inMaterial) { }
-
-	// Get type
-	virtual EShapeType				GetType() const override									{ return EShapeType::Convex; }
+									ConvexShape(EShapeSubType inSubType) : Shape(EShapeType::Convex, inSubType) { }
+									ConvexShape(EShapeSubType inSubType, const ConvexShapeSettings &inSettings, ShapeResult &outResult) : Shape(EShapeType::Convex, inSubType, inSettings, outResult), mMaterial(inSettings.mMaterial), mDensity(inSettings.mDensity) { }
+									ConvexShape(EShapeSubType inSubType, const PhysicsMaterial *inMaterial) : Shape(EShapeType::Convex, inSubType), mMaterial(inMaterial) { }
 
 	// See Shape::GetSubShapeIDBitsRecursive
 	virtual uint					GetSubShapeIDBitsRecursive() const override					{ return 0; } // Convex shapes don't have sub shapes

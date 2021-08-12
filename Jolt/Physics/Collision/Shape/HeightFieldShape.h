@@ -77,14 +77,9 @@ public:
 class HeightFieldShape final : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(HeightFieldShape)
-
 	/// Constructor
-									HeightFieldShape() = default;
+									HeightFieldShape() : Shape(EShapeType::HeightField, EShapeSubType::HeightField) { }
 									HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult);
-
-	/// Get type
-	virtual EShapeType				GetType() const override											{ return EShapeType::HeightField; }
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override										{ return true; }
@@ -163,6 +158,9 @@ public:
 	// Settings
 	static bool						sDrawTriangleOutlines;
 #endif // JPH_DEBUG_RENDERER
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

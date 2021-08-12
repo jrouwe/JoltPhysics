@@ -22,11 +22,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(RotatedTranslatedShapeSettings)
 	JPH_ADD_ATTRIBUTE(RotatedTranslatedShapeSettings, mRotation)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(RotatedTranslatedShape)
-{
-	JPH_ADD_BASE_CLASS(RotatedTranslatedShape, DecoratedShape)
-}
-
 ShapeSettings::ShapeResult RotatedTranslatedShapeSettings::Create() const
 { 
 	if (mCachedResult.IsEmpty())
@@ -35,7 +30,7 @@ ShapeSettings::ShapeResult RotatedTranslatedShapeSettings::Create() const
 }
 
 RotatedTranslatedShape::RotatedTranslatedShape(const RotatedTranslatedShapeSettings &inSettings, ShapeResult &outResult) :
-	DecoratedShape(inSettings, outResult)
+	DecoratedShape(EShapeType::RotatedTranslated, EShapeSubType::RotatedTranslated, inSettings, outResult)
 {
 	if (outResult.HasError())
 		return;
@@ -220,6 +215,12 @@ bool RotatedTranslatedShape::IsValidScale(Vec3Arg inScale) const
 		return false;
 
 	return mInnerShape->IsValidScale(ScaleHelpers::RotateScale(mRotation, inScale));
+}
+
+void RotatedTranslatedShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::RotatedTranslated);
+	f.mConstruct = []() -> Shape * { return new RotatedTranslatedShape; };
 }
 
 } // JPH

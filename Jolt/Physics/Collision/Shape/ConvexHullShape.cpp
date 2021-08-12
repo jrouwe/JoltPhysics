@@ -30,11 +30,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConvexHullShapeSettings)
 	JPH_ADD_ATTRIBUTE(ConvexHullShapeSettings, mHullTolerance)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullShape)
-{
-	JPH_ADD_BASE_CLASS(ConvexHullShape, ConvexShape)
-}
-
 static constexpr int cMaxPointsInHull = 256;
 
 ShapeSettings::ShapeResult ConvexHullShapeSettings::Create() const
@@ -45,7 +40,7 @@ ShapeSettings::ShapeResult ConvexHullShapeSettings::Create() const
 }
 
 ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, ShapeResult &outResult) :
-	ConvexShape(inSettings, outResult)
+	ConvexShape(EShapeSubType::ConvexHull, inSettings, outResult)
 {
 	using BuilderFace = ConvexHullBuilder::Face;
 	using Edge = ConvexHullBuilder::Edge;
@@ -1173,6 +1168,12 @@ Shape::Stats ConvexHullShape::GetStats() const
 			+ mPlanes.size() * sizeof(Plane)
 			+ mVertexIdx.size() * sizeof(uint8),
 		triangle_count);
+}
+
+void ConvexHullShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::ConvexHull);
+	f.mConstruct = []() -> Shape * { return new ConvexHullShape; };
 }
 
 } // JPH

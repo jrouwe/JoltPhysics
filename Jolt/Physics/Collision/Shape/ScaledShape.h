@@ -28,17 +28,12 @@ class ScaledShapeSettings final : public DecoratedShapeSettings
 class ScaledShape final : public DecoratedShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ScaledShape)
-
 	/// Constructor
-									ScaledShape() = default;
+									ScaledShape() : DecoratedShape(EShapeType::Scaled, EShapeSubType::Scaled) { }
 									ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Constructor that decorates another shape with a scale
-									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(inShape), mScale(inScale) { }
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::Scaled; }
+									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeType::Scaled, EShapeSubType::Scaled, inShape), mScale(inScale) { }
 
 	/// Get the scale
 	Vec3		 					GetScale() const										{ return mScale; }
@@ -111,6 +106,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool					IsValidScale(Vec3Arg inScale) const override;
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState
