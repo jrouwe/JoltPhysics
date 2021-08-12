@@ -81,7 +81,7 @@ private:
 ///			BodyLockRead lock(lock_interface, body_id);
 ///			if (lock.Succeeded()) // body_id may no longer be valid
 ///			{
-///				const Body &body = lock.Body();
+///				const Body &body = lock.GetBody();
 ///		
 ///				// Do something with body
 ///				...

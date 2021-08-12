@@ -18,7 +18,7 @@ In general, body ID's ([BodyID](@ref JPH::BodyID)) are used to refer to bodies. 
 		JPH::BodyLockRead lock(lock_interface, body_id);
 		if (lock.Succeeded()) // body_id may no longer be valid
 		{
-			const JPH::Body &body = lock.Body();
+			const JPH::Body &body = lock.GetBody();
 	
 			// Do something with body
 			...
@@ -26,6 +26,66 @@ In general, body ID's ([BodyID](@ref JPH::BodyID)) are used to refer to bodies. 
 	}
 
 When another thread has removed the body between the time the body ID was obtained and the lock, the lock will fail. While the lock is taken, other threads cannot modify the body, so it is safe to work with it. Each body ID contains a sequence number, so body ID's will only be reused after many add/remove cycles.
+
+### Shapes
+
+Each body has a shape attached that determines the collision volume. The following shapes are available (in order of computational complexity):
+
+* [SphereShape](@ref JPH::SphereShape) - A sphere centered around zero.
+* [BoxShape](@ref JPH::BoxShape) - A box centered around zero.
+* [CapsuleShape](@ref JPH::CapsuleShape) - A capsule centered around zero.
+* [TaperedCapsuleShape](@ref JPH::TaperedCapsuleShape) - A capsule with different radii at the bottom and top.
+* [CylinderShape](@ref JPH::CylinderShape) - A cylinder shape. Note that cylinders are the least stable of all shapes, so use another shape if possible.
+* [ConvexHullShape](@ref JPH::ConvexHullShape) - A convex hull defined by a set of points.
+* [StaticCompoundShape](@ref JPH::StaticCompoundShape) - A shape containing other shapes. This shape is constructed once and cannot be changed afterwards. Child shapes are organized in a tree to speed up collision detection.
+* [MutableCompoundShape](@ref JPH::MutableCompoundShape) - A shape containing other shapes. This shape can be constructed/changed at runtime and trades construction time for runtime performance. Child shapes are organized in a list to make modification easy.
+* [MeshShape](@ref JPH::MeshShape) - A shape consisting of triangles. Any body that uses this shape needs to be static.
+* [HeightFieldShape](@ref JPH::HeightFieldShape) - A shape consisting of NxN points that define the height at each point, very suitable for representing hilly terrain. Any body that uses this shape needs to be static.
+
+Next to this there are a number of decorator shapes that change the behavior of their children:
+
+* [ScaledShape](@ref JPH::ScaledShape) - This shape can uniformly scale a child shape. Note that if a shape is rotated first and then scaled, you can introduce shearing which is not supported by the library.
+* [RotatedTranslatedShape](@ref JPH::RotatedTranslatedShape) - This shape can rotate and translate a child shape, it can e.g. be used to offset a sphere from the origin.
+* [OffsetCenterOfMassShape](@ref JPH::OffsetCenterOfMassShape) - This shape does not change its child shape but it does shift the calculated center of mass for that shape. It allows you to e.g. shift the center of mass of a vehicle down to improve its handling.
+
+__Beware: When a shape is created, it will automatically recenter itself around its center of mass.__ The center of mass can be obtained by calling [Shape::GetCenterOfMass](@ref JPH::Shape::GetCenterOfMass) and most functions operate in this Center of Mass (COM) space. Some functions work in the original space the shape was created in, they usually have World Space (WS) or Shape Space (SS) in their name (or documentation). As an example, say we create a box and then translate it:
+
+	// Create box of 2x2x2 m (you specify half the side)
+	JPH::BoxShapeSettings box(JPH::Vec3(1, 1, 1));
+	JPH::Ref<Shape> box_shape = box.Create().Get();
+
+	// Offset it by 10 m
+	JPH::RotatedTranslatedShapeSettings translated_box(JPH::Vec3(10, 0, 0), JPH::Quat::sIdentity(), box_shape);
+	JPH::Ref<Shape> translated_box_shape = translated_box.Create().Get();
+
+	// Cast a ray against the offset box (WRONG!)
+	JPH::RayCast ray;
+	ray.mOrigin = JPH::Vec3(10, 2, 0);
+	ray.mDirection = JPH::Vec3(0, -2, 0);
+
+	// Cast ray
+	JPH::RayCastResult hit;
+	bool had_hit = translated_box_shape->CastRay(ray, JPH::SubShapeIDCreator(), hit);
+	JPH_ASSERT(!had_hit); // There's no hit because we did not correct for COM!
+		
+	// Convert the ray to center of mass space for the shape (CORRECT!)
+	ray.mOrigin -= translated_box_shape->GetCenterOfMass();
+
+	// Cast ray
+	had_hit = translated_box_shape->CastRay(ray, JPH::SubShapeIDCreator(), hit);
+	JPH_ASSERT(had_hit); // Ray was in COM space, now there's a hit!
+
+In the same way calling:
+
+	translated_box_shape->GetLocalBounds();
+	
+will return a box of size 2x2x2 centered around the origin, so in order to get it back to the space in which it was originally created you need to offset the bounding box:
+
+	JPH::AABox shape_bounds = translated_box_shape->GetLocalBounds();
+	shape_bounds.Translate(translated_box_shape->GetCenterOfMass());
+	JPH_ASSERT(shape_bounds == JPH::AABox(JPH::Vec3(9, -1, -1), JPH::Vec3(11, 1, 1))); // Now we have the box relative to how we created it
+
+Note that when you work with interface of [BroadPhaseQuery](@ref JPH::BroadPhaseQuery), [NarrowPhaseQuery](@ref JPH::NarrowPhaseQuery) or [TransformedShape](@ref JPH::TransformedShape) this transformation is done for you.
 
 ### Constraints
 
@@ -44,6 +104,8 @@ The following constraints are available:
 * [PathConstraint](@ref JPH::PathConstraintSettings) - This constraint allows attaching two bodies connected through a Hermite spline path.
 
 Most of the constraints support motors ([MotorSettings](@ref JPH::MotorSettings)) and allow the relative position/orientation of the bodies to be driven to a particular velocity or position.
+
+If you want to constrain a dynamic object to the unmovable 'world' you can use [Body::sFixedToWorld](@ref JPH::Body::sFixedToWorld) instead of creating a static body.
 
 Adding and removing constraints can be done from multiple threads, but the constraints themselves do not have any protection against concurrent access. We assume that constraints are owned by some object (e.g. a Ragdoll) and that object ensures that it only modifies its own constraints and contains its own synchronization logic. Constraints can be freely modified except during the physics simulation step.
 
@@ -83,6 +145,17 @@ Each physics step can be divided into multiple sub steps. There are collision an
 	* Integration (1/360s)
 
 In general, the system is stable when running at 60 Hz with 1 collision and 1 integration step.
+
+### Cooking Data and Saving
+
+Data needs to be converted into an optimized format in order to be usable in the physics simulation. The uncooked data is usually stored in a [Settings](@ref JPH::ShapeSettings) object and then converted to cooked format by a [Create](@ref JPH::ShapeSettings::Create) function that returns a [Result](@ref JPH::Result) object that indicates success or failure and provides the cooked object. There are two ways of serializing data:
+
+* The uncooked data can be serialized using the [ObjectStream](@ref JPH::ObjectStream) system (either in [binary](@ref JPH::ObjectStreamBinaryOut) or in [text](@ref JPH::ObjectStreamTextOut) format), data stored in this way is likely to be compatible with future versions of the library (although there is no 100% guarantee of this).
+* The cooked data can be serialized using the [SaveBinaryState](@ref JPH::Shape::SaveBinaryState) interface that various objects provide. Data stored in this way is optimized for simulation performance and loading speed but is very likely to change between versions of the library, so this should never be your primary data format.
+
+As the library does not offer an exporter from content creation packages and since most games will have their own content pipeline, we encourage you to store data in your own format, cook data while cooking the game data and store the result using the SaveBinaryState interface (and provide a way to force a re-cook when the library is updated).
+
+### The Simulation Step in Detail
 
 The job graph looks like this:
 
