@@ -36,11 +36,11 @@ UIManager::UIManager(Renderer *inRenderer) :
 	};
 
 	// Load vertex shader
-	ComPtr<ID3DBlob> vtx = mRenderer->CreateVertexShader("Shaders/UIVertexShader.hlsl");
+	ComPtr<ID3DBlob> vtx = mRenderer->CreateVertexShader("Assets/Shaders/UIVertexShader.hlsl");
 
 	// Load pixel shader
-	ComPtr<ID3DBlob> pix_textured = mRenderer->CreatePixelShader("Shaders/UIPixelShader.hlsl");
-	ComPtr<ID3DBlob> pix_untextured = mRenderer->CreatePixelShader("Shaders/UIPixelShaderUntextured.hlsl");
+	ComPtr<ID3DBlob> pix_textured = mRenderer->CreatePixelShader("Assets/Shaders/UIPixelShader.hlsl");
+	ComPtr<ID3DBlob> pix_untextured = mRenderer->CreatePixelShader("Assets/Shaders/UIPixelShaderUntextured.hlsl");
 
 	mTextured = mRenderer->CreatePipelineState(vtx.Get(), vertex_desc, ARRAYSIZE(vertex_desc), pix_textured.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 	mUntextured = mRenderer->CreatePipelineState(vtx.Get(), vertex_desc, ARRAYSIZE(vertex_desc), pix_untextured.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
