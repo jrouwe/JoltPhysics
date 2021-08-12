@@ -1,0 +1,185 @@
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#include <TestFramework.h>
+
+#include <Tests/Shapes/HeightFieldShapeTest.h>
+#include <Math/Perlin.h>
+#include <Physics/Collision/Shape/BoxShape.h>
+#include <Physics/Body/BodyCreationSettings.h>
+#include <Physics/Collision/PhysicsMaterialSimple.h>
+#include <Physics/Collision/CastResult.h>
+#include <Physics/Collision/RayCast.h>
+#include <Renderer/DebugRendererImp.h>
+#include <Application/DebugUI.h>
+#include <Utils/ReadData.h>
+#include <Utils/Log.h>
+#include <Layers.h>
+
+JPH_IMPLEMENT_RTTI_VIRTUAL(HeightFieldShapeTest) 
+{ 
+	JPH_ADD_BASE_CLASS(HeightFieldShapeTest, Test) 
+}
+
+static int sTerrainType = 0;
+
+static const char *sTerrainTypes[] = {
+	"Procedural Terrain",
+	"Heightfield 1"
+};
+
+static void sValidateHeightField(const float *inUncompressedHeights, uint inSize, const HeightFieldShape *inShape)
+{
+	float max_diff = -1.0f;
+	uint max_diff_x = 0, max_diff_y = 0;
+	float min_height = FLT_MAX, max_height = -FLT_MAX;
+	for (uint y = 0; y < inSize; ++y)
+		for (uint x = 0; x < inSize; ++x)
+		{
+			float h1 = inUncompressedHeights[y * inSize + x];
+			if (h1 != HeightFieldShapeConstants::cNoCollisionValue)
+			{
+				if (inShape->IsNoCollision(x, y))
+					FatalError("No collision where there should be");
+				float h2 = inShape->GetPosition(x, y).GetY();
+				float diff = abs(h2 - h1);
+				if (diff > max_diff)
+				{
+					max_diff = diff;
+					max_diff_x = x;
+					max_diff_y = y;
+				}
+				min_height = min(min_height, h1);
+				max_height = max(max_height, h1);
+			}
+			else
+			{
+				if (!inShape->IsNoCollision(x, y))
+					FatalError("Collision where there shouldn't be");
+			}
+		}
+
+	// Calculate relative error compared to 8-bit compression (error should be below 1)
+	float rel_error = 255.0f * max_diff / (max_height - min_height);
+
+	Trace("Min height: %g, max height: %g", (double)min_height, (double)max_height);
+	Trace("Max diff: %g at (%d, %d), relative error: %g", (double)max_diff, max_diff_x, max_diff_y, (double)rel_error);
+
+	if (rel_error > 1.0f)
+		FatalError("Error too big!");
+}
+
+void HeightFieldShapeTest::Initialize()
+{
+	if (sTerrainType == 0)
+	{
+		const int n = 128;
+		const float cell_size = 1.0f;
+		const float max_height = 5.0f;
+
+		// Create height samples
+		float heights[n * n];
+		for (int y = 0; y < n; ++y)
+			for (int x = 0; x < n; ++x)
+				heights[y * n + x] = max_height * PerlinNoise3(float(x) * 8.0f / n, 0, float(y) * 8.0f / n, 256, 256, 256);
+
+		// Make some holes
+		heights[2 * n + 2] = HeightFieldShapeConstants::cNoCollisionValue;
+		for (int y = 4; y < 33; ++y)
+			for (int x = 4; x < 33; ++x)
+				heights[y * n + x] = HeightFieldShapeConstants::cNoCollisionValue;
+
+		// Make material indices
+		uint8 max_material_index = 0;
+		uint8 material_indices[Square(n - 1)];
+		for (int y = 0; y < n - 1; ++y)
+			for (int x = 0; x < n - 1; ++x)
+			{
+				uint8 material_index = uint8(round((Vec3(x * cell_size, 0, y * cell_size) - Vec3(n * cell_size / 2, 0, n * cell_size / 2)).Length() / 10.0f));
+				max_material_index = max(max_material_index, material_index);
+				material_indices[y * (n - 1) + x] = material_index;
+			}
+
+		// Mark the corners to validate that materials and heights match
+		heights[0] = 0.0f;
+		heights[n - 1] = 10.0f;
+		heights[(n - 1) * n] = 20.0f;
+		heights[n * n - 1] = 30.0f;
+		material_indices[0] = 0;
+		material_indices[n - 2] = 1;
+		material_indices[(n - 2) * (n - 1)] = 2;
+		material_indices[Square(n - 1) - 1] = 3;
+
+		// Create materials
+		PhysicsMaterialList materials;
+		for (uint8 i = 0; i <= max_material_index; ++i)
+			materials.push_back(new PhysicsMaterialSimple("Material " + ConvertToString(uint(i)), Color::sGetDistinctColor(i)));
+
+		// Create height field
+		mHeightField = static_cast<const HeightFieldShape *>(HeightFieldShapeSettings(heights, Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n), Vec3(cell_size, 1.0f, cell_size), n, material_indices, materials).Create().Get().GetPtr());
+		Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		mBodyInterface->AddBody(terrain.GetID(), EActivation::DontActivate);
+
+		sValidateHeightField(heights, n, mHeightField);
+	}
+	else if (sTerrainType == 1)
+	{
+		const int n = 1024;
+		const float cell_size = 0.5f;
+
+		// Get height samples
+		vector<uint8> data = ReadData("Assets/heightfield1.bin");
+		if (data.size() != sizeof(float) * n * n)
+			FatalError("Invalid file size");
+		const float *heights = (float *)&data[0];
+
+		// Create height field
+		mHeightField = static_cast<const HeightFieldShape *>(HeightFieldShapeSettings(heights, Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n), Vec3(cell_size, 1.0f, cell_size), n).Create().Get().GetPtr());
+		Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		mBodyInterface->AddBody(terrain.GetID(), EActivation::DontActivate);
+
+		sValidateHeightField(heights, n, mHeightField);
+	}
+
+	// Determine terrain height
+	RayCastResult result;
+	Vec3 start(0, 1000, 0);
+	Vec3 direction(0, -2000, 0);
+	RayCast ray { start, direction };
+	if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, result, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
+		mHitPos = start + result.mFraction * direction;
+
+	// Dynamic body
+	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)), mHitPos + Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
+}
+
+void HeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	// Test the 'GetHeight' function and draw a marker on the surface
+	Vec3 test_pos = inParams.mCameraState.mPos + 10.0f * inParams.mCameraState.mForward, surface_pos;
+	SubShapeID sub_shape_id;
+	if (mHeightField->ProjectOntoSurface(test_pos, surface_pos, sub_shape_id))
+	{
+		Vec3 surface_normal = mHeightField->GetSurfaceNormal(sub_shape_id, surface_pos);
+		mDebugRenderer->DrawMarker(surface_pos, Color::sWhite, 1.0f);
+		mDebugRenderer->DrawArrow(surface_pos, surface_pos + surface_normal, Color::sRed, 0.1f);
+	}
+}
+
+void HeightFieldShapeTest::GetInitialCamera(CameraState &ioState) const
+{
+	// Correct camera pos for hit position
+	ioState.mPos += mHitPos;
+}
+
+void HeightFieldShapeTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
+{
+	inUI->CreateTextButton(inSubMenu, "Select Terrain", [this, inUI]() { 
+		UIElement *terrain_name = inUI->CreateMenu();
+		for (uint i = 0; i < size(sTerrainTypes); ++i)
+			inUI->CreateTextButton(terrain_name, sTerrainTypes[i], [this, i]() { sTerrainType = i; RestartTest(); });
+		inUI->ShowMenu(terrain_name);
+	});
+}
+

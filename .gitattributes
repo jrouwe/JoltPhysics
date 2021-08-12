@@ -1,0 +1,17 @@
+# Convert LF to CRLF on windows on checkout and convert back before submitting to the repository
+* text=auto
+
+# Explicitly declare text files to always be normalized and converted to native line endings on checkout
+*.cpp text
+*.inl text
+*.h text
+*.tof text
+*.bat text
+
+# Force shell files to use LF only
+*.sh text eol=lf
+
+# Declare binary file types
+*.tga binary
+*.bof binary
+*.bin binary

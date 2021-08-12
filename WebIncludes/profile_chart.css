@@ -1,0 +1,36 @@
+html, body {
+	padding: 0px;
+	border: 0px;
+	margin: 0px;
+	width: 100%;
+    height: 100%;
+	overflow: hidden;
+}
+
+canvas {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	padding: 0px;
+	border: 0px;
+	margin: 0px;
+}
+
+#tooltip {
+	font: Courier New;
+	position: absolute;
+	background-color: white;
+	border: 1px;
+	border-style: solid;
+	border-color: black;
+	pointer-events: none;
+	padding: 5px;
+	font: 14px Arial;
+	visibility: hidden;
+	height: auto;
+}
+
+.stat {
+	color: blue;
+	text-align: right;
+}

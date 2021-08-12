@@ -1,0 +1,62 @@
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#pragma once
+
+#include <Core/Reference.h>
+#include <Core/Result.h>
+#include <ObjectStream/SerializableObject.h>
+
+namespace JPH {
+
+class StreamIn;
+class StreamOut;
+
+/// Resource that contains the joint hierarchy for a skeleton
+class Skeleton : public RefTarget<Skeleton>
+{
+public:
+	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(Skeleton)
+
+	using SkeletonResult = Result<Ref<Skeleton>>;
+
+	/// Declare internal structure for a joint
+	class Joint
+	{
+	public:
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(Joint)
+
+		string				mName;																	///< Name of the joint
+		string				mParentName;															///< Name of parent joint
+		int					mParentJointIndex = -1;													///< Index of parent joint (in mJoints) or -1 if it has no parent
+	};
+
+	using JointVector = vector<Joint>;
+
+	///@name Access to the joints
+	///@{
+	const JointVector &		GetJoints() const														{ return mJoints; }
+	JointVector &			GetJoints()																{ return mJoints; }
+	int						GetJointCount() const													{ return (int)mJoints.size(); }
+	const Joint &			GetJoint(int inJoint) const												{ return mJoints[inJoint]; }
+	Joint &					GetJoint(int inJoint)													{ return mJoints[inJoint]; }
+	///@}
+
+	/// Find joint by name
+	int						GetJointIndex(const string &inName) const;
+
+	/// Fill in parent joint indices based on name
+	void					CalculateParentJointIndices();
+
+	/// Saves the state of this object in binary form to inStream.
+	void					SaveBinaryState(StreamOut &inStream) const;
+
+	/// Restore the state of this object from inStream.
+	static SkeletonResult	sRestoreFromBinaryState(StreamIn &inStream);
+
+private:
+	/// Joints
+	JointVector				mJoints;
+};
+
+} // JPH

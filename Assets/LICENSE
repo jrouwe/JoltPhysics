@@ -1,0 +1,8 @@
+The following assets were taken from Horizon Zero Dawn:
+
+terrain1.bof and terrain2.bof contain the 'Mothers Heart' scene
+convex_hulls.bin contains point clouds used as the source for convex hulls
+heightfield1.bin contains a single 'tile' of terrain data
+Human.tof and Human/*.tof contain the Aloy ragdoll setup and a couple of sample animations mapped onto the ragdoll
+
+Permission was granted by Guerrilla Games to release this under the same MIT license as the rest of the project.

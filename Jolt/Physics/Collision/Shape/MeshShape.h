@@ -1,0 +1,170 @@
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#pragma once
+
+#include <Physics/Collision/Shape/Shape.h>
+#include <Physics/Collision/PhysicsMaterial.h>
+#include <Core/ByteBuffer.h>
+#include <Geometry/Triangle.h>
+#include <Geometry/IndexedTriangle.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Renderer/DebugRenderer.h>
+#endif // JPH_DEBUG_RENDERER
+
+namespace JPH {
+
+class ConvexShape;
+class CollideShapeSettings;
+
+/// Class that constructs a MeshShape
+class MeshShapeSettings final : public ShapeSettings
+{
+public:
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
+
+	/// Default constructor for deserialization
+									MeshShapeSettings() = default;
+
+	/// Create a mesh shape.
+									MeshShapeSettings(const TriangleList &inTriangles, const PhysicsMaterialList &inMaterials = PhysicsMaterialList());
+									MeshShapeSettings(const VertexList &inVertices, const IndexedTriangleList &inTriangles, const PhysicsMaterialList &inMaterials = PhysicsMaterialList());
+
+	/// Sanitize the mesh data. Remove duplicate and degenerate triangles.
+	void							Sanitize();
+
+	// See: ShapeSettings
+	virtual ShapeResult				Create() const override;
+
+	/// Mesh data.
+	VertexList						mTriangleVertices;											///< Vertices belonging to mIndexedTriangles
+	IndexedTriangleList				mIndexedTriangles;											///< Original list of indexed triangles
+
+	/// Materials assigned to the triangles. Each triangle specifies which material it uses through its mMaterialIndex
+	PhysicsMaterialList				mMaterials;
+};
+
+/// A mesh shape, consisting of triangles. Cannot be used as a dynamic object.
+class MeshShape final : public Shape
+{
+public:
+	JPH_DECLARE_RTTI_VIRTUAL(MeshShape)
+
+	/// Constructor
+									MeshShape() = default;
+									MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult);
+
+	/// Get type
+	virtual EShapeType				GetType() const override									{ return EShapeType::Mesh; }
+
+	// See Shape::MustBeStatic
+	virtual bool					MustBeStatic() const override								{ return true; }
+
+	// See Shape::GetLocalBounds
+	virtual AABox					GetLocalBounds() const override;
+
+	// See Shape::GetSubShapeIDBitsRecursive
+	virtual uint					GetSubShapeIDBitsRecursive() const override;
+
+	// See Shape::GetInnerRadius
+	virtual float					GetInnerRadius() const override								{ return 0.0f; }
+
+	// See Shape::GetMassProperties
+	virtual MassProperties			GetMassProperties() const override;
+	
+	// See Shape::GetMaterial
+	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
+
+	// See Shape::GetSurfaceNormal
+	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const override;
+
+#ifdef JPH_DEBUG_RENDERER
+	// See Shape::Draw
+	virtual void					Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const override;
+#endif // JPH_DEBUG_RENDERER
+
+	// See Shape::CastRay
+	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
+	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) const override;
+
+	// See: Shape::CollidePoint
+	virtual void					CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const override;
+
+	// See Shape::CastShape
+	virtual void					CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const override;
+
+	// See Shape::GetTrianglesStart
+	virtual void					GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const override;
+
+	// See Shape::GetTrianglesNext
+	virtual int						GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials = nullptr) const override;
+
+	// See Shape::GetSubmergedVolume
+	virtual void					GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const override { JPH_ASSERT(false, "Not supported"); }
+
+	/// Collide 2 shapes and pass any collisions on to ioCollector
+	static void						sCollideConvexVsMesh(const ConvexShape *inShape1, const MeshShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+
+	// See Shape
+	virtual void					SaveBinaryState(StreamOut &inStream) const override;
+	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;
+	virtual void					RestoreMaterialState(const PhysicsMaterialList &inMaterials) override;
+
+	// See Shape::GetStats
+	virtual Stats					GetStats() const override;
+
+	// See Shape::GetVolume
+	virtual float					GetVolume() const override									{ return 0; }
+
+#ifdef JPH_DEBUG_RENDERER
+	// Settings
+	static bool						sDrawTriangleGroups;
+	static bool						sDrawTriangleOutlines;
+#endif // JPH_DEBUG_RENDERER
+
+protected:
+	// See: Shape::RestoreBinaryState
+	virtual void					RestoreBinaryState(StreamIn &inStream) override;
+
+private:
+	struct							MSGetTrianglesContext;										///< Context class for GetTrianglesStart/Next
+
+	static constexpr int			NumTriangleBits = 3;										///< How many bits to reserve to encode the triangle index
+	static constexpr int			MaxTrianglesPerLeaf = 1 << NumTriangleBits;					///< Number of triangles that are stored max per leaf aabb node 
+
+	/// Find and flag active edges
+	void							FindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices);
+
+	/// Visit the entire tree using a visitor pattern
+	template <class Visitor>
+	void							WalkTree(Visitor &ioVisitor) const;
+
+	/// Decode a sub shape ID
+	inline void						DecodeSubShapeID(const SubShapeID &inSubShapeID, const void *&outTriangleBlock, uint32 &outTriangleIndex) const;
+
+	/// Materials assigned to the triangles. Each triangle specifies which material it uses through its mMaterialIndex
+	PhysicsMaterialList				mMaterials;
+
+	ByteBuffer						mTree;														///< Resulting packed data structure
+
+	/// 8 bit flags stored per triangle
+	enum ETriangleFlags
+	{
+		/// Material index
+		FLAGS_MATERIAL_BITS			= 5,
+		FLAGS_MATERIAL_MASK			= (1 << FLAGS_MATERIAL_BITS) - 1,
+
+		/// Active edge bits
+		FLAGS_ACTIVE_EGDE_SHIFT		= FLAGS_MATERIAL_BITS,
+		FLAGS_ACTIVE_EDGE_BITS		= 3,
+		FLAGS_ACTIVE_EDGE_MASK		= (1 << FLAGS_ACTIVE_EDGE_BITS) - 1
+	};
+
+#ifdef JPH_DEBUG_RENDERER
+	mutable DebugRenderer::GeometryRef	mGeometry;												///< Debug rendering data
+	mutable bool					mCachedTrianglesColoredPerGroup = false;					///< This is used to regenerate the triangle batch if the drawing settings change
+	mutable bool					mCachedUseMaterialColors = false;							///< This is used to regenerate the triangle batch if the drawing settings change
+#endif // JPH_DEBUG_RENDERER
+};
+
+} // JPH

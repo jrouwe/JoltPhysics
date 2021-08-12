@@ -1,0 +1,112 @@
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#pragma once
+
+#include <Physics/Collision/GroupFilter.h>
+#include <Physics/Collision/CollisionGroup.h>
+
+namespace JPH {
+
+/// Implementation of GroupFilter that stores a bit table with one bit per sub shape ID pair to determine if they collide or not
+/// 
+/// The collision rules:
+/// - If one of the objects is in the cInvalidGroup the objects will collide
+/// - If the objects are in different groups they will collide
+/// - If they're in the same group but their collision filter is different they will not collide
+/// - If they're in the same group and their collision filters match, we'll use the SubGroupID and the table below:
+///
+/// For N = 6 sub shapes the table will look like:
+///
+///         group 1 --->
+/// group 2 x.....
+///   |     ox....
+///   |     oox...
+///   V     ooox..
+///         oooox.
+///         ooooox
+///
+/// x means group 1 == group 2 and we define this to never collide
+/// o is a bit that we have to store
+/// . is a bit we don't need to store because the table is symmetric, we take care that group 2 > group 1 always by swapping the elements if needed
+///
+/// The total number of bits we need to store is (N * (N - 1)) / 2
+class GroupFilterTable final : public GroupFilter
+{
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(GroupFilterTable)
+
+private:
+	using GroupID = CollisionGroup::GroupID;
+	using SubGroupID = CollisionGroup::SubGroupID;
+
+	/// Get which bit corresponds to the pair (inSubGroup1, inSubGroup2)
+	int						GetBit(SubGroupID inSubGroup1, SubGroupID inSubGroup2) const
+	{
+		JPH_ASSERT(inSubGroup1 != inSubGroup2);
+
+		// We store the lower left half only, so swap the inputs when trying to access the top right half
+		if (inSubGroup1 > inSubGroup2)
+			swap(inSubGroup1, inSubGroup2);
+
+		JPH_ASSERT(inSubGroup2 < mNumSubGroups);
+
+		// Calculate at which bit the entry for this pair resides
+		// We use the fact that a row always starts at inSubGroup2 * (inSubGroup2 - 1) / 2 
+		// (this is the amount of bits needed to store a table of inSubGroup2 entries)
+		return (inSubGroup2 * (inSubGroup2 - 1)) / 2 + inSubGroup1;
+	}
+
+public:
+	/// Constructs the table with inNumSubGroups subgroups, initially all collision pairs are enabled except when the sub group ID is the same
+							GroupFilterTable(uint inNumSubGroups = 0) :
+		mNumSubGroups(inNumSubGroups)
+	{
+		// By default everything collides
+		int table_size = ((inNumSubGroups * (inNumSubGroups - 1)) / 2 + 7) / 8;
+		mTable.resize(table_size, 0xff);
+	}
+
+	/// Disable collision between two sub groups
+	void					DisableCollision(SubGroupID inSubGroup1, SubGroupID inSubGroup2)
+	{
+		int bit = GetBit(inSubGroup1, inSubGroup2);
+		mTable[bit >> 3] &= (0xff ^ (1 << (bit & 0b111)));
+	}
+
+	/// Checks if two CollisionGroups collide
+	virtual bool			CanCollide(const CollisionGroup &inGroup1, const CollisionGroup &inGroup2) const override
+	{	
+		// If one of the groups is cInvalidGroup the objects will collide (note that the if following this if will ensure that group2 is not cInvalidGroup)
+		if (inGroup1.GetGroupID() == CollisionGroup::cInvalidGroup)
+			return true;
+
+		// If the objects are in different groups, they collide
+		if (inGroup1.GetGroupID() != inGroup2.GetGroupID())
+			return true;
+
+		// If the collision filters do not match, but they're in the same group we ignore the collision
+		if (inGroup1.GetGroupFilter() != inGroup2.GetGroupFilter())
+			return false;
+
+		// If they are in the same sub group, they don't collide
+		if (inGroup1.GetSubGroupID() == inGroup2.GetSubGroupID())
+			return false;
+
+		// Test if the bit is set for this group pair
+		int bit = GetBit(inGroup1.GetSubGroupID(), inGroup2.GetSubGroupID());
+		return (mTable[bit >> 3] & (1 << (bit & 0b111))) != 0;
+	}
+
+	// See: GroupFilter::SaveBinaryState
+	virtual void			SaveBinaryState(StreamOut &inStream) const override;
+
+protected:
+	// See: GroupFilter::RestoreBinaryState
+	virtual void			RestoreBinaryState(StreamIn &inStream) override;
+
+private:
+	uint					mNumSubGroups;									///< The number of subgroups that this group filter supports
+	vector<uint8>			mTable;											///< The table of bits that indicates which pairs collide
+};
+
+} // JPH

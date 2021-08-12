@@ -1,0 +1,121 @@
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#pragma once
+
+#include <Core/NonCopyable.h>
+#include <atomic>
+
+namespace JPH {
+
+/// Very simple lock free hash map that only allows insertion, retrieval and provides a fixed amount of buckets and fixed storage.
+/// Note: This class currently assumes key and value are simple types that need no calls to the destructor.
+template <class Key, class Value>
+class LockFreeHashMap : public NonCopyable
+{
+public:
+	using MapType = LockFreeHashMap<Key, Value>;
+
+	/// Destructor
+							~LockFreeHashMap();
+
+	/// Initialization
+	/// @param inObjectStoreSizeBytes Number of bytes to reserve for all key value pairs
+	/// @param inMaxBuckets Max amount of buckets to use in the hashmap. Must be power of 2.
+	void					Init(uint32 inObjectStoreSizeBytes, uint32 inMaxBuckets);
+
+	/// Remove all elements.
+	/// Note that this cannot happen simultaneously with adding new elements.
+	void					Clear();
+	
+	/// Get the current amount of buckets that the map is using
+	uint32					GetNumBuckets() const			{ return mNumBuckets; }
+
+	/// Get the maximum amount of buckets that this map supports
+	uint32					GetMaxBuckets() const			{ return mMaxBuckets; }
+
+	/// Update the number of buckets. This must be done after clearing the map and cannot be done concurrently with any other operations on the map.
+	/// Note that the number of buckets can never become bigger than the specified max buckets during initialization and that it must be a power of 2.
+	void					SetNumBuckets(uint32 inNumBuckets);
+
+	/// A key / value pair that is inserted in the map
+	class KeyValue
+	{
+	public:
+		const Key &			GetKey() const					{ return mKey; }
+		Value &				GetValue()						{ return mValue; }
+		const Value &		GetValue() const				{ return mValue; }
+
+	private:
+		template <class K, class V> friend class LockFreeHashMap;
+
+		Key					mKey;							///< Key for this entry
+		uint32				mNextOffset;					///< Offset in mObjectStore of next KeyValue entry with same hash
+		Value				mValue;							///< Value for this entry + optionally extra bytes
+	};
+
+	/// Insert a new element, returns null if map full.
+	/// Multiple threads can be inserting in the map at the same time.
+	template <class... Params>
+	inline KeyValue *		Create(const Key &inKey, size_t inKeyHash, int inExtraBytes, Params &&... inConstructorParams);
+	
+	/// Find an element, returns null if not found
+	inline const KeyValue *	Find(const Key &inKey, size_t inKeyHash) const;
+
+	/// Value of an invalid handle
+	const static uint32		cInvalidHandle = uint32(-1);
+
+	/// Get convert key value pair to uint32 handle
+	inline uint32			ToHandle(const KeyValue *inKeyValue) const;
+
+	/// Convert uint32 handle back to key and value
+	inline const KeyValue *	FromHandle(uint32 inHandle) const;
+
+	/// Get the number of key value pairs that this map currently contains
+	inline uint32			GetNumKeyValues() const		{ return mNumKeyValues; }
+
+	/// Get all key/value pairs
+	inline void				GetAllKeyValues(vector<const KeyValue *> &outAll) const;
+
+	/// Non-const iterator
+	struct Iterator
+	{
+		/// Comparison
+		bool				operator == (const Iterator &inRHS) const	{ return mMap == inRHS.mMap && mBucket == inRHS.mBucket && mOffset == inRHS.mOffset; }
+		bool				operator != (const Iterator &inRHS) const	{ return !(*this == inRHS); }
+
+		/// Convert to key value pair
+		KeyValue & 			operator * ();
+
+		/// Next item
+		Iterator &			operator ++ ();
+
+		MapType *			mMap;		
+		uint32				mBucket;
+		uint32				mOffset;
+	};
+
+	/// Iterate over the map, note that it is not safe to do this in parallel to Clear(). 
+	/// It is safe to do this while adding elements to the map, but newly added elements may or may not be returned by the iterator.
+	Iterator				begin();
+	Iterator				end();
+
+#ifdef _DEBUG
+	/// Output stats about this map to the log
+	void					TraceStats() const;
+#endif
+
+private:
+	uint8 *					mObjectStore = nullptr;			///< This contains a contigous list of objects (possibly of varying size)
+	uint32					mObjectStoreSizeBytes = 0;		///< The size of mObjectStore in bytes
+	atomic<uint32>			mWriteOffset { 0 };				///< Next offset to write to in mObjectStore
+	atomic<uint32>			mNumKeyValues = 0;				///< Number of key value pairs in the store
+
+	atomic<uint32> *		mBuckets = nullptr;				///< This contains the offset in mObjectStore of the first object with a particular hash
+	uint32					mNumBuckets = 0;				///< Current number of buckets
+	uint32					mMaxBuckets = 0;				///< Maximum number of buckets
+};
+
+} // JPH
+
+#include <Core/LockFreeHashMap.inl>

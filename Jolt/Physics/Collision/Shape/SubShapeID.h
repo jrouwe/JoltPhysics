@@ -1,0 +1,111 @@
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#pragma once
+
+namespace JPH {
+
+/// A sub shape id contains a path to an element (usually a triangle or other primitive type) of a compound shape
+class SubShapeID
+{
+public:
+	/// Underlying storage type
+	using Type = uint32;
+
+	/// Type that is bigger than the underlying storage type for operations that would otherwise overflow
+	using BiggerType = uint64;
+
+	static_assert(sizeof(BiggerType) > sizeof(Type), "The calculation below assumes BiggerType is a bigger type than Type");
+
+	/// How many bits we can store in this ID
+	static constexpr uint MaxBits = 8 * sizeof(Type);
+
+	/// Constructor
+						SubShapeID() = default;
+
+	/// Get the next id in the chain of ids (pops parents before children)
+	Type				PopID(uint inBits, SubShapeID &outRemainder) const
+	{
+		Type mask_bits = Type((BiggerType(1) << inBits) - 1);
+		Type fill_bits = Type(BiggerType(cEmpty) << (MaxBits - inBits)); // Fill left side bits with 1 so that if there's no remainder all bits will be set, note that we do this using a BiggerType since on intel 0xffffffff << 32 == 0xffffffff
+		Type v = mValue & mask_bits;		
+		outRemainder = SubShapeID(Type(BiggerType(mValue) >> inBits) | fill_bits); 
+		return v;
+	}
+
+	/// Get the value of the path to the sub shape ID
+	inline Type			GetValue() const
+	{
+		return mValue;
+	}
+
+	/// Set the value of the sub shape ID (use with care!)
+	inline void			SetValue(Type inValue)
+	{
+		mValue = inValue;
+	}
+
+	/// Check if there is any bits of subshape ID left. 
+	/// Note that this is not a 100% guarantee as the subshape ID could consist of all 1 bits. Use for asserts only.
+	inline bool			IsEmpty() const
+	{
+		return mValue == cEmpty;
+	}
+
+private:
+	friend class SubShapeIDCreator;
+
+	/// An empty SubShapeID has all bits set
+	static constexpr Type cEmpty = ~Type(0);
+
+	/// Constructor
+						SubShapeID(const Type &inValue) : mValue(inValue) { }
+
+	/// Adds an id at a particular position in the chain
+	/// (this should really only be called by the SubShapeIDCreator)
+	void				PushID(Type inValue, uint inFirstBit, uint inBits)
+	{
+		// First clear the bits
+		mValue &= ~(Type((BiggerType(1) << inBits) - 1) << inFirstBit);
+
+		// Then set them to the new value
+		mValue |= inValue << inFirstBit;
+	}
+
+	Type				mValue = cEmpty;
+};
+
+/// A sub shape id creator can be used to create a new sub shape id by recursing through the shape 
+/// hierarchy and pushing new ID's onto the chain
+class SubShapeIDCreator
+{
+public:
+	/// Add a new id to the chain of id's and return it
+	SubShapeIDCreator	PushID(uint inValue, uint inBits) const
+	{
+		JPH_ASSERT(inValue < (SubShapeID::BiggerType(1) << inBits));
+		SubShapeIDCreator copy = *this;
+		copy.mID.PushID(inValue, mCurrentBit, inBits);
+		copy.mCurrentBit += inBits;
+		JPH_ASSERT(copy.mCurrentBit <= SubShapeID::MaxBits);
+		return copy;
+	}
+
+	// Get the resulting sub shape ID
+	const SubShapeID &	GetID() const
+	{
+		return mID;
+	}
+
+	/// Get the number of bits that have been written to the sub shape ID so far
+	inline uint			GetNumBitsWritten() const
+	{
+		return mCurrentBit;
+	}
+
+private:
+	SubShapeID			mID;
+	uint				mCurrentBit = 0;
+};
+
+} // JPH

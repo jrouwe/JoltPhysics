@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        applicationId "com.joltphysics.unittests"
+        minSdk 24
+        targetSdk 31
+        versionCode 1
+        versionName "1.0"
+        ndk.abiFilters 'arm64-v8a', 'x86_64'
+
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++17 -Wall -Werror -DJPH_STAT_COLLECTOR -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
+                arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.10.2'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+}
