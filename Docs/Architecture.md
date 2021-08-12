@@ -48,7 +48,21 @@ Next to this there are a number of decorator shapes that change the behavior of 
 * [RotatedTranslatedShape](@ref JPH::RotatedTranslatedShape) - This shape can rotate and translate a child shape, it can e.g. be used to offset a sphere from the origin.
 * [OffsetCenterOfMassShape](@ref JPH::OffsetCenterOfMassShape) - This shape does not change its child shape but it does shift the calculated center of mass for that shape. It allows you to e.g. shift the center of mass of a vehicle down to improve its handling.
 
-__Beware: When a shape is created, it will automatically recenter itself around its center of mass.__ The center of mass can be obtained by calling [Shape::GetCenterOfMass](@ref JPH::Shape::GetCenterOfMass) and most functions operate in this Center of Mass (COM) space. Some functions work in the original space the shape was created in, they usually have World Space (WS) or Shape Space (SS) in their name (or documentation). As an example, say we create a box and then translate it:
+#### Convex Radius
+
+In order to speed up the collision detection system, all convex shapes use a convex radius. The provided shape will first be shrunken by the convex radius and then inflated again by the same amount, resulting in a rounded off shape:
+
+![Convex Radius](Images/ConvexRadius.jpg)
+
+In this example a box (green) was created with a fairly large convex radius. The shape is shrunken first (dashed green line) and then inflated again equally on all sides. The resulting shape as seen by the collision detection system is shown in blue. A larger convex radius results in better performance but a less accurate simulation. A convex radius of 0 is allowed.
+
+#### Center of Mass
+
+__Beware: When a shape is created, it will automatically recenter itself around its center of mass.__ The center of mass can be obtained by calling [Shape::GetCenterOfMass](@ref JPH::Shape::GetCenterOfMass) and most functions operate in this Center of Mass (COM) space. Some functions work in the original space the shape was created in, they usually have World Space (WS) or Shape Space (SS) in their name (or documentation). 
+
+![Shape Center of Mass](Images/ShapeCenterOfMass.jpg)
+
+As an example, say we create a box and then translate it:
 
 	// Create box of 2x2x2 m (you specify half the side)
 	JPH::BoxShapeSettings box(JPH::Vec3(1, 1, 1));
@@ -145,6 +159,22 @@ Each physics step can be divided into multiple sub steps. There are collision an
 	* Integration (1/360s)
 
 In general, the system is stable when running at 60 Hz with 1 collision and 1 integration step.
+
+Note that the physics simulation works best if you use SI units (meters, radians, seconds, kg). In order for the simluation to be accurate, dynamic objects should be in the order [0.1, 10] meters long and have speeds in the order of [0, 500] m/s. Static object should be in the order [0.1, 2000] meter long. If you are using different units, consider scaling the objects before passing them on to the physics simulation.
+
+### Continuous Collision Detection
+
+Each body has a motion quality setting ([EMotionQuality](@ref JPH::EMotionQuality)). By default the motion quality is [Discrete](@ref JPH::EMotionQuality::Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref JPH::EMotionQuality::LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented. 
+
+![Motion Quality](Images/MotionQuality.jpg)
+
+With the Discrete motion quality the blue object tunnels through the green object in a single time step. With motion quality LinearCast it doesn't.
+
+Fast rotating long objects are also to be avoided, as the LinearCast motion quality will fully rotate the object at the beginning of the time step and from that orientation perform the CastShape, there is a chance that the object misses a collision because it rotated through it.
+
+![Long and Thin](Images/LongAndThin.jpg)
+
+Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.
 
 ### Cooking Data and Saving
 
