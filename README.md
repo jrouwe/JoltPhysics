@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/jrouwe/JoltPhysics/actions/workflows/build.yml/badge.svg)](https://github.com/jrouwe/JoltPhysics/actions/)
+
 # Jolt Physics Library
 
 A multi core friendly rigid body physics and collision detection library suitable for games and VR applications.
