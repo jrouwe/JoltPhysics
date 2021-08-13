@@ -44,7 +44,7 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 	snprintf(buffer, sizeof(buffer), "%s:%u: (%s) %s", inFile, inLine, inExpression, inMessage != nullptr? inMessage : "");
 
 	// Forward to doctest
-	FAIL(buffer);
+	FAIL_CHECK(buffer);
 
 	// No breakpoint
 	return false;

@@ -413,9 +413,6 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 	// it if there's not enough space in the queue.
 	uint head = GetHead();
 
-	// Keep track of how many times we slept
-	JPH_IF_ENABLE_ASSERTS(int sleep_count = 0;)
-
 	for (;;)
 	{
 		// Check if there's space in the queue
@@ -429,9 +426,6 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 			// Second check if there's space in the queue
 			if (old_value - head >= cQueueLength)
 			{
-				// If we keep sleeping, something's wrong.
-				JPH_ASSERT(sleep_count++ < 10, "Queue is not being processed quickly enough / too small!");
-
 				// Wake up all threads in order to ensure that they can clear any nullptrs they may not have processed yet
 				mSemaphore.Release((uint)mThreads.size()); 
 
