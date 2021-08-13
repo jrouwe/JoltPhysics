@@ -90,7 +90,7 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 endif()
 
 # Register unit tests as a test so that it can be run with: 
-# make CTEST_OUTPUT_ON_FAILURE=1 test
+# ctest --output-on-failure
 enable_testing()
 add_test(UnitTests UnitTests)
 
