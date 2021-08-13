@@ -21,11 +21,42 @@ using namespace JPH;
 
 using namespace doctest;
 
+// Callback for traces
+void TraceImpl(const char *inFMT, ...)
+{ 
+	// Format the message
+	va_list list;
+	va_start(list, inFMT);
+	char buffer[1024];
+	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+
+	// Forward to doctest
+	MESSAGE(buffer);
+}
+
+// Callback for asserts
+static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, uint inLine)
+{ 
+	// Format message
+	char buffer[1024];
+	sprintf(buffer, "%s:%u: (%s) %s", inFile, inLine, inExpression, inMessage != nullptr? inMessage : "");
+
+	// Forward to doctest
+	FAIL(buffer);
+
+	// No breakpoint
+	return false;
+};
+
 #ifndef JPH_PLATFORM_ANDROID
 
 // Generic entry point
 int main(int argc, char** argv)
 {
+	// Install callbacks
+	Trace = TraceImpl;
+	AssertFailed = AssertFailedImpl;
+
 #if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
 	// Enable leak detection
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -83,6 +114,10 @@ DOCTEST_REGISTER_REPORTER("android_log", 0, LogReporter);
 
 void AndroidInitialize(android_app *inApp)
 {
+	// Install callbacks
+	Trace = TraceImpl;
+	AssertFailed = AssertFailedImpl;
+
 	// Enable floating point exceptions
 	FPExceptionsEnable enable_exceptions;
 	JPH_UNUSED(enable_exceptions);
