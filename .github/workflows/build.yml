@@ -54,3 +54,16 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2019_CL/${{matrix.build_type}}
       run: ./UnitTests.exe
+
+  android:
+    runs-on: ubuntu-latest
+    name: Android
+    strategy:
+        fail-fast: false
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Gradle Build
+      working-directory: ${{github.workspace}}/Build/Android
+      run: ./gradlew build
