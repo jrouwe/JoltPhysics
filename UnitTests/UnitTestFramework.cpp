@@ -34,12 +34,14 @@ void TraceImpl(const char *inFMT, ...)
 	MESSAGE(buffer);
 }
 
+#ifdef JPH_ENABLE_ASSERTS
+
 // Callback for asserts
 static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, uint inLine)
 { 
 	// Format message
 	char buffer[1024];
-	sprintf(buffer, "%s:%u: (%s) %s", inFile, inLine, inExpression, inMessage != nullptr? inMessage : "");
+	snprintf(buffer, sizeof(buffer), "%s:%u: (%s) %s", inFile, inLine, inExpression, inMessage != nullptr? inMessage : "");
 
 	// Forward to doctest
 	FAIL(buffer);
@@ -48,6 +50,8 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 	return false;
 };
 
+#endif // JPH_ENABLE_ASSERTS
+
 #ifndef JPH_PLATFORM_ANDROID
 
 // Generic entry point
@@ -55,7 +59,7 @@ int main(int argc, char** argv)
 {
 	// Install callbacks
 	Trace = TraceImpl;
-	AssertFailed = AssertFailedImpl;
+	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
 
 #if defined(JPH_PLATFORM_WINDOWS) && defined(_DEBUG)
 	// Enable leak detection
@@ -116,7 +120,7 @@ void AndroidInitialize(android_app *inApp)
 {
 	// Install callbacks
 	Trace = TraceImpl;
-	AssertFailed = AssertFailedImpl;
+	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
 
 	// Enable floating point exceptions
 	FPExceptionsEnable enable_exceptions;
