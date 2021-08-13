@@ -89,6 +89,11 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
 endif()
 
+# Register unit tests as a test so that it can be run with: 
+# make CTEST_OUTPUT_ON_FAILURE=1 test
+enable_testing()
+add_test(UnitTests UnitTests)
+
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	# Windows only targets
 	include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
