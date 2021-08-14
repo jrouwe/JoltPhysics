@@ -182,7 +182,7 @@ AABBTreeBuilder::Node *AABBTreeBuilder::Build(AABBTreeBuilderStats &outStats)
 	return root;
 }
 
-AABBTreeBuilder::Node *AABBTreeBuilder::BuildInternal(TriangleSplitter::Range &inTriangles)
+AABBTreeBuilder::Node *AABBTreeBuilder::BuildInternal(const TriangleSplitter::Range &inTriangles)
 {
 	// Check if there are too many triangles left
 	if (inTriangles.Count() > mMaxTrianglesPerLeaf)

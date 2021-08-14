@@ -97,7 +97,7 @@ public:
 	Node *					Build(AABBTreeBuilderStats &outStats);
 
 private:
-	Node *					BuildInternal(TriangleSplitter::Range &inTriangles);
+	Node *					BuildInternal(const TriangleSplitter::Range &inTriangles);
 
 	TriangleSplitter &		mTriangleSplitter;
 	const uint				mMaxTrianglesPerLeaf;

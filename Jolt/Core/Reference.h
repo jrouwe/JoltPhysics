@@ -92,7 +92,7 @@ public:
 	inline					Ref()											: mPtr(nullptr) { }
 	inline					Ref(T *inRHS)									: mPtr(inRHS) { AddRef(); }
 	inline					Ref(const Ref<T> &inRHS)						: mPtr(inRHS.mPtr) { AddRef(); }
-	inline					Ref(Ref<T> &&inRHS)								: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
+	inline					Ref(Ref<T> &&inRHS) noexcept					: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
 	inline					~Ref()											{ Release(); }
 						
 	/// Assignment operators
@@ -145,7 +145,7 @@ public:
 	inline					RefConst()										: mPtr(nullptr) { }
 	inline					RefConst(const T * inRHS)						: mPtr(inRHS) { AddRef(); }
 	inline					RefConst(const RefConst<T> &inRHS)				: mPtr(inRHS.mPtr) { AddRef(); }
-	inline					RefConst(RefConst<T> &&inRHS)					: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
+	inline					RefConst(RefConst<T> &&inRHS) noexcept			: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
 	inline					RefConst(const Ref<T> &inRHS)					: mPtr(inRHS.mPtr) { AddRef(); }
 	inline					RefConst(Ref<T> &&inRHS)						: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
 	inline					~RefConst()										{ Release(); }

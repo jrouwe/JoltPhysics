@@ -52,7 +52,7 @@ public:
 		/// Constructor 
 		inline				JobHandle()									{ }
 		inline				JobHandle(const JobHandle &inHandle)		: Ref<Job>(inHandle) { }
-		inline				JobHandle(JobHandle &&inHandle)				: Ref<Job>(move(inHandle)) { }
+		inline				JobHandle(JobHandle &&inHandle) noexcept	: Ref<Job>(move(inHandle)) { }
 
 		/// Constructor, only to be used by JobSystem
 		inline				JobHandle(Job *inJob)						: Ref<Job>(inJob) { }
