@@ -70,8 +70,7 @@ void JobSystemThreadPool::Semaphore::Acquire(uint inNumber)
 #else
 	unique_lock<mutex> lock(mLock);
 	mCount -= (int)inNumber;
-	while (mCount < 0)
-		mWaitVariable.wait(lock);
+	mWaitVariable.wait(lock, [this]() { return mCount >= 0; });
 #endif
 }
 
