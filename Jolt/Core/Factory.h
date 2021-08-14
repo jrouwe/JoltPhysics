@@ -25,7 +25,7 @@ public:
 	bool						Register(const RTTI *inRTTI);
 
 	/// Get all registered classes
-	const vector<const RTTI *>	GetAllClasses();
+	vector<const RTTI *>		GetAllClasses();
 
 	/// Singleton factory instance
 	static Factory 				sInstance;

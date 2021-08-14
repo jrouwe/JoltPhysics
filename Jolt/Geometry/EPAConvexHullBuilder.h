@@ -264,7 +264,7 @@ public:
 	/// Check if there's another triangle to process from the queue
 	bool				HasNextTriangle()
 	{
-		return mTriangleQueue.size() > 0;
+		return !mTriangleQueue.empty();
 	}
 
 	/// Access to the next closest triangle to the origin (won't remove it from the queue).

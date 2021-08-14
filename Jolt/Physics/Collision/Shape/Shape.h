@@ -29,7 +29,6 @@ class PhysicsMaterial;
 class TransformedShape;
 class Plane;
 class Shape;
-class PhysicsMaterial;
 class StreamOut;
 class StreamIn;
 #ifdef JPH_DEBUG_RENDERER
