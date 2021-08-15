@@ -17,7 +17,7 @@
 
 namespace JPH {
 
-static uint64 sProcessorTicksPerSecond = []() {
+static const uint64 sProcessorTicksPerSecond = []() {
 #if defined(JPH_PLATFORM_WINDOWS)
 	// Open the key where the processor speed is stored
 	HKEY hkey;
