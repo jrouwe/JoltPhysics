@@ -97,8 +97,11 @@ void WaterShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Draw the water surface 5mm below actual surface to avoid z fighting with intersection shapes
 	Vec3 surface_point = Vec3(0, 10, 0);
-	Plane surface = Plane::sFromPointAndNormal(surface_point, Vec3::sAxisY());
-	mDebugRenderer->DrawBox(AABox(surface_point + Vec3(-100, -0.006f, -100), surface_point + Vec3(100, -0.005f, 100)), Color::sBlue, DebugRenderer::ECastShadow::Off);
+	for (int i = -20; i <= 20; ++i)
+	{
+		mDebugRenderer->DrawLine(surface_point + Vec3(5.0f * i, 0, -100), surface_point + Vec3(5.0f * i, 0, 100), Color::sBlue);
+		mDebugRenderer->DrawLine(surface_point + Vec3(-100, 0, 5.0f * i), surface_point + Vec3(100, 0, 5.0f * i), Color::sBlue);
+	}
 
 	// Broadphase results, will apply buoyancy to any body that intersects with the water volume
 	class MyCollector : public CollideShapeBodyCollector 
@@ -119,6 +122,7 @@ void WaterShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		Plane					mSurface;
 		float					mDeltaTime;
 	};
+	Plane surface = Plane::sFromPointAndNormal(surface_point, Vec3::sAxisY());
 	MyCollector collector(mPhysicsSystem, surface, inParams.mDeltaTime);
 	
 	// Apply buoyancy to all bodies that intersect with the water
