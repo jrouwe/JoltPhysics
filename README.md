@@ -6,7 +6,7 @@
 A multi core friendly rigid body physics and collision detection library suitable for games and VR applications.
 
 |[![Ragdoll Pile](https://img.youtube.com/vi/pwyCW0yNKMA/hqdefault.jpg)](https://www.youtube.com/watch?v=pwyCW0yNKMA)|
-|-|
+|:-|
 |*A YouTube video showing a ragdoll pile simulated with Jolt Physics.*|
 
 For more demos and videos go to the [Samples](Docs/Samples.md) section.

@@ -53,7 +53,7 @@ Next to this there are a number of decorator shapes that change the behavior of 
 In order to speed up the collision detection system, all convex shapes use a convex radius. The provided shape will first be shrunken by the convex radius and then inflated again by the same amount, resulting in a rounded off shape:
 
 |![Convex Radius](Images/ConvexRadius.jpg)|
-|-|
+|:-|
 |*In this example a box (green) was created with a fairly large convex radius. The shape is shrunken first (dashed green line) and then inflated again equally on all sides. The resulting shape as seen by the collision detection system is shown in blue. A larger convex radius results in better performance but a less accurate simulation. A convex radius of 0 is allowed.*|
 
 ### Center of Mass
@@ -174,13 +174,13 @@ Note that the physics simulation works best if you use SI units (meters, radians
 Each body has a motion quality setting ([EMotionQuality](@ref JPH::EMotionQuality)). By default the motion quality is [Discrete](@ref JPH::EMotionQuality::Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref JPH::EMotionQuality::LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented. 
 
 |![Motion Quality](Images/MotionQuality.jpg)|
-|-|
+|:-|
 |*With the Discrete motion quality the blue object tunnels through the green object in a single time step. With motion quality LinearCast it doesn't.*|
 
 Fast rotating long objects are also to be avoided, as the LinearCast motion quality will fully rotate the object at the beginning of the time step and from that orientation perform the CastShape, there is a chance that the object misses a collision because it rotated through it.
 
 |![Long and Thin](Images/LongAndThin.jpg)|
-|-|
+|:-|
 |*Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.*|
 
 ## Cooking Data and Saving
