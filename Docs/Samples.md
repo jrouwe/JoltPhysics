@@ -28,7 +28,7 @@ This document describes the demos in the Samples application (currently compiles
 
 ## The Tests
 
-Note that you can watch all movies below in [a single YouTube playlist](https://youtu.be/QwlPOKbxsqU).
+Note that you can watch all movies below in [a single YouTube playlist](https://www.youtube.com/watch?v=QwlPOKbxsqU&list=PLYXVwtOr1CBxbA50jVg2dKUQvHW_5OOom).
 
 ### Vehicles
 
