@@ -66,11 +66,21 @@ public:
 		mTable.resize(table_size, 0xff);
 	}
 
+	/// Copy constructor
+							GroupFilterTable(const GroupFilterTable &inRHS) : mNumSubGroups(inRHS.mNumSubGroups), mTable(inRHS.mTable) { }
+
 	/// Disable collision between two sub groups
 	void					DisableCollision(SubGroupID inSubGroup1, SubGroupID inSubGroup2)
 	{
 		int bit = GetBit(inSubGroup1, inSubGroup2);
 		mTable[bit >> 3] &= (0xff ^ (1 << (bit & 0b111)));
+	}
+
+	/// Enable collision between two sub groups
+	void					EnableCollision(SubGroupID inSubGroup1, SubGroupID inSubGroup2)
+	{
+		int bit = GetBit(inSubGroup1, inSubGroup2);
+		mTable[bit >> 3] |= 1 << (bit & 0b111);
 	}
 
 	/// Checks if two CollisionGroups collide
