@@ -116,23 +116,29 @@ VehicleConstraint::~VehicleConstraint()
 		delete w;
 }
 
-Mat44 VehicleConstraint::GetWheelLocalTransform(uint inWheelIndex) const
+Mat44 VehicleConstraint::GetWheelLocalTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const
 {
 	JPH_ASSERT(inWheelIndex < mWheels.size());
 
 	const Wheel *wheel = mWheels[inWheelIndex];
 	const WheelSettings *settings = wheel->mSettings;
 
+	// Use the two vectors provided to calculate a matrix that takes us from wheel model space to X = right, Y = up, Z = forward (the space where we will rotate the wheel)
+	Mat44 wheel_to_rotational = Mat44(Vec4(inWheelRight, 0), Vec4(inWheelUp, 0), Vec4(inWheelUp.Cross(inWheelRight), 0), Vec4(0, 0, 0, 1)).Transposed();
+
+	// Calculate the matrix that takes us from the rotational space to vehicle local space
 	Vec3 local_forward = Quat::sRotation(mUp, wheel->mSteerAngle) * mForward;
 	Vec3 local_right = local_forward.Cross(mUp);
 	Vec3 local_wheel_pos = settings->mPosition + settings->mDirection * (wheel->mContactLength - settings->mRadius);
+	Mat44 rotational_to_local(Vec4(local_right, 0), Vec4(mUp, 0), Vec4(local_forward, 0), Vec4(local_wheel_pos, 1));
 
-	return Mat44(Vec4(mUp, 0), Vec4(local_right, 0), Vec4(local_forward, 0), Vec4(local_wheel_pos, 1)) * Mat44::sRotationY(-wheel->mAngle); // Flip wheel angle because positive is rolling forwards
+	// Calculate transform of rotated wheel
+	return rotational_to_local * Mat44::sRotationX(wheel->mAngle) * wheel_to_rotational;
 }
 
-Mat44 VehicleConstraint::GetWheelWorldTransform(uint inWheelIndex) const
+Mat44 VehicleConstraint::GetWheelWorldTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const
 {
-	return mBody->GetWorldTransform() * GetWheelLocalTransform(inWheelIndex);
+	return mBody->GetWorldTransform() * GetWheelLocalTransform(inWheelIndex, inWheelRight, inWheelUp);
 }
 
 void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem)
