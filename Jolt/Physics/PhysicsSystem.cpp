@@ -279,7 +279,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 						context.mPhysicsSystem->JobApplyGravity(&context, &step); 
 
 						JobHandle::sRemoveDependencies(step.mFindCollisions);
-					}, previous_step_dependency_count + num_step_listener_jobs); // depends on: step listeners
+					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 	
 			// This job will setup velocity constraints for non-collision constraints
 			step.mSetupVelocityConstraints = inJobSystem->CreateJob("SetupVelocityConstraints", cColorSetupVelocityConstraints, [&context, &step]() 
@@ -309,7 +309,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 
 						// Kick find collisions last as they will use up all CPU cores leaving no space for the previous 2 jobs
 						JobHandle::sRemoveDependencies(step.mFindCollisions);
-					}, previous_step_dependency_count + num_step_listener_jobs);
+					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 
 			// This job calls the step listeners
 			step.mStepListeners.resize(num_step_listener_jobs);
@@ -322,7 +322,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 						// Kick apply gravity and determine active constraint jobs
 						JobHandle::sRemoveDependencies(step.mApplyGravity);
 						JobHandle::sRemoveDependencies(step.mDetermineActiveConstraints);
-					});
+					}, previous_step_dependency_count);
 
 			// Unblock the previous step
 			if (!is_first_step)
@@ -389,8 +389,17 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 
 						// Kick the jobs of the next step (in the same order as the first step)
 						next_step->mBroadPhasePrepare.RemoveDependency();
-						JobHandle::sRemoveDependencies(next_step->mApplyGravity);
-						JobHandle::sRemoveDependencies(next_step->mDetermineActiveConstraints);
+						if (next_step->mStepListeners.empty())
+						{
+							// Kick the gravity and active constraints jobs immediately
+							JobHandle::sRemoveDependencies(next_step->mApplyGravity);
+							JobHandle::sRemoveDependencies(next_step->mDetermineActiveConstraints);
+						}
+						else
+						{
+							// Kick the step listeners job first
+							JobHandle::sRemoveDependencies(next_step->mStepListeners);
+						}
 					}, max_concurrency + 3); // depends on: solve position constraints of the last step, body set island index, contact removed callbacks, finish building the previous step
 			}
 
