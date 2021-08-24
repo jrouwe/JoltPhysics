@@ -113,6 +113,12 @@ public:
 	virtual Mat44				GetConstraintToBody1Matrix() const override					{ return Mat44::sRotationTranslation(mConstraintToBody1, mLocalSpacePosition1); }
 	virtual Mat44				GetConstraintToBody2Matrix() const override					{ return Mat44::sRotationTranslation(mConstraintToBody2, mLocalSpacePosition2); }
 
+	/// Update the translation limits for this constraint, note that this won't change if axis are free or not.
+	void						SetTranslationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax);
+
+	/// Update the rotational limits for this constraint, note that this won't change if axis are free or not.
+	void						SetRotationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax);
+
 	/// Get rotation of constraint in constraint space
 	inline Quat					GetRotationInConstraintSpace() const;
 
@@ -149,6 +155,9 @@ public:
 private:
 	// Calculate properties needed for the position constraint
 	inline void					GetPositionConstraintProperties(Vec3 &outR1PlusU, Vec3 &outR2, Vec3 &outU) const;
+
+	// Propagate the rotation limits to the constraint part
+	inline void					UpdateRotationLimits();
 
 	// Constraint settings helper functions
 	inline bool					IsAxisFixed(EAxis inAxis) const								{ return (mFixedAxis & (1 << inAxis)) != 0; }

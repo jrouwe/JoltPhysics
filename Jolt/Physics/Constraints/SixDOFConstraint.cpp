@@ -71,6 +71,26 @@ TwoBodyConstraint *SixDOFConstraintSettings::Create(Body &inBody1, Body &inBody2
 	return new SixDOFConstraint(inBody1, inBody2, *this);
 }
 
+void SixDOFConstraint::UpdateRotationLimits()
+{
+	// Make values sensible
+	for (int i = 3; i < 6; ++i)
+		if (IsAxisFixed(((EAxis)i)))
+			mLimitMin[i] = mLimitMax[i] = 0.0f;
+		else
+		{
+			mLimitMin[i] = max(-JPH_PI, mLimitMin[i]);
+			mLimitMax[i] = min(JPH_PI, mLimitMax[i]);
+		}
+
+	// The swing twist constraint part requires symmetrical rotations around Y and Z
+	JPH_ASSERT(mLimitMin[EAxis::RotationY] == -mLimitMax[EAxis::RotationY]);
+	JPH_ASSERT(mLimitMin[EAxis::RotationZ] == -mLimitMax[EAxis::RotationZ]);
+
+	// Pass limits on to constraint part
+	mSwingTwistConstraintPart.SetLimits(mLimitMin[EAxis::RotationX], mLimitMax[EAxis::RotationX], mLimitMax[EAxis::RotationY], mLimitMax[EAxis::RotationZ]);
+}
+
 SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {
@@ -108,29 +128,10 @@ SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFCon
 			mFreeAxis |= 1 << a;
 	}
 
-	// Copy translation limits
-	for (int i = 0; i < 3; ++i)
-	{
-		mLimitMin[i] = inSettings.mLimitMin[i]; 
-		mLimitMax[i] = inSettings.mLimitMax[i];
-	}
-
-	// Copy rotation limits and make sensible
-	for (int i = 3; i < 6; ++i)
-		if (inSettings.IsFixedAxis((EAxis)i))
-			mLimitMin[i] = mLimitMax[i] = 0.0f;
-		else
-		{
-			mLimitMin[i] = max(-JPH_PI, inSettings.mLimitMin[i]);
-			mLimitMax[i] = min(JPH_PI, inSettings.mLimitMax[i]);
-		}
-
-	// The swing twist constraint part requires symmetrical rotations around Y and Z
-	JPH_ASSERT(mLimitMin[EAxis::RotationY] == -mLimitMax[EAxis::RotationY]);
-	JPH_ASSERT(mLimitMin[EAxis::RotationZ] == -mLimitMax[EAxis::RotationZ]);
-
-	// Pass limits on to constraint part
-	mSwingTwistConstraintPart.SetLimits(mLimitMin[EAxis::RotationX], mLimitMax[EAxis::RotationX], mLimitMax[EAxis::RotationY], mLimitMax[EAxis::RotationZ]);
+	// Copy translation and rotation limits
+	memcpy(mLimitMin, inSettings.mLimitMin, sizeof(mLimitMin)); 
+	memcpy(mLimitMax, inSettings.mLimitMax, sizeof(mLimitMax)); 
+	UpdateRotationLimits();
 
 	// Store friction settings
 	memcpy(mMaxFriction, inSettings.mMaxFriction, sizeof(mMaxFriction));
@@ -138,6 +139,28 @@ SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFCon
 	// Store motor settings
 	for (int i = 0; i < EAxis::Num; ++i)
 		mMotorSettings[i] = inSettings.mMotorSettings[i];
+}
+
+void SixDOFConstraint::SetTranslationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax)
+{
+	mLimitMin[EAxis::TranslationX] = inLimitMin.GetX();
+	mLimitMin[EAxis::TranslationY] = inLimitMin.GetY();
+	mLimitMin[EAxis::TranslationZ] = inLimitMin.GetZ();
+	mLimitMax[EAxis::TranslationX] = inLimitMax.GetX();
+	mLimitMax[EAxis::TranslationY] = inLimitMax.GetY();
+	mLimitMax[EAxis::TranslationZ] = inLimitMax.GetZ();
+}
+
+void SixDOFConstraint::SetRotationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax)
+{
+	mLimitMin[EAxis::RotationX] = inLimitMin.GetX();
+	mLimitMin[EAxis::RotationY] = inLimitMin.GetY();
+	mLimitMin[EAxis::RotationZ] = inLimitMin.GetZ();
+	mLimitMax[EAxis::RotationX] = inLimitMax.GetX();
+	mLimitMax[EAxis::RotationY] = inLimitMax.GetY();
+	mLimitMax[EAxis::RotationZ] = inLimitMax.GetZ();
+
+	UpdateRotationLimits();
 }
 
 void SixDOFConstraint::GetPositionConstraintProperties(Vec3 &outR1PlusU, Vec3 &outR2, Vec3 &outU) const
