@@ -13,7 +13,7 @@ class BodyFilter : public NonCopyable
 {
 public:
 	/// Destructor
-	virtual					~BodyFilter() { }
+	virtual					~BodyFilter() = default;
 
 	/// Filter function. Returns true if we should collide with inBodyID
 	virtual bool			ShouldCollide(const BodyID &inBodyID) const

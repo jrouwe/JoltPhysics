@@ -18,7 +18,7 @@ class ObjectLayerFilter : public NonCopyable
 {
 public:
 	/// Destructor
-	virtual					~ObjectLayerFilter() { }
+	virtual					~ObjectLayerFilter() = default;
 
 	/// Function to filter out object layers when doing collision query test (return true to allow testing against objects with this layer)
 	virtual bool			ShouldCollide(ObjectLayer inLayer) const

@@ -50,7 +50,7 @@ public:
 	{
 	public:
 		/// Constructor 
-		inline				JobHandle()									{ }
+		inline				JobHandle() = default;
 		inline				JobHandle(const JobHandle &inHandle)		: Ref<Job>(inHandle) { }
 		inline				JobHandle(JobHandle &&inHandle) noexcept	: Ref<Job>(move(inHandle)) { }
 
@@ -105,7 +105,7 @@ public:
 		friend class Job;
 
 		/// Destructor, you should call JobSystem::DestroyBarrier instead of destructing this object directly
-		virtual				~Barrier()									{ }
+		virtual				~Barrier() = default;
 
 		/// Called by a Job to mark that it is finished
 		virtual void		OnJobFinished(Job *inJob) = 0;
@@ -115,7 +115,7 @@ public:
 	using JobFunction = function<void()>;
 
 	/// Destructor
-	virtual					~JobSystem()								{ }
+	virtual					~JobSystem() = default;
 
 	/// Get maximum number of concurrently executing jobs
 	virtual int				GetMaxConcurrency() const = 0;

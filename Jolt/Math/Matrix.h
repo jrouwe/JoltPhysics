@@ -14,7 +14,7 @@ class [[nodiscard]] Matrix
 {
 public:
 	/// Constructor
-	inline									Matrix()												{ }
+	inline									Matrix() = default;
 	inline									Matrix(const Matrix &inM2)								{ *this = inM2; }
 
 	/// Dimensions
@@ -243,7 +243,6 @@ inline bool Matrix<2, 2>::SetInversed(const Matrix<2, 2> &inM)
 		return false;
 
 	// Construct inverse
-	Matrix<2, 2> out;
 	mCol[0].mF32[0] = d / det;
 	mCol[1].mF32[0] = -b / det;
 	mCol[0].mF32[1] = -c / det;

@@ -16,7 +16,7 @@ class UIEventListener
 {
 public:
 	/// Destructor
-	virtual				~UIEventListener() { }
+	virtual				~UIEventListener() = default;
 
 	/// Handle an UI event, function should return true if event was handled
 	virtual bool		HandleUIEvent(EUIEvent inEvent, UIElement *inSender) = 0;

@@ -78,7 +78,7 @@ public:
 	{
 	public:
 		/// Warning: Virtual destructor will not be called on this object!
-		virtual						~Support() { }
+		virtual						~Support() = default;
 
 		/// Calculate the support vector for this convex shape (includes / excludes the convex radius depending on how this was obtained). 
 		/// Support vector is relative to the center of mass of the shape.

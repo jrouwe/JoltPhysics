@@ -30,7 +30,7 @@ public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 
 	/// Constructor
-							BodyCreationSettings()											{ }
+							BodyCreationSettings() = default;
 							BodyCreationSettings(const ShapeSettings *inShape, Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, ObjectLayer inObjectLayer) : mPosition(inPosition), mRotation(inRotation), mObjectLayer(inObjectLayer), mMotionType(inMotionType), mShape(inShape) { }
 							BodyCreationSettings(const Shape *inShape, Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, ObjectLayer inObjectLayer) : mPosition(inPosition), mRotation(inRotation), mObjectLayer(inObjectLayer), mMotionType(inMotionType), mShapePtr(inShape) { }
 

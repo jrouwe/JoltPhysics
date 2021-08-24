@@ -46,7 +46,7 @@ public:
 	using ResultType = ResultTypeArg;
 
 	/// Destructor
-	virtual					~CollisionCollector()							{ }
+	virtual					~CollisionCollector() = default;
 
 	/// If you want to reuse this collector, call Reset()
 	virtual void			Reset()											{ mEarlyOutFraction = TraitsType::InitialEarlyOutFraction; } 

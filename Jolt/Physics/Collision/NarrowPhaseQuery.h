@@ -21,7 +21,7 @@ class NarrowPhaseQuery : public NonCopyable
 {
 public:
 	/// Constructor
-								NarrowPhaseQuery() { }
+								NarrowPhaseQuery() = default;
 								NarrowPhaseQuery(BodyInterface &inBodyInterface, BroadPhase &inBroadPhase) : mBodyInterface(&inBodyInterface), mBroadPhase(&inBroadPhase) { }
 
 	/// Cast a ray, returns true if it finds a hit closer than ioHit.mFraction and updates ioHit in that case.

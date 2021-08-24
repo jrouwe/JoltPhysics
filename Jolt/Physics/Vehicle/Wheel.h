@@ -41,8 +41,8 @@ class Wheel
 {
 public:
 	/// Constructor / destructor
-							Wheel(const WheelSettings &inSettings);
-	virtual					~Wheel()									{ }
+	explicit				Wheel(const WheelSettings &inSettings);
+	virtual					~Wheel() = default;
 
 	/// Get settings for the wheel
 	const WheelSettings *	GetSettings() const							{ return mSettings; }

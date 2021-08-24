@@ -17,7 +17,7 @@ class [[nodiscard]] OrientedBox
 {
 public:
 	/// Constructor
-					OrientedBox()														{ }
+					OrientedBox() = default;
 					OrientedBox(Mat44Arg inOrientation, Vec3Arg inHalfExtents)			: mOrientation(inOrientation), mHalfExtents(inHalfExtents) { }
 
 	/// Construct from axis aligned box and transform. Only works for rotation/translation matrix (no scaling / shearing).

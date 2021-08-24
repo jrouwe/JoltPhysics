@@ -93,7 +93,7 @@ public:
 									Shape(const ShapeSettings &inSettings, ShapeResult &outResult)		: mUserData(inSettings.mUserData) { }
 
 	/// Destructor
-	virtual							~Shape()															{ }
+	virtual							~Shape() = default;
 
 	/// Get type
 	virtual EShapeType				GetType() const = 0;

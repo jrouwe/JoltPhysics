@@ -10,7 +10,7 @@ class [[nodiscard]] Plane
 {
 public:
 	/// Constructor
-					Plane()																	{ }
+					Plane() = default;
 					Plane(Vec4Arg inNormalAndConstant)										: mNormalAndConstant(inNormalAndConstant) { }
 					Plane(Vec3Arg inNormal, float inConstant)								: mNormalAndConstant(inNormal, inConstant) { }
 

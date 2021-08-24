@@ -10,7 +10,7 @@ class UITexturedQuad
 {
 public:
 	/// Constructor
-							UITexturedQuad()				{ }
+							UITexturedQuad() = default;
 							UITexturedQuad(const Texture *inTexture) : mTexture(inTexture), mWidth(inTexture->GetWidth()), mHeight(inTexture->GetHeight()) { }
 							UITexturedQuad(const Texture *inTexture, int inX, int inY, int inWidth, int inHeight) : mTexture(inTexture), mX(inX), mY(inY), mWidth(inWidth), mHeight(inHeight) { }
 							UITexturedQuad(const Texture *inTexture, int inX, int inY, int inWidth, int inHeight, int inInnerX, int inInnerY, int inInnerWidth, int inInnerHeight) : mTexture(inTexture), mX(inX), mY(inY), mWidth(inWidth), mHeight(inHeight), mInnerX(inInnerX), mInnerY(inInnerY), mInnerWidth(inInnerWidth), mInnerHeight(inInnerHeight) { }

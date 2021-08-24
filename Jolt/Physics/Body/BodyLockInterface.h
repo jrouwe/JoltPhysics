@@ -20,7 +20,7 @@ public:
 
 	/// Constructor
 								BodyLockInterface(BodyManager &inBodyManager)		: mBodyManager(inBodyManager) { }
-	virtual						~BodyLockInterface()								{ }
+	virtual						~BodyLockInterface() = default;
 
 	///@name Locking functions
 	///@{

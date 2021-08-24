@@ -21,7 +21,7 @@ class ImageFilter
 {
 public:
 	// Destructor
-	virtual			~ImageFilter() { }
+	virtual			~ImageFilter() = default;
 
 	// Get support of this filter (+/- the range the filter function is not zero)
 	virtual float	GetSupport() const = 0;						

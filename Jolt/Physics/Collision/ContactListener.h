@@ -54,7 +54,7 @@ class ContactListener
 {
 public:
 	/// Ensure virtual destructor
-	virtual					~ContactListener()												{ }
+	virtual					~ContactListener() = default;
 
 	/// Called after detecting a collision between a body pair, but before calling OnContactAdded and before adding the contact constraint.
 	/// If the function returns false, the contact will not be added and any other contacts between this body pair will not be processed.

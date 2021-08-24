@@ -67,7 +67,7 @@ class BroadPhaseLayerFilter : public NonCopyable
 {
 public:
 	/// Destructor
-	virtual							~BroadPhaseLayerFilter() { }
+	virtual							~BroadPhaseLayerFilter() = default;
 
 	/// Function to filter out broadphase layers when doing collision query test (return true to allow testing against objects with this layer)
 	virtual bool					ShouldCollide(BroadPhaseLayer inLayer) const

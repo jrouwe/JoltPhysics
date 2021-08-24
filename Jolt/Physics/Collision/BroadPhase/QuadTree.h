@@ -26,7 +26,7 @@ private:
 	{
 	public:
 		/// Default constructor does not initialize
-		inline 					NodeID()							{ }
+		inline 					NodeID() = default;
 
 		/// Construct a node ID
 		static inline NodeID	sInvalid()							{ return NodeID(cInvalidNodeIndex); }
@@ -63,7 +63,7 @@ private:
 	{
 	public:
 		/// Constructor
-								AtomicNodeID() { }
+								AtomicNodeID() = default;
 								AtomicNodeID(const NodeID &inRHS)			: mID(inRHS.mID) { }
 
 		/// Assignment
@@ -148,7 +148,7 @@ public:
 	struct Tracking
 	{
 		/// Constructor to satisfy the vector class
-								Tracking() { }
+								Tracking() = default;
 								Tracking(const Tracking &inRHS) : mBroadPhaseLayer(inRHS.mBroadPhaseLayer.load()), mObjectLayer(inRHS.mObjectLayer.load()), mBodyLocation(inRHS.mBodyLocation.load()) { }
 
 		/// Invalid body location identifier

@@ -12,7 +12,7 @@ class PhysicsStepListener
 {
 public:
 	/// Ensure virtual destructor
-	virtual					~PhysicsStepListener()												{ }
+	virtual					~PhysicsStepListener() = default;
 
 	/// Called before every simulation step (received inCollisionSteps times for every PhysicsSystem::Update(...) call)
 	/// This is called while all bodies and constraints are locked for modifications. Multiple listeners can be executed in parallel and it is the responsibility of the listener

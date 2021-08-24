@@ -13,7 +13,7 @@ class TempAllocator
 {
 public:
 	/// Destructor
-	virtual							~TempAllocator() { }
+	virtual							~TempAllocator() = default;
 
 	/// Allocates inSize bytes of memory, returned memory address must be 16 byte aligned
 	virtual void *					Allocate(uint inSize) = 0;

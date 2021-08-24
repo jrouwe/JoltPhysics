@@ -12,7 +12,7 @@ namespace JPH {
 struct BodyPair
 {
 	/// Constructor
-							BodyPair()													{ }
+							BodyPair() = default;
 							BodyPair(BodyID inA, BodyID inB)							: mBodyA(inA), mBodyB(inB) { }
 
 	/// Equals operator

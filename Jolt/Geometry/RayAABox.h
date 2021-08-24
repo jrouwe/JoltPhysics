@@ -10,7 +10,7 @@ class RayInvDirection
 {
 public:
 	/// Constructors
-	inline			RayInvDirection() { }
+	inline			RayInvDirection() = default;
 	inline			RayInvDirection(Vec3Arg inDirection) { Set(inDirection); }
 
 	/// Set reciprocal from ray direction

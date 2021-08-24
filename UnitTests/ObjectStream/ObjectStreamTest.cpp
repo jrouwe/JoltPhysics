@@ -20,7 +20,7 @@ class TestSerializableBase : public RefTarget<TestSerializableBase>
 	JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE(TestSerializableBase)
 
 public:
-	virtual						~TestSerializableBase() { }
+	virtual						~TestSerializableBase() = default;
 
 	uint8						mUInt8 = 0;
 	uint16						mUInt16 = 0;

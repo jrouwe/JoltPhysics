@@ -25,7 +25,7 @@ public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(MotorSettings)
 
 	/// Constructor
-							MotorSettings() { }
+							MotorSettings() = default;
 							MotorSettings(const MotorSettings &inRHS) = default;
 							MotorSettings(float inFrequency, float inDamping) : mFrequency(inFrequency), mDamping(inDamping) { JPH_ASSERT(IsValid()); }
 							MotorSettings(float inFrequency, float inDamping, float inForceLimit, float inTorqueLimit) : mFrequency(inFrequency), mDamping(inDamping), mMinForceLimit(-inForceLimit), mMaxForceLimit(inForceLimit), mMinTorqueLimit(-inTorqueLimit), mMaxTorqueLimit(inTorqueLimit) { JPH_ASSERT(IsValid()); }

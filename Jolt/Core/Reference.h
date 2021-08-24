@@ -70,7 +70,7 @@ class RefTargetVirtual
 {
 public:
 	/// Virtual destructor
-	virtual					~RefTargetVirtual()								{ }
+	virtual					~RefTargetVirtual() = default;
 
 	/// Virtual add reference
 	virtual void			AddRef() = 0;
