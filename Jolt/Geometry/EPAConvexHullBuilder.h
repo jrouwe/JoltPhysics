@@ -166,15 +166,10 @@ public:
 	using PointsBase = StaticArray<Vec3, cMaxPoints>;
 	using Triangles = StaticArray<Triangle *, cMaxTriangles>;
 
-	/// Specialized points list that allows direct access to the size and pointer
+	/// Specialized points list that allows direct access to the size
 	class Points : public PointsBase
 	{
 	public:
-		Vec3 *			GetElementPtr()
-		{
-			return reinterpret_cast<Vec3 *>(mElements);
-		}
-
 		size_type &		GetSizeRef()
 		{
 			return mSize;

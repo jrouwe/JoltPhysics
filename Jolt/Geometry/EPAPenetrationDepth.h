@@ -143,7 +143,7 @@ public:
 
 		// Fetch the simplex from GJK algorithm
 		SupportPoints support_points;
-		mGJK.GetClosestPointsSimplex(support_points.mY.GetElementPtr(), support_points.mP, support_points.mQ, support_points.mY.GetSizeRef());
+		mGJK.GetClosestPointsSimplex(support_points.mY.data(), support_points.mP, support_points.mQ, support_points.mY.GetSizeRef());
 
 		// Fill up the amount of support points to 4
 		switch (support_points.mY.size())
