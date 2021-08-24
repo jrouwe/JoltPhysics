@@ -59,7 +59,7 @@ public:
 
 		/// Assignment
 		inline JobHandle &	operator = (const JobHandle &inHandle)		{ Ref<Job>::operator = (inHandle); return *this; }
-		inline JobHandle &	operator = (JobHandle &&inHandle)			{ Ref<Job>::operator = (move(inHandle)); return *this; }
+		inline JobHandle &	operator = (JobHandle &&inHandle) noexcept	{ Ref<Job>::operator = (move(inHandle)); return *this; }
 
 		/// Check if this handle contains a job
 		inline bool			IsValid() const								{ return GetPtr() != nullptr; }
