@@ -83,7 +83,7 @@ public:
 	/// @param inLeftRatio Value between -1 and 1 indicating an extra multiplier to the rotation rate of the left track (used for steering)
 	/// @param inRightRatio Value between -1 and 1 indicating an extra multiplier to the rotation rate of the right track (used for steering)
 	/// @param inBrake Value between 0 and 1 indicating how strong the brake pedal is pressed
-	void						SetDriverInput(float inForward, float inLeftRatio, float inRightRatio, float inBrake) { mForwardInput = inForward; mLeftRatio = inLeftRatio; mRightRatio = inRightRatio; mBrakeInput = inBrake; }
+	void						SetDriverInput(float inForward, float inLeftRatio, float inRightRatio, float inBrake) { JPH_ASSERT(inLeftRatio != 0.0f && inRightRatio != 0.0f); mForwardInput = inForward; mLeftRatio = inLeftRatio; mRightRatio = inRightRatio; mBrakeInput = inBrake; }
 
 	/// Get current engine state
 	const VehicleEngine &		GetEngine() const							{ return mEngine; }
