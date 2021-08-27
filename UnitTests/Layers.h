@@ -29,7 +29,7 @@ inline bool ObjectCanCollide(ObjectLayer inObject1, ObjectLayer inObject2)
 	case Layers::NON_MOVING:
 		return inObject2 == Layers::MOVING;
 	case Layers::MOVING:
-		return true;
+		return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING;
 	default:
 		JPH_ASSERT(false);
 		return false;
@@ -45,15 +45,17 @@ namespace BroadPhaseLayers
 };
 
 /// Function that determines if two broadphase layers can collide
-inline bool BroadPhaseCanCollide(BroadPhaseLayer inLayer1, BroadPhaseLayer inLayer2)
+inline bool BroadPhaseCanCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2)
 {
-	switch ((BroadPhaseLayer::Type)inLayer1)
+	switch (inLayer1)
 	{
-	case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:
+	case Layers::NON_MOVING:
 		return inLayer2 == BroadPhaseLayers::MOVING;
-	case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:
-		return true;
-	case (BroadPhaseLayer::Type)BroadPhaseLayers::UNUSED:
+	case Layers::MOVING:
+		return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING;
+	case Layers::UNUSED1:
+	case Layers::UNUSED2:
+	case Layers::UNUSED3:
 		return false;			
 	default:
 		JPH_ASSERT(false);

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Core/NonCopyable.h>
+#include <Physics/Collision/ObjectLayer.h>
 
 namespace JPH {
 
@@ -59,8 +60,11 @@ static constexpr BroadPhaseLayer cBroadPhaseLayerInvalid(0xff);
 /// packed, i.e. the lowest value should be 0 and the amount of sub structures that are created in the broadphase is max(inObjectToBroadPhaseLayer).
 using ObjectToBroadPhaseLayer = vector<BroadPhaseLayer>;
 
-/// Function to test if two objects can collide based on their object layer. Used while finding collision pairs.
-using BroadPhaseLayerPairFilter = bool (*)(BroadPhaseLayer inLayer1, BroadPhaseLayer inLayer2);
+/// Function to test if an object can collide with a broadphase layer. Used while finding collision pairs.
+using ObjectVsBroadPhaseLayerFilter = bool (*)(ObjectLayer inLayer1, BroadPhaseLayer inLayer2);
+
+/// Function to convert a broadphase layer to a string for debugging purposes
+using BroadPhaseLayerToString = const char * (*)(BroadPhaseLayer inLayer);
 
 /// Filter class for broadphase layers
 class BroadPhaseLayerFilter : public NonCopyable
@@ -81,15 +85,15 @@ class DefaultBroadPhaseLayerFilter : public BroadPhaseLayerFilter
 {
 public:
 	/// Constructor
-									DefaultBroadPhaseLayerFilter(BroadPhaseLayerPairFilter inObjectLayerPairFilter, BroadPhaseLayer inLayer) :
-		mBroadPhaseLayerPairFilter(inObjectLayerPairFilter),
+									DefaultBroadPhaseLayerFilter(ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayer inLayer) :
+		mObjectVsBroadPhaseLayerFilter(inObjectVsBroadPhaseLayerFilter),
 		mLayer(inLayer)
 	{
 	}
 
 	/// Copy constructor
 									DefaultBroadPhaseLayerFilter(const DefaultBroadPhaseLayerFilter &inRHS) :
-		mBroadPhaseLayerPairFilter(inRHS.mBroadPhaseLayerPairFilter),
+		mObjectVsBroadPhaseLayerFilter(inRHS.mObjectVsBroadPhaseLayerFilter),
 		mLayer(inRHS.mLayer)
 	{
 	}
@@ -97,12 +101,12 @@ public:
 	// See BroadPhaseLayerFilter::ShouldCollide
 	virtual bool					ShouldCollide(BroadPhaseLayer inLayer) const override
 	{
-		return mBroadPhaseLayerPairFilter(mLayer, inLayer);
+		return mObjectVsBroadPhaseLayerFilter(mLayer, inLayer);
 	}
 
 private:
-	BroadPhaseLayerPairFilter		mBroadPhaseLayerPairFilter;
-	BroadPhaseLayer					mLayer;
+	ObjectVsBroadPhaseLayerFilter	mObjectVsBroadPhaseLayerFilter;
+	ObjectLayer						mLayer;
 };
 
 /// Allows objects from a specific broad phase layer only

@@ -16,7 +16,7 @@ public:
 	virtual					~BroadPhaseQuadTree() override;
 
 	// Implementing interface of BroadPhase (see BroadPhase for documentation)
-	virtual void			Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer) override;
+	virtual void			Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerToString inBroadPhaseLayerToString) override;
 	virtual void			Optimize() override;
 	virtual void			FrameSync() override;
 	virtual void			LockModifications() override;
@@ -35,7 +35,7 @@ public:
 	virtual void			CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
 	virtual void			CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
 	virtual void			CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
-	virtual void			FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
+	virtual void			FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
 
 private:
 	/// Helper struct for AddBodies handle
@@ -59,8 +59,10 @@ private:
 	QuadTree::Allocator		mAllocator;
 
 	/// Mapping table that maps from Object Layer to tree
-	const BroadPhaseLayer *	mObjectToBroadPhaseLayer = nullptr;
-	uint					mNumObjectLayers;
+	ObjectToBroadPhaseLayer	mObjectToBroadPhaseLayer;
+
+	/// Debug function to convert a broadphase layer to a string
+	BroadPhaseLayerToString	mBroadPhaseLayerToString = nullptr;
 
 	/// One tree per object layer
 	QuadTree *				mLayers;
