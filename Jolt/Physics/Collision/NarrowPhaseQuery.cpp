@@ -21,10 +21,10 @@ bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const
 	class MyCollector : public RayCastBodyCollector
 	{
 	public:
-							MyCollector(const RayCast &inRay, RayCastResult &ioHit, const BodyInterface &inBodyInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const RayCast &inRay, RayCastResult &ioHit, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
 			mRay(inRay),
 			mHit(ioHit),
-			mBodyInterface(inBodyInterface),
+			mBodyLockInterface(inBodyLockInterface),
 			mBodyFilter(inBodyFilter)
 		{
 			UpdateEarlyOutFraction(ioHit.mFraction);
@@ -37,29 +37,34 @@ bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const
 			// Only test shape if it passes the body filter
 			if (mBodyFilter.ShouldCollide(inResult.mBodyID))
 			{
-				// Collect the transformed shape
-				TransformedShape ts = mBodyInterface.GetTransformedShape(inResult.mBodyID);
-
-				// Do narrow phase collision check
-				if (ts.CastRay(mRay, mHit))
+				// Lock the body
+				BodyLockRead lock(mBodyLockInterface, inResult.mBodyID);
+				if (lock.Succeeded())
 				{
-					// Test that we didn't find a further hit by accident
-					JPH_ASSERT(mHit.mFraction >= 0.0f && mHit.mFraction < GetEarlyOutFraction());
+					// Collect the transformed shape
+					TransformedShape ts = lock.GetBody().GetTransformedShape();
 
-					// Update early out fraction based on narrow phase collector
-					UpdateEarlyOutFraction(mHit.mFraction);
+					// Do narrow phase collision check
+					if (ts.CastRay(mRay, mHit))
+					{
+						// Test that we didn't find a further hit by accident
+						JPH_ASSERT(mHit.mFraction >= 0.0f && mHit.mFraction < GetEarlyOutFraction());
+
+						// Update early out fraction based on narrow phase collector
+						UpdateEarlyOutFraction(mHit.mFraction);
+					}
 				}
 			}
 		}
 
 		RayCast						mRay;
 		RayCastResult &				mHit;
-		const BodyInterface &		mBodyInterface;
+		const BodyLockInterface &	mBodyLockInterface;
 		const BodyFilter &			mBodyFilter;
 	};
 	
 	// Do broadphase test
-	MyCollector collector(inRay, ioHit, *mBodyInterface, inBodyFilter);
+	MyCollector collector(inRay, ioHit, *mBodyLockInterface, inBodyFilter);
 	mBroadPhase->CastRay(inRay, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 	return ioHit.mFraction <= 1.0f;
 }
@@ -71,11 +76,11 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 	class MyCollector : public RayCastBodyCollector
 	{
 	public:
-							MyCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BodyInterface &inBodyInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
 			mRay(inRay),
 			mRayCastSettings(inRayCastSettings),
 			mCollector(ioCollector),
-			mBodyInterface(inBodyInterface),
+			mBodyLockInterface(inBodyLockInterface),
 			mBodyFilter(inBodyFilter)
 		{
 			UpdateEarlyOutFraction(ioCollector.GetEarlyOutFraction());
@@ -88,26 +93,36 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 			// Only test shape if it passes the body filter
 			if (mBodyFilter.ShouldCollide(inResult.mBodyID))
 			{
-				// Collect the transformed shape
-				TransformedShape ts = mBodyInterface.GetTransformedShape(inResult.mBodyID);
+				// Lock the body
+				BodyLockRead lock(mBodyLockInterface, inResult.mBodyID);
+				if (lock.Succeeded())
+				{
+					const Body &body = lock.GetBody();
 
-				// Do narrow phase collision check
-				ts.CastRay(mRay, mRayCastSettings, mCollector);
+					// Collect the transformed shape
+					TransformedShape ts = body.GetTransformedShape();
 
-				// Update early out fraction based on narrow phase collector
-				UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					// Notify collector of new body
+					mCollector.OnBody(body);
+
+					// Do narrow phase collision check
+					ts.CastRay(mRay, mRayCastSettings, mCollector);
+
+					// Update early out fraction based on narrow phase collector
+					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+				}
 			}
 		}
 
 		RayCast						mRay;
 		RayCastSettings				mRayCastSettings;
 		CastRayCollector &			mCollector;
-		const BodyInterface &		mBodyInterface;
+		const BodyLockInterface &	mBodyLockInterface;
 		const BodyFilter &			mBodyFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inRay, inRayCastSettings, ioCollector, *mBodyInterface, inBodyFilter);
+	MyCollector collector(inRay, inRayCastSettings, ioCollector, *mBodyLockInterface, inBodyFilter);
 	mBroadPhase->CastRay(inRay, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
@@ -118,10 +133,10 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BodyInterface &inBodyInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
 			mPoint(inPoint),
 			mCollector(ioCollector),
-			mBodyInterface(inBodyInterface),
+			mBodyLockInterface(inBodyLockInterface),
 			mBodyFilter(inBodyFilter)
 		{
 		}
@@ -131,25 +146,35 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 			// Only test shape if it passes the body filter
 			if (mBodyFilter.ShouldCollide(inResult))
 			{
-				// Collect the transformed shape
-				TransformedShape ts = mBodyInterface.GetTransformedShape(inResult);
+				// Lock the body
+				BodyLockRead lock(mBodyLockInterface, inResult);
+				if (lock.Succeeded())
+				{
+					const Body &body = lock.GetBody();
 
-				// Do narrow phase collision check
-				ts.CollidePoint(mPoint, mCollector);
+					// Collect the transformed shape
+					TransformedShape ts = body.GetTransformedShape();
 
-				// Update early out fraction based on narrow phase collector
-				UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					// Notify collector of new body
+					mCollector.OnBody(body);
+
+					// Do narrow phase collision check
+					ts.CollidePoint(mPoint, mCollector);
+
+					// Update early out fraction based on narrow phase collector
+					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+				}
 			}
 		}
 
 		Vec3							mPoint;
 		CollidePointCollector &			mCollector;
-		const BodyInterface &			mBodyInterface;
+		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inPoint, ioCollector, *mBodyInterface, inBodyFilter);
+	MyCollector collector(inPoint, ioCollector, *mBodyLockInterface, inBodyFilter);
 	mBroadPhase->CollidePoint(inPoint, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
@@ -160,13 +185,13 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const BodyInterface &inBodyInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
 			mShape(inShape),
 			mShapeScale(inShapeScale),
 			mCenterOfMassTransform(inCenterOfMassTransform),
 			mCollideShapeSettings(inCollideShapeSettings),
 			mCollector(ioCollector),
-			mBodyInterface(inBodyInterface),
+			mBodyLockInterface(inBodyLockInterface),
 			mBodyFilter(inBodyFilter)
 		{
 		}
@@ -176,14 +201,24 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 			// Only test shape if it passes the body filter
 			if (mBodyFilter.ShouldCollide(inResult))
 			{
-				// Collect the transformed shape
-				TransformedShape ts = mBodyInterface.GetTransformedShape(inResult);
+				// Lock the body
+				BodyLockRead lock(mBodyLockInterface, inResult);
+				if (lock.Succeeded())
+				{
+					const Body &body = lock.GetBody();
 
-				// Do narrow phase collision check
-				ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mCollector);
+					// Collect the transformed shape
+					TransformedShape ts = body.GetTransformedShape();
 
-				// Update early out fraction based on narrow phase collector
-				UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					// Notify collector of new body
+					mCollector.OnBody(body);
+
+					// Do narrow phase collision check
+					ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mCollector);
+
+					// Update early out fraction based on narrow phase collector
+					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+				}
 			}
 		}
 
@@ -192,7 +227,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 		Mat44							mCenterOfMassTransform;
 		const CollideShapeSettings &	mCollideShapeSettings;
 		CollideShapeCollector &			mCollector;
-		const BodyInterface &			mBodyInterface;
+		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
 	};
 
@@ -201,7 +236,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 	bounds.ExpandBy(Vec3::sReplicate(inCollideShapeSettings.mMaxSeparationDistance));
 
 	// Do broadphase test
-	MyCollector collector(inShape, inShapeScale, inCenterOfMassTransform, inCollideShapeSettings, ioCollector, *mBodyInterface, inBodyFilter);
+	MyCollector collector(inShape, inShapeScale, inCenterOfMassTransform, inCollideShapeSettings, ioCollector, *mBodyLockInterface, inBodyFilter);
 	mBroadPhase->CollideAABox(bounds, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
@@ -223,11 +258,11 @@ void NarrowPhaseQuery::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 			}
 
 	public:
-							MyCollector(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, CastShapeCollector &ioCollector, const BodyInterface &inBodyInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
+							MyCollector(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, CastShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mShapeCast(inShapeCast),
 			mShapeCastSettings(inShapeCastSettings),
 			mCollector(ioCollector),
-			mBodyInterface(inBodyInterface),
+			mBodyLockInterface(inBodyLockInterface),
 			mBodyFilter(inBodyFilter),
 			mShapeFilter(inShapeFilter)
 		{
@@ -241,27 +276,37 @@ void NarrowPhaseQuery::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 			// Only test shape if it passes the body filter
 			if (mBodyFilter.ShouldCollide(inResult.mBodyID))
 			{
-				// Collect the transformed shape
-				TransformedShape ts = mBodyInterface.GetTransformedShape(inResult.mBodyID);
+				// Lock the body
+				BodyLockRead lock(mBodyLockInterface, inResult.mBodyID);
+				if (lock.Succeeded())
+				{
+					const Body &body = lock.GetBody();
 
-				// Do narrow phase collision check
-				ts.CastShape(mShapeCast, mShapeCastSettings, mCollector, mShapeFilter);
+					// Collect the transformed shape
+					TransformedShape ts = body.GetTransformedShape();
 
-				// Update early out fraction based on narrow phase collector
-				PropagateEarlyOutFraction();
+					// Notify collector of new body
+					mCollector.OnBody(body);
+
+					// Do narrow phase collision check
+					ts.CastShape(mShapeCast, mShapeCastSettings, mCollector, mShapeFilter);
+
+					// Update early out fraction based on narrow phase collector
+					PropagateEarlyOutFraction();
+				}
 			}
 		}
 
 		ShapeCast					mShapeCast;
 		const ShapeCastSettings &	mShapeCastSettings;
 		CastShapeCollector &		mCollector;
-		const BodyInterface &		mBodyInterface;
+		const BodyLockInterface &	mBodyLockInterface;
 		const BodyFilter &			mBodyFilter;
 		const ShapeFilter &			mShapeFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inShapeCast, inShapeCastSettings, ioCollector, *mBodyInterface, inBodyFilter, inShapeFilter);
+	MyCollector collector(inShapeCast, inShapeCastSettings, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CastAABox({ inShapeCast.mShapeWorldBounds, inShapeCast.mDirection }, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
@@ -270,10 +315,10 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(const AABox &inBox, TransformedShapeCollector &ioCollector, const BodyInterface &inBodyInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const AABox &inBox, TransformedShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
 			mBox(inBox),
 			mCollector(ioCollector),
-			mBodyInterface(inBodyInterface),
+			mBodyLockInterface(inBodyLockInterface),
 			mBodyFilter(inBodyFilter)
 		{
 		}
@@ -283,25 +328,35 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 			// Only test shape if it passes the body filter
 			if (mBodyFilter.ShouldCollide(inResult))
 			{
-				// Collect the transformed shape
-				TransformedShape ts = mBodyInterface.GetTransformedShape(inResult);
+				// Lock the body
+				BodyLockRead lock(mBodyLockInterface, inResult);
+				if (lock.Succeeded())
+				{
+					const Body &body = lock.GetBody();
 
-				// Do narrow phase collision check
-				ts.CollectTransformedShapes(mBox, mCollector);
+					// Collect the transformed shape
+					TransformedShape ts = body.GetTransformedShape();
 
-				// Update early out fraction based on narrow phase collector
-				UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					// Notify collector of new body
+					mCollector.OnBody(body);
+
+					// Do narrow phase collision check
+					ts.CollectTransformedShapes(mBox, mCollector);
+
+					// Update early out fraction based on narrow phase collector
+					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+				}
 			}
 		}
 
 		const AABox &					mBox;
 		TransformedShapeCollector &		mCollector;
-		const BodyInterface &			mBodyInterface;
+		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inBox, ioCollector, *mBodyInterface, inBodyFilter);
+	MyCollector collector(inBox, ioCollector, *mBodyLockInterface, inBodyFilter);
 	mBroadPhase->CollideAABox(inBox, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 

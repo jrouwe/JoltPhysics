@@ -86,10 +86,10 @@ void PhysicsSystem::Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContac
 
 	// Initialize narrow phase query
 	mNarrowPhaseQueryLocking.~NarrowPhaseQuery();
-	new (&mNarrowPhaseQueryLocking) NarrowPhaseQuery(mBodyInterfaceLocking, *mBroadPhase);
+	new (&mNarrowPhaseQueryLocking) NarrowPhaseQuery(mBodyLockInterfaceLocking, *mBroadPhase);
 
 	mNarrowPhaseQueryNoLock.~NarrowPhaseQuery();
-	new (&mNarrowPhaseQueryNoLock) NarrowPhaseQuery(mBodyInterfaceNoLock, *mBroadPhase);
+	new (&mNarrowPhaseQueryNoLock) NarrowPhaseQuery(mBodyLockInterfaceNoLock, *mBroadPhase);
 }
 
 void PhysicsSystem::OptimizeBroadPhase()
