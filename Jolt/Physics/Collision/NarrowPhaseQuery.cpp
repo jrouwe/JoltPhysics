@@ -44,6 +44,9 @@ bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const
 					// Collect the transformed shape
 					TransformedShape ts = lock.GetBody().GetTransformedShape();
 
+					// Release the lock now, we have all the info we need in the transformed shape
+					lock.ReleaseLock();
+
 					// Do narrow phase collision check
 					if (ts.CastRay(mRay, mHit))
 					{
@@ -105,6 +108,9 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 					// Notify collector of new body
 					mCollector.OnBody(body);
 
+					// Release the lock now, we have all the info we need in the transformed shape
+					lock.ReleaseLock();
+
 					// Do narrow phase collision check
 					ts.CastRay(mRay, mRayCastSettings, mCollector);
 
@@ -157,6 +163,9 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 
 					// Notify collector of new body
 					mCollector.OnBody(body);
+
+					// Release the lock now, we have all the info we need in the transformed shape
+					lock.ReleaseLock();
 
 					// Do narrow phase collision check
 					ts.CollidePoint(mPoint, mCollector);
@@ -212,6 +221,9 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 
 					// Notify collector of new body
 					mCollector.OnBody(body);
+
+					// Release the lock now, we have all the info we need in the transformed shape
+					lock.ReleaseLock();
 
 					// Do narrow phase collision check
 					ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mCollector);
@@ -288,6 +300,9 @@ void NarrowPhaseQuery::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 					// Notify collector of new body
 					mCollector.OnBody(body);
 
+					// Release the lock now, we have all the info we need in the transformed shape
+					lock.ReleaseLock();
+
 					// Do narrow phase collision check
 					ts.CastShape(mShapeCast, mShapeCastSettings, mCollector, mShapeFilter);
 
@@ -339,6 +354,9 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 
 					// Notify collector of new body
 					mCollector.OnBody(body);
+
+					// Release the lock now, we have all the info we need in the transformed shape
+					lock.ReleaseLock();
 
 					// Do narrow phase collision check
 					ts.CollectTransformedShapes(mBox, mCollector);

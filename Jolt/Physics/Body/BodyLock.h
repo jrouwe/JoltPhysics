@@ -32,8 +32,8 @@ public:
 		}
 	}
 
-	/// Destructor will unlock the body
-								~BodyLockBase()
+	/// Explicitly release the lock (normally this is done in the destructor)
+	inline void					ReleaseLock()
 	{
 		if (mBodyLockMutex != nullptr)
 		{
@@ -41,7 +41,16 @@ public:
 				mBodyLockInterface.UnlockWrite(mBodyLockMutex);
 			else
 				mBodyLockInterface.UnlockRead(mBodyLockMutex);
+
+			mBodyLockMutex = nullptr;
+			mBody = nullptr;
 		}
+	}
+
+	/// Destructor will unlock the body
+								~BodyLockBase()
+	{
+		ReleaseLock();
 	}
 
 	/// Test if the lock was successful (if the body ID was valid)
