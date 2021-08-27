@@ -21,7 +21,7 @@ public:
 	/// @param inBodyManager The body manager singleton
 	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, @see ObjectToBroadPhaseLayer. 
 	/// Note that the broadphase takes a pointer to the data inside inObjectToBroadPhaseLayer so this object should remain static.
-	virtual void		Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer);
+	virtual void		Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerToString inBroadPhaseLayerToString);
 
 	/// Should be called after many objects have been inserted to make the broadphase more efficient, usually done on startup only
 	virtual void		Optimize()															{ }
@@ -79,10 +79,10 @@ public:
 	/// @param ioActiveBodies is a list of bodies for which we need to find colliding pairs (this function can change the order of the ioActiveBodies array). This can be a subset of the set of active bodies in the system.
 	/// @param inNumActiveBodies is the size of the ioActiveBodies array.
 	/// @param inSpeculativeContactDistance Distance at which speculative contact points will be created.
-	/// @param inBroadPhaseLayerPairFilter is the filter that determines if two objects can collide (at broadphase level).
+	/// @param inObjectVsBroadPhaseLayerFilter is the filter that determines if an object can collide with a broadphase layer.
 	/// @param inObjectLayerPairFilter is the filter that determines if two objects can collide.
 	/// @param ioPairCollector receives callbacks for every body pair found.
-	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const = 0;
+	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const = 0;
 
 protected:
 	/// Link to the body manager that manages the bodies in this broadphase

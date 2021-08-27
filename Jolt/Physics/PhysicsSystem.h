@@ -34,7 +34,7 @@ public:
 	/// @param inMaxContactConstraints Maximum amount of contact constraints to process (anything else will fall through the world)
 	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, @see ObjectToBroadPhaseLayer.
 	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide.
-	void						Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter);
+	void						Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BroadPhaseLayerToString inBroadPhaseLayerToString = nullptr);
 	
 	/// Listener that is notified whenever a body is activated/deactivated
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
@@ -132,7 +132,7 @@ public:
 	inline const BodyLockInterfaceLocking &	GetBodyLockInterface() const					{ return mBodyLockInterfaceLocking; }
 
 	/// Get an broadphase layer filter that uses the default pair filter and a specified object layer to determine if broadphase layers collide
-	DefaultBroadPhaseLayerFilter GetDefaultBroadPhaseLayerFilter(ObjectLayer inLayer) const	{ return DefaultBroadPhaseLayerFilter(mBroadPhaseLayerPairFilter, mObjectToBroadPhaseLayer[inLayer]); }
+	DefaultBroadPhaseLayerFilter GetDefaultBroadPhaseLayerFilter(ObjectLayer inLayer) const	{ return DefaultBroadPhaseLayerFilter(mObjectVsBroadPhaseLayerFilter, inLayer); }
 
 	/// Get an object layer filter that uses the default pair filter and a specified layer to determine if layers collide
 	DefaultObjectLayerFilter	GetDefaultLayerFilter(ObjectLayer inLayer) const			{ return DefaultObjectLayerFilter(mObjectLayerPairFilter, inLayer); }
@@ -200,11 +200,8 @@ private:
 	/// Number of continuous collision shape casts that need to be queued before another job is started
 	static constexpr int		cNumCCDBodiesPerJob = 4;
 
-	/// Mapping table that maps from Object Layer to tree
-	ObjectToBroadPhaseLayer		mObjectToBroadPhaseLayer;
-
 	/// Broadphase layer filter that decides if two objects can collide
-	BroadPhaseLayerPairFilter	mBroadPhaseLayerPairFilter = nullptr;
+	ObjectVsBroadPhaseLayerFilter mObjectVsBroadPhaseLayerFilter = nullptr;
 
 	/// Object layer filter that decides if two objects can collide
 	ObjectLayerPairFilter		mObjectLayerPairFilter = nullptr;
