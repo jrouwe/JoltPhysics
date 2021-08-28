@@ -167,6 +167,10 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 
 void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 {
+	// Don't take lock if no bodies are to be destroyed
+	if (inNumber <= 0)
+		return;
+
 	UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 	// Update cached number of bodies
@@ -246,6 +250,10 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 
 void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 {
+	// Don't take lock if no bodies are to be deactivated
+	if (inNumber <= 0)
+		return;
+
 	UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 	JPH_ASSERT(!mActiveBodiesLocked || sOverrideAllowDeactivation);
