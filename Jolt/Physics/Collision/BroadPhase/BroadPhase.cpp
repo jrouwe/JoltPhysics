@@ -7,7 +7,7 @@
 
 namespace JPH {
 
-void BroadPhase::Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerToString inBroadPhaseLayerToString)
+void BroadPhase::Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer)
 {
 	mBodyManager = inBodyManager;
 }

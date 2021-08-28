@@ -58,7 +58,7 @@ PhysicsSystem::~PhysicsSystem()
 	delete mBroadPhase;
 }
 
-void PhysicsSystem::Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BroadPhaseLayerToString inBroadPhaseLayerToString)
+void PhysicsSystem::Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter)
 { 
 	mObjectVsBroadPhaseLayerFilter = inObjectVsBroadPhaseLayerFilter;
 	mObjectLayerPairFilter = inObjectLayerPairFilter;
@@ -68,7 +68,7 @@ void PhysicsSystem::Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContac
 
 	// Create broadphase
 	mBroadPhase = new BROAD_PHASE();
-	mBroadPhase->Init(&mBodyManager, inObjectToBroadPhaseLayer, inBroadPhaseLayerToString);
+	mBroadPhase->Init(&mBodyManager, inObjectToBroadPhaseLayer);
 
 	// Init contact constraint manager
 	mContactManager.Init(inMaxBodyPairs, inMaxContactConstraints);

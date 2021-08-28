@@ -16,7 +16,7 @@ public:
 	virtual					~BroadPhaseQuadTree() override;
 
 	// Implementing interface of BroadPhase (see BroadPhase for documentation)
-	virtual void			Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerToString inBroadPhaseLayerToString) override;
+	virtual void			Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer) override;
 	virtual void			Optimize() override;
 	virtual void			FrameSync() override;
 	virtual void			LockModifications() override;
@@ -60,9 +60,6 @@ private:
 
 	/// Mapping table that maps from Object Layer to tree
 	ObjectToBroadPhaseLayer	mObjectToBroadPhaseLayer;
-
-	/// Debug function to convert a broadphase layer to a string
-	BroadPhaseLayerToString	mBroadPhaseLayerToString = nullptr;
 
 	/// One tree per object layer
 	QuadTree *				mLayers;

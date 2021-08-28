@@ -21,7 +21,7 @@ public:
 	/// @param inBodyManager The body manager singleton
 	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, @see ObjectToBroadPhaseLayer. 
 	/// Note that the broadphase takes a pointer to the data inside inObjectToBroadPhaseLayer so this object should remain static.
-	virtual void		Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerToString inBroadPhaseLayerToString);
+	virtual void		Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer);
 
 	/// Should be called after many objects have been inserted to make the broadphase more efficient, usually done on startup only
 	virtual void		Optimize()															{ }
@@ -84,9 +84,19 @@ public:
 	/// @param ioPairCollector receives callbacks for every body pair found.
 	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const = 0;
 
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Set function that converts a broadphase layer to a human readable string for debugging purposes
+	void				SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { JPH_ASSERT(inBroadPhaseLayerToString != nullptr); mBroadPhaseLayerToString = inBroadPhaseLayerToString; }
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
 protected:
 	/// Link to the body manager that manages the bodies in this broadphase
 	BodyManager *		mBodyManager = nullptr;
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Debug function to convert a broadphase layer to a string
+	BroadPhaseLayerToString mBroadPhaseLayerToString = [](BroadPhaseLayer) { return "Layer"; };
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 };
 
 } // JPH

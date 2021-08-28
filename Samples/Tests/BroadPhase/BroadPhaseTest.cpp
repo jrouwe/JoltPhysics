@@ -59,7 +59,7 @@ void BroadPhaseTest::Initialize()
 	// Crate broadphase
 	mObjectToBroadPhaseLayer = GetObjectToBroadPhaseLayer();
 	mBroadPhase = new BROAD_PHASE;
-	mBroadPhase->Init(mBodyManager, mObjectToBroadPhaseLayer, nullptr);
+	mBroadPhase->Init(mBodyManager, mObjectToBroadPhaseLayer);
 }
 
 void BroadPhaseTest::PostPhysicsUpdate(float inDeltaTime)

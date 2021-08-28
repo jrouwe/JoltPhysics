@@ -22,7 +22,7 @@ TEST_SUITE("BroadPhaseTests")
 		// Create quad tree
 		BroadPhaseQuadTree broadphase;
 		ObjectToBroadPhaseLayer obj_to_bp = GetObjectToBroadPhaseLayer();
-		broadphase.Init(&body_manager, obj_to_bp, nullptr);
+		broadphase.Init(&body_manager, obj_to_bp);
 
 		// Create a box
 		BodyCreationSettings settings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);

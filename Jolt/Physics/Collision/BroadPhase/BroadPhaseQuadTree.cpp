@@ -15,13 +15,12 @@ BroadPhaseQuadTree::~BroadPhaseQuadTree()
 	delete [] mLayers;
 }
 
-void BroadPhaseQuadTree::Init(BodyManager* inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerToString inBroadPhaseLayerToString)
+void BroadPhaseQuadTree::Init(BodyManager* inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer)
 {
-	BroadPhase::Init(inBodyManager, inObjectToBroadPhaseLayer, inBroadPhaseLayerToString);
+	BroadPhase::Init(inBodyManager, inObjectToBroadPhaseLayer);
 
 	// Store input parameters
 	mObjectToBroadPhaseLayer = inObjectToBroadPhaseLayer;
-	mBroadPhaseLayerToString = inBroadPhaseLayerToString;
 
 	// Store max bodies
 	mMaxBodies = inBodyManager->GetMaxBodies();
@@ -401,7 +400,7 @@ void BroadPhaseQuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioC
 		QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString != nullptr? mBroadPhaseLayerToString(BroadPhaseLayer(l)) : "QuadTree");
+			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
 			tree.CastRay(inRay, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -421,7 +420,7 @@ void BroadPhaseQuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollec
 		QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString != nullptr? mBroadPhaseLayerToString(BroadPhaseLayer(l)) : "QuadTree");
+			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
 			tree.CollideAABox(inBox, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -441,7 +440,7 @@ void BroadPhaseQuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, Collide
 		QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString != nullptr? mBroadPhaseLayerToString(BroadPhaseLayer(l)) : "QuadTree");
+			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
 			tree.CollideSphere(inCenter, inRadius, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -461,7 +460,7 @@ void BroadPhaseQuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector
 		QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString != nullptr? mBroadPhaseLayerToString(BroadPhaseLayer(l)) : "QuadTree");
+			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
 			tree.CollidePoint(inPoint, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -481,7 +480,7 @@ void BroadPhaseQuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideSha
 		QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString != nullptr? mBroadPhaseLayerToString(BroadPhaseLayer(l)) : "QuadTree");
+			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
 			tree.CollideOrientedBox(inBox, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -501,7 +500,7 @@ void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollecto
 		QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString != nullptr? mBroadPhaseLayerToString(BroadPhaseLayer(l)) : "QuadTree");
+			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
 			tree.CastAABox(inBox, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -536,7 +535,7 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 			QuadTree &tree = mLayers[l];
 			if (tree.HasBodies() && inObjectVsBroadPhaseLayerFilter(object_layer, BroadPhaseLayer(l)))
 			{
-				JPH_PROFILE(mBroadPhaseLayerToString != nullptr? mBroadPhaseLayerToString(BroadPhaseLayer(l)) : "QuadTree");
+				JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
 				tree.FindCollidingPairs(bodies, b_start, int(b_mid - b_start), inSpeculativeContactDistance, ioPairCollector, inObjectLayerPairFilter);
 			}
 		}
