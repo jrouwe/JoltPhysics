@@ -207,6 +207,10 @@ void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 
 void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 {
+	// Don't take lock if no bodies are to be activated
+	if (inNumber <= 0)
+		return;
+
 	UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 	JPH_ASSERT(!mActiveBodiesLocked || sOverrideAllowActivation);
