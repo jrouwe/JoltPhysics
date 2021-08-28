@@ -49,20 +49,15 @@ void BroadPhaseQuadTree::Init(BodyManager* inBodyManager, const ObjectToBroadPha
 	mLayers = new QuadTree [mNumLayers];
 	for (uint l = 0; l < mNumLayers; ++l)
 		mLayers[l].Init(mAllocator);
-
-	// Mark the first query lock available
-	mQueryLocks[0].mAvailable = true;
 }
 
 void BroadPhaseQuadTree::FrameSync()
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Take a unique lock on the root of the old tree so that we know no one is using the old nodes anymore
-	// Note that nothing should be locked at this point to avoid risking a lock inversion deadlock
-	QueryLock &old_lock = mQueryLocks[mCurrentQueryLock ^ 1];
-	JPH_ASSERT(!old_lock.mAvailable); // Should have been flagged as not available in UpdateFinalize already
-	UniqueLock<SharedMutex> root_lock(old_lock.mMutex, EPhysicsLockTypes::BroadPhaseQuery);
+	// Take a unique lock on the old query lock so that we know no one is using the old nodes anymore.
+	// Note that nothing should be locked at this point to avoid risking a lock inversion deadlock.
+	UniqueLock<SharedMutex> root_lock(mQueryLocks[mQueryLockIdx ^ 1], EPhysicsLockTypes::BroadPhaseQuery);
 
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
 		mLayers[l].DiscardOldTree();
@@ -140,14 +135,8 @@ void BroadPhaseQuadTree::UpdateFinalize(UpdateState &inUpdateState)
 
 	update_state_impl->mTree->UpdateFinalize(mBodyManager->GetBodies(), mTracking, update_state_impl->mUpdateState);
 
-	// Make all queries use the new lock
-	uint32 old_lock = mCurrentQueryLock;
-	uint32 new_lock = old_lock ^ 1;
-	JPH_ASSERT(!mQueryLocks[new_lock].mAvailable);
-	mQueryLocks[new_lock].mAvailable = true;
-	mCurrentQueryLock = new_lock;
-	JPH_ASSERT(mQueryLocks[old_lock].mAvailable);
-	mQueryLocks[old_lock].mAvailable = false;
+	// Make all queries from now on use the new lock
+	mQueryLockIdx = mQueryLockIdx ^ 1;
 }
 
 void BroadPhaseQuadTree::UnlockModifications()
@@ -413,12 +402,12 @@ void BroadPhaseQuadTree::TakeQueryLock(shared_lock<SharedMutex> &outLock) const
 		// Prevent this from running in parallel with node deletion in FrameSync()
 		// Note that we don't use SharedLock here as it is safe in this case for other locks to have been taken 
 		// (the only guarantee we need to avoid a lock inversion deadlock is that during FrameSync nothing is locked which is why the BroadPhaseQuery is the highest priority lock)
-		const QueryLock &query_lock = mQueryLocks[mCurrentQueryLock];
-		shared_lock<SharedMutex> lock(query_lock.mMutex);
+		uint32 current_lock = mQueryLockIdx;
+		shared_lock<SharedMutex> lock(mQueryLocks[current_lock]);
 
-		// If our thread swapped out after querying the current lock it is possible 
+		// If our thread swapped out after querying the current lock index it is possible
 		// that we've locked the wrong mutex and we need to try again.
-		if (query_lock.mAvailable)
+		if (mQueryLockIdx == current_lock)
 		{
 			// We've got the right lock, return it
 			outLock = move(lock);
