@@ -210,10 +210,6 @@ void QuadTree::DiscardOldTree()
 	RootNode &old_root_node = mRootNode[mRootNodeIndex ^ 1];
 	if (old_root_node.mIndex != cInvalidNodeIndex)
 	{
-		// Take a unique lock on the root of the old tree so that we know no one is using the old nodes anymore
-		// Note that nothing should be locked at this point to avoid risking a lock inversion deadlock
-		UniqueLock<SharedMutex> root_lock(old_root_node.mMutex, EPhysicsLockTypes::BroadPhaseTree);
-
 		// Clear the root
 		old_root_node.mIndex = cInvalidNodeIndex;
 
@@ -935,30 +931,10 @@ void QuadTree::NotifyBodiesAABBChanged(const BodyVector &inBodies, const Trackin
 	}
 }
 
-const QuadTree::RootNode &QuadTree::LockRoot(shared_lock<SharedMutex> &outLock) const
-{
-	for (;;)
-	{
-		// Prevent this from running in parallel with node deletion in DiscardOldTree()
-		// Note that we don't use SharedLock here as it is safe in this case for other locks to have been taken 
-		// (the only guarantee we need to avoid a lock inversion deadlock is that during DiscardOldTree nothing is locked)
-		const RootNode &root_node = GetCurrentRoot();
-		shared_lock<SharedMutex> lock(root_node.mMutex);
-
-		// Check that the tree was not discarded between the call to GetCurrentRoot() and when the lock was taken
-		if (root_node.mIndex != cInvalidNodeIndex)
-		{
-			outLock = move(lock);
-			return root_node;
-		}
-	}
-}
-
 void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get and lock the root
-	shared_lock<SharedMutex> lock;
-	const RootNode &root_node = LockRoot(lock);
+	// Get the root
+	const RootNode &root_node = GetCurrentRoot();
 
 	// Properties of ray
 	Vec3 origin(inRay.mOrigin);
@@ -1041,9 +1017,8 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 
 void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get and lock the root
-	shared_lock<SharedMutex> lock;
-	const RootNode &root_node = LockRoot(lock);
+	// Get the root
+	const RootNode &root_node = GetCurrentRoot();
 
 	NodeID node_stack[cStackSize];
 	node_stack[0] = root_node.GetNodeID();
@@ -1107,9 +1082,8 @@ void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCol
 
 void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get and lock the root
-	shared_lock<SharedMutex> lock;
-	const RootNode &root_node = LockRoot(lock);
+	// Get the root
+	const RootNode &root_node = GetCurrentRoot();
 
 	// Splat sphere to 4 component vectors
 	Vec4 center_x = Vec4(inCenter).SplatX();
@@ -1186,9 +1160,8 @@ void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyC
 
 void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get and lock the root
-	shared_lock<SharedMutex> lock;
-	const RootNode &root_node = LockRoot(lock);
+	// Get the root
+	const RootNode &root_node = GetCurrentRoot();
 
 	NodeID node_stack[cStackSize];
 	node_stack[0] = root_node.GetNodeID();
@@ -1253,9 +1226,8 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 
 void QuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get and lock the root
-	shared_lock<SharedMutex> lock;
-	const RootNode &root_node = LockRoot(lock);
+	// Get the root
+	const RootNode &root_node = GetCurrentRoot();
 
 	NodeID node_stack[cStackSize];
 	node_stack[0] = root_node.GetNodeID();
@@ -1320,9 +1292,8 @@ void QuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyColl
 
 void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get and lock the root
-	shared_lock<SharedMutex> lock;
-	const RootNode &root_node = LockRoot(lock);
+	// Get the root
+	const RootNode &root_node = GetCurrentRoot();
 
 	// Properties of ray
 	Vec3 origin(inBox.mBox.GetCenter());

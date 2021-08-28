@@ -4,7 +4,6 @@
 #pragma once
 
 #include <Core/FixedSizeFreeList.h>
-#include <Core/Mutex.h>
 #include <Core/Atomics.h>
 #include <Core/NonCopyable.h>
 #include <Physics/Body/BodyManager.h>
@@ -251,9 +250,6 @@ private:
 
 		/// Index of the root node of the tree (this is always a node, never a body id)
 		atomic<uint32>			mIndex { cInvalidNodeIndex };
-
-		/// Mutex that protects mIndex
-		mutable SharedMutex		mMutex;
 	};
 
 	/// Caches location of body inBodyID in the tracker, body can be found in mNodes[inNodeIdx].mChildNodeID[inChildIdx]
@@ -264,9 +260,6 @@ private:
 	/// Get the current root of the tree
 	inline const RootNode &		GetCurrentRoot() const				{ return mRootNode[mRootNodeIndex]; }
 	inline RootNode &			GetCurrentRoot()					{ return mRootNode[mRootNodeIndex]; }
-
-	/// Get the current root of the tree and lock it
-	const RootNode &			LockRoot(shared_lock<SharedMutex> &outLock) const;
 
 	/// Depending on if inNodeID is a body or tree node return the bounding box
 	inline AABox				GetNodeOrBodyBounds(const BodyVector &inBodies, NodeID inNodeID) const;

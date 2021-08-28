@@ -10,7 +10,7 @@ namespace JPH {
 /// This is the list of locks used by the physics engine, they need to be locked in a particular order (from top of the list to bottom of the list) in order to prevent deadlocks
 enum class EPhysicsLockTypes
 {
-	BroadPhaseTree			= 1 << 0,
+	BroadPhaseQuery			= 1 << 0,
 	PerBody					= 1 << 1,
 	BodiesList				= 1 << 2,
 	BroadPhaseUpdate		= 1 << 3,
