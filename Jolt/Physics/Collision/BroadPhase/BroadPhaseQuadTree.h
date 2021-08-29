@@ -38,9 +38,6 @@ public:
 	virtual void			FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
 
 private:
-	/// This function will take the current active query lock to ensure that the tree remains available for the duration of the query
-	void					TakeQueryLock(shared_lock<SharedMutex> &outLock) const;
-
 	/// Helper struct for AddBodies handle
 	struct LayerState
 	{
@@ -82,7 +79,7 @@ private:
 	SharedMutex				mUpdateMutex;
 
 	/// We double buffer all trees so that we can query while building the next one and we destroy the old tree the next physics update.
-	/// This structure ensures that we wait for queries started 2 updates ago before destroying the old tree.
+	/// This structure ensures that we wait for queries that are still using the old tree.
 	mutable SharedMutex		mQueryLocks[2];
 
 	/// This index indicates which lock is currently active, it alternates between 0 and 1
