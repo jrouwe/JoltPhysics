@@ -41,20 +41,26 @@ bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const
 				BodyLockRead lock(mBodyLockInterface, inResult.mBodyID);
 				if (lock.Succeeded())
 				{
-					// Collect the transformed shape
-					TransformedShape ts = lock.GetBody().GetTransformedShape();
+					const Body &body = lock.GetBody();
 
-					// Release the lock now, we have all the info we need in the transformed shape
-					lock.ReleaseLock();
-
-					// Do narrow phase collision check
-					if (ts.CastRay(mRay, mHit))
+					// Check body filter again now that we've locked the body
+					if (mBodyFilter.ShouldCollide(body))
 					{
-						// Test that we didn't find a further hit by accident
-						JPH_ASSERT(mHit.mFraction >= 0.0f && mHit.mFraction < GetEarlyOutFraction());
+						// Collect the transformed shape
+						TransformedShape ts = body.GetTransformedShape();
 
-						// Update early out fraction based on narrow phase collector
-						UpdateEarlyOutFraction(mHit.mFraction);
+						// Release the lock now, we have all the info we need in the transformed shape
+						lock.ReleaseLock();
+
+						// Do narrow phase collision check
+						if (ts.CastRay(mRay, mHit))
+						{
+							// Test that we didn't find a further hit by accident
+							JPH_ASSERT(mHit.mFraction >= 0.0f && mHit.mFraction < GetEarlyOutFraction());
+
+							// Update early out fraction based on narrow phase collector
+							UpdateEarlyOutFraction(mHit.mFraction);
+						}
 					}
 				}
 			}
@@ -102,20 +108,24 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 				{
 					const Body &body = lock.GetBody();
 
-					// Collect the transformed shape
-					TransformedShape ts = body.GetTransformedShape();
+					// Check body filter again now that we've locked the body
+					if (mBodyFilter.ShouldCollide(body))
+					{
+						// Collect the transformed shape
+						TransformedShape ts = body.GetTransformedShape();
 
-					// Notify collector of new body
-					mCollector.OnBody(body);
+						// Notify collector of new body
+						mCollector.OnBody(body);
 
-					// Release the lock now, we have all the info we need in the transformed shape
-					lock.ReleaseLock();
+						// Release the lock now, we have all the info we need in the transformed shape
+						lock.ReleaseLock();
 
-					// Do narrow phase collision check
-					ts.CastRay(mRay, mRayCastSettings, mCollector);
+						// Do narrow phase collision check
+						ts.CastRay(mRay, mRayCastSettings, mCollector);
 
-					// Update early out fraction based on narrow phase collector
-					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						// Update early out fraction based on narrow phase collector
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					}
 				}
 			}
 		}
@@ -158,20 +168,24 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 				{
 					const Body &body = lock.GetBody();
 
-					// Collect the transformed shape
-					TransformedShape ts = body.GetTransformedShape();
+					// Check body filter again now that we've locked the body
+					if (mBodyFilter.ShouldCollide(body))
+					{
+						// Collect the transformed shape
+						TransformedShape ts = body.GetTransformedShape();
 
-					// Notify collector of new body
-					mCollector.OnBody(body);
+						// Notify collector of new body
+						mCollector.OnBody(body);
 
-					// Release the lock now, we have all the info we need in the transformed shape
-					lock.ReleaseLock();
+						// Release the lock now, we have all the info we need in the transformed shape
+						lock.ReleaseLock();
 
-					// Do narrow phase collision check
-					ts.CollidePoint(mPoint, mCollector);
+						// Do narrow phase collision check
+						ts.CollidePoint(mPoint, mCollector);
 
-					// Update early out fraction based on narrow phase collector
-					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						// Update early out fraction based on narrow phase collector
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					}
 				}
 			}
 		}
@@ -216,20 +230,24 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 				{
 					const Body &body = lock.GetBody();
 
-					// Collect the transformed shape
-					TransformedShape ts = body.GetTransformedShape();
+					// Check body filter again now that we've locked the body
+					if (mBodyFilter.ShouldCollide(body))
+					{
+						// Collect the transformed shape
+						TransformedShape ts = body.GetTransformedShape();
 
-					// Notify collector of new body
-					mCollector.OnBody(body);
+						// Notify collector of new body
+						mCollector.OnBody(body);
 
-					// Release the lock now, we have all the info we need in the transformed shape
-					lock.ReleaseLock();
+						// Release the lock now, we have all the info we need in the transformed shape
+						lock.ReleaseLock();
 
-					// Do narrow phase collision check
-					ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mCollector);
+						// Do narrow phase collision check
+						ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mCollector);
 
-					// Update early out fraction based on narrow phase collector
-					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						// Update early out fraction based on narrow phase collector
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					}
 				}
 			}
 		}
@@ -294,20 +312,24 @@ void NarrowPhaseQuery::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 				{
 					const Body &body = lock.GetBody();
 
-					// Collect the transformed shape
-					TransformedShape ts = body.GetTransformedShape();
+					// Check body filter again now that we've locked the body
+					if (mBodyFilter.ShouldCollide(body))
+					{
+						// Collect the transformed shape
+						TransformedShape ts = body.GetTransformedShape();
 
-					// Notify collector of new body
-					mCollector.OnBody(body);
+						// Notify collector of new body
+						mCollector.OnBody(body);
 
-					// Release the lock now, we have all the info we need in the transformed shape
-					lock.ReleaseLock();
+						// Release the lock now, we have all the info we need in the transformed shape
+						lock.ReleaseLock();
 
-					// Do narrow phase collision check
-					ts.CastShape(mShapeCast, mShapeCastSettings, mCollector, mShapeFilter);
+						// Do narrow phase collision check
+						ts.CastShape(mShapeCast, mShapeCastSettings, mCollector, mShapeFilter);
 
-					// Update early out fraction based on narrow phase collector
-					PropagateEarlyOutFraction();
+						// Update early out fraction based on narrow phase collector
+						PropagateEarlyOutFraction();
+					}
 				}
 			}
 		}
@@ -349,20 +371,24 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 				{
 					const Body &body = lock.GetBody();
 
-					// Collect the transformed shape
-					TransformedShape ts = body.GetTransformedShape();
+					// Check body filter again now that we've locked the body
+					if (mBodyFilter.ShouldCollide(body))
+					{
+						// Collect the transformed shape
+						TransformedShape ts = body.GetTransformedShape();
 
-					// Notify collector of new body
-					mCollector.OnBody(body);
+						// Notify collector of new body
+						mCollector.OnBody(body);
 
-					// Release the lock now, we have all the info we need in the transformed shape
-					lock.ReleaseLock();
+						// Release the lock now, we have all the info we need in the transformed shape
+						lock.ReleaseLock();
 
-					// Do narrow phase collision check
-					ts.CollectTransformedShapes(mBox, mCollector);
+						// Do narrow phase collision check
+						ts.CollectTransformedShapes(mBox, mCollector);
 
-					// Update early out fraction based on narrow phase collector
-					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						// Update early out fraction based on narrow phase collector
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					}
 				}
 			}
 		}
