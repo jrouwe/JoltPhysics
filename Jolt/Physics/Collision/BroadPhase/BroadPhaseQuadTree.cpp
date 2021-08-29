@@ -59,7 +59,7 @@ void BroadPhaseQuadTree::FrameSync()
 	// Note that nothing should be locked at this point to avoid risking a lock inversion deadlock.
 	// Note that in other places where we lock this mutex we don't use SharedLock to detect lock inversions. As long as
 	// nothing else is locked this is safe. This is why BroadPhaseQuery should be the highest priority lock.
-	UniqueLock<SharedMutex> root_lock(mQueryLocks[mQueryLockIdx ^ 1], EPhysicsLockTypes::BroadPhaseQuery);
+	UniqueLock root_lock(mQueryLocks[mQueryLockIdx ^ 1], EPhysicsLockTypes::BroadPhaseQuery);
 
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
 		mLayers[l].DiscardOldTree();
@@ -208,7 +208,7 @@ void BroadPhaseQuadTree::AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddSt
 	JPH_PROFILE_FUNCTION();
 
 	// This cannot run concurrently with UpdatePrepare()/UpdateFinalize()
-	SharedLock<SharedMutex> lock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+	SharedLock lock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
 
 	BodyVector &bodies = mBodyManager->GetBodies();
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());
@@ -278,7 +278,7 @@ void BroadPhaseQuadTree::RemoveBodies(BodyID *ioBodies, int inNumber)
 	JPH_PROFILE_FUNCTION();
 
 	// This cannot run concurrently with UpdatePrepare()/UpdateFinalize()
-	SharedLock<SharedMutex> lock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+	SharedLock lock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
 
 	JPH_ASSERT(inNumber > 0);
 
@@ -404,7 +404,7 @@ void BroadPhaseQuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioC
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
 
 	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock<SharedMutex> lock(mQueryLocks[mQueryLockIdx]);
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
@@ -427,7 +427,7 @@ void BroadPhaseQuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollec
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
 
 	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock<SharedMutex> lock(mQueryLocks[mQueryLockIdx]);
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
@@ -450,7 +450,7 @@ void BroadPhaseQuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, Collide
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
 
 	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock<SharedMutex> lock(mQueryLocks[mQueryLockIdx]);
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
@@ -473,7 +473,7 @@ void BroadPhaseQuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
 
 	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock<SharedMutex> lock(mQueryLocks[mQueryLockIdx]);
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
@@ -496,7 +496,7 @@ void BroadPhaseQuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideSha
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
 
 	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock<SharedMutex> lock(mQueryLocks[mQueryLockIdx]);
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
@@ -519,7 +519,7 @@ void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollecto
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
 
 	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock<SharedMutex> lock(mQueryLocks[mQueryLockIdx]);
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
