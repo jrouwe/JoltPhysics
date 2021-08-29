@@ -78,6 +78,13 @@ private:
 	/// Mutex that prevents object modification during UpdatePrepare/Finalize()
 	SharedMutex				mUpdateMutex;
 
+	/// We double buffer all trees so that we can query while building the next one and we destroy the old tree the next physics update.
+	/// This structure ensures that we wait for queries that are still using the old tree.
+	mutable SharedMutex		mQueryLocks[2];
+
+	/// This index indicates which lock is currently active, it alternates between 0 and 1
+	atomic<uint32>			mQueryLockIdx { 0 };
+
 	/// This is the next tree to update in UpdatePrepare()
 	uint32					mNextLayerToUpdate = 0;
 };
