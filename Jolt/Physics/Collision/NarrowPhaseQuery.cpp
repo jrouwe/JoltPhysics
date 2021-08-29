@@ -44,7 +44,7 @@ bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const
 					const Body &body = lock.GetBody();
 
 					// Check body filter again now that we've locked the body
-					if (mBodyFilter.ShouldCollide(body))
+					if (mBodyFilter.ShouldCollideLocked(body))
 					{
 						// Collect the transformed shape
 						TransformedShape ts = body.GetTransformedShape();
@@ -109,7 +109,7 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 					const Body &body = lock.GetBody();
 
 					// Check body filter again now that we've locked the body
-					if (mBodyFilter.ShouldCollide(body))
+					if (mBodyFilter.ShouldCollideLocked(body))
 					{
 						// Collect the transformed shape
 						TransformedShape ts = body.GetTransformedShape();
@@ -169,7 +169,7 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 					const Body &body = lock.GetBody();
 
 					// Check body filter again now that we've locked the body
-					if (mBodyFilter.ShouldCollide(body))
+					if (mBodyFilter.ShouldCollideLocked(body))
 					{
 						// Collect the transformed shape
 						TransformedShape ts = body.GetTransformedShape();
@@ -231,7 +231,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 					const Body &body = lock.GetBody();
 
 					// Check body filter again now that we've locked the body
-					if (mBodyFilter.ShouldCollide(body))
+					if (mBodyFilter.ShouldCollideLocked(body))
 					{
 						// Collect the transformed shape
 						TransformedShape ts = body.GetTransformedShape();
@@ -313,7 +313,7 @@ void NarrowPhaseQuery::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 					const Body &body = lock.GetBody();
 
 					// Check body filter again now that we've locked the body
-					if (mBodyFilter.ShouldCollide(body))
+					if (mBodyFilter.ShouldCollideLocked(body))
 					{
 						// Collect the transformed shape
 						TransformedShape ts = body.GetTransformedShape();
@@ -372,7 +372,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 					const Body &body = lock.GetBody();
 
 					// Check body filter again now that we've locked the body
-					if (mBodyFilter.ShouldCollide(body))
+					if (mBodyFilter.ShouldCollideLocked(body))
 					{
 						// Collect the transformed shape
 						TransformedShape ts = body.GetTransformedShape();

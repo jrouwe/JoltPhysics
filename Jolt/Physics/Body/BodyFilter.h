@@ -24,7 +24,7 @@ public:
 	}
 
 	/// Filter function. Returns true if we should collide with inBody (this is called after the body is locked and makes it possible to filter based on body members)
-	virtual bool			ShouldCollide(const Body &inBody) const
+	virtual bool			ShouldCollideLocked(const Body &inBody) const
 	{
 		return true;
 	}
