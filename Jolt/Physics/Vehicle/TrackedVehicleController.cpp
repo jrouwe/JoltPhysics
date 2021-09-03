@@ -201,9 +201,8 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	}
 	
 	// First calculate engine speed based on speed of all wheels
-	// TODO: Not correct, if the wheels are not connected or the clutch is pressed the RPM should go up when the user presses the gas (we're missing engine inertia in the equation too)
 	bool can_engine_apply_torque = false;
-	if (mTransmission.GetCurrentGear() != 0)
+	if (mTransmission.GetCurrentGear() != 0 && mTransmission.GetClutchFriction() > 1.0e-3f)
 	{
 		float transmission_ratio = mTransmission.GetCurrentRatio();
 		bool forward = transmission_ratio >= 0.0f;
@@ -224,8 +223,13 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 
 		// Update RPM only if the tracks are connected to the engine
 		if (fastest_wheel_speed > -FLT_MAX && fastest_wheel_speed < FLT_MAX)
-			mEngine.SetCurrentRPM(fastest_wheel_speed * mTransmission.GetCurrentRatio() * cAngularVelocityToRPM);
+			mEngine.SetCurrentRPM(fastest_wheel_speed * mTransmission.GetCurrentRatio() * VehicleEngine::cAngularVelocityToRPM);
 		mEngine.SetCurrentRPM(Clamp(mEngine.GetCurrentRPM(), mEngine.mMinRPM, mEngine.mMaxRPM));
+	}
+	else
+	{
+		// Engine not connected to tracks, update RPM based on engine inertia alone
+		mEngine.UpdateRPM(inDeltaTime, abs(mForwardInput));
 	}
 
 	// Update transmission
@@ -234,7 +238,7 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 
 	// Calculate the amount of torque the transmission gives to the differentials
 	float transmission_ratio = mTransmission.GetCurrentRatio();
-	float transmission_torque = mTransmission.GetClutchFriction() * transmission_ratio * abs(mForwardInput) * mEngine.mMaxTorque * mEngine.mNormalizedTorque.GetValue(mEngine.GetCurrentRPM() / mEngine.mMaxRPM);
+	float transmission_torque = mTransmission.GetClutchFriction() * transmission_ratio * mEngine.GetTorque(abs(mForwardInput));
 	if (transmission_torque != 0.0f)
 	{
 		// Apply the transmission torque to the wheels
@@ -247,13 +251,13 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 
 			// Calculate the max angular velocity of the driven wheel of the track given current engine RPM
 			// Note this adds 0.1% slop to avoid numerical accuracy issues
-			float track_max_angular_velocity = abs(mEngine.GetCurrentRPM() / (transmission_ratio * t.mDifferentialRatio * ratio * cAngularVelocityToRPM)) * 1.001f;
+			float track_max_angular_velocity = mEngine.GetCurrentRPM() / (transmission_ratio * t.mDifferentialRatio * ratio * VehicleEngine::cAngularVelocityToRPM) * 1.001f;
 
 			// Calculate torque on the driven wheel
 			float differential_torque = t.mDifferentialRatio * ratio * transmission_torque;
 
 			// Apply torque to driven wheel
-			if (t.mAngularVelocity * track_max_angular_velocity < 0.0f || abs(t.mAngularVelocity) < track_max_angular_velocity)
+			if (t.mAngularVelocity * track_max_angular_velocity < 0.0f || abs(t.mAngularVelocity) < abs(track_max_angular_velocity))
 				t.mAngularVelocity += differential_torque * inDeltaTime / t.mInertia;
 		}
 	}
@@ -398,12 +402,18 @@ bool TrackedVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 
 void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const 
 {
-	// Draw current vehicle state
+	// Draw RPM
 	Body *body = mConstraint.GetVehicleBody();
+	Vec3 rpm_meter_up = body->GetRotation() * mConstraint.GetLocalUp();
+	Vec3 rpm_meter_pos = body->GetPosition() + body->GetRotation() * mRPMMeterPosition;
+	Vec3 rpm_meter_fwd = body->GetRotation() * mConstraint.GetLocalForward();
+	mEngine.DrawRPM(inRenderer, rpm_meter_pos, rpm_meter_fwd, rpm_meter_up, mRPMMeterSize, mTransmission.mShiftDownRPM, mTransmission.mShiftUpRPM);
+
+	// Draw current vehicle state
 	string status = StringFormat("Forward: %.1f, LRatio: %.1f, RRatio: %.1f, Brake: %.1f\n"
 								 "Gear: %d, Clutch: %.1f, EngineRPM: %.0f, V: %.1f km/h", 
 								 (double)mForwardInput, (double)mLeftRatio, (double)mRightRatio, (double)mBrakeInput, 
-								 (double)mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
+								 mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
 	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, mConstraint.GetDrawConstraintSize());
 
 	for (const VehicleTrack &t : mTracks)

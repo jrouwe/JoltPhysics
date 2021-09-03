@@ -110,6 +110,9 @@ void TankTest::Initialize()
 
 	mVehicleConstraint = new VehicleConstraint(*mTankBody, vehicle);
 	mVehicleConstraint->SetVehicleCollisionTester(new VehicleCollisionTesterRay(Layers::MOVING));
+#ifdef JPH_DEBUG_RENDERER
+	static_cast<TrackedVehicleController *>(mVehicleConstraint->GetController())->SetRPMMeter(Vec3(0, 2, 0), 0.5f);
+#endif // JPH_DEBUG_RENDERER
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
 

@@ -58,6 +58,12 @@ public:
 	/// Set the interface that tests collision between wheel and ground
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
+	/// Get the local space forward vector of the vehicle
+	Vec3						GetLocalForward() const						{ return mForward; }
+
+	/// Get the local space up vector of the vehicle
+	Vec3						GetLocalUp() const							{ return mUp; }
+
 	/// Access to the vehicle body
 	Body *						GetVehicleBody() const						{ return mBody; }
 
