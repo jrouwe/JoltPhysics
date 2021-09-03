@@ -98,7 +98,7 @@ void PhysicsSystem::OptimizeBroadPhase()
 
 void PhysicsSystem::AddStepListener(PhysicsStepListener *inListener)
 {
-	lock_guard<Mutex> lock(mStepListenersMutex);
+	lock_guard lock(mStepListenersMutex);
 
 	JPH_ASSERT(find(mStepListeners.begin(), mStepListeners.end(), inListener) == mStepListeners.end());
 	mStepListeners.push_back(inListener);
@@ -106,7 +106,7 @@ void PhysicsSystem::AddStepListener(PhysicsStepListener *inListener)
 
 void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 {
-	lock_guard<Mutex> lock(mStepListenersMutex);
+	lock_guard lock(mStepListenersMutex);
 
 	StepListeners::iterator i = find(mStepListeners.begin(), mStepListeners.end(), inListener);
 	JPH_ASSERT(i != mStepListeners.end());

@@ -71,7 +71,7 @@ void SensorTest::Initialize()
 
 void SensorTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	Vec3 center(0, 10, 0);
 	float centrifugal_force = 10.0f;
@@ -116,7 +116,7 @@ void SensorTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const 
 		return;
 
 	// Add to list and make sure that the list remains sorted for determinism (contacts can be added from multiple threads)
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 	BodyAndCount body_and_count { body_id, 1 };
 	BodiesInSensor::iterator b = lower_bound(mBodiesInSensor.begin(), mBodiesInSensor.end(), body_and_count);
 	if (b != mBodiesInSensor.end() && b->mBodyID == body_id)
@@ -140,7 +140,7 @@ void SensorTest::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
 		return;
 
 	// Remove from list
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 	BodyAndCount body_and_count { body_id, 1 };
 	BodiesInSensor::iterator b = lower_bound(mBodiesInSensor.begin(), mBodiesInSensor.end(), body_and_count);
 	if (b != mBodiesInSensor.end() && b->mBodyID == body_id)

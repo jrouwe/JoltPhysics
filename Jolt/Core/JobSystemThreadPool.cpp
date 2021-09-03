@@ -45,7 +45,7 @@ void JobSystemThreadPool::Semaphore::Release(uint inNumber)
 		::ReleaseSemaphore(mSemaphore, num_to_release, nullptr);
 	}
 #else
-	lock_guard<mutex> lock(mLock);
+	lock_guard lock(mLock);
 	mCount += (int)inNumber;
 	if (inNumber > 1)
 		mWaitVariable.notify_all();
@@ -68,7 +68,7 @@ void JobSystemThreadPool::Semaphore::Acquire(uint inNumber)
 			WaitForSingleObject(mSemaphore, INFINITE);
 	}
 #else
-	unique_lock<mutex> lock(mLock);
+	unique_lock lock(mLock);
 	mCount -= (int)inNumber;
 	mWaitVariable.wait(lock, [this]() { return mCount >= 0; });
 #endif
