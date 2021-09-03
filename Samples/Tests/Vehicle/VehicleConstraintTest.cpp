@@ -35,7 +35,6 @@ void VehicleConstraintTest::Initialize()
 	const float half_vehicle_height = 0.2f;
 	const float suspension_min_length = 0.3f;
 	const float suspension_max_length = 0.5f;
-	const float suspension_frequency = 1.5f;
 	const float max_steering_angle = DegreesToRadians(30);
 
 	// Create collision testers
@@ -83,7 +82,6 @@ void VehicleConstraintTest::Initialize()
 		w->mWidth = wheel_width;
 		w->mSuspensionMinLength = suspension_min_length;
 		w->mSuspensionMaxLength = suspension_max_length;
-		w->mSuspensionFrequency = suspension_frequency;
 	}
 
 	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;

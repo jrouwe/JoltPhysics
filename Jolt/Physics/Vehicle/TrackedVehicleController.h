@@ -103,8 +103,10 @@ public:
 	/// Get the tracks this vehicle has (writable interface, allows you to make changes to the configuration which will take effect the next time step)
 	VehicleTracks &				GetTracks()									{ return mTracks; }
 
-	/// Multiply an angular velocity (rad/s) with this value to get rounds per minute (RPM)
-	static constexpr float		cAngularVelocityToRPM = 60.0f / (2.0f * JPH_PI);
+#ifdef JPH_DEBUG_RENDERER
+	/// Debug drawing of RPM meter
+	void						SetRPMMeter(Vec3Arg inPosition, float inSize) { mRPMMeterPosition = inPosition; mRPMMeterSize = inSize; }
+#endif // JPH_DEBUG_RENDERER
 
 protected:
 	/// Synchronize angular velocities of left and right tracks according to their ratios
@@ -131,6 +133,12 @@ protected:
 	VehicleEngine				mEngine;									///< Engine state of the vehicle
 	VehicleTransmission			mTransmission;								///< Transmission state of the vehicle
 	VehicleTracks				mTracks;									///< Tracks of the vehicle
+
+#ifdef JPH_DEBUG_RENDERER
+	// Debug settings
+	Vec3						mRPMMeterPosition { 0, 1, 0 };				///< Position (in local space of the body) of the RPM meter when drawing the constraint
+	float						mRPMMeterSize = 0.5f;						///< Size of the RPM meter when drawing the constraint
+#endif // JPH_DEBUG_RENDERER
 };
 
 } // JPH
