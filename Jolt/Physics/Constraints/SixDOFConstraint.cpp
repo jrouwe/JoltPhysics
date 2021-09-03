@@ -75,7 +75,7 @@ void SixDOFConstraint::UpdateRotationLimits()
 {
 	// Make values sensible
 	for (int i = 3; i < 6; ++i)
-		if (IsAxisFixed(((EAxis)i)))
+		if (IsAxisFixed((EAxis)i))
 			mLimitMin[i] = mLimitMax[i] = 0.0f;
 		else
 		{

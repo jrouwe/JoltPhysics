@@ -9,7 +9,7 @@ namespace JPH {
 class NonCopyable
 {
 public:
-	inline	NonCopyable() = default;
+			NonCopyable() = default;
 			NonCopyable(const NonCopyable &) = delete;
 	void	operator = (const NonCopyable &) = delete;
 };
