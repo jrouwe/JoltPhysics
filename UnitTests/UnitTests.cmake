@@ -35,6 +35,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/PhysicsDeterminismTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PhysicsStepListenerTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/RayShapeTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/SensorTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SliderConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SubShapeIDTest.cpp

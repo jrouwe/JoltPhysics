@@ -29,8 +29,9 @@ public:
 
 	virtual ValidateResult			OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult) override
 	{
-		// Check contract that body 1 is dynamic
-		CHECK(inBody1.IsDynamic());
+		// Check contract that body 1 is dynamic or that body2 is not dynamic
+		bool contract = inBody1.IsDynamic() || !inBody2.IsDynamic();
+		CHECK(contract);
 
 		lock_guard lock(mLogMutex);
 		mLog.push_back({ EType::Validate, inBody1.GetID(), inBody2.GetID(), ContactManifold() });
