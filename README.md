@@ -4,7 +4,7 @@
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jrouwe_JoltPhysics&metric=bugs)](https://sonarcloud.io/dashboard?id=jrouwe_JoltPhysics)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=jrouwe_JoltPhysics&metric=code_smells)](https://sonarcloud.io/dashboard?id=jrouwe_JoltPhysics)
 
-# Jolt Physics Library
+# Jolt Physics
 
 A multi core friendly rigid body physics and collision detection library suitable for games and VR applications.
 
@@ -12,7 +12,7 @@ A multi core friendly rigid body physics and collision detection library suitabl
 |:-|
 |*A YouTube video showing a ragdoll pile simulated with Jolt Physics.*|
 
-For more demos and videos go to the [Samples](Docs/Samples.md) section.
+For more demos and [videos](https://www.youtube.com/watch?v=pwyCW0yNKMA&list=PLYXVwtOr1CBxbA50jVg2dKUQvHW_5OOom) go to the [Samples](Docs/Samples.md) section.
 
 ## Design Considerations
 
