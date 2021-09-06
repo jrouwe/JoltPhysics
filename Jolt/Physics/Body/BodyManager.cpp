@@ -141,6 +141,8 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	
 	if (inBodyCreationSettings.HasMassProperties())
 	{
+		JPH_ASSERT(!inBodyCreationSettings.mIsSensor, "Sensors should be static and moved through BodyInterface::SetPosition/SetPositionAndRotation");
+
 		MotionProperties *mp = new MotionProperties();
 		mp->SetLinearDamping(inBodyCreationSettings.mLinearDamping);
 		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);

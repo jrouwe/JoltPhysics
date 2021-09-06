@@ -904,9 +904,11 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair)
 
 	// Ensure that body1 is dynamic, this ensures that we do the collision detection in the space of a moving body, which avoids accuracy problems when testing a very large static object against a small dynamic object
 	// Ensure that body1 id < body2 id for dynamic vs dynamic
-	if (!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA))
+	// Keep body order unchanged when colliding with a sensor
+	if ((!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA)) 
+		&& !body2->IsSensor())
 		swap(body1, body2);
-	JPH_ASSERT(body1->IsDynamic());
+	JPH_ASSERT(body1->IsDynamic() || (body1->IsKinematic() && body2->IsSensor()));
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, contact_found = false;
@@ -955,8 +957,10 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair)
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// Body 1 should always be dynamic, body 2 may be static / kinematic
-					JPH_ASSERT(mBody1->IsDynamic());
+					// One of the following should be true:
+					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
+					// - Body 1 is kinematic in which case body 2 should be a sensor
+					JPH_ASSERT(mBody1->IsDynamic() || (mBody1->IsKinematic() && mBody2->IsSensor()));
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit

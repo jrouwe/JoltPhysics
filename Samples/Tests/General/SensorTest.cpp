@@ -67,10 +67,28 @@ void SensorTest::Initialize()
 	mRagdoll = ragdoll_settings->CreateRagdoll(1, nullptr, mPhysicsSystem);
 	mRagdoll->SetPose(ragdoll_pose);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
+
+	// Create kinematic body
+	BodyCreationSettings kinematic_settings(new BoxShape(Vec3(0.25f, 0.5f, 1.0f)), Vec3(-15, 10, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
+	Body &kinematic = *mBodyInterface->CreateBody(kinematic_settings);
+	mKinematicBodyID = kinematic.GetID();
+	mBodyInterface->AddBody(kinematic.GetID(), EActivation::Activate);
 }
 
 void SensorTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
+	// Update time
+	mTime += inParams.mDeltaTime;
+
+	// Move kinematic body
+	Vec3 kinematic_pos = Vec3(-15.0f * cos(mTime), 10, 0);
+	mBodyInterface->MoveKinematic(mKinematicBodyID, kinematic_pos, Quat::sIdentity(), inParams.mDeltaTime);
+
+	// Draw if the kinematic body is in the sensor
+	if (mKinematicBodyInSensor)
+		mDebugRenderer->DrawWireBox(mBodyInterface->GetTransformedShape(mKinematicBodyID).GetWorldSpaceBounds(), Color::sRed);
+
+	// Apply forces to dynamic bodies in sensor
 	lock_guard lock(mMutex);
 
 	Vec3 center(0, 10, 0);
@@ -115,17 +133,26 @@ void SensorTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const 
 	else
 		return;
 
-	// Add to list and make sure that the list remains sorted for determinism (contacts can be added from multiple threads)
 	lock_guard lock(mMutex);
-	BodyAndCount body_and_count { body_id, 1 };
-	BodiesInSensor::iterator b = lower_bound(mBodiesInSensor.begin(), mBodiesInSensor.end(), body_and_count);
-	if (b != mBodiesInSensor.end() && b->mBodyID == body_id)
+
+	if (body_id == mKinematicBodyID)
 	{
-		// This is the right body, increment reference
-		b->mCount++;
-		return;
+		JPH_ASSERT(!mKinematicBodyInSensor);
+		mKinematicBodyInSensor = true;
 	}
-	mBodiesInSensor.insert(b, body_and_count);
+	else
+	{
+		// Add to list and make sure that the list remains sorted for determinism (contacts can be added from multiple threads)
+		BodyAndCount body_and_count { body_id, 1 };
+		BodiesInSensor::iterator b = lower_bound(mBodiesInSensor.begin(), mBodiesInSensor.end(), body_and_count);
+		if (b != mBodiesInSensor.end() && b->mBodyID == body_id)
+		{
+			// This is the right body, increment reference
+			b->mCount++;
+			return;
+		}
+		mBodiesInSensor.insert(b, body_and_count);
+	}
 }
 
 void SensorTest::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
@@ -139,30 +166,43 @@ void SensorTest::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
 	else
 		return;
 
-	// Remove from list
 	lock_guard lock(mMutex);
-	BodyAndCount body_and_count { body_id, 1 };
-	BodiesInSensor::iterator b = lower_bound(mBodiesInSensor.begin(), mBodiesInSensor.end(), body_and_count);
-	if (b != mBodiesInSensor.end() && b->mBodyID == body_id)
-	{
-		// This is the right body, increment reference
-		JPH_ASSERT(b->mCount > 0);
-		b->mCount--;
 
-		// When last reference remove from the list
-		if (b->mCount == 0)
-			mBodiesInSensor.erase(b);
-		return;
+	if (body_id == mKinematicBodyID)
+	{
+		JPH_ASSERT(mKinematicBodyInSensor);
+		mKinematicBodyInSensor = false;
 	}
-	JPH_ASSERT(false, "Body pair not found");
+	else
+	{
+		// Remove from list
+		BodyAndCount body_and_count { body_id, 1 };
+		BodiesInSensor::iterator b = lower_bound(mBodiesInSensor.begin(), mBodiesInSensor.end(), body_and_count);
+		if (b != mBodiesInSensor.end() && b->mBodyID == body_id)
+		{
+			// This is the right body, increment reference
+			JPH_ASSERT(b->mCount > 0);
+			b->mCount--;
+
+			// When last reference remove from the list
+			if (b->mCount == 0)
+				mBodiesInSensor.erase(b);
+			return;
+		}
+		JPH_ASSERT(false, "Body pair not found");
+	}
 }
 
 void SensorTest::SaveState(StateRecorder &inStream) const
 {
+	inStream.Write(mTime);
 	inStream.Write(mBodiesInSensor);
+	inStream.Write(mKinematicBodyInSensor);
 }
 
 void SensorTest::RestoreState(StateRecorder &inStream)
 {
+	inStream.Read(mTime);
 	inStream.Read(mBodiesInSensor);
+	inStream.Read(mKinematicBodyInSensor);
 }
