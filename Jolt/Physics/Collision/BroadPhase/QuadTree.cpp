@@ -940,6 +940,12 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 	Vec3 origin(inRay.mOrigin);
 	RayInvDirection inv_direction(inRay.mDirection);
 
+	int bodies_visited = 0;
+	int hits_collected = 0;
+	int nodes_visited = 0;
+
+	uint64 start = GetProcessorTickCount();
+
 	NodeID node_stack[cStackSize];
 	float fraction_stack[cStackSize];
 	node_stack[0] = root_node.GetNodeID();
@@ -955,10 +961,14 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 			float fraction = fraction_stack[top];
 			if (fraction < early_out_fraction)
 			{
+				++bodies_visited;
+
 				BodyID body_id = child_node_id.GetBodyID();
 				ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
 				if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
 				{
+					++hits_collected;
+
 					// Store potential hit with body
 					BroadPhaseCastResult result { body_id, fraction };
 					ioCollector.AddHit(result);
@@ -970,6 +980,8 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 		}
 		else if (child_node_id.IsValid())
 		{
+			++nodes_visited;
+
 			// Process normal node
 			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
 			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
@@ -1013,12 +1025,29 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 		--top;
 	} 
 	while (top >= 0);
+
+	uint64 time = GetProcessorTickCount() - start;
+
+	{
+		unique_lock lock(mStatsMutex);
+		Stat &s = mStats["Ray"][inObjectLayerFilter.GetDescription()];
+		s.mNodesVisited += nodes_visited;
+		s.mBodiesVisited += bodies_visited;
+		s.mHitsReported += hits_collected;
+		s.mTotalTime += time;
+	}
 }
 
 void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
 	// Get the root
 	const RootNode &root_node = GetCurrentRoot();
+
+	int bodies_visited = 0;
+	int hits_collected = 0;
+	int nodes_visited = 0;
+
+	uint64 start = GetProcessorTickCount();
 
 	NodeID node_stack[cStackSize];
 	node_stack[0] = root_node.GetNodeID();
@@ -1029,10 +1058,14 @@ void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCol
 		NodeID child_node_id = node_stack[top];
 		if (child_node_id.IsBody())
 		{
+			bodies_visited++;
+
 			BodyID body_id = child_node_id.GetBodyID();
 			ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
 			if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
 			{
+				++hits_collected;
+
 				// Store potential hit with body
 				ioCollector.AddHit(body_id);
 				if (ioCollector.ShouldEarlyOut())
@@ -1041,6 +1074,8 @@ void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCol
 		}
 		else if (child_node_id.IsValid())
 		{
+			++nodes_visited;
+
 			// Process normal node
 			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
 			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
@@ -1078,6 +1113,17 @@ void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCol
 		--top;
 	} 
 	while (top >= 0);
+
+	uint64 time = GetProcessorTickCount() - start;
+
+	{
+		unique_lock lock(mStatsMutex);
+		Stat &s = mStats["AABox"][inObjectLayerFilter.GetDescription()];
+		s.mNodesVisited += nodes_visited;
+		s.mBodiesVisited += bodies_visited;
+		s.mHitsReported += hits_collected;
+		s.mTotalTime += time;
+	}
 }
 
 void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
@@ -1163,6 +1209,12 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 	// Get the root
 	const RootNode &root_node = GetCurrentRoot();
 
+	int bodies_visited = 0;
+	int hits_collected = 0;
+	int nodes_visited = 0;
+
+	uint64 start = GetProcessorTickCount();
+
 	NodeID node_stack[cStackSize];
 	node_stack[0] = root_node.GetNodeID();
 	int top = 0;
@@ -1172,10 +1224,14 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 		NodeID child_node_id = node_stack[top];
 		if (child_node_id.IsBody())
 		{
+			++bodies_visited;
+
 			BodyID body_id = child_node_id.GetBodyID();
 			ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
 			if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
 			{
+				++hits_collected;
+
 				// Store potential hit with body
 				ioCollector.AddHit(body_id);
 				if (ioCollector.ShouldEarlyOut())
@@ -1184,6 +1240,8 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 		}
 		else if (child_node_id.IsValid())
 		{
+			++nodes_visited;
+
 			// Process normal node
 			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
 			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
@@ -1222,6 +1280,17 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 		--top;
 	} 
 	while (top >= 0);
+
+	uint64 time = GetProcessorTickCount() - start;
+
+	{
+		unique_lock lock(mStatsMutex);
+		Stat &s = mStats["Point"][inObjectLayerFilter.GetDescription()];
+		s.mNodesVisited += nodes_visited;
+		s.mBodiesVisited += bodies_visited;
+		s.mHitsReported += hits_collected;
+		s.mTotalTime += time;
+	}
 }
 
 void QuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
@@ -1295,6 +1364,12 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 	// Get the root
 	const RootNode &root_node = GetCurrentRoot();
 
+	int bodies_visited = 0;
+	int hits_collected = 0;
+	int nodes_visited = 0;
+
+	uint64 start = GetProcessorTickCount();
+
 	// Properties of ray
 	Vec3 origin(inBox.mBox.GetCenter());
 	Vec3 extent(inBox.mBox.GetExtent());
@@ -1315,10 +1390,14 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 			float fraction = fraction_stack[top];
 			if (fraction < early_out_fraction)
 			{
+				++bodies_visited;
+
 				BodyID body_id = child_node_id.GetBodyID();
 				ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
 				if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
 				{
+					++hits_collected;
+
 					// Store potential hit with body
 					BroadPhaseCastResult result { body_id, fraction };
 					ioCollector.AddHit(result);
@@ -1330,6 +1409,8 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 		}
 		else if (child_node_id.IsValid())
 		{
+			++nodes_visited;
+
 			// Process normal node
 			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
 			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
@@ -1377,6 +1458,17 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 		--top;
 	} 
 	while (top >= 0);
+
+	uint64 time = GetProcessorTickCount() - start;
+
+	{
+		unique_lock lock(mStatsMutex);
+		Stat &s = mStats["CastAABox"][inObjectLayerFilter.GetDescription()];
+		s.mNodesVisited += nodes_visited;
+		s.mBodiesVisited += bodies_visited;
+		s.mHitsReported += hits_collected;
+		s.mTotalTime += time;
+	}
 }
 
 void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, ObjectLayerPairFilter inObjectLayerPairFilter) const
@@ -1564,5 +1656,22 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 }
 
 #endif
+
+void QuadTree::DumpStats() const
+{
+	unique_lock lock(mStatsMutex);
+	uint64 ticks_per_sec = GetProcessorTicksPerSecond();
+	for (const StatsMap::value_type &s : mStats)
+		for (const LayerToStats::value_type &kv : s.second)
+		{
+			double total_time = 1000.0 * double(kv.second.mTotalTime) / double(ticks_per_sec);
+			double hits_reported_vs_bodies_visited = kv.second.mBodiesVisited > 0? 100.0 * double(kv.second.mHitsReported) / double(kv.second.mBodiesVisited) : 100.0;
+			double hits_reported_vs_nodes_visited = kv.second.mNodesVisited > 0? double(kv.second.mHitsReported) / double(kv.second.mNodesVisited) : -1.0f;
+
+			stringstream str;
+			str << s.first << ", " << kv.first << ", " << mName << ", " << total_time << ", " << kv.second.mNodesVisited << ", " << kv.second.mBodiesVisited << ", " << kv.second.mHitsReported << ", " << hits_reported_vs_bodies_visited << ", " << hits_reported_vs_nodes_visited;
+			Trace(str.str().c_str());
+		}
+}
 
 } // JPH

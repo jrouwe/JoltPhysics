@@ -25,6 +25,14 @@ public:
 	{
 		return true;
 	}
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Get a string that describes this filter for debugging purposes
+	virtual const char *	GetDescription() const
+	{
+		return "None";
+	}
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 };
 
 /// Function to test if two objects can collide based on their object layer. Used while finding collision pairs.

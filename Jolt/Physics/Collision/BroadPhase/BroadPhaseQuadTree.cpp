@@ -412,10 +412,24 @@ void BroadPhaseQuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioC
 		const QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
+			JPH_PROFILE(tree.GetName());
 			tree.CastRay(inRay, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
+		}
+	}
+
+	{
+		unique_lock lock2(mRayMutex);
+		if (mRayCounter++ > 10000)
+		{
+			Trace("Query Type, Filter Description, Tree Name, Total Time (ms), Nodes Visited, Bodies Visited, Hits Reported, Hits Reported vs Bodies Visited (%%), Hits Reported vs Nodes Visited");
+			for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
+			{
+				const QuadTree &tree = mLayers[l];
+				tree.DumpStats();
+			}
+			mRayCounter = 0;
 		}
 	}
 }
@@ -435,7 +449,7 @@ void BroadPhaseQuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollec
 		const QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
+			JPH_PROFILE(tree.GetName());
 			tree.CollideAABox(inBox, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -458,7 +472,7 @@ void BroadPhaseQuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, Collide
 		const QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
+			JPH_PROFILE(tree.GetName());
 			tree.CollideSphere(inCenter, inRadius, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -481,7 +495,7 @@ void BroadPhaseQuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector
 		const QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
+			JPH_PROFILE(tree.GetName());
 			tree.CollidePoint(inPoint, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -504,7 +518,7 @@ void BroadPhaseQuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideSha
 		const QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
+			JPH_PROFILE(tree.GetName());
 			tree.CollideOrientedBox(inBox, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -527,7 +541,7 @@ void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollecto
 		const QuadTree &tree = mLayers[l];
 		if (tree.HasBodies() && inBroadPhaseLayerFilter.ShouldCollide(BroadPhaseLayer(l)))
 		{
-			JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
+			JPH_PROFILE(tree.GetName());
 			tree.CastAABox(inBox, ioCollector, inObjectLayerFilter, mTracking);
 			if (ioCollector.ShouldEarlyOut())
 				break;
@@ -564,7 +578,7 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 			const QuadTree &tree = mLayers[l];
 			if (tree.HasBodies() && inObjectVsBroadPhaseLayerFilter(object_layer, BroadPhaseLayer(l)))
 			{
-				JPH_PROFILE(mBroadPhaseLayerToString(BroadPhaseLayer(l)));
+				JPH_PROFILE(tree.GetName());
 				tree.FindCollidingPairs(bodies, b_start, int(b_mid - b_start), inSpeculativeContactDistance, ioPairCollector, inObjectLayerPairFilter);
 			}
 		}
@@ -573,5 +587,16 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 		b_start = b_mid;
 	}
 }
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+
+void BroadPhaseQuadTree::SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString)
+{
+	// Set the name on the sub trees
+	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
+		mLayers[l].SetName(inBroadPhaseLayerToString(BroadPhaseLayer(l)));
+}
+
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 } // JPH

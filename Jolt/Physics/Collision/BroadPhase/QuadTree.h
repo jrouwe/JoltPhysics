@@ -9,6 +9,8 @@
 #include <Physics/Body/BodyManager.h>
 #include <Physics/Collision/BroadPhase/BroadPhase.h>
 
+#include <map>
+
 namespace JPH {
 
 /// Internal tree structure in broadphase, is essentially a quad AABB tree.
@@ -163,6 +165,12 @@ public:
 	/// Destructor
 								~QuadTree();
 
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Name of the tree for debugging purposes
+	void						SetName(const char *inName)			{ mName = inName; }
+	inline const char *			GetName() const						{ return mName; }
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
 	/// Check if there is anything in the tree
 	inline bool					HasBodies() const					{ return mNumBodies != 0; }
 
@@ -236,6 +244,8 @@ public:
 	/// Find all colliding pairs between dynamic bodies, calls ioPairCollector for every pair found
 	void						FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, ObjectLayerPairFilter inObjectLayerPairFilter) const;
 
+	void						DumpStats() const;
+
 private:
 	/// Constants
 	static const uint32			cInvalidNodeIndex = 0xffffffff;		///< Value used to indicate node index is invalid
@@ -297,6 +307,11 @@ private:
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
 #endif
 
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Name of this tree for debugging purposes
+	const char *				mName = "Layer";
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
 	/// Number of bodies currently in the tree
 	atomic<uint32>				mNumBodies { 0 };
 
@@ -313,6 +328,18 @@ private:
 
 	/// Flag to keep track of changes to the broadphase, if false, we don't need to UpdatePrepare/Finalize()
 	atomic<bool>				mIsDirty = false;
+
+	mutable Mutex				mStatsMutex;
+	struct Stat
+	{
+		uint64					mNodesVisited = 0;
+		uint64					mBodiesVisited = 0;
+		uint64					mHitsReported = 0;
+		uint64					mTotalTime = 0;
+	};
+	using LayerToStats = map<string, Stat>;
+	using StatsMap = map<string, LayerToStats>;
+	mutable StatsMap			mStats;
 };
 
 } // JPH

@@ -86,17 +86,12 @@ public:
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	/// Set function that converts a broadphase layer to a human readable string for debugging purposes
-	void				SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { JPH_ASSERT(inBroadPhaseLayerToString != nullptr); mBroadPhaseLayerToString = inBroadPhaseLayerToString; }
+	virtual void		SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { /* Can be implemented by derived classes */ };
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 protected:
 	/// Link to the body manager that manages the bodies in this broadphase
 	BodyManager *		mBodyManager = nullptr;
-
-#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-	/// Debug function to convert a broadphase layer to a string
-	BroadPhaseLayerToString mBroadPhaseLayerToString = [](BroadPhaseLayer) { return "Layer"; };
-#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 };
 
 } // JPH

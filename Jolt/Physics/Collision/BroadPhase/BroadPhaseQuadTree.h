@@ -36,6 +36,9 @@ public:
 	virtual void			CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
 	virtual void			CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
 	virtual void			FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	virtual void			SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) override;
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 private:
 	/// Helper struct for AddBodies handle
@@ -87,6 +90,9 @@ private:
 
 	/// This is the next tree to update in UpdatePrepare()
 	uint32					mNextLayerToUpdate = 0;
+
+	mutable Mutex			mRayMutex;
+	mutable int				mRayCounter = 0;
 };
 
 } // JPH
