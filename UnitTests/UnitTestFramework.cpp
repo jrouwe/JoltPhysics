@@ -22,7 +22,7 @@ using namespace JPH;
 using namespace doctest;
 
 // Callback for traces
-void TraceImpl(const char *inFMT, ...)
+static void TraceImpl(const char *inFMT, ...)
 { 
 	// Format the message
 	va_list list;

@@ -1054,13 +1054,13 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 		}
 
 		/// Returns true if further processing of the tree should be aborted
-		JPH_INLINE bool			ShouldAbort()
+		JPH_INLINE bool			ShouldAbort() const
 		{
 			return mCollector.ShouldEarlyOut();
 		}
 
 		/// Returns true if this node / body should be visited, false if no hit can be generated
-		JPH_INLINE bool			ShouldVisitNode(int inStackTop)
+		JPH_INLINE bool			ShouldVisitNode(int inStackTop) const
 		{
 			return mFractionStack[inStackTop] < mCollector.GetEarlyOutFraction();
 		}
@@ -1123,13 +1123,13 @@ void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCol
 		}
 
 		/// Returns true if further processing of the tree should be aborted
-		JPH_INLINE bool				ShouldAbort()
+		JPH_INLINE bool				ShouldAbort() const
 		{
 			return mCollector.ShouldEarlyOut();
 		}
 
 		/// Returns true if this node / body should be visited, false if no hit can be generated
-		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop) const
 		{
 			return true;
 		}
@@ -1183,13 +1183,13 @@ void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyC
 		}
 
 		/// Returns true if further processing of the tree should be aborted
-		JPH_INLINE bool				ShouldAbort()
+		JPH_INLINE bool				ShouldAbort() const
 		{
 			return mCollector.ShouldEarlyOut();
 		}
 
 		/// Returns true if this node / body should be visited, false if no hit can be generated
-		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop) const
 		{
 			return true;
 		}
@@ -1249,13 +1249,13 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 		}
 
 		/// Returns true if further processing of the tree should be aborted
-		JPH_INLINE bool				ShouldAbort()
+		JPH_INLINE bool				ShouldAbort() const
 		{
 			return mCollector.ShouldEarlyOut();
 		}
 
 		/// Returns true if this node / body should be visited, false if no hit can be generated
-		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop) const
 		{
 			return true;
 		}
@@ -1306,13 +1306,13 @@ void QuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyColl
 		}
 
 		/// Returns true if further processing of the tree should be aborted
-		JPH_INLINE bool				ShouldAbort()
+		JPH_INLINE bool				ShouldAbort() const
 		{
 			return mCollector.ShouldEarlyOut();
 		}
 
 		/// Returns true if this node / body should be visited, false if no hit can be generated
-		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop) const
 		{
 			return true;
 		}
@@ -1366,13 +1366,13 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 		}
 
 		/// Returns true if further processing of the tree should be aborted
-		JPH_INLINE bool				ShouldAbort()
+		JPH_INLINE bool				ShouldAbort() const
 		{
 			return mCollector.ShouldEarlyOut();
 		}
 
 		/// Returns true if this node / body should be visited, false if no hit can be generated
-		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop) const
 		{
 			return mFractionStack[inStackTop] < mCollector.GetEarlyOutFraction();
 		}

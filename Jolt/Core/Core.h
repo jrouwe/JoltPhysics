@@ -35,6 +35,7 @@
 	#pragma clang diagnostic ignored "-Winvalid-offsetof"
 	#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 	#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
+	#pragma clang diagnostic ignored "-Wctad-maybe-unsupported"
 	#ifndef JPH_PLATFORM_ANDROID
 		#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
 	#endif

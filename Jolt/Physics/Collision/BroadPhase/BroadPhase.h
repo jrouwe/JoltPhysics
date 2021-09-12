@@ -93,7 +93,7 @@ public:
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	/// Set function that converts a broadphase layer to a human readable string for debugging purposes
-	virtual void		SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { /* Can be implemented by derived classes */ };
+	virtual void		SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { /* Can be implemented by derived classes */ }
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
