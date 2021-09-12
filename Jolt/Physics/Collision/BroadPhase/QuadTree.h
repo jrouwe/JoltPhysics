@@ -9,7 +9,9 @@
 #include <Physics/Body/BodyManager.h>
 #include <Physics/Collision/BroadPhase/BroadPhase.h>
 
-#include <map>
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	#include <map>
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 namespace JPH {
 
