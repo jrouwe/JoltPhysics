@@ -589,7 +589,7 @@ void BroadPhaseQuadTree::SetBroadPhaseLayerToString(BroadPhaseLayerToString inBr
 
 void BroadPhaseQuadTree::ReportStats()
 {
-	Trace("Query Type, Filter Description, Tree Name, Num Queries, Total Time (ms), Nodes Visited, Bodies Visited, Hits Reported, Hits Reported vs Bodies Visited (%%), Hits Reported vs Nodes Visited");
+	Trace("Query Type, Filter Description, Tree Name, Num Queries, Total Time (ms), Total Time Excl. Collector (ms), Nodes Visited, Bodies Visited, Hits Reported, Hits Reported vs Bodies Visited (%%), Hits Reported vs Nodes Visited");
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
 		mLayers[l].ReportStats();
 }
