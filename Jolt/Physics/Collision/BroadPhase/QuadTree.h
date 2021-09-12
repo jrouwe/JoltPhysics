@@ -331,6 +331,11 @@ private:
 	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;
 	
 	mutable LayerToStats		mCastRayStats;
+	mutable LayerToStats		mCollideAABoxStats;
+	mutable LayerToStats		mCollideSphereStats;
+	mutable LayerToStats		mCollidePointStats;
+	mutable LayerToStats		mCollideOrientedBoxStats;
+	mutable LayerToStats		mCastAABoxStats;
 #endif // JPH_TRACK_BROADPHASE_STATS
 
 	/// Walk the node tree calling the Visitor::VisitNodes for each node encountered and Visitor::VisitBody for each body encountered

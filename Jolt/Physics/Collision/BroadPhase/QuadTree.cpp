@@ -1112,366 +1112,318 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 
 void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get the root
-	const RootNode &root_node = GetCurrentRoot();
-
-	NodeID node_stack[cStackSize];
-	node_stack[0] = root_node.GetNodeID();
-	int top = 0;
-	do
+	class Visitor
 	{
-		// Check if node is a body
-		NodeID child_node_id = node_stack[top];
-		if (child_node_id.IsBody())
+	public:
+		/// Constructor
+		JPH_INLINE					Visitor(const AABox &inBox, CollideShapeBodyCollector &ioCollector) :
+			mBox(inBox),
+			mCollector(ioCollector)
 		{
-			BodyID body_id = child_node_id.GetBodyID();
-			ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
-			if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
-			{
-				// Store potential hit with body
-				ioCollector.AddHit(body_id);
-				if (ioCollector.ShouldEarlyOut())
-					break;
-			}
 		}
-		else if (child_node_id.IsValid())
+
+		/// Returns true if further processing of the tree should be aborted
+		JPH_INLINE bool				ShouldAbort()
 		{
-			// Process normal node
-			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
-			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
+			return mCollector.ShouldEarlyOut();
+		}
 
-			// Test bounds of 4 children
-			Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-			Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-			Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-			Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-			Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-			Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+		/// Returns true if this node / body should be visited, false if no hit can be generated
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		{
+			return true;
+		}
 
-			UVec4 hitting = AABox4VsBox(inBox, bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
+		/// Visit nodes, returns number of hits found and sorts ioChildNodeIDs so that they are at the beginning of the vector.
+		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioChildNodeIDs, int inStackTop) 
+		{
+			// Test the box vs 4 boxes
+			UVec4 hitting = AABox4VsBox(mBox, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
 			// Count how many results are hitting
 			int num_results = hitting.CountTrues();
 			if (num_results > 0)
 			{
-				// Load ids for 4 children
-				UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
-
 				// Sort trues first
-				UVec4::sSort4True(hitting, child_ids);
-
-				// Push them onto the stack
-				if (top + 4 < cStackSize)
-				{
-					child_ids.StoreInt4((uint32 *)&node_stack[top]);
-					top += num_results;
-				}
-				else
-					JPH_ASSERT(false, "Stack full!");
+				UVec4::sSort4True(hitting, ioChildNodeIDs);
 			}
+
+			return num_results;
 		}
-		--top;
-	} 
-	while (top >= 0);
+
+		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
+		JPH_INLINE void				VisitBody(const BodyID &inBodyID, int inStackTop)
+		{
+			// Store potential hit with body
+			mCollector.AddHit(inBodyID);
+		}
+
+	private:
+		const AABox &				mBox;
+		CollideShapeBodyCollector &	mCollector;
+	};
+
+	Visitor visitor(inBox, ioCollector);
+	WalkTree(inObjectLayerFilter, inTracking, visitor JPH_IF_TRACK_BROADPHASE_STATS(, mCollideAABoxStats));
 }
 
 void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get the root
-	const RootNode &root_node = GetCurrentRoot();
-
-	// Splat sphere to 4 component vectors
-	Vec4 center_x = Vec4(inCenter).SplatX();
-	Vec4 center_y = Vec4(inCenter).SplatY();
-	Vec4 center_z = Vec4(inCenter).SplatZ();
-	Vec4 radius_sq = Vec4::sReplicate(Square(inRadius));
-
-	NodeID node_stack[cStackSize];
-	node_stack[0] = root_node.GetNodeID();
-	int top = 0;
-	do
+	class Visitor
 	{
-		// Check if node is a body
-		NodeID child_node_id = node_stack[top];
-		if (child_node_id.IsBody())
+	public:
+		/// Constructor
+		JPH_INLINE					Visitor(Vec3Arg inCenter, float inRadius, CollideShapeBodyCollector &ioCollector) :
+			mCenterX(inCenter.SplatX()),
+			mCenterY(inCenter.SplatY()),
+			mCenterZ(inCenter.SplatZ()),
+			mRadiusSq(Vec4::sReplicate(Square(inRadius))),
+			mCollector(ioCollector)
 		{
-			BodyID body_id = child_node_id.GetBodyID();
-			ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
-			if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
-			{
-				// Store potential hit with body
-				ioCollector.AddHit(body_id);
-				if (ioCollector.ShouldEarlyOut())
-					break;
-			}
 		}
-		else if (child_node_id.IsValid())
+
+		/// Returns true if further processing of the tree should be aborted
+		JPH_INLINE bool				ShouldAbort()
 		{
-			// Process normal node
-			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
-			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
+			return mCollector.ShouldEarlyOut();
+		}
 
-			// Test bounds of 4 children
-			Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-			Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-			Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-			Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-			Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-			Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+		/// Returns true if this node / body should be visited, false if no hit can be generated
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		{
+			return true;
+		}
 
+		/// Visit nodes, returns number of hits found and sorts ioChildNodeIDs so that they are at the beginning of the vector.
+		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioChildNodeIDs, int inStackTop) 
+		{
 			// Get closest point on box
-			Vec4 closest_x = Vec4::sMin(Vec4::sMax(center_x, bounds_minx), bounds_maxx);
-			Vec4 closest_y = Vec4::sMin(Vec4::sMax(center_y, bounds_miny), bounds_maxy);
-			Vec4 closest_z = Vec4::sMin(Vec4::sMax(center_z, bounds_minz), bounds_maxz);
+			Vec4 closest_x = Vec4::sMin(Vec4::sMax(mCenterX, inBoundsMinX), inBoundsMaxX);
+			Vec4 closest_y = Vec4::sMin(Vec4::sMax(mCenterY, inBoundsMinY), inBoundsMaxY);
+			Vec4 closest_z = Vec4::sMin(Vec4::sMax(mCenterZ, inBoundsMinZ), inBoundsMaxZ);
 
 			// Test the distance from the center of the sphere to the box is smaller than the radius
-			Vec4 distance_sq = Square(closest_x - center_x) + Square(closest_y - center_y) + Square(closest_z - center_z);
-			UVec4 hitting = Vec4::sLessOrEqual(distance_sq, radius_sq);
+			Vec4 distance_sq = Square(closest_x - mCenterX) + Square(closest_y - mCenterY) + Square(closest_z - mCenterZ);
+			UVec4 hitting = Vec4::sLessOrEqual(distance_sq, mRadiusSq);
 
 			// Count how many results are hitting
 			int num_results = hitting.CountTrues();
 			if (num_results > 0)
 			{
-				// Load ids for 4 children
-				UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
-
 				// Sort trues first
-				UVec4::sSort4True(hitting, child_ids);
-
-				// Push them onto the stack
-				if (top + 4 < cStackSize)
-				{
-					child_ids.StoreInt4((uint32 *)&node_stack[top]);
-					top += num_results;
-				}
-				else
-					JPH_ASSERT(false, "Stack full!");
+				UVec4::sSort4True(hitting, ioChildNodeIDs);
 			}
+
+			return num_results;
 		}
-		--top;
-	} 
-	while (top >= 0);
+
+		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
+		JPH_INLINE void				VisitBody(const BodyID &inBodyID, int inStackTop)
+		{
+			// Store potential hit with body
+			mCollector.AddHit(inBodyID);
+		}
+
+	private:
+		Vec4						mCenterX;
+		Vec4						mCenterY;
+		Vec4						mCenterZ;
+		Vec4						mRadiusSq;
+		CollideShapeBodyCollector &	mCollector;
+	};
+
+	Visitor visitor(inCenter, inRadius, ioCollector);
+	WalkTree(inObjectLayerFilter, inTracking, visitor JPH_IF_TRACK_BROADPHASE_STATS(, mCollideSphereStats));
 }
 
 void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get the root
-	const RootNode &root_node = GetCurrentRoot();
-
-	NodeID node_stack[cStackSize];
-	node_stack[0] = root_node.GetNodeID();
-	int top = 0;
-	do
+	class Visitor
 	{
-		// Check if node is a body
-		NodeID child_node_id = node_stack[top];
-		if (child_node_id.IsBody())
+	public:
+		/// Constructor
+		JPH_INLINE					Visitor(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollector) :
+			mPoint(inPoint),
+			mCollector(ioCollector)
 		{
-			BodyID body_id = child_node_id.GetBodyID();
-			ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
-			if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
-			{
-				// Store potential hit with body
-				ioCollector.AddHit(body_id);
-				if (ioCollector.ShouldEarlyOut())
-					break;
-			}
 		}
-		else if (child_node_id.IsValid())
+
+		/// Returns true if further processing of the tree should be aborted
+		JPH_INLINE bool				ShouldAbort()
 		{
-			// Process normal node
-			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
-			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
+			return mCollector.ShouldEarlyOut();
+		}
 
-			// Test bounds of 4 children
-			Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-			Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-			Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-			Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-			Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-			Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+		/// Returns true if this node / body should be visited, false if no hit can be generated
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		{
+			return true;
+		}
 
+		/// Visit nodes, returns number of hits found and sorts ioChildNodeIDs so that they are at the beginning of the vector.
+		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioChildNodeIDs, int inStackTop) 
+		{
 			// Test if point overlaps with box
-			UVec4 hitting = AABox4VsPoint(inPoint, bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
+			UVec4 hitting = AABox4VsPoint(mPoint, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
 			// Count how many results are hitting
 			int num_results = hitting.CountTrues();
 			if (num_results > 0)
 			{
-				// Load ids for 4 children
-				UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
-
 				// Sort trues first
-				UVec4::sSort4True(hitting, child_ids);
-
-				// Push them onto the stack
-				if (top + 4 < cStackSize)
-				{
-					child_ids.StoreInt4((uint32 *)&node_stack[top]);
-					top += num_results;
-				}
-				else
-					JPH_ASSERT(false, "Stack full!");
+				UVec4::sSort4True(hitting, ioChildNodeIDs);
 			}
+
+			return num_results;
 		}
-		--top;
-	} 
-	while (top >= 0);
+
+		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
+		JPH_INLINE void				VisitBody(const BodyID &inBodyID, int inStackTop)
+		{
+			// Store potential hit with body
+			mCollector.AddHit(inBodyID);
+		}
+
+	private:
+		Vec3						mPoint;
+		CollideShapeBodyCollector &	mCollector;
+	};
+
+	Visitor visitor(inPoint, ioCollector);
+	WalkTree(inObjectLayerFilter, inTracking, visitor JPH_IF_TRACK_BROADPHASE_STATS(, mCollidePointStats));
 }
 
 void QuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get the root
-	const RootNode &root_node = GetCurrentRoot();
-
-	NodeID node_stack[cStackSize];
-	node_stack[0] = root_node.GetNodeID();
-	int top = 0;
-	do
+	class Visitor
 	{
-		// Check if node is a body
-		NodeID child_node_id = node_stack[top];
-		if (child_node_id.IsBody())
+	public:
+		/// Constructor
+		JPH_INLINE					Visitor(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector) :
+			mBox(inBox),
+			mCollector(ioCollector)
 		{
-			BodyID body_id = child_node_id.GetBodyID();
-			ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
-			if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
-			{
-				// Store potential hit with body
-				ioCollector.AddHit(body_id);
-				if (ioCollector.ShouldEarlyOut())
-					break;
-			}
 		}
-		else if (child_node_id.IsValid())
+
+		/// Returns true if further processing of the tree should be aborted
+		JPH_INLINE bool				ShouldAbort()
 		{
-			// Process normal node
-			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
-			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
+			return mCollector.ShouldEarlyOut();
+		}
 
-			// Test bounds of 4 children
-			Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-			Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-			Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-			Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-			Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-			Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+		/// Returns true if this node / body should be visited, false if no hit can be generated
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		{
+			return true;
+		}
 
+		/// Visit nodes, returns number of hits found and sorts ioChildNodeIDs so that they are at the beginning of the vector.
+		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioChildNodeIDs, int inStackTop) 
+		{
 			// Test if point overlaps with box
-			UVec4 hitting = AABox4VsBox(inBox, bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
+			UVec4 hitting = AABox4VsBox(mBox, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
 			// Count how many results are hitting
 			int num_results = hitting.CountTrues();
 			if (num_results > 0)
 			{
-				// Load ids for 4 children
-				UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
-
 				// Sort trues first
-				UVec4::sSort4True(hitting, child_ids);
-
-				// Push them onto the stack
-				if (top + 4 < cStackSize)
-				{
-					child_ids.StoreInt4((uint32 *)&node_stack[top]);
-					top += num_results;
-				}
-				else
-					JPH_ASSERT(false, "Stack full!");
+				UVec4::sSort4True(hitting, ioChildNodeIDs);
 			}
+
+			return num_results;
 		}
-		--top;
-	} 
-	while (top >= 0);
+
+		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
+		JPH_INLINE void				VisitBody(const BodyID &inBodyID, int inStackTop)
+		{
+			// Store potential hit with body
+			mCollector.AddHit(inBodyID);
+		}
+
+	private:
+		OrientedBox					mBox;
+		CollideShapeBodyCollector &	mCollector;
+	};
+
+	Visitor visitor(inBox, ioCollector);
+	WalkTree(inObjectLayerFilter, inTracking, visitor JPH_IF_TRACK_BROADPHASE_STATS(, mCollideOrientedBoxStats));
 }
 
 void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const
 {
-	// Get the root
-	const RootNode &root_node = GetCurrentRoot();
-
-	// Properties of ray
-	Vec3 origin(inBox.mBox.GetCenter());
-	Vec3 extent(inBox.mBox.GetExtent());
-	RayInvDirection inv_direction(inBox.mDirection);
-
-	NodeID node_stack[cStackSize];
-	float fraction_stack[cStackSize];
-	node_stack[0] = root_node.GetNodeID();
-	fraction_stack[0] = -1;
-	int top = 0;
-	float early_out_fraction = ioCollector.GetEarlyOutFraction();
-	do
+	class Visitor
 	{
-		// Check if node is a body
-		NodeID child_node_id = node_stack[top];
-		if (child_node_id.IsBody())
+	public:
+		/// Constructor
+		JPH_INLINE					Visitor(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector) :
+			mOrigin(inBox.mBox.GetCenter()),
+			mExtent(inBox.mBox.GetExtent()),
+			mInvDirection(inBox.mDirection),
+			mCollector(ioCollector)
 		{
-			float fraction = fraction_stack[top];
-			if (fraction < early_out_fraction)
-			{
-				BodyID body_id = child_node_id.GetBodyID();
-				ObjectLayer object_layer = inTracking[body_id.GetIndex()].mObjectLayer; // We're not taking a lock on the body, so it may be in the process of being removed so check if the object layer is invalid
-				if (object_layer != cObjectLayerInvalid && inObjectLayerFilter.ShouldCollide(object_layer))
-				{
-					// Store potential hit with body
-					BroadPhaseCastResult result { body_id, fraction };
-					ioCollector.AddHit(result);
-					if (ioCollector.ShouldEarlyOut())
-						break;
-					early_out_fraction = ioCollector.GetEarlyOutFraction();
-				}
-			}
+			mFractionStack[0] = -1;
 		}
-		else if (child_node_id.IsValid())
+
+		/// Returns true if further processing of the tree should be aborted
+		JPH_INLINE bool				ShouldAbort()
 		{
-			// Process normal node
-			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
-			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
+			return mCollector.ShouldEarlyOut();
+		}
 
-			// Get bounds of 4 children
-			Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-			Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-			Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-			Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-			Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-			Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+		/// Returns true if this node / body should be visited, false if no hit can be generated
+		JPH_INLINE bool				ShouldVisitNode(int inStackTop)
+		{
+			return mFractionStack[inStackTop] < mCollector.GetEarlyOutFraction();
+		}
 
+		/// Visit nodes, returns number of hits found and sorts ioChildNodeIDs so that they are at the beginning of the vector.
+		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioChildNodeIDs, int inStackTop) 
+		{
 			// Enlarge them by the casted aabox extents
-			AABox4EnlargeWithExtent(extent, bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
+			AABox4EnlargeWithExtent(mExtent, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
 			// Test 4 children
-			Vec4 fraction = RayAABox4(origin, inv_direction, bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz);
+			Vec4 fraction = RayAABox4(mOrigin, mInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
 			// Count how many results are hitting
-			UVec4 hitting = Vec4::sLess(fraction, Vec4::sReplicate(early_out_fraction));
+			UVec4 hitting = Vec4::sLess(fraction, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
 			int num_results = hitting.CountTrues();
 			if (num_results > 0)
 			{
-				// Load ids for 4 children
-				UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
-
 				// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-				Vec4::sSort4Reverse(fraction, child_ids);
+				Vec4::sSort4Reverse(fraction, ioChildNodeIDs);
 
 				// Shift the results so that only the hitting ones remain
+				ioChildNodeIDs = ioChildNodeIDs.ShiftComponents4Minus(num_results);
 				fraction = fraction.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-				child_ids = child_ids.ShiftComponents4Minus(num_results);
 
 				// Push them onto the stack
-				if (top + 4 < cStackSize)
-				{
-					fraction.StoreFloat4((Float4 *)&fraction_stack[top]);
-					child_ids.StoreInt4((uint32 *)&node_stack[top]);
-					top += num_results;
-				}
-				else
-					JPH_ASSERT(false, "Stack full!");
+				if (inStackTop + 4 < cStackSize)
+					fraction.StoreFloat4((Float4 *)&mFractionStack[inStackTop]);
 			}
+
+			return num_results;
 		}
-		--top;
-	} 
-	while (top >= 0);
+
+		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
+		JPH_INLINE void				VisitBody(const BodyID &inBodyID, int inStackTop)
+		{
+			// Store potential hit with body
+			BroadPhaseCastResult result { inBodyID, mFractionStack[inStackTop] };
+			mCollector.AddHit(result);
+		}
+
+	private:
+		Vec3						mOrigin;
+		Vec3						mExtent;
+		RayInvDirection				mInvDirection;
+		CastShapeBodyCollector &	mCollector;
+		float						mFractionStack[cStackSize];
+	};
+
+	Visitor visitor(inBox, ioCollector);
+	WalkTree(inObjectLayerFilter, inTracking, visitor JPH_IF_TRACK_BROADPHASE_STATS(, mCastAABoxStats));
 }
 
 void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, ObjectLayerPairFilter inObjectLayerPairFilter) const
@@ -1682,6 +1634,11 @@ void QuadTree::ReportStats() const
 {
 	unique_lock lock(mStatsMutex);
 	ReportStats("RayCast", mCastRayStats);
+	ReportStats("CollideAABox", mCollideAABoxStats);
+	ReportStats("CollideSphere", mCollideSphereStats);
+	ReportStats("CollidePoint", mCollidePointStats);
+	ReportStats("CollideOrientedBox", mCollideOrientedBoxStats);
+	ReportStats("CastAABox", mCastAABoxStats);
 }
 
 #endif // JPH_TRACK_BROADPHASE_STATS
