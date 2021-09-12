@@ -25,6 +25,14 @@ public:
 	{
 		return true;
 	}
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Get a string that describes this filter for stat tracking purposes
+	virtual string			GetDescription() const
+	{
+		return "No Description";
+	}
+#endif // JPH_TRACK_BROADPHASE_STATS
 };
 
 /// Function to test if two objects can collide based on their object layer. Used while finding collision pairs.

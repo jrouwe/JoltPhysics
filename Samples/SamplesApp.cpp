@@ -2073,6 +2073,11 @@ void SamplesApp::StepPhysics()
 		mTotalTime = 0;
 	}
 
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	if (mStepNumber % 600 == 0)
+		mPhysicsSystem->ReportBroadphaseStats();
+#endif // JPH_TRACK_BROADPHASE_STATS
+
 	{
 		// Post update
 		JPH_PROFILE("PostPhysicsUpdate");
