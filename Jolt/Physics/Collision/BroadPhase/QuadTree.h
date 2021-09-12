@@ -244,7 +244,10 @@ public:
 	/// Find all colliding pairs between dynamic bodies, calls ioPairCollector for every pair found
 	void						FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, ObjectLayerPairFilter inObjectLayerPairFilter) const;
 
-	void						DumpStats() const;
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Trace the stats of this tree to the TTY
+	void						ReportStats() const;
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 private:
 	/// Constants
@@ -268,8 +271,8 @@ private:
 	void						InvalidateBodyLocation(TrackingVector &ioTracking, BodyID inBodyID);
 
 	/// Get the current root of the tree
-	inline const RootNode &		GetCurrentRoot() const				{ return mRootNode[mRootNodeIndex]; }
-	inline RootNode &			GetCurrentRoot()					{ return mRootNode[mRootNodeIndex]; }
+	JPH_INLINE const RootNode &	GetCurrentRoot() const				{ return mRootNode[mRootNodeIndex]; }
+	JPH_INLINE RootNode &		GetCurrentRoot()					{ return mRootNode[mRootNodeIndex]; }
 
 	/// Depending on if inNodeID is a body or tree node return the bounding box
 	inline AABox				GetNodeOrBodyBounds(const BodyVector &inBodies, NodeID inNodeID) const;
@@ -307,6 +310,33 @@ private:
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
 #endif
 
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Mutex protecting the various LayerToStats members
+	mutable Mutex				mStatsMutex;
+
+	struct Stat
+	{
+		uint64					mNumQueries = 0;
+		uint64					mNodesVisited = 0;
+		uint64					mBodiesVisited = 0;
+		uint64					mHitsReported = 0;
+		uint64					mTotalTicks = 0;
+		uint64					mCollectorTicks = 0;
+	};
+	
+	using LayerToStats = map<string, Stat>;
+
+	/// Trace the stats of a single query type to the TTY
+	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;
+	
+	mutable LayerToStats		mCastRayStats;
+#endif // JPH_TRACK_BROADPHASE_STATS
+
+	/// Walk the node tree calling the Visitor::VisitNodes for each node encountered and Visitor::VisitBody for each body encountered
+	template <class Visitor>
+	JPH_INLINE void				WalkTree(const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking, Visitor &ioVisitor JPH_IF_TRACK_BROADPHASE_STATS(, LayerToStats &ioStats)) const;
+
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	/// Name of this tree for debugging purposes
 	const char *				mName = "Layer";
@@ -328,18 +358,6 @@ private:
 
 	/// Flag to keep track of changes to the broadphase, if false, we don't need to UpdatePrepare/Finalize()
 	atomic<bool>				mIsDirty = false;
-
-	mutable Mutex				mStatsMutex;
-	struct Stat
-	{
-		uint64					mNodesVisited = 0;
-		uint64					mBodiesVisited = 0;
-		uint64					mHitsReported = 0;
-		uint64					mTotalTime = 0;
-	};
-	using LayerToStats = map<string, Stat>;
-	using StatsMap = map<string, LayerToStats>;
-	mutable StatsMap			mStats;
 };
 
 } // JPH

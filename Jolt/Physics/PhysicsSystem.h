@@ -165,6 +165,11 @@ public:
 	/// @param outBodyIDs On return, this will contain the list of BodyIDs
 	void						GetActiveBodies(BodyIDVector &outBodyIDs) const				{ return mBodyManager.GetActiveBodies(outBodyIDs); }
 
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Trace the accumulated broadphase stats to the TTY
+	void						ReportBroadphaseStats()										{ mBroadPhase->ReportStats(); }
+#endif // JPH_TRACK_BROADPHASE_STATS
+
 private:
 	using CCDBody = PhysicsUpdateContext::SubStep::CCDBody;
 

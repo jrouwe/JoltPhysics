@@ -39,6 +39,9 @@ public:
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	virtual void			SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) override;
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	virtual void			ReportStats() override;
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 private:
 	/// Helper struct for AddBodies handle
@@ -90,9 +93,6 @@ private:
 
 	/// This is the next tree to update in UpdatePrepare()
 	uint32					mNextLayerToUpdate = 0;
-
-	mutable Mutex			mRayMutex;
-	mutable int				mRayCounter = 0;
 };
 
 } // JPH

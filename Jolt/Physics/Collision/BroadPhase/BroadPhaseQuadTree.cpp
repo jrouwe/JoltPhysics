@@ -418,20 +418,6 @@ void BroadPhaseQuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioC
 				break;
 		}
 	}
-
-	{
-		unique_lock lock2(mRayMutex);
-		if (mRayCounter++ > 10000)
-		{
-			Trace("Query Type, Filter Description, Tree Name, Total Time (ms), Nodes Visited, Bodies Visited, Hits Reported, Hits Reported vs Bodies Visited (%%), Hits Reported vs Nodes Visited");
-			for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
-			{
-				const QuadTree &tree = mLayers[l];
-				tree.DumpStats();
-			}
-			mRayCounter = 0;
-		}
-	}
 }
 
 void BroadPhaseQuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
@@ -598,5 +584,16 @@ void BroadPhaseQuadTree::SetBroadPhaseLayerToString(BroadPhaseLayerToString inBr
 }
 
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+
+void BroadPhaseQuadTree::ReportStats()
+{
+	Trace("Query Type, Filter Description, Tree Name, Num Queries, Total Time (ms), Nodes Visited, Bodies Visited, Hits Reported, Hits Reported vs Bodies Visited (%%), Hits Reported vs Nodes Visited");
+	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
+		mLayers[l].ReportStats();
+}
+
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 } // JPH

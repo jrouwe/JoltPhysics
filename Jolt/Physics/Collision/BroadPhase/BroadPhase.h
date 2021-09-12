@@ -6,6 +6,13 @@
 #include <Physics/Collision/BroadPhase/BroadPhaseQuery.h>
 #include <Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 
+// Shorthand function to ifdef out code if broadphase stats tracking is off
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	#define JPH_IF_TRACK_BROADPHASE_STATS(...) __VA_ARGS__
+#else
+	#define JPH_IF_TRACK_BROADPHASE_STATS(...)
+#endif // JPH_TRACK_BROADPHASE_STATS
+
 namespace JPH {
 
 class BodyManager;
@@ -88,6 +95,12 @@ public:
 	/// Set function that converts a broadphase layer to a human readable string for debugging purposes
 	virtual void		SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { /* Can be implemented by derived classes */ };
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Trace the collected broadphase stats in CSV form.
+	/// This report can be used to judge and tweak the efficiency of the broadphase.
+	virtual void		ReportStats()														{ /* Can be implemented by derived classes */ }
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 protected:
 	/// Link to the body manager that manages the bodies in this broadphase
