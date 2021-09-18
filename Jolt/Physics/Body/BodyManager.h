@@ -31,7 +31,7 @@ public:
 									~BodyManager();
 
 	/// Initialize the manager
-	void							Init(uint inMaxBodies);
+	void							Init(uint inMaxBodies, uint inNumBodyMutexes);
 
 	/// Gets the current amount of bodies that are in the body manager
 	uint							GetNumBodies() const;
@@ -121,6 +121,7 @@ public:
 	
 	///@name Batch body mutex access (do not use directly)
 	///@{
+	MutexMask						GetAllBodiesMutexMask() const				{ return mBodyMutexes.GetNumMutexes() == sizeof(MutexMask) * 8? ~MutexMask(0) : (MutexMask(1) << mBodyMutexes.GetNumMutexes()) - 1; }
 	MutexMask						GetMutexMask(const BodyID *inBodies, int inNumber) const;
 	void							LockRead(MutexMask inMutexMask) const;
 	void							UnlockRead(MutexMask inMutexMask) const;
@@ -243,7 +244,7 @@ private:
 	mutable Mutex					mBodiesMutex; 
 
 	/// An array of mutexes protecting the bodies in the mBodies array
-	using BodyMutexes = MutexArray<SharedMutex, 64>;
+	using BodyMutexes = MutexArray<SharedMutex>;
 	mutable BodyMutexes				mBodyMutexes;
 
 	/// List of next sequence number for a body ID

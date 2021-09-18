@@ -288,6 +288,7 @@ static TestCategory sAllCategories[] =
 // Configuration
 //-----------------------------------------------------------------------------
 static constexpr uint cNumBodies = 10240;
+static constexpr uint cNumBodyMutexes = 0; // Autodetect
 static constexpr uint cMaxBodyPairs = 65536;
 static constexpr uint cMaxContactConstraints = 10240;
 
@@ -502,7 +503,7 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 	// Create physics system
 	mPhysicsSystem = new PhysicsSystem();
-	mPhysicsSystem->Init(cNumBodies, cMaxBodyPairs, cMaxContactConstraints, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
+	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
 	mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings);
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	mPhysicsSystem->SetBroadPhaseLayerToString(GetBroadPhaseLayerName);

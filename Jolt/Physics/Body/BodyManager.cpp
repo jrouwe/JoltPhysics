@@ -34,9 +34,15 @@ BodyManager::~BodyManager()
 	delete [] mActiveBodies;
 }
 
-void BodyManager::Init(uint inMaxBodies)
+void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes)
 {
 	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+
+	// Num body mutexes must be a power of two and not bigger than our MutexMask
+	uint num_body_mutexes = Clamp<uint>(GetNextPowerOf2(inNumBodyMutexes == 0? 2 * thread::hardware_concurrency() : inNumBodyMutexes), 1, sizeof(MutexMask) * 8);
+
+	// Allocate the body mutexes
+	mBodyMutexes.Init(num_body_mutexes);
 
 	// Allocate space for bodies
 	mBodies.reserve(inMaxBodies);
@@ -344,12 +350,12 @@ void BodyManager::SetBodyActivationListener(BodyActivationListener *inListener)
 
 BodyManager::MutexMask BodyManager::GetMutexMask(const BodyID *inBodies, int inNumber) const
 {
-	static_assert(sizeof(MutexMask) * 8 == BodyMutexes::NumMutexes, "MutexMask must have the same amount of bits");
+	JPH_ASSERT(sizeof(MutexMask) * 8 >= mBodyMutexes.GetNumMutexes(), "MutexMask must have enough bits");
 
-	if (inNumber >= BodyMutexes::NumMutexes)
+	if (inNumber >= (int)mBodyMutexes.GetNumMutexes())
 	{
 		// Just lock everything if there are too many bodies
-		return ~MutexMask(0);
+		return GetAllBodiesMutexMask();
 	}
 	else
 	{
