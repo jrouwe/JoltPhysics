@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <Core/NonCopyable.h>
+
 namespace JPH {
 
 /// A mutex array protects a number of resources with a limited amount of mutexes.
@@ -10,14 +12,14 @@ namespace JPH {
 /// The idea is that if the amount of threads is much smaller than the amount of mutexes
 /// that there is a relatively small chance that two different objects map to the same mutex.
 template <class MutexType>
-class MutexArray
+class MutexArray : public NonCopyable
 {
 public:
 	/// Constructor, constructs an empty mutex array that you need to initialize with Init()
 							MutexArray() = default;
 
 	/// Constructor, constructs an array with inNumMutexes entries
-							MutexArray(uint inNumMutexes) { Init(inNumMutexes); }
+	explicit				MutexArray(uint inNumMutexes) { Init(inNumMutexes); }
 
 	/// Destructor
 							~MutexArray() { delete [] mMutexStorage; }
