@@ -30,6 +30,12 @@ public:
 	virtual void				UnlockWrite(SharedMutex *inMutex) const = 0;
 	///@}
 
+	/// Get the mask needed to lock all bodies
+	inline MutexMask			GetAllBodiesMutexMask() const
+	{
+		return mBodyManager.GetAllBodiesMutexMask();
+	}
+
 	///@name Batch locking functions
 	///@{
 	virtual MutexMask			GetMutexMask(const BodyID *inBodies, int inNumber) const = 0;

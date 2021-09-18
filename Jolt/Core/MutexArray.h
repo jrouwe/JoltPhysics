@@ -9,19 +9,41 @@ namespace JPH {
 /// It uses hashing to find the mutex of a particular object.
 /// The idea is that if the amount of threads is much smaller than the amount of mutexes
 /// that there is a relatively small chance that two different objects map to the same mutex.
-template <class MutexType, int NumMutexesArg>
+template <class MutexType>
 class MutexArray
 {
 public:
-	/// Number of mutexes used to protect the underlying resources.
-	static constexpr int	NumMutexes = NumMutexesArg;
+	/// Constructor, constructs an empty mutex array that you need to initialize with Init()
+							MutexArray() = default;
+
+	/// Constructor, constructs an array with inNumMutexes entries
+							MutexArray(uint inNumMutexes) { Init(inNumMutexes); }
+
+	/// Destructor
+							~MutexArray() { delete [] mMutexStorage; }
+
+	/// Initialization
+	/// @param inNumMutexes The amount of mutexes to allocate
+	void					Init(uint inNumMutexes) 
+	{ 
+		JPH_ASSERT(mMutexStorage == nullptr); 
+		JPH_ASSERT(inNumMutexes > 0 && IsPowerOf2(inNumMutexes));
+
+		mMutexStorage = new MutexStorage[inNumMutexes]; 
+		mNumMutexes = inNumMutexes; 
+	}
+
+	/// Get the number of mutexes that were allocated
+	inline uint				GetNumMutexes() const
+	{
+		return mNumMutexes;
+	}
 
 	/// Convert an object index to a mutex index
 	inline uint32			GetMutexIndex(uint32 inObjectIndex) const
 	{
 		std::hash<uint32> hasher;
-		static_assert(IsPowerOf2(NumMutexes), "Number of mutexes must be power of 2");
-		return hasher(inObjectIndex) & (NumMutexes - 1);
+		return hasher(inObjectIndex) & (mNumMutexes - 1);
 	}
 
 	/// Get the mutex belonging to a certain object by index
@@ -41,8 +63,9 @@ public:
 	{
 		JPH_PROFILE_FUNCTION();
 
-		for (MutexStorage &m : mMutexStorage)
-			m.mMutex.lock();
+		MutexStorage *end = mMutexStorage + mNumMutexes;
+		for (MutexStorage *m = mMutexStorage; m < end; ++m)
+			m->mMutex.lock();
 	}
 
 	/// Unlock all mutexes
@@ -50,8 +73,9 @@ public:
 	{
 		JPH_PROFILE_FUNCTION();
 
-		for (MutexStorage &m : mMutexStorage)
-			m.mMutex.unlock();
+		MutexStorage *end = mMutexStorage + mNumMutexes;
+		for (MutexStorage *m = mMutexStorage; m < end; ++m)
+			m->mMutex.unlock();
 	}
 
 private:
@@ -61,7 +85,8 @@ private:
 		MutexType			mMutex;
 	};
 
-	MutexStorage			mMutexStorage[NumMutexes];
+	MutexStorage *			mMutexStorage = nullptr;
+	uint					mNumMutexes = 0;
 };
 
 } // JPH
