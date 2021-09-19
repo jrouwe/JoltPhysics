@@ -140,6 +140,10 @@ static inline float sCalculateClosestPointThroughNewtonRaphson(Vec3Arg inP1, Vec
 		Vec3 ddt_tangent = d2dt_h00 * inP1 + d2dt_h10 * inM1 + d2dt_h01 * inP2 + d2dt_h11 * inM2;
 		float d2dt = tangent.Dot(tangent) + position.Dot(ddt_tangent);  // Leaving out factor 2, because we left it out above too
 
+		// If d2dt is zero, the curve is flat and there are multiple t's for which we are closest to the origin, stop now
+		if (d2dt == 0.0f)
+			break;
+
 		// Do a Newton Raphson step
 		// See: https://en.wikipedia.org/wiki/Newton%27s_method
 		// Clamp against [-interval, interval] to avoid overshooting too much, we're not interested outside the interval
