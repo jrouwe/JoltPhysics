@@ -171,6 +171,12 @@ protected:
 private:	
 	class							DecodingContext;						///< Context class for walking through all nodes of a heightfield
 	struct							HSGetTrianglesContext;					///< Context class for GetTrianglesStart/Next
+
+	/// Calculate bit mask for all active edges in the heightfield
+	void							CalculateActiveEdges();
+	
+	/// Store material indices in the least amount of bits per index possible
+	void							StoreMaterialIndices(const vector<uint8> &inMaterialIndices);
 	
 	/// For location (inX, inY) get the block that contains this position and get the offset and scale needed to decode a uint8 height sample to a uint16
 	void							GetBlockOffsetAndScale(uint inX, uint inY, float &outBlockOffset, float &outBlockScale) const;

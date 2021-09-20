@@ -99,6 +99,109 @@ ShapeSettings::ShapeResult HeightFieldShapeSettings::Create() const
 	return mCachedResult;
 }
 
+void HeightFieldShape::CalculateActiveEdges()
+{
+	// Store active edges. The triangles are organized like this:
+	//  +       +
+	//  | \ T1B | \ T2B 
+	// e0   e2  |   \
+	//  | T1A \ | T2A \
+	//  +--e1---+-------+
+	//  | \ T3B | \ T4B 
+	//  |   \   |   \
+	//  | T3A \ | T4A \
+	//  +-------+-------+
+	// We store active edges e0 .. e2 as bits 0 .. 2. 
+	// We store triangles horizontally then vertically (order T1A, T2A, T3A and T4A).
+	// The top edge and right edge of the heightfield are always active so we do not need to store them, 
+	// therefore we only need to store (mSampleCount - 1)^2 * 3-bit
+	// The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
+	// Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
+	uint count_min_1 = mSampleCount - 1;
+	uint count_min_1_sq = Square(count_min_1);
+	mActiveEdges.resize((count_min_1_sq * 3 + 7) / 8 + 1); 
+	memset(&mActiveEdges[0], 0, mActiveEdges.size());
+
+	// Calculate triangle normals and make normals zero for triangles that are missing
+	vector<Vec3> normals;
+	normals.resize(2 * count_min_1_sq);
+	memset(&normals[0], 0, normals.size() * sizeof(Vec3));
+	for (uint y = 0; y < count_min_1; ++y)
+		for (uint x = 0; x < count_min_1; ++x)
+			if (!IsNoCollision(x, y) && !IsNoCollision(x + 1, y + 1))
+			{
+				Vec3 x1y1 = GetPosition(x, y);
+				Vec3 x2y2 = GetPosition(x + 1, y + 1);
+
+				uint offset = 2 * (count_min_1 * y + x);
+
+				if (!IsNoCollision(x, y + 1))
+				{
+					Vec3 x1y2 = GetPosition(x, y + 1);
+					normals[offset] = (x2y2 - x1y2).Cross(x1y1 - x1y2).Normalized();
+				}
+
+				if (!IsNoCollision(x + 1, y))
+				{
+					Vec3 x2y1 = GetPosition(x + 1, y);
+					normals[offset + 1] = (x1y1 - x2y1).Cross(x2y2 - x2y1).Normalized();
+				}
+			}
+
+	// Calculate active edges
+	for (uint y = 0; y < count_min_1; ++y)
+		for (uint x = 0; x < count_min_1; ++x)
+		{
+			// Calculate vertex positions. 
+			// We don't check 'no colliding' since those normals will be zero and sIsEdgeActive will return true
+			Vec3 x1y1 = GetPosition(x, y);
+			Vec3 x1y2 = GetPosition(x, y + 1);
+			Vec3 x2y2 = GetPosition(x + 1, y + 1);
+
+			// Calculate the edge flags (3 bits)
+			uint offset = 2 * (count_min_1 * y + x);
+			bool edge0_active = x == 0 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset - 1], x1y2 - x1y1);
+			bool edge1_active = y == count_min_1 - 1 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 2 * count_min_1 + 1], x2y2 - x1y2);
+			bool edge2_active = ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 1], x1y1 - x2y2);
+			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
+
+			// Store the edge flags in the array
+			uint bit_pos = 3 * (y * count_min_1 + x);
+			uint byte_pos = bit_pos >> 3;
+			bit_pos &= 0b111;
+			edge_flags <<= bit_pos;
+			mActiveEdges[byte_pos] |= uint8(edge_flags);
+			mActiveEdges[byte_pos + 1] |= uint8(edge_flags >> 8);
+		}
+}
+
+void HeightFieldShape::StoreMaterialIndices(const vector<uint8> &inMaterialIndices)
+{
+	uint count_min_1 = mSampleCount - 1;
+
+	mNumBitsPerMaterialIndex = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
+	mMaterialIndices.resize(((Square(count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
+
+	for (uint y = 0; y < count_min_1; ++y)
+		for (uint x = 0; x < count_min_1; ++x)
+		{
+			// Read material
+			uint sample_pos = x + y * count_min_1;
+			uint16 material_index = uint16(inMaterialIndices[sample_pos]);
+
+			// Calculate byte and bit position where the material index needs to go
+			uint bit_pos = sample_pos * mNumBitsPerMaterialIndex;
+			uint byte_pos = bit_pos >> 3;
+			bit_pos &= 0b111;
+
+			// Write the material index
+			material_index <<= bit_pos;
+			JPH_ASSERT(byte_pos + 1 < mMaterialIndices.size());
+			mMaterialIndices[byte_pos] |= uint8(material_index);
+			mMaterialIndices[byte_pos + 1] |= uint8(material_index >> 8);
+		}
+}
+
 HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult) :
 	Shape(inSettings, outResult),
 	mOffset(inSettings.mOffset),
@@ -334,104 +437,12 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 			}
 		}
 
-	// Store active edges. The triangles are organized like this:
-	//  +       +
-	//  | \ T1B | \ T2B 
-	// e0   e2  |   \
-	//  | T1A \ | T2A \
-	//  +--e1---+-------+
-	//  | \ T3B | \ T4B 
-	//  |   \   |   \
-	//  | T3A \ | T4A \
-	//  +-------+-------+
-	// We store active edges e0 .. e2 as bits 0 .. 2. 
-	// We store triangles horizontally then vertically (order T1A, T2A, T3A and T4A).
-	// The top edge and right edge of the heightfield are always active so we do not need to store them, 
-	// therefore we only need to store (mSampleCount - 1)^2 * 3-bit
-	// The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
-	// Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
-	uint count_min_1 = mSampleCount - 1;
-	uint count_min_1_sq = Square(count_min_1);
-	mActiveEdges.resize((count_min_1_sq * 3 + 7) / 8 + 1); 
-	memset(&mActiveEdges[0], 0, mActiveEdges.size());
-
-	// Calculate triangle normals and make normals zero for triangles that are missing
-	vector<Vec3> normals;
-	normals.resize(2 * count_min_1_sq);
-	memset(&normals[0], 0, normals.size() * sizeof(Vec3));
-	for (uint y = 0; y < count_min_1; ++y)
-		for (uint x = 0; x < count_min_1; ++x)
-			if (!IsNoCollision(x, y) && !IsNoCollision(x + 1, y + 1))
-			{
-				Vec3 x1y1 = GetPosition(x, y);
-				Vec3 x2y2 = GetPosition(x + 1, y + 1);
-
-				uint offset = 2 * (count_min_1 * y + x);
-
-				if (!IsNoCollision(x, y + 1))
-				{
-					Vec3 x1y2 = GetPosition(x, y + 1);
-					normals[offset] = (x2y2 - x1y2).Cross(x1y1 - x1y2).Normalized();
-				}
-
-				if (!IsNoCollision(x + 1, y))
-				{
-					Vec3 x2y1 = GetPosition(x + 1, y);
-					normals[offset + 1] = (x1y1 - x2y1).Cross(x2y2 - x2y1).Normalized();
-				}
-			}
-
-	// Calculate active edges
-	for (uint y = 0; y < count_min_1; ++y)
-		for (uint x = 0; x < count_min_1; ++x)
-		{
-			// Calculate vertex positions. 
-			// We don't check 'no colliding' since those normals will be zero and sIsEdgeActive will return true
-			Vec3 x1y1 = GetPosition(x, y);
-			Vec3 x1y2 = GetPosition(x, y + 1);
-			Vec3 x2y2 = GetPosition(x + 1, y + 1);
-
-			// Calculate the edge flags (3 bits)
-			uint offset = 2 * (count_min_1 * y + x);
-			bool edge0_active = x == 0 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset - 1], x1y2 - x1y1);
-			bool edge1_active = y == count_min_1 - 1 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 2 * count_min_1 + 1], x2y2 - x1y2);
-			bool edge2_active = ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 1], x1y1 - x2y2);
-			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
-
-			// Store the edge flags in the array
-			uint bit_pos = 3 * (y * count_min_1 + x);
-			uint byte_pos = bit_pos >> 3;
-			bit_pos &= 0b111;
-			edge_flags <<= bit_pos;
-			mActiveEdges[byte_pos] |= uint8(edge_flags);
-			mActiveEdges[byte_pos + 1] |= uint8(edge_flags >> 8);
-		}
+	// Calculate the active edges
+	CalculateActiveEdges();
 
 	// Compress material indices
 	if (mMaterials.size() > 1)
-	{
-		mNumBitsPerMaterialIndex = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
-		mMaterialIndices.resize(((Square(count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
-
-		for (uint y = 0; y < count_min_1; ++y)
-			for (uint x = 0; x < count_min_1; ++x)
-			{
-				// Read material
-				uint sample_pos = x + y * count_min_1;
-				uint16 material_index = uint16(inSettings.mMaterialIndices[sample_pos]);
-
-				// Calculate byte and bit position where the material index needs to go
-				uint bit_pos = sample_pos * mNumBitsPerMaterialIndex;
-				uint byte_pos = bit_pos >> 3;
-				bit_pos &= 0b111;
-
-				// Write the material index
-				material_index <<= bit_pos;
-				JPH_ASSERT(byte_pos + 1 < mMaterialIndices.size());
-				mMaterialIndices[byte_pos] |= uint8(material_index);
-				mMaterialIndices[byte_pos + 1] |= uint8(material_index >> 8);
-			}
-	}
+		StoreMaterialIndices(inSettings.mMaterialIndices);
 
 	outResult.Set(this);
 }
@@ -786,7 +797,7 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTr
 				return true;
 			}
 
-			JPH_INLINE int			VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) const
+			JPH_INLINE int			VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 			{
 				UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
 				UVec4::sSort4True(valid, ioProperties);
@@ -1096,7 +1107,7 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 
 	struct Visitor
 	{
-		JPH_INLINE explicit		Visitor(const HeightFieldShape *inShape, const RayCast inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) : 
+		JPH_INLINE explicit		Visitor(const HeightFieldShape *inShape, const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) : 
 			mCollector(ioCollector),
 			mRayOrigin(inRay.mOrigin),
 			mRayDirection(inRay.mDirection),
@@ -1277,7 +1288,7 @@ struct HeightFieldShape::HSGetTrianglesContext
 		return true;
 	}
 
-	int		VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) const
+	int		VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 	{
 		// Scale the bounding boxes of this node 
 		Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
@@ -1387,7 +1398,7 @@ void HeightFieldShape::sCollideConvexVsHeightField(const ConvexShape *inShape1, 
 			return true;
 		}
 
-		JPH_INLINE int				VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) const
+		JPH_INLINE int				VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 		{
 			// Scale the bounding boxes of this node
 			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
