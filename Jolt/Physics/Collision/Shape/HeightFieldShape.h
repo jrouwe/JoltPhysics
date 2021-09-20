@@ -139,7 +139,7 @@ public:
 
 	/// Get height field position at sampled location (inX, inY).
 	/// where inX and inY are integers in the range inX e [0, mSampleCount - 1] and inY e [0, mSampleCount - 1].
-	const Vec3						GetPosition(uint inX, uint inY) const;
+	Vec3							GetPosition(uint inX, uint inY) const;
 
 	/// Check if height field at sampled location (inX, inY) has collision (has a hole or not)
 	bool							IsNoCollision(uint inX, uint inY) const;
@@ -176,7 +176,7 @@ private:
 	void							GetBlockOffsetAndScale(uint inX, uint inY, float &outBlockOffset, float &outBlockScale) const;
 
 	/// Faster version of GetPosition when block offset and scale are already known
-	const Vec3						GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const;
+	Vec3							GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const;
 	
 	/// Determine amount of bits needed to encode sub shape id
 	uint							GetSubShapeIDBits() const;
@@ -190,7 +190,7 @@ private:
 
 	/// Visit the entire height field using a visitor pattern
 	template <class Visitor>
-	void							WalkHeightField(Visitor &ioVisitor) const;
+	JPH_INLINE void					WalkHeightField(Visitor &ioVisitor) const;
 
 	/// A block of 2x2 ranges used to form a hierarchical grid, ordered left top, right top, left bottom, right bottom
 	struct alignas(16) RangeBlock
