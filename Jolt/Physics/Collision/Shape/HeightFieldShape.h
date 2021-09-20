@@ -20,9 +20,6 @@ namespace HeightFieldShapeConstants
 	/// Value used to create gaps in the height field
 	constexpr float			cNoCollisionValue = FLT_MAX;
 
-	/// Hierarchical grids stop when cBlockSize x cBlockSize height samples remain
-	constexpr uint			cBlockSize = 2;
-
 	/// Stack size to use during WalkHeightField
 	constexpr int			cStackSize = 128;
 
@@ -52,7 +49,7 @@ public:
 	/// Create a height field shape of inSampleCount * inSampleCount vertices.
 	/// The height field is a surface defined by: inOffset + inScale * (x, inSamples[y * inSampleCount + x], y).
 	/// where x and y are integers in the range x and y e [0, inSampleCount - 1].
-	/// inSampleCount: Must be a power of 2 and minimally 8.
+	/// inSampleCount: inSampleCount / mBlockSize must be a power of 2 and minimally 2.
 	/// inSamples: inSampleCount^2 vertices.
 	/// inMaterialIndices: (inSampleCount - 1)^2 indices that index into inMaterialList.
 									HeightFieldShapeSettings(const float *inSamples, Vec3Arg inOffset, Vec3Arg inScale, uint32 inSampleCount, const uint8 *inMaterialIndices = nullptr, const PhysicsMaterialList &inMaterialList = PhysicsMaterialList());
@@ -65,6 +62,11 @@ public:
 	Vec3							mOffset = Vec3::sZero();
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 	uint32							mSampleCount = 0;
+
+	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only, 
+	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [1, 4], does not need to be
+	/// a power of 2.
+	uint32							mBlockSize = 2;
 
 	vector<float>					mHeightSamples;
 	vector<uint8>					mMaterialIndices;
@@ -218,13 +220,14 @@ private:
 
 	// Calculated data
 	uint32							mSampleCount = 0;
+	uint32							mBlockSize = 2;
 	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16;	///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
+	uint32							mNumBitsPerMaterialIndex = 0;		///< Number of bits per material index
 	vector<RangeBlock>				mRangeBlocks;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
 	vector<uint8>					mHeightSamples;						///< 8-bit height samples. Value [0, cMaxHeightValue8] maps to highest detail grid in mRangeBlocks [mMin, mMax].
 	vector<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags. 
 	vector<uint8>					mMaterialIndices;					///< Compressed to the minimum amount of bits per material index (mSampleCount - 1) * (mSampleCount - 1) * mNumBitsPerMaterialIndex bits of data
-	uint							mNumBitsPerMaterialIndex = 0;		///< Number of bits per material index
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Temporary rendering data

@@ -207,24 +207,35 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	mOffset(inSettings.mOffset),
 	mScale(inSettings.mScale),
 	mMaterials(inSettings.mMaterials),
-	mSampleCount(inSettings.mSampleCount)
+	mSampleCount(inSettings.mSampleCount),
+	mBlockSize(inSettings.mBlockSize)
 {
-	// Required to be power of two to allow creating a hierarchical grid
-	if (!IsPowerOf2(mSampleCount))
+	// Check sample count
+	if (mSampleCount % mBlockSize != 0)
 	{
-		outResult.SetError("HeightFieldShape: Sample count must be power of 2!");
+		outResult.SetError("HeightFieldShape: Sample count must be a multiple of block size!");
+		return;
+	}
+
+	// We stop at mBlockSize x mBlockSize height sample blocks
+	uint n = mSampleCount / mBlockSize;
+
+	// Required to be power of two to allow creating a hierarchical grid
+	if (!IsPowerOf2(n))
+	{
+		outResult.SetError("HeightFieldShape: Sample count / block size must be power of 2!");
 		return;
 	}
 
 	// We want at least 1 grid layer
-	if (mSampleCount < cBlockSize * 2)
+	if (n < 2)
 	{
 		outResult.SetError("HeightFieldShape: Sample count too low!");
 		return;
 	}
 
 	// Check that we don't overflow our 32 bit 'properties'
-	if (mSampleCount > cBlockSize * (1 << cNumBitsXY))
+	if (n > (1 << cNumBitsXY))
 	{
 		outResult.SetError("HeightFieldShape: Sample count too high!");
 		return;
@@ -292,9 +303,6 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		mOffset.SetY(mOffset.GetY() + min_value);
 	mScale.SetY(mScale.GetY() / scale);
 
-	// We stop at cBlockSize x cBlockSize height sample blocks
-	uint n = mSampleCount / cBlockSize;
-
 	// Calculate amount of grids
 	uint max_level = CountTrailingZeros(n);
 
@@ -309,7 +317,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	vector<vector<Range>> ranges;
 	ranges.resize(max_level + 1);
 
-	// Calculate highest detail grid by combining cBlockSize x cBlockSize height samples
+	// Calculate highest detail grid by combining mBlockSize x mBlockSize height samples
 	vector<Range> *cur_range_vector = &ranges.back();
 	cur_range_vector->resize(n * n);
 	Range *range_dst = &cur_range_vector->front();
@@ -318,12 +326,12 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		{
 			range_dst->mMin = 0xffff;
 			range_dst->mMax = 0;
-			uint max_bx = x == n - 1? cBlockSize : cBlockSize + 1; // for interior blocks take 1 more because the triangles connect to the next block so we must include their height too
-			uint max_by = y == n - 1? cBlockSize : cBlockSize + 1;
+			uint max_bx = x == n - 1? mBlockSize : mBlockSize + 1; // for interior blocks take 1 more because the triangles connect to the next block so we must include their height too
+			uint max_by = y == n - 1? mBlockSize : mBlockSize + 1;
 			for (uint by = 0; by < max_by; ++by)
 				for (uint bx = 0; bx < max_bx; ++bx)
 				{
-					uint16 h = quantized_samples[(y * cBlockSize + by) * mSampleCount + (x * cBlockSize + bx)];
+					uint16 h = quantized_samples[(y * mBlockSize + by) * mSampleCount + (x * mBlockSize + bx)];
 					if (h != cNoCollisionValue16)
 					{
 						range_dst->mMax = max(range_dst->mMax, h);
@@ -419,10 +427,10 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	for (uint y = 0; y < mSampleCount; ++y)
 		for (uint x = 0; x < mSampleCount; ++x)
 		{
-			uint bx = x / cBlockSize;
-			uint by = y / cBlockSize;
+			uint bx = x / mBlockSize;
+			uint by = y / mBlockSize;
 			uint16 h = quantized_samples[y * mSampleCount + x];
-			const Range &range = ranges.back()[by * (mSampleCount / cBlockSize) + bx];
+			const Range &range = ranges.back()[by * (mSampleCount / mBlockSize) + bx];
 			if (h == cNoCollisionValue16)
 			{
 				// No collision
@@ -453,12 +461,12 @@ void HeightFieldShape::GetBlockOffsetAndScale(uint inX, uint inY, float &outBloc
 	JPH_ASSERT(inY < mSampleCount); 
 
 	// Calculate amount of grids
-	uint num_blocks = mSampleCount / cBlockSize;
+	uint num_blocks = mSampleCount / mBlockSize;
 	uint max_level = CountTrailingZeros(num_blocks);
 
 	// Get block location
-	uint bx = inX / cBlockSize;
-	uint by = inY / cBlockSize;
+	uint bx = inX / mBlockSize;
+	uint by = inY / mBlockSize;
 
 	// Convert to location of range block
 	uint rbx = bx >> 1;
@@ -585,7 +593,7 @@ const PhysicsMaterial *HeightFieldShape::GetMaterial(uint inX, uint inY) const
 uint HeightFieldShape::GetSubShapeIDBits() const
 {
 	// Need to store X, Y and 1 extra bit to specify the triangle number in the quad
-	return 2 * CountTrailingZeros(mSampleCount) + 1;
+	return 2 * (32 - CountLeadingZeros(mSampleCount - 1)) + 1;
 }
 
 SubShapeID HeightFieldShape::EncodeSubShapeID(const SubShapeIDCreator &inCreator, uint inX, uint inY, uint inTriangle) const
@@ -840,7 +848,7 @@ class HeightFieldShape::DecodingContext
 public:
 	JPH_INLINE explicit			DecodingContext(const HeightFieldShape *inShape) :
 		mShape(inShape),
-		mMaxLevel(CountTrailingZeros(inShape->mSampleCount / cBlockSize)), // Calculate amount of grids
+		mMaxLevel(CountTrailingZeros(inShape->mSampleCount / inShape->mBlockSize)), // Calculate amount of grids
 		mOX(inShape->mOffset.SplatX()), // Splat offsets
 		mOY(inShape->mOffset.SplatY()),
 		mOZ(inShape->mOffset.SplatZ()),
@@ -858,6 +866,9 @@ public:
 	template <class Visitor>
 	JPH_INLINE void				WalkHeightField(Visitor &ioVisitor)
 	{
+		uint32 sample_count = mShape->mSampleCount;
+		uint32 block_size = mShape->mBlockSize;
+
 		do
 		{
 			// Decode properties
@@ -869,23 +880,23 @@ public:
 			if (level >= mMaxLevel)
 			{
 				// Determine actual range of samples
-				uint32 min_x = x * cBlockSize;
-				uint32 max_x = min(min_x + cBlockSize + 1, mShape->mSampleCount);
+				uint32 min_x = x * block_size;
+				uint32 max_x = min(min_x + block_size + 1, sample_count);
 				uint32 num_x = max_x - min_x;
-				uint32 min_y = y * cBlockSize;
-				uint32 max_y = min(min_y + cBlockSize + 1, mShape->mSampleCount);
+				uint32 min_y = y * block_size;
+				uint32 max_y = min(min_y + block_size + 1, sample_count);
 
 				// Decompress vertices
-				constexpr int array_size = Square(cBlockSize + 1);
-				bool no_collision[array_size];
-				bool *dst_no_collision = no_collision;
-				Vec3 vertices[array_size];
+				int array_size = Square(block_size + 1);
+				Vec3 *vertices = reinterpret_cast<Vec3 *>(alloca(array_size * sizeof(Vec3)));
+				bool *no_collision = reinterpret_cast<bool *>(alloca(array_size * sizeof(bool)));
 				Vec3 *dst_vertex = vertices;
+				bool *dst_no_collision = no_collision;
 				for (uint32 v_y = min_y; v_y < max_y; ++v_y)
 					for (uint32 v_x = min_x; v_x < max_x; ++v_x)
 					{
-						*dst_no_collision++ = mShape->IsNoCollision(v_x, v_y);
 						*dst_vertex++ = mShape->GetPosition(v_x, v_y);
+						*dst_no_collision++ = mShape->IsNoCollision(v_x, v_y);
 					}
 
 				// Loop triangles
@@ -947,7 +958,7 @@ public:
 				Vec4 bounds_maxy = mOY + mSY * block.Expand4Uint16Hi().ToFloat();
 
 				// Calculate size of one cell at this grid level
-				UVec4 internal_cell_size = UVec4::sReplicate(cBlockSize << (mMaxLevel - level - 1)); // subtract 1 from level because we have an internal grid of 2x2
+				UVec4 internal_cell_size = UVec4::sReplicate(block_size << (mMaxLevel - level - 1)); // subtract 1 from level because we have an internal grid of 2x2
 
 				// Calculate min/max x and z
 				UVec4 two_x = UVec4::sReplicate(2 * x); // multiply by two because we have an internal grid of 2x2
@@ -1442,6 +1453,7 @@ void HeightFieldShape::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mOffset);
 	inStream.Write(mScale);
 	inStream.Write(mSampleCount);
+	inStream.Write(mBlockSize);
 	inStream.Write(mMinSample);
 	inStream.Write(mMaxSample);
 	inStream.Write(mRangeBlocks);
@@ -1458,6 +1470,7 @@ void HeightFieldShape::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mOffset);
 	inStream.Read(mScale);
 	inStream.Read(mSampleCount);
+	inStream.Read(mBlockSize);
 	inStream.Read(mMinSample);
 	inStream.Read(mMaxSample);
 	inStream.Read(mRangeBlocks);
