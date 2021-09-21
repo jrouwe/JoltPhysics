@@ -208,12 +208,22 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	mScale(inSettings.mScale),
 	mMaterials(inSettings.mMaterials),
 	mSampleCount(inSettings.mSampleCount),
-	mBlockSize(inSettings.mBlockSize)
+	mBlockSize(inSettings.mBlockSize),
+	mBitsPerSample(uint8(inSettings.mBitsPerSample)),
+	mNoCollisionValue(uint8((1 << inSettings.mBitsPerSample) - 1)),
+	mMaxHeightValue(uint8((1 << inSettings.mBitsPerSample) - 2))
 {
 	// Check sample count
 	if (mSampleCount % mBlockSize != 0)
 	{
 		outResult.SetError("HeightFieldShape: Sample count must be a multiple of block size!");
+		return;
+	}
+
+	// Check bits per sample
+	if (inSettings.mBitsPerSample != 1 && inSettings.mBitsPerSample != 2 && inSettings.mBitsPerSample != 4 && inSettings.mBitsPerSample != 8)
+	{
+		outResult.SetError("HeightFieldShape: Bits per sample needs to be 1, 2, 4 or 8!");
 		return;
 	}
 
@@ -423,7 +433,8 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[ranges.size()]);
 
 	// Quantize height samples
-	mHeightSamples.reserve(mSampleCount * mSampleCount);
+	mHeightSamples.resize((mSampleCount * mSampleCount * inSettings.mBitsPerSample + 7) / 8);
+	int sample = 0;
 	for (uint y = 0; y < mSampleCount; ++y)
 		for (uint x = 0; x < mSampleCount; ++x)
 		{
@@ -431,18 +442,25 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 			uint by = y / mBlockSize;
 			uint16 h = quantized_samples[y * mSampleCount + x];
 			const Range &range = ranges.back()[by * (mSampleCount / mBlockSize) + bx];
+			uint8 output_value;
 			if (h == cNoCollisionValue16)
 			{
 				// No collision
-				mHeightSamples.push_back(cNoCollisionValue8);
+				output_value = mNoCollisionValue;
 			}
 			else
 			{
-				// Quantize to 8 bits
-				float quantized_height = range.mMax == range.mMin? 0.0f : round(float(h - range.mMin) * float(cMaxHeightValue8) / float(range.mMax - range.mMin));
-				JPH_ASSERT(quantized_height >= 0.0f && quantized_height <= float(cMaxHeightValue8));
-				mHeightSamples.push_back(uint8(quantized_height));
+				// Quantize to mBitsPerSample bits
+				float quantized_height = range.mMax == range.mMin? 0.0f : round(float(h - range.mMin) * float(mMaxHeightValue) / float(range.mMax - range.mMin));
+				JPH_ASSERT(quantized_height >= 0.0f && quantized_height <= float(mMaxHeightValue));
+				output_value = uint8(quantized_height);
 			}
+
+			// Store the sample
+			uint byte_pos = sample >> 3;
+			uint bit_pos = sample & 0b111;
+			mHeightSamples[byte_pos] |= output_value << bit_pos;
+			sample += inSettings.mBitsPerSample;
 		}
 
 	// Calculate the active edges
@@ -476,15 +494,23 @@ void HeightFieldShape::GetBlockOffsetAndScale(uint inX, uint inY, float &outBloc
 	// Calculate offset and scale
 	const RangeBlock &block = mRangeBlocks[sGridOffsets[max_level - 1] + rby * (num_blocks >> 1) + rbx];
 	outBlockOffset = float(block.mMin[n]);
-	outBlockScale = float(block.mMax[n] - block.mMin[n]) / float(cMaxHeightValue8);
+	outBlockScale = mMaxHeightValue != 0? float(block.mMax[n] - block.mMin[n]) / float(mMaxHeightValue) : 0.0f;
+}
+
+inline uint8 HeightFieldShape::GetHeightSample(uint inX, uint inY) const
+{
+	JPH_ASSERT(inX < mSampleCount); 
+	JPH_ASSERT(inY < mSampleCount); 
+	
+	uint sample = (inY * mSampleCount + inX) * uint(mBitsPerSample);
+	uint byte_pos = sample >> 3;
+	uint bit_pos = sample & 0b111;
+	return (mHeightSamples[byte_pos] >> bit_pos) & mNoCollisionValue; 
 }
 
 Vec3 HeightFieldShape::GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const
 { 
-	JPH_ASSERT(inX < mSampleCount); 
-	JPH_ASSERT(inY < mSampleCount); 
-
-	return mOffset + mScale * Vec3(float(inX), inBlockOffset + float(mHeightSamples[inY * mSampleCount + inX]) * inBlockScale, float(inY)); 
+	return mOffset + mScale * Vec3(float(inX), inBlockOffset + float(GetHeightSample(inX, inY)) * inBlockScale, float(inY)); 
 }
 
 Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
@@ -496,10 +522,7 @@ Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
 
 bool HeightFieldShape::IsNoCollision(uint inX, uint inY) const
 { 
-	JPH_ASSERT(inX < mSampleCount); 
-	JPH_ASSERT(inY < mSampleCount); 
-	
-	return mHeightSamples[inY * mSampleCount + inX] == cNoCollisionValue8; 
+	return GetHeightSample(inX, inY) == mNoCollisionValue;
 }
 
 bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurfacePosition, SubShapeID &outSubShapeID) const
@@ -869,6 +892,11 @@ public:
 		uint32 sample_count = mShape->mSampleCount;
 		uint32 block_size = mShape->mBlockSize;
 
+		// Allocate space for vertices and 'no collision' flags
+		int array_size = Square(block_size + 1);
+		Vec3 *vertices = reinterpret_cast<Vec3 *>(alloca(array_size * sizeof(Vec3)));
+		bool *no_collision = reinterpret_cast<bool *>(alloca(array_size * sizeof(bool)));
+
 		do
 		{
 			// Decode properties
@@ -887,9 +915,6 @@ public:
 				uint32 max_y = min(min_y + block_size + 1, sample_count);
 
 				// Decompress vertices
-				int array_size = Square(block_size + 1);
-				Vec3 *vertices = reinterpret_cast<Vec3 *>(alloca(array_size * sizeof(Vec3)));
-				bool *no_collision = reinterpret_cast<bool *>(alloca(array_size * sizeof(bool)));
 				Vec3 *dst_vertex = vertices;
 				bool *dst_no_collision = no_collision;
 				for (uint32 v_y = min_y; v_y < max_y; ++v_y)
@@ -1454,6 +1479,9 @@ void HeightFieldShape::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mScale);
 	inStream.Write(mSampleCount);
 	inStream.Write(mBlockSize);
+	inStream.Write(mBitsPerSample);
+	inStream.Write(mNoCollisionValue);
+	inStream.Write(mMaxHeightValue);
 	inStream.Write(mMinSample);
 	inStream.Write(mMaxSample);
 	inStream.Write(mRangeBlocks);
@@ -1471,6 +1499,9 @@ void HeightFieldShape::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mScale);
 	inStream.Read(mSampleCount);
 	inStream.Read(mBlockSize);
+	inStream.Read(mBitsPerSample);
+	inStream.Read(mNoCollisionValue);
+	inStream.Read(mMaxHeightValue);
 	inStream.Read(mMinSample);
 	inStream.Read(mMaxSample);
 	inStream.Read(mRangeBlocks);
