@@ -175,6 +175,9 @@ private:
 	class							DecodingContext;						///< Context class for walking through all nodes of a heightfield
 	struct							HSGetTrianglesContext;					///< Context class for GetTrianglesStart/Next
 
+	/// Calculate commonly used values and store them in the shape
+	void							CacheValues();
+
 	/// Calculate bit mask for all active edges in the heightfield
 	void							CalculateActiveEdges();
 	

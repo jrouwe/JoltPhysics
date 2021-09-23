@@ -202,6 +202,12 @@ void HeightFieldShape::StoreMaterialIndices(const vector<uint8> &inMaterialIndic
 		}
 }
 
+void HeightFieldShape::CacheValues()
+{
+	mNoCollisionValue = uint8((uint32(1) << mBitsPerSample) - 1);
+	mMaxHeightValue = uint8((uint32(1) << mBitsPerSample) - 2);
+}
+
 HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult) :
 	Shape(inSettings, outResult),
 	mOffset(inSettings.mOffset),
@@ -209,10 +215,10 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	mMaterials(inSettings.mMaterials),
 	mSampleCount(inSettings.mSampleCount),
 	mBlockSize(inSettings.mBlockSize),
-	mBitsPerSample(uint8(inSettings.mBitsPerSample)),
-	mNoCollisionValue(uint8((1 << inSettings.mBitsPerSample) - 1)),
-	mMaxHeightValue(uint8((1 << inSettings.mBitsPerSample) - 2))
+	mBitsPerSample(uint8(inSettings.mBitsPerSample))
 {
+	CacheValues();
+
 	// Check sample count
 	if (mSampleCount % mBlockSize != 0)
 	{
@@ -1480,8 +1486,6 @@ void HeightFieldShape::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mSampleCount);
 	inStream.Write(mBlockSize);
 	inStream.Write(mBitsPerSample);
-	inStream.Write(mNoCollisionValue);
-	inStream.Write(mMaxHeightValue);
 	inStream.Write(mMinSample);
 	inStream.Write(mMaxSample);
 	inStream.Write(mRangeBlocks);
@@ -1500,8 +1504,6 @@ void HeightFieldShape::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSampleCount);
 	inStream.Read(mBlockSize);
 	inStream.Read(mBitsPerSample);
-	inStream.Read(mNoCollisionValue);
-	inStream.Read(mMaxHeightValue);
 	inStream.Read(mMinSample);
 	inStream.Read(mMaxSample);
 	inStream.Read(mRangeBlocks);
@@ -1509,6 +1511,8 @@ void HeightFieldShape::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mActiveEdges);
 	inStream.Read(mMaterialIndices);
 	inStream.Read(mNumBitsPerMaterialIndex);
+
+	CacheValues();
 }
 
 void HeightFieldShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const
