@@ -444,22 +444,33 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	for (uint y = 0; y < mSampleCount; ++y)
 		for (uint x = 0; x < mSampleCount; ++x)
 		{
-			uint bx = x / mBlockSize;
-			uint by = y / mBlockSize;
-			uint16 h = quantized_samples[y * mSampleCount + x];
-			const Range &range = ranges.back()[by * (mSampleCount / mBlockSize) + bx];
 			uint8 output_value;
-			if (h == cNoCollisionValue16)
+
+			float h = inSettings.mHeightSamples[y * mSampleCount + x];
+			if (h == cNoCollisionValue)
 			{
 				// No collision
 				output_value = mNoCollisionValue;
 			}
 			else
 			{
-				// Quantize to mBitsPerSample bits
-				float quantized_height = range.mMax == range.mMin? 0.0f : round(float(h - range.mMin) * float(mMaxHeightValue) / float(range.mMax - range.mMin));
-				JPH_ASSERT(quantized_height >= 0.0f && quantized_height <= float(mMaxHeightValue));
-				output_value = uint8(quantized_height);
+				// Get range of block so we know what range to compress to
+				uint bx = x / mBlockSize;
+				uint by = y / mBlockSize;
+				const Range &range = ranges.back()[by * (mSampleCount / mBlockSize) + bx];
+				if (range.mMin == range.mMax)
+				{
+					// No range, all output values result in the same height
+					output_value = 0;
+				}
+				else
+				{
+					// Quantize to mBitsPerSample bits
+					float h_min = mOffset.GetY() + mScale.GetY() * range.mMin;
+					float h_delta = mScale.GetY() * float(range.mMax - range.mMin);
+					float quantized_height = round((h - h_min) * float(mMaxHeightValue) / h_delta);
+					output_value = uint8(Clamp(quantized_height, 0.0f, float(mMaxHeightValue)));
+				}
 			}
 
 			// Store the sample
