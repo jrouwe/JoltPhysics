@@ -107,7 +107,7 @@ void HeightFieldShapeTest::Initialize()
 	// Validate it
 	float max_diff = -1.0f;
 	uint max_diff_x = 0, max_diff_y = 0;
-	float min_height = FLT_MAX, max_height = -FLT_MAX;
+	float min_height = FLT_MAX, max_height = -FLT_MAX, avg_diff = 0.0f;
 	for (uint y = 0; y < mTerrainSize; ++y)
 		for (uint x = 0; x < mTerrainSize; ++x)
 		{
@@ -126,6 +126,7 @@ void HeightFieldShapeTest::Initialize()
 				}
 				min_height = min(min_height, h1);
 				max_height = max(max_height, h1);
+				avg_diff += diff;
 			}
 			else
 			{
@@ -137,12 +138,14 @@ void HeightFieldShapeTest::Initialize()
 	// Calculate relative error
 	float rel_error = 100.0f * max_diff / (max_height - min_height);
 
+	// Calculate average
+	avg_diff /= mTerrainSize * mTerrainSize;
+
 	// Calculate amount of memory used
 	Shape::Stats stats = mHeightField->GetStats();
 
 	// Trace stats
-	Trace("Min height: %g, max height: %g", (double)min_height, (double)max_height);
-	Trace("Block size: %d, bits per sample: %d, max diff: %g at (%d, %d), relative error: %g%%, size: %u", 1 << sBlockSizeShift, 1 << sBitsPerSampleShift, (double)max_diff, max_diff_x, max_diff_y, (double)rel_error, stats.mSizeBytes);
+	Trace("Block size: %d, bits per sample: %d, min height: %g, max height: %g, avg diff: %g, max diff: %g at (%d, %d), relative error: %g%%, size: %u bytes", 1 << sBlockSizeShift, 1 << sBitsPerSampleShift, (double)min_height, (double)max_height, (double)avg_diff, (double)max_diff, max_diff_x, max_diff_y, (double)rel_error, stats.mSizeBytes);
 	if (rel_error > 100.0f / (1 << sBitsPerSampleShift))
 		FatalError("Error too big!");
 
