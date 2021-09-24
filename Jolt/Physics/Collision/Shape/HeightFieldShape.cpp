@@ -204,20 +204,26 @@ void HeightFieldShape::StoreMaterialIndices(const vector<uint8> &inMaterialIndic
 
 void HeightFieldShape::CacheValues()
 {
-	mNoCollisionValue = uint8((uint32(1) << mBitsPerSample) - 1);
-	mMaxHeightValue = uint8((uint32(1) << mBitsPerSample) - 2);
+	mSampleMask = uint8((uint32(1) << mBitsPerSample) - 1);
 }
 
 HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult) :
 	Shape(inSettings, outResult),
 	mOffset(inSettings.mOffset),
 	mScale(inSettings.mScale),
-	mMaterials(inSettings.mMaterials),
 	mSampleCount(inSettings.mSampleCount),
 	mBlockSize(inSettings.mBlockSize),
-	mBitsPerSample(uint8(inSettings.mBitsPerSample))
+	mBitsPerSample(uint8(inSettings.mBitsPerSample)),
+	mMaterials(inSettings.mMaterials)
 {
 	CacheValues();
+
+	// Check block size
+	if (mBlockSize < 1 || mBlockSize > 4)
+	{
+		outResult.SetError("HeightFieldShape: Block size must be in the range [1, 4]!");
+		return;
+	}
 
 	// Check sample count
 	if (mSampleCount % mBlockSize != 0)
@@ -298,8 +304,11 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 			max_value = max(max_value, h);
 		}
 
+	// Prevent dividing by zero by setting a minimal height difference
+	float height_diff = max(max_value - min_value, 1.0e-6f);
+
 	// Quantize to uint16
-	float scale = min_value < max_value? float(cMaxHeightValue16) / (max_value - min_value) : 1.0f; // Only when there was collision / we would not divide by 0
+	float scale = float(cMaxHeightValue16) / height_diff; 
 	vector<uint16> quantized_samples;
 	quantized_samples.reserve(mSampleCount * mSampleCount);
 	for (float h : inSettings.mHeightSamples)
@@ -309,14 +318,25 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		}
 		else
 		{
-			float quantized_height = round(scale * (h - min_value));
-			JPH_ASSERT(quantized_height >= 0.0f && quantized_height <= cMaxHeightValue16);
-			quantized_samples.push_back(uint16(quantized_height));
+			// Floor the quantized height to get a lower bound for the quantized value
+			int quantized_height = (int)floor(scale * (h - min_value));
+
+			// Ensure that the height says below the max height value so we can safely add 1 to get the upper bound for the quantized value
+			quantized_height = Clamp(quantized_height, 0, int(cMaxHeightValue16 - 1));
+
+			quantized_samples.push_back(uint16(quantized_height)); 
 		}
 
 	// Update offset and scale to account for the compression to uint16
 	if (min_value <= max_value) // Only when there was collision
-		mOffset.SetY(mOffset.GetY() + min_value);
+	{
+		// In GetPosition we always add 0.5 to the quantized sample in order to reduce the average error.
+		// We want to be able to exactly quantize min_value (this is important in case the heightfield is entirely flat)
+		// so we subtract that value from the offset.
+		float half_quantization_step = height_diff / (2.0f * cMaxHeightValue16 * mSampleMask);
+
+		mOffset.SetY(mOffset.GetY() + min_value - half_quantization_step); 
+	}
 	mScale.SetY(mScale.GetY() / scale);
 
 	// Calculate amount of grids
@@ -350,8 +370,8 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 					uint16 h = quantized_samples[(y * mBlockSize + by) * mSampleCount + (x * mBlockSize + bx)];
 					if (h != cNoCollisionValue16)
 					{
-						range_dst->mMax = max(range_dst->mMax, h);
 						range_dst->mMin = min(range_dst->mMin, h);
+						range_dst->mMax = max(range_dst->mMax, uint16(h + 1)); // Add 1 to the max so we know the real value is between mMin and mMax
 					}
 				}
 			++range_dst;
@@ -383,8 +403,8 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 					for (uint bx = 0; bx < 2; ++bx)
 					{
 						const Range &r = range_src[(y * 2 + by) * n * 2 + x * 2 + bx];
-						range_dst->mMax = max(range_dst->mMax, r.mMax);
 						range_dst->mMin = min(range_dst->mMin, r.mMin);
+						range_dst->mMax = max(range_dst->mMax, r.mMax);
 					}
 				++range_dst;
 			}
@@ -402,7 +422,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		if (v != cNoCollisionValue16)
 		{
 			minv = min(minv, v);
-			maxv = max(maxv, v);
+			maxv = max(maxv, uint16(v + 1));
 		}
 	JPH_ASSERT(mMinSample == minv && mMaxSample == maxv);
 #endif
@@ -450,7 +470,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 			if (h == cNoCollisionValue)
 			{
 				// No collision
-				output_value = mNoCollisionValue;
+				output_value = mSampleMask;
 			}
 			else
 			{
@@ -458,19 +478,15 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 				uint bx = x / mBlockSize;
 				uint by = y / mBlockSize;
 				const Range &range = ranges.back()[by * (mSampleCount / mBlockSize) + bx];
-				if (range.mMin == range.mMax)
-				{
-					// No range, all output values result in the same height
-					output_value = 0;
-				}
-				else
-				{
-					// Quantize to mBitsPerSample bits
-					float h_min = mOffset.GetY() + mScale.GetY() * range.mMin;
-					float h_delta = mScale.GetY() * float(range.mMax - range.mMin);
-					float quantized_height = round((h - h_min) * float(mMaxHeightValue) / h_delta);
-					output_value = uint8(Clamp(quantized_height, 0.0f, float(mMaxHeightValue)));
-				}
+				JPH_ASSERT(range.mMin < range.mMax);
+
+				// Quantize to mBitsPerSample bits, note that mSampleMask is reserved for indicating that there's no collision.
+				// We divide the range into mSampleMask segments and use the mid points of these segments as the quantized values.
+				// This results in a lower error than if we had quantized our data using the lowest point of all these segments.
+				float h_min = mOffset.GetY() + mScale.GetY() * range.mMin;
+				float h_delta = mScale.GetY() * float(range.mMax - range.mMin);
+				float quantized_height = floor((h - h_min) * float(mSampleMask) / h_delta);
+				output_value = uint8(Clamp((int)quantized_height, 0, int(mSampleMask) - 1)); // mSampleMask is reserved as 'no collision value'
 			}
 
 			// Store the sample
@@ -511,7 +527,7 @@ void HeightFieldShape::GetBlockOffsetAndScale(uint inX, uint inY, float &outBloc
 	// Calculate offset and scale
 	const RangeBlock &block = mRangeBlocks[sGridOffsets[max_level - 1] + rby * (num_blocks >> 1) + rbx];
 	outBlockOffset = float(block.mMin[n]);
-	outBlockScale = mMaxHeightValue != 0? float(block.mMax[n] - block.mMin[n]) / float(mMaxHeightValue) : 0.0f;
+	outBlockScale = float(block.mMax[n] - block.mMin[n]) / float(mSampleMask);
 }
 
 inline uint8 HeightFieldShape::GetHeightSample(uint inX, uint inY) const
@@ -522,12 +538,13 @@ inline uint8 HeightFieldShape::GetHeightSample(uint inX, uint inY) const
 	uint sample = (inY * mSampleCount + inX) * uint(mBitsPerSample);
 	uint byte_pos = sample >> 3;
 	uint bit_pos = sample & 0b111;
-	return (mHeightSamples[byte_pos] >> bit_pos) & mNoCollisionValue; 
+	return (mHeightSamples[byte_pos] >> bit_pos) & mSampleMask; 
 }
 
 Vec3 HeightFieldShape::GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const
 { 
-	return mOffset + mScale * Vec3(float(inX), inBlockOffset + float(GetHeightSample(inX, inY)) * inBlockScale, float(inY)); 
+	// Add 0.5 to the quantized value to minimize the error (see constructor)
+	return mOffset + mScale * Vec3(float(inX), inBlockOffset + (0.5f + GetHeightSample(inX, inY)) * inBlockScale, float(inY)); 
 }
 
 Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
@@ -539,7 +556,7 @@ Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
 
 bool HeightFieldShape::IsNoCollision(uint inX, uint inY) const
 { 
-	return GetHeightSample(inX, inY) == mNoCollisionValue;
+	return GetHeightSample(inX, inY) == mSampleMask;
 }
 
 bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurfacePosition, SubShapeID &outSubShapeID) const

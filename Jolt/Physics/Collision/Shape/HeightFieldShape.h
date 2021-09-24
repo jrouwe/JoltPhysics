@@ -222,20 +222,19 @@ private:
 	Vec3							mOffset = Vec3::sZero();
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 
-	/// The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
-	PhysicsMaterialList				mMaterials;
-
-	// Calculated data
+	/// Height data
 	uint32							mSampleCount = 0;					///< See HeightFieldShapeSettings::mSampleCount
 	uint32							mBlockSize = 2;						///< See HeightFieldShapeSettings::mBlockSize
 	uint8							mBitsPerSample = 8;					///< See HeightFieldShapeSettings::mBitsPerSample
-	uint8							mNoCollisionValue = 0xff;			///< The value that indicates that a sample has no collision: (1 << mBitsPerSample) - 1
-	uint8							mMaxHeightValue = 0xfe;				///< The value that indicates the max value a compressed sample can have: (1 << mBitsPerSample) - 2
+	uint8							mSampleMask = 0xff;					///< All bits set for a sample: (1 << mBitsPerSample) - 1, used to indicate that there's no collision
 	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16;	///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
 	vector<RangeBlock>				mRangeBlocks;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
 	vector<uint8>					mHeightSamples;						///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
 	vector<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags. 
+
+	/// Materials
+	PhysicsMaterialList				mMaterials;							///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
 	vector<uint8>					mMaterialIndices;					///< Compressed to the minimum amount of bits per material index (mSampleCount - 1) * (mSampleCount - 1) * mNumBitsPerMaterialIndex bits of data
 	uint32							mNumBitsPerMaterialIndex = 0;		///< Number of bits per material index
 
