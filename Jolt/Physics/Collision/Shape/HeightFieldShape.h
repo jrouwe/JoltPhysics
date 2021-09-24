@@ -53,6 +53,14 @@ public:
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;
 
+	/// Determine the minimal and maximal value of mHeightSamples (will ignore cNoCollisionValue)
+	void							DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue) const;
+
+	/// Given mBlockSize, mSampleCount and mHeightSamples, calculate the amount of bits needed to stay below absolute error inMaxError
+	/// @param inMaxError Maximum allowed error in mHeightSamples after compression (note that this does not take mScale.Y into account)
+	/// @return Needed bits per sample (1, 2, 4 or 8)
+	uint32							CalculateBitsPerSampleForError(float inMaxError) const;
+
 	/// The height field is a surface defined by: mOffset + mScale * (x, mHeightSamples[y * mSampleCount + x], y).
 	/// where x and y are integers in the range x and y e [0, mSampleCount - 1].
 	Vec3							mOffset = Vec3::sZero();

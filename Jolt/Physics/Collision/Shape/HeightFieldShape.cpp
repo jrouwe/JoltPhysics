@@ -99,6 +99,95 @@ ShapeSettings::ShapeResult HeightFieldShapeSettings::Create() const
 	return mCachedResult;
 }
 
+void HeightFieldShapeSettings::DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue) const
+{
+	outMinValue = FLT_MAX;
+	outMaxValue = -FLT_MAX;
+	for (float h : mHeightSamples)
+		if (h != cNoCollisionValue)
+		{
+			outMinValue = min(outMinValue, h);
+			outMaxValue = max(outMaxValue, h);
+		}
+}
+
+uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError) const
+{
+	// Start with 1 bit per sample
+	uint32 bits_per_sample = 1;
+
+	// Determine total range
+	float min_value, max_value;
+	DetermineMinAndMaxSample(min_value, max_value);
+	if (min_value < max_value)
+	{
+		// Determine scale needed to quantize for the range blocks
+		float height_diff = max_value - min_value;
+		float scale = float(cMaxHeightValue16) / height_diff; 
+
+		// Loop over all blocks
+		for (uint y = 0; y < mSampleCount; y += mBlockSize)
+			for (uint x = 0; x < mSampleCount; x += mBlockSize)
+			{
+				// Determine min and max block value + take 1 sample border just like we do while building the hierarchical grids
+				float block_min_value = FLT_MAX, block_max_value = -FLT_MAX;
+				for (uint bx = x; bx < min(x + mBlockSize + 1, mSampleCount); ++bx)
+					for (uint by = y; by < min(y + mBlockSize + 1, mSampleCount); ++by)
+					{
+						float h = mHeightSamples[by * mSampleCount + bx];
+						if (h != cNoCollisionValue)
+						{
+							block_min_value = min(block_min_value, h);
+							block_max_value = max(block_max_value, h);
+						}
+					}
+
+				if (block_min_value < block_max_value)
+				{
+					// Quantize then dequantize block min/max value
+					block_min_value = min_value + floor((block_min_value - min_value) * scale) / scale;
+					block_max_value = min_value + ceil((block_max_value - min_value) * scale) / scale;
+					float block_height = block_max_value - block_min_value;
+
+					// Loop over the block again
+					for (uint bx = x; bx < x + mBlockSize; ++bx)
+						for (uint by = y; by < y + mBlockSize; ++by)
+						{
+							// Get the height
+							float height = mHeightSamples[by * mSampleCount + bx];
+							if (height != cNoCollisionValue)
+							{
+								for (;;)
+								{
+									// Determine bitmask for sample
+									uint32 sample_mask = (1 << bits_per_sample) - 1;
+
+									// Quantize
+									float quantized_height = floor((height - block_min_value) * float(sample_mask) / block_height);
+									quantized_height = Clamp(quantized_height, 0.0f, float(sample_mask - 1));
+
+									// Dequantize and check error
+									float dequantized_height = block_min_value + (quantized_height + 0.5f) * block_height / float(sample_mask);
+									if (abs(dequantized_height - height) <= inMaxError)
+										break;
+
+									// Not accurate enough, increase bits per sample
+									bits_per_sample <<= 1;
+
+									// Don't go above 8 bits per sample
+									if (bits_per_sample == 8)
+										return bits_per_sample;
+								}
+							}
+						}
+				}
+			}
+
+	}
+
+	return bits_per_sample;
+}
+
 void HeightFieldShape::CalculateActiveEdges()
 {
 	// Store active edges. The triangles are organized like this:
@@ -296,13 +385,8 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	}
 
 	// Determine range
-	float min_value = FLT_MAX, max_value = -FLT_MAX;
-	for (float h : inSettings.mHeightSamples)
-		if (h != cNoCollisionValue)
-		{
-			min_value = min(min_value, h);
-			max_value = max(max_value, h);
-		}
+	float min_value, max_value;
+	inSettings.DetermineMinAndMaxSample(min_value, max_value);
 
 	// Prevent dividing by zero by setting a minimal height difference
 	float height_diff = max(max_value - min_value, 1.0e-6f);
