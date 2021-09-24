@@ -25,7 +25,9 @@ static int sTerrainType = 0;
 
 static const char *sTerrainTypes[] = {
 	"Procedural Terrain",
-	"Heightfield 1"
+	"Heightfield 1",
+	"Flat",
+	"No Collision"
 };
 
 void HeightFieldShapeTest::Initialize()
@@ -95,6 +97,37 @@ void HeightFieldShapeTest::Initialize()
 		mTerrainOffset = Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n);
 		mTerrainScale = Vec3(cell_size, 1.0f, cell_size);
 	}
+	else if (sTerrainType == 2)
+	{
+		const int n = 128;
+		const float cell_size = 1.0f;
+		const float height = JPH_PI;
+
+		// Determine scale and offset
+		mTerrainOffset = Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n);
+		mTerrainScale = Vec3(cell_size, 1.0f, cell_size);
+
+		// Mark the entire terrain as no collision
+		mTerrainSize = n;
+		mTerrain.resize(n * n);
+		for (float &v : mTerrain)
+			v = height;
+	}
+	else if (sTerrainType == 3)
+	{
+		const int n = 128;
+		const float cell_size = 1.0f;
+
+		// Determine scale and offset
+		mTerrainOffset = Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n);
+		mTerrainScale = Vec3(cell_size, 1.0f, cell_size);
+
+		// Mark the entire terrain as no collision
+		mTerrainSize = n;
+		mTerrain.resize(n * n);
+		for (float &v : mTerrain)
+			v = HeightFieldShapeConstants::cNoCollisionValue;
+	}
 
 	// Create height field
 	HeightFieldShapeSettings settings(mTerrain.data(), mTerrainOffset, mTerrainScale, mTerrainSize, mMaterialIndices.data(), mMaterials);
@@ -136,7 +169,7 @@ void HeightFieldShapeTest::Initialize()
 		}
 
 	// Calculate relative error
-	float rel_error = 100.0f * max_diff / (max_height - min_height);
+	float rel_error = min_height < max_height? 100.0f * max_diff / (max_height - min_height) : 0.0f;
 
 	// Calculate average
 	avg_diff /= mTerrainSize * mTerrainSize;
