@@ -43,6 +43,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(HeightFieldShapeSettings)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mOffset)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mScale)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mSampleCount)
+	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mBlockSize)
+	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mBitsPerSample)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mMaterialIndices)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mMaterials)
 }
