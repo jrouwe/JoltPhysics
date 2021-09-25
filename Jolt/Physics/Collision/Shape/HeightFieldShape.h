@@ -54,7 +54,10 @@ public:
 	virtual ShapeResult				Create() const override;
 
 	/// Determine the minimal and maximal value of mHeightSamples (will ignore cNoCollisionValue)
-	void							DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue) const;
+	/// @param outMinValue The minimal value fo mHeightSamples or FLT_MAX if no samples have collision
+	/// @param outMaxValue The maximal value fo mHeightSamples or -FLT_MAX if no samples have collision
+	/// @param outQuantizationScale (value - outMinValue) * outQuantizationScale quantizes a height sample to 16 bits
+	void							DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue, float &outQuantizationScale) const;
 
 	/// Given mBlockSize, mSampleCount and mHeightSamples, calculate the amount of bits needed to stay below absolute error inMaxError
 	/// @param inMaxError Maximum allowed error in mHeightSamples after compression (note that this does not take mScale.Y into account)

@@ -76,9 +76,9 @@ void HeightFieldShapeTest::Initialize()
 		for (uint8 i = 0; i <= max_material_index; ++i)
 			mMaterials.push_back(new PhysicsMaterialSimple("Material " + ConvertToString(uint(i)), Color::sGetDistinctColor(i)));
 
-		// Determine scale and offset
-		mTerrainOffset = Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n);
-		mTerrainScale = Vec3(cell_size, 1.0f, cell_size);
+		// Determine scale and offset (deliberately apply extra offset and scale in Y direction)
+		mTerrainOffset = Vec3(-0.5f * cell_size * n, -2.0f, -0.5f * cell_size * n);
+		mTerrainScale = Vec3(cell_size, 1.5f, cell_size);
 	}
 	else if (sTerrainType == 1)
 	{
@@ -147,6 +147,7 @@ void HeightFieldShapeTest::Initialize()
 			float h1 = mTerrain[y * mTerrainSize + x];
 			if (h1 != HeightFieldShapeConstants::cNoCollisionValue)
 			{
+				h1 = mTerrainOffset.GetY() + mTerrainScale.GetY() * h1;
 				if (mHeightField->IsNoCollision(x, y))
 					FatalError("No collision where there should be");
 				float h2 = mHeightField->GetPosition(x, y).GetY();

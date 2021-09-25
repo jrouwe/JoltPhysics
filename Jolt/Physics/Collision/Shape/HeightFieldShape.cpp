@@ -101,8 +101,9 @@ ShapeSettings::ShapeResult HeightFieldShapeSettings::Create() const
 	return mCachedResult;
 }
 
-void HeightFieldShapeSettings::DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue) const
+void HeightFieldShapeSettings::DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue, float &outQuantizationScale) const
 {
+	// Determine min and max value
 	outMinValue = FLT_MAX;
 	outMaxValue = -FLT_MAX;
 	for (float h : mHeightSamples)
@@ -111,6 +112,12 @@ void HeightFieldShapeSettings::DetermineMinAndMaxSample(float &outMinValue, floa
 			outMinValue = min(outMinValue, h);
 			outMaxValue = max(outMaxValue, h);
 		}
+
+	// Prevent dividing by zero by setting a minimal height difference
+	float height_diff = max(outMaxValue - outMinValue, 1.0e-6f);
+
+	// Calculate the scale factor to quantize to 16 bits
+	outQuantizationScale = float(cMaxHeightValue16) / height_diff;
 }
 
 uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError) const
@@ -119,14 +126,10 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 	uint32 bits_per_sample = 1;
 
 	// Determine total range
-	float min_value, max_value;
-	DetermineMinAndMaxSample(min_value, max_value);
+	float min_value, max_value, scale;
+	DetermineMinAndMaxSample(min_value, max_value, scale);
 	if (min_value < max_value)
 	{
-		// Determine scale needed to quantize for the range blocks
-		float height_diff = max_value - min_value;
-		float scale = float(cMaxHeightValue16) / height_diff; 
-
 		// Loop over all blocks
 		for (uint y = 0; y < mSampleCount; y += mBlockSize)
 			for (uint x = 0; x < mSampleCount; x += mBlockSize)
@@ -387,14 +390,10 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	}
 
 	// Determine range
-	float min_value, max_value;
-	inSettings.DetermineMinAndMaxSample(min_value, max_value);
-
-	// Prevent dividing by zero by setting a minimal height difference
-	float height_diff = max(max_value - min_value, 1.0e-6f);
+	float min_value, max_value, scale;
+	inSettings.DetermineMinAndMaxSample(min_value, max_value, scale);
 
 	// Quantize to uint16
-	float scale = float(cMaxHeightValue16) / height_diff; 
 	vector<uint16> quantized_samples;
 	quantized_samples.reserve(mSampleCount * mSampleCount);
 	for (float h : inSettings.mHeightSamples)
@@ -417,11 +416,10 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	if (min_value <= max_value) // Only when there was collision
 	{
 		// In GetPosition we always add 0.5 to the quantized sample in order to reduce the average error.
-		// We want to be able to exactly quantize min_value (this is important in case the heightfield is entirely flat)
-		// so we subtract that value from the offset.
-		float half_quantization_step = height_diff / (2.0f * cMaxHeightValue16 * mSampleMask);
+		// We want to be able to exactly quantize min_value (this is important in case the heightfield is entirely flat) so we subtract that value from min_value.
+		min_value -= 0.5f / (scale * mSampleMask);
 
-		mOffset.SetY(mOffset.GetY() + min_value - half_quantization_step); 
+		mOffset.SetY(mOffset.GetY() + mScale.GetY() * min_value);
 	}
 	mScale.SetY(mScale.GetY() / scale);
 
@@ -569,8 +567,8 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 				// Quantize to mBitsPerSample bits, note that mSampleMask is reserved for indicating that there's no collision.
 				// We divide the range into mSampleMask segments and use the mid points of these segments as the quantized values.
 				// This results in a lower error than if we had quantized our data using the lowest point of all these segments.
-				float h_min = mOffset.GetY() + mScale.GetY() * range.mMin;
-				float h_delta = mScale.GetY() * float(range.mMax - range.mMin);
+				float h_min = min_value + range.mMin / scale;
+				float h_delta = float(range.mMax - range.mMin) / scale;
 				float quantized_height = floor((h - h_min) * float(mSampleMask) / h_delta);
 				output_value = uint32(Clamp((int)quantized_height, 0, int(mSampleMask) - 1)); // mSampleMask is reserved as 'no collision value'
 			}
