@@ -35,8 +35,8 @@ public:
 	// Block size = 1 << sBlockSizeShift
 	inline static int	sBlockSizeShift = 1;
 
-	// Bits per sample = 1 << sBitsPerSampleShift
-	inline static int	sBitsPerSampleShift = 3;
+	// Bits per sample
+	inline static int	sBitsPerSample = 8;
 
 	// Draw the terrain
 	inline static bool	sShowOriginalTerrain = false;

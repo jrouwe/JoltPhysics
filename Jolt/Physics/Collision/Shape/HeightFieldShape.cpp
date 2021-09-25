@@ -174,7 +174,7 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 										break;
 
 									// Not accurate enough, increase bits per sample
-									bits_per_sample <<= 1;
+									bits_per_sample++;
 
 									// Don't go above 8 bits per sample
 									if (bits_per_sample == 8)
@@ -324,9 +324,9 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	}
 
 	// Check bits per sample
-	if (inSettings.mBitsPerSample != 1 && inSettings.mBitsPerSample != 2 && inSettings.mBitsPerSample != 4 && inSettings.mBitsPerSample != 8)
+	if (inSettings.mBitsPerSample < 1 || inSettings.mBitsPerSample > 8)
 	{
-		outResult.SetError("HeightFieldShape: Bits per sample needs to be 1, 2, 4 or 8!");
+		outResult.SetError("HeightFieldShape: Bits per sample must be in the range [1, 8]!");
 		return;
 	}
 
@@ -545,12 +545,12 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[ranges.size()]);
 
 	// Quantize height samples
-	mHeightSamples.resize((mSampleCount * mSampleCount * inSettings.mBitsPerSample + 7) / 8);
+	mHeightSamples.resize((mSampleCount * mSampleCount * inSettings.mBitsPerSample + 7) / 8 + 1);
 	int sample = 0;
 	for (uint y = 0; y < mSampleCount; ++y)
 		for (uint x = 0; x < mSampleCount; ++x)
 		{
-			uint8 output_value;
+			uint32 output_value;
 
 			float h = inSettings.mHeightSamples[y * mSampleCount + x];
 			if (h == cNoCollisionValue)
@@ -572,13 +572,15 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 				float h_min = mOffset.GetY() + mScale.GetY() * range.mMin;
 				float h_delta = mScale.GetY() * float(range.mMax - range.mMin);
 				float quantized_height = floor((h - h_min) * float(mSampleMask) / h_delta);
-				output_value = uint8(Clamp((int)quantized_height, 0, int(mSampleMask) - 1)); // mSampleMask is reserved as 'no collision value'
+				output_value = uint32(Clamp((int)quantized_height, 0, int(mSampleMask) - 1)); // mSampleMask is reserved as 'no collision value'
 			}
 
 			// Store the sample
 			uint byte_pos = sample >> 3;
 			uint bit_pos = sample & 0b111;
-			mHeightSamples[byte_pos] |= output_value << bit_pos;
+			output_value <<= bit_pos;
+			mHeightSamples[byte_pos] |= uint8(output_value);
+			mHeightSamples[byte_pos + 1] |= uint8(output_value >> 8);
 			sample += inSettings.mBitsPerSample;
 		}
 
@@ -621,10 +623,16 @@ inline uint8 HeightFieldShape::GetHeightSample(uint inX, uint inY) const
 	JPH_ASSERT(inX < mSampleCount); 
 	JPH_ASSERT(inY < mSampleCount); 
 	
+	// Determine bit position of sample
 	uint sample = (inY * mSampleCount + inX) * uint(mBitsPerSample);
 	uint byte_pos = sample >> 3;
 	uint bit_pos = sample & 0b111;
-	return (mHeightSamples[byte_pos] >> bit_pos) & mSampleMask; 
+
+	// Fetch the height sample value
+	JPH_ASSERT(byte_pos + 1 < mHeightSamples.size());
+	const uint8 *height_samples = mHeightSamples.data() + byte_pos;
+	uint16 height_sample = uint16(height_samples[0]) | uint16(uint16(height_samples[1]) << 8);
+	return uint8(height_sample >> bit_pos) & mSampleMask; 
 }
 
 Vec3 HeightFieldShape::GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const

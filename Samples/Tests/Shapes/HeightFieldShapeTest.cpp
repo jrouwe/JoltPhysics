@@ -132,7 +132,7 @@ void HeightFieldShapeTest::Initialize()
 	// Create height field
 	HeightFieldShapeSettings settings(mTerrain.data(), mTerrainOffset, mTerrainScale, mTerrainSize, mMaterialIndices.data(), mMaterials);
 	settings.mBlockSize = 1 << sBlockSizeShift;
-	settings.mBitsPerSample = 1 << sBitsPerSampleShift;
+	settings.mBitsPerSample = sBitsPerSample;
 	mHeightField = static_cast<const HeightFieldShape *>(settings.Create().Get().GetPtr());
 	Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(terrain.GetID(), EActivation::DontActivate);
@@ -178,8 +178,8 @@ void HeightFieldShapeTest::Initialize()
 	Shape::Stats stats = mHeightField->GetStats();
 
 	// Trace stats
-	Trace("Block size: %d, bits per sample: %d, min height: %g, max height: %g, avg diff: %g, max diff: %g at (%d, %d), relative error: %g%%, size: %u bytes", 1 << sBlockSizeShift, 1 << sBitsPerSampleShift, (double)min_height, (double)max_height, (double)avg_diff, (double)max_diff, max_diff_x, max_diff_y, (double)rel_error, stats.mSizeBytes);
-	if (rel_error > 100.0f / (1 << sBitsPerSampleShift))
+	Trace("Block size: %d, bits per sample: %d, min height: %g, max height: %g, avg diff: %g, max diff: %g at (%d, %d), relative error: %g%%, size: %u bytes", 1 << sBlockSizeShift, sBitsPerSample, (double)min_height, (double)max_height, (double)avg_diff, (double)max_diff, max_diff_x, max_diff_y, (double)rel_error, stats.mSizeBytes);
+	if (rel_error > 100.0f / (1 << sBitsPerSample))
 		FatalError("Error too big!");
 
 	// Determine terrain height
@@ -249,7 +249,7 @@ void HeightFieldShapeTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI]() { 
 		UIElement *terrain_settings = inUI->CreateMenu();
 		inUI->CreateComboBox(terrain_settings, "Block Size", { "1", "2", "4" }, sBlockSizeShift, [=](int inItem) { sBlockSizeShift = inItem; });
-		inUI->CreateComboBox(terrain_settings, "Bits Per Sample", { "1", "2", "4", "8" }, sBitsPerSampleShift, [=](int inItem) { sBitsPerSampleShift = inItem; });
+		inUI->CreateSlider(terrain_settings, "Bits Per Sample", (float)sBitsPerSample, 1.0f, 8.0f, 1.0f, [=](float inValue) { sBitsPerSample = (int)inValue; });
 		inUI->CreateTextButton(terrain_settings, "Accept", [this]() { RestartTest(); });
 		inUI->ShowMenu(terrain_settings);
 	});

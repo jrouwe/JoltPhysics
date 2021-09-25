@@ -58,7 +58,7 @@ public:
 
 	/// Given mBlockSize, mSampleCount and mHeightSamples, calculate the amount of bits needed to stay below absolute error inMaxError
 	/// @param inMaxError Maximum allowed error in mHeightSamples after compression (note that this does not take mScale.Y into account)
-	/// @return Needed bits per sample (1, 2, 4 or 8)
+	/// @return Needed bits per sample in the range [1, 8].
 	uint32							CalculateBitsPerSampleForError(float inMaxError) const;
 
 	/// The height field is a surface defined by: mOffset + mScale * (x, mHeightSamples[y * mSampleCount + x], y).
@@ -72,7 +72,7 @@ public:
 	/// a power of 2.
 	uint32							mBlockSize = 2;
 
-	/// How many bits per sample to use to compress the height field. Can be 1, 2, 4 or 8. 
+	/// How many bits per sample to use to compress the height field. Can be in the range [1, 8].
 	/// Note that each sample is compressed relative to the min/max value of its block of mBlockSize * mBlockSize pixels so the effective precision is higher.
 	/// Also note that increasing mBlockSize saves more memory than reducing the amount of bits per sample.
 	uint32							mBitsPerSample = 8;
