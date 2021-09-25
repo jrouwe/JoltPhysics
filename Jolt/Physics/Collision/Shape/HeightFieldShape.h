@@ -20,9 +20,6 @@ namespace HeightFieldShapeConstants
 	/// Value used to create gaps in the height field
 	constexpr float			cNoCollisionValue = FLT_MAX;
 
-	/// Hierarchical grids stop when cBlockSize x cBlockSize height samples remain
-	constexpr uint			cBlockSize = 2;
-
 	/// Stack size to use during WalkHeightField
 	constexpr int			cStackSize = 128;
 
@@ -34,10 +31,6 @@ namespace HeightFieldShapeConstants
 	/// When height samples are converted to 16 bit:
 	constexpr uint16		cNoCollisionValue16 = 0xffff;		///< This is the magic value for 'no collision'
 	constexpr uint16		cMaxHeightValue16 = 0xfffe;			///< This is the maximum allowed height value
-
-	/// When height samples are converted to 8 bit:
-	constexpr uint8			cNoCollisionValue8 = 0xff;			///< This is the magic value for 'no collision'
-	constexpr uint8			cMaxHeightValue8 = 0xfe;			///< This is the maximum allowed height value
 };
 
 /// Class that constructs a HeightFieldShape
@@ -52,7 +45,7 @@ public:
 	/// Create a height field shape of inSampleCount * inSampleCount vertices.
 	/// The height field is a surface defined by: inOffset + inScale * (x, inSamples[y * inSampleCount + x], y).
 	/// where x and y are integers in the range x and y e [0, inSampleCount - 1].
-	/// inSampleCount: Must be a power of 2 and minimally 8.
+	/// inSampleCount: inSampleCount / mBlockSize must be a power of 2 and minimally 2.
 	/// inSamples: inSampleCount^2 vertices.
 	/// inMaterialIndices: (inSampleCount - 1)^2 indices that index into inMaterialList.
 									HeightFieldShapeSettings(const float *inSamples, Vec3Arg inOffset, Vec3Arg inScale, uint32 inSampleCount, const uint8 *inMaterialIndices = nullptr, const PhysicsMaterialList &inMaterialList = PhysicsMaterialList());
@@ -60,11 +53,32 @@ public:
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;
 
+	/// Determine the minimal and maximal value of mHeightSamples (will ignore cNoCollisionValue)
+	/// @param outMinValue The minimal value fo mHeightSamples or FLT_MAX if no samples have collision
+	/// @param outMaxValue The maximal value fo mHeightSamples or -FLT_MAX if no samples have collision
+	/// @param outQuantizationScale (value - outMinValue) * outQuantizationScale quantizes a height sample to 16 bits
+	void							DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue, float &outQuantizationScale) const;
+
+	/// Given mBlockSize, mSampleCount and mHeightSamples, calculate the amount of bits needed to stay below absolute error inMaxError
+	/// @param inMaxError Maximum allowed error in mHeightSamples after compression (note that this does not take mScale.Y into account)
+	/// @return Needed bits per sample in the range [1, 8].
+	uint32							CalculateBitsPerSampleForError(float inMaxError) const;
+
 	/// The height field is a surface defined by: mOffset + mScale * (x, mHeightSamples[y * mSampleCount + x], y).
 	/// where x and y are integers in the range x and y e [0, mSampleCount - 1].
 	Vec3							mOffset = Vec3::sZero();
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 	uint32							mSampleCount = 0;
+
+	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only, 
+	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [1, 4], does not need to be
+	/// a power of 2.
+	uint32							mBlockSize = 2;
+
+	/// How many bits per sample to use to compress the height field. Can be in the range [1, 8].
+	/// Note that each sample is compressed relative to the min/max value of its block of mBlockSize * mBlockSize pixels so the effective precision is higher.
+	/// Also note that increasing mBlockSize saves more memory than reducing the amount of bits per sample.
+	uint32							mBitsPerSample = 8;
 
 	vector<float>					mHeightSamples;
 	vector<uint8>					mMaterialIndices;
@@ -139,7 +153,7 @@ public:
 
 	/// Get height field position at sampled location (inX, inY).
 	/// where inX and inY are integers in the range inX e [0, mSampleCount - 1] and inY e [0, mSampleCount - 1].
-	const Vec3						GetPosition(uint inX, uint inY) const;
+	Vec3							GetPosition(uint inX, uint inY) const;
 
 	/// Check if height field at sampled location (inX, inY) has collision (has a hole or not)
 	bool							IsNoCollision(uint inX, uint inY) const;
@@ -171,12 +185,24 @@ protected:
 private:	
 	class							DecodingContext;						///< Context class for walking through all nodes of a heightfield
 	struct							HSGetTrianglesContext;					///< Context class for GetTrianglesStart/Next
+
+	/// Calculate commonly used values and store them in the shape
+	void							CacheValues();
+
+	/// Calculate bit mask for all active edges in the heightfield
+	void							CalculateActiveEdges();
+	
+	/// Store material indices in the least amount of bits per index possible
+	void							StoreMaterialIndices(const vector<uint8> &inMaterialIndices);
 	
 	/// For location (inX, inY) get the block that contains this position and get the offset and scale needed to decode a uint8 height sample to a uint16
 	void							GetBlockOffsetAndScale(uint inX, uint inY, float &outBlockOffset, float &outBlockScale) const;
 
+	/// Get the height sample at position (inX, inY)
+	inline uint8					GetHeightSample(uint inX, uint inY) const;
+
 	/// Faster version of GetPosition when block offset and scale are already known
-	const Vec3						GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const;
+	Vec3							GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const;
 	
 	/// Determine amount of bits needed to encode sub shape id
 	uint							GetSubShapeIDBits() const;
@@ -190,7 +216,7 @@ private:
 
 	/// Visit the entire height field using a visitor pattern
 	template <class Visitor>
-	void							WalkHeightField(Visitor &ioVisitor) const;
+	JPH_INLINE void					WalkHeightField(Visitor &ioVisitor) const;
 
 	/// A block of 2x2 ranges used to form a hierarchical grid, ordered left top, right top, left bottom, right bottom
 	struct alignas(16) RangeBlock
@@ -207,18 +233,21 @@ private:
 	Vec3							mOffset = Vec3::sZero();
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 
-	/// The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
-	PhysicsMaterialList				mMaterials;
-
-	// Calculated data
-	uint32							mSampleCount = 0;
+	/// Height data
+	uint32							mSampleCount = 0;					///< See HeightFieldShapeSettings::mSampleCount
+	uint32							mBlockSize = 2;						///< See HeightFieldShapeSettings::mBlockSize
+	uint8							mBitsPerSample = 8;					///< See HeightFieldShapeSettings::mBitsPerSample
+	uint8							mSampleMask = 0xff;					///< All bits set for a sample: (1 << mBitsPerSample) - 1, used to indicate that there's no collision
 	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16;	///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
 	vector<RangeBlock>				mRangeBlocks;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
-	vector<uint8>					mHeightSamples;						///< 8-bit height samples. Value [0, cMaxHeightValue8] maps to highest detail grid in mRangeBlocks [mMin, mMax].
+	vector<uint8>					mHeightSamples;						///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
 	vector<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags. 
+
+	/// Materials
+	PhysicsMaterialList				mMaterials;							///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
 	vector<uint8>					mMaterialIndices;					///< Compressed to the minimum amount of bits per material index (mSampleCount - 1) * (mSampleCount - 1) * mNumBitsPerMaterialIndex bits of data
-	uint							mNumBitsPerMaterialIndex = 0;		///< Number of bits per material index
+	uint32							mNumBitsPerMaterialIndex = 0;		///< Number of bits per material index
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Temporary rendering data

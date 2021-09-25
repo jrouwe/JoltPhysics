@@ -94,7 +94,7 @@ void MutableCompoundShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			if (roll < 0.001f && count > 1)
 			{
 				// Remove a random shape
-				uniform_int_distribution<uint> index_distribution(0, count = 1);
+				uniform_int_distribution<uint> index_distribution(0, count - 1);
 				shape->RemoveShape(index_distribution(frame_random));
 			}
 			else if (roll < 0.002f && count < 10)
