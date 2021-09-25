@@ -172,6 +172,9 @@ void HeightFieldShapeTest::Initialize()
 	// Calculate relative error
 	float rel_error = min_height < max_height? 100.0f * max_diff / (max_height - min_height) : 0.0f;
 
+	// Max error we expect given sBitsPerSample (normally the error should be much lower because we quantize relative to the block rather than the full height)
+	float max_error = 0.5f * 100.0f / ((1 << sBitsPerSample) - 1);
+
 	// Calculate average
 	avg_diff /= mTerrainSize * mTerrainSize;
 
@@ -180,7 +183,7 @@ void HeightFieldShapeTest::Initialize()
 
 	// Trace stats
 	Trace("Block size: %d, bits per sample: %d, min height: %g, max height: %g, avg diff: %g, max diff: %g at (%d, %d), relative error: %g%%, size: %u bytes", 1 << sBlockSizeShift, sBitsPerSample, (double)min_height, (double)max_height, (double)avg_diff, (double)max_diff, max_diff_x, max_diff_y, (double)rel_error, stats.mSizeBytes);
-	if (rel_error > 100.0f / (1 << sBitsPerSample))
+	if (rel_error > max_error)
 		FatalError("Error too big!");
 
 	// Determine terrain height
