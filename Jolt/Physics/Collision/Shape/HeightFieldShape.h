@@ -194,16 +194,25 @@ private:
 	
 	/// Store material indices in the least amount of bits per index possible
 	void							StoreMaterialIndices(const vector<uint8> &inMaterialIndices);
+
+	/// Get the amount of horizontal/vertical blocks
+	inline uint						GetNumBlocks() const					{ return mSampleCount / mBlockSize; }
+
+	/// Get the maximum level (amount of grids) of the tree
+	static inline uint				sGetMaxLevel(uint inNumBlocks)			{ return CountTrailingZeros(inNumBlocks); }
 	
-	/// For location (inX, inY) get the block that contains this position and get the offset and scale needed to decode a uint8 height sample to a uint16
-	void							GetBlockOffsetAndScale(uint inX, uint inY, float &outBlockOffset, float &outBlockScale) const;
+	/// Get the range block offset and stride for GetBlockOffsetAndScale
+	static inline void				sGetRangeBlockOffsetAndStride(uint inNumBlocks, uint inMaxLevel, uint &outRangeBlockOffset, uint &outRangeBlockStride);
+
+	/// For block (inBlockX, inBlockY) get the offset and scale needed to decode a uint8 height sample to a uint16
+	inline void						GetBlockOffsetAndScale(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, float &outBlockOffset, float &outBlockScale) const;
 
 	/// Get the height sample at position (inX, inY)
 	inline uint8					GetHeightSample(uint inX, uint inY) const;
 
 	/// Faster version of GetPosition when block offset and scale are already known
-	Vec3							GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale) const;
-	
+	inline Vec3						GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale, bool &outNoCollision) const;
+		
 	/// Determine amount of bits needed to encode sub shape id
 	uint							GetSubShapeIDBits() const;
 
