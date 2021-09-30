@@ -576,9 +576,9 @@ void ConvexShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const
 	outMaterials = { mMaterial }; 
 }
 
-void ConvexShape::RestoreMaterialState(const PhysicsMaterialList &inMaterials) 
+void ConvexShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) 
 { 
-	JPH_ASSERT(inMaterials.size() == 1); 
+	JPH_ASSERT(inNumMaterials == 1); 
 	mMaterial = inMaterials[0]; 
 }
 
