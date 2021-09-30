@@ -325,6 +325,7 @@ void CompoundShape::RestoreBinaryState(StreamIn &inStream)
 void CompoundShape::SaveSubShapeState(ShapeList &outSubShapes) const
 { 
 	outSubShapes.clear();
+	outSubShapes.reserve(mSubShapes.size());
 	for (const SubShape &shape : mSubShapes)
 		outSubShapes.push_back(shape.mShape);
 }
