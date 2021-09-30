@@ -41,8 +41,10 @@ using CollidePointCollector = CollisionCollector<CollidePointResult, CollisionCo
 using CollideShapeCollector = CollisionCollector<CollideShapeResult, CollisionCollectorTraitsCollideShape>;
 using TransformedShapeCollector = CollisionCollector<TransformedShape, CollisionCollectorTraitsCollideShape>;
 
-using ShapeList = vector<RefConst<Shape>>;
-using PhysicsMaterialList = vector<RefConst<PhysicsMaterial>>;
+using ShapeRefC = RefConst<Shape>;
+using ShapeList = vector<ShapeRefC>;
+using PhysicsMaterialRefC = RefConst<PhysicsMaterial>;
+using PhysicsMaterialList = vector<PhysicsMaterialRefC>;
 
 /// Shapes are categorized in groups, each shape can return which group it belongs to through its Shape::GetType function.
 enum class EShapeType
@@ -240,13 +242,13 @@ public:
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const			{ }
 
 	/// Restore the material references after calling sRestoreFromBinaryState. Note that the exact same materials need to be provided in the same order as returned by SaveMaterialState.
-	virtual void					RestoreMaterialState(const PhysicsMaterialList &inMaterials)		{ JPH_ASSERT(inMaterials.empty()); }
+	virtual void					RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) { JPH_ASSERT(inNumMaterials == 0); }
 
 	/// Outputs the shape references that this shape has to outSubShapes.
 	virtual void					SaveSubShapeState(ShapeList &outSubShapes) const					{ }
 
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
-	virtual void					RestoreSubShapeState(const ShapeList &inSubShapes)					{ JPH_ASSERT(inSubShapes.empty()); }
+	virtual void					RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
 	using ShapeToIDMap = unordered_map<const Shape *, uint32>;
 	using MaterialToIDMap = unordered_map<const PhysicsMaterial *, uint32>;

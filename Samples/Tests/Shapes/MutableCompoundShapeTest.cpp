@@ -163,7 +163,7 @@ void MutableCompoundShapeTest::RestoreState(StateRecorder &inStream)
 
 			// Restore the pointers to the sub compound
 			ShapeList sub_shapes(shape->GetNumSubShapes(), mSubCompound);
-			shape->RestoreSubShapeState(sub_shapes);
+			shape->RestoreSubShapeState(sub_shapes.data(), (uint)sub_shapes.size());
 
 			// Update the shape (we're under lock protection, so use the no lock interface)
 			mPhysicsSystem->GetBodyInterfaceNoLock().SetShape(id, shape, false, EActivation::DontActivate);

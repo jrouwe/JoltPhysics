@@ -108,7 +108,7 @@ public:
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;
-	virtual void					RestoreMaterialState(const PhysicsMaterialList &inMaterials) override;
+	virtual void					RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) override;
 
 	// See Shape::GetStats
 	virtual Stats					GetStats() const override;

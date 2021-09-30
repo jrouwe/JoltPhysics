@@ -1708,9 +1708,9 @@ void HeightFieldShape::SaveMaterialState(PhysicsMaterialList &outMaterials) cons
 	outMaterials = mMaterials;
 }
 
-void HeightFieldShape::RestoreMaterialState(const PhysicsMaterialList &inMaterials) 
+void HeightFieldShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) 
 { 
-	mMaterials = inMaterials;
+	mMaterials.assign(inMaterials, inMaterials + inNumMaterials);
 }
 
 Shape::Stats HeightFieldShape::GetStats() const 
