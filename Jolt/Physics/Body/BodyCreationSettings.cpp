@@ -217,8 +217,7 @@ BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(Strea
 	if (group_filter_id != ~uint32(0))
 	{
 		// Check if it already exists
-		IDToGroupFilterMap::const_iterator group_filter_it = ioGroupFilterMap.find(group_filter_id);
-		if (group_filter_it == ioGroupFilterMap.end())
+		if (group_filter_id >= ioGroupFilterMap.size())
 		{
 			// New group filter, restore it
 			GroupFilter::GroupFilterResult group_filter_result = GroupFilter::sRestoreFromBinaryState(inStream);
@@ -228,12 +227,13 @@ BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(Strea
 				return result;
 			}
 			group_filter = group_filter_result.Get();
-			ioGroupFilterMap[group_filter_id] = group_filter;
+			JPH_ASSERT(group_filter_id == ioGroupFilterMap.size());
+			ioGroupFilterMap.push_back(group_filter);
 		}
 		else
 		{
 			// Existing group filter
-			group_filter = group_filter_it->second;
+			group_filter = ioGroupFilterMap[group_filter_id];
 		}
 	}
 

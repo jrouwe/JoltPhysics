@@ -252,8 +252,8 @@ public:
 
 	using ShapeToIDMap = unordered_map<const Shape *, uint32>;
 	using MaterialToIDMap = unordered_map<const PhysicsMaterial *, uint32>;
-	using IDToShapeMap = unordered_map<uint32, Ref<Shape>>;
-	using IDToMaterialMap = unordered_map<uint32, Ref<PhysicsMaterial>>;
+	using IDToShapeMap = vector<Ref<Shape>>;
+	using IDToMaterialMap = vector<Ref<PhysicsMaterial>>;
 
 	/// Save this shape, all its children and its materials. Pass in an empty map in ioShapeMap / ioMaterialMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	void							SaveWithChildren(StreamOut &inStream, ShapeToIDMap &ioShapeMap, MaterialToIDMap &ioMaterialMap) const;
