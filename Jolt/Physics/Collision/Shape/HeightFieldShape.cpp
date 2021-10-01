@@ -384,7 +384,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		// No materials assigned, validate that no materials have been specified
 		if (!inSettings.mMaterialIndices.empty())
 		{
-			outResult.SetError("No materials present, mHeightSamples should be empty");
+			outResult.SetError("No materials present, mMaterialIndices should be empty");
 			return;
 		}
 	}
@@ -392,6 +392,13 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	// Determine range
 	float min_value, max_value, scale;
 	inSettings.DetermineMinAndMaxSample(min_value, max_value, scale);
+	if (min_value > max_value)
+	{
+		// If there is no collision with this heightmap, leave everything empty
+		mMaterials.clear();
+		outResult.Set(this);
+		return;
+	}
 
 	// Quantize to uint16
 	vector<uint16> quantized_samples;
@@ -642,6 +649,10 @@ inline Vec3 HeightFieldShape::GetPosition(uint inX, uint inY, float inBlockOffse
 
 Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
 {
+	// Test if there are any samples
+	if (mHeightSamples.empty())
+		return mOffset + mScale * Vec3(float(inX), 0.0f, float(inY));
+
 	// Get block location
 	uint bx = inX / mBlockSize;
 	uint by = inY / mBlockSize;
@@ -660,11 +671,15 @@ Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
 
 bool HeightFieldShape::IsNoCollision(uint inX, uint inY) const
 { 
-	return GetHeightSample(inX, inY) == mSampleMask;
+	return mHeightSamples.empty() || GetHeightSample(inX, inY) == mSampleMask;
 }
 
 bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurfacePosition, SubShapeID &outSubShapeID) const
 {
+	// Check if we have collision
+	if (mHeightSamples.empty())
+		return false;
+
 	// Convert coordinate to integer space
 	Vec3 integer_space = (inLocalPosition - mOffset) / mScale;
 
@@ -857,6 +872,10 @@ AABox HeightFieldShape::GetLocalBounds() const
 #ifdef JPH_DEBUG_RENDERER
 void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
+	// Don't draw anything if we don't have any collision
+	if (mHeightSamples.empty())
+		return;
+
 	// Reset the batch if we switch coloring mode
 	if (mCachedUseMaterialColors != inUseMaterialColors)
 	{
@@ -1019,6 +1038,10 @@ public:
 	template <class Visitor>
 	JPH_INLINE void				WalkHeightField(Visitor &ioVisitor)
 	{
+		// Early out if there's no collision
+		if (mShape->mHeightSamples.empty())
+			return;
+
 		// Precalculate values relating to sample count
 		uint32 sample_count = mShape->mSampleCount;
 		UVec4 sample_count_min_1 = UVec4::sReplicate(sample_count - 1);
@@ -1722,7 +1745,7 @@ Shape::Stats HeightFieldShape::GetStats() const
 			+ mHeightSamples.size() * sizeof(uint8) 
 			+ mActiveEdges.size() * sizeof(uint8) 
 			+ mMaterialIndices.size() * sizeof(uint8), 
-		Square(mSampleCount - 1) * 2); 
+		mHeightSamples.empty()? 0 : Square(mSampleCount - 1) * 2);
 }
 
 } // JPH

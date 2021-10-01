@@ -28,7 +28,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		}
 	}
 
-	static void sValidateGetPosition(const HeightFieldShapeSettings &inSettings, float inMaxError)
+	static Ref<HeightFieldShape> sValidateGetPosition(const HeightFieldShapeSettings &inSettings, float inMaxError)
 	{
 		// Create shape
 		Ref<HeightFieldShape> shape = static_cast<HeightFieldShape *>(inSettings.Create().Get().GetPtr());
@@ -38,7 +38,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		for (uint y = 0; y < inSettings.mSampleCount; ++y)
 			for (uint x = 0; x < inSettings.mSampleCount; ++x)
 			{
-				// Perform a raycast from above the terrain on this location
+				// Perform a raycast from above the height field on this location
 				RayCast ray { inSettings.mOffset + inSettings.mScale * Vec3((float)x, 100.0f, (float)y), inSettings.mScale.GetY() * Vec3(0, -200, 0) };
 				RayCastResult hit;
 				shape->CastRay(ray, SubShapeIDCreator(), hit);
@@ -76,7 +76,7 @@ TEST_SUITE("HeightFieldShapeTests")
 					// Don't test borders, the ray may or may not hit
 					if (x > 0 && y > 0 && x < inSettings.mSampleCount - 1 && y < inSettings.mSampleCount - 1)
 					{
-						// Check that the ray hit the terrain
+						// Check that the ray hit the height field
 						Vec3 hit_pos = ray.mOrigin + ray.mDirection * hit.mFraction;
 						CHECK_APPROX_EQUAL(hit_pos, shape_pos, 1.0e-3f);
 					}
@@ -93,6 +93,8 @@ TEST_SUITE("HeightFieldShapeTests")
 
 		// Check error
 		CHECK(max_diff <= inMaxError);
+
+		return shape;
 	}
 
 	TEST_CASE("TestPlane")
@@ -139,7 +141,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		sValidateGetPosition(settings, 0.0f);
 	}
 
-	TEST_CASE("TestRandomTerrain")
+	TEST_CASE("TestRandomHeightField")
 	{
 		const float cMinHeight = -5.0f;
 		const float cMaxHeight = 10.0f;
@@ -147,7 +149,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		UnitTestRandom random;
 		uniform_real_distribution<float> height_distribution(cMinHeight, cMaxHeight);
 
-		// Create terrain with random samples
+		// Create height field with random samples
 		HeightFieldShapeSettings settings;
 		settings.mOffset = Vec3(0.3f, 0.5f, 0.7f);
 		settings.mScale = Vec3(1.1f, 1.2f, 1.3f);
@@ -171,5 +173,26 @@ TEST_SUITE("HeightFieldShapeTests")
 
 		sRandomizeMaterials(settings, 1);
 		sValidateGetPosition(settings, settings.mScale.GetY() * (cMaxHeight - cMinHeight) / ((1 << settings.mBitsPerSample) - 1));
+	}
+
+	TEST_CASE("TestEmptyHeightField")
+	{
+		// Create height field with no collision
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = 32;
+		settings.mHeightSamples.resize(Square(settings.mSampleCount));
+		for (float &h : settings.mHeightSamples)
+			h = HeightFieldShapeConstants::cNoCollisionValue;
+
+		// This should use the minimum amount of bits
+		CHECK(settings.CalculateBitsPerSampleForError(0.0f) == 1);
+
+		sRandomizeMaterials(settings, 50);
+		Ref<HeightFieldShape> shape = sValidateGetPosition(settings, 0.0f);
+
+		// Check that we allocated the minimum amount of memory
+		Shape::Stats stats = shape->GetStats();
+		CHECK(stats.mNumTriangles == 0);
+		CHECK(stats.mSizeBytes == sizeof(HeightFieldShape));
 	}
 }
