@@ -210,6 +210,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 		return result;
 	}
 	ShapeList sub_shapes;
+	sub_shapes.reserve(len);
 	for (size_t i = 0; i < len; ++i)
 	{
 		ShapeResult sub_shape_result = sRestoreWithChildren(inStream, ioShapeMap, ioMaterialMap);
@@ -227,6 +228,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 		return result;
 	}
 	PhysicsMaterialList materials;
+	materials.reserve(len);
 	for (size_t i = 0; i < len; ++i)
 	{
 		Ref<PhysicsMaterial> material;
