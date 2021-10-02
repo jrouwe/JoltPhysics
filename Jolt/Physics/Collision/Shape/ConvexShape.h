@@ -121,9 +121,6 @@ public:
 	/// Get density of the shape (kg / m^3)
 	float							GetDensity() const											{ return mDensity; }
 
-	/// Collide 2 shapes and report any hits to ioCollector.
-	static void						sCollideConvexVsConvex(const ConvexShape *inShape1, const ConvexShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-
 #ifdef JPH_DEBUG_RENDERER
 	// See Shape::DrawGetSupportFunction
 	virtual void					DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const override;
@@ -145,6 +142,9 @@ public:
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;
 	virtual void					RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) override;
 
+	// Register shape functions with the registry
+	static void						sRegister();
+
 protected:
 	// See: Shape::RestoreBinaryState
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
@@ -155,6 +155,10 @@ protected:
 private:
 	// Class for GetTrianglesStart/Next
 	class							CSGetTrianglesContext;
+
+	// Helper functions called by CollisionDispatch
+	static void						sCollideConvexVsConvex(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCastConvexVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
 
 #ifdef JPH_STAT_COLLECTOR
 	// Statistics

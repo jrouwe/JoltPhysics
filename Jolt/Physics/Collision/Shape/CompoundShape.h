@@ -121,18 +121,6 @@ public:
 	/// @return How many indices were placed in outSubShapeIndices
 	virtual int						GetIntersectingSubShapes(const OrientedBox &inBox, uint *outSubShapeIndices, int inMaxSubShapeIndices) const = 0;
 
-	/// Cast a compound shape againt a shape, reports hits to ioCollector
-	/// @param inShapeCast The shape to cast against the other shape and its start and direction
-	/// @param inShapeCastSettings Settings for performing the cast
-	/// @param inShape The shape to cast against.
-	/// @param inScale Local space scale for the shape to cast against.
-	/// @param inShapeFilter Determines if sub shapes of the shape can collide
-	/// @param inCenterOfMassTransform2 Is the center of mass transform of shape 2 (excluding scale), this is used to provide a transform to the shape cast result so that local quantities can be transformed into world space.
-	/// @param inSubShapeIDCreator1 Class that tracks the current sub shape ID for the casting shape
-	/// @param inSubShapeIDCreator2 Class that tracks the current sub shape ID for the shape we're casting against
-	/// @param ioCollector The collector that receives the results.
-	static void						sCastCompoundShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
-
 	struct SubShape
 	{
 		/// Initialize sub shape from sub shape settings
@@ -300,6 +288,9 @@ public:
 	// See Shape::IsValidScale
 	virtual bool					IsValidScale(Vec3Arg inScale) const override;
 
+	// Register shape functions with the registry
+	static void						sRegister();
+
 protected:
 	// See: Shape::RestoreBinaryState
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
@@ -334,6 +325,10 @@ protected:
 	AABox							mLocalBounds;
 	SubShapes						mSubShapes;
 	float							mInnerRadius = FLT_MAX;									///< Smallest radius of GetInnerRadius() of child shapes
+
+private:
+	// Helper functions called by CollisionDispatch
+	static void						sCastCompoundVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
 };
 
 } // JPH

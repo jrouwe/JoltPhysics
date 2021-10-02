@@ -63,20 +63,29 @@ namespace JPH {
 
 void RegisterTypes()
 {
+	// Register base classes first so that we can specialize them later
+	CompoundShape::sRegister();
+	ConvexShape::sRegister();
+
+	// Register compounds before others so that we can specialize them later (register them in reverse order of collision complexity)
+	MutableCompoundShape::sRegister();
+	StaticCompoundShape::sRegister();
+
+	// Leaf classes
 	TriangleShape::sRegister();
 	SphereShape::sRegister();
 	BoxShape::sRegister();
 	CapsuleShape::sRegister();
 	TaperedCapsuleShape::sRegister();
 	CylinderShape::sRegister();
-	ScaledShape::sRegister();
 	MeshShape::sRegister();
 	ConvexHullShape::sRegister();
 	HeightFieldShape::sRegister();
+
+	// Register these last because their collision functions are simple so we want to execute them first (register them in reverse order of collision complexity)
 	RotatedTranslatedShape::sRegister();
 	OffsetCenterOfMassShape::sRegister();
-	StaticCompoundShape::sRegister();
-	MutableCompoundShape::sRegister();
+	ScaledShape::sRegister();
 
 	Factory::sInstance.Register(JPH_RTTI(SkeletalAnimation));
 	Factory::sInstance.Register(JPH_RTTI(Skeleton));

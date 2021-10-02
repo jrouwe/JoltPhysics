@@ -131,17 +131,23 @@ void OffsetCenterOfMassShape::TransformShape(Mat44Arg inCenterOfMassTransform, T
 	mInnerShape->TransformShape(inCenterOfMassTransform * Mat44::sTranslation(-mOffset), ioCollector);
 }
 
-void OffsetCenterOfMassShape::sCollideOffsetCenterOfMassShapeVsShape(const OffsetCenterOfMassShape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+void OffsetCenterOfMassShape::sCollideOffsetCenterOfMassVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {	
-	CollisionDispatch::sCollideShapeVsShape(inShape1->mInnerShape, inShape2, inScale1, inScale2, inCenterOfMassTransform1 * Mat44::sTranslation(-inShape1->mOffset), inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
+	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::OffsetCenterOfMass);
+	const OffsetCenterOfMassShape *shape1 = static_cast<const OffsetCenterOfMassShape *>(inShape1);
+
+	CollisionDispatch::sCollideShapeVsShape(shape1->mInnerShape, inShape2, inScale1, inScale2, inCenterOfMassTransform1 * Mat44::sTranslation(-shape1->mOffset), inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
 }
 
-void OffsetCenterOfMassShape::sCollideShapeVsOffsetCenterOfMassShape(const Shape *inShape1, const OffsetCenterOfMassShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+void OffsetCenterOfMassShape::sCollideShapeVsOffsetCenterOfMass(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {
-	CollisionDispatch::sCollideShapeVsShape(inShape1, inShape2->mInnerShape, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2 * Mat44::sTranslation(-inShape2->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
+	JPH_ASSERT(inShape2->GetSubType() == EShapeSubType::OffsetCenterOfMass);
+	const OffsetCenterOfMassShape *shape2 = static_cast<const OffsetCenterOfMassShape *>(inShape2);
+
+	CollisionDispatch::sCollideShapeVsShape(inShape1, shape2->mInnerShape, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2 * Mat44::sTranslation(-shape2->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
 }
 
-void OffsetCenterOfMassShape::sCastOffsetCenterOfMassShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+void OffsetCenterOfMassShape::sCastOffsetCenterOfMassVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	// Fetch offset center of mass shape from cast shape
 	JPH_ASSERT(inShapeCast.mShape->GetSubType() == EShapeSubType::OffsetCenterOfMass);
@@ -172,6 +178,14 @@ void OffsetCenterOfMassShape::sRegister()
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::OffsetCenterOfMass);
 	f.mConstruct = []() -> Shape * { return new OffsetCenterOfMassShape; };
 	f.mColor = Color::sCyan;
+
+	for (EShapeSubType s : sAllSubShapeTypes)
+	{
+		CollisionDispatch::sRegisterCollideShape(EShapeSubType::OffsetCenterOfMass, s, sCollideOffsetCenterOfMassVsShape);
+		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::OffsetCenterOfMass, sCollideShapeVsOffsetCenterOfMass);
+	}
+
+	CollisionDispatch::sRegisterCastShape(EShapeSubType::OffsetCenterOfMass, sCastOffsetCenterOfMassVsShape);
 }
 
 } // JPH

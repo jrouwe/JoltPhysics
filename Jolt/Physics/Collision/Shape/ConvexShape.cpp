@@ -13,6 +13,7 @@
 #include <Physics/Collision/Shape/GetTrianglesContext.h>
 #include <Physics/Collision/Shape/PolyhedronSubmergedVolumeCalculator.h>
 #include <Physics/Collision/TransformedShape.h>
+#include <Physics/Collision/CollisionDispatch.h>
 #include <Physics/PhysicsSettings.h>
 #include <Core/StatCollector.h>
 #include <Core/StreamIn.h>
@@ -47,20 +48,26 @@ const vector<Vec3> ConvexShape::sUnitSphereTriangles = []() {
 	return verts;
 }();
 
-void ConvexShape::sCollideConvexVsConvex(const ConvexShape *inShape1, const ConvexShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
 	JPH_IF_STAT_COLLECTOR(sNumCollideChecks++;)
+
+	// Get the shapes
+	JPH_ASSERT(inShape1->GetType() == EShapeType::Convex);
+	JPH_ASSERT(inShape2->GetType() == EShapeType::Convex);
+	const ConvexShape *shape1 = static_cast<const ConvexShape *>(inShape1);
+	const ConvexShape *shape2 = static_cast<const ConvexShape *>(inShape2);
 
 	// Get transforms
 	Mat44 inverse_transform1 = inCenterOfMassTransform1.InversedRotationTranslation();
 	Mat44 transform_2_to_1 = inverse_transform1 * inCenterOfMassTransform2;
 
 	// Get bounding boxes
-	AABox shape1_bbox = inShape1->GetLocalBounds().Scaled(inScale1);
+	AABox shape1_bbox = shape1->GetLocalBounds().Scaled(inScale1);
 	shape1_bbox.ExpandBy(Vec3::sReplicate(inCollideShapeSettings.mMaxSeparationDistance));
-	AABox shape2_bbox = inShape2->GetLocalBounds().Scaled(inScale2);
+	AABox shape2_bbox = shape2->GetLocalBounds().Scaled(inScale2);
 
 	// Check if they overlap
 	if (!OrientedBox(transform_2_to_1, shape2_bbox).Overlaps(shape1_bbox))
@@ -76,8 +83,8 @@ void ConvexShape::sCollideConvexVsConvex(const ConvexShape *inShape1, const Conv
 
 		// Create support function
 		SupportBuffer buffer1_excl_cvx_radius, buffer2_excl_cvx_radius;
-		const Support *shape1_excl_cvx_radius = inShape1->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer1_excl_cvx_radius, inScale1);
-		const Support *shape2_excl_cvx_radius = inShape2->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer2_excl_cvx_radius, inScale2);
+		const Support *shape1_excl_cvx_radius = shape1->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer1_excl_cvx_radius, inScale1);
+		const Support *shape2_excl_cvx_radius = shape2->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer2_excl_cvx_radius, inScale2);
 
 		// Transform shape 2 in the space of shape 1
 		TransformedConvexObject<Support> transformed2_excl_cvx_radius(transform_2_to_1, *shape2_excl_cvx_radius);
@@ -102,8 +109,8 @@ void ConvexShape::sCollideConvexVsConvex(const ConvexShape *inShape1, const Conv
 
 			// Create support function
 			SupportBuffer buffer1_incl_cvx_radius, buffer2_incl_cvx_radius;
-			const Support *shape1_incl_cvx_radius = inShape1->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer1_incl_cvx_radius, inScale1);
-			const Support *shape2_incl_cvx_radius = inShape2->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer2_incl_cvx_radius, inScale2);
+			const Support *shape1_incl_cvx_radius = shape1->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer1_incl_cvx_radius, inScale1);
+			const Support *shape2_incl_cvx_radius = shape2->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer2_incl_cvx_radius, inScale2);
 
 			// Add separation distance
 			AddConvexRadius<Support> shape1_add_max_separation_distance(*shape1_incl_cvx_radius, inCollideShapeSettings.mMaxSeparationDistance);
@@ -140,14 +147,14 @@ void ConvexShape::sCollideConvexVsConvex(const ConvexShape *inShape1, const Conv
 	if (inCollideShapeSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
 	{
 		// Get supporting face of shape 1
-		inShape1->GetSupportingFace(-penetration_axis, inScale1, result.mShape1Face);
+		shape1->GetSupportingFace(-penetration_axis, inScale1, result.mShape1Face);
 
 		// Convert to world space
 		for (Vec3 &p : result.mShape1Face)
 			p = inCenterOfMassTransform1 * p;
 
 		// Get supporting face of shape 2 
-		inShape2->GetSupportingFace(transform_2_to_1.Multiply3x3Transposed(penetration_axis), inScale2, result.mShape2Face);
+		shape2->GetSupportingFace(transform_2_to_1.Multiply3x3Transposed(penetration_axis), inScale2, result.mShape2Face);
 
 		// Convert to world space
 		for (Vec3 &p : result.mShape2Face)
@@ -158,6 +165,11 @@ void ConvexShape::sCollideConvexVsConvex(const ConvexShape *inShape1, const Conv
 
 	// Notify the collector
 	ioCollector.AddHit(result);
+}
+
+void ConvexShape::sCastConvexVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	inShape->CastShape(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 }
 
 bool ConvexShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const
@@ -576,6 +588,17 @@ void ConvexShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, u
 { 
 	JPH_ASSERT(inNumMaterials == 1); 
 	mMaterial = inMaterials[0]; 
+}
+
+void ConvexShape::sRegister()
+{
+	for (EShapeSubType s1 : sConvexSubShapeTypes)
+	{
+		for (EShapeSubType s2 : sConvexSubShapeTypes)
+			CollisionDispatch::sRegisterCollideShape(s1, s2, sCollideConvexVsConvex);
+
+		CollisionDispatch::sRegisterCastShape(s1, sCastConvexVsShape);
+	}
 }
 
 } // JPH

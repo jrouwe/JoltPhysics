@@ -104,22 +104,6 @@ public:
 	// See Shape::GetTrianglesNext
 	virtual int						GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials = nullptr) const override { JPH_ASSERT(false, "Cannot call on non-leaf shapes, use CollectTransformedShapes to collect the leaves first!"); return 0; }
 
-	/// Collide 2 shapes and pass any hits on to ioCollector
-	static void						sCollideRotatedTranslatedVsShape(const RotatedTranslatedShape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-	static void						sCollideShapeVsRotatedTranslated(const Shape *inShape1, const RotatedTranslatedShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-
-	/// Cast a rotated translated shape againt a shape, reports hits to ioCollector
-	/// @param inShapeCast The shape to cast against the other shape and its start and direction
-	/// @param inShapeCastSettings Settings for performing the cast
-	/// @param inShape The shape to cast against.
-	/// @param inScale Local space scale for the shape to cast against.
-	/// @param inShapeFilter Determines if sub shapes of the shape can collide
-	/// @param inCenterOfMassTransform2 Is the center of mass transform of shape 2 (excluding scale), this is used to provide a transform to the shape cast result so that local quantities can be transformed into world space.
-	/// @param inSubShapeIDCreator1 Class that tracks the current sub shape ID for the casting shape
-	/// @param inSubShapeIDCreator2 Class that tracks the current sub shape ID for the shape we're casting against
-	/// @param ioCollector The collector that receives the results.
-	static void						sCastRotatedTranslatedShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
-
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 
@@ -140,6 +124,11 @@ protected:
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
 
 private:
+	// Helper functions called by CollisionDispatch
+	static void						sCollideRotatedTranslatedVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCollideShapeVsRotatedTranslated(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCastRotatedTranslatedVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
+
 	/// Transform the scale to the local space of the child shape
 	inline Vec3						TransformScale(Vec3Arg inScale) const
 	{

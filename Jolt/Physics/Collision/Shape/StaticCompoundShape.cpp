@@ -603,9 +603,12 @@ int StaticCompoundShape::GetIntersectingSubShapes(const OrientedBox &inBox, uint
 	return visitor.GetNumResults();
 }
 
-void StaticCompoundShape::sCollideCompoundVsShape(const StaticCompoundShape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+void StaticCompoundShape::sCollideCompoundVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {	
 	JPH_PROFILE_FUNCTION();
+
+	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::StaticCompound);
+	const StaticCompoundShape *shape1 = static_cast<const StaticCompoundShape *>(inShape1);
 
 	struct Visitor : public CollideCompoundVsShapeVisitor
 	{
@@ -629,11 +632,11 @@ void StaticCompoundShape::sCollideCompoundVsShape(const StaticCompoundShape *inS
 		}
 	};
 
-	Visitor visitor(inShape1, inShape2, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
-	inShape1->WalkTree(visitor);
+	Visitor visitor(shape1, inShape2, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
+	shape1->WalkTree(visitor);
 }
 
-void StaticCompoundShape::sCollideShapeVsCompound(const Shape *inShape1, const StaticCompoundShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+void StaticCompoundShape::sCollideShapeVsCompound(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -659,8 +662,11 @@ void StaticCompoundShape::sCollideShapeVsCompound(const Shape *inShape1, const S
 		}
 	};
 
-	Visitor visitor(inShape1, inShape2, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
-	inShape2->WalkTree(visitor);
+	JPH_ASSERT(inShape2->GetSubType() == EShapeSubType::StaticCompound);
+	const StaticCompoundShape *shape2 = static_cast<const StaticCompoundShape *>(inShape2);
+
+	Visitor visitor(inShape1, shape2, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
+	shape2->WalkTree(visitor);
 }
 
 void StaticCompoundShape::SaveBinaryState(StreamOut &inStream) const
@@ -682,6 +688,12 @@ void StaticCompoundShape::sRegister()
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::StaticCompound);
 	f.mConstruct = []() -> Shape * { return new StaticCompoundShape; };
 	f.mColor = Color::sOrange;
+
+	for (EShapeSubType s : sAllSubShapeTypes)
+	{
+		CollisionDispatch::sRegisterCollideShape(EShapeSubType::StaticCompound, s, sCollideCompoundVsShape);
+		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::StaticCompound, sCollideShapeVsCompound);
+	}
 }
 
 } // JPH

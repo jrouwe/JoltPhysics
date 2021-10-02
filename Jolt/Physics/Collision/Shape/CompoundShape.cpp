@@ -237,7 +237,7 @@ void CompoundShape::TransformShape(Mat44Arg inCenterOfMassTransform, Transformed
 		shape.mShape->TransformShape(inCenterOfMassTransform * Mat44::sRotationTranslation(shape.GetRotation(), shape.GetPositionCOM()), ioCollector);
 }
 
-void CompoundShape::sCastCompoundShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+void CompoundShape::sCastCompoundVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -373,6 +373,12 @@ bool CompoundShape::IsValidScale(Vec3Arg inScale) const
 	}
 
 	return true;
+}
+
+void CompoundShape::sRegister()
+{
+	for (EShapeSubType s : sCompoundSubShapeTypes)
+		CollisionDispatch::sRegisterCastShape(s, sCastCompoundVsShape);
 }
 
 } // JPH

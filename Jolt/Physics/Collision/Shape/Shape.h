@@ -98,8 +98,14 @@ enum class EShapeSubType : uint8
 	User8,
 };
 
+// Sets of shape sub types
+static constexpr EShapeSubType sAllSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull, EShapeSubType::StaticCompound, EShapeSubType::MutableCompound, EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass, EShapeSubType::Mesh, EShapeSubType::HeightField, EShapeSubType::User1, EShapeSubType::User2, EShapeSubType::User3, EShapeSubType::User4, EShapeSubType::User5, EShapeSubType::User6, EShapeSubType::User7, EShapeSubType::User8 };
+static constexpr EShapeSubType sConvexSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull };
+static constexpr EShapeSubType sCompoundSubShapeTypes[] = { EShapeSubType::StaticCompound, EShapeSubType::MutableCompound };
+static constexpr EShapeSubType sDecoratorSubShapeTypes[] = { EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass };
+
 /// How many shape types we support
-static constexpr int NumShapeTypes = 14;
+static constexpr uint NumSubShapeTypes = (uint)size(sAllSubShapeTypes);
 
 /// Class that can construct shapes and that is serializable using the ObjectStream system.
 /// Can be used to store shape data in 'uncooked' form (i.e. in a form that is still human readable and authorable).
@@ -138,7 +144,7 @@ public:
 	static inline ShapeFunctions &	sGet(EShapeSubType inSubType)										{ return sRegistry[(int)inSubType]; }
 
 private:
-	static ShapeFunctions 			sRegistry[NumShapeTypes];
+	static ShapeFunctions 			sRegistry[NumSubShapeTypes];
 };
 
 /// Base class for all shapes (collision volume of a body). Defines a virtual interface for collision detection.

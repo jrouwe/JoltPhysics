@@ -26,7 +26,7 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT_BASE(ShapeSettings)
 bool Shape::sDrawSubmergedVolumes = false;
 #endif // JPH_DEBUG_RENDERER
 
-ShapeFunctions ShapeFunctions::sRegistry[NumShapeTypes];
+ShapeFunctions ShapeFunctions::sRegistry[NumSubShapeTypes];
 
 TransformedShape Shape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {

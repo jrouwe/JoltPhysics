@@ -15,6 +15,7 @@
 #include <Physics/Collision/CollideConvexVsTriangles.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
+#include <Physics/Collision/CollisionDispatch.h>
 #include <Core/Profiler.h>
 #include <Core/StringTools.h>
 #include <Core/StreamIn.h>
@@ -1628,9 +1629,15 @@ int HeightFieldShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMax
 	return context.mNumTrianglesFound;
 }
 
-void HeightFieldShape::sCollideConvexVsHeightField(const ConvexShape *inShape1, const HeightFieldShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+void HeightFieldShape::sCollideConvexVsHeightField(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
+
+	// Get the shapes
+	JPH_ASSERT(inShape1->GetType() == EShapeType::Convex);
+	JPH_ASSERT(inShape2->GetType() == EShapeType::HeightField);
+	const ConvexShape *shape1 = static_cast<const ConvexShape *>(inShape1);
+	const HeightFieldShape *shape2 = static_cast<const HeightFieldShape *>(inShape2);
 
 	struct Visitor : public CollideConvexVsTriangles
 	{
@@ -1677,10 +1684,10 @@ void HeightFieldShape::sCollideConvexVsHeightField(const ConvexShape *inShape1, 
 		SubShapeIDCreator			mSubShapeIDCreator2;
 	};
 
-	Visitor visitor(inShape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
-	visitor.mShape2 = inShape2;
+	Visitor visitor(shape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
+	visitor.mShape2 = shape2;
 	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
-	inShape2->WalkHeightField(visitor);
+	shape2->WalkHeightField(visitor);
 }
 
 void HeightFieldShape::SaveBinaryState(StreamOut &inStream) const
@@ -1748,6 +1755,9 @@ void HeightFieldShape::sRegister()
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::HeightField);
 	f.mConstruct = []() -> Shape * { return new HeightFieldShape; };
 	f.mColor = Color::sPurple;
+
+	for (EShapeSubType s : sConvexSubShapeTypes)
+		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::HeightField, sCollideConvexVsHeightField);
 }
 
 } // JPH
