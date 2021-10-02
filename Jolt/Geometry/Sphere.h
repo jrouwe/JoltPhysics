@@ -11,7 +11,7 @@ class [[nodiscard]] Sphere
 {
 public:
 	/// Constructor
-	inline				Sphere()												{ }
+	inline				Sphere() = default;
 	inline				Sphere(const Float3 &inCenter, float inRadius)			: mCenter(inCenter), mRadius(inRadius) { }
 	inline				Sphere(Vec3Arg inCenter, float inRadius)				: mRadius(inRadius) { inCenter.StoreFloat3(&mCenter); }
 

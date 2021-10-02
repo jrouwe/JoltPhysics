@@ -49,7 +49,7 @@ public:
 
 	// See Shape
 	virtual void					SaveSubShapeState(ShapeList &outSubShapes) const override;
-	virtual void					RestoreSubShapeState(const ShapeList &inSubShapes) override;
+	virtual void					RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes) override;
 
 	// See Shape::GetStatsRecursive
 	virtual Stats					GetStatsRecursive(VisitedShapes &ioVisitedShapes) const override;

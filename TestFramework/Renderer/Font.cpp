@@ -203,10 +203,10 @@ Font::Create(const char *inFontName, int inCharHeight)
 	};
 
 	// Load vertex shader
-	ComPtr<ID3DBlob> vtx = mRenderer->CreateVertexShader("Shaders/FontVertexShader.hlsl");
+	ComPtr<ID3DBlob> vtx = mRenderer->CreateVertexShader("Assets/Shaders/FontVertexShader.hlsl");
 
 	// Load pixel shader
-	ComPtr<ID3DBlob> pix = mRenderer->CreatePixelShader("Shaders/FontPixelShader.hlsl");
+	ComPtr<ID3DBlob> pix = mRenderer->CreatePixelShader("Assets/Shaders/FontPixelShader.hlsl");
 
 	mPipelineState = mRenderer->CreatePipelineState(vtx.Get(), vertex_desc, ARRAYSIZE(vertex_desc), pix.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::Off, PipelineState::EBlendMode::AlphaTest, PipelineState::ECullMode::Backface);
 

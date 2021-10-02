@@ -12,7 +12,7 @@ class TriangleGrouper
 {
 public:
 	/// Virtual destructor
-	virtual					~TriangleGrouper() { }
+	virtual					~TriangleGrouper() = default;
 
 	/// Group a batch of indexed triangles
 	/// @param inVertices The list of vertices

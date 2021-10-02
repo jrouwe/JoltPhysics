@@ -17,7 +17,7 @@ TEST_SUITE("BroadPhaseTests")
 	{
 		// Create body manager
 		BodyManager body_manager;
-		body_manager.Init(1);
+		body_manager.Init(1, 0);
 		
 		// Create quad tree
 		BroadPhaseQuadTree broadphase;

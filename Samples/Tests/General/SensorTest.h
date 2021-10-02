@@ -33,11 +33,15 @@ public:
 	virtual void		RestoreState(StateRecorder &inStream) override;
 
 private:
+	float				mTime = 0.0f;						// Total elapsed time
+
 	BodyID				mSensorID;							// Body ID of the sensor
 
-	Ref<Ragdoll>		mRagdoll;
+	Ref<Ragdoll>		mRagdoll;							// Ragdoll that is falling into the sensor
 
-	Mutex				mMutex;								// Mutex that protects mBodiesInSensor
+	BodyID				mKinematicBodyID;					// Body ID of a kinematic body that is animating in and out of the sensor
+
+	Mutex				mMutex;								// Mutex that protects mBodiesInSensor and mKinematicBodyInSensor
 
 	// Structure that keeps track of how many contact point each body has with the sensor
 	struct BodyAndCount
@@ -49,5 +53,7 @@ private:
 	};
 
 	using BodiesInSensor = vector<BodyAndCount>;
-	BodiesInSensor		mBodiesInSensor;					// Bodies that are currently inside the sensor
+	BodiesInSensor		mBodiesInSensor;					// Dynamic bodies that are currently inside the sensor
+
+	bool				mKinematicBodyInSensor = false;		// Keeps track if the kinematic body is in the sensor
 };

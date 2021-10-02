@@ -15,7 +15,7 @@ public:
 								TriangleSplitter(const VertexList &inVertices, const IndexedTriangleList &inTriangles);
 
 	/// Virtual destructor
-	virtual						~TriangleSplitter() { }
+	virtual						~TriangleSplitter() = default;
 
 	struct Stats
 	{
@@ -30,7 +30,7 @@ public:
 	struct Range
 	{
 		/// Constructor
-								Range() { }
+								Range() = default;
 								Range(uint inBegin, uint inEnd) : mBegin(inBegin), mEnd(inEnd) { }
 
 		/// Get number of triangles in range

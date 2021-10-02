@@ -1,0 +1,70 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - 'Docs/**'
+      - '**.md'
+      - '**.txt'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - 'Docs/**'
+      - '**.md'
+      - '**.txt'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    name: Linux
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution, ReleaseASAN, ReleaseUBSAN]
+            clang_version: [clang++-10, clang++-11, clang++-12]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} --config ${{matrix.build_type}}
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      run: ctest --output-on-failure
+
+  msvc_cl:
+    runs-on: windows-latest
+    name: Visual Studio CL
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/VS2019_CL -G "Visual Studio 16 2019" -A x64 Build
+    - name: Build
+      run: msbuild Build\VS2019_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}}
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/VS2019_CL/${{matrix.build_type}}
+      run: ./UnitTests.exe
+
+  android:
+    runs-on: ubuntu-latest
+    name: Android
+    strategy:
+        fail-fast: false
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Gradle Build
+      working-directory: ${{github.workspace}}/Build/Android
+      run: ./gradlew build

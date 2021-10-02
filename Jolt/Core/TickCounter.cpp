@@ -17,7 +17,7 @@
 
 namespace JPH {
 
-static uint64 sProcessorTicksPerSecond = []() {
+static const uint64 sProcessorTicksPerSecond = []() {
 #if defined(JPH_PLATFORM_WINDOWS)
 	// Open the key where the processor speed is stored
 	HKEY hkey;
@@ -56,7 +56,7 @@ static uint64 sProcessorTicksPerSecond = []() {
 		#endif
 
 			// Check if line starts with correct string
-			const int num_chars = strlen(cpu_str);
+			const size_t num_chars = strlen(cpu_str);
 			if (strncmp(line.c_str(), cpu_str, num_chars) == 0)
 			{
 				// Find ':'

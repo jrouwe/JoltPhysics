@@ -14,7 +14,7 @@ public:
 	JPH_DECLARE_RTTI_VIRTUAL_BASE(UIAnimation)
 
 	/// Destructor
-	virtual			~UIAnimation()										{ }
+	virtual			~UIAnimation() = default;
 
 	///@name Interface
 	virtual void	Init(UIElement *inElement)							{ }

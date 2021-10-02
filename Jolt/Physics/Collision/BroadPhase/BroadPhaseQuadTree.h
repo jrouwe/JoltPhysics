@@ -35,7 +35,13 @@ public:
 	virtual void			CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
 	virtual void			CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
 	virtual void			CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
-	virtual void			FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
+	virtual void			FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	virtual void			SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) override;
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	virtual void			ReportStats() override;
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 private:
 	/// Helper struct for AddBodies handle
@@ -59,8 +65,7 @@ private:
 	QuadTree::Allocator		mAllocator;
 
 	/// Mapping table that maps from Object Layer to tree
-	const BroadPhaseLayer *	mObjectToBroadPhaseLayer = nullptr;
-	uint					mNumObjectLayers;
+	ObjectToBroadPhaseLayer	mObjectToBroadPhaseLayer;
 
 	/// One tree per object layer
 	QuadTree *				mLayers;
@@ -78,6 +83,13 @@ private:
 
 	/// Mutex that prevents object modification during UpdatePrepare/Finalize()
 	SharedMutex				mUpdateMutex;
+
+	/// We double buffer all trees so that we can query while building the next one and we destroy the old tree the next physics update.
+	/// This structure ensures that we wait for queries that are still using the old tree.
+	mutable SharedMutex		mQueryLocks[2];
+
+	/// This index indicates which lock is currently active, it alternates between 0 and 1
+	atomic<uint32>			mQueryLockIdx { 0 };
 
 	/// This is the next tree to update in UpdatePrepare()
 	uint32					mNextLayerToUpdate = 0;

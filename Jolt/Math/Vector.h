@@ -11,7 +11,7 @@ class [[nodiscard]] Vector
 {
 public:
 	/// Constructor
-	inline						Vector()												{ }
+	inline						Vector() = default;
 	inline						Vector(const Vector &inRHS)								{ *this = inRHS; }
 
 	/// Dimensions

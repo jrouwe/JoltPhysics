@@ -274,7 +274,7 @@ TEST_SUITE("RayShapeTests")
 		ObjectToBroadPhaseLayer object_to_broadphase;
 		object_to_broadphase.push_back(BroadPhaseLayer(0));
 		PhysicsSystem system;
-		system.Init(1, 4, 4, object_to_broadphase, [](BroadPhaseLayer, BroadPhaseLayer) { return true; }, [](ObjectLayer, ObjectLayer) { return true; });
+		system.Init(1, 0, 4, 4, object_to_broadphase, [](ObjectLayer, BroadPhaseLayer) { return true; }, [](ObjectLayer, ObjectLayer) { return true; });
 		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, cShapePosition, cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate);
 			   
 

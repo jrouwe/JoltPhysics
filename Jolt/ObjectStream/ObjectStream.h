@@ -41,7 +41,7 @@ public:
 
 protected:
 	/// Constructor
-	virtual							~ObjectStream()										{ }
+	virtual							~ObjectStream() = default;
 
 	/// Identifier for objects
 	using Identifier = uint32;

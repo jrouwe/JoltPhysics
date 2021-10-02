@@ -86,12 +86,12 @@ void SkeletalAnimation::Sample(float inTime, SkeletonPose &ioPose) const
 		if (low == -1)
 		{
 			// Before first key, return first key
-			state = aj.mKeyframes.front();
+			state = static_cast<const JointState &>(aj.mKeyframes.front());
 		}
 		else if (high == (int)aj.mKeyframes.size())
 		{
 			// Beyond last key, return last key
-			state = aj.mKeyframes.back();
+			state = static_cast<const JointState &>(aj.mKeyframes.back());
 		}
 		else
 		{

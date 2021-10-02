@@ -27,7 +27,7 @@ class BodyInterface : public NonCopyable
 {
 public:
 	/// Constructor
-								BodyInterface() { }
+								BodyInterface() = default;
 								BodyInterface(BodyLockInterface &inBodyLockInterface, BodyManager &inBodyManager, BroadPhase &inBroadPhase) : mBodyLockInterface(&inBodyLockInterface), mBodyManager(&inBodyManager), mBroadPhase(&inBroadPhase) { }
 	
 	/// Create a body

@@ -30,11 +30,12 @@ public:
 
 	/// Initialize the system.
 	/// @param inMaxBodies Maximum number of bodies to support.
+	/// @param inNumBodyMutexes Number of body mutexes to use. Should be a power of 2 in the range [1, 64], use 0 to auto detect.
 	/// @param inMaxBodyPairs Maximum amount of body pairs to process (anything else will fall through the world), this number should generally be much higher than the max amount of contact points as there will be lots of bodies close that are not actually touching
 	/// @param inMaxContactConstraints Maximum amount of contact constraints to process (anything else will fall through the world)
 	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, @see ObjectToBroadPhaseLayer.
 	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide.
-	void						Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter);
+	void						Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter);
 	
 	/// Listener that is notified whenever a body is activated/deactivated
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
@@ -55,6 +56,11 @@ public:
 	/// Control the main constants of the physics simulation
 	void						SetPhysicsSettings(const PhysicsSettings &inSettings)		{ mPhysicsSettings = inSettings; }
 	const PhysicsSettings &		GetPhysicsSettings() const									{ return mPhysicsSettings; }
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Set function that converts a broadphase layer to a human readable string for debugging purposes
+	void						SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { mBroadPhase->SetBroadPhaseLayerToString(inBroadPhaseLayerToString); }
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 	/// Access to the body interface. This interface allows to to create / remove bodies and to change their properties.
 	BodyInterface &				GetBodyInterface() 											{ return mBodyInterfaceLocking; }
@@ -132,7 +138,7 @@ public:
 	inline const BodyLockInterfaceLocking &	GetBodyLockInterface() const					{ return mBodyLockInterfaceLocking; }
 
 	/// Get an broadphase layer filter that uses the default pair filter and a specified object layer to determine if broadphase layers collide
-	DefaultBroadPhaseLayerFilter GetDefaultBroadPhaseLayerFilter(ObjectLayer inLayer) const	{ return DefaultBroadPhaseLayerFilter(mBroadPhaseLayerPairFilter, mObjectToBroadPhaseLayer[inLayer]); }
+	DefaultBroadPhaseLayerFilter GetDefaultBroadPhaseLayerFilter(ObjectLayer inLayer) const	{ return DefaultBroadPhaseLayerFilter(mObjectVsBroadPhaseLayerFilter, inLayer); }
 
 	/// Get an object layer filter that uses the default pair filter and a specified layer to determine if layers collide
 	DefaultObjectLayerFilter	GetDefaultLayerFilter(ObjectLayer inLayer) const			{ return DefaultObjectLayerFilter(mObjectLayerPairFilter, inLayer); }
@@ -159,6 +165,11 @@ public:
 	/// Get copy of the list of active bodies under protection of a lock.
 	/// @param outBodyIDs On return, this will contain the list of BodyIDs
 	void						GetActiveBodies(BodyIDVector &outBodyIDs) const				{ return mBodyManager.GetActiveBodies(outBodyIDs); }
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Trace the accumulated broadphase stats to the TTY
+	void						ReportBroadphaseStats()										{ mBroadPhase->ReportStats(); }
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 private:
 	using CCDBody = PhysicsUpdateContext::SubStep::CCDBody;
@@ -200,11 +211,8 @@ private:
 	/// Number of continuous collision shape casts that need to be queued before another job is started
 	static constexpr int		cNumCCDBodiesPerJob = 4;
 
-	/// Mapping table that maps from Object Layer to tree
-	ObjectToBroadPhaseLayer		mObjectToBroadPhaseLayer;
-
 	/// Broadphase layer filter that decides if two objects can collide
-	BroadPhaseLayerPairFilter	mBroadPhaseLayerPairFilter = nullptr;
+	ObjectVsBroadPhaseLayerFilter mObjectVsBroadPhaseLayerFilter = nullptr;
 
 	/// Object layer filter that decides if two objects can collide
 	ObjectLayerPairFilter		mObjectLayerPairFilter = nullptr;

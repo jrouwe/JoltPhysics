@@ -12,7 +12,7 @@ class IndexedTriangleNoMaterial
 {
 public:
 	/// Constructor
-					IndexedTriangleNoMaterial()											{ }
+					IndexedTriangleNoMaterial() = default;
 					IndexedTriangleNoMaterial(uint32 inI1, uint32 inI2, uint32 inI3)	{ mIdx[0] = inI1; mIdx[1] = inI2; mIdx[2] = inI3; }
 
 	/// Check if two triangles are identical

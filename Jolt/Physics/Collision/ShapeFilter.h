@@ -15,7 +15,7 @@ class ShapeFilter : public NonCopyable
 {
 public:
 	/// Destructor
-	virtual					~ShapeFilter()									{ }
+	virtual					~ShapeFilter() = default;
 
 	/// Filter function to determine if two shapes should collide. Returns true if the filter passes.
 	virtual bool			ShouldCollide(const SubShapeID &inSubShapeID1, const SubShapeID &inSubShapeID2) const

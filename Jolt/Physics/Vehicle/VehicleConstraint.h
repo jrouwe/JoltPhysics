@@ -58,6 +58,12 @@ public:
 	/// Set the interface that tests collision between wheel and ground
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
+	/// Get the local space forward vector of the vehicle
+	Vec3						GetLocalForward() const						{ return mForward; }
+
+	/// Get the local space up vector of the vehicle
+	Vec3						GetLocalUp() const							{ return mUp; }
+
 	/// Access to the vehicle body
 	Body *						GetVehicleBody() const						{ return mBody; }
 
@@ -74,10 +80,16 @@ public:
 	Wheels &					GetWheels()									{ return mWheels; }
 
 	/// Get the transform of a wheel in local space to the vehicle body, returns a matrix that transforms a cylinder aligned with the Y axis in body space (not COM space)
-	Mat44						GetWheelLocalTransform(uint inWheelIndex) const;
+	/// @param inWheelIndex Index of the wheel to fetch
+	/// @param inWheelRight Unit vector that indicates right in model space of the wheel (so if you only have 1 wheel model, you probably want to specify the opposite direction for the left and right wheels)
+	/// @param inWheelUp Unit vector that indicates up in model space of the wheel
+	Mat44						GetWheelLocalTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const;
 
 	/// Get the transform of a wheel in world space, returns a matrix that transforms a cylinder aligned with the Y axis in world space
-	Mat44						GetWheelWorldTransform(uint inWheelIndex) const;
+	/// @param inWheelIndex Index of the wheel to fetch
+	/// @param inWheelRight Unit vector that indicates right in model space of the wheel (so if you only have 1 wheel model, you probably want to specify the opposite direction for the left and right wheels)
+	/// @param inWheelUp Unit vector that indicates up in model space of the wheel
+	Mat44						GetWheelWorldTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const;
 
 	// Generic interface of a constraint
 	virtual bool				IsActive() const override					{ return mIsActive && Constraint::IsActive(); }

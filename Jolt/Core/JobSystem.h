@@ -50,16 +50,16 @@ public:
 	{
 	public:
 		/// Constructor 
-		inline				JobHandle()									{ }
+		inline				JobHandle() = default;
 		inline				JobHandle(const JobHandle &inHandle)		: Ref<Job>(inHandle) { }
-		inline				JobHandle(JobHandle &&inHandle)				: Ref<Job>(move(inHandle)) { }
+		inline				JobHandle(JobHandle &&inHandle) noexcept	: Ref<Job>(move(inHandle)) { }
 
 		/// Constructor, only to be used by JobSystem
 		inline				JobHandle(Job *inJob)						: Ref<Job>(inJob) { }
 
 		/// Assignment
 		inline JobHandle &	operator = (const JobHandle &inHandle)		{ Ref<Job>::operator = (inHandle); return *this; }
-		inline JobHandle &	operator = (JobHandle &&inHandle)			{ Ref<Job>::operator = (move(inHandle)); return *this; }
+		inline JobHandle &	operator = (JobHandle &&inHandle) noexcept	{ Ref<Job>::operator = (move(inHandle)); return *this; }
 
 		/// Check if this handle contains a job
 		inline bool			IsValid() const								{ return GetPtr() != nullptr; }
@@ -105,7 +105,7 @@ public:
 		friend class Job;
 
 		/// Destructor, you should call JobSystem::DestroyBarrier instead of destructing this object directly
-		virtual				~Barrier()									{ }
+		virtual				~Barrier() = default;
 
 		/// Called by a Job to mark that it is finished
 		virtual void		OnJobFinished(Job *inJob) = 0;
@@ -115,7 +115,7 @@ public:
 	using JobFunction = function<void()>;
 
 	/// Destructor
-	virtual					~JobSystem()								{ }
+	virtual					~JobSystem() = default;
 
 	/// Get maximum number of concurrently executing jobs
 	virtual int				GetMaxConcurrency() const = 0;

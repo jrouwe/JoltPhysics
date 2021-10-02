@@ -15,7 +15,7 @@ namespace JPH {
 	
 void BroadPhaseBruteForce::AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddState inAddState)
 { 
-	lock_guard<SharedMutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	BodyVector &bodies = mBodyManager->GetBodies();
 
@@ -46,7 +46,7 @@ void BroadPhaseBruteForce::AddBodiesFinalize(BodyID *ioBodies, int inNumber, Add
 	
 void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber) 
 { 
-	lock_guard<SharedMutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	BodyVector &bodies = mBodyManager->GetBodies();
 
@@ -85,7 +85,7 @@ void BroadPhaseBruteForce::NotifyBodiesLayerChanged(BodyID * ioBodies, int inNum
 
 void BroadPhaseBruteForce::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
 { 
-	shared_lock<SharedMutex> lock(mMutex);
+	shared_lock lock(mMutex);
 
 	// Load ray
 	Vec3 origin(inRay.mOrigin);
@@ -118,7 +118,7 @@ void BroadPhaseBruteForce::CastRay(const RayCast &inRay, RayCastBodyCollector &i
 
 void BroadPhaseBruteForce::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
 {
-	shared_lock<SharedMutex> lock(mMutex);
+	shared_lock lock(mMutex);
 
 	// For all bodies
 	for (BodyID b : mBodyIDs)
@@ -143,7 +143,7 @@ void BroadPhaseBruteForce::CollideAABox(const AABox &inBox, CollideShapeBodyColl
 
 void BroadPhaseBruteForce::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
 {
-	shared_lock<SharedMutex> lock(mMutex);
+	shared_lock lock(mMutex);
 
 	float radius_sq = Square(inRadius);
 
@@ -170,7 +170,7 @@ void BroadPhaseBruteForce::CollideSphere(Vec3Arg inCenter, float inRadius, Colli
 
 void BroadPhaseBruteForce::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
 {
-	shared_lock<SharedMutex> lock(mMutex);
+	shared_lock lock(mMutex);
 
 	// For all bodies
 	for (BodyID b : mBodyIDs)
@@ -195,7 +195,7 @@ void BroadPhaseBruteForce::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollect
 
 void BroadPhaseBruteForce::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
 {
-	shared_lock<SharedMutex> lock(mMutex);
+	shared_lock lock(mMutex);
 
 	// For all bodies
 	for (BodyID b : mBodyIDs)
@@ -220,7 +220,7 @@ void BroadPhaseBruteForce::CollideOrientedBox(const OrientedBox &inBox, CollideS
 
 void BroadPhaseBruteForce::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
 {
-	shared_lock<SharedMutex> lock(mMutex);
+	shared_lock lock(mMutex);
 
 	// Load box
 	Vec3 origin(inBox.mBox.GetCenter());
@@ -252,9 +252,9 @@ void BroadPhaseBruteForce::CastAABox(const AABoxCast &inBox, CastShapeBodyCollec
 	}
 }
 
-void BroadPhaseBruteForce::FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const
+void BroadPhaseBruteForce::FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const
 {
-	shared_lock<SharedMutex> lock(mMutex);
+	shared_lock lock(mMutex);
 
 	// Loop through all active bodies
 	size_t num_bodies = mBodyIDs.size();

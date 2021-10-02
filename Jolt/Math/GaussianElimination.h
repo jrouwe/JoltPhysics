@@ -17,7 +17,7 @@ namespace JPH {
 template <class MatrixA, class MatrixB>
 bool GaussianElimination(MatrixA &ioA, MatrixB &ioB, float inTolerance = 1.0e-16f)
 {
-	// Get problem dimensions;
+	// Get problem dimensions
 	const uint n = ioA.GetCols();
 	const uint m = ioB.GetCols();
 

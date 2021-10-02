@@ -74,7 +74,7 @@ public:
 	}
 
 	/// Virtual destructor
-	virtual						~Constraint()								{ }
+	virtual						~Constraint() = default;
 
 	/// Get the type of a constraint
 	virtual EConstraintType		GetType() const = 0;

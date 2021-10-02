@@ -178,10 +178,9 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 	}
 
 	// Check if we already read this shape
-	IDToShapeMap::const_iterator shape_it = ioShapeMap.find(shape_id);
-	if (shape_it != ioShapeMap.end())
+	if (shape_id < ioShapeMap.size())
 	{
-		result.Set(shape_it->second);
+		result.Set(ioShapeMap[shape_id]);
 		return result;
 	}
 
@@ -189,7 +188,8 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 	result = sRestoreFromBinaryState(inStream);
 	if (result.HasError())
 		return result;
-	ioShapeMap[shape_id] = result.Get();
+	JPH_ASSERT(ioShapeMap.size() == shape_id); // Assert that this is the next ID in the map
+	ioShapeMap.push_back(result.Get());
 
 	// Read the sub shapes
 	size_t len;
@@ -200,6 +200,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 		return result;
 	}
 	ShapeList sub_shapes;
+	sub_shapes.reserve(len);
 	for (size_t i = 0; i < len; ++i)
 	{
 		ShapeResult sub_shape_result = sRestoreWithChildren(inStream, ioShapeMap, ioMaterialMap);
@@ -207,7 +208,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 			return sub_shape_result;
 		sub_shapes.push_back(sub_shape_result.Get());
 	}
-	result.Get()->RestoreSubShapeState(sub_shapes);
+	result.Get()->RestoreSubShapeState(sub_shapes.data(), (uint)sub_shapes.size());
 
 	// Read the materials
 	inStream.Read(len);
@@ -217,6 +218,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 		return result;
 	}
 	PhysicsMaterialList materials;
+	materials.reserve(len);
 	for (size_t i = 0; i < len; ++i)
 	{
 		Ref<PhysicsMaterial> material;
@@ -227,8 +229,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 		// Check nullptr
 		if (material_id != ~uint32(0))
 		{
-			IDToMaterialMap::const_iterator material_it = ioMaterialMap.find(material_id);
-			if (material_it == ioMaterialMap.end())
+			if (material_id >= ioMaterialMap.size())
 			{
 				// New material, restore material
 				PhysicsMaterial::PhysicsMaterialResult material_result = PhysicsMaterial::sRestoreFromBinaryState(inStream);
@@ -238,18 +239,19 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 					return result;
 				}
 				material = material_result.Get();
-				ioMaterialMap[material_id] = material;
+				JPH_ASSERT(material_id == ioMaterialMap.size());
+				ioMaterialMap.push_back(material);
 			}
 			else
 			{
 				// Existing material
-				material = material_it->second;
+				material = ioMaterialMap[material_id];
 			}
 		}
 
 		materials.push_back(material);
 	}
-	result.Get()->RestoreMaterialState(materials);
+	result.Get()->RestoreMaterialState(materials.data(), (uint)materials.size());
 
 	return result;
 }

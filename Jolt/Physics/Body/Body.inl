@@ -28,8 +28,11 @@ const Mat44 Body::GetInverseCenterOfMassTransform() const
 
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
 {
-	// One of the bodies must be dynamic in order to collide
-	if (!inBody1.IsDynamic() && !inBody2.IsDynamic())
+	// One of these conditions must be true
+	// - One of the bodies must be dynamic to collide
+	// - A kinematic object can collide with a sensor
+	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic()) 
+		&& !(inBody1.IsKinematic() && inBody2.IsSensor()))
 		return false;
 
 	// Check that body 1 is active

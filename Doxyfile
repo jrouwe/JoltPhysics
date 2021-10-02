@@ -831,6 +831,7 @@ WARN_LOGFILE           =
 
 INPUT                  = .\Jolt \
                          .\Docs\Architecture.md \
+                         .\Docs\Samples.md \
                          .\Docs\PhysicsSystemUpdate.svg
 
 # This tag can be used to specify the character encoding of the source files

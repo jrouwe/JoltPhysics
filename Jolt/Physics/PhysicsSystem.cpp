@@ -58,18 +58,17 @@ PhysicsSystem::~PhysicsSystem()
 	delete mBroadPhase;
 }
 
-void PhysicsSystem::Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter)
+void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter)
 { 
-	mBroadPhaseLayerPairFilter = inBroadPhaseLayerPairFilter;
+	mObjectVsBroadPhaseLayerFilter = inObjectVsBroadPhaseLayerFilter;
 	mObjectLayerPairFilter = inObjectLayerPairFilter;
-	mObjectToBroadPhaseLayer = inObjectToBroadPhaseLayer;
 
 	// Initialize body manager
-	mBodyManager.Init(inMaxBodies); 
+	mBodyManager.Init(inMaxBodies, inNumBodyMutexes); 
 
 	// Create broadphase
 	mBroadPhase = new BROAD_PHASE();
-	mBroadPhase->Init(&mBodyManager, mObjectToBroadPhaseLayer);
+	mBroadPhase->Init(&mBodyManager, inObjectToBroadPhaseLayer);
 
 	// Init contact constraint manager
 	mContactManager.Init(inMaxBodyPairs, inMaxContactConstraints);
@@ -86,10 +85,10 @@ void PhysicsSystem::Init(uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContac
 
 	// Initialize narrow phase query
 	mNarrowPhaseQueryLocking.~NarrowPhaseQuery();
-	new (&mNarrowPhaseQueryLocking) NarrowPhaseQuery(mBodyInterfaceLocking, *mBroadPhase);
+	new (&mNarrowPhaseQueryLocking) NarrowPhaseQuery(mBodyLockInterfaceLocking, *mBroadPhase);
 
 	mNarrowPhaseQueryNoLock.~NarrowPhaseQuery();
-	new (&mNarrowPhaseQueryNoLock) NarrowPhaseQuery(mBodyInterfaceNoLock, *mBroadPhase);
+	new (&mNarrowPhaseQueryNoLock) NarrowPhaseQuery(mBodyLockInterfaceNoLock, *mBroadPhase);
 }
 
 void PhysicsSystem::OptimizeBroadPhase()
@@ -99,7 +98,7 @@ void PhysicsSystem::OptimizeBroadPhase()
 
 void PhysicsSystem::AddStepListener(PhysicsStepListener *inListener)
 {
-	lock_guard<Mutex> lock(mStepListenersMutex);
+	lock_guard lock(mStepListenersMutex);
 
 	JPH_ASSERT(find(mStepListeners.begin(), mStepListeners.end(), inListener) == mStepListeners.end());
 	mStepListeners.push_back(inListener);
@@ -107,7 +106,7 @@ void PhysicsSystem::AddStepListener(PhysicsStepListener *inListener)
 
 void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 {
-	lock_guard<Mutex> lock(mStepListenersMutex);
+	lock_guard lock(mStepListenersMutex);
 
 	StepListeners::iterator i = find(mStepListeners.begin(), mStepListeners.end(), inListener);
 	JPH_ASSERT(i != mStepListeners.end());
@@ -279,7 +278,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 						context.mPhysicsSystem->JobApplyGravity(&context, &step); 
 
 						JobHandle::sRemoveDependencies(step.mFindCollisions);
-					}, previous_step_dependency_count + num_step_listener_jobs); // depends on: step listeners
+					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 	
 			// This job will setup velocity constraints for non-collision constraints
 			step.mSetupVelocityConstraints = inJobSystem->CreateJob("SetupVelocityConstraints", cColorSetupVelocityConstraints, [&context, &step]() 
@@ -309,7 +308,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 
 						// Kick find collisions last as they will use up all CPU cores leaving no space for the previous 2 jobs
 						JobHandle::sRemoveDependencies(step.mFindCollisions);
-					}, previous_step_dependency_count + num_step_listener_jobs);
+					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 
 			// This job calls the step listeners
 			step.mStepListeners.resize(num_step_listener_jobs);
@@ -322,7 +321,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 						// Kick apply gravity and determine active constraint jobs
 						JobHandle::sRemoveDependencies(step.mApplyGravity);
 						JobHandle::sRemoveDependencies(step.mDetermineActiveConstraints);
-					});
+					}, previous_step_dependency_count);
 
 			// Unblock the previous step
 			if (!is_first_step)
@@ -389,8 +388,17 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 
 						// Kick the jobs of the next step (in the same order as the first step)
 						next_step->mBroadPhasePrepare.RemoveDependency();
-						JobHandle::sRemoveDependencies(next_step->mApplyGravity);
-						JobHandle::sRemoveDependencies(next_step->mDetermineActiveConstraints);
+						if (next_step->mStepListeners.empty())
+						{
+							// Kick the gravity and active constraints jobs immediately
+							JobHandle::sRemoveDependencies(next_step->mApplyGravity);
+							JobHandle::sRemoveDependencies(next_step->mDetermineActiveConstraints);
+						}
+						else
+						{
+							// Kick the step listeners job first
+							JobHandle::sRemoveDependencies(next_step->mStepListeners);
+						}
 					}, max_concurrency + 3); // depends on: solve position constraints of the last step, body set island index, contact removed callbacks, finish building the previous step
 			}
 
@@ -819,7 +827,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				memcpy(active_bodies, mBodyManager.GetActiveBodiesUnsafe() + active_bodies_read_idx, batch_size * sizeof(BodyID));
 
 				// Find pairs in the broadphase
-				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, mBroadPhaseLayerPairFilter, mObjectLayerPairFilter, add_pair);
+				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, mObjectVsBroadPhaseLayerFilter, mObjectLayerPairFilter, add_pair);
 
 				// Check if we have enough pairs in the buffer to start a new job
 				PhysicsUpdateContext::BodyPairQueue &queue = ioStep->mBodyPairQueues[inJobIndex];
@@ -896,9 +904,11 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair)
 
 	// Ensure that body1 is dynamic, this ensures that we do the collision detection in the space of a moving body, which avoids accuracy problems when testing a very large static object against a small dynamic object
 	// Ensure that body1 id < body2 id for dynamic vs dynamic
-	if (!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA))
+	// Keep body order unchanged when colliding with a sensor
+	if ((!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA)) 
+		&& !body2->IsSensor())
 		swap(body1, body2);
-	JPH_ASSERT(body1->IsDynamic());
+	JPH_ASSERT(body1->IsDynamic() || (body1->IsKinematic() && body2->IsSensor()));
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, contact_found = false;
@@ -947,8 +957,10 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair)
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// Body 1 should always be dynamic, body 2 may be static / kinematic
-					JPH_ASSERT(mBody1->IsDynamic());
+					// One of the following should be true:
+					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
+					// - Body 1 is kinematic in which case body 2 should be a sensor
+					JPH_ASSERT(mBody1->IsDynamic() || (mBody1->IsKinematic() && mBody2->IsSensor()));
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit

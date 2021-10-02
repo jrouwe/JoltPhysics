@@ -211,7 +211,7 @@ class SerializableObject
 
 public:
 	/// Constructor
-	virtual						~SerializableObject()																{ }
+	virtual						~SerializableObject() = default;
 
 	/// Callback given when object has been loaded from an object stream
 	/// This is called when all links have been resolved. Objects that this object point to have already received their OnLoaded callback.

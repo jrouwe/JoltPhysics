@@ -8,15 +8,23 @@
 
 namespace JPH {
 
+class Body;
+
 /// Class function to filter out bodies, returns true if test should collide with body
 class BodyFilter : public NonCopyable
 {
 public:
 	/// Destructor
-	virtual					~BodyFilter() { }
+	virtual					~BodyFilter() = default;
 
 	/// Filter function. Returns true if we should collide with inBodyID
 	virtual bool			ShouldCollide(const BodyID &inBodyID) const
+	{
+		return true;
+	}
+
+	/// Filter function. Returns true if we should collide with inBody (this is called after the body is locked and makes it possible to filter based on body members)
+	virtual bool			ShouldCollideLocked(const Body &inBody) const
 	{
 		return true;
 	}

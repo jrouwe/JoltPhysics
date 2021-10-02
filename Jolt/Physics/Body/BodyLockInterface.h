@@ -20,7 +20,7 @@ public:
 
 	/// Constructor
 								BodyLockInterface(BodyManager &inBodyManager)		: mBodyManager(inBodyManager) { }
-	virtual						~BodyLockInterface()								{ }
+	virtual						~BodyLockInterface() = default;
 
 	///@name Locking functions
 	///@{
@@ -29,6 +29,12 @@ public:
 	virtual SharedMutex *		LockWrite(const BodyID &inBodyID) const = 0;
 	virtual void				UnlockWrite(SharedMutex *inMutex) const = 0;
 	///@}
+
+	/// Get the mask needed to lock all bodies
+	inline MutexMask			GetAllBodiesMutexMask() const
+	{
+		return mBodyManager.GetAllBodiesMutexMask();
+	}
 
 	///@name Batch locking functions
 	///@{

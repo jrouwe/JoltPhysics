@@ -448,7 +448,7 @@ public:
 	/// Constructor
 								RTTIAttribute()												: mName("") { }
 								RTTIAttribute(const char *inName)							: mName(inName) { }
-	virtual						~RTTIAttribute()											{ }
+	virtual						~RTTIAttribute() = default;
 
 	/// Name of the attribute
 	void						SetName(const char *inName)									{ mName = inName; }

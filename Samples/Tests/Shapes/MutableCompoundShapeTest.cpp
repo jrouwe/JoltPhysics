@@ -94,7 +94,7 @@ void MutableCompoundShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			if (roll < 0.001f && count > 1)
 			{
 				// Remove a random shape
-				uniform_int_distribution<uint> index_distribution(0, count = 1);
+				uniform_int_distribution<uint> index_distribution(0, count - 1);
 				shape->RemoveShape(index_distribution(frame_random));
 			}
 			else if (roll < 0.002f && count < 10)
@@ -163,7 +163,7 @@ void MutableCompoundShapeTest::RestoreState(StateRecorder &inStream)
 
 			// Restore the pointers to the sub compound
 			ShapeList sub_shapes(shape->GetNumSubShapes(), mSubCompound);
-			shape->RestoreSubShapeState(sub_shapes);
+			shape->RestoreSubShapeState(sub_shapes.data(), (uint)sub_shapes.size());
 
 			// Update the shape (we're under lock protection, so use the no lock interface)
 			mPhysicsSystem->GetBodyInterfaceNoLock().SetShape(id, shape, false, EActivation::DontActivate);

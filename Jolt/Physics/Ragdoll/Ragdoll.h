@@ -149,6 +149,9 @@ public:
 	/// Access a body ID
 	BodyID								GetBodyID(int inBodyIndex) const						{ return mBodyIDs[inBodyIndex]; }
 
+	/// Access to the array of body IDs
+	const vector<BodyID> &				GetBodyIDs() const										{ return mBodyIDs; }
+
 	/// Get number of constraints in the ragdoll
 	size_t								GetConstraintCount() const								{ return mConstraints.size(); }
 

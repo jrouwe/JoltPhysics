@@ -35,7 +35,6 @@ void VehicleConstraintTest::Initialize()
 	const float half_vehicle_height = 0.2f;
 	const float suspension_min_length = 0.3f;
 	const float suspension_max_length = 0.5f;
-	const float suspension_frequency = 1.5f;
 	const float max_steering_angle = DegreesToRadians(30);
 
 	// Create collision testers
@@ -83,7 +82,6 @@ void VehicleConstraintTest::Initialize()
 		w->mWidth = wheel_width;
 		w->mSuspensionMinLength = suspension_min_length;
 		w->mSuspensionMaxLength = suspension_max_length;
-		w->mSuspensionFrequency = suspension_frequency;
 	}
 
 	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
@@ -160,7 +158,7 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	for (uint w = 0; w < 4; ++w)
 	{
 		const WheelSettings *settings = mVehicleConstraint->GetWheels()[w]->GetSettings();
-		Mat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w);
+		Mat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cyclinder we draw is aligned with Y so we specify that as rotational axis
 		mDebugRenderer->DrawCylinder(wheel_transform, 0.5f * settings->mWidth, settings->mRadius, Color::sGreen);
 	}
 }

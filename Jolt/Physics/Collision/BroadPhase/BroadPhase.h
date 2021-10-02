@@ -6,6 +6,13 @@
 #include <Physics/Collision/BroadPhase/BroadPhaseQuery.h>
 #include <Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 
+// Shorthand function to ifdef out code if broadphase stats tracking is off
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	#define JPH_IF_TRACK_BROADPHASE_STATS(...) __VA_ARGS__
+#else
+	#define JPH_IF_TRACK_BROADPHASE_STATS(...)
+#endif // JPH_TRACK_BROADPHASE_STATS
+
 namespace JPH {
 
 class BodyManager;
@@ -79,10 +86,21 @@ public:
 	/// @param ioActiveBodies is a list of bodies for which we need to find colliding pairs (this function can change the order of the ioActiveBodies array). This can be a subset of the set of active bodies in the system.
 	/// @param inNumActiveBodies is the size of the ioActiveBodies array.
 	/// @param inSpeculativeContactDistance Distance at which speculative contact points will be created.
-	/// @param inBroadPhaseLayerPairFilter is the filter that determines if two objects can collide (at broadphase level).
+	/// @param inObjectVsBroadPhaseLayerFilter is the filter that determines if an object can collide with a broadphase layer.
 	/// @param inObjectLayerPairFilter is the filter that determines if two objects can collide.
 	/// @param ioPairCollector receives callbacks for every body pair found.
-	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BroadPhaseLayerPairFilter inBroadPhaseLayerPairFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const = 0;
+	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const = 0;
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Set function that converts a broadphase layer to a human readable string for debugging purposes
+	virtual void		SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { /* Can be implemented by derived classes */ }
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Trace the collected broadphase stats in CSV form.
+	/// This report can be used to judge and tweak the efficiency of the broadphase.
+	virtual void		ReportStats()														{ /* Can be implemented by derived classes */ }
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 protected:
 	/// Link to the body manager that manages the bodies in this broadphase

@@ -28,8 +28,8 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	};
 
 	// Lines
-	ComPtr<ID3DBlob> vtx_line = mRenderer->CreateVertexShader("Shaders/LineVertexShader.hlsl");
-	ComPtr<ID3DBlob> pix_line = mRenderer->CreatePixelShader("Shaders/LinePixelShader.hlsl");
+	ComPtr<ID3DBlob> vtx_line = mRenderer->CreateVertexShader("Assets/Shaders/LineVertexShader.hlsl");
+	ComPtr<ID3DBlob> pix_line = mRenderer->CreatePixelShader("Assets/Shaders/LinePixelShader.hlsl");
 	mLineState = mRenderer->CreatePipelineState(vtx_line.Get(), line_vertex_desc, ARRAYSIZE(line_vertex_desc), pix_line.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 
 	// Create input layout for triangles
@@ -51,15 +51,15 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	};
 
 	// Triangles
-	ComPtr<ID3DBlob> vtx_triangle = mRenderer->CreateVertexShader("Shaders/TriangleVertexShader.hlsl");
-	ComPtr<ID3DBlob> pix_triangle  = mRenderer->CreatePixelShader("Shaders/TrianglePixelShader.hlsl");
+	ComPtr<ID3DBlob> vtx_triangle = mRenderer->CreateVertexShader("Assets/Shaders/TriangleVertexShader.hlsl");
+	ComPtr<ID3DBlob> pix_triangle  = mRenderer->CreatePixelShader("Assets/Shaders/TrianglePixelShader.hlsl");
 	mTriangleStateBF = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 	mTriangleStateFF = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
 	mTriangleStateWire = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_WIREFRAME, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 	
 	// Shadow pass
-	ComPtr<ID3DBlob> vtx_shadow = mRenderer->CreateVertexShader("Shaders/TriangleDepthVertexShader.hlsl");
-	ComPtr<ID3DBlob> pix_shadow = mRenderer->CreatePixelShader("Shaders/TriangleDepthPixelShader.hlsl");
+	ComPtr<ID3DBlob> vtx_shadow = mRenderer->CreateVertexShader("Assets/Shaders/TriangleDepthVertexShader.hlsl");
+	ComPtr<ID3DBlob> pix_shadow = mRenderer->CreatePixelShader("Assets/Shaders/TriangleDepthPixelShader.hlsl");
 	mShadowStateBF = mRenderer->CreatePipelineState(vtx_shadow.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_shadow.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 	mShadowStateFF = mRenderer->CreatePipelineState(vtx_shadow.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_shadow.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
 	mShadowStateWire = mRenderer->CreatePipelineState(vtx_shadow.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_shadow.Get(), D3D12_FILL_MODE_WIREFRAME, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
@@ -82,7 +82,7 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 
 void DebugRendererImp::DrawLine(const Float3 &inFrom, const Float3 &inTo, ColorArg inColor) 
 { 
-	lock_guard<Mutex> lock(mLinesLock); 
+	lock_guard lock(mLinesLock); 
 	mLines.push_back(Line(inFrom, inTo, inColor)); 
 }
 
@@ -111,7 +111,7 @@ DebugRenderer::Batch DebugRendererImp::CreateTriangleBatch(const Vertex *inVerti
 
 void DebugRendererImp::DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
-	lock_guard<Mutex> lock(mPrimitivesLock); 
+	lock_guard lock(mPrimitivesLock); 
 	   
 	// Our pixel shader uses alpha only to turn on/off shadows
 	Color color = inCastShadow == ECastShadow::On? Color(inModelColor, 255) : Color(inModelColor, 0);
@@ -186,7 +186,7 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 
 void DebugRendererImp::DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor)
 {
-	lock_guard<Mutex> lock(mPrimitivesLock); 
+	lock_guard lock(mPrimitivesLock); 
 
 	EnsurePrimitiveSpace(3);
 
@@ -228,7 +228,7 @@ void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const vector<in
 
 void DebugRendererImp::DrawText3D(Vec3Arg inPosition, const string &inString, ColorArg inColor, float inHeight)
 { 	
-	lock_guard<Mutex> lock(mTextsLock);  
+	lock_guard lock(mTextsLock);  
 	mTexts.emplace_back(inPosition, inString, inColor, inHeight); 
 }
 
@@ -236,7 +236,7 @@ void DebugRendererImp::DrawLines()
 {
 	JPH_PROFILE_FUNCTION();
 
-	lock_guard<Mutex> lock(mLinesLock); 
+	lock_guard lock(mLinesLock); 
 
 	// Draw the lines
 	if (!mLines.empty())
@@ -255,7 +255,7 @@ void DebugRendererImp::DrawTriangles()
 {
 	JPH_PROFILE_FUNCTION();
 
-	lock_guard<Mutex> lock(mPrimitivesLock); 
+	lock_guard lock(mPrimitivesLock); 
 
 	// Finish the last primitive
 	FinalizePrimitive();
@@ -432,7 +432,7 @@ void DebugRendererImp::DrawTriangles()
 
 void DebugRendererImp::DrawTexts()
 {
-	lock_guard<Mutex> lock(mTextsLock); 
+	lock_guard lock(mTextsLock); 
 
 	JPH_PROFILE_FUNCTION();
 
@@ -458,7 +458,7 @@ void DebugRendererImp::Draw()
 
 void DebugRendererImp::ClearLines()
 { 
-	lock_guard<Mutex> lock(mLinesLock); 
+	lock_guard lock(mLinesLock); 
 	mLines.clear(); 
 }
 
@@ -480,7 +480,7 @@ void DebugRendererImp::ClearMap(InstanceMap &ioInstances)
 
 void DebugRendererImp::ClearTriangles()
 { 
-	lock_guard<Mutex> lock(mPrimitivesLock); 
+	lock_guard lock(mPrimitivesLock); 
 
 	// Close any primitive that's being built
 	FinalizePrimitive(); 
@@ -495,7 +495,7 @@ void DebugRendererImp::ClearTriangles()
 
 void DebugRendererImp::ClearTexts()
 {
-	lock_guard<Mutex> lock(mTextsLock); 
+	lock_guard lock(mTextsLock); 
 	mTexts.clear();
 }
 

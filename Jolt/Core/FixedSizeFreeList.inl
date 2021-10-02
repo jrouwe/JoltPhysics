@@ -57,7 +57,7 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 			if (first_free >= mNumObjectsAllocated)
 			{
 				// Allocate new page
-				lock_guard<Mutex> lock(mPageMutex);
+				lock_guard lock(mPageMutex);
 				while (first_free >= mNumObjectsAllocated)
 				{
 					uint32 next_page = mNumObjectsAllocated / mPageSize;

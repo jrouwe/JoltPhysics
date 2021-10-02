@@ -38,7 +38,7 @@ void ContactListenerImpl::OnContactAdded(const Body &inBody1, const Body &inBody
 
 	// Insert new manifold into state map
 	{
-		lock_guard<Mutex> lock(mStateMutex);
+		lock_guard lock(mStateMutex);
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		if (mState.find(key) != mState.end())
 			JPH_BREAKPOINT; // Added contact that already existed
@@ -63,7 +63,7 @@ void ContactListenerImpl::OnContactPersisted(const Body &inBody1, const Body &in
 
 	// Update existing manifold in state map
 	{
-		lock_guard<Mutex> lock(mStateMutex);
+		lock_guard lock(mStateMutex);
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		StateMap::iterator i = mState.find(key);
 		if (i != mState.end())
@@ -86,7 +86,7 @@ void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
 
 	// Update existing manifold in state map
 	{
-		lock_guard<Mutex> lock(mStateMutex);
+		lock_guard lock(mStateMutex);
 		StateMap::iterator i = mState.find(inSubShapePair);
 		if (i != mState.end())
 			mState.erase(i);
@@ -180,7 +180,7 @@ void ContactListenerImpl::DrawState()
 {
 	Trace("Draw Contact State");
 
-	lock_guard<Mutex> lock(mStateMutex);
+	lock_guard lock(mStateMutex);
 	for (const StateMap::value_type &kv : mState)
 		for (Vec3 v : kv.second)
 			DebugRenderer::sInstance->DrawWireSphere(v, 0.05f, Color::sRed, 1);

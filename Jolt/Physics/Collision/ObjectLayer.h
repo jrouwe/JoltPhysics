@@ -18,13 +18,21 @@ class ObjectLayerFilter : public NonCopyable
 {
 public:
 	/// Destructor
-	virtual					~ObjectLayerFilter() { }
+	virtual					~ObjectLayerFilter() = default;
 
 	/// Function to filter out object layers when doing collision query test (return true to allow testing against objects with this layer)
 	virtual bool			ShouldCollide(ObjectLayer inLayer) const
 	{
 		return true;
 	}
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Get a string that describes this filter for stat tracking purposes
+	virtual string			GetDescription() const
+	{
+		return "No Description";
+	}
+#endif // JPH_TRACK_BROADPHASE_STATS
 };
 
 /// Function to test if two objects can collide based on their object layer. Used while finding collision pairs.

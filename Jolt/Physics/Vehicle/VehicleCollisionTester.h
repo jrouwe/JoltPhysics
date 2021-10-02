@@ -14,7 +14,7 @@ class VehicleCollisionTester : public RefTarget<VehicleCollisionTester>
 {
 public:
 	/// Virtual destructor
-	virtual						~VehicleCollisionTester()						{ }
+	virtual						~VehicleCollisionTester() = default;
 
 	/// Do a collision test with the world
 	/// @param inPhysicsSystem The physics system that should be tested against

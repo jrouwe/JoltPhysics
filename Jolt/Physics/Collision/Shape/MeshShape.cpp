@@ -1062,9 +1062,9 @@ void MeshShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const
 	outMaterials = mMaterials;
 }
 
-void MeshShape::RestoreMaterialState(const PhysicsMaterialList &inMaterials) 
+void MeshShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) 
 { 
-	mMaterials = inMaterials;
+	mMaterials.assign(inMaterials, inMaterials + inNumMaterials);
 }
 
 Shape::Stats MeshShape::GetStats() const

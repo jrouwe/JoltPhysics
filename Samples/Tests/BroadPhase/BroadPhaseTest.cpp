@@ -54,7 +54,7 @@ void BroadPhaseTest::Initialize()
 {
 	// Create body manager
 	mBodyManager = new BodyManager();
-	mBodyManager->Init(NUM_BODIES);
+	mBodyManager->Init(NUM_BODIES, 0);
 		
 	// Crate broadphase
 	mObjectToBroadPhaseLayer = GetObjectToBroadPhaseLayer();

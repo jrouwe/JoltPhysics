@@ -21,7 +21,7 @@ private:
 	struct alignas(Object) ObjectStorage
 	{
 		/// Constructor to satisfy the vector class
-							ObjectStorage() { }
+							ObjectStorage() = default;
 							ObjectStorage(const ObjectStorage &inRHS) : mNextFreeObject(inRHS.mNextFreeObject.load()) { memcpy(mData, inRHS.mData, sizeof(Object)); }
 
 		/// Storage space for the Object, stored as uninitialized data

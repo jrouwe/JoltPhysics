@@ -33,7 +33,7 @@ string StatCollector::Variant::ToString() const
 
 void StatCollector::SetNextFrame()
 {
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	if (mIsCapturing)
 		mCurrentFrame = &mFrames[mCurrentFrameNumber++];
@@ -51,14 +51,14 @@ void StatCollector::ResetInternal()
 
 void StatCollector::Reset()
 {
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	ResetInternal();	
 }
 
 void StatCollector::StartCapture()
 {
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	ResetInternal();
 
@@ -67,7 +67,7 @@ void StatCollector::StartCapture()
 
 void StatCollector::AddItem(const string &inName, const Variant &inValue)
 {
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	JPH_ASSERT(mCurrentFrame != nullptr, "Don't forget to call SetFrame(...)");
 
@@ -139,7 +139,7 @@ static void sWriteStatTree(ofstream &ioStream, const StatTreeNode &inNode)
 
 void StatCollector::StopCapture(const char *inFileName)
 {
-	lock_guard<Mutex> lock(mMutex);
+	lock_guard lock(mMutex);
 
 	// Stop capturing
 	mIsCapturing = false;

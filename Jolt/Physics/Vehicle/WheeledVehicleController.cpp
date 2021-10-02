@@ -210,9 +210,8 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	}
 	
 	// First calculate engine speed based on speed of all wheels
-	// TODO: Not correct, if the wheels are not connected or the clutch is pressed the RPM should go up when the user presses the gas (we're missing engine inertia in the equation too)
 	bool can_engine_apply_torque = false;
-	if (mTransmission.GetCurrentGear() != 0)
+	if (mTransmission.GetCurrentGear() != 0 && mTransmission.GetClutchFriction() > 1.0e-3f)
 	{
 		float transmission_ratio = mTransmission.GetCurrentRatio();
 		bool forward = transmission_ratio >= 0.0f;
@@ -242,8 +241,13 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 
 		// Update RPM only if the wheels are connected to the engine
 		if (slowest_wheel_speed > -FLT_MAX && slowest_wheel_speed < FLT_MAX)
-			mEngine.SetCurrentRPM(slowest_wheel_speed * transmission_ratio * cAngularVelocityToRPM);
+			mEngine.SetCurrentRPM(slowest_wheel_speed * transmission_ratio * VehicleEngine::cAngularVelocityToRPM);
 		mEngine.SetCurrentRPM(Clamp(mEngine.GetCurrentRPM(), mEngine.mMinRPM, mEngine.mMaxRPM));
+	}
+	else
+	{
+		// Engine not connected to wheels, update RPM based on engine inertia alone
+		mEngine.UpdateRPM(inDeltaTime, abs(mForwardInput));
 	}
 
 	// Update transmission
@@ -251,12 +255,12 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 
 	// Calculate the amount of torque the transmission gives to the differentials
 	float transmission_ratio = mTransmission.GetCurrentRatio();
-	float transmission_torque = mTransmission.GetClutchFriction() * transmission_ratio * abs(mForwardInput) * mEngine.mMaxTorque * mEngine.mNormalizedTorque.GetValue(mEngine.GetCurrentRPM() / mEngine.mMaxRPM);
+	float transmission_torque = mTransmission.GetClutchFriction() * transmission_ratio * mEngine.GetTorque(abs(mForwardInput));
 	if (transmission_torque != 0.0f)
 	{
 		// Calculate the max angular velocity of the differential given current engine RPM
 		// Note this adds 0.1% slop to avoid numerical accuracy issues
-		float differential_max_angular_velocity = abs(mEngine.GetCurrentRPM() / (transmission_ratio * cAngularVelocityToRPM)) * 1.001f;
+		float differential_max_angular_velocity = mEngine.GetCurrentRPM() / (transmission_ratio * VehicleEngine::cAngularVelocityToRPM) * 1.001f;
 
 		// Apply the transmission torque to the wheels
 		for (const VehicleDifferentialSettings &d : mDifferentials)
@@ -272,7 +276,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 				if (d.mLeftWheel != -1 && d.mLeftRightSplit < 1.0f)
 				{
 					WheelWV *w = static_cast<WheelWV *>(wheels[d.mLeftWheel]);
-					if (w->GetAngularVelocity() * wheel_max_angular_velocity < 0.0f || abs(w->GetAngularVelocity()) < wheel_max_angular_velocity)
+					if (w->GetAngularVelocity() * wheel_max_angular_velocity < 0.0f || abs(w->GetAngularVelocity()) < abs(wheel_max_angular_velocity))
 					{
 						float wheel_torque = differential_torque * (1.0f - d.mLeftRightSplit);
 						w->ApplyTorque(wheel_torque, inDeltaTime);
@@ -283,7 +287,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 				if (d.mRightWheel != -1 && d.mLeftRightSplit > 0.0f)
 				{
 					WheelWV *w = static_cast<WheelWV *>(wheels[d.mRightWheel]);
-					if (w->GetAngularVelocity() * wheel_max_angular_velocity < 0.0f || abs(w->GetAngularVelocity()) < wheel_max_angular_velocity)
+					if (w->GetAngularVelocity() * wheel_max_angular_velocity < 0.0f || abs(w->GetAngularVelocity()) < abs(wheel_max_angular_velocity))
 					{
 						float wheel_torque = differential_torque * d.mLeftRightSplit;
 						w->ApplyTorque(wheel_torque, inDeltaTime);
@@ -399,12 +403,18 @@ bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 
 void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const 
 {
-	// Draw current vehicle state
+	// Draw RPM
 	Body *body = mConstraint.GetVehicleBody();
+	Vec3 rpm_meter_up = body->GetRotation() * mConstraint.GetLocalUp();
+	Vec3 rpm_meter_pos = body->GetPosition() + body->GetRotation() * mRPMMeterPosition;
+	Vec3 rpm_meter_fwd = body->GetRotation() * mConstraint.GetLocalForward();
+	mEngine.DrawRPM(inRenderer, rpm_meter_pos, rpm_meter_fwd, rpm_meter_up, mRPMMeterSize, mTransmission.mShiftDownRPM, mTransmission.mShiftUpRPM);
+
+	// Draw current vehicle state
 	string status = StringFormat("Forward: %.1f, Right: %.1f, Brake: %.1f, HandBrake: %.1f\n"
 								 "Gear: %d, Clutch: %.1f, EngineRPM: %.0f, V: %.1f km/h", 
 								 (double)mForwardInput, (double)mRightInput, (double)mBrakeInput, (double)mHandBrakeInput, 
-								 (double)mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
+								 mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
 	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, mConstraint.GetDrawConstraintSize());
 
 	for (const Wheel *w_base : mConstraint.GetWheels())

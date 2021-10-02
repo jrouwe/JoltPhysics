@@ -27,7 +27,7 @@ class BroadPhaseQuery : public NonCopyable
 {
 public:
 	/// Virtual destructor
-	virtual				~BroadPhaseQuery() { }
+	virtual				~BroadPhaseQuery() = default;
 
 	/// Cast a ray and add any hits to ioCollector
 	virtual void		CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter = { }, const ObjectLayerFilter &inObjectLayerFilter = { }) const = 0;

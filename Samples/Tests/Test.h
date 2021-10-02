@@ -24,7 +24,7 @@ public:
 	JPH_DECLARE_RTTI_VIRTUAL_BASE(Test)
 
 	// Destructor
-	virtual			~Test()														{ }
+	virtual			~Test() = default;
 
 	// Set the physics system
 	virtual void	SetPhysicsSystem(PhysicsSystem *inPhysicsSystem)			{ mPhysicsSystem = inPhysicsSystem; mBodyInterface = &inPhysicsSystem->GetBodyInterface(); }

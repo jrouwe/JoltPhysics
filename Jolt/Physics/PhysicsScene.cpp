@@ -71,6 +71,11 @@ PhysicsScene::PhysicsSceneResult PhysicsScene::sRestoreFromBinaryState(StreamIn 
 	BodyCreationSettings::IDToMaterialMap id_to_material;
 	BodyCreationSettings::IDToGroupFilterMap id_to_group_filter;
 
+	// Reserve some memory to avoid frequent reallocations
+	id_to_shape.reserve(1024);
+	id_to_material.reserve(128);
+	id_to_group_filter.reserve(128);
+
 	// Read bodies
 	uint32 len = 0;
 	inStream.Read(len);

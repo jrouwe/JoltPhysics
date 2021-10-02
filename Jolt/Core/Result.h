@@ -34,7 +34,7 @@ public:
 	}
 
 	/// Move constructor
-						Result(Result<Type> &&inRHS)
+						Result(Result<Type> &&inRHS) noexcept
 	{
 		mState = inRHS.mState;
 

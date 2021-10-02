@@ -45,7 +45,7 @@ void JobSystemThreadPool::Semaphore::Release(uint inNumber)
 		::ReleaseSemaphore(mSemaphore, num_to_release, nullptr);
 	}
 #else
-	lock_guard<mutex> lock(mLock);
+	lock_guard lock(mLock);
 	mCount += (int)inNumber;
 	if (inNumber > 1)
 		mWaitVariable.notify_all();
@@ -68,10 +68,9 @@ void JobSystemThreadPool::Semaphore::Acquire(uint inNumber)
 			WaitForSingleObject(mSemaphore, INFINITE);
 	}
 #else
-	unique_lock<mutex> lock(mLock);
+	unique_lock lock(mLock);
 	mCount -= (int)inNumber;
-	while (mCount < 0)
-		mWaitVariable.wait(lock);
+	mWaitVariable.wait(lock, [this]() { return mCount >= 0; });
 #endif
 }
 
@@ -413,9 +412,6 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 	// it if there's not enough space in the queue.
 	uint head = GetHead();
 
-	// Keep track of how many times we slept
-	JPH_IF_ENABLE_ASSERTS(int sleep_count = 0;)
-
 	for (;;)
 	{
 		// Check if there's space in the queue
@@ -429,9 +425,6 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 			// Second check if there's space in the queue
 			if (old_value - head >= cQueueLength)
 			{
-				// If we keep sleeping, something's wrong.
-				JPH_ASSERT(sleep_count++ < 10, "Queue is not being processed quickly enough / too small!");
-
 				// Wake up all threads in order to ensure that they can clear any nullptrs they may not have processed yet
 				mSemaphore.Release((uint)mThreads.size()); 
 

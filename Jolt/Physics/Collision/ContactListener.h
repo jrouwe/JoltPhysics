@@ -54,7 +54,7 @@ class ContactListener
 {
 public:
 	/// Ensure virtual destructor
-	virtual					~ContactListener()												{ }
+	virtual					~ContactListener() = default;
 
 	/// Called after detecting a collision between a body pair, but before calling OnContactAdded and before adding the contact constraint.
 	/// If the function returns false, the contact will not be added and any other contacts between this body pair will not be processed.
@@ -63,7 +63,7 @@ public:
 	/// This is a rather expensive time to reject a contact point since a lot of the collision detection has happened already, make sure you
 	/// filter out the majority of undesired body pairs through the ObjectLayerPairFilter that is registered on the PhysicsSystem.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// Body 1 is always dynamic, otherwise there is no sorting between body 1 and 2
+	/// The order of body 1 and 2 is undefined, but when one of the two bodies is dynamic it will be body 1
 	virtual ValidateResult	OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult) { return ValidateResult::AcceptAllContactsForThisBodyPair; }
 
 	/// Called whenever a new contact point is detected.

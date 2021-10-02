@@ -62,7 +62,7 @@ public:
 	inline float			GetLinearDamping() const										{ return mLinearDamping; }
 	void					SetLinearDamping(float inLinearDamping)							{ JPH_ASSERT(inLinearDamping >= 0.0f); mLinearDamping = inLinearDamping; }
 
-	/// Get angular damping: dw/dt = -c * v. c must be between 0 and 1 but is usually close to 0.
+	/// Get angular damping: dw/dt = -c * w. c must be between 0 and 1 but is usually close to 0.
 	inline float			GetAngularDamping() const										{ return mAngularDamping; }
 	void					SetAngularDamping(float inAngularDamping)						{ JPH_ASSERT(inAngularDamping >= 0.0f); mAngularDamping = inAngularDamping; }
 
@@ -146,7 +146,7 @@ private:
 	Float3					mTorque;														///< Accumulated world space torque (N m). Note loaded through intrinsics so ensure that the 4 bytes after this are readable!
 	float					mInvMass;														///< Inverse mass of the object (1/kg)
 	float					mLinearDamping;													///< Linear damping: dv/dt = -c * v. c must be between 0 and 1 but is usually close to 0.
-	float					mAngularDamping;												///< Angular damping: dw/dt = -c * v. c must be between 0 and 1 but is usually close to 0.
+	float					mAngularDamping;												///< Angular damping: dw/dt = -c * w. c must be between 0 and 1 but is usually close to 0.
 	float					mMaxLinearVelocity;												///< Maximum linear velocity that this body can reach (m/s)
 	float					mMaxAngularVelocity;											///< Maximum angular velocity that this body can reach (rad/s)
 	float					mGravityFactor;													///< Factor to multiply gravity with

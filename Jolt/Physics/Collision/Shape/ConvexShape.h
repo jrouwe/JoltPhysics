@@ -73,7 +73,7 @@ public:
 	{
 	public:
 		/// Warning: Virtual destructor will not be called on this object!
-		virtual						~Support() { }
+		virtual						~Support() = default;
 
 		/// Calculate the support vector for this convex shape (includes / excludes the convex radius depending on how this was obtained). 
 		/// Support vector is relative to the center of mass of the shape.
@@ -143,7 +143,7 @@ public:
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;
-	virtual void					RestoreMaterialState(const PhysicsMaterialList &inMaterials) override;
+	virtual void					RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) override;
 
 protected:
 	// See: Shape::RestoreBinaryState

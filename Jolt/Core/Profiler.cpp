@@ -23,7 +23,7 @@ bool ProfileMeasurement::sOutOfSamplesReported = false;
 
 void Profiler::NextFrame()
 {
-	lock_guard<mutex> lock(mLock);
+	lock_guard lock(mLock);
 
 	if (mDump)
 	{
@@ -42,14 +42,14 @@ void Profiler::Dump()
 
 void Profiler::AddThread(ProfileThread *inThread)										
 { 
-	lock_guard<mutex> lock(mLock); 
+	lock_guard lock(mLock); 
 
 	mThreads.push_back(inThread); 
 }
 
 void Profiler::RemoveThread(ProfileThread *inThread)									
 { 
-	lock_guard<mutex> lock(mLock); 
+	lock_guard lock(mLock); 
 	
 	vector<ProfileThread *>::iterator i = find(mThreads.begin(), mThreads.end(), inThread); 
 	JPH_ASSERT(i != mThreads.end()); 

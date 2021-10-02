@@ -288,6 +288,7 @@ static TestCategory sAllCategories[] =
 // Configuration
 //-----------------------------------------------------------------------------
 static constexpr uint cNumBodies = 10240;
+static constexpr uint cNumBodyMutexes = 0; // Autodetect
 static constexpr uint cMaxBodyPairs = 65536;
 static constexpr uint cMaxContactConstraints = 10240;
 
@@ -502,8 +503,11 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 	// Create physics system
 	mPhysicsSystem = new PhysicsSystem();
-	mPhysicsSystem->Init(cNumBodies, cMaxBodyPairs, cMaxContactConstraints, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
+	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
 	mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings);
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	mPhysicsSystem->SetBroadPhaseLayerToString(GetBroadPhaseLayerName);
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 	// Restore gravity
 	mPhysicsSystem->SetGravity(old_gravity);
@@ -2069,6 +2073,11 @@ void SamplesApp::StepPhysics()
 		Trace("Timing: %d, %.0f", mStepNumber / cNumSteps, us_per_step);
 		mTotalTime = 0;
 	}
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	if (mStepNumber % 600 == 0)
+		mPhysicsSystem->ReportBroadphaseStats();
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 	{
 		// Post update

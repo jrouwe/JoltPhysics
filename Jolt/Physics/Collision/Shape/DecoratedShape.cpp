@@ -59,9 +59,9 @@ void DecoratedShape::SaveSubShapeState(ShapeList &outSubShapes) const
 	outSubShapes.push_back(mInnerShape);
 }
 
-void DecoratedShape::RestoreSubShapeState(const ShapeList &inSubShapes)
+void DecoratedShape::RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes)
 { 
-	JPH_ASSERT(inSubShapes.size() == 1);
+	JPH_ASSERT(inNumShapes == 1);
 	mInnerShape = inSubShapes[0];
 }
 

@@ -4,11 +4,14 @@
 #pragma once
 
 #include <Core/FixedSizeFreeList.h>
-#include <Core/Mutex.h>
 #include <Core/Atomics.h>
 #include <Core/NonCopyable.h>
 #include <Physics/Body/BodyManager.h>
 #include <Physics/Collision/BroadPhase/BroadPhase.h>
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	#include <map>
+#endif // JPH_TRACK_BROADPHASE_STATS
 
 namespace JPH {
 
@@ -26,7 +29,7 @@ private:
 	{
 	public:
 		/// Default constructor does not initialize
-		inline 					NodeID()							{ }
+		inline 					NodeID() = default;
 
 		/// Construct a node ID
 		static inline NodeID	sInvalid()							{ return NodeID(cInvalidNodeIndex); }
@@ -63,7 +66,7 @@ private:
 	{
 	public:
 		/// Constructor
-								AtomicNodeID() { }
+								AtomicNodeID() = default;
 								AtomicNodeID(const NodeID &inRHS)			: mID(inRHS.mID) { }
 
 		/// Assignment
@@ -148,7 +151,7 @@ public:
 	struct Tracking
 	{
 		/// Constructor to satisfy the vector class
-								Tracking() { }
+								Tracking() = default;
 								Tracking(const Tracking &inRHS) : mBroadPhaseLayer(inRHS.mBroadPhaseLayer.load()), mObjectLayer(inRHS.mObjectLayer.load()), mBodyLocation(inRHS.mBodyLocation.load()) { }
 
 		/// Invalid body location identifier
@@ -163,6 +166,12 @@ public:
 
 	/// Destructor
 								~QuadTree();
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Name of the tree for debugging purposes
+	void						SetName(const char *inName)			{ mName = inName; }
+	inline const char *			GetName() const						{ return mName; }
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 	/// Check if there is anything in the tree
 	inline bool					HasBodies() const					{ return mNumBodies != 0; }
@@ -237,6 +246,11 @@ public:
 	/// Find all colliding pairs between dynamic bodies, calls ioPairCollector for every pair found
 	void						FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, ObjectLayerPairFilter inObjectLayerPairFilter) const;
 
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Trace the stats of this tree to the TTY
+	void						ReportStats() const;
+#endif // JPH_TRACK_BROADPHASE_STATS
+
 private:
 	/// Constants
 	static const uint32			cInvalidNodeIndex = 0xffffffff;		///< Value used to indicate node index is invalid
@@ -251,9 +265,6 @@ private:
 
 		/// Index of the root node of the tree (this is always a node, never a body id)
 		atomic<uint32>			mIndex { cInvalidNodeIndex };
-
-		/// Mutex that protects mIndex
-		mutable SharedMutex		mMutex;
 	};
 
 	/// Caches location of body inBodyID in the tracker, body can be found in mNodes[inNodeIdx].mChildNodeID[inChildIdx]
@@ -262,11 +273,8 @@ private:
 	void						InvalidateBodyLocation(TrackingVector &ioTracking, BodyID inBodyID);
 
 	/// Get the current root of the tree
-	inline const RootNode &		GetCurrentRoot() const				{ return mRootNode[mRootNodeIndex]; }
-	inline RootNode &			GetCurrentRoot()					{ return mRootNode[mRootNodeIndex]; }
-
-	/// Get the current root of the tree and lock it
-	const RootNode &			LockRoot(shared_lock<SharedMutex> &outLock) const;
+	JPH_INLINE const RootNode &	GetCurrentRoot() const				{ return mRootNode[mRootNodeIndex]; }
+	JPH_INLINE RootNode &		GetCurrentRoot()					{ return mRootNode[mRootNodeIndex]; }
 
 	/// Depending on if inNodeID is a body or tree node return the bounding box
 	inline AABox				GetNodeOrBodyBounds(const BodyVector &inBodies, NodeID inNodeID) const;
@@ -303,6 +311,43 @@ private:
 	/// Note: This function only works if the tree is not modified while we're traversing it.
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
 #endif
+
+
+#ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Mutex protecting the various LayerToStats members
+	mutable Mutex				mStatsMutex;
+
+	struct Stat
+	{
+		uint64					mNumQueries = 0;
+		uint64					mNodesVisited = 0;
+		uint64					mBodiesVisited = 0;
+		uint64					mHitsReported = 0;
+		uint64					mTotalTicks = 0;
+		uint64					mCollectorTicks = 0;
+	};
+	
+	using LayerToStats = map<string, Stat>;
+
+	/// Trace the stats of a single query type to the TTY
+	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;
+	
+	mutable LayerToStats		mCastRayStats;
+	mutable LayerToStats		mCollideAABoxStats;
+	mutable LayerToStats		mCollideSphereStats;
+	mutable LayerToStats		mCollidePointStats;
+	mutable LayerToStats		mCollideOrientedBoxStats;
+	mutable LayerToStats		mCastAABoxStats;
+#endif // JPH_TRACK_BROADPHASE_STATS
+
+	/// Walk the node tree calling the Visitor::VisitNodes for each node encountered and Visitor::VisitBody for each body encountered
+	template <class Visitor>
+	JPH_INLINE void				WalkTree(const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking, Visitor &ioVisitor JPH_IF_TRACK_BROADPHASE_STATS(, LayerToStats &ioStats)) const;
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	/// Name of this tree for debugging purposes
+	const char *				mName = "Layer";
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 	/// Number of bodies currently in the tree
 	atomic<uint32>				mNumBodies { 0 };

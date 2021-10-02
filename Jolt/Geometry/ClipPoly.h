@@ -173,9 +173,9 @@ void ClipPolyVsAABox(const VERTEX_ARRAY &inPolygonToClip, const AABox &inAABox, 
 			}
 
 			// Get source and target polygon
-			const VERTEX_ARRAY &src_polygon = tmp_vertices_idx == 0? inPolygonToClip : tmp_vertices[(tmp_vertices_idx & 1)];
+			const VERTEX_ARRAY &src_polygon = tmp_vertices_idx == 0? inPolygonToClip : tmp_vertices[tmp_vertices_idx & 1];
 			tmp_vertices_idx++;
-			VERTEX_ARRAY &tgt_polygon = tmp_vertices_idx == 6? outClippedPolygon : tmp_vertices[(tmp_vertices_idx & 1)];
+			VERTEX_ARRAY &tgt_polygon = tmp_vertices_idx == 6? outClippedPolygon : tmp_vertices[tmp_vertices_idx & 1];
 			tgt_polygon.clear();
 
 			// Clip against the edge

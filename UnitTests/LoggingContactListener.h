@@ -29,10 +29,11 @@ public:
 
 	virtual ValidateResult			OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult) override
 	{
-		// Check contract that body 1 is dynamic
-		CHECK(inBody1.IsDynamic());
+		// Check contract that body 1 is dynamic or that body2 is not dynamic
+		bool contract = inBody1.IsDynamic() || !inBody2.IsDynamic();
+		CHECK(contract);
 
-		lock_guard<Mutex> lock(mLogMutex);
+		lock_guard lock(mLogMutex);
 		mLog.push_back({ EType::Validate, inBody1.GetID(), inBody2.GetID(), ContactManifold() });
 		return ValidateResult::AcceptContact;
 	}
@@ -42,7 +43,7 @@ public:
 		// Check contract that body 1 < body 2
 		CHECK(inBody1.GetID() < inBody2.GetID());
 
-		lock_guard<Mutex> lock(mLogMutex);
+		lock_guard lock(mLogMutex);
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		CHECK(mExistingContacts.insert(key).second); // Validate that contact does not exist yet
 		mLog.push_back({ EType::Add, inBody1.GetID(), inBody2.GetID(), inManifold });
@@ -53,7 +54,7 @@ public:
 		// Check contract that body 1 < body 2
 		CHECK(inBody1.GetID() < inBody2.GetID());
 
-		lock_guard<Mutex> lock(mLogMutex);
+		lock_guard lock(mLogMutex);
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		CHECK(mExistingContacts.find(key) != mExistingContacts.end()); // Validate that OnContactAdded was called
 		mLog.push_back({ EType::Persist, inBody1.GetID(), inBody2.GetID(), inManifold });
@@ -64,7 +65,7 @@ public:
 		// Check contract that body 1 < body 2
 		CHECK(inSubShapePair.GetBody1ID() < inSubShapePair.GetBody2ID());
 
-		lock_guard<Mutex> lock(mLogMutex);
+		lock_guard lock(mLogMutex);
 		CHECK(mExistingContacts.erase(inSubShapePair) == 1); // Validate that OnContactAdded was called
 		mLog.push_back({ EType::Remove, inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID(), ContactManifold() });
 	}

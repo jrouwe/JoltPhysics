@@ -5,7 +5,7 @@
 
 #include <Physics/Body/BodyFilter.h>
 #include <Physics/Body/BodyLock.h>
-#include <Physics/Body/BodyInterface.h>
+#include <Physics/Body/BodyLockInterface.h>
 #include <Physics/Collision/ShapeFilter.h>
 #include <Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Physics/Collision/BackFaceMode.h>
@@ -21,8 +21,8 @@ class NarrowPhaseQuery : public NonCopyable
 {
 public:
 	/// Constructor
-								NarrowPhaseQuery() { }
-								NarrowPhaseQuery(BodyInterface &inBodyInterface, BroadPhase &inBroadPhase) : mBodyInterface(&inBodyInterface), mBroadPhase(&inBroadPhase) { }
+								NarrowPhaseQuery() = default;
+								NarrowPhaseQuery(BodyLockInterface &inBodyLockInterface, BroadPhase &inBroadPhase) : mBodyLockInterface(&inBodyLockInterface), mBroadPhase(&inBroadPhase) { }
 
 	/// Cast a ray, returns true if it finds a hit closer than ioHit.mFraction and updates ioHit in that case.
 	bool						CastRay(const RayCast &inRay, RayCastResult &ioHit, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter = { }, const ObjectLayerFilter &inObjectLayerFilter = { }, const BodyFilter &inBodyFilter = { }) const;
@@ -45,7 +45,7 @@ public:
 	void						CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter = { }, const ObjectLayerFilter &inObjectLayerFilter = { }, const BodyFilter &inBodyFilter = { }) const;
 
 private:
-	BodyInterface *				mBodyInterface = nullptr;
+	BodyLockInterface *			mBodyLockInterface = nullptr;
 	BroadPhase *				mBroadPhase = nullptr;
 };
 

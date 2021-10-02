@@ -10,6 +10,7 @@
 
 # Force shell files to use LF only
 *.sh text eol=lf
+gradlew text eol=lf
 
 # Declare binary file types
 *.tga binary

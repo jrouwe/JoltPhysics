@@ -320,14 +320,15 @@ void CompoundShape::RestoreBinaryState(StreamIn &inStream)
 void CompoundShape::SaveSubShapeState(ShapeList &outSubShapes) const
 { 
 	outSubShapes.clear();
+	outSubShapes.reserve(mSubShapes.size());
 	for (const SubShape &shape : mSubShapes)
 		outSubShapes.push_back(shape.mShape);
 }
 
-void CompoundShape::RestoreSubShapeState(const ShapeList &inSubShapes)
+void CompoundShape::RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes)
 { 
-	JPH_ASSERT(inSubShapes.size() == mSubShapes.size());
-	for (size_t i = 0; i < mSubShapes.size(); ++i)
+	JPH_ASSERT(mSubShapes.size() == inNumShapes);
+	for (uint i = 0; i < inNumShapes; ++i)
 		mSubShapes[i].mShape = inSubShapes[i];
 }
 

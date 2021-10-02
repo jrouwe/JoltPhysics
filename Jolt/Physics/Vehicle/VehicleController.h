@@ -34,7 +34,7 @@ class VehicleController : public RefTarget<VehicleController>
 public:
 	/// Constructor / destructor
 								VehicleController(VehicleConstraint &inConstraint) : mConstraint(inConstraint) { }
-	virtual						~VehicleController() { }
+	virtual						~VehicleController() = default;
 
 protected:
 	// The functions below are only for the VehicleConstraint

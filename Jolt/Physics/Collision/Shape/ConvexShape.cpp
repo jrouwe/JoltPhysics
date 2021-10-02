@@ -568,12 +568,13 @@ void ConvexShape::RestoreBinaryState(StreamIn &inStream)
 
 void ConvexShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const
 { 
-	outMaterials = { mMaterial }; 
+	outMaterials.clear();
+	outMaterials.push_back(mMaterial);
 }
 
-void ConvexShape::RestoreMaterialState(const PhysicsMaterialList &inMaterials) 
+void ConvexShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) 
 { 
-	JPH_ASSERT(inMaterials.size() == 1); 
+	JPH_ASSERT(inNumMaterials == 1); 
 	mMaterial = inMaterials[0]; 
 }
 

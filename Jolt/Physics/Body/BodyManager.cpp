@@ -24,7 +24,7 @@ namespace JPH {
 
 BodyManager::~BodyManager()
 {
-	UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 	// Destroy any bodies that are still alive
 	for (Body *b : mBodies)
@@ -34,9 +34,15 @@ BodyManager::~BodyManager()
 	delete [] mActiveBodies;
 }
 
-void BodyManager::Init(uint inMaxBodies)
+void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes)
 {
-	UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+
+	// Num body mutexes must be a power of two and not bigger than our MutexMask
+	uint num_body_mutexes = Clamp<uint>(GetNextPowerOf2(inNumBodyMutexes == 0? 2 * thread::hardware_concurrency() : inNumBodyMutexes), 1, sizeof(MutexMask) * 8);
+
+	// Allocate the body mutexes
+	mBodyMutexes.Init(num_body_mutexes);
 
 	// Allocate space for bodies
 	mBodies.reserve(inMaxBodies);
@@ -51,14 +57,14 @@ void BodyManager::Init(uint inMaxBodies)
 
 uint BodyManager::GetNumBodies() const
 {
-	UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 	return mNumBodies;
 }
 
 BodyManager::BodyStats BodyManager::GetBodyStats() const
 {
-	UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 	BodyStats stats;
 	stats.mNumBodies = mNumBodies;
@@ -95,7 +101,7 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	// Determine next free index
 	uint32 idx;
 	{
-		UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+		UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 		if (mBodyIDFreeListStart != cBodyIDFreeListEnd)
 		{
@@ -141,6 +147,8 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	
 	if (inBodyCreationSettings.HasMassProperties())
 	{
+		JPH_ASSERT(!inBodyCreationSettings.mIsSensor, "Sensors should be static and moved through BodyInterface::SetPosition/SetPositionAndRotation");
+
 		MotionProperties *mp = new MotionProperties();
 		mp->SetLinearDamping(inBodyCreationSettings.mLinearDamping);
 		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);
@@ -167,7 +175,11 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 
 void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 {
-	UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+	// Don't take lock if no bodies are to be destroyed
+	if (inNumber <= 0)
+		return;
+
+	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 	// Update cached number of bodies
 	JPH_ASSERT(mNumBodies >= (uint)inNumber);
@@ -207,7 +219,11 @@ void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 
 void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 {
-	UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+	// Don't take lock if no bodies are to be activated
+	if (inNumber <= 0)
+		return;
+
+	UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 	JPH_ASSERT(!mActiveBodiesLocked || sOverrideAllowActivation);
 
@@ -242,7 +258,11 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 
 void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 {
-	UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+	// Don't take lock if no bodies are to be deactivated
+	if (inNumber <= 0)
+		return;
+
+	UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 	JPH_ASSERT(!mActiveBodiesLocked || sOverrideAllowDeactivation);
 
@@ -297,7 +317,7 @@ void BodyManager::GetActiveBodies(BodyIDVector &outBodyIDs) const
 {
 	JPH_PROFILE_FUNCTION();
 
-	UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+	UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 	outBodyIDs.assign(mActiveBodies, mActiveBodies + mNumActiveBodies);
 }
@@ -306,7 +326,7 @@ void BodyManager::GetBodyIDs(BodyIDVector &outBodies) const
 {
 	JPH_PROFILE_FUNCTION();
 
-	UniqueLock<Mutex> lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 	// Reserve space for all bodies
 	outBodies.clear();
@@ -323,19 +343,19 @@ void BodyManager::GetBodyIDs(BodyIDVector &outBodies) const
 
 void BodyManager::SetBodyActivationListener(BodyActivationListener *inListener)	
 { 
-	UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+	UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 	mActivationListener = inListener; 
 }
 
 BodyManager::MutexMask BodyManager::GetMutexMask(const BodyID *inBodies, int inNumber) const
 {
-	static_assert(sizeof(MutexMask) * 8 == BodyMutexes::NumMutexes, "MutexMask must have the same amount of bits");
+	JPH_ASSERT(sizeof(MutexMask) * 8 >= mBodyMutexes.GetNumMutexes(), "MutexMask must have enough bits");
 
-	if (inNumber >= BodyMutexes::NumMutexes)
+	if (inNumber >= (int)mBodyMutexes.GetNumMutexes())
 	{
 		// Just lock everything if there are too many bodies
-		return ~MutexMask(0);
+		return GetAllBodiesMutexMask();
 	}
 	else
 	{
@@ -430,7 +450,7 @@ void BodyManager::SaveState(StateRecorder &inStream) const
 	}
 
 	{
-		UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+		UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 		// Write active bodies, sort because activation can come from multiple threads, so order is not deterministic
 		inStream.Write(mNumActiveBodies);
@@ -480,7 +500,7 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 	}
 
 	{
-		UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+		UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 		// Mark current active bodies as deactivated
 		for (BodyID *id = mActiveBodies, *id_end = mActiveBodies + mNumActiveBodies; id < id_end; ++id)
@@ -723,7 +743,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 
 void BodyManager::InvalidateContactCacheForBody(Body &ioBody)
 {
-	lock_guard<Mutex> lock(mBodiesCacheInvalidMutex);
+	lock_guard lock(mBodiesCacheInvalidMutex);
 	
 	if (!ioBody.IsCollisionCacheInvalid())
 	{
@@ -734,7 +754,7 @@ void BodyManager::InvalidateContactCacheForBody(Body &ioBody)
 
 void BodyManager::ValidateContactCacheForAllBodies()
 {
-	lock_guard<Mutex> lock(mBodiesCacheInvalidMutex);
+	lock_guard lock(mBodiesCacheInvalidMutex);
 	
 	for (const BodyID &b : mBodiesCacheInvalid)
 	{
@@ -777,7 +797,7 @@ void BodyManager::CollectStats() const
 #ifdef _DEBUG
 void BodyManager::ValidateActiveBodyBounds()
 {
-	UniqueLock<Mutex> lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+	UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 	for (BodyID *id = mActiveBodies, *id_end = mActiveBodies + mNumActiveBodies; id < id_end; ++id)
 	{

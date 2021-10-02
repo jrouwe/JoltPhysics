@@ -10,7 +10,7 @@ class StreamOut
 {
 public:
 	/// Virtual destructor
-	virtual				~StreamOut() { }
+	virtual				~StreamOut() = default;
 
 	/// Write a string of bytes to the binary stream
 	virtual void		WriteBytes(const void *inData, size_t inNumBytes) = 0;

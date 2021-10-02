@@ -166,15 +166,10 @@ public:
 	using PointsBase = StaticArray<Vec3, cMaxPoints>;
 	using Triangles = StaticArray<Triangle *, cMaxTriangles>;
 
-	/// Specialized points list that allows direct access to the size and pointer
+	/// Specialized points list that allows direct access to the size
 	class Points : public PointsBase
 	{
 	public:
-		Vec3 *			GetElementPtr()
-		{
-			return reinterpret_cast<Vec3 *>(mElements);
-		}
-
 		size_type &		GetSizeRef()
 		{
 			return mSize;
@@ -264,7 +259,7 @@ public:
 	/// Check if there's another triangle to process from the queue
 	bool				HasNextTriangle()
 	{
-		return mTriangleQueue.size() > 0;
+		return !mTriangleQueue.empty();
 	}
 
 	/// Access to the next closest triangle to the origin (won't remove it from the queue).

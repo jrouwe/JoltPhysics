@@ -5,6 +5,7 @@
 
 #include <TriangleSplitter/TriangleSplitter.h>
 #include <Geometry/AABox.h>
+#include <Core/NonCopyable.h>
 
 namespace JPH {
 
@@ -34,7 +35,7 @@ class AABBTreeBuilder
 {
 public:
 	/// A node in the tree, contains the AABox for the tree and any child nodes or triangles
-	class Node
+	class Node : public NonCopyable
 	{
 	public:
 		/// Constructor
@@ -97,7 +98,7 @@ public:
 	Node *					Build(AABBTreeBuilderStats &outStats);
 
 private:
-	Node *					BuildInternal(TriangleSplitter::Range &inTriangles);
+	Node *					BuildInternal(const TriangleSplitter::Range &inTriangles);
 
 	TriangleSplitter &		mTriangleSplitter;
 	const uint				mMaxTrianglesPerLeaf;

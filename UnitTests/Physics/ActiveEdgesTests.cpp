@@ -5,6 +5,7 @@
 #include "PhysicsTestContext.h"
 #include "Layers.h"
 #include <Physics/Collision/Shape/BoxShape.h>
+#include <Physics/Collision/Shape/CapsuleShape.h>
 #include <Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Physics/Collision/Shape/MeshShape.h>
 #include <Physics/Collision/Shape/HeightFieldShape.h>
@@ -16,18 +17,16 @@
 
 TEST_SUITE("ActiveEdgesTest")
 {
-	static const float cBoxSize = 0.1f;
+	static const float cCapsuleProbeOffset = 0.1f; // How much to offset the probe from y = 0 in order to avoid hitting a back instead of a front face
+	static const float cCapsuleRadius = 0.1f;
 
-	// Create a box as our probe
-	static Ref<Shape> sCreateProbeBox()
+	// Create a capsule as our probe
+	static Ref<Shape> sCreateProbeCapsule()
 	{
-		// Ensure box is larger in y direction so that when active edges mode is on, we will always get a horizontal penetration axis rather than a vertical one
-		BoxShapeSettings box(Vec3(cBoxSize, 1.0f, cBoxSize), 0.01f); 
-		box.SetEmbedded();
-
-		// Offset box by 0.1 in y direction so that the when active edges mode is off, the penetration axis is well defined
-		RotatedTranslatedShapeSettings offset_settings(Vec3(0, 0.1f, 0), Quat::sIdentity(), &box);
-		return offset_settings.Create().Get();
+		// Ensure capsule is long enough so that when active edges mode is on, we will always get a horizontal penetration axis rather than a vertical one
+		CapsuleShapeSettings capsule(1.0f, cCapsuleRadius); 
+		capsule.SetEmbedded();
+		return capsule.Create().Get();
 	}
 
 	// Create a flat mesh shape consting of 7 x 7 quads, we know that only the outer edges of this shape are active
@@ -62,7 +61,7 @@ TEST_SUITE("ActiveEdgesTest")
 
 	// Compare expected hits with returned hits
 	template <class ResultType>
-	static void sCheckMatch(const vector<ResultType> &inResult, const vector<ExpectedHit> &inExpectedHits)
+	static void sCheckMatch(const vector<ResultType> &inResult, const vector<ExpectedHit> &inExpectedHits, float inAccuracySq)
 	{
 		CHECK(inResult.size() == inExpectedHits.size());
 
@@ -70,8 +69,8 @@ TEST_SUITE("ActiveEdgesTest")
 		{
 			bool found = false;
 			for (const ResultType &result : inResult)
-				if (result.mContactPointOn2.IsClose(hit.mPosition) 
-					&& result.mPenetrationAxis.Normalized().IsClose(hit.mPenetrationAxis))
+				if (result.mContactPointOn2.IsClose(hit.mPosition, inAccuracySq) 
+					&& result.mPenetrationAxis.Normalized().IsClose(hit.mPenetrationAxis, inAccuracySq))
 				{
 					found = true;
 					break;
@@ -86,7 +85,7 @@ TEST_SUITE("ActiveEdgesTest")
 		AllHitCollisionCollector<CollideShapeCollector> collector;
 		CollisionDispatch::sCollideShapeVsShape(inProbeShape, inTestShape, Vec3::sReplicate(1.0f), inTestShapeScale, Mat44::sTranslation(inProbeShapePos), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), inSettings, collector);
 
-		sCheckMatch(collector.mHits, inExpectedHits);
+		sCheckMatch(collector.mHits, inExpectedHits, 1.0e-8f);
 	}
 
 	// Collide a probe shape against our test shape in various locations to verify active edge behavior
@@ -96,20 +95,20 @@ TEST_SUITE("ActiveEdgesTest")
 		settings.mActiveEdgeMode = inActiveEdgesOnly? EActiveEdgeMode::CollideOnlyWithActive : EActiveEdgeMode::CollideWithAll;
 
 		Ref<Shape> test_shape = inTestShape->Create().Get();
-		Ref<Shape> box = sCreateProbeBox();
+		Ref<Shape> capsule = sCreateProbeCapsule();
 
 		// Test hitting all active edges
-		sTestCollideShape(box, test_shape, inTestShapeScale, settings, Vec3(-3.5f, 0, 0), { { Vec3(-3.5f, 0, 0), Vec3(1, 0, 0) } });
-		sTestCollideShape(box, test_shape, inTestShapeScale, settings, Vec3(3.5f, 0, 0), { { Vec3(3.5f, 0, 0), Vec3(-1, 0, 0) } });
-		sTestCollideShape(box, test_shape, inTestShapeScale, settings, Vec3(0, 0, -3.5f), { { Vec3(0, 0, -3.5f), Vec3(0, 0, 1) } });
-		sTestCollideShape(box, test_shape, inTestShapeScale, settings, Vec3(0, 0, 3.5f), { { Vec3(0, 0, 3.5f), Vec3(0, 0, -1) } });
+		sTestCollideShape(capsule, test_shape, inTestShapeScale, settings, Vec3(-3.5f, cCapsuleProbeOffset, 0), { { Vec3(-3.5f, 0, 0), Vec3(1, 0, 0) } });
+		sTestCollideShape(capsule, test_shape, inTestShapeScale, settings, Vec3(3.5f, cCapsuleProbeOffset, 0), { { Vec3(3.5f, 0, 0), Vec3(-1, 0, 0) } });
+		sTestCollideShape(capsule, test_shape, inTestShapeScale, settings, Vec3(0, cCapsuleProbeOffset, -3.5f), { { Vec3(0, 0, -3.5f), Vec3(0, 0, 1) } });
+		sTestCollideShape(capsule, test_shape, inTestShapeScale, settings, Vec3(0, cCapsuleProbeOffset, 3.5f), { { Vec3(0, 0, 3.5f), Vec3(0, 0, -1) } });
 
 		// Test hitting internal edges, this should return two hits
-		sTestCollideShape(box, test_shape, inTestShapeScale, settings, Vec3(-2.5f, 0, 0), { { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(-1, 0, 0) }, { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(1, 0, 0) } });
-		sTestCollideShape(box, test_shape, inTestShapeScale, settings, Vec3(0, 0, -2.5f), { { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) }, { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) } });
+		sTestCollideShape(capsule, test_shape, inTestShapeScale, settings, Vec3(-2.5f, cCapsuleProbeOffset, 0), { { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(-1, 0, 0) }, { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(1, 0, 0) } });
+		sTestCollideShape(capsule, test_shape, inTestShapeScale, settings, Vec3(0, cCapsuleProbeOffset, -2.5f), { { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) }, { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) } });
 
 		// Test hitting an interior diagonal, this should return two hits
-		sTestCollideShape(box, test_shape, inTestShapeScale, settings, Vec3(-3.0f, 0, 0), { { Vec3(-3.0f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : (inTestShapeScale * Vec3(1, 0, -1)).Normalized() }, { Vec3(-3.0f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : (inTestShapeScale * Vec3(-1, 0, 1)).Normalized() } });
+		sTestCollideShape(capsule, test_shape, inTestShapeScale, settings, Vec3(-3.0f, cCapsuleProbeOffset, 0), { { Vec3(-3.0f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : (inTestShapeScale * Vec3(1, 0, -1)).Normalized() }, { Vec3(-3.0f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : (inTestShapeScale * Vec3(-1, 0, 1)).Normalized() } });
 	}
 
 	TEST_CASE("CollideShapeMesh")
@@ -145,7 +144,7 @@ TEST_SUITE("ActiveEdgesTest")
 		ShapeCast shape_cast(inProbeShape, Vec3::sReplicate(1.0f), Mat44::sTranslation(inProbeShapePos), inProbeShapeDirection);
 		CollisionDispatch::sCastShapeVsShape(shape_cast, inSettings, inTestShape, inTestShapeScale, ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 
-		sCheckMatch(collector.mHits, inExpectedHits);
+		sCheckMatch(collector.mHits, inExpectedHits, 1.0e-6f);
 	}
 
 	// Cast a probe shape against our test shape in various locations to verify active edge behavior
@@ -156,17 +155,17 @@ TEST_SUITE("ActiveEdgesTest")
 		settings.mReturnDeepestPoint = true;
 
 		Ref<Shape> test_shape = inTestShape->Create().Get();
-		Ref<Shape> box = sCreateProbeBox();
+		Ref<Shape> capsule = sCreateProbeCapsule();
 
 		// Test hitting all active edges
-		sTestCastShape(box, test_shape, inTestShapeScale, settings, Vec3(-4, 0, 0), Vec3(0.5f, 0, 0), { { Vec3(-3.5f, 0, 0), Vec3(1, 0, 0) } });
-		sTestCastShape(box, test_shape, inTestShapeScale, settings, Vec3(4, 0, 0), Vec3(-0.5f, 0, 0), { { Vec3(3.5f, 0, 0), Vec3(-1, 0, 0) } });
-		sTestCastShape(box, test_shape, inTestShapeScale, settings, Vec3(0, 0, -4), Vec3(0, 0, 0.5f), { { Vec3(0, 0, -3.5f), Vec3(0, 0, 1) } });
-		sTestCastShape(box, test_shape, inTestShapeScale, settings, Vec3(0, 0, 4), Vec3(0, 0, -0.5f), { { Vec3(0, 0, 3.5f), Vec3(0, 0, -1) } });
+		sTestCastShape(capsule, test_shape, inTestShapeScale, settings, Vec3(-4, cCapsuleProbeOffset, 0), Vec3(0.5f, 0, 0), { { Vec3(-3.5f, 0, 0), Vec3(1, 0, 0) } });
+		sTestCastShape(capsule, test_shape, inTestShapeScale, settings, Vec3(4, cCapsuleProbeOffset, 0), Vec3(-0.5f, 0, 0), { { Vec3(3.5f, 0, 0), Vec3(-1, 0, 0) } });
+		sTestCastShape(capsule, test_shape, inTestShapeScale, settings, Vec3(0, cCapsuleProbeOffset, -4), Vec3(0, 0, 0.5f), { { Vec3(0, 0, -3.5f), Vec3(0, 0, 1) } });
+		sTestCastShape(capsule, test_shape, inTestShapeScale, settings, Vec3(0, cCapsuleProbeOffset, 4), Vec3(0, 0, -0.5f), { { Vec3(0, 0, 3.5f), Vec3(0, 0, -1) } });
 
 		// Test hitting internal edges, this should return two hits
-		sTestCastShape(box, test_shape, inTestShapeScale, settings, Vec3(-2.5f - 1.1f * cBoxSize, 0, 0), Vec3(0.2f * cBoxSize, 0, 0), { { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(-1, 0, 0) }, { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(1, 0, 0) } });
-		sTestCastShape(box, test_shape, inTestShapeScale, settings, Vec3(0, 0, -2.5f - 1.1f * cBoxSize), Vec3(0, 0, 0.2f * cBoxSize), { { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) }, { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) } });
+		sTestCastShape(capsule, test_shape, inTestShapeScale, settings, Vec3(-2.5f - 1.1f * cCapsuleRadius, cCapsuleProbeOffset, 0), Vec3(0.2f * cCapsuleRadius, 0, 0), { { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(-1, 0, 0) }, { Vec3(-2.5f, 0, 0), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(1, 0, 0) } });
+		sTestCastShape(capsule, test_shape, inTestShapeScale, settings, Vec3(0, cCapsuleProbeOffset, -2.5f - 1.1f * cCapsuleRadius), Vec3(0, 0, 0.2f * cCapsuleRadius), { { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) }, { Vec3(0, 0, -2.5f), inActiveEdgesOnly? Vec3(0, -1, 0) : Vec3(0, 0, -1) } });
 	}
 
 	TEST_CASE("CastShapeMesh")

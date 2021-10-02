@@ -23,7 +23,7 @@ PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, 
 {
 	// Create physics system
 	mSystem = new PhysicsSystem();
-	mSystem->Init(1024, 4096, 1024, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
+	mSystem->Init(1024, 0, 4096, 1024, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
 }
 
 PhysicsTestContext::~PhysicsTestContext()

@@ -10,7 +10,7 @@ class StreamIn
 {
 public:
 	/// Virtual destructor
-	virtual				~StreamIn() { }
+	virtual				~StreamIn() = default;
 
 	/// Read a string of bytes from the binary stream
 	virtual void		ReadBytes(void *outData, size_t inNumBytes) = 0;

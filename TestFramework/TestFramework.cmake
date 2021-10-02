@@ -93,28 +93,28 @@ source_group(TREE ${TEST_FRAMEWORK_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES})
 
 # All shaders
 set(TEST_FRAMEWORK_SRC_FILES_SHADERS
-	${PHYSICS_REPO_ROOT}/Shaders/VertexConstants.h
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/VertexConstants.h
 )
 
 # Vertex shaders
 set(TEST_FRAMEWORK_VERTEX_SHADERS
-	${PHYSICS_REPO_ROOT}/Shaders/FontVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/LineVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/TriangleDepthVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/TriangleVertexShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/UIVertexShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/FontVertexShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/LineVertexShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthVertexShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleVertexShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIVertexShader.hlsl
 )
 set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_VERTEX_SHADERS})
 set_source_files_properties(${TEST_FRAMEWORK_VERTEX_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T vs_5_0")
 
 # Pixel shaders
 set(TEST_FRAMEWORK_PIXEL_SHADERS
-	${PHYSICS_REPO_ROOT}/Shaders/FontPixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/LinePixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/TriangleDepthPixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/TrianglePixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/UIPixelShader.hlsl
-	${PHYSICS_REPO_ROOT}/Shaders/UIPixelShaderUntextured.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/FontPixelShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/LinePixelShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/TriangleDepthPixelShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/TrianglePixelShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShader.hlsl
+	${PHYSICS_REPO_ROOT}/Assets/Shaders/UIPixelShaderUntextured.hlsl
 )
 set(TEST_FRAMEWORK_SRC_FILES_SHADERS ${TEST_FRAMEWORK_SRC_FILES_SHADERS} ${TEST_FRAMEWORK_PIXEL_SHADERS})
 set_source_files_properties(${TEST_FRAMEWORK_PIXEL_SHADERS} PROPERTIES VS_SHADER_FLAGS "/WX /T ps_5_0")
