@@ -323,6 +323,7 @@ void TriangleShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Triangle);
 	f.mConstruct = []() -> Shape * { return new TriangleShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

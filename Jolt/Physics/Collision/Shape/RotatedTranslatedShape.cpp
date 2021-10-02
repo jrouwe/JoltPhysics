@@ -30,7 +30,7 @@ ShapeSettings::ShapeResult RotatedTranslatedShapeSettings::Create() const
 }
 
 RotatedTranslatedShape::RotatedTranslatedShape(const RotatedTranslatedShapeSettings &inSettings, ShapeResult &outResult) :
-	DecoratedShape(EShapeType::RotatedTranslated, EShapeSubType::RotatedTranslated, inSettings, outResult)
+	DecoratedShape(EShapeSubType::RotatedTranslated, inSettings, outResult)
 {
 	if (outResult.HasError())
 		return;
@@ -175,7 +175,7 @@ void RotatedTranslatedShape::sCollideShapeVsRotatedTranslated(const Shape *inSha
 void RotatedTranslatedShape::sCastRotatedTranslatedShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	// Fetch rotated translated shape from cast shape
-	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::RotatedTranslated);
+	JPH_ASSERT(inShapeCast.mShape->GetSubType() == EShapeSubType::RotatedTranslated);
 	const RotatedTranslatedShape *shape1 = static_cast<const RotatedTranslatedShape *>(inShapeCast.mShape.GetPtr());
 
 	// Transform the shape cast and update the shape
@@ -221,6 +221,7 @@ void RotatedTranslatedShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::RotatedTranslated);
 	f.mConstruct = []() -> Shape * { return new RotatedTranslatedShape; };
+	f.mColor = Color::sBlue;
 }
 
 } // JPH

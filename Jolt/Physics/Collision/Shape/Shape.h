@@ -49,19 +49,23 @@ using PhysicsMaterialList = vector<PhysicsMaterialRefC>;
 /// Shapes are categorized in groups, each shape can return which group it belongs to through its Shape::GetType function.
 enum class EShapeType : uint8
 {
-	Convex,							///< All shapes that use the generic convex vs convex collision detection system (box, sphere, capsule, tapered capsule, cylinder, triangle)
-	Mesh,							///< Used only by MeshShape
-	HeightField,					///< Used only by HeightFieldShape
-	StaticCompound,					///< Used only by StaticCompoundShape
-	MutableCompound,				///< Used only by MutableCompoundShape
-	RotatedTranslated,				///< Used only by RotatedTranslatedShape
-	Scaled,							///< Used only by ScaledShape
-	OffsetCenterOfMass,				///< Used only by OffsetCenterOfMassShape
+	Convex,							///< Used by ConvexShape, all shapes that use the generic convex vs convex collision detection system (box, sphere, capsule, tapered capsule, cylinder, triangle)
+	Compound,						///< Used by CompoundShape
+	Decorated,						///< Used by DecoratedShape
+	Mesh,							///< Used by MeshShape
+	HeightField,					///< Used by HeightFieldShape
+	
+	// User defined shapes
+	User1,
+	User2,
+	User3,
+	User4,
 };
 
 /// This enumerates all shape types, each shape can return its type through Shape::GetSubType
 enum class EShapeSubType : uint8
 {
+	// Convex shapes
 	Sphere,
 	Box,
 	Triangle,
@@ -69,13 +73,29 @@ enum class EShapeSubType : uint8
 	TaperedCapsule,
 	Cylinder,
 	ConvexHull,
-	Mesh,
-	HeightField,
+	
+	// Compound shapes
 	StaticCompound,
 	MutableCompound,
+	
+	// Decorated shapes
 	RotatedTranslated,
 	Scaled,
 	OffsetCenterOfMass,
+
+	// Other shapes
+	Mesh,
+	HeightField,
+	
+	// User defined shapes
+	User1,
+	User2,
+	User3,
+	User4,
+	User5,
+	User6,
+	User7,
+	User8,
 };
 
 /// How many shape types we support
@@ -110,6 +130,9 @@ class ShapeFunctions
 public:
 	/// Construct a shape
 	Shape *							(*mConstruct)() = nullptr;
+
+	/// Color of the shape when drawing
+	Color							mColor = Color::sBlack;
 
 	/// Get an entry in the registry for a particular sub type
 	static inline ShapeFunctions &	sGet(EShapeSubType inSubType)										{ return sRegistry[(int)inSubType]; }

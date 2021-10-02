@@ -29,7 +29,7 @@ ShapeSettings::ShapeResult OffsetCenterOfMassShapeSettings::Create() const
 }
 
 OffsetCenterOfMassShape::OffsetCenterOfMassShape(const OffsetCenterOfMassShapeSettings &inSettings, ShapeResult &outResult) :
-	DecoratedShape(EShapeType::OffsetCenterOfMass, EShapeSubType::OffsetCenterOfMass, inSettings, outResult),
+	DecoratedShape(EShapeSubType::OffsetCenterOfMass, inSettings, outResult),
 	mOffset(inSettings.mOffset)
 {
 	if (outResult.HasError())
@@ -144,7 +144,7 @@ void OffsetCenterOfMassShape::sCollideShapeVsOffsetCenterOfMassShape(const Shape
 void OffsetCenterOfMassShape::sCastOffsetCenterOfMassShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	// Fetch offset center of mass shape from cast shape
-	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::OffsetCenterOfMass);
+	JPH_ASSERT(inShapeCast.mShape->GetSubType() == EShapeSubType::OffsetCenterOfMass);
 	const OffsetCenterOfMassShape *shape1 = static_cast<const OffsetCenterOfMassShape *>(inShapeCast.mShape.GetPtr());
 
 	// Transform the shape cast and update the shape
@@ -171,6 +171,7 @@ void OffsetCenterOfMassShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::OffsetCenterOfMass);
 	f.mConstruct = []() -> Shape * { return new OffsetCenterOfMassShape; };
+	f.mColor = Color::sCyan;
 }
 
 } // JPH

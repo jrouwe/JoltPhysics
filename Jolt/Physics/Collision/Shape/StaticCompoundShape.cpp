@@ -160,7 +160,7 @@ void StaticCompoundShape::sPartition4(uint *ioBodyIdx, AABox *ioBounds, int inBe
 }
 
 StaticCompoundShape::StaticCompoundShape(const StaticCompoundShapeSettings &inSettings, TempAllocator &inTempAllocator, ShapeResult &outResult) :
-	CompoundShape(EShapeType::StaticCompound, EShapeSubType::StaticCompound, inSettings, outResult)
+	CompoundShape(EShapeSubType::StaticCompound, inSettings, outResult)
 {
 	// Check that there's at least 1 shape
 	uint num_subshapes = (uint)inSettings.mSubShapes.size();
@@ -681,6 +681,7 @@ void StaticCompoundShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::StaticCompound);
 	f.mConstruct = []() -> Shape * { return new StaticCompoundShape; };
+	f.mColor = Color::sOrange;
 }
 
 } // JPH

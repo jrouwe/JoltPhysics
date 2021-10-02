@@ -1107,6 +1107,7 @@ void MeshShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Mesh);
 	f.mConstruct = []() -> Shape * { return new MeshShape; };
+	f.mColor = Color::sRed;
 }
 
 } // JPH

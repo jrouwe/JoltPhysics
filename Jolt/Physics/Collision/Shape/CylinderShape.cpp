@@ -343,6 +343,7 @@ void CylinderShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Cylinder);
 	f.mConstruct = []() -> Shape * { return new CylinderShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

@@ -35,7 +35,7 @@ class OffsetCenterOfMassShape final : public DecoratedShape
 {
 public:
 	/// Constructor
-									OffsetCenterOfMassShape() : DecoratedShape(EShapeType::OffsetCenterOfMass, EShapeSubType::OffsetCenterOfMass) { }
+									OffsetCenterOfMassShape() : DecoratedShape(EShapeSubType::OffsetCenterOfMass) { }
 									OffsetCenterOfMassShape(const OffsetCenterOfMassShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Access the offset that is applied to the center of mass

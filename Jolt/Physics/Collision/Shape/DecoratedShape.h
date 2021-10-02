@@ -28,9 +28,9 @@ class DecoratedShape : public Shape
 {
 public:
 	/// Constructor
-									DecoratedShape(EShapeType inType, EShapeSubType inSubType) : Shape(inType, inSubType) { }
-									DecoratedShape(EShapeType inType, EShapeSubType inSubType, const Shape *inInnerShape) : Shape(inType, inSubType), mInnerShape(inInnerShape) { }
-									DecoratedShape(EShapeType inType, EShapeSubType inSubType, const DecoratedShapeSettings &inSettings, ShapeResult &outResult);
+									DecoratedShape(EShapeSubType inSubType) : Shape(EShapeType::Decorated, inSubType) { }
+									DecoratedShape(EShapeSubType inSubType, const Shape *inInnerShape) : Shape(EShapeType::Decorated, inSubType), mInnerShape(inInnerShape) { }
+									DecoratedShape(EShapeSubType inSubType, const DecoratedShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Access to the decorated inner shape
 	const Shape *					GetInnerShape() const									{ return mInnerShape; }

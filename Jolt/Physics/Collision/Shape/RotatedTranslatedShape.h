@@ -38,7 +38,7 @@ class RotatedTranslatedShape final : public DecoratedShape
 {
 public:
 	/// Constructor
-									RotatedTranslatedShape() : DecoratedShape(EShapeType::RotatedTranslated, EShapeSubType::RotatedTranslated) { }
+									RotatedTranslatedShape() : DecoratedShape(EShapeSubType::RotatedTranslated) { }
 									RotatedTranslatedShape(const RotatedTranslatedShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Access the rotation that is applied to the inner shape

@@ -376,6 +376,7 @@ void TaperedCapsuleShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::TaperedCapsule);
 	f.mConstruct = []() -> Shape * { return new TaperedCapsuleShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

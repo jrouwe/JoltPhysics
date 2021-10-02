@@ -29,11 +29,11 @@ class ScaledShape final : public DecoratedShape
 {
 public:
 	/// Constructor
-									ScaledShape() : DecoratedShape(EShapeType::Scaled, EShapeSubType::Scaled) { }
+									ScaledShape() : DecoratedShape(EShapeSubType::Scaled) { }
 									ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Constructor that decorates another shape with a scale
-									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeType::Scaled, EShapeSubType::Scaled, inShape), mScale(inScale) { }
+									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeSubType::Scaled, inShape), mScale(inScale) { }
 
 	/// Get the scale
 	Vec3		 					GetScale() const										{ return mScale; }

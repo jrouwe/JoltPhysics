@@ -1747,6 +1747,7 @@ void HeightFieldShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::HeightField);
 	f.mConstruct = []() -> Shape * { return new HeightFieldShape; };
+	f.mColor = Color::sPurple;
 }
 
 } // JPH

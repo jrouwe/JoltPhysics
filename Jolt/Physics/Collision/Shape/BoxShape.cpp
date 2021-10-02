@@ -238,6 +238,7 @@ void BoxShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Box);
 	f.mConstruct = []() -> Shape * { return new BoxShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

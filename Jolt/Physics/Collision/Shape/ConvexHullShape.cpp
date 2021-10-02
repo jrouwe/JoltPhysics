@@ -1174,6 +1174,7 @@ void ConvexHullShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::ConvexHull);
 	f.mConstruct = []() -> Shape * { return new ConvexHullShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

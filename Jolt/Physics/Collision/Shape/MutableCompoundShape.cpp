@@ -27,7 +27,7 @@ ShapeSettings::ShapeResult MutableCompoundShapeSettings::Create() const
 }
 
 MutableCompoundShape::MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult) :
-	CompoundShape(EShapeType::MutableCompound, EShapeSubType::MutableCompound, inSettings, outResult)
+	CompoundShape(EShapeSubType::MutableCompound, inSettings, outResult)
 {
 	mSubShapes.reserve(inSettings.mSubShapes.size());
 	for (const CompoundShapeSettings::SubShapeSettings &shape : inSettings.mSubShapes)
@@ -547,6 +547,7 @@ void MutableCompoundShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::MutableCompound);
 	f.mConstruct = []() -> Shape * { return new MutableCompoundShape; };
+	f.mColor = Color::sDarkOrange;
 }
 
 } // JPH

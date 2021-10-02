@@ -30,7 +30,7 @@ class MutableCompoundShape final : public CompoundShape
 {
 public:
 	/// Constructor
-									MutableCompoundShape() : CompoundShape(EShapeType::MutableCompound, EShapeSubType::MutableCompound) { }
+									MutableCompoundShape() : CompoundShape(EShapeSubType::MutableCompound) { }
 									MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult);
 	virtual							~MutableCompoundShape();
 		

@@ -549,46 +549,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 					break;
 
 				case EShapeColor::ShapeTypeColor:
-					// Each shape type has own color
-					switch (body->GetShape()->GetType())
-					{
-					case EShapeType::Convex:
-						color = Color::sGreen;
-						break;
-
-					case EShapeType::Scaled:
-						color = Color::sYellow;
-						break;
-
-					case EShapeType::StaticCompound:
-						color = Color::sOrange;
-						break;
-
-					case EShapeType::MutableCompound:
-						color = Color::sDarkOrange;
-						break;
-
-					case EShapeType::Mesh:
-						color = Color::sRed;
-						break;
-
-					case EShapeType::HeightField:
-						color = Color::sPurple;
-						break;
-
-					case EShapeType::RotatedTranslated:
-						color = Color::sBlue;
-						break;
-
-					case EShapeType::OffsetCenterOfMass:
-						color = Color::sCyan;
-						break;
-
-					default:
-						JPH_ASSERT(false);
-						color = Color::sBlack;
-						break;
-					}
+					color = ShapeFunctions::sGet(body->GetShape()->GetSubType()).mColor;
 					break;
 
 				case EShapeColor::MotionTypeColor:

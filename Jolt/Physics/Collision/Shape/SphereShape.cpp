@@ -308,6 +308,7 @@ void SphereShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Sphere);
 	f.mConstruct = []() -> Shape * { return new SphereShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

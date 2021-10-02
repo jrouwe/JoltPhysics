@@ -27,7 +27,7 @@ ShapeSettings::ShapeResult ScaledShapeSettings::Create() const
 }
 
 ScaledShape::ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult) :
-	DecoratedShape(EShapeType::Scaled, EShapeSubType::Scaled, inSettings, outResult),
+	DecoratedShape(EShapeSubType::Scaled, inSettings, outResult),
 	mScale(inSettings.mScale)
 {
 	if (outResult.HasError())
@@ -159,6 +159,7 @@ void ScaledShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Scaled);
 	f.mConstruct = []() -> Shape * { return new ScaledShape; };
+	f.mColor = Color::sYellow;
 }
 
 } // JPH

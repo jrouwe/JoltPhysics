@@ -375,6 +375,7 @@ void CapsuleShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Capsule);
 	f.mConstruct = []() -> Shape * { return new CapsuleShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

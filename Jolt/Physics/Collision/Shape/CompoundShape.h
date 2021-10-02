@@ -48,7 +48,8 @@ class CompoundShape : public Shape
 {
 public:
 	/// Constructor
-	using Shape::Shape;
+									CompoundShape(EShapeSubType inSubType) : Shape(EShapeType::Compound, inSubType) { }
+									CompoundShape(EShapeSubType inSubType, const ShapeSettings &inSettings, ShapeResult &outResult) : Shape(EShapeType::Compound, inSubType, inSettings, outResult) { }
 
 	// See Shape::GetCenterOfMass
 	virtual Vec3					GetCenterOfMass() const override						{ return mCenterOfMass; }

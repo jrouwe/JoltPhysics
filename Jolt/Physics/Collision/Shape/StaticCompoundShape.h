@@ -31,7 +31,7 @@ class StaticCompoundShape final : public CompoundShape
 {
 public:
 	/// Constructor
-									StaticCompoundShape() : CompoundShape(EShapeType::StaticCompound, EShapeSubType::StaticCompound) { }
+									StaticCompoundShape() : CompoundShape(EShapeSubType::StaticCompound) { }
 									StaticCompoundShape(const StaticCompoundShapeSettings &inSettings, TempAllocator &inTempAllocator, ShapeResult &outResult);
 
 	// See Shape::CastRay

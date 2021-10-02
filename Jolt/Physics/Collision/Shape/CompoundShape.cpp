@@ -242,7 +242,7 @@ void CompoundShape::sCastCompoundShapeVsShape(const ShapeCast &inShapeCast, cons
 	JPH_PROFILE_FUNCTION();
 
 	// Fetch compound shape from cast shape
-	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::StaticCompound || inShapeCast.mShape->GetType() == EShapeType::MutableCompound);
+	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Compound);
 	const CompoundShape *compound = static_cast<const CompoundShape *>(inShapeCast.mShape.GetPtr());
 
 	// Number of sub shapes
