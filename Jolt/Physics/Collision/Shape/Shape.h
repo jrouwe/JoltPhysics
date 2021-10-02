@@ -155,7 +155,7 @@ public:
 
 	/// Constructor
 									Shape(EShapeType inType, EShapeSubType inSubType) : mShapeType(inType), mShapeSubType(inSubType) { }
-									Shape(EShapeType inType, EShapeSubType inSubType, const ShapeSettings &inSettings, ShapeResult &outResult) : mShapeType(inType), mShapeSubType(inSubType), mUserData(inSettings.mUserData) { }
+									Shape(EShapeType inType, EShapeSubType inSubType, const ShapeSettings &inSettings, ShapeResult &outResult) : mUserData(inSettings.mUserData), mShapeType(inType), mShapeSubType(inSubType) { }
 
 	/// Destructor
 	virtual							~Shape() = default;
@@ -362,9 +362,9 @@ protected:
 	virtual void					RestoreBinaryState(StreamIn &inStream);
 
 private:
+	uint32							mUserData = 0;
 	EShapeType						mShapeType;
 	EShapeSubType					mShapeSubType;
-	uint32							mUserData = 0;
 };
 
 } // JPH
