@@ -522,6 +522,7 @@ TEST_SUITE("ShapeTests")
 
 		// Check that the sphere and its user data was preserved
 		CHECK(sphere->GetType() == EShapeType::Convex);
+		CHECK(sphere->GetSubType() == EShapeSubType::Sphere);
 		CHECK(sphere->GetUserData() == 5678);
 		CHECK(static_cast<SphereShape *>(sphere.GetPtr())->GetRadius() == cRadius);
 	}
