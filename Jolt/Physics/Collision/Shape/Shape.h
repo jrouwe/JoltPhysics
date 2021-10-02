@@ -155,7 +155,7 @@ public:
 
 	/// Constructor
 									Shape(EShapeType inType, EShapeSubType inSubType) : mShapeType(inType), mShapeSubType(inSubType) { }
-									Shape(EShapeType inType, EShapeSubType inSubType, const ShapeSettings &inSettings, ShapeResult &outResult) : mUserData(inSettings.mUserData), mShapeType(inType), mShapeSubType(inSubType) { }
+									Shape(EShapeType inType, EShapeSubType inSubType, const ShapeSettings &inSettings, [[maybe_unused]] ShapeResult &outResult) : mUserData(inSettings.mUserData), mShapeType(inType), mShapeSubType(inSubType) { }
 
 	/// Destructor
 	virtual							~Shape() = default;

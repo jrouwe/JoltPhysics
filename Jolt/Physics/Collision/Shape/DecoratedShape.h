@@ -16,8 +16,8 @@ class DecoratedShapeSettings : public ShapeSettings
 									DecoratedShapeSettings() = default;
 
 	/// Constructor that decorates another shape
-									DecoratedShapeSettings(const ShapeSettings *inShape)	: mInnerShape(inShape) { }
-									DecoratedShapeSettings(const Shape *inShape)			: mInnerShapePtr(inShape) { }
+	explicit						DecoratedShapeSettings(const ShapeSettings *inShape)	: mInnerShape(inShape) { }
+	explicit						DecoratedShapeSettings(const Shape *inShape)			: mInnerShapePtr(inShape) { }
 
 	RefConst<ShapeSettings>			mInnerShape;											///< Sub shape (either this or mShapePtr needs to be filled up)
 	RefConst<Shape>					mInnerShapePtr;											///< Sub shape (either this or mShape needs to be filled up)
@@ -28,7 +28,7 @@ class DecoratedShape : public Shape
 {
 public:
 	/// Constructor
-									DecoratedShape(EShapeSubType inSubType) : Shape(EShapeType::Decorated, inSubType) { }
+	explicit						DecoratedShape(EShapeSubType inSubType) : Shape(EShapeType::Decorated, inSubType) { }
 									DecoratedShape(EShapeSubType inSubType, const Shape *inInnerShape) : Shape(EShapeType::Decorated, inSubType), mInnerShape(inInnerShape) { }
 									DecoratedShape(EShapeSubType inSubType, const DecoratedShapeSettings &inSettings, ShapeResult &outResult);
 

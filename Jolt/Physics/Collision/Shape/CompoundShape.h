@@ -48,7 +48,7 @@ class CompoundShape : public Shape
 {
 public:
 	/// Constructor
-									CompoundShape(EShapeSubType inSubType) : Shape(EShapeType::Compound, inSubType) { }
+	explicit						CompoundShape(EShapeSubType inSubType) : Shape(EShapeType::Compound, inSubType) { }
 									CompoundShape(EShapeSubType inSubType, const ShapeSettings &inSettings, ShapeResult &outResult) : Shape(EShapeType::Compound, inSubType, inSettings, outResult) { }
 
 	// See Shape::GetCenterOfMass

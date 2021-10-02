@@ -24,7 +24,7 @@ public:
 
 	/// Constructor
 									ConvexShapeSettings() = default;
-									ConvexShapeSettings(const PhysicsMaterial *inMaterial)		: mMaterial(inMaterial) { }
+	explicit						ConvexShapeSettings(const PhysicsMaterial *inMaterial)		: mMaterial(inMaterial) { }
 
 	/// Set the density of the object in kg / m^3
 	void							SetDensity(float inDensity)									{ mDensity = inDensity; }
@@ -39,7 +39,7 @@ class ConvexShape : public Shape
 {
 public:
 	/// Constructor
-									ConvexShape(EShapeSubType inSubType) : Shape(EShapeType::Convex, inSubType) { }
+	explicit						ConvexShape(EShapeSubType inSubType) : Shape(EShapeType::Convex, inSubType) { }
 									ConvexShape(EShapeSubType inSubType, const ConvexShapeSettings &inSettings, ShapeResult &outResult) : Shape(EShapeType::Convex, inSubType, inSettings, outResult), mMaterial(inSettings.mMaterial), mDensity(inSettings.mDensity) { }
 									ConvexShape(EShapeSubType inSubType, const PhysicsMaterial *inMaterial) : Shape(EShapeType::Convex, inSubType), mMaterial(inMaterial) { }
 
