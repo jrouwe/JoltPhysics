@@ -28,11 +28,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(BoxShapeSettings)
 	JPH_ADD_ATTRIBUTE(BoxShapeSettings, mConvexRadius)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(BoxShape)
-{
-	JPH_ADD_BASE_CLASS(BoxShape, ConvexShape)
-}
-
 static const Vec3 sUnitBoxTriangles[] = {
 	Vec3(-1, 1, -1),	Vec3(-1, 1, 1),		Vec3(1, 1, 1),
 	Vec3(-1, 1, -1),	Vec3(1, 1, 1),		Vec3(1, 1, -1),
@@ -56,7 +51,7 @@ ShapeSettings::ShapeResult BoxShapeSettings::Create() const
 }
 
 BoxShape::BoxShape(const BoxShapeSettings &inSettings, ShapeResult &outResult) : 
-	ConvexShape(inSettings, outResult), 
+	ConvexShape(EShapeSubType::Box, inSettings, outResult), 
 	mHalfExtent(inSettings.mHalfExtent), 
 	mConvexRadius(inSettings.mConvexRadius) 
 { 
@@ -237,6 +232,13 @@ void BoxShape::RestoreBinaryState(StreamIn &inStream)
 
 	inStream.Read(mHalfExtent);
 	inStream.Read(mConvexRadius);
+}
+
+void BoxShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Box);
+	f.mConstruct = []() -> Shape * { return new BoxShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

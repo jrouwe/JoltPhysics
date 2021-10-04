@@ -29,16 +29,11 @@ public:
 class MutableCompoundShape final : public CompoundShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(MutableCompoundShape)
-
 	/// Constructor
-									MutableCompoundShape() = default;
+									MutableCompoundShape() : CompoundShape(EShapeSubType::MutableCompound) { }
 									MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult);
-	virtual							~MutableCompoundShape() override;
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::MutableCompound; }
-
+	virtual							~MutableCompoundShape();
+		
 	// See Shape::CastRay
 	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
 	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) const override;
@@ -57,10 +52,6 @@ public:
 
 	// See: CompoundShape::GetIntersectingSubShapes
 	virtual int						GetIntersectingSubShapes(const OrientedBox &inBox, uint *outSubShapeIndices, int inMaxSubShapeIndices) const override;
-
-	/// Collide 2 shapes and pass any hits on to ioCollector
-	static void						sCollideCompoundVsShape(const MutableCompoundShape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-	static void						sCollideShapeVsCompound(const Shape *inShape1, const MutableCompoundShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
 
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
@@ -98,6 +89,9 @@ public:
 	void							AdjustCenterOfMass();
 
 	///@}
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState
@@ -144,6 +138,10 @@ private:
 
 	template <class Visitor>
 	JPH_INLINE void					WalkSubShapes(Visitor &ioVisitor) const;					///< Walk the sub shapes and call Visitor::VisitShape for each sub shape encountered
+
+	// Helper functions called by CollisionDispatch
+	static void						sCollideCompoundVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCollideShapeVsCompound(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
 
 	Vec4 *							mSubShapeBounds[6];											///< Bounding boxes of all sub shapes in SOA format, 0 = MinX, 1 = MinY, 2 = MinZ, 3 = MaxX, 4 = MaxY, 5 = MaxZ
 	uint							mSubShapeBoundsCapacity = 0;								///< Number of bounding boxes that can be stored in the mSubShapeBounds array (will be multiple of 4)

@@ -16,8 +16,8 @@ class DecoratedShapeSettings : public ShapeSettings
 									DecoratedShapeSettings() = default;
 
 	/// Constructor that decorates another shape
-									DecoratedShapeSettings(const ShapeSettings *inShape)	: mInnerShape(inShape) { }
-									DecoratedShapeSettings(const Shape *inShape)			: mInnerShapePtr(inShape) { }
+	explicit						DecoratedShapeSettings(const ShapeSettings *inShape)	: mInnerShape(inShape) { }
+	explicit						DecoratedShapeSettings(const Shape *inShape)			: mInnerShapePtr(inShape) { }
 
 	RefConst<ShapeSettings>			mInnerShape;											///< Sub shape (either this or mShapePtr needs to be filled up)
 	RefConst<Shape>					mInnerShapePtr;											///< Sub shape (either this or mShape needs to be filled up)
@@ -27,12 +27,10 @@ class DecoratedShapeSettings : public ShapeSettings
 class DecoratedShape : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(DecoratedShape)
-
 	/// Constructor
-									DecoratedShape() = default;
-									DecoratedShape(const Shape *inInnerShape) : mInnerShape(inInnerShape) { }
-									DecoratedShape(const DecoratedShapeSettings &inSettings, ShapeResult &outResult);
+	explicit						DecoratedShape(EShapeSubType inSubType) : Shape(EShapeType::Decorated, inSubType) { }
+									DecoratedShape(EShapeSubType inSubType, const Shape *inInnerShape) : Shape(EShapeType::Decorated, inSubType), mInnerShape(inInnerShape) { }
+									DecoratedShape(EShapeSubType inSubType, const DecoratedShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Access to the decorated inner shape
 	const Shape *					GetInnerShape() const									{ return mInnerShape; }

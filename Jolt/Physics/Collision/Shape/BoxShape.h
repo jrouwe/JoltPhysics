@@ -32,15 +32,13 @@ public:
 class BoxShape final : public ConvexShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(BoxShape)
-
 	/// Constructor
-							BoxShape() = default;
+							BoxShape() : ConvexShape(EShapeSubType::Box) { }
 							BoxShape(const BoxShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Create a box with half edge length inHalfExtent and convex radius inConvexRadius.
 	/// (internally the convex radius will be subtracted from the half extent so the total box will not grow with the convex radius).
-							BoxShape(Vec3Arg inHalfExtent, float inConvexRadius = cDefaultConvexRadius, const PhysicsMaterial *inMaterial = nullptr) : ConvexShape(inMaterial), mHalfExtent(inHalfExtent), mConvexRadius(inConvexRadius) { JPH_ASSERT(inConvexRadius >= 0.0f); JPH_ASSERT(inHalfExtent.ReduceMin() >= inConvexRadius); }
+							BoxShape(Vec3Arg inHalfExtent, float inConvexRadius = cDefaultConvexRadius, const PhysicsMaterial *inMaterial = nullptr) : ConvexShape(EShapeSubType::Box, inMaterial), mHalfExtent(inHalfExtent), mConvexRadius(inConvexRadius) { JPH_ASSERT(inConvexRadius >= 0.0f); JPH_ASSERT(inHalfExtent.ReduceMin() >= inConvexRadius); }
 
 	/// Get half extent of box
 	Vec3		 			GetHalfExtent() const										{ return mHalfExtent; }
@@ -89,6 +87,9 @@ public:
 
 	// See Shape::GetVolume
 	virtual float			GetVolume() const override									{ return GetLocalBounds().GetVolume(); }
+
+	// Register shape functions with the registry
+	static void				sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

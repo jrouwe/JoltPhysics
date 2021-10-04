@@ -29,11 +29,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(CapsuleShapeSettings)
 	JPH_ADD_ATTRIBUTE(CapsuleShapeSettings, mHalfHeightOfCylinder)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CapsuleShape)
-{
-	JPH_ADD_BASE_CLASS(CapsuleShape, ConvexShape)
-}
-
 static const int cCapsuleDetailLevel = 2;
 
 static const vector<Vec3> sCapsuleTopTriangles = []() { 
@@ -72,7 +67,7 @@ ShapeSettings::ShapeResult CapsuleShapeSettings::Create() const
 }
 
 CapsuleShape::CapsuleShape(const CapsuleShapeSettings &inSettings, ShapeResult &outResult) : 
-	ConvexShape(inSettings, outResult), 
+	ConvexShape(EShapeSubType::Capsule, inSettings, outResult), 
 	mRadius(inSettings.mRadius), 
 	mHalfHeightOfCylinder(inSettings.mHalfHeightOfCylinder) 
 { 
@@ -374,6 +369,13 @@ void CapsuleShape::RestoreBinaryState(StreamIn &inStream)
 bool CapsuleShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScale(inScale.Abs());
+}
+
+void CapsuleShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Capsule);
+	f.mConstruct = []() -> Shape * { return new CapsuleShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

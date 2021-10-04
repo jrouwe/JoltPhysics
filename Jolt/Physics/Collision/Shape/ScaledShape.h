@@ -7,6 +7,9 @@
 
 namespace JPH {
 
+class SubShapeIDCreator;
+class CollideShapeSettings;
+
 /// Class that constructs a ScaledShape
 class ScaledShapeSettings final : public DecoratedShapeSettings
 {
@@ -28,17 +31,12 @@ class ScaledShapeSettings final : public DecoratedShapeSettings
 class ScaledShape final : public DecoratedShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ScaledShape)
-
 	/// Constructor
-									ScaledShape() = default;
+									ScaledShape() : DecoratedShape(EShapeSubType::Scaled) { }
 									ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Constructor that decorates another shape with a scale
-									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(inShape), mScale(inScale) { }
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::Scaled; }
+									ScaledShape(const Shape *inShape, Vec3Arg inScale)		: DecoratedShape(EShapeSubType::Scaled, inShape), mScale(inScale) { }
 
 	/// Get the scale
 	Vec3		 					GetScale() const										{ return mScale; }
@@ -112,11 +110,19 @@ public:
 	// See Shape::IsValidScale
 	virtual bool					IsValidScale(Vec3Arg inScale) const override;
 
+	// Register shape functions with the registry
+	static void						sRegister();
+
 protected:
 	// See: Shape::RestoreBinaryState
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
 
 private:
+	// Helper functions called by CollisionDispatch
+	static void						sCollideScaledVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCollideShapeVsScaled(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCastScaledVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
+
 	Vec3							mScale = Vec3(1, 1, 1);
 };
 

@@ -33,11 +33,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TriangleShapeSettings)
 	JPH_ADD_ATTRIBUTE(TriangleShapeSettings, mConvexRadius)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(TriangleShape)
-{
-	JPH_ADD_BASE_CLASS(TriangleShape, ConvexShape)
-}
-
 ShapeSettings::ShapeResult TriangleShapeSettings::Create() const
 { 
 	if (mCachedResult.IsEmpty())
@@ -46,7 +41,7 @@ ShapeSettings::ShapeResult TriangleShapeSettings::Create() const
 }
 
 TriangleShape::TriangleShape(const TriangleShapeSettings &inSettings, ShapeResult &outResult) :
-	ConvexShape(inSettings, outResult), 
+	ConvexShape(EShapeSubType::Triangle, inSettings, outResult), 
 	mV1(inSettings.mV1), 
 	mV2(inSettings.mV2), 
 	mV3(inSettings.mV3), 
@@ -322,6 +317,13 @@ void TriangleShape::RestoreBinaryState(StreamIn &inStream)
 bool TriangleShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && (mConvexRadius == 0.0f || ScaleHelpers::IsUniformScale(inScale.Abs()));
+}
+
+void TriangleShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Triangle);
+	f.mConstruct = []() -> Shape * { return new TriangleShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

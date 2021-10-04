@@ -34,14 +34,9 @@ public:
 class OffsetCenterOfMassShape final : public DecoratedShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(OffsetCenterOfMassShape)
-
 	/// Constructor
-									OffsetCenterOfMassShape() = default;
+									OffsetCenterOfMassShape() : DecoratedShape(EShapeSubType::OffsetCenterOfMass) { }
 									OffsetCenterOfMassShape(const OffsetCenterOfMassShapeSettings &inSettings, ShapeResult &outResult);
-
-	/// Get type
-	virtual EShapeType				GetType() const override								{ return EShapeType::OffsetCenterOfMass; }
 
 	/// Access the offset that is applied to the center of mass
 	const Vec3						GetOffset() const										{ return mOffset; }
@@ -103,22 +98,6 @@ public:
 	// See Shape::GetTrianglesNext
 	virtual int						GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials = nullptr) const override { JPH_ASSERT(false, "Cannot call on non-leaf shapes, use CollectTransformedShapes to collect the leaves first!"); return 0; }
 
-	/// Collide 2 shapes and pass any hits on to ioCollector
-	static void						sCollideOffsetCenterOfMassShapeVsShape(const OffsetCenterOfMassShape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-	static void						sCollideShapeVsOffsetCenterOfMassShape(const Shape *inShape1, const OffsetCenterOfMassShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-
-	/// Cast an offset center of mass shape againt a shape, reports hits to ioCollector
-	/// @param inShapeCast The shape to cast against the other shape and its start and direction
-	/// @param inShapeCastSettings Settings for performing the cast
-	/// @param inShape The shape to cast against.
-	/// @param inScale Local space scale for the shape to cast against.
-	/// @param inShapeFilter Determines if sub shapes of the shape can collide
-	/// @param inCenterOfMassTransform2 Is the center of mass transform of shape 2 (excluding scale), this is used to provide a transform to the shape cast result so that local quantities can be transformed into world space.
-	/// @param inSubShapeIDCreator1 Class that tracks the current sub shape ID for the casting shape
-	/// @param inSubShapeIDCreator2 Class that tracks the current sub shape ID for the shape we're casting against
-	/// @param ioCollector The collector that receives the results.
-	static void						sCastOffsetCenterOfMassShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
-
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 
@@ -131,11 +110,19 @@ public:
 	// See Shape::IsValidScale
 	virtual bool					IsValidScale(Vec3Arg inScale) const override			{ return mInnerShape->IsValidScale(inScale); }
 
+	// Register shape functions with the registry
+	static void						sRegister();
+
 protected:
 	// See: Shape::RestoreBinaryState
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
-		
-	Vec3							mCenterOfMass;											///< Position of the center of mass
+
+private:
+	// Helper functions called by CollisionDispatch
+	static void						sCollideOffsetCenterOfMassVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCollideShapeVsOffsetCenterOfMass(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCastOffsetCenterOfMassVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
+
 	Vec3							mOffset;												///< Offset of the center of mass
 };
 

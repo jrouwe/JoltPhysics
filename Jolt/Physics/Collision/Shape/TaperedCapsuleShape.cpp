@@ -27,11 +27,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TaperedCapsuleShapeSettings)
 	JPH_ADD_ATTRIBUTE(TaperedCapsuleShapeSettings, mBottomRadius)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(TaperedCapsuleShape)
-{
-	JPH_ADD_BASE_CLASS(TaperedCapsuleShape, ConvexShape)
-}
-
 bool TaperedCapsuleShapeSettings::IsSphere() const
 {
 	return max(mTopRadius, mBottomRadius) >= 2.0f * mHalfHeightOfTaperedCylinder + min(mTopRadius, mBottomRadius);
@@ -87,7 +82,7 @@ TaperedCapsuleShapeSettings::TaperedCapsuleShapeSettings(float inHalfHeightOfTap
 }
 
 TaperedCapsuleShape::TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSettings, ShapeResult &outResult) :
-	ConvexShape(inSettings, outResult),
+	ConvexShape(EShapeSubType::TaperedCapsule, inSettings, outResult),
 	mTopRadius(inSettings.mTopRadius), 
 	mBottomRadius(inSettings.mBottomRadius)
 { 
@@ -375,6 +370,13 @@ void TaperedCapsuleShape::RestoreBinaryState(StreamIn &inStream)
 bool TaperedCapsuleShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScale(inScale.Abs());
+}
+
+void TaperedCapsuleShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::TaperedCapsule);
+	f.mConstruct = []() -> Shape * { return new TaperedCapsuleShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH

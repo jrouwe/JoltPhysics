@@ -15,13 +15,8 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(DecoratedShapeSettings)
 	JPH_ADD_ATTRIBUTE(DecoratedShapeSettings, mInnerShape)
 }
 
-JPH_IMPLEMENT_RTTI_ABSTRACT(DecoratedShape)
-{
-	JPH_ADD_BASE_CLASS(DecoratedShape, Shape)
-}
-
-DecoratedShape::DecoratedShape(const DecoratedShapeSettings &inSettings, ShapeResult &outResult) :
-	Shape(inSettings, outResult)
+DecoratedShape::DecoratedShape(EShapeSubType inSubType, const DecoratedShapeSettings &inSettings, ShapeResult &outResult) :
+	Shape(EShapeType::Decorated, inSubType, inSettings, outResult)
 {
 	// Check that there's a shape
 	if (inSettings.mInnerShape == nullptr && inSettings.mInnerShapePtr == nullptr)

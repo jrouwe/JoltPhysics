@@ -24,7 +24,7 @@ public:
 
 	/// Constructor
 									ConvexShapeSettings() = default;
-									ConvexShapeSettings(const PhysicsMaterial *inMaterial)		: mMaterial(inMaterial) { }
+	explicit						ConvexShapeSettings(const PhysicsMaterial *inMaterial)		: mMaterial(inMaterial) { }
 
 	/// Set the density of the object in kg / m^3
 	void							SetDensity(float inDensity)									{ mDensity = inDensity; }
@@ -38,15 +38,10 @@ public:
 class ConvexShape : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_ABSTRACT(ConvexShape)
-
 	/// Constructor
-									ConvexShape() = default;
-									ConvexShape(const ConvexShapeSettings &inSettings, ShapeResult &outResult) : Shape(inSettings, outResult), mMaterial(inSettings.mMaterial), mDensity(inSettings.mDensity) { }
-									ConvexShape(const PhysicsMaterial *inMaterial) : mMaterial(inMaterial) { }
-
-	// Get type
-	virtual EShapeType				GetType() const override									{ return EShapeType::Convex; }
+	explicit						ConvexShape(EShapeSubType inSubType) : Shape(EShapeType::Convex, inSubType) { }
+									ConvexShape(EShapeSubType inSubType, const ConvexShapeSettings &inSettings, ShapeResult &outResult) : Shape(EShapeType::Convex, inSubType, inSettings, outResult), mMaterial(inSettings.mMaterial), mDensity(inSettings.mDensity) { }
+									ConvexShape(EShapeSubType inSubType, const PhysicsMaterial *inMaterial) : Shape(EShapeType::Convex, inSubType), mMaterial(inMaterial) { }
 
 	// See Shape::GetSubShapeIDBitsRecursive
 	virtual uint					GetSubShapeIDBitsRecursive() const override					{ return 0; } // Convex shapes don't have sub shapes
@@ -126,9 +121,6 @@ public:
 	/// Get density of the shape (kg / m^3)
 	float							GetDensity() const											{ return mDensity; }
 
-	/// Collide 2 shapes and report any hits to ioCollector.
-	static void						sCollideConvexVsConvex(const ConvexShape *inShape1, const ConvexShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-
 #ifdef JPH_DEBUG_RENDERER
 	// See Shape::DrawGetSupportFunction
 	virtual void					DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const override;
@@ -150,6 +142,9 @@ public:
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;
 	virtual void					RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) override;
 
+	// Register shape functions with the registry
+	static void						sRegister();
+
 protected:
 	// See: Shape::RestoreBinaryState
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
@@ -160,6 +155,10 @@ protected:
 private:
 	// Class for GetTrianglesStart/Next
 	class							CSGetTrianglesContext;
+
+	// Helper functions called by CollisionDispatch
+	static void						sCollideConvexVsConvex(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
+	static void						sCastConvexVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
 
 #ifdef JPH_STAT_COLLECTOR
 	// Statistics

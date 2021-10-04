@@ -16,6 +16,7 @@
 #include <Physics/Collision/CastConvexVsTriangles.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
+#include <Physics/Collision/CollisionDispatch.h>
 #include <Core/StringTools.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -46,11 +47,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mTriangleVertices)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mIndexedTriangles)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
-}
-
-JPH_IMPLEMENT_RTTI_VIRTUAL(MeshShape)
-{
-	JPH_ADD_BASE_CLASS(MeshShape, Shape)
 }
 
 // Codecs this mesh shape is using
@@ -107,7 +103,7 @@ ShapeSettings::ShapeResult MeshShapeSettings::Create() const
 }
 
 MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult) : 
-	Shape(inSettings, outResult)
+	Shape(EShapeType::Mesh, EShapeSubType::Mesh, inSettings, outResult)
 {
 	// Check if there are any triangles
 	if (inSettings.mIndexedTriangles.empty())
@@ -969,9 +965,15 @@ int MeshShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTriangl
 	return context.mNumTrianglesFound;
 }
 
-void MeshShape::sCollideConvexVsMesh(const ConvexShape *inShape1, const MeshShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+void MeshShape::sCollideConvexVsMesh(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
+
+	// Get the shapes
+	JPH_ASSERT(inShape1->GetType() == EShapeType::Convex);
+	JPH_ASSERT(inShape2->GetType() == EShapeType::Mesh);
+	const ConvexShape *shape1 = static_cast<const ConvexShape *>(inShape1);
+	const MeshShape *shape2 = static_cast<const MeshShape *>(inShape2);
 
 	struct Visitor : public CollideConvexVsTriangles
 	{
@@ -1041,11 +1043,11 @@ void MeshShape::sCollideConvexVsMesh(const ConvexShape *inShape1, const MeshShap
 		SubShapeIDCreator				mSubShapeIDCreator2;
 	};
 
-	Visitor visitor(inShape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
-	visitor.mTriangleBlockIDBits = NodeCodec::DecodingContext::sTriangleBlockIDBits(inShape2->mTree);
+	Visitor visitor(shape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
+	visitor.mTriangleBlockIDBits = NodeCodec::DecodingContext::sTriangleBlockIDBits(shape2->mTree);
 	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
 
-	inShape2->WalkTree(visitor);
+	shape2->WalkTree(visitor);
 }
 
 void MeshShape::SaveBinaryState(StreamOut &inStream) const
@@ -1106,6 +1108,16 @@ Shape::Stats MeshShape::GetStats() const
 	WalkTree(visitor);
 	
 	return Stats(sizeof(*this) + mMaterials.size() * sizeof(Ref<PhysicsMaterial>) + mTree.size() * sizeof(uint8), visitor.mNumTriangles);
+}
+
+void MeshShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Mesh);
+	f.mConstruct = []() -> Shape * { return new MeshShape; };
+	f.mColor = Color::sRed;
+
+	for (EShapeSubType s : sConvexSubShapeTypes)
+		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::Mesh, sCollideConvexVsMesh);
 }
 
 } // JPH

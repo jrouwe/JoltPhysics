@@ -47,17 +47,65 @@ using PhysicsMaterialRefC = RefConst<PhysicsMaterial>;
 using PhysicsMaterialList = vector<PhysicsMaterialRefC>;
 
 /// Shapes are categorized in groups, each shape can return which group it belongs to through its Shape::GetType function.
-enum class EShapeType
+enum class EShapeType : uint8
 {
-	Convex,							///< All shapes that use the generic convex vs convex collision detection system (box, sphere, capsule, tapered capsule, cylinder, triangle)
-	Mesh,							///< Used only by MeshShape
-	HeightField,					///< Used only by HeightFieldShape
-	StaticCompound,					///< Used only by StaticCompoundShape
-	MutableCompound,				///< Used only by MutableCompoundShape
-	RotatedTranslated,				///< Used only by RotatedTranslatedShape
-	Scaled,							///< Used only by ScaledShape
-	OffsetCenterOfMass,				///< Used only by OffsetCenterOfMassShape
+	Convex,							///< Used by ConvexShape, all shapes that use the generic convex vs convex collision detection system (box, sphere, capsule, tapered capsule, cylinder, triangle)
+	Compound,						///< Used by CompoundShape
+	Decorated,						///< Used by DecoratedShape
+	Mesh,							///< Used by MeshShape
+	HeightField,					///< Used by HeightFieldShape
+	
+	// User defined shapes
+	User1,
+	User2,
+	User3,
+	User4,
 };
+
+/// This enumerates all shape types, each shape can return its type through Shape::GetSubType
+enum class EShapeSubType : uint8
+{
+	// Convex shapes
+	Sphere,
+	Box,
+	Triangle,
+	Capsule,
+	TaperedCapsule,
+	Cylinder,
+	ConvexHull,
+	
+	// Compound shapes
+	StaticCompound,
+	MutableCompound,
+	
+	// Decorated shapes
+	RotatedTranslated,
+	Scaled,
+	OffsetCenterOfMass,
+
+	// Other shapes
+	Mesh,
+	HeightField,
+	
+	// User defined shapes
+	User1,
+	User2,
+	User3,
+	User4,
+	User5,
+	User6,
+	User7,
+	User8,
+};
+
+// Sets of shape sub types
+static constexpr EShapeSubType sAllSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull, EShapeSubType::StaticCompound, EShapeSubType::MutableCompound, EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass, EShapeSubType::Mesh, EShapeSubType::HeightField, EShapeSubType::User1, EShapeSubType::User2, EShapeSubType::User3, EShapeSubType::User4, EShapeSubType::User5, EShapeSubType::User6, EShapeSubType::User7, EShapeSubType::User8 };
+static constexpr EShapeSubType sConvexSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull };
+static constexpr EShapeSubType sCompoundSubShapeTypes[] = { EShapeSubType::StaticCompound, EShapeSubType::MutableCompound };
+static constexpr EShapeSubType sDecoratorSubShapeTypes[] = { EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass };
+
+/// How many shape types we support
+static constexpr uint NumSubShapeTypes = (uint)size(sAllSubShapeTypes);
 
 /// Class that can construct shapes and that is serializable using the ObjectStream system.
 /// Can be used to store shape data in 'uncooked' form (i.e. in a form that is still human readable and authorable).
@@ -82,23 +130,39 @@ protected:
 	mutable ShapeResult				mCachedResult;
 };
 
+/// Function table for functions on shapes
+class ShapeFunctions
+{
+public:
+	/// Construct a shape
+	Shape *							(*mConstruct)() = nullptr;
+
+	/// Color of the shape when drawing
+	Color							mColor = Color::sBlack;
+
+	/// Get an entry in the registry for a particular sub type
+	static inline ShapeFunctions &	sGet(EShapeSubType inSubType)										{ return sRegistry[(int)inSubType]; }
+
+private:
+	static ShapeFunctions 			sRegistry[NumSubShapeTypes];
+};
+
 /// Base class for all shapes (collision volume of a body). Defines a virtual interface for collision detection.
 class Shape : public RefTarget<Shape>
 {
 public:
-	JPH_DECLARE_RTTI_ABSTRACT_BASE(Shape)
-
 	using ShapeResult = ShapeSettings::ShapeResult;
 
 	/// Constructor
-									Shape() = default;
-									Shape(const ShapeSettings &inSettings, ShapeResult &outResult)		: mUserData(inSettings.mUserData) { }
+									Shape(EShapeType inType, EShapeSubType inSubType) : mShapeType(inType), mShapeSubType(inSubType) { }
+									Shape(EShapeType inType, EShapeSubType inSubType, const ShapeSettings &inSettings, [[maybe_unused]] ShapeResult &outResult) : mUserData(inSettings.mUserData), mShapeType(inType), mShapeSubType(inSubType) { }
 
 	/// Destructor
 	virtual							~Shape() = default;
 
 	/// Get type
-	virtual EShapeType				GetType() const = 0;
+	inline EShapeType				GetType() const														{ return mShapeType; }
+	inline EShapeSubType			GetSubType() const													{ return mShapeSubType; }
 
 	/// User data (to be used freely by the application)
 	uint32							GetUserData() const													{ return mUserData; }
@@ -299,6 +363,8 @@ protected:
 
 private:
 	uint32							mUserData = 0;
+	EShapeType						mShapeType;
+	EShapeSubType					mShapeSubType;
 };
 
 } // JPH

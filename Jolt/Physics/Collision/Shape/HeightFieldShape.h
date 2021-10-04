@@ -91,14 +91,9 @@ public:
 class HeightFieldShape final : public Shape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(HeightFieldShape)
-
 	/// Constructor
-									HeightFieldShape() = default;
+									HeightFieldShape() : Shape(EShapeType::HeightField, EShapeSubType::HeightField) { }
 									HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult);
-
-	/// Get type
-	virtual EShapeType				GetType() const override											{ return EShapeType::HeightField; }
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override										{ return true; }
@@ -148,9 +143,6 @@ public:
 	// See Shape::GetTrianglesNext
 	virtual int						GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials = nullptr) const override;
 
-	/// Collide 2 shapes and pass any collisions on to ioCollector
-	static void						sCollideConvexVsHeightField(const ConvexShape *inShape1, const HeightFieldShape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
-
 	/// Get height field position at sampled location (inX, inY).
 	/// where inX and inY are integers in the range inX e [0, mSampleCount - 1] and inY e [0, mSampleCount - 1].
 	Vec3							GetPosition(uint inX, uint inY) const;
@@ -177,6 +169,9 @@ public:
 	// Settings
 	static bool						sDrawTriangleOutlines;
 #endif // JPH_DEBUG_RENDERER
+
+	// Register shape functions with the registry
+	static void						sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState
@@ -222,6 +217,9 @@ private:
 
 	/// Get the edge flags for a triangle
 	inline uint8					GetEdgeFlags(uint inX, uint inY, uint inTriangle) const;
+
+	// Helper functions called by CollisionDispatch
+	static void						sCollideConvexVsHeightField(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
 
 	/// Visit the entire height field using a visitor pattern
 	template <class Visitor>

@@ -36,10 +36,8 @@ class TaperedCapsuleShapeSettings final : public ConvexShapeSettings
 class TaperedCapsuleShape final : public ConvexShape
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(TaperedCapsuleShape)
-
 	/// Constructor
-							TaperedCapsuleShape() = default;
+							TaperedCapsuleShape() : ConvexShape(EShapeSubType::TaperedCapsule) { }
 							TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSettings, ShapeResult &outResult);
 
 	// See Shape::GetCenterOfMass
@@ -85,6 +83,9 @@ public:
 
 	// See Shape::IsValidScale
 	virtual bool			IsValidScale(Vec3Arg inScale) const override;
+
+	// Register shape functions with the registry
+	static void				sRegister();
 
 protected:
 	// See: Shape::RestoreBinaryState

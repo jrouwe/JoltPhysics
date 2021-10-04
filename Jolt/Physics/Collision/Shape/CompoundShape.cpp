@@ -33,11 +33,6 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(CompoundShapeSettings::SubShapeSettings)
 	JPH_ADD_ATTRIBUTE(CompoundShapeSettings::SubShapeSettings, mUserData)
 }
 
-JPH_IMPLEMENT_RTTI_ABSTRACT(CompoundShape)
-{
-	JPH_ADD_BASE_CLASS(CompoundShape, Shape)
-}
-
 void CompoundShapeSettings::AddShape(Vec3Arg inPosition, QuatArg inRotation, const ShapeSettings *inShape, uint32 inUserData)
 {
 	// Add shape
@@ -242,12 +237,12 @@ void CompoundShape::TransformShape(Mat44Arg inCenterOfMassTransform, Transformed
 		shape.mShape->TransformShape(inCenterOfMassTransform * Mat44::sRotationTranslation(shape.GetRotation(), shape.GetPositionCOM()), ioCollector);
 }
 
-void CompoundShape::sCastCompoundShapeVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+void CompoundShape::sCastCompoundVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Fetch compound shape from cast shape
-	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::StaticCompound || inShapeCast.mShape->GetType() == EShapeType::MutableCompound);
+	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Compound);
 	const CompoundShape *compound = static_cast<const CompoundShape *>(inShapeCast.mShape.GetPtr());
 
 	// Number of sub shapes
@@ -378,6 +373,12 @@ bool CompoundShape::IsValidScale(Vec3Arg inScale) const
 	}
 
 	return true;
+}
+
+void CompoundShape::sRegister()
+{
+	for (EShapeSubType s : sCompoundSubShapeTypes)
+		CollisionDispatch::sRegisterCastShape(s, sCastCompoundVsShape);
 }
 
 } // JPH

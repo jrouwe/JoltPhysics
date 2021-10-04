@@ -28,11 +28,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SphereShapeSettings)
 	JPH_ADD_ATTRIBUTE(SphereShapeSettings, mRadius)
 }
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SphereShape)
-{
-	JPH_ADD_BASE_CLASS(SphereShape, ConvexShape)
-}
-
 ShapeSettings::ShapeResult SphereShapeSettings::Create() const
 { 
 	if (mCachedResult.IsEmpty())
@@ -41,7 +36,7 @@ ShapeSettings::ShapeResult SphereShapeSettings::Create() const
 }
 
 SphereShape::SphereShape(const SphereShapeSettings &inSettings, ShapeResult &outResult) : 
-	ConvexShape(inSettings, outResult), 
+	ConvexShape(EShapeSubType::Sphere, inSettings, outResult), 
 	mRadius(inSettings.mRadius) 
 { 
 	if (inSettings.mRadius <= 0.0f)
@@ -307,6 +302,13 @@ void SphereShape::RestoreBinaryState(StreamIn &inStream)
 bool SphereShape::IsValidScale(Vec3Arg inScale) const
 {
 	return ConvexShape::IsValidScale(inScale) && ScaleHelpers::IsUniformScale(inScale.Abs());
+}
+
+void SphereShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Sphere);
+	f.mConstruct = []() -> Shape * { return new SphereShape; };
+	f.mColor = Color::sGreen;
 }
 
 } // JPH
