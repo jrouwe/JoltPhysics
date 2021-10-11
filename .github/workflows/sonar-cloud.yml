@@ -22,6 +22,7 @@ jobs:
       SONAR_SCANNER_VERSION: 4.4.0.2170
       SONAR_SERVER_URL: "https://sonarcloud.io"
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      CLANG_VERSION: 12
     steps:
       - uses: actions/checkout@v2
         with:
@@ -46,13 +47,21 @@ jobs:
           unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
           echo "$HOME/.sonar/build-wrapper-linux-x86" >> $GITHUB_PATH
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/Build/Linux_Debug -DCMAKE_BUILD_TYPE=Debug Build -DCMAKE_CXX_COMPILER=clang++
+        run: |
+            cd ${{github.workspace}}/Build/
+            ./cmake_linux_clang.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
       - name: Run build-wrapper
         run: |
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_Debug --config Debug
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_ReleaseCoverage
+      - name: Run unit tests and create coverage report
+        run: |
+          cd ${{github.workspace}}/Build/Linux_ReleaseCoverage/
+          cmake --build . --target test
+          llvm-profdata-${{ env.CLANG_VERSION }} merge -sparse default.profraw -o default.profdata
+          llvm-cov-${{ env.CLANG_VERSION }} show -format=text UnitTests -instr-profile=default.profdata > coverage.txt
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          sonar-scanner --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}" --define sonar.cfamily.llvm-cov.reportPath="${{github.workspace}}/Build/Linux_ReleaseCoverage/coverage.txt"
