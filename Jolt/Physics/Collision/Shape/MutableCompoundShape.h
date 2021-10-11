@@ -32,7 +32,7 @@ public:
 	/// Constructor
 									MutableCompoundShape() : CompoundShape(EShapeSubType::MutableCompound) { }
 									MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult);
-	virtual							~MutableCompoundShape();
+	virtual							~MutableCompoundShape() override;
 		
 	// See Shape::CastRay
 	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
