@@ -114,7 +114,7 @@ class SpecifiedBroadPhaseLayerFilter : public BroadPhaseLayerFilter
 {
 public:
 	/// Constructor
-									SpecifiedBroadPhaseLayerFilter(BroadPhaseLayer inLayer) :
+	explicit						SpecifiedBroadPhaseLayerFilter(BroadPhaseLayer inLayer) :
 		mLayer(inLayer)
 	{
 	}

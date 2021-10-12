@@ -40,28 +40,28 @@ public:
 #endif // !JPH_ENABLE_ASSERTS
 
 	template <class LockType>
-	static inline void			sLock(LockType &inMutex, EPhysicsLockTypes inType)
+	static inline void			sLock(LockType &inMutex, [[maybe_unused]] EPhysicsLockTypes inType)
 	{
 		JPH_IF_ENABLE_ASSERTS(sCheckLock(inType);)
 		inMutex.lock();
 	}
 
 	template <class LockType>
-	static inline void			sUnlock(LockType &inMutex, EPhysicsLockTypes inType)
+	static inline void			sUnlock(LockType &inMutex, [[maybe_unused]] EPhysicsLockTypes inType)
 	{
 		JPH_IF_ENABLE_ASSERTS(sCheckUnlock(inType);)
 		inMutex.unlock();
 	}
 
 	template <class LockType>
-	static inline void			sLockShared(LockType &inMutex, EPhysicsLockTypes inType)
+	static inline void			sLockShared(LockType &inMutex, [[maybe_unused]] EPhysicsLockTypes inType)
 	{
 		JPH_IF_ENABLE_ASSERTS(sCheckLock(inType);)
 		inMutex.lock_shared();
 	}
 
 	template <class LockType>
-	static inline void			sUnlockShared(LockType &inMutex, EPhysicsLockTypes inType)
+	static inline void			sUnlockShared(LockType &inMutex, [[maybe_unused]] EPhysicsLockTypes inType)
 	{
 		JPH_IF_ENABLE_ASSERTS(sCheckUnlock(inType);)
 		inMutex.unlock_shared();

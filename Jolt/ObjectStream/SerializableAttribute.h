@@ -16,7 +16,7 @@ class SerializableAttribute : public RTTIAttribute
 {
 public:
 	/// Constructor
-								SerializableAttribute(const char *inName)							: RTTIAttribute(inName) { }
+	explicit					SerializableAttribute(const char *inName)							: RTTIAttribute(inName) { }
 
 	///@name Serialization operations
 	virtual bool				IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const = 0;

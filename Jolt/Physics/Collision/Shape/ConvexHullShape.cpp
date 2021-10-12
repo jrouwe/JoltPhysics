@@ -397,7 +397,7 @@ Vec3 ConvexHullShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg i
 class ConvexHullShape::HullNoConvex final : public Support
 {
 public:
-							HullNoConvex(float inConvexRadius) : 
+	explicit				HullNoConvex(float inConvexRadius) : 
 		mConvexRadius(inConvexRadius)
 	{ 
 		static_assert(sizeof(HullNoConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
@@ -449,7 +449,7 @@ private:
 class ConvexHullShape::HullWithConvex final : public Support
 {
 public:
-							HullWithConvex(const ConvexHullShape *inShape) : 
+	explicit				HullWithConvex(const ConvexHullShape *inShape) : 
 		mShape(inShape)
 	{ 
 		static_assert(sizeof(HullWithConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 

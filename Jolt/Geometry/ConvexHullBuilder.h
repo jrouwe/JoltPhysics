@@ -82,7 +82,7 @@ public:
 	using Faces = vector<Face *>;
 
 	/// Constructor
-						ConvexHullBuilder(const Positions &inPositions);
+	explicit			ConvexHullBuilder(const Positions &inPositions);
 
 	/// Destructor
 						~ConvexHullBuilder()				{ FreeFaces(); }

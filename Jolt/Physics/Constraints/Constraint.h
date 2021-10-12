@@ -66,7 +66,7 @@ class Constraint : public RefTarget<Constraint>
 {
 public:
 	/// Constructor
-								Constraint(const ConstraintSettings &inSettings)
+	explicit					Constraint([[maybe_unused]] const ConstraintSettings &inSettings)
 #ifdef JPH_DEBUG_RENDERER
 									: mDrawConstraintSize(inSettings.mDrawConstraintSize)
 #endif // JPH_DEBUG_RENDERER

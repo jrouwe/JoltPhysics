@@ -207,7 +207,7 @@ public:
 		}
 
 		/// Constructor
-		inline						DecodingContext(const Header *inHeader) :
+		inline explicit				DecodingContext(const Header *inHeader) :
 			mRootBoundsMin(Vec3::sLoadFloat3Unsafe(inHeader->mRootBoundsMin)),
 			mRootBoundsMax(Vec3::sLoadFloat3Unsafe(inHeader->mRootBoundsMax))
 		{

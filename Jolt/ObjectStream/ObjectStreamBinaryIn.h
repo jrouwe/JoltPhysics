@@ -12,7 +12,7 @@ class ObjectStreamBinaryIn : public ObjectStreamIn
 {
 public:
 	/// Constructor
-								ObjectStreamBinaryIn(istream &inStream);
+	explicit 					ObjectStreamBinaryIn(istream &inStream);
 
 	///@name Input type specific operations
 	virtual bool				ReadDataType(EDataType &outType) override;

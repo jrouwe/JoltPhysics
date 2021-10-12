@@ -12,7 +12,7 @@ class ObjectStreamTextIn : public ObjectStreamIn
 {
 public:
 	/// Constructor
-								ObjectStreamTextIn(istream &inStream);
+	explicit					ObjectStreamTextIn(istream &inStream);
 
 	///@name Input type specific operations
 	virtual bool				ReadDataType(EDataType &outType) override;

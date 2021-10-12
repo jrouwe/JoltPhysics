@@ -8,9 +8,9 @@
 #include <Core/StringTools.h>
 #include <fstream>
 
-namespace JPH {
-
 #ifdef JPH_STAT_COLLECTOR
+
+namespace JPH {
 
 StatCollector StatCollector::sInstance;
 
@@ -364,6 +364,6 @@ void StatCollector::StopCapture(const char *inFileName)
 	ResetInternal();
 }
 
-#endif // JPH_STAT_COLLECTOR
-
 } // JPH
+
+#endif // JPH_STAT_COLLECTOR

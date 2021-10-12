@@ -12,7 +12,7 @@ class ObjectStreamBinaryOut : public ObjectStreamOut
 {
 public:
 	/// Constructor and destructor
-								ObjectStreamBinaryOut(ostream &inStream);
+	explicit 					ObjectStreamBinaryOut(ostream &inStream);
 
 	///@name Output type specific operations
 	virtual void				WriteDataType(EDataType inType) override;

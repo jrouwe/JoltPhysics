@@ -12,7 +12,7 @@ class ObjectStreamTextOut : public ObjectStreamOut
 {
 public:
 	/// Constructor and destructor
-								ObjectStreamTextOut(ostream &inStream);
+	explicit					ObjectStreamTextOut(ostream &inStream);
 
 	///@name Output type specific operations
 	virtual void				WriteDataType(EDataType inType) override;

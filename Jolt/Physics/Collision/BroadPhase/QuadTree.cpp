@@ -117,7 +117,7 @@ void QuadTree::GetBodyLocation(const TrackingVector &inTracking, BodyID inBodyID
 	JPH_ASSERT(mAllocator->Get(outNodeIdx).mChildNodeID[outChildIdx] == inBodyID, "Make sure that the body is in the node where it should be");
 }
 
-void QuadTree::SetBodyLocation(TrackingVector &ioTracking, BodyID inBodyID, uint32 inNodeIdx, uint32 inChildIdx)
+void QuadTree::SetBodyLocation(TrackingVector &ioTracking, BodyID inBodyID, uint32 inNodeIdx, uint32 inChildIdx) const
 { 
 	JPH_ASSERT(inNodeIdx <= 0x3fffffff);
 	JPH_ASSERT(inChildIdx < 4); 
@@ -350,7 +350,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 	outUpdateState.mRootNodeID = root_node_id;
 }
 
-void QuadTree::UpdateFinalize(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &inUpdateState)
+void QuadTree::UpdateFinalize([[maybe_unused]] const BodyVector &inBodies, [[maybe_unused]] TrackingVector &ioTracking, UpdateState &inUpdateState)
 {
 	// Tree building is complete, now we switch the old with the new tree
 	uint32 new_root_idx = mRootNodeIndex ^ 1;
@@ -863,7 +863,7 @@ void QuadTree::AddBodiesAbort(TrackingVector &ioTracking, const AddState &inStat
 	mAllocator->DestructObjectBatch(free_batch);
 }
 
-void QuadTree::RemoveBodies(const BodyVector &inBodies, TrackingVector &ioTracking, BodyID *ioBodyIDs, int inNumber)
+void QuadTree::RemoveBodies([[maybe_unused]] const BodyVector &inBodies, TrackingVector &ioTracking, BodyID *ioBodyIDs, int inNumber)
 {
 	// Assert sane input
 	JPH_ASSERT(ioBodyIDs != nullptr);

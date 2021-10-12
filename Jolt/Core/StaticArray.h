@@ -20,7 +20,7 @@ public:
 	}
 
 	/// Constructor from initializer list
-						StaticArray(initializer_list<T> inList)
+	explicit			StaticArray(initializer_list<T> inList)
 	{
 		JPH_ASSERT(inList.size() <= N);
 		for (typename initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)

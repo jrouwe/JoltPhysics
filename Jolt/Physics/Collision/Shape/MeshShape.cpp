@@ -523,22 +523,22 @@ bool MeshShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShap
 
 	struct Visitor
 	{
-				Visitor(RayCastResult &ioHit) : 
+		explicit	Visitor(RayCastResult &ioHit) : 
 			mHit(ioHit)
 		{
 		}
 
-		bool	ShouldAbort() const
+		bool		ShouldAbort() const
 		{
 			return mHit.mFraction <= 0.0f;
 		}
 
-		bool	ShouldVisitNode(int inStackTop) const
+		bool		ShouldVisitNode(int inStackTop) const
 		{
 			return mDistanceStack[inStackTop] < mHit.mFraction;
 		}
 
-		int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		int			VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
 		{
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mRayOrigin, mRayInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
@@ -558,7 +558,7 @@ bool MeshShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShap
 			return num_results;
 		}
 
-		void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+		void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
 		{
 			// Test against triangles
 			uint32 triangle_idx;
@@ -600,22 +600,22 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 
 	struct Visitor
 	{
-				Visitor(CastRayCollector &ioCollector) : 
+		explicit	Visitor(CastRayCollector &ioCollector) : 
 			mCollector(ioCollector)
 		{
 		}
 
-		bool	ShouldAbort() const
+		bool		ShouldAbort() const
 		{
 			return mCollector.ShouldEarlyOut();
 		}
 
-		bool	ShouldVisitNode(int inStackTop) const
+		bool		ShouldVisitNode(int inStackTop) const
 		{
 			return mDistanceStack[inStackTop] < mCollector.GetEarlyOutFraction();
 		}
 
-		int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		int			VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
 		{
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mRayOrigin, mRayInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
@@ -635,7 +635,7 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 			return num_results;
 		}
 
-		void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+		void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
 		{
 			// Create ID for triangle block
 			SubShapeIDCreator block_sub_shape_id = mSubShapeIDCreator.PushID(inTriangleBlockID, mTriangleBlockIDBits);

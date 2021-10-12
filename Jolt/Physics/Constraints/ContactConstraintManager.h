@@ -22,7 +22,7 @@ class ContactConstraintManager : public NonCopyable
 {
 public:
 	/// Constructor
-								ContactConstraintManager(const PhysicsSettings &inPhysicsSettings);
+	explicit					ContactConstraintManager(const PhysicsSettings &inPhysicsSettings);
 								~ContactConstraintManager();
 
 	/// Initialize the system.

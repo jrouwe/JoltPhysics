@@ -72,7 +72,7 @@ class SpecifiedObjectLayerFilter : public ObjectLayerFilter
 {
 public:
 	/// Constructor
-							SpecifiedObjectLayerFilter(ObjectLayer inLayer) :
+	explicit				SpecifiedObjectLayerFilter(ObjectLayer inLayer) :
 		mLayer(inLayer)
 	{
 	}

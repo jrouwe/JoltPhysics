@@ -515,7 +515,7 @@ static void SetThreadName(const char *inName)
 
 #endif
 
-void JobSystemThreadPool::ThreadMain(const string &inName, int inThreadIndex)
+void JobSystemThreadPool::ThreadMain([[maybe_unused]] const string &inName, int inThreadIndex)
 {
 #ifdef JPH_PLATFORM_WINDOWS
 	SetThreadName(inName.c_str());

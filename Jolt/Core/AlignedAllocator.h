@@ -31,7 +31,7 @@ public:
 
 	/// Constructor from other allocator
 	template <typename T2>
-	inline					AlignedAllocator(const AlignedAllocator<T2, N> &) { }
+	inline explicit			AlignedAllocator(const AlignedAllocator<T2, N> &) { }
 
 	/// Allocate memory
 	inline pointer			allocate(size_type n)
