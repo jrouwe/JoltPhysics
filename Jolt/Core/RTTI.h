@@ -447,7 +447,7 @@ class RTTIAttribute : public RefTarget<RTTIAttribute>
 public:
 	/// Constructor
 								RTTIAttribute()												: mName("") { }
-								RTTIAttribute(const char *inName)							: mName(inName) { }
+	explicit					RTTIAttribute(const char *inName)							: mName(inName) { }
 	virtual						~RTTIAttribute() = default;
 
 	/// Name of the attribute

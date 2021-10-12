@@ -96,7 +96,7 @@ class Ragdoll : public RefTarget<Ragdoll>
 {
 public:
 	/// Constructor
-										Ragdoll(PhysicsSystem *inSystem) : mSystem(inSystem) { }
+	explicit							Ragdoll(PhysicsSystem *inSystem) : mSystem(inSystem) { }
 
 	/// Destructor
 										~Ragdoll();

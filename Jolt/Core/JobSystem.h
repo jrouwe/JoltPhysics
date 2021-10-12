@@ -55,7 +55,7 @@ public:
 		inline				JobHandle(JobHandle &&inHandle) noexcept	: Ref<Job>(move(inHandle)) { }
 
 		/// Constructor, only to be used by JobSystem
-		inline				JobHandle(Job *inJob)						: Ref<Job>(inJob) { }
+		inline explicit		JobHandle(Job *inJob)						: Ref<Job>(inJob) { }
 
 		/// Assignment
 		inline JobHandle &	operator = (const JobHandle &inHandle)		{ Ref<Job>::operator = (inHandle); return *this; }
@@ -139,7 +139,7 @@ protected:
 	{
 	public:
 		/// Constructor
-							Job(const char *inJobName, ColorArg inColor, JobSystem *inJobSystem, const JobFunction &inJobFunction, uint32 inNumDependencies) : 
+							Job([[maybe_unused]] const char *inJobName, [[maybe_unused]] ColorArg inColor, JobSystem *inJobSystem, const JobFunction &inJobFunction, uint32 inNumDependencies) : 
 		#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 			mJobName(inJobName), 
 			mColor(inColor), 

@@ -8,9 +8,9 @@
 #include <Core/StringTools.h>
 #include <fstream>
 
-namespace JPH {
-
 #ifdef JPH_PROFILE_ENABLED
+
+namespace JPH {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Profiler
@@ -379,6 +379,6 @@ void Profiler::DumpChart(int inNumber, const Threads &inThreads, const KeyToAggr
 </tbody></table></body></html>)";
 }
 
-#endif // JPH_PROFILE_ENABLED
-
 } // JPH
+
+#endif // JPH_PROFILE_ENABLED

@@ -59,7 +59,7 @@ private:
 	static constexpr Type cEmpty = ~Type(0);
 
 	/// Constructor
-						SubShapeID(const Type &inValue) : mValue(inValue) { }
+	explicit			SubShapeID(const Type &inValue) : mValue(inValue) { }
 
 	/// Adds an id at a particular position in the chain
 	/// (this should really only be called by the SubShapeIDCreator)

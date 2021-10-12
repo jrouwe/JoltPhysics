@@ -7,9 +7,9 @@
 #include <Core/NonCopyable.h>
 #include <map>
 
-namespace JPH {
-
 #ifdef JPH_STAT_COLLECTOR
+
+namespace JPH {
 
 /// Singleton class for collacting simple stat values
 ///
@@ -109,6 +109,8 @@ private:
 #define JPH_STAT_COLLECTOR_IS_CAPTURING()			StatCollector::sInstance.IsCapturing()
 #define JPH_STAT_COLLECTOR_RESET()					StatCollector::sInstance.Reset()
 
+} // JPH
+
 #else
 
 #define JPH_IF_STAT_COLLECTOR(...)
@@ -120,5 +122,3 @@ private:
 #define JPH_STAT_COLLECTOR_RESET()
 
 #endif
-
-} // JPH

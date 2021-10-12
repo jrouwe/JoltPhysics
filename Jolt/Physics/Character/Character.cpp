@@ -103,7 +103,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 	{
 	public:
 		// Constructor
-							MyCollector(Vec3Arg inGravity) : mGravity(inGravity) { }
+		explicit			MyCollector(Vec3Arg inGravity) : mGravity(inGravity) { }
 
 		// See: CollectorType::AddHit
 		virtual void		AddHit(const CollideShapeResult &inResult) override
@@ -217,7 +217,7 @@ bool Character::SetShape(const Shape *inShape, float inMaxPenetrationDepth, bool
 		{
 		public:
 			// Constructor
-								MyCollector(float inMaxPenetrationDepth) : mMaxPenetrationDepth(inMaxPenetrationDepth) { }
+			explicit			MyCollector(float inMaxPenetrationDepth) : mMaxPenetrationDepth(inMaxPenetrationDepth) { }
 
 			// See: CollectorType::AddHit
 			virtual void		AddHit(const CollideShapeResult &inResult) override

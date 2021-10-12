@@ -11,7 +11,7 @@ class RayInvDirection
 public:
 	/// Constructors
 	inline			RayInvDirection() = default;
-	inline			RayInvDirection(Vec3Arg inDirection) { Set(inDirection); }
+	inline explicit	RayInvDirection(Vec3Arg inDirection) { Set(inDirection); }
 
 	/// Set reciprocal from ray direction
 	inline void		Set(Vec3Arg inDirection)

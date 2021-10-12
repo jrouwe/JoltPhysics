@@ -90,7 +90,7 @@ protected:
 	static ObjectStreamOut *	Open(EStreamType inType, ostream &inStream);
 
 	/// Constructor
-								ObjectStreamOut(ostream &inStream);
+	explicit 					ObjectStreamOut(ostream &inStream);
 
 	ostream &					mStream;
 

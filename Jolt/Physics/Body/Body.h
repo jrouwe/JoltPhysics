@@ -258,7 +258,7 @@ public:
 private:
 	friend class BodyManager;
 
-							Body(bool);														///< Alternative constructor that initializes all members
+	explicit				Body(bool);														///< Alternative constructor that initializes all members
 
 	void					GetSleepTestPoints(Vec3 *outPoints) const;						///< Determine points to test for checking if body is sleeping: COM, COM + largest bounding box axis, COM + second largest bounding box axis
 	void					ResetSleepTestSpheres();										///< Reset spheres to current position as returned by GetSleepTestPoints

@@ -58,7 +58,7 @@ private:
 
 public:
 	/// Constructs the table with inNumSubGroups subgroups, initially all collision pairs are enabled except when the sub group ID is the same
-							GroupFilterTable(uint inNumSubGroups = 0) :
+	explicit				GroupFilterTable(uint inNumSubGroups = 0) :
 		mNumSubGroups(inNumSubGroups)
 	{
 		// By default everything collides
