@@ -59,7 +59,7 @@ public:
 						~Result()									{ Clear(); }
 
 	/// Copy assignment
-	Result<Type> &		operator = (const Result<Type> &inRHS) noexcept
+	Result<Type> &		operator = (const Result<Type> &inRHS)
 	{
 		Clear();
 
@@ -83,7 +83,7 @@ public:
 	}
 
 	/// Move assignment
-	Result<Type> &		operator = (Result<Type> &&inRHS)
+	Result<Type> &		operator = (Result<Type> &&inRHS) noexcept
 	{
 		Clear();
 
