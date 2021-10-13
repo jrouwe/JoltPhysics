@@ -122,7 +122,7 @@ public:
 			uint start_vertex = Clamp((int)mVertices.size() - 256 + (int)tri_count * 3, 0, (int)mVertices.size());
 
 			// Store the start vertex offset, this will later be patched to give the delta offset relative to the triangle block
-			mOffsetsToPatch.push_back(uint((uint8 *)&header->mOffsetToVertices - (uint8 *)&ioBuffer[0]));
+			mOffsetsToPatch.push_back(uint((uint8 *)&header->mOffsetToVertices - &ioBuffer[0]));
 			header->mOffsetToVertices = start_vertex * sizeof(VertexData);
 
 			// Pack vertices

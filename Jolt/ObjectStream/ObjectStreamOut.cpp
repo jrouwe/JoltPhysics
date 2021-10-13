@@ -18,7 +18,6 @@ ObjectStreamOut::ObjectStreamOut(ostream &inStream) :
 // Add all primitives to the class set
 #define JPH_DECLARE_PRIMITIVE(name)	mClassSet.insert(JPH_RTTI(name));
 #include <ObjectStream/ObjectStreamTypes.h>
-#undef JPH_DECLARE_PRIMITIVE
 }
 
 ObjectStreamOut *ObjectStreamOut::Open(EStreamType inType, ostream &inStream)
@@ -181,8 +180,5 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
 #include <ObjectStream/ObjectStreamTypes.h>
-
-// Remove macro
-#undef JPH_DECLARE_PRIMITIVE
 
 } // JPH
