@@ -59,15 +59,18 @@ public:
 			float			mMaxPenetration;										///< Maximum allowed penetration (determined by inner radius of shape)
 			ContactSettings	mContactSettings;										///< The contact settings for this contact
 		};
+		atomic<uint32>		mIntegrateVelocityReadIdx { 0 };						///< Next active body index to take when integrating velocities
 		CCDBody *			mCCDBodies = nullptr;									///< List of bodies that need to do continuous collision detection
 		uint32				mCCDBodiesCapacity = 0;									///< Capacity of the mCCDBodies list
-		uint32				mNumCCDBodies = 0;										///< Number of CCD bodies in mCCDBodies
+		atomic<uint32>		mNumCCDBodies = 0;										///< Number of CCD bodies in mCCDBodies
 		atomic<uint32>		mNextCCDBody { 0 };										///< Next unprocessed body index in mCCDBodies
 		int *				mActiveBodyToCCDBody = nullptr;							///< A mapping between an index in BodyManager::mActiveBodies and the index in mCCDBodies
 		uint32				mNumActiveBodyToCCDBody = 0;							///< Number of indices in mActiveBodyToCCDBody
 
 		JobHandleArray		mSolveVelocityConstraints;								///< Solve the constraints in the velocity domain
-		JobHandle			mIntegrateVelocity;										///< Integrate all body positions
+		JobHandle			mPreIntegrateVelocity;									///< Setup integration of all body positions
+		JobHandleArray		mIntegrateVelocity;										///< Integrate all body positions
+		JobHandle			mPostIntegrateVelocity;									///< Finalize integration of all body positions
 		JobHandle			mResolveCCDContacts;									///< Updates the positions and velocities for all bodies that need continuous collision detection
 		JobHandleArray		mSolvePositionConstraints;								///< Solve all constraints in the position domain
 		JobHandle			mStartNextSubStep;										///< Trampoline job that either kicks the next sub step or the next step
