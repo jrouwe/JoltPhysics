@@ -534,13 +534,13 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 		{
 			if (step.mBroadPhasePrepare.IsValid())
 				handles.push_back(step.mBroadPhasePrepare);
-			for (JobHandle &h : step.mStepListeners)
+			for (const JobHandle &h : step.mStepListeners)
 				handles.push_back(h);
-			for (JobHandle &h : step.mDetermineActiveConstraints)
+			for (const JobHandle &h : step.mDetermineActiveConstraints)
 				handles.push_back(h);
-			for (JobHandle &h : step.mApplyGravity)
+			for (const JobHandle &h : step.mApplyGravity)
 				handles.push_back(h);
-			for (JobHandle &h : step.mFindCollisions)
+			for (const JobHandle &h : step.mFindCollisions)
 				handles.push_back(h);
 			if (step.mUpdateBroadphaseFinalize.IsValid())
 				handles.push_back(step.mUpdateBroadphaseFinalize);
@@ -550,14 +550,14 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 			handles.push_back(step.mBodySetIslandIndex);
 			for (PhysicsUpdateContext::SubStep &sub_step : step.mSubSteps)
 			{
-				for (JobHandle &h : sub_step.mSolveVelocityConstraints)
+				for (const JobHandle &h : sub_step.mSolveVelocityConstraints)
 					handles.push_back(h);
 				handles.push_back(sub_step.mPreIntegrateVelocity);
-				for (JobHandle &h : sub_step.mIntegrateVelocity)
+				for (const JobHandle &h : sub_step.mIntegrateVelocity)
 					handles.push_back(h);
 				handles.push_back(sub_step.mPostIntegrateVelocity);
 				handles.push_back(sub_step.mResolveCCDContacts);
-				for (JobHandle &h : sub_step.mSolvePositionConstraints)
+				for (const JobHandle &h : sub_step.mSolvePositionConstraints)
 					handles.push_back(h);
 				if (sub_step.mStartNextSubStep.IsValid())
 					handles.push_back(sub_step.mStartNextSubStep);
@@ -1338,7 +1338,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	}
 }
 
-void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const
 {
 	// Reserve enough space for all bodies that may need a cast
 	TempAllocator *temp_allocator = ioContext->mTempAllocator;
@@ -1352,7 +1352,7 @@ void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, Phy
 	ioSubStep->mActiveBodyToCCDBody = (int *)temp_allocator->Allocate(ioSubStep->mNumActiveBodyToCCDBody * sizeof(int));
 }
 
-void PhysicsSystem::JobIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We update positions and need velocity to do so, we also clamp velocities so need to write to them
@@ -1478,7 +1478,7 @@ void PhysicsSystem::JobIntegrateVelocity(PhysicsUpdateContext *ioContext, Physic
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 }
 
-void PhysicsSystem::JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const
 {
 	// Validate that our reservations were correct
 	JPH_ASSERT(ioSubStep->mNumCCDBodies <= mBodyManager.GetNumActiveCCDBodies());
