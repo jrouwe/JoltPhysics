@@ -265,11 +265,19 @@ This job does some housekeeping work that can be executed concurrent to the solv
 
 A number of these jobs will run in parallel. Each job takes the next unprocessed island and will run the iterative constraint solver for that island. It will first apply the impulses applied from the previous simulation step (which are stored in the contact cache) to warm start the solver. It will then repeatedly iterate over all contact and non-contact constraints until either the applied impulses are too small or a max iteration count is reached ([PhysicsSettings::mNumVelocitySteps](@ref JPH::PhysicsSettings::mNumVelocitySteps)). The result will be that the new velocities are known for all active bodies. In the last integration step, the applied impulses are stored in the contact cache for the next step.
 
+### Pre Integrate
+
+This job prepares the CCD buffers.
+
 ### Integrate & Clamp Velocities
 
 This job will integrate the velocity and update the position. It will clamp the velocity to the max velocity. 
 
-Depending on the motion quality ([EMotionQuality](@ref JPH::EMotionQuality)) of the body, it will schedule a body for continuous collision detection (CCD) if its movement is bigger than some treshold based on the [inner radius](@ref JPH::Shape::GetInnerRadius)) of the shape. Find CCD Contact jobs are created on the fly depending on how many CCD bodies there are.
+Depending on the motion quality ([EMotionQuality](@ref JPH::EMotionQuality)) of the body, it will schedule a body for continuous collision detection (CCD) if its movement is bigger than some treshold based on the [inner radius](@ref JPH::Shape::GetInnerRadius)) of the shape.
+
+### Post Integrate
+
+Find CCD Contact jobs are created on the fly depending on how many CCD bodies were found. If there are no CCD bodies it will immediately start Resolve CCD Contacts.
 
 ### Find CCD Contacts
 

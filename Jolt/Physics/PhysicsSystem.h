@@ -184,7 +184,9 @@ private:
 	void						JobFinalizeIslands(PhysicsUpdateContext *ioContext);
 	void						JobBodySetIslandIndex(PhysicsUpdateContext *ioContext);
 	void						JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
-	void						JobIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
+	void						JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
+	void						JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
+	void						JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
 	void						JobFindCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobContactRemovedCallbacks();
@@ -204,6 +206,9 @@ private:
 
 	/// Number of active bodies to test for collisions per batch
 	static constexpr int		cActiveBodiesBatchSize = 16;
+
+	/// Number of active bodies to integrate velocities for
+	static constexpr int		cIntegrateVelocityBatchSize = 64;
 
 	/// Number of contacts that need to be queued before another narrow phase job is started
 	static constexpr int		cNarrowPhaseBatchSize = 16;
