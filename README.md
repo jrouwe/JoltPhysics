@@ -26,7 +26,7 @@ So why create yet another physics engine? First of all, this has been a personal
 * The simulation runs deterministically, so you could replicate a simulation to a remote client by merely replicating the inputs to the simulation.
 * The simulation of this physics engine tries to simulate behavior of rigid bodies in the real world but makes approximations in the simulation so should mainly be used for games or VR simulations.
 
-For more information see the [Architecture](Docs/Architecture.md) section.
+For more information see the [Architecture](https://jrouwe.github.io/JoltPhysics/) section.
 
 ## Features
 
