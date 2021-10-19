@@ -512,14 +512,11 @@ void BroadPhaseQuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideSha
 	}
 }
 
-void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
+void BroadPhaseQuadTree::CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
 { 
 	JPH_PROFILE_FUNCTION();
 
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
-
-	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
@@ -533,6 +530,14 @@ void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollecto
 				break;
 		}
 	}
+}
+
+void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
+{ 
+	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
+
+	CastAABoxNoLock(inBox, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const 

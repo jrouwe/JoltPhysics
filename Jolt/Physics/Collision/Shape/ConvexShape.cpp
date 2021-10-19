@@ -261,7 +261,7 @@ void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSetting
 
 	// Only supported for convex shapes
 	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Convex); 
-	const ConvexShape *cast_shape = static_cast<const ConvexShape *>(inShapeCast.mShape.GetPtr());
+	const ConvexShape *cast_shape = static_cast<const ConvexShape *>(inShapeCast.mShape);
 
 	// Determine if we want to use the actual shape or a shrunken shape with convex radius
 	ConvexShape::ESupportMode support_mode = inShapeCastSettings.mUseShrunkenShapeAndConvexRadius? ConvexShape::ESupportMode::ExcludeConvexRadius : ConvexShape::ESupportMode::IncludeConvexRadius;

@@ -57,7 +57,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 		ConvexShape::ESupportMode support_mode = mShapeCastSettings.mUseShrunkenShapeAndConvexRadius? ConvexShape::ESupportMode::ExcludeConvexRadius : ConvexShape::ESupportMode::IncludeConvexRadius;
 
 		// Create support function
-		mSupport = static_cast<const ConvexShape *>(mShapeCast.mShape.GetPtr())->GetSupportFunction(support_mode, mSupportBuffer, mShapeCast.mScale);
+		mSupport = static_cast<const ConvexShape *>(mShapeCast.mShape)->GetSupportFunction(support_mode, mSupportBuffer, mShapeCast.mScale);
 	}
 
 	EPAPenetrationDepth epa;
@@ -90,7 +90,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 			// Get supporting face of shape 1
 			Mat44 transform_1_to_2 = mShapeCast.mCenterOfMassStart;
 			transform_1_to_2.SetTranslation(transform_1_to_2.GetTranslation() + fraction * mShapeCast.mDirection);
-			static_cast<const ConvexShape *>(mShapeCast.mShape.GetPtr())->GetSupportingFace(transform_1_to_2.Multiply3x3Transposed(-contact_normal), mShapeCast.mScale, result.mShape1Face);
+			static_cast<const ConvexShape *>(mShapeCast.mShape)->GetSupportingFace(transform_1_to_2.Multiply3x3Transposed(-contact_normal), mShapeCast.mScale, result.mShape1Face);
 
 			// Convert to world space
 			Mat44 transform_1_to_world = mCenterOfMassTransform2 * transform_1_to_2;

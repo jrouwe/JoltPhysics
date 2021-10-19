@@ -344,9 +344,9 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 					step.mBodySetIslandIndex.RemoveDependency();
 				}, num_find_collisions_jobs + 2); // depends on: find collisions, build islands from constraints, finish building jobs
 
-			// Unblock previous jobs (find collisions last since it will use up all CPU cores)
+			// Unblock previous job
+			// Note: technically we could release find collisions here but we don't want to because that could make them run before 'setup velocity constraints' which means that job won't have a thread left
 			step.mBuildIslandsFromConstraints.RemoveDependency();
-			JobHandle::sRemoveDependencies(step.mFindCollisions);
 
 			// This job will call the contact removed callbacks
 			step.mContactRemovedCallbacks = inJobSystem->CreateJob("ContactRemovedCallbacks", cColorContactRemovedCallbacks, [&context, &step]()
@@ -433,8 +433,12 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 				// Unblock previous jobs
 				if (is_first_sub_step)
 				{
-					step.mFinalizeIslands.RemoveDependency();
+					// Kick find collisions after setup velocity constraints because the former job will use up all CPU cores
 					step.mSetupVelocityConstraints.RemoveDependency();
+					JobHandle::sRemoveDependencies(step.mFindCollisions);
+
+					// Finalize islands is a dependency on find collisions so it can go last
+					step.mFinalizeIslands.RemoveDependency();
 				}
 				else
 				{
@@ -1776,10 +1780,10 @@ void PhysicsSystem::JobFindCCDContacts(PhysicsUpdateContext *ioContext, PhysicsU
 			float						mDeltaTime;
 		};
 
-		// Check if we collide with any other body
+		// Check if we collide with any other body. Note that we use the non-locking interface as we know the broadphase cannot be modified at this point.
 		ShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
 		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, np_collector, mBodyManager, ioSubStep, ioContext->mSubStepDeltaTime);
-		mBroadPhase->CastAABox({ shape_cast.mShapeWorldBounds, shape_cast.mDirection }, bp_collector, broadphase_layer_filter, object_layer_filter);
+		mBroadPhase->CastAABoxNoLock({ shape_cast.mShapeWorldBounds, shape_cast.mDirection }, bp_collector, broadphase_layer_filter, object_layer_filter);
 
 		// Check if there was a hit
 		if (ccd_body.mFractionPlusSlop < 1.0f)

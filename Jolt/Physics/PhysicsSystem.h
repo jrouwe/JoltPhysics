@@ -33,7 +33,7 @@ public:
 	/// @param inNumBodyMutexes Number of body mutexes to use. Should be a power of 2 in the range [1, 64], use 0 to auto detect.
 	/// @param inMaxBodyPairs Maximum amount of body pairs to process (anything else will fall through the world), this number should generally be much higher than the max amount of contact points as there will be lots of bodies close that are not actually touching
 	/// @param inMaxContactConstraints Maximum amount of contact constraints to process (anything else will fall through the world)
-	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, @see ObjectToBroadPhaseLayer.
+	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, see ObjectToBroadPhaseLayer.
 	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide.
 	void						Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter);
 	

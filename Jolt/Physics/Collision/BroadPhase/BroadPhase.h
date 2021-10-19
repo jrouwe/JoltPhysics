@@ -91,6 +91,9 @@ public:
 	/// @param ioPairCollector receives callbacks for every body pair found.
 	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const = 0;
 
+	/// Same as BroadPhaseQuery::CastAABox but can be implemented in a way to take no broad phase locks.
+	virtual void		CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const = 0; 
+
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	/// Set function that converts a broadphase layer to a human readable string for debugging purposes
 	virtual void		SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) { /* Can be implemented by derived classes */ }
