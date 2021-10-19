@@ -534,7 +534,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 		JPH_PROFILE("Build job barrier");
 
 		StaticArray<JobHandle, cMaxPhysicsJobs> handles;
-		for (PhysicsUpdateContext::Step &step : context.mSteps)
+		for (const PhysicsUpdateContext::Step &step : context.mSteps)
 		{
 			if (step.mBroadPhasePrepare.IsValid())
 				handles.push_back(step.mBroadPhasePrepare);
@@ -552,7 +552,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 			handles.push_back(step.mBuildIslandsFromConstraints);
 			handles.push_back(step.mFinalizeIslands);
 			handles.push_back(step.mBodySetIslandIndex);
-			for (PhysicsUpdateContext::SubStep &sub_step : step.mSubSteps)
+			for (const PhysicsUpdateContext::SubStep &sub_step : step.mSubSteps)
 			{
 				for (const JobHandle &h : sub_step.mSolveVelocityConstraints)
 					handles.push_back(h);
@@ -643,7 +643,7 @@ void PhysicsSystem::JobStepListeners(PhysicsUpdateContext::Step *ioStep)
 	}
 }
 
-void PhysicsSystem::JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep)
+void PhysicsSystem::JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep) const
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// No body access
@@ -676,7 +676,7 @@ void PhysicsSystem::JobDetermineActiveConstraints(PhysicsUpdateContext::Step *io
 	}
 }
 
-void PhysicsSystem::JobApplyGravity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
+void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We update velocities and need the rotation to do so
@@ -707,7 +707,7 @@ void PhysicsSystem::JobApplyGravity(PhysicsUpdateContext *ioContext, PhysicsUpda
 		// Process the batch
 		while (active_body_idx < active_body_idx_end)
 		{
-			Body &body = mBodyManager.GetBody(active_bodies[active_body_idx]);
+			const Body &body = mBodyManager.GetBody(active_bodies[active_body_idx]);
 			if (body.IsDynamic())
 				body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
 			active_body_idx++;
@@ -742,7 +742,7 @@ void PhysicsSystem::JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioConte
 	mConstraintManager.BuildIslands(ioStep->mContext->mActiveConstraints, ioStep->mNumActiveConstraints, mIslandBuilder, mBodyManager);
 }
 
-void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep)
+void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const
 {
 	// Get how many jobs we can spawn and check if we can spawn more
 	uint max_jobs = ioStep->mBodyPairQueues.size();
@@ -866,7 +866,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, mObjectVsBroadPhaseLayerFilter, mObjectLayerPairFilter, add_pair);
 
 				// Check if we have enough pairs in the buffer to start a new job
-				PhysicsUpdateContext::BodyPairQueue &queue = ioStep->mBodyPairQueues[inJobIndex];
+				const PhysicsUpdateContext::BodyPairQueue &queue = ioStep->mBodyPairQueues[inJobIndex];
 				uint32 body_pairs_in_queue = queue.mWriteIdx - queue.mReadIdx;
 				if (body_pairs_in_queue >= cNarrowPhaseBatchSize)
 					TrySpawnJobFindCollisions(ioStep);
@@ -875,7 +875,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 		else 
 		{
 			// Lockless loop to get the next body pair from the pairs buffer
-			PhysicsUpdateContext *context = ioStep->mContext;
+			const PhysicsUpdateContext *context = ioStep->mContext;
 			int first_read_queue_idx = read_queue_idx;
 			for (;;)
 			{
@@ -907,7 +907,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				}
 
 				// Copy the body pair out of the buffer
-				BodyPair bp = context->mBodyPairs[read_queue_idx * ioStep->mMaxBodyPairsPerQueue + pair_idx % ioStep->mMaxBodyPairsPerQueue];
+				const BodyPair bp = context->mBodyPairs[read_queue_idx * ioStep->mMaxBodyPairsPerQueue + pair_idx % ioStep->mMaxBodyPairsPerQueue];
 			
 				// Mark this pair as taken
 				if (queue.mReadIdx.compare_exchange_strong(pair_idx, pair_idx + 1))
@@ -1550,7 +1550,7 @@ inline static PhysicsUpdateContext::SubStep::CCDBody *sGetCCDBody(const Body &in
 	return ccd_body;
 }
 
-void PhysicsSystem::JobFindCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We only read positions, but the validate callback may read body positions and velocities
@@ -2181,7 +2181,7 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 
 	// Update bounding boxes for all bodies in the broadphase
 	vector<BodyID> bodies;
-	for (Body *b : mBodyManager.GetBodies())
+	for (const Body *b : mBodyManager.GetBodies())
 		if (BodyManager::sIsValidBodyPointer(b) && b->IsInBroadPhase())
 			bodies.push_back(b->GetID());
 	if (!bodies.empty())

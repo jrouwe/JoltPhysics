@@ -176,8 +176,8 @@ private:
 
 	// Various job entry points
 	void						JobStepListeners(PhysicsUpdateContext::Step *ioStep);
-	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep);
-	void						JobApplyGravity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);	
+	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep) const;
+	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);	
 	void						JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep);
 	void						JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex);
@@ -187,13 +187,13 @@ private:
 	void						JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
 	void						JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
-	void						JobFindCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
+	void						JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobContactRemovedCallbacks();
 	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
-	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep);
+	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const;
 
 	/// Process narrow phase for a single body pair
 	void						ProcessBodyPair(const BodyPair &inBodyPair);

@@ -24,7 +24,7 @@ void BroadPhaseBruteForce::AddBodiesFinalize(BodyID *ioBodies, int inNumber, Add
 	mBodyIDs.resize(idx + inNumber);
 
 	// Add bodies
-	for (BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
+	for (const BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
 	{
 		Body &body = *bodies[b->GetIndex()];
 
@@ -53,7 +53,7 @@ void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber)
 	JPH_ASSERT((int)mBodyIDs.size() >= inNumber);
 
 	// Remove bodies
-	for (BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
+	for (const BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
 	{
 		Body &body = *bodies[b->GetIndex()];
 
