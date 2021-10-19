@@ -182,7 +182,7 @@ void RotatedTranslatedShape::sCastRotatedTranslatedVsShape(const ShapeCast &inSh
 {
 	// Fetch rotated translated shape from cast shape
 	JPH_ASSERT(inShapeCast.mShape->GetSubType() == EShapeSubType::RotatedTranslated);
-	const RotatedTranslatedShape *shape1 = static_cast<const RotatedTranslatedShape *>(inShapeCast.mShape.GetPtr());
+	const RotatedTranslatedShape *shape1 = static_cast<const RotatedTranslatedShape *>(inShapeCast.mShape);
 
 	// Transform the shape cast and update the shape
 	Mat44 transform = inShapeCast.mCenterOfMassStart * Mat44::sRotation(shape1->mRotation);

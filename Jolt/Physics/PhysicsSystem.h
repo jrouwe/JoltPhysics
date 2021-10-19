@@ -33,7 +33,7 @@ public:
 	/// @param inNumBodyMutexes Number of body mutexes to use. Should be a power of 2 in the range [1, 64], use 0 to auto detect.
 	/// @param inMaxBodyPairs Maximum amount of body pairs to process (anything else will fall through the world), this number should generally be much higher than the max amount of contact points as there will be lots of bodies close that are not actually touching
 	/// @param inMaxContactConstraints Maximum amount of contact constraints to process (anything else will fall through the world)
-	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, @see ObjectToBroadPhaseLayer.
+	/// @param inObjectToBroadPhaseLayer Maps object layer to broadphase layer, see ObjectToBroadPhaseLayer.
 	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide.
 	void						Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter);
 	
@@ -176,8 +176,8 @@ private:
 
 	// Various job entry points
 	void						JobStepListeners(PhysicsUpdateContext::Step *ioStep);
-	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep);
-	void						JobApplyGravity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);	
+	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep) const;
+	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);	
 	void						JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep);
 	void						JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex);
@@ -187,13 +187,13 @@ private:
 	void						JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
 	void						JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
-	void						JobFindCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
+	void						JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobContactRemovedCallbacks();
 	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
-	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep);
+	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const;
 
 	/// Process narrow phase for a single body pair
 	void						ProcessBodyPair(const BodyPair &inBodyPair);

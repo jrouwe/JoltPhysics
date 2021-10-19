@@ -36,7 +36,7 @@ struct ShapeCast
 		return { mShape, mScale, start, direction };
 	}
 
-	const RefConst<Shape>		mShape;								///< Shape that's being cast (cannot be mesh shape)
+	const Shape *				mShape;								///< Shape that's being cast (cannot be mesh shape). Note that this structure does not assume ownership over the shape for performance reasons.
 	const Vec3					mScale;								///< Scale in local space of the shape being cast
 	const Mat44					mCenterOfMassStart;					///< Start position and orientation of the center of mass of the shape (i.e. mCenterOfMassStart = Start * Mat44::sTranslation(mShape->GetCenterOfMass()) if you want to cast the shape in the space it was created)
 	const Vec3					mDirection;							///< Direction and length of the cast (anything beyond this length will not be reported as a hit)

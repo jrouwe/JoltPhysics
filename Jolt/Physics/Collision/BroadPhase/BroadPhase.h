@@ -31,13 +31,13 @@ public:
 	virtual void		Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer);
 
 	/// Should be called after many objects have been inserted to make the broadphase more efficient, usually done on startup only
-	virtual void		Optimize()															{ }
+	virtual void		Optimize()															{ /* Optionally overridden by implementation */ }
 
 	/// Must be called just before updating the broadphase when none of the body mutexes are locked
-	virtual void		FrameSync()															{ }
+	virtual void		FrameSync()															{ /* Optionally overridden by implementation */ }
 
 	/// Must be called before UpdatePrepare to prevent modifications from being made to the tree
-	virtual void		LockModifications()													{ }
+	virtual void		LockModifications()													{ /* Optionally overridden by implementation */ }
 
 	/// Context used during broadphase update
 	struct UpdateState { void *mData[4]; };
@@ -47,10 +47,10 @@ public:
 	virtual	UpdateState	UpdatePrepare()														{ return UpdateState(); }
 
 	/// Finalizing the update will quickly apply the changes
-	virtual void		UpdateFinalize(UpdateState &inUpdateState)							{ }
+	virtual void		UpdateFinalize(UpdateState &inUpdateState)							{ /* Optionally overridden by implementation */ }
 
 	/// Must be called after UpdateFinalize to allow modifications to the broadphase
-	virtual void		UnlockModifications()												{ }
+	virtual void		UnlockModifications()												{ /* Optionally overridden by implementation */ }
 
 	/// Handle used during adding bodies to the broadphase
 	using AddState = void *;
@@ -67,7 +67,7 @@ public:
 	/// Abort adding bodies to the broadphase, supply the return value of AddBodiesPrepare in inAddState.
 	/// This can be done on a background thread without influencing the broadphase.
 	/// Please ensure that the ioBodies array passed to AddBodiesPrepare is unmodified and passed again to this function.
-	virtual void		AddBodiesAbort(BodyID *ioBodies, int inNumber, AddState inAddState)	{ } // By default nothing needs to be done
+	virtual void		AddBodiesAbort(BodyID *ioBodies, int inNumber, AddState inAddState)	{ /* By default nothing needs to be done */ }
 
 	/// Remove inNumber bodies in ioBodies from the broadphase.
 	/// ioBodies may be shuffled around by this function.
@@ -90,6 +90,9 @@ public:
 	/// @param inObjectLayerPairFilter is the filter that determines if two objects can collide.
 	/// @param ioPairCollector receives callbacks for every body pair found.
 	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const = 0;
+
+	/// Same as BroadPhaseQuery::CastAABox but can be implemented in a way to take no broad phase locks.
+	virtual void		CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const = 0; 
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	/// Set function that converts a broadphase layer to a human readable string for debugging purposes

@@ -185,7 +185,8 @@ TEST_SUITE("CastShapeTests")
 
 		{
 			// Create shape cast in X from -5 to 5
-			ShapeCast shape_cast { new SphereShape(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(-5, 0, 0)), Vec3(10, 0, 0) };
+			RefConst<Shape> sphere = new SphereShape(1.0f);
+			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(-5, 0, 0)), Vec3(10, 0, 0) };
 
 			// We should hit the first body
 			ClosestHitCollisionCollector<CastShapeCollector> collector;
@@ -202,7 +203,8 @@ TEST_SUITE("CastShapeTests")
 
 		{
 			// Create shape cast in X from 5 to -5
-			ShapeCast shape_cast { new SphereShape(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(5, 0, 0)), Vec3(-10, 0, 0) };
+			RefConst<Shape> sphere = new SphereShape(1.0f);
+			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(5, 0, 0)), Vec3(-10, 0, 0) };
 
 			// We should hit the last body
 			ClosestHitCollisionCollector<CastShapeCollector> collector;
@@ -219,7 +221,8 @@ TEST_SUITE("CastShapeTests")
 
 		{
 			// Create shape cast in X from 1.05 to 11, this should intersect with all bodies and have deepest penetration in bodies[5]
-			ShapeCast shape_cast { new SphereShape(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(1.05f, 0, 0)), Vec3(10, 0, 0) };
+			RefConst<Shape> sphere = new SphereShape(1.0f);
+			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(1.05f, 0, 0)), Vec3(10, 0, 0) };
 
 			// We should hit bodies[5]
 			AllHitCollisionCollector<CastShapeCollector> collector;

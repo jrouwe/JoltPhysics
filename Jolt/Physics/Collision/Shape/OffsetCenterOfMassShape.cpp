@@ -151,7 +151,7 @@ void OffsetCenterOfMassShape::sCastOffsetCenterOfMassVsShape(const ShapeCast &in
 {
 	// Fetch offset center of mass shape from cast shape
 	JPH_ASSERT(inShapeCast.mShape->GetSubType() == EShapeSubType::OffsetCenterOfMass);
-	const OffsetCenterOfMassShape *shape1 = static_cast<const OffsetCenterOfMassShape *>(inShapeCast.mShape.GetPtr());
+	const OffsetCenterOfMassShape *shape1 = static_cast<const OffsetCenterOfMassShape *>(inShapeCast.mShape);
 
 	// Transform the shape cast and update the shape
 	ShapeCast shape_cast(shape1->mInnerShape, inShapeCast.mScale, inShapeCast.mCenterOfMassStart * Mat44::sTranslation(-shape1->mOffset), inShapeCast.mDirection);
