@@ -14,6 +14,7 @@
 #include <Physics/Collision/Shape/PolyhedronSubmergedVolumeCalculator.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/CollisionDispatch.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #include <Physics/PhysicsSettings.h>
 #include <Core/StatCollector.h>
 #include <Core/StreamIn.h>
@@ -164,6 +165,7 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 	JPH_IF_STAT_COLLECTOR(sNumCollisions++;)
 
 	// Notify the collector
+	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 	ioCollector.AddHit(result);
 }
 
@@ -312,6 +314,7 @@ void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSetting
 					p = inCenterOfMassTransform2 * p;
 			}
 
+			JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 			ioCollector.AddHit(result);
 		}
 	}

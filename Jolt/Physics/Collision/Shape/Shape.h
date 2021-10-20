@@ -107,6 +107,10 @@ static constexpr EShapeSubType sDecoratorSubShapeTypes[] = { EShapeSubType::Rota
 /// How many shape types we support
 static constexpr uint NumSubShapeTypes = (uint)size(sAllSubShapeTypes);
 
+/// Names of sub shape types
+static constexpr const char *sSubShapeTypeNames[] = { "Sphere", "Box", "Triangle", "Capsule", "TaperedCapsule", "Cylinder", "ConvexHull", "StaticCompound", "MutableCompound", "RotatedTranslated", "Scaled", "OffsetCenterOfMass", "Mesh", "HeightField", "User1", "User2", "User3", "User4", "User5", "User6", "User7", "User8" };
+static_assert(size(sSubShapeTypeNames) == NumSubShapeTypes);
+
 /// Class that can construct shapes and that is serializable using the ObjectStream system.
 /// Can be used to store shape data in 'uncooked' form (i.e. in a form that is still human readable and authorable).
 /// Once the shape has been created using the Create() function, the data will be moved into the Shape class
