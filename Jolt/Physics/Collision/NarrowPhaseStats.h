@@ -32,7 +32,6 @@ public:
 	atomic<uint64>			mHitsReported = 0;
 	atomic<uint64>			mTotalTicks = 0;
 	atomic<uint64>			mChildTicks = 0;
-	atomic<uint64>			mCollectorTicks = 0;
 
 	static NarrowPhaseStat	sCollideShape[NumSubShapeTypes][NumSubShapeTypes];
 	static NarrowPhaseStat	sCastShape[NumSubShapeTypes][NumSubShapeTypes];
@@ -59,7 +58,7 @@ public:
 		if (mParent != nullptr)
 			mParent->mStat.mChildTicks += delta_ticks;
 
-		// Increment total ticks
+		// Increment stats at this level
 		mStat.mNumQueries++;
 		mStat.mTotalTicks += delta_ticks;
 
@@ -86,15 +85,13 @@ public:
 
 							~TrackNarrowPhaseCollector()
 	{
+		// Mark time spent in collector as 'child' time for the parent
 		uint64 delta_ticks = GetProcessorTickCount() - mStart;
+		TrackNarrowPhaseStat::sRoot->mStat.mChildTicks += delta_ticks;
 
+		// Notify all parents of a hit
 		for (TrackNarrowPhaseStat *track = TrackNarrowPhaseStat::sRoot; track != nullptr; track = track->mParent)
-		{
-			NarrowPhaseStat &stat = track->mStat;
-
-			stat.mHitsReported++;
-			stat.mCollectorTicks += delta_ticks;
-		}
+			track->mStat.mHitsReported++;
 	}
 
 private:
