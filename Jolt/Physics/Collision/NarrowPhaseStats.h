@@ -31,6 +31,7 @@ public:
 	atomic<uint64>			mNumQueries = 0;
 	atomic<uint64>			mHitsReported = 0;
 	atomic<uint64>			mTotalTicks = 0;
+	atomic<uint64>			mChildTicks = 0;
 	atomic<uint64>			mCollectorTicks = 0;
 
 	static NarrowPhaseStat	sCollideShape[NumSubShapeTypes][NumSubShapeTypes];
@@ -46,18 +47,25 @@ public:
 		mParent(sRoot),
 		mStart(GetProcessorTickCount())
 	{
+		// Make this the new root of the chain
 		sRoot = this;
 	}
 
 							~TrackNarrowPhaseStat()
 	{
-		uint64 end = GetProcessorTickCount();
+		uint64 delta_ticks = GetProcessorTickCount() - mStart;
 
+		// Notify parent of time spent in child
+		if (mParent != nullptr)
+			mParent->mStat.mChildTicks += delta_ticks;
+
+		// Increment total ticks
+		mStat.mNumQueries++;
+		mStat.mTotalTicks += delta_ticks;
+
+		// Restore root pointer
 		JPH_ASSERT(sRoot == this);
 		sRoot = mParent;
-
-		mStat.mNumQueries++;
-		mStat.mTotalTicks += end - mStart;
 	}
 
 	NarrowPhaseStat &		mStat;
@@ -78,11 +86,15 @@ public:
 
 							~TrackNarrowPhaseCollector()
 	{
-		uint64 end = GetProcessorTickCount();
+		uint64 delta_ticks = GetProcessorTickCount() - mStart;
 
-		NarrowPhaseStat &stat = TrackNarrowPhaseStat::sRoot->mStat;
-		stat.mHitsReported++;
-		stat.mCollectorTicks += end - mStart;
+		for (TrackNarrowPhaseStat *track = TrackNarrowPhaseStat::sRoot; track != nullptr; track = track->mParent)
+		{
+			NarrowPhaseStat &stat = track->mStat;
+
+			stat.mHitsReported++;
+			stat.mCollectorTicks += delta_ticks;
+		}
 	}
 
 private:
