@@ -91,6 +91,15 @@ endif()
 enable_testing()
 add_test(UnitTests UnitTests)
 
+# Example 'Hello World' application
+include(${PHYSICS_REPO_ROOT}/HelloWorld/HelloWorld.cmake)
+add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
+target_include_directories(HelloWorld PUBLIC ${JOLT_PHYSICS_ROOT} ${HELLO_WORLD_ROOT})
+target_link_libraries (HelloWorld LINK_PUBLIC Jolt)
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+	target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
+endif()
+
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	# Windows only targets
 	include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
