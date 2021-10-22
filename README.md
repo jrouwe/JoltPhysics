@@ -14,6 +14,8 @@ A multi core friendly rigid body physics and collision detection library suitabl
 
 For more demos and [videos](https://www.youtube.com/watch?v=pwyCW0yNKMA&list=PLYXVwtOr1CBxbA50jVg2dKUQvHW_5OOom) go to the [Samples](Docs/Samples.md) section.
 
+To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example.
+
 ## Design Considerations
 
 So why create yet another physics engine? First of all, this has been a personal learning project and secondly I wanted to address some issues that I had with existing physics engines:
@@ -26,7 +28,7 @@ So why create yet another physics engine? First of all, this has been a personal
 * The simulation runs deterministically, so you could replicate a simulation to a remote client by merely replicating the inputs to the simulation.
 * The simulation of this physics engine tries to simulate behavior of rigid bodies in the real world but makes approximations in the simulation so should mainly be used for games or VR simulations.
 
-For more information see the [Architecture](https://jrouwe.github.io/JoltPhysics/) section.
+For more information see the [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) section.
 
 ## Features
 
