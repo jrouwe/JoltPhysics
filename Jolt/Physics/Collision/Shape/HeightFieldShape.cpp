@@ -1442,7 +1442,7 @@ void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &in
 	}
 }
 
-void HeightFieldShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1506,13 +1506,16 @@ void HeightFieldShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 		float						mDistanceStack[cStackSize];
 	};
 
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
+	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
+
 	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
-	visitor.mShape2 = this;
+	visitor.mShape2 = shape;
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
 	visitor.mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent();
 	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
-	WalkHeightField(visitor);
+	shape->WalkHeightField(visitor);
 }
 
 struct HeightFieldShape::HSGetTrianglesContext
@@ -1757,7 +1760,10 @@ void HeightFieldShape::sRegister()
 	f.mColor = Color::sPurple;
 
 	for (EShapeSubType s : sConvexSubShapeTypes)
+	{
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::HeightField, sCollideConvexVsHeightField);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::HeightField, sCastConvexVsHeightField);
+	}
 }
 
 } // JPH

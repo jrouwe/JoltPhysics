@@ -8,6 +8,6 @@
 namespace JPH {
 
 CollisionDispatch::CollideShape CollisionDispatch::sCollideShape[NumSubShapeTypes][NumSubShapeTypes];
-CollisionDispatch::CastShape CollisionDispatch::sCastShape[NumSubShapeTypes];
+CollisionDispatch::CastShape CollisionDispatch::sCastShape[NumSubShapeTypes][NumSubShapeTypes];
 
 } // JPH

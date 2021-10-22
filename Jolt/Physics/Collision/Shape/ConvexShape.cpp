@@ -169,11 +169,6 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 	ioCollector.AddHit(result);
 }
 
-void ConvexShape::sCastConvexVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
-{
-	inShape->CastShape(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
-}
-
 bool ConvexShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const
 {
 	// Note: This is a fallback routine, most convex shapes should implement a more performant version!
@@ -257,13 +252,16 @@ void ConvexShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubSh
 	}
 }
 
-void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Only supported for convex shapes
 	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Convex); 
 	const ConvexShape *cast_shape = static_cast<const ConvexShape *>(inShapeCast.mShape);
+
+	JPH_ASSERT(inShape->GetType() == EShapeType::Convex); 
+	const ConvexShape *shape = static_cast<const ConvexShape *>(inShape);
 
 	// Determine if we want to use the actual shape or a shrunken shape with convex radius
 	ConvexShape::ESupportMode support_mode = inShapeCastSettings.mUseShrunkenShapeAndConvexRadius? ConvexShape::ESupportMode::ExcludeConvexRadius : ConvexShape::ESupportMode::IncludeConvexRadius;
@@ -274,7 +272,7 @@ void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSetting
 
 	// Create support function for target shape
 	SupportBuffer target_buffer;
-	const Support *target_support = GetSupportFunction(support_mode, target_buffer, inScale);
+	const Support *target_support = shape->GetSupportFunction(support_mode, target_buffer, inScale);
 
 	// Do a raycast against the result
 	EPAPenetrationDepth epa;
@@ -307,7 +305,7 @@ void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSetting
 					p = transform_1_to_world * p;
 
 				// Get supporting face of shape 2
-				GetSupportingFace(contact_normal, inScale, result.mShape2Face);
+				shape->GetSupportingFace(contact_normal, inScale, result.mShape2Face);
 
 				// Convert to world space
 				for (Vec3 &p : result.mShape2Face)
@@ -596,12 +594,11 @@ void ConvexShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, u
 void ConvexShape::sRegister()
 {
 	for (EShapeSubType s1 : sConvexSubShapeTypes)
-	{
 		for (EShapeSubType s2 : sConvexSubShapeTypes)
+		{
 			CollisionDispatch::sRegisterCollideShape(s1, s2, sCollideConvexVsConvex);
-
-		CollisionDispatch::sRegisterCastShape(s1, sCastConvexVsShape);
-	}
+			CollisionDispatch::sRegisterCastShape(s1, s2, sCastConvexVsConvex);
+		}
 }
 
 } // JPH

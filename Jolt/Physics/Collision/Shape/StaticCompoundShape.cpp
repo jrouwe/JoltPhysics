@@ -515,7 +515,7 @@ void StaticCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator 
 	WalkTree(visitor);
 }
 
-void StaticCompoundShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void StaticCompoundShape::sCastShapeVsCompound(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -551,8 +551,11 @@ void StaticCompoundShape::CastShape(const ShapeCast &inShapeCast, const ShapeCas
 		float				mDistanceStack[cStackSize];
 	};
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, this, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
-	WalkTree(visitor);
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::StaticCompound);
+	const StaticCompoundShape *shape = static_cast<const StaticCompoundShape *>(inShape);
+
+	Visitor visitor(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
+	shape->WalkTree(visitor);
 }
 
 void StaticCompoundShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector) const
@@ -693,6 +696,7 @@ void StaticCompoundShape::sRegister()
 	{
 		CollisionDispatch::sRegisterCollideShape(EShapeSubType::StaticCompound, s, sCollideCompoundVsShape);
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::StaticCompound, sCollideShapeVsCompound);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::StaticCompound, sCastShapeVsCompound);
 	}
 }
 

@@ -248,15 +248,6 @@ public:
 	/// For each shape that collides, ioCollector will receive a hit.
 	virtual void					CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const = 0;
 
-	/// Cast a shape againt this shape, passes any hits found to ioCollector.
-	/// Note that the shape cast should be relative to the center of mass of this shape (i.e. inShapeCast.mCenterOfMassStart = Mat44::sTranslation(-GetCenterOfMass()) * inShapeCast.mCenterOfMassStart if you want to cast against the shape in the space it was created).
-	/// This shape will be scaled in its local space with inScale before performing the cast.
-	/// inShapeFilter allows selectively disabling collisions between pairs of (sub) shapes.
-	/// inCenterOfMassTransform2 Is the center of mass transform of shape 2 (excluding scale), this is used to provide a transform to the shape cast result so that local quantities can be transformed into world space.
-	/// inSubShapeIDCreator1 represents the current sub shape ID of the cast shape.
-	/// inSubShapeIDCreator2 represents the current sub shape ID of the shape that is being cast against.
-	virtual void					CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const = 0;
-
 	/// Collect the leaf transformed shapes of all leaf shapes of this shape.
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.
 	/// inPositionCOM/inRotation/inScale describes the transform of this shape.
