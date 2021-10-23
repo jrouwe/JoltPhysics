@@ -30,6 +30,7 @@
 #include <Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Physics/Collision/Shape/ScaledShape.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #include <Physics/Constraints/DistanceConstraint.h>
 #include <Layers.h>
 #include <Utils/Log.h>
@@ -2078,6 +2079,11 @@ void SamplesApp::StepPhysics()
 	if (mStepNumber % 600 == 0)
 		mPhysicsSystem->ReportBroadphaseStats();
 #endif // JPH_TRACK_BROADPHASE_STATS
+
+#ifdef JPH_TRACK_NARROWPHASE_STATS
+	if (mStepNumber % 600 == 0)
+		NarrowPhaseStat::sReportStats();
+#endif // JPH_TRACK_NARROWPHASE_STATS
 
 	{
 		// Post update

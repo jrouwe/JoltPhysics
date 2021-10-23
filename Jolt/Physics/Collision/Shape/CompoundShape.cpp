@@ -377,8 +377,9 @@ bool CompoundShape::IsValidScale(Vec3Arg inScale) const
 
 void CompoundShape::sRegister()
 {
-	for (EShapeSubType s : sCompoundSubShapeTypes)
-		CollisionDispatch::sRegisterCastShape(s, sCastCompoundVsShape);
+	for (EShapeSubType s1 : sCompoundSubShapeTypes)
+		for (EShapeSubType s2 : sAllSubShapeTypes)
+			CollisionDispatch::sRegisterCastShape(s1, s2, sCastCompoundVsShape);
 }
 
 } // JPH

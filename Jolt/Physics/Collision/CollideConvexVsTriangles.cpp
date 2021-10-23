@@ -8,6 +8,7 @@
 #include <Physics/Collision/CollideShape.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #include <Core/StatCollector.h>
 #include <Geometry/EPAPenetrationDepth.h>
 #include <Geometry/Plane.h>
@@ -158,6 +159,7 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	JPH_IF_STAT_COLLECTOR(sNumCollisions++;)
 
 	// Notify the collector
+	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 	mCollector.AddHit(result);
 }
 

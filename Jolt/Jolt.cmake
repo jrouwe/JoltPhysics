@@ -203,6 +203,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ManifoldBetweenTwoFaces.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseQuery.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseQuery.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseStats.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseStats.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ObjectLayer.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/PhysicsMaterial.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/PhysicsMaterial.h

@@ -732,7 +732,7 @@ void MeshShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShap
 	}
 }
 
-void MeshShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -816,13 +816,16 @@ void MeshShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings 
 		float						mDistanceStack[NodeCodec::StackSize];
 	};
 
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Mesh);
+	const MeshShape *shape = static_cast<const MeshShape *>(inShape);
+
 	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
 	visitor.mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent();
 	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
-	visitor.mTriangleBlockIDBits = NodeCodec::DecodingContext::sTriangleBlockIDBits(mTree);
-	WalkTree(visitor);
+	visitor.mTriangleBlockIDBits = NodeCodec::DecodingContext::sTriangleBlockIDBits(shape->mTree);
+	shape->WalkTree(visitor);
 }
 
 struct MeshShape::MSGetTrianglesContext
@@ -1117,7 +1120,10 @@ void MeshShape::sRegister()
 	f.mColor = Color::sRed;
 
 	for (EShapeSubType s : sConvexSubShapeTypes)
+	{
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::Mesh, sCollideConvexVsMesh);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::Mesh, sCastConvexVsMesh);
+	}
 }
 
 } // JPH

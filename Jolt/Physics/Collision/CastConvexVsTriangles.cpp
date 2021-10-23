@@ -7,6 +7,7 @@
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/Shape/ScaleHelpers.h>
 #include <Physics/Collision/ActiveEdges.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #include <Geometry/EPAPenetrationDepth.h>
 
 namespace JPH {
@@ -105,6 +106,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 				p = mCenterOfMassTransform2 * p;
 		}
 
+		JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 		mCollector.AddHit(result);
 	}
 }

@@ -312,7 +312,6 @@ private:
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
 #endif
 
-
 #ifdef JPH_TRACK_BROADPHASE_STATS
 	/// Mutex protecting the various LayerToStats members
 	mutable Mutex				mStatsMutex;
