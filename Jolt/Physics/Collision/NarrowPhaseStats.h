@@ -87,7 +87,8 @@ public:
 	{
 		// Mark time spent in collector as 'child' time for the parent
 		uint64 delta_ticks = GetProcessorTickCount() - mStart;
-		TrackNarrowPhaseStat::sRoot->mStat.mChildTicks += delta_ticks;
+		if (TrackNarrowPhaseStat::sRoot != nullptr)
+			TrackNarrowPhaseStat::sRoot->mStat.mChildTicks += delta_ticks;
 
 		// Notify all parents of a hit
 		for (TrackNarrowPhaseStat *track = TrackNarrowPhaseStat::sRoot; track != nullptr; track = track->mParent)
