@@ -14,6 +14,7 @@
 #include <Physics/Collision/CollidePointResult.h>
 #include <Physics/Collision/CollideConvexVsTriangles.h>
 #include <Physics/Collision/CastConvexVsTriangles.h>
+#include <Physics/Collision/CastSphereVsTriangles.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
 #include <Physics/Collision/CollisionDispatch.h>
@@ -828,6 +829,98 @@ void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 	shape->WalkTree(visitor);
 }
 
+void MeshShape::sCastSphereVsMesh(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	JPH_PROFILE_FUNCTION();
+
+	struct Visitor : public CastSphereVsTriangles
+	{
+		using CastSphereVsTriangles::CastSphereVsTriangles;
+
+		bool		ShouldAbort() const
+		{
+			return mCollector.ShouldEarlyOut();
+		}
+
+		bool		ShouldVisitNode(int inStackTop) const
+		{
+			return mDistanceStack[inStackTop] < mCollector.GetEarlyOutFraction();
+		}
+
+		int			VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		{
+			// Scale the bounding boxes of this node
+			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
+			AABox4Scale(mScale, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Enlarge them by the radius of the sphere
+			AABox4EnlargeWithExtent(Vec3::sReplicate(mRadius), bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Test bounds of 4 children
+			Vec4 distance = RayAABox4(mStart, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+	
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			Vec4::sSort4Reverse(distance, ioProperties);
+
+			// Count how many results are closer
+			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
+			int num_results = closer.CountTrues();
+
+			// Shift the results so that only the closer ones remain
+			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
+			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
+
+			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
+			return num_results;
+		}
+
+		void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+		{
+			// Create ID for triangle block
+			SubShapeIDCreator block_sub_shape_id = mSubShapeIDCreator2.PushID(inTriangleBlockID, mTriangleBlockIDBits);
+
+			// Decode vertices
+			JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
+			Vec3 vertices[MaxTrianglesPerLeaf * 3];
+			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices);
+
+			// Decode triangle flags
+			uint8 flags[MaxTrianglesPerLeaf];
+			TriangleCodec::DecodingContext::sGetFlags(inTriangles, inNumTriangles, flags);
+
+			int triangle_idx = 0;
+			for (Vec3 *v = vertices, *v_end = vertices + inNumTriangles * 3; v < v_end; v += 3, triangle_idx++)
+			{
+				// Determine active edges
+				uint8 active_edges = (flags[triangle_idx] >> FLAGS_ACTIVE_EGDE_SHIFT) & FLAGS_ACTIVE_EDGE_MASK;
+
+				// Create ID for triangle
+				SubShapeIDCreator triangle_sub_shape_id = block_sub_shape_id.PushID(triangle_idx, NumTriangleBits);
+
+				Cast(v[0], v[1], v[2], active_edges, triangle_sub_shape_id.GetID());
+				
+				// Check if we should exit because we found our hit
+				if (mCollector.ShouldEarlyOut())
+					break;
+			}
+		}
+
+		RayInvDirection				mInvDirection;
+		SubShapeIDCreator			mSubShapeIDCreator2;
+		uint						mTriangleBlockIDBits;
+		float						mDistanceStack[NodeCodec::StackSize];
+	};
+
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Mesh);
+	const MeshShape *shape = static_cast<const MeshShape *>(inShape);
+
+	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	visitor.mInvDirection.Set(inShapeCast.mDirection);
+	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
+	visitor.mTriangleBlockIDBits = NodeCodec::DecodingContext::sTriangleBlockIDBits(shape->mTree);
+	shape->WalkTree(visitor);
+}
+
 struct MeshShape::MSGetTrianglesContext
 {
 			MSGetTrianglesContext(const MeshShape *inShape, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) : 
@@ -1124,6 +1217,9 @@ void MeshShape::sRegister()
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::Mesh, sCollideConvexVsMesh);
 		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::Mesh, sCastConvexVsMesh);
 	}
+
+	// Specialized collision functions
+	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::Mesh, sCastSphereVsMesh);
 }
 
 } // JPH
