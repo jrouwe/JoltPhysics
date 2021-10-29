@@ -481,14 +481,11 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 
 			void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
 			{
-				// Get vertices
+				// Decode vertices and flags
 				JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
 				Vec3 vertices[MaxTrianglesPerLeaf * 3];
-				ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices);
-
-				// Get flags
 				uint8 flags[MaxTrianglesPerLeaf];
-				TriangleCodec::DecodingContext::sGetFlags(inTriangles, inNumTriangles, flags);
+				ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices, flags);
 
 				// Loop through triangles
 				const uint8 *f = flags;
@@ -620,14 +617,11 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 			// Create ID for triangle block
 			SubShapeIDCreator block_sub_shape_id = mSubShapeIDCreator.PushID(inTriangleBlockID, mTriangleBlockIDBits);
 
-			// Decode vertices
+			// Decode vertices and flags
 			JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
 			Vec3 vertices[MaxTrianglesPerLeaf * 3];
-			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices);
-
-			// Decode triangle flags
 			uint8 flags[MaxTrianglesPerLeaf];
-			TriangleCodec::DecodingContext::sGetFlags(inTriangles, inNumTriangles, flags);
+			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices, flags);
 
 			// Loop over all triangles
 			for (int triangle_idx = 0; triangle_idx < inNumTriangles; ++triangle_idx)
@@ -751,14 +745,11 @@ void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 			// Create ID for triangle block
 			SubShapeIDCreator block_sub_shape_id = mSubShapeIDCreator2.PushID(inTriangleBlockID, mTriangleBlockIDBits);
 
-			// Decode vertices
+			// Decode vertices and flags
 			JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
 			Vec3 vertices[MaxTrianglesPerLeaf * 3];
-			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices);
-
-			// Decode triangle flags
 			uint8 flags[MaxTrianglesPerLeaf];
-			TriangleCodec::DecodingContext::sGetFlags(inTriangles, inNumTriangles, flags);
+			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices, flags);
 
 			int triangle_idx = 0;
 			for (Vec3 *v = vertices, *v_end = vertices + inNumTriangles * 3; v < v_end; v += 3, triangle_idx++)
@@ -836,14 +827,11 @@ void MeshShape::sCastSphereVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 			// Create ID for triangle block
 			SubShapeIDCreator block_sub_shape_id = mSubShapeIDCreator2.PushID(inTriangleBlockID, mTriangleBlockIDBits);
 
-			// Decode vertices
+			// Decode vertices and flags
 			JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
 			Vec3 vertices[MaxTrianglesPerLeaf * 3];
-			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices);
-
-			// Decode triangle flags
 			uint8 flags[MaxTrianglesPerLeaf];
-			TriangleCodec::DecodingContext::sGetFlags(inTriangles, inNumTriangles, flags);
+			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices, flags);
 
 			int triangle_idx = 0;
 			for (Vec3 *v = vertices, *v_end = vertices + inNumTriangles * 3; v < v_end; v += 3, triangle_idx++)
@@ -1063,14 +1051,11 @@ void MeshShape::sCollideConvexVsMesh(const Shape *inShape1, const Shape *inShape
 			// Create ID for triangle block
 			SubShapeIDCreator block_sub_shape_id = mSubShapeIDCreator2.PushID(inTriangleBlockID, mTriangleBlockIDBits);
 
-			// Decode vertices
+			// Decode vertices and flags
 			JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
 			Vec3 vertices[MaxTrianglesPerLeaf * 3];
-			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices);
-
-			// Decode triangle flags
 			uint8 flags[MaxTrianglesPerLeaf];
-			TriangleCodec::DecodingContext::sGetFlags(inTriangles, inNumTriangles, flags);
+			ioContext.Unpack(inRootBoundsMin, inRootBoundsMax, inTriangles, inNumTriangles, vertices, flags);
 
 			// Loop over all triangles
 			for (int triangle_idx = 0; triangle_idx < inNumTriangles; ++triangle_idx)
