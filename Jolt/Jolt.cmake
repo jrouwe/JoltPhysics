@@ -258,6 +258,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/TriangleShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ShapeCast.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ShapeFilter.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/SortReverseAndStore.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/TransformedShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/TransformedShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConeConstraint.cpp
