@@ -6,12 +6,14 @@
 #include <Physics/Collision/Shape/HeightFieldShape.h>
 #include <Physics/Collision/Shape/ConvexShape.h>
 #include <Physics/Collision/Shape/ScaleHelpers.h>
+#include <Physics/Collision/Shape/SphereShape.h>
 #include <Physics/Collision/RayCast.h>
 #include <Physics/Collision/ShapeCast.h>
 #include <Physics/Collision/CastResult.h>
 #include <Physics/Collision/CollidePointResult.h>
 #include <Physics/Collision/ShapeFilter.h>
 #include <Physics/Collision/CastConvexVsTriangles.h>
+#include <Physics/Collision/CastSphereVsTriangles.h>
 #include <Physics/Collision/CollideConvexVsTriangles.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
@@ -1518,6 +1520,78 @@ void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, co
 	shape->WalkHeightField(visitor);
 }
 
+void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	JPH_PROFILE_FUNCTION();
+
+	struct Visitor : public CastSphereVsTriangles
+	{
+		using CastSphereVsTriangles::CastSphereVsTriangles;
+
+		JPH_INLINE bool				ShouldAbort() const
+		{
+			return mCollector.ShouldEarlyOut();
+		}
+
+		JPH_INLINE bool				ShouldVisitRangeBlock(int inStackTop) const
+		{
+			return mDistanceStack[inStackTop] < mCollector.GetEarlyOutFraction();
+		}
+
+		JPH_INLINE int				VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		{
+			// Scale the bounding boxes of this node 
+			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
+			AABox4Scale(mScale, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Enlarge them by the radius of the sphere
+			AABox4EnlargeWithExtent(Vec3::sReplicate(mRadius), bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Test bounds of 4 children
+			Vec4 distance = RayAABox4(mStart, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+	
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			Vec4::sSort4Reverse(distance, ioProperties);
+
+			// Count how many results are closer
+			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
+			int num_results = closer.CountTrues();
+
+			// Shift the results so that only the closer ones remain
+			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
+			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
+
+			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
+			return num_results;
+		}
+
+		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
+		{			
+			// Create sub shape id for this part
+			SubShapeID triangle_sub_shape_id = mShape2->EncodeSubShapeID(mSubShapeIDCreator2, inX, inY, inTriangle);
+
+			// Determine active edges
+			uint8 active_edges = mShape2->GetEdgeFlags(inX, inY, inTriangle);
+
+			Cast(inV0, inV1, inV2, active_edges, triangle_sub_shape_id);
+		}
+
+		const HeightFieldShape *	mShape2;
+		RayInvDirection				mInvDirection;
+		SubShapeIDCreator			mSubShapeIDCreator2;
+		float						mDistanceStack[cStackSize];
+	};
+
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
+	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
+
+	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	visitor.mShape2 = shape;
+	visitor.mInvDirection.Set(inShapeCast.mDirection);
+	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
+	shape->WalkHeightField(visitor);
+}
+
 struct HeightFieldShape::HSGetTrianglesContext
 {
 			HSGetTrianglesContext(const HeightFieldShape *inShape, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) : 
@@ -1764,6 +1838,9 @@ void HeightFieldShape::sRegister()
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::HeightField, sCollideConvexVsHeightField);
 		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::HeightField, sCastConvexVsHeightField);
 	}
+
+	// Specialized collision functions
+	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::HeightField, sCastSphereVsHeightField);
 }
 
 } // JPH
