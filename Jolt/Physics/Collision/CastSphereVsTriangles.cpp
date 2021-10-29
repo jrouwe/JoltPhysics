@@ -12,7 +12,6 @@
 #include <Geometry/ClosestPoint.h>
 #include <Geometry/RaySphere.h>
 #include <Core/Profiler.h>
-#include <Renderer/DebugRenderer.h>
 
 namespace JPH {
 
