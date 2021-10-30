@@ -417,6 +417,13 @@ public:
 			return first_block[inTriangleIndex >> 2].mFlags[inTriangleIndex & 0b11];
 		}
 
+		/// Unpacks triangles and flags, convencience function
+		JPH_INLINE void				Unpack(Vec3Arg inBoundsMin, Vec3Arg inBoundsMax, const void *inTriangleStart, uint32 inNumTriangles, Vec3 *outTriangles, uint8 *outTriangleFlags) const
+		{
+			Unpack(inBoundsMin, inBoundsMax, inTriangleStart, inNumTriangles, outTriangles);
+			sGetFlags(inTriangleStart, inNumTriangles, outTriangleFlags);
+		}
+
 	private:
 		Vec4						mOffsetX;
 		Vec4						mOffsetY;

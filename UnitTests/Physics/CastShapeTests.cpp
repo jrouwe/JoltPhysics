@@ -17,6 +17,24 @@
 
 TEST_SUITE("CastShapeTests")
 {
+	/// Helper function that tests a sphere against a triangle
+	static void sTestCastSphereVertexOrEdge(const Shape *inSphere, Vec3Arg inPosition, Vec3Arg inDirection, const Shape *inTriangle)
+	{
+		ShapeCast shape_cast(inSphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(inPosition - inDirection), inDirection);
+		ShapeCastSettings cast_settings;
+		cast_settings.mBackFaceModeTriangles = EBackFaceMode::CollideWithBackFaces;
+		cast_settings.mBackFaceModeConvex = EBackFaceMode::CollideWithBackFaces;
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		CollisionDispatch::sCastShapeVsShape(shape_cast, cast_settings, inTriangle, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+		CHECK(collector.mHits.size() == 1);
+		const ShapeCastResult &result = collector.mHits.back();
+		CHECK_APPROX_EQUAL(result.mFraction, 1.0f - 0.2f / inDirection.Length(), 1.0e-4f);
+		CHECK_APPROX_EQUAL(result.mPenetrationAxis.Normalized(), inDirection.Normalized(), 1.0e-3f);
+		CHECK_APPROX_EQUAL(result.mPenetrationDepth, 0.0f, 1.0e-3f);
+		CHECK_APPROX_EQUAL(result.mContactPointOn1, inPosition, 1.0e-3f);
+		CHECK_APPROX_EQUAL(result.mContactPointOn2, inPosition, 1.0e-3f);
+	}
+
 	/// Helper function that tests a shere against a triangle centered on the origin with normal Z
 	static void sTestCastSphereTriangle(const Shape *inTriangle)
 	{
@@ -91,6 +109,16 @@ TEST_SUITE("CastShapeTests")
 			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3::sZero(), 1.0e-3f);
 			CHECK(result.mIsBackFaceHit);
 		}
+
+		// Hit vertex 1, 2 and 3
+		sTestCastSphereVertexOrEdge(sphere, Vec3(50, 25, 0), Vec3(-10, -10, 0), inTriangle);
+		sTestCastSphereVertexOrEdge(sphere, Vec3(-50, 25, 0), Vec3(10, -10, 0), inTriangle);
+		sTestCastSphereVertexOrEdge(sphere, Vec3(0, -25, 0), Vec3(0, 10, 0), inTriangle);
+
+		// Hit edge 1, 2 and 3
+		sTestCastSphereVertexOrEdge(sphere, Vec3(0, 25, 0), Vec3(0, -10, 0), inTriangle); // Edge: Vec3(50, 25, 0), Vec3(-50, 25, 0)
+		sTestCastSphereVertexOrEdge(sphere, Vec3(-25, 0, 0), Vec3(10, 10, 0), inTriangle); // Edge: Vec3(-50, 25, 0), Vec3(0,-25, 0)
+		sTestCastSphereVertexOrEdge(sphere, Vec3(25, 0, 0), Vec3(-10, 10, 0), inTriangle); // Edge: Float3(0,-25, 0), Float3(50, 25, 0)
 	}
 
 	TEST_CASE("TestCastSphereTriangle")

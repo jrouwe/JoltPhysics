@@ -1181,8 +1181,6 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						Vec3 contact_position1 = hit.mContactPointOn1;
 						Vec3 contact_position2 = hit.mContactPointOn2;
 						Vec3 normal = hit.mPenetrationAxis.Normalized();
-						if (hit.mIsBackFaceHit)
-							normal = -normal;
 						mDebugRenderer->DrawArrow(contact_position2, contact_position2 - normal, color, 0.01f); // Flip to make it point towards the cast body
 
 						// Contact position 1
