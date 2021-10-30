@@ -122,24 +122,28 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	if (abs(normal_dot_direction) > 1.0e-6f)
 	{
 		// Calculate the point on the sphere that will hit the triangle's plane first and calculate a fraction where it will do so
-		Vec3 d = -mRadius * triangle_normal;
+		Vec3 d = Sign(normal_dot_direction) * mRadius * triangle_normal;
 		float plane_intersection = (v0 - d).Dot(triangle_normal) / normal_dot_direction;
 
 		// Check if sphere will hit in the interval that we're interested in
 		if (plane_intersection * mDirection.Length() < -mRadius || plane_intersection > 1.0f)
 			return;
 
-		// Calculate the point of contact on the plane
-		Vec3 p = d + plane_intersection * mDirection;
-
-		// Check if this is an interior point
-		float u, v, w;
-		ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w);
-		if (u >= 0.0f && v >= 0.0f && w >= 0.0f)
+		// We can only report an interior hit if we're hitting the plane during our sweep
+		if (plane_intersection >= 0.0f)
 		{
-			// Interior point, we found the collision point. We don't need to check active edges.
-			AddHit(back_facing, inSubShapeID2, plane_intersection, p, p, -triangle_normal);
-			return;
+			// Calculate the point of contact on the plane
+			Vec3 p = d + plane_intersection * mDirection;
+
+			// Check if this is an interior point
+			float u, v, w;
+			ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w);
+			if (u >= 0.0f && v >= 0.0f && w >= 0.0f)
+			{
+				// Interior point, we found the collision point. We don't need to check active edges.
+				AddHit(back_facing, inSubShapeID2, plane_intersection, p, p, -triangle_normal);
+				return;
+			}
 		}
 	}
 
