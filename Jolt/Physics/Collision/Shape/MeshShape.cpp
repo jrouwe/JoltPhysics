@@ -469,7 +469,7 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 				return valid.CountTrues();
 			}
 
-			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
 			{
 				JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
 				Vec3 vertices[MaxTrianglesPerLeaf * 3];
@@ -674,7 +674,7 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
-		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
+		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, [[maybe_unused]] uint8 inActiveEdges, SubShapeID inSubShapeID2) 
 		{
 			// Back facing check
 			if (mBackFaceMode == EBackFaceMode::IgnoreBackFaces && (inV2 - inV0).Cross(inV1 - inV0).Dot(mRayDirection) < 0)
@@ -867,12 +867,12 @@ struct MeshShape::MSGetTrianglesContext
 		return mShouldAbort;
 	}
 
-	JPH_INLINE bool	ShouldVisitNode(int inStackTop) const
+	JPH_INLINE bool	ShouldVisitNode([[maybe_unused]] int inStackTop) const
 	{
 		return true;
 	}
 
-	JPH_INLINE int	VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+	JPH_INLINE int	VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 	{
 		// Scale the bounding boxes of this node
 		Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
@@ -1009,12 +1009,12 @@ void MeshShape::sCollideConvexVsMesh(const Shape *inShape1, const Shape *inShape
 			return mCollector.ShouldEarlyOut();
 		}
 
-		JPH_INLINE bool	ShouldVisitNode(int inStackTop) const
+		JPH_INLINE bool	ShouldVisitNode([[maybe_unused]] int inStackTop) const
 		{
 			return true;
 		}
 
-		JPH_INLINE int	VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int	VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) 
 		{
 			// Scale the bounding boxes of this node
 			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
@@ -1079,7 +1079,7 @@ Shape::Stats MeshShape::GetStats() const
 			return true;
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 		{
 			// Visit all valid children
 			UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
@@ -1087,7 +1087,7 @@ Shape::Stats MeshShape::GetStats() const
 			return valid.CountTrues();
 		}
 
-		JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+		JPH_INLINE void		VisitTriangles([[maybe_unused]] const TriangleCodec::DecodingContext &ioContext, [[maybe_unused]] Vec3Arg inRootBoundsMin, [[maybe_unused]] Vec3Arg inRootBoundsMax, [[maybe_unused]] const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
 		{
 			mNumTriangles += inNumTriangles;
 		}
