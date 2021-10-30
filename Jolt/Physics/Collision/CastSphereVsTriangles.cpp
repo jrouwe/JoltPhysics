@@ -64,7 +64,7 @@ void CastSphereVsTriangles::AddHitWithActiveEdgeDetection(Vec3Arg inV0, Vec3Arg 
 		contact_normal = ActiveEdges::FixNormal(inV0, inV1, inV2, inBackFacing? inTriangleNormal : -inTriangleNormal, inActiveEdges, inContactPointB, inContactNormal, active_edge_movement_direction);
 	}
 
-	AddHit(inBackFacing, inSubShapeID2, inFraction, inContactPointA, inContactPointB, inContactNormal);
+	AddHit(inBackFacing, inSubShapeID2, inFraction, inContactPointA, inContactPointB, contact_normal);
 }
 
 // This is a simplified version of the ray cylinder test from: Real Time Collision Detection - Christer Ericson
