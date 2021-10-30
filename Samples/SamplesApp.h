@@ -176,7 +176,7 @@ private:
 	ECollectFacesMode		mCollectFacesMode = ECollectFacesMode::NoFaces;				// If we should collect colliding faces
 	float					mMaxSeparationDistance = 0.0f;								// Max separation distance for collide shape test
 	bool					mTreatConvexAsSolid = true;									// For ray casts if the shape should be treated as solid or if the ray should only collide with the surface
-	bool					mReturnDeepestPoint = false;								// For shape casts, when true this will return the deepest point
+	bool					mReturnDeepestPoint = true;									// For shape casts, when true this will return the deepest point
 	bool					mUseShrunkenShapeAndConvexRadius = false;					// Shrink then expand the shape by the convex radius
 	int						mMaxHits = 10;												// The maximum number of hits to request for a collision probe.
 
