@@ -18,7 +18,7 @@ constexpr float cDefaultConvexRadius = 0.05f;
 static constexpr float cCapsuleProjectionSlop = 0.02f;
 
 /// Maximum amount of jobs to allow
-constexpr int cMaxPhysicsJobs = 1024;
+constexpr int cMaxPhysicsJobs = 2048;
 
 /// Maximum amount of barriers to allow
 constexpr int cMaxPhysicsBarriers = 8;

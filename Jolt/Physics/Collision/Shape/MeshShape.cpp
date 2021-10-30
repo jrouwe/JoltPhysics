@@ -888,7 +888,7 @@ struct MeshShape::MSGetTrianglesContext
 		return collides.CountTrues();
 	}
 
-	JPH_INLINE void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+	JPH_INLINE void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
 	{
 		// When the buffer is full and we cannot process the triangles, abort the tree walk. The next time GetTrianglesNext is called we will continue here.
 		if (mNumTrianglesFound + inNumTriangles > mMaxTrianglesRequested)
@@ -1074,7 +1074,7 @@ Shape::Stats MeshShape::GetStats() const
 			return false;
 		}
 
-		JPH_INLINE bool		ShouldVisitNode(int inStackTop) const
+		JPH_INLINE bool		ShouldVisitNode([[maybe_unused]] int inStackTop) const
 		{
 			return true;
 		}
