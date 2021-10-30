@@ -6,6 +6,7 @@
 #include <Physics/Collision/RayCast.h>
 #include <Physics/Collision/AABoxCast.h>
 #include <Physics/Collision/CastResult.h>
+#include <Physics/Collision/SortReverseAndStore.h>
 #include <Physics/Body/BodyPair.h>
 #include <Physics/PhysicsLock.h>
 #include <Geometry/AABox4.h>
@@ -986,34 +987,31 @@ JPH_INLINE void QuadTree::WalkTree(const ObjectLayerFilter &inObjectLayerFilter,
 		{
 			JPH_IF_TRACK_BROADPHASE_STATS(++nodes_visited;)
 
-			// Process normal node
-			const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
-			JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
-
-			// Load bounds of 4 children
-			Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
-			Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
-			Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
-			Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
-			Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
-			Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
-
-			// Load ids for 4 children
-			UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
-
-			// Check which sub nodes to visit
-			int num_results = ioVisitor.VisitNodes(bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz, child_ids, top);
-			if (num_results > 0)
+			// Check if stack can hold more nodes
+			if (top + 4 < cStackSize)
 			{
-				// Push them onto the stack
-				if (top + 4 < cStackSize)
-				{
-					child_ids.StoreInt4((uint32 *)&node_stack[top]);
-					top += num_results;
-				}
-				else
-					JPH_ASSERT(false, "Stack full!");
+				// Process normal node
+				const Node &node = mAllocator->Get(child_node_id.GetNodeIndex());
+				JPH_ASSERT(IsAligned(&node, JPH_CACHE_LINE_SIZE));
+
+				// Load bounds of 4 children
+				Vec4 bounds_minx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinX);
+				Vec4 bounds_miny = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinY);
+				Vec4 bounds_minz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMinZ);
+				Vec4 bounds_maxx = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxX);
+				Vec4 bounds_maxy = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxY);
+				Vec4 bounds_maxz = Vec4::sLoadFloat4Aligned((const Float4 *)&node.mBoundsMaxZ);
+
+				// Load ids for 4 children
+				UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
+
+				// Check which sub nodes to visit
+				int num_results = ioVisitor.VisitNodes(bounds_minx, bounds_miny, bounds_minz, bounds_maxx, bounds_maxy, bounds_maxz, child_ids, top);
+				child_ids.StoreInt4((uint32 *)&node_stack[top]);
+				top += num_results;
 			}
+			else
+				JPH_ASSERT(false, "Stack full!");
 		}
 
 		// Fetch next node until we find one that the visitor wants to see
@@ -1073,24 +1071,8 @@ void QuadTree::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, 
 			// Test the ray against 4 bounding boxes
 			Vec4 fraction = RayAABox4(mOrigin, mInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
-			// Count how many results are hitting
-			UVec4 hitting = Vec4::sLess(fraction, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
-			int num_results = hitting.CountTrues();
-			if (num_results > 0)
-			{
-				// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-				Vec4::sSort4Reverse(fraction, ioChildNodeIDs);
-
-				// Shift the results so that only the hitting ones remain
-				ioChildNodeIDs = ioChildNodeIDs.ShiftComponents4Minus(num_results);
-				fraction = fraction.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-
-				// Push them onto the stack
-				if (inStackTop + 4 < cStackSize)
-					fraction.StoreFloat4((Float4 *)&mFractionStack[inStackTop]);
-			}
-
-			return num_results;
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			return SortReverseAndStore(fraction, mCollector.GetEarlyOutFraction(), ioChildNodeIDs, &mFractionStack[inStackTop]);
 		}
 
 		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
@@ -1388,24 +1370,8 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 			// Test 4 children
 			Vec4 fraction = RayAABox4(mOrigin, mInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
-			// Count how many results are hitting
-			UVec4 hitting = Vec4::sLess(fraction, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
-			int num_results = hitting.CountTrues();
-			if (num_results > 0)
-			{
-				// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-				Vec4::sSort4Reverse(fraction, ioChildNodeIDs);
-
-				// Shift the results so that only the hitting ones remain
-				ioChildNodeIDs = ioChildNodeIDs.ShiftComponents4Minus(num_results);
-				fraction = fraction.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-
-				// Push them onto the stack
-				if (inStackTop + 4 < cStackSize)
-					fraction.StoreFloat4((Float4 *)&mFractionStack[inStackTop]);
-			}
-
-			return num_results;
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			return SortReverseAndStore(fraction, mCollector.GetEarlyOutFraction(), ioChildNodeIDs, &mFractionStack[inStackTop]);
 		}
 
 		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
