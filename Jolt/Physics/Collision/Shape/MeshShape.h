@@ -131,6 +131,10 @@ private:
 	template <class Visitor>
 	void							WalkTree(Visitor &ioVisitor) const;
 
+	/// Same as above but with a callback per triangle instead of per block of triangles
+	template <class Visitor>
+	void							WalkTreePerTriangle(const SubShapeIDCreator &inSubShapeIDCreator2, Visitor &ioVisitor) const;
+
 	/// Decode a sub shape ID
 	inline void						DecodeSubShapeID(const SubShapeID &inSubShapeID, const void *&outTriangleBlock, uint32 &outTriangleIndex) const;
 
