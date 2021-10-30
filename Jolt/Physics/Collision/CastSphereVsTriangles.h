@@ -41,6 +41,7 @@ protected:
 
 private:
 	void							AddHit(bool inBackFacing, const SubShapeID &inSubShapeID2, float inFraction, Vec3Arg inContactPointA, Vec3Arg inContactPointB, Vec3Arg inContactNormal);
+	void							AddHitWithActiveEdgeDetection(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, bool inBackFacing, Vec3Arg inTriangleNormal, uint8 inActiveEdges, const SubShapeID &inSubShapeID2, float inFraction, Vec3Arg inContactPointA, Vec3Arg inContactPointB, Vec3Arg inContactNormal);
 	float							RayCylinder(Vec3Arg inRayDirection, Vec3Arg inCylinderA, Vec3Arg inCylinderB, float inRadius) const;
 
 	float							mScaleSign;							///< Sign of the scale, -1 if object is inside out, 1 if not

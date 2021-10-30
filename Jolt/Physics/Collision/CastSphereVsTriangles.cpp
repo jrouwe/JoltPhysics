@@ -50,6 +50,23 @@ void CastSphereVsTriangles::AddHit(bool inBackFacing, const SubShapeID &inSubSha
 	mCollector.AddHit(result);
 }
 
+void CastSphereVsTriangles::AddHitWithActiveEdgeDetection(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, bool inBackFacing, Vec3Arg inTriangleNormal, uint8 inActiveEdges, const SubShapeID &inSubShapeID2, float inFraction, Vec3Arg inContactPointA, Vec3Arg inContactPointB, Vec3Arg inContactNormal)
+{
+	// Check if we have enabled active edge detection
+	Vec3 contact_normal = inContactNormal;
+	if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111)
+	{
+		// Convert the active edge velocity hint to local space
+		Vec3 active_edge_movement_direction = mCenterOfMassTransform2.Multiply3x3Transposed(mShapeCastSettings.mActiveEdgeMovementDirection);
+
+		// Update the contact normal to account for active edges
+		// Note that we flip the triangle normal as the penetration axis is pointing towards the triangle instead of away
+		contact_normal = ActiveEdges::FixNormal(inV0, inV1, inV2, inBackFacing? inTriangleNormal : -inTriangleNormal, inActiveEdges, inContactPointB, inContactNormal, active_edge_movement_direction);
+	}
+
+	AddHit(inBackFacing, inSubShapeID2, inFraction, inContactPointA, inContactPointB, inContactNormal);
+}
+
 // This is a simplified version of the ray cylinder test from: Real Time Collision Detection - Christer Ericson
 // Chapter 5.3.7, page 194-197. Some conditions have been removed as we're not interested in hitting the caps of the cylinder.
 // Note that the ray origin is assumed to be the origin here.
@@ -118,31 +135,54 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	if (!mShapeFilter.ShouldCollide(mSubShapeIDCreator1.GetID(), inSubShapeID2))
 		return;
 
-	// Check if cast is parallel to the plane of the triangle
-	if (abs(normal_dot_direction) > 1.0e-6f)
+	// Test if distance between the sphere and plane of triangle is smaller or equal than the radius
+	if (abs(v0.Dot(triangle_normal)) <= mRadius)
 	{
-		// Calculate the point on the sphere that will hit the triangle's plane first and calculate a fraction where it will do so
-		Vec3 d = Sign(normal_dot_direction) * mRadius * triangle_normal;
-		float plane_intersection = (v0 - d).Dot(triangle_normal) / normal_dot_direction;
-
-		// Check if sphere will hit in the interval that we're interested in
-		if (plane_intersection * mDirection.Length() < -mRadius || plane_intersection > 1.0f)
-			return;
-
-		// We can only report an interior hit if we're hitting the plane during our sweep
-		if (plane_intersection >= 0.0f)
+		// Check if the sphere intersects at the start of the cast
+		uint32 closest_feature;
+		Vec3 q = ClosestPoint::GetClosestPointOnTriangle(v0, v1, v2, closest_feature);
+		float q_len_sq = q.LengthSq();
+		if (q_len_sq <= Square(mRadius))
 		{
-			// Calculate the point of contact on the plane
-			Vec3 p = d + plane_intersection * mDirection;
+			// Yes it does, generate contacts now
+			float q_len = sqrt(q_len_sq);
+			Vec3 contact_normal = q_len > 0.0f? q / q_len : Vec3::sAxisY();
+			Vec3 contact_point_a = q + contact_normal * (mRadius - q_len);
+			Vec3 contact_point_b = q;
+			AddHitWithActiveEdgeDetection(v0, v1, v2, back_facing, triangle_normal, inActiveEdges, inSubShapeID2, 0.0f, contact_point_a, contact_point_b, contact_normal);
+			return;
+		}
+	}
+	else
+	{
+		// Check if cast is not parallel to the plane of the triangle
+		float abs_normal_dot_direction = abs(normal_dot_direction);
+		if (abs_normal_dot_direction > 1.0e-6f)
+		{
+			// Calculate the point on the sphere that will hit the triangle's plane first and calculate a fraction where it will do so
+			Vec3 d = Sign(normal_dot_direction) * mRadius * triangle_normal;
+			float plane_intersection = (v0 - d).Dot(triangle_normal) / normal_dot_direction;
 
-			// Check if this is an interior point
-			float u, v, w;
-			ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w);
-			if (u >= 0.0f && v >= 0.0f && w >= 0.0f)
-			{
-				// Interior point, we found the collision point. We don't need to check active edges.
-				AddHit(back_facing, inSubShapeID2, plane_intersection, p, p, -triangle_normal);
+			// Check if sphere will hit in the interval that we're interested in
+			if (plane_intersection * abs_normal_dot_direction < -mRadius	// Sphere hits the plane before the sweep, cannot intersect
+				|| plane_intersection > 1.0f)								// Sphere hits the plane after the sweep, cannot intersect
 				return;
+
+			// We can only report an interior hit if we're hitting the plane during our sweep and not before
+			if (plane_intersection >= 0.0f)
+			{
+				// Calculate the point of contact on the plane
+				Vec3 p = d + plane_intersection * mDirection;
+
+				// Check if this is an interior point
+				float u, v, w;
+				ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w);
+				if (u >= 0.0f && v >= 0.0f && w >= 0.0f)
+				{
+					// Interior point, we found the collision point. We don't need to check active edges.
+					AddHit(back_facing, inSubShapeID2, plane_intersection, p, p, back_facing? triangle_normal : -triangle_normal);
+					return;
+				}
 			}
 		}
 	}
@@ -157,52 +197,20 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	fraction = min(fraction, RaySphere(Vec3::sZero(), mDirection, v1, mRadius));
 	fraction = min(fraction, RaySphere(Vec3::sZero(), mDirection, v2, mRadius));
 
-	// Here we will store the contact point and normal in case of a hit
-	Vec3 contact_normal;
-	Vec3 contact_point;
-
 	// Check if we have a collision
 	JPH_ASSERT(fraction >= 0.0f);
-	if (fraction > 1.0f)
-		return;
-	if (fraction > 0.0f)
+	if (fraction <= 1.0f)
 	{
-		// Calculate the center of the sphere a the point of contact
+		// Calculate the center of the sphere at the point of contact
 		Vec3 p = fraction * mDirection;
 
 		// Get contact point and normal
 		uint32 closest_feature;
 		Vec3 q = ClosestPoint::GetClosestPointOnTriangle(v0 - p, v1 - p, v2 - p, closest_feature);
-		contact_normal = q.Normalized();
-		contact_point = p + q;
+		Vec3 contact_normal = q.Normalized();
+		Vec3 contact_point_ab = p + q;
+		AddHitWithActiveEdgeDetection(v0, v1, v2, back_facing, triangle_normal, inActiveEdges, inSubShapeID2, fraction, contact_point_ab, contact_point_ab, contact_normal);
 	}
-	else
-	{
-		// Check if the sphere intersects at the start of the cast
-		uint32 closest_feature;
-		Vec3 q = ClosestPoint::GetClosestPointOnTriangle(v0, v1, v2, closest_feature);
-		float q_len_sq = q.LengthSq();
-		if (q_len_sq > Square(mRadius))
-			return;
-
-		// Yes it does, generate contacts now
-		float q_len = sqrt(q_len_sq);
-		contact_normal = q_len > 0.0f? q / q_len : Vec3::sAxisY();
-		contact_point = q + contact_normal * (mRadius - q_len);
-	}
-
-	// Check if we have enabled active edge detection
-	if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111)
-	{
-		// Convert the active edge velocity hint to local space
-		Vec3 active_edge_movement_direction = mCenterOfMassTransform2.Multiply3x3Transposed(mShapeCastSettings.mActiveEdgeMovementDirection);
-
-		// Update the contact normal to account for active edges
-		// Note that we flip the triangle normal as the penetration axis is pointing towards the triangle instead of away
-		contact_normal = ActiveEdges::FixNormal(inV0, inV1, inV2, back_facing? triangle_normal : -triangle_normal, inActiveEdges, contact_point, contact_normal, active_edge_movement_direction);
-	}
-
-	AddHit(back_facing, inSubShapeID2, fraction, contact_point, contact_point, contact_normal);
 }
 
 } // JPH
