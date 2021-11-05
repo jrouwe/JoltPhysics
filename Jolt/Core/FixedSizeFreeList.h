@@ -39,7 +39,9 @@ private:
 	ObjectStorage &			GetStorage(uint32 inObjectIndex)		{ return mPages[inObjectIndex / mPageSize][inObjectIndex % mPageSize]; }
 
 	/// Number of objects that we currently have in the free list / new pages
+#ifdef JPH_ENABLE_ASSERTS
 	atomic<uint32>			mNumFreeObjects;
+#endif // JPH_ENABLE_ASSERTS
 
 	/// Simple counter that makes the first free object pointer update with every CAS so that we don't suffer from the ABA problem
 	atomic<uint32>			mAllocationTag;
