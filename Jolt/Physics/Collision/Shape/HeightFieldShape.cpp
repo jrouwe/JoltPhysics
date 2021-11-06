@@ -312,9 +312,9 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	CacheValues();
 
 	// Check block size
-	if (mBlockSize < 1 || mBlockSize > 4)
+	if (mBlockSize < 2 || mBlockSize > 8)
 	{
-		outResult.SetError("HeightFieldShape: Block size must be in the range [1, 4]!");
+		outResult.SetError("HeightFieldShape: Block size must be in the range [2, 8]!");
 		return;
 	}
 

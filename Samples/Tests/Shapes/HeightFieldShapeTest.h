@@ -33,7 +33,7 @@ public:
 	Vec3				mTerrainScale;
 
 	// Block size = 1 << sBlockSizeShift
-	inline static int	sBlockSizeShift = 1;
+	inline static int	sBlockSizeShift = 2;
 
 	// Bits per sample
 	inline static int	sBitsPerSample = 8;
