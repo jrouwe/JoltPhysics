@@ -1150,51 +1150,141 @@ public:
 				// Update max_x (we've been using it so we couldn't update it earlier)
 				max_x -= max_x_decrement;
 
-				// Loop triangles
-				for (uint32 v_y = min_y; v_y < max_y; ++v_y)
-					for (uint32 v_x = min_x; v_x < max_x; ++v_x)
+				// We're going to divide the vertices in 4 blocks to do one more runtime sub-division, calculate the ranges of those blocks
+				struct Range
+				{
+					uint32 mMinX, mMinY, mNumTrianglesX, mNumTrianglesY;
+				};
+				uint32 half_block_size = block_size >> 1;
+				uint32 block_size_x = max_x - min_x - half_block_size;
+				uint32 block_size_y = max_y - min_y - half_block_size;
+				Range ranges[] = 
+				{
+					{ 0, 0,									half_block_size, half_block_size },
+					{ half_block_size, 0,					block_size_x, half_block_size },
+					{ 0, half_block_size,					half_block_size, block_size_y },
+					{ half_block_size, half_block_size,		block_size_x, block_size_y },
+				};
+
+				// Calculate the min and max of each of the blocks
+				Mat44 block_min, block_max;
+				for (int block = 0; block < 4; ++block)
+				{
+					// Get the range for this block
+					const Range &range = ranges[block];
+					uint32 start = range.mMinX + range.mMinY * block_size_plus_1;
+					uint32 size_x_plus_1 = range.mNumTrianglesX + 1;
+					uint32 size_y_plus_1 = range.mNumTrianglesY + 1;
+
+					// Calculate where to start reading
+					const Vec3 *src_vertex = vertices + start;
+					const bool *src_no_collision = no_collision + start;
+					uint32 stride = block_size_plus_1 - size_x_plus_1;
+
+					// Start range with a very large inside-out box
+					Vec3 value_min = Vec3::sReplicate(1.0e30f);
+					Vec3 value_max = Vec3::sReplicate(-1.0e30f);
+
+					// Loop over the samples to determine the min and max of this block
+					for (uint32 block_y = 0; block_y < size_y_plus_1; ++block_y)
 					{
-						// Get first vertex
-						const int offset = (v_y - min_y) * block_size_plus_1 + (v_x - min_x);
-						const Vec3 *start_vertex = vertices + offset;
-						const bool *start_no_collision = no_collision + offset;
-
-						// Check if vertices shared by both triangles have collision
-						if (!start_no_collision[0] && !start_no_collision[block_size_plus_1 + 1])
+						for (uint32 block_x = 0; block_x < size_x_plus_1; ++block_x)
 						{
-							// Loop 2 triangles
-							for (uint t = 0; t < 2; ++t)
+							if (!*src_no_collision)
 							{
-								// Determine triangle vertices
-								Vec3 v0, v1, v2;
-								if (t == 0)
+								value_min = Vec3::sMin(value_min, *src_vertex);
+								value_max = Vec3::sMax(value_max, *src_vertex);
+							}
+							++src_vertex;
+							++src_no_collision;
+						}
+						src_vertex += stride;
+						src_no_collision += stride;
+					}
+					block_min.SetColumn4(block, Vec4(value_min));
+					block_max.SetColumn4(block, Vec4(value_max));
+				};
+
+			#ifdef JPH_DEBUG_HEIGHT_FIELD
+				// Draw the bounding boxes of the sub-nodes
+				for (int block = 0; block < 4; ++block)
+				{
+					AABox bounds(block_min.GetColumn3(block), block_max.GetColumn3(block));
+					if (bounds.IsValid())
+						DebugRenderer::sInstance->DrawWireBox(bounds, Color::sYellow);
+				}
+			#endif // JPH_DEBUG_HEIGHT_FIELD
+
+				// Transpose so we have the mins and maxes of each of the blocks in rows instead of columns
+				Mat44 transposed_min = block_min.Transposed();
+				Mat44 transposed_max = block_max.Transposed();
+				
+				// Check which blocks collide
+				// Note: This will potentially write some data to mTop but since we don't increment mTop afterwards this is ok
+				UVec4 colliding_blocks(0, 1, 2, 3);
+				int num_results = ioVisitor.VisitRangeBlock(transposed_min.GetColumn4(0), transposed_min.GetColumn4(1), transposed_min.GetColumn4(2), transposed_max.GetColumn4(0), transposed_max.GetColumn4(1), transposed_max.GetColumn4(2), colliding_blocks, mTop);
+
+				// Loop through the results
+				for (int result = 0; result < num_results; ++result)
+				{
+					// Calculate the min and max of this block
+					uint32 block = colliding_blocks[result];
+					const Range &range = ranges[block];
+					uint32 block_min_x = min_x + range.mMinX;
+					uint32 block_max_x = block_min_x + range.mNumTrianglesX;
+					uint32 block_min_y = min_y + range.mMinY;
+					uint32 block_max_y = block_min_y + range.mNumTrianglesY;
+
+					// Loop triangles
+					for (uint32 v_y = block_min_y; v_y < block_max_y; ++v_y)
+						for (uint32 v_x = block_min_x; v_x < block_max_x; ++v_x)
+						{
+							// Get first vertex
+							const int offset = (v_y - min_y) * block_size_plus_1 + (v_x - min_x);
+							const Vec3 *start_vertex = vertices + offset;
+							const bool *start_no_collision = no_collision + offset;
+
+							// Check if vertices shared by both triangles have collision
+							if (!start_no_collision[0] && !start_no_collision[block_size_plus_1 + 1])
+							{
+								// Loop 2 triangles
+								for (uint t = 0; t < 2; ++t)
 								{
-									// Check third vertex
-									if (start_no_collision[block_size_plus_1])
-										continue;
+									// Determine triangle vertices
+									Vec3 v0, v1, v2;
+									if (t == 0)
+									{
+										// Check third vertex
+										if (start_no_collision[block_size_plus_1])
+											continue;
 
-									// Get vertices for triangle
-									v0 = start_vertex[0];
-									v1 = start_vertex[block_size_plus_1];
-									v2 = start_vertex[block_size_plus_1 + 1];
+										// Get vertices for triangle
+										v0 = start_vertex[0];
+										v1 = start_vertex[block_size_plus_1];
+										v2 = start_vertex[block_size_plus_1 + 1];
+									}
+									else
+									{
+										// Check third vertex
+										if (start_no_collision[1])
+											continue;
+
+										// Get vertices for triangle
+										v0 = start_vertex[0];
+										v1 = start_vertex[block_size_plus_1 + 1];
+										v2 = start_vertex[1];
+									}
+
+								#ifdef JPH_DEBUG_HEIGHT_FIELD
+									DebugRenderer::sInstance->DrawWireTriangle(v0, v1, v2, Color::sWhite);
+								#endif
+
+									// Call visitor
+									ioVisitor.VisitTriangle(v_x, v_y, t, v0, v1, v2);
 								}
-								else
-								{
-									// Check third vertex
-									if (start_no_collision[1])
-										continue;
-
-									// Get vertices for triangle
-									v0 = start_vertex[0];
-									v1 = start_vertex[block_size_plus_1 + 1];
-									v2 = start_vertex[1];
-								}
-
-								// Call visitor
-								ioVisitor.VisitTriangle(v_x, v_y, t, v0, v1, v2);
 							}
 						}
-					}
+				}
 			}
 			else
 			{
@@ -1308,10 +1398,6 @@ bool HeightFieldShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &in
 
 		JPH_INLINE void			VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2) 
 		{			
-		#ifdef JPH_DEBUG_HEIGHT_FIELD
-			float old_fraction = mHit.mFraction;
-		#endif
-
 			float fraction = RayTriangle(mRayOrigin, mRayDirection, inV0, inV1, inV2);
 			if (fraction < mHit.mFraction)
 			{
@@ -1320,10 +1406,6 @@ bool HeightFieldShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &in
 				mHit.mSubShapeID2 = mShape->EncodeSubShapeID(mSubShapeIDCreator, inX, inY, inTriangle);
 				mReturnValue = true;
 			}
-			
-		#ifdef JPH_DEBUG_HEIGHT_FIELD
-			DebugRenderer::sInstance->DrawWireTriangle(inV0, inV1, inV2, old_fraction > mHit.mFraction? Color::sRed : Color::sCyan);
-		#endif
 		}
 
 		RayCastResult &			mHit;
