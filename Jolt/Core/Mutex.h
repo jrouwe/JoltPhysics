@@ -7,13 +7,14 @@
 #include <shared_mutex>
 #include <thread>
 #include <Core/Profiler.h>
+#include <Core/NonCopyable.h>
 
 namespace JPH {
 
 #ifdef JPH_PLATFORM_BLUE
 
 // On Platform Blue the mutex class is not very fast so we implement it using the official APIs
-class MutexBase
+class MutexBase : public NonCopyable
 {
 public:
 					MutexBase()
@@ -46,7 +47,7 @@ private:
 };
 
 // On Platform Blue the shared_mutex class is not very fast so we implement it using the official APIs
-class SharedMutexBase
+class SharedMutexBase : public NonCopyable
 {
 public:
 					SharedMutexBase()
