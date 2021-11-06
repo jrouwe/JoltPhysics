@@ -165,7 +165,7 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 
 			// Check if sphere will hit in the interval that we're interested in
 			if (plane_intersection * abs_normal_dot_direction < -mRadius	// Sphere hits the plane before the sweep, cannot intersect
-				|| plane_intersection > 1.0f)								// Sphere hits the plane after the sweep, cannot intersect
+				|| plane_intersection >= mCollector.GetEarlyOutFraction())	// Sphere hits the plane after the sweep / early out fraction, cannot intersect
 				return;
 
 			// We can only report an interior hit if we're hitting the plane during our sweep and not before
@@ -199,7 +199,7 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 
 	// Check if we have a collision
 	JPH_ASSERT(fraction >= 0.0f);
-	if (fraction <= 1.0f)
+	if (fraction < mCollector.GetEarlyOutFraction())
 	{
 		// Calculate the center of the sphere at the point of contact
 		Vec3 p = fraction * mDirection;
