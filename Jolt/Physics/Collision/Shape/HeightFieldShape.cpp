@@ -1220,12 +1220,14 @@ public:
 				Mat44 transposed_max = block_max.Transposed();
 				
 				// Check which blocks collide
-				// Note: This will potentially write some data to mTop but since we don't increment mTop afterwards this is ok
+				// Note: At this point we don't use our own stack but we do allow the visitor to use its own stack
+				// to store collision distances so that we can still early out when no closer hits have been found.
 				UVec4 colliding_blocks(0, 1, 2, 3);
 				int num_results = ioVisitor.VisitRangeBlock(transposed_min.GetColumn4(0), transposed_min.GetColumn4(1), transposed_min.GetColumn4(2), transposed_max.GetColumn4(0), transposed_max.GetColumn4(1), transposed_max.GetColumn4(2), colliding_blocks, mTop);
 
-				// Loop through the results
-				for (int result = 0; result < num_results; ++result)
+				// Loop through the results backwards (closest first)
+				int result = num_results - 1;
+				while (result >= 0)
 				{
 					// Calculate the min and max of this block
 					uint32 block = colliding_blocks[result];
@@ -1281,9 +1283,18 @@ public:
 
 									// Call visitor
 									ioVisitor.VisitTriangle(v_x, v_y, t, v0, v1, v2);
+
+									// Check if we're done
+									if (ioVisitor.ShouldAbort())
+										return;
 								}
 							}
 						}
+
+					// Fetch next block until we find one that the visitor wants to see
+					do 
+						--result;
+					while (result >= 0 && !ioVisitor.ShouldVisitRangeBlock(mTop + result));
 				}
 			}
 			else
@@ -1332,7 +1343,7 @@ public:
 
 			// Check if we're done
 			if (ioVisitor.ShouldAbort())
-				break;
+				return;
 
 			// Fetch next node until we find one that the visitor wants to see
 			do 
