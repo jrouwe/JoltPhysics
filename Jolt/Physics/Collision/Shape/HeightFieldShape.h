@@ -71,8 +71,8 @@ public:
 	uint32							mSampleCount = 0;
 
 	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only, 
-	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [1, 4], does not need to be
-	/// a power of 2.
+	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [2, 8], does not need to be
+	/// a power of 2. Note that at run-time we'll perform one more grid subdivision, so the effective block size is half of what is provided here.
 	uint32							mBlockSize = 2;
 
 	/// How many bits per sample to use to compress the height field. Can be in the range [1, 8].
