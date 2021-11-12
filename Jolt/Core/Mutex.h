@@ -168,7 +168,7 @@ public:
 	{
 		if (!try_lock())
 		{
-			JPH_PROFILE("Lock", 0xff00ffff);
+			JPH_PROFILE("WLock", 0xff00ffff);
 			SharedMutexBase::lock();
 			JPH_IF_ENABLE_ASSERTS(mLockedThreadID = this_thread::get_id();)
 		}
@@ -192,7 +192,7 @@ public:
 	{
 		if (!try_lock_shared())
 		{
-			JPH_PROFILE("LockShared", 0xff00ffff);
+			JPH_PROFILE("RLock", 0xff00ffff);
 			SharedMutexBase::lock_shared();
 		}
 	}
