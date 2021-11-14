@@ -24,7 +24,7 @@ public:
 							~PhysicsUpdateContext();
 
 	static constexpr int	cMaxConcurrency = 32;									///< Maximum supported amount of concurrent jobs
-	static constexpr int	cMaxSteps = 2;											///< Maximum supported amount of collision steps
+	static constexpr int	cMaxSteps = 4;											///< Maximum supported amount of collision steps
 	static constexpr int	cMaxSubSteps = 4;										///< Maximum supported amount of integration sub steps
 
 	using JobHandleArray = StaticArray<JobHandle, cMaxConcurrency>;
