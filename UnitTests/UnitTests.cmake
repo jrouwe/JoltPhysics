@@ -31,6 +31,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/BroadPhaseTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/CastShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/CollideShapeTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/CollidePointTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/CollisionGroupTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ContactListenerTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/HeightFieldShapeTests.cpp
