@@ -9,6 +9,10 @@
 #include <Physics/Collision/Shape/CapsuleShape.h>
 #include <Physics/Collision/Shape/CylinderShape.h>
 #include <Physics/Collision/Shape/TaperedCapsuleShape.h>
+#include <Physics/Collision/Shape/ConvexHullShape.h>
+#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Physics/Collision/Shape/ScaledShape.h>
+#include <Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Physics/Collision/Shape/MeshShape.h>
 #include <Physics/Collision/CollisionCollectorImpl.h>
 #include <Physics/Collision/CollidePointResult.h>
@@ -51,6 +55,18 @@ TEST_SUITE("CollidePointTests")
 		Vec3(1.0f, 0, 0),
 		Vec3(0, 0, -1.0f),
 		Vec3(0, 0, 1.0f)
+	};
+
+	// Vertices of a cube
+	static Vec3 cube_vertices[] = {
+		Vec3(-1.0f, -1.0f, -1.0f),
+		Vec3( 1.0f, -1.0f, -1.0f),
+		Vec3(-1.0f, -1.0f,  1.0f),
+		Vec3( 1.0f, -1.0f,  1.0f),
+		Vec3(-1.0f,  1.0f, -1.0f),
+		Vec3( 1.0f,  1.0f, -1.0f),
+		Vec3(-1.0f,  1.0f,  1.0f),
+		Vec3( 1.0f,  1.0f,  1.0f)
 	};
 
 	static void sTestHit(const Shape *inShape, Vec3Arg inPosition)
@@ -184,20 +200,77 @@ TEST_SUITE("CollidePointTests")
 			sTestMiss(shape, 1.01f * Vec3(radius, half_height, radius) * probe);
 	}
 
+	TEST_CASE("TestCollidePointVsConvexHull")
+	{
+		Vec3 half_box_size(0.1f, 0.2f, 0.3f);
+		Vec3 offset(10.0f, 11.0f, 12.0f);
+
+		ConvexHullShapeSettings settings;
+		for (uint i = 0; i < size(cube_vertices); ++i)
+			settings.mPoints.push_back(offset + cube_vertices[i] * half_box_size);
+		ShapeRefC shape = settings.Create().Get();
+
+		// Hits
+		for (Vec3 probe : cube_and_zero_probes)
+			sTestHit(shape, offset + 0.99f * half_box_size * probe);
+
+		// Misses
+		for (Vec3 probe : cube_probes)
+			sTestMiss(shape, offset + 1.01f * half_box_size * probe);
+	}
+
+	TEST_CASE("TestCollidePointVsRotatedTranslated")
+	{
+		Vec3 translation(10.0f, 11.0f, 12.0f);
+		Quat rotation = Quat::sRotation(Vec3(1, 2, 3).Normalized(), 0.3f * JPH_PI);
+		Mat44 transform = Mat44::sRotationTranslation(rotation, translation);
+
+		Vec3 half_box_size(0.1f, 0.2f, 0.3f);
+		RotatedTranslatedShapeSettings settings(translation, rotation, new BoxShape(half_box_size));
+		ShapeRefC shape = settings.Create().Get();
+
+		// Hits
+		for (Vec3 probe : cube_and_zero_probes)
+			sTestHit(shape, transform * (0.99f * half_box_size * probe));
+
+		// Misses
+		for (Vec3 probe : cube_probes)
+			sTestMiss(shape, transform * (1.01f * half_box_size * probe));
+	}
+
+	TEST_CASE("TestCollidePointVsScaled")
+	{
+		Vec3 scale(2.0f, 3.0f, -4.0f);
+		Vec3 half_box_size(0.1f, 0.2f, 0.3f);
+		ShapeRefC shape = new ScaledShape(new BoxShape(half_box_size), scale);
+
+		// Hits
+		for (Vec3 probe : cube_and_zero_probes)
+			sTestHit(shape, scale * (0.99f * half_box_size * probe));
+
+		// Misses
+		for (Vec3 probe : cube_probes)
+			sTestMiss(shape, scale * (1.01f * half_box_size * probe));
+	}
+
+	TEST_CASE("TestCollidePointVsOffsetCenterOfMass")
+	{
+		Vec3 offset(10.0f, 11.0f, 12.0f);
+		Vec3 half_box_size(0.1f, 0.2f, 0.3f);
+		OffsetCenterOfMassShapeSettings settings(offset, new BoxShape(half_box_size));
+		ShapeRefC shape = settings.Create().Get();
+
+		// Hits
+		for (Vec3 probe : cube_and_zero_probes)
+			sTestHit(shape, 0.99f * half_box_size * probe);
+
+		// Misses
+		for (Vec3 probe : cube_probes)
+			sTestMiss(shape, 1.01f * half_box_size * probe);
+	}
+
 	TEST_CASE("TestCollidePointVsMesh")
 	{
-		// Vertices of a cube
-		Vec3 vertices[] = {
-			Vec3(-1.0f, -1.0f, -1.0f),
-			Vec3( 1.0f, -1.0f, -1.0f),
-			Vec3(-1.0f, -1.0f,  1.0f),
-			Vec3( 1.0f, -1.0f,  1.0f),
-			Vec3(-1.0f,  1.0f, -1.0f),
-			Vec3( 1.0f,  1.0f, -1.0f),
-			Vec3(-1.0f,  1.0f,  1.0f),
-			Vec3( 1.0f,  1.0f,  1.0f)
-		};
-
 		// Face indices of a cube
 		int indices[][3] = {
 			{ 0, 1, 3 },
@@ -223,7 +296,7 @@ TEST_SUITE("CollidePointTests")
 		MeshShapeSettings settings;
 		settings.SetEmbedded();
 		int num_cubes = Cubed(2 * grid_size + 1);
-		settings.mTriangleVertices.reserve(num_cubes * size(vertices));
+		settings.mTriangleVertices.reserve(num_cubes * size(cube_vertices));
 		settings.mIndexedTriangles.reserve(num_cubes * size(indices));
 		for (int x = -grid_size; x <= grid_size; ++x)
 			for (int y = -grid_size; y <= grid_size; ++y)
@@ -233,10 +306,10 @@ TEST_SUITE("CollidePointTests")
 
 					// Create vertices with randomness
 					uint vtx = (uint)settings.mTriangleVertices.size();
-					settings.mTriangleVertices.resize(vtx + size(vertices));
-					for (uint i = 0; i < size(vertices); ++i)
+					settings.mTriangleVertices.resize(vtx + size(cube_vertices));
+					for (uint i = 0; i < size(cube_vertices); ++i)
 					{
-						Vec3 vertex(center + vertices[i] * Vec3(range(random), range(random), range(random)));
+						Vec3 vertex(center + cube_vertices[i] * Vec3(range(random), range(random), range(random)));
 						vertex.StoreFloat3(&settings.mTriangleVertices[vtx + i]);
 					}
 

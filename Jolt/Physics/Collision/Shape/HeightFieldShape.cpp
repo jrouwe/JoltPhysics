@@ -1505,15 +1505,7 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 
 void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
 {
-	// First test if we're inside our bounding box
-	AABox bounds = GetLocalBounds();
-	if (bounds.Contains(inPoint))
-	{
-		// Cast a ray that's 10% longer than the heigth of our bounding box downwards to see if we hit the surface
-		RayCastResult result;
-		if (!CastRay(RayCast { inPoint, -1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, inSubShapeIDCreator, result))
-			ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
-	}
+	// A height field doesn't have volume, so we can't test insideness
 }
 
 void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
