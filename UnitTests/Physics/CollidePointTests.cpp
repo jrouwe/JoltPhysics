@@ -13,6 +13,8 @@
 #include <Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Physics/Collision/Shape/ScaledShape.h>
 #include <Physics/Collision/Shape/OffsetCenterOfMassShape.h>
+#include <Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Physics/Collision/Shape/MeshShape.h>
 #include <Physics/Collision/CollisionCollectorImpl.h>
 #include <Physics/Collision/CollidePointResult.h>
@@ -267,6 +269,76 @@ TEST_SUITE("CollidePointTests")
 		// Misses
 		for (Vec3 probe : cube_probes)
 			sTestMiss(shape, 1.01f * half_box_size * probe);
+	}
+
+	TEST_CASE("TestCollidePointVsStaticCompound")
+	{
+		Vec3 translation1(10.0f, 11.0f, 12.0f);
+		Quat rotation1 = Quat::sRotation(Vec3(1, 2, 3).Normalized(), 0.3f * JPH_PI);
+		Mat44 transform1 = Mat44::sRotationTranslation(rotation1, translation1);
+
+		Vec3 translation2(-1.0f, -2.0f, -3.0f);
+		Quat rotation2 = Quat::sRotation(Vec3(4, 5, 6).Normalized(), 0.2f * JPH_PI);
+		Mat44 transform2 = Mat44::sRotationTranslation(rotation2, translation2);
+
+		Vec3 half_box_size(0.1f, 0.2f, 0.3f);
+		ShapeRefC box = new BoxShape(half_box_size);
+
+		StaticCompoundShapeSettings settings;
+		settings.AddShape(translation1, rotation1, box);
+		settings.AddShape(translation2, rotation2, box);
+		ShapeRefC shape = settings.Create().Get();
+
+		// Hits
+		for (Vec3 probe : cube_and_zero_probes)
+		{
+			Vec3 point = 0.99f * half_box_size * probe;
+			sTestHit(shape, transform1 * point);
+			sTestHit(shape, transform2 * point);
+		}
+
+		// Misses
+		for (Vec3 probe : cube_probes)
+		{
+			Vec3 point = 1.01f * half_box_size * probe;
+			sTestMiss(shape, transform1 * point);
+			sTestMiss(shape, transform2 * point);
+		}
+	}
+
+	TEST_CASE("TestCollidePointVsMutableCompound")
+	{
+		Vec3 translation1(10.0f, 11.0f, 12.0f);
+		Quat rotation1 = Quat::sRotation(Vec3(1, 2, 3).Normalized(), 0.3f * JPH_PI);
+		Mat44 transform1 = Mat44::sRotationTranslation(rotation1, translation1);
+
+		Vec3 translation2(-1.0f, -2.0f, -3.0f);
+		Quat rotation2 = Quat::sRotation(Vec3(4, 5, 6).Normalized(), 0.2f * JPH_PI);
+		Mat44 transform2 = Mat44::sRotationTranslation(rotation2, translation2);
+
+		Vec3 half_box_size(0.1f, 0.2f, 0.3f);
+		ShapeRefC box = new BoxShape(half_box_size);
+
+		MutableCompoundShapeSettings settings;
+		settings.AddShape(translation1, rotation1, box);
+		settings.AddShape(translation2, rotation2, box);
+		ShapeRefC shape = settings.Create().Get();
+
+		// Hits
+		for (Vec3 probe : cube_and_zero_probes)
+		{
+			Vec3 point = 0.99f * half_box_size * probe;
+			sTestHit(shape, transform1 * point);
+			sTestHit(shape, transform2 * point);
+		}
+
+		// Misses
+		for (Vec3 probe : cube_probes)
+		{
+			Vec3 point = 1.01f * half_box_size * probe;
+			sTestMiss(shape, transform1 * point);
+			sTestMiss(shape, transform2 * point);
+		}
 	}
 
 	TEST_CASE("TestCollidePointVsMesh")
