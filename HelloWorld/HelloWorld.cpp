@@ -1,8 +1,11 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-// Jolt includes
+// The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
+// You can use Jolt.h in your precompiled header to speed up compilation.
 #include <Jolt.h>
+
+// Jolt includes
 #include <RegisterTypes.h>
 #include <Core/TempAllocator.h>
 #include <Core/JobSystemThreadPool.h>

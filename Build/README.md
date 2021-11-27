@@ -11,6 +11,11 @@ Each platform supports multiple build targets
 - ReleaseCoverage - As Release but turns on Coverage reporting (clang only) to find which areas of the code are not executed
 - Distribution - Shippable version of the library, turns off all debugging support
 
+## Includes
+
+The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
+You can use Jolt.h in your precompiled header to speed up compilation.
+
 ## Defines
 
 There are a number of user configurable defines that turn on/off certain features:
