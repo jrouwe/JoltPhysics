@@ -22,7 +22,7 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	set(CMAKE_CXX_FLAGS "/std:c++17 /Zc:__cplusplus /GR- /Gm- /Wall /WX /EHsc /nologo /diagnostics:classic /FC /arch:AVX2 /fp:except- /Zc:inline /Zi /DWIN32 /D_WINDOWS /DUNICODE /D_UNICODE")
 	
 	# Set compiler flags for various configurations
-	set(CMAKE_CXX_FLAGS_DEBUG "/D_DEBUG /GS /Od /Ob0 /RTC1 /DJPH_STAT_COLLECTOR /DJPH_PROFILE_ENABLED /DJPH_DEBUG_RENDERER")
+	set(CMAKE_CXX_FLAGS_DEBUG "/D_DEBUG /GS /Od /Ob0 /RTC1 /DJPH_PROFILE_ENABLED /DJPH_DEBUG_RENDERER")
 	set(CMAKE_CXX_FLAGS_RELEASE "/DNDEBUG /GS- /GL /Gy /O2 /Oi /Ot /DJPH_PROFILE_ENABLED /DJPH_DEBUG_RENDERER")
 	set(CMAKE_CXX_FLAGS_DISTRIBUTION "/DNDEBUG /GS- /GL /Gy /O2 /Oi /Ot")
 	set(CMAKE_CXX_FLAGS_RELEASEASAN "/DNDEBUG /DJPH_PROFILE_ENABLED /DJPH_DISABLE_TEMP_ALLOCATOR /DJPH_DEBUG_RENDERER -fsanitize=address /Od")
@@ -57,7 +57,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 	endif()
 
 	# Set compiler flags for various configurations
-	set(CMAKE_CXX_FLAGS_DEBUG "-g -D_DEBUG -DJPH_STAT_COLLECTOR -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER") # Clang reorders variables so that div by zero occurs if we enable exception checking
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -D_DEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER") # Clang reorders variables so that div by zero occurs if we enable exception checking
 	set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER")
 	set(CMAKE_CXX_FLAGS_DISTRIBUTION "-DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASEASAN "-DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DISABLE_TEMP_ALLOCATOR -DJPH_DEBUG_RENDERER -fsanitize=address")

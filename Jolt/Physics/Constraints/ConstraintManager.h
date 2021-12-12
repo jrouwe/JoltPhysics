@@ -54,11 +54,6 @@ public:
 	/// This function is called multiple times to iteratively come to a solution that meets all position constraints
 	bool					SolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte);
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats for all constraints
-	void					CollectStats() const;
-#endif // JPH_STAT_COLLECTOR
-
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw all constraints
 	void					DrawConstraints(DebugRenderer *inRenderer) const;

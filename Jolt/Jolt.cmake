@@ -44,8 +44,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/Result.h
 	${JOLT_PHYSICS_ROOT}/Core/RTTI.cpp
 	${JOLT_PHYSICS_ROOT}/Core/RTTI.h
-	${JOLT_PHYSICS_ROOT}/Core/StatCollector.cpp
-	${JOLT_PHYSICS_ROOT}/Core/StatCollector.h
 	${JOLT_PHYSICS_ROOT}/Core/StaticArray.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamIn.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamOut.h

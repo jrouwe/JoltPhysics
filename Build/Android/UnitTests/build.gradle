@@ -15,7 +15,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags '-std=c++17 -Wall -Werror -DJPH_STAT_COLLECTOR -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
+                cppFlags '-std=c++17 -Wall -Werror -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
                 arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
             }
         }

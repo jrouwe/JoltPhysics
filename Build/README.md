@@ -22,7 +22,6 @@ There are a number of user configurable defines that turn on/off certain feature
 
 - JPH_PROFILE_ENABLED - Turns on the internal profiler.
 - JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).
-- JPH_STAT_COLLECTOR - Turns on the stat collector system which allows you to see internal properties over time (see StatCollector.h)
 - JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.
 - JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.
 - JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).

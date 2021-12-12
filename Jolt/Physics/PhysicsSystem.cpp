@@ -21,7 +21,6 @@
 #include <Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Geometry/RayAABox.h>
 #include <Core/JobSystem.h>
-#include <Core/StatCollector.h>
 #include <Core/TempAllocator.h>
 
 namespace JPH {
@@ -121,14 +120,6 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 
 	JPH_ASSERT(inDeltaTime >= 0.0f);
 	JPH_ASSERT(inIntegrationSubSteps <= PhysicsUpdateContext::cMaxSubSteps);
-
-#ifdef JPH_STAT_COLLECTOR
-	// Reset stats
-	mManifoldsBeforeReduction = 0;
-	mManifoldsAfterReduction = 0;
-	CollideConvexVsTriangles::sResetStats();
-	ConvexShape::sResetStats();
-#endif // JPH_STAT_COLLECTOR
 
 	// Sync point for the broadphase. This will allow it to do clean up operations without having any mutexes locked yet.
 	mBroadPhase->FrameSync();
@@ -1024,9 +1015,6 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair)
 						}
 					}
 
-					// Count amount of manifolds before reduction
-					JPH_IF_STAT_COLLECTOR(++mSystem->mManifoldsBeforeReduction;)
-
 					// Calculate normal
 					Vec3 world_space_normal = inResult.mPenetrationAxis.Normalized();
 			
@@ -1064,9 +1052,6 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair)
 							// Not full, create new manifold
 							mManifolds.push_back({ { world_space_normal, inResult.mPenetrationDepth, inResult.mSubShapeID1, inResult.mSubShapeID2, { }, { } }, world_space_normal });
 							manifold = mManifolds.end() - 1;
-
-							// Count manifolds after reduction
-							JPH_IF_STAT_COLLECTOR(mSystem->mManifoldsAfterReduction++;)
 						}
 					}
 
@@ -2133,21 +2118,6 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_begin, int(bodies_end - bodies_begin), false);
 	}
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void PhysicsSystem::CollectStats()
-{
-	JPH_PROFILE_FUNCTION();
-
-	JPH_STAT_COLLECTOR_ADD("ContactConstraint.ManifoldReductionPercentage", mManifoldsBeforeReduction > 0? 100.0f * (mManifoldsBeforeReduction - mManifoldsAfterReduction) / mManifoldsBeforeReduction : 0.0f);
-
-	mBodyManager.CollectStats();
-	mConstraintManager.CollectStats();
-	mContactManager.CollectStats();
-	CollideConvexVsTriangles::sCollectStats();
-	ConvexShape::sCollectStats();
-}
-#endif // JPH_STAT_COLLECTOR
 
 void PhysicsSystem::SaveState(StateRecorder &inStream) const
 {

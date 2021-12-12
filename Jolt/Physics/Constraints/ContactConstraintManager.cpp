@@ -8,7 +8,6 @@
 #include <Physics/PhysicsUpdateContext.h>
 #include <Physics/PhysicsSettings.h>
 #include <Physics/IslandBuilder.h>
-#include <Core/StatCollector.h>
 #include <Core/TempAllocator.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Renderer/DebugRenderer.h>
@@ -22,13 +21,6 @@ bool ContactConstraintManager::sDrawSupportingFaces = false;
 bool ContactConstraintManager::sDrawContactPointReduction = false;
 bool ContactConstraintManager::sDrawContactManifolds = false;
 #endif // JPH_DEBUG_RENDERER
-
-#ifdef JPH_STAT_COLLECTOR
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ContactConstraintManager::sNumBodyPairCacheChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ContactConstraintManager::sNumBodyPairCacheHits { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ContactConstraintManager::sNumContactPointsAdded { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ContactConstraintManager::sNumContactPointsLambdasSet { 0 };
-#endif // JPH_STAT_COLLECTOR
 
 //#define JPH_MANIFOLD_CACHE_DEBUG
 
@@ -600,14 +592,6 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 
 	// Use the amount of contacts from the last iteration to determine the amount of buckets to use in the hash map for this frame
 	mCache[mCacheWriteIdx].Prepare(mCache[mCacheWriteIdx ^ 1]);
-
-#ifdef JPH_STAT_COLLECTOR
-	// Reset stats
-	sNumBodyPairCacheChecks = 0;
-	sNumBodyPairCacheHits = 0;
-	sNumContactPointsAdded = 0;
-	sNumContactPointsLambdasSet = 0;
-#endif // JPH_STAT_COLLECTOR
 }
 
 // Get the orientation of body 2 in local space of body 1
@@ -629,8 +613,6 @@ static void sGetRelativeOrientation(const Body &inBody1, const Body &inBody2, Ve
 void ContactConstraintManager::GetContactsFromCache(Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound)
 {
 	JPH_PROFILE_FUNCTION();
-
-	JPH_IF_STAT_COLLECTOR(sNumBodyPairCacheChecks++;)
 
 	// Start with nothing found and not handled
 	outContactFound = false;
@@ -675,8 +657,6 @@ void ContactConstraintManager::GetContactsFromCache(Body &inBody1, Body &inBody2
 		return;
 	if (delta_rotation.Dot(old_delta_rotation) < mPhysicsSettings.mBodyPairCacheCosMaxDeltaRotation)
 		return;
-
-	JPH_IF_STAT_COLLECTOR(sNumBodyPairCacheHits++;)
 
 	// The cache is valid, return that we've handled this body pair
 	outPairHandled = true;
@@ -993,8 +973,6 @@ void ContactConstraintManager::AddContactConstraint(BodyPairHandle inBodyPairHan
 		// Get time step
 		float delta_time = mUpdateContext->mSubStepDeltaTime;
 
-		JPH_IF_STAT_COLLECTOR(sNumContactPointsAdded += num_contact_points;)
-
 		// Calculate tangents
 		Vec3 t1, t2;
 		constraint.GetTangents(t1, t2);
@@ -1017,8 +995,6 @@ void ContactConstraintManager::AddContactConstraint(BodyPairHandle inBodyPairHan
 				if (Vec3::sLoadFloat3Unsafe(ccp->mPosition1).IsClose(p1_ls, mPhysicsSettings.mContactPointPreserveLambdaMaxDistSq) 
 					&& Vec3::sLoadFloat3Unsafe(ccp->mPosition2).IsClose(p2_ls, mPhysicsSettings.mContactPointPreserveLambdaMaxDistSq))
 				{
-					JPH_IF_STAT_COLLECTOR(sNumContactPointsLambdasSet++;)
-
 					// Get lambdas from previous frame
 					wcp.mNonPenetrationConstraint.SetTotalLambda(ccp->mNonPenetrationLambda);
 					wcp.mFrictionConstraint1.SetTotalLambda(ccp->mFrictionLambda[0]);
@@ -1377,20 +1353,5 @@ bool ContactConstraintManager::RestoreState(StateRecorder &inStream)
 	mCache[mCacheWriteIdx].Clear();
 	return success;
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void ContactConstraintManager::CollectStats()
-{
-	JPH_PROFILE_FUNCTION();
-
-	JPH_STAT_COLLECTOR_ADD("ContactConstraint.BodyPairCacheChecks", int(sNumBodyPairCacheChecks));
-	if (sNumBodyPairCacheChecks > 0)
-		JPH_STAT_COLLECTOR_ADD("ContactConstraint.BodyPairCacheHitPercentage", 100.0f * sNumBodyPairCacheHits / sNumBodyPairCacheChecks);
-
-	JPH_STAT_COLLECTOR_ADD("ContactConstraint.ContactPointsAdded", int(sNumContactPointsAdded));
-	if (sNumContactPointsAdded > 0)
-		JPH_STAT_COLLECTOR_ADD("ContactConstraint.ContactPointsLambdasSetPercentage", 100.0f * sNumContactPointsLambdasSet / sNumContactPointsAdded);
-}
-#endif // JPH_STAT_COLLECTOR
 
 } // JPH

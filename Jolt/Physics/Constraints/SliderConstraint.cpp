@@ -5,7 +5,6 @@
 
 #include <Physics/Constraints/SliderConstraint.h>
 #include <Physics/Body/Body.h>
-#include <Core/StatCollector.h>
 #include <ObjectStream/TypeDeclarations.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -262,25 +261,6 @@ bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 
 	return pos || rot || limit;
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void SliderConstraint::CollectStats() const
-{
-	string prefix = "Constraint." + mBody1->GetDebugName() + "-" + mBody2->GetDebugName();
-
-	JPH_STAT_COLLECTOR_ADD(prefix + ".SlideDistance", mD);
-
-	JPH_STAT_COLLECTOR_ADD(prefix + ".DualAxis.TotalLambda0", mPositionConstraintPart.GetTotalLambda()[0]);
-	JPH_STAT_COLLECTOR_ADD(prefix + ".DualAxis.TotalLambda1", mPositionConstraintPart.GetTotalLambda()[1]);
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda", mRotationConstraintPart.GetTotalLambda());
-
-	if (mPositionLimitsConstraintPart.IsActive())
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Limit.TotalLambda", mPositionLimitsConstraintPart.GetTotalLambda());
-
-	if (mMotorConstraintPart.IsActive())
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Motor.TotalLambda", mMotorConstraintPart.GetTotalLambda());
-}
-#endif // JPH_STAT_COLLECTOR
 
 #ifdef JPH_DEBUG_RENDERER
 void SliderConstraint::DrawConstraint(DebugRenderer *inRenderer) const

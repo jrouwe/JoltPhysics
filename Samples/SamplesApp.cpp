@@ -5,7 +5,6 @@
 
 #include <SamplesApp.h>
 #include <Application/EntryPoint.h>
-#include <Core/StatCollector.h>
 #include <Core/JobSystemThreadPool.h>
 #include <Core/TempAllocator.h>
 #include <Geometry/OrientedBox.h>
@@ -433,8 +432,7 @@ SamplesApp::SamplesApp()
 			".: Step forward (only when Physics Settings / Record State for Playback is on).\n"
 			"Shift + ,: Play reverse (only when Physics Settings / Record State for Playback is on).\n"
 			"Shift + .: Replay forward (only when Physics Settings / Record State for Playback is on).\n"
-			"T: Dump frame timing information to profile_*.html (when JPH_PROFILE_ENABLED defined).\n"
-			"Y: Start / stop recording stats. Stats?.html is written when stopping (when JPH_STAT_COLLECTOR defined)."
+			"T: Dump frame timing information to profile_*.html (when JPH_PROFILE_ENABLED defined)."
 		);
 		mDebugUI->ShowMenu(help);
 	});
@@ -498,9 +496,6 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	delete mTest;
 	delete mContactListener;
 	delete mPhysicsSystem;
-
-	// Start at frame 0
-	JPH_STAT_COLLECTOR_RESET();
 
 	// Create physics system
 	mPhysicsSystem = new PhysicsSystem();
@@ -1837,9 +1832,6 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 				SaveState(mPlaybackFrames.back());
 			}
 
-			// Set next frame for the stat collector
-			JPH_STAT_COLLECTOR_SET_NEXT_FRAME();
-
 			// Physics world is drawn using debug lines, when not paused
 			// Draw state prior to step so that debug lines are created from the same state
 			// (the constraints are solved on the current state and then the world is stepped)
@@ -1869,17 +1861,6 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 				// Validate that the result is the same
 				ValidateState(post_step_state);
 			}
-
-#ifdef JPH_STAT_COLLECTOR
-			if (JPH_STAT_COLLECTOR_IS_CAPTURING())
-			{
-				// Record FPS as stat
-				JPH_STAT_COLLECTOR_ADD("General.FPS", 1.0f / inDeltaTime);
-
-				// Collect stats for previous time step
-				mPhysicsSystem->CollectStats();
-			}
-#endif // JPH_STAT_COLLECTOR
 		}
 	}
 

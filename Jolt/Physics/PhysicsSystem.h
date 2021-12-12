@@ -99,11 +99,6 @@ public:
 	/// consists of collision detection followed by inIntegrationSubSteps integration steps.
 	void						Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem);
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats of the previous time step
-	void						CollectStats();
-#endif // JPH_STAT_COLLECTOR
-
 	/// Saving state for replay
 	void						SaveState(StateRecorder &inStream) const;
 
@@ -264,12 +259,6 @@ private:
 
 	/// Simulation settings
 	PhysicsSettings				mPhysicsSettings;
-
-#ifdef JPH_STAT_COLLECTOR
-	/// Statistics
-	alignas(JPH_CACHE_LINE_SIZE) atomic<int> mManifoldsBeforeReduction { 0 };
-	alignas(JPH_CACHE_LINE_SIZE) atomic<int> mManifoldsAfterReduction { 0 };
-#endif // JPH_STAT_COLLECTOR
 };
 
 } // JPH

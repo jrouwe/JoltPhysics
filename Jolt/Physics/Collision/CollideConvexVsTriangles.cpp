@@ -9,18 +9,10 @@
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
 #include <Physics/Collision/NarrowPhaseStats.h>
-#include <Core/StatCollector.h>
 #include <Geometry/EPAPenetrationDepth.h>
 #include <Geometry/Plane.h>
 
 namespace JPH {
-
-#ifdef JPH_STAT_COLLECTOR
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> CollideConvexVsTriangles::sNumCollideChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> CollideConvexVsTriangles::sNumGJKChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> CollideConvexVsTriangles::sNumEPAChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> CollideConvexVsTriangles::sNumCollisions { 0 };
-#endif // JPH_STAT_COLLECTOR
 
 CollideConvexVsTriangles::CollideConvexVsTriangles(const ConvexShape *inShape1, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeID &inSubShapeID1, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector) :
 	mCollideShapeSettings(inCollideShapeSettings),
@@ -48,8 +40,6 @@ CollideConvexVsTriangles::CollideConvexVsTriangles(const ConvexShape *inShape1, 
 void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, const SubShapeID &inSubShapeID2)
 {
 	JPH_PROFILE_FUNCTION();
-
-	JPH_IF_STAT_COLLECTOR(sNumCollideChecks++;)
 
 	// Scale triangle and transform it to the space of 1
 	Vec3 v0 = mTransform2To1 * (mScale2 * inV0); 
@@ -80,8 +70,6 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	EPAPenetrationDepth pen_depth;
 	EPAPenetrationDepth::EStatus status;
 
-	JPH_IF_STAT_COLLECTOR(sNumGJKChecks++;)
-
 	// Get the support function
 	if (mShape1ExCvxRadius == nullptr)
 		mShape1ExCvxRadius = mShape1->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, mBufferExCvxRadius, mScale1);
@@ -95,7 +83,6 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	else if (status == EPAPenetrationDepth::EStatus::Indeterminate)
 	{
 		// Need to run expensive EPA algorithm
-		JPH_IF_STAT_COLLECTOR(sNumEPAChecks++;)
 
 		// Get the support function
 		if (mShape1IncCvxRadius == nullptr)
@@ -156,34 +143,9 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 			p = mTransform1 * p;
 	}
 	
-	JPH_IF_STAT_COLLECTOR(sNumCollisions++;)
-
 	// Notify the collector
 	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 	mCollector.AddHit(result);
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void CollideConvexVsTriangles::sResetStats()
-{
-	sNumCollideChecks = 0;
-	sNumGJKChecks = 0;
-	sNumEPAChecks = 0;
-	sNumCollisions = 0;
-}
-
-void CollideConvexVsTriangles::sCollectStats()
-{
-	JPH_PROFILE_FUNCTION();
-
-	JPH_STAT_COLLECTOR_ADD("ConvexVsTriangles.NumChecks", int(sNumCollideChecks));
-	JPH_STAT_COLLECTOR_ADD("ConvexVsTriangles.NumCollisions", int(sNumCollisions));
-	if (sNumCollideChecks > 0)
-	{
-		JPH_STAT_COLLECTOR_ADD("ConvexVsTriangles.GJKCheckPercentage", 100.0f * sNumGJKChecks / sNumCollideChecks);
-		JPH_STAT_COLLECTOR_ADD("ConvexVsTriangles.EPACheckPercentage", 100.0f * sNumEPAChecks / sNumCollideChecks);
-	}
-}
-#endif // JPH_STAT_COLLECTOR
 
 } // JPH

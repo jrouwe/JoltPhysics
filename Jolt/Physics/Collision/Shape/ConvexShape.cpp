@@ -16,7 +16,6 @@
 #include <Physics/Collision/CollisionDispatch.h>
 #include <Physics/Collision/NarrowPhaseStats.h>
 #include <Physics/PhysicsSettings.h>
-#include <Core/StatCollector.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
 #include <Geometry/EPAPenetrationDepth.h>
@@ -24,13 +23,6 @@
 #include <ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
-
-#ifdef JPH_STAT_COLLECTOR
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumCollideChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumGJKChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumEPAChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumCollisions { 0 };
-#endif // JPH_STAT_COLLECTOR
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(ConvexShapeSettings)
 {
@@ -52,8 +44,6 @@ const vector<Vec3> ConvexShape::sUnitSphereTriangles = []() {
 void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
-
-	JPH_IF_STAT_COLLECTOR(sNumCollideChecks++;)
 
 	// Get the shapes
 	JPH_ASSERT(inShape1->GetType() == EShapeType::Convex);
@@ -80,8 +70,6 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 
 	// Scope to limit lifetime of SupportBuffer
 	{
-		JPH_IF_STAT_COLLECTOR(sNumGJKChecks++;)
-
 		// Create support function
 		SupportBuffer buffer1_excl_cvx_radius, buffer2_excl_cvx_radius;
 		const Support *shape1_excl_cvx_radius = shape1->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer1_excl_cvx_radius, inScale1);
@@ -106,7 +94,6 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 	case EPAPenetrationDepth::EStatus::Indeterminate:
 		{
 			// Need to run expensive EPA algorithm
-			JPH_IF_STAT_COLLECTOR(sNumEPAChecks++;)
 
 			// Create support function
 			SupportBuffer buffer1_incl_cvx_radius, buffer2_incl_cvx_radius;
@@ -161,8 +148,6 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 		for (Vec3 &p : result.mShape2Face)
 			p = inCenterOfMassTransform2 * p;
 	}
-
-	JPH_IF_STAT_COLLECTOR(sNumCollisions++;)
 
 	// Notify the collector
 	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
@@ -541,29 +526,6 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCe
 	}
 }
 #endif // JPH_DEBUG_RENDERER
-
-#ifdef JPH_STAT_COLLECTOR
-void ConvexShape::sResetStats()
-{
-	sNumCollideChecks = 0;
-	sNumGJKChecks = 0;
-	sNumEPAChecks = 0;
-	sNumCollisions = 0;
-}
-
-void ConvexShape::sCollectStats()
-{
-	JPH_PROFILE_FUNCTION();
-
-	JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.NumChecks", int(sNumCollideChecks));
-	JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.NumCollisions", int(sNumCollisions));
-	if (sNumCollideChecks > 0)
-	{
-		JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.GJKCheckPercentage", 100.0f * sNumGJKChecks / sNumCollideChecks);
-		JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.EPACheckPercentage", 100.0f * sNumEPAChecks / sNumCollideChecks);
-	}
-}
-#endif // JPH_STAT_COLLECTOR
 
 void ConvexShape::SaveBinaryState(StreamOut &inStream) const
 {

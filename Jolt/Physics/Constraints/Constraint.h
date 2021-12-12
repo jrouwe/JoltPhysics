@@ -99,11 +99,6 @@ public:
 	/// Link bodies that are connected by this constraint in the island builder
 	virtual void				BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) = 0;
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats
-	virtual void				CollectStats() const						{ }
-#endif // JPH_STAT_COLLECTOR
-
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing interface
 	virtual void				DrawConstraint(DebugRenderer *inRenderer) const = 0;

@@ -215,20 +215,7 @@ public:
 	/// Restoring state for replay. Returns false when failed.
 	bool						RestoreState(StateRecorder &inStream);
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats of the previous time step
-	void						CollectStats();
-#endif // JPH_STAT_COLLECTOR
-
 private:
-#ifdef JPH_STAT_COLLECTOR
-	// Statistics
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumBodyPairCacheChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumBodyPairCacheHits;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumContactPointsAdded;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumContactPointsLambdasSet;
-#endif // JPH_STAT_COLLECTOR
-	
 	/// Local space contact point, used for caching impulses
 	class CachedContactPoint
 	{

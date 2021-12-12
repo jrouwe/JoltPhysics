@@ -126,14 +126,6 @@ public:
 	virtual void					DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const override;
 #endif // JPH_DEBUG_RENDERER
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Reset stats collected during the previous time step
-	static void						sResetStats();
-
-	/// Collect stats of the previous time step
-	static void						sCollectStats();
-#endif // JPH_STAT_COLLECTOR
-
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;
@@ -156,14 +148,6 @@ private:
 	// Helper functions called by CollisionDispatch
 	static void						sCollideConvexVsConvex(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
 	static void						sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
-
-#ifdef JPH_STAT_COLLECTOR
-	// Statistics
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumCollideChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumGJKChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumEPAChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumCollisions;
-#endif // JPH_STAT_COLLECTOR
 
 	// Properties
 	RefConst<PhysicsMaterial>		mMaterial;													///< Material assigned to this shape

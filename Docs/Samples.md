@@ -24,7 +24,6 @@ This document describes the demos in the Samples application (currently compiles
 * Shift + , - Play reverse (only when Physics Settings / Record State for Playback is on).
 * Shift + . - Replay forward (only when Physics Settings / Record State for Playback is on).
 * T - Dump frame timing information to profile_*.html (when JPH_PROFILE_ENABLED defined).
-* Y - Start / stop recording stats. Stats?.html is written when stopping (when JPH_STAT_COLLECTOR defined).
 
 ## The Tests
 
