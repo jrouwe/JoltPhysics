@@ -66,7 +66,7 @@ private:
 	void					DrawPhysics();
 
 	// Update the physics system with a fixed delta time
-	void					StepPhysics();
+	void					StepPhysics(JobSystem *inJobSystem);
 
 	// Save state of simulation
 	void					SaveState(StateRecorderImpl &inStream);
@@ -84,6 +84,7 @@ private:
 	int						mIntegrationSubSteps = 1;									// How many integration steps per physics update
 	TempAllocator *			mTempAllocator = nullptr;									// Allocator for temporary allocations
 	JobSystem *				mJobSystem = nullptr;										// The job system that runs physics jobs
+	JobSystem *				mJobSystemValidating = nullptr;								// The job system to use when validating determinism
 	PhysicsSystem *			mPhysicsSystem = nullptr;									// The physics system that simulates the world
 	ContactListenerImpl *	mContactListener = nullptr;									// Contact listener implementation
 	PhysicsSettings			mPhysicsSettings;											// Main physics simulation settings

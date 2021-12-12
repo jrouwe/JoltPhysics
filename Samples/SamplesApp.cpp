@@ -304,6 +304,9 @@ SamplesApp::SamplesApp()
 	// Create job system
 	mJobSystem = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, mMaxConcurrentJobs - 1);
 
+	// Create job system without extra threads for validating
+	mJobSystemValidating = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, 0);
+
 	// Create UI
 	UIElement *main_menu = mDebugUI->CreateMenu();
 	mDebugUI->CreateTextButton(main_menu, "Select Test", [this]() { 
@@ -480,6 +483,7 @@ SamplesApp::~SamplesApp()
 	delete mTest;
 	delete mContactListener;
 	delete mPhysicsSystem;
+	delete mJobSystemValidating;
 	delete mJobSystem;
 	delete mTempAllocator;
 }
@@ -1791,7 +1795,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			DrawPhysics();
 
 			// Step the world (with fixed frequency)
-			StepPhysics();
+			StepPhysics(mJobSystem);
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw any contacts that were collected through the contact listener
@@ -1838,7 +1842,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			DrawPhysics();
 
 			// Update the physics world
-			StepPhysics();
+			StepPhysics(mJobSystem);
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw any contacts that were collected through the contact listener
@@ -1856,7 +1860,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 				RestoreState(mPlaybackFrames.back());
 
 				// Step again
-				StepPhysics();
+				StepPhysics(mJobSystemValidating);
 
 				// Validate that the result is the same
 				ValidateState(post_step_state);
@@ -2018,7 +2022,7 @@ void SamplesApp::DrawPhysics()
 	mShapeToGeometry = move(shape_to_geometry);
 }
 
-void SamplesApp::StepPhysics()
+void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 {
 	float delta_time = 1.0f / mUpdateFrequency;
 
@@ -2039,7 +2043,7 @@ void SamplesApp::StepPhysics()
 	uint64 start_tick = GetProcessorTickCount();
 
 	// Step the world (with fixed frequency)
-	mPhysicsSystem->Update(delta_time, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+	mPhysicsSystem->Update(delta_time, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, inJobSystem);
 
 	// Accumulate time
 	mTotalTime += GetProcessorTickCount() - start_tick;
