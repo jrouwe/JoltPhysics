@@ -41,7 +41,7 @@ bool PhysicsScene::FixInvalidScales()
 	return success;
 }
 
-void PhysicsScene::CreateBodies(PhysicsSystem *inSystem)
+void PhysicsScene::CreateBodies(PhysicsSystem *inSystem) const
 {
 	BodyInterface &bi = inSystem->GetBodyInterface();
 	for (const BodyCreationSettings &b : mBodies)

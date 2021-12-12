@@ -27,7 +27,7 @@ public:
 	vector<BodyCreationSettings> &			GetBodies()										{ return mBodies; }
 
 	/// Instantiate all bodies
-	void									CreateBodies(PhysicsSystem *inSystem);
+	void									CreateBodies(PhysicsSystem *inSystem) const;
 
 	/// Go through all body creation settings and fix shapes that are scaled incorrectly (note this will change the scene a bit).
 	/// @return False when not all scales could be fixed.
