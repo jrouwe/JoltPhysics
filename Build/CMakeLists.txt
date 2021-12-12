@@ -58,8 +58,8 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 
 	# Set compiler flags for various configurations
 	set(CMAKE_CXX_FLAGS_DEBUG "-g -D_DEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER") # Clang reorders variables so that div by zero occurs if we enable exception checking
-	set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER")
-	set(CMAKE_CXX_FLAGS_DISTRIBUTION "-DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER")
+	set(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3 -DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASEASAN "-DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DISABLE_TEMP_ALLOCATOR -DJPH_DEBUG_RENDERER -fsanitize=address")
 	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER -fsanitize=undefined,implicit-conversion")
 	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-DNDEBUG -fprofile-instr-generate -fcoverage-mapping")
@@ -99,6 +99,16 @@ target_link_libraries (HelloWorld LINK_PUBLIC Jolt)
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
 endif()
+
+# Performance Test application
+include(${PHYSICS_REPO_ROOT}/PerformanceTest/PerformanceTest.cmake)
+add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
+target_include_directories(PerformanceTest PUBLIC ${JOLT_PHYSICS_ROOT} ${PERFORMANCE_TEST_ROOT})
+target_link_libraries (PerformanceTest LINK_PUBLIC Jolt)
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+	target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+endif()
+set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	# Windows only targets
