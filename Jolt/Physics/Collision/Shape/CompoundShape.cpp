@@ -276,7 +276,8 @@ void CompoundShape::SaveBinaryState(StreamOut &inStream) const
 	Shape::SaveBinaryState(inStream);
 
 	inStream.Write(mCenterOfMass);
-	inStream.Write(mLocalBounds);
+	inStream.Write(mLocalBounds.mMin);
+	inStream.Write(mLocalBounds.mMax);
 	inStream.Write(mInnerRadius);
 
 	// Write sub shapes
@@ -297,7 +298,8 @@ void CompoundShape::RestoreBinaryState(StreamIn &inStream)
 	Shape::RestoreBinaryState(inStream);
 
 	inStream.Read(mCenterOfMass);
-	inStream.Read(mLocalBounds);
+	inStream.Read(mLocalBounds.mMin);
+	inStream.Read(mLocalBounds.mMax);
 	inStream.Read(mInnerRadius);
 
 	// Read sub shapes
