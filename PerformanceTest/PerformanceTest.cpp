@@ -131,100 +131,112 @@ int main(int argc, char** argv)
 	object_to_broadphase[Layers::MOVING] = BroadPhaseLayers::MOVING;
 
 	// Trace header
-	cout << "Thread Count, Time (s), Iterations, Hash" << endl;
+	cout << "Motion Quality, Thread Count, Time (s), Iterations, Hash" << endl;
 
-	// Test thread permutations
-	for (uint num_threads = 0; num_threads < thread::hardware_concurrency(); ++num_threads)
+	// Iterate motion qualities
+	for (uint mq = 0; mq < 2; ++mq)
 	{
-		// Create job system with desired number of threads
-		JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, num_threads);
+		// Determine motion quality
+		EMotionQuality motion_quality = mq == 0? EMotionQuality::Discrete : EMotionQuality::LinearCast;
+		string motion_quality_str = mq == 0? "Discrete" : "LinearCast";
 
-		// Create physics system
-		PhysicsSystem physics_system;
-		physics_system.Init(10240, 0, 65536, 10240, object_to_broadphase, MyBroadPhaseCanCollide, MyObjectCanCollide);
+		// Set motion quality on ragdoll
+		for (BodyCreationSettings &body : ragdoll_settings->mParts)
+			body.mMotionQuality = motion_quality;
 
-		// Add background geometry
-		scene->CreateBodies(&physics_system);
-
-		// Create ragdoll piles
-		vector<Ref<Ragdoll>> ragdolls;
-		mt19937 random;
-		uniform_real_distribution<float> angle(0.0f, JPH_PI);
-		CollisionGroup::GroupID group_id = 1;
-		for (int row = 0; row < cNumRows; ++row)
-			for (int col = 0; col < cNumCols; ++col)
-			{
-				// Determine start location of ray
-				Vec3 start = Vec3(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0f), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0f));
-
-				// Cast ray down to terrain
-				RayCastResult hit;
-				Vec3 ray_direction(0, -200, 0);
-				RayCast ray { start, ray_direction };
-				if (physics_system.GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
-					start = start + hit.mFraction * ray_direction;
-
-				for (int i = 0; i < cPileSize; ++i)
-				{
-					// Create ragdoll
-					Ref<Ragdoll> ragdoll = ragdoll_settings->CreateRagdoll(group_id++, nullptr, &physics_system);
-	
-					// Override root
-					SkeletonPose pose_copy = pose;
-					SkeletonPose::JointState &root = pose_copy.GetJoint(0);
-					root.mTranslation = start + Vec3(0, cVerticalSeparation * (i + 1), 0);
-					root.mRotation = Quat::sRotation(Vec3::sAxisY(), angle(random)) * root.mRotation;
-					pose_copy.CalculateJointMatrices();
-
-					// Drive to pose
-					ragdoll->SetPose(pose_copy);
-					ragdoll->DriveToPoseUsingMotors(pose_copy);
-					ragdoll->AddToPhysicsSystem(EActivation::Activate);
-
-					// Keep reference
-					ragdolls.push_back(ragdoll);
-				}
-			}
-
-		// Calculate total amount of ragdoll bodies
-		uint num_bodies = uint(ragdolls.size() * ragdolls[0]->GetBodyCount());
-
-		uint64 total_ticks = 0;
-		uint iterations = 0;
-
-		// Step the world until half of the bodies are sleeping
-		while (physics_system.GetNumActiveBodies() > num_bodies / 2)
+		// Test thread permutations
+		for (uint num_threads = 0; num_threads < thread::hardware_concurrency(); ++num_threads)
 		{
-			JPH_PROFILE_NEXTFRAME();
+			// Create job system with desired number of threads
+			JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, num_threads);
 
-			// Start measuring
-			uint64 start = GetProcessorTickCount();
+			// Create physics system
+			PhysicsSystem physics_system;
+			physics_system.Init(10240, 0, 65536, 10240, object_to_broadphase, MyBroadPhaseCanCollide, MyObjectCanCollide);
 
-			// Do a physics step
-			physics_system.Update(cDeltaTime, 1, 1, &temp_allocator, &job_system);
+			// Add background geometry
+			scene->CreateBodies(&physics_system);
 
-			// Stop measuring
-			total_ticks += GetProcessorTickCount() - start;
-			++iterations;
-		}
+			// Create ragdoll piles
+			vector<Ref<Ragdoll>> ragdolls;
+			mt19937 random;
+			uniform_real_distribution<float> angle(0.0f, JPH_PI);
+			CollisionGroup::GroupID group_id = 1;
+			for (int row = 0; row < cNumRows; ++row)
+				for (int col = 0; col < cNumCols; ++col)
+				{
+					// Determine start location of ray
+					Vec3 start = Vec3(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0f), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0f));
 
-		// Calculate hash of all positions and rotations of the bodies
-		size_t hash = 0;
-		BodyInterface &bi = physics_system.GetBodyInterfaceNoLock();
-		for (Ragdoll *ragdoll : ragdolls)
-			for (BodyID id : ragdoll->GetBodyIDs())
+					// Cast ray down to terrain
+					RayCastResult hit;
+					Vec3 ray_direction(0, -200, 0);
+					RayCast ray { start, ray_direction };
+					if (physics_system.GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
+						start = start + hit.mFraction * ray_direction;
+
+					for (int i = 0; i < cPileSize; ++i)
+					{
+						// Create ragdoll
+						Ref<Ragdoll> ragdoll = ragdoll_settings->CreateRagdoll(group_id++, nullptr, &physics_system);
+	
+						// Override root
+						SkeletonPose pose_copy = pose;
+						SkeletonPose::JointState &root = pose_copy.GetJoint(0);
+						root.mTranslation = start + Vec3(0, cVerticalSeparation * (i + 1), 0);
+						root.mRotation = Quat::sRotation(Vec3::sAxisY(), angle(random)) * root.mRotation;
+						pose_copy.CalculateJointMatrices();
+
+						// Drive to pose
+						ragdoll->SetPose(pose_copy);
+						ragdoll->DriveToPoseUsingMotors(pose_copy);
+						ragdoll->AddToPhysicsSystem(EActivation::Activate);
+
+						// Keep reference
+						ragdolls.push_back(ragdoll);
+					}
+				}
+
+			// Calculate total amount of ragdoll bodies
+			uint num_bodies = uint(ragdolls.size() * ragdolls[0]->GetBodyCount());
+
+			uint64 total_ticks = 0;
+			uint iterations = 0;
+
+			// Step the world until half of the bodies are sleeping
+			while (physics_system.GetNumActiveBodies() > num_bodies / 2)
 			{
-				Vec3 pos = bi.GetPosition(id);
-				Quat rot = bi.GetRotation(id);
-				hash_combine(hash, pos.GetX(), pos.GetY(), pos.GetZ(), rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+				JPH_PROFILE_NEXTFRAME();
+
+				// Start measuring
+				uint64 start = GetProcessorTickCount();
+
+				// Do a physics step
+				physics_system.Update(cDeltaTime, 1, 1, &temp_allocator, &job_system);
+
+				// Stop measuring
+				total_ticks += GetProcessorTickCount() - start;
+				++iterations;
 			}
 
-		// Remove ragdolls
-		for (Ragdoll *ragdoll : ragdolls)
-			ragdoll->RemoveFromPhysicsSystem();
+			// Calculate hash of all positions and rotations of the bodies
+			size_t hash = 0;
+			BodyInterface &bi = physics_system.GetBodyInterfaceNoLock();
+			for (Ragdoll *ragdoll : ragdolls)
+				for (BodyID id : ragdoll->GetBodyIDs())
+				{
+					Vec3 pos = bi.GetPosition(id);
+					Quat rot = bi.GetRotation(id);
+					hash_combine(hash, pos.GetX(), pos.GetY(), pos.GetZ(), rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+				}
 
-		// Trace stat line
-		cout << num_threads + 1 << ", " << double(total_ticks) / GetProcessorTicksPerSecond() << ", " << iterations << ", " << hash << endl;
+			// Remove ragdolls
+			for (Ragdoll *ragdoll : ragdolls)
+				ragdoll->RemoveFromPhysicsSystem();
+
+			// Trace stat line
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(total_ticks) / GetProcessorTicksPerSecond() << ", " << iterations << ", " << hash << endl;
+		}
 	}
 
 	return 0;
