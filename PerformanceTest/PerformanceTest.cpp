@@ -186,11 +186,14 @@ int main(int argc, char** argv)
 				}
 			}
 
+		// Calculate total amount of ragdoll bodies
+		uint num_bodies = uint(ragdolls.size() * ragdolls[0]->GetBodyCount());
+
 		uint64 total_ticks = 0;
 		uint iterations = 0;
 
-		// Step the world until everything is sleeping
-		while (physics_system.GetNumActiveBodies() > 0)
+		// Step the world until half of the bodies are sleeping
+		while (physics_system.GetNumActiveBodies() > num_bodies / 2)
 		{
 			JPH_PROFILE_NEXTFRAME();
 
