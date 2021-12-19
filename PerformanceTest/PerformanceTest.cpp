@@ -16,6 +16,7 @@
 // STL includes
 #include <iostream>
 #include <thread>
+#include <chrono>
 
 using namespace JPH;
 using namespace std;
@@ -203,7 +204,7 @@ int main(int argc, char** argv)
 			// Calculate total amount of ragdoll bodies
 			uint num_bodies = uint(ragdolls.size() * ragdolls[0]->GetBodyCount());
 
-			uint64 total_ticks = 0;
+			chrono::nanoseconds total_duration(0);
 			uint iterations = 0;
 
 			// Step the world until half of the bodies are sleeping
@@ -212,13 +213,16 @@ int main(int argc, char** argv)
 				JPH_PROFILE_NEXTFRAME();
 
 				// Start measuring
-				uint64 start = GetProcessorTickCount();
+				chrono::high_resolution_clock::time_point clock_start = chrono::high_resolution_clock::now();
 
 				// Do a physics step
 				physics_system.Update(cDeltaTime, 1, 1, &temp_allocator, &job_system);
 
 				// Stop measuring
-				total_ticks += GetProcessorTickCount() - start;
+				chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
+				total_duration += chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
+
+				// Increment step count
 				++iterations;
 
 				// Dump profile information every 100 iterations
@@ -244,7 +248,7 @@ int main(int argc, char** argv)
 				ragdoll->RemoveFromPhysicsSystem();
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(total_ticks) / GetProcessorTicksPerSecond() << ", " << iterations << ", " << hash << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << 1.0e-9 * total_duration.count() << ", " << iterations << ", " << hash << endl;
 		}
 	}
 
