@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
 	// Load animation
 	Ref<SkeletalAnimation> animation;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
+	if (!ObjectStreamIn::sReadObject("Assets/Human/dead_pose1.tof", animation))
 	{
 		cerr << "Unable to load animation" << endl;
 		return 1;
@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 
 	// Read the scene
 	Ref<PhysicsScene> scene;
-	if (!ObjectStreamIn::sReadObject("Assets/Terrain2.bof", scene))
+	if (!ObjectStreamIn::sReadObject("Assets/terrain2.bof", scene))
 	{
 		cerr << "Unable to load terrain" << endl;
 		return 1;
