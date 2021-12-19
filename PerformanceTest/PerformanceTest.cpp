@@ -223,7 +223,9 @@ int main(int argc, char** argv)
 
 				// Dump profile information every 100 iterations
 				if (iterations % 100 == 0)
+				{
 					JPH_PROFILE_DUMP();
+				}
 			}
 
 			// Calculate hash of all positions and rotations of the bodies
