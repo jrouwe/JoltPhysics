@@ -299,7 +299,7 @@ void Body::SaveState(StateRecorder &inStream) const
 	inStream.Write(mRotation);
 	inStream.Write(mFriction);
 	inStream.Write(mRestitution);
-	inStream.Write(mCollisionGroup);
+	mCollisionGroup.SaveBinaryState(inStream);
 	inStream.Write(mMotionType);
 
 	if (mMotionProperties != nullptr)
@@ -312,7 +312,7 @@ void Body::RestoreState(StateRecorder &inStream)
 	inStream.Read(mRotation);
 	inStream.Read(mFriction);
 	inStream.Read(mRestitution);
-	inStream.Read(mCollisionGroup);
+	mCollisionGroup.RestoreBinaryState(inStream);
 	inStream.Read(mMotionType);
 
 	if (mMotionProperties != nullptr)

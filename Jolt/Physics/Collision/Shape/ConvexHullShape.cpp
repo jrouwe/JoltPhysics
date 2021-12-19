@@ -1128,7 +1128,8 @@ void ConvexHullShape::SaveBinaryState(StreamOut &inStream) const
 
 	inStream.Write(mCenterOfMass);
 	inStream.Write(mInertia);
-	inStream.Write(mLocalBounds);
+	inStream.Write(mLocalBounds.mMin);
+	inStream.Write(mLocalBounds.mMax);
 	inStream.Write(mPoints);
 	inStream.Write(mFaces);
 	inStream.Write(mPlanes);
@@ -1144,7 +1145,8 @@ void ConvexHullShape::RestoreBinaryState(StreamIn &inStream)
 
 	inStream.Read(mCenterOfMass);
 	inStream.Read(mInertia);
-	inStream.Read(mLocalBounds);
+	inStream.Read(mLocalBounds.mMin);
+	inStream.Read(mLocalBounds.mMax);
 	inStream.Read(mPoints);
 	inStream.Read(mFaces);
 	inStream.Read(mPlanes);

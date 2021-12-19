@@ -44,6 +44,12 @@ public:
 		if (!IsFailed())
 			WriteBytes(inString.data(), len);
 	}
+
+	/// Write a Vec3 (don't write W)
+	void				Write(const Vec3 &inVec)
+	{
+		WriteBytes(&inVec, 3 * sizeof(float));
+	}
 };
 
 } // JPH

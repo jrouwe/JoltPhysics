@@ -57,6 +57,13 @@ public:
 		else
 			outString.clear();
 	}
+
+	/// Read a Vec3 (don't read W)
+	void				Read(Vec3 &outVec)
+	{
+		ReadBytes(&outVec, 3 * sizeof(float));
+		outVec = Vec3::sFixW(outVec.mValue);
+	}
 };
 
 } // JPH
