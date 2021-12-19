@@ -130,6 +130,9 @@ int main(int argc, char** argv)
 	object_to_broadphase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
 	object_to_broadphase[Layers::MOVING] = BroadPhaseLayers::MOVING;
 
+	// Start profiling this thread
+	JPH_PROFILE_THREAD_START("Main");
+
 	// Trace header
 	cout << "Motion Quality, Thread Count, Time (s), Iterations, Hash" << endl;
 
@@ -217,6 +220,10 @@ int main(int argc, char** argv)
 				// Stop measuring
 				total_ticks += GetProcessorTickCount() - start;
 				++iterations;
+
+				// Dump profile information every 100 iterations
+				if (iterations % 100 == 0)
+					JPH_PROFILE_DUMP();
 			}
 
 			// Calculate hash of all positions and rotations of the bodies
@@ -238,6 +245,9 @@ int main(int argc, char** argv)
 			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(total_ticks) / GetProcessorTicksPerSecond() << ", " << iterations << ", " << hash << endl;
 		}
 	}
+
+	// End profiling this thread
+	JPH_PROFILE_THREAD_END();
 
 	return 0;
 }
