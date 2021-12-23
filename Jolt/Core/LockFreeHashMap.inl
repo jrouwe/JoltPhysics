@@ -5,18 +5,107 @@
 
 namespace JPH {
 
-template <class Key, class Value>
-void LockFreeHashMap<Key, Value>::Init(uint inObjectStoreSizeBytes, uint32 inMaxBuckets)
+///////////////////////////////////////////////////////////////////////////////////
+// LFHMAllocator
+///////////////////////////////////////////////////////////////////////////////////
+
+inline LFHMAllocator::~LFHMAllocator()
 {
-	JPH_ASSERT(inMaxBuckets >= 4 && IsPowerOf2(inMaxBuckets));
+	delete [] mObjectStore;
+}
+
+inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
+{
 	JPH_ASSERT(mObjectStore == nullptr);
-	JPH_ASSERT(mBuckets == nullptr);
 
 	mObjectStoreSizeBytes = inObjectStoreSizeBytes;
+	mObjectStore = new uint8 [inObjectStoreSizeBytes];
+}
+
+inline void LFHMAllocator::Clear()
+{
+	mWriteOffset = 0;
+}
+
+inline void LFHMAllocator::Allocate(uint32 inBlockSize, uint32 &ioBegin, uint32 &ioEnd)
+{
+	// Atomically fetch a block from the pool
+	uint32 begin = mWriteOffset.fetch_add(inBlockSize, memory_order_relaxed);
+	uint32 end = min(begin + inBlockSize, mObjectStoreSizeBytes);
+
+	if (ioEnd == begin)
+	{
+		// Block is allocated straight after our previous block
+		begin = ioBegin;
+	}
+	else
+	{
+		// Block is a new block
+		begin = min(begin, mObjectStoreSizeBytes);
+	}
+
+	// Store the begin and end of the resulting block
+	ioBegin = begin;
+	ioEnd = end;
+}
+
+template <class T>
+inline uint32 LFHMAllocator::ToOffset(const T *inData) const
+{
+	const uint8 *data = reinterpret_cast<const uint8 *>(inData);
+	JPH_ASSERT(data >= mObjectStore && data < mObjectStore + mObjectStoreSizeBytes);
+	return uint32(data - mObjectStore);
+}
+
+template <class T>
+inline T *LFHMAllocator::FromOffset(uint32 inOffset) const
+{
+	JPH_ASSERT(inOffset < mObjectStoreSizeBytes);
+	return reinterpret_cast<T *>(mObjectStore + inOffset);
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// LFHMAllocatorContext
+///////////////////////////////////////////////////////////////////////////////////
+
+inline LFHMAllocatorContext::LFHMAllocatorContext(LFHMAllocator &inAllocator, uint32 inBlockSize) : 
+	mAllocator(inAllocator), 
+	mBlockSize(inBlockSize) 
+{ 
+}
+
+inline bool LFHMAllocatorContext::Allocate(uint32 inSize, uint32 &outWriteOffset)
+{
+	// Check if we have space
+	if (mEnd - mBegin < inSize)
+	{
+		// Allocate a new block
+		mAllocator.Allocate(mBlockSize, mBegin, mEnd);
+
+		// Check if we have space again
+		if (mEnd - mBegin < inSize)
+			return false;
+	}
+
+	// Make the allocation
+	outWriteOffset = mBegin;
+	mBegin += inSize;
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+// LockFreeHashMap
+///////////////////////////////////////////////////////////////////////////////////
+
+template <class Key, class Value>
+void LockFreeHashMap<Key, Value>::Init(uint32 inMaxBuckets)
+{
+	JPH_ASSERT(inMaxBuckets >= 4 && IsPowerOf2(inMaxBuckets));
+	JPH_ASSERT(mBuckets == nullptr);
+
 	mNumBuckets = inMaxBuckets;
 	mMaxBuckets = inMaxBuckets;
 
-	mObjectStore = new uint8 [inObjectStoreSizeBytes];
 	mBuckets = new atomic<uint32> [inMaxBuckets];
 
 	Clear();
@@ -25,16 +114,14 @@ void LockFreeHashMap<Key, Value>::Init(uint inObjectStoreSizeBytes, uint32 inMax
 template <class Key, class Value>
 LockFreeHashMap<Key, Value>::~LockFreeHashMap()
 {
-	delete [] mObjectStore;
 	delete [] mBuckets;
 }
 
 template <class Key, class Value>
 void LockFreeHashMap<Key, Value>::Clear()
 {
-	// Reset write offset and number of key value pairs
-	mWriteOffset = 0;
 #ifdef JPH_ENABLE_ASSERTS
+	// Reset number of key value pairs
 	mNumKeyValues = 0;
 #endif // JPH_ENABLE_ASSERTS
 
@@ -62,7 +149,7 @@ void LockFreeHashMap<Key, Value>::SetNumBuckets(uint32 inNumBuckets)
 
 template <class Key, class Value>
 template <class... Params>
-inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::Create(const Key &inKey, size_t inKeyHash, int inExtraBytes, Params &&... inConstructorParams)
+inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::Create(LFHMAllocatorContext &ioContext, const Key &inKey, size_t inKeyHash, int inExtraBytes, Params &&... inConstructorParams)
 {
 	// This is not a multi map, test the key hasn't been inserted yet
 	JPH_ASSERT(Find(inKey, inKeyHash) == nullptr);
@@ -70,16 +157,19 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 	// Calculate total size
 	uint size = sizeof(KeyValue) + inExtraBytes;
 
-	// Allocate entry in the cache
-	uint32 write_offset = mWriteOffset.fetch_add(size, memory_order_relaxed);
-	if (write_offset + size > mObjectStoreSizeBytes)
+	// Get the write offset for this key value pair
+	uint32 write_offset;
+	if (!ioContext.Allocate(size, write_offset))
 		return nullptr;
+
 #ifdef JPH_ENABLE_ASSERTS
+	// Increment amount of entries in map
 	mNumKeyValues.fetch_add(1, memory_order_relaxed);
 #endif // JPH_ENABLE_ASSERTS
 
 	// Construct the key/value pair
-	KeyValue *kv = reinterpret_cast<KeyValue *>(mObjectStore + write_offset);
+	KeyValue *kv = mAllocator.FromOffset<KeyValue>(write_offset);
+	JPH_ASSERT(intptr_t(kv) % alignof(KeyValue) == 0);
 #ifdef _DEBUG
 	memset(kv, 0xcd, size);
 #endif
@@ -90,12 +180,11 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 	atomic<uint32> &offset = mBuckets[inKeyHash & (mNumBuckets - 1)];
 
 	// Add this entry as the first element in the linked list
-	uint32 new_offset = uint32(reinterpret_cast<uint8 *>(kv) - mObjectStore);
 	for (;;)
 	{
 		uint32 old_offset = offset.load(memory_order_relaxed);
 		kv->mNextOffset = old_offset;
-		if (offset.compare_exchange_weak(old_offset, new_offset, memory_order_release))
+		if (offset.compare_exchange_weak(old_offset, write_offset, memory_order_release))
 			break;
 	}
 
@@ -110,7 +199,7 @@ inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key
 	while (offset != cInvalidHandle)
 	{
 		// Loop through linked list of values until the right one is found
-		const KeyValue *kv = reinterpret_cast<const KeyValue *>(mObjectStore + offset);
+		const KeyValue *kv = mAllocator.FromOffset<const KeyValue>(offset);
 		if (kv->mKey == inKey)
 			return kv;
 		offset = kv->mNextOffset;
@@ -123,16 +212,13 @@ inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key
 template <class Key, class Value>
 inline uint32 LockFreeHashMap<Key, Value>::ToHandle(const KeyValue *inKeyValue) const
 {
-	const uint8 *kv = reinterpret_cast<const uint8 *>(inKeyValue);
-	JPH_ASSERT(kv >= mObjectStore && kv < mObjectStore + mObjectStoreSizeBytes);
-	return uint32(kv - mObjectStore);
+	return mAllocator.ToOffset(inKeyValue);
 }
 
 template <class Key, class Value>
 inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::FromHandle(uint32 inHandle) const
 {
-	JPH_ASSERT(inHandle < mObjectStoreSizeBytes);
-	return reinterpret_cast<const KeyValue *>(mObjectStore + inHandle);
+	return mAllocator.FromOffset<const KeyValue>(inHandle);
 }
 
 template <class Key, class Value>
@@ -143,7 +229,7 @@ inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(vector<const KeyValue *
 		uint32 offset = *bucket;
 		while (offset != cInvalidHandle)
 		{
-			const KeyValue *kv = reinterpret_cast<const KeyValue *>(mObjectStore + offset);
+			const KeyValue *kv = mAllocator.FromOffset<const KeyValue>(offset);
 			outAll.push_back(kv);
 			offset = kv->mNextOffset;
 		}
@@ -174,7 +260,7 @@ typename LockFreeHashMap<Key, Value>::KeyValue &LockFreeHashMap<Key, Value>::Ite
 {
 	JPH_ASSERT(mOffset != cInvalidHandle);
 
-	return *reinterpret_cast<KeyValue *>(mMap->mObjectStore + mOffset);
+	return *mMap->mAllocator.FromOffset<KeyValue>(mOffset);
 }		
 
 template <class Key, class Value>
@@ -185,7 +271,7 @@ typename LockFreeHashMap<Key, Value>::Iterator &LockFreeHashMap<Key, Value>::Ite
 	// Find the next key value in this bucket
 	if (mOffset != cInvalidHandle)
 	{
-		const KeyValue *kv = reinterpret_cast<const KeyValue *>(mMap->mObjectStore + mOffset);
+		const KeyValue *kv = mMap->mAllocator.FromOffset<const KeyValue>(mOffset);
 		mOffset = kv->mNextOffset;
 		if (mOffset != cInvalidHandle)
 			return *this;
@@ -225,7 +311,7 @@ void LockFreeHashMap<Key, Value>::TraceStats() const
 		uint32 offset = *bucket;
 		while (offset != cInvalidHandle)
 		{
-			const KeyValue *kv = reinterpret_cast<const KeyValue *>(mObjectStore + offset);
+			const KeyValue *kv = mAllocator.FromOffset<const KeyValue>(offset);
 			offset = kv->mNextOffset;
 			++objects_in_bucket;
 			++num_objects;

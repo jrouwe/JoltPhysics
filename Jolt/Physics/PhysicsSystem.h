@@ -190,9 +190,11 @@ private:
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
 	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const;
 
+	using ContactAllocator = ContactConstraintManager::ContactAllocator;
+
 	/// Process narrow phase for a single body pair
 	/// The amount of contact manifolds that were found is added to ioNumManifolds
-	void						ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManifolds);
+	void						ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair, uint &ioNumManifolds);
 
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;

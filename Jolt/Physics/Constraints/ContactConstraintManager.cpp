@@ -200,8 +200,9 @@ void ContactConstraintManager::CachedBodyPair::RestoreState(StateRecorder &inStr
 
 void ContactConstraintManager::ManifoldCache::Init(uint inMaxBodyPairs, uint inMaxContactConstraints, uint inCachedManifoldsSize)
 {
-	mCachedManifolds.Init(inCachedManifoldsSize, GetNextPowerOf2(inMaxContactConstraints));
-	mCachedBodyPairs.Init(inMaxBodyPairs * sizeof(BodyPairMap::KeyValue), GetNextPowerOf2(inMaxBodyPairs));
+	mAllocator.Init(inMaxBodyPairs * sizeof(BodyPairMap::KeyValue) + inCachedManifoldsSize);
+	mCachedManifolds.Init(GetNextPowerOf2(inMaxContactConstraints));
+	mCachedBodyPairs.Init(GetNextPowerOf2(inMaxBodyPairs));
 }
 
 void ContactConstraintManager::ManifoldCache::Clear()
@@ -210,6 +211,7 @@ void ContactConstraintManager::ManifoldCache::Clear()
 
 	mCachedManifolds.Clear();
 	mCachedBodyPairs.Clear();
+	mAllocator.Clear();
 
 #ifdef JPH_ENABLE_ASSERTS
 	// Mark as incomplete
@@ -233,10 +235,10 @@ const ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCac
 	return mCachedManifolds.Find(inKey, inKeyHash);
 }
 
-ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCache::Create(const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints)
+ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCache::Create(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints)
 {
 	JPH_ASSERT(!mIsFinalized);
-	MKeyValue *kv = mCachedManifolds.Create(inKey, inKeyHash, CachedManifold::sGetRequiredExtraSize(inNumContactPoints));
+	MKeyValue *kv = mCachedManifolds.Create(ioContactAllocator, inKey, inKeyHash, CachedManifold::sGetRequiredExtraSize(inNumContactPoints));
 	if (kv == nullptr)
 	{
 		JPH_ASSERT(false, "Out of cache space for manifold cache");
@@ -246,13 +248,13 @@ ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCache::Cr
 	return kv;
 }
 
-ContactConstraintManager::MKVAndCreated ContactConstraintManager::ManifoldCache::FindOrCreate(const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints)
+ContactConstraintManager::MKVAndCreated ContactConstraintManager::ManifoldCache::FindOrCreate(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints)
 {
 	MKeyValue *kv = const_cast<MKeyValue *>(mCachedManifolds.Find(inKey, inKeyHash));
 	if (kv != nullptr)
 		return { kv, false };
 
-	return { Create(inKey, inKeyHash, inNumContactPoints), true };
+	return { Create(ioContactAllocator, inKey, inKeyHash, inNumContactPoints), true };
 }
 
 uint32 ContactConstraintManager::ManifoldCache::ToHandle(const MKeyValue *inKeyValue) const
@@ -273,10 +275,10 @@ const ContactConstraintManager::BPKeyValue *ContactConstraintManager::ManifoldCa
 	return mCachedBodyPairs.Find(inKey, inKeyHash);
 }
 
-ContactConstraintManager::BPKeyValue *ContactConstraintManager::ManifoldCache::Create(const BodyPair &inKey, size_t inKeyHash)
+ContactConstraintManager::BPKeyValue *ContactConstraintManager::ManifoldCache::Create(ContactAllocator &ioContactAllocator, const BodyPair &inKey, size_t inKeyHash)
 {
 	JPH_ASSERT(!mIsFinalized);
-	BPKeyValue *kv = mCachedBodyPairs.Create(inKey, inKeyHash, 0);
+	BPKeyValue *kv = mCachedBodyPairs.Create(ioContactAllocator, inKey, inKeyHash, 0);
 	if (kv == nullptr)
 	{
 		JPH_ASSERT(false, "Out of cache space for body pair cache");
@@ -422,6 +424,9 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 
 	bool success = true;
 
+	// Create a contact allocator for restoring the contact cache
+	ContactAllocator contact_allocator(GetContactAllocator());
+
 	// When validating, get all existing body pairs
 	vector<const BPKeyValue *> all_bp;
 	if (inStream.IsValidating())
@@ -444,7 +449,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 
 		// Create new entry for this body pair
 		size_t body_pair_hash = BodyPairHash {} (body_pair_key);
-		BPKeyValue *bp_kv = Create(body_pair_key, body_pair_hash);
+		BPKeyValue *bp_kv = Create(contact_allocator, body_pair_key, body_pair_hash);
 		if (bp_kv == nullptr)
 		{
 			// Out of cache space
@@ -486,7 +491,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 			inStream.Read(num_contact_points);
 
 			// Read manifold
-			MKeyValue *m_kv = Create(sub_shape_key, sub_shape_key_hash, num_contact_points);
+			MKeyValue *m_kv = Create(contact_allocator, sub_shape_key, sub_shape_key_hash, num_contact_points);
 			if (m_kv == nullptr)
 			{
 				// Out of cache space
@@ -531,7 +536,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 		size_t sub_shape_key_hash = std::hash<SubShapeIDPair> {} (sub_shape_key);
 			
 		// Create CCD manifold
-		MKeyValue *m_kv = Create(sub_shape_key, sub_shape_key_hash, 0);
+		MKeyValue *m_kv = Create(contact_allocator, sub_shape_key, sub_shape_key_hash, 0);
 		if (m_kv == nullptr)
 		{
 			// Out of cache space
@@ -590,7 +595,7 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 }
 
 // Get the orientation of body 2 in local space of body 1
-static void sGetRelativeOrientation(const Body &inBody1, const Body &inBody2, Vec3 &outDeltaPosition, Quat &outDeltaRotation)
+static JPH_INLINE void sGetRelativeOrientation(const Body &inBody1, const Body &inBody2, Vec3 &outDeltaPosition, Quat &outDeltaRotation)
 {
 	Quat inv_r1 = inBody1.GetRotation().Conjugated();
 
@@ -605,7 +610,7 @@ static void sGetRelativeOrientation(const Body &inBody1, const Body &inBody2, Ve
 	outDeltaPosition = inv_r1 * (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition());
 }
 
-void ContactConstraintManager::GetContactsFromCache(Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound, uint &ioNumManifolds)
+void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound, uint &ioNumManifolds)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -658,7 +663,7 @@ void ContactConstraintManager::GetContactsFromCache(Body &inBody1, Body &inBody2
 
 	// Copy the cached body pair to this frame
 	ManifoldCache &write_cache = mCache[mCacheWriteIdx];
-	BPKeyValue *output_bp_kv = write_cache.Create(body_pair_key, body_pair_hash);
+	BPKeyValue *output_bp_kv = write_cache.Create(ioContactAllocator, body_pair_key, body_pair_hash);
 	if (output_bp_kv == nullptr)
 		return; // Out of cache space
 	CachedBodyPair *output_cbp = &output_bp_kv->GetValue();
@@ -696,7 +701,7 @@ void ContactConstraintManager::GetContactsFromCache(Body &inBody1, Body &inBody2
 
 		// Create room for manifold in write buffer and copy data
 		size_t input_hash = std::hash<SubShapeIDPair> {} (input_key);
-		MKeyValue *output_kv = write_cache.Create(input_key, input_hash, input_cm.mNumContactPoints);
+		MKeyValue *output_kv = write_cache.Create(ioContactAllocator, input_key, input_hash, input_cm.mNumContactPoints);
 		if (output_kv == nullptr)
 			break; // Out of cache space
 		CachedManifold *output_cm = &output_kv->GetValue();
@@ -800,7 +805,7 @@ void ContactConstraintManager::GetContactsFromCache(Body &inBody1, Body &inBody2
 	output_cbp->mFirstCachedManifold = output_handle;
 }
 
-ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(const Body &inBody1, const Body &inBody2)
+ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -820,7 +825,7 @@ ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(c
 	// Add an entry
 	BodyPair body_pair_key(body1->GetID(), body2->GetID());
 	size_t body_pair_hash = BodyPairHash {} (body_pair_key);
-	BPKeyValue *body_pair_kv = mCache[mCacheWriteIdx].Create(body_pair_key, body_pair_hash);
+	BPKeyValue *body_pair_kv = mCache[mCacheWriteIdx].Create(ioContactAllocator, body_pair_key, body_pair_hash);
 	if (body_pair_kv == nullptr)
 		return nullptr; // Out of cache space
 	CachedBodyPair *cbp = &body_pair_kv->GetValue();
@@ -838,7 +843,7 @@ ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(c
 	return cbp;
 }
 
-void ContactConstraintManager::AddContactConstraint(BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold)
+void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -875,7 +880,7 @@ void ContactConstraintManager::AddContactConstraint(BodyPairHandle inBodyPairHan
 	// Note that for dynamic vs dynamic we always require the first body to have a lower body id to get a consistent key
 	// under which to look up the contact
 	ManifoldCache &write_cache = mCache[mCacheWriteIdx];
-	MKeyValue *new_manifold_kv = write_cache.Create(key, key_hash, num_contact_points);
+	MKeyValue *new_manifold_kv = write_cache.Create(ioContactAllocator, key, key_hash, num_contact_points);
 	if (new_manifold_kv == nullptr)
 		return; // Out of cache space
 	CachedManifold *new_manifold = &new_manifold_kv->GetValue();
@@ -1030,7 +1035,7 @@ void ContactConstraintManager::AddContactConstraint(BodyPairHandle inBodyPairHan
 	cbp->mFirstCachedManifold = write_cache.ToHandle(new_manifold_kv);
 }
 
-void ContactConstraintManager::OnCCDContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings, uint &ioNumManifolds)
+void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings, uint &ioNumManifolds)
 {
 	JPH_ASSERT(inManifold.mWorldSpaceNormal.IsNormalized());
 
@@ -1065,7 +1070,7 @@ void ContactConstraintManager::OnCCDContactAdded(const Body &inBody1, const Body
 
 		// Check if we already created this contact this physics update
 		ManifoldCache &write_cache = mCache[mCacheWriteIdx];
-		MKVAndCreated new_manifold_kv = write_cache.FindOrCreate(key, key_hash, 0);
+		MKVAndCreated new_manifold_kv = write_cache.FindOrCreate(ioContactAllocator, key, key_hash, 0);
 		if (new_manifold_kv.second)
 		{
 			// Count this manifold

@@ -797,6 +797,9 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
 #endif
 
+	// Allocation context for allocating new contact points
+	ContactAllocator contact_allocator(mContactManager.GetContactAllocator());
+
 	// Total number of body pairs and manifolds found (tracked as a non-atomic here to avoid contention)
 	uint num_body_pairs = 0;
 	uint num_manifolds = 0;
@@ -821,8 +824,9 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				{
 				public:
 					// Constructor
-											MyBodyPairCallback(PhysicsUpdateContext::Step *inStep, int inJobIndex, uint &ioNumBodyPairs, uint &ioNumManifolds) :
+											MyBodyPairCallback(PhysicsUpdateContext::Step *inStep, ContactAllocator &ioContactAllocator, int inJobIndex, uint &ioNumBodyPairs, uint &ioNumManifolds) :
 						mStep(inStep),
+						mContactAllocator(ioContactAllocator),
 						mJobIndex(inJobIndex),
 						mNumBodyPairs(ioNumBodyPairs),
 						mNumManifolds(ioNumManifolds)
@@ -838,7 +842,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 						if (body_pairs_in_queue >= mStep->mMaxBodyPairsPerQueue)
 						{
 							// Buffer full, process the pair now
-							mStep->mContext->mPhysicsSystem->ProcessBodyPair(inPair, mNumManifolds);
+							mStep->mContext->mPhysicsSystem->ProcessBodyPair(mContactAllocator, inPair, mNumManifolds);
 							++mNumBodyPairs;
 						}
 						else
@@ -851,11 +855,12 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 
 				private:
 					PhysicsUpdateContext::Step *	mStep;
+					ContactAllocator &				mContactAllocator;
 					int								mJobIndex;
 					uint &							mNumBodyPairs;
 					uint &							mNumManifolds;
 				};
-				MyBodyPairCallback add_pair(ioStep, inJobIndex, num_body_pairs, num_manifolds);
+				MyBodyPairCallback add_pair(ioStep, contact_allocator, inJobIndex, num_body_pairs, num_manifolds);
 
 				// Copy active bodies to temporary array, broadphase will reorder them
 				uint32 batch_size = active_bodies_read_idx_end - active_bodies_read_idx;
@@ -917,7 +922,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				if (queue.mReadIdx.compare_exchange_strong(pair_idx, pair_idx + 1))
 				{
 					// Process the actual body pair
-					ProcessBodyPair(bp, num_manifolds);
+					ProcessBodyPair(contact_allocator, bp, num_manifolds);
 					++num_body_pairs;
 					break;
 				}
@@ -926,7 +931,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 	}
 }
 
-void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManifolds)
+void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair, uint &ioNumManifolds)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -954,14 +959,14 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManif
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, contact_found = false;
 	if (mPhysicsSettings.mUseBodyPairContactCache && !(body1->IsCollisionCacheInvalid() || body2->IsCollisionCacheInvalid()))
-		mContactManager.GetContactsFromCache(*body1, *body2, pair_handled, contact_found, ioNumManifolds);
+		mContactManager.GetContactsFromCache(ioContactAllocator, *body1, *body2, pair_handled, contact_found, ioNumManifolds);
 
 	// If the cache hasn't handled this body pair do actual collision detection
 	if (!pair_handled)
 	{
 		// Create entry in the cache for this body pair
 		// Needs to happen irrespective if we found a collision or not (we want to remember that no collision was found too)
-		ContactConstraintManager::BodyPairHandle body_pair_handle = mContactManager.AddBodyPair(*body1, *body2);
+		ContactConstraintManager::BodyPairHandle body_pair_handle = mContactManager.AddBodyPair(ioContactAllocator, *body1, *body2);
 		if (body_pair_handle == nullptr)
 			return; // Out of cache space
 
@@ -1101,7 +1106,7 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManif
 					PruneContactPoints(body1->GetCenterOfMassPosition(), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
 
 				// Actually add the contact points to the manager
-				mContactManager.AddContactConstraint(body_pair_handle, *body1, *body2, manifold);
+				mContactManager.AddContactConstraint(ioContactAllocator, body_pair_handle, *body1, *body2, manifold);
 				++ioNumManifolds;
 			}
 
@@ -1115,8 +1120,9 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManif
 			class NonReductionCollideShapeCollector : public CollideShapeCollector
 			{
 			public:
-								NonReductionCollideShapeCollector(PhysicsSystem *inSystem, Body *inBody1, Body *inBody2, const ContactConstraintManager::BodyPairHandle &inPairHandle, uint &ioNumManifolds) : 
+								NonReductionCollideShapeCollector(PhysicsSystem *inSystem, ContactAllocator &ioContactAllocator, Body *inBody1, Body *inBody2, const ContactConstraintManager::BodyPairHandle &inPairHandle, uint &ioNumManifolds) : 
 					mSystem(inSystem), 
+					mContactAllocator(ioContactAllocator),
 					mBody1(inBody1),
 					mBody2(inBody2),
 					mBodyPairHandle(inPairHandle),
@@ -1175,7 +1181,7 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManif
 					manifold.mSubShapeID2 = inResult.mSubShapeID2;
 
 					// Actually add the contact points to the manager
-					mSystem->mContactManager.AddContactConstraint(mBodyPairHandle, *mBody1, *mBody2, manifold);
+					mSystem->mContactManager.AddContactConstraint(mContactAllocator, mBodyPairHandle, *mBody1, *mBody2, manifold);
 					++mNumManifolds;
 
 					// Mark contact found
@@ -1183,6 +1189,7 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManif
 				}
 
 				PhysicsSystem *		mSystem;
+				ContactAllocator &	mContactAllocator;
 				Body *				mBody1;
 				Body *				mBody2;
 				ContactConstraintManager::BodyPairHandle mBodyPairHandle;
@@ -1190,7 +1197,7 @@ void PhysicsSystem::ProcessBodyPair(const BodyPair &inBodyPair, uint &ioNumManif
 				bool				mContactFound = false;
 				uint &				mNumManifolds;
 			};
-			NonReductionCollideShapeCollector collector(this, body1, body2, body_pair_handle, ioNumManifolds);
+			NonReductionCollideShapeCollector collector(this, ioContactAllocator, body1, body2, body_pair_handle, ioNumManifolds);
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
@@ -1560,6 +1567,9 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 	BodyAccess::Grant grant(BodyAccess::EAccess::Read, BodyAccess::EAccess::Read);
 #endif
 
+	// Allocation context for allocating new contact points
+	ContactAllocator contact_allocator(mContactManager.GetContactAllocator());
+
 	// Keep track of amount of manifolds created
 	uint num_manifolds = 0;
 
@@ -1805,7 +1815,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			manifold.mWorldSpaceNormal = ccd_body.mContactNormal;
 
 			// Call contact point callbacks
-			mContactManager.OnCCDContactAdded(body, body2, manifold, ccd_body.mContactSettings, num_manifolds);
+			mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, ccd_body.mContactSettings, num_manifolds);
 
 			// Calculate the average position from the manifold (this will result in the same impulse applied as when we apply impulses to all contact points)
 			if (manifold.mWorldSpaceContactPointsOn2.size() > 1)
