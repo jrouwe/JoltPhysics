@@ -34,7 +34,9 @@ void LockFreeHashMap<Key, Value>::Clear()
 {
 	// Reset write offset and number of key value pairs
 	mWriteOffset = 0;
+#ifdef JPH_ENABLE_ASSERTS
 	mNumKeyValues = 0;
+#endif // JPH_ENABLE_ASSERTS
 
 	// Reset buckets 4 at a time
 	static_assert(sizeof(atomic<uint32>) == sizeof(uint32));
@@ -69,10 +71,12 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 	uint size = sizeof(KeyValue) + inExtraBytes;
 
 	// Allocate entry in the cache
-	uint32 write_offset = mWriteOffset.fetch_add(size);
+	uint32 write_offset = mWriteOffset.fetch_add(size, memory_order_relaxed);
 	if (write_offset + size > mObjectStoreSizeBytes)
 		return nullptr;
-	++mNumKeyValues;
+#ifdef JPH_ENABLE_ASSERTS
+	mNumKeyValues.fetch_add(1, memory_order_relaxed);
+#endif // JPH_ENABLE_ASSERTS
 
 	// Construct the key/value pair
 	KeyValue *kv = reinterpret_cast<KeyValue *>(mObjectStore + write_offset);
@@ -89,9 +93,9 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 	uint32 new_offset = uint32(reinterpret_cast<uint8 *>(kv) - mObjectStore);
 	for (;;)
 	{
-		uint32 old_offset = offset;
+		uint32 old_offset = offset.load(memory_order_relaxed);
 		kv->mNextOffset = old_offset;
-		if (offset.compare_exchange_strong(old_offset, new_offset))
+		if (offset.compare_exchange_weak(old_offset, new_offset, memory_order_release))
 			break;
 	}
 
@@ -102,7 +106,7 @@ template <class Key, class Value>
 inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::Find(const Key &inKey, size_t inKeyHash) const
 {
 	// Get the offset to the keyvalue object from the bucket with corresponding hash
-	uint32 offset = mBuckets[inKeyHash & (mNumBuckets - 1)];
+	uint32 offset = mBuckets[inKeyHash & (mNumBuckets - 1)].load(memory_order_acquire);
 	while (offset != cInvalidHandle)
 	{
 		// Loop through linked list of values until the right one is found

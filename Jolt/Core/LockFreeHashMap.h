@@ -71,8 +71,11 @@ public:
 	/// Convert uint32 handle back to key and value
 	inline const KeyValue *	FromHandle(uint32 inHandle) const;
 
-	/// Get the number of key value pairs that this map currently contains
-	inline uint32			GetNumKeyValues() const		{ return mNumKeyValues; }
+#ifdef JPH_ENABLE_ASSERTS
+	/// Get the number of key value pairs that this map currently contains.
+	/// Available only when asserts are enabled because adding elements creates contention on this atomic and negatively affects performance.
+	inline uint32			GetNumKeyValues() const			{ return mNumKeyValues; }
+#endif // JPH_ENABLE_ASSERTS
 
 	/// Get all key/value pairs
 	inline void				GetAllKeyValues(vector<const KeyValue *> &outAll) const;
@@ -109,7 +112,9 @@ private:
 	uint8 *					mObjectStore = nullptr;			///< This contains a contigous list of objects (possibly of varying size)
 	uint32					mObjectStoreSizeBytes = 0;		///< The size of mObjectStore in bytes
 	atomic<uint32>			mWriteOffset { 0 };				///< Next offset to write to in mObjectStore
+#ifdef JPH_ENABLE_ASSERTS
 	atomic<uint32>			mNumKeyValues = 0;				///< Number of key value pairs in the store
+#endif // JPH_ENABLE_ASSERTS
 
 	atomic<uint32> *		mBuckets = nullptr;				///< This contains the offset in mObjectStore of the first object with a particular hash
 	uint32					mNumBuckets = 0;				///< Current number of buckets
