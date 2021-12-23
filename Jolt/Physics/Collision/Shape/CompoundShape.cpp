@@ -132,6 +132,8 @@ uint32 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 	// Decode sub shape index
 	SubShapeID remainder;
 	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
+	if (index >= mSubShapes.size())
+		return 0; // No longer valid index
 
 	// Pass call on
 	return mSubShapes[index].mShape->GetSubShapeUserData(remainder);
