@@ -168,7 +168,7 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 #endif // JPH_ENABLE_ASSERTS
 
 	// Construct the key/value pair
-	KeyValue *kv = mAllocator.FromOffset<KeyValue>(write_offset);
+	KeyValue *kv = mAllocator.template FromOffset<KeyValue>(write_offset);
 	JPH_ASSERT(intptr_t(kv) % alignof(KeyValue) == 0);
 #ifdef _DEBUG
 	memset(kv, 0xcd, size);
@@ -199,7 +199,7 @@ inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key
 	while (offset != cInvalidHandle)
 	{
 		// Loop through linked list of values until the right one is found
-		const KeyValue *kv = mAllocator.FromOffset<const KeyValue>(offset);
+		const KeyValue *kv = mAllocator.template FromOffset<const KeyValue>(offset);
 		if (kv->mKey == inKey)
 			return kv;
 		offset = kv->mNextOffset;
@@ -218,7 +218,7 @@ inline uint32 LockFreeHashMap<Key, Value>::ToHandle(const KeyValue *inKeyValue) 
 template <class Key, class Value>
 inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::FromHandle(uint32 inHandle) const
 {
-	return mAllocator.FromOffset<const KeyValue>(inHandle);
+	return mAllocator.template FromOffset<const KeyValue>(inHandle);
 }
 
 template <class Key, class Value>
@@ -229,7 +229,7 @@ inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(vector<const KeyValue *
 		uint32 offset = *bucket;
 		while (offset != cInvalidHandle)
 		{
-			const KeyValue *kv = mAllocator.FromOffset<const KeyValue>(offset);
+			const KeyValue *kv = mAllocator.template FromOffset<const KeyValue>(offset);
 			outAll.push_back(kv);
 			offset = kv->mNextOffset;
 		}
@@ -260,7 +260,7 @@ typename LockFreeHashMap<Key, Value>::KeyValue &LockFreeHashMap<Key, Value>::Ite
 {
 	JPH_ASSERT(mOffset != cInvalidHandle);
 
-	return *mMap->mAllocator.FromOffset<KeyValue>(mOffset);
+	return *mMap->mAllocator.template FromOffset<KeyValue>(mOffset);
 }		
 
 template <class Key, class Value>
@@ -271,7 +271,7 @@ typename LockFreeHashMap<Key, Value>::Iterator &LockFreeHashMap<Key, Value>::Ite
 	// Find the next key value in this bucket
 	if (mOffset != cInvalidHandle)
 	{
-		const KeyValue *kv = mMap->mAllocator.FromOffset<const KeyValue>(mOffset);
+		const KeyValue *kv = mMap->mAllocator.template FromOffset<const KeyValue>(mOffset);
 		mOffset = kv->mNextOffset;
 		if (mOffset != cInvalidHandle)
 			return *this;
@@ -311,7 +311,7 @@ void LockFreeHashMap<Key, Value>::TraceStats() const
 		uint32 offset = *bucket;
 		while (offset != cInvalidHandle)
 		{
-			const KeyValue *kv = mAllocator.FromOffset<const KeyValue>(offset);
+			const KeyValue *kv = mAllocator.template FromOffset<const KeyValue>(offset);
 			offset = kv->mNextOffset;
 			++objects_in_bucket;
 			++num_objects;
