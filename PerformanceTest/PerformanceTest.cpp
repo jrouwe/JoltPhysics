@@ -135,7 +135,7 @@ int main(int argc, char** argv)
 	JPH_PROFILE_THREAD_START("Main");
 
 	// Trace header
-	cout << "Motion Quality, Thread Count, Time (s), Iterations, Hash" << endl;
+	cout << "Motion Quality, Thread Count, Time (s), Hash" << endl;
 
 	// Iterate motion qualities
 	for (uint mq = 0; mq < 2; ++mq)
@@ -201,14 +201,10 @@ int main(int argc, char** argv)
 					}
 				}
 
-			// Calculate total amount of ragdoll bodies
-			uint num_bodies = uint(ragdolls.size() * ragdolls[0]->GetBodyCount());
-
 			chrono::nanoseconds total_duration(0);
-			uint iterations = 0;
 
-			// Step the world until half of the bodies are sleeping
-			while (physics_system.GetNumActiveBodies() > num_bodies / 2)
+			// Step the world for a fixed amount of iterations
+			for (uint iterations = 0; iterations < 500; ++iterations)
 			{
 				JPH_PROFILE_NEXTFRAME();
 
@@ -221,9 +217,6 @@ int main(int argc, char** argv)
 				// Stop measuring
 				chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
 				total_duration += chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
-
-				// Increment step count
-				++iterations;
 
 				// Dump profile information every 100 iterations
 				if (iterations % 100 == 0)
@@ -248,7 +241,7 @@ int main(int argc, char** argv)
 				ragdoll->RemoveFromPhysicsSystem();
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << 1.0e-9 * total_duration.count() << ", " << iterations << ", " << hash << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << 1.0e-9 * total_duration.count() << ", " << hash << endl;
 		}
 	}
 
