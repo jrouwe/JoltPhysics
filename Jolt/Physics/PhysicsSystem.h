@@ -184,7 +184,7 @@ private:
 	void						JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
 	void						JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
-	void						JobContactRemovedCallbacks(PhysicsUpdateContext::Step *ioStep);
+	void						JobContactRemovedCallbacks(const PhysicsUpdateContext::Step *ioStep);
 	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
 
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
@@ -193,8 +193,7 @@ private:
 	using ContactAllocator = ContactConstraintManager::ContactAllocator;
 
 	/// Process narrow phase for a single body pair
-	/// The amount of contact manifolds that were found is added to ioNumManifolds
-	void						ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair, uint &ioNumManifolds);
+	void						ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair);
 
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;

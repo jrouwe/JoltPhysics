@@ -219,14 +219,14 @@ void ContactConstraintManager::ManifoldCache::Clear()
 #endif
 }
 
-void ContactConstraintManager::ManifoldCache::Prepare(uint inNumBodyPairs, uint inNumManifolds)
+void ContactConstraintManager::ManifoldCache::Prepare(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds)
 {
 	// Minimum amount of buckets to use in the hash map
 	constexpr uint32 cMinBuckets = 1024;
 
 	// Use the next higher power of 2 of amount of objects in the cache from last frame to determine the amount of buckets in this frame
-	mCachedManifolds.SetNumBuckets(min(max(cMinBuckets, GetNextPowerOf2(inNumManifolds)), mCachedManifolds.GetMaxBuckets()));
-	mCachedBodyPairs.SetNumBuckets(min(max(cMinBuckets, GetNextPowerOf2(inNumBodyPairs)), mCachedBodyPairs.GetMaxBuckets()));
+	mCachedManifolds.SetNumBuckets(min(max(cMinBuckets, GetNextPowerOf2(inExpectedNumManifolds)), mCachedManifolds.GetMaxBuckets()));
+	mCachedBodyPairs.SetNumBuckets(min(max(cMinBuckets, GetNextPowerOf2(inExpectedNumBodyPairs)), mCachedBodyPairs.GetMaxBuckets()));
 }
 
 const ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCache::Find(const SubShapeIDPair &inKey, size_t inKeyHash) const
@@ -245,6 +245,7 @@ ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCache::Cr
 		return nullptr;
 	}
 	kv->GetValue().mNumContactPoints = uint16(inNumContactPoints);
+	++ioContactAllocator.mNumManifolds;
 	return kv;
 }
 
@@ -284,6 +285,7 @@ ContactConstraintManager::BPKeyValue *ContactConstraintManager::ManifoldCache::C
 		JPH_ASSERT(false, "Out of cache space for body pair cache");
 		return nullptr;
 	}
+	++ioContactAllocator.mNumBodyPairs;
 	return kv;
 }
 
@@ -610,7 +612,7 @@ static JPH_INLINE void sGetRelativeOrientation(const Body &inBody1, const Body &
 	outDeltaPosition = inv_r1 * (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition());
 }
 
-void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound, uint &ioNumManifolds)
+void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -689,9 +691,6 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 	do
 	{
 		JPH_PROFILE("Add Constraint From Cached Manifold");
-
-		// Count this manifold
-		++ioNumManifolds;
 
 		// Find the existing manifold
 		const MKeyValue *input_kv = read_cache.FromHandle(input_handle);
@@ -1035,7 +1034,7 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 	cbp->mFirstCachedManifold = write_cache.ToHandle(new_manifold_kv);
 }
 
-void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings, uint &ioNumManifolds)
+void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings)
 {
 	JPH_ASSERT(inManifold.mWorldSpaceNormal.IsNormalized());
 
@@ -1073,9 +1072,6 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 		MKVAndCreated new_manifold_kv = write_cache.FindOrCreate(ioContactAllocator, key, key_hash, 0);
 		if (new_manifold_kv.second)
 		{
-			// Count this manifold
-			++ioNumManifolds;
-
 			// This contact is new for this physics update, check if previous update we already had this contact.
 			const ManifoldCache &read_cache = mCache[mCacheWriteIdx ^ 1];
 			const MKeyValue *old_manifold_kv = read_cache.Find(key, key_hash);
@@ -1123,7 +1119,7 @@ void ContactConstraintManager::SortContacts(uint32 *inConstraintIdxBegin, uint32
 	});
 }
 
-void ContactConstraintManager::FinalizeContactCache(uint inNumBodyPairs, uint inNumManifolds)
+void ContactConstraintManager::FinalizeContactCache(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1133,15 +1129,15 @@ void ContactConstraintManager::FinalizeContactCache(uint inNumBodyPairs, uint in
 	old_write_cache.Finalize();
 
 	// Check that the count of body pairs and manifolds that we tracked outside of the cache (to avoid contention on an atomic) is correct
-	JPH_ASSERT(old_write_cache.GetNumBodyPairs() == inNumBodyPairs);
-	JPH_ASSERT(old_write_cache.GetNumManifolds() == inNumManifolds);
+	JPH_ASSERT(old_write_cache.GetNumBodyPairs() == inExpectedNumBodyPairs);
+	JPH_ASSERT(old_write_cache.GetNumManifolds() == inExpectedNumManifolds);
 #endif
 
 	// Buffers are now complete, make write buffer the read buffer
 	mCacheWriteIdx ^= 1;
 
 	// Use the amount of contacts from the last iteration to determine the amount of buckets to use in the hash map for the next iteration
-	mCache[mCacheWriteIdx].Prepare(inNumBodyPairs, inNumManifolds);
+	mCache[mCacheWriteIdx].Prepare(inExpectedNumBodyPairs, inExpectedNumManifolds);
 }
 
 void ContactConstraintManager::ContactPointRemovedCallbacks()

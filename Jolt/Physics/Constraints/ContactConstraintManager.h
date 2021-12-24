@@ -64,7 +64,14 @@ public:
 	static const int			MaxContactPoints = 4;
 
 	/// Contacts are allocated in a lock free hash map
-	using ContactAllocator = LFHMAllocatorContext;
+	class ContactAllocator : public LFHMAllocatorContext
+	{
+	public:
+		using LFHMAllocatorContext::LFHMAllocatorContext;
+
+		uint					mNumBodyPairs = 0;													///< Total number of body pairs added using this allocator
+		uint					mNumManifolds = 0;													///< Total number of manifolds added using this allocator
+	};
 
 	/// Get a new allocator context for storing contacts. Note that you should call this once and then add multiple contacts using the context.
 	ContactAllocator			GetContactAllocator()												{ return mCache[mCacheWriteIdx].GetContactAllocator(); }
@@ -72,8 +79,7 @@ public:
 	/// Check if the contact points from the previous frame are reusable and if so copy them.
 	/// When the cache was usable and the pair has been handled: outPairHandled = true.
 	/// When a contact was produced: outContactFound = true.
-	/// The number of manifolds that were copied is added to ioNumManifolds.
-	void						GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound, uint &ioNumManifolds);
+	void						GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound);
 
 	/// Handle used to keep track of the current body pair
 	using BodyPairHandle = void *;
@@ -125,8 +131,8 @@ public:
 
 	/// Finalizes the contact cache, the contact cache that was generated during the calls to AddContactConstraint in this update
 	/// will be used from now on to read from.
-	/// inNumBodyPairs and inNumManifolds are the amount of body pairs / manifolds in the read cache and are used to resize the contact cache for the next update.
-	void						FinalizeContactCache(uint inNumBodyPairs, uint inNumManifolds);
+	/// inExpectedNumBodyPairs / inExpectedNumManifolds are the amount of body pairs / manifolds found in the previous step and is used to determine the amount of buckets the contact cache hash map will use.
+	void						FinalizeContactCache(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds);
 
 	/// Notifies the listener of any contact points that were removed. Needs to be callsed after FinalizeContactCache().
 	void						ContactPointRemovedCallbacks();
@@ -207,8 +213,7 @@ public:
 	/// @param inBody2 The second body that is colliding
 	/// @param inManifold The manifold that describes the collision
 	/// @param outSettings The calculated contact settings (may be overridden by the contact listener)
-	/// @param ioNumManifolds The number of manifolds that were added to the cache.
-	void						OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings, uint &ioNumManifolds);
+	void						OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings);
 
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing properties
@@ -330,8 +335,8 @@ private:
 		void					Clear();
 
 		/// Prepare cache before creating new contacts. 
-		/// inNumBodyPairs / inNumManifolds are the amount of body pairs / manifolds found in the previous step and is used to determine the amount of buckets the contact cache hash map will use.
-		void					Prepare(uint inNumBodyPairs, uint inNumManifolds);
+		/// inExpectedNumBodyPairs / inExpectedNumManifolds are the amount of body pairs / manifolds found in the previous step and is used to determine the amount of buckets the contact cache hash map will use.
+		void					Prepare(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds);
 
 		/// Get a new allocator context for storing contacts. Note that you should call this once and then add multiple contacts using the context.
 		ContactAllocator		GetContactAllocator()						{ return ContactAllocator(mAllocator, cAllocatorBlockSize); }

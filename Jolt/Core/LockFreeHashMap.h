@@ -72,7 +72,7 @@ public:
 	using MapType = LockFreeHashMap<Key, Value>;
 
 	/// Destructor
-							LockFreeHashMap(LFHMAllocator &inAllocator) : mAllocator(inAllocator) { }
+	explicit				LockFreeHashMap(LFHMAllocator &inAllocator) : mAllocator(inAllocator) { }
 							~LockFreeHashMap();
 
 	/// Initialization
