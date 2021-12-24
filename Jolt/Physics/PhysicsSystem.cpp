@@ -889,16 +889,16 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 					// If we're back at the first queue, we've looked at all of them and found nothing
 					if (read_queue_idx == first_read_queue_idx)
 					{
+						// Atomically accumulate the number of found manifolds and body pairs
+						ioStep->mNumBodyPairs += contact_allocator.mNumBodyPairs;
+						ioStep->mNumManifolds += contact_allocator.mNumManifolds;
+
 						// Mark this job as inactive
 						ioStep->mActiveFindCollisionJobs.fetch_and(~PhysicsUpdateContext::JobMask(1 << inJobIndex));
 
 						// Trigger the next jobs
 						ioStep->mUpdateBroadphaseFinalize.RemoveDependency();
 						ioStep->mFinalizeIslands.RemoveDependency();
-
-						// Atomically accumulate the number of found manifolds and body pairs
-						ioStep->mNumBodyPairs += contact_allocator.mNumBodyPairs;
-						ioStep->mNumManifolds += contact_allocator.mNumManifolds;
 						return;
 					}
 
