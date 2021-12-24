@@ -114,6 +114,9 @@ public:
 
 		atomic<JobMask>		mActiveFindCollisionJobs;								///< A bitmask that indicates which jobs are still active
 
+		atomic<uint>		mNumBodyPairs { 0 };									///< The number of body pairs found in this step (used to size the contact cache in the next step)
+		atomic<uint>		mNumManifolds { 0 };									///< The number of manifolds found in this step (used to size the contact cache in the next step)
+
 		// Jobs in order of execution (some run in parallel)
 		JobHandle			mBroadPhasePrepare;										///< Prepares the new tree in the background
 		JobHandleArray		mStepListeners;											///< Listeners to notify of the beginning of a physics step

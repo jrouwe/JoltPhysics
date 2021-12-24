@@ -8,6 +8,61 @@
 
 namespace JPH {
 
+/// Allocator for a lock free hash map
+class LFHMAllocator : public NonCopyable
+{
+public:
+	/// Destructor
+	inline					~LFHMAllocator();
+
+	/// Initialize the allocator
+	/// @param inObjectStoreSizeBytes Number of bytes to reserve for all key value pairs
+	inline void				Init(uint inObjectStoreSizeBytes);
+
+	/// Clear all allocations
+	inline void				Clear();
+
+	/// Allocate a new block of data
+	/// @param inBlockSize Size of block to allocate (will potentially return a smaller block if memory is full)
+	/// @param ioBegin Should be start of first free byte in current memory block on input, will contain start of first free byte in allocated block on return
+	/// @param ioEnd Should be the byte beyond the current memory block on input, will contain the byte beyond the allocated block on return
+	inline void				Allocate(uint32 inBlockSize, uint32 &ioBegin, uint32 &ioEnd);
+
+	/// Convert a pointer to an offset
+	template <class T>
+	inline uint32			ToOffset(const T *inData) const;
+
+	/// Convert an offset to a pointer
+	template <class T>
+	inline T *				FromOffset(uint32 inOffset) const;
+
+private:
+	uint8 *					mObjectStore = nullptr;			///< This contains a contigous list of objects (possibly of varying size)
+	uint32					mObjectStoreSizeBytes = 0;		///< The size of mObjectStore in bytes
+	atomic<uint32>			mWriteOffset { 0 };				///< Next offset to write to in mObjectStore
+};
+
+/// Allocator context object for a lock free hash map that allocates a larger memory block at once and hands it out in smaller portions.
+/// This avoids contention on the atomic LFHMAllocator::mWriteOffset.
+class LFHMAllocatorContext : public NonCopyable
+{
+public:
+	/// Construct a new allocator context
+	inline					LFHMAllocatorContext(LFHMAllocator &inAllocator, uint32 inBlockSize);
+
+	/// @brief Allocate data block
+	/// @param inSize Size of block to allocae
+	/// @param outWriteOffset Offset in buffer where block is located
+	/// @return True if allocation succeeded
+	inline bool				Allocate(uint32 inSize, uint32 &outWriteOffset);
+
+private:
+	LFHMAllocator &			mAllocator;
+	uint32					mBlockSize;
+	uint32					mBegin = 0;
+	uint32					mEnd = 0;
+};
+
 /// Very simple lock free hash map that only allows insertion, retrieval and provides a fixed amount of buckets and fixed storage.
 /// Note: This class currently assumes key and value are simple types that need no calls to the destructor.
 template <class Key, class Value>
@@ -17,12 +72,12 @@ public:
 	using MapType = LockFreeHashMap<Key, Value>;
 
 	/// Destructor
+	explicit				LockFreeHashMap(LFHMAllocator &inAllocator) : mAllocator(inAllocator) { }
 							~LockFreeHashMap();
 
 	/// Initialization
-	/// @param inObjectStoreSizeBytes Number of bytes to reserve for all key value pairs
 	/// @param inMaxBuckets Max amount of buckets to use in the hashmap. Must be power of 2.
-	void					Init(uint32 inObjectStoreSizeBytes, uint32 inMaxBuckets);
+	void					Init(uint32 inMaxBuckets);
 
 	/// Remove all elements.
 	/// Note that this cannot happen simultaneously with adding new elements.
@@ -57,7 +112,7 @@ public:
 	/// Insert a new element, returns null if map full.
 	/// Multiple threads can be inserting in the map at the same time.
 	template <class... Params>
-	inline KeyValue *		Create(const Key &inKey, size_t inKeyHash, int inExtraBytes, Params &&... inConstructorParams);
+	inline KeyValue *		Create(LFHMAllocatorContext &ioContext, const Key &inKey, size_t inKeyHash, int inExtraBytes, Params &&... inConstructorParams);
 	
 	/// Find an element, returns null if not found
 	inline const KeyValue *	Find(const Key &inKey, size_t inKeyHash) const;
@@ -71,8 +126,11 @@ public:
 	/// Convert uint32 handle back to key and value
 	inline const KeyValue *	FromHandle(uint32 inHandle) const;
 
-	/// Get the number of key value pairs that this map currently contains
-	inline uint32			GetNumKeyValues() const		{ return mNumKeyValues; }
+#ifdef JPH_ENABLE_ASSERTS
+	/// Get the number of key value pairs that this map currently contains.
+	/// Available only when asserts are enabled because adding elements creates contention on this atomic and negatively affects performance.
+	inline uint32			GetNumKeyValues() const			{ return mNumKeyValues; }
+#endif // JPH_ENABLE_ASSERTS
 
 	/// Get all key/value pairs
 	inline void				GetAllKeyValues(vector<const KeyValue *> &outAll) const;
@@ -106,10 +164,11 @@ public:
 #endif
 
 private:
-	uint8 *					mObjectStore = nullptr;			///< This contains a contigous list of objects (possibly of varying size)
-	uint32					mObjectStoreSizeBytes = 0;		///< The size of mObjectStore in bytes
-	atomic<uint32>			mWriteOffset { 0 };				///< Next offset to write to in mObjectStore
+	LFHMAllocator &			mAllocator;						///< Allocator used to allocate key value pairs
+
+#ifdef JPH_ENABLE_ASSERTS
 	atomic<uint32>			mNumKeyValues = 0;				///< Number of key value pairs in the store
+#endif // JPH_ENABLE_ASSERTS
 
 	atomic<uint32> *		mBuckets = nullptr;				///< This contains the offset in mObjectStore of the first object with a particular hash
 	uint32					mNumBuckets = 0;				///< Current number of buckets
