@@ -122,7 +122,10 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	for (BodyCreationSettings &body : scene->GetBodies())
+	{
 		body.mObjectLayer = Layers::NON_MOVING;
+		body.mAllowSleeping = false;
+	}
 	scene->FixInvalidScales();
 
 	// Create mapping table from object layer to broadphase layer
@@ -135,7 +138,9 @@ int main(int argc, char** argv)
 	JPH_PROFILE_THREAD_START("Main");
 
 	// Trace header
-	cout << "Motion Quality, Thread Count, Time (s), Hash" << endl;
+	cout << "Motion Quality, Thread Count, Steps / Second, Hash" << endl;
+
+	constexpr uint cMaxSteps = 500;
 
 	// Iterate motion qualities
 	for (uint mq = 0; mq < 2; ++mq)
@@ -204,7 +209,7 @@ int main(int argc, char** argv)
 			chrono::nanoseconds total_duration(0);
 
 			// Step the world for a fixed amount of iterations
-			for (uint iterations = 0; iterations < 500; ++iterations)
+			for (uint iterations = 0; iterations < cMaxSteps; ++iterations)
 			{
 				JPH_PROFILE_NEXTFRAME();
 
@@ -241,7 +246,7 @@ int main(int argc, char** argv)
 				ragdoll->RemoveFromPhysicsSystem();
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << 1.0e-9 * total_duration.count() << ", " << hash << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(cMaxSteps) / (1.0e-9 * total_duration.count()) << ", " << hash << endl;
 		}
 	}
 
