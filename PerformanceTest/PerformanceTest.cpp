@@ -226,7 +226,7 @@ int main(int argc, char** argv)
 				// Dump profile information every 100 iterations
 				if (iterations % 100 == 0)
 				{
-					JPH_PROFILE_DUMP();
+					JPH_PROFILE_DUMP(ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1) + "_it" + ConvertToString(iterations));
 				}
 			}
 

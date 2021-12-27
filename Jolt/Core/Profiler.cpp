@@ -35,9 +35,10 @@ void Profiler::NextFrame()
 		t->mCurrentSample = 0;
 }
 
-void Profiler::Dump()
+void Profiler::Dump(string inTag)
 {
 	mDump = true;
+	mDumpTag = inTag;
 }
 
 void Profiler::AddThread(ProfileThread *inThread)										
@@ -133,9 +134,21 @@ void Profiler::DumpInternal()
 			s->mEndCycle -= min_cycle;
 		}
 
-	// Next sequence number
-	static int number = 0;
-	++number;
+	// Determine tag of this profile
+	string tag;
+	if (mDumpTag.empty())
+	{
+		// Next sequence number
+		static int number = 0;
+		++number;
+		tag = ConvertToString(number);
+	}
+	else
+	{
+		// Take provided tag
+		tag = mDumpTag;
+		mDumpTag.clear();
+	}
 
 	// Aggregate data across threads
 	Aggregators aggregators;
@@ -145,10 +158,10 @@ void Profiler::DumpInternal()
 			sAggregate(0, Color::sGetDistinctColor(0).GetUInt32(), s, end, aggregators, key_to_aggregators);
 
 	// Dump as list
-	DumpList(number, aggregators);
+	DumpList(tag, aggregators);
 
 	// Dump as chart
-	DumpChart(number, threads, key_to_aggregators, aggregators);
+	DumpChart(tag, threads, key_to_aggregators, aggregators);
 }
 
 static string sHTMLEncode(string inString)
@@ -159,11 +172,11 @@ static string sHTMLEncode(string inString)
 	return str;
 }
 
-void Profiler::DumpList(int inNumber, const Aggregators &inAggregators)
+void Profiler::DumpList(string inTag, const Aggregators &inAggregators)
 {
 	// Open file
 	ofstream f;
-	f.open(StringFormat("profile_list_%d.html", inNumber).c_str(), ofstream::out | ofstream::trunc);
+	f.open(StringFormat("profile_list_%s.html", inTag.c_str()).c_str(), ofstream::out | ofstream::trunc);
 	if (!f.is_open()) 
 		return;
 
@@ -239,11 +252,11 @@ void Profiler::DumpList(int inNumber, const Aggregators &inAggregators)
 	f << R"(</tbody></table></body></html>)";
 }
 
-void Profiler::DumpChart(int inNumber, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators)
+void Profiler::DumpChart(string inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators)
 {
 	// Open file
 	ofstream f;
-	f.open(StringFormat("profile_chart_%d.html", inNumber).c_str(), ofstream::out | ofstream::trunc);
+	f.open(StringFormat("profile_chart_%s.html", inTag.c_str()).c_str(), ofstream::out | ofstream::trunc);
 	if (!f.is_open()) 
 		return;
 
