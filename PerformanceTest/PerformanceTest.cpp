@@ -12,6 +12,10 @@
 #include <Physics/PhysicsScene.h>
 #include <Physics/Collision/CastResult.h>
 #include <Physics/Collision/RayCast.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Renderer/DebugRendererRecorder.h>
+	#include <Core/StreamWrapper.h>
+#endif // JPH_DEBUG_RENDERER
 
 // STL includes
 #include <iostream>
@@ -79,6 +83,55 @@ const float cDeltaTime = 1.0f / 60.0f;
 // Program entry point
 int main(int argc, char** argv)
 {
+	// Parse command line parameters
+	int specified_quality = -1;
+	int specified_threads = -1;
+	bool enable_profiler = false;
+	bool enable_debug_renderer = false;
+	for (int arg = 1; arg < argc; ++arg)
+	{
+		if (strncmp(argv[arg], "-q=", 3) == 0)
+		{
+			// Parse quality
+			if (strcmp(argv[arg] + 3, "discrete") == 0)
+			{
+				specified_quality = 0;
+			}
+			else if (strcmp(argv[arg] + 3, "linearcast") == 0)
+			{
+				specified_quality = 1;
+			}
+			else
+			{
+				cerr << "Invalid quality" << endl;
+				return 1;
+			}
+		}
+		else if (strncmp(argv[arg], "-t=", 3) == 0)
+		{
+			// Parse threads
+			specified_threads = atoi(argv[arg] + 3);
+		}
+		else if (strcmp(argv[arg], "-p") == 0)
+		{
+			enable_profiler = true;
+		}
+		else if (strcmp(argv[arg], "-r") == 0)
+		{
+			enable_debug_renderer = true;
+		}
+		else if (strcmp(argv[arg], "-h") == 0)
+		{
+			// Print usage
+			cerr << "Usage: PerformanceTest [-q=<quality>] [-t=<threads>] [-p] [-r]" << endl
+				 << "-q: Test only with specified quality (discrete, linearcast)" << endl
+				 << "-t: Test only with N threads" << endl
+				 << "-p: Write out profiles" << endl
+				 << "-r: Record debug renderer output for JoltViewer" << endl;
+			return 0;
+		}
+	}
+
 	// Register all Jolt physics types
 	RegisterTypes();
 
@@ -140,11 +193,15 @@ int main(int argc, char** argv)
 	// Trace header
 	cout << "Motion Quality, Thread Count, Steps / Second, Hash" << endl;
 
-	constexpr uint cMaxSteps = 500;
+	constexpr uint cMaxIterations = 500;
 
 	// Iterate motion qualities
 	for (uint mq = 0; mq < 2; ++mq)
 	{
+		// Skip quality if another was specified
+		if (specified_quality != -1 && mq != (uint)specified_quality)
+			continue;
+
 		// Determine motion quality
 		EMotionQuality motion_quality = mq == 0? EMotionQuality::Discrete : EMotionQuality::LinearCast;
 		string motion_quality_str = mq == 0? "Discrete" : "LinearCast";
@@ -153,8 +210,16 @@ int main(int argc, char** argv)
 		for (BodyCreationSettings &body : ragdoll_settings->mParts)
 			body.mMotionQuality = motion_quality;
 
+		// Determine which thread counts to test
+		vector<uint> thread_permutations;
+		if (specified_threads > 0)
+			thread_permutations.push_back((uint)specified_threads - 1);
+		else
+			for (uint num_threads = 0; num_threads < thread::hardware_concurrency(); ++num_threads)
+				thread_permutations.push_back(num_threads);
+
 		// Test thread permutations
-		for (uint num_threads = 0; num_threads < thread::hardware_concurrency(); ++num_threads)
+		for (uint num_threads : thread_permutations)
 		{
 			// Create job system with desired number of threads
 			JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, num_threads);
@@ -206,10 +271,19 @@ int main(int argc, char** argv)
 					}
 				}
 
+		#ifdef JPH_DEBUG_RENDERER
+			// Open output
+			ofstream renderer_file;
+			if (enable_debug_renderer)
+				renderer_file.open(("performance_test_" + ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1) + ".JoltRecording").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
+			StreamOutWrapper renderer_stream(renderer_file);
+			DebugRendererRecorder renderer(renderer_stream);
+		#endif // JPH_DEBUG_RENDERER
+
 			chrono::nanoseconds total_duration(0);
 
 			// Step the world for a fixed amount of iterations
-			for (uint iterations = 0; iterations < cMaxSteps; ++iterations)
+			for (uint iterations = 0; iterations < cMaxIterations; ++iterations)
 			{
 				JPH_PROFILE_NEXTFRAME();
 
@@ -223,8 +297,20 @@ int main(int argc, char** argv)
 				chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
 				total_duration += chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
 
+			#ifdef JPH_DEBUG_RENDERER
+				if (enable_debug_renderer)
+				{
+					// Draw the state of the world
+					BodyManager::DrawSettings settings;
+					physics_system.DrawBodies(settings, &renderer);
+
+					// Mark end of frame
+					renderer.EndFrame();
+				}
+			#endif // JPH_DEBUG_RENDERER
+
 				// Dump profile information every 100 iterations
-				if (iterations % 100 == 0)
+				if (enable_profiler && iterations % 100 == 0)
 				{
 					JPH_PROFILE_DUMP(ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1) + "_it" + ConvertToString(iterations));
 				}
@@ -246,7 +332,7 @@ int main(int argc, char** argv)
 				ragdoll->RemoveFromPhysicsSystem();
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(cMaxSteps) / (1.0e-9 * total_duration.count()) << ", " << hash << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(cMaxIterations) / (1.0e-9 * total_duration.count()) << ", " << hash << endl;
 		}
 	}
 

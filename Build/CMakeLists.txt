@@ -114,4 +114,5 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	# Windows only targets
 	include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
 	include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
+	include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
 endif()
