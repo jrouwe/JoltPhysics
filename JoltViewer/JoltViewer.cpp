@@ -11,6 +11,14 @@
 #include <Application/DebugUI.h>
 #include <fstream>
 
+#ifndef JPH_DEBUG_RENDERER	
+	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
+	#define JPH_DEBUG_RENDERER
+	#include <Renderer/DebugRendererRecorder.cpp>
+	#include <Renderer/DebugRendererPlayback.cpp>
+	#undef JPH_DEBUG_RENDERER
+#endif
+
 JoltViewer::JoltViewer()
 {
 	// Get file name from commandline
@@ -81,11 +89,13 @@ bool JoltViewer::RenderFrame(float inDeltaTime)
 		case DIK_R:
 			// Restart
 			mCurrentFrame = 0;
-			Pause(false);
+			mPlaybackMode = EPlaybackMode::Play;
+			Pause(true);
 			break;
 
 		case DIK_O:
 			// Step
+			mPlaybackMode = EPlaybackMode::Play;
 			SingleStep();
 			break;
 
@@ -108,26 +118,22 @@ bool JoltViewer::RenderFrame(float inDeltaTime)
 		// Determine new frame number
 		switch (mPlaybackMode)
 		{
+		case EPlaybackMode::StepForward:
+			mPlaybackMode = EPlaybackMode::Stop;
+			[[fallthrough]];
+
 		case EPlaybackMode::Play:
 			if (mCurrentFrame + 1 < mRendererPlayback.GetNumFrames())
 				++mCurrentFrame;
 			break;
 
-		case EPlaybackMode::StepForward:
-			if (mCurrentFrame + 1 < mRendererPlayback.GetNumFrames())
-				++mCurrentFrame;
+		case EPlaybackMode::StepBack:
 			mPlaybackMode = EPlaybackMode::Stop;
-			break;
+			[[fallthrough]];
 
 		case EPlaybackMode::Rewind:
 			if (mCurrentFrame > 0)
 				--mCurrentFrame;
-			break;
-
-		case EPlaybackMode::StepBack:
-			if (mCurrentFrame > 0)
-				--mCurrentFrame;
-			mPlaybackMode = EPlaybackMode::Stop;
 			break;
 
 		case EPlaybackMode::Stop:
