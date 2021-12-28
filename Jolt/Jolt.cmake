@@ -344,6 +344,10 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/RegisterTypes.h
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRenderer.cpp
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRenderer.h
+	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererPlayback.cpp
+	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererPlayback.h
+	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.cpp
+	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/Skeleton.cpp

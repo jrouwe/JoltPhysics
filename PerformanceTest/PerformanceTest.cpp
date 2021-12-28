@@ -12,6 +12,10 @@
 #include <Physics/PhysicsScene.h>
 #include <Physics/Collision/CastResult.h>
 #include <Physics/Collision/RayCast.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Renderer/DebugRendererRecorder.h>
+	#include <Core/StreamWrapper.h>
+#endif // JPH_DEBUG_RENDERER
 
 // STL includes
 #include <iostream>
@@ -206,6 +210,13 @@ int main(int argc, char** argv)
 					}
 				}
 
+		#ifdef JPH_DEBUG_RENDERER
+			// Open output
+			ofstream renderer_file(("performance_test_" + ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1) + ".JoltRecording").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
+			StreamOutWrapper renderer_stream(renderer_file);
+			DebugRendererRecorder renderer(renderer_stream);
+		#endif // JPH_DEBUG_RENDERER
+
 			chrono::nanoseconds total_duration(0);
 
 			// Step the world for a fixed amount of iterations
@@ -222,6 +233,15 @@ int main(int argc, char** argv)
 				// Stop measuring
 				chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
 				total_duration += chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
+
+			#ifdef JPH_DEBUG_RENDERER
+				// Draw the state of the world
+				BodyManager::DrawSettings settings;
+				physics_system.DrawBodies(settings, &renderer);
+
+				// Mark end of frame
+				renderer.EndFrame();
+			#endif // JPH_DEBUG_RENDERER
 
 				// Dump profile information every 100 iterations
 				if (iterations % 100 == 0)
