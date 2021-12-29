@@ -17,7 +17,7 @@
 class RagdollScene : public PerformanceTestScene
 {
 public:
-	virtual char *			GetName() const override
+	virtual const char *	GetName() const override
 	{
 		return "Ragdoll";
 	}
