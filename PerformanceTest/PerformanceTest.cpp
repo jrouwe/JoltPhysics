@@ -40,6 +40,7 @@ int main(int argc, char** argv)
 	int specified_threads = -1;
 	bool enable_profiler = false;
 	bool enable_debug_renderer = false;
+	bool enable_per_frame_recording = false;
 	unique_ptr<PerformanceTestScene> scene;
 	for (int argidx = 1; argidx < argc; ++argidx)
 	{
@@ -84,6 +85,10 @@ int main(int argc, char** argv)
 		{
 			enable_debug_renderer = true;
 		}
+		else if (strcmp(arg, "-f") == 0)
+		{
+			enable_per_frame_recording = true;
+		}
 		else if (strcmp(arg, "-h") == 0)
 		{
 			// Print usage
@@ -92,7 +97,8 @@ int main(int argc, char** argv)
 				 << "-q: Test only with specified quality (Discrete, LinearCast)" << endl
 				 << "-t: Test only with N threads" << endl
 				 << "-p: Write out profiles" << endl
-				 << "-r: Record debug renderer output for JoltViewer" << endl;
+				 << "-r: Record debug renderer output for JoltViewer" << endl
+				 << "-f: Record per frame timings" << endl;
 			return 0;
 		}
 	}
@@ -153,14 +159,28 @@ int main(int argc, char** argv)
 			// Start test scene
 			scene->StartTest(physics_system, motion_quality);
 
+			// Optimize the broadphase to prevent an expensive first frame
+			physics_system.OptimizeBroadPhase();
+
+			// A tag used to identify the test
+			string tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
+					     
 		#ifdef JPH_DEBUG_RENDERER
-			// Open output
+			// Open renderer output
 			ofstream renderer_file;
 			if (enable_debug_renderer)
-				renderer_file.open(("performance_test_" + ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1) + ".JoltRecording").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
+				renderer_file.open(("performance_test_" + tag + ".jor").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
 			StreamOutWrapper renderer_stream(renderer_file);
 			DebugRendererRecorder renderer(renderer_stream);
 		#endif // JPH_DEBUG_RENDERER
+
+			// Open per frame timing output
+			ofstream per_frame_file;
+			if (enable_per_frame_recording)
+			{
+				per_frame_file.open(("per_frame_" + tag + ".csv").c_str(), ofstream::out | ofstream::trunc);
+				per_frame_file << "Frame, Time (ms)" << endl;
+			}
 
 			chrono::nanoseconds total_duration(0);
 
@@ -177,7 +197,8 @@ int main(int argc, char** argv)
 
 				// Stop measuring
 				chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
-				total_duration += chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
+				chrono::nanoseconds duration = chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
+				total_duration += duration;
 
 			#ifdef JPH_DEBUG_RENDERER
 				if (enable_debug_renderer)
@@ -191,10 +212,14 @@ int main(int argc, char** argv)
 				}
 			#endif // JPH_DEBUG_RENDERER
 
+				// Record time taken this iteration
+				if (enable_per_frame_recording)
+					per_frame_file << iterations << ", " << (1.0e-6 * duration.count()) << endl;
+
 				// Dump profile information every 100 iterations
 				if (enable_profiler && iterations % 100 == 0)
 				{
-					JPH_PROFILE_DUMP(ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1) + "_it" + ConvertToString(iterations));
+					JPH_PROFILE_DUMP(tag + "_it" + ConvertToString(iterations));
 				}
 			}
 
