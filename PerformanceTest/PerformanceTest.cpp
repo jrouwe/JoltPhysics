@@ -8,6 +8,7 @@
 #include <Core/JobSystemThreadPool.h>
 #include <Physics/PhysicsSettings.h>
 #include <Physics/PhysicsSystem.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Renderer/DebugRendererRecorder.h>
 	#include <Core/StreamWrapper.h>
@@ -18,6 +19,7 @@
 #include <thread>
 #include <chrono>
 #include <memory>
+#include <cstdarg>
 
 using namespace JPH;
 using namespace std;
@@ -31,6 +33,18 @@ constexpr float cDeltaTime = 1.0f / 60.0f;
 
 // Number of iterations to run the test
 constexpr uint cMaxIterations = 500;
+
+static void TraceImpl(const char *inFMT, ...)
+{ 
+	// Format the message
+	va_list list;
+	va_start(list, inFMT);
+	char buffer[1024];
+	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+
+	// Print to the TTY
+	cout << buffer << endl;
+}
 
 // Program entry point
 int main(int argc, char** argv)
@@ -102,6 +116,9 @@ int main(int argc, char** argv)
 			return 0;
 		}
 	}
+
+	// Install callbacks
+	Trace = TraceImpl;
 
 	// Register all Jolt physics types
 	RegisterTypes();
@@ -242,6 +259,10 @@ int main(int argc, char** argv)
 			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(cMaxIterations) / (1.0e-9 * total_duration.count()) << ", " << hash << endl;
 		}
 	}
+
+#ifdef JPH_TRACK_NARROWPHASE_STATS
+	NarrowPhaseStat::sReportStats();
+#endif // JPH_TRACK_NARROWPHASE_STATS
 
 	// End profiling this thread
 	JPH_PROFILE_THREAD_END();
