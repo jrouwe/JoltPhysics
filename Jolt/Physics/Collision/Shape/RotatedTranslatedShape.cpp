@@ -135,17 +135,6 @@ void RotatedTranslatedShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreat
 	mInnerShape->CollidePoint(transform * inPoint, inSubShapeIDCreator, ioCollector);
 }
 
-void RotatedTranslatedShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
-{
-	// Determine the local transform
-	Mat44 local_transform = Mat44::sRotation(mRotation);
-
-	// Transform the shape cast
-	ShapeCast shape_cast = inShapeCast.PostTransformed(local_transform.Transposed3x3());
-
-	mInnerShape->CastShape(shape_cast, inShapeCastSettings, TransformScale(inScale), inShapeFilter, inCenterOfMassTransform2 * local_transform, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
-}
-
 void RotatedTranslatedShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector) const
 {
 	mInnerShape->CollectTransformedShapes(inBox, inPositionCOM, inRotation * mRotation, TransformScale(inScale), inSubShapeIDCreator, ioCollector);
@@ -182,7 +171,7 @@ void RotatedTranslatedShape::sCastRotatedTranslatedVsShape(const ShapeCast &inSh
 {
 	// Fetch rotated translated shape from cast shape
 	JPH_ASSERT(inShapeCast.mShape->GetSubType() == EShapeSubType::RotatedTranslated);
-	const RotatedTranslatedShape *shape1 = static_cast<const RotatedTranslatedShape *>(inShapeCast.mShape.GetPtr());
+	const RotatedTranslatedShape *shape1 = static_cast<const RotatedTranslatedShape *>(inShapeCast.mShape);
 
 	// Transform the shape cast and update the shape
 	Mat44 transform = inShapeCast.mCenterOfMassStart * Mat44::sRotation(shape1->mRotation);
@@ -190,6 +179,20 @@ void RotatedTranslatedShape::sCastRotatedTranslatedVsShape(const ShapeCast &inSh
 	ShapeCast shape_cast(shape1->mInnerShape, scale, transform, inShapeCast.mDirection);
 
 	CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
+}
+
+void RotatedTranslatedShape::sCastShapeVsRotatedTranslated(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::RotatedTranslated);
+	const RotatedTranslatedShape *shape = static_cast<const RotatedTranslatedShape *>(inShape);
+
+	// Determine the local transform
+	Mat44 local_transform = Mat44::sRotation(shape->mRotation);
+
+	// Transform the shape cast
+	ShapeCast shape_cast = inShapeCast.PostTransformed(local_transform.Transposed3x3());
+
+	CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, shape->mInnerShape, shape->TransformScale(inScale), inShapeFilter, inCenterOfMassTransform2 * local_transform, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 }
 
 void RotatedTranslatedShape::SaveBinaryState(StreamOut &inStream) const
@@ -233,9 +236,9 @@ void RotatedTranslatedShape::sRegister()
 	{
 		CollisionDispatch::sRegisterCollideShape(EShapeSubType::RotatedTranslated, s, sCollideRotatedTranslatedVsShape);
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::RotatedTranslated, sCollideShapeVsRotatedTranslated);
+		CollisionDispatch::sRegisterCastShape(EShapeSubType::RotatedTranslated, s, sCastRotatedTranslatedVsShape);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::RotatedTranslated, sCastShapeVsRotatedTranslated);
 	}
-
-	CollisionDispatch::sRegisterCastShape(EShapeSubType::RotatedTranslated, sCastRotatedTranslatedVsShape);
 }
 
 } // JPH

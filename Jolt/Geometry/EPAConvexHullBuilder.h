@@ -219,7 +219,7 @@ public:
 	};
 
 	/// Constructor
-						EPAConvexHullBuilder(const Points &inPositions) :
+	explicit			EPAConvexHullBuilder(const Points &inPositions) :
 		mPositions(inPositions)
 	{
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW

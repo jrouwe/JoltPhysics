@@ -49,7 +49,8 @@ void WheelSettings::RestoreBinaryState(StreamIn &inStream)
 }
 
 Wheel::Wheel(const WheelSettings &inSettings) :
-	mSettings(&inSettings)
+	mSettings(&inSettings),
+	mContactLength(inSettings.mSuspensionMaxLength + inSettings.mRadius)
 {
 	JPH_ASSERT(inSettings.mDirection.IsNormalized());
 	JPH_ASSERT(inSettings.mSuspensionMinLength >= 0.0f);
@@ -59,8 +60,6 @@ Wheel::Wheel(const WheelSettings &inSettings) :
 	JPH_ASSERT(inSettings.mSuspensionDamping >= 0.0f);
 	JPH_ASSERT(inSettings.mRadius > 0.0f);
 	JPH_ASSERT(inSettings.mWidth >= 0.0f);
-
-	mContactLength = inSettings.mSuspensionMaxLength + inSettings.mRadius;
 }
 
 bool Wheel::SolveLongitudinalConstraintPart(const VehicleConstraint &inConstraint, float inMinImpulse, float inMaxImpulse) 

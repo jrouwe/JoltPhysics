@@ -24,7 +24,7 @@ public:
 							~PhysicsUpdateContext();
 
 	static constexpr int	cMaxConcurrency = 32;									///< Maximum supported amount of concurrent jobs
-	static constexpr int	cMaxSteps = 2;											///< Maximum supported amount of collision steps
+	static constexpr int	cMaxSteps = 4;											///< Maximum supported amount of collision steps
 	static constexpr int	cMaxSubSteps = 4;										///< Maximum supported amount of integration sub steps
 
 	using JobHandleArray = StaticArray<JobHandle, cMaxConcurrency>;
@@ -59,15 +59,18 @@ public:
 			float			mMaxPenetration;										///< Maximum allowed penetration (determined by inner radius of shape)
 			ContactSettings	mContactSettings;										///< The contact settings for this contact
 		};
+		atomic<uint32>		mIntegrateVelocityReadIdx { 0 };						///< Next active body index to take when integrating velocities
 		CCDBody *			mCCDBodies = nullptr;									///< List of bodies that need to do continuous collision detection
 		uint32				mCCDBodiesCapacity = 0;									///< Capacity of the mCCDBodies list
-		uint32				mNumCCDBodies = 0;										///< Number of CCD bodies in mCCDBodies
+		atomic<uint32>		mNumCCDBodies = 0;										///< Number of CCD bodies in mCCDBodies
 		atomic<uint32>		mNextCCDBody { 0 };										///< Next unprocessed body index in mCCDBodies
 		int *				mActiveBodyToCCDBody = nullptr;							///< A mapping between an index in BodyManager::mActiveBodies and the index in mCCDBodies
 		uint32				mNumActiveBodyToCCDBody = 0;							///< Number of indices in mActiveBodyToCCDBody
 
 		JobHandleArray		mSolveVelocityConstraints;								///< Solve the constraints in the velocity domain
-		JobHandle			mIntegrateVelocity;										///< Integrate all body positions
+		JobHandle			mPreIntegrateVelocity;									///< Setup integration of all body positions
+		JobHandleArray		mIntegrateVelocity;										///< Integrate all body positions
+		JobHandle			mPostIntegrateVelocity;									///< Finalize integration of all body positions
 		JobHandle			mResolveCCDContacts;									///< Updates the positions and velocities for all bodies that need continuous collision detection
 		JobHandleArray		mSolvePositionConstraints;								///< Solve all constraints in the position domain
 		JobHandle			mStartNextSubStep;										///< Trampoline job that either kicks the next sub step or the next step
@@ -110,6 +113,9 @@ public:
 		uint32				mMaxBodyPairsPerQueue;									///< Amount of body pairs that we can queue per queue
 
 		atomic<JobMask>		mActiveFindCollisionJobs;								///< A bitmask that indicates which jobs are still active
+
+		atomic<uint>		mNumBodyPairs { 0 };									///< The number of body pairs found in this step (used to size the contact cache in the next step)
+		atomic<uint>		mNumManifolds { 0 };									///< The number of manifolds found in this step (used to size the contact cache in the next step)
 
 		// Jobs in order of execution (some run in parallel)
 		JobHandle			mBroadPhasePrepare;										///< Prepares the new tree in the background

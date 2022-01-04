@@ -24,8 +24,8 @@ void FixedSizeFreeList<Object>::Init(uint inMaxObjects, uint inPageSize)
 
 	// Store configuration parameters
 	mNumPages = (inMaxObjects + inPageSize - 1) / inPageSize;
-	mNumFreeObjects = mNumPages * inPageSize;
 	mPageSize = inPageSize;
+	JPH_IF_ENABLE_ASSERTS(mNumFreeObjects = mNumPages * inPageSize;)
 
 	// Allocate page table
 	mPages = new ObjectStorage * [mNumPages];
@@ -69,7 +69,7 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 			}
 
 			// Allocation successful
-			--mNumFreeObjects;
+			JPH_IF_ENABLE_ASSERTS(--mNumFreeObjects;)
 			ObjectStorage &storage = GetStorage(first_free);
 			new (&storage.mData) Object(forward<Parameters>(inParameters)...);
 			storage.mNextFreeObject = first_free;
@@ -87,7 +87,7 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 			if (mFirstFreeObjectAndTag.compare_exchange_strong(first_free_object_and_tag, new_first_free_object_and_tag))
 			{
 				// Allocation successful
-				--mNumFreeObjects;
+				JPH_IF_ENABLE_ASSERTS(--mNumFreeObjects;)
 				ObjectStorage &storage = GetStorage(first_free);
 				new (&storage.mData) Object(forward<Parameters>(inParameters)...);
 				storage.mNextFreeObject = first_free;
@@ -147,7 +147,7 @@ void FixedSizeFreeList<Object>::DestructObjectBatch(Batch &ioBatch)
 			if (mFirstFreeObjectAndTag.compare_exchange_strong(first_free_object_and_tag, new_first_free_object_and_tag))
 			{
 				// Free successful
-				mNumFreeObjects += ioBatch.mNumObjects;
+				JPH_IF_ENABLE_ASSERTS(mNumFreeObjects += ioBatch.mNumObjects;)
 
 				// Mark the batch as freed
 #ifdef JPH_ENABLE_ASSERTS
@@ -185,7 +185,7 @@ void FixedSizeFreeList<Object>::DestructObject(uint32 inObjectIndex)
 		if (mFirstFreeObjectAndTag.compare_exchange_strong(first_free_object_and_tag, new_first_free_object_and_tag))
 		{
 			// Free successful
-			mNumFreeObjects++;
+			JPH_IF_ENABLE_ASSERTS(mNumFreeObjects++;)
 			return;
 		}
 	}

@@ -10,7 +10,6 @@
 #include <Physics/Body/BodyActivationListener.h>
 #include <Physics/StateRecorder.h>
 #include <Core/StringTools.h>
-#include <Core/StatCollector.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -726,34 +725,6 @@ void BodyManager::ValidateContactCacheForAllBodies()
 	}
 	mBodiesCacheInvalid.clear();
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void BodyManager::CollectStats() const
-{
-	JPH_PROFILE_FUNCTION();
-
-	BodyLockInterfaceLocking lock_interface(const_cast<BodyManager &>(*this));
-
-	BodyIDVector active_body_ids;
-	GetActiveBodies(active_body_ids);
-
-	for (const BodyID &id : active_body_ids)
-	{
-		BodyLockRead body_lock(lock_interface, id);
-		if (body_lock.SucceededAndIsInBroadPhase())
-		{
-			const Body &body = body_lock.GetBody();
-			string prefix = "Body." + body.GetDebugName();
-			JPH_STAT_COLLECTOR_ADD(prefix + ".Position", body.GetPosition());
-			JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation", body.GetRotation());
-			JPH_STAT_COLLECTOR_ADD(prefix + ".LinearVelocity", body.GetLinearVelocity());
-			JPH_STAT_COLLECTOR_ADD(prefix + ".LinearVelocity.Length", body.GetLinearVelocity().Length());
-			JPH_STAT_COLLECTOR_ADD(prefix + ".AngularVelocity", body.GetAngularVelocity());
-			JPH_STAT_COLLECTOR_ADD(prefix + ".AngularVelocity.Length", body.GetAngularVelocity().Length());
-		}
-	}
-}
-#endif // JPH_STAT_COLLECTOR
 
 #ifdef _DEBUG
 void BodyManager::ValidateActiveBodyBounds()

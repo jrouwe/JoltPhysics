@@ -22,7 +22,7 @@ class ContactConstraintManager : public NonCopyable
 {
 public:
 	/// Constructor
-								ContactConstraintManager(const PhysicsSettings &inPhysicsSettings);
+	explicit					ContactConstraintManager(const PhysicsSettings &inPhysicsSettings);
 								~ContactConstraintManager();
 
 	/// Initialize the system.
@@ -63,17 +63,30 @@ public:
 	/// Max 4 contact points are needed for a stable manifold
 	static const int			MaxContactPoints = 4;
 
+	/// Contacts are allocated in a lock free hash map
+	class ContactAllocator : public LFHMAllocatorContext
+	{
+	public:
+		using LFHMAllocatorContext::LFHMAllocatorContext;
+
+		uint					mNumBodyPairs = 0;													///< Total number of body pairs added using this allocator
+		uint					mNumManifolds = 0;													///< Total number of manifolds added using this allocator
+	};
+
+	/// Get a new allocator context for storing contacts. Note that you should call this once and then add multiple contacts using the context.
+	ContactAllocator			GetContactAllocator()												{ return mCache[mCacheWriteIdx].GetContactAllocator(); }
+
 	/// Check if the contact points from the previous frame are reusable and if so copy them.
 	/// When the cache was usable and the pair has been handled: outPairHandled = true.
 	/// When a contact was produced: outContactFound = true.
-	void						GetContactsFromCache(Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound);
+	void						GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound);
 
 	/// Handle used to keep track of the current body pair
 	using BodyPairHandle = void *;
 
 	/// Create a handle for a colliding body pair so that contact constraints can be added between them.
 	/// Needs to be called once per body pair per frame before calling AddContactConstraint.
-	BodyPairHandle				AddBodyPair(const Body &inBody1, const Body &inBody2);
+	BodyPairHandle				AddBodyPair(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2);
 
 	/// Add a contact constraint for this frame.
 	///
@@ -114,11 +127,12 @@ public:
 	/// r1, r2 = contact point relative to center of mass of body 1 and body 2 (r1 = p1 - x1, r2 = p2 - x2).
 	/// v1, v2 = (linear velocity, angular velocity): 6 vectors containing linear and angular velocity for body 1 and 2.
 	/// M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].
-	void						AddContactConstraint(BodyPairHandle inBodyPair, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
+	void						AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPair, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
 
 	/// Finalizes the contact cache, the contact cache that was generated during the calls to AddContactConstraint in this update
-	/// will be used from now on to read from
-	void						FinalizeContactCache();
+	/// will be used from now on to read from.
+	/// inExpectedNumBodyPairs / inExpectedNumManifolds are the amount of body pairs / manifolds found in the previous step and is used to determine the amount of buckets the contact cache hash map will use.
+	void						FinalizeContactCache(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds);
 
 	/// Notifies the listener of any contact points that were removed. Needs to be callsed after FinalizeContactCache().
 	void						ContactPointRemovedCallbacks();
@@ -199,7 +213,7 @@ public:
 	/// @param inBody2 The second body that is colliding
 	/// @param inManifold The manifold that describes the collision
 	/// @param outSettings The calculated contact settings (may be overridden by the contact listener)
-	void						OnCCDContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings);
+	void						OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings);
 
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing properties
@@ -215,20 +229,7 @@ public:
 	/// Restoring state for replay. Returns false when failed.
 	bool						RestoreState(StateRecorder &inStream);
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats of the previous time step
-	void						CollectStats();
-#endif // JPH_STAT_COLLECTOR
-
 private:
-#ifdef JPH_STAT_COLLECTOR
-	// Statistics
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumBodyPairCacheChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumBodyPairCacheHits;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumContactPointsAdded;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int> sNumContactPointsLambdasSet;
-#endif // JPH_STAT_COLLECTOR
-	
 	/// Local space contact point, used for caching impulses
 	class CachedContactPoint
 	{
@@ -333,25 +334,35 @@ private:
 		/// Reset all entries from the cache
 		void					Clear();
 
-		/// Prepare cache before creating new contacts. Uses previous frame to determine amount of buckets in the hash map.
-		void					Prepare(const ManifoldCache &inReadCache);
+		/// Prepare cache before creating new contacts. 
+		/// inExpectedNumBodyPairs / inExpectedNumManifolds are the amount of body pairs / manifolds found in the previous step and is used to determine the amount of buckets the contact cache hash map will use.
+		void					Prepare(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds);
+
+		/// Get a new allocator context for storing contacts. Note that you should call this once and then add multiple contacts using the context.
+		ContactAllocator		GetContactAllocator()						{ return ContactAllocator(mAllocator, cAllocatorBlockSize); }
 
 		/// Find / create cached entry for SubShapeIDPair -> CachedManifold
 		const MKeyValue *		Find(const SubShapeIDPair &inKey, size_t inKeyHash) const;
-		MKeyValue *				Create(const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints);
-		MKVAndCreated			FindOrCreate(const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints);
+		MKeyValue *				Create(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints);
+		MKVAndCreated			FindOrCreate(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints);
 		uint32					ToHandle(const MKeyValue *inKeyValue) const;
 		const MKeyValue *		FromHandle(uint32 inHandle) const;
 
 		/// Find / create entry for BodyPair -> CachedBodyPair
 		const BPKeyValue *		Find(const BodyPair &inKey, size_t inKeyHash) const;
-		BPKeyValue *			Create(const BodyPair &inKey, size_t inKeyHash);
+		BPKeyValue *			Create(ContactAllocator &ioContactAllocator, const BodyPair &inKey, size_t inKeyHash);
 		void					GetAllBodyPairsSorted(vector<const BPKeyValue *> &outAll) const;
 		void					GetAllManifoldsSorted(const CachedBodyPair &inBodyPair, vector<const MKeyValue *> &outAll) const;
 		void					GetAllCCDManifoldsSorted(vector<const MKeyValue *> &outAll) const;
 		void					ContactPointRemovedCallbacks(ContactListener *inListener);
 
 #ifdef JPH_ENABLE_ASSERTS
+		/// Get the amount of manifolds in the cache
+		uint					GetNumManifolds() const						{ return mCachedManifolds.GetNumKeyValues(); }
+
+		/// Get the amount of body pairs in the cache
+		uint					GetNumBodyPairs() const						{ return mCachedBodyPairs.GetNumKeyValues(); }
+
 		/// Before a cache is finalized you can only do Create(), after only Find() or Clear()
 		void					Finalize();
 #endif
@@ -361,11 +372,17 @@ private:
 		bool					RestoreState(const ManifoldCache &inReadCache, StateRecorder &inStream);
 
 	private:
+		/// Block size used when allocating new blocks in the contact cache
+		static constexpr uint32	cAllocatorBlockSize = 4096;
+
+		/// Allocator used by both mCachedManifolds and mCachedBodyPairs, this makes it more likely that a body pair and its manifolds are close in memory
+		LFHMAllocator			mAllocator;
+
 		/// Simple hash map for SubShapeIDPair -> CachedManifold
-		ManifoldMap				mCachedManifolds;
+		ManifoldMap				mCachedManifolds { mAllocator };
 
 		/// Simple hash map for BodyPair -> CachedBodyPair
-		BodyPairMap				mCachedBodyPairs;
+		BodyPairMap				mCachedBodyPairs { mAllocator };
 
 #ifdef JPH_ENABLE_ASSERTS
 		bool					mIsFinalized = false;						///< Marks if this buffer is complete

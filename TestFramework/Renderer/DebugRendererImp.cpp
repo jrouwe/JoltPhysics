@@ -365,8 +365,9 @@ void DebugRendererImp::DrawTriangles()
 		mShadowStateFF->Activate();
 
 		// Draw all primitives as seen from the light
-		for (InstanceMap::value_type &v : mPrimitives)
-			DrawInstances(v.first, v.second.mLightStartIdx);
+		if (mNumInstances > 0)
+			for (InstanceMap::value_type &v : mPrimitives)
+				DrawInstances(v.first, v.second.mLightStartIdx);
 		for (InstanceMap::value_type &v : mTempPrimitives)
 			DrawInstances(v.first, v.second.mLightStartIdx);
 	}
@@ -403,8 +404,9 @@ void DebugRendererImp::DrawTriangles()
 		mTriangleStateBF->Activate();
 
 		// Draw all primitives
-		for (InstanceMap::value_type &v : mPrimitives)
-			DrawInstances(v.first, v.second.mGeometryStartIdx);
+		if (mNumInstances > 0)
+			for (InstanceMap::value_type &v : mPrimitives)
+				DrawInstances(v.first, v.second.mGeometryStartIdx);
 		for (InstanceMap::value_type &v : mTempPrimitives)
 			DrawInstances(v.first, v.second.mGeometryStartIdx);
 	}

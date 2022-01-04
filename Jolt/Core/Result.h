@@ -83,7 +83,7 @@ public:
 	}
 
 	/// Move assignment
-	Result<Type> &		operator = (Result<Type> &&inRHS)
+	Result<Type> &		operator = (Result<Type> &&inRHS) noexcept
 	{
 		Clear();
 

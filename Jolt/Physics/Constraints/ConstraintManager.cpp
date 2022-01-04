@@ -156,18 +156,6 @@ bool ConstraintManager::SolvePositionConstraints(Constraint **inActiveConstraint
 	return any_impulse_applied;
 }
 
-#ifdef JPH_STAT_COLLECTOR
-void ConstraintManager::CollectStats() const
-{
-	JPH_PROFILE_FUNCTION();
-
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
-
-	for (const Ref<Constraint> &c : mConstraints)			
-		c->CollectStats();
-}
-#endif // JPH_STAT_COLLECTOR
-
 #ifdef JPH_DEBUG_RENDERER
 void ConstraintManager::DrawConstraints(DebugRenderer *inRenderer) const
 {

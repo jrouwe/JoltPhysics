@@ -33,7 +33,7 @@ class VehicleController : public RefTarget<VehicleController>
 {
 public:
 	/// Constructor / destructor
-								VehicleController(VehicleConstraint &inConstraint) : mConstraint(inConstraint) { }
+	explicit					VehicleController(VehicleConstraint &inConstraint) : mConstraint(inConstraint) { }
 	virtual						~VehicleController() = default;
 
 protected:

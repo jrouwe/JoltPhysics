@@ -6,7 +6,6 @@
 #include <Physics/Constraints/SixDOFConstraint.h>
 #include <Physics/Body/Body.h>
 #include <Geometry/Ellipse.h>
-#include <Core/StatCollector.h>
 #include <ObjectStream/TypeDeclarations.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -632,29 +631,6 @@ bool SixDOFConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 
 	return impulse;
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void SixDOFConstraint::CollectStats() const
-{
-	string prefix = "Constraint." + mBody1->GetDebugName() + "-" + mBody2->GetDebugName();
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Point.TotalLambda", mPointConstraintPart.GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Point.TotalLambda.Length", mPointConstraintPart.GetTotalLambda().Length());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".TranslationX.TotalLambda", mTranslationConstraintPart[0].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".TranslationY.TotalLambda", mTranslationConstraintPart[1].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".TranslationZ.TotalLambda", mTranslationConstraintPart[2].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda", mRotationConstraintPart.GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda.Length", mRotationConstraintPart.GetTotalLambda().Length());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".SwingYLimit.TotalLambda", mSwingTwistConstraintPart.GetTotalSwingYLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".SwingZLimit.TotalLambda", mSwingTwistConstraintPart.GetTotalSwingZLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".TwistLimit.TotalLambda", mSwingTwistConstraintPart.GetTotalTwistLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".MotorTranslationX.TotalLambda", mMotorTranslationConstraintPart[0].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".MotorTranslationY.TotalLambda", mMotorTranslationConstraintPart[1].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".MotorTranslationZ.TotalLambda", mMotorTranslationConstraintPart[2].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".MotorRotationX.TotalLambda", mMotorRotationConstraintPart[0].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".MotorRotationY.TotalLambda", mMotorRotationConstraintPart[1].GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".MotorRotationZ.TotalLambda", mMotorRotationConstraintPart[2].GetTotalLambda());
-}
-#endif // JPH_STAT_COLLECTOR
 
 #ifdef JPH_DEBUG_RENDERER
 void SixDOFConstraint::DrawConstraint(DebugRenderer *inRenderer) const

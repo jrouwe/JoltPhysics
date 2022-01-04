@@ -24,7 +24,7 @@ void BroadPhaseBruteForce::AddBodiesFinalize(BodyID *ioBodies, int inNumber, Add
 	mBodyIDs.resize(idx + inNumber);
 
 	// Add bodies
-	for (BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
+	for (const BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
 	{
 		Body &body = *bodies[b->GetIndex()];
 
@@ -53,7 +53,7 @@ void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber)
 	JPH_ASSERT((int)mBodyIDs.size() >= inNumber);
 
 	// Remove bodies
-	for (BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
+	for (const BodyID *b = ioBodies, *b_end = ioBodies + inNumber; b < b_end; ++b)
 	{
 		Body &body = *bodies[b->GetIndex()];
 
@@ -218,7 +218,7 @@ void BroadPhaseBruteForce::CollideOrientedBox(const OrientedBox &inBox, CollideS
 	}
 }
 
-void BroadPhaseBruteForce::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
+void BroadPhaseBruteForce::CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
 {
 	shared_lock lock(mMutex);
 
@@ -250,6 +250,11 @@ void BroadPhaseBruteForce::CastAABox(const AABoxCast &inBox, CastShapeBodyCollec
 			}
 		}
 	}
+}
+
+void BroadPhaseBruteForce::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
+{
+	CastAABoxNoLock(inBox, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 void BroadPhaseBruteForce::FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const

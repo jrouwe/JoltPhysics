@@ -18,7 +18,7 @@ constexpr float cDefaultConvexRadius = 0.05f;
 static constexpr float cCapsuleProjectionSlop = 0.02f;
 
 /// Maximum amount of jobs to allow
-constexpr int cMaxPhysicsJobs = 1024;
+constexpr int cMaxPhysicsJobs = 2048;
 
 /// Maximum amount of barriers to allow
 constexpr int cMaxPhysicsBarriers = 8;
@@ -71,6 +71,7 @@ struct PhysicsSettings
 	float		mContactPointPreserveLambdaMaxDistSq = Square(0.01f); ///< 1 cm
 
 	/// Number of solver velocity iterations to run
+	/// Note that this needs to be >= 2 in order for friction to work (friction is applied using the non-penetration impulse from the previous iteration)
 	int			mNumVelocitySteps = 10;
 
 	/// Number of solver position iterations to run

@@ -74,7 +74,7 @@ AABox SphereShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg
 class SphereShape::SphereNoConvex final : public Support
 {
 public:
-					SphereNoConvex(float inRadius) :
+	explicit		SphereNoConvex(float inRadius) :
 		mRadius(inRadius)
 	{ 
 		static_assert(sizeof(SphereNoConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
@@ -98,7 +98,7 @@ private:
 class SphereShape::SphereWithConvex final : public Support
 {
 public:
-					SphereWithConvex(float inRadius) :
+	explicit		SphereWithConvex(float inRadius) :
 		mRadius(inRadius)
 	{ 
 		static_assert(sizeof(SphereWithConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 

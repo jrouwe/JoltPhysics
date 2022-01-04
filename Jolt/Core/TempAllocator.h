@@ -27,7 +27,7 @@ class TempAllocatorImpl final : public TempAllocator
 {
 public:
 	/// Constructs the allocator with a maximum allocatable size of inSize
-									TempAllocatorImpl(uint inSize) :
+	explicit						TempAllocatorImpl(uint inSize) :
 		mBase(static_cast<uint8 *>(malloc(inSize))),
 		mSize(inSize)
 	{

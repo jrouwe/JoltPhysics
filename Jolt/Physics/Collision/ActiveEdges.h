@@ -39,9 +39,8 @@ namespace ActiveEdges
 	/// @return Returns inNormal if an active edge was hit, otherwise returns inTriangleNormal
 	inline static Vec3					FixNormal(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inTriangleNormal, uint8 inActiveEdges, Vec3Arg inPoint, Vec3Arg inNormal, Vec3Arg inMovementDirection)
 	{
-		// Check: All of the edges are active, we have the correct normal already
-		if (inActiveEdges == 0b111)
-			return inNormal;
+		// Check: All of the edges are active, we have the correct normal already. No need to call this function!
+		JPH_ASSERT(inActiveEdges != 0b111);
 
 		// If inNormal would affect movement less than inTriangleNormal use inNormal
 		// This is done since it is really hard to make a distinction between sliding over a horizontal triangulated grid and hitting an edge (in this case you want to use the triangle normal)

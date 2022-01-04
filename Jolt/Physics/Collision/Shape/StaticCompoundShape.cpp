@@ -6,6 +6,7 @@
 #include <Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Physics/Collision/Shape/CompoundShapeVisitors.h>
+#include <Physics/Collision/SortReverseAndStore.h>
 #include <Core/Profiler.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -424,18 +425,7 @@ bool StaticCompoundShape::CastRay(const RayCast &inRay, const SubShapeIDCreator 
 			Vec4 distance = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 	
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-			Vec4::sSort4Reverse(distance, ioProperties);
-
-			// Count how many results are closer
-			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mHit.mFraction));
-			int num_results = closer.CountTrues();
-
-			// Shift the results so that only the closer ones remain
-			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
-
-			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
-			return num_results;
+			return SortReverseAndStore(distance, mHit.mFraction, ioProperties, &mDistanceStack[inStackTop]);
 		}
 
 		float				mDistanceStack[cStackSize];
@@ -465,18 +455,7 @@ void StaticCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &i
 			Vec4 distance = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 	
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-			Vec4::sSort4Reverse(distance, ioProperties);
-
-			// Count how many results are closer
-			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
-			int num_results = closer.CountTrues();
-
-			// Shift the results so that only the closer ones remain
-			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
-
-			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
-			return num_results;
+			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
 		float				mDistanceStack[cStackSize];
@@ -515,7 +494,7 @@ void StaticCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator 
 	WalkTree(visitor);
 }
 
-void StaticCompoundShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void StaticCompoundShape::sCastShapeVsCompound(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -534,25 +513,17 @@ void StaticCompoundShape::CastShape(const ShapeCast &inShapeCast, const ShapeCas
 			Vec4 distance = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 	
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-			Vec4::sSort4Reverse(distance, ioProperties);
-
-			// Count how many results are closer
-			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
-			int num_results = closer.CountTrues();
-
-			// Shift the results so that only the closer ones remain
-			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
-
-			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
-			return num_results;
+			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
 		float				mDistanceStack[cStackSize];
 	};
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, this, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
-	WalkTree(visitor);
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::StaticCompound);
+	const StaticCompoundShape *shape = static_cast<const StaticCompoundShape *>(inShape);
+
+	Visitor visitor(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
+	shape->WalkTree(visitor);
 }
 
 void StaticCompoundShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector) const
@@ -693,6 +664,7 @@ void StaticCompoundShape::sRegister()
 	{
 		CollisionDispatch::sRegisterCollideShape(EShapeSubType::StaticCompound, s, sCollideCompoundVsShape);
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::StaticCompound, sCollideShapeVsCompound);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::StaticCompound, sCastShapeVsCompound);
 	}
 }
 

@@ -11,7 +11,7 @@ class [[nodiscard]] Plane
 public:
 	/// Constructor
 					Plane() = default;
-					Plane(Vec4Arg inNormalAndConstant)										: mNormalAndConstant(inNormalAndConstant) { }
+	explicit		Plane(Vec4Arg inNormalAndConstant)										: mNormalAndConstant(inNormalAndConstant) { }
 					Plane(Vec3Arg inNormal, float inConstant)								: mNormalAndConstant(inNormal, inConstant) { }
 
 	/// Create from point and normal
@@ -27,7 +27,7 @@ public:
 	void			SetConstant(float inConstant)											{ mNormalAndConstant.SetW(inConstant); }
 
 	/// Offset the plane (positive value means move it in the direction of the plane normal)
-	Plane			Offset(float inDistance) const											{ return mNormalAndConstant - Vec4(Vec3::sZero(), inDistance); }
+	Plane			Offset(float inDistance) const											{ return Plane(mNormalAndConstant - Vec4(Vec3::sZero(), inDistance)); }
 
 	/// Distance point to plane
 	float			SignedDistance(Vec3Arg inPoint) const									{ return inPoint.Dot(GetNormal()) + GetConstant(); }

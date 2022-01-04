@@ -216,17 +216,23 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsFreeFallSubStep")
 	{
-		PhysicsTestContext c1(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
 		TestPhysicsFreeFall(c1);
 
-		PhysicsTestContext c2(1.0f / 15.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
 		TestPhysicsFreeFall(c2);
 
-		PhysicsTestContext c3(1.0f / 15.0f, 2, 2);
+		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
 		TestPhysicsFreeFall(c3);
 
-		PhysicsTestContext c4(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
 		TestPhysicsFreeFall(c4);
+
+		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
+		TestPhysicsFreeFall(c5);
+
+		PhysicsTestContext c6(4.0f / 60.0f, 4, 1);
+		TestPhysicsFreeFall(c6);
 	}
 
 	// Test acceleration of a box with force applied
@@ -264,17 +270,23 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsApplyForceSubStep")
 	{
-		PhysicsTestContext c1(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
 		TestPhysicsApplyForce(c1);
 
-		PhysicsTestContext c2(1.0f / 15.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
 		TestPhysicsApplyForce(c2);
 
-		PhysicsTestContext c3(1.0f / 15.0f, 2, 2);
+		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
 		TestPhysicsApplyForce(c3);
 
-		PhysicsTestContext c4(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
 		TestPhysicsApplyForce(c4);
+
+		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
+		TestPhysicsApplyForce(c5);
+
+		PhysicsTestContext c6(4.0f / 60.0f, 4, 1);
+		TestPhysicsApplyForce(c6);
 	}
 
 	// Test angular accelartion for a box by applying torque every frame
@@ -314,17 +326,23 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsApplyTorqueSubStep")
 	{
-		PhysicsTestContext c1(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
 		TestPhysicsApplyTorque(c1);
 
-		PhysicsTestContext c2(1.0f / 15.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
 		TestPhysicsApplyTorque(c2);
 
-		PhysicsTestContext c3(1.0f / 15.0f, 2, 2);
+		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
 		TestPhysicsApplyTorque(c3);
 
-		PhysicsTestContext c4(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
 		TestPhysicsApplyTorque(c4);
+
+		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
+		TestPhysicsApplyTorque(c5);
+
+		PhysicsTestContext c6(4.0f / 60.0f, 4, 1);
+		TestPhysicsApplyTorque(c6);
 	}		
 
 	// Let a sphere bounce on the floor with restition = 1
@@ -382,17 +400,20 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsCollisionElasticSubStep")
 	{
-		PhysicsTestContext c1(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
 		TestPhysicsCollisionElastic(c1);
 
-		PhysicsTestContext c2(1.0f / 15.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
 		TestPhysicsCollisionElastic(c2);
 
-		PhysicsTestContext c3(1.0f / 15.0f, 2, 2);
+		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
 		TestPhysicsCollisionElastic(c3);
 
-		PhysicsTestContext c4(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
 		TestPhysicsCollisionElastic(c4);
+
+		PhysicsTestContext c5(4.0f / 60.0f, 4, 1);
+		TestPhysicsCollisionElastic(c5);
 	}		
 
 	// Let a sphere bounce on the floor with restitution = 0
@@ -439,17 +460,20 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsCollisionInelasticSubStep")
 	{
-		PhysicsTestContext c1(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
 		TestPhysicsCollisionInelastic(c1);
 
-		PhysicsTestContext c2(1.0f / 15.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
 		TestPhysicsCollisionInelastic(c2);
 
-		PhysicsTestContext c3(1.0f / 15.0f, 2, 2);
+		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
 		TestPhysicsCollisionInelastic(c3);
 
-		PhysicsTestContext c4(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
 		TestPhysicsCollisionInelastic(c4);
+
+		PhysicsTestContext c5(4.0f / 60.0f, 4, 1);
+		TestPhysicsCollisionInelastic(c5);
 	}		
 		
 	// Let box intersect with floor by cPenetrationSlop. It should not move, this is the maximum penetration allowed.
@@ -829,14 +853,20 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsActivationDeactivation")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
-		TestPhysicsActivationDeactivation(c);
+		PhysicsTestContext c1(1.0f / 60.0f, 1, 1);
+		TestPhysicsActivationDeactivation(c1);
 
-		PhysicsTestContext c2(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c2(2.0f / 60.0f, 1, 2);
 		TestPhysicsActivationDeactivation(c2);
 
-		PhysicsTestContext c3(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c3(2.0f / 60.0f, 2, 1);
 		TestPhysicsActivationDeactivation(c3);
+
+		PhysicsTestContext c4(4.0f / 60.0f, 4, 1);
+		TestPhysicsActivationDeactivation(c4);
+
+		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
+		TestPhysicsActivationDeactivation(c5);
 	}
 
 	// A test that checks that a row of penetrating boxes will all activate and handle collision in 1 frame so that active bodies cannot tunnel through inactive bodies

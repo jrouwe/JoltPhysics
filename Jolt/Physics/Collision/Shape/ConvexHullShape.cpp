@@ -397,7 +397,7 @@ Vec3 ConvexHullShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg i
 class ConvexHullShape::HullNoConvex final : public Support
 {
 public:
-							HullNoConvex(float inConvexRadius) : 
+	explicit				HullNoConvex(float inConvexRadius) : 
 		mConvexRadius(inConvexRadius)
 	{ 
 		static_assert(sizeof(HullNoConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
@@ -449,7 +449,7 @@ private:
 class ConvexHullShape::HullWithConvex final : public Support
 {
 public:
-							HullWithConvex(const ConvexHullShape *inShape) : 
+	explicit				HullWithConvex(const ConvexHullShape *inShape) : 
 		mShape(inShape)
 	{ 
 		static_assert(sizeof(HullWithConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
@@ -1128,7 +1128,8 @@ void ConvexHullShape::SaveBinaryState(StreamOut &inStream) const
 
 	inStream.Write(mCenterOfMass);
 	inStream.Write(mInertia);
-	inStream.Write(mLocalBounds);
+	inStream.Write(mLocalBounds.mMin);
+	inStream.Write(mLocalBounds.mMax);
 	inStream.Write(mPoints);
 	inStream.Write(mFaces);
 	inStream.Write(mPlanes);
@@ -1144,7 +1145,8 @@ void ConvexHullShape::RestoreBinaryState(StreamIn &inStream)
 
 	inStream.Read(mCenterOfMass);
 	inStream.Read(mInertia);
-	inStream.Read(mLocalBounds);
+	inStream.Read(mLocalBounds.mMin);
+	inStream.Read(mLocalBounds.mMax);
 	inStream.Read(mPoints);
 	inStream.Read(mFaces);
 	inStream.Read(mPlanes);

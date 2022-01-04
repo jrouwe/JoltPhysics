@@ -4,7 +4,6 @@
 #include <TestFramework.h>
 
 #include <Application/Application.h>
-#include <Core/StatCollector.h>
 #include <UI/UIManager.h>
 #include <Application/DebugUI.h>
 #include <Core/FPException.h>
@@ -133,18 +132,6 @@ void Application::Run()
 				case DIK_T:
 					// Dump timing info to file
 					JPH_PROFILE_DUMP();
-					break;
-
-				case DIK_Y:
-					if (JPH_STAT_COLLECTOR_IS_CAPTURING())
-					{
-						static int number = 0;
-						++number;
-						string path = StringFormat("stats%d.html", number);
-						JPH_STAT_COLLECTOR_STOP_CAPTURE(path.c_str());
-					}
-					else
-						JPH_STAT_COLLECTOR_START_CAPTURE();
 					break;
 
 				case DIK_ESCAPE:

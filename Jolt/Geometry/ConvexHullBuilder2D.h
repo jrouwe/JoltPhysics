@@ -18,7 +18,7 @@ public:
 
 	/// Constructor
 	/// @param inPositions Positions used to make the hull. Uses X and Y component of Vec3 only!
-						ConvexHullBuilder2D(const Positions &inPositions); 
+	explicit			ConvexHullBuilder2D(const Positions &inPositions); 
 
 	/// Destructor
 						~ConvexHullBuilder2D();
@@ -72,7 +72,7 @@ private:
 	{
 	public:
 		/// Constructor
-						Edge(int inStartIdx)						: mStartIdx(inStartIdx) { }
+		explicit		Edge(int inStartIdx)						: mStartIdx(inStartIdx) { }
 
 		/// Calculate the center of the edge and the edge normal
 		void			CalculateNormalAndCenter(const Vec3 *inPositions);

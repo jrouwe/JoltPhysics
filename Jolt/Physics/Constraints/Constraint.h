@@ -66,7 +66,7 @@ class Constraint : public RefTarget<Constraint>
 {
 public:
 	/// Constructor
-								Constraint(const ConstraintSettings &inSettings)
+	explicit					Constraint([[maybe_unused]] const ConstraintSettings &inSettings)
 #ifdef JPH_DEBUG_RENDERER
 									: mDrawConstraintSize(inSettings.mDrawConstraintSize)
 #endif // JPH_DEBUG_RENDERER
@@ -98,11 +98,6 @@ public:
 
 	/// Link bodies that are connected by this constraint in the island builder
 	virtual void				BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) = 0;
-
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats
-	virtual void				CollectStats() const						{ }
-#endif // JPH_STAT_COLLECTOR
 
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing interface

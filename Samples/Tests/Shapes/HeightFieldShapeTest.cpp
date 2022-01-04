@@ -252,7 +252,7 @@ void HeightFieldShapeTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI]() { 
 		UIElement *terrain_settings = inUI->CreateMenu();
-		inUI->CreateComboBox(terrain_settings, "Block Size", { "1", "2", "4" }, sBlockSizeShift, [=](int inItem) { sBlockSizeShift = inItem; });
+		inUI->CreateComboBox(terrain_settings, "Block Size", { "2", "4", "8" }, sBlockSizeShift - 1, [=](int inItem) { sBlockSizeShift = inItem + 1; });
 		inUI->CreateSlider(terrain_settings, "Bits Per Sample", (float)sBitsPerSample, 1.0f, 8.0f, 1.0f, [=](float inValue) { sBitsPerSample = (int)inValue; });
 		inUI->CreateTextButton(terrain_settings, "Accept", [this]() { RestartTest(); });
 		inUI->ShowMenu(terrain_settings);

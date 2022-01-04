@@ -184,7 +184,7 @@ BroadPhase::AddState BroadPhaseQuadTree::AddBodiesPrepare(BodyID *ioBodies, int 
 		mLayers[broadphase_layer].AddBodiesPrepare(bodies, mTracking, b_start, int(b_mid - b_start), layer_state.mAddState);
 
 		// Keep track in which tree we placed the object
-		for (BodyID *b = b_start; b < b_mid; ++b)
+		for (const BodyID *b = b_start; b < b_mid; ++b)
 		{
 			uint32 index = b->GetIndex();
 			JPH_ASSERT(bodies[index]->GetID() == *b, "Provided BodyID doesn't match BodyID in body manager");
@@ -224,7 +224,7 @@ void BroadPhaseQuadTree::AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddSt
 			mLayers[broadphase_layer].AddBodiesFinalize(mTracking, int(l.mBodyEnd - l.mBodyStart), l.mAddState);
 
 			// Mark added to broadphase
-			for (BodyID *b = l.mBodyStart; b < l.mBodyEnd; ++b)
+			for (const BodyID *b = l.mBodyStart; b < l.mBodyEnd; ++b)
 			{
 				uint32 index = b->GetIndex();
 				JPH_ASSERT(bodies[index]->GetID() == *b, "Provided BodyID doesn't match BodyID in body manager");
@@ -257,7 +257,7 @@ void BroadPhaseQuadTree::AddBodiesAbort(BodyID *ioBodies, int inNumber, AddState
 			mLayers[broadphase_layer].AddBodiesAbort(mTracking, l.mAddState);
 
 			// Reset bookkeeping
-			for (BodyID *b = l.mBodyStart; b < l.mBodyEnd; ++b)
+			for (const BodyID *b = l.mBodyStart; b < l.mBodyEnd; ++b)
 			{
 				uint32 index = b->GetIndex();
 				JPH_ASSERT(bodies[index]->GetID() == *b, "Provided BodyID doesn't match BodyID in body manager");
@@ -302,7 +302,7 @@ void BroadPhaseQuadTree::RemoveBodies(BodyID *ioBodies, int inNumber)
 		// Remove all bodies of the same layer
 		mLayers[broadphase_layer].RemoveBodies(bodies, mTracking, b_start, int(b_mid - b_start));
 
-		for (BodyID *b = b_start; b < b_mid; ++b)
+		for (const BodyID *b = b_start; b < b_mid; ++b)
 		{
 			// Reset bookkeeping
 			uint32 index = b->GetIndex();
@@ -336,7 +336,7 @@ void BroadPhaseQuadTree::NotifyBodiesAABBChanged(BodyID *ioBodies, int inNumber,
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());
 
 	// Sort bodies on layer
-	Tracking *tracking = mTracking.data(); // C pointer or else sort is incredibly slow in debug mode
+	const Tracking *tracking = mTracking.data(); // C pointer or else sort is incredibly slow in debug mode
 	sort(ioBodies, ioBodies + inNumber, [tracking](BodyID inLHS, BodyID inRHS) { return tracking[inLHS.GetIndex()].mBroadPhaseLayer < tracking[inRHS.GetIndex()].mBroadPhaseLayer; });
 
 	BodyID *b_start = ioBodies, *b_end = ioBodies + inNumber;
@@ -512,14 +512,11 @@ void BroadPhaseQuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideSha
 	}
 }
 
-void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
+void BroadPhaseQuadTree::CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
 { 
 	JPH_PROFILE_FUNCTION();
 
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());	
-
-	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
-	shared_lock lock(mQueryLocks[mQueryLockIdx]);
 
 	// Loop over all layers and test the ones that could hit
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
@@ -533,6 +530,14 @@ void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollecto
 				break;
 		}
 	}
+}
+
+void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
+{ 
+	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
+
+	CastAABoxNoLock(inBox, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const 

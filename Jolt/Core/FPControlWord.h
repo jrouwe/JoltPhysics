@@ -45,7 +45,7 @@ public:
 		mPrevState = val;
 		val &= ~Mask;
 		val |= Value;
-	    asm volatile("msr fpcr, %0" : "=r" (val));
+	    asm volatile("msr fpcr, %0" : /* no output */ : "r" (val));
 	}
 
 				~FPControlWord()
@@ -54,7 +54,7 @@ public:
 		asm volatile("mrs %0, fpcr" : "=r" (val));
 		val &= ~Mask;
 		val |= mPrevState & Mask;
-		asm volatile("msr fpcr, %0" : "=r" (val));
+		asm volatile("msr fpcr, %0" : /* no output */ : "r" (val));
 	}
 
 private:

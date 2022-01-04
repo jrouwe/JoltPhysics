@@ -6,7 +6,6 @@
 #include <Physics/Constraints/PathConstraint.h>
 #include <Physics/Body/Body.h>
 #include <Core/StringTools.h>
-#include <Core/StatCollector.h>
 #include <ObjectStream/TypeDeclarations.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -350,45 +349,6 @@ bool PathConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 
 	return pos || limit || rot;
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void PathConstraint::CollectStats() const
-{
-	string prefix = "Constraint." + mBody1->GetDebugName() + "-" + mBody2->GetDebugName();
-
-	JPH_STAT_COLLECTOR_ADD(prefix + ".PathFraction", mPathFraction);
-
-	JPH_STAT_COLLECTOR_ADD(prefix + ".DualAxis.TotalLambda0", mPositionConstraintPart.GetTotalLambda()[0]);
-	JPH_STAT_COLLECTOR_ADD(prefix + ".DualAxis.TotalLambda1", mPositionConstraintPart.GetTotalLambda()[1]);
-
-	switch (mRotationConstraintType)
-	{
-	case EPathRotationConstraintType::Free:
-		// No rotational limits
-		break;
-
-	case EPathRotationConstraintType::ConstrainAroundTangent:
-	case EPathRotationConstraintType::ConstrainAroundNormal:
-	case EPathRotationConstraintType::ConstrainAroundBinormal:
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Hinge.TotalLambda0", mHingeConstraintPart.GetTotalLambda()[0]);
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Hinge.TotalLambda1", mHingeConstraintPart.GetTotalLambda()[1]);
-		break;
-
-	case EPathRotationConstraintType::ConstaintToPath:
-	case EPathRotationConstraintType::FullyConstrained:
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda0", mRotationConstraintPart.GetTotalLambda()[0]);
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda1", mRotationConstraintPart.GetTotalLambda()[1]);
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda2", mRotationConstraintPart.GetTotalLambda()[2]);
-		break;
-	}
-
-	if (mPositionLimitsConstraintPart.IsActive())
-		JPH_STAT_COLLECTOR_ADD(prefix + ".PositionLimit.TotalLambda", mPositionLimitsConstraintPart.GetTotalLambda());
-
-	if (mPositionMotorConstraintPart.IsActive())
-		JPH_STAT_COLLECTOR_ADD(prefix + ".PositionMotor.TotalLambda", mPositionMotorConstraintPart.GetTotalLambda());
-}
-#endif // JPH_STAT_COLLECTOR
 
 #ifdef JPH_DEBUG_RENDERER
 void PathConstraint::DrawConstraint(DebugRenderer *inRenderer) const

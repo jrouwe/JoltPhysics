@@ -32,7 +32,7 @@ class WheelTV : public Wheel
 {
 public:
 	/// Constructor
-								WheelTV(const WheelSettingsTV &inWheel);
+	explicit					WheelTV(const WheelSettingsTV &inWheel);
 
 	/// Override GetSettings and cast to the correct class
 	const WheelSettingsTV *		GetSettings() const							{ return static_cast<const WheelSettingsTV *>(mSettings.GetPtr()); }

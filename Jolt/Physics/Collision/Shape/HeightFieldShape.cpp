@@ -6,16 +6,19 @@
 #include <Physics/Collision/Shape/HeightFieldShape.h>
 #include <Physics/Collision/Shape/ConvexShape.h>
 #include <Physics/Collision/Shape/ScaleHelpers.h>
+#include <Physics/Collision/Shape/SphereShape.h>
 #include <Physics/Collision/RayCast.h>
 #include <Physics/Collision/ShapeCast.h>
 #include <Physics/Collision/CastResult.h>
 #include <Physics/Collision/CollidePointResult.h>
 #include <Physics/Collision/ShapeFilter.h>
 #include <Physics/Collision/CastConvexVsTriangles.h>
+#include <Physics/Collision/CastSphereVsTriangles.h>
 #include <Physics/Collision/CollideConvexVsTriangles.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
 #include <Physics/Collision/CollisionDispatch.h>
+#include <Physics/Collision/SortReverseAndStore.h>
 #include <Core/Profiler.h>
 #include <Core/StringTools.h>
 #include <Core/StreamIn.h>
@@ -309,9 +312,9 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	CacheValues();
 
 	// Check block size
-	if (mBlockSize < 1 || mBlockSize > 4)
+	if (mBlockSize < 2 || mBlockSize > 8)
 	{
-		outResult.SetError("HeightFieldShape: Block size must be in the range [1, 4]!");
+		outResult.SetError("HeightFieldShape: Block size must be in the range [2, 8]!");
 		return;
 	}
 
@@ -1147,51 +1150,152 @@ public:
 				// Update max_x (we've been using it so we couldn't update it earlier)
 				max_x -= max_x_decrement;
 
-				// Loop triangles
-				for (uint32 v_y = min_y; v_y < max_y; ++v_y)
-					for (uint32 v_x = min_x; v_x < max_x; ++v_x)
+				// We're going to divide the vertices in 4 blocks to do one more runtime sub-division, calculate the ranges of those blocks
+				struct Range
+				{
+					uint32 mMinX, mMinY, mNumTrianglesX, mNumTrianglesY;
+				};
+				uint32 half_block_size = block_size >> 1;
+				uint32 block_size_x = max_x - min_x - half_block_size;
+				uint32 block_size_y = max_y - min_y - half_block_size;
+				Range ranges[] = 
+				{
+					{ 0, 0,									half_block_size, half_block_size },
+					{ half_block_size, 0,					block_size_x, half_block_size },
+					{ 0, half_block_size,					half_block_size, block_size_y },
+					{ half_block_size, half_block_size,		block_size_x, block_size_y },
+				};
+
+				// Calculate the min and max of each of the blocks
+				Mat44 block_min, block_max;
+				for (int block = 0; block < 4; ++block)
+				{
+					// Get the range for this block
+					const Range &range = ranges[block];
+					uint32 start = range.mMinX + range.mMinY * block_size_plus_1;
+					uint32 size_x_plus_1 = range.mNumTrianglesX + 1;
+					uint32 size_y_plus_1 = range.mNumTrianglesY + 1;
+
+					// Calculate where to start reading
+					const Vec3 *src_vertex = vertices + start;
+					const bool *src_no_collision = no_collision + start;
+					uint32 stride = block_size_plus_1 - size_x_plus_1;
+
+					// Start range with a very large inside-out box
+					Vec3 value_min = Vec3::sReplicate(1.0e30f);
+					Vec3 value_max = Vec3::sReplicate(-1.0e30f);
+
+					// Loop over the samples to determine the min and max of this block
+					for (uint32 block_y = 0; block_y < size_y_plus_1; ++block_y)
 					{
-						// Get first vertex
-						const int offset = (v_y - min_y) * block_size_plus_1 + (v_x - min_x);
-						const Vec3 *start_vertex = vertices + offset;
-						const bool *start_no_collision = no_collision + offset;
-
-						// Check if vertices shared by both triangles have collision
-						if (!start_no_collision[0] && !start_no_collision[block_size_plus_1 + 1])
+						for (uint32 block_x = 0; block_x < size_x_plus_1; ++block_x)
 						{
-							// Loop 2 triangles
-							for (uint t = 0; t < 2; ++t)
+							if (!*src_no_collision)
 							{
-								// Determine triangle vertices
-								Vec3 v0, v1, v2;
-								if (t == 0)
+								value_min = Vec3::sMin(value_min, *src_vertex);
+								value_max = Vec3::sMax(value_max, *src_vertex);
+							}
+							++src_vertex;
+							++src_no_collision;
+						}
+						src_vertex += stride;
+						src_no_collision += stride;
+					}
+					block_min.SetColumn4(block, Vec4(value_min));
+					block_max.SetColumn4(block, Vec4(value_max));
+				};
+
+			#ifdef JPH_DEBUG_HEIGHT_FIELD
+				// Draw the bounding boxes of the sub-nodes
+				for (int block = 0; block < 4; ++block)
+				{
+					AABox bounds(block_min.GetColumn3(block), block_max.GetColumn3(block));
+					if (bounds.IsValid())
+						DebugRenderer::sInstance->DrawWireBox(bounds, Color::sYellow);
+				}
+			#endif // JPH_DEBUG_HEIGHT_FIELD
+
+				// Transpose so we have the mins and maxes of each of the blocks in rows instead of columns
+				Mat44 transposed_min = block_min.Transposed();
+				Mat44 transposed_max = block_max.Transposed();
+				
+				// Check which blocks collide
+				// Note: At this point we don't use our own stack but we do allow the visitor to use its own stack
+				// to store collision distances so that we can still early out when no closer hits have been found.
+				UVec4 colliding_blocks(0, 1, 2, 3);
+				int num_results = ioVisitor.VisitRangeBlock(transposed_min.GetColumn4(0), transposed_min.GetColumn4(1), transposed_min.GetColumn4(2), transposed_max.GetColumn4(0), transposed_max.GetColumn4(1), transposed_max.GetColumn4(2), colliding_blocks, mTop);
+
+				// Loop through the results backwards (closest first)
+				int result = num_results - 1;
+				while (result >= 0)
+				{
+					// Calculate the min and max of this block
+					uint32 block = colliding_blocks[result];
+					const Range &range = ranges[block];
+					uint32 block_min_x = min_x + range.mMinX;
+					uint32 block_max_x = block_min_x + range.mNumTrianglesX;
+					uint32 block_min_y = min_y + range.mMinY;
+					uint32 block_max_y = block_min_y + range.mNumTrianglesY;
+
+					// Loop triangles
+					for (uint32 v_y = block_min_y; v_y < block_max_y; ++v_y)
+						for (uint32 v_x = block_min_x; v_x < block_max_x; ++v_x)
+						{
+							// Get first vertex
+							const int offset = (v_y - min_y) * block_size_plus_1 + (v_x - min_x);
+							const Vec3 *start_vertex = vertices + offset;
+							const bool *start_no_collision = no_collision + offset;
+
+							// Check if vertices shared by both triangles have collision
+							if (!start_no_collision[0] && !start_no_collision[block_size_plus_1 + 1])
+							{
+								// Loop 2 triangles
+								for (uint t = 0; t < 2; ++t)
 								{
-									// Check third vertex
-									if (start_no_collision[block_size_plus_1])
-										continue;
+									// Determine triangle vertices
+									Vec3 v0, v1, v2;
+									if (t == 0)
+									{
+										// Check third vertex
+										if (start_no_collision[block_size_plus_1])
+											continue;
 
-									// Get vertices for triangle
-									v0 = start_vertex[0];
-									v1 = start_vertex[block_size_plus_1];
-									v2 = start_vertex[block_size_plus_1 + 1];
+										// Get vertices for triangle
+										v0 = start_vertex[0];
+										v1 = start_vertex[block_size_plus_1];
+										v2 = start_vertex[block_size_plus_1 + 1];
+									}
+									else
+									{
+										// Check third vertex
+										if (start_no_collision[1])
+											continue;
+
+										// Get vertices for triangle
+										v0 = start_vertex[0];
+										v1 = start_vertex[block_size_plus_1 + 1];
+										v2 = start_vertex[1];
+									}
+
+								#ifdef JPH_DEBUG_HEIGHT_FIELD
+									DebugRenderer::sInstance->DrawWireTriangle(v0, v1, v2, Color::sWhite);
+								#endif
+
+									// Call visitor
+									ioVisitor.VisitTriangle(v_x, v_y, t, v0, v1, v2);
+
+									// Check if we're done
+									if (ioVisitor.ShouldAbort())
+										return;
 								}
-								else
-								{
-									// Check third vertex
-									if (start_no_collision[1])
-										continue;
-
-									// Get vertices for triangle
-									v0 = start_vertex[0];
-									v1 = start_vertex[block_size_plus_1 + 1];
-									v2 = start_vertex[1];
-								}
-
-								// Call visitor
-								ioVisitor.VisitTriangle(v_x, v_y, t, v0, v1, v2);
 							}
 						}
-					}
+
+					// Fetch next block until we find one that the visitor wants to see
+					do 
+						--result;
+					while (result >= 0 && !ioVisitor.ShouldVisitRangeBlock(mTop + result));
+				}
 			}
 			else
 			{
@@ -1239,7 +1343,7 @@ public:
 
 			// Check if we're done
 			if (ioVisitor.ShouldAbort())
-				break;
+				return;
 
 			// Fetch next node until we find one that the visitor wants to see
 			do 
@@ -1298,28 +1402,13 @@ bool HeightFieldShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &in
 		{
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mRayOrigin, mRayInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-			Vec4::sSort4Reverse(distance, ioProperties);
-
-			// Count how many results are closer
-			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mHit.mFraction));
-			int num_results = closer.CountTrues();
-
-			// Shift the results so that only the closer ones remain
-			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
-
-			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
-			return num_results;
+			return SortReverseAndStore(distance, mHit.mFraction, ioProperties, &mDistanceStack[inStackTop]);
 		}
 
 		JPH_INLINE void			VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2) 
 		{			
-		#ifdef JPH_DEBUG_HEIGHT_FIELD
-			float old_fraction = mHit.mFraction;
-		#endif
-
 			float fraction = RayTriangle(mRayOrigin, mRayDirection, inV0, inV1, inV2);
 			if (fraction < mHit.mFraction)
 			{
@@ -1328,10 +1417,6 @@ bool HeightFieldShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &in
 				mHit.mSubShapeID2 = mShape->EncodeSubShapeID(mSubShapeIDCreator, inX, inY, inTriangle);
 				mReturnValue = true;
 			}
-			
-		#ifdef JPH_DEBUG_HEIGHT_FIELD
-			DebugRenderer::sInstance->DrawWireTriangle(inV0, inV1, inV2, old_fraction > mHit.mFraction? Color::sRed : Color::sCyan);
-		#endif
 		}
 
 		RayCastResult &			mHit;
@@ -1383,18 +1468,7 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 			Vec4 distance = RayAABox4(mRayOrigin, mRayInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 	
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-			Vec4::sSort4Reverse(distance, ioProperties);
-
-			// Count how many results are closer
-			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
-			int num_results = closer.CountTrues();
-
-			// Shift the results so that only the closer ones remain
-			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
-
-			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
-			return num_results;
+			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
 		JPH_INLINE void			VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2) const
@@ -1431,18 +1505,10 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 
 void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
 {
-	// First test if we're inside our bounding box
-	AABox bounds = GetLocalBounds();
-	if (bounds.Contains(inPoint))
-	{
-		// Cast a ray that's 10% longer than the heigth of our bounding box downwards to see if we hit the surface
-		RayCastResult result;
-		if (!CastRay(RayCast { inPoint, -1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, inSubShapeIDCreator, result))
-			ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
-	}
+	// A height field doesn't have volume, so we can't test insideness
 }
 
-void HeightFieldShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1473,18 +1539,7 @@ void HeightFieldShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 			Vec4 distance = RayAABox4(mBoxCenter, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
 	
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-			Vec4::sSort4Reverse(distance, ioProperties);
-
-			// Count how many results are closer
-			UVec4 closer = Vec4::sLess(distance, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
-			int num_results = closer.CountTrues();
-
-			// Shift the results so that only the closer ones remain
-			distance = distance.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
-			ioProperties = ioProperties.ShiftComponents4Minus(num_results);
-
-			distance.StoreFloat4((Float4 *)&mDistanceStack[inStackTop]);
-			return num_results;
+			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
 		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
@@ -1506,13 +1561,77 @@ void HeightFieldShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 		float						mDistanceStack[cStackSize];
 	};
 
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
+	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
+
 	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
-	visitor.mShape2 = this;
+	visitor.mShape2 = shape;
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
 	visitor.mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent();
 	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
-	WalkHeightField(visitor);
+	shape->WalkHeightField(visitor);
+}
+
+void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	JPH_PROFILE_FUNCTION();
+
+	struct Visitor : public CastSphereVsTriangles
+	{
+		using CastSphereVsTriangles::CastSphereVsTriangles;
+
+		JPH_INLINE bool				ShouldAbort() const
+		{
+			return mCollector.ShouldEarlyOut();
+		}
+
+		JPH_INLINE bool				ShouldVisitRangeBlock(int inStackTop) const
+		{
+			return mDistanceStack[inStackTop] < mCollector.GetEarlyOutFraction();
+		}
+
+		JPH_INLINE int				VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		{
+			// Scale the bounding boxes of this node 
+			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
+			AABox4Scale(mScale, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Enlarge them by the radius of the sphere
+			AABox4EnlargeWithExtent(Vec3::sReplicate(mRadius), bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Test bounds of 4 children
+			Vec4 distance = RayAABox4(mStart, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+	
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
+		}
+
+		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
+		{			
+			// Create sub shape id for this part
+			SubShapeID triangle_sub_shape_id = mShape2->EncodeSubShapeID(mSubShapeIDCreator2, inX, inY, inTriangle);
+
+			// Determine active edges
+			uint8 active_edges = mShape2->GetEdgeFlags(inX, inY, inTriangle);
+
+			Cast(inV0, inV1, inV2, active_edges, triangle_sub_shape_id);
+		}
+
+		const HeightFieldShape *	mShape2;
+		RayInvDirection				mInvDirection;
+		SubShapeIDCreator			mSubShapeIDCreator2;
+		float						mDistanceStack[cStackSize];
+	};
+
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
+	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
+
+	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	visitor.mShape2 = shape;
+	visitor.mInvDirection.Set(inShapeCast.mDirection);
+	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
+	shape->WalkHeightField(visitor);
 }
 
 struct HeightFieldShape::HSGetTrianglesContext
@@ -1757,7 +1876,13 @@ void HeightFieldShape::sRegister()
 	f.mColor = Color::sPurple;
 
 	for (EShapeSubType s : sConvexSubShapeTypes)
+	{
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::HeightField, sCollideConvexVsHeightField);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::HeightField, sCastConvexVsHeightField);
+	}
+
+	// Specialized collision functions
+	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::HeightField, sCastSphereVsHeightField);
 }
 
 } // JPH

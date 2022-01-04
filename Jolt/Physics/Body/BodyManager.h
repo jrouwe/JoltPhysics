@@ -180,11 +180,6 @@ public:
 	void							Draw(const DrawSettings &inSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer);
 #endif // JPH_DEBUG_RENDERER
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats for all bodies
-	void							CollectStats() const;
-#endif // JPH_STAT_COLLECTOR
-
 #ifdef JPH_ENABLE_ASSERTS
 	/// Lock the active body list, asserts when Activate/DeactivateBody is called.
 	void							SetActiveBodiesLocked(bool inLocked)		{ mActiveBodiesLocked = inLocked; }

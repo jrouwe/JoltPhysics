@@ -5,7 +5,6 @@
 
 #include <Physics/Constraints/HingeConstraint.h>
 #include <Physics/Body/Body.h>
-#include <Core/StatCollector.h>
 #include <ObjectStream/TypeDeclarations.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -281,25 +280,6 @@ bool HingeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 
 	return pos || rot || limit;
 }
-
-#ifdef JPH_STAT_COLLECTOR
-void HingeConstraint::CollectStats() const
-{
-	string prefix = "Constraint." + mBody1->GetDebugName() + "-" + mBody2->GetDebugName();
-
-	JPH_STAT_COLLECTOR_ADD(prefix + ".HingeAngle", RadiansToDegrees(mTheta));
-
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Point.TotalLambda", mPointConstraintPart.GetTotalLambda());
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda0", mRotationConstraintPart.GetTotalLambda()[0]);
-	JPH_STAT_COLLECTOR_ADD(prefix + ".Rotation.TotalLambda1", mRotationConstraintPart.GetTotalLambda()[1]);
-
-	if (mRotationLimitsConstraintPart.IsActive())
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Limit.TotalLambda", mRotationLimitsConstraintPart.GetTotalLambda());
-
-	if (mMotorConstraintPart.IsActive())
-		JPH_STAT_COLLECTOR_ADD(prefix + ".Motor.TotalLambda", mMotorConstraintPart.GetTotalLambda());
-}
-#endif // JPH_STAT_COLECTOR
 
 #ifdef JPH_DEBUG_RENDERER
 void HingeConstraint::DrawConstraint(DebugRenderer *inRenderer) const

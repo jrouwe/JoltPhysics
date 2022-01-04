@@ -19,7 +19,7 @@ public:
 	using MutexMask = BodyManager::MutexMask;
 
 	/// Constructor
-								BodyLockInterface(BodyManager &inBodyManager)		: mBodyManager(inBodyManager) { }
+	explicit					BodyLockInterface(BodyManager &inBodyManager)		: mBodyManager(inBodyManager) { }
 	virtual						~BodyLockInterface() = default;
 
 	///@name Locking functions

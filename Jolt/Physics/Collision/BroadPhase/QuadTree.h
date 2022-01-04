@@ -67,7 +67,7 @@ private:
 	public:
 		/// Constructor
 								AtomicNodeID() = default;
-								AtomicNodeID(const NodeID &inRHS)			: mID(inRHS.mID) { }
+		explicit				AtomicNodeID(const NodeID &inRHS)			: mID(inRHS.mID) { }
 
 		/// Assignment
 		inline void				operator = (const NodeID &inRHS)			{ mID = inRHS.mID; }
@@ -94,7 +94,7 @@ private:
 	{
 	public:
 		/// Construct node
-								Node(bool inLocked);
+		explicit				Node(bool inLocked);
 
 		/// Get bounding box encapsulating all children
 		void					GetNodeBounds(AABox &outBounds) const;
@@ -269,7 +269,7 @@ private:
 
 	/// Caches location of body inBodyID in the tracker, body can be found in mNodes[inNodeIdx].mChildNodeID[inChildIdx]
 	void						GetBodyLocation(const TrackingVector &inTracking, BodyID inBodyID, uint32 &outNodeIdx, uint32 &outChildIdx) const;
-	void						SetBodyLocation(TrackingVector &ioTracking, BodyID inBodyID, uint32 inNodeIdx, uint32 inChildIdx);
+	void						SetBodyLocation(TrackingVector &ioTracking, BodyID inBodyID, uint32 inNodeIdx, uint32 inChildIdx) const;
 	void						InvalidateBodyLocation(TrackingVector &ioTracking, BodyID inBodyID);
 
 	/// Get the current root of the tree
@@ -311,7 +311,6 @@ private:
 	/// Note: This function only works if the tree is not modified while we're traversing it.
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
 #endif
-
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
 	/// Mutex protecting the various LayerToStats members

@@ -5,7 +5,6 @@
 
 #include <SamplesApp.h>
 #include <Application/EntryPoint.h>
-#include <Core/StatCollector.h>
 #include <Core/JobSystemThreadPool.h>
 #include <Core/TempAllocator.h>
 #include <Geometry/OrientedBox.h>
@@ -30,6 +29,7 @@
 #include <Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Physics/Collision/Shape/ScaledShape.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #include <Physics/Constraints/DistanceConstraint.h>
 #include <Layers.h>
 #include <Utils/Log.h>
@@ -304,6 +304,9 @@ SamplesApp::SamplesApp()
 	// Create job system
 	mJobSystem = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, mMaxConcurrentJobs - 1);
 
+	// Create job system without extra threads for validating
+	mJobSystemValidating = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, 0);
+
 	// Create UI
 	UIElement *main_menu = mDebugUI->CreateMenu();
 	mDebugUI->CreateTextButton(main_menu, "Select Test", [this]() { 
@@ -332,8 +335,8 @@ SamplesApp::SamplesApp()
 		UIElement *phys_settings = mDebugUI->CreateMenu();
 		mDebugUI->CreateSlider(phys_settings, "Max Concurrent Jobs", float(mMaxConcurrentJobs), 1, float(thread::hardware_concurrency()), 1, [this](float inValue) { mMaxConcurrentJobs = (int)inValue; });
 		mDebugUI->CreateSlider(phys_settings, "Gravity (m/s^2)", -mPhysicsSystem->GetGravity().GetY(), 0.0f, 20.0f, 1.0f, [this](float inValue) { mPhysicsSystem->SetGravity(Vec3(0, -inValue, 0)); });
-		mDebugUI->CreateSlider(phys_settings, "Update Frequency (Hz)", mUpdateFrequency, 15.0f, 120.0f, 5.0f, [this](float inValue) { mUpdateFrequency = inValue; });
-		mDebugUI->CreateSlider(phys_settings, "Num Collision Steps", float(mCollisionSteps), 1.0f, 2.0f, 1.0f, [this](float inValue) { mCollisionSteps = int(inValue); });
+		mDebugUI->CreateSlider(phys_settings, "Update Frequency (Hz)", mUpdateFrequency, 7.5f, 120.0f, 2.5f, [this](float inValue) { mUpdateFrequency = inValue; });
+		mDebugUI->CreateSlider(phys_settings, "Num Collision Steps", float(mCollisionSteps), 1.0f, 4.0f, 1.0f, [this](float inValue) { mCollisionSteps = int(inValue); });
 		mDebugUI->CreateSlider(phys_settings, "Num Integration Sub Steps", float(mIntegrationSubSteps), 1.0f, 4.0f, 1.0f, [this](float inValue) { mIntegrationSubSteps = int(inValue); });
 		mDebugUI->CreateSlider(phys_settings, "Num Velocity Steps", float(mPhysicsSettings.mNumVelocitySteps), 0, 30, 1, [this](float inValue) { mPhysicsSettings.mNumVelocitySteps = int(round(inValue)); mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 		mDebugUI->CreateSlider(phys_settings, "Num Position Steps", float(mPhysicsSettings.mNumPositionSteps), 0, 30, 1, [this](float inValue) { mPhysicsSettings.mNumPositionSteps = int(round(inValue)); mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
@@ -432,8 +435,7 @@ SamplesApp::SamplesApp()
 			".: Step forward (only when Physics Settings / Record State for Playback is on).\n"
 			"Shift + ,: Play reverse (only when Physics Settings / Record State for Playback is on).\n"
 			"Shift + .: Replay forward (only when Physics Settings / Record State for Playback is on).\n"
-			"T: Dump frame timing information to profile_*.html (when JPH_PROFILE_ENABLED defined).\n"
-			"Y: Start / stop recording stats. Stats?.html is written when stopping (when JPH_STAT_COLLECTOR defined)."
+			"T: Dump frame timing information to profile_*.html (when JPH_PROFILE_ENABLED defined)."
 		);
 		mDebugUI->ShowMenu(help);
 	});
@@ -481,6 +483,7 @@ SamplesApp::~SamplesApp()
 	delete mTest;
 	delete mContactListener;
 	delete mPhysicsSystem;
+	delete mJobSystemValidating;
 	delete mJobSystem;
 	delete mTempAllocator;
 }
@@ -497,9 +500,6 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	delete mTest;
 	delete mContactListener;
 	delete mPhysicsSystem;
-
-	// Start at frame 0
-	JPH_STAT_COLLECTOR_RESET();
 
 	// Create physics system
 	mPhysicsSystem = new PhysicsSystem();
@@ -1180,8 +1180,6 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						Vec3 contact_position1 = hit.mContactPointOn1;
 						Vec3 contact_position2 = hit.mContactPointOn2;
 						Vec3 normal = hit.mPenetrationAxis.Normalized();
-						if (hit.mIsBackFaceHit)
-							normal = -normal;
 						mDebugRenderer->DrawArrow(contact_position2, contact_position2 - normal, color, 0.01f); // Flip to make it point towards the cast body
 
 						// Contact position 1
@@ -1797,7 +1795,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			DrawPhysics();
 
 			// Step the world (with fixed frequency)
-			StepPhysics();
+			StepPhysics(mJobSystem);
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw any contacts that were collected through the contact listener
@@ -1838,16 +1836,13 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 				SaveState(mPlaybackFrames.back());
 			}
 
-			// Set next frame for the stat collector
-			JPH_STAT_COLLECTOR_SET_NEXT_FRAME();
-
 			// Physics world is drawn using debug lines, when not paused
 			// Draw state prior to step so that debug lines are created from the same state
 			// (the constraints are solved on the current state and then the world is stepped)
 			DrawPhysics();
 
 			// Update the physics world
-			StepPhysics();
+			StepPhysics(mJobSystem);
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw any contacts that were collected through the contact listener
@@ -1865,22 +1860,11 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 				RestoreState(mPlaybackFrames.back());
 
 				// Step again
-				StepPhysics();
+				StepPhysics(mJobSystemValidating);
 
 				// Validate that the result is the same
 				ValidateState(post_step_state);
 			}
-
-#ifdef JPH_STAT_COLLECTOR
-			if (JPH_STAT_COLLECTOR_IS_CAPTURING())
-			{
-				// Record FPS as stat
-				JPH_STAT_COLLECTOR_ADD("General.FPS", 1.0f / inDeltaTime);
-
-				// Collect stats for previous time step
-				mPhysicsSystem->CollectStats();
-			}
-#endif // JPH_STAT_COLLECTOR
 		}
 	}
 
@@ -2038,7 +2022,7 @@ void SamplesApp::DrawPhysics()
 	mShapeToGeometry = move(shape_to_geometry);
 }
 
-void SamplesApp::StepPhysics()
+void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 {
 	float delta_time = 1.0f / mUpdateFrequency;
 
@@ -2059,7 +2043,7 @@ void SamplesApp::StepPhysics()
 	uint64 start_tick = GetProcessorTickCount();
 
 	// Step the world (with fixed frequency)
-	mPhysicsSystem->Update(delta_time, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+	mPhysicsSystem->Update(delta_time, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, inJobSystem);
 
 	// Accumulate time
 	mTotalTime += GetProcessorTickCount() - start_tick;
@@ -2078,6 +2062,11 @@ void SamplesApp::StepPhysics()
 	if (mStepNumber % 600 == 0)
 		mPhysicsSystem->ReportBroadphaseStats();
 #endif // JPH_TRACK_BROADPHASE_STATS
+
+#ifdef JPH_TRACK_NARROWPHASE_STATS
+	if (mStepNumber % 600 == 0)
+		NarrowPhaseStat::sReportStats();
+#endif // JPH_TRACK_NARROWPHASE_STATS
 
 	{
 		// Post update

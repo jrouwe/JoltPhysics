@@ -11,13 +11,17 @@ Each platform supports multiple build targets
 - ReleaseCoverage - As Release but turns on Coverage reporting (clang only) to find which areas of the code are not executed
 - Distribution - Shippable version of the library, turns off all debugging support
 
+## Includes
+
+The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
+You can use Jolt.h in your precompiled header to speed up compilation.
+
 ## Defines
 
 There are a number of user configurable defines that turn on/off certain features:
 
 - JPH_PROFILE_ENABLED - Turns on the internal profiler.
 - JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).
-- JPH_STAT_COLLECTOR - Turns on the stat collector system which allows you to see internal properties over time (see StatCollector.h)
 - JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.
 - JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.
 - JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).

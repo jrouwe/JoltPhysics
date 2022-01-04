@@ -11,11 +11,30 @@
 #include <Physics/Collision/Shape/ScaledShape.h>
 #include <Physics/Collision/Shape/BoxShape.h>
 #include <Physics/Collision/ShapeFilter.h>
+#include <Physics/Collision/CollisionDispatch.h>
 #include "PhysicsTestContext.h"
 #include "Layers.h"
 
 TEST_SUITE("CastShapeTests")
 {
+	/// Helper function that tests a sphere against a triangle
+	static void sTestCastSphereVertexOrEdge(const Shape *inSphere, Vec3Arg inPosition, Vec3Arg inDirection, const Shape *inTriangle)
+	{
+		ShapeCast shape_cast(inSphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(inPosition - inDirection), inDirection);
+		ShapeCastSettings cast_settings;
+		cast_settings.mBackFaceModeTriangles = EBackFaceMode::CollideWithBackFaces;
+		cast_settings.mBackFaceModeConvex = EBackFaceMode::CollideWithBackFaces;
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		CollisionDispatch::sCastShapeVsShape(shape_cast, cast_settings, inTriangle, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+		CHECK(collector.mHits.size() == 1);
+		const ShapeCastResult &result = collector.mHits.back();
+		CHECK_APPROX_EQUAL(result.mFraction, 1.0f - 0.2f / inDirection.Length(), 1.0e-4f);
+		CHECK_APPROX_EQUAL(result.mPenetrationAxis.Normalized(), inDirection.Normalized(), 1.0e-3f);
+		CHECK_APPROX_EQUAL(result.mPenetrationDepth, 0.0f, 1.0e-3f);
+		CHECK_APPROX_EQUAL(result.mContactPointOn1, inPosition, 1.0e-3f);
+		CHECK_APPROX_EQUAL(result.mContactPointOn2, inPosition, 1.0e-3f);
+	}
+
 	/// Helper function that tests a shere against a triangle centered on the origin with normal Z
 	static void sTestCastSphereTriangle(const Shape *inTriangle)
 	{
@@ -30,7 +49,7 @@ TEST_SUITE("CastShapeTests")
 			cast_settings.mBackFaceModeConvex = EBackFaceMode::IgnoreBackFaces;
 			cast_settings.mReturnDeepestPoint = false;
 			AllHitCollisionCollector<CastShapeCollector> collector;
-			inTriangle->CastShape(shape_cast, cast_settings, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+			CollisionDispatch::sCastShapeVsShape(shape_cast, cast_settings, inTriangle, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const ShapeCastResult &result = collector.mHits.back();
 			CHECK_APPROX_EQUAL(result.mFraction, (15.0f - 0.2f) / 30.0f, 1.0e-4f);
@@ -49,13 +68,13 @@ TEST_SUITE("CastShapeTests")
 			cast_settings.mBackFaceModeConvex = EBackFaceMode::IgnoreBackFaces;
 			cast_settings.mReturnDeepestPoint = false;
 			AllHitCollisionCollector<CastShapeCollector> collector;
-			inTriangle->CastShape(shape_cast, cast_settings, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+			CollisionDispatch::sCastShapeVsShape(shape_cast, cast_settings, inTriangle, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 			CHECK(collector.mHits.empty());
 
 			// Hit back face -> collision
 			cast_settings.mBackFaceModeTriangles = EBackFaceMode::CollideWithBackFaces;
 			cast_settings.mBackFaceModeConvex = EBackFaceMode::CollideWithBackFaces;
-			inTriangle->CastShape(shape_cast, cast_settings, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+			CollisionDispatch::sCastShapeVsShape(shape_cast, cast_settings, inTriangle, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const ShapeCastResult &result = collector.mHits.back();
 			CHECK_APPROX_EQUAL(result.mFraction, (15.0f - 0.2f) / 30.0f, 1.0e-4f);
@@ -74,13 +93,13 @@ TEST_SUITE("CastShapeTests")
 			cast_settings.mBackFaceModeConvex = EBackFaceMode::IgnoreBackFaces;
 			cast_settings.mReturnDeepestPoint = true;
 			AllHitCollisionCollector<CastShapeCollector> collector;
-			inTriangle->CastShape(shape_cast, cast_settings, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+			CollisionDispatch::sCastShapeVsShape(shape_cast, cast_settings, inTriangle, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 			CHECK(collector.mHits.empty());
 
 			// Hit back face while starting in collision -> collision
 			cast_settings.mBackFaceModeTriangles = EBackFaceMode::CollideWithBackFaces;
 			cast_settings.mBackFaceModeConvex = EBackFaceMode::CollideWithBackFaces;
-			inTriangle->CastShape(shape_cast, cast_settings, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+			CollisionDispatch::sCastShapeVsShape(shape_cast, cast_settings, inTriangle, Vec3::sReplicate(1.0f), ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const ShapeCastResult &result = collector.mHits.back();
 			CHECK_APPROX_EQUAL(result.mFraction, 0.0f);
@@ -90,6 +109,16 @@ TEST_SUITE("CastShapeTests")
 			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3::sZero(), 1.0e-3f);
 			CHECK(result.mIsBackFaceHit);
 		}
+
+		// Hit vertex 1, 2 and 3
+		sTestCastSphereVertexOrEdge(sphere, Vec3(50, 25, 0), Vec3(-10, -10, 0), inTriangle);
+		sTestCastSphereVertexOrEdge(sphere, Vec3(-50, 25, 0), Vec3(10, -10, 0), inTriangle);
+		sTestCastSphereVertexOrEdge(sphere, Vec3(0, -25, 0), Vec3(0, 10, 0), inTriangle);
+
+		// Hit edge 1, 2 and 3
+		sTestCastSphereVertexOrEdge(sphere, Vec3(0, 25, 0), Vec3(0, -10, 0), inTriangle); // Edge: Vec3(50, 25, 0), Vec3(-50, 25, 0)
+		sTestCastSphereVertexOrEdge(sphere, Vec3(-25, 0, 0), Vec3(10, 10, 0), inTriangle); // Edge: Vec3(-50, 25, 0), Vec3(0,-25, 0)
+		sTestCastSphereVertexOrEdge(sphere, Vec3(25, 0, 0), Vec3(-10, 10, 0), inTriangle); // Edge: Float3(0,-25, 0), Float3(50, 25, 0)
 	}
 
 	TEST_CASE("TestCastSphereTriangle")
@@ -185,7 +214,8 @@ TEST_SUITE("CastShapeTests")
 
 		{
 			// Create shape cast in X from -5 to 5
-			ShapeCast shape_cast { new SphereShape(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(-5, 0, 0)), Vec3(10, 0, 0) };
+			RefConst<Shape> sphere = new SphereShape(1.0f);
+			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(-5, 0, 0)), Vec3(10, 0, 0) };
 
 			// We should hit the first body
 			ClosestHitCollisionCollector<CastShapeCollector> collector;
@@ -202,7 +232,8 @@ TEST_SUITE("CastShapeTests")
 
 		{
 			// Create shape cast in X from 5 to -5
-			ShapeCast shape_cast { new SphereShape(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(5, 0, 0)), Vec3(-10, 0, 0) };
+			RefConst<Shape> sphere = new SphereShape(1.0f);
+			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(5, 0, 0)), Vec3(-10, 0, 0) };
 
 			// We should hit the last body
 			ClosestHitCollisionCollector<CastShapeCollector> collector;
@@ -219,7 +250,8 @@ TEST_SUITE("CastShapeTests")
 
 		{
 			// Create shape cast in X from 1.05 to 11, this should intersect with all bodies and have deepest penetration in bodies[5]
-			ShapeCast shape_cast { new SphereShape(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(1.05f, 0, 0)), Vec3(10, 0, 0) };
+			RefConst<Shape> sphere = new SphereShape(1.0f);
+			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(1.05f, 0, 0)), Vec3(10, 0, 0) };
 
 			// We should hit bodies[5]
 			AllHitCollisionCollector<CastShapeCollector> collector;

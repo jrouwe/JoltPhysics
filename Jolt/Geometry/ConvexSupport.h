@@ -148,7 +148,7 @@ template <class VERTEX_ARRAY>
 struct PolygonConvexSupport
 {
 	/// Constructor
-							PolygonConvexSupport(const VERTEX_ARRAY &inVertices) :
+	explicit				PolygonConvexSupport(const VERTEX_ARRAY &inVertices) :
 		mVertices(inVertices)
 	{
 	}

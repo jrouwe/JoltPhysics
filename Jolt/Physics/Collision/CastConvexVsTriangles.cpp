@@ -7,6 +7,7 @@
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/Shape/ScaleHelpers.h>
 #include <Physics/Collision/ActiveEdges.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #include <Geometry/EPAPenetrationDepth.h>
 
 namespace JPH {
@@ -57,7 +58,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 		ConvexShape::ESupportMode support_mode = mShapeCastSettings.mUseShrunkenShapeAndConvexRadius? ConvexShape::ESupportMode::ExcludeConvexRadius : ConvexShape::ESupportMode::IncludeConvexRadius;
 
 		// Create support function
-		mSupport = static_cast<const ConvexShape *>(mShapeCast.mShape.GetPtr())->GetSupportFunction(support_mode, mSupportBuffer, mShapeCast.mScale);
+		mSupport = static_cast<const ConvexShape *>(mShapeCast.mShape)->GetSupportFunction(support_mode, mSupportBuffer, mShapeCast.mScale);
 	}
 
 	EPAPenetrationDepth epa;
@@ -66,7 +67,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	if (epa.CastShape(mShapeCast.mCenterOfMassStart, mShapeCast.mDirection, mShapeCastSettings.mCollisionTolerance, mShapeCastSettings.mPenetrationTolerance, *mSupport, triangle, mSupport->GetConvexRadius(), 0.0f, mShapeCastSettings.mReturnDeepestPoint, fraction, contact_point_a, contact_point_b, contact_normal))
 	{
 		// Check if we have enabled active edge detection
-		if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive)
+		if (mShapeCastSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111)
 		{
 			// Convert the active edge velocity hint to local space
 			Vec3 active_edge_movement_direction = mCenterOfMassTransform2.Multiply3x3Transposed(mShapeCastSettings.mActiveEdgeMovementDirection);
@@ -90,7 +91,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 			// Get supporting face of shape 1
 			Mat44 transform_1_to_2 = mShapeCast.mCenterOfMassStart;
 			transform_1_to_2.SetTranslation(transform_1_to_2.GetTranslation() + fraction * mShapeCast.mDirection);
-			static_cast<const ConvexShape *>(mShapeCast.mShape.GetPtr())->GetSupportingFace(transform_1_to_2.Multiply3x3Transposed(-contact_normal), mShapeCast.mScale, result.mShape1Face);
+			static_cast<const ConvexShape *>(mShapeCast.mShape)->GetSupportingFace(transform_1_to_2.Multiply3x3Transposed(-contact_normal), mShapeCast.mScale, result.mShape1Face);
 
 			// Convert to world space
 			Mat44 transform_1_to_world = mCenterOfMassTransform2 * transform_1_to_2;
@@ -105,6 +106,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 				p = mCenterOfMassTransform2 * p;
 		}
 
+		JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 		mCollector.AddHit(result);
 	}
 }

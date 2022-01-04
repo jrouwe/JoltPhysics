@@ -35,7 +35,7 @@ class IgnoreSingleBodyFilter : public BodyFilter
 {
 public:
 	/// Constructor, pass the body you want to ignore
-							IgnoreSingleBodyFilter(const BodyID &inBodyID) : 
+	explicit				IgnoreSingleBodyFilter(const BodyID &inBodyID) : 
 		mBodyID(inBodyID)
 	{
 	}

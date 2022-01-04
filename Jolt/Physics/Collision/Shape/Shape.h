@@ -107,6 +107,10 @@ static constexpr EShapeSubType sDecoratorSubShapeTypes[] = { EShapeSubType::Rota
 /// How many shape types we support
 static constexpr uint NumSubShapeTypes = (uint)size(sAllSubShapeTypes);
 
+/// Names of sub shape types
+static constexpr const char *sSubShapeTypeNames[] = { "Sphere", "Box", "Triangle", "Capsule", "TaperedCapsule", "Cylinder", "ConvexHull", "StaticCompound", "MutableCompound", "RotatedTranslated", "Scaled", "OffsetCenterOfMass", "Mesh", "HeightField", "User1", "User2", "User3", "User4", "User5", "User6", "User7", "User8" };
+static_assert(size(sSubShapeTypeNames) == NumSubShapeTypes);
+
 /// Class that can construct shapes and that is serializable using the ObjectStream system.
 /// Can be used to store shape data in 'uncooked' form (i.e. in a form that is still human readable and authorable).
 /// Once the shape has been created using the Create() function, the data will be moved into the Shape class
@@ -243,15 +247,6 @@ public:
 	/// For a mesh shape, this test will only provide sensible information if the mesh is a closed manifold.
 	/// For each shape that collides, ioCollector will receive a hit.
 	virtual void					CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const = 0;
-
-	/// Cast a shape againt this shape, passes any hits found to ioCollector.
-	/// Note that the shape cast should be relative to the center of mass of this shape (i.e. inShapeCast.mCenterOfMassStart = Mat44::sTranslation(-GetCenterOfMass()) * inShapeCast.mCenterOfMassStart if you want to cast against the shape in the space it was created).
-	/// This shape will be scaled in its local space with inScale before performing the cast.
-	/// inShapeFilter allows selectively disabling collisions between pairs of (sub) shapes.
-	/// inCenterOfMassTransform2 Is the center of mass transform of shape 2 (excluding scale), this is used to provide a transform to the shape cast result so that local quantities can be transformed into world space.
-	/// inSubShapeIDCreator1 represents the current sub shape ID of the cast shape.
-	/// inSubShapeIDCreator2 represents the current sub shape ID of the shape that is being cast against.
-	virtual void					CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const = 0;
 
 	/// Collect the leaf transformed shapes of all leaf shapes of this shape.
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.

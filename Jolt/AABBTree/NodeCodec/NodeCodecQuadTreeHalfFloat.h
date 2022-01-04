@@ -207,7 +207,7 @@ public:
 		}
 
 		/// Constructor
-		inline						DecodingContext(const Header *inHeader) :
+		JPH_INLINE explicit			DecodingContext(const Header *inHeader) :
 			mRootBoundsMin(Vec3::sLoadFloat3Unsafe(inHeader->mRootBoundsMin)),
 			mRootBoundsMax(Vec3::sLoadFloat3Unsafe(inHeader->mRootBoundsMax))
 		{
@@ -217,7 +217,7 @@ public:
 
 		/// Walk the node tree calling the Visitor::VisitNodes for each node encountered and Visitor::VisitTriangles for each triangle encountered
 		template <class TriangleContext, class Visitor>
-		inline void					WalkTree(const uint8 *inBufferStart, const TriangleContext &inTriangleContext, Visitor &ioVisitor)
+		JPH_INLINE void				WalkTree(const uint8 *inBufferStart, const TriangleContext &inTriangleContext, Visitor &ioVisitor)
 		{
 			do
 			{

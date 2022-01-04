@@ -35,21 +35,7 @@ public:
 	/// @param inSubShapeID2 The sub shape ID for the triangle
 	void							Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, const SubShapeID &inSubShapeID2);
 
-#ifdef JPH_STAT_COLLECTOR
-	/// Collect stats of the previous time step
-	static void						sResetStats();
-	static void						sCollectStats();
-#endif // JPH_STAT_COLLECTOR
-
 protected:
-#ifdef JPH_STAT_COLLECTOR
-	// Statistics
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumCollideChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumGJKChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumEPAChecks;
-	alignas(JPH_CACHE_LINE_SIZE) static atomic<int>	sNumCollisions;
-#endif // JPH_STAT_COLLECTOR
-
 	const CollideShapeSettings &	mCollideShapeSettings;					///< Settings for this collision operation
 	CollideShapeCollector &			mCollector;								///< The collector that will receive the results
 	const ConvexShape *				mShape1;								///< The shape that we're colliding with

@@ -381,7 +381,7 @@ void MutableCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator
 	WalkSubShapes(visitor);
 }
 
-void MutableCompoundShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void MutableCompoundShape::sCastShapeVsCompound(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -408,8 +408,11 @@ void MutableCompoundShape::CastShape(const ShapeCast &inShapeCast, const ShapeCa
 		}
 	};
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, this, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
-	WalkSubShapes(visitor);
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::MutableCompound);
+	const MutableCompoundShape *shape = static_cast<const MutableCompoundShape *>(inShape);
+
+	Visitor visitor(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
+	shape->WalkSubShapes(visitor);
 }
 
 void MutableCompoundShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector) const
@@ -559,6 +562,7 @@ void MutableCompoundShape::sRegister()
 	{
 		CollisionDispatch::sRegisterCollideShape(EShapeSubType::MutableCompound, s, sCollideCompoundVsShape);
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::MutableCompound, sCollideShapeVsCompound);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::MutableCompound, sCastShapeVsCompound);
 	}
 }
 

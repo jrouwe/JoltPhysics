@@ -3,9 +3,9 @@
 
 #pragma once
 
-namespace JPH {
-
 #ifdef JPH_ENABLE_ASSERTS
+
+namespace JPH {
 
 class BodyAccess
 {
@@ -46,6 +46,6 @@ public:
 	static thread_local EAccess			sPositionAccess;
 };
 
-#endif // JPH_ENABLE_ASSERTS
-
 } // JPH
+
+#endif // JPH_ENABLE_ASSERTS

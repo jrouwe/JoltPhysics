@@ -14,8 +14,8 @@
 #include <Physics/Collision/Shape/PolyhedronSubmergedVolumeCalculator.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/CollisionDispatch.h>
+#include <Physics/Collision/NarrowPhaseStats.h>
 #include <Physics/PhysicsSettings.h>
-#include <Core/StatCollector.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
 #include <Geometry/EPAPenetrationDepth.h>
@@ -23,13 +23,6 @@
 #include <ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
-
-#ifdef JPH_STAT_COLLECTOR
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumCollideChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumGJKChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumEPAChecks { 0 };
-alignas(JPH_CACHE_LINE_SIZE) atomic<int> ConvexShape::sNumCollisions { 0 };
-#endif // JPH_STAT_COLLECTOR
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(ConvexShapeSettings)
 {
@@ -51,8 +44,6 @@ const vector<Vec3> ConvexShape::sUnitSphereTriangles = []() {
 void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
-
-	JPH_IF_STAT_COLLECTOR(sNumCollideChecks++;)
 
 	// Get the shapes
 	JPH_ASSERT(inShape1->GetType() == EShapeType::Convex);
@@ -79,8 +70,6 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 
 	// Scope to limit lifetime of SupportBuffer
 	{
-		JPH_IF_STAT_COLLECTOR(sNumGJKChecks++;)
-
 		// Create support function
 		SupportBuffer buffer1_excl_cvx_radius, buffer2_excl_cvx_radius;
 		const Support *shape1_excl_cvx_radius = shape1->GetSupportFunction(ConvexShape::ESupportMode::ExcludeConvexRadius, buffer1_excl_cvx_radius, inScale1);
@@ -105,7 +94,6 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 	case EPAPenetrationDepth::EStatus::Indeterminate:
 		{
 			// Need to run expensive EPA algorithm
-			JPH_IF_STAT_COLLECTOR(sNumEPAChecks++;)
 
 			// Create support function
 			SupportBuffer buffer1_incl_cvx_radius, buffer2_incl_cvx_radius;
@@ -161,15 +149,9 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 			p = inCenterOfMassTransform2 * p;
 	}
 
-	JPH_IF_STAT_COLLECTOR(sNumCollisions++;)
-
 	// Notify the collector
+	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 	ioCollector.AddHit(result);
-}
-
-void ConvexShape::sCastConvexVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
-{
-	inShape->CastShape(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 }
 
 bool ConvexShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const
@@ -255,13 +237,16 @@ void ConvexShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubSh
 	}
 }
 
-void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Only supported for convex shapes
 	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Convex); 
-	const ConvexShape *cast_shape = static_cast<const ConvexShape *>(inShapeCast.mShape.GetPtr());
+	const ConvexShape *cast_shape = static_cast<const ConvexShape *>(inShapeCast.mShape);
+
+	JPH_ASSERT(inShape->GetType() == EShapeType::Convex); 
+	const ConvexShape *shape = static_cast<const ConvexShape *>(inShape);
 
 	// Determine if we want to use the actual shape or a shrunken shape with convex radius
 	ConvexShape::ESupportMode support_mode = inShapeCastSettings.mUseShrunkenShapeAndConvexRadius? ConvexShape::ESupportMode::ExcludeConvexRadius : ConvexShape::ESupportMode::IncludeConvexRadius;
@@ -272,7 +257,7 @@ void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSetting
 
 	// Create support function for target shape
 	SupportBuffer target_buffer;
-	const Support *target_support = GetSupportFunction(support_mode, target_buffer, inScale);
+	const Support *target_support = shape->GetSupportFunction(support_mode, target_buffer, inScale);
 
 	// Do a raycast against the result
 	EPAPenetrationDepth epa;
@@ -305,13 +290,14 @@ void ConvexShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSetting
 					p = transform_1_to_world * p;
 
 				// Get supporting face of shape 2
-				GetSupportingFace(contact_normal, inScale, result.mShape2Face);
+				shape->GetSupportingFace(contact_normal, inScale, result.mShape2Face);
 
 				// Convert to world space
 				for (Vec3 &p : result.mShape2Face)
 					p = inCenterOfMassTransform2 * p;
 			}
 
+			JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 			ioCollector.AddHit(result);
 		}
 	}
@@ -541,29 +527,6 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCe
 }
 #endif // JPH_DEBUG_RENDERER
 
-#ifdef JPH_STAT_COLLECTOR
-void ConvexShape::sResetStats()
-{
-	sNumCollideChecks = 0;
-	sNumGJKChecks = 0;
-	sNumEPAChecks = 0;
-	sNumCollisions = 0;
-}
-
-void ConvexShape::sCollectStats()
-{
-	JPH_PROFILE_FUNCTION();
-
-	JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.NumChecks", int(sNumCollideChecks));
-	JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.NumCollisions", int(sNumCollisions));
-	if (sNumCollideChecks > 0)
-	{
-		JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.GJKCheckPercentage", 100.0f * sNumGJKChecks / sNumCollideChecks);
-		JPH_STAT_COLLECTOR_ADD("ConvexVsConvex.EPACheckPercentage", 100.0f * sNumEPAChecks / sNumCollideChecks);
-	}
-}
-#endif // JPH_STAT_COLLECTOR
-
 void ConvexShape::SaveBinaryState(StreamOut &inStream) const
 {
 	Shape::SaveBinaryState(inStream);
@@ -593,12 +556,11 @@ void ConvexShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, u
 void ConvexShape::sRegister()
 {
 	for (EShapeSubType s1 : sConvexSubShapeTypes)
-	{
 		for (EShapeSubType s2 : sConvexSubShapeTypes)
+		{
 			CollisionDispatch::sRegisterCollideShape(s1, s2, sCollideConvexVsConvex);
-
-		CollisionDispatch::sRegisterCastShape(s1, sCastConvexVsShape);
-	}
+			CollisionDispatch::sRegisterCastShape(s1, s2, sCastConvexVsConvex);
+		}
 }
 
 } // JPH

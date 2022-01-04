@@ -192,6 +192,18 @@ Data needs to be converted into an optimized format in order to be usable in the
 
 As the library does not offer an exporter from content creation packages and since most games will have their own content pipeline, we encourage you to store data in your own format, cook data while cooking the game data and store the result using the SaveBinaryState interface (and provide a way to force a re-cook when the library is updated).
 
+## Deterministic Simulation
+
+The physics simulation is deterministic provided that:
+
+* The APIs that modify the simulation are called in exactly the same order. For example, bodies and constraints need to be added/removed/modified in exactly the same order so that the state at the beginning of a simulation step is exactly the same for both simulations.
+* The simulation uses the exact same version of the library.
+* The simulation runs on the same CPU model and is compiled to the same binary code.
+
+If you're willing to sacrifice some performance, the last point can be mitigated. The library doesn't use any SIMD intrinsics that return an approximate result (e.g. 1/sqrt(x) or 1/x) which will differ between e.g. Intel and AMD. Furthermore, by default we compile with 'fast math' and 'fused multiply add' enabled, these will also result in differences across CPUs. You'll need to compile with 'strict math' enabled (-ffp-model=strict in clang) and disable 'fused multiply add' (see JPH_USE_FMADD). Deterministic simulation across platforms is even less likely to happen, you may need to turn off optimization altogether. There is a unit test that checks determinism, but it does not test for determinism across CPU models / platforms so no guarantees are made here.
+
+When running the Samples Application you can press ESC, Physics Settings and check the 'Check Determinism' checkbox. Before every simulation step we will record the state using the [StateRecorder](@ref JPH::StateRecorder) interface, rewind the simulation and do the step again to validate that the simulation runs deterministically. Some of the tests (e.g. the MultiThreaded) test will explicitly disable the check because they randomly add/remove bodies from different threads. This violates the first rule so will not result in a deterministic simulation.
+
 ## The Simulation Step in Detail
 
 The job graph looks like this:
@@ -265,11 +277,19 @@ This job does some housekeeping work that can be executed concurrent to the solv
 
 A number of these jobs will run in parallel. Each job takes the next unprocessed island and will run the iterative constraint solver for that island. It will first apply the impulses applied from the previous simulation step (which are stored in the contact cache) to warm start the solver. It will then repeatedly iterate over all contact and non-contact constraints until either the applied impulses are too small or a max iteration count is reached ([PhysicsSettings::mNumVelocitySteps](@ref JPH::PhysicsSettings::mNumVelocitySteps)). The result will be that the new velocities are known for all active bodies. In the last integration step, the applied impulses are stored in the contact cache for the next step.
 
+### Pre Integrate
+
+This job prepares the CCD buffers.
+
 ### Integrate & Clamp Velocities
 
 This job will integrate the velocity and update the position. It will clamp the velocity to the max velocity. 
 
-Depending on the motion quality ([EMotionQuality](@ref JPH::EMotionQuality)) of the body, it will schedule a body for continuous collision detection (CCD) if its movement is bigger than some treshold based on the [inner radius](@ref JPH::Shape::GetInnerRadius)) of the shape. Find CCD Contact jobs are created on the fly depending on how many CCD bodies there are.
+Depending on the motion quality ([EMotionQuality](@ref JPH::EMotionQuality)) of the body, it will schedule a body for continuous collision detection (CCD) if its movement is bigger than some treshold based on the [inner radius](@ref JPH::Shape::GetInnerRadius)) of the shape.
+
+### Post Integrate
+
+Find CCD Contact jobs are created on the fly depending on how many CCD bodies were found. If there are no CCD bodies it will immediately start Resolve CCD Contacts.
 
 ### Find CCD Contacts
 

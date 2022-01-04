@@ -122,7 +122,7 @@ public:
 			uint start_vertex = Clamp((int)mVertices.size() - 256 + (int)tri_count * 3, 0, (int)mVertices.size());
 
 			// Store the start vertex offset, this will later be patched to give the delta offset relative to the triangle block
-			mOffsetsToPatch.push_back(uint((uint8 *)&header->mOffsetToVertices - (uint8 *)&ioBuffer[0]));
+			mOffsetsToPatch.push_back(uint((uint8 *)&header->mOffsetToVertices - &ioBuffer[0]));
 			header->mOffsetToVertices = start_vertex * sizeof(VertexData);
 
 			// Pack vertices
@@ -415,6 +415,13 @@ public:
 			const TriangleBlockHeader *header = reinterpret_cast<const TriangleBlockHeader *>(inTriangleStart);
 			const TriangleBlock *first_block = header->GetTriangleBlock();
 			return first_block[inTriangleIndex >> 2].mFlags[inTriangleIndex & 0b11];
+		}
+
+		/// Unpacks triangles and flags, convencience function
+		JPH_INLINE void				Unpack(Vec3Arg inBoundsMin, Vec3Arg inBoundsMax, const void *inTriangleStart, uint32 inNumTriangles, Vec3 *outTriangles, uint8 *outTriangleFlags) const
+		{
+			Unpack(inBoundsMin, inBoundsMax, inTriangleStart, inNumTriangles, outTriangles);
+			sGetFlags(inTriangleStart, inNumTriangles, outTriangleFlags);
 		}
 
 	private:

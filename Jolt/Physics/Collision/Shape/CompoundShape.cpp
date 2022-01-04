@@ -132,6 +132,8 @@ uint32 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 	// Decode sub shape index
 	SubShapeID remainder;
 	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
+	if (index >= mSubShapes.size())
+		return 0; // No longer valid index
 
 	// Pass call on
 	return mSubShapes[index].mShape->GetSubShapeUserData(remainder);
@@ -243,7 +245,7 @@ void CompoundShape::sCastCompoundVsShape(const ShapeCast &inShapeCast, const Sha
 
 	// Fetch compound shape from cast shape
 	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Compound);
-	const CompoundShape *compound = static_cast<const CompoundShape *>(inShapeCast.mShape.GetPtr());
+	const CompoundShape *compound = static_cast<const CompoundShape *>(inShapeCast.mShape);
 
 	// Number of sub shapes
 	int n = (int)compound->mSubShapes.size();
@@ -276,7 +278,8 @@ void CompoundShape::SaveBinaryState(StreamOut &inStream) const
 	Shape::SaveBinaryState(inStream);
 
 	inStream.Write(mCenterOfMass);
-	inStream.Write(mLocalBounds);
+	inStream.Write(mLocalBounds.mMin);
+	inStream.Write(mLocalBounds.mMax);
 	inStream.Write(mInnerRadius);
 
 	// Write sub shapes
@@ -297,7 +300,8 @@ void CompoundShape::RestoreBinaryState(StreamIn &inStream)
 	Shape::RestoreBinaryState(inStream);
 
 	inStream.Read(mCenterOfMass);
-	inStream.Read(mLocalBounds);
+	inStream.Read(mLocalBounds.mMin);
+	inStream.Read(mLocalBounds.mMax);
 	inStream.Read(mInnerRadius);
 
 	// Read sub shapes
@@ -377,8 +381,9 @@ bool CompoundShape::IsValidScale(Vec3Arg inScale) const
 
 void CompoundShape::sRegister()
 {
-	for (EShapeSubType s : sCompoundSubShapeTypes)
-		CollisionDispatch::sRegisterCastShape(s, sCastCompoundVsShape);
+	for (EShapeSubType s1 : sCompoundSubShapeTypes)
+		for (EShapeSubType s2 : sAllSubShapeTypes)
+			CollisionDispatch::sRegisterCastShape(s1, s2, sCastCompoundVsShape);
 }
 
 } // JPH

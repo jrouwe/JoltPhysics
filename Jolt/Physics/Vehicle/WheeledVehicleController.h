@@ -41,7 +41,7 @@ class WheelWV : public Wheel
 {
 public:
 	/// Constructor
-								WheelWV(const WheelSettingsWV &inWheel);
+	explicit					WheelWV(const WheelSettingsWV &inWheel);
 
 	/// Override GetSettings and cast to the correct class
 	const WheelSettingsWV *		GetSettings() const							{ return static_cast<const WheelSettingsWV *>(mSettings.GetPtr()); }

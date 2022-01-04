@@ -38,7 +38,7 @@ private:
 #define JPH_PROFILE_THREAD_START(name)			
 #define JPH_PROFILE_THREAD_END()				
 #define JPH_PROFILE_NEXTFRAME()			
-#define JPH_PROFILE_DUMP()				
+#define JPH_PROFILE_DUMP(...)				
 								
 // Scope profiling measurement
 #define JPH_PROFILE_TAG2(line)		profile##line
@@ -73,7 +73,8 @@ public:
 	void						NextFrame();
 
 	/// Dump profiling statistics at the start of the next frame
-	void						Dump();
+	/// @param inTag If not empty, this overrides the auto incrementing number in the filename of the dump file
+	void						Dump(string inTag = string());
 
 	/// Add a thread to be instrumented
 	void						AddThread(ProfileThread *inThread);
@@ -136,12 +137,13 @@ private:
 
 	/// Dump profiling statistics
 	void						DumpInternal();
-	void						DumpList(int inNumber, const Aggregators &inAggregators);
-	void						DumpChart(int inNumber, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators);
+	void						DumpList(string inTag, const Aggregators &inAggregators);
+	void						DumpChart(string inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators);
 
 	mutex						mLock;																///< Lock that protects mThreads
 	vector<ProfileThread *>		mThreads;															///< List of all active threads
 	bool						mDump = false;														///< When true, the samples are dumped next frame
+	string						mDumpTag;															///< When not empty, this overrides the auto incrementing number of the dump filename
 };							
 
 // Class that contains the information of a single scoped measurement
@@ -214,7 +216,7 @@ private:
 #define JPH_PROFILE_NEXTFRAME()			Profiler::sInstance.NextFrame()
 
 /// Dump profiling info
-#define JPH_PROFILE_DUMP()				Profiler::sInstance.Dump()
+#define JPH_PROFILE_DUMP(...)			Profiler::sInstance.Dump(__VA_ARGS__)
 
 #else
 
@@ -227,6 +229,6 @@ private:
 #define JPH_PROFILE(...)
 #define JPH_PROFILE_FUNCTION()
 #define JPH_PROFILE_NEXTFRAME()
-#define JPH_PROFILE_DUMP()
+#define JPH_PROFILE_DUMP(...)
 
 #endif

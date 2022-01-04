@@ -12,6 +12,8 @@
 #include <Physics/Collision/CollidePointResult.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/CastConvexVsTriangles.h>
+#include <Physics/Collision/CastSphereVsTriangles.h>
+#include <Physics/Collision/CollisionDispatch.h>
 #include <Geometry/ConvexSupport.h>
 #include <Geometry/RayTriangle.h>
 #include <ObjectStream/TypeDeclarations.h>
@@ -233,10 +235,22 @@ void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 	// Can't be inside a triangle
 }
 
-void TriangleShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) const 
+void TriangleShape::sCastConvexVsTriangle(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Triangle);
+	const TriangleShape *shape = static_cast<const TriangleShape *>(inShape);
+
 	CastConvexVsTriangles caster(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
-	caster.Cast(mV1, mV2, mV3, 0b111, inSubShapeIDCreator2.GetID());
+	caster.Cast(shape->mV1, shape->mV2, shape->mV3, 0b111, inSubShapeIDCreator2.GetID());
+}
+
+void TriangleShape::sCastSphereVsTriangle(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Triangle);
+	const TriangleShape *shape = static_cast<const TriangleShape *>(inShape);
+
+	CastSphereVsTriangles caster(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	caster.Cast(shape->mV1, shape->mV2, shape->mV3, 0b111, inSubShapeIDCreator2.GetID());
 }
 
 void TriangleShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
@@ -324,6 +338,12 @@ void TriangleShape::sRegister()
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Triangle);
 	f.mConstruct = []() -> Shape * { return new TriangleShape; };
 	f.mColor = Color::sGreen;
+
+	for (EShapeSubType s : sConvexSubShapeTypes)
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::Triangle, sCastConvexVsTriangle);
+
+	// Specialized collision functions
+	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::Triangle, sCastSphereVsTriangle);
 }
 
 } // JPH

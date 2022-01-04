@@ -102,7 +102,7 @@ public:
 
 protected:
 	/// Constructor
-								ObjectStreamIn(istream &inStream);
+	explicit 					ObjectStreamIn(istream &inStream);
 
 	/// Determine the type and version of an object stream
 	static bool					GetInfo(istream &inStream, EStreamType &outType, int &outVersion, int &outRevision);
@@ -127,7 +127,7 @@ private:
 	struct ClassDescription
 	{
 								ClassDescription()										: mRTTI(nullptr) { }
-								ClassDescription(const RTTI *inRTTI)					: mRTTI(inRTTI) { }
+		explicit 				ClassDescription(const RTTI *inRTTI)					: mRTTI(inRTTI) { }
 
 		const RTTI *			mRTTI;
 		vector<AttributeDescription>	mAttributes;
