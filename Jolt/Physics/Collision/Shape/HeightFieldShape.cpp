@@ -1203,7 +1203,7 @@ public:
 					}
 					block_min.SetColumn4(block, Vec4(value_min));
 					block_max.SetColumn4(block, Vec4(value_max));
-				};
+				}
 
 			#ifdef JPH_DEBUG_HEIGHT_FIELD
 				// Draw the bounding boxes of the sub-nodes
