@@ -23,9 +23,9 @@ public:
 	inline void				Clear();
 
 	/// Allocate a new block of data
-	/// @param inBlockSize Size of block to allocate (will potentially return a smaller block if memory is full)
-	/// @param ioBegin Should be start of first free byte in current memory block on input, will contain start of first free byte in allocated block on return
-	/// @param ioEnd Should be the byte beyond the current memory block on input, will contain the byte beyond the allocated block on return
+	/// @param inBlockSize Size of block to allocate (will potentially return a smaller block if memory is full).
+	/// @param ioBegin Should be the start of the first free byte in current memory block on input, will contain the start of the first free byte in allocated block on return.
+	/// @param ioEnd Should be the byte beyond the current memory block on input, will contain the byte beyond the allocated block on return.
 	inline void				Allocate(uint32 inBlockSize, uint32 &ioBegin, uint32 &ioEnd);
 
 	/// Convert a pointer to an offset
