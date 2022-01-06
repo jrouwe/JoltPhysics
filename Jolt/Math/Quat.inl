@@ -80,8 +80,8 @@ Quat Quat::sRotation(Vec3Arg inAxis, float inAngle)
 void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 {
 	JPH_ASSERT(IsNormalized());
-	float w = GetW();
-	float abs_w = abs(w);
+	Quat w_pos = EnsureWPositive();
+	float abs_w = w_pos.GetW();
 	if (abs_w >= 1.0f)
 	{ 
 		outAxis = Vec3::sZero();
@@ -90,8 +90,7 @@ void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 	else
 	{
 		outAngle = 2.0f * acos(abs_w);
-		float len = GetXYZ().Length();
-		outAxis = len > 0.0f? (w < 0.0f? -GetXYZ() : GetXYZ()) / len : Vec3::sZero();
+		outAxis = w_pos.GetXYZ().NormalizedOr(Vec3::sZero());
 	}
 }
 
@@ -302,7 +301,7 @@ Vec3 Quat::RotateAxisZ() const
 void Quat::StoreFloat3(Float3 *outV) const
 {
 	JPH_ASSERT(IsNormalized());
-	Vec3(GetW() < 0.0f? -mValue : mValue).StoreFloat3(outV);
+	Vec3(EnsureWPositive().mValue).StoreFloat3(outV);
 }
 
 Quat Quat::sLoadFloat3Unsafe(const Float3 &inV)

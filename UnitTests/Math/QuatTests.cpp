@@ -244,6 +244,21 @@ TEST_SUITE("QuatTests")
 		CHECK(Quat(1, 2, 3, 0).EnsureWPositive() == Quat(1, 2, 3, 0));
 	}
 
+	TEST_CASE("TestQuatStoreFloat3")
+	{
+		Float3 q1;
+		Quat(0.7071067f, 0, 0, -0.7071067f).StoreFloat3(&q1);
+		CHECK(q1 == Float3(-0.7071067f, 0, 0));
+
+		Float3 q2;
+		Quat(0, 0.7071067f, 0, 0.7071067f).StoreFloat3(&q2);
+		CHECK(q2 == Float3(0, 0.7071067f, 0));
+
+		Float3 q3;
+		Quat(0, 0, 1, 0).StoreFloat3(&q3);
+		CHECK(q3 == Float3(0, 0, 1));
+	}
+
 	TEST_CASE("TestQuatGetTwistAxis")
 	{
 		Quat q1 = Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(-10.0f));
