@@ -628,7 +628,7 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 
 	// Get relative translation
 	Quat inv_r1 = body1->GetRotation().Conjugated();
-	Vec3 delta_position = inv_r1 * (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition());
+	Vec3 delta_position = inv_r1 * (body2->GetCenterOfMassPosition() - body1->GetCenterOfMassPosition());
 
 	// Get old position delta
 	Vec3 old_delta_position = Vec3::sLoadFloat3Unsafe(input_cbp.mDeltaPosition);
@@ -645,8 +645,10 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 	Quat old_delta_rotation(Vec4(old_delta_rotation3, sqrt(max(0.0f, 1.0f - old_delta_rotation3.LengthSq()))));
 
 	// Check if bodies are still roughly in the same relative orientation
-	// Note that we didn't make the W component positive so we need to take the absolute of the dot product
-	if (abs(delta_rotation.Dot(old_delta_rotation)) < mPhysicsSettings.mBodyPairCacheCosMaxDeltaRotation)
+	// The delta between 2 quaternions p and q is: p q^* = (cos(angle / 2), rotation_axis * sin(angle / 2))
+	// From the W component we can extract the angle: cos(angle / 2) = px * qx + py * qy + pz * qz + pw * qw = p . q
+	// Since we want to abort if the rotation is smaller than -angle or bigger than angle, we can write the comparison as |p . q| < cos(angle / 2)
+	if (abs(delta_rotation.Dot(old_delta_rotation)) < mPhysicsSettings.mBodyPairCacheCosMaxDeltaRotationDiv2)
 		return;
 
 	// The cache is valid, return that we've handled this body pair
@@ -830,7 +832,7 @@ ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(C
 	delta_rotation.GetXYZ().StoreFloat3(&cbp->mDeltaRotation);
 
 	// Get relative translation
-	Vec3 delta_position = inv_r1 * (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition());
+	Vec3 delta_position = inv_r1 * (body2->GetCenterOfMassPosition() - body1->GetCenterOfMassPosition());
 
 	// Store it
 	delta_position.StoreFloat3(&cbp->mDeltaPosition);
