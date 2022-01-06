@@ -162,10 +162,13 @@ public:
 	JPH_INLINE float			Dot(QuatArg inRHS) const										{ return mValue.Dot(inRHS.mValue); }
 								
 	/// The conjugate [w, -x, -y, -z] is the same as the inverse for unit quaternions
-	JPH_INLINE const Quat		Conjugated() const												{ return Quat(Vec4(-1, -1, -1, 1) * mValue); }
+	JPH_INLINE const Quat		Conjugated() const												{ return Quat(Vec4::sXor(mValue, UVec4(0x80000000, 0x80000000, 0x80000000, 0).ReinterpretAsFloat())); }
 
 	/// Get inverse quaternion
 	JPH_INLINE const Quat		Inversed() const												{ return Conjugated() / Length(); }
+
+	/// Ensures that the W component is positive by negating the entire quaternion if it is not. This is useful when you want to store a quaternion as a 3 vector by discarding W and reconstructing it as sqrt(1 - x^2 - y^2 - z^2).
+	JPH_INLINE const Quat		EnsureWPositive() const											{ return Quat(Vec4::sXor(mValue, Vec4::sAnd(mValue.SplatW(), UVec4::sReplicate(0x80000000).ReinterpretAsFloat()))); }
 
 	/// Get a quaternion that is perpendicular to this quaternion
 	JPH_INLINE const Quat		GetPerpendicular() const										{ return Quat(Vec4(1, -1, 1, -1) * mValue.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>()); }

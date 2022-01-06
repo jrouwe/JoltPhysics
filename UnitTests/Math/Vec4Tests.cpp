@@ -470,6 +470,12 @@ TEST_SUITE("Vec4Tests")
 		CHECK(Vec4(1, 2, 3, 4).ReinterpretAsInt() == UVec4(0x3f800000U, 0x40000000U, 0x40400000U, 0x40800000U));
 	}
 
+	TEST_CASE("TestVec4Sign")
+	{
+		CHECK(Vec4(1.2345f, -6.7891f, 0, 1).GetSign() == Vec4(1, -1, 1, 1));
+		CHECK(Vec4(0, 2.3456f, -7.8912f, -1).GetSign() == Vec4(1, 1, -1, -1));
+	}
+
 	TEST_CASE("TestVec4SignBit")
 	{
 		CHECK(Vec4(2, -3, 4, -5).GetSignBits() == 0b1010);

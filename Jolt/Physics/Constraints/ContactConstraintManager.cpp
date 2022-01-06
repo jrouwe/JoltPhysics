@@ -596,22 +596,6 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 	mConstraints = (ContactConstraint *)inContext->mTempAllocator->Allocate(mMaxConstraints * sizeof(ContactConstraint));
 }
 
-// Get the orientation of body 2 in local space of body 1
-static JPH_INLINE void sGetRelativeOrientation(const Body &inBody1, const Body &inBody2, Vec3 &outDeltaPosition, Quat &outDeltaRotation)
-{
-	Quat inv_r1 = inBody1.GetRotation().Conjugated();
-
-	// Get relative rotation
-	outDeltaRotation = inv_r1 * inBody2.GetRotation();
-
-	// Ensure W > 0, we'll be discarding it to save storage space
-	if (outDeltaRotation.GetW() < 0.0f)
-		outDeltaRotation = -outDeltaRotation;
-
-	// Get relative translation
-	outDeltaPosition = inv_r1 * (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition());
-}
-
 void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound)
 {
 	JPH_PROFILE_FUNCTION();
@@ -642,22 +626,27 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 		return;
 	const CachedBodyPair &input_cbp = kv->GetValue();
 
+	// Get relative translation
+	Quat inv_r1 = body1->GetRotation().Conjugated();
+	Vec3 delta_position = inv_r1 * (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition());
+
 	// Get old position delta
 	Vec3 old_delta_position = Vec3::sLoadFloat3Unsafe(input_cbp.mDeltaPosition);
+
+	// Check if bodies are still roughly in the same relative position
+	if ((delta_position - old_delta_position).LengthSq() > mPhysicsSettings.mBodyPairCacheMaxDeltaPositionSq)
+		return;
+
+	// Determine relative orientation
+	Quat delta_rotation = inv_r1 * body2->GetRotation();
 
 	// Reconstruct old quaternion delta
 	Vec3 old_delta_rotation3 = Vec3::sLoadFloat3Unsafe(input_cbp.mDeltaRotation);
 	Quat old_delta_rotation(Vec4(old_delta_rotation3, sqrt(max(0.0f, 1.0f - old_delta_rotation3.LengthSq()))));
 
-	// Determine relative orientation
-	Vec3 delta_position;
-	Quat delta_rotation;
-	sGetRelativeOrientation(*body1, *body2, delta_position, delta_rotation);
-
 	// Check if bodies are still roughly in the same relative orientation
-	if ((delta_position - old_delta_position).LengthSq() > mPhysicsSettings.mBodyPairCacheMaxDeltaPositionSq)
-		return;
-	if (delta_rotation.Dot(old_delta_rotation) < mPhysicsSettings.mBodyPairCacheCosMaxDeltaRotation)
+	// Note that we didn't make the W component positive so we need to take the absolute of the dot product
+	if (abs(delta_rotation.Dot(old_delta_rotation)) < mPhysicsSettings.mBodyPairCacheCosMaxDeltaRotation)
 		return;
 
 	// The cache is valid, return that we've handled this body pair
@@ -831,13 +820,20 @@ ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(C
 	cbp->mFirstCachedManifold = ManifoldMap::cInvalidHandle;
 
 	// Determine relative orientation
-	Vec3 delta_position;
-	Quat delta_rotation;
-	sGetRelativeOrientation(*body1, *body2, delta_position, delta_rotation);
+	Quat inv_r1 = body1->GetRotation().Conjugated();
+	Quat delta_rotation = inv_r1 * body2->GetRotation();
+
+	// Ensure W > 0, we'll be discarding it to save storage space
+	delta_rotation = delta_rotation.EnsureWPositive();
+
+	// Store it
+	delta_rotation.GetXYZ().StoreFloat3(&cbp->mDeltaRotation);
+
+	// Get relative translation
+	Vec3 delta_position = inv_r1 * (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition());
 
 	// Store it
 	delta_position.StoreFloat3(&cbp->mDeltaPosition);
-	delta_rotation.GetXYZ().StoreFloat3(&cbp->mDeltaRotation);
 
 	return cbp;
 }

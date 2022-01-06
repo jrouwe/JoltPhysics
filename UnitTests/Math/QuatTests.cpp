@@ -231,6 +231,19 @@ TEST_SUITE("QuatTests")
 		}
 	}
 
+	TEST_CASE("TestQuatConjugate")
+	{
+		CHECK(Quat(1, 2, 3, 4).Conjugated() == Quat(-1, -2, -3, 4));
+		CHECK(Quat(-1, -2, -3, -4).Conjugated() == Quat(1, 2, 3, -4));
+	}
+
+	TEST_CASE("TestQuatEnsureWPositive")
+	{
+		CHECK(Quat(1, -2, 3, -4).EnsureWPositive() == Quat(-1, 2, -3, 4));
+		CHECK(Quat(-4, 5, -6, 7).EnsureWPositive() == Quat(-4, 5, -6, 7));
+		CHECK(Quat(1, 2, 3, 0).EnsureWPositive() == Quat(1, 2, 3, 0));
+	}
+
 	TEST_CASE("TestQuatGetTwistAxis")
 	{
 		Quat q1 = Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(-10.0f));
