@@ -123,7 +123,7 @@ public:
 	JPH_INLINE float			Length() const													{ return mValue.Length(); }	
 
 	/// Normalize the quaternion (make it length 1)
-	JPH_INLINE const Quat		Normalized() const												{ return Quat(mValue.Normalized()); }
+	JPH_INLINE Quat				Normalized() const												{ return Quat(mValue.Normalized()); }
 
 	///@}
 	///@name Additions / multiplications
@@ -133,45 +133,45 @@ public:
 	JPH_INLINE void				operator -= (QuatArg inRHS)										{ mValue -= inRHS.mValue; }
 	JPH_INLINE void				operator *= (float inValue)										{ mValue *= inValue; }
 	JPH_INLINE void				operator /= (float inValue)										{ mValue /= inValue; }
-	JPH_INLINE const Quat		operator - () const												{ return Quat(-mValue); }
-	JPH_INLINE const Quat		operator + (QuatArg inRHS) const								{ return Quat(mValue + inRHS.mValue); }
-	JPH_INLINE const Quat		operator - (QuatArg inRHS) const								{ return Quat(mValue - inRHS.mValue); }
-	JPH_INLINE const Quat		operator * (QuatArg inRHS) const;
-	JPH_INLINE const Quat		operator * (float inValue) const								{ return Quat(mValue * inValue); }
-	inline friend const Quat	operator * (float inValue, QuatArg inRHS)						{ return Quat(inRHS.mValue * inValue); }
-	JPH_INLINE const Quat		operator / (float inValue) const								{ return Quat(mValue / inValue); }
+	JPH_INLINE Quat				operator - () const												{ return Quat(-mValue); }
+	JPH_INLINE Quat				operator + (QuatArg inRHS) const								{ return Quat(mValue + inRHS.mValue); }
+	JPH_INLINE Quat				operator - (QuatArg inRHS) const								{ return Quat(mValue - inRHS.mValue); }
+	JPH_INLINE Quat				operator * (QuatArg inRHS) const;
+	JPH_INLINE Quat				operator * (float inValue) const								{ return Quat(mValue * inValue); }
+	inline friend Quat			operator * (float inValue, QuatArg inRHS)						{ return Quat(inRHS.mValue * inValue); }
+	JPH_INLINE Quat				operator / (float inValue) const								{ return Quat(mValue / inValue); }
 
 	///@}
 
 	/// Rotate a vector by this quaternion 
-	JPH_INLINE const Vec3		operator * (Vec3Arg inValue) const;
+	JPH_INLINE Vec3				operator * (Vec3Arg inValue) const;
 
 	/// Rotate a vector by the inverse of this quaternion
-	JPH_INLINE const Vec3		InverseRotate(Vec3Arg inValue) const;
+	JPH_INLINE Vec3				InverseRotate(Vec3Arg inValue) const;
 
 	/// Rotate a the vector (1, 0, 0) with this quaternion
-	JPH_INLINE const Vec3		RotateAxisX() const;
+	JPH_INLINE Vec3				RotateAxisX() const;
 								
 	/// Rotate a the vector (0, 1, 0) with this quaternion
-	JPH_INLINE const Vec3		RotateAxisY() const;
+	JPH_INLINE Vec3				RotateAxisY() const;
 								
 	/// Rotate a the vector (0, 0, 1) with this quaternion
-	JPH_INLINE const Vec3		RotateAxisZ() const;
+	JPH_INLINE Vec3				RotateAxisZ() const;
 								
 	/// Dot product				
 	JPH_INLINE float			Dot(QuatArg inRHS) const										{ return mValue.Dot(inRHS.mValue); }
 								
 	/// The conjugate [w, -x, -y, -z] is the same as the inverse for unit quaternions
-	JPH_INLINE const Quat		Conjugated() const												{ return Quat(Vec4::sXor(mValue, UVec4(0x80000000, 0x80000000, 0x80000000, 0).ReinterpretAsFloat())); }
+	JPH_INLINE Quat				Conjugated() const												{ return Quat(Vec4::sXor(mValue, UVec4(0x80000000, 0x80000000, 0x80000000, 0).ReinterpretAsFloat())); }
 
 	/// Get inverse quaternion
-	JPH_INLINE const Quat		Inversed() const												{ return Conjugated() / Length(); }
+	JPH_INLINE Quat				Inversed() const												{ return Conjugated() / Length(); }
 
 	/// Ensures that the W component is positive by negating the entire quaternion if it is not. This is useful when you want to store a quaternion as a 3 vector by discarding W and reconstructing it as sqrt(1 - x^2 - y^2 - z^2).
-	JPH_INLINE const Quat		EnsureWPositive() const											{ return Quat(Vec4::sXor(mValue, Vec4::sAnd(mValue.SplatW(), UVec4::sReplicate(0x80000000).ReinterpretAsFloat()))); }
+	JPH_INLINE Quat				EnsureWPositive() const											{ return Quat(Vec4::sXor(mValue, Vec4::sAnd(mValue.SplatW(), UVec4::sReplicate(0x80000000).ReinterpretAsFloat()))); }
 
 	/// Get a quaternion that is perpendicular to this quaternion
-	JPH_INLINE const Quat		GetPerpendicular() const										{ return Quat(Vec4(1, -1, 1, -1) * mValue.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>()); }
+	JPH_INLINE Quat				GetPerpendicular() const										{ return Quat(Vec4(1, -1, 1, -1) * mValue.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>()); }
 
 	/// Get rotation angle around inAxis (uses Swing Twist Decomposition to get the twist quaternion and uses q(axis, angle) = [cos(angle / 2), axis * sin(angle / 2)])
 	JPH_INLINE float			GetRotationAngle(Vec3Arg inAxis) const							{ return GetW() == 0.0f? JPH_PI : 2.0f * atan(GetXYZ().Dot(inAxis) / GetW()); }
@@ -193,7 +193,7 @@ public:
 	/// \f[q_{swing} = q \: q_{twist}^* \f]
 	///
 	/// Where \f$q_{twist}^*\f$ = complex conjugate of \f$q_{twist}\f$
-	JPH_INLINE const Quat		GetTwist(Vec3Arg inAxis) const;
+	JPH_INLINE Quat				GetTwist(Vec3Arg inAxis) const;
 
 	/// Decomposes quaternion into swing and twist component:
 	///
@@ -213,14 +213,14 @@ public:
 	/// @param inFraction is in the range [0, 1]
 	/// @param inDestination The destination quaternion
 	/// @return (1 - inFraction) * this + fraction * inDestination
-	JPH_INLINE const Quat		LERP(QuatArg inDestination, float inFraction) const;
+	JPH_INLINE Quat				LERP(QuatArg inDestination, float inFraction) const;
 
 	/// Spherical linear interpolation between two quaternions.
 	/// @param inFraction is in the range [0, 1]
 	/// @param inDestination The destination quaternion
 	/// @return When fraction is zero this quaternion is returned, when fraction is 1 inDestination is returned. 
 	/// When fraction is between 0 and 1 an interpolation along the shortest path is returned.
-	JPH_INLINE const Quat		SLERP(QuatArg inDestination, float inFraction) const;
+	JPH_INLINE Quat				SLERP(QuatArg inDestination, float inFraction) const;
 	
 	/// Load 3 floats from memory (X, Y and Z component and then calculates W) reads 32 bits extra which it doesn't use
 	static JPH_INLINE Quat		sLoadFloat3Unsafe(const Float3 &inV);
