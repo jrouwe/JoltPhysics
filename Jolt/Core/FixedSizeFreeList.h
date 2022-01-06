@@ -35,8 +35,8 @@ private:
 	static_assert(alignof(ObjectStorage) == alignof(Object), "Object not properly aligned");
 
 	/// Access the object storage given the object index
-	const ObjectStorage &	GetStorage(uint32 inObjectIndex) const	{ return mPages[inObjectIndex / mPageSize][inObjectIndex % mPageSize]; }
-	ObjectStorage &			GetStorage(uint32 inObjectIndex)		{ return mPages[inObjectIndex / mPageSize][inObjectIndex % mPageSize]; }
+	const ObjectStorage &	GetStorage(uint32 inObjectIndex) const	{ return mPages[inObjectIndex >> mPageShift][inObjectIndex & mObjectMask]; }
+	ObjectStorage &			GetStorage(uint32 inObjectIndex)		{ return mPages[inObjectIndex >> mPageShift][inObjectIndex & mObjectMask]; }
 
 	/// Number of objects that we currently have in the free list / new pages
 #ifdef JPH_ENABLE_ASSERTS
@@ -51,6 +51,12 @@ private:
 
 	/// Size (in objects) of a single page
 	uint32					mPageSize;
+
+	/// Number of bits to shift an object index to the right to get the page number
+	uint32					mPageShift;
+
+	/// Mask to and an object index with to get the page number
+	uint32					mObjectMask;
 
 	/// Total number of pages that are usable
 	uint32					mNumPages;

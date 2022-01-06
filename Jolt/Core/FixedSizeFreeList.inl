@@ -20,11 +20,14 @@ template <typename Object>
 void FixedSizeFreeList<Object>::Init(uint inMaxObjects, uint inPageSize)
 {
 	// Check sanity
+	JPH_ASSERT(inPageSize > 0 && IsPowerOf2(inPageSize));
 	JPH_ASSERT(mPages == nullptr);
 
 	// Store configuration parameters
 	mNumPages = (inMaxObjects + inPageSize - 1) / inPageSize;
 	mPageSize = inPageSize;
+	mPageShift = CountTrailingZeros(inPageSize);
+	mObjectMask = inPageSize - 1;
 	JPH_IF_ENABLE_ASSERTS(mNumFreeObjects = mNumPages * inPageSize;)
 
 	// Allocate page table
