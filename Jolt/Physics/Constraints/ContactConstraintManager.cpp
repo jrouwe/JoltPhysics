@@ -1313,6 +1313,10 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 			case EMotionType::Static:
 				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, t1, t2);
 				break;
+
+			default:
+				JPH_ASSERT(false);
+				break;
 			}
 			break;
 
@@ -1324,6 +1328,10 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 		case EMotionType::Static:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
 			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2);
+			break;
+
+		default:
+			JPH_ASSERT(false);
 			break;
 		}
 	}
