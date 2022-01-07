@@ -39,37 +39,58 @@ namespace JPH {
 /// \f$\beta\f$ = baumgarte constant.
 class AxisConstraintPart
 {
+	/// Internal helper function to calculate and accumulate lambda
+	/// @param inJV Jacobian times velocity
+	/// @param inMinLambda Minimum value of constraint impulse to apply (N s)
+	/// @param inMaxLambda Maximum value of constraint impulse to apply (N s)
+	JPH_INLINE float			CalculateLambda(float inJV, float inMinLambda, float inMaxLambda)
+	{
+		// Lagrange multiplier is:
+		//
+		// lambda = -K^-1 (J v + b)
+		float lambda = mEffectiveMass * (inJV - mSpringPart.GetBias(mTotalLambda));
+		float new_lambda = Clamp(mTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
+		lambda = new_lambda - mTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
+		mTotalLambda = new_lambda; // Store accumulated impulse
+		return lambda;
+	}
+
+	/// Internal helper function to update velocities of body 1 after Lagrange multiplier is calculated
+	JPH_INLINE void				ApplyVelocityBody1(MotionProperties *ioMotionProperties1, Vec3Arg inWorldSpaceAxis, float inLambda)
+	{
+		// Calculate velocity change due to constraint
+		//
+		// Impulse:
+		// P = J^T lambda
+		//
+		// Euler velocity integration: 
+		// v' = v + M^-1 P
+		ioMotionProperties1->SubLinearVelocityStep((inLambda * ioMotionProperties1->GetInverseMass()) * inWorldSpaceAxis);
+		ioMotionProperties1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
+	}
+
+	/// Internal helper function to update velocities of body 1 after Lagrange multiplier is calculated
+	JPH_INLINE void				ApplyVelocityBody2(MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inLambda)
+	{
+		ioMotionProperties2->AddLinearVelocityStep((inLambda * ioMotionProperties2->GetInverseMass()) * inWorldSpaceAxis);
+		ioMotionProperties2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
+	}
+
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
 	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inLambda)
 	{
 		// Apply impulse if delta is not zero
 		if (inLambda != 0.0f)
 		{
-			// Calculate velocity change due to constraint
-			//
-			// Impulse:
-			// P = J^T lambda
-			//
-			// Euler velocity integration: 
-			// v' = v + M^-1 P
 			if (ioBody1.IsDynamic())
-			{
-				MotionProperties *mp1 = ioBody1.GetMotionProperties();
-				mp1->SubLinearVelocityStep((inLambda * mp1->GetInverseMass()) * inWorldSpaceAxis);
-				mp1->SubAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
-			}
+				ApplyVelocityBody1(ioBody1.GetMotionPropertiesUnchecked(), inWorldSpaceAxis, inLambda);
 			if (ioBody2.IsDynamic())
-			{
-				MotionProperties *mp2 = ioBody2.GetMotionProperties();
-				mp2->AddLinearVelocityStep((inLambda * mp2->GetInverseMass()) * inWorldSpaceAxis);
-				mp2->AddAngularVelocityStep(inLambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
-			}
+				ApplyVelocityBody2(ioBody2.GetMotionPropertiesUnchecked(), inWorldSpaceAxis, inLambda);
 			return true;
 		}
 
 		return false;
 	}
-
 public:
 	/// Calculate properties used during the functions below
 	/// @param inDeltaTime Time step
@@ -156,15 +177,72 @@ public:
 	/// @param inMaxLambda Maximum value of constraint impulse to apply (N s)
 	inline bool					SolveVelocityConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
 	{
-		// Lagrange multiplier is:
-		//
-		// lambda = -K^-1 (J v + b)
-		float lambda = mEffectiveMass * (inWorldSpaceAxis.Dot(ioBody1.GetLinearVelocity() - ioBody2.GetLinearVelocity()) + Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioBody1.GetAngularVelocity()) - Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioBody2.GetAngularVelocity()) - mSpringPart.GetBias(mTotalLambda));
-		float new_lambda = Clamp(mTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
-		lambda = new_lambda - mTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
-		mTotalLambda = new_lambda; // Store accumulated impulse
-
+		float jv = inWorldSpaceAxis.Dot(ioBody1.GetLinearVelocity() - ioBody2.GetLinearVelocity()) + Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioBody1.GetAngularVelocity()) - Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioBody2.GetAngularVelocity());
+		float lambda = CalculateLambda(jv, inMinLambda, inMaxLambda);
 		return ApplyVelocityStep(ioBody1, ioBody2, inWorldSpaceAxis, lambda);
+	}
+
+	/// Templated form of SolveVelocityConstraint with the motion types baked in
+	template <EMotionType Type1, EMotionType Type2>
+	inline bool					TemplatedSolveVelocityConstraint(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda);
+
+	/// Template instance optimized for Dynamic vs Dynamic
+	template <>
+	inline bool					TemplatedSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	{
+		float jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity() - ioMotionProperties2->GetLinearVelocity()) + Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity()) - Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
+		float lambda = CalculateLambda(jv, inMinLambda, inMaxLambda);
+		if (lambda == 0.0f)
+			return false;
+		ApplyVelocityBody1(ioMotionProperties1, inWorldSpaceAxis, lambda);
+		ApplyVelocityBody2(ioMotionProperties2, inWorldSpaceAxis, lambda);
+		return true;
+	}
+
+	/// Template instance optimized for Dynamic vs Kinematic
+	template <>
+	inline bool					TemplatedSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	{
+		float jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity() - ioMotionProperties2->GetLinearVelocity()) + Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity()) - Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
+		float lambda = CalculateLambda(jv, inMinLambda, inMaxLambda);
+		if (lambda == 0.0f)
+			return false;
+		ApplyVelocityBody1(ioMotionProperties1, inWorldSpaceAxis, lambda);
+		return true;
+	}
+
+	/// Template instance optimized for Dynamic vs Static
+	template <>
+	inline bool					TemplatedSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	{
+		float jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity()) + Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity());
+		float lambda = CalculateLambda(jv, inMinLambda, inMaxLambda);
+		ApplyVelocityBody1(ioMotionProperties1, inWorldSpaceAxis, lambda);
+		return lambda != 0.0f;
+	}
+
+	/// Template instance optimized for Kinematic vs Dynamic
+	template <>
+	inline bool					TemplatedSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	{
+		float jv = inWorldSpaceAxis.Dot(ioMotionProperties1->GetLinearVelocity() - ioMotionProperties2->GetLinearVelocity()) + Vec3::sLoadFloat3Unsafe(mR1PlusUxAxis).Dot(ioMotionProperties1->GetAngularVelocity()) - Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
+		float lambda = CalculateLambda(jv, inMinLambda, inMaxLambda);
+		if (lambda == 0.0f)
+			return false;
+		ApplyVelocityBody2(ioMotionProperties2, inWorldSpaceAxis, lambda);
+		return true;
+	}
+
+	/// Template instance optimized for Static vs Dynamic
+	template <>
+	inline bool					TemplatedSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	{
+		float jv = inWorldSpaceAxis.Dot(-ioMotionProperties2->GetLinearVelocity()) - Vec3::sLoadFloat3Unsafe(mR2xAxis).Dot(ioMotionProperties2->GetAngularVelocity());
+		float lambda = CalculateLambda(jv, inMinLambda, inMaxLambda);
+		if (lambda == 0.0f)
+			return false;
+		ApplyVelocityBody2(ioMotionProperties2, inWorldSpaceAxis, lambda);
+		return true;
 	}
 
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.

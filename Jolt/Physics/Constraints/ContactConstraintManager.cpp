@@ -1212,6 +1212,44 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 	}
 }
 
+template <EMotionType Type1, EMotionType Type2>
+JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2)
+{
+	bool any_impulse_applied = false;
+
+	// First apply all friction constraints (non-penetration is more important than friction)
+	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
+	{
+		// Check if friction is enabled
+		if (wcp.mFrictionConstraint1.IsActive())
+		{
+			JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
+
+			// Calculate max impulse that can be applied. Note that we're using the non-penetration impulse from the previous iteration here.
+			// We do this because non-penetration is more important so is solved last (the last things that are solved in an iterative solver
+			// contribute the most).
+			float max_lambda_f = ioConstraint.mSettings.mCombinedFriction * wcp.mNonPenetrationConstraint.GetTotalLambda();
+
+			// Solve friction velocities
+			// Note that what we're doing is not fully correct since the max force we can apply is 2 * max_lambda_f instead of max_lambda_f since we're solving axis independently
+			if (wcp.mFrictionConstraint1.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent1, -max_lambda_f, max_lambda_f))
+				any_impulse_applied = true;
+			if (wcp.mFrictionConstraint2.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent2, -max_lambda_f, max_lambda_f))
+				any_impulse_applied = true;
+		}
+	}
+
+	// Then apply all non-penetration constraints
+	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
+	{
+		// Solve non penetration velocities
+		if (wcp.mNonPenetrationConstraint.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, ioConstraint.mWorldSpaceNormal, 0.0f, FLT_MAX))
+			any_impulse_applied = true;
+	}
+
+	return any_impulse_applied;
+}
+
 bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd)
 {
 	JPH_PROFILE_FUNCTION();
@@ -1224,40 +1262,46 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 
 		// Fetch bodies
 		Body &body1 = *constraint.mBody1;
+		EMotionType motion_type1 = body1.GetMotionType();
+		MotionProperties *motion_properties1 = body1.GetMotionPropertiesUnchecked();
+
 		Body &body2 = *constraint.mBody2;
+		EMotionType motion_type2 = body2.GetMotionType();
+		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
 
 		// Calculate tangents
 		Vec3 t1, t2;
 		constraint.GetTangents(t1, t2);
 
-		// First apply all friction constraints (non-penetration is more important than friction)
-		for (WorldContactPoint &wcp : constraint.mContactPoints)
+		// To reduce the amount of ifs we do a high level switch and then go to specialized code paths based on which configuration we hit
+		switch (motion_type1)
 		{
-			// Check if friction is enabled
-			if (wcp.mFrictionConstraint1.IsActive())
+		case EMotionType::Dynamic:
+			switch (motion_type2)
 			{
-				JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
+			case EMotionType::Dynamic:
+				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2);
+				break;
 
-				// Calculate max impulse that can be applied. Note that we're using the non-penetration impulse from the previous iteration here.
-				// We do this because non-penetration is more important so is solved last (the last things that are solved in an iterative solver
-				// contribute the most).
-				float max_lambda_f = constraint.mSettings.mCombinedFriction * wcp.mNonPenetrationConstraint.GetTotalLambda();
+			case EMotionType::Kinematic:
+				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(constraint, motion_properties1, motion_properties2, t1, t2);
+				break;
 
-				// Solve friction velocities
-				// Note that what we're doing is not fully correct since the max force we can apply is 2 * max_lambda_f instead of max_lambda_f since we're solving axis independently
-				if (wcp.mFrictionConstraint1.SolveVelocityConstraint(body1, body2, t1, -max_lambda_f, max_lambda_f))
-					any_impulse_applied = true;
-				if (wcp.mFrictionConstraint2.SolveVelocityConstraint(body1, body2, t2, -max_lambda_f, max_lambda_f))
-					any_impulse_applied = true;
+			case EMotionType::Static:
+				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, t1, t2);
+				break;
 			}
-		}
+			break;
 
-		// Then apply all non-penetration constraints
-		for (WorldContactPoint &wcp : constraint.mContactPoints)
-		{
-			// Solve non penetration velocities
-			if (wcp.mNonPenetrationConstraint.SolveVelocityConstraint(body1, body2, constraint.mWorldSpaceNormal, 0.0f, FLT_MAX))
-				any_impulse_applied = true;
+		case EMotionType::Kinematic:
+			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
+			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2);
+			break;
+
+		case EMotionType::Static:
+			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
+			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2);
+			break;
 		}
 	}
 
