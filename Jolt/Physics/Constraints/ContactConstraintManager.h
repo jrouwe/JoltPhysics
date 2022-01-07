@@ -435,7 +435,11 @@ private:
 		WorldContactPoints		mContactPoints;
 	};
 
-	/// Internal helper function to solve a single contact constraint. Templated to the motion type to reduce the amount of branches while solving.
+	/// Internal helper function to warm start contact constraint. Templated to the motion type to reduce the amount of branches.
+	template <EMotionType Type1, EMotionType Type2>
+	JPH_INLINE static void		sWarmStartConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2, float inWarmStartImpulseRatio);
+
+	/// Internal helper function to solve a single contact constraint. Templated to the motion type to reduce the amount of branches.
 	template <EMotionType Type1, EMotionType Type2>
 	JPH_INLINE static bool		sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2);
 

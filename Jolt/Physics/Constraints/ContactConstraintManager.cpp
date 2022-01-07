@@ -1182,6 +1182,22 @@ void ContactConstraintManager::SetupVelocityConstraints(uint32 *inConstraintIdxB
 	}
 }
 
+template <EMotionType Type1, EMotionType Type2>
+JPH_INLINE static void ContactConstraintManager::sWarmStartConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2, float inWarmStartImpulseRatio)
+{
+	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
+	{
+		// Warm starting: Apply impulse from last frame
+		if (wcp.mFrictionConstraint1.IsActive())
+		{
+			JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
+			wcp.mFrictionConstraint1.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent1, inWarmStartImpulseRatio);
+			wcp.mFrictionConstraint2.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent2, inWarmStartImpulseRatio);
+		}
+		wcp.mNonPenetrationConstraint.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, ioConstraint.mWorldSpaceNormal, inWarmStartImpulseRatio);
+	}
+}
+
 void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio)
 {
 	JPH_PROFILE_FUNCTION();
@@ -1192,22 +1208,41 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 
 		// Fetch bodies
 		Body &body1 = *constraint.mBody1;
+		EMotionType motion_type1 = body1.GetMotionType();
+		MotionProperties *motion_properties1 = body1.GetMotionPropertiesUnchecked();
+
 		Body &body2 = *constraint.mBody2;
+		EMotionType motion_type2 = body2.GetMotionType();
+		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
 				
 		// Calculate tangents
 		Vec3 t1, t2;
 		constraint.GetTangents(t1, t2);
 		
-		for (WorldContactPoint &wcp : constraint.mContactPoints)
+		// To reduce the amount of ifs we do a high level switch and then go to specialized code paths based on which configuration we hit
+		switch (motion_type1)
 		{
-			// Warm starting: Apply impulse from last frame
-			if (wcp.mFrictionConstraint1.IsActive())
+		case EMotionType::Dynamic:
+			switch (motion_type2)
 			{
-				JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
-				wcp.mFrictionConstraint1.WarmStart(body1, body2, t1, inWarmStartImpulseRatio);
-				wcp.mFrictionConstraint2.WarmStart(body1, body2, t2, inWarmStartImpulseRatio);
+			case EMotionType::Dynamic:
+				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
+				break;
+
+			case EMotionType::Kinematic:
+			case EMotionType::Static:
+			default:
+				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
+				break;
 			}
-			wcp.mNonPenetrationConstraint.WarmStart(body1, body2, constraint.mWorldSpaceNormal, inWarmStartImpulseRatio);
+			break;
+
+		case EMotionType::Kinematic:
+		case EMotionType::Static:
+		default:
+			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
+			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
+			break;
 		}
 	}
 }
