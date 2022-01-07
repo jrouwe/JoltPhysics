@@ -698,7 +698,7 @@ void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, Physi
 		// Process the batch
 		while (active_body_idx < active_body_idx_end)
 		{
-			const Body &body = mBodyManager.GetBody(active_bodies[active_body_idx]);
+			Body &body = mBodyManager.GetBody(active_bodies[active_body_idx]);
 			if (body.IsDynamic())
 				body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
 			active_body_idx++;

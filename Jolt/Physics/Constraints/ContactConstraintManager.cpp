@@ -1220,29 +1220,17 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 		constraint.GetTangents(t1, t2);
 		
 		// To reduce the amount of ifs we do a high level switch and then go to specialized code paths based on which configuration we hit
-		switch (motion_type1)
+		if (motion_type1 == EMotionType::Dynamic)
 		{
-		case EMotionType::Dynamic:
-			switch (motion_type2)
-			{
-			case EMotionType::Dynamic:
+			if (motion_type2 == EMotionType::Dynamic)
 				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
-				break;
-
-			case EMotionType::Kinematic:
-			case EMotionType::Static:
-			default:
+			else
 				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-		case EMotionType::Static:
-		default:
+		}
+		else
+		{
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
 			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
-			break;
 		}
 	}
 }

@@ -41,7 +41,7 @@ class AxisConstraintPart
 {
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE bool				ApplyVelocityStep(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inLambda)
+	JPH_INLINE bool				ApplyVelocityStep(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inLambda) const
 	{
 		// Apply impulse if delta is not zero
 		if (inLambda != 0.0f)
@@ -159,29 +159,17 @@ public:
 		MotionProperties *motion_properties2 = ioBody2.GetMotionPropertiesUnchecked();
 
 		// To reduce the amount of ifs we do a high level switch and then go to specialized code paths based on which configuration we hit
-		switch (motion_type1)
+		if (motion_type1 == EMotionType::Dynamic)
 		{
-		case EMotionType::Dynamic:
-			switch (motion_type2)
-			{
-			case EMotionType::Dynamic:
+			if (motion_type2 == EMotionType::Dynamic)
 				TemplatedWarmStart<EMotionType::Dynamic, EMotionType::Dynamic>(motion_properties1, motion_properties2, inWorldSpaceAxis, inWarmStartImpulseRatio);
-				break;
-
-			case EMotionType::Kinematic:
-			case EMotionType::Static:
-			default:
+			else
 				TemplatedWarmStart<EMotionType::Dynamic, EMotionType::Static>(motion_properties1, motion_properties2, inWorldSpaceAxis, inWarmStartImpulseRatio);
-				break;
-			}
-			break;
-
-		case EMotionType::Kinematic:
-		case EMotionType::Static:
-		default:
+		}
+		else
+		{
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
 			TemplatedWarmStart<EMotionType::Static, EMotionType::Dynamic>(motion_properties1, motion_properties2, inWorldSpaceAxis, inWarmStartImpulseRatio);
-			break;
 		}
 	}
 
@@ -245,6 +233,10 @@ public:
 
 			case EMotionType::Static:
 				return TemplatedSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(motion_properties1, motion_properties2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+
+			default:
+				JPH_ASSERT(false);
+				break;
 			}
 			break;
 
@@ -255,9 +247,12 @@ public:
 		case EMotionType::Static:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
 			return TemplatedSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(motion_properties1, motion_properties2, inWorldSpaceAxis, inMinLambda, inMaxLambda);
+
+		default:
+			JPH_ASSERT(false);
+			break;
 		}
 
-		JPH_ASSERT(false);
 		return false;
 	}
 
