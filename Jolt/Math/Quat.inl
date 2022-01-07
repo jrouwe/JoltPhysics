@@ -301,7 +301,7 @@ Vec3 Quat::RotateAxisZ() const
 void Quat::StoreFloat3(Float3 *outV) const
 {
 	JPH_ASSERT(IsNormalized());
-	Vec3(EnsureWPositive().mValue).StoreFloat3(outV);
+	EnsureWPositive().GetXYZ().StoreFloat3(outV);
 }
 
 Quat Quat::sLoadFloat3Unsafe(const Float3 &inV)
