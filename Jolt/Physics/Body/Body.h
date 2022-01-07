@@ -172,10 +172,12 @@ public:
 	inline const AABox &	GetWorldSpaceBounds() const										{ return mBounds; }
 
 	/// Access to the motion properties
-	MotionProperties *		GetMotionProperties() const										{ JPH_ASSERT(!IsStatic()); return mMotionProperties; }
+	const MotionProperties *GetMotionProperties() const										{ JPH_ASSERT(!IsStatic()); return mMotionProperties; }
+	MotionProperties *		GetMotionProperties()											{ JPH_ASSERT(!IsStatic()); return mMotionProperties; }
 
 	/// Access to the motion properties (version that does not check if the object is kinematic or dynamic)
-	MotionProperties *		GetMotionPropertiesUnchecked() const							{ return mMotionProperties; }
+	const MotionProperties *GetMotionPropertiesUnchecked() const							{ return mMotionProperties; }
+	MotionProperties *		GetMotionPropertiesUnchecked()									{ return mMotionProperties; }
 
 	/// Access to the user data pointer
 	void *					GetUserData() const												{ return mUserData; }
