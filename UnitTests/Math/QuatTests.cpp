@@ -8,6 +8,21 @@
 
 TEST_SUITE("QuatTests")
 {
+	TEST_CASE("TestQuatEqual")
+	{
+		CHECK(Quat(1, 2, 3, 4) == Quat(1, 2, 3, 4));
+		CHECK(Quat(1, 2, 3, 4) != Quat(0, 2, 3, 4));
+		CHECK(Quat(1, 2, 3, 4) != Quat(1, 0, 3, 4));
+		CHECK(Quat(1, 2, 3, 4) != Quat(1, 2, 0, 4));
+		CHECK(Quat(1, 2, 3, 4) != Quat(1, 2, 3, 0));
+	}
+
+	TEST_CASE("TestQuatZero")
+	{
+		Quat zero = Quat::sZero();
+		CHECK(zero == Quat(0, 0, 0, 0));
+	}
+
 	TEST_CASE("TestQuatIdentity")
 	{
 		Quat identity = Quat::sIdentity();
@@ -16,6 +31,45 @@ TEST_SUITE("QuatTests")
 		CHECK_APPROX_EQUAL(identity.GetY(), 0.0f);
 		CHECK_APPROX_EQUAL(identity.GetZ(), 0.0f);
 		CHECK_APPROX_EQUAL(identity.GetW(), 1.0f);
+	}
+
+	TEST_CASE("TestQuatIsNaN")
+	{
+		CHECK(Quat(numeric_limits<float>::quiet_NaN(), 0, 0, 0).IsNaN());
+		CHECK(Quat(0, numeric_limits<float>::quiet_NaN(), 0, 0).IsNaN());
+		CHECK(Quat(0, 0, numeric_limits<float>::quiet_NaN(), 0).IsNaN());
+		CHECK(Quat(0, 0, 0, numeric_limits<float>::quiet_NaN()).IsNaN());
+	}
+	
+	TEST_CASE("TestQuatOperators")
+	{
+		CHECK(-Quat(1, 2, 3, 4) == Quat(-1, -2, -3, -4));
+		CHECK(Quat(1, 2, 3, 4) + Quat(5, 6, 7, 8) == Quat(6, 8, 10, 12));
+		CHECK(Quat(5, 6, 7, 8) - Quat(4, 3, 2, 1) == Quat(1, 3, 5, 7));
+		CHECK(Quat(1, 2, 3, 4) * 5.0f == Quat(5, 10, 15, 20));
+		CHECK(5.0f * Quat(1, 2, 3, 4) == Quat(5, 10, 15, 20));
+		CHECK(Quat(2, 4, 6, 8) / 2.0f == Quat(1, 2, 3, 4));
+	}
+
+	TEST_CASE("TestQuatPerpendicular")
+	{
+		Quat q1(1, 2, 3, 4);
+		CHECK(q1.GetPerpendicular().Dot(q1) == 0.0f);
+
+		Quat q2(-5, 4, -3, 2);
+		CHECK(q2.GetPerpendicular().Dot(q2) == 0.0f);
+	}
+
+	TEST_CASE("TestQuatNormalized")
+	{
+		CHECK(Quat(1, 0, 0, 0).IsNormalized());
+		CHECK(Quat(-0.7071067f, 0.7071067f, 0, 0).IsNormalized());
+		CHECK(Quat(0.5773502f, -0.5773502f, 0.5773502f, 0).IsNormalized());
+		CHECK(Quat(0.5f, -0.5f, 0.5f, -0.5f).IsNormalized());
+		CHECK(!Quat(2, 0, 0, 0).IsNormalized());
+		CHECK(!Quat(0, 2, 0, 0).IsNormalized());
+		CHECK(!Quat(0, 0, 2, 0).IsNormalized());
+		CHECK(!Quat(0, 0, 0, 2).IsNormalized());
 	}
 
 	TEST_CASE("TestQuatConvertMatrix")
@@ -229,6 +283,34 @@ TEST_SUITE("QuatTests")
 
 			CHECK_APPROX_EQUAL(Quat::sIdentity(), q1 * q2);
 		}
+	}
+
+	TEST_CASE("TestQuatConjugate")
+	{
+		CHECK(Quat(1, 2, 3, 4).Conjugated() == Quat(-1, -2, -3, 4));
+		CHECK(Quat(-1, -2, -3, -4).Conjugated() == Quat(1, 2, 3, -4));
+	}
+
+	TEST_CASE("TestQuatEnsureWPositive")
+	{
+		CHECK(Quat(1, -2, 3, -4).EnsureWPositive() == Quat(-1, 2, -3, 4));
+		CHECK(Quat(-4, 5, -6, 7).EnsureWPositive() == Quat(-4, 5, -6, 7));
+		CHECK(Quat(1, 2, 3, 0).EnsureWPositive() == Quat(1, 2, 3, 0));
+	}
+
+	TEST_CASE("TestQuatStoreFloat3")
+	{
+		Float3 q1;
+		Quat(0.7071067f, 0, 0, -0.7071067f).StoreFloat3(&q1);
+		CHECK(q1 == Float3(-0.7071067f, 0, 0));
+
+		Float3 q2;
+		Quat(0, 0.7071067f, 0, 0.7071067f).StoreFloat3(&q2);
+		CHECK(q2 == Float3(0, 0.7071067f, 0));
+
+		Float3 q3;
+		Quat(0, 0, 1, 0).StoreFloat3(&q3);
+		CHECK(q3 == Float3(0, 0, 1));
 	}
 
 	TEST_CASE("TestQuatGetTwistAxis")

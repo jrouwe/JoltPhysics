@@ -9,7 +9,7 @@ TEST_SUITE("JobSystemTest")
 	TEST_CASE("TestJobSystemRunJobs")
 	{
 		// Create job system
-		const int cMaxJobs = 100;
+		const int cMaxJobs = 128;
 		const int cMaxBarriers = 10;
 		const int cMaxThreads = 10;
 		JobSystemThreadPool system(cMaxJobs, cMaxBarriers, cMaxThreads);
@@ -43,7 +43,7 @@ TEST_SUITE("JobSystemTest")
 	TEST_CASE("TestJobSystemRunChain")
 	{
 		// Create job system
-		const int cMaxJobs = 100;
+		const int cMaxJobs = 128;
 		const int cMaxBarriers = 10;
 		JobSystemThreadPool system(cMaxJobs, cMaxBarriers);
 

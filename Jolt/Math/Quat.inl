@@ -3,7 +3,7 @@
 
 namespace JPH {
 
-const Quat Quat::operator * (QuatArg inRHS) const
+Quat Quat::operator * (QuatArg inRHS) const
 { 
 #if defined(JPH_USE_SSE)
 	// Taken from: http://momchil-velikov.blogspot.nl/2013/10/fast-sse-quternion-multiplication.html
@@ -80,8 +80,8 @@ Quat Quat::sRotation(Vec3Arg inAxis, float inAngle)
 void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 {
 	JPH_ASSERT(IsNormalized());
-	float w = GetW();
-	float abs_w = abs(w);
+	Quat w_pos = EnsureWPositive();
+	float abs_w = w_pos.GetW();
 	if (abs_w >= 1.0f)
 	{ 
 		outAxis = Vec3::sZero();
@@ -90,8 +90,7 @@ void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 	else
 	{
 		outAngle = 2.0f * acos(abs_w);
-		float len = GetXYZ().Length();
-		outAxis = len > 0.0f? (w < 0.0f? -GetXYZ() : GetXYZ()) / len : Vec3::sZero();
+		outAxis = w_pos.GetXYZ().NormalizedOr(Vec3::sZero());
 	}
 }
 
@@ -189,7 +188,7 @@ Vec3 Quat::GetEulerAngles() const
 	return Vec3(atan2(t0, t1), asin(t2), atan2(t3, t4));
 }
 
-const Quat Quat::GetTwist(Vec3Arg inAxis) const
+Quat Quat::GetTwist(Vec3Arg inAxis) const
 { 
 	Quat twist(Vec4(GetXYZ().Dot(inAxis) * inAxis, GetW()));
 	float twist_len = twist.LengthSq();
@@ -216,13 +215,13 @@ void Quat::GetSwingTwist(Quat &outSwing, Quat &outTwist) const
 	}
 }
 
-const Quat Quat::LERP(QuatArg inDestination, float inFraction) const
+Quat Quat::LERP(QuatArg inDestination, float inFraction) const
 {
 	float scale0 = 1.0f - inFraction;
 	return Quat(Vec4::sReplicate(scale0) * mValue + Vec4::sReplicate(inFraction) * inDestination.mValue);
 }
 
-const Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
+Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
 {	
     // Difference at which to LERP instead of SLERP
 	const float delta = 0.0001f;
@@ -259,20 +258,20 @@ const Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
 	return Quat(Vec4::sReplicate(scale0) * mValue + Vec4::sReplicate(scale1) * inDestination.mValue).Normalized();
 }
 
-const Vec3 Quat::operator * (Vec3Arg inValue) const
+Vec3 Quat::operator * (Vec3Arg inValue) const
 {
 	// Rotating a vector by a quaternion is done by: p' = q * p * q^-1 (q^-1 = conjugated(q) for a unit quaternion)
 	JPH_ASSERT(IsNormalized());
 	return Vec3((*this * Quat(Vec4(inValue, 0)) * Conjugated()).mValue);
 }
 
-const Vec3 Quat::InverseRotate(Vec3Arg inValue) const
+Vec3 Quat::InverseRotate(Vec3Arg inValue) const
 {
 	JPH_ASSERT(IsNormalized());
 	return Vec3((Conjugated() * Quat(Vec4(inValue, 0)) * *this).mValue);
 }
 
-const Vec3 Quat::RotateAxisX() const												
+Vec3 Quat::RotateAxisX() const												
 { 
 	// This is *this * Vec3::sAxisX() written out:
 	JPH_ASSERT(IsNormalized());
@@ -281,7 +280,7 @@ const Vec3 Quat::RotateAxisX() const
 	return Vec3(tx * x + tw * w - 1.0f, tx * y + z * tw, tx * z - y * tw); 
 }
 
-const Vec3 Quat::RotateAxisY() const												
+Vec3 Quat::RotateAxisY() const												
 { 
 	// This is *this * Vec3::sAxisY() written out:
 	JPH_ASSERT(IsNormalized());
@@ -290,7 +289,7 @@ const Vec3 Quat::RotateAxisY() const
 	return Vec3(x * ty - z * tw, tw * w + ty * y - 1.0f, x * tw + ty * z); 
 }
 
-const Vec3 Quat::RotateAxisZ() const												
+Vec3 Quat::RotateAxisZ() const												
 { 
 	// This is *this * Vec3::sAxisZ() written out:
 	JPH_ASSERT(IsNormalized());
@@ -302,7 +301,7 @@ const Vec3 Quat::RotateAxisZ() const
 void Quat::StoreFloat3(Float3 *outV) const
 {
 	JPH_ASSERT(IsNormalized());
-	Vec3(GetW() < 0.0f? -mValue : mValue).StoreFloat3(outV);
+	EnsureWPositive().GetXYZ().StoreFloat3(outV);
 }
 
 Quat Quat::sLoadFloat3Unsafe(const Float3 &inV)

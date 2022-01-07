@@ -608,6 +608,22 @@ Vec4 Vec4::Sqrt() const
 #endif
 }
 
+
+Vec4 Vec4::GetSign() const
+{
+#if defined(JPH_USE_SSE)
+	Type minus_one = _mm_set1_ps(-1.0f);
+	Type one = _mm_set1_ps(1.0f);
+	return _mm_or_ps(_mm_and_ps(mValue, minus_one), one);
+#elif defined(JPH_USE_NEON)
+	Type minus_one = vdupq_n_f32(-1.0f);
+	Type one = vdupq_n_f32(1.0f);
+	return vorrq_s32(vandq_s32(mValue, minus_one), one);
+#else
+	#error Unsupported CPU architecture
+#endif
+}
+
 Vec4 Vec4::Normalized() const
 {
 #if defined(JPH_USE_SSE)

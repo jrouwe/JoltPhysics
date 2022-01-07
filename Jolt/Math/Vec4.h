@@ -229,6 +229,9 @@ public:
 	/// Component wise square root
 	JPH_INLINE Vec4				Sqrt() const;
 
+	/// Get vector that contains the sign of each element (returns 1.0f if positive, -1.0f if negative)
+	JPH_INLINE Vec4				GetSign() const;
+
 	/// To String
 	friend ostream &			operator << (ostream &inStream, Vec4Arg inV)
 	{

@@ -61,8 +61,8 @@ struct PhysicsSettings
 	/// Maximum relative delta position for body pairs to be able to reuse collision results from last frame (units: meter^2)
 	float		mBodyPairCacheMaxDeltaPositionSq = Square(0.001f); ///< 1 mm
 
-	/// Maximum relative delta orientation for body pairs to be able to reuse collision results from last frame
-	float		mBodyPairCacheCosMaxDeltaRotation = 0.99984769515639123915701155881391f; ///< cos(1 degree)
+	/// Maximum relative delta orientation for body pairs to be able to reuse collision results from last frame, stored as cos(max angle / 2)
+	float		mBodyPairCacheCosMaxDeltaRotationDiv2 = 0.99984769515639123915701155881391f; ///< cos(2 degrees / 2)
 
 	/// Maximum angle between normals that allows manifolds between different sub shapes of the same body pair to be combined
 	float		mContactNormalCosMaxDeltaRotation = 0.99619469809174553229501040247389f; ///< cos(5 degree)
