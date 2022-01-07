@@ -1183,7 +1183,7 @@ void ContactConstraintManager::SetupVelocityConstraints(uint32 *inConstraintIdxB
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE static void ContactConstraintManager::sWarmStartConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2, float inWarmStartImpulseRatio)
+JPH_INLINE void ContactConstraintManager::sWarmStartConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2, float inWarmStartImpulseRatio)
 {
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
 	{
