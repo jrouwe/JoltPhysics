@@ -246,6 +246,11 @@ int main(int argc, char** argv)
 	// We simulate the physics world in discrete time steps. 60 Hz is a good rate to update the physics system.
 	const float cDeltaTime = 1.0f / 60.0f;
 
+	// Optional step: Before starting the physics simulation you can optimize the broad phase. This improves collision detection performance (it's pointless here because we only have 2 bodies).
+	// You should definitely not call this every frame or when e.g. streaming in a new level section as it is an expensive operation.
+	// Instead insert all new objects in batches instead of 1 at a time to keep the broad phase efficient.
+	physics_system.OptimizeBroadPhase();
+
 	// Now we're ready to simulate the body, keep simulating until it goes to sleep
 	uint step = 0;
 	while (body_interface.IsActive(sphere_id))
