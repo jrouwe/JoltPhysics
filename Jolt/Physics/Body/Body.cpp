@@ -144,35 +144,6 @@ void Body::SetShapeInternal(const Shape *inShape, bool inUpdateMassProperties)
 	CalculateWorldSpaceBoundsInternal();
 }
 
-void Body::GetSleepTestPoints(Vec3 *outPoints) const
-{
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
-
-	// Center of mass is the first position
-	outPoints[0] = mPosition;
-
-	// The second and third position are on the largest axis of the bounding box
-	Vec3 extent = mShape->GetLocalBounds().GetExtent();
-	int lowest_component = extent.GetLowestComponentIndex();
-	int component = 0;
-	for (int output = 1; output < 3; ++output)
-	{
-		if (component == lowest_component)
-			++component;
-		Vec3 axis = Vec3::sZero();
-		axis.SetComponent(component, extent[component]);
-		outPoints[output] = mPosition + mRotation * axis;
-		component++;
-	}
-}
-
-void Body::ResetSleepTestSpheres()
-{
-	Vec3 points[3];
-	GetSleepTestPoints(points);
-	mMotionProperties->ResetSleepTestSpheres(points);
-}
-
 Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMovement, float inTimeBeforeSleep)
 {
 	// Check override
@@ -185,11 +156,13 @@ Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMov
 
 	for (int i = 0; i < 3; ++i)
 	{
+		Sphere &sphere = mMotionProperties->mSleepTestSpheres[i];
+
 		// Encapsulate the point in a sphere
-		mMotionProperties->mSleepTestSpheres[i].EncapsulatePoint(points[i]);
+		sphere.EncapsulatePoint(points[i]);
 
 		// Test if it exceeded the max movement
-		if (mMotionProperties->mSleepTestSpheres[i].GetRadius() > inMaxMovement)
+		if (sphere.GetRadius() > inMaxMovement)
 		{
 			// Body is not sleeping, reset test
 			mMotionProperties->ResetSleepTestSpheres(points);

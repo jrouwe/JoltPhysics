@@ -8,13 +8,6 @@
 
 namespace JPH {
 
-void MotionProperties::ResetSleepTestSpheres(const Vec3 *inPoints)
-{
-	for (int i = 0; i < 3; ++i)
-		mSleepTestSpheres[i] = Sphere(inPoints[i], 0.0f);
-	mSleepTestTimer = 0.0f;
-}
-
 void MotionProperties::SaveState(StateRecorder &inStream) const
 {
 	// Only write properties that can change at runtime
