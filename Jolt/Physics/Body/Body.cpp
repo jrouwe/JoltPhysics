@@ -154,15 +154,23 @@ void Body::GetSleepTestPoints(Vec3 *outPoints) const
 	// The second and third position are on the largest axis of the bounding box
 	Vec3 extent = mShape->GetLocalBounds().GetExtent();
 	int lowest_component = extent.GetLowestComponentIndex();
-	int component = 0;
-	for (int output = 1; output < 3; ++output)
+	Mat44 rotation = Mat44::sRotation(mRotation);
+	switch (lowest_component)
 	{
-		if (component == lowest_component)
-			++component;
-		Vec3 axis = Vec3::sZero();
-		axis.SetComponent(component, extent[component]);
-		outPoints[output] = mPosition + mRotation * axis;
-		component++;
+	case 0:
+		outPoints[1] = mPosition + extent.GetY() * rotation.GetColumn3(1);
+		outPoints[2] = mPosition + extent.GetZ() * rotation.GetColumn3(2);
+		break;
+
+	case 1:
+		outPoints[1] = mPosition + extent.GetX() * rotation.GetColumn3(0);
+		outPoints[2] = mPosition + extent.GetZ() * rotation.GetColumn3(2);
+		break;
+
+	case 2:
+		outPoints[1] = mPosition + extent.GetX() * rotation.GetColumn3(0);
+		outPoints[2] = mPosition + extent.GetY() * rotation.GetColumn3(1);
+		break;
 	}
 }
 
@@ -185,11 +193,13 @@ Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMov
 
 	for (int i = 0; i < 3; ++i)
 	{
+		Sphere &sphere = mMotionProperties->mSleepTestSpheres[i];
+
 		// Encapsulate the point in a sphere
-		mMotionProperties->mSleepTestSpheres[i].EncapsulatePoint(points[i]);
+		sphere.EncapsulatePoint(points[i]);
 
 		// Test if it exceeded the max movement
-		if (mMotionProperties->mSleepTestSpheres[i].GetRadius() > inMaxMovement)
+		if (sphere.GetRadius() > inMaxMovement)
 		{
 			// Body is not sleeping, reset test
 			mMotionProperties->ResetSleepTestSpheres(points);
