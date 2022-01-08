@@ -113,4 +113,11 @@ void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, V
 	ClampAngularVelocity();
 }
 
+void MotionProperties::ResetSleepTestSpheres(const Vec3 *inPoints)
+{
+	for (int i = 0; i < 3; ++i)
+		mSleepTestSpheres[i] = Sphere(inPoints[i], 0.0f);
+	mSleepTestTimer = 0.0f;
+}
+
 } // JPH

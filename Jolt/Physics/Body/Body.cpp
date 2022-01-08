@@ -144,43 +144,6 @@ void Body::SetShapeInternal(const Shape *inShape, bool inUpdateMassProperties)
 	CalculateWorldSpaceBoundsInternal();
 }
 
-void Body::GetSleepTestPoints(Vec3 *outPoints) const
-{
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
-
-	// Center of mass is the first position
-	outPoints[0] = mPosition;
-
-	// The second and third position are on the largest axis of the bounding box
-	Vec3 extent = mShape->GetLocalBounds().GetExtent();
-	int lowest_component = extent.GetLowestComponentIndex();
-	Mat44 rotation = Mat44::sRotation(mRotation);
-	switch (lowest_component)
-	{
-	case 0:
-		outPoints[1] = mPosition + extent.GetY() * rotation.GetColumn3(1);
-		outPoints[2] = mPosition + extent.GetZ() * rotation.GetColumn3(2);
-		break;
-
-	case 1:
-		outPoints[1] = mPosition + extent.GetX() * rotation.GetColumn3(0);
-		outPoints[2] = mPosition + extent.GetZ() * rotation.GetColumn3(2);
-		break;
-
-	case 2:
-		outPoints[1] = mPosition + extent.GetX() * rotation.GetColumn3(0);
-		outPoints[2] = mPosition + extent.GetY() * rotation.GetColumn3(1);
-		break;
-	}
-}
-
-void Body::ResetSleepTestSpheres()
-{
-	Vec3 points[3];
-	GetSleepTestPoints(points);
-	mMotionProperties->ResetSleepTestSpheres(points);
-}
-
 Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMovement, float inTimeBeforeSleep)
 {
 	// Check override
