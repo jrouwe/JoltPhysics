@@ -46,8 +46,8 @@ void ContactConstraintManager::WorldContactPoint::CalculateFrictionAndNonPenetra
 	Vec3 r2 = p - inBody2.GetCenterOfMassPosition();
 
 	// Calculate velocity of collision points
-	Vec3 v1 = inBody1.GetLinearVelocity() + inBody1.GetAngularVelocity().Cross(r1); 
-	Vec3 v2 = inBody2.GetLinearVelocity() + inBody2.GetAngularVelocity().Cross(r2);
+	Vec3 v1 = inBody1.GetPointVelocityCOM(r1); 
+	Vec3 v2 = inBody2.GetPointVelocityCOM(r2);
 	Vec3 relative_velocity = v2 - v1;
 	float normal_velocity = relative_velocity.Dot(inWorldSpaceNormal);
 

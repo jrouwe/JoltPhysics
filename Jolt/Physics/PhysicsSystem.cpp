@@ -1908,8 +1908,8 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					Vec3 r2 = ccd_body->mContactPointOn2 - body2.GetCenterOfMassPosition();
 
 					// Calculate velocity of collision points
-					Vec3 v1 = body1.GetLinearVelocity() + body1.GetAngularVelocity().Cross(r1_plus_u); 
-					Vec3 v2 = body2.GetLinearVelocity() + body2.GetAngularVelocity().Cross(r2);
+					Vec3 v1 = body1.GetPointVelocityCOM(r1_plus_u); 
+					Vec3 v2 = body2.GetPointVelocityCOM(r2);
 					Vec3 relative_velocity = v2 - v1;
 					float normal_velocity = relative_velocity.Dot(ccd_body->mContactNormal);
 
