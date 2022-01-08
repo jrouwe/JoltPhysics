@@ -88,6 +88,20 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 For build instructions go to the [Build](Build/README.md) section.
 
+## Folder Structure
+
+* Assets - This folder contains assets used by the Samples.
+* Build - Contains everything needed to build the library, see the [Build](Build/README.md) section.
+* Docs - Contains documentation for the library.
+* HelloWorld - A simple application demonstrating how to use the Jolt Physics library.
+* Jolt - All source code for the library is in this folder.
+* JoltViewer - It is possible to record the output of the physics engine using the DebugRendererRecorder class (a .jor file), this folder contains the source code to an application that can visualize a recording. This is useful for e.g. visualizing the output of the PerformanceTest on different platforms.
+* PerformanceTest - Contains a simple application that runs a performance test and collects timing information.
+* Samples - This contains the sample application, see the [Samples](Docs/Samples.md) section. Currently available on Windows only.
+* TestFramework - A rendering framework to visualize the results of the physics engine. Used by Samples and JoltViewer. Currently available on Windows only.
+* UnitTests - A set of unit tests to validate the behavior of the physics engine.
+* WebIncludes - A number of JavaScript resources used by the internal profiling framework of the physics engine.
+
 ## License
 
 The project is distributed under the [MIT license](LICENSE).
