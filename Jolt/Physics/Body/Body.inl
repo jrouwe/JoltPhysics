@@ -164,6 +164,10 @@ void Body::GetSleepTestPoints(Vec3 *outPoints) const
 		outPoints[1] = mPosition + extent.GetX() * rotation.GetColumn3(0);
 		outPoints[2] = mPosition + extent.GetY() * rotation.GetColumn3(1);
 		break;
+
+	default:
+		JPH_ASSERT(false);
+		break;
 	}
 }
 
