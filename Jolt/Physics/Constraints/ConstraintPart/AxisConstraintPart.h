@@ -70,6 +70,61 @@ class AxisConstraintPart
 	}
 
 public:
+	/// Templated form of CalculateConstraintProperties with the motion types baked in
+	template <EMotionType Type1, EMotionType Type2>
+	JPH_INLINE void				TemplatedCalculateConstraintProperties(float inDeltaTime, const MotionProperties *inMotionProperties1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, const MotionProperties *inMotionProperties2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f, float inC = 0.0f, float inFrequency = 0.0f, float inDamping = 0.0f)
+	{
+		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
+
+		// Calculate properties used below
+		Vec3 r1_plus_u_x_axis;
+		if constexpr (Type1 != EMotionType::Static)
+		{
+			r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
+			r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
+		}
+		else
+			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis));
+
+		Vec3 r2_x_axis;
+		if constexpr (Type2 != EMotionType::Static)
+		{
+			r2_x_axis = inR2.Cross(inWorldSpaceAxis);
+			r2_x_axis.StoreFloat3(&mR2xAxis);
+		}
+		else
+			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR2xAxis));
+
+		// Calculate inverse effective mass: K = J M^-1 J^T
+		float inv_effective_mass;
+
+		if constexpr (Type1 == EMotionType::Dynamic)
+		{
+			Vec3 invi1_r1_plus_u_x_axis = inInvI1 * r1_plus_u_x_axis;
+			invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
+			inv_effective_mass = inMotionProperties1->GetInverseMass() + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
+		}
+		else
+		{
+			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
+			inv_effective_mass = 0.0f;
+		}
+
+		if constexpr (Type2 == EMotionType::Dynamic)
+		{
+			Vec3 invi2_r2_x_axis = inInvI2 * r2_x_axis;
+			invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
+			inv_effective_mass += inMotionProperties2->GetInverseMass() + invi2_r2_x_axis.Dot(r2_x_axis);
+		}
+		else
+		{
+			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
+		}
+
+		// Calculate effective mass and spring properties
+		mSpringPart.CalculateSpringProperties(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
+	}
+
 	/// Calculate properties used during the functions below
 	/// @param inDeltaTime Time step
 	/// @param inBody1 The first body that this constraint is attached to
@@ -83,44 +138,48 @@ public:
 	///	@param inDamping Damping factor (0 = no damping, 1 = critical damping). Set to zero if you don't want to drive the constraint to zero with a spring.
 	inline void					CalculateConstraintProperties(float inDeltaTime, const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f, float inC = 0.0f, float inFrequency = 0.0f, float inDamping = 0.0f)
 	{
-		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
-
-		// Calculate properties used below
-		Vec3 r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
-		r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
-		Vec3 r2_x_axis = inR2.Cross(inWorldSpaceAxis);
-		r2_x_axis.StoreFloat3(&mR2xAxis);
-
-		// Calculate inverse effective mass: K = J M^-1 J^T
-		float inv_effective_mass;
-
-		if (inBody1.IsDynamic())
+		// Dispatch to the correct templated form
+		switch (inBody1.GetMotionType())
 		{
-			const MotionProperties *mp1 = inBody1.GetMotionProperties();
-			Vec3 invi1_r1_plus_u_x_axis = mp1->MultiplyWorldSpaceInverseInertiaByVector(inBody1.GetRotation(), r1_plus_u_x_axis);
-			invi1_r1_plus_u_x_axis.StoreFloat3(&mInvI1_R1PlusUxAxis);
-			inv_effective_mass = mp1->GetInverseMass() + invi1_r1_plus_u_x_axis.Dot(r1_plus_u_x_axis);
-		}
-		else
-		{
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
-			inv_effective_mass = 0.0f;
-		}
+		case EMotionType::Dynamic:
+			{
+				const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
+				Mat44 invi1 = inBody1.GetInverseInertia();
+				switch (inBody2.GetMotionType())
+				{
+				case EMotionType::Dynamic:
+					TemplatedCalculateConstraintProperties<EMotionType::Dynamic, EMotionType::Dynamic>(inDeltaTime, mp1, invi1, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
+					break;
 
-		if (inBody2.IsDynamic())
-		{
-			const MotionProperties *mp2 = inBody2.GetMotionProperties();
-			Vec3 invi2_r2_x_axis = mp2->MultiplyWorldSpaceInverseInertiaByVector(inBody2.GetRotation(), r2_x_axis);
-			invi2_r2_x_axis.StoreFloat3(&mInvI2_R2xAxis);
-			inv_effective_mass += mp2->GetInverseMass() + invi2_r2_x_axis.Dot(r2_x_axis);
-		}
-		else
-		{
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
-		}
+				case EMotionType::Kinematic:
+					TemplatedCalculateConstraintProperties<EMotionType::Dynamic, EMotionType::Kinematic>(inDeltaTime, mp1, invi1, inR1PlusU, nullptr, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
+					break;
 
-		// Calculate effective mass and spring properties
-		mSpringPart.CalculateSpringProperties(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
+				case EMotionType::Static:
+					TemplatedCalculateConstraintProperties<EMotionType::Dynamic, EMotionType::Static>(inDeltaTime, mp1, invi1, inR1PlusU, nullptr, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
+					break;
+
+				default:
+					JPH_ASSERT(false);
+					break;
+				}
+				break;
+			}
+
+		case EMotionType::Kinematic:
+			JPH_ASSERT(inBody2.IsDynamic());
+			TemplatedCalculateConstraintProperties<EMotionType::Kinematic, EMotionType::Dynamic>(inDeltaTime, nullptr, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
+			break;
+
+		case EMotionType::Static:
+			JPH_ASSERT(inBody2.IsDynamic());
+			TemplatedCalculateConstraintProperties<EMotionType::Static, EMotionType::Dynamic>(inDeltaTime, nullptr, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
+			break;
+
+		default:
+			JPH_ASSERT(false);
+			break;
+		}
 	}
 
 	/// Deactivate this constraint
@@ -158,7 +217,7 @@ public:
 		EMotionType motion_type2 = ioBody2.GetMotionType();
 		MotionProperties *motion_properties2 = ioBody2.GetMotionPropertiesUnchecked();
 
-		// To reduce the amount of ifs we do a high level switch and then go to specialized code paths based on which configuration we hit
+		// Dispatch to the correct templated form
 		if (motion_type1 == EMotionType::Dynamic)
 		{
 			if (motion_type2 == EMotionType::Dynamic)
@@ -219,7 +278,7 @@ public:
 		EMotionType motion_type2 = ioBody2.GetMotionType();
 		MotionProperties *motion_properties2 = ioBody2.GetMotionPropertiesUnchecked();
 
-		// To reduce the amount of ifs we do a high level switch and then go to specialized code paths based on which configuration we hit
+		// Dispatch to the correct templated form
 		switch (motion_type1)
 		{
 		case EMotionType::Dynamic:
