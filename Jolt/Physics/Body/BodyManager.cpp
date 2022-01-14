@@ -154,13 +154,13 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	Body *body;
 	if (inBodyCreationSettings.HasMassProperties())
 	{
-		BodyWithMotionProperties *bmp = new BodyWithMotionProperties();
+		BodyWithMotionProperties *bmp = new BodyWithMotionProperties;
 		body = bmp;
 		body->mMotionProperties = &bmp->mMotionProperties;
 	}
 	else
 	{
-	 	body = new Body();
+	 	body = new Body;
 	}
 	body->mID = BodyID(idx, seq_no);
 	body->mShape = inBodyCreationSettings.GetShape();
