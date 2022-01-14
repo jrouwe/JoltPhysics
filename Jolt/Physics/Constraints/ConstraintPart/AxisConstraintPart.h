@@ -218,6 +218,7 @@ public:
 		MotionProperties *motion_properties2 = ioBody2.GetMotionPropertiesUnchecked();
 
 		// Dispatch to the correct templated form
+		// Note: Warm starting doesn't differentiate between kinematic/static bodies so we handle both as static bodies
 		if (motion_type1 == EMotionType::Dynamic)
 		{
 			if (motion_type2 == EMotionType::Dynamic)

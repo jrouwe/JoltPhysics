@@ -46,10 +46,22 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAn
 	Vec3 r1 = p - inBody1.GetCenterOfMassPosition();
 	Vec3 r2 = p - inBody2.GetCenterOfMassPosition();
 
+	const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
+	const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
+
 	// Calculate velocity of collision points
-	Vec3 v1 = inBody1.GetPointVelocityCOM(r1); 
-	Vec3 v2 = inBody2.GetPointVelocityCOM(r2);
-	Vec3 relative_velocity = v2 - v1;
+	Vec3 relative_velocity;
+	if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
+		relative_velocity = mp2->GetPointVelocityCOM(r2) - mp1->GetPointVelocityCOM(r1);
+	else if constexpr (Type1 != EMotionType::Static)
+		relative_velocity = -mp1->GetPointVelocityCOM(r1);
+	else if constexpr (Type2 != EMotionType::Static)
+		relative_velocity = mp2->GetPointVelocityCOM(r2);
+	else
+	{
+		JPH_ASSERT(false); // Static vs static makes no sense
+		relative_velocity = Vec3::sZero();
+	}
 	float normal_velocity = relative_velocity.Dot(inWorldSpaceNormal);
 
 	// How much the shapes are penetrating (> 0 if penetrating, < 0 if separated)
@@ -82,9 +94,6 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAn
 		// No restitution. We can safely apply our contact velocity bias.
 		normal_velocity_bias = speculative_contact_velocity_bias;
 	}
-
-	const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-	const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
 
 	mNonPenetrationConstraint.TemplatedCalculateConstraintProperties<Type1, Type2>(inDeltaTime, mp1, inInvI1, r1, mp2, inInvI2, r2, inWorldSpaceNormal, normal_velocity_bias);
 
@@ -1088,6 +1097,7 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 	}
 
 	// Dispatch to the correct templated form
+	// Note: Non-dynamic vs non-dynamic can happen in this case due to one body being a sensor, so we need to have an extended switch case here
 	switch (body1->GetMotionType())
 	{
 	case EMotionType::Dynamic:
@@ -1146,11 +1156,8 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
 			break;
 
-		case EMotionType::Static:
-			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
-			break;
-
-		default:
+		case EMotionType::Static: // Static vs static not possible
+		default: 
 			JPH_ASSERT(false);
 			break;
 		}
@@ -1305,16 +1312,20 @@ void ContactConstraintManager::SetupVelocityConstraints(uint32 *inConstraintIdxB
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE void ContactConstraintManager::sWarmStartConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2, float inWarmStartImpulseRatio)
+JPH_INLINE void ContactConstraintManager::sWarmStartConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, float inWarmStartImpulseRatio)
 {
+	// Calculate tangents
+	Vec3 t1, t2;
+	ioConstraint.GetTangents(t1, t2);
+		
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
 	{
 		// Warm starting: Apply impulse from last frame
 		if (wcp.mFrictionConstraint1.IsActive())
 		{
 			JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
-			wcp.mFrictionConstraint1.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent1, inWarmStartImpulseRatio);
-			wcp.mFrictionConstraint2.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent2, inWarmStartImpulseRatio);
+			wcp.mFrictionConstraint1.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t1, inWarmStartImpulseRatio);
+			wcp.mFrictionConstraint2.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t2, inWarmStartImpulseRatio);
 		}
 		wcp.mNonPenetrationConstraint.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, ioConstraint.mWorldSpaceNormal, inWarmStartImpulseRatio);
 	}
@@ -1337,30 +1348,31 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 		EMotionType motion_type2 = body2.GetMotionType();
 		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
 				
-		// Calculate tangents
-		Vec3 t1, t2;
-		constraint.GetTangents(t1, t2);
-		
 		// Dispatch to the correct templated form
+		// Note: Warm starting doesn't differentiate between kinematic/static bodies so we handle both as static bodies
 		if (motion_type1 == EMotionType::Dynamic)
 		{
 			if (motion_type2 == EMotionType::Dynamic)
-				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
+				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 			else
-				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
+				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 		}
 		else
 		{
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2, inWarmStartImpulseRatio);
+			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 		}
 	}
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inTangent1, Vec3Arg inTangent2)
+JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2)
 {
 	bool any_impulse_applied = false;
+
+	// Calculate tangents
+	Vec3 t1, t2;
+	ioConstraint.GetTangents(t1, t2);
 
 	// First apply all friction constraints (non-penetration is more important than friction)
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
@@ -1377,9 +1389,9 @@ JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstr
 
 			// Solve friction velocities
 			// Note that what we're doing is not fully correct since the max force we can apply is 2 * max_lambda_f instead of max_lambda_f since we're solving axis independently
-			if (wcp.mFrictionConstraint1.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent1, -max_lambda_f, max_lambda_f))
+			if (wcp.mFrictionConstraint1.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t1, -max_lambda_f, max_lambda_f))
 				any_impulse_applied = true;
-			if (wcp.mFrictionConstraint2.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inTangent2, -max_lambda_f, max_lambda_f))
+			if (wcp.mFrictionConstraint2.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t2, -max_lambda_f, max_lambda_f))
 				any_impulse_applied = true;
 		}
 	}
@@ -1414,10 +1426,6 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 		EMotionType motion_type2 = body2.GetMotionType();
 		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
 
-		// Calculate tangents
-		Vec3 t1, t2;
-		constraint.GetTangents(t1, t2);
-
 		// Dispatch to the correct templated form
 		switch (motion_type1)
 		{
@@ -1425,15 +1433,15 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 			switch (motion_type2)
 			{
 			case EMotionType::Dynamic:
-				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2);
+				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2);
 				break;
 
 			case EMotionType::Kinematic:
-				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(constraint, motion_properties1, motion_properties2, t1, t2);
+				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(constraint, motion_properties1, motion_properties2);
 				break;
 
 			case EMotionType::Static:
-				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, t1, t2);
+				any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2);
 				break;
 
 			default:
@@ -1444,12 +1452,12 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 
 		case EMotionType::Kinematic:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2);
+			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2);
 			break;
 
 		case EMotionType::Static:
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, t1, t2);
+			any_impulse_applied |= sSolveVelocityConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2);
 			break;
 
 		default:

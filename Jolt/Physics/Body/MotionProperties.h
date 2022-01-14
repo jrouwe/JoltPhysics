@@ -95,6 +95,9 @@ public:
 	/// Multiply a vector with the inverse world space inertia tensor (\f$I_{world}^{-1}\f$). Zero if object is static or kinematic.
 	JPH_INLINE const Vec3	MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRotation, Vec3Arg inV) const;
 
+	/// Velocity of point inPoint (in center of mass space, e.g. on the surface of the body) of the body (unit: m/s)
+	JPH_INLINE const Vec3	GetPointVelocityCOM(Vec3Arg inPointRelativeToCOM) const			{ return mLinearVelocity + mAngularVelocity.Cross(inPointRelativeToCOM); }
+
 	////////////////////////////////////////////////////////////
 	// FUNCTIONS BELOW THIS LINE ARE FOR INTERNAL USE ONLY
 	////////////////////////////////////////////////////////////

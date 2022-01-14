@@ -108,7 +108,7 @@ public:
 	void					SetAngularVelocityClamped(Vec3Arg inAngularVelocity)			{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetAngularVelocityClamped(inAngularVelocity); }
 
 	/// Velocity of point inPoint (in center of mass space, e.g. on the surface of the body) of the body (unit: m/s)
-	inline const Vec3		GetPointVelocityCOM(Vec3Arg inPointRelativeToCOM) const			{ return !IsStatic()? mMotionProperties->GetLinearVelocity() + mMotionProperties->GetAngularVelocity().Cross(inPointRelativeToCOM) : Vec3::sZero(); }
+	inline const Vec3		GetPointVelocityCOM(Vec3Arg inPointRelativeToCOM) const			{ return !IsStatic()? mMotionProperties->GetPointVelocityCOM(inPointRelativeToCOM) : Vec3::sZero(); }
 
 	/// Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body (unit: m/s)
 	inline const Vec3		GetPointVelocity(Vec3Arg inPoint) const							{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return GetPointVelocityCOM(inPoint - mPosition); }
