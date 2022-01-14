@@ -217,6 +217,9 @@ private:
 #endif
 	inline uint8					GetNextSequenceNumber(int inBodyIndex)		{ return ++mBodySequenceNumbers[inBodyIndex]; }
 
+	/// Helper function to delete a body (which could actually be a BodyWithMotionProperties)
+	inline static void				sDeleteBody(Body *inBody);
+
 	/// List of pointers to all bodies. Contains invalid pointers for deleted bodies, check with sIsValidBodyPointer. Note that this array is reserved to the max bodies that is passed in the Init function so that adding bodies will not reallocate the array.
 	BodyVector						mBodies;
 

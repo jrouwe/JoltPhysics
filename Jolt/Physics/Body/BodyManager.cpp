@@ -21,6 +21,24 @@ namespace JPH {
 	thread_local bool BodyManager::sOverrideAllowDeactivation = false;
 #endif
 
+// Helper class that combines a body and its motion properties
+class BodyWithMotionProperties : public Body
+{
+public:
+	MotionProperties		mMotionProperties;
+};
+
+inline void BodyManager::sDeleteBody(Body *inBody)
+{
+	if (inBody->mMotionProperties != nullptr)
+	{
+		JPH_IF_ENABLE_ASSERTS(inBody->mMotionProperties = nullptr;)
+		delete static_cast<BodyWithMotionProperties *>(inBody);
+	}
+	else
+		delete inBody;
+}
+
 BodyManager::~BodyManager()
 {
 	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
@@ -28,7 +46,7 @@ BodyManager::~BodyManager()
 	// Destroy any bodies that are still alive
 	for (Body *b : mBodies)
 		if (sIsValidBodyPointer(b))
-			delete b;
+			sDeleteBody(b);
 
 	delete [] mActiveBodies;
 }
@@ -133,7 +151,17 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	uint8 seq_no = GetNextSequenceNumber(idx);
 
 	// Fill in basic properties
-	Body *body = new Body();
+	Body *body;
+	if (inBodyCreationSettings.HasMassProperties())
+	{
+		BodyWithMotionProperties *bmp = new BodyWithMotionProperties;
+		body = bmp;
+		body->mMotionProperties = &bmp->mMotionProperties;
+	}
+	else
+	{
+	 	body = new Body;
+	}
 	body->mID = BodyID(idx, seq_no);
 	body->mShape = inBodyCreationSettings.GetShape();
 	body->SetFriction(inBodyCreationSettings.mFriction);
@@ -148,7 +176,7 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	{
 		JPH_ASSERT(!inBodyCreationSettings.mIsSensor, "Sensors should be static and moved through BodyInterface::SetPosition/SetPositionAndRotation");
 
-		MotionProperties *mp = new MotionProperties();
+		MotionProperties *mp = body->mMotionProperties;
 		mp->SetLinearDamping(inBodyCreationSettings.mLinearDamping);
 		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);
 		mp->SetMaxLinearVelocity(inBodyCreationSettings.mMaxLinearVelocity);
@@ -160,8 +188,6 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 		mp->mIslandIndex = Body::cInactiveIndex;
 		JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
 		mp->SetMassProperties(inBodyCreationSettings.GetMassProperties());
-
-		body->mMotionProperties = mp;
 	}
 
 	// Position body
@@ -201,7 +227,7 @@ void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 		mBodyIDFreeListStart = (uintptr_t(idx) << cFreedBodyIndexShift) | cIsFreedBody;
 
 		// Free the body
-		delete body;
+		sDeleteBody(body);
 	}
 
 #if defined(_DEBUG) && defined(JPH_ENABLE_ASSERTS)

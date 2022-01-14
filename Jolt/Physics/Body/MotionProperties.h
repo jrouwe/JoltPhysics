@@ -138,15 +138,15 @@ private:
 
 	// 1st cache line
 	// 16 byte aligned
-	Vec3					mLinearVelocity;												///< World space linear velocity of the center of mass (m/s)
-	Vec3					mAngularVelocity;												///< World space angular velocity (rad/s)
+	Vec3					mLinearVelocity { Vec3::sZero() };								///< World space linear velocity of the center of mass (m/s)
+	Vec3					mAngularVelocity { Vec3::sZero() };								///< World space angular velocity (rad/s)
 	Vec3					mInvInertiaDiagonal;											///< Diagonal of inverse inertia matrix: D
 	Quat					mInertiaRotation;												///< Rotation (R) that takes inverse inertia diagonal to local space: Ibody^-1 = R * D * R^-1
 
 	// 2nd cache line
 	// 4 byte aligned
-	Float3					mForce;															///< Accumulated world space force (N). Note loaded through intrinsics so ensure that the 4 bytes after this are readable!
-	Float3					mTorque;														///< Accumulated world space torque (N m). Note loaded through intrinsics so ensure that the 4 bytes after this are readable!
+	Float3					mForce { 0, 0, 0 };												///< Accumulated world space force (N). Note loaded through intrinsics so ensure that the 4 bytes after this are readable!
+	Float3					mTorque { 0, 0, 0 };											///< Accumulated world space torque (N m). Note loaded through intrinsics so ensure that the 4 bytes after this are readable!
 	float					mInvMass;														///< Inverse mass of the object (1/kg)
 	float					mLinearDamping;													///< Linear damping: dv/dt = -c * v. c must be between 0 and 1 but is usually close to 0.
 	float					mAngularDamping;												///< Angular damping: dw/dt = -c * w. c must be between 0 and 1 but is usually close to 0.
