@@ -64,7 +64,7 @@ void MotionProperties::ClampAngularVelocity()
 		mAngularVelocity *= mMaxAngularVelocity / sqrt(len_sq); 
 }
 
-inline const Mat44 MotionProperties::GetLocalSpaceInverseInertia() const
+inline Mat44 MotionProperties::GetLocalSpaceInverseInertia() const
 { 
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
@@ -73,7 +73,7 @@ inline const Mat44 MotionProperties::GetLocalSpaceInverseInertia() const
 	return rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
 }
 
-const Mat44 MotionProperties::GetInverseInertiaForRotation(Mat44Arg inRotation) const		
+Mat44 MotionProperties::GetInverseInertiaForRotation(Mat44Arg inRotation) const		
 { 
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
@@ -82,7 +82,7 @@ const Mat44 MotionProperties::GetInverseInertiaForRotation(Mat44Arg inRotation) 
 	return rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
 }
 
-const Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRotation, Vec3Arg inV) const
+Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRotation, Vec3Arg inV) const
 { 
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
