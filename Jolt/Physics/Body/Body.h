@@ -34,7 +34,7 @@ public:
 							Body() = default;
 
 	/// Destructor							
-							~Body()															{ delete mMotionProperties; }
+							~Body()															{ JPH_ASSERT(mMotionProperties == nullptr); }
 
 #ifdef _DEBUG
 	/// Name of the body for debugging purposes
