@@ -13,6 +13,17 @@
 
 namespace JPH {
 
+static constexpr uint8 sClosestFeatureToActiveEdgesMask[] = {
+	0b000,		// 0b000: Invalid, guarded by an assert
+	0b101,		// 0b001: Vertex 1 -> edge 1 or 3
+	0b011,		// 0b010: Vertex 2 -> edge 1 or 2
+	0b001,		// 0b011: Vertex 1 & 2 -> edge 1
+	0b110,		// 0b100: Vertex 3 -> edge 2 or 3
+	0b100,		// 0b101: Vertex 1 & 3 -> edge 3
+	0b010,		// 0b110: Vertex 2 & 3 -> egde 2
+	// 0b111: Vertex 1, 2 & 3 -> interior, guarded by an if
+};
+
 CollideSphereVsTriangles::CollideSphereVsTriangles(const SphereShape *inShape1, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeID &inSubShapeID1, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector) :
 	mCollideShapeSettings(inCollideShapeSettings),
 	mCollector(ioCollector),
@@ -69,14 +80,17 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	Vec3 point1 = mRadius * penetration_axis;
 
 	// Check if we have enabled active edge detection
-	if (mCollideShapeSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111)
+	JPH_ASSERT(closest_feature != 0);
+	if (mCollideShapeSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive 
+		&& closest_feature != 0b111 // For an interior hit we should already have the right normal
+		&& (inActiveEdges & sClosestFeatureToActiveEdgesMask[closest_feature]) == 0) // If we didn't hit an active edge we should take the triangle normal
 	{
 		// Convert the active edge velocity hint to local space
 		Vec3 active_edge_movement_direction = mTransform2.Multiply3x3Transposed(mCollideShapeSettings.mActiveEdgeMovementDirection);
 
-		// Update the penetration axis to account for active edges
-		// Note that we flip the triangle normal as the penetration axis is pointing towards the triangle instead of away
-		penetration_axis = ActiveEdges::FixNormal(v0, v1, v2, back_facing? triangle_normal : -triangle_normal, inActiveEdges, point2, penetration_axis, active_edge_movement_direction);
+		// See ActiveEdges::FixNormal. If penetration_axis affects the movement less than the triangle normal we keep penetration_axis.
+		if (active_edge_movement_direction.Dot(penetration_axis) * triangle_normal.Length() >= active_edge_movement_direction.Dot(triangle_normal))
+			penetration_axis = back_facing? triangle_normal : -triangle_normal;
 	}
 
 	// Convert to world space
