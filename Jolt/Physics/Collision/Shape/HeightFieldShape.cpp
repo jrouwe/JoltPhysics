@@ -15,6 +15,7 @@
 #include <Physics/Collision/CastConvexVsTriangles.h>
 #include <Physics/Collision/CastSphereVsTriangles.h>
 #include <Physics/Collision/CollideConvexVsTriangles.h>
+#include <Physics/Collision/CollideSphereVsTriangles.h>
 #include <Physics/Collision/TransformedShape.h>
 #include <Physics/Collision/ActiveEdges.h>
 #include <Physics/Collision/CollisionDispatch.h>
@@ -1809,6 +1810,67 @@ void HeightFieldShape::sCollideConvexVsHeightField(const Shape *inShape1, const 
 	shape2->WalkHeightField(visitor);
 }
 
+void HeightFieldShape::sCollideSphereVsHeightField(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Get the shapes
+	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::Sphere);
+	JPH_ASSERT(inShape2->GetType() == EShapeType::HeightField);
+	const SphereShape *shape1 = static_cast<const SphereShape *>(inShape1);
+	const HeightFieldShape *shape2 = static_cast<const HeightFieldShape *>(inShape2);
+
+	struct Visitor : public CollideSphereVsTriangles
+	{
+		using CollideSphereVsTriangles::CollideSphereVsTriangles;
+
+		JPH_INLINE bool				ShouldAbort() const
+		{
+			return mCollector.ShouldEarlyOut();
+		}
+
+		JPH_INLINE bool				ShouldVisitRangeBlock([[maybe_unused]] int inStackTop) const
+		{
+			return true;
+		}
+
+		JPH_INLINE int				VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
+		{
+			// Scale the bounding boxes of this node
+			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
+			AABox4Scale(mScale2, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Test which nodes collide
+			UVec4 collides = AABox4VsSphere(mTransform2To1.GetTranslation(), Square(mRadius), bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Sort so the colliding ones go first
+			UVec4::sSort4True(collides, ioProperties);
+
+			// Return number of hits
+			return collides.CountTrues();
+		}
+
+		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
+		{			
+			// Create ID for triangle
+			SubShapeID triangle_sub_shape_id = mShape2->EncodeSubShapeID(mSubShapeIDCreator2, inX, inY, inTriangle);
+
+			// Determine active edges
+			uint8 active_edges = mShape2->GetEdgeFlags(inX, inY, inTriangle);
+
+			Collide(inV0, inV1, inV2, active_edges, triangle_sub_shape_id);
+		}
+
+		const HeightFieldShape *	mShape2;
+		SubShapeIDCreator			mSubShapeIDCreator2;
+	};
+
+	Visitor visitor(shape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
+	visitor.mShape2 = shape2;
+	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
+	shape2->WalkHeightField(visitor);
+}
+
 void HeightFieldShape::SaveBinaryState(StreamOut &inStream) const
 {
 	Shape::SaveBinaryState(inStream);
@@ -1882,6 +1944,7 @@ void HeightFieldShape::sRegister()
 	}
 
 	// Specialized collision functions
+	CollisionDispatch::sRegisterCollideShape(EShapeSubType::Sphere, EShapeSubType::HeightField, sCollideSphereVsHeightField);
 	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::HeightField, sCastSphereVsHeightField);
 }
 

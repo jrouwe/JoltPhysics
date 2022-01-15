@@ -188,6 +188,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideConvexVsTriangles.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollidePointResult.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSphereVsTriangles.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSphereVsTriangles.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionCollector.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionCollectorImpl.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionDispatch.cpp

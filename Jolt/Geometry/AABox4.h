@@ -28,24 +28,24 @@ JPH_INLINE UVec4 AABox4VsBox(const AABox &inBox1, Vec4Arg inBox2MinX, Vec4Arg in
 	return UVec4::sNot(UVec4::sOr(UVec4::sOr(nooverlapx, nooverlapy), nooverlapz));
 }
 
-/// Scale 4 bounding boxes
-JPH_INLINE void AABox4Scale(Vec3Arg inScale, Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, Vec4 &outBoundsMinX, Vec4 &outBoundsMinY, Vec4 &outBoundsMinZ, Vec4 &outBoundsMaxX, Vec4 &outBoundsMaxY, Vec4 &outBoundsMaxZ)
+/// Scale 4 axis aligned boxes
+JPH_INLINE void AABox4Scale(Vec3Arg inScale, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ, Vec4 &outBoundsMinX, Vec4 &outBoundsMinY, Vec4 &outBoundsMinZ, Vec4 &outBoundsMaxX, Vec4 &outBoundsMaxY, Vec4 &outBoundsMaxZ)
 {
 	Vec4 scale_x = inScale.SplatX();
-	Vec4 scaled_min_x = scale_x * inBoundsMinX;
-	Vec4 scaled_max_x = scale_x * inBoundsMaxX;
+	Vec4 scaled_min_x = scale_x * inBoxMinX;
+	Vec4 scaled_max_x = scale_x * inBoxMaxX;
 	outBoundsMinX = Vec4::sMin(scaled_min_x, scaled_max_x); // Negative scale can flip min and max
 	outBoundsMaxX = Vec4::sMax(scaled_min_x, scaled_max_x);
 
 	Vec4 scale_y = inScale.SplatY();
-	Vec4 scaled_min_y = scale_y * inBoundsMinY;
-	Vec4 scaled_max_y = scale_y * inBoundsMaxY;
+	Vec4 scaled_min_y = scale_y * inBoxMinY;
+	Vec4 scaled_max_y = scale_y * inBoxMaxY;
 	outBoundsMinY = Vec4::sMin(scaled_min_y, scaled_max_y);
 	outBoundsMaxY = Vec4::sMax(scaled_min_y, scaled_max_y);
 
 	Vec4 scale_z = inScale.SplatZ();
-	Vec4 scaled_min_z = scale_z * inBoundsMinZ;
-	Vec4 scaled_max_z = scale_z * inBoundsMaxZ;
+	Vec4 scaled_min_z = scale_z * inBoxMinZ;
+	Vec4 scaled_max_z = scale_z * inBoxMaxZ;
 	outBoundsMinZ = Vec4::sMin(scaled_min_z, scaled_max_z);
 	outBoundsMaxZ = Vec4::sMax(scaled_min_z, scaled_max_z);
 }
@@ -186,6 +186,25 @@ JPH_INLINE UVec4 AABox4VsBox(Mat44Arg inOrientation, Vec3Arg inHalfExtents, Vec4
 JPH_INLINE UVec4 AABox4VsBox(const OrientedBox &inBox, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ, float inEpsilon = 1.0e-6f)
 {
 	return AABox4VsBox(inBox.mOrientation, inBox.mHalfExtents, inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ, inEpsilon);
+}
+
+/// Test 4 AABoxes vs a sphere
+JPH_INLINE UVec4 AABox4VsSphere(Vec4Arg inCenterX, Vec4Arg inCenterY, Vec4Arg inCenterZ, Vec4Arg inRadiusSq, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
+{
+	// Get closest point on box
+	Vec4 closest_x = Vec4::sMin(Vec4::sMax(inCenterX, inBoxMinX), inBoxMaxX);
+	Vec4 closest_y = Vec4::sMin(Vec4::sMax(inCenterY, inBoxMinY), inBoxMaxY);
+	Vec4 closest_z = Vec4::sMin(Vec4::sMax(inCenterZ, inBoxMinZ), inBoxMaxZ);
+
+	// Test the distance from the center of the sphere to the box is smaller than the radius
+	Vec4 distance_sq = Square(closest_x - inCenterX) + Square(closest_y - inCenterY) + Square(closest_z - inCenterZ);
+	return Vec4::sLessOrEqual(distance_sq, inRadiusSq);
+}
+
+/// Test 4 AABoxes vs a sphere
+JPH_INLINE UVec4 AABox4VsSphere(Vec3 inCenter, float inRadiusSq, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
+{
+	return AABox4VsSphere(inCenter.SplatX(), inCenter.SplatY(), inCenter.SplatZ(), Vec4::sReplicate(inRadiusSq), inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ);
 }
 
 } // JPH

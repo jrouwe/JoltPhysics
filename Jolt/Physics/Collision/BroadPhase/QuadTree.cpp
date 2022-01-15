@@ -1181,14 +1181,8 @@ void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyC
 		/// Visit nodes, returns number of hits found and sorts ioChildNodeIDs so that they are at the beginning of the vector.
 		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioChildNodeIDs, int inStackTop) const
 		{
-			// Get closest point on box
-			Vec4 closest_x = Vec4::sMin(Vec4::sMax(mCenterX, inBoundsMinX), inBoundsMaxX);
-			Vec4 closest_y = Vec4::sMin(Vec4::sMax(mCenterY, inBoundsMinY), inBoundsMaxY);
-			Vec4 closest_z = Vec4::sMin(Vec4::sMax(mCenterZ, inBoundsMinZ), inBoundsMaxZ);
-
-			// Test the distance from the center of the sphere to the box is smaller than the radius
-			Vec4 distance_sq = Square(closest_x - mCenterX) + Square(closest_y - mCenterY) + Square(closest_z - mCenterZ);
-			UVec4 hitting = Vec4::sLessOrEqual(distance_sq, mRadiusSq);
+			// Test 4 boxes vs sphere
+			UVec4 hitting = AABox4VsSphere(mCenterX, mCenterY, mCenterZ, mRadiusSq, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
 			// Count how many results are hitting
 			int num_results = hitting.CountTrues();
