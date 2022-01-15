@@ -1841,7 +1841,7 @@ void HeightFieldShape::sCollideSphereVsHeightField(const Shape *inShape1, const 
 			AABox4Scale(mScale2, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
 
 			// Test which nodes collide
-			UVec4 collides = AABox4VsSphere(mTransform2To1.GetTranslation(), Square(mRadius), bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+			UVec4 collides = AABox4VsSphere(mTransform2To1.GetTranslation(), Square(mRadius + mCollideShapeSettings.mMaxSeparationDistance), bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
 
 			// Sort so the colliding ones go first
 			UVec4::sSort4True(collides, ioProperties);

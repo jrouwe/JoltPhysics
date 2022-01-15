@@ -54,15 +54,15 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	// Check if we collide with the sphere
 	uint32 closest_feature;
 	Vec3 point2 = ClosestPoint::GetClosestPointOnTriangle(v0, v1, v2, closest_feature);
-	float penetration_depth = mRadius - point2.Length() - mCollideShapeSettings.mMaxSeparationDistance;
-	if (penetration_depth < 0.0f || -penetration_depth >= mCollector.GetEarlyOutFraction())
+	float penetration_depth = mRadius - point2.Length();
+	if (penetration_depth < -mCollideShapeSettings.mMaxSeparationDistance || -penetration_depth >= mCollector.GetEarlyOutFraction())
 		return;
 
-	// Calculate the point on the sphere
-	Vec3 point1 = (mRadius + mCollideShapeSettings.mMaxSeparationDistance) * point2.NormalizedOr(Vec3::sAxisX());
+	// Calculate penetration axis, direction along which to push 2 to move it out of collision (this is always away from the sphere center)
+	Vec3 penetration_axis = point2.NormalizedOr(Vec3::sAxisY());
 
-	// Calculate penetration axis
-	Vec3 penetration_axis = point1 - point2;
+	// Calculate the point on the sphere
+	Vec3 point1 = mRadius * penetration_axis;
 
 	// Check if we have enabled active edge detection
 	if (mCollideShapeSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111)
