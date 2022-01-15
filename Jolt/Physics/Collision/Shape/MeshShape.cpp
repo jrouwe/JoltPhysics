@@ -51,6 +51,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mTriangleVertices)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mIndexedTriangles)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
+	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaxTrianglesPerLeaf)
 }
 
 // Codecs this mesh shape is using
