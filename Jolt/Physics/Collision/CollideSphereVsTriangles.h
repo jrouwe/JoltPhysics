@@ -40,9 +40,11 @@ protected:
 	Vec3							mScale2;								///< The scale of the shape (in shape local space) of the shape we're colliding against
 	Mat44							mTransform1;							///< Transform of the shape we're colliding with
 	Mat44							mTransform2To1;							///< Transform that takes a point in space of the colliding shape to the shape we're colliding with
+	Vec3							mSphereCenterIn2;						///< The center of the sphere in the space of 2
 	SubShapeID						mSubShapeID1;							///< Sub shape ID of colliding shape
 	float							mScaleSign2;							///< Sign of the scale of object 2, -1 if object is inside out, 1 if not
 	float							mRadius;								///< Radius of the sphere
+	float							mRadiusPlusMaxSeparationSq;				///< (Radius + Max SeparationDistance)^2
 };
 
 } // JPH

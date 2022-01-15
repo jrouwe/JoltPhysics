@@ -25,6 +25,7 @@ CollideSphereVsTriangles::CollideSphereVsTriangles(const SphereShape *inShape1, 
 	Mat44 inverse_transform2 = inCenterOfMassTransform2.InversedRotationTranslation();
 	Mat44 transform1_to_2 = inverse_transform2 * inCenterOfMassTransform1;
 	mTransform2To1 = transform1_to_2.InversedRotationTranslation();
+	mSphereCenterIn2 = transform1_to_2.GetTranslation();
 
 	// Determine if shape 2 is inside out or not
 	mScaleSign2 = ScaleHelpers::IsInsideOut(inScale2)? -1.0f : 1.0f;
@@ -32,6 +33,7 @@ CollideSphereVsTriangles::CollideSphereVsTriangles(const SphereShape *inShape1, 
 	// Check that the sphere is uniformly scaled
 	JPH_ASSERT(ScaleHelpers::IsUniformScale(inScale1.Abs()));
 	mRadius = abs(inScale1.GetX()) * inShape1->GetRadius();
+	mRadiusPlusMaxSeparationSq = Square(mRadius + inCollideShapeSettings.mMaxSeparationDistance);
 }
 
 void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, const SubShapeID &inSubShapeID2)
@@ -54,8 +56,13 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	// Check if we collide with the sphere
 	uint32 closest_feature;
 	Vec3 point2 = ClosestPoint::GetClosestPointOnTriangle(v0, v1, v2, closest_feature);
-	float penetration_depth = mRadius - point2.Length();
-	if (penetration_depth < -mCollideShapeSettings.mMaxSeparationDistance || -penetration_depth >= mCollector.GetEarlyOutFraction())
+	float point2_len_sq = point2.LengthSq();
+	if (point2_len_sq > mRadiusPlusMaxSeparationSq)
+		return;
+
+	// Calculate penetration depth
+	float penetration_depth = mRadius - sqrt(point2_len_sq);
+	if (-penetration_depth >= mCollector.GetEarlyOutFraction())
 		return;
 
 	// Calculate penetration axis, direction along which to push 2 to move it out of collision (this is always away from the sphere center)
