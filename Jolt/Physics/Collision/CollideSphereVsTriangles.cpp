@@ -18,14 +18,11 @@ CollideSphereVsTriangles::CollideSphereVsTriangles(const SphereShape *inShape1, 
 	mCollector(ioCollector),
 	mShape1(inShape1),
 	mScale2(inScale2),
-	mTransform1(inCenterOfMassTransform1),
+	mTransform2(inCenterOfMassTransform2),
 	mSubShapeID1(inSubShapeID1)
 {
-	// Get transforms
-	Mat44 inverse_transform2 = inCenterOfMassTransform2.InversedRotationTranslation();
-	Mat44 transform1_to_2 = inverse_transform2 * inCenterOfMassTransform1;
-	mTransform2To1 = transform1_to_2.InversedRotationTranslation();
-	mSphereCenterIn2 = transform1_to_2.GetTranslation();
+	// Calculate the center of the sphere in the space of 2
+	mSphereCenterIn2 = inCenterOfMassTransform2.Multiply3x3Transposed(inCenterOfMassTransform1.GetTranslation() - inCenterOfMassTransform2.GetTranslation());
 
 	// Determine if shape 2 is inside out or not
 	mScaleSign2 = ScaleHelpers::IsInsideOut(inScale2)? -1.0f : 1.0f;
@@ -40,10 +37,10 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Scale triangle and transform it to the space of 1
-	Vec3 v0 = mTransform2To1 * (mScale2 * inV0); 
-	Vec3 v1 = mTransform2To1 * (mScale2 * inV1);
-	Vec3 v2 = mTransform2To1 * (mScale2 * inV2);
+	// Scale triangle and make it relative to the center of the sphere
+	Vec3 v0 = mScale2 * inV0 - mSphereCenterIn2; 
+	Vec3 v1 = mScale2 * inV1 - mSphereCenterIn2;
+	Vec3 v2 = mScale2 * inV2 - mSphereCenterIn2;
 
 	// Calculate triangle normal
 	Vec3 triangle_normal = mScaleSign2 * (v1 - v0).Cross(v2 - v0);
@@ -75,7 +72,7 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	if (mCollideShapeSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive && inActiveEdges != 0b111)
 	{
 		// Convert the active edge velocity hint to local space
-		Vec3 active_edge_movement_direction = mTransform1.Multiply3x3Transposed(mCollideShapeSettings.mActiveEdgeMovementDirection);
+		Vec3 active_edge_movement_direction = mTransform2.Multiply3x3Transposed(mCollideShapeSettings.mActiveEdgeMovementDirection);
 
 		// Update the penetration axis to account for active edges
 		// Note that we flip the triangle normal as the penetration axis is pointing towards the triangle instead of away
@@ -83,12 +80,14 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	}
 
 	// Convert to world space
-	point1 = mTransform1 * point1;
-	point2 = mTransform1 * point2;
-	Vec3 penetration_axis_world = mTransform1.Multiply3x3(penetration_axis);
+	point1 = mTransform2 * (mSphereCenterIn2 + point1);
+	point2 = mTransform2 * (mSphereCenterIn2 + point2);
+	Vec3 penetration_axis_world = mTransform2.Multiply3x3(penetration_axis);
 
 	// Create collision result
 	CollideShapeResult result(point1, point2, penetration_axis_world, penetration_depth, mSubShapeID1, inSubShapeID2, TransformedShape::sGetBodyID(mCollector.GetContext()));
+
+	// Note: We don't gather faces here because that's only useful if both shapes have a face. Since the sphere always has only 1 contact point, the manifold is always a point.
 
 	// Notify the collector
 	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)

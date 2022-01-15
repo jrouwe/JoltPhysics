@@ -46,6 +46,8 @@ void CastSphereVsTriangles::AddHit(bool inBackFacing, const SubShapeID &inSubSha
 	// Its a hit, store the sub shape id's
 	ShapeCastResult result(inFraction, contact_point_a, contact_point_b, contact_normal_world, inBackFacing, mSubShapeIDCreator1.GetID(), inSubShapeID2, TransformedShape::sGetBodyID(mCollector.GetContext()));
 
+	// Note: We don't gather faces here because that's only useful if both shapes have a face. Since the sphere always has only 1 contact point, the manifold is always a point.
+
 	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 	mCollector.AddHit(result);
 }
