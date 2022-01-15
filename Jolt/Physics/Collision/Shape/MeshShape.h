@@ -42,6 +42,10 @@ public:
 
 	/// Materials assigned to the triangles. Each triangle specifies which material it uses through its mMaterialIndex
 	PhysicsMaterialList				mMaterials;
+
+	/// Maximum number of triangles in each leaf of the axis aligned box tree. This is a balance between memory and performance. Can be in the range [1, MeshShape::MaxTrianglesPerLeaf].
+	/// Sensible values are between 4 (for better performance) and 8 (for less memory usage).
+	uint							mMaxTrianglesPerLeaf = 8;
 };
 
 /// A mesh shape, consisting of triangles. Cannot be used as a dynamic object.

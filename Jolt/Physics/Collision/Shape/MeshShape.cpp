@@ -165,6 +165,13 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 			}
 	}
 
+	// Check max triangles
+	if (inSettings.mMaxTrianglesPerLeaf < 1 || inSettings.mMaxTrianglesPerLeaf > MaxTrianglesPerLeaf)
+	{
+		outResult.SetError("Invalid max triangles per leaf");
+		return;
+	}
+
 	// Fill in active edge bits
 	IndexedTriangleList indexed_triangles = inSettings.mIndexedTriangles; // Copy indices since we're adding the 'active edge' flag
 	FindActiveEdges(inSettings.mTriangleVertices, indexed_triangles);
@@ -173,7 +180,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	TriangleSplitterBinning splitter(inSettings.mTriangleVertices, indexed_triangles);
 	
 	// Build tree
-	AABBTreeBuilder builder(splitter, MaxTrianglesPerLeaf);
+	AABBTreeBuilder builder(splitter, inSettings.mMaxTrianglesPerLeaf);
 	AABBTreeBuilderStats builder_stats;
 	AABBTreeBuilder::Node *root = builder.Build(builder_stats);
 
