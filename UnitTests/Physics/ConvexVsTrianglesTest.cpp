@@ -1,0 +1,156 @@
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#include "UnitTestFramework.h"
+#include "PhysicsTestContext.h"
+#include <Physics/Collision/Shape/SphereShape.h>
+#include <Physics/Collision/CollideShape.h>
+#include <Physics/Collision/CollisionCollectorImpl.h>
+#include <Physics/Collision/CollideConvexVsTriangles.h>
+#include <Physics/Collision/CollideSphereVsTriangles.h>
+
+TEST_SUITE("ConvexVsTrianglesTest")
+{
+	static constexpr float cEdgeLength = 4.0f;
+
+	template <class Collider>
+	static void sCheckCollision(Vec3Arg inCenter, float inRadius, uint8 inActiveEdges, Vec3Arg inExpectedContactOn1, Vec3Arg inExpectedContactOn2, Vec3Arg inExpectedPenetrationAxis, float inExpectedPenetrationDepth)
+	{
+		// Our sphere
+		Ref<SphereShape> sphere = new SphereShape(inRadius);
+
+		// Our default triangle
+		Vec3 v1(0, 0, 0);
+		Vec3 v2(0, 0, cEdgeLength);
+		Vec3 v3(cEdgeLength, 0, 0);
+
+		// A semi random transform to transform the whole query
+		Mat44 transform = Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), Vec3(1, 2, 3));
+		Mat44 inv_transform = transform.InversedRotationTranslation();
+		
+		// Create settings
+		CollideShapeSettings settings;
+		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+		
+		// Collide sphere
+		AllHitCollisionCollector<CollideShapeCollector> collector;
+		Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform * Mat44::sTranslation(inCenter), transform, SubShapeID(), settings, collector);
+		collider.Collide(v1, v2, v3, inActiveEdges, SubShapeID());
+
+		// Test result
+		CHECK(collector.mHits.size() == 1);
+		const CollideShapeResult &hit = collector.mHits[0];
+		Vec3 contact1 = inv_transform * hit.mContactPointOn1;
+		Vec3 contact2 = inv_transform * hit.mContactPointOn2;
+		Vec3 pen_axis = transform.Multiply3x3Transposed(hit.mPenetrationAxis).Normalized();
+		Vec3 expected_pen_axis = inExpectedPenetrationAxis.Normalized();
+		CHECK_APPROX_EQUAL(contact1, inExpectedContactOn1, 1.0e-4f);
+		CHECK_APPROX_EQUAL(contact2, inExpectedContactOn2, 1.0e-4f);
+		CHECK_APPROX_EQUAL(pen_axis, expected_pen_axis, 1.0e-4f);
+		CHECK_APPROX_EQUAL(hit.mPenetrationDepth, inExpectedPenetrationDepth, 1.0e-4f);
+	}
+
+	// Compares CollideShapeResult for two spheres with given positions and radii
+	template <class Collider>
+	static void sTestConvexVsTriangles()
+	{
+		const float cRadius = 0.5f;
+		const float cRadiusRS2 = cRadius / sqrt(2.0f);
+		const float cDistanceToTriangle = 0.1f;
+		const float cDistanceToTriangleRS2 = cDistanceToTriangle / sqrt(2.0f);
+		const float cEpsilon = 1.0e-6f; // A small epsilon to ensure we hit the front side
+
+		for (uint8 active_edges = 0; active_edges <= 0b111; ++active_edges)
+		{
+			{
+				// Hit interior from front side
+				Vec3 expected2(0.25f * cEdgeLength, 0, 0.25f * cEdgeLength);
+				Vec3 sphere_center = expected2 + Vec3(0, cDistanceToTriangle, 0);
+				Vec3 expected1 = sphere_center + Vec3(0, -cRadius, 0);
+				Vec3 pen_axis(0, -1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// Hit interior from back side
+				Vec3 expected2(0.25f * cEdgeLength, 0, 0.25f * cEdgeLength);
+				Vec3 sphere_center = expected2 + Vec3(0, -cDistanceToTriangle, 0);
+				Vec3 expected1 = sphere_center + Vec3(0, cRadius, 0);
+				Vec3 pen_axis(0, 1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// Hit edge 1
+				Vec3 expected2(0, 0, 0.5f * cEdgeLength);
+				Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangle, cEpsilon, 0);
+				Vec3 expected1 = sphere_center + Vec3(cRadius, 0, 0);
+				Vec3 pen_axis = (active_edges & 0b001)? Vec3(1, 0, 0) : Vec3(0, -1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// Hit edge 2
+				Vec3 expected2(0.5f * cEdgeLength, 0, 0.5f * cEdgeLength);
+				Vec3 sphere_center = expected2 + Vec3(cDistanceToTriangleRS2, cEpsilon, cDistanceToTriangleRS2);
+				Vec3 expected1 = sphere_center - Vec3(cRadiusRS2, 0, cRadiusRS2);
+				Vec3 pen_axis = (active_edges & 0b010)? Vec3(-1, 0, -1) : Vec3(0, -1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// Hit edge 3
+				Vec3 expected2(0.5f * cEdgeLength, 0, 0);
+				Vec3 sphere_center = expected2 + Vec3(0, cEpsilon, -cDistanceToTriangle);
+				Vec3 expected1 = sphere_center + Vec3(0, 0, cRadius);
+				Vec3 pen_axis = (active_edges & 0b100)? Vec3(0, 0, 1) : Vec3(0, -1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// Hit vertex 1
+				Vec3 expected2(0, 0, 0);
+				Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangleRS2, cEpsilon, -cDistanceToTriangleRS2);
+				Vec3 expected1 = sphere_center + Vec3(cRadiusRS2, 0, cRadiusRS2);
+				Vec3 pen_axis = (active_edges & 0b101)? Vec3(1, 0, 1) : Vec3(0, -1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// Hit vertex 2
+				Vec3 expected2(0, 0, cEdgeLength);
+				Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangleRS2, cEpsilon, cDistanceToTriangleRS2);
+				Vec3 expected1 = sphere_center + Vec3(cRadiusRS2, 0, -cRadiusRS2);
+				Vec3 pen_axis = (active_edges & 0b011)? Vec3(1, 0, -1) : Vec3(0, -1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// Hit vertex 3
+				Vec3 expected2(cEdgeLength, 0, 0);
+				Vec3 sphere_center = expected2 + Vec3(cDistanceToTriangleRS2, cEpsilon, -cDistanceToTriangleRS2);
+				Vec3 expected1 = sphere_center + Vec3(-cRadiusRS2, 0, cRadiusRS2);
+				Vec3 pen_axis = (active_edges & 0b110)? Vec3(-1, 0, 1) : Vec3(0, -1, 0);
+				float pen_depth = cRadius - cDistanceToTriangle;
+				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+		}
+	}
+
+	TEST_CASE("TestConvexVsTriangles")
+	{
+		sTestConvexVsTriangles<CollideConvexVsTriangles>();
+	}
+
+	TEST_CASE("TestSphereVsTriangles")
+	{
+		sTestConvexVsTriangles<CollideSphereVsTriangles>();
+	}
+}
