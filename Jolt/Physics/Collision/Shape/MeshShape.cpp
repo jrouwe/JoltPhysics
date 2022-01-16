@@ -7,12 +7,14 @@
 #include <Physics/Collision/Shape/MeshShape.h>
 #include <Physics/Collision/Shape/ConvexShape.h>
 #include <Physics/Collision/Shape/ScaleHelpers.h>
+#include <Physics/Collision/Shape/SphereShape.h>
 #include <Physics/Collision/RayCast.h>
 #include <Physics/Collision/ShapeCast.h>
 #include <Physics/Collision/ShapeFilter.h>
 #include <Physics/Collision/CastResult.h>
 #include <Physics/Collision/CollidePointResult.h>
 #include <Physics/Collision/CollideConvexVsTriangles.h>
+#include <Physics/Collision/CollideSphereVsTriangles.h>
 #include <Physics/Collision/CastConvexVsTriangles.h>
 #include <Physics/Collision/CastSphereVsTriangles.h>
 #include <Physics/Collision/TransformedShape.h>
@@ -49,6 +51,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mTriangleVertices)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mIndexedTriangles)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
+	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaxTrianglesPerLeaf)
 }
 
 // Codecs this mesh shape is using
@@ -163,6 +166,13 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 			}
 	}
 
+	// Check max triangles
+	if (inSettings.mMaxTrianglesPerLeaf < 1 || inSettings.mMaxTrianglesPerLeaf > MaxTrianglesPerLeaf)
+	{
+		outResult.SetError("Invalid max triangles per leaf");
+		return;
+	}
+
 	// Fill in active edge bits
 	IndexedTriangleList indexed_triangles = inSettings.mIndexedTriangles; // Copy indices since we're adding the 'active edge' flag
 	FindActiveEdges(inSettings.mTriangleVertices, indexed_triangles);
@@ -171,7 +181,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	TriangleSplitterBinning splitter(inSettings.mTriangleVertices, indexed_triangles);
 	
 	// Build tree
-	AABBTreeBuilder builder(splitter, MaxTrianglesPerLeaf);
+	AABBTreeBuilder builder(splitter, inSettings.mMaxTrianglesPerLeaf);
 	AABBTreeBuilderStats builder_stats;
 	AABBTreeBuilder::Node *root = builder.Build(builder_stats);
 
@@ -1040,6 +1050,56 @@ void MeshShape::sCollideConvexVsMesh(const Shape *inShape1, const Shape *inShape
 	shape2->WalkTreePerTriangle(inSubShapeIDCreator2, visitor);
 }
 
+void MeshShape::sCollideSphereVsMesh(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Get the shapes
+	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::Sphere);
+	JPH_ASSERT(inShape2->GetType() == EShapeType::Mesh);
+	const SphereShape *shape1 = static_cast<const SphereShape *>(inShape1);
+	const MeshShape *shape2 = static_cast<const MeshShape *>(inShape2);
+
+	struct Visitor : public CollideSphereVsTriangles
+	{
+		using CollideSphereVsTriangles::CollideSphereVsTriangles;
+
+		JPH_INLINE bool	ShouldAbort() const
+		{
+			return mCollector.ShouldEarlyOut();
+		}
+
+		JPH_INLINE bool	ShouldVisitNode([[maybe_unused]] int inStackTop) const
+		{
+			return true;
+		}
+
+		JPH_INLINE int	VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
+		{
+			// Scale the bounding boxes of this node
+			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
+			AABox4Scale(mScale2, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Test which nodes collide
+			UVec4 collides = AABox4VsSphere(mSphereCenterIn2, mRadiusPlusMaxSeparationSq, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Sort so the colliding ones go first
+			UVec4::sSort4True(collides, ioProperties);
+
+			// Return number of hits
+			return collides.CountTrues();
+		}
+
+		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
+		{
+			Collide(inV0, inV1, inV2, inActiveEdges, inSubShapeID2);
+		}
+	};
+
+	Visitor visitor(shape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
+	shape2->WalkTreePerTriangle(inSubShapeIDCreator2, visitor);
+}
+
 void MeshShape::SaveBinaryState(StreamOut &inStream) const
 {
 	Shape::SaveBinaryState(inStream);
@@ -1114,6 +1174,7 @@ void MeshShape::sRegister()
 	}
 
 	// Specialized collision functions
+	CollisionDispatch::sRegisterCollideShape(EShapeSubType::Sphere, EShapeSubType::Mesh, sCollideSphereVsMesh);
 	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::Mesh, sCastSphereVsMesh);
 }
 

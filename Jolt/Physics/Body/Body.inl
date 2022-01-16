@@ -5,21 +5,21 @@
 
 namespace JPH {
 
-const Mat44 Body::GetWorldTransform() const
+Mat44 Body::GetWorldTransform() const
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
 
 	return Mat44::sRotationTranslation(mRotation, GetPosition());
 }
 
-const Mat44 Body::GetCenterOfMassTransform() const
+Mat44 Body::GetCenterOfMassTransform() const
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
 
 	return Mat44::sRotationTranslation(mRotation, mPosition);
 }
 
-const Mat44 Body::GetInverseCenterOfMassTransform() const
+Mat44 Body::GetInverseCenterOfMassTransform() const
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
 

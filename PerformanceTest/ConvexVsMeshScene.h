@@ -63,13 +63,17 @@ public:
 				next++;
 			}
 
+		// Create mesh shape settings
+		Ref<MeshShapeSettings> mesh_shape_settings = new MeshShapeSettings(vertices, indices);
+		mesh_shape_settings->mMaxTrianglesPerLeaf = 4;
+
 		// Create mesh shape creation settings
 		mMeshSettings.mMotionType = EMotionType::Static;
 		mMeshSettings.mObjectLayer = Layers::NON_MOVING;
 		mMeshSettings.mPosition = Vec3(-center, max_height, -center);
 		mMeshSettings.mFriction = 0.5f;
 		mMeshSettings.mRestitution = 0.6f;
-		mMeshSettings.SetShapeSettings(new MeshShapeSettings(vertices, indices));
+		mMeshSettings.SetShapeSettings(mesh_shape_settings);
 
 		// Create other shapes
 		mShapes = {

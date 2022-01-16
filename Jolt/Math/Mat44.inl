@@ -295,7 +295,16 @@ Vec3 Mat44::Multiply3x3(Vec3Arg inV) const
 
 Vec3 Mat44::Multiply3x3Transposed(Vec3Arg inV) const
 {
+#if defined(JPH_USE_SSE)
+	__m128 x = _mm_dp_ps(mCol[0].mValue, inV.mValue, 0x7f);
+	__m128 y = _mm_dp_ps(mCol[1].mValue, inV.mValue, 0x7f);
+	__m128 xy = _mm_blend_ps(x, y, 0b0010);
+	__m128 z = _mm_dp_ps(mCol[2].mValue, inV.mValue, 0x7f);
+	__m128 xyzz = _mm_blend_ps(xy, z, 0b1100);
+	return xyzz;
+#else
 	return Transposed3x3().Multiply3x3(inV);
+#endif
 }
 
 Mat44 Mat44::Multiply3x3(Mat44Arg inM) const

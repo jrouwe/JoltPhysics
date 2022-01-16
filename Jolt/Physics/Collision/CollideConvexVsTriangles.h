@@ -7,7 +7,6 @@
 #include <Physics/Collision/Shape/Shape.h>
 #include <Physics/Collision/Shape/SubShapeID.h>
 #include <Physics/Collision/Shape/ConvexShape.h>
-#include <atomic>
 
 namespace JPH {
 
