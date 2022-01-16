@@ -90,7 +90,7 @@ public:
 	void					SetRestitution(float inRestitution)								{ JPH_ASSERT(inRestitution >= 0.0f && inRestitution <= 1.0f); mRestitution = inRestitution; }
 
 	/// Get world space linear velocity of the center of mass (unit: m/s)
-	inline const Vec3		GetLinearVelocity() const										{ return !IsStatic()? mMotionProperties->GetLinearVelocity() : Vec3::sZero(); }
+	inline Vec3				GetLinearVelocity() const										{ return !IsStatic()? mMotionProperties->GetLinearVelocity() : Vec3::sZero(); }
 
 	/// Set world space linear velocity of the center of mass (unit: m/s)
 	void					SetLinearVelocity(Vec3Arg inLinearVelocity)						{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetLinearVelocity(inLinearVelocity); }
@@ -99,7 +99,7 @@ public:
 	void					SetLinearVelocityClamped(Vec3Arg inLinearVelocity)				{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetLinearVelocityClamped(inLinearVelocity); }
 
 	/// Get world space angular velocity of the center of mass (unit: rad/s)
-	inline const Vec3		GetAngularVelocity() const										{ return !IsStatic()? mMotionProperties->GetAngularVelocity() : Vec3::sZero(); }
+	inline Vec3				GetAngularVelocity() const										{ return !IsStatic()? mMotionProperties->GetAngularVelocity() : Vec3::sZero(); }
 
 	/// Set world space angular velocity of the center of mass (unit: rad/s)
 	void					SetAngularVelocity(Vec3Arg inAngularVelocity)					{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetAngularVelocity(inAngularVelocity); }
@@ -108,10 +108,10 @@ public:
 	void					SetAngularVelocityClamped(Vec3Arg inAngularVelocity)			{ JPH_ASSERT(!IsStatic()); mMotionProperties->SetAngularVelocityClamped(inAngularVelocity); }
 
 	/// Velocity of point inPoint (in center of mass space, e.g. on the surface of the body) of the body (unit: m/s)
-	inline const Vec3		GetPointVelocityCOM(Vec3Arg inPointRelativeToCOM) const			{ return !IsStatic()? mMotionProperties->GetPointVelocityCOM(inPointRelativeToCOM) : Vec3::sZero(); }
+	inline Vec3				GetPointVelocityCOM(Vec3Arg inPointRelativeToCOM) const			{ return !IsStatic()? mMotionProperties->GetPointVelocityCOM(inPointRelativeToCOM) : Vec3::sZero(); }
 
 	/// Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body (unit: m/s)
-	inline const Vec3		GetPointVelocity(Vec3Arg inPoint) const							{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return GetPointVelocityCOM(inPoint - mPosition); }
+	inline Vec3				GetPointVelocity(Vec3Arg inPoint) const							{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return GetPointVelocityCOM(inPoint - mPosition); }
 
 	/// Add force (unit: N) for the next time step, will be reset after the next call to PhysicsSimulation::Update
 	inline void				AddForce(Vec3Arg inForce)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mForce) + inForce).StoreFloat3(&mMotionProperties->mForce); }
@@ -154,22 +154,22 @@ public:
 	inline const Shape *	GetShape() const												{ return mShape; }
 
 	/// World space position of the body
-	inline const Vec3		GetPosition() const												{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mPosition - mRotation * mShape->GetCenterOfMass(); }
+	inline Vec3				GetPosition() const												{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mPosition - mRotation * mShape->GetCenterOfMass(); }
 
 	/// World space rotation of the body
-	inline const Quat 		GetRotation() const												{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mRotation; }
+	inline Quat 			GetRotation() const												{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mRotation; }
 
 	/// Calculates the transform of this body
-	inline const Mat44		GetWorldTransform() const;
+	inline Mat44			GetWorldTransform() const;
 
 	/// Gets the world space position of this body's center of mass
 	inline Vec3 			GetCenterOfMassPosition() const									{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mPosition; }
 
 	/// Calculates the transform for this body's center of mass
-	inline const Mat44		GetCenterOfMassTransform() const;
+	inline Mat44			GetCenterOfMassTransform() const;
 
 	/// Calculates the inverse of the transform for this body's center of mass
-	inline const Mat44		GetInverseCenterOfMassTransform() const;
+	inline Mat44			GetInverseCenterOfMassTransform() const;
 
 	/// Get world space bounding box
 	inline const AABox &	GetWorldSpaceBounds() const										{ return mBounds; }
