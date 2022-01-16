@@ -89,8 +89,9 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 		Vec3 active_edge_movement_direction = mTransform2.Multiply3x3Transposed(mCollideShapeSettings.mActiveEdgeMovementDirection);
 
 		// See ActiveEdges::FixNormal. If penetration_axis affects the movement less than the triangle normal we keep penetration_axis.
-		if (active_edge_movement_direction.Dot(penetration_axis) * triangle_normal.Length() >= active_edge_movement_direction.Dot(triangle_normal))
-			penetration_axis = back_facing? triangle_normal : -triangle_normal;
+		Vec3 new_penetration_axis = back_facing? triangle_normal : -triangle_normal;
+		if (active_edge_movement_direction.Dot(penetration_axis) * new_penetration_axis.Length() >= active_edge_movement_direction.Dot(new_penetration_axis))
+			penetration_axis = new_penetration_axis;
 	}
 
 	// Convert to world space

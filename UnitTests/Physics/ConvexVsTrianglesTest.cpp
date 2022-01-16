@@ -14,7 +14,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 	static constexpr float cEdgeLength = 4.0f;
 
 	template <class Collider>
-	static void sCheckCollision(Vec3Arg inCenter, float inRadius, uint8 inActiveEdges, Vec3Arg inExpectedContactOn1, Vec3Arg inExpectedContactOn2, Vec3Arg inExpectedPenetrationAxis, float inExpectedPenetrationDepth)
+	static void sCheckCollision(const CollideShapeSettings &inSettings, Vec3Arg inCenter, float inRadius, uint8 inActiveEdges, Vec3Arg inExpectedContactOn1, Vec3Arg inExpectedContactOn2, Vec3Arg inExpectedPenetrationAxis, float inExpectedPenetrationDepth)
 	{
 		// Our sphere
 		Ref<SphereShape> sphere = new SphereShape(inRadius);
@@ -28,10 +28,10 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		Mat44 transform = Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), Vec3(1, 2, 3));
 		Mat44 inv_transform = transform.InversedRotationTranslation();
 		
-		// Create settings
-		CollideShapeSettings settings;
-		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
-		
+		// Transform incoming settings
+		CollideShapeSettings settings = inSettings;
+		settings.mActiveEdgeMovementDirection = transform.Multiply3x3(inSettings.mActiveEdgeMovementDirection);
+
 		// Collide sphere
 		AllHitCollisionCollector<CollideShapeCollector> collector;
 		Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform * Mat44::sTranslation(inCenter), transform, SubShapeID(), settings, collector);
@@ -60,8 +60,13 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		const float cDistanceToTriangleRS2 = cDistanceToTriangle / sqrt(2.0f);
 		const float cEpsilon = 1.0e-6f; // A small epsilon to ensure we hit the front side
 
+		// Loop over all possible active edge combinations
 		for (uint8 active_edges = 0; active_edges <= 0b111; ++active_edges)
 		{
+			// Create settings
+			CollideShapeSettings settings;
+			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+
 			{
 				// Hit interior from front side
 				Vec3 expected2(0.25f * cEdgeLength, 0, 0.25f * cEdgeLength);
@@ -69,7 +74,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 				Vec3 expected1 = sphere_center + Vec3(0, -cRadius, 0);
 				Vec3 pen_axis(0, -1, 0);
 				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
 			}
 
 			{
@@ -79,67 +84,89 @@ TEST_SUITE("ConvexVsTrianglesTest")
 				Vec3 expected1 = sphere_center + Vec3(0, cRadius, 0);
 				Vec3 pen_axis(0, 1, 0);
 				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
 			}
 
+			// Loop over possibel active edge movement direction permutations
+			for (int movement_direction = 0; movement_direction < 3; ++movement_direction)
 			{
-				// Hit edge 1
-				Vec3 expected2(0, 0, 0.5f * cEdgeLength);
-				Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangle, cEpsilon, 0);
-				Vec3 expected1 = sphere_center + Vec3(cRadius, 0, 0);
-				Vec3 pen_axis = (active_edges & 0b001)? Vec3(1, 0, 0) : Vec3(0, -1, 0);
-				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
-			}
+				switch (movement_direction)
+				{
+				case 0:
+					// Disable the system
+					settings.mActiveEdgeMovementDirection = Vec3::sZero();
+					break;
 
-			{
-				// Hit edge 2
-				Vec3 expected2(0.5f * cEdgeLength, 0, 0.5f * cEdgeLength);
-				Vec3 sphere_center = expected2 + Vec3(cDistanceToTriangleRS2, cEpsilon, cDistanceToTriangleRS2);
-				Vec3 expected1 = sphere_center - Vec3(cRadiusRS2, 0, cRadiusRS2);
-				Vec3 pen_axis = (active_edges & 0b010)? Vec3(-1, 0, -1) : Vec3(0, -1, 0);
-				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
-			}
+				case 1:
+					// Move into the triangle, this should always give us the normal from the edge
+					settings.mActiveEdgeMovementDirection = Vec3(0, -1, 0);
+					break;
 
-			{
-				// Hit edge 3
-				Vec3 expected2(0.5f * cEdgeLength, 0, 0);
-				Vec3 sphere_center = expected2 + Vec3(0, cEpsilon, -cDistanceToTriangle);
-				Vec3 expected1 = sphere_center + Vec3(0, 0, cRadius);
-				Vec3 pen_axis = (active_edges & 0b100)? Vec3(0, 0, 1) : Vec3(0, -1, 0);
-				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
-			}
+				case 2:
+					// Move out of the triangle, we should always get the normal of the triangle
+					settings.mActiveEdgeMovementDirection = Vec3(0, 1, 0);
+					break;
+				}
+		
+				{
+					// Hit edge 1
+					Vec3 expected2(0, 0, 0.5f * cEdgeLength);
+					Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangle, cEpsilon, 0);
+					Vec3 expected1 = sphere_center + Vec3(cRadius, 0, 0);
+					Vec3 pen_axis = (active_edges & 0b001) != 0 || movement_direction == 1? Vec3(1, 0, 0) : Vec3(0, -1, 0);
+					float pen_depth = cRadius - cDistanceToTriangle;
+					sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				}
 
-			{
-				// Hit vertex 1
-				Vec3 expected2(0, 0, 0);
-				Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangleRS2, cEpsilon, -cDistanceToTriangleRS2);
-				Vec3 expected1 = sphere_center + Vec3(cRadiusRS2, 0, cRadiusRS2);
-				Vec3 pen_axis = (active_edges & 0b101)? Vec3(1, 0, 1) : Vec3(0, -1, 0);
-				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
-			}
+				{
+					// Hit edge 2
+					Vec3 expected2(0.5f * cEdgeLength, 0, 0.5f * cEdgeLength);
+					Vec3 sphere_center = expected2 + Vec3(cDistanceToTriangleRS2, cEpsilon, cDistanceToTriangleRS2);
+					Vec3 expected1 = sphere_center - Vec3(cRadiusRS2, 0, cRadiusRS2);
+					Vec3 pen_axis = (active_edges & 0b010) != 0 || movement_direction == 1? Vec3(-1, 0, -1) : Vec3(0, -1, 0);
+					float pen_depth = cRadius - cDistanceToTriangle;
+					sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				}
 
-			{
-				// Hit vertex 2
-				Vec3 expected2(0, 0, cEdgeLength);
-				Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangleRS2, cEpsilon, cDistanceToTriangleRS2);
-				Vec3 expected1 = sphere_center + Vec3(cRadiusRS2, 0, -cRadiusRS2);
-				Vec3 pen_axis = (active_edges & 0b011)? Vec3(1, 0, -1) : Vec3(0, -1, 0);
-				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
-			}
+				{
+					// Hit edge 3
+					Vec3 expected2(0.5f * cEdgeLength, 0, 0);
+					Vec3 sphere_center = expected2 + Vec3(0, cEpsilon, -cDistanceToTriangle);
+					Vec3 expected1 = sphere_center + Vec3(0, 0, cRadius);
+					Vec3 pen_axis = (active_edges & 0b100) != 0 || movement_direction == 1? Vec3(0, 0, 1) : Vec3(0, -1, 0);
+					float pen_depth = cRadius - cDistanceToTriangle;
+					sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				}
 
-			{
-				// Hit vertex 3
-				Vec3 expected2(cEdgeLength, 0, 0);
-				Vec3 sphere_center = expected2 + Vec3(cDistanceToTriangleRS2, cEpsilon, -cDistanceToTriangleRS2);
-				Vec3 expected1 = sphere_center + Vec3(-cRadiusRS2, 0, cRadiusRS2);
-				Vec3 pen_axis = (active_edges & 0b110)? Vec3(-1, 0, 1) : Vec3(0, -1, 0);
-				float pen_depth = cRadius - cDistanceToTriangle;
-				sCheckCollision<Collider>(sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				{
+					// Hit vertex 1
+					Vec3 expected2(0, 0, 0);
+					Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangleRS2, cEpsilon, -cDistanceToTriangleRS2);
+					Vec3 expected1 = sphere_center + Vec3(cRadiusRS2, 0, cRadiusRS2);
+					Vec3 pen_axis = (active_edges & 0b101) != 0 || movement_direction == 1? Vec3(1, 0, 1) : Vec3(0, -1, 0);
+					float pen_depth = cRadius - cDistanceToTriangle;
+					sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				}
+
+				{
+					// Hit vertex 2
+					Vec3 expected2(0, 0, cEdgeLength);
+					Vec3 sphere_center = expected2 + Vec3(-cDistanceToTriangleRS2, cEpsilon, cDistanceToTriangleRS2);
+					Vec3 expected1 = sphere_center + Vec3(cRadiusRS2, 0, -cRadiusRS2);
+					Vec3 pen_axis = (active_edges & 0b011) != 0 || movement_direction == 1? Vec3(1, 0, -1) : Vec3(0, -1, 0);
+					float pen_depth = cRadius - cDistanceToTriangle;
+					sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				}
+
+				{
+					// Hit vertex 3
+					Vec3 expected2(cEdgeLength, 0, 0);
+					Vec3 sphere_center = expected2 + Vec3(cDistanceToTriangleRS2, cEpsilon, -cDistanceToTriangleRS2);
+					Vec3 expected1 = sphere_center + Vec3(-cRadiusRS2, 0, cRadiusRS2);
+					Vec3 pen_axis = (active_edges & 0b110) != 0 || movement_direction == 1? Vec3(-1, 0, 1) : Vec3(0, -1, 0);
+					float pen_depth = cRadius - cDistanceToTriangle;
+					sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+				}
 			}
 		}
 	}
