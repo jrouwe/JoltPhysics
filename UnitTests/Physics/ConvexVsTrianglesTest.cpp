@@ -4,10 +4,14 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include <Physics/Collision/Shape/SphereShape.h>
+#include <Physics/Collision/Shape/TriangleShape.h>
+#include <Physics/Collision/Shape/MeshShape.h>
 #include <Physics/Collision/CollideShape.h>
 #include <Physics/Collision/CollisionCollectorImpl.h>
 #include <Physics/Collision/CollideConvexVsTriangles.h>
 #include <Physics/Collision/CollideSphereVsTriangles.h>
+#include "Layers.h"
+#include "PhysicsTestContext.h"
 
 TEST_SUITE("ConvexVsTrianglesTest")
 {
@@ -24,11 +28,41 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		Vec3 v2(0, 0, cEdgeLength);
 		Vec3 v3(cEdgeLength, 0, 0);
 				
-		// Collide sphere
-		AllHitCollisionCollector<CollideShapeCollector> collector;
-		Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), Mat44::sIdentity(), SubShapeID(), inSettings, collector);
-		collider.Collide(v1, v2, v3, inActiveEdges, SubShapeID());
-		CHECK(!collector.HadHit());
+		{
+			// Collide sphere
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), Mat44::sIdentity(), SubShapeID(), inSettings, collector);
+			collider.Collide(v1, v2, v3, inActiveEdges, SubShapeID());
+			CHECK(!collector.HadHit());
+		}
+
+		// A triangle shape has all edges active, so only test if all edges are active
+		if (inActiveEdges == 0b111)
+		{
+			// Create the triangle shape
+			PhysicsTestContext context;
+			context.CreateBody(new TriangleShapeSettings(v1, v2, v3), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+			// Collide sphere
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), inSettings, collector);
+			CHECK(!collector.HadHit());
+		}
+
+		// A mesh shape with a single triangle has all edges active, so only test if all edges are active
+		if (inActiveEdges == 0b111)
+		{
+			// Create a mesh with a single triangle
+			TriangleList triangles;
+			triangles.push_back(Triangle(v1, v2, v3));
+			PhysicsTestContext context;
+			context.CreateBody(new MeshShapeSettings(triangles), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+			// Collide sphere
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), inSettings, collector);
+			CHECK(!collector.HadHit());
+		}
 	}
 
 	template <class Collider>
@@ -42,30 +76,101 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		Vec3 v2(0, 0, cEdgeLength);
 		Vec3 v3(cEdgeLength, 0, 0);
 
-		// A semi random transform to transform the whole query
-		Mat44 transform = Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), Vec3(1, 2, 3));
+		// A semi random transform for the triangle
+		Vec3 translation = Vec3(1, 2, 3);
+		Quat rotation = Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI);
+		Mat44 transform = Mat44::sRotationTranslation(rotation, translation);
 		Mat44 inv_transform = transform.InversedRotationTranslation();
+
+		// The transform for the sphere
+		Mat44 sphere_transform = transform * Mat44::sTranslation(inCenter);
 		
 		// Transform incoming settings
 		CollideShapeSettings settings = inSettings;
 		settings.mActiveEdgeMovementDirection = transform.Multiply3x3(inSettings.mActiveEdgeMovementDirection);
 
-		// Collide sphere
-		AllHitCollisionCollector<CollideShapeCollector> collector;
-		Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform * Mat44::sTranslation(inCenter), transform, SubShapeID(), settings, collector);
-		collider.Collide(v1, v2, v3, inActiveEdges, SubShapeID());
+		// Test the specified collider
+		{
+			SubShapeID sub_shape_id1, sub_shape_id2;
+			sub_shape_id1.SetValue(123);
+			sub_shape_id2.SetValue(456);
 
-		// Test result
-		CHECK(collector.mHits.size() == 1);
-		const CollideShapeResult &hit = collector.mHits[0];
-		Vec3 contact1 = inv_transform * hit.mContactPointOn1;
-		Vec3 contact2 = inv_transform * hit.mContactPointOn2;
-		Vec3 pen_axis = transform.Multiply3x3Transposed(hit.mPenetrationAxis).Normalized();
-		Vec3 expected_pen_axis = inExpectedPenetrationAxis.Normalized();
-		CHECK_APPROX_EQUAL(contact1, inExpectedContactOn1, 1.0e-4f);
-		CHECK_APPROX_EQUAL(contact2, inExpectedContactOn2, 1.0e-4f);
-		CHECK_APPROX_EQUAL(pen_axis, expected_pen_axis, 1.0e-4f);
-		CHECK_APPROX_EQUAL(hit.mPenetrationDepth, inExpectedPenetrationDepth, 1.0e-4f);
+			// Collide sphere
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), sphere_transform, transform, sub_shape_id1, settings, collector);
+			collider.Collide(v1, v2, v3, inActiveEdges, sub_shape_id2);
+
+			// Test result
+			CHECK(collector.mHits.size() == 1);
+			const CollideShapeResult &hit = collector.mHits[0];
+			CHECK(hit.mBodyID2 == BodyID());
+			CHECK(hit.mSubShapeID1.GetValue() == sub_shape_id1.GetValue());
+			CHECK(hit.mSubShapeID2.GetValue() == sub_shape_id2.GetValue());
+			Vec3 contact1 = inv_transform * hit.mContactPointOn1;
+			Vec3 contact2 = inv_transform * hit.mContactPointOn2;
+			Vec3 pen_axis = transform.Multiply3x3Transposed(hit.mPenetrationAxis).Normalized();
+			Vec3 expected_pen_axis = inExpectedPenetrationAxis.Normalized();
+			CHECK_APPROX_EQUAL(contact1, inExpectedContactOn1, 1.0e-4f);
+			CHECK_APPROX_EQUAL(contact2, inExpectedContactOn2, 1.0e-4f);
+			CHECK_APPROX_EQUAL(pen_axis, expected_pen_axis, 1.0e-4f);
+			CHECK_APPROX_EQUAL(hit.mPenetrationDepth, inExpectedPenetrationDepth, 1.0e-4f);
+		}
+
+		// A triangle shape has all edges active, so only test if all edges are active
+		if (inActiveEdges == 0b111)
+		{
+			// Create the triangle shape
+			PhysicsTestContext context;
+			Body &body = context.CreateBody(new TriangleShapeSettings(v1, v2, v3), translation, rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+			// Collide sphere
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), sphere_transform, settings, collector);
+
+			// Test result
+			CHECK(collector.mHits.size() == 1);
+			const CollideShapeResult &hit = collector.mHits[0];
+			CHECK(hit.mBodyID2 == body.GetID());
+			CHECK(hit.mSubShapeID1.GetValue() == SubShapeID().GetValue());
+			CHECK(hit.mSubShapeID2.GetValue() == SubShapeID().GetValue());
+			Vec3 contact1 = inv_transform * hit.mContactPointOn1;
+			Vec3 contact2 = inv_transform * hit.mContactPointOn2;
+			Vec3 pen_axis = transform.Multiply3x3Transposed(hit.mPenetrationAxis).Normalized();
+			Vec3 expected_pen_axis = inExpectedPenetrationAxis.Normalized();
+			CHECK_APPROX_EQUAL(contact1, inExpectedContactOn1, 1.0e-4f);
+			CHECK_APPROX_EQUAL(contact2, inExpectedContactOn2, 1.0e-4f);
+			CHECK_APPROX_EQUAL(pen_axis, expected_pen_axis, 1.0e-4f);
+			CHECK_APPROX_EQUAL(hit.mPenetrationDepth, inExpectedPenetrationDepth, 1.0e-4f);
+		}
+
+		// A mesh shape with a single triangle has all edges active, so only test if all edges are active
+		if (inActiveEdges == 0b111)
+		{
+			// Create a mesh with a single triangle
+			TriangleList triangles;
+			triangles.push_back(Triangle(v1, v2, v3));
+			PhysicsTestContext context;
+			Body &body = context.CreateBody(new MeshShapeSettings(triangles), translation, rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+			// Collide sphere
+			AllHitCollisionCollector<CollideShapeCollector> collector;
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), sphere_transform, settings, collector);
+
+			// Test result
+			CHECK(collector.mHits.size() == 1);
+			const CollideShapeResult &hit = collector.mHits[0];
+			CHECK(hit.mBodyID2 == body.GetID());
+			CHECK(hit.mSubShapeID1.GetValue() == SubShapeID().GetValue());
+			CHECK(hit.mSubShapeID2.GetValue() != SubShapeID().GetValue()); // We don't really know what SubShapeID a triangle in the mesh will get, but it should not be invalid
+			Vec3 contact1 = inv_transform * hit.mContactPointOn1;
+			Vec3 contact2 = inv_transform * hit.mContactPointOn2;
+			Vec3 pen_axis = transform.Multiply3x3Transposed(hit.mPenetrationAxis).Normalized();
+			Vec3 expected_pen_axis = inExpectedPenetrationAxis.Normalized();
+			CHECK_APPROX_EQUAL(contact1, inExpectedContactOn1, 1.0e-4f);
+			CHECK_APPROX_EQUAL(contact2, inExpectedContactOn2, 1.0e-4f);
+			CHECK_APPROX_EQUAL(pen_axis, expected_pen_axis, 1.0e-4f);
+			CHECK_APPROX_EQUAL(hit.mPenetrationDepth, inExpectedPenetrationDepth, 1.0e-4f);
+		}
 	}
 
 	// Compares CollideShapeResult for two spheres with given positions and radii
