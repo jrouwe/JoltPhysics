@@ -14,6 +14,24 @@ TEST_SUITE("ConvexVsTrianglesTest")
 	static constexpr float cEdgeLength = 4.0f;
 
 	template <class Collider>
+	static void sCheckCollisionNoHit(const CollideShapeSettings &inSettings, Vec3Arg inCenter, float inRadius, uint8 inActiveEdges)
+	{
+		// Our sphere
+		Ref<SphereShape> sphere = new SphereShape(inRadius);
+
+		// Our default triangle
+		Vec3 v1(0, 0, 0);
+		Vec3 v2(0, 0, cEdgeLength);
+		Vec3 v3(cEdgeLength, 0, 0);
+				
+		// Collide sphere
+		AllHitCollisionCollector<CollideShapeCollector> collector;
+		Collider collider(sphere, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), Mat44::sIdentity(), SubShapeID(), inSettings, collector);
+		collider.Collide(v1, v2, v3, inActiveEdges, SubShapeID());
+		CHECK(!collector.HadHit());
+	}
+
+	template <class Collider>
 	static void sCheckCollision(const CollideShapeSettings &inSettings, Vec3Arg inCenter, float inRadius, uint8 inActiveEdges, Vec3Arg inExpectedContactOn1, Vec3Arg inExpectedContactOn2, Vec3Arg inExpectedPenetrationAxis, float inExpectedPenetrationDepth)
 	{
 		// Our sphere
@@ -59,6 +77,8 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		const float cDistanceToTriangle = 0.1f;
 		const float cDistanceToTriangleRS2 = cDistanceToTriangle / sqrt(2.0f);
 		const float cEpsilon = 1.0e-6f; // A small epsilon to ensure we hit the front side
+		const float cMaxSeparationDistance = 0.5f;
+		const float cSeparationDistance = 0.1f;
 
 		// Loop over all possible active edge combinations
 		for (uint8 active_edges = 0; active_edges <= 0b111; ++active_edges)
@@ -66,6 +86,53 @@ TEST_SUITE("ConvexVsTrianglesTest")
 			// Create settings
 			CollideShapeSettings settings;
 			settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+
+			// Settings with ignore back faces
+			CollideShapeSettings settings_no_bf;
+			settings_no_bf.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+
+			// Settings with max seperation distance
+			CollideShapeSettings settings_max_distance;
+			settings_max_distance.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+			settings_max_distance.mMaxSeparationDistance = cMaxSeparationDistance;
+
+			{
+				// There should be no hit in front of the triangle
+				Vec3 sphere_center(0.25f * cEdgeLength, cRadius + cSeparationDistance, 0.25f * cEdgeLength);
+				sCheckCollisionNoHit<Collider>(settings, sphere_center, cRadius, active_edges);
+
+				// But if there's a max separation distance there should be
+				Vec3 expected1 = sphere_center + Vec3(0, -cRadius, 0);
+				Vec3 expected2(0.25f * cEdgeLength, 0, 0.25f * cEdgeLength);
+				Vec3 pen_axis(0, -1, 0);
+				float pen_depth = -cSeparationDistance;
+				sCheckCollision<Collider>(settings_max_distance, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// But if we go beyond the separation distance we should again have no hit
+				Vec3 sphere_center(0.25f * cEdgeLength, cRadius + cMaxSeparationDistance + cSeparationDistance, 0.25f * cEdgeLength);
+				sCheckCollisionNoHit<Collider>(settings_max_distance, sphere_center, cRadius, active_edges);
+			}
+
+			{
+				// There should be no hit in behind the triangle
+				Vec3 sphere_center(0.25f * cEdgeLength, -cRadius - cSeparationDistance, 0.25f * cEdgeLength);
+				sCheckCollisionNoHit<Collider>(settings, sphere_center, cRadius, active_edges);
+
+				// But if there's a max separation distance there should be
+				Vec3 expected1 = sphere_center + Vec3(0, cRadius, 0);
+				Vec3 expected2(0.25f * cEdgeLength, 0, 0.25f * cEdgeLength);
+				Vec3 pen_axis(0, 1, 0);
+				float pen_depth = -cSeparationDistance;
+				sCheckCollision<Collider>(settings_max_distance, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+			}
+
+			{
+				// But if we go beyond the separation distance we should again have no hit
+				Vec3 sphere_center(0.25f * cEdgeLength, -cRadius - cMaxSeparationDistance - cSeparationDistance, 0.25f * cEdgeLength);
+				sCheckCollisionNoHit<Collider>(settings_max_distance, sphere_center, cRadius, active_edges);
+			}
 
 			{
 				// Hit interior from front side
@@ -75,6 +142,9 @@ TEST_SUITE("ConvexVsTrianglesTest")
 				Vec3 pen_axis(0, -1, 0);
 				float pen_depth = cRadius - cDistanceToTriangle;
 				sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+
+				// Ignore back faces should not matter
+				sCheckCollision<Collider>(settings_no_bf, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
 			}
 
 			{
@@ -85,6 +155,9 @@ TEST_SUITE("ConvexVsTrianglesTest")
 				Vec3 pen_axis(0, 1, 0);
 				float pen_depth = cRadius - cDistanceToTriangle;
 				sCheckCollision<Collider>(settings, sphere_center, cRadius, active_edges, expected1, expected2, pen_axis, pen_depth);
+
+				// Back face hit should be filtered
+				sCheckCollisionNoHit<Collider>(settings_no_bf, sphere_center, cRadius, active_edges);
 			}
 
 			// Loop over possibel active edge movement direction permutations
