@@ -106,6 +106,7 @@ public:
 		}
 		else
 		{
+			(void)r1_plus_u_x_axis; // Fix compiler warning: Not using this (it's not calculated either)
 			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI1_R1PlusUxAxis);)
 			inv_effective_mass = 0.0f;
 		}
@@ -118,6 +119,7 @@ public:
 		}
 		else
 		{
+			(void)r2_x_axis; // Fix compiler warning: Not using this (it's not calculated either)
 			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
 		}
 
