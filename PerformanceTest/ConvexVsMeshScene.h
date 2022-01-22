@@ -88,6 +88,12 @@ public:
 
 	virtual void			StartTest(PhysicsSystem &inPhysicsSystem, EMotionQuality inMotionQuality) override
 	{
+		// Reduce the solver iteration count, the scene doesn't have any constraints so we don't need the default amount of iterations
+		PhysicsSettings settings = inPhysicsSystem.GetPhysicsSettings();
+		settings.mNumVelocitySteps = 4;
+		settings.mNumPositionSteps = 1;
+		inPhysicsSystem.SetPhysicsSettings(settings);
+
 		// Create background
 		BodyInterface &bi = inPhysicsSystem.GetBodyInterface();
 		bi.CreateAndAddBody(mMeshSettings, EActivation::DontActivate);
