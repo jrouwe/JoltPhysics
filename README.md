@@ -16,6 +16,8 @@ For more demos and [videos](https://www.youtube.com/watch?v=pwyCW0yNKMA&list=PLY
 
 To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example.
 
+If you're interested in how Jolt scales with multiple CPUs and compares to other physics engines, take a look at [this document](https://jrouwe.nl/jolt/JoltPhysicsMulticoreScaling.pdf).
+
 ## Design Considerations
 
 So why create yet another physics engine? First of all, this has been a personal learning project and secondly I wanted to address some issues that I had with existing physics engines:
