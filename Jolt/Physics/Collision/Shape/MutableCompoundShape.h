@@ -54,7 +54,7 @@ public:
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 
 	// See Shape::GetStats
-	virtual Stats					GetStats() const override								{ return Stats(sizeof(*this) + mSubShapes.size() * sizeof(SubShape) + 6 * mSubShapeBoundsCapacity * sizeof(float), 0); }
+	virtual Stats					GetStats() const override								{ return Stats(sizeof(*this) + mSubShapes.size() * sizeof(SubShape) + mSubShapeBoundsCapacity * sizeof(Bounds), 0); }
 
 	///@{
 	/// @name Mutating shapes. Note that this is not thread safe, so you need to ensure that any bodies that use this shape are locked at the time of modification using BodyLockWrite. After modification you need to call BodyInterface::NotifyShapeChanged to update the broadphase and collision caches.
@@ -141,8 +141,18 @@ private:
 	static void						sCollideShapeVsCompound(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector);
 	static void						sCastShapeVsCompound(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
 
-	Vec4 *							mSubShapeBounds[6];											///< Bounding boxes of all sub shapes in SOA format, 0 = MinX, 1 = MinY, 2 = MinZ, 3 = MaxX, 4 = MaxY, 5 = MaxZ
-	uint							mSubShapeBoundsCapacity = 0;								///< Number of bounding boxes that can be stored in the mSubShapeBounds array (will be multiple of 4)
+	struct Bounds
+	{
+		Vec4						mMinX;
+		Vec4						mMinY;
+		Vec4						mMinZ;
+		Vec4						mMaxX;
+		Vec4						mMaxY;
+		Vec4						mMaxZ;
+	};
+
+	Bounds *						mSubShapeBounds = nullptr;									///< Bounding boxes of all sub shapes in SOA format (in blocks of 4 boxes), MinX 0..3, MinY 0..3, MinZ 0..3, MaxX 0..3, MaxY 0..3, MaxZ 0..3, MinX 4..7, MinY 4..7, ...
+	uint							mSubShapeBoundsCapacity = 0;								///< Number of Bounds structures in mSubShapeBounds
 };
 
 } // JPH

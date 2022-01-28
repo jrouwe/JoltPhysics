@@ -57,9 +57,7 @@ MutableCompoundShape::MutableCompoundShape(const MutableCompoundShapeSettings &i
 MutableCompoundShape::~MutableCompoundShape()
 {
 	// Free our bounds
-	if (mSubShapeBoundsCapacity > 0)
-		for (int i = 0; i < 6; ++i)
-			free(mSubShapeBounds[i]);
+	free(mSubShapeBounds);
 }
 
 void MutableCompoundShape::AdjustCenterOfMass()
@@ -89,25 +87,34 @@ void MutableCompoundShape::CalculateLocalBounds()
 	uint num_blocks = GetNumBlocks();
 	if (num_blocks > 0)
 	{
-		// Calculate min of bounding box
-		for (int coord = 0; coord < 3; ++coord)
+		// Initialize min/max for first block
+		const Bounds *bounds = mSubShapeBounds;
+		Vec4 min_x = bounds->mMinX;
+		Vec4 min_y = bounds->mMinY;
+		Vec4 min_z = bounds->mMinZ;
+		Vec4 max_x = bounds->mMaxX;
+		Vec4 max_y = bounds->mMaxY;
+		Vec4 max_z = bounds->mMaxZ;
+
+		// Accumulate other blocks
+		const Bounds *bounds_end = bounds + num_blocks;
+		for (++bounds; bounds < bounds_end; ++bounds)
 		{
-			Vec4 **min_bounds = &mSubShapeBounds[0];
-			Vec4 min_value = min_bounds[coord][0];
-			for (const Vec4 *block = min_bounds[coord] + 1, *block_end = min_bounds[coord] + num_blocks; block < block_end; ++block)
-				min_value = Vec4::sMin(min_value, *block);
-			mLocalBounds.mMin.SetComponent(coord, min_value.ReduceMin());
+			min_x = Vec4::sMin(min_x, bounds->mMinX);
+			min_y = Vec4::sMin(min_y, bounds->mMinY);
+			min_z = Vec4::sMin(min_z, bounds->mMinZ);
+			max_x = Vec4::sMax(max_x, bounds->mMaxX);
+			max_y = Vec4::sMax(max_y, bounds->mMaxY);
+			max_z = Vec4::sMax(max_z, bounds->mMaxZ);
 		}
 
-		// Calculate max of bounding box
-		for (int coord = 0; coord < 3; ++coord)
-		{
-			Vec4 **max_bounds = &mSubShapeBounds[3];
-			Vec4 max_value = max_bounds[coord][0];
-			for (const Vec4 *block = max_bounds[coord] + 1, *block_end = max_bounds[coord] + num_blocks; block < block_end; ++block)
-				max_value = Vec4::sMax(max_value, *block);
-			mLocalBounds.mMax.SetComponent(coord, max_value.ReduceMax());
-		}
+		// Calculate resulting bounding box
+		mLocalBounds.mMin.SetX(min_x.ReduceMin());
+		mLocalBounds.mMin.SetY(min_y.ReduceMin());
+		mLocalBounds.mMin.SetZ(min_z.ReduceMin());
+		mLocalBounds.mMax.SetX(max_x.ReduceMax());
+		mLocalBounds.mMax.SetY(max_y.ReduceMax());
+		mLocalBounds.mMax.SetZ(max_z.ReduceMax());
 	}
 	else
 	{
@@ -121,24 +128,13 @@ void MutableCompoundShape::CalculateLocalBounds()
 
 void MutableCompoundShape::EnsureSubShapeBoundsCapacity()
 {
-	// Calculate next multiple of 4
-	uint num_bounds = AlignUp((uint)mSubShapes.size(), 4);
-
 	// Check if we have enough space
-	if (mSubShapeBoundsCapacity < num_bounds)
+	uint new_capacity = ((uint)mSubShapes.size() + 3) >> 2;
+	if (mSubShapeBoundsCapacity < new_capacity)
 	{
-		uint new_size = num_bounds * sizeof(float);
-		if (mSubShapeBoundsCapacity == 0)
-		{
-			for (int i = 0; i < 6; ++i)
-				mSubShapeBounds[i] = reinterpret_cast<Vec4 *>(malloc(new_size));
-		}
-		else
-		{
-			for (int i = 0; i < 6; ++i)
-				mSubShapeBounds[i] = reinterpret_cast<Vec4 *>(realloc(mSubShapeBounds[i], new_size));
-		}
-		mSubShapeBoundsCapacity = num_bounds;
+		uint new_size = new_capacity * sizeof(Bounds);
+		mSubShapeBounds = reinterpret_cast<Bounds *>(realloc(mSubShapeBounds, new_size));
+		mSubShapeBoundsCapacity = new_capacity;
 	}
 }
 
@@ -178,12 +174,13 @@ void MutableCompoundShape::CalculateSubShapeBounds(uint inStartIdx, uint inNumbe
 		Mat44 bounds_max_t = bounds_max.Transposed();
 
 		// Store in our bounds array
-		uint block_no = sub_shape_idx_start >> 2;
-		for (int col = 0; col < 3; ++col)
-		{
-			mSubShapeBounds[col][block_no] = bounds_min_t.GetColumn4(col);
-			mSubShapeBounds[3 + col][block_no] = bounds_max_t.GetColumn4(col);
-		}
+		Bounds &bounds = mSubShapeBounds[sub_shape_idx_start >> 2];
+		bounds.mMinX = bounds_min_t.GetColumn4(0);
+		bounds.mMinY = bounds_min_t.GetColumn4(1);
+		bounds.mMinZ = bounds_min_t.GetColumn4(2);
+		bounds.mMaxX = bounds_max_t.GetColumn4(0);
+		bounds.mMaxY = bounds_max_t.GetColumn4(1);
+		bounds.mMaxZ = bounds_max_t.GetColumn4(2);
 	}
 
 	CalculateLocalBounds();
@@ -256,16 +253,9 @@ inline void MutableCompoundShape::WalkSubShapes(Visitor &ioVisitor) const
 	// Loop over all blocks of 4 bounding boxes
 	for (uint block = 0, num_blocks = GetNumBlocks(); block < num_blocks; ++block)
 	{
-		// Get bounding boxes of block
-		Vec4 bounds_min_x = mSubShapeBounds[0][block];
-		Vec4 bounds_min_y = mSubShapeBounds[1][block];
-		Vec4 bounds_min_z = mSubShapeBounds[2][block];
-		Vec4 bounds_max_x = mSubShapeBounds[3][block];
-		Vec4 bounds_max_y = mSubShapeBounds[4][block];
-		Vec4 bounds_max_z = mSubShapeBounds[5][block];
-
 		// Test the bounding boxes
-		typename Visitor::Result result = ioVisitor.TestBlock(bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+		const Bounds &bounds = mSubShapeBounds[block];
+		typename Visitor::Result result = ioVisitor.TestBlock(bounds.mMinX, bounds.mMinY, bounds.mMinZ, bounds.mMaxX, bounds.mMaxY, bounds.mMaxZ);
 
 		// Check if any of the bounding boxes collided
 		if (ioVisitor.ShouldVisitBlock(result))
@@ -534,9 +524,8 @@ void MutableCompoundShape::SaveBinaryState(StreamOut &inStream) const
 	CompoundShape::SaveBinaryState(inStream);
 
 	// Write bounds
-	uint bounds_size = AlignUp((uint)mSubShapes.size(), 4) * sizeof(float);
-	for (int i = 0; i < 6; ++i)
-		inStream.WriteBytes(mSubShapeBounds[i], bounds_size);
+	uint bounds_size = (((uint)mSubShapes.size() + 3) >> 2) * sizeof(Bounds);
+	inStream.WriteBytes(mSubShapeBounds, bounds_size);
 }
 
 void MutableCompoundShape::RestoreBinaryState(StreamIn &inStream)
@@ -547,9 +536,8 @@ void MutableCompoundShape::RestoreBinaryState(StreamIn &inStream)
 	EnsureSubShapeBoundsCapacity();
 
 	// Read bounds
-	uint bounds_size = AlignUp((uint)mSubShapes.size(), 4) * sizeof(float);
-	for (int i = 0; i < 6; ++i)
-		inStream.ReadBytes(mSubShapeBounds[i], bounds_size);
+	uint bounds_size = (((uint)mSubShapes.size() + 3) >> 2) * sizeof(Bounds);
+	inStream.ReadBytes(mSubShapeBounds, bounds_size);
 }
 
 void MutableCompoundShape::sRegister()
