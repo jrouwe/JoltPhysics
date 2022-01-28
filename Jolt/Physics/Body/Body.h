@@ -63,7 +63,7 @@ public:
 	inline bool				CanBeKinematicOrDynamic() const									{ return mMotionProperties != nullptr; }
 
 	/// Check if this body is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
-	inline bool				IsSensor() const												{ return (mFlags & uint8(EFlags::IsSensor)) != 0; }
+	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
 
 	/// Motion type of this body
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
@@ -145,10 +145,10 @@ public:
 	void					ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime);
 
 	/// Check if this body has been added to the physics system
-	inline bool				IsInBroadPhase() const											{ return (mFlags & uint8(EFlags::IsInBroadPhase)) != 0; }
+	inline bool				IsInBroadPhase() const											{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsInBroadPhase)) != 0; }
 
 	/// Check if this body has been changed in such a way that the collision cache should be considered invalid for any body interacting with this body
-	inline bool				IsCollisionCacheInvalid() const									{ return (mFlags & uint8(EFlags::InvalidateContactCache)) != 0; }
+	inline bool				IsCollisionCacheInvalid() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::InvalidateContactCache)) != 0; }
 
 	/// Get the shape of this body
 	inline const Shape *	GetShape() const												{ return mShape; }
@@ -214,10 +214,10 @@ public:
 	inline void				SubRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime);
 
 	/// Flag if body is in the broadphase (should only be called by the BroadPhase)
-	inline void				SetInBroadPhaseInternal(bool inInBroadPhase)					{ if (inInBroadPhase) mFlags |= uint8(EFlags::IsInBroadPhase); else mFlags &= uint8(~uint8(EFlags::IsInBroadPhase)); }
+	inline void				SetInBroadPhaseInternal(bool inInBroadPhase)					{ if (inInBroadPhase) mFlags.fetch_or(uint8(EFlags::IsInBroadPhase), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::IsInBroadPhase)), memory_order_relaxed); }
 
 	/// Flag to invalidate the collision cache (should only be called by the BodyManager), will be reset the next simulation step.
-	inline void				InvalidateCollisionCacheInternal(bool inInvalidate)				{ if (inInvalidate) mFlags |= uint8(EFlags::InvalidateContactCache); else mFlags &= uint8(~uint8(EFlags::InvalidateContactCache)); }
+	inline void				InvalidateCollisionCacheInternal(bool inInvalidate)				{ if (inInvalidate) mFlags.fetch_or(uint8(EFlags::InvalidateContactCache), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::InvalidateContactCache)), memory_order_relaxed); }
 
 	/// Updates world space bounding box (should only be called by the PhysicsSystem)
 	void					CalculateWorldSpaceBoundsInternal();

@@ -168,7 +168,7 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	body->SetRestitution(inBodyCreationSettings.mRestitution);
 	body->mMotionType = inBodyCreationSettings.mMotionType;
 	if (inBodyCreationSettings.mIsSensor)
-		body->mFlags |= uint8(Body::EFlags::IsSensor);
+		body->mFlags.fetch_or(uint8(Body::EFlags::IsSensor), memory_order_relaxed);
 	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
 	
@@ -729,12 +729,17 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 
 void BodyManager::InvalidateContactCacheForBody(Body &ioBody)
 {
-	lock_guard lock(mBodiesCacheInvalidMutex);
-	
+	// Check if invalid to avoid taking a mutex lock. Note that this double locking pattern is safe as this flag is only reset during the physics update at which point we never invalidate the contact cache (and all bodies are locked).
 	if (!ioBody.IsCollisionCacheInvalid())
 	{
-		mBodiesCacheInvalid.push_back(ioBody.GetID());
-		ioBody.InvalidateCollisionCacheInternal(true);
+		lock_guard lock(mBodiesCacheInvalidMutex);
+	
+		// Check flag again
+		if (!ioBody.IsCollisionCacheInvalid())
+		{
+			mBodiesCacheInvalid.push_back(ioBody.GetID());
+			ioBody.InvalidateCollisionCacheInternal(true);
+		}
 	}
 }
 
