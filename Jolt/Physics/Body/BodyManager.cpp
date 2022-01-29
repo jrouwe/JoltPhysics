@@ -729,17 +729,11 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 
 void BodyManager::InvalidateContactCacheForBody(Body &ioBody)
 {
-	// Check if invalid to avoid taking a mutex lock. Note that this double locking pattern is safe as this flag is only reset during the physics update at which point we never invalidate the contact cache (and all bodies are locked).
-	if (!ioBody.IsCollisionCacheInvalid())
+	// If this is the first time we flip the collision cache invalid flag, we need to add it to an internal list to ensure we reset the flag at the end of the physics update
+	if (ioBody.InvalidateContactCacheInternal())
 	{
 		lock_guard lock(mBodiesCacheInvalidMutex);
-	
-		// Check flag again
-		if (!ioBody.IsCollisionCacheInvalid())
-		{
-			mBodiesCacheInvalid.push_back(ioBody.GetID());
-			ioBody.InvalidateCollisionCacheInternal(true);
-		}
+		mBodiesCacheInvalid.push_back(ioBody.GetID());
 	}
 }
 
@@ -752,7 +746,7 @@ void BodyManager::ValidateContactCacheForAllBodies()
 		// The body may have been removed between the call to InvalidateContactCacheForBody and this call, so check if it still exists
 		Body *body = TryGetBody(b);
 		if (body != nullptr)
-			body->InvalidateCollisionCacheInternal(false);
+			body->ValidateContactCacheInternal();
 	}
 	mBodiesCacheInvalid.clear();
 }
