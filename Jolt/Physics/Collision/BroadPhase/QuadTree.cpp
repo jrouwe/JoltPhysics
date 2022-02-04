@@ -1123,16 +1123,7 @@ void QuadTree::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCol
 		{
 			// Test the box vs 4 boxes
 			UVec4 hitting = AABox4VsBox(mBox, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Count how many results are hitting
-			int num_results = hitting.CountTrues();
-			if (num_results > 0)
-			{
-				// Sort trues first
-				UVec4::sSort4True(hitting, ioChildNodeIDs);
-			}
-
-			return num_results;
+			return CountAndSortTrues(hitting, ioChildNodeIDs);
 		}
 
 		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
@@ -1183,16 +1174,7 @@ void QuadTree::CollideSphere(Vec3Arg inCenter, float inRadius, CollideShapeBodyC
 		{
 			// Test 4 boxes vs sphere
 			UVec4 hitting = AABox4VsSphere(mCenterX, mCenterY, mCenterZ, mRadiusSq, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Count how many results are hitting
-			int num_results = hitting.CountTrues();
-			if (num_results > 0)
-			{
-				// Sort trues first
-				UVec4::sSort4True(hitting, ioChildNodeIDs);
-			}
-
-			return num_results;
+			return CountAndSortTrues(hitting, ioChildNodeIDs);
 		}
 
 		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
@@ -1243,16 +1225,7 @@ void QuadTree::CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollec
 		{
 			// Test if point overlaps with box
 			UVec4 hitting = AABox4VsPoint(mPoint, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Count how many results are hitting
-			int num_results = hitting.CountTrues();
-			if (num_results > 0)
-			{
-				// Sort trues first
-				UVec4::sSort4True(hitting, ioChildNodeIDs);
-			}
-
-			return num_results;
+			return CountAndSortTrues(hitting, ioChildNodeIDs);
 		}
 
 		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
@@ -1300,16 +1273,7 @@ void QuadTree::CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyColl
 		{
 			// Test if point overlaps with box
 			UVec4 hitting = AABox4VsBox(mBox, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Count how many results are hitting
-			int num_results = hitting.CountTrues();
-			if (num_results > 0)
-			{
-				// Sort trues first
-				UVec4::sSort4True(hitting, ioChildNodeIDs);
-			}
-
-			return num_results;
+			return CountAndSortTrues(hitting, ioChildNodeIDs);
 		}
 
 		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore
@@ -1463,7 +1427,7 @@ void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inAc
 					UVec4 child_ids = UVec4::sLoadInt4Aligned((const uint32 *)&node.mChildNodeID[0]);
 
 					// Sort so that overlaps are first
-					UVec4::sSort4True(overlap, child_ids);
+					child_ids = UVec4::sSort4True(overlap, child_ids);
 
 					// Push them onto the stack
 					if (top + 4 < cStackSize)

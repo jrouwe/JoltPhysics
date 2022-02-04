@@ -192,39 +192,18 @@ UVec4 UVec4::sNot(UVec4Arg inV1)
 #endif
 }
 
-void UVec4::sSort4True(UVec4 &ioValue, UVec4 &ioIndex)
+UVec4 UVec4::sSort4True(UVec4Arg inValue, UVec4Arg inIndex)
 {
-	// We didn't expose the less operator on UVec4 since X64 doesn't offer an unsigned one, we're comparing true and false here so we know that we only have 2 values
-#if defined(JPH_USE_SSE)
-	#define S4T_COMPARE _mm_cmplt_epi32
-#elif defined(JPH_USE_NEON)
-	#define S4T_COMPARE vcltq_s32
-#else
-	#error Unsupported CPU architecture
-#endif
+	// If inValue.z is false then shift W to Z
+	UVec4 v = UVec4::sSelect(inIndex.Swizzle<SWIZZLE_X, SWIZZLE_Y, SWIZZLE_W, SWIZZLE_W>(), inIndex, inValue.SplatZ());
 
-	// Pass 1, test 1st vs 3rd, 2nd vs 4th
-	UVec4 v1 = ioValue.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_X, SWIZZLE_Y>();
-	UVec4 i1 = ioIndex.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_X, SWIZZLE_Y>();
-	UVec4 c1 = UVec4(S4T_COMPARE(ioValue.mValue, v1.mValue)).Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_Z, SWIZZLE_W>();
-	ioValue = sSelect(ioValue, v1, c1);
-	ioIndex = sSelect(ioIndex, i1, c1);
+	// If inValue.y is false then shift Z and further to Y and further
+	v = UVec4::sSelect(v.Swizzle<SWIZZLE_X, SWIZZLE_Z, SWIZZLE_W, SWIZZLE_W>(), v, inValue.SplatY());
 
-	// Pass 2, test 1st vs 2nd, 3rd vs 4th
-	UVec4 v2 = ioValue.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>();
-	UVec4 i2 = ioIndex.Swizzle<SWIZZLE_Y, SWIZZLE_X, SWIZZLE_W, SWIZZLE_Z>();
-	UVec4 c2 = UVec4(S4T_COMPARE(ioValue.mValue, v2.mValue)).Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_W, SWIZZLE_W>();
-	ioValue = sSelect(ioValue, v2, c2);
-	ioIndex = sSelect(ioIndex, i2, c2);
+	// If inValue.x is false then shift X and furhter to Y and furhter
+	v = UVec4::sSelect(v.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W, SWIZZLE_W>(), v, inValue.SplatX());
 
-	// Pass 3, test 2nd vs 3rd component
-	UVec4 v3 = ioValue.Swizzle<SWIZZLE_X, SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_W>();
-	UVec4 i3 = ioIndex.Swizzle<SWIZZLE_X, SWIZZLE_Z, SWIZZLE_Y, SWIZZLE_W>();
-	UVec4 c3 = UVec4(S4T_COMPARE(ioValue.mValue, v3.mValue)).Swizzle<SWIZZLE_X, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_W>();
-	ioValue = sSelect(ioValue, v3, c3);
-	ioIndex = sSelect(ioIndex, i3, c3);
-
-#undef S4T_COMPARE
+	return v;
 }
 
 UVec4 UVec4::operator * (UVec4Arg inV2) const

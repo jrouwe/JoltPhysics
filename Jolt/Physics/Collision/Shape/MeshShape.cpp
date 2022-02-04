@@ -475,8 +475,7 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 			JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
 			{
 				UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
-				UVec4::sSort4True(valid, ioProperties);
-				return valid.CountTrues();
+				return CountAndSortTrues(valid, ioProperties);
 			}
 
 			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
@@ -549,8 +548,7 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 			JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
 			{
 				UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
-				UVec4::sSort4True(valid, ioProperties);
-				return valid.CountTrues();
+				return CountAndSortTrues(valid, ioProperties);
 			}
 
 			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
@@ -890,12 +888,7 @@ struct MeshShape::MSGetTrianglesContext
 
 		// Test which nodes collide
 		UVec4 collides = AABox4VsBox(mLocalBox, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-
-		// Sort so the colliding ones go first
-		UVec4::sSort4True(collides, ioProperties);
-
-		// Return number of hits
-		return collides.CountTrues();
+		return CountAndSortTrues(collides, ioProperties);
 	}
 
 	JPH_INLINE void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, Vec3Arg inRootBoundsMin, Vec3Arg inRootBoundsMax, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
@@ -1032,12 +1025,7 @@ void MeshShape::sCollideConvexVsMesh(const Shape *inShape1, const Shape *inShape
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsBox(mBoundsOf1InSpaceOf2, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			// Return number of hits
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 
 		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
@@ -1082,12 +1070,7 @@ void MeshShape::sCollideSphereVsMesh(const Shape *inShape1, const Shape *inShape
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsSphere(mSphereCenterIn2, mRadiusPlusMaxSeparationSq, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			// Return number of hits
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 
 		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
@@ -1143,8 +1126,7 @@ Shape::Stats MeshShape::GetStats() const
 		{
 			// Visit all valid children
 			UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
-			UVec4::sSort4True(valid, ioProperties);
-			return valid.CountTrues();
+			return CountAndSortTrues(valid, ioProperties);
 		}
 
 		JPH_INLINE void		VisitTriangles([[maybe_unused]] const TriangleCodec::DecodingContext &ioContext, [[maybe_unused]] Vec3Arg inRootBoundsMin, [[maybe_unused]] Vec3Arg inRootBoundsMax, [[maybe_unused]] const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 

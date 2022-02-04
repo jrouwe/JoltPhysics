@@ -78,9 +78,10 @@ public:
 	/// Logical not (component wise)
 	static JPH_INLINE UVec4		sNot(UVec4Arg inV1);
 
-	/// Sorts 4 elements so that the True values go first (highest bit set), sorts ioIndex at the same time.
-	/// Based on a sorting network: http://en.wikipedia.org/wiki/Sorting_network
-	static JPH_INLINE void		sSort4True(UVec4 &ioValue, UVec4 &ioIndex);
+	/// Sorts the elements in inIndex so that the values that correspond to trues in inValue are the first elements.
+	/// The remaining elements will be set to inValue.w.
+	/// I.e. if inValue = (true, false, true, false) and inIndex = (1, 2, 3, 4) the function returns (1, 3, 4, 4).
+	static JPH_INLINE UVec4		sSort4True(UVec4Arg inValue, UVec4Arg inIndex);
 
 	/// Get individual components
 #if defined(JPH_USE_SSE)

@@ -988,8 +988,7 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTr
 			JPH_INLINE int			VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 			{
 				UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
-				UVec4::sSort4True(valid, ioProperties);
-				return valid.CountTrues();
+				return CountAndSortTrues(valid, ioProperties);
 			}
 
 			JPH_INLINE void			VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2) const
@@ -1665,12 +1664,7 @@ struct HeightFieldShape::HSGetTrianglesContext
 
 		// Test which nodes collide
 		UVec4 collides = AABox4VsBox(mLocalBox, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-
-		// Sort so the colliding ones go first
-		UVec4::sSort4True(collides, ioProperties);
-
-		// Return number of hits
-		return collides.CountTrues();
+		return CountAndSortTrues(collides, ioProperties);
 	}
 
 	void	VisitTriangle(uint inX, uint inY, [[maybe_unused]] uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2) 
@@ -1781,12 +1775,7 @@ void HeightFieldShape::sCollideConvexVsHeightField(const Shape *inShape1, const 
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsBox(mBoundsOf1InSpaceOf2, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			// Return number of hits
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 
 		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
@@ -1842,12 +1831,7 @@ void HeightFieldShape::sCollideSphereVsHeightField(const Shape *inShape1, const 
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsSphere(mSphereCenterIn2, mRadiusPlusMaxSeparationSq, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			// Return number of hits
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 
 		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
