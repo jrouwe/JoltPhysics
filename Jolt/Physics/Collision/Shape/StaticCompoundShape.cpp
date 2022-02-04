@@ -6,7 +6,6 @@
 #include <Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Physics/Collision/Shape/CompoundShapeVisitors.h>
-#include <Physics/Collision/SortReverseAndStore.h>
 #include <Core/Profiler.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>

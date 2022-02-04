@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Physics/Collision/Shape/CompoundShape.h>
+#include <Physics/Collision/SortReverseAndStore.h>
 #include <Math/HalfFloat.h>
 
 namespace JPH {
