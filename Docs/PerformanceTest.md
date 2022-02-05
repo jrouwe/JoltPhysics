@@ -22,3 +22,7 @@ The performance test application contains a couple of simple scenes to test perf
 - Thread Count: The amount of threads used for the test.
 - Steps / Second: Average amount of physics steps / second over the entire duration of the test.
 - Hash: A hash of all positions and rotations of the bodies at the end of the test. Can be used to verify that the test was deterministic.
+
+## Results
+
+If you're interested in how Jolt scales with multiple CPUs and compares to other physics engines, take a look at [this document](https://jrouwe.nl/jolt/JoltPhysicsMulticoreScaling.pdf).
