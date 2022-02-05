@@ -450,4 +450,24 @@ TEST_SUITE("UVec4Tests")
 		CHECK(v.ShiftComponents4Minus(1) == UVec4(4, 0, 0, 0));
 		CHECK(v.ShiftComponents4Minus(0) == UVec4(0, 0, 0, 0));
 	}		
+
+	TEST_CASE("TestUVec4Sort4True")
+	{
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(4, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0x00000000U, 0x00000000U, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(1, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0xffffffffU, 0x00000000U, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(2, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0xffffffffU, 0x00000000U, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(1, 2, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0x00000000U, 0xffffffffU, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(3, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0x00000000U, 0xffffffffU, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(1, 3, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0xffffffffU, 0xffffffffU, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(2, 3, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0xffffffffU, 0xffffffffU, 0x00000000U), UVec4(1, 2, 3, 4)) == UVec4(1, 2, 3, 4));
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0x00000000U, 0x00000000U, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(4, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0x00000000U, 0x00000000U, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(1, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0xffffffffU, 0x00000000U, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(2, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0xffffffffU, 0x00000000U, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(1, 2, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0x00000000U, 0xffffffffU, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(3, 4, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0x00000000U, 0xffffffffU, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(1, 3, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0x00000000U, 0xffffffffU, 0xffffffffU, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(2, 3, 4, 4));
+		CHECK(UVec4::sSort4True(UVec4(0xffffffffU, 0xffffffffU, 0xffffffffU, 0xffffffffU), UVec4(1, 2, 3, 4)) == UVec4(1, 2, 3, 4));
+	}		
 }

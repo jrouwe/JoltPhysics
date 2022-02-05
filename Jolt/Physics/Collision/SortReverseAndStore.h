@@ -30,4 +30,17 @@ JPH_INLINE int SortReverseAndStore(Vec4Arg inValues, float inMaxValue, UVec4 &io
 	return num_results;
 }
 
+/// Shift the elements so that the identifiers that correspond with the trues in inValue come first
+/// @param inValue Values to test for true or false
+/// @param ioIdentifiers the identifiers that are shifted, on return they are shifted
+/// @return The number of trues
+JPH_INLINE int CountAndSortTrues(UVec4Arg inValue, UVec4 &ioIdentifiers)
+{
+	// Sort the hits
+	ioIdentifiers = UVec4::sSort4True(inValue, ioIdentifiers);
+
+	// Return the amount of hits
+	return inValue.CountTrues();
+}
+
 } // JPH

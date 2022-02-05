@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Physics/Collision/Shape/CompoundShape.h>
+#include <Physics/Collision/SortReverseAndStore.h>
 #include <Math/HalfFloat.h>
 
 namespace JPH {
@@ -79,11 +80,7 @@ private:
 		{
 			// Test if point overlaps with box
 			UVec4 collides = GetIntersectingSubShapesVisitor<BoxType>::TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 	};
 

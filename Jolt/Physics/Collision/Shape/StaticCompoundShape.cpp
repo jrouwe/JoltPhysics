@@ -6,7 +6,6 @@
 #include <Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Physics/Collision/Shape/CompoundShapeVisitors.h>
-#include <Physics/Collision/SortReverseAndStore.h>
 #include <Core/Profiler.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -482,11 +481,7 @@ void StaticCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator 
 		{
 			// Test if point overlaps with box
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 	};
 
@@ -543,12 +538,7 @@ void StaticCompoundShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg i
 		{
 			// Test which nodes collide
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			// Return number of hits
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 	};
 
@@ -594,12 +584,7 @@ void StaticCompoundShape::sCollideCompoundVsShape(const Shape *inShape1, const S
 		{
 			// Test which nodes collide
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			// Return number of hits
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 	};
 
@@ -624,12 +609,7 @@ void StaticCompoundShape::sCollideShapeVsCompound(const Shape *inShape1, const S
 		{
 			// Test which nodes collide
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-
-			// Sort so the colliding ones go first
-			UVec4::sSort4True(collides, ioProperties);
-
-			// Return number of hits
-			return collides.CountTrues();
+			return CountAndSortTrues(collides, ioProperties);
 		}
 	};
 
