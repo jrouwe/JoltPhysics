@@ -66,7 +66,10 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	TriangleConvexSupport triangle(v0, v1, v2);
 
 	// Perform collision detection
-	Vec3 penetration_axis = Vec3::sAxisX(), point1, point2;
+	// Note: As we don't remember the penetration axis from the last iteration, and it is likely that the shape (A) we're colliding the triangle (B) against is in front of the triangle,
+	// and the penetration axis is the shortest distance along to push B out of collision, we use the inverse of the triangle normal as an initial penetration axis. This has been seen
+	// to improve performance by approx. 5% over using a fixed axis like (1, 0, 0).
+	Vec3 penetration_axis = -triangle_normal, point1, point2;
 	EPAPenetrationDepth pen_depth;
 	EPAPenetrationDepth::EStatus status;
 
