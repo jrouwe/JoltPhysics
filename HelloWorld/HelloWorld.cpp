@@ -66,7 +66,7 @@ namespace Layers
 };
 
 // Function that determines if two object layers can collide
-bool MyObjectCanCollide(ObjectLayer inObject1, ObjectLayer inObject2)
+static bool MyObjectCanCollide(ObjectLayer inObject1, ObjectLayer inObject2)
 {
 	switch (inObject1)
 	{
@@ -92,7 +92,7 @@ namespace BroadPhaseLayers
 };
 
 // Function that determines if two broadphase layers can collide
-bool MyBroadPhaseCanCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2)
+static bool MyBroadPhaseCanCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2)
 {
 	switch (inLayer1)
 	{
