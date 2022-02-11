@@ -72,10 +72,10 @@ private:
 	struct BodyLink
 	{
 		atomic<uint32>		mLinkedTo;										///< An index in mBodyLinks pointing to another body in this island with a lower index than this body
-		uint32				mNextLinkOrIslandIndex;							///< If cProcessedLink bit is cleared: Forms a linked list of bodies in the same island, otherwise: points to the island index of this body
+		uint32				mIslandIndex;									///< The island index of this body (filled in during Finalize)
 	};
 
-	// Intermediate date
+	// Intermediate data
 	BodyLink *				mBodyLinks = nullptr;							///< Maps bodies to the first body in the island
 	uint32 *				mConstraintLinks = nullptr;						///< Maps constraint index to body index (which maps to island index)
 	uint32 *				mContactLinks = nullptr;						///< Maps contact constraint index to body index (which maps to island index)
