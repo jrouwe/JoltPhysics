@@ -12,9 +12,6 @@
 
 namespace JPH {
 
-static const uint32 cNoLink = 0x7fffffff;
-static const uint32 cProcessedLink = 0x80000000;
-
 IslandBuilder::~IslandBuilder()
 {
 	JPH_ASSERT(mConstraintLinks == nullptr);
@@ -38,7 +35,7 @@ void IslandBuilder::Init(uint32 inMaxActiveBodies)
 	JPH_ASSERT(mBodyLinks == nullptr);
 	mBodyLinks = new BodyLink [mMaxActiveBodies];
 	for (uint32 i = 0; i < mMaxActiveBodies; ++i)
-		mBodyLinks[i].mLinkedTo = i;
+		mBodyLinks[i].mLinkedTo.store(i, memory_order_relaxed);
 }
 
 void IslandBuilder::PrepareContactConstraints(uint32 inMaxContacts, TempAllocator *inTempAllocator)
@@ -88,7 +85,7 @@ uint32 IslandBuilder::GetLowestBodyIndex(uint32 inActiveBodyIndex) const
 	uint32 index = inActiveBodyIndex;
 	for (;;)
 	{
-		uint32 link_to = mBodyLinks[index].mLinkedTo;
+		uint32 link_to = mBodyLinks[index].mLinkedTo.load(memory_order_relaxed);
 		if (link_to == index)
 			break;
 		index = link_to;
@@ -132,7 +129,7 @@ void IslandBuilder::LinkBodies(uint32 inFirst, uint32 inSecond)
 				// Attempt to link the second to the first
 				// Since we found this body to be at the end of the chain it must point to itself, and if it
 				// doesn't it has been reparented and we need to retry the algorithm
-				if (!mBodyLinks[second_link_to].mLinkedTo.compare_exchange_strong(second_link_to, first_link_to))
+				if (!mBodyLinks[second_link_to].mLinkedTo.compare_exchange_weak(second_link_to, first_link_to, memory_order_relaxed))
 					continue;
 			}
 			else
@@ -140,7 +137,7 @@ void IslandBuilder::LinkBodies(uint32 inFirst, uint32 inSecond)
 				// Attempt to link the first to the second
 				// Since we found this body to be at the end of the chain it must point to itself, and if it
 				// doesn't it has been reparented and we need to retry the algorithm
-				if (!mBodyLinks[first_link_to].mLinkedTo.compare_exchange_strong(first_link_to, second_link_to))
+				if (!mBodyLinks[first_link_to].mLinkedTo.compare_exchange_weak(first_link_to, second_link_to, memory_order_relaxed))
 					continue;
 			}
 		}
@@ -151,8 +148,8 @@ void IslandBuilder::LinkBodies(uint32 inFirst, uint32 inSecond)
 		// to the lowest index that we found. If the value became lower than our lowest link, some other
 		// thread must have relinked these bodies in the mean time so we won't update the value.
 		uint32 lowest_link_to = min(first_link_to, second_link_to);
-		AtomicMin(mBodyLinks[inFirst].mLinkedTo, lowest_link_to);
-		AtomicMin(mBodyLinks[inSecond].mLinkedTo, lowest_link_to);
+		AtomicMin(mBodyLinks[inFirst].mLinkedTo, lowest_link_to, memory_order_relaxed);
+		AtomicMin(mBodyLinks[inSecond].mLinkedTo, lowest_link_to, memory_order_relaxed);
 		break;
 	}
 }
@@ -181,7 +178,7 @@ void IslandBuilder::ValidateIslands(uint32 inNumActiveBodies) const
 	for (uint32 i = 0; i < mNumLinkValidation; ++i)
 	{
 		// If the bodies in this link ended up in different groups we have a problem
-		if (mBodyLinks[mLinkValidation[i].mFirst].mLinkedTo != mBodyLinks[mLinkValidation[i].mSecond].mLinkedTo)
+		if (mBodyLinks[mLinkValidation[i].mFirst].mIslandIndex != mBodyLinks[mLinkValidation[i].mSecond].mIslandIndex)
 		{
 			Trace("Fail: %d, %d", mLinkValidation[i].mFirst, mLinkValidation[i].mSecond);
 			Trace("Num Active: %d", inNumActiveBodies);
@@ -210,43 +207,6 @@ void IslandBuilder::BuildBodyIslands(const BodyID *inActiveBodies, uint32 inNumA
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Check that the number of active bodies does not exceed our special value
-	JPH_ASSERT(inNumActiveBodies < cNoLink);
-
-	// Make the linked to field for all active bodies point to the body with the lowest index
-	for (uint32 t = 0; t < inNumActiveBodies; ++t)
-	{
-		BodyLink &target_link = mBodyLinks[t];
-		target_link.mLinkedTo = mBodyLinks[target_link.mLinkedTo].mLinkedTo.load();
-		target_link.mNextLinkOrIslandIndex = cNoLink;
-	}
-
-#ifdef JPH_VALIDATE_ISLAND_BUILDER
-	ValidateIslands(inNumActiveBodies);
-#endif
-
-	// Form a linked list connecting all bodies in an island
-	JPH_ASSERT(mNumIslands == 0);
-	for (int t = (int)inNumActiveBodies - 1; t >= 0; --t)
-	{
-		BodyLink &target_link = mBodyLinks[t];
-		uint32 s = target_link.mLinkedTo;
-		if (s != uint32(t))
-		{
-			// Links to another body, link it
-			BodyLink &source_link = mBodyLinks[s];
-			uint32 source_next_link = source_link.mNextLinkOrIslandIndex;
-			source_link.mNextLinkOrIslandIndex = t;
-			target_link.mNextLinkOrIslandIndex = source_next_link;
-		}
-		else
-		{
-			// Does not link to other body, this is the start of a new island
-			++mNumIslands;
-		}
-	}
-	JPH_ASSERT((mNumIslands & cProcessedLink) == 0);
-
 	// Store the amount of active bodies
 	mNumActiveBodies = inNumActiveBodies;
 
@@ -254,42 +214,68 @@ void IslandBuilder::BuildBodyIslands(const BodyID *inActiveBodies, uint32 inNumA
 	JPH_ASSERT(mBodyIslands == nullptr);
 	mBodyIslands = (BodyID *)inTempAllocator->Allocate(inNumActiveBodies * sizeof(BodyID));
 
-	// Create output array for end index of each contact island
-	JPH_ASSERT(mBodyIslandEnds == nullptr);
-	mBodyIslandEnds = (uint32 *)inTempAllocator->Allocate(mNumIslands * sizeof(uint32)); 
+	// Create output array for start index of each island. At this point we don't know how many islands there will be, but we know it cannot be more than inNumActiveBodies.
+	// Note: We allocate 1 extra entry because we always increment the count of the next island.
+	uint32 *body_island_starts = (uint32 *)inTempAllocator->Allocate((inNumActiveBodies + 1) * sizeof(uint32));
 
-	// Convert the linked list to a linear list grouped by island
-	uint32 island_idx = 0;
-	uint32 output_idx = 0;
+	// First island always starts at 0
+	body_island_starts[0] = 0;
+
+	// Calculate island index for all bodies
+	JPH_ASSERT(mNumIslands == 0);
 	for (uint32 i = 0; i < inNumActiveBodies; ++i)
-		if ((mBodyLinks[i].mNextLinkOrIslandIndex & cProcessedLink) == 0)
+	{
+		BodyLink &link = mBodyLinks[i];
+		uint32 s = link.mLinkedTo.load(memory_order_relaxed);
+		if (s != uint32(i))
 		{
-			uint32 active_body_idx = i;
+			// Links to another body, take island index from other body (this must have been filled in already since we're looping from low to high)
+			JPH_ASSERT(s < uint32(i));
+			uint32 island_index = mBodyLinks[s].mIslandIndex;
+			link.mIslandIndex = island_index;
 
-			do
-			{
-				// Store body id of active body
-				mBodyIslands[output_idx++] = inActiveBodies[active_body_idx];
-
-				// Get next body in chain
-				BodyLink &link = mBodyLinks[active_body_idx];
-				uint32 next = link.mNextLinkOrIslandIndex;
-
-				// Store island index and mark this link as processed
-				link.mNextLinkOrIslandIndex = island_idx | cProcessedLink; 
-
-				// Reset linked to field for the next update
-				link.mLinkedTo = active_body_idx;
-
-				active_body_idx = next;
-			}
-			while (active_body_idx != cNoLink);
-
-			// Store next pointer
-			mBodyIslandEnds[island_idx] = output_idx;
-			++island_idx;
+			// Increment the start of the next island
+			body_island_starts[island_index + 1]++;
 		}
-	JPH_ASSERT(island_idx == mNumIslands);
+		else
+		{
+			// Does not link to other body, this is the start of a new island
+			link.mIslandIndex = mNumIslands;
+			++mNumIslands;
+
+			// Set the start of the next island to 1
+			body_island_starts[mNumIslands] = 1;
+		}
+	}
+
+#ifdef JPH_VALIDATE_ISLAND_BUILDER
+	ValidateIslands(inNumActiveBodies);
+#endif
+
+	// Make the start array absolute (so far we only counted)
+	for (uint32 island = 1; island < mNumIslands; ++island)
+		body_island_starts[island] += body_island_starts[island - 1];
+
+	// Convert the to a linear list grouped by island
+	for (uint32 i = 0; i < inNumActiveBodies; ++i)
+	{
+		BodyLink &link = mBodyLinks[i];
+
+		// Copy the body to the correct location in the array and increment it
+		uint32 &start = body_island_starts[link.mIslandIndex];
+		mBodyIslands[start] = inActiveBodies[i];
+		start++;
+
+		// Reset linked to field for the next update
+		link.mLinkedTo.store(i, memory_order_relaxed);
+	}
+
+	// We should now have a full array
+	JPH_ASSERT(mNumIslands == 0 || body_island_starts[mNumIslands - 1] == inNumActiveBodies);
+
+	// We've incremented all body indices so that they now point at the end instead of the starts
+	JPH_ASSERT(mBodyIslandEnds == nullptr);
+	mBodyIslandEnds = body_island_starts;
 }
 
 void IslandBuilder::BuildConstraintIslands(uint32 *inConstraintToBody, uint32 inNumConstraints, uint32 *&outConstraints, uint32 *&outConstraintsEnd, TempAllocator *inTempAllocator)
@@ -301,8 +287,9 @@ void IslandBuilder::BuildConstraintIslands(uint32 *inConstraintToBody, uint32 in
 		return;
 
 	// Create output arrays for constraints
+	// Note: For the end indices we allocate 1 extra entry so we don't have to do an if in the inner loop
 	uint32 *constraints = (uint32 *)inTempAllocator->Allocate(inNumConstraints * sizeof(uint32));
-	uint32 *constraint_ends = (uint32 *)inTempAllocator->Allocate(mNumIslands * sizeof(uint32));
+	uint32 *constraint_ends = (uint32 *)inTempAllocator->Allocate((mNumIslands + 1) * sizeof(uint32));
 
 	// Reset sizes
 	for (uint32 island = 0; island < mNumIslands; ++island)
@@ -312,10 +299,9 @@ void IslandBuilder::BuildConstraintIslands(uint32 *inConstraintToBody, uint32 in
 	for (uint32 constraint = 0; constraint < inNumConstraints; ++constraint)
 	{
 		uint32 body_idx = inConstraintToBody[constraint];
-		uint32 next_island_idx = (mBodyLinks[body_idx].mNextLinkOrIslandIndex & (~cProcessedLink)) + 1;
+		uint32 next_island_idx = mBodyLinks[body_idx].mIslandIndex + 1;
 		JPH_ASSERT(next_island_idx <= mNumIslands);
-		if (next_island_idx < mNumIslands)
-			constraint_ends[next_island_idx]++;
+		constraint_ends[next_island_idx]++;
 	}
 
 	// Make start positions absolute
@@ -326,7 +312,7 @@ void IslandBuilder::BuildConstraintIslands(uint32 *inConstraintToBody, uint32 in
 	for (uint32 constraint = 0; constraint < inNumConstraints; ++constraint)
 	{
 		uint32 body_idx = inConstraintToBody[constraint];
-		uint32 island_idx = mBodyLinks[body_idx].mNextLinkOrIslandIndex & (~cProcessedLink);
+		uint32 island_idx = mBodyLinks[body_idx].mIslandIndex;
 		constraints[constraint_ends[island_idx]++] = constraint;
 	}
 
@@ -450,7 +436,7 @@ void IslandBuilder::ResetIslands(TempAllocator *inTempAllocator)
 
 	if (mContactIslands != nullptr)
 	{
-		inTempAllocator->Free(mContactIslandEnds, mNumIslands * sizeof(uint32));
+		inTempAllocator->Free(mContactIslandEnds, (mNumIslands + 1) * sizeof(uint32));
 		mContactIslandEnds = nullptr;
 		inTempAllocator->Free(mContactIslands, mNumContacts * sizeof(uint32));
 		mContactIslands = nullptr;
@@ -458,13 +444,13 @@ void IslandBuilder::ResetIslands(TempAllocator *inTempAllocator)
 	
 	if (mConstraintIslands != nullptr)
 	{
-		inTempAllocator->Free(mConstraintIslandEnds, mNumIslands * sizeof(uint32));
+		inTempAllocator->Free(mConstraintIslandEnds, (mNumIslands + 1) * sizeof(uint32));
 		mConstraintIslandEnds = nullptr;
 		inTempAllocator->Free(mConstraintIslands, mNumConstraints * sizeof(uint32));
 		mConstraintIslands = nullptr;
 	}
 	
-	inTempAllocator->Free(mBodyIslandEnds, mNumIslands * sizeof(uint32));
+	inTempAllocator->Free(mBodyIslandEnds, (mNumActiveBodies + 1) * sizeof(uint32));
 	mBodyIslandEnds = nullptr;
 	inTempAllocator->Free(mBodyIslands, mNumActiveBodies * sizeof(uint32));
 	mBodyIslands = nullptr;
