@@ -94,7 +94,7 @@ private:
 	{
 	public:
 		/// Construct node
-		explicit				Node(bool inLocked);
+								Node();
 
 		/// Get bounding box encapsulating all children
 		void					GetNodeBounds(AABox &outBounds) const;
@@ -124,11 +124,11 @@ private:
 
 		/// Index of the parent node.
 		/// Note: This value is unreliable during the UpdatePrepare/Finalize() function as a node may be relinked to the newly built tree.
-		atomic<uint32>			mParentNodeIndex;
+		atomic<uint32>			mParentNodeIndex = cInvalidNodeIndex;
 
-		/// If this part of the tree is locked, meaning we will treat this sub tree as a single body during the UpdatePrepare/Finalize().
-		/// If any changes are made to an object inside this sub tree then the direct path from the body to the top of the tree will become unlocked.
-		atomic<uint32>			mIsLocked;
+		/// If this part of the tree has changed, if not, we will treat this sub tree as a single body during the UpdatePrepare/Finalize().
+		/// If any changes are made to an object inside this sub tree then the direct path from the body to the top of the tree will become changed.
+		atomic<uint32>			mIsChanged = false;
 
 		// Padding to align to 124 bytes
 		uint32					mPadding = 0;
@@ -279,14 +279,14 @@ private:
 	/// Depending on if inNodeID is a body or tree node return the bounding box
 	inline AABox				GetNodeOrBodyBounds(const BodyVector &inBodies, NodeID inNodeID) const;
 
-	/// Unlock node and all of its parents
-	inline void					UnlockNodeAndParents(uint32 inNodeIndex);
+	/// Mark node and all of its parents as changed
+	inline void					MarkNodeAndParentsChanged(uint32 inNodeIndex);
 
-	/// Widen parent bounds of node inNodeIndex to encapsulate inNewBounds, also unlock the node and its parents
-	inline void					WidenAndUnlockNodeAndParents(uint32 inNodeIndex, const AABox &inNewBounds);
+	/// Widen parent bounds of node inNodeIndex to encapsulate inNewBounds, also mark node and all of its parents as changed
+	inline void					WidenAndMarkNodeAndParentsChanged(uint32 inNodeIndex, const AABox &inNewBounds);
 
 	/// Allocate a new node
-	inline uint32				AllocateNode(bool inLocked);
+	inline uint32				AllocateNode();
 
 	/// Try to insert a new leaf to the tree at inNodeIndex
 	inline bool					TryInsertLeaf(TrackingVector &ioTracking, int inNodeIndex, NodeID inLeafID, const AABox &inLeafBounds, int inLeafNumBodies);
@@ -295,7 +295,7 @@ private:
 	inline bool					TryCreateNewRoot(TrackingVector &ioTracking, atomic<uint32> &ioRootNodeIndex, NodeID inLeafID, const AABox &inLeafBounds, int inLeafNumBodies);
 
 	/// Build a tree for ioBodyIDs, returns the NodeID of the root (which will be the ID of a single body if inNumber = 1)
-	NodeID						BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, uint32 inParentNodeIndex, bool inLocked, AABox &outBounds);
+	NodeID						BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, uint32 inParentNodeIndex, AABox &outBounds);
 
 	/// Sorts ioNodeIDs spatially into 2 groups. Second groups starts at ioNodeIDs + outMidPoint.
 	/// After the function returns ioNodeIDs and ioNodeCenters will be shuffled
