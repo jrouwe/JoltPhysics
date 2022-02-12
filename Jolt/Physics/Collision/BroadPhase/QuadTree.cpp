@@ -307,7 +307,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 	{
 		// Build new tree
 		AABox root_bounds;
-		root_node_id = BuildTree(inBodies, ioTracking, outUpdateState.mAllNodeIDs, num_node_ids, cInvalidNodeIndex, root_bounds);
+		root_node_id = BuildTree(inBodies, ioTracking, outUpdateState.mAllNodeIDs, num_node_ids, root_bounds);
 
 		if (root_node_id.IsBody())
 		{
@@ -454,7 +454,7 @@ AABox QuadTree::GetNodeOrBodyBounds(const BodyVector &inBodies, NodeID inNodeID)
 	}
 }
 
-QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, uint32 inParentNodeIndex, AABox &outBounds)
+QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, AABox &outBounds)
 {
 	// Trivial case: No bodies in tree
 	if (inNumber == 0)
@@ -764,7 +764,7 @@ void QuadTree::AddBodiesPrepare(const BodyVector &inBodies, TrackingVector &ioTr
 #endif
 
 	// Build subtree for the new bodies
-	outState.mLeafID = BuildTree(inBodies, ioTracking, (NodeID *)ioBodyIDs, inNumber, cInvalidNodeIndex, outState.mLeafBounds);
+	outState.mLeafID = BuildTree(inBodies, ioTracking, (NodeID *)ioBodyIDs, inNumber, outState.mLeafBounds);
 
 #ifdef _DEBUG
 	if (outState.mLeafID.IsNode())
