@@ -67,7 +67,13 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 	// Note: As we don't remember the penetration axis from the last iteration, and it is likely that shape2 is pushed out of
 	// collision relative to shape1 by comparing their COM's, we use that as an initial penetration axis: shape2.com - shape1.com
 	// This has been seen to improve performance by approx. 1% over using a fixed axis like (1, 0, 0).
-	Vec3 penetration_axis = transform_2_to_1.GetTranslation(), point1, point2;
+	Vec3 penetration_axis = transform_2_to_1.GetTranslation();
+
+	// Ensure that we do not pass in a near zero penetration axis
+	if (penetration_axis.IsNearZero())
+		penetration_axis = Vec3::sAxisX();
+
+	Vec3 point1, point2;
 	EPAPenetrationDepth pen_depth;
 	EPAPenetrationDepth::EStatus status;
 
