@@ -333,7 +333,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 	outUpdateState.mRootNodeID = root_node_id;
 }
 
-void QuadTree::UpdateFinalize([[maybe_unused]] const BodyVector &inBodies, [[maybe_unused]] TrackingVector &ioTracking, UpdateState &inUpdateState)
+void QuadTree::UpdateFinalize([[maybe_unused]] const BodyVector &inBodies, [[maybe_unused]] TrackingVector &ioTracking, const UpdateState &inUpdateState)
 {
 	// Tree building is complete, now we switch the old with the new tree
 	uint32 new_root_idx = mRootNodeIndex ^ 1;

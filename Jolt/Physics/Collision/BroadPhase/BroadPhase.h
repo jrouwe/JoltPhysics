@@ -47,7 +47,7 @@ public:
 	virtual	UpdateState	UpdatePrepare()														{ return UpdateState(); }
 
 	/// Finalizing the update will quickly apply the changes
-	virtual void		UpdateFinalize(UpdateState &inUpdateState)							{ /* Optionally overridden by implementation */ }
+	virtual void		UpdateFinalize(const UpdateState &inUpdateState)					{ /* Optionally overridden by implementation */ }
 
 	/// Must be called after UpdateFinalize to allow modifications to the broadphase
 	virtual void		UnlockModifications()												{ /* Optionally overridden by implementation */ }
