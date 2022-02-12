@@ -187,7 +187,6 @@ public:
 
 	struct UpdateState
 	{
-		NodeID *				mAllNodeIDs;						///< Temporary storage for all leaf node ID's in the tree that must be grouped into a new tree
 		NodeID					mRootNodeID;						///< This will be the new root node id
 	};
 

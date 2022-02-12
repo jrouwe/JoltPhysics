@@ -238,8 +238,8 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 #endif
 
 	// Create space for all body ID's
-	outUpdateState.mAllNodeIDs = new NodeID [mNumBodies];
-	NodeID *cur_node_id = outUpdateState.mAllNodeIDs;
+	NodeID *node_ids = new NodeID [mNumBodies];
+	NodeID *cur_node_id = node_ids;
 
 	// Collect all bodies
 	NodeID node_stack[cStackSize];
@@ -297,7 +297,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 	while (top >= 0);
 
 	// Check that our book keeping matches
-	uint32 num_node_ids = uint32(cur_node_id - outUpdateState.mAllNodeIDs);
+	uint32 num_node_ids = uint32(cur_node_id - node_ids);
 	JPH_ASSERT(num_node_ids <= mNumBodies);
 
 	// This will be the new root node id
@@ -307,7 +307,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 	{
 		// Build new tree
 		AABox root_bounds;
-		root_node_id = BuildTree(inBodies, ioTracking, outUpdateState.mAllNodeIDs, num_node_ids, root_bounds);
+		root_node_id = BuildTree(inBodies, ioTracking, node_ids, num_node_ids, root_bounds);
 
 		if (root_node_id.IsBody())
 		{
@@ -327,6 +327,9 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 		root_node_id = NodeID::sFromNodeIndex(root_idx);
 	}
 
+	// Delete temporary data
+	delete [] node_ids;
+
 	outUpdateState.mRootNodeID = root_node_id;
 }
 
@@ -345,9 +348,6 @@ void QuadTree::UpdateFinalize([[maybe_unused]] const BodyVector &inBodies, [[may
 
 	// All queries that start from now on will use this new tree
 	mRootNodeIndex = new_root_idx;
-
-	// Delete temporary data
-	delete [] inUpdateState.mAllNodeIDs;
 
 #ifdef _DEBUG
 	ValidateTree(inBodies, ioTracking, new_root_node.mIndex, mNumBodies);
