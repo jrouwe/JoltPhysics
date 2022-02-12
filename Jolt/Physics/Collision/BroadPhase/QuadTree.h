@@ -196,7 +196,7 @@ public:
 	/// Update the broadphase, needs to be called regularly to achieve a tight fit of the tree when bodies have been modified.
 	/// UpdatePrepare() will build the tree, UpdateFinalize() will lock the root of the tree shortly and swap the trees and afterwards clean up temporary data structures.
 	void						UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState);
-	void						UpdateFinalize(const BodyVector &inBodies, TrackingVector &ioTracking, const UpdateState &inUpdateState);
+	void						UpdateFinalize(const BodyVector &inBodies, const TrackingVector &inTracking, const UpdateState &inUpdateState);
 
 	/// Temporary data structure to pass information between AddBodiesPrepare and AddBodiesFinalize/Abort
 	struct AddState
