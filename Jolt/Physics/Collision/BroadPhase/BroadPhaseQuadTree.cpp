@@ -76,10 +76,10 @@ void BroadPhaseQuadTree::Optimize()
 	for (uint l = 0; l < mNumLayers; ++l)
 	{
 		QuadTree &tree = mLayers[l];
-		if (tree.HasBodies() && tree.IsDirty())
+		if (tree.HasBodies())
 		{
 			QuadTree::UpdateState update_state;
-			tree.UpdatePrepare(mBodyManager->GetBodies(), mTracking, update_state);
+			tree.UpdatePrepare(mBodyManager->GetBodies(), mTracking, update_state, true);
 			tree.UpdateFinalize(mBodyManager->GetBodies(), mTracking, update_state);
 		}
 	}
@@ -115,7 +115,7 @@ BroadPhase::UpdateState BroadPhaseQuadTree::UpdatePrepare()
 		if (tree.HasBodies() && tree.IsDirty() && tree.CanBeUpdated())
 		{
 			update_state_impl->mTree = &tree;
-			tree.UpdatePrepare(mBodyManager->GetBodies(), mTracking, update_state_impl->mUpdateState);
+			tree.UpdatePrepare(mBodyManager->GetBodies(), mTracking, update_state_impl->mUpdateState, false);
 			return update_state;
 		}
 	}

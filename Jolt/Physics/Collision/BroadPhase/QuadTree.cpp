@@ -216,7 +216,7 @@ void QuadTree::DiscardOldTree()
 	}
 }
 
-void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState)
+void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState, bool inFullRebuild)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We only read positions
@@ -231,6 +231,10 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 
 	// Get the current root node
 	RootNode &root_node = GetCurrentRoot();
+
+#ifdef JPH_DUMP_BROADPHASE_TREE
+	DumpTree(root_node.GetNodeID(), StringFormat("%s_PRE", mName).c_str());
+#endif
 
 	// Assert sane data
 #ifdef _DEBUG
@@ -268,7 +272,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 			uint32 node_idx = node_id.GetNodeIndex();
 			const Node &node = mAllocator->Get(node_idx);
 
-			if (!node.mIsChanged)
+			if (!node.mIsChanged && !inFullRebuild)
 			{
 				// Node is unchanged, treat it as a whole
 				*cur_node_id = node_id;
@@ -298,7 +302,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 
 	// Check that our book keeping matches
 	uint32 num_node_ids = uint32(cur_node_id - node_ids);
-	JPH_ASSERT(num_node_ids <= mNumBodies);
+	JPH_ASSERT(inFullRebuild? num_node_ids == mNumBodies : num_node_ids <= mNumBodies);
 
 	// This will be the new root node id
 	NodeID root_node_id;
@@ -348,6 +352,10 @@ void QuadTree::UpdateFinalize([[maybe_unused]] const BodyVector &inBodies, [[may
 
 	// All queries that start from now on will use this new tree
 	mRootNodeIndex = new_root_idx;
+
+#ifdef JPH_DUMP_BROADPHASE_TREE
+	DumpTree(new_root_node.GetNodeID(), StringFormat("%s_POST", mName).c_str());
+#endif
 
 #ifdef _DEBUG
 	ValidateTree(inBodies, inTracking, new_root_node.mIndex, mNumBodies);
@@ -1512,6 +1520,83 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 }
 
 #endif
+
+#ifdef JPH_DUMP_BROADPHASE_TREE
+
+void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) const
+{
+	// Open DOT file
+	ofstream f;
+	f.open(StringFormat("%s.dot", inFileNamePrefix), ofstream::out | ofstream::trunc);
+	if (!f.is_open())
+		return;
+
+	// Write header
+	f << "digraph {\n";
+
+	// Iterate the entire tree
+	NodeID node_stack[cStackSize];
+	node_stack[0] = inRoot;
+	JPH_ASSERT(node_stack[0].IsValid());
+	int top = 0;
+	do
+	{
+		// Check if node is a body
+		NodeID node_id = node_stack[top];
+		if (node_id.IsBody())
+		{
+			// Output body
+			string body_id = ConvertToString(node_id.GetBodyID().GetIndex());
+			f << "body" << body_id << "[label = \"Body " << body_id << "\"]\n";
+		}
+		else
+		{
+			// Process normal node
+			uint32 node_idx = node_id.GetNodeIndex();
+			const Node &node = mAllocator->Get(node_idx);
+
+			// Get bounding box
+			AABox bounds;
+			node.GetNodeBounds(bounds);
+
+			// Output node
+			string node_str = ConvertToString(node_idx);
+			f << "node" << node_str << "[label = \"Node " << node_str << "\nVolume: " << ConvertToString(bounds.GetVolume()) << "\" color=" << (node.mIsChanged? "red" : "black") << "]\n";
+
+			// Recurse and get all children
+			for (int i = 0; i < 4; ++i)
+			{
+				NodeID child_node_id = node.mChildNodeID[i];
+				if (child_node_id.IsValid())
+				{
+					JPH_ASSERT(top < cStackSize);
+					node_stack[top] = child_node_id;
+					top++;
+
+					// Output link
+					f << "node" << node_str << " -> ";
+					if (child_node_id.IsBody())
+						f << "body" << ConvertToString(child_node_id.GetBodyID().GetIndex());
+					else
+						f << "node" << ConvertToString(child_node_id.GetNodeIndex());
+					f << "\n";
+				}
+			}
+		}
+		--top;
+	} 
+	while (top >= 0);
+
+	// Finish DOT file
+	f << "}\n";
+	f.close();
+
+	// Convert to svg file
+	string cmd = StringFormat("dot %s.dot -Tsvg -o %s.svg", inFileNamePrefix, inFileNamePrefix);
+	system(cmd.c_str());
+}
+
+#endif // JPH_DUMP_BROADPHASE_TREE
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
 

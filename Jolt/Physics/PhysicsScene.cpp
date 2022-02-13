@@ -41,11 +41,27 @@ bool PhysicsScene::FixInvalidScales()
 	return success;
 }
 
-void PhysicsScene::CreateBodies(PhysicsSystem *inSystem) const
+bool PhysicsScene::CreateBodies(PhysicsSystem *inSystem) const
 {
 	BodyInterface &bi = inSystem->GetBodyInterface();
+
+	// Create bodies
+	BodyIDVector body_ids;
+	body_ids.reserve(mBodies.size());
 	for (const BodyCreationSettings &b : mBodies)
-		bi.CreateAndAddBody(b, EActivation::Activate);
+	{
+		const Body *body = bi.CreateBody(b);
+		if (body == nullptr)
+			break; // Out of bodies
+		body_ids.push_back(body->GetID());
+	}
+
+	// Batch add bodies
+	BodyInterface::AddState add_state = bi.AddBodiesPrepare(body_ids.data(), (int)body_ids.size());
+	bi.AddBodiesFinalize(body_ids.data(), (int)body_ids.size(), add_state, EActivation::Activate);
+
+	// Return true if all bodies were added
+	return body_ids.size() == mBodies.size();
 }
 
 void PhysicsScene::SaveBinaryState(StreamOut &inStream, bool inSaveShapes, bool inSaveGroupFilter) const

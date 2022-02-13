@@ -13,6 +13,8 @@
 	#include <map>
 #endif // JPH_TRACK_BROADPHASE_STATS
 
+//#define JPH_DUMP_BROADPHASE_TREE
+
 namespace JPH {
 
 /// Internal tree structure in broadphase, is essentially a quad AABB tree.
@@ -195,7 +197,7 @@ public:
 
 	/// Update the broadphase, needs to be called regularly to achieve a tight fit of the tree when bodies have been modified.
 	/// UpdatePrepare() will build the tree, UpdateFinalize() will lock the root of the tree shortly and swap the trees and afterwards clean up temporary data structures.
-	void						UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState);
+	void						UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState, bool inFullRebuild);
 	void						UpdateFinalize(const BodyVector &inBodies, const TrackingVector &inTracking, const UpdateState &inUpdateState);
 
 	/// Temporary data structure to pass information between AddBodiesPrepare and AddBodiesFinalize/Abort
@@ -309,6 +311,11 @@ private:
 	/// Validate that the tree is consistent.
 	/// Note: This function only works if the tree is not modified while we're traversing it.
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
+#endif
+
+#ifdef JPH_DUMP_BROADPHASE_TREE
+	/// Dump the tree in DOT format (see: https://graphviz.org/)
+	void						DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) const;
 #endif
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
