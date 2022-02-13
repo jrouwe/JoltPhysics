@@ -13,6 +13,8 @@
 	#include <map>
 #endif // JPH_TRACK_BROADPHASE_STATS
 
+//#define JPH_DUMP_BROADPHASE_TREE
+
 namespace JPH {
 
 /// Internal tree structure in broadphase, is essentially a quad AABB tree.
@@ -309,6 +311,11 @@ private:
 	/// Validate that the tree is consistent.
 	/// Note: This function only works if the tree is not modified while we're traversing it.
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;
+#endif
+
+#ifdef JPH_DUMP_BROADPHASE_TREE
+	/// Dump the tree in DOT format (see: https://graphviz.org/)
+	void						DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) const;
 #endif
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
