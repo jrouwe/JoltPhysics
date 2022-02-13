@@ -216,7 +216,7 @@ void QuadTree::DiscardOldTree()
 	}
 }
 
-void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState)
+void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState, bool inFullRebuild)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We only read positions
@@ -268,7 +268,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 			uint32 node_idx = node_id.GetNodeIndex();
 			const Node &node = mAllocator->Get(node_idx);
 
-			if (!node.mIsChanged)
+			if (!node.mIsChanged && !inFullRebuild)
 			{
 				// Node is unchanged, treat it as a whole
 				*cur_node_id = node_id;
@@ -298,7 +298,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 
 	// Check that our book keeping matches
 	uint32 num_node_ids = uint32(cur_node_id - node_ids);
-	JPH_ASSERT(num_node_ids <= mNumBodies);
+	JPH_ASSERT(inFullRebuild? num_node_ids == mNumBodies : num_node_ids <= mNumBodies);
 
 	// This will be the new root node id
 	NodeID root_node_id;
