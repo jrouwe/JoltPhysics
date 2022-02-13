@@ -26,8 +26,8 @@ public:
 	const vector<BodyCreationSettings> &	GetBodies() const								{ return mBodies; }
 	vector<BodyCreationSettings> &			GetBodies()										{ return mBodies; }
 
-	/// Instantiate all bodies
-	void									CreateBodies(PhysicsSystem *inSystem) const;
+	/// Instantiate all bodies, returns false if not all bodies could be created
+	bool									CreateBodies(PhysicsSystem *inSystem) const;
 
 	/// Go through all body creation settings and fix shapes that are scaled incorrectly (note this will change the scene a bit).
 	/// @return False when not all scales could be fixed.
