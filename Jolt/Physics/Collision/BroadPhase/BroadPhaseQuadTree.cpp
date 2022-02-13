@@ -125,13 +125,13 @@ BroadPhase::UpdateState BroadPhaseQuadTree::UpdatePrepare()
 	return update_state;
 }
 
-void BroadPhaseQuadTree::UpdateFinalize(UpdateState &inUpdateState)
+void BroadPhaseQuadTree::UpdateFinalize(const UpdateState &inUpdateState)
 {
 	// LockModifications should have been called
 	JPH_ASSERT(mUpdateMutex.is_locked());
 
 	// Test if a tree was updated
-	UpdateStateImpl *update_state_impl = reinterpret_cast<UpdateStateImpl *>(&inUpdateState);
+	const UpdateStateImpl *update_state_impl = reinterpret_cast<const UpdateStateImpl *>(&inUpdateState);
 	if (update_state_impl->mTree == nullptr)
 		return;
 

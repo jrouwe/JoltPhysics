@@ -9,8 +9,8 @@
 
 ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult)
 {
-	// Expect body 1 to be dynamic
-	if (!inBody1.IsDynamic())
+	// Expect body 1 to be dynamic (or one of the bodies must be a sensor)
+	if (!inBody1.IsDynamic() && !inBody1.IsSensor() && !inBody2.IsSensor())
 		JPH_BREAKPOINT;
 
 	ValidateResult result;

@@ -21,7 +21,7 @@ public:
 	virtual void			FrameSync() override;
 	virtual void			LockModifications() override;
 	virtual	UpdateState		UpdatePrepare() override;
-	virtual void			UpdateFinalize(UpdateState &inUpdateState) override;
+	virtual void			UpdateFinalize(const UpdateState &inUpdateState) override;
 	virtual void			UnlockModifications() override;
 	virtual AddState		AddBodiesPrepare(BodyID *ioBodies, int inNumber) override;
 	virtual void			AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddState inAddState) override;
