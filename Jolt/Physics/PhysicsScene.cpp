@@ -50,7 +50,7 @@ bool PhysicsScene::CreateBodies(PhysicsSystem *inSystem) const
 	body_ids.reserve(mBodies.size());
 	for (const BodyCreationSettings &b : mBodies)
 	{
-		Body *body = bi.CreateBody(b);
+		const Body *body = bi.CreateBody(b);
 		if (body == nullptr)
 			break; // Out of bodies
 		body_ids.push_back(body->GetID());
