@@ -197,10 +197,9 @@ As the library does not offer an exporter from content creation packages and sin
 The physics simulation is deterministic provided that:
 
 * The APIs that modify the simulation are called in exactly the same order. For example, bodies and constraints need to be added/removed/modified in exactly the same order so that the state at the beginning of a simulation step is exactly the same for both simulations.
-* The simulation uses the exact same version of the library.
-* The simulation runs on the same CPU model and is compiled to the same binary code.
+* The same binary code is used to run the simulation. For example, when you run the simulation on Windows it doesn't matter if you have an AMD or Intel processor. 
 
-If you're willing to sacrifice some performance, the last point can be mitigated. The library doesn't use any SIMD intrinsics that return an approximate result (e.g. 1/sqrt(x) or 1/x) which will differ between e.g. Intel and AMD. Furthermore, by default we compile with 'fast math' and 'fused multiply add' enabled, these will also result in differences across CPUs. You'll need to compile with 'strict math' enabled (-ffp-model=strict in clang) and disable 'fused multiply add' (see JPH_USE_FMADD). Deterministic simulation across platforms is even less likely to happen, you may need to turn off optimization altogether. There is a unit test that checks determinism, but it does not test for determinism across CPU models / platforms so no guarantees are made here.
+Different library versions, compilers, compile options, OSes (e.g. Linux vs Windows) or architectures (e.g. ARM vs x86) will not result in the same simulation. You may be able to get cross platform compatibility by turning on 'strict math' (-ffp-model=strict in clang) and by disabling 'fused multiply add' (see JPH_USE_FMADD), but this hasn't been tested.
 
 When running the Samples Application you can press ESC, Physics Settings and check the 'Check Determinism' checkbox. Before every simulation step we will record the state using the [StateRecorder](@ref JPH::StateRecorder) interface, rewind the simulation and do the step again to validate that the simulation runs deterministically. Some of the tests (e.g. the MultiThreaded) test will explicitly disable the check because they randomly add/remove bodies from different threads. This violates the first rule so will not result in a deterministic simulation.
 
