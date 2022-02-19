@@ -227,7 +227,7 @@ void IslandBuilder::BuildBodyIslands(const BodyID *inActiveBodies, uint32 inNumA
 	{
 		BodyLink &link = mBodyLinks[i];
 		uint32 s = link.mLinkedTo.load(memory_order_relaxed);
-		if (s != uint32(i))
+		if (s != i)
 		{
 			// Links to another body, take island index from other body (this must have been filled in already since we're looping from low to high)
 			JPH_ASSERT(s < uint32(i));
