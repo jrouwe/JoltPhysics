@@ -18,6 +18,12 @@ struct RayCast
 		return { ray_origin, ray_direction };
 	}
 
+	/// Get point with fraction inFraction on ray (0 = start of ray, 1 = end of ray)
+	inline Vec3					GetPointOnRay(float inFraction) const
+	{
+		return mOrigin + inFraction * mDirection;
+	}
+
 	Vec3						mOrigin;					///< Origin of the ray
 	Vec3						mDirection;					///< Direction and length of the ray (anything beyond this length will not be reported as a hit)
 };

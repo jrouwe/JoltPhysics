@@ -27,10 +27,13 @@ public:
 								TransformedShape() = default;
 								TransformedShape(Vec3Arg inPositionCOM, QuatArg inRotation, const Shape *inShape, const BodyID &inBodyID, const SubShapeIDCreator &inSubShapeIDCreator = SubShapeIDCreator()) : mShapePositionCOM(inPositionCOM), mShapeRotation(inRotation), mShape(inShape), mBodyID(inBodyID), mSubShapeIDCreator(inSubShapeIDCreator) { }
 
-	/// Cast a ray, returns true if it finds a hit closer than ioHit.mFraction and updates ioHit in that case.
+	/// Cast a ray and find the closest hit. Returns true if it finds a hit. Hits further than ioHit.mFraction will not be considered and in this case ioHit will remain unmodified (and the function will return false).
+	/// Convex objects will be treated as solid (meaning if the ray starts inside, you'll get a hit fraction of 0) and back face hits are returned.
+	/// If you want the surface normal of the hit use GetWorldSpaceSurfaceNormal(ioHit.mSubShapeID2, inRay.GetPointOnRay(ioHit.mFraction)) on this object.
 	bool						CastRay(const RayCast &inRay, RayCastResult &ioHit) const;
 
-	/// Cast a ray, allows collecting multiple hits
+	/// Cast a ray, allows collecting multiple hits. Note that this version is more flexible but also slightly slower than the CastRay function that returns only a single hit.
+	/// If you want the surface normal of the hit use GetWorldSpaceSurfaceNormal(collected sub shape ID, inRay.GetPointOnRay(collected fraction)) on this object.
 	void						CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector) const;
 
 	/// Check if inPoint is inside any shapes. For this tests all shapes are treated as if they were solid. 
