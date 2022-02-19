@@ -43,7 +43,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 				const Body *body = &lock.GetBody();
 
 				// Test that we're not hitting a vertical wall
-				Vec3 contact_pos = mRay.mOrigin + inResult.mFraction * mRay.mDirection;
+				Vec3 contact_pos = mRay.GetPointOnRay(inResult.mFraction);
 				Vec3 normal = body->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, contact_pos);
 				if (normal.Dot(mUpDirection) > mCosMaxSlopeAngle)
 				{

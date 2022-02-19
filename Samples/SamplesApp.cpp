@@ -853,7 +853,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			had_hit = mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit);
 
 			// Fill in results
-			outPosition = start + hit.mFraction * direction;
+			outPosition = ray.GetPointOnRay(hit.mFraction);
 			outFraction = hit.mFraction;
 			outID = hit.mBodyID;
 
@@ -943,7 +943,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 				for (const RayCastResult &hit : hits)
 				{
 					// Draw line
-					Vec3 position = start + hit.mFraction * direction;
+					Vec3 position = ray.GetPointOnRay(hit.mFraction);
 					mDebugRenderer->DrawLine(prev_position, position, c? Color::sGrey : Color::sWhite);
 					c = !c;
 					prev_position = position;
