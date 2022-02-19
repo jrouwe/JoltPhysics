@@ -34,7 +34,10 @@ void ClipPolyVsPlane(const VERTEX_ARRAY &inPolygonToClip, Vec3Arg inPlaneOrigin,
 			// Solve: (X - inPlaneOrigin) . inPlaneNormal = 0 and X = e1 + t * (e2 - e1) for X
 			Vec3 e12 = e2 - e1;
 			float denom = e12.Dot(inPlaneNormal);
-			outClippedPolygon.push_back(e1 + (prev_num / denom) * e12);
+			if (denom != 0.0f)
+				outClippedPolygon.push_back(e1 + (prev_num / denom) * e12);
+			else
+				cur_inside = prev_inside; // Edge is parallel to plane, treat point as if it were on the same side as the last point
 		}
 
 		// Point inside, add it
