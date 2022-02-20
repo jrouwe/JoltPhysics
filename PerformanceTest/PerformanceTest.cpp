@@ -31,9 +31,6 @@ using namespace std;
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
 
-// Number of iterations to run the test
-constexpr uint cMaxIterations = 500;
-
 static void TraceImpl(const char *inFMT, ...)
 { 
 	// Format the message
@@ -52,6 +49,8 @@ int main(int argc, char** argv)
 	// Parse command line parameters
 	int specified_quality = -1;
 	int specified_threads = -1;
+	uint max_iterations = 500;
+	bool disable_sleep = false;
 	bool enable_profiler = false;
 	bool enable_debug_renderer = false;
 	bool enable_per_frame_recording = false;
@@ -73,6 +72,11 @@ int main(int argc, char** argv)
 				return 1;
 			}
 		}
+		else if (strncmp(arg, "-i=", 3) == 0)
+		{
+			// Parse max iterations
+			max_iterations = (uint)atoi(arg + 3);
+		}
 		else if (strncmp(arg, "-q=", 3) == 0)
 		{
 			// Parse quality
@@ -91,6 +95,10 @@ int main(int argc, char** argv)
 			// Parse threads
 			specified_threads = atoi(arg + 3);
 		}
+		else if (strcmp(arg, "-no_sleep") == 0)
+		{
+			disable_sleep = true;
+		}
 		else if (strcmp(arg, "-p") == 0)
 		{
 			enable_profiler = true;
@@ -106,13 +114,15 @@ int main(int argc, char** argv)
 		else if (strcmp(arg, "-h") == 0)
 		{
 			// Print usage
-			cerr << "Usage: PerformanceTest [-s=<scene>] [-q=<quality>] [-t=<threads>] [-p] [-r]" << endl
-				 << "-s: Select scene (Ragdoll, ConvexVsMesh)" << endl
-				 << "-q: Test only with specified quality (Discrete, LinearCast)" << endl
-				 << "-t: Test only with N threads" << endl
+			cerr << "Usage:" << endl
+				 << "-s=<scene>: Select scene (Ragdoll, ConvexVsMesh)" << endl
+				 << "-i=<num physics steps>: Number of physics steps to simulate (default 500)" << endl
+				 << "-q=<quality>: Test only with specified quality (Discrete, LinearCast)" << endl
+				 << "-t=<num threads>: Test only with N threads (default is to iterate over 1 .. num hardware threads)" << endl
 				 << "-p: Write out profiles" << endl
 				 << "-r: Record debug renderer output for JoltViewer" << endl
-				 << "-f: Record per frame timings" << endl;
+				 << "-f: Record per frame timings" << endl
+				 << "-no_sleep: Disable sleeping" << endl;
 			return 0;
 		}
 	}
@@ -176,6 +186,24 @@ int main(int argc, char** argv)
 			// Start test scene
 			scene->StartTest(physics_system, motion_quality);
 
+			// Disable sleeping if requested
+			if (disable_sleep)
+			{
+				const BodyLockInterface &bli = physics_system.GetBodyLockInterfaceNoLock();
+				BodyIDVector body_ids;
+				physics_system.GetBodies(body_ids);
+				for (BodyID id : body_ids)
+				{
+					BodyLockWrite lock(bli, id);
+					if (lock.Succeeded())
+					{
+						Body &body = lock.GetBody();
+						if (!body.IsStatic())
+							body.SetAllowSleeping(false);
+					}
+				}
+			}
+
 			// Optimize the broadphase to prevent an expensive first frame
 			physics_system.OptimizeBroadPhase();
 
@@ -202,7 +230,7 @@ int main(int argc, char** argv)
 			chrono::nanoseconds total_duration(0);
 
 			// Step the world for a fixed amount of iterations
-			for (uint iterations = 0; iterations < cMaxIterations; ++iterations)
+			for (uint iterations = 0; iterations < max_iterations; ++iterations)
 			{
 				JPH_PROFILE_NEXTFRAME();
 
@@ -256,7 +284,7 @@ int main(int argc, char** argv)
 			scene->StopTest(physics_system);
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(cMaxIterations) / (1.0e-9 * total_duration.count()) << ", " << hash << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", " << hash << endl;
 		}
 	}
 
