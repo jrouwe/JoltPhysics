@@ -14,6 +14,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 {
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mPosition)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mRotation)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mUserData)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mShape)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mCollisionGroup)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mObjectLayer)

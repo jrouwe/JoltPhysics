@@ -167,7 +167,7 @@ public:
 	TransformedShape			GetTransformedShape(const BodyID &inBodyID) const;
 
 	/// Get the user data for a body
-	void *						GetUserData(const BodyID &inBodyID) const;
+	uint64						GetUserData(const BodyID &inBodyID) const;
 
 	/// Get the material for a particular sub shape
 	const PhysicsMaterial *		GetMaterial(const BodyID &inBodyID, const SubShapeID &inSubShapeID) const;

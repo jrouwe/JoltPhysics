@@ -108,7 +108,7 @@ void RigPileTest::Initialize()
 			for (int i = 0; i < cPileSize; ++i)
 			{
 				// Create ragdoll
-				Ref<Ragdoll> ragdoll = settings->CreateRagdoll(group_id++, nullptr, mPhysicsSystem);
+				Ref<Ragdoll> ragdoll = settings->CreateRagdoll(group_id++, 0, mPhysicsSystem);
 	
 				// Sample pose
 				SkeletonPose pose;

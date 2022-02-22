@@ -23,12 +23,12 @@ private:
 	class Listener : public BodyActivationListener
 	{
 	public:
-		virtual void	OnBodyActivated(const BodyID &inBodyID, void *inBodyUserData) override
+		virtual void	OnBodyActivated(const BodyID &inBodyID, uint64 inBodyUserData) override
 		{
 			Trace("Body %d activated", inBodyID.GetIndex());
 		}
 
-		virtual void	OnBodyDeactivated(const BodyID &inBodyID, void *inBodyUserData) override
+		virtual void	OnBodyDeactivated(const BodyID &inBodyID, uint64 inBodyUserData) override
 		{
 			Trace("Body %d deactivated", inBodyID.GetIndex());
 		}

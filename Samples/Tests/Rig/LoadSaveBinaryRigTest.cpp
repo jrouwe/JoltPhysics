@@ -41,6 +41,6 @@ void LoadSaveBinaryRigTest::Initialize()
 		FatalError(result.GetError().c_str());
 
 	// Create ragdoll
-	mRagdoll = result.Get()->CreateRagdoll(0, nullptr, mPhysicsSystem);
+	mRagdoll = result.Get()->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 }

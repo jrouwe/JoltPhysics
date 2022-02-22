@@ -73,7 +73,7 @@ void CharacterTest::Initialize()
 	settings->mLayer = Layers::MOVING;
 	settings->mShape = mStandingShape;
 	settings->mFriction = 0.5f;
-	mCharacter = new Character(settings, Vec3::sZero(), Quat::sIdentity(), nullptr, mPhysicsSystem);
+	mCharacter = new Character(settings, Vec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->AddToPhysicsSystem(EActivation::Activate);
 }
 

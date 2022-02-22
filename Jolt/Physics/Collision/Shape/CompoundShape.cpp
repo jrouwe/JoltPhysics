@@ -127,7 +127,7 @@ const PhysicsMaterial *CompoundShape::GetMaterial(const SubShapeID &inSubShapeID
 	return mSubShapes[index].mShape->GetMaterial(remainder);
 }
 
-uint32 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
+uint64 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 {
 	// Decode sub shape index
 	SubShapeID remainder;

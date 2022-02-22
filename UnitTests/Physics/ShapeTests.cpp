@@ -495,13 +495,13 @@ TEST_SUITE("ShapeTests")
 
 		// Create a sphere with user data
 		SphereShapeSettings sphere_settings(cRadius);
-		sphere_settings.mUserData = 1234;
+		sphere_settings.mUserData = 0x1234567887654321;
 		Ref<Shape> sphere = sphere_settings.Create().Get();
-		CHECK(sphere->GetUserData() == 1234);
+		CHECK(sphere->GetUserData() == 0x1234567887654321);
 
 		// Change the user data
-		sphere->SetUserData(5678);
-		CHECK(sphere->GetUserData() == 5678);
+		sphere->SetUserData(0x5678123443218765);
+		CHECK(sphere->GetUserData() == 0x5678123443218765);
 
 		stringstream data;
 
@@ -523,7 +523,7 @@ TEST_SUITE("ShapeTests")
 		// Check that the sphere and its user data was preserved
 		CHECK(sphere->GetType() == EShapeType::Convex);
 		CHECK(sphere->GetSubType() == EShapeSubType::Sphere);
-		CHECK(sphere->GetUserData() == 5678);
+		CHECK(sphere->GetUserData() == 0x5678123443218765);
 		CHECK(static_cast<SphereShape *>(sphere.GetPtr())->GetRadius() == cRadius);
 	}
 

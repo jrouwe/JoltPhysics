@@ -76,7 +76,7 @@ public:
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
 
 	// See Shape::GetSubShapeUserData
-	virtual uint32					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
+	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
 
 	// See Shape::GetSubShapeTransformedShape
 	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const override;
@@ -239,11 +239,11 @@ public:
 	/// Access to a particular sub shape
 	const SubShape &				GetSubShape(uint inIdx) const							{ return mSubShapes[inIdx]; }
 
-	/// Get the user data of sub shape
-	uint32							GetSubShapeUserData(uint inIdx) const					{ return mSubShapes[inIdx].mUserData; }
+	/// Get the user data associated with a shape in this compound
+	uint32							GetCompoundUserData(uint inIdx) const					{ return mSubShapes[inIdx].mUserData; }
 
-	/// Set the user data of a sub shape
-	void							SetSubShapeUserData(uint inIdx, uint32 inUserData)		{ mSubShapes[inIdx].mUserData = inUserData; }
+	/// Set the user data associated with a shape in this compound
+	void							SetCompoundUserData(uint inIdx, uint32 inUserData)		{ mSubShapes[inIdx].mUserData = inUserData; }
 
 	/// Check if a sub shape ID is still valid for this shape
 	/// @param inSubShapeID Sub shape id that indicates the leaf shape relative to this shape

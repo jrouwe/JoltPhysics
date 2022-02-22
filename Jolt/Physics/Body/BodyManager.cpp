@@ -164,6 +164,7 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	}
 	body->mID = BodyID(idx, seq_no);
 	body->mShape = inBodyCreationSettings.GetShape();
+	body->mUserData = inBodyCreationSettings.mUserData;
 	body->SetFriction(inBodyCreationSettings.mFriction);
 	body->SetRestitution(inBodyCreationSettings.mRestitution);
 	body->mMotionType = inBodyCreationSettings.mMotionType;

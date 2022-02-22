@@ -45,7 +45,7 @@ public:
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
 
 	// See Shape::GetSubShapeUserData
-	virtual uint32					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
+	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
 
 	// See Shape
 	virtual void					SaveSubShapeState(ShapeList &outSubShapes) const override;

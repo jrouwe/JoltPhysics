@@ -37,7 +37,7 @@ void LoadRigTest::Initialize()
 	mRagdollSettings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic, sConstraintType);
 
 	// Create ragdoll
-	mRagdoll = mRagdollSettings->CreateRagdoll(0, nullptr, mPhysicsSystem);
+	mRagdoll = mRagdollSettings->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 }
 

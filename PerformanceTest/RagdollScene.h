@@ -105,7 +105,7 @@ public:
 				for (int i = 0; i < cPileSize; ++i)
 				{
 					// Create ragdoll
-					Ref<Ragdoll> ragdoll = mRagdollSettings->CreateRagdoll(group_id++, nullptr, &inPhysicsSystem);
+					Ref<Ragdoll> ragdoll = mRagdollSettings->CreateRagdoll(group_id++, 0, &inPhysicsSystem);
 	
 					// Override root
 					SkeletonPose pose_copy = mPose;
