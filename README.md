@@ -6,7 +6,11 @@
 
 # Jolt Physics
 
-A multi core friendly rigid body physics and collision detection library suitable for games and VR applications.
+A multi core friendly rigid body physics and collision detection library suitable for games and VR applications, used by Horizon Forbidden West.
+
+[![Horizon Forbidden West Cover Art](https://jrouwe.nl/jolt/Horizon_Forbidden_West.png)](https://www.playstation.com/en-us/games/horizon-forbidden-west/)
+
+Please come and listen to my talk [Architecting Jolt Physics for 'Horizon Forbidden West'](https://schedule.gdconf.com/session/architecting-jolt-physics-for-horizon-forbidden-west/882755) at GDC 2022!
 
 |[![Ragdoll Pile](https://img.youtube.com/vi/pwyCW0yNKMA/hqdefault.jpg)](https://www.youtube.com/watch?v=pwyCW0yNKMA)|
 |:-|
