@@ -77,6 +77,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/DampingTest.h
 	${SAMPLES_ROOT}/Tests/General/FrictionTest.cpp
 	${SAMPLES_ROOT}/Tests/General/FrictionTest.h
+	${SAMPLES_ROOT}/Tests/General/FrictionPerTriangleTest.cpp
+	${SAMPLES_ROOT}/Tests/General/FrictionPerTriangleTest.h
 	${SAMPLES_ROOT}/Tests/General/FunnelTest.cpp
 	${SAMPLES_ROOT}/Tests/General/FunnelTest.h
 	${SAMPLES_ROOT}/Tests/General/GravityFactorTest.cpp

@@ -58,6 +58,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(WallTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(IslandTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(FunnelTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(FrictionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(FrictionPerTriangleTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(GravityFactorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(RestitutionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(DampingTest)
@@ -86,6 +87,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Island",								JPH_RTTI(IslandTest) },
 	{ "Funnel",								JPH_RTTI(FunnelTest) },
 	{ "Friction",							JPH_RTTI(FrictionTest) },
+	{ "Friction (Per Triangle)",			JPH_RTTI(FrictionPerTriangleTest) },
 	{ "Gravity Factor",						JPH_RTTI(GravityFactorTest) },
 	{ "Restitution",						JPH_RTTI(RestitutionTest) },
 	{ "Damping",							JPH_RTTI(DampingTest) },
