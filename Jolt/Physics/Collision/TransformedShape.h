@@ -131,7 +131,7 @@ public:
 	}
 
 	/// Get the user data of a particular sub shape
-	inline uint32				GetSubShapeUserData(const SubShapeID &inSubShapeID) const
+	inline uint64				GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 	{
 		return mShape->GetSubShapeUserData(MakeSubShapeIDRelativeToShape(inSubShapeID));
 	}

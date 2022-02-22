@@ -48,7 +48,7 @@ const PhysicsMaterial *DecoratedShape::GetMaterial(const SubShapeID &inSubShapeI
 	return mInnerShape->GetMaterial(inSubShapeID);
 }
 
-uint32 DecoratedShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
+uint64 DecoratedShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 {
 	return mInnerShape->GetSubShapeUserData(inSubShapeID);
 }

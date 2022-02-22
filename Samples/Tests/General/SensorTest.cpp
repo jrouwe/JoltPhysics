@@ -64,7 +64,7 @@ void SensorTest::Initialize()
 	ragdoll_pose.CalculateJointMatrices();
 
 	// Create ragdoll
-	mRagdoll = ragdoll_settings->CreateRagdoll(1, nullptr, mPhysicsSystem);
+	mRagdoll = ragdoll_settings->CreateRagdoll(1, 0, mPhysicsSystem);
 	mRagdoll->SetPose(ragdoll_pose);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 

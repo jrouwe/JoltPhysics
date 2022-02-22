@@ -182,9 +182,9 @@ public:
 	const MotionProperties *GetMotionPropertiesUnchecked() const							{ return mMotionProperties; }
 	MotionProperties *		GetMotionPropertiesUnchecked()									{ return mMotionProperties; }
 
-	/// Access to the user data pointer
-	void *					GetUserData() const												{ return mUserData; }
-	void					SetUserData(void *inUserData)									{ mUserData = inUserData; }
+	/// Access to the user data, can be used for anything by the application
+	uint64					GetUserData() const												{ return mUserData; }
+	void					SetUserData(uint64 inUserData)									{ mUserData = inUserData; }
 
 	/// Get surface normal of a particular sub shape and its world space surface position on this body
 	inline Vec3				GetWorldSpaceSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inPosition) const;
@@ -286,7 +286,7 @@ private:
 	// 8 byte aligned
 	RefConst<Shape>			mShape;															///< Shape representing the volume of this body
 	MotionProperties *		mMotionProperties = nullptr;									///< If this is a keyframed or dynamic object, this object holds all information about the movement
-	void *					mUserData = nullptr;											///< User data pointer, can be used for anything by the application
+	uint64					mUserData = 0;													///< User data, can be used for anything by the application
 	CollisionGroup			mCollisionGroup;												///< The collision group this body belongs to (determines if two objects can collide)
 
 	// 4 byte aligned

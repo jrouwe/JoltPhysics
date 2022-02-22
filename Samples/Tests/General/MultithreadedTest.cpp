@@ -162,7 +162,7 @@ void MultithreadedTest::RagdollSpawner()
 		if (ragdolls.size() < cMaxRagdolls)
 		{
 			// Create ragdoll
-			Ref<Ragdoll> ragdoll = ragdoll_settings->CreateRagdoll(group_id++, nullptr, mPhysicsSystem);
+			Ref<Ragdoll> ragdoll = ragdoll_settings->CreateRagdoll(group_id++, 0, mPhysicsSystem);
 	
 			// Override root
 			SkeletonPose::JointState &root = ragdoll_pose.GetJoint(0);

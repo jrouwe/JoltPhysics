@@ -52,7 +52,7 @@ void KinematicRigTest::Initialize()
 	mRagdollSettings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Kinematic);
 
 	// Create ragdoll
-	mRagdoll = mRagdollSettings->CreateRagdoll(0, nullptr, mPhysicsSystem);
+	mRagdoll = mRagdollSettings->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 
 	// Load animation

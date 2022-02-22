@@ -46,9 +46,9 @@ public:
 	/// @param inSettings The settings for the character
 	/// @param inPosition Initial position for the character
 	/// @param inRotation Initial rotation for the character (usually only around Y)
-	/// @param inUserData Application specific data pointer
+	/// @param inUserData Application specific value
 	/// @param inSystem Physics system that this character will be added to later
-										Character(CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, void *inUserData, PhysicsSystem *inSystem);
+										Character(CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
 
 	/// Destructor
 										~Character();
@@ -149,8 +149,8 @@ public:
 	/// Sub part of the body that we're standing on.
 	SubShapeID							GetGroundSubShapeID() const								{ return mGroundBodySubShapeID; }
 
-	/// User data pointer of the body that we're standing on
-	void *								GetGroundUserData(bool inLockBodies = true) const;
+	/// User data value of the body that we're standing on
+	uint64								GetGroundUserData(bool inLockBodies = true) const;
 
 private:
 	/// Check collisions between inShape and the world

@@ -80,6 +80,9 @@ public:
 	/// Rotation of the body
 	Quat					mRotation = Quat::sIdentity();
 
+	/// User data value (can be used by application)
+	uint64					mUserData = 0;
+
 	///@name Collision settings
 	ObjectLayer				mObjectLayer = 0;												///< The collision layer this body belongs to (determines if two objects can collide)
 	CollisionGroup			mCollisionGroup;												///< The collision group this body belongs to (determines if two objects can collide)

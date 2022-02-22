@@ -694,13 +694,13 @@ TransformedShape BodyInterface::GetTransformedShape(const BodyID &inBodyID) cons
 		return TransformedShape();
 }
 
-void *BodyInterface::GetUserData(const BodyID &inBodyID) const
+uint64 BodyInterface::GetUserData(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 		return lock.GetBody().GetUserData();
 	else
-		return nullptr;
+		return 0;
 }
 
 const PhysicsMaterial *BodyInterface::GetMaterial(const BodyID &inBodyID, const SubShapeID &inSubShapeID) const

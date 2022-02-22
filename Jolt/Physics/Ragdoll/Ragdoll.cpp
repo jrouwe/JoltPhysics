@@ -263,7 +263,7 @@ RagdollSettings::RagdollResult RagdollSettings::sRestoreFromBinaryState(StreamIn
 	return result;
 }
 
-Ragdoll *RagdollSettings::CreateRagdoll(CollisionGroup::GroupID inCollisionGroup, void *inUserData, PhysicsSystem *inSystem) const
+Ragdoll *RagdollSettings::CreateRagdoll(CollisionGroup::GroupID inCollisionGroup, uint64 inUserData, PhysicsSystem *inSystem) const
 {
 	Ragdoll *r = new Ragdoll(inSystem);
 	r->mRagdollSettings = this;

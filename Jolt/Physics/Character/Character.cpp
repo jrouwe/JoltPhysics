@@ -22,7 +22,7 @@ static inline const NarrowPhaseQuery &sGetNarrowPhaseQuery(PhysicsSystem *inSyst
 	return inLockBodies? inSystem->GetNarrowPhaseQuery() : inSystem->GetNarrowPhaseQueryNoLock();
 }
 
-Character::Character(CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, void *inUserData, PhysicsSystem *inSystem) :
+Character::Character(CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
 	mLayer(inSettings->mLayer),
 	mShape(inSettings->mShape),
 	mSystem(inSystem),
@@ -35,11 +35,10 @@ Character::Character(CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg 
 	BodyCreationSettings settings(mShape, inPosition, inRotation, EMotionType::Dynamic, mLayer);
 	settings.mFriction = inSettings->mFriction;
 	settings.mGravityFactor = inSettings->mGravityFactor;
+	settings.mUserData = inUserData;
 	Body *body = mSystem->GetBodyInterface().CreateBody(settings);
 	if (body != nullptr)
 	{
-		body->SetUserData(inUserData);
-
 		// Update the mass properties of the shape so that we set the correct mass and don't allow any rotation
 		body->GetMotionProperties()->SetInverseMass(1.0f / inSettings->mMass);
 		body->GetMotionProperties()->SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
@@ -258,7 +257,7 @@ Character::EGroundState Character::GetGroundState() const
 		return EGroundState::Sliding;
 }
 
-void *Character::GetGroundUserData(bool inLockBodies) const
+uint64 Character::GetGroundUserData(bool inLockBodies) const
 {
 	return sGetBodyInterface(mSystem, inLockBodies).GetUserData(mGroundBodyID);
 }

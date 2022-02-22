@@ -24,13 +24,13 @@ public:
 		BodyID				mBodyID;
 	};
 
-	virtual void		OnBodyActivated(const BodyID &inBodyID, void *inBodyUserData) override
+	virtual void		OnBodyActivated(const BodyID &inBodyID, uint64 inBodyUserData) override
 	{
 		lock_guard lock(mLogMutex);
 		mLog.push_back({ EType::Activated, inBodyID });
 	}
 
-	virtual void		OnBodyDeactivated(const BodyID &inBodyID, void *inBodyUserData) override
+	virtual void		OnBodyDeactivated(const BodyID &inBodyID, uint64 inBodyUserData) override
 	{
 		lock_guard lock(mLogMutex);
 		mLog.push_back({ EType::Deactivated, inBodyID });

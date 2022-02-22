@@ -128,7 +128,7 @@ public:
 	virtual ShapeResult				Create() const = 0;
 
 	/// User data (to be used freely by the application)
-	uint32							mUserData = 0;
+	uint64							mUserData = 0;
 
 protected:
 	mutable ShapeResult				mCachedResult;
@@ -169,8 +169,8 @@ public:
 	inline EShapeSubType			GetSubType() const													{ return mShapeSubType; }
 
 	/// User data (to be used freely by the application)
-	uint32							GetUserData() const													{ return mUserData; }
-	void							SetUserData(uint32 inUserData)										{ mUserData = inUserData; }
+	uint64							GetUserData() const													{ return mUserData; }
+	void							SetUserData(uint64 inUserData)										{ mUserData = inUserData; }
 
 	/// Check if this shape can only be used to create a static body or if it can also be dynamic/kinematic
 	virtual bool					MustBeStatic() const												{ return false; }
@@ -203,7 +203,7 @@ public:
 	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const = 0;
 
 	/// Get the user data of a particular sub shape ID
-	virtual uint32					GetSubShapeUserData(const SubShapeID &inSubShapeID) const			{ return mUserData; }
+	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const			{ return mUserData; }
 
 	/// Get the direct child sub shape and its transform for a sub shape ID.
 	/// @param inSubShapeID Sub shape ID that indicates the path to the leaf shape
@@ -359,7 +359,7 @@ protected:
 	virtual void					RestoreBinaryState(StreamIn &inStream);
 
 private:
-	uint32							mUserData = 0;
+	uint64							mUserData = 0;
 	EShapeType						mShapeType;
 	EShapeSubType					mShapeSubType;
 };

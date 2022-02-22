@@ -39,7 +39,7 @@ public:
 
 	/// Create ragdoll instance from these settings
 	/// @return Newly created ragdoll or null when out of bodies
-	Ragdoll *							CreateRagdoll(CollisionGroup::GroupID inCollisionGroup, void *inUserData, PhysicsSystem *inSystem) const;
+	Ragdoll *							CreateRagdoll(CollisionGroup::GroupID inCollisionGroup, uint64 inUserData, PhysicsSystem *inSystem) const;
 
 	/// Access to the skeleton of this ragdoll
 	const Skeleton *					GetSkeleton() const												{ return mSkeleton; }

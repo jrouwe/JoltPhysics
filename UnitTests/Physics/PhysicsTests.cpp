@@ -141,6 +141,22 @@ TEST_SUITE("PhysicsTests")
 		bi.DestroyBody(body0_id);
 	}
 
+	TEST_CASE("TestPhysicsBodyUserData")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// Create a body and pass user data through the creation settings
+		BodyCreationSettings body_settings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		body_settings.mUserData = 0x1234567887654321;
+		Body *body = bi.CreateBody(body_settings);
+		CHECK(body->GetUserData() == 0x1234567887654321);
+
+		// Change the user data
+		body->SetUserData(0x5678123443218765);
+		CHECK(body->GetUserData() == 0x5678123443218765);
+	}
+
 	TEST_CASE("TestPhysicsOverrideMassAndInertia")
 	{
 		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
