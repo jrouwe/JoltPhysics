@@ -30,8 +30,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConvexHullShapeSettings)
 	JPH_ADD_ATTRIBUTE(ConvexHullShapeSettings, mHullTolerance)
 }
 
-static constexpr int cMaxPointsInHull = 256;
-
 ShapeSettings::ShapeResult ConvexHullShapeSettings::Create() const
 { 
 	if (mCachedResult.IsEmpty())
