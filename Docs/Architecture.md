@@ -48,6 +48,74 @@ Next to this there are a number of decorator shapes that change the behavior of 
 * [RotatedTranslatedShape](@ref JPH::RotatedTranslatedShape) - This shape can rotate and translate a child shape, it can e.g. be used to offset a sphere from the origin.
 * [OffsetCenterOfMassShape](@ref JPH::OffsetCenterOfMassShape) - This shape does not change its child shape but it does shift the calculated center of mass for that shape. It allows you to e.g. shift the center of mass of a vehicle down to improve its handling.
 
+### Creating Shapes
+
+Simple shapes like spheres and boxes can be constructed immediately by simply new-ing them. Other shapes need to be converted into an optimized format in order to be usable in the physics simulation. The uncooked data is usually stored in a [Settings](@ref JPH::ShapeSettings) object and then converted to cooked format by a [Create](@ref JPH::ShapeSettings::Create) function that returns a [Result](@ref JPH::Result) object that indicates success or failure and provides the cooked object. 
+
+Creating a convex hull for example looks like:
+
+	// Shapes are refcounted and can be shared between bodies
+	JPH::Ref<Shape> shape;
+
+	// The ShapeSettings object is only required for building the shape, all information is copied into the Shape class
+	{
+		// Create an array of vertices
+		vector<JPH::Vec3> vertices = { ... };
+
+		// Create the settings object for a convex hull
+		JPH::ConvexHullShapeSettings settings(vertices, JPH::cDefaultConvexRadius);
+
+		// Create shape
+		JPH::Shape::ShapeResult result = settings.Create();
+		if (result.IsValid())
+			shape = result.Get();
+		else
+			... // Error handling
+	}
+
+Note that after you call Create, the shape is cached and ShapeSettings keeps a reference to your shape. If you call Create again, the same shape will be returned regardless of what changed to the settings object.
+
+### Saving Shapes
+
+There are two ways of serializing data:
+
+* The uncooked data can be serialized using the [ObjectStream](@ref JPH::ObjectStream) system (either in [binary](@ref JPH::ObjectStreamBinaryOut) or in [text](@ref JPH::ObjectStreamTextOut) format), data stored in this way is likely to be compatible with future versions of the library (although there is no 100% guarantee of this).
+* The cooked data can be serialized using the [SaveBinaryState](@ref JPH::Shape::SaveBinaryState) interface that various objects provide. Data stored in this way is optimized for simulation performance and loading speed but is very likely to change between versions of the library, so this should never be your primary data format.
+
+An example of saving a shape in binary format:
+
+	// Create a sphere of radius 1
+	JPH::Ref<Shape> sphere = new JPH::SphereShape(1.0f);
+
+	// For this example we'll be saving the shape in a STL string stream, but if you implement StreamOut you don't have to use STL.
+	stringstream data;
+	JPH::StreamOutWrapper stream_out(data);
+
+	// Save the shape (note this function handles CompoundShape too).
+	// The maps are there to avoid saving the same shape twice (it will assign an ID to each shape the first time it encounters them).
+	// If you don't want certain shapes to be saved, add them to the map and give them an ID.
+	// You can save many shapes to the same stream by repeatedly calling SaveWithChildren on different shapes.
+	JPH::Shape::ShapeToIDMap shape_to_id;
+	JPH::Shape::MaterialToIDMap material_to_id;
+	sphere->SaveWithChildren(stream_out, shape_to_id, material_to_id);
+
+	// Wrap the STL stream in a StreamIn
+	JPH::StreamInWrapper stream_in(data);
+
+	// Load the shape
+	// If you have assigned custom ID's on save, you need to ensure that the shapes exist in this map on restore too.
+	JPH::Shape::IDToShapeMap id_to_shape;
+	JPH::Shape::IDToMaterialMap id_to_material;
+	JPH::Shape::ShapeResult result = JPH::Shape::sRestoreWithChildren(stream_in, id_to_shape, id_to_material);
+
+	JPH::Ref<Shape> restored_shape;
+	if (result.IsValid())
+		restored_shape = result.Get();
+	else
+		... // Error handling
+
+As the library does not offer an exporter from content creation packages and since most games will have their own content pipeline, we encourage you to store data in your own format, cook data while cooking the game data and store the result using the SaveBinaryState interface (and provide a way to force a re-cook when the library is updated).
+
 ### Convex Radius
 
 In order to speed up the collision detection system, all convex shapes use a convex radius. The provided shape will first be shrunken by the convex radius and then inflated again by the same amount, resulting in a rounded off shape:
@@ -182,15 +250,6 @@ Fast rotating long objects are also to be avoided, as the LinearCast motion qual
 |![Long and Thin](Images/LongAndThin.jpg)|
 |:-|
 |*Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.*|
-
-## Cooking Data and Saving
-
-Data needs to be converted into an optimized format in order to be usable in the physics simulation. The uncooked data is usually stored in a [Settings](@ref JPH::ShapeSettings) object and then converted to cooked format by a [Create](@ref JPH::ShapeSettings::Create) function that returns a [Result](@ref JPH::Result) object that indicates success or failure and provides the cooked object. There are two ways of serializing data:
-
-* The uncooked data can be serialized using the [ObjectStream](@ref JPH::ObjectStream) system (either in [binary](@ref JPH::ObjectStreamBinaryOut) or in [text](@ref JPH::ObjectStreamTextOut) format), data stored in this way is likely to be compatible with future versions of the library (although there is no 100% guarantee of this).
-* The cooked data can be serialized using the [SaveBinaryState](@ref JPH::Shape::SaveBinaryState) interface that various objects provide. Data stored in this way is optimized for simulation performance and loading speed but is very likely to change between versions of the library, so this should never be your primary data format.
-
-As the library does not offer an exporter from content creation packages and since most games will have their own content pipeline, we encourage you to store data in your own format, cook data while cooking the game data and store the result using the SaveBinaryState interface (and provide a way to force a re-cook when the library is updated).
 
 ## Deterministic Simulation
 
