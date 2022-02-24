@@ -64,6 +64,7 @@
 #if defined(__x86_64__) || defined(_M_X64)
 	// X86 CPU architecture
 	#define JPH_CPU_X64
+    #define JPH_PTR_SIZE 8
 	#define JPH_USE_SSE
 
 	// Detect enabled instruction sets
@@ -93,6 +94,7 @@
 #elif defined(__aarch64__) || defined(_M_ARM64)
 	// ARM64 CPU architecture
 	#define JPH_CPU_ARM64
+    #define JPH_PTR_SIZE 8
 	#define JPH_USE_NEON
 #else
 	#error Unsupported CPU architecture
@@ -130,7 +132,7 @@
 #include <utility>
 #include <cmath>
 #include <sstream>
-#include <functional>
+#include <inplace_function.h>
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)
@@ -168,6 +170,10 @@ static_assert(sizeof(void *) == 8, "Invalid size of pointer");
 // Cache line size (used for aligning to cache line)
 #ifndef JPH_CACHE_LINE_SIZE
 	#define JPH_CACHE_LINE_SIZE 64
+#endif
+
+#ifndef JPH_PTR_SIZE
+    #define JPH_PTR_SIZE 8
 #endif
 
 // Define macro to get current function name

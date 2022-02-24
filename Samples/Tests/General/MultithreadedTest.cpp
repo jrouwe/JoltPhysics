@@ -42,7 +42,7 @@ void MultithreadedTest::Initialize()
 	mCasterThread = thread([this]() { CasterMain(); });
 }
 
-void MultithreadedTest::Execute(default_random_engine &ioRandom, const char *inName, function<void()> inFunction)
+void MultithreadedTest::Execute(default_random_engine &ioRandom, const char *inName, stdext::inplace_function<void(), JPH_CACHE_LINE_SIZE / 2> inFunction)
 {
 	uniform_real_distribution<float> chance(0, 1);
 	if (chance(ioRandom) < 0.5f)

@@ -8,7 +8,7 @@
 
 namespace JPH {
 
-using CompoundVisitor = function<void(const void *, const RTTI *)>;
+    using CompoundVisitor = stdext::inplace_function<void(const void*, const RTTI*), JPH_CACHE_LINE_SIZE - JPH_PTR_SIZE>;
 
 /// Attributes are members of classes that need to be serialized. This extends the
 /// basic attribute defined in RTTI.h

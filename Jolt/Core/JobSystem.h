@@ -112,7 +112,7 @@ public:
 	};
 
 	/// Main function of the job
-	using JobFunction = function<void()>;
+	using JobFunction = stdext::inplace_function<void(), JPH_CACHE_LINE_SIZE - JPH_PTR_SIZE>;
 
 	/// Destructor
 	virtual					~JobSystem() = default;
