@@ -52,7 +52,9 @@ int main(int argc, char** argv)
 	uint max_iterations = 500;
 	bool disable_sleep = false;
 	bool enable_profiler = false;
+#ifdef JPH_DEBUG_RENDERER
 	bool enable_debug_renderer = false;
+#endif // JPH_DEBUG_RENDERER
 	bool enable_per_frame_recording = false;
 	unique_ptr<PerformanceTestScene> scene;
 	for (int argidx = 1; argidx < argc; ++argidx)
@@ -103,10 +105,12 @@ int main(int argc, char** argv)
 		{
 			enable_profiler = true;
 		}
+	#ifdef JPH_DEBUG_RENDERER
 		else if (strcmp(arg, "-r") == 0)
 		{
 			enable_debug_renderer = true;
 		}
+	#endif // JPH_DEBUG_RENDERER
 		else if (strcmp(arg, "-f") == 0)
 		{
 			enable_per_frame_recording = true;
