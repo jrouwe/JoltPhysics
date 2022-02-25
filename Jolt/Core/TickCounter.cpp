@@ -35,7 +35,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 	return uint64(mhz) * 1000000UL;
 #elif defined(JPH_PLATFORM_BLUE)
 	return JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY();
-#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID)
+#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) 
 	// Open /proc/cpuinfo
     ifstream ifs("/proc/cpuinfo");
     if (ifs.is_open())
@@ -73,6 +73,8 @@ static const uint64 sProcessorTicksPerSecond = []() {
 
 	JPH_ASSERT(false);
     return uint64(0);
+#elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+    return 0;
 #else
 	#error Undefined
 #endif

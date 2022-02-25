@@ -94,7 +94,9 @@ inline bool IsAligned(T inV, uint64 inAlignment)
 inline uint CountTrailingZeros(uint32 inValue)
 {
 #if defined(JPH_CPU_X64)
-	#ifdef JPH_USE_LZCNT
+    #if defined (__clang__)
+        return inValue == 0 ? 32 : __builtin_ctz(inValue);
+    #elif defined JPH_USE_LZCNT
 		return _tzcnt_u32(inValue);
 	#else
 		if (inValue == 0)
@@ -114,7 +116,9 @@ inline uint CountTrailingZeros(uint32 inValue)
 inline uint CountLeadingZeros(uint32 inValue)
 {
 #if defined(JPH_CPU_X64)
-	#ifdef JPH_USE_LZCNT
+    #if defined (__clang__)
+        return inValue == 0 ? 32 : __builtin_clz(inValue);
+	#elif defined JPH_USE_LZCNT
 		return _lzcnt_u32(inValue);
 	#else
 		if (inValue == 0)
@@ -133,7 +137,9 @@ inline uint CountLeadingZeros(uint32 inValue)
 /// Count the number of 1 bits in a value
 inline uint CountBits(uint32 inValue)
 {
-#if defined(JPH_CPU_X64)
+#if defined(__clang__)
+    return __builtin_popcount(inValue);
+#elif defined(JPH_CPU_X64)
 	return _mm_popcnt_u32(inValue);
 #elif defined(JPH_CPU_ARM64)
 	return __builtin_popcount(inValue);
