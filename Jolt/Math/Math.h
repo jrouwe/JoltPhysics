@@ -94,16 +94,18 @@ inline bool IsAligned(T inV, uint64 inAlignment)
 inline uint CountTrailingZeros(uint32 inValue)
 {
 #if defined(JPH_CPU_X64)
-    #if defined (__clang__)
-        return inValue == 0 ? 32 : __builtin_ctz(inValue);
-    #elif defined JPH_USE_LZCNT
+	#if defined(JPH_USE_LZCNT)
 		return _tzcnt_u32(inValue);
-	#else
+	#elif defined(JPH_COMPILER_MSVC)
 		if (inValue == 0)
 			return 32;
 		unsigned long result;
 		_BitScanForward(&result, inValue);
 		return result;
+	#else
+		if (inValue == 0)
+			return 32;
+		return __builtin_clz(__builtin_bitreverse32(inValue));
 	#endif
 #elif defined(JPH_CPU_ARM64)
 	return __builtin_clz(__builtin_bitreverse32(inValue));
@@ -116,16 +118,18 @@ inline uint CountTrailingZeros(uint32 inValue)
 inline uint CountLeadingZeros(uint32 inValue)
 {
 #if defined(JPH_CPU_X64)
-    #if defined (__clang__)
-        return inValue == 0 ? 32 : __builtin_clz(inValue);
-	#elif defined JPH_USE_LZCNT
+	#if defined(JPH_USE_LZCNT)
 		return _lzcnt_u32(inValue);
-	#else
+	#elif defined(JPH_COMPILER_MSVC)
 		if (inValue == 0)
 			return 32;
 		unsigned long result;
 		_BitScanReverse(&result, inValue);
 		return 31 - result;
+	#else
+		if (inValue == 0)
+			return 32;
+		return __builtin_clz(inValue);
 	#endif
 #elif defined(JPH_CPU_ARM64)
 	return __builtin_clz(inValue);

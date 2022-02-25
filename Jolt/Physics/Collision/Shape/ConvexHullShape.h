@@ -39,6 +39,10 @@ public:
 class ConvexHullShape final : public ConvexShape
 {
 public:
+	/// Maximum amount of points supported in a convex hull. Note that while constructing a hull, interior points are discarded so you can provide more points.
+	/// The ConvexHullShapeSettings::Create function will return an error when too many points are provided.
+	static constexpr int	cMaxPointsInHull = 256;
+
 	/// Constructor
 							ConvexHullShape() : ConvexShape(EShapeSubType::ConvexHull) { }
 							ConvexHullShape(const ConvexHullShapeSettings &inSettings, ShapeResult &outResult);

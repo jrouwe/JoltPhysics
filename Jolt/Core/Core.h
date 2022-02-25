@@ -21,8 +21,10 @@
     #endif
 #endif
 
-// Turn off warnings
+// Determine compiler and turn off warnings
 #if defined(__clang__)
+	#define JPH_COMPILER_CLANG
+
 	#pragma clang diagnostic ignored "-Wc++98-compat"
 	#pragma clang diagnostic ignored "-Wc++98-compat-pedantic"
 	#pragma clang diagnostic ignored "-Wfloat-equal"
@@ -47,6 +49,8 @@
 		#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
 	#endif
 #elif defined(_MSC_VER)
+	#define JPH_COMPILER_MSVC
+
 	#pragma warning (disable : 4514) // 'X' : unreferenced inline function has been removed
 	#pragma warning (disable : 4710) // 'X' : function not inlined
 	#pragma warning (disable : 4711) // function 'X' selected for automatic inline expansion
