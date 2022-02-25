@@ -48,8 +48,9 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror")
 
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-		# Somehow -Wcomment doesn't want to be turned off from code
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment")
+		# Somehow -Wcomment doesn't want to be turned off from code and we need this because Doxygen MathJax uses it
+		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment -ffp-contract=off")
 	endif()
 
 	# Platform specific compiler flags
