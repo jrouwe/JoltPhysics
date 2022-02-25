@@ -105,7 +105,7 @@ inline uint CountTrailingZeros(uint32 inValue)
 	#else
 		if (inValue == 0)
 			return 32;
-		return __builtin_clz(__builtin_bitreverse32(inValue));
+		return __builtin_ctz(inValue);
 	#endif
 #elif defined(JPH_CPU_ARM64)
 	return __builtin_clz(__builtin_bitreverse32(inValue));
@@ -141,10 +141,10 @@ inline uint CountLeadingZeros(uint32 inValue)
 /// Count the number of 1 bits in a value
 inline uint CountBits(uint32 inValue)
 {
-#if defined(JPH_CPU_X64)
+#if defined(JPH_COMPILER_CLANG)
+    return __builtin_popcount(inValue);
+#elif defined(JPH_COMPILER_MSVC)
 	return _mm_popcnt_u32(inValue);
-#elif defined(JPH_CPU_ARM64)
-	return __builtin_popcount(inValue);
 #else
 	#error Undefined
 #endif
