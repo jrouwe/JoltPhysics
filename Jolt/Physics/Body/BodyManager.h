@@ -212,7 +212,7 @@ public:
 
 private:
 	/// Increment and get the sequence number of the body
-#ifdef __clang__
+#ifdef JPH_COMPILER_CLANG
 	__attribute__((no_sanitize("implicit-conversion"))) // We intentionally overflow the uint8 sequence number
 #endif
 	inline uint8					GetNextSequenceNumber(int inBodyIndex)		{ return ++mBodySequenceNumbers[inBodyIndex]; }

@@ -3,6 +3,7 @@
 
 #include <Jolt.h>
 
+#include <cstdarg>
 #include <Core/FPException.h>
 #include <RegisterTypes.h>
 #ifdef JPH_PLATFORM_ANDROID

@@ -3,8 +3,11 @@
 
 #pragma once
 
-#ifdef JPH_PLATFORM_WINDOWS
-	#include <intrin.h> // for __rdtsc
+// Include for __rdtsc
+#if defined(JPH_PLATFORM_WINDOWS)
+	#include <intrin.h> 
+#elif defined(JPH_CPU_X64) && defined(JPH_COMPILER_GCC)
+	#include <x86intrin.h>
 #endif
 
 namespace JPH {

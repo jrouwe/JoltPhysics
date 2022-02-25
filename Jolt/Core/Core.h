@@ -48,6 +48,12 @@
 	#ifndef JPH_PLATFORM_ANDROID
 		#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
 	#endif
+#elif defined(__GNUC__)
+	#define JPH_COMPILER_GCC
+
+	#pragma GCC diagnostic ignored "-Wcomment"
+	#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+	#pragma GCC diagnostic ignored "-Wclass-memaccess"
 #elif defined(_MSC_VER)
 	#define JPH_COMPILER_MSVC
 
@@ -84,17 +90,20 @@
 	#if (defined(__LZCNT__) || defined(__AVX2__)) && !defined(JPH_USE_LZCNT)
 		#define JPH_USE_LZCNT
 	#endif
+	#if (defined(__BMI__) || defined(__AVX2__)) && !defined(JPH_USE_TZCNT)
+		#define JPH_USE_TZCNT
+	#endif
 	#if defined(__AVX__) && !defined(JPH_USE_AVX)
 		#define JPH_USE_AVX
 	#endif
 	#if defined(__AVX2__) && !defined(JPH_USE_AVX2)
 		#define JPH_USE_AVX2
 	#endif
-	#if defined(__clang__)
+	#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
 		#if defined(__FMA__) && !defined(JPH_USE_FMADD)
 			#define JPH_USE_FMADD
 		#endif
-	#elif defined(_MSC_VER)
+	#elif defined(JPH_COMPILER_MSVC)
 		#if defined(__AVX2__) && !defined(JPH_USE_FMADD) // AVX2 also enables fused multiply add
 			#define JPH_USE_FMADD
 		#endif
@@ -168,9 +177,9 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 static_assert(sizeof(void *) == 8, "Invalid size of pointer");
 
 // Define inline macro
-#if defined(__clang__)
+#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
 	#define JPH_INLINE __inline__ __attribute__((always_inline))
-#elif defined(_MSC_VER)
+#elif defined(JPH_COMPILER_MSVC)
 	#define JPH_INLINE __forceinline
 #else
 	#error Undefined
@@ -182,9 +191,9 @@ static_assert(sizeof(void *) == 8, "Invalid size of pointer");
 #endif
 
 // Define macro to get current function name
-#if defined(__clang__)
+#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
 	#define JPH_FUNCTION_NAME	__PRETTY_FUNCTION__
-#elif defined(_MSC_VER)
+#elif defined(JPH_COMPILER_MSVC)
 	#define JPH_FUNCTION_NAME	__FUNCTION__
 #else
 	#error Undefined
@@ -204,14 +213,14 @@ static_assert(sizeof(void *) == 8, "Invalid size of pointer");
 #define JPH_UNUSED(x)			(void)x
 
 // Macro to enable floating point precise mode and to disable fused multiply add instructions
-#if defined(__clang__)
+#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
 	// In clang it appears you cannot turn off -ffast-math and -ffp-contract=fast for a code block
 	// There is #pragma clang fp contract (off) but that doesn't seem to work under clang 9 & 10 when -ffast-math is specified on the commandline (you override it to turn it on, but not off)
 	// There is #pragma float_control(precise, on) but that doesn't work under clang 9.
 	// So for now we compile clang without -ffast-math so the macros are empty
 	#define JPH_PRECISE_MATH_ON
 	#define JPH_PRECISE_MATH_OFF
-#elif defined(_MSC_VER)
+#elif defined(JPH_COMPILER_MSVC)
 	// Unfortunately there is no way to push the state of fp_contract, so we have to assume it was turned on before JPH_PRECISE_MATH_ON
 	#define JPH_PRECISE_MATH_ON						\
 		__pragma(float_control(precise, on, push))	\

@@ -47,10 +47,16 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 	# Set general compiler flags (do not use -ffast-math since it cannot be turned off in a single compilation unit)
 	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror")
 
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		# Somehow -Wcomment doesn't want to be turned off from code and we need this because Doxygen MathJax uses it
+		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment -ffp-contract=off")
+	endif()
+
 	# Platform specific compiler flags
 	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
 		# X64
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -mf16c -mlzcnt -mpopcnt")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma -mf16c -mlzcnt -mbmi -mpopcnt")
 	elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
 		# ARM64
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -65,7 +71,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-DNDEBUG -fprofile-instr-generate -fcoverage-mapping")
 
 	# Set linker flags
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lpthread")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
 endif()
 
 # Set linker flags

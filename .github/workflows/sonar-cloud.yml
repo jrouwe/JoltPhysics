@@ -49,7 +49,7 @@ jobs:
       - name: Configure CMake
         run: |
             cd ${{github.workspace}}/Build/
-            ./cmake_linux_clang.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
+            ./cmake_linux_clang_gcc.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
       - name: Run build-wrapper
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_ReleaseCoverage
