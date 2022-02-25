@@ -87,7 +87,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 ## Compiling
 
-* The library has been tested to compile with Cl (Visual Studio) and Clang 10+.
+* The library has been tested to compile with Cl (Visual Studio 2019-2022), Clang 10+ and GCC 9+.
 * It uses C++17 and only depends on the standard template library.
 * It doesn't make use of compiler generated RTTI or exceptions.
 * If you want to run on Platform Blue you'll need to provide your own build environment and PlatformBlue.h file due to NDA requirements (see Core.h for further info).

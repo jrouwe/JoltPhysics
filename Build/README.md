@@ -58,7 +58,7 @@ To override the default trace and assert mechanism install your own custom handl
 
 - Install clang (apt-get install clang)
 - Install cmake (apt-get install cmake)
-- Run: ./cmake_linux_clang.sh
+- Run: ./cmake_linux_clang_gcc.sh
 - Go to the Linux_Debug folder
 - Run: make -j 8 && ./UnitTests
 

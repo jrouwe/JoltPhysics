@@ -23,7 +23,7 @@
 #include <wrl.h> // for ComPtr
 #pragma warning (pop)
 
-#if defined(__clang__)
+#if defined(JPH_COMPILER_CLANG)
 	#pragma clang diagnostic ignored "-Wheader-hygiene"
 #endif
 

@@ -22,7 +22,7 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution, ReleaseASAN, ReleaseUBSAN]
-            clang_version: [clang++-10, clang++-11, clang++-12]
+            clang_version: [clang++-10, clang++-11, clang++-12, g++]
 
     steps:
     - name: Checkout Code

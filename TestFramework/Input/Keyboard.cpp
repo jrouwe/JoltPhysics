@@ -44,7 +44,7 @@ void Keyboard::ResetKeyboard()
 }
 
 bool Keyboard::Initialize(Renderer *inRenderer) 
-#ifdef __clang__
+#ifdef JPH_COMPILER_CLANG
 	// DIPROP_BUFFERSIZE is a pointer to 1 which causes UBSan: runtime error: reference binding to misaligned address 0x000000000001
 	__attribute__((no_sanitize("alignment")))
 #endif
