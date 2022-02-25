@@ -15,14 +15,34 @@ on:
       - '**.txt'
 
 jobs:
-  linux:
+  linux-clang:
     runs-on: ubuntu-latest
-    name: Linux
+    name: Linux Clang
     strategy:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution, ReleaseASAN, ReleaseUBSAN]
-            clang_version: [clang++-10, clang++-11, clang++-12, g++]
+            clang_version: [clang++-10, clang++-11, clang++-12]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} --config ${{matrix.build_type}}
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      run: ctest --output-on-failure
+
+  linux-gcc:
+    runs-on: ubuntu-latest
+    name: Linux GCC
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution]
+            clang_version: [g++]
 
     steps:
     - name: Checkout Code
