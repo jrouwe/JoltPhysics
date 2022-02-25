@@ -77,7 +77,6 @@
 	#define JPH_CPU_X64
 	#define JPH_USE_SSE
 
-
 	// Detect enabled instruction sets
 	#if (defined(__F16C__) || defined(__AVX2__)) && !defined(JPH_USE_F16C)
 		#define JPH_USE_F16C
