@@ -24,7 +24,7 @@ enum class EPathRotationConstraintType
 	FullyConstrained,				///< Fully constrain the rotation of the body 2 to the rotation of body 1
 };
 
-/// Point constraint settings, used to create a point constraint
+/// Path constraint settings, used to constrain the degrees of freedom between two bodies to a path
 class PathConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
@@ -62,7 +62,7 @@ protected:
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
 };
 
-/// A point constraint constrains 2 bodies on a single point (removing 3 degrees of freedom)
+/// Path constraint, used to constrain the degrees of freedom between two bodies to a path
 class PathConstraint final : public TwoBodyConstraint
 {
 public:

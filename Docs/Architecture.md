@@ -25,7 +25,9 @@ In general, body ID's ([BodyID](@ref JPH::BodyID)) are used to refer to bodies. 
 		}
 	}
 
-When another thread has removed the body between the time the body ID was obtained and the lock, the lock will fail. While the lock is taken, other threads cannot modify the body, so it is safe to work with it. Each body ID contains a sequence number, so body ID's will only be reused after many add/remove cycles.
+When another thread has removed the body between the time the body ID was obtained and the lock, the lock will fail. While the lock is taken, other threads cannot modify the body, so it is safe to work with it. Each body ID contains a sequence number, so body ID's will only be reused after many add/remove cycles. To write to a body use [BodyLockWrite](@ref JPH::BodyLockWrite).
+
+You cannot use BodyLockRead to lock multiple bodies (if two threads lock the same bodies in opposite order you'll get a deadlock). Use [BodyLockMultiRead](@ref JPH::BodyLockMultiRead) or [BodyLockMultiWrite](@ref JPH::BodyLockMultiWrite) to lock them in a consistent order.
 
 ## Shapes
 
