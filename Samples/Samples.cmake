@@ -69,6 +69,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ChangeMotionTypeTest.h
 	${SAMPLES_ROOT}/Tests/General/ChangeShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ChangeShapeTest.h
+	${SAMPLES_ROOT}/Tests/General/ChangeObjectLayerTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ChangeObjectLayerTest.h
 	${SAMPLES_ROOT}/Tests/General/ContactListenerTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ContactListenerTest.h
 	${SAMPLES_ROOT}/Tests/General/ContactManifoldTest.cpp

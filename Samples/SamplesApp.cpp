@@ -69,6 +69,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(HeavyOnLightTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(HighSpeedTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeMotionTypeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(ChangeObjectLayerTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveSceneTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveBinaryTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(BigVsSmallTest)
@@ -98,6 +99,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "High Speed",							JPH_RTTI(HighSpeedTest) },
 	{ "Change Motion Type",					JPH_RTTI(ChangeMotionTypeTest) },
 	{ "Change Shape",						JPH_RTTI(ChangeShapeTest) },
+	{ "Change Object Layer",				JPH_RTTI(ChangeObjectLayerTest) },
 	{ "Load/Save Scene",					JPH_RTTI(LoadSaveSceneTest) },
 	{ "Load/Save Binary",					JPH_RTTI(LoadSaveBinaryTest) },
 	{ "Big vs Small",						JPH_RTTI(BigVsSmallTest) },
