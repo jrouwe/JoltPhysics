@@ -6,6 +6,7 @@
 #include <Physics/PhysicsSystem.h>
 #include <Physics/Body/BodyCreationSettings.h>
 #include <Physics/Constraints/TwoBodyConstraint.h>
+#include "Layers.h"
 
 namespace JPH {
 	class TempAllocator;
@@ -83,6 +84,7 @@ public:
 private:
 	TempAllocator *		mTempAllocator;
 	JobSystem *			mJobSystem;
+	BPLayerInterfaceImpl mBroadPhaseLayerInterface;
 	PhysicsSystem *		mSystem;
 	float				mDeltaTime;
 	int					mCollisionSteps;

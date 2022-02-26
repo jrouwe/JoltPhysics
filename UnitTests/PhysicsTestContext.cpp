@@ -8,7 +8,6 @@
 #include <Physics/Collision/Shape/SphereShape.h>
 #include <Core/JobSystemThreadPool.h>
 #include <Core/TempAllocator.h>
-#include "Layers.h"
 
 PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, int inWorkerThreads) :
 #ifdef JPH_DISABLE_TEMP_ALLOCATOR
@@ -23,7 +22,7 @@ PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, 
 {
 	// Create physics system
 	mSystem = new PhysicsSystem();
-	mSystem->Init(1024, 0, 4096, 1024, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
+	mSystem->Init(1024, 0, 4096, 1024, mBroadPhaseLayerInterface, BroadPhaseCanCollide, ObjectCanCollide);
 }
 
 PhysicsTestContext::~PhysicsTestContext()

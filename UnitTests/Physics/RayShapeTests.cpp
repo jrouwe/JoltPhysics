@@ -16,6 +16,7 @@
 #include <Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Physics/Body/BodyCreationSettings.h>
 #include <Physics/PhysicsSystem.h>
+#include <Layers.h>
 
 TEST_SUITE("RayShapeTests")
 {
@@ -271,10 +272,9 @@ TEST_SUITE("RayShapeTests")
 		const Mat44 cShapeMatrix = Mat44::sRotationTranslation(cShapeRotation, cShapePosition);
 
 		// Make the shape part of a body and insert it into the physics system
-		ObjectToBroadPhaseLayer object_to_broadphase;
-		object_to_broadphase.push_back(BroadPhaseLayer(0));
+		BPLayerInterfaceImpl broad_phase_layer_interface;
 		PhysicsSystem system;
-		system.Init(1, 0, 4, 4, object_to_broadphase, [](ObjectLayer, BroadPhaseLayer) { return true; }, [](ObjectLayer, ObjectLayer) { return true; });
+		system.Init(1, 0, 4, 4, broad_phase_layer_interface, [](ObjectLayer, BroadPhaseLayer) { return true; }, [](ObjectLayer, ObjectLayer) { return true; });
 		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, cShapePosition, cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate);
 			   
 

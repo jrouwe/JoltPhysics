@@ -6,6 +6,7 @@
 #include <Tests/Test.h>
 #include <Physics/Body/BodyManager.h>
 #include <Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Layers.h>
 
 // Base class for a test involving only the broad phase
 class BroadPhaseTest : public Test
@@ -27,7 +28,7 @@ protected:
 	// http://pub.ist.ac.at/~edels/Papers/2002-J-01-FastBoxIntersection.pdf
 	void					CreateBalancedDistribution(BodyManager *inBodyManager, int inNumBodies, float inEnvironmentSize = 512.0f);
 
-	ObjectToBroadPhaseLayer	mObjectToBroadPhaseLayer;
+	BPLayerInterfaceImpl	mBroadPhaseLayerInterface;
 	BroadPhase *			mBroadPhase = nullptr;
 	BodyManager *			mBodyManager = nullptr;
 };

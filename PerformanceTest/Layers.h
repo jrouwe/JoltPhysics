@@ -34,6 +34,45 @@ namespace BroadPhaseLayers
 {
 	static constexpr BroadPhaseLayer NON_MOVING(0);
 	static constexpr BroadPhaseLayer MOVING(1);
+	static constexpr uint NUM_LAYERS(2);
+};
+
+/// BroadPhaseLayerInterface implementation
+class BPLayerInterfaceImpl final : public BroadPhaseLayerInterface
+{
+public:
+									BPLayerInterfaceImpl()
+	{
+		// Create a mapping table from object to broad phase layer
+		mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
+		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+	}
+
+	virtual uint					GetNumBroadPhaseLayers() const override
+	{
+		return BroadPhaseLayers::NUM_LAYERS;
+	}
+
+	virtual BroadPhaseLayer			GetBroadPhaseLayer(ObjectLayer inLayer) const override
+	{
+		JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
+		return mObjectToBroadPhase[inLayer];
+	}
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	virtual const char *			GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
+	{
+		switch ((BroadPhaseLayer::Type)inLayer)
+		{
+		case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
+		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
+		default:													JPH_ASSERT(false); return "INVALID";
+		}
+	}
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
+private:
+	BroadPhaseLayer					mObjectToBroadPhase[Layers::NUM_LAYERS];
 };
 
 /// Function that determines if two broadphase layers can collide
@@ -49,14 +88,4 @@ inline bool BroadPhaseCanCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2)
 		JPH_ASSERT(false);
 		return false;
 	}
-}
-
-/// Create mapping table from layer to broadphase layer
-inline ObjectToBroadPhaseLayer GetObjectToBroadPhaseLayer()
-{
-	ObjectToBroadPhaseLayer object_to_broadphase;
-	object_to_broadphase.resize(Layers::NUM_LAYERS);
-	object_to_broadphase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
-	object_to_broadphase[Layers::MOVING] = BroadPhaseLayers::MOVING;
-	return object_to_broadphase;
 }

@@ -15,14 +15,15 @@ TEST_SUITE("BroadPhaseTests")
 {
 	TEST_CASE("TestBroadPhaseOptimize")
 	{
+		BPLayerInterfaceImpl broad_phase_layer_interface; 
+
 		// Create body manager
 		BodyManager body_manager;
-		body_manager.Init(1, 0);
+		body_manager.Init(1, 0, broad_phase_layer_interface);
 		
 		// Create quad tree
 		BroadPhaseQuadTree broadphase;
-		ObjectToBroadPhaseLayer obj_to_bp = GetObjectToBroadPhaseLayer();
-		broadphase.Init(&body_manager, obj_to_bp);
+		broadphase.Init(&body_manager, broad_phase_layer_interface);
 
 		// Create a box
 		BodyCreationSettings settings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);

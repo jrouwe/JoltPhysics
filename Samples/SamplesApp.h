@@ -12,6 +12,7 @@
 #include <Utils/ContactListenerImpl.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Physics/StateRecorderImpl.h>
+#include <Layers.h>
 
 namespace JPH {
 	class JobSystem;
@@ -85,6 +86,7 @@ private:
 	TempAllocator *			mTempAllocator = nullptr;									// Allocator for temporary allocations
 	JobSystem *				mJobSystem = nullptr;										// The job system that runs physics jobs
 	JobSystem *				mJobSystemValidating = nullptr;								// The job system to use when validating determinism
+	BPLayerInterfaceImpl	mBroadPhaseLayerInterface;									// The broadphase layer interface that maps object layers to broadphase layers
 	PhysicsSystem *			mPhysicsSystem = nullptr;									// The physics system that simulates the world
 	ContactListenerImpl *	mContactListener = nullptr;									// Contact listener implementation
 	PhysicsSettings			mPhysicsSettings;											// Main physics simulation settings

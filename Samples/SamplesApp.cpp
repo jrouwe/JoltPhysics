@@ -31,7 +31,6 @@
 #include <Physics/Collision/Shape/ScaledShape.h>
 #include <Physics/Collision/NarrowPhaseStats.h>
 #include <Physics/Constraints/DistanceConstraint.h>
-#include <Layers.h>
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
 
@@ -505,11 +504,8 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 	// Create physics system
 	mPhysicsSystem = new PhysicsSystem();
-	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, GetObjectToBroadPhaseLayer(), BroadPhaseCanCollide, ObjectCanCollide);
+	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, mBroadPhaseLayerInterface, BroadPhaseCanCollide, ObjectCanCollide);
 	mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings);
-#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-	mPhysicsSystem->SetBroadPhaseLayerToString(GetBroadPhaseLayerName);
-#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 
 	// Restore gravity
 	mPhysicsSystem->SetGravity(old_gravity);
