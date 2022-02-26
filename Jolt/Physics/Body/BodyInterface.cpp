@@ -227,7 +227,8 @@ void BodyInterface::SetObjectLayer(const BodyID &inBodyID, ObjectLayer inLayer)
 		// Check if layer actually changed, updating the broadphase is rather expensive
 		if (body.GetObjectLayer() != inLayer)
 		{
-			body.SetObjectLayerInternal(inLayer);
+			// Update the layer on the body
+			mBodyManager->SetBodyObjectLayerInternal(body, inLayer);
 
 			// Notify broadphase of change
 			if (body.IsInBroadPhase())

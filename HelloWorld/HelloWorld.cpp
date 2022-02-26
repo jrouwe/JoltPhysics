@@ -89,6 +89,46 @@ namespace BroadPhaseLayers
 {
 	static constexpr BroadPhaseLayer NON_MOVING(0);
 	static constexpr BroadPhaseLayer MOVING(1);
+	static constexpr uint NUM_LAYERS(2);
+};
+
+// BroadPhaseLayerInterface implementation
+// This defines a mapping between object and broadphase layers.
+class BPLayerInterfaceImpl final : public BroadPhaseLayerInterface
+{
+public:
+									BPLayerInterfaceImpl()
+	{
+		// Create a mapping table from object to broad phase layer
+		mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
+		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+	}
+
+	virtual uint					GetNumBroadPhaseLayers() const override
+	{
+		return BroadPhaseLayers::NUM_LAYERS;
+	}
+
+	virtual BroadPhaseLayer			GetBroadPhaseLayer(ObjectLayer inLayer) const override
+	{
+		JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
+		return mObjectToBroadPhase[inLayer];
+	}
+
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+	virtual const char *			GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
+	{
+		switch ((BroadPhaseLayer::Type)inLayer)
+		{
+		case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
+		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
+		default:													JPH_ASSERT(false); return "INVALID";
+		}
+	}
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+
+private:
+	BroadPhaseLayer					mObjectToBroadPhase[Layers::NUM_LAYERS];
 };
 
 // Function that determines if two broadphase layers can collide
@@ -191,14 +231,12 @@ int main(int argc, char** argv)
 	const uint cMaxContactConstraints = 1024;
 
 	// Create mapping table from object layer to broadphase layer
-	ObjectToBroadPhaseLayer object_to_broadphase;
-	object_to_broadphase.resize(Layers::NUM_LAYERS);
-	object_to_broadphase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
-	object_to_broadphase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+	// Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
+	BPLayerInterfaceImpl broad_phase_layer_interface;
 
 	// Now we can create the actual physics system.
 	PhysicsSystem physics_system;
-	physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, object_to_broadphase, MyBroadPhaseCanCollide, MyObjectCanCollide);
+	physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface, MyBroadPhaseCanCollide, MyObjectCanCollide);
 
 	// A body activation listener gets notified when bodies activate and go to sleep
 	// Note that this is called from a job so whatever you do here needs to be thread safe.

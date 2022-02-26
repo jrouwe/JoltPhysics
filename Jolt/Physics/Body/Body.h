@@ -6,6 +6,7 @@
 #include <Core/NonCopyable.h>
 #include <Geometry/AABox.h>
 #include <Physics/Collision/Shape/Shape.h>
+#include <Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Physics/Collision/ObjectLayer.h>
 #include <Physics/Collision/CollisionGroup.h>
 #include <Physics/Collision/TransformedShape.h>
@@ -68,6 +69,9 @@ public:
 	/// Motion type of this body
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
 	void					SetMotionType(EMotionType inMotionType);
+
+	/// Get broadphase layer, this determines in which broad phase sub-tree the object is placed
+	inline BroadPhaseLayer	GetBroadPhaseLayer() const										{ return mBroadPhaseLayer; }	
 
 	/// Get object layer, this determines which other objects it collides with
 	inline ObjectLayer		GetObjectLayer() const											{ return mObjectLayer; }
@@ -225,9 +229,6 @@ public:
 	/// Updates world space bounding box (should only be called by the PhysicsSystem)
 	void					CalculateWorldSpaceBoundsInternal();
 
-	/// Function to update body's layer (should only be called by the BodyInterface since it also requires updating the broadphase)
-	void					SetObjectLayerInternal(ObjectLayer inLayer)						{ mObjectLayer = inLayer; }
-
 	/// Function to update body's position (should only be called by the BodyInterface since it also requires updating the broadphase)
 	void					SetPositionAndRotationInternal(Vec3Arg inPosition, QuatArg inRotation);
 
@@ -298,10 +299,11 @@ private:
 	ObjectLayer				mObjectLayer;													///< The collision layer this body belongs to (determines if two objects can collide)
 
 	// 1 byte aligned
+	BroadPhaseLayer			mBroadPhaseLayer;												///< The broad phase layer this body belongs to
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 	
-	// 120 bytes up to here
+	// 121 bytes up to here
 
 #ifdef _DEBUG
 	string					mDebugName;														///< Name for debugging purposes

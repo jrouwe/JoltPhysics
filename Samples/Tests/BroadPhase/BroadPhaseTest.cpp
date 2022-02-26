@@ -8,7 +8,6 @@
 #include <Physics/Body/BodyCreationSettings.h>
 #include <Physics/Collision/BroadPhase/BroadPhaseBruteForce.h>
 #include <Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
-#include <Layers.h>
 #include <random>
 
 JPH_IMPLEMENT_RTTI_ABSTRACT(BroadPhaseTest) 
@@ -54,12 +53,11 @@ void BroadPhaseTest::Initialize()
 {
 	// Create body manager
 	mBodyManager = new BodyManager();
-	mBodyManager->Init(NUM_BODIES, 0);
+	mBodyManager->Init(NUM_BODIES, 0, mBroadPhaseLayerInterface);
 		
 	// Crate broadphase
-	mObjectToBroadPhaseLayer = GetObjectToBroadPhaseLayer();
 	mBroadPhase = new BROAD_PHASE;
-	mBroadPhase->Init(mBodyManager, mObjectToBroadPhaseLayer);
+	mBroadPhase->Init(mBodyManager, mBroadPhaseLayerInterface);
 }
 
 void BroadPhaseTest::PostPhysicsUpdate(float inDeltaTime)

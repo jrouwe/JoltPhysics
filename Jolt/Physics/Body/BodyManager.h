@@ -31,7 +31,7 @@ public:
 									~BodyManager();
 
 	/// Initialize the manager
-	void							Init(uint inMaxBodies, uint inNumBodyMutexes);
+	void							Init(uint inMaxBodies, uint inNumBodyMutexes, const BroadPhaseLayerInterface &inLayerInterface);
 
 	/// Gets the current amount of bodies that are in the body manager
 	uint							GetNumBodies() const;
@@ -134,6 +134,9 @@ public:
 
 	/// Unlock all bodies. This should only be done during PhysicsSystem::Update().
 	void							UnlockAllBodies() const;
+
+	/// Function to update body's layer (should only be called by the BodyInterface since it also requires updating the broadphase)
+	inline void						SetBodyObjectLayerInternal(Body &ioBody, ObjectLayer inLayer) const { ioBody.mObjectLayer = inLayer; ioBody.mBroadPhaseLayer = mBroadPhaseLayerInterface->GetBroadPhaseLayer(inLayer); }
 
 	/// Set the Body::EFlags::InvalidateContactCache flag for the specified body. This means that the collision cache is invalid for any body pair involving that body until the next physics step.
 	void							InvalidateContactCacheForBody(Body &ioBody);
@@ -268,6 +271,9 @@ private:
 
 	/// Listener that is notified whenever a body is activated/deactivated
 	BodyActivationListener *		mActivationListener = nullptr;
+
+	/// Cached broadphase layer interface
+	const BroadPhaseLayerInterface *mBroadPhaseLayerInterface = nullptr;
 
 #ifdef JPH_ENABLE_ASSERTS
 	/// Debug system that tries to limit changes to active bodies during the PhysicsSystem::Update()

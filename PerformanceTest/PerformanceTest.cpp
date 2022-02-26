@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 	cout << "Running scene: " << scene->GetName() << endl;
 
 	// Create mapping table from object layer to broadphase layer
-	ObjectToBroadPhaseLayer object_to_broadphase = GetObjectToBroadPhaseLayer();
+	BPLayerInterfaceImpl broad_phase_layer_interface;
 
 	// Start profiling this thread
 	JPH_PROFILE_THREAD_START("Main");
@@ -185,7 +185,7 @@ int main(int argc, char** argv)
 
 			// Create physics system
 			PhysicsSystem physics_system;
-			physics_system.Init(10240, 0, 65536, 10240, object_to_broadphase, BroadPhaseCanCollide, ObjectCanCollide);
+			physics_system.Init(10240, 0, 65536, 10240, broad_phase_layer_interface, BroadPhaseCanCollide, ObjectCanCollide);
 
 			// Start test scene
 			scene->StartTest(physics_system, motion_quality);

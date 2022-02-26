@@ -16,7 +16,7 @@ public:
 	virtual					~BroadPhaseQuadTree() override;
 
 	// Implementing interface of BroadPhase (see BroadPhase for documentation)
-	virtual void			Init(BodyManager *inBodyManager, const ObjectToBroadPhaseLayer &inObjectToBroadPhaseLayer) override;
+	virtual void			Init(BodyManager *inBodyManager, const BroadPhaseLayerInterface &inLayerInterface) override;
 	virtual void			Optimize() override;
 	virtual void			FrameSync() override;
 	virtual void			LockModifications() override;
@@ -37,9 +37,6 @@ public:
 	virtual void			CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override; 
 	virtual void			CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const override;
 	virtual void			FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
-#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-	virtual void			SetBroadPhaseLayerToString(BroadPhaseLayerToString inBroadPhaseLayerToString) override;
-#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 #ifdef JPH_TRACK_BROADPHASE_STATS
 	virtual void			ReportStats() override;
 #endif // JPH_TRACK_BROADPHASE_STATS
@@ -65,8 +62,8 @@ private:
 	/// Node allocator for all trees
 	QuadTree::Allocator		mAllocator;
 
-	/// Mapping table that maps from Object Layer to tree
-	ObjectToBroadPhaseLayer	mObjectToBroadPhaseLayer;
+	/// Information about broad phase layers
+	const BroadPhaseLayerInterface *mBroadPhaseLayerInterface = nullptr;
 
 	/// One tree per object layer
 	QuadTree *				mLayers;

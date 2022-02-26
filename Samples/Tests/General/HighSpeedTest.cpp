@@ -351,6 +351,8 @@ void HighSpeedTest::CreateConvexOnTerrain1()
 	Ref<PhysicsScene> scene;
 	if (!ObjectStreamIn::sReadObject("Assets/terrain1.bof", scene))
 		FatalError("Failed to load scene");
+	for (BodyCreationSettings &body : scene->GetBodies())
+		body.mObjectLayer = Layers::NON_MOVING;
 	scene->FixInvalidScales();
 	scene->CreateBodies(mPhysicsSystem);
 

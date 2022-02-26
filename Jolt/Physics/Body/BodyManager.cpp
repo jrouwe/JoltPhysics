@@ -51,7 +51,7 @@ BodyManager::~BodyManager()
 	delete [] mActiveBodies;
 }
 
-void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes)
+void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes, const BroadPhaseLayerInterface &inLayerInterface)
 {
 	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
@@ -70,6 +70,9 @@ void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes)
 
 	// Allocate space for sequence numbers
 	mBodySequenceNumbers.resize(inMaxBodies);
+
+	// Keep layer interface
+	mBroadPhaseLayerInterface = &inLayerInterface;
 }
 
 uint BodyManager::GetNumBodies() const
@@ -170,6 +173,7 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	body->mMotionType = inBodyCreationSettings.mMotionType;
 	if (inBodyCreationSettings.mIsSensor)
 		body->mFlags.fetch_or(uint8(Body::EFlags::IsSensor), memory_order_relaxed);
+	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
 	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
 	

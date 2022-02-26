@@ -1020,4 +1020,154 @@ TEST_SUITE("PhysicsTests")
 		PhysicsTestContext c2(1.0f / 60.0f, 1, 1);
 		TestPhysicsActivateDuringStep(c2, true);
 	}
+
+	TEST_CASE("TestPhysicsBroadPhaseLayers")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// Reduce slop
+		PhysicsSettings settings = c.GetSystem()->GetPhysicsSettings();
+		settings.mPenetrationSlop = 0.0f;
+		c.GetSystem()->SetPhysicsSettings(settings);
+
+		// Create static floor
+		c.CreateFloor();
+
+		// Create MOVING boxes
+		Body &moving1 = c.CreateBox(Vec3(0, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &moving2 = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::Activate);
+
+		// Create HQ_DEBRIS boxes
+		Body &hq_debris1 = c.CreateBox(Vec3(0, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::HQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &hq_debris2 = c.CreateBox(Vec3(0, 4, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::HQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+
+		// Create LQ_DEBRIS boxes
+		Body &lq_debris1 = c.CreateBox(Vec3(0, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::LQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &lq_debris2 = c.CreateBox(Vec3(0, 6, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::LQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+
+		// Check layers
+		CHECK(moving1.GetObjectLayer() == Layers::MOVING);
+		CHECK(moving2.GetObjectLayer() == Layers::MOVING);
+		CHECK(hq_debris1.GetObjectLayer() == Layers::HQ_DEBRIS);
+		CHECK(hq_debris2.GetObjectLayer() == Layers::HQ_DEBRIS);
+		CHECK(lq_debris1.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(moving1.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(moving2.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(hq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(hq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(lq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+
+		// Simulate the boxes falling
+		c.Simulate(5.0f);
+
+		// Everything should sleep
+		CHECK_FALSE(moving1.IsActive());
+		CHECK_FALSE(moving2.IsActive());
+		CHECK_FALSE(hq_debris1.IsActive());
+		CHECK_FALSE(hq_debris2.IsActive());
+		CHECK_FALSE(lq_debris1.IsActive());
+		CHECK_FALSE(lq_debris2.IsActive());
+
+		// MOVING boxes should have stacked
+		float slop = 0.02f;
+		CHECK_APPROX_EQUAL(moving1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving2.GetPosition(), Vec3(0, 1.5f, 0), slop);
+
+		// HQ_DEBRIS boxes should have stacked on MOVING boxes but don't collide with each other
+		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), Vec3(0, 2.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), Vec3(0, 2.5f, 0), slop);
+
+		// LQ_DEBRIS should have fallen through all but the floor
+		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// Now change HQ_DEBRIS to LQ_DEBRIS
+		bi.SetObjectLayer(hq_debris1.GetID(), Layers::LQ_DEBRIS);
+		bi.SetObjectLayer(hq_debris2.GetID(), Layers::LQ_DEBRIS);
+		bi.ActivateBody(hq_debris1.GetID());
+		bi.ActivateBody(hq_debris2.GetID());
+
+		// Check layers
+		CHECK(moving1.GetObjectLayer() == Layers::MOVING);
+		CHECK(moving2.GetObjectLayer() == Layers::MOVING);
+		CHECK(hq_debris1.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(hq_debris2.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(lq_debris1.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(moving1.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(moving2.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(hq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(hq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(lq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+
+		// Simulate again
+		c.Simulate(5.0f);
+
+		// Everything should sleep
+		CHECK_FALSE(moving1.IsActive());
+		CHECK_FALSE(moving2.IsActive());
+		CHECK_FALSE(hq_debris1.IsActive());
+		CHECK_FALSE(hq_debris2.IsActive());
+		CHECK_FALSE(lq_debris1.IsActive());
+		CHECK_FALSE(lq_debris2.IsActive());
+
+		// MOVING boxes should have stacked
+		CHECK_APPROX_EQUAL(moving1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving2.GetPosition(), Vec3(0, 1.5f, 0), slop);
+
+		// HQ_DEBRIS (now LQ_DEBRIS) boxes have fallen through all but the floor
+		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// LQ_DEBRIS should have fallen through all but the floor
+		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// Now change MOVING to HQ_DEBRIS (this doesn't change the broadphase layer so avoids adding/removing bodies)
+		bi.SetObjectLayer(moving1.GetID(), Layers::HQ_DEBRIS);
+		bi.SetObjectLayer(moving2.GetID(), Layers::HQ_DEBRIS);
+		bi.ActivateBody(moving1.GetID());
+		bi.ActivateBody(moving2.GetID());
+
+		// Check layers
+		CHECK(moving1.GetObjectLayer() == Layers::HQ_DEBRIS);
+		CHECK(moving2.GetObjectLayer() == Layers::HQ_DEBRIS);
+		CHECK(hq_debris1.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(hq_debris2.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(lq_debris1.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(moving1.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING); // Broadphase layer didn't change
+		CHECK(moving2.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(hq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(hq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(lq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+
+		// Simulate again
+		c.Simulate(5.0f);
+
+		// Everything should sleep
+		CHECK_FALSE(moving1.IsActive());
+		CHECK_FALSE(moving2.IsActive());
+		CHECK_FALSE(hq_debris1.IsActive());
+		CHECK_FALSE(hq_debris2.IsActive());
+		CHECK_FALSE(lq_debris1.IsActive());
+		CHECK_FALSE(lq_debris2.IsActive());
+
+		// MOVING boxes now also fall through
+		CHECK_APPROX_EQUAL(moving1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// HQ_DEBRIS (now LQ_DEBRIS) boxes have fallen through all but the floor
+		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// LQ_DEBRIS should have fallen through all but the floor
+		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+	}
 }
