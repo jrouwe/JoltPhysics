@@ -1080,5 +1080,48 @@ TEST_SUITE("PhysicsTests")
 		// LQ_DEBRIS should have fallen through all but the floor
 		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
 		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// Now change MOVING to HQ_DEBRIS (this doesn't change the broadphase layer so avoids adding/removing bodies)
+		bi.SetObjectLayer(moving1.GetID(), Layers::HQ_DEBRIS);
+		bi.SetObjectLayer(moving2.GetID(), Layers::HQ_DEBRIS);
+		bi.ActivateBody(moving1.GetID());
+		bi.ActivateBody(moving2.GetID());
+
+		// Check layers
+		CHECK(moving1.GetObjectLayer() == Layers::HQ_DEBRIS);
+		CHECK(moving2.GetObjectLayer() == Layers::HQ_DEBRIS);
+		CHECK(hq_debris1.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(hq_debris2.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(lq_debris1.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetObjectLayer() == Layers::LQ_DEBRIS);
+		CHECK(moving1.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING); // Broadphase layer didn't change
+		CHECK(moving2.GetBroadPhaseLayer() == BroadPhaseLayers::MOVING);
+		CHECK(hq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(hq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(lq_debris1.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+		CHECK(lq_debris2.GetBroadPhaseLayer() == BroadPhaseLayers::LQ_DEBRIS);
+
+		// Simulate again
+		c.Simulate(5.0f);
+
+		// Everything should sleep
+		CHECK_FALSE(moving1.IsActive());
+		CHECK_FALSE(moving2.IsActive());
+		CHECK_FALSE(hq_debris1.IsActive());
+		CHECK_FALSE(hq_debris2.IsActive());
+		CHECK_FALSE(lq_debris1.IsActive());
+		CHECK_FALSE(lq_debris2.IsActive());
+
+		// MOVING boxes now also fall through
+		CHECK_APPROX_EQUAL(moving1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// HQ_DEBRIS (now LQ_DEBRIS) boxes have fallen through all but the floor
+		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+
+		// LQ_DEBRIS should have fallen through all but the floor
+		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
 	}
 }
