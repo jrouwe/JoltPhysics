@@ -56,11 +56,11 @@ private:
 static constexpr BroadPhaseLayer cBroadPhaseLayerInvalid(0xff);
 
 /// Interface that the application should implement to allow mapping object layers to broadphase layers
-class BroadPhaseLayerInterface
+class BroadPhaseLayerInterface : public NonCopyable
 {
 public:
 	/// Destructor
-	virtual							~BroadPhaseLayerInterface() { };
+	virtual							~BroadPhaseLayerInterface() = default;
 
 	/// Return the number of broadphase layers there are
 	virtual uint					GetNumBroadPhaseLayers() const = 0;
