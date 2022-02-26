@@ -7,6 +7,7 @@
 #include "LoggingBodyActivationListener.h"
 #include "LoggingContactListener.h"
 #include <Physics/Collision/Shape/BoxShape.h>
+#include <Physics/Body/BodyLockMulti.h>
 
 TEST_SUITE("PhysicsTests")
 {
@@ -40,9 +41,16 @@ TEST_SUITE("PhysicsTests")
 	{
 		PhysicsTestContext c;
 
+		// Check that we cannot lock the invalid body ID
+		{
+			BodyLockRead lock(c.GetSystem()->GetBodyLockInterface(), BodyID());
+			CHECK_FALSE(lock.Succeeded());
+			CHECK_FALSE(lock.SucceededAndIsInBroadPhase());
+		}
+
 		BodyID body1_id;
 		{
-			// Creata a box
+			// Create a box
 			Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
 			body1_id = body1.GetID();
 			CHECK(body1_id.GetIndex() == 0);
@@ -102,6 +110,44 @@ TEST_SUITE("PhysicsTests")
 			CHECK_FALSE(lock1.SucceededAndIsInBroadPhase());
 		}
 	}		
+
+	TEST_CASE("TestPhysicsBodyLockMulti")
+	{
+		PhysicsTestContext c;
+
+		// Check that we cannot lock the invalid body ID
+		{
+			BodyID bodies[] = { BodyID(), BodyID() };
+			BodyLockMultiRead lock(c.GetSystem()->GetBodyLockInterface(), bodies, 2);
+			CHECK(lock.GetBody(0) == nullptr);
+			CHECK(lock.GetBody(1) == nullptr);
+		}
+
+		{
+			// Create two bodies
+			Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body2 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			BodyID bodies[] = { body1.GetID(), body2.GetID() };
+
+			{
+				// Lock the bodies
+				BodyLockMultiWrite lock(c.GetSystem()->GetBodyLockInterface(), bodies, 2);
+				CHECK(lock.GetBody(0) == &body1);
+				CHECK(lock.GetBody(1) == &body2);
+			}
+
+			// Destroy body 1
+			c.GetSystem()->GetBodyInterface().RemoveBody(bodies[0]);
+			c.GetSystem()->GetBodyInterface().DestroyBody(bodies[0]);
+
+			{
+				// Lock the bodies
+				BodyLockMultiRead lock(c.GetSystem()->GetBodyLockInterface(), bodies, 2);
+				CHECK(lock.GetBody(0) == nullptr);
+				CHECK(lock.GetBody(1) == &body2);
+			}
+		}
+	}
 
 	TEST_CASE("TestPhysicsBodyID")
 	{

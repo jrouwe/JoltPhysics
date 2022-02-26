@@ -52,6 +52,8 @@ public:
 
 		// Get body ID
 		const BodyID &body_id = mBodyIDs[inBodyIndex];
+		if (body_id.IsInvalid())
+			return nullptr;
 
 		// Get a reference to the body or nullptr when it is no longer valid
 		return mBodyLockInterface.TryGetBody(body_id);
