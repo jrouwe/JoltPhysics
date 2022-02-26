@@ -60,6 +60,8 @@ void RigPileTest::Initialize()
 		Ref<PhysicsScene> scene;
 		if (!ObjectStreamIn::sReadObject((string("Assets/") + sSceneName + ".bof").c_str(), scene))
 			FatalError("Failed to load scene");
+		for (BodyCreationSettings &body : scene->GetBodies())
+			body.mObjectLayer = Layers::NON_MOVING;
 		scene->FixInvalidScales();
 		scene->CreateBodies(mPhysicsSystem);
 	}

@@ -60,7 +60,10 @@ void CharacterTest::Initialize()
 			FatalError("Failed to load scene");
 		scene->FixInvalidScales();
 		for (BodyCreationSettings &settings : scene->GetBodies())
+		{
+			settings.mObjectLayer = Layers::NON_MOVING;
 			settings.mFriction = 0.5f;
+		}
 		scene->CreateBodies(mPhysicsSystem);
 	}
 
