@@ -18,21 +18,24 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(PointConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(PointConstraintSettings, TwoBodyConstraintSettings)
 
-	JPH_ADD_ATTRIBUTE(PointConstraintSettings, mCommonPoint)
+	JPH_ADD_ATTRIBUTE(PointConstraintSettings, mPoint1)
+	JPH_ADD_ATTRIBUTE(PointConstraintSettings, mPoint2)
 }
 
 void PointConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 { 
 	ConstraintSettings::SaveBinaryState(inStream);
 
-	inStream.Write(mCommonPoint);	
+	inStream.Write(mPoint1);	
+	inStream.Write(mPoint2);
 }
 
 void PointConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	ConstraintSettings::RestoreBinaryState(inStream);
 
-	inStream.Read(mCommonPoint);
+	inStream.Read(mPoint1);
+	inStream.Read(mPoint2);
 }
 
 TwoBodyConstraint *PointConstraintSettings::Create(Body &inBody1, Body &inBody2) const
@@ -44,8 +47,8 @@ PointConstraint::PointConstraint(Body &inBody1, Body &inBody2, const PointConstr
 	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {
 	// Store local positions
-	mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * inSettings.mCommonPoint;
-	mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * inSettings.mCommonPoint;
+	mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * inSettings.mPoint1;
+	mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * inSettings.mPoint2;
 }
 
 void PointConstraint::CalculateConstraintProperties()
