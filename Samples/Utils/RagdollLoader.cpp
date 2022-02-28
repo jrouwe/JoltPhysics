@@ -42,7 +42,7 @@ RagdollSettings *RagdollLoader::sLoad(const char *inFileName, EMotionType inMoti
 			case EConstraintOverride::TypePoint:
 				{
 					PointConstraintSettings *settings = new PointConstraintSettings();
-					settings->mCommonPoint = original->mPosition1;
+					settings->mPoint1 = settings->mPoint2 = original->mPosition1;
 					p.mToParent = settings;
 					break;
 				}

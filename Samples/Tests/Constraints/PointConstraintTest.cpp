@@ -46,7 +46,7 @@ void PointConstraintTest::Initialize()
 		mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
 
 		PointConstraintSettings settings;
-		settings.mCommonPoint = position + Vec3(-half_cylinder_height, 0, 0);
+		settings.mPoint1 = settings.mPoint2 = position + Vec3(-half_cylinder_height, 0, 0);
 		mPhysicsSystem->AddConstraint(settings.Create(*prev, segment));
 
 		prev = &segment;

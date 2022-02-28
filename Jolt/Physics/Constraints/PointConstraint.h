@@ -20,8 +20,12 @@ public:
 	/// Create an an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	/// Constraint is placed at mCommonPoint (world space position).
-	Vec3						mCommonPoint = Vec3::sZero();
+	/// Body 1 constraint position (world space position).
+	Vec3						mPoint1 = Vec3::sZero();
+
+	/// Body 2 constraint position (world space position).
+	/// Note: Normally you would set mPoint1 = mPoint2 if the bodies are already placed how you want to constrain them.
+	Vec3						mPoint2 = Vec3::sZero();
 
 protected:
 	// See: ConstraintSettings::RestoreBinaryState
