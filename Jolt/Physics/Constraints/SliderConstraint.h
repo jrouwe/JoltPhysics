@@ -23,10 +23,24 @@ public:
 	/// Create an an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	/// Axis along which movement is possible (world space direction).
-	Vec3						mSliderAxis = Vec3::sAxisX();
+	/// Simple way of setting the anchor points so that the current relative position is chosen as the '0' position
+	void						SetPoint(const Body &inBody1, const Body &inBody2);
 
-	/// Bodies are assumed to be placed so that the slider position = 0, movement will be limited between [mLimitsMin, mLimitsMax] where mLimitsMin e [-inf, 0] and mLimitsMax e [0, inf]
+	/// Simple way of setting the slider and normal axis in world space (assumes the bodies are already oriented correctly when the constraint is created)
+	void						SetSliderAxis(Vec3Arg inSliderAxis);
+
+	/// Body 1 constraint reference frame (in world space).
+	/// Slider axis is the axis along which movement is possible (world space direction), normal axis is a perpendicular vector to define the frame.
+	Vec3						mPoint1 = Vec3::sZero();
+	Vec3						mSliderAxis1 = Vec3::sAxisX();
+	Vec3						mNormalAxis1 = Vec3::sAxisY();
+	
+	/// Body 2 constraint reference frame (in world space)
+	Vec3						mPoint2 = Vec3::sZero();
+	Vec3						mSliderAxis2 = Vec3::sAxisX();
+	Vec3						mNormalAxis2 = Vec3::sAxisY();
+
+	/// When the bodies move so that mPoint1 coincides with mPoint2 the slider position is defined to be 0, movement will be limited between [mLimitsMin, mLimitsMax] where mLimitsMin e [-inf, 0] and mLimitsMax e [0, inf]
 	float						mLimitsMin = -FLT_MAX;
 	float						mLimitsMax = FLT_MAX;
 

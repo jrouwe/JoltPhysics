@@ -66,7 +66,9 @@ RagdollSettings *RagdollLoader::sLoad(const char *inFileName, EMotionType inMoti
 			case EConstraintOverride::TypeSlider:
 				{
 					SliderConstraintSettings *settings = new SliderConstraintSettings();
-					settings->mSliderAxis = original->mTwistAxis1;
+					settings->mPoint1 = settings->mPoint2 = original->mPosition1;
+					settings->mSliderAxis1 = settings->mSliderAxis2 = original->mTwistAxis1;
+					settings->mNormalAxis1 = settings->mNormalAxis2 = original->mTwistAxis1.GetNormalizedPerpendicular();
 					settings->mLimitsMin = -1.0f;
 					settings->mLimitsMax = 1.0f;
 					settings->mMaxFrictionForce = original->mMaxFrictionTorque;

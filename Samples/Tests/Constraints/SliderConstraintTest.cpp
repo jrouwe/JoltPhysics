@@ -48,7 +48,8 @@ void SliderConstraintTest::Initialize()
 			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
 
 			SliderConstraintSettings settings;
-			settings.mSliderAxis = Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)) * Vec3::sAxisX();
+			settings.SetPoint(*prev, segment);
+			settings.SetSliderAxis(Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)).RotateAxisX());
 			settings.mLimitsMin = -5.0f;
 			settings.mLimitsMax = 10.0f;
 			mPhysicsSystem->AddConstraint(settings.Create(*prev, segment));
@@ -76,7 +77,8 @@ void SliderConstraintTest::Initialize()
 			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
 
 			SliderConstraintSettings settings;
-			settings.mSliderAxis = Quat::sRotation(Vec3::sAxisY(), displacement(random) * DegreesToRadians(20)) * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)) * Vec3::sAxisX();
+			settings.SetPoint(*prev, segment);
+			settings.SetSliderAxis(Quat::sRotation(Vec3::sAxisY(), displacement(random) * DegreesToRadians(20)) * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)).RotateAxisX());
 			settings.mLimitsMin = -5.0f;
 			settings.mLimitsMax = 10.0f;
 			mPhysicsSystem->AddConstraint(settings.Create(*prev, segment));

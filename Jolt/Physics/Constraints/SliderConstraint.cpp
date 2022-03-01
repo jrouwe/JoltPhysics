@@ -18,18 +18,48 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SliderConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(SliderConstraintSettings, TwoBodyConstraintSettings)
 
-	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mSliderAxis)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mPoint1)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mSliderAxis1)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mNormalAxis1)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mPoint2)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mSliderAxis2)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mNormalAxis2)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mLimitsMin)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mLimitsMax)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mMaxFrictionForce)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mMotorSettings)
 }
 
+void SliderConstraintSettings::SetPoint(const Body &inBody1, const Body &inBody2)
+{
+	// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point, otherwise use the mid point between the two center of masses
+	Vec3 anchor;
+	if (!inBody1.CanBeKinematicOrDynamic())
+		anchor = inBody2.GetCenterOfMassPosition();
+	else if (!inBody2.CanBeKinematicOrDynamic())
+		anchor = inBody1.GetCenterOfMassPosition();
+	else
+		anchor = 0.5f * (inBody1.GetCenterOfMassPosition() + inBody2.GetCenterOfMassPosition());
+
+	mPoint1 = mPoint2 = anchor;
+}
+
+void SliderConstraintSettings::SetSliderAxis(Vec3Arg inSliderAxis)
+{
+	mSliderAxis1 = mSliderAxis2 = inSliderAxis;
+	mNormalAxis1 = mNormalAxis2 = inSliderAxis.GetNormalizedPerpendicular();
+}
+
 void SliderConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 { 
 	ConstraintSettings::SaveBinaryState(inStream);
 
-	inStream.Write(mSliderAxis);
+	inStream.Write(mPoint1);
+	inStream.Write(mSliderAxis1);
+	inStream.Write(mNormalAxis1);
+	inStream.Write(mPoint2);
+	inStream.Write(mSliderAxis2);
+	inStream.Write(mNormalAxis2);
 	inStream.Write(mLimitsMin);
 	inStream.Write(mLimitsMax);
 	inStream.Write(mMaxFrictionForce);
@@ -40,7 +70,12 @@ void SliderConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	ConstraintSettings::RestoreBinaryState(inStream);
 
-	inStream.Read(mSliderAxis);
+	inStream.Read(mPoint1);
+	inStream.Read(mSliderAxis1);
+	inStream.Read(mNormalAxis1);
+	inStream.Read(mPoint2);
+	inStream.Read(mSliderAxis2);
+	inStream.Read(mNormalAxis2);
 	inStream.Read(mLimitsMin);
 	inStream.Read(mLimitsMax);
 	inStream.Read(mMaxFrictionForce);
@@ -59,28 +94,33 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 {
 	Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
 
-	// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point, otherwise use the mid point between the two center of masses
-	Vec3 anchor;
-	if (!mBody1->CanBeKinematicOrDynamic())
-		anchor = mBody2->GetCenterOfMassPosition();
-	else if (!mBody2->CanBeKinematicOrDynamic())
-		anchor = mBody1->GetCenterOfMassPosition();
-	else
-		anchor = 0.5f * (mBody1->GetCenterOfMassPosition() + mBody2->GetCenterOfMassPosition());
-
 	// Store local positions
-	mLocalSpacePosition1 = inv_transform1 * anchor;
-	mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * anchor;
+	mLocalSpacePosition1 = inv_transform1 * inSettings.mPoint1;
+	mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * inSettings.mPoint2;
 
 	// Store local sliding axis
-	mLocalSpaceSliderAxis1 = inv_transform1.Multiply3x3(inSettings.mSliderAxis).Normalized();
+	mLocalSpaceSliderAxis1 = inv_transform1.Multiply3x3(inSettings.mSliderAxis1).Normalized();
 
 	// Store local space normals
-	mLocalSpaceNormal1 = mLocalSpaceSliderAxis1.GetNormalizedPerpendicular();
+	mLocalSpaceNormal1 = inv_transform1.Multiply3x3(inSettings.mNormalAxis1).Normalized();
 	mLocalSpaceNormal2 = mLocalSpaceSliderAxis1.Cross(mLocalSpaceNormal1);
 	
-	// Inverse of initial rotation from body 1 to body 2 in body 1 space
-	mInvInitialOrientation = RotationEulerConstraintPart::sGetInvInitialOrientation(inBody1, inBody2);
+	// Store inverse of initial rotation from body 1 to body 2 in body 1 space
+	if (inSettings.mSliderAxis1 == inSettings.mSliderAxis2 && inSettings.mNormalAxis1 == inSettings.mNormalAxis2)
+	{
+		// Bodies are in their neutral poses, no need to take slider and normal axis into account
+		mInvInitialOrientation = RotationEulerConstraintPart::sGetInvInitialOrientation(inBody1, inBody2);
+	}
+	else
+	{
+		// Bodies are not in their neutral pose, need to adjust initial rotation for it
+		// Form two world space constraint matrices C1, C2
+		// Body 1 needs to be rotated by D to get it into neutral pose: C2 = D C1 <=> D = C2 C1^1
+		// so instead of using body1 rotation as above use D R1 = C2 C1^-1 R1
+		Mat44 constraint1(Vec4(inSettings.mSliderAxis1, 0), Vec4(inSettings.mNormalAxis1, 0), Vec4(inSettings.mSliderAxis1.Cross(inSettings.mNormalAxis1), 0), Vec4(0, 0, 0, 1));
+		Mat44 constraint2(Vec4(inSettings.mSliderAxis2, 0), Vec4(inSettings.mNormalAxis1, 0), Vec4(inSettings.mSliderAxis2.Cross(inSettings.mNormalAxis2), 0), Vec4(0, 0, 0, 1));
+		mInvInitialOrientation = inBody2.GetRotation().Conjugated() * constraint2.GetQuaternion() * constraint1.GetQuaternion().Conjugated() * inBody1.GetRotation();
+	}
 
 	// Store limits
 	JPH_ASSERT(inSettings.mLimitsMin != inSettings.mLimitsMax, "Better use a fixed constraint");
