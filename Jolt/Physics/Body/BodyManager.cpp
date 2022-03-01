@@ -258,32 +258,33 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 	JPH_ASSERT(!mActiveBodiesLocked || sOverrideAllowActivation);
 
 	for (const BodyID *b = inBodyIDs, *b_end = inBodyIDs + inNumber; b < b_end; b++)
-	{
-		BodyID body_id = *b;
-		Body &body = *mBodies[body_id.GetIndex()];
-
-		JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
-		JPH_ASSERT(body.GetID() == body_id);
-		JPH_ASSERT(body.IsInBroadPhase());
-
-		if (!body.IsStatic()
-			&& body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
+		if (!b->IsInvalid())
 		{
-			body.mMotionProperties->mIndexInActiveBodies = mNumActiveBodies;
-			body.ResetSleepTestSpheres();
-			JPH_ASSERT(mNumActiveBodies < GetMaxBodies());
-			mActiveBodies[mNumActiveBodies] = body_id;
-			mNumActiveBodies++; // Increment atomic after setting the body ID so that PhysicsSystem::JobFindCollisions (which doesn't lock the mActiveBodiesMutex) will only read valid IDs
+			BodyID body_id = *b;
+			Body &body = *mBodies[body_id.GetIndex()];
 
-			// Count CCD bodies
-			if (body.mMotionProperties->GetMotionQuality() == EMotionQuality::LinearCast)
-				mNumActiveCCDBodies++;
+			JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
+			JPH_ASSERT(body.GetID() == body_id);
+			JPH_ASSERT(body.IsInBroadPhase());
 
-			// Call activation listener
-			if (mActivationListener != nullptr)
-				mActivationListener->OnBodyActivated(body_id, body.GetUserData());
+			if (!body.IsStatic()
+				&& body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
+			{
+				body.mMotionProperties->mIndexInActiveBodies = mNumActiveBodies;
+				body.ResetSleepTestSpheres();
+				JPH_ASSERT(mNumActiveBodies < GetMaxBodies());
+				mActiveBodies[mNumActiveBodies] = body_id;
+				mNumActiveBodies++; // Increment atomic after setting the body ID so that PhysicsSystem::JobFindCollisions (which doesn't lock the mActiveBodiesMutex) will only read valid IDs
+
+				// Count CCD bodies
+				if (body.mMotionProperties->GetMotionQuality() == EMotionQuality::LinearCast)
+					mNumActiveCCDBodies++;
+
+				// Call activation listener
+				if (mActivationListener != nullptr)
+					mActivationListener->OnBodyActivated(body_id, body.GetUserData());
+			}
 		}
-	}
 }
 
 void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
@@ -297,50 +298,51 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 	JPH_ASSERT(!mActiveBodiesLocked || sOverrideAllowDeactivation);
 
 	for (const BodyID *b = inBodyIDs, *b_end = inBodyIDs + inNumber; b < b_end; b++)
-	{
-		BodyID body_id = *b;
-		Body &body = *mBodies[body_id.GetIndex()];
-
-		JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
-		JPH_ASSERT(body.GetID() == body_id);
-		JPH_ASSERT(body.IsInBroadPhase());
-
-		if (body.mMotionProperties != nullptr
-			&& body.mMotionProperties->mIndexInActiveBodies != Body::cInactiveIndex)
+		if (!b->IsInvalid())
 		{
-			uint32 last_body_index = mNumActiveBodies - 1;
-			if (body.mMotionProperties->mIndexInActiveBodies != last_body_index)
+			BodyID body_id = *b;
+			Body &body = *mBodies[body_id.GetIndex()];
+
+			JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
+			JPH_ASSERT(body.GetID() == body_id);
+			JPH_ASSERT(body.IsInBroadPhase());
+
+			if (body.mMotionProperties != nullptr
+				&& body.mMotionProperties->mIndexInActiveBodies != Body::cInactiveIndex)
 			{
-				// This is not the last body, use the last body to fill the hole
-				BodyID last_body_id = mActiveBodies[last_body_index];
-				mActiveBodies[body.mMotionProperties->mIndexInActiveBodies] = last_body_id;
+				uint32 last_body_index = mNumActiveBodies - 1;
+				if (body.mMotionProperties->mIndexInActiveBodies != last_body_index)
+				{
+					// This is not the last body, use the last body to fill the hole
+					BodyID last_body_id = mActiveBodies[last_body_index];
+					mActiveBodies[body.mMotionProperties->mIndexInActiveBodies] = last_body_id;
 
-				// Update that body's index in the active list
-				Body &last_body = *mBodies[last_body_id.GetIndex()];
-				JPH_ASSERT(last_body.mMotionProperties->mIndexInActiveBodies == last_body_index);
-				last_body.mMotionProperties->mIndexInActiveBodies = body.mMotionProperties->mIndexInActiveBodies;
+					// Update that body's index in the active list
+					Body &last_body = *mBodies[last_body_id.GetIndex()];
+					JPH_ASSERT(last_body.mMotionProperties->mIndexInActiveBodies == last_body_index);
+					last_body.mMotionProperties->mIndexInActiveBodies = body.mMotionProperties->mIndexInActiveBodies;
+				}
+
+				// Mark this body as no longer active
+				body.mMotionProperties->mIndexInActiveBodies = Body::cInactiveIndex;
+				body.mMotionProperties->mIslandIndex = Body::cInactiveIndex;
+
+				// Reset velocity
+				body.mMotionProperties->mLinearVelocity = Vec3::sZero();
+				body.mMotionProperties->mAngularVelocity = Vec3::sZero();
+
+				// Remove unused element from active bodies list
+				--mNumActiveBodies;
+
+				// Count CCD bodies
+				if (body.mMotionProperties->GetMotionQuality() == EMotionQuality::LinearCast)
+					mNumActiveCCDBodies--;
+
+				// Call activation listener
+				if (mActivationListener != nullptr)
+					mActivationListener->OnBodyDeactivated(body_id, body.GetUserData());
 			}
-
-			// Mark this body as no longer active
-			body.mMotionProperties->mIndexInActiveBodies = Body::cInactiveIndex;
-			body.mMotionProperties->mIslandIndex = Body::cInactiveIndex;
-
-			// Reset velocity
-			body.mMotionProperties->mLinearVelocity = Vec3::sZero();
-			body.mMotionProperties->mAngularVelocity = Vec3::sZero();
-
-			// Remove unused element from active bodies list
-			--mNumActiveBodies;
-
-			// Count CCD bodies
-			if (body.mMotionProperties->GetMotionQuality() == EMotionQuality::LinearCast)
-				mNumActiveCCDBodies--;
-
-			// Call activation listener
-			if (mActivationListener != nullptr)
-				mActivationListener->OnBodyDeactivated(body_id, body.GetUserData());
 		}
-	}
 }
 
 void BodyManager::GetActiveBodies(BodyIDVector &outBodyIDs) const
