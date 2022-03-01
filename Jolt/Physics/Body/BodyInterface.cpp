@@ -11,6 +11,7 @@
 #include <Physics/Body/BodyLock.h>
 #include <Physics/Body/BodyLockMulti.h>
 #include <Physics/Collision/PhysicsMaterial.h>
+#include <Physics/Constraints/TwoBodyConstraint.h>
 
 namespace JPH {
 
@@ -147,6 +148,12 @@ bool BodyInterface::IsActive(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	return lock.Succeeded() && lock.GetBody().IsActive();
+}
+
+void BodyInterface::ActivateConstraint(const TwoBodyConstraint *inConstraint)
+{
+	BodyID bodies[] = { inConstraint->GetBody1()->GetID(), inConstraint->GetBody2()->GetID() };
+	ActivateBodies(bodies, 2);
 }
 
 RefConst<Shape> BodyInterface::GetShape(const BodyID &inBodyID) const
