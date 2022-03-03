@@ -8,6 +8,9 @@
 #include <Physics/PhysicsSystem.h>
 #include <Physics/Body/BodyLockMulti.h>
 #include <Physics/Collision/GroupFilterTable.h>
+#include <Physics/Collision/CollisionCollectorImpl.h>
+#include <Physics/Collision/CollideShape.h>
+#include <Physics/Collision/CollisionDispatch.h>
 #include <ObjectStream/TypeDeclarations.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -178,7 +181,7 @@ bool RagdollSettings::Stabilize()
 	return true;
 }
 
-void RagdollSettings::DisableParentChildCollisions()
+void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices, float inMinSeparationDistance)
 {
 	int joint_count = mSkeleton->GetJointCount();
 	JPH_ASSERT(joint_count == (int)mParts.size());
@@ -190,6 +193,41 @@ void RagdollSettings::DisableParentChildCollisions()
 		int parent_joint = mSkeleton->GetJoint(joint_idx).mParentJointIndex;
 		if (parent_joint >= 0)
 			group_filter->DisableCollision(joint_idx, parent_joint);
+	}
+
+	// If joint matrices are provided
+	if (inJointMatrices != nullptr)
+	{
+		// Loop over all joints
+		for (int j1 = 0; j1 < joint_count; ++j1)
+		{
+			// Shape and transform for joint 1
+			const Shape *shape1 = mParts[j1].GetShape();
+			Vec3 scale1;
+			Mat44 com1 = (inJointMatrices[j1] * Mat44::sTranslation(shape1->GetCenterOfMass())).Decompose(scale1);
+
+			// Loop over all other joints
+			for (int j2 = j1 + 1; j2 < joint_count; ++j2)
+				if (group_filter->IsCollisionEnabled(j1, j2)) // Only if collision is still enabled we need to test
+				{
+					// Shape and transform for joint 2
+					const Shape *shape2 = mParts[j2].GetShape();
+					Vec3 scale2;
+					Mat44 com2 = (inJointMatrices[j2] * Mat44::sTranslation(shape2->GetCenterOfMass())).Decompose(scale2);
+					
+					// Collision settings
+					CollideShapeSettings settings;
+					settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
+					settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+					settings.mMaxSeparationDistance = inMinSeparationDistance;
+
+					// If there is a collision, disable the collision between the joints
+					AnyHitCollisionCollector<CollideShapeCollector> collector;
+					CollisionDispatch::sCollideShapeVsShape(shape1, shape2, scale1, scale2, com1, com2, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+					if (collector.HadHit())
+						group_filter->DisableCollision(j1, j2);
+				}
+		}
 	}
 
 	// Loop over the body parts and assign them a sub group ID and the group filter

@@ -33,10 +33,12 @@ public:
 	/// - Create a GroupFilterTable and assign it to all of the bodies in a ragdoll.
 	/// - Each body in your ragdoll will get a SubGroupID that is equal to the joint index in the Skeleton that it is attached to.
 	/// - Loop over all joints in the Skeleton and call GroupFilterTable::DisableCollision(joint index, parent joint index).
+	/// - When a pose is provided through inJointMatrices the function will detect collisions between joints 
+	/// (they must be separated by more than inMinSeparationDistance to be treated as not colliding) and automatically disable collisions.
 	/// 
 	/// When you create an instance using Ragdoll::CreateRagdoll pass in a unique GroupID for each ragdoll (e.g. a simple counter), note that this number 
 	/// should be unique throughout the PhysicsSystem, so if you have different types of ragdolls they should not share the same GroupID.
-	void								DisableParentChildCollisions();
+	void								DisableParentChildCollisions(const Mat44 *inJointMatrices = nullptr, float inMinSeparationDistance = 0.0f);
 
 	/// Saves the state of this object in binary form to inStream.
 	/// @param inStream The stream to save the state to
