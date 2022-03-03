@@ -7,6 +7,7 @@
 #include <Physics/Ragdoll/Ragdoll.h>
 #include <Physics/PhysicsSystem.h>
 #include <Physics/Body/BodyLockMulti.h>
+#include <Physics/Collision/GroupFilterTable.h>
 #include <ObjectStream/TypeDeclarations.h>
 #include <Core/StreamIn.h>
 #include <Core/StreamOut.h>
@@ -175,6 +176,29 @@ bool RagdollSettings::Stabilize()
 	}
 
 	return true;
+}
+
+void RagdollSettings::DisableParentChildCollisions()
+{
+	int joint_count = mSkeleton->GetJointCount();
+	JPH_ASSERT(joint_count == (int)mParts.size());
+
+	// Create a group filter table that disables collisions between parent and child
+	GroupFilterTable *group_filter = new GroupFilterTable(joint_count);
+	for (int joint_idx = 0; joint_idx < joint_count; ++joint_idx)
+	{
+		int parent_joint = mSkeleton->GetJoint(joint_idx).mParentJointIndex;
+		if (parent_joint >= 0)
+			group_filter->DisableCollision(joint_idx, parent_joint);
+	}
+
+	// Loop over the body parts and assign them a sub group ID and the group filter
+	for (int joint_idx = 0; joint_idx < joint_count; ++joint_idx)
+	{
+		Part &part = mParts[joint_idx];
+		part.mCollisionGroup.SetSubGroupID(joint_idx);
+		part.mCollisionGroup.SetGroupFilter(group_filter);
+	}
 }
 
 void RagdollSettings::SaveBinaryState(StreamOut &inStream, bool inSaveShapes, bool inSaveGroupFilter) const
