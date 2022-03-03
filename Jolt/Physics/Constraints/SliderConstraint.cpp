@@ -118,7 +118,7 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 		// Body 1 needs to be rotated by D to get it into neutral pose: C2 = D C1 <=> D = C2 C1^1
 		// so instead of using body1 rotation as above use D R1 = C2 C1^-1 R1
 		Mat44 constraint1(Vec4(inSettings.mSliderAxis1, 0), Vec4(inSettings.mNormalAxis1, 0), Vec4(inSettings.mSliderAxis1.Cross(inSettings.mNormalAxis1), 0), Vec4(0, 0, 0, 1));
-		Mat44 constraint2(Vec4(inSettings.mSliderAxis2, 0), Vec4(inSettings.mNormalAxis1, 0), Vec4(inSettings.mSliderAxis2.Cross(inSettings.mNormalAxis2), 0), Vec4(0, 0, 0, 1));
+		Mat44 constraint2(Vec4(inSettings.mSliderAxis2, 0), Vec4(inSettings.mNormalAxis2, 0), Vec4(inSettings.mSliderAxis2.Cross(inSettings.mNormalAxis2), 0), Vec4(0, 0, 0, 1));
 		mInvInitialOrientation = inBody2.GetRotation().Conjugated() * constraint2.GetQuaternion() * constraint1.GetQuaternion().Conjugated() * inBody1.GetRotation();
 	}
 

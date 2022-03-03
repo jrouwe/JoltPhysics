@@ -397,4 +397,48 @@ TEST_SUITE("SliderConstraintTests")
 		CHECK(body1.IsActive());
 		CHECK(body2.IsActive());
 	}
+
+	// Test that when a reference frame is provided, the slider constraint is correctly constructed
+	TEST_CASE("TestSliderReferenceFrame")
+	{
+		// Create two boxes in semi random position/orientation
+		PhysicsTestContext c;
+		Body &body1 = c.CreateBox(Vec3(1, 2, 3), Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.1f * JPH_PI), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::Activate);
+		Body &body2 = c.CreateBox(Vec3(-3, -2, -1), Quat::sRotation(Vec3(1, 0, 1).Normalized(), 0.2f * JPH_PI), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::Activate);
+
+		// Disable collision between the boxes
+		GroupFilterTable *group_filter = new GroupFilterTable(2);
+		group_filter->DisableCollision(0, 1);
+		body1.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
+		body2.SetCollisionGroup(CollisionGroup(group_filter, 0, 1));
+
+		// Get their transforms
+		Mat44 t1 = body1.GetCenterOfMassTransform();
+		Mat44 t2 = body2.GetCenterOfMassTransform();
+
+		// Create slider constraint so that slider connects the bodies at their center of mass and rotated XY -> YZ
+		SliderConstraintSettings s;
+		s.mPoint1 = t1.GetTranslation();
+		s.mSliderAxis1 = t1.GetColumn3(0);
+		s.mNormalAxis1 = t1.GetColumn3(1);
+		s.mPoint2 = t2.GetTranslation();
+		s.mSliderAxis2 = t2.GetColumn3(1);
+		s.mNormalAxis2 = t2.GetColumn3(2);
+		SliderConstraint &constraint = c.CreateConstraint<SliderConstraint>(body1, body2, s);
+
+		// Activate the motor to drive to 0
+		constraint.SetMotorState(EMotorState::Position);
+		constraint.SetTargetPosition(0);
+
+		// Simulate for a second
+		c.Simulate(1.0f);
+
+		// Now the bodies should have aligned so their COM is at the same position and they're rotated XY -> YZ
+		t1 = body1.GetCenterOfMassTransform();
+		t2 = body2.GetCenterOfMassTransform();
+		CHECK_APPROX_EQUAL(t1.GetColumn3(0), t2.GetColumn3(1), 1.0e-4f);
+		CHECK_APPROX_EQUAL(t1.GetColumn3(1), t2.GetColumn3(2), 1.0e-4f);
+		CHECK_APPROX_EQUAL(t1.GetColumn3(2), t2.GetColumn3(0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(t1.GetTranslation(), t2.GetTranslation(), 1.0e-2f);
+	}
 }
