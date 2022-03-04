@@ -113,6 +113,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/WallTest.h
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.h
+	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.cpp
+	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.h
 	${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.h
 	${SAMPLES_ROOT}/Tests/Rig/LoadSaveBinaryRigTest.cpp

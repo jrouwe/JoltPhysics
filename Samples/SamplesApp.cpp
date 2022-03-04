@@ -205,6 +205,7 @@ static TestNameAndRTTI sScaledShapeTests[] =
 	{ "Offset Center Of Mass Shape",		JPH_RTTI(ScaledOffsetCenterOfMassShapeTest) }
 };
 
+JPH_DECLARE_RTTI_FOR_FACTORY(CreateRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(LoadRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(KinematicRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(PoweredRigTest)
@@ -213,6 +214,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveBinaryRigTest)
 
 static TestNameAndRTTI sRigTests[] =
 {
+	{ "Create Rig",							JPH_RTTI(CreateRigTest) },
 	{ "Load Rig",							JPH_RTTI(LoadRigTest) },
 	{ "Load / Save Binary Rig",				JPH_RTTI(LoadSaveBinaryRigTest) },
 	{ "Kinematic Rig",						JPH_RTTI(KinematicRigTest) },
