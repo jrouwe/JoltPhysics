@@ -93,7 +93,7 @@
 	#if (defined(__BMI__) || defined(__AVX2__)) && !defined(JPH_USE_TZCNT)
 		#define JPH_USE_TZCNT
 	#endif
-	#if defined(__SSE4_2__) && !defined(JPH_USE_SSE4_2)
+	#if (defined(__SSE4_2__) || defined(__AVX__)) && !defined(JPH_USE_SSE4_2)
 		#define JPH_USE_SSE4_2
 	#endif
 	#if defined(__AVX__) && !defined(JPH_USE_AVX)
