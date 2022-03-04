@@ -187,7 +187,7 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 	JPH_ASSERT(joint_count == (int)mParts.size());
 
 	// Create a group filter table that disables collisions between parent and child
-	GroupFilterTable *group_filter = new GroupFilterTable(joint_count);
+	Ref<GroupFilterTable> group_filter = new GroupFilterTable(joint_count);
 	for (int joint_idx = 0; joint_idx < joint_count; ++joint_idx)
 	{
 		int parent_joint = mSkeleton->GetJoint(joint_idx).mParentJointIndex;
@@ -202,7 +202,8 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 		for (int j1 = 0; j1 < joint_count; ++j1)
 		{
 			// Shape and transform for joint 1
-			const Shape *shape1 = mParts[j1].GetShape();
+			const Part &part1 = mParts[j1];
+			const Shape *shape1 = part1.GetShape();
 			Vec3 scale1;
 			Mat44 com1 = (inJointMatrices[j1] * Mat44::sTranslation(shape1->GetCenterOfMass())).Decompose(scale1);
 
@@ -211,7 +212,8 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 				if (group_filter->IsCollisionEnabled(j1, j2)) // Only if collision is still enabled we need to test
 				{
 					// Shape and transform for joint 2
-					const Shape *shape2 = mParts[j2].GetShape();
+					const Part &part2 = mParts[j2];
+					const Shape *shape2 = part2.GetShape();
 					Vec3 scale2;
 					Mat44 com2 = (inJointMatrices[j2] * Mat44::sTranslation(shape2->GetCenterOfMass())).Decompose(scale2);
 					
@@ -221,11 +223,18 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 					settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 					settings.mMaxSeparationDistance = inMinSeparationDistance;
 
-					// If there is a collision, disable the collision between the joints
-					AnyHitCollisionCollector<CollideShapeCollector> collector;
-					CollisionDispatch::sCollideShapeVsShape(shape1, shape2, scale1, scale2, com1, com2, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
-					if (collector.HadHit())
-						group_filter->DisableCollision(j1, j2);
+					// Only check if one of the two bodies can become dynamic
+					if (part1.HasMassProperties() || part2.HasMassProperties())
+					{
+						// If there is a collision, disable the collision between the joints
+						AnyHitCollisionCollector<CollideShapeCollector> collector;
+						if (part1.HasMassProperties()) // Ensure that the first shape is always a dynamic one (we can't check mesh vs convex but we can check convex vs mesh)
+							CollisionDispatch::sCollideShapeVsShape(shape1, shape2, scale1, scale2, com1, com2, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+						else
+							CollisionDispatch::sCollideShapeVsShape(shape2, shape1, scale2, scale1, com2, com1, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+						if (collector.HadHit())
+							group_filter->DisableCollision(j1, j2);
+					}
 				}
 		}
 	}
