@@ -40,6 +40,8 @@ public:
 	int						GetJointCount() const													{ return (int)mJoints.size(); }
 	const Joint &			GetJoint(int inJoint) const												{ return mJoints[inJoint]; }
 	Joint &					GetJoint(int inJoint)													{ return mJoints[inJoint]; }
+	uint					AddJoint(const string &inName, const string &inParentName = string())	{ mJoints.push_back({ inName, inParentName, -1 }); return (uint)mJoints.size() - 1; }
+	uint					AddJoint(const string &inName, int inParentIndex)						{ mJoints.push_back({ inName, inParentIndex >= 0? mJoints[inParentIndex].mName : string(), inParentIndex }); return (uint)mJoints.size() - 1; }
 	///@}
 
 	/// Find joint by name

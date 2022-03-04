@@ -83,6 +83,14 @@ public:
 		mTable[bit >> 3] |= 1 << (bit & 0b111);
 	}
 
+	/// Check if the collision between two subgroups is enabled
+	inline bool				IsCollisionEnabled(SubGroupID inSubGroup1, SubGroupID inSubGroup2) const
+	{
+		// Test if the bit is set for this group pair
+		int bit = GetBit(inSubGroup1, inSubGroup2);
+		return (mTable[bit >> 3] & (1 << (bit & 0b111))) != 0;
+	}
+
 	/// Checks if two CollisionGroups collide
 	virtual bool			CanCollide(const CollisionGroup &inGroup1, const CollisionGroup &inGroup2) const override
 	{	
@@ -102,9 +110,8 @@ public:
 		if (inGroup1.GetSubGroupID() == inGroup2.GetSubGroupID())
 			return false;
 
-		// Test if the bit is set for this group pair
-		int bit = GetBit(inGroup1.GetSubGroupID(), inGroup2.GetSubGroupID());
-		return (mTable[bit >> 3] & (1 << (bit & 0b111))) != 0;
+		// Check the bit table
+		return IsCollisionEnabled(inGroup1.GetSubGroupID(), inGroup2.GetSubGroupID());
 	}
 
 	// See: GroupFilter::SaveBinaryState
