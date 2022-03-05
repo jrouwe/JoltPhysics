@@ -25,11 +25,13 @@ There are a number of user configurable defines that turn on/off certain feature
 - JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.
 - JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.
 - JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).
+- JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x64 only)
 - JPH_USE_F16C - Enable half float CPU instructions (x64 only)
 - JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x64 only)
+- JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x64 only)
 - JPH_USE_AVX - Enable AVX CPU instructions (x64 only)
 - JPH_USE_AVX2 - Enable AVX2 CPU instructions (x64 only)
-- JPH_USE_FMA - Enable fused multiply add CPU instructions (x64 only)
+- JPH_USE_FMADD - Enable fused multiply add CPU instructions (x64 only)
 
 ## Logging & Asserting
 
