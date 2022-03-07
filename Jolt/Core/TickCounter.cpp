@@ -13,6 +13,9 @@
 	#pragma warning (pop)
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID)
 	#include <fstream>
+#elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+	#include <sys/types.h>
+	#include <sys/sysctl.h>
 #endif
 
 namespace JPH {
@@ -74,7 +77,14 @@ static const uint64 sProcessorTicksPerSecond = []() {
 	JPH_ASSERT(false);
     return uint64(0);
 #elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
-    return 0;
+	// Use sysctl to get the processor frequency
+	int mib[2];
+    mib[0] = CTL_HW;
+    mib[1] = HW_CPU_FREQ;
+    uint64 freq = 1;
+    size_t len = sizeof(freq);
+    sysctl(mib, 2, &freq, &len, nullptr, 0);
+	return freq;
 #else
 	#error Undefined
 #endif

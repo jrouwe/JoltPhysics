@@ -22,7 +22,7 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution, ReleaseASAN, ReleaseUBSAN]
-            clang_version: [clang++-10, clang++-11, clang++-12]
+            clang_version: [clang++-10, clang++-12]
 
     steps:
     - name: Checkout Code
@@ -75,6 +75,27 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
       run: ./UnitTests.exe
+
+  macos:
+    runs-on: macos-latest
+    name: MacOS
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution]
+            clang_version: [clang++]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} --config ${{matrix.build_type}}
+# Disabled unit tests, they work on a Mac Mini 2014 but not in a github action for some reason
+#    - name: Test
+#      working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}}
+#      run: ctest --output-on-failure
 
   android:
     runs-on: ubuntu-latest
