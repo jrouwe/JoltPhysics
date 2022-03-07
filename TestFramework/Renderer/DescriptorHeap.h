@@ -25,7 +25,8 @@ public:
 		mDescriptorSize = inDevice->GetDescriptorHandleIncrementSize(heap_desc.Type);
 
 		// Delta between the CPU and GPU heap
-		mGPUOffset = mHeap->GetGPUDescriptorHandleForHeapStart().ptr - mHeap->GetCPUDescriptorHandleForHeapStart().ptr;
+		if (inFlags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
+			mGPUOffset = mHeap->GetGPUDescriptorHandleForHeapStart().ptr - mHeap->GetCPUDescriptorHandleForHeapStart().ptr;
 
 		// Populate the freelist
 		mFreeList.reserve(inNumber);
@@ -58,6 +59,7 @@ public:
 	/// Convert from a CPU to a GPU handle
 	D3D12_GPU_DESCRIPTOR_HANDLE			ConvertToGPUHandle(D3D12_CPU_DESCRIPTOR_HANDLE inHandle)
 	{
+		JPH_ASSERT(mGPUOffset != -1);
 		return { inHandle.ptr + mGPUOffset };
 	}
 
@@ -71,5 +73,5 @@ private:
 	ComPtr<ID3D12DescriptorHeap>		mHeap;
 	uint								mDescriptorSize;				///< The size (in bytes) of a single heap descriptor
 	vector<uint>						mFreeList;						///< List of indices in the heap that are still free
-	INT64								mGPUOffset;						///< Offset between CPU and GPU handles
+	INT64								mGPUOffset = -1;				///< Offset between CPU and GPU handles
 };
