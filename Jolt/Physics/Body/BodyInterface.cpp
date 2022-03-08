@@ -498,6 +498,23 @@ void BodyInterface::AddLinearVelocity(const BodyID &inBodyID, Vec3Arg inLinearVe
 	}
 }
 
+void BodyInterface::AddLinearAndAngularVelocity(const BodyID &inBodyID, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+	{
+		Body &body = lock.GetBody();
+		if (!body.IsStatic())
+		{
+			body.SetLinearVelocityClamped(body.GetLinearVelocity() + inLinearVelocity);
+			body.SetAngularVelocityClamped(body.GetAngularVelocity() + inAngularVelocity);
+
+			if (!body.IsActive() && (!body.GetLinearVelocity().IsNearZero() || !body.GetAngularVelocity().IsNearZero()))
+				mBodyManager->ActivateBodies(&inBodyID, 1);
+		}
+	}
+}
+
 void BodyInterface::SetAngularVelocity(const BodyID &inBodyID, Vec3Arg inAngularVelocity)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
