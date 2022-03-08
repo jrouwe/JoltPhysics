@@ -38,14 +38,14 @@ inline void CHECK_APPROX_EQUAL(QuatArg inLHS, QuatArg inRHS, float inTolerance =
 	CHECK(close);
 }
 
-#ifdef JPH_USE_AVX
+#ifdef JPH_USE_AVX2
 
 inline void CHECK_APPROX_EQUAL(DVec3Arg inLHS, DVec3Arg inRHS, double inTolerance = 1.0e-6)
 {
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }
 
-#endif // JPH_USE_AVX
+#endif // JPH_USE_AVX2
 
 inline void CHECK_APPROX_EQUAL(const Float2 &inLHS, const Float2 &inRHS, float inTolerance = 1.0e-6f)
 {
