@@ -128,6 +128,7 @@ public:
 	void						SetLinearVelocity(const BodyID &inBodyID, Vec3Arg inLinearVelocity);
 	Vec3						GetLinearVelocity(const BodyID &inBodyID) const;
 	void						AddLinearVelocity(const BodyID &inBodyID, Vec3Arg inLinearVelocity); ///< Add velocity to current velocity
+	void						AddLinearAndAngularVelocity(const BodyID &inBodyID, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity); ///< Add linear and angular to current velocities
 	void						SetAngularVelocity(const BodyID &inBodyID, Vec3Arg inAngularVelocity);
 	Vec3						GetAngularVelocity(const BodyID &inBodyID) const;
 	Vec3						GetPointVelocity(const BodyID &inBodyID, Vec3Arg inPoint) const; ///< Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body
