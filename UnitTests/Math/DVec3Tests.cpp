@@ -4,7 +4,7 @@
 #include "UnitTestFramework.h"
 #include <Math/DVec3.h>
 
-#ifdef JPH_USE_AVX
+#ifdef JPH_USE_AVX2
 
 TEST_SUITE("DVec3Tests")
 {
@@ -50,4 +50,4 @@ TEST_SUITE("DVec3Tests")
 	}
 }
 
-#endif // JPH_USE_AVX
+#endif // JPH_USE_AVX2

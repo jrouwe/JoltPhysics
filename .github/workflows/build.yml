@@ -89,13 +89,13 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} Build
+      # github macos-latest runs on a 2013 Ivy Bridge CPU so doesn't have AVX2, LZCNT, TZCNT or FMADD
+      run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DUSE_AVX2=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_FMADD=OFF Build
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} --config ${{matrix.build_type}}
-# Disabled unit tests, they work on a Mac Mini 2014 but not in a github action for some reason
-#    - name: Test
-#      working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}}
-#      run: ctest --output-on-failure
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}}
+      run: ctest --output-on-failure
 
   android:
     runs-on: ubuntu-latest
