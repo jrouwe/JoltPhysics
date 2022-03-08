@@ -65,6 +65,7 @@ public:
 
 	/// Check if this body is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
+	inline void				SetSensor(bool inSensor)										{ if (inSensor) mFlags.fetch_or(uint8(JPH::Body::EFlags::IsSensor), JPH::memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(JPH::Body::EFlags::IsSensor)), JPH::memory_order_relaxed); }
 
 	/// Motion type of this body
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
