@@ -405,6 +405,15 @@ Mat44 BodyInterface::GetWorldTransform(const BodyID &inBodyID) const
 		return Mat44::sIdentity();
 }
 
+Mat44 BodyInterface::GetCenterOfMassTransform(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		return lock.GetBody().GetCenterOfMassTransform();
+	else
+		return Mat44::sIdentity();
+}
+
 void BodyInterface::MoveKinematic(const BodyID &inBodyID, Vec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);

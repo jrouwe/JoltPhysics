@@ -116,6 +116,7 @@ public:
 	void						SetRotation(const BodyID &inBodyID, QuatArg inRotation, EActivation inActivationMode);
 	Quat						GetRotation(const BodyID &inBodyID) const;
 	Mat44						GetWorldTransform(const BodyID &inBodyID) const;
+	Mat44						GetCenterOfMassTransform(const BodyID &inBodyID) const;
 	///@}
 
 	/// Set velocity of body such that it will be positioned at inTargetPosition/Rotation in inDeltaTime seconds (will activate body if needed)
