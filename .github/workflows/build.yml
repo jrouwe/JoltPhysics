@@ -89,8 +89,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v2
     - name: Configure CMake
-      # github macos-latest doesn't seem to have AVX2 yet
-      run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DUSE_AVX2=OFF Build
+      # github macos-latest runs on a 2013 Ivy Bridge CPU so doesn't have AVX2, LZCNT, TZCNT or FMADD
+      run: cmake -B ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DUSE_AVX2=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_FMADD=OFF Build
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} --config ${{matrix.build_type}}
     - name: Test
