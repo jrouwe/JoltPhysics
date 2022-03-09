@@ -172,15 +172,13 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 	body->SetRestitution(inBodyCreationSettings.mRestitution);
 	body->mMotionType = inBodyCreationSettings.mMotionType;
 	if (inBodyCreationSettings.mIsSensor)
-		body->mFlags.fetch_or(uint8(Body::EFlags::IsSensor), memory_order_relaxed);
+		body->SetIsSensor(true);
 	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
 	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
 	
 	if (inBodyCreationSettings.HasMassProperties())
 	{
-		JPH_ASSERT(!inBodyCreationSettings.mIsSensor, "Sensors should be static and moved through BodyInterface::SetPosition/SetPositionAndRotation");
-
 		MotionProperties *mp = body->mMotionProperties;
 		mp->SetLinearDamping(inBodyCreationSettings.mLinearDamping);
 		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);

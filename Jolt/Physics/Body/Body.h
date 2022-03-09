@@ -63,9 +63,12 @@ public:
 	/// Check if a body could be made kinematic or dynamic (if it was created dynamic or with mAllowDynamicOrKinematic set to true)
 	inline bool				CanBeKinematicOrDynamic() const									{ return mMotionProperties != nullptr; }
 
-	/// Check if this body is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
+	/// Change the body to a sensor or to a regular static body. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
+	/// Note that Sensors need to be of motion type Static (they can be moved around using BodyInterface::SetPosition/SetPositionAndRotation).
+	inline void				SetIsSensor(bool inIsSensor)									{ JPH_ASSERT(!inIsSensor || mMotionProperties == nullptr, "A sensor needs to be Static"); if (inIsSensor) mFlags.fetch_or(uint8(JPH::Body::EFlags::IsSensor), JPH::memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(JPH::Body::EFlags::IsSensor)), JPH::memory_order_relaxed); }
+
+	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
-	inline void				SetSensor(bool inSensor)										{ if (inSensor) mFlags.fetch_or(uint8(JPH::Body::EFlags::IsSensor), JPH::memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(JPH::Body::EFlags::IsSensor)), JPH::memory_order_relaxed); }
 
 	/// Motion type of this body
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
