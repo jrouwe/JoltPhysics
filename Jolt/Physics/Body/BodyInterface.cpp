@@ -405,6 +405,15 @@ Mat44 BodyInterface::GetWorldTransform(const BodyID &inBodyID) const
 		return Mat44::sIdentity();
 }
 
+Mat44 BodyInterface::GetCenterOfMassTransform(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		return lock.GetBody().GetCenterOfMassTransform();
+	else
+		return Mat44::sIdentity();
+}
+
 void BodyInterface::MoveKinematic(const BodyID &inBodyID, Vec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
@@ -493,6 +502,23 @@ void BodyInterface::AddLinearVelocity(const BodyID &inBodyID, Vec3Arg inLinearVe
 			body.SetLinearVelocityClamped(body.GetLinearVelocity() + inLinearVelocity);
 
 			if (!body.IsActive() && !body.GetLinearVelocity().IsNearZero())
+				mBodyManager->ActivateBodies(&inBodyID, 1);
+		}
+	}
+}
+
+void BodyInterface::AddLinearAndAngularVelocity(const BodyID &inBodyID, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+	{
+		Body &body = lock.GetBody();
+		if (!body.IsStatic())
+		{
+			body.SetLinearVelocityClamped(body.GetLinearVelocity() + inLinearVelocity);
+			body.SetAngularVelocityClamped(body.GetAngularVelocity() + inAngularVelocity);
+
+			if (!body.IsActive() && (!body.GetLinearVelocity().IsNearZero() || !body.GetAngularVelocity().IsNearZero()))
 				mBodyManager->ActivateBodies(&inBodyID, 1);
 		}
 	}

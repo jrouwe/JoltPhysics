@@ -142,9 +142,16 @@ inline uint CountLeadingZeros(uint32 inValue)
 inline uint CountBits(uint32 inValue)
 {
 #if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
-    return __builtin_popcount(inValue);
+	return __builtin_popcount(inValue);
 #elif defined(JPH_COMPILER_MSVC)
-	return _mm_popcnt_u32(inValue);
+	#if defined(JPH_USE_SSE4_2)
+		return _mm_popcnt_u32(inValue);
+	#else
+		inValue = inValue - ((inValue >> 1) & 0x55555555);
+		inValue = (inValue & 0x33333333) + ((inValue >> 2) & 0x33333333);
+		inValue = (inValue + (inValue >> 4)) & 0x0F0F0F0F;
+		return (inValue * 0x01010101) >> 24;
+	#endif
 #else
 	#error Undefined
 #endif

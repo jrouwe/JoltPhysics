@@ -5,7 +5,7 @@
 
 #include <Math/Swizzle.h>
 
-#ifdef JPH_USE_AVX // DVec3 currently uses AVX intrinsics but the class is currently unused so we can leave it out (it will be used in the future to support objects at a large distance from the origin)
+#ifdef JPH_USE_AVX2 // DVec3 currently uses AVX2 intrinsics but the class is currently unused so we can leave it out (it will be used in the future to support objects at a large distance from the origin)
 
 namespace JPH {
 
@@ -218,4 +218,4 @@ static_assert(is_trivial<DVec3>(), "Is supposed to be a trivial type!");
 
 #include "DVec3.inl"
 
-#endif // JPH_USE_AVX
+#endif // JPH_USE_AVX2
