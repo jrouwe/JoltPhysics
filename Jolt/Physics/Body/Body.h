@@ -121,8 +121,11 @@ public:
 	/// Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body (unit: m/s)
 	inline Vec3				GetPointVelocity(Vec3Arg inPoint) const							{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return GetPointVelocityCOM(inPoint - mPosition); }
 
-	/// Add force (unit: N) for the next time step, will be reset after the next call to PhysicsSimulation::Update
+	/// Add force (unit: N) at center of mass for the next time step, will be reset after the next call to PhysicsSimulation::Update
 	inline void				AddForce(Vec3Arg inForce)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mForce) + inForce).StoreFloat3(&mMotionProperties->mForce); }
+
+	/// Add force (unit: N) at inPosition for the next time step, will be reset after the next call to PhysicsSimulation::Update
+	inline void				AddForce(Vec3Arg inForce, Vec3Arg inPosition);
 
 	/// Add torque (unit: N m) for the next time step, will be reset after the next call to PhysicsSimulation::Update
 	inline void				AddTorque(Vec3Arg inTorque)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mTorque) + inTorque).StoreFloat3(&mMotionProperties->mTorque); }
