@@ -566,6 +566,71 @@ Vec3 BodyInterface::GetPointVelocity(const BodyID &inBodyID, Vec3Arg inPoint) co
 	return Vec3::sZero();
 }
 
+void BodyInterface::AddForce(const BodyID &inBodyID, Vec3Arg inForce)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+	{
+		Body &body = lock.GetBody();
+		if (body.IsDynamic())
+		{
+			body.AddForce(inForce);
+
+			if (!body.IsActive())
+				mBodyManager->ActivateBodies(&inBodyID, 1);
+		}
+	}
+}
+
+void BodyInterface::AddForce(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inPoint)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+	{
+		Body &body = lock.GetBody();
+		if (body.IsDynamic())
+		{
+			body.AddForce(inForce, inPoint);
+
+			if (!body.IsActive())
+				mBodyManager->ActivateBodies(&inBodyID, 1);
+		}
+	}
+}
+
+void BodyInterface::AddTorque(const BodyID &inBodyID, Vec3Arg inTorque)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+	{
+		Body &body = lock.GetBody();
+		if (body.IsDynamic())
+		{
+			body.AddTorque(inTorque);
+
+			if (!body.IsActive())
+				mBodyManager->ActivateBodies(&inBodyID, 1);
+		}
+	}
+}
+
+void BodyInterface::AddForceAndTorque(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inTorque)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+	{
+		Body &body = lock.GetBody();
+		if (body.IsDynamic())
+		{
+			body.AddForce(inForce);
+			body.AddTorque(inTorque);
+
+			if (!body.IsActive())
+				mBodyManager->ActivateBodies(&inBodyID, 1);
+		}
+	}
+}
+
 void BodyInterface::AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);

@@ -138,6 +138,14 @@ public:
 	/// Note that the linear velocity is the velocity of the center of mass, which may not coincide with the position of your object, to correct for this: \f$VelocityCOM = Velocity - AngularVelocity \times ShapeCOM\f$
 	void						SetPositionRotationAndVelocity(const BodyID &inBodyID, Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity);
 
+	///@name Add forces to the body
+	///@{
+	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce); ///< See Body::AddForce
+	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inPoint); ///< Applied at inPoint
+	void						AddTorque(const BodyID &inBodyID, Vec3Arg inTorque); ///< See Body::AddTorque
+	void						AddForceAndTorque(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inTorque); ///< A combination of Body::AddForce and Body::AddTorque
+	///@}
+
 	///@name Add an impulse to the body
 	///@{
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse); ///< Applied at center of mass
