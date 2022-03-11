@@ -88,6 +88,7 @@ void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistan
 
 	// Settings for collide shape
 	CollideShapeSettings settings;
+	settings.mMaxSeparationDistance = inMaxSeparationDistance;
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 	settings.mActiveEdgeMovementDirection = bi.GetLinearVelocity(mBodyID);
 	settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
