@@ -42,6 +42,9 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 				JPH_ASSERT(lock.Succeeded()); // When this runs all bodies are locked so this should not fail
 				const Body *body = &lock.GetBody();
 
+				if (body->IsSensor())
+					return;
+
 				// Test that we're not hitting a vertical wall
 				Vec3 contact_pos = mRay.GetPointOnRay(inResult.mFraction);
 				Vec3 normal = body->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, contact_pos);
@@ -124,6 +127,9 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 				BodyLockRead lock(mPhysicsSystem.GetBodyLockInterfaceNoLock(), inResult.mBodyID2);
 				JPH_ASSERT(lock.Succeeded()); // When this runs all bodies are locked so this should not fail
 				const Body *body = &lock.GetBody();
+
+				if (body->IsSensor())
+					return;
 
 				// Test that we're not hitting a vertical wall
 				Vec3 normal = -inResult.mPenetrationAxis.Normalized();
