@@ -18,6 +18,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConeConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(ConeConstraintSettings, TwoBodyConstraintSettings)
 
+	JPH_ADD_ENUM_ATTRIBUTE(ConeConstraintSettings, mSpace)
 	JPH_ADD_ATTRIBUTE(ConeConstraintSettings, mPoint1)
 	JPH_ADD_ATTRIBUTE(ConeConstraintSettings, mTwistAxis1)
 	JPH_ADD_ATTRIBUTE(ConeConstraintSettings, mPoint2)
@@ -29,6 +30,7 @@ void ConeConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 { 
 	ConstraintSettings::SaveBinaryState(inStream);
 
+	inStream.Write(mSpace);
 	inStream.Write(mPoint1);
 	inStream.Write(mTwistAxis1);
 	inStream.Write(mPoint2);
@@ -40,6 +42,7 @@ void ConeConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	ConstraintSettings::RestoreBinaryState(inStream);
 
+	inStream.Read(mSpace);
 	inStream.Read(mPoint1);
 	inStream.Read(mTwistAxis1);
 	inStream.Read(mPoint2);
@@ -55,22 +58,36 @@ TwoBodyConstraint *ConeConstraintSettings::Create(Body &inBody1, Body &inBody2) 
 ConeConstraint::ConeConstraint(Body &inBody1, Body &inBody2, const ConeConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {
-	Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
-	Mat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
-
-	// Store local positions
-	mLocalSpacePosition1 = inv_transform1 * inSettings.mPoint1;
-	mLocalSpacePosition2 = inv_transform2 * inSettings.mPoint2;
+	// Store positions
+	mLocalSpacePosition1 = inSettings.mPoint1;
+	mLocalSpacePosition2 = inSettings.mPoint2;
 
 	// Store axis
-	mLocalSpaceTwistAxis1 = inv_transform1.Multiply3x3(inSettings.mTwistAxis1);
-	mLocalSpaceTwistAxis2 = inv_transform2.Multiply3x3(inSettings.mTwistAxis2);
+	mLocalSpaceTwistAxis1 = inSettings.mTwistAxis1;
+	mLocalSpaceTwistAxis2 = inSettings.mTwistAxis2;
 
 	// Store limits
 	SetHalfConeAngle(inSettings.mHalfConeAngle);
 
 	// Initialize rotation axis to perpendicular of twist axis in case the angle between the twist axis is 0 in the first frame
 	mWorldSpaceRotationAxis = inSettings.mTwistAxis1.GetNormalizedPerpendicular();
+
+	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
+	{
+		// If all properties were specified in world space, take them to local space now
+		Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition1 = inv_transform1 * mLocalSpacePosition1;
+		mLocalSpaceTwistAxis1 = inv_transform1.Multiply3x3(mLocalSpaceTwistAxis1);
+
+		Mat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition2 = inv_transform2 * mLocalSpacePosition2;
+		mLocalSpaceTwistAxis2 = inv_transform2.Multiply3x3(mLocalSpaceTwistAxis2);
+	}
+	else
+	{
+		// If they were in local space, we need to take the initial rotation axis to world space
+		mWorldSpaceRotationAxis = inBody1.GetRotation() * mWorldSpaceRotationAxis;
+	}
 }
 
 void ConeConstraint::CalculateRotationConstraintProperties(float inDeltaTime, Mat44Arg inRotation1, Mat44Arg inRotation2)

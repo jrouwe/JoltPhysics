@@ -19,6 +19,7 @@ class StreamOut;
 class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
+/// Enum to identify constraint type
 enum class EConstraintType
 {
 	Fixed,
@@ -37,6 +38,13 @@ enum class EConstraintType
 	User2,
 	User3,
 	User4
+};
+
+/// Certain constraints support setting them up in local or world space. This governs what is used.
+enum class EConstraintSpace
+{
+	LocalToBody,				///< All constraint properties are specified in local space to the bodies that are being constrained (so e.g. 'constraint position 1' will be local to body 1, 'constraint position 2' will be local to body 2)
+	WorldSpace,					///< All constraint properties are specified in world space
 };
 
 /// Class used to store the configuration of a constraint. Allows run-time creation of constraints.

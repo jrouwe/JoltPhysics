@@ -18,6 +18,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SwingTwistConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(SwingTwistConstraintSettings, TwoBodyConstraintSettings)
 
+	JPH_ADD_ENUM_ATTRIBUTE(SwingTwistConstraintSettings, mSpace)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPosition1)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mTwistAxis1)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPlaneAxis1)
@@ -37,6 +38,7 @@ void SwingTwistConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 { 
 	ConstraintSettings::SaveBinaryState(inStream);
 
+	inStream.Write(mSpace);
 	inStream.Write(mPosition1);
 	inStream.Write(mTwistAxis1);
 	inStream.Write(mPlaneAxis1);
@@ -56,6 +58,7 @@ void SwingTwistConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	ConstraintSettings::RestoreBinaryState(inStream);
 
+	inStream.Read(mSpace);
 	inStream.Read(mPosition1);
 	inStream.Read(mTwistAxis1);
 	inStream.Read(mPlaneAxis1);
@@ -92,23 +95,29 @@ SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const S
 	mSwingMotorSettings(inSettings.mSwingMotorSettings),
 	mTwistMotorSettings(inSettings.mTwistMotorSettings)
 {
-	// Calculate position of the constraint in body1 local space
-	Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
-	mLocalSpacePosition1 = inv_transform1 * inSettings.mPosition1;
-
-	// Calculate position of the constraint in body2 local space
-	Mat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
-	mLocalSpacePosition2 = inv_transform2 * inSettings.mPosition2;
+	// Copy local space position
+	mLocalSpacePosition1 = inSettings.mPosition1;
+	mLocalSpacePosition2 = inSettings.mPosition2;
 
 	// Calculate rotation needed to go from constraint space to body1 local space
 	Vec3 normal_axis1 = inSettings.mPlaneAxis1.Cross(inSettings.mTwistAxis1);
 	Mat44 c_to_b1(Vec4(inSettings.mTwistAxis1, 0), Vec4(normal_axis1, 0), Vec4(inSettings.mPlaneAxis1, 0), Vec4(0, 0, 0, 1));
-	mConstraintToBody1 = inBody1.GetRotation().Conjugated() * c_to_b1.GetQuaternion();
+	mConstraintToBody1 = c_to_b1.GetQuaternion();
 
 	// Calculate rotation needed to go from constraint space to body2 local space
 	Vec3 normal_axis2 = inSettings.mPlaneAxis2.Cross(inSettings.mTwistAxis2);
 	Mat44 c_to_b2(Vec4(inSettings.mTwistAxis2, 0), Vec4(normal_axis2, 0), Vec4(inSettings.mPlaneAxis2, 0), Vec4(0, 0, 0, 1));
-	mConstraintToBody2 = inBody2.GetRotation().Conjugated() * c_to_b2.GetQuaternion();
+	mConstraintToBody2 = c_to_b2.GetQuaternion();
+
+	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
+	{
+		// If all properties were specified in world space, take them to local space now
+		mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
+		mConstraintToBody1 = inBody1.GetRotation().Conjugated() * mConstraintToBody1;
+
+		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+		mConstraintToBody2 = inBody2.GetRotation().Conjugated() * mConstraintToBody2;
+	}
 
 	UpdateLimits();
 }
