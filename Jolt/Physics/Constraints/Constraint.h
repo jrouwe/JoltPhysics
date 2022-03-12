@@ -19,6 +19,7 @@ class StreamOut;
 class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
+/// Enum to identify constraint type
 enum class EConstraintType
 {
 	Fixed,
@@ -37,6 +38,13 @@ enum class EConstraintType
 	User2,
 	User3,
 	User4
+};
+
+/// Certain constraints support setting them up in local or world space. This governs what is used.
+enum class EConstraintSpace
+{
+	LocalToBodyCOM,				///< All constraint properties are specified in local space to center of mass of the bodies that are being constrained (so e.g. 'constraint position 1' will be local to body 1 COM, 'constraint position 2' will be local to body 2 COM). Note that this means you need to subtract Shape::GetCenterOfMass() from positions!
+	WorldSpace,					///< All constraint properties are specified in world space
 };
 
 /// Class used to store the configuration of a constraint. Allows run-time creation of constraints.

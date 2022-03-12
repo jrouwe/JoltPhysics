@@ -18,6 +18,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(PointConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(PointConstraintSettings, TwoBodyConstraintSettings)
 
+	JPH_ADD_ENUM_ATTRIBUTE(PointConstraintSettings, mSpace)
 	JPH_ADD_ATTRIBUTE(PointConstraintSettings, mPoint1)
 	JPH_ADD_ATTRIBUTE(PointConstraintSettings, mPoint2)
 }
@@ -26,6 +27,7 @@ void PointConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 { 
 	ConstraintSettings::SaveBinaryState(inStream);
 
+	inStream.Write(mSpace);
 	inStream.Write(mPoint1);	
 	inStream.Write(mPoint2);
 }
@@ -34,6 +36,7 @@ void PointConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	ConstraintSettings::RestoreBinaryState(inStream);
 
+	inStream.Read(mSpace);
 	inStream.Read(mPoint1);
 	inStream.Read(mPoint2);
 }
@@ -44,11 +47,16 @@ TwoBodyConstraint *PointConstraintSettings::Create(Body &inBody1, Body &inBody2)
 }
 
 PointConstraint::PointConstraint(Body &inBody1, Body &inBody2, const PointConstraintSettings &inSettings) :
-	TwoBodyConstraint(inBody1, inBody2, inSettings)
+	TwoBodyConstraint(inBody1, inBody2, inSettings),
+	mLocalSpacePosition1(inSettings.mPoint1),
+	mLocalSpacePosition2(inSettings.mPoint2)
 {
-	// Store local positions
-	mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * inSettings.mPoint1;
-	mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * inSettings.mPoint2;
+	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
+	{
+		// If all properties were specified in world space, take them to local space now
+		mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
+		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+	}
 }
 
 void PointConstraint::CalculateConstraintProperties()

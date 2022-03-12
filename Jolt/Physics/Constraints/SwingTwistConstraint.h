@@ -28,12 +28,15 @@ public:
 	/// Create an an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	///@name Body 1 constraint reference frame (in world space)
+	/// This determines in which space the constraint is setup, all properties below should be in the specified space
+	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
+
+	///@name Body 1 constraint reference frame (space determined by mSpace)
 	Vec3						mPosition1 = Vec3::sZero();
 	Vec3						mTwistAxis1 = Vec3::sAxisX();
 	Vec3						mPlaneAxis1 = Vec3::sAxisY();
 
-	///@name Body 2 constraint reference frame (in world space)
+	///@name Body 2 constraint reference frame (space determined by mSpace)
 	Vec3						mPosition2 = Vec3::sZero();
 	Vec3						mTwistAxis2 = Vec3::sAxisX();
 	Vec3						mPlaneAxis2 = Vec3::sAxisY();

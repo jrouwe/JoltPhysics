@@ -23,19 +23,22 @@ public:
 	/// Create an an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	/// Simple way of setting the anchor points so that the current relative position is chosen as the '0' position
+	/// Simple way of setting the anchor points in world space so that the current relative position is chosen as the '0' position
 	void						SetPoint(const Body &inBody1, const Body &inBody2);
 
 	/// Simple way of setting the slider and normal axis in world space (assumes the bodies are already oriented correctly when the constraint is created)
 	void						SetSliderAxis(Vec3Arg inSliderAxis);
 
-	/// Body 1 constraint reference frame (in world space).
-	/// Slider axis is the axis along which movement is possible (world space direction), normal axis is a perpendicular vector to define the frame.
+	/// This determines in which space the constraint is setup, all properties below should be in the specified space
+	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
+
+	/// Body 1 constraint reference frame (space determined by mSpace).
+	/// Slider axis is the axis along which movement is possible (direction), normal axis is a perpendicular vector to define the frame.
 	Vec3						mPoint1 = Vec3::sZero();
 	Vec3						mSliderAxis1 = Vec3::sAxisX();
 	Vec3						mNormalAxis1 = Vec3::sAxisY();
 	
-	/// Body 2 constraint reference frame (in world space)
+	/// Body 2 constraint reference frame (space determined by mSpace)
 	Vec3						mPoint2 = Vec3::sZero();
 	Vec3						mSliderAxis2 = Vec3::sAxisX();
 	Vec3						mNormalAxis2 = Vec3::sAxisY();
@@ -124,7 +127,7 @@ private:
 	// Local space sliding direction
 	Vec3						mLocalSpaceSliderAxis1;
 
-	// Local space normals to the sliding direction
+	// Local space normals to the sliding direction (in body 1 space)
 	Vec3						mLocalSpaceNormal1;
 	Vec3						mLocalSpaceNormal2;
 

@@ -20,11 +20,14 @@ public:
 	/// Create an an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	/// Body 1 constraint position (world space position).
+	/// This determines in which space the constraint is setup, all properties below should be in the specified space
+	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
+
+	/// Body 1 constraint position (space determined by mSpace).
 	Vec3						mPoint1 = Vec3::sZero();
 
-	/// Body 2 constraint position (world space position).
-	/// Note: Normally you would set mPoint1 = mPoint2 if the bodies are already placed how you want to constrain them.
+	/// Body 2 constraint position (space determined by mSpace).
+	/// Note: Normally you would set mPoint1 = mPoint2 if the bodies are already placed how you want to constrain them (if mSpace = world space).
 	Vec3						mPoint2 = Vec3::sZero();
 
 protected:
