@@ -87,6 +87,8 @@ void SwingTwistConstraint::UpdateLimits()
 
 SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const SwingTwistConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings),
+	mLocalSpacePosition1(inSettings.mPosition1),
+	mLocalSpacePosition2(inSettings.mPosition2),
 	mNormalHalfConeAngle(inSettings.mNormalHalfConeAngle),
 	mPlaneHalfConeAngle(inSettings.mPlaneHalfConeAngle),
 	mTwistMinAngle(inSettings.mTwistMinAngle),
@@ -95,10 +97,6 @@ SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const S
 	mSwingMotorSettings(inSettings.mSwingMotorSettings),
 	mTwistMotorSettings(inSettings.mTwistMotorSettings)
 {
-	// Copy local space position
-	mLocalSpacePosition1 = inSettings.mPosition1;
-	mLocalSpacePosition2 = inSettings.mPosition2;
-
 	// Calculate rotation needed to go from constraint space to body1 local space
 	Vec3 normal_axis1 = inSettings.mPlaneAxis1.Cross(inSettings.mTwistAxis1);
 	Mat44 c_to_b1(Vec4(inSettings.mTwistAxis1, 0), Vec4(normal_axis1, 0), Vec4(inSettings.mPlaneAxis1, 0), Vec4(0, 0, 0, 1));

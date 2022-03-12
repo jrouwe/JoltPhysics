@@ -56,16 +56,12 @@ TwoBodyConstraint *ConeConstraintSettings::Create(Body &inBody1, Body &inBody2) 
 }
 
 ConeConstraint::ConeConstraint(Body &inBody1, Body &inBody2, const ConeConstraintSettings &inSettings) :
-	TwoBodyConstraint(inBody1, inBody2, inSettings)
+	TwoBodyConstraint(inBody1, inBody2, inSettings),
+	mLocalSpacePosition1(inSettings.mPoint1),
+	mLocalSpacePosition2(inSettings.mPoint2),
+	mLocalSpaceTwistAxis1(inSettings.mTwistAxis1),
+	mLocalSpaceTwistAxis2(inSettings.mTwistAxis2)
 {
-	// Store positions
-	mLocalSpacePosition1 = inSettings.mPoint1;
-	mLocalSpacePosition2 = inSettings.mPoint2;
-
-	// Store axis
-	mLocalSpaceTwistAxis1 = inSettings.mTwistAxis1;
-	mLocalSpaceTwistAxis2 = inSettings.mTwistAxis2;
-
 	// Store limits
 	SetHalfConeAngle(inSettings.mHalfConeAngle);
 

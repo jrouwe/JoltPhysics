@@ -94,15 +94,13 @@ void SixDOFConstraint::UpdateRotationLimits()
 }
 
 SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFConstraintSettings &inSettings) :
-	TwoBodyConstraint(inBody1, inBody2, inSettings)
+	TwoBodyConstraint(inBody1, inBody2, inSettings),
+	mLocalSpacePosition1(inSettings.mPosition1),
+	mLocalSpacePosition2(inSettings.mPosition2)
 {
 	// Assert that input adheres to the limitations of this class
 	JPH_ASSERT(inSettings.mLimitMin[EAxis::RotationY] == -inSettings.mLimitMax[EAxis::RotationY]);
 	JPH_ASSERT(inSettings.mLimitMin[EAxis::RotationZ] == -inSettings.mLimitMax[EAxis::RotationZ]);
-
-	// Store positions
-	mLocalSpacePosition1 = inSettings.mPosition1;
-	mLocalSpacePosition2 = inSettings.mPosition2;
 
 	// Calculate rotation needed to go from constraint space to body1 local space
 	Vec3 axis_z1 = inSettings.mAxisX1.Cross(inSettings.mAxisY1);
