@@ -40,14 +40,22 @@ public:
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
 	/// Body 1 constraint reference frame (in world space)
+	/// Unused if mUseLocalReferenceFrames is set.
 	Vec3						mPosition1 = Vec3::sZero();
 	Vec3						mAxisX1 = Vec3::sAxisX();
 	Vec3						mAxisY1 = Vec3::sAxisY();
 
 	/// Body 2 constraint reference frame (in world space)
+	/// Unused if mUseLocalReferenceFrames is set.
 	Vec3						mPosition2 = Vec3::sZero();
 	Vec3						mAxisX2 = Vec3::sAxisX();
 	Vec3						mAxisY2 = Vec3::sAxisY();
+
+	/// If mUseLocalReferenceFrames is specified, uses the below reference frames (mConstraintToBody1 and mConstraintToBody2) directly,
+	// instead of the above world-space reference frames.
+	bool						mUseLocalReferenceFrames = false;
+	Mat44						mConstraintToBodyLocal1; /// Body 1 constraint reference frame (in local space)
+	Mat44						mConstraintToBodyLocal2; /// Body 2 constraint reference frame (in local space)
 	
 	/// Friction settings.
 	/// For translation: Max friction force in N. 0 = no friction.

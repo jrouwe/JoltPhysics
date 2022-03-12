@@ -97,23 +97,35 @@ SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFCon
 	JPH_ASSERT(inSettings.mLimitMin[EAxis::RotationY] == -inSettings.mLimitMax[EAxis::RotationY]);
 	JPH_ASSERT(inSettings.mLimitMin[EAxis::RotationZ] == -inSettings.mLimitMax[EAxis::RotationZ]);
 
-	// Calculate position of the constraint in body1 local space
-	Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
-	mLocalSpacePosition1 = inv_transform1 * inSettings.mPosition1;
+	if ( inSettings.mUseLocalReferenceFrames )
+	{
+		// If specified, use local reference frames directly.
+		mLocalSpacePosition1 = inSettings.mConstraintToBodyLocal1.GetTranslation();
+		mLocalSpacePosition2 = inSettings.mConstraintToBodyLocal2.GetTranslation();
 
-	// Calculate position of the constraint in body2 local space
-	Mat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
-	mLocalSpacePosition2 = inv_transform2 * inSettings.mPosition2;
+		mConstraintToBody1 = inSettings.mConstraintToBodyLocal1.GetQuaternion();
+		mConstraintToBody2 = inSettings.mConstraintToBodyLocal2.GetQuaternion();
+	}
+	else
+	{
+		// Calculate position of the constraint in body1 local space
+		Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition1 = inv_transform1 * inSettings.mPosition1;
 
-	// Calculate rotation needed to go from constraint space to body1 local space
-	Vec3 axis_z1 = inSettings.mAxisX1.Cross(inSettings.mAxisY1);
-	Mat44 c_to_b1(Vec4(inSettings.mAxisX1, 0), Vec4(inSettings.mAxisY1, 0), Vec4(axis_z1, 0), Vec4(0, 0, 0, 1));
-	mConstraintToBody1 = inBody1.GetRotation().Conjugated() * c_to_b1.GetQuaternion();
+		// Calculate position of the constraint in body2 local space
+		Mat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition2 = inv_transform2 * inSettings.mPosition2;
 
-	// Calculate rotation needed to go from constraint space to body2 local space
-	Vec3 axis_z2 = inSettings.mAxisX2.Cross(inSettings.mAxisY2);
-	Mat44 c_to_b2(Vec4(inSettings.mAxisX2, 0), Vec4(inSettings.mAxisY2, 0), Vec4(axis_z2, 0), Vec4(0, 0, 0, 1));
-	mConstraintToBody2 = inBody2.GetRotation().Conjugated() * c_to_b2.GetQuaternion();
+		// Calculate rotation needed to go from constraint space to body1 local space
+		Vec3 axis_z1 = inSettings.mAxisX1.Cross(inSettings.mAxisY1);
+		Mat44 c_to_b1(Vec4(inSettings.mAxisX1, 0), Vec4(inSettings.mAxisY1, 0), Vec4(axis_z1, 0), Vec4(0, 0, 0, 1));
+		mConstraintToBody1 = inBody1.GetRotation().Conjugated() * c_to_b1.GetQuaternion();
+
+		// Calculate rotation needed to go from constraint space to body2 local space
+		Vec3 axis_z2 = inSettings.mAxisX2.Cross(inSettings.mAxisY2);
+		Mat44 c_to_b2(Vec4(inSettings.mAxisX2, 0), Vec4(inSettings.mAxisY2, 0), Vec4(axis_z2, 0), Vec4(0, 0, 0, 1));
+		mConstraintToBody2 = inBody2.GetRotation().Conjugated() * c_to_b2.GetQuaternion();
+	}
 
 	// Cache which axis are fixed and which ones are free
 	mFreeAxis = 0;
