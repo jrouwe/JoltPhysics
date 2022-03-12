@@ -20,15 +20,18 @@ public:
 	/// Create an an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	/// Body 1 constraint reference frame (in world space).
-	/// Constraint will keep mPoint1 (a point on body 1, world space) and mPoint2 (a point on body 2, world space) at the same distance.
+	/// This determines in which space the constraint is setup, all properties below should be in the specified space
+	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
+
+	/// Body 1 constraint reference frame (space determined by mSpace).
+	/// Constraint will keep mPoint1 (a point on body 1) and mPoint2 (a point on body 2) at the same distance.
 	/// Note that this constraint can be used as a cheap PointConstraint by setting mPoint1 = mPoint2 (but this removes only 1 degree of freedom instead of 3).
 	Vec3						mPoint1 = Vec3::sZero();
 
-	/// Body 2 constraint reference frame (in world space)
+	/// Body 2 constraint reference frame (space determined by mSpace)
 	Vec3						mPoint2 = Vec3::sZero();
 
-	/// Ability to override the distance range at which the two points are kept apart. If the value is negative, it will be replaced by the distance between mPoint1 and mPoint2.
+	/// Ability to override the distance range at which the two points are kept apart. If the value is negative, it will be replaced by the distance between mPoint1 and mPoint2 (works only if mSpace is world space).
 	float						mMinDistance = -1.0f;
 	float						mMaxDistance = -1.0f;
 
