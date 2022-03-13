@@ -109,3 +109,17 @@ jobs:
     - name: Gradle Build
       working-directory: ${{github.workspace}}/Build/Android
       run: ./gradlew build
+
+  ios:
+    runs-on: macos-latest
+    name: iOS
+    strategy:
+        fail-fast: false
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/XCode_iOS -DTARGET_HELLO_WORLD=OFF -DTARGET_PERFORMANCE_TEST=OFF -DCMAKE_SYSTEM_NAME=iOS -GXcode Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/XCode_iOS -- -sdk iphonesimulator -arch x86_64
