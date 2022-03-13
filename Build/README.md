@@ -71,6 +71,24 @@ To override the default trace and assert mechanism install your own custom handl
 - Select 'Run' / 'Run...' and 'UnitTests'
 - If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)
 
+### MacOS
+
+- Install XCode
+- Download CMake 3.23+ (https://cmake.org/download/)
+- Run: ./cmake_xcode_macos.sh
+- This will open XCode with a newly generated project
+- Build and run the project
+
+Note that you can also follow the steps in the 'Linux' section if you wish to build without XCode.
+
+### iOS
+
+- Install XCode
+- Download CMake 3.23+ (https://cmake.org/download/)
+- Run: ./cmake_xcode.ios.sh
+- This will open XCode with a newly generated project
+- Build and run the project (note that this will only work in the simulator as the code signing information is not set up)
+
 ## Unit Test Coverage Report on Windows
 
 To test unit test coverage run the following:
@@ -79,7 +97,7 @@ To test unit test coverage run the following:
 - Run: unit_tests_coverage.bat
 - This will build and run the unit tests and open a browser with the results
 
-## Doxygen
+## Doxygen on Windows
 
 Documentation can be generated through doxygen:
 
