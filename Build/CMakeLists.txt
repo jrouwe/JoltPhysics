@@ -109,7 +109,9 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 	endif()
 
 	# Platform specific compiler flags
-	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64" OR "${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64" 
+		# For iOS CMAKE_SYSTEM_PROCESSOR is empty so we don't set the correct flags, using host processor in this case as I haven't found a way to make both the ARM and the x86 version compile with XCode
+		OR (IOS AND "${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "x86_64"))
 		# X64
 		if (USE_AVX2)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c -mfma")
