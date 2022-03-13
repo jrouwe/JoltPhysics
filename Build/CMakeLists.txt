@@ -173,7 +173,7 @@ if (TARGET_UNIT_TESTS)
     endif()
     if (IOS)
 	# Set the bundle information
-        set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST iOS/UnitTestsInfo.plist)
+        set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
         set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
 
 	# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
