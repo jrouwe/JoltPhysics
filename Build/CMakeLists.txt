@@ -109,9 +109,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 	endif()
 
 	# Platform specific compiler flags
-	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64" 
-		# For iOS CMAKE_SYSTEM_PROCESSOR is empty so we don't set the correct flags, using host processor in this case as I haven't found a way to make both the ARM and the x86 version compile with XCode
-		OR (IOS AND "${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "x86_64"))
+	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
 		# X64
 		if (USE_AVX2)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c -mfma")
@@ -159,6 +157,10 @@ set(PHYSICS_REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 # Make Jolt Library
 include(${PHYSICS_REPO_ROOT}/Jolt/Jolt.cmake)
+if (IOS)
+	# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
+	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt") 
+endif()
 
 if (TARGET_UNIT_TESTS)
     # Create UnitTests executable
@@ -169,11 +171,13 @@ if (TARGET_UNIT_TESTS)
     if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
         target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
     endif()
-
-    # For iOS setup the bundle
-    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
+    if (IOS)
+	# Set the bundle information
         set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST iOS/UnitTestsInfo.plist)
         set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
+
+	# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
+	set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
     endif()
 
     # Register unit tests as a test so that it can be run with:
