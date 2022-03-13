@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 project(JoltPhysics CXX)
 
+# Ability to turn ON/OFF individual applications
+option(TARGET_UNIT_TESTS "Build Unit Tests" ON)
+option(TARGET_HELLO_WORLD "Build Hello World" ON)
+option(TARGET_PERFORMANCE_TEST "Build Performance Test" ON)
+
 # Select X86 processor features to use (if everything is off it will be SSE4.1 compatible)
 option(USE_SSE4_2 "Enable SSE4.2" ON)
 option(USE_AVX "Enable AVX" ON)
@@ -93,7 +98,7 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASEUBSAN "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 	endif()
-elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
 	# Set general compiler flags (do not use -ffast-math since it cannot be turned off in a single compilation unit)
 	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror")
 
@@ -104,7 +109,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 	endif()
 
 	# Platform specific compiler flags
-	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
+	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64" OR "${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
 		# X64
 		if (USE_AVX2)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c -mfma")
@@ -153,38 +158,50 @@ set(PHYSICS_REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../)
 # Make Jolt Library
 include(${PHYSICS_REPO_ROOT}/Jolt/Jolt.cmake)
 
-# Create UnitTests executable
-include(${PHYSICS_REPO_ROOT}/UnitTests/UnitTests.cmake)
-add_executable(UnitTests ${UNIT_TESTS_SRC_FILES})
-target_include_directories(UnitTests PUBLIC ${JOLT_PHYSICS_ROOT} ${UNIT_TESTS_ROOT})
-target_link_libraries (UnitTests LINK_PUBLIC Jolt)
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-	target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
+if (TARGET_UNIT_TESTS)
+    # Create UnitTests executable
+    include(${PHYSICS_REPO_ROOT}/UnitTests/UnitTests.cmake)
+    add_executable(UnitTests ${UNIT_TESTS_SRC_FILES})
+    target_include_directories(UnitTests PUBLIC ${JOLT_PHYSICS_ROOT} ${UNIT_TESTS_ROOT})
+    target_link_libraries (UnitTests LINK_PUBLIC Jolt)
+    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+        target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
+    endif()
+
+    # For iOS setup the bundle
+    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
+        set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST iOS/UnitTestsInfo.plist)
+        set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
+    endif()
+
+    # Register unit tests as a test so that it can be run with:
+    # ctest --output-on-failure
+    enable_testing()
+    add_test(UnitTests UnitTests)
 endif()
 
-# Register unit tests as a test so that it can be run with: 
-# ctest --output-on-failure
-enable_testing()
-add_test(UnitTests UnitTests)
-
-# Example 'Hello World' application
-include(${PHYSICS_REPO_ROOT}/HelloWorld/HelloWorld.cmake)
-add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
-target_include_directories(HelloWorld PUBLIC ${JOLT_PHYSICS_ROOT} ${HELLO_WORLD_ROOT})
-target_link_libraries (HelloWorld LINK_PUBLIC Jolt)
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-	target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
+if (TARGET_HELLO_WORLD)
+	# Example 'Hello World' application
+	include(${PHYSICS_REPO_ROOT}/HelloWorld/HelloWorld.cmake)
+	add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
+	target_include_directories(HelloWorld PUBLIC ${JOLT_PHYSICS_ROOT} ${HELLO_WORLD_ROOT})
+	target_link_libraries (HelloWorld LINK_PUBLIC Jolt)
+	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+		target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
+	endif()
 endif()
 
-# Performance Test application
-include(${PHYSICS_REPO_ROOT}/PerformanceTest/PerformanceTest.cmake)
-add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
-target_include_directories(PerformanceTest PUBLIC ${JOLT_PHYSICS_ROOT} ${PERFORMANCE_TEST_ROOT})
-target_link_libraries (PerformanceTest LINK_PUBLIC Jolt)
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-	target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+if (TARGET_PERFORMANCE_TEST)
+	# Performance Test application
+	include(${PHYSICS_REPO_ROOT}/PerformanceTest/PerformanceTest.cmake)
+	add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
+	target_include_directories(PerformanceTest PUBLIC ${JOLT_PHYSICS_ROOT} ${PERFORMANCE_TEST_ROOT})
+	target_link_libraries (PerformanceTest LINK_PUBLIC Jolt)
+	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+		target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+	endif()
+	set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 endif()
-set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	# Windows only targets
