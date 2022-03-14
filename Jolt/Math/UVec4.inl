@@ -111,8 +111,9 @@ UVec4 UVec4::sMin(UVec4Arg inV1, UVec4Arg inV2)
 	return vminq_u32(inV1.mValue, inV2.mValue);
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
-		result.mU32[i] = std::min(inV1.mU32[i], inV2.mU32[i]);
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = min(inV1.mU32[i], inV2.mU32[i]);
 	}
 	return result;
 #endif
@@ -126,8 +127,9 @@ UVec4 UVec4::sMax(UVec4Arg inV1, UVec4Arg inV2)
 	return vmaxq_u32(inV1.mValue, inV2.mValue);
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
-		result.mU32[i] = std::max(inV1.mU32[i], inV2.mU32[i]);
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = max(inV1.mU32[i], inV2.mU32[i]);
 	}
 	return result;
 #endif
@@ -152,7 +154,8 @@ UVec4 UVec4::sSelect(UVec4Arg inV1, UVec4Arg inV2, UVec4Arg inControl)
 	return vbslq_u32(vshrq_n_s32(inControl.mValue, 31), inV2.mValue, inV1.mValue);
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		result.mU32[i] = inControl.mU32[i] ? inV2.mU32[i] : inV1.mU32[i];
 	}
 	return result;
@@ -226,7 +229,8 @@ UVec4 UVec4::operator * (UVec4Arg inV2) const
 	return vmulq_u32(mValue, inV2.mValue);
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		result.mU32[i] = mU32[i] * inV2.mU32[i];
 	}
 	return result;
@@ -464,7 +468,8 @@ UVec4 UVec4::Expand4Byte0() const
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		result.mU32[i] = (mU32[0] >> (i * 8)) & 0xff;
 	}
 	return result;
@@ -480,7 +485,8 @@ UVec4 UVec4::Expand4Byte4() const
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		result.mU32[i] = (mU32[1] >> (i * 8)) & 0xff;
 	}
 	return result;
@@ -496,7 +502,8 @@ UVec4 UVec4::Expand4Byte8() const
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		result.mU32[i] = (mU32[2] >> (i * 8)) & 0xff;
 	}
 	return result;
@@ -512,7 +519,8 @@ UVec4 UVec4::Expand4Byte12() const
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		result.mU32[i] = (mU32[3] >> (i * 8)) & 0xff;
 	}
 	return result;
@@ -528,7 +536,8 @@ UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result(0, 0, 0, 0);
-	for (int i = 0; i < inCount; i++) {
+	for (int i = 0; i < inCount; i++)
+	{
 		result.mU32[i] = mU32[i + 4 - inCount];
 	}
 	return result;
