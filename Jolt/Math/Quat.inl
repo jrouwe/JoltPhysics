@@ -5,7 +5,7 @@ namespace JPH {
 
 Quat Quat::operator * (QuatArg inRHS) const
 { 
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	// Taken from: http://momchil-velikov.blogspot.nl/2013/10/fast-sse-quternion-multiplication.html
 	__m128 abcd = mValue.mValue;
 	__m128 xyzw = inRHS.mValue.mValue;
