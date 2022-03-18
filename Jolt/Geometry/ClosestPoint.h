@@ -195,7 +195,6 @@ namespace ClosestPoint
 			if (dist_sq < best_dist_sq)
 			{
 				closest_point = q;
-				best_dist_sq = dist_sq;
 				closest_set = set << 1;
 			}
 
@@ -407,7 +406,6 @@ namespace ClosestPoint
 			float dist_sq = q.LengthSq(); 
 			if (dist_sq < best_dist_sq) 
 			{
-				best_dist_sq = dist_sq;
 				closest_point = q;
 				closest_set = ((set & 0b0001) << 1) + ((set & 0b0010) << 2) + (set & 0b0100); 
 			}
