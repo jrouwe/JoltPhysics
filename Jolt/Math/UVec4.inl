@@ -105,23 +105,33 @@ UVec4 UVec4::sGatherInt4(const uint32 *inBase, UVec4Arg inOffsets)
 
 UVec4 UVec4::sMin(UVec4Arg inV1, UVec4Arg inV2)
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_min_epu32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vminq_u32(inV1.mValue, inV2.mValue);
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = min(inV1.mU32[i], inV2.mU32[i]);
+	}
+	return result;
 #endif
 }
 
 UVec4 UVec4::sMax(UVec4Arg inV1, UVec4Arg inV2)
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_max_epu32(inV1.mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vmaxq_u32(inV1.mValue, inV2.mValue);
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = max(inV1.mU32[i], inV2.mU32[i]);
+	}
+	return result;
 #endif
 }
 
@@ -138,12 +148,17 @@ UVec4 UVec4::sEquals(UVec4Arg inV1, UVec4Arg inV2)
 
 UVec4 UVec4::sSelect(UVec4Arg inV1, UVec4Arg inV2, UVec4Arg inControl)
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_castps_si128(_mm_blendv_ps(_mm_castsi128_ps(inV1.mValue), _mm_castsi128_ps(inV2.mValue), _mm_castsi128_ps(inControl.mValue)));
 #elif defined(JPH_USE_NEON)
 	return vbslq_u32(vshrq_n_s32(inControl.mValue, 31), inV2.mValue, inV1.mValue);
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = inControl.mU32[i] ? inV2.mU32[i] : inV1.mU32[i];
+	}
+	return result;
 #endif
 }
 
@@ -208,12 +223,17 @@ UVec4 UVec4::sSort4True(UVec4Arg inValue, UVec4Arg inIndex)
 
 UVec4 UVec4::operator * (UVec4Arg inV2) const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_mullo_epi32(mValue, inV2.mValue);
 #elif defined(JPH_USE_NEON)
 	return vmulq_u32(mValue, inV2.mValue);
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = mU32[i] * inV2.mU32[i];
+	}
+	return result;
 #endif
 }
 
@@ -441,61 +461,86 @@ UVec4 UVec4::Expand4Uint16Hi() const
 
 UVec4 UVec4::Expand4Byte0() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff03), int(0xffffff02), int(0xffffff01), int(0xffffff00)));
 #elif defined(JPH_USE_NEON)
 	int8x16_t idx = { 0x00, 0x7f, 0x7f, 0x7f, 0x01, 0x7f, 0x7f, 0x7f, 0x02, 0x7f, 0x7f, 0x7f, 0x03, 0x7f, 0x7f, 0x7f };
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = (mU32[0] >> (i * 8)) & 0xff;
+	}
+	return result;
 #endif
 }
 
 UVec4 UVec4::Expand4Byte4() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff07), int(0xffffff06), int(0xffffff05), int(0xffffff04)));
 #elif defined(JPH_USE_NEON)
 	int8x16_t idx = { 0x04, 0x7f, 0x7f, 0x7f, 0x05, 0x7f, 0x7f, 0x7f, 0x06, 0x7f, 0x7f, 0x7f, 0x07, 0x7f, 0x7f, 0x7f };
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = (mU32[1] >> (i * 8)) & 0xff;
+	}
+	return result;
 #endif
 }
 
 UVec4 UVec4::Expand4Byte8() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff0b), int(0xffffff0a), int(0xffffff09), int(0xffffff08)));
 #elif defined(JPH_USE_NEON)
 	int8x16_t idx = { 0x08, 0x7f, 0x7f, 0x7f, 0x09, 0x7f, 0x7f, 0x7f, 0x0a, 0x7f, 0x7f, 0x7f, 0x0b, 0x7f, 0x7f, 0x7f };
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = (mU32[2] >> (i * 8)) & 0xff;
+	}
+	return result;
 #endif
 }
 
 UVec4 UVec4::Expand4Byte12() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, _mm_set_epi32(int(0xffffff0f), int(0xffffff0e), int(0xffffff0d), int(0xffffff0c)));
 #elif defined(JPH_USE_NEON)
 	int8x16_t idx = { 0x0c, 0x7f, 0x7f, 0x7f, 0x0d, 0x7f, 0x7f, 0x7f, 0x0e, 0x7f, 0x7f, 0x7f, 0x0f, 0x7f, 0x7f, 0x7f };
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
-	#error Unsupported CPU architecture
+	UVec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mU32[i] = (mU32[3] >> (i * 8)) & 0xff;
+	}
+	return result;
 #endif
 }
 
 UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_shuffle_epi8(mValue, sFourMinusXShuffle[inCount].mValue);
 #elif defined(JPH_USE_NEON)
 	uint8x16_t idx = vreinterpretq_u8_u32(sFourMinusXShuffle[inCount].mValue);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
-	#error Unsupported CPU architecture
+	UVec4 result(0, 0, 0, 0);
+	for (int i = 0; i < inCount; i++)
+	{
+		result.mU32[i] = mU32[i + 4 - inCount];
+	}
+	return result;
 #endif
 }
 

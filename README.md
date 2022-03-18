@@ -84,7 +84,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 ## Required CPU features
 
-* On x86 the minimal requirements are SSE4.1 but the library can be compiled using SSE4.2, AVX or AVX2.
+* On x86 the minimal requirements are SSE2 but the library can be compiled using SSE4.1, SSE4.2, AVX or AVX2.
 * On ARM64 the library requires NEON with FP16 support.
 
 ## Compiling

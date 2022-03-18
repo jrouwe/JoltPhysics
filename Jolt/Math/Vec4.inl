@@ -14,12 +14,16 @@ Vec4::Vec4(Vec3Arg inRHS) :
 
 Vec4::Vec4(Vec3Arg inRHS, float inW)
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	mValue = _mm_blend_ps(inRHS.mValue, _mm_set1_ps(inW), 8);
 #elif defined(JPH_USE_NEON)
 	mValue = vsetq_lane_f32(inW, inRHS.mValue, 3);
 #else
-	#error Undefined CPU architecture
+	for (int i = 0; i < 3; i++)
+	{
+		mF32[i] = inRHS.mF32[i];
+	}
+	mF32[3] = inW;
 #endif
 }
 
@@ -222,12 +226,17 @@ Vec4 Vec4::sFusedMultiplyAdd(Vec4Arg inMul1, Vec4Arg inMul2, Vec4Arg inAdd)
 
 Vec4 Vec4::sSelect(Vec4Arg inV1, Vec4Arg inV2, UVec4Arg inControl)
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_blendv_ps(inV1.mValue, inV2.mValue, _mm_castsi128_ps(inControl.mValue));
 #elif defined(JPH_USE_NEON)
 	return vbslq_f32(vshrq_n_s32(inControl.mValue, 31), inV2.mValue, inV1.mValue);
 #else
-	#error Unsupported CPU architecture
+	Vec4 result;
+	for (int i = 0; i < 4; i++)
+	{
+		result.mF32[i] = inControl.mU32[i] ? inV2.mF32[i] : inV1.mF32[i];
+	}
+	return result;
 #endif
 }
 
@@ -550,50 +559,70 @@ Vec4 Vec4::Reciprocal() const
 
 Vec4 Vec4::DotV(Vec4Arg inV2) const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_dp_ps(mValue, inV2.mValue, 0xff);
 #elif defined(JPH_USE_NEON)
     float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
     return vdupq_n_f32(vaddvq_f32(mul));
 #else
-	#error Unsupported CPU architecture
+	float dot = 0.0f;
+	for (int i = 0; i < 4; i++)
+	{
+		dot += mF32[i] * inV2.mF32[i];
+	}
+	return Vec4(dot, dot, dot, dot);
 #endif
 }
 
 float Vec4::Dot(Vec4Arg inV2) const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_dp_ps(mValue, inV2.mValue, 0xff));
 #elif defined(JPH_USE_NEON)
     float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
     return vaddvq_f32(mul);
 #else
-	#error Unsupported CPU architecture
+	float dot = 0.0f;
+	for (int i = 0; i < 4; i++)
+	{
+		dot += mF32[i] * inV2.mF32[i];
+	}
+	return dot;
 #endif
 }
 
 float Vec4::LengthSq() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_dp_ps(mValue, mValue, 0xff));
 #elif defined(JPH_USE_NEON)
     float32x4_t mul = vmulq_f32(mValue, mValue);
     return vaddvq_f32(mul);
 #else
-	#error Unsupported CPU architecture
+	float len_sq = 0.0f;
+	for (int i = 0; i < 4; i++)
+	{
+		len_sq += mF32[i] * mF32[i];
+	}
+	return len_sq;
 #endif
 }
 
 float Vec4::Length() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(mValue, mValue, 0xff)));
 #elif defined(JPH_USE_NEON)
     float32x4_t mul = vmulq_f32(mValue, mValue);
     float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
     return vget_lane_f32(vsqrt_f32(sum), 0);
 #else
-	#error Unsupported CPU architecture
+	float len_sq = 0.0f;
+	for (int i = 0; i < 4; i++)
+	{
+		len_sq += mF32[i] * mF32[i];
+	}
+	return sqrt(len_sq);
 #endif
 }
 
@@ -626,14 +655,20 @@ Vec4 Vec4::GetSign() const
 
 Vec4 Vec4::Normalized() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_SSE4_1)
 	return _mm_div_ps(mValue, _mm_sqrt_ps(_mm_dp_ps(mValue, mValue, 0xff)));
 #elif defined(JPH_USE_NEON)
     float32x4_t mul = vmulq_f32(mValue, mValue);
     float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
     return vdivq_f32(mValue, vsqrtq_f32(sum));
 #else
-	#error Unsupported CPU architecture
+	float len_sq = 0.0f;
+	for (int i = 0; i < 4; i++)
+	{
+		len_sq += mF32[i] * mF32[i];
+	}
+	float len = sqrt(len_sq);
+	return Vec4(mF32[0] / len, mF32[1] / len, mF32[2] / len, mF32[3] / len);
 #endif
 }
 
