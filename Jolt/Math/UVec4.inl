@@ -112,9 +112,7 @@ UVec4 UVec4::sMin(UVec4Arg inV1, UVec4Arg inV2)
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = min(inV1.mU32[i], inV2.mU32[i]);
-	}
 	return result;
 #endif
 }
@@ -128,9 +126,7 @@ UVec4 UVec4::sMax(UVec4Arg inV1, UVec4Arg inV2)
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = max(inV1.mU32[i], inV2.mU32[i]);
-	}
 	return result;
 #endif
 }
@@ -155,9 +151,7 @@ UVec4 UVec4::sSelect(UVec4Arg inV1, UVec4Arg inV2, UVec4Arg inControl)
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = inControl.mU32[i] ? inV2.mU32[i] : inV1.mU32[i];
-	}
 	return result;
 #endif
 }
@@ -230,9 +224,7 @@ UVec4 UVec4::operator * (UVec4Arg inV2) const
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = mU32[i] * inV2.mU32[i];
-	}
 	return result;
 #endif
 }
@@ -469,9 +461,7 @@ UVec4 UVec4::Expand4Byte0() const
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = (mU32[0] >> (i * 8)) & 0xff;
-	}
 	return result;
 #endif
 }
@@ -486,9 +476,7 @@ UVec4 UVec4::Expand4Byte4() const
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = (mU32[1] >> (i * 8)) & 0xff;
-	}
 	return result;
 #endif
 }
@@ -503,9 +491,7 @@ UVec4 UVec4::Expand4Byte8() const
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = (mU32[2] >> (i * 8)) & 0xff;
-	}
 	return result;
 #endif
 }
@@ -520,9 +506,7 @@ UVec4 UVec4::Expand4Byte12() const
 #else
 	UVec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mU32[i] = (mU32[3] >> (i * 8)) & 0xff;
-	}
 	return result;
 #endif
 }
@@ -535,11 +519,9 @@ UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 	uint8x16_t idx = vreinterpretq_u8_u32(sFourMinusXShuffle[inCount].mValue);
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
-	UVec4 result(0, 0, 0, 0);
+	UVec4 result = UVec4::sZero();
 	for (int i = 0; i < inCount; i++)
-	{
 		result.mU32[i] = mU32[i + 4 - inCount];
-	}
 	return result;
 #endif
 }

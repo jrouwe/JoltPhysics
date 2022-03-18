@@ -232,10 +232,10 @@ Vec3 Vec3::sSelect(Vec3Arg inV1, Vec3Arg inV2, UVec4Arg inControl)
 #else
 	Vec3 result;
 	for (int i = 0; i < 3; i++)
-	{
 		result.mF32[i] = inControl.mU32[i] ? inV2.mF32[i] : inV1.mF32[i];
-	}
+#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	result.mF32[3] = result.mF32[2];
+#endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	return result;
 #endif
 }
@@ -543,10 +543,8 @@ Vec3 Vec3::DotV(Vec3Arg inV2) const
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 3; i++)
-	{
 		dot += mF32[i] * inV2.mF32[i];
-	}
-	return Vec3(dot, dot, dot);
+	return Vec3::sReplicate(dot);
 #endif
 }
 
@@ -561,10 +559,8 @@ Vec4 Vec3::DotV4(Vec3Arg inV2) const
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 3; i++)
-	{
 		dot += mF32[i] * inV2.mF32[i];
-	}
-	return Vec4(dot, dot, dot, dot);
+	return Vec4::sReplicate(dot);
 #endif
 }
 
@@ -579,9 +575,7 @@ float Vec3::Dot(Vec3Arg inV2) const
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 3; i++)
-	{
 		dot += mF32[i] * inV2.mF32[i];
-	}
 	return dot;
 #endif
 }
@@ -597,9 +591,7 @@ float Vec3::LengthSq() const
 #else
 	float len_sq = 0.0f;
 	for (int i = 0; i < 3; i++)
-	{
 		len_sq += mF32[i] * mF32[i];
-	}
 	return len_sq;
 #endif
 }
@@ -614,12 +606,7 @@ float Vec3::Length() const
     float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
     return vget_lane_f32(vsqrt_f32(sum), 0);
 #else
-	float len_sq = 0.0f;
-	for (int i = 0; i < 3; i++)
-	{
-		len_sq += mF32[i] * mF32[i];
-	}
-	return sqrt(len_sq);
+	return sqrt(LengthSq());
 #endif
 }
 
@@ -644,13 +631,7 @@ Vec3 Vec3::Normalized() const
     float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
     return vdivq_f32(mValue, vsqrtq_f32(sum));
 #else
-	float len_sq = 0.0f;
-	for (int i = 0; i < 3; i++)
-	{
-		len_sq += mF32[i] * mF32[i];
-	}
-	float len = sqrt(len_sq);
-	return Vec3(mF32[0] / len, mF32[1] / len, mF32[2] / len);
+	return *this / Length();
 #endif
 }
 
@@ -675,17 +656,11 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 	float32x4_t is_zero = vceqq_f32(len, vdupq_n_f32(0));
     return vbslq_f32(is_zero, inZeroValue.mValue, vdivq_f32(mValue, len));
 #else
-	float len_sq = 0.0f;
-	for (int i = 0; i < 3; i++)
-	{
-		len_sq += mF32[i] * mF32[i];
-	}
-	float len = sqrt(len_sq);
-	if (len == 0.0f) {
+	float len_sq = LengthSq();
+	if (len_sq == 0.0f)
 		return inZeroValue;
-	} else {
-		return Vec3(mF32[0] / len, mF32[1] / len, mF32[2] / len);
-	}
+	else
+		return *this / sqrt(len_sq);
 #endif
 }
 

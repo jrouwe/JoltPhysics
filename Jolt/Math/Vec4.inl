@@ -20,9 +20,7 @@ Vec4::Vec4(Vec3Arg inRHS, float inW)
 	mValue = vsetq_lane_f32(inW, inRHS.mValue, 3);
 #else
 	for (int i = 0; i < 3; i++)
-	{
 		mF32[i] = inRHS.mF32[i];
-	}
 	mF32[3] = inW;
 #endif
 }
@@ -233,9 +231,7 @@ Vec4 Vec4::sSelect(Vec4Arg inV1, Vec4Arg inV2, UVec4Arg inControl)
 #else
 	Vec4 result;
 	for (int i = 0; i < 4; i++)
-	{
 		result.mF32[i] = inControl.mU32[i] ? inV2.mF32[i] : inV1.mF32[i];
-	}
 	return result;
 #endif
 }
@@ -567,10 +563,8 @@ Vec4 Vec4::DotV(Vec4Arg inV2) const
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 4; i++)
-	{
 		dot += mF32[i] * inV2.mF32[i];
-	}
-	return Vec4(dot, dot, dot, dot);
+	return Vec4::sReplicate(dot);
 #endif
 }
 
@@ -584,9 +578,7 @@ float Vec4::Dot(Vec4Arg inV2) const
 #else
 	float dot = 0.0f;
 	for (int i = 0; i < 4; i++)
-	{
 		dot += mF32[i] * inV2.mF32[i];
-	}
 	return dot;
 #endif
 }
@@ -601,9 +593,7 @@ float Vec4::LengthSq() const
 #else
 	float len_sq = 0.0f;
 	for (int i = 0; i < 4; i++)
-	{
 		len_sq += mF32[i] * mF32[i];
-	}
 	return len_sq;
 #endif
 }
@@ -617,12 +607,7 @@ float Vec4::Length() const
     float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
     return vget_lane_f32(vsqrt_f32(sum), 0);
 #else
-	float len_sq = 0.0f;
-	for (int i = 0; i < 4; i++)
-	{
-		len_sq += mF32[i] * mF32[i];
-	}
-	return sqrt(len_sq);
+	return sqrt(LengthSq());
 #endif
 }
 
@@ -662,13 +647,7 @@ Vec4 Vec4::Normalized() const
     float32x4_t sum = vdupq_n_f32(vaddvq_f32(mul));
     return vdivq_f32(mValue, vsqrtq_f32(sum));
 #else
-	float len_sq = 0.0f;
-	for (int i = 0; i < 4; i++)
-	{
-		len_sq += mF32[i] * mF32[i];
-	}
-	float len = sqrt(len_sq);
-	return Vec4(mF32[0] / len, mF32[1] / len, mF32[2] / len, mF32[3] / len);
+	return *this / Length();
 #endif
 }
 
