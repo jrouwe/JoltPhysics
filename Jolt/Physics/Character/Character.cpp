@@ -126,7 +126,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 		Vec3				mGroundNormal = Vec3::sZero();
 
 	private:
-		float				mBestDot = 0.0f;
+		float				mBestDot = FLT_MAX;
 		Vec3				mGravity;
 	};
 
