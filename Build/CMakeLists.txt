@@ -6,6 +6,7 @@ project(JoltPhysics CXX)
 option(TARGET_UNIT_TESTS "Build Unit Tests" ON)
 option(TARGET_HELLO_WORLD "Build Hello World" ON)
 option(TARGET_PERFORMANCE_TEST "Build Performance Test" ON)
+option(TARGET_WINDOWS_ONLY "Build Windows Only Targets" ON)
 
 # Select X86 processor features to use (if everything is off it will be SSE2 compatible)
 option(USE_SSE4_1 "Enable SSE4.1" ON)
@@ -218,8 +219,10 @@ if (TARGET_PERFORMANCE_TEST)
 endif()
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-	# Windows only targets
-	include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
-	include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
-	include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
+	if(TARGET_WINDOWS_ONLY)
+		# Windows only targets
+		include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
+		include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
+		include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
+	endif()
 endif()
