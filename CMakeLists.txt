@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.0.0)
+project(Jolt)
+set(PHYSICS_REPO_ROOT ${PROJECT_SOURCE_DIR})
+set(CMAKE_CXX_STANDARD 17)
+include(Jolt/Jolt.cmake)
