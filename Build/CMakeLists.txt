@@ -39,12 +39,12 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 	set(CMAKE_CXX_FLAGS "/std:c++17 /Zc:__cplusplus /GR- /Gm- /Wall /WX /EHsc /nologo /diagnostics:classic /FC /fp:except- /Zc:inline /Zi /DWIN32 /D_WINDOWS /DUNICODE /D_UNICODE")
 	
 	# Set compiler flags for various configurations
-	set(CMAKE_CXX_FLAGS_DEBUG "/D_DEBUG /GS /Od /Ob0 /RTC1 /DJPH_PROFILE_ENABLED /DJPH_DEBUG_RENDERER")
-	set(CMAKE_CXX_FLAGS_RELEASE "/DNDEBUG /GS- /GL /Gy /O2 /Oi /Ot /DJPH_PROFILE_ENABLED /DJPH_DEBUG_RENDERER")
-	set(CMAKE_CXX_FLAGS_DISTRIBUTION "/DNDEBUG /GS- /GL /Gy /O2 /Oi /Ot")
-	set(CMAKE_CXX_FLAGS_RELEASEASAN "/DNDEBUG /DJPH_PROFILE_ENABLED /DJPH_DISABLE_TEMP_ALLOCATOR /DJPH_DEBUG_RENDERER -fsanitize=address /Od")
-	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "/DNDEBUG /DJPH_PROFILE_ENABLED /DJPH_DEBUG_RENDERER -fsanitize=undefined,implicit-conversion")
-	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "/DNDEBUG -fprofile-instr-generate -fcoverage-mapping")
+	set(CMAKE_CXX_FLAGS_DEBUG "/GS /Od /Ob0 /RTC1")
+	set(CMAKE_CXX_FLAGS_RELEASE "/GS- /GL /Gy /O2 /Oi /Ot")
+	set(CMAKE_CXX_FLAGS_DISTRIBUTION "/GS- /GL /Gy /O2 /Oi /Ot")
+	set(CMAKE_CXX_FLAGS_RELEASEASAN "-fsanitize=address /Od")
+	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-fsanitize=undefined,implicit-conversion")
+	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-fprofile-instr-generate -fcoverage-mapping")
 
 	# Set linker flags
 	set(CMAKE_EXE_LINKER_FLAGS "/machine:x64 /SUBSYSTEM:WINDOWS /ignore:4221 /DEBUG:FASTLINK")
@@ -148,12 +148,11 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 	endif()
 
 	# Set compiler flags for various configurations
-	set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER") # Clang reorders variables so that div by zero occurs if we enable exception checking
-	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER")
-	set(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3 -DNDEBUG")
-	set(CMAKE_CXX_FLAGS_RELEASEASAN "-DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DISABLE_TEMP_ALLOCATOR -DJPH_DEBUG_RENDERER -fsanitize=address")
-	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-DNDEBUG -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER -fsanitize=undefined,implicit-conversion")
-	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-DNDEBUG -fprofile-instr-generate -fcoverage-mapping")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+	set(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3")
+	set(CMAKE_CXX_FLAGS_RELEASEASAN "-fsanitize=address")
+	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-fsanitize=undefined,implicit-conversion")
+	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-fprofile-instr-generate -fcoverage-mapping")
 
 	# Set linker flags
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
