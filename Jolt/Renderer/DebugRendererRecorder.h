@@ -7,9 +7,9 @@
 	#error This file should only be included when JPH_DEBUG_RENDERER is defined
 #endif // !JPH_DEBUG_RENDERER
 
-#include <Renderer/DebugRenderer.h>
-#include <Core/StreamOut.h>
-#include <Core/Mutex.h>
+#include <Jolt/Renderer/DebugRenderer.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/Mutex.h>
 #include <map>
 
 namespace JPH {

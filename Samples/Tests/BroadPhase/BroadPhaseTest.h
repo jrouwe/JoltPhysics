@@ -4,8 +4,8 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Body/BodyManager.h>
-#include <Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Layers.h>
 
 // Base class for a test involving only the broad phase

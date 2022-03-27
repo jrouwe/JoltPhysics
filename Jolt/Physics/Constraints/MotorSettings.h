@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/Reference.h>
-#include <ObjectStream/SerializableObject.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
 
 namespace JPH {
 

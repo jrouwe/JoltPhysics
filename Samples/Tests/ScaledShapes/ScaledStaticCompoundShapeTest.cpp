@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/ScaledShapes/ScaledStaticCompoundShapeTest.h>
-#include <Physics/Collision/Shape/ConvexHullShape.h>
-#include <Physics/Collision/Shape/StaticCompoundShape.h>
-#include <Physics/Collision/Shape/ScaledShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledStaticCompoundShapeTest) 

@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <TriangleSplitter/TriangleSplitterFixedLeafSize.h>
-#include <TriangleGrouper/TriangleGrouperClosestCentroid.h>
+#include <Jolt/TriangleSplitter/TriangleSplitterFixedLeafSize.h>
+#include <Jolt/TriangleGrouper/TriangleGrouperClosestCentroid.h>
 
 namespace JPH {
 

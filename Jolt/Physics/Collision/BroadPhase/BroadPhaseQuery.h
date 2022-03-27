@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <Physics/Collision/BroadPhase/BroadPhaseLayer.h>
-#include <Physics/Collision/ObjectLayer.h>
-#include <Physics/Collision/CollisionCollector.h>
-#include <Physics/Body/BodyID.h>
-#include <Core/NonCopyable.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
+#include <Jolt/Physics/Collision/CollisionCollector.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Core/NonCopyable.h>
 
 namespace JPH {
 

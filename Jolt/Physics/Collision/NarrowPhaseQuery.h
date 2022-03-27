@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <Physics/Body/BodyFilter.h>
-#include <Physics/Body/BodyLock.h>
-#include <Physics/Body/BodyLockInterface.h>
-#include <Physics/Collision/ShapeFilter.h>
-#include <Physics/Collision/BroadPhase/BroadPhase.h>
-#include <Physics/Collision/BackFaceMode.h>
+#include <Jolt/Physics/Body/BodyFilter.h>
+#include <Jolt/Physics/Body/BodyLock.h>
+#include <Jolt/Physics/Body/BodyLockInterface.h>
+#include <Jolt/Physics/Collision/ShapeFilter.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Physics/Collision/BackFaceMode.h>
 
 namespace JPH {
 

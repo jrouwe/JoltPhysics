@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <Core/Reference.h>
-#include <Core/Result.h>
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Constraints/TwoBodyConstraint.h>
-#include <Skeleton/Skeleton.h>
-#include <Skeleton/SkeletonPose.h>
-#include <Physics/EActivation.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/Core/Result.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
+#include <Jolt/Skeleton/Skeleton.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
+#include <Jolt/Physics/EActivation.h>
 
 namespace JPH {
 

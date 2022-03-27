@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Character/Character.h>
+#include <Jolt/Physics/Character/Character.h>
 
 // Simple test that test the Character class. Allows the user to move around with the arrow keys and jump with the J button.
 class CharacterTest : public Test

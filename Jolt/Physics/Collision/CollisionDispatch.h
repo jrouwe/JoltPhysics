@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <Physics/Collision/Shape/Shape.h>
-#include <Physics/Collision/Shape/SubShapeID.h>
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/ShapeFilter.h>
-#include <Physics/Collision/NarrowPhaseStats.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/ShapeFilter.h>
+#include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 
 namespace JPH {
 

@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <Physics/PhysicsSystem.h>
+#include <Jolt/Physics/PhysicsSystem.h>
 #include <Renderer/Renderer.h>
 #include <Input/Keyboard.h>
-#include <Skeleton/SkeletonPose.h>
-#include <Core/RTTI.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
+#include <Jolt/Core/RTTI.h>
 
 class DebugUI;
 class UIElement;

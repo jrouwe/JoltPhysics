@@ -4,7 +4,7 @@
 #include <TestFramework.h>
 
 #include <Tests/ConvexCollision/ClosestPointTest.h>
-#include <Geometry/ClosestPoint.h>
+#include <Jolt/Geometry/ClosestPoint.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ClosestPointTest) 

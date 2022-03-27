@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <Physics/PhysicsSettings.h>
-#include <Physics/Body/Body.h>
-#include <Physics/Constraints/ConstraintPart/SpringPart.h>
-#include <Physics/StateRecorder.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/SpringPart.h>
+#include <Jolt/Physics/StateRecorder.h>
 
 namespace JPH {
 

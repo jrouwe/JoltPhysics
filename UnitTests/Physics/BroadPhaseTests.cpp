@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Body/BodyManager.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include "Layers.h"
 
 TEST_SUITE("BroadPhaseTests")

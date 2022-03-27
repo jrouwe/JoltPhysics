@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
 
 class PoweredHingeConstraintTest : public Test
 {

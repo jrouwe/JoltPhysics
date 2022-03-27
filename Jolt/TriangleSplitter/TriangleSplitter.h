@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Geometry/IndexedTriangle.h>
+#include <Jolt/Geometry/IndexedTriangle.h>
 
 namespace JPH {
 

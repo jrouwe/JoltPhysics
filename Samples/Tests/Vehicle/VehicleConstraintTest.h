@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Vehicle/VehicleTest.h>
-#include <Physics/Vehicle/VehicleConstraint.h>
+#include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 
 // This test shows how a vehicle could be made with the vehicle constraint.
 class VehicleConstraintTest : public VehicleTest

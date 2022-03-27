@@ -4,8 +4,8 @@
 #pragma once
 
 #include <Tests/Vehicle/VehicleTest.h>
-#include <Physics/Vehicle/VehicleConstraint.h>
-#include <Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Vehicle/VehicleConstraint.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
 
 // This test shows how a tank could be made with the vehicle constraint.
 class TankTest : public VehicleTest

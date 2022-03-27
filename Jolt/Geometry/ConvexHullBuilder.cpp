@@ -1,17 +1,17 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Geometry/ConvexHullBuilder.h>
-#include <Geometry/ConvexHullBuilder2D.h>
-#include <Geometry/ClosestPoint.h>
-#include <Core/StringTools.h>
+#include <Jolt/Geometry/ConvexHullBuilder.h>
+#include <Jolt/Geometry/ConvexHullBuilder2D.h>
+#include <Jolt/Geometry/ClosestPoint.h>
+#include <Jolt/Core/StringTools.h>
 #include <unordered_set>
 #include <fstream>
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif
 
 namespace JPH {

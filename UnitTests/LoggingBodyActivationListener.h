@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
 
 /// Activation listener that just logs the activations/deactivations
 class LoggingBodyActivationListener : public BodyActivationListener

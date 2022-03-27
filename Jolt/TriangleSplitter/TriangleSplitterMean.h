@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <TriangleSplitter/TriangleSplitter.h>
+#include <Jolt/TriangleSplitter/TriangleSplitter.h>
 
 namespace JPH {
 

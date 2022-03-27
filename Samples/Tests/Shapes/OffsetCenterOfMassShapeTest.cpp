@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/Shapes/OffsetCenterOfMassShapeTest.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/OffsetCenterOfMassShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(OffsetCenterOfMassShapeTest) 

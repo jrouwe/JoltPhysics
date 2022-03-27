@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Math/DVec3.h>
+#include <Jolt/Math/DVec3.h>
 
 #ifdef JPH_USE_AVX2
 

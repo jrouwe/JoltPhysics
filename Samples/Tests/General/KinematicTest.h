@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Body/Body.h>
+#include <Jolt/Physics/Body/Body.h>
 
 // This test tests kinematic objects against a pile of dynamic boxes
 class KinematicTest : public Test

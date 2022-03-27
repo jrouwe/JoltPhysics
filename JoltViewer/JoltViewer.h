@@ -5,11 +5,11 @@
 
 #include <Application/Application.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRendererPlayback.h>
+	#include <Jolt/Renderer/DebugRendererPlayback.h>
 #else
 	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
 	#define JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRendererPlayback.h>
+	#include <Jolt/Renderer/DebugRendererPlayback.h>
 	#undef JPH_DEBUG_RENDERER
 #endif
 

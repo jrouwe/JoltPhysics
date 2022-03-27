@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <TriangleGrouper/TriangleGrouper.h>
+#include <Jolt/TriangleGrouper/TriangleGrouper.h>
 
 namespace JPH {
 

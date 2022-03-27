@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Core/Reference.h>
-#include <Core/Color.h>
-#include <Math/Float2.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/Core/Color.h>
+#include <Jolt/Math/Float2.h>
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/Texture.h>
 #include <Renderer/PipelineState.h>

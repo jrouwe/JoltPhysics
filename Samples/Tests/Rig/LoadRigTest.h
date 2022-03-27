@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
 #include <Utils/RagdollLoader.h>
 
 // This test loads a ragdoll from disc and simulates it

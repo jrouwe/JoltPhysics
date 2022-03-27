@@ -4,14 +4,14 @@
 #include <TestFramework.h>
 
 #include <Tests/Rig/RigPileTest.h>
-#include <Physics/PhysicsScene.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Skeleton/Skeleton.h>
-#include <Skeleton/SkeletalAnimation.h>
-#include <Skeleton/SkeletonPose.h>
+#include <Jolt/Physics/PhysicsScene.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Skeleton/Skeleton.h>
+#include <Jolt/Skeleton/SkeletalAnimation.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
 #include <Utils/RagdollLoader.h>
-#include <Core/StringTools.h>
+#include <Jolt/Core/StringTools.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Utils/Log.h>

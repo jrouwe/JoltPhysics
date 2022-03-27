@@ -5,7 +5,7 @@
 
 #include <UI/UIManager.h>
 #include <UI/UIAnimationSlide.h>
-#include <Core/Profiler.h>
+#include <Jolt/Core/Profiler.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Font.h>
 

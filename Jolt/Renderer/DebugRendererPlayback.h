@@ -7,8 +7,8 @@
 	#error This file should only be included when JPH_DEBUG_RENDERER is defined
 #endif // !JPH_DEBUG_RENDERER
 
-#include <Renderer/DebugRendererRecorder.h>
-#include <Core/StreamIn.h>
+#include <Jolt/Renderer/DebugRendererRecorder.h>
+#include <Jolt/Core/StreamIn.h>
 #include <map>
 
 namespace JPH {

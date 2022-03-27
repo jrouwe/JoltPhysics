@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Geometry/AABox.h>
-#include <Geometry/RayAABox.h>
+#include <Jolt/Geometry/AABox.h>
+#include <Jolt/Geometry/RayAABox.h>
 
 TEST_SUITE("RayAABoxTests")
 {

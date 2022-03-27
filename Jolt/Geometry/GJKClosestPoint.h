@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include <Core/NonCopyable.h>
-#include <Core/FPException.h>
-#include <Geometry/ClosestPoint.h>
-#include <Geometry/ConvexSupport.h>
+#include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/FPException.h>
+#include <Jolt/Geometry/ClosestPoint.h>
+#include <Jolt/Geometry/ConvexSupport.h>
 
 //#define JPH_GJK_DEBUG
 #ifdef JPH_GJK_DEBUG
-	#include <Core/StringTools.h>
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Core/StringTools.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif
 
 namespace JPH {

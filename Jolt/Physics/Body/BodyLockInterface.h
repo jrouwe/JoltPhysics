@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <Physics/Body/Body.h>
-#include <Physics/Body/BodyManager.h>
-#include <Physics/PhysicsLock.h>
-#include <Core/Mutex.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Physics/PhysicsLock.h>
+#include <Jolt/Core/Mutex.h>
 
 namespace JPH {
 

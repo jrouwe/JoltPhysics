@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/Shape/DecoratedShape.h>
-#include <Physics/Collision/Shape/ScaleHelpers.h>
+#include <Jolt/Physics/Collision/Shape/DecoratedShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
 
 namespace JPH {
 

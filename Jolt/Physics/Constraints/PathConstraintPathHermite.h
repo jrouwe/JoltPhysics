@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/Constraints/PathConstraintPath.h>
+#include <Jolt/Physics/Constraints/PathConstraintPath.h>
 
 namespace JPH {
 

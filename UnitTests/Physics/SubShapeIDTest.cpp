@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 
 TEST_SUITE("SubShapeIDTest")
 {

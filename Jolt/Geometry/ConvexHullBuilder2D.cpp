@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Geometry/ConvexHullBuilder2D.h>
+#include <Jolt/Geometry/ConvexHullBuilder2D.h>
 
 #ifdef JPH_CONVEX_BUILDER_2D_DEBUG
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif
 
 namespace JPH {

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/PhysicsUpdateContext.h>
+#include <Jolt/Physics/PhysicsUpdateContext.h>
 
 namespace JPH {
 

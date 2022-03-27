@@ -1,19 +1,19 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Constraints/SwingTwistConstraint.h>
-#include <Physics/Ragdoll/Ragdoll.h>
-#include <Physics/PhysicsSystem.h>
-#include <Physics/Body/BodyLockMulti.h>
-#include <Physics/Collision/GroupFilterTable.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Collision/CollisionDispatch.h>
-#include <ObjectStream/TypeDeclarations.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
+#include <Jolt/Physics/Constraints/SwingTwistConstraint.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyLockMulti.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
 
 namespace JPH {
 

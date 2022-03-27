@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Geometry/AABox.h>
-#include <Geometry/OrientedBox.h>
+#include <Jolt/Geometry/AABox.h>
+#include <Jolt/Geometry/OrientedBox.h>
 
 namespace JPH {
 

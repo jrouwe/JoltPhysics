@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Constraints/PathConstraintPath.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <Core/Factory.h>
+#include <Jolt/Physics/Constraints/PathConstraintPath.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/Factory.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
 namespace JPH {

@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Vehicle/VehicleTest.h>
-#include <Physics/Constraints/SixDOFConstraint.h>
+#include <Jolt/Physics/Constraints/SixDOFConstraint.h>
 
 // This test shows how a vehicle could be made with the SixDOF constraint.
 class VehicleSixDOFTest : public VehicleTest

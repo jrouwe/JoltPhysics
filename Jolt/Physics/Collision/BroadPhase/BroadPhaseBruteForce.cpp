@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
-#include <Physics/Collision/BroadPhase/BroadPhaseBruteForce.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/AABoxCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Body/BodyManager.h>
-#include <Physics/Body/BodyPair.h>
-#include <Geometry/RayAABox.h>
-#include <Geometry/OrientedBox.h>
+#include <Jolt/Jolt.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseBruteForce.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/AABoxCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Physics/Body/BodyPair.h>
+#include <Jolt/Geometry/RayAABox.h>
+#include <Jolt/Geometry/OrientedBox.h>
 
 namespace JPH {
 	

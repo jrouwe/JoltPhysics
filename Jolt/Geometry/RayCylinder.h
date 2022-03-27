@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Math/FindRoot.h>
+#include <Jolt/Math/FindRoot.h>
 
 namespace JPH {
 

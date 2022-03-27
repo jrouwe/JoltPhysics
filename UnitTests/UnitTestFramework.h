@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
-#include <Math/DVec3.h>
-#include <Math/Float2.h>
+#include <Jolt/Jolt.h>
+#include <Jolt/Math/DVec3.h>
+#include <Jolt/Math/Float2.h>
 #include "doctest.h"
 
 #if defined(JPH_COMPILER_CLANG)

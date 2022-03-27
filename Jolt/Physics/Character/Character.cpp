@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Body/BodyLock.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Character/Character.h>
-#include <Physics/PhysicsSystem.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyLock.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Character/Character.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 

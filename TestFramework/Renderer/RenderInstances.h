@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Renderer/Renderer.h>
-#include <Core/Reference.h>
+#include <Jolt/Core/Reference.h>
 
 class RenderPrimitive;
 

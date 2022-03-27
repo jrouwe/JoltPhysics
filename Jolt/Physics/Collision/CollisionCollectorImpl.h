@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/Collision/CollisionCollector.h>
+#include <Jolt/Physics/Collision/CollisionCollector.h>
 
 namespace JPH {
 

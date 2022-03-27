@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Math/Vec3.h>
-#include <Math/UVec4.h>
+#include <Jolt/Math/Vec3.h>
+#include <Jolt/Math/UVec4.h>
 
 namespace JPH {
 

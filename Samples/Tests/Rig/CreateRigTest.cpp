@@ -4,8 +4,8 @@
 #include <TestFramework.h>
 
 #include <Tests/Rig/CreateRigTest.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Constraints/SwingTwistConstraint.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Constraints/SwingTwistConstraint.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 

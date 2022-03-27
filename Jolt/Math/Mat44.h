@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Math/MathTypes.h>
+#include <Jolt/Math/MathTypes.h>
 
 namespace JPH {
 

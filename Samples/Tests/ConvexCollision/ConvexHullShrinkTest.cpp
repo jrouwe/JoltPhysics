@@ -5,8 +5,8 @@
 
 #include <Tests/ConvexCollision/ConvexHullShrinkTest.h>
 #include <Utils/Log.h>
-#include <Geometry/ConvexSupport.h>
-#include <Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Geometry/ConvexSupport.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullShrinkTest) 

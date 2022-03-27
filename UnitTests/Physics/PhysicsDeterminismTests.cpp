@@ -4,8 +4,8 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include "Layers.h"
-#include <Physics/Constraints/SwingTwistConstraint.h>
-#include <Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Constraints/SwingTwistConstraint.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
 
 TEST_SUITE("PhysicsDeterminismTests")
 {

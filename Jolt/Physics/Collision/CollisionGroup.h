@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/GroupFilter.h>
-#include <ObjectStream/SerializableObject.h>
+#include <Jolt/Physics/Collision/GroupFilter.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
 
 namespace JPH {
 

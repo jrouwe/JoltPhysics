@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Geometry/Plane.h>
+#include <Jolt/Geometry/Plane.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
 namespace JPH {

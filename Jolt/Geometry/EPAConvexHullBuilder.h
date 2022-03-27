@@ -9,11 +9,11 @@
 // Define to draw the building of the hull for debugging purposes
 //#define JPH_EPA_CONVEX_BUILDER_DRAW
 
-#include <Core/NonCopyable.h>
+#include <Jolt/Core/NonCopyable.h>
 
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
-	#include <Renderer/DebugRenderer.h>
-	#include <Core/StringTools.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
+	#include <Jolt/Core/StringTools.h>
 #endif
 
 namespace JPH {

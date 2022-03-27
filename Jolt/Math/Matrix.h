@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Math/Vector.h>
-#include <Math/GaussianElimination.h>
+#include <Jolt/Math/Vector.h>
+#include <Jolt/Math/GaussianElimination.h>
 
 namespace JPH {
 

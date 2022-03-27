@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Math/Float2.h>
+#include <Jolt/Math/Float2.h>
 
 namespace JPH {
 

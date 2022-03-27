@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Geometry/Plane.h>
-#include <Geometry/AABox.h>
+#include <Jolt/Geometry/Plane.h>
+#include <Jolt/Geometry/AABox.h>
 
 /// A camera frustum containing of 6 planes (left, right, top, bottom, near, far) pointing inwards
 class [[nodiscard]] Frustum

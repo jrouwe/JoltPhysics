@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Constraints/SixDOFConstraint.h>
+#include <Jolt/Physics/Constraints/SixDOFConstraint.h>
 
 class SixDOFConstraintTest : public Test
 {

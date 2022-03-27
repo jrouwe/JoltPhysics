@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/NonCopyable.h>
-#include <Physics/Collision/ObjectLayer.h>
+#include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
 
 namespace JPH {
 

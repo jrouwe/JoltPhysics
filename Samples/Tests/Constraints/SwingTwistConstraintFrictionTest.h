@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Constraints/SwingTwistConstraint.h>
+#include <Jolt/Physics/Constraints/SwingTwistConstraint.h>
 
 class SwingTwistConstraintFrictionTest : public Test
 {

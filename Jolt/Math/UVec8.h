@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Math/Vec8.h>
+#include <Jolt/Math/Vec8.h>
 
 namespace JPH {
 

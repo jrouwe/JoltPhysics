@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <ObjectStream/SerializableObject.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
 
 namespace JPH {
 

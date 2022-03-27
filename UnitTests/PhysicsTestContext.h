@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Physics/PhysicsSystem.h>
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Constraints/TwoBodyConstraint.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 #include "Layers.h"
 
 namespace JPH {

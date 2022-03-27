@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MIT
 
 // Jolt includes
-#include <Jolt.h>
-#include <RegisterTypes.h>
-#include <Core/TempAllocator.h>
-#include <Core/JobSystemThreadPool.h>
-#include <Physics/PhysicsSettings.h>
-#include <Physics/PhysicsSystem.h>
-#include <Physics/Collision/NarrowPhaseStats.h>
+#include <Jolt/Jolt.h>
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRendererRecorder.h>
-	#include <Core/StreamWrapper.h>
+	#include <Jolt/Renderer/DebugRendererRecorder.h>
+	#include <Jolt/Core/StreamWrapper.h>
 #endif // JPH_DEBUG_RENDERER
 
 // STL includes

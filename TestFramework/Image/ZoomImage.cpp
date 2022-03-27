@@ -6,7 +6,7 @@
 #include <Image/ZoomImage.h>
 #include <Image/Surface.h>
 #include <Image/BlitSurface.h>
-#include <Core/Profiler.h>
+#include <Jolt/Core/Profiler.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // ImageFilter

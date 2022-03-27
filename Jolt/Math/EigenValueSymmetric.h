@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/FPFlushDenormals.h>
+#include <Jolt/Core/FPFlushDenormals.h>
 
 namespace JPH {
 

@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <ObjectStream/SerializableObject.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <Physics/StateRecorder.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Physics/StateRecorder.h>
 
 namespace JPH {
 

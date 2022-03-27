@@ -5,7 +5,7 @@
 
 #include <Utils/ContactListenerImpl.h>
 #include <Renderer/DebugRendererImp.h>
-#include <Physics/Body/Body.h>
+#include <Jolt/Physics/Body/Body.h>
 
 ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult)
 {

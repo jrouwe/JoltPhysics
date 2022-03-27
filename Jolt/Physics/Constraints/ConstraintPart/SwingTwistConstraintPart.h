@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Geometry/Ellipse.h>
-#include <Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
-#include <Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
+#include <Jolt/Geometry/Ellipse.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
 
 namespace JPH {
 

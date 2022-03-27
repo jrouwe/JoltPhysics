@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/ObjectLayer.h>
-#include <Physics/Collision/BroadPhase/BroadPhaseLayer.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 
 /// Layer that objects can be in, determines which other objects it can collide with
 namespace Layers

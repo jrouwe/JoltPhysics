@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Geometry/ConvexSupport.h>
-#include <Geometry/EPAPenetrationDepth.h>
-#include <Geometry/AABox.h>
-#include <Geometry/Sphere.h>
+#include <Jolt/Geometry/ConvexSupport.h>
+#include <Jolt/Geometry/EPAPenetrationDepth.h>
+#include <Jolt/Geometry/AABox.h>
+#include <Jolt/Geometry/Sphere.h>
 #include <random>
 
 // Enable to trace accuracy of EPA algorithm

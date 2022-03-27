@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <Physics/Body/BodyPair.h>
-#include <Physics/Collision/ContactListener.h>
-#include <Physics/Collision/BroadPhase/BroadPhase.h>
-#include <Core/StaticArray.h>
-#include <Core/JobSystem.h>
+#include <Jolt/Physics/Body/BodyPair.h>
+#include <Jolt/Physics/Collision/ContactListener.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Core/StaticArray.h>
+#include <Jolt/Core/JobSystem.h>
 
 namespace JPH {
 

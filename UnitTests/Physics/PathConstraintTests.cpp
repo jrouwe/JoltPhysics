@@ -3,8 +3,8 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
-#include <Physics/Constraints/PathConstraintPathHermite.h>
-#include <Physics/Constraints/PathConstraintPath.h>
+#include <Jolt/Physics/Constraints/PathConstraintPathHermite.h>
+#include <Jolt/Physics/Constraints/PathConstraintPath.h>
 #include "Layers.h"
 
 TEST_SUITE("PathConstraintTests")

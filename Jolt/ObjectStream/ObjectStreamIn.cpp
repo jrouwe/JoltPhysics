@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Core/Factory.h>
-#include <ObjectStream/SerializableAttribute.h>
-#include <ObjectStream/ObjectStreamIn.h>
-#include <ObjectStream/ObjectStreamTextIn.h>
-#include <ObjectStream/ObjectStreamBinaryIn.h>
-#include <ObjectStream/SerializableObject.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/ObjectStream/SerializableAttribute.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
+#include <Jolt/ObjectStream/ObjectStreamTextIn.h>
+#include <Jolt/ObjectStream/ObjectStreamBinaryIn.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
 #include <unordered_set>
 
 namespace JPH {
@@ -562,6 +562,6 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EDataType inDataType, c
 	}
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <ObjectStream/ObjectStreamTypes.h>
+#include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 } // JPH

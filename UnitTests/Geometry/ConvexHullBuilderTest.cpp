@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Geometry/ConvexHullBuilder.h>
+#include <Jolt/Geometry/ConvexHullBuilder.h>
 
 TEST_SUITE("ConvexHullBuilderTest")
 {

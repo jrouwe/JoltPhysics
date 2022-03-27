@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/Collision/PhysicsMaterial.h>
+#include <Jolt/Physics/Collision/PhysicsMaterial.h>
 
 namespace JPH {
 

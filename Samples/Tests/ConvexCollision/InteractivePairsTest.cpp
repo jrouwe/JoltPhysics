@@ -5,10 +5,10 @@
 
 #include <Tests/ConvexCollision/InteractivePairsTest.h>
 #include <Input/Keyboard.h>
-#include <Geometry/Sphere.h>
-#include <Geometry/AABox.h>
-#include <Geometry/ConvexSupport.h>
-#include <Geometry/EPAPenetrationDepth.h>
+#include <Jolt/Geometry/Sphere.h>
+#include <Jolt/Geometry/AABox.h>
+#include <Jolt/Geometry/ConvexSupport.h>
+#include <Jolt/Geometry/EPAPenetrationDepth.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(InteractivePairsTest) 

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Math/Mat44.h>
-#include <Math/Quat.h>
+#include <Jolt/Math/Mat44.h>
+#include <Jolt/Math/Quat.h>
 #include <random>
 
 TEST_SUITE("QuatTests")

@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
 // Test that contains a sensor that will apply forces to bodies inside the sensor
 class SensorTest : public Test, public ContactListener

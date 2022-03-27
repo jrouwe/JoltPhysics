@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Constraints/ContactConstraintManager.h>
-#include <Physics/Body/Body.h>
-#include <Physics/PhysicsUpdateContext.h>
-#include <Physics/PhysicsSettings.h>
-#include <Physics/IslandBuilder.h>
-#include <Core/TempAllocator.h>
+#include <Jolt/Physics/Constraints/ContactConstraintManager.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/PhysicsUpdateContext.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/IslandBuilder.h>
+#include <Jolt/Core/TempAllocator.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
 namespace JPH {

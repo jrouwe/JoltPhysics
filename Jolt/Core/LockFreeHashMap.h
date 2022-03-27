@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/NonCopyable.h>
+#include <Jolt/Core/NonCopyable.h>
 #include <atomic>
 
 namespace JPH {
@@ -177,4 +177,4 @@ private:
 
 } // JPH
 
-#include <Core/LockFreeHashMap.inl>
+#include "LockFreeHashMap.inl"

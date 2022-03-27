@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/BroadPhase/BroadPhaseCastRayTest.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Renderer/DebugRendererImp.h>
 #include <random>
 

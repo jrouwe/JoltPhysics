@@ -4,7 +4,7 @@
 #include <TestFramework.h>
 
 #include <JoltViewer.h>
-#include <Core/StreamWrapper.h>
+#include <Jolt/Core/StreamWrapper.h>
 #include <Application/EntryPoint.h>
 #include <Renderer/DebugRendererImp.h>
 #include <UI/UIManager.h>
@@ -14,8 +14,8 @@
 #ifndef JPH_DEBUG_RENDERER	
 	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
 	#define JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRendererRecorder.cpp>
-	#include <Renderer/DebugRendererPlayback.cpp>
+	#include <Jolt/Renderer/DebugRendererRecorder.cpp>
+	#include <Jolt/Renderer/DebugRendererPlayback.cpp>
 	#undef JPH_DEBUG_RENDERER
 #endif
 

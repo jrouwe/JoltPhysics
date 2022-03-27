@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <ObjectStream/SerializableAttribute.h>
-#include <ObjectStream/GetPrimitiveTypeOfType.h>
+#include <Jolt/ObjectStream/SerializableAttribute.h>
+#include <Jolt/ObjectStream/GetPrimitiveTypeOfType.h>
 
 namespace JPH {
 

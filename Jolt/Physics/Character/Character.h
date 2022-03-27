@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/Reference.h>
-#include <Physics/EActivation.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/Physics/EActivation.h>
 
 namespace JPH {
 

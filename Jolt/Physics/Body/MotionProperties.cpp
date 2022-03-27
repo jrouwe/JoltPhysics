@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Body/MotionProperties.h>
-#include <Physics/StateRecorder.h>
+#include <Jolt/Physics/Body/MotionProperties.h>
+#include <Jolt/Physics/StateRecorder.h>
 
 namespace JPH {
 

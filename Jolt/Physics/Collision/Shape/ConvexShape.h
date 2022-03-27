@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <Core/StaticArray.h>
-#include <Physics/Collision/Shape/Shape.h>
-#include <Physics/Collision/Shape/SubShapeID.h>
-#include <Physics/Collision/PhysicsMaterial.h>
+#include <Jolt/Core/StaticArray.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Collision/PhysicsMaterial.h>
 #include <unordered_map>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
 namespace JPH {

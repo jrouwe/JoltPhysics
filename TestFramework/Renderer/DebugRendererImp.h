@@ -4,17 +4,17 @@
 #pragma once
 
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #else
 	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
 	#define JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 	#undef JPH_DEBUG_RENDERER
 #endif
 
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/RenderInstances.h>
-#include <Core/Mutex.h>
+#include <Jolt/Core/Mutex.h>
 #include <unordered_map>
 
 class Renderer;

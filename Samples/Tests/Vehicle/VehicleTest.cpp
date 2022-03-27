@@ -4,11 +4,11 @@
 #include <TestFramework.h>
 
 #include <Tests/Vehicle/VehicleTest.h>
-#include <Physics/Constraints/DistanceConstraint.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/GroupFilterTable.h>
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/PhysicsScene.h>
+#include <Jolt/Physics/Constraints/DistanceConstraint.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/PhysicsScene.h>
 #include <Layers.h>
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>

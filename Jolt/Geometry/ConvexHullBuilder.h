@@ -7,11 +7,11 @@
 //#define JPH_CONVEX_BUILDER_DUMP_SHAPE
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
-	#include <Core/Color.h>
+	#include <Jolt/Core/Color.h>
 #endif
 
-#include <Core/StaticArray.h>
-#include <Core/NonCopyable.h>
+#include <Jolt/Core/StaticArray.h>
+#include <Jolt/Core/NonCopyable.h>
 
 namespace JPH {
 

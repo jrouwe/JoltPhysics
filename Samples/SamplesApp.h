@@ -6,12 +6,12 @@
 #include <Application/Application.h>
 #include <UI/UIManager.h>
 #include <Application/DebugUI.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Skeleton/SkeletonPose.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
 #include <Tests/Test.h>
 #include <Utils/ContactListenerImpl.h>
 #include <Renderer/DebugRendererImp.h>
-#include <Physics/StateRecorderImpl.h>
+#include <Jolt/Physics/StateRecorderImpl.h>
 #include <Layers.h>
 
 namespace JPH {

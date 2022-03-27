@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Math/Vector.h>
+#include <Jolt/Math/Vector.h>
 
 TEST_SUITE("VectorTests")
 {

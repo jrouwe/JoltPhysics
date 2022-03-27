@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/Mutex.h>
+#include <Jolt/Core/Mutex.h>
 
 namespace JPH {
 

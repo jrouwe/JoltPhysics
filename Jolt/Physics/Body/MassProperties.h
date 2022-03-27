@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <ObjectStream/SerializableObject.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
 
 namespace JPH {
 

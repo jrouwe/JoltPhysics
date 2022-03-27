@@ -5,9 +5,9 @@
 
 #include <Tests/General/LoadSaveBinaryTest.h>
 #include <Tests/General/LoadSaveSceneTest.h>
-#include <Physics/PhysicsScene.h>
+#include <Jolt/Physics/PhysicsScene.h>
 #include <Utils/Log.h>
-#include <Core/StreamWrapper.h>
+#include <Jolt/Core/StreamWrapper.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveBinaryTest) 
 { 

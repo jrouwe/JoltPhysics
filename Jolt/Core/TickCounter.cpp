@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Core/TickCounter.h>
+#include <Jolt/Core/TickCounter.h>
 
 #if defined(JPH_PLATFORM_WINDOWS)
 	#pragma warning (push, 0)

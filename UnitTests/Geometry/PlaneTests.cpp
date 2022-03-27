@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Geometry/Plane.h>
+#include <Jolt/Geometry/Plane.h>
 
 TEST_SUITE("PlaneTests")
 {

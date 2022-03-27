@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/Constraints/PathConstraintTest.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Constraints/PathConstraintPathHermite.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Constraints/PathConstraintPathHermite.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 

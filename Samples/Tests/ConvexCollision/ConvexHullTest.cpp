@@ -4,7 +4,7 @@
 #include <TestFramework.h>
 
 #include <Tests/ConvexCollision/ConvexHullTest.h>
-#include <Geometry/ConvexHullBuilder.h>
+#include <Jolt/Geometry/ConvexHullBuilder.h>
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
 

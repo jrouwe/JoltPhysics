@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Core/Factory.h>
-#include <ObjectStream/ObjectStreamTextIn.h>
-#include <ObjectStream/ObjectStreamTextOut.h>
-#include <ObjectStream/SerializableObject.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/ObjectStream/ObjectStreamTextIn.h>
+#include <Jolt/ObjectStream/ObjectStreamTextOut.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 enum TestEnum
 {

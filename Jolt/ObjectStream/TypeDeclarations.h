@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <ObjectStream/SerializableObject.h>
-#include <Core/Color.h>
-#include <Geometry/AABox.h>
-#include <Geometry/Triangle.h>
-#include <Geometry/IndexedTriangle.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Core/Color.h>
+#include <Jolt/Geometry/AABox.h>
+#include <Jolt/Geometry/Triangle.h>
+#include <Jolt/Geometry/IndexedTriangle.h>
 
 namespace JPH {
 
@@ -32,5 +32,5 @@ JPH_DECLARE_SERIALIZABLE_OUTSIDE_CLASS(IndexedTriangle);
 } // JPH
 
 // These need to be added after all types have been registered or else clang under linux will not find GetRTTIOfType for the type
-#include <ObjectStream/SerializableAttributeTyped.h>
-#include <ObjectStream/SerializableAttributeEnum.h>
+#include <Jolt/ObjectStream/SerializableAttributeTyped.h>
+#include <Jolt/ObjectStream/SerializableAttributeEnum.h>

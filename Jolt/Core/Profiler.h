@@ -6,8 +6,8 @@
 #include <mutex>
 #include <unordered_map>
 
-#include <Core/NonCopyable.h>
-#include <Core/TickCounter.h>
+#include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/TickCounter.h>
 
 #if defined(JPH_EXTERNAL_PROFILE)
 

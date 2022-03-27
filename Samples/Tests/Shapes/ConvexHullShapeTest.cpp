@@ -4,8 +4,8 @@
 #include <TestFramework.h>
 
 #include <Tests/Shapes/ConvexHullShapeTest.h>
-#include <Physics/Collision/Shape/ConvexHullShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullShapeTest) 

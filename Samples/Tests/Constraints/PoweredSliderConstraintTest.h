@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Constraints/SliderConstraint.h>
+#include <Jolt/Physics/Constraints/SliderConstraint.h>
 
 class PoweredSliderConstraintTest : public Test
 {

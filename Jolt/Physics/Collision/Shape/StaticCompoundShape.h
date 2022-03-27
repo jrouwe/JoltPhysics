@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Physics/Collision/Shape/CompoundShape.h>
-#include <Physics/Collision/SortReverseAndStore.h>
-#include <Math/HalfFloat.h>
+#include <Jolt/Physics/Collision/Shape/CompoundShape.h>
+#include <Jolt/Physics/Collision/SortReverseAndStore.h>
+#include <Jolt/Math/HalfFloat.h>
 
 namespace JPH {
 

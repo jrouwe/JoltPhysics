@@ -4,12 +4,12 @@
 #include <TestFramework.h>
 
 #include <Tests/ConvexCollision/CapsuleVsBoxTest.h>
-#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Collision/CollisionDispatch.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CapsuleVsBoxTest) 

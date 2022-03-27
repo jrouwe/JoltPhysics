@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Math/Vec4.h>
-#include <Math/UVec4.h>
-#include <Core/HashCombine.h>
+#include <Jolt/Math/Vec4.h>
+#include <Jolt/Math/UVec4.h>
+#include <Jolt/Core/HashCombine.h>
 #include <random>
 
 // Create a std::hash for Vec3

@@ -6,8 +6,8 @@
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
-#include <Core/Profiler.h>
-#include <Core/NonCopyable.h>
+#include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/NonCopyable.h>
 
 namespace JPH {
 

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Math/Vec3.h>
-#include <Math/Vec4.h>
-#include <Math/Quat.h>
+#include <Jolt/Math/Vec3.h>
+#include <Jolt/Math/Vec4.h>
+#include <Jolt/Math/Quat.h>
 
 namespace JPH {
 

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/Reference.h>
-#include <Core/StaticArray.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/Core/StaticArray.h>
 
 namespace JPH {
 

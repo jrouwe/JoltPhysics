@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/AlignedAllocator.h>
+#include <Jolt/Core/AlignedAllocator.h>
 
 namespace JPH {
 

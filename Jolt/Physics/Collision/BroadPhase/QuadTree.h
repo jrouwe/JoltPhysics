@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <Core/FixedSizeFreeList.h>
-#include <Core/Atomics.h>
-#include <Core/NonCopyable.h>
-#include <Physics/Body/BodyManager.h>
-#include <Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Core/FixedSizeFreeList.h>
+#include <Jolt/Core/Atomics.h>
+#include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Physics/Body/BodyManager.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
 	#include <map>

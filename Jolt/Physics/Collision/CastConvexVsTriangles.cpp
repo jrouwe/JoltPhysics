@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/CastConvexVsTriangles.h>
-#include <Physics/Collision/TransformedShape.h>
-#include <Physics/Collision/Shape/ScaleHelpers.h>
-#include <Physics/Collision/ActiveEdges.h>
-#include <Physics/Collision/NarrowPhaseStats.h>
-#include <Geometry/EPAPenetrationDepth.h>
+#include <Jolt/Physics/Collision/CastConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
+#include <Jolt/Physics/Collision/ActiveEdges.h>
+#include <Jolt/Physics/Collision/NarrowPhaseStats.h>
+#include <Jolt/Geometry/EPAPenetrationDepth.h>
 
 namespace JPH {
 

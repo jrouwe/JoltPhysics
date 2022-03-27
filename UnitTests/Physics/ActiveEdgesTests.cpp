@@ -4,16 +4,16 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include "Layers.h"
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
-#include <Physics/Collision/Shape/MeshShape.h>
-#include <Physics/Collision/Shape/HeightFieldShape.h>
-#include <Physics/Collision/Shape/ScaledShape.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 
 TEST_SUITE("ActiveEdgesTest")
 {

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/JobSystem.h>
-#include <Core/FixedSizeFreeList.h>
+#include <Jolt/Core/JobSystem.h>
+#include <Jolt/Core/FixedSizeFreeList.h>
 #include <thread>
 #include <mutex>
 #include <condition_variable>

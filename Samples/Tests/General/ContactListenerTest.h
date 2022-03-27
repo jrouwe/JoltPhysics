@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Collision/ContactListener.h>
+#include <Jolt/Physics/Collision/ContactListener.h>
 
 // Tests the contact listener callbacks
 class ContactListenerTest : public Test, public ContactListener

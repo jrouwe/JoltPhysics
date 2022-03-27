@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Physics/Constraints/Constraint.h>
-#include <Physics/PhysicsLock.h>
-#include <Core/Mutex.h>
+#include <Jolt/Physics/Constraints/Constraint.h>
+#include <Jolt/Physics/PhysicsLock.h>
+#include <Jolt/Core/Mutex.h>
 
 namespace JPH {
 

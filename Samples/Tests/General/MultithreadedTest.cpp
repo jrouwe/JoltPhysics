@@ -4,15 +4,15 @@
 #include <TestFramework.h>
 
 #include <Tests/General/MultithreadedTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
-#include <Skeleton/Skeleton.h>
-#include <Skeleton/SkeletalAnimation.h>
-#include <Skeleton/SkeletonPose.h>
-#include <Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Skeleton/Skeleton.h>
+#include <Jolt/Skeleton/SkeletalAnimation.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
 #include <Utils/RagdollLoader.h>
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
