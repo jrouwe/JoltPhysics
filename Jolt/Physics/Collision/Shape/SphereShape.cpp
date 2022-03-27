@@ -1,22 +1,22 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/ScaleHelpers.h>
-#include <Physics/Collision/Shape/GetTrianglesContext.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/CollidePointResult.h>
-#include <Physics/Collision/TransformedShape.h>
-#include <Geometry/RaySphere.h>
-#include <Geometry/Plane.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
+#include <Jolt/Physics/Collision/Shape/GetTrianglesContext.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollidePointResult.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Geometry/RaySphere.h>
+#include <Jolt/Geometry/Plane.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
 namespace JPH {

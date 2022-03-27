@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Core/Profiler.h>
-#include <Core/Color.h>
-#include <Core/StringTools.h>
+#include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/Color.h>
+#include <Jolt/Core/StringTools.h>
 #include <fstream>
 
 #ifdef JPH_PROFILE_ENABLED

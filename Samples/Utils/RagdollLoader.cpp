@@ -4,14 +4,14 @@
 #include <TestFramework.h>
 
 #include <Utils/RagdollLoader.h>
-#include <Physics/Ragdoll/Ragdoll.h>
-#include <Physics/Constraints/PointConstraint.h>
-#include <Physics/Constraints/FixedConstraint.h>
-#include <Physics/Constraints/HingeConstraint.h>
-#include <Physics/Constraints/SliderConstraint.h>
-#include <Physics/Constraints/ConeConstraint.h>
-#include <Physics/Constraints/SwingTwistConstraint.h>
-#include <ObjectStream/ObjectStreamOut.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/Constraints/PointConstraint.h>
+#include <Jolt/Physics/Constraints/FixedConstraint.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/SliderConstraint.h>
+#include <Jolt/Physics/Constraints/ConeConstraint.h>
+#include <Jolt/Physics/Constraints/SwingTwistConstraint.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
 #include <Layers.h>
 #include <Utils/Log.h>
 

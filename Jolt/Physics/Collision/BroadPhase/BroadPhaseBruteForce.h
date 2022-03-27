@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/BroadPhase/BroadPhase.h>
-#include <Core/Mutex.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Core/Mutex.h>
 
 namespace JPH {
 

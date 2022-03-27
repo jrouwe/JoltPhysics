@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Body/BodyID.h>
+#include <Jolt/Physics/Body/BodyID.h>
 
 // This test will demonstrates how to use layers to disable collisions between other objects and how to change them on the fly.
 // The bodies will switch between the MOVING layer and the DEBRIS layer (debris only collides with static).

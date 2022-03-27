@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Geometry/RayTriangle.h>
+#include <Jolt/Geometry/RayTriangle.h>
 #include <unordered_map>
 
 namespace JPH {

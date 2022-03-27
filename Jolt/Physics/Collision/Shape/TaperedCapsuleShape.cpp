@@ -1,19 +1,19 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/Shape/TaperedCapsuleShape.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
-#include <Physics/Collision/Shape/ScaleHelpers.h>
-#include <Physics/Collision/TransformedShape.h>
-#include <Geometry/RayCapsule.h>
-#include <ObjectStream/TypeDeclarations.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Geometry/RayCapsule.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
 namespace JPH {

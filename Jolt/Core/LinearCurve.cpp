@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Core/LinearCurve.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Core/LinearCurve.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 

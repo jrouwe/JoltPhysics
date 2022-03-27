@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/TriangleShape.h>
-#include <Physics/Collision/Shape/MeshShape.h>
-#include <Physics/Collision/Shape/ScaledShape.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/ShapeFilter.h>
-#include <Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/TriangleShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/ShapeFilter.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include "PhysicsTestContext.h"
 #include "Layers.h"
 

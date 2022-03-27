@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
 #include <cstdarg>
-#include <Core/FPException.h>
-#include <RegisterTypes.h>
+#include <Jolt/Core/FPException.h>
+#include <Jolt/RegisterTypes.h>
 #ifdef JPH_PLATFORM_ANDROID
-#include <Core/Color.h>
+#include <Jolt/Core/Color.h>
 #include <android/log.h>
 #include <android_native_app_glue.h>
 #endif // JPH_PLATFORM_ANDROID

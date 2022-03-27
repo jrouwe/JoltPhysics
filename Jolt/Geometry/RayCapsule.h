@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Geometry/RayCylinder.h>
-#include <Geometry/RaySphere.h>
+#include <Jolt/Geometry/RayCylinder.h>
+#include <Jolt/Geometry/RaySphere.h>
 
 namespace JPH {
 

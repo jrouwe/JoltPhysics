@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Math/Vec8.h>
-#include <Geometry/RayAABox.h>
+#include <Jolt/Math/Vec8.h>
+#include <Jolt/Geometry/RayAABox.h>
 
 namespace JPH {
 

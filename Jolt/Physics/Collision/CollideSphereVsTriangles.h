@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Physics/Collision/Shape/Shape.h>
-#include <Physics/Collision/Shape/SubShapeID.h>
-#include <Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
 namespace JPH {
 

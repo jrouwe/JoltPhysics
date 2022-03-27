@@ -6,9 +6,9 @@
 #include <Application/Application.h>
 #include <UI/UIManager.h>
 #include <Application/DebugUI.h>
-#include <Core/FPException.h>
 #include <Utils/Log.h>
-#include <RegisterTypes.h>
+#include <Jolt/Core/FPException.h>
+#include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>
 
 // Constructor

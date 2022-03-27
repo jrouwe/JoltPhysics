@@ -5,11 +5,11 @@
 
 #include <Tests/Shapes/HeightFieldShapeTest.h>
 #include <Math/Perlin.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Collision/PhysicsMaterialSimple.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/RayCast.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Application/DebugUI.h>
 #include <Utils/ReadData.h>

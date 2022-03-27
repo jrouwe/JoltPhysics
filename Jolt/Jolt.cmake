@@ -382,9 +382,9 @@ endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	# Enable Precompiled Headers for Jolt
-	set_source_files_properties(${JOLT_PHYSICS_SRC_FILES} PROPERTIES COMPILE_FLAGS "/YuJolt.h")
+	set_source_files_properties(${JOLT_PHYSICS_SRC_FILES} PROPERTIES COMPILE_FLAGS "/YuJolt/Jolt.h")
 	set(JOLT_PHYSICS_SRC_FILES ${JOLT_PHYSICS_SRC_FILES} ${JOLT_PHYSICS_ROOT}/pch.cpp)	
-	set_source_files_properties(${JOLT_PHYSICS_ROOT}/pch.cpp PROPERTIES COMPILE_FLAGS "/YcJolt.h")
+	set_source_files_properties(${JOLT_PHYSICS_ROOT}/pch.cpp PROPERTIES COMPILE_FLAGS "/YcJolt/Jolt.h")
 endif()
 
 # Group source files
@@ -392,7 +392,7 @@ source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES})
 
 # Create Jolt lib
 add_library(Jolt STATIC ${JOLT_PHYSICS_SRC_FILES})
-target_include_directories(Jolt PUBLIC ${JOLT_PHYSICS_ROOT})
+target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Distribution>:NDEBUG>")

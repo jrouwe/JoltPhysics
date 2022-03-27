@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSettings.h>
 
 namespace JPH {
 

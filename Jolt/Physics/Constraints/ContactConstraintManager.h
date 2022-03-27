@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include <Core/StaticArray.h>
-#include <Core/LockFreeHashMap.h>
-#include <Physics/Body/BodyPair.h>
-#include <Physics/Collision/Shape/SubShapeIDPair.h>
-#include <Physics/Collision/ManifoldBetweenTwoFaces.h>
-#include <Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
-#include <Physics/Constraints/ConstraintPart/DualAxisConstraintPart.h>
-#include <Core/HashCombine.h>
-#include <Core/NonCopyable.h>
+#include <Jolt/Core/StaticArray.h>
+#include <Jolt/Core/LockFreeHashMap.h>
+#include <Jolt/Physics/Body/BodyPair.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeIDPair.h>
+#include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/DualAxisConstraintPart.h>
+#include <Jolt/Core/HashCombine.h>
+#include <Jolt/Core/NonCopyable.h>
 #include <atomic>
 
 namespace JPH {

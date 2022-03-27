@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/PhysicsMaterial.h>
-#include <Physics/Collision/PhysicsMaterialSimple.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <Core/Factory.h>
+#include <Jolt/Physics/Collision/PhysicsMaterial.h>
+#include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/Factory.h>
 
 namespace JPH {
 

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Geometry/AABox.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Collision/Shape/Shape.h>
+#include <Jolt/Geometry/AABox.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
 
 namespace JPH {
 

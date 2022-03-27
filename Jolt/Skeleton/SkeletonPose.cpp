@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Skeleton/SkeletonPose.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
 #ifdef JPH_DEBUG_RENDERER
-	#include <Renderer/DebugRenderer.h>
+	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
 namespace JPH {

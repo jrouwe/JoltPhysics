@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Physics/Collision/ContactListener.h>
-#include <Physics/StateRecorder.h>
-#include <Core/Mutex.h>
+#include <Jolt/Physics/Collision/ContactListener.h>
+#include <Jolt/Physics/StateRecorder.h>
+#include <Jolt/Core/Mutex.h>
 #include <unordered_map>
 
 // Tests the contact listener callbacks

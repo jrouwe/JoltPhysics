@@ -5,7 +5,7 @@
 
 #include <Tests/Rig/LoadSaveBinaryRigTest.h>
 #include <Application/DebugUI.h>
-#include <Core/StreamWrapper.h>
+#include <Jolt/Core/StreamWrapper.h>
 #include <Utils/Log.h>
 #include <Utils/RagdollLoader.h>
 

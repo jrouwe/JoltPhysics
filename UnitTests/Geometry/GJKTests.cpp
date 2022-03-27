@@ -2,19 +2,19 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Geometry/ConvexSupport.h>
-#include <Geometry/GJKClosestPoint.h>
-#include <Geometry/AABox.h>
-#include <Geometry/Sphere.h>
-#include <Geometry/RayTriangle.h>
-#include <Geometry/RaySphere.h>
-#include <Geometry/RayAABox.h>
-#include <Geometry/RayCapsule.h>
-#include <Geometry/RayCylinder.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Geometry/ConvexSupport.h>
+#include <Jolt/Geometry/GJKClosestPoint.h>
+#include <Jolt/Geometry/AABox.h>
+#include <Jolt/Geometry/Sphere.h>
+#include <Jolt/Geometry/RayTriangle.h>
+#include <Jolt/Geometry/RaySphere.h>
+#include <Jolt/Geometry/RayAABox.h>
+#include <Jolt/Geometry/RayCapsule.h>
+#include <Jolt/Geometry/RayCylinder.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <random>
 
 TEST_SUITE("GJKTests")

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/Collision/ContactListener.h>
+#include <Jolt/Physics/Collision/ContactListener.h>
 
 // Contact listener that just logs the calls made to it for later validation
 class LoggingContactListener : public ContactListener

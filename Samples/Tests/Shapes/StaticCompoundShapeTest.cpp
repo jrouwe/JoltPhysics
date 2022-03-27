@@ -4,13 +4,13 @@
 #include <TestFramework.h>
 
 #include <Tests/Shapes/StaticCompoundShapeTest.h>
-#include <Physics/Collision/Shape/StaticCompoundShape.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/TaperedCapsuleShape.h>
-#include <Physics/Collision/Shape/CylinderShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(StaticCompoundShapeTest) 

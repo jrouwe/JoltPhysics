@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Body/BodyID.h>
-#include <Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 
 namespace JPH {
 

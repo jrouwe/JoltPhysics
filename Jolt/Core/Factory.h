@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/RTTI.h>
+#include <Jolt/Core/RTTI.h>
 #include <unordered_map>
 
 namespace JPH {

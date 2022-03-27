@@ -1,17 +1,17 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/Shape/Shape.h>
-#include <Physics/Collision/Shape/ScaledShape.h>
-#include <Physics/Collision/Shape/StaticCompoundShape.h>
-#include <Physics/Collision/TransformedShape.h>
-#include <Physics/Collision/PhysicsMaterial.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <Core/Factory.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/Collision/PhysicsMaterial.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 

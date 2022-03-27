@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/Shapes/RotatedTranslatedShapeTest.h>
-#include <Physics/Collision/Shape/ConvexHullShape.h>
-#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(RotatedTranslatedShapeTest) 

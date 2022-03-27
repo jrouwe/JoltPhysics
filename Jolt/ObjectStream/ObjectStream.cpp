@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <ObjectStream/ObjectStream.h>
+#include <Jolt/ObjectStream/ObjectStream.h>
 
 namespace JPH {
 
@@ -15,6 +15,6 @@ namespace JPH {
 	}
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <ObjectStream/ObjectStreamTypes.h>
+#include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 } // JPH

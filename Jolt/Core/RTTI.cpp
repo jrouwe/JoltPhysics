@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Core/RTTI.h>
-#include <Core/StringTools.h>
+#include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/StringTools.h>
 
 namespace JPH {
 

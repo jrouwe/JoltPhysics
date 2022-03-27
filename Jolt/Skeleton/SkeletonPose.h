@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Skeleton/Skeleton.h>
-#include <Skeleton/SkeletalAnimation.h>
+#include <Jolt/Skeleton/Skeleton.h>
+#include <Jolt/Skeleton/SkeletalAnimation.h>
 
 namespace JPH {
 

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Core/NonCopyable.h>
-#include <Core/Mutex.h>
-#include <Core/Memory.h>
+#include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/Mutex.h>
+#include <Jolt/Core/Memory.h>
 #include <atomic>
 
 namespace JPH {
@@ -121,4 +121,4 @@ public:
 
 } // JPH
 
-#include <Core/FixedSizeFreeList.inl>
+#include "FixedSizeFreeList.inl"

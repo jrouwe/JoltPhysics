@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/Shape/DecoratedShape.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Physics/Collision/Shape/DecoratedShape.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 

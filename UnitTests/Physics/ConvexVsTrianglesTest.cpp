@@ -3,13 +3,13 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/TriangleShape.h>
-#include <Physics/Collision/Shape/MeshShape.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/CollideConvexVsTriangles.h>
-#include <Physics/Collision/CollideSphereVsTriangles.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/TriangleShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
 #include "Layers.h"
 #include "PhysicsTestContext.h"
 

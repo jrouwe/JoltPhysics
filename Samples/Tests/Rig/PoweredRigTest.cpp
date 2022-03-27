@@ -4,7 +4,7 @@
 #include <TestFramework.h>
 
 #include <Tests/Rig/PoweredRigTest.h>
-#include <Physics/StateRecorder.h>
+#include <Jolt/Physics/StateRecorder.h>
 #include <Application/DebugUI.h>
 #include <Utils/RagdollLoader.h>
 #include <Utils/Log.h>

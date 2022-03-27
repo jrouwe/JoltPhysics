@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/TickCounter.h>
-#include <Physics/Collision/Shape/Shape.h>
+#include <Jolt/Core/TickCounter.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
 
 // Shorthand function to ifdef out code if narrow phase stats tracking is off
 #ifdef JPH_TRACK_NARROWPHASE_STATS

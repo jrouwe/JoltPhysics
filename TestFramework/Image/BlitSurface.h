@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Image/ZoomImage.h>
-#include <Core/Color.h>
+#include <Jolt/Core/Color.h>
 
 /// Settings for blitting one surface to another with possibly different formats and dimensions. The blit
 /// routine can use filtering or blurring on the fly. Also it can perform some other

@@ -7,12 +7,12 @@
 	#error This file should only be included when JPH_DEBUG_RENDERER is defined
 #endif // !JPH_DEBUG_RENDERER
 
-#include <Core/Color.h>
-#include <Core/Reference.h>
-#include <Core/HashCombine.h>
-#include <Math/Float2.h>
-#include <Geometry/IndexedTriangle.h>
-#include <Geometry/AABox.h>
+#include <Jolt/Core/Color.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/Core/HashCombine.h>
+#include <Jolt/Math/Float2.h>
+#include <Jolt/Geometry/IndexedTriangle.h>
+#include <Jolt/Geometry/AABox.h>
 #include <unordered_map>
 
 namespace JPH {

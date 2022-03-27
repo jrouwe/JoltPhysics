@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/Constraints/SwingTwistConstraintTest.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/GroupFilterTable.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 

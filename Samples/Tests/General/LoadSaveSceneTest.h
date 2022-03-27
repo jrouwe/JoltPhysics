@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/PhysicsScene.h>
+#include <Jolt/Physics/PhysicsScene.h>
 
 // This test tests the serialization system by creating a number of shapes, storing them, loading them and then simulating them
 class LoadSaveSceneTest : public Test

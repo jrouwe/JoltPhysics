@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Vehicle/Wheel.h>
-#include <Physics/Vehicle/VehicleConstraint.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Physics/Vehicle/Wheel.h>
+#include <Jolt/Physics/Vehicle/VehicleConstraint.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 

@@ -5,8 +5,8 @@
 
 #include <Image/BlitSurface.h>
 #include <Image/Surface.h>
-#include <Core/Color.h>
-#include <Core/Profiler.h>
+#include <Jolt/Core/Color.h>
+#include <Jolt/Core/Profiler.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // BlitSettings

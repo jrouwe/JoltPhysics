@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
 #ifdef JPH_DEBUG_RENDERER
 
-#include <Renderer/DebugRendererPlayback.h>
+#include <Jolt/Renderer/DebugRendererPlayback.h>
 
 namespace JPH {
 

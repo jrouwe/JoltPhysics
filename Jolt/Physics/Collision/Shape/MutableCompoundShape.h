@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/Collision/Shape/CompoundShape.h>
+#include <Jolt/Physics/Collision/Shape/CompoundShape.h>
 
 namespace JPH {
 

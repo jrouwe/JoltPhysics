@@ -5,7 +5,7 @@
 #include "PhysicsTestContext.h"
 #include "Layers.h"
 #include "LoggingContactListener.h"
-#include <Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
 
 TEST_SUITE("SensorTests")
 {

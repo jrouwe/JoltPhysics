@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/ScaledShapes/ScaledCapsuleShapeTest.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/ScaledShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledCapsuleShapeTest) 

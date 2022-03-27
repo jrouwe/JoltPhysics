@@ -1,26 +1,26 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/Shape/ConvexShape.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/CollidePointResult.h>
-#include <Physics/Collision/Shape/ScaleHelpers.h>
-#include <Physics/Collision/Shape/GetTrianglesContext.h>
-#include <Physics/Collision/Shape/PolyhedronSubmergedVolumeCalculator.h>
-#include <Physics/Collision/TransformedShape.h>
-#include <Physics/Collision/CollisionDispatch.h>
-#include <Physics/Collision/NarrowPhaseStats.h>
-#include <Physics/PhysicsSettings.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <Geometry/EPAPenetrationDepth.h>
-#include <Geometry/OrientedBox.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollidePointResult.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
+#include <Jolt/Physics/Collision/Shape/GetTrianglesContext.h>
+#include <Jolt/Physics/Collision/Shape/PolyhedronSubmergedVolumeCalculator.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/NarrowPhaseStats.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Geometry/EPAPenetrationDepth.h>
+#include <Jolt/Geometry/OrientedBox.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 

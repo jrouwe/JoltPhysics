@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <Core/StaticArray.h>
-#include <Core/Profiler.h>
-#include <Geometry/GJKClosestPoint.h>
-#include <Geometry/EPAConvexHullBuilder.h>
+#include <Jolt/Core/StaticArray.h>
+#include <Jolt/Core/Profiler.h>
+#include <Jolt/Geometry/GJKClosestPoint.h>
+#include <Jolt/Geometry/EPAConvexHullBuilder.h>
 
 namespace JPH {
 

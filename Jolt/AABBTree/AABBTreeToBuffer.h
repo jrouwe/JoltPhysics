@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <AABBTree/AABBTreeBuilder.h>
-#include <Core/ByteBuffer.h>
-#include <Geometry/IndexedTriangle.h>
+#include <Jolt/AABBTree/AABBTreeBuilder.h>
+#include <Jolt/Core/ByteBuffer.h>
+#include <Jolt/Geometry/IndexedTriangle.h>
 #include <deque>
 
 namespace JPH {

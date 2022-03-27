@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Math/HalfFloat.h>
-#include <Core/FPException.h>
+#include <Jolt/Math/HalfFloat.h>
+#include <Jolt/Core/FPException.h>
 
 TEST_SUITE("HalfFloatTests")
 {

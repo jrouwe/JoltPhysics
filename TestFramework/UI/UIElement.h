@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/RTTI.h>
-#include <Core/Color.h>
+#include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/Color.h>
 #include <UI/UIEventListener.h>
 
 class UIManager;

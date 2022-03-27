@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include <Physics/Constraints/Constraint.h>
-#include <Physics/PhysicsStepListener.h>
-#include <Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
-#include <Physics/Vehicle/VehicleCollisionTester.h>
-#include <Physics/Vehicle/VehicleAntiRollBar.h>
-#include <Physics/Vehicle/Wheel.h>
+#include <Jolt/Physics/Constraints/Constraint.h>
+#include <Jolt/Physics/PhysicsStepListener.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
+#include <Jolt/Physics/Vehicle/VehicleCollisionTester.h>
+#include <Jolt/Physics/Vehicle/VehicleAntiRollBar.h>
+#include <Jolt/Physics/Vehicle/Wheel.h>
 
 namespace JPH {
 

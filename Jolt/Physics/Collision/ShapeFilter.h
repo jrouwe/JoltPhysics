@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Body/BodyID.h>
-#include <Core/NonCopyable.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Core/NonCopyable.h>
 
 namespace JPH {
 

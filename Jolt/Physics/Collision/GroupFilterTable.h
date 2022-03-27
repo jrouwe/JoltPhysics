@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/GroupFilter.h>
-#include <Physics/Collision/CollisionGroup.h>
+#include <Jolt/Physics/Collision/GroupFilter.h>
+#include <Jolt/Physics/Collision/CollisionGroup.h>
 
 namespace JPH {
 

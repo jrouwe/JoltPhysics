@@ -5,12 +5,12 @@
 
 #include <Tests/General/ChangeShapeTest.h>
 #include <Layers.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/TaperedCapsuleShape.h>
-#include <Physics/Collision/Shape/StaticCompoundShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ChangeShapeTest) 

@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/Constraints/SpringTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Constraints/DistanceConstraint.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Constraints/DistanceConstraint.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SpringTest) 

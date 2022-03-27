@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/BroadPhase/QuadTree.h>
-#include <Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Physics/Collision/BroadPhase/QuadTree.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 
 namespace JPH {
 

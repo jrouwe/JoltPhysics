@@ -4,11 +4,11 @@
 #include <TestFramework.h>
 
 #include <Tests/Constraints/ConstraintSingularityTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/GroupFilterTable.h>
-#include <Physics/Constraints/HingeConstraint.h>
-#include <Physics/Constraints/FixedConstraint.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/FixedConstraint.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ConstraintSingularityTest) 

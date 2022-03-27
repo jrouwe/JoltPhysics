@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Core/Reference.h>
-#include <Core/Color.h>
-#include <Core/StringTools.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/Core/Color.h>
+#include <Jolt/Core/StringTools.h>
 
 /// Possible lock modes of a Surface
 enum class ESurfaceLockMode : uint

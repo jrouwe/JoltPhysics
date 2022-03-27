@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/Constraints/ConeConstraintTest.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/GroupFilterTable.h>
-#include <Physics/Constraints/ConeConstraint.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Constraints/ConeConstraint.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ConeConstraintTest) 

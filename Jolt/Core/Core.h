@@ -132,7 +132,7 @@
 	// This file is not distributed because it would violate an NDA. 
 	// Creating one should only be a couple of minutes of work if you have the documentation for the platform 
 	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS and JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY and include the right header).
-	#include <Core/PlatformBlue.h> 
+	#include <Jolt/Core/PlatformBlue.h> 
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 	#include <float.h>
 	#include <limits.h>

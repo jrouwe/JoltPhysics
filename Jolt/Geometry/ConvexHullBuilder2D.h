@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/NonCopyable.h>
+#include <Jolt/Core/NonCopyable.h>
 
 //#define JPH_CONVEX_BUILDER_2D_DEBUG
 

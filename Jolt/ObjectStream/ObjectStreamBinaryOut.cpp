@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <ObjectStream/ObjectStreamBinaryOut.h>
-#include <Core/StringTools.h>
+#include <Jolt/ObjectStream/ObjectStreamBinaryOut.h>
+#include <Jolt/Core/StringTools.h>
 
 namespace JPH {
 

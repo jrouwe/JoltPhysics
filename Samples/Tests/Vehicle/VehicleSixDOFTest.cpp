@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/Vehicle/VehicleSixDOFTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/CylinderShape.h>
-#include <Physics/Collision/GroupFilterTable.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 

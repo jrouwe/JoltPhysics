@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Constraints/Constraint.h>
-#include <Physics/StateRecorder.h>
-#include <ObjectStream/TypeDeclarations.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <Core/Factory.h>
+#include <Jolt/Physics/Constraints/Constraint.h>
+#include <Jolt/Physics/StateRecorder.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/Factory.h>
 
 namespace JPH {
 

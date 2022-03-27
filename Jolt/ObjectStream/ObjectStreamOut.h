@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <ObjectStream/ObjectStream.h>
-#include <Core/RTTI.h>
+#include <Jolt/ObjectStream/ObjectStream.h>
+#include <Jolt/Core/RTTI.h>
 #include <queue>
 #include <fstream>
 #include <unordered_set>
@@ -122,7 +122,7 @@ private:
 	void	OSWriteData(ObjectStreamOut &ioStream, const name &inPrimitive);
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <ObjectStream/ObjectStreamTypes.h>
+#include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 // Define serialization templates for dynamic arrays
 template <class T>

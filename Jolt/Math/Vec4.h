@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Math/Float4.h>
-#include <Math/Swizzle.h>
-#include <Math/MathTypes.h>
+#include <Jolt/Math/Float4.h>
+#include <Jolt/Math/Swizzle.h>
+#include <Jolt/Math/MathTypes.h>
 
 namespace JPH {
 

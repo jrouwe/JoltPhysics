@@ -4,11 +4,11 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Skeleton/Skeleton.h>
-#include <Skeleton/SkeletalAnimation.h>
-#include <Skeleton/SkeletonPose.h>
+#include <Jolt/Skeleton/Skeleton.h>
+#include <Jolt/Skeleton/SkeletalAnimation.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
 #include <Utils/RagdollLoader.h>
-#include <Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
 // This test tests a kinematic ragdoll moving towards a wall of boxes
 class KinematicRigTest : public Test

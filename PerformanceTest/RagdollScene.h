@@ -4,10 +4,10 @@
 #pragma once
 
 // Jolt includes
-#include <Physics/Ragdoll/Ragdoll.h>
-#include <Physics/PhysicsScene.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/PhysicsScene.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/RayCast.h>
 
 // Local includes
 #include "PerformanceTestScene.h"

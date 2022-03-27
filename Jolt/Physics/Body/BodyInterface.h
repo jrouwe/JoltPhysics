@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <Physics/Body/BodyID.h>
-#include <Physics/EActivation.h>
-#include <Physics/Collision/ObjectLayer.h>
-#include <Physics/Body/MotionType.h>
-#include <Core/Reference.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/EActivation.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
+#include <Jolt/Physics/Body/MotionType.h>
+#include <Jolt/Core/Reference.h>
 
 namespace JPH {
 

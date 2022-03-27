@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
 // This test loads a ragdoll from disc, writes it to a binary stream, loads it again and simulates it
 class LoadSaveBinaryRigTest : public Test

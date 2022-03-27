@@ -1,27 +1,27 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/PhysicsSystem.h>
-#include <Physics/PhysicsSettings.h>
-#include <Physics/PhysicsUpdateContext.h>
-#include <Physics/PhysicsStepListener.h>
-#include <Physics/Collision/BroadPhase/BroadPhaseBruteForce.h>
-#include <Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
-#include <Physics/Collision/CollisionDispatch.h>
-#include <Physics/Collision/AABoxCast.h>
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/CollideShape.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/CollideConvexVsTriangles.h>
-#include <Physics/Collision/ManifoldBetweenTwoFaces.h>
-#include <Physics/Collision/Shape/ConvexShape.h>
-#include <Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
-#include <Geometry/RayAABox.h>
-#include <Core/JobSystem.h>
-#include <Core/TempAllocator.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsUpdateContext.h>
+#include <Jolt/Physics/PhysicsStepListener.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseBruteForce.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/AABoxCast.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
+#include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
+#include <Jolt/Geometry/RayAABox.h>
+#include <Jolt/Core/JobSystem.h>
+#include <Jolt/Core/TempAllocator.h>
 
 namespace JPH {
 

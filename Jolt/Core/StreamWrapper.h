@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
 #include <ostream>
 
 namespace JPH {

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
 
 namespace JPH {
 

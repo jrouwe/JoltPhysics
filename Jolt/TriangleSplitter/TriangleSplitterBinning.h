@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <TriangleSplitter/TriangleSplitter.h>
-#include <Geometry/AABox.h>
+#include <Jolt/TriangleSplitter/TriangleSplitter.h>
+#include <Jolt/Geometry/AABox.h>
 
 namespace JPH {
 

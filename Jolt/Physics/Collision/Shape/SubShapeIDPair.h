@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <Physics/Body/BodyID.h>
-#include <Physics/Collision/Shape/SubShapeID.h>
-#include <Core/HashCombine.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Core/HashCombine.h>
 
 namespace JPH {
 

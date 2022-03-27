@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/TransformedShape.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/Shape/SubShapeID.h>
-#include <Physics/Collision/CollisionDispatch.h>
-#include <Geometry/OrientedBox.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Geometry/OrientedBox.h>
 
 namespace JPH {
 

@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/Constraints/SixDOFConstraintTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/GroupFilterTable.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 

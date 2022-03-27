@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
 // This test demonstrates how to create a ragdoll from code
 class CreateRigTest : public Test

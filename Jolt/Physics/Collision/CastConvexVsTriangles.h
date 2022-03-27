@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/Shape/ConvexShape.h>
-#include <Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
 
 namespace JPH {
 

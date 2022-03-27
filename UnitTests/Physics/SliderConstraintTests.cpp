@@ -3,8 +3,8 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
-#include <Physics/Constraints/SliderConstraint.h>
-#include <Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Constraints/SliderConstraint.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include "Layers.h"
 
 TEST_SUITE("SliderConstraintTests")

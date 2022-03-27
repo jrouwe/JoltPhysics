@@ -3,14 +3,14 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
-#include <Physics/Collision/Shape/ScaledShape.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
-#include <Physics/Collision/TransformedShape.h>
-#include <Physics/Collision/CollisionCollectorImpl.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 
 TEST_SUITE("TransformedShapeTests")
 {

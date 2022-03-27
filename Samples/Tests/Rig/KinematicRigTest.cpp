@@ -4,8 +4,8 @@
 #include <TestFramework.h>
 
 #include <Tests/Rig/KinematicRigTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/StateRecorder.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/StateRecorder.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Utils/Log.h>

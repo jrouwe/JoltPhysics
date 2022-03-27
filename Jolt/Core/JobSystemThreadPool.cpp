@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Core/JobSystemThreadPool.h>
-#include <Core/Profiler.h>
-#include <Core/FPException.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/FPException.h>
 #include <algorithm>
 
 #ifdef JPH_PLATFORM_WINDOWS

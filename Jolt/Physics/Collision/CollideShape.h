@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <Core/StaticArray.h>
-#include <Physics/Collision/BackFaceMode.h>
-#include <Physics/Collision/ActiveEdgeMode.h>
-#include <Physics/Collision/CollectFacesMode.h>
-#include <Physics/Collision/Shape/SubShapeID.h>
-#include <Physics/Body/BodyID.h>
-#include <Physics/PhysicsSettings.h>
+#include <Jolt/Core/StaticArray.h>
+#include <Jolt/Physics/Collision/BackFaceMode.h>
+#include <Jolt/Physics/Collision/ActiveEdgeMode.h>
+#include <Jolt/Physics/Collision/CollectFacesMode.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/PhysicsSettings.h>
 
 namespace JPH {
 

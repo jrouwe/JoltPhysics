@@ -4,9 +4,9 @@
 #include <TestFramework.h>
 
 #include <Tests/ScaledShapes/ScaledCylinderShapeTest.h>
-#include <Physics/Collision/Shape/CylinderShape.h>
-#include <Physics/Collision/Shape/ScaledShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledCylinderShapeTest) 

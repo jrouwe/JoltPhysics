@@ -1,41 +1,41 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
 #include <unordered_map>
-#include <Physics/Collision/Shape/MeshShape.h>
-#include <Physics/Collision/Shape/ConvexShape.h>
-#include <Physics/Collision/Shape/ScaleHelpers.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/ShapeCast.h>
-#include <Physics/Collision/ShapeFilter.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/CollidePointResult.h>
-#include <Physics/Collision/CollideConvexVsTriangles.h>
-#include <Physics/Collision/CollideSphereVsTriangles.h>
-#include <Physics/Collision/CastConvexVsTriangles.h>
-#include <Physics/Collision/CastSphereVsTriangles.h>
-#include <Physics/Collision/TransformedShape.h>
-#include <Physics/Collision/ActiveEdges.h>
-#include <Physics/Collision/CollisionDispatch.h>
-#include <Physics/Collision/SortReverseAndStore.h>
-#include <Core/StringTools.h>
-#include <Core/StreamIn.h>
-#include <Core/StreamOut.h>
-#include <Core/Profiler.h>
-#include <Geometry/AABox4.h>
-#include <Geometry/RayAABox.h>
-#include <Geometry/Indexify.h>
-#include <Geometry/Plane.h>
-#include <Geometry/OrientedBox.h>
-#include <TriangleSplitter/TriangleSplitterBinning.h>
-#include <AABBTree/AABBTreeBuilder.h>
-#include <AABBTree/AABBTreeToBuffer.h>
-#include <AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h>
-#include <AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/ShapeFilter.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollidePointResult.h>
+#include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
+#include <Jolt/Physics/Collision/CastConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/CastSphereVsTriangles.h>
+#include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/Collision/ActiveEdges.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/SortReverseAndStore.h>
+#include <Jolt/Core/StringTools.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/Profiler.h>
+#include <Jolt/Geometry/AABox4.h>
+#include <Jolt/Geometry/RayAABox.h>
+#include <Jolt/Geometry/Indexify.h>
+#include <Jolt/Geometry/Plane.h>
+#include <Jolt/Geometry/OrientedBox.h>
+#include <Jolt/TriangleSplitter/TriangleSplitterBinning.h>
+#include <Jolt/AABBTree/AABBTreeBuilder.h>
+#include <Jolt/AABBTree/AABBTreeToBuffer.h>
+#include <Jolt/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h>
+#include <Jolt/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 

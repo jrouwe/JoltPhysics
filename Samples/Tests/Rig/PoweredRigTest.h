@@ -4,10 +4,10 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Skeleton/Skeleton.h>
-#include <Skeleton/SkeletalAnimation.h>
-#include <Skeleton/SkeletonPose.h>
-#include <Physics/Ragdoll/Ragdoll.h>
+#include <Jolt/Skeleton/Skeleton.h>
+#include <Jolt/Skeleton/SkeletalAnimation.h>
+#include <Jolt/Skeleton/SkeletonPose.h>
+#include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
 // This test demonstrates powered constraints. It can either show a ragdoll in a static pose or in an animated pose (e.g. walk).
 class PoweredRigTest : public Test

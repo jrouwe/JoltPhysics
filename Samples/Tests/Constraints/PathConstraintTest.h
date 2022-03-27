@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Constraints/PathConstraint.h>
+#include <Jolt/Physics/Constraints/PathConstraint.h>
 
 class PathConstraintTest : public Test
 {

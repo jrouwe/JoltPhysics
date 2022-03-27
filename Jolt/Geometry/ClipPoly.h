@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Geometry/AABox.h>
+#include <Jolt/Geometry/AABox.h>
 
 namespace JPH {
 

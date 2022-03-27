@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <ObjectStream/ObjectStreamOut.h>
-#include <ObjectStream/ObjectStreamTextOut.h>
-#include <ObjectStream/ObjectStreamBinaryOut.h>
-#include <ObjectStream/SerializableAttribute.h>
-#include <ObjectStream/TypeDeclarations.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
+#include <Jolt/ObjectStream/ObjectStreamTextOut.h>
+#include <Jolt/ObjectStream/ObjectStreamBinaryOut.h>
+#include <Jolt/ObjectStream/SerializableAttribute.h>
+#include <Jolt/ObjectStream/TypeDeclarations.h>
 
 namespace JPH {
 
@@ -17,7 +17,7 @@ ObjectStreamOut::ObjectStreamOut(ostream &inStream) :
 {
 // Add all primitives to the class set
 #define JPH_DECLARE_PRIMITIVE(name)	mClassSet.insert(JPH_RTTI(name));
-#include <ObjectStream/ObjectStreamTypes.h>
+#include <Jolt/ObjectStream/ObjectStreamTypes.h>
 }
 
 ObjectStreamOut *ObjectStreamOut::Open(EStreamType inType, ostream &inStream)
@@ -179,6 +179,6 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 	}
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <ObjectStream/ObjectStreamTypes.h>
+#include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 } // JPH

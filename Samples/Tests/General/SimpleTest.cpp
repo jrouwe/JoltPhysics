@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/General/SimpleTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SimpleTest) 

@@ -4,7 +4,7 @@
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
 #include "Layers.h"
-#include <Physics/PhysicsStepListener.h>
+#include <Jolt/Physics/PhysicsStepListener.h>
 
 TEST_SUITE("StepListenerTest")
 {

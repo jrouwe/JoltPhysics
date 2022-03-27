@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Math/Matrix.h>
+#include <Jolt/Math/Matrix.h>
 
 TEST_SUITE("MatrixTests")
 {

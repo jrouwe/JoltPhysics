@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Core/LinearCurve.h>
+#include <Jolt/Core/LinearCurve.h>
 
 TEST_SUITE("LinearCurveTest")
 {

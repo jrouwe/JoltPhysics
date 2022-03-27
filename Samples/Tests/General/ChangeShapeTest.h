@@ -4,8 +4,8 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Body/BodyID.h>
-#include <Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
 
 // This test will make a dynamic body cyle through various shapes
 class ChangeShapeTest : public Test

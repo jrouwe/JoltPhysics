@@ -4,8 +4,8 @@
 #include <TestFramework.h>
 
 #include <Tests/Shapes/BoxShapeTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(BoxShapeTest) 

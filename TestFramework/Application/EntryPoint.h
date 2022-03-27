@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/FPException.h>
+#include <Jolt/Core/FPException.h>
 
 #if defined(JPH_PLATFORM_WINDOWS)
 

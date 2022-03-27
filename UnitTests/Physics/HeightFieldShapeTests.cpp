@@ -3,10 +3,10 @@
 
 #include "UnitTestFramework.h"
 #include "PhysicsTestContext.h"
-#include <Physics/Collision/RayCast.h>
-#include <Physics/Collision/CastResult.h>
-#include <Physics/Collision/Shape/HeightFieldShape.h>
-#include <Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
+#include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 
 TEST_SUITE("HeightFieldShapeTests")
 {

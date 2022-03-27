@@ -6,7 +6,7 @@
 #include <Renderer/Font.h>
 #include <Renderer/Renderer.h>
 #include <Image/Surface.h>
-#include <Core/Profiler.h>
+#include <Jolt/Core/Profiler.h>
 
 const int cSpacingH		= 2;								// Number of pixels to put horizontally between characters
 const int cSpacingV		= 2;								// Number of pixels to put vertically between characters

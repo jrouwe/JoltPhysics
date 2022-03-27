@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/HashCombine.h>
+#include <Jolt/Core/HashCombine.h>
 
 // Create a std::hash for DVec3
 JPH_MAKE_HASHABLE(JPH::DVec3, t.GetX(), t.GetY(), t.GetZ())

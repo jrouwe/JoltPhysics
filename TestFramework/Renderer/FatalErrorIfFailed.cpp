@@ -4,7 +4,7 @@
 #include <TestFramework.h>
 
 #include <Renderer/FatalErrorIfFailed.h>
-#include <Core/StringTools.h>
+#include <Jolt/Core/StringTools.h>
 #include <Utils/Log.h>
 
 void FatalErrorIfFailed(HRESULT inHResult)

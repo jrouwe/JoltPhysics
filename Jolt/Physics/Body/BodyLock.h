@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/Body/BodyLockInterface.h>
+#include <Jolt/Physics/Body/BodyLockInterface.h>
 
 namespace JPH {
 

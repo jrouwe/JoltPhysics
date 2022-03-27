@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Body/Body.h>
+#include <Jolt/Physics/Body/Body.h>
 
 // This test will switch a body between static, kinematic and dynamic
 class ChangeMotionTypeTest : public Test

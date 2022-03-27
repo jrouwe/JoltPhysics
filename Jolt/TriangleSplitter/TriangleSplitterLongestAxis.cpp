@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <TriangleSplitter/TriangleSplitterLongestAxis.h>
-#include <Geometry/AABox.h>
+#include <Jolt/TriangleSplitter/TriangleSplitterLongestAxis.h>
+#include <Jolt/Geometry/AABox.h>
 
 namespace JPH {
 

@@ -13,8 +13,8 @@ Each platform supports multiple build targets
 
 ## Includes
 
-The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
-You can use Jolt.h in your precompiled header to speed up compilation.
+The Jolt headers don't include Jolt/Jolt.h. Always include Jolt/Jolt.h before including any other Jolt header.
+You can use Jolt/Jolt.h in your precompiled header to speed up compilation.
 
 ## Defines
 

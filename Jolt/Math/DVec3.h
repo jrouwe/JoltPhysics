@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Math/Swizzle.h>
+#include <Jolt/Math/Swizzle.h>
 
 #ifdef JPH_USE_AVX2 // DVec3 currently uses AVX2 intrinsics but the class is currently unused so we can leave it out (it will be used in the future to support objects at a large distance from the origin)
 

@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
 
 // This is a very basic test that just drops a few objects on the floor
 class SimpleTest : public Test

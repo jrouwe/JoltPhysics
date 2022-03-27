@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Core/FPFlushDenormals.h>
+#include <Jolt/Core/FPFlushDenormals.h>
 
 // Implemented as a global so the compiler can't optimize it to a constant
 extern volatile float TestFltMin;

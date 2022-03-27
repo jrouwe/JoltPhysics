@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/BroadPhase/BroadPhaseQuery.h>
-#include <Physics/Collision/BroadPhase/BroadPhaseLayer.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuery.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 
 // Shorthand function to ifdef out code if broadphase stats tracking is off
 #ifdef JPH_TRACK_BROADPHASE_STATS

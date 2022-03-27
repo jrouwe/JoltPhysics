@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <ObjectStream/ObjectStream.h>
-#include <Core/Reference.h>
-#include <Core/RTTI.h>
+#include <Jolt/ObjectStream/ObjectStream.h>
+#include <Jolt/Core/Reference.h>
+#include <Jolt/Core/RTTI.h>
 #include <fstream>
 #include <unordered_map>
 
@@ -163,7 +163,7 @@ private:
 	bool	OSReadData(ObjectStreamIn &ioStream, name &outPrimitive);
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <ObjectStream/ObjectStreamTypes.h>
+#include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 /// Define serialization templates for dynamic arrays
 template <class T>

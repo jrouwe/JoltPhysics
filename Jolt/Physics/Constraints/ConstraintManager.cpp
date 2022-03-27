@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Constraints/ConstraintManager.h>
-#include <Physics/IslandBuilder.h>
-#include <Physics/StateRecorder.h>
-#include <Physics/PhysicsLock.h>
-#include <Core/Profiler.h>
+#include <Jolt/Physics/Constraints/ConstraintManager.h>
+#include <Jolt/Physics/IslandBuilder.h>
+#include <Jolt/Physics/StateRecorder.h>
+#include <Jolt/Physics/PhysicsLock.h>
+#include <Jolt/Core/Profiler.h>
 
 namespace JPH {
 

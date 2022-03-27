@@ -12,7 +12,7 @@ set(JOLT_VIEWER_SRC_FILES
 source_group(TREE ${JOLT_VIEWER_ROOT} FILES ${JOLT_VIEWER_SRC_FILES})	
 
 # Create JoltViewer executable
-add_executable(JoltViewer  ${JOLT_VIEWER_SRC_FILES})
+add_executable(JoltViewer ${JOLT_VIEWER_SRC_FILES})
 target_include_directories(JoltViewer PUBLIC ${JOLT_VIEWER_ROOT})
 target_link_libraries (JoltViewer LINK_PUBLIC TestFramework d3d12.lib shcore.lib)
 

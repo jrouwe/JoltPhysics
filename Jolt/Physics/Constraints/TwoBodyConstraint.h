@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Constraints/Constraint.h>
-#include <Physics/Body/Body.h>
+#include <Jolt/Physics/Constraints/Constraint.h>
+#include <Jolt/Physics/Body/Body.h>
 
 namespace JPH {
 

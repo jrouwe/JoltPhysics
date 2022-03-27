@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Physics/Collision/GroupFilterTable.h>
+#include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include "Layers.h"
 
 TEST_SUITE("CollisionGroupTests")

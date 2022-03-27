@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/BroadPhase/BroadPhaseTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
-#include <Physics/Collision/BroadPhase/BroadPhaseBruteForce.h>
-#include <Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseBruteForce.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
 #include <random>
 
 JPH_IMPLEMENT_RTTI_ABSTRACT(BroadPhaseTest) 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/Memory.h>
+#include <Jolt/Core/Memory.h>
 
 namespace JPH {
 

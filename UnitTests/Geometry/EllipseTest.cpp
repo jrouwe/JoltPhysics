@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Geometry/Ellipse.h>
+#include <Jolt/Geometry/Ellipse.h>
 
 TEST_SUITE("EllipseTests")
 {

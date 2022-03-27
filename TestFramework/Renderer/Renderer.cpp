@@ -6,7 +6,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Texture.h>
 #include <Renderer/FatalErrorIfFailed.h>
-#include <Core/Profiler.h>
+#include <Jolt/Core/Profiler.h>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
 

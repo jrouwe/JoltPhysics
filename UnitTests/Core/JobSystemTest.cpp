@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Core/JobSystemThreadPool.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
 
 TEST_SUITE("JobSystemTest")
 {

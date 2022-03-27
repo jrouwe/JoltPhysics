@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Physics/Collision/NarrowPhaseStats.h>
+#include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 

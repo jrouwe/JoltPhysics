@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <ObjectStream/ObjectStreamIn.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
 
 namespace JPH {
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Geometry/OrientedBox.h>
+#include <Jolt/Geometry/OrientedBox.h>
 
 namespace JPH {
 

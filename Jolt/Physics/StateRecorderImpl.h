@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Physics/StateRecorder.h>
+#include <Jolt/Physics/StateRecorder.h>
 
 namespace JPH {
 

@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <Physics/Constraints/TwoBodyConstraint.h>
-#include <Physics/Constraints/MotorSettings.h>
-#include <Physics/Constraints/ConstraintPart/PointConstraintPart.h>
-#include <Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
-#include <Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
-#include <Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
-#include <Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h>
+#include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
+#include <Jolt/Physics/Constraints/MotorSettings.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/PointConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h>
 
 namespace JPH {
 

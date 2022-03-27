@@ -4,8 +4,8 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Physics/Collision/ContactListener.h>
-#include <Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Physics/Collision/ContactListener.h>
+#include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 
 /// This test demonstrates how you can use a contact listener and your own material definition to get friction and restitution per triangle or sub shape of a compound shape
 class FrictionPerTriangleTest : public Test, public ContactListener

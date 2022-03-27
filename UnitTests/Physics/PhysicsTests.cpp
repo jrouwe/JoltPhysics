@@ -6,8 +6,8 @@
 #include "Layers.h"
 #include "LoggingBodyActivationListener.h"
 #include "LoggingContactListener.h"
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Body/BodyLockMulti.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Body/BodyLockMulti.h>
 
 TEST_SUITE("PhysicsTests")
 {

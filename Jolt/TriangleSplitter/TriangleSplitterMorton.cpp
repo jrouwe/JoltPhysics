@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <TriangleSplitter/TriangleSplitterMorton.h>
-#include <Geometry/MortonCode.h>
+#include <Jolt/TriangleSplitter/TriangleSplitterMorton.h>
+#include <Jolt/Geometry/MortonCode.h>
 
 namespace JPH {
 

@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/Character/CharacterTest.h>
-#include <Physics/PhysicsScene.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Collision/Shape/RotatedTranslatedShape.h>
-#include <Core/StringTools.h>
+#include <Jolt/Physics/PhysicsScene.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Core/StringTools.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Utils/Log.h>

@@ -4,12 +4,12 @@
 #pragma once
 
 // Jolt includes
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/SphereShape.h>
-#include <Physics/Collision/Shape/ConvexHullShape.h>
-#include <Physics/Collision/Shape/MeshShape.h>
-#include <Physics/Collision/Shape/CapsuleShape.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 
 // Local includes
 #include "PerformanceTestScene.h"

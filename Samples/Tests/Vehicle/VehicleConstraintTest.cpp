@@ -4,10 +4,10 @@
 #include <TestFramework.h>
 
 #include <Tests/Vehicle/VehicleConstraintTest.h>
-#include <Physics/Collision/Shape/BoxShape.h>
-#include <Physics/Collision/Shape/OffsetCenterOfMassShape.h>
-#include <Physics/Vehicle/WheeledVehicleController.h>
-#include <Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
+#include <Jolt/Physics/Vehicle/WheeledVehicleController.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>

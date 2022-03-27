@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#include <Jolt.h>
+#include <Jolt/Jolt.h>
 
-#include <Geometry/Indexify.h>
+#include <Jolt/Geometry/Indexify.h>
 #include <unordered_map>
 
 namespace JPH {

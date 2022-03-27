@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Physics/Collision/Shape/SubShapeIDPair.h>
-#include <Core/StaticArray.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeIDPair.h>
+#include <Jolt/Core/StaticArray.h>
 
 namespace JPH {
 
