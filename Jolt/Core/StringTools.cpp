@@ -4,7 +4,10 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Core/StringTools.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <cstdarg>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

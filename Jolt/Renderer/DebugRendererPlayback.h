@@ -9,7 +9,10 @@
 
 #include <Jolt/Renderer/DebugRendererRecorder.h>
 #include <Jolt/Core/StreamIn.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <map>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

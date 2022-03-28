@@ -7,8 +7,11 @@
 #include <Jolt/Geometry/ConvexHullBuilder2D.h>
 #include <Jolt/Geometry/ClosestPoint.h>
 #include <Jolt/Core/StringTools.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <unordered_set>
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	#include <Jolt/Renderer/DebugRenderer.h>

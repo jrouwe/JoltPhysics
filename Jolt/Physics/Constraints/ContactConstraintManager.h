@@ -12,7 +12,10 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/DualAxisConstraintPart.h>
 #include <Jolt/Core/HashCombine.h>
 #include <Jolt/Core/NonCopyable.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <atomic>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

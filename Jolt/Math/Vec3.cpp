@@ -4,7 +4,11 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Math/Vec3.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <unordered_set>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 
 JPH_NAMESPACE_BEGIN
 

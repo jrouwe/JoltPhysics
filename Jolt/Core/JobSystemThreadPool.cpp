@@ -6,7 +6,10 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/FPException.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <algorithm>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 #ifdef JPH_PLATFORM_WINDOWS
 	#pragma warning (push, 0)

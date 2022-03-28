@@ -5,7 +5,10 @@
 
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <ostream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

@@ -10,7 +10,10 @@
 #include <Jolt/Renderer/DebugRenderer.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Mutex.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <map>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

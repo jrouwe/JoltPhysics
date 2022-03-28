@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

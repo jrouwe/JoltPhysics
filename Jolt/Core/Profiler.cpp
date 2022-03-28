@@ -6,7 +6,10 @@
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/StringTools.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 #ifdef JPH_PROFILE_ENABLED
 

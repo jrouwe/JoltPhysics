@@ -6,7 +6,10 @@
 #include <Jolt/AABBTree/AABBTreeBuilder.h>
 #include <Jolt/Core/ByteBuffer.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <deque>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

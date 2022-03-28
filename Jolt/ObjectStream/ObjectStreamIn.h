@@ -6,8 +6,11 @@
 #include <Jolt/ObjectStream/ObjectStream.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/RTTI.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 #include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

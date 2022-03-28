@@ -184,23 +184,34 @@
 #define JPH_CRASH				do { int *ptr = nullptr; *ptr = 0; } while (false)
 
 // Begin the JPH namespace
-#define JPH_NAMESPACE_BEGIN		\
-	JPH_SUPPRESS_WARNING_PUSH	\
-	JPH_SUPPRESS_WARNINGS		\
+#define JPH_NAMESPACE_BEGIN					\
+	JPH_SUPPRESS_WARNING_PUSH				\
+	JPH_SUPPRESS_WARNINGS					\
 	namespace JPH {
 
 // End the JPH namespace
-#define JPH_NAMESPACE_END		\
-	}							\
+#define JPH_NAMESPACE_END					\
+	}										\
+	JPH_SUPPRESS_WARNING_POP
+
+// On MSVC the std library generates warnings, use these macros to disable them
+#define JPH_SUPPRESS_WARNINGS_STD_BEGIN		\
+	JPH_SUPPRESS_WARNING_PUSH				\
+	JPH_MSVC_SUPPRESS_WARNING(4710)			\
+	JPH_MSVC_SUPPRESS_WARNING(4711)
+
+#define JPH_SUPPRESS_WARNINGS_STD_END		\
 	JPH_SUPPRESS_WARNING_POP
 
 // Standard C++ includes
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <vector>
 #include <algorithm>
 #include <utility>
 #include <cmath>
 #include <sstream>
 #include <functional>
+JPH_SUPPRESS_WARNINGS_STD_END
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)

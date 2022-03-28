@@ -6,7 +6,10 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Core/Mutex.h>
 #include <Jolt/Core/Memory.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <atomic>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

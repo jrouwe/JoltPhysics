@@ -4,7 +4,10 @@
 #include <Jolt/Math/Vec4.h>
 #include <Jolt/Math/UVec4.h>
 #include <Jolt/Core/HashCombine.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <random>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 // Create a std::hash for Vec3
 JPH_MAKE_HASHABLE(JPH::Vec3, t.GetX(), t.GetY(), t.GetZ())

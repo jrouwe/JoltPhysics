@@ -3,11 +3,14 @@
 
 #pragma once
 
+#include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/NonCopyable.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
-#include <Jolt/Core/Profiler.h>
-#include <Jolt/Core/NonCopyable.h>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
