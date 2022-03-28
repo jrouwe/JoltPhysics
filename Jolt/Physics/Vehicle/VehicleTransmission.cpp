@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Vehicle/VehicleTransmission.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleTransmissionSettings)
 {
@@ -140,4 +140,4 @@ void VehicleTransmission::RestoreState(StateRecorder &inStream)
 	inStream.Read(mClutchReleaseTimeLeft);
 }
 
-} // JPH
+JPH_NAMESPACE_END

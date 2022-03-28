@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Whether or not to collect faces, used by CastShape and CollideShape
 enum class ECollectFacesMode : uint8
@@ -12,4 +12,4 @@ enum class ECollectFacesMode : uint8
 	NoFaces												///< mShape1/2Face is not desired
 };
 
-} // JPH
+JPH_NAMESPACE_END

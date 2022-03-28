@@ -10,7 +10,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Factory.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConstraintSettings)
 {
@@ -75,4 +75,4 @@ void Constraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mEnabled);
 }
 
-} // JPH
+JPH_NAMESPACE_END

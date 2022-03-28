@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 Quat Quat::operator * (QuatArg inRHS) const
 { 
@@ -311,4 +311,4 @@ Quat Quat::sLoadFloat3Unsafe(const Float3 &inV)
 	return Quat(Vec4(v, w));
 }
 
-} // JPH
+JPH_NAMESPACE_END

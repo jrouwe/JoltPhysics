@@ -5,9 +5,12 @@
 
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
-#include <ostream>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <ostream>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 /// Wrapper around std::ostream
 class StreamOutWrapper : public StreamOut
@@ -46,4 +49,4 @@ private:
 	istream &			mWrapped;
 };
 
-} // JPH
+JPH_NAMESPACE_END

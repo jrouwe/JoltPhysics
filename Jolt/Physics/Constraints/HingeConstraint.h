@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/HingeRotationConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Hinge constraint settings, used to create a hinge constraint
 class HingeConstraintSettings final : public TwoBodyConstraintSettings
@@ -158,4 +158,4 @@ private:
 	AngleConstraintPart			mMotorConstraintPart;
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/Geometry/AABox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class MortonCode
 {
@@ -36,4 +36,4 @@ public:
 	}
 };
 
-} // JPH
+JPH_NAMESPACE_END

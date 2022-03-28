@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 UVec4::UVec4(uint32 inX, uint32 inY, uint32 inZ, uint32 inW)
 {
@@ -526,4 +526,4 @@ UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 #endif
 }
 
-} // JPH
+JPH_NAMESPACE_END

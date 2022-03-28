@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Quaternion based constraint that decomposes the rotation in constraint space in swing and twist: q = q_swing * q_twist
 /// where q_swing.x = 0 and where q_twist.y = q_twist.z = 0
@@ -460,4 +460,4 @@ private:
 	AngleConstraintPart			mTwistLimitConstraintPart;
 };
 
-} // JPH
+JPH_NAMESPACE_END

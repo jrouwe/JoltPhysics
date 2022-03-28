@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/PointConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Cone constraint settings, used to create a cone constraint
 class ConeConstraintSettings final : public TwoBodyConstraintSettings
@@ -124,4 +124,4 @@ private:
 	AngleConstraintPart			mAngleConstraintPart;
 };
 
-} // JPH
+JPH_NAMESPACE_END

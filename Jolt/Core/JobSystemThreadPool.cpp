@@ -6,7 +6,10 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/FPException.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <algorithm>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 #ifdef JPH_PLATFORM_WINDOWS
 	#pragma warning (push, 0)
@@ -16,7 +19,7 @@
 	#pragma warning (pop)
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JobSystemThreadPool::Semaphore::Semaphore()
 {
@@ -560,4 +563,4 @@ void JobSystemThreadPool::ThreadMain([[maybe_unused]] const string &inName, int 
 	JPH_PROFILE_THREAD_END();
 }
 
-} // JPH
+JPH_NAMESPACE_END

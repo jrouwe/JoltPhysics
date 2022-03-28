@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// This function will sort values from high to low and only keep the ones that are less than inMaxValue
 /// @param inValues Values to be sorted
@@ -43,4 +43,4 @@ JPH_INLINE int CountAndSortTrues(UVec4Arg inValue, UVec4 &ioIdentifiers)
 	return inValue.CountTrues();
 }
 
-} // JPH
+JPH_NAMESPACE_END

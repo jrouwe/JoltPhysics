@@ -9,9 +9,12 @@
 #include <Jolt/ObjectStream/ObjectStreamTextIn.h>
 #include <Jolt/ObjectStream/ObjectStreamBinaryIn.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
-#include <unordered_set>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <unordered_set>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 ObjectStreamIn::ObjectStreamIn(istream &inStream) :
 	mStream(inStream)
@@ -564,4 +567,4 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EDataType inDataType, c
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
-} // JPH
+JPH_NAMESPACE_END

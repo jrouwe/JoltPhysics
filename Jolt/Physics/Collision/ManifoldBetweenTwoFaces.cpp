@@ -10,7 +10,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void PruneContactPoints(Vec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, ContactPoints &ioContactPointsOn1, ContactPoints &ioContactPointsOn2)
 {
@@ -225,4 +225,4 @@ void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, V
 	}
 }
 
-} // JPH
+JPH_NAMESPACE_END

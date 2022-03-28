@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/BackFaceMode.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Structure that holds a single ray cast
 struct RayCast
@@ -39,4 +39,4 @@ public:
 	bool						mTreatConvexAsSolid			= true;
 };
 
-} // JPH
+JPH_NAMESPACE_END

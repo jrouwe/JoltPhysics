@@ -9,7 +9,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheeledVehicleControllerSettings)
 {
@@ -470,4 +470,4 @@ void WheeledVehicleController::RestoreState(StateRecorder &inStream)
 	mTransmission.RestoreState(inStream);
 }
 
-} // JPH
+JPH_NAMESPACE_END

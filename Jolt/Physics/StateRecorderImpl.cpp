@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/StateRecorderImpl.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void StateRecorderImpl::WriteBytes(const void *inData, size_t inNumBytes)
 {
@@ -80,4 +80,4 @@ bool StateRecorderImpl::IsEqual(StateRecorderImpl &inReference)
 	return true;
 }
 
-} // JPH
+JPH_NAMESPACE_END

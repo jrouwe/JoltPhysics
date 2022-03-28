@@ -13,9 +13,12 @@
 #include <Jolt/Math/Float2.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <Jolt/Geometry/AABox.h>
-#include <unordered_map>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 class OrientedBox;
 
@@ -256,4 +259,4 @@ private:
 	PieBatces							mPieLimits;
 };
 
-} // JPH
+JPH_NAMESPACE_END

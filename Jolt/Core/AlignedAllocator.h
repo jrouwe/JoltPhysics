@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/Memory.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// STL allocator that takes care that memory is aligned to N bytes
 template <typename T, size_t N>
@@ -64,4 +64,4 @@ public:
 	};
 };
 
-} // JPH
+JPH_NAMESPACE_END

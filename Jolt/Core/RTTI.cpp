@@ -6,7 +6,7 @@
 #include <Jolt/Core/RTTI.h>
 #include <Jolt/Core/StringTools.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_RTTI_VIRTUAL_BASE(RTTIAttribute)
 {
@@ -152,4 +152,4 @@ const RTTIAttribute *RTTI::GetAttribute(const RTTI *inRTTI, const char *inName) 
 	return nullptr;
 }
 
-} // JPH
+JPH_NAMESPACE_END

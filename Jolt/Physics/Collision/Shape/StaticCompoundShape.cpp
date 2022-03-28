@@ -12,7 +12,7 @@
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(StaticCompoundShapeSettings)
 {
@@ -648,4 +648,4 @@ void StaticCompoundShape::sRegister()
 	}
 }
 
-} // JPH
+JPH_NAMESPACE_END

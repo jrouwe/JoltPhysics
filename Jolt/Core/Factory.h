@@ -4,9 +4,12 @@
 #pragma once
 
 #include <Jolt/Core/RTTI.h>
-#include <unordered_map>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 /// Factory, to create RTTI objects
 class Factory
@@ -42,4 +45,4 @@ private:
 	ClassHashMap				mClassHashMap;
 };
 
-} // JPH
+JPH_NAMESPACE_END

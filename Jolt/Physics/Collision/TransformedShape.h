@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Collision/BackFaceMode.h>
 #include <Jolt/Physics/Body/BodyID.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 struct RayCast;
 class CollideShapeSettings;
@@ -159,4 +159,4 @@ public:
 static_assert(sizeof(TransformedShape) == 64, "Not properly packed");
 static_assert(alignof(TransformedShape) == 16, "Not properly aligned");
 
-} // JPH
+JPH_NAMESPACE_END

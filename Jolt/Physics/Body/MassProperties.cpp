@@ -11,7 +11,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(MassProperties)
 {
@@ -180,4 +180,4 @@ void MassProperties::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mInertia);
 }
 
-} // JPH
+JPH_NAMESPACE_END

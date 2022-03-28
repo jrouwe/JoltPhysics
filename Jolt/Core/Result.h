@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Helper class that either contains a valid result or an error
 template <class Type>
@@ -172,4 +172,4 @@ private:
 	EState				mState = EState::Invalid;
 };
 
-} // JPH
+JPH_NAMESPACE_END

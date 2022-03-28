@@ -6,7 +6,7 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// An object layer can be mapped to a broadphase layer. Objects with the same broadphase layer will end up in the same sub structure (usually a tree) of the broadphase. 
 /// When there are many layers, this reduces the total amount of sub structures the broad phase needs to manage. Usually you want objects that don't collide with each other 
@@ -140,4 +140,4 @@ private:
 	BroadPhaseLayer					mLayer;
 };
 
-} // JPH
+JPH_NAMESPACE_END

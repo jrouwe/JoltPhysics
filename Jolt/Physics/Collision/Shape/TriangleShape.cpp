@@ -25,7 +25,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TriangleShapeSettings)
 {
@@ -374,4 +374,4 @@ void TriangleShape::sRegister()
 	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::Triangle, sCastSphereVsTriangle);
 }
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a TaperedCapsuleShape
 class TaperedCapsuleShapeSettings final : public ConvexShapeSettings
@@ -112,4 +112,4 @@ private:
 #endif // JPH_DEBUG_RENDERER
 };
 
-} // JPH
+JPH_NAMESPACE_END

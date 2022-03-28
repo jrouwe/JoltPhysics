@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/ObjectStreamBinaryIn.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ObjectStreamBinaryIn::ObjectStreamBinaryIn(istream &inStream) :
 	ObjectStreamIn(inStream),
@@ -189,4 +189,4 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(Mat44 &outPrimitive)
 	return true;
 }
 
-} // JPH
+JPH_NAMESPACE_END

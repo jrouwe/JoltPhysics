@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// If objects are closer than this distance, they are considered to be colliding (used for GJK) (unit: meter)
 constexpr float cDefaultCollisionTolerance = 1.0e-4f;
@@ -107,4 +107,4 @@ struct PhysicsSettings
 	///@}
 };
 
-} // JPH
+JPH_NAMESPACE_END

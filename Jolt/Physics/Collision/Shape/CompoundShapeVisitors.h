@@ -14,7 +14,7 @@
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/OrientedBox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 struct CompoundShape::CastRayVisitor
 {
@@ -460,4 +460,4 @@ private:
 	int					mNumResults = 0;
 };
 
-} // JPH
+JPH_NAMESPACE_END

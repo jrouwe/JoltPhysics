@@ -9,7 +9,7 @@
 #include <Jolt/Core/StaticArray.h>
 #include <Jolt/Core/JobSystem.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
 class IslandBuilder;
@@ -156,4 +156,4 @@ public:
 	Steps					mSteps;
 };
 
-} // JPH
+JPH_NAMESPACE_END

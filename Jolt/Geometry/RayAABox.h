@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Helper structure holding the reciprocal of a ray for Ray vs AABox testing
 class RayInvDirection
@@ -237,4 +237,4 @@ JPH_INLINE bool RayAABoxHits(Vec3Arg inOrigin, Vec3Arg inDirection, Vec3Arg inBo
 	return !no_intersection.TestAnyXYZTrue();
 }
 
-} // JPH
+JPH_NAMESPACE_END

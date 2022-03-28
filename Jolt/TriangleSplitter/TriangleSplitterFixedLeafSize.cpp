@@ -6,7 +6,7 @@
 #include <Jolt/TriangleSplitter/TriangleSplitterFixedLeafSize.h>
 #include <Jolt/TriangleGrouper/TriangleGrouperClosestCentroid.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 TriangleSplitterFixedLeafSize::TriangleSplitterFixedLeafSize(const VertexList &inVertices, const IndexedTriangleList &inTriangles, uint inLeafSize, uint inMinNumBins, uint inMaxNumBins, uint inNumTrianglesPerBin) :
 	TriangleSplitter(inVertices, inTriangles),
@@ -166,4 +166,4 @@ bool TriangleSplitterFixedLeafSize::Split(const Range &inTriangles, Range &outLe
 	return true;
 }
 
-} // JPH
+JPH_NAMESPACE_END

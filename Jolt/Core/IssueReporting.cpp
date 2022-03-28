@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
-#include <fstream>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 static void DummyTrace(const char *inFMT, ...) 
 { 
@@ -24,4 +27,4 @@ AssertFailedFunction AssertFailed = DummyAssertFailed;
 
 #endif // JPH_ENABLE_ASSERTS
 
-} // JPH
+JPH_NAMESPACE_END

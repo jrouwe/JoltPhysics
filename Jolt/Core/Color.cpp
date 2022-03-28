@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/Color.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 // Predefined colors
 const Color Color::sBlack(0, 0, 0);
@@ -34,4 +34,4 @@ Color Color::sGetDistinctColor(int inIndex)
 	return sColors[inIndex % (sizeof(sColors) / sizeof(uint32))];
 }
 
-} // JPH
+JPH_NAMESPACE_END

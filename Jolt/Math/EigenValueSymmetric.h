@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/FPFlushDenormals.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Function to determine the eigen vectors and values of a N x N real symmetric matrix
 /// by Jacobi transformations. This method is most suitable for N < 10.
@@ -170,4 +170,4 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 	return false;
 }
 
-} // JPH
+JPH_NAMESPACE_END

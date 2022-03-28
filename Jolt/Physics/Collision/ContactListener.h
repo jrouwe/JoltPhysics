@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Collision/Shape/SubShapeIDPair.h>
 #include <Jolt/Core/StaticArray.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class Body;
 class CollideShapeResult;
@@ -83,4 +83,4 @@ public:
 	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) { }
 };
 
-} // JPH
+JPH_NAMESPACE_END

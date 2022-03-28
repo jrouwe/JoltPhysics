@@ -6,9 +6,12 @@
 #include <Jolt/AABBTree/AABBTreeBuilder.h>
 #include <Jolt/Core/ByteBuffer.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
-#include <deque>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <deque>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 /// How the tree should be converted
 enum class EAABBTreeToBufferConvertMode
@@ -313,4 +316,4 @@ private:
 	uint							mNodesSize;								///< Size in bytes of the nodes in the buffer
 };
 
-} // JPH
+JPH_NAMESPACE_END

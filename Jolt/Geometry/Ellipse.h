@@ -5,7 +5,7 @@
 
 #include <Jolt/Math/Float2.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Ellipse centered around the origin
 /// @see https://en.wikipedia.org/wiki/Ellipse
@@ -71,4 +71,4 @@ private:
 	float			mB;				///< Radius along Y-axis
 };
 
-} // JPH
+JPH_NAMESPACE_END

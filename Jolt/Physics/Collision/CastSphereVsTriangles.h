@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/ShapeCast.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Collision detection helper that casts a sphere vs one or more triangles
 class CastSphereVsTriangles
@@ -47,4 +47,4 @@ private:
 	float							mScaleSign;							///< Sign of the scale, -1 if object is inside out, 1 if not
 };
 
-} // JPH
+JPH_NAMESPACE_END

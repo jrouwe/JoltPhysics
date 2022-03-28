@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 	
 /// Trace function, needs to be overridden by application. This should output a line of text to the log / TTY.
 using TraceFunction = void (*)(const char *inFMT, ...);
@@ -34,4 +34,4 @@ extern TraceFunction Trace;
 	#define JPH_IF_ENABLE_ASSERTS(...)	
 #endif // JPH_ENABLE_ASSERTS
 
-} // JPH
+JPH_NAMESPACE_END

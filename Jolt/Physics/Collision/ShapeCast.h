@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Structure that holds a single shape cast (a shape moving along a linear path in 3d space with no rotation)
 struct ShapeCast
@@ -90,4 +90,4 @@ public:
 	bool						mIsBackFaceHit;						///< True if the shape was hit from the back side
 };
 
-} // JPH
+JPH_NAMESPACE_END

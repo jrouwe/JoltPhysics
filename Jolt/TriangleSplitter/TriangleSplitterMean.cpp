@@ -5,7 +5,7 @@
 
 #include <Jolt/TriangleSplitter/TriangleSplitterMean.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 TriangleSplitterMean::TriangleSplitterMean(const VertexList &inVertices, const IndexedTriangleList &inTriangles) :
 	TriangleSplitter(inVertices, inTriangles)
@@ -36,4 +36,4 @@ bool TriangleSplitterMean::Split(const Range &inTriangles, Range &outLeft, Range
 	return SplitInternal(inTriangles, dimension, split, outLeft, outRight);
 }
 
-} // JPH
+JPH_NAMESPACE_END

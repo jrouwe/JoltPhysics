@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Vehicle/VehicleDifferential.h>
 #include <Jolt/Core/LinearCurve.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
 
@@ -149,4 +149,4 @@ protected:
 #endif // JPH_DEBUG_RENDERER
 };
 
-} // JPH
+JPH_NAMESPACE_END

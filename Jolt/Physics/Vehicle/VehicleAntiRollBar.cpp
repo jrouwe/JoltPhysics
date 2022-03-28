@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Vehicle/VehicleAntiRollBar.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleAntiRollBar)
 {
@@ -29,4 +29,4 @@ void VehicleAntiRollBar::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mStiffness);
 }
 
-} // JPH
+JPH_NAMESPACE_END

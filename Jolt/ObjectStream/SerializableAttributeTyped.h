@@ -6,7 +6,7 @@
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/GetPrimitiveTypeOfType.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Contains a serializable attribute of any type (except enum)
 template <class Class, class T>
@@ -70,4 +70,4 @@ inline void AddSerializableAttributeTyped(RTTI &inRTTI, T Class::*inMember, cons
 #define JPH_ADD_ATTRIBUTE(class_name, member_name)																	\
 								AddSerializableAttributeTyped(inRTTI, &class_name::member_name, #member_name);
 
-} // JPH
+JPH_NAMESPACE_END

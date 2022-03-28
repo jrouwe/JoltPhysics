@@ -59,7 +59,7 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, PhysicsMaterialSimple);
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, GroupFilter);
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, GroupFilterTable);
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void RegisterTypes()
 {
@@ -126,4 +126,4 @@ void RegisterTypes()
 	Factory::sInstance.Register(JPH_RTTI(GroupFilterTable));
 }
 
-}; // JPH
+JPH_NAMESPACE_END

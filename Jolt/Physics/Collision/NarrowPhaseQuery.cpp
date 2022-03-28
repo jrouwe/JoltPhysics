@@ -12,7 +12,7 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
 {
@@ -404,4 +404,4 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 	mBroadPhase->CollideAABox(inBox, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
-} // JPH
+JPH_NAMESPACE_END

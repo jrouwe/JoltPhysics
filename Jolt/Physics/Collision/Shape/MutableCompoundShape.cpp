@@ -10,7 +10,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MutableCompoundShapeSettings)
 {
@@ -554,4 +554,4 @@ void MutableCompoundShape::sRegister()
 	}
 }
 
-} // JPH
+JPH_NAMESPACE_END

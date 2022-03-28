@@ -6,7 +6,7 @@
 #include <Jolt/Math/Vec3.h>
 #include <Jolt/Math/Vec4.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Quaternion class, quaternions are 4 dimensional vectors which can describe rotations in 3 dimensional
 /// space if their length is 1.
@@ -237,6 +237,6 @@ public:
 
 static_assert(is_trivial<Quat>(), "Is supposed to be a trivial type!");
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "Quat.inl"

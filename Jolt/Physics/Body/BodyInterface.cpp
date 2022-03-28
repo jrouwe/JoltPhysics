@@ -13,7 +13,7 @@
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 Body *BodyInterface::CreateBody(const BodyCreationSettings &inSettings)
 {
@@ -811,4 +811,4 @@ const PhysicsMaterial *BodyInterface::GetMaterial(const BodyID &inBodyID, const 
 		return PhysicsMaterial::sDefault;
 }
 
-} // JPH
+JPH_NAMESPACE_END

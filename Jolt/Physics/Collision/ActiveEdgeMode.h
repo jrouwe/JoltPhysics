@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// How to treat active/inactive edges. 
 /// An active edge is an edge that either has no neighbouring edge or if the angle between the two connecting faces is too large, see: ActiveEdges
@@ -13,4 +13,4 @@ enum class EActiveEdgeMode : uint8
 	CollideWithAll,										///< Collide with all edges. Use this when you're interested in all collisions.
 };
 
-} // JPH
+JPH_NAMESPACE_END

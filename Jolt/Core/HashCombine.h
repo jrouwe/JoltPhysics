@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 inline void hash_combine(std::size_t &ioSeed) 
 { 
@@ -30,7 +30,7 @@ inline void hash_combine(std::size_t &ioSeed, const T &inValue, Rest... inRest)
     hash_combine(ioSeed, inRest...);
 }
 
-} // JPH
+JPH_NAMESPACE_END
 
 #define JPH_MAKE_HASH_STRUCT(type, name, ...)				\
 	struct [[nodiscard]] name								\
@@ -44,8 +44,11 @@ inline void hash_combine(std::size_t &ioSeed, const T &inValue, Rest... inRest)
     };
 
 #define JPH_MAKE_HASHABLE(type, ...)						\
+	JPH_SUPPRESS_WARNING_PUSH								\
+	JPH_SUPPRESS_WARNINGS									\
     namespace std											\
 	{														\
         template<>											\
 		JPH_MAKE_HASH_STRUCT(type, hash<type>, __VA_ARGS__)	\
-    }
+    }														\
+	JPH_SUPPRESS_WARNING_POP

@@ -11,7 +11,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(TwoBodyConstraintSettings)
 {
@@ -46,4 +46,4 @@ void TwoBodyConstraint::DrawConstraintReferenceFrame(DebugRenderer *inRenderer) 
 
 #endif // JPH_DEBUG_RENDERER
 
-} // JPH
+JPH_NAMESPACE_END

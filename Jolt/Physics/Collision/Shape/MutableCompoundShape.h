@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/Shape/CompoundShape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class CollideShapeSettings;
 
@@ -155,4 +155,4 @@ private:
 	uint							mSubShapeBoundsCapacity = 0;								///< Number of Bounds structures in mSubShapeBounds
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -7,7 +7,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(PhysicsScene)
 {
@@ -112,4 +112,4 @@ PhysicsScene::PhysicsSceneResult PhysicsScene::sRestoreFromBinaryState(StreamIn 
 	return result;
 }
 
-} // JPH
+JPH_NAMESPACE_END

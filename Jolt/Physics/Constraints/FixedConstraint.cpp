@@ -10,7 +10,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(FixedConstraintSettings)
 {
@@ -109,4 +109,4 @@ void FixedConstraint::RestoreState(StateRecorder &inStream)
 	mPointConstraintPart.RestoreState(inStream);
 }
 
-} // JPH
+JPH_NAMESPACE_END

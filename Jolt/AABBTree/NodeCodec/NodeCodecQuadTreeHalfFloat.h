@@ -7,7 +7,7 @@
 #include <Jolt/Math/HalfFloat.h>
 #include <Jolt/AABBTree/AABBTreeBuilder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 template <int Alignment>
 class NodeCodecQuadTreeHalfFloat
@@ -287,4 +287,4 @@ public:
 	};
 };
 
-} // JPH
+JPH_NAMESPACE_END

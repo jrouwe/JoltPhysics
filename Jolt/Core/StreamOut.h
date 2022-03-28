@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Simple binary output stream
 class StreamOut
@@ -52,4 +52,4 @@ public:
 	}
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/HashCombine.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that holds 3 floats. Used as a storage class. Convert to Vec3 for calculations.
 class [[nodiscard]] Float3
@@ -40,7 +40,7 @@ using VertexList = vector<Float3>;
 
 static_assert(is_trivial<Float3>(), "Is supposed to be a trivial type!");
 
-} // JPH
+JPH_NAMESPACE_END
 
 // Create a std::hash for Float3
 JPH_MAKE_HASHABLE(JPH::Float3, t.x, t.y, t.z)

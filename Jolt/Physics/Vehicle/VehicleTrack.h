@@ -9,7 +9,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Physics/StateRecorder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// On which side of the vehicle the track is located (for steering)
 enum class ETrackSide : uint
@@ -52,4 +52,4 @@ public:
 
 using VehicleTracks = VehicleTrack[(int)ETrackSide::Num];
 
-} // JPH
+JPH_NAMESPACE_END

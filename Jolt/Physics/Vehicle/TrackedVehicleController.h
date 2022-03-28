@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Vehicle/VehicleTransmission.h>
 #include <Jolt/Physics/Vehicle/VehicleTrack.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
 
@@ -141,4 +141,4 @@ protected:
 #endif // JPH_DEBUG_RENDERER
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(SerializableObject)
 {
@@ -27,4 +27,4 @@ void OSVisitCompounds(const void *inObject, const RTTI *inRTTI, const CompoundVi
 	inVisitor(inObject, inRTTI);
 }
 
-} // JPH
+JPH_NAMESPACE_END

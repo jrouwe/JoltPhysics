@@ -5,7 +5,7 @@
 
 #include <Jolt/Geometry/AABox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Structure that holds AABox moving linearly through 3d space
 struct AABoxCast
@@ -14,4 +14,4 @@ struct AABoxCast
 	Vec3						mDirection;					///< Direction and length of the cast (anything beyond this length will not be reported as a hit)
 };
 
-} // JPH
+JPH_NAMESPACE_END

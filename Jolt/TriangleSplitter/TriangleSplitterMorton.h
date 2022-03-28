@@ -5,7 +5,7 @@
 
 #include <Jolt/TriangleSplitter/TriangleSplitter.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Splitter using Morton codes, see: http://devblogs.nvidia.com/parallelforall/thinking-parallel-part-iii-tree-construction-gpu/
 class TriangleSplitterMorton : public TriangleSplitter
@@ -28,4 +28,4 @@ private:
 	vector<uint32>			mMortonCodes;
 };
 
-} // JPH
+JPH_NAMESPACE_END

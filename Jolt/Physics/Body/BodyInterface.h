@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Core/Reference.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class Body;
 class BodyCreationSettings;
@@ -192,4 +192,4 @@ private:
 	BroadPhase *				mBroadPhase = nullptr;
 };
 
-} // JPH
+JPH_NAMESPACE_END

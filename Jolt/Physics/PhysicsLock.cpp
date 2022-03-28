@@ -7,10 +7,10 @@
 
 #ifdef JPH_ENABLE_ASSERTS
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 thread_local uint32 PhysicsLock::sLockedMutexes = 0;
 
-} // JPH
+JPH_NAMESPACE_END
 
 #endif

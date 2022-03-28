@@ -8,7 +8,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// This class calculates the intersection between a fluid surface and a polyhedron and returns the submerged volume and its center of buoyancy
 /// Construct this class and then one by one add all faces of the polyhedron using the AddFace function. After all faces have been added the result
@@ -287,4 +287,4 @@ private:
 	Vec3				mCenterOfBuoyancy = Vec3::sZero();
 };
 
-} // JPH
+JPH_NAMESPACE_END

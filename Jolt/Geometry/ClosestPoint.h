@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 // Turn off fused multiply add instruction because it makes the equations of the form a * b - c * d inaccurate below
 JPH_PRECISE_MATH_ON
@@ -418,4 +418,4 @@ namespace ClosestPoint
 
 JPH_PRECISE_MATH_OFF
 
-} // JPH
+JPH_NAMESPACE_END

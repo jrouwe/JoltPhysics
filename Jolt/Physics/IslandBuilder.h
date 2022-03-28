@@ -5,9 +5,12 @@
 
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Core/NonCopyable.h>
-#include <atomic>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <atomic>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 class TempAllocator;
 
@@ -113,4 +116,4 @@ private:
 #endif
 };
 
-} // JPH
+JPH_NAMESPACE_END

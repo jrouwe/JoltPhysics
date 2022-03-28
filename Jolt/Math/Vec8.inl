@@ -3,7 +3,7 @@
 
 #include <Jolt/Math/UVec8.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 Vec8::Vec8(Vec4Arg inLo, Vec4Arg inHi) :
 	mValue(_mm256_insertf128_ps(_mm256_castps128_ps256(inLo.mValue), inHi.mValue, 1))
@@ -140,4 +140,4 @@ float Vec8::ReduceMin() const
 	return Vec4::sMin(LowerVec4(), UpperVec4()).ReduceMin();
 }
 
-} // JPH
+JPH_NAMESPACE_END

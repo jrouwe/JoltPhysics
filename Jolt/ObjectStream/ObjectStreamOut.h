@@ -5,12 +5,15 @@
 
 #include <Jolt/ObjectStream/ObjectStream.h>
 #include <Jolt/Core/RTTI.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <queue>
 #include <fstream>
 #include <unordered_set>
 #include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// ObjectStreamOut contains all logic for writing an object to disk. It is the base 
 /// class for the text and binary output streams (ObjectStreamTextOut and ObjectStreamBinaryOut).
@@ -221,4 +224,4 @@ void OSWriteData(ObjectStreamOut &ioStream, const RefConst<T> &inRef)
 		ioStream.WritePointerData(nullptr, nullptr);
 }
 
-} // JPH
+JPH_NAMESPACE_END

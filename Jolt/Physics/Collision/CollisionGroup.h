@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Collision/GroupFilter.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class StreamIn;
 class StreamOut;
@@ -90,4 +90,4 @@ private:
 	SubGroupID				mSubGroupID = cInvalidSubGroup;
 };
 
-} // JPH
+JPH_NAMESPACE_END

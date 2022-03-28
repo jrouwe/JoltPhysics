@@ -6,11 +6,11 @@
 #include <Jolt/Physics/Vehicle/VehicleController.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(VehicleControllerSettings)
 {
 	JPH_ADD_BASE_CLASS(VehicleControllerSettings, SerializableObject)
 }
 
-} // JPH
+JPH_NAMESPACE_END

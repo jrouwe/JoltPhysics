@@ -5,6 +5,9 @@
 
 #include <Jolt/Jolt.h>
 
+// Disable common warnings triggered by Jolt
+JPH_SUPPRESS_WARNINGS
+
 #pragma warning (push, 0)
 #pragma warning (disable : 5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
 #pragma warning (disable : 5204) // implements.h(65): warning C5204: 'Microsoft::WRL::CloakedIid<IMarshal>': class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly

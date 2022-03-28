@@ -11,7 +11,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Factory.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(VehicleConstraintSettings)
 {
@@ -481,4 +481,4 @@ void VehicleConstraint::RestoreState(StateRecorder &inStream)
 	mPitchRollPart.RestoreState(inStream);
 }
 
-} // JPH
+JPH_NAMESPACE_END

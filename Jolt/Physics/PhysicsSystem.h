@@ -11,7 +11,7 @@
 #include <Jolt/Physics/IslandBuilder.h>
 #include <Jolt/Physics/PhysicsUpdateContext.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class JobSystem;
 class StateRecorder;
@@ -258,4 +258,4 @@ private:
 	PhysicsSettings				mPhysicsSettings;
 };
 
-} // JPH
+JPH_NAMESPACE_END

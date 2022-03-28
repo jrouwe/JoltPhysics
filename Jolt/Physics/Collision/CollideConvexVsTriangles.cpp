@@ -12,7 +12,7 @@
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
 #include <Jolt/Geometry/Plane.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 CollideConvexVsTriangles::CollideConvexVsTriangles(const ConvexShape *inShape1, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeID &inSubShapeID1, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector) :
 	mCollideShapeSettings(inCollideShapeSettings),
@@ -151,4 +151,4 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	mCollector.AddHit(result);
 }
 
-} // JPH
+JPH_NAMESPACE_END

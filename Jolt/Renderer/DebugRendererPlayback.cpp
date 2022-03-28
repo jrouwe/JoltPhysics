@@ -7,7 +7,7 @@
 
 #include <Jolt/Renderer/DebugRendererPlayback.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void DebugRendererPlayback::Parse(StreamIn &inStream) 
 { 
@@ -161,6 +161,6 @@ void DebugRendererPlayback::DrawFrame(uint inFrameNumber) const
 		mRenderer.DrawGeometry(geom.mModelMatrix, geom.mModelColor, mGeometries.find(geom.mGeometryID)->second, geom.mCullMode, geom.mCastShadow, geom.mDrawMode);
 }
 
-} // JPH
+JPH_NAMESPACE_END
 
 #endif // JPH_DEBUG_RENDERER

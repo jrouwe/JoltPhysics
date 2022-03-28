@@ -10,7 +10,7 @@
 #include <Jolt/Core/Atomics.h>
 #include <Jolt/Core/TempAllocator.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 IslandBuilder::~IslandBuilder()
 {
@@ -473,4 +473,4 @@ void IslandBuilder::ResetIslands(TempAllocator *inTempAllocator)
 	mNumIslands = 0;
 }
 
-} // JPH
+JPH_NAMESPACE_END

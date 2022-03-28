@@ -9,9 +9,12 @@
 
 #include <Jolt/Renderer/DebugRendererRecorder.h>
 #include <Jolt/Core/StreamIn.h>
-#include <map>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <map>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 /// Class that can read a recorded stream from DebugRendererRecorder and plays it back trough a DebugRenderer
 class DebugRendererPlayback
@@ -44,4 +47,4 @@ private:
 	vector<Frame>						mFrames;
 };
 
-} // JPH
+JPH_NAMESPACE_END

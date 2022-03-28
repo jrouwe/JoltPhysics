@@ -15,10 +15,13 @@
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <unordered_set>
 #include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConvexHullShapeSettings)
 {
@@ -1177,4 +1180,4 @@ void ConvexHullShape::sRegister()
 	f.mColor = Color::sGreen;
 }
 
-} // JPH
+JPH_NAMESPACE_END

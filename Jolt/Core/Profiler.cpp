@@ -6,11 +6,14 @@
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/StringTools.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 #ifdef JPH_PROFILE_ENABLED
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Profiler
@@ -392,6 +395,6 @@ void Profiler::DumpChart(string inTag, const Threads &inThreads, const KeyToAggr
 </tbody></table></body></html>)";
 }
 
-} // JPH
+JPH_NAMESPACE_END
 
 #endif // JPH_PROFILE_ENABLED

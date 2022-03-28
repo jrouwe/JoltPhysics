@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class Body;
 class TransformedShape;
@@ -87,4 +87,4 @@ private:
 	const TransformedShape *mContext = nullptr;
 };
 
-} // JPH
+JPH_NAMESPACE_END

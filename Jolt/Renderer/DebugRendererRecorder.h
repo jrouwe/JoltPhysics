@@ -10,9 +10,12 @@
 #include <Jolt/Renderer/DebugRenderer.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Mutex.h>
-#include <map>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <map>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 /// Implementation of DebugRenderer that records the API invocations to be played back later
 class DebugRendererRecorder final : public DebugRenderer
@@ -118,4 +121,4 @@ private:
 	Frame								mCurrentFrame;
 };
 
-} // JPH
+JPH_NAMESPACE_END

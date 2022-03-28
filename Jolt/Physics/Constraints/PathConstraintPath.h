@@ -7,7 +7,7 @@
 #include <Jolt/Core/Result.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class StreamIn;
 class StreamOut;
@@ -66,4 +66,4 @@ private:
 	bool				mIsLooping = false;
 };
 
-} // JPH
+JPH_NAMESPACE_END

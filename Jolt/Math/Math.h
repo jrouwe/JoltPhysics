@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// The constant \f$\pi\f$
 #define JPH_PI       3.14159265358979323846f
@@ -163,4 +163,4 @@ inline uint32 GetNextPowerOf2(uint32 inValue)
 	return inValue <= 1? uint32(1) : uint32(1) << (32 - CountLeadingZeros(inValue - 1));
 }
 
-} // JPH
+JPH_NAMESPACE_END

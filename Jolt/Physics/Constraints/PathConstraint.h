@@ -11,7 +11,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/HingeRotationConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/RotationQuatConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// How to constrain the rotation of the body to a PathConstraint
 enum class EPathRotationConstraintType
@@ -163,4 +163,4 @@ private:
 	RotationQuatConstraintPart		mRotationConstraintPart;								///< Constraint part that removes all rotational freedom
 };
 
-} // JPH
+JPH_NAMESPACE_END

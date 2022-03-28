@@ -6,7 +6,7 @@
 #include <Jolt/TriangleSplitter/TriangleSplitterLongestAxis.h>
 #include <Jolt/Geometry/AABox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 TriangleSplitterLongestAxis::TriangleSplitterLongestAxis(const VertexList &inVertices, const IndexedTriangleList &inTriangles) :
 	TriangleSplitter(inVertices, inTriangles)
@@ -27,4 +27,4 @@ bool TriangleSplitterLongestAxis::Split(const Range &inTriangles, Range &outLeft
 	return SplitInternal(inTriangles, dimension, split, outLeft, outRight);
 }
 
-} // JPH
+JPH_NAMESPACE_END

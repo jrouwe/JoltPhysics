@@ -9,7 +9,7 @@
 #include <Jolt/Physics/PhysicsLock.h>
 #include <Jolt/Core/Profiler.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void ConstraintManager::Add(Constraint **inConstraints, int inNumber)						
 { 
@@ -218,4 +218,4 @@ bool ConstraintManager::RestoreState(StateRecorder &inStream)
 	return true;
 }
 
-} // JPH
+JPH_NAMESPACE_END

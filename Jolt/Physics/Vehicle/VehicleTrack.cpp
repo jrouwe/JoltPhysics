@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Vehicle/VehicleTrack.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleTrackSettings)
 {
@@ -48,4 +48,4 @@ void VehicleTrack::RestoreState(StateRecorder &inStream)
 	inStream.Read(mAngularVelocity);
 }
 
-} // JPH
+JPH_NAMESPACE_END

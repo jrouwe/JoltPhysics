@@ -5,7 +5,7 @@
 
 #include <Jolt/Math/MathTypes.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Holds a 4x4 matrix of floats, but supports also operations on the 3x3 upper left part of the matrix.
 class [[nodiscard]] Mat44
@@ -207,6 +207,6 @@ private:
 
 static_assert(is_trivial<Mat44>(), "Is supposed to be a trivial type!");
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "Mat44.inl"

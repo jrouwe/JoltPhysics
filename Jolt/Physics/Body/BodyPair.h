@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Core/HashCombine.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Structure that holds a body pair
 struct BodyPair
@@ -27,4 +27,4 @@ struct BodyPair
 
 JPH_MAKE_HASH_STRUCT(BodyPair, BodyPairHash, t.mBodyA.GetIndex(), t.mBodyB.GetIndex())
 
-} // JPH
+JPH_NAMESPACE_END

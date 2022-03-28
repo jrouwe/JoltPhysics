@@ -7,7 +7,7 @@
 #include <Jolt/Math/Vec4.h>
 #include <Jolt/Math/Quat.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 Mat44::Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec4Arg inC4) : 
 	mCol { inC1, inC2, inC3, inC4 } 
@@ -1094,4 +1094,4 @@ Mat44 Mat44::Decompose(Vec3 &outScale) const
 	return Mat44(Vec4(x / outScale.GetX(), 0), Vec4(y / outScale.GetY(), 0), Vec4(z / outScale.GetZ(), 0), GetColumn4(3));
 }
 
-} // JPH
+JPH_NAMESPACE_END

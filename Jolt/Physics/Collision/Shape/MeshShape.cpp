@@ -3,7 +3,6 @@
 
 #include <Jolt/Jolt.h>
 
-#include <unordered_map>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
@@ -37,7 +36,11 @@
 #include <Jolt/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
+
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_DEBUG_RENDERER
 bool MeshShape::sDrawTriangleGroups = false;
@@ -1160,4 +1163,4 @@ void MeshShape::sRegister()
 	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::Mesh, sCastSphereVsMesh);
 }
 
-} // JPH
+JPH_NAMESPACE_END

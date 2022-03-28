@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Collision/SortReverseAndStore.h>
 #include <Jolt/Math/HalfFloat.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class CollideShapeSettings;
 class TempAllocator;
@@ -133,4 +133,4 @@ private:
 	Nodes							mNodes;													///< Quad tree node structure
 };
 
-} // JPH
+JPH_NAMESPACE_END

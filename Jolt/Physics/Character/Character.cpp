@@ -10,7 +10,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 static inline BodyInterface &sGetBodyInterface(PhysicsSystem *inSystem, bool inLockBodies)
 {
@@ -268,4 +268,4 @@ Vec3 Character::GetGroundVelocity(bool inLockBodies) const
 	return sGetBodyInterface(mSystem, inLockBodies).GetPointVelocity(mGroundBodyID, mGroundPosition);
 }
 
-} // JPH
+JPH_NAMESPACE_END

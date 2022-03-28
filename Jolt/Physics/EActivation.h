@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Enum used by AddBody to determine if the body needs to be initially active
 enum class EActivation
@@ -12,4 +12,4 @@ enum class EActivation
 	DontActivate			///< Leave activation state as it is (will not deactivate an active body)
 };
 
-} // JPH
+JPH_NAMESPACE_END

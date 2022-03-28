@@ -7,7 +7,7 @@
 #include <Jolt/Math/Swizzle.h>
 #include <Jolt/Math/MathTypes.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// 3 component vector (stored as 4 vectors). 
 /// Note that we keep the 4th component the same as the 3rd component to avoid divisions by zero when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED defined
@@ -277,6 +277,6 @@ public:
 
 static_assert(is_trivial<Vec3>(), "Is supposed to be a trivial type!");
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "Vec3.inl"

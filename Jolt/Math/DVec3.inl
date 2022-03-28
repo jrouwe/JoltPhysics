@@ -8,7 +8,7 @@
 // Create a std::hash for DVec3
 JPH_MAKE_HASHABLE(JPH::DVec3, t.GetX(), t.GetY(), t.GetZ())
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 DVec3::DVec3(Vec3Arg inRHS) : 
 	mValue(_mm256_cvtps_pd(inRHS.mValue))
@@ -274,4 +274,4 @@ DVec3 DVec3::GetSign() const
 	return _mm256_or_pd(_mm256_and_pd(mValue, minus_one), one);
 }
 
-} // JPH
+JPH_NAMESPACE_END

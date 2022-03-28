@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/Mutex.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// This is the list of locks used by the physics engine, they need to be locked in a particular order (from top of the list to bottom of the list) in order to prevent deadlocks
 enum class EPhysicsLockTypes
@@ -99,4 +99,4 @@ private:
 	EPhysicsLockTypes			mType;
 };
 
-} // JPH
+JPH_NAMESPACE_END

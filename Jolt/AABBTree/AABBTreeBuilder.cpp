@@ -5,7 +5,7 @@
 
 #include <Jolt/AABBTree/AABBTreeBuilder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 AABBTreeBuilder::Node::Node()
 { 
@@ -221,4 +221,4 @@ AABBTreeBuilder::Node *AABBTreeBuilder::BuildInternal(const TriangleSplitter::Ra
 	return node;
 }
 
-} // JPH
+JPH_NAMESPACE_END

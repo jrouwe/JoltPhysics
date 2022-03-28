@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
 
@@ -21,4 +21,4 @@ public:
 	virtual void			OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem) = 0;
 };
 
-} // JPH
+JPH_NAMESPACE_END

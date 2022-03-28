@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 UVec8::UVec8(UVec4Arg inLo, UVec4Arg inHi) :
 	mValue(_mm256_insertf128_si256(_mm256_castsi128_si256(inLo.mValue), inHi.mValue, 1))
@@ -134,4 +134,4 @@ UVec8 UVec8::ArithmeticShiftRight() const
 #endif
 }
 
-} // JPH
+JPH_NAMESPACE_END

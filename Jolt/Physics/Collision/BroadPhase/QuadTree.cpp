@@ -13,7 +13,7 @@
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/OrientedBox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // QuadTree::Node
@@ -1630,4 +1630,4 @@ void QuadTree::ReportStats() const
 
 #endif // JPH_TRACK_BROADPHASE_STATS
 
-} // JPH
+JPH_NAMESPACE_END

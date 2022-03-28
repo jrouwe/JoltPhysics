@@ -6,7 +6,7 @@
 #include <Jolt/TriangleGrouper/TriangleGrouperMorton.h>
 #include <Jolt/Geometry/MortonCode.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void TriangleGrouperMorton::Group(const VertexList &inVertices, const IndexedTriangleList &inTriangles, int inGroupSize, vector<uint> &outGroupedTriangleIndices)
 {
@@ -44,4 +44,4 @@ void TriangleGrouperMorton::Group(const VertexList &inVertices, const IndexedTri
 	sort(outGroupedTriangleIndices.begin(), outGroupedTriangleIndices.end(), [&morton_codes](uint inLHS, uint inRHS) -> bool { return morton_codes[inLHS] < morton_codes[inRHS]; });
 }
 
-} // JPH
+JPH_NAMESPACE_END

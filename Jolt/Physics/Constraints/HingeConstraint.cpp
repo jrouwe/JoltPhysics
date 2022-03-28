@@ -12,7 +12,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(HingeConstraintSettings)
 {
@@ -369,4 +369,4 @@ Mat44 HingeConstraint::GetConstraintToBody2Matrix() const
 	return Mat44(Vec4(mLocalSpaceHingeAxis2, 0), Vec4(mLocalSpaceNormalAxis2, 0), Vec4(mLocalSpaceHingeAxis2.Cross(mLocalSpaceNormalAxis2), 0), Vec4(mLocalSpacePosition2, 1)); 
 }
 
-} // JPH
+JPH_NAMESPACE_END

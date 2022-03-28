@@ -5,7 +5,7 @@
 
 #include <Jolt/Geometry/AABox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Clip inPolygonToClip against the positive halfspace of plane defined by inPlaneOrigin and inPlaneNormal.
 /// inPlaneNormal does not need to be normalized.
@@ -196,4 +196,4 @@ void ClipPolyVsAABox(const VERTEX_ARRAY &inPolygonToClip, const AABox &inAABox, 
 		}
 }
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Constraints/PathConstraintPath.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// A path that follows a Hermite spline
 class PathConstraintPathHermite final : public PathConstraintPath
@@ -50,4 +50,4 @@ private:
 	Points				mPoints;															///< Points on the Hermite spline
 };
 
-} // JPH
+JPH_NAMESPACE_END

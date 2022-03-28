@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Implementation of ObjectStream binary output stream.
 class ObjectStreamBinaryOut : public ObjectStreamOut
@@ -41,4 +41,4 @@ private:
 	uint32						mNextStringID;
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Simple binary input stream
 class StreamIn
@@ -66,4 +66,4 @@ public:
 	}
 };
 
-} // JPH
+JPH_NAMESPACE_END

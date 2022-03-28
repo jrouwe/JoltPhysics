@@ -7,7 +7,7 @@
 
 //#define JPH_CONVEX_BUILDER_2D_DEBUG
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// A convex hull builder that tries to create 2D hulls as accurately as possible. Used for offline processing. 
 class ConvexHullBuilder2D : public NonCopyable
@@ -99,4 +99,4 @@ private:
 #endif
 };
 
-} // JPH
+JPH_NAMESPACE_END

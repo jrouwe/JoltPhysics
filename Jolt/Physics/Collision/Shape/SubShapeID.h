@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// A sub shape id contains a path to an element (usually a triangle or other primitive type) of a compound shape
 class SubShapeID
@@ -108,4 +108,4 @@ private:
 	uint				mCurrentBit = 0;
 };
 
-} // JPH
+JPH_NAMESPACE_END

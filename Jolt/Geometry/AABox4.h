@@ -5,7 +5,7 @@
 
 #include <Jolt/Geometry/OrientedBox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Helper functions that process 4 axis aligned boxes at the same time using SIMD
 /// Test if 4 bounding boxes overlap with 1 bounding box, splat 1 box
@@ -207,4 +207,4 @@ JPH_INLINE UVec4 AABox4VsSphere(Vec3 inCenter, float inRadiusSq, Vec4Arg inBoxMi
 	return AABox4VsSphere(inCenter.SplatX(), inCenter.SplatY(), inCenter.SplatZ(), Vec4::sReplicate(inRadiusSq), inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ);
 }
 
-} // JPH
+JPH_NAMESPACE_END

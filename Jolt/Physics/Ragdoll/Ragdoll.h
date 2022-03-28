@@ -11,7 +11,7 @@
 #include <Jolt/Skeleton/SkeletonPose.h>
 #include <Jolt/Physics/EActivation.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class Ragdoll;
 class PhysicsSystem;
@@ -198,4 +198,4 @@ private:
 	PhysicsSystem *						mSystem;
 };
 
-} // JPH
+JPH_NAMESPACE_END

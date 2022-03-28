@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Jolt/Physics/Collision/BackFaceMode.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class Shape;
 class CollideShapeSettings;
@@ -52,4 +52,4 @@ private:
 	BroadPhase *				mBroadPhase = nullptr;
 };
 
-} // JPH
+JPH_NAMESPACE_END

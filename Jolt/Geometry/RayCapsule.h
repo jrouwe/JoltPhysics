@@ -6,7 +6,7 @@
 #include <Jolt/Geometry/RayCylinder.h>
 #include <Jolt/Geometry/RaySphere.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Tests a ray starting at inRayOrigin and extending infinitely in inRayDirection
 /// against a capsule centered around the origin with its axis along the Y axis and half height specified.
@@ -33,4 +33,4 @@ JPH_INLINE float RayCapsule(Vec3Arg inRayOrigin, Vec3Arg inRayDirection, float i
 	return min(upper, lower);
 }
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Implementation of ObjectStream text output stream.
 class ObjectStreamTextOut : public ObjectStreamOut
@@ -46,4 +46,4 @@ private:
 	int							mIndentation;
 };
 
-} // JPH
+JPH_NAMESPACE_END

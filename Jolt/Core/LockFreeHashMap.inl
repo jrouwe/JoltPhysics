@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ///////////////////////////////////////////////////////////////////////////////////
 // LFHMAllocator
@@ -329,4 +329,4 @@ void LockFreeHashMap<Key, Value>::TraceStats() const
 
 #endif
 
-} // JPH
+JPH_NAMESPACE_END

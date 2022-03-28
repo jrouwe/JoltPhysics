@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/Factory.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 Factory Factory::sInstance;
 
@@ -69,4 +69,4 @@ vector<const RTTI *> Factory::GetAllClasses()
 	return all_classes;
 }
 
-} // JPH
+JPH_NAMESPACE_END

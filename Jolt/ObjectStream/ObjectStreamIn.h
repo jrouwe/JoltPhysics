@@ -6,10 +6,13 @@
 #include <Jolt/ObjectStream/ObjectStream.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/RTTI.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 #include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// ObjectStreamIn contains all logic for reading an object from disk. It is the base
 /// class for the text and binary input streams (ObjectStreamTextIn and ObjectStreamBinaryIn).
@@ -243,4 +246,4 @@ bool OSReadData(ObjectStreamIn &ioStream, RefConst<T> &inRef)
 	return ioStream.ReadPointerData(JPH_RTTI(T), inRef.InternalGetPointer(), T::sInternalGetRefCountOffset());
 }
 
-} // JPH
+JPH_NAMESPACE_END

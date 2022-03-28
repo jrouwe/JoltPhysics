@@ -3,9 +3,11 @@
 
 #pragma once
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <atomic>
+JPH_SUPPRESS_WARNINGS_STD_END
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Atomically compute the min(ioAtomic, inValue) and store it in ioAtomic, returns true if value was updated
 template <class T>
@@ -29,4 +31,4 @@ bool AtomicMax(atomic<T> &ioAtomic, const T inValue, const memory_order inMemory
 	return false;
 }
 
-} // JPH
+JPH_NAMESPACE_END

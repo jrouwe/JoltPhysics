@@ -5,7 +5,7 @@
 
 #include <Jolt/Math/FindRoot.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Tests a ray starting at inRayOrigin and extending infinitely in inRayDirection
 /// against an infinite cylinder centered along the Y axis
@@ -97,4 +97,4 @@ JPH_INLINE float RayCylinder(Vec3Arg inRayOrigin, Vec3Arg inRayDirection, float 
 	return FLT_MAX;
 }
 
-} // JPH
+JPH_NAMESPACE_END

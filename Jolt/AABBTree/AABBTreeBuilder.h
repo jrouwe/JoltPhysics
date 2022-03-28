@@ -7,7 +7,7 @@
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Core/NonCopyable.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 struct AABBTreeBuilderStats
 {
@@ -104,4 +104,4 @@ private:
 	const uint				mMaxTrianglesPerLeaf;
 };
 
-} // JPH
+JPH_NAMESPACE_END

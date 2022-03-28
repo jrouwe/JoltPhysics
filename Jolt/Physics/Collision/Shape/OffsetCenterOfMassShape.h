@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/Shape/DecoratedShape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class CollideShapeSettings;
 
@@ -124,4 +124,4 @@ private:
 	Vec3							mOffset;												///< Offset of the center of mass
 };
 
-} // JPH
+JPH_NAMESPACE_END

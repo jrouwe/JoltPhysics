@@ -16,7 +16,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(CompoundShapeSettings)
 {
@@ -386,4 +386,4 @@ void CompoundShape::sRegister()
 			CollisionDispatch::sRegisterCastShape(s1, s2, sCastCompoundVsShape);
 }
 
-} // JPH
+JPH_NAMESPACE_END

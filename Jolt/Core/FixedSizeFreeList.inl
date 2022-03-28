@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 template <typename Object>
 FixedSizeFreeList<Object>::~FixedSizeFreeList()
@@ -202,4 +202,4 @@ inline void FixedSizeFreeList<Object>::DestructObject(Object *inObject)
 	DestructObject(index);
 }
 
-} // JPH
+JPH_NAMESPACE_END

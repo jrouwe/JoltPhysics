@@ -10,7 +10,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a ConvexHullShape
 class ConvexHullShapeSettings final : public ConvexShapeSettings
@@ -161,4 +161,4 @@ private:
 #endif // JPH_DEBUG_RENDERER
 };
 
-} // JPH
+JPH_NAMESPACE_END

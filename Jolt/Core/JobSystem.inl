@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void JobSystem::Job::AddDependency(int inCount)
 {
@@ -52,4 +52,4 @@ void JobSystem::JobHandle::sRemoveDependencies(JobHandle *inHandles, uint inNumH
 		job_system->QueueJobs(jobs_to_queue, num_jobs_to_queue);
 }
 
-} // JPH
+JPH_NAMESPACE_END

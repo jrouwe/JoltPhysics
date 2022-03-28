@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// A simple triangle and its material
 class Triangle
@@ -28,4 +28,4 @@ public:
 
 using TriangleList = vector<Triangle>;
 
-} // JPH
+JPH_NAMESPACE_END

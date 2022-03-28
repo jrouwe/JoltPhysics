@@ -8,7 +8,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class VehicleController;
 
@@ -64,4 +64,4 @@ protected:
 	VehicleConstraint &			mConstraint;								///< The vehicle constraint we belong to
 };
 
-} // JPH
+JPH_NAMESPACE_END

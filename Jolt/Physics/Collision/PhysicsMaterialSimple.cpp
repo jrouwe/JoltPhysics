@@ -8,7 +8,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(PhysicsMaterialSimple)
 {
@@ -34,4 +34,4 @@ void PhysicsMaterialSimple::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mDebugColor);
 }
 
-} // JPH
+JPH_NAMESPACE_END

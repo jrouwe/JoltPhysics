@@ -12,7 +12,7 @@
 #include <Jolt/Core/Result.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 struct RayCast;
 class RayCastSettings;
@@ -364,4 +364,4 @@ private:
 	EShapeSubType					mShapeSubType;
 };
 
-} // JPH
+JPH_NAMESPACE_END

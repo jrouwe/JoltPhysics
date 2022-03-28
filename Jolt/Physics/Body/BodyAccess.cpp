@@ -7,11 +7,11 @@
 
 #ifdef JPH_ENABLE_ASSERTS
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 thread_local BodyAccess::EAccess	BodyAccess::sVelocityAccess = BodyAccess::EAccess::ReadWrite;
 thread_local BodyAccess::EAccess	BodyAccess::sPositionAccess = BodyAccess::EAccess::ReadWrite;
 
-} // JPH
+JPH_NAMESPACE_END
 
 #endif

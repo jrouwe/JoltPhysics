@@ -5,7 +5,7 @@
 
 #include <Jolt/Math/Vec4.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class [[nodiscard]] UVec4
 {
@@ -211,6 +211,6 @@ private:
 
 static_assert(is_trivial<UVec4>(), "Is supposed to be a trivial type!");
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "UVec4.inl"

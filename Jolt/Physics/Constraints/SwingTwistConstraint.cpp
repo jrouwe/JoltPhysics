@@ -12,7 +12,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SwingTwistConstraintSettings)
 {
@@ -459,4 +459,4 @@ void SwingTwistConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetOrientation);
 }
 
-} // JPH
+JPH_NAMESPACE_END

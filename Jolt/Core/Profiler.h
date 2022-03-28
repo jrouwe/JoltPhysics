@@ -3,15 +3,17 @@
 
 #pragma once
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <mutex>
 #include <unordered_map>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Core/TickCounter.h>
 
 #if defined(JPH_EXTERNAL_PROFILE)
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Create this class on the stack to start sampling timing information of a particular scope.
 ///
@@ -28,7 +30,7 @@ private:
 	uint8							mUserData[64];
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Macros to do the actual profiling	
@@ -60,7 +62,7 @@ private:
 
 #elif defined(JPH_PROFILE_ENABLED)
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class ProfileSample;
 class ProfileThread;
@@ -190,7 +192,7 @@ private:
 	static bool					sOutOfSamplesReported;
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "Profiler.inl"
 

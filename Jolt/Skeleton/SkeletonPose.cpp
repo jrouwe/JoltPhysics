@@ -8,7 +8,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void SkeletonPose::SetSkeleton(const Skeleton *inSkeleton)
 {
@@ -56,4 +56,4 @@ void SkeletonPose::Draw(const DrawSettings &inDrawSettings, DebugRenderer *inRen
 }
 #endif // JPH_DEBUG_RENDERER
 
-} // JPH
+JPH_NAMESPACE_END

@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Intersect ray with triangle, returns closest point or FLT_MAX if no hit (branch less version)
 /// Adapted from: http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
@@ -154,4 +154,4 @@ JPH_INLINE Vec4 RayTriangle4(Vec3Arg inOrigin, Vec3Arg inDirection, Vec4Arg inV0
 	return Vec4::sSelect(t / det, Vec4::sReplicate(FLT_MAX), no_intersection);
 }
 
-} // JPH
+JPH_NAMESPACE_END
