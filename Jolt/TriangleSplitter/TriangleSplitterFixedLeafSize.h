@@ -6,7 +6,7 @@
 #include <Jolt/TriangleSplitter/TriangleSplitter.h>
 #include <Jolt/Geometry/AABox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Same as TriangleSplitterBinning, but ensuring that leaves have a fixed amount of triangles
 /// The resulting tree should be suitable for processing on GPU where we want all threads to process an equal amount of triangles
@@ -51,4 +51,4 @@ private:
 	};
 };
 
-} // JPH
+JPH_NAMESPACE_END

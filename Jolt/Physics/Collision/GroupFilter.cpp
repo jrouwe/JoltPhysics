@@ -8,7 +8,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Factory.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT_BASE(GroupFilter)
 {
@@ -58,4 +58,4 @@ GroupFilter::GroupFilterResult GroupFilter::sRestoreFromBinaryState(StreamIn &in
 	return result;
 }
 
-} // JPH
+JPH_NAMESPACE_END

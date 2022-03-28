@@ -9,7 +9,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class VehicleConstraint;
 
@@ -138,4 +138,4 @@ protected:
 
 using Wheels = vector<Wheel *>;
 
-} // JPH
+JPH_NAMESPACE_END

@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class used in other constraint parts to calculate the required bias factor in the lagrange multiplier for creating springs
 class SpringPart
@@ -123,4 +123,4 @@ private:
 	float						mSoftness;
 };
 
-} // JPH
+JPH_NAMESPACE_END

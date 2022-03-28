@@ -9,7 +9,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Physics/StateRecorder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_DEBUG_RENDERER
 	class DebugRenderer;
@@ -73,4 +73,4 @@ private:
 	float					mCurrentRPM = 1000.0f;						///< Current rotation speed of engine in rounds per minute
 };
 
-} // JPH
+JPH_NAMESPACE_END

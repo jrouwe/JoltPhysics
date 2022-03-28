@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Sample implementation of PhysicsMaterial that just holds the needed properties directly
 class PhysicsMaterialSimple : public PhysicsMaterial
@@ -33,4 +33,4 @@ private:
 	Color									mDebugColor = Color::sGrey;			///< Color of the material, used to render the shapes
 };
 
-} // JPH
+JPH_NAMESPACE_END

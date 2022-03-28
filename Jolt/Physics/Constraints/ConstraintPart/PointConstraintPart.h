@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/StateRecorder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Constrains movement along 3 axis
 ///
@@ -222,4 +222,4 @@ private:
 	Vec3						mTotalLambda { Vec3::sZero() };
 };
 
-} // JPH
+JPH_NAMESPACE_END

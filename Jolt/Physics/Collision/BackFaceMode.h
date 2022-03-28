@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// How collision detection functions will treat back facing triangles
 enum class EBackFaceMode : uint8
@@ -12,4 +12,4 @@ enum class EBackFaceMode : uint8
 	CollideWithBackFaces,								///< Collide with back facing surfaces/triangles
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 CastConvexVsTriangles::CastConvexVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Vec3 &inScale, const ShapeFilter &inShapeFilter, const Mat44 &inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
 	mShapeCast(inShapeCast),
@@ -111,4 +111,4 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	}
 }
 
-} // JPH
+JPH_NAMESPACE_END

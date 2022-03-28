@@ -6,7 +6,7 @@
 #include <Jolt/Math/Vec8.h>
 #include <Jolt/Geometry/RayAABox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Intersect 8 AABBs with ray, returns minimal distance along ray or FLT_MAX if no hit
 /// Note: Can return negative value if ray starts in box
@@ -72,4 +72,4 @@ JPH_INLINE Vec8 RayAABox8(Vec3Arg inOrigin, const RayInvDirection &inInvDirectio
 	return Vec8::sSelect(t_min, flt_max, no_intersection);
 }
 
-} // JPH
+JPH_NAMESPACE_END

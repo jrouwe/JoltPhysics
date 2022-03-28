@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Remove contact points if there are > 4 (no more than 4 are needed for a stable solution)
 /// @param inCenterOfMass is the world space center of mass for body 1
@@ -27,4 +27,4 @@ void PruneContactPoints(Vec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, Conta
 /// @param outContactPoints2 Returns the contact points between the two shapes for shape 2 in world space (any existing points in the output array are left as is)
 void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2);
 
-} // JPH
+JPH_NAMESPACE_END

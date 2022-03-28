@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// ID of a body. This is a way of reasoning about bodies in a multithreaded simulation while avoiding race conditions.
 class BodyID
@@ -89,4 +89,4 @@ private:
 	uint32					mID;
 };
 
-} // JPH
+JPH_NAMESPACE_END

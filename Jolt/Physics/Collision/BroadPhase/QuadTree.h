@@ -15,7 +15,7 @@
 
 //#define JPH_DUMP_BROADPHASE_TREE
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Internal tree structure in broadphase, is essentially a quad AABB tree.
 /// Tree is lockless (except for UpdatePrepare/Finalize() function), modifying objects in the tree will widen the aabbs of parent nodes to make the node fit.
@@ -372,4 +372,4 @@ private:
 	atomic<bool>				mIsDirty = false;
 };
 
-} // JPH
+JPH_NAMESPACE_END

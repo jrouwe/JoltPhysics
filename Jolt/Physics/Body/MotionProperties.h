@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/MassProperties.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class StateRecorder;
 
@@ -174,6 +174,6 @@ private:
 #endif
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "MotionProperties.inl"

@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 Mat44 Body::GetWorldTransform() const
 {
@@ -184,4 +184,4 @@ void Body::ResetSleepTestSpheres()
 	mMotionProperties->ResetSleepTestSpheres(points);
 }
 
-} // JPH
+JPH_NAMESPACE_END

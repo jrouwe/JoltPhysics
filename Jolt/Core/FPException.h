@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/FPControlWord.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 
@@ -52,4 +52,4 @@ class FPExceptionDisableDivByZero { };
 
 #endif
 
-} // JPH
+JPH_NAMESPACE_END

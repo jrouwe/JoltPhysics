@@ -21,60 +21,20 @@
     #endif
 #endif
 
-// Determine compiler and turn off warnings
+// Platform helper macros
+#ifdef JPH_PLATFORM_ANDROID
+	#define JPH_IF_NOT_ANDROID(x)
+#else
+	#define JPH_IF_NOT_ANDROID(x) x
+#endif
+
+// Determine compiler
 #if defined(__clang__)
 	#define JPH_COMPILER_CLANG
-
-	#pragma clang diagnostic ignored "-Wc++98-compat"
-	#pragma clang diagnostic ignored "-Wc++98-compat-pedantic"
-	#pragma clang diagnostic ignored "-Wfloat-equal"
-	#pragma clang diagnostic ignored "-Wnewline-eof"
-	#pragma clang diagnostic ignored "-Wsign-conversion"
-	#pragma clang diagnostic ignored "-Wold-style-cast"
-	#pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
-	#pragma clang diagnostic ignored "-Wnested-anon-types"
-	#pragma clang diagnostic ignored "-Wglobal-constructors"
-	#pragma clang diagnostic ignored "-Wexit-time-destructors"
-	#pragma clang diagnostic ignored "-Wnonportable-system-include-path"
-	#pragma clang diagnostic ignored "-Wlanguage-extension-token"
-	#pragma clang diagnostic ignored "-Wunused-parameter"
-	#pragma clang diagnostic ignored "-Wformat-nonliteral"
-	#pragma clang diagnostic ignored "-Wcovered-switch-default"
-	#pragma clang diagnostic ignored "-Wcast-align"
-	#pragma clang diagnostic ignored "-Winvalid-offsetof"
-	#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
-	#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
-	#pragma clang diagnostic ignored "-Wctad-maybe-unsupported"
-	#ifndef JPH_PLATFORM_ANDROID
-		#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
-	#endif
 #elif defined(__GNUC__)
 	#define JPH_COMPILER_GCC
-
-	#pragma GCC diagnostic ignored "-Wcomment"
-	#pragma GCC diagnostic ignored "-Winvalid-offsetof"
-	#pragma GCC diagnostic ignored "-Wclass-memaccess"
 #elif defined(_MSC_VER)
 	#define JPH_COMPILER_MSVC
-
-	#pragma warning (disable : 4514) // 'X' : unreferenced inline function has been removed
-	#pragma warning (disable : 4710) // 'X' : function not inlined
-	#pragma warning (disable : 4711) // function 'X' selected for automatic inline expansion
-	#pragma warning (disable : 4820) // 'X': 'Y' bytes padding added after data member 'Z'
-	#pragma warning (disable : 4100) // 'X' : unreferenced formal parameter
-	#pragma warning (disable : 4626) // 'X' : assignment operator was implicitly defined as deleted because a base class assignment operator is inaccessible or deleted
-	#pragma warning (disable : 5027) // 'X' : move assignment operator was implicitly defined as deleted because a base class move assignment operator is inaccessible or deleted
-	#pragma warning (disable : 4365) // 'argument' : conversion from 'X' to 'Y', signed / unsigned mismatch
-	#pragma warning (disable : 4324) // 'X' : structure was padded due to alignment specifier
-	#pragma warning (disable : 4625) // 'X' : copy constructor was implicitly defined as deleted because a base class copy constructor is inaccessible or deleted
-	#pragma warning (disable : 5026) // 'X': move constructor was implicitly defined as deleted because a base class move constructor is inaccessible or deleted
-	#pragma warning (disable : 4623) // 'X' : default constructor was implicitly defined as deleted
-	#pragma warning (disable : 4201) // nonstandard extension used: nameless struct/union
-	#pragma warning (disable : 4371) // 'X': layout of class may have changed from a previous version of the compiler due to better packing of member 'Y'
-	#pragma warning (disable : 5045) // Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
-	#pragma warning (disable : 4583) // 'X': destructor is not implicitly called
-	#pragma warning (disable : 4582) // 'X': constructor is not implicitly called
-	#pragma warning (disable : 5219) // implicit conversion from 'X' to 'Y', possible loss of data 
 #endif
 
 // Detect CPU architecture
@@ -124,6 +84,79 @@
 	#error Unsupported CPU architecture
 #endif
 
+// Pragmas to store / restore the warning state and to disable individual warnings
+#ifdef JPH_COMPILER_CLANG
+#define JPH_PRAGMA(x)					_Pragma(#x)
+#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(clang diagnostic push)
+#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(clang diagnostic pop)
+#define JPH_CLANG_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
+#else
+#define JPH_CLANG_SUPPRESS_WARNING(w)
+#endif
+#ifdef JPH_COMPILER_GCC
+#define JPH_PRAGMA(x)					_Pragma(#x)
+#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(GCC diagnostic push)
+#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(GCC diagnostic pop)
+#define JPH_GCC_SUPPRESS_WARNING(w)		JPH_PRAGMA(GCC diagnostic ignored w)
+#else
+#define JPH_GCC_SUPPRESS_WARNING(w)
+#endif
+#ifdef JPH_COMPILER_MSVC
+#define JPH_PRAGMA(x)					__pragma(x)
+#define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(warning (push))
+#define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(warning (pop))
+#define JPH_MSVC_SUPPRESS_WARNING(w)	JPH_PRAGMA(warning (disable : w))
+#else
+#define JPH_MSVC_SUPPRESS_WARNING(w)
+#endif
+
+// Disable common warnings triggered by Jolt when compiling with -Wall
+#define JPH_SUPPRESS_WARNINGS																	\
+	JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat")												\
+	JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")										\
+	JPH_CLANG_SUPPRESS_WARNING("-Wfloat-equal")													\
+	JPH_CLANG_SUPPRESS_WARNING("-Wnewline-eof")													\
+	JPH_CLANG_SUPPRESS_WARNING("-Wsign-conversion")												\
+	JPH_CLANG_SUPPRESS_WARNING("-Wold-style-cast")												\
+	JPH_CLANG_SUPPRESS_WARNING("-Wgnu-anonymous-struct")										\
+	JPH_CLANG_SUPPRESS_WARNING("-Wnested-anon-types")											\
+	JPH_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")											\
+	JPH_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")										\
+	JPH_CLANG_SUPPRESS_WARNING("-Wnonportable-system-include-path")								\
+	JPH_CLANG_SUPPRESS_WARNING("-Wlanguage-extension-token")									\
+	JPH_CLANG_SUPPRESS_WARNING("-Wunused-parameter")											\
+	JPH_CLANG_SUPPRESS_WARNING("-Wformat-nonliteral")											\
+	JPH_CLANG_SUPPRESS_WARNING("-Wcovered-switch-default")										\
+	JPH_CLANG_SUPPRESS_WARNING("-Wcast-align")													\
+	JPH_CLANG_SUPPRESS_WARNING("-Winvalid-offsetof")											\
+	JPH_CLANG_SUPPRESS_WARNING("-Wgnu-zero-variadic-macro-arguments")							\
+	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
+	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
+	JPH_IF_NOT_ANDROID(JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion"))			\
+																								\
+	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
+	JPH_GCC_SUPPRESS_WARNING("-Winvalid-offsetof")												\
+	JPH_GCC_SUPPRESS_WARNING("-Wclass-memaccess")												\
+																								\
+	JPH_MSVC_SUPPRESS_WARNING(4514) /* 'X' : unreferenced inline function has been removed */	\
+	JPH_MSVC_SUPPRESS_WARNING(4710) /* 'X' : function not inlined */							\
+	JPH_MSVC_SUPPRESS_WARNING(4711) /* function 'X' selected for automatic inline expansion */	\
+	JPH_MSVC_SUPPRESS_WARNING(4820) /* 'X': 'Y' bytes padding added after data member 'Z' */	\
+	JPH_MSVC_SUPPRESS_WARNING(4100) /* 'X' : unreferenced formal parameter */					\
+	JPH_MSVC_SUPPRESS_WARNING(4626) /* 'X' : assignment operator was implicitly defined as deleted because a base class assignment operator is inaccessible or deleted */ \
+	JPH_MSVC_SUPPRESS_WARNING(5027) /* 'X' : move assignment operator was implicitly defined as deleted because a base class move assignment operator is inaccessible or deleted */ \
+	JPH_MSVC_SUPPRESS_WARNING(4365) /* 'argument' : conversion from 'X' to 'Y', signed / unsigned mismatch */ \
+	JPH_MSVC_SUPPRESS_WARNING(4324) /* 'X' : structure was padded due to alignment specifier */ \
+	JPH_MSVC_SUPPRESS_WARNING(4625) /* 'X' : copy constructor was implicitly defined as deleted because a base class copy constructor is inaccessible or deleted */ \
+	JPH_MSVC_SUPPRESS_WARNING(5026) /* 'X': move constructor was implicitly defined as deleted because a base class move constructor is inaccessible or deleted */ \
+	JPH_MSVC_SUPPRESS_WARNING(4623) /* 'X' : default constructor was implicitly defined as deleted */ \
+	JPH_MSVC_SUPPRESS_WARNING(4201) /* nonstandard extension used: nameless struct/union */		\
+	JPH_MSVC_SUPPRESS_WARNING(4371) /* 'X': layout of class may have changed from a previous version of the compiler due to better packing of member 'Y' */ \
+	JPH_MSVC_SUPPRESS_WARNING(5045) /* Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified */ \
+	JPH_MSVC_SUPPRESS_WARNING(4583) /* 'X': destructor is not implicitly called */				\
+	JPH_MSVC_SUPPRESS_WARNING(4582) /* 'X': constructor is not implicitly called */				\
+	JPH_MSVC_SUPPRESS_WARNING(5219) /* implicit conversion from 'X' to 'Y', possible loss of data  */
+
 // OS-specific includes
 #if defined(JPH_PLATFORM_WINDOWS)
 	#define JPH_BREAKPOINT		__debugbreak()
@@ -150,6 +183,17 @@
 // Crashes the application
 #define JPH_CRASH				do { int *ptr = nullptr; *ptr = 0; } while (false)
 
+// Begin the JPH namespace
+#define JPH_NAMESPACE_BEGIN		\
+	JPH_SUPPRESS_WARNING_PUSH	\
+	JPH_SUPPRESS_WARNINGS		\
+	namespace JPH {
+
+// End the JPH namespace
+#define JPH_NAMESPACE_END		\
+	}							\
+	JPH_SUPPRESS_WARNING_POP
+
 // Standard C++ includes
 #include <vector>
 #include <algorithm>
@@ -163,7 +207,7 @@
 	#include <arm_neon.h>
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 using namespace std;
 
@@ -238,4 +282,4 @@ static_assert(sizeof(void *) == 8, "Invalid size of pointer");
 	#error Undefined
 #endif
 
-} // JPH
+JPH_NAMESPACE_END

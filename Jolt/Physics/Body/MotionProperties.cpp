@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Body/MotionProperties.h>
 #include <Jolt/Physics/StateRecorder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void MotionProperties::SaveState(StateRecorder &inStream) const
 {
@@ -43,4 +43,4 @@ void MotionProperties::RestoreState(StateRecorder &inStream)
 	inStream.Read(mAllowSleeping);
 }
 
-} // JPH
+JPH_NAMESPACE_END

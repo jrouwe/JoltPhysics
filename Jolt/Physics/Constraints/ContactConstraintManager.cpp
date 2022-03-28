@@ -13,7 +13,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_DEBUG_RENDERER
 bool ContactConstraintManager::sDrawContactPoint = false;
@@ -1562,4 +1562,4 @@ bool ContactConstraintManager::RestoreState(StateRecorder &inStream)
 	return success;
 }
 
-} // JPH
+JPH_NAMESPACE_END

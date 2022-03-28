@@ -12,7 +12,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SliderConstraintSettings)
 {
@@ -435,4 +435,4 @@ Mat44 SliderConstraint::GetConstraintToBody2Matrix() const
 	return mat; 
 }
 
-} // JPH
+JPH_NAMESPACE_END

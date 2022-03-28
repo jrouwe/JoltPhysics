@@ -9,7 +9,7 @@
 #include <Jolt/Physics/PhysicsLock.h>
 #include <Jolt/Core/Mutex.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Base class interface for locking a body. Usually you will use BodyLockRead / BodyLockWrite / BodyLockMultiRead / BodyLockMultiWrite instead.
 class BodyLockInterface
@@ -130,4 +130,4 @@ public:
 	}
 };
 
-} // JPH
+JPH_NAMESPACE_END

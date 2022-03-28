@@ -9,7 +9,7 @@
 #include <fstream>
 #include <unordered_map>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// ObjectStreamIn contains all logic for reading an object from disk. It is the base
 /// class for the text and binary input streams (ObjectStreamTextIn and ObjectStreamBinaryIn).
@@ -243,4 +243,4 @@ bool OSReadData(ObjectStreamIn &ioStream, RefConst<T> &inRef)
 	return ioStream.ReadPointerData(JPH_RTTI(T), inRef.InternalGetPointer(), T::sInternalGetRefCountOffset());
 }
 
-} // JPH
+JPH_NAMESPACE_END

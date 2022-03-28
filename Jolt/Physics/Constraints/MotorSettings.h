@@ -6,7 +6,7 @@
 #include <Jolt/Core/Reference.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class StreamIn;
 class StreamOut;
@@ -60,4 +60,4 @@ public:
 	float					mMaxTorqueLimit = FLT_MAX;					///< Maximum torque to apply in case of a angular constraint (N m)
 };
 
-} // JPH
+JPH_NAMESPACE_END

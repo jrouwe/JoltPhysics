@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Vehicle/VehicleDifferential.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleDifferentialSettings)
 {
@@ -35,4 +35,4 @@ void VehicleDifferentialSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mEngineTorqueRatio);
 }
 
-} // JPH
+JPH_NAMESPACE_END

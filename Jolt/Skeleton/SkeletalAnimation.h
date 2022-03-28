@@ -6,7 +6,7 @@
 #include <Jolt/Core/Reference.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class SkeletonPose;
 
@@ -73,4 +73,4 @@ private:
 	bool								mIsLooping = true;									///< If this animation loops back to start
 };
 
-} // JPH
+JPH_NAMESPACE_END

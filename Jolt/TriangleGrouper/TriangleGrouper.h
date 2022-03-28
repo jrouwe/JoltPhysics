@@ -5,7 +5,7 @@
 
 #include <Jolt/Geometry/IndexedTriangle.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// A class that groups triangles in batches of N (according to closeness)
 class TriangleGrouper
@@ -22,4 +22,4 @@ public:
 	virtual void			Group(const VertexList &inVertices, const IndexedTriangleList &inTriangles, int inGroupSize, vector<uint> &outGroupedTriangleIndices) = 0;
 };
 
-} // JPH
+JPH_NAMESPACE_END

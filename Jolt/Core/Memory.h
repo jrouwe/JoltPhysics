@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Allocate a block of memory aligned to inAlignment bytes of size inSize
 void *AlignedAlloc(size_t inSize, size_t inAlignment);
@@ -11,4 +11,4 @@ void *AlignedAlloc(size_t inSize, size_t inAlignment);
 /// Free memory block allocated with AlignedAlloc
 void AlignedFree(void *inBlock);
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/Math/Vec8.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Intersect ray with 8 triangles in SOA format, returns 8 vector of closest points or FLT_MAX if no hit
 JPH_INLINE Vec8 RayTriangle8(Vec3Arg inOrigin, Vec3Arg inDirection, Vec8Arg inV0X, Vec8Arg inV0Y, Vec8Arg inV0Z, Vec8Arg inV1X, Vec8Arg inV1Y, Vec8Arg inV1Z, Vec8Arg inV2X, Vec8Arg inV2Y, Vec8Arg inV2Z)
@@ -87,4 +87,4 @@ JPH_INLINE Vec8 RayTriangle8(Vec3Arg inOrigin, Vec3Arg inDirection, Vec8Arg inV0
 	return Vec8::sSelect(t, Vec8::sReplicate(FLT_MAX), no_intersection);
 }
 
-} // JPH
+JPH_NAMESPACE_END

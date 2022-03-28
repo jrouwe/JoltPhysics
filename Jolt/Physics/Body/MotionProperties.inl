@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void MotionProperties::SetMassProperties(const MassProperties &inMassProperties)
 {
@@ -124,4 +124,4 @@ void MotionProperties::ResetSleepTestSpheres(const Vec3 *inPoints)
 	mSleepTestTimer = 0.0f;
 }
 
-} // JPH
+JPH_NAMESPACE_END

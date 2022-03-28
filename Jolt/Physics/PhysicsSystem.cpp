@@ -23,7 +23,7 @@
 #include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/TempAllocator.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_DEBUG_RENDERER
 bool PhysicsSystem::sDrawMotionQualityLinearCast = false;
@@ -2178,4 +2178,4 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 	return true;
 }
 
-} // JPH
+JPH_NAMESPACE_END

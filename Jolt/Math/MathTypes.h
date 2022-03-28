@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class Vec3;
 class DVec3;
@@ -24,4 +24,4 @@ using UVec8Arg = UVec8;
 using QuatArg = Quat;
 using Mat44Arg = const Mat44 &;
 
-} // JPH
+JPH_NAMESPACE_END

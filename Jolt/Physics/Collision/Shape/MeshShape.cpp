@@ -37,7 +37,7 @@
 #include <Jolt/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_DEBUG_RENDERER
 bool MeshShape::sDrawTriangleGroups = false;
@@ -1160,4 +1160,4 @@ void MeshShape::sRegister()
 	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::Mesh, sCastSphereVsMesh);
 }
 
-} // JPH
+JPH_NAMESPACE_END

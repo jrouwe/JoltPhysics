@@ -5,7 +5,7 @@
 
 #include <atomic>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 // Forward declares
 template <class T> class Ref;
@@ -186,7 +186,7 @@ private:
 	const T *				mPtr;											///< Pointer to object that we are reference counting
 };						
 
-} // JPH
+JPH_NAMESPACE_END
 
 namespace std
 {

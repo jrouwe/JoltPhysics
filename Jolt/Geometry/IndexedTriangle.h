@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/HashCombine.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Triangle with 32-bit indices
 class IndexedTriangleNoMaterial
@@ -101,7 +101,7 @@ public:
 using IndexedTriangleNoMaterialList = vector<IndexedTriangleNoMaterial>;
 using IndexedTriangleList = vector<IndexedTriangle>;
 
-} // JPH
+JPH_NAMESPACE_END
 
 // Create a std::hash for IndexedTriangleNoMaterial and IndexedTriangle
 JPH_MAKE_HASHABLE(JPH::IndexedTriangleNoMaterial, t.mIdx[0], t.mIdx[1], t.mIdx[2])

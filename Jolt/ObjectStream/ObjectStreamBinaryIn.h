@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Implementation of ObjectStream binary input stream.
 class ObjectStreamBinaryIn : public ObjectStreamIn
@@ -41,4 +41,4 @@ private:
 	uint32						mNextStringID;
 };
 
-} // JPH
+JPH_NAMESPACE_END

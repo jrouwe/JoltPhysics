@@ -8,7 +8,7 @@
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <deque>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// How the tree should be converted
 enum class EAABBTreeToBufferConvertMode
@@ -313,4 +313,4 @@ private:
 	uint							mNodesSize;								///< Size in bytes of the nodes in the buffer
 };
 
-} // JPH
+JPH_NAMESPACE_END

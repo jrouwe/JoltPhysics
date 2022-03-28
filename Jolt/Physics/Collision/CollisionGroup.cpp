@@ -8,7 +8,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(CollisionGroup)
 {
@@ -29,4 +29,4 @@ void CollisionGroup::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSubGroupID);
 }
 
-} // JPH
+JPH_NAMESPACE_END

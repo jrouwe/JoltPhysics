@@ -15,7 +15,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(RagdollSettings::Part)
 {
@@ -591,4 +591,4 @@ const AABox Ragdoll::GetWorldSpaceBounds(bool inLockBodies) const
 	return bounds;
 }
 
-} // JPH
+JPH_NAMESPACE_END

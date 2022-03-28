@@ -10,7 +10,7 @@
 	#include <x86intrin.h>
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Functionality to get the processors cycle counter 
 JPH_INLINE uint64 GetProcessorTickCount()
@@ -31,4 +31,4 @@ JPH_INLINE uint64 GetProcessorTickCount()
 /// Get the amount of ticks per second, note that this number will never be fully accurate as the amound of ticks per second may vary with CPU load, so this number is only to be used to give an indication of time for profiling purposes
 uint64 GetProcessorTicksPerSecond();
 
-} // JPH
+JPH_NAMESPACE_END

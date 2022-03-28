@@ -6,7 +6,7 @@
 #include <Jolt/Math/Vec3.h>
 #include <unordered_set>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 static void sCreateVertices(unordered_set<Vec3> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel)
 {
@@ -55,4 +55,4 @@ const vector<Vec3> Vec3::sUnitSphere = []() {
 	return vector<Vec3>(verts.begin(), verts.end());
 }();
 
-} // JPH
+JPH_NAMESPACE_END

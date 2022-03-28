@@ -7,7 +7,7 @@
 
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 NarrowPhaseStat	NarrowPhaseStat::sCollideShape[NumSubShapeTypes][NumSubShapeTypes];
 NarrowPhaseStat	NarrowPhaseStat::sCastShape[NumSubShapeTypes][NumSubShapeTypes];
@@ -47,6 +47,6 @@ void NarrowPhaseStat::sReportStats()
 		}
 }
 
-} // JPH
+JPH_NAMESPACE_END
 
 #endif // JPH_TRACK_NARROWPHASE_STATS

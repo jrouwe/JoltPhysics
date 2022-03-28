@@ -14,7 +14,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ConvexHullBuilder::Face::~Face()
 {
@@ -1372,4 +1372,4 @@ void ConvexHullBuilder::DumpShape() const
 
 #endif // JPH_CONVEX_BUILDER_DUMP_SHAPE
 
-} // JPH
+JPH_NAMESPACE_END

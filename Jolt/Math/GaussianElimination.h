@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// This function performs Gauss-Jordan elimination to solve a matrix equation. 
 /// A must be an NxN matrix and B must be an NxM matrix forming the equation A * x = B
@@ -98,4 +98,4 @@ bool GaussianElimination(MatrixA &ioA, MatrixB &ioB, float inTolerance = 1.0e-16
 	return true;
 }
 
-} // JPH
+JPH_NAMESPACE_END

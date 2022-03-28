@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/CollisionCollector.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Simple implementation that collects all hits and optionally sorts them on distance
 template <class CollectorType>
@@ -129,4 +129,4 @@ private:
 	bool				mHadHit = false;
 };
 
-} // JPH
+JPH_NAMESPACE_END

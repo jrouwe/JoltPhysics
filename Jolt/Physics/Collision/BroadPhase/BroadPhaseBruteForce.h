@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Jolt/Core/Mutex.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Test BroadPhase implementation that does not do anything to speed up the operations. Can be used as a reference implementation.
 class BroadPhaseBruteForce final : public BroadPhase
@@ -31,4 +31,4 @@ private:
 	mutable SharedMutex	mMutex;
 };
 
-} // JPH
+JPH_NAMESPACE_END

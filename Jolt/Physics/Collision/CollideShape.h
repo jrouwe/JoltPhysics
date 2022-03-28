@@ -11,7 +11,7 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that contains all information of two colliding shapes
 class CollideShapeResult
@@ -79,4 +79,4 @@ public:
 	EBackFaceMode			mBackFaceMode				= EBackFaceMode::IgnoreBackFaces;
 };
 
-} // JPH
+JPH_NAMESPACE_END

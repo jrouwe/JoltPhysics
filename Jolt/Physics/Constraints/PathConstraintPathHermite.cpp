@@ -9,7 +9,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(PathConstraintPathHermite::Point)
 {
@@ -304,4 +304,4 @@ void PathConstraintPathHermite::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mPoints);
 }
 
-} // JPH
+JPH_NAMESPACE_END

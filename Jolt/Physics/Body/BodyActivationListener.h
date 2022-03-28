@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class BodyID;
 
@@ -24,4 +24,4 @@ public:
 	virtual void			OnBodyDeactivated(const BodyID &inBodyID, uint64 inBodyUserData) = 0;
 };
 
-} // JPH
+JPH_NAMESPACE_END

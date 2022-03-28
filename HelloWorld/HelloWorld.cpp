@@ -21,6 +21,9 @@
 #include <cstdarg>
 #include <thread>
 
+// Disable common warnings triggered by Jolt, you can use JPH_SUPPRESS_WARNING_PUSH / JPH_SUPPRESS_WARNING_POP to store and restore the warning state
+JPH_SUPPRESS_WARNINGS
+
 // All Jolt symbols are in the JPH namespace
 using namespace JPH;
 

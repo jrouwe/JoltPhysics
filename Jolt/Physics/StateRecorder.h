@@ -6,7 +6,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that records the state of a physics system. Can be used to check if the simulation is deterministic by putting the recorder in validation mode.
 /// Can be used to restore the state to an earlier point in time.
@@ -28,4 +28,4 @@ private:
 	bool				mIsValidating = false;
 };
 
-} // JPH
+JPH_NAMESPACE_END

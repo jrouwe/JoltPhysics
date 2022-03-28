@@ -14,7 +14,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Convex vs convex collision detection
 /// Based on: A Fast and Robust GJK Implementation for Collision Detection of Convex Objects - Gino van den Bergen
@@ -963,4 +963,4 @@ private:
 #endif
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -7,7 +7,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// An anti rollbar is a stiff spring that connects two wheels to reduce the amount of roll the vehicle makes in sharp corners
 /// See: https://en.wikipedia.org/wiki/Anti-roll_bar
@@ -27,4 +27,4 @@ public:
 	float					mStiffness = 1000.0f;						///< Stiffness (spring constant in N/m) of anti rollbar, can be 0 to disable the anti-rollbar 
 };
 
-} // JPH
+JPH_NAMESPACE_END

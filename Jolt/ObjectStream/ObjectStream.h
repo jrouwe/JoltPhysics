@@ -6,7 +6,7 @@
 #include <Jolt/Core/StaticArray.h>
 #include <Jolt/Core/Reference.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Base class for object stream input and output streams.
 class ObjectStream
@@ -89,4 +89,4 @@ bool OSIsType(RefConst<T> *inNull, int inArrayDepth, ObjectStream::EDataType inD
 	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
 }
 
-} // JPH
+JPH_NAMESPACE_END

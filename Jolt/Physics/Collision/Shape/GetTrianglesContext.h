@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class PhysicsMaterial;
 
@@ -240,4 +240,4 @@ private:
 	bool					mIsInsideOut;
 };
 
-} // JPH
+JPH_NAMESPACE_END

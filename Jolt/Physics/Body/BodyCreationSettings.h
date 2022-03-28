@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Body/MotionQuality.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class StreamIn;
 class StreamOut;
@@ -112,4 +112,4 @@ private:
 	RefConst<Shape>			mShapePtr;														///< Actual shape, cannot be serialized. Mutually exclusive with mShape
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Motion quality, or how well it detects collisions when it has a high velocity
 enum class EMotionQuality : uint8
@@ -27,4 +27,4 @@ enum class EMotionQuality : uint8
 	LinearCast,
 };
 
-} // JPH
+JPH_NAMESPACE_END

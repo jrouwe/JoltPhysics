@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Motion type of a physics body
 enum class EMotionType : uint8
@@ -13,4 +13,4 @@ enum class EMotionType : uint8
 	Dynamic,					///< Responds to forces as a normal physics object
 };
 
-} // JPH
+JPH_NAMESPACE_END

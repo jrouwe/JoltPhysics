@@ -5,7 +5,7 @@
 
 #include <Jolt/Math/FindRoot.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Tests a ray starting at inRayOrigin and extending infinitely in inRayDirection against a sphere, 
 /// @return FLT_MAX if there is no intersection, otherwise the fraction along the ray.
@@ -92,4 +92,4 @@ JPH_INLINE int RaySphere(Vec3Arg inRayOrigin, Vec3Arg inRayDirection, Vec3Arg in
 	}
 }
 
-} // JPH
+JPH_NAMESPACE_END

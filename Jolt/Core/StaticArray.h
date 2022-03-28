@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Simple variable length array backed by a fixed size buffer
 template <class T, uint N>
@@ -279,7 +279,7 @@ protected:
 	Storage				mElements[N];
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 namespace std
 {

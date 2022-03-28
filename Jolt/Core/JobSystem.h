@@ -10,7 +10,7 @@
 #include <Jolt/Core/StaticArray.h>
 #include <atomic>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// A class that allows units of work (Jobs) to be scheduled across multiple threads.
 /// It allows dependencies between the jobs so that the jobs form a graph.
@@ -250,6 +250,6 @@ private:
 
 using JobHandle = JobSystem::JobHandle;
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "JobSystem.inl"

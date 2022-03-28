@@ -6,7 +6,7 @@
 #include <Jolt/Geometry/Triangle.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Take a list of triangles and get the unique set of vertices and use them to create indexed triangles.
 /// Vertices that are less than inVertexWeldDistance apart will be combined to a single vertex.
@@ -15,4 +15,4 @@ void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedT
 /// Take a list of indexed triangles and unpack them
 void Deindexify(const VertexList &inVertices, const IndexedTriangleList &inTriangles, TriangleList &outTriangles);
 
-} // JPH
+JPH_NAMESPACE_END

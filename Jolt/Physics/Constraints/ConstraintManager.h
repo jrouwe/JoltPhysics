@@ -7,7 +7,7 @@
 #include <Jolt/Physics/PhysicsLock.h>
 #include <Jolt/Core/Mutex.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class IslandBuilder;
 class BodyManager;
@@ -82,4 +82,4 @@ private:
 	mutable Mutex			mConstraintsMutex;
 };
 
-} // JPH
+JPH_NAMESPACE_END

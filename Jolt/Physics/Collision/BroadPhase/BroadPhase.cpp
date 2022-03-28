@@ -5,11 +5,11 @@
 
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void BroadPhase::Init(BodyManager *inBodyManager, const BroadPhaseLayerInterface &inLayerInterface)
 {
 	mBodyManager = inBodyManager;
 }
 
-} // JPH
+JPH_NAMESPACE_END

@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <stdlib.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void *AlignedAlloc(size_t inSize, size_t inAlignment)
 {
@@ -32,4 +32,4 @@ void AlignedFree(void *inBlock)
 #endif
 }
 
-} // JPH
+JPH_NAMESPACE_END

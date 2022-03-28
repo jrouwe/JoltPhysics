@@ -6,7 +6,7 @@
 #include <Jolt/Geometry/RayTriangle.h>
 #include <unordered_map>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Store vertices in 64 bits and indices in 8 bits + 8 bit of flags per triangle like this:
 ///
@@ -434,4 +434,4 @@ public:
 	};
 };
 
-} // JPH
+JPH_NAMESPACE_END

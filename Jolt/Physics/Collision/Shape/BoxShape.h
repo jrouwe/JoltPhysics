@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a BoxShape
 class BoxShapeSettings final : public ConvexShapeSettings
@@ -103,4 +103,4 @@ private:
 	float					mConvexRadius = 0.0f;
 };
 
-} // JPH
+JPH_NAMESPACE_END

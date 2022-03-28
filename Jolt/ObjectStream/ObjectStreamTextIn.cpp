@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/ObjectStreamTextIn.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ObjectStreamTextIn::ObjectStreamTextIn(istream &inStream) :
 	ObjectStreamIn(inStream)
@@ -342,4 +342,4 @@ bool ObjectStreamTextIn::ReadWord(string &outWord)
 	return !outWord.empty();
 }
 
-} // JPH
+JPH_NAMESPACE_END

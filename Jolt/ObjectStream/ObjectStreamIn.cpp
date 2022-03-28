@@ -11,7 +11,7 @@
 #include <Jolt/ObjectStream/SerializableObject.h>
 #include <unordered_set>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ObjectStreamIn::ObjectStreamIn(istream &inStream) :
 	mStream(inStream)
@@ -564,4 +564,4 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EDataType inDataType, c
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
-} // JPH
+JPH_NAMESPACE_END

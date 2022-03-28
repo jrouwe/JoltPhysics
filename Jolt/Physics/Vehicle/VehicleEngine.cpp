@@ -9,7 +9,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleEngineSettings)
 {
@@ -116,4 +116,4 @@ void VehicleEngine::RestoreState(StateRecorder &inStream)
 	inStream.Read(mCurrentRPM);
 }
 
-} // JPH
+JPH_NAMESPACE_END

@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Create a formatted text string
 string StringFormat(const char *inFMT, ...);
@@ -45,4 +45,4 @@ string ToLower(const string &inString);
 /// Converts the lower 4 bits of inNibble to a string that represents the number in binary format
 const char *NibbleToBinary(uint32 inNibble);
 
-} // JPH
+JPH_NAMESPACE_END

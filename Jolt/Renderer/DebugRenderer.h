@@ -15,7 +15,7 @@
 #include <Jolt/Geometry/AABox.h>
 #include <unordered_map>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class OrientedBox;
 
@@ -256,4 +256,4 @@ private:
 	PieBatces							mPieLimits;
 };
 
-} // JPH
+JPH_NAMESPACE_END

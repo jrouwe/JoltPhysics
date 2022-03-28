@@ -14,7 +14,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_ENABLE_ASSERTS
 	thread_local bool BodyManager::sOverrideAllowActivation = false;
@@ -771,4 +771,4 @@ void BodyManager::ValidateActiveBodyBounds()
 }
 #endif // _DEBUG
 
-} // JPH
+JPH_NAMESPACE_END

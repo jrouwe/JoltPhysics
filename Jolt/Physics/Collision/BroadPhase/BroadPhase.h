@@ -13,7 +13,7 @@
 	#define JPH_IF_TRACK_BROADPHASE_STATS(...)
 #endif // JPH_TRACK_BROADPHASE_STATS
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class BodyManager;
 struct BodyPair;
@@ -105,4 +105,4 @@ protected:
 	BodyManager *		mBodyManager = nullptr;
 };
 
-} // JPH
+JPH_NAMESPACE_END

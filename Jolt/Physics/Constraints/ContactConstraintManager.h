@@ -14,7 +14,7 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <atomic>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class PhysicsUpdateContext;
 
@@ -474,4 +474,4 @@ private:
 	PhysicsUpdateContext *		mUpdateContext;
 };
 
-} // JPH
+JPH_NAMESPACE_END

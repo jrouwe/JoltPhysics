@@ -32,7 +32,7 @@
 
 //#define JPH_DEBUG_HEIGHT_FIELD
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_DEBUG_RENDERER
 bool HeightFieldShape::sDrawTriangleOutlines = false;
@@ -1932,4 +1932,4 @@ void HeightFieldShape::sRegister()
 	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::HeightField, sCastSphereVsHeightField);
 }
 
-} // JPH
+JPH_NAMESPACE_END

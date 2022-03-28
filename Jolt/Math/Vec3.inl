@@ -9,7 +9,7 @@
 // Create a std::hash for Vec3
 JPH_MAKE_HASHABLE(JPH::Vec3, t.GetX(), t.GetY(), t.GetZ())
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void Vec3::CheckW() const
 { 
@@ -764,4 +764,4 @@ Vec3 Vec3::GetSign() const
 #endif
 }
 
-} // JPH
+JPH_NAMESPACE_END

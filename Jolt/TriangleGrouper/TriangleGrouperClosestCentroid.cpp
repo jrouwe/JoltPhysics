@@ -6,7 +6,7 @@
 #include <Jolt/TriangleGrouper/TriangleGrouperClosestCentroid.h>
 #include <Jolt/Geometry/MortonCode.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const IndexedTriangleList &inTriangles, int inGroupSize, vector<uint> &outGroupedTriangleIndices)
 {
@@ -90,4 +90,4 @@ void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const I
 	}
 }
 
-} // JPH
+JPH_NAMESPACE_END

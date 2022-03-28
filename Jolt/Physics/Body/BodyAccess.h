@@ -5,7 +5,7 @@
 
 #ifdef JPH_ENABLE_ASSERTS
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class BodyAccess
 {
@@ -46,6 +46,6 @@ public:
 	static thread_local EAccess			sPositionAccess;
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 #endif // JPH_ENABLE_ASSERTS

@@ -15,7 +15,7 @@
 
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Structure that tracks narrow phase timing information for a particular combination of shapes
 class NarrowPhaseStat
@@ -99,6 +99,6 @@ private:
 	uint64					mStart;
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 #endif // JPH_TRACK_NARROWPHASE_STATS

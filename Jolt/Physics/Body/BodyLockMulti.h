@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Body/BodyLockInterface.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Base class for locking multiple bodies for the duration of the scope of this class (do not use directly)
 template <bool Write, class BodyType>
@@ -100,4 +100,4 @@ class BodyLockMultiWrite : public BodyLockMultiBase<true, Body>
 	using BodyLockMultiBase::BodyLockMultiBase;
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Swing twist constraint settings, used to create a swing twist constraint
 /// All values in this structure are copied to the swing twist constraint and the settings object is no longer needed afterwards.
@@ -186,4 +186,4 @@ private:
 	AngleConstraintPart			mMotorConstraintPart[3];
 };
 
-} // JPH
+JPH_NAMESPACE_END

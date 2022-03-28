@@ -7,7 +7,7 @@
 #include <Jolt/Core/Mutex.h>
 #include <Jolt/Core/MutexArray.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 // Classes
 class BodyCreationSettings;
@@ -283,4 +283,4 @@ private:
 #endif
 };
 
-} // JPH
+JPH_NAMESPACE_END

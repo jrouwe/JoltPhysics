@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Enum indicating which component to use when swizzling
 enum
@@ -15,4 +15,4 @@ enum
 	SWIZZLE_UNUSED = 2,		///< We always use the Z component when we don't specifically want to initialize a value, this is consistent with what is done in Vec3(x, y, z), Vec3(Float3 &) and Vec3::sLoadFloat3Unsafe
 };
 
-} // JPH
+JPH_NAMESPACE_END

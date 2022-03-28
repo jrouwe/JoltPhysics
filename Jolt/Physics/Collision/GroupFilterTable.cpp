@@ -8,7 +8,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(GroupFilterTable)
 {
@@ -34,4 +34,4 @@ void GroupFilterTable::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mTable);
 }
 
-} // JPH
+JPH_NAMESPACE_END

@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class CollideShapeSettings;
 
@@ -46,4 +46,4 @@ protected:
 	float							mRadiusPlusMaxSeparationSq;				///< (Radius + Max SeparationDistance)^2
 };
 
-} // JPH
+JPH_NAMESPACE_END

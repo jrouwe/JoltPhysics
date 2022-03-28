@@ -12,7 +12,7 @@
 #include <Jolt/Core/Mutex.h>
 #include <map>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Implementation of DebugRenderer that records the API invocations to be played back later
 class DebugRendererRecorder final : public DebugRenderer
@@ -118,4 +118,4 @@ private:
 	Frame								mCurrentFrame;
 };
 
-} // JPH
+JPH_NAMESPACE_END

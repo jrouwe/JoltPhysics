@@ -14,7 +14,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 Body Body::sFixedToWorld(false);
 
@@ -326,4 +326,4 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	return result;
 }
 
-} // JPH
+JPH_NAMESPACE_END

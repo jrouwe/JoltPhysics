@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// An infinite plane described by the formula X . Normal + Constant = 0.
 class [[nodiscard]] Plane
@@ -70,4 +70,4 @@ private:
 	Vec4			mNormalAndConstant;													///< XYZ = normal, W = constant, plane: x . normal + constant = 0
 };
 
-} // JPH
+JPH_NAMESPACE_END

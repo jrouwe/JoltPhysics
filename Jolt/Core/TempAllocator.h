@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Allocator for temporary allocations. 
 /// This allocator works as a stack: The blocks must always be freed in the reverse order as they are allocated.
@@ -97,4 +97,4 @@ public:
 	}
 };
 
-}; // JPH
+JPH_NAMESPACE_END

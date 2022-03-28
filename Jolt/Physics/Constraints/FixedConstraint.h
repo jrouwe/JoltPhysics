@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/PointConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Fixed constraint settings, used to create a fixed constraint
 class FixedConstraintSettings final : public TwoBodyConstraintSettings
@@ -64,4 +64,4 @@ private:
 	PointConstraintPart			mPointConstraintPart;
 };
 
-} // JPH
+JPH_NAMESPACE_END

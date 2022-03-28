@@ -3,9 +3,9 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Register all physics types with the factory
 extern void RegisterTypes();
 
-}; // JPH
+JPH_NAMESPACE_END

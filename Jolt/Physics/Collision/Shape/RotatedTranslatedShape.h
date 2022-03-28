@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Collision/Shape/DecoratedShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class CollideShapeSettings;
 
@@ -142,4 +142,4 @@ private:
 	Quat							mRotation;												///< Rotation of the child shape
 };
 
-} // JPH
+JPH_NAMESPACE_END

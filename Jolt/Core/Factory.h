@@ -6,7 +6,7 @@
 #include <Jolt/Core/RTTI.h>
 #include <unordered_map>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Factory, to create RTTI objects
 class Factory
@@ -42,4 +42,4 @@ private:
 	ClassHashMap				mClassHashMap;
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -15,7 +15,7 @@
 #include <Jolt/Physics/Body/BodyAccess.h>
 #include <Jolt/Core/StringTools.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class StateRecorder;
 class BodyCreationSettings;
@@ -322,6 +322,6 @@ private:
 	static_assert(alignof(Body) == 16, "Body should align to 16 bytes");
 #endif
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "Body.inl"

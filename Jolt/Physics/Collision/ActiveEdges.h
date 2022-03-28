@@ -5,7 +5,7 @@
 
 #include <Jolt/Geometry/ClosestPoint.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// An active edge is an edge that either has no neighbouring edge or if the angle between the two connecting faces is too large.
 namespace ActiveEdges
@@ -109,4 +109,4 @@ namespace ActiveEdges
 	}
 }
 
-} // JPH
+JPH_NAMESPACE_END

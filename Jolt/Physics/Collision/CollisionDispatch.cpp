@@ -5,9 +5,9 @@
 
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 CollisionDispatch::CollideShape CollisionDispatch::sCollideShape[NumSubShapeTypes][NumSubShapeTypes];
 CollisionDispatch::CastShape CollisionDispatch::sCastShape[NumSubShapeTypes][NumSubShapeTypes];
 
-} // JPH
+JPH_NAMESPACE_END

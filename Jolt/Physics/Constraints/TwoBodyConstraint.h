@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Constraints/Constraint.h>
 #include <Jolt/Physics/Body/Body.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class TwoBodyConstraint;
 
@@ -53,4 +53,4 @@ protected:
 	Body *						mBody2;
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -6,7 +6,7 @@
 #include <Jolt/Geometry/Indexify.h>
 #include <unordered_map>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedTriangleList &outTriangles, float inVertexWeldDistance)
 {
@@ -68,4 +68,4 @@ void Deindexify(const VertexList &inVertices, const IndexedTriangleList &inTrian
 			outTriangles[t].mV[v] = inVertices[inTriangles[t].mIdx[v]];
 }
 
-} // JPH
+JPH_NAMESPACE_END

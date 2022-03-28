@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/SerializableObject.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class StreamIn;
 class StreamOut;
@@ -54,4 +54,4 @@ public:
 	Mat44					mInertia = Mat44::sZero();
 };
 
-} // JPH
+JPH_NAMESPACE_END

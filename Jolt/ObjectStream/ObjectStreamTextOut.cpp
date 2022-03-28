@@ -6,7 +6,7 @@
 #include <Jolt/ObjectStream/ObjectStreamTextOut.h>
 #include <Jolt/Core/StringTools.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ObjectStreamTextOut::ObjectStreamTextOut(ostream &inStream) :
 	ObjectStreamOut(inStream),
@@ -183,4 +183,4 @@ void ObjectStreamTextOut::WriteWord(const string &inWord)
 	mStream << inWord;
 }
 
-} // JPH
+JPH_NAMESPACE_END

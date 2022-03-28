@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Distance constraint settings, used to create a distance constraint
 class DistanceConstraintSettings final : public TwoBodyConstraintSettings
@@ -117,4 +117,4 @@ private:
 	AxisConstraintPart			mAxisConstraint;
 };
 
-} // JPH
+JPH_NAMESPACE_END

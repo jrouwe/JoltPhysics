@@ -8,7 +8,7 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/PhysicsLock.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 BroadPhaseQuadTree::~BroadPhaseQuadTree()
 {
@@ -584,4 +584,4 @@ void BroadPhaseQuadTree::ReportStats()
 
 #endif // JPH_TRACK_BROADPHASE_STATS
 
-} // JPH
+JPH_NAMESPACE_END

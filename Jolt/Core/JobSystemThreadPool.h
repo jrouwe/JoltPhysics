@@ -9,7 +9,7 @@
 #include <mutex>
 #include <condition_variable>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Implementation of a JobSystem using a thread pool
 /// 
@@ -147,4 +147,4 @@ private:
 	atomic<bool>			mQuit = false;
 };
 
-} // JPH
+JPH_NAMESPACE_END

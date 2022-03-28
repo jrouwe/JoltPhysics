@@ -11,7 +11,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// 6 Degree Of Freedom Constraint setup structure. Allows control over each of the 6 degrees of freedom.
 class SixDOFConstraintSettings final : public TwoBodyConstraintSettings
@@ -221,4 +221,4 @@ private:
 	AngleConstraintPart			mMotorRotationConstraintPart[3];
 };
 
-} // JPH
+JPH_NAMESPACE_END

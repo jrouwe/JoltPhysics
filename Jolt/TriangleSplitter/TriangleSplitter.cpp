@@ -5,7 +5,7 @@
 
 #include <Jolt/TriangleSplitter/TriangleSplitter.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 TriangleSplitter::TriangleSplitter(const VertexList &inVertices, const IndexedTriangleList &inTriangles) :
 	mVertices(inVertices),
@@ -63,4 +63,4 @@ bool TriangleSplitter::SplitInternal(const Range &inTriangles, uint inDimension,
 	return outLeft.Count() > 0 && outRight.Count() > 0;
 }
 
-} // JPH
+JPH_NAMESPACE_END

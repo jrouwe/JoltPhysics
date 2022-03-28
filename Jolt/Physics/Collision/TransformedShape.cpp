@@ -11,7 +11,7 @@
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Geometry/OrientedBox.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 bool TransformedShape::CastRay(const RayCast &inRay, RayCastResult &ioHit) const
 {
@@ -132,4 +132,4 @@ int TransformedShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMax
 		return 0;
 }
 
-} // JPH
+JPH_NAMESPACE_END

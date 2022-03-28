@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Slider constraint settings, used to create a slider constraint
 class SliderConstraintSettings final : public TwoBodyConstraintSettings
@@ -174,4 +174,4 @@ private:
 	AxisConstraintPart			mMotorConstraintPart;
 };
 
-} // JPH
+JPH_NAMESPACE_END

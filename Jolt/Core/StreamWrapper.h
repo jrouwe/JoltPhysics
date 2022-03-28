@@ -7,7 +7,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <ostream>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Wrapper around std::ostream
 class StreamOutWrapper : public StreamOut
@@ -46,4 +46,4 @@ private:
 	istream &			mWrapped;
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Structure that holds the result of colliding a point against a shape
 class CollidePointResult
@@ -19,4 +19,4 @@ public:
 	SubShapeID		mSubShapeID2;						///< Sub shape ID of shape that we collided against
 };
 
-} // JPH
+JPH_NAMESPACE_END

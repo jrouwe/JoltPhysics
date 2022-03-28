@@ -16,7 +16,7 @@
 	#pragma warning (pop)
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JobSystemThreadPool::Semaphore::Semaphore()
 {
@@ -560,4 +560,4 @@ void JobSystemThreadPool::ThreadMain([[maybe_unused]] const string &inName, int 
 	JPH_PROFILE_THREAD_END();
 }
 
-} // JPH
+JPH_NAMESPACE_END

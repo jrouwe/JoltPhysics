@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a TriangleShape
 class TriangleShapeSettings final : public ConvexShapeSettings
@@ -128,4 +128,4 @@ private:
 	float					mConvexRadius = 0.0f;
 };
 
-} // JPH
+JPH_NAMESPACE_END

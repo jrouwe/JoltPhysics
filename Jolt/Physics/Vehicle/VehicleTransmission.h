@@ -8,7 +8,7 @@
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Physics/StateRecorder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// How gears are shifted
 enum class ETransmissionMode : uint8
@@ -77,4 +77,4 @@ private:
 	float					mClutchReleaseTimeLeft = 0.0f;				///< After switching gears this will be > 0 and will cause the clutch friction to go from 0 to 1 (used for automatic gear switching only)
 };
 
-} // JPH
+JPH_NAMESPACE_END

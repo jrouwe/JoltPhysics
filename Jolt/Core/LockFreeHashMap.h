@@ -6,7 +6,7 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <atomic>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Allocator for a lock free hash map
 class LFHMAllocator : public NonCopyable
@@ -175,6 +175,6 @@ private:
 	uint32					mMaxBuckets = 0;				///< Maximum number of buckets
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "LockFreeHashMap.inl"

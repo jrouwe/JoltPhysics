@@ -7,7 +7,7 @@
 
 #ifdef JPH_USE_AVX2 // DVec3 currently uses AVX2 intrinsics but the class is currently unused so we can leave it out (it will be used in the future to support objects at a large distance from the origin)
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// 3 component vector of doubles (stored as 4 vectors). 
 /// Note that we keep the 4th component the same as the 3rd component to avoid divisions by zero when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED defined
@@ -214,7 +214,7 @@ private:
 
 static_assert(is_trivial<DVec3>(), "Is supposed to be a trivial type!");
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "DVec3.inl"
 

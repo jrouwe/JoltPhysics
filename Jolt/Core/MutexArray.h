@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/NonCopyable.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// A mutex array protects a number of resources with a limited amount of mutexes.
 /// It uses hashing to find the mutex of a particular object.
@@ -91,5 +91,5 @@ private:
 	uint					mNumMutexes = 0;
 };
 
-} // JPH
+JPH_NAMESPACE_END
 

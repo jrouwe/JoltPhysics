@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Find the roots of \f$inA \: x^2 + inB \: x + inC = 0\f$.
 /// @return The number of roots, actual roots in outX1 and outX2.
@@ -38,4 +38,4 @@ inline int FindRoot(const T inA, const T inB, const T inC, T &outX1, T &outX2)
 	return 2;
 }
 
-} // JPH
+JPH_NAMESPACE_END

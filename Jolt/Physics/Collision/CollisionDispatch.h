@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Collision/ShapeFilter.h>
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class CollideShapeSettings;
 
@@ -72,4 +72,4 @@ private:
 	static CastShape		sCastShape[NumSubShapeTypes][NumSubShapeTypes];
 };
 
-} // JPH
+JPH_NAMESPACE_END

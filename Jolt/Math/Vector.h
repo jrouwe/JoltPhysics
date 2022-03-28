@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Templatized vector class
 template <uint Rows>
@@ -205,4 +205,4 @@ public:
 	float						mF32[Rows];
 };
 
-} // JPH
+JPH_NAMESPACE_END

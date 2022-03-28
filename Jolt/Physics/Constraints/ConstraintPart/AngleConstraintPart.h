@@ -8,7 +8,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/SpringPart.h>
 #include <Jolt/Physics/StateRecorder.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Constraint that constrains rotation along 1 axis
 ///
@@ -193,4 +193,4 @@ private:
 	float						mTotalLambda = 0.0f;
 };
 
-} // JPH
+JPH_NAMESPACE_END

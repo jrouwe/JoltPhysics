@@ -6,7 +6,7 @@
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 using CompoundVisitor = function<void(const void *, const RTTI *)>;
 
@@ -26,4 +26,4 @@ public:
 	virtual void				VisitCompounds(const void *inObject, const CompoundVisitor &inVisitor) const = 0;
 };
 
-} // JPH
+JPH_NAMESPACE_END

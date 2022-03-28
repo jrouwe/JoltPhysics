@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettings)
 {
@@ -72,4 +72,4 @@ bool Wheel::SolveLateralConstraintPart(const VehicleConstraint &inConstraint, fl
 	return mLateralPart.SolveVelocityConstraint(*inConstraint.GetVehicleBody(), *mContactBody, -mContactLateral, inMinImpulse, inMaxImpulse); 
 }
 
-} // JPH
+JPH_NAMESPACE_END

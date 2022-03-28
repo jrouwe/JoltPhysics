@@ -8,7 +8,7 @@
 #include <Jolt/Geometry/Plane.h>
 #include <Jolt/Math/Mat44.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Axis aligned box
 class [[nodiscard]] AABox
@@ -276,4 +276,4 @@ public:
 	Vec3			mMax;
 };
 
-} // JPH
+JPH_NAMESPACE_END

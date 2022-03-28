@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Vehicle/VehicleAntiRollBar.h>
 #include <Jolt/Physics/Vehicle/Wheel.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
 class VehicleController;
@@ -134,4 +134,4 @@ private:
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
 };
 
-} // JPH
+JPH_NAMESPACE_END

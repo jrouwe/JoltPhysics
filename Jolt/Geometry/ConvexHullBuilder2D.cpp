@@ -9,7 +9,7 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 void ConvexHullBuilder2D::Edge::CalculateNormalAndCenter(const Vec3 *inPositions)
 {
@@ -332,4 +332,4 @@ void ConvexHullBuilder2D::DrawState()
 
 #endif
 
-} // JPH
+JPH_NAMESPACE_END

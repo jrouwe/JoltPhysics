@@ -3,7 +3,7 @@
 
 #pragma once
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class Color;
 
@@ -73,4 +73,4 @@ public:
 
 static_assert(is_trivial<Color>(), "Is supposed to be a trivial type!");
 
-} // JPH
+JPH_NAMESPACE_END

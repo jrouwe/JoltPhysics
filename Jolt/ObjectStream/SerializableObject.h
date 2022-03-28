@@ -5,7 +5,7 @@
 
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Helper macros
@@ -218,4 +218,4 @@ public:
 	virtual void				OnLoaded()																			{ }
 };
 
-} // JPH
+JPH_NAMESPACE_END

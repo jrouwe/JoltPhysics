@@ -5,7 +5,7 @@
 
 #include <Jolt/TriangleSplitter/TriangleSplitter.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Splitter using center of bounding box with longest axis
 class TriangleSplitterLongestAxis : public TriangleSplitter
@@ -24,4 +24,4 @@ public:
 	virtual bool			Split(const Range &inTriangles, Range &outLeft, Range &outRight) override;
 };
 
-} // JPH
+JPH_NAMESPACE_END

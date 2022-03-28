@@ -9,7 +9,7 @@
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/NonCopyable.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_PLATFORM_BLUE
 
@@ -208,4 +208,4 @@ using SharedMutex = SharedMutexBase;
 
 #endif
 
-} // JPH
+JPH_NAMESPACE_END

@@ -5,7 +5,7 @@
 
 #include <Jolt/Core/NonCopyable.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_USE_SSE
 
@@ -67,4 +67,4 @@ private:
 
 #endif
 
-} // JPH
+JPH_NAMESPACE_END

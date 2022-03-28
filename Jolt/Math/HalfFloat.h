@@ -5,7 +5,7 @@
 
 #include <Jolt/Math/Vec4.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 using HalfFloat = uint16;
 
@@ -208,4 +208,4 @@ JPH_INLINE Vec4 ToFloat(UVec4Arg inValue)
 
 } // HalfFloatConversion
 
-} // JPH
+JPH_NAMESPACE_END

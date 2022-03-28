@@ -7,7 +7,7 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <atomic>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class TempAllocator;
 
@@ -113,4 +113,4 @@ private:
 #endif
 };
 
-} // JPH
+JPH_NAMESPACE_END

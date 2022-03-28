@@ -5,7 +5,7 @@
 
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a CapsuleShape
 class CapsuleShapeSettings final : public ConvexShapeSettings
@@ -117,4 +117,4 @@ private:
 	float					mHalfHeightOfCylinder = 0.0f;
 };
 
-} // JPH
+JPH_NAMESPACE_END

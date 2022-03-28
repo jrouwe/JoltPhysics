@@ -18,7 +18,7 @@
 	#include <sys/sysctl.h>
 #endif
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 static const uint64 sProcessorTicksPerSecond = []() {
 #if defined(JPH_PLATFORM_WINDOWS)
@@ -95,4 +95,4 @@ uint64 GetProcessorTicksPerSecond()
 	return sProcessorTicksPerSecond;
 }
 
-} // JPH
+JPH_NAMESPACE_END

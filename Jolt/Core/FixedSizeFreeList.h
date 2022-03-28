@@ -8,7 +8,7 @@
 #include <Jolt/Core/Memory.h>
 #include <atomic>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 /// Class that allows lock free creation / destruction of objects (unless a new page of objects needs to be allocated)
 /// It contains a fixed pool of objects and also allows batching up a lot of objects to be destroyed
@@ -119,6 +119,6 @@ public:
 	inline const Object &	Get(uint32 inObjectIndex) const			{ return reinterpret_cast<const Object &>(GetStorage(inObjectIndex).mData); }
 };
 
-} // JPH
+JPH_NAMESPACE_END
 
 #include "FixedSizeFreeList.inl"

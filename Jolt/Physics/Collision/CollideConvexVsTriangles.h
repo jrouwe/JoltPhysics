@@ -8,7 +8,7 @@
 #include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 class CollideShapeSettings;
 
@@ -52,4 +52,4 @@ protected:
 	const ConvexShape::Support *	mShape1IncCvxRadius = nullptr;			///< Actual support function object including convex radius
 };
 
-} // JPH
+JPH_NAMESPACE_END

@@ -13,7 +13,7 @@
 #include <Jolt/Core/Factory.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT_BASE(ShapeSettings)
 {
@@ -322,4 +322,4 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 	return compound.Create();
 }
 
-} // JPH
+JPH_NAMESPACE_END

@@ -9,7 +9,7 @@
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
-namespace JPH {
+JPH_NAMESPACE_BEGIN
 
 ObjectStreamOut::ObjectStreamOut(ostream &inStream) :
 	mStream(inStream),
@@ -181,4 +181,4 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
-} // JPH
+JPH_NAMESPACE_END

@@ -24,6 +24,9 @@
 using namespace JPH;
 using namespace std;
 
+// Disable common warnings triggered by Jolt
+JPH_SUPPRESS_WARNINGS
+
 // Local includes
 #include "RagdollScene.h"
 #include "ConvexVsMeshScene.h"
