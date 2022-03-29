@@ -186,6 +186,8 @@ public:
 	/// Get the material for a particular sub shape
 	const PhysicsMaterial *		GetMaterial(const BodyID &inBodyID, const SubShapeID &inSubShapeID) const;
 
+	void						InvalidateContactCache(const BodyID &inBodyID);
+
 private:
 	BodyLockInterface *			mBodyLockInterface = nullptr;
 	BodyManager *				mBodyManager = nullptr;
