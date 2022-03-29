@@ -22,6 +22,9 @@ using namespace JPH;
 
 using namespace doctest;
 
+// Disable common warnings triggered by Jolt
+JPH_SUPPRESS_WARNINGS
+
 // Callback for traces
 static void TraceImpl(const char *inFMT, ...)
 { 
@@ -49,7 +52,7 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 
 	// No breakpoint
 	return false;
-};
+}
 
 #endif // JPH_ENABLE_ASSERTS
 

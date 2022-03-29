@@ -32,6 +32,9 @@ inline void hash_combine(std::size_t &ioSeed, const T &inValue, Rest... inRest)
 
 JPH_NAMESPACE_END
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
+
 #define JPH_MAKE_HASH_STRUCT(type, name, ...)				\
 	struct [[nodiscard]] name								\
 	{														\
@@ -52,3 +55,5 @@ JPH_NAMESPACE_END
 		JPH_MAKE_HASH_STRUCT(type, hash<type>, __VA_ARGS__)	\
     }														\
 	JPH_SUPPRESS_WARNING_POP
+
+JPH_SUPPRESS_WARNING_POP

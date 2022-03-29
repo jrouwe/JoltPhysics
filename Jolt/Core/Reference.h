@@ -190,6 +190,9 @@ private:
 
 JPH_NAMESPACE_END
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat")
+
 namespace std
 {
 	/// Declare std::hash for Ref
@@ -212,3 +215,5 @@ namespace std
 		}
 	};
 }
+
+JPH_SUPPRESS_WARNING_POP

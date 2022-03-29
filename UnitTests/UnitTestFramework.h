@@ -4,11 +4,12 @@
 #include <Jolt/Jolt.h>
 #include <Jolt/Math/DVec3.h>
 #include <Jolt/Math/Float2.h>
-#include "doctest.h"
 
 // Disable common warnings
 JPH_SUPPRESS_WARNINGS
 JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")
+
+#include "doctest.h"
 
 using namespace JPH;
 

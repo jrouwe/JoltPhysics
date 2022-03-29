@@ -6,12 +6,17 @@
 #include <Jolt/Core/TickCounter.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
+
 // Shorthand function to ifdef out code if narrow phase stats tracking is off
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 	#define JPH_IF_TRACK_NARROWPHASE_STATS(...) __VA_ARGS__
 #else
 	#define JPH_IF_TRACK_NARROWPHASE_STATS(...)
 #endif // JPH_TRACK_NARROWPHASE_STATS
+
+JPH_SUPPRESS_WARNING_POP
 
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 
