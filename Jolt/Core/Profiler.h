@@ -36,6 +36,9 @@ JPH_NAMESPACE_END
 // Macros to do the actual profiling	
 //////////////////////////////////////////////////////////////////////////////////////////
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
+
 // Dummy implementations
 #define JPH_PROFILE_THREAD_START(name)			
 #define JPH_PROFILE_THREAD_END()				
@@ -59,6 +62,8 @@ JPH_NAMESPACE_END
 
 // Scope profiling for function
 #define JPH_PROFILE_FUNCTION()		JPH_PROFILE(JPH_FUNCTION_NAME)
+
+JPH_SUPPRESS_WARNING_POP
 
 #elif defined(JPH_PROFILE_ENABLED)
 
@@ -200,6 +205,9 @@ JPH_NAMESPACE_END
 // Macros to do the actual profiling	
 //////////////////////////////////////////////////////////////////////////////////////////
 
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
+
 /// Start instrumenting a thread
 #define JPH_PROFILE_THREAD_START(name)	ProfileThread::sInstance = new ProfileThread(name)
 
@@ -220,11 +228,16 @@ JPH_NAMESPACE_END
 /// Dump profiling info
 #define JPH_PROFILE_DUMP(...)			Profiler::sInstance.Dump(__VA_ARGS__)
 
+JPH_SUPPRESS_WARNING_POP
+
 #else
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Dummy profiling instructions
 //////////////////////////////////////////////////////////////////////////////////////////
+
+JPH_SUPPRESS_WARNING_PUSH
+JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 
 #define JPH_PROFILE_THREAD_START(name)
 #define JPH_PROFILE_THREAD_END()
@@ -232,5 +245,7 @@ JPH_NAMESPACE_END
 #define JPH_PROFILE_FUNCTION()
 #define JPH_PROFILE_NEXTFRAME()
 #define JPH_PROFILE_DUMP(...)
+
+JPH_SUPPRESS_WARNING_POP
 
 #endif

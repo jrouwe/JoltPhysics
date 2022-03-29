@@ -115,7 +115,6 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat")												\
 	JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")										\
 	JPH_CLANG_SUPPRESS_WARNING("-Wfloat-equal")													\
-	JPH_CLANG_SUPPRESS_WARNING("-Wnewline-eof")													\
 	JPH_CLANG_SUPPRESS_WARNING("-Wsign-conversion")												\
 	JPH_CLANG_SUPPRESS_WARNING("-Wold-style-cast")												\
 	JPH_CLANG_SUPPRESS_WARNING("-Wgnu-anonymous-struct")										\

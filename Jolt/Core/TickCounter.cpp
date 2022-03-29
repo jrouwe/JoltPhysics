@@ -6,11 +6,11 @@
 #include <Jolt/Core/TickCounter.h>
 
 #if defined(JPH_PLATFORM_WINDOWS)
-	#pragma warning (push, 0)
-	#pragma warning (disable : 5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
+	JPH_SUPPRESS_WARNING_PUSH
+	JPH_MSVC_SUPPRESS_WARNING(5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
 	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-	#pragma warning (pop)
+	#include <Windows.h>
+	JPH_SUPPRESS_WARNING_POP
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID)
 	#include <fstream>
 #elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)

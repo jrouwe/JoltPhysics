@@ -6,6 +6,8 @@
 #include <Jolt/Core/TickCounter.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
+JPH_NAMESPACE_BEGIN
+
 // Shorthand function to ifdef out code if narrow phase stats tracking is off
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 	#define JPH_IF_TRACK_NARROWPHASE_STATS(...) __VA_ARGS__
@@ -14,8 +16,6 @@
 #endif // JPH_TRACK_NARROWPHASE_STATS
 
 #ifdef JPH_TRACK_NARROWPHASE_STATS
-
-JPH_NAMESPACE_BEGIN
 
 /// Structure that tracks narrow phase timing information for a particular combination of shapes
 class NarrowPhaseStat
@@ -99,6 +99,6 @@ private:
 	uint64					mStart;
 };
 
-JPH_NAMESPACE_END
-
 #endif // JPH_TRACK_NARROWPHASE_STATS
+
+JPH_NAMESPACE_END
