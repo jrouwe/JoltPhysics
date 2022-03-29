@@ -811,4 +811,11 @@ const PhysicsMaterial *BodyInterface::GetMaterial(const BodyID &inBodyID, const 
 		return PhysicsMaterial::sDefault;
 }
 
+void BodyInterface::InvalidateContactCache(const BodyID &inBodyID)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		mBodyManager->InvalidateContactCacheForBody(lock.GetBody());
+}
+
 JPH_NAMESPACE_END
