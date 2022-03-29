@@ -6,12 +6,9 @@
 #include <Jolt/Math/Float2.h>
 #include "doctest.h"
 
-// Disable common warnings triggered by Jolt
+// Disable common warnings
 JPH_SUPPRESS_WARNINGS
-
-#if defined(JPH_COMPILER_CLANG)
-	#pragma clang diagnostic ignored "-Wheader-hygiene"
-#endif
+JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")
 
 using namespace JPH;
 

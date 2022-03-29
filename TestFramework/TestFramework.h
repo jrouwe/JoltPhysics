@@ -5,8 +5,9 @@
 
 #include <Jolt/Jolt.h>
 
-// Disable common warnings triggered by Jolt
+// Disable common warnings
 JPH_SUPPRESS_WARNINGS
+JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")
 
 #pragma warning (push, 0)
 #pragma warning (disable : 5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
@@ -25,10 +26,6 @@ JPH_SUPPRESS_WARNINGS
 #include <dxgi1_6.h>
 #include <wrl.h> // for ComPtr
 #pragma warning (pop)
-
-#if defined(JPH_COMPILER_CLANG)
-	#pragma clang diagnostic ignored "-Wheader-hygiene"
-#endif
 
 using Microsoft::WRL::ComPtr;
 using namespace JPH;
