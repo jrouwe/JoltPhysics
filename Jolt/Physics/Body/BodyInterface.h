@@ -186,6 +186,7 @@ public:
 	/// Get the material for a particular sub shape
 	const PhysicsMaterial *		GetMaterial(const BodyID &inBodyID, const SubShapeID &inSubShapeID) const;
 
+	/// Set the Body::EFlags::InvalidateContactCache flag for the specified body. This means that the collision cache is invalid for any body pair involving that body until the next physics step.
 	void						InvalidateContactCache(const BodyID &inBodyID);
 
 private:
