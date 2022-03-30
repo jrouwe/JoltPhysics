@@ -116,7 +116,8 @@ public:
 		return sub_shape_id;
 	}
 
-	/// Get surface normal of a particular sub shape and its world space surface position on this body
+	/// Get surface normal of a particular sub shape and its world space surface position on this body.
+	/// Note: When you have a CollideShapeResult or ShapeCastResult you should use -mPenetrationAxis.Normalized() as contact normal as GetWorldSpaceSurfaceNormal will only return face normals (and not vertex or edge normals).
 	inline Vec3					GetWorldSpaceSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inPosition) const
 	{
 		Mat44 inv_com = GetInverseCenterOfMassTransform();

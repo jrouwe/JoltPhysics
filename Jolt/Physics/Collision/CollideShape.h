@@ -39,7 +39,7 @@ public:
 
 	Vec3					mContactPointOn1;			///< Contact point on shape 1 (in world space)
 	Vec3					mContactPointOn2;			///< Contact point on shape 2 (in world space)
-	Vec3					mPenetrationAxis;			///< Direction to move shape 2 out of collision along the shortest path (magnitude is meaningless, in world space)
+	Vec3					mPenetrationAxis;			///< Direction to move shape 2 out of collision along the shortest path (magnitude is meaningless, in world space). You can use -mPenetrationAxis.Normalized() as contact normal.
 	float					mPenetrationDepth;			///< Penetration depth (move shape 2 by this distance to resolve the collision)
 	SubShapeID				mSubShapeID1;				///< Sub shape ID that identifies the face on shape 1
 	SubShapeID				mSubShapeID2;				///< Sub shape ID that identifies the face on shape 2

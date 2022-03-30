@@ -199,7 +199,8 @@ public:
 	/// Get the material assigned to a particular sub shape ID
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const = 0;
 
-	/// Get the surface normal of a particular sub shape ID and point on surface (all vectors are relative to center of mass for this shape)
+	/// Get the surface normal of a particular sub shape ID and point on surface (all vectors are relative to center of mass for this shape).
+	/// Note: When you have a CollideShapeResult or ShapeCastResult you should use -mPenetrationAxis.Normalized() as contact normal as GetSurfaceNormal will only return face normals (and not vertex or edge normals).
 	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const = 0;
 
 	/// Get the user data of a particular sub shape ID
