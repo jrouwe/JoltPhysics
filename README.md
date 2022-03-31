@@ -79,8 +79,8 @@ For more information see the [Architecture and API documentation](https://jrouwe
 * Linux (tested on Ubuntu 20.04) x64/ARM64
 * Android (tested on Android 10) x64/ARM64
 * Platform Blue (a popular game console) x64
-* MacOS (has had minimal testing)
-* iOS (has had minimal testing)
+* MacOS (tested on Monterey) x64/ARM64
+* iOS (tested on iOS 15) x64/ARM64
 
 ## Required CPU features
 

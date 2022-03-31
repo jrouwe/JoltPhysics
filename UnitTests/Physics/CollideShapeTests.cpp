@@ -203,10 +203,10 @@ TEST_SUITE("CollideShapeTests")
 			CHECK(collector.mHits.size() == 1);
 			const CollideShapeResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == body2.GetID());
-			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(0, 10, 0), 1.0e-5f);
-			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(0, 11, 0), 1.0e-5f);
+			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(0, 10, 0), 1.0e-4f);
+			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(0, 11, 0), 1.0e-4f);
 			Vec3 pen_axis = result.mPenetrationAxis.Normalized();
-			CHECK_APPROX_EQUAL(pen_axis, Vec3(0, -1, 0), 1.0e-5f);
+			CHECK_APPROX_EQUAL(pen_axis, Vec3(0, -1, 0), 1.0e-4f);
 			CHECK_APPROX_EQUAL(result.mPenetrationDepth, 1.0f, 1.0e-5f);
 		}
 
@@ -220,10 +220,10 @@ TEST_SUITE("CollideShapeTests")
 			CHECK(collector.mHits.size() == 1);
 			const CollideShapeResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == body2.GetID());
-			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(0, 10, 0), 1.0e-5f);
-			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(0, 11, 0), 1.0e-5f);
+			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(0, 10, 0), 1.0e-4f);
+			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(0, 11, 0), 1.0e-4f);
 			Vec3 pen_axis = result.mPenetrationAxis.Normalized();
-			CHECK_APPROX_EQUAL(pen_axis, Vec3(0, -1, 0), 1.0e-5f);
+			CHECK_APPROX_EQUAL(pen_axis, Vec3(0, -1, 0), 1.0e-4f);
 			CHECK_APPROX_EQUAL(result.mPenetrationDepth, 1.0f, 1.0e-5f);
 		}
 	}
