@@ -519,7 +519,6 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 void CharacterVirtual::UpdateSupportingContact()
 {
 	// Flag contacts as having a collision if they're close enough.
-	// This way CheckSupportInternal will give sensible results.
 	// Note that if we did MoveShape before we want to preserve any contacts that it marked as colliding
 	for (Contact &c : mActiveContacts)
 		if (!c.mWasDiscarded)
