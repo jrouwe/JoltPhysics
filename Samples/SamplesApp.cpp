@@ -223,10 +223,12 @@ static TestNameAndRTTI sRigTests[] =
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(CharacterTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(CharacterVirtualTest)
 
 static TestNameAndRTTI sCharacterTests[] =
 {
 	{ "Character",							JPH_RTTI(CharacterTest) },
+	{ "Character Virtual",					JPH_RTTI(CharacterVirtualTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(WaterShapeTest)

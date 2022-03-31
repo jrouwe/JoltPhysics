@@ -13,8 +13,12 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/BroadPhase/BroadPhaseInsertionTest.h
 	${SAMPLES_ROOT}/Tests/BroadPhase/BroadPhaseTest.cpp
 	${SAMPLES_ROOT}/Tests/BroadPhase/BroadPhaseTest.h
+	${SAMPLES_ROOT}/Tests/Character/CharacterTestBase.cpp
+	${SAMPLES_ROOT}/Tests/Character/CharacterTestBase.h
 	${SAMPLES_ROOT}/Tests/Character/CharacterTest.cpp
 	${SAMPLES_ROOT}/Tests/Character/CharacterTest.h
+	${SAMPLES_ROOT}/Tests/Character/CharacterVirtualTest.cpp
+	${SAMPLES_ROOT}/Tests/Character/CharacterVirtualTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.cpp

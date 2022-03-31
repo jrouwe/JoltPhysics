@@ -52,6 +52,18 @@ public:
 		return mValue == cEmpty;
 	}
 
+	/// Check equal
+	inline bool			operator == (const SubShapeID &inRHS) const
+	{
+		return mValue == inRHS.mValue;
+	}
+
+	/// Check not-equal
+	inline bool			operator != (const SubShapeID &inRHS) const
+	{
+		return mValue != inRHS.mValue;
+	}
+
 private:
 	friend class SubShapeIDCreator;
 

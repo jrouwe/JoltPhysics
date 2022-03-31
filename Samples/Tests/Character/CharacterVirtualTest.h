@@ -4,16 +4,13 @@
 #pragma once
 
 #include <Tests/Character/CharacterTestBase.h>
-#include <Jolt/Physics/Character/Character.h>
+#include <Jolt/Physics/Character/CharacterVirtual.h>
 
-// Simple test that test the Character class. Allows the user to move around with the arrow keys and jump with the J button.
-class CharacterTest : public CharacterTestBase
+// Simple test that test the CharacterVirtual class. Allows the user to move around with the arrow keys and jump with the J button.
+class CharacterVirtualTest : public CharacterTestBase
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CharacterTest)
-
-	// Destructor
-	virtual					~CharacterTest() override;
+	JPH_DECLARE_RTTI_VIRTUAL(CharacterVirtualTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;
@@ -21,13 +18,10 @@ public:
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
-	// Update the test, called after the physics update
-	virtual void			PostPhysicsUpdate(float inDeltaTime) override;
-
 	// Override to specify a camera pivot point and orientation (world space)
 	virtual Mat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
 
 private:
 	// The 'player' character
-	Ref<Character>			mCharacter;
+	Ref<CharacterVirtual>	mCharacter;
 };

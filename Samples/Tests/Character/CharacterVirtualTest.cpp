@@ -3,39 +3,30 @@
 
 #include <TestFramework.h>
 
-#include <Tests/Character/CharacterTest.h>
+#include <Tests/Character/CharacterVirtualTest.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Layers.h>
-#include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterTest) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest) 
 { 
-	JPH_ADD_BASE_CLASS(CharacterTest, CharacterTestBase)
+	JPH_ADD_BASE_CLASS(CharacterVirtualTest, CharacterTestBase)
 }
 
-static const float cCollisionTolerance = 0.05f;
-
-CharacterTest::~CharacterTest()
-{
-	mCharacter->RemoveFromPhysicsSystem();
-}
-
-void CharacterTest::Initialize()
+void CharacterVirtualTest::Initialize()
 {
 	CharacterTestBase::Initialize();
 
 	// Create 'player' character
-	Ref<CharacterSettings> settings = new CharacterSettings();
-	settings->mLayer = Layers::MOVING;
+	Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
 	settings->mShape = mStandingShape;
-	settings->mFriction = 0.5f;
-	mCharacter = new Character(settings, Vec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
-	mCharacter->AddToPhysicsSystem(EActivation::Activate);
+	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 }
 
-void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Get the state of the character
-	Character::EGroundState ground_state = mCharacter->GetGroundState();
+	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
 
 	// Determine controller input
 	Vec3 control_input = Vec3::sZero();
@@ -47,7 +38,7 @@ void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		control_input = control_input.Normalized();
 
 	// Cancel movement in opposite direction of normal when sliding
-	if (ground_state == Character::EGroundState::Sliding)
+	if (ground_state == CharacterVirtual::EGroundState::Sliding)
 	{
 		Vec3 normal = mCharacter->GetGroundNormal();
 		normal.SetY(0);
@@ -61,19 +52,23 @@ void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	desired_velocity.SetY(current_velocity.GetY());
 	Vec3 new_velocity = 0.75f * current_velocity + 0.25f * desired_velocity;
 
+	// Apply gravity only if we're not on solid ground (otherwise we'll slowly slide as there is no friction)
+	if (ground_state != CharacterVirtual::EGroundState::OnGround)
+		new_velocity += mPhysicsSystem->GetGravity() * inParams.mDeltaTime;
+
 	// Check actions
 	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
 	{
 		if (key == DIK_RETURN)
 		{
 			// Stance switch
-			mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop);
+			mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
 			break;
 		}
 		else if (key == DIK_J)
 		{
 			// Jump
-			if (ground_state == Character::EGroundState::OnGround)
+			if (ground_state == CharacterVirtual::EGroundState::OnGround)
 				new_velocity += Vec3(0, cJumpSpeed, 0);
 		}
 	}
@@ -81,16 +76,19 @@ void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update the velocity
 	mCharacter->SetLinearVelocity(new_velocity);
 
-	// Get properties
-	Vec3 position;
-	Quat rotation;
-	mCharacter->GetPositionAndRotation(position, rotation);
+	// Update the character position (instant, do not have to wait for physics update)
+	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
+
+	// Draw the character capsule
+	mCharacter->GetShape()->Draw(DebugRenderer::sInstance, mCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sRed, false, true);
 
 	// Draw current location
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
-	mDebugRenderer->DrawCoordinateSystem(Mat44::sRotationTranslation(rotation, position));
+	mDebugRenderer->DrawCoordinateSystem(mCharacter->GetWorldTransform());
 
-	if (ground_state != Character::EGroundState::InAir)
+	// Get the state of the character again (may have changed)
+	ground_state = mCharacter->GetGroundState();
+	if (ground_state != CharacterVirtual::EGroundState::InAir)
 	{
 		Vec3 ground_position = mCharacter->GetGroundPosition();
 		Vec3 ground_normal = mCharacter->GetGroundNormal();
@@ -105,17 +103,7 @@ void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-void CharacterTest::PostPhysicsUpdate(float inDeltaTime)
+Mat44 CharacterVirtualTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
-	// Fetch the new ground properties
-	mCharacter->PostSimulation(cCollisionTolerance);
-}
-
-Mat44 CharacterTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
-{
-	// Get properties
-	Vec3 position;
-	Quat rotation;
-	mCharacter->GetPositionAndRotation(position, rotation);
-	return Mat44::sRotationTranslation(rotation, position);
+	return mCharacter->GetWorldTransform();
 }
