@@ -72,6 +72,7 @@ public:
 	void						ActivateBody(const BodyID &inBodyID);
 	void						ActivateBodies(const BodyID *inBodyIDs, int inNumber);
 	void						DeactivateBody(const BodyID &inBodyID);
+	void						DeactivateBodies(const BodyID *inBodyIDs, int inNumber);
 	bool						IsActive(const BodyID &inBodyID) const;
 	///@}
 
