@@ -598,11 +598,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter)
 {
 	// Slide the shape through the world
-	Vec3 old_position = mPosition;
 	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
-
-	// Update velocity based on motion
-	mLinearVelocity = (mPosition - old_position) / inDeltaTime;
 
 	// Determine the object that we're standing on
 	UpdateSupportingContact();
@@ -658,7 +654,6 @@ CharacterVirtual::EGroundState CharacterVirtual::GetGroundState() const
 		return EGroundState::InAir;
 
 	if (mCosMaxSlopeAngle < 0.999f // If cos(slope angle) is close to 1 then there's no limit
-		&& mSupportingContact->mNormal.GetY() >= 0.0f
 		&& mSupportingContact->mNormal.GetY() < mCosMaxSlopeAngle)
 		return EGroundState::Sliding;
 

@@ -19,62 +19,14 @@ void CharacterVirtualTest::Initialize()
 
 	// Create 'player' character
 	Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
+	settings->mMaxSlopeAngle = DegreesToRadians(45.0f);
 	settings->mShape = mStandingShape;
 	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 }
 
 void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	// Get the state of the character
-	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
-
-	// Determine controller input
-	Vec3 control_input = Vec3::sZero();
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetX(-1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	control_input.SetX(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		control_input.SetZ(-1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		control_input.SetZ(1);
-	if (control_input != Vec3::sZero())
-		control_input = control_input.Normalized();
-
-	// Cancel movement in opposite direction of normal when sliding
-	if (ground_state == CharacterVirtual::EGroundState::Sliding)
-	{
-		Vec3 normal = mCharacter->GetGroundNormal();
-		normal.SetY(0);
-		if (normal.Dot(control_input) <= 0.0f)
-			control_input = Vec3::sZero();
-	}
-
-	// Update velocity
-	Vec3 current_velocity = mCharacter->GetLinearVelocity();
-	Vec3 desired_velocity = cCharacterSpeed * control_input;
-	desired_velocity.SetY(current_velocity.GetY());
-	Vec3 new_velocity = 0.75f * current_velocity + 0.25f * desired_velocity;
-
-	// Apply gravity only if we're not on solid ground (otherwise we'll slowly slide as there is no friction)
-	if (ground_state != CharacterVirtual::EGroundState::OnGround)
-		new_velocity += mPhysicsSystem->GetGravity() * inParams.mDeltaTime;
-
-	// Check actions
-	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
-	{
-		if (key == DIK_RETURN)
-		{
-			// Stance switch
-			mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
-			break;
-		}
-		else if (key == DIK_J)
-		{
-			// Jump
-			if (ground_state == CharacterVirtual::EGroundState::OnGround)
-				new_velocity += Vec3(0, cJumpSpeed, 0);
-		}
-	}
-
-	// Update the velocity
-	mCharacter->SetLinearVelocity(new_velocity);
+	CharacterTestBase::PrePhysicsUpdate(inParams);
 
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
@@ -86,8 +38,8 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
 	mDebugRenderer->DrawCoordinateSystem(mCharacter->GetWorldTransform());
 
-	// Get the state of the character again (may have changed)
-	ground_state = mCharacter->GetGroundState();
+	// Draw the state of the ground contact
+	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
 	if (ground_state != CharacterVirtual::EGroundState::InAir)
 	{
 		Vec3 ground_position = mCharacter->GetGroundPosition();
@@ -103,7 +55,39 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-Mat44 CharacterVirtualTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
 {
-	return mCharacter->GetWorldTransform();
+	// Cancel movement in opposite direction of normal when sliding
+	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
+	if (ground_state == CharacterVirtual::EGroundState::Sliding)
+	{
+		Vec3 normal = mCharacter->GetGroundNormal();
+		normal.SetY(0.0f);
+		float dot = normal.Dot(inMovementDirection);
+		if (dot < 0.0f)
+			inMovementDirection -= (dot * normal) / normal.LengthSq();
+	}
+
+	// Update velocity
+	Vec3 current_velocity = mCharacter->GetLinearVelocity();
+	Vec3 desired_velocity = cCharacterSpeed * inMovementDirection;
+	desired_velocity.SetY(current_velocity.GetY());
+	Vec3 new_velocity = 0.75f * current_velocity + 0.25f * desired_velocity;
+
+	// Apply gravity only if we're not on solid ground (otherwise we'll slowly slide as there is no friction)
+	if (ground_state != CharacterVirtual::EGroundState::OnGround)
+		new_velocity += mPhysicsSystem->GetGravity() * inDeltaTime;
+	else
+		new_velocity.SetY(max(new_velocity.GetY(), 0.0f)); // Reset negative velocity if we're on ground
+
+	// Stance switch
+	if (inSwitchStance)
+		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
+
+	// Jump
+	if (inJump && ground_state == CharacterVirtual::EGroundState::OnGround)
+		new_velocity += Vec3(0, cJumpSpeed, 0);
+
+	// Update the velocity
+	mCharacter->SetLinearVelocity(new_velocity);
 }

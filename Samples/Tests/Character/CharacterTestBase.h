@@ -17,14 +17,26 @@ public:
 	// Initialize the test
 	virtual void			Initialize() override;
 
+	// Update the test, called before the physics update
+	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+
 	// Override to specify the initial camera state (local to GetCameraPivot)
 	virtual void			GetInitialCamera(CameraState &ioState) const override;
+
+	// Override to specify a camera pivot point and orientation (world space)
+	virtual Mat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
 
 	// Optional settings menu
 	virtual bool			HasSettingsMenu() const override							{ return true; }
 	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 protected:
+	// Get position of the character
+	virtual Vec3			GetCharacterPosition() const = 0;
+
+	// Handle user input to the character
+	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) = 0;
+
 	// Character size
 	inline static constexpr float cCharacterHeightStanding = 1.35f;
 	inline static constexpr float cCharacterRadiusStanding = 0.3f;
