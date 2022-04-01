@@ -144,6 +144,13 @@ void BodyInterface::DeactivateBody(const BodyID &inBodyID)
 	}
 }
 
+void BodyInterface::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
+{
+	BodyLockMultiWrite lock(*mBodyLockInterface, inBodyIDs, inNumber);
+
+	mBodyManager->DeactivateBodies(inBodyIDs, inNumber);
+}
+
 bool BodyInterface::IsActive(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
