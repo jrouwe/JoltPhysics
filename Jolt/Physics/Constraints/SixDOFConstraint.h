@@ -152,6 +152,10 @@ public:
 	/// Solve: R2 * ConstraintToBody2 = R1 * ConstraintToBody1 * q (see SwingTwistConstraint::GetSwingTwist) and R2 = R1 * inOrientation for q.
 	void						SetTargetOrientationBS(QuatArg inOrientation)				{ SetTargetOrientationCS(mConstraintToBody1.Conjugated() * inOrientation * mConstraintToBody2); }
 
+	/// Set the max friction for each axis
+	float						GetMaxFriction(EAxis inAxis)								{ return mMaxFriction[inAxis]; }
+	void						SetMaxFriction(EAxis inAxis, float inFriction)				{ mMaxFriction[inAxis] = inFriction; }
+
 private:
 	// Calculate properties needed for the position constraint
 	inline void					GetPositionConstraintProperties(Vec3 &outR1PlusU, Vec3 &outR2, Vec3 &outU) const;
