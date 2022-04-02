@@ -121,7 +121,7 @@ public:
 
 	/// Set the max friction for each axis
 	void						SetMaxFriction(EAxis inAxis, float inFriction);
-	float						GetMaxFriction(EAxis inAxis)								{ return mMaxFriction[inAxis]; }
+	float						GetMaxFriction(EAxis inAxis) const							{ return mMaxFriction[inAxis]; }
 
 	/// Get rotation of constraint in constraint space
 	inline Quat					GetRotationInConstraintSpace() const;
