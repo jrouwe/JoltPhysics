@@ -230,7 +230,7 @@ void SixDOFConstraint::CacheRotationMotorActive()
 
 void SixDOFConstraint::SetMotorState(EAxis inAxis, EMotorState inState)
 {
-	JPH_ASSERT(inState == EMotorState::Off || (mMotorSettings[inAxis].IsValid() && !IsAxisFixed(inAxis)));
+	JPH_ASSERT(inState == EMotorState::Off || mMotorSettings[inAxis].IsValid());
 
 	if (mMotorState[inAxis] != inState)
 	{
