@@ -145,6 +145,10 @@ SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFCon
 	// Store motor settings
 	for (int i = 0; i < EAxis::Num; ++i)
 		mMotorSettings[i] = inSettings.mMotorSettings[i];
+
+	// Cache if motors are active (motors are off initially, but we may have friction)
+	CacheTranslationMotorActive();
+	CacheRotationMotorActive();
 }
 
 void SixDOFConstraint::SetTranslationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax)
@@ -167,6 +171,16 @@ void SixDOFConstraint::SetRotationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax)
 	mLimitMax[EAxis::RotationZ] = inLimitMax.GetZ();
 
 	UpdateRotationLimits();
+}
+
+void SixDOFConstraint::SetMaxFriction(EAxis inAxis, float inFriction)
+{ 
+	mMaxFriction[inAxis] = inFriction; 
+	
+	if (inAxis >= EAxis::TranslationX && inAxis <= EAxis::TranslationZ) 
+		CacheTranslationMotorActive(); 
+	else 
+		CacheRotationMotorActive(); 
 }
 
 void SixDOFConstraint::GetPositionConstraintProperties(Vec3 &outR1PlusU, Vec3 &outR2, Vec3 &outU) const
@@ -194,9 +208,29 @@ Quat SixDOFConstraint::GetRotationInConstraintSpace() const
 	return (mBody1->GetRotation() * mConstraintToBody1).Conjugated() * mBody2->GetRotation() * mConstraintToBody2;
 }
 
+void SixDOFConstraint::CacheTranslationMotorActive()
+{
+	mTranslationMotorActive = mMotorState[EAxis::TranslationX] != EMotorState::Off 
+		|| mMotorState[EAxis::TranslationY] != EMotorState::Off 
+		|| mMotorState[EAxis::TranslationZ] != EMotorState::Off
+		|| HasFriction(EAxis::TranslationX)
+		|| HasFriction(EAxis::TranslationY)
+		|| HasFriction(EAxis::TranslationZ);
+}
+
+void SixDOFConstraint::CacheRotationMotorActive()
+{
+	mRotationMotorActive = mMotorState[EAxis::RotationX] != EMotorState::Off 
+		|| mMotorState[EAxis::RotationY] != EMotorState::Off 
+		|| mMotorState[EAxis::RotationZ] != EMotorState::Off
+		|| HasFriction(EAxis::RotationX)
+		|| HasFriction(EAxis::RotationY)
+		|| HasFriction(EAxis::RotationZ);
+}
+
 void SixDOFConstraint::SetMotorState(EAxis inAxis, EMotorState inState)
 {
-	JPH_ASSERT(inState == EMotorState::Off || mMotorSettings[inAxis].IsValid());
+	JPH_ASSERT(inState == EMotorState::Off || (mMotorSettings[inAxis].IsValid() && !IsAxisFixed(inAxis)));
 
 	if (mMotorState[inAxis] != inState)
 	{
@@ -207,13 +241,7 @@ void SixDOFConstraint::SetMotorState(EAxis inAxis, EMotorState inState)
 		{
 			mMotorTranslationConstraintPart[inAxis - EAxis::TranslationX].Deactivate();
 
-			// Test if any of the motors or friction are active
-			mTranslationMotorActive = mMotorState[EAxis::TranslationX] != EMotorState::Off 
-				|| mMotorState[EAxis::TranslationY] != EMotorState::Off 
-				|| mMotorState[EAxis::TranslationZ] != EMotorState::Off
-				|| mMaxFriction[EAxis::TranslationX] > 0.0f
-				|| mMaxFriction[EAxis::TranslationY] > 0.0f
-				|| mMaxFriction[EAxis::TranslationZ] > 0.0f;
+			CacheTranslationMotorActive();
 		}
 		else
 		{
@@ -221,12 +249,7 @@ void SixDOFConstraint::SetMotorState(EAxis inAxis, EMotorState inState)
 
 			mMotorRotationConstraintPart[inAxis - EAxis::RotationX].Deactivate();
 
-			mRotationMotorActive = mMotorState[EAxis::RotationX] != EMotorState::Off 
-				|| mMotorState[EAxis::RotationY] != EMotorState::Off 
-				|| mMotorState[EAxis::RotationZ] != EMotorState::Off
-				|| mMaxFriction[EAxis::RotationX] > 0.0f
-				|| mMaxFriction[EAxis::RotationY] > 0.0f
-				|| mMaxFriction[EAxis::RotationZ] > 0.0f;
+			CacheRotationMotorActive();
 
 			mRotationPositionMotorActive = 0;
 			for (int i = 0; i < 3; ++i)
@@ -306,7 +329,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 			switch (mMotorState[i])
 			{
 			case EMotorState::Off:
-				if (mMaxFriction[i] > 0.0f)
+				if (HasFriction(axis))
 					mMotorTranslationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis);
 				else
 					mMotorTranslationConstraintPart[i].Deactivate();
@@ -430,7 +453,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 				switch (mMotorState[axis])
 				{
 				case EMotorState::Off:
-					if (mMaxFriction[axis] > 0.0f)
+					if (HasFriction(axis))
 						mMotorRotationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, rotation_axis);
 					else
 						mMotorRotationConstraintPart[i].Deactivate();
