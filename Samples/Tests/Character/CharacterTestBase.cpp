@@ -75,10 +75,23 @@ void CharacterTestBase::Initialize()
 		Ref<Shape> block = new BoxShape(Vec3::sReplicate(0.5f));
 		for (int y = 0; y < 3; ++y)
 		{
-			BodyCreationSettings bcs(block, Vec3(3.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			BodyCreationSettings bcs(block, Vec3(5.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 			bcs.mMassPropertiesOverride.mMass = 10.0f;
 			mDynamicBoxes.push_back(mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate));
+		}
+
+		// Create two funnels with walls that are too steep to climb
+		Ref<Shape> funnel = new BoxShape(Vec3(0.1f, 1.0f, 1.0f));
+		for (int i = 0; i < 2; ++i)
+		{
+			Quat rotation = Quat::sRotation(Vec3::sAxisY(), JPH_PI * i);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(funnel, Vec3(5.0f, 0.0f, 5.0f) + rotation * Vec3(0.2f, 0, 0), rotation * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(40.0f)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+		}
+		for (int i = 0; i < 4; ++i)
+		{
+			Quat rotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(funnel, Vec3(10.0f, 0.0f, 5.0f) + rotation * Vec3(0.2f, 0, 0), rotation * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(40.0f)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 		}
 	}
 	else
