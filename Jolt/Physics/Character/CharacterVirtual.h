@@ -23,7 +23,7 @@ public:
 	float								mMass = 70.0f;
 
 	/// Maximum force with which the character can push other bodies (N).
-	float								mMaxStrength = 5.0f;
+	float								mMaxStrength = 100.0f;
 
 	/// Maximum angle of slope that character can still walk on (radians).
 	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
@@ -264,7 +264,7 @@ private:
 	void								DetermineConstraints(Vec3Arg inCharacterVelocity, vector<Contact> &inContacts, vector<Constraint> &outConstraints) const;
 
 	// Use the constraints to solve the displacement of the character. This will slide the character on the planes around the origin for as far as possible.
-	void								SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, vector<Constraint> &ioConstraints, float &outTimeSimulated, Vec3 &outDisplacement) const;
+	void								SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, vector<Constraint> &ioConstraints, vector<IgnoredContact> &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement) const;
 
 	// Handle contact with physics object that we're colliding against
 	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, Vec3Arg inGravity, float inDeltaTime) const;

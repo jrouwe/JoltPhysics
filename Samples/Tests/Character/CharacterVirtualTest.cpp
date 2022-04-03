@@ -23,6 +23,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mMaxSlopeAngle = DegreesToRadians(45.0f);
 	settings->mShape = mStandingShape;
 	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
+	mCharacter->SetListener(this);
 }
 
 void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -94,4 +95,11 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 	// Update the velocity
 	mCharacter->SetLinearVelocity(new_velocity);
+}
+
+void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+{
+	// Dynamic boxes cannot push the character (they're meant to be pushed by the player)
+	if (find(mDynamicBoxes.begin(), mDynamicBoxes.end(), inBodyID2) != mDynamicBoxes.end())
+		ioSettings.mCanPushCharacter = false;
 }

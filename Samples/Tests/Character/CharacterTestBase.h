@@ -30,6 +30,10 @@ public:
 	virtual bool			HasSettingsMenu() const override							{ return true; }
 	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
+	// Saving / restoring state for replay
+	virtual void			SaveState(StateRecorder &inStream) const override;
+	virtual void			RestoreState(StateRecorder &inStream) override;
+
 protected:
 	// Get position of the character
 	virtual Vec3			GetCharacterPosition() const = 0;
@@ -49,10 +53,21 @@ protected:
 	RefConst<Shape>			mStandingShape;
 	RefConst<Shape>			mCrouchingShape;
 
+	// List of dynamic boxes
+	vector<BodyID>			mDynamicBoxes;
+
 private:
 	// List of possible scene names
 	static const char *		sScenes[];
 
 	// Filename of animation to load for this test
 	static const char *		sSceneName;
+
+	// Scene time (for moving bodies)
+	float					mTime = 0.0f;
+
+	// Moving bodies
+	BodyID					mRotatingBody;
+	BodyID					mVerticallyMovingBody;
+	BodyID					mHorizontallyMovingBody;
 };

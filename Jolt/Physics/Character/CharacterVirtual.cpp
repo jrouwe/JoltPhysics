@@ -314,7 +314,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	return true;
 }
 
-void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, vector<Constraint> &ioConstraints, float &outTimeSimulated, Vec3 &outDisplacement) const
+void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, vector<Constraint> &ioConstraints, vector<IgnoredContact> &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement) const
 {
 	// If there are no constraints we can immediately move to our target
 	if (ioConstraints.empty())
@@ -411,6 +411,9 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 				{
 					// Constraint should be ignored, remove it from the list
 					c->mContact->mWasDiscarded = true;
+
+					// Mark it as ignored for GetFirstContactForSweep
+					ioIgnoredContacts.emplace_back(c->mContact->mBodyB, c->mContact->mSubShapeIDB);
 					continue;
 				}
 
@@ -570,7 +573,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 		// Solve the displacement using these constraints
 		Vec3 displacement;
 		float time_simulated;
-		SolveConstraints(inVelocity, inGravity, inDeltaTime, time_remaining, constraints, time_simulated, displacement);
+		SolveConstraints(inVelocity, inGravity, inDeltaTime, time_remaining, constraints, ignored_contacts, time_simulated, displacement);
 
 		// Store the contacts now that the colliding ones have been marked
 		if (outActiveContacts != nullptr)

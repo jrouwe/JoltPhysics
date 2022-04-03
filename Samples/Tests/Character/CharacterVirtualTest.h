@@ -7,7 +7,7 @@
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 
 // Simple test that test the CharacterVirtual class. Allows the user to move around with the arrow keys and jump with the J button.
-class CharacterVirtualTest : public CharacterTestBase
+class CharacterVirtualTest : public CharacterTestBase, public CharacterContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(CharacterVirtualTest)
@@ -17,6 +17,9 @@ public:
 
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+
+	// Called whenever the character collides with a body. Returns true if the contact can push the character.
+	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
 
 protected:
 	// Get position of the character

@@ -29,6 +29,14 @@ const char *CharacterTestBase::sScenes[] =
 
 const char *CharacterTestBase::sSceneName = "ObstacleCourse";
 
+// Scene constants
+static const Vec3 cRotatingPosition(-5, 0.25f, 15);
+static const Quat cRotatingOrientation = Quat::sIdentity();
+static const Vec3 cVerticallyMovingPosition(0, 2.0f, 15);
+static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
+static const Vec3 cHorizontallyMovingPosition(5, 1, 15);
+static const Quat cHorizontallyMovingOrientation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
+
 void CharacterTestBase::Initialize()
 {
 	if (strcmp(sSceneName, "PerlinMesh") == 0)
@@ -56,6 +64,22 @@ void CharacterTestBase::Initialize()
 		Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f); 
 		for (int z = 0; z < 40; ++z)
 			mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, Vec3(-10.0f, 2.5f, -10.0f + 0.2f * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+		// Kinematic blocks to test interacting with moving objects
+		Ref<Shape> kinematic = new BoxShape(Vec3(1, 0.25f, 3.0f));
+		mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+		mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+		mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+
+		// Dynamic blocks to test player pushing blocks
+		Ref<Shape> block = new BoxShape(Vec3::sReplicate(0.5f));
+		for (int y = 0; y < 3; ++y)
+		{
+			BodyCreationSettings bcs(block, Vec3(3.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+			bcs.mMassPropertiesOverride.mMass = 10.0f;
+			mDynamicBoxes.push_back(mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate));
+		}
 	}
 	else
 	{
@@ -79,6 +103,9 @@ void CharacterTestBase::Initialize()
 
 void CharacterTestBase::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
+	// Update scene time
+	mTime += inParams.mDeltaTime;
+
 	// Determine controller input
 	Vec3 control_input = Vec3::sZero();
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
@@ -107,6 +134,14 @@ void CharacterTestBase::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	HandleInput(control_input, jump, switch_stance, inParams.mDeltaTime);
+
+	// Animate bodies
+	if (!mRotatingBody.IsInvalid())
+		mBodyInterface->MoveKinematic(mRotatingBody, cRotatingPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * sin(mTime)), inParams.mDeltaTime);
+	if (!mHorizontallyMovingBody.IsInvalid())
+		mBodyInterface->MoveKinematic(mHorizontallyMovingBody, cHorizontallyMovingPosition + Vec3(3.0f * sin(mTime), 0, 0), cHorizontallyMovingOrientation, inParams.mDeltaTime);
+	if (!mVerticallyMovingBody.IsInvalid())
+		mBodyInterface->MoveKinematic(mVerticallyMovingBody, cVerticallyMovingPosition + Vec3(0, 1.75f * sin(mTime), 0), cVerticallyMovingOrientation, inParams.mDeltaTime);
 }
 
 void CharacterTestBase::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
@@ -131,4 +166,14 @@ Mat44 CharacterTestBase::GetCameraPivot(float inCameraHeading, float inCameraPit
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(cos(inCameraPitch) * cos(inCameraHeading), sin(inCameraPitch), cos(inCameraPitch) * sin(inCameraHeading));
 	return Mat44::sTranslation(GetCharacterPosition() + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
+}
+
+void CharacterTestBase::SaveState(StateRecorder &inStream) const
+{
+	inStream.Write(mTime);
+}
+
+void CharacterTestBase::RestoreState(StateRecorder &inStream)
+{
+	inStream.Read(mTime);
 }
