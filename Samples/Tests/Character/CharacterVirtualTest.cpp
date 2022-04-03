@@ -7,6 +7,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Layers.h>
+#include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest) 
 { 
@@ -31,8 +32,11 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
 
-	// Draw the character capsule
-	mCharacter->GetShape()->Draw(DebugRenderer::sInstance, mCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sRed, false, true);
+	// Draw character
+	if (mCharacter->GetShape() == mStandingShape)
+		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	else
+		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 
 	// Draw current location
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
