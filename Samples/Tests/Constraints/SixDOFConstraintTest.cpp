@@ -114,6 +114,9 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 			}
 		}
 
+		for (int i = 0; i < 6; ++i)
+			inUI->CreateSlider(configuration_settings, "Max Friction " + labels[i], sSettings->mMaxFriction[i], 0.0f, 500.0f, 1.0f, [=](float inValue) { sSettings->mMaxFriction[i] = inValue; });
+
 		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
 
 		inUI->ShowMenu(configuration_settings);
