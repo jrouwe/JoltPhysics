@@ -13,7 +13,8 @@ JPH_NAMESPACE_BEGIN
 
 CharacterVirtual::CharacterVirtual(CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
 	mSystem(inSystem),
-	mShape(inSettings->mShape)
+	mShape(inSettings->mShape),
+	mUp(inSettings->mUp)
 {
 	// Copy settings
 	SetMaxSlopeAngle(inSettings->mMaxSlopeAngle);
@@ -232,19 +233,21 @@ void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, vector<
 		constraint.mPlane = Plane(c.mNormal, c.mDistance);
 
 		// Next check if the angle is too steep and if it is add an additional constraint that holds the character back
-		if (mCosMaxSlopeAngle < 0.999f // If cos(slope angle) is close to 1 then there's no limit
-			&& c.mNormal.GetY() >= 0.0f
-			&& c.mNormal.GetY() < mCosMaxSlopeAngle)
+		if (mCosMaxSlopeAngle < 0.999f) // If cos(slope angle) is close to 1 then there's no limit
 		{
-			// Make horizontal normal
-			Vec3 normal = Vec3(c.mNormal.GetX(), 0.0f, c.mNormal.GetZ()).Normalized();
+			float dot = c.mNormal.Dot(mUp);
+			if (dot >= 0.0f && dot < mCosMaxSlopeAngle)
+			{
+				// Make horizontal normal
+				Vec3 normal = Vec3(c.mNormal.GetX(), 0.0f, c.mNormal.GetZ()).Normalized();
 
-			// Create a secondary constraint that blocks horizontal movement
-			outConstraints.push_back(Constraint());
-			Constraint &vertical_constraint = outConstraints.back();
-			vertical_constraint.mContact = &c;
-			vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
-			vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
+				// Create a secondary constraint that blocks horizontal movement
+				outConstraints.push_back(Constraint());
+				Constraint &vertical_constraint = outConstraints.back();
+				vertical_constraint.mContact = &c;
+				vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
+				vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
+			}
 		}
 	}
 }
@@ -529,12 +532,16 @@ void CharacterVirtual::UpdateSupportingContact()
 
 	// Find the contact with the normal that is pointing most upwards and store it in mSupportingContact
 	mSupportingContact = nullptr;
-	float max_y = -FLT_MAX;
+	float max_dot = -FLT_MAX;
 	for (const Contact &c : mActiveContacts)
-		if (c.mHadCollision && max_y < c.mNormal.GetY())
+		if (c.mHadCollision)
 		{
-			mSupportingContact = &c;
-			max_y = c.mNormal.GetY();
+			float dot = c.mNormal.Dot(mUp);
+			if (max_dot < dot)
+			{
+				mSupportingContact = &c;
+				max_dot = dot;
+			}
 		}
 }
 
@@ -657,7 +664,7 @@ CharacterVirtual::EGroundState CharacterVirtual::GetGroundState() const
 		return EGroundState::InAir;
 
 	if (mCosMaxSlopeAngle < 0.999f // If cos(slope angle) is close to 1 then there's no limit
-		&& mSupportingContact->mNormal.GetY() < mCosMaxSlopeAngle)
+		&& mSupportingContact->mNormal.Dot(mUp) < mCosMaxSlopeAngle)
 		return EGroundState::Sliding;
 
 	return EGroundState::OnGround;

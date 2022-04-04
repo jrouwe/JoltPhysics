@@ -19,6 +19,9 @@ class PhysicsSystem;
 class CharacterVirtualSettings : public RefTarget<CharacterVirtualSettings>
 {
 public:
+	/// Vector indicating the up direction of the character
+	Vec3								mUp = Vec3::sAxisY();
+
 	/// Character mass (kg). Used to push down objects with gravity when the character is standing on top.
 	float								mMass = 70.0f;
 
@@ -69,7 +72,7 @@ public:
 	/// Constructor
 	/// @param inSettings The settings for the character
 	/// @param inPosition Initial position for the character
-	/// @param inRotation Initial rotation for the character (usually only around Y)
+	/// @param inRotation Initial rotation for the character (usually only around the up-axis)
 	/// @param inSystem Physics system that this character will be added to later
 										CharacterVirtual(CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem);
 
@@ -289,6 +292,9 @@ private:
 
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
+
+	// The character's world space up axis
+	Vec3								mUp;
 
 	// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
 	float								mPenetrationRecoverySpeed;
