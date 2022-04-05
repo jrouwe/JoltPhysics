@@ -99,11 +99,8 @@ void TransformedShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 		// Get center of mass of object we're casting against
 		Mat44 center_of_mass_transform2 = GetCenterOfMassTransform();
 
-		// Transform the shape cast to local space
-		ShapeCast local_shape = inShapeCast.PostTransformed(center_of_mass_transform2.InversedRotationTranslation());
-				
 		SubShapeIDCreator sub_shape_id1, sub_shape_id2(mSubShapeIDCreator);
-		CollisionDispatch::sCastShapeVsShape(local_shape, inShapeCastSettings, mShape, GetShapeScale(), inShapeFilter, center_of_mass_transform2, sub_shape_id1, sub_shape_id2, ioCollector);
+		CollisionDispatch::sCastShapeVsShapeWorldSpace(inShapeCast, inShapeCastSettings, mShape, GetShapeScale(), inShapeFilter, center_of_mass_transform2, sub_shape_id1, sub_shape_id2, ioCollector);
 	}
 }
 

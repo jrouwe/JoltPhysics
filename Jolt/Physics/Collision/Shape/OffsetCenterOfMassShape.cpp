@@ -48,7 +48,7 @@ AABox OffsetCenterOfMassShape::GetLocalBounds() const
 
 AABox OffsetCenterOfMassShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 { 
-	return mInnerShape->GetWorldSpaceBounds(inCenterOfMassTransform * Mat44::sTranslation(-mOffset), inScale);
+	return mInnerShape->GetWorldSpaceBounds(inCenterOfMassTransform.PreTranslated(-mOffset), inScale);
 }
 
 TransformedShape OffsetCenterOfMassShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
@@ -69,23 +69,23 @@ Vec3 OffsetCenterOfMassShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, V
 
 void OffsetCenterOfMassShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
 {
-	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform * Mat44::sTranslation(-mOffset), inScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy);
+	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy);
 }
 
 #ifdef JPH_DEBUG_RENDERER
 void OffsetCenterOfMassShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
-	mInnerShape->Draw(inRenderer, inCenterOfMassTransform * Mat44::sTranslation(-mOffset), inScale, inColor, inUseMaterialColors, inDrawWireframe);
+	mInnerShape->Draw(inRenderer, inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inColor, inUseMaterialColors, inDrawWireframe);
 }
 
 void OffsetCenterOfMassShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
 {
-	mInnerShape->DrawGetSupportFunction(inRenderer, inCenterOfMassTransform * Mat44::sTranslation(-mOffset), inScale, inColor, inDrawSupportDirection);
+	mInnerShape->DrawGetSupportFunction(inRenderer, inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inColor, inDrawSupportDirection);
 }
 
 void OffsetCenterOfMassShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
-	mInnerShape->DrawGetSupportingFace(inRenderer, inCenterOfMassTransform * Mat44::sTranslation(-mOffset), inScale);
+	mInnerShape->DrawGetSupportingFace(inRenderer, inCenterOfMassTransform.PreTranslated(-mOffset), inScale);
 }
 #endif // JPH_DEBUG_RENDERER
 
@@ -120,7 +120,7 @@ void OffsetCenterOfMassShape::CollectTransformedShapes(const AABox &inBox, Vec3A
 
 void OffsetCenterOfMassShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
-	mInnerShape->TransformShape(inCenterOfMassTransform * Mat44::sTranslation(-mOffset), ioCollector);
+	mInnerShape->TransformShape(inCenterOfMassTransform.PreTranslated(-mOffset), ioCollector);
 }
 
 void OffsetCenterOfMassShape::sCollideOffsetCenterOfMassVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
@@ -128,7 +128,7 @@ void OffsetCenterOfMassShape::sCollideOffsetCenterOfMassVsShape(const Shape *inS
 	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::OffsetCenterOfMass);
 	const OffsetCenterOfMassShape *shape1 = static_cast<const OffsetCenterOfMassShape *>(inShape1);
 
-	CollisionDispatch::sCollideShapeVsShape(shape1->mInnerShape, inShape2, inScale1, inScale2, inCenterOfMassTransform1 * Mat44::sTranslation(-shape1->mOffset), inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
+	CollisionDispatch::sCollideShapeVsShape(shape1->mInnerShape, inShape2, inScale1, inScale2, inCenterOfMassTransform1.PreTranslated(-shape1->mOffset), inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
 }
 
 void OffsetCenterOfMassShape::sCollideShapeVsOffsetCenterOfMass(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector)
@@ -136,7 +136,7 @@ void OffsetCenterOfMassShape::sCollideShapeVsOffsetCenterOfMass(const Shape *inS
 	JPH_ASSERT(inShape2->GetSubType() == EShapeSubType::OffsetCenterOfMass);
 	const OffsetCenterOfMassShape *shape2 = static_cast<const OffsetCenterOfMassShape *>(inShape2);
 
-	CollisionDispatch::sCollideShapeVsShape(inShape1, shape2->mInnerShape, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2 * Mat44::sTranslation(-shape2->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
+	CollisionDispatch::sCollideShapeVsShape(inShape1, shape2->mInnerShape, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2.PreTranslated(-shape2->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector);
 }
 
 void OffsetCenterOfMassShape::sCastOffsetCenterOfMassVsShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
@@ -146,7 +146,7 @@ void OffsetCenterOfMassShape::sCastOffsetCenterOfMassVsShape(const ShapeCast &in
 	const OffsetCenterOfMassShape *shape1 = static_cast<const OffsetCenterOfMassShape *>(inShapeCast.mShape);
 
 	// Transform the shape cast and update the shape
-	ShapeCast shape_cast(shape1->mInnerShape, inShapeCast.mScale, inShapeCast.mCenterOfMassStart * Mat44::sTranslation(-shape1->mOffset), inShapeCast.mDirection);
+	ShapeCast shape_cast(shape1->mInnerShape, inShapeCast.mScale, inShapeCast.mCenterOfMassStart.PreTranslated(-shape1->mOffset), inShapeCast.mDirection);
 
 	CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 }
@@ -159,7 +159,7 @@ void OffsetCenterOfMassShape::sCastShapeVsOffsetCenterOfMass(const ShapeCast &in
 	// Transform the shape cast
 	ShapeCast shape_cast = inShapeCast.PostTransformed(Mat44::sTranslation(shape->mOffset));
 
-	CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, shape->mInnerShape, inScale, inShapeFilter, inCenterOfMassTransform2 * Mat44::sTranslation(-shape->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
+	CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, shape->mInnerShape, inScale, inShapeFilter, inCenterOfMassTransform2.PreTranslated(-shape->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 }
 
 void OffsetCenterOfMassShape::SaveBinaryState(StreamOut &inStream) const
