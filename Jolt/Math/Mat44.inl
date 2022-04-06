@@ -1052,6 +1052,16 @@ void Mat44::SetRotation(Mat44Arg inRotation)
 	mCol[2] = inRotation.mCol[2];
 }
 
+Mat44 Mat44::PreTranslated(Vec3Arg inTranslation) const
+{
+	return Mat44(mCol[0], mCol[1], mCol[2], Vec4(GetTranslation() + Multiply3x3(inTranslation), 1));
+}
+
+Mat44 Mat44::PostTranslated(Vec3Arg inTranslation) const
+{
+	return Mat44(mCol[0], mCol[1], mCol[2], Vec4(GetTranslation() + inTranslation, 1));
+}
+
 Mat44 Mat44::PreScaled(Vec3Arg inScale) const
 {
 	return Mat44(inScale.GetX() * mCol[0], inScale.GetY() * mCol[1], inScale.GetZ() * mCol[2], mCol[3]);

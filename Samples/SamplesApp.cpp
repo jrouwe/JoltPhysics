@@ -1109,8 +1109,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			// Create shape cast
 			RefConst<Shape> shape = CreateProbeShape();
 			Mat44 rotation = Mat44::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Mat44::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI);
-			Mat44 com = Mat44::sTranslation(shape->GetCenterOfMass());
-			ShapeCast shape_cast(shape, Vec3::sReplicate(1.0f), Mat44::sTranslation(start) * rotation * com, direction);
+			ShapeCast shape_cast = ShapeCast::sFromWorldTransform(shape, Vec3::sReplicate(1.0f), Mat44::sTranslation(start) * rotation, direction);
 
 			// Settings
 			ShapeCastSettings settings;
@@ -1175,7 +1174,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						// Draw shape
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
 					#ifdef JPH_DEBUG_RENDERER
-						shape_cast.mShape->Draw(mDebugRenderer, Mat44::sTranslation(position) * rotation * com, Vec3::sReplicate(1.0f), color, false, false);
+						shape_cast.mShape->Draw(mDebugRenderer, shape_cast.mCenterOfMassStart.PostTranslated(hit.mFraction * shape_cast.mDirection), Vec3::sReplicate(1.0f), color, false, false);
 					#endif // JPH_DEBUG_RENDERER
 
 						// Draw normal
@@ -1211,7 +1210,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 				// Draw 'miss'
 				mDebugRenderer->DrawLine(start, start + direction, Color::sRed);
 			#ifdef JPH_DEBUG_RENDERER
-				shape_cast.mShape->Draw(mDebugRenderer, Mat44::sTranslation(outPosition) * rotation * com, Vec3::sReplicate(1.0f), Color::sRed, false, false);
+				shape_cast.mShape->Draw(mDebugRenderer, shape_cast.mCenterOfMassStart.PostTranslated(shape_cast.mDirection), Vec3::sReplicate(1.0f), Color::sRed, false, false);
 			#endif // JPH_DEBUG_RENDERER
 			}
 		}

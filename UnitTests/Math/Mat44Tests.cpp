@@ -330,6 +330,24 @@ TEST_SUITE("Mat44Tests")
 		CHECK_APPROX_EQUAL(m1, m2);
 	}
 
+	TEST_CASE("TestMat44PrePostScaled")
+	{
+		Mat44 m(Vec4(2, 3, 4, 0), Vec4(5, 6, 7, 0), Vec4(8, 9, 10, 0), Vec4(11, 12, 13, 1));
+		Vec3 v(14, 15, 16);
+
+		CHECK(m.PreScaled(v) == m * Mat44::sScale(v));
+		CHECK(m.PostScaled(v) == Mat44::sScale(v) * m);
+	}
+
+	TEST_CASE("TestMat44PrePostTranslated")
+	{
+		Mat44 m(Vec4(2, 3, 4, 0), Vec4(5, 6, 7, 0), Vec4(8, 9, 10, 0), Vec4(11, 12, 13, 1));
+		Vec3 v(14, 15, 16);
+
+		CHECK(m.PreTranslated(v) == m * Mat44::sTranslation(v));
+		CHECK(m.PostTranslated(v) == Mat44::sTranslation(v) * m);
+	}
+
 	TEST_CASE("TestMat44Decompose")
 	{
 		// Create a rotation/translation matrix

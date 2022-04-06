@@ -142,7 +142,7 @@ TEST_SUITE("ActiveEdgesTest")
 	{
 		AllHitCollisionCollector<CastShapeCollector> collector;
 		ShapeCast shape_cast(inProbeShape, Vec3::sReplicate(1.0f), Mat44::sTranslation(inProbeShapePos), inProbeShapeDirection);
-		CollisionDispatch::sCastShapeVsShape(shape_cast, inSettings, inTestShape, inTestShapeScale, ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
+		CollisionDispatch::sCastShapeVsShapeLocalSpace(shape_cast, inSettings, inTestShape, inTestShapeScale, ShapeFilter(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), collector);
 
 		sCheckMatch(collector.mHits, inExpectedHits, 1.0e-6f);
 	}

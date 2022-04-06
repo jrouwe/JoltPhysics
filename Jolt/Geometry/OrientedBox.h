@@ -21,8 +21,7 @@ public:
 					OrientedBox(Mat44Arg inOrientation, Vec3Arg inHalfExtents)			: mOrientation(inOrientation), mHalfExtents(inHalfExtents) { }
 
 	/// Construct from axis aligned box and transform. Only works for rotation/translation matrix (no scaling / shearing).
-					OrientedBox(Mat44Arg inOrientation, const AABox &inBox)				: OrientedBox(inOrientation * Mat44::sTranslation(inBox.GetCenter()), inBox.GetExtent()) { }
-
+					OrientedBox(Mat44Arg inOrientation, const AABox &inBox)				: OrientedBox(inOrientation.PreTranslated(inBox.GetCenter()), inBox.GetExtent()) { }
 
 	/// Test if oriented boxe overlaps with axis aligned box eachother
 	bool			Overlaps(const AABox &inBox, float inEpsilon = 1.0e-6f) const;

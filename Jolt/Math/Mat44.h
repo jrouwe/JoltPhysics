@@ -182,6 +182,12 @@ public:
 	/// Get matrix that transforms a direction with the same transform as this matrix (length is not preserved)
 	JPH_INLINE const Mat44		GetDirectionPreservingMatrix() const					{ return GetRotation().Inversed3x3().Transposed3x3(); }
 
+	/// Pre multiply by translation matrix: result = this * Mat44::sTranslation(inTranslation)
+	JPH_INLINE Mat44			PreTranslated(Vec3Arg inTranslation) const;
+
+	/// Post multiply by translation matrix: result = Mat44::sTranslation(inTranslation) * this (i.e. add inTranslation to the 4-th column)
+	JPH_INLINE Mat44			PostTranslated(Vec3Arg inTranslation) const;
+
 	/// Scale a matrix: result = this * Mat44::sScale(inScale)
 	JPH_INLINE Mat44			PreScaled(Vec3Arg inScale) const;
 
