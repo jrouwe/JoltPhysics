@@ -332,12 +332,8 @@ void MeshShape::DecodeSubShapeID(const SubShapeID &inSubShapeID, const void *&ou
 	JPH_ASSERT(remainder.IsEmpty(), "Invalid subshape ID");
 }
 
-const PhysicsMaterial *MeshShape::GetMaterial(const SubShapeID &inSubShapeID) const
+uint MeshShape::GetMaterialIndex(const SubShapeID &inSubShapeID) const
 {
-	// Return the default material if there are no materials on this shape
-	if (mMaterials.empty())
-		return PhysicsMaterial::sDefault;
-
 	// Decode ID
 	const void *block_start;
 	uint32 triangle_idx;
@@ -345,7 +341,16 @@ const PhysicsMaterial *MeshShape::GetMaterial(const SubShapeID &inSubShapeID) co
 		
 	// Fetch the flags
 	uint8 flags = TriangleCodec::DecodingContext::sGetFlags(block_start, triangle_idx);
-	return mMaterials[flags & FLAGS_MATERIAL_MASK];
+	return flags & FLAGS_MATERIAL_MASK;
+}
+
+const PhysicsMaterial *MeshShape::GetMaterial(const SubShapeID &inSubShapeID) const
+{
+	// Return the default material if there are no materials on this shape
+	if (mMaterials.empty())
+		return PhysicsMaterial::sDefault;
+
+	return mMaterials[GetMaterialIndex(inSubShapeID)];
 }
 
 Vec3 MeshShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 

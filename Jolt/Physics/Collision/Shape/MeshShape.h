@@ -74,6 +74,13 @@ public:
 	// See Shape::GetMaterial
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
 
+	/// Get the list of all materials
+	const PhysicsMaterialList &		GetMaterialList() const										{ return mMaterials; }
+
+	/// Determine which material index a particular sub shape uses (note that if there are no materials this function will return 0 so check the array size)
+	/// Note: This could for example be used to create a decorator shape around a mesh shape that overrides the GetMaterial call to replace a material with another material.
+	uint							GetMaterialIndex(const SubShapeID &inSubShapeID) const;
+
 	// See Shape::GetSurfaceNormal
 	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const override;
 
