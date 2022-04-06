@@ -12,7 +12,14 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Functionality to get the processors cycle counter 
+#ifdef JPH_PLATFORM_WINDOWS_UWP
+
+/// Functionality to get the processors cycle counter
+uint64 GetProcessorTickCount(); // Not inline to avoid having to include Windows.h
+
+#else
+
+/// Functionality to get the processors cycle counter
 JPH_INLINE uint64 GetProcessorTickCount()
 {
 #if defined(JPH_PLATFORM_BLUE)
@@ -27,6 +34,8 @@ JPH_INLINE uint64 GetProcessorTickCount()
 	#error Undefined
 #endif
 }
+
+#endif // JPH_PLATFORM_WINDOWS_UWP
 
 /// Get the amount of ticks per second, note that this number will never be fully accurate as the amound of ticks per second may vary with CPU load, so this number is only to be used to give an indication of time for profiling purposes
 uint64 GetProcessorTicksPerSecond();
