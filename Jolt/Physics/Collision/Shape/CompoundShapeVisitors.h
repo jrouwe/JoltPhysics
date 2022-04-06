@@ -210,7 +210,7 @@ struct CompoundShape::CastShapeVisitor
 		// Transform the shape cast
 		ShapeCast shape_cast = mShapeCast.PostTransformed(local_transform.InversedRotationTranslation());
 
-		CollisionDispatch::sCastShapeVsShape(shape_cast, mShapeCastSettings, inSubShape.mShape, inSubShape.TransformScale(mScale), mShapeFilter, center_of_mass_transform2, mSubShapeIDCreator1, shape2_sub_shape_id, mCollector);
+		CollisionDispatch::sCastShapeVsShapeLocalSpace(shape_cast, mShapeCastSettings, inSubShape.mShape, inSubShape.TransformScale(mScale), mShapeFilter, center_of_mass_transform2, mSubShapeIDCreator1, shape2_sub_shape_id, mCollector);
 	}
 
 	RayInvDirection				mInvDirection;

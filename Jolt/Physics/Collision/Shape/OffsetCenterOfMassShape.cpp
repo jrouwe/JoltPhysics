@@ -148,7 +148,7 @@ void OffsetCenterOfMassShape::sCastOffsetCenterOfMassVsShape(const ShapeCast &in
 	// Transform the shape cast and update the shape
 	ShapeCast shape_cast(shape1->mInnerShape, inShapeCast.mScale, inShapeCast.mCenterOfMassStart.PreTranslated(-shape1->mOffset), inShapeCast.mDirection);
 
-	CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
+	CollisionDispatch::sCastShapeVsShapeLocalSpace(shape_cast, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 }
 
 void OffsetCenterOfMassShape::sCastShapeVsOffsetCenterOfMass(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
@@ -159,7 +159,7 @@ void OffsetCenterOfMassShape::sCastShapeVsOffsetCenterOfMass(const ShapeCast &in
 	// Transform the shape cast
 	ShapeCast shape_cast = inShapeCast.PostTransformed(Mat44::sTranslation(shape->mOffset));
 
-	CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, shape->mInnerShape, inScale, inShapeFilter, inCenterOfMassTransform2.PreTranslated(-shape->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
+	CollisionDispatch::sCastShapeVsShapeLocalSpace(shape_cast, inShapeCastSettings, shape->mInnerShape, inScale, inShapeFilter, inCenterOfMassTransform2.PreTranslated(-shape->mOffset), inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 }
 
 void OffsetCenterOfMassShape::SaveBinaryState(StreamOut &inStream) const
