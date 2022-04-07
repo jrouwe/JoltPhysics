@@ -38,6 +38,9 @@ public:
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override							{ return mInnerShape->MustBeStatic(); }
 
+	// See Shape::GetCenterOfMass
+	virtual Vec3					GetCenterOfMass() const override						{ return mInnerShape->GetCenterOfMass(); }
+
 	// See Shape::GetSubShapeIDBitsRecursive
 	virtual uint					GetSubShapeIDBitsRecursive() const override				{ return mInnerShape->GetSubShapeIDBitsRecursive(); }
 

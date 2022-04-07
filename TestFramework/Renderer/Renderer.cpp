@@ -245,13 +245,24 @@ void Renderer::Initialize()
 	
 #ifdef _DEBUG
 	// Enable breaking on errors
-	ComPtr<ID3D12InfoQueue> pInfoQueue;
-	if (SUCCEEDED(mDevice.As(&pInfoQueue)))
+	ComPtr<ID3D12InfoQueue> info_queue;
+	if (SUCCEEDED(mDevice.As(&info_queue)))
 	{
-		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
-		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
-		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
 	}
+
+	// Disable an error that triggers on Windows 11 with a hybrid graphic system
+	// See: https://stackoverflow.com/questions/69805245/directx-12-application-is-crashing-in-windows-11
+	D3D12_MESSAGE_ID hide[] =
+	{
+		D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
+	};
+	D3D12_INFO_QUEUE_FILTER filter = { };
+	filter.DenyList.NumIDs = static_cast<UINT>(std::size(hide));
+	filter.DenyList.pIDList = hide;
+	info_queue->AddStorageFilterEntries(&filter);
 #endif // _DEBUG
 
 	// Disable full screen transitions

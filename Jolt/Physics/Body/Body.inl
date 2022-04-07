@@ -9,7 +9,7 @@ Mat44 Body::GetWorldTransform() const
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
 
-	return Mat44::sRotationTranslation(mRotation, GetPosition());
+	return Mat44::sRotationTranslation(mRotation, mPosition).PreTranslated(mShape->GetCenterOfMass());
 }
 
 Mat44 Body::GetCenterOfMassTransform() const

@@ -266,7 +266,7 @@ void CompoundShape::sCastCompoundVsShape(const ShapeCast &inShapeCast, const Sha
 		Vec3 scale = shape.TransformScale(inShapeCast.mScale);
 		ShapeCast shape_cast(shape.mShape, scale, transform, inShapeCast.mDirection);
 
-		CollisionDispatch::sCastShapeVsShape(shape_cast, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, shape1_sub_shape_id, inSubShapeIDCreator2, ioCollector);
+		CollisionDispatch::sCastShapeVsShapeLocalSpace(shape_cast, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, shape1_sub_shape_id, inSubShapeIDCreator2, ioCollector);
 
 		if (ioCollector.ShouldEarlyOut())
 			break;

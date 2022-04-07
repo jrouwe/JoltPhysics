@@ -20,8 +20,23 @@
 
 JPH_NAMESPACE_BEGIN
 
+#ifdef JPH_PLATFORM_WINDOWS_UWP
+
+uint64 GetProcessorTickCount()
+{
+	LARGE_INTEGER count;
+	QueryPerformanceCounter(&count);
+	return uint64(count.QuadPart);
+}
+
+#endif // JPH_PLATFORM_WINDOWS_UWP
+
 static const uint64 sProcessorTicksPerSecond = []() {
-#if defined(JPH_PLATFORM_WINDOWS)
+#if defined(JPH_PLATFORM_WINDOWS_UWP)
+	LARGE_INTEGER frequency { };
+	QueryPerformanceFrequency(&frequency);
+	return uint64(frequency.QuadPart);
+#elif defined(JPH_PLATFORM_WINDOWS)
 	// Open the key where the processor speed is stored
 	HKEY hkey;
 	RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, 1, &hkey);
