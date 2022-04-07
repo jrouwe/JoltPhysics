@@ -150,16 +150,16 @@ public:
 	///@name Properties of the ground this character is standing on
 
 	/// Current ground state
-	EGroundState						GetGroundState() const;
+	EGroundState						GetGroundState() const									{ return mGroundState; }
 
 	/// Get the contact point with the ground
 	Vec3								GetGroundPosition() const								{ return mSupportingContact != nullptr? mSupportingContact->mPosition : Vec3::sZero(); }
 
 	/// Get the contact normal with the ground
-	Vec3								GetGroundNormal() const									{ return mSupportingContact != nullptr? mSupportingContact->mNormal : Vec3::sZero(); }
+	Vec3								GetGroundNormal() const									{ return mGroundNormal; }
 
 	/// Velocity in world space of the point that we're standing on
-	Vec3								GetGroundVelocity() const								{ return mSupportingContact != nullptr? mSupportingContact->mLinearVelocity : Vec3::sZero(); }
+	Vec3								GetGroundVelocity() const								{ return mGroundVelocity; }
 
 	/// Material that the character is standing on.
 	const PhysicsMaterial *				GetGroundMaterial() const								{ return mSupportingContact != nullptr? mSupportingContact->mMaterial : nullptr; }
@@ -322,6 +322,18 @@ private:
 
 	// Points into mActiveContacts to the contact that has the most upward pointing normal
 	const Contact *						mSupportingContact = nullptr;
+
+	// Remembers the delta time of the last update
+	float								mLastDeltaTime = 1.0f / 60.0f;
+
+	// If the character is on the ground
+	EGroundState						mGroundState = EGroundState::InAir;
+
+	// Average velocity of the ground
+	Vec3								mGroundVelocity = Vec3::sZero();
+
+	// Average normal of the ground
+	Vec3								mGroundNormal = Vec3::sZero();
 };
 
 JPH_NAMESPACE_END

@@ -530,19 +530,134 @@ void CharacterVirtual::UpdateSupportingContact()
 		if (!c.mWasDiscarded)
 			c.mHadCollision |= c.mDistance < cCollisionTolerance;
 
-	// Find the contact with the normal that is pointing most upwards and store it in mSupportingContact
+	// Determine if we're supported or not
+	int num_supported = 0;
+	int num_sliding = 0;
+	int num_avg_normal = 0;
+	Vec3 avg_normal = Vec3::sZero();
+	Vec3 avg_velocity = Vec3::sZero();
 	mSupportingContact = nullptr;
-	float max_dot = -FLT_MAX;
+	float max_cos_angle = -FLT_MAX;
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
 		{
-			float dot = c.mNormal.Dot(mUp);
-			if (max_dot < dot)
+			// Calculate the angle between the plane normal and the up direction
+			float cos_angle = c.mNormal.Dot(mUp);
+
+			// Find the contact with the normal that is pointing most upwards and store it in mSupportingContact
+			if (max_cos_angle < cos_angle)
 			{
 				mSupportingContact = &c;
-				max_dot = dot;
+				max_cos_angle = cos_angle;
+			}
+
+			// Check if this is a sliding or supported contact
+			bool is_supported = cos_angle >= mCosMaxSlopeAngle;
+			if (is_supported)
+				num_supported++;
+			else
+				num_sliding++;
+
+			// If the angle between the two is less than 85 degrees we also use it to calculate the average normal
+			if (cos_angle >= 0.08f)
+			{
+				avg_normal += c.mNormal;
+				num_avg_normal++;
+
+				// For static or dynamic objects or for contacts that don't support us just take the contact velocity
+				if (c.mMotionTypeB != EMotionType::Kinematic || !is_supported)
+					avg_velocity += c.mLinearVelocity;
+				else
+				{
+					// For keyframed objects that support us calculate the velocity at our position rather than at the contact position so that we properly follow the object
+					// Note that we don't just take the point velocity because a point on an object with angular velocity traces an arc, 
+					// so if you just take point velocity * delta time you get an error that accumulates over time
+
+					// Determine center of mass and angular velocity
+					Vec3 angular_velocity, com;
+					{
+						BodyLockRead lock(mSystem->GetBodyLockInterface(), c.mBodyB);
+						if (lock.SucceededAndIsInBroadPhase())
+						{
+							const Body &body = lock.GetBody();
+
+							// Add the linear velocity to the average velocity
+							avg_velocity += body.GetLinearVelocity();
+
+							angular_velocity = body.GetAngularVelocity();
+							com = body.GetCenterOfMassPosition();
+						}
+						else
+						{
+							angular_velocity = Vec3::sZero();
+							com = Vec3::sZero();
+						}
+					}
+
+					// Get angular velocity
+					float angular_velocity_len_sq = angular_velocity.LengthSq();
+					if (angular_velocity_len_sq > 1.0e-12f)
+					{
+						float angular_velocity_len = sqrt(angular_velocity_len_sq);
+
+						// Calculate the rotation that the object will make in the time step
+						Quat rotation = Quat::sRotation(angular_velocity / angular_velocity_len, angular_velocity_len * mLastDeltaTime);
+
+						// Calculate where the new contact position will be
+						Vec3 new_position = com + rotation * (mPosition - com);
+
+						// Calculate the velocity
+						avg_velocity += (new_position - mPosition) / mLastDeltaTime;
+					}
+				}
 			}
 		}
+
+	// Calculate average normal and velocity
+	if (num_avg_normal > 1)
+	{
+		mGroundNormal = avg_normal.Normalized();
+		mGroundVelocity = avg_velocity / float(num_avg_normal);
+	}
+	else
+	{
+		mGroundNormal = Vec3::sZero();
+		mGroundVelocity = Vec3::sZero();
+	}
+
+	if (num_supported > 0)
+	{
+		// We made contact with something that supports us
+		mGroundState = EGroundState::OnGround;
+	}
+	else if (num_sliding > 0)
+	{
+		// If we're sliding we may actually be standing on multiple sliding contacts in such a way that we can't slide off, in this case we're also supported
+
+		// Convert the contacts into constraints
+		vector<Contact> contacts(mActiveContacts);
+		vector<Constraint> constraints;
+		constraints.reserve(contacts.size() * 2);
+		DetermineConstraints(-mUp, contacts, constraints);
+
+		// Solve the displacement using these constraints, this is used to check if we didn't move at all because we are supported
+		Vec3 displacement;
+		float time_simulated;
+		vector<IgnoredContact> ignored_contacts;
+		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement);
+
+		// If we're blocked then we're supported, otherwise we're sliding
+		constexpr float cMinRequiredDisplacementSquared = Square(0.01f);
+		if (time_simulated < 0.001f || displacement.LengthSq() < cMinRequiredDisplacementSquared)
+			mGroundState = EGroundState::OnGround;
+		else
+			mGroundState = EGroundState::Sliding;
+	}
+	else
+	{
+		// Not in contact with anything
+		mGroundState = EGroundState::InAir;
+	}
 }
 
 void CharacterVirtual::StoreActiveContacts(const vector<Contact> &inContacts)
@@ -607,6 +722,13 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 
 void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter)
 {
+	// If there's no delta time, we don't need to do anything
+	if (inDeltaTime <= 0.0f)
+		return;
+
+	// Remember delta time for checking if we're supported by the ground
+	mLastDeltaTime = inDeltaTime;
+
 	// Slide the shape through the world
 	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
@@ -656,18 +778,6 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 	}
 
 	return mShape == inShape;
-}
-
-CharacterVirtual::EGroundState CharacterVirtual::GetGroundState() const
-{
-	if (mSupportingContact == nullptr)
-		return EGroundState::InAir;
-
-	if (mCosMaxSlopeAngle < 0.999f // If cos(slope angle) is close to 1 then there's no limit
-		&& mSupportingContact->mNormal.Dot(mUp) < mCosMaxSlopeAngle)
-		return EGroundState::Sliding;
-
-	return EGroundState::OnGround;
 }
 
 JPH_NAMESPACE_END

@@ -33,18 +33,34 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
 
+	// Determine color
+	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
+	Color color;
+	switch (ground_state)
+	{
+	case CharacterVirtual::EGroundState::OnGround:
+		color = Color::sGreen;
+		break;
+	case CharacterVirtual::EGroundState::Sliding:
+		color = Color::sRed;
+		break;
+	case CharacterVirtual::EGroundState::InAir:
+	default:
+		color = Color::sBlue;
+		break;
+	}
+
 	// Draw character
 	if (mCharacter->GetShape() == mStandingShape)
-		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding, color, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	else
-		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, color, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 
 	// Draw current location
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
 	mDebugRenderer->DrawCoordinateSystem(mCharacter->GetWorldTransform());
 
 	// Draw the state of the ground contact
-	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
 	if (ground_state != CharacterVirtual::EGroundState::InAir)
 	{
 		Vec3 ground_position = mCharacter->GetGroundPosition();
