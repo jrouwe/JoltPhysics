@@ -33,7 +33,13 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL
 	set(CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE "x64")
 
 	# Set runtime library
-	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
+		# Windows store only supports multithreaded DLL
+		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+	else()
+		# Otherwise use static library
+		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	endif()
 
 	# Set general compiler flags
 	set(CMAKE_CXX_FLAGS "/std:c++17 /Zc:__cplusplus /GR- /Gm- /Wall /WX /EHsc /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline /Zi /DWIN32 /D_WINDOWS /DUNICODE /D_UNICODE")
@@ -181,12 +187,12 @@ if (TARGET_UNIT_TESTS)
         target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
     endif()
     if (IOS)
-	# Set the bundle information
-        set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
-        set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
+		# Set the bundle information
+		set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
+		set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
 
-	# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
-	set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
+		# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
+		set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
     endif()
 
     # Register unit tests as a test so that it can be run with:
@@ -195,27 +201,29 @@ if (TARGET_UNIT_TESTS)
     add_test(UnitTests UnitTests)
 endif()
 
-if (TARGET_HELLO_WORLD)
-	# Example 'Hello World' application
-	include(${PHYSICS_REPO_ROOT}/HelloWorld/HelloWorld.cmake)
-	add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
-	target_include_directories(HelloWorld PUBLIC ${HELLO_WORLD_ROOT})
-	target_link_libraries (HelloWorld LINK_PUBLIC Jolt)
-	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-		target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
+if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
+	if (TARGET_HELLO_WORLD)
+		# Example 'Hello World' application
+		include(${PHYSICS_REPO_ROOT}/HelloWorld/HelloWorld.cmake)
+		add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
+		target_include_directories(HelloWorld PUBLIC ${HELLO_WORLD_ROOT})
+		target_link_libraries (HelloWorld LINK_PUBLIC Jolt)
+		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+			target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
+		endif()
 	endif()
-endif()
 
-if (TARGET_PERFORMANCE_TEST)
-	# Performance Test application
-	include(${PHYSICS_REPO_ROOT}/PerformanceTest/PerformanceTest.cmake)
-	add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
-	target_include_directories(PerformanceTest PUBLIC ${PERFORMANCE_TEST_ROOT})
-	target_link_libraries (PerformanceTest LINK_PUBLIC Jolt)
-	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
-		target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+	if (TARGET_PERFORMANCE_TEST)
+		# Performance Test application
+		include(${PHYSICS_REPO_ROOT}/PerformanceTest/PerformanceTest.cmake)
+		add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
+		target_include_directories(PerformanceTest PUBLIC ${PERFORMANCE_TEST_ROOT})
+		target_link_libraries (PerformanceTest LINK_PUBLIC Jolt)
+		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+			target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+		endif()
+		set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 	endif()
-	set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
 endif()
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")

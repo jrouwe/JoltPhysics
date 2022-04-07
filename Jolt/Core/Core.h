@@ -8,7 +8,7 @@
 	// Correct define already defined, this overrides everything else
 #elif defined(_WIN32) || defined(_WIN64)
 	#include <winapifamily.h>
-	#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+	#if WINAPI_FAMILY == WINAPI_FAMILY_APP
 		#define JPH_PLATFORM_WINDOWS_UWP // Building for Universal Windows Platform
 	#endif
 	#define JPH_PLATFORM_WINDOWS

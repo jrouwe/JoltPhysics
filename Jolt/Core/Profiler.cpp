@@ -110,7 +110,7 @@ void Profiler::sAggregate(int inDepth, uint32 inColor, ProfileSample *&ioSample,
 	aggregator->AccumulateMeasurement(cycles_this_with_children, cycles_in_children);
 
 	// Update ioSample to the last child of ioSample
-	JPH_ASSERT(sample[-1].mStartCycle < ioSample->mEndCycle);
+	JPH_ASSERT(sample[-1].mStartCycle <= ioSample->mEndCycle);
 	JPH_ASSERT(sample >= inEnd || sample->mStartCycle >= ioSample->mEndCycle);
 	ioSample = sample - 1;
 }

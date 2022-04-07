@@ -56,7 +56,30 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 
 #endif // JPH_ENABLE_ASSERTS
 
-#ifndef JPH_PLATFORM_ANDROID
+#ifdef JPH_PLATFORM_WINDOWS_UWP
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+{
+	// Install callbacks
+	Trace = TraceImpl;
+	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
+
+#ifdef _DEBUG
+	// Enable leak detection
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+	// Enable floating point exceptions
+	FPExceptionsEnable enable_exceptions;
+	JPH_UNUSED(enable_exceptions);
+
+	// Register physics types
+	RegisterTypes();
+
+	return Context().run(); 
+}
+
+#elif !defined(JPH_PLATFORM_ANDROID)
 
 // Generic entry point
 int main(int argc, char** argv)
