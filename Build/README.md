@@ -42,20 +42,29 @@ To override the default trace and assert mechanism install your own custom handl
 
 ### Windows 10+ (CL - Default compiler)
 
-- Download Visual Studio 2019+ (Community or other edition)
+- Download Visual Studio 2022 (Community or other edition)
 - Download CMake 3.15+ (https://cmake.org/download/)
-- Run cmake_vs2019_cl.bat
-- Open the resulting project file VS2019_CL\JoltPhysics.sln
+- Run cmake_vs2022_cl.bat
+- Open the resulting project file VS2022_CL\JoltPhysics.sln
 - Compile and run either 'Samples' or 'UnitTests'
 
 ### Windows 10+ (Clang compiler)
 
-- Download Visual Studio 2019+ (Community or other edition)
+- Download Visual Studio 2022 (Community or other edition)
 - Make sure to install "C++ Clang Compiler for Windows 11.0.0+" and "C++ Clang-cl for v142+ build tools (x64/x86)" using the Visual Studio Installer
 - Download CMake 3.15+ (https://cmake.org/download/)
-- Run cmake_vs2019_clang.bat
-- Open the resulting project file VS2019_Clang\JoltPhysics.sln
+- Run cmake_vs2022_clang.bat
+- Open the resulting project file VS2022_Clang\JoltPhysics.sln
 - Compile and run either 'Samples' or 'UnitTests'
+
+### Windows 10+ (Universal Windows Platform)
+
+- Download Visual Studio 2022+ (Community or other edition)
+- Make sure to install "Universal Windows Platform development" using the Visual Studio Installer
+- Download CMake 3.15+ (https://cmake.org/download/)
+- Run cmake_vs2022_uwp.bat
+- Open the resulting project file VS2022_UWP\JoltPhysics.sln
+- Compile and run 'UnitTests'
 
 ### Linux (Debian flavor, x64 or ARM64)
 
@@ -89,14 +98,6 @@ Note that you can also follow the steps in the 'Linux' section if you wish to bu
 - Run: ./cmake_xcode.ios.sh
 - This will open XCode with a newly generated project
 - Build and run the project (note that this will only work in the simulator as the code signing information is not set up)
-
-## Unit Test Coverage Report on Windows
-
-To test unit test coverage run the following:
-
-- Run: cmake_vs2019_clang.bat
-- Run: unit_tests_coverage.bat
-- This will build and run the unit tests and open a browser with the results
 
 ## Doxygen on Windows
 
