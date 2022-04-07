@@ -7,6 +7,10 @@
 #if defined(JPH_PLATFORM_BLUE)
 	// Correct define already defined, this overrides everything else
 #elif defined(_WIN32) || defined(_WIN64)
+	#include <winapifamily.h>
+	#if WINAPI_FAMILY == WINAPI_FAMILY_APP
+		#define JPH_PLATFORM_WINDOWS_UWP // Building for Universal Windows Platform
+	#endif
 	#define JPH_PLATFORM_WINDOWS
 #elif defined(__ANDROID__) // Android is linux too, so that's why we check it first
 	#define JPH_PLATFORM_ANDROID
