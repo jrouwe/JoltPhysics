@@ -614,7 +614,7 @@ void CharacterVirtual::UpdateSupportingContact()
 		}
 
 	// Calculate average normal and velocity
-	if (num_avg_normal > 1)
+	if (num_avg_normal >= 1)
 	{
 		mGroundNormal = avg_normal.Normalized();
 		mGroundVelocity = avg_velocity / float(num_avg_normal);

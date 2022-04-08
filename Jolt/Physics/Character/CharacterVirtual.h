@@ -152,13 +152,13 @@ public:
 	/// Current ground state
 	EGroundState						GetGroundState() const									{ return mGroundState; }
 
-	/// Get the contact point with the ground
+	/// Get the contact point with the ground which has the most upright normal
 	Vec3								GetGroundPosition() const								{ return mSupportingContact != nullptr? mSupportingContact->mPosition : Vec3::sZero(); }
 
-	/// Get the contact normal with the ground
+	/// Get the average contact normal with the ground
 	Vec3								GetGroundNormal() const									{ return mGroundNormal; }
 
-	/// Velocity in world space of the point that we're standing on
+	/// Average velocity in world space of the surface that we're standing on
 	Vec3								GetGroundVelocity() const								{ return mGroundVelocity; }
 
 	/// Material that the character is standing on.

@@ -30,8 +30,15 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	CharacterTestBase::PrePhysicsUpdate(inParams);
 
+	// Remember old position
+	Vec3 old_position = mCharacter->GetPosition();
+
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
+
+	// Calculate effective velocity
+	Vec3 new_position = mCharacter->GetPosition();
+	float velocity = (new_position - old_position).Length() / inParams.mDeltaTime;
 
 	// Determine color
 	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
@@ -65,15 +72,21 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	{
 		Vec3 ground_position = mCharacter->GetGroundPosition();
 		Vec3 ground_normal = mCharacter->GetGroundNormal();
-		const PhysicsMaterial *ground_material = mCharacter->GetGroundMaterial();
+		Vec3 ground_velocity = mCharacter->GetGroundVelocity();
 
 		// Draw ground position
 		mDebugRenderer->DrawWireSphere(ground_position, 0.1f, Color::sRed);
 		mDebugRenderer->DrawArrow(ground_position, ground_position + 2.0f * ground_normal, Color::sGreen, 0.1f);
 
-		// Draw ground material
-		mDebugRenderer->DrawText3D(ground_position, ground_material->GetDebugName());
+		// Draw ground velocity
+		if (!ground_velocity.IsNearZero())
+			mDebugRenderer->DrawArrow(ground_position, ground_position + ground_velocity, Color::sBlue, 0.1f);
+
 	}
+
+	// Draw ground material and velocity
+	const PhysicsMaterial *ground_material = mCharacter->GetGroundMaterial();
+	mDebugRenderer->DrawText3D(new_position, StringFormat("Mat: %s\nVel: %.1f m/s", ground_material != nullptr? ground_material->GetDebugName() : "null", velocity));
 }
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
@@ -89,28 +102,39 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 			inMovementDirection -= (dot * normal) / normal.LengthSq();
 	}
 
-	// Update velocity
-	Vec3 current_velocity = mCharacter->GetLinearVelocity();
-	Vec3 desired_velocity = cCharacterSpeed * inMovementDirection;
-	desired_velocity.SetY(current_velocity.GetY());
-	Vec3 new_velocity = 0.75f * current_velocity + 0.25f * desired_velocity;
+	// Smooth the player input
+	mSmoothMovementDirection = 0.25f * inMovementDirection + 0.75f * mSmoothMovementDirection;
 
-	// Apply gravity only if we're not on solid ground (otherwise we'll slowly slide as there is no friction)
-	if (ground_state != CharacterVirtual::EGroundState::OnGround)
-		new_velocity += mPhysicsSystem->GetGravity() * inDeltaTime;
+	Vec3 current_vertical_velocity = Vec3(0, mCharacter->GetLinearVelocity().GetY(), 0);
+
+	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
+
+	Vec3 new_velocity;
+	if (ground_state == CharacterVirtual::EGroundState::OnGround // If on ground
+		&& (current_vertical_velocity.GetY() - ground_velocity.GetY()) < 0.1f) // And not moving away from ground
+	{
+		// Assume velocity of ground when on ground
+		new_velocity = ground_velocity;
+		
+		// Jump
+		if (inJump)
+			new_velocity += Vec3(0, cJumpSpeed, 0);
+	}
 	else
-		new_velocity.SetY(max(new_velocity.GetY(), 0.0f)); // Reset negative velocity if we're on ground
+		new_velocity = current_vertical_velocity;
+
+	// Gravity
+	new_velocity += mPhysicsSystem->GetGravity() * inDeltaTime;
+
+	// Player input
+	new_velocity += mSmoothMovementDirection * cCharacterSpeed;
+
+	// Update the velocity
+	mCharacter->SetLinearVelocity(new_velocity);
 
 	// Stance switch
 	if (inSwitchStance)
 		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
-
-	// Jump
-	if (inJump && ground_state == CharacterVirtual::EGroundState::OnGround)
-		new_velocity += Vec3(0, cJumpSpeed, 0);
-
-	// Update the velocity
-	mCharacter->SetLinearVelocity(new_velocity);
 }
 
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)

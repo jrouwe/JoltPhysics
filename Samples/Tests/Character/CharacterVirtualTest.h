@@ -31,4 +31,7 @@ protected:
 private:
 	// The 'player' character
 	Ref<CharacterVirtual>	mCharacter;
+
+	// Smoothed value of the player input
+	Vec3					mSmoothMovementDirection = Vec3::sZero();
 };
