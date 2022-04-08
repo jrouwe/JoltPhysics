@@ -212,7 +212,6 @@ TEST_SUITE("PhysicsTests")
 		// Translate / rotate the box
 		Vec3 box_pos(1, 2, 3);
 		Quat box_rotation = Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI);
-		Mat44 box_transform = Mat44::sRotationTranslation(box_rotation, box_pos);
 
 		// Translate / rotate the body
 		Vec3 body_pos(4, 5, 6);
