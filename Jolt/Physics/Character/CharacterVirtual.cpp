@@ -11,7 +11,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-CharacterVirtual::CharacterVirtual(CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
+CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
 	mUp(inSettings->mUp),
 	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
@@ -21,7 +21,9 @@ CharacterVirtual::CharacterVirtual(CharacterVirtualSettings *inSettings, Vec3Arg
 	mCollisionTolerance(inSettings->mCollisionTolerance),
 	mCharacterPadding(inSettings->mCharacterPadding),
 	mMaxNumHits(inSettings->mMaxNumHits),
-	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed)
+	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed),
+	mPosition(inPosition),
+	mRotation(inRotation)
 {
 	// Copy settings
 	SetMaxStrength(inSettings->mMaxStrength);
@@ -49,7 +51,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 	{
 		const Body &body = lock.GetBody();
 
-		mContacts.push_back(Contact());
+		mContacts.emplace_back();
 		Contact &contact = mContacts.back();
 		sFillContactProperties(contact, body, *this, inResult);
 		contact.mFraction = 0.0f;
@@ -75,7 +77,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 		{
 			const Body &body = lock.GetBody();
 
-			mContacts.push_back(Contact());
+			mContacts.emplace_back();
 			Contact &contact = mContacts.back();
 			sFillContactProperties(contact, body, *this, inResult);
 			contact.mFraction = inResult.mFraction;
@@ -231,7 +233,7 @@ void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, vector<
 			continue; // Moving away from contact: Ignore
 
 		// Convert to a constraint
-		outConstraints.push_back(Constraint());
+		outConstraints.emplace_back();
 		Constraint &constraint = outConstraints.back();
 		constraint.mContact = &c;
 		constraint.mLinearVelocity = contact_velocity;
@@ -247,7 +249,7 @@ void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, vector<
 				Vec3 normal = Vec3(c.mNormal.GetX(), 0.0f, c.mNormal.GetZ()).Normalized();
 
 				// Create a secondary constraint that blocks horizontal movement
-				outConstraints.push_back(Constraint());
+				outConstraints.emplace_back();
 				Constraint &vertical_constraint = outConstraints.back();
 				vertical_constraint.mContact = &c;
 				vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
@@ -380,7 +382,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 		}
 				
 		// Sort constraints on proximity
-		sort(sorted_constraints.begin(), sorted_constraints.end(), [](Constraint *inLHS, Constraint *inRHS) {
+		sort(sorted_constraints.begin(), sorted_constraints.end(), [](const Constraint *inLHS, const Constraint *inRHS) {
 				// If both constraints hit at t = 0 then order the one that will push the character furthest first
 				// Note that because we add velocity to penetrating contacts, this will also resolve contacts that penetrate the most
 				if (inLHS->mTOI <= 0.0f && inRHS->mTOI <= 0.0f)
@@ -691,7 +693,7 @@ void CharacterVirtual::StoreActiveContacts(const vector<Contact> &inContacts)
 	UpdateSupportingContact();
 }
 
-void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, vector<Contact> *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter)
+void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, vector<Contact> *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
 {
 	// Calculate starting position for the shape
 	Vec3 position = GetShapePosition(ioPosition);
@@ -702,7 +704,6 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 	for (uint iteration = 0; iteration < mMaxCollisionIterations && time_remaining >= mMinTimeRemaining; iteration++)
 	{
 		// Determine contacts in the neighborhood
-		// TODO: Query the broadphase only once instead of for every iteration
 		vector<Contact> contacts;
 		GetContactsAtPosition(position, movement_direction, mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 

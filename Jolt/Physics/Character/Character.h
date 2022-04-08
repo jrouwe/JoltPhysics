@@ -38,7 +38,7 @@ public:
 	/// @param inRotation Initial rotation for the character (usually only around Y)
 	/// @param inUserData Application specific value
 	/// @param inSystem Physics system that this character will be added to later
-										Character(CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
+										Character(const CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
 
 	/// Destructor
 										~Character();

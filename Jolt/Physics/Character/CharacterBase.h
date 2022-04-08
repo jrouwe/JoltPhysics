@@ -4,9 +4,11 @@
 #pragma once
 
 #include <Jolt/Core/Reference.h>
+#include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 #include <Jolt/Physics/Collision/Shape/SubShapeID.h>
+#include <Jolt/Physics/Collision/PhysicsMaterial.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -25,11 +27,11 @@ public:
 };
 
 /// Base class for character class
-class CharacterBase : public RefTarget<CharacterBase>
+class CharacterBase : public RefTarget<CharacterBase>, public NonCopyable
 {
 public:
 	/// Constructor
-										CharacterBase(CharacterBaseSettings *inSettings, PhysicsSystem *inSystem);
+										CharacterBase(const CharacterBaseSettings *inSettings, PhysicsSystem *inSystem);
 
 	/// Set the maximum angle of slope that character can still walk on (radians)
 	void								SetMaxSlopeAngle(float inMaxSlopeAngle)					{ mCosMaxSlopeAngle = cos(inMaxSlopeAngle); }
@@ -87,7 +89,7 @@ protected:
 	Vec3								mGroundPosition = Vec3::sZero();
 	Vec3								mGroundNormal = Vec3::sZero();
 	Vec3								mGroundVelocity = Vec3::sZero();
-	RefConst<PhysicsMaterial>			mGroundMaterial;
+	RefConst<PhysicsMaterial>			mGroundMaterial = PhysicsMaterial::sDefault;
 	uint64								mGroundUserData = 0;
 };
 
