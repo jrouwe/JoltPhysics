@@ -7,10 +7,10 @@
 #include <Jolt/Physics/Character/CharacterBase.h>
 
 // Base class for the character tests, initializes the test scene.
-class CharacterTestBase : public Test
+class CharacterBaseTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CharacterTestBase)
+	JPH_DECLARE_RTTI_VIRTUAL(CharacterBaseTest)
 
 	// Number used to scale the terrain and camera movement to the scene
 	virtual float			GetWorldScale() const override								{ return 0.2f; }

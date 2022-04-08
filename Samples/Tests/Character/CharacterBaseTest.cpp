@@ -3,7 +3,7 @@
 
 #include <TestFramework.h>
 
-#include <Tests/Character/CharacterTestBase.h>
+#include <Tests/Character/CharacterBaseTest.h>
 #include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
@@ -13,12 +13,12 @@
 #include <Layers.h>
 #include <Utils/Log.h>
 
-JPH_IMPLEMENT_RTTI_ABSTRACT(CharacterTestBase) 
+JPH_IMPLEMENT_RTTI_ABSTRACT(CharacterBaseTest) 
 { 
-	JPH_ADD_BASE_CLASS(CharacterTestBase, Test) 
+	JPH_ADD_BASE_CLASS(CharacterBaseTest, Test) 
 }
 
-const char *CharacterTestBase::sScenes[] =
+const char *CharacterBaseTest::sScenes[] =
 {
 	"PerlinMesh",
 	"PerlinHeightField",
@@ -27,7 +27,7 @@ const char *CharacterTestBase::sScenes[] =
 	"Terrain2",
 };
 
-const char *CharacterTestBase::sSceneName = "ObstacleCourse";
+const char *CharacterBaseTest::sSceneName = "ObstacleCourse";
 
 // Scene constants
 static const Vec3 cRotatingPosition(-5, 0.25f, 15);
@@ -37,7 +37,7 @@ static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
 static const Vec3 cHorizontallyMovingPosition(5, 1, 15);
 static const Quat cHorizontallyMovingOrientation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
 
-void CharacterTestBase::Initialize()
+void CharacterBaseTest::Initialize()
 {
 	if (strcmp(sSceneName, "PerlinMesh") == 0)
 	{
@@ -114,7 +114,7 @@ void CharacterTestBase::Initialize()
 	mCrouchingShape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching)).Create().Get();
 }
 
-void CharacterTestBase::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Update scene time
 	mTime += inParams.mDeltaTime;
@@ -157,7 +157,7 @@ void CharacterTestBase::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mBodyInterface->MoveKinematic(mVerticallyMovingBody, cVerticallyMovingPosition + Vec3(0, 1.75f * sin(mTime), 0), cVerticallyMovingOrientation, inParams.mDeltaTime);
 }
 
-void CharacterTestBase::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
+void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
 	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() { 
 		UIElement *scene_name = inUI->CreateMenu();
@@ -167,31 +167,31 @@ void CharacterTestBase::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 	});
 }
 
-void CharacterTestBase::GetInitialCamera(CameraState& ioState) const
+void CharacterBaseTest::GetInitialCamera(CameraState& ioState) const
 {
 	// This will become the local space offset, look down the x axis and slightly down
 	ioState.mPos = Vec3::sZero();
 	ioState.mForward = Vec3(10.0f, -2.0f, 0).Normalized();
 }
 
-Mat44 CharacterTestBase::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+Mat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(cos(inCameraPitch) * cos(inCameraHeading), sin(inCameraPitch), cos(inCameraPitch) * sin(inCameraHeading));
 	return Mat44::sTranslation(GetCharacterPosition() + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
 }
 
-void CharacterTestBase::SaveState(StateRecorder &inStream) const
+void CharacterBaseTest::SaveState(StateRecorder &inStream) const
 {
 	inStream.Write(mTime);
 }
 
-void CharacterTestBase::RestoreState(StateRecorder &inStream)
+void CharacterBaseTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
 }
 
-void CharacterTestBase::DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, float inCharacterVelocity)
+void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, float inCharacterVelocity)
 {
 	// Draw current location
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)

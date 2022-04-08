@@ -11,12 +11,12 @@
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest) 
 { 
-	JPH_ADD_BASE_CLASS(CharacterVirtualTest, CharacterTestBase)
+	JPH_ADD_BASE_CLASS(CharacterVirtualTest, CharacterBaseTest)
 }
 
 void CharacterVirtualTest::Initialize()
 {
-	CharacterTestBase::Initialize();
+	CharacterBaseTest::Initialize();
 
 	// Create 'player' character
 	Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
@@ -28,7 +28,7 @@ void CharacterVirtualTest::Initialize()
 
 void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	CharacterTestBase::PrePhysicsUpdate(inParams);
+	CharacterBaseTest::PrePhysicsUpdate(inParams);
 
 	// Remember old position
 	Vec3 old_position = mCharacter->GetPosition();

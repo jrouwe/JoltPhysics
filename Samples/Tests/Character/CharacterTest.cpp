@@ -9,7 +9,7 @@
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterTest) 
 { 
-	JPH_ADD_BASE_CLASS(CharacterTest, CharacterTestBase)
+	JPH_ADD_BASE_CLASS(CharacterTest, CharacterBaseTest)
 }
 
 static const float cCollisionTolerance = 0.05f;
@@ -21,7 +21,7 @@ CharacterTest::~CharacterTest()
 
 void CharacterTest::Initialize()
 {
-	CharacterTestBase::Initialize();
+	CharacterBaseTest::Initialize();
 
 	// Create 'player' character
 	Ref<CharacterSettings> settings = new CharacterSettings();
@@ -35,7 +35,7 @@ void CharacterTest::Initialize()
 
 void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	CharacterTestBase::PrePhysicsUpdate(inParams);
+	CharacterBaseTest::PrePhysicsUpdate(inParams);
 
 	// Draw state of character
 	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), mCharacter->GetLinearVelocity().Length());
