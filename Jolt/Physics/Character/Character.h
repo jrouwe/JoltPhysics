@@ -41,7 +41,7 @@ public:
 										Character(const CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
 
 	/// Destructor
-										~Character();
+	virtual								~Character() override;
 
 	/// Add bodies and constraints to the system and optionally activate the bodies
 	void								AddToPhysicsSystem(EActivation inActivationMode = EActivation::Activate, bool inLockBodies = true);

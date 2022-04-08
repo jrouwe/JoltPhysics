@@ -33,6 +33,9 @@ public:
 	/// Constructor
 										CharacterBase(const CharacterBaseSettings *inSettings, PhysicsSystem *inSystem);
 
+	/// Destructor
+	virtual								~CharacterBase() = default;
+
 	/// Set the maximum angle of slope that character can still walk on (radians)
 	void								SetMaxSlopeAngle(float inMaxSlopeAngle)					{ mCosMaxSlopeAngle = cos(inMaxSlopeAngle); }
 
