@@ -7,6 +7,7 @@
 #include "LoggingBodyActivationListener.h"
 #include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 
 TEST_SUITE("PhysicsTests")
@@ -201,6 +202,35 @@ TEST_SUITE("PhysicsTests")
 		// Change the user data
 		body->SetUserData(0x5678123443218765);
 		CHECK(body->GetUserData() == 0x5678123443218765);
+	}
+
+	TEST_CASE("TestPhysicsPosition")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// Translate / rotate the box
+		Vec3 box_pos(1, 2, 3);
+		Quat box_rotation = Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI);
+		Mat44 box_transform = Mat44::sRotationTranslation(box_rotation, box_pos);
+
+		// Translate / rotate the body
+		Vec3 body_pos(4, 5, 6);
+		Quat body_rotation = Quat::sRotation(Vec3::sAxisY(), 0.3f * JPH_PI);
+		Mat44 body_transform = Mat44::sRotationTranslation(body_rotation, body_pos);
+		Mat44 com_transform = body_transform * Mat44::sTranslation(box_pos);
+
+		// Create body
+		BodyCreationSettings body_settings(new RotatedTranslatedShapeSettings(box_pos, box_rotation, new BoxShape(Vec3::sReplicate(1.0f))), body_pos, body_rotation, EMotionType::Static, Layers::NON_MOVING);
+		Body *body = bi.CreateBody(body_settings);
+
+		// Check that the correct positions / rotations are reported
+		CHECK_APPROX_EQUAL(body->GetPosition(), body_pos);
+		CHECK_APPROX_EQUAL(body->GetRotation(), body_rotation);
+		CHECK_APPROX_EQUAL(body->GetWorldTransform(), body_transform);
+		CHECK_APPROX_EQUAL(body->GetCenterOfMassPosition(), com_transform.GetTranslation());
+		CHECK_APPROX_EQUAL(body->GetCenterOfMassTransform(), com_transform);
+		CHECK_APPROX_EQUAL(body->GetInverseCenterOfMassTransform(), com_transform.InversedRotationTranslation());
 	}
 
 	TEST_CASE("TestPhysicsOverrideMassAndInertia")
