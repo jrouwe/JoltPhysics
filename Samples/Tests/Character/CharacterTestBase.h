@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Tests/Test.h>
+#include <Jolt/Physics/Character/CharacterBase.h>
 
 // Base class for the character tests, initializes the test scene.
 class CharacterTestBase : public Test
@@ -40,6 +41,9 @@ protected:
 
 	// Handle user input to the character
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) = 0;
+
+	// Draw the character state
+	void					DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, float inCharacterVelocity);
 
 	// Character size
 	inline static constexpr float cCharacterHeightStanding = 1.35f;

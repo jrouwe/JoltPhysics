@@ -190,3 +190,47 @@ void CharacterTestBase::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
 }
+
+void CharacterTestBase::DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, float inCharacterVelocity)
+{
+	// Draw current location
+	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
+	mDebugRenderer->DrawCoordinateSystem(inCharacterTransform);
+
+	// Determine color
+	CharacterBase::EGroundState ground_state = inCharacter->GetGroundState();
+	Color color;
+	switch (ground_state)
+	{
+	case CharacterBase::EGroundState::OnGround:
+		color = Color::sGreen;
+		break;
+	case CharacterBase::EGroundState::Sliding:
+		color = Color::sOrange;
+		break;
+	case CharacterBase::EGroundState::InAir:
+	default:
+		color = Color::sRed;
+		break;
+	}
+
+	// Draw the state of the ground contact
+	if (ground_state != CharacterBase::EGroundState::InAir)
+	{
+		Vec3 ground_position = inCharacter->GetGroundPosition();
+		Vec3 ground_normal = inCharacter->GetGroundNormal();
+		Vec3 ground_velocity = inCharacter->GetGroundVelocity();
+
+		// Draw ground position
+		mDebugRenderer->DrawWireSphere(ground_position, 0.1f, Color::sRed);
+		mDebugRenderer->DrawArrow(ground_position, ground_position + 2.0f * ground_normal, Color::sGreen, 0.1f);
+
+		// Draw ground velocity
+		if (!ground_velocity.IsNearZero())
+			mDebugRenderer->DrawArrow(ground_position, ground_position + ground_velocity, Color::sBlue, 0.1f);
+	}
+
+	// Draw text info
+	const PhysicsMaterial *ground_material = inCharacter->GetGroundMaterial();
+	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("Mat: %s\nVel: %.1f m/s", ground_material->GetDebugName(), inCharacterVelocity), color, 0.25f);
+}

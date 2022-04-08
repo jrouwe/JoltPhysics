@@ -40,53 +40,14 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	Vec3 new_position = mCharacter->GetPosition();
 	float velocity = (new_position - old_position).Length() / inParams.mDeltaTime;
 
-	// Determine color
-	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
-	Color color;
-	switch (ground_state)
-	{
-	case CharacterVirtual::EGroundState::OnGround:
-		color = Color::sGreen;
-		break;
-	case CharacterVirtual::EGroundState::Sliding:
-		color = Color::sRed;
-		break;
-	case CharacterVirtual::EGroundState::InAir:
-	default:
-		color = Color::sBlue;
-		break;
-	}
-
 	// Draw character
 	if (mCharacter->GetShape() == mStandingShape)
-		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding, color, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	else
-		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, color, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 
-	// Draw current location
-	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
-	mDebugRenderer->DrawCoordinateSystem(mCharacter->GetWorldTransform());
-
-	// Draw the state of the ground contact
-	if (ground_state != CharacterVirtual::EGroundState::InAir)
-	{
-		Vec3 ground_position = mCharacter->GetGroundPosition();
-		Vec3 ground_normal = mCharacter->GetGroundNormal();
-		Vec3 ground_velocity = mCharacter->GetGroundVelocity();
-
-		// Draw ground position
-		mDebugRenderer->DrawWireSphere(ground_position, 0.1f, Color::sRed);
-		mDebugRenderer->DrawArrow(ground_position, ground_position + 2.0f * ground_normal, Color::sGreen, 0.1f);
-
-		// Draw ground velocity
-		if (!ground_velocity.IsNearZero())
-			mDebugRenderer->DrawArrow(ground_position, ground_position + ground_velocity, Color::sBlue, 0.1f);
-
-	}
-
-	// Draw ground material and velocity
-	const PhysicsMaterial *ground_material = mCharacter->GetGroundMaterial();
-	mDebugRenderer->DrawText3D(new_position, StringFormat("Mat: %s\nVel: %.1f m/s", ground_material != nullptr? ground_material->GetDebugName() : "null", velocity));
+	// Draw state of character
+	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);
 }
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)

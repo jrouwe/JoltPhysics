@@ -3,16 +3,13 @@
 
 #pragma once
 
-#include <Jolt/Core/Reference.h>
+#include <Jolt/Physics/Character/CharacterBase.h>
 #include <Jolt/Physics/EActivation.h>
 
 JPH_NAMESPACE_BEGIN
 
-class Character;
-class PhysicsSystem;
-
 /// Contains the configuration of a character
-class CharacterSettings : public RefTarget<CharacterSettings>
+class CharacterSettings : public CharacterBaseSettings
 {
 public:
 	/// Layer that this character will be added to
@@ -21,25 +18,18 @@ public:
 	/// Mass of the character
 	float								mMass = 80.0f;
 
-	/// Maximum angle of slope that character can still walk on (radians)
-	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
-
 	/// Friction for the character
 	float								mFriction = 0.2f;
 
 	/// Value to multiply gravity with for this character
 	float								mGravityFactor = 1.0f;
-
-	/// Initial shape that represents the character's volume.
-	/// Usually this is a capsule, make sure the shape is made so that the bottom of the shape is at (0, 0, 0).
-	RefConst<Shape>						mShape;
 };
 
 /// Runtime character object.
 /// This object usually represents the player or a humanoid AI. It uses a single rigid body, 
 /// usually with a capsule shape to simulate movement and collision for the character.
 /// The character is a keyframed object, the application controls it by setting the velocity.
-class Character : public RefTarget<Character>
+class Character : public CharacterBase
 {
 public:
 	/// Constructor
@@ -106,51 +96,15 @@ public:
 	/// Position of the center of mass of the underlying rigid body
 	Vec3								GetCenterOfMassPosition(bool inLockBodies = true) const;
 
+	/// Calculate the world transform of the character
+	Mat44								GetWorldTransform(bool inLockBodies = true) const;
+
 	/// Update the layer of the character
 	void								SetLayer(ObjectLayer inLayer, bool inLockBodies = true);
-
-	/// Set the maximum angle of slope that character can still walk on (radians)
-	void								SetMaxSlopeAngle(float inMaxSlopeAngle)					{ mCosMaxSlopeAngle = cos(inMaxSlopeAngle); }
 
 	/// Switch the shape of the character (e.g. for stance). When inMaxPenetrationDepth is not FLT_MAX, it checks
 	/// if the new shape collides before switching shape. Returns true if the switch succeeded.
 	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, bool inLockBodies = true);
-
-	/// Get the current shape that the character is using.
-	const Shape *						GetShape() const										{ return mShape; }
-
-	enum class EGroundState
-	{
-		OnGround,						///< Character is on the ground and can move freely
-		Sliding,						///< Character is on a slope that is too steep and should start sliding
-		InAir,							///< Character is in the air
-	};
-
-	///@name Properties of the ground this character is standing on
-
-	/// Current ground state (updated during PostSimlulation())
-	EGroundState						GetGroundState() const;
-
-	/// Get the contact point with the ground
-	Vec3 								GetGroundPosition() const								{ return mGroundPosition; }
-
-	/// Get the contact normal with the ground
-	Vec3	 							GetGroundNormal() const									{ return mGroundNormal; }
-
-	/// Velocity in world space of the point that we're standing on
-	Vec3								GetGroundVelocity(bool inLockBodies = true) const;
-	
-	/// Material that the character is standing on.
-	const PhysicsMaterial *				GetGroundMaterial() const								{ return mGroundMaterial; }
-
-	/// BodyID of the object the character is standing on. Note may have been removed!
-	BodyID								GetGroundBodyID() const									{ return mGroundBodyID; }
-
-	/// Sub part of the body that we're standing on.
-	SubShapeID							GetGroundSubShapeID() const								{ return mGroundBodySubShapeID; }
-
-	/// User data value of the body that we're standing on
-	uint64								GetGroundUserData(bool inLockBodies = true) const;
 
 private:
 	/// Check collisions between inShape and the world
@@ -161,22 +115,6 @@ private:
 
 	/// The layer the body is in
 	ObjectLayer							mLayer;
-
-	/// Cosine of the maximum angle of slope that character can still walk on
-	float								mCosMaxSlopeAngle;
-
-	/// The shape that the body currently has
-	RefConst<Shape>						mShape;
-
-	/// Cached physics system
-	PhysicsSystem *						mSystem;
-
-	// Ground properties
-	BodyID								mGroundBodyID;
-	SubShapeID							mGroundBodySubShapeID;
-	Vec3								mGroundPosition = Vec3::sZero();
-	Vec3								mGroundNormal = Vec3::sZero();
-	RefConst<PhysicsMaterial>			mGroundMaterial;
 };
 
 JPH_NAMESPACE_END

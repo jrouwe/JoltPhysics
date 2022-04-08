@@ -3,9 +3,8 @@
 
 #pragma once
 
-#include <Jolt/Core/Reference.h>
-#include <Jolt/Physics/Collision/Shape/Shape.h>
-#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Character/CharacterBase.h>
+#include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/BodyFilter.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
@@ -13,10 +12,9 @@
 JPH_NAMESPACE_BEGIN
 
 class CharacterVirtual;
-class PhysicsSystem;
 
 /// Contains the configuration of a character
-class CharacterVirtualSettings : public RefTarget<CharacterVirtualSettings>
+class CharacterVirtualSettings : public CharacterBaseSettings
 {
 public:
 	/// Vector indicating the up direction of the character
@@ -28,15 +26,8 @@ public:
 	/// Maximum force with which the character can push other bodies (N).
 	float								mMaxStrength = 100.0f;
 
-	/// Maximum angle of slope that character can still walk on (radians).
-	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
-
 	/// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
 	float								mPenetrationRecoverySpeed = 1.0f;
-
-	/// Initial shape that represents the character's volume.
-	/// Usually this is a capsule, make sure the shape is made so that the bottom of the shape is at (0, 0, 0).
-	RefConst<Shape>						mShape;
 };
 
 /// This class contains settings that allow you to override the behavior of a character's collision response
@@ -66,7 +57,7 @@ public:
 /// The advantage of this is that you can determine when the character moves in the frame (usually this has to happen at a very particular point in the frame)
 /// but the downside is that other objects don't see this virtual character. In order to make this work it is recommended to pair a CharacterVirtual with a Character that
 /// moves along. This Character should be keyframed (or at least have no gravity) and move along with the CharacterVirtual so that other rigid bodies can collide with it.
-class CharacterVirtual : public RefTarget<CharacterVirtual>
+class CharacterVirtual : public CharacterBase
 {
 public:
 	/// Constructor
@@ -112,9 +103,6 @@ public:
 	/// Maximum force with which the character can push other bodies (N)
 	void								SetMaxStrength(float inMaxStrength)						{ mMaxStrength = inMaxStrength; }
 
-	/// Set the maximum angle of slope that character can still walk on (radians)
-	void								SetMaxSlopeAngle(float inMaxSlopeAngle)					{ mCosMaxSlopeAngle = cos(inMaxSlopeAngle); }
-
 	/// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
 	void								SetPenetrationRecoverySpeed(float inSpeed)				{ mPenetrationRecoverySpeed = inSpeed; }
 
@@ -136,42 +124,6 @@ public:
 	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
 	/// @return Returns true if the switch succeeded.
 	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter);
-
-	/// Get the current shape that the character is using.
-	const Shape *						GetShape() const										{ return mShape; }
-
-	enum class EGroundState
-	{
-		OnGround,						///< Character is on the ground and can move freely
-		Sliding,						///< Character is on a slope that is too steep and should start sliding
-		InAir,							///< Character is in the air
-	};
-
-	///@name Properties of the ground this character is standing on
-
-	/// Current ground state
-	EGroundState						GetGroundState() const									{ return mGroundState; }
-
-	/// Get the contact point with the ground which has the most upright normal
-	Vec3								GetGroundPosition() const								{ return mSupportingContact != nullptr? mSupportingContact->mPosition : Vec3::sZero(); }
-
-	/// Get the average contact normal with the ground
-	Vec3								GetGroundNormal() const									{ return mGroundNormal; }
-
-	/// Average velocity in world space of the surface that we're standing on
-	Vec3								GetGroundVelocity() const								{ return mGroundVelocity; }
-
-	/// Material that the character is standing on.
-	const PhysicsMaterial *				GetGroundMaterial() const								{ return mSupportingContact != nullptr? mSupportingContact->mMaterial : nullptr; }
-
-	/// BodyID of the object the character is standing on. Note may have been removed!
-	BodyID								GetGroundBodyID() const									{ return mSupportingContact != nullptr? mSupportingContact->mBodyB : BodyID(); }
-
-	/// Sub part of the body that we're standing on.
-	SubShapeID							GetGroundSubShapeID() const								{ return mSupportingContact != nullptr? mSupportingContact->mSubShapeIDB : SubShapeID(); }
-
-	/// User data value of the body that we're standing on
-	uint64								GetGroundUserData() const								{ return mSupportingContact != nullptr? mSupportingContact->mUserData : 0; }
 
 private:
 	// Constants
@@ -284,12 +236,6 @@ private:
 	// This function returns the actual position of the shape, corrected for the character padding
 	Vec3								GetShapePosition(Vec3Arg inPosition) const				{ return inPosition + mRotation * Vec3(0, cCharacterPadding, 0); }
 
-	// The physics system that we belong to
-	PhysicsSystem *						mSystem;
-
-	// The shape that represents the volume of the character
-	RefConst<Shape>						mShape;
-
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
 
@@ -305,9 +251,6 @@ private:
 	/// Maximum force with which the character can push other bodies (N)
 	float								mMaxStrength;
 
-	// Cosine of mMaxSlopeRadians, avoids having to recompute it every time
-	float								mCosMaxSlopeAngle;
-
 	// Current position (of the base, not the center of mass)
 	Vec3								mPosition = Vec3::sZero();
 
@@ -320,20 +263,8 @@ private:
 	// List of contacts that were active in the last frame
 	vector<Contact>						mActiveContacts;
 
-	// Points into mActiveContacts to the contact that has the most upward pointing normal
-	const Contact *						mSupportingContact = nullptr;
-
 	// Remembers the delta time of the last update
 	float								mLastDeltaTime = 1.0f / 60.0f;
-
-	// If the character is on the ground
-	EGroundState						mGroundState = EGroundState::InAir;
-
-	// Average velocity of the ground
-	Vec3								mGroundVelocity = Vec3::sZero();
-
-	// Average normal of the ground
-	Vec3								mGroundNormal = Vec3::sZero();
 };
 
 JPH_NAMESPACE_END

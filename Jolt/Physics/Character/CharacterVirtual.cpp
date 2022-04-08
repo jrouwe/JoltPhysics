@@ -12,12 +12,10 @@
 JPH_NAMESPACE_BEGIN
 
 CharacterVirtual::CharacterVirtual(CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
-	mSystem(inSystem),
-	mShape(inSettings->mShape),
+	CharacterBase(inSettings, inSystem),
 	mUp(inSettings->mUp)
 {
 	// Copy settings
-	SetMaxSlopeAngle(inSettings->mMaxSlopeAngle);
 	SetMaxStrength(inSettings->mMaxStrength);
 	SetMass(inSettings->mMass);
 	SetPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed);
@@ -536,7 +534,7 @@ void CharacterVirtual::UpdateSupportingContact()
 	int num_avg_normal = 0;
 	Vec3 avg_normal = Vec3::sZero();
 	Vec3 avg_velocity = Vec3::sZero();
-	mSupportingContact = nullptr;
+	const Contact *supporting_contact = nullptr;
 	float max_cos_angle = -FLT_MAX;
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
@@ -547,7 +545,7 @@ void CharacterVirtual::UpdateSupportingContact()
 			// Find the contact with the normal that is pointing most upwards and store it in mSupportingContact
 			if (max_cos_angle < cos_angle)
 			{
-				mSupportingContact = &c;
+				supporting_contact = &c;
 				max_cos_angle = cos_angle;
 			}
 
@@ -625,6 +623,25 @@ void CharacterVirtual::UpdateSupportingContact()
 		mGroundVelocity = Vec3::sZero();
 	}
 
+	// Copy supporting contact properties
+	if (supporting_contact != nullptr)
+	{
+		mGroundBodyID = supporting_contact->mBodyB;
+		mGroundBodySubShapeID = supporting_contact->mSubShapeIDB;
+		mGroundPosition = supporting_contact->mPosition;
+		mGroundMaterial = supporting_contact->mMaterial;
+		mGroundUserData = supporting_contact->mUserData;
+	}
+	else
+	{
+		mGroundBodyID = BodyID();
+		mGroundBodySubShapeID = SubShapeID();
+		mGroundPosition = Vec3::sZero();
+		mGroundMaterial = PhysicsMaterial::sDefault;
+		mGroundUserData = 0;
+	}
+
+	// Determine ground state
 	if (num_supported > 0)
 	{
 		// We made contact with something that supports us

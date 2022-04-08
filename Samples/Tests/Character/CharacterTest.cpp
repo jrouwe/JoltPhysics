@@ -37,30 +37,8 @@ void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	CharacterTestBase::PrePhysicsUpdate(inParams);
 
-	// Get properties
-	Vec3 position;
-	Quat rotation;
-	mCharacter->GetPositionAndRotation(position, rotation);
-
-	// Draw current location
-	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
-	mDebugRenderer->DrawCoordinateSystem(Mat44::sRotationTranslation(rotation, position));
-
-	// Draw the state of the ground contact
-	Character::EGroundState ground_state = mCharacter->GetGroundState();
-	if (ground_state != Character::EGroundState::InAir)
-	{
-		Vec3 ground_position = mCharacter->GetGroundPosition();
-		Vec3 ground_normal = mCharacter->GetGroundNormal();
-		const PhysicsMaterial *ground_material = mCharacter->GetGroundMaterial();
-
-		// Draw ground position
-		mDebugRenderer->DrawWireSphere(ground_position, 0.1f, Color::sRed);
-		mDebugRenderer->DrawArrow(ground_position, ground_position + 2.0f * ground_normal, Color::sGreen, 0.1f);
-
-		// Draw ground material
-		mDebugRenderer->DrawText3D(ground_position, ground_material->GetDebugName());
-	}
+	// Draw state of character
+	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), mCharacter->GetLinearVelocity().Length());
 }
 void CharacterTest::PostPhysicsUpdate(float inDeltaTime)
 {

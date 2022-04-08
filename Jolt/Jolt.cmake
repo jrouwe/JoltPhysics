@@ -164,6 +164,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Body/MotionType.h
 	${JOLT_PHYSICS_ROOT}/Physics/Character/Character.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Character/Character.h
+	${JOLT_PHYSICS_ROOT}/Physics/Character/CharacterBase.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Character/CharacterBase.h
 	${JOLT_PHYSICS_ROOT}/Physics/Character/CharacterVirtual.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Character/CharacterVirtual.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/AABoxCast.h
