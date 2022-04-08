@@ -13,12 +13,19 @@ JPH_NAMESPACE_BEGIN
 
 CharacterVirtual::CharacterVirtual(CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
-	mUp(inSettings->mUp)
+	mUp(inSettings->mUp),
+	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
+	mMaxCollisionIterations(inSettings->mMaxCollisionIterations),
+	mMaxConstraintIterations(inSettings->mMaxConstraintIterations),
+	mMinTimeRemaining(inSettings->mMinTimeRemaining),
+	mCollisionTolerance(inSettings->mCollisionTolerance),
+	mCharacterPadding(inSettings->mCharacterPadding),
+	mMaxNumHits(inSettings->mMaxNumHits),
+	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed)
 {
 	// Copy settings
 	SetMaxStrength(inSettings->mMaxStrength);
 	SetMass(inSettings->mMass);
-	SetPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed);
 }
 
 template <class taCollector>
@@ -48,7 +55,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 		contact.mFraction = 0.0f;
 
 		// Protection from excess of contact points
-		if (mContacts.size() == cMaxNumHits)
+		if (mContacts.size() == mMaxHits)
 			ForceEarlyOut();
 	}
 }
@@ -74,7 +81,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 			contact.mFraction = inResult.mFraction;
 
 			// Protection from excess of contact points
-			if (mContacts.size() == cMaxNumHits)
+			if (mContacts.size() == mMaxHits)
 				ForceEarlyOut();
 		}
 	}
@@ -94,23 +101,23 @@ void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovem
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 	settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
-	settings.mMaxSeparationDistance = cPredictiveContactDistance;
+	settings.mMaxSeparationDistance = mPredictiveContactDistance;
 
 	// Collide shape
-	ContactCollector collector(mSystem, outContacts);
+	ContactCollector collector(mSystem, mMaxNumHits, outContacts);
 	mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 	// Reduce distance to contact by padding to ensure we stay away from the object by a little margin
 	// (this will make collision detection cheaper - especially for sweep tests as they won't hit the surface if we're properly sliding)
 	for (Contact &c : outContacts)
-		c.mDistance -= cCharacterPadding;
+		c.mDistance -= mCharacterPadding;
 }
 
 void CharacterVirtual::RemoveConflictingContacts(vector<Contact> &ioContacts, vector<IgnoredContact> &outIgnoredContacts) const
 {
 	// Only use this algorithm if we're penetrating further than this (due to numerical precision issues we can always penetrate a little bit and we don't want to discard contacts if they just have a tiny penetration)
 	// We do need to account for padding (see GetContactsAtPosition) that is removed from the contact distances, to compensate we add it to the cMinRequiredPenetration
-	static constexpr float cMinRequiredPenetration = 0.005f + cCharacterPadding;
+	const float cMinRequiredPenetration = 1.25f * mCharacterPadding;
 
 	// Discard conflicting penetrating contacts
 	for (size_t c1 = 0; c1 < ioContacts.size(); c1++)
@@ -173,7 +180,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 
 	// Cast shape
 	vector<Contact> contacts;
-	ContactCastCollector collector(mSystem, inDisplacement, inIgnoredContacts, contacts);
+	ContactCastCollector collector(mSystem, inDisplacement, mMaxNumHits, inIgnoredContacts, contacts);
 	ShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
 	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 	if (contacts.empty())
@@ -185,7 +192,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	// Check the first contact that will make us penetrate more than the allowed tolerance
 	bool valid_contact = false;
 	for (const Contact &c : contacts)
-		if (c.mDistance + c.mNormal.Dot(inDisplacement) < -cCollisionTolerance
+		if (c.mDistance + c.mNormal.Dot(inDisplacement) < -mCollisionTolerance
 			&& ValidateContact(c))
 		{
 			outContact = c;
@@ -201,7 +208,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	// <=> d' = -p |d| / n dot d
 	// The new fraction of collision is then:
 	// f' = f - d' / |d| = f + p / n dot d
-	outContact.mFraction = max(0.0f, outContact.mFraction + cCharacterPadding / outContact.mNormal.Dot(inDisplacement));
+	outContact.mFraction = max(0.0f, outContact.mFraction + mCharacterPadding / outContact.mNormal.Dot(inDisplacement));
 	return true;
 }
 
@@ -339,11 +346,11 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 	outTimeSimulated = 0.0f;
 
 	// These are the contacts that we hit previously without moving a significant distance
-	Constraint *previous_contacts[cMaxConstraintIterations];
+	Constraint **previous_contacts = (Constraint **)alloca(mMaxConstraintIterations * sizeof(Constraint *));
 	int num_previous_contacts = 0;
 
 	// Loop for a max amount of iterations
-	for (int iteration = 0; iteration < cMaxConstraintIterations; iteration++)
+	for (uint iteration = 0; iteration < mMaxConstraintIterations; iteration++)
 	{
 		// Calculate time of impact for all constraints
 		for (Constraint &c : ioConstraints)
@@ -444,7 +451,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 		outTimeSimulated += constraint->mTOI;
 
 		// If there's not enough time left to be simulated, bail
-		if (inTimeRemaining < cMinTimeRemaining)
+		if (inTimeRemaining < mMinTimeRemaining)
 			return;
 
 		// If we've moved significantly, clear all previous contacts
@@ -526,7 +533,7 @@ void CharacterVirtual::UpdateSupportingContact()
 	// Note that if we did MoveShape before we want to preserve any contacts that it marked as colliding
 	for (Contact &c : mActiveContacts)
 		if (!c.mWasDiscarded)
-			c.mHadCollision |= c.mDistance < cCollisionTolerance;
+			c.mHadCollision |= c.mDistance < mCollisionTolerance;
 
 	// Determine if we're supported or not
 	int num_supported = 0;
@@ -692,7 +699,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 	Vec3 movement_direction = inVelocity.NormalizedOr(Vec3::sZero());
 
 	float time_remaining = inDeltaTime;
-	for (int iteration = 0; iteration < cMaxCollisionIterations && time_remaining >= cMinTimeRemaining; iteration++)
+	for (uint iteration = 0; iteration < mMaxCollisionIterations && time_remaining >= mMinTimeRemaining; iteration++)
 	{
 		// Determine contacts in the neighborhood
 		// TODO: Query the broadphase only once instead of for every iteration

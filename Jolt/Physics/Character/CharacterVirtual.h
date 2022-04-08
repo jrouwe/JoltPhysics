@@ -26,8 +26,15 @@ public:
 	/// Maximum force with which the character can push other bodies (N).
 	float								mMaxStrength = 100.0f;
 
-	/// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
-	float								mPenetrationRecoverySpeed = 1.0f;
+	///@name Movement settings
+	float								mPredictiveContactDistance = 0.1f;						///< How far to scan outside of the shape for predictive contacts
+	uint								mMaxCollisionIterations = 5;							///< Max amount of collision loops
+	uint								mMaxConstraintIterations = 15;							///< How often to try stepping in the constraint solving
+	float								mMinTimeRemaining = 1.0e-4f;							///< Early out condition: If this much time is left to simulate we are done
+	float								mCollisionTolerance = 1.0e-3f;							///< How far we're willing to penetrate geometry
+	float								mCharacterPadding = 0.02f;								///< How far we try to stay away from the geometry, this ensures that the sweep will hit as little as possible lowering the collision cost and reducing the risk of getting stuck
+	uint								mMaxNumHits = 256;										///< Max num hits to collect in order to avoid excess of contact points collection
+	float								mPenetrationRecoverySpeed = 1.0f;						///< This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
 };
 
 /// This class contains settings that allow you to override the behavior of a character's collision response
@@ -103,9 +110,6 @@ public:
 	/// Maximum force with which the character can push other bodies (N)
 	void								SetMaxStrength(float inMaxStrength)						{ mMaxStrength = inMaxStrength; }
 
-	/// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
-	void								SetPenetrationRecoverySpeed(float inSpeed)				{ mPenetrationRecoverySpeed = inSpeed; }
-
 	/// This is the main update function. It moves the character according to its current velocity. Note it's your own responsibility to apply gravity!
 	/// @param inDeltaTime Time step to simulate.
 	/// @param inGravity Gravity vector (m/s^2)
@@ -126,15 +130,6 @@ public:
 	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter);
 
 private:
-	// Constants
-	static constexpr float				cPredictiveContactDistance = 0.1f;						///< How far to scan outside of the shape for predictive contacts
-	static constexpr int				cMaxCollisionIterations = 5;							///< Max amount of collision loops
-	static constexpr int				cMaxConstraintIterations = 15;							///< How often to try stepping in the constraint solving
-	static constexpr float				cMinTimeRemaining = 1.0e-4f;							///< Early out condition: If this much time is left to simulate we are done
-	static constexpr float				cCollisionTolerance = 1.0e-3f;							///< How far we're willing to penetrate geometry
-	static constexpr float				cCharacterPadding = 0.02f;								///< How far we try to stay away from the geometry, this ensures that the sweep will hit as little as possible lowering the collision cost and reducing the risk of getting stuck
-	static constexpr int				cMaxNumHits = 256;										///< Max num hits to collect in order to avoid excess of contact points collection
-
 	// Encapsulates a collision contact
 	struct Contact
 	{
@@ -177,19 +172,20 @@ private:
 	class ContactCollector : public CollideShapeCollector
 	{
 	public:
-										ContactCollector(PhysicsSystem *inSystem, vector<Contact> &outContacts) : mSystem(inSystem), mContacts(outContacts) { }
+										ContactCollector(PhysicsSystem *inSystem, uint inMaxHits, vector<Contact> &outContacts) : mSystem(inSystem), mContacts(outContacts), mMaxHits(inMaxHits) { }
 
 		virtual void					AddHit(const CollideShapeResult &inResult) override;
 
 		PhysicsSystem *					mSystem;
 		vector<Contact> &				mContacts;
+		uint							mMaxHits;
 	};
 
 	// A collision collector that collects hits for CastShape
 	class ContactCastCollector : public CastShapeCollector
 	{
 	public:
-										ContactCastCollector(PhysicsSystem *inSystem, Vec3Arg inDisplacement, const vector<IgnoredContact> &inIgnoredContacts, vector<Contact> &outContacts) : mSystem(inSystem), mDisplacement(inDisplacement), mIgnoredContacts(inIgnoredContacts), mContacts(outContacts) { }
+										ContactCastCollector(PhysicsSystem *inSystem, Vec3Arg inDisplacement, uint inMaxHits, const vector<IgnoredContact> &inIgnoredContacts, vector<Contact> &outContacts) : mSystem(inSystem), mDisplacement(inDisplacement), mIgnoredContacts(inIgnoredContacts), mContacts(outContacts), mMaxHits(inMaxHits) { }
 
 		virtual void					AddHit(const ShapeCastResult &inResult) override;
 
@@ -197,6 +193,7 @@ private:
 		Vec3							mDisplacement;
 		const vector<IgnoredContact> &	mIgnoredContacts;
 		vector<Contact> &				mContacts;
+		uint							mMaxHits;
 	};
 
 	// Helper function to convert a Jolt collision result into a contact
@@ -234,7 +231,7 @@ private:
 	void								UpdateSupportingContact();
 
 	// This function returns the actual position of the shape, corrected for the character padding
-	Vec3								GetShapePosition(Vec3Arg inPosition) const				{ return inPosition + mRotation * Vec3(0, cCharacterPadding, 0); }
+	Vec3								GetShapePosition(Vec3Arg inPosition) const				{ return inPosition + mRotation * Vec3(0, mCharacterPadding, 0); }
 
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
@@ -242,13 +239,20 @@ private:
 	// The character's world space up axis
 	Vec3								mUp;
 
-	// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
-	float								mPenetrationRecoverySpeed;
+	// Movement settings
+	float								mPredictiveContactDistance;								// How far to scan outside of the shape for predictive contacts
+	uint								mMaxCollisionIterations;								// Max amount of collision loops
+	uint								mMaxConstraintIterations;								// How often to try stepping in the constraint solving
+	float								mMinTimeRemaining;										// Early out condition: If this much time is left to simulate we are done
+	float								mCollisionTolerance;									// How far we're willing to penetrate geometry
+	float								mCharacterPadding;										// How far we try to stay away from the geometry, this ensures that the sweep will hit as little as possible lowering the collision cost and reducing the risk of getting stuck
+	uint								mMaxNumHits;											// Max num hits to collect in order to avoid excess of contact points collection
+	float								mPenetrationRecoverySpeed;								// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
 
-	/// Character mass (kg)
+	// Character mass (kg)
 	float								mMass;
 
-	/// Maximum force with which the character can push other bodies (N)
+	// Maximum force with which the character can push other bodies (N)
 	float								mMaxStrength;
 
 	// Current position (of the base, not the center of mass)
