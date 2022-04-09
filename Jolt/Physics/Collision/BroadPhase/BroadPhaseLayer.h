@@ -20,13 +20,8 @@ public:
 
 	JPH_INLINE 						BroadPhaseLayer() = default;
 	JPH_INLINE explicit constexpr	BroadPhaseLayer(Type inValue) : mValue(inValue) { }
-	JPH_INLINE constexpr			BroadPhaseLayer(const BroadPhaseLayer &inRHS) : mValue(inRHS.mValue) { }
-
-	JPH_INLINE BroadPhaseLayer &	operator = (const BroadPhaseLayer &inRHS)
-	{
-		mValue = inRHS.mValue;
-		return *this;
-	}
+	JPH_INLINE constexpr			BroadPhaseLayer(const BroadPhaseLayer &)  = default;
+	JPH_INLINE BroadPhaseLayer &	operator = (const BroadPhaseLayer &) = default;
 
 	JPH_INLINE constexpr bool		operator == (const BroadPhaseLayer &inRHS) const
 	{
@@ -99,13 +94,6 @@ public:
 									DefaultBroadPhaseLayerFilter(ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayer inLayer) :
 		mObjectVsBroadPhaseLayerFilter(inObjectVsBroadPhaseLayerFilter),
 		mLayer(inLayer)
-	{
-	}
-
-	/// Copy constructor
-									DefaultBroadPhaseLayerFilter(const DefaultBroadPhaseLayerFilter &inRHS) :
-		mObjectVsBroadPhaseLayerFilter(inRHS.mObjectVsBroadPhaseLayerFilter),
-		mLayer(inRHS.mLayer)
 	{
 	}
 
