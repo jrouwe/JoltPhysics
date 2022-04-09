@@ -43,7 +43,7 @@ protected:
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) = 0;
 
 	// Draw the character state
-	void					DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, float inCharacterVelocity);
+	void					DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity);
 
 	// Character size
 	inline static constexpr float cCharacterHeightStanding = 1.35f;

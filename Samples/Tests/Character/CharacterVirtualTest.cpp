@@ -42,7 +42,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Calculate effective velocity
 	Vec3 new_position = mCharacter->GetPosition();
-	float velocity = (new_position - old_position).Length() / inParams.mDeltaTime;
+	Vec3 velocity = (new_position - old_position) / inParams.mDeltaTime;
 
 	// Draw character
 	Mat44 com = mCharacter->GetCenterOfMassTransform();

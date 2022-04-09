@@ -241,7 +241,7 @@ void CharacterBaseTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(mRampBlocksTimeLeft);
 }
 
-void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, float inCharacterVelocity)
+void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity)
 {
 	// Draw current location
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
@@ -280,7 +280,11 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat
 			mDebugRenderer->DrawArrow(ground_position, ground_position + ground_velocity, Color::sBlue, 0.1f);
 	}
 
+	// Draw provided character velocity
+	if (!inCharacterVelocity.IsNearZero())
+		mDebugRenderer->DrawArrow(inCharacterTransform.GetTranslation(), inCharacterTransform.GetTranslation() + inCharacterVelocity, Color::sYellow, 0.1f);
+
 	// Draw text info
 	const PhysicsMaterial *ground_material = inCharacter->GetGroundMaterial();
-	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("Mat: %s\nVel: %.1f m/s", ground_material->GetDebugName(), (double)inCharacterVelocity), color, 0.25f);
+	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("Mat: %s\nVel: %.1f m/s", ground_material->GetDebugName(), (double)inCharacterVelocity.Length()), color, 0.25f);
 }

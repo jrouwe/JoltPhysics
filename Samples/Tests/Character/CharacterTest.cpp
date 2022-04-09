@@ -38,7 +38,7 @@ void CharacterTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	CharacterBaseTest::PrePhysicsUpdate(inParams);
 
 	// Draw state of character
-	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), mCharacter->GetLinearVelocity().Length());
+	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), mCharacter->GetLinearVelocity());
 }
 void CharacterTest::PostPhysicsUpdate(float inDeltaTime)
 {
