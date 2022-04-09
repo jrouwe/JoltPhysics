@@ -28,7 +28,7 @@ public:
 			mCol[c].SetZero();
 	}
 
-	inline static const Matrix				sZero()													{ Matrix m; m.SetZero(); return m; }
+	inline static Matrix					sZero()													{ Matrix m; m.SetZero(); return m; }
 
 	/// Check if this matrix consists of all zeros
 	inline bool								IsZero() const
@@ -51,7 +51,7 @@ public:
 			mCol[rc].mF32[rc] = 1.0f;
 	}
 
-	inline static const Matrix				sIdentity()												{ Matrix m; m.SetIdentity(); return m; }
+	inline static Matrix					sIdentity()												{ Matrix m; m.SetIdentity(); return m; }
 
 	/// Check if this matrix is identity
 	bool									IsIdentity() const										{ return *this == sIdentity(); }
@@ -67,7 +67,7 @@ public:
 			mCol[rc].mF32[rc] = inV[rc];
 	}
 
-	inline static const Matrix				sDiagonal(const Vector<Rows < Cols? Rows : Cols> &inV)	
+	inline static Matrix					sDiagonal(const Vector<Rows < Cols? Rows : Cols> &inV)	
 	{ 
 		Matrix m; 
 		m.SetDiagonal(inV); 
@@ -125,7 +125,7 @@ public:
 
 	/// Multiply matrix by matrix
 	template <uint OtherCols>
-	inline const Matrix<Rows, OtherCols>	operator * (const Matrix<Cols, OtherCols> &inM) const
+	inline Matrix<Rows, OtherCols>	operator * (const Matrix<Cols, OtherCols> &inM) const
 	{
 		Matrix<Rows, OtherCols> m;
 		for (uint c = 0; c < OtherCols; ++c)
@@ -154,7 +154,7 @@ public:
 	}
 
 	/// Multiply matrix with float
-	inline const Matrix						operator * (float inV) const
+	inline Matrix							operator * (float inV) const
 	{
 		Matrix m;
 		for (uint c = 0; c < Cols; ++c)
@@ -162,13 +162,13 @@ public:
 		return m;
 	}
 
-	inline friend const Matrix				operator * (float inV, const Matrix &inM)				
+	inline friend Matrix					operator * (float inV, const Matrix &inM)				
 	{ 
 		return inM * inV; 
 	}
 
 	/// Per element addition of matrix
-	inline const Matrix						operator + (const Matrix &inM) const
+	inline Matrix							operator + (const Matrix &inM) const
 	{
 		Matrix m;
 		for (uint c = 0; c < Cols; ++c)
@@ -177,7 +177,7 @@ public:
 	}
 
 	/// Per element subtraction of matrix
-	inline const Matrix						operator - (const Matrix &inM) const
+	inline Matrix							operator - (const Matrix &inM) const
 	{
 		Matrix m;
 		for (uint c = 0; c < Cols; ++c)
@@ -186,7 +186,7 @@ public:
 	}
 
 	/// Transpose matrix
-	inline const Matrix<Cols, Rows>			Transposed() const
+	inline Matrix<Cols, Rows>				Transposed() const
 	{
 		Matrix<Cols, Rows> m;
 		for (uint r = 0; r < Rows; ++r)
@@ -204,7 +204,7 @@ public:
 		return GaussianElimination(copy, *this);
 	}
 
-	inline const Matrix						Inversed() const
+	inline Matrix							Inversed() const
 	{
 		Matrix m;
 		m.SetInversed(*this);
