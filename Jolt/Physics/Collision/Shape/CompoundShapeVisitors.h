@@ -21,13 +21,11 @@ struct CompoundShape::CastRayVisitor
 	JPH_INLINE 			CastRayVisitor(const RayCast &inRay, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) : 
 		mRay(inRay),
 		mHit(ioHit),
-		mSubShapeIDCreator(inSubShapeIDCreator)
+		mSubShapeIDCreator(inSubShapeIDCreator),
+		mSubShapeBits(inShape->GetSubShapeIDBits())
 	{ 
 		// Determine ray properties of cast
 		mInvDirection.Set(inRay.mDirection);
-
-		// Determine amount of bits for sub shape
-		mSubShapeBits = inShape->GetSubShapeIDBits();
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -69,13 +67,11 @@ struct CompoundShape::CastRayVisitorCollector
 		mRay(inRay),
 		mCollector(ioCollector),
 		mSubShapeIDCreator(inSubShapeIDCreator),
+		mSubShapeBits(inShape->GetSubShapeIDBits()),
 		mRayCastSettings(inRayCastSettings)
 	{ 
 		// Determine ray properties of cast
 		mInvDirection.Set(inRay.mDirection);
-
-		// Determine amount of bits for sub shape
-		mSubShapeBits = inShape->GetSubShapeIDBits();
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -115,10 +111,9 @@ struct CompoundShape::CollidePointVisitor
 	JPH_INLINE			CollidePointVisitor(Vec3Arg inPoint, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) : 
 		mPoint(inPoint),
 		mSubShapeIDCreator(inSubShapeIDCreator),
-		mCollector(ioCollector) 
+		mCollector(ioCollector),
+		mSubShapeBits(inShape->GetSubShapeIDBits())
 	{ 
-		// Determine amount of bits for sub shape
-		mSubShapeBits = inShape->GetSubShapeIDBits();
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -153,6 +148,8 @@ struct CompoundShape::CollidePointVisitor
 struct CompoundShape::CastShapeVisitor
 {
 	JPH_INLINE			CastShapeVisitor(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const CompoundShape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) : 
+		mBoxCenter(inShapeCast.mShapeWorldBounds.GetCenter()),
+		mBoxExtent(inShapeCast.mShapeWorldBounds.GetExtent()),
 		mScale(inScale),
 		mShapeCast(inShapeCast),
 		mShapeCastSettings(inShapeCastSettings),
@@ -160,17 +157,11 @@ struct CompoundShape::CastShapeVisitor
 		mCollector(ioCollector),
 		mCenterOfMassTransform2(inCenterOfMassTransform2),
 		mSubShapeIDCreator1(inSubShapeIDCreator1),
-		mSubShapeIDCreator2(inSubShapeIDCreator2)
+		mSubShapeIDCreator2(inSubShapeIDCreator2),
+		mSubShapeBits(inShape->GetSubShapeIDBits())
 	{ 
 		// Determine ray properties of cast
 		mInvDirection.Set(inShapeCast.mDirection);
-
-		// Determine bounding box of cast shape
-		mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
-		mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent();
-
-		// Determine amount of bits for sub shape
-		mSubShapeBits = inShape->GetSubShapeIDBits();
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -236,10 +227,9 @@ struct CompoundShape::CollectTransformedShapesVisitor
 		mRotation(inRotation),
 		mScale(inScale),
 		mSubShapeIDCreator(inSubShapeIDCreator),
-		mCollector(ioCollector)
+		mCollector(ioCollector),
+		mSubShapeBits(inShape->GetSubShapeIDBits())
 	{
-		// Determine amount of bits for sub shape
-		mSubShapeBits = inShape->GetSubShapeIDBits();			
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -296,16 +286,14 @@ struct CompoundShape::CollideCompoundVsShapeVisitor
 		mTransform1(inCenterOfMassTransform1),
 		mTransform2(inCenterOfMassTransform2),
 		mSubShapeIDCreator1(inSubShapeIDCreator1),
-		mSubShapeIDCreator2(inSubShapeIDCreator2)			
+		mSubShapeIDCreator2(inSubShapeIDCreator2),
+		mSubShapeBits(inShape1->GetSubShapeIDBits())
 	{
 		// Get transform from shape 2 to shape 1
 		Mat44 transform2_to_1 = inCenterOfMassTransform1.InversedRotationTranslation() * inCenterOfMassTransform2;
 
 		// Convert bounding box of 2 into space of 1
 		mBoundsOf2InSpaceOf1 = inShape2->GetLocalBounds().Scaled(inScale2).Transformed(transform2_to_1);	
-
-		// Determine amount of bits for sub shape
-		mSubShapeBits = inShape1->GetSubShapeIDBits();
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -361,7 +349,8 @@ struct CompoundShape::CollideShapeVsCompoundVisitor
 		mTransform1(inCenterOfMassTransform1),
 		mTransform2(inCenterOfMassTransform2),
 		mSubShapeIDCreator1(inSubShapeIDCreator1),
-		mSubShapeIDCreator2(inSubShapeIDCreator2)			
+		mSubShapeIDCreator2(inSubShapeIDCreator2),
+		mSubShapeBits(inShape2->GetSubShapeIDBits())
 	{
 		// Get transform from shape 1 to shape 2
 		Mat44 transform1_to_2 = inCenterOfMassTransform2.InversedRotationTranslation() * inCenterOfMassTransform1;
@@ -369,9 +358,6 @@ struct CompoundShape::CollideShapeVsCompoundVisitor
 		// Convert bounding box of 1 into space of 2
 		mBoundsOf1InSpaceOf2 = inShape1->GetLocalBounds().Scaled(inScale1).Transformed(transform1_to_2);
 		mBoundsOf1InSpaceOf2.ExpandBy(Vec3::sReplicate(inCollideShapeSettings.mMaxSeparationDistance));
-
-		// Determine amount of bits for sub shape
-		mSubShapeBits = inShape2->GetSubShapeIDBits();
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -440,7 +426,7 @@ struct CompoundShape::GetIntersectingSubShapesVisitor
 	}
 
 	/// Records a hit
-	JPH_INLINE void		VisitShape(const SubShape &inSubShape, uint32 inSubShapeIndex)
+	JPH_INLINE void		VisitShape([[maybe_unused]] const SubShape &inSubShape, uint32 inSubShapeIndex)
 	{
 		JPH_ASSERT(mNumResults < mMaxSubShapeIndices);
 		*mSubShapeIndices++ = inSubShapeIndex;
