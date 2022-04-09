@@ -90,7 +90,7 @@ void StaticCompoundShape::sPartition(uint *ioBodyIdx, AABox *ioBounds, int inNum
 	// Calculate bounding box of box centers
 	Vec3 center_min = Vec3::sReplicate(FLT_MAX);
 	Vec3 center_max = Vec3::sReplicate(-FLT_MAX);
-	for (AABox *b = ioBounds, *b_end = ioBounds + inNumber; b < b_end; ++b)
+	for (const AABox *b = ioBounds, *b_end = ioBounds + inNumber; b < b_end; ++b)
 	{
 		Vec3 center = b->GetCenter();
 		center_min = Vec3::sMin(center_min, center);
@@ -472,12 +472,12 @@ void StaticCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator 
 	{
 		using CollidePointVisitor::CollidePointVisitor;
 
-		JPH_INLINE bool		ShouldVisitNode(int inStackTop) const
+		JPH_INLINE bool		ShouldVisitNode([[maybe_unused]] int inStackTop) const
 		{
 			return true;
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 		{
 			// Test if point overlaps with box
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
@@ -529,12 +529,12 @@ void StaticCompoundShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg i
 	{
 		using CollectTransformedShapesVisitor::CollectTransformedShapesVisitor;
 
-		JPH_INLINE bool		ShouldVisitNode(int inStackTop) const
+		JPH_INLINE bool		ShouldVisitNode([[maybe_unused]] int inStackTop) const
 		{
 			return true;
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 		{
 			// Test which nodes collide
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
@@ -575,12 +575,12 @@ void StaticCompoundShape::sCollideCompoundVsShape(const Shape *inShape1, const S
 	{
 		using CollideCompoundVsShapeVisitor::CollideCompoundVsShapeVisitor;
 
-		JPH_INLINE bool		ShouldVisitNode(int inStackTop) const
+		JPH_INLINE bool		ShouldVisitNode([[maybe_unused]] int inStackTop) const
 		{
 			return true;
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 		{
 			// Test which nodes collide
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
@@ -600,12 +600,12 @@ void StaticCompoundShape::sCollideShapeVsCompound(const Shape *inShape1, const S
 	{
 		using CollideShapeVsCompoundVisitor::CollideShapeVsCompoundVisitor;
 
-		JPH_INLINE bool		ShouldVisitNode(int inStackTop) const
+		JPH_INLINE bool		ShouldVisitNode([[maybe_unused]] int inStackTop) const
 		{
 			return true;
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 		{
 			// Test which nodes collide
 			UVec4 collides = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
