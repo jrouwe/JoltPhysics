@@ -18,6 +18,9 @@ public:
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
+	// Optional settings menu
+	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
+
 	// Called whenever the character collides with a body. Returns true if the contact can push the character.
 	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
 
@@ -29,6 +32,12 @@ protected:
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) override;
 
 private:
+	// Test settings
+	static inline float		sMaxSlopeAngle = DegreesToRadians(45.0f);
+	static inline float		sMaxStrength = 100.0f;
+	static inline float		sCharacterPadding = 0.02f;
+	static inline float		sPenetrationRecoverySpeed = 1.0f;
+
 	// The 'player' character
 	Ref<CharacterVirtual>	mCharacter;
 

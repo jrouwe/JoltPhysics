@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
+#include <Application/DebugUI.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest) 
 { 
@@ -20,8 +21,11 @@ void CharacterVirtualTest::Initialize()
 
 	// Create 'player' character
 	Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
-	settings->mMaxSlopeAngle = DegreesToRadians(45.0f);
+	settings->mMaxSlopeAngle = sMaxSlopeAngle;
+	settings->mMaxStrength = sMaxStrength;
 	settings->mShape = mStandingShape;
+	settings->mCharacterPadding = sCharacterPadding;
+	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
@@ -41,10 +45,17 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	float velocity = (new_position - old_position).Length() / inParams.mDeltaTime;
 
 	// Draw character
+	Mat44 com = mCharacter->GetCenterOfMassTransform();
 	if (mCharacter->GetShape() == mStandingShape)
-		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	{
+		mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+		mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + mCharacter->GetCharacterPadding(), Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	}
 	else
-		mDebugRenderer->DrawCapsule(mCharacter->GetCenterOfMassTransform(), 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	{
+		mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+		mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching + mCharacter->GetCharacterPadding(), Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	}
 
 	// Draw state of character
 	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);
@@ -100,6 +111,22 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// Stance switch
 	if (inSwitchStance)
 		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
+}
+
+void CharacterVirtualTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
+{
+	CharacterBaseTest::CreateSettingsMenu(inUI, inSubMenu);
+
+	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
+		UIElement *configuration_settings = inUI->CreateMenu();
+		
+		inUI->CreateSlider(configuration_settings, "Max Slope Angle (degrees)", RadiansToDegrees(sMaxSlopeAngle), 0.0f, 90.0f, 1.0f, [=](float inValue) { sMaxSlopeAngle = DegreesToRadians(inValue); });
+		inUI->CreateSlider(configuration_settings, "Max Strength (N)", sMaxStrength, 0.0f, 500.0f, 1.0f, [=](float inValue) { sMaxStrength = inValue; });
+		inUI->CreateSlider(configuration_settings, "Character Padding", sCharacterPadding, 0.01f, 0.5f, 0.01f, [=](float inValue) { sCharacterPadding = inValue; });
+		inUI->CreateSlider(configuration_settings, "Penetration Recovery Speed", sPenetrationRecoverySpeed, 0.0f, 1.0f, 0.05f, [=](float inValue) { sPenetrationRecoverySpeed = inValue; });
+		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
+		inUI->ShowMenu(configuration_settings);
+	});
 }
 
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)

@@ -110,6 +110,9 @@ public:
 	/// Maximum force with which the character can push other bodies (N)
 	void								SetMaxStrength(float inMaxStrength)						{ mMaxStrength = inMaxStrength; }
 
+	/// Character padding
+	float								GetCharacterPadding() const								{ return mCharacterPadding; }
+
 	/// This is the main update function. It moves the character according to its current velocity. Note it's your own responsibility to apply gravity!
 	/// @param inDeltaTime Time step to simulate.
 	/// @param inGravity Gravity vector (m/s^2)

@@ -232,11 +232,13 @@ Mat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPit
 void CharacterBaseTest::SaveState(StateRecorder &inStream) const
 {
 	inStream.Write(mTime);
+	inStream.Write(mRampBlocksTimeLeft);
 }
 
 void CharacterBaseTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
+	inStream.Read(mRampBlocksTimeLeft);
 }
 
 void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, float inCharacterVelocity)

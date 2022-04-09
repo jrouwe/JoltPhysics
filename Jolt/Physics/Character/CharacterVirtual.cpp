@@ -102,7 +102,7 @@ void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovem
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 	settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
-	settings.mMaxSeparationDistance = mPredictiveContactDistance;
+	settings.mMaxSeparationDistance = mCharacterPadding + mPredictiveContactDistance;
 
 	// Collide shape
 	ContactCollector collector(mSystem, mMaxNumHits, outContacts);
