@@ -48,6 +48,9 @@ public:
 	/// Draw coordinate system (3 arrows, x = red, y = green, z = blue)
 	void								DrawCoordinateSystem(Mat44Arg inTransform, float inSize = 1.0f);
 
+	/// Draw a plane through inPoint with normal inNormal
+	void								DrawPlane(Vec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize);
+
 	/// Draw wireframe triangle
 	void								DrawWireTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor);
 

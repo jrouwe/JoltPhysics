@@ -26,6 +26,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mShape = mStandingShape;
 	settings->mCharacterPadding = sCharacterPadding;
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
+	settings->mPredictiveContactDistance = sPredictiveContactDistance;
 	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
@@ -34,17 +35,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	CharacterBaseTest::PrePhysicsUpdate(inParams);
 
-	// Remember old position
-	Vec3 old_position = mCharacter->GetPosition();
-
-	// Update the character position (instant, do not have to wait for physics update)
-	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
-
-	// Calculate effective velocity
-	Vec3 new_position = mCharacter->GetPosition();
-	Vec3 velocity = (new_position - old_position) / inParams.mDeltaTime;
-
-	// Draw character
+	// Draw character pre update (the sim is also drawn pre update)
 	Mat44 com = mCharacter->GetCenterOfMassTransform();
 	if (mCharacter->GetShape() == mStandingShape)
 	{
@@ -56,6 +47,16 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 		mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching + mCharacter->GetCharacterPadding(), Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	}
+
+	// Remember old position
+	Vec3 old_position = mCharacter->GetPosition();
+
+	// Update the character position (instant, do not have to wait for physics update)
+	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { });
+
+	// Calculate effective velocity
+	Vec3 new_position = mCharacter->GetPosition();
+	Vec3 velocity = (new_position - old_position) / inParams.mDeltaTime;
 
 	// Draw state of character
 	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);
@@ -124,6 +125,7 @@ void CharacterVirtualTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 		inUI->CreateSlider(configuration_settings, "Max Strength (N)", sMaxStrength, 0.0f, 500.0f, 1.0f, [=](float inValue) { sMaxStrength = inValue; });
 		inUI->CreateSlider(configuration_settings, "Character Padding", sCharacterPadding, 0.01f, 0.5f, 0.01f, [=](float inValue) { sCharacterPadding = inValue; });
 		inUI->CreateSlider(configuration_settings, "Penetration Recovery Speed", sPenetrationRecoverySpeed, 0.0f, 1.0f, 0.05f, [=](float inValue) { sPenetrationRecoverySpeed = inValue; });
+		inUI->CreateSlider(configuration_settings, "Predictive Contact Distance", sPredictiveContactDistance, 0.01f, 1.0f, 0.01f, [=](float inValue) { sPredictiveContactDistance = inValue; });
 		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
 		inUI->ShowMenu(configuration_settings);
 	});

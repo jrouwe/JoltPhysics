@@ -37,6 +37,7 @@ private:
 	static inline float		sMaxStrength = 100.0f;
 	static inline float		sCharacterPadding = 0.02f;
 	static inline float		sPenetrationRecoverySpeed = 1.0f;
+	static inline float		sPredictiveContactDistance = 0.1f;
 
 	// The 'player' character
 	Ref<CharacterVirtual>	mCharacter;

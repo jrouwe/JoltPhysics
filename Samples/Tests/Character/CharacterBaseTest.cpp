@@ -62,9 +62,9 @@ void CharacterBaseTest::Initialize()
 
 		{
 			// Create ramps with different inclinations
-			Ref<Shape> ramp = RotatedTranslatedShapeSettings(Vec3(0, 0, -2.5f), Quat::sIdentity(), new BoxShape(Vec3(0.5f, 0.05f, 2.5f))).Create().Get();
+			Ref<Shape> ramp = RotatedTranslatedShapeSettings(Vec3(0, 0, -2.5f), Quat::sIdentity(), new BoxShape(Vec3(1.0f, 0.05f, 2.5f))).Create().Get();
 			for (int angle = 0; angle < 18; ++angle)
-				mBodyInterface->CreateAndAddBody(BodyCreationSettings(ramp, Vec3(-10.0f + angle * 1.0f, 0, -10.0f), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(10.0f * angle)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(ramp, Vec3(-15.0f + angle * 2.0f, 0, -10.0f), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(10.0f * angle)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 		}
 
 		{

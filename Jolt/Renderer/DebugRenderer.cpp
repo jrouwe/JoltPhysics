@@ -211,6 +211,33 @@ void DebugRenderer::DrawCoordinateSystem(Mat44Arg inTransform, float inSize)
 	DrawArrow(inTransform.GetTranslation(), inTransform * Vec3(0, 0, inSize), Color::sBlue, 0.1f * inSize);
 }
 
+void DebugRenderer::DrawPlane(Vec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize)
+{
+	// Create orthogonal basis
+	Vec3 perp1 = inNormal.Cross(Vec3::sAxisY()).NormalizedOr(Vec3::sAxisX());
+	Vec3 perp2 = perp1.Cross(inNormal).Normalized();
+	perp1 = inNormal.Cross(perp2);
+
+	// Calculate corners
+	Vec3 corner1 = inPoint + inSize * (perp1 + perp2);
+	Vec3 corner2 = inPoint + inSize * (perp1 - perp2);
+	Vec3 corner3 = inPoint + inSize * (-perp1 - perp2);
+	Vec3 corner4 = inPoint + inSize * (-perp1 + perp2);
+
+	// Draw cross
+	DrawLine(corner1, corner3, inColor);
+	DrawLine(corner2, corner4, inColor);
+
+	// Draw square
+	DrawLine(corner1, corner2, inColor);
+	DrawLine(corner2, corner3, inColor);
+	DrawLine(corner3, corner4, inColor);
+	DrawLine(corner4, corner1, inColor);
+
+	// Draw normal
+	DrawArrow(inPoint, inPoint + inSize * inNormal, inColor, 0.1f * inSize);
+}
+
 void DebugRenderer::DrawWireTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor)
 {
 	JPH_PROFILE_FUNCTION();

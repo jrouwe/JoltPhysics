@@ -222,14 +222,6 @@ void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, vector<
 		if (c.mDistance < 0.0f)
 			contact_velocity -= c.mNormal * c.mDistance * mPenetrationRecoverySpeed;
 
-		// Determine relative velocity between character and contact
-		Vec3 relative_velocity = inCharacterVelocity - contact_velocity;
-
-		// Project the velocity on the normal
-		float projected_velocity = c.mNormal.Dot(relative_velocity);
-		if (projected_velocity >= 0.0f)
-			continue; // Moving away from contact: Ignore
-
 		// Convert to a constraint
 		outConstraints.emplace_back();
 		Constraint &constraint = outConstraints.back();
@@ -241,10 +233,10 @@ void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, vector<
 		if (mCosMaxSlopeAngle < 0.999f) // If cos(slope angle) is close to 1 then there's no limit
 		{
 			float dot = c.mNormal.Dot(mUp);
-			if (dot >= 0.0f && dot < mCosMaxSlopeAngle)
+			if (dot > 0.0f && dot < mCosMaxSlopeAngle)
 			{
 				// Make horizontal normal
-				Vec3 normal = (c.mNormal - c.mNormal.Dot(mUp) * mUp).Normalized();
+				Vec3 normal = (c.mNormal - dot * mUp).Normalized();
 
 				// Create a secondary constraint that blocks horizontal movement
 				outConstraints.emplace_back();
@@ -711,6 +703,24 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 		vector<Constraint> constraints;
 		constraints.reserve(contacts.size() * 2);
 		DetermineConstraints(inVelocity, contacts, constraints);
+
+#ifdef JPH_DEBUG_RENDERER
+		if (sDrawConstraints && iteration == 0)
+		{
+			for (const Constraint &c : constraints)
+			{
+				// Draw contact point
+				DebugRenderer::sInstance->DrawMarker(c.mContact->mPosition, Color::sYellow, 0.05f);
+				Vec3 dist_to_plane = -c.mPlane.GetConstant() * c.mPlane.GetNormal();
+
+				// Draw arrow towards surface that we're hitting
+				DebugRenderer::sInstance->DrawArrow(c.mContact->mPosition, c.mContact->mPosition - dist_to_plane, Color::sYellow, 0.05f);
+
+				// Draw plane around the player posiiton indicating the space that we can move
+				DebugRenderer::sInstance->DrawPlane(mPosition + dist_to_plane, c.mPlane.GetNormal(), Color::sCyan, 1.0f);
+			}
+		}
+#endif // JPH_DEBUG_RENDERER
 
 		// Solve the displacement using these constraints
 		Vec3 displacement;
