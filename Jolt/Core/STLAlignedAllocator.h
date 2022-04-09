@@ -9,7 +9,7 @@ JPH_NAMESPACE_BEGIN
 
 /// STL allocator that takes care that memory is aligned to N bytes
 template <typename T, size_t N>
-class AlignedAllocator
+class STLAlignedAllocator
 {
 public:
 	using value_type = T;
@@ -27,31 +27,31 @@ public:
 	using difference_type = ptrdiff_t;
 
 	/// Constructor
-	inline					AlignedAllocator() = default;
+	inline					STLAlignedAllocator() = default;
 
 	/// Constructor from other allocator
 	template <typename T2>
-	inline explicit			AlignedAllocator(const AlignedAllocator<T2, N> &) { }
+	inline explicit			STLAlignedAllocator(const STLAlignedAllocator<T2, N> &) { }
 
 	/// Allocate memory
-	inline pointer			allocate(size_type n)
+	inline pointer			allocate(size_type inN)
 	{
-		return (pointer)AlignedAlloc(n * sizeof(value_type), N);
+		return (pointer)AlignedAlloc(inN * sizeof(value_type), N);
 	}
 
 	/// Free memory
-	inline void				deallocate(pointer p, size_type)
+	inline void				deallocate(pointer inPointer, size_type)
 	{
-		AlignedFree(p);
+		AlignedFree(inPointer);
 	}
 
 	/// Allocators are stateless so assumed to be equal
-	inline bool				operator == (const AlignedAllocator<T, N>& other) const
+	inline bool				operator == (const STLAlignedAllocator<T, N> &) const
 	{
 		return true;
 	}
 
-	inline bool				operator != (const AlignedAllocator<T, N>& other) const
+	inline bool				operator != (const STLAlignedAllocator<T, N> &) const
 	{
 		return false;
 	}
@@ -60,7 +60,7 @@ public:
 	template <typename T2>
 	struct rebind
 	{
-		using other = AlignedAllocator<T2, N>;
+		using other = STLAlignedAllocator<T2, N>;
 	};
 };
 

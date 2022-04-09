@@ -8,7 +8,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/AABBTree/AABBTreeToBuffer.h
 	${JOLT_PHYSICS_ROOT}/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h
 	${JOLT_PHYSICS_ROOT}/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h
-	${JOLT_PHYSICS_ROOT}/Core/AlignedAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
 	${JOLT_PHYSICS_ROOT}/Core/ByteBuffer.h
 	${JOLT_PHYSICS_ROOT}/Core/Color.cpp
@@ -50,6 +49,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/StreamWrapper.h
 	${JOLT_PHYSICS_ROOT}/Core/StringTools.cpp
 	${JOLT_PHYSICS_ROOT}/Core/StringTools.h
+	${JOLT_PHYSICS_ROOT}/Core/STLAlignedAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/STLTempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/TempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.cpp

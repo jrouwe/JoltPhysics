@@ -46,12 +46,12 @@ public:
 	}
 
 	/// Allocators are stateless so assumed to be equal
-	inline bool				operator == (const STLTempAllocator<T> &inRHS) const
+	inline bool				operator == (const STLTempAllocator<T> &) const
 	{
 		return true;
 	}
 
-	inline bool				operator != (const STLTempAllocator<T> &inRHS) const
+	inline bool				operator != (const STLTempAllocator<T> &) const
 	{
 		return false;
 	}
