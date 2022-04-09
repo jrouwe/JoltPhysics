@@ -6,7 +6,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// The constant \f$\pi\f$
-#define JPH_PI       3.14159265358979323846f
+static constexpr float JPH_PI = 3.14159265358979323846f;
 
 /// Convert a value from degrees to radians
 constexpr float DegreesToRadians(float inV)
