@@ -213,7 +213,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	return true;
 }
 
-void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, TempContactList &inContacts, ConstraintList &outConstraints) const
+void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, ConstraintList &outConstraints) const
 {
 	for (Contact &c : inContacts)
 	{
@@ -656,7 +656,7 @@ void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 		TempContactList contacts(mActiveContacts.begin(), mActiveContacts.end(), inAllocator);
 		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
-		DetermineConstraints(-mUp, contacts, constraints);
+		DetermineConstraints(contacts, constraints);
 
 		// Solve the displacement using these constraints, this is used to check if we didn't move at all because we are supported
 		Vec3 displacement;
@@ -706,7 +706,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 		// Convert contacts into constraints
 		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
-		DetermineConstraints(inVelocity, contacts, constraints);
+		DetermineConstraints(contacts, constraints);
 
 #ifdef JPH_DEBUG_RENDERER
 		if (sDrawConstraints && iteration == 0)

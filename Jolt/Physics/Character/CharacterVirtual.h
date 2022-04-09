@@ -228,7 +228,7 @@ private:
 	void								RemoveConflictingContacts(TempContactList &ioContacts, IgnoredContactList &outIgnoredContacts) const;
 
 	// Convert contacts into constraints. The character is assumed to start at the origin and the constraints are planes around the origin that confine the movement of the character.
-	void								DetermineConstraints(Vec3Arg inCharacterVelocity, TempContactList &inContacts, ConstraintList &outConstraints) const;
+	void								DetermineConstraints(TempContactList &inContacts, ConstraintList &outConstraints) const;
 
 	// Use the constraints to solve the displacement of the character. This will slide the character on the planes around the origin for as far as possible.
 	void								SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, ConstraintList &ioConstraints, IgnoredContactList &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement, TempAllocator &inAllocator) const;
