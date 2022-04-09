@@ -222,7 +222,7 @@ public:
 				else
 				{				
 					// Add triangles
-					node_data->mTriangleStart = tri_ctx.Pack(inVertices, node_data->mNode->mTriangles, node_data->mNodeBoundsMin, node_data->mNodeBoundsMax, mTree, outError);
+					node_data->mTriangleStart = tri_ctx.Pack(inVertices, node_data->mNode->mTriangles, mTree, outError);
 					if (node_data->mTriangleStart == uint(-1))
 						return false;
 				}
