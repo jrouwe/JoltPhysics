@@ -693,9 +693,6 @@ void CharacterVirtual::StoreActiveContacts(const vector<Contact> &inContacts)
 
 void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, vector<Contact> *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
 {
-	// Calculate starting position for the shape
-	Vec3 position = GetPaddedPosition(ioPosition);
-
 	Vec3 movement_direction = inVelocity.NormalizedOr(Vec3::sZero());
 
 	float time_remaining = inDeltaTime;
@@ -703,7 +700,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 	{
 		// Determine contacts in the neighborhood
 		vector<Contact> contacts;
-		GetContactsAtPosition(position, movement_direction, mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+		GetContactsAtPosition(ioPosition, movement_direction, mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 		// Remove contacts with the same body that have conflicting normals
 		vector<IgnoredContact> ignored_contacts;
@@ -726,7 +723,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 
 		// Do a sweep to test if the path is really unobstructed
 		Contact cast_contact;
-		if (GetFirstContactForSweep(position, displacement, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter))
+		if (GetFirstContactForSweep(ioPosition, displacement, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter))
 		{
 			displacement *= cast_contact.mFraction;
 			time_simulated *= cast_contact.mFraction;
@@ -734,7 +731,6 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 
 		// Update the position
 		ioPosition += displacement;
-		position += displacement;
 		time_remaining -= time_simulated;
 
 		// If the displacement during this iteration was too small we assume we cannot further progress this update
@@ -761,12 +757,9 @@ void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadP
 
 void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter)
 {
-	// Calculate position for the shape
-	Vec3 position = GetPaddedPosition(mPosition);
-
 	// Determine the contacts
 	vector<Contact> contacts;
-	GetContactsAtPosition(position, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 	StoreActiveContacts(contacts);
 }
@@ -782,20 +775,24 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 
 	if (inShape != mShape && inShape != nullptr)
 	{
+		// Tentatively set new shape
+		RefConst<Shape> old_shape = mShape;
+		mShape = inShape;
+
 		// Check collision around the new shape
 		vector<Contact> contacts;
-		GetContactsAtPosition(GetPaddedPosition(mPosition), mLinearVelocity.NormalizedOr(Vec3::sZero()), inShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+		GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), inShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 		if (inMaxPenetrationDepth < FLT_MAX)
 		{
 			// Test if this results in penetration, if so cancel the transition
 			for (const Contact &c : contacts)
 				if (c.mDistance < -inMaxPenetrationDepth)
+				{
+					mShape = old_shape;
 					return false;
+				}
 		}
-
-		// Store the new shape
-		mShape = inShape;
 
 		StoreActiveContacts(contacts);
 	}

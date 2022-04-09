@@ -102,7 +102,7 @@ public:
 	Mat44								GetWorldTransform() const								{ return Mat44::sRotationTranslation(mRotation, mPosition); }
 
 	/// Calculates the transform for this character's center of mass
-	Mat44								GetCenterOfMassTransform() const						{ return GetCenterOfMassTransform(mPosition).PostTranslated(mCharacterPadding * mUp); }
+	Mat44								GetCenterOfMassTransform() const						{ return GetCenterOfMassTransform(mPosition); }
 
 	/// Character mass (kg)
 	void								SetMass(float inMass)									{ mMass = inMass; }
@@ -233,11 +233,8 @@ private:
 	// This function will determine which contacts are touching the character and will calculate the one that is supporting us
 	void								UpdateSupportingContact();
 
-	// This function returns the actual position of the shape, corrected for the character padding
-	inline Vec3							GetPaddedPosition(Vec3Arg inPosition) const				{ return inPosition + mCharacterPadding * mUp; }
-
 	// This function returns the actual center of mass of the shape, not corrected for the character padding
-	inline Mat44						GetCenterOfMassTransform(Vec3Arg inPosition) const		{ return Mat44::sRotationTranslation(mRotation, inPosition).PreTranslated(mShape->GetCenterOfMass()); }
+	inline Mat44						GetCenterOfMassTransform(Vec3Arg inPosition) const		{ return Mat44::sRotationTranslation(mRotation, inPosition).PreTranslated(mShape->GetCenterOfMass()).PostTranslated(mCharacterPadding * mUp); }
 
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
