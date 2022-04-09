@@ -251,7 +251,7 @@ public:
 		}
 
 	public:
-		JPH_INLINE					DecodingContext(const TriangleHeader *inHeader) :
+		JPH_INLINE explicit			DecodingContext(const TriangleHeader *inHeader) :
 			mOffsetX(Vec4::sReplicate(inHeader->mOffset.x)),
 			mOffsetY(Vec4::sReplicate(inHeader->mOffset.y)),
 			mOffsetZ(Vec4::sReplicate(inHeader->mOffset.z)),
