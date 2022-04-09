@@ -31,6 +31,7 @@
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
+#include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
 
@@ -223,10 +224,12 @@ static TestNameAndRTTI sRigTests[] =
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(CharacterTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(CharacterVirtualTest)
 
 static TestNameAndRTTI sCharacterTests[] =
 {
 	{ "Character",							JPH_RTTI(CharacterTest) },
+	{ "Character Virtual",					JPH_RTTI(CharacterVirtualTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(WaterShapeTest)
@@ -393,6 +396,7 @@ SamplesApp::SamplesApp()
 		mDebugUI->CreateCheckBox(drawing_options, "Draw Mesh Shape Triangle Outlines", MeshShape::sDrawTriangleOutlines, [](UICheckBox::EState inState) { MeshShape::sDrawTriangleOutlines = inState == UICheckBox::STATE_CHECKED; });
 		mDebugUI->CreateCheckBox(drawing_options, "Draw Height Field Shape Triangle Outlines", HeightFieldShape::sDrawTriangleOutlines, [](UICheckBox::EState inState) { HeightFieldShape::sDrawTriangleOutlines = inState == UICheckBox::STATE_CHECKED; });
 		mDebugUI->CreateCheckBox(drawing_options, "Draw Submerged Volumes", Shape::sDrawSubmergedVolumes, [](UICheckBox::EState inState) { Shape::sDrawSubmergedVolumes = inState == UICheckBox::STATE_CHECKED; });
+		mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Constraints", CharacterVirtual::sDrawConstraints, [](UICheckBox::EState inState) { CharacterVirtual::sDrawConstraints = inState == UICheckBox::STATE_CHECKED; });
 		mDebugUI->ShowMenu(drawing_options);
 	});
 #endif // JPH_DEBUG_RENDERER
@@ -529,6 +533,7 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	mTest->SetPhysicsSystem(mPhysicsSystem);
 	mTest->SetJobSystem(mJobSystem);
 	mTest->SetDebugRenderer(mDebugRenderer);
+	mTest->SetTempAllocator(mTempAllocator);
 	if (mInstallContactListener)
 	{
 		mContactListener = new ContactListenerImpl;

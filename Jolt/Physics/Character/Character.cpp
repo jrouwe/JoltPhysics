@@ -27,15 +27,10 @@ static inline const NarrowPhaseQuery &sGetNarrowPhaseQuery(PhysicsSystem *inSyst
 	return inLockBodies? inSystem->GetNarrowPhaseQuery() : inSystem->GetNarrowPhaseQueryNoLock();
 }
 
-Character::Character(CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
-	mLayer(inSettings->mLayer),
-	mShape(inSettings->mShape),
-	mSystem(inSystem),
-	mGroundMaterial(PhysicsMaterial::sDefault)
+Character::Character(const CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
+	CharacterBase(inSettings, inSystem),
+	mLayer(inSettings->mLayer)
 {
-	// Initialize max slope angle
-	SetMaxSlopeAngle(inSettings->mMaxSlopeAngle);
-
 	// Construct rigid body
 	BodyCreationSettings settings(mShape, inPosition, inRotation, EMotionType::Dynamic, mLayer);
 	settings.mFriction = inSettings->mFriction;
@@ -151,7 +146,32 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 	mGroundBodyID = collector.mGroundBodyID;
 	mGroundPosition = collector.mGroundPosition;
 	mGroundNormal = collector.mGroundNormal;
-	mGroundMaterial = sGetBodyInterface(mSystem, inLockBodies).GetMaterial(collector.mGroundBodyID, collector.mGroundBodySubShapeID);
+
+	// Get additional data from body
+	BodyLockRead lock(sGetBodyLockInterface(mSystem, inLockBodies), mGroundBodyID);
+	if (lock.Succeeded())
+	{
+		const Body &body = lock.GetBody();
+
+		// Update ground state
+		Vec3 up = -mSystem->GetGravity().Normalized();
+		if (mGroundNormal.Dot(up) > mCosMaxSlopeAngle)
+			mGroundState = EGroundState::OnGround;
+		else
+			mGroundState = EGroundState::Sliding;
+
+		// Copy other body properties
+		mGroundMaterial = body.GetShape()->GetMaterial(mGroundBodySubShapeID);
+		mGroundVelocity = body.GetPointVelocity(mGroundPosition);
+		mGroundUserData = body.GetUserData();
+	}
+	else
+	{
+		mGroundState = EGroundState::InAir;
+		mGroundMaterial = PhysicsMaterial::sDefault;
+		mGroundVelocity = Vec3::sZero();
+		mGroundUserData = 0;
+	}
 }
 
 void Character::SetLinearAndAngularVelocity(Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, bool inLockBodies)
@@ -214,6 +234,11 @@ Vec3 Character::GetCenterOfMassPosition(bool inLockBodies) const
 	return sGetBodyInterface(mSystem, inLockBodies).GetCenterOfMassPosition(mBodyID);
 }
 
+Mat44 Character::GetWorldTransform(bool inLockBodies) const
+{
+	return sGetBodyInterface(mSystem, inLockBodies).GetWorldTransform(mBodyID);
+}
+
 void Character::SetLayer(ObjectLayer inLayer, bool inLockBodies)
 {
 	mLayer = inLayer;
@@ -257,28 +282,6 @@ bool Character::SetShape(const Shape *inShape, float inMaxPenetrationDepth, bool
 	mShape = inShape;
 	sGetBodyInterface(mSystem, inLockBodies).SetShape(mBodyID, mShape, false, EActivation::Activate);
 	return true;
-}
-
-Character::EGroundState Character::GetGroundState() const
-{ 
-	if (mGroundBodyID.IsInvalid())
-		return EGroundState::InAir;
-	
-	Vec3 up = -mSystem->GetGravity().Normalized();
-	if (mGroundNormal.Dot(up) > mCosMaxSlopeAngle)
-		return EGroundState::OnGround;
-	else
-		return EGroundState::Sliding;
-}
-
-uint64 Character::GetGroundUserData(bool inLockBodies) const
-{
-	return sGetBodyInterface(mSystem, inLockBodies).GetUserData(mGroundBodyID);
-}
-
-Vec3 Character::GetGroundVelocity(bool inLockBodies) const
-{
-	return sGetBodyInterface(mSystem, inLockBodies).GetPointVelocity(mGroundBodyID, mGroundPosition);
 }
 
 JPH_NAMESPACE_END
