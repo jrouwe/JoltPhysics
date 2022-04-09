@@ -533,6 +533,7 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	mTest->SetPhysicsSystem(mPhysicsSystem);
 	mTest->SetJobSystem(mJobSystem);
 	mTest->SetDebugRenderer(mDebugRenderer);
+	mTest->SetTempAllocator(mTempAllocator);
 	if (mInstallContactListener)
 	{
 		mContactListener = new ContactListenerImpl;

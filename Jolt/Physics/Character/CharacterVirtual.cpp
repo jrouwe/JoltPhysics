@@ -89,7 +89,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 	}
 }
 
-void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, vector<Contact> &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
 {
 	// Remove previous results
 	outContacts.clear();
@@ -114,7 +114,7 @@ void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovem
 		c.mDistance -= mCharacterPadding;
 }
 
-void CharacterVirtual::RemoveConflictingContacts(vector<Contact> &ioContacts, vector<IgnoredContact> &outIgnoredContacts) const
+void CharacterVirtual::RemoveConflictingContacts(TempContactList &ioContacts, IgnoredContactList &outIgnoredContacts) const
 {
 	// Only use this algorithm if we're penetrating further than this (due to numerical precision issues we can always penetrate a little bit and we don't want to discard contacts if they just have a tiny penetration)
 	// We do need to account for padding (see GetContactsAtPosition) that is removed from the contact distances, to compensate we add it to the cMinRequiredPenetration
@@ -161,7 +161,7 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 	return mListener->OnContactValidate(this, inContact.mBodyB, inContact.mSubShapeIDB);
 }
 
-bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const vector<IgnoredContact> &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
 {
 	// Too small distance -> skip checking
 	if (inDisplacement.LengthSq() < 1.0e-8f)
@@ -179,7 +179,8 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	settings.mReturnDeepestPoint = false;
 
 	// Cast shape
-	vector<Contact> contacts;
+	TempContactList contacts(inAllocator);
+	contacts.reserve(mMaxNumHits);
 	ContactCastCollector collector(mSystem, inDisplacement, mMaxNumHits, inIgnoredContacts, contacts);
 	ShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
 	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
@@ -212,7 +213,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	return true;
 }
 
-void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, vector<Contact> &inContacts, vector<Constraint> &outConstraints) const
+void CharacterVirtual::DetermineConstraints(Vec3Arg inCharacterVelocity, TempContactList &inContacts, ConstraintList &outConstraints) const
 {
 	for (Contact &c : inContacts)
 	{
@@ -314,7 +315,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	return true;
 }
 
-void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, vector<Constraint> &ioConstraints, vector<IgnoredContact> &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement) const
+void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, ConstraintList &ioConstraints, IgnoredContactList &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement, TempAllocator &inAllocator) const
 {
 	// If there are no constraints we can immediately move to our target
 	if (ioConstraints.empty())
@@ -325,7 +326,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 	}
 
 	// Create array that holds the constraints in order of time of impact (sort will happen later)
-	vector<Constraint *> sorted_constraints;
+	vector<Constraint *, STLTempAllocator<Constraint *>> sorted_constraints(inAllocator);
 	sorted_constraints.resize(ioConstraints.size());
 	for (size_t index = 0; index < sorted_constraints.size(); index++)
 		sorted_constraints[index] = &ioConstraints[index];
@@ -338,7 +339,8 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 	outTimeSimulated = 0.0f;
 
 	// These are the contacts that we hit previously without moving a significant distance
-	Constraint **previous_contacts = (Constraint **)alloca(mMaxConstraintIterations * sizeof(Constraint *));
+	vector<Constraint *, STLTempAllocator<Constraint *>> previous_contacts(inAllocator);
+	previous_contacts.resize(mMaxConstraintIterations);
 	int num_previous_contacts = 0;
 
 	// Loop for a max amount of iterations
@@ -462,7 +464,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 		// Find the normal of the previous contact that we will violate the most if we move in this new direction
 		float highest_penetration = 0.0f;
 		Constraint *other_constraint = nullptr;
-		for (Constraint **c = previous_contacts; c < previous_contacts + num_previous_contacts; ++c)
+		for (Constraint **c = previous_contacts.data(); c < previous_contacts.data() + num_previous_contacts; ++c)
 			if (*c != constraint)
 			{
 				// Calculate how much we will penetrate if we move in this direction
@@ -519,7 +521,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 	}
 }
 
-void CharacterVirtual::UpdateSupportingContact()
+void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 {
 	// Flag contacts as having a collision if they're close enough.
 	// Note that if we did MoveShape before we want to preserve any contacts that it marked as colliding
@@ -651,16 +653,17 @@ void CharacterVirtual::UpdateSupportingContact()
 		// If we're sliding we may actually be standing on multiple sliding contacts in such a way that we can't slide off, in this case we're also supported
 
 		// Convert the contacts into constraints
-		vector<Contact> contacts(mActiveContacts);
-		vector<Constraint> constraints;
+		TempContactList contacts(mActiveContacts.begin(), mActiveContacts.end(), inAllocator);
+		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
 		DetermineConstraints(-mUp, contacts, constraints);
 
 		// Solve the displacement using these constraints, this is used to check if we didn't move at all because we are supported
 		Vec3 displacement;
 		float time_simulated;
-		vector<IgnoredContact> ignored_contacts;
-		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement);
+		IgnoredContactList ignored_contacts(inAllocator);
+		ignored_contacts.reserve(contacts.size());
+		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement, inAllocator);
 
 		// If we're blocked then we're supported, otherwise we're sliding
 		constexpr float cMinRequiredDisplacementSquared = Square(0.01f);
@@ -676,14 +679,14 @@ void CharacterVirtual::UpdateSupportingContact()
 	}
 }
 
-void CharacterVirtual::StoreActiveContacts(const vector<Contact> &inContacts)
+void CharacterVirtual::StoreActiveContacts(const TempContactList &inContacts, TempAllocator &inAllocator)
 {
-	mActiveContacts = inContacts;
+	mActiveContacts.assign(inContacts.begin(), inContacts.end());
 
-	UpdateSupportingContact();
+	UpdateSupportingContact(inAllocator);
 }
 
-void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, vector<Contact> *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
 {
 	Vec3 movement_direction = inVelocity.NormalizedOr(Vec3::sZero());
 
@@ -691,16 +694,17 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 	for (uint iteration = 0; iteration < mMaxCollisionIterations && time_remaining >= mMinTimeRemaining; iteration++)
 	{
 		// Determine contacts in the neighborhood
-		vector<Contact> contacts;
+		TempContactList contacts(inAllocator);
+		contacts.reserve(mMaxNumHits);
 		GetContactsAtPosition(ioPosition, movement_direction, mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 		// Remove contacts with the same body that have conflicting normals
-		vector<IgnoredContact> ignored_contacts;
+		IgnoredContactList ignored_contacts(inAllocator);
 		ignored_contacts.reserve(contacts.size());
 		RemoveConflictingContacts(contacts, ignored_contacts);
 
 		// Convert contacts into constraints
-		vector<Constraint> constraints;
+		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
 		DetermineConstraints(inVelocity, contacts, constraints);
 
@@ -725,15 +729,15 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 		// Solve the displacement using these constraints
 		Vec3 displacement;
 		float time_simulated;
-		SolveConstraints(inVelocity, inGravity, inDeltaTime, time_remaining, constraints, ignored_contacts, time_simulated, displacement);
+		SolveConstraints(inVelocity, inGravity, inDeltaTime, time_remaining, constraints, ignored_contacts, time_simulated, displacement, inAllocator);
 
 		// Store the contacts now that the colliding ones have been marked
 		if (outActiveContacts != nullptr)
-			*outActiveContacts = contacts;
+			outActiveContacts->assign(contacts.begin(), contacts.end());
 
 		// Do a sweep to test if the path is really unobstructed
 		Contact cast_contact;
-		if (GetFirstContactForSweep(ioPosition, displacement, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter))
+		if (GetFirstContactForSweep(ioPosition, displacement, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		{
 			displacement *= cast_contact.mFraction;
 			time_simulated *= cast_contact.mFraction;
@@ -749,7 +753,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 	}
 }
 
-void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter)
+void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
 {
 	// If there's no delta time, we don't need to do anything
 	if (inDeltaTime <= 0.0f)
@@ -759,22 +763,23 @@ void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadP
 	mLastDeltaTime = inDeltaTime;
 
 	// Slide the shape through the world
-	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 
 	// Determine the object that we're standing on
-	UpdateSupportingContact();
+	UpdateSupportingContact(inAllocator);
 }
 
-void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter)
+void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
 {
 	// Determine the contacts
-	vector<Contact> contacts;
+	TempContactList contacts(inAllocator);
+	contacts.reserve(mMaxNumHits);
 	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
-	StoreActiveContacts(contacts);
+	StoreActiveContacts(contacts, inAllocator);
 }
 
-bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter)
+bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
 {
 	if (mShape == nullptr || mSystem == nullptr)
 	{
@@ -790,7 +795,8 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 		mShape = inShape;
 
 		// Check collision around the new shape
-		vector<Contact> contacts;
+		TempContactList contacts(inAllocator);
+		contacts.reserve(mMaxNumHits);
 		GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), inShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 		if (inMaxPenetrationDepth < FLT_MAX)
@@ -804,7 +810,7 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 				}
 		}
 
-		StoreActiveContacts(contacts);
+		StoreActiveContacts(contacts, inAllocator);
 	}
 
 	return mShape == inShape;

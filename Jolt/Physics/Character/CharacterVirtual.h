@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Body/BodyFilter.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
+#include <Jolt/Core/STLTempAllocator.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -119,10 +120,10 @@ public:
 	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
 	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
 	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
-	void								Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter);
+	void								Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
 	/// This function can be used after a character has teleported to determine the new contacts with the world.
-	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter);
+	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
 	/// Switch the shape of the character (e.g. for stance).
 	/// @param inMaxPenetrationDepth When inMaxPenetrationDepth is not FLT_MAX, it checks if the new shape collides before switching shape. This is the max penetration we're willing to accept after the switch.
@@ -130,7 +131,7 @@ public:
 	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
 	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
 	/// @return Returns true if the switch succeeded.
-	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter);
+	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
 #ifdef JPH_DEBUG_RENDERER
 	static inline bool					sDrawConstraints = false;								///< Draw the current state of the constraints for iteration 0 when creating them
@@ -155,6 +156,9 @@ private:
 		bool							mCanPushCharacter = true;								///< When true, the velocity of the contact point can push the character
 	};
 
+	using TempContactList = vector<Contact, STLTempAllocator<Contact>>;
+	using ContactList = vector<Contact>;
+
 	// A contact that needs to be ignored
 	struct IgnoredContact
 	{
@@ -164,6 +168,8 @@ private:
 		BodyID							mBodyID;												///< ID of body we're colliding with
 		SubShapeID						mSubShapeID;											///< Sub shape of body we're colliding with
 	};
+
+	using IgnoredContactList = vector<IgnoredContact, STLTempAllocator<IgnoredContact>>;
 
 	// A constraint that limits the movement of the character
 	struct Constraint
@@ -175,16 +181,18 @@ private:
 		Plane							mPlane;													///< Plane around the origin that describes how far we can displace (from the origin)
 	};
 
+	using ConstraintList = vector<Constraint, STLTempAllocator<Constraint>>;
+
 	// Collision collector that collects hits for CollideShape
 	class ContactCollector : public CollideShapeCollector
 	{
 	public:
-										ContactCollector(PhysicsSystem *inSystem, uint inMaxHits, vector<Contact> &outContacts) : mSystem(inSystem), mContacts(outContacts), mMaxHits(inMaxHits) { }
+										ContactCollector(PhysicsSystem *inSystem, uint inMaxHits, TempContactList &outContacts) : mSystem(inSystem), mContacts(outContacts), mMaxHits(inMaxHits) { }
 
 		virtual void					AddHit(const CollideShapeResult &inResult) override;
 
 		PhysicsSystem *					mSystem;
-		vector<Contact> &				mContacts;
+		TempContactList &				mContacts;
 		uint							mMaxHits;
 	};
 
@@ -192,14 +200,14 @@ private:
 	class ContactCastCollector : public CastShapeCollector
 	{
 	public:
-										ContactCastCollector(PhysicsSystem *inSystem, Vec3Arg inDisplacement, uint inMaxHits, const vector<IgnoredContact> &inIgnoredContacts, vector<Contact> &outContacts) : mSystem(inSystem), mDisplacement(inDisplacement), mIgnoredContacts(inIgnoredContacts), mContacts(outContacts), mMaxHits(inMaxHits) { }
+										ContactCastCollector(PhysicsSystem *inSystem, Vec3Arg inDisplacement, uint inMaxHits, const IgnoredContactList &inIgnoredContacts, TempContactList &outContacts) : mSystem(inSystem), mDisplacement(inDisplacement), mIgnoredContacts(inIgnoredContacts), mContacts(outContacts), mMaxHits(inMaxHits) { }
 
 		virtual void					AddHit(const ShapeCastResult &inResult) override;
 
 		PhysicsSystem *					mSystem;
 		Vec3							mDisplacement;
-		const vector<IgnoredContact> &	mIgnoredContacts;
-		vector<Contact> &				mContacts;
+		const IgnoredContactList &		mIgnoredContacts;
+		TempContactList &				mContacts;
 		uint							mMaxHits;
 	};
 
@@ -208,34 +216,34 @@ private:
 	inline static void					sFillContactProperties(Contact &outContact, const Body &inBody, const taCollector &inCollector, const CollideShapeResult &inResult);
 
 	// Move the shape from ioPosition and try to displace it by inVelocity * inDeltaTime, this will try to slide the shape along the world geometry
-	void								MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, vector<Contact> *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
+	void								MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const;
 
 	// Ask the callback if inContact is a valid contact point
 	bool								ValidateContact(const Contact &inContact) const;
 
 	// Tests the shape for collision around inPosition
-	void								GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, vector<Contact> &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
+	void								GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
 
 	// Remove penetrating contacts with the same body that have conflicting normals, leaving these will make the character mover get stuck
-	void								RemoveConflictingContacts(vector<Contact> &ioContacts, vector<IgnoredContact> &outIgnoredContacts) const;
+	void								RemoveConflictingContacts(TempContactList &ioContacts, IgnoredContactList &outIgnoredContacts) const;
 
 	// Convert contacts into constraints. The character is assumed to start at the origin and the constraints are planes around the origin that confine the movement of the character.
-	void								DetermineConstraints(Vec3Arg inCharacterVelocity, vector<Contact> &inContacts, vector<Constraint> &outConstraints) const;
+	void								DetermineConstraints(Vec3Arg inCharacterVelocity, TempContactList &inContacts, ConstraintList &outConstraints) const;
 
 	// Use the constraints to solve the displacement of the character. This will slide the character on the planes around the origin for as far as possible.
-	void								SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, vector<Constraint> &ioConstraints, vector<IgnoredContact> &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement) const;
+	void								SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, ConstraintList &ioConstraints, IgnoredContactList &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement, TempAllocator &inAllocator) const;
 
 	// Handle contact with physics object that we're colliding against
 	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, Vec3Arg inGravity, float inDeltaTime) const;
 
 	// Does a swept test of the shape from inPosition with displacement inDisplacement, returns true if there was a collision
-	bool								GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const vector<IgnoredContact> &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
+	bool								GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const;
 
 	// Store contacts so that CheckSupport and GetStandingPhysicsInstance etc. can return information
-	void								StoreActiveContacts(const vector<Contact> &inContacts);
+	void								StoreActiveContacts(const TempContactList &inContacts, TempAllocator &inAllocator);
 
 	// This function will determine which contacts are touching the character and will calculate the one that is supporting us
-	void								UpdateSupportingContact();
+	void								UpdateSupportingContact(TempAllocator &inAllocator);
 
 	// This function returns the actual center of mass of the shape, not corrected for the character padding
 	inline Mat44						GetCenterOfMassTransform(Vec3Arg inPosition) const		{ return Mat44::sRotationTranslation(mRotation, inPosition).PreTranslated(mShape->GetCenterOfMass()).PostTranslated(mCharacterPadding * mUp); }
@@ -272,7 +280,7 @@ private:
 	Vec3								mLinearVelocity = Vec3::sZero();
 
 	// List of contacts that were active in the last frame
-	vector<Contact>						mActiveContacts;
+	ContactList							mActiveContacts;
 
 	// Remembers the delta time of the last update
 	float								mLastDeltaTime = 1.0f / 60.0f;

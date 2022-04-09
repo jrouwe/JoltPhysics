@@ -35,6 +35,9 @@ public:
 	// Set the debug renderer
 	void			SetDebugRenderer(DebugRenderer *inDebugRenderer)			{ mDebugRenderer = inDebugRenderer; }
 
+	// Set the temp allocator
+	void			SetTempAllocator(TempAllocator *inTempAllocator)			{ mTempAllocator = inTempAllocator; }
+
 	// Initialize the test
 	virtual void	Initialize()												{ }
 
@@ -97,6 +100,7 @@ protected:
 	PhysicsSystem *	mPhysicsSystem = nullptr;
 	BodyInterface *	mBodyInterface = nullptr;
 	DebugRenderer *	mDebugRenderer = nullptr;
+	TempAllocator *	mTempAllocator = nullptr;
 
 private:
 	bool			mNeedsRestart = false;
