@@ -31,16 +31,16 @@ constexpr uint64 HashString(const char *inString)
 }
 
 /// Replace substring with other string
-void StringReplace(string &ioString, string inSearch, string inReplace);
+void StringReplace(string &ioString, const string_view &inSearch, const string_view &inReplace);
 
 /// Convert a delimited string to an array of strings
-void StringToVector(const string &inString, vector<string> &outVector, const string &inDelimiter = ",", bool inClearVector = true);
+void StringToVector(const string &inString, vector<string> &outVector, const string_view &inDelimiter = ",", bool inClearVector = true);
 
 /// Convert an array strings to a delimited string
-void VectorToString(const vector<string> &inVector, string &outString, const string &inDelimiter = ",");
+void VectorToString(const vector<string> &inVector, string &outString, const string_view &inDelimiter = ",");
 
 /// Convert a string to lower case
-string ToLower(const string &inString);
+string ToLower(const string_view &inString);
 
 /// Converts the lower 4 bits of inNibble to a string that represents the number in binary format
 const char *NibbleToBinary(uint32 inNibble);

@@ -207,9 +207,7 @@ public:
 		}
 
 		/// Constructor
-		JPH_INLINE explicit			DecodingContext(const Header *inHeader) :
-			mRootBoundsMin(Vec3::sLoadFloat3Unsafe(inHeader->mRootBoundsMin)),
-			mRootBoundsMax(Vec3::sLoadFloat3Unsafe(inHeader->mRootBoundsMax))
+		JPH_INLINE explicit			DecodingContext(const Header *inHeader)
 		{
 			// Start with the root node on the stack
 			mNodeStack[0] = inHeader->mRootProperties;
@@ -258,7 +256,7 @@ public:
 					uint32 triangle_block_id = node_properties & OFFSET_MASK;
 					const void *triangles = sGetTriangleBlockStart(inBufferStart, triangle_block_id);
 
-					ioVisitor.VisitTriangles(inTriangleContext, mRootBoundsMin, mRootBoundsMax, triangles, tri_count, triangle_block_id);
+					ioVisitor.VisitTriangles(inTriangleContext, triangles, tri_count, triangle_block_id);
 				}
 
 				// Check if we're done
@@ -280,8 +278,6 @@ public:
 		}
 
 	private:
-		Vec3						mRootBoundsMin;
-		Vec3						mRootBoundsMax;
 		uint32						mNodeStack[StackSize];
 		int							mTop = 0;
 	};

@@ -46,12 +46,12 @@ protected:
 	void					DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity);
 
 	// Character size
-	inline static constexpr float cCharacterHeightStanding = 1.35f;
-	inline static constexpr float cCharacterRadiusStanding = 0.3f;
-	inline static constexpr float cCharacterHeightCrouching = 0.8f;
-	inline static constexpr float cCharacterRadiusCrouching = 0.3f;
-	inline static constexpr float cCharacterSpeed = 6.0f;
-	inline static constexpr float cJumpSpeed = 4.0f;
+	static constexpr float	cCharacterHeightStanding = 1.35f;
+	static constexpr float	cCharacterRadiusStanding = 0.3f;
+	static constexpr float	cCharacterHeightCrouching = 0.8f;
+	static constexpr float	cCharacterRadiusCrouching = 0.3f;
+	static constexpr float	cCharacterSpeed = 6.0f;
+	static constexpr float	cJumpSpeed = 4.0f;
 
 	// The different stances for the character
 	RefConst<Shape>			mStandingShape;

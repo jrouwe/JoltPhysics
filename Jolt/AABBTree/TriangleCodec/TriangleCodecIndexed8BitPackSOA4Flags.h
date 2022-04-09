@@ -95,11 +95,6 @@ public:
 	class EncodingContext
 	{
 	public:
-		EncodingContext() :
-			mNumTriangles(0)
-		{
-		}
-
 		/// Get an upper bound on the amount of bytes needed to store inTriangleCount triangles
 		uint						GetPessimisticMemoryEstimate(uint inTriangleCount) const
 		{
@@ -109,7 +104,7 @@ public:
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
 		/// Returns uint(-1) on error.
-		uint						Pack(const VertexList &inVertices, const IndexedTriangleList &inTriangles, Vec3Arg inBoundsMin, Vec3Arg inBoundsMax, ByteBuffer &ioBuffer, string &outError)
+		uint						Pack(const VertexList &inVertices, const IndexedTriangleList &inTriangles, ByteBuffer &ioBuffer, string &outError)
 		{
 			// Determine position of triangles start
 			uint offset = (uint)ioBuffer.size();
@@ -217,7 +212,7 @@ public:
 			(bounds.GetSize() / Vec3::sReplicate(COMPONENT_MASK)).StoreFloat3(&ioHeader->mScale);
 		}
 
-		void						GetStats(string &outTriangleCodecName, float &outVerticesPerTriangle)
+		void						GetStats(string &outTriangleCodecName, float &outVerticesPerTriangle) const
 		{
 			// Store stats
 			outTriangleCodecName = "Indexed8BitPackSOA4";
@@ -227,7 +222,7 @@ public:
 	private:
 		using VertexMap = unordered_map<uint32, uint32>;
 
-		uint						mNumTriangles;
+		uint						mNumTriangles = 0;
 		vector<Float3>				mVertices;				///< Output vertices, sorted according to occurrence
 		VertexMap					mVertexMap;				///< Maps from the original mesh vertex index (inVertices) to the index in our output vertices (mVertices)
 		vector<uint>				mOffsetsToPatch;		///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
@@ -256,7 +251,7 @@ public:
 		}
 
 	public:
-		JPH_INLINE					DecodingContext(const TriangleHeader *inHeader, const ByteBuffer &inBuffer) :
+		JPH_INLINE explicit			DecodingContext(const TriangleHeader *inHeader) :
 			mOffsetX(Vec4::sReplicate(inHeader->mOffset.x)),
 			mOffsetY(Vec4::sReplicate(inHeader->mOffset.y)),
 			mOffsetZ(Vec4::sReplicate(inHeader->mOffset.z)),
@@ -267,7 +262,7 @@ public:
 		}
 
 		/// Unpacks triangles in the format t1v1,t1v2,t1v3, t2v1,t2v2,t2v3, ...
-		JPH_INLINE void				Unpack(Vec3Arg inBoundsMin, Vec3Arg inBoundsMax, const void *inTriangleStart, uint32 inNumTriangles, Vec3 *outTriangles) const
+		JPH_INLINE void				Unpack(const void *inTriangleStart, uint32 inNumTriangles, Vec3 *outTriangles) const
 		{
 			JPH_ASSERT(inNumTriangles > 0);
 			const TriangleBlockHeader *header = reinterpret_cast<const TriangleBlockHeader *>(inTriangleStart);
@@ -310,7 +305,7 @@ public:
 		}
 
 		/// Tests a ray against the packed triangles
-		JPH_INLINE float			TestRay(Vec3Arg inRayOrigin, Vec3Arg inRayDirection, Vec3Arg inBoundsMin, Vec3Arg inBoundsMax, const void *inTriangleStart, uint32 inNumTriangles, float inClosest, uint32 &outClosestTriangleIndex) const
+		JPH_INLINE float			TestRay(Vec3Arg inRayOrigin, Vec3Arg inRayDirection, const void *inTriangleStart, uint32 inNumTriangles, float inClosest, uint32 &outClosestTriangleIndex) const
 		{
 			JPH_ASSERT(inNumTriangles > 0);
 			const TriangleBlockHeader *header = reinterpret_cast<const TriangleBlockHeader *>(inTriangleStart);
@@ -421,9 +416,9 @@ public:
 		}
 
 		/// Unpacks triangles and flags, convencience function
-		JPH_INLINE void				Unpack(Vec3Arg inBoundsMin, Vec3Arg inBoundsMax, const void *inTriangleStart, uint32 inNumTriangles, Vec3 *outTriangles, uint8 *outTriangleFlags) const
+		JPH_INLINE void				Unpack(const void *inTriangleStart, uint32 inNumTriangles, Vec3 *outTriangles, uint8 *outTriangleFlags) const
 		{
-			Unpack(inBoundsMin, inBoundsMax, inTriangleStart, inNumTriangles, outTriangles);
+			Unpack(inTriangleStart, inNumTriangles, outTriangles);
 			sGetFlags(inTriangleStart, inNumTriangles, outTriangleFlags);
 		}
 

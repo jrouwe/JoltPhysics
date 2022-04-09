@@ -940,7 +940,7 @@ Mat44 Mat44::Inversed3x3() const
 #endif
 }
 
-const Quat Mat44::GetQuaternion() const
+Quat Mat44::GetQuaternion() const
 {
 	JPH_ASSERT(mCol[3] == Vec4(0, 0, 0, 1));
 

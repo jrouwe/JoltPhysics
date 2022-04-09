@@ -45,7 +45,7 @@ public:
 	///@}
 
 	/// Find joint by name
-	int						GetJointIndex(const string &inName) const;
+	int						GetJointIndex(const string_view &inName) const;
 
 	/// Fill in parent joint indices based on name
 	void					CalculateParentJointIndices();

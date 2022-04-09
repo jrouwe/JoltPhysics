@@ -6,16 +6,16 @@
 JPH_NAMESPACE_BEGIN
 
 /// The constant \f$\pi\f$
-#define JPH_PI       3.14159265358979323846f
+static constexpr float JPH_PI = 3.14159265358979323846f;
 
 /// Convert a value from degrees to radians
-inline constexpr float DegreesToRadians(float inV)
+constexpr float DegreesToRadians(float inV)
 {
 	return inV * (JPH_PI / 180.0f);
 }
 
 /// Convert a value from radians to degrees
-inline constexpr float RadiansToDegrees(float inV)
+constexpr float RadiansToDegrees(float inV)
 {
 	return inV * (180.0f / JPH_PI);
 }
@@ -41,35 +41,35 @@ inline float CenterAngleAroundZero(float inV)
 
 /// Clamp a value between two values
 template <typename T>
-inline constexpr T Clamp(T inV, T inMin, T inMax)
+constexpr T Clamp(T inV, T inMin, T inMax)
 {
 	return min(max(inV, inMin), inMax);
 }
 
 /// Square a value
 template <typename T>
-inline constexpr T Square(T inV)
+constexpr T Square(T inV)
 {
 	return inV * inV;
 }
 
 /// Returns \f$inV^3\f$.
 template <typename T>
-inline constexpr T Cubed(T inV)
+constexpr T Cubed(T inV)
 {
 	return inV * inV * inV;
 }
 
 /// Get the sign of a value
 template <typename T>
-inline constexpr T Sign(T inV)
+constexpr T Sign(T inV)
 {
 	return inV < 0? T(-1) : T(1);
 }
 
 /// Check if inV is a power of 2
 template <typename T>
-inline constexpr bool IsPowerOf2(T inV)
+constexpr bool IsPowerOf2(T inV)
 {
 	return (inV & (inV - 1)) == 0;
 }

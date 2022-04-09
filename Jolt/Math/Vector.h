@@ -24,7 +24,7 @@ public:
 			mF32[r] = 0.0f;
 	}
 
-	inline static const Vector	sZero()													{ Vector v; v.SetZero(); return v; }
+	inline static Vector		sZero()													{ Vector v; v.SetZero(); return v; }
 
 	/// Copy a (part) of another vector into this vector
 	template <class OtherVector>
@@ -88,7 +88,7 @@ public:
 	}
 
 	/// Multiply vector with float
-	inline const Vector			operator * (const float inV2) const
+	inline Vector				operator * (const float inV2) const
 	{
 		Vector v;
 		for (uint r = 0; r < Rows; ++r)
@@ -104,13 +104,13 @@ public:
 	}
 
 	/// Multiply vector with float
-	inline friend const Vector	operator * (const float inV1, const Vector &inV2)
+	inline friend Vector		operator * (const float inV1, const Vector &inV2)
 	{
 		return inV2 * inV1;
 	}
 
 	/// Divide vector by float
-	inline const Vector			operator / (float inV2) const
+	inline Vector				operator / (float inV2) const
 	{
 		Vector v;
 		for (uint r = 0; r < Rows; ++r)
@@ -119,7 +119,7 @@ public:
 	}
 
 	/// Add two float vectors (component wise)
-	inline const Vector			operator + (const Vector &inV2) const
+	inline Vector				operator + (const Vector &inV2) const
 	{
 		Vector v;
 		for (uint r = 0; r < Rows; ++r)
@@ -135,7 +135,7 @@ public:
 	}
 
 	/// Negate
-	inline const Vector			operator - () const
+	inline Vector				operator - () const
 	{
 		Vector v;
 		for (uint r = 0; r < Rows; ++r)
@@ -144,7 +144,7 @@ public:
 	}
 
 	/// Subtract two float vectors (component wise)
-	inline const Vector			operator - (const Vector &inV2) const
+	inline Vector				operator - (const Vector &inV2) const
 	{
 		Vector v;
 		for (uint r = 0; r < Rows; ++r)
@@ -187,7 +187,7 @@ public:
 	}
 
 	/// Normalize vector
-	inline const Vector			Normalized() const
+	inline Vector				Normalized() const
 	{
 		return *this / Length();
 	}

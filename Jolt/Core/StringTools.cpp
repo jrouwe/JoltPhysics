@@ -23,7 +23,7 @@ string StringFormat(const char *inFMT, ...)
 	return string(buffer);
 }
 
-void StringReplace(string &ioString, string inSearch, string inReplace)
+void StringReplace(string &ioString, const string_view &inSearch, const string_view &inReplace)
 {
 	size_t index = 0;
 	for (;;)
@@ -38,7 +38,7 @@ void StringReplace(string &ioString, string inSearch, string inReplace)
 	}
 }
 
-void StringToVector(const string &inString, vector<string> &outVector, const string &inDelimiter, bool inClearVector)
+void StringToVector(const string &inString, vector<string> &outVector, const string_view &inDelimiter, bool inClearVector)
 {
 	JPH_ASSERT(inDelimiter.size() > 0);
 
@@ -65,23 +65,23 @@ void StringToVector(const string &inString, vector<string> &outVector, const str
 	outVector.push_back(s);
 }
 
-void VectorToString(const vector<string> &inVector, string &outString, const string &inDelimiter)
+void VectorToString(const vector<string> &inVector, string &outString, const string_view &inDelimiter)
 {
 	// Ensure string empty
 	outString.clear();
 
-	for (vector<string>::const_iterator i = inVector.begin(); i != inVector.end(); ++i)
+	for (const string &s : inVector)
 	{
 		// Add delimiter if not first element
 		if (!outString.empty())
 			outString.append(inDelimiter);
 
 		// Add element
-		outString.append(*i);
+		outString.append(s);
 	}
 }
 
-string ToLower(const string &inString)
+string ToLower(const string_view &inString)
 {
 	string out;
 	out.reserve(inString.length());
