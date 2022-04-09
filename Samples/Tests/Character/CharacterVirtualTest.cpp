@@ -48,6 +48,10 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Draw state of character
 	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);
+
+	// Draw labels on ramp blocks
+	for (size_t i = 0; i < mRampBlocks.size(); ++i)
+		mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mRampBlocks[i]), StringFormat("PushesPlayer: %s\nPushable: %s", (i & 1) != 0? "True" : "False", (i & 2) != 0? "True" : "False"), Color::sWhite, 0.25f);
 }
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
@@ -100,7 +104,12 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
-	// Dynamic boxes cannot push the character (they're meant to be pushed by the player)
-	if (find(mDynamicBoxes.begin(), mDynamicBoxes.end(), inBodyID2) != mDynamicBoxes.end())
-		ioSettings.mCanPushCharacter = false;
+	// Dynamic boxes on the ramp go through all permutations
+	vector<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
+	if (i != mRampBlocks.end())
+	{
+		size_t index = i - mRampBlocks.begin();
+		ioSettings.mCanPushCharacter = (index & 1) != 0;
+		ioSettings.mCanReceiveImpulses = (index & 2) != 0;
+	}
 }

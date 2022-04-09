@@ -37,6 +37,11 @@ static const Vec3 cVerticallyMovingPosition(0, 2.0f, 15);
 static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
 static const Vec3 cHorizontallyMovingPosition(5, 1, 15);
 static const Quat cHorizontallyMovingOrientation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
+static const Vec3 cRampPosition(15, 2.2f, 15);
+static const Quat cRampOrientation = Quat::sRotation(Vec3::sAxisX(), -0.25f * JPH_PI);
+static const Vec3 cRampBlocksStart = cRampPosition + Vec3(-3.0f, 3.0f, 1.5f);
+static const Vec3 cRampBlocksDelta = Vec3(2.0f, 0, 0);
+static const float cRampBlocksTime = 5.0f;
 
 void CharacterBaseTest::Initialize()
 {
@@ -55,31 +60,56 @@ void CharacterBaseTest::Initialize()
 		// Default terrain
 		CreateFloor();
 
-		// Create ramps with different inclinations
-		Ref<Shape> ramp = RotatedTranslatedShapeSettings(Vec3(0, 0, -2.5f), Quat::sIdentity(), new BoxShape(Vec3(0.5f, 0.05f, 2.5f))).Create().Get();
-		for (int angle = 0; angle < 18; ++angle)
-			mBodyInterface->CreateAndAddBody(BodyCreationSettings(ramp, Vec3(-10.0f + angle * 1.0f, 0, -10.0f), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(10.0f * angle)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
-
-		// Creat wall consisting of vertical pillars
-		// Note: Convex radius 0 because otherwise it will be a bumpy wall
-		Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f); 
-		for (int z = 0; z < 40; ++z)
-			mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, Vec3(-10.0f, 2.5f, -10.0f + 0.2f * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
-
-		// Kinematic blocks to test interacting with moving objects
-		Ref<Shape> kinematic = new BoxShape(Vec3(1, 0.25f, 3.0f));
-		mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
-		mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
-		mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
-
-		// Dynamic blocks to test player pushing blocks
-		Ref<Shape> block = new BoxShape(Vec3::sReplicate(0.5f));
-		for (int y = 0; y < 3; ++y)
 		{
-			BodyCreationSettings bcs(block, Vec3(5.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			// Create ramps with different inclinations
+			Ref<Shape> ramp = RotatedTranslatedShapeSettings(Vec3(0, 0, -2.5f), Quat::sIdentity(), new BoxShape(Vec3(0.5f, 0.05f, 2.5f))).Create().Get();
+			for (int angle = 0; angle < 18; ++angle)
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(ramp, Vec3(-10.0f + angle * 1.0f, 0, -10.0f), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(10.0f * angle)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+		}
+
+		{
+			// Create wall consisting of vertical pillars
+			// Note: Convex radius 0 because otherwise it will be a bumpy wall
+			Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f); 
+			for (int z = 0; z < 40; ++z)
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, Vec3(-10.0f, 2.5f, -10.0f + 0.2f * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+		}
+
+		{
+			// Kinematic blocks to test interacting with moving objects
+			Ref<Shape> kinematic = new BoxShape(Vec3(1, 0.25f, 3.0f));
+			mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+			mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+			mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+		}
+
+		{
+			// Dynamic blocks to test player pushing blocks
+			Ref<Shape> block = new BoxShape(Vec3::sReplicate(0.5f));
+			for (int y = 0; y < 3; ++y)
+			{
+				BodyCreationSettings bcs(block, Vec3(5.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+				bcs.mMassPropertiesOverride.mMass = 10.0f;
+				mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate);
+			}
+		}
+
+		{
+			// Create ramp
+			BodyCreationSettings ramp(new BoxShape(Vec3(4.0f, 0.1f, 3.0f)), cRampPosition, cRampOrientation, EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(ramp, EActivation::DontActivate);
+
+			// Create blocks on ramp
+			Ref<Shape> block = new BoxShape(Vec3::sReplicate(0.5f));
+			BodyCreationSettings bcs(block, cRampBlocksStart, cRampOrientation, EMotionType::Dynamic, Layers::MOVING);
 			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 			bcs.mMassPropertiesOverride.mMass = 10.0f;
-			mDynamicBoxes.push_back(mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate));
+			for (int i = 0; i < 4; ++i)
+			{
+				mRampBlocks.emplace_back(mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate));
+				bcs.mPosition += cRampBlocksDelta;
+			}
 		}
 
 		// Create three funnels with walls that are too steep to climb
@@ -161,6 +191,18 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mBodyInterface->MoveKinematic(mHorizontallyMovingBody, cHorizontallyMovingPosition + Vec3(3.0f * sin(mTime), 0, 0), cHorizontallyMovingOrientation, inParams.mDeltaTime);
 	if (!mVerticallyMovingBody.IsInvalid())
 		mBodyInterface->MoveKinematic(mVerticallyMovingBody, cVerticallyMovingPosition + Vec3(0, 1.75f * sin(mTime), 0), cVerticallyMovingOrientation, inParams.mDeltaTime);
+
+	// Reset ramp blocks
+	mRampBlocksTimeLeft -= inParams.mDeltaTime;
+	if (mRampBlocksTimeLeft < 0.0f)
+	{
+		for (size_t i = 0; i < mRampBlocks.size(); ++i)
+		{
+			mBodyInterface->SetPositionAndRotation(mRampBlocks[i], cRampBlocksStart + float(i) * cRampBlocksDelta, cRampOrientation, EActivation::Activate);
+			mBodyInterface->SetLinearAndAngularVelocity(mRampBlocks[i], Vec3::sZero(), Vec3::sZero());
+		}
+		mRampBlocksTimeLeft = cRampBlocksTime;
+	}
 }
 
 void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
@@ -238,5 +280,5 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat
 
 	// Draw text info
 	const PhysicsMaterial *ground_material = inCharacter->GetGroundMaterial();
-	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("Mat: %s\nVel: %.1f m/s", ground_material->GetDebugName(), inCharacterVelocity), color, 0.25f);
+	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("Mat: %s\nVel: %.1f m/s", ground_material->GetDebugName(), (double)inCharacterVelocity), color, 0.25f);
 }

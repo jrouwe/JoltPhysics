@@ -57,8 +57,9 @@ protected:
 	RefConst<Shape>			mStandingShape;
 	RefConst<Shape>			mCrouchingShape;
 
-	// List of dynamic boxes
-	vector<BodyID>			mDynamicBoxes;
+	// List of boxes on ramp
+	vector<BodyID>			mRampBlocks;
+	float					mRampBlocksTimeLeft = 0.0f;
 
 private:
 	// List of possible scene names
