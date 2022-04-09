@@ -21,7 +21,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(Skeleton)
 	JPH_ADD_ATTRIBUTE(Skeleton, mJoints)
 }
 
-int Skeleton::GetJointIndex(const string &inName) const
+int Skeleton::GetJointIndex(const string_view &inName) const
 {
 	for (int i = 0; i < (int)mJoints.size(); ++i)
 		if (mJoints[i].mName == inName)
