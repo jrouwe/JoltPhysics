@@ -28,7 +28,6 @@ public:
 			break;
 
 		case EState::Invalid:
-		default:
 			break;
 		}
 	}
@@ -48,7 +47,6 @@ public:
 			break;
 
 		case EState::Invalid:
-		default:
 			break;
 		}
 
@@ -76,7 +74,6 @@ public:
 			break;
 
 		case EState::Invalid:
-		default:
 			break;
 		}
 
@@ -101,7 +98,6 @@ public:
 			break;
 
 		case EState::Invalid:
-		default:
 			break;
 		}
 
@@ -124,7 +120,6 @@ public:
 			break;
 
 		case EState::Invalid:
-		default:
 			break;
 		}
 
