@@ -140,7 +140,8 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(string &outPrimitive)
 	outPrimitive = data;
 
 	// Insert string in table
-	mStringTable.try_emplace(mNextStringID++, outPrimitive);
+	mStringTable.try_emplace(mNextStringID, outPrimitive);
+	mNextStringID++;
 	return true;
 }
 

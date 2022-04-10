@@ -34,7 +34,8 @@ ObjectStreamOut *ObjectStreamOut::Open(EStreamType inType, ostream &inStream)
 bool ObjectStreamOut::Write(const void *inObject, const RTTI *inRTTI)
 {
 	// Assign a new identifier to the object and write it
-	mIdentifierMap.try_emplace(inObject, mNextIdentifier++, inRTTI);
+	mIdentifierMap.try_emplace(inObject, mNextIdentifier, inRTTI);
+	mNextIdentifier++;
 	WriteObject(inObject);
 
 	// Write all linked objects
