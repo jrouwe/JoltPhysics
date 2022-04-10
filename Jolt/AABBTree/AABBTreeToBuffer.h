@@ -241,7 +241,7 @@ public:
 		
 		// Finalize all nodes
 		for (NodeData &n : node_list)
-			if (!node_ctx.NodeFinalize(n.mNode, n.mNodeStart, n.mTriangleStart, n.mNumChildren, n.mChildNodeStart, n.mChildTrianglesStart, mTree, outError))
+			if (!node_ctx.NodeFinalize(n.mNode, n.mNodeStart, n.mNumChildren, n.mChildNodeStart, n.mChildTrianglesStart, mTree, outError))
 				return false;
 		
 		// Finalize the triangles
