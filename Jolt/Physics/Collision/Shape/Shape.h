@@ -10,6 +10,7 @@
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/Result.h>
+#include <Jolt/Core/NonCopyable.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
 JPH_NAMESPACE_BEGIN
@@ -152,7 +153,7 @@ private:
 };
 
 /// Base class for all shapes (collision volume of a body). Defines a virtual interface for collision detection.
-class Shape : public RefTarget<Shape>
+class Shape : public RefTarget<Shape>, public NonCopyable
 {
 public:
 	using ShapeResult = ShapeSettings::ShapeResult;

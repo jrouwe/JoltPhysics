@@ -106,7 +106,7 @@ private:
 };
 
 /// Runtime ragdoll information
-class Ragdoll : public RefTarget<Ragdoll>
+class Ragdoll : public RefTarget<Ragdoll>, public NonCopyable
 {
 public:
 	/// Constructor
