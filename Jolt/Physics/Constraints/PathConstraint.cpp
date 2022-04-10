@@ -62,13 +62,11 @@ TwoBodyConstraint *PathConstraintSettings::Create(Body &inBody1, Body &inBody2) 
 }
 
 PathConstraint::PathConstraint(Body &inBody1, Body &inBody2, const PathConstraintSettings &inSettings) :
-	TwoBodyConstraint(inBody1, inBody2, inSettings)
+	TwoBodyConstraint(inBody1, inBody2, inSettings),
+	mRotationConstraintType(inSettings.mRotationConstraintType),
+	mMaxFrictionForce(inSettings.mMaxFrictionForce),
+	mPositionMotorSettings(inSettings.mPositionMotorSettings)
 {
-	// Copy properties
-	mMaxFrictionForce = inSettings.mMaxFrictionForce;
-	mPositionMotorSettings = inSettings.mPositionMotorSettings;
-	mRotationConstraintType = inSettings.mRotationConstraintType;
-
 	// Calculate transform that takes us from the path start to center of mass space of body 1
 	mPathToBody1 = Mat44::sRotationTranslation(inSettings.mPathRotation, inSettings.mPathPosition - inBody1.GetShape()->GetCenterOfMass());
 

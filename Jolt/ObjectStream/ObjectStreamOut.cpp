@@ -34,7 +34,7 @@ ObjectStreamOut *ObjectStreamOut::Open(EStreamType inType, ostream &inStream)
 bool ObjectStreamOut::Write(const void *inObject, const RTTI *inRTTI)
 {
 	// Assign a new identifier to the object and write it
-	mIdentifierMap.insert(IdentifierMap::value_type(inObject, ObjectInfo(mNextIdentifier++, inRTTI)));
+	mIdentifierMap.try_emplace(inObject, mNextIdentifier++, inRTTI);
 	WriteObject(inObject);
 
 	// Write all linked objects
@@ -151,7 +151,7 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 		{
 			// Assign a new identifier to this object and queue it for serialization
 			identifier = mNextIdentifier++;
-			mIdentifierMap.insert(IdentifierMap::value_type(inPointer, ObjectInfo(identifier, inRTTI)));
+			mIdentifierMap.try_emplace(inPointer, identifier, inRTTI);
 			mObjectQueue.push(inPointer);
 		}
 	} 
@@ -168,7 +168,7 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 
 // Define macro to declare functions for a specific primitive type
 #define JPH_DECLARE_PRIMITIVE(name)															\
-	void	OSWriteDataType(ObjectStreamOut &ioStream, name *inNull)						\
+	void	OSWriteDataType(ObjectStreamOut &ioStream, name *)								\
 	{																						\
 		ioStream.WriteDataType(ObjectStream::EDataType::T_##name);							\
 	}																						\

@@ -90,7 +90,7 @@ void ObjectStreamBinaryOut::WritePrimitiveData(const string &inPrimitive)
 	}
 
 	// Insert string in table
-	mStringTable.insert(StringTable::value_type(inPrimitive, mNextStringID++));
+	mStringTable.try_emplace(inPrimitive, mNextStringID++);
 
 	// Write string
 	uint32 len = min((uint32)inPrimitive.size(), (uint32)0x7fffffff);

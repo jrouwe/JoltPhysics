@@ -21,13 +21,12 @@ Body Body::sFixedToWorld(false);
 Body::Body(bool) :
 	mPosition(Vec3::sZero()),
 	mRotation(Quat::sIdentity()),
+	mShape(new SphereShape(FLT_EPSILON)), // Dummy shape
 	mFriction(0.0f),
 	mRestitution(0.0f),
 	mObjectLayer(cObjectLayerInvalid),
 	mMotionType(EMotionType::Static)
 {
-	// Dummy shape
-	mShape = new SphereShape(FLT_EPSILON);
 }
 
 #ifdef _DEBUG

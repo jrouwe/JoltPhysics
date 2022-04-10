@@ -163,9 +163,9 @@ void *ObjectStreamIn::Read(const RTTI *inRTTI)
 		}
 
 		// Release unreferenced objects except the main object
-		for (IdentifierMap::const_iterator j = mIdentifierMap.begin(); j != mIdentifierMap.end(); ++j) 
+		for (const IdentifierMap::value_type &j : mIdentifierMap) 
 		{
-			const ObjectInfo &obj_info = j->second;
+			const ObjectInfo &obj_info = j.second;
 
 			if (obj_info.mInstance != main_object) 
 			{
@@ -192,9 +192,9 @@ void *ObjectStreamIn::Read(const RTTI *inRTTI)
 	else
 	{
 		// Release all objects if a fatal error occurred
-		for (IdentifierMap::iterator i = mIdentifierMap.begin(); i != mIdentifierMap.end(); ++i) 
+		for (const IdentifierMap::value_type &i : mIdentifierMap) 
 		{
-			const ObjectInfo &obj_info = i->second;
+			const ObjectInfo &obj_info = i.second;
 			obj_info.mRTTI->DestructObject(obj_info.mInstance);
 		}
 
@@ -232,7 +232,7 @@ void *ObjectStreamIn::ReadObject(const RTTI *& outRTTI)
 					if (ReadClassData(class_desc, object)) 
 					{
 						// Add object to identifier map
-						mIdentifierMap.insert(IdentifierMap::value_type(identifier, ObjectInfo(object, outRTTI)));
+						mIdentifierMap.try_emplace(identifier, object, outRTTI);
 					} 
 					else 
 					{
@@ -273,8 +273,7 @@ bool ObjectStreamIn::ReadRTTI()
 		Trace("ObjectStreamIn: Unknown class: \"%s\".", class_name.c_str());
 
 	// Insert class description
-	mClassDescriptionMap.insert(ClassDescriptionMap::value_type(class_name, ClassDescription(rtti)));
-	ClassDescription &class_desc = mClassDescriptionMap.find(class_name)->second;
+	ClassDescription &class_desc = mClassDescriptionMap.try_emplace(class_name, rtti).first->second;
 
 	// Read the number of entries in the description
 	uint32 count;
@@ -304,9 +303,9 @@ bool ObjectStreamIn::ReadRTTI()
 		}
 
 		// Read instance/pointer class name
-		if (attribute.mDataType == EDataType::Instance || attribute.mDataType == EDataType::Pointer) 
-			if (!ReadName(attribute.mClassName)) 
-				return false;
+		if ((attribute.mDataType == EDataType::Instance || attribute.mDataType == EDataType::Pointer) 
+			&& !ReadName(attribute.mClassName)) 
+			return false;
 
 		// Find attribute in rtti
 		if (rtti) 
@@ -384,7 +383,7 @@ bool ObjectStreamIn::ReadPointerData(const RTTI *inRTTI, void **inPointer, int i
 		else 
 		{
 			// Put pointer on the list to be resolved later on
-			mUnresolvedLinks.push_back(Link());
+			mUnresolvedLinks.emplace_back();
 			mUnresolvedLinks.back().mPointer = inPointer;
 			mUnresolvedLinks.back().mRefCountOffset = inRefCountOffset;
 			mUnresolvedLinks.back().mIdentifier = identifier;

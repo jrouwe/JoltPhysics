@@ -78,7 +78,7 @@ public:
 	}
 
 	/// Intersect this bounding box with inOther, returns the intersection
-	const AABox		Intersect(const AABox &inOther) const
+	AABox			Intersect(const AABox &inOther) const
 	{
 		return AABox(Vec3::sMax(mMin, inOther.mMin), Vec3::sMin(mMax, inOther.mMax));
 	}
@@ -98,19 +98,19 @@ public:
 	}
 
 	/// Get center of bounding box
-	const Vec3		GetCenter() const
+	Vec3			GetCenter() const
 	{
 		return 0.5f * (mMin + mMax);
 	}
 
 	/// Get extent of bounding box (half of the size)
-	const Vec3		GetExtent() const
+	Vec3			GetExtent() const
 	{
 		return 0.5f * (mMax - mMin);
 	}
 
 	/// Get size of bounding box
-	const Vec3		GetSize() const
+	Vec3			GetSize() const
 	{
 		return mMax - mMin;
 	}
@@ -193,7 +193,7 @@ public:
 	}
 
 	/// Calculate the support vector for this convex shape.
-	const Vec3		GetSupport(Vec3Arg inDirection) const
+	Vec3			GetSupport(Vec3Arg inDirection) const
 	{
 		return Vec3::sSelect(mMax, mMin, Vec3::sLess(inDirection, Vec3::sZero()));
 	}
@@ -260,7 +260,7 @@ public:
 	}
 
 	/// Get the closest point on or in this box to inPoint
-	inline Vec3		GetClosestPoint(Vec3Arg inPoint) const
+	Vec3			GetClosestPoint(Vec3Arg inPoint) const
 	{
 		return Vec3::sMin(Vec3::sMax(inPoint, mMin), mMax);
 	}

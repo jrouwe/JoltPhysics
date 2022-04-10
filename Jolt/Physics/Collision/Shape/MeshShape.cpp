@@ -132,10 +132,10 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 		else
 		{
 			// Check vertex indices
-			for (int i = 0; i < 3; ++i)
-				if (triangle.mIdx[i] >= inSettings.mTriangleVertices.size())
+			for (uint32 idx : triangle.mIdx)
+				if (idx >= inSettings.mTriangleVertices.size())
 				{
-					outResult.SetError(StringFormat("Vertex index %u is beyond vertex list (size: %u)", triangle.mIdx[i], (uint)inSettings.mTriangleVertices.size()));
+					outResult.SetError(StringFormat("Vertex index %u is beyond vertex list (size: %u)", idx, (uint)inSettings.mTriangleVertices.size()));
 					return;
 				}
 		}
@@ -178,7 +178,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 
 	// Fill in active edge bits
 	IndexedTriangleList indexed_triangles = inSettings.mIndexedTriangles; // Copy indices since we're adding the 'active edge' flag
-	FindActiveEdges(inSettings.mTriangleVertices, indexed_triangles);
+	sFindActiveEdges(inSettings.mTriangleVertices, indexed_triangles);
 
 	// Create triangle splitter
 	TriangleSplitterBinning splitter(inSettings.mTriangleVertices, indexed_triangles);
@@ -215,7 +215,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	outResult.Set(this);
 }
 
-void MeshShape::FindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices)
+void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices)
 {
 	struct Edge
 	{
@@ -917,7 +917,7 @@ struct MeshShape::MSGetTrianglesContext
 		if (mIsInsideOut)
 		{
 			// Scaled inside out, flip the triangles
-			for (Vec3 *v = vertices, *v_end = v + 3 * inNumTriangles; v < v_end; v += 3)
+			for (const Vec3 *v = vertices, *v_end = v + 3 * inNumTriangles; v < v_end; v += 3)
 			{
 				(mLocalToWorld * v[0]).StoreFloat3(mTriangleVertices++);
 				(mLocalToWorld * v[2]).StoreFloat3(mTriangleVertices++);
@@ -927,7 +927,7 @@ struct MeshShape::MSGetTrianglesContext
 		else
 		{
 			// Normal scale
-			for (Vec3 *v = vertices, *v_end = v + 3 * inNumTriangles; v < v_end; ++v)
+			for (const Vec3 *v = vertices, *v_end = v + 3 * inNumTriangles; v < v_end; ++v)
 				(mLocalToWorld * *v).StoreFloat3(mTriangleVertices++);
 		}
 

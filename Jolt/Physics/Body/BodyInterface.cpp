@@ -35,7 +35,7 @@ void BodyInterface::AddBody(const BodyID &inBodyID, EActivation inActivationMode
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 	{
-		Body &body = lock.GetBody();
+		const Body &body = lock.GetBody();
 
 		// Add to broadphase
 		BodyID id = inBodyID;
@@ -53,7 +53,7 @@ void BodyInterface::RemoveBody(const BodyID &inBodyID)
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 	{
-		Body &body = lock.GetBody();
+		const Body &body = lock.GetBody();
 
 		// Deactivate body
 		if (body.IsActive())
@@ -73,7 +73,7 @@ bool BodyInterface::IsAdded(const BodyID &inBodyID) const
 
 BodyID BodyInterface::CreateAndAddBody(const BodyCreationSettings &inSettings, EActivation inActivationMode)
 {
-	Body *b = CreateBody(inSettings);
+	const Body *b = CreateBody(inSettings);
 	if (b == nullptr)
 		return BodyID(); // Out of bodies
 	AddBody(b->GetID(), inActivationMode);
@@ -118,7 +118,7 @@ void BodyInterface::ActivateBody(const BodyID &inBodyID)
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 	{
-		Body &body = lock.GetBody();
+		const Body &body = lock.GetBody();
 
 		if (!body.IsActive())
 			mBodyManager->ActivateBodies(&inBodyID, 1);
@@ -137,7 +137,7 @@ void BodyInterface::DeactivateBody(const BodyID &inBodyID)
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 	{
-		Body &body = lock.GetBody();
+		const Body &body = lock.GetBody();
 
 		if (body.IsActive())
 			mBodyManager->DeactivateBodies(&inBodyID, 1);

@@ -53,7 +53,7 @@ protected:
 
 // Define macro to declare functions for a specific primitive type
 #define JPH_DECLARE_PRIMITIVE(name)													\
-	bool						OSIsType(name *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName);
+	bool						OSIsType(name *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName);
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>
@@ -78,13 +78,13 @@ bool OSIsType(T (*inArray)[N], int inArrayDepth, ObjectStream::EDataType inDataT
 }
 
 template <class T>
-bool OSIsType(Ref<T> *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
+bool OSIsType(Ref<T> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
 {
 	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
 }
 
 template <class T>
-bool OSIsType(RefConst<T> *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
+bool OSIsType(RefConst<T> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
 {
 	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
 }

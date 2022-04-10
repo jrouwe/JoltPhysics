@@ -9,7 +9,7 @@ JPH_NAMESPACE_BEGIN
 
 // Define macro to declare functions for a specific primitive type
 #define JPH_DECLARE_PRIMITIVE(name)														\
-	bool				OSIsType(name *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
+	bool				OSIsType(name *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
 	{																					\
 		return inArrayDepth == 0 && inDataType == ObjectStream::EDataType::T_##name;	\
 	}
