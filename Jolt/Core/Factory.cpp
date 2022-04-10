@@ -60,7 +60,7 @@ bool Factory::Register(const RTTI *inRTTI)
 	return true;
 }
 
-vector<const RTTI *> Factory::GetAllClasses()
+vector<const RTTI *> Factory::GetAllClasses() const
 {
 	vector<const RTTI *> all_classes;
 	all_classes.reserve(mClassNameMap.size());
