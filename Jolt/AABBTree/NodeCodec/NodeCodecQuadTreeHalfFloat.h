@@ -60,8 +60,8 @@ public:
 	class EncodingContext
 	{
 	public:
-		/// Get an upper bound on the amount of bytes needed for a node tree with inNodeCount nodes and inLeafNodeCount leaf nodes (those that contain the triangles)
-		uint							GetPessimisticMemoryEstimate(uint inNodeCount, uint inLeafNodeCount) const
+		/// Get an upper bound on the amount of bytes needed for a node tree with inNodeCount nodes
+		uint							GetPessimisticMemoryEstimate(uint inNodeCount) const
 		{
 			return inNodeCount * (sizeof(Node) + Alignment - 1);
 		}
@@ -132,7 +132,7 @@ public:
 		}
 
 		/// Once all nodes have been added, this call finalizes all nodes by patching in the offsets of the child nodes (that were added after the node itself was added)
-		bool						NodeFinalize(const AABBTreeBuilder::Node *inNode, uint inNodeStart, uint inTrianglesStart, uint inNumChildren, const uint *inChildrenNodeStart, const uint *inChildrenTrianglesStart, ByteBuffer &ioBuffer, string &outError) const
+		bool						NodeFinalize(const AABBTreeBuilder::Node *inNode, uint inNodeStart, uint inNumChildren, const uint *inChildrenNodeStart, const uint *inChildrenTrianglesStart, ByteBuffer &ioBuffer, string &outError) const
 		{
 			if (!inNode->HasChildren())
 				return true;

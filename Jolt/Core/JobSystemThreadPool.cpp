@@ -196,7 +196,7 @@ void JobSystemThreadPool::BarrierImpl::Wait()
 				// Loop through the jobs and execute the first executable job
 				for (uint index = mJobReadIndex; index < mJobWriteIndex; ++index)
 				{
-					atomic<Job *> &job = mJobs[index & (cMaxJobs - 1)];
+					const atomic<Job *> &job = mJobs[index & (cMaxJobs - 1)];
 					Job *job_ptr = job.load();
 					if (job_ptr != nullptr && job_ptr->CanBeExecuted())
 					{
@@ -228,14 +228,12 @@ void JobSystemThreadPool::BarrierImpl::Wait()
 	}
 }
 
-JobSystemThreadPool::JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads)	
+JobSystemThreadPool::JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads) :
+	mMaxBarriers(inMaxBarriers),
+	mBarriers(new BarrierImpl [inMaxBarriers]) // Init freelist of barriers
 {
 	// Init freelist of jobs
 	mJobs.Init(inMaxJobs, inMaxJobs);
-
-	// Init freelist of barriers
-	mMaxBarriers = inMaxBarriers;
-	mBarriers = new BarrierImpl [inMaxBarriers];
 
 	// Init queue
 	for (atomic<Job *> &j : mQueue)

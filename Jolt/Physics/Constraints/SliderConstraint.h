@@ -115,7 +115,7 @@ private:
 	void						CalculateR1R2U(Mat44Arg inRotation1, Mat44Arg inRotation2);
 	void						CalculateSlidingAxisAndPosition(Mat44Arg inRotation1);
 	void						CalculatePositionConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2);
-	void						CalculatePositionLimitsConstraintProperties(float inDeltaTime, Mat44Arg inRotation1);
+	void						CalculatePositionLimitsConstraintProperties(float inDeltaTime);
 	void						CalculateMotorConstraintProperties(float inDeltaTime);
 
 	// CONFIGURATION PROPERTIES FOLLOW

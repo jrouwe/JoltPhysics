@@ -77,8 +77,7 @@ public:
 		// Estimate the amount of memory required
 		uint tri_count = inRoot->GetTriangleCountInTree();
 		uint node_count = inRoot->GetNodeCount();
-		uint leaf_node_count = inRoot->GetLeafNodeCount();
-		uint nodes_size = node_ctx.GetPessimisticMemoryEstimate(node_count, leaf_node_count);
+		uint nodes_size = node_ctx.GetPessimisticMemoryEstimate(node_count);
 		uint total_size = HeaderSize + TriangleHeaderSize + nodes_size + tri_ctx.GetPessimisticMemoryEstimate(tri_count);
 		mTree.reserve(total_size);
 
@@ -242,7 +241,7 @@ public:
 		
 		// Finalize all nodes
 		for (NodeData &n : node_list)
-			if (!node_ctx.NodeFinalize(n.mNode, n.mNodeStart, n.mTriangleStart, n.mNumChildren, n.mChildNodeStart, n.mChildTrianglesStart, mTree, outError))
+			if (!node_ctx.NodeFinalize(n.mNode, n.mNodeStart, n.mNumChildren, n.mChildNodeStart, n.mChildTrianglesStart, mTree, outError))
 				return false;
 		
 		// Finalize the triangles

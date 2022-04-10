@@ -128,7 +128,8 @@ void LockFreeHashMap<Key, Value>::Clear()
 	// Reset buckets 4 at a time
 	static_assert(sizeof(atomic<uint32>) == sizeof(uint32));
 	UVec4 invalid_handle = UVec4::sReplicate(cInvalidHandle);
-	uint32 *start = reinterpret_cast<uint32 *>(mBuckets), *end = start + mNumBuckets;
+	uint32 *start = reinterpret_cast<uint32 *>(mBuckets);
+	const uint32 *end = start + mNumBuckets;
 	JPH_ASSERT(IsAligned(start, 16));
 	while (start < end)
 	{
@@ -224,7 +225,7 @@ inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key
 template <class Key, class Value>
 inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(vector<const KeyValue *> &outAll) const
 {
-	for (atomic<uint32> *bucket = mBuckets; bucket < mBuckets + mNumBuckets; ++bucket)
+	for (const atomic<uint32> *bucket = mBuckets; bucket < mBuckets + mNumBuckets; ++bucket)
 	{
 		uint32 offset = *bucket;
 		while (offset != cInvalidHandle)

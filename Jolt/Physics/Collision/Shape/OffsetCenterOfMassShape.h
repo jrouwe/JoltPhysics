@@ -39,7 +39,7 @@ public:
 									OffsetCenterOfMassShape(const OffsetCenterOfMassShapeSettings &inSettings, ShapeResult &outResult);
 
 	/// Access the offset that is applied to the center of mass
-	const Vec3						GetOffset() const										{ return mOffset; }
+	Vec3							GetOffset() const										{ return mOffset; }
 
 	// See Shape::GetCenterOfMass
 	virtual Vec3					GetCenterOfMass() const override						{ return mInnerShape->GetCenterOfMass() + mOffset; }

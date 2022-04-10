@@ -25,7 +25,7 @@ const char *PoweredRigTest::sAnimations[] =
 	"Dead_Pose4"
 };
 
-const char *PoweredRigTest::sAnimationName = "Dead_Pose1";
+const char *PoweredRigTest::sAnimationName = "Sprint";
 
 PoweredRigTest::~PoweredRigTest()
 {

@@ -278,7 +278,7 @@ void IslandBuilder::BuildBodyIslands(const BodyID *inActiveBodies, uint32 inNumA
 	mBodyIslandEnds = body_island_starts;
 }
 
-void IslandBuilder::BuildConstraintIslands(uint32 *inConstraintToBody, uint32 inNumConstraints, uint32 *&outConstraints, uint32 *&outConstraintsEnd, TempAllocator *inTempAllocator)
+void IslandBuilder::BuildConstraintIslands(uint32 *inConstraintToBody, uint32 inNumConstraints, uint32 *&outConstraints, uint32 *&outConstraintsEnd, TempAllocator *inTempAllocator) const
 {
 	JPH_PROFILE_FUNCTION();
 

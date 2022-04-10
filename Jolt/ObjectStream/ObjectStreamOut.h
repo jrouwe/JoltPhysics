@@ -112,7 +112,7 @@ private:
 	using ObjectQueue = queue<const void *>;
 	using ClassQueue = queue<const RTTI *>;
 
-	Identifier					mNextIdentifier;											///< Next free identifier for this stream
+	Identifier					mNextIdentifier = sNullIdentifier + 1;						///< Next free identifier for this stream
 	IdentifierMap				mIdentifierMap;												///< Links object pointer to an identifier
 	ObjectQueue					mObjectQueue;												///< Queue of objects to be written
 	ClassSet					mClassSet;													///< List of classes already written

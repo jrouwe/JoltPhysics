@@ -306,7 +306,7 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 	// Construct a compound shape
 	StaticCompoundShapeSettings compound;
 	compound.mSubShapes.reserve(collector.mShapes.size());
-	for (TransformedShape &ts : collector.mShapes)
+	for (const TransformedShape &ts : collector.mShapes)
 	{
 		const Shape *shape = ts.mShape;
 

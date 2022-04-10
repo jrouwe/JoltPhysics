@@ -9,7 +9,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Base class for locking multiple bodies for the duration of the scope of this class (do not use directly)
 template <bool Write, class BodyType>
-class BodyLockMultiBase
+class BodyLockMultiBase : public NonCopyable
 {
 public:
 	/// Redefine MutexMask

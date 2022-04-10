@@ -213,7 +213,7 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 
 	// If the wheels are rotating, we don't want to go to sleep yet
 	bool allow_sleep = true;
-	for (Wheel *w : mWheels)
+	for (const Wheel *w : mWheels)
 		if (abs(w->mAngularVelocity) > DegreesToRadians(10.0f))
 			allow_sleep = false;
 	if (mBody->GetAllowSleeping() != allow_sleep)

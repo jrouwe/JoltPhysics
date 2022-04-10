@@ -239,9 +239,9 @@ public:
 		Triangle *t2 = CreateTriangle(inIdx1, inIdx3, inIdx2);
 
 		// Link triangles edges
-		LinkTriangle(t1, 0, t2, 2);
-		LinkTriangle(t1, 1, t2, 1);
-		LinkTriangle(t1, 2, t2, 0);
+		sLinkTriangle(t1, 0, t2, 2);
+		sLinkTriangle(t1, 1, t2, 1);
+		sLinkTriangle(t1, 2, t2, 0);
 
 		// Always add both triangles to the priority queue
 		mTriangleQueue.push_back(t1);
@@ -257,7 +257,7 @@ public:
 	}
 
 	/// Check if there's another triangle to process from the queue
-	bool				HasNextTriangle()
+	bool				HasNextTriangle() const
 	{
 		return !mTriangleQueue.empty();
 	}
@@ -340,8 +340,8 @@ public:
 		// Link edges
 		for (int i = 0; i < num_edges; ++i)
 		{
-			LinkTriangle(outTriangles[i], 0, edges[i].mNeighbourTriangle, edges[i].mNeighbourEdge);
-			LinkTriangle(outTriangles[i], 1, outTriangles[(i + 1) % num_edges], 2);
+			sLinkTriangle(outTriangles[i], 0, edges[i].mNeighbourTriangle, edges[i].mNeighbourEdge);
+			sLinkTriangle(outTriangles[i], 1, outTriangles[(i + 1) % num_edges], 2);
 		}
 
 #ifdef JPH_EPA_CONVEX_BUILDER_VALIDATE
@@ -403,7 +403,7 @@ private:
 	}
 
 	/// Link triangle edge to other triangle edge
-	void				LinkTriangle(Triangle *inT1, int inEdge1, Triangle *inT2, int inEdge2)
+	static void			sLinkTriangle(Triangle *inT1, int inEdge1, Triangle *inT2, int inEdge2)
 	{
 		JPH_ASSERT(inEdge1 >= 0 && inEdge1 < 3);
 		JPH_ASSERT(inEdge2 >= 0 && inEdge2 < 3);

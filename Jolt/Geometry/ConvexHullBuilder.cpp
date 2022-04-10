@@ -657,7 +657,7 @@ void ConvexHullBuilder::sUnlinkFace(Face *inFace)
 	} while (e != inFace->mFirstEdge);
 }
 
-void ConvexHullBuilder::FindEdge(Face *inFacingFace, Vec3Arg inVertex, FullEdges &outEdges)
+void ConvexHullBuilder::FindEdge(Face *inFacingFace, Vec3Arg inVertex, FullEdges &outEdges) const
 {
 	// Assert that we were given an empty array
 	JPH_ASSERT(outEdges.empty());

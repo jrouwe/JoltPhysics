@@ -60,12 +60,12 @@ bool Factory::Register(const RTTI *inRTTI)
 	return true;
 }
 
-vector<const RTTI *> Factory::GetAllClasses()
+vector<const RTTI *> Factory::GetAllClasses() const
 {
 	vector<const RTTI *> all_classes;
 	all_classes.reserve(mClassNameMap.size());
-	for (ClassNameMap::iterator c = mClassNameMap.begin(); c != mClassNameMap.end(); ++c)
-		all_classes.push_back(c->second);
+	for (const ClassNameMap::value_type &c : mClassNameMap)
+		all_classes.push_back(c.second);
 	return all_classes;
 }
 

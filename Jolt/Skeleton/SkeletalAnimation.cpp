@@ -41,11 +41,6 @@ void SkeletalAnimation::JointState::FromMatrix(Mat44Arg inMatrix)
 	mTranslation = inMatrix.GetTranslation();
 }
 
-void SkeletalAnimation::JointState::ToMatrix(Mat44 &outMatrix)
-{
-	outMatrix = Mat44::sRotationTranslation(mRotation, mTranslation);
-}
-
 float SkeletalAnimation::GetDuration() const
 {
 	if (!mAnimatedJoints.empty() && !mAnimatedJoints[0].mKeyframes.empty())

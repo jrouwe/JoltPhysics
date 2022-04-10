@@ -213,8 +213,8 @@ void CylinderShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, Supp
 	{
 		// Hitting top or bottom
 		Vec3 multiplier = y < 0.0f? Vec3(scaled_radius, scaled_half_height, scaled_radius) : Vec3(-scaled_radius, -scaled_half_height, scaled_radius);
-		for (int i = 0; i < 8; ++i)
-			outVertices.push_back(multiplier * cTopFace[i]);
+		for (const Vec3 &v : cTopFace)
+			outVertices.push_back(multiplier * v);
 	}
 }
 

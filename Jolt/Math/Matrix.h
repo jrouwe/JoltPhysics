@@ -140,7 +140,7 @@ public:
 	}
 
 	/// Multiply vector by matrix
-	inline const Vector<Rows>				operator * (const Vector<Cols> &inV) const
+	inline Vector<Rows>						operator * (const Vector<Cols> &inV) const
 	{
 		Vector<Rows> v;
 		for (uint r = 0; r < Rows; ++r)

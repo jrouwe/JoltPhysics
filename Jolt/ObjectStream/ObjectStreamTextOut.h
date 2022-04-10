@@ -43,7 +43,7 @@ private:
 	void						WriteChar(char inChar);
 	void						WriteWord(const string &inWord);
 
-	int							mIndentation;
+	int							mIndentation = 0;
 };
 
 JPH_NAMESPACE_END

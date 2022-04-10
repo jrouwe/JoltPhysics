@@ -533,7 +533,7 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 		UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
 		// Mark current active bodies as deactivated
-		for (BodyID *id = mActiveBodies, *id_end = mActiveBodies + mNumActiveBodies; id < id_end; ++id)
+		for (const BodyID *id = mActiveBodies, *id_end = mActiveBodies + mNumActiveBodies; id < id_end; ++id)
 			mBodies[id->GetIndex()]->mMotionProperties->mIndexInActiveBodies = Body::cInactiveIndex;
 
 		sort(mActiveBodies, mActiveBodies + mNumActiveBodies); // Sort for validation

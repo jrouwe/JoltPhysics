@@ -9,8 +9,7 @@
 JPH_NAMESPACE_BEGIN
 
 ObjectStreamTextOut::ObjectStreamTextOut(ostream &inStream) :
-	ObjectStreamOut(inStream),
-	mIndentation(0)
+	ObjectStreamOut(inStream)
 {
 	WriteWord(StringFormat("TOS%2d.%02d", ObjectStream::sVersion, ObjectStream::sRevision));
 }

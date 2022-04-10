@@ -154,7 +154,7 @@ private:
 	}
 
 	// Calculate closest points on A and B
-	void		CalculatePointAAndB(Vec3 &outPointA, Vec3 &outPointB)
+	void		CalculatePointAAndB(Vec3 &outPointA, Vec3 &outPointB) const
 	{
 		switch (mNumPoints)		
 		{
@@ -489,7 +489,7 @@ public:
 
 	/// Get the resulting simplex after the GetClosestPoints algorithm finishes.
 	/// If it returned a squared distance of 0, the origin will be contained in the simplex.
-	void		GetClosestPointsSimplex(Vec3 *outY, Vec3 *outP, Vec3 *outQ, uint &outNumPoints)
+	void		GetClosestPointsSimplex(Vec3 *outY, Vec3 *outP, Vec3 *outQ, uint &outNumPoints) const
 	{
 		uint size = sizeof(Vec3) * mNumPoints;
 		memcpy(outY, mY, size);

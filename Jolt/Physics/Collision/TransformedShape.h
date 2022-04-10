@@ -73,10 +73,10 @@ public:
 	inline void					SetShapeScale(Vec3Arg inScale)				{ inScale.StoreFloat3(&mShapeScale); }
 
 	/// Calculates the transform for this shapes's center of mass (excluding scale)
-	inline const Mat44			GetCenterOfMassTransform() const			{ return Mat44::sRotationTranslation(mShapeRotation, mShapePositionCOM); }
+	inline Mat44				GetCenterOfMassTransform() const			{ return Mat44::sRotationTranslation(mShapeRotation, mShapePositionCOM); }
 
 	/// Calculates the inverse of the transform for this shape's center of mass (excluding scale)
-	inline const Mat44			GetInverseCenterOfMassTransform() const		{ return Mat44::sInverseRotationTranslation(mShapeRotation, mShapePositionCOM); }
+	inline Mat44				GetInverseCenterOfMassTransform() const		{ return Mat44::sInverseRotationTranslation(mShapeRotation, mShapePositionCOM); }
 
 	/// Sets the world transform (including scale) of this transformed shape (not from the center of mass but in the space the shape was created)
 	inline void					SetWorldTransform(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inScale)
@@ -95,7 +95,7 @@ public:
 	}
 
 	/// Calculates the world transform including scale of this shape (not from the center of mass but in the space the shape was created)
-	inline const Mat44			GetWorldTransform() const					
+	inline Mat44				GetWorldTransform() const					
 	{	
 		Mat44 transform = Mat44::sRotation(mShapeRotation) * Mat44::sScale(GetShapeScale());
 		transform.SetTranslation(mShapePositionCOM - transform.Multiply3x3(mShape->GetCenterOfMass()));

@@ -9,7 +9,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-static void DummyTrace(const char *inFMT, ...) 
+static void DummyTrace([[maybe_unused]] const char *inFMT, ...) 
 { 
 	JPH_ASSERT(false); 
 };

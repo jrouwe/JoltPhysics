@@ -75,7 +75,7 @@ private:
 
 /// Helper class that is similar to std::unique_lock
 template <class LockType>
-class UniqueLock
+class UniqueLock : public NonCopyable
 {
 public:
 								UniqueLock(LockType &inLock, EPhysicsLockTypes inType)		: mLock(inLock), mType(inType) { PhysicsLock::sLock(mLock, mType); }
@@ -88,7 +88,7 @@ private:
 
 /// Helper class that is similar to std::shared_lock
 template <class LockType>
-class SharedLock
+class SharedLock : public NonCopyable
 {
 public:
 								SharedLock(LockType &inLock, EPhysicsLockTypes inType)		: mLock(inLock), mType(inType) { PhysicsLock::sLockShared(mLock, mType); }

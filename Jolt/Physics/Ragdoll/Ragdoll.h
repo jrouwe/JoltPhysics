@@ -106,7 +106,7 @@ private:
 };
 
 /// Runtime ragdoll information
-class Ragdoll : public RefTarget<Ragdoll>
+class Ragdoll : public RefTarget<Ragdoll>, public NonCopyable
 {
 public:
 	/// Constructor
@@ -176,7 +176,7 @@ public:
 	const TwoBodyConstraint *			GetConstraint(int inConstraintIndex) const				{ return mConstraints[inConstraintIndex]; }
 
 	/// Get world space bounding box for all bodies of the ragdoll
-	const AABox 						GetWorldSpaceBounds(bool inLockBodies = true) const;
+	AABox 								GetWorldSpaceBounds(bool inLockBodies = true) const;
 
 	/// Get the settings object that created this ragdoll
 	const RagdollSettings *				GetRagdollSettings() const								{ return mRagdollSettings; }

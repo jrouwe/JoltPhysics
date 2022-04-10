@@ -90,7 +90,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 		for (uint b = 1; b < num_bins; ++b) // Start at 1 since selecting bin 0 would result in everything ending up on the right side
 		{
 			// Calculate surface area heuristic and see if it is better than the current best
-			Bin &bin = bins[b];
+			const Bin &bin = bins[b];
 			float cp = bin.mBoundsAccumulatedLeft.GetSurfaceArea() * bin.mNumTrianglesAccumulatedLeft + bin.mBoundsAccumulatedRight.GetSurfaceArea() * bin.mNumTrianglesAccumulatedRight;
 			if (cp < best_cp)
 			{

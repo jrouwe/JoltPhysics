@@ -12,8 +12,7 @@
 JPH_NAMESPACE_BEGIN
 
 ObjectStreamOut::ObjectStreamOut(ostream &inStream) :
-	mStream(inStream),
-	mNextIdentifier(sNullIdentifier + 1)
+	mStream(inStream)
 {
 // Add all primitives to the class set
 #define JPH_DECLARE_PRIMITIVE(name)	mClassSet.insert(JPH_RTTI(name));

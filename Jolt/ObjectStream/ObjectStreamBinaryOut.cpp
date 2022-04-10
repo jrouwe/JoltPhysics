@@ -9,8 +9,7 @@
 JPH_NAMESPACE_BEGIN
 
 ObjectStreamBinaryOut::ObjectStreamBinaryOut(ostream &inStream) :
-	ObjectStreamOut(inStream),
-	mNextStringID(0x80000000)
+	ObjectStreamOut(inStream)
 {
 	string header;
 	header = StringFormat("BOS%2d.%02d", ObjectStream::sVersion, ObjectStream::sRevision);

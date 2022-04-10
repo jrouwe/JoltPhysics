@@ -574,7 +574,7 @@ void Ragdoll::GetRootTransform(Vec3 &outPosition, Quat &outRotation, bool inLock
 	}
 }
 
-const AABox Ragdoll::GetWorldSpaceBounds(bool inLockBodies) const
+AABox Ragdoll::GetWorldSpaceBounds(bool inLockBodies) const
 {
 	// Lock the bodies
 	int body_count = (int)mBodyIDs.size();

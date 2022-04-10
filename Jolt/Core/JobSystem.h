@@ -149,7 +149,6 @@ protected:
 		#endif // defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 			mJobSystem(inJobSystem), 
 			mJobFunction(inJobFunction), 
-			mReferenceCount(0), 
 			mNumDependencies(inNumDependencies) 
 		{ 
 		}
@@ -237,7 +236,7 @@ private:
 		JobSystem *			mJobSystem;									///< The job system we belong to
 		atomic<intptr_t>	mBarrier = 0;								///< Barrier that this job is associated with (is a Barrier pointer)
 		JobFunction			mJobFunction;								///< Main job function
-		atomic<uint32>		mReferenceCount;							///< Amount of JobHandles pointing to this job
+		atomic<uint32>		mReferenceCount = 0;						///< Amount of JobHandles pointing to this job
 		atomic<uint32>		mNumDependencies;							///< Amount of jobs that need to complete before this job can run
 	};
 

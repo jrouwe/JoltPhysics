@@ -38,7 +38,7 @@ void JobSystem::JobHandle::sRemoveDependencies(JobHandle *inHandles, uint inNumH
 	Job **next_job = jobs_to_queue;
 
 	// Remove the dependencies on all jobs
-	for (JobHandle *handle = inHandles, *handle_end = inHandles + inNumHandles; handle < handle_end; ++handle)
+	for (const JobHandle *handle = inHandles, *handle_end = inHandles + inNumHandles; handle < handle_end; ++handle)
 	{
 		Job *job = handle->GetPtr();
 		JPH_ASSERT(job->GetJobSystem() == job_system); // All jobs should belong to the same job system

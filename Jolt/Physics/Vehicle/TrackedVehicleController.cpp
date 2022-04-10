@@ -293,7 +293,7 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			float total_radius = 0.0f;
 			for (uint wheel_index : t.mWheels)
 			{
-				WheelTV *w = static_cast<WheelTV *>(wheels[wheel_index]);
+				const WheelTV *w = static_cast<WheelTV *>(wheels[wheel_index]);
 
 				if (w->HasContact())
 					total_radius += w->GetSettings()->mRadius;
