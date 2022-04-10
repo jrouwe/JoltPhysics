@@ -144,6 +144,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 
 	// Copy results
 	mGroundBodyID = collector.mGroundBodyID;
+	mGroundBodySubShapeID = collector.mGroundBodySubShapeID;
 	mGroundPosition = collector.mGroundPosition;
 	mGroundNormal = collector.mGroundNormal;
 
