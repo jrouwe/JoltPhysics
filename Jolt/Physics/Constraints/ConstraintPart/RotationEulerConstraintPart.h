@@ -36,7 +36,7 @@ class RotationEulerConstraintPart
 {
 private:
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
-	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inLambda)
+	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inLambda) const
 	{
 		// Apply impulse if delta is not zero
 		if (inLambda != Vec3::sZero())
@@ -117,7 +117,7 @@ public:
 	}
 	
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, QuatArg inInvInitialOrientation, float inBaumgarte)
+	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, QuatArg inInvInitialOrientation, float inBaumgarte) const
 	{
 		// Calculate difference in rotation
 		//

@@ -332,7 +332,7 @@ public:
 
 			// If the hull is starting to form defects then we're reaching numerical precision and we have to stop
 			bool has_defect = false;
-			for (Triangle *nt : new_triangles)
+			for (const Triangle *nt : new_triangles)
 				if (nt->IsFacingOrigin())
 				{
 					has_defect = true;

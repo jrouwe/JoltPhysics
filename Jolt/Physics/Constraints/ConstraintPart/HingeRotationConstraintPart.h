@@ -46,7 +46,7 @@ public:
 
 private:
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
-	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, const Vec2 &inLambda)
+	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, const Vec2 &inLambda) const
 	{
 		// Apply impulse if delta is not zero
 		if (!inLambda.IsZero())
@@ -149,7 +149,7 @@ public:
 	}
 
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, float inBaumgarte)
+	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, float inBaumgarte) const
 	{
 		// Constraint needs Axis of body 1 perpendicular to both B and C from body 2 (which are both perpendicular to the Axis of body 2)
 		Vec2 c;

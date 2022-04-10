@@ -91,7 +91,7 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 
 	if (mContactBody != nullptr)
 	{
-		Body *body = inConstraint.GetVehicleBody();
+		const Body *body = inConstraint.GetVehicleBody();
 
 		// Calculate relative velocity between wheel contact point and floor
 		Vec3 relative_velocity = body->GetPointVelocity(mContactPosition) - mContactPointVelocity;

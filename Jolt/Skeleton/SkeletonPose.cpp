@@ -22,7 +22,7 @@ void SkeletonPose::CalculateJointMatrices()
 {
 	for (int i = 0; i < (int)mJoints.size(); ++i)
 	{
-		mJoints[i].ToMatrix(mJointMatrices[i]);
+		mJointMatrices[i] = mJoints[i].ToMatrix();
 
 		int parent = mSkeleton->GetJoint(i).mParentJointIndex;
 		if (parent >= 0)

@@ -175,7 +175,7 @@ private:
 
 	/// Given one face that faces inVertex, find the edges of the faces that are not facing inVertex.
 	/// Will flag all those faces for removal.
-	void				FindEdge(Face *inFacingFace, Vec3Arg inVertex, FullEdges &outEdges);
+	void				FindEdge(Face *inFacingFace, Vec3Arg inVertex, FullEdges &outEdges) const;
 
 	/// Merges the two faces that share inEdge into the face inEdge->mFace
 	void				MergeFaces(Edge *inEdge);

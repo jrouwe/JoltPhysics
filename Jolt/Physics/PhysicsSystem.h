@@ -171,7 +171,7 @@ private:
 	void						JobStepListeners(PhysicsUpdateContext::Step *ioStep);
 	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep) const;
 	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);	
-	void						JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep);
+	void						JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep) const;
 	void						JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex);
 	void						JobFinalizeIslands(PhysicsUpdateContext *ioContext);

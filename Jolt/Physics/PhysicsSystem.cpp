@@ -706,7 +706,7 @@ void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, Physi
 	}
 }
 
-void PhysicsSystem::JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep)
+void PhysicsSystem::JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep) const
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We only read positions

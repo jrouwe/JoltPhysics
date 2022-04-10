@@ -196,7 +196,7 @@ void JobSystemThreadPool::BarrierImpl::Wait()
 				// Loop through the jobs and execute the first executable job
 				for (uint index = mJobReadIndex; index < mJobWriteIndex; ++index)
 				{
-					atomic<Job *> &job = mJobs[index & (cMaxJobs - 1)];
+					const atomic<Job *> &job = mJobs[index & (cMaxJobs - 1)];
 					Job *job_ptr = job.load();
 					if (job_ptr != nullptr && job_ptr->CanBeExecuted())
 					{

@@ -45,7 +45,7 @@ public:
 	void					Finalize(const BodyID *inActiveBodies, uint32 inNumActiveBodies, uint32 inNumContacts, TempAllocator *inTempAllocator);
 
 	/// Get the amount of islands formed
-	uint32					GetNumIslands()									{ return mNumIslands; }
+	uint32					GetNumIslands() const							{ return mNumIslands; }
 
 	/// Get iterator for a particular island, return false if there are no constraints
 	void					GetBodiesInIsland(uint32 inIslandIndex, BodyID *&outBodiesBegin, BodyID *&outBodiesEnd) const;
@@ -66,7 +66,7 @@ private:
 
 	// Helper functions to build various islands
 	void					BuildBodyIslands(const BodyID *inActiveBodies, uint32 inNumActiveBodies, TempAllocator *inTempAllocator);
-	void					BuildConstraintIslands(uint32 *inConstraintToBody, uint32 inNumConstraints, uint32 *&outConstraints, uint32 *&outConstraintsEnd, TempAllocator *inTempAllocator);
+	void					BuildConstraintIslands(uint32 *inConstraintToBody, uint32 inNumConstraints, uint32 *&outConstraints, uint32 *&outConstraintsEnd, TempAllocator *inTempAllocator) const;
 
 	/// Sorts the islands so that the islands with most constraints go first
 	void					SortIslands(TempAllocator *inTempAllocator);

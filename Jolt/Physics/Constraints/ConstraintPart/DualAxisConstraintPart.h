@@ -50,7 +50,7 @@ public:
 
 private:
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
-	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, const Vec2 &inLambda)
+	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, const Vec2 &inLambda) const
 	{
 		// Apply impulse if delta is not zero
 		if (!inLambda.IsZero())
@@ -82,7 +82,7 @@ private:
 	}
 	
 	/// Internal helper function to calculate the lagrange multiplier
-	inline void					CalculateLagrangeMultiplier(const Body &inBody1, const Body &inBody2, Vec3Arg inN1, Vec3Arg inN2, Vec2 &outLambda)
+	inline void					CalculateLagrangeMultiplier(const Body &inBody1, const Body &inBody2, Vec3Arg inN1, Vec3Arg inN2, Vec2 &outLambda) const
 	{
 		// Calculate lagrange multiplier:
 		//
@@ -191,7 +191,7 @@ public:
 	
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.
 	/// All input vectors are in world space
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inU, Vec3Arg inN1, Vec3Arg inN2, float inBaumgarte)
+	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inU, Vec3Arg inN1, Vec3Arg inN2, float inBaumgarte) const
 	{
 		Vec2 c;
 		c[0] = inU.Dot(inN1);
