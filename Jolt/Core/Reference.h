@@ -46,7 +46,7 @@ public:
 	inline void				SetEmbedded()									{ JPH_ASSERT(mRefCount < cEmbedded); mRefCount += cEmbedded; }
 
 	/// Assignment operator
-	inline RefTarget &		operator = (const RefTarget &inRHS)				{ return *this; }
+	inline RefTarget &		operator = (const RefTarget &)					{ /* Don't copy refcount */ return *this; }
 
 	/// Get current refcount of this object
 	uint32					GetRefCount() const								{ return mRefCount; }

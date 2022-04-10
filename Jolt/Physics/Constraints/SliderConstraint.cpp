@@ -199,7 +199,7 @@ void SliderConstraint::CalculateSlidingAxisAndPosition(Mat44Arg inRotation1)
 	}
 }
 
-void SliderConstraint::CalculatePositionLimitsConstraintProperties(float inDeltaTime, Mat44Arg inRotation1)
+void SliderConstraint::CalculatePositionLimitsConstraintProperties(float inDeltaTime)
 {
 	// Check if distance is within limits
 	if (mHasLimits && (mD <= mLimitsMin || mD >= mLimitsMax))
@@ -238,7 +238,7 @@ void SliderConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculatePositionConstraintProperties(rotation1, rotation2);
 	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, *mBody2, rotation2);
 	CalculateSlidingAxisAndPosition(rotation1);
-	CalculatePositionLimitsConstraintProperties(inDeltaTime, rotation1);
+	CalculatePositionLimitsConstraintProperties(inDeltaTime);
 	CalculateMotorConstraintProperties(inDeltaTime);
 }
 
@@ -318,7 +318,7 @@ bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 		rotation2 = Mat44::sRotation(mBody2->GetRotation());
 		CalculateR1R2U(rotation1, rotation2);
 		CalculateSlidingAxisAndPosition(rotation1);
-		CalculatePositionLimitsConstraintProperties(inDeltaTime, rotation1);
+		CalculatePositionLimitsConstraintProperties(inDeltaTime);
 		if (mPositionLimitsConstraintPart.IsActive())
 		{
 			if (mD <= mLimitsMin)

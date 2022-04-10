@@ -60,8 +60,8 @@ public:
 	class EncodingContext
 	{
 	public:
-		/// Get an upper bound on the amount of bytes needed for a node tree with inNodeCount nodes and inLeafNodeCount leaf nodes (those that contain the triangles)
-		uint							GetPessimisticMemoryEstimate(uint inNodeCount, uint inLeafNodeCount) const
+		/// Get an upper bound on the amount of bytes needed for a node tree with inNodeCount nodes
+		uint							GetPessimisticMemoryEstimate(uint inNodeCount) const
 		{
 			return inNodeCount * (sizeof(Node) + Alignment - 1);
 		}

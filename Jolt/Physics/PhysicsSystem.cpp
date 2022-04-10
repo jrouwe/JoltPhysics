@@ -352,7 +352,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 			// It will also delete any bodies that have been destroyed in the last frame
 			step.mBodySetIslandIndex = inJobSystem->CreateJob("BodySetIslandIndex", cColorBodySetIslandIndex, [&context, &step]() 
 				{ 
-					context.mPhysicsSystem->JobBodySetIslandIndex(&context); 
+					context.mPhysicsSystem->JobBodySetIslandIndex(); 
 
 					if (step.mStartNextStep.IsValid())
 						step.mStartNextStep.RemoveDependency();
@@ -1222,7 +1222,7 @@ void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
 	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(), mBodyManager.GetNumActiveBodies(), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
 }
 
-void PhysicsSystem::JobBodySetIslandIndex(PhysicsUpdateContext *ioContext)
+void PhysicsSystem::JobBodySetIslandIndex()
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We only touch island data
