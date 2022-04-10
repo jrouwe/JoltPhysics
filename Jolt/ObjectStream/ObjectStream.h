@@ -60,19 +60,19 @@ protected:
 
 // Define serialization templates
 template <class T>
-bool OSIsType(vector<T> *inArray, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
+bool OSIsType(vector<T> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
 { 
 	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName)); 
 }
 
 template <class T, uint N>
-bool OSIsType(StaticArray<T, N> *inArray, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
+bool OSIsType(StaticArray<T, N> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
 { 
 	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName)); 
 }
 
 template <class T, uint N>
-bool OSIsType(T (*inArray)[N], int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
+bool OSIsType(T (*)[N], int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
 { 
 	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName)); 
 }
