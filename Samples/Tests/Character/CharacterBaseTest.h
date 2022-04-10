@@ -31,6 +31,10 @@ public:
 	virtual bool			HasSettingsMenu() const override							{ return true; }
 	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
+	// Test will never be deterministic since various threads are trying to concurrently add / remove bodies
+	// Ramp blocks are not deterministic (they're teleported, we can't step back)
+	virtual bool			IsDeterministic() const override							{ return mRampBlocks.empty(); }
+
 	// Saving / restoring state for replay
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;

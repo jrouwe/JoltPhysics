@@ -21,10 +21,7 @@ public:
 	virtual void			Initialize() override;
 
 	// Test will never be deterministic since various threads are trying to concurrently add / remove bodies
-	virtual bool			IsDeterministic() const override
-	{ 
-		return false; 
-	}
+	virtual bool			IsDeterministic() const override							{ return false; }
 
 private:
 	// Execute a lambda either on this thread or in a separate job
