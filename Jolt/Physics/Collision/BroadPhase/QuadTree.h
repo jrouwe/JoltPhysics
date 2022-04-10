@@ -75,7 +75,7 @@ private:
 		inline void				operator = (const NodeID &inRHS)			{ mID = inRHS.mID; }
 
 		/// Getting the value
-		inline					operator const NodeID () const				{ return NodeID(mID); }
+		inline					operator NodeID () const					{ return NodeID(mID); }
 
 		/// Check if the ID is valid
 		inline bool				IsValid() const								{ return mID != cInvalidNodeIndex; }

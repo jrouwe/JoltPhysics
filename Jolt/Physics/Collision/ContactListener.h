@@ -69,18 +69,18 @@ public:
 	/// Called whenever a new contact point is detected.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic
-	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { }
+	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { /* Do nothing */ }
 
 	/// Called whenever a contact is detected that was also detected last update.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic
-	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { }
+	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { /* Do nothing */ }
 
 	/// Called whenever a contact was detected last update but is not detected anymore.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
 	/// Note that we're using BodyID's since the bodies may have been removed at the time of callback.
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic
-	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) { }
+	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) { /* Do nothing */ }
 };
 
 JPH_NAMESPACE_END

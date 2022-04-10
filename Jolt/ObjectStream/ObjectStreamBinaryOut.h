@@ -38,7 +38,7 @@ private:
 	using StringTable = unordered_map<string, uint32>;
 
 	StringTable					mStringTable;
-	uint32						mNextStringID;
+	uint32						mNextStringID = 0x80000000;
 };
 
 JPH_NAMESPACE_END

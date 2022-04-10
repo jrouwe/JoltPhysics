@@ -215,7 +215,7 @@ public:
 
 	/// Callback given when object has been loaded from an object stream
 	/// This is called when all links have been resolved. Objects that this object point to have already received their OnLoaded callback.
-	virtual void				OnLoaded()																			{ }
+	virtual void				OnLoaded()																			{ /* Do nothing */ }
 };
 
 JPH_NAMESPACE_END

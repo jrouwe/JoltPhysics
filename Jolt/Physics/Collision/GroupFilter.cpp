@@ -22,6 +22,7 @@ void GroupFilter::SaveBinaryState(StreamOut &inStream) const
 
 void GroupFilter::RestoreBinaryState(StreamIn &inStream)
 {
+	// RTTI hash is read in sRestoreFromBinaryState
 }
 
 GroupFilter::GroupFilterResult GroupFilter::sRestoreFromBinaryState(StreamIn &inStream)

@@ -21,7 +21,7 @@ public:
 	static Plane	sFromPointsCCW(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3)				{ return sFromPointAndNormal(inV1, (inV2 - inV1).Cross(inV3 - inV1).Normalized()); }
 
 	// Properties
-	const Vec3		GetNormal() const														{ return Vec3(mNormalAndConstant); }
+	Vec3			GetNormal() const														{ return Vec3(mNormalAndConstant); }
 	void			SetNormal(Vec3Arg inNormal)												{ mNormalAndConstant = Vec4(inNormal, mNormalAndConstant.GetW()); }
 	float			GetConstant() const														{ return mNormalAndConstant.GetW(); }
 	void			SetConstant(float inConstant)											{ mNormalAndConstant.SetW(inConstant); }

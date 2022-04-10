@@ -51,7 +51,8 @@ public:
 	}
 
 	virtual void				VisitCompounds(const void *inObject, const CompoundVisitor &inVisitor) const override
-	{		
+	{
+		// An enum is not a compound, do nothing
 	}
 
 private:

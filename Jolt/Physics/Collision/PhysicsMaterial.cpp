@@ -25,6 +25,7 @@ void PhysicsMaterial::SaveBinaryState(StreamOut &inStream) const
 
 void PhysicsMaterial::RestoreBinaryState(StreamIn &inStream)
 {
+	// RTTI hash is read in sRestoreFromBinaryState
 }
 
 PhysicsMaterial::PhysicsMaterialResult PhysicsMaterial::sRestoreFromBinaryState(StreamIn &inStream)

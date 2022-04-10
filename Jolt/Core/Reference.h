@@ -36,8 +36,8 @@ class RefTarget
 {	
 public:
 	/// Constructor
-	inline					RefTarget()										: mRefCount(0) { }
-	inline					RefTarget(const RefTarget &)					: mRefCount(0) { }
+	inline					RefTarget() = default;
+	inline					RefTarget(const RefTarget &)					{ /* Do not copy refcount */ }
 	inline					~RefTarget()									{ JPH_ASSERT(mRefCount == 0 || mRefCount == cEmbedded); } ///< assert no one is referencing us
 
 	/// Mark this class as embedded, this means the type can be used in a compound or constructed on the stack.
@@ -64,7 +64,7 @@ public:
 protected:
 	static constexpr uint32 cEmbedded = 0x0ebedded;							///< A large value that gets added to the refcount to mark the object as embedded
 
-	mutable atomic<uint32>	mRefCount;										///< Current reference count
+	mutable atomic<uint32>	mRefCount = 0;									///< Current reference count
 };							
 
 /// Pure virtual version of RefTarget

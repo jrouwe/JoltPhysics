@@ -8,8 +8,7 @@
 JPH_NAMESPACE_BEGIN
 
 ObjectStreamBinaryIn::ObjectStreamBinaryIn(istream &inStream) :
-	ObjectStreamIn(inStream),
-	mNextStringID(0x80000000)
+	ObjectStreamIn(inStream)
 {
 }
 

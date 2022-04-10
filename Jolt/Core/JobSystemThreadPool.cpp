@@ -228,14 +228,12 @@ void JobSystemThreadPool::BarrierImpl::Wait()
 	}
 }
 
-JobSystemThreadPool::JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads)	
+JobSystemThreadPool::JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads) :
+	mMaxBarriers(inMaxBarriers),
+	mBarriers(new BarrierImpl [inMaxBarriers]) // Init freelist of barriers
 {
 	// Init freelist of jobs
 	mJobs.Init(inMaxJobs, inMaxJobs);
-
-	// Init freelist of barriers
-	mMaxBarriers = inMaxBarriers;
-	mBarriers = new BarrierImpl [inMaxBarriers];
 
 	// Init queue
 	for (atomic<Job *> &j : mQueue)
