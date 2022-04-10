@@ -24,6 +24,10 @@ public:
 	// Update the test, called after the physics update
 	virtual void			PostPhysicsUpdate(float inDeltaTime) override;
 
+	// Saving / restoring state for replay
+	virtual void			SaveState(StateRecorder &inStream) const override;
+	virtual void			RestoreState(StateRecorder &inStream) override;
+
 protected:
 	// Get position of the character
 	virtual Vec3			GetCharacterPosition() const override				{ return mCharacter->GetPosition(); }

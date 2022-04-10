@@ -131,6 +131,31 @@ void CharacterVirtualTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 	});
 }
 
+void CharacterVirtualTest::SaveState(StateRecorder &inStream) const
+{
+	CharacterBaseTest::SaveState(inStream);
+
+	mCharacter->SaveState(inStream);
+
+	bool is_standing = mCharacter->GetShape() == mStandingShape;
+	inStream.Write(is_standing);
+
+	inStream.Write(mSmoothMovementDirection);
+}
+
+void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
+{
+	CharacterBaseTest::RestoreState(inStream);
+
+	mCharacter->RestoreState(inStream);
+
+	bool is_standing = mCharacter->GetShape() == mStandingShape; // Initialize variable for validation mode
+	inStream.Read(is_standing);
+	mCharacter->SetShape(is_standing? mStandingShape : mCrouchingShape, FLT_MAX, { }, { }, { }, *mTempAllocator);
+
+	inStream.Read(mSmoothMovementDirection);
+}
+
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
 	// Dynamic boxes on the ramp go through all permutations

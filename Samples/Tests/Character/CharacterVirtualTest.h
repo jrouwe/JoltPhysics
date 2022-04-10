@@ -21,6 +21,10 @@ public:
 	// Optional settings menu
 	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
+	// Saving / restoring state for replay
+	virtual void			SaveState(StateRecorder &inStream) const override;
+	virtual void			RestoreState(StateRecorder &inStream) override;
+
 	// Called whenever the character collides with a body. Returns true if the contact can push the character.
 	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
 

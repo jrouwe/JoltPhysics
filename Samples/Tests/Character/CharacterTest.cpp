@@ -46,6 +46,27 @@ void CharacterTest::PostPhysicsUpdate(float inDeltaTime)
 	mCharacter->PostSimulation(cCollisionTolerance);
 }
 
+void CharacterTest::SaveState(StateRecorder &inStream) const
+{
+	CharacterBaseTest::SaveState(inStream);
+
+	mCharacter->SaveState(inStream);
+
+	bool is_standing = mCharacter->GetShape() == mStandingShape;
+	inStream.Write(is_standing);
+}
+
+void CharacterTest::RestoreState(StateRecorder &inStream)
+{
+	CharacterBaseTest::RestoreState(inStream);
+
+	mCharacter->RestoreState(inStream);
+
+	bool is_standing = mCharacter->GetShape() == mStandingShape; // Initialize variable for validation mode
+	inStream.Read(is_standing);
+	mCharacter->SetShape(is_standing? mStandingShape : mCrouchingShape, FLT_MAX);
+}
+
 void CharacterTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
 {
 	// Cancel movement in opposite direction of normal when sliding

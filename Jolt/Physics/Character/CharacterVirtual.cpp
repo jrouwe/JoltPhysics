@@ -794,13 +794,13 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 		RefConst<Shape> old_shape = mShape;
 		mShape = inShape;
 
-		// Check collision around the new shape
-		TempContactList contacts(inAllocator);
-		contacts.reserve(mMaxNumHits);
-		GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), inShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
-
 		if (inMaxPenetrationDepth < FLT_MAX)
 		{
+			// Check collision around the new shape
+			TempContactList contacts(inAllocator);
+			contacts.reserve(mMaxNumHits);
+			GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), inShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+
 			// Test if this results in penetration, if so cancel the transition
 			for (const Contact &c : contacts)
 				if (c.mDistance < -inMaxPenetrationDepth)
@@ -808,12 +808,30 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 					mShape = old_shape;
 					return false;
 				}
-		}
 
-		StoreActiveContacts(contacts, inAllocator);
+			StoreActiveContacts(contacts, inAllocator);
+		}
 	}
 
 	return mShape == inShape;
+}
+
+void CharacterVirtual::SaveState(StateRecorder &inStream) const
+{
+	CharacterBase::SaveState(inStream);
+
+	inStream.Write(mPosition);
+	inStream.Write(mRotation);
+	inStream.Write(mLinearVelocity);
+}
+
+void CharacterVirtual::RestoreState(StateRecorder &inStream)
+{
+	CharacterBase::RestoreState(inStream);
+
+	inStream.Read(mPosition);
+	inStream.Read(mRotation);
+	inStream.Read(mLinearVelocity);
 }
 
 JPH_NAMESPACE_END

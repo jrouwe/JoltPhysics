@@ -136,6 +136,10 @@ public:
 	/// @return Returns true if the switch succeeded.
 	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
+	// Saving / restoring state for replay
+	virtual void						SaveState(StateRecorder &inStream) const override;
+	virtual void						RestoreState(StateRecorder &inStream) override;
+
 #ifdef JPH_DEBUG_RENDERER
 	static inline bool					sDrawConstraints = false;								///< Draw the current state of the constraints for iteration 0 when creating them
 #endif

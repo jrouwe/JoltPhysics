@@ -13,6 +13,7 @@
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
+class StateRecorder;
 
 /// Base class for configuration of a character
 class CharacterBaseSettings : public RefTarget<CharacterBaseSettings>
@@ -74,6 +75,10 @@ public:
 
 	/// User data value of the body that we're standing on
 	uint64								GetGroundUserData() const								{ return mGroundUserData; }
+
+	// Saving / restoring state for replay
+	virtual void						SaveState(StateRecorder &inStream) const;
+	virtual void						RestoreState(StateRecorder &inStream);
 
 protected:
 	// Cached physics system
