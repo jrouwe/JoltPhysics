@@ -78,7 +78,7 @@ void ConstraintManager::GetActiveConstraints(uint32 inStartConstraintIdx, uint32
 	outNumActiveConstraints = num_active_constraints;
 }
 
-void ConstraintManager::BuildIslands(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, IslandBuilder &ioBuilder, BodyManager &inBodyManager)
+void ConstraintManager::sBuildIslands(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, IslandBuilder &ioBuilder, BodyManager &inBodyManager)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -89,14 +89,14 @@ void ConstraintManager::BuildIslands(Constraint **inActiveConstraints, uint32 in
 	}
 }
 
-void ConstraintManager::SortConstraints(Constraint **inActiveConstraints, uint32 *inConstraintIdxBegin, uint32 *inConstraintIdxEnd) const
+void ConstraintManager::sSortConstraints(Constraint **inActiveConstraints, uint32 *inConstraintIdxBegin, uint32 *inConstraintIdxEnd)
 {
 	JPH_PROFILE_FUNCTION();
 
 	sort(inConstraintIdxBegin, inConstraintIdxEnd, [inActiveConstraints](uint32 inLHS, uint32 inRHS) { return inActiveConstraints[inLHS]->mConstraintIndex < inActiveConstraints[inRHS]->mConstraintIndex; });
 }
 
-void ConstraintManager::SetupVelocityConstraints(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, float inDeltaTime)
+void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, float inDeltaTime)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -104,7 +104,7 @@ void ConstraintManager::SetupVelocityConstraints(Constraint **inActiveConstraint
 		(*c)->SetupVelocityConstraint(inDeltaTime);
 }
 
-void ConstraintManager::SetupVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
+void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -115,7 +115,7 @@ void ConstraintManager::SetupVelocityConstraints(Constraint **inActiveConstraint
 	}
 }
 
-void ConstraintManager::WarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio)
+void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -126,7 +126,7 @@ void ConstraintManager::WarmStartVelocityConstraints(Constraint **inActiveConstr
 	}
 }
 
-bool ConstraintManager::SolveVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
+bool ConstraintManager::sSolveVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -141,7 +141,7 @@ bool ConstraintManager::SolveVelocityConstraints(Constraint **inActiveConstraint
 	return any_impulse_applied;
 }
 
-bool ConstraintManager::SolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte)
+bool ConstraintManager::sSolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte)
 {
 	JPH_PROFILE_FUNCTION();
 

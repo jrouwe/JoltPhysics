@@ -713,7 +713,7 @@ void PhysicsSystem::JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdate
 	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
 #endif
 
-	mConstraintManager.SetupVelocityConstraints(ioStep->mContext->mActiveConstraints, ioStep->mNumActiveConstraints, inDeltaTime); 
+	ConstraintManager::sSetupVelocityConstraints(ioStep->mContext->mActiveConstraints, ioStep->mNumActiveConstraints, inDeltaTime); 
 }
 
 void PhysicsSystem::JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
@@ -730,7 +730,7 @@ void PhysicsSystem::JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioConte
 	mIslandBuilder.PrepareNonContactConstraints(ioStep->mNumActiveConstraints, ioContext->mTempAllocator);
 
 	// Build the islands
-	mConstraintManager.BuildIslands(ioStep->mContext->mActiveConstraints, ioStep->mNumActiveConstraints, mIslandBuilder, mBodyManager);
+	ConstraintManager::sBuildIslands(ioStep->mContext->mActiveConstraints, ioStep->mNumActiveConstraints, mIslandBuilder, mBodyManager);
 }
 
 void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const
@@ -1286,7 +1286,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			}
 
 			// Sort constraints to give a deterministic simulation
-			mConstraintManager.SortConstraints(active_constraints, constraints_begin, constraints_end);
+			ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
 
 			// Sort contacts to give a deterministic simulation
 			mContactManager.SortContacts(contacts_begin, contacts_end);
@@ -1315,18 +1315,18 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				continue;
 
 			// Prepare velocity constraints. In the first step this is done when adding the contact constraints.
-			mConstraintManager.SetupVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
+			ConstraintManager::sSetupVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
 			mContactManager.SetupVelocityConstraints(contacts_begin, contacts_end, delta_time);
 		}
 
 		// Warm start
-		mConstraintManager.WarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio);
+		ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio);
 		mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
 
 		// Solve
 		for (int velocity_step = 0; velocity_step < mPhysicsSettings.mNumVelocitySteps; ++velocity_step)
 		{
-			bool constraint_impulse = mConstraintManager.SolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
+			bool constraint_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
 			bool contact_impulse = mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
 			if (!constraint_impulse && !contact_impulse)
 				break;
@@ -2081,7 +2081,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 			float baumgarte = mPhysicsSettings.mBaumgarte;
 			for (int position_step = 0; position_step < mPhysicsSettings.mNumPositionSteps; ++position_step)
 			{
-				bool constraint_impulse = mConstraintManager.SolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
+				bool constraint_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
 				bool contact_impulse = mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
 				if (!constraint_impulse && !contact_impulse)
 					break;
