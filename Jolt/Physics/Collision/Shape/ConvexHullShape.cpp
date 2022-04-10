@@ -41,14 +41,14 @@ ShapeSettings::ShapeResult ConvexHullShapeSettings::Create() const
 }
 
 ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, ShapeResult &outResult) :
-	ConvexShape(EShapeSubType::ConvexHull, inSettings, outResult)
+	ConvexShape(EShapeSubType::ConvexHull, inSettings, outResult),
+	mConvexRadius(inSettings.mMaxConvexRadius)
 {
 	using BuilderFace = ConvexHullBuilder::Face;
 	using Edge = ConvexHullBuilder::Edge;
 	using Faces = vector<BuilderFace *>;
 	
-	// Copy convex radius
-	mConvexRadius = inSettings.mMaxConvexRadius;
+	// Check convex radius
 	if (mConvexRadius < 0.0f)
 	{
 		outResult.SetError("Invalid convex radius");
@@ -980,16 +980,13 @@ bool ConvexHullShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inS
 {
 	// Determine if ray hits the shape
 	float min_fraction, max_fraction;
-	if (CastRayHelper(inRay, min_fraction, max_fraction))
+	if (CastRayHelper(inRay, min_fraction, max_fraction)
+		&& min_fraction < ioHit.mFraction) // Check if this is a closer hit
 	{
-		// Check if this is a closer hit
-		if (min_fraction < ioHit.mFraction)
-		{
-			// Better hit than the current hit
-			ioHit.mFraction = min_fraction;
-			ioHit.mSubShapeID2 = inSubShapeIDCreator.GetID();
-			return true;
-		}
+		// Better hit than the current hit
+		ioHit.mFraction = min_fraction;
+		ioHit.mSubShapeID2 = inSubShapeIDCreator.GetID();
+		return true;
 	}
 	return false;
 }
@@ -998,30 +995,27 @@ void ConvexHullShape::CastRay(const RayCast &inRay, const RayCastSettings &inRay
 {
 	// Determine if ray hits the shape
 	float min_fraction, max_fraction;
-	if (CastRayHelper(inRay, min_fraction, max_fraction))
+	if (CastRayHelper(inRay, min_fraction, max_fraction)
+		&& min_fraction < ioCollector.GetEarlyOutFraction()) // Check if this is closer than the early out fraction
 	{
-		// Check if this is closer than the early out fraction
-		if (min_fraction < ioCollector.GetEarlyOutFraction())
+		// Better hit than the current hit
+		RayCastResult hit;
+		hit.mBodyID = TransformedShape::sGetBodyID(ioCollector.GetContext());
+		hit.mSubShapeID2 = inSubShapeIDCreator.GetID();
+
+		// Check front side hit
+		if (inRayCastSettings.mTreatConvexAsSolid || min_fraction > 0.0f)
 		{
-			// Better hit than the current hit
-			RayCastResult hit;
-			hit.mBodyID = TransformedShape::sGetBodyID(ioCollector.GetContext());
-			hit.mSubShapeID2 = inSubShapeIDCreator.GetID();
+			hit.mFraction = min_fraction;
+			ioCollector.AddHit(hit);
+		}
 
-			// Check front side hit
-			if (inRayCastSettings.mTreatConvexAsSolid || min_fraction > 0.0f)
-			{
-				hit.mFraction = min_fraction;
-				ioCollector.AddHit(hit);
-			}
-
-			// Check back side hit
-			if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces 
-				&& max_fraction < ioCollector.GetEarlyOutFraction())
-			{
-				hit.mFraction = max_fraction;
-				ioCollector.AddHit(hit);
-			}
+		// Check back side hit
+		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces 
+			&& max_fraction < ioCollector.GetEarlyOutFraction())
+		{
+			hit.mFraction = max_fraction;
+			ioCollector.AddHit(hit);
 		}
 	}
 }
