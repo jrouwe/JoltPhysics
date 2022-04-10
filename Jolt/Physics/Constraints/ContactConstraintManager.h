@@ -93,6 +93,7 @@ public:
 
 	/// Add a contact constraint for this frame.
 	///
+	/// @param ioContactAllocator The allocator that reserves memory for the contacts
 	/// @param inBodyPair The handle for the contact cache for this body pair
 	/// @param inBody1 The first body that is colliding
 	/// @param inBody2 The second body that is colliding
@@ -212,6 +213,7 @@ public:
 	void						FinishConstraintBuffer();
 
 	/// Called by continuous collision detection to notify the contact listener that a contact was added
+	/// @param ioContactAllocator The allocator that reserves memory for the contacts
 	/// @param inBody1 The first body that is colliding
 	/// @param inBody2 The second body that is colliding
 	/// @param inManifold The manifold that describes the collision
