@@ -796,7 +796,7 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			float penetration_depth = -FLT_MAX;
 			for (uint32 i = 0; i < output_cm->mNumContactPoints; ++i)
 			{
-				CachedContactPoint &ccp = output_cm->mContactPoints[i];
+				const CachedContactPoint &ccp = output_cm->mContactPoints[i];
 				manifold.mWorldSpaceContactPointsOn1[i] = transform_body1 * Vec3::sLoadFloat3Unsafe(ccp.mPosition1);
 				manifold.mWorldSpaceContactPointsOn2[i] = transform_body2 * Vec3::sLoadFloat3Unsafe(ccp.mPosition2);
 				penetration_depth = max(penetration_depth, (manifold.mWorldSpaceContactPointsOn1[0] - manifold.mWorldSpaceContactPointsOn2[0]).Dot(world_space_normal));
@@ -1290,7 +1290,7 @@ void ContactConstraintManager::ContactPointRemovedCallbacks()
 	read_cache.Clear();
 }
 
-void ContactConstraintManager::SetupVelocityConstraints(uint32 *inConstraintIdxBegin, uint32 *inConstraintIdxEnd, float inDeltaTime)
+void ContactConstraintManager::SetupVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1299,8 +1299,8 @@ void ContactConstraintManager::SetupVelocityConstraints(uint32 *inConstraintIdxB
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
 
 		// Fetch bodies
-		Body &body1 = *constraint.mBody1;
-		Body &body2 = *constraint.mBody2;
+		const Body &body1 = *constraint.mBody1;
+		const Body &body2 = *constraint.mBody2;
 		
 		// Get body transforms
 		Mat44 transform_body1 = body1.GetCenterOfMassTransform();
@@ -1469,7 +1469,7 @@ bool ContactConstraintManager::SolveVelocityConstraints(const uint32 *inConstrai
 	return any_impulse_applied;
 }
 
-void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd)
+void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd) const
 {
 	// Copy back total applied impulse to cache for the next frame
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
