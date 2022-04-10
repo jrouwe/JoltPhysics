@@ -1,0 +1,9 @@
+root = true
+
+[*.{cpp,h,inl,cmake}]
+indent_style = tab
+tab_width = 4
+
+[CMakeLists.txt]
+indent_style = tab
+tab_width = 4
