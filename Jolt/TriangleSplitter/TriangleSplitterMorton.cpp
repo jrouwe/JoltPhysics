@@ -26,7 +26,7 @@ TriangleSplitterMorton::TriangleSplitterMorton(const VertexList &inVertices, con
 
 	// Sort triangles on morton code
 	const vector<uint32> &morton_codes = mMortonCodes;
-	sort(mSortedTriangleIdx.begin(), mSortedTriangleIdx.end(), [&morton_codes](uint inLHS, uint inRHS) -> bool { return morton_codes[inLHS] < morton_codes[inRHS]; });
+	sort(mSortedTriangleIdx.begin(), mSortedTriangleIdx.end(), [&morton_codes](uint inLHS, uint inRHS) { return morton_codes[inLHS] < morton_codes[inRHS]; });
 }
 
 bool TriangleSplitterMorton::Split(const Range &inTriangles, Range &outLeft, Range &outRight)

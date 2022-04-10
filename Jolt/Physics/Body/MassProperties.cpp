@@ -32,7 +32,7 @@ bool MassProperties::DecomposePrincipalMomentsOfInertia(Mat44 &outRotation, Vec3
 
 	// Sort so that the biggest value goes first
 	int indices[] = { 0, 1, 2 };
-	sort(indices, indices + 3, [&eigen_val](int inLeft, int inRight) -> bool { return eigen_val[inLeft] > eigen_val[inRight]; });
+	sort(indices, indices + 3, [&eigen_val](int inLeft, int inRight) { return eigen_val[inLeft] > eigen_val[inRight]; });
 		
 	// Convert to a regular Mat44 and Vec3
 	outRotation = Mat44::sIdentity();

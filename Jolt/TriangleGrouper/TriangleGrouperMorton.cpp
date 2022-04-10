@@ -41,7 +41,7 @@ void TriangleGrouperMorton::Group(const VertexList &inVertices, const IndexedTri
 		morton_codes[t] = MortonCode::sGetMortonCode(centroids[t], centroid_bounds);
 
 	// Sort triangles based on morton code
-	sort(outGroupedTriangleIndices.begin(), outGroupedTriangleIndices.end(), [&morton_codes](uint inLHS, uint inRHS) -> bool { return morton_codes[inLHS] < morton_codes[inRHS]; });
+	sort(outGroupedTriangleIndices.begin(), outGroupedTriangleIndices.end(), [&morton_codes](uint inLHS, uint inRHS) { return morton_codes[inLHS] < morton_codes[inRHS]; });
 }
 
 JPH_NAMESPACE_END

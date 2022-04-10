@@ -105,7 +105,7 @@ TEST_SUITE("GJKTests")
 
 	TEST_CASE("TestGJKSphereVsSphereIntersect")
 	{
-		auto sphere_creator = [](UnitTestRandom &inRandom) -> Sphere {
+		auto sphere_creator = [](UnitTestRandom &inRandom) {
 				uniform_real_distribution<float> pos(-2.0f, 2.0f);
 				uniform_real_distribution<float> rad(0.5f, 2.0f);
 				return Sphere(Vec3(pos(inRandom), pos(inRandom), pos(inRandom)), rad(inRandom));
@@ -114,7 +114,7 @@ TEST_SUITE("GJKTests")
 		TestIntersect<Sphere, Sphere>(
 			sphere_creator, 
 			sphere_creator, 
-			[](const Sphere &inSphereA, const Sphere &inSphereB, bool inIsIntersecting, float inTolerance) -> bool { 
+			[](const Sphere &inSphereA, const Sphere &inSphereB, bool inIsIntersecting, float inTolerance) {
 
 				// Test without and with tolerance if the results are equal
 				return inSphereA.Overlaps(inSphereB) == inIsIntersecting
@@ -124,13 +124,13 @@ TEST_SUITE("GJKTests")
 
 	TEST_CASE("TestGJKSphereVsBoxIntersect")
 	{
-		auto sphere_creator = [](UnitTestRandom &inRandom) -> Sphere {
+		auto sphere_creator = [](UnitTestRandom &inRandom) {
 				uniform_real_distribution<float> pos(-2.0f, 2.0f);
 				uniform_real_distribution<float> rad(0.5f, 2.0f);
 				return Sphere(Vec3(pos(inRandom), pos(inRandom), pos(inRandom)), rad(inRandom));
 			};
 
-		auto box_creator = [](UnitTestRandom &inRandom) -> AABox {
+		auto box_creator = [](UnitTestRandom &inRandom) {
 				uniform_real_distribution<float> pos(-2.0f, 2.0f);
 				Vec3 p1 = Vec3(pos(inRandom), pos(inRandom), pos(inRandom));
 				Vec3 p2 = Vec3(pos(inRandom), pos(inRandom), pos(inRandom));
@@ -140,7 +140,7 @@ TEST_SUITE("GJKTests")
 		TestIntersect<Sphere, AABox>(
 			sphere_creator, 
 			box_creator, 
-			[](const Sphere &inSphereA, const AABox &inBoxB, bool inIsIntersecting, float inTolerance) -> bool { 
+			[](const Sphere &inSphereA, const AABox &inBoxB, bool inIsIntersecting, float inTolerance) {
 				
 				// Test without and with tolerance if the results are equal
 				return inSphereA.Overlaps(inBoxB) == inIsIntersecting
@@ -182,7 +182,7 @@ TEST_SUITE("GJKTests")
 	TEST_CASE("TestGJKRaySphere")
 	{
 		Sphere sphere(Vec3(0.1f, 0.2f, 0.3f), 1.1f);
-		TestRay<Sphere, Sphere>(sphere, sphere, [](const Sphere &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) -> float { 
+		TestRay<Sphere, Sphere>(sphere, sphere, [](const Sphere &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			return RaySphere(inRayOrigin, inRayDirection, inSphere.GetCenter(), inSphere.GetRadius()); 
 		});
 	}
@@ -192,7 +192,7 @@ TEST_SUITE("GJKTests")
 		SphereShape sphere_shape(1.1f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = sphere_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, SphereShape>(*support, sphere_shape, [](const SphereShape &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) -> float { 
+		TestRay<ConvexShape::Support, SphereShape>(*support, sphere_shape, [](const SphereShape &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			return RaySphere(inRayOrigin, inRayDirection, Vec3::sZero(), inSphere.GetRadius()); 
 		});
 	}
@@ -200,7 +200,7 @@ TEST_SUITE("GJKTests")
 	TEST_CASE("TestGJKRayBox")
 	{
 		AABox box(Vec3(-0.9f, -1.0f, -1.1f), Vec3(0.8f, 0.9f, 1.0f));
-		TestRay<AABox, AABox>(box, box, [](const AABox &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) -> float { 
+		TestRay<AABox, AABox>(box, box, [](const AABox &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), inBox.mMin, inBox.mMax); 
 			return max(fraction, 0.0f);
 		});
@@ -211,7 +211,7 @@ TEST_SUITE("GJKTests")
 		BoxShape box_shape(Vec3(0.9f, 1.0f, 1.1f), 0.0f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = box_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, BoxShape>(*support, box_shape, [](const BoxShape &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) -> float { 
+		TestRay<ConvexShape::Support, BoxShape>(*support, box_shape, [](const BoxShape &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), -inBox.GetHalfExtent(), inBox.GetHalfExtent()); 
 			return max(fraction, 0.0f);
 		});
@@ -222,7 +222,7 @@ TEST_SUITE("GJKTests")
 		CapsuleShape capsule_shape(1.1f, 0.6f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = capsule_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, CapsuleShape>(*support, capsule_shape, [](const CapsuleShape &inCapsule, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) -> float { 
+		TestRay<ConvexShape::Support, CapsuleShape>(*support, capsule_shape, [](const CapsuleShape &inCapsule, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			return RayCapsule(inRayOrigin, inRayDirection, inCapsule.GetHalfHeightOfCylinder(), inCapsule.GetRadius()); 
 		});
 	}
@@ -232,7 +232,7 @@ TEST_SUITE("GJKTests")
 		CylinderShape cylinder_shape(1.5f, 0.6f, 0.0f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = cylinder_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, CylinderShape>(*support, cylinder_shape, [](const CylinderShape &inCylinder, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) -> float { 
+		TestRay<ConvexShape::Support, CylinderShape>(*support, cylinder_shape, [](const CylinderShape &inCylinder, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			return RayCylinder(inRayOrigin, inRayDirection, inCylinder.GetHalfHeight(), inCylinder.GetRadius()); 
 		});
 	}
@@ -240,7 +240,7 @@ TEST_SUITE("GJKTests")
 	TEST_CASE("TestGJKRayTriangle")
 	{			
 		TriangleConvexSupport triangle(Vec3(0.1f, 0.9f, 0.3f), Vec3(-0.9f, -0.5f, 0.2f), Vec3(0.7f, -0.3f, -0.1f));
-		TestRay<TriangleConvexSupport, TriangleConvexSupport>(triangle, triangle, [](const TriangleConvexSupport &inTriangle, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) -> float { 
+		TestRay<TriangleConvexSupport, TriangleConvexSupport>(triangle, triangle, [](const TriangleConvexSupport &inTriangle, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			return RayTriangle(inRayOrigin, inRayDirection, inTriangle.mV1, inTriangle.mV2, inTriangle.mV3);
 		});
 	}
