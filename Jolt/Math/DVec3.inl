@@ -3,6 +3,8 @@
 
 #pragma once
 
+#ifdef JPH_USE_AVX2
+
 #include <Jolt/Core/HashCombine.h>
 
 // Create a std::hash for DVec3
@@ -275,3 +277,5 @@ DVec3 DVec3::GetSign() const
 }
 
 JPH_NAMESPACE_END
+
+#endif // JPH_USE_AVX2

@@ -227,6 +227,9 @@ public:
 	Vector<Rows>							mCol[Cols];									///< Column
 };
 
+// The template specialization doesn't sit well with Doxygen
+#ifndef JPH_PLATFORM_DOXYGEN
+
 /// Specialization of SetInversed for 2x2 matrix
 template <>
 inline bool Matrix<2, 2>::SetInversed(const Matrix<2, 2> &inM)
@@ -249,5 +252,7 @@ inline bool Matrix<2, 2>::SetInversed(const Matrix<2, 2> &inM)
 	mCol[1].mF32[1] = a / det;	
 	return true;
 }
+
+#endif // !JPH_PLATFORM_DOXYGEN
 
 JPH_NAMESPACE_END
