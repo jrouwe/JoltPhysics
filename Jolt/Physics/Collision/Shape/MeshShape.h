@@ -138,7 +138,7 @@ private:
 	static constexpr int			MaxTrianglesPerLeaf = 1 << NumTriangleBits;					///< Number of triangles that are stored max per leaf aabb node 
 
 	/// Find and flag active edges
-	void							FindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices);
+	static void						sFindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices);
 
 	/// Visit the entire tree using a visitor pattern
 	template <class Visitor>

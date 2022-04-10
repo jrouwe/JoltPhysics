@@ -34,10 +34,10 @@ bool Factory::Register(const RTTI *inRTTI)
 		return true;
 
 	// Insert this class by name
-	mClassNameMap.insert(ClassNameMap::value_type(inRTTI->GetName(), inRTTI));
+	mClassNameMap.try_emplace(inRTTI->GetName(), inRTTI);
 
 	// Insert this class by hash
-	if (!mClassHashMap.insert(ClassHashMap::value_type(inRTTI->GetHash(), inRTTI)).second)
+	if (!mClassHashMap.try_emplace(inRTTI->GetHash(), inRTTI).second)
 	{
 		JPH_ASSERT(false, "Hash collision registering type!");
 		return false;

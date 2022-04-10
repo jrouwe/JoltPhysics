@@ -91,18 +91,16 @@ public:
 
 		struct NodeData
 		{
-											NodeData()									: mNode(nullptr), mNodeStart((uint)-1), mTriangleStart((uint)-1), mNumChildren(0), mParentChildNodeStart(nullptr), mParentTrianglesStart(nullptr) { }
-
-			const AABBTreeBuilder::Node *	mNode;										// Node that this entry belongs to
+			const AABBTreeBuilder::Node *	mNode = nullptr;							// Node that this entry belongs to
 			Vec3							mNodeBoundsMin;								// Quantized node bounds
 			Vec3							mNodeBoundsMax;
-			uint							mNodeStart;									// Start of node in mTree
-			uint							mTriangleStart;								// Start of the triangle data in mTree
-			uint							mNumChildren;								// Number of children
+			uint							mNodeStart = uint(-1);						// Start of node in mTree
+			uint							mTriangleStart = uint(-1);					// Start of the triangle data in mTree
+			uint							mNumChildren = 0;							// Number of children
 			uint							mChildNodeStart[NumChildrenPerNode];		// Start of the children of the node in mTree
 			uint							mChildTrianglesStart[NumChildrenPerNode];	// Start of the triangle data in mTree
-			uint *							mParentChildNodeStart;						// Where to store mNodeStart (to patch mChildNodeStart of my parent)
-			uint *							mParentTrianglesStart;						// Where to store mTriangleStart (to patch mChildTrianglesStart of my parent)
+			uint *							mParentChildNodeStart = nullptr;			// Where to store mNodeStart (to patch mChildNodeStart of my parent)
+			uint *							mParentTrianglesStart = nullptr;			// Where to store mTriangleStart (to patch mChildTrianglesStart of my parent)
 		};
 		
 		deque<NodeData *> to_process;

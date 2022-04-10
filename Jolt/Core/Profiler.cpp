@@ -96,7 +96,7 @@ void Profiler::sAggregate(int inDepth, uint32 inColor, ProfileSample *&ioSample,
 	if (aggregator_idx == ioKeyToAggregator.end())
 	{
 		// Not found, add to map and insert in array
-		ioKeyToAggregator.insert(KeyToAggregator::value_type(ioSample->mName, ioAggregators.size()));
+		ioKeyToAggregator.try_emplace(ioSample->mName, ioAggregators.size());
 		ioAggregators.emplace_back(ioSample->mName);
 		aggregator = &ioAggregators.back();
 	}

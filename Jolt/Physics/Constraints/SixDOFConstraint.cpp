@@ -329,7 +329,6 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 			switch (mMotorState[i])
 			{
 			case EMotorState::Off:
-			default:
 				if (HasFriction(axis))
 					mMotorTranslationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis);
 				else
@@ -455,7 +454,6 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 				switch (mMotorState[axis])
 				{
 				case EMotorState::Off:
-				default:
 					if (HasFriction(axis))
 						mMotorRotationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, rotation_axis);
 					else
@@ -515,7 +513,6 @@ bool SixDOFConstraint::SolveVelocityConstraint(float inDeltaTime)
 				switch (mMotorState[i])
 				{
 				case EMotorState::Off:
-				default:
 				{
 					// Apply friction only
 					float max_lambda = mMaxFriction[i] * inDeltaTime;
@@ -539,7 +536,6 @@ bool SixDOFConstraint::SolveVelocityConstraint(float inDeltaTime)
 				switch (mMotorState[axis])
 				{
 				case EMotorState::Off:
-				default:
 				{
 					// Apply friction only
 					float max_lambda = mMaxFriction[axis] * inDeltaTime;

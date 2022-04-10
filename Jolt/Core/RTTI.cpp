@@ -128,7 +128,7 @@ const void *RTTI::CastTo(const void *inObject, const RTTI *inRTTI) const
 	return nullptr;
 }
 
-void RTTI::AddAttribute(RTTIAttribute *inAttribute)
+void RTTI::AddAttribute(const RTTIAttribute *inAttribute)
 { 
 	mAttributes.push_back(inAttribute); 
 }

@@ -20,7 +20,7 @@ struct TransformedConvexObject
 	}
 
 	/// Calculate the support vector for this convex shape.
-	const Vec3				GetSupport(Vec3Arg inDirection) const
+	Vec3					GetSupport(Vec3Arg inDirection) const
 	{
 		return mTransform * mObject.GetSupport(mTransform.Multiply3x3Transposed(inDirection));
 	}
@@ -31,8 +31,8 @@ struct TransformedConvexObject
 	{
 		mObject.GetSupportingFace(mTransform.Multiply3x3Transposed(inDirection), outVertices);
 
-		for (typename VERTEX_ARRAY::size_type i = 0; i < outVertices.size(); ++i)
-			outVertices[i] = mTransform * outVertices[i];
+		for (Vec3 &v : outVertices)
+			v = mTransform * v;
 	}
 
 	Mat44					mTransform;
@@ -50,7 +50,7 @@ struct AddConvexRadius
 	}
 
 	/// Calculate the support vector for this convex shape. 
-	const Vec3				GetSupport(Vec3Arg inDirection) const
+	Vec3					GetSupport(Vec3Arg inDirection) const
 	{
 		float length = inDirection.Length();
 		return length > 0.0f ? mObject.GetSupport(inDirection) + (mRadius / length) * inDirection : mObject.GetSupport(inDirection);
@@ -71,7 +71,7 @@ struct MinkowskiDifference
 	}
 
 	/// Calculate the support vector for this convex shape. 
-	const Vec3				GetSupport(Vec3Arg inDirection) const
+	Vec3					GetSupport(Vec3Arg inDirection) const
 	{
 		return mObjectA.GetSupport(inDirection) - mObjectB.GetSupport(-inDirection);
 	}
@@ -84,7 +84,7 @@ struct MinkowskiDifference
 struct PointConvexSupport
 {
 	/// Calculate the support vector for this convex shape.
-	Vec3					GetSupport(Vec3Arg inDirection) const
+	Vec3					GetSupport([[maybe_unused]] Vec3Arg inDirection) const
 	{
 		return mPoint;
 	}
@@ -130,7 +130,7 @@ struct TriangleConvexSupport
 
 	/// Get the vertices of the face that faces inDirection the most
 	template <class VERTEX_ARRAY>
-	void					GetSupportingFace(Vec3Arg inDirection, VERTEX_ARRAY &outVertices) const
+	void					GetSupportingFace([[maybe_unused]] Vec3Arg inDirection, VERTEX_ARRAY &outVertices) const
 	{
 		outVertices.push_back(mV1);
 		outVertices.push_back(mV2);
@@ -174,7 +174,7 @@ struct PolygonConvexSupport
 
 	/// Get the vertices of the face that faces inDirection the most
 	template <class VERTEX_ARRAY_ARG>
-	void					GetSupportingFace(Vec3Arg inDirection, VERTEX_ARRAY_ARG &outVertices) const
+	void					GetSupportingFace([[maybe_unused]] Vec3Arg inDirection, VERTEX_ARRAY_ARG &outVertices) const
 	{
 		for (Vec3 v : mVertices)
 			outVertices.push_back(v);

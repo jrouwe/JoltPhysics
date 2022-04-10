@@ -164,7 +164,7 @@ public:
 	const void *				CastTo(const void *inObject, const RTTI *inRTTI) const;
 
 	/// Attribute access
-	void						AddAttribute(RTTIAttribute *inAttribute);
+	void						AddAttribute(const RTTIAttribute *inAttribute);
 	int							GetAttributeCount() const;
 	const RTTIAttribute *		GetAttribute(int inIdx) const;
 	const RTTIAttribute *		GetAttribute(const RTTI *inRTTI, const char *inName) const;

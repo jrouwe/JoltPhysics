@@ -15,12 +15,12 @@ JPH_NAMESPACE_BEGIN
 #define JPH_DECLARE_SERIALIZATION_FUNCTIONS(prefix, class_name)														\
 	prefix bool			OSReadData(ObjectStreamIn &ioStream, class_name &inInstance);								\
 	prefix bool			OSReadData(ObjectStreamIn &ioStream, class_name *&inPointer);								\
-	prefix bool			OSIsType(class_name *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName); \
-	prefix bool			OSIsType(class_name **inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName); \
+	prefix bool			OSIsType(class_name *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName); \
+	prefix bool			OSIsType(class_name **, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName); \
 	prefix void			OSWriteData(ObjectStreamOut &ioStream, const class_name &inInstance);						\
 	prefix void			OSWriteData(ObjectStreamOut &ioStream, class_name *const &inPointer);						\
-	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name *inNull);								\
-	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name **inNull);							\
+	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name *);									\
+	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name **);									\
 	prefix void			OSVisitCompounds(const class_name &inObject, const CompoundVisitor &inVisitor);				\
 	prefix void			OSVisitCompounds(const class_name *inObject, const CompoundVisitor &inVisitor);
 
@@ -34,11 +34,11 @@ JPH_NAMESPACE_BEGIN
 	{																												\
 		return ioStream.ReadPointerData(JPH_RTTI(class_name), (void **)&inPointer);									\
 	}																												\
-	bool				OSIsType(class_name *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
+	bool				OSIsType(class_name *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
 	{																												\
 		return inArrayDepth == 0 && inDataType == ObjectStream::EDataType::Instance && strcmp(inClassName, #class_name) == 0; \
 	}																												\
-	bool				OSIsType(class_name **inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
+	bool				OSIsType(class_name **, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
 	{																												\
 		return inArrayDepth == 0 && inDataType == ObjectStream::EDataType::Pointer && strcmp(inClassName, #class_name) == 0; \
 	}																												\
@@ -53,12 +53,12 @@ JPH_NAMESPACE_BEGIN
 		else 																										\
 			ioStream.WritePointerData(nullptr, nullptr);															\
 	}																												\
-	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name *inNull)								\
+	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name *)									\
 	{																												\
 		ioStream.WriteDataType(ObjectStream::EDataType::Instance);													\
 		ioStream.WriteName(#class_name);																			\
 	}																												\
-	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name **inNull)								\
+	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name **)									\
 	{																												\
 		ioStream.WriteDataType(ObjectStream::EDataType::Pointer);													\
 		ioStream.WriteName(#class_name);																			\

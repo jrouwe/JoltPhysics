@@ -147,8 +147,8 @@ void SwingTwistConstraint::SetSwingMotorState(EMotorState inState)
 		mSwingMotorState = inState; 
 
 		// Ensure that warm starting next frame doesn't apply any impulses (motor parts are repurposed for different modes)
-		for (int i = 1; i < 3; ++i)
-			mMotorConstraintPart[i].Deactivate();
+		for (AngleConstraintPart &c : mMotorConstraintPart)
+			c.Deactivate();
 	}
 }
 
@@ -247,8 +247,8 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 			else
 			{
 				// Disable friction
-				for (int i = 1; i < 3; ++i)
-					mMotorConstraintPart[i].Deactivate();
+				for (AngleConstraintPart &c : mMotorConstraintPart)
+					c.Deactivate();
 			}
 			break;
 
@@ -295,16 +295,16 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 	else
 	{
 		// Disable rotation motor
-		for (int i = 0; i < 3; ++i)
-			mMotorConstraintPart[i].Deactivate();
+		for (AngleConstraintPart &c : mMotorConstraintPart)
+			c.Deactivate();
 	}
 }
 
 void SwingTwistConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse
-	for (int i = 0; i < 3; ++i)
-		mMotorConstraintPart[i].WarmStart(*mBody1, *mBody2, inWarmStartImpulseRatio);
+	for (AngleConstraintPart &c : mMotorConstraintPart)
+		c.WarmStart(*mBody1, *mBody2, inWarmStartImpulseRatio);
 	mSwingTwistConstraintPart.WarmStart(*mBody1, *mBody2, inWarmStartImpulseRatio);
 	mPointConstraintPart.WarmStart(*mBody1, *mBody2, inWarmStartImpulseRatio);
 }
@@ -435,8 +435,8 @@ void SwingTwistConstraint::SaveState(StateRecorder &inStream) const
 
 	mPointConstraintPart.SaveState(inStream);
 	mSwingTwistConstraintPart.SaveState(inStream);
-	for (int i = 0; i < 3; ++i)
-		mMotorConstraintPart[i].SaveState(inStream);
+	for (const AngleConstraintPart &c : mMotorConstraintPart)
+		c.SaveState(inStream);
 
 	inStream.Write(mSwingMotorState);
 	inStream.Write(mTwistMotorState);
@@ -450,8 +450,8 @@ void SwingTwistConstraint::RestoreState(StateRecorder &inStream)
 
 	mPointConstraintPart.RestoreState(inStream);
 	mSwingTwistConstraintPart.RestoreState(inStream);
-	for (int i = 0; i < 3; ++i)
-		mMotorConstraintPart[i].RestoreState(inStream);
+	for (AngleConstraintPart &c : mMotorConstraintPart)
+		c.RestoreState(inStream);
 
 	inStream.Read(mSwingMotorState);
 	inStream.Read(mTwistMotorState);

@@ -207,7 +207,7 @@ int ConvexHullBuilder::GetNumVerticesUsed() const
 	return (int)used_verts.size();
 }
 
-bool ConvexHullBuilder::ContainsFace(const vector<int> &inIndices)
+bool ConvexHullBuilder::ContainsFace(const vector<int> &inIndices) const
 {
 	for (Face *f : mFaces)
 	{
@@ -318,9 +318,9 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		Face *t2 = CreateTriangle(idx1, idx3, idx2);
 
 		// Link faces edges
-		LinkFace(t1->mFirstEdge, t2->mFirstEdge->mNextEdge->mNextEdge);
-		LinkFace(t1->mFirstEdge->mNextEdge, t2->mFirstEdge->mNextEdge);
-		LinkFace(t1->mFirstEdge->mNextEdge->mNextEdge, t2->mFirstEdge);
+		sLinkFace(t1->mFirstEdge, t2->mFirstEdge->mNextEdge->mNextEdge);
+		sLinkFace(t1->mFirstEdge->mNextEdge, t2->mFirstEdge->mNextEdge);
+		sLinkFace(t1->mFirstEdge->mNextEdge->mNextEdge, t2->mFirstEdge);
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 		// Draw current state
@@ -369,9 +369,9 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		// Create edges for face 1
 		vector<Edge *> edges_f1;
 		edges_f1.reserve(edges_2d.size());
-		for (int i = 0; i < (int)edges_2d.size(); ++i)
+		for (int start_idx : edges_2d)
 		{
-			Edge *edge = new Edge(f1, edges_2d[i]);
+			Edge *edge = new Edge(f1, start_idx);
 			if (edges_f1.empty())
 				f1->mFirstEdge = edge;
 			else
@@ -396,7 +396,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 
 		// Link edges
 		for (size_t i = 0; i < edges_2d.size(); ++i)
-			LinkFace(edges_f1[i], edges_f2[(2 * edges_2d.size() - 2 - i) % edges_2d.size()]);
+			sLinkFace(edges_f1[i], edges_f2[(2 * edges_2d.size() - 2 - i) % edges_2d.size()]);
 
 		// Calculate the plane for both faces
 		f1->CalculateNormalAndCentroid(mPositions.data());
@@ -422,12 +422,12 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 	Face *t4 = CreateTriangle(idx1, idx3, idx2);
 
 	// Link face edges
-	LinkFace(t1->mFirstEdge, t4->mFirstEdge->mNextEdge->mNextEdge);
-	LinkFace(t1->mFirstEdge->mNextEdge, t2->mFirstEdge->mNextEdge->mNextEdge);
-	LinkFace(t1->mFirstEdge->mNextEdge->mNextEdge, t3->mFirstEdge->mNextEdge);
-	LinkFace(t2->mFirstEdge, t4->mFirstEdge->mNextEdge);
-	LinkFace(t2->mFirstEdge->mNextEdge, t3->mFirstEdge->mNextEdge->mNextEdge);
-	LinkFace(t3->mFirstEdge, t4->mFirstEdge);
+	sLinkFace(t1->mFirstEdge, t4->mFirstEdge->mNextEdge->mNextEdge);
+	sLinkFace(t1->mFirstEdge->mNextEdge, t2->mFirstEdge->mNextEdge->mNextEdge);
+	sLinkFace(t1->mFirstEdge->mNextEdge->mNextEdge, t3->mFirstEdge->mNextEdge);
+	sLinkFace(t2->mFirstEdge, t4->mFirstEdge->mNextEdge);
+	sLinkFace(t2->mFirstEdge->mNextEdge, t3->mFirstEdge->mNextEdge->mNextEdge);
+	sLinkFace(t3->mFirstEdge, t4->mFirstEdge);
 
 	// Build the initial conflict lists
 	Faces faces { t1, t2, t3, t4 };
@@ -486,7 +486,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		AddPoint(face_with_furthest_point, furthest_point_idx, coplanar_tolerance_sq, new_faces);
 
 		// Redistribute points on conflict lists belonging to removed faces
-		for (Face *face : mFaces)
+		for (const Face *face : mFaces)
 			if (face->mRemoved)
 				for (int idx : face->mConflictList)
 					AssignPointToFace(idx, new_faces);
@@ -529,7 +529,7 @@ void ConvexHullBuilder::AddPoint(Face *inFacingFace, int inIdx, float inCoplanar
 
 	// Create new faces
 	outNewFaces.reserve(edges.size());
-	for (FullEdge &e : edges)
+	for (const FullEdge &e : edges)
 	{
 		JPH_ASSERT(e.mStartIdx != e.mEndIdx);
 		Face *f = CreateTriangle(e.mStartIdx, e.mEndIdx, inIdx);
@@ -539,8 +539,8 @@ void ConvexHullBuilder::AddPoint(Face *inFacingFace, int inIdx, float inCoplanar
 	// Link edges
 	for (Faces::size_type i = 0; i < outNewFaces.size(); ++i)
 	{
-		LinkFace(outNewFaces[i]->mFirstEdge, edges[i].mNeighbourEdge);
-		LinkFace(outNewFaces[i]->mFirstEdge->mNextEdge, outNewFaces[(i + 1) % outNewFaces.size()]->mFirstEdge->mNextEdge->mNextEdge);
+		sLinkFace(outNewFaces[i]->mFirstEdge, edges[i].mNeighbourEdge);
+		sLinkFace(outNewFaces[i]->mFirstEdge->mNextEdge, outNewFaces[(i + 1) % outNewFaces.size()]->mFirstEdge->mNextEdge->mNextEdge);
 	}
 
 	// Loop on faces that were modified until nothing needs to be checked anymore
@@ -622,7 +622,7 @@ void ConvexHullBuilder::FreeFace(Face *inFace)
 	delete inFace;
 }
 
-void ConvexHullBuilder::LinkFace(Edge *inEdge1, Edge *inEdge2)
+void ConvexHullBuilder::sLinkFace(Edge *inEdge1, Edge *inEdge2)
 {
 	// Check not connected yet
 	JPH_ASSERT(inEdge1->mNeighbourEdge == nullptr);
@@ -638,7 +638,7 @@ void ConvexHullBuilder::LinkFace(Edge *inEdge1, Edge *inEdge2)
 	inEdge2->mNeighbourEdge = inEdge1;
 }
 
-void ConvexHullBuilder::UnlinkFace(Face *inFace)
+void ConvexHullBuilder::sUnlinkFace(Face *inFace)
 {
 	// Unlink from neighbours
 	Edge *e = inFace->mFirstEdge;
@@ -697,7 +697,7 @@ void ConvexHullBuilder::FindEdge(Face *inFacingFace, Vec3Arg inVertex, FullEdges
 		if (raw_e == cur_entry.mFirstEdge)
 		{
 			// This face needs to be removed, unlink it now, caller will free
-			UnlinkFace(e->mFace);
+			sUnlinkFace(e->mFace);
 
 			// Pop from stack
 			if (--cur_stack_pos < 0)
@@ -871,7 +871,7 @@ void ConvexHullBuilder::MergeCoplanarOrConcaveFaces(Face *inFace, float inCoplan
 
 		// Test if centroid of one face is above plane of the other face by inCoplanarToleranceSq.
 		// If so we need to merge other face into inFace.
-		Face *other_face = edge->mNeighbourEdge->mFace;
+		const Face *other_face = edge->mNeighbourEdge->mFace;
 		Vec3 delta_centroid = other_face->mCentroid - inFace->mCentroid;
 		float dist_other_face_centroid = inFace->mNormal.Dot(delta_centroid);
 		float signed_dist_other_face_centroid_sq = abs(dist_other_face_centroid) * dist_other_face_centroid;
@@ -1018,7 +1018,7 @@ void ConvexHullBuilder::RemoveInvalidEdges(Face *inFace, Faces &ioAffectedFaces)
 		inFace->CalculateNormalAndCentroid(mPositions.data());
 }
 
-bool ConvexHullBuilder::RemoveTwoEdgeFace(Face *inFace, Faces &ioAffectedFaces)
+bool ConvexHullBuilder::RemoveTwoEdgeFace(Face *inFace, Faces &ioAffectedFaces) const
 {
 	// Check if this face contains only 2 edges
 	Edge *edge = inFace->mFirstEdge;

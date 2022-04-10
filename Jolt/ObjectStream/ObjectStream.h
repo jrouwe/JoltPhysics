@@ -53,38 +53,38 @@ protected:
 
 // Define macro to declare functions for a specific primitive type
 #define JPH_DECLARE_PRIMITIVE(name)													\
-	bool						OSIsType(name *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName);
+	bool						OSIsType(name *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName);
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 // Define serialization templates
 template <class T>
-bool OSIsType(vector<T> *inArray, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
+bool OSIsType(vector<T> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
 { 
 	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName)); 
 }
 
 template <class T, uint N>
-bool OSIsType(StaticArray<T, N> *inArray, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
+bool OSIsType(StaticArray<T, N> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
 { 
 	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName)); 
 }
 
 template <class T, uint N>
-bool OSIsType(T (*inArray)[N], int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
+bool OSIsType(T (*)[N], int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)	
 { 
 	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName)); 
 }
 
 template <class T>
-bool OSIsType(Ref<T> *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
+bool OSIsType(Ref<T> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
 {
 	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
 }
 
 template <class T>
-bool OSIsType(RefConst<T> *inNull, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
+bool OSIsType(RefConst<T> *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
 {
 	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
 }

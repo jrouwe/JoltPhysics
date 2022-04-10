@@ -119,30 +119,28 @@ private:
 	/// Class descriptions
 	struct AttributeDescription
 	{
-								AttributeDescription()									: mArrayDepth(0), mDataType(EDataType::Invalid), mIndex(-1) { }
-
-		int						mArrayDepth;
-		EDataType				mDataType;
+		int						mArrayDepth = 0;
+		EDataType				mDataType = EDataType::Invalid;
 		string					mClassName;
-		int						mIndex;
+		int						mIndex = -1;
 	};
 
 	struct ClassDescription
 	{
-								ClassDescription()										: mRTTI(nullptr) { }
+								ClassDescription() = default;
 		explicit 				ClassDescription(const RTTI *inRTTI)					: mRTTI(inRTTI) { }
 
-		const RTTI *			mRTTI;
+		const RTTI *			mRTTI = nullptr;
 		vector<AttributeDescription>	mAttributes;
 	};
 	
 	struct ObjectInfo
 	{
-								ObjectInfo()											: mInstance(nullptr), mRTTI(nullptr) { }
+								ObjectInfo() = default;
 								ObjectInfo(void *inInstance, const RTTI *inRTTI)		: mInstance(inInstance), mRTTI(inRTTI) { }
 
-		void *					mInstance;
-		const RTTI *			mRTTI;
+		void *					mInstance = nullptr;
+		const RTTI *			mRTTI = nullptr;
 	};
 
 	struct Link
