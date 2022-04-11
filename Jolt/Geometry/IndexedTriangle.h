@@ -65,9 +65,9 @@ public:
 class IndexedTriangle : public IndexedTriangleNoMaterial
 {
 public:
+	using IndexedTriangleNoMaterial::IndexedTriangleNoMaterial;
+
 	/// Constructor
-					IndexedTriangle() = default;
-					IndexedTriangle(uint32 inI1, uint32 inI2, uint32 inI3) : IndexedTriangleNoMaterial(inI1, inI2, inI3) { }
 					IndexedTriangle(uint32 inI1, uint32 inI2, uint32 inI3, uint32 inMaterialIndex) : IndexedTriangleNoMaterial(inI1, inI2, inI3), mMaterialIndex(inMaterialIndex) { }
 
 	/// Check if two triangles are identical

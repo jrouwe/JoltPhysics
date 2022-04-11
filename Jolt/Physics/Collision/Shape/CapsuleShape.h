@@ -75,6 +75,7 @@ public:
 #endif // JPH_DEBUG_RENDERER
 
 	// See Shape::CastRay
+	using ConvexShape::CastRay;
 	virtual bool			CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
 
 	// See: Shape::CollidePoint

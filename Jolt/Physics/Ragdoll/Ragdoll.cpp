@@ -35,7 +35,7 @@ static inline BodyInterface &sGetBodyInterface(PhysicsSystem *inSystem, bool inL
 	return inLockBodies? inSystem->GetBodyInterface() : inSystem->GetBodyInterfaceNoLock();
 }
 
-static inline const BodyLockInterface &sGetBodyLockInterface(PhysicsSystem *inSystem, bool inLockBodies)
+static inline const BodyLockInterface &sGetBodyLockInterface(const PhysicsSystem *inSystem, bool inLockBodies)
 {
 	return inLockBodies? static_cast<const BodyLockInterface &>(inSystem->GetBodyLockInterface()) : static_cast<const BodyLockInterface &>(inSystem->GetBodyLockInterfaceNoLock());
 }

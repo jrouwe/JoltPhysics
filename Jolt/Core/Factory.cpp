@@ -52,9 +52,8 @@ bool Factory::Register(const RTTI *inRTTI)
 	for (int i = 0; i < inRTTI->GetAttributeCount(); ++i)
 	{
 		const RTTI *rtti = inRTTI->GetAttribute(i)->GetMemberPrimitiveType();
-		if (rtti != nullptr)
-			if (!Register(rtti))
-				return false;
+		if (rtti != nullptr && !Register(rtti))
+			return false;
 	}
 
 	return true;

@@ -66,7 +66,7 @@ private:
 
 	// Helper functions to build various islands
 	void					BuildBodyIslands(const BodyID *inActiveBodies, uint32 inNumActiveBodies, TempAllocator *inTempAllocator);
-	void					BuildConstraintIslands(uint32 *inConstraintToBody, uint32 inNumConstraints, uint32 *&outConstraints, uint32 *&outConstraintsEnd, TempAllocator *inTempAllocator) const;
+	void					BuildConstraintIslands(const uint32 *inConstraintToBody, uint32 inNumConstraints, uint32 *&outConstraints, uint32 *&outConstraintsEnd, TempAllocator *inTempAllocator) const;
 
 	/// Sorts the islands so that the islands with most constraints go first
 	void					SortIslands(TempAllocator *inTempAllocator);
