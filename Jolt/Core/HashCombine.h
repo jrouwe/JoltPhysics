@@ -5,12 +5,16 @@
 
 JPH_NAMESPACE_BEGIN
 
-inline void hash_combine(std::size_t &ioSeed) 
-{ 
+/// @brief Helper function that hashes a single value into ioSeed
+/// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
+template <typename T>
+inline void hash_combine_helper(std::size_t &ioSeed, const T &inValue)
+{
+	std::hash<T> hasher;
+    ioSeed ^= hasher(inValue) + 0x9e3779b9 + (ioSeed << 6) + (ioSeed >> 2);
 }
 
 /// Hash combiner to use a custom struct in an unordered map or set
-/// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
 ///
 /// Usage:
 ///
@@ -22,12 +26,11 @@ inline void hash_combine(std::size_t &ioSeed)
 ///		};
 /// 
 ///		JPH_MAKE_HASHABLE(SomeHashKey, t.key1, t.key2, t.key3)
-template <typename T, typename... Rest>
-inline void hash_combine(std::size_t &ioSeed, const T &inValue, Rest... inRest) 
+template <typename... Values>
+inline void hash_combine(std::size_t &ioSeed, Values... inValues) 
 {
-	std::hash<T> hasher;
-    ioSeed ^= hasher(inValue) + 0x9e3779b9 + (ioSeed << 6) + (ioSeed >> 2);
-    hash_combine(ioSeed, inRest...);
+	// Hash all values together using a fold expression
+	(hash_combine_helper(ioSeed, inValues), ...);
 }
 
 JPH_NAMESPACE_END
