@@ -27,9 +27,8 @@ class TwoBodyConstraint;
 class BodyInterface : public NonCopyable
 {
 public:
-	/// Constructor
-								BodyInterface() = default;
-								BodyInterface(BodyLockInterface &inBodyLockInterface, BodyManager &inBodyManager, BroadPhase &inBroadPhase) : mBodyLockInterface(&inBodyLockInterface), mBodyManager(&inBodyManager), mBroadPhase(&inBroadPhase) { }
+	/// Initialize the interface (should only be called by PhysicsSystem)
+	void						Init(BodyLockInterface &inBodyLockInterface, BodyManager &inBodyManager, BroadPhase &inBroadPhase) { mBodyLockInterface = &inBodyLockInterface; mBodyManager = &inBodyManager; mBroadPhase = &inBroadPhase; }
 	
 	/// Create a body
 	/// @return Created body or null when out of bodies

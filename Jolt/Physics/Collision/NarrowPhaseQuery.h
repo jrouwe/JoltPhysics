@@ -20,9 +20,8 @@ class RayCastResult;
 class NarrowPhaseQuery : public NonCopyable
 {
 public:
-	/// Constructor
-								NarrowPhaseQuery() = default;
-								NarrowPhaseQuery(BodyLockInterface &inBodyLockInterface, BroadPhase &inBroadPhase) : mBodyLockInterface(&inBodyLockInterface), mBroadPhase(&inBroadPhase) { }
+	/// Initialize the interface (should only be called by PhysicsSystem)
+	void						Init(BodyLockInterface &inBodyLockInterface, BroadPhase &inBroadPhase) { mBodyLockInterface = &inBodyLockInterface; mBroadPhase = &inBroadPhase; }
 
 	/// Cast a ray and find the closest hit. Returns true if it finds a hit. Hits further than ioHit.mFraction will not be considered and in this case ioHit will remain unmodified (and the function will return false).
 	/// Convex objects will be treated as solid (meaning if the ray starts inside, you'll get a hit fraction of 0) and back face hits against triangles are returned.

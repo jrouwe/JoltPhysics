@@ -78,18 +78,12 @@ void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBody
 	mIslandBuilder.Init(inMaxBodies);
 
 	// Initialize body interface
-	mBodyInterfaceLocking.~BodyInterface();
-	new (&mBodyInterfaceLocking) BodyInterface(mBodyLockInterfaceLocking, mBodyManager, *mBroadPhase);
-
-	mBodyInterfaceNoLock.~BodyInterface();
-	new (&mBodyInterfaceNoLock) BodyInterface(mBodyLockInterfaceNoLock, mBodyManager, *mBroadPhase);
+	mBodyInterfaceLocking.Init(mBodyLockInterfaceLocking, mBodyManager, *mBroadPhase);
+	mBodyInterfaceNoLock.Init(mBodyLockInterfaceNoLock, mBodyManager, *mBroadPhase);
 
 	// Initialize narrow phase query
-	mNarrowPhaseQueryLocking.~NarrowPhaseQuery();
-	new (&mNarrowPhaseQueryLocking) NarrowPhaseQuery(mBodyLockInterfaceLocking, *mBroadPhase);
-
-	mNarrowPhaseQueryNoLock.~NarrowPhaseQuery();
-	new (&mNarrowPhaseQueryNoLock) NarrowPhaseQuery(mBodyLockInterfaceNoLock, *mBroadPhase);
+	mNarrowPhaseQueryLocking.Init(mBodyLockInterfaceLocking, *mBroadPhase);
+	mNarrowPhaseQueryNoLock.Init(mBodyLockInterfaceNoLock, *mBroadPhase);
 }
 
 void PhysicsSystem::OptimizeBroadPhase()
