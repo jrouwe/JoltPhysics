@@ -13,7 +13,7 @@ JPH_NAMESPACE_BEGIN
 
 string StringFormat(const char *inFMT, ...)
 {
-	static char buffer[1024];
+	char buffer[1024];
 
 	// Format the string
 	va_list list;
