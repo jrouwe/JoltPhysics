@@ -15,9 +15,7 @@ public:
 	using size_type = uint;
 
 	/// Default constructor
-						StaticArray()
-	{
-	}
+						StaticArray() = default;
 
 	/// Constructor from initializer list
 	explicit			StaticArray(initializer_list<T> inList)

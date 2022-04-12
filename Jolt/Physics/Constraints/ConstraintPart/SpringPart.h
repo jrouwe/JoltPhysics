@@ -4,6 +4,7 @@
 #pragma once
 
 JPH_NAMESPACE_BEGIN
+JPH_MSVC_SUPPRESS_WARNING(4723) // potential divide by 0 - caused by line: outEffectiveMass = 1.0f / inInvEffectiveMass, note that JPH_NAMESPACE_BEGIN already pushes the warning state
 
 /// Class used in other constraint parts to calculate the required bias factor in the lagrange multiplier for creating springs
 class SpringPart

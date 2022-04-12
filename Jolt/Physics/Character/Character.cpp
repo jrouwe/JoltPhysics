@@ -22,7 +22,7 @@ static inline BodyInterface &sGetBodyInterface(PhysicsSystem *inSystem, bool inL
 	return inLockBodies? inSystem->GetBodyInterface() : inSystem->GetBodyInterfaceNoLock();
 }
 
-static inline const NarrowPhaseQuery &sGetNarrowPhaseQuery(PhysicsSystem *inSystem, bool inLockBodies)
+static inline const NarrowPhaseQuery &sGetNarrowPhaseQuery(const PhysicsSystem *inSystem, bool inLockBodies)
 {
 	return inLockBodies? inSystem->GetNarrowPhaseQuery() : inSystem->GetNarrowPhaseQueryNoLock();
 }

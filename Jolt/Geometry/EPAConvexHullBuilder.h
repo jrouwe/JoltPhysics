@@ -181,7 +181,7 @@ public:
 	{
 	public:
 		/// Function to sort triangles on closest distance to origin
-		static bool		sTriangleSorter(Triangle *inT1, Triangle *inT2)
+		static bool		sTriangleSorter(const Triangle *inT1, const Triangle *inT2)
 		{
 			return inT1->mClosestLenSq > inT2->mClosestLenSq;
 		}
