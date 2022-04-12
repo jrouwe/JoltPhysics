@@ -4,7 +4,9 @@
 #pragma once
 
 JPH_NAMESPACE_BEGIN
+#ifndef JPH_PLATFORM_DOXYGEN // Somehow Doxygen gets confused and thinks the parameters to CalculateSpringProperties belong to this macro
 JPH_MSVC_SUPPRESS_WARNING(4723) // potential divide by 0 - caused by line: outEffectiveMass = 1.0f / inInvEffectiveMass, note that JPH_NAMESPACE_BEGIN already pushes the warning state
+#endif // !JPH_PLATFORM_DOXYGEN
 
 /// Class used in other constraint parts to calculate the required bias factor in the lagrange multiplier for creating springs
 class SpringPart
