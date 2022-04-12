@@ -1058,8 +1058,8 @@ public:
 
 		// Allocate space for vertices and 'no collision' flags
 		int array_size = Square(block_size_plus_1);
-		Vec3 *vertices = reinterpret_cast<Vec3 *>(alloca(array_size * sizeof(Vec3)));
-		bool *no_collision = reinterpret_cast<bool *>(alloca(array_size * sizeof(bool)));
+		Vec3 *vertices = reinterpret_cast<Vec3 *>(JPH_STACK_ALLOC(array_size * sizeof(Vec3)));
+		bool *no_collision = reinterpret_cast<bool *>(JPH_STACK_ALLOC(array_size * sizeof(bool)));
 
 		// Splat offsets
 		Vec4 ox = mShape->mOffset.SplatX();

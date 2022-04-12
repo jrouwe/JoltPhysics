@@ -223,7 +223,7 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) 
 {
 	// Find dynamic bodies that our wheels are touching
-	BodyID *body_ids = (BodyID *)alloca((mWheels.size() + 1) * sizeof(BodyID));
+	BodyID *body_ids = (BodyID *)JPH_STACK_ALLOC((mWheels.size() + 1) * sizeof(BodyID));
 	int num_bodies = 0;
 	bool needs_to_activate = false;
 	for (const Wheel *w : mWheels)

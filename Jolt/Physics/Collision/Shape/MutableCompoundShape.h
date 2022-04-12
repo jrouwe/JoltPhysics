@@ -32,7 +32,6 @@ public:
 	/// Constructor
 									MutableCompoundShape() : CompoundShape(EShapeSubType::MutableCompound) { }
 									MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult);
-	virtual							~MutableCompoundShape() override;
 		
 	// See Shape::CastRay
 	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
@@ -54,7 +53,7 @@ public:
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 
 	// See Shape::GetStats
-	virtual Stats					GetStats() const override								{ return Stats(sizeof(*this) + mSubShapes.size() * sizeof(SubShape) + mSubShapeBoundsCapacity * sizeof(Bounds), 0); }
+	virtual Stats					GetStats() const override								{ return Stats(sizeof(*this) + mSubShapes.size() * sizeof(SubShape) + mSubShapeBounds.size() * sizeof(Bounds), 0); }
 
 	///@{
 	/// @name Mutating shapes. Note that this is not thread safe, so you need to ensure that any bodies that use this shape are locked at the time of modification using BodyLockWrite. After modification you need to call BodyInterface::NotifyShapeChanged to update the broadphase and collision caches.
@@ -151,8 +150,7 @@ private:
 		Vec4						mMaxZ;
 	};
 
-	Bounds *						mSubShapeBounds = nullptr;									///< Bounding boxes of all sub shapes in SOA format (in blocks of 4 boxes), MinX 0..3, MinY 0..3, MinZ 0..3, MaxX 0..3, MaxY 0..3, MaxZ 0..3, MinX 4..7, MinY 4..7, ...
-	uint							mSubShapeBoundsCapacity = 0;								///< Number of Bounds structures in mSubShapeBounds
+	vector<Bounds>					mSubShapeBounds;											///< Bounding boxes of all sub shapes in SOA format (in blocks of 4 boxes), MinX 0..3, MinY 0..3, MinZ 0..3, MaxX 0..3, MaxY 0..3, MaxZ 0..3, MinX 4..7, MinY 4..7, ...
 };
 
 JPH_NAMESPACE_END

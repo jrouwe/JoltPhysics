@@ -54,12 +54,6 @@ MutableCompoundShape::MutableCompoundShape(const MutableCompoundShapeSettings &i
 	outResult.Set(this);
 }
 
-MutableCompoundShape::~MutableCompoundShape()
-{
-	// Free our bounds
-	free(mSubShapeBounds);
-}
-
 void MutableCompoundShape::AdjustCenterOfMass()
 {
 	// First calculate the delta of the center of mass
@@ -88,7 +82,7 @@ void MutableCompoundShape::CalculateLocalBounds()
 	if (num_blocks > 0)
 	{
 		// Initialize min/max for first block
-		const Bounds *bounds = mSubShapeBounds;
+		const Bounds *bounds = mSubShapeBounds.data();
 		Vec4 min_x = bounds->mMinX;
 		Vec4 min_y = bounds->mMinY;
 		Vec4 min_z = bounds->mMinZ;
@@ -130,12 +124,8 @@ void MutableCompoundShape::EnsureSubShapeBoundsCapacity()
 {
 	// Check if we have enough space
 	uint new_capacity = ((uint)mSubShapes.size() + 3) >> 2;
-	if (mSubShapeBoundsCapacity < new_capacity)
-	{
-		uint new_size = new_capacity * sizeof(Bounds);
-		mSubShapeBounds = reinterpret_cast<Bounds *>(realloc(mSubShapeBounds, new_size));
-		mSubShapeBoundsCapacity = new_capacity;
-	}
+	if (mSubShapeBounds.size() < new_capacity)
+		mSubShapeBounds.resize(new_capacity);
 }
 
 void MutableCompoundShape::CalculateSubShapeBounds(uint inStartIdx, uint inNumber)
@@ -525,7 +515,7 @@ void MutableCompoundShape::SaveBinaryState(StreamOut &inStream) const
 
 	// Write bounds
 	uint bounds_size = (((uint)mSubShapes.size() + 3) >> 2) * sizeof(Bounds);
-	inStream.WriteBytes(mSubShapeBounds, bounds_size);
+	inStream.WriteBytes(mSubShapeBounds.data(), bounds_size);
 }
 
 void MutableCompoundShape::RestoreBinaryState(StreamIn &inStream)
@@ -537,7 +527,7 @@ void MutableCompoundShape::RestoreBinaryState(StreamIn &inStream)
 
 	// Read bounds
 	uint bounds_size = (((uint)mSubShapes.size() + 3) >> 2) * sizeof(Bounds);
-	inStream.ReadBytes(mSubShapeBounds, bounds_size);
+	inStream.ReadBytes(mSubShapeBounds.data(), bounds_size);
 }
 
 void MutableCompoundShape::sRegister()
