@@ -24,9 +24,6 @@ void DampingTest::Initialize()
 	for (int i = 0; i <= 10; ++i)
 	{
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(sphere, Vec3(-50.0f + i * 10.0f, 2.0f, -80.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-#ifdef _DEBUG
-		body.SetDebugName(StringFormat("LinearDamping%d", i));
-#endif
 		body.GetMotionProperties()->SetAngularDamping(0.0f);
 		body.GetMotionProperties()->SetLinearDamping(0.1f * i);
 		body.SetLinearVelocity(Vec3(0, 0, 10));
@@ -36,9 +33,6 @@ void DampingTest::Initialize()
 	for (int i = 0; i <= 10; ++i)
 	{
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(sphere, Vec3(-50.0f + i * 10.0f, 2.0f, -90.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-#ifdef _DEBUG
-		body.SetDebugName(StringFormat("AngularDamping%d", i));
-#endif
 		body.GetMotionProperties()->SetLinearDamping(0.0f);
 		body.GetMotionProperties()->SetAngularDamping(0.1f * i);
 		body.SetAngularVelocity(Vec3(0, 10, 0));

@@ -46,9 +46,6 @@ Body &PhysicsTestContext::CreateFloor()
 	settings.mObjectLayer = Layers::NON_MOVING;
 
 	Body &floor = *mSystem->GetBodyInterface().CreateBody(settings);
-#ifdef _DEBUG
-	floor.SetDebugName("Floor");
-#endif
 	mSystem->GetBodyInterface().AddBody(floor.GetID(), EActivation::DontActivate);
 	return floor;
 }

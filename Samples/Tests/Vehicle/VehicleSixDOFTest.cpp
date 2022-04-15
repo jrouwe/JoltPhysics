@@ -36,10 +36,6 @@ void VehicleSixDOFTest::Initialize()
 		Vec3(half_vehicle_width, -half_vehicle_height, -half_vehicle_length + 2.0f * half_wheel_height),
 	};
 
-#ifdef _DEBUG
-	const char *wheel_names[] = { "LeftFront", "RightFront", "LeftRear", "RightRear" };
-#endif
-
 	Vec3 position(0, 2, 0);
 
 	RefConst<Shape> body_shape = new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length));
@@ -52,9 +48,6 @@ void VehicleSixDOFTest::Initialize()
 
 	// Create vehicle body
 	mCarBody = mBodyInterface->CreateBody(BodyCreationSettings(body_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-#ifdef _DEBUG
-	mCarBody->SetDebugName("CarBody");
-#endif
 	mCarBody->SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 	mBodyInterface->AddBody(mCarBody->GetID(), EActivation::Activate);
 
@@ -70,9 +63,6 @@ void VehicleSixDOFTest::Initialize()
 		// Create body
 		Body &wheel = *mBodyInterface->CreateBody(BodyCreationSettings(wheel_shape, wheel_pos2, Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 		wheel.SetFriction(1.0f);
-#ifdef _DEBUG
-		wheel.SetDebugName(wheel_names[i]);
-#endif
 		wheel.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 		mBodyInterface->AddBody(wheel.GetID(), EActivation::Activate);
 

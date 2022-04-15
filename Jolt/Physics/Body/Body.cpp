@@ -29,15 +29,6 @@ Body::Body(bool) :
 {
 }
 
-#ifdef _DEBUG
-
-string Body::GetDebugName() const
-{ 
-	return mDebugName.empty()? ConvertToString(mID.GetIndex()) : ConvertToString(mID.GetIndex()) + "-" + mDebugName; 
-}
-
-#endif
-
 void Body::SetMotionType(EMotionType inMotionType)
 {
 	if (mMotionType == inMotionType)

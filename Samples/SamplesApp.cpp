@@ -367,7 +367,6 @@ SamplesApp::SamplesApp()
 #ifdef JPH_DEBUG_RENDERER
 	mDebugUI->CreateTextButton(main_menu, "Drawing Options", [this]() { 
 		UIElement *drawing_options = mDebugUI->CreateMenu();
-		mDebugUI->CreateCheckBox(drawing_options, "Draw Body Names", mBodyDrawSettings.mDrawNames, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawNames = inState == UICheckBox::STATE_CHECKED; });
 		mDebugUI->CreateCheckBox(drawing_options, "Draw Shapes (H)", mBodyDrawSettings.mDrawShape, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawShape = inState == UICheckBox::STATE_CHECKED; });
 		mDebugUI->CreateCheckBox(drawing_options, "Draw Shapes Wireframe (Alt+W)", mBodyDrawSettings.mDrawShapeWireframe, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawShapeWireframe = inState == UICheckBox::STATE_CHECKED; });
 		mDebugUI->CreateComboBox(drawing_options, "Draw Shape Color", { "Instance", "Shape Type", "Motion Type", "Sleep", "Island", "Material" }, (int)mBodyDrawSettings.mDrawShapeColor, [this](int inItem) { mBodyDrawSettings.mDrawShapeColor = (BodyManager::EShapeColor)inItem; });
@@ -1578,9 +1577,6 @@ void SamplesApp::UpdateDebug()
 						// Note that we don't add it to the world since we don't want anything to collide with it, we just
 						// need an anchor for a constraint
 						Body *drag_anchor = bi.CreateBody(BodyCreationSettings(new SphereShape(0.01f), hit_position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-					#ifdef _DEBUG
-						drag_anchor->SetDebugName("DragAnchor");
-					#endif
 						mDragAnchor = drag_anchor;
 
 						// Construct constraint that connects the drag anchor with the body that we want to drag

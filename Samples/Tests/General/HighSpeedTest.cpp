@@ -44,36 +44,19 @@ void HighSpeedTest::CreateDominoBlocks(Vec3Arg inOffset, int inNumWalls, float i
 	// U shaped set of thin boxes
 	for (int i = 0; i < inNumWalls; ++i)
 	{
-		{
-			box_settings.mPosition = inOffset + Vec3(2.0f * i, 1, -1.1f - inRadius);
-			Body &box = *mBodyInterface->CreateBody(box_settings);
-		#ifdef _DEBUG
-			box.SetDebugName("Neg Box " + ConvertToString(i));
-		#endif
-			mBodyInterface->AddBody(box.GetID(), EActivation::DontActivate);
-		}
+		box_settings.mPosition = inOffset + Vec3(2.0f * i, 1, -1.1f - inRadius);
+		mBodyInterface->CreateAndAddBody(box_settings, EActivation::DontActivate);
 
-		{
-			box_settings.mPosition = inOffset + Vec3(2.0f * i, 1, +1.1f + inRadius);
-			Body &box = *mBodyInterface->CreateBody(box_settings);
-		#ifdef _DEBUG
-			box.SetDebugName("Pos Box " + ConvertToString(i));
-		#endif
-			mBodyInterface->AddBody(box.GetID(), EActivation::DontActivate);
-		}
+		box_settings.mPosition = inOffset + Vec3(2.0f * i, 1, +1.1f + inRadius);
+		mBodyInterface->CreateAndAddBody(box_settings, EActivation::DontActivate);
 	}
-	{
-		box_settings.mPosition = inOffset + Vec3(-1.1f - inRadius, 1, 0);
-		box_settings.mRotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI);
-		Body &box = *mBodyInterface->CreateBody(box_settings);
-		#ifdef _DEBUG
-			box.SetDebugName("End Box");
-		#endif
-		mBodyInterface->AddBody(box.GetID(), EActivation::DontActivate);
-	}
+
+	box_settings.mPosition = inOffset + Vec3(-1.1f - inRadius, 1, 0);
+	box_settings.mRotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI);
+	mBodyInterface->CreateAndAddBody(box_settings, EActivation::DontActivate);
 }
 
-void HighSpeedTest::CreateDynamicObject(const char *inName, Vec3 inPosition, Vec3 inVelocity, Shape *inShape, EMotionQuality inMotionQuality)
+void HighSpeedTest::CreateDynamicObject(Vec3 inPosition, Vec3 inVelocity, Shape *inShape, EMotionQuality inMotionQuality)
 {
 	BodyCreationSettings creation_settings;
 	creation_settings.SetShape(inShape);
@@ -86,7 +69,6 @@ void HighSpeedTest::CreateDynamicObject(const char *inName, Vec3 inPosition, Vec
 	creation_settings.mPosition = inPosition;
 
 	Body &body = *mBodyInterface->CreateBody(creation_settings);
-	JPH_IF_DEBUG(body.SetDebugName(inName);)
 	body.SetLinearVelocity(inVelocity);
 	mBodyInterface->AddBody(body.GetID(), inVelocity.IsNearZero()? EActivation::DontActivate : EActivation::Activate);
 }
@@ -113,13 +95,12 @@ void HighSpeedTest::CreateSimpleScene()
 		}
 		triangles.push_back(Triangle(Float3(-1-radius,0,-1), Float3(-1-radius,2,0), Float3(-1-radius,0,1)));
 		Body &walls = *mBodyInterface->CreateBody(BodyCreationSettings(new MeshShapeSettings(triangles), offset, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-		JPH_IF_DEBUG(walls.SetDebugName("Walls");)
 		walls.SetRestitution(1.0f);
 		walls.SetFriction(0.0f);
 		mBodyInterface->AddBody(walls.GetID(), EActivation::DontActivate);
 
 		// Fast moving sphere against mesh
-		CreateDynamicObject("Sphere Against Mesh", offset + Vec3(2.0f * num_walls - 1, 1, 0), Vec3(-speed, 0, -speed), new SphereShape(radius));
+		CreateDynamicObject(offset + Vec3(2.0f * num_walls - 1, 1, 0), Vec3(-speed, 0, -speed), new SphereShape(radius));
 	}
 
 	offset += Vec3(0, 0, 5);
@@ -129,7 +110,7 @@ void HighSpeedTest::CreateSimpleScene()
 		CreateDominoBlocks(offset, num_walls, density, radius);
 
 		// Fast moving sphere against domino blocks
-		CreateDynamicObject("Sphere Against Domino", offset + Vec3(2.0f * num_walls - 1, 1, 0), Vec3(-speed, 0, -speed), new SphereShape(radius));
+		CreateDynamicObject(offset + Vec3(2.0f * num_walls - 1, 1, 0), Vec3(-speed, 0, -speed), new SphereShape(radius));
 	}
 
 	offset += Vec3(0, 0, 5);
@@ -139,15 +120,15 @@ void HighSpeedTest::CreateSimpleScene()
 		CreateDominoBlocks(offset, num_walls, density, radius);
 
 		// Fast moving scaled box against domino blocks
-		CreateDynamicObject("Scaled Box Against Domino", offset + Vec3(2.0f * num_walls - 1, 1, 0), Vec3(-speed, 0, -speed), new ScaledShape(new BoxShape(Vec3::sReplicate(0.5f * radius), 0.01f), Vec3::sReplicate(2.0f)));
+		CreateDynamicObject(offset + Vec3(2.0f * num_walls - 1, 1, 0), Vec3(-speed, 0, -speed), new ScaledShape(new BoxShape(Vec3::sReplicate(0.5f * radius), 0.01f), Vec3::sReplicate(2.0f)));
 	}
 
 	offset += Vec3(0, 0, 5);
 
 	{
 		// Fast moving box stuck in ground moving, one moving up, one moving down
-		CreateDynamicObject("Stuck In Ground Up", offset + Vec3(-1, 0, 0), Vec3(0, speed, 0), new BoxShape(Vec3::sReplicate(radius)));
-		CreateDynamicObject("Stuck In Ground Down", offset + Vec3(1, 0, 0), Vec3(0, -speed, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(-1, 0, 0), Vec3(0, speed, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(1, 0, 0), Vec3(0, -speed, 0), new BoxShape(Vec3::sReplicate(radius)));
 	}
 
 	offset += Vec3(0, 0, 5);
@@ -166,51 +147,50 @@ void HighSpeedTest::CreateSimpleScene()
 		enclosing_settings.mObjectLayer = Layers::MOVING;
 		enclosing_settings.mPosition = offset + Vec3(0, 1, 0);
 		Body &enclosing = *mBodyInterface->CreateBody(enclosing_settings);
-		JPH_IF_DEBUG(enclosing.SetDebugName("Enclosing Box");)
 		mBodyInterface->AddBody(enclosing.GetID(), EActivation::Activate);
 
 		// Fast moving sphere in box
-		CreateDynamicObject("Sphere In Box", offset + Vec3(0, 0.5f, 0), Vec3(-speed, 0, -0.5f * speed), new SphereShape(radius));
+		CreateDynamicObject(offset + Vec3(0, 0.5f, 0), Vec3(-speed, 0, -0.5f * speed), new SphereShape(radius));
 	}
 
 	offset += Vec3(0, 0, 5);
 
 	{
 		// Two boxes on a collision course
-		CreateDynamicObject("Box Vs Box Centered 1", offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
-		CreateDynamicObject("Box Vs Box Centered 2", offset + Vec3(-1, 0.5f, 0), Vec3(speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(-1, 0.5f, 0), Vec3(speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
 	}
 
 	offset += Vec3(0, 0, 5);
 
 	{
 		// Two boxes on a collision course, off center
-		CreateDynamicObject("Box Vs Box Off Center 1", offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
-		CreateDynamicObject("Box Vs Box Off Center 2", offset + Vec3(-1, 0.5f, radius), Vec3(speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(-1, 0.5f, radius), Vec3(speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
 	}
 
 	offset += Vec3(0, 0, 5);
 
 	{
 		// Two boxes on a collision course, one discrete
-		CreateDynamicObject("Box Vs Discrete Box 1", offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
-		CreateDynamicObject("Box Vs Discrete Box 2", offset + Vec3(-1, 0.5f, 0), Vec3(60.0f, 0, 0), new BoxShape(Vec3::sReplicate(radius)), EMotionQuality::Discrete);
+		CreateDynamicObject(offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(-1, 0.5f, 0), Vec3(60.0f, 0, 0), new BoxShape(Vec3::sReplicate(radius)), EMotionQuality::Discrete);
 	}
 
 	offset += Vec3(0, 0, 5);
 
 	{
 		// Two boxes on a collision course, one inactive
-		CreateDynamicObject("Box Vs Inactive Box 1", offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
-		CreateDynamicObject("Box Vs Inactive Box 2", offset + Vec3(0, 0.5f, 0), Vec3::sZero(), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(0, 0.5f, 0), Vec3::sZero(), new BoxShape(Vec3::sReplicate(radius)));
 	}
 
 	offset += Vec3(0, 0, 5);
 
 	{
 		// Two boxes on a collision course, one inactive and discrete
-		CreateDynamicObject("Box Vs Inactive Discrete Box 1", offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
-		CreateDynamicObject("Box Vs Inactive Discrete Box 2", offset + Vec3(0, 0.5f, 0), Vec3::sZero(), new BoxShape(Vec3::sReplicate(radius)), EMotionQuality::Discrete);
+		CreateDynamicObject(offset + Vec3(1, 0.5f, 0), Vec3(-speed, 0, 0), new BoxShape(Vec3::sReplicate(radius)));
+		CreateDynamicObject(offset + Vec3(0, 0.5f, 0), Vec3::sZero(), new BoxShape(Vec3::sReplicate(radius)), EMotionQuality::Discrete);
 	}
 
 	offset += Vec3(0, 0, 5);
@@ -331,7 +311,6 @@ void HighSpeedTest::CreateFastSmallConvexObjects()
 
 				Body &body = *mPhysicsSystem->GetBodyInterface().CreateBody(body_settings);
 				body.SetLinearVelocity(Vec3(velocity_distrib(rnd), -100.0f, velocity_distrib(rnd)));
-				JPH_IF_DEBUG(body.SetDebugName(StringFormat("%dx%d", x, y));)
 				mPhysicsSystem->GetBodyInterface().AddBody(body.GetID(), EActivation::Activate);
 			}
 		}

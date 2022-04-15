@@ -33,17 +33,12 @@ void SensorTest::Initialize()
 	BodyCreationSettings sensor_settings(new SphereShape(10.0f), Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 	sensor_settings.mIsSensor = true;
 	Body &sensor = *mBodyInterface->CreateBody(sensor_settings);
-	JPH_IF_DEBUG(sensor.SetDebugName("Sensor");)
 	mSensorID = sensor.GetID();
 	mBodyInterface->AddBody(mSensorID, EActivation::DontActivate);
 
 	// Dynamic bodies
 	for (int i = 0; i < 10; ++i)
-	{
-		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.1f, 0.5f, 0.2f)), Vec3(-15.0f + i * 3.0f, 25, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-		JPH_IF_DEBUG(body.SetDebugName("Body " + ConvertToString(i)));
-		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
-	}
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.1f, 0.5f, 0.2f)), Vec3(-15.0f + i * 3.0f, 25, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	// Load ragdoll
 	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);

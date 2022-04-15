@@ -355,9 +355,6 @@ Ragdoll *RagdollSettings::CreateRagdoll(CollisionGroup::GroupID inCollisionGroup
 		}
 		body2->GetCollisionGroup().SetGroupID(inCollisionGroup);
 		body2->SetUserData(inUserData);
-#ifdef _DEBUG
-		body2->SetDebugName(mSkeleton->GetJoint(joint_idx).mName);
-#endif
 
 		// Temporarily store body pointer for hooking up constraints
 		bodies[joint_idx] = body2;

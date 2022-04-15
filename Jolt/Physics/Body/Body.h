@@ -37,14 +37,6 @@ public:
 	/// Destructor							
 							~Body()															{ JPH_ASSERT(mMotionProperties == nullptr); }
 
-#ifdef _DEBUG
-	/// Name of the body for debugging purposes
-	void					SetDebugName(const string &inName)								{ mDebugName = inName; }
-	string					GetDebugName() const;
-#else
-	string					GetDebugName() const											{ return ConvertToString(mID.GetIndex()); }
-#endif
-
 	/// Get the id of this body
 	inline const BodyID &	GetID() const													{ return mID; }
 
@@ -311,16 +303,10 @@ private:
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 	
 	// 121 bytes up to here
-
-#ifdef _DEBUG
-	string					mDebugName;														///< Name for debugging purposes
-#endif
 };
 
-#ifndef _DEBUG
-	static_assert(sizeof(Body) == 128, "Body should be 128 bytes");
-	static_assert(alignof(Body) == 16, "Body should align to 16 bytes");
-#endif
+static_assert(sizeof(Body) == 128, "Body should be 128 bytes");
+static_assert(alignof(Body) == 16, "Body should align to 16 bytes");
 
 JPH_NAMESPACE_END
 

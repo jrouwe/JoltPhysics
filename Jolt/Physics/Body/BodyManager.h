@@ -176,7 +176,6 @@ public:
 		bool						mDrawVelocity = false;							///< Draw the velocity vector for each body
 		bool						mDrawMassAndInertia = false;					///< Draw the mass and inertia (as the box equivalent) for each body
 		bool						mDrawSleepStats = false;						///< Draw stats regarding the sleeping algorithm of each body
-		bool						mDrawNames = false;								///< (Debug only) Draw the object names for each body
 	};
 
 	/// Draw the state of the bodies (debugging purposes)

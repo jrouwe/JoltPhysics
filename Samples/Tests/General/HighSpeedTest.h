@@ -22,7 +22,7 @@ public:
 	virtual void		CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
-	void				CreateDynamicObject(const char *inName, Vec3 inPosition, Vec3 inVelocity, Shape *inShape, EMotionQuality inMotionQuality = EMotionQuality::LinearCast);
+	void				CreateDynamicObject(Vec3 inPosition, Vec3 inVelocity, Shape *inShape, EMotionQuality inMotionQuality = EMotionQuality::LinearCast);
 	void				CreateDominoBlocks(Vec3Arg inOffset, int inNumWalls, float inDensity, float inRadius);
 	void				CreateFastSmallConvexObjects();
 	void				CreateSimpleScene();
