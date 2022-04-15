@@ -5,7 +5,8 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Create a formatted text string
+/// Create a formatted text string for debugging purposes.
+/// Note that this function has an internal buffer of 1024 characters, so long strings will be trimmed.
 string StringFormat(const char *inFMT, ...);
 
 /// Convert type to string

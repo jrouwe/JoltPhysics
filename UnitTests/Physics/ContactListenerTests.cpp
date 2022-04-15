@@ -116,6 +116,7 @@ TEST_SUITE("ContactListenerTests")
 
 		// Simulate one more step to process the collision
 		c.Simulate(c.GetDeltaTime());
+		CHECK_APPROX_EQUAL(body.GetPosition(), cFloorHitPos, cPenetrationSlop);
 
 		// We expect a validate and a contact point added message
 		CHECK(listener.GetEntryCount() == 2);
@@ -144,6 +145,7 @@ TEST_SUITE("ContactListenerTests")
 
 		// Simulate 10 steps
 		c.Simulate(10 * c.GetDeltaTime());
+		CHECK_APPROX_EQUAL(body.GetPosition(), cFloorHitPos, cPenetrationSlop);
 
 		// We're not moving, we should have persisted contacts only
 		CHECK(listener.GetEntryCount() == 10);
@@ -163,6 +165,42 @@ TEST_SUITE("ContactListenerTests")
 			CHECK(persist_contact.mManifold.mWorldSpaceContactPointsOn2[0].IsClose(Vec3::sZero(), Square(cPenetrationSlop)));
 		}
 		listener.Clear();
+
+		// Make the body able to go to sleep
+		body.SetAllowSleeping(true);
+
+		// Let the body go to sleep
+		c.Simulate(1.0f);
+		CHECK_APPROX_EQUAL(body.GetPosition(), cFloorHitPos, cPenetrationSlop);
+
+		// Check it went to sleep and that we received a contact removal callback
+		CHECK(!body.IsActive());
+		CHECK(listener.GetEntryCount() > 0);
+		for (size_t i = 0; i < listener.GetEntryCount(); ++i)
+		{
+			// Check persist / removed callbacks
+			const LogEntry &entry = listener.GetEntry(i);
+			CHECK(entry.mBody1 == floor.GetID());
+			CHECK(entry.mBody2 == body.GetID());
+			CHECK(entry.mType == ((i == listener.GetEntryCount() - 1)? EType::Remove : EType::Persist)); // The last entry should remove the contact as the body went to sleep
+		}
+		listener.Clear();
+
+		// Wake the body up again
+		c.GetBodyInterface().ActivateBody(body.GetID());
+		CHECK(body.IsActive());
+
+		// Simulate 1 time step to detect the collision with the floor again
+		c.SimulateSingleStep();
+
+		// Check that the contact got readded
+		CHECK(listener.GetEntryCount() == 2);
+		CHECK(listener.Contains(EType::Validate, floor.GetID(), body.GetID()));
+		CHECK(listener.Contains(EType::Add, floor.GetID(), body.GetID()));
+		listener.Clear();
+
+		// Prevent body from going to sleep again
+		body.SetAllowSleeping(false);
 
 		// Make the sphere move horizontal
 		body.SetLinearVelocity(Vec3::sAxisX());
@@ -207,7 +245,7 @@ TEST_SUITE("ContactListenerTests")
 		listener.Clear();
 
 		// Move the sphere away from the floor
-		c.GetSystem()->GetBodyInterface().SetPosition(body.GetID(), cInitialPos, EActivation::Activate);
+		c.GetBodyInterface().SetPosition(body.GetID(), cInitialPos, EActivation::Activate);
 
 		// Simulate 10 steps
 		c.Simulate(10 * c.GetDeltaTime());

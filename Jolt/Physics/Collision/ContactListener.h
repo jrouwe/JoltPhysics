@@ -25,8 +25,8 @@ public:
 	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision)
 	SubShapeID				mSubShapeID1;						///< Sub shapes that formed this manifold (note that when multiple manifolds are combined because they're coplanar, we lose some information here because we only keep track of one sub shape pair that we encounter)
 	SubShapeID				mSubShapeID2;
-	ContactPoints			mWorldSpaceContactPointsOn1;		///< Contact points on shape 1 in world space
-	ContactPoints			mWorldSpaceContactPointsOn2;		///< Contact points on shape 2 in world space
+	ContactPoints			mWorldSpaceContactPointsOn1;		///< Contact points on the surface of shape 1 in world space.
+	ContactPoints			mWorldSpaceContactPointsOn2;		///< Contact points on the surface of shape 2 in world space. If there's no penetration, this will be the same as mWorldSpaceContactPointsOn1. If there is penetration they will be different.
 };
 
 /// When a contact point is added or persisted, the callback gets a chance to override certain properties of the contact constraint.
@@ -68,18 +68,23 @@ public:
 
 	/// Called whenever a new contact point is detected.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic
+	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
+	/// Note that only active bodies will report contacts, as soon as a body goes to sleep the contacts between that body and all other
+	/// bodies will receive an OnContactRemoved callback, if this is the case then Body::IsActive() will return false during the callback.
+	/// When contacts are added, the constraint solver has not run yet, so the collision impulse is unknown at that point.
+	/// The velocities of inBody1 and inBody2 are the velocities before the contact has been resolved, so you can use this to
+	/// estimate the collision impulse to e.g. determine the volume of the impact sound to play.
 	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { /* Do nothing */ }
 
 	/// Called whenever a contact is detected that was also detected last update.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic
+	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
 	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { /* Do nothing */ }
 
 	/// Called whenever a contact was detected last update but is not detected anymore.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
 	/// Note that we're using BodyID's since the bodies may have been removed at the time of callback.
-	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic
+	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
 	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) { /* Do nothing */ }
 };
 

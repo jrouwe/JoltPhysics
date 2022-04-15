@@ -130,6 +130,10 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 		mBroadPhase->UpdateFinalize(update_state);
 		mBroadPhase->UnlockModifications();
 
+		// Call contact removal callbacks from contacts that existed in the previous update
+		mContactManager.ContactPointRemovedCallbacks();
+		mContactManager.FinalizeContactCache(0, 0);
+
 		mBodyManager.UnlockAllBodies();
 		return;
 	}
