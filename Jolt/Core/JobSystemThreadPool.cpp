@@ -267,10 +267,8 @@ void JobSystemThreadPool::StartThreads(int inNumThreads)
 	for (int i = 0; i < inNumThreads; ++i)
 	{
 		// Name the thread
-		stringstream namestream;
-		namestream << "Worker ";
-		namestream << (i + 1);
-		string name = namestream.str();
+		char name[64];
+		snprintf(name, sizeof(name), "Worker %d", int(i + 1));
 
 		// Create thread
 		mThreads.emplace_back([this, name, i] { ThreadMain(name, i); });
@@ -516,10 +514,10 @@ static void SetThreadName(const char *inName)
 
 #endif
 
-void JobSystemThreadPool::ThreadMain([[maybe_unused]] const string &inName, int inThreadIndex)
+void JobSystemThreadPool::ThreadMain([[maybe_unused]] const char *inName, int inThreadIndex)
 {
 #ifdef JPH_PLATFORM_WINDOWS
-	SetThreadName(inName.c_str());
+	SetThreadName(inName);
 #endif
 
 	// Enable floating point exceptions
