@@ -1421,7 +1421,8 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 				break;
 
 			case EMotionQuality::LinearCast:
-				if (body.IsDynamic()) // Kinematic bodies cannot be stopped
+				if (body.IsDynamic() // Kinematic bodies cannot be stopped
+					&& !body.IsSensor()) // We don't support CCD sensors
 				{
 					// Determine inner radius (the smallest sphere that fits into the shape)
 					float inner_radius = body.GetShape()->GetInnerRadius();
