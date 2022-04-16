@@ -10,8 +10,6 @@ A multi core friendly rigid body physics and collision detection library suitabl
 
 [![Horizon Forbidden West Cover Art](https://jrouwe.nl/jolt/Horizon_Forbidden_West.png)](https://www.playstation.com/en-us/games/horizon-forbidden-west/)
 
-Please come and listen to my talk [Architecting Jolt Physics for 'Horizon Forbidden West'](https://schedule.gdconf.com/session/architecting-jolt-physics-for-horizon-forbidden-west/882755) at GDC 2022!
-
 |[![Ragdoll Pile](https://img.youtube.com/vi/pwyCW0yNKMA/hqdefault.jpg)](https://www.youtube.com/watch?v=pwyCW0yNKMA)|
 |:-|
 |*A YouTube video showing a ragdoll pile simulated with Jolt Physics.*|
@@ -21,6 +19,8 @@ For more demos and [videos](https://www.youtube.com/watch?v=pwyCW0yNKMA&list=PLY
 To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example.
 
 If you're interested in how Jolt scales with multiple CPUs and compares to other physics engines, take a look at [this document](https://jrouwe.nl/jolt/JoltPhysicsMulticoreScaling.pdf).
+
+The slides for my GDC 2022 talk [Architecting Jolt Physics for 'Horizon Forbidden West'](https://gdcvault.com/play/1027560/Architecting-Jolt-Physics-for-Horizon) are now available ([video here](https://gdcvault.com/play/1027891/Architecting-Jolt-Physics-for-Horizon))!
 
 ## Design Considerations
 
