@@ -55,9 +55,12 @@ public:
 	/// Check if a body could be made kinematic or dynamic (if it was created dynamic or with mAllowDynamicOrKinematic set to true)
 	inline bool				CanBeKinematicOrDynamic() const									{ return mMotionProperties != nullptr; }
 
-	/// Change the body to a sensor or to a regular static body. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
-	/// Note that Sensors need to be of motion type Static (they can be moved around using BodyInterface::SetPosition/SetPositionAndRotation).
-	inline void				SetIsSensor(bool inIsSensor)									{ JPH_ASSERT(!inIsSensor || mMotionProperties == nullptr, "A sensor needs to be Static"); if (inIsSensor) mFlags.fetch_or(uint8(JPH::Body::EFlags::IsSensor), JPH::memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(JPH::Body::EFlags::IsSensor)), JPH::memory_order_relaxed); }
+	/// Change the body to a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
+	/// The cheapest sensor (in terms of CPU usage) is a sensor with motion type Static (they can be moved around using BodyInterface::SetPosition/SetPositionAndRotation).
+	/// These sensors will only detect collisions with active Dynamic or Kinematic bodies. As soon as a body go to sleep, the contact point with the sensor will be lost.
+	/// If you make a sensor Dynamic or Kinematic and activate them, the sensor will be able to detect collisions with sleeping bodies too. An active sensor will never go to sleep automatically.
+	/// When you make a Dynamic or Kinematic sensor, make sure it is in an ObjectLayer that does not collide with Static bodies or other sensors to avoid extra overhead in the broad phase.
+	inline void				SetIsSensor(bool inIsSensor)									{ if (inIsSensor) mFlags.fetch_or(uint8(JPH::Body::EFlags::IsSensor), JPH::memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(JPH::Body::EFlags::IsSensor)), JPH::memory_order_relaxed); }
 
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
@@ -261,7 +264,7 @@ public:
 
 	///@}
 
-	static const uint32		cInactiveIndex = uint32(-1);									///< Constant indicating that body is not active
+	static constexpr uint32	cInactiveIndex = uint32(-1);									///< Constant indicating that body is not active
 
 private:
 	friend class BodyManager;

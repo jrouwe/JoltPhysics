@@ -136,8 +136,8 @@ void Body::SetShapeInternal(const Shape *inShape, bool inUpdateMassProperties)
 
 Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMovement, float inTimeBeforeSleep)
 {
-	// Check override
-	if (!mMotionProperties->mAllowSleeping)
+	// Check override & sensors will never go to sleep (they would stop detecting collisions with sleeping bodies)
+	if (!mMotionProperties->mAllowSleeping || IsSensor())
 		return ECanSleep::CannotSleep;
 
 	// Get the points to test

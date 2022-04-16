@@ -35,6 +35,10 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 		&& !(inBody1.IsKinematic() && inBody2.IsSensor()))
 		return false;
 
+	// If both bodies are sensors, there's no collision
+	if (inBody1.IsSensor() && inBody2.IsSensor())
+		return false;
+
 	// Check that body 1 is active
 	uint32 body1_index_in_active_bodies = inBody1.GetIndexInActiveBodiesInternal();
 	JPH_ASSERT(!inBody1.IsStatic() && body1_index_in_active_bodies != Body::cInactiveIndex, "This function assumes that Body 1 is active");

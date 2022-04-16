@@ -1192,7 +1192,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	}
 
 	// If an actual contact is present we need to do some extra work
-	if (contact_found)
+	if (contact_found && !body1->IsSensor() && !body2->IsSensor())
 	{
 		// Wake up sleeping bodies
 		BodyID body_ids[2];
@@ -1421,7 +1421,8 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 				break;
 
 			case EMotionQuality::LinearCast:
-				if (body.IsDynamic()) // Kinematic bodies cannot be stopped
+				if (body.IsDynamic() // Kinematic bodies cannot be stopped
+					&& !body.IsSensor()) // We don't support CCD sensors
 				{
 					// Determine inner radius (the smallest sphere that fits into the shape)
 					float inner_radius = body.GetShape()->GetInnerRadius();
