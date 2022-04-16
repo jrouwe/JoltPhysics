@@ -1192,7 +1192,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	}
 
 	// If an actual contact is present we need to do some extra work
-	if (contact_found)
+	if (contact_found && !body1->IsSensor() && !body2->IsSensor())
 	{
 		// Wake up sleeping bodies
 		BodyID body_ids[2];
