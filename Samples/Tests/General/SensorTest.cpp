@@ -47,7 +47,7 @@ void SensorTest::Initialize()
 		// A kinematic sensor that also detects sleeping bodies
 		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), Vec3(10, 5, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
-		mSensorID[KinematicSensor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::DontActivate);
+		mSensorID[KinematicSensor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
 	}
 
 	// Dynamic bodies
