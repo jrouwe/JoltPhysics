@@ -78,7 +78,7 @@ void SensorTest::Initialize()
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 
 	// Create kinematic body
-	BodyCreationSettings kinematic_settings(new BoxShape(Vec3(0.25f, 0.5f, 1.0f)), Vec3(-15, 10, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
+	BodyCreationSettings kinematic_settings(new BoxShape(Vec3(0.25f, 0.5f, 1.0f)), Vec3(-20, 10, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);
 	Body &kinematic = *mBodyInterface->CreateBody(kinematic_settings);
 	mKinematicBodyID = kinematic.GetID();
 	mBodyInterface->AddBody(kinematic.GetID(), EActivation::Activate);
