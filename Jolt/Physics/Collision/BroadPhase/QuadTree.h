@@ -96,7 +96,7 @@ private:
 	{
 	public:
 		/// Construct node
-								Node(bool inIsChanged);
+		explicit				Node(bool inIsChanged);
 
 		/// Get bounding box encapsulating all children
 		void					GetNodeBounds(AABox &outBounds) const;

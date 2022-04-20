@@ -282,9 +282,19 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 				for (NodeID child_node_id : node.mChildNodeID)
 					if (child_node_id.IsValid())
 					{
-						JPH_ASSERT(top < cStackSize);
-						node_stack[top] = child_node_id;
-						top++;
+						if (top < cStackSize)
+						{
+							node_stack[top] = child_node_id;
+							top++;
+						}
+						else
+						{
+							JPH_ASSERT(false); // Out of stack space, this must be a very deep tree. Are you batch adding bodies to the broadphase?
+
+							// Falling back to adding the node as a whole
+							*cur_node_id = node_id;
+							++cur_node_id;
+						}
 					}
 
 				// Mark node to be freed
