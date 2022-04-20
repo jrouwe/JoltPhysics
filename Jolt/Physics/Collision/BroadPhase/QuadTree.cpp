@@ -314,12 +314,15 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 
 	if (num_node_ids > 0)
 	{
-		// Build new tree. We mark all nodes that we create as 'changed' immediately
-		// so that all of these intermediate nodes will get recreated every time we rebuild the tree.
-		// Only sets of objects that were added at the same time (and have not changed since)
-		// will be 'unchanged' and will stay together.
+		// We mark the first 5 levels (max 1024 nodes) of the newly built tree as 'changed' so that
+		// those nodes get recreated every time when we rebuild the tree. This balances the amount of
+		// time we spend on rebuilding the tree ('unchanged' nodes will be put in the new tree as a whole)
+		// vs the quality of the built tree.
+		constexpr uint cMaxDepthMarkChanged = 5;
+
+		// Build new tree
 		AABox root_bounds;
-		root_node_id = BuildTree(inBodies, ioTracking, node_ids, num_node_ids, true, root_bounds);
+		root_node_id = BuildTree(inBodies, ioTracking, node_ids, num_node_ids, cMaxDepthMarkChanged, root_bounds);
 
 		if (root_node_id.IsBody())
 		{
@@ -470,7 +473,7 @@ AABox QuadTree::GetNodeOrBodyBounds(const BodyVector &inBodies, NodeID inNodeID)
 	}
 }
 
-QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, bool inIsChanged, AABox &outBounds)
+QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, uint inMaxDepthMarkChanged, AABox &outBounds)
 {
 	// Trivial case: No bodies in tree
 	if (inNumber == 0)
@@ -505,6 +508,7 @@ QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector 
 		uint32			mNodeIdx;					// Node index of node that is generated
 		int				mChildIdx;					// Index of child that we're currently processing
 		int				mSplit[5];					// Indices where the node ID's have been split to form 4 partitions
+		uint32			mDepth;						// Depth of this node in the tree
 		Vec3			mNodeBoundsMin;				// Bounding box of this node, accumulated while iterating over children
 		Vec3			mNodeBoundsMax;
 	};
@@ -513,8 +517,9 @@ QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector 
 	int top = 0;
 
 	// Create root node
-	stack[0].mNodeIdx = AllocateNode(inIsChanged);
+	stack[0].mNodeIdx = AllocateNode(inMaxDepthMarkChanged > 0);
 	stack[0].mChildIdx = -1;
+	stack[0].mDepth = 0;
 	stack[0].mNodeBoundsMin = Vec3::sReplicate(cLargeFloat);
 	stack[0].mNodeBoundsMax = Vec3::sReplicate(-cLargeFloat);
 	sPartition4(ioNodeIDs, centers, 0, inNumber, stack[0].mSplit);
@@ -589,8 +594,10 @@ QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector 
 				// Allocate new node
 				StackEntry &new_stack = stack[++top];
 				JPH_ASSERT(top < cStackSize / 4);
-				new_stack.mNodeIdx = AllocateNode(inIsChanged);
+				uint32 next_depth = cur_stack.mDepth + 1;
+				new_stack.mNodeIdx = AllocateNode(inMaxDepthMarkChanged > next_depth);
 				new_stack.mChildIdx = -1;
+				new_stack.mDepth = next_depth;
 				new_stack.mNodeBoundsMin = Vec3::sReplicate(cLargeFloat);
 				new_stack.mNodeBoundsMax = Vec3::sReplicate(-cLargeFloat);
 				sPartition4(ioNodeIDs, centers, low, high, new_stack.mSplit);
@@ -774,7 +781,7 @@ void QuadTree::AddBodiesPrepare(const BodyVector &inBodies, TrackingVector &ioTr
 
 	// Build subtree for the new bodies, note that we mark all nodes as 'not changed' 
 	// so they will stay together as a batch and will make the tree rebuild cheaper
-	outState.mLeafID = BuildTree(inBodies, ioTracking, (NodeID *)ioBodyIDs, inNumber, false, outState.mLeafBounds);
+	outState.mLeafID = BuildTree(inBodies, ioTracking, (NodeID *)ioBodyIDs, inNumber, 0, outState.mLeafBounds);
 
 #ifdef _DEBUG
 	if (outState.mLeafID.IsNode())
