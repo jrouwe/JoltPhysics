@@ -96,7 +96,7 @@ private:
 	{
 	public:
 		/// Construct node
-								Node();
+								Node(bool inIsChanged);
 
 		/// Get bounding box encapsulating all children
 		void					GetNodeBounds(AABox &outBounds) const;
@@ -130,7 +130,7 @@ private:
 
 		/// If this part of the tree has changed, if not, we will treat this sub tree as a single body during the UpdatePrepare/Finalize().
 		/// If any changes are made to an object inside this sub tree then the direct path from the body to the top of the tree will become changed.
-		atomic<uint32>			mIsChanged = false;
+		atomic<uint32>			mIsChanged;
 
 		// Padding to align to 124 bytes
 		uint32					mPadding = 0;
@@ -286,7 +286,7 @@ private:
 	inline void					WidenAndMarkNodeAndParentsChanged(uint32 inNodeIndex, const AABox &inNewBounds);
 
 	/// Allocate a new node
-	inline uint32				AllocateNode();
+	inline uint32				AllocateNode(bool inIsChanged);
 
 	/// Try to insert a new leaf to the tree at inNodeIndex
 	inline bool					TryInsertLeaf(TrackingVector &ioTracking, int inNodeIndex, NodeID inLeafID, const AABox &inLeafBounds, int inLeafNumBodies);
@@ -295,7 +295,7 @@ private:
 	inline bool					TryCreateNewRoot(TrackingVector &ioTracking, atomic<uint32> &ioRootNodeIndex, NodeID inLeafID, const AABox &inLeafBounds, int inLeafNumBodies);
 
 	/// Build a tree for ioBodyIDs, returns the NodeID of the root (which will be the ID of a single body if inNumber = 1)
-	NodeID						BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, AABox &outBounds);
+	NodeID						BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, bool inIsChanged, AABox &outBounds);
 
 	/// Sorts ioNodeIDs spatially into 2 groups. Second groups starts at ioNodeIDs + outMidPoint.
 	/// After the function returns ioNodeIDs and ioNodeCenters will be shuffled

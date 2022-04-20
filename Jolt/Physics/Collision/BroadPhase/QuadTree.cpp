@@ -19,7 +19,8 @@ JPH_NAMESPACE_BEGIN
 // QuadTree::Node
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-QuadTree::Node::Node()
+QuadTree::Node::Node(bool inIsChanged) :
+	mIsChanged(inIsChanged)
 {
 	// First reset bounds
 	Vec4 val = Vec4::sReplicate(cLargeFloat);
@@ -176,9 +177,9 @@ QuadTree::~QuadTree()
 	mAllocator->DestructObjectBatch(free_batch);
 }
 
-uint32 QuadTree::AllocateNode()
+uint32 QuadTree::AllocateNode(bool inIsChanged)
 {
-	uint32 index = mAllocator->ConstructObject();
+	uint32 index = mAllocator->ConstructObject(inIsChanged);
 	if (index == Allocator::cInvalidObjectIndex)
 	{
 		Trace("QuadTree: Out of nodes!");
@@ -193,7 +194,7 @@ void QuadTree::Init(Allocator &inAllocator)
 	mAllocator = &inAllocator;
 	
 	// Allocate root node
-	mRootNode[mRootNodeIndex].mIndex = AllocateNode();
+	mRootNode[mRootNodeIndex].mIndex = AllocateNode(false);
 }
 
 void QuadTree::DiscardOldTree()
@@ -303,14 +304,17 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 
 	if (num_node_ids > 0)
 	{
-		// Build new tree
+		// Build new tree. We mark all nodes that we create as 'changed' immediately
+		// so that all of these intermediate nodes will get recreated every time we rebuild the tree.
+		// Only sets of objects that were added at the same time (and have not changed since)
+		// will be 'unchanged' and will stay together.
 		AABox root_bounds;
-		root_node_id = BuildTree(inBodies, ioTracking, node_ids, num_node_ids, root_bounds);
+		root_node_id = BuildTree(inBodies, ioTracking, node_ids, num_node_ids, true, root_bounds);
 
 		if (root_node_id.IsBody())
 		{
 			// For a single body we need to allocate a new root node
-			uint32 root_idx = AllocateNode();
+			uint32 root_idx = AllocateNode(false);
 			Node &root = mAllocator->Get(root_idx);
 			root.SetChildBounds(0, root_bounds);
 			root.mChildNodeID[0] = root_node_id;
@@ -321,7 +325,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 	else
 	{
 		// Empty tree, create root node
-		uint32 root_idx = AllocateNode();
+		uint32 root_idx = AllocateNode(false);
 		root_node_id = NodeID::sFromNodeIndex(root_idx);
 	}
 
@@ -456,7 +460,7 @@ AABox QuadTree::GetNodeOrBodyBounds(const BodyVector &inBodies, NodeID inNodeID)
 	}
 }
 
-QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, AABox &outBounds)
+QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector &ioTracking, NodeID *ioNodeIDs, int inNumber, bool inIsChanged, AABox &outBounds)
 {
 	// Trivial case: No bodies in tree
 	if (inNumber == 0)
@@ -499,7 +503,7 @@ QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector 
 	int top = 0;
 
 	// Create root node
-	stack[0].mNodeIdx = AllocateNode();
+	stack[0].mNodeIdx = AllocateNode(inIsChanged);
 	stack[0].mChildIdx = -1;
 	stack[0].mNodeBoundsMin = Vec3::sReplicate(cLargeFloat);
 	stack[0].mNodeBoundsMax = Vec3::sReplicate(-cLargeFloat);
@@ -575,7 +579,7 @@ QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector 
 				// Allocate new node
 				StackEntry &new_stack = stack[++top];
 				JPH_ASSERT(top < cStackSize / 4);
-				new_stack.mNodeIdx = AllocateNode();
+				new_stack.mNodeIdx = AllocateNode(inIsChanged);
 				new_stack.mChildIdx = -1;
 				new_stack.mNodeBoundsMin = Vec3::sReplicate(cLargeFloat);
 				new_stack.mNodeBoundsMax = Vec3::sReplicate(-cLargeFloat);
@@ -702,13 +706,10 @@ bool QuadTree::TryCreateNewRoot(TrackingVector &ioTracking, atomic<uint32> &ioRo
 	uint32 root_idx = ioRootNodeIndex;
 	Node &root = mAllocator->Get(root_idx);
 
-	// Create new root
-	uint32 new_root_idx = AllocateNode();
+	// Create new root, mark this new root as changed as we're not creating a very efficient tree at this point
+	uint32 new_root_idx = AllocateNode(true);
 	Node &new_root = mAllocator->Get(new_root_idx);
 	
-	// Mark this new root as changed as we're not creating a very efficient tree at this point
-	new_root.mIsChanged = true;
-
 	// First child is current root, note that since the tree may be modified concurrently we cannot assume that the bounds of our child will be correct so we set a very large bounding box
 	new_root.mChildNodeID[0] = NodeID::sFromNodeIndex(root_idx);
 	new_root.SetChildBounds(0, AABox(Vec3::sReplicate(-cLargeFloat), Vec3::sReplicate(cLargeFloat)));
@@ -761,8 +762,9 @@ void QuadTree::AddBodiesPrepare(const BodyVector &inBodies, TrackingVector &ioTr
 		NodeID::sFromBodyID(*b);
 #endif
 
-	// Build subtree for the new bodies
-	outState.mLeafID = BuildTree(inBodies, ioTracking, (NodeID *)ioBodyIDs, inNumber, outState.mLeafBounds);
+	// Build subtree for the new bodies, note that we mark all nodes as 'not changed' 
+	// so they will stay together as a batch and will make the tree rebuild cheaper
+	outState.mLeafID = BuildTree(inBodies, ioTracking, (NodeID *)ioBodyIDs, inNumber, false, outState.mLeafBounds);
 
 #ifdef _DEBUG
 	if (outState.mLeafID.IsNode())
@@ -1460,6 +1462,7 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 				{
 					// Child is a node, recurse
 					uint32 child_idx = child_node_id.GetNodeIndex();
+					JPH_ASSERT(top < cStackSize);
 					StackEntry &new_entry = stack[top++];
 					new_entry.mNodeIndex = child_idx;
 					new_entry.mParentNodeIndex = cur_stack.mNodeIndex;
