@@ -209,7 +209,9 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	// <=> d' = -p |d| / n dot d
 	// The new fraction of collision is then:
 	// f' = f - d' / |d| = f + p / n dot d
-	outContact.mFraction = max(0.0f, outContact.mFraction + mCharacterPadding / outContact.mNormal.Dot(inDisplacement));
+	float dot = outContact.mNormal.Dot(inDisplacement);
+	if (dot < 0.0f) // We should not divide by zero and we should only update the fraction if normal is pointing towards displacement
+		outContact.mFraction = max(0.0f, outContact.mFraction + mCharacterPadding / dot);
 	return true;
 }
 
