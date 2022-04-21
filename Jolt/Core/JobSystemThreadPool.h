@@ -23,11 +23,16 @@ class JobSystemThreadPool final : public JobSystem
 {
 public:
 	/// Creates a thread pool.
+	/// @see JobSystemThreadPool::Init
+							JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
+							JobSystemThreadPool() = default;
+	virtual					~JobSystemThreadPool() override;
+
+	/// Initialize the thread pool
 	/// @param inMaxJobs Max number of jobs that can be allocated at any time
 	/// @param inMaxBarriers Max number of barriers that can be allocated at any time
 	/// @param inNumThreads Number of threads to start (the number of concurrent jobs is 1 more because the main thread will also run jobs while waiting for a barrier to complete). Use -1 to autodetect the amount of CPU's.
-							JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
-	virtual					~JobSystemThreadPool() override;
+	void					Init(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
 
 	// See JobSystem
 	virtual int				GetMaxConcurrency() const override				{ return int(mThreads.size()) + 1; }
@@ -128,8 +133,8 @@ private:
 	AvailableJobs			mJobs;
 
 	/// Array of barriers (we keep them constructed all the time since constructing a semaphore/mutex is not cheap)
-	uint					mMaxBarriers;									///< Max amount of barriers
-	BarrierImpl *			mBarriers;										///< List of the actual barriers
+	uint					mMaxBarriers = 0;								///< Max amount of barriers
+	BarrierImpl *			mBarriers = nullptr;							///< List of the actual barriers
 
 	/// Threads running jobs
 	vector<thread>			mThreads;
