@@ -1630,4 +1630,18 @@ void QuadTree::ReportStats() const
 
 #endif // JPH_TRACK_BROADPHASE_STATS
 
+uint QuadTree::GetMaxTreeDepth(const NodeID &inNodeID) const
+{
+	// Reached a leaf?
+	if (!inNodeID.IsValid() || inNodeID.IsBody())
+		return 0;
+
+	// Recurse to children
+	uint max_depth = 0;
+	const Node &node = mAllocator->Get(inNodeID.GetNodeIndex());
+	for (NodeID child_node_id : node.mChildNodeID)
+		max_depth = max(max_depth, GetMaxTreeDepth(child_node_id));
+	return max_depth + 1;
+}
+
 JPH_NAMESPACE_END

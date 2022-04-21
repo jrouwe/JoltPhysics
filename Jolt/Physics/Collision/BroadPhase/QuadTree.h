@@ -344,6 +344,9 @@ private:
 	mutable LayerToStats		mCastAABoxStats;
 #endif // JPH_TRACK_BROADPHASE_STATS
 
+	/// Debug function to get the depth of the tree from node inNodeID
+	uint						GetMaxTreeDepth(const NodeID &inNodeID) const;
+
 	/// Walk the node tree calling the Visitor::VisitNodes for each node encountered and Visitor::VisitBody for each body encountered
 	template <class Visitor>
 	JPH_INLINE void				WalkTree(const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking, Visitor &ioVisitor JPH_IF_TRACK_BROADPHASE_STATS(, LayerToStats &ioStats)) const;
