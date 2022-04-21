@@ -41,6 +41,8 @@ public:
 	void						DestroyBodies(const BodyID *inBodyIDs, int inNumber);
 
 	/// Add body to the world.
+	/// Note that if you need to add multiple bodies, use the AddBodiesPrepare/AddBodiesFinalize function.
+	/// Adding many bodies, one at a time, results in a really inefficient broadphase until PhysicsSystem::OptimizeBroadPhase is called or when PhysicsSystem::Update rebuilds the tree!
 	/// After adding, to get a body by ID use the BodyLockRead or BodyLockWrite interface!
 	void						AddBody(const BodyID &inBodyID, EActivation inActivationMode);
 	
