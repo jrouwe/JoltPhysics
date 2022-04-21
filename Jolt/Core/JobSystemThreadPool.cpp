@@ -228,10 +228,14 @@ void JobSystemThreadPool::BarrierImpl::Wait()
 	}
 }
 
-JobSystemThreadPool::JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads) :
-	mMaxBarriers(inMaxBarriers),
-	mBarriers(new BarrierImpl [inMaxBarriers]) // Init freelist of barriers
+void JobSystemThreadPool::Init(uint inMaxJobs, uint inMaxBarriers, int inNumThreads)
 {
+	JPH_ASSERT(mBarriers == nullptr); // Already initialized?
+
+	// Init freelist of barriers
+	mMaxBarriers = inMaxBarriers;
+	mBarriers = new BarrierImpl [inMaxBarriers];
+
 	// Init freelist of jobs
 	mJobs.Init(inMaxJobs, inMaxJobs);
 
@@ -241,6 +245,11 @@ JobSystemThreadPool::JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int
 
 	// Start the worker threads
 	StartThreads(inNumThreads);
+}
+
+JobSystemThreadPool::JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads)
+{
+	Init(inMaxJobs, inMaxBarriers, inNumThreads);
 }
 
 void JobSystemThreadPool::StartThreads(int inNumThreads)
