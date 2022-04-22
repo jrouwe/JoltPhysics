@@ -87,8 +87,9 @@ public:
 	/// Get the type of a constraint
 	virtual EConstraintType		GetType() const = 0;
 
-	/// Enable / disable this constraint. This can e.g. be used to implement a breakable constraint by detecting that the constraint impulse went over a certain limit and then disabling the constraint. 
-	/// Note that although a disabled constraint will not affect the simulation in any way anymore, it does incur some processing overhead. 
+	/// Enable / disable this constraint. This can e.g. be used to implement a breakable constraint by detecting that the constraint impulse
+	/// (see e.g. PointConstraint::GetTotalLambdaPosition) went over a certain limit and then disabling the constraint.
+	/// Note that although a disabled constraint will not affect the simulation in any way anymore, it does incur some processing overhead.
 	/// Alternatively you can remove a constraint from the constraint manager (which may be more costly if you want to disable the constraint for a short while).
 	void						SetEnabled(bool inEnabled)					{ mEnabled = inEnabled; }
 
