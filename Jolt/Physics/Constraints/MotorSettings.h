@@ -18,7 +18,8 @@ enum class EMotorState
 	Position															///< Motor will drive to target position
 };
 
-/// Class that contains the settings for a constraint motor
+/// Class that contains the settings for a constraint motor.
+/// See the main page of the API documentation for more information on how to configure a motor.
 class MotorSettings
 {
 public:
