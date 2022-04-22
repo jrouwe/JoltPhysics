@@ -52,12 +52,12 @@ public:
 	void					RestoreBinaryState(StreamIn &inStream);
 
 	// Settings
-	float					mFrequency = 2.0f;							///< Oscillation frequency when solving position target (Hz)
-	float					mDamping = 1.0f;							///< Damping when solving position target (0 = minimal damping, 1 = critical damping)
-	float					mMinForceLimit = -FLT_MAX;					///< Minimum force to apply in case of a linear constraint (N)
-	float					mMaxForceLimit = FLT_MAX;					///< Maximum force to apply in case of a linear constraint (N)
-	float					mMinTorqueLimit = -FLT_MAX;					///< Minimum torque to apply in case of a angular constraint (N m)
-	float					mMaxTorqueLimit = FLT_MAX;					///< Maximum torque to apply in case of a angular constraint (N m)
+	float					mFrequency = 2.0f;							///< Oscillation frequency when solving position target (Hz). Should be in the range (0, 0.5 * simulation frequency]. When simulating at 60 Hz, 20 is a good value for a strong motor. Only used for position motors.
+	float					mDamping = 1.0f;							///< Damping when solving position target (0 = minimal damping, 1 = critical damping). Only used for position motors.
+	float					mMinForceLimit = -FLT_MAX;					///< Minimum force to apply in case of a linear constraint (N). Usually this is -mMaxForceLimit unless you want a motor that can e.g. push but not pull. Not used when motor is an angular motor.
+	float					mMaxForceLimit = FLT_MAX;					///< Maximum force to apply in case of a linear constraint (N). Not used when motor is an angular motor.
+	float					mMinTorqueLimit = -FLT_MAX;					///< Minimum torque to apply in case of a angular constraint (N m). Usually this is -mMaxTorqueLimit unless you want a motor that can e.g. push but not pull. Not used when motor is a position motor.
+	float					mMaxTorqueLimit = FLT_MAX;					///< Maximum torque to apply in case of a angular constraint (N m). Not used when motor is a position motor.
 };
 
 JPH_NAMESPACE_END
