@@ -202,7 +202,7 @@ If you want to constrain a dynamic object to the unmovable 'world' you can use [
 
 Adding and removing constraints can be done from multiple threads, but the constraints themselves do not have any protection against concurrent access. We assume that constraints are owned by some object (e.g. a Ragdoll) and that object ensures that it only modifies its own constraints and contains its own synchronization logic. Constraints can be freely modified except during the physics simulation step.
 
-Contact constraints (when bodies collide) are not handled through the ([Constraint](@ref Constraint)) class but through the [ContactConstraintManager](@ref ContactConstraintManager) which is considered an internal class.
+Contact constraints (when bodies collide) are not handled through the [Constraint](@ref Constraint) class but through the [ContactConstraintManager](@ref ContactConstraintManager) which is considered an internal class.
 
 ## Constraint Motors
 
