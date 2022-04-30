@@ -2046,6 +2046,9 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 
 	// Step the world (with fixed frequency)
 	mPhysicsSystem->Update(delta_time, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, inJobSystem);
+#ifndef JPH_DISABLE_TEMP_ALLOCATOR
+	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
+#endif // JPH_DISABLE_TEMP_ALLOCATOR
 
 	// Accumulate time
 	mTotalTime += GetProcessorTickCount() - start_tick;

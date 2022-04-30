@@ -75,6 +75,12 @@ public:
 		}
 	}
 
+	// Check if no allocations have been made
+	bool							IsEmpty() const
+	{
+		return mTop == 0;
+	}
+
 private:
 	uint8 *							mBase;							///< Base address of the memory block
 	uint							mSize;							///< Size of the memory block

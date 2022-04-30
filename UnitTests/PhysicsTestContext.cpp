@@ -84,12 +84,18 @@ void PhysicsTestContext::Simulate(float inTotalTime, function<void()> inPreStepC
 	{
 		inPreStepCallback();
 		mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+	#ifndef JPH_DISABLE_TEMP_ALLOCATOR
+		JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
+	#endif // JPH_DISABLE_TEMP_ALLOCATOR
 	}
 }
 
 void PhysicsTestContext::SimulateSingleStep()
 {
 	mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+#ifndef JPH_DISABLE_TEMP_ALLOCATOR
+	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
+#endif // JPH_DISABLE_TEMP_ALLOCATOR
 }
 
 Vec3 PhysicsTestContext::PredictPosition(Vec3Arg inPosition, Vec3Arg inVelocity, Vec3Arg inAcceleration, float inTotalTime) const
