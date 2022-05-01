@@ -121,7 +121,7 @@ void FixedSizeFreeList<Object>::DestructObjectBatch(Batch &ioBatch)
 	if (ioBatch.mFirstObjectIndex != cInvalidObjectIndex)
 	{
 		// Call destructors
-		if (!is_trivially_destructible<Object>())
+		if constexpr (!is_trivially_destructible<Object>())
 		{
 			uint32 object_idx = ioBatch.mFirstObjectIndex;
 			do
