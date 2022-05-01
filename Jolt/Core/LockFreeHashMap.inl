@@ -181,9 +181,9 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 	atomic<uint32> &offset = mBuckets[inKeyHash & (mNumBuckets - 1)];
 
 	// Add this entry as the first element in the linked list
+	uint32 old_offset = offset.load(memory_order_relaxed);
 	for (;;)
 	{
-		uint32 old_offset = offset.load(memory_order_relaxed);
 		kv->mNextOffset = old_offset;
 		if (offset.compare_exchange_weak(old_offset, write_offset, memory_order_release))
 			break;
