@@ -38,6 +38,8 @@ public:
 	ContactListener *			GetContactListener() const											{ return mContactListener; }
 
 	/// Callback function to combine the restitution or friction of two bodies
+	/// Note that when merging manifolds (when PhysicsSettings::mUseManifoldReduction is true) you will only get a callback for the merged manifold.
+	/// It is not possible in that case to get all sub shape ID pairs that were colliding, you'll get the first encountered pair.
 	using CombineFunction = float (*)(const Body &inBody1, const SubShapeID &inSubShapeID1, const Body &inBody2, const SubShapeID &inSubShapeID2);
 
 	/// Set the function that combines the friction of two bodies and returns it
