@@ -38,7 +38,7 @@ public:
 	ContactListener *			GetContactListener() const											{ return mContactListener; }
 
 	/// Callback function to combine the restitution or friction of two bodies
-	using CombineFunction = float (*)(const Body &inBody1, const Body &inBody2);
+	using CombineFunction = float (*)(const Body &inBody1, const SubShapeID &inSubShapeID1, const Body &inBody2, const SubShapeID &inSubShapeID2);
 
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
@@ -467,8 +467,8 @@ private:
 	ContactListener *			mContactListener = nullptr;
 
 	/// Functions that are used to combine friction and restitution of 2 bodies
-	CombineFunction				mCombineFriction = [](const Body &inBody1, const Body &inBody2) { return sqrt(inBody1.GetFriction() * inBody2.GetFriction()); };
-	CombineFunction				mCombineRestitution = [](const Body &inBody1, const Body &inBody2) { return max(inBody1.GetRestitution(), inBody2.GetRestitution()); };
+	CombineFunction				mCombineFriction = [](const Body &inBody1, const SubShapeID &, const Body &inBody2, const SubShapeID &) { return sqrt(inBody1.GetFriction() * inBody2.GetFriction()); };
+	CombineFunction				mCombineRestitution = [](const Body &inBody1, const SubShapeID &, const Body &inBody2, const SubShapeID &) { return max(inBody1.GetRestitution(), inBody2.GetRestitution()); };
 
 	/// The constraints that were added this frame
 	ContactConstraint *			mConstraints = nullptr;
