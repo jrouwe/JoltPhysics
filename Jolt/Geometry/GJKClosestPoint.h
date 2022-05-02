@@ -73,20 +73,20 @@ private:
 #endif
 
 		float v_len_sq = v.LengthSq();
-		if (v_len_sq >= inPrevVLenSq)
+		if (v_len_sq < inPrevVLenSq) // Note, comparison order important: If v_len_sq is NaN then this expression will be false so we will return false
 		{
-			// No better match found
-#ifdef JPH_GJK_DEBUG
-			Trace("New closer point is further away, failed to converge");
-#endif
-			return false;
+			// Return closest point
+			outV = v;
+			outVLenSq = v_len_sq;
+			outSet = set;
+			return true;
 		}
 
-		// Return closest point
-		outV = v;
-		outVLenSq = v_len_sq;
-		outSet = set;
-		return true;
+		// No better match found
+#ifdef JPH_GJK_DEBUG
+		Trace("New closer point is further away, failed to converge");
+#endif
+		return false;
 	}
 
 	// Get max(|Y_0|^2 .. |Y_n|^2)
