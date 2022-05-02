@@ -29,6 +29,14 @@ inline void LFHMAllocator::Clear()
 
 inline void LFHMAllocator::Allocate(uint32 inBlockSize, uint32 &ioBegin, uint32 &ioEnd)
 {
+	// If we're already beyond the end of our buffer then don't do an atomic add.
+	// It's possible that many keys are inserted after the allocator is full, making it possible
+	// for mWriteOffset (uint32) to wrap around to zero. When this happens, there will be a memory corruption.
+	// This way, we will be able to progress the write offset beyond the size of the buffer
+	// worst case by max <CPU count> * inBlockSize.
+	if (mWriteOffset.load(memory_order_relaxed) >= mObjectStoreSizeBytes)
+		return;
+
 	// Atomically fetch a block from the pool
 	uint32 begin = mWriteOffset.fetch_add(inBlockSize, memory_order_relaxed);
 	uint32 end = min(begin + inBlockSize, mObjectStoreSizeBytes);
