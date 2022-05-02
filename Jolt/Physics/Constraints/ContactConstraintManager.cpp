@@ -777,8 +777,8 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 
 		// Calculate default contact settings
 		ContactSettings settings;
-		settings.mCombinedFriction = mCombineFriction(*body1, *body2);
-		settings.mCombinedRestitution = mCombineRestitution(*body1, *body2);
+		settings.mCombinedFriction = mCombineFriction(*body1, input_key.GetSubShapeID1(), *body2, input_key.GetSubShapeID2());
+		settings.mCombinedRestitution = mCombineRestitution(*body1, input_key.GetSubShapeID1(), *body2, input_key.GetSubShapeID2());
 
 		// Calculate world space contact normal
 		Vec3 world_space_normal = transform_body2.Multiply3x3(Vec3::sLoadFloat3Unsafe(output_cm->mContactNormal)).Normalized();
@@ -928,8 +928,8 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 
 	// Settings object that gets passed to the callback
 	ContactSettings settings;
-	settings.mCombinedFriction = mCombineFriction(inBody1, inBody2);
-	settings.mCombinedRestitution = mCombineRestitution(inBody1, inBody2);
+	settings.mCombinedFriction = mCombineFriction(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
+	settings.mCombinedRestitution = mCombineRestitution(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
 
 	// Get the contact points for the old cache entry
 	const ManifoldCache &read_cache = mCache[mCacheWriteIdx ^ 1];
@@ -1174,8 +1174,8 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 	JPH_ASSERT(inManifold.mWorldSpaceNormal.IsNormalized());
 
 	// Calculate contact settings
-	outSettings.mCombinedFriction = mCombineFriction(inBody1, inBody2);
-	outSettings.mCombinedRestitution = mCombineRestitution(inBody1, inBody2);
+	outSettings.mCombinedFriction = mCombineFriction(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
+	outSettings.mCombinedRestitution = mCombineRestitution(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
 
 	// The remainder of this function only deals with calling contact callbacks, if there's no contact callback we also don't need to do this work
 	if (mContactListener != nullptr)
