@@ -33,16 +33,16 @@ public:
 	int							GetCharHeight() const								{ return mCharHeight; }
 							
 	/// Get extents of a string, assuming the height of the text is 1 and with the normal aspect ratio of the font
-	Float2						MeasureText(const string &inText) const;
+	Float2						MeasureText(const string_view &inText) const;
 
 	/// Draw a string at a specific location
 	/// If the string is drawn with the identity matrix, it's top left will start at (0, 0, 0)
 	/// The text width is in the X direction and the text height is in the Y direction and it will have a height of 1
-	void						DrawText3D(Mat44Arg inTransform, const string &inText, ColorArg inColor = Color::sWhite) const;
+	void						DrawText3D(Mat44Arg inTransform, const string_view &inText, ColorArg inColor = Color::sWhite) const;
 							
 private:
 	/// Create a primitive for a string
-	bool						CreateString(Mat44Arg inTransform, const string &inText, ColorArg inColor, RenderPrimitive &ioPrimitive) const;
+	bool						CreateString(Mat44Arg inTransform, const string_view &inText, ColorArg inColor, RenderPrimitive &ioPrimitive) const;
 
 	struct FontVertex
 	{

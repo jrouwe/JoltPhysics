@@ -226,7 +226,7 @@ void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const vector<in
 	}
 }
 
-void DebugRendererImp::DrawText3D(Vec3Arg inPosition, const string &inString, ColorArg inColor, float inHeight)
+void DebugRendererImp::DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
 { 	
 	lock_guard lock(mTextsLock);  
 	mTexts.emplace_back(inPosition, inString, inColor, inHeight); 

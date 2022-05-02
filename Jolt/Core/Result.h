@@ -149,7 +149,7 @@ public:
 
 	/// Set an error value
 	void				SetError(const char *inError)				{ Clear(); new (&mError) string(inError); mState = EState::Error; }
-	void				SetError(const string &inError)				{ Clear(); new (&mError) string(inError); mState = EState::Error; }
+	void				SetError(const string_view &inError)		{ Clear(); new (&mError) string(inError); mState = EState::Error; }
 	void				SetError(string &&inError)					{ Clear(); new (&mError) string(move(inError)); mState = EState::Error; }
 
 private:

@@ -38,7 +38,7 @@ void StringReplace(string &ioString, const string_view &inSearch, const string_v
 	}
 }
 
-void StringToVector(const string &inString, vector<string> &outVector, const string_view &inDelimiter, bool inClearVector)
+void StringToVector(const string_view &inString, vector<string> &outVector, const string_view &inDelimiter, bool inClearVector)
 {
 	JPH_ASSERT(inDelimiter.size() > 0);
 

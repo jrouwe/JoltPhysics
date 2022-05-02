@@ -33,7 +33,7 @@ public:
 	virtual Batch						CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount) override;
 	virtual Batch						CreateTriangleBatch(const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount) override;
 	virtual void						DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
-	virtual void						DrawText3D(Vec3Arg inPosition, const string &inString, ColorArg inColor, float inHeight) override;
+	virtual void						DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) override;
 	
 	/// Draw all primitives that were added
 	void								Draw();
@@ -150,7 +150,7 @@ private:
 	/// A single text string
 	struct Text
 	{
-										Text(Vec3Arg inPosition, const string &inText, ColorArg inColor, float inHeight) : mPosition(inPosition), mText(inText), mColor(inColor), mHeight(inHeight) { }
+										Text(Vec3Arg inPosition, const string_view &inText, ColorArg inColor, float inHeight) : mPosition(inPosition), mText(inText), mColor(inColor), mHeight(inHeight) { }
 
 		Vec3							mPosition;
 		string							mText;

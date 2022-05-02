@@ -35,7 +35,7 @@ constexpr uint64 HashString(const char *inString)
 void StringReplace(string &ioString, const string_view &inSearch, const string_view &inReplace);
 
 /// Convert a delimited string to an array of strings
-void StringToVector(const string &inString, vector<string> &outVector, const string_view &inDelimiter = ",", bool inClearVector = true);
+void StringToVector(const string_view &inString, vector<string> &outVector, const string_view &inDelimiter = ",", bool inClearVector = true);
 
 /// Convert an array strings to a delimited string
 void VectorToString(const vector<string> &inVector, string &outString, const string_view &inDelimiter = ",");

@@ -41,7 +41,7 @@ public:
 
 private:
 	void						WriteChar(char inChar);
-	void						WriteWord(const string &inWord);
+	void						WriteWord(const string_view &inWord);
 
 	int							mIndentation = 0;
 };

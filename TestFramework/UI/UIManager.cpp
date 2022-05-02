@@ -328,7 +328,7 @@ void UIManager::DrawQuad(int inX, int inY, int inWidth, int inHeight, const UITe
 	}
 }
 
-void UIManager::DrawText(int inX, int inY, const string &inText, const Font *inFont, ColorArg inColor)
+void UIManager::DrawText(int inX, int inY, const string_view &inText, const Font *inFont, ColorArg inColor)
 {
 	Vec4 pos(float(inX), float(inY), 0.0f, 1.0f);
 	Vec4 right(float(inFont->GetCharHeight()), 0.0f, 0.0f, 0.0f);

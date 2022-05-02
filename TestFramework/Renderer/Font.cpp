@@ -219,7 +219,7 @@ Font::Create(const char *inFontName, int inCharHeight)
 	return true;
 }
 
-Float2 Font::MeasureText(const string &inText) const
+Float2 Font::MeasureText(const string_view &inText) const
 {
 	JPH_PROFILE("MeasureText");
 
@@ -264,7 +264,7 @@ Float2 Font::MeasureText(const string &inText) const
 	return extents;
 }
 	
-bool Font::CreateString(Mat44Arg inTransform, const string &inText, ColorArg inColor, RenderPrimitive &ioPrimitive) const
+bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorArg inColor, RenderPrimitive &ioPrimitive) const
 {
 	JPH_PROFILE("CreateString");
 
@@ -387,7 +387,7 @@ bool Font::CreateString(Mat44Arg inTransform, const string &inText, ColorArg inC
 	return true;
 }
 
-void Font::DrawText3D(Mat44Arg inTransform, const string &inText, ColorArg inColor) const
+void Font::DrawText3D(Mat44Arg inTransform, const string_view &inText, ColorArg inColor) const
 {
 	JPH_PROFILE("DrawText3D");
 

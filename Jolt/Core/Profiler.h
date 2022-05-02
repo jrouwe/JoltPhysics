@@ -170,7 +170,7 @@ class ProfileThread : public NonCopyable
 {
 public:
 	/// Constructor
-	inline						ProfileThread(const string &inThreadName);
+	inline						ProfileThread(const string_view &inThreadName);
 	inline						~ProfileThread();
 
 	static const uint cMaxSamples = 65536;

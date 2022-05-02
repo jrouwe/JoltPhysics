@@ -30,7 +30,7 @@ public:
 	virtual Batch						CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount) override;
 	virtual Batch						CreateTriangleBatch(const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount) override;
 	virtual void						DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
-	virtual void						DrawText3D(Vec3Arg inPosition, const string &inString, ColorArg inColor, float inHeight) override;
+	virtual void						DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) override;
 	
 	/// Mark the end of a frame
 	void								EndFrame();
@@ -64,6 +64,9 @@ public:
 	/// Holds a single text entry
 	struct TextBlob
 	{
+										TextBlob() = default;
+										TextBlob(Vec3Arg inPosition, const string_view &inString, const Color &inColor, float inHeight) : mPosition(inPosition), mString(inString), mColor(inColor), mHeight(inHeight) { }
+
 		Vec3							mPosition;
 		string							mString;
 		Color							mColor;

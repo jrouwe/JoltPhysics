@@ -67,7 +67,7 @@ public:
 	void						DrawQuad(int inX, int inY, int inWidth, int inHeight, const UITexturedQuad &inQuad, ColorArg inColor);
 
 	/// Draw a string in screen coordinates (assumes that the projection matrix has been set up correctly)
-	void						DrawText(int inX, int inY, const string &inText, const Font *inFont, ColorArg inColor = Color::sWhite);
+	void						DrawText(int inX, int inY, const string_view &inText, const Font *inFont, ColorArg inColor = Color::sWhite);
 								
 private:
 	Renderer *					mRenderer;
