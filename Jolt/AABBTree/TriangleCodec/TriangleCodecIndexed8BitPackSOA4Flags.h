@@ -212,13 +212,6 @@ public:
 			(bounds.GetSize() / Vec3::sReplicate(COMPONENT_MASK)).StoreFloat3(&ioHeader->mScale);
 		}
 
-		void						GetStats(string &outTriangleCodecName, float &outVerticesPerTriangle) const
-		{
-			// Store stats
-			outTriangleCodecName = "Indexed8BitPackSOA4";
-			outVerticesPerTriangle = (float)mVertices.size() / mNumTriangles;
-		}
-
 	private:
 		using VertexMap = unordered_map<uint32, uint32>;
 

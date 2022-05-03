@@ -13,41 +13,6 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-/// How the tree should be converted
-enum class EAABBTreeToBufferConvertMode
-{
-	DepthFirst,							///< Arrange the nodes depth first, put the triangles right after the leaf nodes (so interleaving them with nodes)
-	DepthFirstTrianglesLast,			///< Arrange the nodes depth first and put all triangles blocks after the last node block
-	BreadthFirst,						///< Arrange the nodes breadth first, put the triangles right after the leaf nodes (so interleaving them with nodes)
-	BreadthFirstTrianglesLast,			///< Arrange the nodes breadth first and put all triangles blocks after the last node block
-};
-
-/// Convert mode to string
-inline string ConvertToString(EAABBTreeToBufferConvertMode inConvertMode)
-{
-	switch (inConvertMode)
-	{
-	case EAABBTreeToBufferConvertMode::DepthFirst:					return "DepthFirst";
-	case EAABBTreeToBufferConvertMode::DepthFirstTrianglesLast:		return "DepthFirstTrianglesLast";
-	case EAABBTreeToBufferConvertMode::BreadthFirst:				return "BreadthFirst";
-	case EAABBTreeToBufferConvertMode::BreadthFirstTrianglesLast:	return "BreadthFirstTrianglesLast";
-	}
-
-	JPH_ASSERT(false);
-	return "Invalid";
-}
-
-/// Struct that holds statistics about the AABB tree that was built
-struct AABBTreeToBufferStats
-{
-	uint			mTotalSize = 0;									///< Total size of the built tree in bytes
-	uint			mNodesSize = 0;									///< Total size of all nodes in the tree in bytes
-	uint			mTrianglesSize = 0;								///< Total size of all triangles in the tree in bytes
-	float			mBytesPerTriangle = 0.0f;						///< Average number of bytes per triangle (includes all tree overhead)
-	string			mTriangleCodecName;								///< Name of the codec that was used to build the tree
-	float			mVerticesPerTriangle = 0.0f;					///< How many vertices a triangle on average has
-};
-		
 /// Conversion algorithm that converts an AABB tree to an optimized binary buffer
 template <class TriangleCodec, class NodeCodec>
 class AABBTreeToBuffer
@@ -69,7 +34,7 @@ public:
 	static const int TriangleHeaderSize = TriangleCodec::TriangleHeaderSize;
 
 	/// Convert AABB tree. Returns false if failed.
-	bool							Convert(const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, AABBTreeToBufferStats &outStats, const char *&outError, EAABBTreeToBufferConvertMode inConvertMode = EAABBTreeToBufferConvertMode::DepthFirst)
+	bool							Convert(const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, const char *&outError)
 	{
 		const typename NodeCodec::EncodingContext node_ctx;
 		typename TriangleCodec::EncodingContext tri_ctx;
@@ -124,25 +89,8 @@ public:
 			while (!to_process.empty())
 			{
 				// Get the next node to process
-				NodeData *node_data = nullptr;
-				switch (inConvertMode)
-				{
-				case EAABBTreeToBufferConvertMode::DepthFirst:
-				case EAABBTreeToBufferConvertMode::DepthFirstTrianglesLast:
-					node_data = to_process.back();
-					to_process.pop_back();
-					break;
-
-				case EAABBTreeToBufferConvertMode::BreadthFirst:
-				case EAABBTreeToBufferConvertMode::BreadthFirstTrianglesLast:
-					node_data = to_process.front();
-					to_process.pop_front();
-					break;
-
-				default:
-					JPH_ASSERT(false);
-					break;
-				}
+				NodeData *node_data = to_process.back();
+				to_process.pop_back();
 
 				// Due to quantization box could have become bigger, not smaller
 				JPH_ASSERT(AABox(node_data->mNodeBoundsMin, node_data->mNodeBoundsMax).Contains(node_data->mNode->mBounds), "AABBTreeToBuffer: Bounding box became smaller!");
@@ -175,12 +123,9 @@ public:
 
 				if (node_data->mNode->HasChildren())
 				{
-					for (size_t i = 0; i < child_nodes.size(); ++i)
+					// Insert in reverse order so we process left child first when taking nodes from the back
+					for (int idx = int(child_nodes.size()) - 1; idx >= 0; --idx)
 					{
-						// Depth first: Insert in reverse order so we process left child first when taking nodes from the back
-						size_t idx = (inConvertMode == EAABBTreeToBufferConvertMode::DepthFirst || inConvertMode == EAABBTreeToBufferConvertMode::DepthFirstTrianglesLast)? 
-							child_nodes.size() - 1 - i : i;
-					
 						// Due to quantization box could have become bigger, not smaller
 						JPH_ASSERT(AABox(child_bounds_min[idx], child_bounds_max[idx]).Contains(child_nodes[idx]->mBounds), "AABBTreeToBuffer: Bounding box became smaller!");
 
@@ -199,21 +144,11 @@ public:
 							return false;
 						}
 
-						switch (inConvertMode)
-						{
-						case EAABBTreeToBufferConvertMode::DepthFirst:
-						case EAABBTreeToBufferConvertMode::BreadthFirst:
+						// Store triangles in separate list so we process them last
+						if (node_list.back().mNode->HasChildren())
 							to_process.push_back(&node_list.back());
-							break;
-
-						case EAABBTreeToBufferConvertMode::DepthFirstTrianglesLast:
-						case EAABBTreeToBufferConvertMode::BreadthFirstTrianglesLast:
-							if (node_list.back().mNode->HasChildren())
-								to_process.push_back(&node_list.back());
-							else
-								to_process_triangles.push_back(&node_list.back());
-							break;
-						}
+						else
+							to_process_triangles.push_back(&node_list.back());
 					}
 				}
 				else
@@ -247,9 +182,6 @@ public:
 		// Finalize the triangles
 		tri_ctx.Finalize(triangle_header, mTree);
 
-		// Get stats
-		tri_ctx.GetStats(outStats.mTriangleCodecName, outStats.mVerticesPerTriangle);
-
 		// Validate that we reserved enough memory
 		if (nodes_size < mNodesSize)
 		{
@@ -268,12 +200,6 @@ public:
 
 		// Shrink the tree, this will invalidate the header and triangle_header variables
 		mTree.shrink_to_fit();
-
-		// Output stats
-		outStats.mTotalSize = (uint)mTree.size();
-		outStats.mNodesSize = mNodesSize;
-		outStats.mTrianglesSize = (uint)mTree.size() - mNodesSize;
-		outStats.mBytesPerTriangle = (float)mTree.size() / tri_count;
 
 		return true;
 	}
