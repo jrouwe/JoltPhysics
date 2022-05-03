@@ -47,11 +47,6 @@ public:
 		OSWriteDataType(ioStream, (T *)nullptr);
 	}
 
-	virtual void				VisitCompounds(const void *inObject, const CompoundVisitor &inVisitor) const override
-	{
-		OSVisitCompounds(((const Class *)inObject)->*mMember, inVisitor);
-	}
-
 private:
 	T Class::*					mMember;
 };

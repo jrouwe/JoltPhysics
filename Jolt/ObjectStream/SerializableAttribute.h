@@ -23,7 +23,6 @@ public:
 	virtual bool				ReadData(ObjectStreamIn &ioStream, void *inObject) const = 0;
 	virtual void				WriteData(ObjectStreamOut &ioStream, const void *inObject) const = 0;
 	virtual void				WriteDataType(ObjectStreamOut &ioStream) const = 0;
-	virtual void				VisitCompounds(const void *inObject, const CompoundVisitor &inVisitor) const = 0;
 };
 
 JPH_NAMESPACE_END
