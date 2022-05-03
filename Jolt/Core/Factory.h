@@ -27,6 +27,9 @@ public:
 	/// Register an object with the factory. Returns false on failure.
 	bool						Register(const RTTI *inRTTI);
 
+	/// Unregisters all types
+	void						Clear();
+
 	/// Get all registered classes
 	vector<const RTTI *>		GetAllClasses() const;
 

@@ -59,6 +59,12 @@ bool Factory::Register(const RTTI *inRTTI)
 	return true;
 }
 
+void Factory::Clear()
+{
+	mClassNameMap.clear();
+	mClassHashMap.clear();
+}
+
 vector<const RTTI *> Factory::GetAllClasses() const
 {
 	vector<const RTTI *> all_classes;
