@@ -8,8 +8,6 @@
 
 JPH_NAMESPACE_BEGIN
 
-using CompoundVisitor = function<void(const void *, const RTTI *)>;
-
 /// Attributes are members of classes that need to be serialized. This extends the
 /// basic attribute defined in RTTI.h
 class SerializableAttribute : public RTTIAttribute
