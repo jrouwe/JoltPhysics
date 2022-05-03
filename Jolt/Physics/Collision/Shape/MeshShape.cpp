@@ -191,10 +191,10 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	// Convert to buffer
 	AABBTreeToBufferStats buffer_stats;
 	AABBTreeToBuffer<TriangleCodec, NodeCodec> buffer;
-	string error;
+	const char *error = nullptr;
 	if (!buffer.Convert(inSettings.mTriangleVertices, root, buffer_stats, error, EAABBTreeToBufferConvertMode::DepthFirstTrianglesLast))
 	{
-		outResult.SetError(move(error));
+		outResult.SetError(error);
 		delete root;
 		return;
 	}

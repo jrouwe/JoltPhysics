@@ -104,7 +104,7 @@ public:
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
 		/// Returns uint(-1) on error.
-		uint						Pack(const VertexList &inVertices, const IndexedTriangleList &inTriangles, ByteBuffer &ioBuffer, string &outError)
+		uint						Pack(const VertexList &inVertices, const IndexedTriangleList &inTriangles, ByteBuffer &ioBuffer, const char *&outError)
 		{
 			// Determine position of triangles start
 			uint offset = (uint)ioBuffer.size();
@@ -158,7 +158,7 @@ public:
 							outError = "TriangleCodecIndexed8BitPackSOA4Flags: Offset doesn't fit in 8 bit";
 							return uint(-1);
 						}
-						block->mIndices[vertex_nr][block_tri_idx] = (uint8)vertex_offset;											   						
+						block->mIndices[vertex_nr][block_tri_idx] = (uint8)vertex_offset;
 
 						// Store flags
 						uint32 flags = triangle_available? inTriangles[t + block_tri_idx].mMaterialIndex : 0;

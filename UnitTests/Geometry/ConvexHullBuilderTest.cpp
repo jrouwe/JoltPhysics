@@ -12,7 +12,7 @@ TEST_SUITE("ConvexHullBuilderTest")
 
 	TEST_CASE("TestDegenerate")
 	{
-		string error;
+		const char *error = nullptr;
 
 		{
 			// Too few points / coinciding points should be degenerate
@@ -41,7 +41,7 @@ TEST_SUITE("ConvexHullBuilderTest")
 
 	TEST_CASE("Test2DHull")
 	{
-		string error;
+		const char *error = nullptr;
 
 		{
 			// A triangle
@@ -92,7 +92,7 @@ TEST_SUITE("ConvexHullBuilderTest")
 
 	TEST_CASE("Test3DHull")
 	{
-		string error;
+		const char *error = nullptr;
 
 		{
 			// A cube with lots of interior points
@@ -142,7 +142,7 @@ TEST_SUITE("ConvexHullBuilderTest")
 
 	TEST_CASE("TestRandomHull")
 	{
-		string error;
+		const char *error = nullptr;
 
 		UnitTestRandom random(0x1ee7c0de);
 

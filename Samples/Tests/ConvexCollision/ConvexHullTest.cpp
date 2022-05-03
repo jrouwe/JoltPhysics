@@ -473,11 +473,11 @@ void ConvexHullTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	ConvexHullBuilder builder(points);
 
 	// Build the hull
-	string error;
+	const char *error = nullptr;
 	ConvexHullBuilder::EResult result = builder.Initialize(INT_MAX, tolerance, error);
 	if (result != ConvexHullBuilder::EResult::Success && result != ConvexHullBuilder::EResult::MaxVerticesReached)
 	{
-		Trace("Iteration %d: Failed to initialize from positions: %s", mIteration - 1, error.c_str());
+		Trace("Iteration %d: Failed to initialize from positions: %s", mIteration - 1, error);
 		JPH_ASSERT(false);
 		return;
 	}

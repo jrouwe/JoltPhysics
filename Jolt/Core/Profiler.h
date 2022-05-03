@@ -81,7 +81,7 @@ public:
 
 	/// Dump profiling statistics at the start of the next frame
 	/// @param inTag If not empty, this overrides the auto incrementing number in the filename of the dump file
-	void						Dump(string inTag = string());
+	void						Dump(const string_view &inTag = string_view());
 
 	/// Add a thread to be instrumented
 	void						AddThread(ProfileThread *inThread);
@@ -144,8 +144,8 @@ private:
 
 	/// Dump profiling statistics
 	void						DumpInternal();
-	void						DumpList(string inTag, const Aggregators &inAggregators);
-	void						DumpChart(string inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators);
+	void						DumpList(const char *inTag, const Aggregators &inAggregators);
+	void						DumpChart(const char *inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators);
 
 	mutex						mLock;																///< Lock that protects mThreads
 	vector<ProfileThread *>		mThreads;															///< List of all active threads
