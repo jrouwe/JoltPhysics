@@ -81,7 +81,7 @@ class RTTIAttribute;
 /// Example of usage in a program:
 ///
 ///		Foo *foo_ptr = new Foo;
-///		Bar *bar_ptr = new Bar;
+///		Foo *bar_ptr = new Bar;
 ///
 ///		IsType(foo_ptr, RTTI(Bar)) returns false
 ///		IsType(bar_ptr, RTTI(Bar)) returns true
