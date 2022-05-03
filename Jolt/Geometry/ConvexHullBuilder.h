@@ -102,7 +102,7 @@ public:
 	/// @param inTolerance Max distance that a point is allowed to be outside of the hull
 	/// @param outError Error message when building fails
 	/// @return Status code that reports if the hull was created or not
-	EResult				Initialize(int inMaxVertices, float inTolerance, string &outError);
+	EResult				Initialize(int inMaxVertices, float inTolerance, const char *&outError);
 
 	/// Returns the amount of vertices that are currently used by the hull
 	int					GetNumVerticesUsed() const;

@@ -177,7 +177,7 @@ void ObjectStreamTextOut::WriteChar(char inChar)
 	mStream.put(inChar);
 }
 
-void ObjectStreamTextOut::WriteWord(const string &inWord)
+void ObjectStreamTextOut::WriteWord(const string_view &inWord)
 {
 	mStream << inWord;
 }

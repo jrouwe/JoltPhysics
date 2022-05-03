@@ -59,7 +59,7 @@ UIElement *DebugUI::CreateMenu()
 	return stack;
 }
 
-UIStaticText *DebugUI::CreateStaticText(UIElement *inMenu, const string &inText)
+UIStaticText *DebugUI::CreateStaticText(UIElement *inMenu, const string_view &inText)
 {
 	UIStaticText *text = new UIStaticText();
 	text->SetText(inText);
@@ -68,7 +68,7 @@ UIStaticText *DebugUI::CreateStaticText(UIElement *inMenu, const string &inText)
 	return text;
 }
 
-UITextButton *DebugUI::CreateTextButton(UIElement *inMenu, const string &inName, UITextButton::ClickAction inAction)
+UITextButton *DebugUI::CreateTextButton(UIElement *inMenu, const string_view &inName, UITextButton::ClickAction inAction)
 {
 	UITextButton *button = new UITextButton();
 	button->SetText(inName);
@@ -80,7 +80,7 @@ UITextButton *DebugUI::CreateTextButton(UIElement *inMenu, const string &inName,
 	return button;
 }
 
-UICheckBox *DebugUI::CreateCheckBox(UIElement *inMenu, const string &inName, bool inInitiallyChecked, UICheckBox::ClickAction inAction)
+UICheckBox *DebugUI::CreateCheckBox(UIElement *inMenu, const string_view &inName, bool inInitiallyChecked, UICheckBox::ClickAction inAction)
 {
 	UICheckBox *check_box = new UICheckBox();
 	check_box->SetUncheckedStateQuad(UITexturedQuad(mUITexture, 48, 0, 16, 16));
@@ -94,7 +94,7 @@ UICheckBox *DebugUI::CreateCheckBox(UIElement *inMenu, const string &inName, boo
 	return check_box;
 }
 
-UISlider *DebugUI::CreateSlider(UIElement *inMenu, const string &inName, float inInitialValue, float inMinValue, float inMaxValue, float inStepValue, UISlider::ValueChangedAction inAction)
+UISlider *DebugUI::CreateSlider(UIElement *inMenu, const string_view &inName, float inInitialValue, float inMinValue, float inMaxValue, float inStepValue, UISlider::ValueChangedAction inAction)
 {
 	UIHorizontalStack *horiz = new UIHorizontalStack();
 	horiz->SetPaddingRight(24);
@@ -146,7 +146,7 @@ UISlider *DebugUI::CreateSlider(UIElement *inMenu, const string &inName, float i
 	return slider;
 }
 
-UIComboBox *DebugUI::CreateComboBox(UIElement *inMenu, const string &inName, const vector<string> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction)
+UIComboBox *DebugUI::CreateComboBox(UIElement *inMenu, const string_view &inName, const vector<string> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction)
 {
 	UIHorizontalStack *horiz = new UIHorizontalStack();
 	horiz->SetPaddingRight(24);

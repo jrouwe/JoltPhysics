@@ -24,7 +24,7 @@ public:
 		// Note: Not implementing serialization because we don't serialize this material in this example!
 
 		/// Constructor
-					MyMaterial(const string &inName, ColorArg inColor, float inFriction, float inRestitution) : PhysicsMaterialSimple(inName, inColor), mFriction(inFriction), mRestitution(inRestitution) { }
+					MyMaterial(const string_view &inName, ColorArg inColor, float inFriction, float inRestitution) : PhysicsMaterialSimple(inName, inColor), mFriction(inFriction), mRestitution(inRestitution) { }
 
 		float		mFriction;
 		float		mRestitution;

@@ -15,7 +15,7 @@ public:
 
 	/// Constructor
 											PhysicsMaterialSimple() = default;
-											PhysicsMaterialSimple(const string &inName, ColorArg inColor) : mDebugName(inName), mDebugColor(inColor) { }
+											PhysicsMaterialSimple(const string_view &inName, ColorArg inColor) : mDebugName(inName), mDebugColor(inColor) { }
 
 	// Properties
 	virtual const char *					GetDebugName() const override		{ return mDebugName.c_str(); }

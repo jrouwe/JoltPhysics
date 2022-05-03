@@ -219,7 +219,7 @@ public:
 	void								DrawGeometry(Mat44Arg inModelMatrix, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawGeometry(inModelMatrix, inGeometry->mBounds.Transformed(inModelMatrix), max(max(inModelMatrix.GetAxisX().LengthSq(), inModelMatrix.GetAxisY().LengthSq()), inModelMatrix.GetAxisZ().LengthSq()), inModelColor, inGeometry, inCullMode, inCastShadow, inDrawMode); }
 
 	/// Draw text
-	virtual void						DrawText3D(Vec3Arg inPosition, const string &inString, ColorArg inColor = Color::sWhite, float inHeight = 0.5f)	= 0;
+	virtual void						DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor = Color::sWhite, float inHeight = 0.5f)	= 0;
 
 protected:
 	/// Initialize the system, must be called from the constructor of the DebugRenderer implementation

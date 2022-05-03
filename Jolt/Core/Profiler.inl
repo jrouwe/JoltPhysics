@@ -7,7 +7,7 @@ JPH_NAMESPACE_BEGIN
 // ProfileThread
 //////////////////////////////////////////////////////////////////////////////////////////
 
-ProfileThread::ProfileThread(const string &inThreadName) :
+ProfileThread::ProfileThread(const string_view &inThreadName) :
 	mThreadName(inThreadName)
 {
 	Profiler::sInstance.AddThread(this);

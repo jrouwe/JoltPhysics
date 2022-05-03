@@ -56,7 +56,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	}
 
 	// Build convex hull
-	string error;
+	const char *error = nullptr;
 	ConvexHullBuilder builder(inSettings.mPoints);
 	ConvexHullBuilder::EResult result = builder.Initialize(cMaxPointsInHull, inSettings.mHullTolerance, error);
 	if (result != ConvexHullBuilder::EResult::Success && result != ConvexHullBuilder::EResult::MaxVerticesReached)

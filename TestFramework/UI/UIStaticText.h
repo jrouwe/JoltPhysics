@@ -19,7 +19,7 @@ public:
 	void				SetTextColor(ColorArg inColor)				{ mTextColor = inColor; }
 	void				SetDisabledTextColor(ColorArg inColor)		{ mDisabledTextColor = inColor; }
 	void				SetFont(const Font *inFont)					{ mFont = inFont; }
-	void				SetText(const string &inText)				{ mText = inText; }
+	void				SetText(const string_view &inText)			{ mText = inText; }
 	void				SetTextPadding(int inTop, int inLeft, int inBottom, int inRight) { mTextPadTop = inTop; mTextPadLeft = inLeft; mTextPadBottom = inBottom; mTextPadRight = inRight; }
 	void				SetTextAlignment(EAlignment inAlignment)	{ JPH_ASSERT(inAlignment == LEFT || inAlignment == RIGHT || inAlignment == CENTER); mTextAlignment = inAlignment; }
 	void				SetWrap(bool inWrap)						{ mWrap = inWrap; }

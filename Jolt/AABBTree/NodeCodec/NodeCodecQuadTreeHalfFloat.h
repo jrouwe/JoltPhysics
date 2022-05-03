@@ -71,7 +71,7 @@ public:
 		/// Algorithm can enlarge the bounding boxes of the children during compression and returns these in outChildBoundsMin, outChildBoundsMax
 		/// inNodeBoundsMin, inNodeBoundsMax is the bounding box if inNode possibly widened by compressing the parent node
 		/// Returns uint(-1) on error and reports the error in outError
-		uint							NodeAllocate(const AABBTreeBuilder::Node *inNode, Vec3Arg inNodeBoundsMin, Vec3Arg inNodeBoundsMax, vector<const AABBTreeBuilder::Node *> &ioChildren, Vec3 outChildBoundsMin[NumChildrenPerNode], Vec3 outChildBoundsMax[NumChildrenPerNode], ByteBuffer &ioBuffer, string &outError) const
+		uint							NodeAllocate(const AABBTreeBuilder::Node *inNode, Vec3Arg inNodeBoundsMin, Vec3Arg inNodeBoundsMax, vector<const AABBTreeBuilder::Node *> &ioChildren, Vec3 outChildBoundsMin[NumChildrenPerNode], Vec3 outChildBoundsMax[NumChildrenPerNode], ByteBuffer &ioBuffer, const char *&outError) const
 		{
 			// We don't emit nodes for leafs
 			if (!inNode->HasChildren())
@@ -132,7 +132,7 @@ public:
 		}
 
 		/// Once all nodes have been added, this call finalizes all nodes by patching in the offsets of the child nodes (that were added after the node itself was added)
-		bool						NodeFinalize(const AABBTreeBuilder::Node *inNode, uint inNodeStart, uint inNumChildren, const uint *inChildrenNodeStart, const uint *inChildrenTrianglesStart, ByteBuffer &ioBuffer, string &outError) const
+		bool						NodeFinalize(const AABBTreeBuilder::Node *inNode, uint inNodeStart, uint inNumChildren, const uint *inChildrenNodeStart, const uint *inChildrenTrianglesStart, ByteBuffer &ioBuffer, const char *&outError) const
 		{
 			if (!inNode->HasChildren())
 				return true;
@@ -162,7 +162,7 @@ public:
 		}
 
 		/// Once all nodes have been finalized, this will finalize the header of the nodes
-		bool						Finalize(Header *outHeader, const AABBTreeBuilder::Node *inRoot, uint inRootNodeStart, uint inRootTrianglesStart, string &outError) const
+		bool						Finalize(Header *outHeader, const AABBTreeBuilder::Node *inRoot, uint inRootNodeStart, uint inRootTrianglesStart, const char *&outError) const
 		{
 			uint offset = inRoot->HasChildren()? inRootNodeStart : inRootTrianglesStart;
 			if (offset & OFFSET_NON_SIGNIFICANT_MASK)

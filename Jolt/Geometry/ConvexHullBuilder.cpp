@@ -243,7 +243,7 @@ bool ConvexHullBuilder::ContainsFace(const vector<int> &inIndices) const
 	return false;
 }
 
-ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, float inTolerance, string &outError)
+ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, float inTolerance, const char *&outError)
 {
 	// Free the faces possibly left over from an earlier hull
 	FreeFaces();

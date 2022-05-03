@@ -69,7 +69,7 @@ public:
 	static const int TriangleHeaderSize = TriangleCodec::TriangleHeaderSize;
 
 	/// Convert AABB tree. Returns false if failed.
-	bool							Convert(const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, AABBTreeToBufferStats &outStats, string &outError, EAABBTreeToBufferConvertMode inConvertMode = EAABBTreeToBufferConvertMode::DepthFirst)
+	bool							Convert(const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, AABBTreeToBufferStats &outStats, const char *&outError, EAABBTreeToBufferConvertMode inConvertMode = EAABBTreeToBufferConvertMode::DepthFirst)
 	{
 		const typename NodeCodec::EncodingContext node_ctx;
 		typename TriangleCodec::EncodingContext tri_ctx;

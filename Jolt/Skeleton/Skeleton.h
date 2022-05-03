@@ -26,22 +26,25 @@ public:
 	public:
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(Joint)
 
-		string				mName;																	///< Name of the joint
-		string				mParentName;															///< Name of parent joint
-		int					mParentJointIndex = -1;													///< Index of parent joint (in mJoints) or -1 if it has no parent
+							Joint() = default;
+							Joint(const string_view &inName, const string_view &inParentName, int inParentJointIndex) : mName(inName), mParentName(inParentName), mParentJointIndex(inParentJointIndex) { }
+
+		string				mName;																		///< Name of the joint
+		string				mParentName;																///< Name of parent joint
+		int					mParentJointIndex = -1;														///< Index of parent joint (in mJoints) or -1 if it has no parent
 	};
 
 	using JointVector = vector<Joint>;
 
 	///@name Access to the joints
 	///@{
-	const JointVector &		GetJoints() const														{ return mJoints; }
-	JointVector &			GetJoints()																{ return mJoints; }
-	int						GetJointCount() const													{ return (int)mJoints.size(); }
-	const Joint &			GetJoint(int inJoint) const												{ return mJoints[inJoint]; }
-	Joint &					GetJoint(int inJoint)													{ return mJoints[inJoint]; }
-	uint					AddJoint(const string &inName, const string &inParentName = string())	{ mJoints.push_back({ inName, inParentName, -1 }); return (uint)mJoints.size() - 1; }
-	uint					AddJoint(const string &inName, int inParentIndex)						{ mJoints.push_back({ inName, inParentIndex >= 0? mJoints[inParentIndex].mName : string(), inParentIndex }); return (uint)mJoints.size() - 1; }
+	const JointVector &		GetJoints() const															{ return mJoints; }
+	JointVector &			GetJoints()																	{ return mJoints; }
+	int						GetJointCount() const														{ return (int)mJoints.size(); }
+	const Joint &			GetJoint(int inJoint) const													{ return mJoints[inJoint]; }
+	Joint &					GetJoint(int inJoint)														{ return mJoints[inJoint]; }
+	uint					AddJoint(const string_view &inName, const string_view &inParentName = string_view()) { mJoints.emplace_back(inName, inParentName, -1); return (uint)mJoints.size() - 1; }
+	uint					AddJoint(const string_view &inName, int inParentIndex)						{ mJoints.emplace_back(inName, inParentIndex >= 0? mJoints[inParentIndex].mName : string(), inParentIndex); return (uint)mJoints.size() - 1; }
 	///@}
 
 	/// Find joint by name

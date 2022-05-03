@@ -92,7 +92,7 @@ void DebugRendererRecorder::DrawGeometry(Mat44Arg inModelMatrix, const AABox &in
 	mCurrentFrame.mGeometries.push_back({ inModelMatrix, inModelColor, geometry_id, inCullMode, inCastShadow, inDrawMode });
 }
 
-void DebugRendererRecorder::DrawText3D(Vec3Arg inPosition, const string &inString, ColorArg inColor, float inHeight)
+void DebugRendererRecorder::DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
 { 	
 	lock_guard lock(mMutex);  
 

@@ -25,11 +25,11 @@ public:
 	UIElement *			CreateMenu();
 
 	/// Add items to the menu
-	UIStaticText *		CreateStaticText(UIElement *inMenu, const string &inText);
-	UITextButton *		CreateTextButton(UIElement *inMenu, const string &inName, UITextButton::ClickAction inAction);
-	UICheckBox *		CreateCheckBox(UIElement *inMenu, const string &inName, bool inInitiallyChecked, UICheckBox::ClickAction inAction);
-	UISlider *			CreateSlider(UIElement *inMenu, const string &inName, float inInitialValue, float inMinValue, float inMaxValue, float inStepValue, UISlider::ValueChangedAction inAction);
-	UIComboBox *		CreateComboBox(UIElement *inMenu, const string &inName, const vector<string> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction);
+	UIStaticText *		CreateStaticText(UIElement *inMenu, const string_view &inText);
+	UITextButton *		CreateTextButton(UIElement *inMenu, const string_view &inName, UITextButton::ClickAction inAction);
+	UICheckBox *		CreateCheckBox(UIElement *inMenu, const string_view &inName, bool inInitiallyChecked, UICheckBox::ClickAction inAction);
+	UISlider *			CreateSlider(UIElement *inMenu, const string_view &inName, float inInitialValue, float inMinValue, float inMaxValue, float inStepValue, UISlider::ValueChangedAction inAction);
+	UIComboBox *		CreateComboBox(UIElement *inMenu, const string_view &inName, const vector<string> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction);
 
 	/// Show it
 	void				ShowMenu(UIElement *inMenu);
