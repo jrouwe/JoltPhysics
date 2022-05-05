@@ -13,6 +13,7 @@ TriangleSplitterBinning::TriangleSplitterBinning(const VertexList &inVertices, c
 	mMaxNumBins(inMaxNumBins),
 	mNumTrianglesPerBin(inNumTrianglesPerBin)
 {
+	mBins.resize(mMaxNumBins);
 }
 
 bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Range &outRight)
@@ -28,7 +29,6 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 
 	// Bin in all dimensions
 	uint num_bins = Clamp(inTriangles.Count() / mNumTrianglesPerBin, mMinNumBins, mMaxNumBins);	
-	vector<Bin> bins(num_bins);
 	for (uint dim = 0; dim < 3; ++dim)
 	{
 		float bounds_min = centroid_bounds.mMin[dim];
@@ -41,7 +41,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 		// Initialize bins
 		for (uint b = 0; b < num_bins; ++b)
 		{
-			Bin &bin = bins[b];
+			Bin &bin = mBins[b];
 			bin.mBounds.SetEmpty();
 			bin.mMinCentroid = bounds_min + bounds_size * (b + 1) / num_bins;
 			bin.mNumTriangles = 0;
@@ -54,7 +54,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 
 			// Select bin 
 			uint bin_no = min(uint((centroid_pos - bounds_min) / bounds_size * num_bins), num_bins - 1);
-			Bin &bin = bins[bin_no];
+			Bin &bin = mBins[bin_no];
 
 			// Accumulate triangle in bin
 			bin.mBounds.Encapsulate(mVertices, GetTriangle(t));
@@ -67,7 +67,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 		int prev_triangles = 0;
 		for (uint b = 0; b < num_bins; ++b)
 		{
-			Bin &bin = bins[b];
+			Bin &bin = mBins[b];
 			bin.mBoundsAccumulatedLeft = prev_bounds; // Don't include this node as we'll take a split on the left side of the bin
 			bin.mNumTrianglesAccumulatedLeft = prev_triangles;
 			prev_bounds.Encapsulate(bin.mBounds);
@@ -79,7 +79,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 		prev_triangles = 0;
 		for (int b = num_bins - 1; b >= 0; --b)
 		{
-			Bin &bin = bins[b];
+			Bin &bin = mBins[b];
 			prev_bounds.Encapsulate(bin.mBounds);
 			prev_triangles += bin.mNumTriangles;
 			bin.mBoundsAccumulatedRight = prev_bounds;
@@ -90,7 +90,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 		for (uint b = 1; b < num_bins; ++b) // Start at 1 since selecting bin 0 would result in everything ending up on the right side
 		{
 			// Calculate surface area heuristic and see if it is better than the current best
-			const Bin &bin = bins[b];
+			const Bin &bin = mBins[b];
 			float cp = bin.mBoundsAccumulatedLeft.GetSurfaceArea() * bin.mNumTrianglesAccumulatedLeft + bin.mBoundsAccumulatedRight.GetSurfaceArea() * bin.mNumTrianglesAccumulatedRight;
 			if (cp < best_cp)
 			{
