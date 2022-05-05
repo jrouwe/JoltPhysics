@@ -178,15 +178,6 @@ void *ObjectStreamIn::Read(const RTTI *inRTTI)
 			}
 		}
 
-		// Call OnLoaded callback
-		unordered_set<SerializableObject *> visited_set;
-		OSVisitCompounds(main_object, inRTTI, [&visited_set](const void *inObject, const RTTI *inType) 
-			{ 
-				SerializableObject *so = const_cast<SerializableObject *>(reinterpret_cast<const SerializableObject *>(inType->CastTo(inObject, JPH_RTTI(SerializableObject))));
-				if (so != nullptr && visited_set.insert(so).second)
-					so->OnLoaded(); 
-			});
-
 		return main_object;
 	}
 	else

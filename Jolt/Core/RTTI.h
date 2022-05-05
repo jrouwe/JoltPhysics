@@ -22,7 +22,6 @@ class RTTIAttribute;
 ///  - An extra virtual member function is added. This adds 8 bytes to the size of 
 ///    an instance of the class (unless you are already using virtual functions).
 ///
-///
 /// To use RTTI on a specific class use:
 ///
 /// Header file:
@@ -81,8 +80,8 @@ class RTTIAttribute;
 ///
 /// Example of usage in a program:
 ///
-///		pFoo foo_ptr = new Foo;
-///		pFoo bar_ptr = new Bar;
+///		Foo *foo_ptr = new Foo;
+///		Foo *bar_ptr = new Bar;
 ///
 ///		IsType(foo_ptr, RTTI(Bar)) returns false
 ///		IsType(bar_ptr, RTTI(Bar)) returns true

@@ -20,9 +20,7 @@ JPH_NAMESPACE_BEGIN
 	prefix void			OSWriteData(ObjectStreamOut &ioStream, const class_name &inInstance);						\
 	prefix void			OSWriteData(ObjectStreamOut &ioStream, class_name *const &inPointer);						\
 	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name *);									\
-	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name **);									\
-	prefix void			OSVisitCompounds(const class_name &inObject, const CompoundVisitor &inVisitor);				\
-	prefix void			OSVisitCompounds(const class_name *inObject, const CompoundVisitor &inVisitor);
+	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name **);
 
 // JPH_IMPLEMENT_SERIALIZATION_FUNCTIONS
 #define JPH_IMPLEMENT_SERIALIZATION_FUNCTIONS(class_name)															\
@@ -62,15 +60,6 @@ JPH_NAMESPACE_BEGIN
 	{																												\
 		ioStream.WriteDataType(ObjectStream::EDataType::Pointer);													\
 		ioStream.WriteName(#class_name);																			\
-	}																												\
-	void				OSVisitCompounds(const class_name &inObject, const CompoundVisitor &inVisitor)				\
-	{																												\
-		OSVisitCompounds(&inObject, JPH_RTTI(class_name), inVisitor);												\
-	}																												\
-	void				OSVisitCompounds(const class_name *inObject, const CompoundVisitor &inVisitor)				\
-	{																												\
-		if (inObject != nullptr)																					\
-			OSVisitCompounds(inObject, GetRTTI(inObject), inVisitor);												\
 	}
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -148,59 +137,7 @@ public:																												\
 // JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT_BASE
 #define JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT_BASE(class_name)														\
 	JPH_IMPLEMENT_SERIALIZATION_FUNCTIONS(class_name)																\
-	JPH_IMPLEMENT_RTTI_ABSTRACT_BASE(class_name)																	\
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// OSVisitCompounds
-//
-// Allows recursively visiting an object and all of its children depth first
-//////////////////////////////////////////////////////////////////////////////////////////
-
-/// Basic visitor that recurses to all attributes
-void OSVisitCompounds(const void *inObject, const RTTI *inRTTI, const CompoundVisitor &inVisitor);
-
-// Dummy implementation for OSVisitCompounds for all primitive types
-#define JPH_DECLARE_PRIMITIVE(name)																					\
-	inline void OSVisitCompounds(const name &inObject, const CompoundVisitor &inVisitor) { }
-
-// This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <Jolt/ObjectStream/ObjectStreamTypes.h>
-
-/// Define visitor templates
-template <class T>
-void OSVisitCompounds(const Ref<T> &inObject, const CompoundVisitor &inVisitor)	
-{
-	if (inObject != nullptr)
-		OSVisitCompounds(inObject.GetPtr(), inVisitor);
-}
-
-template <class T>
-void OSVisitCompounds(const RefConst<T> &inObject, const CompoundVisitor &inVisitor)	
-{
-	if (inObject != nullptr)
-		OSVisitCompounds(inObject.GetPtr(), inVisitor);
-}
-
-template <class T>
-void OSVisitCompounds(const vector<T> &inObject, const CompoundVisitor &inVisitor)	
-{ 
-	for (const T &v : inObject)
-		OSVisitCompounds(v, inVisitor);
-}
-
-template <class T, uint N>
-void OSVisitCompounds(const StaticArray<T, N> &inObject, const CompoundVisitor &inVisitor)	
-{ 
-	for (const T &v : inObject)
-		OSVisitCompounds(v, inVisitor);
-}
-
-template <class T, uint N>
-void OSVisitCompounds(const T (&inObject)[N], const CompoundVisitor &inVisitor)	
-{ 
-	for (const T &v : inObject)
-		OSVisitCompounds(v, inVisitor);
-}
+	JPH_IMPLEMENT_RTTI_ABSTRACT_BASE(class_name)
 
 /// Classes must be derived from SerializableObject if you want to be able to save pointers or
 /// reference counting pointers to objects of this or derived classes. The type will automatically
@@ -212,10 +149,6 @@ class SerializableObject
 public:
 	/// Constructor
 	virtual						~SerializableObject() = default;
-
-	/// Callback given when object has been loaded from an object stream
-	/// This is called when all links have been resolved. Objects that this object point to have already received their OnLoaded callback.
-	virtual void				OnLoaded()																			{ /* Do nothing */ }
 };
 
 JPH_NAMESPACE_END
