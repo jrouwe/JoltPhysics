@@ -37,7 +37,7 @@ public:
 	bool							Convert(const VertexList &inVertices, const AABBTreeBuilder::Node *inRoot, const char *&outError)
 	{
 		const typename NodeCodec::EncodingContext node_ctx;
-		typename TriangleCodec::EncodingContext tri_ctx;
+		typename TriangleCodec::EncodingContext tri_ctx(inVertices);
 
 		// Estimate the amount of memory required
 		uint tri_count = inRoot->GetTriangleCountInTree();
@@ -154,7 +154,7 @@ public:
 				else
 				{				
 					// Add triangles
-					node_data->mTriangleStart = tri_ctx.Pack(inVertices, node_data->mNode->mTriangles, mTree, outError);
+					node_data->mTriangleStart = tri_ctx.Pack(node_data->mNode->mTriangles, mTree, outError);
 					if (node_data->mTriangleStart == uint(-1))
 						return false;
 				}
@@ -180,7 +180,7 @@ public:
 				return false;
 		
 		// Finalize the triangles
-		tri_ctx.Finalize(triangle_header, mTree);
+		tri_ctx.Finalize(inVertices, triangle_header, mTree);
 
 		// Validate that we reserved enough memory
 		if (nodes_size < mNodesSize)
