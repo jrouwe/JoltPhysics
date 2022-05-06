@@ -189,10 +189,9 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	AABBTreeBuilder::Node *root = builder.Build(builder_stats);
 
 	// Convert to buffer
-	AABBTreeToBufferStats buffer_stats;
 	AABBTreeToBuffer<TriangleCodec, NodeCodec> buffer;
 	const char *error = nullptr;
-	if (!buffer.Convert(inSettings.mTriangleVertices, root, buffer_stats, error, EAABBTreeToBufferConvertMode::DepthFirstTrianglesLast))
+	if (!buffer.Convert(inSettings.mTriangleVertices, root, error))
 	{
 		outResult.SetError(error);
 		delete root;
@@ -217,6 +216,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 
 void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices)
 {
+	// A struct to hold the two vertex indices of an edge
 	struct Edge
 	{
 				Edge(int inIdx1, int inIdx2) : mIdx1(min(inIdx1, inIdx2)), mIdx2(max(inIdx1, inIdx2)) { }
@@ -245,33 +245,54 @@ void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleLi
 
 	JPH_MAKE_HASH_STRUCT(Edge, EdgeHash, t.mIdx1, t.mIdx2)
 
+	// A struct to hold the triangles that are connected to an edge
+	struct TriangleIndices
+	{
+		uint	mNumTriangles = 0;
+		uint	mTriangleIndices[2];
+	};
+
 	// Build a list of edge to triangles
-	using EdgeToTriangle = unordered_map<Edge, vector<uint>, EdgeHash>;
+	using EdgeToTriangle = unordered_map<Edge, TriangleIndices, EdgeHash>;
 	EdgeToTriangle edge_to_triangle;
+	edge_to_triangle.reserve(ioIndices.size() * 3);
 	for (uint triangle_idx = 0; triangle_idx < ioIndices.size(); ++triangle_idx)
 	{
-		const IndexedTriangle &triangle = ioIndices[triangle_idx];
+		IndexedTriangle &triangle = ioIndices[triangle_idx];
 		for (uint edge_idx = 0; edge_idx < 3; ++edge_idx)
 		{
 			Edge edge(triangle.mIdx[edge_idx], triangle.mIdx[(edge_idx + 1) % 3]);
-			edge_to_triangle[edge].push_back(triangle_idx);
+			TriangleIndices &indices = edge_to_triangle[edge];
+			if (indices.mNumTriangles < 2)
+			{
+				// Store index of triangle that connects to this edge
+				indices.mTriangleIndices[indices.mNumTriangles] = triangle_idx;
+				indices.mNumTriangles++;
+			}
+			else
+			{
+				// 3 or more triangles share an edge, mark this edge as active
+				uint32 mask = 1 << (edge_idx + FLAGS_ACTIVE_EGDE_SHIFT);
+				JPH_ASSERT((triangle.mMaterialIndex & mask) == 0);
+				triangle.mMaterialIndex |= mask;
+			}
 		}
 	}
 
 	// Walk over all edges and determine which ones are active
 	for (const EdgeToTriangle::value_type &edge : edge_to_triangle)
 	{
-		bool active = false;
-		if (edge.second.size() == 1)
+		uint num_active = 0;
+		if (edge.second.mNumTriangles == 1)
 		{
 			// Edge is not shared, it is an active edge
-			active = true;
+			num_active = 1;
 		}
-		else if (edge.second.size() == 2)
+		else if (edge.second.mNumTriangles == 2)
 		{
 			// Simple shared edge, determine if edge is active based on the two adjacent triangles
-			const IndexedTriangle &triangle1 = ioIndices[edge.second[0]];
-			const IndexedTriangle &triangle2 = ioIndices[edge.second[1]];
+			const IndexedTriangle &triangle1 = ioIndices[edge.second.mTriangleIndices[0]];
+			const IndexedTriangle &triangle2 = ioIndices[edge.second.mTriangleIndices[1]];
 
 			// Find which edge this is for both triangles
 			uint edge_idx1 = edge.first.GetIndexInTriangle(triangle1);
@@ -290,25 +311,23 @@ void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleLi
 			Plane triangle2_plane = Plane::sFromPointsCCW(triangle2_e1, triangle2_e2, triangle2_op);
 
 			// Determine if the edge is active
-			active = ActiveEdges::IsEdgeActive(triangle1_plane.GetNormal(), triangle2_plane.GetNormal(), triangle1_e2 - triangle1_e1);
+			num_active = ActiveEdges::IsEdgeActive(triangle1_plane.GetNormal(), triangle2_plane.GetNormal(), triangle1_e2 - triangle1_e1)? 2 : 0;
 		}
 		else
 		{
-			// Multiple edges incoming, assume active
-			active = true;
+			// More edges incoming, we've already marked all edges beyond the 2nd as active
+			num_active = 2;
 		}
 
-		if (active)
+		// Mark edges of all original triangles active
+		for (uint i = 0; i < num_active; ++i)
 		{
-			// Mark edges of all original triangles active
-			for (uint triangle_idx : edge.second)
-			{
-				IndexedTriangle &triangle = ioIndices[triangle_idx];
-				uint edge_idx = edge.first.GetIndexInTriangle(triangle);
-				uint32 mask = 1 << (edge_idx + FLAGS_ACTIVE_EGDE_SHIFT);
-				JPH_ASSERT((triangle.mMaterialIndex & mask) == 0);
-				triangle.mMaterialIndex |= mask;
-			}
+			uint triangle_idx = edge.second.mTriangleIndices[i];
+			IndexedTriangle &triangle = ioIndices[triangle_idx];
+			uint edge_idx = edge.first.GetIndexInTriangle(triangle);
+			uint32 mask = 1 << (edge_idx + FLAGS_ACTIVE_EGDE_SHIFT);
+			JPH_ASSERT((triangle.mMaterialIndex & mask) == 0);
+			triangle.mMaterialIndex |= mask;
 		}
 	}
 }
