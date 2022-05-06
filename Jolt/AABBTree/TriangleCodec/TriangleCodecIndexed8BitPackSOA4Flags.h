@@ -96,7 +96,7 @@ public:
 	{
 	public:
 		/// Construct the encoding context
-									EncodingContext(const VertexList &inVertices) :
+		explicit					EncodingContext(const VertexList &inVertices) :
 			mVertexMap(inVertices.size(), 0xffffffff) // Fill vertex map with 'not found'
 		{
 			// Reserve for worst case to avoid allocating in the inner loop
