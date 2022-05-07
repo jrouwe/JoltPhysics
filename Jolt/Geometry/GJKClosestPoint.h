@@ -709,7 +709,7 @@ public:
 
 		float lambda = 0.0f;
 		Vec3 x = Vec3::sZero(); // Since A is already transformed we can start the cast from zero
-		Vec3 v = -MinkowskiDifference(inB, transformed_a).GetSupport(Vec3::sZero()); // See CastRay: v = x - inA.GetSupport(Vec3::sZero()) where inA is the Minkowski difference (see CastShape above) and x is zero
+		Vec3 v = -inB.GetSupport(Vec3::sZero()) + transformed_a.GetSupport(Vec3::sZero()); // See CastRay: v = x - inA.GetSupport(Vec3::sZero()) where inA is the Minkowski difference inB - transformed_a (see CastShape above) and x is zero
 		float v_len_sq = FLT_MAX;
 		bool allow_restart = false;
 
