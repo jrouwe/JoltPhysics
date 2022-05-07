@@ -5,13 +5,13 @@ JPH_NAMESPACE_BEGIN
 
 void JobSystem::Job::AddDependency(int inCount)
 {
-	JPH_IF_ENABLE_ASSERTS(uint32 old_value =) mNumDependencies.fetch_add(inCount);
+	JPH_IF_ENABLE_ASSERTS(uint32 old_value =) mNumDependencies.fetch_add(inCount, memory_order_relaxed);
 	JPH_ASSERT(old_value > 0 && old_value != cExecutingState && old_value != cDoneState, "Job is queued, running or done, it is not allowed to add a dependency to a running job");
 }
 
 bool JobSystem::Job::RemoveDependency(int inCount)
 {
-	uint32 old_value = mNumDependencies.fetch_sub(inCount);
+	uint32 old_value = mNumDependencies.fetch_sub(inCount, memory_order_release);
 	JPH_ASSERT(old_value != cExecutingState && old_value != cDoneState, "Job is running or done, it is not allowed to add a dependency to a running job");
 	uint32 new_value = old_value - inCount;
 	JPH_ASSERT(old_value > new_value, "Test wrap around, this is a logic error");
