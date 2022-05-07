@@ -13,7 +13,7 @@ JPH_NAMESPACE_BEGIN
 template <class T>
 bool AtomicMin(atomic<T> &ioAtomic, const T inValue, const memory_order inMemoryOrder = memory_order_seq_cst)
 {
-	T cur_value = ioAtomic;
+	T cur_value = ioAtomic.load(memory_order_relaxed);
 	while (cur_value > inValue)
 		if (ioAtomic.compare_exchange_weak(cur_value, inValue, inMemoryOrder))
 			return true;
@@ -24,7 +24,7 @@ bool AtomicMin(atomic<T> &ioAtomic, const T inValue, const memory_order inMemory
 template <class T>
 bool AtomicMax(atomic<T> &ioAtomic, const T inValue, const memory_order inMemoryOrder = memory_order_seq_cst)
 {
-	T cur_value = ioAtomic;
+	T cur_value = ioAtomic.load(memory_order_relaxed);
 	while (cur_value < inValue)
 		if (ioAtomic.compare_exchange_weak(cur_value, inValue, inMemoryOrder))
 			return true;
