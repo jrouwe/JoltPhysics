@@ -330,7 +330,7 @@ public:
 
 #ifdef JPH_GJK_DEBUG
 		// Generate the hull of the Minkowski difference for visualization
-		MinkowskiDifference<A, B> diff(inA, inB);
+		MinkowskiDifference diff(inA, inB);
 		mGeometry = DebugRenderer::sInstance->CreateTriangleGeometryForConvex([&diff](Vec3Arg inDirection) { return diff.GetSupport(inDirection); });
 
 		for (int i = 0; i < 4; ++i)
@@ -666,12 +666,11 @@ public:
 	bool		CastShape(Mat44Arg inStart, Vec3Arg inDirection, float inTolerance, const A &inA, const B &inB, float &ioLambda)
 	{
 		// Transform the shape to be cast to the starting position
-		using TransformedA = TransformedConvexObject<A>;
-		TransformedA transformed_a(inStart, inA);
+		TransformedConvexObject transformed_a(inStart, inA);
 
 		// Calculate the minkowski difference inB - inA
 		// inA is moving, so we need to add the back side of inB to the front side of inA
-		MinkowskiDifference<B, TransformedA> difference(inB, transformed_a);
+		MinkowskiDifference difference(inB, transformed_a);
 
 		// Do a raycast against the Minkowski difference
 		return CastRay(Vec3::sZero(), inDirection, inTolerance, difference, ioLambda);
@@ -703,15 +702,14 @@ public:
 		float sum_convex_radius = inConvexRadiusA + inConvexRadiusB;
 
 		// Transform the shape to be cast to the starting position
-		using TransformedA = TransformedConvexObject<A>;
-		TransformedA transformed_a(inStart, inA);
+		TransformedConvexObject transformed_a(inStart, inA);
 
 		// Reset state
 		mNumPoints = 0;
 
 		float lambda = 0.0f;
 		Vec3 x = Vec3::sZero(); // Since A is already transformed we can start the cast from zero
-		Vec3 v = -inA.GetSupport(Vec3::sZero());
+		Vec3 v = -inB.GetSupport(Vec3::sZero()) + transformed_a.GetSupport(Vec3::sZero()); // See CastRay: v = x - inA.GetSupport(Vec3::sZero()) where inA is the Minkowski difference inB - transformed_a (see CastShape above) and x is zero
 		float v_len_sq = FLT_MAX;
 		bool allow_restart = false;
 
