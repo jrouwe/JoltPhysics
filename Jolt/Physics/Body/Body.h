@@ -60,7 +60,7 @@ public:
 	/// These sensors will only detect collisions with active Dynamic or Kinematic bodies. As soon as a body go to sleep, the contact point with the sensor will be lost.
 	/// If you make a sensor Dynamic or Kinematic and activate them, the sensor will be able to detect collisions with sleeping bodies too. An active sensor will never go to sleep automatically.
 	/// When you make a Dynamic or Kinematic sensor, make sure it is in an ObjectLayer that does not collide with Static bodies or other sensors to avoid extra overhead in the broad phase.
-	inline void				SetIsSensor(bool inIsSensor)									{ if (inIsSensor) mFlags.fetch_or(uint8(JPH::Body::EFlags::IsSensor), JPH::memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(JPH::Body::EFlags::IsSensor)), JPH::memory_order_relaxed); }
+	inline void				SetIsSensor(bool inIsSensor)									{ if (inIsSensor) mFlags.fetch_or(uint8(EFlags::IsSensor), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::IsSensor)), memory_order_relaxed); }
 
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
