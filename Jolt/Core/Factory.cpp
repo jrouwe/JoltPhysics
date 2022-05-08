@@ -4,6 +4,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Core/Factory.h>
+#include <Jolt/ObjectStream/SerializableAttribute.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -51,7 +52,7 @@ bool Factory::Register(const RTTI *inRTTI)
 	// Register attribute classes
 	for (int i = 0; i < inRTTI->GetAttributeCount(); ++i)
 	{
-		const RTTI *rtti = inRTTI->GetAttribute(i)->GetMemberPrimitiveType();
+		const RTTI *rtti = inRTTI->GetAttribute(i).GetMemberPrimitiveType();
 		if (rtti != nullptr && !Register(rtti))
 			return false;
 	}

@@ -8,19 +8,66 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Attributes are members of classes that need to be serialized. This extends the
-/// basic attribute defined in RTTI.h
-class SerializableAttribute : public RTTIAttribute
+/// Attributes are members of classes that need to be serialized.
+class SerializableAttribute
 {
 public:
-	/// Constructor
-	using RTTIAttribute::RTTIAttribute;
+	///@ Serialization functions
+	using pGetMemberPrimitiveType = const RTTI * (*)();
+	using pIsType = bool (*)(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName);
+	using pReadData = bool (*)(ObjectStreamIn &ioStream, void *inObject);
+	using pWriteData = void (*)(ObjectStreamOut &ioStream, const void *inObject);
+	using pWriteDataType = void (*)(ObjectStreamOut &ioStream);
 
-	///@name Serialization operations
-	virtual bool				IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const = 0;
-	virtual bool				ReadData(ObjectStreamIn &ioStream, void *inObject) const = 0;
-	virtual void				WriteData(ObjectStreamOut &ioStream, const void *inObject) const = 0;
-	virtual void				WriteDataType(ObjectStreamOut &ioStream) const = 0;
+	/// Constructor
+								SerializableAttribute(const char *inName, intptr_t inMemberOffset, pGetMemberPrimitiveType inGetMemberPrimitiveType, pIsType inIsType, pReadData inReadData, pWriteData inWriteData, pWriteDataType inWriteDataType) : mName(inName), mMemberOffset(inMemberOffset), mGetMemberPrimitiveType(inGetMemberPrimitiveType), mIsType(inIsType), mReadData(inReadData), mWriteData(inWriteData), mWriteDataType(inWriteDataType) { }
+
+	/// Name of the attribute
+	void						SetName(const char *inName)									{ mName = inName; }
+	const char *				GetName() const												{ return mName; }
+
+	/// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
+	const RTTI *				GetMemberPrimitiveType() const
+	{
+		return mGetMemberPrimitiveType != nullptr? mGetMemberPrimitiveType() : nullptr;
+	}
+
+	///@ Serialization operations
+	bool						IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const
+	{
+		return mIsType(inArrayDepth, inDataType, inClassName);
+	}
+
+	bool						ReadData(ObjectStreamIn &ioStream, void *inObject) const
+	{
+		return mReadData(ioStream, reinterpret_cast<uint8 *>(inObject) + mMemberOffset);
+	}
+
+	void						WriteData(ObjectStreamOut &ioStream, const void *inObject) const
+	{
+		mWriteData(ioStream, reinterpret_cast<const uint8 *>(inObject) + mMemberOffset);
+	}
+
+	void						WriteDataType(ObjectStreamOut &ioStream) const
+	{
+		mWriteDataType(ioStream);
+	}
+
+private:
+	// Name of the attribute
+	const char *				mName;
+
+	// Offset of the member relative to the class
+	intptr_t					mMemberOffset;
+
+	// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
+	pGetMemberPrimitiveType		mGetMemberPrimitiveType;
+
+	// Serialization operations
+	pIsType						mIsType;
+	pReadData					mReadData;
+	pWriteData					mWriteData;
+	pWriteDataType				mWriteDataType;
 };
 
 JPH_NAMESPACE_END

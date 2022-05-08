@@ -7,47 +7,36 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Contains an serialize attribute of type enum
-template <class Class, class T>
-class SerializableAttributeEnum : public SerializableAttribute
+inline bool				EnumAttrIsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
 {
-public:
-	/// Constructor
-								SerializableAttributeEnum(T Class::*inMember, const char *inName)			: SerializableAttribute(inName), mMember(inMember) { }
+	return (inArrayDepth == 0 && inDataType == ObjectStream::EDataType::T_uint32);
+}
 
-	///@name Serialization operations
-	virtual bool				IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const override
+template <class T>
+bool					EnumAttrReadData(ObjectStreamIn &ioStream, void *inObject)
+{
+	uint32 temporary;
+	if (OSReadData(ioStream, temporary)) 
 	{
-		return (inArrayDepth == 0 && inDataType == ObjectStream::EDataType::T_uint32);
+		*reinterpret_cast<T *>(inObject) = (T)temporary;
+		return true;
 	}
 
-	virtual bool				ReadData(ObjectStreamIn &ioStream, void *inObject) const override
-	{
-		uint32 temporary;
-		if (OSReadData(ioStream, temporary)) 
-		{
-			((Class *)inObject)->*mMember = (T)temporary;
-			return true;
-		}
+	return false;
+}
 
-		return false;
-	}
+template <class T>
+void					EnumAttrWriteData(ObjectStreamOut &ioStream, const void *inObject)
+{
+	static_assert(sizeof(T) <= sizeof(uint32));
+	uint32 temporary = uint32(*reinterpret_cast<const T *>(inObject));
+	OSWriteData(ioStream, temporary);
+}
 
-	virtual void				WriteData(ObjectStreamOut &ioStream, const void *inObject) const override
-	{
-		static_assert(sizeof(T) <= sizeof(uint32));
-		uint32 temporary = uint32(((const Class *)inObject)->*mMember);
-		OSWriteData(ioStream, temporary);
-	}
-
-	virtual void				WriteDataType(ObjectStreamOut &ioStream) const override
-	{
-		ioStream.WriteDataType(ObjectStream::EDataType::T_uint32);
-	}
-
-private:
-	T Class::*					mMember;
-};
+inline void				EnumAttrWriteDataType(ObjectStreamOut &ioStream)
+{
+	ioStream.WriteDataType(ObjectStream::EDataType::T_uint32);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Macros to add properties to be serialized
@@ -56,11 +45,11 @@ private:
 template <class Class, class T>
 inline void AddSerializableAttributeEnum(RTTI &inRTTI, T Class::*inMember, const char *inName)
 {
-	inRTTI.AddAttribute(new SerializableAttributeEnum<Class, T>(inMember, inName));
+	inRTTI.AddAttribute(SerializableAttribute(inName, intptr_t(&(reinterpret_cast<Class *>(0)->*inMember)), nullptr, EnumAttrIsType, EnumAttrReadData<T>, EnumAttrWriteData<T>, EnumAttrWriteDataType));
 }
 
 // JPH_ADD_ENUM_ATTRIBUTE
 #define JPH_ADD_ENUM_ATTRIBUTE(class_name, member_name)																\
-								AddSerializableAttributeEnum(inRTTI, &class_name::member_name, #member_name);
+						AddSerializableAttributeEnum(inRTTI, &class_name::member_name, #member_name);
 
 JPH_NAMESPACE_END

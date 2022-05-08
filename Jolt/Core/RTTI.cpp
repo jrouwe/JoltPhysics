@@ -5,12 +5,9 @@
 
 #include <Jolt/Core/RTTI.h>
 #include <Jolt/Core/StringTools.h>
+#include <Jolt/ObjectStream/SerializableAttribute.h>
 
 JPH_NAMESPACE_BEGIN
-
-JPH_IMPLEMENT_RTTI_VIRTUAL_BASE(RTTIAttribute)
-{
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // RTTI
@@ -34,6 +31,11 @@ RTTI::RTTI(const char *inName, int inSize, pCreateObjectFunction inCreateObject,
 	JPH_ASSERT(inDestructObject != nullptr, "Object cannot be destructed");
 
 	inCreateRTTI(*this);
+}
+
+RTTI::~RTTI()
+{
+	// Implemented in cpp file so we don't have to include SerializableAttribute in the header
 }
 
 int RTTI::GetBaseClassCount() const
@@ -74,7 +76,7 @@ void RTTI::AddBaseClass(const RTTI *inRTTI, int inOffset)
 	mBaseClasses.push_back(base); 
 
 	// Add attributes of base class
-	for (AttributeRefC a : inRTTI->mAttributes)
+	for (const SerializableAttribute &a : inRTTI->mAttributes)
 		mAttributes.push_back(a);
 }
 
@@ -128,7 +130,7 @@ const void *RTTI::CastTo(const void *inObject, const RTTI *inRTTI) const
 	return nullptr;
 }
 
-void RTTI::AddAttribute(const RTTIAttribute *inAttribute)
+void RTTI::AddAttribute(const SerializableAttribute &inAttribute)
 { 
 	mAttributes.push_back(inAttribute); 
 }
@@ -138,18 +140,9 @@ int RTTI::GetAttributeCount() const
 	return (int)mAttributes.size(); 
 }
 
-const RTTIAttribute *RTTI::GetAttribute(int inIdx) const
+const SerializableAttribute &RTTI::GetAttribute(int inIdx) const
 { 
 	return mAttributes[inIdx]; 
-}
-
-const RTTIAttribute *RTTI::GetAttribute(const RTTI *inRTTI, const char *inName) const
-{
-	for (AttributeRefC a : mAttributes)
-		if (::JPH::IsKindOf(a, inRTTI) && strcmp(inName, a->GetName()) == 0) 
-			return a;
-
-	return nullptr;
 }
 
 JPH_NAMESPACE_END

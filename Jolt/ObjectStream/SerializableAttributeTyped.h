@@ -8,43 +8,36 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Contains a serializable attribute of any type (except enum)
-template <class Class, class T>
-class SerializableAttributeTyped : public SerializableAttribute
+///@name Serialization operations
+template <class T>
+const RTTI *			TypedAttrGetMemberPrimitiveType()
+{ 
+	return GetPrimitiveTypeOfType((T *)nullptr);
+}
+
+template <class T>
+bool					TypedAttrIsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
 {
-public:
-	/// Constructor
-								SerializableAttributeTyped(T Class::*inMember, const char *inName)			: SerializableAttribute(inName), mMember(inMember) { }
+	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
+}
 
-	///@name Serialization operations
-	virtual const RTTI *		GetMemberPrimitiveType() const override
-	{ 
-		return GetPrimitiveTypeOfType((T *)nullptr);
-	}
+template <class T>
+bool					TypedAttrReadData(ObjectStreamIn &ioStream, void *inObject)
+{
+	return OSReadData(ioStream, *reinterpret_cast<T *>(inObject));
+}
 
-	virtual bool				IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const override
-	{
-		return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
-	}
+template <class T>
+void					TypedAttrWriteData(ObjectStreamOut &ioStream, const void *inObject)
+{
+	OSWriteData(ioStream, *reinterpret_cast<const T *>(inObject));
+}
 
-	virtual bool				ReadData(ObjectStreamIn &ioStream, void *inObject) const override
-	{
-		return OSReadData(ioStream, ((Class *)inObject)->*mMember);
-	}
-
-	virtual void				WriteData(ObjectStreamOut &ioStream, const void *inObject) const override
-	{
-		OSWriteData(ioStream, ((const Class *)inObject)->*mMember);
-	}
-
-	virtual void				WriteDataType(ObjectStreamOut &ioStream) const override
-	{
-		OSWriteDataType(ioStream, (T *)nullptr);
-	}
-
-private:
-	T Class::*					mMember;
-};
+template <class T>
+void					TypedAttrWriteDataType(ObjectStreamOut &ioStream)
+{
+	OSWriteDataType(ioStream, (T *)nullptr);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Macros to add properties to be serialized
@@ -53,11 +46,11 @@ private:
 template <class Class, class T>
 inline void AddSerializableAttributeTyped(RTTI &inRTTI, T Class::*inMember, const char *inName)
 {
-	inRTTI.AddAttribute(new SerializableAttributeTyped<Class, T>(inMember, inName));
+	inRTTI.AddAttribute(SerializableAttribute(inName, intptr_t(&(reinterpret_cast<Class *>(0)->*inMember)), TypedAttrGetMemberPrimitiveType<T>, TypedAttrIsType<T>, TypedAttrReadData<T>, TypedAttrWriteData<T>, TypedAttrWriteDataType<T>));
 }
 
 // JPH_ADD_ATTRIBUTE
 #define JPH_ADD_ATTRIBUTE(class_name, member_name)																	\
-								AddSerializableAttributeTyped(inRTTI, &class_name::member_name, #member_name);
+						AddSerializableAttributeTyped(inRTTI, &class_name::member_name, #member_name);
 
 JPH_NAMESPACE_END

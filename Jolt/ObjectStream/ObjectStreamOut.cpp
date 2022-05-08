@@ -98,20 +98,18 @@ void ObjectStreamOut::WriteRTTI(const RTTI *inRTTI)
 	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index) 
 	{
 		// Get attribute
-		const SerializableAttribute *attr = DynamicCast<SerializableAttribute, RTTIAttribute>(inRTTI->GetAttribute(attr_index));
-		if (attr == nullptr)
-			continue;
+		const SerializableAttribute &attr = inRTTI->GetAttribute(attr_index);
 
 		// Write definition of attribute class if undefined
-		const RTTI *rtti = attr->GetMemberPrimitiveType();
+		const RTTI *rtti = attr.GetMemberPrimitiveType();
 		if (rtti != nullptr)
 			QueueRTTI(rtti);
 
 		HintNextItem();
 
 		// Write attribute information.
-		WriteName(attr->GetName());
-		attr->WriteDataType(*this);
+		WriteName(attr.GetName());
+		attr.WriteDataType(*this);
 	}
 	HintIndentDown();
 }
@@ -125,11 +123,8 @@ void ObjectStreamOut::WriteClassData(const RTTI *inRTTI, const void *inInstance)
 	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index) 
 	{
 		// Get attribute
-		const SerializableAttribute *attr = DynamicCast<SerializableAttribute, RTTIAttribute>(inRTTI->GetAttribute(attr_index));
-		if (attr == nullptr)
-			continue;
-
-		attr->WriteData(*this, inInstance);
+		const SerializableAttribute &attr = inRTTI->GetAttribute(attr_index);
+		attr.WriteData(*this, inInstance);
 	}
 	HintIndentDown();
 }

@@ -304,8 +304,8 @@ bool ObjectStreamIn::ReadRTTI()
 			// Find attribute index
 			for (int idx = 0; idx < rtti->GetAttributeCount(); ++idx)
 			{
-				const SerializableAttribute *attr = DynamicCast<SerializableAttribute, RTTIAttribute>(rtti->GetAttribute(idx));
-				if (attr != nullptr && strcmp(attr->GetName(), attribute_name.c_str()) == 0) 
+				const SerializableAttribute &attr = rtti->GetAttribute(idx);
+				if (strcmp(attr.GetName(), attribute_name.c_str()) == 0) 
 				{
 					attribute.mIndex = idx;
 					break;
@@ -315,8 +315,8 @@ bool ObjectStreamIn::ReadRTTI()
 			// Check if attribute is of expected type
 			if (attribute.mIndex >= 0)
 			{
-				const SerializableAttribute *attr = (const SerializableAttribute *)rtti->GetAttribute(attribute.mIndex);
-				if (!attr->IsType(attribute.mArrayDepth, attribute.mDataType, attribute.mClassName.c_str()))
+				const SerializableAttribute &attr = rtti->GetAttribute(attribute.mIndex);
+				if (!attr.IsType(attribute.mArrayDepth, attribute.mDataType, attribute.mClassName.c_str()))
 					attribute.mIndex = -1;
 			}
 		} 
@@ -348,8 +348,8 @@ bool ObjectStreamIn::ReadClassData(const ClassDescription &inClassDesc, void *in
 		// Read or skip the attribute data
 		if (attr_desc.mIndex >= 0 && inInstance)
 		{
-			const SerializableAttribute *attr = (const SerializableAttribute *)inClassDesc.mRTTI->GetAttribute(attr_desc.mIndex);
-			continue_reading = attr->ReadData(*this, inInstance);
+			const SerializableAttribute &attr = inClassDesc.mRTTI->GetAttribute(attr_desc.mIndex);
+			continue_reading = attr.ReadData(*this, inInstance);
 		}
 		else
 			continue_reading = SkipAttributeData(attr_desc.mArrayDepth, attr_desc.mDataType, attr_desc.mClassName.c_str());
