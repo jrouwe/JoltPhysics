@@ -71,7 +71,7 @@ void RTTI::AddBaseClass(const RTTI *inRTTI, int inOffset)
 
 	// Add attributes of base class
 	for (const SerializableAttribute &a : inRTTI->mAttributes)
-		mAttributes.push_back(a);
+		mAttributes.push_back(SerializableAttribute(a, inOffset));
 }
 
 bool RTTI::operator == (const RTTI &inRHS) const

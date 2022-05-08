@@ -43,6 +43,9 @@ public:
 	/// Constructor
 								SerializableAttribute(const char *inName, intptr_t inMemberOffset, pGetMemberPrimitiveType inGetMemberPrimitiveType, pIsType inIsType, pReadData inReadData, pWriteData inWriteData, pWriteDataType inWriteDataType) : mName(inName), mMemberOffset(inMemberOffset), mGetMemberPrimitiveType(inGetMemberPrimitiveType), mIsType(inIsType), mReadData(inReadData), mWriteData(inWriteData), mWriteDataType(inWriteDataType) { }
 
+	/// Construct from other attribute with base class offset
+								SerializableAttribute(const SerializableAttribute &inOther, int inBaseOffset) : mName(inOther.mName), mMemberOffset(inOther.mMemberOffset + inBaseOffset), mGetMemberPrimitiveType(inOther.mGetMemberPrimitiveType), mIsType(inOther.mIsType), mReadData(inOther.mReadData), mWriteData(inOther.mWriteData), mWriteDataType(inOther.mWriteDataType) { }
+
 	/// Name of the attribute
 	void						SetName(const char *inName)							{ mName = inName; }
 	const char *				GetName() const										{ return mName; }
@@ -53,22 +56,25 @@ public:
 		return mGetMemberPrimitiveType != nullptr? mGetMemberPrimitiveType() : nullptr;
 	}
 
-	///@ Serialization operations
+	/// Check if this attribute is of a specific type
 	bool						IsType(int inArrayDepth, EOSDataType inDataType, const char *inClassName) const
 	{
 		return mIsType(inArrayDepth, inDataType, inClassName);
 	}
 
+	/// Read the data for this attribute into attribute containing class inObject
 	bool						ReadData(ObjectStreamIn &ioStream, void *inObject) const
 	{
 		return mReadData(ioStream, reinterpret_cast<uint8 *>(inObject) + mMemberOffset);
 	}
 
+	/// Write the data for this attribute from attribute containing class inObject
 	void						WriteData(ObjectStreamOut &ioStream, const void *inObject) const
 	{
 		mWriteData(ioStream, reinterpret_cast<const uint8 *>(inObject) + mMemberOffset);
 	}
 
+	/// Write the data type of this attribute to a stream
 	void						WriteDataType(ObjectStreamOut &ioStream) const
 	{
 		mWriteDataType(ioStream);

@@ -36,7 +36,17 @@ public:
 	string						mString;
 };
 
-class TestSerializable : public TestSerializableBase
+class TestSerializableBase2
+{
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE(TestSerializableBase2)
+
+public:
+	virtual						~TestSerializableBase2() = default;
+
+	uint32						mBase2 = 0;
+};
+
+class TestSerializable : public TestSerializableBase, public TestSerializableBase2
 {
 	JPH_DECLARE_SERIALIZABLE_VIRTUAL(TestSerializable)
 
@@ -52,23 +62,29 @@ public:
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TestSerializableBase)
 {
-	JPH_ADD_ATTRIBUTE(TestSerializable, mUInt8)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mUInt16)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mInt)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mUInt32)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mUInt64)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mFloat)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mBool)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mQuat)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mVec3)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mVec4)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mMat44)
-	JPH_ADD_ATTRIBUTE(TestSerializable, mString)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mUInt8)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mUInt16)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mInt)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mUInt32)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mUInt64)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mFloat)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mBool)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mQuat)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mVec3)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mVec4)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mMat44)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mString)
+}
+
+JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TestSerializableBase2)
+{
+	JPH_ADD_ATTRIBUTE(TestSerializableBase2, mBase2)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TestSerializable)
 {
 	JPH_ADD_BASE_CLASS(TestSerializable, TestSerializableBase)
+	JPH_ADD_BASE_CLASS(TestSerializable, TestSerializableBase2)
 
 	JPH_ADD_ENUM_ATTRIBUTE(TestSerializable, mEnum)
 	JPH_ADD_ATTRIBUTE(TestSerializable, mIntVector)
@@ -106,6 +122,7 @@ TEST_SUITE("ObjectStreamTest")
 		test->mFloatVector[0] = 1.0f;
 		test->mFloatVector[1] = 2.0f;
 		test->mFloatVector[2] = 3.0f;
+		test->mBase2 = 0x9876;
 
 		TestSerializable *test2 = new TestSerializable();
 		test2->mFloat = 4.5f;
@@ -155,6 +172,8 @@ TEST_SUITE("ObjectStreamTest")
 			CHECK(inOutput->mReference->GetRefCount() == uint32(2));
 			CHECK(inOutput->mReferenceConst->GetRefCount() == uint32(2));
 		}
+
+		CHECK(inInput->mBase2 == inOutput->mBase2);
 	}
 
 	TEST_CASE("TestObjectStreamLoadSaveText")
@@ -168,6 +187,11 @@ TEST_SUITE("ObjectStreamTest")
 
 		TestSerializable *test_out = nullptr;
 		REQUIRE(ObjectStreamIn::sReadObject(stream, test_out));
+
+		// Check that DynamicCast returns the right offsets
+		CHECK(DynamicCast<TestSerializable>(test_out) == test_out);
+		CHECK(DynamicCast<TestSerializableBase>(test_out) == static_cast<TestSerializableBase *>(test_out));
+		CHECK(DynamicCast<TestSerializableBase2>(test_out) == static_cast<TestSerializableBase2 *>(test_out));
 
 		CompareObjects(test, test_out);
 
