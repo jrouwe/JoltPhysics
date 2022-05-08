@@ -4,12 +4,14 @@
 #pragma once
 
 #include <Jolt/ObjectStream/SerializableAttribute.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
 
 JPH_NAMESPACE_BEGIN
 
-inline bool				EnumAttrIsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
+inline bool				EnumAttrIsType(int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
-	return (inArrayDepth == 0 && inDataType == ObjectStream::EDataType::T_uint32);
+	return (inArrayDepth == 0 && inDataType == EOSDataType::T_uint32);
 }
 
 template <class T>
@@ -35,7 +37,7 @@ void					EnumAttrWriteData(ObjectStreamOut &ioStream, const void *inObject)
 
 inline void				EnumAttrWriteDataType(ObjectStreamOut &ioStream)
 {
-	ioStream.WriteDataType(ObjectStream::EDataType::T_uint32);
+	ioStream.WriteDataType(EOSDataType::T_uint32);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

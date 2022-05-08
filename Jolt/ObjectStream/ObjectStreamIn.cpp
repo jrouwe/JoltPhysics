@@ -4,7 +4,6 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Core/Factory.h>
-#include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Jolt/ObjectStream/ObjectStreamTextIn.h>
 #include <Jolt/ObjectStream/ObjectStreamBinaryIn.h>
@@ -88,11 +87,11 @@ void *ObjectStreamIn::Read(const RTTI *inRTTI)
 	for (;;)
 	{
 		// Get type of next operation
-		EDataType data_type;
+		EOSDataType data_type;
 		if (!ReadDataType(data_type)) 
 			break;
 
-		if (data_type == EDataType::Declare)
+		if (data_type == EOSDataType::Declare)
 		{	
 			// Read type declaration
 			if (!ReadRTTI()) 
@@ -102,7 +101,7 @@ void *ObjectStreamIn::Read(const RTTI *inRTTI)
 				break;
 			}
 		}
-		else if (data_type == EDataType::Object)
+		else if (data_type == EOSDataType::Object)
 		{	
 			const RTTI *rtti;
 			void *object = ReadObject(rtti);
@@ -286,7 +285,7 @@ bool ObjectStreamIn::ReadRTTI()
 			return false;
 
 		// Read array depth
-		while (attribute.mDataType == EDataType::Array) 
+		while (attribute.mDataType == EOSDataType::Array) 
 		{
 			++attribute.mArrayDepth;
 			if (!ReadDataType(attribute.mDataType)) 
@@ -294,7 +293,7 @@ bool ObjectStreamIn::ReadRTTI()
 		}
 
 		// Read instance/pointer class name
-		if ((attribute.mDataType == EDataType::Instance || attribute.mDataType == EDataType::Pointer) 
+		if ((attribute.mDataType == EOSDataType::Instance || attribute.mDataType == EOSDataType::Pointer) 
 			&& !ReadName(attribute.mClassName)) 
 			return false;
 
@@ -387,7 +386,7 @@ bool ObjectStreamIn::ReadPointerData(const RTTI *inRTTI, void **inPointer, int i
 	return false;
 }
 
-bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EDataType inDataType, const char *inClassName)
+bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
 	bool continue_reading = true;
 
@@ -412,7 +411,7 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EDataType inDataType, c
 	// Read data for all items
 	if (continue_reading) 
 	{
-		if (inDataType == EDataType::Instance) 
+		if (inDataType == EOSDataType::Instance) 
 		{
 			// Get the class description
 			ClassDescriptionMap::iterator i = mClassDescriptionMap.find(inClassName);
@@ -433,109 +432,109 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EDataType inDataType, c
 			{
 				switch (inDataType) 
 				{
-				case EDataType::Pointer:
+				case EOSDataType::Pointer:
 					{	
 						Identifier temporary;
 						continue_reading = ReadIdentifier(temporary);
 						break;
 					}
 
-				case EDataType::T_uint8:
+				case EOSDataType::T_uint8:
 					{	
 						uint8 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 				
-				case EDataType::T_uint16:
+				case EOSDataType::T_uint16:
 					{	
 						uint16 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 				
-				case EDataType::T_int:
+				case EOSDataType::T_int:
 					{	
 						int temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 				
-				case EDataType::T_uint32:
+				case EOSDataType::T_uint32:
 					{	
 						uint32 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 				
-				case EDataType::T_uint64:
+				case EOSDataType::T_uint64:
 					{	
 						uint64 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 				
-				case EDataType::T_float:
+				case EOSDataType::T_float:
 					{	
 						float temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 				
-				case EDataType::T_bool:
+				case EOSDataType::T_bool:
 					{	
 						bool temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 				
-				case EDataType::T_string:
+				case EOSDataType::T_string:
 					{	
 						string temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 
-				case EDataType::T_Float3:
+				case EOSDataType::T_Float3:
 					{	
 						Float3 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 
-				case EDataType::T_Vec3:
+				case EOSDataType::T_Vec3:
 					{	
 						Vec3 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 
-				case EDataType::T_Vec4:
+				case EOSDataType::T_Vec4:
 					{	
 						Vec4 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 
-				case EDataType::T_Quat:
+				case EOSDataType::T_Quat:
 					{	
 						Quat temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 
-				case EDataType::T_Mat44:
+				case EOSDataType::T_Mat44:
 					{	
 						Mat44 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}
 
-				case EDataType::Array:
-				case EDataType::Object:
-				case EDataType::Declare:
-				case EDataType::Instance:
-				case EDataType::Invalid:
+				case EOSDataType::Array:
+				case EOSDataType::Object:
+				case EOSDataType::Declare:
+				case EOSDataType::Instance:
+				case EOSDataType::Invalid:
 				default:
 					continue_reading = false;
 					break;

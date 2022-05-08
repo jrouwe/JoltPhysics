@@ -5,7 +5,6 @@
 
 #include <Jolt/Core/RTTI.h>
 #include <Jolt/Core/StringTools.h>
-#include <Jolt/ObjectStream/SerializableAttribute.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -31,11 +30,6 @@ RTTI::RTTI(const char *inName, int inSize, pCreateObjectFunction inCreateObject,
 	JPH_ASSERT(inDestructObject != nullptr, "Object cannot be destructed");
 
 	inCreateRTTI(*this);
-}
-
-RTTI::~RTTI()
-{
-	// Implemented in cpp file so we don't have to include SerializableAttribute in the header
 }
 
 int RTTI::GetBaseClassCount() const
@@ -80,7 +74,7 @@ void RTTI::AddBaseClass(const RTTI *inRTTI, int inOffset)
 		mAttributes.push_back(a);
 }
 
-bool RTTI::operator == (const RTTI &inRHS) const							
+bool RTTI::operator == (const RTTI &inRHS) const
 { 
 	// Compare addresses 
 	if (this == &inRHS) 

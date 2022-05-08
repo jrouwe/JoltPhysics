@@ -3,10 +3,31 @@
 
 #pragma once
 
-#include <Jolt/ObjectStream/ObjectStreamIn.h>
-#include <Jolt/ObjectStream/ObjectStreamOut.h>
-
 JPH_NAMESPACE_BEGIN
+
+class RTTI;
+class ObjectStreamIn;
+class ObjectStreamOut;
+
+/// Data type
+enum class EOSDataType
+{
+	/// Control codes
+	Declare,																		///< Used to declare the attributes of a new object type
+	Object,																			///< Start of a new object
+	Instance,																		///< Used in attribute declaration, indicates that an object is an instanced attribute (no pointer)
+	Pointer,																		///< Used in attribute declaration, indicates that an object is a pointer attribute
+	Array,																			///< Used in attribute declaration, indicates that this is an array of objects
+		
+	// Basic types (primitives)
+	#define JPH_DECLARE_PRIMITIVE(name)	T_##name,
+
+	// This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
+	#include <Jolt/ObjectStream/ObjectStreamTypes.h>
+
+	// Error values for read functions
+	Invalid,																		///< Next token on the stream was not a valid data type
+};
 
 /// Attributes are members of classes that need to be serialized.
 class SerializableAttribute
@@ -14,7 +35,7 @@ class SerializableAttribute
 public:
 	///@ Serialization functions
 	using pGetMemberPrimitiveType = const RTTI * (*)();
-	using pIsType = bool (*)(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName);
+	using pIsType = bool (*)(int inArrayDepth, EOSDataType inDataType, const char *inClassName);
 	using pReadData = bool (*)(ObjectStreamIn &ioStream, void *inObject);
 	using pWriteData = void (*)(ObjectStreamOut &ioStream, const void *inObject);
 	using pWriteDataType = void (*)(ObjectStreamOut &ioStream);
@@ -23,8 +44,8 @@ public:
 								SerializableAttribute(const char *inName, intptr_t inMemberOffset, pGetMemberPrimitiveType inGetMemberPrimitiveType, pIsType inIsType, pReadData inReadData, pWriteData inWriteData, pWriteDataType inWriteDataType) : mName(inName), mMemberOffset(inMemberOffset), mGetMemberPrimitiveType(inGetMemberPrimitiveType), mIsType(inIsType), mReadData(inReadData), mWriteData(inWriteData), mWriteDataType(inWriteDataType) { }
 
 	/// Name of the attribute
-	void						SetName(const char *inName)									{ mName = inName; }
-	const char *				GetName() const												{ return mName; }
+	void						SetName(const char *inName)							{ mName = inName; }
+	const char *				GetName() const										{ return mName; }
 
 	/// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
 	const RTTI *				GetMemberPrimitiveType() const
@@ -33,7 +54,7 @@ public:
 	}
 
 	///@ Serialization operations
-	bool						IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const
+	bool						IsType(int inArrayDepth, EOSDataType inDataType, const char *inClassName) const
 	{
 		return mIsType(inArrayDepth, inDataType, inClassName);
 	}

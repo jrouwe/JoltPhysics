@@ -15,7 +15,7 @@ public:
 	explicit 					ObjectStreamBinaryIn(istream &inStream);
 
 	///@name Input type specific operations
-	virtual bool				ReadDataType(EDataType &outType) override;
+	virtual bool				ReadDataType(EOSDataType &outType) override;
 	virtual bool				ReadName(string &outName) override;
 	virtual bool				ReadIdentifier(Identifier &outIdentifier) override;
 	virtual bool				ReadCount(uint32 &outCount) override;

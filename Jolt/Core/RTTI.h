@@ -5,14 +5,13 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/StaticArray.h>
+#include <Jolt/ObjectStream/SerializableAttribute.h>
 
 JPH_NAMESPACE_BEGIN
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // RTTI
 //////////////////////////////////////////////////////////////////////////////////////////
-
-class SerializableAttribute;
 
 /// Light weight runtime type information system. This way we don't need to turn
 /// on the default RTTI system of the compiler (introducing a possible overhead for every
@@ -133,7 +132,6 @@ public:
 	/// Constructor
 								RTTI(const char *inName, int inSize, pCreateObjectFunction inCreateObject, pDestructObjectFunction inDestructObject);
 								RTTI(const char *inName, int inSize, pCreateObjectFunction inCreateObject, pDestructObjectFunction inDestructObject, pCreateRTTIFunction inCreateRTTI);
-								~RTTI();
 
 	// Properties
 	inline const char *			GetName() const												{ return mName; }
@@ -178,10 +176,10 @@ protected:
 
 	const char *				mName;														///< Class name
 	int							mSize;														///< Class size
-	vector<BaseClass>			mBaseClasses;												///< Names of base classes
+	StaticArray<BaseClass, 4>	mBaseClasses;												///< Names of base classes
 	pCreateObjectFunction		mCreate;													///< Pointer to a function that will create a new instance of this class
 	pDestructObjectFunction		mDestruct;													///< Pointer to a function that will destruct an object of this class
-	vector<SerializableAttribute> mAttributes;												///< All attributes of this class
+	StaticArray<SerializableAttribute, 32> mAttributes;										///< All attributes of this class
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////

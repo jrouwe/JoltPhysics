@@ -12,12 +12,12 @@ ObjectStreamBinaryIn::ObjectStreamBinaryIn(istream &inStream) :
 {
 }
 
-bool ObjectStreamBinaryIn::ReadDataType(EDataType &outType)
+bool ObjectStreamBinaryIn::ReadDataType(EOSDataType &outType)
 {
 	uint32 type;
 	mStream.read((char *)&type, sizeof(type));
 	if (mStream.fail()) return false;
-	outType = (EDataType)type;
+	outType = (EOSDataType)type;
 	return true;
 }
 

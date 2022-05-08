@@ -64,7 +64,7 @@ public:
 	void						WritePointerData(const RTTI *inRTTI, const void *inPointer);
 
 	///@name Output type specific operations
-	virtual void				WriteDataType(EDataType inType) = 0;
+	virtual void				WriteDataType(EOSDataType inType) = 0;
 	virtual void				WriteName(const char *inName) = 0;
 	virtual void				WriteIdentifier(Identifier inIdentifier) = 0;
 	virtual void				WriteCount(uint32 inCount) = 0;
@@ -131,7 +131,7 @@ private:
 template <class T>
 void OSWriteDataType(ObjectStreamOut &ioStream, vector<T> *)		
 { 
-	ioStream.WriteDataType(ObjectStream::EDataType::Array); 
+	ioStream.WriteDataType(EOSDataType::Array); 
 	OSWriteDataType(ioStream, (T *)nullptr); 
 }
 
@@ -153,7 +153,7 @@ void OSWriteData(ObjectStreamOut &ioStream, const vector<T> &inArray)
 template <class T, uint N>
 void OSWriteDataType(ObjectStreamOut &ioStream, StaticArray<T, N> *)		
 { 
-	ioStream.WriteDataType(ObjectStream::EDataType::Array); 
+	ioStream.WriteDataType(EOSDataType::Array); 
 	OSWriteDataType(ioStream, (T *)nullptr); 
 }
 
@@ -175,7 +175,7 @@ void OSWriteData(ObjectStreamOut &ioStream, const StaticArray<T, N> &inArray)
 template <class T, uint N>
 void OSWriteDataType(ObjectStreamOut &ioStream, T (*)[N])		
 { 
-	ioStream.WriteDataType(ObjectStream::EDataType::Array); 
+	ioStream.WriteDataType(EOSDataType::Array); 
 	OSWriteDataType(ioStream, (T *)nullptr); 
 }
 

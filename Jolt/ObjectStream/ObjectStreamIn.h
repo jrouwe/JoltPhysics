@@ -81,10 +81,10 @@ public:
 	bool						ReadClassData(const char *inClassName, void *inInstance);
 	bool						ReadClassData(const ClassDescription &inClassDesc, void *inInstance);
 	bool						ReadPointerData(const RTTI *inRTTI, void **inPointer, int inRefCountOffset = -1);
-	bool						SkipAttributeData(int inArrayDepth, EDataType inDataType, const char *inClassName);
+	bool						SkipAttributeData(int inArrayDepth, EOSDataType inDataType, const char *inClassName);
 
 	///@name Input type specific operations
-	virtual bool				ReadDataType(EDataType &outType) = 0;
+	virtual bool				ReadDataType(EOSDataType &outType) = 0;
 	virtual bool				ReadName(string &outName) = 0;
 	virtual bool				ReadIdentifier(Identifier &outIdentifier) = 0;
 	virtual bool				ReadCount(uint32 &outCount) = 0;
@@ -120,7 +120,7 @@ private:
 	struct AttributeDescription
 	{
 		int						mArrayDepth = 0;
-		EDataType				mDataType = EDataType::Invalid;
+		EOSDataType				mDataType = EOSDataType::Invalid;
 		string					mClassName;
 		int						mIndex = -1;
 	};

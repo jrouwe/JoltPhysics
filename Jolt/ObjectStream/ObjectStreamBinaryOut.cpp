@@ -16,7 +16,7 @@ ObjectStreamBinaryOut::ObjectStreamBinaryOut(ostream &inStream) :
 	mStream.write(header.c_str(), header.size());
 }
 
-void ObjectStreamBinaryOut::WriteDataType(EDataType inType)
+void ObjectStreamBinaryOut::WriteDataType(EOSDataType inType)
 {
 	mStream.write((const char *)&inType, sizeof(inType));
 }

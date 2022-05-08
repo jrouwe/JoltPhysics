@@ -5,6 +5,8 @@
 
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/GetPrimitiveTypeOfType.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -16,7 +18,7 @@ const RTTI *			TypedAttrGetMemberPrimitiveType()
 }
 
 template <class T>
-bool					TypedAttrIsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName)
+bool					TypedAttrIsType(int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
 	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
 }

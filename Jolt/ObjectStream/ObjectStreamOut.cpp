@@ -6,7 +6,6 @@
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
 #include <Jolt/ObjectStream/ObjectStreamTextOut.h>
 #include <Jolt/ObjectStream/ObjectStreamBinaryOut.h>
-#include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
 JPH_NAMESPACE_BEGIN
@@ -65,7 +64,7 @@ void ObjectStreamOut::WriteObject(const void *inObject)
 	HintNextItem();
 
 	// Write object header.
-	WriteDataType(EDataType::Object);
+	WriteDataType(EOSDataType::Object);
 	WriteName(i->second.mRTTI->GetName());
 	WriteIdentifier(i->second.mIdentifier);
 
@@ -89,7 +88,7 @@ void ObjectStreamOut::WriteRTTI(const RTTI *inRTTI)
 	HintNextItem();
 
 	// Write class header. E.g. in text mode: "class <name> <attr-count>"
-	WriteDataType(EDataType::Declare);
+	WriteDataType(EOSDataType::Declare);
 	WriteName(inRTTI->GetName());
 	WriteCount(inRTTI->GetAttributeCount());
 
@@ -165,7 +164,7 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 #define JPH_DECLARE_PRIMITIVE(name)															\
 	void	OSWriteDataType(ObjectStreamOut &ioStream, name *)								\
 	{																						\
-		ioStream.WriteDataType(ObjectStream::EDataType::T_##name);							\
+		ioStream.WriteDataType(EOSDataType::T_##name);										\
 	}																						\
 	void	OSWriteData(ObjectStreamOut &ioStream, const name &inPrimitive)					\
 	{																						\

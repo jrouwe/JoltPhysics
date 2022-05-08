@@ -14,29 +14,29 @@ ObjectStreamTextOut::ObjectStreamTextOut(ostream &inStream) :
 	WriteWord(StringFormat("TOS%2d.%02d", ObjectStream::sVersion, ObjectStream::sRevision));
 }
 
-void ObjectStreamTextOut::WriteDataType(EDataType inType)
+void ObjectStreamTextOut::WriteDataType(EOSDataType inType)
 {
 	switch (inType) 
 	{
-	case EDataType::Declare:		WriteWord("declare ");		break;
-	case EDataType::Object:			WriteWord("object ");		break;
-	case EDataType::Instance:		WriteWord("instance ");		break;
-	case EDataType::Pointer:		WriteWord("pointer ");		break;
-	case EDataType::Array:			WriteWord("array ");		break;
-	case EDataType::T_uint8:		WriteWord("uint8");			break;
-	case EDataType::T_uint16:		WriteWord("uint16");		break;
-	case EDataType::T_int:			WriteWord("int");			break;
-	case EDataType::T_uint32:		WriteWord("uint32");		break;
-	case EDataType::T_uint64:		WriteWord("uint64");		break;
-	case EDataType::T_float:		WriteWord("float");			break;
-	case EDataType::T_bool:			WriteWord("bool");			break;
-	case EDataType::T_string:		WriteWord("string");		break;
-	case EDataType::T_Float3:		WriteWord("float3");		break;
-	case EDataType::T_Vec3:			WriteWord("vec3");			break;
-	case EDataType::T_Vec4:			WriteWord("vec4");			break;
-	case EDataType::T_Quat:			WriteWord("quat");			break;
-	case EDataType::T_Mat44:		WriteWord("mat44");			break;
-	case EDataType::Invalid:
+	case EOSDataType::Declare:		WriteWord("declare ");		break;
+	case EOSDataType::Object:		WriteWord("object ");		break;
+	case EOSDataType::Instance:		WriteWord("instance ");		break;
+	case EOSDataType::Pointer:		WriteWord("pointer ");		break;
+	case EOSDataType::Array:		WriteWord("array ");		break;
+	case EOSDataType::T_uint8:		WriteWord("uint8");			break;
+	case EOSDataType::T_uint16:		WriteWord("uint16");		break;
+	case EOSDataType::T_int:		WriteWord("int");			break;
+	case EOSDataType::T_uint32:		WriteWord("uint32");		break;
+	case EOSDataType::T_uint64:		WriteWord("uint64");		break;
+	case EOSDataType::T_float:		WriteWord("float");			break;
+	case EOSDataType::T_bool:		WriteWord("bool");			break;
+	case EOSDataType::T_string:		WriteWord("string");		break;
+	case EOSDataType::T_Float3:		WriteWord("float3");		break;
+	case EOSDataType::T_Vec3:		WriteWord("vec3");			break;
+	case EOSDataType::T_Vec4:		WriteWord("vec4");			break;
+	case EOSDataType::T_Quat:		WriteWord("quat");			break;
+	case EOSDataType::T_Mat44:		WriteWord("mat44");			break;
+	case EOSDataType::Invalid:
 	default:						JPH_ASSERT(false);			break;
 	}
 }
