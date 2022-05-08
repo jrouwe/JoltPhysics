@@ -59,6 +59,15 @@ bool Factory::Register(const RTTI *inRTTI)
 	return true;
 }
 
+bool Factory::Register(const RTTI **inRTTIs, uint inNumber)
+{
+	for (const RTTI **rtti = inRTTIs; rtti < inRTTIs + inNumber; ++rtti)
+		if (!Register(*rtti))
+			return false;
+
+	return true;
+}
+
 void Factory::Clear()
 {
 	mClassNameMap.clear();
