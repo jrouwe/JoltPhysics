@@ -9,7 +9,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-inline bool				EnumAttrIsType(int inArrayDepth, EOSDataType inDataType, const char *inClassName)
+inline bool				EnumAttrIsType(int inArrayDepth, EOSDataType inDataType, [[maybe_unused]] const char *inClassName)
 {
 	return (inArrayDepth == 0 && inDataType == EOSDataType::T_uint32);
 }
