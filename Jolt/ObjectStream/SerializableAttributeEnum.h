@@ -16,11 +16,6 @@ public:
 								SerializableAttributeEnum(T Class::*inMember, const char *inName)			: SerializableAttribute(inName), mMember(inMember) { }
 
 	///@name Serialization operations
-	virtual const void *		GetMemberPointer(const void *inObject) const override
-	{
-		return &(((const Class *)inObject)->*mMember);
-	}
-
 	virtual bool				IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const override
 	{
 		return (inArrayDepth == 0 && inDataType == ObjectStream::EDataType::T_uint32);

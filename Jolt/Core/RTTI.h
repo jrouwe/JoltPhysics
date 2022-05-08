@@ -456,9 +456,6 @@ public:
 	/// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
 	virtual const RTTI *		GetMemberPrimitiveType() const								{ return nullptr; }
 
-	/// In case this attribute references an object, return data pointer here (note that if the attribute is vector<sometype> it will return the address of the vector)
-	virtual const void *		GetMemberPointer(const void *inObject) const				{ return nullptr; }
-
 private:
 	const char *				mName;
 };

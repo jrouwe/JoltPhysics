@@ -22,11 +22,6 @@ public:
 		return GetPrimitiveTypeOfType((T *)nullptr);
 	}
 
-	virtual const void *		GetMemberPointer(const void *inObject) const override
-	{
-		return &(((const Class *)inObject)->*mMember);
-	}
-
 	virtual bool				IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const override
 	{
 		return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
