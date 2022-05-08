@@ -302,11 +302,11 @@ TEST_SUITE("MotionQualityLinearCastTests")
 		Vec3 new_velocity1 = Vec3(0, 0, cAngledVelocity.GetZ());
 		Vec3 new_velocity2 = Vec3(cAngledVelocity.GetX(), 0, 0);
 		CHECK_APPROX_EQUAL(box1.GetPosition(), Vec3(2.0f * cBoxExtent, 0, 0), 2.3f * cPenetrationSlop); // We're moving 2x as fast in the z direction and the slop is allowed in x direction: sqrt(1^2 + 2^2) ~ 2.3
-		CHECK_APPROX_EQUAL(box1.GetLinearVelocity(), new_velocity1);
-		CHECK_APPROX_EQUAL(box1.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
+		CHECK_APPROX_EQUAL(box1.GetLinearVelocity(), new_velocity1, 1.0e-4f);
+		CHECK_APPROX_EQUAL(box1.GetAngularVelocity(), Vec3::sZero(), 2.0e-4f);
 		CHECK_APPROX_EQUAL(box2.GetPosition(), Vec3::sZero());
-		CHECK_APPROX_EQUAL(box2.GetLinearVelocity(), new_velocity2);
-		CHECK_APPROX_EQUAL(box2.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
+		CHECK_APPROX_EQUAL(box2.GetLinearVelocity(), new_velocity2, 1.0e-4f);
+		CHECK_APPROX_EQUAL(box2.GetAngularVelocity(), Vec3::sZero(), 2.0e-4f);
 		CHECK(box2.IsActive());
 		CHECK(activation.Contains(LoggingBodyActivationListener::EType::Activated, box2.GetID()));
 	}

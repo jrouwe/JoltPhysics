@@ -157,8 +157,21 @@ protected:
 		inline JobSystem *	GetJobSystem()								{ return mJobSystem; }
 
 		/// Add or release a reference to this object
-		inline void			AddRef() 									{ ++mReferenceCount; }
-		inline void			Release()									{ if (--mReferenceCount == 0) mJobSystem->FreeJob(this); }
+		inline void			AddRef()
+		{
+			// Adding a reference can use relaxed memory ordering
+			mReferenceCount.fetch_add(1, memory_order_relaxed);
+		} 
+		inline void			Release()
+		{
+			// Releasing a reference must use release semantics...
+			if (mReferenceCount.fetch_sub(1, memory_order_release) == 1)
+			{
+				// ... so that we can use aquire to ensure that we see any updates from other threads that released a ref before freeing the job
+				atomic_thread_fence(memory_order_acquire);
+				mJobSystem->FreeJob(this);
+			}
+		}
 
 		/// Add to the dependency counter. 
 		inline void			AddDependency(int inCount);
@@ -175,7 +188,7 @@ protected:
 		inline bool			SetBarrier(Barrier *inBarrier)
 		{ 
 			intptr_t barrier = 0; 
-			if (mBarrier.compare_exchange_strong(barrier, reinterpret_cast<intptr_t>(inBarrier)))
+			if (mBarrier.compare_exchange_strong(barrier, reinterpret_cast<intptr_t>(inBarrier), memory_order_relaxed))
 				return true; 
 			JPH_ASSERT(barrier == cBarrierDoneState, "A job can only belong to 1 barrier");
 			return false;
@@ -186,7 +199,7 @@ protected:
 		{
 			// Transition job to executing state
 			uint32 state = 0; // We can only start running with a dependency counter of 0
-			if (!mNumDependencies.compare_exchange_strong(state, cExecutingState))
+			if (!mNumDependencies.compare_exchange_strong(state, cExecutingState, memory_order_acquire))
 				return state; // state is updated by compare_exchange_strong to the current value
 
 			// Run the job function
@@ -196,18 +209,17 @@ protected:
 			}
 
 			// Fetch the barrier pointer and exchange it for the done state, so we're sure that no barrier gets set after we want to call the callback
-			intptr_t barrier;
+			intptr_t barrier = mBarrier.load(memory_order_relaxed);
 			for (;;)
 			{
-				barrier = mBarrier;
-				if (mBarrier.compare_exchange_strong(barrier, cBarrierDoneState))
+				if (mBarrier.compare_exchange_weak(barrier, cBarrierDoneState, memory_order_relaxed))
 					break;
 			}
 			JPH_ASSERT(barrier != cBarrierDoneState);
 
 			// Mark job as done
 			state = cExecutingState;
-			mNumDependencies.compare_exchange_strong(state, cDoneState);
+			mNumDependencies.compare_exchange_strong(state, cDoneState, memory_order_relaxed);
 			JPH_ASSERT(state == cExecutingState);
 
 			// Notify the barrier after we've changed the job to the done state so that any thread reading the state after receiving the callback will see that the job has finished
@@ -218,10 +230,10 @@ protected:
 		}
 
 		/// Test if the job can be executed
-		inline bool			CanBeExecuted() const						{ return mNumDependencies == 0; }
+		inline bool			CanBeExecuted() const						{ return mNumDependencies.load(memory_order_relaxed) == 0; }
 
 		/// Test if the job finished executing
-		inline bool			IsDone() const								{ return mNumDependencies == cDoneState; }
+		inline bool			IsDone() const								{ return mNumDependencies.load(memory_order_relaxed) == cDoneState; }
 
 		static constexpr uint32 cExecutingState = 0xe0e0e0e0;			///< Value of mNumDependencies when job is executing
 		static constexpr uint32 cDoneState		= 0xd0d0d0d0;			///< Value of mNumDependencies when job is done executing

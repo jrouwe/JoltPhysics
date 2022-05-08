@@ -50,11 +50,6 @@ public:
 		ioStream.WriteDataType(ObjectStream::EDataType::T_uint32);
 	}
 
-	virtual void				VisitCompounds(const void *inObject, const CompoundVisitor &inVisitor) const override
-	{
-		// An enum is not a compound, do nothing
-	}
-
 private:
 	T Class::*					mMember;
 };
