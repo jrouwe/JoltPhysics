@@ -63,6 +63,8 @@ JPH_NAMESPACE_BEGIN
 
 void RegisterTypes()
 {
+	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");
+
 	// Register base classes first so that we can specialize them later
 	CompoundShape::sRegister();
 	ConvexShape::sRegister();
@@ -87,43 +89,43 @@ void RegisterTypes()
 	OffsetCenterOfMassShape::sRegister();
 	ScaledShape::sRegister();
 
-	Factory::sInstance.Register(JPH_RTTI(SkeletalAnimation));
-	Factory::sInstance.Register(JPH_RTTI(Skeleton));
-	Factory::sInstance.Register(JPH_RTTI(CompoundShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(StaticCompoundShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(MutableCompoundShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(TriangleShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(SphereShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(BoxShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(CapsuleShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(TaperedCapsuleShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(CylinderShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(ScaledShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(MeshShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(ConvexHullShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(HeightFieldShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(RotatedTranslatedShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(OffsetCenterOfMassShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(RagdollSettings));
-	Factory::sInstance.Register(JPH_RTTI(PointConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(SixDOFConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(SliderConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(SwingTwistConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(DistanceConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(HingeConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(FixedConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(ConeConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(PathConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(VehicleConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(WheeledVehicleControllerSettings));
-	Factory::sInstance.Register(JPH_RTTI(PathConstraintPath));
-	Factory::sInstance.Register(JPH_RTTI(PathConstraintPathHermite));
-	Factory::sInstance.Register(JPH_RTTI(MotorSettings));
-	Factory::sInstance.Register(JPH_RTTI(PhysicsScene));
-	Factory::sInstance.Register(JPH_RTTI(PhysicsMaterial));
-	Factory::sInstance.Register(JPH_RTTI(PhysicsMaterialSimple));
-	Factory::sInstance.Register(JPH_RTTI(GroupFilter));
-	Factory::sInstance.Register(JPH_RTTI(GroupFilterTable));
+	Factory::sInstance->Register(JPH_RTTI(SkeletalAnimation));
+	Factory::sInstance->Register(JPH_RTTI(Skeleton));
+	Factory::sInstance->Register(JPH_RTTI(CompoundShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(StaticCompoundShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(MutableCompoundShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(TriangleShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(SphereShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(BoxShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(CapsuleShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(TaperedCapsuleShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(CylinderShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(ScaledShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(MeshShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(ConvexHullShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(HeightFieldShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(RotatedTranslatedShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(OffsetCenterOfMassShapeSettings));
+	Factory::sInstance->Register(JPH_RTTI(RagdollSettings));
+	Factory::sInstance->Register(JPH_RTTI(PointConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(SixDOFConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(SliderConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(SwingTwistConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(DistanceConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(HingeConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(FixedConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(ConeConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(PathConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(VehicleConstraintSettings));
+	Factory::sInstance->Register(JPH_RTTI(WheeledVehicleControllerSettings));
+	Factory::sInstance->Register(JPH_RTTI(PathConstraintPath));
+	Factory::sInstance->Register(JPH_RTTI(PathConstraintPathHermite));
+	Factory::sInstance->Register(JPH_RTTI(MotorSettings));
+	Factory::sInstance->Register(JPH_RTTI(PhysicsScene));
+	Factory::sInstance->Register(JPH_RTTI(PhysicsMaterial));
+	Factory::sInstance->Register(JPH_RTTI(PhysicsMaterialSimple));
+	Factory::sInstance->Register(JPH_RTTI(GroupFilter));
+	Factory::sInstance->Register(JPH_RTTI(GroupFilterTable));
 }
 
 JPH_NAMESPACE_END

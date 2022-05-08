@@ -69,7 +69,7 @@ void VehicleConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 
 	uint32 hash = 0;
 	inStream.Read(hash);
-	const RTTI *rtti = Factory::sInstance.Find(hash);
+	const RTTI *rtti = Factory::sInstance->Find(hash);
 	mController = reinterpret_cast<VehicleControllerSettings *>(rtti->CreateObject());
 	mController->RestoreBinaryState(inStream);
 }

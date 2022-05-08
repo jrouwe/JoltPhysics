@@ -4,6 +4,7 @@
 // Jolt includes
 #include <Jolt/Jolt.h>
 #include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Physics/PhysicsSettings.h>
@@ -136,6 +137,9 @@ int main(int argc, char** argv)
 
 	// Install callbacks
 	Trace = TraceImpl;
+
+	// Create a factory
+	Factory::sInstance = new Factory();
 
 	// Register all Jolt physics types
 	RegisterTypes();
@@ -298,6 +302,10 @@ int main(int argc, char** argv)
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 	NarrowPhaseStat::sReportStats();
 #endif // JPH_TRACK_NARROWPHASE_STATS
+
+	// Destroy the factory
+	delete Factory::sInstance;
+	Factory::sInstance = nullptr;
 
 	// End profiling this thread
 	JPH_PROFILE_THREAD_END();

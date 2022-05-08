@@ -258,7 +258,7 @@ bool ObjectStreamIn::ReadRTTI()
 		return false;
 
 	// Find class 
-	const RTTI *rtti = Factory::sInstance.Find(class_name.c_str());
+	const RTTI *rtti = Factory::sInstance->Find(class_name.c_str());
 	if (rtti == nullptr)
 		Trace("ObjectStreamIn: Unknown class: \"%s\".", class_name.c_str());
 

@@ -7,7 +7,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-Factory Factory::sInstance;
+Factory *Factory::sInstance = nullptr;
 
 void *Factory::CreateObject(const char *inName)
 { 

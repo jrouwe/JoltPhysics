@@ -42,7 +42,7 @@ PhysicsMaterial::PhysicsMaterialResult PhysicsMaterial::sRestoreFromBinaryState(
 	}
 
 	// Get the RTTI for the material
-	const RTTI *rtti = Factory::sInstance.Find(hash);
+	const RTTI *rtti = Factory::sInstance->Find(hash);
 	if (rtti == nullptr)
 	{
 		result.SetError("Failed to create instance of material");

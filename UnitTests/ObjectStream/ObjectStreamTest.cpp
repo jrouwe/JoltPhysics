@@ -178,7 +178,7 @@ TEST_SUITE("ObjectStreamTest")
 
 	TEST_CASE("TestObjectStreamLoadSaveText")
 	{
-		Factory::sInstance.Register(JPH_RTTI(TestSerializable));
+		Factory::sInstance->Register(JPH_RTTI(TestSerializable));
 
 		TestSerializable *test = CreateTestObject();
 
@@ -201,7 +201,7 @@ TEST_SUITE("ObjectStreamTest")
 
 	TEST_CASE("TestObjectStreamLoadSaveBinary")
 	{
-		Factory::sInstance.Register(JPH_RTTI(TestSerializable));
+		Factory::sInstance->Register(JPH_RTTI(TestSerializable));
 
 		TestSerializable *test = CreateTestObject();
 

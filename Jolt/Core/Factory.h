@@ -34,7 +34,7 @@ public:
 	vector<const RTTI *>		GetAllClasses() const;
 
 	/// Singleton factory instance
-	static Factory 				sInstance;
+	static Factory *			sInstance;
 
 private:
 	using ClassNameMap = unordered_map<string_view, const RTTI *>;

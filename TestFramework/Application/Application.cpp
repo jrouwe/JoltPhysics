@@ -8,6 +8,7 @@
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>
 #include <Jolt/Core/FPException.h>
+#include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>
 
@@ -36,6 +37,9 @@ Application::Application() :
 		return true;
 	};
 #endif // JPH_ENABLE_ASSERTS
+
+	// Create factory
+	Factory::sInstance = new Factory;
 
 	// Register physics types with the factory
 	RegisterTypes();
@@ -81,6 +85,8 @@ Application::~Application()
 	delete mDebugRenderer;
 	mFont = nullptr;
 	delete mRenderer;
+	delete Factory::sInstance;
+	Factory::sInstance = nullptr;
 }
 
 // Clear debug lines / triangles / texts that have been accumulated
