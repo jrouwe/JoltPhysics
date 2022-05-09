@@ -35,14 +35,19 @@ void SliderConstraintSettings::SetPoint(const Body &inBody1, const Body &inBody2
 {
 	JPH_ASSERT(mSpace == EConstraintSpace::WorldSpace);
 
-	// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point, otherwise use the mid point between the two center of masses
+	// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point
 	Vec3 anchor;
 	if (!inBody1.CanBeKinematicOrDynamic())
 		anchor = inBody2.GetCenterOfMassPosition();
 	else if (!inBody2.CanBeKinematicOrDynamic())
 		anchor = inBody1.GetCenterOfMassPosition();
 	else
-		anchor = 0.5f * (inBody1.GetCenterOfMassPosition() + inBody2.GetCenterOfMassPosition());
+	{
+		// Otherwise use weighted anchor point towards the lightest body
+		float inv_m1 = inBody1.GetMotionPropertiesUnchecked()->GetInverseMass();
+		float inv_m2 = inBody2.GetMotionPropertiesUnchecked()->GetInverseMass();
+		anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
+	}
 
 	mPoint1 = mPoint2 = anchor;
 }
