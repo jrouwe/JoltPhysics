@@ -17,19 +17,19 @@ const RTTI *GetPrimitiveTypeOfType(T *)
 template <class T>				
 const RTTI *GetPrimitiveTypeOfType(T **)
 { 
-	return GetPrimitiveTypeOfType((T *)nullptr);
+	return GetRTTIOfType((T *)nullptr);
 }
 
 template <class T>				
 const RTTI *GetPrimitiveTypeOfType(Ref<T> *)
 { 
-	return GetPrimitiveTypeOfType((T *)nullptr);
+	return GetRTTIOfType((T *)nullptr);
 }
 
 template <class T>				
 const RTTI *GetPrimitiveTypeOfType(RefConst<T> *)
 { 
-	return GetPrimitiveTypeOfType((T *)nullptr);
+	return GetRTTIOfType((T *)nullptr);
 }
 
 template <class T>				

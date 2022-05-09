@@ -55,6 +55,8 @@ public:
 	vector<int>					mIntVector;
 	StaticArray<bool, 10>		mBoolVector;
 	float						mFloatVector[3] = { 0, 0, 0 };
+	vector<float>				mArrayOfVector[3];
+	vector<vector<int>>			mVectorOfVector;
 	TestSerializable *			mPointer = nullptr;
 	Ref<TestSerializable>		mReference;
 	RefConst<TestSerializable>	mReferenceConst;
@@ -90,6 +92,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TestSerializable)
 	JPH_ADD_ATTRIBUTE(TestSerializable, mIntVector)
 	JPH_ADD_ATTRIBUTE(TestSerializable, mBoolVector)
 	JPH_ADD_ATTRIBUTE(TestSerializable, mFloatVector)
+	JPH_ADD_ATTRIBUTE(TestSerializable, mArrayOfVector)
+	JPH_ADD_ATTRIBUTE(TestSerializable, mVectorOfVector)
 	JPH_ADD_ATTRIBUTE(TestSerializable, mPointer)
 	JPH_ADD_ATTRIBUTE(TestSerializable, mReference)
 	JPH_ADD_ATTRIBUTE(TestSerializable, mReferenceConst)
@@ -113,15 +117,17 @@ TEST_SUITE("ObjectStreamTest")
 		test->mMat44 = Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisY(), 0.4567f), Vec3(13, 14, 15));
 		test->mString = "\"test string\"";
 		test->mEnum = B;
-		test->mIntVector.push_back(1);
-		test->mIntVector.push_back(2);
-		test->mIntVector.push_back(3);
+		test->mIntVector = { 1, 2, 3, 4, 5 };
 		test->mBoolVector.push_back(true);
 		test->mBoolVector.push_back(false);
 		test->mBoolVector.push_back(true);
 		test->mFloatVector[0] = 1.0f;
 		test->mFloatVector[1] = 2.0f;
 		test->mFloatVector[2] = 3.0f;
+		test->mArrayOfVector[0] = { 1, 2, 3 };
+		test->mArrayOfVector[1] = { 4, 5 };
+		test->mArrayOfVector[2] = { 6, 7, 8, 9 };
+		test->mVectorOfVector = { { 10, 11 }, { 12, 13, 14 }, { 15, 16, 17, 18 }};
 		test->mBase2 = 0x9876;
 
 		TestSerializable *test2 = new TestSerializable();
@@ -148,17 +154,16 @@ TEST_SUITE("ObjectStreamTest")
 		CHECK(inInput->mMat44 == inOutput->mMat44);
 		CHECK(inInput->mString == inOutput->mString);
 		CHECK(inInput->mEnum == inOutput->mEnum);
-
-		CHECK(inInput->mIntVector.size() == inOutput->mIntVector.size());
-		for (size_t i = 0; i < min(inInput->mIntVector.size(), inOutput->mIntVector.size()); ++i)
-			CHECK(inInput->mIntVector[i] == inOutput->mIntVector[i]);
-
-		CHECK(inInput->mBoolVector.size() == inOutput->mBoolVector.size());
-		for (uint32 i = 0; i < min(inInput->mBoolVector.size(), inOutput->mBoolVector.size()); ++i)
-			CHECK(inInput->mBoolVector[i] == inOutput->mBoolVector[i]);
+		CHECK(inInput->mIntVector == inOutput->mIntVector);
+		CHECK(inInput->mBoolVector == inOutput->mBoolVector);
 
 		for (uint32 i = 0; i < size(inInput->mFloatVector); ++i)
 			CHECK(inInput->mFloatVector[i] == inOutput->mFloatVector[i]);
+
+		for (uint32 i = 0; i < size(inInput->mArrayOfVector); ++i)
+			CHECK(inInput->mArrayOfVector[i] == inOutput->mArrayOfVector[i]);
+
+		CHECK(inInput->mVectorOfVector == inOutput->mVectorOfVector);
 
 		CHECK(inOutput->mPointer == inOutput->mReference);
 		CHECK(inOutput->mPointer == inOutput->mReferenceConst);
