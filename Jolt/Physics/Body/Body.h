@@ -148,7 +148,8 @@ public:
 	/// @param inFluidVelocity The average velocity of the fluid (in m/s) in which the body resides
 	/// @param inGravity The graviy vector (pointing down)
 	/// @param inDeltaTime Delta time of the next simulation step (in s)
-	void					ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime);
+	/// @return true if an impulse was applied, false if the body was not in the fluid
+	bool					ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime);
 
 	/// Check if this body has been added to the physics system
 	inline bool				IsInBroadPhase() const											{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsInBroadPhase)) != 0; }

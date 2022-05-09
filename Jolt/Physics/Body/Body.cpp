@@ -164,7 +164,7 @@ Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMov
 	return mMotionProperties->mSleepTestTimer >= inTimeBeforeSleep? ECanSleep::CanSleep : ECanSleep::CannotSleep;
 }
 
-void Body::ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime)
+bool Body::ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -252,7 +252,10 @@ void Body::ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float 
 		// Calculate total delta angular velocity due to drag and buoyancy
 		Vec3 delta_angular_velocity = drag_delta_angular_velocity + inv_inertia * relative_center_of_buoyancy.Cross(buoyancy_impulse + drag_impulse);
 		mMotionProperties->AddAngularVelocityStep(delta_angular_velocity);
+		return true;
 	}
+
+	return false;
 }
 
 void Body::SaveState(StateRecorder &inStream) const
