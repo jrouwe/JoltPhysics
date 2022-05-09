@@ -41,7 +41,7 @@ public:
 	using pWriteDataType = void (*)(ObjectStreamOut &ioStream);
 
 	/// Constructor
-								SerializableAttribute(const char *inName, intptr_t inMemberOffset, pGetMemberPrimitiveType inGetMemberPrimitiveType, pIsType inIsType, pReadData inReadData, pWriteData inWriteData, pWriteDataType inWriteDataType) : mName(inName), mMemberOffset(inMemberOffset), mGetMemberPrimitiveType(inGetMemberPrimitiveType), mIsType(inIsType), mReadData(inReadData), mWriteData(inWriteData), mWriteDataType(inWriteDataType) { }
+								SerializableAttribute(const char *inName, uint inMemberOffset, pGetMemberPrimitiveType inGetMemberPrimitiveType, pIsType inIsType, pReadData inReadData, pWriteData inWriteData, pWriteDataType inWriteDataType) : mName(inName), mMemberOffset(inMemberOffset), mGetMemberPrimitiveType(inGetMemberPrimitiveType), mIsType(inIsType), mReadData(inReadData), mWriteData(inWriteData), mWriteDataType(inWriteDataType) { }
 
 	/// Construct from other attribute with base class offset
 								SerializableAttribute(const SerializableAttribute &inOther, int inBaseOffset) : mName(inOther.mName), mMemberOffset(inOther.mMemberOffset + inBaseOffset), mGetMemberPrimitiveType(inOther.mGetMemberPrimitiveType), mIsType(inOther.mIsType), mReadData(inOther.mReadData), mWriteData(inOther.mWriteData), mWriteDataType(inOther.mWriteDataType) { }
@@ -53,7 +53,7 @@ public:
 	/// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
 	const RTTI *				GetMemberPrimitiveType() const
 	{
-		return mGetMemberPrimitiveType != nullptr? mGetMemberPrimitiveType() : nullptr;
+		return mGetMemberPrimitiveType();
 	}
 
 	/// Check if this attribute is of a specific type
@@ -85,7 +85,7 @@ private:
 	const char *				mName;
 
 	// Offset of the member relative to the class
-	intptr_t					mMemberOffset;
+	uint						mMemberOffset;
 
 	// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
 	pGetMemberPrimitiveType		mGetMemberPrimitiveType;

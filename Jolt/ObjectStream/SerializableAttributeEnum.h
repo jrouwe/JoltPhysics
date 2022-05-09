@@ -9,49 +9,46 @@
 
 JPH_NAMESPACE_BEGIN
 
-inline bool				EnumAttrIsType(int inArrayDepth, EOSDataType inDataType, [[maybe_unused]] const char *inClassName)
-{
-	return (inArrayDepth == 0 && inDataType == EOSDataType::T_uint32);
-}
-
-template <class T>
-bool					EnumAttrReadData(ObjectStreamIn &ioStream, void *inObject)
-{
-	uint32 temporary;
-	if (OSReadData(ioStream, temporary)) 
-	{
-		*reinterpret_cast<T *>(inObject) = (T)temporary;
-		return true;
-	}
-
-	return false;
-}
-
-template <class T>
-void					EnumAttrWriteData(ObjectStreamOut &ioStream, const void *inObject)
-{
-	static_assert(sizeof(T) <= sizeof(uint32));
-	uint32 temporary = uint32(*reinterpret_cast<const T *>(inObject));
-	OSWriteData(ioStream, temporary);
-}
-
-inline void				EnumAttrWriteDataType(ObjectStreamOut &ioStream)
-{
-	ioStream.WriteDataType(EOSDataType::T_uint32);
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////
 // Macros to add properties to be serialized
 //////////////////////////////////////////////////////////////////////////////////////////
 
-template <class Class, class T>
-inline void AddSerializableAttributeEnum(RTTI &inRTTI, T Class::*inMember, const char *inName)
+template <class MemberType>
+inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char *inName)
 {
-	inRTTI.AddAttribute(SerializableAttribute(inName, intptr_t(&(reinterpret_cast<Class *>(0)->*inMember)), nullptr, EnumAttrIsType, EnumAttrReadData<T>, EnumAttrWriteData<T>, EnumAttrWriteDataType));
+	inRTTI.AddAttribute(SerializableAttribute(inName, inOffset,
+		[]() -> const RTTI *
+		{ 
+			return nullptr;
+		},
+		[](int inArrayDepth, EOSDataType inDataType, [[maybe_unused]] const char *inClassName)
+		{
+			return inArrayDepth == 0 && inDataType == EOSDataType::T_uint32;
+		},
+		[](ObjectStreamIn &ioStream, void *inObject)
+		{
+			uint32 temporary;
+			if (OSReadData(ioStream, temporary)) 
+			{
+				*reinterpret_cast<MemberType *>(inObject) = static_cast<MemberType>(temporary);
+				return true;
+			}
+			return false;
+		},
+		[](ObjectStreamOut &ioStream, const void *inObject)
+		{
+			static_assert(sizeof(MemberType) <= sizeof(uint32));
+			uint32 temporary = uint32(*reinterpret_cast<const MemberType *>(inObject));
+			OSWriteData(ioStream, temporary);
+		},
+		[](ObjectStreamOut &ioStream)
+		{
+			ioStream.WriteDataType(EOSDataType::T_uint32);
+		}));
 }
 
 // JPH_ADD_ENUM_ATTRIBUTE
-#define JPH_ADD_ENUM_ATTRIBUTE(class_name, member_name)																\
-						AddSerializableAttributeEnum(inRTTI, &class_name::member_name, #member_name);
+#define JPH_ADD_ENUM_ATTRIBUTE(class_name, member_name) \
+	AddSerializableAttributeEnum<decltype(class_name::member_name)>(inRTTI, offsetof(class_name, member_name), #member_name);
 
 JPH_NAMESPACE_END
