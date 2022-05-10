@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <Jolt/ObjectStream/SerializableAttribute.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -15,8 +16,8 @@ JPH_NAMESPACE_BEGIN
 #define JPH_DECLARE_SERIALIZATION_FUNCTIONS(prefix, class_name)														\
 	prefix bool			OSReadData(ObjectStreamIn &ioStream, class_name &inInstance);								\
 	prefix bool			OSReadData(ObjectStreamIn &ioStream, class_name *&inPointer);								\
-	prefix bool			OSIsType(class_name *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName); \
-	prefix bool			OSIsType(class_name **, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName); \
+	prefix bool			OSIsType(class_name *, int inArrayDepth, EOSDataType inDataType, const char *inClassName);	\
+	prefix bool			OSIsType(class_name **, int inArrayDepth, EOSDataType inDataType, const char *inClassName);	\
 	prefix void			OSWriteData(ObjectStreamOut &ioStream, const class_name &inInstance);						\
 	prefix void			OSWriteData(ObjectStreamOut &ioStream, class_name *const &inPointer);						\
 	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name *);									\
@@ -32,13 +33,13 @@ JPH_NAMESPACE_BEGIN
 	{																												\
 		return ioStream.ReadPointerData(JPH_RTTI(class_name), (void **)&inPointer);									\
 	}																												\
-	bool				OSIsType(class_name *, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
+	bool				OSIsType(class_name *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)	\
 	{																												\
-		return inArrayDepth == 0 && inDataType == ObjectStream::EDataType::Instance && strcmp(inClassName, #class_name) == 0; \
+		return inArrayDepth == 0 && inDataType == EOSDataType::Instance && strcmp(inClassName, #class_name) == 0;	\
 	}																												\
-	bool				OSIsType(class_name **, int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) \
+	bool				OSIsType(class_name **, int inArrayDepth, EOSDataType inDataType, const char *inClassName)	\
 	{																												\
-		return inArrayDepth == 0 && inDataType == ObjectStream::EDataType::Pointer && strcmp(inClassName, #class_name) == 0; \
+		return inArrayDepth == 0 && inDataType == EOSDataType::Pointer && strcmp(inClassName, #class_name) == 0;	\
 	}																												\
 	void				OSWriteData(ObjectStreamOut &ioStream, const class_name &inInstance)						\
 	{																												\
@@ -53,12 +54,12 @@ JPH_NAMESPACE_BEGIN
 	}																												\
 	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name *)									\
 	{																												\
-		ioStream.WriteDataType(ObjectStream::EDataType::Instance);													\
+		ioStream.WriteDataType(EOSDataType::Instance);																\
 		ioStream.WriteName(#class_name);																			\
 	}																												\
 	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name **)									\
 	{																												\
-		ioStream.WriteDataType(ObjectStream::EDataType::Pointer);													\
+		ioStream.WriteDataType(EOSDataType::Pointer);																\
 		ioStream.WriteName(#class_name);																			\
 	}
 

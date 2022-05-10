@@ -5,64 +5,43 @@
 
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/GetPrimitiveTypeOfType.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
 
 JPH_NAMESPACE_BEGIN
-
-/// Contains a serializable attribute of any type (except enum)
-template <class Class, class T>
-class SerializableAttributeTyped : public SerializableAttribute
-{
-public:
-	/// Constructor
-								SerializableAttributeTyped(T Class::*inMember, const char *inName)			: SerializableAttribute(inName), mMember(inMember) { }
-
-	///@name Serialization operations
-	virtual const RTTI *		GetMemberPrimitiveType() const override
-	{ 
-		return GetPrimitiveTypeOfType((T *)nullptr);
-	}
-
-	virtual const void *		GetMemberPointer(const void *inObject) const override
-	{
-		return &(((const Class *)inObject)->*mMember);
-	}
-
-	virtual bool				IsType(int inArrayDepth, ObjectStream::EDataType inDataType, const char *inClassName) const override
-	{
-		return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
-	}
-
-	virtual bool				ReadData(ObjectStreamIn &ioStream, void *inObject) const override
-	{
-		return OSReadData(ioStream, ((Class *)inObject)->*mMember);
-	}
-
-	virtual void				WriteData(ObjectStreamOut &ioStream, const void *inObject) const override
-	{
-		OSWriteData(ioStream, ((const Class *)inObject)->*mMember);
-	}
-
-	virtual void				WriteDataType(ObjectStreamOut &ioStream) const override
-	{
-		OSWriteDataType(ioStream, (T *)nullptr);
-	}
-
-private:
-	T Class::*					mMember;
-};
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Macros to add properties to be serialized
 //////////////////////////////////////////////////////////////////////////////////////////
 
-template <class Class, class T>
-inline void AddSerializableAttributeTyped(RTTI &inRTTI, T Class::*inMember, const char *inName)
+template <class MemberType>
+inline void AddSerializableAttributeTyped(RTTI &inRTTI, uint inOffset, const char *inName)
 {
-	inRTTI.AddAttribute(new SerializableAttributeTyped<Class, T>(inMember, inName));
+	inRTTI.AddAttribute(SerializableAttribute(inName, inOffset,
+		[]()
+		{ 
+			return GetPrimitiveTypeOfType((MemberType *)nullptr);
+		},
+		[](int inArrayDepth, EOSDataType inDataType, const char *inClassName)
+		{
+			return OSIsType((MemberType *)nullptr, inArrayDepth, inDataType, inClassName);
+		},
+		[](ObjectStreamIn &ioStream, void *inObject)
+		{
+			return OSReadData(ioStream, *reinterpret_cast<MemberType *>(inObject));
+		},
+		[](ObjectStreamOut &ioStream, const void *inObject)
+		{
+			OSWriteData(ioStream, *reinterpret_cast<const MemberType *>(inObject));
+		},
+		[](ObjectStreamOut &ioStream)
+		{
+			OSWriteDataType(ioStream, (MemberType *)nullptr);
+		}));
 }
 
 // JPH_ADD_ATTRIBUTE
-#define JPH_ADD_ATTRIBUTE(class_name, member_name)																	\
-								AddSerializableAttributeTyped(inRTTI, &class_name::member_name, #member_name);
+#define JPH_ADD_ATTRIBUTE(class_name, member_name) \
+	AddSerializableAttributeTyped<decltype(class_name::member_name)>(inRTTI, offsetof(class_name, member_name), #member_name);
 
 JPH_NAMESPACE_END

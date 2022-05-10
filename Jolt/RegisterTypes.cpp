@@ -63,6 +63,8 @@ JPH_NAMESPACE_BEGIN
 
 void RegisterTypes()
 {
+	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");
+
 	// Register base classes first so that we can specialize them later
 	CompoundShape::sRegister();
 	ConvexShape::sRegister();
@@ -87,43 +89,49 @@ void RegisterTypes()
 	OffsetCenterOfMassShape::sRegister();
 	ScaledShape::sRegister();
 
-	Factory::sInstance.Register(JPH_RTTI(SkeletalAnimation));
-	Factory::sInstance.Register(JPH_RTTI(Skeleton));
-	Factory::sInstance.Register(JPH_RTTI(CompoundShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(StaticCompoundShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(MutableCompoundShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(TriangleShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(SphereShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(BoxShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(CapsuleShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(TaperedCapsuleShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(CylinderShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(ScaledShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(MeshShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(ConvexHullShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(HeightFieldShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(RotatedTranslatedShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(OffsetCenterOfMassShapeSettings));
-	Factory::sInstance.Register(JPH_RTTI(RagdollSettings));
-	Factory::sInstance.Register(JPH_RTTI(PointConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(SixDOFConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(SliderConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(SwingTwistConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(DistanceConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(HingeConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(FixedConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(ConeConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(PathConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(VehicleConstraintSettings));
-	Factory::sInstance.Register(JPH_RTTI(WheeledVehicleControllerSettings));
-	Factory::sInstance.Register(JPH_RTTI(PathConstraintPath));
-	Factory::sInstance.Register(JPH_RTTI(PathConstraintPathHermite));
-	Factory::sInstance.Register(JPH_RTTI(MotorSettings));
-	Factory::sInstance.Register(JPH_RTTI(PhysicsScene));
-	Factory::sInstance.Register(JPH_RTTI(PhysicsMaterial));
-	Factory::sInstance.Register(JPH_RTTI(PhysicsMaterialSimple));
-	Factory::sInstance.Register(JPH_RTTI(GroupFilter));
-	Factory::sInstance.Register(JPH_RTTI(GroupFilterTable));
+	// Create list of all types
+	const RTTI *types[] = {
+		JPH_RTTI(SkeletalAnimation),
+		JPH_RTTI(Skeleton),
+		JPH_RTTI(CompoundShapeSettings),
+		JPH_RTTI(StaticCompoundShapeSettings),
+		JPH_RTTI(MutableCompoundShapeSettings),
+		JPH_RTTI(TriangleShapeSettings),
+		JPH_RTTI(SphereShapeSettings),
+		JPH_RTTI(BoxShapeSettings),
+		JPH_RTTI(CapsuleShapeSettings),
+		JPH_RTTI(TaperedCapsuleShapeSettings),
+		JPH_RTTI(CylinderShapeSettings),
+		JPH_RTTI(ScaledShapeSettings),
+		JPH_RTTI(MeshShapeSettings),
+		JPH_RTTI(ConvexHullShapeSettings),
+		JPH_RTTI(HeightFieldShapeSettings),
+		JPH_RTTI(RotatedTranslatedShapeSettings),
+		JPH_RTTI(OffsetCenterOfMassShapeSettings),
+		JPH_RTTI(RagdollSettings),
+		JPH_RTTI(PointConstraintSettings),
+		JPH_RTTI(SixDOFConstraintSettings),
+		JPH_RTTI(SliderConstraintSettings),
+		JPH_RTTI(SwingTwistConstraintSettings),
+		JPH_RTTI(DistanceConstraintSettings),
+		JPH_RTTI(HingeConstraintSettings),
+		JPH_RTTI(FixedConstraintSettings),
+		JPH_RTTI(ConeConstraintSettings),
+		JPH_RTTI(PathConstraintSettings),
+		JPH_RTTI(VehicleConstraintSettings),
+		JPH_RTTI(WheeledVehicleControllerSettings),
+		JPH_RTTI(PathConstraintPath),
+		JPH_RTTI(PathConstraintPathHermite),
+		JPH_RTTI(MotorSettings),
+		JPH_RTTI(PhysicsScene),
+		JPH_RTTI(PhysicsMaterial),
+		JPH_RTTI(PhysicsMaterialSimple),
+		JPH_RTTI(GroupFilter),
+		JPH_RTTI(GroupFilterTable)
+	};
+
+	// Register them all
+	Factory::sInstance->Register(types, (uint)size(types));
 }
 
 JPH_NAMESPACE_END

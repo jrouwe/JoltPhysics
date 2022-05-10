@@ -5,6 +5,7 @@
 
 #include <cstdarg>
 #include <Jolt/Core/FPException.h>
+#include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
 #ifdef JPH_PLATFORM_ANDROID
 #include <Jolt/Core/Color.h>
@@ -73,10 +74,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 	FPExceptionsEnable enable_exceptions;
 	JPH_UNUSED(enable_exceptions);
 
+	// Create a factory
+	Factory::sInstance = new Factory();
+
 	// Register physics types
 	RegisterTypes();
 
-	return Context().run(); 
+	int rv = Context().run();
+
+	// Destroy the factory
+	delete Factory::sInstance;
+	Factory::sInstance = nullptr;
+
+	return rv;
 }
 
 #elif !defined(JPH_PLATFORM_ANDROID)
@@ -97,10 +107,19 @@ int main(int argc, char** argv)
 	FPExceptionsEnable enable_exceptions;
 	JPH_UNUSED(enable_exceptions);
 
+	// Create a factory
+	Factory::sInstance = new Factory();
+
 	// Register physics types
 	RegisterTypes();
 
-	return Context(argc, argv).run(); 
+	int rv = Context(argc, argv).run(); 
+
+	// Destroy the factory
+	delete Factory::sInstance;
+	Factory::sInstance = nullptr;
+
+	return rv;
 }
 
 #else // !JPH_PLATFORM_ANDROID
@@ -153,6 +172,9 @@ void AndroidInitialize(android_app *inApp)
 	FPExceptionsEnable enable_exceptions;
 	JPH_UNUSED(enable_exceptions);
 
+	// Create a factory
+	Factory::sInstance = new Factory();
+
 	// Register physics types
 	RegisterTypes();
 
@@ -188,6 +210,10 @@ void AndroidInitialize(android_app *inApp)
 	}
 	ANativeWindow_unlockAndPost(inApp->window);
 	ANativeWindow_release(inApp->window);
+
+	// Destroy the factory
+	delete Factory::sInstance;
+	Factory::sInstance = nullptr;
 }
 
 // Handle callback from Android

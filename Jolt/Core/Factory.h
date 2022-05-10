@@ -27,11 +27,17 @@ public:
 	/// Register an object with the factory. Returns false on failure.
 	bool						Register(const RTTI *inRTTI);
 
+	/// Register a list of objects with the factory. Returns false on failure.
+	bool						Register(const RTTI **inRTTIs, uint inNumber);
+
+	/// Unregisters all types
+	void						Clear();
+
 	/// Get all registered classes
 	vector<const RTTI *>		GetAllClasses() const;
 
 	/// Singleton factory instance
-	static Factory 				sInstance;
+	static Factory *			sInstance;
 
 private:
 	using ClassNameMap = unordered_map<string_view, const RTTI *>;

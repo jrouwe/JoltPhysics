@@ -7,6 +7,7 @@
 
 // Jolt includes
 #include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Physics/PhysicsSettings.h>
@@ -200,6 +201,9 @@ int main(int argc, char** argv)
 	Trace = TraceImpl;
 	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
 
+	// Create a factory
+	Factory::sInstance = new Factory();
+
 	// Register all Jolt physics types
 	RegisterTypes();
 
@@ -323,6 +327,10 @@ int main(int argc, char** argv)
 	// Remove and destroy the floor
 	body_interface.RemoveBody(floor->GetID());
 	body_interface.DestroyBody(floor->GetID());
+
+	// Destroy the factory
+	delete Factory::sInstance;
+	Factory::sInstance = nullptr;
 
 	return 0;
 }

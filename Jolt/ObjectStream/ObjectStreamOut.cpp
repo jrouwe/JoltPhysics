@@ -6,7 +6,6 @@
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
 #include <Jolt/ObjectStream/ObjectStreamTextOut.h>
 #include <Jolt/ObjectStream/ObjectStreamBinaryOut.h>
-#include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
 JPH_NAMESPACE_BEGIN
@@ -65,7 +64,7 @@ void ObjectStreamOut::WriteObject(const void *inObject)
 	HintNextItem();
 
 	// Write object header.
-	WriteDataType(EDataType::Object);
+	WriteDataType(EOSDataType::Object);
 	WriteName(i->second.mRTTI->GetName());
 	WriteIdentifier(i->second.mIdentifier);
 
@@ -89,7 +88,7 @@ void ObjectStreamOut::WriteRTTI(const RTTI *inRTTI)
 	HintNextItem();
 
 	// Write class header. E.g. in text mode: "class <name> <attr-count>"
-	WriteDataType(EDataType::Declare);
+	WriteDataType(EOSDataType::Declare);
 	WriteName(inRTTI->GetName());
 	WriteCount(inRTTI->GetAttributeCount());
 
@@ -98,20 +97,18 @@ void ObjectStreamOut::WriteRTTI(const RTTI *inRTTI)
 	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index) 
 	{
 		// Get attribute
-		const SerializableAttribute *attr = DynamicCast<SerializableAttribute, RTTIAttribute>(inRTTI->GetAttribute(attr_index));
-		if (attr == nullptr)
-			continue;
+		const SerializableAttribute &attr = inRTTI->GetAttribute(attr_index);
 
 		// Write definition of attribute class if undefined
-		const RTTI *rtti = attr->GetMemberPrimitiveType();
+		const RTTI *rtti = attr.GetMemberPrimitiveType();
 		if (rtti != nullptr)
 			QueueRTTI(rtti);
 
 		HintNextItem();
 
 		// Write attribute information.
-		WriteName(attr->GetName());
-		attr->WriteDataType(*this);
+		WriteName(attr.GetName());
+		attr.WriteDataType(*this);
 	}
 	HintIndentDown();
 }
@@ -125,11 +122,8 @@ void ObjectStreamOut::WriteClassData(const RTTI *inRTTI, const void *inInstance)
 	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index) 
 	{
 		// Get attribute
-		const SerializableAttribute *attr = DynamicCast<SerializableAttribute, RTTIAttribute>(inRTTI->GetAttribute(attr_index));
-		if (attr == nullptr)
-			continue;
-
-		attr->WriteData(*this, inInstance);
+		const SerializableAttribute &attr = inRTTI->GetAttribute(attr_index);
+		attr.WriteData(*this, inInstance);
 	}
 	HintIndentDown();
 }
@@ -170,7 +164,7 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 #define JPH_DECLARE_PRIMITIVE(name)															\
 	void	OSWriteDataType(ObjectStreamOut &ioStream, name *)								\
 	{																						\
-		ioStream.WriteDataType(ObjectStream::EDataType::T_##name);							\
+		ioStream.WriteDataType(EOSDataType::T_##name);										\
 	}																						\
 	void	OSWriteData(ObjectStreamOut &ioStream, const name &inPrimitive)					\
 	{																						\

@@ -45,7 +45,7 @@ ConstraintSettings::ConstraintResult ConstraintSettings::sRestoreFromBinaryState
 	}
 
 	// Get the RTTI for the shape
-	const RTTI *rtti = Factory::sInstance.Find(hash);
+	const RTTI *rtti = Factory::sInstance->Find(hash);
 	if (rtti == nullptr)
 	{
 		result.SetError("Failed to resolve type. Type not registered in factory?");

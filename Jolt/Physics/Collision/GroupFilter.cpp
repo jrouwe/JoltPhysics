@@ -39,7 +39,7 @@ GroupFilter::GroupFilterResult GroupFilter::sRestoreFromBinaryState(StreamIn &in
 	}
 
 	// Get the RTTI for the group filter
-	const RTTI *rtti = Factory::sInstance.Find(hash);
+	const RTTI *rtti = Factory::sInstance->Find(hash);
 	if (rtti == nullptr)
 	{
 		result.SetError("Failed to create instance of group filter");

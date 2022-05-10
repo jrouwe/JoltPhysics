@@ -7,7 +7,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-Factory Factory::sInstance;
+Factory *Factory::sInstance = nullptr;
 
 void *Factory::CreateObject(const char *inName)
 { 
@@ -51,12 +51,27 @@ bool Factory::Register(const RTTI *inRTTI)
 	// Register attribute classes
 	for (int i = 0; i < inRTTI->GetAttributeCount(); ++i)
 	{
-		const RTTI *rtti = inRTTI->GetAttribute(i)->GetMemberPrimitiveType();
+		const RTTI *rtti = inRTTI->GetAttribute(i).GetMemberPrimitiveType();
 		if (rtti != nullptr && !Register(rtti))
 			return false;
 	}
 
 	return true;
+}
+
+bool Factory::Register(const RTTI **inRTTIs, uint inNumber)
+{
+	for (const RTTI **rtti = inRTTIs; rtti < inRTTIs + inNumber; ++rtti)
+		if (!Register(*rtti))
+			return false;
+
+	return true;
+}
+
+void Factory::Clear()
+{
+	mClassNameMap.clear();
+	mClassHashMap.clear();
 }
 
 vector<const RTTI *> Factory::GetAllClasses() const

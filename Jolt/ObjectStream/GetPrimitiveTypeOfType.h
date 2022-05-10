@@ -9,43 +9,43 @@ JPH_NAMESPACE_BEGIN
 
 /// Helper functions to get the underlying RTTI type of a type (so e.g. vector<sometype> will return sometype)
 template <class T>				
-RTTI *GetPrimitiveTypeOfType(T *)
+const RTTI *GetPrimitiveTypeOfType(T *)
 { 
 	return GetRTTIOfType((T *)nullptr);
 }
 
 template <class T>				
-RTTI *GetPrimitiveTypeOfType(T **)
+const RTTI *GetPrimitiveTypeOfType(T **)
 { 
-	return GetPrimitiveTypeOfType((T *)nullptr);
+	return GetRTTIOfType((T *)nullptr);
 }
 
 template <class T>				
-RTTI *GetPrimitiveTypeOfType(Ref<T> *)
+const RTTI *GetPrimitiveTypeOfType(Ref<T> *)
 { 
-	return GetPrimitiveTypeOfType((T *)nullptr);
+	return GetRTTIOfType((T *)nullptr);
 }
 
 template <class T>				
-RTTI *GetPrimitiveTypeOfType(RefConst<T> *)
+const RTTI *GetPrimitiveTypeOfType(RefConst<T> *)
 { 
-	return GetPrimitiveTypeOfType((T *)nullptr);
+	return GetRTTIOfType((T *)nullptr);
 }
 
 template <class T>				
-RTTI *GetPrimitiveTypeOfType(vector<T> *)
+const RTTI *GetPrimitiveTypeOfType(vector<T> *)
 { 
 	return GetPrimitiveTypeOfType((T *)nullptr);
 }
 
 template <class T, uint N>				
-RTTI *GetPrimitiveTypeOfType(StaticArray<T, N> *)
+const RTTI *GetPrimitiveTypeOfType(StaticArray<T, N> *)
 { 
 	return GetPrimitiveTypeOfType((T *)nullptr);
 }
 
 template <class T, uint N>				
-RTTI *GetPrimitiveTypeOfType(T (*)[N])
+const RTTI *GetPrimitiveTypeOfType(T (*)[N])
 { 
 	return GetPrimitiveTypeOfType((T *)nullptr);
 }

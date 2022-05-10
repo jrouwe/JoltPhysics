@@ -15,7 +15,7 @@ public:
 	explicit					ObjectStreamTextOut(ostream &inStream);
 
 	///@name Output type specific operations
-	virtual void				WriteDataType(EDataType inType) override;
+	virtual void				WriteDataType(EOSDataType inType) override;
 	virtual void				WriteName(const char *inName) override;
 	virtual void				WriteIdentifier(Identifier inIdentifier) override;
 	virtual void				WriteCount(uint32 inCount) override;
