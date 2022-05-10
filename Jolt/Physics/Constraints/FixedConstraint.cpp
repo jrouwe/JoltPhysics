@@ -34,8 +34,8 @@ FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstr
 	else
 	{
 		// Otherwise use weighted anchor point towards the lightest body
-		float inv_m1 = mBody1->GetMotionPropertiesUnchecked()->GetInverseMass();
-		float inv_m2 = mBody2->GetMotionPropertiesUnchecked()->GetInverseMass();
+		float inv_m1 = mBody1->GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+		float inv_m2 = mBody2->GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
 		anchor = (inv_m1 * mBody1->GetCenterOfMassPosition() + inv_m2 * mBody2->GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
 	}
 

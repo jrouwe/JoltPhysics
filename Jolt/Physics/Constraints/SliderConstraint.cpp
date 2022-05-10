@@ -44,8 +44,8 @@ void SliderConstraintSettings::SetPoint(const Body &inBody1, const Body &inBody2
 	else
 	{
 		// Otherwise use weighted anchor point towards the lightest body
-		float inv_m1 = inBody1.GetMotionPropertiesUnchecked()->GetInverseMass();
-		float inv_m2 = inBody2.GetMotionPropertiesUnchecked()->GetInverseMass();
+		float inv_m1 = inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+		float inv_m2 = inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
 		anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
 	}
 
