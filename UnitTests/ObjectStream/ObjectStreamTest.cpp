@@ -29,6 +29,7 @@ public:
 	uint64						mUInt64 = 0;
 	float						mFloat = 0;
 	bool						mBool = false;
+	Float3						mFloat3 = { };
 	Quat						mQuat = Quat::sIdentity();
 	Vec3						mVec3 = Vec3::sZero();
 	Vec4						mVec4 = Vec4::sZero();
@@ -71,6 +72,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TestSerializableBase)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mUInt64)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mFloat)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mBool)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mFloat3)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mQuat)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mVec3)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mVec4)
@@ -111,6 +113,7 @@ TEST_SUITE("ObjectStreamTest")
 		test->mUInt64 = 0xf5f6f7f8f9fafbfc;
 		test->mFloat = 0.12345f;
 		test->mBool = true;
+		test->mFloat3 = Float3(9, 10, 11);
 		test->mVec3 = Vec3(6, 7, 8);
 		test->mVec4 = Vec4(9, 10, 11, 12);
 		test->mQuat = Quat::sRotation(Vec3::sAxisX(), 0.1234f);
@@ -148,6 +151,7 @@ TEST_SUITE("ObjectStreamTest")
 		CHECK(inInput->mUInt64 == inOutput->mUInt64);
 		CHECK(inInput->mFloat == inOutput->mFloat);
 		CHECK(inInput->mBool == inOutput->mBool);
+		CHECK(inInput->mFloat3 == inOutput->mFloat3);
 		CHECK(inInput->mQuat == inOutput->mQuat);
 		CHECK(inInput->mVec3 == inOutput->mVec3);
 		CHECK(inInput->mVec4 == inOutput->mVec4);
