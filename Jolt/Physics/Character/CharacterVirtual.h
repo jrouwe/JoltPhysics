@@ -103,7 +103,7 @@ public:
 	Mat44								GetWorldTransform() const								{ return Mat44::sRotationTranslation(mRotation, mPosition); }
 
 	/// Calculates the transform for this character's center of mass
-	Mat44								GetCenterOfMassTransform() const						{ return GetCenterOfMassTransform(mPosition); }
+	Mat44								GetCenterOfMassTransform() const						{ return GetCenterOfMassTransform(mPosition, mRotation, mShape); }
 
 	/// Character mass (kg)
 	void								SetMass(float inMass)									{ mMass = inMass; }
@@ -135,6 +135,18 @@ public:
 	/// @param inAllocator An allocator for temporary allocations. All memory will be freed by the time this function returns.
 	/// @return Returns true if the switch succeeded.
 	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
+
+	/// @brief Get all contacts for the character at a particular location
+	/// @param inPosition Position to test, note that this position will be corrected for the character padding.
+	/// @param inRotation Rotation at which to test the shape.
+	/// @param inMovementDirection A hint in which direction the character is moving, will be used to calculate a proper normal.
+	/// @param inPredictiveContactDistance How much distance around the character you want to report contacts in (can be 0 to match the character exactly).
+	/// @param inShape Shape to test collision with.
+	/// @param ioCollector Collision collector that receives the collision results.
+	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
+	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
+	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
+	void								GetContactsAtPosition(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inPredictiveContactDistance, const Shape *inShape, CollideShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
 
 	// Saving / restoring state for replay
 	virtual void						SaveState(StateRecorder &inStream) const override;
@@ -229,7 +241,7 @@ private:
 	bool								ValidateContact(const Contact &inContact) const;
 
 	// Tests the shape for collision around inPosition
-	void								GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
+	void								GetContactsAtPosition(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
 
 	// Remove penetrating contacts with the same body that have conflicting normals, leaving these will make the character mover get stuck
 	void								RemoveConflictingContacts(TempContactList &ioContacts, IgnoredContactList &outIgnoredContacts) const;
@@ -253,7 +265,10 @@ private:
 	void								UpdateSupportingContact(TempAllocator &inAllocator);
 
 	// This function returns the actual center of mass of the shape, not corrected for the character padding
-	inline Mat44						GetCenterOfMassTransform(Vec3Arg inPosition) const		{ return Mat44::sRotationTranslation(mRotation, inPosition).PreTranslated(mShape->GetCenterOfMass()).PostTranslated(mCharacterPadding * mUp); }
+	inline Mat44						GetCenterOfMassTransform(Vec3Arg inPosition, QuatArg inRotation, const Shape *inShape) const
+	{
+		return Mat44::sRotationTranslation(inRotation, inPosition).PreTranslated(inShape->GetCenterOfMass()).PostTranslated(mCharacterPadding * mUp);
+	}
 
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
