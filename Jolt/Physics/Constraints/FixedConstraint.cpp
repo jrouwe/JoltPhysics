@@ -25,14 +25,19 @@ TwoBodyConstraint *FixedConstraintSettings::Create(Body &inBody1, Body &inBody2)
 FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {	
-	// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point, otherwise use the mid point between the two center of masses
+	// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point
 	Vec3 anchor;
 	if (!mBody1->CanBeKinematicOrDynamic())
 		anchor = mBody2->GetCenterOfMassPosition();
 	else if (!mBody2->CanBeKinematicOrDynamic())
 		anchor = mBody1->GetCenterOfMassPosition();
 	else
-		anchor = 0.5f * (mBody1->GetCenterOfMassPosition() + mBody2->GetCenterOfMassPosition());
+	{
+		// Otherwise use weighted anchor point towards the lightest body
+		float inv_m1 = mBody1->GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+		float inv_m2 = mBody2->GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+		anchor = (inv_m1 * mBody1->GetCenterOfMassPosition() + inv_m2 * mBody2->GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
+	}
 
 	// Store local positions
 	mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * anchor;

@@ -68,4 +68,15 @@ void FixedConstraintTest::Initialize()
 			prev = &segment;
 		}
 	}
+
+	// Two light bodies attached to a heavy body (gives issues if the wrong anchor point is chosen)
+	Body *light1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, -5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	mBodyInterface->AddBody(light1->GetID(), EActivation::Activate);
+	Body *heavy = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(5.0f)), Vec3(-5.0f, 7.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	mBodyInterface->AddBody(heavy->GetID(), EActivation::Activate);
+	Body *light2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, 5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	mBodyInterface->AddBody(light2->GetID(), EActivation::Activate);
+
+	mPhysicsSystem->AddConstraint(FixedConstraintSettings().Create(*light1, *heavy));
+	mPhysicsSystem->AddConstraint(FixedConstraintSettings().Create(*heavy, *light2));
 }

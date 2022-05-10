@@ -86,4 +86,28 @@ void SliderConstraintTest::Initialize()
 			prev = &segment;
 		}
 	}
+
+	// Two light bodies attached to a heavy body (gives issues if the wrong anchor point is chosen)
+	Body *light1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, -5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	mBodyInterface->AddBody(light1->GetID(), EActivation::Activate);
+	Body *heavy = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(5.0f)), Vec3(-5.0f, 7.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	mBodyInterface->AddBody(heavy->GetID(), EActivation::Activate);
+	Body *light2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, 5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	mBodyInterface->AddBody(light2->GetID(), EActivation::Activate);
+
+	// Note: This violates the recommendation that body 1 is heavier than body 2, therefore this constraint will not work well (the rotation constraint will not be solved accurately)
+	SliderConstraintSettings slider1;
+	slider1.SetPoint(*light1, *heavy);
+	slider1.SetSliderAxis(Vec3::sAxisZ());
+	slider1.mLimitsMin = 0.0f;
+	slider1.mLimitsMax = 1.0f;
+	mPhysicsSystem->AddConstraint(slider1.Create(*light1, *heavy));
+
+	// This constraint has the heavy body as body 1 so will work fine
+	SliderConstraintSettings slider2;
+	slider2.SetPoint(*heavy, *light2);
+	slider2.SetSliderAxis(Vec3::sAxisZ());
+	slider2.mLimitsMin = 0.0f;
+	slider2.mLimitsMax = 1.0f;
+	mPhysicsSystem->AddConstraint(slider2.Create(*heavy, *light2));
 }
