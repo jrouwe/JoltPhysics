@@ -45,7 +45,9 @@ enum class ValidateResult
 	AcceptAllContactsForThisBodyPair,							///< Accept this and any further contact points for this body pair
 	AcceptContact,												///< Accept this contact only (and continue calling this callback for every contact manifold for the same body pair)
 	RejectContact,												///< Reject this contact only (but process any other contact manifolds for the same body pair)
-	RejectAllContactsForThisBodyPair							///< Rejects this and any further contact points for this body pair
+	RejectAllContactsForThisBodyPair,							///< Rejects this and any further contact points for this body pair
+
+	TrackContactsForThisBodyPair,								///< Rejects all for this body pair, but tracks contacts and calls OnContactAdded. Essentially treats the pair as a 'sensor' interaction.
 };
 
 /// A listener class that receives collision contact events events.
@@ -74,18 +76,18 @@ public:
 	/// When contacts are added, the constraint solver has not run yet, so the collision impulse is unknown at that point.
 	/// The velocities of inBody1 and inBody2 are the velocities before the contact has been resolved, so you can use this to
 	/// estimate the collision impulse to e.g. determine the volume of the impact sound to play.
-	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { /* Do nothing */ }
+	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) { /* Do nothing */ }
 
 	/// Called whenever a contact is detected that was also detected last update.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
-	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { /* Do nothing */ }
+	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) { /* Do nothing */ }
 
 	/// Called whenever a contact was detected last update but is not detected anymore.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
 	/// Note that we're using BodyID's since the bodies may have been removed at the time of callback.
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
-	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) { /* Do nothing */ }
+	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair, bool inTrackOnly) { /* Do nothing */ }
 };
 
 JPH_NAMESPACE_END

@@ -83,12 +83,12 @@ void FrictionPerTriangleTest::sOverrideContactSettings(const Body &inBody1, cons
 	ioSettings.mCombinedRestitution = max(restitution1, restitution2);
 }
 
-void FrictionPerTriangleTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+void FrictionPerTriangleTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly)
 {
 	sOverrideContactSettings(inBody1, inBody2, inManifold, ioSettings);
 }
 
-void FrictionPerTriangleTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+void FrictionPerTriangleTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly)
 {
 	sOverrideContactSettings(inBody1, inBody2, inManifold, ioSettings);
 }

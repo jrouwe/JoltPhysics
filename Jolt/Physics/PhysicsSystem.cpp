@@ -945,7 +945,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	JPH_ASSERT(body1->IsDynamic() || (body1->IsKinematic() && body2->IsSensor()));
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
-	bool pair_handled = false, contact_found = false;
+	bool pair_handled = false, contact_found = false, track_only = false;
 	if (mPhysicsSettings.mUseBodyPairContactCache && !(body1->IsCollisionCacheInvalid() || body2->IsCollisionCacheInvalid()))
 		mContactManager.GetContactsFromCache(ioContactAllocator, *body1, *body2, pair_handled, contact_found);
 
@@ -1019,6 +1019,12 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 							// Skip this and early out
 							ForceEarlyOut();
 							return;
+
+						case ValidateResult::TrackContactsForThisBodyPair:
+							// Reject and stop calling the validate callback
+							mValidateBodyPair = false;
+							mTrackOnly = true;
+							break;
 						}
 					}
 
@@ -1075,6 +1081,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 				const Body *		mBody1;
 				const Body *		mBody2;
 				bool				mValidateBodyPair = true;
+				bool				mTrackOnly = false;
 				Manifolds			mManifolds;
 			};
 			ReductionCollideShapeCollector collector(this, body1, body2);
@@ -1094,10 +1101,11 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					PruneContactPoints(body1->GetCenterOfMassPosition(), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
 
 				// Actually add the contact points to the manager
-				mContactManager.AddContactConstraint(ioContactAllocator, body_pair_handle, *body1, *body2, manifold);
+				mContactManager.AddContactConstraint(ioContactAllocator, body_pair_handle, *body1, *body2, manifold, collector.mTrackOnly);
 			}
 
 			contact_found = !collector.mManifolds.empty();
+			track_only = collector.mTrackOnly;
 		}
 		else
 		{
@@ -1144,6 +1152,11 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 							// Skip this and early out
 							ForceEarlyOut();
 							return;
+
+						case ValidateResult::TrackContactsForThisBodyPair:
+							mValidateBodyPair = true;
+							mTrackOnly = true;
+							break;
 						}
 					}
 
@@ -1167,7 +1180,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					manifold.mSubShapeID2 = inResult.mSubShapeID2;
 
 					// Actually add the contact points to the manager
-					mSystem->mContactManager.AddContactConstraint(mContactAllocator, mBodyPairHandle, *mBody1, *mBody2, manifold);
+					mSystem->mContactManager.AddContactConstraint(mContactAllocator, mBodyPairHandle, *mBody1, *mBody2, manifold, mTrackOnly);
 
 					// Mark contact found
 					mContactFound = true;
@@ -1180,6 +1193,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 				ContactConstraintManager::BodyPairHandle mBodyPairHandle;
 				bool				mValidateBodyPair = true;
 				bool				mContactFound = false;
+				bool				mTrackOnly = false;
 			};
 			NonReductionCollideShapeCollector collector(this, ioContactAllocator, body1, body2, body_pair_handle);
 
@@ -1188,11 +1202,12 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), body1->GetCenterOfMassTransform(), body2->GetCenterOfMassTransform(), part1, part2, settings, collector);
 
 			contact_found = collector.mContactFound;
+			track_only = collector.mTrackOnly;
 		}
 	}
 
 	// If an actual contact is present we need to do some extra work
-	if (contact_found && !body1->IsSensor() && !body2->IsSensor())
+	if (contact_found && !track_only && !body1->IsSensor() && !body2->IsSensor())
 	{
 		// Wake up sleeping bodies
 		BodyID body_ids[2];
@@ -1649,6 +1664,11 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 									mRejectAll = true;
 									ForceEarlyOut();
 									return;
+
+								case ValidateResult::TrackContactsForThisBodyPair:
+									mValidateBodyPair = false;
+									mTrackOnly = true;
+									break;
 								}
 							}
 
@@ -1680,6 +1700,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 			bool						mValidateBodyPair;				///< If we still have to call the ValidateContactPoint for this body pair
 			bool						mRejectAll;						///< Reject all further contacts between this body pair
+			bool						mTrackOnly = false;
 
 		private:
 			const BodyManager &			mBodyManager;
@@ -1797,7 +1818,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			manifold.mWorldSpaceNormal = ccd_body.mContactNormal;
 
 			// Call contact point callbacks
-			mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, ccd_body.mContactSettings);
+			mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, ccd_body.mContactSettings, np_collector.mTrackOnly);
 
 			// Calculate the average position from the manifold (this will result in the same impulse applied as when we apply impulses to all contact points)
 			if (manifold.mWorldSpaceContactPointsOn2.size() > 1)

@@ -133,7 +133,7 @@ public:
 	/// r1, r2 = contact point relative to center of mass of body 1 and body 2 (r1 = p1 - x1, r2 = p2 - x2).
 	/// v1, v2 = (linear velocity, angular velocity): 6 vectors containing linear and angular velocity for body 1 and 2.
 	/// M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].
-	void						AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPair, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
+	void						AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPair, Body &inBody1, Body &inBody2, const ContactManifold &inManifold, bool inTrackOnly);
 
 	/// Finalizes the contact cache, the contact cache that was generated during the calls to AddContactConstraint in this update
 	/// will be used from now on to read from.
@@ -220,7 +220,7 @@ public:
 	/// @param inBody2 The second body that is colliding
 	/// @param inManifold The manifold that describes the collision
 	/// @param outSettings The calculated contact settings (may be overridden by the contact listener)
-	void						OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings);
+	void						OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings, bool inTrackOnly);
 
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing properties
@@ -283,7 +283,8 @@ private:
 		enum class EFlags : uint16
 		{
 			ContactPersisted	= 1,																///< If this cache entry was reused in the next simulation update
-			CCDContact			= 2																	///< This is a cached manifold reported by continuous collision detection and was only used to create a contact callback
+			CCDContact			= 2,																///< This is a cached manifold reported by continuous collision detection and was only used to create a contact callback
+			TrackOnly			= 4
 		};
 
 		/// @see EFlags
@@ -452,7 +453,7 @@ private:
 
 	/// Internal helper function to add a contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	void						TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold, Mat44Arg inInvI1, Mat44Arg inInvI2);
+	void						TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold, Mat44Arg inInvI1, Mat44Arg inInvI2, bool inTrackOnly);
 
 	/// Internal helper function to warm start contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>

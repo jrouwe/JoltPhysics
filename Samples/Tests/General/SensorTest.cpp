@@ -139,7 +139,7 @@ void SensorTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-void SensorTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+void SensorTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly)
 {
 	for (int sensor = 0; sensor < NumSensors; ++sensor)
 	{
@@ -170,7 +170,7 @@ void SensorTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const 
 	}
 }
 
-void SensorTest::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
+void SensorTest::OnContactRemoved(const SubShapeIDPair &inSubShapePair, bool inTrackOnly)
 {
 	for (int sensor = 0; sensor < NumSensors; ++sensor)
 	{

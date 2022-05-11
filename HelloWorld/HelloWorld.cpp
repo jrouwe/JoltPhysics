@@ -163,17 +163,17 @@ public:
 		return ValidateResult::AcceptAllContactsForThisBodyPair;
 	}
 
-	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) override
 	{
 		cout << "A contact was added" << endl;
 	}
 
-	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) override
 	{
 		cout << "A contact was persisted" << endl;
 	}
 
-	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) override
+	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair, bool inTrackOnly) override
 	{ 
 		cout << "A contact was removed" << endl;
 	}

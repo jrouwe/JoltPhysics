@@ -24,7 +24,7 @@ ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const
 	return result;
 }
 
-void ContactListenerImpl::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+void ContactListenerImpl::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly)
 {
 	// Expect bodies to be sorted
 	if (!(inBody1.GetID() < inBody2.GetID()))
@@ -46,10 +46,10 @@ void ContactListenerImpl::OnContactAdded(const Body &inBody1, const Body &inBody
 	}
 
 	if (mNext != nullptr)
-		mNext->OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
+		mNext->OnContactAdded(inBody1, inBody2, inManifold, ioSettings, inTrackOnly);
 }
 
-void ContactListenerImpl::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+void ContactListenerImpl::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly)
 {
 	// Expect bodies to be sorted
 	if (!(inBody1.GetID() < inBody2.GetID()))
@@ -73,10 +73,10 @@ void ContactListenerImpl::OnContactPersisted(const Body &inBody1, const Body &in
 	}
 
 	if (mNext != nullptr)
-		mNext->OnContactPersisted(inBody1, inBody2, inManifold, ioSettings);
+		mNext->OnContactPersisted(inBody1, inBody2, inManifold, ioSettings, inTrackOnly);
 }
 
-void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
+void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair &inSubShapePair, bool inTrackOnly)
 {
 	// Expect bodies to be sorted
 	if (!(inSubShapePair.GetBody1ID() < inSubShapePair.GetBody2ID()))
@@ -95,7 +95,7 @@ void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
 	}
 
 	if (mNext != nullptr)
-		mNext->OnContactRemoved(inSubShapePair);
+		mNext->OnContactRemoved(inSubShapePair, inTrackOnly);
 }
 
 void ContactListenerImpl::SaveState(StateRecorder &inStream) const

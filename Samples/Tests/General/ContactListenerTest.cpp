@@ -61,7 +61,7 @@ ValidateResult ContactListenerTest::OnContactValidate(const Body &inBody1, const
 	return ((&inBody1 == mBody[0] && &inBody2 == mBody[1]) || (&inBody1 == mBody[1] && &inBody2 == mBody[0]))? ValidateResult::RejectAllContactsForThisBodyPair : ValidateResult::AcceptAllContactsForThisBodyPair;
 }
 
-void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly)
 {
 	// Make body 1 bounce only when a new contact point is added but not when it is persisted (its restitution is normally 0)
 	if (&inBody1 == mBody[0] || &inBody2 == mBody[0])

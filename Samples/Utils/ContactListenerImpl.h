@@ -14,9 +14,9 @@ class ContactListenerImpl : public ContactListener
 public:
 	// See: ContactListener
 	virtual ValidateResult	OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult) override;
-	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
-	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
-	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) override;
+	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) override;
+	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) override;
+	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair, bool inTrackOnly) override;
 
 	// Saving / restoring state for replay
 	void					SaveState(StateRecorder &inStream) const;

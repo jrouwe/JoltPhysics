@@ -351,7 +351,7 @@ void ContactConstraintManager::ManifoldCache::ContactPointRemovedCallbacks(Conta
 {
 	for (MKeyValue &kv : mCachedManifolds)
 		if ((kv.GetValue().mFlags & uint16(CachedManifold::EFlags::ContactPersisted)) == 0)
-			inListener->OnContactRemoved(kv.GetKey());
+			inListener->OnContactRemoved(kv.GetKey(), kv.GetValue().mFlags & uint16(CachedManifold::EFlags::TrackOnly));
 }
 
 #ifdef JPH_ENABLE_ASSERTS
@@ -804,11 +804,11 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			manifold.mPenetrationDepth = penetration_depth; // We don't have the penetration depth anymore, estimate it
 
 			// Notify callback
-			mContactListener->OnContactPersisted(*body1, *body2, manifold, settings);
+			mContactListener->OnContactPersisted(*body1, *body2, manifold, settings, output_cm->mFlags & (uint16)CachedManifold::EFlags::TrackOnly);
 		}
 
 		// If one of the bodies is a sensor, don't actually create the constraint
-		if (!body1->IsSensor() && !body2->IsSensor())
+		if (!body1->IsSensor() && !body2->IsSensor() && !(input_cm.mFlags & (uint16) CachedManifold::EFlags::TrackOnly ) )
 		{
 			// Add contact constraint in world space for the solver
 			uint32 constraint_idx = mNumConstraints++;
@@ -902,7 +902,7 @@ ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(C
 }
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold, Mat44Arg inInvI1, Mat44Arg inInvI2)
+void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold, Mat44Arg inInvI1, Mat44Arg inInvI2, bool inTrackOnly)
 {
 	// Calculate hash
 	SubShapeIDPair key { inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2 };
@@ -938,12 +938,13 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	const CachedContactPoint *ccp_end;
 	if (old_manifold_kv != nullptr)
 	{
+		const CachedManifold* old_manifold = &old_manifold_kv->GetValue();
+
 		// Call point persisted listener
 		if (mContactListener != nullptr)
-			mContactListener->OnContactPersisted(inBody1, inBody2, inManifold, settings);
+			mContactListener->OnContactPersisted(inBody1, inBody2, inManifold, settings, old_manifold->mFlags & (uint16)CachedManifold::EFlags::TrackOnly);
 
 		// Fetch the contact points from the old manifold
-		const CachedManifold *old_manifold = &old_manifold_kv->GetValue();
 		ccp_start = old_manifold->mContactPoints;
 		ccp_end = ccp_start + old_manifold->mNumContactPoints;
 
@@ -954,7 +955,7 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	{
 		// Call point added listener
 		if (mContactListener != nullptr)
-			mContactListener->OnContactAdded(inBody1, inBody2, inManifold, settings);
+			mContactListener->OnContactAdded(inBody1, inBody2, inManifold, settings, inTrackOnly);
 
 		// No contact points available from old manifold
 		ccp_start = nullptr;
@@ -965,8 +966,11 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	Mat44 inverse_transform_body1 = inBody1.GetInverseCenterOfMassTransform();
 
 	// If one of the bodies is a sensor, don't actually create the constraint
-	if (inBody1.IsSensor() || inBody2.IsSensor())
+	if (inBody1.IsSensor() || inBody2.IsSensor() || inTrackOnly)
 	{
+		if (inTrackOnly)
+			new_manifold->mFlags |= (uint16) CachedManifold::EFlags::TrackOnly;
+
 		// Store the contact manifold in the cache
 		for (int i = 0; i < num_contact_points; ++i)
 		{
@@ -1072,7 +1076,7 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	cbp->mFirstCachedManifold = write_cache.ToHandle(new_manifold_kv);
 }
 
-void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold)
+void ContactConstraintManager::AddContactConstraint( ContactAllocator& ioContactAllocator, BodyPairHandle inBodyPairHandle, Body& inBody1, Body& inBody2, const ContactManifold& inManifold, bool inTrackOnly)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1106,15 +1110,15 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 			switch (body2->GetMotionType())
 			{
 			case EMotionType::Dynamic:
-				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, body2->GetInverseInertia());
+				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, body2->GetInverseInertia(), inTrackOnly);
 				break;
 
 			case EMotionType::Kinematic:
-				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */);
+				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */, inTrackOnly);
 				break;
 
 			case EMotionType::Static:
-				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */);
+				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */, inTrackOnly);
 				break;
 
 			default:
@@ -1128,15 +1132,15 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		switch (body2->GetMotionType())
 		{
 		case EMotionType::Dynamic:
-			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia());
+			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia(), inTrackOnly);
 			break;
 
 		case EMotionType::Kinematic:
-			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
+			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */, inTrackOnly);
 			break;
 
 		case EMotionType::Static:
-			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
+			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */, inTrackOnly);
 			break;
 
 		default:
@@ -1149,11 +1153,11 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		switch (body2->GetMotionType())
 		{
 		case EMotionType::Dynamic:
-			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia());
+			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia(), inTrackOnly);
 			break;
 
 		case EMotionType::Kinematic:
-			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
+			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */, inTrackOnly);
 			break;
 
 		case EMotionType::Static: // Static vs static not possible
@@ -1169,7 +1173,7 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 	}
 }
 
-void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings)
+void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings, bool inTrackOnly)
 {
 	JPH_ASSERT(inManifold.mWorldSpaceNormal.IsNormalized());
 
@@ -1213,12 +1217,12 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 			if (old_manifold_kv == nullptr)
 			{
 				// New contact
-				mContactListener->OnContactAdded(*body1, *body2, *manifold, outSettings);
+				mContactListener->OnContactAdded(*body1, *body2, *manifold, outSettings, inTrackOnly);
 			}
 			else
 			{
 				// Existing contact
-				mContactListener->OnContactPersisted(*body1, *body2, *manifold, outSettings);
+				mContactListener->OnContactPersisted(*body1, *body2, *manifold, outSettings, inTrackOnly);
 
 				// Mark contact as persisted so that we won't fire OnContactRemoved callbacks
 				old_manifold_kv->GetValue().mFlags |= (uint16)CachedManifold::EFlags::ContactPersisted;
@@ -1237,7 +1241,7 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 		{
 			// Already found this contact this physics update. 
 			// Note that we can trigger OnContactPersisted multiple times per physics update, but otherwise we have no way of obtaining the settings
-			mContactListener->OnContactPersisted(*body1, *body2, *manifold, outSettings);
+			mContactListener->OnContactPersisted(*body1, *body2, *manifold, outSettings, inTrackOnly);
 		}
 	}
 }

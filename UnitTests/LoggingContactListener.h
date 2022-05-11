@@ -25,6 +25,7 @@ public:
 		BodyID						mBody1;
 		BodyID						mBody2;
 		ContactManifold				mManifold;
+		bool						mTrackOnly;
 	};
 
 	virtual ValidateResult			OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult) override
@@ -38,7 +39,7 @@ public:
 		return ValidateResult::AcceptContact;
 	}
 
-	virtual void					OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+	virtual void					OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) override
 	{
 		// Check contract that body 1 < body 2
 		CHECK(inBody1.GetID() < inBody2.GetID());
@@ -46,10 +47,10 @@ public:
 		lock_guard lock(mLogMutex);
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		CHECK(mExistingContacts.insert(key).second); // Validate that contact does not exist yet
-		mLog.push_back({ EType::Add, inBody1.GetID(), inBody2.GetID(), inManifold });
+		mLog.push_back({ EType::Add, inBody1.GetID(), inBody2.GetID(), inManifold, inTrackOnly });
 	}
 
-	virtual void					OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+	virtual void					OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings, bool inTrackOnly) override
 	{ 
 		// Check contract that body 1 < body 2
 		CHECK(inBody1.GetID() < inBody2.GetID());
@@ -57,17 +58,17 @@ public:
 		lock_guard lock(mLogMutex);
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		CHECK(mExistingContacts.find(key) != mExistingContacts.end()); // Validate that OnContactAdded was called
-		mLog.push_back({ EType::Persist, inBody1.GetID(), inBody2.GetID(), inManifold });
+		mLog.push_back({ EType::Persist, inBody1.GetID(), inBody2.GetID(), inManifold, inTrackOnly });
 	}
 
-	virtual void					OnContactRemoved(const SubShapeIDPair &inSubShapePair) override
+	virtual void					OnContactRemoved(const SubShapeIDPair &inSubShapePair, bool inTrackOnly) override
 	{ 
 		// Check contract that body 1 < body 2
 		CHECK(inSubShapePair.GetBody1ID() < inSubShapePair.GetBody2ID());
 
 		lock_guard lock(mLogMutex);
 		CHECK(mExistingContacts.erase(inSubShapePair) == 1); // Validate that OnContactAdded was called
-		mLog.push_back({ EType::Remove, inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID(), ContactManifold() });
+		mLog.push_back({ EType::Remove, inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID(), ContactManifold(), inTrackOnly });
 	}
 
 	void							Clear()
