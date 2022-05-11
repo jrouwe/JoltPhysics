@@ -36,6 +36,7 @@ class ContactSettings
 public:
 	float					mCombinedFriction;					///< Combined friction for the body pair (usually calculated by sCombineFriction)
 	float					mCombinedRestitution;				///< Combined restitution for the body pair (usually calculated by sCombineRestitution)
+	bool					mIsSensor;							///< If the contact should be treated as a sensor vs body contact (no collision response)
 };
 
 /// Return value for the OnContactValidate callback. Determines if the contact is being processed or not.

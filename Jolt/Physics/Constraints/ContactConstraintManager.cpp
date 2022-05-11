@@ -622,7 +622,7 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	{
 		Vec3 p1 = inTransformBody1 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition1);
 		Vec3 p2 = inTransformBody2 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition2);
-		wcp.CalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(inDeltaTime, inBody1, inBody2, inInvI1, inInvI2, p1, p2, ioConstraint.mWorldSpaceNormal, t1, t2, ioConstraint.mSettings.mCombinedRestitution, ioConstraint.mSettings.mCombinedFriction, min_velocity_for_restitution);
+		wcp.CalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(inDeltaTime, inBody1, inBody2, inInvI1, inInvI2, p1, p2, ioConstraint.mWorldSpaceNormal, t1, t2, ioConstraint.mCombinedRestitution, ioConstraint.mCombinedFriction, min_velocity_for_restitution);
 	}
 }
 
@@ -671,12 +671,12 @@ inline void ContactConstraintManager::CalculateFrictionAndNonPenetrationConstrai
 	}
 }
 
-void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outContactFound)
+void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactAllocator, Body &inBody1, Body &inBody2, bool &outPairHandled, bool &outConstraintCreated)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Start with nothing found and not handled
-	outContactFound = false;
+	outConstraintCreated = false;
 	outPairHandled = false;
 
 	// Swap bodies so that body 1 id < body 2 id
@@ -740,9 +740,6 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 	if (input_cbp.mFirstCachedManifold == ManifoldMap::cInvalidHandle)
 		return;
 
-	// A contact is available, start creating constraints
-	outContactFound = true;
-
 	// Get body transforms
 	Mat44 transform_body1 = body1->GetCenterOfMassTransform();
 	Mat44 transform_body2 = body2->GetCenterOfMassTransform();
@@ -779,6 +776,7 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 		ContactSettings settings;
 		settings.mCombinedFriction = mCombineFriction(*body1, input_key.GetSubShapeID1(), *body2, input_key.GetSubShapeID2());
 		settings.mCombinedRestitution = mCombineRestitution(*body1, input_key.GetSubShapeID1(), *body2, input_key.GetSubShapeID2());
+		settings.mIsSensor = body1->IsSensor() || body2->IsSensor();
 
 		// Calculate world space contact normal
 		Vec3 world_space_normal = transform_body2.Multiply3x3(Vec3::sLoadFloat3Unsafe(output_cm->mContactNormal)).Normalized();
@@ -808,7 +806,7 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 		}
 
 		// If one of the bodies is a sensor, don't actually create the constraint
-		if (!body1->IsSensor() && !body2->IsSensor())
+		if (!settings.mIsSensor)
 		{
 			// Add contact constraint in world space for the solver
 			uint32 constraint_idx = mNumConstraints++;
@@ -818,13 +816,17 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 				break;
 			}
 			
+			// A constraint will be created
+			outConstraintCreated = true;
+
 			ContactConstraint &constraint = mConstraints[constraint_idx];
 			new (&constraint) ContactConstraint();
 			constraint.mBody1 = body1;
 			constraint.mBody2 = body2;
 			constraint.mSortKey = input_hash;
 			constraint.mWorldSpaceNormal = world_space_normal;
-			constraint.mSettings = settings;
+			constraint.mCombinedFriction = settings.mCombinedFriction;
+			constraint.mCombinedRestitution = settings.mCombinedRestitution;
 			constraint.mContactPoints.resize(output_cm->mNumContactPoints);
 			for (uint32 i = 0; i < output_cm->mNumContactPoints; ++i)
 			{
@@ -902,7 +904,7 @@ ContactConstraintManager::BodyPairHandle ContactConstraintManager::AddBodyPair(C
 }
 
 template <EMotionType Type1, EMotionType Type2>
-void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold, Mat44Arg inInvI1, Mat44Arg inInvI2)
+bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold, Mat44Arg inInvI1, Mat44Arg inInvI2)
 {
 	// Calculate hash
 	SubShapeIDPair key { inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2 };
@@ -919,7 +921,7 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	ManifoldCache &write_cache = mCache[mCacheWriteIdx];
 	MKeyValue *new_manifold_kv = write_cache.Create(ioContactAllocator, key, key_hash, num_contact_points);
 	if (new_manifold_kv == nullptr)
-		return; // Out of cache space
+		return false; // Out of cache space
 	CachedManifold *new_manifold = &new_manifold_kv->GetValue();
 
 	// Transform the world space normal to the space of body 2 (this is usually the static body)
@@ -930,6 +932,7 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	ContactSettings settings;
 	settings.mCombinedFriction = mCombineFriction(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
 	settings.mCombinedRestitution = mCombineRestitution(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
+	settings.mIsSensor = inBody1.IsSensor() || inBody2.IsSensor();
 
 	// Get the contact points for the old cache entry
 	const ManifoldCache &read_cache = mCache[mCacheWriteIdx ^ 1];
@@ -964,8 +967,10 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	// Get inverse transform for body 1
 	Mat44 inverse_transform_body1 = inBody1.GetInverseCenterOfMassTransform();
 
+	bool contact_constraint_created;
+
 	// If one of the bodies is a sensor, don't actually create the constraint
-	if (inBody1.IsSensor() || inBody2.IsSensor())
+	if (settings.mIsSensor)
 	{
 		// Store the contact manifold in the cache
 		for (int i = 0; i < num_contact_points; ++i)
@@ -984,6 +989,9 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			cp.mFrictionLambda[0] = 0.0f;
 			cp.mFrictionLambda[1] = 0.0f;
 		}
+
+		// No constraint created
+		contact_constraint_created = false;
 	}
 	else
 	{
@@ -996,8 +1004,11 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			// Manifold has been created already, we're not filling it in, so we need to reset the contact number of points.
 			// Note that we don't hook it up to the body pair cache so that it won't be used as a cache during the next simulation.
 			new_manifold->mNumContactPoints = 0; 
-			return;
+			return false;
 		}
+
+		// We will create a contact constraint
+		contact_constraint_created = true;
 		
 		ContactConstraint &constraint = mConstraints[constraint_idx];
 		new (&constraint) ContactConstraint();
@@ -1005,7 +1016,8 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		constraint.mBody1 = &inBody1;
 		constraint.mBody2 = &inBody2;
 		constraint.mSortKey = key_hash;
-		constraint.mSettings = settings;
+		constraint.mCombinedFriction = settings.mCombinedFriction;
+		constraint.mCombinedRestitution = settings.mCombinedRestitution;
 
 		// Notify island builder
 		mUpdateContext->mIslandBuilder->LinkContact(constraint_idx, inBody1.GetIndexInActiveBodiesInternal(), inBody2.GetIndexInActiveBodiesInternal());
@@ -1070,9 +1082,12 @@ void ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	CachedBodyPair *cbp = reinterpret_cast<CachedBodyPair *>(inBodyPairHandle);
 	new_manifold->mNextWithSameBodyPair = cbp->mFirstCachedManifold;
 	cbp->mFirstCachedManifold = write_cache.ToHandle(new_manifold_kv);
+
+	// A contact constraint was added
+	return contact_constraint_created;
 }
 
-void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold)
+bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPairHandle, Body &inBody1, Body &inBody2, const ContactManifold &inManifold)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1106,16 +1121,13 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 			switch (body2->GetMotionType())
 			{
 			case EMotionType::Dynamic:
-				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, body2->GetInverseInertia());
-				break;
+				return TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, body2->GetInverseInertia());
 
 			case EMotionType::Kinematic:
-				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */);
-				break;
+				return TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */);
 
 			case EMotionType::Static:
-				TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */);
-				break;
+				return TemplatedAddContactConstraint<EMotionType::Dynamic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, invi1, Mat44() /* Will not be used */);
 
 			default:
 				JPH_ASSERT(false);
@@ -1128,16 +1140,13 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		switch (body2->GetMotionType())
 		{
 		case EMotionType::Dynamic:
-			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia());
-			break;
+			return TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia());
 
 		case EMotionType::Kinematic:
-			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
-			break;
+			return TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
 
 		case EMotionType::Static:
-			TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
-			break;
+			return TemplatedAddContactConstraint<EMotionType::Kinematic, EMotionType::Static>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
 
 		default:
 			JPH_ASSERT(false);
@@ -1149,12 +1158,10 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		switch (body2->GetMotionType())
 		{
 		case EMotionType::Dynamic:
-			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia());
-			break;
+			return TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Dynamic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, body2->GetInverseInertia());
 
 		case EMotionType::Kinematic:
-			TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
-			break;
+			return TemplatedAddContactConstraint<EMotionType::Static, EMotionType::Kinematic>(ioContactAllocator, inBodyPairHandle, *body1, *body2, *manifold, Mat44() /* Will not be used */, Mat44() /* Will not be used */);
 
 		case EMotionType::Static: // Static vs static not possible
 		default: 
@@ -1167,6 +1174,8 @@ void ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 		JPH_ASSERT(false);
 		break;
 	}
+
+	return false;
 }
 
 void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllocator, const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &outSettings)
@@ -1385,7 +1394,7 @@ JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstr
 			// Calculate max impulse that can be applied. Note that we're using the non-penetration impulse from the previous iteration here.
 			// We do this because non-penetration is more important so is solved last (the last things that are solved in an iterative solver
 			// contribute the most).
-			float max_lambda_f = ioConstraint.mSettings.mCombinedFriction * wcp.mNonPenetrationConstraint.GetTotalLambda();
+			float max_lambda_f = ioConstraint.mCombinedFriction * wcp.mNonPenetrationConstraint.GetTotalLambda();
 
 			// Solve friction velocities
 			// Note that what we're doing is not fully correct since the max force we can apply is 2 * max_lambda_f instead of max_lambda_f since we're solving axis independently
