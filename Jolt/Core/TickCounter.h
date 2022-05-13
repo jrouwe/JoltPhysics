@@ -6,7 +6,7 @@
 // Include for __rdtsc
 #if defined(JPH_PLATFORM_WINDOWS)
 	#include <intrin.h> 
-#elif defined(JPH_CPU_X64) && defined(JPH_COMPILER_GCC)
+#elif (defined(JPH_CPU_X86) || defined(JPH_CPU_X64)) && defined(JPH_COMPILER_GCC)
 	#include <x86intrin.h>
 #endif
 
@@ -24,7 +24,7 @@ JPH_INLINE uint64 GetProcessorTickCount()
 {
 #if defined(JPH_PLATFORM_BLUE)
 	return JPH_PLATFORM_BLUE_GET_TICKS();
-#elif defined(JPH_CPU_X64)
+#elif defined(JPH_CPU_X86) || defined(JPH_CPU_X64)
 	return __rdtsc();
 #elif defined(JPH_CPU_ARM64)
 	uint64 val;
