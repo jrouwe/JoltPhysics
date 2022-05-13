@@ -889,38 +889,35 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 #endif // JPH_DEBUG_RENDERER
 
 	// Test for floor that will support the character
-	if (mCosMaxSlopeAngle < 0.999f) // If cos(slope angle) is close to 1 then there's no limit
+	if (mCosMaxSlopeAngle < 0.999f // If cos(slope angle) is close to 1 then there's no limit
+		&& contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle) // Check slope angle
 	{
-		// Check slope angle
-		if (contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle)
+		// If no test position was provided, we cancel the stair walk
+		if (inStepForwardTest.IsNearZero())
+			return false;
+
+		// Delta time may be very small, so it may be that we hit the edge of a step and the normal is too horizontal.
+		// In order to judge if the floor is flat further along the sweep, we test again for a floor at inStepForwardTest
+		// and check if the normal is valid there.
+		Vec3 test_position = up_position + inStepForwardTest;
+		Contact test_contact;
+		bool hit = GetFirstContactForSweep(test_position, down, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+		if (!hit)
+			return false;
+
+	#ifdef JPH_DEBUG_RENDERER
+		// Draw 2nd sweep down
+		if (sDrawWalkStairs)
 		{
-			// If no test position was provided, we cancel the stair walk
-			if (inStepForwardTest.IsNearZero())
-				return false;
-
-			// Delta time may be very small, so it may be that we hit the edge of a step and the normal is too horizontal.
-			// In order to judge if the floor is flat further along the sweep, we test again for a floor at inStepForwardTest
-			// and check if the normal is valid there.
-			Vec3 test_position = up_position + inStepForwardTest;
-			Contact test_contact;
-			bool hit = GetFirstContactForSweep(test_position, down, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
-			if (!hit)
-				return false;
-
-		#ifdef JPH_DEBUG_RENDERER
-			// Draw 2nd sweep down
-			if (sDrawWalkStairs)
-			{
-				Vec3 debug_pos = test_position + test_contact.mFraction * down; 
-				DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
-				DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mNormal, Color::sCyan, 0.01f);
-				mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sCyan, false, true);
-			}
-		#endif // JPH_DEBUG_RENDERER
-
-			if (test_contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle)
-				return false;
+			Vec3 debug_pos = test_position + test_contact.mFraction * down; 
+			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
+			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mNormal, Color::sCyan, 0.01f);
+			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sCyan, false, true);
 		}
+	#endif // JPH_DEBUG_RENDERER
+
+		if (test_contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle)
+			return false;
 	}
 
 	// Calculate new down position
