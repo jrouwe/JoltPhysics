@@ -109,6 +109,10 @@ TEST_SUITE("SensorTests")
 		c.SimulateSingleStep();
 		CHECK(listener.GetEntryCount() == 0);
 
+		// The dynamic object should not be part of an island
+		CHECK(!sensor.IsActive());
+		CHECK(dynamic.GetMotionProperties()->GetIslandIndexInternal() == Body::cInactiveIndex);
+
 		// Activate the body
 		c.GetBodyInterface().ActivateBody(dynamic.GetID());
 
@@ -121,11 +125,19 @@ TEST_SUITE("SensorTests")
 		CHECK(listener.Contains(EType::Add, sensor.GetID(), dynamic.GetID()));
 		listener.Clear();
 
+		// The dynamic object should be part of an island now
+		CHECK(!sensor.IsActive());
+		CHECK(dynamic.GetMotionProperties()->GetIslandIndexInternal() != Body::cInactiveIndex);
+
 		// After a second the body should have gone to sleep and the contacts should have been removed
 		c.Simulate(1.0f);
 		CHECK(!dynamic.IsActive());
 		CHECK(listener.Contains(EType::Remove, floor.GetID(), dynamic.GetID()));
 		CHECK(listener.Contains(EType::Remove, sensor.GetID(), dynamic.GetID()));
+
+		// The dynamic object should not be part of an island
+		CHECK(!sensor.IsActive());
+		CHECK(dynamic.GetMotionProperties()->GetIslandIndexInternal() == Body::cInactiveIndex);
 	}
 
 	TEST_CASE("TestDynamicSleepingVsKinematicSensor")
@@ -159,6 +171,16 @@ TEST_SUITE("SensorTests")
 		CHECK(sensor.GetMotionProperties()->GetIslandIndexInternal() != Body::cInactiveIndex);
 		CHECK(dynamic.GetMotionProperties()->GetIslandIndexInternal() == Body::cInactiveIndex);
 
+		// The second step, the contact with the sensor should have persisted
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() == 1);
+		CHECK(listener.Contains(EType::Persist, sensor.GetID(), dynamic.GetID()));
+		listener.Clear();
+
+		// The sensor should still be in its own island
+		CHECK(sensor.GetMotionProperties()->GetIslandIndexInternal() != Body::cInactiveIndex);
+		CHECK(dynamic.GetMotionProperties()->GetIslandIndexInternal() == Body::cInactiveIndex);
+
 		// Activate the body
 		c.GetBodyInterface().ActivateBody(dynamic.GetID());
 
@@ -171,6 +193,18 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// The sensor should not be part of the same island as the dynamic body (they won't interact, so this is not needed)
+		CHECK(sensor.GetMotionProperties()->GetIslandIndexInternal() != Body::cInactiveIndex);
+		CHECK(dynamic.GetMotionProperties()->GetIslandIndexInternal() != Body::cInactiveIndex);
+		CHECK(sensor.GetMotionProperties()->GetIslandIndexInternal() != dynamic.GetMotionProperties()->GetIslandIndexInternal());
+
+		// After another step we should have persisted the collision with the floor and sensor
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() >= 2); // Depending on if we used the contact cache or not there will be validate callbacks too
+		CHECK(listener.Contains(EType::Persist, floor.GetID(), dynamic.GetID()));
+		CHECK(listener.Contains(EType::Persist, sensor.GetID(), dynamic.GetID()));
+		listener.Clear();
+
+		// The same islands as the previous step should have been created
 		CHECK(sensor.GetMotionProperties()->GetIslandIndexInternal() != Body::cInactiveIndex);
 		CHECK(dynamic.GetMotionProperties()->GetIslandIndexInternal() != Body::cInactiveIndex);
 		CHECK(sensor.GetMotionProperties()->GetIslandIndexInternal() != dynamic.GetMotionProperties()->GetIslandIndexInternal());
