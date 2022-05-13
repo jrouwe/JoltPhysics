@@ -306,7 +306,11 @@ private:
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 	
-	// 121 bytes up to here
+	// 121 bytes up to here (64-bit)
+#if UINTPTR_MAX == UINT32_MAX
+	// 32-bit padding
+	char padding[19];
+#endif
 };
 
 static_assert(sizeof(Body) == 128, "Body should be 128 bytes");
