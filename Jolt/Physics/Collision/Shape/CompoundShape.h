@@ -226,7 +226,7 @@ public:
 		// 3 padding bytes left
 	};
 
-	static_assert(sizeof(SubShape) == 40, "Compiler added unexpected padding");
+	static_assert(sizeof(SubShape) == (sizeof(void*) == 8 ? 40 : 36), "Compiler added unexpected padding");
 
 	using SubShapes = vector<SubShape>;
 
