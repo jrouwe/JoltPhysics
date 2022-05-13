@@ -42,11 +42,13 @@ TEST_SUITE("SensorTests")
 		// The next step we require that the contact persists
 		c.SimulateSingleStep();
 		CHECK(listener.Contains(EType::Persist, dynamic.GetID(), sensor_id));
+		CHECK(!listener.Contains(EType::Remove, dynamic.GetID(), sensor_id));
 		listener.Clear();
 
 		// After 3 more seconds we should have left the sensor at the bottom side
 		c.Simulate(3.0f + c.GetDeltaTime());
 		CHECK(listener.Contains(EType::Remove, dynamic.GetID(), sensor_id));
+		CHECK_APPROX_EQUAL(dynamic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 
 	TEST_CASE("TestKinematicVsSensor")
@@ -78,11 +80,13 @@ TEST_SUITE("SensorTests")
 		// The next step we require that the contact persists
 		c.SimulateSingleStep();
 		CHECK(listener.Contains(EType::Persist, kinematic.GetID(), sensor_id));
+		CHECK(!listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
 		listener.Clear();
 
 		// After 3 more seconds we should have left the sensor at the bottom side
 		c.Simulate(3.0f + c.GetDeltaTime());
 		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
+		CHECK_APPROX_EQUAL(kinematic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 
 	TEST_CASE("TestDynamicSleepingVsStaticSensor")
@@ -201,7 +205,9 @@ TEST_SUITE("SensorTests")
 		c.SimulateSingleStep();
 		CHECK(listener.GetEntryCount() >= 2); // Depending on if we used the contact cache or not there will be validate callbacks too
 		CHECK(listener.Contains(EType::Persist, floor.GetID(), dynamic.GetID()));
+		CHECK(!listener.Contains(EType::Remove, floor.GetID(), dynamic.GetID()));
 		CHECK(listener.Contains(EType::Persist, sensor.GetID(), dynamic.GetID()));
+		CHECK(!listener.Contains(EType::Remove, sensor.GetID(), dynamic.GetID()));
 		listener.Clear();
 
 		// The same islands as the previous step should have been created
@@ -214,5 +220,79 @@ TEST_SUITE("SensorTests")
 		CHECK(!dynamic.IsActive());
 		CHECK(listener.Contains(EType::Remove, floor.GetID(), dynamic.GetID()));
 		CHECK(!listener.Contains(EType::Remove, sensor.GetID(), dynamic.GetID()));
+	}
+
+	TEST_CASE("TestContactListenerMakesSensor")
+	{
+		PhysicsTestContext c;
+		c.ZeroGravity();
+
+		class SensorOverridingListener : public LoggingContactListener
+		{
+		public:
+			virtual void		OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+			{
+				LoggingContactListener::OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
+
+				JPH_ASSERT(ioSettings.mIsSensor == false);
+				if (inBody1.GetID() == mBodyThatSeesSensorID || inBody2.GetID() == mBodyThatSeesSensorID)
+					ioSettings.mIsSensor = true;
+			}
+
+			virtual void		OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+			{
+				LoggingContactListener::OnContactPersisted(inBody1, inBody2, inManifold, ioSettings);
+
+				JPH_ASSERT(ioSettings.mIsSensor == false);
+				if (inBody1.GetID() == mBodyThatSeesSensorID || inBody2.GetID() == mBodyThatSeesSensorID)
+					ioSettings.mIsSensor = true;
+			}
+
+			BodyID				mBodyThatSeesSensorID;
+		};
+
+		// Register listener
+		SensorOverridingListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Body that will appear as a sensor to one object and as static to another
+		BodyID static_id = c.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(5, 1, 5)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+		// Dynamic body moving down that will do a normal collision
+		Body &dynamic1 = c.CreateBox(Vec3(-2, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		dynamic1.SetAllowSleeping(false);
+		dynamic1.SetLinearVelocity(Vec3(0, -1, 0));
+
+		// Dynamic body moving down that will only see the static object as a sensor
+		Body &dynamic2 = c.CreateBox(Vec3(2, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		dynamic2.SetAllowSleeping(false);
+		dynamic2.SetLinearVelocity(Vec3(0, -1, 0));
+		listener.mBodyThatSeesSensorID = dynamic2.GetID();
+
+		// After a single step the dynamic object should not have touched the sensor yet
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() == 0);
+
+		// After half a second both bodies should be touching the sensor
+		c.Simulate(0.5f);
+		CHECK(listener.Contains(EType::Add, dynamic1.GetID(), static_id));
+		CHECK(listener.Contains(EType::Add, dynamic2.GetID(), static_id));
+		listener.Clear();
+
+		// The next step we require that the contact persists
+		c.SimulateSingleStep();
+		CHECK(listener.Contains(EType::Persist, dynamic1.GetID(), static_id));
+		CHECK(!listener.Contains(EType::Remove, dynamic1.GetID(), static_id));
+		CHECK(listener.Contains(EType::Persist, dynamic2.GetID(), static_id));
+		CHECK(!listener.Contains(EType::Remove, dynamic2.GetID(), static_id));
+		listener.Clear();
+
+		// After 3 more seconds one body should be resting on the static body, the other should have fallen through
+		c.Simulate(3.0f + c.GetDeltaTime());
+		CHECK(listener.Contains(EType::Persist, dynamic1.GetID(), static_id));
+		CHECK(!listener.Contains(EType::Remove, dynamic1.GetID(), static_id));
+		CHECK(listener.Contains(EType::Remove, dynamic2.GetID(), static_id));
+		CHECK_APPROX_EQUAL(dynamic1.GetPosition(), Vec3(-2, 1.5f, 0), 5.0e-3f);
+		CHECK_APPROX_EQUAL(dynamic2.GetPosition(), Vec3(2, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 }
