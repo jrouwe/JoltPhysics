@@ -70,7 +70,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		achieved_horizontal_step.SetY(0);
 		float achieved_horizontal_step_len = achieved_horizontal_step.Length();
 
-		// If we didn't move as far as we wanted
+		// If we didn't move as far as we wanted and we're against a slope that's too steep
 		if (achieved_horizontal_step_len + 1.0e-4f < desired_horizontal_step_len
 			&& mCharacter->CanWalkStairs())
 		{
@@ -81,7 +81,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			// Calculate how far to scan ahead for a floor
 			Vec3 step_forward_test = step_forward_normalized * cMinStepForward;
 
-			mCharacter->WalkStairs(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), cStepUpHeight, step_forward, step_forward_test, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
+			mCharacter->WalkStairs(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), cStepUpHeight, step_forward, step_forward_test, Vec3::sZero(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
 		}
 	}
 

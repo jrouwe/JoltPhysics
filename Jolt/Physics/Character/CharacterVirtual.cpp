@@ -837,7 +837,7 @@ bool CharacterVirtual::CanWalkStairs() const
 	return false;
 }
 
-bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg inStepUp, Vec3Arg inStepForward, Vec3Arg inStepForwardTest, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
+bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg inStepUp, Vec3Arg inStepForward, Vec3Arg inStepForwardTest, Vec3Arg inStepDownExtra, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
 {
 	// Move up
 	Vec3 up = inStepUp;
@@ -872,8 +872,8 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 #endif // JPH_DEBUG_RENDERER
 
 	// Move down towards the floor.
-	// Note that we don't want to move down more than we have moved up (it may be that be have collided on the way up)
-	Vec3 down = -up;
+	// Note that we travel the same amount down as we travelled up with the specified extra
+	Vec3 down = -up + inStepDownExtra;
 	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		return false; // No floor found, we're in mid air, cancel stair walk
 
