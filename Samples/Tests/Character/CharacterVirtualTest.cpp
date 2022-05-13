@@ -15,6 +15,9 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest)
 	JPH_ADD_BASE_CLASS(CharacterVirtualTest, CharacterBaseTest)
 }
 
+static const Vec3 cStepUpHeight = Vec3(0.0f, 0.4f, 0.0f);
+static const float cMinStepForward = 0.15f;
+
 void CharacterVirtualTest::Initialize()
 {
 	CharacterBaseTest::Initialize();
@@ -53,6 +56,34 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
+
+	// Allow user to turn off walk stairs algorithm
+	if (sEnableWalkStairs)
+	{
+		// Calculate how much we wanted to move horizontally
+		Vec3 desired_horizontal_step = mCharacter->GetLinearVelocity() * inParams.mDeltaTime;
+		desired_horizontal_step.SetY(0);
+		float desired_horizontal_step_len = desired_horizontal_step.Length();
+
+		// Calculate how much we moved horizontally
+		Vec3 achieved_horizontal_step = mCharacter->GetPosition() - old_position;
+		achieved_horizontal_step.SetY(0);
+		float achieved_horizontal_step_len = achieved_horizontal_step.Length();
+
+		// If we didn't move as far as we wanted
+		if (achieved_horizontal_step_len + 1.0e-4f < desired_horizontal_step_len
+			&& mCharacter->CanWalkStairs())
+		{
+			// Calculate how much we should step forward
+			Vec3 step_forward_normalized = desired_horizontal_step / desired_horizontal_step_len;
+			Vec3 step_forward = step_forward_normalized * (desired_horizontal_step_len - achieved_horizontal_step_len);
+
+			// Calculate how far to scan ahead for a floor
+			Vec3 step_forward_test = step_forward_normalized * cMinStepForward;
+
+			mCharacter->WalkStairs(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), cStepUpHeight, step_forward, step_forward_test, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
+		}
+	}
 
 	// Calculate effective velocity
 	Vec3 new_position = mCharacter->GetPosition();
@@ -121,11 +152,12 @@ void CharacterVirtualTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
 		
-		inUI->CreateSlider(configuration_settings, "Max Slope Angle (degrees)", RadiansToDegrees(sMaxSlopeAngle), 0.0f, 90.0f, 1.0f, [=](float inValue) { sMaxSlopeAngle = DegreesToRadians(inValue); });
-		inUI->CreateSlider(configuration_settings, "Max Strength (N)", sMaxStrength, 0.0f, 500.0f, 1.0f, [=](float inValue) { sMaxStrength = inValue; });
-		inUI->CreateSlider(configuration_settings, "Character Padding", sCharacterPadding, 0.01f, 0.5f, 0.01f, [=](float inValue) { sCharacterPadding = inValue; });
-		inUI->CreateSlider(configuration_settings, "Penetration Recovery Speed", sPenetrationRecoverySpeed, 0.0f, 1.0f, 0.05f, [=](float inValue) { sPenetrationRecoverySpeed = inValue; });
-		inUI->CreateSlider(configuration_settings, "Predictive Contact Distance", sPredictiveContactDistance, 0.01f, 1.0f, 0.01f, [=](float inValue) { sPredictiveContactDistance = inValue; });
+		inUI->CreateSlider(configuration_settings, "Max Slope Angle (degrees)", RadiansToDegrees(sMaxSlopeAngle), 0.0f, 90.0f, 1.0f, [](float inValue) { sMaxSlopeAngle = DegreesToRadians(inValue); });
+		inUI->CreateSlider(configuration_settings, "Max Strength (N)", sMaxStrength, 0.0f, 500.0f, 1.0f, [](float inValue) { sMaxStrength = inValue; });
+		inUI->CreateSlider(configuration_settings, "Character Padding", sCharacterPadding, 0.01f, 0.5f, 0.01f, [](float inValue) { sCharacterPadding = inValue; });
+		inUI->CreateSlider(configuration_settings, "Penetration Recovery Speed", sPenetrationRecoverySpeed, 0.0f, 1.0f, 0.05f, [](float inValue) { sPenetrationRecoverySpeed = inValue; });
+		inUI->CreateSlider(configuration_settings, "Predictive Contact Distance", sPredictiveContactDistance, 0.01f, 1.0f, 0.01f, [](float inValue) { sPredictiveContactDistance = inValue; });
+		inUI->CreateCheckBox(configuration_settings, "Enable Walk Stairs", sEnableWalkStairs, [](UICheckBox::EState inState) { sEnableWalkStairs = inState == UICheckBox::STATE_CHECKED; });
 		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
 		inUI->ShowMenu(configuration_settings);
 	});
