@@ -42,6 +42,7 @@ private:
 	static inline float		sCharacterPadding = 0.02f;
 	static inline float		sPenetrationRecoverySpeed = 1.0f;
 	static inline float		sPredictiveContactDistance = 0.1f;
+	static inline bool		sEnableWalkStairs = true;
 
 	// The 'player' character
 	Ref<CharacterVirtual>	mCharacter;

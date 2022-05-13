@@ -123,6 +123,24 @@ public:
 	/// @param inAllocator An allocator for temporary allocations. All memory will be freed by the time this function returns.
 	void								Update(float inDeltaTime, Vec3Arg inGravity, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
+	/// This function will return true if the character has moved into a slope that is too steep (e.g. a vertical wall).
+	/// You would call WalkStairs to attempt to step up stairs.
+	bool								CanWalkStairs() const;
+
+	/// When stair walking is needed, you can call the WalkStairs function to cast up, forward and down again to try to find a valid position
+	/// @param inDeltaTime Time step to simulate.
+	/// @param inGravity Gravity vector (m/s^2)
+	/// @param inStepUp The direction and distance to step up (this corresponds to the max step height)
+	/// @param inStepForward The direction and distance to step forward after the step up
+	/// @param inStepForwardTest When running at a high frequency, inStepForward can be very small and it's likely that you hit the side of the stairs on the way down. This could produce a normal that violates the max slope angle. If this happens, we test again using this distance from the up position to see if we find a valid slope.
+	/// @param inStepDownExtra An additional translation that is added when stepping down at the end. Allows you to step further down than up. Set to zero if you don't want this.
+	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
+	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
+	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
+	/// @param inAllocator An allocator for temporary allocations. All memory will be freed by the time this function returns.
+	/// @return true if the stair walk was successful
+	bool								WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg inStepUp, Vec3Arg inStepForward, Vec3Arg inStepForwardTest, Vec3Arg inStepDownExtra, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
+
 	/// This function can be used after a character has teleported to determine the new contacts with the world.
 	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
@@ -154,6 +172,7 @@ public:
 
 #ifdef JPH_DEBUG_RENDERER
 	static inline bool					sDrawConstraints = false;								///< Draw the current state of the constraints for iteration 0 when creating them
+	static inline bool					sDrawWalkStairs = false;								///< Draw the state of the walk stairs algorithm
 #endif
 
 private:

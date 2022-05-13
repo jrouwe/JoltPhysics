@@ -31,7 +31,7 @@ const char *CharacterBaseTest::sScenes[] =
 const char *CharacterBaseTest::sSceneName = "ObstacleCourse";
 
 // Scene constants
-static const Vec3 cRotatingPosition(-5, 0.25f, 15);
+static const Vec3 cRotatingPosition(-5, 0.15f, 15);
 static const Quat cRotatingOrientation = Quat::sIdentity();
 static const Vec3 cVerticallyMovingPosition(0, 2.0f, 15);
 static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
@@ -42,6 +42,12 @@ static const Quat cRampOrientation = Quat::sRotation(Vec3::sAxisX(), -0.25f * JP
 static const Vec3 cRampBlocksStart = cRampPosition + Vec3(-3.0f, 3.0f, 1.5f);
 static const Vec3 cRampBlocksDelta = Vec3(2.0f, 0, 0);
 static const float cRampBlocksTime = 5.0f;
+static const Vec3 cBumpsPosition = Vec3(-5.0f, 0, 2.5f);
+static const float cBumpHeight = 0.05f;
+static const float cBumpWidth = 0.01f;
+static const float cBumpDelta = 0.5f;
+static const Vec3 cStairsPosition = Vec3(-10.0f, 0, 2.5f);
+static const float cStairsStepHeight = 0.3f;
 
 void CharacterBaseTest::Initialize()
 {
@@ -77,7 +83,7 @@ void CharacterBaseTest::Initialize()
 
 		{
 			// Kinematic blocks to test interacting with moving objects
-			Ref<Shape> kinematic = new BoxShape(Vec3(1, 0.25f, 3.0f));
+			Ref<Shape> kinematic = new BoxShape(Vec3(1, 0.15f, 3.0f));
 			mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
@@ -128,6 +134,26 @@ void CharacterBaseTest::Initialize()
 		{
 			Quat rotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i);
 			mBodyInterface->CreateAndAddBody(BodyCreationSettings(funnel, Vec3(10.0f, 0.1f, 5.0f) + rotation * Vec3(0.2f, 0, 0), rotation * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(40.0f)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+		}
+
+		// Create small bumps
+		{
+			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cBumpHeight, 0.5f * cBumpWidth), 0.0f), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			for (int i = 0; i < 10; ++i)
+			{
+				step.mPosition = cBumpsPosition + Vec3(0, 0.5f * cBumpHeight, cBumpDelta * i);
+				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
+			}
+		}
+
+		// Create stairs
+		{
+			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cStairsStepHeight, 0.5f * cStairsStepHeight)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			for (int i = 0; i < 10; ++i)
+			{
+				step.mPosition = cStairsPosition + Vec3(0, cStairsStepHeight * (0.5f + i), cStairsStepHeight * i);
+				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
+			}
 		}
 	}
 	else
