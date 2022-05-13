@@ -89,24 +89,30 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 	}
 }
 
-void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void CharacterVirtual::CheckCollision(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
 {
-	// Remove previous results
-	outContacts.clear();
-
 	// Query shape transform
-	Mat44 transform = GetCenterOfMassTransform(inPosition);
+	Mat44 transform = GetCenterOfMassTransform(inPosition, inRotation, inShape);
 
 	// Settings for collide shape
 	CollideShapeSettings settings;
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 	settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
-	settings.mMaxSeparationDistance = mCharacterPadding + mPredictiveContactDistance;
+	settings.mMaxSeparationDistance = mCharacterPadding + inMaxSeparationDistance;
+
+	// Collide shape
+	mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+}
+
+void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+{
+	// Remove previous results
+	outContacts.clear();
 
 	// Collide shape
 	ContactCollector collector(mSystem, mMaxNumHits, outContacts);
-	mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+	CheckCollision(inPosition, mRotation, inMovementDirection, mPredictiveContactDistance, inShape, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 	// Reduce distance to contact by padding to ensure we stay away from the object by a little margin
 	// (this will make collision detection cheaper - especially for sweep tests as they won't hit the surface if we're properly sliding)
@@ -168,7 +174,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 		return false;
 
 	// Calculate start transform
-	Mat44 start = GetCenterOfMassTransform(inPosition);
+	Mat44 start = GetCenterOfMassTransform(inPosition, mRotation, mShape);
 
 	// Settings for the cast
 	ShapeCastSettings settings;
@@ -792,10 +798,6 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 
 	if (inShape != mShape && inShape != nullptr)
 	{
-		// Tentatively set new shape
-		RefConst<Shape> old_shape = mShape;
-		mShape = inShape;
-
 		if (inMaxPenetrationDepth < FLT_MAX)
 		{
 			// Check collision around the new shape
@@ -806,13 +808,13 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 			// Test if this results in penetration, if so cancel the transition
 			for (const Contact &c : contacts)
 				if (c.mDistance < -inMaxPenetrationDepth)
-				{
-					mShape = old_shape;
 					return false;
-				}
 
 			StoreActiveContacts(contacts, inAllocator);
 		}
+
+		// Set new shape
+		mShape = inShape;
 	}
 
 	return mShape == inShape;
