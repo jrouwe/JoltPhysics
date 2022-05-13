@@ -42,9 +42,13 @@
 #endif
 
 // Detect CPU architecture
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 	// X86 CPU architecture
-	#define JPH_CPU_X64
+	#if defined(__x86_64__) || defined(_M_X64)
+		#define JPH_CPU_X64
+	#else
+		#define JPH_CPU_X86
+	#endif
 	#define JPH_USE_SSE
 
 	// Detect enabled instruction sets
@@ -158,7 +162,8 @@
 	JPH_MSVC_SUPPRESS_WARNING(5045) /* Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified */ \
 	JPH_MSVC_SUPPRESS_WARNING(4583) /* 'X': destructor is not implicitly called */				\
 	JPH_MSVC_SUPPRESS_WARNING(4582) /* 'X': constructor is not implicitly called */				\
-	JPH_MSVC_SUPPRESS_WARNING(5219) /* implicit conversion from 'X' to 'Y', possible loss of data  */
+	JPH_MSVC_SUPPRESS_WARNING(5219) /* implicit conversion from 'X' to 'Y', possible loss of data  */ \
+	JPH_MSVC_SUPPRESS_WARNING(4826) /* Conversion from 'X *' to 'JPH::uint64' is sign-extended. This may cause unexpected runtime behavior. (32-bit) */
 
 // OS-specific includes
 #if defined(JPH_PLATFORM_WINDOWS)
@@ -174,7 +179,7 @@
 	#include <limits.h>
 	#include <string.h>
 
-	#if defined(JPH_CPU_X64)
+	#if defined(JPH_CPU_X86) || defined(JPH_CPU_X64)
 		#define JPH_BREAKPOINT		__asm volatile ("int $0x3")
 	#elif defined(JPH_CPU_ARM64)
 		#define JPH_BREAKPOINT		__builtin_trap()
@@ -240,7 +245,7 @@ static_assert(sizeof(uint8) == 1, "Invalid size of uint8");
 static_assert(sizeof(uint16) == 2, "Invalid size of uint16");
 static_assert(sizeof(uint32) == 4, "Invalid size of uint32");
 static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
-static_assert(sizeof(void *) == 8, "Invalid size of pointer");
+static_assert(sizeof(void *) == 8 || sizeof(void *) == 4, "Invalid size of pointer" );
 
 // Define inline macro
 #if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
