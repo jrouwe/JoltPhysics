@@ -140,13 +140,13 @@ public:
 	/// @param inPosition Position to test, note that this position will be corrected for the character padding.
 	/// @param inRotation Rotation at which to test the shape.
 	/// @param inMovementDirection A hint in which direction the character is moving, will be used to calculate a proper normal.
-	/// @param inPredictiveContactDistance How much distance around the character you want to report contacts in (can be 0 to match the character exactly).
+	/// @param inMaxSeparationDistance How much distance around the character you want to report contacts in (can be 0 to match the character exactly).
 	/// @param inShape Shape to test collision with.
 	/// @param ioCollector Collision collector that receives the collision results.
 	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
 	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
 	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
-	void								GetContactsAtPosition(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inPredictiveContactDistance, const Shape *inShape, CollideShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
+	void								CheckCollision(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
 
 	// Saving / restoring state for replay
 	virtual void						SaveState(StateRecorder &inStream) const override;
@@ -241,7 +241,7 @@ private:
 	bool								ValidateContact(const Contact &inContact) const;
 
 	// Tests the shape for collision around inPosition
-	void								GetContactsAtPosition(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
+	void								GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const;
 
 	// Remove penetrating contacts with the same body that have conflicting normals, leaving these will make the character mover get stuck
 	void								RemoveConflictingContacts(TempContactList &ioContacts, IgnoredContactList &outIgnoredContacts) const;

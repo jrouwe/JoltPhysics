@@ -68,7 +68,7 @@ void Character::Activate(bool inLockBodies)
 	sGetBodyInterface(mSystem, inLockBodies).ActivateBody(mBodyID);
 }
 
-void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistance, CollideShapeCollector &ioCollector, bool inLockBodies) const
+void Character::CheckCollision(Mat44Arg inCenterOfMassTransform, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
 {
 	// Create query broadphase layer filter
 	DefaultBroadPhaseLayerFilter broadphase_layer_filter = mSystem->GetDefaultBroadPhaseLayerFilter(mLayer);
@@ -79,6 +79,26 @@ void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistan
 	// Ignore my own body
 	IgnoreSingleBodyFilter body_filter(mBodyID);
 
+	// Settings for collide shape
+	CollideShapeSettings settings;
+	settings.mMaxSeparationDistance = inMaxSeparationDistance;
+	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
+	settings.mActiveEdgeMovementDirection = inMovementDirection;
+	settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
+
+	sGetNarrowPhaseQuery(mSystem, inLockBodies).CollideShape(inShape, Vec3::sReplicate(1.0f), inCenterOfMassTransform, settings, ioCollector, broadphase_layer_filter, object_layer_filter, body_filter);
+}
+
+void Character::CheckCollision(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
+{
+	// Calculate center of mass transform
+	Mat44 center_of_mass = Mat44::sRotationTranslation(inRotation, inPosition).PreTranslated(inShape->GetCenterOfMass());
+
+	CheckCollision(center_of_mass, inMovementDirection, inMaxSeparationDistance, inShape, ioCollector, inLockBodies);
+}
+
+void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistance, CollideShapeCollector &ioCollector, bool inLockBodies) const
+{
 	// Determine position and velocity of body
 	Mat44 query_transform;
 	Vec3 velocity;
@@ -94,14 +114,7 @@ void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistan
 		velocity = body.GetLinearVelocity();
 	}
 
-	// Settings for collide shape
-	CollideShapeSettings settings;
-	settings.mMaxSeparationDistance = inMaxSeparationDistance;
-	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
-	settings.mActiveEdgeMovementDirection = velocity;
-	settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
-
-	sGetNarrowPhaseQuery(mSystem, inLockBodies).CollideShape(inShape, Vec3::sReplicate(1.0f), query_transform, settings, ioCollector, broadphase_layer_filter, object_layer_filter, body_filter);
+	CheckCollision(query_transform, velocity, inMaxSeparationDistance, inShape, ioCollector, inLockBodies);
 }
 
 void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
@@ -140,7 +153,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 
 	// Collide shape
 	MyCollector collector(mSystem->GetGravity());
-	CheckCollision(mShape, inMaxSeparationDistance, collector);
+	CheckCollision(mShape, inMaxSeparationDistance, collector, inLockBodies);
 
 	// Copy results
 	mGroundBodyID = collector.mGroundBodyID;
@@ -274,7 +287,7 @@ bool Character::SetShape(const Shape *inShape, float inMaxPenetrationDepth, bool
 
 		// Test if anything is in the way of switching
 		MyCollector collector(inMaxPenetrationDepth);
-		CheckCollision(inShape, 0.0f, collector);
+		CheckCollision(inShape, 0.0f, collector, inLockBodies);
 		if (collector.mHadCollision)
 			return false;
 	}
