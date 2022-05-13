@@ -35,8 +35,10 @@ public:
 	float						mMinDistance = -1.0f;
 	float						mMaxDistance = -1.0f;
 
-	/// If mFrequency != 0 the constraint will be soft and mFrequency specifies the oscillation frequency in Hz and mDamping the damping ratio (0 = no damping, 1 = critical damping).
-	/// Note that due to the way the damping is implemented, it is impossible to get an undamped oscillation. See comment in AxisConstraintPart::CalculateConstraintProperties.
+	/// If mFrequency > 0 the constraint will be soft and mFrequency specifies the oscillation frequency in Hz and mDamping the damping ratio (0 = no damping, 1 = critical damping).
+	/// If mFrequency <= 0, mDamping is ignored and the distance constraint will have hard limits (as hard as the time step / the number of velocity / position solver steps allows).
+	/// Note that if you set mDamping = 0, you will not get an infinite oscillation. Because we integrate physics using an explict Euler scheme, there is always energy loss.
+	/// This is done to keep the simulation from exploding, because with a damping of 0 and even the slightest rounding error, the oscillation could become bigger and bigger until the simluation explodes.
 	float						mFrequency = 0.0f;
 	float						mDamping = 0.0f;
 
