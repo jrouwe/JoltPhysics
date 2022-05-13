@@ -251,18 +251,18 @@ void Renderer::Initialize()
 		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
 		info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
-	}
 
-	// Disable an error that triggers on Windows 11 with a hybrid graphic system
-	// See: https://stackoverflow.com/questions/69805245/directx-12-application-is-crashing-in-windows-11
-	D3D12_MESSAGE_ID hide[] =
-	{
-		D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
-	};
-	D3D12_INFO_QUEUE_FILTER filter = { };
-	filter.DenyList.NumIDs = static_cast<UINT>(std::size(hide));
-	filter.DenyList.pIDList = hide;
-	info_queue->AddStorageFilterEntries(&filter);
+		// Disable an error that triggers on Windows 11 with a hybrid graphic system
+		// See: https://stackoverflow.com/questions/69805245/directx-12-application-is-crashing-in-windows-11
+		D3D12_MESSAGE_ID hide[] =
+		{
+			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
+		};
+		D3D12_INFO_QUEUE_FILTER filter = { };
+		filter.DenyList.NumIDs = static_cast<UINT>( std::size( hide ) );
+		filter.DenyList.pIDList = hide;
+		info_queue->AddStorageFilterEntries( &filter );
+	}
 #endif // _DEBUG
 
 	// Disable full screen transitions
@@ -786,7 +786,7 @@ void Renderer::CopyD3DResource(ID3D12Resource *inDest, const void *inSrc, uint64
 	void *data;
 	D3D12_RANGE range = { 0, 0 }; // We're not going to read
 	FatalErrorIfFailed(inDest->Map(0, &range, &data));
-	memcpy(data, inSrc, inSize);
+	memcpy(data, inSrc, size_t(inSize));
 	inDest->Unmap(0, nullptr);
 }
 
