@@ -806,6 +806,7 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 		}
 
 		// If one of the bodies is a sensor, don't actually create the constraint
+		JPH_ASSERT(settings.mIsSensor || !(body1->IsSensor() || body2->IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
 		if (!settings.mIsSensor)
 		{
 			// Add contact constraint in world space for the solver
@@ -970,6 +971,7 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	bool contact_constraint_created;
 
 	// If one of the bodies is a sensor, don't actually create the constraint
+	JPH_ASSERT(settings.mIsSensor || !(inBody1.IsSensor() || inBody2.IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
 	if (settings.mIsSensor)
 	{
 		// Store the contact manifold in the cache
@@ -1185,6 +1187,7 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 	// Calculate contact settings
 	outSettings.mCombinedFriction = mCombineFriction(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
 	outSettings.mCombinedRestitution = mCombineRestitution(inBody1, inManifold.mSubShapeID1, inBody2, inManifold.mSubShapeID2);
+	outSettings.mIsSensor = false; // For now, no sensors are supported during CCD
 
 	// The remainder of this function only deals with calling contact callbacks, if there's no contact callback we also don't need to do this work
 	if (mContactListener != nullptr)
@@ -1249,6 +1252,8 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 			mContactListener->OnContactPersisted(*body1, *body2, *manifold, outSettings);
 		}
 	}
+
+	JPH_ASSERT(!outSettings.mIsSensor, "CCD bodies cannot currently act as sensors");
 }
 
 void ContactConstraintManager::SortContacts(uint32 *inConstraintIdxBegin, uint32 *inConstraintIdxEnd) const
