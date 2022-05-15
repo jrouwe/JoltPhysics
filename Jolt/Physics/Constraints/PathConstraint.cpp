@@ -426,4 +426,10 @@ void PathConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mPathFraction);
 }
 
+Ref<ConstraintSettings> PathConstraint::GetConstraintSettings() const
+{
+	JPH_ASSERT(false); // Not implemented yet
+	return nullptr;
+}
+
 JPH_NAMESPACE_END

@@ -83,6 +83,9 @@ public:
 	/// Batch remove constraints. Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void						RemoveConstraints(Constraint **inConstraints, int inNumber)	{ mConstraintManager.Remove(inConstraints, inNumber); }
 
+	/// Get a list of all constraints
+	Constraints					GetConstraints() const										{ return mConstraintManager.GetConstraints(); }
+
 	/// Optimize the broadphase, needed only if you've added many bodies prior to calling Update() for the first time.
 	void						OptimizeBroadPhase();
 

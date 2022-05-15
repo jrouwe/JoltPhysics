@@ -754,4 +754,10 @@ void SixDOFConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetOrientation);
 }
 
+Ref<ConstraintSettings> SixDOFConstraint::GetConstraintSettings() const
+{
+	JPH_ASSERT(false); // Not implemented yet
+	return nullptr;
+}
+
 JPH_NAMESPACE_END

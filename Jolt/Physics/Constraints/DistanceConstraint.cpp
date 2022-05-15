@@ -223,4 +223,20 @@ void DistanceConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mWorldSpaceNormal);
 }
 
+Ref<ConstraintSettings> DistanceConstraint::GetConstraintSettings() const
+{
+	DistanceConstraintSettings *settings = new DistanceConstraintSettings;
+#ifdef JPH_DEBUG_RENDERER
+	settings->mDrawConstraintSize = mDrawConstraintSize;
+#endif // JPH_DEBUG_RENDERER
+	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
+	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mMinDistance = mMinDistance;
+	settings->mMaxDistance = mMaxDistance;
+	settings->mFrequency = mFrequency;
+	settings->mDamping = mDamping;
+	return settings;
+}
+
 JPH_NAMESPACE_END

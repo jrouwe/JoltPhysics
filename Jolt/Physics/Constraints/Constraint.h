@@ -22,6 +22,13 @@ class DebugRenderer;
 /// Enum to identify constraint type
 enum class EConstraintType
 {
+	Constraint,
+	TwoBodyConstraint,
+};
+
+/// Enum to identify constraint sub type
+enum class EConstraintSubType
+{
 	Fixed,
 	Point,
 	Hinge,
@@ -85,7 +92,10 @@ public:
 	virtual						~Constraint() = default;
 
 	/// Get the type of a constraint
-	virtual EConstraintType		GetType() const = 0;
+	virtual EConstraintType		GetType() const								{ return EConstraintType::Constraint; }
+
+	/// Get the sub type of a constraint
+	virtual EConstraintSubType	GetSubType() const = 0;
 
 	/// Enable / disable this constraint. This can e.g. be used to implement a breakable constraint by detecting that the constraint impulse
 	/// (see e.g. PointConstraint::GetTotalLambdaPosition) went over a certain limit and then disabling the constraint.
@@ -124,6 +134,9 @@ public:
 
 	/// Restoring state for replay
 	virtual void				RestoreState(StateRecorder &inStream);
+
+	/// Debug function to convert a constraint to its settings, note that this will not save to which bodies the constraint is connected to
+	virtual Ref<ConstraintSettings> GetConstraintSettings() const = 0;
 
 protected:
 #ifdef JPH_DEBUG_RENDERER

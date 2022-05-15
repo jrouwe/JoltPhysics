@@ -459,4 +459,10 @@ void SwingTwistConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetOrientation);
 }
 
+Ref<ConstraintSettings> SwingTwistConstraint::GetConstraintSettings() const
+{
+	JPH_ASSERT(false); // Not implemented yet
+	return nullptr;
+}
+
 JPH_NAMESPACE_END

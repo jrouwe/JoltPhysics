@@ -197,6 +197,21 @@ void ConeConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mWorldSpaceRotationAxis);
 }
 
+Ref<ConstraintSettings> ConeConstraint::GetConstraintSettings() const
+{
+	ConeConstraintSettings *settings = new ConeConstraintSettings;
+#ifdef JPH_DEBUG_RENDERER
+	settings->mDrawConstraintSize = mDrawConstraintSize;
+#endif // JPH_DEBUG_RENDERER
+	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
+	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mTwistAxis1 = mLocalSpaceTwistAxis1;
+	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mTwistAxis2 = mLocalSpaceTwistAxis2;
+	settings->mHalfConeAngle = acos(mCosHalfConeAngle);
+	return settings;
+}
+
 Mat44 ConeConstraint::GetConstraintToBody1Matrix() const 
 { 
 	Vec3 perp = mLocalSpaceTwistAxis1.GetNormalizedPerpendicular(); 

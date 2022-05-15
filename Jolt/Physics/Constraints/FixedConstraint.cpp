@@ -114,4 +114,10 @@ void FixedConstraint::RestoreState(StateRecorder &inStream)
 	mPointConstraintPart.RestoreState(inStream);
 }
 
+Ref<ConstraintSettings> FixedConstraint::GetConstraintSettings() const
+{
+	JPH_ASSERT(false); // Not implemented yet
+	return nullptr;
+}
+
 JPH_NAMESPACE_END
