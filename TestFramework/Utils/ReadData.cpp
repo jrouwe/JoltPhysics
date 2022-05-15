@@ -16,7 +16,7 @@ vector<uint8> ReadData(const char *inFileName)
 	input.seekg(0, ios_base::end);
 	ifstream::pos_type length = input.tellg();
 	input.seekg(0, ios_base::beg);
-	data.resize(length);
+	data.resize(size_t(length));
 	input.read((char *)&data[0], length);
 	if (!input)
 		FatalError("Unable to read file: %s", inFileName);

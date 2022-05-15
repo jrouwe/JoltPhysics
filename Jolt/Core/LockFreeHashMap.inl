@@ -114,7 +114,7 @@ void LockFreeHashMap<Key, Value>::Init(uint32 inMaxBuckets)
 	mNumBuckets = inMaxBuckets;
 	mMaxBuckets = inMaxBuckets;
 
-	mBuckets = new atomic<uint32> [inMaxBuckets];
+	mBuckets = reinterpret_cast<atomic<uint32> *>(AlignedAlloc(inMaxBuckets * sizeof(atomic<uint32>), 16));
 
 	Clear();
 }
@@ -122,7 +122,7 @@ void LockFreeHashMap<Key, Value>::Init(uint32 inMaxBuckets)
 template <class Key, class Value>
 LockFreeHashMap<Key, Value>::~LockFreeHashMap()
 {
-	delete [] mBuckets;
+	AlignedFree(mBuckets);
 }
 
 template <class Key, class Value>
