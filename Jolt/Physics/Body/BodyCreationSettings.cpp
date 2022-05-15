@@ -14,6 +14,8 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 {
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mPosition)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mRotation)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mLinearVelocity)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAngularVelocity)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mUserData)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mShape)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mCollisionGroup)
@@ -38,6 +40,8 @@ void BodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 {
 	inStream.Write(mPosition);
 	inStream.Write(mRotation);
+	inStream.Write(mLinearVelocity);
+	inStream.Write(mAngularVelocity);
 	mCollisionGroup.SaveBinaryState(inStream);
 	inStream.Write(mObjectLayer);
 	inStream.Write(mMotionType);
@@ -60,6 +64,8 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	inStream.Read(mPosition);
 	inStream.Read(mRotation);
+	inStream.Read(mLinearVelocity);
+	inStream.Read(mAngularVelocity);
 	mCollisionGroup.RestoreBinaryState(inStream);
 	inStream.Read(mObjectLayer);
 	inStream.Read(mMotionType);

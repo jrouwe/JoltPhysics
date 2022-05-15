@@ -806,12 +806,10 @@ void SamplesApp::ShootObject()
 	creation_settings.mMotionQuality = mShootObjectMotionQuality;
 	creation_settings.mFriction = mShootObjectFriction;
 	creation_settings.mRestitution = mShootObjectRestitution;
+	creation_settings.mLinearVelocity = mShootObjectVelocity * GetCamera().mForward;
 
 	// Create body
-	BodyInterface &body_interface = mPhysicsSystem->GetBodyInterface();
-	Body &body = *body_interface.CreateBody(creation_settings);
-	body.SetLinearVelocity(mShootObjectVelocity * GetCamera().mForward);
-	body_interface.AddBody(body.GetID(), EActivation::Activate);
+	mPhysicsSystem->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
 }
 
 bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPosition, BodyID &outID)
