@@ -145,7 +145,7 @@ public:
 		// theta = rotation angle
 		// 
 		// If we assume theta is small (error is small) then sin(x) = x so an approximation of the error angles is:
-		Vec3 error = 2.0f * diff.GetXYZ();
+		Vec3 error = 2.0f * diff.EnsureWPositive().GetXYZ();
 		if (error != Vec3::sZero())
 		{
 			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
