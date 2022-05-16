@@ -7,7 +7,6 @@
 #include <Jolt/Physics/Constraints/MotorSettings.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/PointConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
-#include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h>
 
 JPH_NAMESPACE_BEGIN
