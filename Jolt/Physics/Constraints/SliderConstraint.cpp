@@ -437,9 +437,9 @@ Ref<ConstraintSettings> SliderConstraint::GetConstraintSettings() const
 	settings->mSliderAxis1 = mLocalSpaceSliderAxis1;
 	settings->mNormalAxis1 = mLocalSpaceNormal1;
 	settings->mPoint2 = mLocalSpacePosition2;
-	Mat44 initial_rotation = Mat44::sRotation(mInvInitialOrientation.Conjugated());
-	settings->mSliderAxis2 = initial_rotation.Multiply3x3(mLocalSpaceSliderAxis1);
-	settings->mNormalAxis2 = initial_rotation.Multiply3x3(mLocalSpaceNormal1);
+	Mat44 inv_initial_rotation = Mat44::sRotation(mInvInitialOrientation);
+	settings->mSliderAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceSliderAxis1);
+	settings->mNormalAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceNormal1);
 	settings->mLimitsMin = mLimitsMin;
 	settings->mLimitsMax = mLimitsMax;
 	settings->mMaxFrictionForce = mMaxFrictionForce;
