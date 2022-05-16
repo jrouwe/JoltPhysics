@@ -369,7 +369,7 @@ Ref<ConstraintSettings> HingeConstraint::GetConstraintSettings() const
 	settings->mHingeAxis1 = mLocalSpaceHingeAxis1;
 	settings->mNormalAxis1 = mLocalSpaceNormalAxis1;
 	settings->mPoint2 = mLocalSpacePosition2;
-	settings->mHingeAxis1 = mLocalSpaceHingeAxis2;
+	settings->mHingeAxis2 = mLocalSpaceHingeAxis2;
 	settings->mNormalAxis2 = mLocalSpaceNormalAxis2;
 	settings->mLimitsMin = mLimitsMin;
 	settings->mLimitsMax = mLimitsMax;
