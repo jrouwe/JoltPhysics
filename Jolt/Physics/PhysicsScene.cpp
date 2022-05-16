@@ -71,28 +71,25 @@ bool PhysicsScene::CreateBodies(PhysicsSystem *inSystem) const
 	}
 
 	// Batch add bodies
-	BodyInterface::AddState add_state = bi.AddBodiesPrepare(body_ids.data(), (int)body_ids.size());
-	bi.AddBodiesFinalize(body_ids.data(), (int)body_ids.size(), add_state, EActivation::Activate);
+	BodyIDVector temp_body_ids = body_ids; // Body ID's get shuffled by AddBodiesPrepare
+	BodyInterface::AddState add_state = bi.AddBodiesPrepare(temp_body_ids.data(), (int)temp_body_ids.size());
+	bi.AddBodiesFinalize(temp_body_ids.data(), (int)temp_body_ids.size(), add_state, EActivation::Activate);
+
+	// If not all bodies are created, creating constraints will be unreliable
+	if (body_ids.size() != mBodies.size())
+		return false;
 
 	// Create constraints
-	bool all_constraints_added = true;
 	for (const ConnectedConstraint &cc : mConstraints)
 	{
-		if ((cc.mBody1 != cFixedToWorld && cc.mBody1 >= body_ids.size())
-			|| (cc.mBody2 != cFixedToWorld && cc.mBody2 >= body_ids.size()))
-		{
-			all_constraints_added = false;
-			continue;
-		}
-
 		BodyID body1_id = cc.mBody1 == cFixedToWorld? BodyID() : body_ids[cc.mBody1];
 		BodyID body2_id = cc.mBody2 == cFixedToWorld? BodyID() : body_ids[cc.mBody2];
 		Constraint *c = bi.CreateConstraint(cc.mSettings, body1_id, body2_id);
 		inSystem->AddConstraint(c);
 	}
 
-	// Return true if all bodies and constraints were added
-	return body_ids.size() == mBodies.size() && all_constraints_added;
+	// Everything was created
+	return true;
 }
 
 void PhysicsScene::SaveBinaryState(StreamOut &inStream, bool inSaveShapes, bool inSaveGroupFilter) const
@@ -184,7 +181,7 @@ void PhysicsScene::FromPhysicsSystem(const PhysicsSystem *inSystem)
 
 	// Loop over all bodies
 	const BodyLockInterface &bli = inSystem->GetBodyLockInterface();
-	for (BodyID id : body_ids)
+	for (const BodyID &id : body_ids)
 	{
 		BodyLockRead lock(bli, id);
 		if (lock.Succeeded())
@@ -199,7 +196,7 @@ void PhysicsScene::FromPhysicsSystem(const PhysicsSystem *inSystem)
 
 	// Loop over all constraints
 	Constraints constraints = inSystem->GetConstraints();
-	for (Constraint *c : constraints)
+	for (const Constraint *c : constraints)
 		if (c->GetType() == EConstraintType::TwoBodyConstraint)
 		{
 			// Cast to two body constraint

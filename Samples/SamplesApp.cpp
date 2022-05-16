@@ -7,10 +7,12 @@
 #include <Application/EntryPoint.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/StreamWrapper.h>
 #include <Jolt/Geometry/OrientedBox.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/ShapeCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
@@ -278,6 +280,13 @@ static TestNameAndRTTI sConvexCollisionTests[] =
 	{ "Capsule Vs Box",						JPH_RTTI(CapsuleVsBoxTest) }
 };
 
+JPH_DECLARE_RTTI_FOR_FACTORY(LoadSnapshotTest)
+
+static TestNameAndRTTI sTools[] =
+{
+	{ "Load Snapshot",						JPH_RTTI(LoadSnapshotTest) },
+};
+
 static TestCategory sAllCategories[] = 
 { 
 	{ "General", sGeneralTests, size(sGeneralTests) },
@@ -289,7 +298,8 @@ static TestCategory sAllCategories[] =
 	{ "Water", sWaterTests, size(sWaterTests) },
 	{ "Vehicle", sVehicleTests, size(sVehicleTests) },
 	{ "Broad Phase", sBroadPhaseTests, size(sBroadPhaseTests) },
-	{ "Convex Collision", sConvexCollisionTests, size(sConvexCollisionTests) } 
+	{ "Convex Collision", sConvexCollisionTests, size(sConvexCollisionTests) },
+	{ "Tools", sTools, size(sTools) } 
 };
 
 //-----------------------------------------------------------------------------
@@ -339,6 +349,8 @@ SamplesApp::SamplesApp()
 	mDebugUI->CreateTextButton(main_menu, "Run All Tests", [this]() { RunAllTests(); });
 	mNextTestButton = mDebugUI->CreateTextButton(main_menu, "Next Test (N)", [this]() { NextTest(); });
 	mNextTestButton->SetDisabled(true);
+	mDebugUI->CreateTextButton(main_menu, "Take Snapshot", [this]() { TakeSnapshot(); });
+	mDebugUI->CreateTextButton(main_menu, "Take And Reload Snapshot", [this]() { TakeAndReloadSnapshot(); });
 	mDebugUI->CreateTextButton(main_menu, "Physics Settings", [this]() { 
 		UIElement *phys_settings = mDebugUI->CreateMenu();
 		mDebugUI->CreateSlider(phys_settings, "Max Concurrent Jobs", float(mMaxConcurrentJobs), 1, float(thread::hardware_concurrency()), 1, [this](float inValue) { mMaxConcurrentJobs = (int)inValue; });
@@ -623,6 +635,26 @@ bool SamplesApp::CheckNextTest()
 		mStatusString.clear();
 
 	return true;
+}
+
+void SamplesApp::TakeSnapshot()
+{
+	// Convert physics system to scene
+	Ref<PhysicsScene> scene = new PhysicsScene();
+	scene->FromPhysicsSystem(mPhysicsSystem);
+
+	// Save scene
+	ofstream stream("snapshot.bin", ofstream::out | ofstream::trunc | ofstream::binary);
+	StreamOutWrapper wrapper(stream);
+	if (stream.is_open())
+		scene->SaveBinaryState(wrapper, true, true);
+}
+
+void SamplesApp::TakeAndReloadSnapshot()
+{
+	TakeSnapshot();
+
+	StartTest(JPH_RTTI(LoadSnapshotTest));
 }
 
 RefConst<Shape> SamplesApp::CreateProbeShape()
