@@ -756,8 +756,21 @@ void SixDOFConstraint::RestoreState(StateRecorder &inStream)
 
 Ref<ConstraintSettings> SixDOFConstraint::GetConstraintSettings() const
 {
-	JPH_ASSERT(false); // Not implemented yet
-	return nullptr;
+	SixDOFConstraintSettings *settings = new SixDOFConstraintSettings;
+	ToConstraintSettings(*settings);
+	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
+	settings->mPosition1 = mLocalSpacePosition1;
+	settings->mAxisX1 = mConstraintToBody1.RotateAxisX();
+	settings->mAxisY1 = mConstraintToBody1.RotateAxisY();
+	settings->mPosition2 = mLocalSpacePosition2;
+	settings->mAxisX2 = mConstraintToBody2.RotateAxisX();
+	settings->mAxisY2 = mConstraintToBody2.RotateAxisY();
+	memcpy(settings->mLimitMin, mLimitMin, sizeof(mLimitMin)); 
+	memcpy(settings->mLimitMax, mLimitMax, sizeof(mLimitMax)); 
+	memcpy(settings->mMaxFriction, mMaxFriction, sizeof(mMaxFriction));
+	for (int i = 0; i < EAxis::Num; ++i)
+		settings->mMotorSettings[i] = mMotorSettings[i];
+	return settings;
 }
 
 JPH_NAMESPACE_END
