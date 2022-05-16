@@ -21,6 +21,7 @@
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 #include <Utils/Log.h>
@@ -169,6 +170,11 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	mutable_compound->AddShape(Vec3(0.5f, 0, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CapsuleShapeSettings(0.5f, 0.1f, new PhysicsMaterialSimple("MutableCompound Capsule Material", Color::sGetDistinctColor(11))));
 	mutable_compound->AddShape(Vec3(0, 0, 0.5f), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), new TaperedCapsuleShapeSettings(0.5f, 0.2f, 0.1f, new PhysicsMaterialSimple("MutableCompound Tapered Capsule Material", Color::sGetDistinctColor(12))));
 	scene->AddBody(BodyCreationSettings(mutable_compound, Vec3(0, cMaxHeight + 9.0f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+
+	// Connect the first two dynamic bodies with a distance constraint
+	DistanceConstraintSettings *dist_constraint = new DistanceConstraintSettings();
+	dist_constraint->mSpace = EConstraintSpace::LocalToBodyCOM;
+	scene->AddConstraint(dist_constraint, 3, 4);
 
 	return scene;
 }

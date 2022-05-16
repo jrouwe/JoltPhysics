@@ -428,6 +428,25 @@ void SliderConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetPosition);
 }
 
+Ref<ConstraintSettings> SliderConstraint::GetConstraintSettings() const
+{
+	SliderConstraintSettings *settings = new SliderConstraintSettings;
+	ToConstraintSettings(*settings);
+	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
+	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mSliderAxis1 = mLocalSpaceSliderAxis1;
+	settings->mNormalAxis1 = mLocalSpaceNormal1;
+	settings->mPoint2 = mLocalSpacePosition2;
+	Mat44 inv_initial_rotation = Mat44::sRotation(mInvInitialOrientation);
+	settings->mSliderAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceSliderAxis1);
+	settings->mNormalAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceNormal1);
+	settings->mLimitsMin = mLimitsMin;
+	settings->mLimitsMax = mLimitsMax;
+	settings->mMaxFrictionForce = mMaxFrictionForce;
+	settings->mMotorSettings = mMotorSettings;
+	return settings;
+}
+
 Mat44 SliderConstraint::GetConstraintToBody1Matrix() const
 { 
 	return Mat44(Vec4(mLocalSpaceSliderAxis1, 0), Vec4(mLocalSpaceNormal1, 0), Vec4(mLocalSpaceNormal2, 0), Vec4(mLocalSpacePosition1, 1)); 

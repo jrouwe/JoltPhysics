@@ -70,7 +70,7 @@ public:
 									PathConstraint(Body &inBody1, Body &inBody2, const PathConstraintSettings &inSettings);
 
 	// Generic interface of a constraint
-	virtual EConstraintType			GetType() const override								{ return EConstraintType::Path; }
+	virtual EConstraintSubType		GetSubType() const override								{ return EConstraintSubType::Path; }
 	virtual void					SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void					WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool					SolveVelocityConstraint(float inDeltaTime) override;
@@ -81,6 +81,7 @@ public:
 	virtual void					SaveState(StateRecorder &inStream) const override;
 	virtual void					RestoreState(StateRecorder &inStream) override;
 	virtual bool					IsActive() const override								{ return TwoBodyConstraint::IsActive() && mPath != nullptr; }
+	virtual Ref<ConstraintSettings> GetConstraintSettings() const override;
 
 	// See: TwoBodyConstraint
 	virtual Mat44					GetConstraintToBody1Matrix() const override				{ return mPathToBody1; }

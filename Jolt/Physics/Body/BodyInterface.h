@@ -20,6 +20,7 @@ class TransformedShape;
 class PhysicsMaterial;
 class SubShapeID;
 class Shape;
+class TwoBodyConstraintSettings;
 class TwoBodyConstraint;
 
 /// Class that provides operations on bodies using a body ID. Note that if you need to do multiple operations on a single body, it is more efficient to lock the body once and combine the operations.
@@ -76,6 +77,9 @@ public:
 	void						DeactivateBodies(const BodyID *inBodyIDs, int inNumber);
 	bool						IsActive(const BodyID &inBodyID) const;
 	///@}
+
+	/// Create a two body constraint
+	TwoBodyConstraint *			CreateConstraint(const TwoBodyConstraintSettings *inSettings, const BodyID &inBodyID1, const BodyID &inBodyID2);
 
 	/// Activate non-static bodies attached to a constraint
 	void						ActivateConstraint(const TwoBodyConstraint *inConstraint);

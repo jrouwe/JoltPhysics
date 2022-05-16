@@ -16,18 +16,21 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(ConstraintSettings, SerializableObject)
 
+	JPH_ADD_ATTRIBUTE(ConstraintSettings, mEnabled)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mDrawConstraintSize)
 }
 
 void ConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 { 
 	inStream.Write(GetRTTI()->GetHash());
+	inStream.Write(mEnabled);
 	inStream.Write(mDrawConstraintSize);
 }
 
 void ConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	// Type hash read by sRestoreFromBinaryState
+	inStream.Read(mEnabled);
 	inStream.Read(mDrawConstraintSize);
 }
 
@@ -73,6 +76,15 @@ void Constraint::SaveState(StateRecorder &inStream) const
 void Constraint::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mEnabled);
+}
+
+void Constraint::ToConstraintSettings(ConstraintSettings &outSettings) const
+{
+	outSettings.mEnabled = mEnabled;
+
+#ifdef JPH_DEBUG_RENDERER
+	outSettings.mDrawConstraintSize = mDrawConstraintSize;
+#endif // JPH_DEBUG_RENDERER
 }
 
 JPH_NAMESPACE_END

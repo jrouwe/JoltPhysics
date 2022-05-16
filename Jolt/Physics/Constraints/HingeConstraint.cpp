@@ -359,6 +359,25 @@ void HingeConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetAngle);
 }
 
+
+Ref<ConstraintSettings> HingeConstraint::GetConstraintSettings() const
+{
+	HingeConstraintSettings *settings = new HingeConstraintSettings;
+	ToConstraintSettings(*settings);
+	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
+	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mHingeAxis1 = mLocalSpaceHingeAxis1;
+	settings->mNormalAxis1 = mLocalSpaceNormalAxis1;
+	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mHingeAxis2 = mLocalSpaceHingeAxis2;
+	settings->mNormalAxis2 = mLocalSpaceNormalAxis2;
+	settings->mLimitsMin = mLimitsMin;
+	settings->mLimitsMax = mLimitsMax;
+	settings->mMaxFrictionTorque = mMaxFrictionTorque;
+	settings->mMotorSettings = mMotorSettings;
+	return settings;
+}
+
 Mat44 HingeConstraint::GetConstraintToBody1Matrix() const
 { 
 	return Mat44(Vec4(mLocalSpaceHingeAxis1, 0), Vec4(mLocalSpaceNormalAxis1, 0), Vec4(mLocalSpaceHingeAxis1.Cross(mLocalSpaceNormalAxis1), 0), Vec4(mLocalSpacePosition1, 1)); 

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <Jolt/Core/HashCombine.h>
+
 JPH_NAMESPACE_BEGIN
 
 /// ID of a body. This is a way of reasoning about bodies in a multithreaded simulation while avoiding race conditions.
@@ -90,3 +92,6 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+// Create a std::hash for BodyID
+JPH_MAKE_HASHABLE(JPH::BodyID, t.GetIndexAndSequenceNumber())

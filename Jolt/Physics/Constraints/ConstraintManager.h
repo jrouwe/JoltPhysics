@@ -15,6 +15,9 @@ class BodyManager;
 class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
+/// A list of constraints
+using Constraints = vector<Ref<Constraint>>;
+
 /// A constraint manager manages all constraints of the same type
 class ConstraintManager : public NonCopyable
 {
@@ -26,6 +29,9 @@ public:
 	/// Remove a constraint. This is thread safe.
 	/// Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void					Remove(Constraint **inConstraint, int inNumber);
+
+	/// Get a list of all constraints
+	Constraints				GetConstraints() const;
 
 	/// Get total number of constraints
 	inline uint32			GetNumConstraints() const					{ return (uint32)mConstraints.size(); }
@@ -76,8 +82,6 @@ public:
 	void					UnlockAllConstraints()						{ PhysicsLock::sUnlock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList); }
 
 private:
-	using Constraints = vector<Ref<Constraint>>;
-
 	Constraints				mConstraints;
 	mutable Mutex			mConstraintsMutex;
 };

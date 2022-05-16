@@ -157,6 +157,20 @@ bool BodyInterface::IsActive(const BodyID &inBodyID) const
 	return lock.Succeeded() && lock.GetBody().IsActive();
 }
 
+TwoBodyConstraint *BodyInterface::CreateConstraint(const TwoBodyConstraintSettings *inSettings, const BodyID &inBodyID1, const BodyID &inBodyID2)
+{
+	BodyID constraint_bodies[] = { inBodyID1, inBodyID2 };
+	BodyLockMultiWrite lock(*mBodyLockInterface, constraint_bodies, 2);
+
+	Body *body1 = lock.GetBody(0);
+	Body *body2 = lock.GetBody(1);
+
+	JPH_ASSERT(body1 != body2);
+	JPH_ASSERT(body1 != nullptr || body2 != nullptr);
+
+	return inSettings->Create(body1 != nullptr? *body1 : Body::sFixedToWorld, body2 != nullptr? *body2 : Body::sFixedToWorld);
+}
+
 void BodyInterface::ActivateConstraint(const TwoBodyConstraint *inConstraint)
 {
 	BodyID bodies[] = { inConstraint->GetBody1()->GetID(), inConstraint->GetBody2()->GetID() };
