@@ -431,9 +431,7 @@ void SliderConstraint::RestoreState(StateRecorder &inStream)
 Ref<ConstraintSettings> SliderConstraint::GetConstraintSettings() const
 {
 	SliderConstraintSettings *settings = new SliderConstraintSettings;
-#ifdef JPH_DEBUG_RENDERER
-	settings->mDrawConstraintSize = mDrawConstraintSize;
-#endif // JPH_DEBUG_RENDERER
+	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
 	settings->mPoint1 = mLocalSpacePosition1;
 	settings->mSliderAxis1 = mLocalSpaceSliderAxis1;

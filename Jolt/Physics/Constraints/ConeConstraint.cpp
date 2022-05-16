@@ -200,9 +200,7 @@ void ConeConstraint::RestoreState(StateRecorder &inStream)
 Ref<ConstraintSettings> ConeConstraint::GetConstraintSettings() const
 {
 	ConeConstraintSettings *settings = new ConeConstraintSettings;
-#ifdef JPH_DEBUG_RENDERER
-	settings->mDrawConstraintSize = mDrawConstraintSize;
-#endif // JPH_DEBUG_RENDERER
+	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
 	settings->mPoint1 = mLocalSpacePosition1;
 	settings->mTwistAxis1 = mLocalSpaceTwistAxis1;

@@ -226,9 +226,7 @@ void DistanceConstraint::RestoreState(StateRecorder &inStream)
 Ref<ConstraintSettings> DistanceConstraint::GetConstraintSettings() const
 {
 	DistanceConstraintSettings *settings = new DistanceConstraintSettings;
-#ifdef JPH_DEBUG_RENDERER
-	settings->mDrawConstraintSize = mDrawConstraintSize;
-#endif // JPH_DEBUG_RENDERER
+	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
 	settings->mPoint1 = mLocalSpacePosition1;
 	settings->mPoint2 = mLocalSpacePosition2;

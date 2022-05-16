@@ -114,9 +114,7 @@ void PointConstraint::RestoreState(StateRecorder &inStream)
 Ref<ConstraintSettings> PointConstraint::GetConstraintSettings() const
 {
 	PointConstraintSettings *settings = new PointConstraintSettings;
-#ifdef JPH_DEBUG_RENDERER
-	settings->mDrawConstraintSize = mDrawConstraintSize;
-#endif // JPH_DEBUG_RENDERER
+	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
 	settings->mPoint1 = mLocalSpacePosition1;
 	settings->mPoint2 = mLocalSpacePosition2;

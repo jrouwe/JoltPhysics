@@ -363,9 +363,7 @@ void HingeConstraint::RestoreState(StateRecorder &inStream)
 Ref<ConstraintSettings> HingeConstraint::GetConstraintSettings() const
 {
 	HingeConstraintSettings *settings = new HingeConstraintSettings;
-#ifdef JPH_DEBUG_RENDERER
-	settings->mDrawConstraintSize = mDrawConstraintSize;
-#endif // JPH_DEBUG_RENDERER
+	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
 	settings->mPoint1 = mLocalSpacePosition1;
 	settings->mHingeAxis1 = mLocalSpaceHingeAxis1;
