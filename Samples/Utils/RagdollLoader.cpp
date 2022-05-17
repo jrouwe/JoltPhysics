@@ -36,8 +36,12 @@ RagdollSettings *RagdollLoader::sLoad(const char *inFileName, EMotionType inMoti
 			switch (inConstraintOverride)
 			{
 			case EConstraintOverride::TypeFixed:
-				p.mToParent = new FixedConstraintSettings();
-				break;
+				{
+					FixedConstraintSettings *settings = new FixedConstraintSettings();
+					settings->mPoint1 = settings->mPoint2 = original->mPosition1;
+					p.mToParent = settings;
+					break;
+				}
 
 			case EConstraintOverride::TypePoint:
 				{
