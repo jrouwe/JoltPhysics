@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/DualAxisConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/HingeRotationConstraintPart.h>
-#include <Jolt/Physics/Constraints/ConstraintPart/RotationQuatConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -168,7 +168,7 @@ private:
 
 	// Rotation constraint parts
 	HingeRotationConstraintPart		mHingeConstraintPart;									///< Constraint part that removes 2 degrees of rotation freedom
-	RotationQuatConstraintPart		mRotationConstraintPart;								///< Constraint part that removes all rotational freedom
+	RotationEulerConstraintPart		mRotationConstraintPart;								///< Constraint part that removes all rotational freedom
 };
 
 JPH_NAMESPACE_END
