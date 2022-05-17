@@ -108,38 +108,8 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 	mMaxFrictionForce(inSettings.mMaxFrictionForce),
 	mMotorSettings(inSettings.mMotorSettings)
 {
-	// Store inverse of initial rotation from body 1 to body 2 in body 1 space:
-	//
-	// q20 = q10 r0 
-	// <=> r0 = q10^-1 q20 
-	// <=> r0^-1 = q20^-1 q10
-	//
-	// where:
-	//
-	// q10, q20 = world space initial orientation of body 1 and 2
-	// r0 = initial rotation rotation from body 1 to body 2 in local space of body 1
-	//
-	// We can also write this in terms of the constraint matrices:
-	// 
-	// q20 c2 = q10 c1
-	// <=> q20 = q10 c1 c2^-1
-	// => r0 = c1 c2^-1
-	// <=> r0^-1 = c2 c1^-1
-	// 
-	// where:
-	// 
-	// c1, c2 = matrix that takes us from body 1 and 2 COM to constraint space 1 and 2
-	if (inSettings.mSliderAxis1 == inSettings.mSliderAxis2 && inSettings.mNormalAxis1 == inSettings.mNormalAxis2)
-	{
-		// Axis are the same -> identity transform
-		mInvInitialOrientation = Quat::sIdentity();
-	}
-	else
-	{
-		Mat44 constraint1(Vec4(inSettings.mSliderAxis1, 0), Vec4(inSettings.mNormalAxis1, 0), Vec4(inSettings.mSliderAxis1.Cross(inSettings.mNormalAxis1), 0), Vec4(0, 0, 0, 1));
-		Mat44 constraint2(Vec4(inSettings.mSliderAxis2, 0), Vec4(inSettings.mNormalAxis2, 0), Vec4(inSettings.mSliderAxis2.Cross(inSettings.mNormalAxis2), 0), Vec4(0, 0, 0, 1));
-		mInvInitialOrientation = constraint2.GetQuaternion() * constraint1.GetQuaternion().Conjugated();
-	}
+	// Store inverse of initial rotation from body 1 to body 2 in body 1 space
+	mInvInitialOrientation = RotationEulerConstraintPart::sGetInvInitialOrientationXY(inSettings.mSliderAxis1, inSettings.mNormalAxis1, inSettings.mSliderAxis2, inSettings.mNormalAxis2);
 
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{

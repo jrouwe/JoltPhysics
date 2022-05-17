@@ -74,6 +74,69 @@ public:
 		return inBody2.GetRotation().Conjugated() * inBody1.GetRotation();
 	}
 
+	/// @brief Return inverse of initial rotation from body 1 to body 2 in body 1 space
+	/// @param inAxisX1 Reference axis X for body 1
+	/// @param inAxisY1 Reference axis Y for body 1
+	/// @param inAxisX2 Reference axis X for body 2
+	/// @param inAxisY2 Reference axis Y for body 2
+	/// @return 
+	static Quat					sGetInvInitialOrientationXY(Vec3Arg inAxisX1, Vec3Arg inAxisY1, Vec3Arg inAxisX2, Vec3Arg inAxisY2)
+	{
+		// Store inverse of initial rotation from body 1 to body 2 in body 1 space:
+		//
+		// q20 = q10 r0 
+		// <=> r0 = q10^-1 q20 
+		// <=> r0^-1 = q20^-1 q10
+		//
+		// where:
+		//
+		// q10, q20 = world space initial orientation of body 1 and 2
+		// r0 = initial rotation rotation from body 1 to body 2 in local space of body 1
+		//
+		// We can also write this in terms of the constraint matrices:
+		// 
+		// q20 c2 = q10 c1
+		// <=> q20 = q10 c1 c2^-1
+		// => r0 = c1 c2^-1
+		// <=> r0^-1 = c2 c1^-1
+		// 
+		// where:
+		// 
+		// c1, c2 = matrix that takes us from body 1 and 2 COM to constraint space 1 and 2
+		if (inAxisX1 == inAxisX2 && inAxisY1 == inAxisY2)
+		{
+			// Axis are the same -> identity transform
+			return Quat::sIdentity();
+		}
+		else
+		{
+			Mat44 constraint1(Vec4(inAxisX1, 0), Vec4(inAxisY1, 0), Vec4(inAxisX1.Cross(inAxisY1), 0), Vec4(0, 0, 0, 1));
+			Mat44 constraint2(Vec4(inAxisX2, 0), Vec4(inAxisY2, 0), Vec4(inAxisX2.Cross(inAxisY2), 0), Vec4(0, 0, 0, 1));
+			return constraint2.GetQuaternion() * constraint1.GetQuaternion().Conjugated();
+		}
+	}
+
+	/// @brief Return inverse of initial rotation from body 1 to body 2 in body 1 space
+	/// @param inAxisX1 Reference axis X for body 1
+	/// @param inAxisZ1 Reference axis Z for body 1
+	/// @param inAxisX2 Reference axis X for body 2
+	/// @param inAxisZ2 Reference axis Z for body 2
+	/// @return 
+	static Quat					sGetInvInitialOrientationXZ(Vec3Arg inAxisX1, Vec3Arg inAxisZ1, Vec3Arg inAxisX2, Vec3Arg inAxisZ2)
+	{
+		// See comment at sGetInvInitialOrientationXY
+		if (inAxisX1 == inAxisX2 && inAxisZ1 == inAxisZ2)
+		{
+			return Quat::sIdentity();
+		}
+		else
+		{
+			Mat44 constraint1(Vec4(inAxisX1, 0), Vec4(inAxisZ1.Cross(inAxisX1), 0), Vec4(inAxisZ1, 0), Vec4(0, 0, 0, 1));
+			Mat44 constraint2(Vec4(inAxisX2, 0), Vec4(inAxisZ2.Cross(inAxisX2), 0), Vec4(inAxisZ2, 0), Vec4(0, 0, 0, 1));
+			return constraint2.GetQuaternion() * constraint1.GetQuaternion().Conjugated();
+		}
+	}
+
 	/// Calculate properties used during the functions below
 	inline void					CalculateConstraintProperties(const Body &inBody1, Mat44Arg inRotation1, const Body &inBody2, Mat44Arg inRotation2)
 	{

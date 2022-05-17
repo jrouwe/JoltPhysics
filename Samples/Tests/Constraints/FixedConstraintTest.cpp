@@ -62,7 +62,9 @@ void FixedConstraintTest::Initialize()
 			segment.SetCollisionGroup(CollisionGroup(group_filter, group_id, CollisionGroup::SubGroupID(i)));
 			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
 
-			Ref<Constraint> c = FixedConstraintSettings().Create(*prev, segment);
+			FixedConstraintSettings settings;
+			settings.SetPoint(*prev, segment);
+			Ref<Constraint> c = settings.Create(*prev, segment);
 			mPhysicsSystem->AddConstraint(c);
 					
 			prev = &segment;
@@ -77,6 +79,11 @@ void FixedConstraintTest::Initialize()
 	Body *light2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, 5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(light2->GetID(), EActivation::Activate);
 
-	mPhysicsSystem->AddConstraint(FixedConstraintSettings().Create(*light1, *heavy));
-	mPhysicsSystem->AddConstraint(FixedConstraintSettings().Create(*heavy, *light2));
+	FixedConstraintSettings light1_heavy;
+	light1_heavy.SetPoint(*light1, *heavy);
+	mPhysicsSystem->AddConstraint(light1_heavy.Create(*light1, *heavy));
+
+	FixedConstraintSettings heavy_light2;
+	heavy_light2.SetPoint(*heavy, *light2);
+	mPhysicsSystem->AddConstraint(heavy_light2.Create(*heavy, *light2));
 }

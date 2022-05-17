@@ -4,6 +4,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -84,38 +85,8 @@ HingeConstraint::HingeConstraint(Body &inBody1, Body &inBody2, const HingeConstr
 	JPH_ASSERT(inSettings.mLimitsMin != inSettings.mLimitsMax, "Better use a fixed constraint in this case");
 	SetLimits(inSettings.mLimitsMin, inSettings.mLimitsMax);
 
-	// Store inverse of initial rotation from body 1 to body 2 in body 1 space:
-	//
-	// q20 = q10 r0 
-	// <=> r0 = q10^-1 q20 
-	// <=> r0^-1 = q20^-1 q10
-	//
-	// where:
-	//
-	// q10, q20 = world space initial orientation of body 1 and 2
-	// r0 = initial rotation rotation from body 1 to body 2 in local space of body 1
-	//
-	// We can also write this in terms of the constraint matrices:
-	// 
-	// q20 c2 = q10 c1
-	// <=> q20 = q10 c1 c2^-1
-	// => r0 = c1 c2^-1
-	// <=> r0^-1 = c2 c1^-1
-	// 
-	// where:
-	// 
-	// c1, c2 = matrix that takes us from body 1 and 2 COM to constraint space 1 and 2
-	if (inSettings.mHingeAxis1 == inSettings.mHingeAxis2 && inSettings.mNormalAxis1 == inSettings.mNormalAxis2)
-	{
-		// Axis are the same -> identity transform
-		mInvInitialOrientation = Quat::sIdentity();
-	}
-	else
-	{
-		Mat44 constraint1(Vec4(inSettings.mNormalAxis1, 0), Vec4(inSettings.mHingeAxis1.Cross(inSettings.mNormalAxis1), 0), Vec4(inSettings.mHingeAxis1, 0), Vec4(0, 0, 0, 1));
-		Mat44 constraint2(Vec4(inSettings.mNormalAxis2, 0), Vec4(inSettings.mHingeAxis2.Cross(inSettings.mNormalAxis2), 0), Vec4(inSettings.mHingeAxis2, 0), Vec4(0, 0, 0, 1));
-		mInvInitialOrientation = constraint2.GetQuaternion() * constraint1.GetQuaternion().Conjugated();
-	}
+	// Store inverse of initial rotation from body 1 to body 2 in body 1 space
+	mInvInitialOrientation = RotationEulerConstraintPart::sGetInvInitialOrientationXZ(inSettings.mNormalAxis1, inSettings.mHingeAxis1, inSettings.mNormalAxis2, inSettings.mHingeAxis2);
 
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
