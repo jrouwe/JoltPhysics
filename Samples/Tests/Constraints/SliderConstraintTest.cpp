@@ -32,53 +32,43 @@ void SliderConstraintTest::Initialize()
 	RefConst<Shape> box = new BoxShape(Vec3::sReplicate(0.5f * box_size));
 
 	// Bodies attached through slider constraints
+	for (int randomness = 0; randomness < 2; ++randomness)
 	{
-		Vec3 position(0, 25, 0);
+		CollisionGroup::GroupID group_id = CollisionGroup::GroupID(randomness);
+
+		Vec3 position(0, 25.0f, -randomness * 20.0f);
 		Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-		top.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
-		mBodyInterface->AddBody(top.GetID(), EActivation::DontActivate);
-
-		Body *prev = &top;
-		for (int i = 1; i < cChainLength; ++i)
-		{
-			position += Vec3(box_size, 0, 0);
-
-			Body &segment = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-			segment.SetCollisionGroup(CollisionGroup(group_filter, 0, CollisionGroup::SubGroupID(i)));
-			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
-
-			SliderConstraintSettings settings;
-			settings.SetPoint(*prev, segment);
-			settings.SetSliderAxis(Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)).RotateAxisX());
-			settings.mLimitsMin = -5.0f;
-			settings.mLimitsMax = 10.0f;
-			mPhysicsSystem->AddConstraint(settings.Create(*prev, segment));
-
-			prev = &segment;
-		}
-	}
-
-	// Bodies attached through slider constraints with random rotations and translations
-	{
-		Vec3 position(0, 25, -20);
-		Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-		top.SetCollisionGroup(CollisionGroup(group_filter, 1, 0));
+		top.SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
 		mBodyInterface->AddBody(top.GetID(), EActivation::DontActivate);
 
 		default_random_engine random;
 		uniform_real_distribution<float> displacement(-1.0f, 1.0f);
+
 		Body *prev = &top;
 		for (int i = 1; i < cChainLength; ++i)
 		{
-			position += Vec3(box_size + abs(displacement(random)), displacement(random), displacement(random));
+			Quat rotation;
+			Vec3 slider_axis;
+			if (randomness == 0)
+			{
+				position += Vec3(box_size, 0, 0);
+				rotation = Quat::sIdentity();
+				slider_axis = Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)).RotateAxisX();
+			}
+			else
+			{
+				position += Vec3(box_size + abs(displacement(random)), displacement(random), displacement(random));
+				rotation = Quat::sRandom(random);
+				slider_axis = Quat::sRotation(Vec3::sAxisY(), displacement(random) * DegreesToRadians(20)) * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)).RotateAxisX();
+			}
 
-			Body &segment = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sRandom(random), EMotionType::Dynamic, Layers::MOVING));
-			segment.SetCollisionGroup(CollisionGroup(group_filter, 1, CollisionGroup::SubGroupID(i)));
+			Body &segment = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, rotation, EMotionType::Dynamic, Layers::MOVING));
+			segment.SetCollisionGroup(CollisionGroup(group_filter, group_id, CollisionGroup::SubGroupID(i)));
 			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
 
 			SliderConstraintSettings settings;
 			settings.SetPoint(*prev, segment);
-			settings.SetSliderAxis(Quat::sRotation(Vec3::sAxisY(), displacement(random) * DegreesToRadians(20)) * Quat::sRotation(Vec3::sAxisZ(), -DegreesToRadians(10)).RotateAxisX());
+			settings.SetSliderAxis(slider_axis);
 			settings.mLimitsMin = -5.0f;
 			settings.mLimitsMax = 10.0f;
 			mPhysicsSystem->AddConstraint(settings.Create(*prev, segment));
