@@ -63,12 +63,13 @@ struct CompoundShape::CastRayVisitor
 
 struct CompoundShape::CastRayVisitorCollector
 {
-	JPH_INLINE 			CastRayVisitorCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) : 
+	JPH_INLINE 			CastRayVisitorCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) : 
 		mRay(inRay),
 		mCollector(ioCollector),
 		mSubShapeIDCreator(inSubShapeIDCreator),
 		mSubShapeBits(inShape->GetSubShapeIDBits()),
-		mRayCastSettings(inRayCastSettings)
+		mRayCastSettings(inRayCastSettings),
+		mShapeFilter(inShapeFilter)
 	{ 
 		// Determine ray properties of cast
 		mInvDirection.Set(inRay.mDirection);
@@ -95,7 +96,7 @@ struct CompoundShape::CastRayVisitorCollector
 		// Transform the ray
 		Mat44 transform = Mat44::sInverseRotationTranslation(inSubShape.GetRotation(), inSubShape.GetPositionCOM());
 		RayCast ray = mRay.Transformed(transform);
-		inSubShape.mShape->CastRay(ray, mRayCastSettings, shape2_sub_shape_id, mCollector);
+		inSubShape.mShape->CastRay(ray, mRayCastSettings, shape2_sub_shape_id, mCollector, mShapeFilter);
 	}
 
 	RayInvDirection		mInvDirection;
@@ -104,6 +105,7 @@ struct CompoundShape::CastRayVisitorCollector
 	SubShapeIDCreator	mSubShapeIDCreator;
 	uint				mSubShapeBits;
 	RayCastSettings		mRayCastSettings;
+	const ShapeFilter &	mShapeFilter;
 };
 
 struct CompoundShape::CollidePointVisitor

@@ -105,11 +105,15 @@ bool ScaledShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubSh
 	return mInnerShape->CastRay(scaled_ray, inSubShapeIDCreator, ioHit);
 }
 
-void ScaledShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) const
+void ScaledShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
+
 	Vec3 inv_scale = mScale.Reciprocal();
 	RayCast scaled_ray { inv_scale * inRay.mOrigin, inv_scale * inRay.mDirection };
-	return mInnerShape->CastRay(scaled_ray, inRayCastSettings, inSubShapeIDCreator, ioCollector);
+	return mInnerShape->CastRay(scaled_ray, inRayCastSettings, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
 void ScaledShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const

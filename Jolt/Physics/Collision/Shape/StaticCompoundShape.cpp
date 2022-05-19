@@ -435,8 +435,12 @@ bool StaticCompoundShape::CastRay(const RayCast &inRay, const SubShapeIDCreator 
 	return visitor.mReturnValue;
 }
 
-void StaticCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) const
+void StaticCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
+
 	JPH_PROFILE_FUNCTION();
 
 	struct Visitor : public CastRayVisitorCollector
@@ -460,7 +464,7 @@ void StaticCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &i
 		float				mDistanceStack[cStackSize];
 	};
 
-	Visitor visitor(inRay, inRayCastSettings, this, inSubShapeIDCreator, ioCollector);
+	Visitor visitor(inRay, inRayCastSettings, this, inSubShapeIDCreator, ioCollector, inShapeFilter);
 	WalkTree(visitor);
 }
 

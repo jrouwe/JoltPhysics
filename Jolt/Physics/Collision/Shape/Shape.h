@@ -6,6 +6,7 @@
 #include <Jolt/Physics/Body/MassProperties.h>
 #include <Jolt/Physics/Collision/BackFaceMode.h>
 #include <Jolt/Physics/Collision/CollisionCollector.h>
+#include <Jolt/Physics/Collision/ShapeFilter.h>
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/Color.h>
@@ -23,7 +24,6 @@ class RayCastResult;
 class ShapeCastResult;
 class CollidePointResult;
 class CollideShapeResult;
-class ShapeFilter;
 class SubShapeIDCreator;
 class SubShapeID;
 class PhysicsMaterial;
@@ -244,7 +244,7 @@ public:
 
 	/// Cast a ray against this shape. Allows returning multiple hits through ioCollector. Note that this version is more flexible but also slightly slower than the CastRay function that returns only a single hit.
 	/// If you want the surface normal of the hit use GetSurfaceNormal(collected sub shape ID, inRay.GetPointOnRay(collected faction)).
-	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) const = 0;
+	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const = 0;
 
 	/// Check if inPoint is inside this shape. For this tests all shapes are treated as if they were solid. 
 	/// Note that inPoint should be relative to the center of mass of this shape (i.e. subtract Shape::GetCenterOfMass() from inPoint if you want to test against the shape in the space it was created).

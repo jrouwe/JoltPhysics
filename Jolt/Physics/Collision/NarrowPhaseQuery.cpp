@@ -78,19 +78,20 @@ bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const
 	return ioHit.mFraction <= 1.0f;
 }
 
-void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	JPH_PROFILE_FUNCTION();
 
 	class MyCollector : public RayCastBodyCollector
 	{
 	public:
-							MyCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mRay(inRay),
 			mRayCastSettings(inRayCastSettings),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
-			mBodyFilter(inBodyFilter)
+			mBodyFilter(inBodyFilter),
+			mShapeFilter(inShapeFilter)
 		{
 			UpdateEarlyOutFraction(ioCollector.GetEarlyOutFraction());
 		}
@@ -121,7 +122,7 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 						lock.ReleaseLock();
 
 						// Do narrow phase collision check
-						ts.CastRay(mRay, mRayCastSettings, mCollector);
+						ts.CastRay(mRay, mRayCastSettings, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
 						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -135,10 +136,11 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 		CastRayCollector &			mCollector;
 		const BodyLockInterface &	mBodyLockInterface;
 		const BodyFilter &			mBodyFilter;
+		const ShapeFilter &			mShapeFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inRay, inRayCastSettings, ioCollector, *mBodyLockInterface, inBodyFilter);
+	MyCollector collector(inRay, inRayCastSettings, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CastRay(inRay, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 

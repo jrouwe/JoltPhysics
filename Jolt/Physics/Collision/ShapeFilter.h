@@ -17,6 +17,12 @@ public:
 	/// Destructor
 	virtual					~ShapeFilter() = default;
 
+	/// Filter function to determine if we should collide with a shape. Returns true if the filter passes.
+	virtual bool			ShouldCollide(const SubShapeID &inSubShapeID2) const
+	{
+		return true;
+	}
+
 	/// Filter function to determine if two shapes should collide. Returns true if the filter passes.
 	virtual bool			ShouldCollide(const SubShapeID &inSubShapeID1, const SubShapeID &inSubShapeID2) const
 	{
