@@ -93,7 +93,7 @@ inline bool IsAligned(T inV, uint64 inAlignment)
 /// Compute number of trailing zero bits (how many low bits are zero)
 inline uint CountTrailingZeros(uint32 inValue)
 {
-#if defined(JPH_CPU_X64)
+#if defined(JPH_CPU_X86)
 	#if defined(JPH_USE_TZCNT)
 		return _tzcnt_u32(inValue);
 	#elif defined(JPH_COMPILER_MSVC)
@@ -117,7 +117,7 @@ inline uint CountTrailingZeros(uint32 inValue)
 /// Compute the number of leading zero bits (how many high bits are zero)
 inline uint CountLeadingZeros(uint32 inValue)
 {
-#if defined(JPH_CPU_X64)
+#if defined(JPH_CPU_X86)
 	#if defined(JPH_USE_LZCNT)
 		return _lzcnt_u32(inValue);
 	#elif defined(JPH_COMPILER_MSVC)

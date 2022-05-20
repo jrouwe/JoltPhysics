@@ -76,6 +76,27 @@ jobs:
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
       run: ./UnitTests.exe
 
+  msvc_cl_32_bit:
+    runs-on: windows-latest
+    name: Visual Studio CL 32-bit
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL_32_BIT -G "Visual Studio 17 2022" -A Win32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF Build
+    - name: Build
+      run: msbuild Build\VS2022_CL_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}}
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/VS2022_CL_32_BIT/${{matrix.build_type}}
+      run: ./UnitTests.exe
+
   macos:
     runs-on: macos-latest
     name: MacOS

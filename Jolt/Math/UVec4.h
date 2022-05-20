@@ -7,7 +7,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-class [[nodiscard]] UVec4
+class [[nodiscard]] alignas(16) UVec4
 {
 public:
 	// Underlying vector type

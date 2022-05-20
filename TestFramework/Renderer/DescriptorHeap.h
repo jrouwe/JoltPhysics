@@ -60,7 +60,7 @@ public:
 	D3D12_GPU_DESCRIPTOR_HANDLE			ConvertToGPUHandle(D3D12_CPU_DESCRIPTOR_HANDLE inHandle)
 	{
 		JPH_ASSERT(mGPUOffset != -1);
-		return { inHandle.ptr + mGPUOffset };
+		return { UINT64(inHandle.ptr) + mGPUOffset };
 	}
 
 	/// Access to the underlying DirectX structure
