@@ -78,19 +78,20 @@ bool NarrowPhaseQuery::CastRay(const RayCast &inRay, RayCastResult &ioHit, const
 	return ioHit.mFraction <= 1.0f;
 }
 
-void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	JPH_PROFILE_FUNCTION();
 
 	class MyCollector : public RayCastBodyCollector
 	{
 	public:
-							MyCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mRay(inRay),
 			mRayCastSettings(inRayCastSettings),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
-			mBodyFilter(inBodyFilter)
+			mBodyFilter(inBodyFilter),
+			mShapeFilter(inShapeFilter)
 		{
 			UpdateEarlyOutFraction(ioCollector.GetEarlyOutFraction());
 		}
@@ -121,7 +122,7 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 						lock.ReleaseLock();
 
 						// Do narrow phase collision check
-						ts.CastRay(mRay, mRayCastSettings, mCollector);
+						ts.CastRay(mRay, mRayCastSettings, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
 						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -135,25 +136,27 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 		CastRayCollector &			mCollector;
 		const BodyLockInterface &	mBodyLockInterface;
 		const BodyFilter &			mBodyFilter;
+		const ShapeFilter &			mShapeFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inRay, inRayCastSettings, ioCollector, *mBodyLockInterface, inBodyFilter);
+	MyCollector collector(inRay, inRayCastSettings, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CastRay(inRay, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
-void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	JPH_PROFILE_FUNCTION();
 
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mPoint(inPoint),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
-			mBodyFilter(inBodyFilter)
+			mBodyFilter(inBodyFilter),
+			mShapeFilter(inShapeFilter)
 		{
 		}
 
@@ -181,7 +184,7 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 						lock.ReleaseLock();
 
 						// Do narrow phase collision check
-						ts.CollidePoint(mPoint, mCollector);
+						ts.CollidePoint(mPoint, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
 						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -194,28 +197,30 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 		CollidePointCollector &			mCollector;
 		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
+		const ShapeFilter &				mShapeFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inPoint, ioCollector, *mBodyLockInterface, inBodyFilter);
+	MyCollector collector(inPoint, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CollidePoint(inPoint, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
-void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	JPH_PROFILE_FUNCTION();
 
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mShape(inShape),
 			mShapeScale(inShapeScale),
 			mCenterOfMassTransform(inCenterOfMassTransform),
 			mCollideShapeSettings(inCollideShapeSettings),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
-			mBodyFilter(inBodyFilter)
+			mBodyFilter(inBodyFilter),
+			mShapeFilter(inShapeFilter)
 		{
 		}
 
@@ -243,7 +248,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 						lock.ReleaseLock();
 
 						// Do narrow phase collision check
-						ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mCollector);
+						ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
 						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -259,6 +264,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 		CollideShapeCollector &			mCollector;
 		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
+		const ShapeFilter &				mShapeFilter;
 	};
 
 	// Calculate bounds for shape and expand by max separation distance
@@ -266,7 +272,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 	bounds.ExpandBy(Vec3::sReplicate(inCollideShapeSettings.mMaxSeparationDistance));
 
 	// Do broadphase test
-	MyCollector collector(inShape, inShapeScale, inCenterOfMassTransform, inCollideShapeSettings, ioCollector, *mBodyLockInterface, inBodyFilter);
+	MyCollector collector(inShape, inShapeScale, inCenterOfMassTransform, inCollideShapeSettings, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CollideAABox(bounds, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
@@ -347,16 +353,17 @@ void NarrowPhaseQuery::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 	mBroadPhase->CastAABox({ inShapeCast.mShapeWorldBounds, inShapeCast.mDirection }, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
-void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(const AABox &inBox, TransformedShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const AABox &inBox, TransformedShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mBox(inBox),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
-			mBodyFilter(inBodyFilter)
+			mBodyFilter(inBodyFilter),
+			mShapeFilter(inShapeFilter)
 		{
 		}
 
@@ -384,7 +391,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 						lock.ReleaseLock();
 
 						// Do narrow phase collision check
-						ts.CollectTransformedShapes(mBox, mCollector);
+						ts.CollectTransformedShapes(mBox, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
 						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -397,10 +404,11 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 		TransformedShapeCollector &		mCollector;
 		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
+		const ShapeFilter &				mShapeFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inBox, ioCollector, *mBodyLockInterface, inBodyFilter);
+	MyCollector collector(inBox, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CollideAABox(inBox, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 

@@ -6,6 +6,7 @@
 #include <Jolt/Physics/Body/MassProperties.h>
 #include <Jolt/Physics/Collision/BackFaceMode.h>
 #include <Jolt/Physics/Collision/CollisionCollector.h>
+#include <Jolt/Physics/Collision/ShapeFilter.h>
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/Color.h>
@@ -23,7 +24,6 @@ class RayCastResult;
 class ShapeCastResult;
 class CollidePointResult;
 class CollideShapeResult;
-class ShapeFilter;
 class SubShapeIDCreator;
 class SubShapeID;
 class PhysicsMaterial;
@@ -244,19 +244,19 @@ public:
 
 	/// Cast a ray against this shape. Allows returning multiple hits through ioCollector. Note that this version is more flexible but also slightly slower than the CastRay function that returns only a single hit.
 	/// If you want the surface normal of the hit use GetSurfaceNormal(collected sub shape ID, inRay.GetPointOnRay(collected faction)).
-	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) const = 0;
+	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const = 0;
 
 	/// Check if inPoint is inside this shape. For this tests all shapes are treated as if they were solid. 
 	/// Note that inPoint should be relative to the center of mass of this shape (i.e. subtract Shape::GetCenterOfMass() from inPoint if you want to test against the shape in the space it was created).
 	/// For a mesh shape, this test will only provide sensible information if the mesh is a closed manifold.
 	/// For each shape that collides, ioCollector will receive a hit.
-	virtual void					CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const = 0;
+	virtual void					CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const = 0;
 
 	/// Collect the leaf transformed shapes of all leaf shapes of this shape.
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.
 	/// inPositionCOM/inRotation/inScale describes the transform of this shape.
 	/// inSubShapeIDCeator represents the current sub shape ID of this shape.
-	virtual void					CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector) const;
+	virtual void					CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const;
 	   
 	/// Transforms this shape and all of its children with inTransform, resulting shape(s) are passed to ioCollector.
 	/// Note that not all shapes support all transforms (especially true for scaling), the resulting shape will try to match the transform as accurately as possible.

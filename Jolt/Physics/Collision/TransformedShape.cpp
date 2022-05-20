@@ -39,12 +39,13 @@ bool TransformedShape::CastRay(const RayCast &inRay, RayCastResult &ioHit) const
 	return false;
 }
 
-void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector) const
+void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
-		// Set the context on the collector
+		// Set the context on the collector and filter
 		ioCollector.SetContext(this);
+		inShapeFilter.mBodyID2 = mBodyID;
 
 		// Transform and scale the ray to local space
 		RayCast ray = inRay.Transformed(GetInverseCenterOfMassTransform());
@@ -56,35 +57,37 @@ void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 
 		// Cast the ray on the shape
 		SubShapeIDCreator sub_shape_id(mSubShapeIDCreator);
-		mShape->CastRay(ray, inRayCastSettings, sub_shape_id, ioCollector);
+		mShape->CastRay(ray, inRayCastSettings, sub_shape_id, ioCollector, inShapeFilter);
 	}
 }
 
-void TransformedShape::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector) const
+void TransformedShape::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
-		// Set the context on the collector
+		// Set the context on the collector and filter
 		ioCollector.SetContext(this);
+		inShapeFilter.mBodyID2 = mBodyID;
 
 		// Transform and scale the point to local space
 		Vec3 point = (GetInverseCenterOfMassTransform() * inPoint) / GetShapeScale();
 
 		// Do point collide on the shape
 		SubShapeIDCreator sub_shape_id(mSubShapeIDCreator);
-		mShape->CollidePoint(point, sub_shape_id, ioCollector);
+		mShape->CollidePoint(point, sub_shape_id, ioCollector, inShapeFilter);
 	}
 }
 
-void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector) const
+void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
-		// Set the context on the collector
+		// Set the context on the collector and filter
 		ioCollector.SetContext(this);
+		inShapeFilter.mBodyID2 = mBodyID;
 
 		SubShapeIDCreator sub_shape_id1, sub_shape_id2(mSubShapeIDCreator);
-		CollisionDispatch::sCollideShapeVsShape(inShape, mShape, inShapeScale, GetShapeScale(), inCenterOfMassTransform, GetCenterOfMassTransform(), sub_shape_id1, sub_shape_id2, inCollideShapeSettings, ioCollector);
+		CollisionDispatch::sCollideShapeVsShape(inShape, mShape, inShapeScale, GetShapeScale(), inCenterOfMassTransform, GetCenterOfMassTransform(), sub_shape_id1, sub_shape_id2, inCollideShapeSettings, ioCollector, inShapeFilter);
 	}
 }
 
@@ -104,14 +107,14 @@ void TransformedShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 	}
 }
 
-void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector) const
+void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
 		// Set the context on the collector
 		ioCollector.SetContext(this);
 
-		mShape->CollectTransformedShapes(inBox, mShapePositionCOM, mShapeRotation, GetShapeScale(), mSubShapeIDCreator, ioCollector);
+		mShape->CollectTransformedShapes(inBox, mShapePositionCOM, mShapeRotation, GetShapeScale(), mSubShapeIDCreator, ioCollector, inShapeFilter);
 	}
 }
 

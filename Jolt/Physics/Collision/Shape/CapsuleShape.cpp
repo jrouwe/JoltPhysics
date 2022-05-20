@@ -295,8 +295,12 @@ bool CapsuleShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubS
 	return false;
 }
 
-void CapsuleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void CapsuleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
+
 	float radius_sq = Square(mRadius);
 
 	// Get vertical distance to the top/bottom sphere centers
