@@ -9,7 +9,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-class [[nodiscard]] Vec4
+class [[nodiscard]] alignas(16) Vec4
 {
 public:
 	// Underlying vector type

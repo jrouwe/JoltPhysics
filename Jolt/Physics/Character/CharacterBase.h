@@ -19,6 +19,9 @@ class StateRecorder;
 class CharacterBaseSettings : public RefTarget<CharacterBaseSettings>
 {
 public:
+	/// Virtual destructor
+	virtual								~CharacterBaseSettings() = default;
+
 	/// Maximum angle of slope that character can still walk on (radians).
 	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
 

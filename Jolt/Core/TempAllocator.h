@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/Memory.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -95,13 +96,13 @@ public:
 	// See: TempAllocator
 	virtual void *					Allocate(uint inSize) override
 	{
-		return malloc(inSize);
+		return AlignedAlloc(inSize, 16);
 	}
 
 	// See: TempAllocator
 	virtual void					Free(void *inAddress, uint inSize) override
 	{
-		free(inAddress);
+		AlignedFree(inAddress);
 	}
 };
 

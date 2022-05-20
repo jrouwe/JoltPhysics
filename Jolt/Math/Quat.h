@@ -28,7 +28,7 @@ JPH_NAMESPACE_BEGIN
 /// it easy to extract the rotation axis of the quaternion:
 ///
 /// q = [cos(angle / 2), sin(angle / 2) * rotation_axis]
-class [[nodiscard]] Quat
+class [[nodiscard]] alignas(16) Quat
 {
 public:
 	///@name Constructors
