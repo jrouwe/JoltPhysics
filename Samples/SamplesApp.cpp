@@ -81,6 +81,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(MultithreadedTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ContactListenerTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(SensorTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(DynamicMeshTest)
 
 static TestNameAndRTTI sGeneralTests[] =
 {
@@ -111,6 +112,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Contact Listener",					JPH_RTTI(ContactListenerTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
+	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(DistanceConstraintTest)

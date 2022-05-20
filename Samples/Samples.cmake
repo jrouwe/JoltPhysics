@@ -81,6 +81,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ContactManifoldTest.h
 	${SAMPLES_ROOT}/Tests/General/DampingTest.cpp
 	${SAMPLES_ROOT}/Tests/General/DampingTest.h
+	${SAMPLES_ROOT}/Tests/General/DynamicMeshTest.cpp
+	${SAMPLES_ROOT}/Tests/General/DynamicMeshTest.h
 	${SAMPLES_ROOT}/Tests/General/FrictionTest.cpp
 	${SAMPLES_ROOT}/Tests/General/FrictionTest.h
 	${SAMPLES_ROOT}/Tests/General/FrictionPerTriangleTest.cpp
