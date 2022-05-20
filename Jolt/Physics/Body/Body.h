@@ -306,10 +306,11 @@ private:
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 	
-	// 121 bytes up to here (64-bit)
-#if UINTPTR_MAX == UINT32_MAX
-	// 32-bit padding
-	char padding[19];
+	// 121 bytes up to here (64-bit mode)
+
+#if JPH_CPU_ADDRESS_BITS == 32
+	// Padding for 32 bit mode
+	char					mPadding[19];
 #endif
 };
 
