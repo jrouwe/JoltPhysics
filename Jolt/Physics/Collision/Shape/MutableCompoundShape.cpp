@@ -335,9 +335,13 @@ void MutableCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &
 	WalkSubShapes(visitor);
 }
 
-void MutableCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void MutableCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	JPH_PROFILE_FUNCTION();
+
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
 
 	struct Visitor : public CollidePointVisitor
 	{
@@ -361,7 +365,7 @@ void MutableCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator
 		}
 	};
 
-	Visitor visitor(inPoint, this, inSubShapeIDCreator, ioCollector);
+	Visitor visitor(inPoint, this, inSubShapeIDCreator, ioCollector, inShapeFilter);
 	WalkSubShapes(visitor);
 }
 

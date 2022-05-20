@@ -230,8 +230,12 @@ void ConvexShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCast
 	}
 }
 
-void ConvexShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void ConvexShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
+
 	// First test bounding box
 	if (GetLocalBounds().Contains(inPoint))
 	{

@@ -1024,8 +1024,12 @@ void ConvexHullShape::CastRay(const RayCast &inRay, const RayCastSettings &inRay
 	}
 }
 
-void ConvexHullShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void ConvexHullShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
+
 	// Check if point is behind all planes
 	for (const Plane &p : mPlanes)
 		if (p.SignedDistance(inPoint) > 0.0f)

@@ -132,11 +132,15 @@ void RotatedTranslatedShape::CastRay(const RayCast &inRay, const RayCastSettings
 	return mInnerShape->CastRay(ray, inRayCastSettings, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void RotatedTranslatedShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void RotatedTranslatedShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
+
 	// Transform the point
 	Mat44 transform = Mat44::sRotation(mRotation.Conjugated());
-	mInnerShape->CollidePoint(transform * inPoint, inSubShapeIDCreator, ioCollector);
+	mInnerShape->CollidePoint(transform * inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
 void RotatedTranslatedShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector) const

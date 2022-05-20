@@ -61,19 +61,20 @@ void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 	}
 }
 
-void TransformedShape::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector) const
+void TransformedShape::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
-		// Set the context on the collector
+		// Set the context on the collector and filter
 		ioCollector.SetContext(this);
+		inShapeFilter.mBodyID2 = mBodyID;
 
 		// Transform and scale the point to local space
 		Vec3 point = (GetInverseCenterOfMassTransform() * inPoint) / GetShapeScale();
 
 		// Do point collide on the shape
 		SubShapeIDCreator sub_shape_id(mSubShapeIDCreator);
-		mShape->CollidePoint(point, sub_shape_id, ioCollector);
+		mShape->CollidePoint(point, sub_shape_id, ioCollector, inShapeFilter);
 	}
 }
 
@@ -81,8 +82,9 @@ void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 {
 	if (mShape != nullptr)
 	{
-		// Set the context on the collector
+		// Set the context on the collector and filter
 		ioCollector.SetContext(this);
+		inShapeFilter.mBodyID2 = mBodyID;
 
 		SubShapeIDCreator sub_shape_id1, sub_shape_id2(mSubShapeIDCreator);
 		CollisionDispatch::sCollideShapeVsShape(inShape, mShape, inShapeScale, GetShapeScale(), inCenterOfMassTransform, GetCenterOfMassTransform(), sub_shape_id1, sub_shape_id2, inCollideShapeSettings, ioCollector, inShapeFilter);

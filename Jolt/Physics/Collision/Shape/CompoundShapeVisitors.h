@@ -110,11 +110,12 @@ struct CompoundShape::CastRayVisitorCollector
 
 struct CompoundShape::CollidePointVisitor
 {
-	JPH_INLINE			CollidePointVisitor(Vec3Arg inPoint, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) : 
+	JPH_INLINE			CollidePointVisitor(Vec3Arg inPoint, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) : 
 		mPoint(inPoint),
 		mSubShapeIDCreator(inSubShapeIDCreator),
 		mCollector(ioCollector),
-		mSubShapeBits(inShape->GetSubShapeIDBits())
+		mSubShapeBits(inShape->GetSubShapeIDBits()),
+		mShapeFilter(inShapeFilter)
 	{ 
 	}
 
@@ -138,13 +139,14 @@ struct CompoundShape::CollidePointVisitor
 
 		// Transform the point
 		Mat44 transform = Mat44::sInverseRotationTranslation(inSubShape.GetRotation(), inSubShape.GetPositionCOM());
-		inSubShape.mShape->CollidePoint(transform * mPoint, shape2_sub_shape_id, mCollector);
+		inSubShape.mShape->CollidePoint(transform * mPoint, shape2_sub_shape_id, mCollector, mShapeFilter);
 	}
 
 	Vec3						mPoint;
 	SubShapeIDCreator			mSubShapeIDCreator;
 	CollidePointCollector &		mCollector;
 	uint						mSubShapeBits;
+	const ShapeFilter &			mShapeFilter;
 };
 
 struct CompoundShape::CastShapeVisitor

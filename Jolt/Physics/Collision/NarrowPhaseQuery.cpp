@@ -144,18 +144,19 @@ void NarrowPhaseQuery::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 	mBroadPhase->CastRay(inRay, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
-void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	JPH_PROFILE_FUNCTION();
 
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(Vec3Arg inPoint, CollidePointCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mPoint(inPoint),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
-			mBodyFilter(inBodyFilter)
+			mBodyFilter(inBodyFilter),
+			mShapeFilter(inShapeFilter)
 		{
 		}
 
@@ -183,7 +184,7 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 						lock.ReleaseLock();
 
 						// Do narrow phase collision check
-						ts.CollidePoint(mPoint, mCollector);
+						ts.CollidePoint(mPoint, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
 						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -196,10 +197,11 @@ void NarrowPhaseQuery::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 		CollidePointCollector &			mCollector;
 		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
+		const ShapeFilter &				mShapeFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inPoint, ioCollector, *mBodyLockInterface, inBodyFilter);
+	MyCollector collector(inPoint, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CollidePoint(inPoint, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 

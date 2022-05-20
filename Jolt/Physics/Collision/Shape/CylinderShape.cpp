@@ -284,8 +284,12 @@ bool CylinderShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSub
 	return false;
 }
 
-void CylinderShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void CylinderShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
+	// Test shape filter
+	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+		return;
+
 	// Check if the point is in the cylinder
 	if (abs(inPoint.GetY()) <= mHalfHeight											// Within the height
 		&& Square(inPoint.GetX()) + Square(inPoint.GetZ()) <= Square(mRadius))		// Within the radius

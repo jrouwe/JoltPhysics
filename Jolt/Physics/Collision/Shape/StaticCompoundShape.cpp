@@ -468,7 +468,7 @@ void StaticCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &i
 	WalkTree(visitor);
 }
 
-void StaticCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void StaticCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -489,7 +489,7 @@ void StaticCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator 
 		}
 	};
 
-	Visitor visitor(inPoint, this, inSubShapeIDCreator, ioCollector);
+	Visitor visitor(inPoint, this, inSubShapeIDCreator, ioCollector, inShapeFilter);
 	WalkTree(visitor);
 }
 

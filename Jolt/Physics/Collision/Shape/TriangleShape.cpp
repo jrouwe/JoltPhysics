@@ -236,7 +236,7 @@ void TriangleShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 	}
 }
 
-void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector) const
+void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Can't be inside a triangle
 }

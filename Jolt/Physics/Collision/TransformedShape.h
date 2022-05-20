@@ -39,10 +39,10 @@ public:
 	/// Check if inPoint is inside any shapes. For this tests all shapes are treated as if they were solid. 
 	/// For a mesh shape, this test will only provide sensible information if the mesh is a closed manifold.
 	/// For each shape that collides, ioCollector will receive a hit
-	void						CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector) const;
+	void						CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const;
 
 	/// Collide a shape and report any hits to ioCollector
-	void						CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const;
+	void						CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const;
 
 	/// Cast a shape and report any hits to ioCollector
 	void						CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, CastShapeCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const;
