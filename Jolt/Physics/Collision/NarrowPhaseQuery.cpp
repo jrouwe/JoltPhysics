@@ -353,16 +353,17 @@ void NarrowPhaseQuery::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 	mBroadPhase->CastAABox({ inShapeCast.mShapeWorldBounds, inShapeCast.mDirection }, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
-void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter) const
+void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
 {
 	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
-							MyCollector(const AABox &inBox, TransformedShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter) :
+							MyCollector(const AABox &inBox, TransformedShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
 			mBox(inBox),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
-			mBodyFilter(inBodyFilter)
+			mBodyFilter(inBodyFilter),
+			mShapeFilter(inShapeFilter)
 		{
 		}
 
@@ -390,7 +391,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 						lock.ReleaseLock();
 
 						// Do narrow phase collision check
-						ts.CollectTransformedShapes(mBox, mCollector);
+						ts.CollectTransformedShapes(mBox, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
 						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -403,10 +404,11 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 		TransformedShapeCollector &		mCollector;
 		const BodyLockInterface &		mBodyLockInterface;
 		const BodyFilter &				mBodyFilter;
+		const ShapeFilter &				mShapeFilter;
 	};
 
 	// Do broadphase test
-	MyCollector collector(inBox, ioCollector, *mBodyLockInterface, inBodyFilter);
+	MyCollector collector(inBox, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
 	mBroadPhase->CollideAABox(inBox, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 

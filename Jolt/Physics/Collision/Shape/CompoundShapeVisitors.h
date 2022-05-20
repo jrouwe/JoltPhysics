@@ -224,7 +224,7 @@ struct CompoundShape::CastShapeVisitor
 
 struct CompoundShape::CollectTransformedShapesVisitor
 {
-	JPH_INLINE 			CollectTransformedShapesVisitor(const AABox &inBox, const CompoundShape *inShape, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector) :
+	JPH_INLINE 			CollectTransformedShapesVisitor(const AABox &inBox, const CompoundShape *inShape, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) :
 		mBox(inBox),
 		mLocalBox(Mat44::sInverseRotationTranslation(inRotation, inPositionCOM), inBox),
 		mPositionCOM(inPositionCOM),
@@ -232,7 +232,8 @@ struct CompoundShape::CollectTransformedShapesVisitor
 		mScale(inScale),
 		mSubShapeIDCreator(inSubShapeIDCreator),
 		mCollector(ioCollector),
-		mSubShapeBits(inShape->GetSubShapeIDBits())
+		mSubShapeBits(inShape->GetSubShapeIDBits()),
+		mShapeFilter(inShapeFilter)
 	{
 	}
 
@@ -266,7 +267,7 @@ struct CompoundShape::CollectTransformedShapesVisitor
 		Quat rotation = mRotation * inSubShape.GetRotation();
 
 		// Recurse to sub shape
-		inSubShape.mShape->CollectTransformedShapes(mBox, position, rotation, inSubShape.TransformScale(mScale), sub_shape_id, mCollector);
+		inSubShape.mShape->CollectTransformedShapes(mBox, position, rotation, inSubShape.TransformScale(mScale), sub_shape_id, mCollector, mShapeFilter);
 	}
 
 	AABox 							mBox;
@@ -277,6 +278,7 @@ struct CompoundShape::CollectTransformedShapesVisitor
 	SubShapeIDCreator				mSubShapeIDCreator;
 	TransformedShapeCollector &		mCollector;
 	uint							mSubShapeBits;
+	const ShapeFilter &				mShapeFilter;
 };
 
 struct CompoundShape::CollideCompoundVsShapeVisitor

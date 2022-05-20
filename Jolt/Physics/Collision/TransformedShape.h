@@ -49,7 +49,7 @@ public:
 
 	/// Collect the leaf transformed shapes of all leaf shapes of this shape
 	/// inBox is the world space axis aligned box which leaf shapes should collide with
-	void						CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector) const;
+	void						CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const;
 
 	/// Use the context from Shape
 	using GetTrianglesContext = Shape::GetTrianglesContext;

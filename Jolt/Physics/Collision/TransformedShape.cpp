@@ -107,14 +107,14 @@ void TransformedShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 	}
 }
 
-void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector) const
+void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
 		// Set the context on the collector
 		ioCollector.SetContext(this);
 
-		mShape->CollectTransformedShapes(inBox, mShapePositionCOM, mShapeRotation, GetShapeScale(), mSubShapeIDCreator, ioCollector);
+		mShape->CollectTransformedShapes(inBox, mShapePositionCOM, mShapeRotation, GetShapeScale(), mSubShapeIDCreator, ioCollector, inShapeFilter);
 	}
 }
 
