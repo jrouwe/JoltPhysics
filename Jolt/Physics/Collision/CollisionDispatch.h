@@ -73,11 +73,20 @@ public:
 	/// Function that casts a shape vs another shape (see sCastShapeVsShapeLocalSpace)
 	using CastShape = void (*)(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
 
+	/// Initialize all collision functions with a function that asserts and returns no collision
+	static void				sInit();
+
 	/// Register a collide shape function in the collision table
 	static void				sRegisterCollideShape(EShapeSubType inType1, EShapeSubType inType2, CollideShape inFunction)	{ sCollideShape[(int)inType1][(int)inType2] = inFunction; }
 
 	/// Register a cast shape function in the collision table
 	static void				sRegisterCastShape(EShapeSubType inType1, EShapeSubType inType2, CastShape inFunction)			{ sCastShape[(int)inType1][(int)inType2] = inFunction; }
+
+	/// An implementation of CollideShape that swaps inShape1 and inShape2 and swaps the result back, can be registered if the collision function only exists the other way around
+	static void				sReversedCollideShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter);
+
+	/// An implementation of CastShape that swaps inShape1 and inShape2 and swaps the result back, can be registered if the collision function only exists the other way around
+	static void				sReversedCastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
 
 private:
 	static CollideShape		sCollideShape[NumSubShapeTypes][NumSubShapeTypes];

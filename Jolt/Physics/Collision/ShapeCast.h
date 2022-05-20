@@ -92,6 +92,16 @@ public:
 	/// Function required by the CollisionCollector. A smaller fraction is considered to be a 'better hit'. For rays/cast shapes we can just use the collision fraction. The fraction and penetration depth are combined in such a way that deeper hits at fraction 0 go first.
 	inline float				GetEarlyOutFraction() const			{ return mFraction > 0.0f? mFraction : -mPenetrationDepth; }
 
+	/// Reverses the hit result, swapping contact point 1 with contact point 2 etc.
+	ShapeCastResult				Reversed() const
+	{
+		ShapeCastResult result;
+		static_cast<CollideShapeResult &>(result) = CollideShapeResult::Reversed();
+		result.mFraction = mFraction;
+		result.mIsBackFaceHit = mIsBackFaceHit;
+		return result;
+	}
+
 	float						mFraction;							///< This is the fraction where the shape hit the other shape: CenterOfMassOnHit = Start + value * (End - Start)
 	bool						mIsBackFaceHit;						///< True if the shape was hit from the back side
 };

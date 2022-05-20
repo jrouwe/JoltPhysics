@@ -6,6 +6,7 @@
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
@@ -64,6 +65,9 @@ JPH_NAMESPACE_BEGIN
 void RegisterTypes()
 {
 	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");
+
+	// Initialize dispatcher
+	CollisionDispatch::sInit();
 
 	// Register base classes first so that we can specialize them later
 	CompoundShape::sRegister();
