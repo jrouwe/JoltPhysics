@@ -1445,7 +1445,7 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 
 	struct Visitor
 	{
-		JPH_INLINE explicit		Visitor(const HeightFieldShape *inShape, const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) : 
+		JPH_INLINE explicit		Visitor(const HeightFieldShape *inShape, const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector) : 
 			mCollector(ioCollector),
 			mRayOrigin(inRay.mOrigin),
 			mRayDirection(inRay.mDirection),
@@ -1503,7 +1503,7 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 		float					mDistanceStack[cStackSize];
 	};
 
-	Visitor visitor(this, inRay, inRayCastSettings, inSubShapeIDCreator, ioCollector, inShapeFilter);
+	Visitor visitor(this, inRay, inRayCastSettings, inSubShapeIDCreator, ioCollector);
 	WalkHeightField(visitor);
 }
 
