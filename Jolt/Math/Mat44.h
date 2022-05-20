@@ -8,7 +8,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Holds a 4x4 matrix of floats, but supports also operations on the 3x3 upper left part of the matrix.
-class [[nodiscard]] Mat44
+class [[nodiscard]] alignas(16) Mat44
 {
 public:
 	// Underlying column type
