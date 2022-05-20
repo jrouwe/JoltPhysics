@@ -39,6 +39,7 @@ void CollisionDispatch::sReversedCollideShape(const Shape *inShape1, const Shape
 								ReversedCollector(CollideShapeCollector &ioCollector) :
 			mCollector(ioCollector)
 		{
+			SetContext(ioCollector.GetContext());
 		}
 
 		virtual void			AddHit(const CollideShapeResult &inResult) override
@@ -55,7 +56,7 @@ void CollisionDispatch::sReversedCollideShape(const Shape *inShape1, const Shape
 	};
 
 	ReversedCollector collector(ioCollector);
-	sCollideShapeVsShape(inShape2, inShape2, inScale2, inScale1, inCenterOfMassTransform2, inCenterOfMassTransform1, inSubShapeIDCreator2, inSubShapeIDCreator1, inCollideShapeSettings, collector, inShapeFilter);
+	sCollideShapeVsShape(inShape2, inShape1, inScale2, inScale1, inCenterOfMassTransform2, inCenterOfMassTransform1, inSubShapeIDCreator2, inSubShapeIDCreator1, inCollideShapeSettings, collector, inShapeFilter);
 }
 
 void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
@@ -67,6 +68,7 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 								ReversedCollector(CastShapeCollector &ioCollector) :
 			mCollector(ioCollector)
 		{
+			SetContext(ioCollector.GetContext());
 		}
 
 		virtual void			AddHit(const ShapeCastResult &inResult) override

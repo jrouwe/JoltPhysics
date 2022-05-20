@@ -173,6 +173,7 @@ private:
 		StaticCompound,
 		StaticCompound2,
 		MutableCompound,
+		Mesh,
 	};
 
 	// Probe settings

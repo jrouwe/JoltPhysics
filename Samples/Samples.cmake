@@ -199,6 +199,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Utils/ContactListenerImpl.h
 	${SAMPLES_ROOT}/Utils/RagdollLoader.cpp
 	${SAMPLES_ROOT}/Utils/RagdollLoader.h
+	${SAMPLES_ROOT}/Utils/ShapeCreator.cpp
+	${SAMPLES_ROOT}/Utils/ShapeCreator.h
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
