@@ -77,7 +77,7 @@ void TransformedShape::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 	}
 }
 
-void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector) const
+void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, Mat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
@@ -85,7 +85,7 @@ void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 		ioCollector.SetContext(this);
 
 		SubShapeIDCreator sub_shape_id1, sub_shape_id2(mSubShapeIDCreator);
-		CollisionDispatch::sCollideShapeVsShape(inShape, mShape, inShapeScale, GetShapeScale(), inCenterOfMassTransform, GetCenterOfMassTransform(), sub_shape_id1, sub_shape_id2, inCollideShapeSettings, ioCollector);
+		CollisionDispatch::sCollideShapeVsShape(inShape, mShape, inShapeScale, GetShapeScale(), inCenterOfMassTransform, GetCenterOfMassTransform(), sub_shape_id1, sub_shape_id2, inCollideShapeSettings, ioCollector, inShapeFilter);
 	}
 }
 
