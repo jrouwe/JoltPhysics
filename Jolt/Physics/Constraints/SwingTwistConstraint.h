@@ -7,7 +7,6 @@
 #include <Jolt/Physics/Constraints/MotorSettings.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/PointConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AngleConstraintPart.h>
-#include <Jolt/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h>
 
 JPH_NAMESPACE_BEGIN
@@ -71,7 +70,7 @@ public:
 								SwingTwistConstraint(Body &inBody1, Body &inBody2, const SwingTwistConstraintSettings &inSettings);
 
 	///@name Generic interface of a constraint
-	virtual EConstraintType		GetType() const override									{ return EConstraintType::SwingTwist; }
+	virtual EConstraintSubType	GetSubType() const override									{ return EConstraintSubType::SwingTwist; }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
@@ -82,6 +81,7 @@ public:
 #endif // JPH_DEBUG_RENDERER
 	virtual void				SaveState(StateRecorder &inStream) const override;
 	virtual void				RestoreState(StateRecorder &inStream) override;
+	virtual Ref<ConstraintSettings> GetConstraintSettings() const override;
 
 	// See: TwoBodyConstraint
 	virtual Mat44				GetConstraintToBody1Matrix() const override					{ return Mat44::sRotationTranslation(mConstraintToBody1, mLocalSpacePosition1); }

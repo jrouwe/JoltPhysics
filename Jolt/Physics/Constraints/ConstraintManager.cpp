@@ -57,6 +57,14 @@ void ConstraintManager::Remove(Constraint **inConstraints, int inNumber)
 	}
 }
 
+Constraints ConstraintManager::GetConstraints() const
+{
+	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+
+	Constraints copy = mConstraints;
+	return copy;
+}
+
 void ConstraintManager::GetActiveConstraints(uint32 inStartConstraintIdx, uint32 inEndConstraintIdx, Constraint **outActiveConstraints, uint32 &outNumActiveConstraints) const
 {
 	JPH_PROFILE_FUNCTION();

@@ -92,7 +92,7 @@ void PathConstraint::SetPath(const PathConstraintPath *inPath, float inPathFract
 
 		// Calculate initial orientation
 		if (mRotationConstraintType == EPathRotationConstraintType::FullyConstrained)
-			mInvInitialOrientation = RotationQuatConstraintPart::sGetInvInitialOrientation(*mBody1, *mBody2);
+			mInvInitialOrientation = RotationEulerConstraintPart::sGetInvInitialOrientation(*mBody1, *mBody2);
 	}
 }
 
@@ -161,7 +161,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 		break;
 
 	case EPathRotationConstraintType::ConstaintToPath:
-		// We need to calculate the inverse of the rotation from body 1 to body 2 for the current path position (see: RotationQuatConstraintPart::sGetInvInitialOrientation)
+		// We need to calculate the inverse of the rotation from body 1 to body 2 for the current path position (see: RotationEulerConstraintPart::sGetInvInitialOrientation)
 		// RotationBody2 = RotationBody1 * InitialOrientation <=> InitialOrientation^-1 = RotationBody2^-1 * RotationBody1
 		// We can express RotationBody2 in terms of RotationBody1: RotationBody2 = RotationBody1 * PathToBody1 * RotationClosestPointOnPath * PathToBody2^-1
 		// Combining these two: InitialOrientation^-1 = PathToBody2 * (PathToBody1 * RotationClosestPointOnPath)^-1
@@ -169,7 +169,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 		[[fallthrough]];
 
 	case EPathRotationConstraintType::FullyConstrained:
-		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), *mBody2, transform2.GetRotation(), mInvInitialOrientation);
+		mRotationConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), *mBody2, transform2.GetRotation());
 		break;
 	}
 
@@ -424,6 +424,12 @@ void PathConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetVelocity);
 	inStream.Read(mTargetPathFraction);
 	inStream.Read(mPathFraction);
+}
+
+Ref<ConstraintSettings> PathConstraint::GetConstraintSettings() const
+{
+	JPH_ASSERT(false); // Not implemented yet
+	return nullptr;
 }
 
 JPH_NAMESPACE_END

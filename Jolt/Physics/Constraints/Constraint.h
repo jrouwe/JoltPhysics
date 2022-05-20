@@ -22,6 +22,13 @@ class DebugRenderer;
 /// Enum to identify constraint type
 enum class EConstraintType
 {
+	Constraint,
+	TwoBodyConstraint,
+};
+
+/// Enum to identify constraint sub type
+enum class EConstraintSubType
+{
 	Fixed,
 	Point,
 	Hinge,
@@ -61,6 +68,9 @@ public:
 	/// Creates a constraint of the correct type and restores its contents from the binary stream inStream.
 	static ConstraintResult		sRestoreFromBinaryState(StreamIn &inStream);
 
+	/// If this constraint is enabled initially. Use Constraint::SetEnabled to toggle after creation.
+	bool						mEnabled = true;
+
 	/// Size of constraint when drawing it through the debug renderer
 	float						mDrawConstraintSize = 1.0f;
 
@@ -74,10 +84,11 @@ class Constraint : public RefTarget<Constraint>, public NonCopyable
 {
 public:
 	/// Constructor
-	explicit					Constraint([[maybe_unused]] const ConstraintSettings &inSettings)
+	explicit					Constraint(const ConstraintSettings &inSettings) :
 #ifdef JPH_DEBUG_RENDERER
-									: mDrawConstraintSize(inSettings.mDrawConstraintSize)
+		mDrawConstraintSize(inSettings.mDrawConstraintSize),
 #endif // JPH_DEBUG_RENDERER
+		mEnabled(inSettings.mEnabled)
 	{
 	}
 
@@ -85,7 +96,10 @@ public:
 	virtual						~Constraint() = default;
 
 	/// Get the type of a constraint
-	virtual EConstraintType		GetType() const = 0;
+	virtual EConstraintType		GetType() const								{ return EConstraintType::Constraint; }
+
+	/// Get the sub type of a constraint
+	virtual EConstraintSubType	GetSubType() const = 0;
 
 	/// Enable / disable this constraint. This can e.g. be used to implement a breakable constraint by detecting that the constraint impulse
 	/// (see e.g. PointConstraint::GetTotalLambdaPosition) went over a certain limit and then disabling the constraint.
@@ -125,7 +139,13 @@ public:
 	/// Restoring state for replay
 	virtual void				RestoreState(StateRecorder &inStream);
 
+	/// Debug function to convert a constraint to its settings, note that this will not save to which bodies the constraint is connected to
+	virtual Ref<ConstraintSettings> GetConstraintSettings() const = 0;
+
 protected:
+	/// Helper function to copy settings back to constraint settings for this base class
+	void						ToConstraintSettings(ConstraintSettings &outSettings) const;
+
 #ifdef JPH_DEBUG_RENDERER
 	/// Size of constraint when drawing it through the debug renderer
 	float						mDrawConstraintSize;

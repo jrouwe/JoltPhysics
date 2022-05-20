@@ -111,4 +111,14 @@ void PointConstraint::RestoreState(StateRecorder &inStream)
 	mPointConstraintPart.RestoreState(inStream);
 }
 
+Ref<ConstraintSettings> PointConstraint::GetConstraintSettings() const
+{
+	PointConstraintSettings *settings = new PointConstraintSettings;
+	ToConstraintSettings(*settings);
+	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
+	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mPoint2 = mLocalSpacePosition2;
+	return settings;
+}
+
 JPH_NAMESPACE_END

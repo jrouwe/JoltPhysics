@@ -52,6 +52,12 @@ private:
 	// Check if we've got to start the next test. Returns false when the application should exit.
 	bool					CheckNextTest();
 
+	// Create a snapshot of the physics system and save it to disc
+	void					TakeSnapshot();
+
+	// Create a snapshot of the physics system, save it to disc and immediately reload it
+	void					TakeAndReloadSnapshot();
+
 	// Probing the collision world
 	RefConst<Shape>			CreateProbeShape();
 	bool					CastProbe(float inProbeLength, float &outFraction, Vec3 &outPosition, BodyID &outID);

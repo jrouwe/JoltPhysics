@@ -481,4 +481,10 @@ void VehicleConstraint::RestoreState(StateRecorder &inStream)
 	mPitchRollPart.RestoreState(inStream);
 }
 
+Ref<ConstraintSettings> VehicleConstraint::GetConstraintSettings() const
+{
+	JPH_ASSERT(false); // Not implemented yet
+	return nullptr;
+}
+
 JPH_NAMESPACE_END

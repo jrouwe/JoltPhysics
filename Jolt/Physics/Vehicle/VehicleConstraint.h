@@ -50,7 +50,7 @@ public:
 	virtual						~VehicleConstraint() override;
 
 	/// Get the type of a constraint
-	virtual EConstraintType		GetType() const override					{ return EConstraintType::Vehicle; }
+	virtual EConstraintSubType	GetSubType() const override					{ return EConstraintSubType::Vehicle; }
 
 	/// Defines the maximum pitch/roll angle (rad), can be used to avoid the car from getting upside down. The vehicle up direction will stay within a cone centered around the up axis with half top angle mMaxPitchRollAngle, set to pi to turn off.
 	void						SetMaxPitchRollAngle(float inMaxPitchRollAngle) { mCosMaxPitchRollAngle = cos(inMaxPitchRollAngle); }
@@ -104,6 +104,7 @@ public:
 #endif // JPH_DEBUG_RENDERER
 	virtual void				SaveState(StateRecorder &inStream) const override;
 	virtual void				RestoreState(StateRecorder &inStream) override;
+	virtual Ref<ConstraintSettings> GetConstraintSettings() const override;
 
 private:
 	// See: PhysicsStepListener

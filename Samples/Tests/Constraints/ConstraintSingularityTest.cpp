@@ -60,8 +60,12 @@ void ConstraintSingularityTest::Initialize()
 				}
 
 			default:
-				constraint = FixedConstraintSettings().Create(body1, body2);
-				break;
+				{
+					FixedConstraintSettings settings;
+					settings.SetPoint(body1, body2);
+					constraint = settings.Create(body1, body2);
+					break;
+				}
 			}
 				
 			mPhysicsSystem->AddConstraint(constraint);

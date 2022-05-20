@@ -114,8 +114,7 @@ void LockFreeHashMap<Key, Value>::Init(uint32 inMaxBuckets)
 	mNumBuckets = inMaxBuckets;
 	mMaxBuckets = inMaxBuckets;
 
-	constexpr size_t bucket_alignment = max<size_t>(alignof(atomic<uint32>), 16u);
-	mBuckets = reinterpret_cast<atomic<uint32>*>(AlignedAlloc(AlignUp(inMaxBuckets * sizeof(atomic<uint32>), bucket_alignment), bucket_alignment));
+	mBuckets = reinterpret_cast<atomic<uint32> *>(AlignedAlloc(inMaxBuckets * sizeof(atomic<uint32>), 16));
 
 	Clear();
 }

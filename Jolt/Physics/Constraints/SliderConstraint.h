@@ -21,7 +21,7 @@ public:
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 
 	/// Create an an instance of this constraint.
-	/// Note that the rotation constraint will be solved from body 1. This means that if body 1 and body 2 have different masses (kinematic body = infinite mass), body 1 should be the heaviest body.
+	/// Note that the rotation constraint will be solved from body 1. This means that if body 1 and body 2 have different masses / inertias (kinematic body = infinite mass / inertia), body 1 should be the heaviest body.
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
 	/// Simple way of setting the anchor points in world space so that the current relative position is chosen as the '0' position
@@ -67,7 +67,7 @@ public:
 								SliderConstraint(Body &inBody1, Body &inBody2, const SliderConstraintSettings &inSettings);
 
 	// Generic interface of a constraint
-	virtual EConstraintType		GetType() const override								{ return EConstraintType::Slider; }
+	virtual EConstraintSubType	GetSubType() const override								{ return EConstraintSubType::Slider; }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
@@ -78,6 +78,7 @@ public:
 #endif // JPH_DEBUG_RENDERER
 	virtual void				SaveState(StateRecorder &inStream) const override;
 	virtual void				RestoreState(StateRecorder &inStream) override;
+	virtual Ref<ConstraintSettings> GetConstraintSettings() const override;
 
 	// See: TwoBodyConstraint
 	virtual Mat44				GetConstraintToBody1Matrix() const override;

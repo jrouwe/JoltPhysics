@@ -23,7 +23,9 @@ void HingeConstraintTest::Initialize()
 	float box_size = 4.0f;
 	RefConst<Shape> box = new BoxShape(Vec3::sReplicate(0.5f * box_size));
 
-	const int cChainLength = 15;
+	constexpr int cChainLength = 15;
+	constexpr float cMinAngle = DegreesToRadians(-10.0f);
+	constexpr float cMaxAngle = DegreesToRadians(20.0f);
 
 	// Build a collision group filter that disables collision between adjacent bodies
 	Ref<GroupFilterTable> group_filter = new GroupFilterTable(cChainLength);
@@ -31,40 +33,55 @@ void HingeConstraintTest::Initialize()
 		group_filter->DisableCollision(i, i + 1);
 
 	// Bodies attached through hinge constraints
-	Vec3 position(0, 50, 0);
-	Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	top.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
-	mBodyInterface->AddBody(top.GetID(), EActivation::DontActivate);
-
-	constexpr float min_angle = DegreesToRadians(-10.0f);
-	constexpr float max_angle = DegreesToRadians(20.0f);
-
-	Body *prev = &top;
-	for (int i = 1; i < cChainLength; ++i)
+	for (int randomness = 0; randomness < 2; ++randomness)
 	{
-		position += Vec3(box_size, 0, 0);
+		CollisionGroup::GroupID group_id = CollisionGroup::GroupID(randomness);
 
-		Body &segment = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-		segment.SetCollisionGroup(CollisionGroup(group_filter, 0, CollisionGroup::SubGroupID(i)));
-		mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
+		Vec3 position(0, 50, -randomness * 20.0f);
+		Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		top.SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
+		mBodyInterface->AddBody(top.GetID(), EActivation::DontActivate);
 
-		HingeConstraintSettings settings;
-		if ((i & 1) == 0)
+		default_random_engine random;
+		uniform_real_distribution<float> displacement(-1.0f, 1.0f);
+
+		Body *prev = &top;
+		for (int i = 1; i < cChainLength; ++i)
 		{
-			settings.mPoint1 = settings.mPoint2 = position + Vec3(-0.5f * box_size, 0, 0.5f * box_size);
-			settings.mHingeAxis1 = settings.mHingeAxis2 = Vec3::sAxisY();
-			settings.mNormalAxis1 = settings.mNormalAxis2 = Vec3::sAxisX();
-		}
-		else
-		{ 
-			settings.mPoint1 = settings.mPoint2 = position + Vec3(-0.5f * box_size, -0.5f * box_size, 0);
-			settings.mHingeAxis1 = settings.mHingeAxis2 = Vec3::sAxisZ();
-			settings.mNormalAxis1 = settings.mNormalAxis2 = Vec3::sAxisX();
-		}
-		settings.mLimitsMin = min_angle;
-		settings.mLimitsMax = max_angle;
-		mPhysicsSystem->AddConstraint(settings.Create(*prev, segment));
+			Quat rotation;
+			if (randomness == 0)
+			{
+				position += Vec3(box_size, 0, 0);
+				rotation = Quat::sIdentity();
+			}
+			else
+			{
+				position += Vec3(box_size + abs(displacement(random)), displacement(random), displacement(random));
+				rotation = Quat::sRandom(random);
+			}
 
-		prev = &segment;
+			Body &segment = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, rotation, EMotionType::Dynamic, Layers::MOVING));
+			segment.SetCollisionGroup(CollisionGroup(group_filter, group_id, CollisionGroup::SubGroupID(i)));
+			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
+
+			HingeConstraintSettings settings;
+			if ((i & 1) == 0)
+			{
+				settings.mPoint1 = settings.mPoint2 = position + Vec3(-0.5f * box_size, 0, 0.5f * box_size);
+				settings.mHingeAxis1 = settings.mHingeAxis2 = Vec3::sAxisY();
+				settings.mNormalAxis1 = settings.mNormalAxis2 = Vec3::sAxisX();
+			}
+			else
+			{ 
+				settings.mPoint1 = settings.mPoint2 = position + Vec3(-0.5f * box_size, -0.5f * box_size, 0);
+				settings.mHingeAxis1 = settings.mHingeAxis2 = Vec3::sAxisZ();
+				settings.mNormalAxis1 = settings.mNormalAxis2 = Vec3::sAxisX();
+			}
+			settings.mLimitsMin = cMinAngle;
+			settings.mLimitsMax = cMaxAngle;
+			mPhysicsSystem->AddConstraint(settings.Create(*prev, segment));
+
+			prev = &segment;
+		}
 	}
 }

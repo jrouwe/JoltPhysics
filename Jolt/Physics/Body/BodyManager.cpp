@@ -184,6 +184,8 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);
 		mp->SetMaxLinearVelocity(inBodyCreationSettings.mMaxLinearVelocity);
 		mp->SetMaxAngularVelocity(inBodyCreationSettings.mMaxAngularVelocity);
+		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity
+		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
 		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
 		mp->SetMotionQuality(inBodyCreationSettings.mMotionQuality);
 		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;

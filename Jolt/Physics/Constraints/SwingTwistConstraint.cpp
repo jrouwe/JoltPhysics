@@ -459,4 +459,25 @@ void SwingTwistConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetOrientation);
 }
 
+Ref<ConstraintSettings> SwingTwistConstraint::GetConstraintSettings() const
+{
+	SwingTwistConstraintSettings *settings = new SwingTwistConstraintSettings;
+	ToConstraintSettings(*settings);
+	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
+	settings->mPosition1 = mLocalSpacePosition1;
+	settings->mTwistAxis1 = mConstraintToBody1.RotateAxisX();
+	settings->mPlaneAxis1 = mConstraintToBody1.RotateAxisZ();
+	settings->mPosition2 = mLocalSpacePosition2;
+	settings->mTwistAxis2 = mConstraintToBody2.RotateAxisX();
+	settings->mPlaneAxis2 = mConstraintToBody2.RotateAxisZ();
+	settings->mNormalHalfConeAngle = mNormalHalfConeAngle;
+	settings->mPlaneHalfConeAngle = mPlaneHalfConeAngle;
+	settings->mTwistMinAngle = mTwistMinAngle;
+	settings->mTwistMaxAngle = mTwistMaxAngle;
+	settings->mMaxFrictionTorque = mMaxFrictionTorque;
+	settings->mSwingMotorSettings = mSwingMotorSettings;
+	settings->mTwistMotorSettings = mTwistMotorSettings;
+	return settings;
+}
+
 JPH_NAMESPACE_END
