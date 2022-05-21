@@ -65,8 +65,9 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 	class ReversedCollector : public CastShapeCollector
 	{
 	public:
-								ReversedCollector(CastShapeCollector &ioCollector) :
-			mCollector(ioCollector)
+								ReversedCollector(CastShapeCollector &ioCollector, Vec3Arg inCastShapeWorldDirection) :
+			mCollector(ioCollector),
+			mCastShapeWorldDirection(inCastShapeWorldDirection)
 		{
 			SetContext(ioCollector.GetContext());
 		}
@@ -74,7 +75,7 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 		virtual void			AddHit(const ShapeCastResult &inResult) override
 		{
 			// Add the reversed hit
-			mCollector.AddHit(inResult.Reversed());
+			mCollector.AddHit(inResult.Reversed(mCastShapeWorldDirection));
 
 			// If our chained collector updated its early out fraction, we need to follow
 			UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -82,11 +83,12 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 
 	private:
 		CastShapeCollector &	mCollector;
+		Vec3					mCastShapeWorldDirection;
 	};
 
-	ReversedCollector collector(ioCollector);
-	ShapeCast shape_cast(inShape, inScale, inCenterOfMassTransform2, -inShapeCast.mDirection);
-	sCastShapeVsShapeLocalSpace(shape_cast, inShapeCastSettings, inShapeCast.mShape, inShapeCast.mScale, inShapeFilter, inShapeCast.mCenterOfMassStart, inSubShapeIDCreator2, inSubShapeIDCreator1, collector);
+	ShapeCast shape_cast_world(inShape, inScale, inCenterOfMassTransform2, -inCenterOfMassTransform2.Multiply3x3(inShapeCast.mDirection));
+	ReversedCollector collector(ioCollector, shape_cast_world.mDirection);
+	sCastShapeVsShapeWorldSpace(shape_cast_world, inShapeCastSettings, inShapeCast.mShape, inShapeCast.mScale, inShapeFilter, inCenterOfMassTransform2 * inShapeCast.mCenterOfMassStart, inSubShapeIDCreator2, inSubShapeIDCreator1, collector);
 }
 
 JPH_NAMESPACE_END
