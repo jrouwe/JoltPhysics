@@ -65,9 +65,9 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 	class ReversedCollector : public CastShapeCollector
 	{
 	public:
-								ReversedCollector(CastShapeCollector &ioCollector, Vec3Arg inCastShapeWorldDirection) :
+								ReversedCollector(CastShapeCollector &ioCollector, Vec3Arg inWorldDirection) :
 			mCollector(ioCollector),
-			mCastShapeWorldDirection(inCastShapeWorldDirection)
+			mWorldDirection(inWorldDirection)
 		{
 			SetContext(ioCollector.GetContext());
 		}
@@ -75,7 +75,7 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 		virtual void			AddHit(const ShapeCastResult &inResult) override
 		{
 			// Add the reversed hit
-			mCollector.AddHit(inResult.Reversed(mCastShapeWorldDirection));
+			mCollector.AddHit(inResult.Reversed(mWorldDirection));
 
 			// If our chained collector updated its early out fraction, we need to follow
 			UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
@@ -83,12 +83,22 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 
 	private:
 		CastShapeCollector &	mCollector;
-		Vec3					mCastShapeWorldDirection;
+		Vec3					mWorldDirection;
 	};
 
-	ShapeCast shape_cast_world(inShape, inScale, inCenterOfMassTransform2, -inCenterOfMassTransform2.Multiply3x3(inShapeCast.mDirection));
-	ReversedCollector collector(ioCollector, shape_cast_world.mDirection);
-	sCastShapeVsShapeWorldSpace(shape_cast_world, inShapeCastSettings, inShapeCast.mShape, inShapeCast.mScale, inShapeFilter, inCenterOfMassTransform2 * inShapeCast.mCenterOfMassStart, inSubShapeIDCreator2, inSubShapeIDCreator1, collector);
+	// Reverse the shape cast (shape cast is in local space to shape 2)
+	Mat44 com_start_inv = inShapeCast.mCenterOfMassStart.InversedRotationTranslation();
+	ShapeCast local_shape_cast(inShape, inScale, com_start_inv, -com_start_inv.Multiply3x3(inShapeCast.mDirection));
+
+	// Calculate the center of mass of shape 1 at start of sweep
+	Mat44 shape1_com = inCenterOfMassTransform2 * inShapeCast.mCenterOfMassStart;
+
+	// Calculate the world space direction vector of the shape cast
+	Vec3 world_direction = -inCenterOfMassTransform2.Multiply3x3(inShapeCast.mDirection);
+
+	// Forward the cast
+	ReversedCollector collector(ioCollector, world_direction);
+	sCastShapeVsShapeLocalSpace(local_shape_cast, inShapeCastSettings, inShapeCast.mShape, inShapeCast.mScale, inShapeFilter, shape1_com, inSubShapeIDCreator2, inSubShapeIDCreator1, collector);
 }
 
 JPH_NAMESPACE_END
