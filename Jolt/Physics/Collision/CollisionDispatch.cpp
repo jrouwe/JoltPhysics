@@ -13,8 +13,8 @@ CollisionDispatch::CastShape CollisionDispatch::sCastShape[NumSubShapeTypes][Num
 
 void CollisionDispatch::sInit()
 {
-	for (int i = 0; i < NumSubShapeTypes; ++i)
-		for (int j = 0; j < NumSubShapeTypes; ++j)
+	for (uint i = 0; i < NumSubShapeTypes; ++i)
+		for (uint j = 0; j < NumSubShapeTypes; ++j)
 		{
 			if (sCollideShape[i][j] == nullptr)
 				sCollideShape[i][j] = [](const Shape *, const Shape *, Vec3Arg, Vec3Arg, Mat44Arg, Mat44Arg, const SubShapeIDCreator &, const SubShapeIDCreator &, const CollideShapeSettings &, CollideShapeCollector &, const ShapeFilter &)
