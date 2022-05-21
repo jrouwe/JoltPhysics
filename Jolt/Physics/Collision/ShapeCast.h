@@ -92,6 +92,35 @@ public:
 	/// Function required by the CollisionCollector. A smaller fraction is considered to be a 'better hit'. For rays/cast shapes we can just use the collision fraction. The fraction and penetration depth are combined in such a way that deeper hits at fraction 0 go first.
 	inline float				GetEarlyOutFraction() const			{ return mFraction > 0.0f? mFraction : -mPenetrationDepth; }
 
+	/// Reverses the hit result, swapping contact point 1 with contact point 2 etc.
+	/// @param inWorldSpaceCastDirection Direction of the shape cast in world space
+	ShapeCastResult				Reversed(Vec3Arg inWorldSpaceCastDirection) const
+	{
+		// Calculate by how much to shift the contact points
+		Vec3 delta = mFraction * inWorldSpaceCastDirection;
+
+		ShapeCastResult result;
+		result.mContactPointOn2 = mContactPointOn1 - delta;
+		result.mContactPointOn1 = mContactPointOn2 - delta;
+		result.mPenetrationAxis = -mPenetrationAxis;
+		result.mPenetrationDepth = mPenetrationDepth;
+		result.mSubShapeID2 = mSubShapeID1;
+		result.mSubShapeID1 = mSubShapeID2;
+		result.mBodyID2 = mBodyID2;
+		result.mFraction = mFraction;
+		result.mIsBackFaceHit = mIsBackFaceHit;
+
+		result.mShape2Face.resize(mShape1Face.size());
+		for (Face::size_type i = 0; i < mShape1Face.size(); ++i)
+			result.mShape2Face[i] = mShape1Face[i] - delta;
+
+		result.mShape1Face.resize(mShape2Face.size());
+		for (Face::size_type i = 0; i < mShape2Face.size(); ++i)
+			result.mShape1Face[i] = mShape2Face[i] - delta;
+
+		return result;
+	}
+
 	float						mFraction;							///< This is the fraction where the shape hit the other shape: CenterOfMassOnHit = Start + value * (End - Start)
 	bool						mIsBackFaceHit;						///< True if the shape was hit from the back side
 };

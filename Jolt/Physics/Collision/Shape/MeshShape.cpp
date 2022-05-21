@@ -1184,6 +1184,9 @@ void MeshShape::sRegister()
 	{
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::Mesh, sCollideConvexVsMesh);
 		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::Mesh, sCastConvexVsMesh);
+
+		CollisionDispatch::sRegisterCastShape(EShapeSubType::Mesh, s, CollisionDispatch::sReversedCastShape);
+		CollisionDispatch::sRegisterCollideShape(EShapeSubType::Mesh, s, CollisionDispatch::sReversedCollideShape);
 	}
 
 	// Specialized collision functions

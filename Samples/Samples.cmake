@@ -81,6 +81,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ContactManifoldTest.h
 	${SAMPLES_ROOT}/Tests/General/DampingTest.cpp
 	${SAMPLES_ROOT}/Tests/General/DampingTest.h
+	${SAMPLES_ROOT}/Tests/General/DynamicMeshTest.cpp
+	${SAMPLES_ROOT}/Tests/General/DynamicMeshTest.h
 	${SAMPLES_ROOT}/Tests/General/FrictionTest.cpp
 	${SAMPLES_ROOT}/Tests/General/FrictionTest.h
 	${SAMPLES_ROOT}/Tests/General/FrictionPerTriangleTest.cpp
@@ -197,6 +199,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Utils/ContactListenerImpl.h
 	${SAMPLES_ROOT}/Utils/RagdollLoader.cpp
 	${SAMPLES_ROOT}/Utils/RagdollLoader.h
+	${SAMPLES_ROOT}/Utils/ShapeCreator.cpp
+	${SAMPLES_ROOT}/Utils/ShapeCreator.h
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

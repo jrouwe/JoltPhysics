@@ -35,6 +35,7 @@
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Utils/Log.h>
+#include <Utils/ShapeCreator.h>
 #include <Renderer/DebugRendererImp.h>
 
 //-----------------------------------------------------------------------------
@@ -81,6 +82,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(MultithreadedTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ContactListenerTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(SensorTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(DynamicMeshTest)
 
 static TestNameAndRTTI sGeneralTests[] =
 {
@@ -111,6 +113,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Contact Listener",					JPH_RTTI(ContactListenerTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
+	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(DistanceConstraintTest)
@@ -415,7 +418,7 @@ SamplesApp::SamplesApp()
 	mDebugUI->CreateTextButton(main_menu, "Mouse Probe", [this]() { 
 		UIElement *probe_options = mDebugUI->CreateMenu();
 		mDebugUI->CreateComboBox(probe_options, "Mode", { "Pick", "Ray", "RayCollector", "CollidePoint", "CollideShape", "CastShape", "TransfShape", "GetTriangles", "BP Ray", "BP Box", "BP Sphere", "BP Point", "BP OBox", "BP Cast Box" }, (int)mProbeMode, [this](int inItem) { mProbeMode = (EProbeMode)inItem; });
-		mDebugUI->CreateComboBox(probe_options, "Shape", { "Sphere", "Box", "ConvexHull", "Capsule", "TaperedCapsule", "Cylinder", "Triangle", "StaticCompound", "StaticCompound2", "MutableCompound" }, (int)mProbeShape, [=](int inItem) { mProbeShape = (EProbeShape)inItem; });
+		mDebugUI->CreateComboBox(probe_options, "Shape", { "Sphere", "Box", "ConvexHull", "Capsule", "TaperedCapsule", "Cylinder", "Triangle", "StaticCompound", "StaticCompound2", "MutableCompound", "Mesh" }, (int)mProbeShape, [=](int inItem) { mProbeShape = (EProbeShape)inItem; });
 		mDebugUI->CreateCheckBox(probe_options, "Scale Shape", mScaleShape, [this](UICheckBox::EState inState) { mScaleShape = inState == UICheckBox::STATE_CHECKED; });
 		mDebugUI->CreateSlider(probe_options, "Scale X", mShapeScale.GetX(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetX(inValue); });
 		mDebugUI->CreateSlider(probe_options, "Scale Y", mShapeScale.GetY(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetY(inValue); });
@@ -752,6 +755,10 @@ RefConst<Shape> SamplesApp::CreateProbeShape()
 			compound_settings.AddShape(Vec3(0.5f, 0, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), convex);
 			shape = compound_settings.Create().Get();
 		}
+		break;
+
+	case EProbeShape::Mesh:
+		shape = ShapeCreator::CreateTorusMesh(2.0f, 0.25f);
 		break;
 	}
 
