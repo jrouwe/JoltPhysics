@@ -25,14 +25,14 @@ There are a number of user configurable defines that turn on/off certain feature
 - JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.
 - JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.
 - JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).
-- JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x64 only)
-- JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x64 only)
-- JPH_USE_F16C - Enable half float CPU instructions (x64 only)
-- JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x64 only)
-- JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x64 only)
-- JPH_USE_AVX - Enable AVX CPU instructions (x64 only)
-- JPH_USE_AVX2 - Enable AVX2 CPU instructions (x64 only)
-- JPH_USE_FMADD - Enable fused multiply add CPU instructions (x64 only)
+- JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x86/x64 only)
+- JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x86/x64 only)
+- JPH_USE_F16C - Enable half float CPU instructions (x86/x64 only)
+- JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x86/x64 only)
+- JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x86/x64 only)
+- JPH_USE_AVX - Enable AVX CPU instructions (x86/x64 only)
+- JPH_USE_AVX2 - Enable AVX2 CPU instructions (x86/x64 only)
+- JPH_USE_FMADD - Enable fused multiply add CPU instructions (x86/x64 only)
 
 ## Logging & Asserting
 
@@ -46,6 +46,14 @@ To override the default trace and assert mechanism install your own custom handl
 - Download CMake 3.15+ (https://cmake.org/download/)
 - Run cmake_vs2022_cl.bat
 - Open the resulting project file VS2022_CL\JoltPhysics.sln
+- Compile and run either 'Samples' or 'UnitTests'
+
+### Windows 10+ (CL - 32 bit)
+
+- Download Visual Studio 2022 (Community or other edition)
+- Download CMake 3.15+ (https://cmake.org/download/)
+- Run cmake_vs2022_cl_32bit.bat
+- Open the resulting project file VS2022_CL_32BIT\JoltPhysics.sln
 - Compile and run either 'Samples' or 'UnitTests'
 
 ### Windows 10+ (Clang compiler)
@@ -104,5 +112,4 @@ Note that you can also follow the steps in the 'Linux' section if you wish to bu
 Documentation can be generated through doxygen:
 
 - Install Doxygen (https://www.doxygen.nl/download.html)
-- Install Microsoft HTML Help Workshop (to generate a CHM file)
 - Run: run_doxygen.bat
