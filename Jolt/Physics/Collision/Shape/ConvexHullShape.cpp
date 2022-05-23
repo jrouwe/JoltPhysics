@@ -832,7 +832,21 @@ void ConvexHullShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTra
 
 	// Draw the geometry
 	Color color = inUseMaterialColors? GetMaterial()->GetDebugColor() : inColor;
-	inRenderer->DrawGeometry(inCenterOfMassTransform * Mat44::sScale(inScale), color, mGeometry, cull_mode, DebugRenderer::ECastShadow::On, draw_mode);
+	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
+	inRenderer->DrawGeometry(transform, color, mGeometry, cull_mode, DebugRenderer::ECastShadow::On, draw_mode);
+
+	// Draw the outline if requested
+	if (sDrawFaceOutlines)
+		for (const Face &f : mFaces)
+		{
+			const uint8 *first_vtx = mVertexIdx.data() + f.mFirstVertex;
+			const uint8 *end_vtx = first_vtx + f.mNumVertices;
+
+			// Draw edges of face
+			inRenderer->DrawLine(transform * mPoints[*(end_vtx - 1)].mPosition, transform * mPoints[*first_vtx].mPosition, Color::sGrey);
+			for (const uint8 *v = first_vtx + 1; v < end_vtx; ++v)
+				inRenderer->DrawLine(transform * mPoints[*(v - 1)].mPosition, transform * mPoints[*v].mPosition, Color::sGrey);
+		}
 }
 
 void ConvexHullShape::DrawShrunkShape(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const

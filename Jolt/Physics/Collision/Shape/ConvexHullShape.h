@@ -110,6 +110,11 @@ public:
 	// Register shape functions with the registry
 	static void				sRegister();
 
+#ifdef JPH_DEBUG_RENDERER
+	/// Draw the outlines of the faces of the convex hull when drawing the shape
+	inline static bool		sDrawFaceOutlines = false;
+#endif // JPH_DEBUG_RENDERER
+
 protected:
 	// See: Shape::RestoreBinaryState
 	virtual void			RestoreBinaryState(StreamIn &inStream) override;
