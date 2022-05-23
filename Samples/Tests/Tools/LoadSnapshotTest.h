@@ -13,4 +13,12 @@ public:
 
 	// See: Test
 	virtual void		Initialize() override;
+
+	// Optional settings menu
+	virtual bool		HasSettingsMenu() const override							{ return true; }
+	virtual void		CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
+
+private:
+	inline static bool	sOverrideLayers = false;
+	inline static int	sUpAxis = 1;				// 0 = x, 1 = y, 2 = z
 };
