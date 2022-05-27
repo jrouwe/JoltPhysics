@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 #include <Jolt/Core/StaticArray.h>
 #include <Jolt/Core/JobSystem.h>
+#include <Jolt/Core/STLTempAllocator.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -21,10 +22,10 @@ class PhysicsUpdateContext : public NonCopyable
 {
 public:
 	/// Destructor
+							PhysicsUpdateContext(TempAllocator &inTempAllocator);
 							~PhysicsUpdateContext();
 
 	static constexpr int	cMaxConcurrency = 32;									///< Maximum supported amount of concurrent jobs
-	static constexpr int	cMaxSteps = 4;											///< Maximum supported amount of collision steps
 	static constexpr int	cMaxSubSteps = 4;										///< Maximum supported amount of integration sub steps
 
 	using JobHandleArray = StaticArray<JobHandle, cMaxConcurrency>;
@@ -92,6 +93,9 @@ public:
 	/// Structure that contains data needed for each collision step.
 	struct Step
 	{
+							Step() = default;
+							Step(const Step &)										{ JPH_ASSERT(false); } // vector needs a copy constructor, but we're never going to call it
+
 		PhysicsUpdateContext *mContext;												///< The physics update context
 
 		BroadPhase::UpdateState	mBroadPhaseUpdateState;								///< Handle returned by Broadphase::UpdatePrepare
@@ -133,7 +137,7 @@ public:
 		JobHandle			mStartNextStep;											///< Job that kicks the next step (empty for the last step)
 	};
 
-	using Steps = StaticArray<Step, cMaxSteps>;
+	using Steps = vector<Step, STLTempAllocator<Step>>;
 
 	/// Maximum amount of concurrent jobs on this machine
 	int						GetMaxConcurrency() const								{ const int max_concurrency = PhysicsUpdateContext::cMaxConcurrency; return min(max_concurrency, mJobSystem->GetMaxConcurrency()); } ///< Need to put max concurrency in temp var as min requires a reference

@@ -144,15 +144,15 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 	mPreviousSubStepDeltaTime = sub_step_delta_time;
 
 	// Create the context used for passing information between jobs
-	PhysicsUpdateContext context;
+	PhysicsUpdateContext context(*inTempAllocator);
 	context.mPhysicsSystem = this;
-	context.mTempAllocator = inTempAllocator;
 	context.mJobSystem = inJobSystem;
 	context.mBarrier = inJobSystem->CreateBarrier();
 	context.mIslandBuilder = &mIslandBuilder;
 	context.mStepDeltaTime = inDeltaTime / inCollisionSteps;
 	context.mSubStepDeltaTime = sub_step_delta_time;
 	context.mWarmStartImpulseRatio = warm_start_impulse_ratio;
+	context.mSteps.resize(inCollisionSteps);
 
 	// Allocate space for body pairs
 	JPH_ASSERT(context.mBodyPairs == nullptr);
@@ -188,7 +188,6 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 		JPH_PROFILE("Build Jobs");
 
 		// Iterate over collision steps
-		context.mSteps.resize(inCollisionSteps);
 		for (int step_idx = 0; step_idx < inCollisionSteps; ++step_idx)
 		{
 			bool is_first_step = step_idx == 0;
