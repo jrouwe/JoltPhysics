@@ -7,6 +7,12 @@
 
 JPH_NAMESPACE_BEGIN
 
+PhysicsUpdateContext::PhysicsUpdateContext(TempAllocator &inTempAllocator) :
+	mTempAllocator(&inTempAllocator),
+	mSteps(inTempAllocator)
+{
+}
+
 PhysicsUpdateContext::~PhysicsUpdateContext()
 {
 	JPH_ASSERT(mBodyPairs == nullptr);
