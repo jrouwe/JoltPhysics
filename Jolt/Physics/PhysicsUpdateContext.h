@@ -22,7 +22,7 @@ class PhysicsUpdateContext : public NonCopyable
 {
 public:
 	/// Destructor
-							PhysicsUpdateContext(TempAllocator &inTempAllocator);
+	explicit				PhysicsUpdateContext(TempAllocator &inTempAllocator);
 							~PhysicsUpdateContext();
 
 	static constexpr int	cMaxConcurrency = 32;									///< Maximum supported amount of concurrent jobs
