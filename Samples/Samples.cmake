@@ -203,20 +203,13 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Utils/ShapeCreator.h
 )
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	# Enable Precompiled Headers for Samples
-	set_source_files_properties(${SAMPLES_SRC_FILES} PROPERTIES COMPILE_FLAGS "/YuTestFramework.h")
-	set(SAMPLES_SRC_FILES ${SAMPLES_SRC_FILES} ${SAMPLES_ROOT}/pch.cpp)
-	set_source_files_properties(${SAMPLES_ROOT}/pch.cpp PROPERTIES COMPILE_FLAGS "/YcTestFramework.h")
-endif()
-
 # Group source files
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})	
 
 # Create Samples executable
 add_executable(Samples  ${SAMPLES_SRC_FILES})
 target_include_directories(Samples PUBLIC ${SAMPLES_ROOT})
-target_link_libraries (Samples LINK_PUBLIC TestFramework d3d12.lib shcore.lib)
+target_link_libraries(Samples LINK_PUBLIC TestFramework d3d12.lib shcore.lib)
 
 # Set the correct working directory
 set_property(TARGET Samples PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
