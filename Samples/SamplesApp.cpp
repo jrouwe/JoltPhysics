@@ -37,6 +37,7 @@
 #include <Utils/Log.h>
 #include <Utils/ShapeCreator.h>
 #include <Renderer/DebugRendererImp.h>
+#include <fstream>
 
 //-----------------------------------------------------------------------------
 // RTTI definitions

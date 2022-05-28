@@ -14,6 +14,10 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <unordered_set>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 JPH_NAMESPACE_BEGIN
 
 struct RayCast;

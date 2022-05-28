@@ -5,8 +5,7 @@
 
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/ObjectStream/GetPrimitiveTypeOfType.h>
-#include <Jolt/ObjectStream/ObjectStreamIn.h>
-#include <Jolt/ObjectStream/ObjectStreamOut.h>
+#include <Jolt/ObjectStream/ObjectStream.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -26,15 +25,15 @@ inline void AddSerializableAttributeTyped(RTTI &inRTTI, uint inOffset, const cha
 		{
 			return OSIsType((MemberType *)nullptr, inArrayDepth, inDataType, inClassName);
 		},
-		[](ObjectStreamIn &ioStream, void *inObject)
+		[](IObjectStreamIn &ioStream, void *inObject)
 		{
 			return OSReadData(ioStream, *reinterpret_cast<MemberType *>(inObject));
 		},
-		[](ObjectStreamOut &ioStream, const void *inObject)
+		[](IObjectStreamOut &ioStream, const void *inObject)
 		{
 			OSWriteData(ioStream, *reinterpret_cast<const MemberType *>(inObject));
 		},
-		[](ObjectStreamOut &ioStream)
+		[](IObjectStreamOut &ioStream)
 		{
 			OSWriteDataType(ioStream, (MemberType *)nullptr);
 		}));

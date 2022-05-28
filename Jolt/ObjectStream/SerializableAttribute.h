@@ -6,8 +6,8 @@
 JPH_NAMESPACE_BEGIN
 
 class RTTI;
-class ObjectStreamIn;
-class ObjectStreamOut;
+class IObjectStreamIn;
+class IObjectStreamOut;
 
 /// Data type
 enum class EOSDataType
@@ -36,9 +36,9 @@ public:
 	///@ Serialization functions
 	using pGetMemberPrimitiveType = const RTTI * (*)();
 	using pIsType = bool (*)(int inArrayDepth, EOSDataType inDataType, const char *inClassName);
-	using pReadData = bool (*)(ObjectStreamIn &ioStream, void *inObject);
-	using pWriteData = void (*)(ObjectStreamOut &ioStream, const void *inObject);
-	using pWriteDataType = void (*)(ObjectStreamOut &ioStream);
+	using pReadData = bool (*)(IObjectStreamIn &ioStream, void *inObject);
+	using pWriteData = void (*)(IObjectStreamOut &ioStream, const void *inObject);
+	using pWriteDataType = void (*)(IObjectStreamOut &ioStream);
 
 	/// Constructor
 								SerializableAttribute(const char *inName, uint inMemberOffset, pGetMemberPrimitiveType inGetMemberPrimitiveType, pIsType inIsType, pReadData inReadData, pWriteData inWriteData, pWriteDataType inWriteDataType) : mName(inName), mMemberOffset(inMemberOffset), mGetMemberPrimitiveType(inGetMemberPrimitiveType), mIsType(inIsType), mReadData(inReadData), mWriteData(inWriteData), mWriteDataType(inWriteDataType) { }
@@ -63,19 +63,19 @@ public:
 	}
 
 	/// Read the data for this attribute into attribute containing class inObject
-	bool						ReadData(ObjectStreamIn &ioStream, void *inObject) const
+	bool						ReadData(IObjectStreamIn &ioStream, void *inObject) const
 	{
 		return mReadData(ioStream, reinterpret_cast<uint8 *>(inObject) + mMemberOffset);
 	}
 
 	/// Write the data for this attribute from attribute containing class inObject
-	void						WriteData(ObjectStreamOut &ioStream, const void *inObject) const
+	void						WriteData(IObjectStreamOut &ioStream, const void *inObject) const
 	{
 		mWriteData(ioStream, reinterpret_cast<const uint8 *>(inObject) + mMemberOffset);
 	}
 
 	/// Write the data type of this attribute to a stream
-	void						WriteDataType(ObjectStreamOut &ioStream) const
+	void						WriteDataType(IObjectStreamOut &ioStream) const
 	{
 		mWriteDataType(ioStream);
 	}

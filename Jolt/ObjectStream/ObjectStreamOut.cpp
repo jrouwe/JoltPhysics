@@ -160,19 +160,4 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 	WriteIdentifier(identifier);
 }
 
-// Define macro to declare functions for a specific primitive type
-#define JPH_DECLARE_PRIMITIVE(name)															\
-	void	OSWriteDataType(ObjectStreamOut &ioStream, name *)								\
-	{																						\
-		ioStream.WriteDataType(EOSDataType::T_##name);										\
-	}																						\
-	void	OSWriteData(ObjectStreamOut &ioStream, const name &inPrimitive)					\
-	{																						\
-		ioStream.HintNextItem();															\
-		ioStream.WritePrimitiveData(inPrimitive);											\
-	}
-
-// This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <Jolt/ObjectStream/ObjectStreamTypes.h>
-
 JPH_NAMESPACE_END

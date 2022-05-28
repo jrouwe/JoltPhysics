@@ -8,6 +8,7 @@
 #include <Jolt/Geometry/ConvexSupport.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Renderer/DebugRendererImp.h>
+#include <fstream>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullShrinkTest) 
 { 

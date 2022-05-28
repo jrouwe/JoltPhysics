@@ -5,6 +5,7 @@
 
 #include <Tests/Rig/PoweredRigTest.h>
 #include <Jolt/Physics/StateRecorder.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Application/DebugUI.h>
 #include <Utils/RagdollLoader.h>
 #include <Utils/Log.h>

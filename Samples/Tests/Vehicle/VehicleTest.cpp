@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/PhysicsScene.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Layers.h>
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>
