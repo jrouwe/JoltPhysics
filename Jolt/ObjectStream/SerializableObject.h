@@ -3,8 +3,7 @@
 
 #pragma once
 
-#include <Jolt/ObjectStream/ObjectStreamIn.h>
-#include <Jolt/ObjectStream/ObjectStreamOut.h>
+#include <Jolt/ObjectStream/ObjectStream.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -14,22 +13,22 @@ JPH_NAMESPACE_BEGIN
 
 // JPH_DECLARE_SERIALIZATION_FUNCTIONS
 #define JPH_DECLARE_SERIALIZATION_FUNCTIONS(prefix, class_name)														\
-	prefix bool			OSReadData(ObjectStreamIn &ioStream, class_name &inInstance);								\
-	prefix bool			OSReadData(ObjectStreamIn &ioStream, class_name *&inPointer);								\
+	prefix bool			OSReadData(IObjectStreamIn &ioStream, class_name &inInstance);								\
+	prefix bool			OSReadData(IObjectStreamIn &ioStream, class_name *&inPointer);								\
 	prefix bool			OSIsType(class_name *, int inArrayDepth, EOSDataType inDataType, const char *inClassName);	\
 	prefix bool			OSIsType(class_name **, int inArrayDepth, EOSDataType inDataType, const char *inClassName);	\
-	prefix void			OSWriteData(ObjectStreamOut &ioStream, const class_name &inInstance);						\
-	prefix void			OSWriteData(ObjectStreamOut &ioStream, class_name *const &inPointer);						\
-	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name *);									\
-	prefix void			OSWriteDataType(ObjectStreamOut &ioStream, class_name **);
+	prefix void			OSWriteData(IObjectStreamOut &ioStream, const class_name &inInstance);						\
+	prefix void			OSWriteData(IObjectStreamOut &ioStream, class_name *const &inPointer);						\
+	prefix void			OSWriteDataType(IObjectStreamOut &ioStream, class_name *);									\
+	prefix void			OSWriteDataType(IObjectStreamOut &ioStream, class_name **);
 
 // JPH_IMPLEMENT_SERIALIZATION_FUNCTIONS
 #define JPH_IMPLEMENT_SERIALIZATION_FUNCTIONS(class_name)															\
-	bool				OSReadData(ObjectStreamIn &ioStream, class_name &inInstance)								\
+	bool				OSReadData(IObjectStreamIn &ioStream, class_name &inInstance)								\
 	{																												\
 		return ioStream.ReadClassData(#class_name, (void *)&inInstance);											\
 	}																												\
-	bool				OSReadData(ObjectStreamIn &ioStream, class_name *&inPointer)								\
+	bool				OSReadData(IObjectStreamIn &ioStream, class_name *&inPointer)								\
 	{																												\
 		return ioStream.ReadPointerData(JPH_RTTI(class_name), (void **)&inPointer);									\
 	}																												\
@@ -41,23 +40,23 @@ JPH_NAMESPACE_BEGIN
 	{																												\
 		return inArrayDepth == 0 && inDataType == EOSDataType::Pointer && strcmp(inClassName, #class_name) == 0;	\
 	}																												\
-	void				OSWriteData(ObjectStreamOut &ioStream, const class_name &inInstance)						\
+	void				OSWriteData(IObjectStreamOut &ioStream, const class_name &inInstance)						\
 	{																												\
 		ioStream.WriteClassData(JPH_RTTI(class_name), (void *)&inInstance);											\
 	}																												\
-	void				OSWriteData(ObjectStreamOut &ioStream, class_name *const &inPointer)						\
+	void				OSWriteData(IObjectStreamOut &ioStream, class_name *const &inPointer)						\
 	{																												\
 		if (inPointer)																								\
 			ioStream.WritePointerData(GetRTTI(inPointer), (void *)inPointer);										\
 		else 																										\
 			ioStream.WritePointerData(nullptr, nullptr);															\
 	}																												\
-	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name *)									\
+	void				OSWriteDataType(IObjectStreamOut &ioStream, class_name *)									\
 	{																												\
 		ioStream.WriteDataType(EOSDataType::Instance);																\
 		ioStream.WriteName(#class_name);																			\
 	}																												\
-	void				OSWriteDataType(ObjectStreamOut &ioStream, class_name **)									\
+	void				OSWriteDataType(IObjectStreamOut &ioStream, class_name **)									\
 	{																												\
 		ioStream.WriteDataType(EOSDataType::Pointer);																\
 		ioStream.WriteName(#class_name);																			\

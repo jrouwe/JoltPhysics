@@ -7,6 +7,7 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Utils/RagdollLoader.h>
 #include <Utils/Log.h>
 #include <Layers.h>

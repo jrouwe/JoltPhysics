@@ -546,14 +546,4 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 	return continue_reading;
 }
 
-// Define macro to declare functions for a specific primitive type
-#define JPH_DECLARE_PRIMITIVE(name)														\
-	bool	OSReadData(ObjectStreamIn &ioStream, name &outPrimitive)					\
-	{																					\
-		return ioStream.ReadPrimitiveData(outPrimitive);								\
-	}
-
-// This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
-#include <Jolt/ObjectStream/ObjectStreamTypes.h>
-
 JPH_NAMESPACE_END

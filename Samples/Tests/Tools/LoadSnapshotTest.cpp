@@ -9,6 +9,7 @@
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>
 #include <Layers.h>
+#include <fstream>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSnapshotTest) 
 { 

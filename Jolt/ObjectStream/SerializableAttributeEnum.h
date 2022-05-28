@@ -4,8 +4,7 @@
 #pragma once
 
 #include <Jolt/ObjectStream/SerializableAttribute.h>
-#include <Jolt/ObjectStream/ObjectStreamIn.h>
-#include <Jolt/ObjectStream/ObjectStreamOut.h>
+#include <Jolt/ObjectStream/ObjectStream.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -25,7 +24,7 @@ inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char
 		{
 			return inArrayDepth == 0 && inDataType == EOSDataType::T_uint32;
 		},
-		[](ObjectStreamIn &ioStream, void *inObject)
+		[](IObjectStreamIn &ioStream, void *inObject)
 		{
 			uint32 temporary;
 			if (OSReadData(ioStream, temporary)) 
@@ -35,13 +34,13 @@ inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char
 			}
 			return false;
 		},
-		[](ObjectStreamOut &ioStream, const void *inObject)
+		[](IObjectStreamOut &ioStream, const void *inObject)
 		{
 			static_assert(sizeof(MemberType) <= sizeof(uint32));
 			uint32 temporary = uint32(*reinterpret_cast<const MemberType *>(inObject));
 			OSWriteData(ioStream, temporary);
 		},
-		[](ObjectStreamOut &ioStream)
+		[](IObjectStreamOut &ioStream)
 		{
 			ioStream.WriteDataType(EOSDataType::T_uint32);
 		}));
