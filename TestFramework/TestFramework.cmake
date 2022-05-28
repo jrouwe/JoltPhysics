@@ -81,13 +81,6 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/Utils/ReadData.h
 )
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	# Enable Precompiled Headers for TestFramework
-	set_source_files_properties(${TEST_FRAMEWORK_SRC_FILES} PROPERTIES COMPILE_FLAGS "/YuTestFramework.h")
-	set(TEST_FRAMEWORK_SRC_FILES ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_ROOT}/pch.cpp)
-	set_source_files_properties(${TEST_FRAMEWORK_ROOT}/pch.cpp PROPERTIES COMPILE_FLAGS "/YcTestFramework.h")
-endif()
-
 # Group source files
 source_group(TREE ${TEST_FRAMEWORK_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES})
 
@@ -125,4 +118,5 @@ source_group(TREE ${PHYSICS_REPO_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES_SHADERS}
 # Create TestFramework lib
 add_library(TestFramework STATIC ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_SRC_FILES_SHADERS})
 target_include_directories(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT})
-target_link_libraries (TestFramework LINK_PUBLIC Jolt)
+target_link_libraries(TestFramework LINK_PUBLIC Jolt)
+target_precompile_headers(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT}/TestFramework.h)
