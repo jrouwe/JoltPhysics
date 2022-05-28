@@ -15,6 +15,7 @@
 #include <Jolt/ObjectStream/SerializableObject.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <unordered_map>
 #include <unordered_set>
 JPH_SUPPRESS_WARNINGS_STD_END
 
