@@ -124,6 +124,9 @@ public:
 	const Faces &		GetFaces() const					{ return mFaces; }
 
 private:
+	/// Minimal square area of a triangle (used for merging and checking if a triangle is degenerate)
+	static constexpr float cMinTriangleAreaSq = 1.0e-12f;
+
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	/// Factor to scale convex hull when debug drawing the construction process
 	static constexpr float cDrawScale = 10.0f;
@@ -181,7 +184,7 @@ private:
 	void				MergeFaces(Edge *inEdge);
 
 	/// Merges inFace with a neighbour if it is degenerate (a sliver)
-	void				MergeDegenerateFace(Face *inFace, float inMinAreaSq, Faces &ioAffectedFaces);
+	void				MergeDegenerateFace(Face *inFace, Faces &ioAffectedFaces);
 
 	/// Merges any coplanar as well as neighbours that form a non-convex edge into inFace. 
 	/// Faces are considered coplanar if the distance^2 of the other face's centroid is smaller than inToleranceSq.

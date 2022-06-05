@@ -304,7 +304,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 			}
 		}
 	JPH_ASSERT(idx3 >= 0);
-	if (best_triangle_area_sq < FLT_EPSILON)
+	if (best_triangle_area_sq < cMinTriangleAreaSq)
 	{
 		outError = "Could not find a suitable initial triangle because its area was too small";
 		return EResult::Degenerate;
@@ -554,7 +554,7 @@ void ConvexHullBuilder::AddPoint(Face *inFacingFace, int inIdx, float inCoplanar
 		if (!face->mRemoved)
 		{
 			// Merge with neighbour if this is a degenerate face
-			MergeDegenerateFace(face, 1.0e-12f, affected_faces);
+			MergeDegenerateFace(face, affected_faces);
 
 			// Merge with coplanar neighbours (or when the neighbour forms a concave edge)
 			if (!face->mRemoved)
@@ -827,10 +827,10 @@ void ConvexHullBuilder::MergeFaces(Edge *inEdge)
 #endif
 }
 
-void ConvexHullBuilder::MergeDegenerateFace(Face *inFace, float inMinAreaSq, Faces &ioAffectedFaces)
+void ConvexHullBuilder::MergeDegenerateFace(Face *inFace, Faces &ioAffectedFaces)
 {
 	// Check area of face
-	if (inFace->mNormal.LengthSq() < inMinAreaSq)
+	if (inFace->mNormal.LengthSq() < cMinTriangleAreaSq)
 	{
 		// Find longest edge, since this face is a sliver this should keep the face convex
 		float max_length_sq = 0.0f;
