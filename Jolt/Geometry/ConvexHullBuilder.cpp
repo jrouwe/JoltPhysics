@@ -141,7 +141,7 @@ void ConvexHullBuilder::FreeFaces()
 	mFaces.clear();
 }
 
-void ConvexHullBuilder::GetFaceForPoint(Vec3Arg inPoint, const Faces &inFaces, Face *&outFace, float &outDistSq)
+void ConvexHullBuilder::GetFaceForPoint(Vec3Arg inPoint, const Faces &inFaces, Face *&outFace, float &outDistSq) const
 {
 	outFace = nullptr;
 	outDistSq = 0.0f;
@@ -1330,15 +1330,12 @@ void ConvexHullBuilder::DetermineMaxError(Face *&outFaceWithMaxError, float &out
 					min_edge_dist_face = f;
 				}
 
-				if (edge_dist_sq == 0.0f)
+				// If the point is inside the polygon and the point is in front of the plane, measure the distance
+				if (edge_dist_sq == 0.0f && plane_dist > max_error)
 				{
-					// The point is inside the polygon, if the point is in front of the plane, measure the distance
-					if (plane_dist > max_error)
-					{
-						max_error = plane_dist;
-						max_error_face = f;
-						max_error_point = i;
-					}
+					max_error = plane_dist;
+					max_error_face = f;
+					max_error_point = i;
 				}
 			}
 		}

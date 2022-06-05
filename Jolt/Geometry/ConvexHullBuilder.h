@@ -152,7 +152,7 @@ private:
 	/// @param inFaces List of faces to test
 	/// @param outFace Returns the best face
 	/// @param outDistSq Returns the squared distance how much inPoint is in front of the plane of the face
-	void				GetFaceForPoint(Vec3Arg inPoint, const Faces &inFaces, Face *&outFace, float &outDistSq);
+	void				GetFaceForPoint(Vec3Arg inPoint, const Faces &inFaces, Face *&outFace, float &outDistSq) const;
 
 	/// @brief Calculates the distance between inPoint and inFace
 	/// @param inFace Face to test
