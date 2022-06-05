@@ -220,7 +220,7 @@ private:
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	/// Draw state of algorithm
-	void				DrawState(bool inDrawConflictList = false);
+	void				DrawState(bool inDrawConflictList = false) const;
 
 	/// Draw a face for debugging purposes
 	void				DrawWireFace(const Face *inFace, ColorArg inColor) const;
@@ -238,7 +238,7 @@ private:
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)	
-	Vec3				mOffset;							///< Offset to use for state drawing
+	mutable Vec3		mOffset;							///< Offset to use for state drawing
 	Vec3				mDelta;								///< Delta offset between next states
 #endif
 };

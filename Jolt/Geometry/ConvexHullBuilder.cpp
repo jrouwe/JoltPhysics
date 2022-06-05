@@ -1278,7 +1278,7 @@ void ConvexHullBuilder::DetermineMaxError(Face *&outFaceWithMaxError, float &out
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 
-void ConvexHullBuilder::DrawState(bool inDrawConflictList)
+void ConvexHullBuilder::DrawState(bool inDrawConflictList) const
 {
 	// Draw origin
 	DebugRenderer::sInstance->DrawMarker(cDrawScale * mOffset, Color::sRed, 0.2f);
