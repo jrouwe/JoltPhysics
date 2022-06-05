@@ -141,46 +141,98 @@ void ConvexHullBuilder::FreeFaces()
 	mFaces.clear();
 }
 
-void ConvexHullBuilder::AssignPointToFace(int inPositionIdx, const Faces &inFaces) const
+void ConvexHullBuilder::GetFaceForPoint(Vec3Arg inPoint, const Faces &inFaces, Face *&outFace, float &outDistSq)
 {
-	Vec3 point = mPositions[inPositionIdx];
+	outFace = nullptr;
+	outDistSq = 0.0f;
 
-	Face *best_face = nullptr;
-	float best_dist_sq = 0.0f;
-
-	// Test against all faces
 	for (Face *f : inFaces)
 		if (!f->mRemoved)
 		{
 			// Determine distance to face
-			float dot = f->mNormal.Dot(point - f->mCentroid);
+			float dot = f->mNormal.Dot(inPoint - f->mCentroid);
 			if (dot > 0.0f)
 			{
 				float dist_sq = dot * dot / f->mNormal.LengthSq();
-				if (dist_sq > best_dist_sq)
+				if (dist_sq > outDistSq)
 				{
-					best_face = f;
-					best_dist_sq = dist_sq;
+					outFace = f;
+					outDistSq = dist_sq;
 				}
 			}
 		}
+}
 
-	// If this point is in front of the face, add it to the conflict list
+float ConvexHullBuilder::GetDistanceToEdgeSq(Vec3Arg inPoint, const Face *inFace) const
+{
+	bool all_inside = true;
+	float edge_dist_sq = FLT_MAX;
+
+	// Test if it is inside the edges of the polygon
+	Edge *edge = inFace->mFirstEdge;
+	Vec3 p1 = mPositions[edge->GetPreviousEdge()->mStartIdx];
+	do
+	{
+		Vec3 p2 = mPositions[edge->mStartIdx];
+		if ((p2 - p1).Cross(inPoint - p1).Dot(inFace->mNormal) < 0.0f)
+		{
+			// It is outside
+			all_inside = false;
+
+			// Measure distance to this edge
+			uint32 s;
+			edge_dist_sq = min(edge_dist_sq, ClosestPoint::GetClosestPointOnLine(p1 - inPoint, p2 - inPoint, s).LengthSq());
+		}
+		p1 = p2;
+		edge = edge->mNextEdge;
+	} while (edge != inFace->mFirstEdge);
+
+	return all_inside? 0.0f : edge_dist_sq;
+}
+
+bool ConvexHullBuilder::AssignPointToFace(int inPositionIdx, const Faces &inFaces, float inToleranceSq)
+{
+	Vec3 point = mPositions[inPositionIdx];
+
+	// Find the face for which the point is furthest away
+	Face *best_face;
+	float best_dist_sq;
+	GetFaceForPoint(point, inFaces, best_face, best_dist_sq);
+
 	if (best_face != nullptr)
 	{
-		if (best_dist_sq > best_face->mFurthestPointDistanceSq)
+		// Check if this point is within the tolerance margin to the plane
+		if (best_dist_sq <= inToleranceSq)
 		{
-			// This point is futher away than any others, update the distance and add point as last point
-			best_face->mFurthestPointDistanceSq = best_dist_sq;
-			best_face->mConflictList.push_back(inPositionIdx);
+			// Check distance to edges
+			float dist_to_edge_sq = GetDistanceToEdgeSq(point, best_face);
+			if (dist_to_edge_sq > inToleranceSq)
+			{
+				// Point is outside of the face and too far away to discard
+				mCoplanarList.push_back({ inPositionIdx, dist_to_edge_sq });
+			}
 		}
 		else
 		{
-			// Not the furthest point, add it as the before last point
-			best_face->mConflictList.push_back(best_face->mConflictList.back());
-			best_face->mConflictList[best_face->mConflictList.size() - 2] = inPositionIdx;
+			// This point is in front of the face, add it to the conflict list
+			if (best_dist_sq > best_face->mFurthestPointDistanceSq)
+			{
+				// This point is futher away than any others, update the distance and add point as last point
+				best_face->mFurthestPointDistanceSq = best_dist_sq;
+				best_face->mConflictList.push_back(inPositionIdx);
+			}
+			else
+			{
+				// Not the furthest point, add it as the before last point
+				best_face->mConflictList.push_back(best_face->mConflictList.back());
+				best_face->mConflictList[best_face->mConflictList.size() - 2] = inPositionIdx;
+			}
+			
+			return true;
 		}
 	}
+
+	return false;
 }
 
 float ConvexHullBuilder::DetermineCoplanarDistance() const
@@ -433,7 +485,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 	Faces faces { t1, t2, t3, t4 };
 	for (int idx = 0; idx < (int)mPositions.size(); ++idx)
 		if (idx != idx1 && idx != idx2 && idx != idx3 && idx != idx4)
-			AssignPointToFace(idx, faces);
+			AssignPointToFace(idx, faces, tolerance_sq);
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	// Draw current state including conflict list
@@ -459,9 +511,64 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 				face_with_furthest_point = f;
 			}
 
-		// If there is none closer than our tolerance value, we're done
-		if (face_with_furthest_point == nullptr || furthest_dist_sq < tolerance_sq)
+		int furthest_point_idx;
+		if (face_with_furthest_point != nullptr)
+		{
+			// Take the furthest point
+			furthest_point_idx = face_with_furthest_point->mConflictList.back();
+			face_with_furthest_point->mConflictList.pop_back();
+		}
+		else if (!mCoplanarList.empty())
+		{
+			// Try to assign points to faces (this also recalculates the distance to the hull for the coplanar vertices)
+			CoplanarList coplanar;
+			mCoplanarList.swap(coplanar);
+			bool added = false;
+			for (const Coplanar &c : coplanar)
+				added |= AssignPointToFace(c.mPositionIdx, mFaces, tolerance_sq);
+
+			// If we were able to assign a point, loop again to pick it up
+			if (added)
+				continue;
+
+			// If the coplanar list is empty, there are no points left and we're done
+			if (mCoplanarList.empty())
+				break;
+
+			do
+			{
+				// Find the vertex that is furthest from the hull
+				CoplanarList::size_type best_idx = 0;
+				float best_dist_sq = mCoplanarList.front().mDistanceSq;
+				for (CoplanarList::size_type idx = 1; idx < mCoplanarList.size(); ++idx)
+				{
+					const Coplanar &c = mCoplanarList[idx];
+					if (c.mDistanceSq > best_dist_sq)
+					{
+						best_idx = idx;
+						best_dist_sq = c.mDistanceSq;
+					}
+				}
+
+				// Swap it to the end
+				swap(mCoplanarList[best_idx], mCoplanarList.back());
+
+				// Remove it
+				furthest_point_idx = mCoplanarList.back().mPositionIdx;
+				mCoplanarList.pop_back();
+
+				// Find the face for which the point is furthest away
+				GetFaceForPoint(mPositions[furthest_point_idx], mFaces, face_with_furthest_point, best_dist_sq);
+			} while (!mCoplanarList.empty() && face_with_furthest_point == nullptr);
+
+			if (face_with_furthest_point == nullptr)
+				break;
+		}
+		else
+		{
+			// If there are no more vertices, we're done
 			break;
+		}
 
 		// Check if we have a limit on the max vertices that we should produce
 		if (num_vertices_used >= inMaxVertices)
@@ -477,10 +584,6 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		// We're about to add another vertex
 		++num_vertices_used;
 
-		// Take the furthest point
-		int furthest_point_idx = face_with_furthest_point->mConflictList.back();
-		face_with_furthest_point->mConflictList.pop_back();
-
 		// Add the point to the hull
 		Faces new_faces;
 		AddPoint(face_with_furthest_point, furthest_point_idx, coplanar_tolerance_sq, new_faces);
@@ -489,7 +592,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		for (const Face *face : mFaces)
 			if (face->mRemoved)
 				for (int idx : face->mConflictList)
-					AssignPointToFace(idx, new_faces);
+					AssignPointToFace(idx, new_faces, tolerance_sq);
 
 		// Permanently delete faces that we removed in AddPoint()
 		GarbageCollectFaces();
@@ -1055,7 +1158,7 @@ bool ConvexHullBuilder::RemoveTwoEdgeFace(Face *inFace, Faces &ioAffectedFaces) 
 
 	return false;
 }
-	
+
 #ifdef JPH_ENABLE_ASSERTS
 
 void ConvexHullBuilder::DumpFace(const Face *inFace) const
@@ -1208,7 +1311,7 @@ void ConvexHullBuilder::DetermineMaxError(Face *&outFaceWithMaxError, float &out
 		// Note that we take the min of all faces since there may be multiple near coplanar faces so if we were to test this per face
 		// we may find that a point is outside of a polygon and mark it as an error, while it is actually inside a nearly coplanar
 		// polygon.
-		float min_edge_dist = FLT_MAX;
+		float min_edge_dist_sq = FLT_MAX;
 		Face *min_edge_dist_face = nullptr;
 
 		for (Face *f : mFaces)
@@ -1219,39 +1322,17 @@ void ConvexHullBuilder::DetermineMaxError(Face *&outFaceWithMaxError, float &out
 			float plane_dist = f->mNormal.Dot(v - f->mCentroid) / normal_len;
 			if (plane_dist > -outCoplanarDistance)
 			{
-				bool all_inside = true;
-
-				// Test if it is inside the edges of the polygon
-				Edge *edge = f->mFirstEdge;
-				Vec3 p1 = mPositions[edge->GetPreviousEdge()->mStartIdx];
-				do
+				// Check distance to the edges of this face
+				float edge_dist_sq = GetDistanceToEdgeSq(v, f);
+				if (edge_dist_sq < min_edge_dist_sq)
 				{
-					Vec3 p2 = mPositions[edge->mStartIdx];
-					if ((p2 - p1).Cross(v - p1).Dot(f->mNormal) < 0.0f)
-					{
-						// It is outside
-						all_inside = false;
-
-						// Measure distance to this edge
-						uint32 s;
-						float edge_dist = ClosestPoint::GetClosestPointOnLine(p1 - v, p2 - v, s).Length();
-						if (edge_dist < min_edge_dist)
-						{
-							min_edge_dist = edge_dist;
-							min_edge_dist_face = f;
-						}
-					}
-					p1 = p2;
-					edge = edge->mNextEdge;
-				} while (edge != f->mFirstEdge);
-
-				if (all_inside)
-				{
-					// The point is inside the polygon, reset distance to edge
-					min_edge_dist = 0.0f;
+					min_edge_dist_sq = edge_dist_sq;
 					min_edge_dist_face = f;
+				}
 
-					// If the point is in front of the plane, measure the distance
+				if (edge_dist_sq == 0.0f)
+				{
+					// The point is inside the polygon, if the point is in front of the plane, measure the distance
 					if (plane_dist > max_error)
 					{
 						max_error = plane_dist;
@@ -1263,6 +1344,7 @@ void ConvexHullBuilder::DetermineMaxError(Face *&outFaceWithMaxError, float &out
 		}
 
 		// If the minimum distance to an edge is further than our current max error, we use that as max error
+		float min_edge_dist = sqrt(min_edge_dist_sq);
 		if (min_edge_dist_face != nullptr && min_edge_dist > max_error)
 		{
 			max_error = min_edge_dist;
@@ -1319,7 +1401,7 @@ void ConvexHullBuilder::DrawState(bool inDrawConflictList) const
 
 			// Draw normal
 			Vec3 centroid = cDrawScale * (f->mCentroid + mOffset);
-			DebugRenderer::sInstance->DrawArrow(centroid, centroid + f->mNormal.Normalized(), face_color, 0.01f);
+			DebugRenderer::sInstance->DrawArrow(centroid, centroid + f->mNormal.NormalizedOr(Vec3::sZero()), face_color, 0.01f);
 
 			// Draw conflict list
 			if (inDrawConflictList)
