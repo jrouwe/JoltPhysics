@@ -25,10 +25,10 @@ JPH_NAMESPACE_BEGIN
 ///
 /// Used terms (here and below, everything in world space):\n
 /// a = axis around which body 1 rotates (normalized).\n
-/// b = axis along which body 2 slides (normalized)\n
-/// Theta(t) = rotation around a of body 1
-/// d(t) = distance body 2 slides
-/// r = ratio between rotation and translation\n
+/// b = axis along which body 2 slides (normalized).\n
+/// Theta(t) = rotation around a of body 1.\n
+/// d(t) = distance body 2 slides.\n
+/// r = ratio between rotation and translation.\n
 /// v = [v1, w1, v2, w2].\n
 /// v1, v2 = linear velocity of body 1 and 2.\n
 /// w1, w2 = angular velocity of body 1 and 2.\n

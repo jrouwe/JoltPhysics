@@ -25,10 +25,10 @@ JPH_NAMESPACE_BEGIN
 ///
 /// Used terms (here and below, everything in world space):\n
 /// a = axis around which body 1 rotates (normalized).\n
-/// b = axis along which body 2 slides (normalized)\n
-/// Rotation1(t) = rotation around a of body 1
-/// Rotation2(t) = rotation around b of body 2
-/// r = ratio between rotation for body 1 and 2\n
+/// b = axis along which body 2 slides (normalized).\n
+/// Rotation1(t) = rotation around a of body 1.\n
+/// Rotation2(t) = rotation around b of body 2.\n
+/// r = ratio between rotation for body 1 and 2.\n
 /// v = [v1, w1, v2, w2].\n
 /// v1, v2 = linear velocity of body 1 and 2.\n
 /// w1, w2 = angular velocity of body 1 and 2.\n
