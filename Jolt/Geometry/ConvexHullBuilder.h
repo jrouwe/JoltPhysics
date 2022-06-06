@@ -147,10 +147,25 @@ private:
 	// Determine a suitable tolerance for detecting that points are coplanar
 	float				DetermineCoplanarDistance() const;
 
+	/// Find the face for which inPoint is furthest to the front
+	/// @param inPoint Point to test
+	/// @param inFaces List of faces to test
+	/// @param outFace Returns the best face
+	/// @param outDistSq Returns the squared distance how much inPoint is in front of the plane of the face
+	void				GetFaceForPoint(Vec3Arg inPoint, const Faces &inFaces, Face *&outFace, float &outDistSq) const;
+
+	/// @brief Calculates the distance between inPoint and inFace
+	/// @param inFace Face to test
+	/// @param inPoint Point to test
+	/// @return If the projection of the point on the plane is interior to the face 0, otherwise the squared distance to the closest edge
+	float				GetDistanceToEdgeSq(Vec3Arg inPoint, const Face *inFace) const;
+
 	/// Assigns a position to one of the supplied faces based on which face is closest.
 	/// @param inPositionIdx Index of the position to add
 	/// @param inFaces List of faces to consider
-	void				AssignPointToFace(int inPositionIdx, const Faces &inFaces) const;
+	/// @param inToleranceSq Tolerance of the hull, if the point is closer to the face than this, we ignore it
+	/// @return True if point was assigned, false if it was discarded or added to the coplanar list
+	bool				AssignPointToFace(int inPositionIdx, const Faces &inFaces, float inToleranceSq);
 
 	/// Add a new point to the convex hull
 	void				AddPoint(Face *inFacingFace, int inIdx, float inToleranceSq, Faces &outNewFaces);
@@ -235,6 +250,15 @@ private:
 
 	const Positions &	mPositions;							///< List of positions (some of them are part of the hull)
 	Faces 				mFaces;								///< List of faces that are part of the hull (if !mRemoved)
+
+	struct Coplanar
+	{
+		int				mPositionIdx;						///< Index in mPositions
+		float			mDistanceSq;						///< Distance to the edge of closest face (should be > 0)
+	};
+	using CoplanarList = vector<Coplanar>;
+
+	CoplanarList		mCoplanarList;						///< List of positions that are coplanar to a face but outside of the face, these are added to the hull at the end
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)	
