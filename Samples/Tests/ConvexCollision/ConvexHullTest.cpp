@@ -430,6 +430,18 @@ void ConvexHullTest::Initialize()
 		mPoints.push_back(move(p));
 	}
 
+	// Add wedge shaped disc that is just above the hull tolerance on its widest side and zero on the other side
+	{
+		Points p;
+		for (float phi = 0.0f; phi <= 2.0f * JPH_PI; phi += 2.0f * JPH_PI / 40.0f)
+		{
+			Vec3 pos(2.0f * cos(phi), 0, 2.0f * sin(phi));
+			p.push_back(pos);
+			p.push_back(pos + Vec3(0, 2.0e-3f * (2.0f + pos.GetX()) / 4.0f, 0));
+		}
+		mPoints.push_back(move(p));
+	}
+
 	// Add a sphere of many points
 	{
 		Points p;
