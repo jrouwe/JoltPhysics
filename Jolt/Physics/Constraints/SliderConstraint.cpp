@@ -27,6 +27,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SliderConstraintSettings)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mNormalAxis2)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mLimitsMin)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mLimitsMax)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mFrequency)
+	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mDamping)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mMaxFrictionForce)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mMotorSettings)
 }
@@ -73,6 +75,8 @@ void SliderConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mNormalAxis2);
 	inStream.Write(mLimitsMin);
 	inStream.Write(mLimitsMax);
+	inStream.Write(mFrequency);
+	inStream.Write(mDamping);
 	inStream.Write(mMaxFrictionForce);
 	mMotorSettings.SaveBinaryState(inStream);
 }
@@ -90,6 +94,8 @@ void SliderConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mNormalAxis2);
 	inStream.Read(mLimitsMin);
 	inStream.Read(mLimitsMax);
+	inStream.Read(mFrequency);
+	inStream.Read(mDamping);
 	inStream.Read(mMaxFrictionForce);
 	mMotorSettings.RestoreBinaryState(inStream);
 }
@@ -130,8 +136,12 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 	mLocalSpaceNormal2 = mLocalSpaceSliderAxis1.Cross(mLocalSpaceNormal1);
 
 	// Store limits
-	JPH_ASSERT(inSettings.mLimitsMin != inSettings.mLimitsMax, "Better use a fixed constraint");
+	JPH_ASSERT(inSettings.mLimitsMin != inSettings.mLimitsMax || inSettings.mFrequency > 0.0f, "Better use a fixed constraint");
 	SetLimits(inSettings.mLimitsMin, inSettings.mLimitsMax);
+
+	// Store frequency and damping
+	SetFrequency(inSettings.mFrequency);
+	SetDamping(inSettings.mDamping);
 }
 
 void SliderConstraint::SetLimits(float inLimitsMin, float inLimitsMax)
@@ -177,8 +187,9 @@ void SliderConstraint::CalculateSlidingAxisAndPosition(Mat44Arg inRotation1)
 void SliderConstraint::CalculatePositionLimitsConstraintProperties(float inDeltaTime)
 {
 	// Check if distance is within limits
-	if (mHasLimits && (mD <= mLimitsMin || mD >= mLimitsMax))
-		mPositionLimitsConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis);
+	bool below_min = mD <= mLimitsMin;
+	if (mHasLimits && (below_min || mD >= mLimitsMax))
+		mPositionLimitsConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - (below_min? mLimitsMin : mLimitsMax), mFrequency, mDamping);
 	else
 		mPositionLimitsConstraintPart.Deactivate();
 }
@@ -287,7 +298,7 @@ bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 
 	// Solve limits along slider axis
 	bool limit = false;
-	if (mHasLimits)
+	if (mHasLimits && mFrequency <= 0.0f)
 	{
 		rotation1 = Mat44::sRotation(mBody1->GetRotation());
 		rotation2 = Mat44::sRotation(mBody2->GetRotation());
@@ -412,6 +423,8 @@ Ref<ConstraintSettings> SliderConstraint::GetConstraintSettings() const
 	settings->mNormalAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceNormal1);
 	settings->mLimitsMin = mLimitsMin;
 	settings->mLimitsMax = mLimitsMax;
+	settings->mFrequency = mFrequency;
+	settings->mDamping = mDamping;
 	settings->mMaxFrictionForce = mMaxFrictionForce;
 	settings->mMotorSettings = mMotorSettings;
 	return settings;

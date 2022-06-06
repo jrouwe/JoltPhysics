@@ -39,6 +39,8 @@ enum class EConstraintSubType
 	SixDOF,
 	Path,
 	Vehicle,
+	RackAndPinion,
+	Gear,
 
 	/// User defined constraint types start here
 	User1,

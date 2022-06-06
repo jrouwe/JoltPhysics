@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/StateRecorder.h>
 

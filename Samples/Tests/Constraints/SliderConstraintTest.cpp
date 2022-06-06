@@ -26,6 +26,7 @@ void SliderConstraintTest::Initialize()
 	Ref<GroupFilterTable> group_filter = new GroupFilterTable(cChainLength);
 	for (CollisionGroup::SubGroupID i = 0; i < cChainLength - 1; ++i)
 		group_filter->DisableCollision(i, i + 1);
+	CollisionGroup::GroupID group_id = 0;
 
 	// Create box
 	float box_size = 4.0f;
@@ -34,8 +35,6 @@ void SliderConstraintTest::Initialize()
 	// Bodies attached through slider constraints
 	for (int randomness = 0; randomness < 2; ++randomness)
 	{
-		CollisionGroup::GroupID group_id = CollisionGroup::GroupID(randomness);
-
 		Vec3 position(0, 25.0f, -randomness * 20.0f);
 		Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 		top.SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
@@ -75,29 +74,75 @@ void SliderConstraintTest::Initialize()
 
 			prev = &segment;
 		}
+
+		group_id++;
 	}
 
-	// Two light bodies attached to a heavy body (gives issues if the wrong anchor point is chosen)
-	Body *light1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, -5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(light1->GetID(), EActivation::Activate);
-	Body *heavy = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(5.0f)), Vec3(-5.0f, 7.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(heavy->GetID(), EActivation::Activate);
-	Body *light2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, 5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-	mBodyInterface->AddBody(light2->GetID(), EActivation::Activate);
+	{
+		// Two light bodies attached to a heavy body (gives issues if the wrong anchor point is chosen)
+		Body *light1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, -5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		light1->SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
+		mBodyInterface->AddBody(light1->GetID(), EActivation::Activate);
+		Body *heavy = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(5.0f)), Vec3(-5.0f, 7.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		heavy->SetCollisionGroup(CollisionGroup(group_filter, group_id, 1));
+		mBodyInterface->AddBody(heavy->GetID(), EActivation::Activate);
+		Body *light2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.1f)), Vec3(-5.0f, 7.0f, 5.2f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		light2->SetCollisionGroup(CollisionGroup(group_filter, group_id, 2));
+		mBodyInterface->AddBody(light2->GetID(), EActivation::Activate);
+		++group_id;
 
-	// Note: This violates the recommendation that body 1 is heavier than body 2, therefore this constraint will not work well (the rotation constraint will not be solved accurately)
-	SliderConstraintSettings slider1;
-	slider1.SetPoint(*light1, *heavy);
-	slider1.SetSliderAxis(Vec3::sAxisZ());
-	slider1.mLimitsMin = 0.0f;
-	slider1.mLimitsMax = 1.0f;
-	mPhysicsSystem->AddConstraint(slider1.Create(*light1, *heavy));
+		// Note: This violates the recommendation that body 1 is heavier than body 2, therefore this constraint will not work well (the rotation constraint will not be solved accurately)
+		SliderConstraintSettings slider1;
+		slider1.SetPoint(*light1, *heavy);
+		slider1.SetSliderAxis(Vec3::sAxisZ());
+		slider1.mLimitsMin = 0.0f;
+		slider1.mLimitsMax = 1.0f;
+		mPhysicsSystem->AddConstraint(slider1.Create(*light1, *heavy));
 
-	// This constraint has the heavy body as body 1 so will work fine
-	SliderConstraintSettings slider2;
-	slider2.SetPoint(*heavy, *light2);
-	slider2.SetSliderAxis(Vec3::sAxisZ());
-	slider2.mLimitsMin = 0.0f;
-	slider2.mLimitsMax = 1.0f;
-	mPhysicsSystem->AddConstraint(slider2.Create(*heavy, *light2));
+		// This constraint has the heavy body as body 1 so will work fine
+		SliderConstraintSettings slider2;
+		slider2.SetPoint(*heavy, *light2);
+		slider2.SetSliderAxis(Vec3::sAxisZ());
+		slider2.mLimitsMin = 0.0f;
+		slider2.mLimitsMax = 1.0f;
+		mPhysicsSystem->AddConstraint(slider2.Create(*heavy, *light2));
+	}
+
+	{
+		// Two bodies vertically stacked with a slider constraint
+		Body *vert1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3(5, 9, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		vert1->SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
+		mBodyInterface->AddBody(vert1->GetID(), EActivation::Activate);
+		Body *vert2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3(5, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		vert2->SetCollisionGroup(CollisionGroup(group_filter, group_id, 1));
+		mBodyInterface->AddBody(vert2->GetID(), EActivation::Activate);
+		++group_id;
+
+		SliderConstraintSettings slider;
+		slider.SetPoint(*vert1, *vert2);
+		slider.SetSliderAxis(Vec3::sAxisY());
+		slider.mLimitsMin = 0.0f;
+		slider.mLimitsMax = 2.0f;
+		mPhysicsSystem->AddConstraint(slider.Create(*vert1, *vert2));
+	}
+
+	{
+		// Two bodies vertically stacked with a slider constraint using soft limits
+		Body *vert1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3(10, 9, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		vert1->SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
+		mBodyInterface->AddBody(vert1->GetID(), EActivation::Activate);
+		Body *vert2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3(10, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		vert2->SetCollisionGroup(CollisionGroup(group_filter, group_id, 1));
+		mBodyInterface->AddBody(vert2->GetID(), EActivation::Activate);
+		++group_id;
+
+		SliderConstraintSettings slider;
+		slider.SetPoint(*vert1, *vert2);
+		slider.SetSliderAxis(Vec3::sAxisY());
+		slider.mLimitsMin = 0.0f;
+		slider.mLimitsMax = 2.0f;
+		slider.mFrequency = 1.0f;
+		slider.mDamping = 0.5f;
+		mPhysicsSystem->AddConstraint(slider.Create(*vert1, *vert2));
+	}
 }

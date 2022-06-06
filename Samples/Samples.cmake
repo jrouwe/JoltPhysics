@@ -27,6 +27,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Constraints/DistanceConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/FixedConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/FixedConstraintTest.h
+	${SAMPLES_ROOT}/Tests/Constraints/GearConstraintTest.cpp
+	${SAMPLES_ROOT}/Tests/Constraints/GearConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/HingeConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/HingeConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/PointConstraintTest.cpp
@@ -39,6 +41,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Constraints/PoweredSwingTwistConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/PoweredSliderConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/PoweredSliderConstraintTest.h
+	${SAMPLES_ROOT}/Tests/Constraints/RackAndPinionConstraintTest.cpp
+	${SAMPLES_ROOT}/Tests/Constraints/RackAndPinionConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/SwingTwistConstraintFrictionTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/SwingTwistConstraintFrictionTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/SwingTwistConstraintTest.cpp
