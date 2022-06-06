@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Constraints/ConstraintManager.h>
 #include <Jolt/Physics/IslandBuilder.h>
 #include <Jolt/Physics/PhysicsUpdateContext.h>
+#include <Jolt/Physics/PhysicsSettings.h>
 
 JPH_NAMESPACE_BEGIN
 
