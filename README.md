@@ -56,6 +56,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 	* Slider (also called prismatic).
 	* Cone.
 	* Rack and Pinion.
+	* Gear.
 	* Smooth spline paths.
 	* Swing-twist (for humanoid shoulders).
 	* 6 DOF.

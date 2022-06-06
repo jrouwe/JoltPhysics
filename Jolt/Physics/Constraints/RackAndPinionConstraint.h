@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Rack and pinion constraint (gear & slider) settings
+/// Rack and pinion constraint (slider & gear) settings
 class RackAndPinionConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
@@ -18,12 +18,13 @@ public:
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 
 	/// Create an an instance of this constraint.
+	/// Body1 should be the pinion (gear) and body 2 the rack (slider).
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
 	/// Defines the ratio between the rotation of the pinion and the translation of the rack.
 	/// The ratio is defined as: PinionRotation(t) = ratio * RackTranslation(t)
 	/// @param inNumTeethRack Number of teeth that the rack has
-	/// @param inRackLength Lenght of the rack
+	/// @param inRackLength Length of the rack
 	/// @param inNumTeethPinion Number of teeth the pinion has
 	void						SetRatio(int inNumTeethRack, float inRackLength, int inNumTeethPinion)
 	{
@@ -52,7 +53,7 @@ protected:
 class RackAndPinionConstraint final : public TwoBodyConstraint
 {
 public:
-	/// Construct slider constraint
+	/// Construct gear constraint
 								RackAndPinionConstraint(Body &inBody1, Body &inBody2, const RackAndPinionConstraintSettings &inSettings);
 
 	// Generic interface of a constraint

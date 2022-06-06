@@ -27,6 +27,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Constraints/DistanceConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/FixedConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/FixedConstraintTest.h
+	${SAMPLES_ROOT}/Tests/Constraints/GearConstraintTest.cpp
+	${SAMPLES_ROOT}/Tests/Constraints/GearConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/HingeConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/HingeConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/PointConstraintTest.cpp

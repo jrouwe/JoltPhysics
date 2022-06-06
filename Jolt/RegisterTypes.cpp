@@ -54,6 +54,7 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, PathConstraintPathHermite)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, VehicleConstraintSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, WheeledVehicleControllerSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, RackAndPinionConstraintSettings)
+JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, GearConstraintSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, MotorSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, PhysicsScene)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, PhysicsMaterial)
@@ -128,6 +129,7 @@ void RegisterTypes()
 		JPH_RTTI(PathConstraintPath),
 		JPH_RTTI(PathConstraintPathHermite),
 		JPH_RTTI(RackAndPinionConstraintSettings),
+		JPH_RTTI(GearConstraintSettings),
 		JPH_RTTI(MotorSettings),
 		JPH_RTTI(PhysicsScene),
 		JPH_RTTI(PhysicsMaterial),

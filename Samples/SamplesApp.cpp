@@ -133,6 +133,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(PoweredSwingTwistConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(SwingTwistConstraintFrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(PathConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(RackAndPinionConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(GearConstraintTest)
 
 static TestNameAndRTTI sConstraintTests[] =
 {
@@ -150,6 +151,7 @@ static TestNameAndRTTI sConstraintTests[] =
 	{ "Six DOF Constraint",					JPH_RTTI(SixDOFConstraintTest) },
 	{ "Path Constraint",					JPH_RTTI(PathConstraintTest) },
 	{ "Rack And Pinion Constraint",			JPH_RTTI(RackAndPinionConstraintTest) },
+	{ "Gear Constraint",					JPH_RTTI(GearConstraintTest) },
 	{ "Spring",								JPH_RTTI(SpringTest) },
 	{ "Constraint Singularity",				JPH_RTTI(ConstraintSingularityTest) },
 };

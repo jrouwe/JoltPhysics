@@ -8,34 +8,34 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Constraint that constrains a rotation to a translation
+/// Constraint that constrains two rotations using a gear (rotating in opposite direction)
 ///
 /// Constraint equation:
 ///
-/// C = Theta(t) - r d(t)
+/// C = Rotation1(t) + r Rotation2(t)
 ///
 /// Derivative:
 ///
 /// d/dt C = 0
-/// <=> w1 . a - r v2 . b = 0
+/// <=> w1 . a + r w2 . b = 0
 ///
 /// Jacobian:
 ///
-/// \f[J = \begin{bmatrix}0 & a^T & -r b^T & 0\end{bmatrix}\f]
+/// \f[J = \begin{bmatrix}0 & a^T & 0 & r b^T\end{bmatrix}\f]
 ///
 /// Used terms (here and below, everything in world space):\n
 /// a = axis around which body 1 rotates (normalized).\n
 /// b = axis along which body 2 slides (normalized)\n
-/// Theta(t) = rotation around a of body 1
-/// d(t) = distance body 2 slides
-/// r = ratio between rotation and translation\n
+/// Rotation1(t) = rotation around a of body 1
+/// Rotation2(t) = rotation around b of body 2
+/// r = ratio between rotation for body 1 and 2\n
 /// v = [v1, w1, v2, w2].\n
 /// v1, v2 = linear velocity of body 1 and 2.\n
 /// w1, w2 = angular velocity of body 1 and 2.\n
 /// M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].\n
 /// \f$K^{-1} = \left( J M^{-1} J^T \right)^{-1}\f$ = effective mass.\n
 /// \f$\beta\f$ = baumgarte constant.
-class RackAndPinionConstraintPart
+class GearConstraintPart
 {
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
 	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, float inLambda) const
@@ -51,7 +51,7 @@ class RackAndPinionConstraintPart
 			// Euler velocity integration: 
 			// v' = v + M^-1 P
 			ioBody1.GetMotionProperties()->AddAngularVelocityStep(inLambda * mInvI1_A);
-			ioBody2.GetMotionProperties()->SubLinearVelocityStep(inLambda * mRatio_InvM2_B);
+			ioBody2.GetMotionProperties()->AddAngularVelocityStep(inLambda * mInvI2_B);
 			return true;
 		}
 
@@ -62,23 +62,22 @@ public:
 	/// Calculate properties used during the functions below
 	/// @param inBody1 The first body that this constraint is attached to
 	/// @param inBody2 The second body that this constraint is attached to
-	/// @param inWorldSpaceHingeAxis The axis around which body 1 rotates
-	/// @param inWorldSpaceSliderAxis The axis along which body 2 slides
+	/// @param inWorldSpaceHingeAxis1 The axis around which body 1 rotates
+	/// @param inWorldSpaceHingeAxis2 The axis around which body 2 rotates
 	/// @param inRatio The ratio between rotation and translation
-	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inWorldSpaceHingeAxis, const Body &inBody2, Vec3Arg inWorldSpaceSliderAxis, float inRatio)
+	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inWorldSpaceHingeAxis1, const Body &inBody2, Vec3Arg inWorldSpaceHingeAxis2, float inRatio)
 	{
-		JPH_ASSERT(inWorldSpaceHingeAxis.IsNormalized(1.0e-4f));
-		JPH_ASSERT(inWorldSpaceSliderAxis.IsNormalized(1.0e-4f));
+		JPH_ASSERT(inWorldSpaceHingeAxis1.IsNormalized(1.0e-4f));
+		JPH_ASSERT(inWorldSpaceHingeAxis2.IsNormalized(1.0e-4f));
 
 		// Calculate: I1^-1 a
-		mInvI1_A = inBody1.GetMotionProperties()->MultiplyWorldSpaceInverseInertiaByVector(inBody1.GetRotation(), inWorldSpaceHingeAxis);
+		mInvI1_A = inBody1.GetMotionProperties()->MultiplyWorldSpaceInverseInertiaByVector(inBody1.GetRotation(), inWorldSpaceHingeAxis1);
 
-		// Calculate: r/m2 b
-		float inv_m2 = inBody2.GetMotionProperties()->GetInverseMass();
-		mRatio_InvM2_B = inRatio * inv_m2 * inWorldSpaceSliderAxis;
+		// Calculate: I2^-1 b
+		mInvI2_B = inBody2.GetMotionProperties()->MultiplyWorldSpaceInverseInertiaByVector(inBody2.GetRotation(), inWorldSpaceHingeAxis2);
 
-		// K^-1 = 1 / (J M^-1 J^T) = 1 / (a^T I1^-1 a + 1/m2 * r^2 * b . b)
-		mEffectiveMass = 1.0f / (inWorldSpaceHingeAxis.Dot(mInvI1_A) + inv_m2 * Square(inRatio));
+		// K^-1 = 1 / (J M^-1 J^T) = 1 / (a^T I1^-1 a + r^2 * b^T I2^-1 b)
+		mEffectiveMass = 1.0f / (inWorldSpaceHingeAxis1.Dot(mInvI1_A) + inWorldSpaceHingeAxis2.Dot(mInvI2_B) * Square(inRatio));
 	}
 
 	/// Deactivate this constraint
@@ -107,15 +106,15 @@ public:
 	/// Iteratively update the velocity constraint. Makes sure d/dt C(...) = 0, where C is the constraint equation.
 	/// @param ioBody1 The first body that this constraint is attached to
 	/// @param ioBody2 The second body that this constraint is attached to
-	/// @param inWorldSpaceHingeAxis The axis around which body 1 rotates
-	/// @param inWorldSpaceSliderAxis The axis along which body 2 slides
+	/// @param inWorldSpaceHingeAxis1 The axis around which body 1 rotates
+	/// @param inWorldSpaceHingeAxis2 The axis around which body 2 rotates
 	/// @param inRatio The ratio between rotation and translation
-	inline bool					SolveVelocityConstraint(Body &ioBody1, Vec3Arg inWorldSpaceHingeAxis, Body &ioBody2, Vec3Arg inWorldSpaceSliderAxis, float inRatio)
+	inline bool					SolveVelocityConstraint(Body &ioBody1, Vec3Arg inWorldSpaceHingeAxis1, Body &ioBody2, Vec3Arg inWorldSpaceHingeAxis2, float inRatio)
 	{
 		// Lagrange multiplier is:
 		//
 		// lambda = -K^-1 (J v + b)
-		float lambda = mEffectiveMass * (inRatio * inWorldSpaceSliderAxis.Dot(ioBody2.GetLinearVelocity()) - inWorldSpaceHingeAxis.Dot(ioBody1.GetAngularVelocity()));
+		float lambda = -mEffectiveMass * (inWorldSpaceHingeAxis1.Dot(ioBody1.GetAngularVelocity()) + inRatio * inWorldSpaceHingeAxis2.Dot(ioBody2.GetAngularVelocity()));
 		mTotalLambda += lambda; // Store accumulated impulse
 
 		return ApplyVelocityStep(ioBody1, ioBody2, lambda);
@@ -162,7 +161,7 @@ public:
 			if (ioBody1.IsDynamic())
 				ioBody1.AddRotationStep(lambda * mInvI1_A);
 			if (ioBody2.IsDynamic())
-				ioBody2.SubPositionStep(lambda * mRatio_InvM2_B);
+				ioBody2.AddRotationStep(lambda * mInvI2_B);
 			return true;
 		}
 
@@ -183,7 +182,7 @@ public:
 
 private:
 	Vec3						mInvI1_A;
-	Vec3						mRatio_InvM2_B;
+	Vec3						mInvI2_B;
 	float						mEffectiveMass = 0.0f;
 	float						mTotalLambda = 0.0f;
 };

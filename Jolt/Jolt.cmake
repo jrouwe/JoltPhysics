@@ -275,6 +275,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/AngleConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/AxisConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/DualAxisConstraintPart.h
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/GearConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/HingeRotationConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/PointConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/RackAndPinionConstraintPart.h
@@ -288,6 +289,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/DistanceConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/FixedConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/FixedConstraint.h
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/GearConstraint.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/GearConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/HingeConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/HingeConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/MotorSettings.cpp
