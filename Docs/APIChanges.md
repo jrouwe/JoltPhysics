@@ -4,6 +4,8 @@ This document lists all breaking API changes by date and by release tag.
 
 ## Changes between v1.1.0 and latest
 
+* 20220606 - The slider constraint now has frequency and damping for its limits, this breaks SaveBinaryState for the constraint (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
+* 20220606 - The rack and pinion and gear constraints were added, this breaks SaveBinaryState of user defined constraints as the value of EConstraintSubType::User1 changed (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
 * 20220517 - When constructing a FixedConstraint you now need to call FixedConstraintSettings::SetPoint to configure the point where the bodies attach (4f7c925c31f39eda1d8d68e4e72456b5def93d9b)
 * 20220516 - Constraint::GetType was renamed to GetSubType, a new GetType function was introduced (3e2151a009e8f11ca724754b2bd25e14d2654fb6)
 * 20220516 - Binary serialization format changed, ensure that any content saved using SaveBinaryState is recreated (3e2151a009e8f11ca724754b2bd25e14d2654fb6)
