@@ -144,6 +144,15 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 	SetDamping(inSettings.mDamping);
 }
 
+float SliderConstraint::GetCurrentPosition() const
+{
+	// See: CalculateR1R2U and CalculateSlidingAxisAndPosition
+	Vec3 r1 = mBody1->GetRotation() * mLocalSpacePosition1;
+	Vec3 r2 = mBody2->GetRotation() * mLocalSpacePosition2;
+	Vec3 u = mBody2->GetCenterOfMassPosition() + r2 - mBody1->GetCenterOfMassPosition() - r1;
+	return u.Dot(mBody1->GetRotation() * mLocalSpaceSliderAxis1);
+}
+
 void SliderConstraint::SetLimits(float inLimitsMin, float inLimitsMax)
 {
 	JPH_ASSERT(inLimitsMin <= 0.0f);

@@ -4,6 +4,8 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Constraints/RackAndPinionConstraint.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/SliderConstraint.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -93,8 +95,39 @@ bool RackAndPinionConstraint::SolveVelocityConstraint(float inDeltaTime)
 
 bool RackAndPinionConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
 {
-	// To be implemented
-	return false;
+	if (mRackConstraint == nullptr || mPinionConstraint == nullptr)
+		return false;
+
+	float rotation;
+	if (mPinionConstraint->GetSubType() == EConstraintSubType::Hinge)
+	{
+		rotation = static_cast<const HingeConstraint *>(mPinionConstraint.GetPtr())->GetCurrentAngle();
+	}
+	else
+	{
+		JPH_ASSERT(false, "Unsupported");
+		return false;
+	}
+
+	float translation;
+	if (mRackConstraint->GetSubType() == EConstraintSubType::Slider)
+	{
+		translation = static_cast<const SliderConstraint *>(mRackConstraint.GetPtr())->GetCurrentPosition();
+	}
+	else
+	{		
+		JPH_ASSERT(false, "Unsupported");
+		return false;
+	}
+
+	float error = CenterAngleAroundZero(fmod(rotation - mRatio * translation, 2.0f * JPH_PI));
+	if (error == 0.0f)
+		return false;
+
+	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
+	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
+	CalculateConstraintProperties(rotation1, rotation2);
+	return mRackAndPinionConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, error, inBaumgarte);
 }
 
 #ifdef JPH_DEBUG_RENDERER

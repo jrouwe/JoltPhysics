@@ -4,6 +4,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Constraints/GearConstraint.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -93,8 +94,39 @@ bool GearConstraint::SolveVelocityConstraint(float inDeltaTime)
 
 bool GearConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
 {
-	// To be implemented
-	return false;
+	if (mGear1Constraint == nullptr || mGear2Constraint == nullptr)
+		return false;
+
+	float gear1rot;
+	if (mGear1Constraint->GetSubType() == EConstraintSubType::Hinge)
+	{
+		gear1rot = static_cast<const HingeConstraint *>(mGear1Constraint.GetPtr())->GetCurrentAngle();
+	}
+	else
+	{
+		JPH_ASSERT(false, "Unsupported");
+		return false;
+	}
+
+	float gear2rot;
+	if (mGear2Constraint->GetSubType() == EConstraintSubType::Hinge)
+	{
+		gear2rot = static_cast<const HingeConstraint *>(mGear2Constraint.GetPtr())->GetCurrentAngle();
+	}
+	else
+	{		
+		JPH_ASSERT(false, "Unsupported");
+		return false;
+	}
+
+	float error = CenterAngleAroundZero(fmod(gear1rot + mRatio * gear2rot, 2.0f * JPH_PI));
+	if (error == 0.0f)
+		return false;
+
+	Mat44 rotation1 = Mat44::sRotation(mBody1->GetRotation());
+	Mat44 rotation2 = Mat44::sRotation(mBody2->GetRotation());
+	CalculateConstraintProperties(rotation1, rotation2);
+	return mGearConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, error, inBaumgarte);
 }
 
 #ifdef JPH_DEBUG_RENDERER
