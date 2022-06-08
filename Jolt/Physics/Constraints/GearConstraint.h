@@ -21,7 +21,7 @@ public:
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
 	/// Defines the ratio between the rotation of both gears
-	/// The ratio is defined as: Gear1Rotation(t) = ratio * Gear2Rotation(t)
+	/// The ratio is defined as: Gear1Rotation(t) = -ratio * Gear2Rotation(t)
 	/// @param inNumTeethGear1 Number of teeth that body 1 has
 	/// @param inNumTeethGear2 Number of teeth that body 2 has
 	void						SetRatio(int inNumTeethGear1, int inNumTeethGear2)
@@ -71,6 +71,9 @@ public:
 	virtual Mat44				GetConstraintToBody1Matrix() const override;
 	virtual Mat44				GetConstraintToBody2Matrix() const override;
 
+	/// The constraints that constrain both gears (2 hinges), optional and used to calculate the rotation error and fix numerical drift.
+	void						SetConstraints(const Constraint *inGear1, const Constraint *inGear2)	{ mGear1Constraint = inGear1; mGear2Constraint = inGear2; }
+
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
 	inline float				GetTotalLambda() const									{ return mGearConstraintPart.GetTotalLambda(); }
 
@@ -88,6 +91,10 @@ private:
 
 	// Ratio between gear 1 and 2
 	float						mRatio;
+
+	// The constraints that constrain both gears (2 hinges), optional and used to calculate the rotation error and fix numerical drift.
+	RefConst<Constraint>		mGear1Constraint;
+	RefConst<Constraint>		mGear2Constraint;
 
 	// RUN TIME PROPERTIES FOLLOW
 

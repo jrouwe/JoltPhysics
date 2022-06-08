@@ -78,7 +78,7 @@ void GearConstraintTest::Initialize()
 	gear2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), &gear2_cylinder);
 	for (int i = 0; i < cGear2NumTeeth; ++i)
 	{
-		Quat rotation = Quat::sRotation(Vec3::sAxisY(), 2.0f * JPH_PI * i / cGear2NumTeeth);
+		Quat rotation = Quat::sRotation(Vec3::sAxisY(), 2.0f * JPH_PI * (i + 0.5f) / cGear2NumTeeth);
 		gear2_settings.AddShape(rotation * Vec3(cGear2Radius, 0, 0), rotation, &tooth_settings);
 	}
 
@@ -92,14 +92,16 @@ void GearConstraintTest::Initialize()
 	hinge1.mPoint1 = hinge1.mPoint2 = gear1_initial_p;
 	hinge1.mHingeAxis1 = hinge1.mHingeAxis2 = Vec3::sAxisZ();
 	hinge1.mNormalAxis1 = hinge1.mNormalAxis2 = Vec3::sAxisX();
-	mPhysicsSystem->AddConstraint(hinge1.Create(*gear1, Body::sFixedToWorld));
+	Constraint *hinge1_constraint = hinge1.Create(Body::sFixedToWorld, *gear1);
+	mPhysicsSystem->AddConstraint(hinge1_constraint);
 
 	// Create a hinge for gear 1
 	HingeConstraintSettings hinge2;
 	hinge2.mPoint1 = hinge2.mPoint2 = gear2_initial_p;
 	hinge2.mHingeAxis1 = hinge2.mHingeAxis2 = Vec3::sAxisZ();
 	hinge2.mNormalAxis1 = hinge2.mNormalAxis2 = Vec3::sAxisX();
-	mPhysicsSystem->AddConstraint(hinge2.Create(*gear2, Body::sFixedToWorld));
+	Constraint *hinge2_constraint = hinge2.Create(Body::sFixedToWorld, *gear2);
+	mPhysicsSystem->AddConstraint(hinge2_constraint);
 
 	// Disable collision between gears
 	Ref<GroupFilterTable> group_filter = new GroupFilterTable(2);
@@ -112,7 +114,9 @@ void GearConstraintTest::Initialize()
 	gear.mHingeAxis1 = hinge1.mHingeAxis1;
 	gear.mHingeAxis2 = hinge2.mHingeAxis1;
 	gear.SetRatio(cGear1NumTeeth, cGear2NumTeeth);
-	mPhysicsSystem->AddConstraint(gear.Create(*gear1, *gear2));
+	GearConstraint *gear_constraint = static_cast<GearConstraint *>(gear.Create(*gear1, *gear2));
+	gear_constraint->SetConstraints(hinge1_constraint, hinge2_constraint);
+	mPhysicsSystem->AddConstraint(gear_constraint);
 
 	// Give the gear a spin
 	gear2->SetAngularVelocity(Vec3(0, 0, 3.0f));

@@ -29,7 +29,7 @@ void RackAndPinionConstraintTest::Initialize()
 	constexpr float cGearHalfWidth = 0.05f;
 	constexpr int cGearNumTeeth = 100;
 
-	constexpr float cRackLength = 5.0f;
+	constexpr float cRackLength = 10.0f;
 	constexpr float cRackHalfHeight = 0.1f;
 	constexpr float cRackHalfWidth = 0.05f;
 	constexpr int cRackNumTeeth = int(cRackLength * cGearNumTeeth / (2.0f * JPH_PI * cGearRadius));
@@ -92,7 +92,8 @@ void RackAndPinionConstraintTest::Initialize()
 	hinge.mPoint1 = hinge.mPoint2 = gear_initial_p;
 	hinge.mHingeAxis1 = hinge.mHingeAxis2 = Vec3::sAxisZ();
 	hinge.mNormalAxis1 = hinge.mNormalAxis2 = Vec3::sAxisX();
-	mPhysicsSystem->AddConstraint(hinge.Create(*gear, Body::sFixedToWorld));
+	Constraint *hinge_constraint = hinge.Create(Body::sFixedToWorld, *gear);
+	mPhysicsSystem->AddConstraint(hinge_constraint);
 
 	// Create a slider for the rack
 	SliderConstraintSettings slider;
@@ -101,7 +102,8 @@ void RackAndPinionConstraintTest::Initialize()
 	slider.mNormalAxis1 = slider.mNormalAxis2 = Vec3::sAxisZ();
 	slider.mLimitsMin = -0.5f * cRackLength;
 	slider.mLimitsMax = 0.5f * cRackLength;
-	mPhysicsSystem->AddConstraint(slider.Create(*rack, Body::sFixedToWorld));
+	Constraint *slider_constraint = slider.Create(Body::sFixedToWorld, *rack);
+	mPhysicsSystem->AddConstraint(slider_constraint);
 
 	// Disable collision between rack and gear (we want the rack and pinion constraint to take care of the relative movement)
 	Ref<GroupFilterTable> group_filter = new GroupFilterTable(2);
@@ -114,7 +116,9 @@ void RackAndPinionConstraintTest::Initialize()
 	randp.mHingeAxis = hinge.mHingeAxis1;
 	randp.mSliderAxis = slider.mSliderAxis2;
 	randp.SetRatio(cRackNumTeeth, cRackLength, cGearNumTeeth);
-	mPhysicsSystem->AddConstraint(randp.Create(*gear, *rack));
+	RackAndPinionConstraint *randp_constraint = static_cast<RackAndPinionConstraint *>(randp.Create(*gear, *rack));
+	randp_constraint->SetConstraints(hinge_constraint, slider_constraint);
+	mPhysicsSystem->AddConstraint(randp_constraint);
 
 	// Give the gear a spin
 	gear->SetAngularVelocity(Vec3(0, 0, 6.0f));

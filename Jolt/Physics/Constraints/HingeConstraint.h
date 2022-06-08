@@ -78,6 +78,9 @@ public:
 	virtual Mat44				GetConstraintToBody1Matrix() const override;
 	virtual Mat44				GetConstraintToBody2Matrix() const override;
 
+	/// Get the current rotation angle from the rest position
+	float						GetCurrentAngle() const;
+
 	// Friction control
 	void						SetMaxFrictionTorque(float inFrictionTorque)			{ mMaxFrictionTorque = inFrictionTorque; }
 	float						GetMaxFrictionTorque() const							{ return mMaxFrictionTorque; }

@@ -89,6 +89,9 @@ public:
 	virtual Mat44				GetConstraintToBody1Matrix() const override;
 	virtual Mat44				GetConstraintToBody2Matrix() const override;
 
+	/// Get the current distance from the rest position
+	float						GetCurrentPosition() const;
+
 	/// Friction control
 	void						SetMaxFrictionForce(float inFrictionForce)				{ mMaxFrictionForce = inFrictionForce; }
 	float						GetMaxFrictionForce() const								{ return mMaxFrictionForce; }

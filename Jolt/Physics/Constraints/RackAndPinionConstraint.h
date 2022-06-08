@@ -57,7 +57,7 @@ public:
 								RackAndPinionConstraint(Body &inBody1, Body &inBody2, const RackAndPinionConstraintSettings &inSettings);
 
 	// Generic interface of a constraint
-	virtual EConstraintSubType	GetSubType() const override								{ return EConstraintSubType::RackAndPinion; }
+	virtual EConstraintSubType	GetSubType() const override												{ return EConstraintSubType::RackAndPinion; }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
@@ -73,8 +73,11 @@ public:
 	virtual Mat44				GetConstraintToBody1Matrix() const override;
 	virtual Mat44				GetConstraintToBody2Matrix() const override;
 
+	/// The constraints that constrain the rack and pinion (a slider and a hinge), optional and used to calculate the position error and fix numerical drift.
+	void						SetConstraints(const Constraint *inPinion, const Constraint *inRack)	{ mPinionConstraint = inPinion; mRackConstraint = inRack; }
+
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
-	inline float				GetTotalLambda() const									{ return mRackAndPinionConstraintPart.GetTotalLambda(); }
+	inline float				GetTotalLambda() const													{ return mRackAndPinionConstraintPart.GetTotalLambda(); }
 
 private:
 	// Internal helper function to calculate the values below
@@ -90,6 +93,10 @@ private:
 
 	// Ratio between rack and pinion
 	float						mRatio;
+
+	// The constraints that constrain the rack and pinion (a slider and a hinge), optional and used to calculate the position error and fix numerical drift.
+	RefConst<Constraint>		mPinionConstraint;
+	RefConst<Constraint>		mRackConstraint;
 
 	// RUN TIME PROPERTIES FOLLOW
 

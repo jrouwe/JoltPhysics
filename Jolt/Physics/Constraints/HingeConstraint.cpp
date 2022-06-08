@@ -107,6 +107,14 @@ HingeConstraint::HingeConstraint(Body &inBody1, Body &inBody2, const HingeConstr
 	}
 }
 
+float HingeConstraint::GetCurrentAngle() const
+{
+	// See: CalculateA1AndTheta
+	Quat rotation1 = mBody1->GetRotation();
+	Quat diff = mBody2->GetRotation() * mInvInitialOrientation * rotation1.Conjugated();
+	return diff.GetRotationAngle(rotation1 * mLocalSpaceHingeAxis1);
+}
+
 void HingeConstraint::SetLimits(float inLimitsMin, float inLimitsMax)
 {
 	JPH_ASSERT(inLimitsMin <= 0.0f && inLimitsMin >= -JPH_PI);
