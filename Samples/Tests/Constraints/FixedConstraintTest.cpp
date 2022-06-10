@@ -99,7 +99,7 @@ void FixedConstraintTest::Initialize()
 
 		Body *prev_pillars[4] = { &Body::sFixedToWorld, &Body::sFixedToWorld, &Body::sFixedToWorld, &Body::sFixedToWorld };
 
-		Vec3 center(5.0f, 0, 0);
+		Vec3 center = Vec3::sZero();
 		for (int y = 0; y < 10; ++y)
 		{
 			// Create pillars
