@@ -140,11 +140,15 @@ bool FixedConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 #ifdef JPH_DEBUG_RENDERER
 void FixedConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	Vec3 com1 = mBody1->GetCenterOfMassPosition();
-	Vec3 com2 = mBody2->GetCenterOfMassPosition();
+	Mat44 com1 = mBody1->GetCenterOfMassTransform();
+	Mat44 com2 = mBody2->GetCenterOfMassTransform();
+
+	Vec3 anchor1 = com1 * mLocalSpacePosition1;
+	Vec3 anchor2 = com2 * mLocalSpacePosition2;
 
 	// Draw constraint
-	inRenderer->DrawLine(com1, com2, Color::sGreen);
+	inRenderer->DrawLine(com1.GetTranslation(), anchor1, Color::sGreen);
+	inRenderer->DrawLine(com2.GetTranslation(), anchor2, Color::sBlue);
 }
 #endif // JPH_DEBUG_RENDERER
 

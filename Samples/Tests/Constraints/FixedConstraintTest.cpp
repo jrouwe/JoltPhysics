@@ -126,8 +126,8 @@ void FixedConstraintTest::Initialize()
 				for (int j = 0; j < 2; ++j)
 				{
 					FixedConstraintSettings constraint;
-					constraint.SetPoint(*cross, *pillars[i]);
-					mPhysicsSystem->AddConstraint(constraint.Create(*cross, *pillars[(i + j) % 4]));
+					constraint.SetPoint(*pillars[(i + j) % 4], *cross);
+					mPhysicsSystem->AddConstraint(constraint.Create(*pillars[(i + j) % 4], *cross));
 				}
 
 				// Attach to previous pillar
@@ -153,8 +153,8 @@ void FixedConstraintTest::Initialize()
 		for (int i = 0; i < 4; ++i)
 		{
 			FixedConstraintSettings constraint;
-			constraint.SetPoint(*top, *prev_pillars[i]);
-			mPhysicsSystem->AddConstraint(constraint.Create(*top, *prev_pillars[i]));
+			constraint.SetPoint(*prev_pillars[i], *top);
+			mPhysicsSystem->AddConstraint(constraint.Create(*prev_pillars[i], *top));
 		}
 	}
 }
