@@ -39,7 +39,7 @@ class IObjectStreamIn : public ObjectStream
 public:
 	///@name Input type specific operations
 	virtual bool				ReadDataType(EOSDataType &outType) = 0;
-	virtual bool				ReadName(string &outName) = 0;
+	virtual bool				ReadName(String &outName) = 0;
 	virtual bool				ReadIdentifier(Identifier &outIdentifier) = 0;
 	virtual bool				ReadCount(uint32 &outCount) = 0;
 
@@ -51,7 +51,7 @@ public:
 	virtual bool				ReadPrimitiveData(uint64 &outPrimitive) = 0;
 	virtual bool				ReadPrimitiveData(float &outPrimitive) = 0;
 	virtual bool				ReadPrimitiveData(bool &outPrimitive) = 0;
-	virtual bool				ReadPrimitiveData(string &outPrimitive) = 0;
+	virtual bool				ReadPrimitiveData(String &outPrimitive) = 0;
 	virtual bool				ReadPrimitiveData(Float3 &outPrimitive) = 0;
 	virtual bool				ReadPrimitiveData(Vec3 &outPrimitive) = 0;
 	virtual bool				ReadPrimitiveData(Vec4 &outPrimitive) = 0;
@@ -81,7 +81,7 @@ public:
 	virtual void				WritePrimitiveData(const uint64 &inPrimitive) = 0;
 	virtual void				WritePrimitiveData(const float &inPrimitive) = 0;
 	virtual void				WritePrimitiveData(const bool &inPrimitive) = 0;
-	virtual void				WritePrimitiveData(const string &inPrimitive) = 0;
+	virtual void				WritePrimitiveData(const String &inPrimitive) = 0;
 	virtual void				WritePrimitiveData(const Float3 &inPrimitive) = 0;
 	virtual void				WritePrimitiveData(const Vec3 &inPrimitive) = 0;
 	virtual void				WritePrimitiveData(const Vec4 &inPrimitive) = 0;

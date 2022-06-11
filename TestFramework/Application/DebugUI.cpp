@@ -146,7 +146,7 @@ UISlider *DebugUI::CreateSlider(UIElement *inMenu, const string_view &inName, fl
 	return slider;
 }
 
-UIComboBox *DebugUI::CreateComboBox(UIElement *inMenu, const string_view &inName, const Array<string> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction)
+UIComboBox *DebugUI::CreateComboBox(UIElement *inMenu, const string_view &inName, const Array<String> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction)
 {
 	UIHorizontalStack *horiz = new UIHorizontalStack();
 	horiz->SetPaddingRight(24);

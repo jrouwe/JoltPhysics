@@ -108,7 +108,7 @@ void PathConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void PathConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	static Array<string> constraint_types = { "Free", "Tangent", "Normal", "Binormal", "Path", "Full" };
+	static Array<String> constraint_types = { "Free", "Tangent", "Normal", "Binormal", "Path", "Full" };
 
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
 		UIElement *configuration_settings = inUI->CreateMenu();

@@ -24,7 +24,7 @@ public:
 			break;
 
 		case EState::Error:
-			new (&mError) string(inRHS.mError);
+			new (&mError) String(inRHS.mError);
 			break;
 
 		case EState::Invalid:
@@ -43,7 +43,7 @@ public:
 			break;
 
 		case EState::Error:
-			new (&mError) string(move(inRHS.mError));
+			new (&mError) String(move(inRHS.mError));
 			break;
 
 		case EState::Invalid:
@@ -70,7 +70,7 @@ public:
 			break;
 
 		case EState::Error:
-			new (&mError) string(inRHS.mError);
+			new (&mError) String(inRHS.mError);
 			break;
 
 		case EState::Invalid:
@@ -94,7 +94,7 @@ public:
 			break;
 
 		case EState::Error:
-			new (&mError) string(move(inRHS.mError));
+			new (&mError) String(move(inRHS.mError));
 			break;
 
 		case EState::Invalid:
@@ -116,7 +116,7 @@ public:
 			break; 
 
 		case EState::Error:
-			mError.~string();
+			mError.~String();
 			break;
 
 		case EState::Invalid:
@@ -145,18 +145,18 @@ public:
 	bool				HasError() const							{ return mState == EState::Error; }
 
 	/// Get the error value
-	const string &		GetError() const							{ JPH_ASSERT(HasError()); return mError; }
+	const String &		GetError() const							{ JPH_ASSERT(HasError()); return mError; }
 
 	/// Set an error value
-	void				SetError(const char *inError)				{ Clear(); new (&mError) string(inError); mState = EState::Error; }
-	void				SetError(const string_view &inError)		{ Clear(); new (&mError) string(inError); mState = EState::Error; }
-	void				SetError(string &&inError)					{ Clear(); new (&mError) string(move(inError)); mState = EState::Error; }
+	void				SetError(const char *inError)				{ Clear(); new (&mError) String(inError); mState = EState::Error; }
+	void				SetError(const string_view &inError)		{ Clear(); new (&mError) String(inError); mState = EState::Error; }
+	void				SetError(String &&inError)					{ Clear(); new (&mError) String(move(inError)); mState = EState::Error; }
 
 private:
 	union
 	{
 		Type			mResult;									///< The actual result object
-		string			mError;										///< The error description if the result failed
+		String			mError;										///< The error description if the result failed
 	};
 
 	/// State of the result

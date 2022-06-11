@@ -96,7 +96,7 @@ private:
 	/// Helper class to freeze ProfileSamples per thread while processing them
 	struct ThreadSamples
 	{
-		string					mThreadName;
+		String					mThreadName;
 		ProfileSample *			mSamplesBegin;
 		ProfileSample *			mSamplesEnd;
 	};
@@ -150,7 +150,7 @@ private:
 	mutex						mLock;																///< Lock that protects mThreads
 	Array<ProfileThread *>		mThreads;															///< List of all active threads
 	bool						mDump = false;														///< When true, the samples are dumped next frame
-	string						mDumpTag;															///< When not empty, this overrides the auto incrementing number of the dump filename
+	String						mDumpTag;															///< When not empty, this overrides the auto incrementing number of the dump filename
 };							
 
 // Class that contains the information of a single scoped measurement
@@ -175,7 +175,7 @@ public:
 
 	static const uint cMaxSamples = 65536;
 
-	string						mThreadName;														///< Name of the thread that we're collecting information for
+	String						mThreadName;														///< Name of the thread that we're collecting information for
 	ProfileSample				mSamples[cMaxSamples];												///< Buffer of samples
 	uint						mCurrentSample = 0;													///< Next position to write a sample to
 

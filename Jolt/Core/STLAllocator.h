@@ -70,5 +70,7 @@ public:
 
 // Declare STL containers that use our allocator
 template <class T> using Array = vector<T, STLAllocator<T>>;
+using String = basic_string<char, char_traits<char>, STLAllocator<char>>;
+using IStringStream = basic_istringstream<char, char_traits<char>, STLAllocator<char>>;
 
 JPH_NAMESPACE_END

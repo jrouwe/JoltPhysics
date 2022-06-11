@@ -472,12 +472,12 @@ SamplesApp::SamplesApp()
 	mDebugUI->ShowMenu(main_menu);
 
 	// Get test name from commandline
-	string cmd_line = ToLower(GetCommandLineA());
-	Array<string> args;
+	String cmd_line = ToLower(GetCommandLineA());
+	Array<String> args;
 	StringToVector(cmd_line, args, " ");
 	if (args.size() == 2)
 	{
-		string cmd = args[1];
+		String cmd = args[1];
 		if (cmd == "alltests")
 		{
 			// Run all tests
@@ -493,7 +493,7 @@ SamplesApp::SamplesApp()
 				for (uint i = 0; i < c.mNumTests; ++i)
 				{
 					TestNameAndRTTI &t = c.mTests[i];
-					string test_name = ToLower(t.mRTTI->GetName());
+					String test_name = ToLower(t.mRTTI->GetName());
 					if (test_name == cmd)
 					{
 						test = t.mRTTI;

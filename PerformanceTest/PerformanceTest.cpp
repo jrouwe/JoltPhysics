@@ -177,7 +177,7 @@ int main(int argc, char** argv)
 
 		// Determine motion quality
 		EMotionQuality motion_quality = mq == 0? EMotionQuality::Discrete : EMotionQuality::LinearCast;
-		string motion_quality_str = mq == 0? "Discrete" : "LinearCast";
+		String motion_quality_str = mq == 0? "Discrete" : "LinearCast";
 
 		// Determine which thread counts to test
 		Array<uint> thread_permutations;
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
 			physics_system.OptimizeBroadPhase();
 
 			// A tag used to identify the test
-			string tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
+			String tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
 					     
 		#ifdef JPH_DEBUG_RENDERER
 			// Open renderer output

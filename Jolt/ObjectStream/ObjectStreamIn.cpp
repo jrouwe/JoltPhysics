@@ -193,7 +193,7 @@ void *ObjectStreamIn::ReadObject(const RTTI *& outRTTI)
 {
 	// Read the object class
 	void *object = nullptr;
-	string class_name;
+	String class_name;
 	if (ReadName(class_name)) 
 	{
 		// Get class description
@@ -250,7 +250,7 @@ void *ObjectStreamIn::ReadObject(const RTTI *& outRTTI)
 bool ObjectStreamIn::ReadRTTI()
 {
 	// Read class name and find it's attribute info
-	string class_name;
+	String class_name;
 	if (!ReadName(class_name)) 
 		return false;
 
@@ -273,7 +273,7 @@ bool ObjectStreamIn::ReadRTTI()
 		AttributeDescription attribute;
 		
 		// Read name
-		string attribute_name;
+		String attribute_name;
 		if (!ReadName(attribute_name)) 
 			return false;
 		
@@ -485,9 +485,9 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 						break;
 					}
 				
-				case EOSDataType::T_string:
+				case EOSDataType::T_String:
 					{	
-						string temporary;
+						String temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}

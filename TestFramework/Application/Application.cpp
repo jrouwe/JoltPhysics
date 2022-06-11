@@ -295,7 +295,7 @@ void Application::DrawFPS(float inDeltaTime)
 	}
 
 	// Create string
-	string fps = StringFormat("%.1f", (double)mFPS);
+	String fps = StringFormat("%.1f", (double)mFPS);
 
 	// Get size of text on screen
 	Float2 text_size = mFont->MeasureText(fps);
@@ -315,7 +315,7 @@ void Application::DrawFPS(float inDeltaTime)
 	// Draw paused string if the app is paused
 	if (mIsPaused)
 	{
-		string paused_str = "P: Unpause, ESC: Menu";
+		string_view paused_str = "P: Unpause, ESC: Menu";
 		Float2 pause_size = mFont->MeasureText(paused_str);
 		mUI->DrawText(mRenderer->GetWindowWidth() - 5 - int(pause_size.x * mFont->GetCharHeight()), 5, paused_str, mFont);
 	}

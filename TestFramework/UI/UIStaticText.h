@@ -34,10 +34,10 @@ protected:
 	/// Draw element custom
 	void				DrawCustom(ColorArg inColor) const;
 
-	string				GetWrappedText() const;
+	String				GetWrappedText() const;
 
 	RefConst<Font>		mFont;
-	string				mText;
+	String				mText;
 	Color				mTextColor { Color(220, 220, 200) };
 	Color				mDisabledTextColor { Color::sGrey };
 	int					mTextPadLeft = 0;

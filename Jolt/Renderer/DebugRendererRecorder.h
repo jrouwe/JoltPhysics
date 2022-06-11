@@ -68,7 +68,7 @@ public:
 										TextBlob(Vec3Arg inPosition, const string_view &inString, const Color &inColor, float inHeight) : mPosition(inPosition), mString(inString), mColor(inColor), mHeight(inHeight) { }
 
 		Vec3							mPosition;
-		string							mString;
+		String							mString;
 		Color							mColor;
 		float							mHeight;
 	};

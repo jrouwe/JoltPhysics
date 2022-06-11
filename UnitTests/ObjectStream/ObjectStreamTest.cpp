@@ -34,7 +34,7 @@ public:
 	Vec3						mVec3 = Vec3::sZero();
 	Vec4						mVec4 = Vec4::sZero();
 	Mat44						mMat44 = Mat44::sIdentity();
-	string						mString;
+	JPH::String					mString;
 };
 
 class TestSerializableBase2

@@ -331,7 +331,7 @@ private:
 		uint64					mCollectorTicks = 0;
 	};
 	
-	using LayerToStats = map<string, Stat>;
+	using LayerToStats = map<String, Stat>;
 
 	/// Trace the stats of a single query type to the TTY
 	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;

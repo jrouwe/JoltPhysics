@@ -16,7 +16,7 @@ public:
 
 	///@name Input type specific operations
 	virtual bool				ReadDataType(EOSDataType &outType) override;
-	virtual bool				ReadName(string &outName) override;
+	virtual bool				ReadName(String &outName) override;
 	virtual bool				ReadIdentifier(Identifier &outIdentifier) override;
 	virtual bool				ReadCount(uint32 &outCount) override;
 
@@ -27,7 +27,7 @@ public:
 	virtual bool				ReadPrimitiveData(uint64 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(float &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(bool &outPrimitive) override;
-	virtual bool				ReadPrimitiveData(string &outPrimitive) override;
+	virtual bool				ReadPrimitiveData(String &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Float3 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Vec3 &outPrimitive) override;
 	virtual bool				ReadPrimitiveData(Vec4 &outPrimitive) override;
@@ -36,7 +36,7 @@ public:
 
 private:
 	bool						ReadChar(char &outChar);
-	bool						ReadWord(string &outWord);
+	bool						ReadWord(String &outWord);
 };
 
 JPH_NAMESPACE_END

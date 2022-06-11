@@ -138,7 +138,7 @@ void Profiler::DumpInternal()
 		}
 
 	// Determine tag of this profile
-	string tag;
+	String tag;
 	if (mDumpTag.empty())
 	{
 		// Next sequence number
@@ -167,9 +167,9 @@ void Profiler::DumpInternal()
 	DumpChart(tag.c_str(), threads, key_to_aggregators, aggregators);
 }
 
-static string sHTMLEncode(const char *inString)
+static String sHTMLEncode(const char *inString)
 {
-	string str(inString);
+	String str(inString);
 	StringReplace(str, "<", "&lt;");
 	StringReplace(str, ">", "&gt;");
 	return str;
@@ -345,7 +345,7 @@ void Profiler::DumpChart(const char *inTag, const Threads &inThreads, const KeyT
 		if (!first)
 			f << ",";
 		first = false;
-		string name = "\"" + sHTMLEncode(a.mName) + "\"";
+		String name = "\"" + sHTMLEncode(a.mName) + "\"";
 		f << name;
 	}
 	f << "],\ncalls: [";

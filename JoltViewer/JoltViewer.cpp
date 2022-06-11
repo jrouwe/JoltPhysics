@@ -22,8 +22,8 @@
 JoltViewer::JoltViewer()
 {
 	// Get file name from commandline
-	string cmd_line = GetCommandLineA();
-	Array<string> args;
+	String cmd_line = GetCommandLineA();
+	Array<String> args;
 	StringToVector(cmd_line, args, " ");
 	
 	// Check arguments
@@ -34,7 +34,7 @@ JoltViewer::JoltViewer()
 	}
 
 	// Open file
-	ifstream stream(args[1], ifstream::in | ifstream::binary);
+	ifstream stream(args[1].c_str(), ifstream::in | ifstream::binary);
 	if (!stream.is_open())
 	{
 		MessageBoxA(nullptr, "Could not open recording file", "Error", MB_OK);

@@ -39,7 +39,7 @@ protected:
 	DebugUI *					mDebugUI;
 
 	/// A string that is shown on screen to indicate the status of the application
-	string						mStatusString;
+	String						mStatusString;
 
 public:
 	/// Constructor

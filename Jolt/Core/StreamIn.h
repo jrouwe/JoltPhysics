@@ -45,9 +45,9 @@ public:
 	}
 
 	/// Read a string from the binary stream (reads the number of characters and then the characters)
-	void				Read(string &outString)
+	void				Read(String &outString)
 	{
-		string::size_type len = 0;
+		String::size_type len = 0;
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{

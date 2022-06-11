@@ -21,7 +21,7 @@ bool ObjectStreamBinaryIn::ReadDataType(EOSDataType &outType)
 	return true;
 }
 
-bool ObjectStreamBinaryIn::ReadName(string &outName)
+bool ObjectStreamBinaryIn::ReadName(String &outName)
 {
 	return ReadPrimitiveData(outName);
 }
@@ -107,7 +107,7 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(bool &outPrimitive)
 	return true;
 }
 
-bool ObjectStreamBinaryIn::ReadPrimitiveData(string &outPrimitive)
+bool ObjectStreamBinaryIn::ReadPrimitiveData(String &outPrimitive)
 {
 	// Read length or ID of string
 	uint32 len;

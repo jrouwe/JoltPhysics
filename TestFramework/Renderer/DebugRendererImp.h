@@ -153,7 +153,7 @@ private:
 										Text(Vec3Arg inPosition, const string_view &inText, ColorArg inColor, float inHeight) : mPosition(inPosition), mText(inText), mColor(inColor), mHeight(inHeight) { }
 
 		Vec3							mPosition;
-		string							mText;
+		String							mText;
 		Color							mColor;
 		float							mHeight;
 	};

@@ -37,9 +37,9 @@ public:
 	}
 
 	/// Write a string to the binary stream (writes the number of characters and then the characters)
-	void				Write(const string &inString)
+	void				Write(const String &inString)
 	{
-		string::size_type len = inString.size();
+		String::size_type len = inString.size();
 		Write(len);
 		if (!IsFailed())
 			WriteBytes(inString.data(), len);
