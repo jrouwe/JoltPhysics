@@ -15,7 +15,7 @@
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/RenderInstances.h>
 #include <Jolt/Core/Mutex.h>
-#include <unordered_map>
+#include <Jolt/Core/UnorderedMap.h>
 
 class Renderer;
 class Font;
@@ -124,7 +124,7 @@ private:
 		Array<int>						mLightStartIdx;
 	};
 
-	using InstanceMap = unordered_map<GeometryRef, Instances>;
+	using InstanceMap = UnorderedMap<GeometryRef, Instances>;
 
 	/// Clear map of instances and make it ready for the next frame
 	void								ClearMap(InstanceMap &ioInstances);

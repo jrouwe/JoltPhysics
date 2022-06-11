@@ -6,7 +6,7 @@
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Core/Mutex.h>
-#include <unordered_map>
+#include <Jolt/Core/UnorderedMap.h>
 
 // Tests the contact listener callbacks
 class ContactListenerImpl : public ContactListener
@@ -30,7 +30,7 @@ public:
 
 private:
 	// Map that keeps track of the current state of contacts based on the contact listener callbacks
-	using StateMap = unordered_map<SubShapeIDPair, ContactPoints>;
+	using StateMap = UnorderedMap<SubShapeIDPair, ContactPoints>;
 	Mutex					mStateMutex;
 	StateMap				mState;
 

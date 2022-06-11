@@ -5,11 +5,11 @@
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <mutex>
-#include <unordered_map>
 JPH_SUPPRESS_WARNINGS_STD_END
 
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Core/TickCounter.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 #if defined(JPH_EXTERNAL_PROFILE)
 
@@ -137,7 +137,7 @@ private:
 
 	using Threads = Array<ThreadSamples>;
 	using Aggregators = Array<Aggregator>;
-	using KeyToAggregator = unordered_map<const char *, size_t>;
+	using KeyToAggregator = UnorderedMap<const char *, size_t>;
 
 	/// Helper function to aggregate profile sample data
 	static void					sAggregate(int inDepth, uint32 inColor, ProfileSample *&ioSample, const ProfileSample *inEnd, Aggregators &ioAggregators, KeyToAggregator &ioKeyToAggregator);

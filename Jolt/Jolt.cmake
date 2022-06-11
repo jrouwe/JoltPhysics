@@ -55,6 +55,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/TempAllocator.h
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.cpp
 	${JOLT_PHYSICS_ROOT}/Core/TickCounter.h
+	${JOLT_PHYSICS_ROOT}/Core/UnorderedMap.h
 	${JOLT_PHYSICS_ROOT}/Geometry/AABox.h
 	${JOLT_PHYSICS_ROOT}/Geometry/AABox4.h
 	${JOLT_PHYSICS_ROOT}/Geometry/ClipPoly.h

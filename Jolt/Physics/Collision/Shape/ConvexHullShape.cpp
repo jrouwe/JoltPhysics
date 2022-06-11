@@ -15,10 +15,10 @@
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <unordered_set>
-#include <unordered_map>
 JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
@@ -124,7 +124,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	mInertia = Mat44::sIdentity() * (covariance_matrix(0, 0) + covariance_matrix(1, 1) + covariance_matrix(2, 2)) - covariance_matrix;
 
 	// Convert polygons fron the builder to our internal representation
-	using VtxMap = unordered_map<int, uint8>;
+	using VtxMap = UnorderedMap<int, uint8>;
 	VtxMap vertex_map;
 	for (BuilderFace *builder_face : builder_faces)
 	{

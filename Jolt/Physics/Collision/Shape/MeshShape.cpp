@@ -24,6 +24,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/Indexify.h>
@@ -35,10 +36,6 @@
 #include <Jolt/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h>
 #include <Jolt/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -253,7 +250,7 @@ void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleLi
 	};
 
 	// Build a list of edge to triangles
-	using EdgeToTriangle = unordered_map<Edge, TriangleIndices, EdgeHash>;
+	using EdgeToTriangle = UnorderedMap<Edge, TriangleIndices, EdgeHash>;
 	EdgeToTriangle edge_to_triangle;
 	edge_to_triangle.reserve(ioIndices.size() * 3);
 	for (uint triangle_idx = 0; triangle_idx < ioIndices.size(); ++triangle_idx)

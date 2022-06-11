@@ -35,7 +35,7 @@ public:
 	virtual void				WritePrimitiveData(const Mat44 &inPrimitive) override;
 
 private:
-	using StringTable = unordered_map<string, uint32>;
+	using StringTable = UnorderedMap<string, uint32>;
 
 	StringTable					mStringTable;
 	uint32						mNextStringID = 0x80000000;

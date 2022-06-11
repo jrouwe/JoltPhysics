@@ -6,10 +6,10 @@
 #include <Jolt/ObjectStream/ObjectStream.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
-#include <unordered_map>
 JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
@@ -131,8 +131,8 @@ private:
 		const RTTI *			mRTTI;
 	};
 	
-	using IdentifierMap = unordered_map<Identifier, ObjectInfo>;
-	using ClassDescriptionMap = unordered_map<string, ClassDescription>;
+	using IdentifierMap = UnorderedMap<Identifier, ObjectInfo>;
+	using ClassDescriptionMap = UnorderedMap<string, ClassDescription>;
 
 	ClassDescriptionMap			mClassDescriptionMap;
 	IdentifierMap				mIdentifierMap;											///< Links identifier to an object pointer

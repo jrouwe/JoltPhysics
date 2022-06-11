@@ -57,7 +57,7 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the shape nor the group filter.
 	void					RestoreBinaryState(StreamIn &inStream);
 
-	using GroupFilterToIDMap = unordered_map<const GroupFilter *, uint32>;
+	using GroupFilterToIDMap = UnorderedMap<const GroupFilter *, uint32>;
 	using IDToGroupFilterMap = Array<RefConst<GroupFilter>>;
 	using ShapeToIDMap = Shape::ShapeToIDMap;
 	using IDToShapeMap = Shape::IDToShapeMap;

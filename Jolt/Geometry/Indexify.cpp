@@ -3,11 +3,8 @@
 
 #include <Jolt/Jolt.h>
 
+#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Geometry/Indexify.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -19,7 +16,7 @@ void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedT
 	outVertices.clear();
 
 	// Find unique vertices
-	unordered_map<Float3, uint32> vertex_map;
+	UnorderedMap<Float3, uint32> vertex_map;
 	for (const Triangle &t : inTriangles)
 		for (const Float3 &v : t.mV)
 		{

@@ -108,7 +108,7 @@ private:
 #endif // JPH_DEBUG_RENDERER
 
 	// Drawing using GetTriangles interface
-	using ShapeToGeometryMap = unordered_map<RefConst<Shape>, DebugRenderer::GeometryRef>;
+	using ShapeToGeometryMap = UnorderedMap<RefConst<Shape>, DebugRenderer::GeometryRef>;
 	ShapeToGeometryMap		mShapeToGeometry;
 
 	// The test to run

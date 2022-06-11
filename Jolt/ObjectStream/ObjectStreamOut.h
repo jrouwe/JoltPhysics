@@ -5,12 +5,12 @@
 
 #include <Jolt/ObjectStream/ObjectStream.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <queue>
 #include <fstream>
 #include <unordered_set>
-#include <unordered_map>
 JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
@@ -82,7 +82,7 @@ private:
 		const RTTI *			mRTTI;
 	};
 
-	using IdentifierMap = unordered_map<const void *, ObjectInfo>;
+	using IdentifierMap = UnorderedMap<const void *, ObjectInfo>;
 	using ClassSet = unordered_set<const RTTI *>;
 	using ObjectQueue = queue<const void *>;
 	using ClassQueue = queue<const RTTI *>;

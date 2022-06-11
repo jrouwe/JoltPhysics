@@ -12,10 +12,10 @@
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/Result.h>
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
 #include <unordered_set>
 JPH_SUPPRESS_WARNINGS_STD_END
 
@@ -318,8 +318,8 @@ public:
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
 	virtual void					RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
-	using ShapeToIDMap = unordered_map<const Shape *, uint32>;
-	using MaterialToIDMap = unordered_map<const PhysicsMaterial *, uint32>;
+	using ShapeToIDMap = UnorderedMap<const Shape *, uint32>;
+	using MaterialToIDMap = UnorderedMap<const PhysicsMaterial *, uint32>;
 	using IDToShapeMap = Array<Ref<Shape>>;
 	using IDToMaterialMap = Array<Ref<PhysicsMaterial>>;
 

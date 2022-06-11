@@ -10,13 +10,10 @@
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/HashCombine.h>
+#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Math/Float2.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <Jolt/Geometry/AABox.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -255,10 +252,10 @@ private:
 
 	JPH_MAKE_HASH_STRUCT(SwingLimits, SwingLimitsHasher, t.mSwingYHalfAngle, t.mSwingZHalfAngle)
 
-	using SwingBatches = unordered_map<SwingLimits, GeometryRef, SwingLimitsHasher>;
+	using SwingBatches = UnorderedMap<SwingLimits, GeometryRef, SwingLimitsHasher>;
 	SwingBatches						mSwingLimits;
 
-	using PieBatces = unordered_map<float, GeometryRef>;
+	using PieBatces = UnorderedMap<float, GeometryRef>;
 	PieBatces							mPieLimits;
 };
 

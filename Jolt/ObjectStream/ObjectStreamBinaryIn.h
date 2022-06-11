@@ -35,7 +35,7 @@ public:
 	virtual bool				ReadPrimitiveData(Mat44 &outPrimitive) override;
 
 private:
-	using StringTable = unordered_map<uint32, string>;
+	using StringTable = UnorderedMap<uint32, string>;
 
 	StringTable					mStringTable;
 	uint32						mNextStringID = 0x80000000;

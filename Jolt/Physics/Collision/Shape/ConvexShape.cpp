@@ -493,7 +493,7 @@ void ConvexShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inC
 void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	// Sample directions and map which faces belong to which directions
-	using FaceToDirection = unordered_map<SupportingFace, Array<Vec3>>;
+	using FaceToDirection = UnorderedMap<SupportingFace, Array<Vec3>>;
 	FaceToDirection faces;
 	for (Vec3 v : Vec3::sUnitSphere)
 	{
