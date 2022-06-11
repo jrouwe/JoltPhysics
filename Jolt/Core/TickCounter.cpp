@@ -62,7 +62,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 		while (ifs.good())
 		{
 			// Get next line
-			String line;
+			string line;
 			getline(ifs, line);
 		
 		#if defined(JPH_CPU_X86)
@@ -78,11 +78,11 @@ static const uint64 sProcessorTicksPerSecond = []() {
 			if (strncmp(line.c_str(), cpu_str, num_chars) == 0)
 			{
 				// Find ':'
-				String::size_type pos = line.find(':', num_chars);
+				string::size_type pos = line.find(':', num_chars);
 				if (pos != String::npos)
 				{		
 					// Convert to number
-					String freq = line.substr(pos + 1);
+					string freq = line.substr(pos + 1);
 					return uint64(stod(freq) * 1000000.0);
 				}
 			}
