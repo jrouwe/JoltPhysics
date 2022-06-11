@@ -38,6 +38,8 @@ public:
 	class Node : public NonCopyable
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 							Node();
 							~Node();

@@ -52,6 +52,8 @@ public:
 class MeshShape final : public Shape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									MeshShape() : Shape(EShapeType::Mesh, EShapeSubType::Mesh) { }
 									MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult);

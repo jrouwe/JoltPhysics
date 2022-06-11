@@ -10,6 +10,8 @@ JPH_NAMESPACE_BEGIN
 /// Structure that holds a single ray cast
 struct RayCast
 {
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Transform this ray using inTransform
 	RayCast						Transformed(Mat44Arg inTransform) const
 	{
@@ -32,6 +34,8 @@ struct RayCast
 class RayCastSettings
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// How backfacing triangles should be treated
 	EBackFaceMode				mBackFaceMode				= EBackFaceMode::IgnoreBackFaces;
 

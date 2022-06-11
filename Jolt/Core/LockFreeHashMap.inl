@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 
 inline LFHMAllocator::~LFHMAllocator()
 {
-	delete [] mObjectStore;
+	Free(mObjectStore);
 }
 
 inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
@@ -19,7 +19,7 @@ inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
 	JPH_ASSERT(mObjectStore == nullptr);
 
 	mObjectStoreSizeBytes = inObjectStoreSizeBytes;
-	mObjectStore = new uint8 [inObjectStoreSizeBytes];
+	mObjectStore = reinterpret_cast<uint8 *>(Alloc(inObjectStoreSizeBytes));
 }
 
 inline void LFHMAllocator::Clear()

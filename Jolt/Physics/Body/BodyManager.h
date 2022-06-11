@@ -27,6 +27,8 @@ using BodyIDVector = Array<BodyID>;
 class BodyManager : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 									~BodyManager();
 

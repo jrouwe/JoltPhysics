@@ -23,6 +23,8 @@ class OrientedBox;
 class DebugRenderer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 										DebugRenderer();
 	virtual								~DebugRenderer();
@@ -166,6 +168,8 @@ public:
 	class Geometry : public RefTarget<Geometry>
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 										Geometry(const AABox &inBounds) : mBounds(inBounds) { }
 										Geometry(const Batch &inBatch, const AABox &inBounds) : mBounds(inBounds) { mLODs.push_back({ inBatch, FLT_MAX }); }

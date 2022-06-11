@@ -31,6 +31,8 @@ public:
 class StaticCompoundShape final : public CompoundShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									StaticCompoundShape() : CompoundShape(EShapeSubType::StaticCompound) { }
 									StaticCompoundShape(const StaticCompoundShapeSettings &inSettings, TempAllocator &inTempAllocator, ShapeResult &outResult);

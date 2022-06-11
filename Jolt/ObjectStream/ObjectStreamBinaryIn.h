@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 class ObjectStreamBinaryIn : public ObjectStreamIn
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit 					ObjectStreamBinaryIn(istream &inStream);
 

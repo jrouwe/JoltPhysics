@@ -13,6 +13,8 @@ JPH_NAMESPACE_BEGIN
 class SubShapeIDPair
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							SubShapeIDPair() = default;
 							SubShapeIDPair(const BodyID &inBody1ID, const SubShapeID &inSubShapeID1, const BodyID &inBody2ID, const SubShapeID &inSubShapeID2) : mBody1ID(inBody1ID), mSubShapeID1(inSubShapeID1), mBody2ID(inBody2ID), mSubShapeID2(inSubShapeID2) { }

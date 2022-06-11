@@ -9,6 +9,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] Float4
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 				Float4() = default; ///< Intentionally not initialized for performance reasons
 				Float4(const Float4 &inRHS) = default;
 				Float4(float inX, float inY, float inZ, float inW) : x(inX), y(inY), z(inZ), w(inW) { }

@@ -158,6 +158,8 @@ private:
 class Shape : public RefTarget<Shape>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	using ShapeResult = ShapeSettings::ShapeResult;
 
 	/// Constructor

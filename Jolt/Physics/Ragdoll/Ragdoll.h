@@ -109,6 +109,8 @@ private:
 class Ragdoll : public RefTarget<Ragdoll>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit							Ragdoll(PhysicsSystem *inSystem) : mSystem(inSystem) { }
 

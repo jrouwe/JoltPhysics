@@ -14,6 +14,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] DVec3
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	/// Internal helper function that checks that W is equal to Z, so e.g. dividing by it should not generate div by 0
 	JPH_INLINE void				CheckW() const									{ JPH_ASSERT(reinterpret_cast<const uint64 *>(mD32)[2] == reinterpret_cast<const uint64 *>(mD32)[3]); } // Avoid asserts when both components are NaN

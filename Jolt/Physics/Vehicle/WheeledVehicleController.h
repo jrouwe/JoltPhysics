@@ -40,6 +40,8 @@ public:
 class WheelWV : public Wheel
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit					WheelWV(const WheelSettingsWV &inWheel);
 
@@ -83,6 +85,8 @@ public:
 class WheeledVehicleController : public VehicleController
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 								WheeledVehicleController(const WheeledVehicleControllerSettings &inSettings, VehicleConstraint &inConstraint);
 

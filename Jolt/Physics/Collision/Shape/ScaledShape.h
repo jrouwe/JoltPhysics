@@ -31,6 +31,8 @@ class ScaledShapeSettings final : public DecoratedShapeSettings
 class ScaledShape final : public DecoratedShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									ScaledShape() : DecoratedShape(EShapeSubType::Scaled) { }
 									ScaledShape(const ScaledShapeSettings &inSettings, ShapeResult &outResult);

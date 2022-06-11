@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 class Factory
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Create an object
 	void *						CreateObject(const char *inName);
 

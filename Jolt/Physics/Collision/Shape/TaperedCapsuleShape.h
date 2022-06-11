@@ -36,6 +36,8 @@ class TaperedCapsuleShapeSettings final : public ConvexShapeSettings
 class TaperedCapsuleShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							TaperedCapsuleShape() : ConvexShape(EShapeSubType::TaperedCapsule) { }
 							TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSettings, ShapeResult &outResult);

@@ -16,17 +16,19 @@
 
 JPH_NAMESPACE_BEGIN
 
+static SphereShape sFixedToWorldShape(FLT_EPSILON);
 Body Body::sFixedToWorld(false);
 
 Body::Body(bool) :
 	mPosition(Vec3::sZero()),
 	mRotation(Quat::sIdentity()),
-	mShape(new SphereShape(FLT_EPSILON)), // Dummy shape
+	mShape(&sFixedToWorldShape), // Dummy shape
 	mFriction(0.0f),
 	mRestitution(0.0f),
 	mObjectLayer(cObjectLayerInvalid),
 	mMotionType(EMotionType::Static)
 {
+	sFixedToWorldShape.SetEmbedded();
 }
 
 void Body::SetMotionType(EMotionType inMotionType)

@@ -40,6 +40,8 @@ public:
 class Wheel
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / destructor
 	explicit				Wheel(const WheelSettings &inSettings);
 	virtual					~Wheel() = default;

@@ -10,6 +10,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] Sphere
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	inline				Sphere() = default;
 	inline				Sphere(const Float3 &inCenter, float inRadius)			: mCenter(inCenter), mRadius(inRadius) { }

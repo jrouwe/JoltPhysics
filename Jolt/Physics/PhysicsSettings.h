@@ -25,6 +25,8 @@ constexpr int cMaxPhysicsBarriers = 8;
 
 struct PhysicsSettings
 {
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Size of body pairs array, corresponds to the maximum amount of potential body pairs that can be in flight at any time.
 	/// Setting this to a low value will use less memory but slow down simulation as threads may run out of narrow phase work.
 	int			mMaxInFlightBodyPairs = 16384;

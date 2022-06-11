@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 class ObjectStreamBinaryOut : public ObjectStreamOut
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor and destructor
 	explicit 					ObjectStreamBinaryOut(ostream &inStream);
 

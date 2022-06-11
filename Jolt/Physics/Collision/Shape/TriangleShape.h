@@ -33,6 +33,8 @@ public:
 class TriangleShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							TriangleShape() : ConvexShape(EShapeSubType::Triangle) { }
 							TriangleShape(const TriangleShapeSettings &inSettings, ShapeResult &outResult);

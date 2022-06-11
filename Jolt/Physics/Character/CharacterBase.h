@@ -19,6 +19,8 @@ class StateRecorder;
 class CharacterBaseSettings : public RefTarget<CharacterBaseSettings>
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Virtual destructor
 	virtual								~CharacterBaseSettings() = default;
 
@@ -34,6 +36,8 @@ public:
 class CharacterBase : public RefTarget<CharacterBase>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 										CharacterBase(const CharacterBaseSettings *inSettings, PhysicsSystem *inSystem);
 

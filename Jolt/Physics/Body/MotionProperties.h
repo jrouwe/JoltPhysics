@@ -17,6 +17,8 @@ class StateRecorder;
 class MotionProperties
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Motion quality, or how well it detects collisions when it has a high velocity
 	EMotionQuality			GetMotionQuality() const										{ return mMotionQuality; }
 	void					SetMotionQuality(EMotionQuality inQuality)						{ mMotionQuality = inQuality; }

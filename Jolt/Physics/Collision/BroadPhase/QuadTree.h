@@ -18,6 +18,9 @@ JPH_NAMESPACE_BEGIN
 /// During the UpdatePrepare/Finalize() call the tree is rebuilt to achieve a tight fit again.
 class QuadTree : public NonCopyable
 {
+public:
+	JPH_OVERRIDE_NEW_DELETE
+
 private:
 	// Forward declare
 	class AtomicNodeID;
@@ -26,6 +29,8 @@ private:
 	class NodeID
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Default constructor does not initialize
 		inline 					NodeID() = default;
 

@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 class BroadPhaseBruteForce final : public BroadPhase
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	// Implementing interface of BroadPhase (see BroadPhase for documentation)
 	virtual void		AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddState inAddState) override;
 	virtual void		RemoveBodies(BodyID *ioBodies, int inNumber) override;

@@ -22,6 +22,8 @@ JPH_NAMESPACE_BEGIN
 class JobSystemThreadPool final : public JobSystem
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Creates a thread pool.
 	/// @see JobSystemThreadPool::Init
 							JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
@@ -84,6 +86,8 @@ private:
 	class BarrierImpl : public Barrier
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 							BarrierImpl();
 		virtual				~BarrierImpl() override;

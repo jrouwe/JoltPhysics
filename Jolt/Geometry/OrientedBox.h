@@ -16,6 +16,8 @@ class AABox;
 class [[nodiscard]] OrientedBox
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 					OrientedBox() = default;
 					OrientedBox(Mat44Arg inOrientation, Vec3Arg inHalfExtents)			: mOrientation(inOrientation), mHalfExtents(inHalfExtents) { }

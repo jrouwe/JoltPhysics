@@ -71,6 +71,8 @@ private:
 	class Edge
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 		explicit		Edge(int inStartIdx)						: mStartIdx(inStartIdx) { }
 

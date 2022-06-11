@@ -18,6 +18,8 @@ class CharacterVirtual;
 class CharacterVirtualSettings : public CharacterBaseSettings
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Vector indicating the up direction of the character
 	Vec3								mUp = Vec3::sAxisY();
 
@@ -50,6 +52,8 @@ public:
 class CharacterContactListener
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual								~CharacterContactListener() = default;
 
@@ -68,6 +72,8 @@ public:
 class CharacterVirtual : public CharacterBase
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	/// @param inSettings The settings for the character
 	/// @param inPosition Initial position for the character

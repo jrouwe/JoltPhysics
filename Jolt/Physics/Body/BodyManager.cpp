@@ -25,6 +25,8 @@ JPH_NAMESPACE_BEGIN
 class BodyWithMotionProperties : public Body
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	MotionProperties		mMotionProperties;
 };
 

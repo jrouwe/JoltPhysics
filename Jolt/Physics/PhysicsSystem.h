@@ -25,6 +25,8 @@ class PhysicsStepListener;
 class PhysicsSystem : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / Destructor
 								PhysicsSystem()												: mContactManager(mPhysicsSettings) { }
 								~PhysicsSystem();

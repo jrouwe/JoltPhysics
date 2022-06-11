@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 class ObjectStreamTextIn : public ObjectStreamIn
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit					ObjectStreamTextIn(istream &inStream);
 

@@ -26,6 +26,8 @@ public:
 	class Edge : public NonCopyable
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 						Edge(Face *inFace, int inStartIdx)	: mFace(inFace), mStartIdx(inStartIdx) { }
 
@@ -50,6 +52,8 @@ public:
 	class Face : public NonCopyable
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Destructor
 						~Face();
 

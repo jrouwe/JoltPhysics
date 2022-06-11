@@ -22,6 +22,8 @@ using Constraints = Array<Ref<Constraint>>;
 class ConstraintManager : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Add a new constraint. This is thread safe.
 	/// Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void					Add(Constraint **inConstraints, int inNumber);

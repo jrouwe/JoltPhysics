@@ -18,6 +18,8 @@ JPH_NAMESPACE_BEGIN
 class DebugRendererRecorder final : public DebugRenderer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 										DebugRendererRecorder(StreamOut &inStream) : mStream(inStream) { Initialize(); }
 
@@ -95,6 +97,8 @@ private:
 	class BatchImpl : public RefTargetVirtual
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 										BatchImpl(uint32 inID)		: mID(inID) {  }
 
 		virtual void					AddRef() override			{ ++mRefCount; }

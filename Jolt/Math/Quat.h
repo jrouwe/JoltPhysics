@@ -31,6 +31,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] alignas(16) Quat
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	///@name Constructors
 	///@{
 	inline						Quat() = default; ///< Intentionally not initialized for performance reasons

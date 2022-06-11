@@ -35,6 +35,8 @@ class CapsuleShapeSettings final : public ConvexShapeSettings
 class CapsuleShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							CapsuleShape() : ConvexShape(EShapeSubType::Capsule) { }
 							CapsuleShape(const CapsuleShapeSettings &inSettings, ShapeResult &outResult);

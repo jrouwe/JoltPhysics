@@ -9,6 +9,8 @@ JPH_NAMESPACE_BEGIN
 class SubShapeID
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Underlying storage type
 	using Type = uint32;
 

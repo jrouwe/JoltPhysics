@@ -69,6 +69,7 @@ JPH_NAMESPACE_BEGIN
 // JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL
 #define JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(class_name)															\
 public:																												\
+	JPH_OVERRIDE_NEW_DELETE																							\
 	JPH_DECLARE_RTTI_NON_VIRTUAL(class_name)																		\
 	JPH_DECLARE_SERIALIZATION_FUNCTIONS(friend, class_name)															\
 
@@ -98,6 +99,7 @@ public:																												\
 // JPH_DECLARE_SERIALIZABLE_VIRTUAL - Use for concrete, non-base classes
 #define JPH_DECLARE_SERIALIZABLE_VIRTUAL(class_name)																\
 public:																												\
+	JPH_OVERRIDE_NEW_DELETE																							\
 	JPH_DECLARE_RTTI_VIRTUAL(class_name)																			\
 	JPH_DECLARE_SERIALIZATION_FUNCTIONS(friend, class_name)															\
 
@@ -109,6 +111,7 @@ public:																												\
 // JPH_DECLARE_SERIALIZABLE_ABSTRACT - Use for abstract, non-base classes
 #define JPH_DECLARE_SERIALIZABLE_ABSTRACT(class_name)																\
 public:																												\
+	JPH_OVERRIDE_NEW_DELETE																							\
 	JPH_DECLARE_RTTI_ABSTRACT(class_name)																			\
 	JPH_DECLARE_SERIALIZATION_FUNCTIONS(friend, class_name)															\
 
@@ -120,6 +123,7 @@ public:																												\
 // JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE - Use for concrete base classes
 #define JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE(class_name)															\
 public:																												\
+	JPH_OVERRIDE_NEW_DELETE																							\
 	JPH_DECLARE_RTTI_VIRTUAL_BASE(class_name)																		\
 	JPH_DECLARE_SERIALIZATION_FUNCTIONS(friend, class_name)															\
 
@@ -131,6 +135,7 @@ public:																												\
 // JPH_DECLARE_SERIALIZABLE_ABSTRACT_BASE - Use for abstract base class
 #define JPH_DECLARE_SERIALIZABLE_ABSTRACT_BASE(class_name)															\
 public:																												\
+	JPH_OVERRIDE_NEW_DELETE																							\
 	JPH_DECLARE_RTTI_ABSTRACT_BASE(class_name)																		\
 	JPH_DECLARE_SERIALIZATION_FUNCTIONS(friend, class_name)															\
 

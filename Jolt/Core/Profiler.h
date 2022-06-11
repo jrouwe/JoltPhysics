@@ -76,6 +76,8 @@ class ProfileThread;
 class Profiler : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Increments the frame counter to provide statistics per frame
 	void						NextFrame();
 
@@ -157,6 +159,8 @@ private:
 class alignas(16) ProfileSample : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	const char *				mName;																///< User defined name of this item
 	uint32						mColor;																///< Color to use for this sample
 	uint8						mDepth;																///< Calculated depth
@@ -169,6 +173,8 @@ public:
 class ProfileThread : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	inline						ProfileThread(const string_view &inThreadName);
 	inline						~ProfileThread();

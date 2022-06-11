@@ -39,6 +39,8 @@ public:
 class ConvexHullShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Maximum amount of points supported in a convex hull. Note that while constructing a hull, interior points are discarded so you can provide more points.
 	/// The ConvexHullShapeSettings::Create function will return an error when too many points are provided.
 	static constexpr int	cMaxPointsInHull = 256;

@@ -24,6 +24,8 @@ class Font;
 class DebugRendererImp final : public DebugRenderer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 										DebugRendererImp(Renderer *inRenderer, const Font *inFont);
 

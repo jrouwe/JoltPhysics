@@ -51,6 +51,8 @@ protected:
 class GearConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Construct gear constraint
 								GearConstraint(Body &inBody1, Body &inBody2, const GearConstraintSettings &inSettings);
 

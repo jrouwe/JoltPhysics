@@ -31,6 +31,8 @@ public:
 class WheelTV : public Wheel
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit					WheelTV(const WheelSettingsTV &inWheel);
 
@@ -75,6 +77,8 @@ public:
 class TrackedVehicleController : public VehicleController
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 								TrackedVehicleController(const TrackedVehicleControllerSettings &inSettings, VehicleConstraint &inConstraint);
 

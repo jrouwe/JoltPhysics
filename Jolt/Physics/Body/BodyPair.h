@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 /// Structure that holds a body pair
 struct BodyPair
 {
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							BodyPair() = default;
 							BodyPair(BodyID inA, BodyID inB)							: mBodyA(inA), mBodyB(inB) { }

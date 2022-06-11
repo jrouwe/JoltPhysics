@@ -85,6 +85,8 @@ protected:
 class Constraint : public RefTarget<Constraint>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit					Constraint(const ConstraintSettings &inSettings) :
 #ifdef JPH_DEBUG_RENDERER

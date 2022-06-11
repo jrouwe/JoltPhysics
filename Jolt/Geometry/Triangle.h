@@ -9,6 +9,8 @@ JPH_NAMESPACE_BEGIN
 class Triangle
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 					Triangle() = default;
 					Triangle(const Float3 &inV1, const Float3 &inV2, const Float3 &inV3) : mV { inV1, inV2, inV3 } { }

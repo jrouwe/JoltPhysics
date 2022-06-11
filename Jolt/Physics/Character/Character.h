@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 class CharacterSettings : public CharacterBaseSettings
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Layer that this character will be added to
 	ObjectLayer							mLayer = 0;
 
@@ -32,6 +34,8 @@ public:
 class Character : public CharacterBase
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	/// @param inSettings The settings for the character
 	/// @param inPosition Initial position for the character
