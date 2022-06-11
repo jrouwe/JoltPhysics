@@ -259,12 +259,12 @@ int ConvexHullBuilder::GetNumVerticesUsed() const
 	return (int)used_verts.size();
 }
 
-bool ConvexHullBuilder::ContainsFace(const vector<int> &inIndices) const
+bool ConvexHullBuilder::ContainsFace(const Array<int> &inIndices) const
 {
 	for (Face *f : mFaces)
 	{
 		Edge *e = f->mFirstEdge;
-		vector<int>::const_iterator index = find(inIndices.begin(), inIndices.end(), e->mStartIdx);
+		Array<int>::const_iterator index = find(inIndices.begin(), inIndices.end(), e->mStartIdx);
 		if (index != inIndices.end())
 		{
 			size_t matches = 0;
@@ -404,13 +404,13 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		// First project all points in 2D space
 		Vec3 base1 = initial_plane_normal.GetNormalizedPerpendicular();
 		Vec3 base2 = initial_plane_normal.Cross(base1);
-		vector<Vec3> positions_2d;
+		Array<Vec3> positions_2d;
 		positions_2d.reserve(mPositions.size());
 		for (Vec3 v : mPositions)
 			positions_2d.push_back(Vec3(base1.Dot(v), base2.Dot(v), 0));
 
 		// Build hull
-		vector<int> edges_2d;
+		Array<int> edges_2d;
 		ConvexHullBuilder2D builder_2d(positions_2d);
 		ConvexHullBuilder2D::EResult result = builder_2d.Initialize(idx1, idx2, idx3, inMaxVertices, inTolerance, edges_2d);
 
@@ -419,7 +419,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		Face *f2 = CreateFace();
 
 		// Create edges for face 1
-		vector<Edge *> edges_f1;
+		Array<Edge *> edges_f1;
 		edges_f1.reserve(edges_2d.size());
 		for (int start_idx : edges_2d)
 		{
@@ -433,7 +433,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		edges_f1.back()->mNextEdge = f1->mFirstEdge;
 
 		// Create edges for face 2
-		vector<Edge *> edges_f2;
+		Array<Edge *> edges_f2;
 		edges_f2.reserve(edges_2d.size());
 		for (int i = (int)edges_2d.size() - 1; i >= 0; --i)
 		{

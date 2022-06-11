@@ -45,7 +45,7 @@ private:
 	};
 
 	// Scratch area to store the bins
-	vector<Bin>				mBins;
+	Array<Bin>				mBins;
 };
 
 JPH_NAMESPACE_END

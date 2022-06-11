@@ -44,7 +44,7 @@ private:
 
 	/// The list of parsed frames
 	using Frame = DebugRendererRecorder::Frame;
-	vector<Frame>						mFrames;
+	Array<Frame>						mFrames;
 };
 
 JPH_NAMESPACE_END

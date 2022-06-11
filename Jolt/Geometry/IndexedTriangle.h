@@ -98,8 +98,8 @@ public:
 	uint32			mMaterialIndex = 0;
 };
 
-using IndexedTriangleNoMaterialList = vector<IndexedTriangleNoMaterial>;
-using IndexedTriangleList = vector<IndexedTriangle>;
+using IndexedTriangleNoMaterialList = Array<IndexedTriangleNoMaterial>;
+using IndexedTriangleList = Array<IndexedTriangle>;
 
 JPH_NAMESPACE_END
 

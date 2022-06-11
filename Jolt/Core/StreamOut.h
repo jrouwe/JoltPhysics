@@ -29,10 +29,10 @@ public:
 	template <class T, class A>
 	void				Write(const vector<T, A> &inT)
 	{
-		typename vector<T>::size_type len = inT.size();
+		typename Array<T>::size_type len = inT.size();
 		Write(len);
 		if (!IsFailed())
-			for (typename vector<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T>::size_type i = 0; i < len; ++i)
 				Write(inT[i]);
 	}
 

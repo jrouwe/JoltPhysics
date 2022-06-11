@@ -473,7 +473,7 @@ SamplesApp::SamplesApp()
 
 	// Get test name from commandline
 	string cmd_line = ToLower(GetCommandLineA());
-	vector<string> args;
+	Array<string> args;
 	StringToVector(cmd_line, args, " ");
 	if (args.size() == 2)
 	{
@@ -690,7 +690,7 @@ RefConst<Shape> SamplesApp::CreateProbeShape()
 	case EProbeShape::ConvexHull:
 		{
 			// Create tetrahedron
-			vector<Vec3> tetrahedron;
+			Array<Vec3> tetrahedron;
 			tetrahedron.push_back(Vec3::sZero());
 			tetrahedron.push_back(Vec3(0.2f, 0, 0.4f));
 			tetrahedron.push_back(Vec3(0.4f, 0, 0));
@@ -721,7 +721,7 @@ RefConst<Shape> SamplesApp::CreateProbeShape()
 
 	case EProbeShape::StaticCompound:
 		{
-			vector<Vec3> tetrahedron;
+			Array<Vec3> tetrahedron;
 			tetrahedron.push_back(Vec3::sZero());
 			tetrahedron.push_back(Vec3(-0.2f, 0, 0.4f));
 			tetrahedron.push_back(Vec3(0, 0.2f, 0));
@@ -750,7 +750,7 @@ RefConst<Shape> SamplesApp::CreateProbeShape()
 
 	case EProbeShape::MutableCompound:
 		{
-			vector<Vec3> tetrahedron;
+			Array<Vec3> tetrahedron;
 			tetrahedron.push_back(Vec3::sZero());
 			tetrahedron.push_back(Vec3(-0.2f, 0, 0.4f));
 			tetrahedron.push_back(Vec3(0, 0.2f, 0));
@@ -797,7 +797,7 @@ RefConst<Shape> SamplesApp::CreateShootObjectShape()
 
 	case EShootObjectShape::ConvexHull:
 		{
-			vector<Vec3> vertices = {
+			Array<Vec3> vertices = {
 				Vec3(-0.044661f, 0.001230f, 0.003877f),
 				Vec3(-0.024743f, -0.042562f, 0.003877f),
 				Vec3(-0.012336f, -0.021073f, 0.048484f),
@@ -953,7 +953,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			settings.mTreatConvexAsSolid = mTreatConvexAsSolid;
 
 			// Cast ray
-			vector<RayCastResult> hits;
+			Array<RayCastResult> hits;
 			if (mMaxHits == 0)
 			{
 				AnyHitCollisionCollector<CastRayCollector> collector;
@@ -1080,7 +1080,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			settings.mCollectFacesMode = mCollectFacesMode;
 			settings.mMaxSeparationDistance = mMaxSeparationDistance;
 
-			vector<CollideShapeResult> hits;
+			Array<CollideShapeResult> hits;
 			if (mMaxHits == 0)
 			{
 				AnyHitCollisionCollector<CollideShapeCollector> collector;
@@ -1169,7 +1169,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			settings.mCollectFacesMode = mCollectFacesMode;
 
 			// Cast shape
-			vector<ShapeCastResult> hits;
+			Array<ShapeCastResult> hits;
 			if (mMaxHits == 0)
 			{
 				AnyHitCollisionCollector<CastShapeCollector> collector;
@@ -1977,7 +1977,7 @@ void SamplesApp::DrawPhysics()
 					if (geometry == nullptr)
 					{
 						// Geometry not cached
-						vector<DebugRenderer::Triangle> triangles;
+						Array<DebugRenderer::Triangle> triangles;
 
 						// Start iterating all triangles of the shape
 						Shape::GetTrianglesContext context;

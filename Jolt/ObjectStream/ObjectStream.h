@@ -110,7 +110,7 @@ public:
 
 // Define serialization templates
 template <class T>
-bool OSIsType(vector<T> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)	
+bool OSIsType(Array<T> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)	
 { 
 	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName)); 
 }
@@ -141,7 +141,7 @@ bool OSIsType(RefConst<T> *, int inArrayDepth, EOSDataType inDataType, const cha
 
 /// Define serialization templates for dynamic arrays
 template <class T>
-bool OSReadData(IObjectStreamIn &ioStream, vector<T> &inArray)
+bool OSReadData(IObjectStreamIn &ioStream, Array<T> &inArray)
 {
 	bool continue_reading = true;
 
@@ -219,14 +219,14 @@ bool OSReadData(IObjectStreamIn &ioStream, RefConst<T> &inRef)
 
 // Define serialization templates for dynamic arrays
 template <class T>
-void OSWriteDataType(IObjectStreamOut &ioStream, vector<T> *)		
+void OSWriteDataType(IObjectStreamOut &ioStream, Array<T> *)		
 { 
 	ioStream.WriteDataType(EOSDataType::Array); 
 	OSWriteDataType(ioStream, (T *)nullptr); 
 }
 
 template <class T>
-void OSWriteData(IObjectStreamOut &ioStream, const vector<T> &inArray)
+void OSWriteData(IObjectStreamOut &ioStream, const Array<T> &inArray)
 {
 	// Write size of array
 	ioStream.HintNextItem();

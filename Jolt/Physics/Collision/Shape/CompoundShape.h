@@ -38,7 +38,7 @@ public:
 		uint32						mUserData = 0;											///< User data value (can be used by the application for any purpose)
 	};
 
-	using SubShapes = vector<SubShapeSettings>;
+	using SubShapes = Array<SubShapeSettings>;
 
 	SubShapes						mSubShapes;
 };
@@ -228,7 +228,7 @@ public:
 
 	static_assert(sizeof(SubShape) == (JPH_CPU_ADDRESS_BITS == 64? 40 : 36), "Compiler added unexpected padding");
 
-	using SubShapes = vector<SubShape>;
+	using SubShapes = Array<SubShape>;
 
 	/// Access to the sub shapes of this compound
 	const SubShapes &				GetSubShapes() const									{ return mSubShapes; }

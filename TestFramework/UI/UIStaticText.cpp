@@ -131,7 +131,7 @@ void UIStaticText::DrawCustom(ColorArg inColor) const
 		else if (mTextAlignment == CENTER)
 		{
 			// Split lines
-			vector<string> lines;
+			Array<string> lines;
 			StringToVector(text, lines, "\n");
 
 			// Amount of space we have horizontally
@@ -151,7 +151,7 @@ void UIStaticText::DrawCustom(ColorArg inColor) const
 			JPH_ASSERT(mTextAlignment == RIGHT);
 
 			// Split lines
-			vector<string> lines;
+			Array<string> lines;
 			StringToVector(text, lines, "\n");
 
 			// Center each line individually

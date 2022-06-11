@@ -111,7 +111,7 @@ private:
 		explicit 				ClassDescription(const RTTI *inRTTI)					: mRTTI(inRTTI) { }
 
 		const RTTI *			mRTTI = nullptr;
-		vector<AttributeDescription>	mAttributes;
+		Array<AttributeDescription>	mAttributes;
 	};
 	
 	struct ObjectInfo
@@ -136,7 +136,7 @@ private:
 
 	ClassDescriptionMap			mClassDescriptionMap;
 	IdentifierMap				mIdentifierMap;											///< Links identifier to an object pointer
-	vector<Link>				mUnresolvedLinks;										///< All pointers (links) are resolved after reading the entire file, e.g. when all object exist
+	Array<Link>					mUnresolvedLinks;										///< All pointers (links) are resolved after reading the entire file, e.g. when all object exist
 };
 
 JPH_NAMESPACE_END

@@ -76,7 +76,7 @@ public:
 
 	VehicleEngineSettings		mEngine;									///< The properties of the engine
 	VehicleTransmissionSettings	mTransmission;								///< The properties of the transmission (aka gear box)
-	vector<VehicleDifferentialSettings> mDifferentials;						///< List of differentials and their properties
+	Array<VehicleDifferentialSettings> mDifferentials;						///< List of differentials and their properties
 };
 
 /// Runtime controller class
@@ -87,7 +87,7 @@ public:
 								WheeledVehicleController(const WheeledVehicleControllerSettings &inSettings, VehicleConstraint &inConstraint);
 
 	/// Typedefs
-	using Differentials = vector<VehicleDifferentialSettings>;
+	using Differentials = Array<VehicleDifferentialSettings>;
 
 	/// Set input from driver
 	/// @param inForward Value between -1 and 1 for auto transmission and value between 0 and 1 indicating desired driving direction and amount the gas pedal is pressed

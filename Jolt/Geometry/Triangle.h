@@ -26,6 +26,6 @@ public:
 	uint32			mMaterialIndex = 0;			///< Follows mV[3] so that we can read mV as 4 vectors
 };
 
-using TriangleList = vector<Triangle>;
+using TriangleList = Array<Triangle>;
 
 JPH_NAMESPACE_END

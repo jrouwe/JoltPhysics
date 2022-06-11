@@ -80,8 +80,8 @@ public:
 	/// Also note that increasing mBlockSize saves more memory than reducing the amount of bits per sample.
 	uint32							mBitsPerSample = 8;
 
-	vector<float>					mHeightSamples;
-	vector<uint8>					mMaterialIndices;
+	Array<float>					mHeightSamples;
+	Array<uint8>					mMaterialIndices;
 
 	/// The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
 	PhysicsMaterialList				mMaterials;
@@ -185,7 +185,7 @@ private:
 	void							CalculateActiveEdges();
 	
 	/// Store material indices in the least amount of bits per index possible
-	void							StoreMaterialIndices(const vector<uint8> &inMaterialIndices);
+	void							StoreMaterialIndices(const Array<uint8> &inMaterialIndices);
 
 	/// Get the amount of horizontal/vertical blocks
 	inline uint						GetNumBlocks() const					{ return mSampleCount / mBlockSize; }
@@ -247,18 +247,18 @@ private:
 	uint8							mSampleMask = 0xff;					///< All bits set for a sample: (1 << mBitsPerSample) - 1, used to indicate that there's no collision
 	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16;	///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
-	vector<RangeBlock>				mRangeBlocks;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
-	vector<uint8>					mHeightSamples;						///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
-	vector<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags. 
+	Array<RangeBlock>				mRangeBlocks;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
+	Array<uint8>					mHeightSamples;						///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
+	Array<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags. 
 
 	/// Materials
 	PhysicsMaterialList				mMaterials;							///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
-	vector<uint8>					mMaterialIndices;					///< Compressed to the minimum amount of bits per material index (mSampleCount - 1) * (mSampleCount - 1) * mNumBitsPerMaterialIndex bits of data
+	Array<uint8>					mMaterialIndices;					///< Compressed to the minimum amount of bits per material index (mSampleCount - 1) * (mSampleCount - 1) * mNumBitsPerMaterialIndex bits of data
 	uint32							mNumBitsPerMaterialIndex = 0;		///< Number of bits per material index
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Temporary rendering data
-	mutable vector<DebugRenderer::GeometryRef>	mGeometry;
+	mutable Array<DebugRenderer::GeometryRef> mGeometry;
 	mutable bool					mCachedUseMaterialColors = false;	///< This is used to regenerate the triangle batch if the drawing settings change
 #endif // JPH_DEBUG_RENDERER
 };

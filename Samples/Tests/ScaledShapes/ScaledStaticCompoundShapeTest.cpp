@@ -21,7 +21,7 @@ void ScaledStaticCompoundShapeTest::Initialize()
 	CreateFloor();
 
 	// Left end
-	vector<Vec3> end1;
+	Array<Vec3> end1;
 	end1.push_back(Vec3(0, 0, 0));
 	end1.push_back(Vec3(0, 0, 1));
 	end1.push_back(Vec3(2, 0, 0));
@@ -33,7 +33,7 @@ void ScaledStaticCompoundShapeTest::Initialize()
 	RefConst<ShapeSettings> end1_shape = new ConvexHullShapeSettings(end1);
 
 	// Right end
-	vector<Vec3> end2;
+	Array<Vec3> end2;
 	end2.push_back(Vec3(0, 0, 0));
 	end2.push_back(Vec3(0, 0, 5));
 	end2.push_back(Vec3(0, 1, 0));
@@ -45,7 +45,7 @@ void ScaledStaticCompoundShapeTest::Initialize()
 	RefConst<ShapeSettings> end2_shape = new ConvexHullShapeSettings(end2);
 
 	// Central part
-	vector<Vec3> center;
+	Array<Vec3> center;
 	center.push_back(Vec3(0, 0, 0));
 	center.push_back(Vec3(0, 0, 1));
 	center.push_back(Vec3(0, 1, 0));

@@ -252,7 +252,7 @@ private:
 	Mutex						mStepListenersMutex;
 
 	/// List of physics step listeners
-	using StepListeners = vector<PhysicsStepListener *>;
+	using StepListeners = Array<PhysicsStepListener *>;
 	StepListeners				mStepListeners;
 
 	/// This is the global gravity vector

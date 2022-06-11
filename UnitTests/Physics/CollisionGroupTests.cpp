@@ -30,7 +30,7 @@ TEST_SUITE("CollisionGroupTests")
 
 		// Disable some pairs
 		using SubGroupPair = pair<CollisionGroup::SubGroupID, CollisionGroup::SubGroupID>;
-		vector<SubGroupPair> pairs = { 
+		Array<SubGroupPair> pairs = { 
 			SubGroupPair(CollisionGroup::SubGroupID(1), CollisionGroup::SubGroupID(2)), 
 			SubGroupPair(CollisionGroup::SubGroupID(9), CollisionGroup::SubGroupID(5)), 
 			SubGroupPair(CollisionGroup::SubGroupID(3), CollisionGroup::SubGroupID(7)), 

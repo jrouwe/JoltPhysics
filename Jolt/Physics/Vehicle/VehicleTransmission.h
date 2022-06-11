@@ -30,8 +30,8 @@ public:
 	void					RestoreBinaryState(StreamIn &inStream);
 
 	ETransmissionMode		mMode = ETransmissionMode::Auto;			///< How to switch gears
-	vector<float>			mGearRatios { 2.66f, 1.78f, 1.3f, 1.0f, 0.74f }; ///< Ratio in rotation rate between engine and gear box, first element is 1st gear, 2nd element 2nd gear etc.
-	vector<float>			mReverseGearRatios { -2.90f };				///< Ratio in rotation rate between engine and gear box when driving in reverse
+	Array<float>			mGearRatios { 2.66f, 1.78f, 1.3f, 1.0f, 0.74f }; ///< Ratio in rotation rate between engine and gear box, first element is 1st gear, 2nd element 2nd gear etc.
+	Array<float>			mReverseGearRatios { -2.90f };				///< Ratio in rotation rate between engine and gear box when driving in reverse
 	float					mSwitchTime = 0.5f;							///< How long it takes to switch gears (s), only used in auto mode
 	float					mClutchReleaseTime = 0.3f;					///< How long it takes to release the clutch (go to full friction)
 	float					mShiftUpRPM = 4000.0f;						///< If RPM of engine is bigger then this we will shift a gear up, only used in auto mode

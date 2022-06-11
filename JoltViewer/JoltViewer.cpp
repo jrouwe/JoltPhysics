@@ -23,7 +23,7 @@ JoltViewer::JoltViewer()
 {
 	// Get file name from commandline
 	string cmd_line = GetCommandLineA();
-	vector<string> args;
+	Array<string> args;
 	StringToVector(cmd_line, args, " ");
 	
 	// Check arguments

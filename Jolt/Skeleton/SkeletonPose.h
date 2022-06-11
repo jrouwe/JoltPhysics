@@ -17,8 +17,8 @@ class SkeletonPose
 {
 public:
 	using JointState = SkeletalAnimation::JointState;
-	using JointStateVector = vector<JointState>;
-	using Mat44Vector = vector<Mat44>;
+	using JointStateVector = Array<JointState>;
+	using Mat44Vector = Array<Mat44>;
 
 	///@name Skeleton
 	///@{

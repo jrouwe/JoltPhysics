@@ -117,5 +117,5 @@ public:
 
 private:
 	BodyCreationSettings	mMeshSettings;
-	vector<Ref<Shape>>		mShapes;
+	Array<Ref<Shape>>		mShapes;
 };

@@ -60,6 +60,6 @@ private:
 		bool			operator < (const BodyAndCount &inRHS) const { return mBodyID < inRHS.mBodyID; }
 	};
 
-	using BodiesInSensor = vector<BodyAndCount>;
+	using BodiesInSensor = Array<BodyAndCount>;
 	BodiesInSensor		mBodiesInSensor[NumSensors];		// Dynamic bodies that are currently inside the sensor
 };

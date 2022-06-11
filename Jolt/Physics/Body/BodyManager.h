@@ -18,10 +18,10 @@ class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
 /// Array of bodies
-using BodyVector = vector<Body *>;
+using BodyVector = Array<Body *>;
 
 /// Array of body ID's
-using BodyIDVector = vector<BodyID>;
+using BodyIDVector = Array<BodyID>;
 
 /// Class that contains all bodies
 class BodyManager : public NonCopyable
@@ -248,7 +248,7 @@ private:
 	mutable BodyMutexes				mBodyMutexes;
 
 	/// List of next sequence number for a body ID
-	vector<uint8>					mBodySequenceNumbers;
+	Array<uint8>					mBodySequenceNumbers;
 
 	/// Mutex that protects the mActiveBodies array
 	mutable Mutex					mActiveBodiesMutex;

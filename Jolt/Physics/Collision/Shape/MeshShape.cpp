@@ -530,14 +530,14 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 				}
 			}
 
-			vector<DebugRenderer::Triangle> &		mTriangles;
+			Array<DebugRenderer::Triangle> &		mTriangles;
 			const PhysicsMaterialList &				mMaterials;
 			bool									mUseMaterialColors;
 			bool									mDrawTriangleGroups;
 			int										mColorIdx = 0;
 		};
 		
-		vector<DebugRenderer::Triangle> triangles;
+		Array<DebugRenderer::Triangle> triangles;
 		Visitor visitor { triangles, mMaterials, mCachedUseMaterialColors, mCachedTrianglesColoredPerGroup };
 		WalkTree(visitor);
 		mGeometry = new DebugRenderer::Geometry(inRenderer->CreateTriangleBatch(triangles), GetLocalBounds());
@@ -1118,14 +1118,14 @@ void MeshShape::SaveBinaryState(StreamOut &inStream) const
 {
 	Shape::SaveBinaryState(inStream);
 
-	inStream.Write(static_cast<const ByteBufferVector &>(mTree)); // Make sure we use the vector<> overload
+	inStream.Write(static_cast<const ByteBufferVector &>(mTree)); // Make sure we use the Array<> overload
 }
 
 void MeshShape::RestoreBinaryState(StreamIn &inStream)
 {
 	Shape::RestoreBinaryState(inStream);
 
-	inStream.Read(static_cast<ByteBufferVector &>(mTree)); // Make sure we use the vector<> overload
+	inStream.Read(static_cast<ByteBufferVector &>(mTree)); // Make sure we use the Array<> overload
 }
 
 void MeshShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const

@@ -70,7 +70,7 @@ public:
 		float				CalculateSAHCost(float inCostTraversal, float inCostLeaf) const;
 
 		/// Recursively get children (breadth first) to get in total inN children (or less if there are no more)
-		void				GetNChildren(uint inN, vector<const Node *> &outChildren) const;
+		void				GetNChildren(uint inN, Array<const Node *> &outChildren) const;
 
 		/// Bounding box
 		AABox				mBounds;

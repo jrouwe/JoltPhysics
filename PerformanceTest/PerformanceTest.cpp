@@ -162,8 +162,8 @@ int main(int argc, char** argv)
 	// Create mapping table from object layer to broadphase layer
 	BPLayerInterfaceImpl broad_phase_layer_interface;
 
-	// Start profiling this thread
-	JPH_PROFILE_THREAD_START("Main");
+	// Start profiling this program
+	JPH_PROFILE_START("Main");
 
 	// Trace header
 	cout << "Motion Quality, Thread Count, Steps / Second, Hash" << endl;
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
 		string motion_quality_str = mq == 0? "Discrete" : "LinearCast";
 
 		// Determine which thread counts to test
-		vector<uint> thread_permutations;
+		Array<uint> thread_permutations;
 		if (specified_threads > 0)
 			thread_permutations.push_back((uint)specified_threads - 1);
 		else
@@ -310,8 +310,8 @@ int main(int argc, char** argv)
 	delete Factory::sInstance;
 	Factory::sInstance = nullptr;
 
-	// End profiling this thread
-	JPH_PROFILE_THREAD_END();
+	// End profiling this program
+	JPH_PROFILE_END();
 
 	return 0;
 }

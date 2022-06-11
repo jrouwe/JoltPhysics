@@ -123,7 +123,7 @@ protected:
 
 private:
 	uint					mNumSubGroups;									///< The number of subgroups that this group filter supports
-	vector<uint8>			mTable;											///< The table of bits that indicates which pairs collide
+	Array<uint8>			mTable;											///< The table of bits that indicates which pairs collide
 };
 
 JPH_NAMESPACE_END

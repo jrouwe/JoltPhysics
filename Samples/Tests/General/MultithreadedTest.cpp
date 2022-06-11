@@ -73,7 +73,7 @@ void MultithreadedTest::BoxSpawner()
 
 	default_random_engine random;
 
-	vector<BodyID> bodies;
+	Array<BodyID> bodies;
 
 	while (!mIsQuitting)
 	{
@@ -155,7 +155,7 @@ void MultithreadedTest::RagdollSpawner()
 
 	CollisionGroup::GroupID group_id = 1;
 
-	vector<Ref<Ragdoll>> ragdolls;
+	Array<Ref<Ragdoll>> ragdolls;
 
 	while (!mIsQuitting)
 	{
@@ -219,7 +219,7 @@ void MultithreadedTest::CasterMain()
 
 	default_random_engine random;
 
-	vector<BodyID> bodies;
+	Array<BodyID> bodies;
 
 	while (!mIsQuitting)
 	{

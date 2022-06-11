@@ -19,7 +19,7 @@ JPH_NAMESPACE_BEGIN
 // Profiler
 //////////////////////////////////////////////////////////////////////////////////////////
 
-Profiler Profiler::sInstance;
+Profiler *Profiler::sInstance = nullptr;
 thread_local ProfileThread *ProfileThread::sInstance = nullptr;
 
 bool ProfileMeasurement::sOutOfSamplesReported = false;
@@ -55,7 +55,7 @@ void Profiler::RemoveThread(ProfileThread *inThread)
 { 
 	lock_guard lock(mLock); 
 	
-	vector<ProfileThread *>::iterator i = find(mThreads.begin(), mThreads.end(), inThread); 
+	Array<ProfileThread *>::iterator i = find(mThreads.begin(), mThreads.end(), inThread); 
 	JPH_ASSERT(i != mThreads.end()); 
 	mThreads.erase(i); 
 }

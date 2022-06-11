@@ -115,13 +115,13 @@ private:
 	/// Properties for a batch of instances that have the same primitive
 	struct Instances
 	{
-		vector<InstanceWithLODInfo>		mInstances;
+		Array<InstanceWithLODInfo>		mInstances;
 
 		/// Start index in mInstancesBuffer for each of the LOD in the geometry pass. Length is one longer than the number of LODs to indicate how many instances the last lod has.
-		vector<int>						mGeometryStartIdx;
+		Array<int>						mGeometryStartIdx;
 
 		/// Start index in mInstancesBuffer for each of the LOD in the light pass. Length is one longer than the number of LODs to indicate how many instances the last lod has.
-		vector<int>						mLightStartIdx;
+		Array<int>						mLightStartIdx;
 	};
 
 	using InstanceMap = unordered_map<GeometryRef, Instances>;
@@ -130,7 +130,7 @@ private:
 	void								ClearMap(InstanceMap &ioInstances);
 
 	/// Helper function to draw instances
-	inline void							DrawInstances(const Geometry *inGeometry, const vector<int> &inStartIdx);
+	inline void							DrawInstances(const Geometry *inGeometry, const Array<int> &inStartIdx);
 
 	/// List of primitives that are finished and ready for drawing
 	InstanceMap							mWireframePrimitives;
@@ -159,7 +159,7 @@ private:
 	};
 
 	/// All text strings that are to be drawn on screen
-	vector<Text>						mTexts;
+	Array<Text>							mTexts;
 	Mutex								mTextsLock;
 
 	/// Font with which to draw the texts
@@ -177,7 +177,7 @@ private:
 	};
 
 	/// The list of line segments
-	vector<Line>						mLines;
+	Array<Line>							mLines;
 	Mutex								mLinesLock;
 
 	/// The shaders for the line segments

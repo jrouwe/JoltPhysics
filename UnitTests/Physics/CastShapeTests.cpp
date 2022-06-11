@@ -200,7 +200,7 @@ TEST_SUITE("CastShapeTests")
 		box.SetEmbedded();
 
 		// Create 10 boxes that are 0.2 thick in the X axis and 4 in Y and Z, put them all next to each other on the X axis starting from X = 0 going to X = 2
-		vector<Body *> bodies;
+		Array<Body *> bodies;
 		for (int i = 0; i < 10; ++i)
 			bodies.push_back(&c.CreateBody(&box, Vec3(0.1f + 0.2f * i, 0, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate));
 

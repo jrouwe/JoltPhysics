@@ -24,13 +24,13 @@ void RegisterDefaultAlloc();
 
 /// Macro to override the new and delete functions
 #define JPH_OVERRIDE_NEW_DELETE \
-	void *operator new (size_t inCount)											{ return Alloc(inCount); } \
-	void operator delete (void *inPointer) noexcept								{ Free(inPointer); } \
-	void *operator new[] (size_t inCount)										{ return Alloc(inCount); } \
-	void operator delete[] (void *inPointer) noexcept							{ Free(inPointer); } \
-	void *operator new (size_t inCount, align_val_t inAlignment)				{ return AlignedAlloc(inCount, static_cast<size_t>(inAlignment)); } \
-	void operator delete (void *inPointer, align_val_t inAlignment) noexcept	{ AlignedFree(inPointer); } \
-	void *operator new[] (size_t inCount, align_val_t inAlignment)				{ return AlignedAlloc(inCount, static_cast<size_t>(inAlignment)); } \
-	void operator delete[] (void *inPointer, align_val_t inAlignment) noexcept	{ AlignedFree(inPointer); }
+	JPH_INLINE void *operator new (size_t inCount)											{ return Alloc(inCount); } \
+	JPH_INLINE void operator delete (void *inPointer) noexcept								{ Free(inPointer); } \
+	JPH_INLINE void *operator new[] (size_t inCount)										{ return Alloc(inCount); } \
+	JPH_INLINE void operator delete[] (void *inPointer) noexcept							{ Free(inPointer); } \
+	JPH_INLINE void *operator new (size_t inCount, align_val_t inAlignment)					{ return AlignedAlloc(inCount, static_cast<size_t>(inAlignment)); } \
+	JPH_INLINE void operator delete (void *inPointer, align_val_t inAlignment) noexcept		{ AlignedFree(inPointer); } \
+	JPH_INLINE void *operator new[] (size_t inCount, align_val_t inAlignment)				{ return AlignedAlloc(inCount, static_cast<size_t>(inAlignment)); } \
+	JPH_INLINE void operator delete[] (void *inPointer, align_val_t inAlignment) noexcept	{ AlignedFree(inPointer); }
 
 JPH_NAMESPACE_END

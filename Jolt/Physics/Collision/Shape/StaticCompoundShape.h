@@ -128,7 +128,7 @@ private:
 	
 	static_assert(sizeof(Node) == 64, "Node should be 64 bytes");
 
-	using Nodes = vector<Node>;
+	using Nodes = Array<Node>;
 
 	Nodes							mNodes;													///< Quad tree node structure
 };

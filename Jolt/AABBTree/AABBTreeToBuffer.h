@@ -69,7 +69,7 @@ public:
 		
 		deque<NodeData *> to_process;
 		deque<NodeData *> to_process_triangles;
-		vector<NodeData> node_list;
+		Array<NodeData> node_list;
 
 		node_list.reserve(node_count); // Needed to ensure that array is not reallocated, so we can keep pointers in the array
 		
@@ -81,7 +81,7 @@ public:
 		to_process.push_back(&node_list.back());
 
 		// Child nodes out of loop so we don't constantly realloc it
-		vector<const AABBTreeBuilder::Node *> child_nodes;
+		Array<const AABBTreeBuilder::Node *> child_nodes;
 		child_nodes.reserve(NumChildrenPerNode);
 
 		for (;;)

@@ -72,7 +72,7 @@ public:
 private:
 	Renderer *					mRenderer;
 	UIEventListener *			mListener;
-	vector<UIElementVector>		mInactiveElements;
+	Array<UIElementVector>		mInactiveElements;
 	bool						mDrawInactiveElements = true;
 	unique_ptr<PipelineState>	mTextured;
 	unique_ptr<PipelineState>	mUntextured;

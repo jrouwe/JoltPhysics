@@ -302,7 +302,7 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 			mShapes.push_back(inResult);
 		}
 
-		vector<TransformedShape>	mShapes;
+		Array<TransformedShape>		mShapes;
 	};
 	Collector collector;
 	TransformShape(Mat44::sScale(inScale) * Mat44::sTranslation(GetCenterOfMass()), collector);

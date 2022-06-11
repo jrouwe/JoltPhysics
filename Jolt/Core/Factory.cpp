@@ -74,9 +74,9 @@ void Factory::Clear()
 	mClassHashMap.clear();
 }
 
-vector<const RTTI *> Factory::GetAllClasses() const
+Array<const RTTI *> Factory::GetAllClasses() const
 {
-	vector<const RTTI *> all_classes;
+	Array<const RTTI *> all_classes;
 	all_classes.reserve(mClassNameMap.size());
 	for (const ClassNameMap::value_type &c : mClassNameMap)
 		all_classes.push_back(c.second);

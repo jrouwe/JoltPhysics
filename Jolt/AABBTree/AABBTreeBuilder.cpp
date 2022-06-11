@@ -84,7 +84,7 @@ float AABBTreeBuilder::Node::CalculateSAHCost(float inCostTraversal, float inCos
 	return surface_area > 0.0f? CalculateSAHCostInternal(inCostTraversal / surface_area, inCostLeaf / surface_area) : 0.0f;
 }
 
-void AABBTreeBuilder::Node::GetNChildren(uint inN, vector<const Node *> &outChildren) const
+void AABBTreeBuilder::Node::GetNChildren(uint inN, Array<const Node *> &outChildren) const
 {
 	JPH_ASSERT(outChildren.empty());
 

@@ -46,6 +46,6 @@ protected:
 	virtual void							RestoreBinaryState(StreamIn &inStream);
 };
 
-using PhysicsMaterialList = vector<RefConst<PhysicsMaterial>>;
+using PhysicsMaterialList = Array<RefConst<PhysicsMaterial>>;
 
 JPH_NAMESPACE_END

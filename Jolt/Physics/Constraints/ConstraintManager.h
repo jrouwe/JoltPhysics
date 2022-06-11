@@ -16,7 +16,7 @@ class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
 /// A list of constraints
-using Constraints = vector<Ref<Constraint>>;
+using Constraints = Array<Ref<Constraint>>;
 
 /// A constraint manager manages all constraints of the same type
 class ConstraintManager : public NonCopyable

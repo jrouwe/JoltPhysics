@@ -34,7 +34,7 @@ public:
 	void						Clear();
 
 	/// Get all registered classes
-	vector<const RTTI *>		GetAllClasses() const;
+	Array<const RTTI *>			GetAllClasses() const;
 
 	/// Singleton factory instance
 	static Factory *			sInstance;

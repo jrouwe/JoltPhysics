@@ -27,7 +27,7 @@ TEST_SUITE("ShapeTests")
 		const float cDensity = 1.5f;
 
 		// Create convex hull shape of a box
-		vector<Vec3> box;
+		Array<Vec3> box;
 		box.push_back(Vec3(5, 6, 7));
 		box.push_back(Vec3(5, 6, 14));
 		box.push_back(Vec3(5, 12, 7));

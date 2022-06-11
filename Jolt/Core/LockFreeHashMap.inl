@@ -231,7 +231,7 @@ inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key
 }
 
 template <class Key, class Value>
-inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(vector<const KeyValue *> &outAll) const
+inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(Array<const KeyValue *> &outAll) const
 {
 	for (const atomic<uint32> *bucket = mBuckets; bucket < mBuckets + mNumBuckets; ++bucket)
 	{

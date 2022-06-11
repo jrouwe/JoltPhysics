@@ -73,7 +73,7 @@ void MutableCompoundShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				Vec3	mPosition;
 				Quat	mRotation;
 			};
-			vector<PositionRotation> pos_rot;
+			Array<PositionRotation> pos_rot;
 
 			// Animate sub shapes
 			uint count = shape->GetNumSubShapes();

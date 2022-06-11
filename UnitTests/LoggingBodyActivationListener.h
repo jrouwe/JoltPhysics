@@ -58,5 +58,5 @@ public:
 
 private:
 	Mutex				mLogMutex; // Callbacks are made from a thread, make sure we don't corrupt the log
-	vector<LogEntry>	mLog;
+	Array<LogEntry>		mLog;
 };

@@ -48,7 +48,7 @@ public:
 
 	/// Append inData to the buffer
 	template <class Type>
-	void			AppendVector(const vector<Type> &inData)
+	void			AppendVector(const Array<Type> &inData)
 	{
 		size_t size = inData.size() * sizeof(Type);
 		uint8 *data = Allocate<uint8>(size);

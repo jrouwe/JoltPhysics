@@ -38,7 +38,7 @@ void StringReplace(string &ioString, const string_view &inSearch, const string_v
 	}
 }
 
-void StringToVector(const string_view &inString, vector<string> &outVector, const string_view &inDelimiter, bool inClearVector)
+void StringToVector(const string_view &inString, Array<string> &outVector, const string_view &inDelimiter, bool inClearVector)
 {
 	JPH_ASSERT(inDelimiter.size() > 0);
 
@@ -65,7 +65,7 @@ void StringToVector(const string_view &inString, vector<string> &outVector, cons
 	outVector.push_back(s);
 }
 
-void VectorToString(const vector<string> &inVector, string &outString, const string_view &inDelimiter)
+void VectorToString(const Array<string> &inVector, string &outString, const string_view &inDelimiter)
 {
 	// Ensure string empty
 	outString.clear();

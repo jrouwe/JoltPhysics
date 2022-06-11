@@ -302,7 +302,7 @@ ContactConstraintManager::BPKeyValue *ContactConstraintManager::ManifoldCache::C
 	return kv;
 }
 
-void ContactConstraintManager::ManifoldCache::GetAllBodyPairsSorted(vector<const BPKeyValue *> &outAll) const
+void ContactConstraintManager::ManifoldCache::GetAllBodyPairsSorted(Array<const BPKeyValue *> &outAll) const
 {
 	JPH_ASSERT(mIsFinalized);
 	mCachedBodyPairs.GetAllKeyValues(outAll);
@@ -313,7 +313,7 @@ void ContactConstraintManager::ManifoldCache::GetAllBodyPairsSorted(vector<const
 	});
 }
 
-void ContactConstraintManager::ManifoldCache::GetAllManifoldsSorted(const CachedBodyPair &inBodyPair, vector<const MKeyValue *> &outAll) const
+void ContactConstraintManager::ManifoldCache::GetAllManifoldsSorted(const CachedBodyPair &inBodyPair, Array<const MKeyValue *> &outAll) const
 {
 	JPH_ASSERT(mIsFinalized);
 
@@ -330,7 +330,7 @@ void ContactConstraintManager::ManifoldCache::GetAllManifoldsSorted(const Cached
 	});
 }
 
-void ContactConstraintManager::ManifoldCache::GetAllCCDManifoldsSorted(vector<const MKeyValue *> &outAll) const
+void ContactConstraintManager::ManifoldCache::GetAllCCDManifoldsSorted(Array<const MKeyValue *> &outAll) const
 {
 	mCachedManifolds.GetAllKeyValues(outAll);
 
@@ -375,7 +375,7 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream)
 	JPH_ASSERT(mIsFinalized);
 
 	// Get contents of cache
-	vector<const BPKeyValue *> all_bp;
+	Array<const BPKeyValue *> all_bp;
 	GetAllBodyPairsSorted(all_bp);
 
 	// Write amount of body pairs
@@ -393,7 +393,7 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream)
 		bp.SaveState(inStream);
 
 		// Get attached manifolds
-		vector<const MKeyValue *> all_m;
+		Array<const MKeyValue *> all_m;
 		GetAllManifoldsSorted(bp, all_m);
 
 		// Write num manifolds
@@ -421,7 +421,7 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream)
 	}
 
 	// Get CCD manifolds
-	vector<const MKeyValue *> all_m;
+	Array<const MKeyValue *> all_m;
 	GetAllCCDManifoldsSorted(all_m);
 
 	// Write num CCD manifolds
@@ -443,7 +443,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 	ContactAllocator contact_allocator(GetContactAllocator());
 
 	// When validating, get all existing body pairs
-	vector<const BPKeyValue *> all_bp;
+	Array<const BPKeyValue *> all_bp;
 	if (inStream.IsValidating())
 		inReadCache.GetAllBodyPairsSorted(all_bp);
 
@@ -479,7 +479,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 		bp.RestoreState(inStream);
 
 		// When validating, get all existing manifolds
-		vector<const MKeyValue *> all_m;
+		Array<const MKeyValue *> all_m;
 		if (inStream.IsValidating())
 			inReadCache.GetAllManifoldsSorted(all_bp[i]->GetValue(), all_m);
 
@@ -531,7 +531,7 @@ bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &
 	}
 
 	// When validating, get all existing CCD manifolds
-	vector<const MKeyValue *> all_m;
+	Array<const MKeyValue *> all_m;
 	if (inStream.IsValidating())
 		inReadCache.GetAllCCDManifoldsSorted(all_m);
 

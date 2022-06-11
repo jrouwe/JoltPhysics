@@ -214,12 +214,12 @@ public:
 		}
 
 	private:
-		using VertexMap = vector<uint32>;
+		using VertexMap = Array<uint32>;
 
 		uint						mNumTriangles = 0;
-		vector<uint32>				mVertices;				///< Output vertices as an index into the original vertex list (inVertices), sorted according to occurrence
+		Array<uint32>				mVertices;				///< Output vertices as an index into the original vertex list (inVertices), sorted according to occurrence
 		VertexMap					mVertexMap;				///< Maps from the original mesh vertex index (inVertices) to the index in our output vertices (mVertices)
-		vector<uint>				mOffsetsToPatch;		///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
+		Array<uint>					mOffsetsToPatch;		///< Offsets to the vertex buffer that need to be patched in once all nodes have been packed
 	};
 
 	/// This class is used to decode and decompress triangle data packed by the EncodingContext

@@ -191,7 +191,7 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
 	// Dynamic boxes on the ramp go through all permutations
-	vector<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
+	Array<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
 	if (i != mRampBlocks.end())
 	{
 		size_t index = i - mRampBlocks.begin();

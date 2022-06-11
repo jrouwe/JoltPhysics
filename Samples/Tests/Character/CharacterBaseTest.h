@@ -58,7 +58,7 @@ protected:
 	RefConst<Shape>			mCrouchingShape;
 
 	// List of boxes on ramp
-	vector<BodyID>			mRampBlocks;
+	Array<BodyID>			mRampBlocks;
 	float					mRampBlocksTimeLeft = 0.0f;
 
 private:

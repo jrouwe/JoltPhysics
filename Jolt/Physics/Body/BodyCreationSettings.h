@@ -58,7 +58,7 @@ public:
 	void					RestoreBinaryState(StreamIn &inStream);
 
 	using GroupFilterToIDMap = unordered_map<const GroupFilter *, uint32>;
-	using IDToGroupFilterMap = vector<RefConst<GroupFilter>>;
+	using IDToGroupFilterMap = Array<RefConst<GroupFilter>>;
 	using ShapeToIDMap = Shape::ShapeToIDMap;
 	using IDToShapeMap = Shape::IDToShapeMap;
 	using MaterialToIDMap = Shape::MaterialToIDMap;

@@ -2161,7 +2161,7 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 		return false;
 
 	// Update bounding boxes for all bodies in the broadphase
-	vector<BodyID> bodies;
+	Array<BodyID> bodies;
 	for (const Body *b : mBodyManager.GetBodies())
 		if (BodyManager::sIsValidBodyPointer(b) && b->IsInBroadPhase())
 			bodies.push_back(b->GetID());

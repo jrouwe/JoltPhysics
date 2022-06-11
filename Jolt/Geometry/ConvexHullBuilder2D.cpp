@@ -106,7 +106,7 @@ void ConvexHullBuilder2D::ValidateEdges() const
 
 #endif // JPH_ENABLE_ASSERTS
 
-void ConvexHullBuilder2D::AssignPointToEdge(int inPositionIdx, const vector<Edge *> &inEdges) const
+void ConvexHullBuilder2D::AssignPointToEdge(int inPositionIdx, const Array<Edge *> &inEdges) const
 {
 	Vec3 point = mPositions[inPositionIdx];
 
@@ -185,7 +185,7 @@ ConvexHullBuilder2D::EResult ConvexHullBuilder2D::Initialize(int inIdx1, int inI
 	mNumEdges = 3;
 
 	// Build the initial conflict lists
-	vector<Edge *> edges { e1, e2, e3 };
+	Array<Edge *> edges { e1, e2, e3 };
 	for (Edge *edge : edges)
 		edge->CalculateNormalAndCenter(mPositions.data());
 	for (int idx = 0; idx < (int)mPositions.size(); ++idx)
@@ -262,7 +262,7 @@ ConvexHullBuilder2D::EResult ConvexHullBuilder2D::Initialize(int inIdx1, int inI
 		mNumEdges += 2;
 
 		// Calculate normals
-		vector<Edge *> new_edges { e1, e2 };
+		Array<Edge *> new_edges { e1, e2 };
 		for (Edge *new_edge : new_edges)
 			new_edge->CalculateNormalAndCenter(mPositions.data());
 

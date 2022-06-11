@@ -46,7 +46,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 {
 	using BuilderFace = ConvexHullBuilder::Face;
 	using Edge = ConvexHullBuilder::Edge;
-	using Faces = vector<BuilderFace *>;
+	using Faces = Array<BuilderFace *>;
 	
 	// Check convex radius
 	if (mConvexRadius < 0.0f)
@@ -187,7 +187,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	for (int p = 0; p < (int)mPoints.size(); ++p)
 	{
 		// For each point, find faces that use the point
-		vector<int> faces;
+		Array<int> faces;
 		for (int f = 0; f < (int)mFaces.size(); ++f)
 		{
 			const Face &face = mFaces[f];
@@ -380,7 +380,7 @@ Vec3 ConvexHullShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg i
 	float best_dist = abs(first_plane.SignedDistance(inLocalSurfacePosition));
 
 	// Find the face that has the shortest distance to the surface point
-	for (vector<Face>::size_type i = 1; i < mFaces.size(); ++i)
+	for (Array<Face>::size_type i = 1; i < mFaces.size(); ++i)
 	{
 		const Plane &plane = mPlanes[i];
 		Vec3 plane_normal = plane.GetNormal();
@@ -683,7 +683,7 @@ void ConvexHullShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, Su
 	float best_dot = plane0_normal.Dot(inDirection) / plane0_normal.Length();
 	int best_face_idx = 0;
 
-	for (vector<Plane>::size_type i = 1; i < mPlanes.size(); ++i)
+	for (Array<Plane>::size_type i = 1; i < mPlanes.size(); ++i)
 	{
 		Vec3 plane_normal = inv_scale * mPlanes[i].GetNormal();
 		float dot = plane_normal.Dot(inDirection) / plane_normal.Length();
@@ -804,7 +804,7 @@ void ConvexHullShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTra
 {
 	if (mGeometry == nullptr)
 	{
-		vector<DebugRenderer::Triangle> triangles;
+		Array<DebugRenderer::Triangle> triangles;
 		for (const Face &f : mFaces)
 		{
 			const uint8 *first_vtx = mVertexIdx.data() + f.mFirstVertex;

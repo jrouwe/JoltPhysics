@@ -32,5 +32,5 @@ private:
 	static const char *		sSceneName;
 
 	// All active ragdolls
-	vector<Ref<Ragdoll>>	mRagdolls;
+	Array<Ref<Ragdoll>>		mRagdolls;
 };

@@ -90,7 +90,7 @@ public:
 	void						RemoveThread(ProfileThread *inThread);
 
 	/// Singleton instance
-	static Profiler				sInstance;
+	static Profiler *			sInstance;
 								
 private:
 	/// Helper class to freeze ProfileSamples per thread while processing them
@@ -135,8 +135,8 @@ private:
 		uint64					mMaxCyclesInCallWithChildren = 0;									///< Maximum amount of cycles spent per call
 	};							
 
-	using Threads = vector<ThreadSamples>;
-	using Aggregators = vector<Aggregator>;
+	using Threads = Array<ThreadSamples>;
+	using Aggregators = Array<Aggregator>;
 	using KeyToAggregator = unordered_map<const char *, size_t>;
 
 	/// Helper function to aggregate profile sample data
@@ -148,7 +148,7 @@ private:
 	void						DumpChart(const char *inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators);
 
 	mutex						mLock;																///< Lock that protects mThreads
-	vector<ProfileThread *>		mThreads;															///< List of all active threads
+	Array<ProfileThread *>		mThreads;															///< List of all active threads
 	bool						mDump = false;														///< When true, the samples are dumped next frame
 	string						mDumpTag;															///< When not empty, this overrides the auto incrementing number of the dump filename
 };							
@@ -208,8 +208,14 @@ JPH_NAMESPACE_END
 JPH_SUPPRESS_WARNING_PUSH
 JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 
+/// Start instrumenting program
+#define JPH_PROFILE_START(name)			do { Profiler::sInstance = new Profiler; JPH_PROFILE_THREAD_START(name); } while (false)
+
+/// End instrumenting program
+#define JPH_PROFILE_END()				do { JPH_PROFILE_THREAD_END(); delete Profiler::sInstance; Profiler::sInstance = nullptr; } while (false)
+
 /// Start instrumenting a thread
-#define JPH_PROFILE_THREAD_START(name)	ProfileThread::sInstance = new ProfileThread(name)
+#define JPH_PROFILE_THREAD_START(name)	do { if (Profiler::sInstance) ProfileThread::sInstance = new ProfileThread(name); } while (false)
 
 /// End instrumenting a thread
 #define JPH_PROFILE_THREAD_END()		do { delete ProfileThread::sInstance; ProfileThread::sInstance = nullptr; } while (false)
@@ -223,10 +229,10 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 #define JPH_PROFILE_FUNCTION()			JPH_PROFILE(JPH_FUNCTION_NAME)
 								
 /// Update frame counter								
-#define JPH_PROFILE_NEXTFRAME()			Profiler::sInstance.NextFrame()
+#define JPH_PROFILE_NEXTFRAME()			Profiler::sInstance->NextFrame()
 
 /// Dump profiling info
-#define JPH_PROFILE_DUMP(...)			Profiler::sInstance.Dump(__VA_ARGS__)
+#define JPH_PROFILE_DUMP(...)			Profiler::sInstance->Dump(__VA_ARGS__)
 
 JPH_SUPPRESS_WARNING_POP
 
@@ -239,6 +245,8 @@ JPH_SUPPRESS_WARNING_POP
 JPH_SUPPRESS_WARNING_PUSH
 JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 
+#define JPH_PROFILE_START(name)
+#define JPH_PROFILE_END()
 #define JPH_PROFILE_THREAD_START(name)
 #define JPH_PROFILE_THREAD_END()
 #define JPH_PROFILE(...)

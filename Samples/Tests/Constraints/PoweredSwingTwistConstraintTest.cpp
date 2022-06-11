@@ -97,8 +97,8 @@ void PoweredSwingTwistConstraintTest::GetInitialCamera(CameraState &ioState) con
 
 void PoweredSwingTwistConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	vector<string> axis_label = { "X", "Y", "Z" };
-	vector<string> constraint_label = { "Twist", "Plane", "Normal" };
+	Array<string> axis_label = { "X", "Y", "Z" };
+	Array<string> constraint_label = { "Twist", "Plane", "Normal" };
 
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
 		UIElement *configuration_settings = inUI->CreateMenu();

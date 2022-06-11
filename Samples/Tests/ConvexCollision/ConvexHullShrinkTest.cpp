@@ -142,7 +142,7 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		float max_error = -FLT_MAX;
 		int max_error_plane = 0;
 		Vec3 max_error_support_point = Vec3::sZero();
-		const vector<Plane> &planes = shape->GetPlanes();
+		const Array<Plane> &planes = shape->GetPlanes();
 		for (int i = 0; i < (int)planes.size(); ++i)
 		{
 			const Plane &plane = planes[i];

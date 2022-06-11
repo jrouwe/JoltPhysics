@@ -87,10 +87,10 @@ public:
 	/// All information for a single frame
 	struct Frame
 	{
-		vector<LineBlob>				mLines;
-		vector<TriangleBlob>			mTriangles;
-		vector<TextBlob>				mTexts;
-		vector<GeometryBlob>			mGeometries;
+		Array<LineBlob>					mLines;
+		Array<TriangleBlob>				mTriangles;
+		Array<TextBlob>					mTexts;
+		Array<GeometryBlob>				mGeometries;
 	};
 
 private:

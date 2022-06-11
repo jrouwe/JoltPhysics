@@ -34,7 +34,7 @@ public:
 		int					mParentJointIndex = -1;														///< Index of parent joint (in mJoints) or -1 if it has no parent
 	};
 
-	using JointVector = vector<Joint>;
+	using JointVector = Array<Joint>;
 
 	///@name Access to the joints
 	///@{

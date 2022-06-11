@@ -11,8 +11,8 @@ class UIManager;
 class UIElement;
 class UIAnimation;
 
-using UIElementVector = vector<UIElement *>;
-using UIAnimationVector = vector<UIAnimation *>;
+using UIElementVector = Array<UIElement *>;
+using UIAnimationVector = Array<UIAnimation *>;
 
 /// Base class UI element. Forms a tree of UI elements.
 class UIElement : public UIEventListener

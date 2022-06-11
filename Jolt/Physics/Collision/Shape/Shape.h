@@ -48,9 +48,9 @@ using CollideShapeCollector = CollisionCollector<CollideShapeResult, CollisionCo
 using TransformedShapeCollector = CollisionCollector<TransformedShape, CollisionCollectorTraitsCollideShape>;
 
 using ShapeRefC = RefConst<Shape>;
-using ShapeList = vector<ShapeRefC>;
+using ShapeList = Array<ShapeRefC>;
 using PhysicsMaterialRefC = RefConst<PhysicsMaterial>;
-using PhysicsMaterialList = vector<PhysicsMaterialRefC>;
+using PhysicsMaterialList = Array<PhysicsMaterialRefC>;
 
 /// Shapes are categorized in groups, each shape can return which group it belongs to through its Shape::GetType function.
 enum class EShapeType : uint8
@@ -320,8 +320,8 @@ public:
 
 	using ShapeToIDMap = unordered_map<const Shape *, uint32>;
 	using MaterialToIDMap = unordered_map<const PhysicsMaterial *, uint32>;
-	using IDToShapeMap = vector<Ref<Shape>>;
-	using IDToMaterialMap = vector<Ref<PhysicsMaterial>>;
+	using IDToShapeMap = Array<Ref<Shape>>;
+	using IDToMaterialMap = Array<Ref<PhysicsMaterial>>;
 
 	/// Save this shape, all its children and its materials. Pass in an empty map in ioShapeMap / ioMaterialMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	void							SaveWithChildren(StreamOut &inStream, ShapeToIDMap &ioShapeMap, MaterialToIDMap &ioMaterialMap) const;

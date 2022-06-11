@@ -25,7 +25,7 @@ public:
 
 private:
 	// Precalculated Morton codes
-	vector<uint32>			mMortonCodes;
+	Array<uint32>			mMortonCodes;
 };
 
 JPH_NAMESPACE_END

@@ -7,9 +7,9 @@
 #include <Utils/Log.h>
 
 // Read file contents
-vector<uint8> ReadData(const char *inFileName)
+Array<uint8> ReadData(const char *inFileName)
 {
-	vector<uint8> data;
+	Array<uint8> data;
 	ifstream input(inFileName, std::ios::binary);
 	if (!input)
 		FatalError("Unable to open file: %s", inFileName);

@@ -38,7 +38,7 @@ TEST_SUITE("StringToolsTest")
 
 	TEST_CASE("StringToVector")
 	{
-		vector<string> value;
+		Array<string> value;
 		StringToVector("", value);
 		CHECK(value.empty());
 
@@ -55,7 +55,7 @@ TEST_SUITE("StringToolsTest")
 
 	TEST_CASE("VectorToString")
 	{
-		vector<string> input;
+		Array<string> input;
 		string value;
 		VectorToString(input, value);
 		CHECK(value.empty());

@@ -205,14 +205,14 @@ void DebugRendererImp::DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, Co
 	mLockedPrimitiveBounds.Encapsulate(inV3);
 }
 
-void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const vector<int> &inStartIdx)
+void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const Array<int> &inStartIdx)
 {
 	RenderInstances *instances_buffer = mInstancesBuffer[mRenderer->GetCurrentFrameIndex()];
 
 	if (!inStartIdx.empty())
 	{
 		// Get LODs
-		const vector<LOD> &geometry_lods = inGeometry->mLODs;
+		const Array<LOD> &geometry_lods = inGeometry->mLODs;
 
 		// Write instances for all LODS
 		int next_start_idx = inStartIdx.front();
@@ -283,13 +283,13 @@ void DebugRendererImp::DrawTriangles()
 		int dst_index = 0;
 
 		// This keeps track of which instances use which lod, first array: 0 = light pass, 1 = geometry pass
-		vector<vector<int>> lod_indices[2];
+		Array<Array<int>> lod_indices[2];
 
 		for (InstanceMap *primitive_map : { &mPrimitives, &mTempPrimitives, &mPrimitivesBackFacing, &mWireframePrimitives })
 			for (InstanceMap::value_type &v : *primitive_map)
 			{
 				// Get LODs
-				const vector<LOD> &geometry_lods = v.first->mLODs;
+				const Array<LOD> &geometry_lods = v.first->mLODs;
 				size_t num_lods = geometry_lods.size();
 				JPH_ASSERT(num_lods > 0);
 
@@ -300,7 +300,7 @@ void DebugRendererImp::DrawTriangles()
 					lod_indices[1].resize(num_lods);
 
 				// Iterate over all instances
-				const vector<InstanceWithLODInfo> &instances = v.second.mInstances;
+				const Array<InstanceWithLODInfo> &instances = v.second.mInstances;
 				for (size_t i = 0; i < instances.size(); ++i)
 				{
 					const InstanceWithLODInfo &src_instance = instances[i];
@@ -326,11 +326,11 @@ void DebugRendererImp::DrawTriangles()
 				}
 
 				// Loop over both passes: 0 = light, 1 = geometry
-				vector<int> *start_idx[] = { &v.second.mLightStartIdx, &v.second.mGeometryStartIdx };
+				Array<int> *start_idx[] = { &v.second.mLightStartIdx, &v.second.mGeometryStartIdx };
 				for (int type = 0; type < 2; ++type) 
 				{
 					// Reserve space for instance indices
-					vector<int> &type_start_idx = *start_idx[type];
+					Array<int> &type_start_idx = *start_idx[type];
 					type_start_idx.resize(num_lods + 1);
 
 					// Write out geometry pass instances
@@ -340,7 +340,7 @@ void DebugRendererImp::DrawTriangles()
 						type_start_idx[lod] = dst_index;
 
 						// Copy instances
-						vector<int> &this_lod_indices = lod_indices[type][lod];
+						Array<int> &this_lod_indices = lod_indices[type][lod];
 						for (int i : this_lod_indices)
 						{
 							const Instance &src_instance = instances[i];
@@ -466,7 +466,7 @@ void DebugRendererImp::ClearLines()
 
 void DebugRendererImp::ClearMap(InstanceMap &ioInstances)
 {
-	vector<GeometryRef> to_delete;
+	Array<GeometryRef> to_delete;
 	
 	for (InstanceMap::value_type &kv : ioInstances)
 	{

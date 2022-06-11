@@ -39,7 +39,7 @@ void RackAndPinionConstraintTest::Initialize()
 	constexpr float cToothHeight = 0.02f;
 
 	// Create a tooth
-	vector<Vec3> tooth_points = {
+	Array<Vec3> tooth_points = {
 		Vec3(0, cGearHalfWidth, cToothThicknessBottom),
 		Vec3(0, -cGearHalfWidth, cToothThicknessBottom),
 		Vec3(0, cGearHalfWidth, -cToothThicknessBottom),

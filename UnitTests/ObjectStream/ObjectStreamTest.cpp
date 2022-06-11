@@ -53,11 +53,11 @@ class TestSerializable : public TestSerializableBase, public TestSerializableBas
 
 public:
 	TestEnum					mEnum = A;
-	vector<int>					mIntVector;
+	Array<int>					mIntVector;
 	StaticArray<bool, 10>		mBoolVector;
 	float						mFloatVector[3] = { 0, 0, 0 };
-	vector<float>				mArrayOfVector[3];
-	vector<vector<int>>			mVectorOfVector;
+	Array<float>				mArrayOfVector[3];
+	Array<Array<int>>			mVectorOfVector;
 	TestSerializable *			mPointer = nullptr;
 	Ref<TestSerializable>		mReference;
 	RefConst<TestSerializable>	mReferenceConst;

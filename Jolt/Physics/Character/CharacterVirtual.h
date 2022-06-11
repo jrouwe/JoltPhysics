@@ -195,7 +195,7 @@ private:
 	};
 
 	using TempContactList = vector<Contact, STLTempAllocator<Contact>>;
-	using ContactList = vector<Contact>;
+	using ContactList = Array<Contact>;
 
 	// A contact that needs to be ignored
 	struct IgnoredContact

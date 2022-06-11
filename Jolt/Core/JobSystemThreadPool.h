@@ -137,7 +137,7 @@ private:
 	BarrierImpl *			mBarriers = nullptr;							///< List of the actual barriers
 
 	/// Threads running jobs
-	vector<thread>			mThreads;
+	Array<thread>			mThreads;
 
 	// The job queue
 	static constexpr uint32 cQueueLength = 1024;

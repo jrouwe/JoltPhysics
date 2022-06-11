@@ -36,7 +36,7 @@ public:
 	float		z;
 };
 
-using VertexList = vector<Float3>;
+using VertexList = Array<Float3>;
 
 static_assert(is_trivial<Float3>(), "Is supposed to be a trivial type!");
 

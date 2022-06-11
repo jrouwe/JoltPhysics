@@ -164,7 +164,7 @@ public:
 		atomic<uint32>			mBodyLocation { cInvalidBodyLocation };
 	};
 
-	using TrackingVector = vector<Tracking>;
+	using TrackingVector = Array<Tracking>;
 
 	/// Destructor
 								~QuadTree();

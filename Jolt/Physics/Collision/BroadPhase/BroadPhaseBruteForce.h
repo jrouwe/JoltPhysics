@@ -27,7 +27,7 @@ public:
 	virtual void		FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const override;
 
 private:
-	vector<BodyID>		mBodyIDs;
+	Array<BodyID>		mBodyIDs;
 	mutable SharedMutex	mMutex;
 };
 

@@ -136,6 +136,6 @@ protected:
 	AxisConstraintPart		mLateralPart;								///< Controls movement sideways (slip)
 };
 
-using Wheels = vector<Wheel *>;
+using Wheels = Array<Wheel *>;
 
 JPH_NAMESPACE_END

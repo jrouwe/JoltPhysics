@@ -150,7 +150,7 @@ private:
 		Vec4						mMaxZ;
 	};
 
-	vector<Bounds>					mSubShapeBounds;											///< Bounding boxes of all sub shapes in SOA format (in blocks of 4 boxes), MinX 0..3, MinY 0..3, MinZ 0..3, MaxX 0..3, MaxY 0..3, MaxZ 0..3, MinX 4..7, MinY 4..7, ...
+	Array<Bounds>					mSubShapeBounds;											///< Bounding boxes of all sub shapes in SOA format (in blocks of 4 boxes), MinX 0..3, MinY 0..3, MinZ 0..3, MaxX 0..3, MaxY 0..3, MaxZ 0..3, MinX 4..7, MinY 4..7, ...
 };
 
 JPH_NAMESPACE_END

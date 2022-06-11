@@ -29,7 +29,7 @@ public:
 	UITextButton *		CreateTextButton(UIElement *inMenu, const string_view &inName, UITextButton::ClickAction inAction);
 	UICheckBox *		CreateCheckBox(UIElement *inMenu, const string_view &inName, bool inInitiallyChecked, UICheckBox::ClickAction inAction);
 	UISlider *			CreateSlider(UIElement *inMenu, const string_view &inName, float inInitialValue, float inMinValue, float inMaxValue, float inStepValue, UISlider::ValueChangedAction inAction);
-	UIComboBox *		CreateComboBox(UIElement *inMenu, const string_view &inName, const vector<string> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction);
+	UIComboBox *		CreateComboBox(UIElement *inMenu, const string_view &inName, const Array<string> &inItems, int inInitialItem, UIComboBox::ItemChangedAction inAction);
 
 	/// Show it
 	void				ShowMenu(UIElement *inMenu);

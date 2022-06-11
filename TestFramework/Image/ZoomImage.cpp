@@ -216,7 +216,7 @@ struct Contrib
 	int			mWeight;				// Weight of this pixel in 0.12 fixed point format
 };
 
-static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLength, int inNewLength, int inOffsetFactor, vector<vector<Contrib>> &outContrib)
+static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLength, int inNewLength, int inOffsetFactor, Array<Array<Contrib>> &outContrib)
 {
 	JPH_PROFILE("PrecalculateFilter");
 
@@ -262,7 +262,7 @@ static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLen
 		int right = int(ceil(center + fwidth));
 
 		// Reserve required elements
-		vector<Contrib> &a = outContrib[i];
+		Array<Contrib> &a = outContrib[i];
 		a.reserve(right - left + 1);		
 
 		// Total sum of all weights, for renormalization of the filter
@@ -322,7 +322,7 @@ static void sZoomHorizontal(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Z
 	const int delta_d = ioDst->GetBytesPerPixel() - components;
 
 	// Pre-calculate filter contributions for a row
-	vector<vector<Contrib>> contrib;	
+	Array<Array<Contrib>> contrib;	
 	sPrecalculateFilter(inZoomSettings, inSrc->GetWidth(), ioDst->GetWidth(), inSrc->GetBytesPerPixel(), contrib);
 
 	// Do the zoom
@@ -333,7 +333,7 @@ static void sZoomHorizontal(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Z
 
 		for (int x = 0; x < width; ++x) 
 		{
-			const vector<Contrib> &line = contrib[x];
+			const Array<Contrib> &line = contrib[x];
 			const size_t line_size_min_one = line.size() - 1;
 
 			int c = components;
@@ -385,7 +385,7 @@ static void sZoomVertical(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Zoo
 	const int delta_d = ioDst->GetBytesPerPixel() - components;
 	
 	// Pre-calculate filter contributions for a row
-	vector<vector<Contrib>> contrib;	
+	Array<Array<Contrib>> contrib;	
 	sPrecalculateFilter(inZoomSettings, inSrc->GetHeight(), ioDst->GetHeight(), inSrc->GetStride(), contrib);
 
 	// Do the zoom
@@ -393,7 +393,7 @@ static void sZoomVertical(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Zoo
 	{
 		const uint8 *s = inSrc->GetScanLine(0);
 		uint8 *d = ioDst->GetScanLine(y);
-		const vector<Contrib> &line = contrib[y];		
+		const Array<Contrib> &line = contrib[y];		
 		const size_t line_size_min_one = line.size() - 1;
 
 		for (int x = 0; x < width; ++x) 

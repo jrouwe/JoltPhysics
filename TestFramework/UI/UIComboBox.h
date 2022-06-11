@@ -15,7 +15,7 @@ public:
 	using ItemChangedAction = function<void(int)>;
 	
 	/// Properties
-	void				SetItems(const vector<string> &inItems)				{ mItems = inItems; }
+	void				SetItems(const Array<string> &inItems)				{ mItems = inItems; }
 	void				SetCurrentItem(int inItem)							{ mCurrentItem = inItem; }
 	void				SetPreviousButton(UIButton *inPreviousButton)		{ mPreviousButton = inPreviousButton; }
 	void				SetNextButton(UIButton *inNextButton)				{ mNextButton = inNextButton; }
@@ -39,7 +39,7 @@ protected:
 	void				UpdateStaticText();
 
 	/// Properties
-	vector<string>		mItems;
+	Array<string>		mItems;
 	int					mCurrentItem = 0;
 	UIButton *			mPreviousButton = nullptr;
 	UIButton *			mNextButton = nullptr;
