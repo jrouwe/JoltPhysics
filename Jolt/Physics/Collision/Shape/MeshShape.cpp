@@ -89,7 +89,7 @@ MeshShapeSettings::MeshShapeSettings(const VertexList &inVertices, const Indexed
 void MeshShapeSettings::Sanitize()
 {
 	// Remove degenerate and duplicate triangles
-	unordered_set<IndexedTriangle> triangles;
+	UnorderedSet<IndexedTriangle> triangles;
 	triangles.reserve(mIndexedTriangles.size());
 	for (int t = (int)mIndexedTriangles.size() - 1; t >= 0; --t)
 	{

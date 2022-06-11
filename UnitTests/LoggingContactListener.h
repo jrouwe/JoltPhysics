@@ -107,5 +107,5 @@ public:
 private:
 	Mutex							mLogMutex; // Callbacks are made from a thread, make sure we don't corrupt the log
 	Array<LogEntry>					mLog;
-	unordered_set<SubShapeIDPair>	mExistingContacts; // For validation purposes: the contacts that are currently active
+	UnorderedSet<SubShapeIDPair>	mExistingContacts; // For validation purposes: the contacts that are currently active
 };

@@ -13,11 +13,8 @@
 #include <Jolt/Core/Result.h>
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/UnorderedSet.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_set>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -343,7 +340,7 @@ public:
 	/// Get stats of this shape. Use for logging / data collection purposes only. Does not add values from child shapes, use GetStatsRecursive for this.
 	virtual Stats					GetStats() const = 0;
 
-	using VisitedShapes = unordered_set<const Shape *>;
+	using VisitedShapes = UnorderedSet<const Shape *>;
 
 	/// Get the combined stats of this shape and its children.
 	/// @param ioVisitedShapes is used to track which shapes have already been visited, to avoid calculating the wrong memory size.
