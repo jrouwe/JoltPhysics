@@ -10,10 +10,7 @@
 #include <Jolt/Renderer/DebugRenderer.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Mutex.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <map>
-JPH_SUPPRESS_WARNINGS_STD_END
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -118,7 +115,7 @@ private:
 	uint32								mNextGeometryID = 1;
 
 	/// Cached geometries and their IDs
-	map<GeometryRef, uint32>			mGeometries;
+	UnorderedMap<GeometryRef, uint32>	mGeometries;
 
 	/// Data that is being accumulated for the current frame
 	Frame								mCurrentFrame;

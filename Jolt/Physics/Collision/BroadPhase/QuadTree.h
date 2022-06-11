@@ -9,10 +9,6 @@
 #include <Jolt/Physics/Body/BodyManager.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 
-#ifdef JPH_TRACK_BROADPHASE_STATS
-	#include <map>
-#endif // JPH_TRACK_BROADPHASE_STATS
-
 //#define JPH_DUMP_BROADPHASE_TREE
 
 JPH_NAMESPACE_BEGIN
@@ -331,7 +327,7 @@ private:
 		uint64					mCollectorTicks = 0;
 	};
 	
-	using LayerToStats = map<String, Stat>;
+	using LayerToStats = UnorderedMap<String, Stat>;
 
 	/// Trace the stats of a single query type to the TTY
 	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;
