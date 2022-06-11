@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <Jolt/Core/Memory.h>
 #include <Jolt/Core/NonCopyable.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN

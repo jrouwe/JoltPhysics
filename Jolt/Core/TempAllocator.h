@@ -4,7 +4,6 @@
 #pragma once
 
 #include <Jolt/Core/NonCopyable.h>
-#include <Jolt/Core/Memory.h>
 
 JPH_NAMESPACE_BEGIN
 

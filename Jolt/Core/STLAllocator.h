@@ -5,9 +5,9 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// STL allocator that takes care that memory is aligned to N bytes
-template <typename T, size_t N>
-class STLAlignedAllocator
+/// STL allocator that forwards to our allocation functions
+template <typename T>
+class STLAllocator
 {
 public:
 	using value_type = T;
@@ -25,31 +25,37 @@ public:
 	using difference_type = ptrdiff_t;
 
 	/// Constructor
-	inline					STLAlignedAllocator() = default;
+	inline					STLAllocator() = default;
 
 	/// Constructor from other allocator
 	template <typename T2>
-	inline explicit			STLAlignedAllocator(const STLAlignedAllocator<T2, N> &) { }
+	inline explicit			STLAllocator(const STLAllocator<T2> &) { }
 
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
 	{
-		return (pointer)AlignedAlloc(inN * sizeof(value_type), N);
+		if constexpr (alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16))
+			return (pointer)AlignedAlloc(inN * sizeof(value_type), alignof(T));
+		else
+			return (pointer)Alloc(inN * sizeof(value_type));
 	}
 
 	/// Free memory
 	inline void				deallocate(pointer inPointer, size_type)
 	{
-		AlignedFree(inPointer);
+		if constexpr (alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16))
+			AlignedFree(inPointer);
+		else
+			Free(inPointer);
 	}
 
 	/// Allocators are stateless so assumed to be equal
-	inline bool				operator == (const STLAlignedAllocator<T, N> &) const
+	inline bool				operator == (const STLAllocator<T> &) const
 	{
 		return true;
 	}
 
-	inline bool				operator != (const STLAlignedAllocator<T, N> &) const
+	inline bool				operator != (const STLAllocator<T> &) const
 	{
 		return false;
 	}
@@ -58,8 +64,11 @@ public:
 	template <typename T2>
 	struct rebind
 	{
-		using other = STLAlignedAllocator<T2, N>;
+		using other = STLAllocator<T2>;
 	};
 };
+
+// Declare STL containers that use our allocator
+template <class T> using Array = vector<T, STLAllocator<T>>;
 
 JPH_NAMESPACE_END

@@ -26,6 +26,9 @@ Application::Application() :
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+	// Register allocation hook
+	RegisterDefaultAlloc();
+
 	// Register trace implementation
 	Trace = TraceImpl;
 

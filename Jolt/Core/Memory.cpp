@@ -3,8 +3,6 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Core/Memory.h>
-
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <cstdlib>
 JPH_SUPPRESS_WARNINGS_STD_END
@@ -12,7 +10,22 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-void *AlignedAlloc(size_t inSize, size_t inAlignment)
+AllocFunction Alloc = nullptr;
+FreeFunction Free = nullptr;
+AlignedAllocFunction AlignedAlloc = nullptr;
+AlignedFreeFunction AlignedFree = nullptr;
+
+static void *AllocImpl(size_t inSize)
+{
+	return malloc(inSize);
+}
+
+static void FreeImpl(void *inBlock)
+{
+	free(inBlock);
+}
+
+static void *AlignedAllocImpl(size_t inSize, size_t inAlignment)
 {
 #if defined(JPH_PLATFORM_WINDOWS)
 	// Microsoft doesn't implement C++17 std::aligned_alloc
@@ -24,7 +37,7 @@ void *AlignedAlloc(size_t inSize, size_t inAlignment)
 #endif
 }
 
-void AlignedFree(void *inBlock)
+static void AlignedFreeImpl(void *inBlock)
 {
 #if defined(JPH_PLATFORM_WINDOWS)
 	_aligned_free(inBlock);
@@ -33,6 +46,14 @@ void AlignedFree(void *inBlock)
 #else
 	std::free(inBlock);
 #endif
+}
+
+void RegisterDefaultAlloc()
+{
+	Alloc = AllocImpl;
+	Free = FreeImpl;
+	AlignedAlloc = AlignedAllocImpl;
+	AlignedFree = AlignedFreeImpl;
 }
 
 JPH_NAMESPACE_END

@@ -50,6 +50,9 @@ static void TraceImpl(const char *inFMT, ...)
 // Program entry point
 int main(int argc, char** argv)
 {
+	// Register allocation hook
+	RegisterDefaultAlloc();
+
 	// Parse command line parameters
 	int specified_quality = -1;
 	int specified_threads = -1;

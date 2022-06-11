@@ -197,6 +197,9 @@ public:
 // Program entry point
 int main(int argc, char** argv)
 {
+	// Register allocation hook
+	RegisterDefaultAlloc();
+
 	// Install callbacks
 	Trace = TraceImpl;
 	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
