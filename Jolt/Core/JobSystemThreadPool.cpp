@@ -274,14 +274,7 @@ void JobSystemThreadPool::StartThreads(int inNumThreads)
 	JPH_ASSERT(mThreads.empty());
 	mThreads.reserve(inNumThreads);
 	for (int i = 0; i < inNumThreads; ++i)
-	{
-		// Name the thread
-		char name[64];
-		snprintf(name, sizeof(name), "Worker %d", int(i + 1));
-
-		// Create thread
-		mThreads.emplace_back([this, name, i] { ThreadMain(name, i); });
-	}
+		mThreads.emplace_back([this, i] { ThreadMain(i); });
 }
 
 JobSystemThreadPool::~JobSystemThreadPool()
@@ -523,17 +516,21 @@ static void SetThreadName(const char *inName)
 
 #endif
 
-void JobSystemThreadPool::ThreadMain([[maybe_unused]] const char *inName, int inThreadIndex)
+void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 {
+	// Name the thread
+	char name[64];
+	snprintf(name, sizeof(name), "Worker %d", int(inThreadIndex + 1));
+
 #ifdef JPH_PLATFORM_WINDOWS
-	SetThreadName(inName);
+	SetThreadName(name);
 #endif
 
 	// Enable floating point exceptions
 	FPExceptionsEnable enable_exceptions;
 	JPH_UNUSED(enable_exceptions);
 
-	JPH_PROFILE_THREAD_START(inName);
+	JPH_PROFILE_THREAD_START(name);
 
 	atomic<uint> &head = mHeads[inThreadIndex];
 

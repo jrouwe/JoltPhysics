@@ -22,8 +22,6 @@ private:
 	/// Storage type for an Object
 	struct alignas(Object) ObjectStorage
 	{
-		JPH_OVERRIDE_NEW_DELETE
-
 		/// Constructor to satisfy the vector class
 							ObjectStorage() = default;
 							ObjectStorage(const ObjectStorage &inRHS) : mNextFreeObject(inRHS.mNextFreeObject.load()) { memcpy(mData, inRHS.mData, sizeof(Object)); }

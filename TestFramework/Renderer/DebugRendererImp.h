@@ -58,6 +58,8 @@ private:
 	class BatchImpl : public RefTargetVirtual, public RenderPrimitive
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 										BatchImpl(Renderer *inRenderer, D3D_PRIMITIVE_TOPOLOGY inType) : RenderPrimitive(inRenderer, inType) { }
 
 		virtual void					AddRef() override			{ RenderPrimitive::AddRef(); }

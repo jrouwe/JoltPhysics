@@ -13,7 +13,7 @@ FixedSizeFreeList<Object>::~FixedSizeFreeList()
 	uint32 num_pages = mNumObjectsAllocated / mPageSize;
 	for (uint32 page = 0; page < num_pages; ++page)
 		AlignedFree(mPages[page]);
-	delete [] mPages;
+	Free(mPages);
 }
 
 template <typename Object>
@@ -31,7 +31,7 @@ void FixedSizeFreeList<Object>::Init(uint inMaxObjects, uint inPageSize)
 	JPH_IF_ENABLE_ASSERTS(mNumFreeObjects = mNumPages * inPageSize;)
 
 	// Allocate page table
-	mPages = new ObjectStorage * [mNumPages];
+	mPages = reinterpret_cast<ObjectStorage **>(Alloc(mNumPages * sizeof(ObjectStorage *)));
 
 	// We didn't yet use any objects of any page
 	mNumObjectsAllocated = 0;

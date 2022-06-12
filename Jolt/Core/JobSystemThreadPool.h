@@ -124,7 +124,7 @@ private:
 	void					StopThreads();
 	
 	/// Entry point for a thread
-	void					ThreadMain(const char *inName, int inThreadIndex);
+	void					ThreadMain(int inThreadIndex);
 
 	/// Get the head of the thread that has processed the least amount of jobs
 	inline uint				GetHead() const;
