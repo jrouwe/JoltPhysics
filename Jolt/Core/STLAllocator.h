@@ -29,7 +29,7 @@ public:
 
 	/// Constructor from other allocator
 	template <typename T2>
-	inline explicit			STLAllocator(const STLAllocator<T2> &) { }
+	inline					STLAllocator(const STLAllocator<T2> &) { }
 
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
