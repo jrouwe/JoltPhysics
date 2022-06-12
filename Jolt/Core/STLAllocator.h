@@ -74,3 +74,20 @@ using String = basic_string<char, char_traits<char>, STLAllocator<char>>;
 using IStringStream = basic_istringstream<char, char_traits<char>, STLAllocator<char>>;
 
 JPH_NAMESPACE_END
+
+#ifndef JPH_PLATFORM_WINDOWS
+
+namespace std
+{
+	/// Declare std::hash for String, for some reason on Linux based platforms template deduction takes the wrong variant
+	template <> 
+	struct hash<JPH::String>
+	{
+		inline size_t operator () (const JPH::String &inRHS) const
+		{
+			return hash<string_view> { } (inRHS);
+		}
+	};
+}
+
+#endif // JPH_PLATFORM_WINDOWS
