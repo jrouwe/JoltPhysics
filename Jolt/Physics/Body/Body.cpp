@@ -16,7 +16,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-static SphereShape sFixedToWorldShape(FLT_EPSILON);
+static const SphereShape sFixedToWorldShape(FLT_EPSILON);
 Body Body::sFixedToWorld(false);
 
 Body::Body(bool) :
