@@ -40,7 +40,7 @@ public:
 	template <class Type, class Traits, class Allocator>
 	void				Write(const basic_string<Type, Traits, Allocator> &inString)
 	{
-		basic_string<Type, Traits, Allocator>::size_type len = inString.size();
+		typename basic_string<Type, Traits, Allocator>::size_type len = inString.size();
 		Write(len);
 		if (!IsFailed())
 			WriteBytes(inString.data(), len * sizeof(Type));

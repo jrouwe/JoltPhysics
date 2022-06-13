@@ -48,7 +48,7 @@ public:
 	template <class Type, class Traits, class Allocator>
 	void				Read(basic_string<Type, Traits, Allocator> &outString)
 	{
-		basic_string<Type, Traits, Allocator>::size_type len = 0;
+		typename basic_string<Type, Traits, Allocator>::size_type len = 0;
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
