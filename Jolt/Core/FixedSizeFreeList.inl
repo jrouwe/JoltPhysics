@@ -66,7 +66,7 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 					uint32 next_page = mNumObjectsAllocated / mPageSize;
 					if (next_page == mNumPages)
 						return cInvalidObjectIndex; // Out of space!
-					mPages[next_page] = reinterpret_cast<ObjectStorage *>(AlignedAlloc(mPageSize * sizeof(ObjectStorage), JPH_CACHE_LINE_SIZE));
+					mPages[next_page] = reinterpret_cast<ObjectStorage *>(AlignedAlloc(mPageSize * sizeof(ObjectStorage), max<size_t>(alignof(ObjectStorage), JPH_CACHE_LINE_SIZE)));
 					mNumObjectsAllocated += mPageSize;
 				}
 			}
@@ -74,7 +74,7 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 			// Allocation successful
 			JPH_IF_ENABLE_ASSERTS(mNumFreeObjects.fetch_sub(1, memory_order_relaxed);)
 			ObjectStorage &storage = GetStorage(first_free);
-			::new (&storage.mData) Object(forward<Parameters>(inParameters)...);
+			::new (&storage.mObject) Object(forward<Parameters>(inParameters)...);
 			storage.mNextFreeObject.store(first_free, memory_order_release);
 			return first_free;
 		}
@@ -92,7 +92,7 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 				// Allocation successful
 				JPH_IF_ENABLE_ASSERTS(mNumFreeObjects.fetch_sub(1, memory_order_relaxed);)
 				ObjectStorage &storage = GetStorage(first_free);
-				::new (&storage.mData) Object(forward<Parameters>(inParameters)...);
+				::new (&storage.mObject) Object(forward<Parameters>(inParameters)...);
 				storage.mNextFreeObject.store(first_free, memory_order_release);
 				return first_free;
 			}
@@ -127,7 +127,7 @@ void FixedSizeFreeList<Object>::DestructObjectBatch(Batch &ioBatch)
 			do
 			{
 				ObjectStorage &storage = GetStorage(object_idx);
-				reinterpret_cast<Object &>(storage.mData).~Object();
+				storage.mObject.~Object();
 				object_idx = storage.mNextFreeObject.load(memory_order_relaxed);
 			}
 			while (object_idx != cInvalidObjectIndex);
@@ -170,7 +170,7 @@ void FixedSizeFreeList<Object>::DestructObject(uint32 inObjectIndex)
 
 	// Call destructor
 	ObjectStorage &storage = GetStorage(inObjectIndex); 
-	reinterpret_cast<Object &>(storage.mData).~Object();
+	storage.mObject.~Object();
 
 	// Add to object free list
 	for (;;)

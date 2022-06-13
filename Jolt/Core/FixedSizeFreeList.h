@@ -20,14 +20,10 @@ class FixedSizeFreeList : public NonCopyable
 {
 private:
 	/// Storage type for an Object
-	struct alignas(Object) ObjectStorage
+	struct ObjectStorage
 	{
-		/// Constructor to satisfy the vector class
-							ObjectStorage() = default;
-							ObjectStorage(const ObjectStorage &inRHS) : mNextFreeObject(inRHS.mNextFreeObject.load()) { memcpy(mData, inRHS.mData, sizeof(Object)); }
-
-		/// Storage space for the Object, stored as uninitialized data
-		uint8				mData[sizeof(Object)];
+		/// The object we're storing
+		Object				mObject;
 
 		/// When the object is freed (or in the process of being freed as a batch) this will contain the next free object
 		/// When an object is in use it will contain the object's index in the free list
@@ -115,10 +111,10 @@ public:
 	inline void				DestructObjectBatch(Batch &ioBatch);
 
 	/// Access an object by index.
-	inline Object &			Get(uint32 inObjectIndex)				{ return reinterpret_cast<Object &>(GetStorage(inObjectIndex).mData); }
+	inline Object &			Get(uint32 inObjectIndex)				{ return GetStorage(inObjectIndex).mObject; }
 
 	/// Access an object by index.
-	inline const Object &	Get(uint32 inObjectIndex) const			{ return reinterpret_cast<const Object &>(GetStorage(inObjectIndex).mData); }
+	inline const Object &	Get(uint32 inObjectIndex) const			{ return GetStorage(inObjectIndex).mObject; }
 };
 
 JPH_NAMESPACE_END
