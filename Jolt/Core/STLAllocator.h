@@ -5,6 +5,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+
 /// STL allocator that forwards to our allocation functions
 template <typename T>
 class STLAllocator
@@ -68,6 +70,12 @@ public:
 	};
 };
 
+#else
+
+template <typename T> using STLAllocator = allocator<T>;
+
+#endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
+
 // Declare STL containers that use our allocator
 template <class T> using Array = vector<T, STLAllocator<T>>;
 using String = basic_string<char, char_traits<char>, STLAllocator<char>>;
@@ -75,7 +83,7 @@ using IStringStream = basic_istringstream<char, char_traits<char>, STLAllocator<
 
 JPH_NAMESPACE_END
 
-#ifndef JPH_PLATFORM_WINDOWS
+#if !defined(JPH_PLATFORM_WINDOWS) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR)
 
 namespace std
 {
@@ -90,4 +98,4 @@ namespace std
 	};
 }
 
-#endif // JPH_PLATFORM_WINDOWS
+#endif // !JPH_PLATFORM_WINDOWS && !JPH_DISABLE_CUSTOM_ALLOCATOR

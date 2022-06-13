@@ -66,6 +66,10 @@ JPH_NAMESPACE_BEGIN
 
 void RegisterTypes()
 {
+#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+	JPH_ASSERT(Alloc != nullptr && Free != nullptr && AlignedAlloc != nullptr && AlignedFree != nullptr, "Need to supply an allocator first or call RegisterDefaultAlloc()");
+#endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
+
 	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");
 
 	// Initialize dispatcher

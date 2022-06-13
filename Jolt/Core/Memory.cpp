@@ -10,22 +10,25 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-AllocFunction Alloc = nullptr;
-FreeFunction Free = nullptr;
-AlignedAllocFunction AlignedAlloc = nullptr;
-AlignedFreeFunction AlignedFree = nullptr;
+#ifdef JPH_DISABLE_CUSTOM_ALLOCATOR
+	#define JPH_ALLOC_FN(x)	x
+	#define JPH_ALLOC_SCOPE
+#else
+	#define JPH_ALLOC_FN(x)	x##Impl
+	#define JPH_ALLOC_SCOPE static
+#endif
 
-static void *AllocImpl(size_t inSize)
+JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Alloc)(size_t inSize)
 {
 	return malloc(inSize);
 }
 
-static void FreeImpl(void *inBlock)
+JPH_ALLOC_SCOPE void JPH_ALLOC_FN(Free)(void *inBlock)
 {
 	free(inBlock);
 }
 
-static void *AlignedAllocImpl(size_t inSize, size_t inAlignment)
+JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAlloc)(size_t inSize, size_t inAlignment)
 {
 #if defined(JPH_PLATFORM_WINDOWS)
 	// Microsoft doesn't implement C++17 std::aligned_alloc
@@ -37,7 +40,7 @@ static void *AlignedAllocImpl(size_t inSize, size_t inAlignment)
 #endif
 }
 
-static void AlignedFreeImpl(void *inBlock)
+JPH_ALLOC_SCOPE void JPH_ALLOC_FN(AlignedFree)(void *inBlock)
 {
 #if defined(JPH_PLATFORM_WINDOWS)
 	_aligned_free(inBlock);
@@ -48,6 +51,13 @@ static void AlignedFreeImpl(void *inBlock)
 #endif
 }
 
+#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+
+AllocFunction Alloc = nullptr;
+FreeFunction Free = nullptr;
+AlignedAllocFunction AlignedAlloc = nullptr;
+AlignedFreeFunction AlignedFree = nullptr;
+
 void RegisterDefaultAlloc()
 {
 	Alloc = AllocImpl;
@@ -55,5 +65,7 @@ void RegisterDefaultAlloc()
 	AlignedAlloc = AlignedAllocImpl;
 	AlignedFree = AlignedFreeImpl;
 }
+
+#endif // JPH_DISABLE_CUSTOM_ALLOCATOR
 
 JPH_NAMESPACE_END
