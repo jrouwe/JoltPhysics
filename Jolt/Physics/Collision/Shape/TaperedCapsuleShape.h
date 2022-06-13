@@ -4,6 +4,9 @@
 #pragma once
 
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Jolt/Renderer/DebugRenderer.h>
+#endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
 
