@@ -19,7 +19,7 @@ inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
 	JPH_ASSERT(mObjectStore == nullptr);
 
 	mObjectStoreSizeBytes = inObjectStoreSizeBytes;
-	mObjectStore = reinterpret_cast<uint8 *>(Alloc(inObjectStoreSizeBytes));
+	mObjectStore = reinterpret_cast<uint8 *>(JPH::Allocate(inObjectStoreSizeBytes));
 }
 
 inline void LFHMAllocator::Clear()
@@ -114,7 +114,7 @@ void LockFreeHashMap<Key, Value>::Init(uint32 inMaxBuckets)
 	mNumBuckets = inMaxBuckets;
 	mMaxBuckets = inMaxBuckets;
 
-	mBuckets = reinterpret_cast<atomic<uint32> *>(AlignedAlloc(inMaxBuckets * sizeof(atomic<uint32>), 16));
+	mBuckets = reinterpret_cast<atomic<uint32> *>(AlignedAllocate(inMaxBuckets * sizeof(atomic<uint32>), 16));
 
 	Clear();
 }

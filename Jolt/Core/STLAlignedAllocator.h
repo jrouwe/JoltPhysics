@@ -34,7 +34,7 @@ public:
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
 	{
-		return (pointer)AlignedAlloc(inN * sizeof(value_type), N);
+		return (pointer)AlignedAllocate(inN * sizeof(value_type), N);
 	}
 
 	/// Free memory

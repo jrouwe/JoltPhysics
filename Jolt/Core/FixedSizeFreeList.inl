@@ -31,7 +31,7 @@ void FixedSizeFreeList<Object>::Init(uint inMaxObjects, uint inPageSize)
 	JPH_IF_ENABLE_ASSERTS(mNumFreeObjects = mNumPages * inPageSize;)
 
 	// Allocate page table
-	mPages = reinterpret_cast<ObjectStorage **>(Alloc(mNumPages * sizeof(ObjectStorage *)));
+	mPages = reinterpret_cast<ObjectStorage **>(Allocate(mNumPages * sizeof(ObjectStorage *)));
 
 	// We didn't yet use any objects of any page
 	mNumObjectsAllocated = 0;
@@ -66,7 +66,7 @@ uint32 FixedSizeFreeList<Object>::ConstructObject(Parameters &&... inParameters)
 					uint32 next_page = mNumObjectsAllocated / mPageSize;
 					if (next_page == mNumPages)
 						return cInvalidObjectIndex; // Out of space!
-					mPages[next_page] = reinterpret_cast<ObjectStorage *>(AlignedAlloc(mPageSize * sizeof(ObjectStorage), max<size_t>(alignof(ObjectStorage), JPH_CACHE_LINE_SIZE)));
+					mPages[next_page] = reinterpret_cast<ObjectStorage *>(AlignedAllocate(mPageSize * sizeof(ObjectStorage), max<size_t>(alignof(ObjectStorage), JPH_CACHE_LINE_SIZE)));
 					mNumObjectsAllocated += mPageSize;
 				}
 			}
