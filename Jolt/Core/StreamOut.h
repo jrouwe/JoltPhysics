@@ -37,12 +37,13 @@ public:
 	}
 
 	/// Write a string to the binary stream (writes the number of characters and then the characters)
-	void				Write(const String &inString)
+	template <class Type, class Traits, class Allocator>
+	void				Write(const basic_string<Type, Traits, Allocator> &inString)
 	{
-		String::size_type len = inString.size();
+		basic_string<Type, Traits, Allocator>::size_type len = inString.size();
 		Write(len);
 		if (!IsFailed())
-			WriteBytes(inString.data(), len);
+			WriteBytes(inString.data(), len * sizeof(Type));
 	}
 
 	/// Write a Vec3 (don't write W)

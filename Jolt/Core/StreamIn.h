@@ -45,14 +45,15 @@ public:
 	}
 
 	/// Read a string from the binary stream (reads the number of characters and then the characters)
-	void				Read(String &outString)
+	template <class Type, class Traits, class Allocator>
+	void				Read(basic_string<Type, Traits, Allocator> &outString)
 	{
-		String::size_type len = 0;
+		basic_string<Type, Traits, Allocator>::size_type len = 0;
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
 			outString.resize(len);
-			ReadBytes(outString.data(), len);
+			ReadBytes(outString.data(), len * sizeof(Type));
 		}
 		else
 			outString.clear();
