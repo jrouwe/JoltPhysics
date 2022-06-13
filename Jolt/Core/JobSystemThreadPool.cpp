@@ -266,7 +266,7 @@ void JobSystemThreadPool::StartThreads(int inNumThreads)
 	mQuit = false;
 
 	// Allocate heads
-	mHeads = new atomic<uint> [inNumThreads];
+	mHeads = reinterpret_cast<atomic<uint> *>(Allocate(sizeof(atomic<uint>) * inNumThreads));
 	for (int i = 0; i < inNumThreads; ++i)
 		mHeads[i] = 0;
 
@@ -321,7 +321,7 @@ void JobSystemThreadPool::StopThreads()
 	}
 
 	// Destroy heads and reset tail
-	delete [] mHeads;
+	Free(mHeads);
 	mHeads = nullptr;
 	mTail = 0;
 }
