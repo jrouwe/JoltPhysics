@@ -24,12 +24,12 @@ public:
 	/// Create a convex hull from inPoints and maximum convex radius inMaxConvexRadius, the radius is automatically lowered if the hull requires it. 
 	/// (internally this will be subtracted so the total size will not grow with the convex radius).
 							ConvexHullShapeSettings(const Vec3 *inPoints, int inNumPoints, float inMaxConvexRadius = cDefaultConvexRadius, const PhysicsMaterial *inMaterial = nullptr) : ConvexShapeSettings(inMaterial), mPoints(inPoints, inPoints + inNumPoints), mMaxConvexRadius(inMaxConvexRadius) { }
-							ConvexHullShapeSettings(const vector<Vec3> &inPoints, float inConvexRadius = cDefaultConvexRadius, const PhysicsMaterial *inMaterial = nullptr) : ConvexShapeSettings(inMaterial), mPoints(inPoints), mMaxConvexRadius(inConvexRadius) { }
+							ConvexHullShapeSettings(const Array<Vec3> &inPoints, float inConvexRadius = cDefaultConvexRadius, const PhysicsMaterial *inMaterial = nullptr) : ConvexShapeSettings(inMaterial), mPoints(inPoints), mMaxConvexRadius(inConvexRadius) { }
 
 	// See: ShapeSettings
 	virtual ShapeResult		Create() const override;
 	
-	vector<Vec3>			mPoints;															///< Points to create the hull from
+	Array<Vec3>				mPoints;															///< Points to create the hull from
 	float					mMaxConvexRadius = 0.0f;											///< Convex radius as supplied by the constructor. Note that during hull creation the convex radius can be made smaller if the value is too big for the hull.
 	float					mMaxErrorConvexRadius = 0.05f;										///< Maximum distance between the shrunk hull + convex radius and the actual hull.
 	float					mHullTolerance = 1.0e-3f;											///< Points are allowed this far outside of the hull (increasing this yields a hull with less vertices). Note that the actual used value can be larger if the points of the hull are far apart.
@@ -39,6 +39,8 @@ public:
 class ConvexHullShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Maximum amount of points supported in a convex hull. Note that while constructing a hull, interior points are discarded so you can provide more points.
 	/// The ConvexHullShapeSettings::Create function will return an error when too many points are provided.
 	static constexpr int	cMaxPointsInHull = 256;
@@ -105,7 +107,7 @@ public:
 	float					GetConvexRadius() const												{ return mConvexRadius; }
 
 	/// Get the planes of this convex hull
-	const vector<Plane> &	GetPlanes() const													{ return mPlanes; }
+	const Array<Plane> &	GetPlanes() const													{ return mPlanes; }
 
 	// Register shape functions with the registry
 	static void				sRegister();
@@ -153,10 +155,10 @@ private:
 	Vec3					mCenterOfMass;				///< Center of mass of this convex hull
 	Mat44					mInertia;					///< Inertia matrix assuming density is 1 (needs to be multiplied by density)
 	AABox					mLocalBounds;				///< Local bounding box for the convex hull
-	vector<Point>			mPoints;					///< Points on the convex hull surface
-	vector<Face>			mFaces;						///< Faces of the convex hull surface
-	vector<Plane>			mPlanes;					///< Planes for the faces (1-on-1 with mFaces array, separate because they need to be 16 byte aligned)
-	vector<uint8>			mVertexIdx;					///< A list of vertex indices (indexing in mPoints) for each of the faces
+	Array<Point>			mPoints;					///< Points on the convex hull surface
+	Array<Face>				mFaces;						///< Faces of the convex hull surface
+	Array<Plane>			mPlanes;					///< Planes for the faces (1-on-1 with mFaces array, separate because they need to be 16 byte aligned)
+	Array<uint8>			mVertexIdx;					///< A list of vertex indices (indexing in mPoints) for each of the faces
 	float					mConvexRadius = 0.0f;		///< Convex radius
 	float					mVolume;					///< Total volume of the convex hull
 	float					mInnerRadius = FLT_MAX;		///< Radius of the biggest sphere that fits entirely in the convex hull

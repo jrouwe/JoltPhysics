@@ -25,6 +25,8 @@ class PhysicsStepListener;
 class PhysicsSystem : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / Destructor
 								PhysicsSystem()												: mContactManager(mPhysicsSettings) { }
 								~PhysicsSystem();
@@ -252,7 +254,7 @@ private:
 	Mutex						mStepListenersMutex;
 
 	/// List of physics step listeners
-	using StepListeners = vector<PhysicsStepListener *>;
+	using StepListeners = Array<PhysicsStepListener *>;
 	StepListeners				mStepListeners;
 
 	/// This is the global gravity vector

@@ -20,14 +20,14 @@ void ScaledConvexHullShapeTest::Initialize()
 	CreateFloor();
 
 	// Create tetrahedron
-	vector<Vec3> tetrahedron;
+	Array<Vec3> tetrahedron;
 	tetrahedron.push_back(Vec3::sZero());
 	tetrahedron.push_back(Vec3(10, 0, 12.5f));
 	tetrahedron.push_back(Vec3(15, 0, 2.5f));
 	tetrahedron.push_back(Vec3(10, -5, 5));
 
 	// Create vertices for box
-	vector<Vec3> box;
+	Array<Vec3> box;
 	box.push_back(Vec3(1, 2, 3));
 	box.push_back(Vec3(-1, 2, 3));
 	box.push_back(Vec3(1, -2, 3));

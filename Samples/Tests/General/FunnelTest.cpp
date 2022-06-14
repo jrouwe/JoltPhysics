@@ -65,7 +65,7 @@ void FunnelTest::Initialize()
 		case 2:
 			{
 				// Create random points
-				vector<Vec3> points;
+				Array<Vec3> points;
 				for (int j = 0; j < 20; ++j)
 					points.push_back(feature_size(random) * Vec3::sRandom(random));
 				shape = ConvexHullShapeSettings(points).Create().Get();

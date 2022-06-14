@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <Jolt/Core/Memory.h>
 #include <Jolt/Core/NonCopyable.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -137,7 +136,7 @@ public:
 #endif // JPH_ENABLE_ASSERTS
 
 	/// Get all key/value pairs
-	inline void				GetAllKeyValues(vector<const KeyValue *> &outAll) const;
+	inline void				GetAllKeyValues(Array<const KeyValue *> &outAll) const;
 
 	/// Non-const iterator
 	struct Iterator

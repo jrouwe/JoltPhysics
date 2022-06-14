@@ -68,6 +68,8 @@ protected:
 class SliderConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Construct slider constraint
 								SliderConstraint(Body &inBody1, Body &inBody2, const SliderConstraintSettings &inSettings);
 

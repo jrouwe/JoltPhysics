@@ -33,8 +33,8 @@ public:
 	size_t									GetNumBodies() const							{ return mBodies.size(); }
 
 	/// Access to the body settings for this scene
-	const vector<BodyCreationSettings> &	GetBodies() const								{ return mBodies; }
-	vector<BodyCreationSettings> &			GetBodies()										{ return mBodies; }
+	const Array<BodyCreationSettings> &		GetBodies() const								{ return mBodies; }
+	Array<BodyCreationSettings> &			GetBodies()										{ return mBodies; }
 
 	/// A constraint and how it is connected to the bodies in the scene
 	class ConnectedConstraint
@@ -54,8 +54,8 @@ public:
 	size_t									GetNumConstraints() const						{ return mConstraints.size(); }
 
 	/// Access to the constraints for this scene
-	const vector<ConnectedConstraint> &		GetConstraints() const							{ return mConstraints; }
-	vector<ConnectedConstraint> &			GetConstraints()								{ return mConstraints; }
+	const Array<ConnectedConstraint> &		GetConstraints() const							{ return mConstraints; }
+	Array<ConnectedConstraint> &			GetConstraints()								{ return mConstraints; }
 
 	/// Instantiate all bodies, returns false if not all bodies could be created
 	bool									CreateBodies(PhysicsSystem *inSystem) const;
@@ -80,10 +80,10 @@ public:
 
 private:
 	/// The bodies that are part of this scene
-	vector<BodyCreationSettings>			mBodies;
+	Array<BodyCreationSettings>				mBodies;
 
 	/// Constraints that are part of this scene
-	vector<ConnectedConstraint>				mConstraints;
+	Array<ConnectedConstraint>				mConstraints;
 };
 
 JPH_NAMESPACE_END

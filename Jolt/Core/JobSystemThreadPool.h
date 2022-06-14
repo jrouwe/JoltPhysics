@@ -22,6 +22,8 @@ JPH_NAMESPACE_BEGIN
 class JobSystemThreadPool final : public JobSystem
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Creates a thread pool.
 	/// @see JobSystemThreadPool::Init
 							JobSystemThreadPool(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
@@ -84,6 +86,8 @@ private:
 	class BarrierImpl : public Barrier
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 							BarrierImpl();
 		virtual				~BarrierImpl() override;
@@ -120,7 +124,7 @@ private:
 	void					StopThreads();
 	
 	/// Entry point for a thread
-	void					ThreadMain(const char *inName, int inThreadIndex);
+	void					ThreadMain(int inThreadIndex);
 
 	/// Get the head of the thread that has processed the least amount of jobs
 	inline uint				GetHead() const;
@@ -137,7 +141,7 @@ private:
 	BarrierImpl *			mBarriers = nullptr;							///< List of the actual barriers
 
 	/// Threads running jobs
-	vector<thread>			mThreads;
+	Array<thread>			mThreads;
 
 	// The job queue
 	static constexpr uint32 cQueueLength = 1024;

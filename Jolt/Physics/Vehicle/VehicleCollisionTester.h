@@ -13,6 +13,8 @@ class PhysicsSystem;
 class VehicleCollisionTester : public RefTarget<VehicleCollisionTester>
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Virtual destructor
 	virtual						~VehicleCollisionTester() = default;
 
@@ -36,6 +38,8 @@ public:
 class VehicleCollisionTesterRay : public VehicleCollisionTester
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	/// @param inObjectLayer Object layer to test collision with
 	/// @param inUp World space up vector, used to avoid colliding with vertical walls.
@@ -55,6 +59,8 @@ private:
 class VehicleCollisionTesterCastSphere : public VehicleCollisionTester
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	/// @param inObjectLayer Object layer to test collision with
 	/// @param inUp World space up vector, used to avoid colliding with vertical walls.

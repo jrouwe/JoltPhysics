@@ -28,7 +28,7 @@ void CenterOfMassTest::Initialize()
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
 
 	// Create box with center of mass offset
-	vector<Vec3> box;
+	Array<Vec3> box;
 	box.push_back(Vec3(10, 10, 10));
 	box.push_back(Vec3(5, 10, 10));
 	box.push_back(Vec3(10, 5, 10));

@@ -32,12 +32,12 @@ public:
 	template <class T, class A>
 	void				Read(vector<T, A> &outT)
 	{
-		typename vector<T>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
+		typename Array<T>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
 			outT.resize(len);
-			for (typename vector<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T>::size_type i = 0; i < len; ++i)
 				Read(outT[i]);
 		}
 		else
@@ -45,14 +45,15 @@ public:
 	}
 
 	/// Read a string from the binary stream (reads the number of characters and then the characters)
-	void				Read(string &outString)
+	template <class Type, class Traits, class Allocator>
+	void				Read(basic_string<Type, Traits, Allocator> &outString)
 	{
-		string::size_type len = 0;
+		typename basic_string<Type, Traits, Allocator>::size_type len = 0;
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
 			outString.resize(len);
-			ReadBytes(outString.data(), len);
+			ReadBytes(outString.data(), len * sizeof(Type));
 		}
 		else
 			outString.clear();

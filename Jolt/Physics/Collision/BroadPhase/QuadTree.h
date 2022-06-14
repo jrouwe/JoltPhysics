@@ -9,10 +9,6 @@
 #include <Jolt/Physics/Body/BodyManager.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
 
-#ifdef JPH_TRACK_BROADPHASE_STATS
-	#include <map>
-#endif // JPH_TRACK_BROADPHASE_STATS
-
 //#define JPH_DUMP_BROADPHASE_TREE
 
 JPH_NAMESPACE_BEGIN
@@ -22,6 +18,9 @@ JPH_NAMESPACE_BEGIN
 /// During the UpdatePrepare/Finalize() call the tree is rebuilt to achieve a tight fit again.
 class QuadTree : public NonCopyable
 {
+public:
+	JPH_OVERRIDE_NEW_DELETE
+
 private:
 	// Forward declare
 	class AtomicNodeID;
@@ -30,6 +29,8 @@ private:
 	class NodeID
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Default constructor does not initialize
 		inline 					NodeID() = default;
 
@@ -164,7 +165,7 @@ public:
 		atomic<uint32>			mBodyLocation { cInvalidBodyLocation };
 	};
 
-	using TrackingVector = vector<Tracking>;
+	using TrackingVector = Array<Tracking>;
 
 	/// Destructor
 								~QuadTree();
@@ -331,7 +332,7 @@ private:
 		uint64					mCollectorTicks = 0;
 	};
 	
-	using LayerToStats = map<string, Stat>;
+	using LayerToStats = UnorderedMap<String, Stat>;
 
 	/// Trace the stats of a single query type to the TTY
 	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;

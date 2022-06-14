@@ -20,12 +20,13 @@ float SixDOFConstraintTest::sLimitMax[EAxis::Num] = { 0, 0, 0, 0, 0, 0 };
 bool SixDOFConstraintTest::sEnableLimits[EAxis::Num] = { true, true, true, true, true, true };
 
 SixDOFConstraintTest::SettingsRef SixDOFConstraintTest::sSettings = []() {
-		SixDOFConstraintSettings *settings = new SixDOFConstraintSettings();
-		settings->mAxisX1 = settings->mAxisX2 = -Vec3::sAxisY();
-		settings->mAxisY1 = settings->mAxisY2 = Vec3::sAxisZ();
+		static SixDOFConstraintSettings settings;
+		settings.SetEmbedded();
+		settings.mAxisX1 = settings.mAxisX2 = -Vec3::sAxisY();
+		settings.mAxisY1 = settings.mAxisY2 = Vec3::sAxisZ();
 		for (int i = 0; i < 6; ++i)
-			settings->mMotorSettings[i] = MotorSettings(10.0f, 2.0f);
-		return settings;
+			settings.mMotorSettings[i] = MotorSettings(10.0f, 2.0f);
+		return &settings;
 	}();
 
 void SixDOFConstraintTest::Initialize()
@@ -87,8 +88,8 @@ void SixDOFConstraintTest::GetInitialCamera(CameraState &ioState) const
 
 void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	vector<string> labels = { "Translation X", "Translation Y", "Translation Z", "Rotation X", "Rotation Y", "Rotation Z" };
-	vector<string> motor_states = { "Off", "Velocity", "Position" };
+	Array<String> labels = { "Translation X", "Translation Y", "Translation Z", "Rotation X", "Rotation Y", "Rotation Z" };
+	Array<String> motor_states = { "Off", "Velocity", "Position" };
 
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
 		UIElement *configuration_settings = inUI->CreateMenu();

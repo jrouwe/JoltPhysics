@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] alignas(16) Vec4
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	// Underlying vector type
 #if defined(JPH_USE_SSE)
 	using Type = __m128;

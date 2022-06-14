@@ -153,7 +153,7 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	scene->AddBody(BodyCreationSettings(compound_shape, Vec3(0, cMaxHeight + 6.0f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 
 	// Convex hull shape
-	vector<Vec3> tetrahedron;
+	Array<Vec3> tetrahedron;
 	tetrahedron.push_back(Vec3(-0.5f, 0, -0.5f));
 	tetrahedron.push_back(Vec3(0, 0, 0.5f));
 	tetrahedron.push_back(Vec3(0.5f, 0, -0.5f));

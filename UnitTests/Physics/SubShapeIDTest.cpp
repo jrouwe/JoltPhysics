@@ -12,7 +12,7 @@ TEST_SUITE("SubShapeIDTest")
 		uint		mNumBits;
 	};
 
-	using SSPairs = vector<SSPair>;
+	using SSPairs = Array<SSPair>;
 
 	// Helper function that pushes sub shape ID's on the creator and checks that they come out again
 	static void TestPushPop(const SSPairs &inPairs)

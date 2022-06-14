@@ -53,7 +53,7 @@ bool RagdollSettings::Stabilize()
 
 	// The skeleton can contain one or more static bodies. We can't modify the mass for those so we start a new stabilization chain for each joint under a static body until we reach the next static body.
 	// This array keeps track of which joints have been processed.
-	vector<bool> visited;
+	Array<bool> visited;
 	visited.resize(mSkeleton->GetJointCount());
 	for (size_t v = 0; v < visited.size(); ++v)
 	{
@@ -78,7 +78,7 @@ bool RagdollSettings::Stabilize()
 		{
 			// Find all children of first_idx and their children up to the next static part
 			int next_to_process = 0;
-			vector<int> indices;
+			Array<int> indices;
 			indices.reserve(mSkeleton->GetJointCount());
 			visited[first_idx] = true;
 			indices.push_back(first_idx);
@@ -102,7 +102,7 @@ bool RagdollSettings::Stabilize()
 	
 			// Ensure that the mass ratio from parent to child is within a range
 			float total_mass_ratio = 1.0f;
-			vector<float> mass_ratios;
+			Array<float> mass_ratios;
 			mass_ratios.resize(mSkeleton->GetJointCount());
 			mass_ratios[indices[0]] = 1.0f;
 			for (int i = 1; i < (int)indices.size(); ++i)
@@ -142,7 +142,7 @@ bool RagdollSettings::Stabilize()
 				Vec3	mDiagonal;
 				float	mChildSum = 0.0f;
 			};	
-			vector<Principal> principals;
+			Array<Principal> principals;
 			principals.resize(mParts.size());
 			for (int i : indices)
 				if (!mParts[i].mMassPropertiesOverride.DecomposePrincipalMomentsOfInertia(principals[i].mRotation, principals[i].mDiagonal))

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <Jolt/Core/Memory.h>
-
 JPH_NAMESPACE_BEGIN
 
 /// STL allocator that takes care that memory is aligned to N bytes
@@ -36,7 +34,7 @@ public:
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
 	{
-		return (pointer)AlignedAlloc(inN * sizeof(value_type), N);
+		return (pointer)AlignedAllocate(inN * sizeof(value_type), N);
 	}
 
 	/// Free memory

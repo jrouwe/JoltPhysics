@@ -26,6 +26,8 @@ public:
 	class Edge : public NonCopyable
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 						Edge(Face *inFace, int inStartIdx)	: mFace(inFace), mStartIdx(inStartIdx) { }
 
@@ -44,12 +46,14 @@ public:
 		int				mStartIdx;							///< Vertex index in mPositions that indicates the start vertex of this edge
 	};
 
-	using ConflictList = vector<int>;
+	using ConflictList = Array<int>;
 
 	/// Class that holds the information of one face
 	class Face : public NonCopyable
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Destructor
 						~Face();
 
@@ -78,8 +82,8 @@ public:
 	};
 
 	// Typedefs
-	using Positions = vector<Vec3>;
-	using Faces = vector<Face *>;
+	using Positions = Array<Vec3>;
+	using Faces = Array<Face *>;
 
 	/// Constructor
 	explicit			ConvexHullBuilder(const Positions &inPositions);
@@ -108,7 +112,7 @@ public:
 	int					GetNumVerticesUsed() const;
 
 	/// Returns true if the hull contains a polygon with inIndices (counter clockwise indices in mPositions)
-	bool				ContainsFace(const vector<int> &inIndices) const;
+	bool				ContainsFace(const Array<int> &inIndices) const;
 
 	/// Calculate the center of mass and the volume of the current convex hull
 	void				GetCenterOfMassAndVolume(Vec3 &outCenterOfMass, float &outVolume) const;
@@ -142,7 +146,7 @@ private:
 	};
 
 	// Private typedefs
-	using FullEdges = vector<FullEdge>;
+	using FullEdges = Array<FullEdge>;
 
 	// Determine a suitable tolerance for detecting that points are coplanar
 	float				DetermineCoplanarDistance() const;
@@ -256,7 +260,7 @@ private:
 		int				mPositionIdx;						///< Index in mPositions
 		float			mDistanceSq;						///< Distance to the edge of closest face (should be > 0)
 	};
-	using CoplanarList = vector<Coplanar>;
+	using CoplanarList = Array<Coplanar>;
 
 	CoplanarList		mCoplanarList;						///< List of positions that are coplanar to a face but outside of the face, these are added to the hull at the end
 

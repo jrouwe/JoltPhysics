@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 ObjectStreamBinaryOut::ObjectStreamBinaryOut(ostream &inStream) :
 	ObjectStreamOut(inStream)
 {
-	string header;
+	String header;
 	header = StringFormat("BOS%2d.%02d", ObjectStream::sVersion, ObjectStream::sRevision);
 	mStream.write(header.c_str(), header.size());
 }
@@ -23,7 +23,7 @@ void ObjectStreamBinaryOut::WriteDataType(EOSDataType inType)
 
 void ObjectStreamBinaryOut::WriteName(const char *inName)
 {
-	WritePrimitiveData(string(inName));
+	WritePrimitiveData(String(inName));
 }
 
 void ObjectStreamBinaryOut::WriteIdentifier(Identifier inIdentifier)
@@ -71,7 +71,7 @@ void ObjectStreamBinaryOut::WritePrimitiveData(const bool &inPrimitive)
 	mStream.write((const char *)&inPrimitive, sizeof(inPrimitive));
 }
 
-void ObjectStreamBinaryOut::WritePrimitiveData(const string &inPrimitive)
+void ObjectStreamBinaryOut::WritePrimitiveData(const String &inPrimitive)
 {
 	// Empty strings are trivial
 	if (inPrimitive.empty())

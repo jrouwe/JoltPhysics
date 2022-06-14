@@ -72,6 +72,6 @@ public:
 private:
 	ComPtr<ID3D12DescriptorHeap>		mHeap;
 	uint								mDescriptorSize;				///< The size (in bytes) of a single heap descriptor
-	vector<uint>						mFreeList;						///< List of indices in the heap that are still free
+	Array<uint>							mFreeList;						///< List of indices in the heap that are still free
 	INT64								mGPUOffset = -1;				///< Offset between CPU and GPU handles
 };

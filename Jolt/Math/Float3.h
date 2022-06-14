@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] Float3
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 				Float3() = default; ///< Intentionally not initialized for performance reasons
 				Float3(const Float3 &inRHS) = default;
 				Float3(float inX, float inY, float inZ) : x(inX), y(inY), z(inZ) { }
@@ -36,7 +38,7 @@ public:
 	float		z;
 };
 
-using VertexList = vector<Float3>;
+using VertexList = Array<Float3>;
 
 static_assert(is_trivial<Float3>(), "Is supposed to be a trivial type!");
 

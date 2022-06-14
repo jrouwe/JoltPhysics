@@ -29,7 +29,7 @@ public:
 	bool						Create(const char *inFontName, int inCharHeight);
 
 	/// Properties
-	const string &				GetFontName() const									{ return mFontName; }
+	const String &				GetFontName() const									{ return mFontName; }
 	int							GetCharHeight() const								{ return mCharHeight; }
 							
 	/// Get extents of a string, assuming the height of the text is 1 and with the normal aspect ratio of the font
@@ -52,7 +52,7 @@ private:
 	};
 
 	/// Properties of the font
-	string						mFontName;											///< Name of the font
+	String						mFontName;											///< Name of the font
 	int							mCharHeight;										///< Height of a character
 	int							mHorizontalTexels;									///< Number of texels horizontally, determines the scale of mStartU, mWidth and mSpacing
 	int							mVerticalTexels;									///< Number of texels vertically, determines the scale of mStartV

@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 class BroadPhaseCastResult
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Function required by the CollisionCollector. A smaller fraction is considered to be a 'better hit'. For rays/cast shapes we can just use the collision fraction.
 	inline float	GetEarlyOutFraction() const			{ return mFraction; }
 
@@ -23,6 +25,8 @@ public:
 class RayCastResult : public BroadPhaseCastResult
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	SubShapeID		mSubShapeID2;						///< Sub shape ID of shape that we collided against
 };
 

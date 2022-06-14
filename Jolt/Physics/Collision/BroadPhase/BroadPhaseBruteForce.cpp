@@ -62,7 +62,7 @@ void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber)
 		JPH_ASSERT(body.IsInBroadPhase());
 
 		// Find body id
-		vector<BodyID>::iterator it = lower_bound(mBodyIDs.begin(), mBodyIDs.end(), body.GetID());
+		Array<BodyID>::iterator it = lower_bound(mBodyIDs.begin(), mBodyIDs.end(), body.GetID());
 		JPH_ASSERT(it != mBodyIDs.end());
 
 		// Remove element

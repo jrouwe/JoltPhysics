@@ -104,7 +104,7 @@ void ContactListenerImpl::SaveState(StateRecorder &inStream) const
 	inStream.Write(mState.size());
 
 	// Get and sort keys
-	vector<SubShapeIDPair> keys;
+	Array<SubShapeIDPair> keys;
 	for (const StateMap::value_type &kv : mState)
 		keys.push_back(kv.first);
 	sort(keys.begin(), keys.end());
@@ -132,7 +132,7 @@ void ContactListenerImpl::RestoreState(StateRecorder &inStream)
 		length = mState.size();
 	inStream.Read(length);
 
-	vector<SubShapeIDPair> keys;
+	Array<SubShapeIDPair> keys;
 
 	// Clear the state and remember the old state for validation
 	StateMap old_state;

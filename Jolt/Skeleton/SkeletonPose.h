@@ -16,9 +16,11 @@ class DebugRenderer;
 class SkeletonPose
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	using JointState = SkeletalAnimation::JointState;
-	using JointStateVector = vector<JointState>;
-	using Mat44Vector = vector<Mat44>;
+	using JointStateVector = Array<JointState>;
+	using Mat44Vector = Array<Mat44>;
 
 	///@name Skeleton
 	///@{

@@ -57,6 +57,8 @@ protected:
 class HingeConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Construct hinge constraint
 								HingeConstraint(Body &inBody1, Body &inBody2, const HingeConstraintSettings &inSettings);
 

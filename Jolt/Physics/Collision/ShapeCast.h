@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 /// Structure that holds a single shape cast (a shape moving along a linear path in 3d space with no rotation)
 struct ShapeCast
 {
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 								ShapeCast(const Shape *inShape, Vec3Arg inScale, Mat44Arg inCenterOfMassStart, Vec3Arg inDirection, const AABox &inWorldSpaceBounds) :
 		mShape(inShape),
@@ -53,6 +55,8 @@ struct ShapeCast
 class ShapeCastSettings : public CollideSettingsBase
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// How backfacing triangles should be treated (should we report moving out of a triangle?)
 	EBackFaceMode				mBackFaceModeTriangles				= EBackFaceMode::IgnoreBackFaces;
 
@@ -70,6 +74,8 @@ public:
 class ShapeCastResult : public CollideShapeResult
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Default constructor
 								ShapeCastResult() = default;
 

@@ -50,6 +50,9 @@ static void TraceImpl(const char *inFMT, ...)
 // Program entry point
 int main(int argc, char** argv)
 {
+	// Register allocation hook
+	RegisterDefaultAllocator();
+
 	// Parse command line parameters
 	int specified_quality = -1;
 	int specified_threads = -1;
@@ -159,8 +162,8 @@ int main(int argc, char** argv)
 	// Create mapping table from object layer to broadphase layer
 	BPLayerInterfaceImpl broad_phase_layer_interface;
 
-	// Start profiling this thread
-	JPH_PROFILE_THREAD_START("Main");
+	// Start profiling this program
+	JPH_PROFILE_START("Main");
 
 	// Trace header
 	cout << "Motion Quality, Thread Count, Steps / Second, Hash" << endl;
@@ -174,10 +177,10 @@ int main(int argc, char** argv)
 
 		// Determine motion quality
 		EMotionQuality motion_quality = mq == 0? EMotionQuality::Discrete : EMotionQuality::LinearCast;
-		string motion_quality_str = mq == 0? "Discrete" : "LinearCast";
+		String motion_quality_str = mq == 0? "Discrete" : "LinearCast";
 
 		// Determine which thread counts to test
-		vector<uint> thread_permutations;
+		Array<uint> thread_permutations;
 		if (specified_threads > 0)
 			thread_permutations.push_back((uint)specified_threads - 1);
 		else
@@ -219,7 +222,7 @@ int main(int argc, char** argv)
 			physics_system.OptimizeBroadPhase();
 
 			// A tag used to identify the test
-			string tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
+			String tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
 					     
 		#ifdef JPH_DEBUG_RENDERER
 			// Open renderer output
@@ -307,8 +310,8 @@ int main(int argc, char** argv)
 	delete Factory::sInstance;
 	Factory::sInstance = nullptr;
 
-	// End profiling this thread
-	JPH_PROFILE_THREAD_END();
+	// End profiling this program
+	JPH_PROFILE_END();
 
 	return 0;
 }

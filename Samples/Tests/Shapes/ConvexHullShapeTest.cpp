@@ -19,7 +19,7 @@ void ConvexHullShapeTest::Initialize()
 	CreateFloor();
 
 	// Create tetrahedron
-	vector<Vec3> tetrahedron;
+	Array<Vec3> tetrahedron;
 	tetrahedron.push_back(Vec3(-5, 0, -5));
 	tetrahedron.push_back(Vec3(0, 0, 5));
 	tetrahedron.push_back(Vec3(5, 0, -5));
@@ -29,7 +29,7 @@ void ConvexHullShapeTest::Initialize()
 	mBodyInterface->AddBody(body_tetrahedron.GetID(), EActivation::Activate);
 
 	// Create box
-	vector<Vec3> box;
+	Array<Vec3> box;
 	box.push_back(Vec3(5, 5, 5));
 	box.push_back(Vec3(-5, 5, 5));
 	box.push_back(Vec3(5, -5, 5));
@@ -43,7 +43,7 @@ void ConvexHullShapeTest::Initialize()
 	mBodyInterface->AddBody(body_box.GetID(), EActivation::Activate);
 
 	// Add a sphere of many points
-	vector <Vec3> sphere;
+	Array<Vec3> sphere;
 	for (float theta = 0.0f; theta <= JPH_PI; theta += JPH_PI / 20.0f)
 		for (float phi = 0.0f; phi <= 2.0f * JPH_PI; phi += 2.0f * JPH_PI / 20.0f)
 			sphere.push_back(5.0f * Vec3::sUnitSpherical(theta, phi));
@@ -52,7 +52,7 @@ void ConvexHullShapeTest::Initialize()
 	mBodyInterface->AddBody(body_sphere.GetID(), EActivation::Activate);
 
 	// Add a tapered cylinder of many points
-	vector <Vec3> tapered_cylinder;
+	Array<Vec3> tapered_cylinder;
 	for (float theta = 0.0f; theta <= 2.0f * JPH_PI; theta += JPH_PI / 128.0f)
 	{
 		tapered_cylinder.push_back(4.0f * Vec3(-0.1f, sin(theta), cos(theta)));
@@ -63,7 +63,7 @@ void ConvexHullShapeTest::Initialize()
 	mBodyInterface->AddBody(body_tapered_cylinder.GetID(), EActivation::Activate);
 
 	// Create convex hull with on one side nearly coplanar faces
-	vector<Vec3> coplanar;
+	Array<Vec3> coplanar;
 	coplanar.push_back(Vec3(1.04298747f, 4.68531752f, 0.858853102f));
 	coplanar.push_back(Vec3(-1.00753999f, 4.63935566f, -0.959064901f));
 	coplanar.push_back(Vec3(-1.01861656f, 4.72096348f, 0.846121550f));
@@ -94,7 +94,7 @@ void ConvexHullShapeTest::Initialize()
 	for (int i = 0; i < 10; ++i)
 	{
 		// Create random points
-		vector<Vec3> points;
+		Array<Vec3> points;
 		for (int j = 0; j < 20; ++j)
 			points.push_back(hull_size(random) * Vec3::sRandom(random));
 
@@ -106,7 +106,7 @@ void ConvexHullShapeTest::Initialize()
 	for (int i = 0; i < 10; ++i)
 	{
 		// Create random points
-		vector<Vec3> points;
+		Array<Vec3> points;
 		for (int j = 0; j < 20; ++j)
 		{
 			Vec3 v = hull_size(random) * Vec3::sRandom(random);

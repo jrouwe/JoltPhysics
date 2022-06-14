@@ -45,7 +45,7 @@ void WaterShapeTest::Initialize()
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create tetrahedron
-	vector<Vec3> tetrahedron;
+	Array<Vec3> tetrahedron;
 	tetrahedron.push_back(Vec3(-2, 0, -2));
 	tetrahedron.push_back(Vec3(0, 0, 2));
 	tetrahedron.push_back(Vec3(2, 0, -2));
@@ -59,7 +59,7 @@ void WaterShapeTest::Initialize()
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create convex hull box
-	vector<Vec3> box;
+	Array<Vec3> box;
 	box.push_back(Vec3(1.5f, 1.0f, 0.5f));
 	box.push_back(Vec3(-1.5f, 1.0f, 0.5f));
 	box.push_back(Vec3(1.5f, -1.0f, 0.5f));
@@ -74,7 +74,7 @@ void WaterShapeTest::Initialize()
 	// Create random convex shape
 	default_random_engine random;
 	uniform_real_distribution<float> hull_size(0.1f, 1.9f);
-	vector<Vec3> points;
+	Array<Vec3> points;
 	for (int j = 0; j < 20; ++j)
 		points.push_back(hull_size(random) * Vec3::sRandom(random));
 	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(points), Vec3(21, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();

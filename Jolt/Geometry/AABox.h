@@ -14,6 +14,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] AABox
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 					AABox()												: mMin(Vec3::sReplicate(FLT_MAX)), mMax(Vec3::sReplicate(-FLT_MAX)) { }
 					AABox(Vec3Arg inMin, Vec3Arg inMax)					: mMin(inMin), mMax(inMax) { }

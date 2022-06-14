@@ -1549,7 +1549,7 @@ void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) cons
 		if (node_id.IsBody())
 		{
 			// Output body
-			string body_id = ConvertToString(node_id.GetBodyID().GetIndex());
+			String body_id = ConvertToString(node_id.GetBodyID().GetIndex());
 			f << "body" << body_id << "[label = \"Body " << body_id << "\"]\n";
 		}
 		else
@@ -1563,7 +1563,7 @@ void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) cons
 			node.GetNodeBounds(bounds);
 
 			// Output node
-			string node_str = ConvertToString(node_idx);
+			String node_str = ConvertToString(node_idx);
 			f << "node" << node_str << "[label = \"Node " << node_str << "\nVolume: " << ConvertToString(bounds.GetVolume()) << "\" color=" << (node.mIsChanged? "red" : "black") << "]\n";
 
 			// Recurse and get all children
@@ -1592,7 +1592,7 @@ void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) cons
 	f.close();
 
 	// Convert to svg file
-	string cmd = StringFormat("dot %s.dot -Tsvg -o %s.svg", inFileNamePrefix, inFileNamePrefix);
+	String cmd = StringFormat("dot %s.dot -Tsvg -o %s.svg", inFileNamePrefix, inFileNamePrefix);
 	system(cmd.c_str());
 }
 

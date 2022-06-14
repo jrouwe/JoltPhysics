@@ -19,7 +19,7 @@ public:
 	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
-	vector<Ref<SwingTwistConstraint>>	mConstraints;
+	Array<Ref<SwingTwistConstraint>>	mConstraints;
 
 	inline static float		sNormalHalfConeAngle = DegreesToRadians(60);
 	inline static float		sPlaneHalfConeAngle = DegreesToRadians(20);

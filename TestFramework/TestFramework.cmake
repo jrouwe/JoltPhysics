@@ -75,6 +75,8 @@ set(TEST_FRAMEWORK_SRC_FILES
 	${TEST_FRAMEWORK_ROOT}/UI/UITexturedQuad.h
 	${TEST_FRAMEWORK_ROOT}/UI/UIVerticalStack.cpp
 	${TEST_FRAMEWORK_ROOT}/UI/UIVerticalStack.h
+	${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.cpp
+	${TEST_FRAMEWORK_ROOT}/Utils/CustomMemoryHook.h
 	${TEST_FRAMEWORK_ROOT}/Utils/Log.cpp
 	${TEST_FRAMEWORK_ROOT}/Utils/Log.h
 	${TEST_FRAMEWORK_ROOT}/Utils/ReadData.cpp

@@ -90,6 +90,8 @@ protected:
 class SixDOFConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Get Axis from settings class
 	using EAxis = SixDOFConstraintSettings::EAxis;
 

@@ -79,7 +79,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 			{
 				// Find ':'
 				string::size_type pos = line.find(':', num_chars);
-				if (pos != string::npos)
+				if (pos != String::npos)
 				{		
 					// Convert to number
 					string freq = line.substr(pos + 1);

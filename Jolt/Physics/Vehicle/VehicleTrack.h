@@ -32,7 +32,7 @@ public:
 	void					RestoreBinaryState(StreamIn &inStream);
 
 	uint					mDrivenWheel;								///< Which wheel on the track is connected to the engine
-	vector<uint>			mWheels;									///< Indices of wheels that are inside this track, should include the driven wheel too
+	Array<uint>				mWheels;									///< Indices of wheels that are inside this track, should include the driven wheel too
 	float					mInertia = 10.0f;							///< Moment of inertia (kg m^2) of the track and its wheels as seen on the driven wheel
 	float					mAngularDamping = 0.5f;						///< Damping factor of track and its wheels: dw/dt = -c * w as seen on the driven wheel
 	float					mMaxBrakeTorque = 15000.0f;					///< How much torque (Nm) the brakes can apply on the driven wheel

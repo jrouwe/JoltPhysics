@@ -58,7 +58,7 @@ public:
 	void				RestoreBinaryState(StreamIn &inStream);
 
 	/// The points on the curve, should be sorted ascending by x
-	using Points = vector<Point>;
+	using Points = Array<Point>;
 	Points				mPoints;
 };
 

@@ -12,12 +12,9 @@
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/Result.h>
 #include <Jolt/Core/NonCopyable.h>
+#include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/UnorderedSet.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
-#include <unordered_set>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -48,9 +45,9 @@ using CollideShapeCollector = CollisionCollector<CollideShapeResult, CollisionCo
 using TransformedShapeCollector = CollisionCollector<TransformedShape, CollisionCollectorTraitsCollideShape>;
 
 using ShapeRefC = RefConst<Shape>;
-using ShapeList = vector<ShapeRefC>;
+using ShapeList = Array<ShapeRefC>;
 using PhysicsMaterialRefC = RefConst<PhysicsMaterial>;
-using PhysicsMaterialList = vector<PhysicsMaterialRefC>;
+using PhysicsMaterialList = Array<PhysicsMaterialRefC>;
 
 /// Shapes are categorized in groups, each shape can return which group it belongs to through its Shape::GetType function.
 enum class EShapeType : uint8
@@ -161,6 +158,8 @@ private:
 class Shape : public RefTarget<Shape>, public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	using ShapeResult = ShapeSettings::ShapeResult;
 
 	/// Constructor
@@ -318,10 +317,10 @@ public:
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
 	virtual void					RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
-	using ShapeToIDMap = unordered_map<const Shape *, uint32>;
-	using MaterialToIDMap = unordered_map<const PhysicsMaterial *, uint32>;
-	using IDToShapeMap = vector<Ref<Shape>>;
-	using IDToMaterialMap = vector<Ref<PhysicsMaterial>>;
+	using ShapeToIDMap = UnorderedMap<const Shape *, uint32>;
+	using MaterialToIDMap = UnorderedMap<const PhysicsMaterial *, uint32>;
+	using IDToShapeMap = Array<Ref<Shape>>;
+	using IDToMaterialMap = Array<Ref<PhysicsMaterial>>;
 
 	/// Save this shape, all its children and its materials. Pass in an empty map in ioShapeMap / ioMaterialMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	void							SaveWithChildren(StreamOut &inStream, ShapeToIDMap &ioShapeMap, MaterialToIDMap &ioMaterialMap) const;
@@ -343,7 +342,7 @@ public:
 	/// Get stats of this shape. Use for logging / data collection purposes only. Does not add values from child shapes, use GetStatsRecursive for this.
 	virtual Stats					GetStats() const = 0;
 
-	using VisitedShapes = unordered_set<const Shape *>;
+	using VisitedShapes = UnorderedSet<const Shape *>;
 
 	/// Get the combined stats of this shape and its children.
 	/// @param ioVisitedShapes is used to track which shapes have already been visited, to avoid calculating the wrong memory size.

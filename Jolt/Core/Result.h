@@ -20,11 +20,11 @@ public:
 		switch (inRHS.mState)
 		{
 		case EState::Valid:
-			new (&mResult) Type (inRHS.mResult);
+			::new (&mResult) Type (inRHS.mResult);
 			break;
 
 		case EState::Error:
-			new (&mError) string(inRHS.mError);
+			::new (&mError) String(inRHS.mError);
 			break;
 
 		case EState::Invalid:
@@ -39,11 +39,11 @@ public:
 		switch (inRHS.mState)
 		{
 		case EState::Valid:
-			new (&mResult) Type (move(inRHS.mResult));
+			::new (&mResult) Type (move(inRHS.mResult));
 			break;
 
 		case EState::Error:
-			new (&mError) string(move(inRHS.mError));
+			::new (&mError) String(move(inRHS.mError));
 			break;
 
 		case EState::Invalid:
@@ -66,11 +66,11 @@ public:
 		switch (inRHS.mState)
 		{
 		case EState::Valid:
-			new (&mResult) Type (inRHS.mResult);
+			::new (&mResult) Type (inRHS.mResult);
 			break;
 
 		case EState::Error:
-			new (&mError) string(inRHS.mError);
+			::new (&mError) String(inRHS.mError);
 			break;
 
 		case EState::Invalid:
@@ -90,11 +90,11 @@ public:
 		switch (inRHS.mState)
 		{
 		case EState::Valid:
-			new (&mResult) Type (move(inRHS.mResult));
+			::new (&mResult) Type (move(inRHS.mResult));
 			break;
 
 		case EState::Error:
-			new (&mError) string(move(inRHS.mError));
+			::new (&mError) String(move(inRHS.mError));
 			break;
 
 		case EState::Invalid:
@@ -116,7 +116,7 @@ public:
 			break; 
 
 		case EState::Error:
-			mError.~string();
+			mError.~String();
 			break;
 
 		case EState::Invalid:
@@ -136,27 +136,27 @@ public:
 	const Type &		Get() const									{ JPH_ASSERT(IsValid()); return mResult; }
 
 	/// Set the result value
-	void				Set(const Type &inResult)					{ Clear(); new (&mResult) Type(inResult); mState = EState::Valid; }
+	void				Set(const Type &inResult)					{ Clear(); ::new (&mResult) Type(inResult); mState = EState::Valid; }
 
 	/// Set the result value (move value)
-	void				Set(const Type &&inResult)					{ Clear(); new (&mResult) Type(move(inResult)); mState = EState::Valid; }
+	void				Set(const Type &&inResult)					{ Clear(); ::new (&mResult) Type(move(inResult)); mState = EState::Valid; }
 
 	/// Check if we had an error
 	bool				HasError() const							{ return mState == EState::Error; }
 
 	/// Get the error value
-	const string &		GetError() const							{ JPH_ASSERT(HasError()); return mError; }
+	const String &		GetError() const							{ JPH_ASSERT(HasError()); return mError; }
 
 	/// Set an error value
-	void				SetError(const char *inError)				{ Clear(); new (&mError) string(inError); mState = EState::Error; }
-	void				SetError(const string_view &inError)		{ Clear(); new (&mError) string(inError); mState = EState::Error; }
-	void				SetError(string &&inError)					{ Clear(); new (&mError) string(move(inError)); mState = EState::Error; }
+	void				SetError(const char *inError)				{ Clear(); ::new (&mError) String(inError); mState = EState::Error; }
+	void				SetError(const string_view &inError)		{ Clear(); ::new (&mError) String(inError); mState = EState::Error; }
+	void				SetError(String &&inError)					{ Clear(); ::new (&mError) String(move(inError)); mState = EState::Error; }
 
 private:
 	union
 	{
 		Type			mResult;									///< The actual result object
-		string			mError;										///< The error description if the result failed
+		String			mError;										///< The error description if the result failed
 	};
 
 	/// State of the result

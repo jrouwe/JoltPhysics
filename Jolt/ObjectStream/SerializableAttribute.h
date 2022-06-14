@@ -50,7 +50,7 @@ public:
 	void						SetName(const char *inName)							{ mName = inName; }
 	const char *				GetName() const										{ return mName; }
 
-	/// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
+	/// In case this attribute contains an RTTI type, return it (note that a Array<sometype> will return the rtti of sometype)
 	const RTTI *				GetMemberPrimitiveType() const
 	{
 		return mGetMemberPrimitiveType();
@@ -87,7 +87,7 @@ private:
 	// Offset of the member relative to the class
 	uint						mMemberOffset;
 
-	// In case this attribute contains an RTTI type, return it (note that a vector<sometype> will return the rtti of sometype)
+	// In case this attribute contains an RTTI type, return it (note that a Array<sometype> will return the rtti of sometype)
 	pGetMemberPrimitiveType		mGetMemberPrimitiveType;
 
 	// Serialization operations

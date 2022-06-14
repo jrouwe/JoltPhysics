@@ -15,7 +15,7 @@
 #include <Renderer/RenderPrimitive.h>
 #include <Renderer/RenderInstances.h>
 #include <Jolt/Core/Mutex.h>
-#include <unordered_map>
+#include <Jolt/Core/UnorderedMap.h>
 
 class Renderer;
 class Font;
@@ -24,6 +24,8 @@ class Font;
 class DebugRendererImp final : public DebugRenderer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 										DebugRendererImp(Renderer *inRenderer, const Font *inFont);
 
@@ -56,6 +58,8 @@ private:
 	class BatchImpl : public RefTargetVirtual, public RenderPrimitive
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 										BatchImpl(Renderer *inRenderer, D3D_PRIMITIVE_TOPOLOGY inType) : RenderPrimitive(inRenderer, inType) { }
 
 		virtual void					AddRef() override			{ RenderPrimitive::AddRef(); }
@@ -115,22 +119,22 @@ private:
 	/// Properties for a batch of instances that have the same primitive
 	struct Instances
 	{
-		vector<InstanceWithLODInfo>		mInstances;
+		Array<InstanceWithLODInfo>		mInstances;
 
 		/// Start index in mInstancesBuffer for each of the LOD in the geometry pass. Length is one longer than the number of LODs to indicate how many instances the last lod has.
-		vector<int>						mGeometryStartIdx;
+		Array<int>						mGeometryStartIdx;
 
 		/// Start index in mInstancesBuffer for each of the LOD in the light pass. Length is one longer than the number of LODs to indicate how many instances the last lod has.
-		vector<int>						mLightStartIdx;
+		Array<int>						mLightStartIdx;
 	};
 
-	using InstanceMap = unordered_map<GeometryRef, Instances>;
+	using InstanceMap = UnorderedMap<GeometryRef, Instances>;
 
 	/// Clear map of instances and make it ready for the next frame
 	void								ClearMap(InstanceMap &ioInstances);
 
 	/// Helper function to draw instances
-	inline void							DrawInstances(const Geometry *inGeometry, const vector<int> &inStartIdx);
+	inline void							DrawInstances(const Geometry *inGeometry, const Array<int> &inStartIdx);
 
 	/// List of primitives that are finished and ready for drawing
 	InstanceMap							mWireframePrimitives;
@@ -153,13 +157,13 @@ private:
 										Text(Vec3Arg inPosition, const string_view &inText, ColorArg inColor, float inHeight) : mPosition(inPosition), mText(inText), mColor(inColor), mHeight(inHeight) { }
 
 		Vec3							mPosition;
-		string							mText;
+		String							mText;
 		Color							mColor;
 		float							mHeight;
 	};
 
 	/// All text strings that are to be drawn on screen
-	vector<Text>						mTexts;
+	Array<Text>							mTexts;
 	Mutex								mTextsLock;
 
 	/// Font with which to draw the texts
@@ -177,7 +181,7 @@ private:
 	};
 
 	/// The list of line segments
-	vector<Line>						mLines;
+	Array<Line>							mLines;
 	Mutex								mLinesLock;
 
 	/// The shaders for the line segments

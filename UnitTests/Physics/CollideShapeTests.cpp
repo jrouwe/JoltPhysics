@@ -281,7 +281,7 @@ TEST_SUITE("CollideShapeTests")
 		Vec3 v2(-81.6972275f, -127.383545f, -146.773254f);
 
 		// Oriented box vertices
-		vector<Vec3> obox_points = {
+		Array<Vec3> obox_points = {
 			Vec3(125.932892f, -374.712250f, 364.192169f),
 			Vec3(319.492218f, -73.2614441f, 475.009613f),
 			Vec3(-122.277550f, -152.200287f, 192.441437f),

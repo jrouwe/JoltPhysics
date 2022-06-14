@@ -68,6 +68,8 @@ protected:
 class ConeConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Construct cone constraint
 								ConeConstraint(Body &inBody1, Body &inBody2, const ConeConstraintSettings &inSettings);
 

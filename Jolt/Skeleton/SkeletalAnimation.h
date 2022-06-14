@@ -41,7 +41,7 @@ public:
 		float							mTime = 0.0f;										///< Time of keyframe in seconds
 	};
 
-	using KeyframeVector = vector<Keyframe>;
+	using KeyframeVector = Array<Keyframe>;
 
 	/// Contains the animation for a single joint
 	class AnimatedJoint
@@ -49,11 +49,11 @@ public:
 	public:
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(AnimatedJoint)
 
-		string							mJointName;											///< Name of the joint
+		String							mJointName;											///< Name of the joint
 		KeyframeVector					mKeyframes;											///< List of keyframes over time
 	};
 
-	using AnimatedJointVector = vector<AnimatedJoint>;
+	using AnimatedJointVector = Array<AnimatedJoint>;
 
 	/// Get the length (in seconds) of this animation
 	float								GetDuration() const;

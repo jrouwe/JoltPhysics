@@ -24,6 +24,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/Indexify.h>
@@ -35,10 +36,6 @@
 #include <Jolt/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h>
 #include <Jolt/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -92,7 +89,7 @@ MeshShapeSettings::MeshShapeSettings(const VertexList &inVertices, const Indexed
 void MeshShapeSettings::Sanitize()
 {
 	// Remove degenerate and duplicate triangles
-	unordered_set<IndexedTriangle> triangles;
+	UnorderedSet<IndexedTriangle> triangles;
 	triangles.reserve(mIndexedTriangles.size());
 	for (int t = (int)mIndexedTriangles.size() - 1; t >= 0; --t)
 	{
@@ -253,7 +250,7 @@ void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleLi
 	};
 
 	// Build a list of edge to triangles
-	using EdgeToTriangle = unordered_map<Edge, TriangleIndices, EdgeHash>;
+	using EdgeToTriangle = UnorderedMap<Edge, TriangleIndices, EdgeHash>;
 	EdgeToTriangle edge_to_triangle;
 	edge_to_triangle.reserve(ioIndices.size() * 3);
 	for (uint triangle_idx = 0; triangle_idx < ioIndices.size(); ++triangle_idx)
@@ -530,14 +527,14 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 				}
 			}
 
-			vector<DebugRenderer::Triangle> &		mTriangles;
+			Array<DebugRenderer::Triangle> &		mTriangles;
 			const PhysicsMaterialList &				mMaterials;
 			bool									mUseMaterialColors;
 			bool									mDrawTriangleGroups;
 			int										mColorIdx = 0;
 		};
 		
-		vector<DebugRenderer::Triangle> triangles;
+		Array<DebugRenderer::Triangle> triangles;
 		Visitor visitor { triangles, mMaterials, mCachedUseMaterialColors, mCachedTrianglesColoredPerGroup };
 		WalkTree(visitor);
 		mGeometry = new DebugRenderer::Geometry(inRenderer->CreateTriangleBatch(triangles), GetLocalBounds());
@@ -1118,14 +1115,14 @@ void MeshShape::SaveBinaryState(StreamOut &inStream) const
 {
 	Shape::SaveBinaryState(inStream);
 
-	inStream.Write(static_cast<const ByteBufferVector &>(mTree)); // Make sure we use the vector<> overload
+	inStream.Write(static_cast<const ByteBufferVector &>(mTree)); // Make sure we use the Array<> overload
 }
 
 void MeshShape::RestoreBinaryState(StreamIn &inStream)
 {
 	Shape::RestoreBinaryState(inStream);
 
-	inStream.Read(static_cast<ByteBufferVector &>(mTree)); // Make sure we use the vector<> overload
+	inStream.Read(static_cast<ByteBufferVector &>(mTree)); // Make sure we use the Array<> overload
 }
 
 void MeshShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const

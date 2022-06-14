@@ -7,7 +7,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Helper functions to get the underlying RTTI type of a type (so e.g. vector<sometype> will return sometype)
+/// Helper functions to get the underlying RTTI type of a type (so e.g. Array<sometype> will return sometype)
 template <class T>				
 const RTTI *GetPrimitiveTypeOfType(T *)
 { 
@@ -33,7 +33,7 @@ const RTTI *GetPrimitiveTypeOfType(RefConst<T> *)
 }
 
 template <class T>				
-const RTTI *GetPrimitiveTypeOfType(vector<T> *)
+const RTTI *GetPrimitiveTypeOfType(Array<T> *)
 { 
 	return GetPrimitiveTypeOfType((T *)nullptr);
 }

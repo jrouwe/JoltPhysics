@@ -189,6 +189,7 @@ protected:
 // JPH_DECLARE_RTTI_NON_VIRTUAL
 #define JPH_DECLARE_RTTI_NON_VIRTUAL(class_name)																	\
 public:																												\
+	JPH_OVERRIDE_NEW_DELETE																							\
 	friend RTTI *				GetRTTIOfType(class_name *);														\
 	friend inline const RTTI *	GetRTTI(const class_name *inObject) { return GetRTTIOfType((class_name *)nullptr); }\
 	static void					sCreateRTTI(RTTI &inRTTI);															\
@@ -228,6 +229,7 @@ public:																												\
 
 #define JPH_DECLARE_RTTI_HELPER(class_name, modifier)																\
 public:																												\
+	JPH_OVERRIDE_NEW_DELETE																							\
 	friend RTTI *				GetRTTIOfType(class_name *);														\
 	friend inline const RTTI *	GetRTTI(const class_name *inObject) { return inObject->GetRTTI(); }					\
 	virtual const RTTI *		GetRTTI() const modifier;															\

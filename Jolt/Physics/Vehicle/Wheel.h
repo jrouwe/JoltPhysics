@@ -40,6 +40,8 @@ public:
 class Wheel
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / destructor
 	explicit				Wheel(const WheelSettings &inSettings);
 	virtual					~Wheel() = default;
@@ -136,6 +138,6 @@ protected:
 	AxisConstraintPart		mLateralPart;								///< Controls movement sideways (slip)
 };
 
-using Wheels = vector<Wheel *>;
+using Wheels = Array<Wheel *>;
 
 JPH_NAMESPACE_END

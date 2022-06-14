@@ -12,6 +12,8 @@ JPH_NAMESPACE_BEGIN
 class BroadPhaseQuadTree final : public BroadPhase
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Destructor
 	virtual					~BroadPhaseQuadTree() override;
 
@@ -45,6 +47,8 @@ private:
 	/// Helper struct for AddBodies handle
 	struct LayerState
 	{
+		JPH_OVERRIDE_NEW_DELETE
+
 		BodyID *			mBodyStart = nullptr;
 		BodyID *			mBodyEnd;
 		QuadTree::AddState	mAddState;

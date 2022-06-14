@@ -10,10 +10,7 @@
 #include <Jolt/Renderer/DebugRenderer.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Mutex.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <map>
-JPH_SUPPRESS_WARNINGS_STD_END
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -21,6 +18,8 @@ JPH_NAMESPACE_BEGIN
 class DebugRendererRecorder final : public DebugRenderer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 										DebugRendererRecorder(StreamOut &inStream) : mStream(inStream) { Initialize(); }
 
@@ -68,7 +67,7 @@ public:
 										TextBlob(Vec3Arg inPosition, const string_view &inString, const Color &inColor, float inHeight) : mPosition(inPosition), mString(inString), mColor(inColor), mHeight(inHeight) { }
 
 		Vec3							mPosition;
-		string							mString;
+		String							mString;
 		Color							mColor;
 		float							mHeight;
 	};
@@ -87,10 +86,10 @@ public:
 	/// All information for a single frame
 	struct Frame
 	{
-		vector<LineBlob>				mLines;
-		vector<TriangleBlob>			mTriangles;
-		vector<TextBlob>				mTexts;
-		vector<GeometryBlob>			mGeometries;
+		Array<LineBlob>					mLines;
+		Array<TriangleBlob>				mTriangles;
+		Array<TextBlob>					mTexts;
+		Array<GeometryBlob>				mGeometries;
 	};
 
 private:
@@ -98,6 +97,8 @@ private:
 	class BatchImpl : public RefTargetVirtual
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 										BatchImpl(uint32 inID)		: mID(inID) {  }
 
 		virtual void					AddRef() override			{ ++mRefCount; }
@@ -118,7 +119,7 @@ private:
 	uint32								mNextGeometryID = 1;
 
 	/// Cached geometries and their IDs
-	map<GeometryRef, uint32>			mGeometries;
+	UnorderedMap<GeometryRef, uint32>	mGeometries;
 
 	/// Data that is being accumulated for the current frame
 	Frame								mCurrentFrame;

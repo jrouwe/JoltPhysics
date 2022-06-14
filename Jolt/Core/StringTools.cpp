@@ -11,7 +11,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-string StringFormat(const char *inFMT, ...)
+String StringFormat(const char *inFMT, ...)
 {
 	char buffer[1024];
 
@@ -20,16 +20,16 @@ string StringFormat(const char *inFMT, ...)
 	va_start(list, inFMT);
 	vsnprintf(buffer, sizeof(buffer), inFMT, list);
 
-	return string(buffer);
+	return String(buffer);
 }
 
-void StringReplace(string &ioString, const string_view &inSearch, const string_view &inReplace)
+void StringReplace(String &ioString, const string_view &inSearch, const string_view &inReplace)
 {
 	size_t index = 0;
 	for (;;)
 	{
 		 index = ioString.find(inSearch, index);
-		 if (index == std::string::npos) 
+		 if (index == String::npos) 
 			 break;
 
 		 ioString.replace(index, inSearch.size(), inReplace);
@@ -38,7 +38,7 @@ void StringReplace(string &ioString, const string_view &inSearch, const string_v
 	}
 }
 
-void StringToVector(const string_view &inString, vector<string> &outVector, const string_view &inDelimiter, bool inClearVector)
+void StringToVector(const string_view &inString, Array<String> &outVector, const string_view &inDelimiter, bool inClearVector)
 {
 	JPH_ASSERT(inDelimiter.size() > 0);
 
@@ -51,11 +51,11 @@ void StringToVector(const string_view &inString, vector<string> &outVector, cons
 		return;
 
 	// Start with initial string
-	string s(inString);
+	String s(inString);
 
 	// Add to vector while we have a delimiter
 	size_t i;
-	while (!s.empty() && (i = s.find(inDelimiter)) != string::npos)
+	while (!s.empty() && (i = s.find(inDelimiter)) != String::npos)
 	{
 		outVector.push_back(s.substr(0, i));
 		s.erase(0, i + inDelimiter.length());
@@ -65,12 +65,12 @@ void StringToVector(const string_view &inString, vector<string> &outVector, cons
 	outVector.push_back(s);
 }
 
-void VectorToString(const vector<string> &inVector, string &outString, const string_view &inDelimiter)
+void VectorToString(const Array<String> &inVector, String &outString, const string_view &inDelimiter)
 {
 	// Ensure string empty
 	outString.clear();
 
-	for (const string &s : inVector)
+	for (const String &s : inVector)
 	{
 		// Add delimiter if not first element
 		if (!outString.empty())
@@ -81,9 +81,9 @@ void VectorToString(const vector<string> &inVector, string &outString, const str
 	}
 }
 
-string ToLower(const string_view &inString)
+String ToLower(const string_view &inString)
 {
-	string out;
+	String out;
 	out.reserve(inString.length());
 	for (char c : inString)
 		out.push_back((char)tolower(c));

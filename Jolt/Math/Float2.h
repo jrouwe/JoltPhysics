@@ -9,6 +9,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] Float2
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 						Float2() = default; ///< Intentionally not initialized for performance reasons
 						Float2(const Float2 &inRHS) = default;
 						Float2(float inX, float inY)					: x(inX), y(inY) { }

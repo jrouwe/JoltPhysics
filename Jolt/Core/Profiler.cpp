@@ -19,7 +19,7 @@ JPH_NAMESPACE_BEGIN
 // Profiler
 //////////////////////////////////////////////////////////////////////////////////////////
 
-Profiler Profiler::sInstance;
+Profiler *Profiler::sInstance = nullptr;
 thread_local ProfileThread *ProfileThread::sInstance = nullptr;
 
 bool ProfileMeasurement::sOutOfSamplesReported = false;
@@ -55,7 +55,7 @@ void Profiler::RemoveThread(ProfileThread *inThread)
 { 
 	lock_guard lock(mLock); 
 	
-	vector<ProfileThread *>::iterator i = find(mThreads.begin(), mThreads.end(), inThread); 
+	Array<ProfileThread *>::iterator i = find(mThreads.begin(), mThreads.end(), inThread); 
 	JPH_ASSERT(i != mThreads.end()); 
 	mThreads.erase(i); 
 }
@@ -138,7 +138,7 @@ void Profiler::DumpInternal()
 		}
 
 	// Determine tag of this profile
-	string tag;
+	String tag;
 	if (mDumpTag.empty())
 	{
 		// Next sequence number
@@ -167,9 +167,9 @@ void Profiler::DumpInternal()
 	DumpChart(tag.c_str(), threads, key_to_aggregators, aggregators);
 }
 
-static string sHTMLEncode(const char *inString)
+static String sHTMLEncode(const char *inString)
 {
-	string str(inString);
+	String str(inString);
 	StringReplace(str, "<", "&lt;");
 	StringReplace(str, ">", "&gt;");
 	return str;
@@ -345,7 +345,7 @@ void Profiler::DumpChart(const char *inTag, const Threads &inThreads, const KeyT
 		if (!first)
 			f << ",";
 		first = false;
-		string name = "\"" + sHTMLEncode(a.mName) + "\"";
+		String name = "\"" + sHTMLEncode(a.mName) + "\"";
 		f << name;
 	}
 	f << "],\ncalls: [";

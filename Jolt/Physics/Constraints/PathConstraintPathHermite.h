@@ -45,7 +45,7 @@ private:
 	/// Helper function that returns the index of the path segment and the fraction t on the path segment based on the full path fraction
 	inline void			GetIndexAndT(float inFraction, int &outIndex, float &outT) const;
 
-	using Points = vector<Point>;
+	using Points = Array<Point>;
 	   
 	Points				mPoints;															///< Points on the Hermite spline
 };

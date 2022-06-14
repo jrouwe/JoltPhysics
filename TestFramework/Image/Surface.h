@@ -46,7 +46,7 @@ public:
 								FormatDescription(const char *inFormatName, int inBitsPerPixel, int inNumberOfComponents, ESurfaceFormat inClosest8BitFormat, ESurfaceFormat inClosestAlphaFormat, uint32 inRedMask, uint32 inGreenMask, uint32 inBlueMask, uint32 inAlphaMask);
 
 	/// General properties
-	const string &				GetFormatName() const												{ return mFormatName; }
+	const string_view &			GetFormatName() const												{ return mFormatName; }
 	int							GetBytesPerPixel() const											{ return (mBitsPerPixel + 7) >> 3; }
 	int							GetNumberOfComponents() const										{ return mNumberOfComponents; }
 	ESurfaceFormat				GetClosest8BitFormat() const										{ return mClosest8BitFormat; }
@@ -72,7 +72,7 @@ public:
 	const Color					Decode(uint32 inColor) const;
 
 private:
-	string						mFormatName;														///< User displayable string describing the format
+	string_view					mFormatName;														///< User displayable String describing the format
 	int							mBitsPerPixel;														///< Number of bits per pixel
 	int							mNumberOfComponents;												///< Number of color components per pixel
 	ESurfaceFormat				mClosest8BitFormat;													///< Closest matching format that has 8 bit color components
@@ -98,8 +98,7 @@ public:
 	/// Type of the image data
 	const FormatDescription &	GetFormatDescription() const										{ return ::GetFormatDescription(mFormat); }
 	
-	const string &				GetFormatName() const												{ return GetFormatDescription().GetFormatName(); }
-	string						GetDescription() const												{ return StringFormat("%dx%d %s", GetWidth(), GetHeight(), GetFormatName().c_str()); }
+	const string_view &			GetFormatName() const												{ return GetFormatDescription().GetFormatName(); }
 	int							GetBytesPerPixel() const											{ return GetFormatDescription().GetBytesPerPixel(); }
 	int							GetNumberOfComponents() const										{ return GetFormatDescription().GetNumberOfComponents(); }
 	ESurfaceFormat				GetClosest8BitFormat() const										{ return GetFormatDescription().GetClosest8BitFormat(); }

@@ -16,12 +16,14 @@ class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
 /// A list of constraints
-using Constraints = vector<Ref<Constraint>>;
+using Constraints = Array<Ref<Constraint>>;
 
 /// A constraint manager manages all constraints of the same type
 class ConstraintManager : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Add a new constraint. This is thread safe.
 	/// Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void					Add(Constraint **inConstraints, int inNumber);

@@ -4,14 +4,11 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Core/Factory.h>
+#include <Jolt/Core/UnorderedSet.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Jolt/ObjectStream/ObjectStreamTextIn.h>
 #include <Jolt/ObjectStream/ObjectStreamBinaryIn.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_set>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -79,7 +76,7 @@ ObjectStreamIn *ObjectStreamIn::Open(istream &inStream)
 
 void *ObjectStreamIn::Read(const RTTI *inRTTI)
 {
-	using ObjectSet = unordered_set<void *>;
+	using ObjectSet = UnorderedSet<void *>;
 
 	// Read all information on the stream
 	void *main_object = nullptr;
@@ -196,7 +193,7 @@ void *ObjectStreamIn::ReadObject(const RTTI *& outRTTI)
 {
 	// Read the object class
 	void *object = nullptr;
-	string class_name;
+	String class_name;
 	if (ReadName(class_name)) 
 	{
 		// Get class description
@@ -253,7 +250,7 @@ void *ObjectStreamIn::ReadObject(const RTTI *& outRTTI)
 bool ObjectStreamIn::ReadRTTI()
 {
 	// Read class name and find it's attribute info
-	string class_name;
+	String class_name;
 	if (!ReadName(class_name)) 
 		return false;
 
@@ -276,7 +273,7 @@ bool ObjectStreamIn::ReadRTTI()
 		AttributeDescription attribute;
 		
 		// Read name
-		string attribute_name;
+		String attribute_name;
 		if (!ReadName(attribute_name)) 
 			return false;
 		
@@ -488,9 +485,9 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 						break;
 					}
 				
-				case EOSDataType::T_string:
+				case EOSDataType::T_String:
 					{	
-						string temporary;
+						String temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}

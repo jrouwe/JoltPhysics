@@ -53,7 +53,7 @@ bool TriangleSplitterFixedLeafSize::Split(const Range &inTriangles, Range &outLe
 
 	// Bin in all dimensions
 	uint num_bins = Clamp(inTriangles.Count() / mNumTrianglesPerBin, mMinNumBins, mMaxNumBins);	
-	vector<Bin> bins(num_bins);
+	Array<Bin> bins(num_bins);
 	for (uint dim = 0; dim < 3; ++dim)
 	{
 		float bounds_min = centroid_bounds.mMin[dim];

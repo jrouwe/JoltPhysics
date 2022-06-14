@@ -31,6 +31,8 @@ public:
 class StaticCompoundShape final : public CompoundShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 									StaticCompoundShape() : CompoundShape(EShapeSubType::StaticCompound) { }
 									StaticCompoundShape(const StaticCompoundShapeSettings &inSettings, TempAllocator &inTempAllocator, ShapeResult &outResult);
@@ -128,7 +130,7 @@ private:
 	
 	static_assert(sizeof(Node) == 64, "Node should be 64 bytes");
 
-	using Nodes = vector<Node>;
+	using Nodes = Array<Node>;
 
 	Nodes							mNodes;													///< Quad tree node structure
 };

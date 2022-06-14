@@ -32,6 +32,8 @@ public:
 class BoxShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							BoxShape() : ConvexShape(EShapeSubType::Box) { }
 							BoxShape(const BoxShapeSettings &inSettings, ShapeResult &outResult);

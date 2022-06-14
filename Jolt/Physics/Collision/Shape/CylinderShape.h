@@ -33,6 +33,8 @@ public:
 class CylinderShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							CylinderShape() : ConvexShape(EShapeSubType::Cylinder) { }
 							CylinderShape(const CylinderShapeSettings &inSettings, ShapeResult &outResult);

@@ -455,28 +455,19 @@ void ConvexShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg i
 #ifdef JPH_DEBUG_RENDERER
 void ConvexShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
 {
-	DebugRenderer::GeometryRef &geometry = mGetSupportFunctionGeometry[inScale];
-	if (geometry == nullptr)
-	{
-		SupportBuffer buffer;
-		const Support *support = GetSupportFunction(ESupportMode::ExcludeConvexRadius, buffer, inScale);
-		AddConvexRadius<Support> add_convex(*support, support->GetConvexRadius());
-		geometry = inRenderer->CreateTriangleGeometryForConvex([&add_convex](Vec3Arg inDirection) { return add_convex.GetSupport(inDirection); });
-	}
+	// Get the support function with convex radius
+	SupportBuffer buffer;
+	const Support *support = GetSupportFunction(ESupportMode::ExcludeConvexRadius, buffer, inScale);
+	AddConvexRadius<Support> add_convex(*support, support->GetConvexRadius());
 
+	// Draw the shape
+	DebugRenderer::GeometryRef geometry = inRenderer->CreateTriangleGeometryForConvex([&add_convex](Vec3Arg inDirection) { return add_convex.GetSupport(inDirection); });
 	AABox bounds = geometry->mBounds.Transformed(inCenterOfMassTransform);
-
 	float lod_scale_sq = geometry->mBounds.GetExtent().LengthSq();
-
 	inRenderer->DrawGeometry(inCenterOfMassTransform, bounds, lod_scale_sq, inColor, geometry);
 
 	if (inDrawSupportDirection)
 	{
-		// Get the support function with convex radius
-		SupportBuffer buffer;
-		const Support *support = GetSupportFunction(ESupportMode::ExcludeConvexRadius, buffer, inScale);
-		AddConvexRadius<Support> add_convex(*support, support->GetConvexRadius());
-
 		// Iterate on all directions and draw the support point and an arrow in the direction that was sampled to test if the support points make sense
 		for (Vec3 v : Vec3::sUnitSphere)
 		{
@@ -493,7 +484,7 @@ void ConvexShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inC
 void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	// Sample directions and map which faces belong to which directions
-	using FaceToDirection = unordered_map<SupportingFace, vector<Vec3>>;
+	using FaceToDirection = UnorderedMap<SupportingFace, Array<Vec3>>;
 	FaceToDirection faces;
 	for (Vec3 v : Vec3::sUnitSphere)
 	{

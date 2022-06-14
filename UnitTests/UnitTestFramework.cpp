@@ -61,6 +61,9 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
+	// Register allocation hook
+	RegisterDefaultAllocator();
+
 	// Install callbacks
 	Trace = TraceImpl;
 	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
@@ -94,6 +97,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 // Generic entry point
 int main(int argc, char** argv)
 {
+	// Register allocation hook
+	RegisterDefaultAllocator();
+
 	// Install callbacks
 	Trace = TraceImpl;
 	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
@@ -164,6 +170,9 @@ DOCTEST_REGISTER_REPORTER("android_log", 0, LogReporter);
 
 void AndroidInitialize(android_app *inApp)
 {
+	// Register allocation hook
+	RegisterDefaultAllocator();
+
 	// Install callbacks
 	Trace = TraceImpl;
 	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)

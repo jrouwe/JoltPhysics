@@ -417,7 +417,7 @@ TEST_SUITE("RayShapeTests")
 	TEST_CASE("TestConvexHullShapeRay")
 	{
 		// Create convex hull shape of a box (off center so the center of mass is not zero)
-		vector<Vec3> box;
+		Array<Vec3> box;
 		box.push_back(Vec3(-2, -4, -6));
 		box.push_back(Vec3(-2, -4, 7));
 		box.push_back(Vec3(-2, 5, -6));
@@ -470,7 +470,7 @@ TEST_SUITE("RayShapeTests")
 	TEST_CASE("TestScaledShapeRay")
 	{
 		// Create convex hull shape of a box (off center so the center of mass is not zero)
-		vector<Vec3> box;
+		Array<Vec3> box;
 		box.push_back(Vec3(-2, -4, -6));
 		box.push_back(Vec3(-2, -4, 7));
 		box.push_back(Vec3(-2, 5, -6));
@@ -499,7 +499,7 @@ TEST_SUITE("RayShapeTests")
 	TEST_CASE("TestStaticCompoundShapeRay")
 	{
 		// Create convex hull shape of a box (off center so the center of mass is not zero)
-		vector<Vec3> box;
+		Array<Vec3> box;
 		box.push_back(Vec3(-2, -4, -6));
 		box.push_back(Vec3(-2, -4, 7));
 		box.push_back(Vec3(-2, 5, -6));
@@ -535,7 +535,7 @@ TEST_SUITE("RayShapeTests")
 	TEST_CASE("TestMutableCompoundShapeRay")
 	{
 		// Create convex hull shape of a box (off center so the center of mass is not zero)
-		vector<Vec3> box;
+		Array<Vec3> box;
 		box.push_back(Vec3(-2, -4, -6));
 		box.push_back(Vec3(-2, -4, 7));
 		box.push_back(Vec3(-2, 5, -6));

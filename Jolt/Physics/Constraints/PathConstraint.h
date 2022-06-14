@@ -66,6 +66,8 @@ protected:
 class PathConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Construct point constraint
 									PathConstraint(Body &inBody1, Body &inBody2, const PathConstraintSettings &inSettings);
 

@@ -29,20 +29,21 @@ public:
 	template <class T, class A>
 	void				Write(const vector<T, A> &inT)
 	{
-		typename vector<T>::size_type len = inT.size();
+		typename Array<T>::size_type len = inT.size();
 		Write(len);
 		if (!IsFailed())
-			for (typename vector<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T>::size_type i = 0; i < len; ++i)
 				Write(inT[i]);
 	}
 
 	/// Write a string to the binary stream (writes the number of characters and then the characters)
-	void				Write(const string &inString)
+	template <class Type, class Traits, class Allocator>
+	void				Write(const basic_string<Type, Traits, Allocator> &inString)
 	{
-		string::size_type len = inString.size();
+		typename basic_string<Type, Traits, Allocator>::size_type len = inString.size();
 		Write(len);
 		if (!IsFailed())
-			WriteBytes(inString.data(), len);
+			WriteBytes(inString.data(), len * sizeof(Type));
 	}
 
 	/// Write a Vec3 (don't write W)

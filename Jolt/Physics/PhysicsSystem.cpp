@@ -22,6 +22,9 @@
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/TempAllocator.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Jolt/Renderer/DebugRenderer.h>
+#endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
 
@@ -2161,7 +2164,7 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 		return false;
 
 	// Update bounding boxes for all bodies in the broadphase
-	vector<BodyID> bodies;
+	Array<BodyID> bodies;
 	for (const Body *b : mBodyManager.GetBodies())
 		if (BodyManager::sIsValidBodyPointer(b) && b->IsInBroadPhase())
 			bodies.push_back(b->GetID());

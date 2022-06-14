@@ -75,8 +75,8 @@ protected:
 
 	const VertexList &			mVertices;				///< Vertices of the indexed triangles
 	const IndexedTriangleList &	mTriangles;				///< Unsorted triangles
-	vector<Float3>				mCentroids;				///< Unsorted centroids of triangles
-	vector<uint>				mSortedTriangleIdx;		///< Indices to sort triangles
+	Array<Float3>				mCentroids;				///< Unsorted centroids of triangles
+	Array<uint>					mSortedTriangleIdx;		///< Indices to sort triangles
 };
 
 JPH_NAMESPACE_END

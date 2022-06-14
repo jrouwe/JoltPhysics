@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] alignas(16) Mat44
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	// Underlying column type
 	using Type = Vec4::Type;
 

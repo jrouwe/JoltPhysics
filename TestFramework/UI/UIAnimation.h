@@ -22,4 +22,4 @@ public:
 	virtual void	Exit(UIElement *inElement)							{ }
 };
 
-using UIAnimationVector = vector<UIAnimation *>;
+using UIAnimationVector = Array<UIAnimation *>;

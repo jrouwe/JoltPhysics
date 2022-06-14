@@ -57,7 +57,7 @@ void KinematicRigTest::Initialize()
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 
 	// Load animation
-	string filename = string("Assets/Human/") + sAnimationName + ".tof";
+	String filename = String("Assets/Human/") + sAnimationName + ".tof";
 	if (!ObjectStreamIn::sReadObject(filename.c_str(), mAnimation))
 		FatalError("Could not open animation");
 

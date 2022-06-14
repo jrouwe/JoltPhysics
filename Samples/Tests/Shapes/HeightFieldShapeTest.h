@@ -25,9 +25,9 @@ public:
 	virtual void		CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 	// Original (uncompressed) terrain
-	vector<float>		mTerrain;
+	Array<float>		mTerrain;
 	PhysicsMaterialList mMaterials;
-	vector<uint8>		mMaterialIndices;
+	Array<uint8>		mMaterialIndices;
 	uint				mTerrainSize;
 	Vec3				mTerrainOffset;
 	Vec3				mTerrainScale;

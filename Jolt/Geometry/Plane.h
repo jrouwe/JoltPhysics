@@ -9,6 +9,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] Plane
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 					Plane() = default;
 	explicit		Plane(Vec4Arg inNormalAndConstant)										: mNormalAndConstant(inNormalAndConstant) { }

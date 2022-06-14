@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 
 inline LFHMAllocator::~LFHMAllocator()
 {
-	delete [] mObjectStore;
+	Free(mObjectStore);
 }
 
 inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
@@ -19,7 +19,7 @@ inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
 	JPH_ASSERT(mObjectStore == nullptr);
 
 	mObjectStoreSizeBytes = inObjectStoreSizeBytes;
-	mObjectStore = new uint8 [inObjectStoreSizeBytes];
+	mObjectStore = reinterpret_cast<uint8 *>(JPH::Allocate(inObjectStoreSizeBytes));
 }
 
 inline void LFHMAllocator::Clear()
@@ -114,7 +114,7 @@ void LockFreeHashMap<Key, Value>::Init(uint32 inMaxBuckets)
 	mNumBuckets = inMaxBuckets;
 	mMaxBuckets = inMaxBuckets;
 
-	mBuckets = reinterpret_cast<atomic<uint32> *>(AlignedAlloc(inMaxBuckets * sizeof(atomic<uint32>), 16));
+	mBuckets = reinterpret_cast<atomic<uint32> *>(AlignedAllocate(inMaxBuckets * sizeof(atomic<uint32>), 16));
 
 	Clear();
 }
@@ -231,7 +231,7 @@ inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key
 }
 
 template <class Key, class Value>
-inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(vector<const KeyValue *> &outAll) const
+inline void LockFreeHashMap<Key, Value>::GetAllKeyValues(Array<const KeyValue *> &outAll) const
 {
 	for (const atomic<uint32> *bucket = mBuckets; bucket < mBuckets + mNumBuckets; ++bucket)
 	{

@@ -10,6 +10,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] UVec8
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 								UVec8() = default; ///< Intentionally not initialized for performance reasons
 								UVec8(const UVec8 &inRHS) = default;
 	JPH_INLINE					UVec8(__m256i inRHS) : mValue(inRHS)				{ }

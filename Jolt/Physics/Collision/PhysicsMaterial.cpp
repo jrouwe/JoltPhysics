@@ -11,7 +11,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-RefConst<PhysicsMaterial> PhysicsMaterial::sDefault = new PhysicsMaterialSimple("Default", Color::sGrey);
+RefConst<PhysicsMaterial> PhysicsMaterial::sDefault;
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(PhysicsMaterial)
 {

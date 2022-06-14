@@ -169,7 +169,7 @@ PhysicsScene::PhysicsSceneResult PhysicsScene::sRestoreFromBinaryState(StreamIn 
 void PhysicsScene::FromPhysicsSystem(const PhysicsSystem *inSystem)
 {
 	// This map will track where each body went in mBodies
-	using BodyIDToIdxMap = unordered_map<BodyID, uint32>;
+	using BodyIDToIdxMap = UnorderedMap<BodyID, uint32>;
 	BodyIDToIdxMap body_id_to_idx;
 
 	// Map invalid ID

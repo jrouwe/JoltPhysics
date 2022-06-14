@@ -13,7 +13,7 @@ class TriangleGrouperMorton : public TriangleGrouper
 {
 public:
 	// See: TriangleGrouper::Group
-	virtual void			Group(const VertexList &inVertices, const IndexedTriangleList &inTriangles, int inGroupSize, vector<uint> &outGroupedTriangleIndices) override;
+	virtual void			Group(const VertexList &inVertices, const IndexedTriangleList &inTriangles, int inGroupSize, Array<uint> &outGroupedTriangleIndices) override;
 };
 
 JPH_NAMESPACE_END

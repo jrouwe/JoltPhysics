@@ -51,6 +51,8 @@ protected:
 class DistanceConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Construct distance constraint
 								DistanceConstraint(Body &inBody1, Body &inBody2, const DistanceConstraintSettings &inSettings);
 

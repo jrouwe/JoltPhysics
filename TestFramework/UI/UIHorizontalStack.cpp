@@ -12,7 +12,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(UIHorizontalStack)
 
 void UIHorizontalStack::sUniformChildWidth(UIElement *inParent)
 {
-	vector<int> sizes;
+	Array<int> sizes;
 	sizes.resize(1);
 	for (UIElement *e : inParent->GetChildren())
 	{

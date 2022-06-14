@@ -17,6 +17,8 @@ JPH_NAMESPACE_BEGIN
 class CollideShapeResult
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Default constructor
 								CollideShapeResult() = default;
 
@@ -68,6 +70,8 @@ public:
 class CollideSettingsBase
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// How active edges (edges that a moving object should bump into) are handled
 	EActiveEdgeMode				mActiveEdgeMode				= EActiveEdgeMode::CollideOnlyWithActive;
 
@@ -88,6 +92,8 @@ public:
 class CollideShapeSettings : public CollideSettingsBase
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// When > 0 contacts in the vicinity of the query shape can be found. All nearest contacts that are not further away than this distance will be found (uint: meter)
 	float						mMaxSeparationDistance		= 0.0f;
 

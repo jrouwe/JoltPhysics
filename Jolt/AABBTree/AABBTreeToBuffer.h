@@ -13,6 +13,8 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
+template <class T> using Deque = deque<T, STLAllocator<T>>;
+
 /// Conversion algorithm that converts an AABB tree to an optimized binary buffer
 template <class TriangleCodec, class NodeCodec>
 class AABBTreeToBuffer
@@ -67,9 +69,9 @@ public:
 			uint *							mParentTrianglesStart = nullptr;			// Where to store mTriangleStart (to patch mChildTrianglesStart of my parent)
 		};
 		
-		deque<NodeData *> to_process;
-		deque<NodeData *> to_process_triangles;
-		vector<NodeData> node_list;
+		Deque<NodeData *> to_process;
+		Deque<NodeData *> to_process_triangles;
+		Array<NodeData> node_list;
 
 		node_list.reserve(node_count); // Needed to ensure that array is not reallocated, so we can keep pointers in the array
 		
@@ -81,7 +83,7 @@ public:
 		to_process.push_back(&node_list.back());
 
 		// Child nodes out of loop so we don't constantly realloc it
-		vector<const AABBTreeBuilder::Node *> child_nodes;
+		Array<const AABBTreeBuilder::Node *> child_nodes;
 		child_nodes.reserve(NumChildrenPerNode);
 
 		for (;;)

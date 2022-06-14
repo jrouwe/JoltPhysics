@@ -79,7 +79,7 @@ public:
 	}
 
 private:
-	vector<BodyID>			mBodyIDs;
+	Array<BodyID>			mBodyIDs;
 };
 
 JPH_NAMESPACE_END

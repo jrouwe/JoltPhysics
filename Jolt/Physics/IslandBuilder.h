@@ -74,6 +74,8 @@ private:
 	/// Intermediate data structure that for each body keeps track what the lowest index of the body is that it is connected to
 	struct BodyLink
 	{
+		JPH_OVERRIDE_NEW_DELETE
+
 		atomic<uint32>		mLinkedTo;										///< An index in mBodyLinks pointing to another body in this island with a lower index than this body
 		uint32				mIslandIndex;									///< The island index of this body (filled in during Finalize)
 	};

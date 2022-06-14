@@ -139,5 +139,5 @@ private:
 	Ref<SkeletalAnimation>	mAnimation;
 	SkeletonPose			mPose;
 	Ref<PhysicsScene>		mBackground;
-	vector<Ref<Ragdoll>>	mRagdolls;
+	Array<Ref<Ragdoll>>		mRagdolls;
 };

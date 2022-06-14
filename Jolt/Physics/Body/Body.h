@@ -31,6 +31,8 @@ class BodyCreationSettings;
 class Body : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Default constructor
 							Body() = default;
 

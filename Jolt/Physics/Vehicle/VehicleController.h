@@ -32,6 +32,8 @@ public:
 class VehicleController : public RefTarget<VehicleController>
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor / destructor
 	explicit					VehicleController(VehicleConstraint &inConstraint) : mConstraint(inConstraint) { }
 	virtual						~VehicleController() = default;

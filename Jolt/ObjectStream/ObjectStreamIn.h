@@ -6,10 +6,10 @@
 #include <Jolt/ObjectStream/ObjectStream.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
-#include <unordered_map>
 JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
@@ -101,7 +101,7 @@ private:
 	{
 		int						mArrayDepth = 0;
 		EOSDataType				mDataType = EOSDataType::Invalid;
-		string					mClassName;
+		String					mClassName;
 		int						mIndex = -1;
 	};
 
@@ -111,7 +111,7 @@ private:
 		explicit 				ClassDescription(const RTTI *inRTTI)					: mRTTI(inRTTI) { }
 
 		const RTTI *			mRTTI = nullptr;
-		vector<AttributeDescription>	mAttributes;
+		Array<AttributeDescription>	mAttributes;
 	};
 	
 	struct ObjectInfo
@@ -131,12 +131,12 @@ private:
 		const RTTI *			mRTTI;
 	};
 	
-	using IdentifierMap = unordered_map<Identifier, ObjectInfo>;
-	using ClassDescriptionMap = unordered_map<string, ClassDescription>;
+	using IdentifierMap = UnorderedMap<Identifier, ObjectInfo>;
+	using ClassDescriptionMap = UnorderedMap<String, ClassDescription>;
 
 	ClassDescriptionMap			mClassDescriptionMap;
 	IdentifierMap				mIdentifierMap;											///< Links identifier to an object pointer
-	vector<Link>				mUnresolvedLinks;										///< All pointers (links) are resolved after reading the entire file, e.g. when all object exist
+	Array<Link>					mUnresolvedLinks;										///< All pointers (links) are resolved after reading the entire file, e.g. when all object exist
 };
 
 JPH_NAMESPACE_END

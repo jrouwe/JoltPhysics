@@ -93,7 +93,7 @@ void Renderer::WaitForGpu()
 		mFenceValues[n] = current_fence_value + 1;
 
 	// Release all used resources
-	for (vector<ComPtr<ID3D12Object>> &list : mDelayReleased)
+	for (Array<ComPtr<ID3D12Object>> &list : mDelayReleased)
 		list.clear();
 
 	// Anything that's not used yet can be removed, delayed objects are now available
@@ -677,7 +677,7 @@ ComPtr<ID3DBlob> Renderer::CreateVertexShader(const char *inFileName)
 	};
 
 	// Read shader source file
-	vector<uint8> data = ReadData(inFileName);
+	Array<uint8> data = ReadData(inFileName);
 
 	// Compile source
 	ComPtr<ID3DBlob> shader_blob, error_blob;
@@ -716,7 +716,7 @@ ComPtr<ID3DBlob> Renderer::CreatePixelShader(const char *inFileName)
 	};
 
 	// Read shader source file
-	vector<uint8> data = ReadData(inFileName);
+	Array<uint8> data = ReadData(inFileName);
 
 	// Compile source
 	ComPtr<ID3DBlob> shader_blob, error_blob;

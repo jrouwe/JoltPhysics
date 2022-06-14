@@ -10,6 +10,8 @@ JPH_NAMESPACE_BEGIN
 class [[nodiscard]] Vec8
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 								Vec8() = default; ///< Intentionally not initialized for performance reasons
 								Vec8(const Vec8 &inRHS) = default;

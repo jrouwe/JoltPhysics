@@ -47,6 +47,8 @@ protected:
 class FixedConstraint final : public TwoBodyConstraint
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 								FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstraintSettings &inSettings);
 

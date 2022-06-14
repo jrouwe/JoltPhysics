@@ -7,13 +7,6 @@
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 #include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
-#ifdef JPH_DEBUG_RENDERER
-	#include <Jolt/Renderer/DebugRenderer.h>
-#endif // JPH_DEBUG_RENDERER
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -41,6 +34,8 @@ public:
 class ConvexShape : public Shape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit						ConvexShape(EShapeSubType inSubType) : Shape(EShapeType::Convex, inSubType) { }
 									ConvexShape(EShapeSubType inSubType, const ConvexShapeSettings &inSettings, ShapeResult &outResult) : Shape(EShapeType::Convex, inSubType, inSettings, outResult), mMaterial(inSettings.mMaterial), mDensity(inSettings.mDensity) { }
@@ -155,10 +150,6 @@ private:
 	// Properties
 	RefConst<PhysicsMaterial>		mMaterial;													///< Material assigned to this shape
 	float							mDensity = 1000.0f;											///< Uniform density of the interior of the convex object (kg / m^3)
-
-#ifdef JPH_DEBUG_RENDERER
-	mutable unordered_map<Vec3, DebugRenderer::GeometryRef> mGetSupportFunctionGeometry;
-#endif // JPH_DEBUG_RENDERER
 };
 
 JPH_NAMESPACE_END

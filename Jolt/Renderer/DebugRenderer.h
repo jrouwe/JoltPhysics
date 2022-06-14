@@ -10,13 +10,10 @@
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/HashCombine.h>
+#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Math/Float2.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <Jolt/Geometry/AABox.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <unordered_map>
-JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -26,6 +23,8 @@ class OrientedBox;
 class DebugRenderer
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 										DebugRenderer();
 	virtual								~DebugRenderer();
@@ -169,12 +168,14 @@ public:
 	class Geometry : public RefTarget<Geometry>
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 										Geometry(const AABox &inBounds) : mBounds(inBounds) { }
 										Geometry(const Batch &inBatch, const AABox &inBounds) : mBounds(inBounds) { mLODs.push_back({ inBatch, FLT_MAX }); }
 
 		/// All level of details for this mesh
-		vector<LOD>						mLODs;
+		Array<LOD>						mLODs;
 
 		/// Bounding box that encapsulates all LODs
 		AABox							mBounds;
@@ -189,8 +190,8 @@ public:
 	/// Create a batch of triangles that can be drawn efficiently
 	virtual Batch						CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount) = 0;
 	virtual Batch						CreateTriangleBatch(const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount) = 0;
-	Batch								CreateTriangleBatch(const vector<Triangle> &inTriangles) { return CreateTriangleBatch(inTriangles.empty()? nullptr : &inTriangles[0], (int)inTriangles.size()); }
-	Batch								CreateTriangleBatch(const vector<Vertex> &inVertices, const vector<uint32> &inIndices) { return CreateTriangleBatch(inVertices.empty()? nullptr : &inVertices[0], (int)inVertices.size(), inIndices.empty()? nullptr : &inIndices[0], (int)inIndices.size()); }
+	Batch								CreateTriangleBatch(const Array<Triangle> &inTriangles) { return CreateTriangleBatch(inTriangles.empty()? nullptr : &inTriangles[0], (int)inTriangles.size()); }
+	Batch								CreateTriangleBatch(const Array<Vertex> &inVertices, const Array<uint32> &inIndices) { return CreateTriangleBatch(inVertices.empty()? nullptr : &inVertices[0], (int)inVertices.size(), inIndices.empty()? nullptr : &inIndices[0], (int)inIndices.size()); }
 	Batch								CreateTriangleBatch(const VertexList &inVertices, const IndexedTriangleNoMaterialList &inTriangles);
 
 	/// Create a primitive for a convex shape using its support function
@@ -230,11 +231,11 @@ private:
 	void								DrawWireUnitSphereRecursive(Mat44Arg inMatrix, ColorArg inColor, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel);
 
 	/// Helper functions to create a box
-	void								CreateQuad(vector<uint32> &ioIndices, vector<Vertex> &ioVertices, Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, Vec3Arg inV4);
+	void								CreateQuad(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, Vec3Arg inV4);
 
 	/// Helper functions to create a vertex and index buffer for a sphere
-	void								Create8thSphereRecursive(vector<uint32> &ioIndices, vector<Vertex> &ioVertices, Vec3Arg inDir1, uint32 &ioIdx1, Vec3Arg inDir2, uint32 &ioIdx2, Vec3Arg inDir3, uint32 &ioIdx3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
-	void								Create8thSphere(vector<uint32> &ioIndices, vector<Vertex> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
+	void								Create8thSphereRecursive(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inDir1, uint32 &ioIdx1, Vec3Arg inDir2, uint32 &ioIdx2, Vec3Arg inDir3, uint32 &ioIdx3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
+	void								Create8thSphere(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
 
 	// Predefined shapes
 	GeometryRef							mBox;
@@ -255,10 +256,10 @@ private:
 
 	JPH_MAKE_HASH_STRUCT(SwingLimits, SwingLimitsHasher, t.mSwingYHalfAngle, t.mSwingZHalfAngle)
 
-	using SwingBatches = unordered_map<SwingLimits, GeometryRef, SwingLimitsHasher>;
+	using SwingBatches = UnorderedMap<SwingLimits, GeometryRef, SwingLimitsHasher>;
 	SwingBatches						mSwingLimits;
 
-	using PieBatces = unordered_map<float, GeometryRef>;
+	using PieBatces = UnorderedMap<float, GeometryRef>;
 	PieBatces							mPieLimits;
 };
 

@@ -30,6 +30,8 @@ public:
 class SphereShape final : public ConvexShape
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 							SphereShape() : ConvexShape(EShapeSubType::Sphere) { }
 							SphereShape(const SphereShapeSettings &inSettings, ShapeResult &outResult);

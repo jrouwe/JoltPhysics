@@ -9,10 +9,7 @@
 
 #include <Jolt/Renderer/DebugRendererRecorder.h>
 #include <Jolt/Core/StreamIn.h>
-
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <map>
-JPH_SUPPRESS_WARNINGS_STD_END
+#include <Jolt/Core/UnorderedMap.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -37,14 +34,14 @@ private:
 	DebugRenderer &						mRenderer;
 
 	/// Mapping of ID to batch
-	map<uint32, DebugRenderer::Batch>	mBatches;
+	UnorderedMap<uint32, DebugRenderer::Batch> mBatches;
 
 	/// Mapping of ID to geometry
-	map<uint32, DebugRenderer::GeometryRef> mGeometries;
+	UnorderedMap<uint32, DebugRenderer::GeometryRef> mGeometries;
 
 	/// The list of parsed frames
 	using Frame = DebugRendererRecorder::Frame;
-	vector<Frame>						mFrames;
+	Array<Frame>						mFrames;
 };
 
 JPH_NAMESPACE_END

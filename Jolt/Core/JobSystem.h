@@ -47,6 +47,8 @@ protected:
 	class Job;
 
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// A job handle contains a reference to a job. The job will be deleted as soon as there are no JobHandles.
 	/// referring to the job and when it is not in the job queue / being processed.
 	class JobHandle : private Ref<Job>
@@ -95,6 +97,8 @@ public:
 	class Barrier : public NonCopyable
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Add a job to this barrier
 		/// Note that jobs can keep being added to the barrier while waiting for the barrier
 		virtual void		AddJob(const JobHandle &inJob) = 0;
@@ -141,6 +145,8 @@ protected:
 	class Job
 	{
 	public:
+		JPH_OVERRIDE_NEW_DELETE
+
 		/// Constructor
 							Job([[maybe_unused]] const char *inJobName, [[maybe_unused]] ColorArg inColor, JobSystem *inJobSystem, const JobFunction &inJobFunction, uint32 inNumDependencies) : 
 		#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)

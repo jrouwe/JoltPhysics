@@ -21,6 +21,7 @@
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, Skeleton)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, SkeletalAnimation)
@@ -58,7 +59,6 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, GearConstraintSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, MotorSettings)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, PhysicsScene)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, PhysicsMaterial)
-JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, PhysicsMaterialSimple)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, GroupFilter)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH, GroupFilterTable)
 
@@ -66,6 +66,10 @@ JPH_NAMESPACE_BEGIN
 
 void RegisterTypes()
 {
+#ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
+	JPH_ASSERT(Allocate != nullptr && Free != nullptr && AlignedAllocate != nullptr && AlignedFree != nullptr, "Need to supply an allocator first or call RegisterDefaultAllocator()");
+#endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
+
 	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");
 
 	// Initialize dispatcher
@@ -140,6 +144,10 @@ void RegisterTypes()
 
 	// Register them all
 	Factory::sInstance->Register(types, (uint)size(types));
+
+	// Initialize default physics material
+	if (PhysicsMaterial::sDefault == nullptr)
+		PhysicsMaterial::sDefault = new PhysicsMaterialSimple("Default", Color::sGrey);
 }
 
 JPH_NAMESPACE_END

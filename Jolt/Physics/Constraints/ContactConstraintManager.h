@@ -25,6 +25,8 @@ class PhysicsUpdateContext;
 class ContactConstraintManager : public NonCopyable
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 	explicit					ContactConstraintManager(const PhysicsSettings &inPhysicsSettings);
 								~ContactConstraintManager();
@@ -360,9 +362,9 @@ private:
 		/// Find / create entry for BodyPair -> CachedBodyPair
 		const BPKeyValue *		Find(const BodyPair &inKey, size_t inKeyHash) const;
 		BPKeyValue *			Create(ContactAllocator &ioContactAllocator, const BodyPair &inKey, size_t inKeyHash);
-		void					GetAllBodyPairsSorted(vector<const BPKeyValue *> &outAll) const;
-		void					GetAllManifoldsSorted(const CachedBodyPair &inBodyPair, vector<const MKeyValue *> &outAll) const;
-		void					GetAllCCDManifoldsSorted(vector<const MKeyValue *> &outAll) const;
+		void					GetAllBodyPairsSorted(Array<const BPKeyValue *> &outAll) const;
+		void					GetAllManifoldsSorted(const CachedBodyPair &inBodyPair, Array<const MKeyValue *> &outAll) const;
+		void					GetAllCCDManifoldsSorted(Array<const MKeyValue *> &outAll) const;
 		void					ContactPointRemovedCallbacks(ContactListener *inListener);
 
 #ifdef JPH_ENABLE_ASSERTS

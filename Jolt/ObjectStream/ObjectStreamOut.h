@@ -5,15 +5,17 @@
 
 #include <Jolt/ObjectStream/ObjectStream.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/UnorderedSet.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <queue>
 #include <fstream>
-#include <unordered_set>
-#include <unordered_map>
 JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
+
+template <class T> using Queue = queue<T, deque<T, STLAllocator<T>>>;
 
 /// ObjectStreamOut contains all logic for writing an object to disk. It is the base 
 /// class for the text and binary output streams (ObjectStreamTextOut and ObjectStreamBinaryOut).
@@ -82,10 +84,10 @@ private:
 		const RTTI *			mRTTI;
 	};
 
-	using IdentifierMap = unordered_map<const void *, ObjectInfo>;
-	using ClassSet = unordered_set<const RTTI *>;
-	using ObjectQueue = queue<const void *>;
-	using ClassQueue = queue<const RTTI *>;
+	using IdentifierMap = UnorderedMap<const void *, ObjectInfo>;
+	using ClassSet = UnorderedSet<const RTTI *>;
+	using ObjectQueue = Queue<const void *>;
+	using ClassQueue = Queue<const RTTI *>;
 
 	Identifier					mNextIdentifier = sNullIdentifier + 1;						///< Next free identifier for this stream
 	IdentifierMap				mIdentifierMap;												///< Links object pointer to an identifier

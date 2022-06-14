@@ -25,6 +25,8 @@ JPH_NAMESPACE_BEGIN
 class BodyWithMotionProperties : public Body
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	MotionProperties		mMotionProperties;
 };
 
@@ -718,7 +720,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 			if (inDrawSettings.mDrawSleepStats && body->IsDynamic() && body->IsActive())
 			{
 				// Draw stats to know which bodies could go to sleep
-				string text = StringFormat("t: %.1f", (double)body->mMotionProperties->mSleepTestTimer);
+				String text = StringFormat("t: %.1f", (double)body->mMotionProperties->mSleepTestTimer);
 				uint8 g = uint8(Clamp(255.0f * body->mMotionProperties->mSleepTestTimer / inPhysicsSettings.mTimeBeforeSleep, 0.0f, 255.0f));
 				Color sleep_color = Color(0, 255 - g, g);
 				inRenderer->DrawText3D(body->GetCenterOfMassPosition(), text, sleep_color, 0.2f);

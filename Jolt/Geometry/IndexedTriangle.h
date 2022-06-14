@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 class IndexedTriangleNoMaterial
 {
 public:
+	JPH_OVERRIDE_NEW_DELETE
+
 	/// Constructor
 					IndexedTriangleNoMaterial() = default;
 					IndexedTriangleNoMaterial(uint32 inI1, uint32 inI2, uint32 inI3)	{ mIdx[0] = inI1; mIdx[1] = inI2; mIdx[2] = inI3; }
@@ -98,8 +100,8 @@ public:
 	uint32			mMaterialIndex = 0;
 };
 
-using IndexedTriangleNoMaterialList = vector<IndexedTriangleNoMaterial>;
-using IndexedTriangleList = vector<IndexedTriangle>;
+using IndexedTriangleNoMaterialList = Array<IndexedTriangleNoMaterial>;
+using IndexedTriangleList = Array<IndexedTriangle>;
 
 JPH_NAMESPACE_END
 

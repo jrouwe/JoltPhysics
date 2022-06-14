@@ -41,7 +41,7 @@ public:
 		return !mHits.empty();
 	}
 
-	vector<ResultType>	mHits;
+	Array<ResultType>	mHits;
 };
 
 /// Simple implementation that collects the closest / deepest hit

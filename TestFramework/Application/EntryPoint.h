@@ -7,34 +7,42 @@
 
 #if defined(JPH_PLATFORM_WINDOWS)
 
-#define ENTRY_POINT(AppName)																				\
+#define ENTRY_POINT(AppName, RegisterAllocator)																\
 																											\
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)		\
 {																											\
-	JPH_PROFILE_THREAD_START("Main");																		\
+	RegisterAllocator();																					\
+																											\
+	JPH_PROFILE_START("Main");																				\
 																											\
 	FPExceptionsEnable enable_exceptions;																	\
 	JPH_UNUSED(enable_exceptions);																			\
 																											\
-	AppName app;																							\
-	app.Run();																								\
+	{																										\
+		AppName app;																						\
+		app.Run();																							\
+	}																										\
 																											\
-	JPH_PROFILE_THREAD_END();																				\
+	JPH_PROFILE_END();																						\
 																											\
 	return 0;																								\
 }																											\
 																											\
 int __cdecl main(int inArgC, char **inArgV)																	\
 {																											\
-	JPH_PROFILE_THREAD_START("Main");																		\
+	RegisterAllocator();																					\
+																											\
+	JPH_PROFILE_START("Main");																				\
 																											\
 	FPExceptionsEnable enable_exceptions;																	\
 	JPH_UNUSED(enable_exceptions);																			\
 																											\
-	AppName app;																							\
-	app.Run();																								\
+	{																										\
+		AppName app;																						\
+		app.Run();																							\
+	}																										\
 																											\
-	JPH_PROFILE_THREAD_END();																				\
+	JPH_PROFILE_END();																						\
 																											\
 	return 0;																								\
 }
