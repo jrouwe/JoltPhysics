@@ -51,7 +51,7 @@ static void TraceImpl(const char *inFMT, ...)
 int main(int argc, char** argv)
 {
 	// Register allocation hook
-	RegisterDefaultAlloc();
+	RegisterDefaultAllocator();
 
 	// Parse command line parameters
 	int specified_quality = -1;

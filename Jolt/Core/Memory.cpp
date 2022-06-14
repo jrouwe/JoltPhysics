@@ -58,7 +58,7 @@ FreeFunction Free = nullptr;
 AlignedAllocateFunction AlignedAllocate = nullptr;
 AlignedFreeFunction AlignedFree = nullptr;
 
-void RegisterDefaultAlloc()
+void RegisterDefaultAllocator()
 {
 	Allocate = AllocateImpl;
 	Free = FreeImpl;

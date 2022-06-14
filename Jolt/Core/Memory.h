@@ -22,7 +22,7 @@ extern AlignedAllocateFunction AlignedAllocate;
 extern AlignedFreeFunction AlignedFree;
 
 /// Register platform default allocation / free functions
-void RegisterDefaultAlloc();
+void RegisterDefaultAllocator();
 
 /// Macro to override the new and delete functions
 #define JPH_OVERRIDE_NEW_DELETE \
@@ -44,7 +44,7 @@ void *AlignedAllocate(size_t inSize, size_t inAlignment);
 void AlignedFree(void *inBlock);
 
 // Don't implement allocator registering
-inline void RegisterDefaultAlloc() { }
+inline void RegisterDefaultAllocator() { }
 
 // Don't override new/delete
 #define JPH_OVERRIDE_NEW_DELETE

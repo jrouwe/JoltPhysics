@@ -7,11 +7,11 @@
 
 #if defined(JPH_PLATFORM_WINDOWS)
 
-#define ENTRY_POINT(AppName)																				\
+#define ENTRY_POINT(AppName, RegisterAllocator)																\
 																											\
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)		\
 {																											\
-	RegisterDefaultAlloc();																					\
+	RegisterAllocator();																					\
 																											\
 	JPH_PROFILE_START("Main");																				\
 																											\
@@ -30,7 +30,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lp
 																											\
 int __cdecl main(int inArgC, char **inArgV)																	\
 {																											\
-	RegisterDefaultAlloc();																					\
+	RegisterAllocator();																					\
 																											\
 	JPH_PROFILE_START("Main");																				\
 																											\

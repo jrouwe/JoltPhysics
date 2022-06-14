@@ -147,4 +147,4 @@ bool JoltViewer::RenderFrame(float inDeltaTime)
 	return true;
 }
 
-ENTRY_POINT(JoltViewer)
+ENTRY_POINT(JoltViewer, RegisterDefaultAllocator)

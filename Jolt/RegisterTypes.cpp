@@ -67,7 +67,7 @@ JPH_NAMESPACE_BEGIN
 void RegisterTypes()
 {
 #ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
-	JPH_ASSERT(Allocate != nullptr && Free != nullptr && AlignedAllocate != nullptr && AlignedFree != nullptr, "Need to supply an allocator first or call RegisterDefaultAlloc()");
+	JPH_ASSERT(Allocate != nullptr && Free != nullptr && AlignedAllocate != nullptr && AlignedFree != nullptr, "Need to supply an allocator first or call RegisterDefaultAllocator()");
 #endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
 
 	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");

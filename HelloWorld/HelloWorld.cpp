@@ -198,7 +198,7 @@ public:
 int main(int argc, char** argv)
 {
 	// Register allocation hook
-	RegisterDefaultAlloc();
+	RegisterDefaultAllocator();
 
 	// Install callbacks
 	Trace = TraceImpl;

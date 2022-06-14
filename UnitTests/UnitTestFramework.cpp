@@ -62,7 +62,7 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 	// Register allocation hook
-	RegisterDefaultAlloc();
+	RegisterDefaultAllocator();
 
 	// Install callbacks
 	Trace = TraceImpl;
@@ -98,7 +98,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 int main(int argc, char** argv)
 {
 	// Register allocation hook
-	RegisterDefaultAlloc();
+	RegisterDefaultAllocator();
 
 	// Install callbacks
 	Trace = TraceImpl;
@@ -171,7 +171,7 @@ DOCTEST_REGISTER_REPORTER("android_log", 0, LogReporter);
 void AndroidInitialize(android_app *inApp)
 {
 	// Register allocation hook
-	RegisterDefaultAlloc();
+	RegisterDefaultAllocator();
 
 	// Install callbacks
 	Trace = TraceImpl;
