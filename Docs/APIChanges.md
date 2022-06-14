@@ -4,6 +4,7 @@ This document lists all breaking API changes by date and by release tag.
 
 ## Changes between v1.1.0 and latest
 
+* 20220614 - It is now possible to override the memory allocator, register the default using RegisterDefaultAllocator(). This means that the public API now takes STL containers that use a custom memory allocator so use Array instead of vector, UnorderedMap instead of unordered_map etc. Define JPH_DISABLE_CUSTOM_ALLOCATOR to disable this new behavior (b68097f582148d6f66c18a6ff95c5ca9b40b48cc)
 * 20220606 - The slider constraint now has frequency and damping for its limits, this breaks SaveBinaryState for the constraint (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
 * 20220606 - The rack and pinion and gear constraints were added, this breaks SaveBinaryState of user defined constraints as the value of EConstraintSubType::User1 changed (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
 * 20220517 - When constructing a FixedConstraint you now need to call FixedConstraintSettings::SetPoint to configure the point where the bodies attach (4f7c925c31f39eda1d8d68e4e72456b5def93d9b)
