@@ -39,6 +39,10 @@ There are a number of user configurable defines that turn on/off certain feature
 
 To override the default trace and assert mechanism install your own custom handlers in Trace and AssertFailed (see IssueReporting.h).
 
+## Custom Memory Allocator
+
+To implement your custom memory allocator override Allocate, Free, AlignedAllocate and AlignedFree (see Memory.h).
+
 ## Building
 
 ### Windows 10+ (CL - Default compiler)
