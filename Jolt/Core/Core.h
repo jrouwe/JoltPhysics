@@ -74,16 +74,18 @@
 	#if defined(__AVX2__) && !defined(JPH_USE_AVX2)
 		#define JPH_USE_AVX2
 	#endif
-	#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
-		#if defined(__FMA__) && !defined(JPH_USE_FMADD)
-			#define JPH_USE_FMADD
+	#ifndef JPH_CROSS_PLATFORM_DETERMINISTIC // FMA is not compatible with cross platform determinism
+		#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
+			#if defined(__FMA__) && !defined(JPH_USE_FMADD)
+				#define JPH_USE_FMADD
+			#endif
+		#elif defined(JPH_COMPILER_MSVC)
+			#if defined(__AVX2__) && !defined(JPH_USE_FMADD) // AVX2 also enables fused multiply add
+				#define JPH_USE_FMADD
+			#endif
+		#else
+			#error Undefined compiler
 		#endif
-	#elif defined(JPH_COMPILER_MSVC)
-		#if defined(__AVX2__) && !defined(JPH_USE_FMADD) // AVX2 also enables fused multiply add
-			#define JPH_USE_FMADD
-		#endif
-	#else
-		#error Undefined compiler
 	#endif
 #elif defined(__aarch64__) || defined(_M_ARM64)
 	// ARM64 CPU architecture
@@ -286,7 +288,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 #define JPH_UNUSED(x)			(void)x
 
 // Macro to enable floating point precise mode and to disable fused multiply add instructions
-#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
+#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC) || defined(JPH_CROSS_PLATFORM_DETERMINISTIC)
 	// In clang it appears you cannot turn off -ffast-math and -ffp-contract=fast for a code block
 	// There is #pragma clang fp contract (off) but that doesn't seem to work under clang 9 & 10 when -ffast-math is specified on the commandline (you override it to turn it on, but not off)
 	// There is #pragma float_control(precise, on) but that doesn't work under clang 9.
