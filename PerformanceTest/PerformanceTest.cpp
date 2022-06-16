@@ -10,6 +10,7 @@
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
+#include <Jolt/Physics/StateRecorderImpl.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRendererRecorder.h>
 	#include <Jolt/Core/StreamWrapper.h>
@@ -63,6 +64,8 @@ int main(int argc, char** argv)
 	bool enable_debug_renderer = false;
 #endif // JPH_DEBUG_RENDERER
 	bool enable_per_frame_recording = false;
+	bool record_state = false;
+	bool validate_state = false;
 	unique_ptr<PerformanceTestScene> scene;
 	for (int argidx = 1; argidx < argc; ++argidx)
 	{
@@ -122,6 +125,14 @@ int main(int argc, char** argv)
 		{
 			enable_per_frame_recording = true;
 		}
+		else if (strcmp(arg, "-rs") == 0)
+		{
+			record_state = true;
+		}
+		else if (strcmp(arg, "-vs") == 0)
+		{
+			validate_state = true;
+		}
 		else if (strcmp(arg, "-h") == 0)
 		{
 			// Print usage
@@ -133,7 +144,9 @@ int main(int argc, char** argv)
 				 << "-p: Write out profiles" << endl
 				 << "-r: Record debug renderer output for JoltViewer" << endl
 				 << "-f: Record per frame timings" << endl
-				 << "-no_sleep: Disable sleeping" << endl;
+				 << "-no_sleep: Disable sleeping" << endl
+				 << "-rs: Record state" << endl
+				 << "-vs: Validate state" << endl;
 			return 0;
 		}
 	}
@@ -241,6 +254,13 @@ int main(int argc, char** argv)
 				per_frame_file << "Frame, Time (ms)" << endl;
 			}
 
+			ofstream record_state_file;
+			ifstream validate_state_file;
+			if (record_state)
+				record_state_file.open(("state_" + ToLower(motion_quality_str) + ".bin").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
+			else if (validate_state)
+				validate_state_file.open(("state_" + ToLower(motion_quality_str) + ".bin").c_str(), ifstream::in | ifstream::binary);
+
 			chrono::nanoseconds total_duration(0);
 
 			// Step the world for a fixed amount of iterations
@@ -279,6 +299,36 @@ int main(int argc, char** argv)
 				if (enable_profiler && iterations % 100 == 0)
 				{
 					JPH_PROFILE_DUMP(tag + "_it" + ConvertToString(iterations));
+				}
+
+				if (record_state)
+				{
+					// Record state
+					StateRecorderImpl recorder;
+					physics_system.SaveState(recorder);
+
+					// Write to file
+					string data = recorder.GetData();
+					size_t size = data.size();
+					record_state_file.write((char *)&size, sizeof(size));
+					record_state_file.write(data.data(), size);
+				}
+				else if (validate_state)
+				{
+					// Read state
+					size_t size = 0;
+					validate_state_file.read((char *)&size, sizeof(size));
+					string data;
+					data.resize(size);
+					validate_state_file.read(data.data(), size);
+
+					// Copy to validator
+					StateRecorderImpl validator;
+					validator.WriteBytes(data.data(), size);
+
+					// Validate state
+					validator.SetValidating(true);
+					physics_system.RestoreState(validator);
 				}
 			}
 
