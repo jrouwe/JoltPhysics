@@ -175,7 +175,7 @@ void ConeConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	Vec3 twist_axis1 = transform1.Multiply3x3(mLocalSpaceTwistAxis1);
 	Vec3 normal_axis1 = transform1.Multiply3x3(mLocalSpaceTwistAxis1.GetNormalizedPerpendicular());
 
-	inRenderer->DrawOpenCone(position1, twist_axis1, normal_axis1, acos(mCosHalfConeAngle), mDrawConstraintSize * mCosHalfConeAngle, Color::sPurple, DebugRenderer::ECastShadow::Off);
+	inRenderer->DrawOpenCone(position1, twist_axis1, normal_axis1, ACos(mCosHalfConeAngle), mDrawConstraintSize * mCosHalfConeAngle, Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER
 
@@ -206,7 +206,7 @@ Ref<ConstraintSettings> ConeConstraint::GetConstraintSettings() const
 	settings->mTwistAxis1 = mLocalSpaceTwistAxis1;
 	settings->mPoint2 = mLocalSpacePosition2;
 	settings->mTwistAxis2 = mLocalSpaceTwistAxis2;
-	settings->mHalfConeAngle = acos(mCosHalfConeAngle);
+	settings->mHalfConeAngle = ACos(mCosHalfConeAngle);
 	return settings;
 }
 

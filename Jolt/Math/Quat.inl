@@ -74,7 +74,7 @@ Quat Quat::sRotation(Vec3Arg inAxis, float inAngle)
 {
 	JPH_ASSERT(inAxis.IsNormalized());
 	float half_angle = 0.5f * inAngle;
-    return Quat(Vec4(inAxis * sin(half_angle), cos(half_angle)));
+    return Quat(Vec4(inAxis * Sin(half_angle), Cos(half_angle)));
 }
 
 void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
@@ -89,7 +89,7 @@ void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 	}
 	else
 	{
-		outAngle = 2.0f * acos(abs_w);
+		outAngle = 2.0f * ACos(abs_w);
 		outAxis = w_pos.GetXYZ().NormalizedOr(Vec3::sZero());
 	}
 }
@@ -144,7 +144,7 @@ Quat Quat::sRandom(Random &inRandom)
 	float r1 = sqrt(1.0f - x0), r2 = sqrt(x0);
 	uniform_real_distribution<float> zero_to_two_pi(0.0f, 2.0f * JPH_PI);
 	float t1 = zero_to_two_pi(inRandom), t2 = zero_to_two_pi(inRandom);	
-	return Quat(sin(t1) * r1, cos(t1) * r1, sin(t2) * r2, cos(t2) * r2);
+	return Quat(Sin(t1) * r1, Cos(t1) * r1, Sin(t2) * r2, Cos(t2) * r2);
 }
 
 Quat Quat::sEulerAngles(Vec3Arg inAngles)
@@ -154,12 +154,12 @@ Quat Quat::sEulerAngles(Vec3Arg inAngles)
 	float y = half.GetY();
 	float z = half.GetZ();
 	
-	float cx = cos(x);
-	float sx = sin(x);
-	float cy = cos(y);
-	float sy = sin(y);
-	float cz = cos(z);
-	float sz = sin(z);
+	float cx = Cos(x);
+	float sx = Sin(x);
+	float cy = Cos(y);
+	float sy = Sin(y);
+	float cz = Cos(z);
+	float sz = Sin(z);
 
 	return Quat(
 		cz * sx * cy - sz * cx * sy,
@@ -185,7 +185,7 @@ Vec3 Quat::GetEulerAngles() const
 	float t3 = 2.0f * (GetW() * GetZ() + GetX() * GetY());
 	float t4 = 1.0f - 2.0f * (y_sq + GetZ() * GetZ());  
 
-	return Vec3(atan2(t0, t1), asin(t2), atan2(t3, t4));
+	return Vec3(ATan2(t0, t1), ASin(t2), ATan2(t3, t4));
 }
 
 Quat Quat::GetTwist(Vec3Arg inAxis) const
@@ -242,10 +242,10 @@ Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
 	if (1.0f - cos_omega > delta) 
 	{
 		// Standard case (slerp)
-		float omega = acos(cos_omega);
-		float sin_omega = sin(omega);
-		scale0 = sin((1.0f - inFraction) * omega) / sin_omega;
-		scale1 = sign_scale1 * sin(inFraction * omega) / sin_omega;
+		float omega = ACos(cos_omega);
+		float sin_omega = Sin(omega);
+		scale0 = Sin((1.0f - inFraction) * omega) / sin_omega;
+		scale1 = sign_scale1 * Sin(inFraction * omega) / sin_omega;
 	} 
 	else 
 	{        

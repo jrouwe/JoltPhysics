@@ -58,10 +58,10 @@ public:
 		{
 			float twist_half_min = 0.5f * inTwistMinAngle;
 			float twist_half_max = 0.5f * inTwistMaxAngle;
-			mSinTwistHalfMinAngle = sin(twist_half_min);
-			mSinTwistHalfMaxAngle = sin(twist_half_max);
-			mCosTwistHalfMinAngle = cos(twist_half_min);
-			mCosTwistHalfMaxAngle = cos(twist_half_max);
+			mSinTwistHalfMinAngle = Sin(twist_half_min);
+			mSinTwistHalfMaxAngle = Sin(twist_half_max);
+			mCosTwistHalfMinAngle = Cos(twist_half_min);
+			mCosTwistHalfMaxAngle = Cos(twist_half_max);
 		}
 
 		if (inSwingYHalfAngle < cLockedAngle)
@@ -76,7 +76,7 @@ public:
 		}
 		else
 		{
-			mSinSwingYQuarterAngle = sin(0.5f * inSwingYHalfAngle);
+			mSinSwingYQuarterAngle = Sin(0.5f * inSwingYHalfAngle);
 		}
 
 		if (inSwingZHalfAngle < cLockedAngle)
@@ -91,7 +91,7 @@ public:
 		}
 		else
 		{
-			mSinSwingZQuarterAngle = sin(0.5f * inSwingZHalfAngle);
+			mSinSwingZQuarterAngle = Sin(0.5f * inSwingZHalfAngle);
 		}
 	}
 

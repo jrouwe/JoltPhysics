@@ -213,11 +213,11 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
-		mBodyInterface->MoveKinematic(mRotatingBody, cRotatingPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * sin(mTime)), inParams.mDeltaTime);
+		mBodyInterface->MoveKinematic(mRotatingBody, cRotatingPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
 	if (!mHorizontallyMovingBody.IsInvalid())
-		mBodyInterface->MoveKinematic(mHorizontallyMovingBody, cHorizontallyMovingPosition + Vec3(3.0f * sin(mTime), 0, 0), cHorizontallyMovingOrientation, inParams.mDeltaTime);
+		mBodyInterface->MoveKinematic(mHorizontallyMovingBody, cHorizontallyMovingPosition + Vec3(3.0f * Sin(mTime), 0, 0), cHorizontallyMovingOrientation, inParams.mDeltaTime);
 	if (!mVerticallyMovingBody.IsInvalid())
-		mBodyInterface->MoveKinematic(mVerticallyMovingBody, cVerticallyMovingPosition + Vec3(0, 1.75f * sin(mTime), 0), cVerticallyMovingOrientation, inParams.mDeltaTime);
+		mBodyInterface->MoveKinematic(mVerticallyMovingBody, cVerticallyMovingPosition + Vec3(0, 1.75f * Sin(mTime), 0), cVerticallyMovingOrientation, inParams.mDeltaTime);
 
 	// Reset ramp blocks
 	mRampBlocksTimeLeft -= inParams.mDeltaTime;
@@ -252,7 +252,7 @@ void CharacterBaseTest::GetInitialCamera(CameraState& ioState) const
 Mat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
-	Vec3 fwd = Vec3(cos(inCameraPitch) * cos(inCameraHeading), sin(inCameraPitch), cos(inCameraPitch) * sin(inCameraHeading));
+	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
 	return Mat44::sTranslation(GetCharacterPosition() + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
 }
 

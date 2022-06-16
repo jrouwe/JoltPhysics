@@ -126,7 +126,7 @@ TaperedCapsuleShape::TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSe
 	// See: TaperedCapsuleShape.gliffy
 	mSinAlpha = (mBottomRadius - mTopRadius) / (mTopCenter - mBottomCenter);
 	JPH_ASSERT(mSinAlpha >= -1.0f && mSinAlpha <= 1.0f);
-	mTanAlpha = tan(asin(mSinAlpha));
+	mTanAlpha = Tan(ASin(mSinAlpha));
 
 	outResult.Set(this);
 }

@@ -38,7 +38,7 @@ public:
 		for (int x = 0; x <= n; ++x)
 			for (int z = 0; z <= n; ++z)
 			{
-				float height = sin(float(x) * 50.0f / n) * cos(float(z) * 50.0f / n);
+				float height = Sin(float(x) * 50.0f / n) * Cos(float(z) * 50.0f / n);
 				vertices[z * (n + 1) + x] = Float3(cell_size * x, max_height * height, cell_size * z);
 			}
 

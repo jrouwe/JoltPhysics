@@ -278,8 +278,8 @@ Vec3 Vec3::sAnd(Vec3Arg inV1, Vec3Arg inV2)
 
 Vec3 Vec3::sUnitSpherical(float inTheta, float inPhi)
 {
-	float sint = sin(inTheta);
-	return Vec3(sint * cos(inPhi), sint * sin(inPhi), cos(inTheta));
+	float sint = Sin(inTheta);
+	return Vec3(sint * Cos(inPhi), sint * Sin(inPhi), Cos(inTheta));
 }
 
 template <class Random>

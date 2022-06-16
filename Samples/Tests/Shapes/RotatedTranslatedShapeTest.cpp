@@ -23,7 +23,7 @@ void RotatedTranslatedShapeTest::Initialize()
 	Array<Vec3> points;
 	points.push_back(Vec3(0, 2.5f, 0));
 	for (float a = 0; a < DegreesToRadians(360); a += DegreesToRadians(36))
-		points.push_back(Vec3(sin(a), -2.5f, cos(a)));
+		points.push_back(Vec3(Sin(a), -2.5f, Cos(a)));
 	Ref<ConvexHullShapeSettings> convex_hull = new ConvexHullShapeSettings(points);
 
 	// Offset and rotate so that the cone is upside down on its point

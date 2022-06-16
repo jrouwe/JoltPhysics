@@ -44,7 +44,7 @@ public:
 	/// @param inObjectLayer Object layer to test collision with
 	/// @param inUp World space up vector, used to avoid colliding with vertical walls.
 	/// @param inMaxSlopeAngle Max angle (rad) that is considered for colliding wheels. This is to avoid colliding with vertical walls.
-								VehicleCollisionTesterRay(ObjectLayer inObjectLayer, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mUp(inUp), mCosMaxSlopeAngle(cos(inMaxSlopeAngle)) { }
+								VehicleCollisionTesterRay(ObjectLayer inObjectLayer, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mUp(inUp), mCosMaxSlopeAngle(Cos(inMaxSlopeAngle)) { }
 
 	// See: VehicleCollisionTester
 	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, Vec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, Vec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
@@ -66,7 +66,7 @@ public:
 	/// @param inUp World space up vector, used to avoid colliding with vertical walls.
 	/// @param inRadius Radius of sphere
 	/// @param inMaxSlopeAngle Max angle (rad) that is considered for colliding wheels. This is to avoid colliding with vertical walls.
-								VehicleCollisionTesterCastSphere(ObjectLayer inObjectLayer, float inRadius, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mRadius(inRadius), mUp(inUp), mCosMaxSlopeAngle(cos(inMaxSlopeAngle)) { }
+								VehicleCollisionTesterCastSphere(ObjectLayer inObjectLayer, float inRadius, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mRadius(inRadius), mUp(inUp), mCosMaxSlopeAngle(Cos(inMaxSlopeAngle)) { }
 
 	// See: VehicleCollisionTester
 	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, Vec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, Vec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;

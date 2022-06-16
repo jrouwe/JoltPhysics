@@ -212,7 +212,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 			
 			// When using 2 normals, we get the two with the biggest angle between them with a minimal difference of 1 degree
 			// otherwise we fall back to just using 1 plane normal
-			float smallest_dot = cos(DegreesToRadians(1.0f));
+			float smallest_dot = Cos(DegreesToRadians(1.0f));
 			int best2[2] = { -1, -1 };
 
 			for (int face1 = 0; face1 < (int)faces.size(); ++face1)

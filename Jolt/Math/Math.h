@@ -163,4 +163,46 @@ inline uint32 GetNextPowerOf2(uint32 inValue)
 	return inValue <= 1? uint32(1) : uint32(1) << (32 - CountLeadingZeros(inValue - 1));
 }
 
+/// Sine of x
+JPH_INLINE float Sin(float inX)
+{
+	return sin(inX);
+}
+
+/// Cosine of x
+JPH_INLINE float Cos(float inX)
+{
+	return cos(inX);
+}
+
+/// Tangent of x
+JPH_INLINE float Tan(float inX)
+{
+	return tan(inX);
+}
+
+/// Arc sine of x
+JPH_INLINE float ASin(float inX)
+{
+	return asin(inX);
+}
+
+/// Arc cosine of x
+JPH_INLINE float ACos(float inX)
+{
+	return acos(inX);
+}
+
+/// Arc tangent of x
+JPH_INLINE float ATan(float inX)
+{
+	return atan(inX);
+}
+
+/// Arc tangent of y / x
+JPH_INLINE float ATan2(float inY, float inX)
+{
+	return atan2(inY, inX);
+}
+
 JPH_NAMESPACE_END

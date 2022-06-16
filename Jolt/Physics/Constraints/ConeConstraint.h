@@ -92,7 +92,7 @@ public:
 	virtual Mat44				GetConstraintToBody2Matrix() const override;
 
 	/// Update maximum angle between body 1 and 2 (see ConeConstraintSettings)
-	void						SetHalfConeAngle(float inHalfConeAngle)		{ JPH_ASSERT(inHalfConeAngle >= 0.0f && inHalfConeAngle <= JPH_PI); mCosHalfConeAngle = cos(inHalfConeAngle); }
+	void						SetHalfConeAngle(float inHalfConeAngle)		{ JPH_ASSERT(inHalfConeAngle >= 0.0f && inHalfConeAngle <= JPH_PI); mCosHalfConeAngle = Cos(inHalfConeAngle); }
 	float						GetCosHalfConeAngle() const					{ return mCosHalfConeAngle; }
 
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)

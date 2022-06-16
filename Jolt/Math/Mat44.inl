@@ -53,21 +53,21 @@ Mat44 Mat44::sLoadFloat4x4Aligned(const Float4 *inV)
 Mat44 Mat44::sRotationX(float inX)
 {
 	// TODO: Could be optimized
-	float c = cos(inX), s = sin(inX);
+	float c = Cos(inX), s = Sin(inX);
 	return Mat44(Vec4(1, 0, 0, 0), Vec4(0, c, s, 0), Vec4(0, -s, c, 0), Vec4(0, 0, 0, 1));
 }
 
 Mat44 Mat44::sRotationY(float inY)
 {
 	// TODO: Could be optimized
-	float c = cos(inY), s = sin(inY);
+	float c = Cos(inY), s = Sin(inY);
 	return Mat44(Vec4(c, 0, -s, 0), Vec4(0, 1, 0, 0), Vec4(s, 0, c, 0), Vec4(0, 0, 0, 1));
 }
 
 Mat44 Mat44::sRotationZ(float inZ)
 {
 	// TODO: Could be optimized
-	float c = cos(inZ), s = sin(inZ);
+	float c = Cos(inZ), s = Sin(inZ);
 	return Mat44(Vec4(c, s, 0, 0), Vec4(-s, c, 0, 0), Vec4(0, 0, 1, 0), Vec4(0, 0, 0, 1));
 }
 

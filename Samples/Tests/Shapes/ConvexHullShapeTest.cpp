@@ -55,8 +55,8 @@ void ConvexHullShapeTest::Initialize()
 	Array<Vec3> tapered_cylinder;
 	for (float theta = 0.0f; theta <= 2.0f * JPH_PI; theta += JPH_PI / 128.0f)
 	{
-		tapered_cylinder.push_back(4.0f * Vec3(-0.1f, sin(theta), cos(theta)));
-		tapered_cylinder.push_back(4.5f * Vec3(0.1f, sin(theta), cos(theta)));
+		tapered_cylinder.push_back(4.0f * Vec3(-0.1f, Sin(theta), Cos(theta)));
+		tapered_cylinder.push_back(4.5f * Vec3(0.1f, Sin(theta), Cos(theta)));
 	}
 
 	Body &body_tapered_cylinder = *mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(tapered_cylinder), Vec3(60, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));

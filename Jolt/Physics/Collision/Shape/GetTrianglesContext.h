@@ -94,8 +94,8 @@ public:
 			float angle1 = 2.0f * JPH_PI * (float(i) / num_verts);
 			float angle2 = 2.0f * JPH_PI * (float(i + 1) / num_verts);
 
-			Vec3 t1(sin(angle1), 1.0f, cos(angle1));
-			Vec3 t2(sin(angle2), 1.0f, cos(angle2));
+			Vec3 t1(Sin(angle1), 1.0f, Cos(angle1));
+			Vec3 t2(Sin(angle2), 1.0f, Cos(angle2));
 			Vec3 b1 = t1 + bottom_offset;
 			Vec3 b2 = t2 + bottom_offset;
 

@@ -70,7 +70,7 @@ bool EPATest::CollideBoxSphere(Mat44Arg inMatrix, const AABox &inBox, const Sphe
 		// Check angle between v1 and v2
 		float dot = v1.Dot(v2);
 		float len = v1.Length() * v2.Length();
-		float angle = RadiansToDegrees(acos(Clamp(dot / len, -1.0f, 1.0f)));
+		float angle = RadiansToDegrees(ACos(Clamp(dot / len, -1.0f, 1.0f)));
 		JPH_ASSERT(angle < 0.1f);
 		Trace("Angle = %.9g", (double)angle);
 
