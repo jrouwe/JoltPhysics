@@ -1263,8 +1263,21 @@ void ContactConstraintManager::SortContacts(uint32 *inConstraintIdxBegin, uint32
 	sort(inConstraintIdxBegin, inConstraintIdxEnd, [this](uint32 inLHS, uint32 inRHS) {
 		const ContactConstraint &lhs = mConstraints[inLHS];
 		const ContactConstraint &rhs = mConstraints[inRHS];
-		JPH_ASSERT(lhs.mSortKey != rhs.mSortKey, "Hash collision, ordering will be inconsistent");
-		return lhs.mSortKey < rhs.mSortKey;
+
+		// Most of the time the sort key will be different so we sort on that
+		if (lhs.mSortKey != rhs.mSortKey)
+			return lhs.mSortKey < rhs.mSortKey;
+
+		// If they're equal we use the IDs of body 1 to order
+		if (lhs.mBody1 != rhs.mBody1)
+			return lhs.mBody1->GetID() < rhs.mBody1->GetID();
+
+		// If they're still equal we use the IDs of body 2 to order
+		if (lhs.mBody2 != rhs.mBody2)
+			return lhs.mBody2->GetID() < rhs.mBody2->GetID();
+
+		JPH_ASSERT(false, "Hash collision, ordering will be inconsistent");
+		return false;
 	});
 }
 
