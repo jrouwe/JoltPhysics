@@ -5,10 +5,38 @@
 
 JPH_NAMESPACE_BEGIN
 
+/// Implements the FNV-1a hash algorithm
+/// @param inData Data block of bytes
+/// @param inSize Number of bytes
+/// @return Hash
+JPH_INLINE size_t FNV1aHash(const void *inData, uint inSize)
+{
+#if JPH_CPU_ADDRESS_BITS == 32
+	size_t hash = 0x811c9dc5;
+#elif JPH_CPU_ADDRESS_BITS == 64
+	size_t hash = 0xcbf29ce484222325;
+#else
+	#error Not implemented
+#endif
+
+	for (const uint8_t *data = reinterpret_cast<const uint8_t *>(inData); data < reinterpret_cast<const uint8_t *>(inData) + inSize; ++data)
+	{
+		hash = hash ^ size_t(*data);
+	#if JPH_CPU_ADDRESS_BITS == 32
+		hash = hash * 0x01000193;
+	#elif JPH_CPU_ADDRESS_BITS == 64
+		hash = hash * 0x100000001b3;
+	#else
+		#error Not implemented
+	#endif
+	}
+	return hash;
+}
+
 /// @brief Helper function that hashes a single value into ioSeed
 /// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
 template <typename T>
-inline void hash_combine_helper(std::size_t &ioSeed, const T &inValue)
+inline void HashCombineHelper(std::size_t &ioSeed, const T &inValue)
 {
 	std::hash<T> hasher;
     ioSeed ^= hasher(inValue) + 0x9e3779b9 + (ioSeed << 6) + (ioSeed >> 2);
@@ -27,10 +55,10 @@ inline void hash_combine_helper(std::size_t &ioSeed, const T &inValue)
 /// 
 ///		JPH_MAKE_HASHABLE(SomeHashKey, t.key1, t.key2, t.key3)
 template <typename... Values>
-inline void hash_combine(std::size_t &ioSeed, Values... inValues) 
+inline void HashCombine(std::size_t &ioSeed, Values... inValues) 
 {
 	// Hash all values together using a fold expression
-	(hash_combine_helper(ioSeed, inValues), ...);
+	(HashCombineHelper(ioSeed, inValues), ...);
 }
 
 JPH_NAMESPACE_END
@@ -44,7 +72,7 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
         std::size_t operator()(const type &t) const			\
 		{													\
             std::size_t ret = 0;							\
-            ::JPH::hash_combine(ret, __VA_ARGS__);			\
+            ::JPH::HashCombine(ret, __VA_ARGS__);			\
             return ret;										\
         }													\
     };

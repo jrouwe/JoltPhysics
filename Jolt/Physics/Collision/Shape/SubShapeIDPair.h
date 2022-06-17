@@ -58,4 +58,15 @@ static_assert(alignof(SubShapeIDPair) == 4, "Assuming 4 byte aligned");
 
 JPH_NAMESPACE_END
 
-JPH_MAKE_HASHABLE(JPH::SubShapeIDPair, t.GetBody1ID().GetIndexAndSequenceNumber(), t.GetSubShapeID1().GetValue(), t.GetBody2ID().GetIndexAndSequenceNumber(), t.GetSubShapeID2().GetValue())
+namespace std
+{
+	/// Declare std::hash for SubShapeIDPair, note that std::hash is platform dependent and we need this one to be consistent because we sort on it in the ContactConstraintManager
+	template <> 
+	struct hash<JPH::SubShapeIDPair>
+	{
+		inline size_t operator () (const JPH::SubShapeIDPair &inRHS) const
+		{
+			return JPH::FNV1aHash(&inRHS, sizeof(inRHS));
+		}
+	};
+}

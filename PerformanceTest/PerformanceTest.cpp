@@ -341,7 +341,7 @@ int main(int argc, char** argv)
 			{
 				Vec3 pos = bi.GetPosition(id);
 				Quat rot = bi.GetRotation(id);
-				hash_combine(hash, pos.GetX(), pos.GetY(), pos.GetZ(), rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+				HashCombine(hash, pos.GetX(), pos.GetY(), pos.GetZ(), rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
 			}
 
 			// Stop test scene
