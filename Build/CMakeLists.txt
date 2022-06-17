@@ -47,11 +47,6 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL
 	# Set general compiler flags
 	set(CMAKE_CXX_FLAGS "/std:c++17 /Zc:__cplusplus /GR- /Gm- /Wall /WX /EHsc /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline /Zi /DWIN32 /D_WINDOWS /DUNICODE /D_UNICODE")
 
-	# Settings to attempt cross platform determinism
-	if (CROSS_PLATFORM_DETERMINISTIC)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DJPH_CROSS_PLATFORM_DETERMINISTIC")
-	endif()
-	
 	# Set compiler flags for various configurations
 	set(CMAKE_CXX_FLAGS_DEBUG "/GS /Od /Ob0 /RTC1")
 	set(CMAKE_CXX_FLAGS_RELEASE "/GS- /GL /Gy /O2 /Oi /Ot")
@@ -125,18 +120,12 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 	endif()
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
-	# Set general compiler flags (do not use -ffast-math since it cannot be turned off in a single compilation unit)
-	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror")
+	# Set general compiler flags (do not use -ffast-math or -ffp-contract=on since it cannot be turned off in a single compilation unit under clang, see Core.h)
+	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror -ffp-model=precise -ffp-contract=off")
 
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-		# Somehow -Wcomment doesn't want to be turned off from code and we need this because Doxygen MathJax uses it
-		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment -ffp-contract=off")
-	endif()
-
-	# Settings to attempt cross platform determinism
-	if (CROSS_PLATFORM_DETERMINISTIC)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise -ffp-contract=off -DJPH_CROSS_PLATFORM_DETERMINISTIC")
+		# Somehow -Wcomment doesn't want to be turned off from code under gcc and we need this because Doxygen MathJax uses it
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment")
 	endif()
 
 	# Platform specific compiler flags
@@ -179,6 +168,11 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 
 	# Set linker flags
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+endif()
+
+# Setting to attempt cross platform determinism
+if (CROSS_PLATFORM_DETERMINISTIC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJPH_CROSS_PLATFORM_DETERMINISTIC")
 endif()
 
 # Set linker flags
