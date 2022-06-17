@@ -58,6 +58,8 @@ static_assert(alignof(SubShapeIDPair) == 4, "Assuming 4 byte aligned");
 
 JPH_NAMESPACE_END
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+
 namespace std
 {
 	/// Declare std::hash for SubShapeIDPair, note that std::hash is platform dependent and we need this one to be consistent because we sort on it in the ContactConstraintManager
@@ -70,3 +72,5 @@ namespace std
 		}
 	};
 }
+
+JPH_SUPPRESS_WARNINGS_STD_END
