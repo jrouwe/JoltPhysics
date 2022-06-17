@@ -93,7 +93,7 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /showFilenames")
 		if (USE_AVX2)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c -mfma")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c")
 		elseif (USE_AVX)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx -mpopcnt")
 		elseif (USE_SSE4_2)
@@ -132,7 +132,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 	if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
 		# X64
 		if (USE_AVX2)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c -mfma")
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c")
 		elseif (USE_AVX)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx -mpopcnt")
 		elseif (USE_SSE4_2)
@@ -172,7 +172,7 @@ endif()
 
 # Setting to attempt cross platform determinism
 if (CROSS_PLATFORM_DETERMINISTIC)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJPH_CROSS_PLATFORM_DETERMINISTIC")
+	add_compile_definitions(JPH_CROSS_PLATFORM_DETERMINISTIC)
 endif()
 
 # Set linker flags
