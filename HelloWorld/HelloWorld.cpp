@@ -237,7 +237,7 @@ int main(int argc, char** argv)
 
 	// This is the maximum size of the contact constraint buffer. If more contacts (collisions between bodies) are detected than this
 	// number then these contacts will be ignored and bodies will start interpenetrating / fall through the world.
-	// Note: This value is low because this is a simple test. For a real project use something in the order of 65536.
+	// Note: This value is low because this is a simple test. For a real project use something in the order of 10240.
 	const uint cMaxContactConstraints = 1024;
 
 	// Create mapping table from object layer to broadphase layer
