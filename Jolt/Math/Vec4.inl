@@ -710,4 +710,79 @@ float Vec4::ReduceMax() const
 	return v.GetX();
 }
 
+void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const
+{
+	// Implementation based on sinf.c from the cephes library, combines sinf and cosf in a single function and vectorizes it
+	// Original implementation by Stephen L. Moshier (See: http://www.netlib.org/cephes/)
+
+	// Make argument positive and remember sign (highest bit set is negative)
+	UVec4 sin_sign = UVec4::sAnd(ReinterpretAsInt(), UVec4::sReplicate(0x80000000U));
+	Vec4 x = Vec4::sXor(*this, sin_sign.ReinterpretAsFloat());
+
+	// Integer part of x / (PI / 4)
+	UVec4 int_val = (1.27323954473516f * x).ToInt();
+	Vec4 y = int_val.ToFloat();
+
+	// Integer and fractional part modulo one octant, map zeros to origin
+	// if (int_val & 1) int_val++, y += 1;
+	UVec4 and_1 = int_val.LogicalShiftLeft<31>().ArithmeticShiftRight<31>();
+	int_val += UVec4::sAnd(and_1, UVec4::sReplicate(1));
+	y += Vec4::sAnd(and_1.ReinterpretAsFloat(), Vec4::sReplicate(1.0f));
+
+	// Extended precision modular arithmetic
+	x = ((x - y * 0.78515625f) - y * 2.4187564849853515625e-4f) - y * 3.77489497744594108e-8f;
+
+	// Calculate both results
+	Vec4 z = x * x;
+	Vec4 y1 = ((2.443315711809948e-5f * z - Vec4::sReplicate(1.388731625493765e-3f)) * z + Vec4::sReplicate(4.166664568298827e-2f)) * z * z - 0.5f * z + Vec4::sReplicate(1.0f);
+	Vec4 y2 = ((-1.9515295891e-4f * z + Vec4::sReplicate(8.3321608736e-3f)) * z - Vec4::sReplicate(1.6666654611e-1f)) * z * x + x;
+
+	// From here we deviate form the original cephes code, we would have to write:
+	//
+	// j &= 7;
+	// 
+	// if (j > 3)
+	// {
+	//		j -= 4;
+	//		sin_sign = -sin_sign;
+	//		cos_sign = -cos_sign;
+	// }
+	// 
+	// if (j > 1)
+	//		cos_sign = -cos_sign;
+	//
+	// ...
+	//
+	// if (j == 1 || j == 2) // condition
+	//		...
+	// 
+	// j		sin_sign	cos_sign	condition
+	// 000b     1			1			0
+	// 001b     1			1			1
+	// 010b     1			-1			1
+	// 011b     1			-1			0
+	// 100b     -1			-1			0
+	// 101b     -1			-1			1
+	// 110b     -1			1			1
+	// 111b		-1			1			0
+	//
+	// So: sin_sign = bit3, cos_sign = bit2 ^ bit3, condition = bit1 ^ bit2
+	UVec4 bit1 = int_val.LogicalShiftLeft<31>();
+	UVec4 bit2 = UVec4::sAnd(int_val.LogicalShiftLeft<30>(), UVec4::sReplicate(0x80000000U));
+	UVec4 bit3 = UVec4::sAnd(int_val.LogicalShiftLeft<29>(), UVec4::sReplicate(0x80000000U));
+
+	// Select which one of the results is sin and which one is cos
+	UVec4 xor_1_2 = UVec4::sXor(bit1, bit2);
+	Vec4 s = Vec4::sSelect(y2, y1, xor_1_2);
+	Vec4 c = Vec4::sSelect(y1, y2, xor_1_2);
+
+	// Update the signs
+	sin_sign = UVec4::sXor(sin_sign, bit3);
+	UVec4 cos_sign = UVec4::sXor(bit2, bit3);
+
+	// Correct the signs
+	outSin = Vec4::sXor(s, sin_sign.ReinterpretAsFloat());
+	outCos = Vec4::sXor(c, cos_sign.ReinterpretAsFloat());
+}
+
 JPH_NAMESPACE_END
