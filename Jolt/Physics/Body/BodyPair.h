@@ -23,7 +23,7 @@ struct BodyPair
 	/// Smaller than operator, used for consistently ordering body pairs
 	bool					operator < (const BodyPair &inRHS) const					{ static_assert(sizeof(*this) == sizeof(uint64), "Mismatch in class size"); return *reinterpret_cast<const uint64 *>(this) < *reinterpret_cast<const uint64 *>(&inRHS); }
 
-	uint64					GetHash() const												{ return FNV1aHash(this, sizeof(BodyPair)); }
+	uint64					GetHash() const												{ return HashBytes(this, sizeof(BodyPair)); }
 
 	BodyID					mBodyA;
 	BodyID					mBodyB;

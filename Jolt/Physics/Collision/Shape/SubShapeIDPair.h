@@ -46,7 +46,7 @@ public:
 	const BodyID &			GetBody2ID() const				{ return mBody2ID; }
 	const SubShapeID &		GetSubShapeID2() const			{ return mSubShapeID2; }
 
-	uint64					GetHash() const					{ return FNV1aHash(this, sizeof(SubShapeIDPair)); }
+	uint64					GetHash() const					{ return HashBytes(this, sizeof(SubShapeIDPair)); }
 
 private:
 	BodyID					mBody1ID;

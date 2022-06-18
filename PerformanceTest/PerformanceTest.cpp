@@ -333,22 +333,23 @@ int main(int argc, char** argv)
 			}
 
 			// Calculate hash of all positions and rotations of the bodies
-			size_t hash = 0;
+			uint64 hash = HashBytes(nullptr, 0); // Ensure we start with the proper seed
 			BodyInterface &bi = physics_system.GetBodyInterfaceNoLock();
 			BodyIDVector body_ids;
 			physics_system.GetBodies(body_ids);
 			for (BodyID id : body_ids)
 			{
 				Vec3 pos = bi.GetPosition(id);
+				hash = HashBytes(&pos, 3 * sizeof(float), hash);
 				Quat rot = bi.GetRotation(id);
-				HashCombine(hash, pos.GetX(), pos.GetY(), pos.GetZ(), rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+				hash = HashBytes(&rot, sizeof(Quat), hash);
 			}
 
 			// Stop test scene
 			scene->StopTest(physics_system);
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", " << hash << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", 0x" << hex << hash << endl;
 		}
 	}
 

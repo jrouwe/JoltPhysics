@@ -6,16 +6,17 @@
 JPH_NAMESPACE_BEGIN
 
 /// Implements the FNV-1a hash algorithm
+/// @see https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 /// @param inData Data block of bytes
 /// @param inSize Number of bytes
 /// @return Hash
-inline uint64 FNV1aHash(const void *inData, uint inSize, uint64 inSeed = 0xcbf29ce484222325)
+inline uint64 HashBytes(const void *inData, uint inSize, uint64 inSeed = 0xcbf29ce484222325UL)
 {
 	uint64 hash = inSeed;
-	for (const uint8_t *data = reinterpret_cast<const uint8_t *>(inData); data < reinterpret_cast<const uint8_t *>(inData) + inSize; ++data)
+	for (const uint8 *data = reinterpret_cast<const uint8 *>(inData); data < reinterpret_cast<const uint8 *>(inData) + inSize; ++data)
 	{
 		hash = hash ^ uint64(*data);
-		hash = hash * 0x100000001b3;
+		hash = hash * 0x100000001b3UL;
 	}
 	return hash;
 }
