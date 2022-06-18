@@ -34,6 +34,7 @@ There are a number of user configurable defines that turn on/off certain feature
 - JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x86/x64 only)
 - JPH_USE_AVX - Enable AVX CPU instructions (x86/x64 only)
 - JPH_USE_AVX2 - Enable AVX2 CPU instructions (x86/x64 only)
+- JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (x86/x64 only)
 - JPH_USE_FMADD - Enable fused multiply add CPU instructions (x86/x64 only)
 
 ## Logging & Asserting

@@ -74,6 +74,9 @@
 	#if defined(__AVX2__) && !defined(JPH_USE_AVX2)
 		#define JPH_USE_AVX2
 	#endif
+	#if defined(__AVX512F__) && defined(__AVX512VL__) && defined(__AVX512DQ__) && !defined(JPH_USE_AVX512)
+		#define JPH_USE_AVX512
+	#endif
 	#ifndef JPH_CROSS_PLATFORM_DETERMINISTIC // FMA is not compatible with cross platform determinism
 		#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
 			#if defined(__FMA__) && !defined(JPH_USE_FMADD)
