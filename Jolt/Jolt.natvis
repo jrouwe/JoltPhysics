@@ -19,7 +19,7 @@
     <DisplayString>{mF32[0]}, {mF32[1]}, {mF32[2]}, {mF32[3]}, L^2={mF32[0]*mF32[0]+mF32[1]*mF32[1]+mF32[2]*mF32[2]+mF32[3]*mF32[3]}</DisplayString>
   </Type>
   <Type Name="JPH::UVec4">
-    <DisplayString>{mF32[0]}, {mF32[1]}, {mF32[2]}, {mF32[3]}</DisplayString>
+    <DisplayString>{mU32[0]}, {mU32[1]}, {mU32[2]}, {mU32[3]}</DisplayString>
   </Type>
   <Type Name="JPH::Quat">
     <DisplayString>{mValue}</DisplayString>
