@@ -120,12 +120,15 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 	endif()
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
-	# Set general compiler flags (do not use -ffast-math or -ffp-contract=on since it cannot be turned off in a single compilation unit under clang, see Core.h)
-	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror -ffp-model=precise -ffp-contract=off")
+	# Set general compiler flags
+	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror")
 
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		# Somehow -Wcomment doesn't want to be turned off from code under gcc and we need this because Doxygen MathJax uses it
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment")
+	else()
+		# Do not use -ffast-math or -ffp-contract=on since it cannot be turned off in a single compilation unit under clang, see Core.h
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise -ffp-contract=off")
 	endif()
 
 	# Platform specific compiler flags

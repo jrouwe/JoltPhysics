@@ -349,7 +349,7 @@ int main(int argc, char** argv)
 			scene->StopTest(physics_system);
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", 0x" << hex << hash << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", 0x" << hex << hash << dec << endl;
 		}
 	}
 
