@@ -9,26 +9,13 @@ JPH_NAMESPACE_BEGIN
 /// @param inData Data block of bytes
 /// @param inSize Number of bytes
 /// @return Hash
-JPH_INLINE size_t FNV1aHash(const void *inData, uint inSize)
+inline uint64 FNV1aHash(const void *inData, uint inSize, uint64 inSeed = 0xcbf29ce484222325)
 {
-#if JPH_CPU_ADDRESS_BITS == 32
-	size_t hash = 0x811c9dc5;
-#elif JPH_CPU_ADDRESS_BITS == 64
-	size_t hash = 0xcbf29ce484222325;
-#else
-	#error Not implemented
-#endif
-
+	uint64 hash = inSeed;
 	for (const uint8_t *data = reinterpret_cast<const uint8_t *>(inData); data < reinterpret_cast<const uint8_t *>(inData) + inSize; ++data)
 	{
-		hash = hash ^ size_t(*data);
-	#if JPH_CPU_ADDRESS_BITS == 32
-		hash = hash * 0x01000193;
-	#elif JPH_CPU_ADDRESS_BITS == 64
+		hash = hash ^ uint64(*data);
 		hash = hash * 0x100000001b3;
-	#else
-		#error Not implemented
-	#endif
 	}
 	return hash;
 }
@@ -36,7 +23,7 @@ JPH_INLINE size_t FNV1aHash(const void *inData, uint inSize)
 /// @brief Helper function that hashes a single value into ioSeed
 /// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
 template <typename T>
-inline void HashCombineHelper(std::size_t &ioSeed, const T &inValue)
+inline void HashCombineHelper(size_t &ioSeed, const T &inValue)
 {
 	std::hash<T> hasher;
     ioSeed ^= hasher(inValue) + 0x9e3779b9 + (ioSeed << 6) + (ioSeed >> 2);

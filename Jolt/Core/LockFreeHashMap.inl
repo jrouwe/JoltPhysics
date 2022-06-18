@@ -158,7 +158,7 @@ void LockFreeHashMap<Key, Value>::SetNumBuckets(uint32 inNumBuckets)
 
 template <class Key, class Value>
 template <class... Params>
-inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::Create(LFHMAllocatorContext &ioContext, const Key &inKey, size_t inKeyHash, int inExtraBytes, Params &&... inConstructorParams)
+inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::Create(LFHMAllocatorContext &ioContext, const Key &inKey, uint64 inKeyHash, int inExtraBytes, Params &&... inConstructorParams)
 {
 	// This is not a multi map, test the key hasn't been inserted yet
 	JPH_ASSERT(Find(inKey, inKeyHash) == nullptr);
@@ -201,7 +201,7 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 }
 
 template <class Key, class Value>
-inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::Find(const Key &inKey, size_t inKeyHash) const
+inline const typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Value>::Find(const Key &inKey, uint64 inKeyHash) const
 {
 	// Get the offset to the keyvalue object from the bucket with corresponding hash
 	uint32 offset = mBuckets[inKeyHash & (mNumBuckets - 1)].load(memory_order_acquire);

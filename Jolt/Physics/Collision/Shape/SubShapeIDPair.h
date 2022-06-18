@@ -46,6 +46,8 @@ public:
 	const BodyID &			GetBody2ID() const				{ return mBody2ID; }
 	const SubShapeID &		GetSubShapeID2() const			{ return mSubShapeID2; }
 
+	uint64					GetHash() const					{ return FNV1aHash(this, sizeof(SubShapeIDPair)); }
+
 private:
 	BodyID					mBody1ID;
 	SubShapeID				mSubShapeID1;
@@ -68,7 +70,7 @@ namespace std
 	{
 		inline size_t operator () (const JPH::SubShapeIDPair &inRHS) const
 		{
-			return JPH::FNV1aHash(&inRHS, sizeof(inRHS));
+			return static_cast<size_t>(inRHS.GetHash());
 		}
 	};
 }

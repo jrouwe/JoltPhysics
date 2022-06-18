@@ -353,15 +353,15 @@ private:
 		ContactAllocator		GetContactAllocator()						{ return ContactAllocator(mAllocator, cAllocatorBlockSize); }
 
 		/// Find / create cached entry for SubShapeIDPair -> CachedManifold
-		const MKeyValue *		Find(const SubShapeIDPair &inKey, size_t inKeyHash) const;
-		MKeyValue *				Create(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints);
-		MKVAndCreated			FindOrCreate(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, size_t inKeyHash, int inNumContactPoints);
+		const MKeyValue *		Find(const SubShapeIDPair &inKey, uint64 inKeyHash) const;
+		MKeyValue *				Create(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, uint64 inKeyHash, int inNumContactPoints);
+		MKVAndCreated			FindOrCreate(ContactAllocator &ioContactAllocator, const SubShapeIDPair &inKey, uint64 inKeyHash, int inNumContactPoints);
 		uint32					ToHandle(const MKeyValue *inKeyValue) const;
 		const MKeyValue *		FromHandle(uint32 inHandle) const;
 
 		/// Find / create entry for BodyPair -> CachedBodyPair
-		const BPKeyValue *		Find(const BodyPair &inKey, size_t inKeyHash) const;
-		BPKeyValue *			Create(ContactAllocator &ioContactAllocator, const BodyPair &inKey, size_t inKeyHash);
+		const BPKeyValue *		Find(const BodyPair &inKey, uint64 inKeyHash) const;
+		BPKeyValue *			Create(ContactAllocator &ioContactAllocator, const BodyPair &inKey, uint64 inKeyHash);
 		void					GetAllBodyPairsSorted(Array<const BPKeyValue *> &outAll) const;
 		void					GetAllManifoldsSorted(const CachedBodyPair &inBodyPair, Array<const MKeyValue *> &outAll) const;
 		void					GetAllCCDManifoldsSorted(Array<const MKeyValue *> &outAll) const;
@@ -442,7 +442,7 @@ private:
 		Vec3					mWorldSpaceNormal;
 		Body *					mBody1;
 		Body *					mBody2;
-		size_t					mSortKey;
+		uint64					mSortKey;
 		float					mCombinedFriction;
 		float					mCombinedRestitution;
 		WorldContactPoints		mContactPoints;

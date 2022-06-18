@@ -115,10 +115,10 @@ public:
 	/// Insert a new element, returns null if map full.
 	/// Multiple threads can be inserting in the map at the same time.
 	template <class... Params>
-	inline KeyValue *		Create(LFHMAllocatorContext &ioContext, const Key &inKey, size_t inKeyHash, int inExtraBytes, Params &&... inConstructorParams);
+	inline KeyValue *		Create(LFHMAllocatorContext &ioContext, const Key &inKey, uint64 inKeyHash, int inExtraBytes, Params &&... inConstructorParams);
 	
 	/// Find an element, returns null if not found
-	inline const KeyValue *	Find(const Key &inKey, size_t inKeyHash) const;
+	inline const KeyValue *	Find(const Key &inKey, uint64 inKeyHash) const;
 
 	/// Value of an invalid handle
 	const static uint32		cInvalidHandle = uint32(-1);
