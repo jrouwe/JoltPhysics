@@ -72,9 +72,11 @@ Quat Quat::operator * (QuatArg inRHS) const
 
 Quat Quat::sRotation(Vec3Arg inAxis, float inAngle)
 {
+    // returns [inAxis * sin(0.5f * inAngle), cos(0.5f * inAngle)]
 	JPH_ASSERT(inAxis.IsNormalized());
-	float half_angle = 0.5f * inAngle;
-    return Quat(Vec4(inAxis * Sin(half_angle), Cos(half_angle)));
+	Vec4 s, c;
+	Vec4::sReplicate(0.5f * inAngle).SinCos(s, c);
+    return Quat(Vec4::sSelect(Vec4(inAxis) * s, c, UVec4(0, 0, 0, 0xffffffffU)));
 }
 
 void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
@@ -143,23 +145,23 @@ Quat Quat::sRandom(Random &inRandom)
 	float x0 = zero_to_one(inRandom);
 	float r1 = sqrt(1.0f - x0), r2 = sqrt(x0);
 	uniform_real_distribution<float> zero_to_two_pi(0.0f, 2.0f * JPH_PI);
-	float t1 = zero_to_two_pi(inRandom), t2 = zero_to_two_pi(inRandom);	
-	return Quat(Sin(t1) * r1, Cos(t1) * r1, Sin(t2) * r2, Cos(t2) * r2);
+	Vec4 s, c;
+	Vec4(zero_to_two_pi(inRandom), zero_to_two_pi(inRandom), 0, 0).SinCos(s, c);
+	return Quat(s.GetX() * r1, c.GetX() * r1, s.GetY() * r2, c.GetY() * r2);
 }
 
 Quat Quat::sEulerAngles(Vec3Arg inAngles)
 {
-	Vec3 half = 0.5f * inAngles;
-	float x = half.GetX();
-	float y = half.GetY();
-	float z = half.GetZ();
-	
-	float cx = Cos(x);
-	float sx = Sin(x);
-	float cy = Cos(y);
-	float sy = Sin(y);
-	float cz = Cos(z);
-	float sz = Sin(z);
+	Vec4 half(0.5f * inAngles);
+	Vec4 s, c;
+	half.SinCos(s, c);
+
+	float cx = c.GetX();
+	float sx = s.GetX();
+	float cy = c.GetY();
+	float sy = s.GetY();
+	float cz = c.GetZ();
+	float sz = s.GetZ();
 
 	return Quat(
 		cz * sx * cy - sz * cx * sy,

@@ -278,8 +278,9 @@ Vec3 Vec3::sAnd(Vec3Arg inV1, Vec3Arg inV2)
 
 Vec3 Vec3::sUnitSpherical(float inTheta, float inPhi)
 {
-	float sint = Sin(inTheta);
-	return Vec3(sint * Cos(inPhi), sint * Sin(inPhi), Cos(inTheta));
+	Vec4 s, c;
+	Vec4(inTheta, inPhi, 0, 0).SinCos(s, c);
+	return Vec3(s.GetX() * c.GetY(), s.GetX() * s.GetY(), c.GetX());
 }
 
 template <class Random>
