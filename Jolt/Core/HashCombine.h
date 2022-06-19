@@ -9,6 +9,7 @@ JPH_NAMESPACE_BEGIN
 /// @see https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 /// @param inData Data block of bytes
 /// @param inSize Number of bytes
+/// @param inSeed Seed of the hash (can be used to pass in the hash of a previous operation, otherwise leave default)
 /// @return Hash
 inline uint64 HashBytes(const void *inData, uint inSize, uint64 inSeed = 0xcbf29ce484222325UL)
 {
