@@ -22,7 +22,7 @@ ShapeRefC CreateTorusMesh(float inTorusRadius, float inTubeRadius, uint inTorusS
 		{
 			// Create vertices
 			float tube_angle = float(tube_segment) * 2.0f * JPH_PI / inTubeSegments;
-			Vec3 pos = rotation * Vec3(inTorusRadius + inTubeRadius * sin(tube_angle), inTubeRadius * cos(tube_angle), 0);
+			Vec3 pos = rotation * Vec3(inTorusRadius + inTubeRadius * Sin(tube_angle), inTubeRadius * Cos(tube_angle), 0);
 			Float3 v;
 			pos.StoreFloat3(&v);
 			mesh.mTriangleVertices.push_back(v);

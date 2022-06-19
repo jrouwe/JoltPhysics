@@ -36,6 +36,10 @@ public:
 		JPH_ASSERT(inSwingYHalfAngle >= 0.0f && inSwingYHalfAngle <= JPH_PI);
 		JPH_ASSERT(inSwingZHalfAngle >= 0.0f && inSwingZHalfAngle <= JPH_PI);
 
+		// Calculate the sine and cosine of the half angles
+		Vec4 s, c;
+		(0.5f * Vec4(inTwistMinAngle, inTwistMaxAngle, inSwingYHalfAngle, inSwingZHalfAngle)).SinCos(s, c);
+
 		// Store axis flags which are used at runtime to quickly decided which contraints to apply
 		mRotationFlags = 0;
 		if (inTwistMinAngle > -cLockedAngle && inTwistMaxAngle < cLockedAngle)
@@ -56,12 +60,10 @@ public:
 		}
 		else
 		{
-			float twist_half_min = 0.5f * inTwistMinAngle;
-			float twist_half_max = 0.5f * inTwistMaxAngle;
-			mSinTwistHalfMinAngle = sin(twist_half_min);
-			mSinTwistHalfMaxAngle = sin(twist_half_max);
-			mCosTwistHalfMinAngle = cos(twist_half_min);
-			mCosTwistHalfMaxAngle = cos(twist_half_max);
+			mSinTwistHalfMinAngle = s.GetX();
+			mSinTwistHalfMaxAngle = s.GetY();
+			mCosTwistHalfMinAngle = c.GetX();
+			mCosTwistHalfMaxAngle = c.GetY();
 		}
 
 		if (inSwingYHalfAngle < cLockedAngle)
@@ -76,7 +78,7 @@ public:
 		}
 		else
 		{
-			mSinSwingYQuarterAngle = sin(0.5f * inSwingYHalfAngle);
+			mSinSwingYQuarterAngle = s.GetZ();
 		}
 
 		if (inSwingZHalfAngle < cLockedAngle)
@@ -91,7 +93,7 @@ public:
 		}
 		else
 		{
-			mSinSwingZQuarterAngle = sin(0.5f * inSwingZHalfAngle);
+			mSinSwingZQuarterAngle = s.GetW();
 		}
 	}
 

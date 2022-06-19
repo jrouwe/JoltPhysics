@@ -507,4 +507,35 @@ TEST_SUITE("Vec4Tests")
 									}
 								}
 	}
+
+	TEST_CASE("TestVec4SinCos")
+	{
+		double ms = 0.0, mc = 0.0;
+
+		for (float x = -100.0f * JPH_PI; x < 100.0f * JPH_PI; x += 1.0e-3f)
+		{
+			// Create a vector with intermediate values
+			Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f);
+
+			// Calculate sin and cos
+			Vec4 vs, vc;
+			xv.SinCos(vs, vc);
+
+			for (int i = 0; i < 4; ++i)
+			{
+				// Check accuracy of sin
+				double s1 = sin((double)xv[i]), s2 = (double)vs[i];
+				double ds = abs(s2 - s1);
+				ms = max(ms, ds);
+
+				// Check accuracy of cos
+				double c1 = cos((double)xv[i]), c2 = (double)vc[i];
+				double dc = abs(c2 - c1);
+				mc = max(mc, dc);
+			}
+		}
+
+		CHECK(ms < 1.0e-7f);
+		CHECK(mc < 1.0e-7f);
+	}
 }

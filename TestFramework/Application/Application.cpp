@@ -232,8 +232,8 @@ void Application::Run()
 
 void Application::GetCameraLocalHeadingAndPitch(float &outHeading, float &outPitch)
 {
-	outHeading = atan2(mLocalCamera.mForward.GetZ(), mLocalCamera.mForward.GetX());
-	outPitch = atan2(mLocalCamera.mForward.GetY(), Vec3(mLocalCamera.mForward.GetX(), 0, mLocalCamera.mForward.GetZ()).Length());
+	outHeading = ATan2(mLocalCamera.mForward.GetZ(), mLocalCamera.mForward.GetX());
+	outPitch = ATan2(mLocalCamera.mForward.GetY(), Vec3(mLocalCamera.mForward.GetX(), 0, mLocalCamera.mForward.GetZ()).Length());
 }
 
 void Application::ConvertCameraLocalToWorld(float inCameraHeading, float inCameraPitch)
@@ -284,7 +284,7 @@ void Application::UpdateCamera(float inDeltaTime)
 	GetCameraLocalHeadingAndPitch(heading, pitch);
 	heading += DegreesToRadians(mMouse->GetDX() * 0.5f);
 	pitch = Clamp(pitch - DegreesToRadians(mMouse->GetDY() * 0.5f), -0.49f * JPH_PI, 0.49f * JPH_PI);
-	mLocalCamera.mForward = Vec3(cos(pitch) * cos(heading), sin(pitch), cos(pitch) * sin(heading));
+	mLocalCamera.mForward = Vec3(Cos(pitch) * Cos(heading), Sin(pitch), Cos(pitch) * Sin(heading));
 
 	// Convert to world space
 	ConvertCameraLocalToWorld(heading, pitch);

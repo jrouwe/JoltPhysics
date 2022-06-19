@@ -45,7 +45,7 @@ void ChangeMotionTypeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Provide kinematic body a target
 	if (motion_type == EMotionType::Kinematic)
-		mBody->MoveKinematic(Vec3(sin(mTime), 10, 0), Quat::sRotation(Vec3::sAxisX(), cos(mTime)), inParams.mDeltaTime);
+		mBody->MoveKinematic(Vec3(Sin(mTime), 10, 0), Quat::sRotation(Vec3::sAxisX(), Cos(mTime)), inParams.mDeltaTime);
 }
 
 void ChangeMotionTypeTest::SaveState(StateRecorder &inStream) const

@@ -33,6 +33,9 @@ public:
 	/// Compare this state with a reference state and ensure they are the same
 	bool				IsEqual(StateRecorderImpl &inReference);
 
+	/// Convert the binary data to a string
+	string				GetData() const												{ return mStream.str(); }
+
 private:
 	stringstream		mStream;
 };

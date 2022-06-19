@@ -426,7 +426,7 @@ void ConvexHullTest::Initialize()
 		Mat44 rot = Mat44::sRotationZ(0.25f * JPH_PI);
 		for (float r = 0.0f; r < 2.0f; r += 0.1f)
 			for (float phi = 0.0f; phi <= 2.0f * JPH_PI; phi += 2.0f * JPH_PI / 20.0f)
-				p.push_back(rot * Vec3(r * cos(phi), r * sin(phi), 0));
+				p.push_back(rot * Vec3(r * Cos(phi), r * Sin(phi), 0));
 		mPoints.push_back(move(p));
 	}
 
@@ -435,7 +435,7 @@ void ConvexHullTest::Initialize()
 		Points p;
 		for (float phi = 0.0f; phi <= 2.0f * JPH_PI; phi += 2.0f * JPH_PI / 40.0f)
 		{
-			Vec3 pos(2.0f * cos(phi), 0, 2.0f * sin(phi));
+			Vec3 pos(2.0f * Cos(phi), 0, 2.0f * Sin(phi));
 			p.push_back(pos);
 			p.push_back(pos + Vec3(0, 2.0e-3f * (2.0f + pos.GetX()) / 4.0f, 0));
 		}

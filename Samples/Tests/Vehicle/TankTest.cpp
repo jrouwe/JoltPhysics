@@ -244,13 +244,13 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Orient the turret towards the hit position
 	Mat44 turret_to_world = mTankBody->GetCenterOfMassTransform() * mTurretHinge->GetConstraintToBody1Matrix();
 	Vec3 hit_pos_in_turret = turret_to_world.InversedRotationTranslation() * hit_pos;
-	float heading = atan2(hit_pos_in_turret.GetZ(), hit_pos_in_turret.GetY());
+	float heading = ATan2(hit_pos_in_turret.GetZ(), hit_pos_in_turret.GetY());
 	mTurretHinge->SetTargetAngle(heading);
 
 	// Orient barrel towards the hit position
 	Mat44 barrel_to_world = mTurretBody->GetCenterOfMassTransform() * mBarrelHinge->GetConstraintToBody1Matrix();
 	Vec3 hit_pos_in_barrel = barrel_to_world.InversedRotationTranslation() * hit_pos;
-	float pitch = atan2(hit_pos_in_barrel.GetZ(), hit_pos_in_barrel.GetY());
+	float pitch = ATan2(hit_pos_in_barrel.GetZ(), hit_pos_in_barrel.GetY());
 	mBarrelHinge->SetTargetAngle(pitch);
 
 	// Update reload time
@@ -296,6 +296,6 @@ void TankTest::GetInitialCamera(CameraState &ioState) const
 Mat44 TankTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
 	// Pivot is center of tank + a distance away from the tank based on the heading and pitch of the camera
-	Vec3 fwd = Vec3(cos(inCameraPitch) * cos(inCameraHeading), sin(inCameraPitch), cos(inCameraPitch) * sin(inCameraHeading));
+	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
 	return Mat44::sTranslation(mTankBody->GetPosition() - 10.0f * fwd);
 }

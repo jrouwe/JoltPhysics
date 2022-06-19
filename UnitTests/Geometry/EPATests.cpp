@@ -19,7 +19,7 @@ TEST_SUITE("EPATests")
 	{
 		float dot = inV1.Dot(inV2);
 		float len = inV1.Length() * inV2.Length();
-		return RadiansToDegrees(acos(Clamp(dot / len, -1.0f, 1.0f)));
+		return RadiansToDegrees(ACos(Clamp(dot / len, -1.0f, 1.0f)));
 	}
 
 	/// Test box versus sphere and compare analytical solution with that of the EPA algorithm

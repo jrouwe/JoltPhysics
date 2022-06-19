@@ -486,8 +486,8 @@ void DebugRenderer::Initialize()
 				for (int i = 0; i <= num_parts; ++i)
 				{
 					float angle = 0.5f * JPH_PI * (float(q) + float(i) / num_parts);
-					float s = sin(angle);
-					float c = cos(angle);
+					float s = Sin(angle);
+					float c = Cos(angle);
 					Float3 vt(s, 1.0f, c);
 					Float3 vb(s, -1.0f, c);
 					Float3 n(s, 0, c);
@@ -528,8 +528,8 @@ void DebugRenderer::Initialize()
 				{
 					// Calculate bottom vertex
 					float angle = 0.5f * JPH_PI * (float(q) + float(i) / num_parts);
-					float s = sin(angle);
-					float c = cos(angle);
+					float s = Sin(angle);
+					float c = Cos(angle);
 					Float3 vb(s, 1.0f, c);
 
 					// Calculate normal
@@ -575,8 +575,8 @@ void DebugRenderer::Initialize()
 				for (int i = 0; i <= num_parts; ++i)
 				{
 					float angle = 0.5f * JPH_PI * (float(q) + float(i) / num_parts);
-					float s = sin(angle);
-					float c = cos(angle);
+					float s = Sin(angle);
+					float c = Cos(angle);
 					Float3 vt(s, 1.0f, c);
 					Float3 vb(s, -1.0f, c);
 					Float3 n(s, 0, c);
@@ -786,7 +786,7 @@ void DebugRenderer::DrawOpenCone(Vec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpen
 	JPH_ASSERT(abs(inPerpendicular.Dot(inAxis)) < 1.0e-4f);
 
 	Vec3 axis = Sign(inHalfAngle) * inLength * inAxis;
-	float scale = inLength * tan(abs(inHalfAngle));
+	float scale = inLength * Tan(abs(inHalfAngle));
 	if (scale != 0.0f)
 	{
 		Vec3 perp1 = scale * inPerpendicular;
@@ -815,8 +815,8 @@ void DebugRenderer::DrawSwingLimits(Mat44Arg inMatrix, float inSwingYHalfAngle, 
 		int half_num_segments = num_segments / 2;
 
 		// The y and z values of the quaternion are limited to an ellipse, e1 and e2 are the radii of this ellipse
-		float e1 = sin(0.5f * inSwingZHalfAngle);
-		float e2 = sin(0.5f * inSwingYHalfAngle);
+		float e1 = Sin(0.5f * inSwingZHalfAngle);
+		float e2 = Sin(0.5f * inSwingYHalfAngle);
 
 		// Check if the limits will draw something
 		if ((e1 <= 0.0f && e2 <= 0.0f) || (e2 >= 1.0f && e1 >= 1.0f))
@@ -960,7 +960,7 @@ void DebugRenderer::DrawPie(Vec3Arg inCenter, float inRadius, Vec3Arg inNormal, 
 		{
 			float angle = float(i) / float(num_parts) * delta_angle;
 
-			Float3 pos = { cos(angle), 0, sin(angle) };
+			Float3 pos = { Cos(angle), 0, Sin(angle) };
 			*vertices++ = { pos, normal, { 0, 0 }, Color::sWhite };
 		}
 

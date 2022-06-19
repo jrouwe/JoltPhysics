@@ -78,7 +78,7 @@ TEST_SUITE("ConvexHullBuilderTest")
 				{
 					float f_r = 2.0f * r;
 					float f_phi = 2.0f * JPH_PI * phi / 10;
-					positions.push_back(Vec3(f_r * cos(f_phi), f_r * sin(f_phi), 0));
+					positions.push_back(Vec3(f_r * Cos(f_phi), f_r * Sin(f_phi), 0));
 				}
 
 			ConvexHullBuilder builder(positions);

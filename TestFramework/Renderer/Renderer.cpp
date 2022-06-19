@@ -486,7 +486,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	// Camera properties
 	float camera_fovy = inCamera.mFOVY;
 	float camera_aspect = static_cast<float>(GetWindowWidth()) / GetWindowHeight();
-	float camera_fovx = 2.0f * atan(camera_aspect * tan(0.5f * camera_fovy));
+	float camera_fovx = 2.0f * ATan(camera_aspect * Tan(0.5f * camera_fovy));
 	float camera_near = 0.01f * inWorldScale;
 	float camera_far = inCamera.mFarPlane * inWorldScale;
 

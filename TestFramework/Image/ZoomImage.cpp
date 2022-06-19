@@ -138,7 +138,7 @@ private:
 		if (abs(x) < 1.0e-5f)
 			return 1.0f;
 
-		return sin(x) / x;		
+		return Sin(x) / x;		
 	}
 
 };

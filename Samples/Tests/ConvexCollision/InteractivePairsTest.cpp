@@ -47,7 +47,7 @@ void InteractivePairsTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	float z = 0.0f;
 
 	const float r1 = 0.25f * JPH_PI;
-	const float r2 = atan(1.0f / sqrt(2.0f)); // When rotating cube by 45 degrees the one axis becomes sqrt(2) long while the other stays at length 1
+	const float r2 = ATan(1.0f / sqrt(2.0f)); // When rotating cube by 45 degrees the one axis becomes sqrt(2) long while the other stays at length 1
 
 	for (int i = 0; i < 2; ++i)
 	{

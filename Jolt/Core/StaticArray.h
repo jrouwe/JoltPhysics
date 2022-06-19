@@ -293,11 +293,11 @@ namespace std
 			std::size_t ret = 0;
 
 			// Hash length first
-            JPH::hash_combine(ret, inRHS.size());
+            JPH::HashCombine(ret, inRHS.size());
 
 			// Then hash elements
 			for (const T &t : inRHS)
-	            JPH::hash_combine(ret, t);
+	            JPH::HashCombine(ret, t);
 
             return ret;
 		}
