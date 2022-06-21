@@ -540,7 +540,9 @@ Vec4 Vec4::SplatW() const
 
 Vec4 Vec4::Abs() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_AVX512)
+	return _mm_range_ps(mValue, mValue, 0b1000);
+#elif defined(JPH_USE_SSE)
 	return _mm_max_ps(_mm_sub_ps(_mm_setzero_ps(), mValue), mValue);
 #elif defined(JPH_USE_NEON)
 	return vabsq_f32(mValue);
@@ -626,7 +628,9 @@ Vec4 Vec4::Sqrt() const
 
 Vec4 Vec4::GetSign() const
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_AVX512)
+	return _mm_fixupimm_ps(mValue, mValue, _mm_set1_epi32(0xA9A90A00), 0);
+#elif defined(JPH_USE_SSE)
 	Type minus_one = _mm_set1_ps(-1.0f);
 	Type one = _mm_set1_ps(1.0f);
 	return _mm_or_ps(_mm_and_ps(mValue, minus_one), one);
