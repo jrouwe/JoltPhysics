@@ -15,6 +15,8 @@ The performance test application contains a couple of simple scenes to test perf
 - -r: Outputs a performance_test_[tag].jor file that contains a recording to be played back with JoltViewer
 - -f: Outputs the time taken per frame to per_frame_[tag].csv
 - -h: Displays a help text
+- -rs: Record the simulation state in state_[tag].bin.
+- -vs: Validate the recorded simulation state from state_[tag].bin. This will after every simulation step check that the state is the same as the recorded state and trigger a breakpoint if this is not the case. This is used to validate cross platform determinism.
 
 ## Output
 

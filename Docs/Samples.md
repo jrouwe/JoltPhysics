@@ -89,9 +89,17 @@ This category shows the various constraints that are supported. Constraints conn
 |:-|
 |*Showing the path constraint in action.*|
 
-|[![Swing Twist Constraing](https://img.youtube.com/vi/8aQ9x8SQSuM/hqdefault.jpg)](https://www.youtube.com/watch?v=8aQ9x8SQSuM)|
+|[![Swing Twist Constraint](https://img.youtube.com/vi/8aQ9x8SQSuM/hqdefault.jpg)](https://www.youtube.com/watch?v=8aQ9x8SQSuM)|
 |:-|
 |*Demonstrates a chain of swing-twist constraints (usable for humanoid shoulders). The green cones show the swing limit and the pink pie shows the twist limit.*|
+
+|[![Gear constraint](https://img.youtube.com/vi/3w5SgElroBw/hqdefault.jpg)](https://www.youtube.com/watch?v=3w5SgElroBw)|
+|:-|
+|*Demonstrates a gear constraint. Note that the gears can be placed at any relative angle of each other, so you could e.g. create a bevel or worm gear.*|
+
+|[![Rack and pinion constraint](https://img.youtube.com/vi/e588KG-ZSxc/hqdefault.jpg)](https://www.youtube.com/watch?v=e588KG-ZSxc)|
+|:-|
+|*Demonstrates a rack and pinion constraint.*|
 
 ### General
 
