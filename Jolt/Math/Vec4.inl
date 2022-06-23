@@ -720,7 +720,7 @@ void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const
 	// Implementation based on sinf.c from the cephes library, combines sinf and cosf in a single function and vectorizes it
 	// Original implementation by Stephen L. Moshier (See: http://www.netlib.org/cephes/)
 
-	// Make argument positive and remember sign (highest bit set is negative)
+	// Make argument positive and remember sign for sin only since cos is symmetric around x (highest bit of a float is the sign bit)
 	UVec4 sin_sign = UVec4::sAnd(ReinterpretAsInt(), UVec4::sReplicate(0x80000000U));
 	Vec4 x = Vec4::sXor(*this, sin_sign.ReinterpretAsFloat());
 
@@ -735,33 +735,45 @@ void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const
 	y += Vec4::sAnd(and_1.ReinterpretAsFloat(), Vec4::sReplicate(1.0f));
 
 	// Extended precision modular arithmetic
+	// This does x = x - y * PI / 4 using a two step Cody-Waite argument reduction.
+	// This improves the accuracy of the result by avoiding loss of significant bits in the subtraction.
+	// We start with x = x - y * PI / 4, PI / 4 in hexadecimal notation is 0x3f490fdb, we remove the lowest 16 bits to
+	// get 0x3f490000 (= 0.78515625) this means we can now multiply with a number of up to 2^16 without losing any bits.
+	// This leaves us with: x = (x - y * 0.78515625) - y * (PI / 4 - 0.78515625).
+	// PI / 4 - 0.78515625 in hexadecimal is 0x397daa22, stripping the lowest 12 bits we get 0x397da000 (= 0.00024187564849853515625)
+	// This leaves uw with: x = ((x - y * 0.78515625) - y * 0.00024187564849853515625) - y * (PI / 4 - 0.78515625 - 0.00024187564849853515625)
+	// See: https://stackoverflow.com/questions/42455143/sine-cosine-modular-extended-precision-arithmetic
 	x = ((x - y * 0.78515625f) - y * 2.4187564849853515625e-4f) - y * 3.77489497744594108e-8f;
 
-	// Calculate both results
+	// Calculate z = x^2
 	Vec4 z = x * x;
-	Vec4 y1 = ((2.443315711809948e-5f * z - Vec4::sReplicate(1.388731625493765e-3f)) * z + Vec4::sReplicate(4.166664568298827e-2f)) * z * z - 0.5f * z + Vec4::sReplicate(1.0f);
-	Vec4 y2 = ((-1.9515295891e-4f * z + Vec4::sReplicate(8.3321608736e-3f)) * z - Vec4::sReplicate(1.6666654611e-1f)) * z * x + x;
+
+	// Taylor expansion:
+	// Cos(x) = 1 - x^2/2! + x^4/4! - x^6/6! + x^8/8! + ... = (((z/8!- 1/6!) * z + 1/4!) * z - 1/2!) * z + 1
+	Vec4 taylor_cos = ((2.443315711809948e-5f * z - Vec4::sReplicate(1.388731625493765e-3f)) * z + Vec4::sReplicate(4.166664568298827e-2f)) * z * z - 0.5f * z + Vec4::sReplicate(1.0f);
+	// Sin(x) = x - x^3/3! + x^5/5! - x^7/7! + ... = ((-z/7! + 1/5!) * z - 1/3!) * z * x + x
+	Vec4 taylor_sin = ((-1.9515295891e-4f * z + Vec4::sReplicate(8.3321608736e-3f)) * z - Vec4::sReplicate(1.6666654611e-1f)) * z * x + x;
 
 	// From here we deviate form the original cephes code, we would have to write:
 	//
-	// j &= 7;
+	// int_val &= 7;
 	// 
-	// if (j > 3)
+	// if (int_val > 3)
 	// {
-	//		j -= 4;
+	//		int_val -= 4;
 	//		sin_sign = -sin_sign;
 	//		cos_sign = -cos_sign;
 	// }
 	// 
-	// if (j > 1)
+	// if (int_val > 1)
 	//		cos_sign = -cos_sign;
 	//
 	// ...
 	//
-	// if (j == 1 || j == 2) // condition
+	// if (int_val == 1 || int_val == 2) // condition
 	//		...
 	// 
-	// j		sin_sign	cos_sign	condition
+	// int_val	sin_sign	cos_sign	condition
 	// 000b     1			1			0
 	// 001b     1			1			1
 	// 010b     1			-1			1
@@ -772,14 +784,13 @@ void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const
 	// 111b		-1			1			0
 	//
 	// So: sin_sign = bit3, cos_sign = bit2 ^ bit3, condition = bit1 ^ bit2
-	UVec4 bit1 = int_val.LogicalShiftLeft<31>();
+	// However since we ensured that int_val is always even bit1 = 0
 	UVec4 bit2 = UVec4::sAnd(int_val.LogicalShiftLeft<30>(), UVec4::sReplicate(0x80000000U));
 	UVec4 bit3 = UVec4::sAnd(int_val.LogicalShiftLeft<29>(), UVec4::sReplicate(0x80000000U));
 
 	// Select which one of the results is sin and which one is cos
-	UVec4 xor_1_2 = UVec4::sXor(bit1, bit2);
-	Vec4 s = Vec4::sSelect(y2, y1, xor_1_2);
-	Vec4 c = Vec4::sSelect(y1, y2, xor_1_2);
+	Vec4 s = Vec4::sSelect(taylor_sin, taylor_cos, bit2);
+	Vec4 c = Vec4::sSelect(taylor_cos, taylor_sin, bit2);
 
 	// Update the signs
 	sin_sign = UVec4::sXor(sin_sign, bit3);
