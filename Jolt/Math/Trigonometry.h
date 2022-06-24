@@ -43,10 +43,10 @@ JPH_INLINE float ACos(float inX)
 	return Vec4::sReplicate(inX).ACos().GetX();
 }
 
-/// Arc tangent of x
+/// Arc tangent of x (returns value in the range [-PI, PI])
 JPH_INLINE float ATan(float inX)
 {
-	return atan(inX);
+	return Vec4::sReplicate(inX).ATan().GetX();
 }
 
 /// Arc tangent of y / x
