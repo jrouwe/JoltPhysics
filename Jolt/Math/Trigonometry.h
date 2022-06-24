@@ -26,7 +26,7 @@ JPH_INLINE float Cos(float inX)
 /// Tangent of x
 JPH_INLINE float Tan(float inX)
 {
-	return tan(inX);
+	return Vec4::sReplicate(inX).Tan().GetX();
 }
 
 /// Arc sine of x

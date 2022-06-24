@@ -777,4 +777,37 @@ void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const
 	outCos = Vec4::sXor(c, cos_sign.ReinterpretAsFloat());
 }
 
+Vec4 Vec4::Tan() const
+{
+	// Implementation based on tanf.c from the cephes library, see Vec4::SinCos for further details
+	// Original implementation by Stephen L. Moshier (See: http://www.moshier.net/)
+
+	// Make argument positive
+	UVec4 tan_sign = UVec4::sAnd(ReinterpretAsInt(), UVec4::sReplicate(0x80000000U));
+	Vec4 x = Vec4::sXor(*this, tan_sign.ReinterpretAsFloat());
+
+	// x / (PI / 2) rounded to nearest int gives us the quadrant closest to x
+	UVec4 quadrant = (0.6366197723675814f * x + Vec4::sReplicate(0.5f)).ToInt();
+
+	// Remap x to range [-PI / 4, PI / 4], see Vec4::SinCos
+	Vec4 float_quadrant = quadrant.ToFloat();
+	x = ((x - float_quadrant * 1.5703125f) - float_quadrant * 0.0004837512969970703125f) - float_quadrant * 7.549789948768648e-8f;
+
+	// Calculate x2 = x^2	
+	Vec4 x2 = x * x;
+
+	// Roughly equivalent to the Taylor expansion:
+	// Tan(x) = x + x^3/3 + 2*x^5/15 + 17*x^7/315 + 62*x^9/2835 + ...
+	Vec4 tan =
+		(((((9.38540185543e-3f * x2 + Vec4::sReplicate(3.11992232697e-3f)) * x2 + Vec4::sReplicate(2.44301354525e-2f)) * x2
+		+ Vec4::sReplicate(5.34112807005e-2f)) * x2 + Vec4::sReplicate(1.33387994085e-1f)) * x2 + Vec4::sReplicate(3.33331568548e-1f)) * x2 * x + x;
+
+	// For the 2nd and 4th quadrant we need to invert the value
+	UVec4 bit1 = quadrant.LogicalShiftLeft<31>();
+	tan = Vec4::sSelect(tan, Vec4::sReplicate(-1.0f) / tan, bit1);
+
+	// Put the sign back
+	return Vec4::sXor(tan, tan_sign.ReinterpretAsFloat());
+}
+
 JPH_NAMESPACE_END
