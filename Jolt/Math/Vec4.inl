@@ -724,69 +724,51 @@ void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const
 	UVec4 sin_sign = UVec4::sAnd(ReinterpretAsInt(), UVec4::sReplicate(0x80000000U));
 	Vec4 x = Vec4::sXor(*this, sin_sign.ReinterpretAsFloat());
 
-	// Integer part of x / (PI / 4)
-	UVec4 int_val = (1.27323954473516f * x).ToInt();
-	Vec4 y = int_val.ToFloat();
+	// Integer part of x / (PI / 4) gives us the octant in which x is
+	UVec4 int_octant = (1.27323954473516f * x).ToInt();
+	Vec4 float_octant = int_octant.ToFloat();
 
-	// Integer and fractional part modulo one octant, map zeros to origin
-	// if (int_val & 1) int_val++, y += 1;
-	UVec4 and_1 = int_val.LogicalShiftLeft<31>().ArithmeticShiftRight<31>();
-	int_val += UVec4::sAnd(and_1, UVec4::sReplicate(1));
-	y += Vec4::sAnd(and_1.ReinterpretAsFloat(), Vec4::sReplicate(1.0f));
+	// Round int_octant and float_octant to the nearest interval of PI / 2
+	// if (int_octant & 1) int_octant++, float_octant += 1;
+	UVec4 and_1 = int_octant.LogicalShiftLeft<31>().ArithmeticShiftRight<31>();
+	int_octant += UVec4::sAnd(and_1, UVec4::sReplicate(1));
+	float_octant += Vec4::sAnd(and_1.ReinterpretAsFloat(), Vec4::sReplicate(1.0f));
 
 	// Extended precision modular arithmetic
-	// This does x = x - y * PI / 4 using a two step Cody-Waite argument reduction.
+	// This does x = x - float_octant * PI / 4 using a two step Cody-Waite argument reduction.
 	// This improves the accuracy of the result by avoiding loss of significant bits in the subtraction.
-	// We start with x = x - y * PI / 4, PI / 4 in hexadecimal notation is 0x3f490fdb, we remove the lowest 16 bits to
+	// We start with x = x - float_octant * PI / 4, PI / 4 in hexadecimal notation is 0x3f490fdb, we remove the lowest 16 bits to
 	// get 0x3f490000 (= 0.78515625) this means we can now multiply with a number of up to 2^16 without losing any bits.
-	// This leaves us with: x = (x - y * 0.78515625) - y * (PI / 4 - 0.78515625).
+	// This leaves us with: x = (x - float_octant * 0.78515625) - float_octant * (PI / 4 - 0.78515625).
 	// PI / 4 - 0.78515625 in hexadecimal is 0x397daa22, stripping the lowest 12 bits we get 0x397da000 (= 0.00024187564849853515625)
-	// This leaves uw with: x = ((x - y * 0.78515625) - y * 0.00024187564849853515625) - y * (PI / 4 - 0.78515625 - 0.00024187564849853515625)
+	// This leaves uw with: x = ((x - float_octant * 0.78515625) - float_octant * 0.00024187564849853515625) - float_octant * (PI / 4 - 0.78515625 - 0.00024187564849853515625)
 	// See: https://stackoverflow.com/questions/42455143/sine-cosine-modular-extended-precision-arithmetic
-	x = ((x - y * 0.78515625f) - y * 2.4187564849853515625e-4f) - y * 3.77489497744594108e-8f;
+	// After this we have x in the range [-PI / 4, PI / 4].
+	x = ((x - float_octant * 0.78515625f) - float_octant * 2.4187564849853515625e-4f) - float_octant * 3.77489497744594108e-8f;
 
-	// Calculate z = x^2
-	Vec4 z = x * x;
+	// Calculate x2 = x^2
+	Vec4 x2 = x * x;
 
 	// Taylor expansion:
-	// Cos(x) = 1 - x^2/2! + x^4/4! - x^6/6! + x^8/8! + ... = (((z/8!- 1/6!) * z + 1/4!) * z - 1/2!) * z + 1
-	Vec4 taylor_cos = ((2.443315711809948e-5f * z - Vec4::sReplicate(1.388731625493765e-3f)) * z + Vec4::sReplicate(4.166664568298827e-2f)) * z * z - 0.5f * z + Vec4::sReplicate(1.0f);
-	// Sin(x) = x - x^3/3! + x^5/5! - x^7/7! + ... = ((-z/7! + 1/5!) * z - 1/3!) * z * x + x
-	Vec4 taylor_sin = ((-1.9515295891e-4f * z + Vec4::sReplicate(8.3321608736e-3f)) * z - Vec4::sReplicate(1.6666654611e-1f)) * z * x + x;
+	// Cos(x) = 1 - x^2/2! + x^4/4! - x^6/6! + x^8/8! + ... = (((x2/8!- 1/6!) * x2 + 1/4!) * x2 - 1/2!) * x2 + 1
+	Vec4 taylor_cos = ((2.443315711809948e-5f * x2 - Vec4::sReplicate(1.388731625493765e-3f)) * x2 + Vec4::sReplicate(4.166664568298827e-2f)) * x2 * x2 - 0.5f * x2 + Vec4::sReplicate(1.0f);
+	// Sin(x) = x - x^3/3! + x^5/5! - x^7/7! + ... = ((-x2/7! + 1/5!) * x2 - 1/3!) * x2 * x + x
+	Vec4 taylor_sin = ((-1.9515295891e-4f * x2 + Vec4::sReplicate(8.3321608736e-3f)) * x2 - Vec4::sReplicate(1.6666654611e-1f)) * x2 * x + x;
 
-	// From here we deviate form the original cephes code, we would have to write:
-	//
-	// int_val &= 7;
+	// The lowest 3 bits of int_octant indicate the octant that we are in.
+	// Let x be the original input value and x' our value that has been mapped to the range [-PI / 4, PI / 4].
+	// since cos(x) = sin(x - PI / 2) and since we want to use the Taylor expansion as close as possible to 0,
+	// we can alternate between using the Taylor expansion for sin and cos according to the following table:
 	// 
-	// if (int_val > 3)
-	// {
-	//		int_val -= 4;
-	//		sin_sign = -sin_sign;
-	//		cos_sign = -cos_sign;
-	// }
-	// 
-	// if (int_val > 1)
-	//		cos_sign = -cos_sign;
+	// int_octant	 sin(x)		 cos(x)
+	// XXX000b		 sin(x')	 cos(x')
+	// XXX010b		 cos(x')	-sin(x')
+	// XXX100b		-sin(x')	-cos(x')
+	// XXX110b		-cos(x')	 sin(x')
 	//
-	// ...
-	//
-	// if (int_val == 1 || int_val == 2) // condition
-	//		...
-	// 
-	// int_val	sin_sign	cos_sign	condition
-	// 000b     1			1			0
-	// 001b     1			1			1
-	// 010b     1			-1			1
-	// 011b     1			-1			0
-	// 100b     -1			-1			0
-	// 101b     -1			-1			1
-	// 110b     -1			1			1
-	// 111b		-1			1			0
-	//
-	// So: sin_sign = bit3, cos_sign = bit2 ^ bit3, condition = bit1 ^ bit2
-	// However since we ensured that int_val is always even bit1 = 0
-	UVec4 bit2 = UVec4::sAnd(int_val.LogicalShiftLeft<30>(), UVec4::sReplicate(0x80000000U));
-	UVec4 bit3 = UVec4::sAnd(int_val.LogicalShiftLeft<29>(), UVec4::sReplicate(0x80000000U));
+	// So: sin_sign = bit3, cos_sign = bit2 ^ bit3, bit2 determines if we use sin or cos expansion
+	UVec4 bit2 = UVec4::sAnd(int_octant.LogicalShiftLeft<30>(), UVec4::sReplicate(0x80000000U));
+	UVec4 bit3 = UVec4::sAnd(int_octant.LogicalShiftLeft<29>(), UVec4::sReplicate(0x80000000U));
 
 	// Select which one of the results is sin and which one is cos
 	Vec4 s = Vec4::sSelect(taylor_sin, taylor_cos, bit2);
