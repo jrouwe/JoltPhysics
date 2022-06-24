@@ -241,11 +241,11 @@ public:
 	inline Vec4					Tan() const;
 
 	/// Calculate the arc sine for each element of this vector (returns value in the range [-PI / 2, PI / 2])
-	/// Note that all input values will be clamped to the range [-1, 1] and this function will not return NaNs unlike std::asin
+	/// Note that all input values will be clamped to the range [-1, 1] and this function will not return NaNs like std::asin
 	inline Vec4					ASin() const;
 
-	/// Calculate the arc cosine for each element of this vector (returns value in the range [-PI / 2, PI / 2])
-	/// Note that all input values will be clamped to the range [-1, 1] and this function will not return NaNs unlike std::acos
+	/// Calculate the arc cosine for each element of this vector (returns value in the range [0, PI])
+	/// Note that all input values will be clamped to the range [-1, 1] and this function will not return NaNs like std::acos
 	inline Vec4					ACos() const;
 
 	/// To String
