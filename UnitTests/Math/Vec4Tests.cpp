@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
+#include <Jolt/Core/FPException.h>
 
 TEST_SUITE("Vec4Tests")
 {
@@ -561,5 +562,32 @@ TEST_SUITE("Vec4Tests")
 		}
 
 		CHECK(mt < 1.5e-7f);
+	}
+
+	TEST_CASE("TestVec4ASin")
+	{
+		// asin will generate NaNs outside the range [-1, 1], don't trigger an exception on this
+		FPExceptionDisableInvalid disable;
+
+		double ma = 0.0;
+
+		for (float x = -1.1f; x < 1.1f; x += 1.0e-3f)
+		{
+			// Create a vector with intermediate values
+			Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f);
+
+			// Calculate asin
+			Vec4 va = xv.ASin();
+
+			for (int i = 0; i < 4; ++i)
+			{
+				// Check accuracy of tan
+				double a1 = asin((double)xv[i]), a2 = (double)va[i];
+				double da = abs(a2 - a1);
+				ma = max(ma, da);
+			}
+		}
+
+		CHECK(ma < 2.0e-7f);
 	}
 }

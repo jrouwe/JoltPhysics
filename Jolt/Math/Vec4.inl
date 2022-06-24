@@ -810,4 +810,39 @@ Vec4 Vec4::Tan() const
 	return Vec4::sXor(tan, tan_sign.ReinterpretAsFloat());
 }
 
+Vec4 Vec4::ASin() const
+{
+	// Implementation based on asinf.c from the cephes library
+	// Original implementation by Stephen L. Moshier (See: http://www.moshier.net/)
+
+	// Make argument positive
+	UVec4 asin_sign = UVec4::sAnd(ReinterpretAsInt(), UVec4::sReplicate(0x80000000U));
+	Vec4 a = Vec4::sXor(*this, asin_sign.ReinterpretAsFloat());
+
+	// ASin is not defined outside the range [-1, 1] but it often happens that a value is slightly above 1 so we just clamp here
+	a = Vec4::sMin(a, Vec4::sReplicate(1.0f));
+
+	// When |x| <= 0.5 we use the asin approximation as is
+	Vec4 z1 = a * a;
+	Vec4 x1 = a;
+
+	// When |x| > 0.5 we use the identity asin(x) = PI / 2 - 2 * asin(sqrt((1 - x) / 2))
+	Vec4 z2 = 0.5f * (Vec4::sReplicate(1.0f) - a);
+	Vec4 x2 = z2.Sqrt();
+
+	// Select which of the two situations we have
+	UVec4 greater = Vec4::sGreater(a, Vec4::sReplicate(0.5f));
+	Vec4 z = Vec4::sSelect(z1, z2, greater);
+	Vec4 x = Vec4::sSelect(x1, x2, greater);
+
+	// Polynomial approximation of asin
+	z = ((((4.2163199048e-2f * z + Vec4::sReplicate(2.4181311049e-2f)) * z + Vec4::sReplicate(4.5470025998e-2f)) * z + Vec4::sReplicate(7.4953002686e-2f)) * z + Vec4::sReplicate(1.6666752422e-1f)) * z * x + x;
+
+	// If |x| > 0.5 we need to apply the remainder of the identity above
+	z = Vec4::sSelect(z, Vec4::sReplicate(1.5707963267948966192f) - (z + z), greater);
+
+	// Put the sign back
+	return Vec4::sXor(z, asin_sign.ReinterpretAsFloat());
+}
+
 JPH_NAMESPACE_END

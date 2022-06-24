@@ -32,7 +32,7 @@ JPH_INLINE float Tan(float inX)
 /// Arc sine of x
 JPH_INLINE float ASin(float inX)
 {
-	return asin(inX);
+	return Vec4::sReplicate(inX).ASin().GetX();
 }
 
 /// Arc cosine of x
