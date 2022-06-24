@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 
 #include "UnitTestFramework.h"
-#include <Jolt/Core/FPException.h>
 
 TEST_SUITE("Vec4Tests")
 {
@@ -566,15 +565,12 @@ TEST_SUITE("Vec4Tests")
 
 	TEST_CASE("TestVec4ASin")
 	{
-		// asin will generate NaNs outside the range [-1, 1], don't trigger an exception on this
-		FPExceptionDisableInvalid disable;
-
 		double ma = 0.0;
 
-		for (float x = -1.1f; x < 1.1f; x += 1.0e-3f)
+		for (float x = -1.0f; x <= 1.0f; x += 1.0e-3f)
 		{
 			// Create a vector with intermediate values
-			Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f);
+			Vec4 xv = Vec4::sMin(Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f), Vec4::sReplicate(1.0f));
 
 			// Calculate asin
 			Vec4 va = xv.ASin();
@@ -589,19 +585,20 @@ TEST_SUITE("Vec4Tests")
 		}
 
 		CHECK(ma < 2.0e-7f);
+
+		// Check that inputs are clamped as promised
+		CHECK(Vec4::sReplicate(-1.1f).ASin() == Vec4::sReplicate(-0.5f * JPH_PI));
+		CHECK(Vec4::sReplicate(1.1f).ASin() == Vec4::sReplicate(0.5f * JPH_PI));
 	}
 
 	TEST_CASE("TestVec4ACos")
 	{
-		// acos will generate NaNs outside the range [-1, 1], don't trigger an exception on this
-		FPExceptionDisableInvalid disable;
-
 		double ma = 0.0;
 
-		for (float x = -1.1f; x < 1.1f; x += 1.0e-3f)
+		for (float x = -1.0f; x <= 1.0f; x += 1.0e-3f)
 		{
 			// Create a vector with intermediate values
-			Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f);
+			Vec4 xv = Vec4::sMin(Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f), Vec4::sReplicate(1.0f));
 
 			// Calculate acos
 			Vec4 va = xv.ACos();
@@ -616,5 +613,9 @@ TEST_SUITE("Vec4Tests")
 		}
 
 		CHECK(ma < 3.5e-7f);
+
+		// Check that inputs are clamped as promised
+		CHECK(Vec4::sReplicate(-1.1f).ACos() == Vec4::sReplicate(JPH_PI));
+		CHECK(Vec4::sReplicate(1.1f).ACos() == Vec4::sZero());
 	}
 }

@@ -839,7 +839,7 @@ Vec4 Vec4::ASin() const
 	z = ((((4.2163199048e-2f * z + Vec4::sReplicate(2.4181311049e-2f)) * z + Vec4::sReplicate(4.5470025998e-2f)) * z + Vec4::sReplicate(7.4953002686e-2f)) * z + Vec4::sReplicate(1.6666752422e-1f)) * z * x + x;
 
 	// If |x| > 0.5 we need to apply the remainder of the identity above
-	z = Vec4::sSelect(z, Vec4::sReplicate(1.5707963267948966192f) - (z + z), greater);
+	z = Vec4::sSelect(z, Vec4::sReplicate(0.5f * JPH_PI) - (z + z), greater);
 
 	// Put the sign back
 	return Vec4::sXor(z, asin_sign.ReinterpretAsFloat());
@@ -848,7 +848,7 @@ Vec4 Vec4::ASin() const
 Vec4 Vec4::ACos() const
 {
 	// Not the most accurate, but simple
-	return Vec4::sReplicate(1.5707963267948966192f) - ASin();
+	return Vec4::sReplicate(0.5f * JPH_PI) - ASin();
 }
 
 JPH_NAMESPACE_END
