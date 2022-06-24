@@ -538,4 +538,28 @@ TEST_SUITE("Vec4Tests")
 		CHECK(ms < 1.0e-7f);
 		CHECK(mc < 1.0e-7f);
 	}
+
+	TEST_CASE("TestVec4Tan")
+	{
+		double mt = 0.0;
+
+		for (float x = -100.0f * JPH_PI; x < 100.0f * JPH_PI; x += 1.0e-3f)
+		{
+			// Create a vector with intermediate values
+			Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f);
+
+			// Calculate tan
+			Vec4 vt = xv.Tan();
+
+			for (int i = 0; i < 4; ++i)
+			{
+				// Check accuracy of tan
+				double t1 = tan((double)xv[i]), t2 = (double)vt[i];
+				double dt = abs(t2 - t1);
+				mt = max(mt, dt) / max(1.0, abs(t1)); // Take relative error
+			}
+		}
+
+		CHECK(mt < 1.5e-7f);
+	}
 }

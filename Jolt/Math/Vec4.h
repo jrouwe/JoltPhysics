@@ -237,6 +237,9 @@ public:
 	/// Calcluate the sine and cosine for each element of this vector
 	inline void					SinCos(Vec4 &outSin, Vec4 &outCos) const;
 
+	/// Calcluate the tangent for each element of this vector
+	inline Vec4					Tan() const;
+
 	/// To String
 	friend ostream &			operator << (ostream &inStream, Vec4Arg inV)
 	{
