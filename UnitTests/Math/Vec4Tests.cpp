@@ -581,7 +581,7 @@ TEST_SUITE("Vec4Tests")
 
 			for (int i = 0; i < 4; ++i)
 			{
-				// Check accuracy of tan
+				// Check accuracy of asin
 				double a1 = asin((double)xv[i]), a2 = (double)va[i];
 				double da = abs(a2 - a1);
 				ma = max(ma, da);
@@ -589,5 +589,32 @@ TEST_SUITE("Vec4Tests")
 		}
 
 		CHECK(ma < 2.0e-7f);
+	}
+
+	TEST_CASE("TestVec4ACos")
+	{
+		// acos will generate NaNs outside the range [-1, 1], don't trigger an exception on this
+		FPExceptionDisableInvalid disable;
+
+		double ma = 0.0;
+
+		for (float x = -1.1f; x < 1.1f; x += 1.0e-3f)
+		{
+			// Create a vector with intermediate values
+			Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f);
+
+			// Calculate acos
+			Vec4 va = xv.ACos();
+
+			for (int i = 0; i < 4; ++i)
+			{
+				// Check accuracy of acos
+				double a1 = acos((double)xv[i]), a2 = (double)va[i];
+				double da = abs(a2 - a1);
+				ma = max(ma, da);
+			}
+		}
+
+		CHECK(ma < 3.5e-7f);
 	}
 }

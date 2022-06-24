@@ -244,6 +244,10 @@ public:
 	/// Note that all input values will be clamped to the range [-1, 1] and this function will not return NaNs unlike std::asin
 	inline Vec4					ASin() const;
 
+	/// Calculate the arc cosine for each element of this vector (returns value in the range [-PI / 2, PI / 2])
+	/// Note that all input values will be clamped to the range [-1, 1] and this function will not return NaNs unlike std::acos
+	inline Vec4					ACos() const;
+
 	/// To String
 	friend ostream &			operator << (ostream &inStream, Vec4Arg inV)
 	{

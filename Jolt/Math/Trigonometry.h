@@ -38,7 +38,7 @@ JPH_INLINE float ASin(float inX)
 /// Arc cosine of x
 JPH_INLINE float ACos(float inX)
 {
-	return acos(inX);
+	return Vec4::sReplicate(inX).ACos().GetX();
 }
 
 /// Arc tangent of x

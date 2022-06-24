@@ -845,4 +845,10 @@ Vec4 Vec4::ASin() const
 	return Vec4::sXor(z, asin_sign.ReinterpretAsFloat());
 }
 
+Vec4 Vec4::ACos() const
+{
+	// Not the most accurate, but simple
+	return Vec4::sReplicate(1.5707963267948966192f) - ASin();
+}
+
 JPH_NAMESPACE_END
