@@ -67,6 +67,7 @@ int main(int argc, char** argv)
 	bool record_state = false;
 	bool validate_state = false;
 	unique_ptr<PerformanceTestScene> scene;
+	const char *validate_hash = nullptr;
 	for (int argidx = 1; argidx < argc; ++argidx)
 	{
 		const char *arg = argv[argidx];
@@ -133,6 +134,10 @@ int main(int argc, char** argv)
 		{
 			validate_state = true;
 		}
+		else if (strncmp(arg, "-validate_hash=", 15) == 0)
+		{
+			validate_hash = arg + 15;
+		}
 		else if (strcmp(arg, "-h") == 0)
 		{
 			// Print usage
@@ -146,7 +151,8 @@ int main(int argc, char** argv)
 				 << "-f: Record per frame timings" << endl
 				 << "-no_sleep: Disable sleeping" << endl
 				 << "-rs: Record state" << endl
-				 << "-vs: Validate state" << endl;
+				 << "-vs: Validate state" << endl
+				 << "-validate_hash=<hash>: Validate hash (return 0 if successful, 1 if failed)" << endl;
 			return 0;
 		}
 	}
@@ -345,11 +351,23 @@ int main(int argc, char** argv)
 				hash = HashBytes(&rot, sizeof(Quat), hash);
 			}
 
+			// Convert hash to string
+			stringstream hash_stream;
+			hash_stream << "0x" << hex << hash << dec;
+			string hash_str = hash_stream.str();
+
 			// Stop test scene
 			scene->StopTest(physics_system);
 
 			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", 0x" << hex << hash << dec << endl;
+			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", " << hash_str << endl;
+
+			// Check hash code
+			if (validate_hash != nullptr && hash_str != validate_hash)
+			{
+				cout << "Fail hash validation. Was: " << hash_str << ", expected: " << validate_hash << endl;
+				return 1;
+			}
 		}
 	}
 

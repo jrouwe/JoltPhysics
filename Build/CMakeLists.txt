@@ -246,7 +246,10 @@ if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
 			target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
 		endif()
 		set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
-	endif()
+		
+		# Copy the assets folder
+		add_custom_command(TARGET PerformanceTest PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:PerformanceTest>/Assets/)
+	   endif()
 endif()
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")

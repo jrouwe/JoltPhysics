@@ -1,0 +1,76 @@
+name: Determinism Check
+
+env:
+    CONVEX_VS_MESH_HASH: 0x4245064f2c076b63
+    RAGDOLL_HASH: 0xffa62c540d58c892
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - 'Docs/**'
+      - '**.md'
+      - '**.txt'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - 'Docs/**'
+      - '**.md'
+      - '**.txt'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    name: Linux Determinism Check
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution --config Distribution
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=Discrete -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=Discrete -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+
+  msvc_cl:
+    runs-on: windows-latest
+    name: Visual Studio CL Determinism Check
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+    - name: Build
+      run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=Distribution
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      run: ./PerformanceTest -q=Discrete -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      run: ./PerformanceTest -q=Discrete -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+
+  macos:
+    runs-on: macos-latest
+    name: MacOS Determinism Check
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_Distribution --config Distribution
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=Discrete -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ./PerformanceTest -q=Discrete -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
