@@ -248,8 +248,11 @@ public:
 	/// Note that all input values will be clamped to the range [-1, 1] and this function will not return NaNs like std::acos
 	inline Vec4					ACos() const;
 
-	/// Calculate the arc tangent for each element of this vector (returns value in the range [-PI, PI])
+	/// Calculate the arc tangent for each element of this vector (returns value in the range [-PI / 2, PI / 2])
 	inline Vec4					ATan() const;
+
+	/// Calculate the arc tangent of y / x using the signs of the arguments to determine the correct quadrant (returns value in the range [-PI, PI])
+	inline static Vec4			sATan2(Vec4Arg inY, Vec4Arg inX);
 
 	/// To String
 	friend ostream &			operator << (ostream &inStream, Vec4Arg inV)

@@ -510,6 +510,12 @@ TEST_SUITE("Vec4Tests")
 
 	TEST_CASE("TestVec4SinCos")
 	{
+		// Check edge cases
+		Vec4 vs, vc;
+		Vec4(0, 0.5f * JPH_PI, JPH_PI, -0.5f * JPH_PI).SinCos(vs, vc);
+		CHECK(vs.IsClose(Vec4(0, 1, 0, -1), 1.0e-7f));
+		CHECK(vc.IsClose(Vec4(1, 0, -1, 0), 1.0e-7f));
+
 		double ms = 0.0, mc = 0.0;
 
 		for (float x = -100.0f * JPH_PI; x < 100.0f * JPH_PI; x += 1.0e-3f)
@@ -518,7 +524,6 @@ TEST_SUITE("Vec4Tests")
 			Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-4f, 2.5e-4f, 5.0e-4f, 7.5e-4f);
 
 			// Calculate sin and cos
-			Vec4 vs, vc;
 			xv.SinCos(vs, vc);
 
 			for (int i = 0; i < 4; ++i)
@@ -541,6 +546,11 @@ TEST_SUITE("Vec4Tests")
 
 	TEST_CASE("TestVec4Tan")
 	{
+		// Check edge cases
+		CHECK(Vec4::sReplicate(0.0f).Tan() == Vec4::sZero());
+		CHECK(Vec4::sReplicate(0.5f * JPH_PI - 1.0e-6f).Tan().GetX() > 1.0e6f);
+		CHECK(Vec4::sReplicate(0.5f * JPH_PI + 1.0e-6f).Tan().GetX() < -1.0e6f);
+
 		double mt = 0.0;
 
 		for (float x = -100.0f * JPH_PI; x < 100.0f * JPH_PI; x += 1.0e-3f)
@@ -565,6 +575,11 @@ TEST_SUITE("Vec4Tests")
 
 	TEST_CASE("TestVec4ASin")
 	{
+		// Check edge cases
+		CHECK(Vec4::sReplicate(0.0f).ASin() == Vec4::sZero());
+		CHECK(Vec4::sReplicate(1.0f).ASin() == Vec4::sReplicate(0.5f * JPH_PI));
+		CHECK(Vec4::sReplicate(-1.0f).ASin() == Vec4::sReplicate(-0.5f * JPH_PI));
+
 		double ma = 0.0;
 
 		for (float x = -1.0f; x <= 1.0f; x += 1.0e-3f)
@@ -593,6 +608,11 @@ TEST_SUITE("Vec4Tests")
 
 	TEST_CASE("TestVec4ACos")
 	{
+		// Check edge cases
+		CHECK(Vec4::sReplicate(0.0f).ACos() == Vec4::sReplicate(0.5f * JPH_PI));
+		CHECK(Vec4::sReplicate(1.0f).ACos() == Vec4::sZero());
+		CHECK(Vec4::sReplicate(-1.0f).ACos() == Vec4::sReplicate(JPH_PI));
+
 		double ma = 0.0;
 
 		for (float x = -1.0f; x <= 1.0f; x += 1.0e-3f)
@@ -621,6 +641,11 @@ TEST_SUITE("Vec4Tests")
 
 	TEST_CASE("TestVec4ATan")
 	{
+		// Check edge cases
+		CHECK(Vec4::sReplicate(0.0f).ATan() == Vec4::sZero());
+		CHECK(Vec4::sReplicate(FLT_MAX).ATan() == Vec4::sReplicate(0.5f * JPH_PI));
+		CHECK(Vec4::sReplicate(-FLT_MAX).ATan() == Vec4::sReplicate(-0.5f * JPH_PI));
+
 		double ma = 0.0;
 
 		for (float x = -100.0f; x < 100.0f; x += 1.0e-3f)
@@ -641,5 +666,47 @@ TEST_SUITE("Vec4Tests")
 		}
 
 		CHECK(ma < 1.5e-7f);
+	}
+
+	TEST_CASE("TestVec4ATan2")
+	{
+		double ma = 0.0;
+
+		// Test the axis
+		CHECK(Vec4::sATan2(Vec4::sZero(), Vec4::sReplicate(10.0f)) == Vec4::sZero());
+		CHECK(Vec4::sATan2(Vec4::sZero(), Vec4::sReplicate(-10.0f)) == Vec4::sReplicate(JPH_PI));
+		CHECK(Vec4::sATan2(Vec4::sReplicate(10.0f), Vec4::sZero()) == Vec4::sReplicate(0.5f * JPH_PI));
+		CHECK(Vec4::sATan2(Vec4::sReplicate(-10.0f), Vec4::sZero()) == Vec4::sReplicate(-0.5f * JPH_PI));
+
+		// Test the 4 quadrants
+		CHECK(Vec4::sATan2(Vec4::sReplicate(10.0f), Vec4::sReplicate(10.0f)) == Vec4::sReplicate(0.25f * JPH_PI));
+		CHECK(Vec4::sATan2(Vec4::sReplicate(10.0f), Vec4::sReplicate(-10.0f)) == Vec4::sReplicate(0.75f * JPH_PI));
+		CHECK(Vec4::sATan2(Vec4::sReplicate(-10.0f), Vec4::sReplicate(-10.0f)) == Vec4::sReplicate(-0.75f * JPH_PI));
+		CHECK(Vec4::sATan2(Vec4::sReplicate(-10.0f), Vec4::sReplicate(10.0f)) == Vec4::sReplicate(-0.25f * JPH_PI));
+
+		for (float y = -5.0f; y < 5.0f; y += 1.0e-2f)
+		{
+			// Create a vector with intermediate values
+			Vec4 yv = Vec4::sReplicate(y) + Vec4(0.0e-3f, 2.5e-3f, 5.0e-3f, 7.5e-3f);
+
+			for (float x = -5.0f; x < 5.0f; x += 1.0e-2f)
+			{
+				// Create a vector with intermediate values
+				Vec4 xv = Vec4::sReplicate(x) + Vec4(0.0e-3f, 2.5e-3f, 5.0e-3f, 7.5e-3f);
+
+				// Calculate atan
+				Vec4 va = Vec4::sATan2(yv, xv);
+
+				for (int i = 0; i < 4; ++i)
+				{
+					// Check accuracy of atan
+					double a1 = atan2((double)yv[i], (double)xv[i]), a2 = (double)va[i];
+					double da = abs(a2 - a1);
+					ma = max(ma, da);
+				}
+			}
+		}
+
+		CHECK(ma < 3.0e-7f);
 	}
 }

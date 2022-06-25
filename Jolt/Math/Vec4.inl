@@ -804,7 +804,7 @@ Vec4 Vec4::Tan() const
 
 	// For the 2nd and 4th quadrant we need to invert the value
 	UVec4 bit1 = quadrant.LogicalShiftLeft<31>();
-	tan = Vec4::sSelect(tan, Vec4::sReplicate(-1.0f) / tan, bit1);
+	tan = Vec4::sSelect(tan, Vec4::sReplicate(-1.0f) / (tan JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(+ Vec4::sReplicate(FLT_MIN))), bit1); // Add small epsilon to prevent div by zero, works because tan is always positive
 
 	// Put the sign back
 	return Vec4::sXor(tan, tan_sign.ReinterpretAsFloat());
@@ -867,7 +867,7 @@ Vec4 Vec4::ATan() const
 
 	// If x > Tan(3 * PI / 8)
 	UVec4 greater2 = Vec4::sGreater(x, Vec4::sReplicate(2.414213562373095f)); 
-	Vec4 x2 = Vec4::sReplicate(-1.0f) / x;
+	Vec4 x2 = Vec4::sReplicate(-1.0f) / (x JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(+ Vec4::sReplicate(FLT_MIN))); // Add small epsilon to prevent div by zero, works because x is always positive
 
 	// Apply first if
 	x = Vec4::sSelect(x, x1, greater1);
@@ -883,6 +883,39 @@ Vec4 Vec4::ATan() const
 
 	// Put the sign back
 	return Vec4::sXor(y, atan_sign.ReinterpretAsFloat());
+}
+
+Vec4 Vec4::sATan2(Vec4Arg inY, Vec4Arg inX)
+{
+	UVec4 sign_mask = UVec4::sReplicate(0x80000000U);
+
+	// Determine absolute value and sign of y
+	UVec4 y_sign = UVec4::sAnd(inY.ReinterpretAsInt(), sign_mask);
+	Vec4 y_abs = Vec4::sXor(inY, y_sign.ReinterpretAsFloat());
+
+	// Determine absolute value and sign of x
+	UVec4 x_sign = UVec4::sAnd(inX.ReinterpretAsInt(), sign_mask);
+	Vec4 x_abs = Vec4::sXor(inX, x_sign.ReinterpretAsFloat());
+
+	// Always divide smallest / largest to avoid dividing by zero
+	UVec4 x_is_numerator = Vec4::sLess(x_abs, y_abs);
+	Vec4 numerator = Vec4::sSelect(y_abs, x_abs, x_is_numerator);
+	Vec4 denominator = Vec4::sSelect(x_abs, y_abs, x_is_numerator);
+	Vec4 atan = (numerator / denominator).ATan();
+
+	// If we calculated x / y instead of y / x the result is PI / 2 - result (note that this is true because we know the result is positive because the input was positive)
+	atan = Vec4::sSelect(atan, Vec4::sReplicate(0.5f * JPH_PI) - atan, x_is_numerator);
+
+	// Now we need to map to the correct quadrant
+	// x_sign	y_sign	result
+	// +1		+1		atan
+	// -1		+1		-atan + PI
+	// -1		-1		atan - PI
+	// +1		-1		-atan
+	// This can be written as: x_sign * y_sign * (atan - (x_sign < 0? PI : 0))
+	atan -= Vec4::sAnd(x_sign.ArithmeticShiftRight<31>().ReinterpretAsFloat(), Vec4::sReplicate(JPH_PI));
+	atan = Vec4::sXor(atan, UVec4::sXor(x_sign, y_sign).ReinterpretAsFloat());
+	return atan;
 }
 
 JPH_NAMESPACE_END
