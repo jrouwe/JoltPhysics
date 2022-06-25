@@ -287,6 +287,13 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#define JPH_IF_DEBUG(...)
 #endif
 
+// Shorthand for #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED / #endif
+#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+	#define JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(...)	__VA_ARGS__
+#else
+	#define JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(...)
+#endif
+
 // Macro to indicate that a parameter / variable is unused
 #define JPH_UNUSED(x)			(void)x
 

@@ -804,10 +804,118 @@ Vec4 Vec4::Tan() const
 
 	// For the 2nd and 4th quadrant we need to invert the value
 	UVec4 bit1 = quadrant.LogicalShiftLeft<31>();
-	tan = Vec4::sSelect(tan, Vec4::sReplicate(-1.0f) / tan, bit1);
+	tan = Vec4::sSelect(tan, Vec4::sReplicate(-1.0f) / (tan JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(+ Vec4::sReplicate(FLT_MIN))), bit1); // Add small epsilon to prevent div by zero, works because tan is always positive
 
 	// Put the sign back
 	return Vec4::sXor(tan, tan_sign.ReinterpretAsFloat());
+}
+
+Vec4 Vec4::ASin() const
+{
+	// Implementation based on asinf.c from the cephes library
+	// Original implementation by Stephen L. Moshier (See: http://www.moshier.net/)
+
+	// Make argument positive
+	UVec4 asin_sign = UVec4::sAnd(ReinterpretAsInt(), UVec4::sReplicate(0x80000000U));
+	Vec4 a = Vec4::sXor(*this, asin_sign.ReinterpretAsFloat());
+
+	// ASin is not defined outside the range [-1, 1] but it often happens that a value is slightly above 1 so we just clamp here
+	a = Vec4::sMin(a, Vec4::sReplicate(1.0f));
+
+	// When |x| <= 0.5 we use the asin approximation as is
+	Vec4 z1 = a * a;
+	Vec4 x1 = a;
+
+	// When |x| > 0.5 we use the identity asin(x) = PI / 2 - 2 * asin(sqrt((1 - x) / 2))
+	Vec4 z2 = 0.5f * (Vec4::sReplicate(1.0f) - a);
+	Vec4 x2 = z2.Sqrt();
+
+	// Select which of the two situations we have
+	UVec4 greater = Vec4::sGreater(a, Vec4::sReplicate(0.5f));
+	Vec4 z = Vec4::sSelect(z1, z2, greater);
+	Vec4 x = Vec4::sSelect(x1, x2, greater);
+
+	// Polynomial approximation of asin
+	z = ((((4.2163199048e-2f * z + Vec4::sReplicate(2.4181311049e-2f)) * z + Vec4::sReplicate(4.5470025998e-2f)) * z + Vec4::sReplicate(7.4953002686e-2f)) * z + Vec4::sReplicate(1.6666752422e-1f)) * z * x + x;
+
+	// If |x| > 0.5 we need to apply the remainder of the identity above
+	z = Vec4::sSelect(z, Vec4::sReplicate(0.5f * JPH_PI) - (z + z), greater);
+
+	// Put the sign back
+	return Vec4::sXor(z, asin_sign.ReinterpretAsFloat());
+}
+
+Vec4 Vec4::ACos() const
+{
+	// Not the most accurate, but simple
+	return Vec4::sReplicate(0.5f * JPH_PI) - ASin();
+}
+
+Vec4 Vec4::ATan() const
+{
+	// Implementation based on atanf.c from the cephes library
+	// Original implementation by Stephen L. Moshier (See: http://www.moshier.net/)
+
+	// Make argument positive
+	UVec4 atan_sign = UVec4::sAnd(ReinterpretAsInt(), UVec4::sReplicate(0x80000000U));
+	Vec4 x = Vec4::sXor(*this, atan_sign.ReinterpretAsFloat());
+	Vec4 y = Vec4::sZero();
+
+	// If x > Tan(PI / 8)
+	UVec4 greater1 = Vec4::sGreater(x, Vec4::sReplicate(0.4142135623730950f)); 
+	Vec4 x1 = (x - Vec4::sReplicate(1.0f)) / (x + Vec4::sReplicate(1.0f));
+
+	// If x > Tan(3 * PI / 8)
+	UVec4 greater2 = Vec4::sGreater(x, Vec4::sReplicate(2.414213562373095f)); 
+	Vec4 x2 = Vec4::sReplicate(-1.0f) / (x JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(+ Vec4::sReplicate(FLT_MIN))); // Add small epsilon to prevent div by zero, works because x is always positive
+
+	// Apply first if
+	x = Vec4::sSelect(x, x1, greater1);
+	y = Vec4::sSelect(y, Vec4::sReplicate(0.25f * JPH_PI), greater1);
+
+	// Apply second if
+	x = Vec4::sSelect(x, x2, greater2);
+	y = Vec4::sSelect(y, Vec4::sReplicate(0.5f * JPH_PI), greater2);
+
+	// Polynomial approximation
+	Vec4 z = x * x;
+	y += (((8.05374449538e-2f * z - Vec4::sReplicate(1.38776856032e-1f)) * z + Vec4::sReplicate(1.99777106478e-1f)) * z - Vec4::sReplicate(3.33329491539e-1f)) * z * x + x;
+
+	// Put the sign back
+	return Vec4::sXor(y, atan_sign.ReinterpretAsFloat());
+}
+
+Vec4 Vec4::sATan2(Vec4Arg inY, Vec4Arg inX)
+{
+	UVec4 sign_mask = UVec4::sReplicate(0x80000000U);
+
+	// Determine absolute value and sign of y
+	UVec4 y_sign = UVec4::sAnd(inY.ReinterpretAsInt(), sign_mask);
+	Vec4 y_abs = Vec4::sXor(inY, y_sign.ReinterpretAsFloat());
+
+	// Determine absolute value and sign of x
+	UVec4 x_sign = UVec4::sAnd(inX.ReinterpretAsInt(), sign_mask);
+	Vec4 x_abs = Vec4::sXor(inX, x_sign.ReinterpretAsFloat());
+
+	// Always divide smallest / largest to avoid dividing by zero
+	UVec4 x_is_numerator = Vec4::sLess(x_abs, y_abs);
+	Vec4 numerator = Vec4::sSelect(y_abs, x_abs, x_is_numerator);
+	Vec4 denominator = Vec4::sSelect(x_abs, y_abs, x_is_numerator);
+	Vec4 atan = (numerator / denominator).ATan();
+
+	// If we calculated x / y instead of y / x the result is PI / 2 - result (note that this is true because we know the result is positive because the input was positive)
+	atan = Vec4::sSelect(atan, Vec4::sReplicate(0.5f * JPH_PI) - atan, x_is_numerator);
+
+	// Now we need to map to the correct quadrant
+	// x_sign	y_sign	result
+	// +1		+1		atan
+	// -1		+1		-atan + PI
+	// -1		-1		atan - PI
+	// +1		-1		-atan
+	// This can be written as: x_sign * y_sign * (atan - (x_sign < 0? PI : 0))
+	atan -= Vec4::sAnd(x_sign.ArithmeticShiftRight<31>().ReinterpretAsFloat(), Vec4::sReplicate(JPH_PI));
+	atan = Vec4::sXor(atan, UVec4::sXor(x_sign, y_sign).ReinterpretAsFloat());
+	return atan;
 }
 
 JPH_NAMESPACE_END
