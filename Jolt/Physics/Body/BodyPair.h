@@ -9,7 +9,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Structure that holds a body pair
-struct BodyPair
+struct alignas(uint64) BodyPair
 {
 	JPH_OVERRIDE_NEW_DELETE
 

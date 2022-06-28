@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 
 inline LFHMAllocator::~LFHMAllocator()
 {
-	Free(mObjectStore);
+	AlignedFree(mObjectStore);
 }
 
 inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
@@ -19,7 +19,7 @@ inline void LFHMAllocator::Init(uint inObjectStoreSizeBytes)
 	JPH_ASSERT(mObjectStore == nullptr);
 
 	mObjectStoreSizeBytes = inObjectStoreSizeBytes;
-	mObjectStore = reinterpret_cast<uint8 *>(JPH::Allocate(inObjectStoreSizeBytes));
+	mObjectStore = reinterpret_cast<uint8 *>(JPH::AlignedAllocate(inObjectStoreSizeBytes, 16));
 }
 
 inline void LFHMAllocator::Clear()
@@ -82,20 +82,29 @@ inline LFHMAllocatorContext::LFHMAllocatorContext(LFHMAllocator &inAllocator, ui
 { 
 }
 
-inline bool LFHMAllocatorContext::Allocate(uint32 inSize, uint32 &outWriteOffset)
+inline bool LFHMAllocatorContext::Allocate(uint32 inSize, uint32 inAlignment, uint32 &outWriteOffset)
 {
+	// Calculate needed bytes for alignment
+	JPH_ASSERT(IsPowerOf2(inAlignment));
+	uint32 alignment_mask = inAlignment - 1;
+	uint32 alignment = (inAlignment - (mBegin & alignment_mask)) & alignment_mask;
+	
 	// Check if we have space
-	if (mEnd - mBegin < inSize)
+	if (mEnd - mBegin < inSize + alignment)
 	{
 		// Allocate a new block
 		mAllocator.Allocate(mBlockSize, mBegin, mEnd);
 
+		// Update alignment
+		alignment = (inAlignment - (mBegin & alignment_mask)) & alignment_mask;
+		
 		// Check if we have space again
-		if (mEnd - mBegin < inSize)
+		if (mEnd - mBegin < inSize + alignment)
 			return false;
 	}
 
 	// Make the allocation
+	mBegin += alignment;
 	outWriteOffset = mBegin;
 	mBegin += inSize;
 	return true;
@@ -168,7 +177,7 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 
 	// Get the write offset for this key value pair
 	uint32 write_offset;
-	if (!ioContext.Allocate(size, write_offset))
+	if (!ioContext.Allocate(size, alignof(KeyValue), write_offset))
 		return nullptr;
 
 #ifdef JPH_ENABLE_ASSERTS
