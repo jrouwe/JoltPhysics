@@ -54,10 +54,11 @@ public:
 	inline					LFHMAllocatorContext(LFHMAllocator &inAllocator, uint32 inBlockSize);
 
 	/// @brief Allocate data block
-	/// @param inSize Size of block to allocae
+	/// @param inSize Size of block to allocate.
+	/// @param inAlignment Alignment of block to allocate.
 	/// @param outWriteOffset Offset in buffer where block is located
 	/// @return True if allocation succeeded
-	inline bool				Allocate(uint32 inSize, uint32 &outWriteOffset);
+	inline bool				Allocate(uint32 inSize, uint32 inAlignment, uint32 &outWriteOffset);
 
 private:
 	LFHMAllocator &			mAllocator;
