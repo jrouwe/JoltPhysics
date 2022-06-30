@@ -606,6 +606,13 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 #endif
 	}
 
+	// Check if we are left with a hull. It is possible that hull building fails if the points are nearly coplanar.
+	if (mFaces.size() < 2)
+	{
+		outError = "Too few faces in hull";
+		return EResult::TooFewFaces;
+	}
+
 	return EResult::Success;
 }
 
