@@ -28,16 +28,18 @@ inline void InsertionSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
 					prev = j - 1;
 					*j = *prev;
 				}
+
+				// Move x to the first place
 				*inBegin = move(x);
 			}
 			else
 			{
-				// Move the element to the right as long as its bigger than the element before it
+				// Move elements to the right as long as they are bigger than x
 				Iterator j = i;
 				for (Iterator prev = j - 1; inCompare(x, *prev); j = prev, --prev)
 					*j = move(*prev);
 
-				// Move element i into place
+				// Move x into place
 				*j = move(x);
 			}
 		}
