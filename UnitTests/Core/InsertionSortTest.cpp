@@ -3,19 +3,19 @@
 
 #include "UnitTestFramework.h"
 
-#include <Jolt/Core/QuickSort.h>
+#include <Jolt/Core/InsertionSort.h>
 
-TEST_SUITE("QuickSortTest")
+TEST_SUITE("InsertionSortTest")
 {
 	TEST_CASE("TestOrderedArray")
 	{
 		Array<int> array;
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 10; i++)
 			array.push_back(i);
 
-		QuickSort(array.begin(), array.end());
+		InsertionSort(array.begin(), array.end());
 
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 10; i++)
 			CHECK(array[i] == i);
 	}
 
@@ -25,7 +25,7 @@ TEST_SUITE("QuickSortTest")
 		for (int i = 0; i < 100; i++)
 			array.push_back(i);
 
-		QuickSort(array.begin(), array.end(), greater<int> {});
+		InsertionSort(array.begin(), array.end(), greater<int> {});
 
 		for (int i = 0; i < 100; i++)
 			CHECK(array[i] == 99 - i);
@@ -34,12 +34,12 @@ TEST_SUITE("QuickSortTest")
 	TEST_CASE("TestReversedArray")
 	{
 		Array<int> array;
-		for (int i = 0; i < 100; i++)
-			array.push_back(99 - i);
+		for (int i = 0; i < 10; i++)
+			array.push_back(9 - i);
 
-		QuickSort(array.begin(), array.end());
+		InsertionSort(array.begin(), array.end());
 
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 10; i++)
 			CHECK(array[i] == i);
 	}
 
@@ -48,7 +48,7 @@ TEST_SUITE("QuickSortTest")
 		UnitTestRandom random;
 
 		Array<int> array;
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < 100; i++)
 		{
 			int value = random();
 
@@ -59,7 +59,7 @@ TEST_SUITE("QuickSortTest")
 			array.push_back(value);
 		}
 
-		QuickSort(array.begin(), array.end());
+		InsertionSort(array.begin(), array.end());
 
 		for (Array<int>::size_type i = 0; i < array.size() - 2; i += 2)
 		{
@@ -74,21 +74,21 @@ TEST_SUITE("QuickSortTest")
 	TEST_CASE("TestEmptyArray")
 	{
 		Array<int> array;
-		QuickSort(array.begin(), array.end());
+		InsertionSort(array.begin(), array.end());
 		CHECK(array.empty());
 	}
 
 	TEST_CASE("Test1ElementArray")
 	{
 		Array<int> array { 1 };
-		QuickSort(array.begin(), array.end());
+		InsertionSort(array.begin(), array.end());
 		CHECK(array[0] == 1);
 	}
 
 	TEST_CASE("Test2ElementArray")
 	{
 		Array<int> array { 2, 1 };
-		QuickSort(array.begin(), array.end());
+		InsertionSort(array.begin(), array.end());
 		CHECK(array[0] == 1);
 		CHECK(array[1] == 2);
 	}
