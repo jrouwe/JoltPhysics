@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Body/BodyAccess.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/MassProperties.h>
+#include <Jolt/Physics/DeterminismLog.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -116,10 +117,10 @@ public:
 
 	///@name Update linear and angular velocity (used during constraint solving)
 	///@{
-	inline void				AddLinearVelocityStep(Vec3Arg inLinearVelocityChange)			{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mLinearVelocity += inLinearVelocityChange; JPH_ASSERT(!mLinearVelocity.IsNaN()); }
-	inline void				SubLinearVelocityStep(Vec3Arg inLinearVelocityChange)			{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mLinearVelocity -= inLinearVelocityChange; JPH_ASSERT(!mLinearVelocity.IsNaN()); }
-	inline void				AddAngularVelocityStep(Vec3Arg inAngularVelocityChange)			{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mAngularVelocity += inAngularVelocityChange; JPH_ASSERT(!mAngularVelocity.IsNaN()); }
-	inline void				SubAngularVelocityStep(Vec3Arg inAngularVelocityChange) 		{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mAngularVelocity -= inAngularVelocityChange; JPH_ASSERT(!mAngularVelocity.IsNaN()); }
+	inline void				AddLinearVelocityStep(Vec3Arg inLinearVelocityChange)			{ JPH_DET_LOG("AddLinearVelocityStep: " << inLinearVelocityChange); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mLinearVelocity += inLinearVelocityChange; JPH_ASSERT(!mLinearVelocity.IsNaN()); }
+	inline void				SubLinearVelocityStep(Vec3Arg inLinearVelocityChange)			{ JPH_DET_LOG("SubLinearVelocityStep: " << inLinearVelocityChange); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mLinearVelocity -= inLinearVelocityChange; JPH_ASSERT(!mLinearVelocity.IsNaN()); }
+	inline void				AddAngularVelocityStep(Vec3Arg inAngularVelocityChange)			{ JPH_DET_LOG("AddAngularVelocityStep: " << inAngularVelocityChange); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mAngularVelocity += inAngularVelocityChange; JPH_ASSERT(!mAngularVelocity.IsNaN()); }
+	inline void				SubAngularVelocityStep(Vec3Arg inAngularVelocityChange) 		{ JPH_DET_LOG("SubAngularVelocityStep: " << inAngularVelocityChange); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mAngularVelocity -= inAngularVelocityChange; JPH_ASSERT(!mAngularVelocity.IsNaN()); }
 	///@}
 
 	/// Apply all accumulated forces, torques and drag (should only be called by the PhysicsSystem)
