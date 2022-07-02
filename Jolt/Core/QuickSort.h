@@ -11,41 +11,77 @@ JPH_NAMESPACE_BEGIN
 template <typename Iterator, typename Compare>
 inline void QuickSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
 {
-	// If there's not enough elements we're done
-	auto num_elements = inEnd - inBegin;
-	if (num_elements < 2)
-		return;
+	// Implementation based on https://en.wikipedia.org/wiki/Quicksort using Hoare's partition scheme
 
-	// Fall back to insertion sort if there are too few elements
-	if (num_elements <= 32)
+	// Loop so that we only need to do 1 recursive call instead of 2.
+	for (;;)
 	{
-		InsertionSort(inBegin, inEnd, inCompare);
-		return;
-	}
+		// If there's less than 2 elements we're done
+		auto num_elements = inEnd - inBegin;
+		if (num_elements < 2)
+			return;
 
-	// Determine pivot
-	Iterator pivot = inBegin + num_elements / 2;
-
-	// Move pivot to the beginning
-	Iterator store = inBegin;
-	swap(*store, *pivot);
-
-	// Partition the array
-	for (Iterator it = inBegin + 1; it != inEnd; ++it)
-	{
-		if (inCompare(*it, *inBegin))
+		// Fall back to insertion sort if there are too few elements
+		if (num_elements <= 32)
 		{
-			++store;
-			swap(*store, *it);
+			InsertionSort(inBegin, inEnd, inCompare);
+			return;
+		}
+
+		// Determine pivot
+		Iterator pivot_iterator = inBegin + ((num_elements - 1) >> 1);
+		auto pivot = *pivot_iterator;
+
+		// Left and right iterators
+		Iterator i = inBegin;
+		Iterator j = inEnd;
+
+		for (;;)
+		{
+			// Find the first element that is bigger than the pivot
+			while (inCompare(*i, pivot))
+				i++;
+
+			// Find the last element that is smaller than the pivot
+			do
+				--j;
+			while (inCompare(pivot, *j));
+
+			// If the two iterators crossed, we're done
+			if (i >= j)
+				break;
+
+			// Swap the elements
+			swap(*i, *j);
+
+			// Note that the first while loop in this function should
+			// have been do i++ while (...) but since we cannot decrement
+			// the iterator from inBegin we left that out, so we need to do
+			// it here.
+			++i;
+		}
+
+		// Include the middle element on the left side
+		j++;
+
+		// Check which partition is smaller
+		if (j - inBegin < inEnd - j)
+		{
+			// Left side is smaller, recurse to left first
+			QuickSort(inBegin, j, inCompare);
+
+			// Loop again with the right side to avoid a call
+			inBegin = j;
+		}
+		else
+		{
+			// Right side is smaller, recurse to right first
+			QuickSort(j, inEnd, inCompare);
+
+			// Loop again with the left side to avoid a call
+			inEnd = j;
 		}
 	}
-
-	// Move pivot to the right place
-	swap(*inBegin, *store);
-
-	// Recurse
-	QuickSort(inBegin, store, inCompare);
-	QuickSort(store + 1, inEnd, inCompare);
 }
 
 /// Implementation of quick sort algorithm without comparator.
