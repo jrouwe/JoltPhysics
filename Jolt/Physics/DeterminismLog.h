@@ -3,9 +3,11 @@
 
 #pragma once
 
+//#define JPH_ENABLE_DETERMINISM_LOG
 #ifdef JPH_ENABLE_DETERMINISM_LOG
 
 #include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 
 #include <iomanip>
 #include <fstream>
@@ -46,9 +48,15 @@ public:
 		return *this;
 	}
 
-	DeterminismLog &		operator << (BodyID inValue)
+	DeterminismLog &		operator << (const BodyID &inValue)
 	{
 		mLog << hex << setw(8) << inValue.GetIndexAndSequenceNumber();
+		return *this;
+	}
+
+	DeterminismLog &		operator << (const SubShapeID &inValue)
+	{
+		mLog << hex << setw(8) << inValue.GetValue();
 		return *this;
 	}
 
@@ -64,9 +72,15 @@ public:
 		return *this;
 	}
 
-	DeterminismLog &		operator << (uint inValue)
+	DeterminismLog &		operator << (uint32 inValue)
 	{
-		mLog << inValue;
+		mLog << hex << setw(8) << inValue;
+		return *this;
+	}
+
+	DeterminismLog &		operator << (uint64 inValue)
+	{
+		mLog << hex << setw(16) << inValue;
 		return *this;
 	}
 
@@ -76,9 +90,27 @@ public:
 		return *this;
 	}
 	
-	DeterminismLog &		operator << (QuatArg inValue)
+	DeterminismLog &		operator << (Vec4Arg inValue)
 	{
 		mLog << hex << setw(8) << Convert(inValue.GetX()) << " " << setw(8) << Convert(inValue.GetY()) << " " << setw(8) << Convert(inValue.GetZ()) << " " << setw(8) << Convert(inValue.GetW());
+		return *this;
+	}
+	
+	DeterminismLog &		operator << (const Float3 &inValue)
+	{
+		mLog << hex << setw(8) << Convert(inValue.x) << " " << setw(8) << Convert(inValue.y) << " " << setw(8) << Convert(inValue.z);
+		return *this;
+	}
+	
+	DeterminismLog &		operator << (Mat44Arg inValue)
+	{
+		*this << inValue.GetColumn4(0) << " " << inValue.GetColumn4(1) << " " << inValue.GetColumn4(2) << " " << inValue.GetColumn4(3);
+		return *this;
+	}
+
+	DeterminismLog &		operator << (QuatArg inValue)
+	{
+		*this << inValue.GetXYZW();
 		return *this;
 	}
 
