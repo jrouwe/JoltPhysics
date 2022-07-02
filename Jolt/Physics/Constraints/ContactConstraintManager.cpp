@@ -1277,7 +1277,7 @@ void ContactConstraintManager::SortContacts(uint32 *inConstraintIdxBegin, uint32
 		if (lhs.mBody2 != rhs.mBody2)
 			return lhs.mBody2->GetID() < rhs.mBody2->GetID();
 
-		JPH_ASSERT(false, "Hash collision, ordering will be inconsistent");
+		JPH_ASSERT(inLHS == inRHS, "Hash collision, ordering will be inconsistent");
 		return false;
 	});
 }
