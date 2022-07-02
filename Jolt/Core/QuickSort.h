@@ -7,6 +7,46 @@
 
 JPH_NAMESPACE_BEGIN
 
+/// Helper function for QuickSort, will move the pivot element to inMiddle.
+template <typename Iterator, typename Compare>
+inline void QuickSortMedianOfThree(Iterator inFirst, Iterator inMiddle, Iterator inLast, Compare inCompare)
+{
+	// This should be guaranteed because we switch over to insertion sort when there's 32 or less elements
+	JPH_ASSERT(inFirst != inMiddle && inMiddle != inLast); 
+
+	if (inCompare(*inMiddle, *inFirst))
+		swap(*inFirst, *inMiddle);
+	
+	if (inCompare(*inLast, *inFirst))
+		swap(*inFirst, *inLast);
+
+	if (inCompare(*inLast, *inMiddle))
+		swap(*inMiddle, *inLast);
+}
+
+/// Helper function for QuickSort using the Ninther method, will move the pivot element to inMiddle.
+template <typename Iterator, typename Compare>
+inline void QuickSortNinther(Iterator inFirst, Iterator inMiddle, Iterator inLast, Compare inCompare)
+{
+	// Divide the range in 8 equal parts (this means there are 9 points)
+	auto diff = (inLast - inFirst) >> 3;
+	auto two_diff = diff << 1;
+
+	// Median of first 3 points
+	Iterator mid1 = inFirst + diff;
+	QuickSortMedianOfThree(inFirst, mid1, inFirst + two_diff, inCompare);
+
+	// Median of second 3 points
+	QuickSortMedianOfThree(inMiddle - diff, inMiddle, inMiddle + diff, inCompare);
+
+	// Median of third 3 points
+	Iterator mid3 = inLast - diff;
+	QuickSortMedianOfThree(inLast - two_diff, mid3, inLast, inCompare);
+
+	// Determine the median of the 3 medians
+	QuickSortMedianOfThree(mid1, inMiddle, mid3, inCompare);
+}
+
 /// Implementation of the quick sort algorithm. The STL version implementation is not consistent across platforms.
 template <typename Iterator, typename Compare>
 inline void QuickSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
@@ -30,6 +70,7 @@ inline void QuickSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
 
 		// Determine pivot
 		Iterator pivot_iterator = inBegin + ((num_elements - 1) >> 1);
+		QuickSortNinther(inBegin, pivot_iterator, inEnd - 1, inCompare);
 		auto pivot = *pivot_iterator;
 
 		// Left and right iterators
