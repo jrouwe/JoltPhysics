@@ -21,6 +21,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/FPException.h
 	${JOLT_PHYSICS_ROOT}/Core/FPFlushDenormals.h
 	${JOLT_PHYSICS_ROOT}/Core/HashCombine.h
+	${JOLT_PHYSICS_ROOT}/Core/InsertionSort.h
 	${JOLT_PHYSICS_ROOT}/Core/IssueReporting.cpp
 	${JOLT_PHYSICS_ROOT}/Core/IssueReporting.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystem.h
@@ -39,6 +40,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.cpp
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.h
 	${JOLT_PHYSICS_ROOT}/Core/Profiler.inl
+	${JOLT_PHYSICS_ROOT}/Core/QuickSort.h
 	${JOLT_PHYSICS_ROOT}/Core/Reference.h
 	${JOLT_PHYSICS_ROOT}/Core/Result.h
 	${JOLT_PHYSICS_ROOT}/Core/RTTI.cpp

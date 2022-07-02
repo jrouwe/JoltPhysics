@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Body/BodyPair.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/OrientedBox.h>
+#include <Jolt/Core/QuickSort.h>
 
 JPH_NAMESPACE_BEGIN
 	
@@ -41,7 +42,7 @@ void BroadPhaseBruteForce::AddBodiesFinalize(BodyID *ioBodies, int inNumber, Add
 	}
 
 	// Resort
-	sort(mBodyIDs.begin(), mBodyIDs.end());
+	QuickSort(mBodyIDs.begin(), mBodyIDs.end());
 }
 	
 void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber) 

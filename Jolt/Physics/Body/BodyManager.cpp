@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Core/StringTools.h>
+#include <Jolt/Core/QuickSort.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -489,7 +490,7 @@ void BodyManager::SaveState(StateRecorder &inStream) const
 		// Write active bodies, sort because activation can come from multiple threads, so order is not deterministic
 		inStream.Write(mNumActiveBodies);
 		BodyIDVector sorted_active_bodies(mActiveBodies, mActiveBodies + mNumActiveBodies);
-		sort(sorted_active_bodies.begin(), sorted_active_bodies.end());
+		QuickSort(sorted_active_bodies.begin(), sorted_active_bodies.end());
 		for (const BodyID &id : sorted_active_bodies)
 			inStream.Write(id);
 
@@ -540,7 +541,7 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 		for (const BodyID *id = mActiveBodies, *id_end = mActiveBodies + mNumActiveBodies; id < id_end; ++id)
 			mBodies[id->GetIndex()]->mMotionProperties->mIndexInActiveBodies = Body::cInactiveIndex;
 
-		sort(mActiveBodies, mActiveBodies + mNumActiveBodies); // Sort for validation
+		QuickSort(mActiveBodies, mActiveBodies + mNumActiveBodies); // Sort for validation
 
 		// Read active bodies
 		inStream.Read(mNumActiveBodies);

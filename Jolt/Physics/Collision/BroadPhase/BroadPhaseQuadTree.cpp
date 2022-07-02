@@ -7,6 +7,7 @@
 #include <Jolt/Physics/Collision/AABoxCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/PhysicsLock.h>
+#include <Jolt/Core/QuickSort.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -158,7 +159,7 @@ BroadPhase::AddState BroadPhaseQuadTree::AddBodiesPrepare(BodyID *ioBodies, int 
 
 	// Sort bodies on layer
 	Body * const * const bodies_ptr = bodies.data(); // C pointer or else sort is incredibly slow in debug mode
-	sort(ioBodies, ioBodies + inNumber, [bodies_ptr](BodyID inLHS, BodyID inRHS) { return bodies_ptr[inLHS.GetIndex()]->GetBroadPhaseLayer() < bodies_ptr[inRHS.GetIndex()]->GetBroadPhaseLayer(); });
+	QuickSort(ioBodies, ioBodies + inNumber, [bodies_ptr](BodyID inLHS, BodyID inRHS) { return bodies_ptr[inLHS.GetIndex()]->GetBroadPhaseLayer() < bodies_ptr[inRHS.GetIndex()]->GetBroadPhaseLayer(); });
 
 	BodyID *b_start = ioBodies, *b_end = ioBodies + inNumber;
 	while (b_start < b_end)
@@ -282,7 +283,7 @@ void BroadPhaseQuadTree::RemoveBodies(BodyID *ioBodies, int inNumber)
 
 	// Sort bodies on layer
 	Tracking *tracking = mTracking.data(); // C pointer or else sort is incredibly slow in debug mode
-	sort(ioBodies, ioBodies + inNumber, [tracking](BodyID inLHS, BodyID inRHS) { return tracking[inLHS.GetIndex()].mBroadPhaseLayer < tracking[inRHS.GetIndex()].mBroadPhaseLayer; });
+	QuickSort(ioBodies, ioBodies + inNumber, [tracking](BodyID inLHS, BodyID inRHS) { return tracking[inLHS.GetIndex()].mBroadPhaseLayer < tracking[inRHS.GetIndex()].mBroadPhaseLayer; });
 
 	BodyID *b_start = ioBodies, *b_end = ioBodies + inNumber;
 	while (b_start < b_end)
@@ -332,7 +333,7 @@ void BroadPhaseQuadTree::NotifyBodiesAABBChanged(BodyID *ioBodies, int inNumber,
 
 	// Sort bodies on layer
 	const Tracking *tracking = mTracking.data(); // C pointer or else sort is incredibly slow in debug mode
-	sort(ioBodies, ioBodies + inNumber, [tracking](BodyID inLHS, BodyID inRHS) { return tracking[inLHS.GetIndex()].mBroadPhaseLayer < tracking[inRHS.GetIndex()].mBroadPhaseLayer; });
+	QuickSort(ioBodies, ioBodies + inNumber, [tracking](BodyID inLHS, BodyID inRHS) { return tracking[inLHS.GetIndex()].mBroadPhaseLayer < tracking[inRHS.GetIndex()].mBroadPhaseLayer; });
 
 	BodyID *b_start = ioBodies, *b_end = ioBodies + inNumber;
 	while (b_start < b_end)
@@ -545,7 +546,7 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 
 	// Sort bodies on layer
 	const Tracking *tracking = mTracking.data(); // C pointer or else sort is incredibly slow in debug mode
-	sort(ioActiveBodies, ioActiveBodies + inNumActiveBodies, [tracking](BodyID inLHS, BodyID inRHS) { return tracking[inLHS.GetIndex()].mObjectLayer < tracking[inRHS.GetIndex()].mObjectLayer; });
+	QuickSort(ioActiveBodies, ioActiveBodies + inNumActiveBodies, [tracking](BodyID inLHS, BodyID inRHS) { return tracking[inLHS.GetIndex()].mObjectLayer < tracking[inRHS.GetIndex()].mObjectLayer; });
 
 	BodyID *b_start = ioActiveBodies, *b_end = ioActiveBodies + inNumActiveBodies;
 	while (b_start < b_end)

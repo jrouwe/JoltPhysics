@@ -8,6 +8,7 @@
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Physics/PhysicsLock.h>
 #include <Jolt/Core/Profiler.h>
+#include <Jolt/Core/QuickSort.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -101,7 +102,7 @@ void ConstraintManager::sSortConstraints(Constraint **inActiveConstraints, uint3
 {
 	JPH_PROFILE_FUNCTION();
 
-	sort(inConstraintIdxBegin, inConstraintIdxEnd, [inActiveConstraints](uint32 inLHS, uint32 inRHS) { return inActiveConstraints[inLHS]->mConstraintIndex < inActiveConstraints[inRHS]->mConstraintIndex; });
+	QuickSort(inConstraintIdxBegin, inConstraintIdxEnd, [inActiveConstraints](uint32 inLHS, uint32 inRHS) { return inActiveConstraints[inLHS]->mConstraintIndex < inActiveConstraints[inRHS]->mConstraintIndex; });
 }
 
 void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, float inDeltaTime)
