@@ -6,6 +6,7 @@
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/StringTools.h>
+#include <Jolt/Core/QuickSort.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
@@ -221,7 +222,7 @@ void Profiler::DumpList(const char *inTag, const Aggregators &inAggregators)
 	
 	// Sort the list
 	Aggregators aggregators = inAggregators;
-	sort(aggregators.begin(), aggregators.end());
+	QuickSort(aggregators.begin(), aggregators.end());
 	
 	// Write all aggregators
 	for (const Aggregator &item : aggregators)

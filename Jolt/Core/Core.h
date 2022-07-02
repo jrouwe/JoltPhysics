@@ -223,7 +223,6 @@
 // Standard C++ includes
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <vector>
-#include <algorithm>
 #include <utility>
 #include <cmath>
 #include <sstream>

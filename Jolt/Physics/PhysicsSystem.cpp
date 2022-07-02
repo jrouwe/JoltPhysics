@@ -23,6 +23,7 @@
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/QuickSort.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -1853,7 +1854,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 				*(dst_ccd_bodies++) = src_ccd_bodies++;
 
 			// Which we then sort
-			sort(sorted_ccd_bodies, sorted_ccd_bodies + num_ccd_bodies, [](const CCDBody *inBody1, const CCDBody *inBody2) 
+			QuickSort(sorted_ccd_bodies, sorted_ccd_bodies + num_ccd_bodies, [](const CCDBody *inBody1, const CCDBody *inBody2) 
 				{ 
 					if (inBody1->mFractionPlusSlop != inBody2->mFractionPlusSlop)
 						return inBody1->mFractionPlusSlop < inBody2->mFractionPlusSlop;

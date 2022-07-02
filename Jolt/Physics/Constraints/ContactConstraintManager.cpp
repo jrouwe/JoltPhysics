@@ -10,6 +10,7 @@
 #include <Jolt/Physics/IslandBuilder.h>
 #include <Jolt/Physics/DeterminismLog.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/QuickSort.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -313,7 +314,7 @@ void ContactConstraintManager::ManifoldCache::GetAllBodyPairsSorted(Array<const 
 	mCachedBodyPairs.GetAllKeyValues(outAll);
 
 	// Sort by key
-	sort(outAll.begin(), outAll.end(), [](const BPKeyValue *inLHS, const BPKeyValue *inRHS) {
+	QuickSort(outAll.begin(), outAll.end(), [](const BPKeyValue *inLHS, const BPKeyValue *inRHS) {
 		return inLHS->GetKey() < inRHS->GetKey();
 	});
 }
@@ -330,7 +331,7 @@ void ContactConstraintManager::ManifoldCache::GetAllManifoldsSorted(const Cached
 	}
 
 	// Sort by key
-	sort(outAll.begin(), outAll.end(), [](const MKeyValue *inLHS, const MKeyValue *inRHS) {
+	QuickSort(outAll.begin(), outAll.end(), [](const MKeyValue *inLHS, const MKeyValue *inRHS) {
 		return inLHS->GetKey() < inRHS->GetKey();
 	});
 }
@@ -347,7 +348,7 @@ void ContactConstraintManager::ManifoldCache::GetAllCCDManifoldsSorted(Array<con
 		}
 
 	// Sort by key
-	sort(outAll.begin(), outAll.end(), [](const MKeyValue *inLHS, const MKeyValue *inRHS) {
+	QuickSort(outAll.begin(), outAll.end(), [](const MKeyValue *inLHS, const MKeyValue *inRHS) {
 		return inLHS->GetKey() < inRHS->GetKey();
 	});
 }
@@ -1273,7 +1274,7 @@ void ContactConstraintManager::SortContacts(uint32 *inConstraintIdxBegin, uint32
 {
 	JPH_PROFILE_FUNCTION();
 
-	sort(inConstraintIdxBegin, inConstraintIdxEnd, [this](uint32 inLHS, uint32 inRHS) {
+	QuickSort(inConstraintIdxBegin, inConstraintIdxEnd, [this](uint32 inLHS, uint32 inRHS) {
 		const ContactConstraint &lhs = mConstraints[inLHS];
 		const ContactConstraint &rhs = mConstraints[inRHS];
 
@@ -1289,7 +1290,7 @@ void ContactConstraintManager::SortContacts(uint32 *inConstraintIdxBegin, uint32
 		if (lhs.mBody2 != rhs.mBody2)
 			return lhs.mBody2->GetID() < rhs.mBody2->GetID();
 
-		JPH_ASSERT(false, "Hash collision, ordering will be inconsistent");
+		JPH_ASSERT(inLHS == inRHS, "Hash collision, ordering will be inconsistent");
 		return false;
 	});
 }

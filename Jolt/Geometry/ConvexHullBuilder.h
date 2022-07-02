@@ -97,6 +97,7 @@ public:
 		Success,											///< Hull building finished successfully
 		MaxVerticesReached,									///< Hull building finished successfully, but the desired accuracy was not reached because the max vertices limit was reached
 		TooFewPoints,										///< Too few points to create a hull
+		TooFewFaces,										///< Too few faces in the created hull (signifies precision errors during building)
 		Degenerate,											///< Degenerate hull detected
 	};
 

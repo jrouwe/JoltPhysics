@@ -107,9 +107,9 @@ Mat44 Mat44::sRotation(QuatArg inQuat)
 	float z = inQuat.GetZ();
 	float w = inQuat.GetW();
 
-	float tx = 2.0f * x;
-	float ty = 2.0f * y;
-	float tz = 2.0f * z;
+	float tx = x + x; // Note: Using x + x instead of 2.0f * x to force this function to return the same value as the SSE4.1 version across platforms.
+	float ty = y + y;
+	float tz = z + z;
 
 	float xx = tx * x;
 	float yy = ty * y;
@@ -121,9 +121,9 @@ Mat44 Mat44::sRotation(QuatArg inQuat)
 	float yw = ty * w;
 	float zw = tz * w;
 
-	return Mat44(Vec4(1.0f - yy - zz, xy + zw, xz - yw, 0.0f),
-				 Vec4(xy - zw, 1.0f - xx - zz, yz + xw, 0.0f),
-				 Vec4(xz + yw, yz - xw, 1.0f - xx - yy, 0.0f),
+	return Mat44(Vec4((1.0f - yy) - zz, xy + zw, xz - yw, 0.0f), // Note: Added extra brackets to force this function to return the same value as the SSE4.1 version across platforms.
+				 Vec4(xy - zw, (1.0f - zz) - xx, yz + xw, 0.0f),
+				 Vec4(xz + yw, yz - xw, (1.0f - xx) - yy, 0.0f),
 				 Vec4(0.0f, 0.0f, 0.0f, 1.0f));
 #endif
 }

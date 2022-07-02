@@ -9,6 +9,7 @@
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/Atomics.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/QuickSort.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -360,7 +361,7 @@ void IslandBuilder::SortIslands(TempAllocator *inTempAllocator)
 
 		// Sort so the biggest islands go first, this means that the jobs that take longest will be running
 		// first which improves the chance that all jobs finish at the same time.
-		sort(mIslandsSorted, mIslandsSorted + mNumIslands, [num_constraints](uint32 inLHS, uint32 inRHS) {
+		QuickSort(mIslandsSorted, mIslandsSorted + mNumIslands, [num_constraints](uint32 inLHS, uint32 inRHS) {
 			return num_constraints[inLHS] > num_constraints[inRHS];
 		});
 
