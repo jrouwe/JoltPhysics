@@ -557,8 +557,8 @@ Mat44 Mat44::Inversed() const
 	minor3 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor3);
 
 	__m128 det = _mm_mul_ps(row0, minor0);
-	det = _mm_add_ps(_mm_shuffle_ps(det, det, _MM_SHUFFLE(1, 0, 3, 2)), det);
-	det = _mm_add_ss(_mm_shuffle_ps(det, det, _MM_SHUFFLE(2, 3, 0, 1)), det);
+	det = _mm_add_ps(_mm_shuffle_ps(det, det, _MM_SHUFFLE(2, 3, 0, 1)), det); // Original code did (x + z) + (y + w), changed to (x + y) + (z + w) to match the ARM code below and make the result cross platform deterministic
+	det = _mm_add_ss(_mm_shuffle_ps(det, det, _MM_SHUFFLE(1, 0, 3, 2)), det);
 	det = _mm_div_ss(_mm_set_ss(1.0f), det);
 	det = _mm_shuffle_ps(det, det, _MM_SHUFFLE(0, 0, 0, 0));
 	
@@ -860,8 +860,8 @@ Mat44 Mat44::Inversed3x3() const
 	minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row3, tmp1));
 
 	__m128 det = _mm_mul_ps(row0, minor0);
-	det = _mm_add_ps(_mm_shuffle_ps(det, det, _MM_SHUFFLE(1, 0, 3, 2)), det);
-	det = _mm_add_ss(_mm_shuffle_ps(det, det, _MM_SHUFFLE(2, 3, 0, 1)), det);
+	det = _mm_add_ps(_mm_shuffle_ps(det, det, _MM_SHUFFLE(2, 3, 0, 1)), det); // Original code did (x + z) + (y + w), changed to (x + y) + (z + w) to match the ARM code below and make the result cross platform deterministic
+	det = _mm_add_ss(_mm_shuffle_ps(det, det, _MM_SHUFFLE(1, 0, 3, 2)), det);
 	det = _mm_div_ss(_mm_set_ss(1.0f), det);
 	det = _mm_shuffle_ps(det, det, _MM_SHUFFLE(0, 0, 0, 0));
 	
