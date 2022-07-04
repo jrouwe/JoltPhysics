@@ -82,4 +82,20 @@ private:
 	Array<BodyID>			mBodyIDs;
 };
 
+#ifdef JPH_DEBUG_RENDERER
+/// Class function to filter out bodies for debug rendering, returns true if body should be rendered
+class BodyDrawFilter : public NonCopyable
+{
+public:
+	/// Destructor
+	virtual					~BodyDrawFilter() = default;
+
+	/// Filter function. Returns true if inBody should be rendered
+	virtual bool			ShouldDraw(const Body& inBody) const
+	{
+		return true;
+	}
+};
+#endif // JPH_DEBUG_RENDERER
+
 JPH_NAMESPACE_END

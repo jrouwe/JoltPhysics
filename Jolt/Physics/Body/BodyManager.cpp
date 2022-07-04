@@ -13,6 +13,7 @@
 #include <Jolt/Core/QuickSort.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
+	#include <Jolt/Physics/Body/BodyFilter.h>
 #endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
@@ -558,14 +559,14 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer)
+void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer, const BodyDrawFilter* inBodyFilter)
 {
 	JPH_PROFILE_FUNCTION();
 
 	LockAllBodies();
 
 	for (const Body *body : mBodies)
-		if (sIsValidBodyPointer(body) && body->IsInBroadPhase())
+		if (sIsValidBodyPointer(body) && body->IsInBroadPhase() && (!inBodyFilter || inBodyFilter->ShouldDraw(*body)))
 		{
 			JPH_ASSERT(mBodies[body->GetID().GetIndex()] == body);
 
