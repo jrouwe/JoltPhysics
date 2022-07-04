@@ -354,7 +354,7 @@ This job will go through all non-contact constraints and determine which constra
 
 This job will go through all non-contact constraints and assign the involved bodies and constraint to the same island. Since we allow concurrent insertion/removal of bodies we do not want to keep island data across multiple simulation steps, so we recreate the islands from scratch every simulation step. The operation is lock-free and O(N) where N is the number of constraints. 
 
-If a constraint connects an active and a non-active body, the non-active body is woken up.
+If a constraint connects an active and a non-active body, the non-active body is woken up. One find collisions job will not start until this job has finished in order to pick up any collision testing for newly activated bodies.
 
 ### Find Collisions
 
