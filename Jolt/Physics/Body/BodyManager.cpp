@@ -559,7 +559,7 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer, const BodyDrawFilter* inBodyFilter)
+void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer, const BodyDrawFilter *inBodyFilter)
 {
 	JPH_PROFILE_FUNCTION();
 
