@@ -11,6 +11,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
+#include <Jolt/Physics/DeterminismLog.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRendererRecorder.h>
 	#include <Jolt/Core/StreamWrapper.h>
@@ -273,6 +274,7 @@ int main(int argc, char** argv)
 			for (uint iterations = 0; iterations < max_iterations; ++iterations)
 			{
 				JPH_PROFILE_NEXTFRAME();
+				JPH_DET_LOG("Iteration: " << iterations);
 
 				// Start measuring
 				chrono::high_resolution_clock::time_point clock_start = chrono::high_resolution_clock::now();
@@ -336,6 +338,19 @@ int main(int argc, char** argv)
 					validator.SetValidating(true);
 					physics_system.RestoreState(validator);
 				}
+
+			#ifdef JPH_ENABLE_DETERMINISM_LOG
+				const BodyLockInterface &bli = physics_system.GetBodyLockInterfaceNoLock();
+				BodyIDVector body_ids;
+				physics_system.GetBodies(body_ids);
+				for (BodyID id : body_ids)
+				{
+					BodyLockRead lock(bli, id);
+					const Body &body = lock.GetBody();
+					if (!body.IsStatic())
+						JPH_DET_LOG(id << ": p: " << body.GetPosition() << " r: " << body.GetRotation() << " v: " << body.GetLinearVelocity() << " w: " << body.GetAngularVelocity());
+				}
+			#endif // JPH_ENABLE_DETERMINISM_LOG
 			}
 
 			// Calculate hash of all positions and rotations of the bodies

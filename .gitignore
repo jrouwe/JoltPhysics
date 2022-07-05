@@ -5,3 +5,4 @@
 /stats*.html
 /snapshot.bin
 /*.jor
+/detlog.txt

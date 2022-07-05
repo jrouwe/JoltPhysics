@@ -8,6 +8,7 @@
 #include <Jolt/Physics/PhysicsUpdateContext.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/IslandBuilder.h>
+#include <Jolt/Physics/DeterminismLog.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/QuickSort.h>
 #ifdef JPH_DEBUG_RENDERER
@@ -42,6 +43,10 @@ void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstra
 template <EMotionType Type1, EMotionType Type2>
 JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, Mat44Arg inInvI1, Mat44Arg inInvI2, Vec3Arg inWorldSpacePosition1, Vec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, float inCombinedRestitution, float inCombinedFriction, float inMinVelocityForRestitution)
 {
+	JPH_DET_LOG("CalculateFrictionAndNonPenetrationConstraintProperties: p1: " << inWorldSpacePosition1 << " p2: " << inWorldSpacePosition2
+		<< " normal: " << inWorldSpaceNormal << " tangent1: " << inWorldSpaceTangent1 << " tangent2: " << inWorldSpaceTangent2
+		<< " restitution: " << inCombinedRestitution << " friction: " << inCombinedFriction << " minv: " << inMinVelocityForRestitution);
+
 	// Calculate collision points relative to body
 	Vec3 p = 0.5f * (inWorldSpacePosition1 + inWorldSpacePosition2);
 	Vec3 r1 = p - inBody1.GetCenterOfMassPosition();
@@ -840,6 +845,8 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 				wcp.mContactPoint = &ccp;
 			}
 
+			JPH_DET_LOG("GetContactsFromCache: id1: " << constraint.mBody1->GetID() << " id2: " << constraint.mBody2->GetID() << " key: " << constraint.mSortKey);
+
 			// Calculate friction and non-penetration constraint properties for all contact points
 			CalculateFrictionAndNonPenetrationConstraintProperties(constraint, delta_time, transform_body1, transform_body2, *body1, *body2);
 
@@ -1022,6 +1029,8 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		constraint.mCombinedFriction = settings.mCombinedFriction;
 		constraint.mCombinedRestitution = settings.mCombinedRestitution;
 
+		JPH_DET_LOG("TemplatedAddContactConstraint: id1: " << constraint.mBody1->GetID() << " id2: " << constraint.mBody2->GetID() << " key: " << constraint.mSortKey);
+
 		// Notify island builder
 		mUpdateContext->mIslandBuilder->LinkContact(constraint_idx, inBody1.GetIndexInActiveBodiesInternal(), inBody2.GetIndexInActiveBodiesInternal());
 
@@ -1094,6 +1103,10 @@ bool ContactConstraintManager::AddContactConstraint(ContactAllocator &ioContactA
 {
 	JPH_PROFILE_FUNCTION();
 
+	JPH_DET_LOG("AddContactConstraint: id1: " << inBody1.GetID() << " id2: " << inBody2.GetID()
+		<< " subshape1: " << inManifold.mSubShapeID1 << " subshape2: " << inManifold.mSubShapeID2
+		<< " normal: " << inManifold.mWorldSpaceNormal << " pendepth: " << inManifold.mPenetrationDepth);
+	
 	JPH_ASSERT(inManifold.mWorldSpaceNormal.IsNormalized());
 
 	// Swap bodies so that body 1 id < body 2 id
