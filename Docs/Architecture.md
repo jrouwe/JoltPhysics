@@ -311,7 +311,14 @@ The physics simulation is deterministic provided that:
 * The APIs that modify the simulation are called in exactly the same order. For example, bodies and constraints need to be added/removed/modified in exactly the same order so that the state at the beginning of a simulation step is exactly the same for both simulations.
 * The same binary code is used to run the simulation. For example, when you run the simulation on Windows it doesn't matter if you have an AMD or Intel processor. 
 
-If you want cross platform determinism (e.g. Linux vs Windows) then please turn on the CROSS_PLATFORM_DETERMINISTIC option in CMake. This will compile the library without fused multiply add instructions and with precise math (so it will come at a performance cost). It has been tested with the PerformanceTest (both with Ragdoll and ConvexVsMesh test) to result in the same simulation regardless if the library was compiled on MSVC2022 or clang, in Debug and Release mode and on Windows or Linux. Note that the library is not yet cross platform deterministic between ARM vs x86. Also note that it is quite difficult to verify cross platform determinism, so this feature is less tested than other features.
+If you want cross platform determinism then please turn on the CROSS_PLATFORM_DETERMINISTIC option in CMake. This will make the library approximately 8% slower but the simulation will be deterministic regardless of:
+
+* Compiler used to compile the library (tested MSVC2022 vs clang)
+* Configuration (Debug, Release or Distribution)
+* OS (tested Windows vs Linux)
+* Architecture (x86 or ARM)
+
+Note that the same source code must be used to compile the library on all platforms. Also note that it is quite difficult to verify cross platform determinism, so this feature is less tested than other features.
 
 When running the Samples Application you can press ESC, Physics Settings and check the 'Check Determinism' checkbox. Before every simulation step we will record the state using the [StateRecorder](@ref StateRecorder) interface, rewind the simulation and do the step again to validate that the simulation runs deterministically. Some of the tests (e.g. the MultiThreaded) test will explicitly disable the check because they randomly add/remove bodies from different threads. This violates the first rule so will not result in a deterministic simulation.
 
@@ -347,7 +354,7 @@ This job will go through all non-contact constraints and determine which constra
 
 This job will go through all non-contact constraints and assign the involved bodies and constraint to the same island. Since we allow concurrent insertion/removal of bodies we do not want to keep island data across multiple simulation steps, so we recreate the islands from scratch every simulation step. The operation is lock-free and O(N) where N is the number of constraints. 
 
-If a constraint connects an active and a non-active body, the non-active body is woken up.
+If a constraint connects an active and a non-active body, the non-active body is woken up. One find collisions job will not start until this job has finished in order to pick up any collision testing for newly activated bodies.
 
 ### Find Collisions
 

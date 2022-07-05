@@ -15,6 +15,7 @@ class BodyActivationListener;
 struct PhysicsSettings;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
+class BodyDrawFilter;
 #endif // JPH_DEBUG_RENDERER
 
 /// Array of bodies
@@ -181,7 +182,7 @@ public:
 	};
 
 	/// Draw the state of the bodies (debugging purposes)
-	void							Draw(const DrawSettings &inSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer);
+	void							Draw(const DrawSettings &inSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer, const BodyDrawFilter *inBodyFilter = nullptr);
 #endif // JPH_DEBUG_RENDERER
 
 #ifdef JPH_ENABLE_ASSERTS
