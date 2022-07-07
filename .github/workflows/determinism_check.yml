@@ -74,3 +74,35 @@ jobs:
     - name: Test Ragdoll
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
+
+  arm:
+    runs-on: ubuntu-latest
+    name: ARM Determinism Check
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: aarch64
+          distro: ubuntu_latest
+          githubToken: ${{ github.token }}
+          install: |
+            apt-get update
+            apt-get install clang cmake -y
+          env: |
+            CONVEX_VS_MESH_HASH: '${{ env.CONVEX_VS_MESH_HASH }}'
+            RAGDOLL_HASH: '${{ env.RAGDOLL_HASH }}'
+
+          run: |
+            echo "Configure cmake"
+            cmake -B ./Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF
+            echo "Build"
+            cmake --build ./Build/Linux_Distribution
+            cd ./Build/Linux_Distribution
+            echo "Run UnitTests"
+            ctest --output-on-failure
+            echo "Run ConvexVsMesh"
+            ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
+            echo "Run Ragdoll"
+            ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
