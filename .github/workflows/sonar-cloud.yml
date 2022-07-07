@@ -15,8 +15,21 @@ on:
       - '**.txt'
 
 jobs:
+  check-secret:
+    runs-on: ubuntu-latest
+    outputs:
+      sonar-token: ${{ steps.sonar-token.outputs.defined }}
+    steps:
+      - id: sonar-token
+        if: ${{ env.SONAR_TOKEN != '' }}
+        run: echo "::set-output name=defined::true"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
   build:
     name: Build
+    needs: [check-secret]
+    if: needs.check-secret.outputs.sonar-token == 'true'
     runs-on: ubuntu-latest
     env:
       SONAR_SCANNER_VERSION: 4.7.0.2747
