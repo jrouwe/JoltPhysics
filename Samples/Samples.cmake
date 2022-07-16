@@ -135,6 +135,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Rig/PoweredRigTest.h
 	${SAMPLES_ROOT}/Tests/Rig/RigPileTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/RigPileTest.h
+	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.cpp
+	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
 	${SAMPLES_ROOT}/Tests/Test.cpp
 	${SAMPLES_ROOT}/Tests/Test.h
 	${SAMPLES_ROOT}/Tests/Tools/LoadSnapshotTest.cpp

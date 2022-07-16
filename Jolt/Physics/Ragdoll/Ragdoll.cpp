@@ -486,6 +486,27 @@ void Ragdoll::SetPose(const Mat44 *inJointMatrices, bool inLockBodies)
 	}
 }
 
+void Ragdoll::GetPose(SkeletonPose &outPose, bool inLockBodies)
+{
+	JPH_ASSERT(outPose.GetSkeleton() == mRagdollSettings->mSkeleton);
+
+	GetPose(outPose.GetJointMatrices().data(), inLockBodies);
+}
+
+void Ragdoll::GetPose(Mat44 *outJointMatrices, bool inLockBodies)
+{
+	// Lock the bodies
+	int body_count = (int)mBodyIDs.size();
+	BodyLockMultiRead lock(sGetBodyLockInterface(mSystem, inLockBodies), mBodyIDs.data(), body_count);
+
+	// Get pose
+	for (int b = 0; b < body_count; ++b)
+	{
+		const Body *body = lock.GetBody(b);
+		outJointMatrices[b] = body->GetWorldTransform();
+	}
+}
+
 void Ragdoll::DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies)
 {
 	JPH_ASSERT(inPose.GetSkeleton() == mRagdollSettings->mSkeleton);

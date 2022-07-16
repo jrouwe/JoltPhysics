@@ -135,6 +135,12 @@ public:
 	/// Lower level version of SetPose that directly takes the world space joint matrices
 	void								SetPose(const Mat44 *inJointMatrices, bool inLockBodies = true);
 
+	/// Get the ragdoll pose (uses the world transform of the bodies to calculate the pose)
+	void								GetPose(SkeletonPose &outPose, bool inLockBodies = true);
+
+	/// Lower level version of GetPose that directly returns the world space joint matrices
+	void								GetPose(Mat44 *outJointMatrices, bool inLockBodies = true);
+
 	/// Drive the ragdoll to a specific pose by setting velocities on each of the bodies so that it will reach inPose in inDeltaTime
 	void								DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies = true);
 	

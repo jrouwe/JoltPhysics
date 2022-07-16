@@ -53,6 +53,10 @@ This category demonstrates how ragdolls can be made and controlled using keyfram
 |:-|
 |*Demonstrating a humanoid ragdoll driven by motors which are trying to match a sprint animation in local space (green sticks).*|
 
+|[![Skeleton Mapper](https://img.youtube.com/vi/hrnmgNN-m-U/hqdefault.jpg)](https://www.youtube.com/watch?v=hrnmgNN-m-U)|
+|:-|
+|*An animation is played back on a high detail skeleton ('Animation') and then mapped onto a low detail ragdoll skeleton ('Reversed Mapped'). This animation is used to drive the motors of the ragdoll. The resulting pose is mapped back to the high detail skeleton ('Mapped'). Note that the skeletons are drawn offset to make them clearer..*|
+
 |[![160 Ragdolls in a Pile](https://img.youtube.com/vi/pwyCW0yNKMA/hqdefault.jpg)](https://www.youtube.com/watch?v=pwyCW0yNKMA)|
 |:-|
 |*160 Ragdolls being dropped on a scene from Horizon Zero Dawn.*|
