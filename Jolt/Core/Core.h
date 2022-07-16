@@ -6,6 +6,8 @@
 // Determine platform
 #if defined(JPH_PLATFORM_BLUE)
 	// Correct define already defined, this overrides everything else
+#elif defined(__MINGW64__) || defined (__MINGW32__)
+    #define JPH_PLATFORM_MINGW
 #elif defined(_WIN32) || defined(_WIN64)
 	#include <winapifamily.h>
 	#if WINAPI_FAMILY == WINAPI_FAMILY_APP
@@ -181,7 +183,7 @@
 	// Creating one should only be a couple of minutes of work if you have the documentation for the platform 
 	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS and JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY and include the right header).
 	#include <Jolt/Core/PlatformBlue.h> 
-#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_MINGW)
 	#include <float.h>
 	#include <limits.h>
 	#include <string.h>

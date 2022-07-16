@@ -28,7 +28,8 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor / Destructor
-								PhysicsSystem()												: mContactManager(mPhysicsSettings) { }
+								PhysicsSystem()												: mPhysicsSettings(), mContactManagermPhysicsSettings) { }
+                                
 								~PhysicsSystem();
 
 	/// Initialize the system.
@@ -240,6 +241,9 @@ private:
 
 	/// The broadphase does quick collision detection between body pairs
 	BroadPhase *				mBroadPhase = nullptr;
+    
+    /// Simulation settings
+	PhysicsSettings				mPhysicsSettings;
 
 	/// The contact manager resolves all contacts during a simulation step
 	ContactConstraintManager	mContactManager;
@@ -262,9 +266,6 @@ private:
 
 	/// Previous frame's delta time of one sub step to allow scaling previous frame's constraint impulses
 	float						mPreviousSubStepDeltaTime = 0.0f;
-
-	/// Simulation settings
-	PhysicsSettings				mPhysicsSettings;
 };
 
 JPH_NAMESPACE_END
