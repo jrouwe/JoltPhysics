@@ -63,6 +63,7 @@ public:
 	/// @param inNeutralPose1 Neutral pose of the source skeleton (model space)
 	/// @param inSkeleton2 Target skeleton to map to.
 	/// @param inNeutralPose2 Neutral pose of the target skeleton (model space), inNeutralPose1 and inNeutralPose2 must match as closely as possible, preferably the position of the mappable joints should be identical.
+	/// @param inCanMapJoint Function that checks if joints in skeleton 1 and skeleton 2 are equal.
 	void					Initialize(const Skeleton *inSkeleton1, const Mat44 *inNeutralPose1, const Skeleton *inSkeleton2, const Mat44 *inNeutralPose2, const CanMapJoint &inCanMapJoint = sDefaultCanMapJoint);
 
 	/// Map a pose. Joints that were directly mappable will be copied in model space from pose 1 to pose 2. Any joints that are only present in skeleton 2
