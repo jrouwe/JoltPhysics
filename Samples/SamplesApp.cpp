@@ -223,6 +223,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(KinematicRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(PoweredRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(RigPileTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveBinaryRigTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(SkeletonMapperTest)
 
 static TestNameAndRTTI sRigTests[] =
 {
@@ -231,6 +232,7 @@ static TestNameAndRTTI sRigTests[] =
 	{ "Load / Save Binary Rig",				JPH_RTTI(LoadSaveBinaryRigTest) },
 	{ "Kinematic Rig",						JPH_RTTI(KinematicRigTest) },
 	{ "Powered Rig",						JPH_RTTI(PoweredRigTest) },
+	{ "Skeleton Mapper",					JPH_RTTI(SkeletonMapperTest) },
 	{ "Rig Pile",							JPH_RTTI(RigPileTest) }
 };
 
