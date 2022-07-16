@@ -373,6 +373,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/Skeleton.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/Skeleton.h
+	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletonMapper.cpp
+	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletonMapper.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletonPose.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletonPose.h
 	${JOLT_PHYSICS_ROOT}/TriangleGrouper/TriangleGrouper.h

@@ -71,6 +71,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 	* Hard keying (kinematic only rigid bodies).
 	* Soft keying (setting velocities on dynamic rigid bodies).
 	* Driving constraint motors to an animated pose.
+	* Mapping a high detail (animation) skeleton onto a low detail (ragdoll) skeleton and vice versa.
 * Game character simulation (capsule)
 	* Rigid body character. Moves during the physics simulation. Cheapest option and most accurate collision response between character and dynamic bodies.
 	* Virtual character. Does not have a rigid body in the world but simulates one using collision checks. Updated outside of the physics update for more control. Less accurate interaction with dynamic bodies.
