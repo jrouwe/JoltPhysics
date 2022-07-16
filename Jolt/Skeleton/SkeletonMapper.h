@@ -76,8 +76,8 @@ public:
 	void					Map(const Mat44 *inPose1ModelSpace, const Mat44 *inPose2LocalSpace, Mat44 *outPose2ModelSpace) const;
 
 	/// Reverse map a pose, this will only use the mappings and not the chains (it assumes that all joints in skeleton 1 are mapped)
-	/// @param inPose2ModelSpace 
-	/// @param outPose1ModelSpace 
+	/// @param inPose2ModelSpace Model space pose on skeleton 2
+	/// @param outPose1ModelSpace When the function returns this will contain the model space pose for skeleton 1
 	void					MapReverse(const Mat44 *inPose2ModelSpace, Mat44 *outPose1ModelSpace) const;
 
 	using MappingVector = Array<Mapping>;
