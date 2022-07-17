@@ -42,6 +42,7 @@ public:
 	/// Constructor
 									RotatedTranslatedShape() : DecoratedShape(EShapeSubType::RotatedTranslated) { }
 									RotatedTranslatedShape(const RotatedTranslatedShapeSettings &inSettings, ShapeResult &outResult);
+									RotatedTranslatedShape(Vec3Arg inPosition, QuatArg inRotation, const Shape *inShape);
 
 	/// Access the rotation that is applied to the inner shape
 	Quat							GetRotation() const										{ return mRotation; }

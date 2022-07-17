@@ -45,6 +45,17 @@ RotatedTranslatedShape::RotatedTranslatedShape(const RotatedTranslatedShapeSetti
 	outResult.Set(this);
 }
 
+RotatedTranslatedShape::RotatedTranslatedShape(Vec3Arg inPosition, QuatArg inRotation, const Shape *inShape) :
+	DecoratedShape(EShapeSubType::RotatedTranslated, inShape)
+{
+	// Calculate center of mass position
+	mCenterOfMass = inPosition + inRotation * mInnerShape->GetCenterOfMass(); 
+
+	// Store rotation (position is always zero because we center around the center of mass)
+	mRotation = inRotation;
+	mIsRotationIdentity = mRotation.IsClose(Quat::sIdentity());
+}
+
 MassProperties RotatedTranslatedShape::GetMassProperties() const
 {
 	// Rotate inertia of child into place
