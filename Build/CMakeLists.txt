@@ -32,7 +32,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}
 	set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseASAN;ReleaseUBSAN;ReleaseCoverage;Distribution")
 endif()
 
-if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore") AND NOT MSYS AND NOT MINGW)
+if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore") AND NOT MINGW)
 	# Fill in the path to the asan libraries
 	set(CLANG_LIB_PATH "\"$(VSInstallDir)\\VC\\Tools\\Llvm\\x64\\lib\\clang\\${CMAKE_CXX_COMPILER_VERSION}\\lib\\windows\"")
 	
@@ -127,7 +127,7 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASEUBSAN "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LIBPATH:${CLANG_LIB_PATH}")
 	endif()
-elseif (MSYS OR MINGW OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
+elseif (MINGW OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS")
 	# Set general compiler flags
 	set(CMAKE_CXX_FLAGS "-g -std=c++17 -I. -Wall -Werror")
 
@@ -183,7 +183,9 @@ elseif (MSYS OR MINGW OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYS
 	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-fprofile-instr-generate -fcoverage-mapping")
 
 	# Set linker flags
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+    if(NOT(MINGW AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")))
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+    endif()
 endif()
 
 # Setting to attempt cross platform determinism
@@ -211,7 +213,7 @@ if (TARGET_UNIT_TESTS)
     target_include_directories(UnitTests PUBLIC ${UNIT_TESTS_ROOT})
     target_link_libraries(UnitTests LINK_PUBLIC Jolt)
 	target_precompile_headers(UnitTests PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
-    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MSYS AND NOT MINGW)
+    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
         target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
     endif()
     if (IOS)
@@ -236,7 +238,7 @@ if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
 		add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
 		target_include_directories(HelloWorld PUBLIC ${HELLO_WORLD_ROOT})
 		target_link_libraries(HelloWorld LINK_PUBLIC Jolt)
-		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MSYS AND NOT MINGW)
+		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
 			target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
 		endif()
 	endif()
@@ -247,7 +249,7 @@ if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
 		add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
 		target_include_directories(PerformanceTest PUBLIC ${PERFORMANCE_TEST_ROOT})
 		target_link_libraries(PerformanceTest LINK_PUBLIC Jolt)
-		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MSYS AND NOT MINGW)
+		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
 			target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
 		endif()
 		set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")

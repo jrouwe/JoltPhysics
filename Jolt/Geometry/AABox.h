@@ -7,7 +7,6 @@
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <Jolt/Geometry/Plane.h>
 #include <Jolt/Math/Mat44.h>
-#include <cfloat>
 
 JPH_NAMESPACE_BEGIN
 
