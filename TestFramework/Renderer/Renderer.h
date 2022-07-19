@@ -10,6 +10,7 @@
 #include <Renderer/PipelineState.h>
 #include <Renderer/CommandQueue.h>
 #include <Renderer/DescriptorHeap.h>
+#include <memory>
 
 // Forward declares
 class Texture;

@@ -5,12 +5,15 @@
 
 #include <Jolt/Core/TickCounter.h>
 
-#if defined(JPH_PLATFORM_WINDOWS)
+#if defined(JPH_PLATFORM_WINDOWS) 
 	JPH_SUPPRESS_WARNING_PUSH
 	JPH_MSVC_SUPPRESS_WARNING(5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
 	#define WIN32_LEAN_AND_MEAN
 	#include <Windows.h>
 	JPH_SUPPRESS_WARNING_POP
+#elif defined(JPH_PLATFORM_MINGW)
+    #define WIN32_LEAN_AND_MEAN
+	#include <Windows.h>
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID)
 	#include <fstream>
 #elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
@@ -36,7 +39,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 	LARGE_INTEGER frequency { };
 	QueryPerformanceFrequency(&frequency);
 	return uint64(frequency.QuadPart);
-#elif defined(JPH_PLATFORM_WINDOWS)
+#elif defined(JPH_PLATFORM_WINDOWS) || defined(JPH_PLATFORM_MINGW)
 	// Open the key where the processor speed is stored
 	HKEY hkey;
 	RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, 1, &hkey);
