@@ -30,7 +30,7 @@ JPH_ALLOC_SCOPE void JPH_ALLOC_FN(Free)(void *inBlock)
 
 JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAllocate)(size_t inSize, size_t inAlignment)
 {
-#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_PLATFORM_MINGW)
+#if defined(JPH_PLATFORM_WINDOWS)
 	// Microsoft doesn't implement C++17 std::aligned_alloc
 	return _aligned_malloc(inSize, inAlignment);
 #elif defined(JPH_PLATFORM_ANDROID)
@@ -42,7 +42,7 @@ JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAllocate)(size_t inSize, size_t inAlig
 
 JPH_ALLOC_SCOPE void JPH_ALLOC_FN(AlignedFree)(void *inBlock)
 {
-#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_PLATFORM_MINGW)
+#if defined(JPH_PLATFORM_WINDOWS)
 	_aligned_free(inBlock);
 #elif defined(JPH_PLATFORM_ANDROID)
 	free(inBlock);

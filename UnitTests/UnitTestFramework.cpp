@@ -7,6 +7,9 @@
 #include <Jolt/Core/FPException.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
+#ifdef JPH_PLATFORM_WINDOWS
+#include <crtdbg.h>
+#endif // JPH_PLATFORM_WINDOWS
 #ifdef JPH_PLATFORM_ANDROID
 #include <Jolt/Core/Color.h>
 #include <android/log.h>

@@ -482,7 +482,7 @@ void JobSystemThreadPool::QueueJobs(Job **inJobs, uint inNumJobs)
 	mSemaphore.Release(min(inNumJobs, (uint)mThreads.size()));
 }
 
-#ifdef JPH_PLATFORM_WINDOWS
+#if defined(JPH_PLATFORM_WINDOWS) && !defined(JPH_COMPILER_MINGW) // MinGW doesn't support __try/__except
 
 // Sets the current thread name in MSVC debugger
 static void SetThreadName(const char *inName)
@@ -514,7 +514,7 @@ static void SetThreadName(const char *inName)
 	}
 }
 
-#endif
+#endif // JPH_PLATFORM_WINDOWS && !JPH_COMPILER_MINGW
 
 void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 {
@@ -522,9 +522,9 @@ void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 	char name[64];
 	snprintf(name, sizeof(name), "Worker %d", int(inThreadIndex + 1));
 
-#ifdef JPH_PLATFORM_WINDOWS
+#if defined(JPH_PLATFORM_WINDOWS) && !defined(JPH_COMPILER_MINGW)
 	SetThreadName(name);
-#endif
+#endif // JPH_PLATFORM_WINDOWS && !JPH_COMPILER_MINGW
 
 	// Enable floating point exceptions
 	FPExceptionsEnable enable_exceptions;

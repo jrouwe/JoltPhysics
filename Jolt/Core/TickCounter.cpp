@@ -11,9 +11,6 @@
 	#define WIN32_LEAN_AND_MEAN
 	#include <Windows.h>
 	JPH_SUPPRESS_WARNING_POP
-#elif defined(JPH_PLATFORM_MINGW)
-    #define WIN32_LEAN_AND_MEAN
-	#include <Windows.h>
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID)
 	#include <fstream>
 #elif defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
@@ -39,7 +36,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 	LARGE_INTEGER frequency { };
 	QueryPerformanceFrequency(&frequency);
 	return uint64(frequency.QuadPart);
-#elif defined(JPH_PLATFORM_WINDOWS) || defined(JPH_PLATFORM_MINGW)
+#elif defined(JPH_PLATFORM_WINDOWS)
 	// Open the key where the processor speed is stored
 	HKEY hkey;
 	RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, 1, &hkey);

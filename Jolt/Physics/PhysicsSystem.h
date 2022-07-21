@@ -28,8 +28,7 @@ public:
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor / Destructor
-								PhysicsSystem()												: mPhysicsSettings(), mContactManager(mPhysicsSettings) { }
-                                
+								PhysicsSystem()												: mContactManager(mPhysicsSettings) { }
 								~PhysicsSystem();
 
 	/// Initialize the system.
