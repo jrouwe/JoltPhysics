@@ -516,6 +516,11 @@ SamplesApp::SamplesApp()
 			StartTest(test);
 		}
 	}
+	else
+	{
+		// Otherwise start default test
+		StartTest(JPH_RTTI(LoadRigTest));
+	}
 }
 
 SamplesApp::~SamplesApp()
