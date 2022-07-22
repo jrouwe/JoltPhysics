@@ -76,11 +76,11 @@ jobs:
         install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
         update: true
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/MSYS2_MinGW_GCC -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DTARGET_SAMPLES=OFF -DTARGET_VIEWER=OFF Build
+      run: cmake -B Build/MSYS2_MinGW_GCC -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DTARGET_SAMPLES=OFF -DTARGET_VIEWER=OFF Build
     - name: Build
-      run: cmake --build ${{github.workspace}}/Build/MSYS2_MinGW_GCC --config ${{matrix.build_type}}
+      run: cmake --build Build/MSYS2_MinGW_GCC
     - name: Test
-      working-directory: ${{github.workspace}}/Build/MSYS2_MinGW_GCC
+      working-directory: Build/MSYS2_MinGW_GCC
       run: ctest --output-on-failure
       
   msvc_cl:
