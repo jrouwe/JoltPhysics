@@ -35,6 +35,9 @@
 // Determine compiler
 #if defined(__clang__)
 	#define JPH_COMPILER_CLANG
+#elif defined(__MINGW64__) || defined (__MINGW32__)
+	#define JPH_COMPILER_GCC
+	#define JPH_COMPILER_MINGW
 #elif defined(__GNUC__)
 	#define JPH_COMPILER_GCC
 #elif defined(_MSC_VER)
@@ -116,6 +119,11 @@
 #else
 #define JPH_GCC_SUPPRESS_WARNING(w)
 #endif
+#ifdef JPH_COMPILER_MINGW
+#define JPH_MINGW_SUPPRESS_WARNING(w)	JPH_PRAGMA(GCC diagnostic ignored w)
+#else
+#define JPH_MINGW_SUPPRESS_WARNING(w)
+#endif
 #ifdef JPH_COMPILER_MSVC
 #define JPH_PRAGMA(x)					__pragma(x)
 #define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(warning (push))
@@ -152,6 +160,9 @@
 	JPH_GCC_SUPPRESS_WARNING("-Winvalid-offsetof")												\
 	JPH_GCC_SUPPRESS_WARNING("-Wclass-memaccess")												\
 																								\
+	JPH_MINGW_SUPPRESS_WARNING("-Wmaybe-uninitialized")										    \
+	JPH_MINGW_SUPPRESS_WARNING("-Wstringop-overflow=")										    \
+																								\
 	JPH_MSVC_SUPPRESS_WARNING(4514) /* 'X' : unreferenced inline function has been removed */	\
 	JPH_MSVC_SUPPRESS_WARNING(4710) /* 'X' : function not inlined */							\
 	JPH_MSVC_SUPPRESS_WARNING(4711) /* function 'X' selected for automatic inline expansion */	\
@@ -182,10 +193,6 @@
 	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS and JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY and include the right header).
 	#include <Jolt/Core/PlatformBlue.h> 
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
-	#include <float.h>
-	#include <limits.h>
-	#include <string.h>
-
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT		__asm volatile ("int $0x3")
 	#elif defined(JPH_CPU_ARM64)
@@ -228,6 +235,9 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <sstream>
 #include <functional>
 JPH_SUPPRESS_WARNINGS_STD_END
+#include <limits.h>
+#include <float.h>
+#include <string.h>
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)

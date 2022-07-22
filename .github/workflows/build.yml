@@ -55,6 +55,34 @@ jobs:
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
       run: ctest --output-on-failure
 
+  msys2_mingw_gcc:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    name: MSYS2 MinGW GCC
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
+        update: true
+    - name: Configure CMake
+      run: cmake -B Build/MSYS2_MinGW_GCC -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DTARGET_SAMPLES=OFF -DTARGET_VIEWER=OFF Build
+    - name: Build
+      run: cmake --build Build/MSYS2_MinGW_GCC
+    - name: Test
+      working-directory: Build/MSYS2_MinGW_GCC
+      run: ctest --output-on-failure
+      
   msvc_cl:
     runs-on: windows-latest
     name: Visual Studio CL
