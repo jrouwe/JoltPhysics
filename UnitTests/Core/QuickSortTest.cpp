@@ -47,10 +47,10 @@ TEST_SUITE("QuickSortTest")
 	{
 		UnitTestRandom random;
 
-		Array<int> array;
+		Array<UnitTestRandom::result_type> array;
 		for (int i = 0; i < 1000; i++)
 		{
-			int value = random();
+			UnitTestRandom::result_type value = random();
 
 			// Insert value at beginning
 			array.insert(array.begin(), value);
