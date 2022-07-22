@@ -81,8 +81,11 @@ public:
 
 	struct BodyPairQueue
 	{
-		alignas(JPH_CACHE_LINE_SIZE) atomic<uint32> mWriteIdx { 0 };				///< Next index to write in mBodyPair array (need to add thread index * mMaxBodyPairsPerQueue and modulo mMaxBodyPairsPerQueue) (moved to own cache line to avoid conflicts with consumer jobs)
-		alignas(JPH_CACHE_LINE_SIZE) atomic<uint32> mReadIdx { 0 };					///< Next index to read in mBodyPair array (need to add thread index * mMaxBodyPairsPerQueue and modulo mMaxBodyPairsPerQueue) (moved to own cache line to avoid conflicts with producer/consumer jobs)
+		atomic<uint32>		mWriteIdx { 0 };										///< Next index to write in mBodyPair array (need to add thread index * mMaxBodyPairsPerQueue and modulo mMaxBodyPairsPerQueue)
+		uint8				mPadding1[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Moved to own cache line to avoid conflicts with consumer jobs
+
+		atomic<uint32>		mReadIdx { 0 };											///< Next index to read in mBodyPair array (need to add thread index * mMaxBodyPairsPerQueue and modulo mMaxBodyPairsPerQueue)
+		uint8				mPadding2[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Moved to own cache line to avoid conflicts with producer/consumer jobs
 	};
 
 	using BodyPairQueues = StaticArray<BodyPairQueue, cMaxConcurrency>;
@@ -102,15 +105,20 @@ public:
 
 		uint32				mNumActiveBodiesAtStepStart;							///< Number of bodies that were active at the start of the physics update step. Only these bodies will receive gravity (they are the first N in the active body list).
 
-		alignas(JPH_CACHE_LINE_SIZE) atomic<uint32>	mConstraintReadIdx { 0 };		///< Next constraint for determine active constraints (moved to own cache line since its modified frequently by different jobs)
+		atomic<uint32>		mConstraintReadIdx { 0 };								///< Next constraint for determine active constraints
+		uint8				mPadding1[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
+		
+		atomic<uint32>		mNumActiveConstraints { 0 };							///< Number of constraints in the mActiveConstraints array
+		uint8				mPadding2[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
+		
+		atomic<uint32>		mStepListenerReadIdx { 0 };								///< Next step listener to call
+		uint8				mPadding3[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
+		
+		atomic<uint32>		mApplyGravityReadIdx { 0 };								///< Next body to apply gravity to
+		uint8				mPadding4[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
-		alignas(JPH_CACHE_LINE_SIZE) atomic<uint32>	mNumActiveConstraints { 0 };	///< Number of constraints in the mActiveConstraints array
-
-		alignas(JPH_CACHE_LINE_SIZE) atomic<uint32>	mStepListenerReadIdx { 0 };		///< Next step listener to call (moved to own cache line since its modified frequently by different jobs)
-
-		alignas(JPH_CACHE_LINE_SIZE) atomic<uint32>	mApplyGravityReadIdx { 0 };		///< Next body to apply gravity to (moved to own cache line since its modified frequently by different jobs)
-
-		alignas(JPH_CACHE_LINE_SIZE) atomic<uint32>	mActiveBodyReadIdx { 0 };		///< Index of fist active body that has not yet been processed by the broadphase
+		atomic<uint32>		mActiveBodyReadIdx { 0 };								///< Index of fist active body that has not yet been processed by the broadphase
+		uint8				mPadding5[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
 		BodyPairQueues		mBodyPairQueues;										///< Queues in which to put body pairs that need to be tested by the narrowphase
 

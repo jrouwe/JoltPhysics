@@ -47,10 +47,10 @@ TEST_SUITE("InsertionSortTest")
 	{
 		UnitTestRandom random;
 
-		Array<int> array;
+		Array<UnitTestRandom::result_type> array;
 		for (int i = 0; i < 100; i++)
 		{
-			int value = random();
+			UnitTestRandom::result_type value = random();
 
 			// Insert value at beginning
 			array.insert(array.begin(), value);
