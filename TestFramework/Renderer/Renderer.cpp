@@ -11,6 +11,7 @@
 #include <Utils/Log.h>
 
 #include <d3dcompiler.h>
+#include <d3d12sdklayers.h>
 #include <ShellScalingApi.h>
 
 static Renderer *sRenderer = nullptr;
