@@ -128,7 +128,11 @@ JPH_NAMESPACE_END
 
 #else
 
+JPH_NAMESPACE_BEGIN
+
 /// By default we log nothing
 #define JPH_DET_LOG(...)
+
+JPH_NAMESPACE_END
 
 #endif // JPH_ENABLE_DETERMINISM_LOG

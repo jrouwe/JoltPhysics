@@ -6,6 +6,7 @@
 #include <UI/UIElement.h>
 #include <UI/UITexturedQuad.h>
 #include <Renderer/PipelineState.h>
+#include <memory>
 
 class Font;
 

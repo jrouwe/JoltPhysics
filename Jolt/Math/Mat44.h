@@ -75,6 +75,12 @@ public:
 	/// Returns matrix MR so that \f$MR(q) \: p = p \: q\f$ (where p and q are quaternions)
 	static JPH_INLINE Mat44		sQuatRightMultiply(QuatArg inQ);
 
+	/// Returns a look at matrix that transforms from world space to view space
+	/// @param inPos Position of the camera
+	/// @param inTarget Target of the camera
+	/// @param inUp Up vector
+	static JPH_INLINE Mat44		sLookAt(Vec3Arg inPos, Vec3Arg inTarget, Vec3Arg inUp);
+
 	/// Get float component by element index
 	JPH_INLINE float			operator () (uint inRow, uint inColumn) const			{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
 	JPH_INLINE float &			operator () (uint inRow, uint inColumn)					{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }

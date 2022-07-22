@@ -10,31 +10,23 @@
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
 
-#pragma warning (push, 0)
-#pragma warning (disable : 4668) // DirectXMath.h(22): warning C4668: '_MANAGED' is not defined as a preprocessor macro, replacing with '0' for '#if/#elif'
 #include <d3dcompiler.h>
 #include <ShellScalingApi.h>
-#include <DirectXMath.h>
-#pragma warning (pop)
-
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "d3dcompiler.lib")
 
 static Renderer *sRenderer = nullptr;
 
 struct VertexShaderConstantBuffer
 {
-	DirectX::XMFLOAT4X4		mView;
-	DirectX::XMFLOAT4X4		mProjection;
-	DirectX::XMFLOAT4X4		mLightView;
-	DirectX::XMFLOAT4X4		mLightProjection;
+	Mat44		mView;
+	Mat44		mProjection;
+	Mat44		mLightView;
+	Mat44		mLightProjection;
 };
 
 struct PixelShaderConstantBuffer
 {
-	DirectX::XMFLOAT4		mCameraPos;
-	DirectX::XMFLOAT4		mLightPos;
+	Vec4		mCameraPos;
+	Vec4		mLightPos;
 };
 
 //--------------------------------------------------------------------------------------
@@ -177,7 +169,7 @@ void Renderer::Initialize()
 	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wcex.hbrBackground = nullptr;
 	wcex.lpszMenuName = nullptr;
-	wcex.lpszClassName = L"TestFrameworkClass";
+	wcex.lpszClassName = TEXT("TestFrameworkClass");
 	wcex.hIconSm = nullptr;
 	if (!RegisterClassEx(&wcex))
 		FatalError("Failed to register window class");
@@ -185,7 +177,7 @@ void Renderer::Initialize()
 	// Create window
 	RECT rc = { 0, 0, mWindowWidth, mWindowHeight };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-	mhWnd = CreateWindow(L"TestFrameworkClass", L"TestFramework", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 
+	mhWnd = CreateWindow(TEXT("TestFrameworkClass"), TEXT("TestFramework"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 
 		rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, wcex.hInstance, nullptr);
 	if (!mhWnd)
 		FatalError("Failed to create window");
@@ -436,6 +428,16 @@ void Renderer::OnWindowResize()
 	CreateDepthBuffer();
 }
 
+/// Construct a perspective matrix
+static inline Mat44 sPerspective(float inFovY, float inAspect, float inNear, float inFar)
+{
+    float height = 1.0f / Tan(0.5f * inFovY);
+    float width = height / inAspect;
+    float range = inFar / (inNear - inFar);
+
+    return Mat44(Vec4(width, 0.0f, 0.0f, 0.0f), Vec4(0.0f, height, 0.0f, 0.0f), Vec4(0.0f, 0.0f, range, -1.0f), Vec4(0.0f, 0.0f, range * inNear, 0.0f));
+}
+
 void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
@@ -494,56 +496,26 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	VertexShaderConstantBuffer *vs = mVertexShaderConstantBufferProjection[mFrameIndex]->Map<VertexShaderConstantBuffer>();
 
 	// Camera projection and view
-	DirectX::XMStoreFloat4x4(
-		&vs->mProjection,
-			DirectX::XMMatrixPerspectiveFovRH(
-				camera_fovy,
-				camera_aspect,
-				camera_near,
-				camera_far));
+	vs->mProjection = sPerspective(camera_fovy, camera_aspect, camera_near, camera_far);
 	Vec3 tgt = inCamera.mPos + inCamera.mForward;
-	DirectX::XMStoreFloat4x4(
-		&vs->mView,
-		DirectX::XMMatrixLookAtRH(reinterpret_cast<const DirectX::XMVECTOR &>(inCamera.mPos), reinterpret_cast<const DirectX::XMVECTOR &>(tgt), reinterpret_cast<const DirectX::XMVECTOR &>(inCamera.mUp)));
+	vs->mView = Mat44::sLookAt(inCamera.mPos, tgt, inCamera.mUp);
 
 	// Light projection and view
-	DirectX::XMStoreFloat4x4(
-		&vs->mLightProjection,
-			DirectX::XMMatrixPerspectiveFovRH(
-				light_fov,
-				1.0f,
-				light_near,
-				light_far));
-	DirectX::XMStoreFloat4x4(
-		&vs->mLightView,
-		DirectX::XMMatrixLookAtRH(reinterpret_cast<const DirectX::XMVECTOR &>(light_pos), reinterpret_cast<const DirectX::XMVECTOR &>(light_tgt), reinterpret_cast<const DirectX::XMVECTOR &>(light_up)));
+	vs->mLightProjection = sPerspective(light_fov, 1.0f, light_near, light_far);
+	vs->mLightView = Mat44::sLookAt(light_pos, light_tgt, light_up);
 
 	mVertexShaderConstantBufferProjection[mFrameIndex]->Unmap();
 
 	// Set constants for vertex shader in ortho mode
 	vs = mVertexShaderConstantBufferOrtho[mFrameIndex]->Map<VertexShaderConstantBuffer>();
 
-	// Camera projection and view
-	DirectX::XMStoreFloat4x4(
-		&vs->mProjection,
-		DirectX::XMMatrixOrthographicOffCenterRH(
-			0.0f,
-			float(mWindowWidth),
-			float(mWindowHeight),
-			0.0f,
-			0.0f,
-			1.0f));
-	DirectX::XMStoreFloat4x4(
-		&vs->mView,
-		DirectX::XMMatrixIdentity());
+	// Camera ortho projection and view
+    vs->mProjection = Mat44(Vec4(2.0f / mWindowWidth, 0.0f, 0.0f, 0.0f), Vec4(0.0f, -2.0f / mWindowHeight, 0.0f, 0.0f), Vec4(0.0f, 0.0f, -1.0f, 0.0f), Vec4(-1.0f, 1.0f, 0.0f, 1.0f));
+	vs->mView = Mat44::sIdentity();
 
 	// Light projection and view are unused in ortho mode
-	DirectX::XMStoreFloat4x4(
-		&vs->mLightView,
-		DirectX::XMMatrixIdentity());
-	DirectX::XMStoreFloat4x4(
-		&vs->mLightProjection,
-		DirectX::XMMatrixIdentity());
+	vs->mLightView = Mat44::sIdentity();
+	vs->mLightProjection = Mat44::sIdentity();
 
 	mVertexShaderConstantBufferOrtho[mFrameIndex]->Unmap();
 
@@ -552,8 +524,8 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	
 	// Set constants for pixel shader
 	PixelShaderConstantBuffer *ps = mPixelShaderConstantBuffer[mFrameIndex]->Map<PixelShaderConstantBuffer>();
-	ps->mCameraPos = DirectX::XMFLOAT4(inCamera.mPos.GetX(), inCamera.mPos.GetY(), inCamera.mPos.GetZ(), 0);
-	ps->mLightPos = DirectX::XMFLOAT4(light_pos.GetX(), light_pos.GetY(), light_pos.GetZ(), 0);
+	ps->mCameraPos = Vec4(inCamera.mPos, 0);
+	ps->mLightPos = Vec4(light_pos, 0);
 	mPixelShaderConstantBuffer[mFrameIndex]->Unmap();
 
 	// Set the pixel shader constant buffer data.

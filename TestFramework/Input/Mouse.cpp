@@ -7,10 +7,6 @@
 #include <Renderer/Renderer.h>
 #include <Jolt/Core/Profiler.h>
 
-// Used libraries
-#pragma comment ( lib, "dxguid.lib" )
-#pragma comment ( lib, "dinput8.lib" )
-
 Mouse::Mouse()
 {
 	Reset();

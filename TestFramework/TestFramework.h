@@ -5,6 +5,10 @@
 
 #include <Jolt/Jolt.h>
 
+// Targetting Windows 10 and above
+#define WINVER 0x0A00
+#define _WIN32_WINNT 0x0A00
+
 // Disable common warnings
 JPH_SUPPRESS_WARNINGS
 JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")

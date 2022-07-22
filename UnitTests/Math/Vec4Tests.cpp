@@ -540,8 +540,8 @@ TEST_SUITE("Vec4Tests")
 			}
 		}
 
-		CHECK(ms < 1.0e-7f);
-		CHECK(mc < 1.0e-7f);
+		CHECK(ms < 1.0e-7);
+		CHECK(mc < 1.0e-7);
 	}
 
 	TEST_CASE("TestVec4Tan")
@@ -570,7 +570,7 @@ TEST_SUITE("Vec4Tests")
 			}
 		}
 
-		CHECK(mt < 1.5e-7f);
+		CHECK(mt < 1.5e-7);
 	}
 
 	TEST_CASE("TestVec4ASin")
@@ -599,7 +599,7 @@ TEST_SUITE("Vec4Tests")
 			}
 		}
 
-		CHECK(ma < 2.0e-7f);
+		CHECK(ma < 2.0e-7);
 
 		// Check that inputs are clamped as promised
 		CHECK(Vec4::sReplicate(-1.1f).ASin() == Vec4::sReplicate(-0.5f * JPH_PI));
@@ -632,7 +632,7 @@ TEST_SUITE("Vec4Tests")
 			}
 		}
 
-		CHECK(ma < 3.5e-7f);
+		CHECK(ma < 3.5e-7);
 
 		// Check that inputs are clamped as promised
 		CHECK(Vec4::sReplicate(-1.1f).ACos() == Vec4::sReplicate(JPH_PI));
@@ -665,7 +665,7 @@ TEST_SUITE("Vec4Tests")
 			}
 		}
 
-		CHECK(ma < 1.5e-7f);
+		CHECK(ma < 1.5e-7);
 	}
 
 	TEST_CASE("TestVec4ATan2")
@@ -707,6 +707,6 @@ TEST_SUITE("Vec4Tests")
 			}
 		}
 
-		CHECK(ma < 3.0e-7f);
+		CHECK(ma < 3.0e-7);
 	}
 }

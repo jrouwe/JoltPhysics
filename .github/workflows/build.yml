@@ -76,7 +76,7 @@ jobs:
         install: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
         update: true
     - name: Configure CMake
-      run: cmake -B Build/MSYS2_MinGW_GCC -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DTARGET_SAMPLES=OFF -DTARGET_VIEWER=OFF Build
+      run: cmake -B Build/MSYS2_MinGW_GCC -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} Build
     - name: Build
       run: cmake --build Build/MSYS2_MinGW_GCC
     - name: Test
