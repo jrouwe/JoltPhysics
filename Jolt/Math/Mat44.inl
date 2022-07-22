@@ -196,6 +196,15 @@ Mat44 Mat44::sCrossProduct(Vec3Arg inV)
 #endif
 }
 
+Mat44 Mat44::sLookAt(Vec3Arg inPos, Vec3Arg inTarget, Vec3Arg inUp)
+{
+	Vec3 direction = (inTarget - inPos).NormalizedOr(-Vec3::sAxisZ());
+	Vec3 right = direction.Cross(inUp).NormalizedOr(Vec3::sAxisX());
+	Vec3 up = right.Cross(direction);
+
+	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(-direction, 0), Vec4(inPos, 1)).InversedRotationTranslation();	
+}
+
 bool Mat44::operator == (Mat44Arg inM2) const
 {
 	return UVec4::sAnd(

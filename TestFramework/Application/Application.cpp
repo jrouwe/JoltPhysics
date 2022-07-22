@@ -12,6 +12,7 @@
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
 #include <Renderer/DebugRendererImp.h>
+#include <crtdbg.h>
 
 // Constructor
 Application::Application() : 

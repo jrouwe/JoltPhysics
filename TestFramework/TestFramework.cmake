@@ -120,5 +120,5 @@ source_group(TREE ${PHYSICS_REPO_ROOT} FILES ${TEST_FRAMEWORK_SRC_FILES_SHADERS}
 # Create TestFramework lib
 add_library(TestFramework STATIC ${TEST_FRAMEWORK_SRC_FILES} ${TEST_FRAMEWORK_SRC_FILES_SHADERS})
 target_include_directories(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT})
-target_link_libraries(TestFramework LINK_PUBLIC Jolt)
+target_link_libraries(TestFramework LINK_PUBLIC Jolt dxguid.lib dinput8.lib dxgi.lib d3d12.lib d3dcompiler.lib)
 target_precompile_headers(TestFramework PUBLIC ${TEST_FRAMEWORK_ROOT}/TestFramework.h)

@@ -9,10 +9,6 @@
 
 class Renderer;
 
-// Used libraries
-#pragma comment ( lib, "dxguid.lib" )
-#pragma comment ( lib, "dinput8.lib" )
-
 Keyboard::Keyboard()
 {
 	Reset();
