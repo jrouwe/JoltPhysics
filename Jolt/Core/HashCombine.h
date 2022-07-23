@@ -25,9 +25,6 @@ inline uint64 HashBytes(const void *inData, uint inSize, uint64 inSeed = 0xcbf29
 /// @brief Helper function that hashes a single value into ioSeed
 /// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
 template <typename T>
-#ifdef JPH_COMPILER_CLANG
-	__attribute__((no_sanitize("unsigned-integer-overflow"))) // We intentionally overflow during hashing
-#endif
 inline void HashCombineHelper(size_t &ioSeed, const T &inValue)
 {
 	std::hash<T> hasher;
