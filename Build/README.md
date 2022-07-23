@@ -85,7 +85,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 
 - Follow download instructions for MSYS2 (https://www.msys2.org/)
 - From the MSYS2 MSYS app run: pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
-- From the MSYS2 MINGW x64 app, in the Build folder run: ./cmake_mingw.sh
+- From the MSYS2 MINGW x64 app, in the Build folder run: ./cmake_windows_mingw.sh
 - Run: cmake --build MinGW_Debug
 - Run: MinGW_Debug/UnitTests.exe
 
@@ -96,6 +96,20 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 - Run: ./cmake_linux_clang_gcc.sh
 - Go to the Linux_Debug folder
 - Run: make -j 8 && ./UnitTests
+
+### Linux (Debian flavor, MinGW Cross Compile)
+
+- This setup can be used to run samples on Linux using wine and vkd3d. Tested on Ubuntu 22.04
+- Graphics card must support Vulkan and related drivers must be installed
+- Install mingw-w64 (apt-get install mingw-w64)
+- Run: update-alternatives --config x86_64-w64-mingw32-g++ (Select /usr/bin/x86_64-w64-mingw32-g++-posix)
+- Install cmake (apt-get install cmake)
+- Install wine64 (apt-get install wine64)
+- Run: export WINEPATH="/usr/x86_64-w64-mingw32/lib;/usr/lib/gcc/x86_64-w64-mingw32/10-posix" (change it based on your environment)
+- Run: ./cmake_linux_mingw.sh Release (Debug doesn't work)
+- Go to the MinGW_Release folder
+- Run: make -j 8 && wine UnitTests.exe
+- Run: wine Samples.exe
 
 ### Android
 
