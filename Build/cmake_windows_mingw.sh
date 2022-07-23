@@ -10,7 +10,7 @@ fi
 
 BUILD_DIR=MinGW_$BUILD_TYPE
 
-echo Usage: ./cmake_mingw.sh [Configuration]
+echo Usage: ./cmake_windows_mingw.sh [Configuration]
 echo "Possible configurations: Debug (default), Release, Distribution"
 echo Generating Makefile for build type \"$BUILD_TYPE\" in folder \"$BUILD_DIR\"
 

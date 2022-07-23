@@ -85,7 +85,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 
 - Follow download instructions for MSYS2 (https://www.msys2.org/)
 - From the MSYS2 MSYS app run: pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
-- From the MSYS2 MINGW x64 app, in the Build folder run: ./cmake_mingw.sh
+- From the MSYS2 MINGW x64 app, in the Build folder run: ./cmake_windows_mingw.sh
 - Run: cmake --build MinGW_Debug
 - Run: MinGW_Debug/UnitTests.exe
 

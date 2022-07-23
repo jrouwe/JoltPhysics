@@ -11,11 +11,9 @@
 #include <Utils/Log.h>
 
 #include <d3dcompiler.h>
-#ifndef JPH_COMPILER_MINGW
-#include <d3d12sdklayers.h>
-#include <ShellScalingApi.h>
-#else
 #include <shellscalingapi.h>
+#ifdef _DEBUG
+	#include <d3d12sdklayers.h>
 #endif
 
 static Renderer *sRenderer = nullptr;
