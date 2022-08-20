@@ -31,7 +31,7 @@ JPH_SUPPRESS_WARNINGS
 
 // Callback for traces
 static void TraceImpl(const char *inFMT, ...)
-{ 
+{
 	// Format the message
 	va_list list;
 	va_start(list, inFMT);
@@ -46,7 +46,7 @@ static void TraceImpl(const char *inFMT, ...)
 
 // Callback for asserts
 static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, uint inLine)
-{ 
+{
 	// Format message
 	char buffer[1024];
 	snprintf(buffer, sizeof(buffer), "%s:%u: (%s) %s", inFile, inLine, inExpression, inMessage != nullptr? inMessage : "");
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 	// Register physics types
 	RegisterTypes();
 
-	int rv = Context(argc, argv).run(); 
+	int rv = Context(argc, argv).run();
 
 	// Destroy the factory
 	delete Factory::sInstance;
@@ -136,8 +136,8 @@ int main(int argc, char** argv)
 // Reporter that writes logs to the Android log
 struct LogReporter : public ConsoleReporter
 {
-	LogReporter(const ContextOptions &inOptions) : 
-		ConsoleReporter(inOptions, mStream) 
+	LogReporter(const ContextOptions &inOptions) :
+		ConsoleReporter(inOptions, mStream)
 	{
 	}
 
@@ -145,9 +145,9 @@ struct LogReporter : public ConsoleReporter
 	void func(type arg) override								\
 	{															\
 		ConsoleReporter::func(arg);								\
-		const char *str = mStream.str().c_str();				\
-		if (str[0] != 0)										\
-			__android_log_write(ANDROID_LOG_INFO, "Jolt", str);	\
+		string str = mStream.str();								\
+		if (!str.empty())										\
+			__android_log_write(ANDROID_LOG_INFO, "Jolt", str.c_str());	\
 		mStream.str("");										\
 	}
 
