@@ -4,7 +4,7 @@ plugins {
 
 android {
     compileSdk 33
-    ndkVersion "24.0.8215888"
+    ndkVersion "25.0.8775105"
 
     defaultConfig {
         applicationId "com.joltphysics.unittests"
@@ -16,7 +16,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags '-std=c++17 -Wall -Werror -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
+                cppFlags '-std=c++17 -Wall -Werror -ffp-contract=off -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
                 arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
             }
         }
