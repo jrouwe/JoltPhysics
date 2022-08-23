@@ -535,11 +535,12 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 
 void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 {
-	// Flag contacts as having a collision if they're close enough.
+	// Flag contacts as having a collision if they're close enough but ignore contacts we're moving away from.
 	// Note that if we did MoveShape before we want to preserve any contacts that it marked as colliding
 	for (Contact &c : mActiveContacts)
 		if (!c.mWasDiscarded)
-			c.mHadCollision |= c.mDistance < mCollisionTolerance;
+			c.mHadCollision |= c.mDistance < mCollisionTolerance
+								&& c.mNormal.Dot(mLinearVelocity - c.mLinearVelocity) < 0.0f;
 
 	// Determine if we're supported or not
 	int num_supported = 0;
