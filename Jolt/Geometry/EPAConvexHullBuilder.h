@@ -16,6 +16,10 @@
 	#include <Jolt/Core/StringTools.h>
 #endif
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <algorithm>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 JPH_NAMESPACE_BEGIN
 
 /// A convex hull builder specifically made for the EPA penetration depth calculation. It trades accuracy for speed and will simply abort of the hull forms defects due to numerical precision problems.
