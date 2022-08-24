@@ -62,7 +62,7 @@ void ConstraintSingularityTest::Initialize()
 			default:
 				{
 					FixedConstraintSettings settings;
-					settings.SetPoint(body1, body2);
+					settings.mAutoDetectPoint = true;
 					constraint = settings.Create(body1, body2);
 					break;
 				}

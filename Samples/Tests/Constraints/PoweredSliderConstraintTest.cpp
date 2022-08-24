@@ -42,7 +42,7 @@ void PoweredSliderConstraintTest::Initialize()
 	mBodyInterface->AddBody(mBody2->GetID(), EActivation::Activate);
 
 	SliderConstraintSettings settings;
-	settings.SetPoint(body1, *mBody2);
+	settings.mAutoDetectPoint = true;
 	settings.SetSliderAxis(Vec3::sAxisX());
 	settings.mLimitsMin = -5.0f;
 	settings.mLimitsMax = 100.0f;
