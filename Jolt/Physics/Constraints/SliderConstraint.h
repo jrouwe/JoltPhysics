@@ -24,14 +24,14 @@ public:
 	/// Note that the rotation constraint will be solved from body 1. This means that if body 1 and body 2 have different masses / inertias (kinematic body = infinite mass / inertia), body 1 should be the heaviest body.
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	/// Simple way of setting the anchor points in world space so that the current relative position is chosen as the '0' position
-	void						SetPoint(const Body &inBody1, const Body &inBody2);
-
 	/// Simple way of setting the slider and normal axis in world space (assumes the bodies are already oriented correctly when the constraint is created)
 	void						SetSliderAxis(Vec3Arg inSliderAxis);
 
 	/// This determines in which space the constraint is setup, all properties below should be in the specified space
 	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
+
+	/// When mSpace is WorldSpace mPoint1 and mPoint2 can be automatically calculated based on the positions of the bodies when the constraint is created (the current relative position/orientation is chosen as the '0' position). Set this to false if you want to supply the attachment points yourself.
+	bool						mAutoDetectPoint = false;
 
 	/// Body 1 constraint reference frame (space determined by mSpace).
 	/// Slider axis is the axis along which movement is possible (direction), normal axis is a perpendicular vector to define the frame.

@@ -66,7 +66,7 @@ void SliderConstraintTest::Initialize()
 			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
 
 			SliderConstraintSettings settings;
-			settings.SetPoint(*prev, segment);
+			settings.mAutoDetectPoint = true;
 			settings.SetSliderAxis(slider_axis);
 			settings.mLimitsMin = -5.0f;
 			settings.mLimitsMax = 10.0f;
@@ -93,7 +93,7 @@ void SliderConstraintTest::Initialize()
 
 		// Note: This violates the recommendation that body 1 is heavier than body 2, therefore this constraint will not work well (the rotation constraint will not be solved accurately)
 		SliderConstraintSettings slider1;
-		slider1.SetPoint(*light1, *heavy);
+		slider1.mAutoDetectPoint = true;
 		slider1.SetSliderAxis(Vec3::sAxisZ());
 		slider1.mLimitsMin = 0.0f;
 		slider1.mLimitsMax = 1.0f;
@@ -101,7 +101,7 @@ void SliderConstraintTest::Initialize()
 
 		// This constraint has the heavy body as body 1 so will work fine
 		SliderConstraintSettings slider2;
-		slider2.SetPoint(*heavy, *light2);
+		slider2.mAutoDetectPoint = true;
 		slider2.SetSliderAxis(Vec3::sAxisZ());
 		slider2.mLimitsMin = 0.0f;
 		slider2.mLimitsMax = 1.0f;
@@ -119,7 +119,7 @@ void SliderConstraintTest::Initialize()
 		++group_id;
 
 		SliderConstraintSettings slider;
-		slider.SetPoint(*vert1, *vert2);
+		slider.mAutoDetectPoint = true;
 		slider.SetSliderAxis(Vec3::sAxisY());
 		slider.mLimitsMin = 0.0f;
 		slider.mLimitsMax = 2.0f;
@@ -137,7 +137,7 @@ void SliderConstraintTest::Initialize()
 		++group_id;
 
 		SliderConstraintSettings slider;
-		slider.SetPoint(*vert1, *vert2);
+		slider.mAutoDetectPoint = true;
 		slider.SetSliderAxis(Vec3::sAxisY());
 		slider.mLimitsMin = 0.0f;
 		slider.mLimitsMax = 2.0f;
