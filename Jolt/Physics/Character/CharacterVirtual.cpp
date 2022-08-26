@@ -679,8 +679,8 @@ void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement, inAllocator);
 
 		// If we're blocked then we're supported, otherwise we're sliding
-		constexpr float cMinRequiredDisplacementSquared = Square(0.01f);
-		if (time_simulated < 0.001f || displacement.LengthSq() < cMinRequiredDisplacementSquared)
+		float min_required_displacement_sq = Square(0.6f * mLastDeltaTime);
+		if (time_simulated < 0.001f || displacement.LengthSq() < min_required_displacement_sq)
 			mGroundState = EGroundState::OnGround;
 		else
 			mGroundState = EGroundState::Sliding;
