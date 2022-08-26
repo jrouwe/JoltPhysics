@@ -4,10 +4,11 @@ This document lists all breaking API changes by date and by release tag.
 
 ## Changes between v1.1.0 and latest
 
+* 20220826 - Removed FixedConstraintSettings and SliderConstraintSettings SetPoint functions. If you were calling this function replace it by setting mAutoDetectPoint = true (d16a0b05bfeed42b1618e3774a9c953e6922d22b)
 * 20220614 - It is now possible to override the memory allocator, register the default using RegisterDefaultAllocator(). This means that the public API now takes STL containers that use a custom memory allocator so use Array instead of vector, UnorderedMap instead of unordered_map etc. Define JPH_DISABLE_CUSTOM_ALLOCATOR to disable this new behavior (b68097f582148d6f66c18a6ff95c5ca9b40b48cc)
 * 20220606 - The slider constraint now has frequency and damping for its limits, this breaks SaveBinaryState for the constraint (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
 * 20220606 - The rack and pinion and gear constraints were added, this breaks SaveBinaryState of user defined constraints as the value of EConstraintSubType::User1 changed (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
-* 20220517 - When constructing a FixedConstraint you now need to call FixedConstraintSettings::SetPoint to configure the point where the bodies attach (4f7c925c31f39eda1d8d68e4e72456b5def93d9b)
+* 20220517 - Note: Superseded by d16a0b05bfeed42b1618e3774a9c953e6922d22b. When constructing a FixedConstraint you now need to call FixedConstraintSettings::SetPoint to configure the point where the bodies attach (4f7c925c31f39eda1d8d68e4e72456b5def93d9b)
 * 20220516 - Constraint::GetType was renamed to GetSubType, a new GetType function was introduced (3e2151a009e8f11ca724754b2bd25e14d2654fb6)
 * 20220516 - Binary serialization format changed, ensure that any content saved using SaveBinaryState is recreated (3e2151a009e8f11ca724754b2bd25e14d2654fb6)
 * 20220510 - Factory::sInstance must now be allocated by the application prior to calling RegisterTypes() and has changed to a pointer (3ca62973dae7cda7a9ceece698438a45b9ad1433)
@@ -16,7 +17,7 @@ This document lists all breaking API changes by date and by release tag.
 * 20220415 - Removed Body::GetDebugName / SetDebugName, keep this info in a lookaside table if you need it (6db4d3beac6760e55f65102db00f93dfbc56ac26)
 * 20220406 - Renamed CollisionDispatch::sCastShapeVsShape to sCastShapeVsShapeLocalSpace (6ba21f50dcf17bd506080ec30759724a7f3097d8)
 * 20220327 - Changed the default include path, #include <xxx> must be replaced by #include <Jolt/xxx> (06e9d17d385814cd24d3b77d689c0a29d854e194)
-* 20220303 - When constructing a SliderConstraint you now need to call SliderConstraintSettings::SetPoint to configure the point where the bodies attach (5a327ec182d0436d435c62d0bccb4e76c6324659)
+* 20220303 - Note: Superseded by d16a0b05bfeed42b1618e3774a9c953e6922d22b. When constructing a SliderConstraint you now need to call SliderConstraintSettings::SetPoint to configure the point where the bodies attach (5a327ec182d0436d435c62d0bccb4e76c6324659)
 * 20220228 - PointConstraint::mCommonPoint is now mPoint1 / mPoint2 (066dfb8940ba3e7dbf8ed47e9a1eeb194730e04b)
 * 20220226 - ObjectToBroadPhaseLayer and BroadPhaseLayerToString changed to BroadPhaseLayerInterface, this makes mapping a broadphase layer to an object layer more flexible (36dd3f8c8c31ef1aeb7585b2b615c23bc8b76f13)
 * 20220222 - Shape and body user data changed from uint32 to uint64 (14e062ac96abd571c6eff5e40b1df4d8b2333f55)
