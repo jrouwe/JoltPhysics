@@ -420,7 +420,7 @@ public:
 	/// @param ioLambda The max fraction along the sweep, on output updated with the actual collision fraction.
 	///	@param outPointA is the contact point on A
 	///	@param outPointB is the contact point on B
-	/// @param outContactNormal is either the contact normal when the objects are touching or the penetration axis when the objects are penetrating at the start of the sweep (pointing from A to B)
+	/// @param outContactNormal is either the contact normal when the objects are touching or the penetration axis when the objects are penetrating at the start of the sweep (pointing from A to B, length will not be 1)
 	/// 
 	/// @return true if the a hit was found, in which case ioLambda, outPointA, outPointB and outSurfaceNormal are updated.
 	template <typename A, typename B>
@@ -430,10 +430,13 @@ public:
 		if (!mGJK.CastShape(inStart, inDirection, inCollisionTolerance, inA, inB, inConvexRadiusA, inConvexRadiusB, ioLambda, outPointA, outPointB, outContactNormal))
 			return false;
 
+		// When our contact normal is too small, we don't have an accurate result
+		bool contact_normal_invalid = outContactNormal.IsNearZero(Square(inCollisionTolerance));
+		
 		if (inReturnDeepestPoint 
 			&& ioLambda == 0.0f // Only when lambda = 0 we can have the bodies overlap
 			&& (inConvexRadiusA + inConvexRadiusB == 0.0f // When no convex radius was provided we can never trust contact points at lambda = 0
-				|| outContactNormal.LengthSq() <= inCollisionTolerance * inCollisionTolerance)) // When our contact normal is too small, we don't have an accurate result and need to run the EPA algorithm
+				|| contact_normal_invalid))
 		{
 			// If we're initially intersecting, we need to run the EPA algorithm in order to find the deepest contact point
 			AddConvexRadius<A> add_convex_a(inA, inConvexRadiusA);
@@ -441,6 +444,11 @@ public:
 			TransformedConvexObject<AddConvexRadius<A>> transformed_a(inStart, add_convex_a);
 			if (!GetPenetrationDepthStepEPA(transformed_a, add_convex_b, inPenetrationTolerance, outContactNormal, outPointA, outPointB))
 				return false;
+		}
+		else if (contact_normal_invalid)
+		{
+			// If we weren't able to calculate a contact normal, use the cast direction instead
+			outContactNormal = inDirection;
 		}
 
 		return true;
