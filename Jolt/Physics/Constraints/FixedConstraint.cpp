@@ -17,6 +17,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(FixedConstraintSettings)
 	JPH_ADD_BASE_CLASS(FixedConstraintSettings, TwoBodyConstraintSettings)
 
 	JPH_ADD_ENUM_ATTRIBUTE(FixedConstraintSettings, mSpace)
+	JPH_ADD_ATTRIBUTE(FixedConstraintSettings, mAutoDetectPoint)
 	JPH_ADD_ATTRIBUTE(FixedConstraintSettings, mPoint1)
 	JPH_ADD_ATTRIBUTE(FixedConstraintSettings, mAxisX1)
 	JPH_ADD_ATTRIBUTE(FixedConstraintSettings, mAxisY1)
@@ -30,6 +31,7 @@ void FixedConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
+	inStream.Write(mAutoDetectPoint);
 	inStream.Write(mPoint1);
 	inStream.Write(mAxisX1);
 	inStream.Write(mAxisY1);
@@ -43,6 +45,7 @@ void FixedConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	ConstraintSettings::RestoreBinaryState(inStream);
 
 	inStream.Read(mSpace);
+	inStream.Read(mAutoDetectPoint);
 	inStream.Read(mPoint1);
 	inStream.Read(mAxisX1);
 	inStream.Read(mAxisY1);
@@ -56,27 +59,6 @@ TwoBodyConstraint *FixedConstraintSettings::Create(Body &inBody1, Body &inBody2)
 	return new FixedConstraint(inBody1, inBody2, *this);
 }
 
-void FixedConstraintSettings::SetPoint(const Body &inBody1, const Body &inBody2)
-{
-	JPH_ASSERT(mSpace == EConstraintSpace::WorldSpace);
-
-	// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point
-	Vec3 anchor;
-	if (!inBody1.CanBeKinematicOrDynamic())
-		anchor = inBody2.GetCenterOfMassPosition();
-	else if (!inBody2.CanBeKinematicOrDynamic())
-		anchor = inBody1.GetCenterOfMassPosition();
-	else
-	{
-		// Otherwise use weighted anchor point towards the lightest body
-		float inv_m1 = inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
-		float inv_m2 = inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
-		anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
-	}
-
-	mPoint1 = mPoint2 = anchor;
-}
-
 FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings),
 	mLocalSpacePosition1(inSettings.mPoint1),
@@ -87,6 +69,25 @@ FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstr
 
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
+		if (inSettings.mAutoDetectPoint)
+		{
+			// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point
+			Vec3 anchor;
+			if (!inBody1.CanBeKinematicOrDynamic())
+				anchor = inBody2.GetCenterOfMassPosition();
+			else if (!inBody2.CanBeKinematicOrDynamic())
+				anchor = inBody1.GetCenterOfMassPosition();
+			else
+			{
+				// Otherwise use weighted anchor point towards the lightest body
+				float inv_m1 = inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+				float inv_m2 = inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+				anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
+			}
+
+			mLocalSpacePosition1 = mLocalSpacePosition2 = anchor;
+		}
+
 		// Store local positions
 		mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
 		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;

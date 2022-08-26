@@ -63,7 +63,7 @@ void FixedConstraintTest::Initialize()
 			mBodyInterface->AddBody(segment.GetID(), EActivation::Activate);
 
 			FixedConstraintSettings settings;
-			settings.SetPoint(*prev, segment);
+			settings.mAutoDetectPoint = true;
 			Ref<Constraint> c = settings.Create(*prev, segment);
 			mPhysicsSystem->AddConstraint(c);
 					
@@ -81,11 +81,11 @@ void FixedConstraintTest::Initialize()
 		mBodyInterface->AddBody(light2->GetID(), EActivation::Activate);
 
 		FixedConstraintSettings light1_heavy;
-		light1_heavy.SetPoint(*light1, *heavy);
+		light1_heavy.mAutoDetectPoint = true;
 		mPhysicsSystem->AddConstraint(light1_heavy.Create(*light1, *heavy));
 
 		FixedConstraintSettings heavy_light2;
-		heavy_light2.SetPoint(*heavy, *light2);
+		heavy_light2.mAutoDetectPoint = true;
 		mPhysicsSystem->AddConstraint(heavy_light2.Create(*heavy, *light2));
 	}
 
@@ -126,7 +126,7 @@ void FixedConstraintTest::Initialize()
 				for (int j = 0; j < 2; ++j)
 				{
 					FixedConstraintSettings constraint;
-					constraint.SetPoint(*pillars[(i + j) % 4], *cross);
+					constraint.mAutoDetectPoint = true;
 					mPhysicsSystem->AddConstraint(constraint.Create(*pillars[(i + j) % 4], *cross));
 				}
 
@@ -134,7 +134,7 @@ void FixedConstraintTest::Initialize()
 				if (prev_pillars[i] != nullptr)
 				{
 					FixedConstraintSettings constraint;
-					constraint.SetPoint(*prev_pillars[i], *pillars[i]);
+					constraint.mAutoDetectPoint = true;
 					mPhysicsSystem->AddConstraint(constraint.Create(*prev_pillars[i], *pillars[i]));
 				}
 
@@ -153,7 +153,7 @@ void FixedConstraintTest::Initialize()
 		for (int i = 0; i < 4; ++i)
 		{
 			FixedConstraintSettings constraint;
-			constraint.SetPoint(*prev_pillars[i], *top);
+			constraint.mAutoDetectPoint = true;
 			mPhysicsSystem->AddConstraint(constraint.Create(*prev_pillars[i], *top));
 		}
 	}

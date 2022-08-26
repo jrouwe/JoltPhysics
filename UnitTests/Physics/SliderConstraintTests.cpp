@@ -32,7 +32,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		s.mLimitsMin = cLimitMin;
 		s.mLimitsMax = 0.0f;
@@ -64,7 +64,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		s.mLimitsMin = 0.0f;
 		s.mLimitsMax = cLimitMax;
@@ -93,7 +93,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		constexpr float mass = Cubed(2.0f) * 1000.0f; // Density * Volume
 		s.mMotorSettings = MotorSettings(0.0f, 0.0f, mass * cMotorAcceleration, 0.0f);
@@ -134,7 +134,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		constexpr float mass = Cubed(2.0f) * 1000.0f; // Density * Volume
 		s.mMotorSettings = MotorSettings(0.0f, 0.0f, mass * cMotorAcceleration, 0.0f);
@@ -178,7 +178,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		SliderConstraint &constraint = c.CreateConstraint<SliderConstraint>(body1, body2, s);
 		constraint.SetMotorState(EMotorState::Position);
@@ -210,7 +210,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		constexpr float mass = Cubed(2.0f) * 1000.0f; // Density * Volume
 		s.mMaxFrictionForce = mass * cFrictionAcceleration;
@@ -238,7 +238,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		c.CreateConstraint<SliderConstraint>(body1, body2, s);
 
@@ -272,7 +272,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		c.CreateConstraint<SliderConstraint>(body1, body2, s);
 
@@ -306,7 +306,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		c.CreateConstraint<SliderConstraint>(body1, body2, s);
 
@@ -340,7 +340,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		c.CreateConstraint<SliderConstraint>(body1, body2, s);
 
@@ -374,7 +374,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create slider constraint
 		SliderConstraintSettings s;
-		s.SetPoint(body1, body2);
+		s.mAutoDetectPoint = true;
 		s.SetSliderAxis(Vec3::sAxisX());
 		c.CreateConstraint<SliderConstraint>(body1, body2, s);
 

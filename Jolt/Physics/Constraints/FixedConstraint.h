@@ -21,11 +21,11 @@ public:
 	/// Create an an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
-	/// Simple way of calculating the parameters below to fixate two bodies in their current relative position/orientation
-	void						SetPoint(const Body &inBody1, const Body &inBody2);
-
 	/// This determines in which space the constraint is setup, all properties below should be in the specified space
 	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
+
+	/// When mSpace is WorldSpace mPoint1 and mPoint2 can be automatically calculated based on the positions of the bodies when the constraint is created (they will be fixated in their current relative position/orientation). Set this to false if you want to supply the attachment points yourself.
+	bool						mAutoDetectPoint = false;
 
 	/// Body 1 constraint reference frame (space determined by mSpace)
 	Vec3						mPoint1 = Vec3::sZero();
