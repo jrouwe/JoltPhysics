@@ -540,7 +540,7 @@ void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 	for (Contact &c : mActiveContacts)
 		if (!c.mWasDiscarded)
 			c.mHadCollision |= c.mDistance < mCollisionTolerance
-								&& c.mNormal.Dot(mLinearVelocity - c.mLinearVelocity) < 0.0f;
+								&& c.mNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f;
 
 	// Determine if we're supported or not
 	int num_supported = 0;
