@@ -20,9 +20,6 @@ class CharacterVirtualSettings : public CharacterBaseSettings
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
-	/// Vector indicating the up direction of the character
-	Vec3								mUp = Vec3::sAxisY();
-
 	/// Character mass (kg). Used to push down objects with gravity when the character is standing on top.
 	float								mMass = 70.0f;
 
@@ -297,9 +294,6 @@ private:
 
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
-
-	// The character's world space up axis
-	Vec3								mUp;
 
 	// Movement settings
 	float								mPredictiveContactDistance;								// How far to scan outside of the shape for predictive contacts

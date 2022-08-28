@@ -169,10 +169,10 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 
 		// Update ground state
 		Vec3 up = -mSystem->GetGravity().Normalized();
-		if (mGroundNormal.Dot(up) > mCosMaxSlopeAngle)
-			mGroundState = EGroundState::OnGround;
-		else
+		if (IsSlopeTooSteep(mGroundNormal))
 			mGroundState = EGroundState::Sliding;
+		else
+			mGroundState = EGroundState::OnGround;
 
 		// Copy other body properties
 		mGroundMaterial = body.GetShape()->GetMaterial(mGroundBodySubShapeID);

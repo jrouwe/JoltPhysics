@@ -17,7 +17,6 @@ JPH_NAMESPACE_BEGIN
 
 CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
-	mUp(inSettings->mUp),
 	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
 	mMaxCollisionIterations(inSettings->mMaxCollisionIterations),
 	mMaxConstraintIterations(inSettings->mMaxConstraintIterations),
@@ -243,21 +242,17 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, Constra
 		constraint.mPlane = Plane(c.mNormal, c.mDistance);
 
 		// Next check if the angle is too steep and if it is add an additional constraint that holds the character back
-		if (mCosMaxSlopeAngle < 0.999f) // If cos(slope angle) is close to 1 then there's no limit
+		if (IsSlopeTooSteep(c.mNormal))
 		{
-			float dot = c.mNormal.Dot(mUp);
-			if (dot > 0.0f && dot < mCosMaxSlopeAngle)
-			{
-				// Make horizontal normal
-				Vec3 normal = (c.mNormal - dot * mUp).Normalized();
+			// Make horizontal normal
+			Vec3 normal = (c.mNormal - c.mNormal.Dot(mUp) * mUp).Normalized();
 
-				// Create a secondary constraint that blocks horizontal movement
-				outConstraints.emplace_back();
-				Constraint &vertical_constraint = outConstraints.back();
-				vertical_constraint.mContact = &c;
-				vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
-				vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
-			}
+			// Create a secondary constraint that blocks horizontal movement
+			outConstraints.emplace_back();
+			Constraint &vertical_constraint = outConstraints.back();
+			vertical_constraint.mContact = &c;
+			vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
+			vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
 		}
 	}
 }
@@ -564,7 +559,7 @@ void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 			}
 
 			// Check if this is a sliding or supported contact
-			bool is_supported = cos_angle >= mCosMaxSlopeAngle;
+			bool is_supported = mCosMaxSlopeAngle > cNoMaxSlopeAngle || cos_angle >= mCosMaxSlopeAngle;
 			if (is_supported)
 				num_supported++;
 			else
@@ -836,7 +831,7 @@ bool CharacterVirtual::CanWalkStairs() const
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision
 			&& c.mNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
-			&& c.mNormal.Dot(mUp) < mCosMaxSlopeAngle) // Slope too steep
+			&& IsSlopeTooSteep(c.mNormal)) // Slope too steep
 			return true;
 
 	return false;
@@ -894,8 +889,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 #endif // JPH_DEBUG_RENDERER
 
 	// Test for floor that will support the character
-	if (mCosMaxSlopeAngle < 0.999f // If cos(slope angle) is close to 1 then there's no limit
-		&& contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle) // Check slope angle
+	if (IsSlopeTooSteep(contact.mNormal))
 	{
 		// If no test position was provided, we cancel the stair walk
 		if (inStepForwardTest.IsNearZero())
@@ -921,7 +915,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 		}
 	#endif // JPH_DEBUG_RENDERER
 
-		if (test_contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle)
+		if (IsSlopeTooSteep(test_contact.mNormal))
 			return false;
 	}
 
