@@ -535,14 +535,14 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 	}
 }
 
-void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
+void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, TempAllocator &inAllocator)
 {
 	// Flag contacts as having a collision if they're close enough but ignore contacts we're moving away from.
 	// Note that if we did MoveShape before we want to preserve any contacts that it marked as colliding
 	for (Contact &c : mActiveContacts)
 		if (!c.mWasDiscarded)
 			c.mHadCollision |= c.mDistance < mCollisionTolerance
-								&& c.mNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f;
+								&& (inSkipContactVelocityCheck || c.mNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f);
 
 	// Determine if we're supported or not
 	int num_supported = 0;
@@ -698,7 +698,7 @@ void CharacterVirtual::StoreActiveContacts(const TempContactList &inContacts, Te
 {
 	mActiveContacts.assign(inContacts.begin(), inContacts.end());
 
-	UpdateSupportingContact(inAllocator);
+	UpdateSupportingContact(true, inAllocator);
 }
 
 void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
@@ -781,7 +781,7 @@ void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadP
 	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 
 	// Determine the object that we're standing on
-	UpdateSupportingContact(inAllocator);
+	UpdateSupportingContact(false, inAllocator);
 }
 
 void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
@@ -929,6 +929,34 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 	// Calculate new down position
 	down *= contact.mFraction;
 	new_position += down;
+
+	// Move the character to the new location
+	SetPosition(new_position);
+	RefreshContacts(inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+	return true;
+}
+
+bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
+{
+	JPH_ASSERT(GetGroundState() == EGroundState::InAir, "Makes no sense to call this if we're not in air");
+
+	// Try to find the floor
+	Contact contact;
+	IgnoredContactList dummy_ignored_contacts(inAllocator);
+	if (!GetFirstContactForSweep(mPosition, inStepDown, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+		return false; // If no floor found, don't update our position
+
+	// Calculate new position
+	Vec3 new_position = mPosition + contact.mFraction * inStepDown;
+
+#ifdef JPH_DEBUG_RENDERER
+	// Draw sweep down
+	if (sDrawStickToFloor)
+	{
+		DebugRenderer::sInstance->DrawArrow(mPosition, new_position, Color::sOrange, 0.01f);
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(new_position, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
+	}
+#endif // JPH_DEBUG_RENDERER
 
 	// Move the character to the new location
 	SetPosition(new_position);

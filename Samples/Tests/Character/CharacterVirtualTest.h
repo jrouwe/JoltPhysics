@@ -46,6 +46,7 @@ private:
 	static inline float		sPenetrationRecoverySpeed = 1.0f;
 	static inline float		sPredictiveContactDistance = 0.1f;
 	static inline bool		sEnableWalkStairs = true;
+	static inline bool		sEnableStickToFloor = true;
 
 	// The 'player' character
 	Ref<CharacterVirtual>	mCharacter;
@@ -54,5 +55,5 @@ private:
 	Vec3					mSmoothMovementDirection = Vec3::sZero();
 
 	// True when the player is pressing movement controls
-	bool					mPlayerMovesHorizontally = false;
+	bool					mAllowSliding = false;
 };
