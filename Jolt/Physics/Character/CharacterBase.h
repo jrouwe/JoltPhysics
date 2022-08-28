@@ -58,13 +58,9 @@ public:
 	/// Check if the normal of the ground surface is too steep to walk on
 	bool								IsSlopeTooSteep(Vec3Arg inNormal) const
 	{
-		// If cos max slope angle is close to one the system is turned off
-		if (mCosMaxSlopeAngle >= cNoMaxSlopeAngle)
-			return false;
-
-		// Otherwise check the angle between the up and normal vector
-		float dot = inNormal.Dot(mUp);
-		return dot > 0.0f && dot < mCosMaxSlopeAngle;
+		// If cos max slope angle is close to one the system is turned off,
+		// otherwise check the angle between the up and normal vector
+		return mCosMaxSlopeAngle < cNoMaxSlopeAngle && inNormal.Dot(mUp) < mCosMaxSlopeAngle;
 	}
 
 	/// Get the current shape that the character is using.

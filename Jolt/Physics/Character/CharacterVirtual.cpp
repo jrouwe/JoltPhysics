@@ -244,15 +244,20 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, Constra
 		// Next check if the angle is too steep and if it is add an additional constraint that holds the character back
 		if (IsSlopeTooSteep(c.mNormal))
 		{
-			// Make horizontal normal
-			Vec3 normal = (c.mNormal - c.mNormal.Dot(mUp) * mUp).Normalized();
+			// Only take planes that point up
+			float dot = c.mNormal.Dot(mUp);
+			if (dot > 0.0f)
+			{
+				// Make horizontal normal
+				Vec3 normal = (c.mNormal - dot * mUp).Normalized();
 
-			// Create a secondary constraint that blocks horizontal movement
-			outConstraints.emplace_back();
-			Constraint &vertical_constraint = outConstraints.back();
-			vertical_constraint.mContact = &c;
-			vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
-			vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
+				// Create a secondary constraint that blocks horizontal movement
+				outConstraints.emplace_back();
+				Constraint &vertical_constraint = outConstraints.back();
+				vertical_constraint.mContact = &c;
+				vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
+				vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
+			}
 		}
 	}
 }
