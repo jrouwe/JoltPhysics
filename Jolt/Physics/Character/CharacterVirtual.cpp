@@ -510,13 +510,15 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 			Vec3 other_perpendicular_velocity = other_constraint->mLinearVelocity - other_constraint->mLinearVelocity.Dot(slide_dir) * slide_dir;
 
 			// Add all components together
-			velocity = velocity_in_slide_dir + perpendicular_velocity + other_perpendicular_velocity;
+			new_velocity = velocity_in_slide_dir + perpendicular_velocity + other_perpendicular_velocity;
 		}			
-		else
-		{
-			// Update the velocity
-			velocity = new_velocity;
-		}
+
+		// Allow application to modify calculated velocity
+		if (mListener != nullptr)
+			mListener->OnContactSolve(this, constraint->mContact->mBodyB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
+
+		// Update the velocity
+		velocity = new_velocity;
 
 		// Add the contact to the list so that next iteration we can avoid violating it again
 		previous_contacts[num_previous_contacts] = constraint;

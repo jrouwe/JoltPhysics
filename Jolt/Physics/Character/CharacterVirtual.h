@@ -59,6 +59,18 @@ public:
 
 	/// Called whenever the character collides with a body. Returns true if the contact can push the character.
 	virtual void						OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
+
+	/// Called whenever a contact is being used by the solver. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
+	/// @param inCharacter Character that is being solved
+	/// @param inBodyID2 Body ID of body that is being hit
+	/// @param inSubShapeID2 Sub shape ID of shape that is being hit
+	/// @param inContactPosition World space contact position
+	/// @param inContactNormal World space contact normal
+	/// @param inContactVelocity World space velocity of contact point (e.g. for a moving platform)
+	/// @param inContactMaterial Material of contact point
+	/// @param inCharacterVelocity World space velocity of the character prior to hitting this contact
+	/// @param ioNewCharacterVelocity Contains the calculated world space velocity of the character after hitting this contact, this velocity slides along the surface of the contact. Can be modified by the listener to provide an alternative velocity.
+	virtual void						OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) { /* Default do nothing */ }
 };
 
 /// Runtime character object.

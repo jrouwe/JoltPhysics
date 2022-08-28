@@ -113,6 +113,9 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// Smooth the player input
 	mSmoothMovementDirection = 0.25f * inMovementDirection + 0.75f * mSmoothMovementDirection;
 
+	// True if the player intended to move
+	mPlayerMovesHorizontally = !inMovementDirection.IsNearZero();
+
 	Vec3 current_vertical_velocity = Vec3(0, mCharacter->GetLinearVelocity().GetY(), 0);
 
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
@@ -198,4 +201,11 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 		ioSettings.mCanPushCharacter = (index & 1) != 0;
 		ioSettings.mCanReceiveImpulses = (index & 2) != 0;
 	}
+}
+
+void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)
+{
+	// Don't allow the player to slide down static not-too-steep surfaces when not actively moving and when not on a moving platform
+	if (!mPlayerMovesHorizontally && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))
+		ioNewCharacterVelocity = Vec3::sZero();
 }
