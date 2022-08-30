@@ -122,7 +122,11 @@ Vec8 Vec8::Swizzle() const
 
 Vec8 Vec8::Abs() const
 {
+#if defined(JPH_USE_AVX512)
+	return _mm256_range_ps(mValue, mValue, 0b1000);
+#else
 	return _mm256_max_ps(_mm256_sub_ps(_mm256_setzero_ps(), mValue), mValue);
+#endif
 }
 	
 Vec4 Vec8::LowerVec4() const
