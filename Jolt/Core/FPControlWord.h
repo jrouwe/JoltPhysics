@@ -7,7 +7,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-#ifdef JPH_USE_SSE
+#if defined(JPH_CPU_X86)
 
 /// Helper class that needs to be put on the stack to update the state of the floating point control word.
 /// This state is kept per thread.
@@ -30,7 +30,7 @@ private:
 	uint		mPrevState;	
 };
 
-#elif defined(JPH_USE_NEON)
+#elif defined(JPH_CPU_ARM64)
 
 /// Helper class that needs to be put on the stack to update the state of the floating point control word.
 /// This state is kept per thread.

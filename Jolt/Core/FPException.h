@@ -9,7 +9,7 @@ JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 
-#if defined(JPH_USE_SSE)
+#if defined(JPH_CPU_X86)
 
 /// Enable floating point divide by zero exception and exceptions on invalid numbers
 class FPExceptionsEnable : public FPControlWord<0, _MM_MASK_DIV_ZERO | _MM_MASK_INVALID> { };
@@ -20,7 +20,7 @@ class FPExceptionDisableInvalid : public FPControlWord<_MM_MASK_INVALID, _MM_MAS
 /// Disable division by zero floating point exceptions
 class FPExceptionDisableDivByZero : public FPControlWord<_MM_MASK_DIV_ZERO, _MM_MASK_DIV_ZERO> { };
 
-#elif defined(JPH_USE_NEON)
+#elif defined(JPH_CPU_ARM64)
 
 /// Invalid operation exception bit
 static constexpr uint64 FP_IOE = 1 << 8;

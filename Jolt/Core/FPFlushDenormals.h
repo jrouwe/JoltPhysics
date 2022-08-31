@@ -7,13 +7,13 @@
 
 JPH_NAMESPACE_BEGIN
 
-#if defined(JPH_USE_SSE)
+#if defined(JPH_CPU_X86)
 
 /// Helper class that needs to be put on the stack to enable flushing denormals to zero
 /// This can make floating point operations much faster when working with very small numbers
 class FPFlushDenormals : public FPControlWord<_MM_FLUSH_ZERO_ON, _MM_FLUSH_ZERO_MASK> { };
 
-#elif defined(JPH_USE_NEON)
+#elif defined(JPH_CPU_ARM64)
 
 /// Flush denormals to zero bit
 static constexpr uint64 FP_FZ = 1 << 24;
