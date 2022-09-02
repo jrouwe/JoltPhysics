@@ -23,6 +23,8 @@
     #else
         #define JPH_PLATFORM_IOS
     #endif
+#elif defined(__EMSCRIPTEN__)
+	#define JPH_PLATFORM_WASM
 #endif
 
 // Platform helper macros
@@ -98,6 +100,11 @@
 	#define JPH_CPU_ARM64
 	#define JPH_USE_NEON
 	#define JPH_CPU_ADDRESS_BITS 64
+#elif defined(JPH_PLATFORM_WASM)
+	// WebAssembly CPU architecture
+	#define JPH_CPU_WASM
+	#define JPH_CPU_ADDRESS_BITS 32
+	#define JPH_DISABLE_CUSTOM_ALLOCATOR
 #else
 	#error Unsupported CPU architecture
 #endif
@@ -197,6 +204,8 @@
 	#elif defined(JPH_CPU_ARM64)
 		#define JPH_BREAKPOINT		__builtin_trap()
 	#endif
+#elif defined(JPH_PLATFORM_WASM)
+	#define JPH_BREAKPOINT		do { } while (false) // Not supported
 #else
 	#error Unknown platform
 #endif

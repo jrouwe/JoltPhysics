@@ -104,6 +104,8 @@ static const uint64 sProcessorTicksPerSecond = []() {
     size_t len = sizeof(freq);
     sysctl(mib, 2, &freq, &len, nullptr, 0);
 	return freq;
+#elif defined(JPH_PLATFORM_WASM)
+	return 1; // Not supported
 #else
 	#error Undefined
 #endif

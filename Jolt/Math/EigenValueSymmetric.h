@@ -29,6 +29,7 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 {
 	// This algorithm works with very small numbers and can trigger invalid float exceptions when not flushing denormals
 	FPFlushDenormals flush_denormals;
+	(void)flush_denormals;
 
 	// Maximum number of sweeps to make
 	const int cMaxSweeps = 50;

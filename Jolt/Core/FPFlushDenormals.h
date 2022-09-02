@@ -22,6 +22,11 @@ static constexpr uint64 FP_FZ = 1 << 24;
 /// This can make floating point operations much faster when working with very small numbers
 class FPFlushDenormals : public FPControlWord<FP_FZ, FP_FZ> { };
 
+#elif defined(JPH_CPU_WASM)
+
+// Not supported
+class FPFlushDenormals { };
+
 #else
 
 #error Unsupported CPU architecture

@@ -20,7 +20,7 @@ public:
 #elif defined(JPH_USE_NEON)
 	using Type = float32x4_t;
 #else
-	#error Undefined
+	using Type = struct { float mData[4]; };
 #endif
 
 	/// Constructor
@@ -108,7 +108,10 @@ public:
 	JPH_INLINE float			GetZ() const									{ return vgetq_lane_f32(mValue, 2); }
 	JPH_INLINE float			GetW() const									{ return vgetq_lane_f32(mValue, 3); }
 #else
-	#error Undefined
+	JPH_INLINE float			GetX() const									{ return mF32[0]; }
+	JPH_INLINE float			GetY() const									{ return mF32[1]; }
+	JPH_INLINE float			GetZ() const									{ return mF32[2]; }
+	JPH_INLINE float			GetW() const									{ return mF32[3]; }
 #endif
 
 	/// Set individual components

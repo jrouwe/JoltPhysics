@@ -22,7 +22,7 @@ public:
 #elif defined(JPH_USE_NEON)
 	using Type = float32x4_t;
 #else
-	#error Undefined
+	using Type = Vec4::Type;
 #endif
 
 	/// Constructor
@@ -115,7 +115,9 @@ public:
 	JPH_INLINE float			GetY() const									{ return vgetq_lane_f32(mValue, 1); }
 	JPH_INLINE float			GetZ() const									{ return vgetq_lane_f32(mValue, 2); }
 #else
-	#error Undefined
+	JPH_INLINE float			GetX() const									{ return mF32[0]; }
+	JPH_INLINE float			GetY() const									{ return mF32[1]; }
+	JPH_INLINE float			GetZ() const									{ return mF32[2]; }
 #endif
 	
 	/// Set individual components
