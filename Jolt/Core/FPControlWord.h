@@ -61,6 +61,10 @@ private:
 	uint64		mPrevState;
 };
 
+#elif defined(JPH_CPU_WASM)
+
+// Not supported
+
 #else
 
 #error Unsupported CPU architecture
