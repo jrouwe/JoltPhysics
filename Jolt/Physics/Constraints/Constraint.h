@@ -114,11 +114,11 @@ public:
 	virtual EConstraintSubType	GetSubType() const = 0;
 
 	/// Override for the number of solver velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumVelocitySteps and this for all constraints in the island.
-	int							SetNumVelocityStepsOverride(int inN)		{ mNumVelocityStepsOverride = inN; }
+	void						SetNumVelocityStepsOverride(int inN)		{ mNumVelocityStepsOverride = inN; }
 	int							GetNumVelocityStepsOverride() const			{ return mNumVelocityStepsOverride; }
 
 	/// Override for the number of position velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumPositionSteps and this for all constraints in the island.
-	int							SetNumPositionStepsOverride(int inN)		{ mNumPositionStepsOverride = inN; }
+	void						SetNumPositionStepsOverride(int inN)		{ mNumPositionStepsOverride = inN; }
 	int							GetNumPositionStepsOverride() const			{ return mNumPositionStepsOverride; }
 
 	/// Enable / disable this constraint. This can e.g. be used to implement a breakable constraint by detecting that the constraint impulse
