@@ -54,13 +54,16 @@ public:
 	static void				sSetupVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime);
 
 	/// Apply last frame's impulses, must be called prior to SolveVelocityConstraints
-	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio);
+	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, int &ioNumVelocitySteps);
 
 	/// This function is called multiple times to iteratively come to a solution that meets all velocity constraints
 	static bool				sSolveVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime);
 
 	/// This function is called multiple times to iteratively come to a solution that meets all position constraints
 	static bool				sSolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte);
+
+	/// Same as above but also calculates the number of position steps
+	static bool				sSolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte, int &ioNumPositionSteps);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw all constraints

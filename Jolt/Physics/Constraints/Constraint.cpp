@@ -18,6 +18,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConstraintSettings)
 
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mEnabled)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mDrawConstraintSize)
+	JPH_ADD_ATTRIBUTE(ConstraintSettings, mNumVelocityStepsOverride)
+	JPH_ADD_ATTRIBUTE(ConstraintSettings, mNumPositionStepsOverride)
 }
 
 void ConstraintSettings::SaveBinaryState(StreamOut &inStream) const
@@ -25,6 +27,8 @@ void ConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(GetRTTI()->GetHash());
 	inStream.Write(mEnabled);
 	inStream.Write(mDrawConstraintSize);
+	inStream.Write(mNumVelocityStepsOverride);
+	inStream.Write(mNumPositionStepsOverride);
 }
 
 void ConstraintSettings::RestoreBinaryState(StreamIn &inStream)
@@ -32,6 +36,8 @@ void ConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	// Type hash read by sRestoreFromBinaryState
 	inStream.Read(mEnabled);
 	inStream.Read(mDrawConstraintSize);
+	inStream.Read(mNumVelocityStepsOverride);
+	inStream.Read(mNumPositionStepsOverride);
 }
 
 ConstraintSettings::ConstraintResult ConstraintSettings::sRestoreFromBinaryState(StreamIn &inStream)
@@ -81,7 +87,8 @@ void Constraint::RestoreState(StateRecorder &inStream)
 void Constraint::ToConstraintSettings(ConstraintSettings &outSettings) const
 {
 	outSettings.mEnabled = mEnabled;
-
+	outSettings.mNumVelocityStepsOverride = mNumVelocityStepsOverride;
+	outSettings.mNumPositionStepsOverride = mNumPositionStepsOverride;
 #ifdef JPH_DEBUG_RENDERER
 	outSettings.mDrawConstraintSize = mDrawConstraintSize;
 #endif // JPH_DEBUG_RENDERER
