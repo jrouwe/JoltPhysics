@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v1.1.0 and latest
 
+* 20220903 - *SBS* - Added overrides for number of position/velocity solver iterations. Only affects serialization. (38ec33942ead4968a83409bd13d868f60e6397c4)
 * 20220826 - *SBS* - Removed FixedConstraintSettings and SliderConstraintSettings SetPoint functions. If you were calling this function replace it by setting mAutoDetectPoint = true. (d16a0b05bfeed42b1618e3774a9c953e6922d22b)
 * 20220614 - It is now possible to override the memory allocator, register the default using RegisterDefaultAllocator(). This means that the public API now takes STL containers that use a custom memory allocator so use Array instead of vector, UnorderedMap instead of unordered_map etc. If you're using placement new, replace new (x) y with ::new (x) y. Define JPH_DISABLE_CUSTOM_ALLOCATOR to disable this new behavior (b68097f582148d6f66c18a6ff95c5ca9b40b48cc)
 * 20220606 - *SBS* - The slider constraint now has frequency and damping for its limits (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
@@ -19,6 +20,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 * 20220415 - Removed Body::GetDebugName / SetDebugName, keep this info in a lookaside table if you need it (6db4d3beac6760e55f65102db00f93dfbc56ac26)
 * 20220406 - Renamed CollisionDispatch::sCastShapeVsShape to sCastShapeVsShapeLocalSpace (6ba21f50dcf17bd506080ec30759724a7f3097d8)
 * 20220327 - Changed the default include path, #include <xxx> must be replaced by #include <Jolt/xxx> (06e9d17d385814cd24d3b77d689c0a29d854e194)
+* 20220318 - Added support for SSE2. If you want to use later versions of SSE make sure you have JPH_USE_SSE4_1 and JPH_USE_SSE4_2 defined (28f363856a007d03f657e46e8f6d90ccd7c6487a)
 * 20220303 - Note: Partially superseded by d16a0b05bfeed42b1618e3774a9c953e6922d22b. When constructing a SliderConstraint you now need to call SliderConstraintSettings::SetPoint to configure the point where the bodies attach. Also replace mSliderAxis = x with SetSliderAxis(x) (5a327ec182d0436d435c62d0bccb4e76c6324659)
 * 20220228 - PointConstraint::mCommonPoint is now mPoint1 / mPoint2. Replace mCommonPoint = x with mPoint1 = mPoint2 = x (066dfb8940ba3e7dbf8ed47e9a1eeb194730e04b)
 * 20220226 - ObjectToBroadPhaseLayer and BroadPhaseLayerToString changed to BroadPhaseLayerInterface, this makes mapping a broadphase layer to an object layer more flexible (36dd3f8c8c31ef1aeb7585b2b615c23bc8b76f13)
