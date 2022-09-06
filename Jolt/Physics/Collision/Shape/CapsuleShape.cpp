@@ -252,7 +252,7 @@ Vec3 CapsuleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLo
 	else if (inLocalSurfacePosition.GetY() < -mHalfHeightOfCylinder)
 		return (inLocalSurfacePosition - Vec3(0, -mHalfHeightOfCylinder, 0)).Normalized();
 	else
-		return Vec3(inLocalSurfacePosition.GetX(), 0, inLocalSurfacePosition.GetZ()).Normalized();
+		return Vec3(inLocalSurfacePosition.GetX(), 0, inLocalSurfacePosition.GetZ()).NormalizedOr(Vec3::sAxisX());
 }
 
 AABox CapsuleShape::GetLocalBounds() const
