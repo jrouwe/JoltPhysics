@@ -41,6 +41,7 @@ enum class EConstraintSubType
 	Vehicle,
 	RackAndPinion,
 	Gear,
+	Pulley,
 
 	/// User defined constraint types start here
 	User1,

@@ -33,6 +33,7 @@
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/NarrowPhaseStats.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
+#include <Jolt/Physics/Constraints/PulleyConstraint.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Utils/Log.h>
 #include <Utils/ShapeCreator.h>
@@ -135,6 +136,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(SwingTwistConstraintFrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(PathConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(RackAndPinionConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(GearConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(PulleyConstraintTest)
 
 static TestNameAndRTTI sConstraintTests[] =
 {
@@ -153,6 +155,7 @@ static TestNameAndRTTI sConstraintTests[] =
 	{ "Path Constraint",					JPH_RTTI(PathConstraintTest) },
 	{ "Rack And Pinion Constraint",			JPH_RTTI(RackAndPinionConstraintTest) },
 	{ "Gear Constraint",					JPH_RTTI(GearConstraintTest) },
+	{ "Pulley Constraint",					JPH_RTTI(PulleyConstraintTest) },
 	{ "Spring",								JPH_RTTI(SpringTest) },
 	{ "Constraint Singularity",				JPH_RTTI(ConstraintSingularityTest) },
 };
