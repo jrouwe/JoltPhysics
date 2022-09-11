@@ -21,14 +21,15 @@ void PulleyConstraintTest::Initialize()
 		
 	// Variation 0: Max length (rope)
 	// Variation 1: Fixed length (rigid rod)
-	// Variation 2: With ratio (block and tackle)
-	for (int variation = 0; variation < 3; ++variation)
+	// Variation 2: Min/max length
+	// Variation 3: With ratio (block and tackle)
+	for (int variation = 0; variation < 4; ++variation)
 	{
-		Vec3 position1(-10, 10, 10.0f * variation);
+		Vec3 position1(-10, 10, -10.0f * variation);
 		Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), position1, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
 
-		Vec3 position2(10, 10, 10.0f * variation);
+		Vec3 position2(10, 10, -10.0f * variation);
 		Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), position2, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
 
@@ -40,14 +41,24 @@ void PulleyConstraintTest::Initialize()
 
 		switch (variation)			
 		{
+		case 0:
+			// Can't extend but can contract
+			break;
+
 		case 1:
 			// Fixed size
-			settings.mMinLength = settings.mMaxLength = 20.0f;
+			settings.mMinLength = settings.mMaxLength = -1;
 			break;
 
 		case 2:
+			// With range
+			settings.mMinLength = 18.0f;
+			settings.mMaxLength = 22.0f;
+			break;
+
+		case 3:
 			// With ratio
-			settings.mRatio = 2.0f;
+			settings.mRatio = 4.0f;
 			break;			
 		}
 
