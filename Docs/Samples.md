@@ -105,6 +105,10 @@ This category shows the various constraints that are supported. Constraints conn
 |:-|
 |*Demonstrates a rack and pinion constraint.*|
 
+|[![Pulley constraint](https://img.youtube.com/vi/9P8OaahtU-4/hqdefault.jpg)](https://www.youtube.com/watch?v=9P8OaahtU-4)|
+|:-|
+|*Shows two boxes connected through a pulley constraint. In this case the constraint is configured as a block and tackle with and advantage of 2: the right block moves 2x as slow as the left block.*|
+
 ### General
 
 This category contains general simulation tests. It demonstrates things like friction, restitution, damping, modifying gravity and continous collision detection. Some highlights:
