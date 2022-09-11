@@ -17,7 +17,6 @@ JPH_NAMESPACE_BEGIN
 
 CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
-	mUp(inSettings->mUp),
 	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
 	mMaxCollisionIterations(inSettings->mMaxCollisionIterations),
 	mMaxConstraintIterations(inSettings->mMaxConstraintIterations),
@@ -243,10 +242,11 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, Constra
 		constraint.mPlane = Plane(c.mNormal, c.mDistance);
 
 		// Next check if the angle is too steep and if it is add an additional constraint that holds the character back
-		if (mCosMaxSlopeAngle < 0.999f) // If cos(slope angle) is close to 1 then there's no limit
+		if (IsSlopeTooSteep(c.mNormal))
 		{
+			// Only take planes that point up
 			float dot = c.mNormal.Dot(mUp);
-			if (dot > 0.0f && dot < mCosMaxSlopeAngle)
+			if (dot > 0.0f)
 			{
 				// Make horizontal normal
 				Vec3 normal = (c.mNormal - dot * mUp).Normalized();
@@ -515,13 +515,15 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 			Vec3 other_perpendicular_velocity = other_constraint->mLinearVelocity - other_constraint->mLinearVelocity.Dot(slide_dir) * slide_dir;
 
 			// Add all components together
-			velocity = velocity_in_slide_dir + perpendicular_velocity + other_perpendicular_velocity;
+			new_velocity = velocity_in_slide_dir + perpendicular_velocity + other_perpendicular_velocity;
 		}			
-		else
-		{
-			// Update the velocity
-			velocity = new_velocity;
-		}
+
+		// Allow application to modify calculated velocity
+		if (mListener != nullptr)
+			mListener->OnContactSolve(this, constraint->mContact->mBodyB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
+
+		// Update the velocity
+		velocity = new_velocity;
 
 		// Add the contact to the list so that next iteration we can avoid violating it again
 		previous_contacts[num_previous_contacts] = constraint;
@@ -533,13 +535,14 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 	}
 }
 
-void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
+void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, TempAllocator &inAllocator)
 {
-	// Flag contacts as having a collision if they're close enough.
+	// Flag contacts as having a collision if they're close enough but ignore contacts we're moving away from.
 	// Note that if we did MoveShape before we want to preserve any contacts that it marked as colliding
 	for (Contact &c : mActiveContacts)
 		if (!c.mWasDiscarded)
-			c.mHadCollision |= c.mDistance < mCollisionTolerance;
+			c.mHadCollision |= c.mDistance < mCollisionTolerance
+								&& (inSkipContactVelocityCheck || c.mNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f);
 
 	// Determine if we're supported or not
 	int num_supported = 0;
@@ -563,7 +566,7 @@ void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 			}
 
 			// Check if this is a sliding or supported contact
-			bool is_supported = cos_angle >= mCosMaxSlopeAngle;
+			bool is_supported = mCosMaxSlopeAngle > cNoMaxSlopeAngle || cos_angle >= mCosMaxSlopeAngle;
 			if (is_supported)
 				num_supported++;
 			else
@@ -678,8 +681,8 @@ void CharacterVirtual::UpdateSupportingContact(TempAllocator &inAllocator)
 		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement, inAllocator);
 
 		// If we're blocked then we're supported, otherwise we're sliding
-		constexpr float cMinRequiredDisplacementSquared = Square(0.01f);
-		if (time_simulated < 0.001f || displacement.LengthSq() < cMinRequiredDisplacementSquared)
+		float min_required_displacement_sq = Square(0.6f * mLastDeltaTime);
+		if (time_simulated < 0.001f || displacement.LengthSq() < min_required_displacement_sq)
 			mGroundState = EGroundState::OnGround;
 		else
 			mGroundState = EGroundState::Sliding;
@@ -695,7 +698,7 @@ void CharacterVirtual::StoreActiveContacts(const TempContactList &inContacts, Te
 {
 	mActiveContacts.assign(inContacts.begin(), inContacts.end());
 
-	UpdateSupportingContact(inAllocator);
+	UpdateSupportingContact(true, inAllocator);
 }
 
 void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
@@ -778,7 +781,7 @@ void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadP
 	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 
 	// Determine the object that we're standing on
-	UpdateSupportingContact(inAllocator);
+	UpdateSupportingContact(false, inAllocator);
 }
 
 void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
@@ -835,7 +838,7 @@ bool CharacterVirtual::CanWalkStairs() const
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision
 			&& c.mNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
-			&& c.mNormal.Dot(mUp) < mCosMaxSlopeAngle) // Slope too steep
+			&& IsSlopeTooSteep(c.mNormal)) // Slope too steep
 			return true;
 
 	return false;
@@ -893,8 +896,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 #endif // JPH_DEBUG_RENDERER
 
 	// Test for floor that will support the character
-	if (mCosMaxSlopeAngle < 0.999f // If cos(slope angle) is close to 1 then there's no limit
-		&& contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle) // Check slope angle
+	if (IsSlopeTooSteep(contact.mNormal))
 	{
 		// If no test position was provided, we cancel the stair walk
 		if (inStepForwardTest.IsNearZero())
@@ -920,13 +922,41 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 		}
 	#endif // JPH_DEBUG_RENDERER
 
-		if (test_contact.mNormal.Dot(mUp) < mCosMaxSlopeAngle)
+		if (IsSlopeTooSteep(test_contact.mNormal))
 			return false;
 	}
 
 	// Calculate new down position
 	down *= contact.mFraction;
 	new_position += down;
+
+	// Move the character to the new location
+	SetPosition(new_position);
+	RefreshContacts(inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+	return true;
+}
+
+bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
+{
+	JPH_ASSERT(GetGroundState() == EGroundState::InAir, "Makes no sense to call this if we're not in air");
+
+	// Try to find the floor
+	Contact contact;
+	IgnoredContactList dummy_ignored_contacts(inAllocator);
+	if (!GetFirstContactForSweep(mPosition, inStepDown, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+		return false; // If no floor found, don't update our position
+
+	// Calculate new position
+	Vec3 new_position = mPosition + contact.mFraction * inStepDown;
+
+#ifdef JPH_DEBUG_RENDERER
+	// Draw sweep down
+	if (sDrawStickToFloor)
+	{
+		DebugRenderer::sInstance->DrawArrow(mPosition, new_position, Color::sOrange, 0.01f);
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(new_position, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
+	}
+#endif // JPH_DEBUG_RENDERER
 
 	// Move the character to the new location
 	SetPosition(new_position);

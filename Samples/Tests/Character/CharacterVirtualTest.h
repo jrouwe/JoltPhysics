@@ -28,6 +28,9 @@ public:
 	// Called whenever the character collides with a body. Returns true if the contact can push the character.
 	virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) override;
 
+	// Called whenever the character movement is solved and a constraint is hit. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
+	virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override;
+
 protected:
 	// Get position of the character
 	virtual Vec3			GetCharacterPosition() const override				{ return mCharacter->GetPosition(); }
@@ -43,10 +46,14 @@ private:
 	static inline float		sPenetrationRecoverySpeed = 1.0f;
 	static inline float		sPredictiveContactDistance = 0.1f;
 	static inline bool		sEnableWalkStairs = true;
+	static inline bool		sEnableStickToFloor = true;
 
 	// The 'player' character
 	Ref<CharacterVirtual>	mCharacter;
 
 	// Smoothed value of the player input
 	Vec3					mSmoothMovementDirection = Vec3::sZero();
+
+	// True when the player is pressing movement controls
+	bool					mAllowSliding = false;
 };

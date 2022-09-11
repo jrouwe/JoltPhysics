@@ -24,6 +24,9 @@ public:
 	/// Virtual destructor
 	virtual								~CharacterBaseSettings() = default;
 
+	/// Vector indicating the up direction of the character
+	Vec3								mUp = Vec3::sAxisY();
+
 	/// Maximum angle of slope that character can still walk on (radians).
 	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
 
@@ -46,6 +49,19 @@ public:
 
 	/// Set the maximum angle of slope that character can still walk on (radians)
 	void								SetMaxSlopeAngle(float inMaxSlopeAngle)					{ mCosMaxSlopeAngle = Cos(inMaxSlopeAngle); }
+	float								GetCosMaxSlopeAngle() const								{ return mCosMaxSlopeAngle; }
+
+	/// Set the up vector for the character
+	void								SetUp(Vec3Arg inUp)										{ mUp = inUp; }
+	Vec3								GetUp() const											{ return mUp; }
+
+	/// Check if the normal of the ground surface is too steep to walk on
+	bool								IsSlopeTooSteep(Vec3Arg inNormal) const
+	{
+		// If cos max slope angle is close to one the system is turned off,
+		// otherwise check the angle between the up and normal vector
+		return mCosMaxSlopeAngle < cNoMaxSlopeAngle && inNormal.Dot(mUp) < mCosMaxSlopeAngle;
+	}
 
 	/// Get the current shape that the character is using.
 	const Shape *						GetShape() const										{ return mShape; }
@@ -93,6 +109,12 @@ protected:
 
 	// The shape that the body currently has
 	RefConst<Shape>						mShape;
+
+	// The character's world space up axis
+	Vec3								mUp;
+
+	// Beyond this value there is no max slope
+	static constexpr float				cNoMaxSlopeAngle = 0.9999f;
 
 	// Cosine of the maximum angle of slope that character can still walk on
 	float								mCosMaxSlopeAngle;

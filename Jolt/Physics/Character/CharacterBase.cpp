@@ -10,7 +10,8 @@ JPH_NAMESPACE_BEGIN
 
 CharacterBase::CharacterBase(const CharacterBaseSettings *inSettings, PhysicsSystem *inSystem) :
 	mSystem(inSystem),
-	mShape(inSettings->mShape)
+	mShape(inSettings->mShape),
+	mUp(inSettings->mUp)
 {
 	// Initialize max slope angle
 	SetMaxSlopeAngle(inSettings->mMaxSlopeAngle);
