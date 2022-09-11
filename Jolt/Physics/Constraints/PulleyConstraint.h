@@ -96,7 +96,7 @@ private:
 	float						CalculatePositionsNormalsAndLength();
 
 	// Internal helper function to calculate the values below
-	void						CalculateConstraintProperties(float inDeltaTime);
+	void						CalculateConstraintProperties();
 
 	// CONFIGURATION PROPERTIES FOLLOW
 

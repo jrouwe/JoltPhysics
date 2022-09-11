@@ -118,13 +118,13 @@ float PulleyConstraint::CalculatePositionsNormalsAndLength()
 	return delta1_len + mRatio * delta2_len;
 }
 
-void PulleyConstraint::CalculateConstraintProperties(float inDeltaTime)
+void PulleyConstraint::CalculateConstraintProperties()
 {
 	// Calculate attachment points relative to COM
 	Vec3 r1 = mWorldSpacePosition1 - mBody1->GetCenterOfMassPosition();
 	Vec3 r2 = mWorldSpacePosition2 - mBody2->GetCenterOfMassPosition();
 
-	mIndependentAxisConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, r1, mWorldSpaceNormal1, r2, mWorldSpaceNormal2, mRatio);
+	mIndependentAxisConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, r1, mWorldSpaceNormal1, r2, mWorldSpaceNormal2, mRatio);
 }
 
 void PulleyConstraint::SetupVelocityConstraint(float inDeltaTime)
@@ -139,7 +139,7 @@ void PulleyConstraint::SetupVelocityConstraint(float inDeltaTime)
 		mMinLambda = max_length_violation? -FLT_MAX : 0.0f;
 		mMaxLambda = min_length_violation? FLT_MAX : 0.0f;
 
-		CalculateConstraintProperties(inDeltaTime);
+		CalculateConstraintProperties();
 	}
 	else
 		mIndependentAxisConstraintPart.Deactivate();
@@ -172,7 +172,7 @@ bool PulleyConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 	if (position_error != 0.0f)
 	{
 		// Update constraint properties (bodies may have moved)
-		CalculateConstraintProperties(inDeltaTime);
+		CalculateConstraintProperties();
 
 		return mIndependentAxisConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mRatio, position_error, inBaumgarte);
 	}

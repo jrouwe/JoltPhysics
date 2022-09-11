@@ -78,7 +78,6 @@ class IndependentAxisConstraintPart
 
 public:
 	/// Calculate properties used during the functions below
-	/// @param inDeltaTime Time step
 	/// @param inBody1 The first body that this constraint is attached to
 	/// @param inBody2 The second body that this constraint is attached to
 	/// @param inR1 The position on which the constraint operates on body 1 relative to COM
@@ -86,7 +85,7 @@ public:
 	/// @param inR2 The position on which the constraint operates on body 1 relative to COM
 	/// @param inN2 The world space normal in which the constraint operates for body 2
 	/// @param inRatio The ratio how forces are applied between bodies
-	inline void					CalculateConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, Vec3Arg inR1, Vec3Arg inN1, Vec3Arg inR2, Vec3Arg inN2, float inRatio)
+	inline void					CalculateConstraintProperties(const Body &inBody1, const Body &inBody2, Vec3Arg inR1, Vec3Arg inN1, Vec3Arg inR2, Vec3Arg inN2, float inRatio)
 	{
 		JPH_ASSERT(inN1.IsNormalized(1.0e-4f) && inN2.IsNormalized(1.0e-4f));
 
