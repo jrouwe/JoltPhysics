@@ -94,18 +94,14 @@ PulleyConstraint::PulleyConstraint(Body &inBody1, Body &inBody2, const PulleyCon
 		mMaxLength = current_length;
 
 	// Initialize the normals to a likely valid axis in case the fixed points overlap with the attachment points (most likely the fixed points are above both bodies)
-	mWorldSpaceNormal1 = mWorldSpaceNormal2 = Vec3::sAxisY(); 
+	mWorldSpaceNormal1 = mWorldSpaceNormal2 = -Vec3::sAxisY(); 
 }
 
-void PulleyConstraint::CalculateConstraintProperties(float inDeltaTime)
+float PulleyConstraint::CalculatePositionsNormalsAndLength()
 {
 	// Update world space positions (the bodies may have moved)
 	mWorldSpacePosition1 = mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1;
 	mWorldSpacePosition2 = mBody2->GetCenterOfMassTransform() * mLocalSpacePosition2;
-
-	// Calculate attachment points relative to COM
-	Vec3 r1 = mWorldSpacePosition1 - mBody1->GetCenterOfMassPosition();
-	Vec3 r2 = mWorldSpacePosition2 - mBody2->GetCenterOfMassPosition();
 
 	// Calculate world space normals
 	Vec3 delta1 = mWorldSpacePosition1 - mFixedPosition1;
@@ -118,35 +114,54 @@ void PulleyConstraint::CalculateConstraintProperties(float inDeltaTime)
 	if (delta2_len > 0.0f)
 		mWorldSpaceNormal2 = delta2 / delta2_len;
 
-	// Determine in which direction impulses can be applied based on if we're below min / above max length
-	float current_length = delta1_len + mRatio * delta2_len;
-	mMinLambda = current_length > mMaxLength? -FLT_MAX : 0.0f;
-	mMaxLambda = current_length < mMinLength? FLT_MAX : 0.0f;
+	// Calculate length
+	return delta1_len + mRatio * delta2_len;
+}
+
+void PulleyConstraint::CalculateConstraintProperties(float inDeltaTime)
+{
+	// Calculate attachment points relative to COM
+	Vec3 r1 = mWorldSpacePosition1 - mBody1->GetCenterOfMassPosition();
+	Vec3 r2 = mWorldSpacePosition2 - mBody2->GetCenterOfMassPosition();
 
 	mIndependentAxisConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, r1, mWorldSpaceNormal1, r2, mWorldSpaceNormal2, mRatio);
 }
 
 void PulleyConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
-	CalculateConstraintProperties(inDeltaTime);
+	// Determine if the constraint is active
+	float current_length = CalculatePositionsNormalsAndLength();
+	bool min_length_violation = current_length <= mMinLength;
+	bool max_length_violation = current_length >= mMaxLength;
+	if (min_length_violation || max_length_violation)
+	{
+		// Determine max lambda based on if the length is too big or small
+		mMinLambda = max_length_violation? -FLT_MAX : 0.0f;
+		mMaxLambda = min_length_violation? FLT_MAX : 0.0f;
+
+		CalculateConstraintProperties(inDeltaTime);
+	}
+	else
+		mIndependentAxisConstraintPart.Deactivate();
 }
 
 void PulleyConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
-	mIndependentAxisConstraintPart.WarmStart(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, inWarmStartImpulseRatio);
+	mIndependentAxisConstraintPart.WarmStart(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mRatio, inWarmStartImpulseRatio);
 }
 
 bool PulleyConstraint::SolveVelocityConstraint(float inDeltaTime)
 {
 	if (mIndependentAxisConstraintPart.IsActive())
-		return mIndependentAxisConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mMinLambda, mMaxLambda);
+		return mIndependentAxisConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mRatio, mMinLambda, mMaxLambda);
 	else
 		return false;
 }
 
 bool PulleyConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
 {
-	float current_length = GetCurrentLength();
+	// Calculate new length (bodies may have changed)
+	float current_length = CalculatePositionsNormalsAndLength();
 
 	float position_error = 0.0f;
 	if (current_length < mMinLength)
@@ -159,7 +174,7 @@ bool PulleyConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 		// Update constraint properties (bodies may have moved)
 		CalculateConstraintProperties(inDeltaTime);
 
-		return mIndependentAxisConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, position_error, inBaumgarte);
+		return mIndependentAxisConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mRatio, position_error, inBaumgarte);
 	}
 
 	return false;
@@ -171,9 +186,9 @@ void PulleyConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 	// Color according to length vs min/max length
 	float current_length = GetCurrentLength();
 	Color color = Color::sGreen;
-	if (current_length < 0.99f * mMinLength)
+	if (current_length < mMinLength)
 		color = Color::sYellow;
-	else if (current_length > 1.01f * mMaxLength)
+	else if (current_length > mMaxLength)
 		color = Color::sRed;
 
 	// Draw constraint
@@ -182,7 +197,7 @@ void PulleyConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 	inRenderer->DrawLine(mFixedPosition2, mWorldSpacePosition2, color);
 
 	// Draw current length
-	inRenderer->DrawText3D(0.5f * (mFixedPosition1 + mFixedPosition2), StringFormat("%.2f", (double)GetCurrentLength()));
+	inRenderer->DrawText3D(0.5f * (mFixedPosition1 + mFixedPosition2), StringFormat("%.2f", (double)current_length));
 }
 #endif // JPH_DEBUG_RENDERER
 

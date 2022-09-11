@@ -92,6 +92,9 @@ public:
 	inline float	 			GetTotalLambdaPosition() const								{ return mIndependentAxisConstraintPart.GetTotalLambda(); }
 
 private:
+	// Calculates world positions and normals and returns current length
+	float						CalculatePositionsNormalsAndLength();
+
 	// Internal helper function to calculate the values below
 	void						CalculateConstraintProperties(float inDeltaTime);
 

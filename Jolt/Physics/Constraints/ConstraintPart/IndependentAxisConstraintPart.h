@@ -46,7 +46,7 @@ JPH_NAMESPACE_BEGIN
 class IndependentAxisConstraintPart
 {
 	/// Internal helper function to update velocities of bodies after Lagrange multiplier is calculated
-	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inLambda) const
+	JPH_INLINE bool				ApplyVelocityStep(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inRatio, float inLambda) const
 	{
 		// Apply impulse if delta is not zero
 		if (inLambda != 0.0f)
@@ -67,7 +67,7 @@ class IndependentAxisConstraintPart
 			if (ioBody2.IsDynamic())
 			{
 				MotionProperties *mp2 = ioBody2.GetMotionProperties();
-				mp2->AddLinearVelocityStep((mp2->GetInverseMass() * inLambda) * inN2);
+				mp2->AddLinearVelocityStep((inRatio * mp2->GetInverseMass() * inLambda) * inN2);
 				mp2->AddAngularVelocityStep(mInvI2_RatioR2xN2 * inLambda);
 			}
 			return true;
@@ -109,7 +109,7 @@ public:
 			mRatioR2xN2 = inRatio * inR2.Cross(inN2);
 			mInvI2_RatioR2xN2 = mp2->MultiplyWorldSpaceInverseInertiaByVector(inBody2.GetRotation(), mRatioR2xN2);
 
-			inv_effective_mass += mp2->GetInverseMass() + mInvI2_RatioR2xN2.Dot(mRatioR2xN2);
+			inv_effective_mass += Square(inRatio) * mp2->GetInverseMass() + mInvI2_RatioR2xN2.Dot(mRatioR2xN2);
 		}
 
 		// Calculate inverse effective mass: K = J M^-1 J^T
@@ -134,11 +134,12 @@ public:
 	/// @param ioBody2 The second body that this constraint is attached to
 	/// @param inN1 The world space normal in which the constraint operates for body 1
 	/// @param inN2 The world space normal in which the constraint operates for body 2
+	/// @param inRatio The ratio how forces are applied between bodies
 	/// @param inWarmStartImpulseRatio Ratio of new step to old time step (dt_new / dt_old) for scaling the lagrange multiplier of the previous frame
-	inline void					WarmStart(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inWarmStartImpulseRatio)
+	inline void					WarmStart(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inRatio, float inWarmStartImpulseRatio)
 	{
 		mTotalLambda *= inWarmStartImpulseRatio;
-		ApplyVelocityStep(ioBody1, ioBody2, inN1, inN2, mTotalLambda);
+		ApplyVelocityStep(ioBody1, ioBody2, inN1, inN2, inRatio, mTotalLambda);
 	}
 
 	/// Iteratively update the velocity constraint. Makes sure d/dt C(...) = 0, where C is the constraint equation.
@@ -146,19 +147,20 @@ public:
 	/// @param ioBody2 The second body that this constraint is attached to
 	/// @param inN1 The world space normal in which the constraint operates for body 1
 	/// @param inN2 The world space normal in which the constraint operates for body 2
+	/// @param inRatio The ratio how forces are applied between bodies
 	/// @param inMinLambda Minimum angular impulse to apply (N m s)
 	/// @param inMaxLambda Maximum angular impulse to apply (N m s)
-	inline bool					SolveVelocityConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inMinLambda, float inMaxLambda)
+	inline bool					SolveVelocityConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inRatio, float inMinLambda, float inMaxLambda)
 	{
 		// Lagrange multiplier is:
 		//
 		// lambda = -K^-1 (J v + b)
-		float lambda = -mEffectiveMass * (inN1.Dot(ioBody1.GetLinearVelocity()) + mR1xN1.Dot(ioBody1.GetAngularVelocity()) + inN2.Dot(ioBody2.GetLinearVelocity()) + mRatioR2xN2.Dot(ioBody2.GetAngularVelocity()));
+		float lambda = -mEffectiveMass * (inN1.Dot(ioBody1.GetLinearVelocity()) + mR1xN1.Dot(ioBody1.GetAngularVelocity()) + inRatio * inN2.Dot(ioBody2.GetLinearVelocity()) + mRatioR2xN2.Dot(ioBody2.GetAngularVelocity()));
 		float new_lambda = Clamp(mTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
 		lambda = new_lambda - mTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
 		mTotalLambda = new_lambda; // Store accumulated impulse
 
-		return ApplyVelocityStep(ioBody1, ioBody2, inN1, inN2, lambda);
+		return ApplyVelocityStep(ioBody1, ioBody2, inN1, inN2, inRatio, lambda);
 	}
 
 	/// Return lagrange multiplier
@@ -172,9 +174,10 @@ public:
 	/// @param ioBody2 The second body that this constraint is attached to
 	/// @param inN1 The world space normal in which the constraint operates for body 1
 	/// @param inN2 The world space normal in which the constraint operates for body 2
+	/// @param inRatio The ratio how forces are applied between bodies
 	/// @param inC Value of the constraint equation (C)
 	/// @param inBaumgarte Baumgarte constant (fraction of the error to correct)
-	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inC, float inBaumgarte) const
+	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inN1, Vec3Arg inN2, float inRatio, float inC, float inBaumgarte) const
 	{
 		if (inC != 0.0f)
 		{
@@ -207,7 +210,7 @@ public:
 			}
 			if (ioBody2.IsDynamic())
 			{
-				ioBody2.AddPositionStep((lambda * ioBody2.GetMotionPropertiesUnchecked()->GetInverseMass()) * inN2);
+				ioBody2.AddPositionStep((lambda * inRatio * ioBody2.GetMotionPropertiesUnchecked()->GetInverseMass()) * inN2);
 				ioBody2.AddRotationStep(lambda * mInvI2_RatioR2xN2);
 			}
 			return true;
