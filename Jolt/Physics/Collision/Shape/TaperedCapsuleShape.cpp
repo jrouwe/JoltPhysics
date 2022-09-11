@@ -267,7 +267,7 @@ Vec3 TaperedCapsuleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3A
 	else
 	{
 		// Get perpendicular vector to the surface in the xz plane
-		Vec3 perpendicular = Vec3(inLocalSurfacePosition.GetX(), 0, inLocalSurfacePosition.GetZ()).Normalized();
+		Vec3 perpendicular = Vec3(inLocalSurfacePosition.GetX(), 0, inLocalSurfacePosition.GetZ()).NormalizedOr(Vec3::sAxisX());
 
 		// We know that the perpendicular has length 1 and that it needs a y component where tan(alpha) = y / 1 in order to align it to the surface
 		perpendicular.SetY(mTanAlpha);

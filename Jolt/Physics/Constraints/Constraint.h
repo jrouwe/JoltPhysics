@@ -41,6 +41,7 @@ enum class EConstraintSubType
 	Vehicle,
 	RackAndPinion,
 	Gear,
+	Pulley,
 
 	/// User defined constraint types start here
 	User1,
@@ -73,6 +74,12 @@ public:
 	/// If this constraint is enabled initially. Use Constraint::SetEnabled to toggle after creation.
 	bool						mEnabled = true;
 
+	/// Override for the number of solver velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumVelocitySteps and this for all constraints in the island.
+	int							mNumVelocityStepsOverride = 0;
+
+	/// Override for the number of position velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumPositionSteps and this for all constraints in the island.
+	int							mNumPositionStepsOverride = 0;
+
 	/// Size of constraint when drawing it through the debug renderer
 	float						mDrawConstraintSize = 1.0f;
 
@@ -92,6 +99,8 @@ public:
 #ifdef JPH_DEBUG_RENDERER
 		mDrawConstraintSize(inSettings.mDrawConstraintSize),
 #endif // JPH_DEBUG_RENDERER
+		mNumVelocityStepsOverride(inSettings.mNumVelocityStepsOverride),
+		mNumPositionStepsOverride(inSettings.mNumPositionStepsOverride),
 		mEnabled(inSettings.mEnabled)
 	{
 	}
@@ -104,6 +113,14 @@ public:
 
 	/// Get the sub type of a constraint
 	virtual EConstraintSubType	GetSubType() const = 0;
+
+	/// Override for the number of solver velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumVelocitySteps and this for all constraints in the island.
+	void						SetNumVelocityStepsOverride(int inN)		{ mNumVelocityStepsOverride = inN; }
+	int							GetNumVelocityStepsOverride() const			{ return mNumVelocityStepsOverride; }
+
+	/// Override for the number of position velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumPositionSteps and this for all constraints in the island.
+	void						SetNumPositionStepsOverride(int inN)		{ mNumPositionStepsOverride = inN; }
+	int							GetNumPositionStepsOverride() const			{ return mNumPositionStepsOverride; }
 
 	/// Enable / disable this constraint. This can e.g. be used to implement a breakable constraint by detecting that the constraint impulse
 	/// (see e.g. PointConstraint::GetTotalLambdaPosition) went over a certain limit and then disabling the constraint.
@@ -163,6 +180,12 @@ private:
 
 	/// Index in the mConstraints list of the ConstraintManager for easy finding
 	uint32						mConstraintIndex = cInvalidConstraintIndex;
+
+	/// Override for the number of solver velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumVelocitySteps and this for all constraints in the island.
+	int							mNumVelocityStepsOverride = 0;
+
+	/// Override for the number of position velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumPositionSteps and this for all constraints in the island.
+	int							mNumPositionStepsOverride = 0;
 
 	/// If this constraint is currently enabled
 	bool						mEnabled = true;

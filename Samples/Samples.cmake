@@ -41,6 +41,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Constraints/PoweredSwingTwistConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/PoweredSliderConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/PoweredSliderConstraintTest.h
+	${SAMPLES_ROOT}/Tests/Constraints/PulleyConstraintTest.cpp
+	${SAMPLES_ROOT}/Tests/Constraints/PulleyConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/RackAndPinionConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/RackAndPinionConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/SwingTwistConstraintFrictionTest.cpp

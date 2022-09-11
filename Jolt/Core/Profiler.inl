@@ -78,7 +78,7 @@ ProfileMeasurement::~ProfileMeasurement()
 		val = vld1q_s32(src + 4);
 		vst1q_s32(dst + 4, val);
 	#else
-		#error Unsupported CPU architecture
+		memcpy(mSample, &mTemp, sizeof(ProfileSample));
 	#endif
 		mSample = nullptr;
 	}

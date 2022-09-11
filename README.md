@@ -57,6 +57,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 	* Cone.
 	* Rack and Pinion.
 	* Gear.
+	* Pulley.
 	* Smooth spline paths.
 	* Swing-twist (for humanoid shoulders).
 	* 6 DOF.
@@ -86,6 +87,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 * Platform Blue (a popular game console) x64
 * MacOS (tested on Monterey) x64/ARM64
 * iOS (tested on iOS 15) x64/ARM64
+* WebAssembly, see [this](https://github.com/jrouwe/JoltPhysics.js) separate project.
 
 ## Required CPU features
 

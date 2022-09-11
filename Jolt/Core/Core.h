@@ -23,6 +23,8 @@
     #else
         #define JPH_PLATFORM_IOS
     #endif
+#elif defined(__EMSCRIPTEN__)
+	#define JPH_PLATFORM_WASM
 #endif
 
 // Platform helper macros
@@ -98,6 +100,11 @@
 	#define JPH_CPU_ARM64
 	#define JPH_USE_NEON
 	#define JPH_CPU_ADDRESS_BITS 64
+#elif defined(JPH_PLATFORM_WASM)
+	// WebAssembly CPU architecture
+	#define JPH_CPU_WASM
+	#define JPH_CPU_ADDRESS_BITS 32
+	#define JPH_DISABLE_CUSTOM_ALLOCATOR
 #else
 	#error Unsupported CPU architecture
 #endif
@@ -108,8 +115,14 @@
 #define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(clang diagnostic push)
 #define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(clang diagnostic pop)
 #define JPH_CLANG_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
+	#if __clang_major__ >= 16
+		#define JPH_CLANG16_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
+	#else
+		#define JPH_CLANG16_SUPPRESS_WARNING(w)
+	#endif
 #else
 #define JPH_CLANG_SUPPRESS_WARNING(w)
+#define JPH_CLANG16_SUPPRESS_WARNING(w)
 #endif
 #ifdef JPH_COMPILER_GCC
 #define JPH_PRAGMA(x)					_Pragma(#x)
@@ -149,6 +162,7 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wgnu-zero-variadic-macro-arguments")							\
 	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
 	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
+	JPH_CLANG16_SUPPRESS_WARNING("-Wunqualified-std-cast-call")									\
 	JPH_IF_NOT_ANDROID(JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion"))			\
 																								\
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
@@ -190,6 +204,8 @@
 	#elif defined(JPH_CPU_ARM64)
 		#define JPH_BREAKPOINT		__builtin_trap()
 	#endif
+#elif defined(JPH_PLATFORM_WASM)
+	#define JPH_BREAKPOINT		do { } while (false) // Not supported
 #else
 	#error Unknown platform
 #endif
@@ -228,6 +244,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <cmath>
 #include <sstream>
 #include <functional>
+#include <algorithm>
 JPH_SUPPRESS_WARNINGS_STD_END
 #include <limits.h>
 #include <float.h>
@@ -286,8 +303,10 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 // Shorthand for #ifdef _DEBUG / #endif
 #ifdef _DEBUG
 	#define JPH_IF_DEBUG(...)	__VA_ARGS__
+	#define JPH_IF_NOT_DEBUG(...)
 #else
 	#define JPH_IF_DEBUG(...)
+	#define JPH_IF_NOT_DEBUG(...) __VA_ARGS__
 #endif
 
 // Shorthand for #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED / #endif

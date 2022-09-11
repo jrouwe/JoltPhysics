@@ -37,6 +37,13 @@ class FPExceptionDisableInvalid : public FPControlWord<0, FP_IOE> { };
 /// Disable division by zero floating point exceptions
 class FPExceptionDisableDivByZero : public FPControlWord<0, FP_DZE> { };
 
+#elif defined(JPH_CPU_WASM)
+
+// Not supported
+class FPExceptionsEnable { };
+class FPExceptionDisableInvalid { };
+class FPExceptionDisableDivByZero { };
+
 #else
 
 #error Unsupported CPU architecture
