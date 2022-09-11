@@ -25,11 +25,11 @@ JPH_NAMESPACE_BEGIN
 /// 
 /// Jacobian:
 ///
-/// \f[J = \begin{bmatrix}n_1 & r_1 \times n_1 & n_2 & r_2 \times n_2\end{bmatrix}\f]
+/// \f[J = \begin{bmatrix}n_1 & r_1 \times n_1 & r n_2 & r r_2 \times n_2\end{bmatrix}\f]
 ///
 /// Effective mass:
 ///
-/// \f[K = m_1^{-1} + r_1 \times n_1 I_1^{-1} r_1 \times n_1 + m_2^{-1} + r_2 \times n_2 I_2^{-1} r_2 \times n_2\f]
+/// \f[K = m_1^{-1} + r_1 \times n_1 I_1^{-1} r_1 \times n_1 + r^2 m_2^{-1} + r^2 r_2 \times n_2 I_2^{-1} r_2 \times n_2\f]
 ///
 /// Used terms (here and below, everything in world space):\n
 /// n1 = (x1 + r1 - f1) / |x1 + r1 - f1|, axis along which the force is applied for body 1\n
