@@ -131,7 +131,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 		{
 			Vec3 normal = -inResult.mPenetrationAxis.Normalized();
 			float dot = normal.Dot(mUp);
-			if (dot < mBestDot) // Find the hit that is most opposite to the up vector
+			if (dot > mBestDot) // Find the hit that is most aligned with the up vector
 			{
 				mGroundBodyID = inResult.mBodyID2;
 				mGroundBodySubShapeID = inResult.mSubShapeID2;
@@ -147,7 +147,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 		Vec3				mGroundNormal = Vec3::sZero();
 
 	private:
-		float				mBestDot = FLT_MAX;
+		float				mBestDot = -FLT_MAX;
 		Vec3				mUp;
 	};
 
