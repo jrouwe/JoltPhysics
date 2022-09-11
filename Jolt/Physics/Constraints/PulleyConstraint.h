@@ -43,7 +43,7 @@ public:
 	/// Ratio between the two line segments (see formula above), can be used to create a block and tackle 
 	float						mRatio = 1.0f;
 
-	/// The minimum length of the line segments (see formula above)
+	/// The minimum length of the line segments (see formula above), use -1 to calculate the length based on the positions of the objects when the constraint is created.
 	float						mMinLength = 0.0f;
 
 	/// The maximum length of the line segments (see formula above), use -1 to calculate the length based on the positions of the objects when the constraint is created.

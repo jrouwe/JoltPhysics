@@ -86,11 +86,14 @@ PulleyConstraint::PulleyConstraint(Body &inBody1, Body &inBody2, const PulleyCon
 		mWorldSpacePosition2 = inBody2.GetCenterOfMassTransform() * mWorldSpacePosition2;
 	}
 
-	// Calculate max length if it was not provided
+	// Calculate min/max length if it was not provided
+	float current_length = GetCurrentLength();
+	if (mMinLength < 0.0f)
+		mMinLength = current_length;
 	if (mMaxLength < 0.0f)
-		mMaxLength = GetCurrentLength();
+		mMaxLength = current_length;
 
-	// Most likely gravity is going to tear us apart (this is only used when the distance between the points = 0)
+	// Initialize the normals to a likely valid axis in case the fixed points overlap with the attachment points (most likely the fixed points are above both bodies)
 	mWorldSpaceNormal1 = mWorldSpaceNormal2 = Vec3::sAxisY(); 
 }
 
@@ -115,9 +118,10 @@ void PulleyConstraint::CalculateConstraintProperties(float inDeltaTime)
 	if (delta2_len > 0.0f)
 		mWorldSpaceNormal2 = delta2 / delta2_len;
 
+	// Determine in which direction impulses can be applied based on if we're below min / above max length
 	float current_length = delta1_len + mRatio * delta2_len;
-	mMinLambda = current_length > mMinLength? -FLT_MAX : 0.0f;
-	mMaxLambda = current_length < mMaxLength? FLT_MAX : 0.0f;
+	mMinLambda = current_length > mMaxLength? -FLT_MAX : 0.0f;
+	mMaxLambda = current_length < mMinLength? FLT_MAX : 0.0f;
 
 	mIndependentAxisConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, r1, mWorldSpaceNormal1, r2, mWorldSpaceNormal2, mRatio);
 }
