@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
-#include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/IndependentAxisConstraintPart.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -86,10 +86,10 @@ public:
 	float						GetMaxLength() const										{ return mMaxLength; }
 
 	/// Get the current length of both segments (multiplied by the ratio for segment 2)
-	float						GetCurrentLength() const									{ return (mWorldSpacePosition2 - mFixedPosition2).Length() + mRatio * (mWorldSpacePosition2 - mFixedPosition2).Length(); }
+	float						GetCurrentLength() const									{ return (mWorldSpacePosition1 - mFixedPosition1).Length() + mRatio * (mWorldSpacePosition2 - mFixedPosition2).Length(); }
 
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
-	inline float	 			GetTotalLambdaPosition() const								{ return mAxisConstraint.GetTotalLambda(); }
+	inline float	 			GetTotalLambdaPosition() const								{ return mIndependentAxisConstraintPart.GetTotalLambda(); }
 
 private:
 	// Internal helper function to calculate the values below
@@ -120,12 +120,12 @@ private:
 	Vec3						mWorldSpaceNormal1;
 	Vec3						mWorldSpaceNormal2;
 
-	// Depending on if the distance < min or distance > max we can apply forces to prevent further violations
+	// Depending on if the length < min or length > max we can apply forces to prevent further violations
 	float						mMinLambda;
 	float						mMaxLambda;
 
 	// The constraint part
-	AxisConstraintPart			mAxisConstraint;
+	IndependentAxisConstraintPart mIndependentAxisConstraintPart;
 };
 
 JPH_NAMESPACE_END

@@ -100,43 +100,26 @@ void PulleyConstraint::CalculateConstraintProperties(float inDeltaTime)
 	mWorldSpacePosition1 = mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1;
 	mWorldSpacePosition2 = mBody2->GetCenterOfMassTransform() * mLocalSpacePosition2;
 
-	/*
-	// Calculate current length
-	float length = (mWorldSpacePosition2 - mFixedPosition2).Length() + mRatio * (mWorldSpacePosition2 - mFixedPosition2).Length();
-
-	
-	// Calculate points relative to body
-	// r1 + u = (p1 - x1) + (p2 - p1) = p2 - x1
-	Vec3 r1_plus_u = mWorldSpacePosition2 - mBody1->GetCenterOfMassPosition();
+	// Calculate attachment points relative to COM
+	Vec3 r1 = mWorldSpacePosition1 - mBody1->GetCenterOfMassPosition();
 	Vec3 r2 = mWorldSpacePosition2 - mBody2->GetCenterOfMassPosition();
 
-	if (mMinDistance == mMaxDistance)
-	{
-		mAxisConstraint.CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
+	// Calculate world space normals
+	Vec3 delta1 = mWorldSpacePosition1 - mFixedPosition1;
+	float delta1_len = delta1.Length();
+	if (delta1_len > 0.0f)
+		mWorldSpaceNormal1 = delta1 / delta1_len;
 
-		// Single distance, allow constraint forces in both directions
-		mMinLambda = -FLT_MAX;
-		mMaxLambda = FLT_MAX;
-	}
-	if (delta_len <= mMinDistance)
-	{
-		mAxisConstraint.CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
+	Vec3 delta2 = mWorldSpacePosition2 - mFixedPosition2;
+	float delta2_len = delta2.Length();
+	if (delta2_len > 0.0f)
+		mWorldSpaceNormal2 = delta2 / delta2_len;
 
-		// Allow constraint forces to make distance bigger only
-		mMinLambda = 0;
-		mMaxLambda = FLT_MAX;
-	}
-	else if (delta_len >= mMaxDistance)
-	{
-		mAxisConstraint.CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMaxDistance, mFrequency, mDamping);
+	float current_length = delta1_len + mRatio * delta2_len;
+	mMinLambda = current_length > mMinLength? -FLT_MAX : 0.0f;
+	mMaxLambda = current_length < mMaxLength? FLT_MAX : 0.0f;
 
-		// Allow constraint forces to make distance smaller only
-		mMinLambda = -FLT_MAX;
-		mMaxLambda = 0;
-	}
-	else
-		mAxisConstraint.Deactivate();
-	*/
+	mIndependentAxisConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, r1, mWorldSpaceNormal1, r2, mWorldSpaceNormal2, mRatio);
 }
 
 void PulleyConstraint::SetupVelocityConstraint(float inDeltaTime)
@@ -146,38 +129,34 @@ void PulleyConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 void PulleyConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
-	//mAxisConstraint.WarmStart(*mBody1, *mBody2, mWorldSpaceNormal, inWarmStartImpulseRatio);
+	mIndependentAxisConstraintPart.WarmStart(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, inWarmStartImpulseRatio);
 }
 
 bool PulleyConstraint::SolveVelocityConstraint(float inDeltaTime)
 {
-	/*
-	if (mAxisConstraint.IsActive())
-		return mAxisConstraint.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceNormal, mMinLambda, mMaxLambda);
-	else*/
+	if (mIndependentAxisConstraintPart.IsActive())
+		return mIndependentAxisConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mMinLambda, mMaxLambda);
+	else
 		return false;
 }
 
 bool PulleyConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
 {
-	/*
-	float distance = (mWorldSpacePosition2 - mWorldSpacePosition1).Dot(mWorldSpaceNormal);
+	float current_length = GetCurrentLength();
 
-	// Calculate position error
 	float position_error = 0.0f;
-	if (distance < mMinDistance)
-		position_error = distance - mMinDistance;
-	else if (distance > mMaxDistance)
-		position_error = distance - mMaxDistance;
+	if (current_length < mMinLength)
+		position_error = current_length - mMinLength;
+	else if (current_length > mMaxLength)
+		position_error = current_length - mMaxLength;
 
 	if (position_error != 0.0f)
 	{
 		// Update constraint properties (bodies may have moved)
 		CalculateConstraintProperties(inDeltaTime);
 
-		return mAxisConstraint.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal, position_error, inBaumgarte);
+		return mIndependentAxisConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, position_error, inBaumgarte);
 	}
-	*/
 
 	return false;
 }
@@ -185,10 +164,18 @@ bool PulleyConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 #ifdef JPH_DEBUG_RENDERER
 void PulleyConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
+	// Color according to length vs min/max length
+	float current_length = GetCurrentLength();
+	Color color = Color::sGreen;
+	if (current_length < 0.99f * mMinLength)
+		color = Color::sYellow;
+	else if (current_length > 1.01f * mMaxLength)
+		color = Color::sRed;
+
 	// Draw constraint
-	inRenderer->DrawLine(mWorldSpacePosition1, mFixedPosition1, Color::sGreen);
-	inRenderer->DrawLine(mFixedPosition1, mFixedPosition2, Color::sGreen);
-	inRenderer->DrawLine(mFixedPosition2, mWorldSpacePosition2, Color::sGreen);
+	inRenderer->DrawLine(mWorldSpacePosition1, mFixedPosition1, color);
+	inRenderer->DrawLine(mFixedPosition1, mFixedPosition2, color);
+	inRenderer->DrawLine(mFixedPosition2, mWorldSpacePosition2, color);
 
 	// Draw current length
 	inRenderer->DrawText3D(0.5f * (mFixedPosition1 + mFixedPosition2), StringFormat("%.2f", (double)GetCurrentLength()));
@@ -199,16 +186,18 @@ void PulleyConstraint::SaveState(StateRecorder &inStream) const
 {
 	TwoBodyConstraint::SaveState(inStream);
 
-	mAxisConstraint.SaveState(inStream);
-	//inStream.Write(mWorldSpaceNormal); // When distance = 0, the normal is used from last frame so we need to store it
+	mIndependentAxisConstraintPart.SaveState(inStream);
+	inStream.Write(mWorldSpaceNormal1); // When distance to fixed point = 0, the normal is used from last frame so we need to store it
+	inStream.Write(mWorldSpaceNormal2);
 }
 
 void PulleyConstraint::RestoreState(StateRecorder &inStream)
 {
 	TwoBodyConstraint::RestoreState(inStream);
 
-	mAxisConstraint.RestoreState(inStream);
-	//inStream.Read(mWorldSpaceNormal);
+	mIndependentAxisConstraintPart.RestoreState(inStream);
+	inStream.Read(mWorldSpaceNormal1);
+	inStream.Read(mWorldSpaceNormal2);
 }
 
 Ref<ConstraintSettings> PulleyConstraint::GetConstraintSettings() const

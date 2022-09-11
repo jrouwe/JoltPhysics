@@ -35,8 +35,8 @@ void PulleyConstraintTest::Initialize()
 		PulleyConstraintSettings settings;
 		settings.mBodyPoint1 = position1 + Vec3(0, 0.5f, 0); // Connect at the top of the block
 		settings.mBodyPoint2 = position2 + Vec3(0, 0.5f, 0);
-		settings.mFixedPoint1 = position1 + Vec3(0, 10, 0);
-		settings.mFixedPoint2 = position2 + Vec3(0, 10, 0);
+		settings.mFixedPoint1 = settings.mBodyPoint1 + Vec3(0, 10, 0);
+		settings.mFixedPoint2 = settings.mBodyPoint2 + Vec3(0, 10, 0);
 
 		switch (variation)			
 		{
