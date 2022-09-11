@@ -57,6 +57,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 	* Cone.
 	* Rack and Pinion.
 	* Gear.
+	* Pulley.
 	* Smooth spline paths.
 	* Swing-twist (for humanoid shoulders).
 	* 6 DOF.
