@@ -221,7 +221,7 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 	}
 
 	// If we encounter an object that can push us, enable sliding
-	if (ioSettings.mCanPushCharacter)
+	if (ioSettings.mCanPushCharacter && mPhysicsSystem->GetBodyInterface().GetMotionType(inBodyID2) != EMotionType::Static)
 		mAllowSliding = true;
 }
 

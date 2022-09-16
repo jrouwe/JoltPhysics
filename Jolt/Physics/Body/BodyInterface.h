@@ -159,8 +159,11 @@ public:
 	void						AddAngularImpulse(const BodyID &inBodyID, Vec3Arg inAngularImpulse);
 	///@}
 
-	/// Update the body motion type
+	///@name Body motion type
+	///@{
 	void						SetMotionType(const BodyID &inBodyID, EMotionType inMotionType, EActivation inActivationMode);
+	EMotionType					GetMotionType(const BodyID &inBodyID) const;
+	///@}
 
 	/// Get inverse inertia tensor in world space
 	Mat44						GetInverseInertia(const BodyID &inBodyID) const;

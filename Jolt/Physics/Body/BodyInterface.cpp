@@ -748,6 +748,15 @@ void BodyInterface::SetMotionType(const BodyID &inBodyID, EMotionType inMotionTy
 	}
 }
 
+EMotionType BodyInterface::GetMotionType(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		return lock.GetBody().GetMotionType();
+	else
+		return EMotionType::Static;
+}
+
 Mat44 BodyInterface::GetInverseInertia(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
