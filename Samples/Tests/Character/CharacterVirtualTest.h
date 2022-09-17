@@ -52,7 +52,7 @@ private:
 	Ref<CharacterVirtual>	mCharacter;
 
 	// Smoothed value of the player input
-	Vec3					mSmoothMovementDirection = Vec3::sZero();
+	Vec3					mDesiredVelocity = Vec3::sZero();
 
 	// True when the player is pressing movement controls
 	bool					mAllowSliding = false;
