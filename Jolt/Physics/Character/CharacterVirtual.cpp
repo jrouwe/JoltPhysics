@@ -34,11 +34,14 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, V
 }
 
 template <class taCollector>
-void CharacterVirtual::sFillContactProperties(Contact &outContact, const Body &inBody, const taCollector &inCollector, const CollideShapeResult &inResult)
+void CharacterVirtual::sFillContactProperties(Contact &outContact, const Body &inBody, Vec3Arg inUp, const taCollector &inCollector, const CollideShapeResult &inResult)
 {
 	outContact.mPosition = inResult.mContactPointOn2;	
 	outContact.mLinearVelocity = inBody.GetPointVelocity(inResult.mContactPointOn2);
-	outContact.mNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
+	outContact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
+	outContact.mSurfaceNormal = inCollector.GetContext()->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, inResult.mContactPointOn2);
+	if (outContact.mContactNormal.Dot(inUp) > outContact.mSurfaceNormal.Dot(inUp))
+		outContact.mSurfaceNormal = outContact.mContactNormal; // Replace surface normal with contact normal if the contact normal is pointing more upwards
 	outContact.mDistance = -inResult.mPenetrationDepth;
 	outContact.mBodyB = inResult.mBodyID2;
 	outContact.mSubShapeIDB = inResult.mSubShapeID2;
@@ -56,7 +59,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 
 		mContacts.emplace_back();
 		Contact &contact = mContacts.back();
-		sFillContactProperties(contact, body, *this, inResult);
+		sFillContactProperties(contact, body, mUp, *this, inResult);
 		contact.mFraction = 0.0f;
 
 		// Protection from excess of contact points
@@ -82,7 +85,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 
 			mContacts.emplace_back();
 			Contact &contact = mContacts.back();
-			sFillContactProperties(contact, body, *this, inResult);
+			sFillContactProperties(contact, body, mUp, *this, inResult);
 			contact.mFraction = inResult.mFraction;
 
 			// Protection from excess of contact points
@@ -114,7 +117,7 @@ void CharacterVirtual::GetContactsAtPosition(Vec3Arg inPosition, Vec3Arg inMovem
 	outContacts.clear();
 
 	// Collide shape
-	ContactCollector collector(mSystem, mMaxNumHits, outContacts);
+	ContactCollector collector(mSystem, mMaxNumHits, mUp, outContacts);
 	CheckCollision(inPosition, mRotation, inMovementDirection, mPredictiveContactDistance, inShape, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 	// Reduce distance to contact by padding to ensure we stay away from the object by a little margin
@@ -139,7 +142,7 @@ void CharacterVirtual::RemoveConflictingContacts(TempContactList &ioContacts, Ig
 				Contact &contact2 = ioContacts[c2];
 				if (contact1.mBodyB == contact2.mBodyB // Only same body
 					&& contact2.mDistance <= -cMinRequiredPenetration // Only for penetrations
-					&& contact1.mNormal.Dot(contact2.mNormal) < 0.0f) // Only opposing normals
+					&& contact1.mContactNormal.Dot(contact2.mContactNormal) < 0.0f) // Only opposing normals
 				{
 					// Discard contacts with the least amount of penetration
 					if (contact1.mDistance < contact2.mDistance)
@@ -190,7 +193,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	// Cast shape
 	TempContactList contacts(inAllocator);
 	contacts.reserve(mMaxNumHits);
-	ContactCastCollector collector(mSystem, inDisplacement, mMaxNumHits, inIgnoredContacts, contacts);
+	ContactCastCollector collector(mSystem, inDisplacement, mMaxNumHits, mUp, inIgnoredContacts, contacts);
 	ShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
 	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 	if (contacts.empty())
@@ -202,7 +205,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	// Check the first contact that will make us penetrate more than the allowed tolerance
 	bool valid_contact = false;
 	for (const Contact &c : contacts)
-		if (c.mDistance + c.mNormal.Dot(inDisplacement) < -mCollisionTolerance
+		if (c.mDistance + c.mContactNormal.Dot(inDisplacement) < -mCollisionTolerance
 			&& ValidateContact(c))
 		{
 			outContact = c;
@@ -218,7 +221,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	// <=> d' = -p |d| / n dot d
 	// The new fraction of collision is then:
 	// f' = f - d' / |d| = f + p / n dot d
-	float dot = outContact.mNormal.Dot(inDisplacement);
+	float dot = outContact.mContactNormal.Dot(inDisplacement);
 	if (dot < 0.0f) // We should not divide by zero and we should only update the fraction if normal is pointing towards displacement
 		outContact.mFraction = max(0.0f, outContact.mFraction + mCharacterPadding / dot);
 	return true;
@@ -232,31 +235,31 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, Constra
 
 		// Penetrating contact: Add a contact velocity that pushes the character out at the desired speed
 		if (c.mDistance < 0.0f)
-			contact_velocity -= c.mNormal * c.mDistance * mPenetrationRecoverySpeed;
+			contact_velocity -= c.mContactNormal * c.mDistance * mPenetrationRecoverySpeed;
 
 		// Convert to a constraint
 		outConstraints.emplace_back();
 		Constraint &constraint = outConstraints.back();
 		constraint.mContact = &c;
 		constraint.mLinearVelocity = contact_velocity;
-		constraint.mPlane = Plane(c.mNormal, c.mDistance);
+		constraint.mPlane = Plane(c.mContactNormal, c.mDistance);
 
 		// Next check if the angle is too steep and if it is add an additional constraint that holds the character back
-		if (IsSlopeTooSteep(c.mNormal))
+		if (IsSlopeTooSteep(c.mSurfaceNormal))
 		{
 			// Only take planes that point up
-			float dot = c.mNormal.Dot(mUp);
+			float dot = c.mSurfaceNormal.Dot(mUp);
 			if (dot > 0.0f)
 			{
 				// Make horizontal normal
-				Vec3 normal = (c.mNormal - dot * mUp).Normalized();
+				Vec3 normal = (c.mSurfaceNormal - dot * mUp).Normalized();
 
 				// Create a secondary constraint that blocks horizontal movement
 				outConstraints.emplace_back();
 				Constraint &vertical_constraint = outConstraints.back();
 				vertical_constraint.mContact = &c;
 				vertical_constraint.mLinearVelocity = contact_velocity.Dot(normal) * normal; // Project the contact velocity on the new normal so that both planes push at an equal rate
-				vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
+				vertical_constraint.mPlane = Plane(normal, c.mDistance / normal.Dot(c.mSurfaceNormal)); // Calculate the distance we have to travel horizontally to hit the contact plane
 			}
 		}
 	}
@@ -273,7 +276,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	// Send contact added event
 	CharacterContactSettings settings;
 	if (mListener != nullptr)
-		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mNormal, settings);
+		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
 	contact.mCanPushCharacter = settings.mCanPushCharacter;
 
 	// If body B cannot receive an impulse, we're done
@@ -290,7 +293,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	constexpr float cDamping = 0.9f;
 	constexpr float cPenetrationResolution = 0.4f;
 	Vec3 relative_velocity = inVelocity - contact.mLinearVelocity;
-	float projected_velocity = relative_velocity.Dot(contact.mNormal);
+	float projected_velocity = relative_velocity.Dot(contact.mContactNormal);
 	float delta_velocity = -projected_velocity * cDamping - min(contact.mDistance, 0.0f) * cPenetrationResolution / inDeltaTime;
 
 	// Don't apply impulses if we're separating
@@ -304,7 +307,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	float inverse_mass = motion_properties->GetInverseMass();
 
 	// Calculate the inverse of the mass of body B as seen at the contact point in the direction of the contact normal
-	Vec3 jacobian = (contact.mPosition - center_of_mass).Cross(contact.mNormal);
+	Vec3 jacobian = (contact.mPosition - center_of_mass).Cross(contact.mContactNormal);
 	float inv_effective_mass = inverse_inertia.Multiply3x3(jacobian).Dot(jacobian) + inverse_mass;
 
 	// Impulse P = M dv
@@ -315,10 +318,10 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	impulse = min(impulse, max_impulse);
 
 	// Calculate the world space impulse to apply
-	Vec3 world_impulse = -impulse * contact.mNormal;
+	Vec3 world_impulse = -impulse * contact.mContactNormal;
 
 	// Add the impulse due to gravity working on the player: P = F dt = M g dt
-	float normal_dot_gravity = contact.mNormal.Dot(inGravity);
+	float normal_dot_gravity = contact.mContactNormal.Dot(inGravity);
 	if (normal_dot_gravity < 0.0f)
 		world_impulse -= (mMass * normal_dot_gravity / inGravity.Length() * inDeltaTime) * inGravity;
 
@@ -524,7 +527,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 
 		// Allow application to modify calculated velocity
 		if (mListener != nullptr)
-			mListener->OnContactSolve(this, constraint->mContact->mBodyB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
+			mListener->OnContactSolve(this, constraint->mContact->mBodyB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mContactNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
 
 #ifdef JPH_DEBUG_RENDERER
 		if (inDrawConstraints)
@@ -567,7 +570,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 	for (Contact &c : mActiveContacts)
 		if (!c.mWasDiscarded)
 			c.mHadCollision |= c.mDistance < mCollisionTolerance
-								&& (inSkipContactVelocityCheck || c.mNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f);
+								&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f);
 
 	// Determine if we're supported or not
 	int num_supported = 0;
@@ -581,7 +584,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		if (c.mHadCollision)
 		{
 			// Calculate the angle between the plane normal and the up direction
-			float cos_angle = c.mNormal.Dot(mUp);
+			float cos_angle = c.mSurfaceNormal.Dot(mUp);
 
 			// Find the contact with the normal that is pointing most upwards and store it in mSupportingContact
 			if (max_cos_angle < cos_angle)
@@ -600,7 +603,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 			// If the angle between the two is less than 85 degrees we also use it to calculate the average normal
 			if (cos_angle >= 0.08f)
 			{
-				avg_normal += c.mNormal;
+				avg_normal += c.mSurfaceNormal;
 				num_avg_normal++;
 
 				// For static or dynamic objects or for contacts that don't support us just take the contact velocity
@@ -766,6 +769,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 
 				// Draw plane around the player position indicating the space that we can move
 				DebugRenderer::sInstance->DrawPlane(mPosition + dist_to_plane, c.mPlane.GetNormal(), Color::sCyan, 1.0f);
+				DebugRenderer::sInstance->DrawArrow(mPosition + dist_to_plane, mPosition + dist_to_plane + c.mContact->mSurfaceNormal, Color::sRed, 0.05f);
 			}
 		}
 #endif // JPH_DEBUG_RENDERER
@@ -870,8 +874,8 @@ bool CharacterVirtual::CanWalkStairs(Vec3Arg inLinearVelocity) const
 	// Check contacts for steep slopes
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision
-			&& c.mNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
-			&& IsSlopeTooSteep(c.mNormal)) // Slope too steep
+			&& c.mSurfaceNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
+			&& IsSlopeTooSteep(c.mSurfaceNormal)) // Slope too steep
 			return true;
 
 	return false;
@@ -924,13 +928,13 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 	{
 		Vec3 debug_pos = new_position + contact.mFraction * down; 
 		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, Color::sYellow, 0.01f);
-		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mNormal, Color::sYellow, 0.01f);
+		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, Color::sYellow, 0.01f);
 		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sYellow, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 
 	// Test for floor that will support the character
-	if (IsSlopeTooSteep(contact.mNormal))
+	if (IsSlopeTooSteep(contact.mSurfaceNormal))
 	{
 		// If no test position was provided, we cancel the stair walk
 		if (inStepForwardTest.IsNearZero())
@@ -951,12 +955,12 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 		{
 			Vec3 debug_pos = test_position + test_contact.mFraction * down; 
 			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
-			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mNormal, Color::sCyan, 0.01f);
+			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mSurfaceNormal, Color::sCyan, 0.01f);
 			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sCyan, false, true);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
-		if (IsSlopeTooSteep(test_contact.mNormal))
+		if (IsSlopeTooSteep(test_contact.mSurfaceNormal))
 			return false;
 	}
 

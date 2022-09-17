@@ -209,7 +209,8 @@ private:
 	{
 		Vec3							mPosition;												///< Position where the character makes contact
 		Vec3							mLinearVelocity;										///< Velocity of the contact point
-		Vec3							mNormal;												///< Contact normal, pointing towards the character
+		Vec3							mContactNormal;											///< Contact normal, pointing towards the character
+		Vec3							mSurfaceNormal;											///< Surface normal of the contact
 		float							mDistance;												///< Distance to the contact <= 0 means that it is an actual contact, > 0 means predictive
 		float							mFraction;												///< Fraction along the path where this contact takes place
 		BodyID							mBodyB;													///< ID of body we're colliding with
@@ -253,10 +254,11 @@ private:
 	class ContactCollector : public CollideShapeCollector
 	{
 	public:
-										ContactCollector(PhysicsSystem *inSystem, uint inMaxHits, TempContactList &outContacts) : mSystem(inSystem), mContacts(outContacts), mMaxHits(inMaxHits) { }
+										ContactCollector(PhysicsSystem *inSystem, uint inMaxHits, Vec3Arg inUp, TempContactList &outContacts) : mUp(inUp), mSystem(inSystem), mContacts(outContacts), mMaxHits(inMaxHits) { }
 
 		virtual void					AddHit(const CollideShapeResult &inResult) override;
 
+		Vec3							mUp;
 		PhysicsSystem *					mSystem;
 		TempContactList &				mContacts;
 		uint							mMaxHits;
@@ -266,12 +268,13 @@ private:
 	class ContactCastCollector : public CastShapeCollector
 	{
 	public:
-										ContactCastCollector(PhysicsSystem *inSystem, Vec3Arg inDisplacement, uint inMaxHits, const IgnoredContactList &inIgnoredContacts, TempContactList &outContacts) : mSystem(inSystem), mDisplacement(inDisplacement), mIgnoredContacts(inIgnoredContacts), mContacts(outContacts), mMaxHits(inMaxHits) { }
+										ContactCastCollector(PhysicsSystem *inSystem, Vec3Arg inDisplacement, uint inMaxHits, Vec3Arg inUp, const IgnoredContactList &inIgnoredContacts, TempContactList &outContacts) : mDisplacement(inDisplacement), mUp(inUp), mSystem(inSystem), mIgnoredContacts(inIgnoredContacts), mContacts(outContacts), mMaxHits(inMaxHits) { }
 
 		virtual void					AddHit(const ShapeCastResult &inResult) override;
 
-		PhysicsSystem *					mSystem;
 		Vec3							mDisplacement;
+		Vec3							mUp;
+		PhysicsSystem *					mSystem;
 		const IgnoredContactList &		mIgnoredContacts;
 		TempContactList &				mContacts;
 		uint							mMaxHits;
@@ -279,7 +282,7 @@ private:
 
 	// Helper function to convert a Jolt collision result into a contact
 	template <class taCollector>
-	inline static void					sFillContactProperties(Contact &outContact, const Body &inBody, const taCollector &inCollector, const CollideShapeResult &inResult);
+	inline static void					sFillContactProperties(Contact &outContact, const Body &inBody, Vec3Arg inUp, const taCollector &inCollector, const CollideShapeResult &inResult);
 
 	// Move the shape from ioPosition and try to displace it by inVelocity * inDeltaTime, this will try to slide the shape along the world geometry
 	void								MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const;
