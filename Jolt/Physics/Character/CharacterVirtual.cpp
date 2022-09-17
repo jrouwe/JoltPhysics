@@ -327,7 +327,11 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	return true;
 }
 
-void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, ConstraintList &ioConstraints, IgnoredContactList &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement, TempAllocator &inAllocator) const
+void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, float inTimeRemaining, ConstraintList &ioConstraints, IgnoredContactList &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement, TempAllocator &inAllocator
+#ifdef JPH_DEBUG_RENDERER
+	, bool inDrawConstraints
+#endif // JPH_DEBUG_RENDERER
+	) const
 {
 	// If there are no constraints we can immediately move to our target
 	if (ioConstraints.empty())
@@ -516,11 +520,32 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 
 			// Add all components together
 			new_velocity = velocity_in_slide_dir + perpendicular_velocity + other_perpendicular_velocity;
-		}			
+		}
 
 		// Allow application to modify calculated velocity
 		if (mListener != nullptr)
 			mListener->OnContactSolve(this, constraint->mContact->mBodyB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
+
+#ifdef JPH_DEBUG_RENDERER
+		if (inDrawConstraints)
+		{
+			// Calculate where to draw
+			Vec3 offset = mPosition + Vec3(0, 0, 2.5f * (iteration + 1));
+
+			// Draw constraint plane
+			DebugRenderer::sInstance->DrawPlane(offset, constraint->mPlane.GetNormal(), Color::sCyan, 1.0f);
+
+			// Draw 2nd constraint plane
+			if (other_constraint != nullptr)
+				DebugRenderer::sInstance->DrawPlane(offset, other_constraint->mPlane.GetNormal(), Color::sBlue, 1.0f);
+
+			// Draw starting velocity
+			DebugRenderer::sInstance->DrawArrow(offset, offset + velocity, Color::sGreen, 0.05f);
+
+			// Draw resulting velocity
+			DebugRenderer::sInstance->DrawArrow(offset, offset + new_velocity, Color::sRed, 0.05f);
+		}
+#endif // JPH_DEBUG_RENDERER
 
 		// Update the velocity
 		velocity = new_velocity;
@@ -678,7 +703,11 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		float time_simulated;
 		IgnoredContactList ignored_contacts(inAllocator);
 		ignored_contacts.reserve(contacts.size());
-		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement, inAllocator);
+		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement, inAllocator
+		#ifdef JPH_DEBUG_RENDERER
+			, false
+		#endif // JPH_DEBUG_RENDERER
+			);
 
 		// If we're blocked then we're supported, otherwise we're sliding
 		float min_required_displacement_sq = Square(0.6f * mLastDeltaTime);
@@ -735,7 +764,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 				// Draw arrow towards surface that we're hitting
 				DebugRenderer::sInstance->DrawArrow(c.mContact->mPosition, c.mContact->mPosition - dist_to_plane, Color::sYellow, 0.05f);
 
-				// Draw plane around the player posiiton indicating the space that we can move
+				// Draw plane around the player position indicating the space that we can move
 				DebugRenderer::sInstance->DrawPlane(mPosition + dist_to_plane, c.mPlane.GetNormal(), Color::sCyan, 1.0f);
 			}
 		}
@@ -744,7 +773,11 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 		// Solve the displacement using these constraints
 		Vec3 displacement;
 		float time_simulated;
-		SolveConstraints(inVelocity, inGravity, inDeltaTime, time_remaining, constraints, ignored_contacts, time_simulated, displacement, inAllocator);
+		SolveConstraints(inVelocity, inGravity, inDeltaTime, time_remaining, constraints, ignored_contacts, time_simulated, displacement, inAllocator
+		#ifdef JPH_DEBUG_RENDERER
+			, sDrawConstraints
+		#endif // JPH_DEBUG_RENDERER
+			);
 
 		// Store the contacts now that the colliding ones have been marked
 		if (outActiveContacts != nullptr)
@@ -827,10 +860,10 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 	return mShape == inShape;
 }
 
-bool CharacterVirtual::CanWalkStairs() const
+bool CharacterVirtual::CanWalkStairs(Vec3Arg inLinearVelocity) const
 {
 	// Check if there's enough horizontal velocity to trigger a stair walk
-	Vec3 horizontal_velocity = mLinearVelocity - mLinearVelocity.Dot(mUp) * mUp;
+	Vec3 horizontal_velocity = inLinearVelocity - inLinearVelocity.Dot(mUp) * mUp;
 	if (horizontal_velocity.IsNearZero(1.0e-6f))
 		return false;
 
@@ -879,8 +912,9 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 #endif // JPH_DEBUG_RENDERER
 
 	// Move down towards the floor.
-	// Note that we travel the same amount down as we travelled up with the specified extra
-	Vec3 down = -up + inStepDownExtra;
+	// Note that we travel the same amount down as we travelled up with the character padding and the specified extra
+	// If we don't add the character padding, we may miss the floor (note that GetFirstContactForSweep will subtract the padding when it finds a hit)
+	Vec3 down = -up - mCharacterPadding * mUp + inStepDownExtra;
 	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		return false; // No floor found, we're in mid air, cancel stair walk
 

@@ -43,11 +43,15 @@ static const Quat cRampOrientation = Quat::sRotation(Vec3::sAxisX(), -0.25f * JP
 static const Vec3 cRampBlocksStart = cRampPosition + Vec3(-3.0f, 3.0f, 1.5f);
 static const Vec3 cRampBlocksDelta = Vec3(2.0f, 0, 0);
 static const float cRampBlocksTime = 5.0f;
-static const Vec3 cBumpsPosition = Vec3(-5.0f, 0, 2.5f);
-static const float cBumpHeight = 0.05f;
-static const float cBumpWidth = 0.01f;
-static const float cBumpDelta = 0.5f;
-static const Vec3 cStairsPosition = Vec3(-10.0f, 0, 2.5f);
+static const Vec3 cSmallBumpsPosition = Vec3(-5.0f, 0, 2.5f);
+static const float cSmallBumpHeight = 0.05f;
+static const float cSmallBumpWidth = 0.01f;
+static const float cSmallBumpDelta = 0.5f;
+static const Vec3 cLargeBumpsPosition = Vec3(-10.0f, 0, 2.5f);
+static const float cLargeBumpHeight = 0.3f;
+static const float cLargeBumpWidth = 0.1f;
+static const float cLargeBumpDelta = 2.0f;
+static const Vec3 cStairsPosition = Vec3(-15.0f, 0, 2.5f);
 static const float cStairsStepHeight = 0.3f;
 
 void CharacterBaseTest::Initialize()
@@ -139,10 +143,20 @@ void CharacterBaseTest::Initialize()
 
 		// Create small bumps
 		{
-			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cBumpHeight, 0.5f * cBumpWidth), 0.0f), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cSmallBumpHeight, 0.5f * cSmallBumpWidth), 0.0f), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			for (int i = 0; i < 10; ++i)
 			{
-				step.mPosition = cBumpsPosition + Vec3(0, 0.5f * cBumpHeight, cBumpDelta * i);
+				step.mPosition = cSmallBumpsPosition + Vec3(0, 0.5f * cSmallBumpHeight, cSmallBumpDelta * i);
+				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
+			}
+		}
+
+		// Create large bumps
+		{
+			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cLargeBumpHeight, 0.5f * cLargeBumpWidth)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			for (int i = 0; i < 5; ++i)
+			{
+				step.mPosition = cLargeBumpsPosition + Vec3(0, 0.5f * cLargeBumpHeight, cLargeBumpDelta * i);
 				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
 			}
 		}
