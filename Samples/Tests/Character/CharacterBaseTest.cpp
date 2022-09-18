@@ -286,7 +286,7 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat
 {
 	// Draw current location
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
-	mDebugRenderer->DrawCoordinateSystem(inCharacterTransform);
+	mDebugRenderer->DrawCoordinateSystem(inCharacterTransform, 0.1f);
 
 	// Determine color
 	CharacterBase::EGroundState ground_state = inCharacter->GetGroundState();
@@ -313,7 +313,7 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat
 		Vec3 ground_velocity = inCharacter->GetGroundVelocity();
 
 		// Draw ground position
-		mDebugRenderer->DrawWireSphere(ground_position, 0.1f, Color::sRed);
+		mDebugRenderer->DrawMarker(ground_position, Color::sRed, 0.1f);
 		mDebugRenderer->DrawArrow(ground_position, ground_position + 2.0f * ground_normal, Color::sGreen, 0.1f);
 
 		// Draw ground velocity
