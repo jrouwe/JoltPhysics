@@ -40,6 +40,8 @@ void CharacterVirtual::sFillContactProperties(Contact &outContact, const Body &i
 	outContact.mLinearVelocity = inBody.GetPointVelocity(inResult.mContactPointOn2);
 	outContact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
 	outContact.mSurfaceNormal = inCollector.GetContext()->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, inResult.mContactPointOn2);
+	if (outContact.mContactNormal.Dot(outContact.mSurfaceNormal) < 0.0f)
+		outContact.mSurfaceNormal = -outContact.mSurfaceNormal; // Flip surface normal if we're hitting a back face
 	if (outContact.mContactNormal.Dot(inUp) > outContact.mSurfaceNormal.Dot(inUp))
 		outContact.mSurfaceNormal = outContact.mContactNormal; // Replace surface normal with contact normal if the contact normal is pointing more upwards
 	outContact.mDistance = -inResult.mPenetrationDepth;
@@ -353,6 +355,9 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 	// This is the velocity we use for the displacement, if we hit something it will be shortened
 	Vec3 velocity = inVelocity;
 
+	// Keep track of the last velocity that was applied to the character so that we can detect when the velocity reverses
+	Vec3 last_velocity = inVelocity;
+
 	// Start with no displacement
 	outDisplacement = Vec3::sZero();
 	outTimeSimulated = 0.0f;
@@ -560,6 +565,12 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, Vec3Arg inGravity, f
 		// If there's not enough velocity left, bail
 		if (velocity.LengthSq() < 1.0e-8f)
 			return;
+
+		// If the constraint has velocity we accept the new velocity, otherwise check that we didn't reverse velocity
+		if (!constraint->mLinearVelocity.IsNearZero(1.0e-8f))
+			last_velocity = constraint->mLinearVelocity;
+		else if (velocity.Dot(last_velocity) < 0.0f)
+			return;
 	}
 }
 
@@ -706,11 +717,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		float time_simulated;
 		IgnoredContactList ignored_contacts(inAllocator);
 		ignored_contacts.reserve(contacts.size());
-		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement, inAllocator
-		#ifdef JPH_DEBUG_RENDERER
-			, false
-		#endif // JPH_DEBUG_RENDERER
-			);
+		SolveConstraints(-mUp, mSystem->GetGravity(), 1.0f, 1.0f, constraints, ignored_contacts, time_simulated, displacement, inAllocator);
 
 		// If we're blocked then we're supported, otherwise we're sliding
 		float min_required_displacement_sq = Square(0.6f * mLastDeltaTime);
@@ -733,7 +740,11 @@ void CharacterVirtual::StoreActiveContacts(const TempContactList &inContacts, Te
 	UpdateSupportingContact(true, inAllocator);
 }
 
-void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
+void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg inGravity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator
+#ifdef JPH_DEBUG_RENDERER
+	, bool inDrawConstraints
+#endif // JPH_DEBUG_RENDERER
+	) const
 {
 	Vec3 movement_direction = inVelocity.NormalizedOr(Vec3::sZero());
 
@@ -756,7 +767,8 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 		DetermineConstraints(contacts, constraints);
 
 #ifdef JPH_DEBUG_RENDERER
-		if (sDrawConstraints && iteration == 0)
+		bool draw_constraints = inDrawConstraints && iteration == 0;
+		if (draw_constraints)
 		{
 			for (const Constraint &c : constraints)
 			{
@@ -779,7 +791,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, Vec3Arg i
 		float time_simulated;
 		SolveConstraints(inVelocity, inGravity, inDeltaTime, time_remaining, constraints, ignored_contacts, time_simulated, displacement, inAllocator
 		#ifdef JPH_DEBUG_RENDERER
-			, sDrawConstraints
+			, draw_constraints
 		#endif // JPH_DEBUG_RENDERER
 			);
 
@@ -815,7 +827,11 @@ void CharacterVirtual::Update(float inDeltaTime, Vec3Arg inGravity, const BroadP
 	mLastDeltaTime = inDeltaTime;
 
 	// Slide the shape through the world
-	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+	MoveShape(mPosition, mLinearVelocity, inGravity, inDeltaTime, &mActiveContacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator
+	#ifdef JPH_DEBUG_RENDERER
+		, sDrawConstraints
+	#endif // JPH_DEBUG_RENDERER
+		);
 
 	// Determine the object that we're standing on
 	UpdateSupportingContact(false, inAllocator);
@@ -900,7 +916,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw sweep up
 	if (sDrawWalkStairs)
-		DebugRenderer::sInstance->DrawArrow(mPosition, up_position, Color::sGrey, 0.01f);
+		DebugRenderer::sInstance->DrawArrow(mPosition, up_position, Color::sWhite, 0.01f);
 #endif // JPH_DEBUG_RENDERER
 
 	// Horizontal movement
@@ -912,7 +928,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw horizontal sweep
 	if (sDrawWalkStairs)
-		DebugRenderer::sInstance->DrawArrow(up_position, new_position, Color::sGrey, 0.01f);
+		DebugRenderer::sInstance->DrawArrow(up_position, new_position, Color::sWhite, 0.01f);
 #endif // JPH_DEBUG_RENDERER
 
 	// Move down towards the floor.
@@ -927,9 +943,9 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 	if (sDrawWalkStairs)
 	{
 		Vec3 debug_pos = new_position + contact.mFraction * down; 
-		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, Color::sYellow, 0.01f);
-		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, Color::sYellow, 0.01f);
-		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sYellow, false, true);
+		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, Color::sWhite, 0.01f);
+		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, Color::sWhite, 0.01f);
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sWhite, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 
@@ -944,16 +960,27 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 		// In order to judge if the floor is flat further along the sweep, we test again for a floor at inStepForwardTest
 		// and check if the normal is valid there.
 		Vec3 test_position = up_position + inStepForwardTest;
+
+		// First sweep forward to the test position
 		Contact test_contact;
-		bool hit = GetFirstContactForSweep(test_position, down, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
-		if (!hit)
-			return false;
+		if (!GetFirstContactForSweep(up_position, inStepForwardTest, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+		{
+			// Then sweep down
+			if (!GetFirstContactForSweep(test_position, down, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+				return false;
+		}
+		else
+		{
+			// If we didn't move down, set the 'down' fraction to zero
+			test_contact.mFraction = 0.0f;
+		}
 
 	#ifdef JPH_DEBUG_RENDERER
-		// Draw 2nd sweep down
+		// Draw 2nd sweep forward and down
 		if (sDrawWalkStairs)
 		{
 			Vec3 debug_pos = test_position + test_contact.mFraction * down; 
+			DebugRenderer::sInstance->DrawArrow(up_position, test_position, Color::sCyan, 0.01f);
 			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
 			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mSurfaceNormal, Color::sCyan, 0.01f);
 			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sCyan, false, true);
