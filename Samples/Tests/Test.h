@@ -87,7 +87,7 @@ public:
 
 protected:
 	// Utility function to create a static floor body
-	Body &			CreateFloor();
+	Body &			CreateFloor(float inSize = 200.0f);
 
 	// Utiltity function to create a floor consisting of very large triangles
 	Body &			CreateLargeTriangleFloor();

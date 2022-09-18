@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Application/DebugUI.h>
@@ -53,6 +54,12 @@ static const float cLargeBumpWidth = 0.1f;
 static const float cLargeBumpDelta = 2.0f;
 static const Vec3 cStairsPosition = Vec3(-15.0f, 0, 2.5f);
 static const float cStairsStepHeight = 0.3f;
+static const Vec3 cMeshWallPosition = Vec3(-20.0f, 0, -27.0f);
+static const float cMeshWallHeight = 3.0f;
+static const float cMeshWallWidth = 2.0f;
+static const float cMeshWallStepStart = 0.5f;
+static const float cMeshWallStepEnd = 4.0f;
+static const int cMeshWallSegments = 25;
 
 void CharacterBaseTest::Initialize()
 {
@@ -69,7 +76,7 @@ void CharacterBaseTest::Initialize()
 	else if (strcmp(sSceneName, "ObstacleCourse") == 0)
 	{
 		// Default terrain
-		CreateFloor();
+		CreateFloor(300.0f);
 
 		{
 			// Create ramps with different inclinations
@@ -82,8 +89,8 @@ void CharacterBaseTest::Initialize()
 			// Create wall consisting of vertical pillars
 			// Note: Convex radius 0 because otherwise it will be a bumpy wall
 			Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f); 
-			for (int z = 0; z < 40; ++z)
-				mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, Vec3(-10.0f, 2.5f, -10.0f + 0.2f * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+			for (int z = 0; z < 30; ++z)
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, Vec3(0.0f, 2.5f, 2.0f + 0.2f * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 		}
 
 		{
@@ -169,6 +176,26 @@ void CharacterBaseTest::Initialize()
 				step.mPosition = cStairsPosition + Vec3(0, cStairsStepHeight * (0.5f + i), cStairsStepHeight * i);
 				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
 			}
+		}
+
+		// Create mesh with walls at varying angles
+		{
+			TriangleList triangles;
+			Vec3 p1(0.5f * cMeshWallWidth, 0, 0);
+			Vec3 h(0, cMeshWallHeight, 0);
+			for (int i = 0; i < cMeshWallSegments; ++i)
+			{
+				float delta = cMeshWallStepStart + i * (cMeshWallStepEnd - cMeshWallStepStart) / (cMeshWallSegments - 1);
+				Vec3 p2 = Vec3((i & 1)? 0.5f * cMeshWallWidth : -0.5f * cMeshWallWidth, 0, p1.GetZ() + delta);
+				triangles.push_back(Triangle(p1, p1 + h, p2 + h));
+				triangles.push_back(Triangle(p1, p2 + h, p2));
+				p1 = p2;
+			}
+
+			MeshShapeSettings mesh(triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings wall(&mesh, cMeshWallPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(wall, EActivation::DontActivate);
 		}
 	}
 	else

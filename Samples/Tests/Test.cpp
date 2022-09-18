@@ -15,11 +15,11 @@ JPH_IMPLEMENT_RTTI_ABSTRACT(Test)
 {
 }
 
-Body &Test::CreateFloor()
+Body &Test::CreateFloor(float inSize)
 {
 	const float scale = GetWorldScale();
 
-	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(scale * Vec3(100.0f, 1.0f, 100.0f), 0.0f), scale * Vec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(scale * Vec3(0.5f * inSize, 1.0f, 0.5f * inSize), 0.0f), scale * Vec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 	return floor;
 }
