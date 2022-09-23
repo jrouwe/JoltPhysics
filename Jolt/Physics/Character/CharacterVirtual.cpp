@@ -724,7 +724,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		if (time_simulated < 0.001f || displacement.LengthSq() < min_required_displacement_sq)
 			mGroundState = EGroundState::OnGround;
 		else
-			mGroundState = EGroundState::Sliding;
+			mGroundState = EGroundState::OnSteepGround;
 	}
 	else
 	{
@@ -845,6 +845,31 @@ void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhase
 	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 	StoreActiveContacts(contacts, inAllocator);
+}
+
+void CharacterVirtual::MoveToContact(const Vec3Arg inPosition, const Contact &inContact, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
+{
+	// Set the new position
+	SetPosition(inPosition);
+
+	// Determine the contacts
+	TempContactList contacts(inAllocator);
+	contacts.reserve(mMaxNumHits);
+	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+
+	// Ensure that we mark inContact as colliding
+	JPH_IF_ENABLE_ASSERTS(bool found_contact = false;)
+	for (Contact &c : contacts)
+		if (c.mBodyB == inContact.mBodyB
+			&& c.mSubShapeIDB == inContact.mSubShapeIDB)
+		{
+			c.mHadCollision = true;
+			JPH_IF_ENABLE_ASSERTS(found_contact = true;)
+		}
+	JPH_ASSERT(found_contact);
+
+	StoreActiveContacts(contacts, inAllocator);
+	JPH_ASSERT(mGroundState != EGroundState::InAir);
 }
 
 bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
@@ -996,8 +1021,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inGravity, Vec3Arg 
 	new_position += down;
 
 	// Move the character to the new location
-	SetPosition(new_position);
-	RefreshContacts(inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+	MoveToContact(new_position, contact, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 	return true;
 }
 
@@ -1024,8 +1048,7 @@ bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFil
 #endif // JPH_DEBUG_RENDERER
 
 	// Move the character to the new location
-	SetPosition(new_position);
-	RefreshContacts(inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+	MoveToContact(new_position, contact, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 	return true;
 }
 

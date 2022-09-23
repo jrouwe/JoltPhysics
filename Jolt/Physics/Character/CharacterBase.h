@@ -68,9 +68,9 @@ public:
 
 	enum class EGroundState
 	{
-		OnGround,						///< Character is on the ground and can move freely
-		Sliding,						///< Character is on a slope that is too steep and should start sliding
-		InAir,							///< Character is in the air
+		OnGround,						///< Character is on the ground and can move freely.
+		OnSteepGround,					///< Character is on a slope that is too steep and can't climb up any further. The caller should start applying downward velocity if sliding from the slope is desired.
+		InAir,							///< Character is in the air.
 	};
 
 	///@name Properties of the ground this character is standing on

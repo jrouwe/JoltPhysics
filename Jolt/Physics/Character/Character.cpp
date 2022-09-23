@@ -169,7 +169,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 
 		// Update ground state
 		if (IsSlopeTooSteep(mGroundNormal))
-			mGroundState = EGroundState::Sliding;
+			mGroundState = EGroundState::OnSteepGround;
 		else
 			mGroundState = EGroundState::OnGround;
 
