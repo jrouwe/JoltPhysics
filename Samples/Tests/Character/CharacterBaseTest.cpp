@@ -54,6 +54,9 @@ static const float cLargeBumpWidth = 0.1f;
 static const float cLargeBumpDelta = 2.0f;
 static const Vec3 cStairsPosition = Vec3(-15.0f, 0, 2.5f);
 static const float cStairsStepHeight = 0.3f;
+static const Vec3 cNoStairsPosition = Vec3(-15.0f, 0, 10.0f);
+static const float cNoStairsStepHeight = 0.3f;
+static const float cNoStairsStepDelta = 0.05f;
 static const Vec3 cMeshWallPosition = Vec3(-20.0f, 0, -27.0f);
 static const float cMeshWallHeight = 3.0f;
 static const float cMeshWallWidth = 2.0f;
@@ -174,6 +177,16 @@ void CharacterBaseTest::Initialize()
 			for (int i = 0; i < 10; ++i)
 			{
 				step.mPosition = cStairsPosition + Vec3(0, cStairsStepHeight * (0.5f + i), cStairsStepHeight * i);
+				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
+			}
+		}
+
+		// Create stairs with too little space between the steps
+		{
+			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cNoStairsStepHeight, 0.5f * cNoStairsStepHeight)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			for (int i = 0; i < 10; ++i)
+			{
+				step.mPosition = cNoStairsPosition + Vec3(0, cNoStairsStepHeight * (0.5f + i), cNoStairsStepDelta * i);
 				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
 			}
 		}
