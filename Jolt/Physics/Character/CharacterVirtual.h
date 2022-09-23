@@ -324,6 +324,9 @@ private:
 	// This function will determine which contacts are touching the character and will calculate the one that is supporting us
 	void								UpdateSupportingContact(bool inSkipContactVelocityCheck, TempAllocator &inAllocator);
 
+	/// This function can be called after moving the character to a new colliding position
+	void								MoveToContact(const Vec3Arg inPosition, const Contact &inContact, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
+
 	// This function returns the actual center of mass of the shape, not corrected for the character padding
 	inline Mat44						GetCenterOfMassTransform(Vec3Arg inPosition, QuatArg inRotation, const Shape *inShape) const
 	{

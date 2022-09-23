@@ -55,7 +55,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	Vec3 old_position = mCharacter->GetPosition();
 
 	// Track that on ground before the update
-	bool ground_to_air = mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround;
+	bool ground_to_air = mCharacter->GetGroundState() != CharacterBase::EGroundState::InAir;
 
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
