@@ -336,7 +336,7 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat
 	case CharacterBase::EGroundState::OnGround:
 		color = Color::sGreen;
 		break;
-	case CharacterBase::EGroundState::Sliding:
+	case CharacterBase::EGroundState::OnSteepGround:
 		color = Color::sOrange;
 		break;
 	case CharacterBase::EGroundState::InAir:

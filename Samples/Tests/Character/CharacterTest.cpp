@@ -71,7 +71,7 @@ void CharacterTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool i
 {
 	// Cancel movement in opposite direction of normal when sliding
 	Character::EGroundState ground_state = mCharacter->GetGroundState();
-	if (ground_state == Character::EGroundState::Sliding)
+	if (ground_state == Character::EGroundState::OnSteepGround)
 	{
 		Vec3 normal = mCharacter->GetGroundNormal();
 		normal.SetY(0.0f);

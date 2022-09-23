@@ -724,7 +724,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		if (time_simulated < 0.001f || displacement.LengthSq() < min_required_displacement_sq)
 			mGroundState = EGroundState::OnGround;
 		else
-			mGroundState = EGroundState::Sliding;
+			mGroundState = EGroundState::OnSteepGround;
 	}
 	else
 	{

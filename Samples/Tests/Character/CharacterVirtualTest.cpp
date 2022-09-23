@@ -130,7 +130,7 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// Cancel movement in opposite direction of normal when sliding
 	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
 	Vec3 desired_velocity = mDesiredVelocity;
-	if (ground_state == CharacterVirtual::EGroundState::Sliding)
+	if (ground_state == CharacterVirtual::EGroundState::OnSteepGround)
 	{
 		Vec3 normal = mCharacter->GetGroundNormal();
 		normal.SetY(0.0f);

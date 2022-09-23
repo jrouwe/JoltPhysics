@@ -129,9 +129,11 @@ public:
 	/// Character padding
 	float								GetCharacterPadding() const								{ return mCharacterPadding; }
 
-	/// This is the main update function. It moves the character according to its current velocity. Note it's your own responsibility to apply gravity!
+	/// This is the main update function. It moves the character according to its current velocity (the character is similar to a kinematic body in the sense
+	/// that you set the velocity and the character will follow unless collision is blocking the way). Note it's your own responsibility to apply gravity to the character velocity!
+	/// Different surface materials (like ice) can be emulated by getting the ground material and adjusting the velocity and/or the max slope angle accordingly every frame.
 	/// @param inDeltaTime Time step to simulate.
-	/// @param inGravity Gravity vector (m/s^2)
+	/// @param inGravity Gravity vector (m/s^2). This gravity vector is only used when the character is standing on top of another object to apply downward force.
 	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
 	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
 	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
@@ -145,7 +147,7 @@ public:
 
 	/// When stair walking is needed, you can call the WalkStairs function to cast up, forward and down again to try to find a valid position
 	/// @param inDeltaTime Time step to simulate.
-	/// @param inGravity Gravity vector (m/s^2)
+	/// @param inGravity Gravity vector (m/s^2). This gravity vector is only used when the character is standing on top of another object to apply downward force.
 	/// @param inStepUp The direction and distance to step up (this corresponds to the max step height)
 	/// @param inStepForward The direction and distance to step forward after the step up
 	/// @param inStepForwardTest When running at a high frequency, inStepForward can be very small and it's likely that you hit the side of the stairs on the way down. This could produce a normal that violates the max slope angle. If this happens, we test again using this distance from the up position to see if we find a valid slope.
