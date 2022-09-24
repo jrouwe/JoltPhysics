@@ -790,7 +790,7 @@ void Renderer::CopyD3DResource(ID3D12Resource *inDest, ID3D12Resource *inSrc, ui
 ComPtr<ID3D12Resource> Renderer::CreateD3DResourceOnDefaultHeap(const void *inData, uint64 inSize)
 {
 	ComPtr<ID3D12Resource> upload = CreateD3DResourceOnUploadHeap(inSize);
-	ComPtr<ID3D12Resource> resource = CreateD3DResource(D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COPY_DEST, inSize);
+	ComPtr<ID3D12Resource> resource = CreateD3DResource(D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, inSize);
 	CopyD3DResource(upload.Get(), inData, inSize);
 	CopyD3DResource(resource.Get(), upload.Get(), inSize);
 	RecycleD3DResourceOnUploadHeap(upload.Get(), inSize);
