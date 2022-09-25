@@ -39,6 +39,7 @@ public:
 
 		bool				mIsFirst;												///< If this is the first substep in the step
 		bool				mIsLast;												///< If this is the last substep in the step
+		bool				mIsFirstOfAll;											///< If this is the first substep of the first step
 		bool				mIsLastOfAll;											///< If this is the last substep in the last step
 
 		atomic<uint32>		mSolveVelocityConstraintsNextIsland { 0 };				///< Next island that needs to be processed for the solve velocity constraints step (doesn't need own cache line since position jobs don't run at same time)

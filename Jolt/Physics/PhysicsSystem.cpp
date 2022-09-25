@@ -415,6 +415,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 				sub_step.mStep = &step;
 				sub_step.mIsFirst = is_first_sub_step;
 				sub_step.mIsLast = is_last_sub_step;
+				sub_step.mIsFirstOfAll = is_first_step && is_first_sub_step;
 				sub_step.mIsLastOfAll = is_last_step && is_last_sub_step;
 
 				// This job will solve the velocity constraints 
@@ -1251,11 +1252,13 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 #endif
 	
 	float delta_time = ioContext->mSubStepDeltaTime;
-	float warm_start_impulse_ratio = ioContext->mWarmStartImpulseRatio;
 	Constraint **active_constraints = ioContext->mActiveConstraints;
 
 	bool first_sub_step = ioSubStep->mIsFirst;
 	bool last_sub_step = ioSubStep->mIsLast;
+
+	// Only the first sub step of the first step needs to correct for the delta time difference in the previous update
+	float warm_start_impulse_ratio = ioSubStep->mIsFirstOfAll? ioContext->mWarmStartImpulseRatio : 1.0f; 
 
 	for (;;)
 	{
