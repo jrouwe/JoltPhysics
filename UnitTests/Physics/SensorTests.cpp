@@ -89,6 +89,86 @@ TEST_SUITE("SensorTests")
 		CHECK_APPROX_EQUAL(kinematic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 
+	TEST_CASE("TestKinematicVsKinematicSensor")
+	{
+		// Same as TestKinematicVsSensor but with the sensor being an active kinematic body
+
+		PhysicsTestContext c;
+
+		// Register listener
+		LoggingContactListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Kinematic sensor
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		sensor_settings.mIsSensor = true;
+		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
+
+		// Kinematic body moving downwards
+		Body &kinematic = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		kinematic.SetLinearVelocity(Vec3(0, -1, 0));
+
+		// After a single step the kinematic object should not have touched the sensor yet
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() == 0);
+
+		// After half a second we should be touching the sensor
+		c.Simulate(0.5f);
+		CHECK(listener.Contains(EType::Add, kinematic.GetID(), sensor_id));
+		listener.Clear();
+
+		// The next step we require that the contact persists
+		c.SimulateSingleStep();
+		CHECK(listener.Contains(EType::Persist, kinematic.GetID(), sensor_id));
+		CHECK(!listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
+		listener.Clear();
+
+		// After 3 more seconds we should have left the sensor at the bottom side
+		c.Simulate(3.0f + c.GetDeltaTime());
+		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
+		CHECK_APPROX_EQUAL(kinematic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+	}
+
+	TEST_CASE("TestKinematicVsKinematicSensorReversed")
+	{
+		// Same as TestKinematicVsKinematicSensor but with bodies created in reverse order (this matters for Body::sFindCollidingPairsCanCollide because MotionProperties::mIndexInActiveBodies is swapped between the bodies)
+
+		PhysicsTestContext c;
+
+		// Register listener
+		LoggingContactListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Kinematic body moving downwards
+		Body &kinematic = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		kinematic.SetLinearVelocity(Vec3(0, -1, 0));
+
+		// Kinematic sensor
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		sensor_settings.mIsSensor = true;
+		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
+
+		// After a single step the kinematic object should not have touched the sensor yet
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() == 0);
+
+		// After half a second we should be touching the sensor
+		c.Simulate(0.5f);
+		CHECK(listener.Contains(EType::Add, kinematic.GetID(), sensor_id));
+		listener.Clear();
+
+		// The next step we require that the contact persists
+		c.SimulateSingleStep();
+		CHECK(listener.Contains(EType::Persist, kinematic.GetID(), sensor_id));
+		CHECK(!listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
+		listener.Clear();
+
+		// After 3 more seconds we should have left the sensor at the bottom side
+		c.Simulate(3.0f + c.GetDeltaTime());
+		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
+		CHECK_APPROX_EQUAL(kinematic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+	}
+
 	TEST_CASE("TestDynamicSleepingVsStaticSensor")
 	{
 		PhysicsTestContext c;

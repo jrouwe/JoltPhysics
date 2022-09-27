@@ -31,12 +31,15 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 	// One of these conditions must be true
 	// - One of the bodies must be dynamic to collide
 	// - A kinematic object can collide with a sensor
+	bool body1_sensor = inBody1.IsSensor();
+	bool body2_sensor = inBody2.IsSensor();
 	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic()) 
-		&& !(inBody1.IsKinematic() && inBody2.IsSensor()))
+		&& !(inBody1.IsKinematic() && body2_sensor)
+		&& !(inBody2.IsKinematic() && body1_sensor))
 		return false;
 
 	// If both bodies are sensors, there's no collision
-	if (inBody1.IsSensor() && inBody2.IsSensor())
+	if (body1_sensor && body2_sensor)
 		return false;
 
 	// Check that body 1 is active
