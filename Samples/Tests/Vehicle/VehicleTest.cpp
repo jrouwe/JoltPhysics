@@ -6,6 +6,7 @@
 #include <Tests/Vehicle/VehicleTest.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/PhysicsScene.h>
@@ -46,6 +47,8 @@ void VehicleTest::Initialize()
 		CreateBridge();
 
 		CreateWall();
+
+		CreateRubble();
 	}	
 	else
 	{
@@ -114,8 +117,34 @@ void VehicleTest::CreateWall()
 		for (int j = i / 2; j < 5 - (i + 1) / 2; ++j)
 		{
 			Vec3 position(2.0f + j * 1.0f + (i & 1? 0.5f : 0.0f), 2.0f + i * 1.0f, 10.0f);
-			Body &wall = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-			mBodyInterface->AddBody(wall.GetID(), EActivation::Activate);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+		}
+}
+
+void VehicleTest::CreateRubble()
+{
+	// Flat and light objects
+	RefConst<Shape> box_shape = new BoxShape(Vec3(0.5f, 0.1f, 0.5f));
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 5; ++j)
+		{
+			Vec3 position(-5.0f + j, 2.0f + i * 0.2f, 10.0f + 0.5f * i);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+		}
+
+
+	// Light convex shapes
+	default_random_engine random;
+	uniform_real_distribution<float> hull_size(0.2f, 0.4f);
+	for (int i = 0; i < 10; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			// Create random points
+			Array<Vec3> points;
+			for (int k = 0; k < 20; ++k)
+				points.push_back(hull_size(random) * Vec3::sRandom(random));
+
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(new ConvexHullShapeSettings(points), Vec3(-5.0f + 0.5f * j, 2.0f, 15.0f + 0.5f * i), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 		}
 }
 

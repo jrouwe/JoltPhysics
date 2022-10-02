@@ -27,4 +27,5 @@ private:
 
 	void					CreateBridge();
 	void					CreateWall();
+	void					CreateRubble();
 };

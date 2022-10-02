@@ -279,7 +279,7 @@ void VehicleConstraint::CalculateWheelContactPoint(Mat44Arg inBodyTransform, con
 {
 	Vec3 contact_pos = inBodyTransform * (inWheel.mSettings->mPosition + inWheel.mSettings->mDirection * inWheel.mContactLength);
 	outR1PlusU = contact_pos - mBody->GetCenterOfMassPosition();
-	outR2 = contact_pos - mBody->GetCenterOfMassPosition();
+	outR2 = contact_pos - inWheel.mContactBody->GetCenterOfMassPosition();
 }
 
 void VehicleConstraint::CalculatePitchRollConstraintProperties(float inDeltaTime, Mat44Arg inBodyTransform)

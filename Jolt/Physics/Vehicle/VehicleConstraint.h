@@ -42,6 +42,26 @@ protected:
 
 /// Constraint that simulates a vehicle
 /// Note: Don't forget to register the constraint as a StepListener with the PhysicsSystem!
+///
+/// When the vehicle drives over very light objects (rubble) you may see the car body dip down. This is a known issue and is an artifact of the iterative solver that Jolt is using.
+/// Basically if a light object is sandwiched between two heavy objects (the static floor and the car body), the light object is not able to transfer enough force from the ground to
+/// the car body to keep the car body up. You can see this effect in the HeavyOnLightTest sample, the boxes on the right have a lot of penetration because they're on top of light objects.
+/// 
+/// There are a couple of ways to improve this:
+/// 
+/// 1. You can increase the number of velocity steps (global settings PhysicsSettings::mNumVelocitySteps or if you only want to increase it on
+/// the vehicle you can use VehicleConstraintSettings::mNumVelocityStepsOverride). E.g. going from 10 to 30 steps in the HeavyOnLightTest sample makes the penetration a lot less.
+/// The number of position steps can also be increased (the first prevents the body from going down, the second corrects it if the problem did
+/// occur which inevitably happens due to numerical drift). This solution costs CPU cycles.
+/// 
+/// 2. You can reduce the mass difference between the vehicle body and the rubble on the floor (by making the rubble heavier or the car lighter).
+///
+/// 3. You could filter out collisions between the vehicle collision test and the rubble completely. This would make the wheels ignore the rubble but would cause the vehicle to drive
+/// through it as if nothing happened. You could create fake wheels (keyframed bodies) that move along with the vehicle and that only collide with rubble (and not the vehicle or the ground).
+/// This would cause the vehicle to push away the rubble without the rubble being able to affect the vehicle (unless it hits the main body of course).
+///
+/// Note that when driving over rubble, you may see the wheel jump up and down quite quickly because one frame a collision is found and the next frame not.
+/// To alleviate this, it may be needed to smooth the motion of the visual mesh for the wheel.
 class VehicleConstraint : public Constraint, public PhysicsStepListener
 {
 public:
