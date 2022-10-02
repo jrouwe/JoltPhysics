@@ -16,7 +16,8 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest)
 }
 
 static const Vec3 cStepUpHeight = Vec3(0.0f, 0.4f, 0.0f);
-static const float cMinStepForward = 0.15f;
+static const float cMinStepForward = 0.02f;
+static const float cStepForwardTest = 0.15f;
 
 void CharacterVirtualTest::Initialize()
 {
@@ -90,10 +91,14 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				JPH_ASSERT(!ground_to_air);
 
 				// Calculate how much we should step forward
-				Vec3 step_forward = step_forward_normalized * (desired_horizontal_step_len - achieved_horizontal_step_len);
+				// Note that we clamp the step forward to a minimum distance. This is done because at very high frame rates the delta time
+				// may be very small, causing a very small step forward. If the step becomes small enough, we may not move far enough
+				// horizontally to actually end up at the top of the step.
+				Vec3 step_forward = step_forward_normalized * max(cMinStepForward, desired_horizontal_step_len - achieved_horizontal_step_len);
 
-				// Calculate how far to scan ahead for a floor
-				Vec3 step_forward_test = step_forward_normalized * cMinStepForward;
+				// Calculate how far to scan ahead for a floor. This is only used in case the floor normal at step_forward is too steep.
+				// In that case an additional check will be performed at this distance to check if that normal is not too steep.
+				Vec3 step_forward_test = step_forward_normalized * cStepForwardTest;
 
 				mCharacter->WalkStairs(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), cStepUpHeight, step_forward, step_forward_test, Vec3::sZero(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
 			}

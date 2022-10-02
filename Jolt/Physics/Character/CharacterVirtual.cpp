@@ -218,7 +218,7 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 		return false;
 
 	// Correct fraction for the padding that we want to keep from geometry
-	// We want to maintain distance of cCharacterPadding (p) along plane normal outContact.mNormal (n) to the capsule by moving back along inDisplacement (d) by amount d'
+	// We want to maintain distance of mCharacterPadding (p) along plane normal outContact.mContactNormal (n) to the capsule by moving back along inDisplacement (d) by amount d'
 	// cos(angle between d and -n) = -n dot d / |d| = p / d'
 	// <=> d' = -p |d| / n dot d
 	// The new fraction of collision is then:
