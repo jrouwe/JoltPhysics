@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
@@ -110,6 +111,18 @@ void CharacterBaseTest::Initialize()
 			for (int y = 0; y < 3; ++y)
 			{
 				BodyCreationSettings bcs(block, Vec3(5.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+				bcs.mMassPropertiesOverride.mMass = 10.0f;
+				mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate);
+			}
+		}
+
+		{
+			// Dynamic spheres to test player pushing
+			Ref<Shape> sphere = new SphereShape(0.5f);
+			for (int y = 0; y < 3; ++y)
+			{
+				BodyCreationSettings bcs(sphere, Vec3(10.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 				bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 				bcs.mMassPropertiesOverride.mMass = 10.0f;
 				mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate);
