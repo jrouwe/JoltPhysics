@@ -26,6 +26,12 @@ option(USE_TZCNT "Enable TZCNT" ON)
 option(USE_F16C "Enable F16C" ON)
 option(USE_FMADD "Enable FMADD" ON)
 
+include(CMakeDependentOption)
+
+# Ability to toggle between the static and DLL versions of the MSVC runtime library
+# Windows Store only supports the DLL version
+cmake_dependent_option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Use the static MSVC runtime library" ON "MSVC;NOT WINDOWS_STORE" OFF)
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Distribution")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
@@ -40,12 +46,10 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	set(CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE "x64")
 
 	# Set runtime library
-	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
-		# Windows store only supports multithreaded DLL
-		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-	else()
-		# Otherwise use static library
+	if (USE_STATIC_MSVC_RUNTIME_LIBRARY)
 		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	else()
+		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 	endif()
 
 	# Set general compiler flags
