@@ -35,6 +35,11 @@ public:
 	/// @return Created body or null when out of bodies
 	Body *						CreateBody(const BodyCreationSettings &inSettings);
 	
+	/// Create a body with specified ID. This function can be used if a simulation is to run in sync between clients or if a simulation needs to be restored exactly.
+	/// The ID created on the server can be replicated to the client and used to create a deterministic simulation.
+	/// @return Created body or null when the body ID is invalid or a body of the same ID already exists.
+	Body *						CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings);
+
 	/// Destroy a body
 	void						DestroyBody(const BodyID &inBodyID);
 	

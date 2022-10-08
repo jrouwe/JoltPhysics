@@ -20,6 +20,11 @@ Body *BodyInterface::CreateBody(const BodyCreationSettings &inSettings)
 	return mBodyManager->CreateBody(inSettings);
 }
 
+Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings)
+{
+	return mBodyManager->CreateBodyWithID(inBodyID, inSettings);
+}
+
 void BodyInterface::DestroyBody(const BodyID &inBodyID)
 {
 	mBodyManager->DestroyBodies(&inBodyID, 1);
