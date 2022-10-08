@@ -118,11 +118,23 @@ void CharacterBaseTest::Initialize()
 		}
 
 		{
+			// Dynamic block on a static step (to test pushing block on stairs)
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 0.15f, 0.5f)), Vec3(10.0f, 0.15f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+			BodyCreationSettings bcs(new BoxShape(Vec3::sReplicate(0.5f)), Vec3(10.0f, 0.8f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+			bcs.mMassPropertiesOverride.mMass = 10.0f;
+			mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate);
+		}
+
+		{
 			// Dynamic spheres to test player pushing
-			Ref<Shape> sphere = new SphereShape(0.5f);
+			float h = 0.0f;
 			for (int y = 0; y < 3; ++y)
 			{
-				BodyCreationSettings bcs(sphere, Vec3(10.0f, 0.5f + float(y), 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				float r = 0.4f - 0.1f * y;
+				h += r;
+				BodyCreationSettings bcs(new SphereShape(r), Vec3(15.0f, h, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				h += r;
 				bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 				bcs.mMassPropertiesOverride.mMass = 10.0f;
 				mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate);
