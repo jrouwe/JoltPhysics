@@ -178,7 +178,7 @@ Body *BodyManager::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSe
 				return nullptr; // Return error
 
 			// Remove the entry from the freelist
-			uint32 idx_start = uint32(mBodyIDFreeListStart >> cFreedBodyIndexShift);
+			uintptr_t idx_start = mBodyIDFreeListStart >> cFreedBodyIndexShift;
 			if (idx == idx_start)
 			{
 				// First entry, easy to remove, the start of the list is our next
@@ -188,17 +188,17 @@ Body *BodyManager::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSe
 			{
 				// Loop over the freelist and find the entry in the freelist pointing to our index
 				// TODO: This is O(N), see if this becomes a performance problem (don't want to put the freed bodies in a double linked list)
-				uint32 cur, next;
-				for (cur = idx_start; cur != uint32(cBodyIDFreeListEnd); cur = next)
+				uintptr_t cur, next;
+				for (cur = idx_start; cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift; cur = next)
 				{
-					next = uint32(uintptr_t(mBodies[cur]) >> cFreedBodyIndexShift);
+					next = uintptr_t(mBodies[cur]) >> cFreedBodyIndexShift;
 					if (next == idx)
 					{
 						mBodies[cur] = mBodies[idx];
 						break;
 					}
 				}
-				JPH_ASSERT(cur != uint32(cBodyIDFreeListEnd));
+				JPH_ASSERT(cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift);
 
 				// We're leaving the lock, ensure that we've overwritten this entry (although it's not strictly needed)
 				mBodies[idx] = (Body *)cBodyIDFreeListEnd;
