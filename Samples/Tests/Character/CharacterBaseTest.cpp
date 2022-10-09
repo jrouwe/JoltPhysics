@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Application/DebugUI.h>
@@ -108,7 +109,7 @@ void CharacterBaseTest::Initialize()
 		{
 			// A rolling sphere towards the player
 			BodyCreationSettings bcs(new SphereShape(0.2f), Vec3(0.0f, 0.2f, -1.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-			bcs.mLinearVelocity = Vec3(0, 0, 1.0f);
+			bcs.mLinearVelocity = Vec3(0, 0, 2.0f);
 			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 			bcs.mMassPropertiesOverride.mMass = 10.0f;
 			mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
@@ -152,8 +153,25 @@ void CharacterBaseTest::Initialize()
 
 		{
 			// A seesaw to test character gravity
-			mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(1.0f, 0.2f, 0.05f)), Vec3(20.0f, 0.2f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+			BodyID b1 = mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(1.0f, 0.2f, 0.05f)), Vec3(20.0f, 0.2f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 			BodyCreationSettings bcs(new BoxShape(Vec3(1.0f, 0.05f, 5.0f)), Vec3(20.0f, 0.45f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+			bcs.mMassPropertiesOverride.mMass = 10.0f;
+			BodyID b2 = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+
+			// Connect the parts with a hinge
+			HingeConstraintSettings hinge;
+			hinge.mPoint1 = hinge.mPoint2 = Vec3(20.0f, 0.4f, 0.0f);
+			hinge.mHingeAxis1 = hinge.mHingeAxis2 = Vec3::sAxisX();
+			mPhysicsSystem->AddConstraint(mBodyInterface->CreateConstraint(&hinge, b1, b2));
+		}
+
+		{
+			// A board above the character to crouch and jump up against
+			float h = 0.5f * cCharacterHeightCrouching + cCharacterRadiusCrouching + 0.1f;
+			for (int x = 0; x < 2; ++x)
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(1.0f, h, 0.05f)), Vec3(25.0f, h, x == 0? -0.95f : 0.95f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+			BodyCreationSettings bcs(new BoxShape(Vec3(1.0f, 0.05f, 1.0f)), Vec3(25.0f, 2.0f * h + 0.05f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 			bcs.mMassPropertiesOverride.mMass = 10.0f;
 			mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
