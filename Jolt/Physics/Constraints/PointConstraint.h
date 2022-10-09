@@ -57,6 +57,18 @@ public:
 	virtual void				RestoreState(StateRecorder &inStream) override;
 	virtual Ref<ConstraintSettings> GetConstraintSettings() const override;
 
+	/// Update the attachment point for body 1
+	void						SetPoint1(EConstraintSpace inSpace, Vec3Arg inPoint1);
+
+	/// Update the attachment point for body 2
+	void						SetPoint2(EConstraintSpace inSpace, Vec3Arg inPoint2);
+
+	/// Get the attachment point for body 1 relative to body 1 COM
+	inline Vec3					GetLocalSpacePoint1() const									{ return mLocalSpacePosition1; }
+
+	/// Get the attachment point for body 2 relative to body 2 COM
+	inline Vec3					GetLocalSpacePoint2() const									{ return mLocalSpacePosition2; }
+
 	// See: TwoBodyConstraint
 	virtual Mat44				GetConstraintToBody1Matrix() const override					{ return Mat44::sTranslation(mLocalSpacePosition1); }
 	virtual Mat44				GetConstraintToBody2Matrix() const override					{ return Mat44::sTranslation(mLocalSpacePosition2); } // Note: Incorrect rotation as we don't track the original rotation difference, should not matter though as the constraint is not limiting rotation.
