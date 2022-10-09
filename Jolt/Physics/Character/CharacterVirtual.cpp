@@ -562,8 +562,9 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 		previous_contacts[num_previous_contacts] = constraint;
 		num_previous_contacts++;
 
-		// If there's not enough velocity left, bail
-		if (velocity.LengthSq() < 1.0e-8f)
+		// Check early out
+		if (constraint->mProjectedVelocity < 1.0e-8f // Constraint should not be pushing, otherwise there may be other constraints that are pushing us
+			&& velocity.LengthSq() < 1.0e-8f) // There's not enough velocity left
 			return;
 
 		// If the constraint has velocity we accept the new velocity, otherwise check that we didn't reverse velocity
