@@ -106,6 +106,15 @@ void CharacterBaseTest::Initialize()
 		}
 
 		{
+			// A rolling sphere towards the player
+			BodyCreationSettings bcs(new SphereShape(0.2f), Vec3(0.0f, 0.2f, -1.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			bcs.mLinearVelocity = Vec3(0, 0, 1.0f);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+			bcs.mMassPropertiesOverride.mMass = 10.0f;
+			mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+		}
+
+		{
 			// Dynamic blocks to test player pushing blocks
 			Ref<Shape> block = new BoxShape(Vec3::sReplicate(0.5f));
 			for (int y = 0; y < 3; ++y)
@@ -127,7 +136,7 @@ void CharacterBaseTest::Initialize()
 		}
 
 		{
-			// Dynamic spheres to test player pushing
+			// Dynamic spheres to test player pushing stuff you can step on
 			float h = 0.0f;
 			for (int y = 0; y < 3; ++y)
 			{
@@ -139,6 +148,15 @@ void CharacterBaseTest::Initialize()
 				bcs.mMassPropertiesOverride.mMass = 10.0f;
 				mBodyInterface->CreateAndAddBody(bcs, EActivation::DontActivate);
 			}
+		}
+
+		{
+			// A seesaw to test character gravity
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(1.0f, 0.2f, 0.05f)), Vec3(20.0f, 0.2f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+			BodyCreationSettings bcs(new BoxShape(Vec3(1.0f, 0.05f, 5.0f)), Vec3(20.0f, 0.45f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+			bcs.mMassPropertiesOverride.mMass = 10.0f;
+			mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 		}
 
 		{

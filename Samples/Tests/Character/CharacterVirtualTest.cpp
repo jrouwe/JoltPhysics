@@ -100,7 +100,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				// In that case an additional check will be performed at this distance to check if that normal is not too steep.
 				Vec3 step_forward_test = step_forward_normalized * cStepForwardTest;
 
-				mCharacter->WalkStairs(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), cStepUpHeight, step_forward, step_forward_test, Vec3::sZero(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
+				mCharacter->WalkStairs(inParams.mDeltaTime, cStepUpHeight, step_forward, step_forward_test, Vec3::sZero(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
 			}
 		}
 	}
