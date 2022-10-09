@@ -188,6 +188,61 @@ TEST_SUITE("PhysicsTests")
 		bi.DestroyBody(body0_id);
 	}
 
+	TEST_CASE("TestPhysicsBodyIDOverride")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// Dummy creation settings
+		BodyCreationSettings bc(new BoxShape(Vec3::sReplicate(1.0f)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+
+		// Create a body
+		Body *b1 = bi.CreateBody(bc);
+		CHECK(b1->GetID() == BodyID(0, 1));
+
+		// Create body with same ID and same sequence number
+		Body *b2 = bi.CreateBodyWithID(BodyID(0, 1), bc);
+		CHECK(b2 == nullptr);
+
+		// Create body with same ID and different sequence number
+		b2 = bi.CreateBodyWithID(BodyID(0, 2), bc);
+		CHECK(b2 == nullptr);
+
+		// Create body with different ID (leave 1 open slot)
+		b2 = bi.CreateBodyWithID(BodyID(2, 1), bc);
+		CHECK(b2 != nullptr);
+		CHECK(b2->GetID() == BodyID(2, 1));
+
+		// Create another body and check that the open slot is returned
+		Body *b3 = bi.CreateBody(bc);
+		CHECK(b3->GetID() == BodyID(1, 1));
+
+		// Create another body and check that we do not hand out the body with specified ID
+		Body *b4 = bi.CreateBody(bc);
+		CHECK(b4->GetID() == BodyID(3, 1));
+
+		// Delete and recreate body 4
+		CHECK(bi.CreateBodyWithID(BodyID(3, 1), bc) == nullptr);
+		bi.DestroyBody(b4->GetID());
+		b4 = bi.CreateBodyWithID(BodyID(3, 1), bc);
+		CHECK(b4 != nullptr);
+		CHECK(b4->GetID() == BodyID(3, 1));
+
+		// Clean up all bodies
+		bi.DestroyBody(b1->GetID());
+		bi.DestroyBody(b2->GetID());
+		bi.DestroyBody(b3->GetID());
+		bi.DestroyBody(b4->GetID());
+
+		// Recreate body 1
+		b1 = bi.CreateBodyWithID(BodyID(0, 1), bc);
+		CHECK(b1 != nullptr);
+		CHECK(b1->GetID() == BodyID(0, 1));
+
+		// Destroy last body
+		bi.DestroyBody(b1->GetID());
+	}
+
 	TEST_CASE("TestPhysicsBodyUserData")
 	{
 		PhysicsTestContext c(1.0f / 60.0f, 1, 1);

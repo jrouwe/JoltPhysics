@@ -64,6 +64,10 @@ public:
 	/// This is a thread safe function. Can return null if there are no more bodies available.
 	Body *							CreateBody(const BodyCreationSettings &inBodyCreationSettings);
 
+	/// Helper function to create a body when the ID has been determined
+	/// This is a thread safe function. Can return null if there are no more bodies available or when the body ID is already in use.
+	Body *							CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings);
+
 	/// Mark a list of bodies for destruction and remove it from this manager.
 	/// This is a thread safe function since the body is not deleted until the next PhysicsSystem::Update() (which will take all locks)
 	void							DestroyBodies(const BodyID *inBodyIDs, int inNumber);
@@ -221,6 +225,9 @@ private:
 	__attribute__((no_sanitize("implicit-conversion"))) // We intentionally overflow the uint8 sequence number
 #endif
 	inline uint8					GetNextSequenceNumber(int inBodyIndex)		{ return ++mBodySequenceNumbers[inBodyIndex]; }
+
+	/// Helper function to create a body when the ID has been determined
+	Body *							CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings);
 
 	/// Helper function to delete a body (which could actually be a BodyWithMotionProperties)
 	inline static void				sDeleteBody(Body *inBody);

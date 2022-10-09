@@ -81,6 +81,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2
+    - name: Update index
+      run: sudo apt-get update
     - name: Install Cross Compiler
       run: sudo apt-get install gcc-11-aarch64-linux-gnu gcc-11-multilib g++-11-multilib libstdc++-11-dev-arm64-cross qemu-user -y
     - name: Configure CMake
