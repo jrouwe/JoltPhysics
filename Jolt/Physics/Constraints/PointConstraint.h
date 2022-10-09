@@ -63,7 +63,8 @@ public:
 
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
 	inline Vec3		 			GetTotalLambdaPosition() const								{ return mPointConstraintPart.GetTotalLambda(); }
-
+	inline void		 			SetPoint1(Vec3Arg p)										{ mLocalSpacePosition1 = p; }
+	inline void		 			SetPoint2(Vec3Arg p)										{ mLocalSpacePosition2 = p; }
 private:
 	// Internal helper function to calculate the values below
 	void						CalculateConstraintProperties();
