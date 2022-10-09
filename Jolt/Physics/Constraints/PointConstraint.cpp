@@ -59,6 +59,22 @@ PointConstraint::PointConstraint(Body &inBody1, Body &inBody2, const PointConstr
 	}
 }
 
+void PointConstraint::SetPoint1(EConstraintSpace inSpace, Vec3Arg inPoint1)
+{
+	mLocalSpacePosition1 = inPoint1;
+
+	if (inSpace == EConstraintSpace::WorldSpace)
+		mLocalSpacePosition1 = mBody1->GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
+}
+
+void PointConstraint::SetPoint2(EConstraintSpace inSpace, Vec3Arg inPoint2)
+{
+	mLocalSpacePosition2 = inPoint2;
+
+	if (inSpace == EConstraintSpace::WorldSpace)
+		mLocalSpacePosition2 = mBody2->GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+}
+
 void PointConstraint::CalculateConstraintProperties()
 {	
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
