@@ -91,7 +91,7 @@ void SkeletonMapper::Initialize(const Skeleton *inSkeleton1, const Mat44 *inNeut
 					mapped2[j2] = true;
 
 				// Insert the chain
-				mChains.emplace_back(move(chain1), move(chain2));
+				mChains.emplace_back(std::move(chain1), std::move(chain2));
 			}
 		}
 	}

@@ -30,7 +30,7 @@ public:
 	{
 	public:
 							Chain() = default;
-							Chain(Array<int> &&inJointIndices1, Array<int> &&inJointIndices2) : mJointIndices1(move(inJointIndices1)), mJointIndices2(move(inJointIndices2)) { }
+							Chain(Array<int> &&inJointIndices1, Array<int> &&inJointIndices2) : mJointIndices1(std::move(inJointIndices1)), mJointIndices2(std::move(inJointIndices2)) { }
 
 		Array<int>			mJointIndices1;																///< Joint chain from skeleton 1
 		Array<int>			mJointIndices2;																///< Corresponding joint chain from skeleton 2

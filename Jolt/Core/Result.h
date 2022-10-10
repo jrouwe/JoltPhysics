@@ -42,11 +42,11 @@ public:
 		switch (inRHS.mState)
 		{
 		case EState::Valid:
-			::new (&mResult) Type (move(inRHS.mResult));
+			::new (&mResult) Type (std::move(inRHS.mResult));
 			break;
 
 		case EState::Error:
-			::new (&mError) String(move(inRHS.mError));
+			::new (&mError) String(std::move(inRHS.mError));
 			break;
 
 		case EState::Invalid:
@@ -93,11 +93,11 @@ public:
 		switch (inRHS.mState)
 		{
 		case EState::Valid:
-			::new (&mResult) Type (move(inRHS.mResult));
+			::new (&mResult) Type (std::move(inRHS.mResult));
 			break;
 
 		case EState::Error:
-			::new (&mError) String(move(inRHS.mError));
+			::new (&mError) String(std::move(inRHS.mError));
 			break;
 
 		case EState::Invalid:
@@ -142,7 +142,7 @@ public:
 	void				Set(const Type &inResult)					{ Clear(); ::new (&mResult) Type(inResult); mState = EState::Valid; }
 
 	/// Set the result value (move value)
-	void				Set(const Type &&inResult)					{ Clear(); ::new (&mResult) Type(move(inResult)); mState = EState::Valid; }
+	void				Set(const Type &&inResult)					{ Clear(); ::new (&mResult) Type(std::move(inResult)); mState = EState::Valid; }
 
 	/// Check if we had an error
 	bool				HasError() const							{ return mState == EState::Error; }
@@ -153,7 +153,7 @@ public:
 	/// Set an error value
 	void				SetError(const char *inError)				{ Clear(); ::new (&mError) String(inError); mState = EState::Error; }
 	void				SetError(const string_view &inError)		{ Clear(); ::new (&mError) String(inError); mState = EState::Error; }
-	void				SetError(String &&inError)					{ Clear(); ::new (&mError) String(move(inError)); mState = EState::Error; }
+	void				SetError(String &&inError)					{ Clear(); ::new (&mError) String(std::move(inError)); mState = EState::Error; }
 
 private:
 	union
