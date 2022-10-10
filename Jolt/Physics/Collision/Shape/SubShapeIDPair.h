@@ -19,6 +19,7 @@ public:
 							SubShapeIDPair() = default;
 							SubShapeIDPair(const BodyID &inBody1ID, const SubShapeID &inSubShapeID1, const BodyID &inBody2ID, const SubShapeID &inSubShapeID2) : mBody1ID(inBody1ID), mSubShapeID1(inSubShapeID1), mBody2ID(inBody2ID), mSubShapeID2(inSubShapeID2) { }
 							SubShapeIDPair(const SubShapeIDPair &) = default;
+	SubShapeIDPair &		operator=(const SubShapeIDPair &) = default;
 
 	/// Equality operator
 	inline bool				operator == (const SubShapeIDPair &inRHS) const		
