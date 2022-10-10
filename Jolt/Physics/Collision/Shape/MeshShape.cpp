@@ -143,9 +143,9 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	if (!mMaterials.empty())
 	{
 		// Validate materials
-		if (mMaterials.size() > FLAGS_MATERIAL_MASK)
+		if (mMaterials.size() > (1 << FLAGS_MATERIAL_BITS))
 		{
-			outResult.SetError(StringFormat("Supporting max %d materials per mesh", FLAGS_ACTIVE_EDGE_MASK + 1));
+			outResult.SetError(StringFormat("Supporting max %d materials per mesh", 1 << FLAGS_MATERIAL_BITS));
 			return;
 		}
 		for (const IndexedTriangle &t : inSettings.mIndexedTriangles)
