@@ -81,7 +81,7 @@ void CharacterBaseTest::Initialize()
 	else if (strcmp(sSceneName, "ObstacleCourse") == 0)
 	{
 		// Default terrain
-		CreateFloor(300.0f);
+		CreateFloor(350.0f);
 
 		{
 			// Create ramps with different inclinations
@@ -175,6 +175,11 @@ void CharacterBaseTest::Initialize()
 			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 			bcs.mMassPropertiesOverride.mMass = 10.0f;
 			mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+		}
+
+		{
+			// A floating static block
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), Vec3(30.0f, 1.5f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 		}
 
 		{
