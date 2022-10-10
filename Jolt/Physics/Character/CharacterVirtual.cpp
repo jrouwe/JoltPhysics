@@ -673,6 +673,11 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		mGroundNormal = avg_normal.Normalized();
 		mGroundVelocity = avg_velocity / float(num_avg_normal);
 	}
+	else if (supporting_contact != nullptr)
+	{
+		mGroundNormal = supporting_contact->mSurfaceNormal;
+		mGroundVelocity = supporting_contact->mLinearVelocity;
+	}
 	else
 	{
 		mGroundNormal = Vec3::sZero();
