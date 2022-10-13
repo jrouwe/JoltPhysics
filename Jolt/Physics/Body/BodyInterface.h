@@ -40,6 +40,15 @@ public:
 	/// @return Created body or null when the body ID is invalid or a body of the same ID already exists.
 	Body *						CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings);
 
+	/// Allocates and initializes a body, without adding it.
+	/// @return Created body or null when allocation fails.
+	Body *						AllocateBody(const BodyCreationSettings &inSettings);
+
+	/// Insert a preallocated body at a specified ID. This function can be used if a simulation is to run in sync between clients or if a simulation needs to be restored exactly.
+	/// The ID created on the server can be replicated to the client and used to create a deterministic simulation.
+	/// @return true on success, false on failure.
+	bool                        InsertBody(Body *inBody, const BodyID &inBodyID);
+
 	/// Destroy a body
 	void						DestroyBody(const BodyID &inBodyID);
 	

@@ -228,6 +228,15 @@ Body *BodyManager::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSe
 
 Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings)
 {
+	Body* body = AllocateBody(inBodyCreationSettings);
+	body->mID = inBodyID;
+	// Add body
+	mBodies[inBodyID.GetIndex()] = body;
+	return body;
+}
+
+Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettings)
+{
 	// Fill in basic properties
 	Body *body;
 	if (inBodyCreationSettings.HasMassProperties())
@@ -240,7 +249,6 @@ Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCr
 	{
 	 	body = new Body;
 	}
-	body->mID = inBodyID;
 	body->mShape = inBodyCreationSettings.GetShape();
 	body->mUserData = inBodyCreationSettings.mUserData;
 	body->SetFriction(inBodyCreationSettings.mFriction);
@@ -272,10 +280,73 @@ Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCr
 
 	// Position body
 	body->SetPositionAndRotationInternal(inBodyCreationSettings.mPosition, inBodyCreationSettings.mRotation);
-
-	// Add body
-	mBodies[inBodyID.GetIndex()] = body;
 	return body;
+}
+
+bool BodyManager::InsertBody(Body *inBody, const BodyID &inBodyID)
+{
+	{
+		UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+
+		// Check if index is beyond the max body ID
+		uint32 idx = inBodyID.GetIndex();
+		if (idx >= mBodies.capacity())
+			return false; // Return error
+
+		if (idx < mBodies.size())
+		{
+			// Body array entry has already been allocated, check if there's a free body here
+			if (sIsValidBodyPointer(mBodies[idx]))
+				return false; // Return error
+
+			// Remove the entry from the freelist
+			uintptr_t idx_start = mBodyIDFreeListStart >> cFreedBodyIndexShift;
+			if (idx == idx_start)
+			{
+				// First entry, easy to remove, the start of the list is our next
+				mBodyIDFreeListStart = uintptr_t(mBodies[idx]);
+			}
+			else
+			{
+				// Loop over the freelist and find the entry in the freelist pointing to our index
+				// TODO: This is O(N), see if this becomes a performance problem (don't want to put the freed bodies in a double linked list)
+				uintptr_t cur, next;
+				for (cur = idx_start; cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift; cur = next)
+				{
+					next = uintptr_t(mBodies[cur]) >> cFreedBodyIndexShift;
+					if (next == idx)
+					{
+						mBodies[cur] = mBodies[idx];
+						break;
+					}
+				}
+				JPH_ASSERT(cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift);
+
+				// We're leaving the lock, ensure that we've overwritten this entry (although it's not strictly needed)
+				mBodies[idx] = (Body *)cBodyIDFreeListEnd;
+			}
+		}
+		else
+		{
+			// Ensure that all body IDs up to this body ID have been allocated and added to the free list
+			while (idx > mBodies.size())
+			{
+				// Push the id onto the freelist
+				mBodies.push_back((Body *)mBodyIDFreeListStart);
+				mBodyIDFreeListStart = (uintptr_t(mBodies.size() - 1) << cFreedBodyIndexShift) | cIsFreedBody;
+			}
+
+			// Add the element that we're going to overwrite to the list
+			mBodies.push_back((Body *)cBodyIDFreeListEnd);
+		}
+
+		// Update cached number of bodies
+		mNumBodies++;
+	}
+	inBody->mID = inBodyID;
+	// Add body
+	mBodies[inBodyID.GetIndex()] = inBody;
+	return true;
 }
 
 void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)

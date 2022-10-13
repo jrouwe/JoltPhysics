@@ -25,6 +25,16 @@ Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreation
 	return mBodyManager->CreateBodyWithID(inBodyID, inSettings);
 }
 
+Body *BodyInterface::AllocateBody(const BodyCreationSettings &inSettings)
+{
+	return mBodyManager->AllocateBody(inSettings);
+}
+
+bool BodyInterface::InsertBody(Body *inBody, const BodyID &inBodyID)
+{
+	return mBodyManager->InsertBody(inBody, inBodyID);
+}
+
 void BodyInterface::DestroyBody(const BodyID &inBodyID)
 {
 	mBodyManager->DestroyBodies(&inBodyID, 1);

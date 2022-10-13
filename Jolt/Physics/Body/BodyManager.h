@@ -68,6 +68,14 @@ public:
 	/// This is a thread safe function. Can return null if there are no more bodies available or when the body ID is already in use.
 	Body *							CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings);
 
+	/// Helper function to allocate and initialize a body without modifying other state and without holding locks.
+	/// This is a thread safe function. Can return null if allocation fails.
+	Body *							AllocateBody(const BodyCreationSettings &inBodyCreationSettings);
+
+	/// Helper function to insert a preallocated body at a specified body ID.
+	/// This is a thread safe function. Can return false if the body ID is already in use.
+	bool                            InsertBody(Body *inBody, const BodyID &inBodyID);
+
 	/// Mark a list of bodies for destruction and remove it from this manager.
 	/// This is a thread safe function since the body is not deleted until the next PhysicsSystem::Update() (which will take all locks)
 	void							DestroyBodies(const BodyID *inBodyIDs, int inNumber);
