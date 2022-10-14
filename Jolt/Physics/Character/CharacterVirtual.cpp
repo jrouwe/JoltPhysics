@@ -594,13 +594,16 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 			c.mHadCollision |= c.mDistance < mCollisionTolerance
 								&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f);
 
+	// Calculate transform that takes us to character local space
+	Mat44 inv_transform = Mat44::sInverseRotationTranslation(mRotation, mPosition);
+
 	// Determine if we're supported or not
 	int num_supported = 0;
 	int num_sliding = 0;
 	int num_avg_normal = 0;
 	Vec3 avg_normal = Vec3::sZero();
 	Vec3 avg_velocity = Vec3::sZero();
-	const Contact *supporting_contact = nullptr;
+	const Contact *best_contact = nullptr;
 	float max_cos_angle = -FLT_MAX;
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
@@ -608,12 +611,16 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 			// Calculate the angle between the plane normal and the up direction
 			float cos_angle = c.mSurfaceNormal.Dot(mUp);
 
-			// Find the contact with the normal that is pointing most upwards and store it in mSupportingContact
+			// Find the contact with the normal that is pointing most upwards and store it
 			if (max_cos_angle < cos_angle)
 			{
-				supporting_contact = &c;
+				best_contact = &c;
 				max_cos_angle = cos_angle;
 			}
+
+			// If this contact is in front of our plane, we cannot be supported by it
+			if (mSupportingVolume.SignedDistance(inv_transform * c.mPosition) > 0.0f)
+				continue;
 
 			// Check if this is a sliding or supported contact
 			bool is_supported = mCosMaxSlopeAngle > cNoMaxSlopeAngle || cos_angle >= mCosMaxSlopeAngle;
@@ -683,10 +690,10 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		mGroundNormal = avg_normal.Normalized();
 		mGroundVelocity = avg_velocity / float(num_avg_normal);
 	}
-	else if (supporting_contact != nullptr)
+	else if (best_contact != nullptr)
 	{
-		mGroundNormal = supporting_contact->mSurfaceNormal;
-		mGroundVelocity = supporting_contact->mLinearVelocity;
+		mGroundNormal = best_contact->mSurfaceNormal;
+		mGroundVelocity = best_contact->mLinearVelocity;
 	}
 	else
 	{
@@ -694,14 +701,14 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		mGroundVelocity = Vec3::sZero();
 	}
 
-	// Copy supporting contact properties
-	if (supporting_contact != nullptr)
+	// Copy contact properties
+	if (best_contact != nullptr)
 	{
-		mGroundBodyID = supporting_contact->mBodyB;
-		mGroundBodySubShapeID = supporting_contact->mSubShapeIDB;
-		mGroundPosition = supporting_contact->mPosition;
-		mGroundMaterial = supporting_contact->mMaterial;
-		mGroundUserData = supporting_contact->mUserData;
+		mGroundBodyID = best_contact->mBodyB;
+		mGroundBodySubShapeID = best_contact->mSubShapeIDB;
+		mGroundPosition = best_contact->mPosition;
+		mGroundMaterial = best_contact->mMaterial;
+		mGroundUserData = best_contact->mUserData;
 	}
 	else
 	{
@@ -744,8 +751,8 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 	}
 	else
 	{
-		// Not in contact with anything
-		mGroundState = EGroundState::InAir;
+		// Not supported by anything
+		mGroundState = best_contact != nullptr? EGroundState::NotSupported : EGroundState::InAir;
 	}
 }
 
@@ -935,6 +942,10 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 
 bool CharacterVirtual::CanWalkStairs(Vec3Arg inLinearVelocity) const
 {
+	// We can only walk stairs if we're supported
+	if (!IsSupported())
+		return false;
+
 	// Check if there's enough horizontal velocity to trigger a stair walk
 	Vec3 horizontal_velocity = inLinearVelocity - inLinearVelocity.Dot(mUp) * mUp;
 	if (horizontal_velocity.IsNearZero(1.0e-6f))
@@ -1056,8 +1067,6 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 
 bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
 {
-	JPH_ASSERT(GetGroundState() == EGroundState::InAir, "Makes no sense to call this if we're not in air");
-
 	// Try to find the floor
 	Contact contact;
 	IgnoredContactList dummy_ignored_contacts(inAllocator);

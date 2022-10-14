@@ -29,6 +29,7 @@ void CharacterTest::Initialize()
 	settings->mLayer = Layers::MOVING;
 	settings->mShape = mStandingShape;
 	settings->mFriction = 0.5f;
+	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -1.1f * cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule plus a bit of slack
 	mCharacter = new Character(settings, Vec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->AddToPhysicsSystem(EActivation::Activate);
 }
@@ -69,9 +70,10 @@ void CharacterTest::RestoreState(StateRecorder &inStream)
 
 void CharacterTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
 {
-	// Cancel movement in opposite direction of normal when sliding
+	// Cancel movement in opposite direction of normal when touching something we can't walk up
 	Character::EGroundState ground_state = mCharacter->GetGroundState();
-	if (ground_state == Character::EGroundState::OnSteepGround)
+	if (ground_state == Character::EGroundState::OnSteepGround
+		|| ground_state == Character::EGroundState::NotSupported)
 	{
 		Vec3 normal = mCharacter->GetGroundNormal();
 		normal.SetY(0.0f);

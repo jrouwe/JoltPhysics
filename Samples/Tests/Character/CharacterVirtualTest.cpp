@@ -31,6 +31,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mCharacterPadding = sCharacterPadding;
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
+	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -1.1f * cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule plus a bit of slack
 	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
@@ -56,13 +57,13 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	Vec3 old_position = mCharacter->GetPosition();
 
 	// Track that on ground before the update
-	bool ground_to_air = mCharacter->GetGroundState() != CharacterBase::EGroundState::InAir;
+	bool ground_to_air = mCharacter->IsSupported();
 
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
 
 	// ... and that we got into air after
-	if (mCharacter->GetGroundState() != CharacterBase::EGroundState::InAir)
+	if (mCharacter->IsSupported())
 		ground_to_air = false;
 
 	// Allow user to turn off walk stairs algorithm
@@ -132,10 +133,11 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// True if the player intended to move
 	mAllowSliding = !inMovementDirection.IsNearZero();
 
-	// Cancel movement in opposite direction of normal when sliding
+	// Cancel movement in opposite direction of normal when touching something we can't walk up
 	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
 	Vec3 desired_velocity = mDesiredVelocity;
-	if (ground_state == CharacterVirtual::EGroundState::OnSteepGround)
+	if (ground_state == CharacterVirtual::EGroundState::OnSteepGround
+		|| ground_state == CharacterVirtual::EGroundState::NotSupported)
 	{
 		Vec3 normal = mCharacter->GetGroundNormal();
 		normal.SetY(0.0f);
