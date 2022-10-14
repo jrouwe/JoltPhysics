@@ -175,10 +175,11 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 	return mListener->OnContactValidate(this, inContact.mBodyB, inContact.mSubShapeIDB);
 }
 
-bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
+bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, EContactMode inContactMode, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
 {
 	// Too small distance -> skip checking
-	if (inDisplacement.LengthSq() < 1.0e-8f)
+	float displacement_len_sq = inDisplacement.LengthSq();
+	if (displacement_len_sq < 1.0e-8f)
 		return false;
 
 	// Calculate start transform
@@ -217,15 +218,24 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	if (!valid_contact)
 		return false;
 
-	// Correct fraction for the padding that we want to keep from geometry
-	// We want to maintain distance of mCharacterPadding (p) along plane normal outContact.mContactNormal (n) to the capsule by moving back along inDisplacement (d) by amount d'
-	// cos(angle between d and -n) = -n dot d / |d| = p / d'
-	// <=> d' = -p |d| / n dot d
-	// The new fraction of collision is then:
-	// f' = f - d' / |d| = f + p / n dot d
-	float dot = outContact.mContactNormal.Dot(inDisplacement);
-	if (dot < 0.0f) // We should not divide by zero and we should only update the fraction if normal is pointing towards displacement
-		outContact.mFraction = max(0.0f, outContact.mFraction + mCharacterPadding / dot);
+	if (inContactMode == EContactMode::InfinitePlane)
+	{
+		// Correct fraction for the padding that we want to keep from the infinite plane defined by contact point and normal
+		// We want to maintain distance of mCharacterPadding (p) along plane normal outContact.mContactNormal (n) to the capsule by moving back along inDisplacement (d) by amount d'
+		// cos(angle between d and -n) = -n dot d / |d| = p / d'
+		// <=> d' = -p |d| / n dot d
+		// The new fraction of collision is then:
+		// f' = f - d' / |d| = f + p / n dot d
+		float dot = outContact.mContactNormal.Dot(inDisplacement);
+		if (dot < 0.0f) // We should not divide by zero and we should only update the fraction if normal is pointing towards displacement
+			outContact.mFraction = max(0.0f, outContact.mFraction + mCharacterPadding / dot);
+	}
+	else
+	{
+		// Move the fraction back so that the character and its padding don't hit the contact point anymore
+		JPH_ASSERT(inContactMode == EContactMode::Point);
+		outContact.mFraction = max(0.0f, outContact.mFraction - mCharacterPadding / sqrt(displacement_len_sq));
+	}
 	return true;
 }
 
@@ -807,7 +817,7 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, float inD
 
 		// Do a sweep to test if the path is really unobstructed
 		Contact cast_contact;
-		if (GetFirstContactForSweep(ioPosition, displacement, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+		if (GetFirstContactForSweep(ioPosition, displacement, EContactMode::InfinitePlane, cast_contact, ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		{
 			displacement *= cast_contact.mFraction;
 			time_simulated *= cast_contact.mFraction;
@@ -946,7 +956,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	Vec3 up = inStepUp;
 	Contact contact;
 	IgnoredContactList dummy_ignored_contacts(inAllocator);
-	if (GetFirstContactForSweep(mPosition, up, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+	if (GetFirstContactForSweep(mPosition, up, EContactMode::InfinitePlane, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 	{
 		if (contact.mFraction < 1.0e-6f)
 			return false; // No movement, cancel
@@ -977,8 +987,9 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	// Move down towards the floor.
 	// Note that we travel the same amount down as we travelled up with the character padding and the specified extra
 	// If we don't add the character padding, we may miss the floor (note that GetFirstContactForSweep will subtract the padding when it finds a hit)
+	// For this query we treat the contact as a point instead of an infinite plane since the infinite plane will cause us to move very conservatively and we may end up in mid air
 	Vec3 down = -up - mCharacterPadding * mUp + inStepDownExtra;
-	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+	if (!GetFirstContactForSweep(new_position, down, EContactMode::Point, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		return false; // No floor found, we're in mid air, cancel stair walk
 
 #ifdef JPH_DEBUG_RENDERER
@@ -1006,10 +1017,10 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 
 		// First sweep forward to the test position
 		Contact test_contact;
-		if (!GetFirstContactForSweep(up_position, inStepForwardTest, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+		if (!GetFirstContactForSweep(up_position, inStepForwardTest, EContactMode::InfinitePlane, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		{
 			// Then sweep down
-			if (!GetFirstContactForSweep(test_position, down, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+			if (!GetFirstContactForSweep(test_position, down, EContactMode::Point, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 				return false;
 		}
 		else
@@ -1050,7 +1061,7 @@ bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFil
 	// Try to find the floor
 	Contact contact;
 	IgnoredContactList dummy_ignored_contacts(inAllocator);
-	if (!GetFirstContactForSweep(mPosition, inStepDown, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+	if (!GetFirstContactForSweep(mPosition, inStepDown, EContactMode::Point, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		return false; // If no floor found, don't update our position
 
 	// Calculate new position
