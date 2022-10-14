@@ -120,113 +120,7 @@ BodyManager::BodyStats BodyManager::GetBodyStats() const
 	return stats;
 }
 
-Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings)
-{
-	// Determine next free index
-	uint32 idx;
-	{
-		UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
-
-		if (mBodyIDFreeListStart != cBodyIDFreeListEnd)
-		{
-			// Pop an item from the freelist
-			JPH_ASSERT(mBodyIDFreeListStart & cIsFreedBody);
-			idx = uint32(mBodyIDFreeListStart >> cFreedBodyIndexShift);
-			JPH_ASSERT(!sIsValidBodyPointer(mBodies[idx]));
-			mBodyIDFreeListStart = uintptr_t(mBodies[idx]);
-		}
-		else
-		{
-			if (mBodies.size() < mBodies.capacity())
-			{
-				// Allocate a new entry, note that the array should not actually resize since we've reserved it at init time
-				idx = uint32(mBodies.size());
-				mBodies.push_back((Body *)cBodyIDFreeListEnd);
-			}
-			else
-			{
-				// Out of bodies
-				return nullptr;
-			}
-		}
-
-		// Update cached number of bodies
-		mNumBodies++;
-	}
-
-	// Get next sequence number
-	uint8 seq_no = GetNextSequenceNumber(idx);
-
-	// Do actual creation
-	return CreateBodyWithIDInternal(BodyID(idx, seq_no), inBodyCreationSettings);
-}
-
-Body *BodyManager::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings)
-{
-	{
-		UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
-
-		// Check if index is beyond the max body ID
-		uint32 idx = inBodyID.GetIndex();
-		if (idx >= mBodies.capacity())
-			return nullptr; // Return error
-
-		if (idx < mBodies.size())
-		{
-			// Body array entry has already been allocated, check if there's a free body here
-			if (sIsValidBodyPointer(mBodies[idx]))
-				return nullptr; // Return error
-
-			// Remove the entry from the freelist
-			uintptr_t idx_start = mBodyIDFreeListStart >> cFreedBodyIndexShift;
-			if (idx == idx_start)
-			{
-				// First entry, easy to remove, the start of the list is our next
-				mBodyIDFreeListStart = uintptr_t(mBodies[idx]);
-			}
-			else
-			{
-				// Loop over the freelist and find the entry in the freelist pointing to our index
-				// TODO: This is O(N), see if this becomes a performance problem (don't want to put the freed bodies in a double linked list)
-				uintptr_t cur, next;
-				for (cur = idx_start; cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift; cur = next)
-				{
-					next = uintptr_t(mBodies[cur]) >> cFreedBodyIndexShift;
-					if (next == idx)
-					{
-						mBodies[cur] = mBodies[idx];
-						break;
-					}
-				}
-				JPH_ASSERT(cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift);
-
-				// We're leaving the lock, ensure that we've overwritten this entry (although it's not strictly needed)
-				mBodies[idx] = (Body *)cBodyIDFreeListEnd;
-			}
-		}
-		else
-		{
-			// Ensure that all body IDs up to this body ID have been allocated and added to the free list
-			while (idx > mBodies.size())
-			{
-				// Push the id onto the freelist
-				mBodies.push_back((Body *)mBodyIDFreeListStart);
-				mBodyIDFreeListStart = (uintptr_t(mBodies.size() - 1) << cFreedBodyIndexShift) | cIsFreedBody;
-			}
-
-			// Add the element that we're going to overwrite to the list
-			mBodies.push_back((Body *)cBodyIDFreeListEnd);
-		}
-
-		// Update cached number of bodies
-		mNumBodies++;
-	}
-
-	// Do actual creation
-	return CreateBodyWithIDInternal(inBodyID, inBodyCreationSettings);
-}
-
-Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings)
+Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettings) const
 {
 	// Fill in basic properties
 	Body *body;
@@ -240,7 +134,6 @@ Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCr
 	{
 	 	body = new Body;
 	}
-	body->mID = inBodyID;
 	body->mShape = inBodyCreationSettings.GetShape();
 	body->mUserData = inBodyCreationSettings.mUserData;
 	body->SetFriction(inBodyCreationSettings.mFriction);
@@ -273,9 +166,129 @@ Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCr
 	// Position body
 	body->SetPositionAndRotationInternal(inBodyCreationSettings.mPosition, inBodyCreationSettings.mRotation);
 
-	// Add body
-	mBodies[inBodyID.GetIndex()] = body;
 	return body;
+}
+
+void BodyManager::FreeBody(Body *inBody) const
+{
+	JPH_ASSERT(inBody->GetID().IsInvalid(), "This function should only be called on a body that doesn't have an ID yet, use DestroyBody otherwise");
+
+	sDeleteBody(inBody);
+}
+
+bool BodyManager::AddBody(Body *ioBody)
+{
+	// Return error when body was already added
+	if (!ioBody->GetID().IsInvalid())
+		return false;
+
+	// Determine next free index
+	uint32 idx;
+	{
+		UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+
+		if (mBodyIDFreeListStart != cBodyIDFreeListEnd)
+		{
+			// Pop an item from the freelist
+			JPH_ASSERT(mBodyIDFreeListStart & cIsFreedBody);
+			idx = uint32(mBodyIDFreeListStart >> cFreedBodyIndexShift);
+			JPH_ASSERT(!sIsValidBodyPointer(mBodies[idx]));
+			mBodyIDFreeListStart = uintptr_t(mBodies[idx]);
+			mBodies[idx] = ioBody;
+		}
+		else
+		{
+			if (mBodies.size() < mBodies.capacity())
+			{
+				// Allocate a new entry, note that the array should not actually resize since we've reserved it at init time
+				idx = uint32(mBodies.size());
+				mBodies.push_back(ioBody);
+			}
+			else
+			{
+				// Out of bodies
+				return false;
+			}
+		}
+
+		// Update cached number of bodies
+		mNumBodies++;
+	}
+
+	// Get next sequence number and assign the ID
+	uint8 seq_no = GetNextSequenceNumber(idx);
+	ioBody->mID = BodyID(idx, seq_no);
+	return true;
+}
+
+bool BodyManager::AddBodyWithCustomID(Body *ioBody, const BodyID &inBodyID)
+{
+	// Return error when body was already added
+	if (!ioBody->GetID().IsInvalid())
+		return false;
+
+	{
+		UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+
+		// Check if index is beyond the max body ID
+		uint32 idx = inBodyID.GetIndex();
+		if (idx >= mBodies.capacity())
+			return false; // Return error
+
+		if (idx < mBodies.size())
+		{
+			// Body array entry has already been allocated, check if there's a free body here
+			if (sIsValidBodyPointer(mBodies[idx]))
+				return false; // Return error
+
+			// Remove the entry from the freelist
+			uintptr_t idx_start = mBodyIDFreeListStart >> cFreedBodyIndexShift;
+			if (idx == idx_start)
+			{
+				// First entry, easy to remove, the start of the list is our next
+				mBodyIDFreeListStart = uintptr_t(mBodies[idx]);
+			}
+			else
+			{
+				// Loop over the freelist and find the entry in the freelist pointing to our index
+				// TODO: This is O(N), see if this becomes a performance problem (don't want to put the freed bodies in a double linked list)
+				uintptr_t cur, next;
+				for (cur = idx_start; cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift; cur = next)
+				{
+					next = uintptr_t(mBodies[cur]) >> cFreedBodyIndexShift;
+					if (next == idx)
+					{
+						mBodies[cur] = mBodies[idx];
+						break;
+					}
+				}
+				JPH_ASSERT(cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift);
+			}
+
+			// Put the body in the slot
+			mBodies[idx] = ioBody;
+		}
+		else
+		{
+			// Ensure that all body IDs up to this body ID have been allocated and added to the free list
+			while (idx > mBodies.size())
+			{
+				// Push the id onto the freelist
+				mBodies.push_back((Body *)mBodyIDFreeListStart);
+				mBodyIDFreeListStart = (uintptr_t(mBodies.size() - 1) << cFreedBodyIndexShift) | cIsFreedBody;
+			}
+
+			// Add the element to the list
+			mBodies.push_back(ioBody);
+		}
+
+		// Update cached number of bodies
+		mNumBodies++;
+	}
+
+	// Assign the ID
+	ioBody->mID = inBodyID;
+	return true;
 }
 
 void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)

@@ -40,6 +40,17 @@ public:
 	/// @return Created body or null when the body ID is invalid or a body of the same ID already exists.
 	Body *						CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings);
 
+	/// Advanced use only. Creates a body without specifying an ID. This body cannot be added to the world until it has gotten a body ID. A call to CreateBodyWithoutID followed by AssignBodyID is equivalent to calling CreateBodyWithID.
+	/// @return Created body
+	Body *						CreateBodyWithoutID(const BodyCreationSettings &inSettings) const;
+
+	/// Advanced use only. Destroy a body previously created with CreateBodyWithoutID that hasn't gotten an ID yet through the AssignBodyID function. Bodies that did get an ID should be destroyed through DestroyBody.
+	void						DestroyBodyWithoutID(Body *inBody) const;
+
+	/// Advanced use only. Assigns a body ID to a body that was created using CreateBodyWithoutID. After this call, the body can be added to the world like any other body.
+	/// @return false if the body already has an ID or if the ID is not valid.
+	bool						AssignBodyID(Body *ioBody, const BodyID &inBodyID);
+
 	/// Destroy a body
 	void						DestroyBody(const BodyID &inBodyID);
 	
