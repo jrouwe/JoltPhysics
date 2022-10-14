@@ -27,7 +27,8 @@ TEST_SUITE("BroadPhaseTests")
 
 		// Create a box
 		BodyCreationSettings settings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
-		Body &body = *body_manager.CreateBody(settings);
+		Body &body = *body_manager.AllocateBody(settings);
+		body_manager.AddBody(&body);
 
 		// Add it to the broadphase
 		BodyID id = body.GetID();

@@ -45,7 +45,8 @@ void BroadPhaseTest::CreateBalancedDistribution(BodyManager *inBodyManager, int 
 		s.mPosition = box.GetCenter();
 		s.mRotation = Quat::sIdentity();
 		s.mObjectLayer = (random() % 10) == 0? Layers::MOVING : Layers::NON_MOVING;
-		inBodyManager->CreateBody(s);
+		Body *body = inBodyManager->AllocateBody(s);
+		inBodyManager->AddBody(body);
 	}
 }
 

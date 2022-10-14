@@ -120,8 +120,12 @@ BodyManager::BodyStats BodyManager::GetBodyStats() const
 	return stats;
 }
 
-Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings)
+bool BodyManager::AddBody(Body *ioBody)
 {
+	// Return error when body was already added
+	if (!ioBody->GetID().IsInvalid())
+		return false;
+
 	// Determine next free index
 	uint32 idx;
 	{
@@ -134,6 +138,7 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 			idx = uint32(mBodyIDFreeListStart >> cFreedBodyIndexShift);
 			JPH_ASSERT(!sIsValidBodyPointer(mBodies[idx]));
 			mBodyIDFreeListStart = uintptr_t(mBodies[idx]);
+			mBodies[idx] = ioBody;
 		}
 		else
 		{
@@ -141,12 +146,12 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 			{
 				// Allocate a new entry, note that the array should not actually resize since we've reserved it at init time
 				idx = uint32(mBodies.size());
-				mBodies.push_back((Body *)cBodyIDFreeListEnd);
+				mBodies.push_back(ioBody);
 			}
 			else
 			{
 				// Out of bodies
-				return nullptr;
+				return false;
 			}
 		}
 
@@ -154,28 +159,31 @@ Body *BodyManager::CreateBody(const BodyCreationSettings &inBodyCreationSettings
 		mNumBodies++;
 	}
 
-	// Get next sequence number
+	// Get next sequence number and assign the ID
 	uint8 seq_no = GetNextSequenceNumber(idx);
-
-	// Do actual creation
-	return CreateBodyWithIDInternal(BodyID(idx, seq_no), inBodyCreationSettings);
+	ioBody->mID = BodyID(idx, seq_no);
+	return true;
 }
 
-Body *BodyManager::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings)
+bool BodyManager::AddBodyWithCustomID(Body *ioBody, const BodyID &inBodyID)
 {
+	// Return error when body was already added
+	if (!ioBody->GetID().IsInvalid())
+		return false;
+
 	{
 		UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
 
 		// Check if index is beyond the max body ID
 		uint32 idx = inBodyID.GetIndex();
 		if (idx >= mBodies.capacity())
-			return nullptr; // Return error
+			return false; // Return error
 
 		if (idx < mBodies.size())
 		{
 			// Body array entry has already been allocated, check if there's a free body here
 			if (sIsValidBodyPointer(mBodies[idx]))
-				return nullptr; // Return error
+				return false; // Return error
 
 			// Remove the entry from the freelist
 			uintptr_t idx_start = mBodyIDFreeListStart >> cFreedBodyIndexShift;
@@ -199,10 +207,10 @@ Body *BodyManager::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSe
 					}
 				}
 				JPH_ASSERT(cur != cBodyIDFreeListEnd >> cFreedBodyIndexShift);
-
-				// We're leaving the lock, ensure that we've overwritten this entry (although it's not strictly needed)
-				mBodies[idx] = (Body *)cBodyIDFreeListEnd;
 			}
+
+			// Put the body in the slot
+			mBodies[idx] = ioBody;
 		}
 		else
 		{
@@ -214,19 +222,20 @@ Body *BodyManager::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSe
 				mBodyIDFreeListStart = (uintptr_t(mBodies.size() - 1) << cFreedBodyIndexShift) | cIsFreedBody;
 			}
 
-			// Add the element that we're going to overwrite to the list
-			mBodies.push_back((Body *)cBodyIDFreeListEnd);
+			// Add the element to the list
+			mBodies.push_back(ioBody);
 		}
 
 		// Update cached number of bodies
 		mNumBodies++;
 	}
 
-	// Do actual creation
-	return CreateBodyWithIDInternal(inBodyID, inBodyCreationSettings);
+	// Assign the ID
+	ioBody->mID = inBodyID;
+	return true;
 }
 
-Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCreationSettings &inBodyCreationSettings)
+Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettings)
 {
 	// Fill in basic properties
 	Body *body;
@@ -240,7 +249,6 @@ Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCr
 	{
 	 	body = new Body;
 	}
-	body->mID = inBodyID;
 	body->mShape = inBodyCreationSettings.GetShape();
 	body->mUserData = inBodyCreationSettings.mUserData;
 	body->SetFriction(inBodyCreationSettings.mFriction);
@@ -273,9 +281,14 @@ Body *BodyManager::CreateBodyWithIDInternal(const BodyID &inBodyID, const BodyCr
 	// Position body
 	body->SetPositionAndRotationInternal(inBodyCreationSettings.mPosition, inBodyCreationSettings.mRotation);
 
-	// Add body
-	mBodies[inBodyID.GetIndex()] = body;
 	return body;
+}
+
+void BodyManager::FreeBody(Body *inBody)
+{
+	JPH_ASSERT(inBody->GetID().IsInvalid(), "This function should only be called on a body that doesn't have an ID yet, use DestroyBody otherwise");
+
+	sDeleteBody(inBody);
 }
 
 void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)

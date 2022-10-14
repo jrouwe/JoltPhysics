@@ -17,12 +17,39 @@ JPH_NAMESPACE_BEGIN
 
 Body *BodyInterface::CreateBody(const BodyCreationSettings &inSettings)
 {
-	return mBodyManager->CreateBody(inSettings);
+	Body *body = mBodyManager->AllocateBody(inSettings);
+	if (!mBodyManager->AddBody(body))
+	{
+		mBodyManager->FreeBody(body);
+		return nullptr;
+	}
+	return body;
 }
 
 Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings)
 {
-	return mBodyManager->CreateBodyWithID(inBodyID, inSettings);
+	Body *body = mBodyManager->AllocateBody(inSettings);
+	if (!mBodyManager->AddBodyWithCustomID(body, inBodyID))
+	{
+		mBodyManager->FreeBody(body);
+		return nullptr;
+	}
+	return body;
+}
+
+Body *BodyInterface::CreateBodyWithoutID(const BodyCreationSettings &inSettings)
+{
+	return mBodyManager->AllocateBody(inSettings);
+}
+
+bool BodyInterface::AssignBodyID(Body *ioBody, const BodyID &inBodyID)
+{
+	return mBodyManager->AddBodyWithCustomID(ioBody, inBodyID);
+}
+
+void BodyInterface::DestroyBodyWithoutID(Body *inBody)
+{
+	mBodyManager->FreeBody(inBody);
 }
 
 void BodyInterface::DestroyBody(const BodyID &inBodyID)
