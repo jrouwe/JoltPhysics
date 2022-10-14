@@ -37,19 +37,19 @@ Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreation
 	return body;
 }
 
-Body *BodyInterface::CreateBodyWithoutID(const BodyCreationSettings &inSettings)
+Body *BodyInterface::CreateBodyWithoutID(const BodyCreationSettings &inSettings) const
 {
 	return mBodyManager->AllocateBody(inSettings);
+}
+
+void BodyInterface::DestroyBodyWithoutID(Body *inBody) const
+{
+	mBodyManager->FreeBody(inBody);
 }
 
 bool BodyInterface::AssignBodyID(Body *ioBody, const BodyID &inBodyID)
 {
 	return mBodyManager->AddBodyWithCustomID(ioBody, inBodyID);
-}
-
-void BodyInterface::DestroyBodyWithoutID(Body *inBody)
-{
-	mBodyManager->FreeBody(inBody);
 }
 
 void BodyInterface::DestroyBody(const BodyID &inBodyID)

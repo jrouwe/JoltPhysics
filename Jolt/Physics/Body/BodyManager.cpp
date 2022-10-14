@@ -120,6 +120,62 @@ BodyManager::BodyStats BodyManager::GetBodyStats() const
 	return stats;
 }
 
+Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettings) const
+{
+	// Fill in basic properties
+	Body *body;
+	if (inBodyCreationSettings.HasMassProperties())
+	{
+		BodyWithMotionProperties *bmp = new BodyWithMotionProperties;
+		body = bmp;
+		body->mMotionProperties = &bmp->mMotionProperties;
+	}
+	else
+	{
+	 	body = new Body;
+	}
+	body->mShape = inBodyCreationSettings.GetShape();
+	body->mUserData = inBodyCreationSettings.mUserData;
+	body->SetFriction(inBodyCreationSettings.mFriction);
+	body->SetRestitution(inBodyCreationSettings.mRestitution);
+	body->mMotionType = inBodyCreationSettings.mMotionType;
+	if (inBodyCreationSettings.mIsSensor)
+		body->SetIsSensor(true);
+	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
+	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
+	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
+	
+	if (inBodyCreationSettings.HasMassProperties())
+	{
+		MotionProperties *mp = body->mMotionProperties;
+		mp->SetLinearDamping(inBodyCreationSettings.mLinearDamping);
+		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);
+		mp->SetMaxLinearVelocity(inBodyCreationSettings.mMaxLinearVelocity);
+		mp->SetMaxAngularVelocity(inBodyCreationSettings.mMaxAngularVelocity);
+		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity
+		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
+		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
+		mp->SetMotionQuality(inBodyCreationSettings.mMotionQuality);
+		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
+		mp->mIndexInActiveBodies = Body::cInactiveIndex;
+		mp->mIslandIndex = Body::cInactiveIndex;
+		JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
+		mp->SetMassProperties(inBodyCreationSettings.GetMassProperties());
+	}
+
+	// Position body
+	body->SetPositionAndRotationInternal(inBodyCreationSettings.mPosition, inBodyCreationSettings.mRotation);
+
+	return body;
+}
+
+void BodyManager::FreeBody(Body *inBody) const
+{
+	JPH_ASSERT(inBody->GetID().IsInvalid(), "This function should only be called on a body that doesn't have an ID yet, use DestroyBody otherwise");
+
+	sDeleteBody(inBody);
+}
+
 bool BodyManager::AddBody(Body *ioBody)
 {
 	// Return error when body was already added
@@ -233,62 +289,6 @@ bool BodyManager::AddBodyWithCustomID(Body *ioBody, const BodyID &inBodyID)
 	// Assign the ID
 	ioBody->mID = inBodyID;
 	return true;
-}
-
-Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettings)
-{
-	// Fill in basic properties
-	Body *body;
-	if (inBodyCreationSettings.HasMassProperties())
-	{
-		BodyWithMotionProperties *bmp = new BodyWithMotionProperties;
-		body = bmp;
-		body->mMotionProperties = &bmp->mMotionProperties;
-	}
-	else
-	{
-	 	body = new Body;
-	}
-	body->mShape = inBodyCreationSettings.GetShape();
-	body->mUserData = inBodyCreationSettings.mUserData;
-	body->SetFriction(inBodyCreationSettings.mFriction);
-	body->SetRestitution(inBodyCreationSettings.mRestitution);
-	body->mMotionType = inBodyCreationSettings.mMotionType;
-	if (inBodyCreationSettings.mIsSensor)
-		body->SetIsSensor(true);
-	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
-	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
-	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
-	
-	if (inBodyCreationSettings.HasMassProperties())
-	{
-		MotionProperties *mp = body->mMotionProperties;
-		mp->SetLinearDamping(inBodyCreationSettings.mLinearDamping);
-		mp->SetAngularDamping(inBodyCreationSettings.mAngularDamping);
-		mp->SetMaxLinearVelocity(inBodyCreationSettings.mMaxLinearVelocity);
-		mp->SetMaxAngularVelocity(inBodyCreationSettings.mMaxAngularVelocity);
-		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity
-		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
-		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
-		mp->SetMotionQuality(inBodyCreationSettings.mMotionQuality);
-		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
-		mp->mIndexInActiveBodies = Body::cInactiveIndex;
-		mp->mIslandIndex = Body::cInactiveIndex;
-		JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
-		mp->SetMassProperties(inBodyCreationSettings.GetMassProperties());
-	}
-
-	// Position body
-	body->SetPositionAndRotationInternal(inBodyCreationSettings.mPosition, inBodyCreationSettings.mRotation);
-
-	return body;
-}
-
-void BodyManager::FreeBody(Body *inBody)
-{
-	JPH_ASSERT(inBody->GetID().IsInvalid(), "This function should only be called on a body that doesn't have an ID yet, use DestroyBody otherwise");
-
-	sDeleteBody(inBody);
 }
 
 void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)

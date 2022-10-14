@@ -61,10 +61,10 @@ public:
 	BodyStats						GetBodyStats() const;
 
 	/// Create a body using creation settings. The returned body will not be part of the body manager yet.
-	Body *							AllocateBody(const BodyCreationSettings &inBodyCreationSettings);
+	Body *							AllocateBody(const BodyCreationSettings &inBodyCreationSettings) const;
 
 	/// Free a body that has not been added to the body manager yet (if it has, use DestroyBodies).
-	void							FreeBody(Body *inBody);
+	void							FreeBody(Body *inBody) const;
 
 	/// Add a body to the body manager, assigning it the next available ID. Returns false if no more IDs are available.
 	bool							AddBody(Body *ioBody);
