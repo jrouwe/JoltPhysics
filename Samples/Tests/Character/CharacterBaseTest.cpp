@@ -249,6 +249,9 @@ void CharacterBaseTest::Initialize()
 			}
 		}
 
+		// A wall beside the stairs
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 2.0f, 5.0f * cStairsStepHeight)), cStairsPosition + Vec3(-2.5f, 2.0f, 5.0f * cStairsStepHeight), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
 		// Create stairs from triangles
 		{
 			TriangleList triangles;
