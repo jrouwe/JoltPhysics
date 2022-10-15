@@ -52,6 +52,16 @@ bool BodyInterface::AssignBodyID(Body *ioBody, const BodyID &inBodyID)
 	return mBodyManager->AddBodyWithCustomID(ioBody, inBodyID);
 }
 
+void BodyInterface::RemoveBodyNoDeallocate(const BodyID &inBodyID)
+{
+	mBodyManager->RemoveBodies(&inBodyID, 1);
+}
+
+void BodyInterface::RemoveBodiesNoDeallocate(const BodyID *inBodyIDs, int inNumber)
+{
+	mBodyManager->RemoveBodies(inBodyIDs, inNumber);
+}
+
 void BodyInterface::DestroyBody(const BodyID &inBodyID)
 {
 	mBodyManager->DestroyBodies(&inBodyID, 1);

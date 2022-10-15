@@ -63,7 +63,7 @@ public:
 	/// Create a body using creation settings. The returned body will not be part of the body manager yet.
 	Body *							AllocateBody(const BodyCreationSettings &inBodyCreationSettings) const;
 
-	/// Free a body that has not been added to the body manager yet (if it has, use DestroyBodies).
+	/// Free a body that is not currently added to the body manager (if it has been added and hasn't been removed, use DestroyBodies).
 	void							FreeBody(Body *inBody) const;
 
 	/// Add a body to the body manager, assigning it the next available ID. Returns false if no more IDs are available.
@@ -71,6 +71,9 @@ public:
 
 	/// Add a body to the body manager, assigning it a custom ID. Returns false if the ID is not valid.
 	bool							AddBodyWithCustomID(Body *ioBody, const BodyID &inBodyID);
+
+	/// Remove a set of bodies from the body manager without destroying / freeing them.
+	void                            RemoveBodies(const BodyID *inBodyIDs, int inNumber);
 
 	/// Remove a set of bodies from the body manager and destroy them.
 	void							DestroyBodies(const BodyID *inBodyIDs, int inNumber);

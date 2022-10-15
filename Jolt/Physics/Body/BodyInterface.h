@@ -51,6 +51,12 @@ public:
 	/// @return false if the body already has an ID or if the ID is not valid.
 	bool						AssignBodyID(Body *ioBody, const BodyID &inBodyID);
 
+	/// Remove a body without deallocating it
+	void						RemoveBodyNoDeallocate(const BodyID &inBodyID);
+
+	/// Removes multiple bodies without deallocating them
+	void						RemoveBodiesNoDeallocate(const BodyID *inBodyIDs, int inNumber);
+
 	/// Destroy a body
 	void						DestroyBody(const BodyID &inBodyID);
 	
