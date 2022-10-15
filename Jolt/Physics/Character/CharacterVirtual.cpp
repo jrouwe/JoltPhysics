@@ -986,7 +986,8 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	// Horizontal movement
 	Vec3 new_position = up_position;
 	MoveShape(new_position, inStepForward / inDeltaTime, inDeltaTime, nullptr, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
-	if (new_position.IsClose(up_position, 1.0e-8f))
+	float horizontal_movement_sq = (new_position - up_position).LengthSq();
+	if (horizontal_movement_sq < 1.0e-8f)
 		return false; // No movement, cancel
 
 #ifdef JPH_DEBUG_RENDERER
@@ -1024,28 +1025,28 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 		// Delta time may be very small, so it may be that we hit the edge of a step and the normal is too horizontal.
 		// In order to judge if the floor is flat further along the sweep, we test again for a floor at inStepForwardTest
 		// and check if the normal is valid there.
-		Vec3 test_position = up_position + inStepForwardTest;
-
-		// First sweep forward to the test position
-		Contact test_contact;
-		if (!GetFirstContactForSweep(up_position, inStepForwardTest, EContactMode::InfinitePlane, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
-		{
-			// Then sweep down
-			if (!GetFirstContactForSweep(test_position, down, EContactMode::Point, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
-				return false;
-		}
-		else
-		{
-			// If we didn't move down, set the 'down' fraction to zero
-			test_contact.mFraction = 0.0f;
-		}
+		Vec3 test_position = up_position;
+		MoveShape(test_position, inStepForwardTest / inDeltaTime, inDeltaTime, nullptr, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+		float test_horizontal_movement_sq = (test_position - up_position).LengthSq();
+		if (test_horizontal_movement_sq <= horizontal_movement_sq + 1.0e-8f)
+			return false; // We didn't move any further than in the previous test
 
 	#ifdef JPH_DEBUG_RENDERER
-		// Draw 2nd sweep forward and down
+		// Draw 2nd sweep horizontal
+		if (sDrawWalkStairs)
+			DebugRenderer::sInstance->DrawArrow(up_position, test_position, Color::sCyan, 0.01f);
+	#endif // JPH_DEBUG_RENDERER
+
+		// Then sweep down
+		Contact test_contact;
+		if (!GetFirstContactForSweep(test_position, down, EContactMode::Point, test_contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
+			return false;
+
+	#ifdef JPH_DEBUG_RENDERER
+		// Draw 2nd sweep down
 		if (sDrawWalkStairs)
 		{
 			Vec3 debug_pos = test_position + test_contact.mFraction * down; 
-			DebugRenderer::sInstance->DrawArrow(up_position, test_position, Color::sCyan, 0.01f);
 			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
 			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mSurfaceNormal, Color::sCyan, 0.01f);
 			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sCyan, false, true);
