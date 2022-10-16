@@ -178,8 +178,7 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
 {
 	// Too small distance -> skip checking
-	float displacement_len_sq = inDisplacement.LengthSq();
-	if (displacement_len_sq < 1.0e-8f)
+	if (inDisplacement.LengthSq() < 1.0e-8f)
 		return false;
 
 	// Calculate start transform
@@ -997,7 +996,6 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	// Move down towards the floor.
 	// Note that we travel the same amount down as we travelled up with the character padding and the specified extra
 	// If we don't add the character padding, we may miss the floor (note that GetFirstContactForSweep will subtract the padding when it finds a hit)
-	// For this query we treat the contact as a point instead of an infinite plane since the infinite plane will cause us to move very conservatively and we may end up in mid air
 	Vec3 down = -up - mCharacterPadding * mUp + inStepDownExtra;
 	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator))
 		return false; // No floor found, we're in mid air, cancel stair walk
