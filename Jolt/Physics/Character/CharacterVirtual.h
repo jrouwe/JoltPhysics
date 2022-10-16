@@ -314,15 +314,8 @@ private:
 	// Handle contact with physics object that we're colliding against
 	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, float inDeltaTime) const;
 
-	// How we correct a contact point for the character padding
-	enum class EContactMode
-	{
-		InfinitePlane,					// Treat the contact and its normal as an infinite plane and move the character shape + padding so it doesn't touch the plane
-		Point							// Treat the contact as a single point and move the character + padding so it doesn't touch the point
-	};
-
 	// Does a swept test of the shape from inPosition with displacement inDisplacement, returns true if there was a collision
-	bool								GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, EContactMode inContactMode, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const;
+	bool								GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const;
 
 	// Store contacts so that we have proper ground information
 	void								StoreActiveContacts(const TempContactList &inContacts, TempAllocator &inAllocator);
