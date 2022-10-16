@@ -31,7 +31,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mCharacterPadding = sCharacterPadding;
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
-	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -1.1f * cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule plus a bit of slack
+	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
