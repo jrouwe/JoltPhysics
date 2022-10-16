@@ -1071,6 +1071,11 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 
 	// Move the character to the new location
 	MoveToContact(new_position, contact, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+
+	// Override ground state to 'on ground', it is possible that the contact normal is too steep, but in this case the inStepForwardTest has found a contact normal that is not too steep
+	JPH_ASSERT(IsSupported());
+	mGroundState = EGroundState::OnGround;
+
 	return true;
 }
 
