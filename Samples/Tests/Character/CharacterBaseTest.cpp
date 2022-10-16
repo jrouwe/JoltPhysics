@@ -256,26 +256,36 @@ void CharacterBaseTest::Initialize()
 		{
 			TriangleList triangles;
 
+			float rear_z = 10 * cStairsStepHeight;
+
 			for (int i = 0; i < 10; ++i)
 			{
 				// Start of step
 				Vec3 base(0, cStairsStepHeight * i, cStairsStepHeight * i);
 
 				// Left side
-				Vec3 b1 = base - Vec3(2.0f, 0, 0);
+				Vec3 b1 = base + Vec3(2.0f, 0, 0);
 				Vec3 s1 = b1 + Vec3(0, cStairsStepHeight, 0);
 				Vec3 p1 = s1 + Vec3(0, 0, cStairsStepHeight);
 
 				// Right side
-				Vec3 width(4.0f, 0, 0);
+				Vec3 width(-4.0f, 0, 0);
 				Vec3 b2 = b1 + width;
 				Vec3 s2 = s1 + width;
 				Vec3 p2 = p1 + width;
 
-				triangles.push_back(Triangle(s1, s2, b1));
-				triangles.push_back(Triangle(b1, s2, b2));
-				triangles.push_back(Triangle(s1, p1, p2));
-				triangles.push_back(Triangle(s1, p2, s2));
+				triangles.push_back(Triangle(s1, b1, s2));
+				triangles.push_back(Triangle(b1, b2, s2));
+				triangles.push_back(Triangle(s1, p2, p1));
+				triangles.push_back(Triangle(s1, s2, p2));
+
+				// Side of stairs
+				Vec3 rb2 = b2; rb2.SetZ(rear_z);
+				Vec3 rs2 = s2; rs2.SetZ(rear_z);
+
+				triangles.push_back(Triangle(s2, b2, rs2));
+				triangles.push_back(Triangle(rs2, b2, rb2));
+
 				p1 = p2;
 			}
 
@@ -284,6 +294,9 @@ void CharacterBaseTest::Initialize()
 			BodyCreationSettings mesh_stairs(&mesh, cMeshStairsPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(mesh_stairs, EActivation::DontActivate);
 		}
+
+		// A wall to the side and behind the stairs
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 2.0f, 0.25f)), cStairsPosition + Vec3(-7.5f, 2.0f, 10.0f * cStairsStepHeight + 0.25f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 		// Create stairs with too little space between the steps
 		{
