@@ -594,24 +594,33 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 	int num_avg_normal = 0;
 	Vec3 avg_normal = Vec3::sZero();
 	Vec3 avg_velocity = Vec3::sZero();
-	const Contact *best_contact = nullptr;
+	const Contact *supporting_contact = nullptr;
 	float max_cos_angle = -FLT_MAX;
+	const Contact *deepest_contact = nullptr;
+	float smallest_distance = FLT_MAX;
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision)
 		{
 			// Calculate the angle between the plane normal and the up direction
 			float cos_angle = c.mSurfaceNormal.Dot(mUp);
 
-			// Find the contact with the normal that is pointing most upwards and store it
-			if (max_cos_angle < cos_angle)
+			// Find the deepest contact
+			if (c.mDistance < smallest_distance)
 			{
-				best_contact = &c;
-				max_cos_angle = cos_angle;
+				deepest_contact = &c;
+				smallest_distance = c.mDistance;
 			}
 
 			// If this contact is in front of our plane, we cannot be supported by it
 			if (mSupportingVolume.SignedDistance(inv_transform * c.mPosition) > 0.0f)
 				continue;
+
+			// Find the contact with the normal that is pointing most upwards and store it
+			if (max_cos_angle < cos_angle)
+			{
+				supporting_contact = &c;
+				max_cos_angle = cos_angle;
+			}
 
 			// Check if this is a sliding or supported contact
 			bool is_supported = mCosMaxSlopeAngle > cNoMaxSlopeAngle || cos_angle >= mCosMaxSlopeAngle;
@@ -674,6 +683,9 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 				}
 			}
 		}
+
+	// Take either the most supporting contact or the deepest contact
+	const Contact *best_contact = supporting_contact != nullptr? supporting_contact : deepest_contact;
 
 	// Calculate average normal and velocity
 	if (num_avg_normal >= 1)
