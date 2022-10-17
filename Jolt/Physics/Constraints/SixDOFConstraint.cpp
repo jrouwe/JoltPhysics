@@ -77,7 +77,7 @@ void SixDOFConstraint::UpdateRotationLimits()
 {
 	// Make values sensible
 	for (int i = 3; i < 6; ++i)
-		if (IsAxisFixed((EAxis)i))
+		if (IsFixedAxis((EAxis)i))
 			mLimitMin[i] = mLimitMax[i] = 0.0f;
 		else
 		{
@@ -307,12 +307,12 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 			// Setup limit constraint
 			bool constraint_active = false;
-			if (IsAxisFixed(axis))
+			if (IsFixedAxis(axis))
 			{
 				// When constraint is fixed it is always active
 				constraint_active = true;
 			}
-			else if (!IsAxisFree(axis))
+			else if (!IsFreeAxis(axis))
 			{
 				// When constraint is limited, it is only active when outside of the allowed range
 				float d = translation_axis.Dot(u);
@@ -567,9 +567,9 @@ bool SixDOFConstraint::SolveVelocityConstraint(float inDeltaTime)
 				// If the axis is not fixed it must be limited (or else the constraint would not be active)
 				// Calculate the min and max constraint force based on on which side we're limited
 				float limit_min = -FLT_MAX, limit_max = FLT_MAX;
-				if (!IsAxisFixed(EAxis(EAxis::TranslationX + i)))
+				if (!IsFixedAxis(EAxis(EAxis::TranslationX + i)))
 				{
-					JPH_ASSERT(!IsAxisFree(EAxis(EAxis::TranslationX + i)));
+					JPH_ASSERT(!IsFreeAxis(EAxis(EAxis::TranslationX + i)));
 					if (mDisplacement[i] <= mLimitMin[i])
 						limit_min = 0;
 					else if (mDisplacement[i] >= mLimitMax[i])
@@ -640,9 +640,9 @@ bool SixDOFConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 			// Determine position error
 			float error = 0.0f;
 			EAxis axis(EAxis(EAxis::TranslationX + i));
-			if (IsAxisFixed(axis))
+			if (IsFixedAxis(axis))
 				error = u.Dot(translation_axis);
-			else if (!IsAxisFree(axis))
+			else if (!IsFreeAxis(axis))
 			{
 				float displacement = u.Dot(translation_axis);
 				if (displacement <= mLimitMin[axis])
