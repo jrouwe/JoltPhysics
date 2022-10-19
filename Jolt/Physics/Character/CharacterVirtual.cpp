@@ -8,7 +8,10 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Collision/ShapeCast.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Core/QuickSort.h>
+#include <Jolt/Geometry/ConvexSupport.h>
+#include <Jolt/Geometry/GJKClosestPoint.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -175,10 +178,36 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 	return mListener->OnContactValidate(this, inContact.mBodyB, inContact.mSubShapeIDB);
 }
 
+template <class T>
+inline static void sCorrectFractionForCharacterPadding(const Shape *inShape, Mat44Arg inStart, Vec3Arg inDisplacement, const T &inPolygon, float &ioFraction)
+{
+	if (inShape->GetType() == EShapeType::Convex)
+	{
+		// Get the support function for the shape we're casting
+		const ConvexShape *convex_shape = static_cast<const ConvexShape *>(inShape);
+		ConvexShape::SupportBuffer buffer;
+		const ConvexShape::Support *support = convex_shape->GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+
+		// Cast the shape against the polygon
+		GJKClosestPoint gjk;
+		gjk.CastShape(inStart, inDisplacement, cDefaultCollisionTolerance, *support, inPolygon, ioFraction);
+	}
+	else if (inShape->GetSubType() == EShapeSubType::RotatedTranslated)
+	{
+		const RotatedTranslatedShape *rt_shape = static_cast<const RotatedTranslatedShape *>(inShape);
+		sCorrectFractionForCharacterPadding(rt_shape->GetInnerShape(), inStart * Mat44::sRotation(rt_shape->GetRotation()), inDisplacement, inPolygon, ioFraction);
+	}
+	else
+	{
+		JPH_ASSERT(false, "Not supported yet!");
+	}
+}
+
 bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDisplacement, Contact &outContact, const IgnoredContactList &inIgnoredContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator) const
 {
 	// Too small distance -> skip checking
-	if (inDisplacement.LengthSq() < 1.0e-8f)
+	float displacement_len_sq = inDisplacement.LengthSq();
+	if (displacement_len_sq < 1.0e-8f)
 		return false;
 
 	// Calculate start transform
@@ -217,15 +246,26 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	if (!valid_contact)
 		return false;
 
-	// Correct fraction for the padding that we want to keep from the infinite plane defined by contact point and normal
-	// We want to maintain distance of mCharacterPadding (p) along plane normal outContact.mContactNormal (n) to the capsule by moving back along inDisplacement (d) by amount d'
-	// cos(angle between d and -n) = -n dot d / |d| = p / d'
-	// <=> d' = -p |d| / n dot d
-	// The new fraction of collision is then:
-	// f' = f - d' / |d| = f + p / n dot d
-	float dot = outContact.mContactNormal.Dot(inDisplacement);
-	if (dot < 0.0f) // We should not divide by zero and we should only update the fraction if normal is pointing towards displacement
-		outContact.mFraction = max(0.0f, outContact.mFraction + mCharacterPadding / dot);
+	// Fetch the face we're colliding with
+	TransformedShape ts = mSystem->GetBodyInterface().GetTransformedShape(outContact.mBodyB);
+	Shape::SupportingFace face;
+	ts.GetSupportingFace(outContact.mSubShapeIDB, -outContact.mContactNormal, face);
+
+	if (face.size() <= 1)
+	{
+		// When there's only a single contact point we can just move the fraction back
+		// so that the character and its padding don't hit the contact point anymore
+		outContact.mFraction = max(0.0f, outContact.mFraction - mCharacterPadding / sqrt(displacement_len_sq));
+	}
+	else
+	{
+		// Inflate the colliding face by the character padding
+		PolygonConvexSupport polygon(face);
+		AddConvexRadius add_cvx(polygon, mCharacterPadding);
+
+		// Correct fraction to hit this inflated face instead of the inner shape
+		sCorrectFractionForCharacterPadding(mShape, start, inDisplacement, add_cvx, outContact.mFraction);
+	}
 
 	return true;
 }
