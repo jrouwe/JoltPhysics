@@ -90,6 +90,9 @@ public:
 	// See Shape::GetVolume
 	virtual float			GetVolume() const override									{ return GetLocalBounds().GetVolume(); }
 
+	/// Get the convex radius of this box
+	float					GetConvexRadius() const										{ return mConvexRadius; }
+
 	// Register shape functions with the registry
 	static void				sRegister();
 
