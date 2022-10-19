@@ -144,18 +144,10 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 	if (inCollideShapeSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
 	{
 		// Get supporting face of shape 1
-		shape1->GetSupportingFace(-penetration_axis, inScale1, result.mShape1Face);
-
-		// Convert to world space
-		for (Vec3 &p : result.mShape1Face)
-			p = inCenterOfMassTransform1 * p;
+		shape1->GetSupportingFace(SubShapeID(), -penetration_axis, inScale1, inCenterOfMassTransform1, result.mShape1Face);
 
 		// Get supporting face of shape 2 
-		shape2->GetSupportingFace(transform_2_to_1.Multiply3x3Transposed(penetration_axis), inScale2, result.mShape2Face);
-
-		// Convert to world space
-		for (Vec3 &p : result.mShape2Face)
-			p = inCenterOfMassTransform2 * p;
+		shape2->GetSupportingFace(SubShapeID(), transform_2_to_1.Multiply3x3Transposed(penetration_axis), inScale2, inCenterOfMassTransform2, result.mShape2Face);
 	}
 
 	// Notify the collector
@@ -297,19 +289,10 @@ void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeC
 			// Get supporting face of shape 1
 			Mat44 transform_1_to_2 = inShapeCast.mCenterOfMassStart;
 			transform_1_to_2.SetTranslation(transform_1_to_2.GetTranslation() + fraction * inShapeCast.mDirection);
-			cast_shape->GetSupportingFace(transform_1_to_2.Multiply3x3Transposed(-contact_normal), inShapeCast.mScale, result.mShape1Face);
-
-			// Convert to world space
-			Mat44 transform_1_to_world = inCenterOfMassTransform2 * transform_1_to_2;
-			for (Vec3 &p : result.mShape1Face)
-				p = transform_1_to_world * p;
+			cast_shape->GetSupportingFace(SubShapeID(), transform_1_to_2.Multiply3x3Transposed(-contact_normal), inShapeCast.mScale, inCenterOfMassTransform2 * transform_1_to_2, result.mShape1Face);
 
 			// Get supporting face of shape 2
-			shape->GetSupportingFace(contact_normal, inScale, result.mShape2Face);
-
-			// Convert to world space
-			for (Vec3 &p : result.mShape2Face)
-				p = inCenterOfMassTransform2 * p;
+			shape->GetSupportingFace(SubShapeID(), contact_normal, inScale, inCenterOfMassTransform2, result.mShape2Face);
 		}
 
 		JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
@@ -491,7 +474,7 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCe
 		Vec3 direction = 0.05f * v;
 			
 		SupportingFace face;
-		GetSupportingFace(direction, inScale, face);
+		GetSupportingFace(SubShapeID(), direction, inScale, Mat44::sIdentity(), face);
 			
 		if (!face.empty())
 		{

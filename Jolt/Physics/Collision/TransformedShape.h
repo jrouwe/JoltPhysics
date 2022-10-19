@@ -127,6 +127,18 @@ public:
 		return inv_com.Multiply3x3Transposed(mShape->GetSurfaceNormal(MakeSubShapeIDRelativeToShape(inSubShapeID), (inv_com * inPosition) / scale) / scale).Normalized();
 	}
 
+	/// Get the vertices of the face that faces inDirection the most (includes any convex radius). Note that this function can only return faces of
+	/// convex shapes or triangles, which is why a sub shape ID to get to that leaf must be provided. 
+	/// @param inSubShapeID Sub shape ID of target shape
+	/// @param inDirection Direction that the face should be facing (in world space)
+	/// @param inScale Scale of this shape
+	/// @param outVertices Resulting face. Note the returned face can have a single point if the shape doesn't have polygons to return (e.g. because it's a sphere). The face will be returned in world space.
+	void						GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Shape::SupportingFace &outVertices) const
+	{
+		Mat44 com = GetCenterOfMassTransform();
+		mShape->GetSupportingFace(MakeSubShapeIDRelativeToShape(inSubShapeID), com.Multiply3x3Transposed(inDirection), GetShapeScale(), com, outVertices);
+	}
+
 	/// Get material of a particular sub shape
 	inline const PhysicsMaterial *GetMaterial(const SubShapeID &inSubShapeID) const
 	{

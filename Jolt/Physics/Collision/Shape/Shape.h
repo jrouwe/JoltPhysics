@@ -208,6 +208,18 @@ public:
 	/// Note: When you have a CollideShapeResult or ShapeCastResult you should use -mPenetrationAxis.Normalized() as contact normal as GetSurfaceNormal will only return face normals (and not vertex or edge normals).
 	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const = 0;
 
+	/// Type definition for a supporting face
+	using SupportingFace = StaticArray<Vec3, 32>;
+
+	/// Get the vertices of the face that faces inDirection the most (includes any convex radius). Note that this function can only return faces of
+	/// convex shapes or triangles, which is why a sub shape ID to get to that leaf must be provided. 
+	/// @param inSubShapeID Sub shape ID of target shape
+	/// @param inDirection Direction that the face should be facing (in local space to this shape)
+	/// @param inCenterOfMassTransform Transform to transform outVertices with
+	/// @param inScale Scale of this shape
+	/// @param outVertices Resulting face. The returned face can be empty if the shape doesn't have polygons to return (e.g. because it's a sphere). The face will be returned in world space.
+	virtual void					GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const { /* Nothing */ }
+
 	/// Get the user data of a particular sub shape ID
 	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const			{ return mUserData; }
 
