@@ -97,6 +97,9 @@ public:
 	// See Shape::GetVolume
 	virtual float			GetVolume() const override												{ return 2.0f * JPH_PI * mHalfHeight * Square(mRadius); }
 
+	/// Get the convex radius of this cylinder
+	float					GetConvexRadius() const													{ return mConvexRadius; }
+
 	// See Shape::IsValidScale
 	virtual bool			IsValidScale(Vec3Arg inScale) const override;
 
