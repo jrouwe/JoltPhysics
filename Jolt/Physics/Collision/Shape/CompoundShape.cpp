@@ -176,7 +176,7 @@ void CompoundShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 	SubShapeID remainder;
 	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
 
-	// Transform surface position to local space and pass call on
+	// Apply transform and pass on to sub shape
 	const SubShape &shape = mSubShapes[index];
 	Mat44 transform = shape.GetLocalTransformNoScale(inScale);
 	shape.mShape->GetSupportingFace(remainder, transform.Multiply3x3Transposed(inDirection), shape.TransformScale(inScale), inCenterOfMassTransform * transform, outVertices);

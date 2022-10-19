@@ -837,16 +837,16 @@ void HeightFieldShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg
 
 	// Fetch the triangle
 	outVertices.resize(3);
+	outVertices[0] = GetPosition(x, y);
+	Vec3 v2 = GetPosition(x + 1, y + 1);
 	if (triangle == 0)
 	{
-		outVertices[0] = GetPosition(x, y);
 		outVertices[1] = GetPosition(x, y + 1);
-		outVertices[2] = GetPosition(x + 1, y + 1);
+		outVertices[2] = v2;
 	}
 	else
 	{
-		outVertices[0] = GetPosition(x, y);
-		outVertices[1] = GetPosition(x + 1, y + 1);
+		outVertices[1] = v2;
 		outVertices[2] = GetPosition(x + 1, y);
 	}
 
