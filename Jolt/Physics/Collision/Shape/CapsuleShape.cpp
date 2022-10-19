@@ -170,8 +170,9 @@ const ConvexShape::Support *CapsuleShape::GetSupportFunction(ESupportMode inMode
 	return nullptr;
 }
 
-void CapsuleShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, SupportingFace &outVertices) const
+void CapsuleShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
 {	
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 	JPH_ASSERT(IsValidScale(inScale));
 
 	// Get direction in horizontal plane
@@ -203,8 +204,8 @@ void CapsuleShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, Suppo
 	// If projection is roughly equal then return line, otherwise we return nothing as there's only 1 point
 	if (abs(proj_top - proj_bottom) < cCapsuleProjectionSlop * inDirection.Length())
 	{
-		outVertices.push_back(support_top);
-		outVertices.push_back(support_bottom);
+		outVertices.push_back(inCenterOfMassTransform * support_top);
+		outVertices.push_back(inCenterOfMassTransform * support_bottom);
 	}
 }
 

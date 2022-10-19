@@ -185,8 +185,9 @@ const ConvexShape::Support *CylinderShape::GetSupportFunction(ESupportMode inMod
 	return nullptr;
 }
 
-void CylinderShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, SupportingFace &outVertices) const
+void CylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
 {	
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 	JPH_ASSERT(IsValidScale(inScale));
 
 	// Get scaled cylinder
@@ -206,15 +207,16 @@ void CylinderShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, Supp
 		float f = -scaled_radius / o;
 		float vx = x * f;
 		float vz = z * f;
-		outVertices.push_back(Vec3(vx, scaled_half_height, vz));
-		outVertices.push_back(Vec3(vx, -scaled_half_height, vz));
+		outVertices.push_back(inCenterOfMassTransform * Vec3(vx, scaled_half_height, vz));
+		outVertices.push_back(inCenterOfMassTransform * Vec3(vx, -scaled_half_height, vz));
 	}
 	else
 	{
 		// Hitting top or bottom
 		Vec3 multiplier = y < 0.0f? Vec3(scaled_radius, scaled_half_height, scaled_radius) : Vec3(-scaled_radius, -scaled_half_height, scaled_radius);
+		Mat44 transform = inCenterOfMassTransform.PreScaled(multiplier);
 		for (const Vec3 &v : cTopFace)
-			outVertices.push_back(multiplier * v);
+			outVertices.push_back(transform * v);
 	}
 }
 

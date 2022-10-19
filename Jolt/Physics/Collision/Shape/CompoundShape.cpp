@@ -170,6 +170,18 @@ Vec3 CompoundShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inL
 	return transform.Multiply3x3Transposed(normal);
 }
 
+void CompoundShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
+{
+	// Decode sub shape index
+	SubShapeID remainder;
+	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
+
+	// Apply transform and pass on to sub shape
+	const SubShape &shape = mSubShapes[index];
+	Mat44 transform = shape.GetLocalTransformNoScale(inScale);
+	shape.mShape->GetSupportingFace(remainder, transform.Multiply3x3Transposed(inDirection), shape.TransformScale(inScale), inCenterOfMassTransform * transform, outVertices);
+}
+
 void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
 {
 	outTotalVolume = 0.0f;

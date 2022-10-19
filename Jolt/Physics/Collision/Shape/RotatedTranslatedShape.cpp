@@ -95,6 +95,12 @@ Vec3 RotatedTranslatedShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Ve
 	return transform.Multiply3x3Transposed(normal);
 }
 
+void RotatedTranslatedShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
+{
+	Mat44 transform = Mat44::sRotation(mRotation);
+	mInnerShape->GetSupportingFace(inSubShapeID, transform.Multiply3x3Transposed(inDirection), TransformScale(inScale), inCenterOfMassTransform * transform, outVertices);
+}
+
 void RotatedTranslatedShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
 {
 	// Get center of mass transform of child

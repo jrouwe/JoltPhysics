@@ -829,6 +829,37 @@ Vec3 HeightFieldShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg 
 	return normal.Normalized();
 }
 
+void HeightFieldShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
+{
+	// Decode ID
+	uint x, y, triangle;
+	DecodeSubShapeID(inSubShapeID, x, y, triangle);
+
+	// Fetch the triangle
+	outVertices.resize(3);
+	outVertices[0] = GetPosition(x, y);
+	Vec3 v2 = GetPosition(x + 1, y + 1);
+	if (triangle == 0)
+	{
+		outVertices[1] = GetPosition(x, y + 1);
+		outVertices[2] = v2;
+	}
+	else
+	{
+		outVertices[1] = v2;
+		outVertices[2] = GetPosition(x + 1, y);
+	}
+
+	// Flip triangle if scaled inside out
+	if (ScaleHelpers::IsInsideOut(inScale))
+		swap(outVertices[1], outVertices[2]);
+
+	// Transform to world space
+	Mat44 transform = inCenterOfMassTransform.PreScaled(inScale);
+	for (Vec3 &v : outVertices)
+		v = transform * v;
+}
+
 inline uint8 HeightFieldShape::GetEdgeFlags(uint inX, uint inY, uint inTriangle) const
 {
 	if (inTriangle == 0)

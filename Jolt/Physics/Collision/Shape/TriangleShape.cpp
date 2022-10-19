@@ -155,11 +155,26 @@ const ConvexShape::Support *TriangleShape::GetSupportFunction(ESupportMode inMod
 	return nullptr;
 }
 
-void TriangleShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, SupportingFace &outVertices) const
+void TriangleShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
 {
-	outVertices.push_back(inScale * mV1);
-	outVertices.push_back(inScale * mV2);
-	outVertices.push_back(inScale * mV3);
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
+
+	// Calculate transform with scale
+	Mat44 transform = inCenterOfMassTransform.PreScaled(inScale);
+
+	// Flip triangle if scaled inside out
+	if (ScaleHelpers::IsInsideOut(inScale))
+	{
+		outVertices.push_back(transform * mV1);
+		outVertices.push_back(transform * mV3);
+		outVertices.push_back(transform * mV2);
+	}
+	else
+	{
+		outVertices.push_back(transform * mV1);
+		outVertices.push_back(transform * mV2);
+		outVertices.push_back(transform * mV3);
+	}
 }
 
 MassProperties TriangleShape::GetMassProperties() const
