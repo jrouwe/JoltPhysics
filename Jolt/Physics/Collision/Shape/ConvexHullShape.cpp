@@ -1186,6 +1186,12 @@ Shape::Stats ConvexHullShape::GetStats() const
 		triangle_count);
 }
 
+Vec3 ConvexHullShape::GetPoint(size_t index) const
+{
+	JPH_ASSERT(index >= 0 && index < mPoints.size(), "Point index out of bounds");
+	return mPoints[index].mPosition;
+}
+
 void ConvexHullShape::sRegister()
 {
 	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::ConvexHull);
