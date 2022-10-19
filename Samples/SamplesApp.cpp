@@ -450,6 +450,7 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateCheckBox(probe_options, "Treat Convex As Solid", mTreatConvexAsSolid, [this](UICheckBox::EState inState) { mTreatConvexAsSolid = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(probe_options, "Return Deepest Point", mReturnDeepestPoint, [this](UICheckBox::EState inState) { mReturnDeepestPoint = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(probe_options, "Shrunken Shape + Convex Radius", mUseShrunkenShapeAndConvexRadius, [this](UICheckBox::EState inState) { mUseShrunkenShapeAndConvexRadius = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(probe_options, "Draw Supporting Face", mDrawSupportingFace, [this](UICheckBox::EState inState) { mDrawSupportingFace = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateSlider(probe_options, "Max Hits", float(mMaxHits), 0, 10, 1, [this](float inValue) { mMaxHits = (int)inValue; });
 			mDebugUI->ShowMenu(probe_options);
 		});
@@ -953,6 +954,14 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 					Vec3 perp2 = normal.Cross(perp1);
 					mDebugRenderer->DrawLine(outPosition - 0.1f * perp1, outPosition + 0.1f * perp1, color);
 					mDebugRenderer->DrawLine(outPosition - 0.1f * perp2, outPosition + 0.1f * perp2, color);
+
+					// Get and draw the result of GetSupportingFace
+					if (mDrawSupportingFace)
+					{
+						Shape::SupportingFace face;
+						hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
+						mDebugRenderer->DrawWirePolygon(face, Color::sWhite, 0.01f);
+					}
 				}
 			}
 			else
@@ -1037,6 +1046,14 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						Vec3 perp2 = normal.Cross(perp1);
 						mDebugRenderer->DrawLine(position - 0.1f * perp1, position + 0.1f * perp1, color);
 						mDebugRenderer->DrawLine(position - 0.1f * perp2, position + 0.1f * perp2, color);
+
+						// Get and draw the result of GetSupportingFace
+						if (mDrawSupportingFace)
+						{
+							Shape::SupportingFace face;
+							hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
+							mDebugRenderer->DrawWirePolygon(face, Color::sWhite, 0.01f);
+						}
 					}
 				}
 

@@ -61,11 +61,11 @@ public:
 	// See Shape::GetSurfaceNormal
 	virtual Vec3			GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const override;
 
+	// See Shape::GetSupportingFace
+	virtual void			GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const override;
+
 	// See ConvexShape::GetSupportFunction
 	virtual const Support *	GetSupportFunction(ESupportMode inMode, SupportBuffer &inBuffer, Vec3Arg inScale) const override;
-
-	// See ConvexShape::GetSupportingFace
-	virtual void			GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, SupportingFace &outVertices) const override;
 
 #ifdef JPH_DEBUG_RENDERER
 	// See Shape::Draw
@@ -96,6 +96,9 @@ public:
 
 	// See Shape::GetVolume
 	virtual float			GetVolume() const override												{ return 2.0f * JPH_PI * mHalfHeight * Square(mRadius); }
+
+	/// Get the convex radius of this cylinder
+	float					GetConvexRadius() const													{ return mConvexRadius; }
 
 	// See Shape::IsValidScale
 	virtual bool			IsValidScale(Vec3Arg inScale) const override;

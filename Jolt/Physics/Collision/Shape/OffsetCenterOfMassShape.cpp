@@ -67,6 +67,11 @@ Vec3 OffsetCenterOfMassShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, V
 	return mInnerShape->GetSurfaceNormal(inSubShapeID, inLocalSurfacePosition + mOffset);
 }
 
+void OffsetCenterOfMassShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
+{
+	mInnerShape->GetSupportingFace(inSubShapeID, inDirection, inScale, inCenterOfMassTransform.PreTranslated(-mOffset), outVertices);
+}
+
 void OffsetCenterOfMassShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
 {
 	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy);

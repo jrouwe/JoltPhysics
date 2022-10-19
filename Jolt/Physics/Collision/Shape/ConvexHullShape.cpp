@@ -669,8 +669,10 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 	return nullptr;
 }
 
-void ConvexHullShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, SupportingFace &outVertices) const 
+void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const 
 {
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
+
 	Vec3 inv_scale = inScale.Reciprocal();
 	
 	// Need to transform the plane normals using inScale
@@ -701,17 +703,20 @@ void ConvexHullShape::GetSupportingFace(Vec3Arg inDirection, Vec3Arg inScale, Su
 	int max_vertices_to_return = outVertices.capacity() / 2;
 	int delta_vtx = (int(best_face.mNumVertices) + max_vertices_to_return) / max_vertices_to_return;
 
+	// Calculate transform with scale
+	Mat44 transform = inCenterOfMassTransform.PreScaled(inScale);
+
 	if (ScaleHelpers::IsInsideOut(inScale))
 	{
 		// Flip winding of supporting face
 		for (const uint8 *v = end_vtx - 1; v >= first_vtx; v -= delta_vtx)
-			outVertices.push_back(inScale * mPoints[*v].mPosition);
+			outVertices.push_back(transform * mPoints[*v].mPosition);
 	}
 	else
 	{
 		// Normal winding of supporting face
 		for (const uint8 *v = first_vtx; v < end_vtx; v += delta_vtx)
-			outVertices.push_back(inScale * mPoints[*v].mPosition);
+			outVertices.push_back(transform * mPoints[*v].mPosition);
 	}
 }
 

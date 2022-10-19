@@ -76,6 +76,11 @@ Vec3 ScaledShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLoc
 	return (normal / mScale).Normalized();
 }
 
+void ScaledShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
+{
+	mInnerShape->GetSupportingFace(inSubShapeID, inDirection, inScale * mScale, inCenterOfMassTransform, outVertices);
+}
+
 void ScaledShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
 {
 	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform, inScale * mScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy);
