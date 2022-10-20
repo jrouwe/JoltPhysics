@@ -66,6 +66,15 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	if (mCharacter->IsSupported())
 		ground_to_air = false;
 
+	// If we're in air for the first frame and the user has enabled stick to floor
+	if (sEnableStickToFloor && ground_to_air)
+	{
+		// If we're not moving up, stick to the floor
+		float velocity = (mCharacter->GetPosition().GetY() - old_position.GetY()) / inParams.mDeltaTime;
+		if (velocity <= 1.0e-6f)
+			mCharacter->StickToFloor(Vec3(0, -0.5f, 0), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
+	}
+
 	// Allow user to turn off walk stairs algorithm
 	if (sEnableWalkStairs)
 	{
@@ -88,9 +97,6 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			if (achieved_horizontal_step_len + 1.0e-4f < desired_horizontal_step_len
 				&& mCharacter->CanWalkStairs(mDesiredVelocity))
 			{
-				// CanWalkStairs should not have returned true if we are in air
-				JPH_ASSERT(!ground_to_air);
-
 				// Calculate how much we should step forward
 				// Note that we clamp the step forward to a minimum distance. This is done because at very high frame rates the delta time
 				// may be very small, causing a very small step forward. If the step becomes small enough, we may not move far enough
@@ -109,13 +115,6 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Calculate effective velocity
 	Vec3 new_position = mCharacter->GetPosition();
 	Vec3 velocity = (new_position - old_position) / inParams.mDeltaTime;
-
-	if (sEnableStickToFloor)
-	{
-		// If we're in air for the first frame and we're not moving up, stick to the floor
-		if (ground_to_air && velocity.GetY() <= 1.0e-6f)
-			mCharacter->StickToFloor(Vec3(0, -0.5f, 0), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
-	}
 
 	// Draw state of character
 	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);

@@ -179,7 +179,7 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 }
 
 template <class T>
-inline static void sCorrectFractionForCharacterPadding(const Shape *inShape, Mat44Arg inStart, Vec3Arg inDisplacement, const T &inPolygon, float &ioFraction)
+inline static bool sCorrectFractionForCharacterPadding(const Shape *inShape, Mat44Arg inStart, Vec3Arg inDisplacement, const T &inPolygon, float &ioFraction)
 {
 	if (inShape->GetType() == EShapeType::Convex)
 	{
@@ -190,16 +190,17 @@ inline static void sCorrectFractionForCharacterPadding(const Shape *inShape, Mat
 
 		// Cast the shape against the polygon
 		GJKClosestPoint gjk;
-		gjk.CastShape(inStart, inDisplacement, cDefaultCollisionTolerance, *support, inPolygon, ioFraction);
+		return gjk.CastShape(inStart, inDisplacement, cDefaultCollisionTolerance, *support, inPolygon, ioFraction);
 	}
 	else if (inShape->GetSubType() == EShapeSubType::RotatedTranslated)
 	{
 		const RotatedTranslatedShape *rt_shape = static_cast<const RotatedTranslatedShape *>(inShape);
-		sCorrectFractionForCharacterPadding(rt_shape->GetInnerShape(), inStart * Mat44::sRotation(rt_shape->GetRotation()), inDisplacement, inPolygon, ioFraction);
+		return sCorrectFractionForCharacterPadding(rt_shape->GetInnerShape(), inStart * Mat44::sRotation(rt_shape->GetRotation()), inDisplacement, inPolygon, ioFraction);
 	}
 	else
 	{
 		JPH_ASSERT(false, "Not supported yet!");
+		return false;
 	}
 }
 
@@ -251,20 +252,21 @@ bool CharacterVirtual::GetFirstContactForSweep(Vec3Arg inPosition, Vec3Arg inDis
 	Shape::SupportingFace face;
 	ts.GetSupportingFace(outContact.mSubShapeIDB, -outContact.mContactNormal, face);
 
-	if (face.size() <= 1)
-	{
-		// When there's only a single contact point we can just move the fraction back
-		// so that the character and its padding don't hit the contact point anymore
-		outContact.mFraction = max(0.0f, outContact.mFraction - mCharacterPadding / sqrt(displacement_len_sq));
-	}
-	else
+	bool corrected = false;
+	if (face.size() >= 2)
 	{
 		// Inflate the colliding face by the character padding
 		PolygonConvexSupport polygon(face);
 		AddConvexRadius add_cvx(polygon, mCharacterPadding);
 
 		// Correct fraction to hit this inflated face instead of the inner shape
-		sCorrectFractionForCharacterPadding(mShape, start, inDisplacement, add_cvx, outContact.mFraction);
+		corrected = sCorrectFractionForCharacterPadding(mShape, start, inDisplacement, add_cvx, outContact.mFraction);
+	}
+	if (!corrected)
+	{
+		// When there's only a single contact point or when we were unable to correct the fraction,
+		// we can just move the fraction back so that the character and its padding don't hit the contact point anymore
+		outContact.mFraction = max(0.0f, outContact.mFraction - mCharacterPadding / sqrt(displacement_len_sq));
 	}
 
 	return true;
@@ -1113,7 +1115,6 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	MoveToContact(new_position, contact, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 
 	// Override ground state to 'on ground', it is possible that the contact normal is too steep, but in this case the inStepForwardTest has found a contact normal that is not too steep
-	JPH_ASSERT(IsSupported());
 	mGroundState = EGroundState::OnGround;
 
 	return true;
