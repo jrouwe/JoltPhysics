@@ -110,10 +110,10 @@ public:
 	const Array<Plane> &	GetPlanes() const													{ return mPlanes; }
 
 	/// Get the number of vertices in this convex hull
-	size_t					GetNumPoints() const												{ return mPoints.size(); }
+	inline uint				GetNumPoints() const												{ return (uint)mPoints.size(); }
 
 	/// Get a vertex of this convex hull relative to the center of mass
-	Vec3					GetPoint(size_t index) const;
+	inline Vec3				GetPoint(uint inIndex) const										{ return mPoints[inIndex].mPosition; }
 
 	// Register shape functions with the registry
 	static void				sRegister();
