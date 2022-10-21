@@ -48,6 +48,11 @@ GroupFilter::GroupFilterResult GroupFilter::sRestoreFromBinaryState(StreamIn &in
 
 	// Construct and read the data of the group filter
 	Ref<GroupFilter> group_filter = reinterpret_cast<GroupFilter *>(rtti->CreateObject());
+	if (group_filter == nullptr)
+	{
+		result.SetError("Failed to create instance of group filter");
+		return result;
+	}
 	group_filter->RestoreBinaryState(inStream);
 	if (inStream.IsEOF() || inStream.IsFailed())
 	{
