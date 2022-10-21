@@ -169,7 +169,7 @@ namespace ClosestPoint
 		float n_len_sq = n.LengthSq();
 
 		// Check degenerate
-		if (n_len_sq < Square(FLT_EPSILON))
+		if (n_len_sq < 1.0e-12f) // Square(FLT_EPSILON) was too small and caused a degenerate triangle to incorrectly return an interior hit
 		{
 			// Degenerate, fallback to edges
 
@@ -321,23 +321,33 @@ namespace ClosestPoint
 		float signd3 = -ab.Dot(bd_cross_bc); // A
 		Vec4 signd(signd0, signd1, signd2, signd3);
 
-		// The winding of all triangles has been chosen so that signd should have the
-		// same sign for all components. If this is not the case the tetrahedron
-		// is degenerate and we return that the origin is in front of all sides
-		int sign_bits = signd.GetSignBits();
-		switch (sign_bits)
+		Vec4 epsilon = Vec4::sReplicate(FLT_EPSILON);
+		if (Vec4::sLessOrEqual(signd.Abs(), epsilon).TestAnyTrue())
 		{
-		case 0:
-			// All positive
-			return Vec4::sGreaterOrEqual(signp, Vec4::sReplicate(-FLT_EPSILON));
-
-		case 0xf:
-			// All negative
-			return Vec4::sLessOrEqual(signp, Vec4::sReplicate(FLT_EPSILON));
-
-		default:
-			// Mixed signs, degenerate tetrahedron
+			// Any signs smaller than tolerance, degenerate tetrahedron,
+			// return that the origin is in front of all sides
 			return UVec4::sReplicate(0xffffffff);
+		}
+		else
+		{
+			// The winding of all triangles has been chosen so that signd should have the
+			// same sign for all components. If this is not the case the tetrahedron
+			// is degenerate and we return that the origin is in front of all sides
+			int sign_bits = signd.GetSignBits();
+			switch (sign_bits)
+			{
+			case 0:
+				// All positive
+				return Vec4::sGreaterOrEqual(signp, -epsilon);
+
+			case 0xf:
+				// All negative
+				return Vec4::sLessOrEqual(signp, epsilon);
+
+			default:
+				// Mixed signs, degenerate tetrahedron
+				return UVec4::sReplicate(0xffffffff);
+			}
 		}
 	}
 
