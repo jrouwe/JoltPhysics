@@ -31,6 +31,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mCharacterPadding = sCharacterPadding;
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
+	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
@@ -56,14 +57,23 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	Vec3 old_position = mCharacter->GetPosition();
 
 	// Track that on ground before the update
-	bool ground_to_air = mCharacter->GetGroundState() != CharacterBase::EGroundState::InAir;
+	bool ground_to_air = mCharacter->IsSupported();
 
 	// Update the character position (instant, do not have to wait for physics update)
 	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
 
 	// ... and that we got into air after
-	if (mCharacter->GetGroundState() != CharacterBase::EGroundState::InAir)
+	if (mCharacter->IsSupported())
 		ground_to_air = false;
+
+	// If we're in air for the first frame and the user has enabled stick to floor
+	if (sEnableStickToFloor && ground_to_air)
+	{
+		// If we're not moving up, stick to the floor
+		float velocity = (mCharacter->GetPosition().GetY() - old_position.GetY()) / inParams.mDeltaTime;
+		if (velocity <= 1.0e-6f)
+			mCharacter->StickToFloor(Vec3(0, -0.5f, 0), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
+	}
 
 	// Allow user to turn off walk stairs algorithm
 	if (sEnableWalkStairs)
@@ -87,9 +97,6 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			if (achieved_horizontal_step_len + 1.0e-4f < desired_horizontal_step_len
 				&& mCharacter->CanWalkStairs(mDesiredVelocity))
 			{
-				// CanWalkStairs should not have returned true if we are in air
-				JPH_ASSERT(!ground_to_air);
-
 				// Calculate how much we should step forward
 				// Note that we clamp the step forward to a minimum distance. This is done because at very high frame rates the delta time
 				// may be very small, causing a very small step forward. If the step becomes small enough, we may not move far enough
@@ -109,13 +116,6 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	Vec3 new_position = mCharacter->GetPosition();
 	Vec3 velocity = (new_position - old_position) / inParams.mDeltaTime;
 
-	if (sEnableStickToFloor)
-	{
-		// If we're in air for the first frame and we're not moving up, stick to the floor
-		if (ground_to_air && velocity.GetY() <= 1.0e-6f)
-			mCharacter->StickToFloor(Vec3(0, -0.5f, 0), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
-	}
-
 	// Draw state of character
 	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);
 
@@ -132,10 +132,11 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// True if the player intended to move
 	mAllowSliding = !inMovementDirection.IsNearZero();
 
-	// Cancel movement in opposite direction of normal when sliding
+	// Cancel movement in opposite direction of normal when touching something we can't walk up
 	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
 	Vec3 desired_velocity = mDesiredVelocity;
-	if (ground_state == CharacterVirtual::EGroundState::OnSteepGround)
+	if (ground_state == CharacterVirtual::EGroundState::OnSteepGround
+		|| ground_state == CharacterVirtual::EGroundState::NotSupported)
 	{
 		Vec3 normal = mCharacter->GetGroundNormal();
 		normal.SetY(0.0f);

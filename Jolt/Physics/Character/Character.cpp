@@ -119,6 +119,20 @@ void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistan
 
 void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 {
+	// Get character position, rotation and velocity
+	Vec3 char_pos;
+	Quat char_rot;
+	Vec3 char_vel;
+	{
+		BodyLockRead lock(sGetBodyLockInterface(mSystem, inLockBodies), mBodyID);
+		if (!lock.Succeeded())
+			return;
+		const Body &body = lock.GetBody();
+		char_pos = body.GetPosition();
+		char_rot = body.GetRotation();
+		char_vel = body.GetLinearVelocity();
+	}
+
 	// Collector that finds the hit with the normal that is the most 'up'
 	class MyCollector : public CollideShapeCollector
 	{
@@ -153,7 +167,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 
 	// Collide shape
 	MyCollector collector(mUp);
-	CheckCollision(mShape, inMaxSeparationDistance, collector, inLockBodies);
+	CheckCollision(char_pos, char_rot, char_vel, inMaxSeparationDistance, mShape, collector, inLockBodies);
 
 	// Copy results
 	mGroundBodyID = collector.mGroundBodyID;
@@ -168,7 +182,10 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 		const Body &body = lock.GetBody();
 
 		// Update ground state
-		if (IsSlopeTooSteep(mGroundNormal))
+		Mat44 inv_transform = Mat44::sInverseRotationTranslation(char_rot, char_pos);
+		if (mSupportingVolume.SignedDistance(inv_transform * mGroundPosition) > 0.0f)
+			mGroundState = EGroundState::NotSupported;
+		else if (IsSlopeTooSteep(mGroundNormal))
 			mGroundState = EGroundState::OnSteepGround;
 		else
 			mGroundState = EGroundState::OnGround;

@@ -27,6 +27,11 @@ public:
 	/// Vector indicating the up direction of the character
 	Vec3								mUp = Vec3::sAxisY();
 
+	/// Plane, defined in local space relative to the character. Every contact behind this plane can support the
+	/// character, every contact in front of this plane is treated as only colliding with the player.
+	/// Default: Accept any contact.
+	Plane								mSupportingVolume { Vec3::sAxisY(), -1.0e10f };
+
 	/// Maximum angle of slope that character can still walk on (radians).
 	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
 
@@ -70,13 +75,17 @@ public:
 	{
 		OnGround,						///< Character is on the ground and can move freely.
 		OnSteepGround,					///< Character is on a slope that is too steep and can't climb up any further. The caller should start applying downward velocity if sliding from the slope is desired.
-		InAir,							///< Character is in the air.
+		NotSupported,					///< Character is touching an object, but is not supported by it and should fall. The GetGroundXXX functions will return information about the touched object.
+		InAir,							///< Character is in the air and is not touching anything.
 	};
 
 	///@name Properties of the ground this character is standing on
 
 	/// Current ground state
 	EGroundState						GetGroundState() const									{ return mGroundState; }
+
+	/// Returns true if the player is supported by normal or steep ground
+	bool								IsSupported() const										{ return mGroundState == EGroundState::OnGround || mGroundState == EGroundState::OnSteepGround; }
 
 	/// Get the contact point with the ground
 	Vec3 								GetGroundPosition() const								{ return mGroundPosition; }
@@ -112,6 +121,9 @@ protected:
 
 	// The character's world space up axis
 	Vec3								mUp;
+
+	// Every contact behind this plane can support the character
+	Plane								mSupportingVolume;
 
 	// Beyond this value there is no max slope
 	static constexpr float				cNoMaxSlopeAngle = 0.9999f;

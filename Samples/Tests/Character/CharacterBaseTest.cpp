@@ -56,10 +56,12 @@ static const float cLargeBumpWidth = 0.1f;
 static const float cLargeBumpDelta = 2.0f;
 static const Vec3 cStairsPosition = Vec3(-15.0f, 0, 2.5f);
 static const float cStairsStepHeight = 0.3f;
+static const Vec3 cMeshStairsPosition = Vec3(-20.0f, 0, 2.5f);
 static const Vec3 cNoStairsPosition = Vec3(-15.0f, 0, 10.0f);
 static const float cNoStairsStepHeight = 0.3f;
 static const float cNoStairsStepDelta = 0.05f;
-static const Vec3 cMeshWallPosition = Vec3(-20.0f, 0, -27.0f);
+static const Vec3 cMeshNoStairsPosition = Vec3(-20.0f, 0, 10.0f);
+static const Vec3 cMeshWallPosition = Vec3(-25.0f, 0, -27.0f);
 static const float cMeshWallHeight = 3.0f;
 static const float cMeshWallWidth = 2.0f;
 static const float cMeshWallStepStart = 0.5f;
@@ -247,6 +249,55 @@ void CharacterBaseTest::Initialize()
 			}
 		}
 
+		// A wall beside the stairs
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 2.0f, 5.0f * cStairsStepHeight)), cStairsPosition + Vec3(-2.5f, 2.0f, 5.0f * cStairsStepHeight), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+		// Create stairs from triangles
+		{
+			TriangleList triangles;
+
+			float rear_z = 10 * cStairsStepHeight;
+
+			for (int i = 0; i < 10; ++i)
+			{
+				// Start of step
+				Vec3 base(0, cStairsStepHeight * i, cStairsStepHeight * i);
+
+				// Left side
+				Vec3 b1 = base + Vec3(2.0f, 0, 0);
+				Vec3 s1 = b1 + Vec3(0, cStairsStepHeight, 0);
+				Vec3 p1 = s1 + Vec3(0, 0, cStairsStepHeight);
+
+				// Right side
+				Vec3 width(-4.0f, 0, 0);
+				Vec3 b2 = b1 + width;
+				Vec3 s2 = s1 + width;
+				Vec3 p2 = p1 + width;
+
+				triangles.push_back(Triangle(s1, b1, s2));
+				triangles.push_back(Triangle(b1, b2, s2));
+				triangles.push_back(Triangle(s1, p2, p1));
+				triangles.push_back(Triangle(s1, s2, p2));
+
+				// Side of stairs
+				Vec3 rb2 = b2; rb2.SetZ(rear_z);
+				Vec3 rs2 = s2; rs2.SetZ(rear_z);
+
+				triangles.push_back(Triangle(s2, b2, rs2));
+				triangles.push_back(Triangle(rs2, b2, rb2));
+
+				p1 = p2;
+			}
+
+			MeshShapeSettings mesh(triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings mesh_stairs(&mesh, cMeshStairsPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(mesh_stairs, EActivation::DontActivate);
+		}
+
+		// A wall to the side and behind the stairs
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 2.0f, 0.25f)), cStairsPosition + Vec3(-7.5f, 2.0f, 10.0f * cStairsStepHeight + 0.25f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
 		// Create stairs with too little space between the steps
 		{
 			BodyCreationSettings step(new BoxShape(Vec3(2.0f, 0.5f * cNoStairsStepHeight, 0.5f * cNoStairsStepHeight)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
@@ -255,6 +306,39 @@ void CharacterBaseTest::Initialize()
 				step.mPosition = cNoStairsPosition + Vec3(0, cNoStairsStepHeight * (0.5f + i), cNoStairsStepDelta * i);
 				mBodyInterface->CreateAndAddBody(step, EActivation::DontActivate);
 			}
+		}
+
+		// Create stairs with too little space between the steps consisting of triangles
+		{
+			TriangleList triangles;
+
+			for (int i = 0; i < 10; ++i)
+			{
+				// Start of step
+				Vec3 base(0, cStairsStepHeight * i, cNoStairsStepDelta * i);
+
+				// Left side
+				Vec3 b1 = base - Vec3(2.0f, 0, 0);
+				Vec3 s1 = b1 + Vec3(0, cStairsStepHeight, 0);
+				Vec3 p1 = s1 + Vec3(0, 0, cNoStairsStepDelta);
+
+				// Right side
+				Vec3 width(4.0f, 0, 0);
+				Vec3 b2 = b1 + width;
+				Vec3 s2 = s1 + width;
+				Vec3 p2 = p1 + width;
+
+				triangles.push_back(Triangle(s1, s2, b1));
+				triangles.push_back(Triangle(b1, s2, b2));
+				triangles.push_back(Triangle(s1, p1, p2));
+				triangles.push_back(Triangle(s1, p2, s2));
+				p1 = p2;
+			}
+
+			MeshShapeSettings mesh(triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings mesh_stairs(&mesh, cMeshNoStairsPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(mesh_stairs, EActivation::DontActivate);
 		}
 
 		// Create mesh with walls at varying angles
@@ -403,6 +487,9 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, Mat
 		color = Color::sGreen;
 		break;
 	case CharacterBase::EGroundState::OnSteepGround:
+		color = Color::sYellow;
+		break;
+	case CharacterBase::EGroundState::NotSupported:
 		color = Color::sOrange;
 		break;
 	case CharacterBase::EGroundState::InAir:
