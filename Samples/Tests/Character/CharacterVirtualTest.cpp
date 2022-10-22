@@ -15,9 +15,11 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest)
 	JPH_ADD_BASE_CLASS(CharacterVirtualTest, CharacterBaseTest)
 }
 
-static const Vec3 cStepUpHeight = Vec3(0.0f, 0.4f, 0.0f);
-static const float cMinStepForward = 0.02f;
-static const float cStepForwardTest = 0.15f;
+static const Vec3 cStickToFloorStepDown(0, -0.5f, 0);
+static const Vec3 cWalkStairsStepUp = Vec3(0.0f, 0.4f, 0.0f);
+static const float cWalkStairsMinStepForward = 0.02f;
+static const float cWalkStairsStepForwardTest = 0.15f;
+static const Vec3 cWalkStairsStepDownExtra = Vec3::sZero();
 
 void CharacterVirtualTest::Initialize()
 {
@@ -56,61 +58,18 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Remember old position
 	Vec3 old_position = mCharacter->GetPosition();
 
-	// Track that on ground before the update
-	bool ground_to_air = mCharacter->IsSupported();
-
-	// Update the character position (instant, do not have to wait for physics update)
-	mCharacter->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
-
-	// ... and that we got into air after
-	if (mCharacter->IsSupported())
-		ground_to_air = false;
-
-	// If we're in air for the first frame and the user has enabled stick to floor
-	if (sEnableStickToFloor && ground_to_air)
-	{
-		// If we're not moving up, stick to the floor
-		float velocity = (mCharacter->GetPosition().GetY() - old_position.GetY()) / inParams.mDeltaTime;
-		if (velocity <= 1.0e-6f)
-			mCharacter->StickToFloor(Vec3(0, -0.5f, 0), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
-	}
-
-	// Allow user to turn off walk stairs algorithm
-	if (sEnableWalkStairs)
-	{
-		// Calculate how much we wanted to move horizontally
-		Vec3 desired_horizontal_step = mDesiredVelocity * inParams.mDeltaTime;
-		float desired_horizontal_step_len = desired_horizontal_step.Length();
-		if (desired_horizontal_step_len > 0.0f)
-		{
-			// Calculate how much we moved horizontally
-			Vec3 achieved_horizontal_step = mCharacter->GetPosition() - old_position;
-			achieved_horizontal_step.SetY(0);
-
-			// Only count movement in the direction of the desired movement
-			// (otherwise we find it ok if we're sliding downhill while we're trying to climb uphill)
-			Vec3 step_forward_normalized = desired_horizontal_step / desired_horizontal_step_len;
-			achieved_horizontal_step = max(0.0f, achieved_horizontal_step.Dot(step_forward_normalized)) * step_forward_normalized;
-			float achieved_horizontal_step_len = achieved_horizontal_step.Length();
-
-			// If we didn't move as far as we wanted and we're against a slope that's too steep
-			if (achieved_horizontal_step_len + 1.0e-4f < desired_horizontal_step_len
-				&& mCharacter->CanWalkStairs(mDesiredVelocity))
-			{
-				// Calculate how much we should step forward
-				// Note that we clamp the step forward to a minimum distance. This is done because at very high frame rates the delta time
-				// may be very small, causing a very small step forward. If the step becomes small enough, we may not move far enough
-				// horizontally to actually end up at the top of the step.
-				Vec3 step_forward = step_forward_normalized * max(cMinStepForward, desired_horizontal_step_len - achieved_horizontal_step_len);
-
-				// Calculate how far to scan ahead for a floor. This is only used in case the floor normal at step_forward is too steep.
-				// In that case an additional check will be performed at this distance to check if that normal is not too steep.
-				Vec3 step_forward_test = step_forward_normalized * cStepForwardTest;
-
-				mCharacter->WalkStairs(inParams.mDeltaTime, cStepUpHeight, step_forward, step_forward_test, Vec3::sZero(), mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
-			}
-		}
-	}
+	// Update the character position
+	mCharacter->ExtendedUpdate(inParams.mDeltaTime,
+		mPhysicsSystem->GetGravity(),
+		sEnableStickToFloor? cStickToFloorStepDown : Vec3::sZero(),
+		sEnableWalkStairs? cWalkStairsStepUp : Vec3::sZero(),
+		cWalkStairsMinStepForward,
+		cWalkStairsStepForwardTest,
+		cWalkStairsStepDownExtra,
+		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+		mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING),
+		{ },
+		*mTempAllocator);
 
 	// Calculate effective velocity
 	Vec3 new_position = mCharacter->GetPosition();
@@ -132,25 +91,11 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// True if the player intended to move
 	mAllowSliding = !inMovementDirection.IsNearZero();
 
-	// Cancel movement in opposite direction of normal when touching something we can't walk up
-	CharacterVirtual::EGroundState ground_state = mCharacter->GetGroundState();
-	Vec3 desired_velocity = mDesiredVelocity;
-	if (ground_state == CharacterVirtual::EGroundState::OnSteepGround
-		|| ground_state == CharacterVirtual::EGroundState::NotSupported)
-	{
-		Vec3 normal = mCharacter->GetGroundNormal();
-		normal.SetY(0.0f);
-		float dot = normal.Dot(desired_velocity);
-		if (dot < 0.0f)
-			desired_velocity -= (dot * normal) / normal.LengthSq();
-	}
-
+	// Determine new basic velocity
 	Vec3 current_vertical_velocity = Vec3(0, mCharacter->GetLinearVelocity().GetY(), 0);
-
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
-
 	Vec3 new_velocity;
-	if (ground_state == CharacterVirtual::EGroundState::OnGround // If on ground
+	if (mCharacter->GetGroundState() == CharacterVirtual::EGroundState::OnGround // If on ground
 		&& (current_vertical_velocity.GetY() - ground_velocity.GetY()) < 0.1f) // And not moving away from ground
 	{
 		// Assume velocity of ground when on ground
@@ -167,9 +112,9 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	new_velocity += mPhysicsSystem->GetGravity() * inDeltaTime;
 
 	// Player input
-	new_velocity += desired_velocity;
+	new_velocity += mDesiredVelocity;
 
-	// Update the velocity
+	// Update character velocity
 	mCharacter->SetLinearVelocity(new_velocity);
 
 	// Stance switch

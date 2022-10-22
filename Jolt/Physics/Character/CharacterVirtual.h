@@ -129,6 +129,12 @@ public:
 	/// Character padding
 	float								GetCharacterPadding() const								{ return mCharacterPadding; }
 
+	/// This function can be called prior to calling Update() to convert a desired velocity into a velocity that won't make the character move further onto steep slopes.
+	/// This velocity can then be set on the character using SetLinearVelocity()
+	/// @param inDesiredVelocity Velocity to clamp against steep walls
+	/// @return A new velocity vector that won't make the character move up steep slopes
+	Vec3								CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocity) const;
+
 	/// This is the main update function. It moves the character according to its current velocity (the character is similar to a kinematic body in the sense
 	/// that you set the velocity and the character will follow unless collision is blocking the way). Note it's your own responsibility to apply gravity to the character velocity!
 	/// Different surface materials (like ice) can be emulated by getting the ground material and adjusting the velocity and/or the max slope angle accordingly every frame.
@@ -168,6 +174,23 @@ public:
 	/// @param inAllocator An allocator for temporary allocations. All memory will be freed by the time this function returns.
 	/// @return True if the character was successfully projected onto the floor.
 	bool								StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
+
+	/// This function combines Update, StickToFloor and WalkStairs. This function serves as an example of how these functions could be combined.
+	/// Before calling, call SetLinearVelocity to update the horizontal/vertical speed of the character, typically this is:
+	/// - When on OnGround and not moving away from ground: velocity = GetGroundVelocity() + horizontal speed as input by player + optional vertical jump velocity + delta time * gravity
+	/// - Else: velocity = current vertical velocity + horizontal speed as input by player + delta time * gravity
+	/// @param inDeltaTime Time step to simulate.
+	/// @param inGravity Gravity vector (m/s^2). This gravity vector is only used when the character is standing on top of another object to apply downward force.
+	/// @param inStickToFloorStepDown See StickToFloor inStepDown parameter.
+	/// @param inWalkStairsStepUp See WalkStairs inStepUp parameter.
+	/// @param inWalkStairsMinStepForward See WalkStairs inStepForward parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
+	/// @param inWalkStairsStepForwardTest See WalkStairs inStepForwardTest parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
+	/// @param inWalkStairsStepDownExtra See WalkStairs inStepDownExtra
+	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
+	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
+	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
+	/// @param inAllocator An allocator for temporary allocations. All memory will be freed by the time this function returns.
+	void								ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, Vec3Arg inStickToFloorStepDown, Vec3Arg inWalkStairsStepUp, float inWalkStairsMinStepForward, float inWalkStairsStepForwardTest, Vec3Arg inWalkStairsStepDownExtra, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
 	/// This function can be used after a character has teleported to determine the new contacts with the world.
 	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
