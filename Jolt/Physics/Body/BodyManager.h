@@ -72,7 +72,10 @@ public:
 	/// Add a body to the body manager, assigning it a custom ID. Returns false if the ID is not valid.
 	bool							AddBodyWithCustomID(Body *ioBody, const BodyID &inBodyID);
 
-	/// Remove a set of bodies from the body manager and destroy them.
+	/// Remove a list of bodies from the body manager
+	void							RemoveBodies(const BodyID *inBodyIDs, int inNumber, Body **outBodies);
+
+	/// Remove a set of bodies from the body manager and frees them.
 	void							DestroyBodies(const BodyID *inBodyIDs, int inNumber);
 
 	/// Activate a list of bodies.
@@ -229,8 +232,16 @@ private:
 #endif
 	inline uint8					GetNextSequenceNumber(int inBodyIndex)		{ return ++mBodySequenceNumbers[inBodyIndex]; }
 
+	/// Helper function to remove a body from the manager
+	JPH_INLINE Body *				RemoveBodyInternal(const BodyID &inBodyID);
+
 	/// Helper function to delete a body (which could actually be a BodyWithMotionProperties)
 	inline static void				sDeleteBody(Body *inBody);
+
+#if defined(_DEBUG) && defined(JPH_ENABLE_ASSERTS)
+	/// Function to check that the free list is not corrupted
+	void							ValidateFreeList() const;
+#endif // defined(_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
 
 	/// List of pointers to all bodies. Contains invalid pointers for deleted bodies, check with sIsValidBodyPointer. Note that this array is reserved to the max bodies that is passed in the Init function so that adding bodies will not reallocate the array.
 	BodyVector						mBodies;

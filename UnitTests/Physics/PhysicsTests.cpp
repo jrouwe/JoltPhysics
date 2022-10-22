@@ -209,8 +209,10 @@ TEST_SUITE("PhysicsTests")
 		CHECK(b2 == nullptr);
 
 		// Create body with different ID (leave 1 open slot)
-		b2 = bi.CreateBodyWithID(BodyID(2, 1), bc);
+		b2 = bi.CreateBodyWithoutID(bc); // Using syntax that allows separation of allocation and assigning an ID
 		CHECK(b2 != nullptr);
+		CHECK(b2->GetID().IsInvalid());
+		bi.AssignBodyID(b2, BodyID(2, 1));
 		CHECK(b2->GetID() == BodyID(2, 1));
 
 		// Create another body and check that the open slot is returned
@@ -228,8 +230,12 @@ TEST_SUITE("PhysicsTests")
 		CHECK(b4 != nullptr);
 		CHECK(b4->GetID() == BodyID(3, 1));
 
-		// Clean up all bodies
-		bi.DestroyBody(b1->GetID());
+		// Destroy 1st body
+		CHECK(bi.UnassignBodyID(b1->GetID()) == b1); // Use syntax that allows separation of unassigning and deallocation
+		CHECK(b1->GetID().IsInvalid());
+		bi.DestroyBodyWithoutID(b1);
+
+		// Clean up remaining bodies
 		bi.DestroyBody(b2->GetID());
 		bi.DestroyBody(b3->GetID());
 		bi.DestroyBody(b4->GetID());

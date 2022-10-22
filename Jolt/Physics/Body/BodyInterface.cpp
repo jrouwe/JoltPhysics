@@ -47,9 +47,26 @@ void BodyInterface::DestroyBodyWithoutID(Body *inBody) const
 	mBodyManager->FreeBody(inBody);
 }
 
+bool BodyInterface::AssignBodyID(Body *ioBody)
+{
+	return mBodyManager->AddBody(ioBody);
+}
+
 bool BodyInterface::AssignBodyID(Body *ioBody, const BodyID &inBodyID)
 {
 	return mBodyManager->AddBodyWithCustomID(ioBody, inBodyID);
+}
+
+Body *BodyInterface::UnassignBodyID(const BodyID &inBodyID)
+{
+	Body *body = nullptr;
+	mBodyManager->RemoveBodies(&inBodyID, 1, &body);
+	return body;
+}
+
+void BodyInterface::UnassignBodyIDs(const BodyID *inBodyIDs, int inNumber, Body **outBodies)
+{
+	mBodyManager->RemoveBodies(inBodyIDs, inNumber, outBodies);
 }
 
 void BodyInterface::DestroyBody(const BodyID &inBodyID)

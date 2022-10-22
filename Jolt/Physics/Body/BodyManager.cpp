@@ -291,6 +291,73 @@ bool BodyManager::AddBodyWithCustomID(Body *ioBody, const BodyID &inBodyID)
 	return true;
 }
 
+Body *BodyManager::RemoveBodyInternal(const BodyID &inBodyID)
+{
+	// Get body
+	uint32 idx = inBodyID.GetIndex();
+	Body *body = mBodies[idx];
+
+	// Validate that it can be removed
+	JPH_ASSERT(body->GetID() == inBodyID);
+	JPH_ASSERT(!body->IsActive());
+	JPH_ASSERT(!body->IsInBroadPhase());
+	
+	// Push the id onto the freelist
+	mBodies[idx] = (Body *)mBodyIDFreeListStart;
+	mBodyIDFreeListStart = (uintptr_t(idx) << cFreedBodyIndexShift) | cIsFreedBody;
+
+	return body;
+}
+
+#if defined(_DEBUG) && defined(JPH_ENABLE_ASSERTS)
+
+void BodyManager::ValidateFreeList() const
+{
+	// Check that the freelist is correct
+	size_t num_freed = 0;
+	for (uintptr_t start = mBodyIDFreeListStart; start != cBodyIDFreeListEnd; start = uintptr_t(mBodies[start >> cFreedBodyIndexShift]))
+	{
+		JPH_ASSERT(start & cIsFreedBody);
+		num_freed++;
+	}
+	JPH_ASSERT(mNumBodies == mBodies.size() - num_freed);
+}
+
+#endif // defined(_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
+
+void BodyManager::RemoveBodies(const BodyID *inBodyIDs, int inNumber, Body **outBodies)
+{
+	// Don't take lock if no bodies are to be destroyed
+	if (inNumber <= 0)
+		return;
+
+	UniqueLock lock(mBodiesMutex, EPhysicsLockTypes::BodiesList);
+
+	// Update cached number of bodies
+	JPH_ASSERT(mNumBodies >= (uint)inNumber);
+	mNumBodies -= inNumber;
+
+	for (const BodyID *b = inBodyIDs, *b_end = inBodyIDs + inNumber; b < b_end; b++)
+	{
+		// Remove body
+		Body *body = RemoveBodyInternal(*b);
+
+		// Clear the ID
+		body->mID = BodyID();
+
+		// Return the body to the caller
+		if (outBodies != nullptr)
+		{
+			*outBodies = body;
+			++outBodies;
+		}
+	}
+
+#if defined(_DEBUG) && defined(JPH_ENABLE_ASSERTS)
+	ValidateFreeList();
+#endif // defined(_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
+}
+
 void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 {
 	// Don't take lock if no bodies are to be destroyed
@@ -305,33 +372,15 @@ void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 
 	for (const BodyID *b = inBodyIDs, *b_end = inBodyIDs + inNumber; b < b_end; b++)
 	{
-		// Get body
-		BodyID body_id = *b;
-		uint32 idx = body_id.GetIndex();
-		Body *body = mBodies[idx];
-
-		// Validate that it can be removed
-		JPH_ASSERT(body->GetID() == body_id);
-		JPH_ASSERT(!body->IsActive());
-		JPH_ASSERT(!body->IsInBroadPhase());
-	
-		// Push the id onto the freelist
-		mBodies[idx] = (Body *)mBodyIDFreeListStart;
-		mBodyIDFreeListStart = (uintptr_t(idx) << cFreedBodyIndexShift) | cIsFreedBody;
+		// Remove body
+		Body *body = RemoveBodyInternal(*b);
 
 		// Free the body
 		sDeleteBody(body);
 	}
 
 #if defined(_DEBUG) && defined(JPH_ENABLE_ASSERTS)
-	// Check that the freelist is correct
-	size_t num_freed = 0;
-	for (uintptr_t start = mBodyIDFreeListStart; start != cBodyIDFreeListEnd; start = uintptr_t(mBodies[start >> cFreedBodyIndexShift]))
-	{
-		JPH_ASSERT(start & cIsFreedBody);
-		num_freed++;
-	}
-	JPH_ASSERT(mNumBodies == mBodies.size() - num_freed);
+	ValidateFreeList();
 #endif // defined(_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
 }
 

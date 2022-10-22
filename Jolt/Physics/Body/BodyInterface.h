@@ -40,16 +40,32 @@ public:
 	/// @return Created body or null when the body ID is invalid or a body of the same ID already exists.
 	Body *						CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings);
 
-	/// Advanced use only. Creates a body without specifying an ID. This body cannot be added to the world until it has gotten a body ID. A call to CreateBodyWithoutID followed by AssignBodyID is equivalent to calling CreateBodyWithID.
+	/// Advanced use only. Creates a body without specifying an ID. This body cannot be added to the physics system until it has been assigned a body ID.
+	/// This can be used to decouple allocation from registering the body. A call to CreateBodyWithoutID followed by AssignBodyID is equivalent to calling CreateBodyWithID.
 	/// @return Created body
 	Body *						CreateBodyWithoutID(const BodyCreationSettings &inSettings) const;
 
-	/// Advanced use only. Destroy a body previously created with CreateBodyWithoutID that hasn't gotten an ID yet through the AssignBodyID function. Bodies that did get an ID should be destroyed through DestroyBody.
+	/// Advanced use only. Destroy a body previously created with CreateBodyWithoutID that hasn't gotten an ID yet through the AssignBodyID function,
+	/// or a body that has had its body ID unassigned through UnassignBodyIDs. Bodies that have an ID should be destroyed through DestroyBody.
 	void						DestroyBodyWithoutID(Body *inBody) const;
 
-	/// Advanced use only. Assigns a body ID to a body that was created using CreateBodyWithoutID. After this call, the body can be added to the world like any other body.
+	/// Advanced use only. Assigns the next available body ID to a body that was created using CreateBodyWithoutID. After this call, the body can be added to the physics system.
+	/// @return false if the body already has an ID or out of body ids.
+	bool						AssignBodyID(Body *ioBody);
+
+	/// Advanced use only. Assigns a body ID to a body that was created using CreateBodyWithoutID. After this call, the body can be added to the physics system.
 	/// @return false if the body already has an ID or if the ID is not valid.
 	bool						AssignBodyID(Body *ioBody, const BodyID &inBodyID);
+
+	/// Advanced use only. See UnassignBodyIDs. Unassigns the ID of a single body.
+	Body *						UnassignBodyID(const BodyID &inBodyID);
+
+	/// Advanced use only. Removes a number of body IDs from their bodies and returns the body pointers. Before calling this, the body should have been removed from the physics system.
+	/// The body can be destroyed through DestroyBodyWithoutID. This can be used to decouple deallocation. A call to UnassignBodyIDs followed by calls to DestroyBodyWithoutID is equivalent to calling DestroyBodies.
+	/// @param inBodyIDs A list of body IDs
+	/// @param inNumber Number of bodies in the list
+	/// @param outBodies If not null on input, this will contain a list of body pointers corresponding to inBodyIDs that can be destroyed afterwards (caller assumes ownership over these).
+	void						UnassignBodyIDs(const BodyID *inBodyIDs, int inNumber, Body **outBodies);
 
 	/// Destroy a body
 	void						DestroyBody(const BodyID &inBodyID);
@@ -57,16 +73,16 @@ public:
 	/// Destroy multiple bodies
 	void						DestroyBodies(const BodyID *inBodyIDs, int inNumber);
 
-	/// Add body to the world.
+	/// Add body to the physics system.
 	/// Note that if you need to add multiple bodies, use the AddBodiesPrepare/AddBodiesFinalize function.
 	/// Adding many bodies, one at a time, results in a really inefficient broadphase until PhysicsSystem::OptimizeBroadPhase is called or when PhysicsSystem::Update rebuilds the tree!
 	/// After adding, to get a body by ID use the BodyLockRead or BodyLockWrite interface!
 	void						AddBody(const BodyID &inBodyID, EActivation inActivationMode);
 	
-	/// Remove body from the world.
+	/// Remove body from the physics system.
 	void						RemoveBody(const BodyID &inBodyID);
 	
-	/// Check if a body has been added to the world.
+	/// Check if a body has been added to the physics system.
 	bool						IsAdded(const BodyID &inBodyID) const;
 
 	/// Combines CreateBody and AddBody
