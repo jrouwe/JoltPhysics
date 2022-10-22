@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
@@ -229,7 +230,7 @@ TEST_SUITE("CollideShapeTests")
 	}
 
 	// Test colliding a very long capsule vs a box that is intersecting with the linesegment inside the capsule
-	// This particular config reported the wrong penetration due to accuarcy problems before
+	// This particular config reported the wrong penetration due to accuracy problems before
 	TEST_CASE("TestCollideShapeLongCapsuleVsEmbeddedBox")
 	{
 		// Create box
@@ -309,5 +310,39 @@ TEST_SUITE("CollideShapeTests")
 
 		// But there should not be an actual collision
 		CHECK(!pen_depth.GetPenetrationDepthStepEPA(*support, triangle, cDefaultPenetrationTolerance, penetration_axis, point1, point2));
+	}
+
+	// A test case of a triangle that's nearly parallel to a capsule and penetrating it. This one was causing numerical issues.
+	TEST_CASE("TestCollideParallelTriangleVsCapsule")
+	{
+		Vec3 v1(-0.479988575f, -1.36185002f, 0.269966960f);
+		Vec3 v2(-0.104996204f, 0.388152480f, 0.269967079f);
+		Vec3 v3(-0.104996204f, -1.36185002f, 0.269966960f);
+		TriangleShape triangle(v1, v2, v3);
+		triangle.SetEmbedded();
+
+		float capsule_radius = 0.37f;
+		float capsule_half_height = 0.5f;
+		CapsuleShape capsule(capsule_half_height, capsule_radius);
+		capsule.SetEmbedded();
+
+		CollideShapeSettings settings;
+		AllHitCollisionCollector<CollideShapeCollector> collector;
+		CollisionDispatch::sCollideShapeVsShape(&triangle, &capsule, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+
+		// The capsule's center is closest to the triangle's edge v2 v3
+		Vec3 capsule_center_to_triangle_v2_v3 = v3;
+		capsule_center_to_triangle_v2_v3.SetY(0); // The penetration axis will be in x, z only because the triangle is parallel to the capsule axis
+		float capsule_center_to_triangle_v2_v3_len = capsule_center_to_triangle_v2_v3.Length();
+		Vec3 expected_penetration_axis = -capsule_center_to_triangle_v2_v3 / capsule_center_to_triangle_v2_v3_len;
+		float expected_penetration_depth = capsule_radius - capsule_center_to_triangle_v2_v3_len;
+
+		CHECK(collector.mHits.size() == 1);
+		const CollideShapeResult &hit = collector.mHits[0];
+		Vec3 actual_penetration_axis = hit.mPenetrationAxis.Normalized();
+		float actual_penetration_depth = hit.mPenetrationDepth;
+
+		CHECK_APPROX_EQUAL(actual_penetration_axis, expected_penetration_axis);
+		CHECK_APPROX_EQUAL(actual_penetration_depth, expected_penetration_depth);
 	}
 }
