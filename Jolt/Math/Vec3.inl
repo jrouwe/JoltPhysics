@@ -739,8 +739,10 @@ bool Vec3::IsNormalized(float inTolerance) const
 }
 
 bool Vec3::IsNaN() const
-{	
-#if defined(JPH_USE_SSE)
+{
+#if defined(JPH_USE_AVX512)
+	return (_mm_fpclass_ps_mask(mValue, 0b10000001) & 0x7) != 0;
+#elif defined(JPH_USE_SSE)
 	return (_mm_movemask_ps(_mm_cmpunord_ps(mValue, mValue)) & 0x7) != 0;
 #elif defined(JPH_USE_NEON)
 	uint32x4_t mask = { 1, 1, 1, 0 };

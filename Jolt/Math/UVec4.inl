@@ -207,7 +207,9 @@ UVec4 UVec4::sAnd(UVec4Arg inV1, UVec4Arg inV2)
 
 UVec4 UVec4::sNot(UVec4Arg inV1)
 {
-#if defined(JPH_USE_SSE)
+#if defined(JPH_USE_AVX512)
+	return _mm_ternarylogic_epi32(inV1.mValue, inV1.mValue, inV1.mValue, 0b01010101);
+#elif defined(JPH_USE_SSE)
 	return sXor(inV1, sReplicate(0xffffffff));
 #elif defined(JPH_USE_NEON)
 	return vmvnq_u32(inV1.mValue);

@@ -1120,7 +1120,12 @@ Mat44 Mat44::GetRotation() const
 
 Mat44 Mat44::GetRotationSafe() const
 { 
-#if defined(JPH_USE_SSE4_1)
+#if defined(JPH_USE_AVX512)
+	return Mat44(_mm_maskz_mov_ps(0b0111, mCol[0].mValue),
+				 _mm_maskz_mov_ps(0b0111, mCol[1].mValue),
+				 _mm_maskz_mov_ps(0b0111, mCol[2].mValue),
+				 Vec4(0, 0, 0, 1)); 
+#elif defined(JPH_USE_SSE4_1)
 	__m128 zero = _mm_setzero_ps(); 
 	return Mat44(_mm_blend_ps(mCol[0].mValue, zero, 8),
 				 _mm_blend_ps(mCol[1].mValue, zero, 8),

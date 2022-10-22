@@ -215,7 +215,11 @@ DVec3 DVec3::operator / (DVec3Arg inV2) const
 
 DVec3 DVec3::Abs() const
 {
+#if defined(JPH_USE_AVX512)
+	return _mm256_range_pd(mValue, mValue, 0b1000);
+#else
 	return _mm256_max_pd(_mm256_sub_pd(_mm256_setzero_pd(), mValue), mValue);
+#endif
 }
 
 DVec3 DVec3::Reciprocal() const
