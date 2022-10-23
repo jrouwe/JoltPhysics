@@ -887,6 +887,12 @@ void CharacterVirtual::MoveShape(Vec3 &ioPosition, Vec3Arg inVelocity, float inD
 
 Vec3 CharacterVirtual::CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocity) const
 {
+	// If we're not pushing against a steep slope, return the desired velocity
+	// Note: This is important as WalkStairs overrides the ground state to OnGround when its first check fails but the second succeeds
+	if (mGroundState == CharacterVirtual::EGroundState::OnGround
+		|| mGroundState == CharacterVirtual::EGroundState::InAir)
+		return inDesiredVelocity;
+		
 	Vec3 desired_velocity = inDesiredVelocity;
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision
@@ -1165,7 +1171,7 @@ bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFil
 	return true;
 }
 
-void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, Vec3Arg inStickToFloorStepDown, Vec3Arg inWalkStairsStepUp, float inWalkStairsMinStepForward, float inWalkStairsStepForwardTest, Vec3Arg inWalkStairsStepDownExtra, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
+void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, const ExtendedUpdateSettings &inSettings, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator)
 {
 	// Update the velocity
 	Vec3 desired_velocity = mLinearVelocity;
@@ -1185,16 +1191,16 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, Vec3
 		ground_to_air = false;
 
 	// If stick to floor enabled and we're going from supported to not supported
-	if (ground_to_air && !inStickToFloorStepDown.IsNearZero())
+	if (ground_to_air && !inSettings.mStickToFloorStepDown.IsNearZero())
 	{
 		// If we're not moving up, stick to the floor
 		float velocity = (mPosition - old_position).Dot(mUp) / inDeltaTime;
 		if (velocity <= 1.0e-6f)
-			StickToFloor(Vec3(0, -0.5f, 0), inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+			StickToFloor(inSettings.mStickToFloorStepDown, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 	}
 
 	// If walk stairs enabled
-	if (!inWalkStairsStepUp.IsNearZero())
+	if (!inSettings.mWalkStairsStepUp.IsNearZero())
 	{
 		// Calculate how much we wanted to move horizontally
 		Vec3 desired_horizontal_step = desired_velocity * inDeltaTime;
@@ -1220,13 +1226,24 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, Vec3
 				// Note that we clamp the step forward to a minimum distance. This is done because at very high frame rates the delta time
 				// may be very small, causing a very small step forward. If the step becomes small enough, we may not move far enough
 				// horizontally to actually end up at the top of the step.
-				Vec3 step_forward = step_forward_normalized * max(inWalkStairsMinStepForward, desired_horizontal_step_len - achieved_horizontal_step_len);
+				Vec3 step_forward = step_forward_normalized * max(inSettings.mWalkStairsMinStepForward, desired_horizontal_step_len - achieved_horizontal_step_len);
 
 				// Calculate how far to scan ahead for a floor. This is only used in case the floor normal at step_forward is too steep.
 				// In that case an additional check will be performed at this distance to check if that normal is not too steep.
-				Vec3 step_forward_test = step_forward_normalized * inWalkStairsStepForwardTest;
+				// Start with the ground normal in the horizontal plane and normalizing it
+				Vec3 step_forward_test = -mGroundNormal;
+				step_forward_test -= step_forward_test.Dot(mUp) * mUp;
+				step_forward_test = step_forward_test.NormalizedOr(step_forward_normalized);
 
-				WalkStairs(inDeltaTime, inWalkStairsStepUp, step_forward, step_forward_test, inWalkStairsStepDownExtra, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
+				// If this normalized vector and the character forward vector is bigger than a preset angle, we use the character forward vector instead of the ground normal
+				// to do our forward test
+				if (step_forward_test.Dot(step_forward_normalized) < inSettings.mWalkStairsCosAngleForwardContact)
+					step_forward_test = step_forward_normalized;
+
+				// Calculate the correct magnitude for the test vector
+				step_forward_test *= inSettings.mWalkStairsStepForwardTest;
+
+				WalkStairs(inDeltaTime, inSettings.mWalkStairsStepUp, step_forward, step_forward_test, inSettings.mWalkStairsStepDownExtra, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inAllocator);
 			}
 		}
 	}
