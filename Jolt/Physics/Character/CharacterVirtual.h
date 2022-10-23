@@ -156,7 +156,7 @@ public:
 	/// @param inStepUp The direction and distance to step up (this corresponds to the max step height)
 	/// @param inStepForward The direction and distance to step forward after the step up
 	/// @param inStepForwardTest When running at a high frequency, inStepForward can be very small and it's likely that you hit the side of the stairs on the way down. This could produce a normal that violates the max slope angle. If this happens, we test again using this distance from the up position to see if we find a valid slope.
-	/// @param inStepDownExtra An additional translation that is added when stepping down at the end. Allows you to step further down than up. Set to zero if you don't want this.
+	/// @param inStepDownExtra An additional translation that is added when stepping down at the end. Allows you to step further down than up. Set to zero if you don't want this. Should be in the opposite direction of up.
 	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
 	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
 	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
@@ -175,22 +175,29 @@ public:
 	/// @return True if the character was successfully projected onto the floor.
 	bool								StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
+	/// Settings struct with settings for ExtendedUpdate
+	struct ExtendedUpdateSettings
+	{
+		Vec3Arg							mStickToFloorStepDown { 0, -0.5f, 0 };									///< See StickToFloor inStepDown parameter. Can be zero to turn off.
+		Vec3Arg							mWalkStairsStepUp { 0, 0.4f, 0 };										///< See WalkStairs inStepUp parameter. Can be zero to turn off.
+		float							mWalkStairsMinStepForward { 0.02f };									///< See WalkStairs inStepForward parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
+		float							mWalkStairsStepForwardTest { 0.15f };									///< See WalkStairs inStepForwardTest parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
+		float							mWalkStairsCosAngleForwardContact { cos(DegreesToRadians(75.0f)) };		///< Cos(angle) where angle is the maximum angle between the ground normal in the horizontal plane and the character forward vector where we're willing to adjust the step forward test towards the contact normal.
+		Vec3Arg							mWalkStairsStepDownExtra { Vec3::sZero() };								///< See WalkStairs inStepDownExtra
+	};
+
 	/// This function combines Update, StickToFloor and WalkStairs. This function serves as an example of how these functions could be combined.
 	/// Before calling, call SetLinearVelocity to update the horizontal/vertical speed of the character, typically this is:
 	/// - When on OnGround and not moving away from ground: velocity = GetGroundVelocity() + horizontal speed as input by player + optional vertical jump velocity + delta time * gravity
 	/// - Else: velocity = current vertical velocity + horizontal speed as input by player + delta time * gravity
 	/// @param inDeltaTime Time step to simulate.
 	/// @param inGravity Gravity vector (m/s^2). This gravity vector is only used when the character is standing on top of another object to apply downward force.
-	/// @param inStickToFloorStepDown See StickToFloor inStepDown parameter.
-	/// @param inWalkStairsStepUp See WalkStairs inStepUp parameter.
-	/// @param inWalkStairsMinStepForward See WalkStairs inStepForward parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
-	/// @param inWalkStairsStepForwardTest See WalkStairs inStepForwardTest parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
-	/// @param inWalkStairsStepDownExtra See WalkStairs inStepDownExtra
+	/// @param inSettings A structure containing settings for the algorithm.
 	/// @param inBroadPhaseLayerFilter Filter that is used to check if the character collides with something in the broadphase.
 	/// @param inObjectLayerFilter Filter that is used to check if a character collides with a layer.
 	/// @param inBodyFilter Filter that is used to check if a character collides with a body.
 	/// @param inAllocator An allocator for temporary allocations. All memory will be freed by the time this function returns.
-	void								ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, Vec3Arg inStickToFloorStepDown, Vec3Arg inWalkStairsStepUp, float inWalkStairsMinStepForward, float inWalkStairsStepForwardTest, Vec3Arg inWalkStairsStepDownExtra, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
+	void								ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, const ExtendedUpdateSettings &inSettings, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);
 
 	/// This function can be used after a character has teleported to determine the new contacts with the world.
 	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, TempAllocator &inAllocator);

@@ -15,12 +15,6 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest)
 	JPH_ADD_BASE_CLASS(CharacterVirtualTest, CharacterBaseTest)
 }
 
-static const Vec3 cStickToFloorStepDown(0, -0.5f, 0);
-static const Vec3 cWalkStairsStepUp = Vec3(0.0f, 0.4f, 0.0f);
-static const float cWalkStairsMinStepForward = 0.02f;
-static const float cWalkStairsStepForwardTest = 0.15f;
-static const Vec3 cWalkStairsStepDownExtra = Vec3::sZero();
-
 void CharacterVirtualTest::Initialize()
 {
 	CharacterBaseTest::Initialize();
@@ -58,14 +52,17 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Remember old position
 	Vec3 old_position = mCharacter->GetPosition();
 
+	// Settings for our update function
+	CharacterVirtual::ExtendedUpdateSettings update_settings;
+	if (!sEnableStickToFloor)
+		update_settings.mStickToFloorStepDown = Vec3::sZero();
+	if (!sEnableWalkStairs)
+		update_settings.mWalkStairsStepUp = Vec3::sZero();
+
 	// Update the character position
 	mCharacter->ExtendedUpdate(inParams.mDeltaTime,
 		mPhysicsSystem->GetGravity(),
-		sEnableStickToFloor? cStickToFloorStepDown : Vec3::sZero(),
-		sEnableWalkStairs? cWalkStairsStepUp : Vec3::sZero(),
-		cWalkStairsMinStepForward,
-		cWalkStairsStepForwardTest,
-		cWalkStairsStepDownExtra,
+		update_settings,
 		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 		mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING),
 		{ },
