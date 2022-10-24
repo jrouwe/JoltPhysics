@@ -18,9 +18,6 @@ public:
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
-	// Optional settings menu
-	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
-
 	// Saving / restoring state for replay
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;
@@ -37,6 +34,9 @@ protected:
 
 	// Handle user input to the character
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) override;
+
+	// Add test configuration settings
+	virtual void			AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
 	// Test settings

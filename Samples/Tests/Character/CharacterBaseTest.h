@@ -45,6 +45,9 @@ protected:
 	// Draw the character state
 	void					DrawCharacterState(const CharacterBase *inCharacter, Mat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity);
 
+	// Add test configuration settings
+	virtual void			AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu) { /* Nothing by default */ }
+
 	// Character size
 	static constexpr float	cCharacterHeightStanding = 1.35f;
 	static constexpr float	cCharacterRadiusStanding = 0.3f;
@@ -62,6 +65,17 @@ protected:
 	float					mRampBlocksTimeLeft = 0.0f;
 
 private:
+	// Shape types
+	enum class EType
+	{
+		Capsule,
+		Cylinder,
+		Box
+	};
+
+	// Character shape type
+	static inline EType		sShapeType = EType::Capsule;
+
 	// List of possible scene names
 	static const char *		sScenes[];
 
