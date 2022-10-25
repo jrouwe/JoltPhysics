@@ -93,10 +93,10 @@ void VehicleTransmission::Update(float inDeltaTime, float inCurrentRPM, float in
 			}
 		}
 
-		if (old_gear != mCurrentGear && old_gear != 0)
+		if (old_gear != mCurrentGear)
 		{
 			// We've shifted gear, start switch countdown
-			mGearSwitchTimeLeft = mSwitchTime;
+			mGearSwitchTimeLeft = old_gear != 0? mSwitchTime : 0.0f;
 			mClutchReleaseTimeLeft = mClutchReleaseTime;
 			mGearSwitchLatencyTimeLeft = mSwitchLatency;
 			mClutchFriction = 0.0f;
