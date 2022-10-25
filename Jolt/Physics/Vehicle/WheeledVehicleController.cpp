@@ -249,8 +249,11 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	}
 	else
 	{
+		// In auto transmission mode, don't accelerate the engine when switching gears
+		float forward_input = mTransmission.mMode == ETransmissionMode::Manual? abs(mForwardInput) : 0.0f;
+
 		// Engine not connected to wheels, update RPM based on engine inertia alone
-		mEngine.UpdateRPM(inDeltaTime, abs(mForwardInput));
+		mEngine.UpdateRPM(inDeltaTime, forward_input);
 	}
 
 	// Update transmission

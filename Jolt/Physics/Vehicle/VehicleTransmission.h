@@ -33,7 +33,8 @@ public:
 	Array<float>			mGearRatios { 2.66f, 1.78f, 1.3f, 1.0f, 0.74f }; ///< Ratio in rotation rate between engine and gear box, first element is 1st gear, 2nd element 2nd gear etc.
 	Array<float>			mReverseGearRatios { -2.90f };				///< Ratio in rotation rate between engine and gear box when driving in reverse
 	float					mSwitchTime = 0.5f;							///< How long it takes to switch gears (s), only used in auto mode
-	float					mClutchReleaseTime = 0.3f;					///< How long it takes to release the clutch (go to full friction)
+	float					mClutchReleaseTime = 0.3f;					///< How long it takes to release the clutch (go to full friction), only used in auto mode
+	float					mSwitchLatency = 0.5f;						///< How long to wait after releasing the clutch before another switch is attempted (s), only used in auto mode
 	float					mShiftUpRPM = 4000.0f;						///< If RPM of engine is bigger then this we will shift a gear up, only used in auto mode
 	float					mShiftDownRPM = 2000.0f;					///< If RPM of engine is smaller then this we will shift a gear down, only used in auto mode
 };
@@ -75,6 +76,7 @@ private:
 	float					mClutchFriction = 1.0f;						///< Value between 0 and 1 indicating how much friction the clutch gives (0 = no friction, 1 = full friction)
 	float					mGearSwitchTimeLeft = 0.0f;					///< When switching gears this will be > 0 and will cause the engine to not provide any torque to the wheels for a short time (used for automatic gear switching only)
 	float					mClutchReleaseTimeLeft = 0.0f;				///< After switching gears this will be > 0 and will cause the clutch friction to go from 0 to 1 (used for automatic gear switching only)
+	float					mGearSwitchLatencyTimeLeft = 0.0f;			///< After releasing the clutch this will be > 0 and will prevent another gear switch (used for automatic gear switching only)
 };
 
 JPH_NAMESPACE_END
