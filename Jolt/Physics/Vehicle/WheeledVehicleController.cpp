@@ -8,6 +8,7 @@
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+#include <Jolt/Math/GaussianElimination.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -223,71 +224,213 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	// Calculate engine torque
 	float engine_torque = mEngine.GetTorque(forward_input);
 
-	bool can_engine_apply_torque = false;
-	float transmission_torque = 0.0f;
-	if (mTransmission.GetCurrentGear() != 0 && mTransmission.GetClutchFriction() > 1.0e-3f)
+	// Define a struct that collects information about the wheels that connect to the engine
+	struct DrivenWheel
 	{
-		// Calculate average wheel speed after differential
-		float average_clutch_speed = 0.0f;
-		float average_clutch_speed_denom = 0.0f;
-		for (const VehicleDifferentialSettings &d : mDifferentials)
+		Wheel *					mWheel;
+		const WheelSettingsWV *	mSettings;
+		float					mClutchToWheelRatio;
+		float					mClutchToWheelTorqueRatio;
+	};
+	vector<DrivenWheel> driven_wheels;
+	driven_wheels.reserve(wheels.size());
+
+	// Collect driven wheels
+	bool can_engine_apply_torque = false;
+	float transmission_ratio = mTransmission.GetCurrentRatio();
+	for (const VehicleDifferentialSettings &d : mDifferentials)
+	{
+		if (d.mLeftWheel != -1)
 		{
-			if (d.mLeftWheel != -1)
-			{
-				const Wheel *w = wheels[d.mLeftWheel];
-				average_clutch_speed += w->GetAngularVelocity() * d.mDifferentialRatio;
-				average_clutch_speed_denom += 1.0f;
-				can_engine_apply_torque |= d.mLeftRightSplit < 1.0f && w->HasContact();
-			}
-			if (d.mRightWheel != -1)
-			{
-				const Wheel *w = wheels[d.mRightWheel];
-				average_clutch_speed += w->GetAngularVelocity() * d.mDifferentialRatio;
-				average_clutch_speed_denom += 1.0f;
-				can_engine_apply_torque |= d.mLeftRightSplit > 0.0f && w->HasContact();
-			}
+			Wheel *w = wheels[d.mLeftWheel];
+			const WheelSettingsWV *ws = static_cast<const WheelSettingsWV *>(w->GetSettings());
+			driven_wheels.push_back({ w, ws, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * (1.0f - d.mLeftRightSplit) });
+			can_engine_apply_torque |= d.mLeftRightSplit < 1.0f && w->HasContact();
 		}
-
-		if (average_clutch_speed_denom != 0.0f)
+		if (d.mRightWheel != -1)
 		{
-			// Calculate final average speed of wheels at clutch
-			float transmission_ratio = mTransmission.GetCurrentRatio();
-			average_clutch_speed /= average_clutch_speed_denom;
-			average_clutch_speed *= transmission_ratio;
-
-			// Angular velocity of engine
-			float engine_speed = mEngine.GetAngularVelocity();
-
-			// Calculate torque from engine to clutch
-			transmission_torque = mTransmission.GetClutchFriction() * mTransmission.mClutchStrength * (engine_speed - average_clutch_speed);
-			float transmission_torque_on_differentials = transmission_ratio * transmission_torque;
-
-			for (const VehicleDifferentialSettings &d : mDifferentials)
-			{
-				// Calculate torque on this differential
-				float differential_torque = d.mEngineTorqueRatio * d.mDifferentialRatio * transmission_torque_on_differentials;
-
-				// Left wheel
-				if (d.mLeftWheel != -1 && d.mLeftRightSplit < 1.0f)
-				{
-					WheelWV *w = static_cast<WheelWV *>(wheels[d.mLeftWheel]);
-					float wheel_torque = differential_torque * (1.0f - d.mLeftRightSplit);
-					w->ApplyTorque(wheel_torque, inDeltaTime);
-				}
-
-				// Right wheel
-				if (d.mRightWheel != -1 && d.mLeftRightSplit > 0.0f)
-				{
-					WheelWV *w = static_cast<WheelWV *>(wheels[d.mRightWheel]);
-					float wheel_torque = differential_torque * d.mLeftRightSplit;
-					w->ApplyTorque(wheel_torque, inDeltaTime);
-				}
-			}
+			Wheel *w = wheels[d.mRightWheel];
+			const WheelSettingsWV *ws = static_cast<const WheelSettingsWV *>(w->GetSettings());
+			driven_wheels.push_back({ w, ws, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * d.mLeftRightSplit });
+			can_engine_apply_torque |= d.mLeftRightSplit > 0.0f && w->HasContact();
 		}
 	}
 
-	// Apply torque to engine rotation
-	mEngine.ApplyTorque(engine_torque - transmission_torque, inDeltaTime);
+	bool solved = false;
+	if (!driven_wheels.empty())
+	{
+		// We need a resizable matrix for GaussianElimination to operate on, declare it inline
+		struct DynMatrix
+		{
+							DynMatrix(uint inRows, uint inCols)			: mRows(inRows), mCols(inCols) { mElements.resize(inRows * inCols); }
+
+			float			operator () (uint inRow, uint inCol) const	{ return mElements[inRow * mCols + inCol]; }
+			float &			operator () (uint inRow, uint inCol)		{ return mElements[inRow * mCols + inCol]; }
+
+			uint			GetCols() const								{ return mCols; }
+			uint			GetRows() const								{ return mRows; }
+
+			uint			mRows;
+			uint			mCols;
+			vector<float>	mElements;
+		};
+
+		// Define the torque at the clutch at time t as:
+		// 
+		// tc(t):=S*(we(t)-sum(R(j)*ww(j,t),j,1,N)/N)
+		//
+		// Where:
+		// S is the total strength of clutch (= friction * strength)
+		// we(t) is the engine angular velocity at time t
+		// R(j) is the total gear ratio of clutch to wheel for wheel j
+		// ww(j,t) is the angular velocity of wheel j at time t
+		// N is the amount of wheels
+		//
+		// The torque that increases the engine angular velocity at time t is:
+		// 
+		// te(t):=TE-tc(t)
+		//
+		// Where:
+		// TE is the torque delivered by the engine
+		//
+		// The torque that increases the wheel angular velocity for wheel i at time t is:
+		//
+		// tw(i,t):=TW(i)+R(i)*F(i)*tc(t)
+		//
+		// Where:
+		// TW(i) is the torque applied to the wheel outside of the engine (brake + torque due to friction with the ground)
+		// F(i) is the fraction of the engine torque applied from engine to wheel i
+		//
+		// Because the angular accelaration and torque are connected through: Torque = I * dw/dt
+		//
+		// We have the angular acceleration of the engine at time t:
+		//
+		// ddt_we(t):=te(t)/Ie
+		//
+		// Where:
+		// Ie is the inertia of the engine
+		//
+		// We have the angular acceleration of wheel i at time t:
+		//
+		// ddt_ww(i,t):=tw(i,t)/Iw(i)
+		//
+		// Where:
+		// Iw(i) is the inertia of wheel i
+		//
+		// We could take a simple Euler step to calculate the resulting accelerations but because the system is very stiff this turns out to be unstable, so we need to use implicit Euler instead:
+		//
+		// we(t+dt)=we(t)+dt*ddt_we(t+dt)
+		//
+		// and:
+		//
+		// ww(i,t+dt)=ww(i,t)+dt*ddt_ww(i,t+dt)
+		//
+		// Expanding both equations (the equations above are in wxMaxima format and this can easily be done by expand(%)):
+		//
+		// For wheel:
+		// 
+		// ww(i,t+dt) + (S*dt*F(i)*R(i)*sum(R(j)*ww(j,t+dt),j,1,N))/(N*Iw(i)) - (S*dt*F(i)*R(i)*we(t+dt))/Iw(i) = ww(i,t)+(dt*TW(i))/Iw(i)
+		//
+		// For engine:
+		//
+		// we(t+dt) + (S*dt*we(t+dt))/Ie - (S*dt*sum(R(j)*ww(j,t+dt),j,1,N))/(Ie*N) = we(t)+(TE*dt)/Ie
+		//
+		// Defining a vector w(t) = (ww(1, t), ww(2, t), ..., ww(N, t), we(t)) we can write both equations as a matrix multiplication:
+		//
+		// a * w(t + dt) = b
+		//
+		// We then invert the matrix to get the new angular velocities.
+		//
+		// Note that currently we set TW(i) = 0 so that the wheels will accelerate as if no external force was applied to them. These external forces are applied later and will slow down the wheel before the end of the time step.
+
+		// Dimension of matrix is N + 1
+		int n = (int)driven_wheels.size() + 1;
+
+		// Last column of w is for the engine angular velocity
+		int engine = n - 1;
+
+		// Define a and b
+		DynMatrix a(n, n);
+		DynMatrix b(n, 1);
+
+		// Get number of driven wheels as a float
+		float num_driven_wheels_float = float(driven_wheels.size());
+	
+		// Angular velocity of engine
+		float w_engine = mEngine.GetAngularVelocity();
+
+		// Calculate the total strength of the clutch
+		float clutch_strength = transmission_ratio != 0.0f? mTransmission.GetClutchFriction() * mTransmission.mClutchStrength : 0.0f;
+
+		// dt / Ie
+		float dt_div_ie = inDeltaTime / mEngine.mInertia;
+
+		// Iterate the rows for the wheels
+		for (int i = 0; i < (int)driven_wheels.size(); ++i)
+		{
+			const DrivenWheel &w_i = driven_wheels[i];
+
+			// dt / Iw
+			float dt_div_iw = inDeltaTime / w_i.mSettings->mInertia;
+
+			// S * R(i)
+			float s_r = clutch_strength * w_i.mClutchToWheelRatio;
+
+			// dt * S * R(i) * F(i) / Iw
+			float dt_s_r_f_div_iw = dt_div_iw * s_r * w_i.mClutchToWheelTorqueRatio;
+
+			// Fill in the columns of a for wheel j
+			for (int j = 0; j < (int)driven_wheels.size(); ++j)
+			{
+				const DrivenWheel &w_j = driven_wheels[j];
+				a(i, j) = dt_s_r_f_div_iw * w_j.mClutchToWheelRatio / num_driven_wheels_float;
+			}
+
+			// Add ww(i, t+dt)
+			a(i, i) += 1.0f;
+
+			// Add the column for the engine
+			a(i, engine) = -dt_s_r_f_div_iw;
+
+			// Fill in the constant b
+			b(i, 0) = w_i.mWheel->GetAngularVelocity(); // + dt_div_iw * (brake and tire torques)
+
+			// To avoid looping over the wheels again, we also fill in the wheel columns of the engine row here
+			a(engine, i) = -dt_div_ie * s_r / num_driven_wheels_float;
+		}
+
+		// Finalize the engine row
+		a(engine, engine) = (1.0f + dt_div_ie * clutch_strength);
+		b(engine, 0) = w_engine + dt_div_ie * engine_torque;
+
+		// Solve the linear equation
+		if (GaussianElimination(a, b))
+		{
+			// Update the angular velocities for the wheels
+			for (int i = 0; i < (int)driven_wheels.size(); ++i)
+			{
+				DrivenWheel &dw1 = driven_wheels[i];
+				dw1.mWheel->SetAngularVelocity(b(i, 0));
+			}
+
+			// Update the engine RPM and clamp it to its range
+			float engine_rpm = Clamp(b(engine, 0) * VehicleEngine::cAngularVelocityToRPM, mEngine.mMinRPM, mEngine.mMaxRPM);
+			mEngine.SetCurrentRPM(engine_rpm);
+
+			// The speeds have been solved
+			solved = true;
+		}
+		else
+		{
+			JPH_ASSERT(false, "New engine/wheel speeds could not be calculated!");
+		}
+	}
+
+	if (!solved)
+	{
+		// Engine not connected to wheels, apply all torque to engine rotation
+		mEngine.ApplyTorque(engine_torque, inDeltaTime);
+	}
 
 	// Update transmission
 	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, can_engine_apply_torque);
