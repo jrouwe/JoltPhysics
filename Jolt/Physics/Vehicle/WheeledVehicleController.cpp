@@ -211,97 +211,87 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		WheelWV *w = static_cast<WheelWV *>(w_base);
 		w->Update(inDeltaTime, mConstraint);
 	}
-	
-	// First calculate engine speed based on speed of all wheels
+
+	// Update engine with damping
+	mEngine.Update(inDeltaTime);
+
+	// In auto transmission mode, don't accelerate the engine when switching gears
+	float forward_input = abs(mForwardInput);
+	if (mTransmission.mMode == ETransmissionMode::Auto)
+		forward_input *= mTransmission.GetClutchFriction();
+
+	// Calculate engine torque
+	float engine_torque = mEngine.GetTorque(forward_input);
+
 	bool can_engine_apply_torque = false;
+	float transmission_torque = 0.0f;
 	if (mTransmission.GetCurrentGear() != 0 && mTransmission.GetClutchFriction() > 1.0e-3f)
 	{
-		float transmission_ratio = mTransmission.GetCurrentRatio();
-		bool forward = transmission_ratio >= 0.0f;
-		float slowest_wheel_speed = forward? FLT_MAX : -FLT_MAX;
+		// Calculate average wheel speed after differential
+		float average_clutch_speed = 0.0f;
+		float average_clutch_speed_denom = 0.0f;
 		for (const VehicleDifferentialSettings &d : mDifferentials)
-			if (d.mEngineTorqueRatio > 0.0f)
+		{
+			if (d.mLeftWheel != -1)
 			{
-				if (d.mLeftWheel != -1 && d.mLeftRightSplit < 1.0f)
-				{
-					const Wheel *w = wheels[d.mLeftWheel];
-					if (forward)
-						slowest_wheel_speed = min(slowest_wheel_speed, w->GetAngularVelocity() * d.mDifferentialRatio);
-					else
-						slowest_wheel_speed = max(slowest_wheel_speed, w->GetAngularVelocity() * d.mDifferentialRatio);
-					can_engine_apply_torque |= w->HasContact();
-				}
-				if (d.mRightWheel != -1 && d.mLeftRightSplit > 0.0f)
-				{
-					const Wheel *w = wheels[d.mRightWheel];
-					if (forward)
-						slowest_wheel_speed = min(slowest_wheel_speed, w->GetAngularVelocity() * d.mDifferentialRatio);
-					else
-						slowest_wheel_speed = max(slowest_wheel_speed, w->GetAngularVelocity() * d.mDifferentialRatio);
-					can_engine_apply_torque |= w->HasContact();
-				}
+				const Wheel *w = wheels[d.mLeftWheel];
+				average_clutch_speed += w->GetAngularVelocity() * d.mDifferentialRatio;
+				average_clutch_speed_denom += 1.0f;
+				can_engine_apply_torque |= d.mLeftRightSplit < 1.0f && w->HasContact();
 			}
+			if (d.mRightWheel != -1)
+			{
+				const Wheel *w = wheels[d.mRightWheel];
+				average_clutch_speed += w->GetAngularVelocity() * d.mDifferentialRatio;
+				average_clutch_speed_denom += 1.0f;
+				can_engine_apply_torque |= d.mLeftRightSplit > 0.0f && w->HasContact();
+			}
+		}
 
-		// Update RPM only if the wheels are connected to the engine
-		if (slowest_wheel_speed > -FLT_MAX && slowest_wheel_speed < FLT_MAX)
-			mEngine.SetCurrentRPM(slowest_wheel_speed * transmission_ratio * VehicleEngine::cAngularVelocityToRPM);
-		mEngine.SetCurrentRPM(Clamp(mEngine.GetCurrentRPM(), mEngine.mMinRPM, mEngine.mMaxRPM));
-	}
-	else
-	{
-		// In auto transmission mode, don't accelerate the engine when switching gears
-		float forward_input = mTransmission.mMode == ETransmissionMode::Manual? abs(mForwardInput) : 0.0f;
+		if (average_clutch_speed_denom != 0.0f)
+		{
+			// Calculate final average speed of wheels at clutch
+			float transmission_ratio = mTransmission.GetCurrentRatio();
+			average_clutch_speed /= average_clutch_speed_denom;
+			average_clutch_speed *= transmission_ratio;
 
-		// Engine not connected to wheels, update RPM based on engine inertia alone
-		mEngine.UpdateRPM(inDeltaTime, forward_input);
-	}
+			// Angular velocity of engine
+			float engine_speed = mEngine.GetAngularVelocity();
 
-	// Update transmission
-	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, can_engine_apply_torque);
+			// Calculate torque from engine to clutch
+			transmission_torque = mTransmission.GetClutchFriction() * mTransmission.mClutchStrength * (engine_speed - average_clutch_speed);
+			float transmission_torque_on_differentials = transmission_ratio * transmission_torque;
 
-	// Calculate the amount of torque the transmission gives to the differentials
-	float transmission_ratio = mTransmission.GetCurrentRatio();
-	float transmission_torque = mTransmission.GetClutchFriction() * transmission_ratio * mEngine.GetTorque(abs(mForwardInput));
-	if (transmission_torque != 0.0f)
-	{
-		// Calculate the max angular velocity of the differential given current engine RPM
-		// Note this adds 0.1% slop to avoid numerical accuracy issues
-		float differential_max_angular_velocity = mEngine.GetCurrentRPM() / (transmission_ratio * VehicleEngine::cAngularVelocityToRPM) * 1.001f;
-
-		// Apply the transmission torque to the wheels
-		for (const VehicleDifferentialSettings &d : mDifferentials)
-			if (d.mEngineTorqueRatio > 0.0f)
+			for (const VehicleDifferentialSettings &d : mDifferentials)
 			{
 				// Calculate torque on this differential
-				float differential_torque = d.mEngineTorqueRatio * d.mDifferentialRatio * transmission_torque;
-
-				// Calculate max angular velocity for wheels on this differential
-				float wheel_max_angular_velocity = differential_max_angular_velocity / d.mDifferentialRatio;
+				float differential_torque = d.mEngineTorqueRatio * d.mDifferentialRatio * transmission_torque_on_differentials;
 
 				// Left wheel
 				if (d.mLeftWheel != -1 && d.mLeftRightSplit < 1.0f)
 				{
 					WheelWV *w = static_cast<WheelWV *>(wheels[d.mLeftWheel]);
-					if (w->GetAngularVelocity() * wheel_max_angular_velocity < 0.0f || abs(w->GetAngularVelocity()) < abs(wheel_max_angular_velocity))
-					{
-						float wheel_torque = differential_torque * (1.0f - d.mLeftRightSplit);
-						w->ApplyTorque(wheel_torque, inDeltaTime);
-					}
+					float wheel_torque = differential_torque * (1.0f - d.mLeftRightSplit);
+					w->ApplyTorque(wheel_torque, inDeltaTime);
 				}
 
 				// Right wheel
 				if (d.mRightWheel != -1 && d.mLeftRightSplit > 0.0f)
 				{
 					WheelWV *w = static_cast<WheelWV *>(wheels[d.mRightWheel]);
-					if (w->GetAngularVelocity() * wheel_max_angular_velocity < 0.0f || abs(w->GetAngularVelocity()) < abs(wheel_max_angular_velocity))
-					{
-						float wheel_torque = differential_torque * d.mLeftRightSplit;
-						w->ApplyTorque(wheel_torque, inDeltaTime);
-					}
+					float wheel_torque = differential_torque * d.mLeftRightSplit;
+					w->ApplyTorque(wheel_torque, inDeltaTime);
 				}
 			}
+		}
 	}
 
+	// Apply torque to engine rotation
+	mEngine.ApplyTorque(engine_torque - transmission_torque, inDeltaTime);
+
+	// Update transmission
+	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, can_engine_apply_torque);
+	
 	// Braking
 	for (Wheel *w_base : wheels)
 	{

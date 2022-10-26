@@ -231,11 +231,14 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	}
 	else
 	{
+		// Update engine with damping
+		mEngine.Update(inDeltaTime);
+
 		// In auto transmission mode, don't accelerate the engine when switching gears
 		float forward_input = mTransmission.mMode == ETransmissionMode::Manual? abs(mForwardInput) : 0.0f;
 
 		// Engine not connected to wheels, update RPM based on engine inertia alone
-		mEngine.UpdateRPM(inDeltaTime, forward_input);
+		mEngine.ApplyTorque(mEngine.GetTorque(forward_input), inDeltaTime);
 	}
 
 	// Update transmission

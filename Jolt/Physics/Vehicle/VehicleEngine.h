@@ -51,14 +51,21 @@ public:
 	/// Update rotation speed of engine in rounds per minute
 	void					SetCurrentRPM(float inRPM)					{ mCurrentRPM = inRPM; }
 
+	/// Get current angular velocity of the engine in radians / second
+	inline float			GetAngularVelocity() const					{ return mCurrentRPM / cAngularVelocityToRPM; }
+
 	/// Get the amount of torque (N m) that the engine can supply
 	/// @param inAcceleration How much the gas pedal is pressed [0, 1]
 	float					GetTorque(float inAcceleration) const		{ return inAcceleration * mMaxTorque * mNormalizedTorque.GetValue(mCurrentRPM / mMaxRPM); }
 
-	/// Update the engine RPM assuming the engine is not connected to the wheels
+	/// Apply a torque to the engine rotation speed
+	/// @param inTorque Torque in N m
 	/// @param inDeltaTime Delta time in seconds
-	/// @param inAcceleration How much the gas pedal is pressed [0, 1]
-	void					UpdateRPM(float inDeltaTime, float inAcceleration);
+	void					ApplyTorque(float inTorque, float inDeltaTime);
+
+	/// Update the engine RPM for damping
+	/// @param inDeltaTime Delta time in seconds
+	void					Update(float inDeltaTime);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Debug draw a RPM meter
