@@ -23,6 +23,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleTest)
 const char *VehicleTest::sScenes[] =
 {
 	"Flat",
+	"Steep Slope",
 	"Playground",
 	"Terrain1",
 };
@@ -35,6 +36,13 @@ void VehicleTest::Initialize()
 	{
 		// Flat test floor
 		Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1000.0f, 1.0f, 1000.0f), 0.0f), Vec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		floor.SetFriction(1.0f);
+		mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
+	}
+	else if (strcmp(sSceneName, "Steep Slope") == 0)
+	{
+		// Steep slope test floor (20 degrees = 36% grade)
+		Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1000.0f, 1.0f, 1000.0f), 0.0f), Vec3(0.0f, -1.0f, 0.0f), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(-20.0f)), EMotionType::Static, Layers::NON_MOVING));
 		floor.SetFriction(1.0f);
 		mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 	}
