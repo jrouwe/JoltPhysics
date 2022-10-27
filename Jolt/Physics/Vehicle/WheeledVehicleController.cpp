@@ -238,7 +238,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		float					mClutchToWheelRatio;
 		float					mClutchToWheelTorqueRatio;
 	};
-	vector<DrivenWheel> driven_wheels;
+	Array<DrivenWheel> driven_wheels;
 	driven_wheels.reserve(wheels.size());
 
 	// Collect driven wheels
