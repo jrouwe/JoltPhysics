@@ -34,7 +34,7 @@ public:
 	float					mMinRPM = 1000.0f;							///< Min amount of revolutions per minute (rpm) the engine can produce without stalling
 	float					mMaxRPM = 6000.0f;							///< Max amount of revolutions per minute (rpm) the engine can generate
 	LinearCurve				mNormalizedTorque;							///< Curve that describes a ratio of the max torque the engine can produce vs the fraction of the max RPM of the engine
-	float					mInertia = 2.0f;							///< Moment of inertia (kg m^2) of the engine
+	float					mInertia = 0.5f;							///< Moment of inertia (kg m^2) of the engine
 	float					mAngularDamping = 0.2f;						///< Angular damping factor of the wheel: dw/dt = -c * w
 };
 
@@ -77,7 +77,7 @@ public:
 	void					RestoreState(StateRecorder &inStream);
 
 private:
-	float					mCurrentRPM = 1000.0f;						///< Current rotation speed of engine in rounds per minute
+	float					mCurrentRPM = mMinRPM;						///< Current rotation speed of engine in rounds per minute
 };
 
 JPH_NAMESPACE_END

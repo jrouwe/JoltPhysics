@@ -106,8 +106,9 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 		float relative_longitudinal_velocity = relative_velocity.Dot(mContactLongitudinal);
 
 		// Calculate longitudinal friction based on difference between velocity of rolling wheel and drive surface
-		float longitudinal_slip	= relative_longitudinal_velocity != 0.0f? abs((mAngularVelocity * settings->mRadius - relative_longitudinal_velocity) / relative_longitudinal_velocity) : 0.0f;
-		float longitudinal_slip_friction = settings->mLongitudinalFriction.GetValue(longitudinal_slip);
+		float relative_longitudinal_velocity_denom = Sign(relative_longitudinal_velocity) * max(1.0e-3f, abs(relative_longitudinal_velocity)); // Ensure we don't divide by zero
+		mLongitudinalSlip = abs((mAngularVelocity * settings->mRadius - relative_longitudinal_velocity) / relative_longitudinal_velocity_denom);
+		float longitudinal_slip_friction = settings->mLongitudinalFriction.GetValue(mLongitudinalSlip);
 
 		// Calculate lateral friction based on slip angle
 		float relative_velocity_len = relative_velocity.Length();
@@ -121,6 +122,7 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 	else
 	{
 		// No collision
+		mLongitudinalSlip = 0.0f;
 		mCombinedLongitudinalFriction = mCombinedLateralFriction = 0.0f;
 	}
 }
@@ -228,7 +230,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	// Define a struct that collects information about the wheels that connect to the engine
 	struct DrivenWheel
 	{
-		Wheel *					mWheel;
+		WheelWV *				mWheel;
 		const WheelSettingsWV *	mSettings;
 		float					mClutchToWheelRatio;
 		float					mClutchToWheelTorqueRatio;
@@ -237,23 +239,57 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	driven_wheels.reserve(wheels.size());
 
 	// Collect driven wheels
-	bool can_engine_apply_torque = false;
 	float transmission_ratio = mTransmission.GetCurrentRatio();
 	for (const VehicleDifferentialSettings &d : mDifferentials)
 	{
-		if (d.mLeftWheel != -1)
+		WheelWV *wl = static_cast<WheelWV *>(d.mLeftWheel != -1? wheels[d.mLeftWheel] : nullptr);
+		WheelWV *wr = static_cast<WheelWV *>(d.mRightWheel != -1? wheels[d.mRightWheel] : nullptr);
+		const WheelSettingsWV *wsl = wl != nullptr? wl->GetSettings() : nullptr;
+		const WheelSettingsWV *wsr = wr != nullptr? wr->GetSettings() : nullptr;
+
+		if (wl != nullptr && wr != nullptr)
 		{
-			Wheel *w = wheels[d.mLeftWheel];
-			const WheelSettingsWV *ws = static_cast<const WheelSettingsWV *>(w->GetSettings());
-			driven_wheels.push_back({ w, ws, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * (1.0f - d.mLeftRightSplit) });
-			can_engine_apply_torque |= d.mLeftRightSplit < 1.0f && w->HasContact();
+			// Calculate torque ratio
+			float ratio_l = 1.0f - d.mLeftRightSplit;
+			float ratio_r = d.mLeftRightSplit;
+			if (d.mLimitedSlipRotationRatio < FLT_MAX)
+			{
+				// This is a limited slip differential, adjust torque ratios according to wheel speeds
+				float omega_l = max(1.0e-3f, abs(wl->GetAngularVelocity())); // prevent div by zero by setting a minimum velocity
+				float omega_r = max(1.0e-3f, abs(wr->GetAngularVelocity()));
+				float omega_min = min(omega_l, omega_r);
+				float omega_max = max(omega_l, omega_r);
+
+				// Map into a value that is 0 when the wheels are turning at an equal rate and 1 when the wheels are turning at LimitedSlipRotationRatio
+				float alpha = min((omega_max / omega_min - 1.0f) / (d.mLimitedSlipRotationRatio - 1.0f), 1.0f);
+				float one_min_alpha = 1.0f - alpha;
+
+				if (omega_l < omega_r)
+				{
+					// Redirect more power to the left wheel
+					ratio_l = ratio_l * one_min_alpha + alpha;
+					ratio_r = ratio_r * one_min_alpha;
+				}
+				else
+				{
+					// Redirect more power to the right wheel
+					ratio_l = ratio_l * one_min_alpha;
+					ratio_r = ratio_r * one_min_alpha + alpha;
+				}
+			}
+
+			driven_wheels.push_back({ wl, wsl, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * ratio_l });
+			driven_wheels.push_back({ wr, wsr, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * ratio_r });
 		}
-		if (d.mRightWheel != -1)
+		else if (wl != nullptr)
 		{
-			Wheel *w = wheels[d.mRightWheel];
-			const WheelSettingsWV *ws = static_cast<const WheelSettingsWV *>(w->GetSettings());
-			driven_wheels.push_back({ w, ws, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * d.mLeftRightSplit });
-			can_engine_apply_torque |= d.mLeftRightSplit > 0.0f && w->HasContact();
+			// Only left wheel, all power to left
+			driven_wheels.push_back({ wl, wsl, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio });
+		}
+		else if (wr != nullptr)
+		{
+			// Only right wheel, all power to right
+			driven_wheels.push_back({ wr, wsr, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio });
 		}
 	}
 
@@ -417,8 +453,13 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		mEngine.ApplyTorque(engine_torque, inDeltaTime);
 	}
 
+	// Calculate if any of the wheels are slipping, this is used to prevent gear switching
+	bool wheels_slipping = false;
+	for (const DrivenWheel &w : driven_wheels)
+		wheels_slipping |= w.mClutchToWheelTorqueRatio > 0.0f && (!w.mWheel->HasContact() || w.mWheel->mLongitudinalSlip > 1.0f);
+
 	// Update transmission
-	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, can_engine_apply_torque);
+	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, !wheels_slipping);
 	
 	// Braking
 	for (Wheel *w_base : wheels)
@@ -535,8 +576,8 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 	mEngine.DrawRPM(inRenderer, rpm_meter_pos, rpm_meter_fwd, rpm_meter_up, mRPMMeterSize, mTransmission.mShiftDownRPM, mTransmission.mShiftUpRPM);
 
 	// Draw current vehicle state
-	String status = StringFormat("Forward: %.1f, Right: %.1f, Brake: %.1f, HandBrake: %.1f\n"
-								 "Gear: %d, Clutch: %.1f, EngineRPM: %.0f, V: %.1f km/h", 
+	String status = StringFormat("Forward: %.1f, Right: %.1f\nBrake: %.1f, HandBrake: %.1f\n"
+								 "Gear: %d, Clutch: %.1f\nEngineRPM: %.0f, V: %.1f km/h", 
 								 (double)mForwardInput, (double)mRightInput, (double)mBrakeInput, (double)mHandBrakeInput, 
 								 mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
 	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, mConstraint.GetDrawConstraintSize());
@@ -557,7 +598,7 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLongitudinal(), Color::sRed);
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLateral(), Color::sBlue);
 
-			DebugRenderer::sInstance->DrawText3D(w->GetContactPosition(), StringFormat("W: %.1f, S: %.2f, FrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, 0.1f);
+			DebugRenderer::sInstance->DrawText3D(w->GetContactPosition(), StringFormat("W: %.1f, S: %.2f\nSlip: %.2f, FrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)w->mLongitudinalSlip, (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, 0.1f);
 		}
 		else
 		{

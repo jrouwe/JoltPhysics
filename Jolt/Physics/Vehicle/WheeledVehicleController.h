@@ -57,6 +57,7 @@ public:
 	/// Update the wheel rotation based on the current angular velocity
 	void						Update(float inDeltaTime, const VehicleConstraint &inConstraint);
 
+	float						mLongitudinalSlip = 0.0f;					///< Velocity difference between ground and wheel relative to ground velocity
 	float						mCombinedLongitudinalFriction = 0.0f;		///< Combined friction coefficient in longitudinal direction (combines terrain and tires)
 	float						mCombinedLateralFriction = 0.0f;			///< Combined friction coefficient in lateral direction (combines terrain and tires)
 	float						mBrakeImpulse = 0.0f;						///< Amount of impulse that the brakes can apply to the floor (excluding friction)
