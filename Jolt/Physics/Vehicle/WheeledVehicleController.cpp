@@ -207,6 +207,9 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Remember old RPM so we're increasing or decreasing
+	float old_engine_rpm = mEngine.GetCurrentRPM();
+
 	Wheels &wheels = mConstraint.GetWheels();
 
 	// Update wheel angle, do this before applying torque to the wheels (as friction will slow them down again)
@@ -433,8 +436,13 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	for (const DrivenWheel &w : driven_wheels)
 		wheels_slipping |= w.mClutchToWheelTorqueRatio > 0.0f && (!w.mWheel->HasContact() || w.mWheel->mLongitudinalSlip > 0.1f);
 
+	// Only allow shifting up when we're not slipping and we're increasing our RPM.
+	// After a jump, we have a very high engine RPM but once we hit the ground the RPM should be decreasing and we don't want to shift up
+	// during that time.
+	bool can_shift_up = !wheels_slipping && mEngine.GetCurrentRPM() > old_engine_rpm;
+
 	// Update transmission
-	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, !wheels_slipping);
+	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, can_shift_up);
 	
 	// Braking
 	for (Wheel *w_base : wheels)

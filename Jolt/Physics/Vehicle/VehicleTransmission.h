@@ -53,8 +53,8 @@ public:
 	/// @param inDeltaTime Time step delta time in s
 	/// @param inCurrentRPM Current RPM for engine
 	/// @param inForwardInput Hint if the user wants to drive forward (> 0) or backwards (< 0)
-	/// @param inEngineCanApplyTorque Indicates if the engine is connected ultimately to the ground, if not it makes no sense to shift up
-	void					Update(float inDeltaTime, float inCurrentRPM, float inForwardInput, bool inEngineCanApplyTorque);
+	/// @param inCanShiftUp Indicates if we want to allow the transmission to shift up (e.g. pass false if wheels are slipping)
+	void					Update(float inDeltaTime, float inCurrentRPM, float inForwardInput, bool inCanShiftUp);
 
 	/// Current gear, -1 = reverse, 0 = neutral, 1 = 1st gear etc.
 	int						GetCurrentGear() const						{ return mCurrentGear; }
