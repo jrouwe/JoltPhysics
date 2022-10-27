@@ -50,6 +50,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/SliderConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SubShapeIDTest.cpp
 	${UNIT_TESTS_ROOT}/Physics/TransformedShapeTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/WheeledVehicleTests.cpp
 	${UNIT_TESTS_ROOT}/PhysicsTestContext.cpp
 	${UNIT_TESTS_ROOT}/PhysicsTestContext.h
 	${UNIT_TESTS_ROOT}/UnitTestFramework.cpp

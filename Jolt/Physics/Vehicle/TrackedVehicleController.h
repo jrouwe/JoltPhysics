@@ -118,6 +118,7 @@ protected:
 
 	// See: VehicleController
 	virtual Wheel *				ConstructWheel(const WheelSettings &inWheel) const override { JPH_ASSERT(IsKindOf(&inWheel, JPH_RTTI(WheelSettingsTV))); return new WheelTV(static_cast<const WheelSettingsTV &>(inWheel)); }
+	virtual bool				AllowSleep() const override					{ return mForwardInput == 0.0f; }
 	virtual void				PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 	virtual void				PostCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 	virtual bool				SolveLongitudinalAndLateralConstraints(float inDeltaTime) override;
