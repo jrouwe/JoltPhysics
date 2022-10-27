@@ -8,6 +8,7 @@
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+#include <Jolt/Math/DynMatrix.h>
 #include <Jolt/Math/GaussianElimination.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
@@ -259,22 +260,6 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	bool solved = false;
 	if (!driven_wheels.empty())
 	{
-		// We need a resizable matrix for GaussianElimination to operate on, declare it inline
-		struct DynMatrix
-		{
-							DynMatrix(uint inRows, uint inCols)			: mRows(inRows), mCols(inCols) { mElements.resize(inRows * inCols); }
-
-			float			operator () (uint inRow, uint inCol) const	{ return mElements[inRow * mCols + inCol]; }
-			float &			operator () (uint inRow, uint inCol)		{ return mElements[inRow * mCols + inCol]; }
-
-			uint			GetCols() const								{ return mCols; }
-			uint			GetRows() const								{ return mRows; }
-
-			uint			mRows;
-			uint			mCols;
-			vector<float>	mElements;
-		};
-
 		// Define the torque at the clutch at time t as:
 		// 
 		// tc(t):=S*(we(t)-sum(R(j)*ww(j,t),j,1,N)/N)
