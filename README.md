@@ -117,6 +117,10 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 * UnitTests - A set of unit tests to validate the behavior of the physics engine.
 * WebIncludes - A number of JavaScript resources used by the internal profiling framework of the physics engine.
 
+## Bindings
+
+* [JoltPhysicsSharp](https://github.com/amerkoleci/JoltPhysicsSharp) Modern C# bindings.
+
 ## License
 
 The project is distributed under the [MIT license](LICENSE).
