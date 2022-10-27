@@ -439,7 +439,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	// Only allow shifting up when we're not slipping and we're increasing our RPM.
 	// After a jump, we have a very high engine RPM but once we hit the ground the RPM should be decreasing and we don't want to shift up
 	// during that time.
-	bool can_shift_up = !wheels_slipping && mEngine.GetCurrentRPM() > old_engine_rpm;
+	bool can_shift_up = !wheels_slipping && mEngine.GetCurrentRPM() >= old_engine_rpm;
 
 	// Update transmission
 	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, can_shift_up);
