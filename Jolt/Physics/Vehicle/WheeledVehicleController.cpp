@@ -232,7 +232,6 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	struct DrivenWheel
 	{
 		WheelWV *				mWheel;
-		const WheelSettingsWV *	mSettings;
 		float					mClutchToWheelRatio;
 		float					mClutchToWheelTorqueRatio;
 	};
@@ -243,54 +242,30 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	float transmission_ratio = mTransmission.GetCurrentRatio();
 	for (const VehicleDifferentialSettings &d : mDifferentials)
 	{
-		WheelWV *wl = static_cast<WheelWV *>(d.mLeftWheel != -1? wheels[d.mLeftWheel] : nullptr);
-		WheelWV *wr = static_cast<WheelWV *>(d.mRightWheel != -1? wheels[d.mRightWheel] : nullptr);
-		const WheelSettingsWV *wsl = wl != nullptr? wl->GetSettings() : nullptr;
-		const WheelSettingsWV *wsr = wr != nullptr? wr->GetSettings() : nullptr;
+		WheelWV *wl = d.mLeftWheel != -1? static_cast<WheelWV *>(wheels[d.mLeftWheel]) : nullptr;
+		WheelWV *wr = d.mRightWheel != -1? static_cast<WheelWV *>(wheels[d.mRightWheel]) : nullptr;
+
+		float clutch_to_wheel_ratio = transmission_ratio * d.mDifferentialRatio;
 
 		if (wl != nullptr && wr != nullptr)
 		{
 			// Calculate torque ratio
-			float ratio_l = 1.0f - d.mLeftRightSplit;
-			float ratio_r = d.mLeftRightSplit;
-			if (d.mLimitedSlipRotationRatio < FLT_MAX)
-			{
-				// This is a limited slip differential, adjust torque ratios according to wheel speeds
-				float omega_l = max(1.0e-3f, abs(wl->GetAngularVelocity())); // prevent div by zero by setting a minimum velocity
-				float omega_r = max(1.0e-3f, abs(wr->GetAngularVelocity()));
-				float omega_min = min(omega_l, omega_r);
-				float omega_max = max(omega_l, omega_r);
+			float ratio_l, ratio_r;
+			d.CalculateTorqueRatio(wl->GetAngularVelocity(), wr->GetAngularVelocity(), ratio_l, ratio_r);
 
-				// Map into a value that is 0 when the wheels are turning at an equal rate and 1 when the wheels are turning at LimitedSlipRotationRatio
-				float alpha = min((omega_max / omega_min - 1.0f) / (d.mLimitedSlipRotationRatio - 1.0f), 1.0f);
-				float one_min_alpha = 1.0f - alpha;
-
-				if (omega_l < omega_r)
-				{
-					// Redirect more power to the left wheel
-					ratio_l = ratio_l * one_min_alpha + alpha;
-					ratio_r = ratio_r * one_min_alpha;
-				}
-				else
-				{
-					// Redirect more power to the right wheel
-					ratio_l = ratio_l * one_min_alpha;
-					ratio_r = ratio_r * one_min_alpha + alpha;
-				}
-			}
-
-			driven_wheels.push_back({ wl, wsl, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * ratio_l });
-			driven_wheels.push_back({ wr, wsr, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio * ratio_r });
+			// Add both wheels
+			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, d.mEngineTorqueRatio * ratio_l });
+			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, d.mEngineTorqueRatio * ratio_r });
 		}
 		else if (wl != nullptr)
 		{
 			// Only left wheel, all power to left
-			driven_wheels.push_back({ wl, wsl, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio });
+			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, d.mEngineTorqueRatio });
 		}
 		else if (wr != nullptr)
 		{
 			// Only right wheel, all power to right
-			driven_wheels.push_back({ wr, wsr, transmission_ratio * d.mDifferentialRatio, d.mEngineTorqueRatio });
+			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, d.mEngineTorqueRatio });
 		}
 	}
 
@@ -393,7 +368,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			const DrivenWheel &w_i = driven_wheels[i];
 
 			// dt / Iw
-			float dt_div_iw = inDeltaTime / w_i.mSettings->mInertia;
+			float dt_div_iw = inDeltaTime / w_i.mWheel->GetSettings()->mInertia;
 
 			// S * R(i)
 			float s_r = clutch_strength * w_i.mClutchToWheelRatio;

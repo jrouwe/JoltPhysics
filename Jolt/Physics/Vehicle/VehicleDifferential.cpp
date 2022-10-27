@@ -38,4 +38,37 @@ void VehicleDifferentialSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mEngineTorqueRatio);
 }
 
+void VehicleDifferentialSettings::CalculateTorqueRatio(float inLeftAngularVelocity, float inRightAngularVelocity, float &outLeftTorqueFraction, float &outRightTorqueFraction) const
+{
+	// Start with the default torque ratio
+	outLeftTorqueFraction = 1.0f - mLeftRightSplit;
+	outRightTorqueFraction = mLeftRightSplit;
+
+	if (mLimitedSlipRotationRatio < FLT_MAX)
+	{
+		// This is a limited slip differential, adjust torque ratios according to wheel speeds
+		float omega_l = max(1.0e-3f, abs(inLeftAngularVelocity)); // prevent div by zero by setting a minimum velocity and ignoring that the wheels may be rotating in different directions
+		float omega_r = max(1.0e-3f, abs(inRightAngularVelocity));
+		float omega_min = min(omega_l, omega_r);
+		float omega_max = max(omega_l, omega_r);
+
+		// Map into a value that is 0 when the wheels are turning at an equal rate and 1 when the wheels are turning at mLimitedSlipRotationRatio
+		float alpha = min((omega_max / omega_min - 1.0f) / (mLimitedSlipRotationRatio - 1.0f), 1.0f);
+		float one_min_alpha = 1.0f - alpha;
+
+		if (omega_l < omega_r)
+		{
+			// Redirect more power to the left wheel
+			outLeftTorqueFraction = outLeftTorqueFraction * one_min_alpha + alpha;
+			outRightTorqueFraction = outRightTorqueFraction * one_min_alpha;
+		}
+		else
+		{
+			// Redirect more power to the right wheel
+			outLeftTorqueFraction = outLeftTorqueFraction * one_min_alpha;
+			outRightTorqueFraction = outRightTorqueFraction * one_min_alpha + alpha;
+		}
+	}
+}
+
 JPH_NAMESPACE_END
