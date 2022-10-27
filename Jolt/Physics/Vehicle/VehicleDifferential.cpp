@@ -46,6 +46,8 @@ void VehicleDifferentialSettings::CalculateTorqueRatio(float inLeftAngularVeloci
 
 	if (mLimitedSlipRotationRatio < FLT_MAX)
 	{
+		JPH_ASSERT(mLimitedSlipRotationRatio > 1.0f);
+
 		// This is a limited slip differential, adjust torque ratios according to wheel speeds
 		float omega_l = max(1.0e-3f, abs(inLeftAngularVelocity)); // prevent div by zero by setting a minimum velocity and ignoring that the wheels may be rotating in different directions
 		float omega_r = max(1.0e-3f, abs(inRightAngularVelocity));
