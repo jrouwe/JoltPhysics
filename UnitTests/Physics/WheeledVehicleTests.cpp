@@ -31,7 +31,7 @@ TEST_SUITE("WheeledVehicleTests")
 	};
 
 	// Helper function to create a vehicle
-	VehicleConstraint *AddVehicle(PhysicsTestContext &inContext, VehicleSettings &inSettings)
+	static VehicleConstraint *AddVehicle(PhysicsTestContext &inContext, VehicleSettings &inSettings)
 	{
 		// Create vehicle body
 		RefConst<Shape> car_shape = OffsetCenterOfMassShapeSettings(Vec3(0, -inSettings.mHalfVehicleHeight, 0), new BoxShape(Vec3(inSettings.mHalfVehicleWidth, inSettings.mHalfVehicleHeight, inSettings.mHalfVehicleLength))).Create().Get();
@@ -118,7 +118,7 @@ TEST_SUITE("WheeledVehicleTests")
 		return constraint;
 	}
 
-	void CheckOnGround(VehicleConstraint *inConstraint, const VehicleSettings &inSettings, const BodyID &inGroundID)
+	static void CheckOnGround(VehicleConstraint *inConstraint, const VehicleSettings &inSettings, const BodyID &inGroundID)
 	{
 		// Between min and max suspension length
 		Vec3 pos = inConstraint->GetVehicleBody()->GetPosition();

@@ -464,7 +464,7 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
 
-		inUI->CreateComboBox(configuration_settings, "Shape Type", { "Capsule", "Cylinder", "Box" }, (int)sShapeType, [this](int inItem) { sShapeType = (EType)inItem; });
+		inUI->CreateComboBox(configuration_settings, "Shape Type", { "Capsule", "Cylinder", "Box" }, (int)sShapeType, [](int inItem) { sShapeType = (EType)inItem; });
 		AddConfigurationSettings(inUI, configuration_settings);
 		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
 		inUI->ShowMenu(configuration_settings);
