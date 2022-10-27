@@ -14,6 +14,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleDifferentialSettings)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mRightWheel)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mDifferentialRatio)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mLeftRightSplit)
+	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mLimitedSlipRotationRatio)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mEngineTorqueRatio)
 }
 
@@ -23,6 +24,7 @@ void VehicleDifferentialSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mRightWheel);
 	inStream.Write(mDifferentialRatio);
 	inStream.Write(mLeftRightSplit);
+	inStream.Write(mLimitedSlipRotationRatio);
 	inStream.Write(mEngineTorqueRatio);
 }
 
@@ -32,6 +34,7 @@ void VehicleDifferentialSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mRightWheel);
 	inStream.Read(mDifferentialRatio);
 	inStream.Read(mLeftRightSplit);
+	inStream.Read(mLimitedSlipRotationRatio);
 	inStream.Read(mEngineTorqueRatio);
 }
 
