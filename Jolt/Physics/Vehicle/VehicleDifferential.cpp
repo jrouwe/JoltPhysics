@@ -14,7 +14,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleDifferentialSettings)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mRightWheel)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mDifferentialRatio)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mLeftRightSplit)
-	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mLimitedSlipRotationRatio)
+	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mLimitedSlipRatio)
 	JPH_ADD_ATTRIBUTE(VehicleDifferentialSettings, mEngineTorqueRatio)
 }
 
@@ -24,7 +24,7 @@ void VehicleDifferentialSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mRightWheel);
 	inStream.Write(mDifferentialRatio);
 	inStream.Write(mLeftRightSplit);
-	inStream.Write(mLimitedSlipRotationRatio);
+	inStream.Write(mLimitedSlipRatio);
 	inStream.Write(mEngineTorqueRatio);
 }
 
@@ -34,7 +34,7 @@ void VehicleDifferentialSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mRightWheel);
 	inStream.Read(mDifferentialRatio);
 	inStream.Read(mLeftRightSplit);
-	inStream.Read(mLimitedSlipRotationRatio);
+	inStream.Read(mLimitedSlipRatio);
 	inStream.Read(mEngineTorqueRatio);
 }
 
@@ -44,9 +44,9 @@ void VehicleDifferentialSettings::CalculateTorqueRatio(float inLeftAngularVeloci
 	outLeftTorqueFraction = 1.0f - mLeftRightSplit;
 	outRightTorqueFraction = mLeftRightSplit;
 
-	if (mLimitedSlipRotationRatio < FLT_MAX)
+	if (mLimitedSlipRatio < FLT_MAX)
 	{
-		JPH_ASSERT(mLimitedSlipRotationRatio > 1.0f);
+		JPH_ASSERT(mLimitedSlipRatio > 1.0f);
 
 		// This is a limited slip differential, adjust torque ratios according to wheel speeds
 		float omega_l = max(1.0e-3f, abs(inLeftAngularVelocity)); // prevent div by zero by setting a minimum velocity and ignoring that the wheels may be rotating in different directions
@@ -55,7 +55,8 @@ void VehicleDifferentialSettings::CalculateTorqueRatio(float inLeftAngularVeloci
 		float omega_max = max(omega_l, omega_r);
 
 		// Map into a value that is 0 when the wheels are turning at an equal rate and 1 when the wheels are turning at mLimitedSlipRotationRatio
-		float alpha = min((omega_max / omega_min - 1.0f) / (mLimitedSlipRotationRatio - 1.0f), 1.0f);
+		float alpha = min((omega_max / omega_min - 1.0f) / (mLimitedSlipRatio - 1.0f), 1.0f);
+		JPH_ASSERT(alpha >= 0.0f);
 		float one_min_alpha = 1.0f - alpha;
 
 		if (omega_l < omega_r)
@@ -71,6 +72,9 @@ void VehicleDifferentialSettings::CalculateTorqueRatio(float inLeftAngularVeloci
 			outRightTorqueFraction = outRightTorqueFraction * one_min_alpha + alpha;
 		}
 	}
+
+	// Assert the values add up to 1
+	JPH_ASSERT(abs(outLeftTorqueFraction + outRightTorqueFraction - 1.0f) < 1.0e-6f);
 }
 
 JPH_NAMESPACE_END

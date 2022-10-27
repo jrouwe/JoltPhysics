@@ -80,6 +80,7 @@ public:
 	VehicleEngineSettings		mEngine;									///< The properties of the engine
 	VehicleTransmissionSettings	mTransmission;								///< The properties of the transmission (aka gear box)
 	Array<VehicleDifferentialSettings> mDifferentials;						///< List of differentials and their properties
+	float						mDifferentialLimitedSlipRatio = 1.4f;		///< Ratio max / min average wheel speed of each differential (measured at the clutch). When the ratio is exceeded all torque gets distributed to the differential with the minimal average velocity. This allows implementing a limited slip differential between differentials. Set to FLT_MAX for an open differential. Value should be > 1.
 };
 
 /// Runtime controller class
@@ -119,6 +120,10 @@ public:
 	/// Get the differentials this vehicle has (writable interface, allows you to make changes to the configuration which will take effect the next time step)
 	Differentials &				GetDifferentials()							{ return mDifferentials; }
 
+	/// Ratio max / min average wheel speed of each differential (measured at the clutch).
+	float						GetDifferentialLimitedSlipRatio() const		{ return mDifferentialLimitedSlipRatio; }
+	void						SetDifferentialLimitedSlipRatio(float inV)	{ mDifferentialLimitedSlipRatio = inV; }
+
 #ifdef JPH_DEBUG_RENDERER
 	/// Debug drawing of RPM meter
 	void						SetRPMMeter(Vec3Arg inPosition, float inSize) { mRPMMeterPosition = inPosition; mRPMMeterSize = inSize; }
@@ -146,6 +151,7 @@ protected:
 	VehicleEngine				mEngine;									///< Engine state of the vehicle
 	VehicleTransmission			mTransmission;								///< Transmission state of the vehicle
 	Differentials				mDifferentials;								///< Differential states of the vehicle
+	float						mDifferentialLimitedSlipRatio;				///< Ratio max / min average wheel speed of each differential (measured at the clutch).
 
 #ifdef JPH_DEBUG_RENDERER
 	// Debug settings

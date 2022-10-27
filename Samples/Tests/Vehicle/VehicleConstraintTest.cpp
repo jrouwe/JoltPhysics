@@ -162,8 +162,12 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update vehicle statistics
 	controller->GetEngine().mMaxTorque = sMaxEngineTorque;
 	controller->GetTransmission().mClutchStrength = sClutchStrength;
+
+	// Set slip ratios to the same for everything
+	float limited_slip_ratio = sLimitedSlipDifferentials? 1.4f : FLT_MAX;
+	controller->SetDifferentialLimitedSlipRatio(limited_slip_ratio);
 	for (VehicleDifferentialSettings &d : controller->GetDifferentials())
-		d.mLimitedSlipRotationRatio = sLimitedSlipDifferentials? 1.4f : FLT_MAX;
+		d.mLimitedSlipRatio = limited_slip_ratio;
 
 	// Pass the input on to the constraint
 	controller->SetDriverInput(forward, right, brake, hand_brake);
