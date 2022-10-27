@@ -45,11 +45,14 @@ public:
 	/// Multiply an angular velocity (rad/s) with this value to get rounds per minute (RPM)
 	static constexpr float	cAngularVelocityToRPM = 60.0f / (2.0f * JPH_PI);
 
+	/// Clamp the RPM between min and max RPM
+	inline void				ClampRPM()									{ mCurrentRPM = Clamp(mCurrentRPM, mMinRPM, mMaxRPM); }
+
 	/// Current rotation speed of engine in rounds per minute
 	float					GetCurrentRPM() const						{ return mCurrentRPM; }
 
 	/// Update rotation speed of engine in rounds per minute
-	void					SetCurrentRPM(float inRPM)					{ mCurrentRPM = inRPM; }
+	void					SetCurrentRPM(float inRPM)					{ mCurrentRPM = inRPM; ClampRPM(); }
 
 	/// Get current angular velocity of the engine in radians / second
 	inline float			GetAngularVelocity() const					{ return mCurrentRPM / cAngularVelocityToRPM; }
@@ -65,7 +68,7 @@ public:
 
 	/// Update the engine RPM for damping
 	/// @param inDeltaTime Delta time in seconds
-	void					Update(float inDeltaTime);
+	void					ApplyDamping(float inDeltaTime);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Debug draw a RPM meter

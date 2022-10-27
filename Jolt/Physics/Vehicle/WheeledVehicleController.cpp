@@ -216,13 +216,14 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		w->Update(inDeltaTime, mConstraint);
 	}
 
-	// Update engine with damping
-	mEngine.Update(inDeltaTime);
-
 	// In auto transmission mode, don't accelerate the engine when switching gears
 	float forward_input = abs(mForwardInput);
 	if (mTransmission.mMode == ETransmissionMode::Auto)
 		forward_input *= mTransmission.GetClutchFriction();
+
+	// Apply damping if there is no acceleration
+	if (forward_input < 1.0e-3f)
+		mEngine.ApplyDamping(inDeltaTime);
 
 	// Calculate engine torque
 	float engine_torque = mEngine.GetTorque(forward_input);
@@ -434,9 +435,8 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 				dw1.mWheel->SetAngularVelocity(b(i, 0));
 			}
 
-			// Update the engine RPM and clamp it to its range
-			float engine_rpm = Clamp(b(engine, 0) * VehicleEngine::cAngularVelocityToRPM, mEngine.mMinRPM, mEngine.mMaxRPM);
-			mEngine.SetCurrentRPM(engine_rpm);
+			// Update the engine RPM
+			mEngine.SetCurrentRPM(b(engine, 0) * VehicleEngine::cAngularVelocityToRPM);
 
 			// The speeds have been solved
 			solved = true;
@@ -456,7 +456,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	// Calculate if any of the wheels are slipping, this is used to prevent gear switching
 	bool wheels_slipping = false;
 	for (const DrivenWheel &w : driven_wheels)
-		wheels_slipping |= w.mClutchToWheelTorqueRatio > 0.0f && (!w.mWheel->HasContact() || w.mWheel->mLongitudinalSlip > 1.0f);
+		wheels_slipping |= w.mClutchToWheelTorqueRatio > 0.0f && (!w.mWheel->HasContact() || w.mWheel->mLongitudinalSlip > 0.1f);
 
 	// Update transmission
 	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, !wheels_slipping);

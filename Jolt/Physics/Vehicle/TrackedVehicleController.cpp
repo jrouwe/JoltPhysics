@@ -227,12 +227,11 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// Update RPM only if the tracks are connected to the engine
 		if (fastest_wheel_speed > -FLT_MAX && fastest_wheel_speed < FLT_MAX)
 			mEngine.SetCurrentRPM(fastest_wheel_speed * mTransmission.GetCurrentRatio() * VehicleEngine::cAngularVelocityToRPM);
-		mEngine.SetCurrentRPM(Clamp(mEngine.GetCurrentRPM(), mEngine.mMinRPM, mEngine.mMaxRPM));
 	}
 	else
 	{
 		// Update engine with damping
-		mEngine.Update(inDeltaTime);
+		mEngine.ApplyDamping(inDeltaTime);
 
 		// In auto transmission mode, don't accelerate the engine when switching gears
 		float forward_input = mTransmission.mMode == ETransmissionMode::Manual? abs(mForwardInput) : 0.0f;
