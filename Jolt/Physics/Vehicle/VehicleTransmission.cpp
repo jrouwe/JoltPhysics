@@ -18,6 +18,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(VehicleTransmissionSettings)
 	JPH_ADD_ATTRIBUTE(VehicleTransmissionSettings, mSwitchLatency)
 	JPH_ADD_ATTRIBUTE(VehicleTransmissionSettings, mShiftUpRPM)
 	JPH_ADD_ATTRIBUTE(VehicleTransmissionSettings, mShiftDownRPM)
+	JPH_ADD_ATTRIBUTE(VehicleTransmissionSettings, mClutchStrength)
 }
 
 void VehicleTransmissionSettings::SaveBinaryState(StreamOut &inStream) const
@@ -30,6 +31,7 @@ void VehicleTransmissionSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mSwitchLatency);
 	inStream.Write(mShiftUpRPM);
 	inStream.Write(mShiftDownRPM);
+	inStream.Write(mClutchStrength);
 }
 
 void VehicleTransmissionSettings::RestoreBinaryState(StreamIn &inStream)
@@ -42,9 +44,10 @@ void VehicleTransmissionSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSwitchLatency);
 	inStream.Read(mShiftUpRPM);
 	inStream.Read(mShiftDownRPM);
+	inStream.Read(mClutchStrength);
 }
 
-void VehicleTransmission::Update(float inDeltaTime, float inCurrentRPM, float inForwardInput, bool inEngineCanApplyTorque)
+void VehicleTransmission::Update(float inDeltaTime, float inCurrentRPM, float inForwardInput, bool inCanShiftUp)
 {
 	// Update current gear and calculate clutch friction
 	if (mMode == ETransmissionMode::Auto)
@@ -59,7 +62,7 @@ void VehicleTransmission::Update(float inDeltaTime, float inCurrentRPM, float in
 		}
 		else if (mGearSwitchLatencyTimeLeft == 0.0f) // If not in the timout after switching gears
 		{
-			if (inEngineCanApplyTorque && inCurrentRPM > mShiftUpRPM)
+			if (inCanShiftUp && inCurrentRPM > mShiftUpRPM)
 			{
 				if (mCurrentGear < 0)
 				{

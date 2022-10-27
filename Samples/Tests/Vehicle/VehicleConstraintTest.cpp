@@ -17,8 +17,6 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleConstraintTest)
 	JPH_ADD_BASE_CLASS(VehicleConstraintTest, VehicleTest) 
 }
 
-int VehicleConstraintTest::sCollisionMode = 1;
-
 VehicleConstraintTest::~VehicleConstraintTest()
 {
 	mPhysicsSystem->RemoveStepListener(mVehicleConstraint);
@@ -57,21 +55,21 @@ void VehicleConstraintTest::Initialize()
 
 	// Wheels
 	WheelSettingsWV *w1 = new WheelSettingsWV;
-	w1->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
+	w1->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
 	w1->mMaxSteerAngle = max_steering_angle;
 	w1->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
 	WheelSettingsWV *w2 = new WheelSettingsWV;
-	w2->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
+	w2->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
 	w2->mMaxSteerAngle = max_steering_angle;
 	w2->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
 	WheelSettingsWV *w3 = new WheelSettingsWV;
-	w3->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
+	w3->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
 	w3->mMaxSteerAngle = 0.0f;
 
 	WheelSettingsWV *w4 = new WheelSettingsWV;
-	w4->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
+	w4->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
 	w4->mMaxSteerAngle = 0.0f;
 
 	vehicle.mWheels = { w1, w2, w3, w4 };
@@ -88,16 +86,27 @@ void VehicleConstraintTest::Initialize()
 	vehicle.mController = controller;
 
 	// Differential
-	controller->mDifferentials.resize(1);
+	controller->mDifferentials.resize(sFourWheelDrive? 2 : 1);
 	controller->mDifferentials[0].mLeftWheel = 0;
 	controller->mDifferentials[0].mRightWheel = 1;
+	if (sFourWheelDrive)
+	{
+		controller->mDifferentials[1].mLeftWheel = 2;
+		controller->mDifferentials[1].mRightWheel = 3;
+
+		// Split engine torque
+		controller->mDifferentials[0].mEngineTorqueRatio = controller->mDifferentials[1].mEngineTorqueRatio = 0.5f;
+	}
 
 	// Anti rollbars
-	vehicle.mAntiRollBars.resize(2);
-	vehicle.mAntiRollBars[0].mLeftWheel = 0;
-	vehicle.mAntiRollBars[0].mRightWheel = 1;
-	vehicle.mAntiRollBars[1].mLeftWheel = 2;
-	vehicle.mAntiRollBars[1].mRightWheel = 3;
+	if (sAntiRollbar)
+	{
+		vehicle.mAntiRollBars.resize(2);
+		vehicle.mAntiRollBars[0].mLeftWheel = 0;
+		vehicle.mAntiRollBars[0].mRightWheel = 1;
+		vehicle.mAntiRollBars[1].mLeftWheel = 2;
+		vehicle.mAntiRollBars[1].mRightWheel = 3;
+	}
 
 	mVehicleConstraint = new VehicleConstraint(*mCarBody, vehicle);
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
@@ -148,8 +157,20 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	if (right != 0.0f || forward != 0.0f || brake != 0.0f || hand_brake != 0.0f)
 		mBodyInterface->ActivateBody(mCarBody->GetID());
 
+	WheeledVehicleController *controller = static_cast<WheeledVehicleController *>(mVehicleConstraint->GetController());
+
+	// Update vehicle statistics
+	controller->GetEngine().mMaxTorque = sMaxEngineTorque;
+	controller->GetTransmission().mClutchStrength = sClutchStrength;
+
+	// Set slip ratios to the same for everything
+	float limited_slip_ratio = sLimitedSlipDifferentials? 1.4f : FLT_MAX;
+	controller->SetDifferentialLimitedSlipRatio(limited_slip_ratio);
+	for (VehicleDifferentialSettings &d : controller->GetDifferentials())
+		d.mLimitedSlipRatio = limited_slip_ratio;
+
 	// Pass the input on to the constraint
-	static_cast<WheeledVehicleController *>(mVehicleConstraint->GetController())->SetDriverInput(forward, right, brake, hand_brake);
+	controller->SetDriverInput(forward, right, brake, hand_brake);
 
 	// Set the collision tester
 	mVehicleConstraint->SetVehicleCollisionTester(mTesters[sCollisionMode]);
@@ -191,4 +212,9 @@ void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMe
 	VehicleTest::CreateSettingsMenu(inUI, inSubMenu);
 
 	inUI->CreateComboBox(inSubMenu, "Collision Mode", { "Ray", "Cast Sphere" }, sCollisionMode, [](int inItem) { sCollisionMode = inItem; });
+	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [this](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; RestartTest(); });
+	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [this](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; RestartTest(); });
+	inUI->CreateCheckBox(inSubMenu, "Limited Slip Differentials", sLimitedSlipDifferentials, [](UICheckBox::EState inState) { sLimitedSlipDifferentials = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateSlider(inSubMenu, "Max Engine Torque", float(sMaxEngineTorque), 100.0f, 2000.0f, 10.0f, [](float inValue) { sMaxEngineTorque = inValue; });
+	inUI->CreateSlider(inSubMenu, "Clutch Strength", float(sClutchStrength), 1.0f, 40.0f, 1.0f, [](float inValue) { sClutchStrength = inValue; });
 }

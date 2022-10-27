@@ -57,6 +57,7 @@ public:
 	/// Update the wheel rotation based on the current angular velocity
 	void						Update(float inDeltaTime, const VehicleConstraint &inConstraint);
 
+	float						mLongitudinalSlip = 0.0f;					///< Velocity difference between ground and wheel relative to ground velocity
 	float						mCombinedLongitudinalFriction = 0.0f;		///< Combined friction coefficient in longitudinal direction (combines terrain and tires)
 	float						mCombinedLateralFriction = 0.0f;			///< Combined friction coefficient in lateral direction (combines terrain and tires)
 	float						mBrakeImpulse = 0.0f;						///< Amount of impulse that the brakes can apply to the floor (excluding friction)
@@ -79,6 +80,7 @@ public:
 	VehicleEngineSettings		mEngine;									///< The properties of the engine
 	VehicleTransmissionSettings	mTransmission;								///< The properties of the transmission (aka gear box)
 	Array<VehicleDifferentialSettings> mDifferentials;						///< List of differentials and their properties
+	float						mDifferentialLimitedSlipRatio = 1.4f;		///< Ratio max / min average wheel speed of each differential (measured at the clutch). When the ratio is exceeded all torque gets distributed to the differential with the minimal average velocity. This allows implementing a limited slip differential between differentials. Set to FLT_MAX for an open differential. Value should be > 1.
 };
 
 /// Runtime controller class
@@ -118,6 +120,10 @@ public:
 	/// Get the differentials this vehicle has (writable interface, allows you to make changes to the configuration which will take effect the next time step)
 	Differentials &				GetDifferentials()							{ return mDifferentials; }
 
+	/// Ratio max / min average wheel speed of each differential (measured at the clutch).
+	float						GetDifferentialLimitedSlipRatio() const		{ return mDifferentialLimitedSlipRatio; }
+	void						SetDifferentialLimitedSlipRatio(float inV)	{ mDifferentialLimitedSlipRatio = inV; }
+
 #ifdef JPH_DEBUG_RENDERER
 	/// Debug drawing of RPM meter
 	void						SetRPMMeter(Vec3Arg inPosition, float inSize) { mRPMMeterPosition = inPosition; mRPMMeterSize = inSize; }
@@ -126,6 +132,7 @@ public:
 protected:
 	// See: VehicleController
 	virtual Wheel *				ConstructWheel(const WheelSettings &inWheel) const override { JPH_ASSERT(IsKindOf(&inWheel, JPH_RTTI(WheelSettingsWV))); return new WheelWV(static_cast<const WheelSettingsWV &>(inWheel)); }
+	virtual bool				AllowSleep() const override					{ return mForwardInput == 0.0f; }
 	virtual void				PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 	virtual void				PostCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 	virtual bool				SolveLongitudinalAndLateralConstraints(float inDeltaTime) override;
@@ -145,6 +152,7 @@ protected:
 	VehicleEngine				mEngine;									///< Engine state of the vehicle
 	VehicleTransmission			mTransmission;								///< Transmission state of the vehicle
 	Differentials				mDifferentials;								///< Differential states of the vehicle
+	float						mDifferentialLimitedSlipRatio;				///< Ratio max / min average wheel speed of each differential (measured at the clutch).
 
 #ifdef JPH_DEBUG_RENDERER
 	// Debug settings

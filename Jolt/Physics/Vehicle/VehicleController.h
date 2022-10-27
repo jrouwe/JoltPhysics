@@ -45,6 +45,9 @@ protected:
 	// Create a new instance of wheel
 	virtual Wheel *				ConstructWheel(const WheelSettings &inWheel) const = 0;
 
+	// If the vehicle is allowed to go to sleep
+	virtual bool				AllowSleep() const = 0;
+
 	// Called before the wheel probes have been done
 	virtual void				PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) = 0;
 

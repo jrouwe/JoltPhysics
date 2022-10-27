@@ -43,19 +43,21 @@ void VehicleEngineSettings::RestoreBinaryState(StreamIn &inStream)
 	mNormalizedTorque.RestoreBinaryState(inStream);
 }
 
-void VehicleEngine::UpdateRPM(float inDeltaTime, float inAcceleration)
+void VehicleEngine::ApplyTorque(float inTorque, float inDeltaTime)
+{
+	// Accelerate engine using torque
+	mCurrentRPM += cAngularVelocityToRPM * inTorque * inDeltaTime / mInertia;
+	ClampRPM();
+}
+
+void VehicleEngine::ApplyDamping(float inDeltaTime)
 {
 	// Angular damping: dw/dt = -c * w
 	// Solution: w(t) = w(0) * e^(-c * t) or w2 = w1 * e^(-c * dt)
 	// Taylor expansion of e^(-c * dt) = 1 - c * dt + ...
 	// Since dt is usually in the order of 1/60 and c is a low number too this approximation is good enough
 	mCurrentRPM *= max(0.0f, 1.0f - mAngularDamping * inDeltaTime);
-
-	// Accelerate engine using torque
-	mCurrentRPM += cAngularVelocityToRPM * GetTorque(inAcceleration) * inDeltaTime / mInertia;
-
-	// Clamp RPM
-	mCurrentRPM = Clamp(mCurrentRPM, mMinRPM, mMaxRPM);
+	ClampRPM();
 }
 
 #ifdef JPH_DEBUG_RENDERER
