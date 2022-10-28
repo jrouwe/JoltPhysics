@@ -251,12 +251,17 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-// Commonly used STL classes
+// Commonly used STL types
 using std::pair;
 using std::min;
 using std::max;
 using std::abs;
 using std::sqrt;
+using std::ceil;
+using std::floor;
+using std::trunc;
+using std::round;
+using std::fmod;
 using std::swap;
 using std::size;
 using std::string;
