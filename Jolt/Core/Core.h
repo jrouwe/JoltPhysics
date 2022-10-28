@@ -255,6 +255,7 @@ JPH_NAMESPACE_BEGIN
 using std::pair;
 using std::min;
 using std::max;
+using std::abs;
 using std::sqrt;
 using std::swap;
 using std::size;

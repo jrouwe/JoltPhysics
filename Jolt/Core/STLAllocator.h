@@ -72,7 +72,7 @@ public:
 
 #else
 
-template <typename T> using STLAllocator = allocator<T>;
+template <typename T> using STLAllocator = std::allocator<T>;
 
 #endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
 
