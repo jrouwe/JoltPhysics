@@ -1448,14 +1448,14 @@ void ConvexHullBuilder::DumpShape() const
 	static atomic<int> sShapeNo = 1;
 	int shape_no = sShapeNo++;
 
-	ofstream f;
-	f.open(StringFormat("dumped_shape%d.cpp", shape_no).c_str(), ofstream::out | ofstream::trunc);
+	std::ofstream f;
+	f.open(StringFormat("dumped_shape%d.cpp", shape_no).c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (!f.is_open()) 
 		return;
 
 	f << "{\n";
 	for (Vec3 v : mPositions)
-		f << StringFormat("\tVec3(%.9gf, %.9gf, %.9gf),\n", v.GetX(), v.GetY(), v.GetZ());
+		f << StringFormat("\tVec3(%.9gf, %.9gf, %.9gf),\n", (double)v.GetX(), (double)v.GetY(), (double)v.GetZ());
 	f << "},\n";
 }
 

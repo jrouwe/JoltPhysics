@@ -18,10 +18,10 @@ public:
 						StaticArray() = default;
 
 	/// Constructor from initializer list
-	explicit			StaticArray(initializer_list<T> inList)
+	explicit			StaticArray(std::initializer_list<T> inList)
 	{
 		JPH_ASSERT(inList.size() <= N);
-		for (typename initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)
+		for (typename std::initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)
 			::new (reinterpret_cast<T *>(&mElements[mSize++])) T(*i);
 	}
 
@@ -64,7 +64,7 @@ public:
 	void				emplace_back(A &&... inElement)
 	{	
 		JPH_ASSERT(mSize < N);
-		::new (&mElements[mSize++]) T(forward<A>(inElement)...);
+		::new (&mElements[mSize++]) T(std::forward<A>(inElement)...);
 	}
 
 	/// Remove element from the back of the array

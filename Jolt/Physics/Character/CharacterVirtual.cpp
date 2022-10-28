@@ -390,7 +390,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 	}
 
 	// Create array that holds the constraints in order of time of impact (sort will happen later)
-	vector<Constraint *, STLTempAllocator<Constraint *>> sorted_constraints(inAllocator);
+	std::vector<Constraint *, STLTempAllocator<Constraint *>> sorted_constraints(inAllocator);
 	sorted_constraints.resize(ioConstraints.size());
 	for (size_t index = 0; index < sorted_constraints.size(); index++)
 		sorted_constraints[index] = &ioConstraints[index];
@@ -406,7 +406,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 	outTimeSimulated = 0.0f;
 
 	// These are the contacts that we hit previously without moving a significant distance
-	vector<Constraint *, STLTempAllocator<Constraint *>> previous_contacts(inAllocator);
+	std::vector<Constraint *, STLTempAllocator<Constraint *>> previous_contacts(inAllocator);
 	previous_contacts.resize(mMaxConstraintIterations);
 	int num_previous_contacts = 0;
 

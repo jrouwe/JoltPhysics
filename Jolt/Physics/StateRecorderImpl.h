@@ -13,7 +13,7 @@ class StateRecorderImpl final : public StateRecorder
 public:
 	/// Constructor
 						StateRecorderImpl() = default;
-						StateRecorderImpl(StateRecorderImpl &&inRHS)				: StateRecorder(inRHS), mStream(move(inRHS.mStream)) { }
+						StateRecorderImpl(StateRecorderImpl &&inRHS)				: StateRecorder(inRHS), mStream(std::move(inRHS.mStream)) { }
 
 	/// Write a string of bytes to the binary stream
 	virtual void		WriteBytes(const void *inData, size_t inNumBytes) override;
@@ -37,7 +37,7 @@ public:
 	string				GetData() const												{ return mStream.str(); }
 
 private:
-	stringstream		mStream;
+	std::stringstream	mStream;
 };
 
 JPH_NAMESPACE_END

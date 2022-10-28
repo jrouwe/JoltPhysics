@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-static void sCreateVertices(unordered_set<Vec3> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel)
+static void sCreateVertices(std::unordered_set<Vec3> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel)
 {
 	Vec3 center1 = (inDir1 + inDir2).Normalized();
 	Vec3 center2 = (inDir2 + inDir3).Normalized();
@@ -28,11 +28,11 @@ static void sCreateVertices(unordered_set<Vec3> &ioVertices, Vec3Arg inDir1, Vec
 	}
 }
 
-const vector<Vec3> Vec3::sUnitSphere = []() { 
+const std::vector<Vec3> Vec3::sUnitSphere = []() { 
 
 	const int level = 3;
 
-	unordered_set<Vec3> verts;
+	std::unordered_set<Vec3> verts;
 	
 	// Add unit axis
 	verts.insert(Vec3::sAxisX());
@@ -52,7 +52,7 @@ const vector<Vec3> Vec3::sUnitSphere = []() {
 	sCreateVertices(verts, Vec3::sAxisX(), -Vec3::sAxisY(), -Vec3::sAxisZ(), level);
 	sCreateVertices(verts, -Vec3::sAxisX(), -Vec3::sAxisY(), -Vec3::sAxisZ(), level);
 
-	return vector<Vec3>(verts.begin(), verts.end());
+	return std::vector<Vec3>(verts.begin(), verts.end());
 }();
 
 JPH_NAMESPACE_END

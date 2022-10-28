@@ -149,7 +149,7 @@ private:
 	void						DumpList(const char *inTag, const Aggregators &inAggregators);
 	void						DumpChart(const char *inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators);
 
-	mutex						mLock;																///< Lock that protects mThreads
+	std::mutex					mLock;																///< Lock that protects mThreads
 	Array<ProfileThread *>		mThreads;															///< List of all active threads
 	bool						mDump = false;														///< When true, the samples are dumped next frame
 	String						mDumpTag;															///< When not empty, this overrides the auto incrementing number of the dump filename

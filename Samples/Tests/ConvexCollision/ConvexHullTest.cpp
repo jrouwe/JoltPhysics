@@ -417,7 +417,7 @@ void ConvexHullTest::Initialize()
 			for (int y = 0; y < 10; ++y)
 				for (int z = 0; z < 10; ++z)
 					p.push_back(Vec3::sReplicate(-0.5f) * 0.1f * Vec3(float(x), float(y), float(z)));
-		mPoints.push_back(move(p));
+		mPoints.push_back(std::move(p));
 	}
 
 	// Add disc of many points
@@ -427,7 +427,7 @@ void ConvexHullTest::Initialize()
 		for (float r = 0.0f; r < 2.0f; r += 0.1f)
 			for (float phi = 0.0f; phi <= 2.0f * JPH_PI; phi += 2.0f * JPH_PI / 20.0f)
 				p.push_back(rot * Vec3(r * Cos(phi), r * Sin(phi), 0));
-		mPoints.push_back(move(p));
+		mPoints.push_back(std::move(p));
 	}
 
 	// Add wedge shaped disc that is just above the hull tolerance on its widest side and zero on the other side
@@ -439,7 +439,7 @@ void ConvexHullTest::Initialize()
 			p.push_back(pos);
 			p.push_back(pos + Vec3(0, 2.0e-3f * (2.0f + pos.GetX()) / 4.0f, 0));
 		}
-		mPoints.push_back(move(p));
+		mPoints.push_back(std::move(p));
 	}
 
 	// Add a sphere of many points
@@ -448,7 +448,7 @@ void ConvexHullTest::Initialize()
 		for (float theta = 0.0f; theta <= JPH_PI; theta += JPH_PI / 20.0f)
 			for (float phi = 0.0f; phi <= 2.0f * JPH_PI; phi += 2.0f * JPH_PI / 20.0f)
 				p.push_back(Vec3::sUnitSpherical(theta, phi));
-		mPoints.push_back(move(p));
+		mPoints.push_back(std::move(p));
 	}
 
 	// Open the external file with hulls
@@ -474,7 +474,7 @@ void ConvexHullTest::Initialize()
 					points_stream.read((char *)&v, sizeof(v));
 					p.push_back(Vec3(v));
 				}
-				mPoints.push_back(move(p));
+				mPoints.push_back(std::move(p));
 			}
 		}
 	}

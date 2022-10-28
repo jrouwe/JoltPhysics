@@ -33,3 +33,4 @@ JPH_SUPPRESS_WARNING_POP
 
 using Microsoft::WRL::ComPtr;
 using namespace JPH;
+using namespace std;

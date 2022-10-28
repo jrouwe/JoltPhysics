@@ -14,6 +14,11 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
+// Things we're using from STL
+using std::atomic;
+using std::thread;
+using std::condition_variable;
+
 /// Implementation of a JobSystem using a thread pool
 /// 
 /// Note that this is considered an example implementation. It is expected that when you integrate

@@ -76,7 +76,7 @@ void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const I
 				*other = *batch_end_minus_1;
 
 				// Find first element that is bigger than this one and insert the current item before it
-				Array<uint>::iterator upper = upper_bound(batch_begin_plus_1, batch_end, dist, 
+				Array<uint>::iterator upper = std::upper_bound(batch_begin_plus_1, batch_end, dist, 
 					[&first_centroid, &centroids](float inLHS, uint inRHS)
 					{
 						return inLHS < (centroids[inRHS] - first_centroid).LengthSq(); 

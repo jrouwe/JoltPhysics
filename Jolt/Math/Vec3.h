@@ -99,7 +99,7 @@ public:
 	static JPH_INLINE Vec3		sUnitSpherical(float inTheta, float inPhi);
 
 	/// A set of vectors uniformly spanning the surface of a unit sphere, usable for debug purposes
-	static const vector<Vec3>	sUnitSphere;
+	static const std::vector<Vec3> sUnitSphere;
 
 	/// Get random unit vector
 	template <class Random>

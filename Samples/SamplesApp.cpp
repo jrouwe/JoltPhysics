@@ -2102,7 +2102,7 @@ void SamplesApp::DrawPhysics()
 	}
 
 	// Replace the map with the newly created map so that shapes that we don't draw / were removed are released
-	mShapeToGeometry = move(shape_to_geometry);
+	mShapeToGeometry = std::move(shape_to_geometry);
 }
 
 void SamplesApp::StepPhysics(JobSystem *inJobSystem)
