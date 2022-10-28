@@ -22,8 +22,6 @@
 
 JPH_NAMESPACE_BEGIN
 
-using namespace std::literals; // for us suffix
-
 JobSystemThreadPool::Semaphore::Semaphore()
 {
 #ifdef JPH_PLATFORM_WINDOWS
@@ -115,7 +113,7 @@ void JobSystemThreadPool::BarrierImpl::AddJob(const JobHandle &inJob)
 		while (write_index - mJobReadIndex >= cMaxJobs)
 		{
 			JPH_ASSERT(false, "Barrier full, stalling!");
-			std::this_thread::sleep_for(100us);
+			std::this_thread::sleep_for(std::chrono::microseconds(100));
 		}
 		mJobs[write_index & (cMaxJobs - 1)] = job;
 	}
@@ -151,7 +149,7 @@ void JobSystemThreadPool::BarrierImpl::AddJobs(const JobHandle *inHandles, uint 
 			while (write_index - mJobReadIndex >= cMaxJobs)
 			{
 				JPH_ASSERT(false, "Barrier full, stalling!");
-				std::this_thread::sleep_for(100us);
+				std::this_thread::sleep_for(std::chrono::microseconds(100));
 			}
 			mJobs[write_index & (cMaxJobs - 1)] = job;
 		}
@@ -341,7 +339,7 @@ JobHandle JobSystemThreadPool::CreateJob(const char *inJobName, ColorArg inColor
 		if (index != AvailableJobs::cInvalidObjectIndex)
 			break;
 		JPH_ASSERT(false, "No jobs available!");
-		std::this_thread::sleep_for(100us);
+		std::this_thread::sleep_for(std::chrono::microseconds(100));
 	}
 	Job *job = &mJobs.Get(index);
 	
@@ -433,7 +431,7 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 				mSemaphore.Release((uint)mThreads.size()); 
 
 				// Sleep a little (we have to wait for other threads to update their head pointer in order for us to be able to continue)
-				std::this_thread::sleep_for(100us);
+				std::this_thread::sleep_for(std::chrono::microseconds(100));
 				continue;
 			}
 		}
