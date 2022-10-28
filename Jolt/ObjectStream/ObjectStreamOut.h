@@ -15,7 +15,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-template <class T> using Queue = queue<T, deque<T, STLAllocator<T>>>;
+template <class T> using Queue = std::queue<T, std::deque<T, STLAllocator<T>>>;
 
 /// ObjectStreamOut contains all logic for writing an object to disk. It is the base 
 /// class for the text and binary output streams (ObjectStreamTextOut and ObjectStreamBinaryOut).
@@ -46,8 +46,8 @@ public:
 	template <class T>
 	static bool	sWriteObject(const char *inFileName, ObjectStream::EStreamType inType, const T &inObject)
 	{
-		ofstream stream;
-		stream.open(inFileName, ofstream::out | ofstream::trunc | ofstream::binary);
+		std::ofstream stream;
+		stream.open(inFileName, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
 		if (!stream.is_open()) 
 			return false;
 		return sWriteObject(stream, inType, inObject);

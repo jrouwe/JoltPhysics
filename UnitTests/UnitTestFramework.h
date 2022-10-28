@@ -12,6 +12,7 @@ JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")
 #include "doctest.h"
 
 using namespace JPH;
+using namespace std;
 
 inline void CHECK_APPROX_EQUAL(float inLHS, float inRHS, float inTolerance = 1.0e-6f)
 {

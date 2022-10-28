@@ -9,6 +9,14 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
+// Things we're using from STL
+using std::atomic;
+using std::memory_order;
+using std::memory_order_relaxed;
+using std::memory_order_acquire;
+using std::memory_order_release;
+using std::memory_order_seq_cst;
+
 /// Atomically compute the min(ioAtomic, inValue) and store it in ioAtomic, returns true if value was updated
 template <class T>
 bool AtomicMin(atomic<T> &ioAtomic, const T inValue, const memory_order inMemoryOrder = memory_order_seq_cst)

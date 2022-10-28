@@ -53,37 +53,37 @@ void ObjectStreamTextOut::WriteIdentifier(Identifier inIdentifier)
 
 void ObjectStreamTextOut::WriteCount(uint32 inCount)
 {
-	WriteWord(to_string(inCount));
+	WriteWord(std::to_string(inCount));
 }
 
 void ObjectStreamTextOut::WritePrimitiveData(const uint8 &inPrimitive)
 {
-	WriteWord(to_string(inPrimitive));
+	WriteWord(std::to_string(inPrimitive));
 }
 
 void ObjectStreamTextOut::WritePrimitiveData(const uint16 &inPrimitive)
 {
-	WriteWord(to_string(inPrimitive));
+	WriteWord(std::to_string(inPrimitive));
 }
 
 void ObjectStreamTextOut::WritePrimitiveData(const int &inPrimitive)
 {
-	WriteWord(to_string(inPrimitive));
+	WriteWord(std::to_string(inPrimitive));
 }
 
 void ObjectStreamTextOut::WritePrimitiveData(const uint32 &inPrimitive)
 {
-	WriteWord(to_string(inPrimitive));
+	WriteWord(std::to_string(inPrimitive));
 }
 
 void ObjectStreamTextOut::WritePrimitiveData(const uint64 &inPrimitive)
 {
-	WriteWord(to_string(inPrimitive));
+	WriteWord(std::to_string(inPrimitive));
 }
 
 void ObjectStreamTextOut::WritePrimitiveData(const float &inPrimitive)
 {
-	ostringstream stream;
+	std::ostringstream stream;
 	stream.precision(9);
 	stream << inPrimitive;
 	WriteWord(stream.str());

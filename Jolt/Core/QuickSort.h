@@ -129,7 +129,7 @@ inline void QuickSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
 template <typename Iterator>
 inline void QuickSort(Iterator inBegin, Iterator inEnd)
 {
-	less<> compare;
+	std::less<> compare;
 	QuickSort(inBegin, inEnd, compare);
 }
 

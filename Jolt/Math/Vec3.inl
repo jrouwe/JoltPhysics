@@ -327,7 +327,7 @@ Vec3 Vec3::sUnitSpherical(float inTheta, float inPhi)
 template <class Random>
 Vec3 Vec3::sRandom(Random &inRandom)
 {
-	uniform_real_distribution<float> zero_to_one(0.0f, 1.0f);
+	std::uniform_real_distribution<float> zero_to_one(0.0f, 1.0f);
 	float theta = JPH_PI * zero_to_one(inRandom);
 	float phi = 2.0f * JPH_PI * zero_to_one(inRandom);
 	return sUnitSpherical(theta, phi);

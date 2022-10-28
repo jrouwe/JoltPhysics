@@ -169,7 +169,7 @@ BroadPhase::AddState BroadPhaseQuadTree::AddBodiesPrepare(BodyID *ioBodies, int 
 		JPH_ASSERT(broadphase_layer < mNumLayers);
 
 		// Find first body with different layer
-		BodyID *b_mid = upper_bound(b_start, b_end, broadphase_layer, [bodies_ptr](BroadPhaseLayer::Type inLayer, BodyID inBodyID) { return inLayer < (BroadPhaseLayer::Type)bodies_ptr[inBodyID.GetIndex()]->GetBroadPhaseLayer(); });
+		BodyID *b_mid = std::upper_bound(b_start, b_end, broadphase_layer, [bodies_ptr](BroadPhaseLayer::Type inLayer, BodyID inBodyID) { return inLayer < (BroadPhaseLayer::Type)bodies_ptr[inBodyID.GetIndex()]->GetBroadPhaseLayer(); });
 
 		// Keep track of state for this layer
 		LayerState &layer_state = state[broadphase_layer];
@@ -293,7 +293,7 @@ void BroadPhaseQuadTree::RemoveBodies(BodyID *ioBodies, int inNumber)
 		JPH_ASSERT(broadphase_layer != (BroadPhaseLayer::Type)cBroadPhaseLayerInvalid);
 
 		// Find first body with different layer
-		BodyID *b_mid = upper_bound(b_start, b_end, broadphase_layer, [tracking](BroadPhaseLayer::Type inLayer, BodyID inBodyID) { return inLayer < tracking[inBodyID.GetIndex()].mBroadPhaseLayer; });
+		BodyID *b_mid = std::upper_bound(b_start, b_end, broadphase_layer, [tracking](BroadPhaseLayer::Type inLayer, BodyID inBodyID) { return inLayer < tracking[inBodyID.GetIndex()].mBroadPhaseLayer; });
 
 		// Remove all bodies of the same layer
 		mLayers[broadphase_layer].RemoveBodies(bodies, mTracking, b_start, int(b_mid - b_start));
@@ -343,7 +343,7 @@ void BroadPhaseQuadTree::NotifyBodiesAABBChanged(BodyID *ioBodies, int inNumber,
 		JPH_ASSERT(broadphase_layer != (BroadPhaseLayer::Type)cBroadPhaseLayerInvalid);
 
 		// Find first body with different layer
-		BodyID *b_mid = upper_bound(b_start, b_end, broadphase_layer, [tracking](BroadPhaseLayer::Type inLayer, BodyID inBodyID) { return inLayer < tracking[inBodyID.GetIndex()].mBroadPhaseLayer; });
+		BodyID *b_mid = std::upper_bound(b_start, b_end, broadphase_layer, [tracking](BroadPhaseLayer::Type inLayer, BodyID inBodyID) { return inLayer < tracking[inBodyID.GetIndex()].mBroadPhaseLayer; });
 
 		// Nodify all bodies of the same layer changed
 		mLayers[broadphase_layer].NotifyBodiesAABBChanged(bodies, mTracking, b_start, int(b_mid - b_start));
@@ -556,7 +556,7 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 		JPH_ASSERT(object_layer != cObjectLayerInvalid);
 
 		// Find first body with different layer
-		BodyID *b_mid = upper_bound(b_start, b_end, object_layer, [tracking](ObjectLayer inLayer, BodyID inBodyID) { return inLayer < tracking[inBodyID.GetIndex()].mObjectLayer; });
+		BodyID *b_mid = std::upper_bound(b_start, b_end, object_layer, [tracking](ObjectLayer inLayer, BodyID inBodyID) { return inLayer < tracking[inBodyID.GetIndex()].mObjectLayer; });
 
 		// Loop over all layers and test the ones that could hit
 		for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)

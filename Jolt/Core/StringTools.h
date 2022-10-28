@@ -13,7 +13,7 @@ String StringFormat(const char *inFMT, ...);
 template<typename T>
 String ConvertToString(const T &inValue)
 {
-	using OStringStream = basic_ostringstream<char, char_traits<char>, STLAllocator<char>>;
+	using OStringStream = std::basic_ostringstream<char, std::char_traits<char>, STLAllocator<char>>;
     OStringStream oss;
     oss << inValue;
     return oss.str();

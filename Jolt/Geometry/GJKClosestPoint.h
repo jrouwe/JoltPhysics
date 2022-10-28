@@ -34,7 +34,7 @@ private:
 	{
 #ifdef JPH_GJK_DEBUG
 		for (int i = 0; i < mNumPoints; ++i)
-			Trace("y[%d] = [%s], |y[%d]| = %g", i, ConvertToString(mY[i]).c_str(), i, mY[i].Length());
+			Trace("y[%d] = [%s], |y[%d]| = %g", i, ConvertToString(mY[i]).c_str(), i, (double)mY[i].Length());
 #endif
 
 		uint32 set;
@@ -69,7 +69,7 @@ private:
 		}
 
 #ifdef JPH_GJK_DEBUG
- 		Trace("GetClosest: set = 0b%s, v = [%s], |v| = %g", NibbleToBinary(set), ConvertToString(v).c_str(), v.Length());
+ 		Trace("GetClosest: set = 0b%s, v = [%s], |v| = %g", NibbleToBinary(set), ConvertToString(v).c_str(), (double)v.Length());
 #endif
 
 		float v_len_sq = v.LengthSq();
@@ -434,7 +434,7 @@ public:
 
 			// If v is very small compared to the length of y, we also consider this a collision
 #ifdef JPH_GJK_DEBUG
-			Trace("Check v small compared to y: %g <= %g", v_len_sq, FLT_EPSILON * GetMaxYLengthSq());
+			Trace("Check v small compared to y: %g <= %g", (double)v_len_sq, (double)(FLT_EPSILON * GetMaxYLengthSq()));
 #endif
 			if (v_len_sq <= FLT_EPSILON * GetMaxYLengthSq())
 			{
@@ -452,7 +452,7 @@ public:
 
 			// If the squared length of v is not changing enough, we've converged and there is no collision
 #ifdef JPH_GJK_DEBUG
-			Trace("Check v not changing enough: %g <= %g", prev_v_len_sq - v_len_sq, FLT_EPSILON * prev_v_len_sq);
+			Trace("Check v not changing enough: %g <= %g", (double)(prev_v_len_sq - v_len_sq), (double)(FLT_EPSILON * prev_v_len_sq));
 #endif
 			JPH_ASSERT(prev_v_len_sq >= v_len_sq);
 			if (prev_v_len_sq - v_len_sq <= FLT_EPSILON * prev_v_len_sq)
@@ -470,7 +470,7 @@ public:
 		CalculatePointAAndB(outPointA, outPointB);
 
 #ifdef JPH_GJK_DEBUG
-		Trace("Return: v = [%s], |v| = %g", ConvertToString(ioV).c_str(), ioV.Length());
+		Trace("Return: v = [%s], |v| = %g", ConvertToString(ioV).c_str(), (double)ioV.Length());
 
 		// Draw -ioV to show the closest point to the origin from the previous simplex
 		DebugRenderer::sInstance->DrawArrow(mOffset, mOffset - ioV, Color::sOrange, 0.05f);
@@ -539,14 +539,14 @@ public:
 
 			float v_dot_w = v.Dot(w);
 #ifdef JPH_GJK_DEBUG
-			Trace("v . w = %g", v_dot_w);
+			Trace("v . w = %g", (double)v_dot_w);
 #endif
 			if (v_dot_w > 0.0f)
 			{
 				// If ray and normal are in the same direction, we've passed A and there's no collision
 				float v_dot_r = v.Dot(inRayDirection);
 #ifdef JPH_GJK_DEBUG
-				Trace("v . r = %g", v_dot_r);
+				Trace("v . r = %g", (double)v_dot_r);
 #endif
 				if (v_dot_r >= 0.0f)
 					return false;
@@ -556,7 +556,7 @@ public:
 				float old_lambda = lambda;
 				lambda -= delta;
 #ifdef JPH_GJK_DEBUG
-				Trace("lambda = %g, delta = %g", lambda, delta);
+				Trace("lambda = %g, delta = %g", (double)lambda, (double)delta);
 #endif
 
 				// If lambda didn't change, we cannot converge any further and we assume a hit
@@ -743,14 +743,14 @@ public:
 			// So to v . w we have to add: v . (-(inConvexRadiusA + inConvexRadiusB) * v / |v|) = -(inConvexRadiusA + inConvexRadiusB) * |v|
 			float v_dot_w = v.Dot(w) - sum_convex_radius * v.Length();
 #ifdef JPH_GJK_DEBUG
-			Trace("v . w = %g", v_dot_w);
+			Trace("v . w = %g", (double)v_dot_w);
 #endif
 			if (v_dot_w > 0.0f)
 			{
 				// If ray and normal are in the same direction, we've passed A and there's no collision
 				float v_dot_r = v.Dot(inDirection);
 #ifdef JPH_GJK_DEBUG
-				Trace("v . r = %g", v_dot_r);
+				Trace("v . r = %g", (double)v_dot_r);
 #endif
 				if (v_dot_r >= 0.0f)
 					return false;
@@ -760,7 +760,7 @@ public:
 				float old_lambda = lambda;
 				lambda -= delta;
 #ifdef JPH_GJK_DEBUG
-				Trace("lambda = %g, delta = %g", lambda, delta);
+				Trace("lambda = %g, delta = %g", (double)lambda, (double)delta);
 #endif
 
 				// If lambda didn't change, we cannot converge any further and we assume a hit

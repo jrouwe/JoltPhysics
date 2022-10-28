@@ -59,7 +59,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 	return JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY();
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) 
 	// Open /proc/cpuinfo
-    ifstream ifs("/proc/cpuinfo");
+    std::ifstream ifs("/proc/cpuinfo");
     if (ifs.is_open())
 	{
 		// Read all lines

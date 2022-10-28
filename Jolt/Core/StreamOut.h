@@ -27,7 +27,7 @@ public:
 
 	/// Write a vector of primitives from the binary stream
 	template <class T, class A>
-	void				Write(const vector<T, A> &inT)
+	void				Write(const std::vector<T, A> &inT)
 	{
 		typename Array<T>::size_type len = inT.size();
 		Write(len);
@@ -38,9 +38,9 @@ public:
 
 	/// Write a string to the binary stream (writes the number of characters and then the characters)
 	template <class Type, class Traits, class Allocator>
-	void				Write(const basic_string<Type, Traits, Allocator> &inString)
+	void				Write(const std::basic_string<Type, Traits, Allocator> &inString)
 	{
-		typename basic_string<Type, Traits, Allocator>::size_type len = inString.size();
+		typename std::basic_string<Type, Traits, Allocator>::size_type len = inString.size();
 		Write(len);
 		if (!IsFailed())
 			WriteBytes(inString.data(), len * sizeof(Type));

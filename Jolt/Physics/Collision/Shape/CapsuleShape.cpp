@@ -31,20 +31,20 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(CapsuleShapeSettings)
 
 static const int cCapsuleDetailLevel = 2;
 
-static const vector<Vec3> sCapsuleTopTriangles = []() { 
-	vector<Vec3> verts;	
+static const std::vector<Vec3> sCapsuleTopTriangles = []() { 
+	std::vector<Vec3> verts;	
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereTop(verts, cCapsuleDetailLevel);
 	return verts;
 }();
 
-static const vector<Vec3> sCapsuleMiddleTriangles = []() { 
-	vector<Vec3> verts;
+static const std::vector<Vec3> sCapsuleMiddleTriangles = []() { 
+	std::vector<Vec3> verts;
 	GetTrianglesContextVertexList::sCreateUnitOpenCylinder(verts, cCapsuleDetailLevel);
 	return verts;
 }();
 
-static const vector<Vec3> sCapsuleBottomTriangles = []() { 
-	vector<Vec3> verts;	
+static const std::vector<Vec3> sCapsuleBottomTriangles = []() { 
+	std::vector<Vec3> verts;	
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereBottom(verts, cCapsuleDetailLevel);
 	return verts;
 }();

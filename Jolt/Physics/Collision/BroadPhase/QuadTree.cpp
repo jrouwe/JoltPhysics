@@ -13,6 +13,10 @@
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Geometry/OrientedBox.h>
 
+#ifdef JPH_DUMP_BROADPHASE_TREE
+#include <fstream>
+#endif // JPH_DUMP_BROADPHASE_TREE
+
 JPH_NAMESPACE_BEGIN
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1529,8 +1533,8 @@ void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &in
 void QuadTree::DumpTree(const NodeID &inRoot, const char *inFileNamePrefix) const
 {
 	// Open DOT file
-	ofstream f;
-	f.open(StringFormat("%s.dot", inFileNamePrefix), ofstream::out | ofstream::trunc);
+	std::ofstream f;
+	f.open(StringFormat("%s.dot", inFileNamePrefix).c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (!f.is_open())
 		return;
 

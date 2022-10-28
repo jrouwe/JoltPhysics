@@ -43,8 +43,8 @@ static const Vec3 cTopFace[] =
 	Vec3(-cSin45,	1.0f,	cSin45)
 };
 
-static const vector<Vec3> sUnitCylinderTriangles = []() { 
-	vector<Vec3> verts;
+static const std::vector<Vec3> sUnitCylinderTriangles = []() { 
+	std::vector<Vec3> verts;
 
 	const Vec3 bottom_offset(0.0f, -2.0f, 0.0f);
 

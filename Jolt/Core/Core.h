@@ -115,14 +115,8 @@
 #define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(clang diagnostic push)
 #define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(clang diagnostic pop)
 #define JPH_CLANG_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
-	#if __clang_major__ >= 15
-		#define JPH_CLANG15_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
-	#else
-		#define JPH_CLANG15_SUPPRESS_WARNING(w)
-	#endif
 #else
 #define JPH_CLANG_SUPPRESS_WARNING(w)
-#define JPH_CLANG15_SUPPRESS_WARNING(w)
 #endif
 #ifdef JPH_COMPILER_GCC
 #define JPH_PRAGMA(x)					_Pragma(#x)
@@ -163,7 +157,6 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
 	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
 	JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy")												\
-	JPH_CLANG15_SUPPRESS_WARNING("-Wunqualified-std-cast-call")									\
 	JPH_IF_NOT_ANDROID(JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion"))			\
 																								\
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
@@ -258,7 +251,30 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-using namespace std;
+// Commonly used STL types
+using std::pair;
+using std::min;
+using std::max;
+using std::abs;
+using std::sqrt;
+using std::ceil;
+using std::floor;
+using std::trunc;
+using std::round;
+using std::fmod;
+using std::swap;
+using std::size;
+using std::string;
+using std::string_view;
+using std::function;
+using std::numeric_limits;
+using std::isfinite;
+using std::isnan;
+using std::is_trivial;
+using std::is_trivially_constructible;
+using std::is_trivially_destructible;
+using std::ostream;
+using std::istream;
 
 // Standard types
 using uint = unsigned int;

@@ -182,7 +182,7 @@ public:
 		Vec3Arg							mWalkStairsStepUp { 0, 0.4f, 0 };										///< See WalkStairs inStepUp parameter. Can be zero to turn off.
 		float							mWalkStairsMinStepForward { 0.02f };									///< See WalkStairs inStepForward parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
 		float							mWalkStairsStepForwardTest { 0.15f };									///< See WalkStairs inStepForwardTest parameter. Note that the parameter only indicates a magnitude, direction is taken from current velocity.
-		float							mWalkStairsCosAngleForwardContact { cos(DegreesToRadians(75.0f)) };		///< Cos(angle) where angle is the maximum angle between the ground normal in the horizontal plane and the character forward vector where we're willing to adjust the step forward test towards the contact normal.
+		float							mWalkStairsCosAngleForwardContact { Cos(DegreesToRadians(75.0f)) };		///< Cos(angle) where angle is the maximum angle between the ground normal in the horizontal plane and the character forward vector where we're willing to adjust the step forward test towards the contact normal.
 		Vec3Arg							mWalkStairsStepDownExtra { Vec3::sZero() };								///< See WalkStairs inStepDownExtra
 	};
 
@@ -254,7 +254,7 @@ private:
 		bool							mCanPushCharacter = true;								///< When true, the velocity of the contact point can push the character
 	};
 
-	using TempContactList = vector<Contact, STLTempAllocator<Contact>>;
+	using TempContactList = std::vector<Contact, STLTempAllocator<Contact>>;
 	using ContactList = Array<Contact>;
 
 	// A contact that needs to be ignored
@@ -267,7 +267,7 @@ private:
 		SubShapeID						mSubShapeID;											///< Sub shape of body we're colliding with
 	};
 
-	using IgnoredContactList = vector<IgnoredContact, STLTempAllocator<IgnoredContact>>;
+	using IgnoredContactList = std::vector<IgnoredContact, STLTempAllocator<IgnoredContact>>;
 
 	// A constraint that limits the movement of the character
 	struct Constraint
@@ -279,7 +279,7 @@ private:
 		Plane							mPlane;													///< Plane around the origin that describes how far we can displace (from the origin)
 	};
 
-	using ConstraintList = vector<Constraint, STLTempAllocator<Constraint>>;
+	using ConstraintList = std::vector<Constraint, STLTempAllocator<Constraint>>;
 
 	// Collision collector that collects hits for CollideShape
 	class ContactCollector : public CollideShapeCollector

@@ -16,7 +16,7 @@ inline void InsertionSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
 		for (Iterator i = inBegin + 1; i != inEnd; ++i)
 		{
 			// Move this element to a temporary value
-			auto x = move(*i);
+			auto x = std::move(*i);
 
 			// Check if the element goes before inBegin (we can't decrement the iterator before inBegin so this needs to be a separate branch)
 			if (inCompare(x, *inBegin))
@@ -30,17 +30,17 @@ inline void InsertionSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
 				}
 
 				// Move x to the first place
-				*inBegin = move(x);
+				*inBegin = std::move(x);
 			}
 			else
 			{
 				// Move elements to the right as long as they are bigger than x
 				Iterator j = i;
 				for (Iterator prev = j - 1; inCompare(x, *prev); j = prev, --prev)
-					*j = move(*prev);
+					*j = std::move(*prev);
 
 				// Move x into place
-				*j = move(x);
+				*j = std::move(x);
 			}
 		}
 	}
@@ -50,7 +50,7 @@ inline void InsertionSort(Iterator inBegin, Iterator inEnd, Compare inCompare)
 template <typename Iterator>
 inline void InsertionSort(Iterator inBegin, Iterator inEnd)
 {
-	less<> compare;
+	std::less<> compare;
 	InsertionSort(inBegin, inEnd, compare);
 }
 

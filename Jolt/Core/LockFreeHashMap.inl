@@ -192,7 +192,7 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 	memset(kv, 0xcd, size);
 #endif
 	kv->mKey = inKey;
-	new (&kv->mValue) Value(forward<Params>(inConstructorParams)...);
+	new (&kv->mValue) Value(std::forward<Params>(inConstructorParams)...);
 
 	// Get the offset to the first object from the bucket with corresponding hash
 	atomic<uint32> &offset = mBuckets[inKeyHash & (mNumBuckets - 1)];

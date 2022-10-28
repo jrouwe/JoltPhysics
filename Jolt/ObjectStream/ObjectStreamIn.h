@@ -53,8 +53,8 @@ public:
 	template <class T>
 	static bool sReadObject(const char *inFileName, T *&outObject)
 	{
-		ifstream stream;
-		stream.open(inFileName, ifstream::in | ifstream::binary);
+		std::ifstream stream;
+		stream.open(inFileName, std::ifstream::in | std::ifstream::binary);
 		if (!stream.is_open()) 
 			return false;
 		return sReadObject(stream, outObject);

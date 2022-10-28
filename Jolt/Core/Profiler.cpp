@@ -27,7 +27,7 @@ bool ProfileMeasurement::sOutOfSamplesReported = false;
 
 void Profiler::NextFrame()
 {
-	lock_guard lock(mLock);
+	std::lock_guard lock(mLock);
 
 	if (mDump)
 	{
@@ -47,14 +47,14 @@ void Profiler::Dump(const string_view &inTag)
 
 void Profiler::AddThread(ProfileThread *inThread)										
 { 
-	lock_guard lock(mLock); 
+	std::lock_guard lock(mLock); 
 
 	mThreads.push_back(inThread); 
 }
 
 void Profiler::RemoveThread(ProfileThread *inThread)									
 { 
-	lock_guard lock(mLock); 
+	std::lock_guard lock(mLock); 
 	
 	Array<ProfileThread *>::iterator i = find(mThreads.begin(), mThreads.end(), inThread); 
 	JPH_ASSERT(i != mThreads.end()); 
@@ -179,8 +179,8 @@ static String sHTMLEncode(const char *inString)
 void Profiler::DumpList(const char *inTag, const Aggregators &inAggregators)
 {
 	// Open file
-	ofstream f;
-	f.open(StringFormat("profile_list_%s.html", inTag).c_str(), ofstream::out | ofstream::trunc);
+	std::ofstream f;
+	f.open(StringFormat("profile_list_%s.html", inTag).c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (!f.is_open()) 
 		return;
 
@@ -259,8 +259,8 @@ void Profiler::DumpList(const char *inTag, const Aggregators &inAggregators)
 void Profiler::DumpChart(const char *inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators)
 {
 	// Open file
-	ofstream f;
-	f.open(StringFormat("profile_chart_%s.html", inTag).c_str(), ofstream::out | ofstream::trunc);
+	std::ofstream f;
+	f.open(StringFormat("profile_chart_%s.html", inTag).c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (!f.is_open()) 
 		return;
 

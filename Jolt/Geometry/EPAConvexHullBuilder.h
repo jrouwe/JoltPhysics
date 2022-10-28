@@ -196,7 +196,7 @@ public:
 			inT->mInQueue = true;
 
 			// Resort heap
-			push_heap(begin(), end(), sTriangleSorter);
+			std::push_heap(begin(), end(), sTriangleSorter);
 		}
 
 		/// Peek the next closest triangle without removing it
@@ -209,7 +209,7 @@ public:
 		Triangle *		PopClosest()
 		{
 			// Move largest to end
-			pop_heap(begin(), end(), sTriangleSorter);
+			std::pop_heap(begin(), end(), sTriangleSorter);
 
 			// Remove last triangle
 			Triangle *t = back();
@@ -372,7 +372,7 @@ public:
 
 #if defined(JPH_EPA_CONVEX_BUILDER_VALIDATE) || defined(JPH_EPA_CONVEX_BUILDER_DRAW)
 		// Remove from list of all triangles
-		Triangles::iterator i = find(mTriangles.begin(), mTriangles.end(), inT);
+		Triangles::iterator i = std::find(mTriangles.begin(), mTriangles.end(), inT);
 		JPH_ASSERT(i != mTriangles.end());
 		mTriangles.erase(i);
 #endif

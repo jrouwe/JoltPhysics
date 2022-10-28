@@ -72,14 +72,14 @@ public:
 
 #else
 
-template <typename T> using STLAllocator = allocator<T>;
+template <typename T> using STLAllocator = std::allocator<T>;
 
 #endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
 
 // Declare STL containers that use our allocator
-template <class T> using Array = vector<T, STLAllocator<T>>;
-using String = basic_string<char, char_traits<char>, STLAllocator<char>>;
-using IStringStream = basic_istringstream<char, char_traits<char>, STLAllocator<char>>;
+template <class T> using Array = std::vector<T, STLAllocator<T>>;
+using String = std::basic_string<char, std::char_traits<char>, STLAllocator<char>>;
+using IStringStream = std::basic_istringstream<char, std::char_traits<char>, STLAllocator<char>>;
 
 JPH_NAMESPACE_END
 
