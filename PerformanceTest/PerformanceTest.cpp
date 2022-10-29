@@ -44,6 +44,7 @@ static void TraceImpl(const char *inFMT, ...)
 	va_start(list, inFMT);
 	char buffer[1024];
 	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+	va_end(list);
 
 	// Print to the TTY
 	cout << buffer << endl;

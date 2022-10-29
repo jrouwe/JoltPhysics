@@ -19,6 +19,7 @@ String StringFormat(const char *inFMT, ...)
 	va_list list;
 	va_start(list, inFMT);
 	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+	va_end(list);
 
 	return String(buffer);
 }
