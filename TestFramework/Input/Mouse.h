@@ -54,6 +54,7 @@ private:
 	ComPtr<IDirectInput8>			mDI;
 	ComPtr<IDirectInputDevice8>		mMouse;
 	DIMOUSESTATE					mMouseState;
+	bool							mMousePosInitialized = false;
 	POINT							mMousePos;
 	DIDEVICEOBJECTDATA				mDOD[BUFFERSIZE];
 	DWORD							mDODLength;

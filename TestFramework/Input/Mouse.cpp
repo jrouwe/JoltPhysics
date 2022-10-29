@@ -31,6 +31,7 @@ Mouse::Reset()
 void Mouse::ResetMouse()
 {
 	memset(&mMouseState, 0, sizeof(mMouseState));
+	mMousePosInitialized = false;
 	memset(&mDOD, 0, sizeof(mDOD));
 	mDODLength = 0;
 	mTimeLeftButtonLastReleased = 0;
@@ -110,11 +111,21 @@ void Mouse::Poll()
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Remember last position
+	POINT old_mouse_pos = mMousePos;
+
 	// Get mouse position using the standard window call
 	if (!GetCursorPos(&mMousePos))
 	{
 		ResetMouse();
 		return;
+	}
+
+	// If we lost mouse before, we need to reset the old mouse pos to the current one
+	if (!mMousePosInitialized)
+	{
+		old_mouse_pos = mMousePos;
+		mMousePosInitialized = true;
 	}
 
 	// Convert to window space
@@ -135,6 +146,16 @@ void Mouse::Poll()
 			ResetMouse();
 			return;
 		}
+	}
+
+	// If we're connected through remote desktop then GetDeviceState returns faulty data for lX and lY so we need to use a fallback
+	if (GetSystemMetrics(SM_REMOTESESSION))
+	{
+		// Just use the delta between the current and last mouse position.
+		// Note that this has the disadvantage that you can no longer rotate any further if you're at the edge of the screen,
+		// but unfortunately a RDP session doesn't allow capturing the mouse so there doesn't seem to be a workaround for this.
+		mMouseState.lX = mMousePos.x - old_mouse_pos.x;
+		mMouseState.lY = mMousePos.y - old_mouse_pos.y;
 	}
 	
 	// Get the state in a buffer for checking doubleclicks	
