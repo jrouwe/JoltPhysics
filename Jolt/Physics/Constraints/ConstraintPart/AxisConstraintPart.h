@@ -83,17 +83,15 @@ public:
 			r1_plus_u_x_axis = inR1PlusU.Cross(inWorldSpaceAxis);
 			r1_plus_u_x_axis.StoreFloat3(&mR1PlusUxAxis);
 		}
-		else
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis));
+			JPH_IF_DEBUG(else Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis);)
 
 		Vec3 r2_x_axis;
 		if constexpr (Type2 != EMotionType::Static)
 		{
 			r2_x_axis = inR2.Cross(inWorldSpaceAxis);
 			r2_x_axis.StoreFloat3(&mR2xAxis);
-		}
-		else
-			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mR2xAxis));
+		}		
+			JPH_IF_DEBUG(else Vec3::sNaN().StoreFloat3(&mR2xAxis);)
 
 		// Calculate inverse effective mass: K = J M^-1 J^T
 		float inv_effective_mass;
