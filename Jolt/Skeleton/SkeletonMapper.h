@@ -47,6 +47,15 @@ public:
 		int					mParentJointIdx;															///< Parent joint index of unmappable joint
 	};
 
+	/// Joints that should have their translation locked (fixed)
+	class Locked
+	{
+	public:
+		int					mJointIdx;																	///< Joint index of joint with locked translation
+		int					mParentJointIdx;															///< Parent joint index of joint with locked translation
+		Vec3				mTranslation;																///< Translation of neutral pose
+	};
+
 	/// A function that is called to determine if a joint can be mapped from source to target skeleton
 	using CanMapJoint = function<bool (const Skeleton *, int, const Skeleton *, int)>;
 
@@ -66,6 +75,23 @@ public:
 	/// @param inCanMapJoint Function that checks if joints in skeleton 1 and skeleton 2 are equal.
 	void					Initialize(const Skeleton *inSkeleton1, const Mat44 *inNeutralPose1, const Skeleton *inSkeleton2, const Mat44 *inNeutralPose2, const CanMapJoint &inCanMapJoint = sDefaultCanMapJoint);
 
+	/// This can be called so lock the translation of a specified set of joints in skeleton 2.
+	/// Because constraints are never 100% rigid, there's always a little bit of stretch in the ragdoll when the ragdoll is under stress.
+	/// Locking the translations of the pose will remove the visual stretch from the ragdoll but will introduce a difference between the
+	/// physical simulation and the visual representation.
+	/// @param inSkeleton2 Target skeleton to map to.
+	/// @param inLockedTranslations An array of bools the size of inSkeleton2->GetJointCount(), for each joint indicating if the joint is locked.
+	/// @param inNeutralPose2 Neutral pose to take reference translations from
+	void					LockTranslations(const Skeleton *inSkeleton2, const bool *inLockedTranslations, const Mat44 *inNeutralPose2);
+
+	/// After Initialize(), this can be called to lock the translation of all joints in skeleton 2 below the first mapped joint to those of the neutral pose.
+	/// Because constraints are never 100% rigid, there's always a little bit of stretch in the ragdoll when the ragdoll is under stress.
+	/// Locking the translations of the pose will remove the visual stretch from the ragdoll but will introduce a difference between the
+	/// physical simulation and the visual representation.
+	/// @param inSkeleton2 Target skeleton to map to.
+	/// @param inNeutralPose2 Neutral pose to take reference translations from
+	void					LockAllTranslations(const Skeleton *inSkeleton2, const Mat44 *inNeutralPose2);
+
 	/// Map a pose. Joints that were directly mappable will be copied in model space from pose 1 to pose 2. Any joints that are only present in skeleton 2
 	/// will get their model space transform calculated through the local space transforms of pose 2. Joints that are part of a joint chain between two
 	/// mapped joints will be reoriented towards the next joint in skeleton 1. This means that it is possible for unmapped joints to have some animation,
@@ -83,6 +109,7 @@ public:
 	using MappingVector = Array<Mapping>;
 	using ChainVector = Array<Chain>;
 	using UnmappedVector = Array<Unmapped>;
+	using LockedVector = Array<Locked>;
 
 	///@name Access to the mapped joints
 	///@{
@@ -92,6 +119,8 @@ public:
 	ChainVector &			GetChains()																	{ return mChains; }
 	const UnmappedVector &	GetUnmapped() const															{ return mUnmapped; }
 	UnmappedVector &		GetUnmapped()																{ return mUnmapped; }
+	const LockedVector &	GetLockedTranslations() const												{ return mLockedTranslations; }
+	LockedVector &			GetLockedTranslations()														{ return mLockedTranslations; }
 	///@}
 
 private:
@@ -99,6 +128,7 @@ private:
 	MappingVector			mMappings;
 	ChainVector				mChains;
 	UnmappedVector			mUnmapped;																	///< Joint indices that could not be mapped from 1 to 2 (these are indices in 2)
+	LockedVector			mLockedTranslations;
 };
 
 JPH_NAMESPACE_END
