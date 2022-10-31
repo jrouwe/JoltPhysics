@@ -104,6 +104,8 @@ void SkeletonMapper::Initialize(const Skeleton *inSkeleton1, const Mat44 *inNeut
 
 void SkeletonMapper::LockTranslations(const Skeleton *inSkeleton2, const bool *inLockedTranslations, const Mat44 *inNeutralPose2)
 {
+	JPH_ASSERT(inSkeleton2->AreJointsCorrectlyOrdered());
+
 	int n = inSkeleton2->GetJointCount();
 
 	// Copy locked joints to array but don't actually include the first joint (this is physics driven)
@@ -124,24 +126,16 @@ void SkeletonMapper::LockTranslations(const Skeleton *inSkeleton2, const bool *i
 void SkeletonMapper::LockAllTranslations(const Skeleton *inSkeleton2, const Mat44 *inNeutralPose2)
 {
 	JPH_ASSERT(!mMappings.empty(), "Call Initialize first!");
+	JPH_ASSERT(inSkeleton2->AreJointsCorrectlyOrdered());
 
 	// The first mapping is the top most one (remember that joints should be ordered so that parents go before children).
 	// Because we created the mappings from the lowest joint first, this should contain the first mappable joint.
 	int root_idx = mMappings[0].mJointIdx2;
 
-#ifdef JPH_ENABLE_ASSERTS
-	// Check parents are correct for everything up to and including the root
-	for (int i = 0; i < root_idx + 1; ++i)
-		JPH_ASSERT(inSkeleton2->GetJoint(i).mParentJointIndex < i, "Joints should be ordered parents before children!");
-#endif // JPH_ENABLE_ASSERTS
-
 	// Create temp array to hold locked joints
 	int n = inSkeleton2->GetJointCount();
 	bool *locked_translations = (bool *)JPH_STACK_ALLOC(n * sizeof(bool));
-
-	// Don't lock everything up to root
-	for (int i = 0; i < root_idx; ++i)
-		locked_translations[i] = false;
+	memset(locked_translations, 0, n * sizeof(bool));
 
 	// Mark root as locked
 	locked_translations[root_idx] = true;
@@ -150,11 +144,8 @@ void SkeletonMapper::LockAllTranslations(const Skeleton *inSkeleton2, const Mat4
 	for (int i = root_idx + 1; i < n; ++i)
 	{
 		int parent_idx = inSkeleton2->GetJoint(i).mParentJointIndex;
-		JPH_ASSERT(parent_idx < i, "Joints should be ordered parents before children!");
 		if (parent_idx >= 0)
 			locked_translations[i] = locked_translations[parent_idx];
-		else
-			locked_translations[i] = false;
 	}
 
 	// Unmark root because we don't actually want to include this (this determines the position of the entire ragdoll)

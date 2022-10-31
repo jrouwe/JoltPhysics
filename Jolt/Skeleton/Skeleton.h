@@ -53,6 +53,10 @@ public:
 	/// Fill in parent joint indices based on name
 	void					CalculateParentJointIndices();
 
+	/// Many of the algorithms that use the Skeleton class require that parent joints are in the mJoints array before their children.
+	/// This function returns true if this is the case, false if not.
+	bool					AreJointsCorrectlyOrdered() const;
+
 	/// Saves the state of this object in binary form to inStream.
 	void					SaveBinaryState(StreamOut &inStream) const;
 

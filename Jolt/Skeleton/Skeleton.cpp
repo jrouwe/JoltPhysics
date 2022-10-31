@@ -36,6 +36,15 @@ void Skeleton::CalculateParentJointIndices()
 		j.mParentJointIndex = GetJointIndex(j.mParentName);
 }
 
+bool Skeleton::AreJointsCorrectlyOrdered() const
+{
+	for (int i = 0; i < (int)mJoints.size(); ++i)
+		if (mJoints[i].mParentJointIndex >= i)
+			return false;
+
+	return true;
+}
+
 void Skeleton::SaveBinaryState(StreamOut &inStream) const
 {
 	inStream.Write((uint32)mJoints.size());
