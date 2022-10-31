@@ -960,7 +960,7 @@ void CharacterVirtual::MoveToContact(Vec3Arg inPosition, const Contact &inContac
 
 	// Determine the contacts
 	TempContactList contacts(inAllocator);
-	contacts.reserve(mMaxNumHits);
+	contacts.reserve(mMaxNumHits + 1); // +1 because we can add one extra below
 	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 
 	// Ensure that we mark inContact as colliding
