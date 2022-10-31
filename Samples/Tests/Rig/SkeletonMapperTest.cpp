@@ -9,6 +9,7 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 #include <Utils/Log.h>
+#include <Application/DebugUI.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SkeletonMapperTest) 
 { 
@@ -62,6 +63,11 @@ void SkeletonMapperTest::Initialize()
 	neutral_animation->Sample(0.0f, mAnimatedPose);
 	mAnimatedPose.CalculateJointMatrices();
 	mRagdollToAnimated.Initialize(mRagdollPose.GetSkeleton(), mRagdollPose.GetJointMatrices().data(), mAnimatedPose.GetSkeleton(), mAnimatedPose.GetJointMatrices().data());
+
+	// Optionally lock translations (this can be used to prevent ragdolls from stretching)
+	// Try wildly dragging the ragdoll by the head (using spacebar) to see how the ragdoll stretches under stress
+	if (sLockTranslations)
+		mRagdollToAnimated.LockAllTranslations(mAnimatedPose.GetSkeleton(), mAnimatedPose.GetJointMatrices().data());
 
 	// Calculate initial pose and set it
 	CalculateRagdollPose();
@@ -117,6 +123,11 @@ void SkeletonMapperTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	pose2_world.Draw(*inParams.mPoseDrawSettings, mDebugRenderer, offset);
 	mDebugRenderer->DrawText3D(offset * pose2_world.GetJointMatrix(1).GetTranslation(), "Mapped", Color::sWhite, 0.2f);
 #endif // JPH_DEBUG_RENDERER
+}
+
+void SkeletonMapperTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
+{
+	inUI->CreateCheckBox(inSubMenu, "Lock Translations", sLockTranslations, [this](UICheckBox::EState inState) { sLockTranslations = inState == UICheckBox::STATE_CHECKED; RestartTest(); });
 }
 
 void SkeletonMapperTest::SaveState(StateRecorder &inStream) const

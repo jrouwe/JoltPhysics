@@ -102,6 +102,59 @@ void SkeletonMapper::Initialize(const Skeleton *inSkeleton1, const Mat44 *inNeut
 			mUnmapped.emplace_back(j2, inSkeleton2->GetJoint(j2).mParentJointIndex);
 }
 
+void SkeletonMapper::LockTranslations(const Skeleton *inSkeleton2, const bool *inLockedTranslations, const Mat44 *inNeutralPose2)
+{
+	JPH_ASSERT(inSkeleton2->AreJointsCorrectlyOrdered());
+
+	int n = inSkeleton2->GetJointCount();
+
+	// Copy locked joints to array but don't actually include the first joint (this is physics driven)
+	for (int i = 0; i < n; ++i)
+		if (inLockedTranslations[i])
+		{
+			Locked l;
+			l.mJointIdx = i;
+			l.mParentJointIdx = inSkeleton2->GetJoint(i).mParentJointIndex;
+			if (l.mParentJointIdx >= 0)
+				l.mTranslation = inNeutralPose2[l.mParentJointIdx].Inversed() * inNeutralPose2[i].GetTranslation();
+			else
+				l.mTranslation = inNeutralPose2[i].GetTranslation();
+			mLockedTranslations.push_back(l);
+		}
+}
+
+void SkeletonMapper::LockAllTranslations(const Skeleton *inSkeleton2, const Mat44 *inNeutralPose2)
+{
+	JPH_ASSERT(!mMappings.empty(), "Call Initialize first!");
+	JPH_ASSERT(inSkeleton2->AreJointsCorrectlyOrdered());
+
+	// The first mapping is the top most one (remember that joints should be ordered so that parents go before children).
+	// Because we created the mappings from the lowest joint first, this should contain the first mappable joint.
+	int root_idx = mMappings[0].mJointIdx2;
+
+	// Create temp array to hold locked joints
+	int n = inSkeleton2->GetJointCount();
+	bool *locked_translations = (bool *)JPH_STACK_ALLOC(n * sizeof(bool));
+	memset(locked_translations, 0, n * sizeof(bool));
+
+	// Mark root as locked
+	locked_translations[root_idx] = true;
+
+	// Loop over all joints and propagate the locked flag to all children
+	for (int i = root_idx + 1; i < n; ++i)
+	{
+		int parent_idx = inSkeleton2->GetJoint(i).mParentJointIndex;
+		if (parent_idx >= 0)
+			locked_translations[i] = locked_translations[parent_idx];
+	}
+
+	// Unmark root because we don't actually want to include this (this determines the position of the entire ragdoll)
+	locked_translations[root_idx] = false;
+
+	// Call the generic function
+	LockTranslations(inSkeleton2, locked_translations, inNeutralPose2);
+}
+
 void SkeletonMapper::Map(const Mat44 *inPose1ModelSpace, const Mat44 *inPose2LocalSpace, Mat44 *outPose2ModelSpace) const
 {
 	// Apply direct mappings
@@ -143,6 +196,10 @@ void SkeletonMapper::Map(const Mat44 *inPose1ModelSpace, const Mat44 *inPose2Loc
 		}
 		else
 			outPose2ModelSpace[u.mJointIdx] = inPose2LocalSpace[u.mJointIdx];
+
+	// Update all locked joint translations
+	for (const Locked &l : mLockedTranslations)
+		outPose2ModelSpace[l.mJointIdx].SetTranslation(outPose2ModelSpace[l.mParentJointIdx] * l.mTranslation);
 }
 
 void SkeletonMapper::MapReverse(const Mat44 *inPose2ModelSpace, Mat44 *outPose1ModelSpace) const
