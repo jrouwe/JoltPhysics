@@ -11,6 +11,14 @@
 
 TEST_SUITE("WheeledVehicleTests")
 {
+	enum
+	{
+		FL_WHEEL,
+		FR_WHEEL,
+		BL_WHEEL,
+		BR_WHEEL
+	};
+
 	// Simplified vehicle settings
 	struct VehicleSettings
 	{
@@ -27,6 +35,8 @@ TEST_SUITE("WheeledVehicleTests")
 		float		mSuspensionMaxLength = 0.5f;
 		float		mMaxSteeringAngle = DegreesToRadians(30);
 		bool		mFourWheelDrive = false;
+		float		mFrontBackLimitedSlipRatio = 1.4f;
+		float		mLeftRightLimitedSlipRatio = 1.4f;
 		bool		mAntiRollbar = true;
 	};
 
@@ -47,25 +57,29 @@ TEST_SUITE("WheeledVehicleTests")
 		vehicle.mMaxPitchRollAngle = DegreesToRadians(60.0f);
 
 		// Wheels
-		WheelSettingsWV *w1 = new WheelSettingsWV;
-		w1->mPosition = Vec3(inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, inSettings.mWheelOffsetHorizontal);
-		w1->mMaxSteerAngle = inSettings.mMaxSteeringAngle;
-		w1->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
+		WheelSettingsWV *fl = new WheelSettingsWV;
+		fl->mPosition = Vec3(inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, inSettings.mWheelOffsetHorizontal);
+		fl->mMaxSteerAngle = inSettings.mMaxSteeringAngle;
+		fl->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
-		WheelSettingsWV *w2 = new WheelSettingsWV;
-		w2->mPosition = Vec3(-inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, inSettings.mWheelOffsetHorizontal);
-		w2->mMaxSteerAngle = inSettings.mMaxSteeringAngle;
-		w2->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
+		WheelSettingsWV *fr = new WheelSettingsWV;
+		fr->mPosition = Vec3(-inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, inSettings.mWheelOffsetHorizontal);
+		fr->mMaxSteerAngle = inSettings.mMaxSteeringAngle;
+		fr->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
-		WheelSettingsWV *w3 = new WheelSettingsWV;
-		w3->mPosition = Vec3(inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, -inSettings.mWheelOffsetHorizontal);
-		w3->mMaxSteerAngle = 0.0f;
+		WheelSettingsWV *bl = new WheelSettingsWV;
+		bl->mPosition = Vec3(inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, -inSettings.mWheelOffsetHorizontal);
+		bl->mMaxSteerAngle = 0.0f;
 
-		WheelSettingsWV *w4 = new WheelSettingsWV;
-		w4->mPosition = Vec3(-inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, -inSettings.mWheelOffsetHorizontal);
-		w4->mMaxSteerAngle = 0.0f;
+		WheelSettingsWV *br = new WheelSettingsWV;
+		br->mPosition = Vec3(-inSettings.mHalfVehicleWidth, -inSettings.mWheelOffsetVertical, -inSettings.mWheelOffsetHorizontal);
+		br->mMaxSteerAngle = 0.0f;
 
-		vehicle.mWheels = { w1, w2, w3, w4 };
+		vehicle.mWheels.resize(4);
+		vehicle.mWheels[FL_WHEEL] = fl;
+		vehicle.mWheels[FR_WHEEL] = fr;
+		vehicle.mWheels[BL_WHEEL] = bl;
+		vehicle.mWheels[BR_WHEEL] = br;
 	
 		for (WheelSettings *w : vehicle.mWheels)
 		{
@@ -80,12 +94,15 @@ TEST_SUITE("WheeledVehicleTests")
 
 		// Differential
 		controller->mDifferentials.resize(inSettings.mFourWheelDrive? 2 : 1);
-		controller->mDifferentials[0].mLeftWheel = 0;
-		controller->mDifferentials[0].mRightWheel = 1;
+		controller->mDifferentials[0].mLeftWheel = FL_WHEEL;
+		controller->mDifferentials[0].mRightWheel = FR_WHEEL;
+		controller->mDifferentials[0].mLimitedSlipRatio = inSettings.mLeftRightLimitedSlipRatio;
+		controller->mDifferentialLimitedSlipRatio = inSettings.mFrontBackLimitedSlipRatio;
 		if (inSettings.mFourWheelDrive)
 		{
-			controller->mDifferentials[1].mLeftWheel = 2;
-			controller->mDifferentials[1].mRightWheel = 3;
+			controller->mDifferentials[1].mLeftWheel = BL_WHEEL;
+			controller->mDifferentials[1].mRightWheel = BR_WHEEL;
+			controller->mDifferentials[1].mLimitedSlipRatio = inSettings.mLeftRightLimitedSlipRatio;
 
 			// Split engine torque
 			controller->mDifferentials[0].mEngineTorqueRatio = controller->mDifferentials[1].mEngineTorqueRatio = 0.5f;
@@ -95,10 +112,10 @@ TEST_SUITE("WheeledVehicleTests")
 		if (inSettings.mAntiRollbar)
 		{
 			vehicle.mAntiRollBars.resize(2);
-			vehicle.mAntiRollBars[0].mLeftWheel = 0;
-			vehicle.mAntiRollBars[0].mRightWheel = 1;
-			vehicle.mAntiRollBars[1].mLeftWheel = 2;
-			vehicle.mAntiRollBars[1].mRightWheel = 3;
+			vehicle.mAntiRollBars[0].mLeftWheel = FL_WHEEL;
+			vehicle.mAntiRollBars[0].mRightWheel = FR_WHEEL;
+			vehicle.mAntiRollBars[1].mLeftWheel = BL_WHEEL;
+			vehicle.mAntiRollBars[1].mRightWheel = BR_WHEEL;
 		}
 
 		// Create the constraint
@@ -233,5 +250,89 @@ TEST_SUITE("WheeledVehicleTests")
 		omega = body->GetAngularVelocity();
 		CHECK(omega.GetY() > 0.4f); // Rotating left
 		CHECK(controller->GetTransmission().GetCurrentGear() > 0);
+	}
+
+	TEST_CASE("TestLSDifferential")
+	{
+		struct Test
+		{
+			Vec3	mBlockPosition;		// Location of the box under the vehicle
+			bool	mFourWheelDrive;	// 4WD or not
+			float	mFBLSRatio;			// Limited slip ratio front-back
+			float	mLRLSRatio;			// Limited slip ratio left-right
+			bool	mFLHasContactPre;	// Which wheels should be in contact with the ground prior to the test
+			bool	mFRHasContactPre;
+			bool	mBLHasContactPre;
+			bool	mBRHasContactPre;
+			bool	mShouldMove;		// If the vehicle should be able to drive off the block
+		};
+
+		Test tests[] = {
+			// Block Position,		4WD,	FBSlip,		LRSlip		FLPre,	FRPre,	BLPre,	BRPre,	ShouldMove
+			{ Vec3(1, 0.5f, 0),		true,	FLT_MAX,	FLT_MAX,	false,	true,	false,	true,	false	},		// Block left, no limited slip -> vehicle can't move
+			{ Vec3(1, 0.5f, 0),		true,	1.4f,		FLT_MAX,	false,	true,	false,	true,	false	},		// Block left, only FB limited slip -> vehicle can't move
+			{ Vec3(1, 0.5f, 0),		true,	1.4f,		1.4f,		false,	true,	false,	true,	true	},		// Block left, limited slip -> vehicle drives off
+			{ Vec3(-1, 0.5f, 0),	true,	FLT_MAX,	FLT_MAX,	true,	false,	true,	false,	false	},		// Block right, no limited slip -> vehicle can't move
+			{ Vec3(-1, 0.5f, 0),	true,	1.4f,		FLT_MAX,	true,	false,	true,	false,	false	},		// Block right, only FB limited slip -> vehicle can't move
+			{ Vec3(-1, 0.5f, 0),	true,	1.4f,		1.4f,		true,	false,	true,	false,	true	},		// Block right, limited slip -> vehicle drives off
+			{ Vec3(0, 0.5f, 1.5f),	true,	FLT_MAX,	FLT_MAX,	false,	false,	true,	true,	false	},		// Block front, no limited slip -> vehicle can't move
+			{ Vec3(0, 0.5f, 1.5f),	true,	1.4f,		FLT_MAX,	false,	false,	true,	true,	true	},		// Block front, only FB limited slip -> vehicle drives off
+			{ Vec3(0, 0.5f, 1.5f),	true,	1.4f,		1.4f,		false,	false,	true,	true,	true	},		// Block front, limited slip -> vehicle drives off
+			{ Vec3(0, 0.5f, 1.5f),	false,	1.4f,		1.4f,		false,	false,	true,	true,	false	},		// Block front, limited slip, 2WD -> vehicle can't move
+			{ Vec3(0, 0.5f, -1.5f),	true,	FLT_MAX,	FLT_MAX,	true,	true,	false,	false,	false	},		// Block back, no limited slip -> vehicle can't move
+			{ Vec3(0, 0.5f, -1.5f),	true,	1.4f,		FLT_MAX,	true,	true,	false,	false,	true	},		// Block back, only FB limited slip -> vehicle drives off
+			{ Vec3(0, 0.5f, -1.5f),	true,	1.4f,		1.4f,		true,	true,	false,	false,	true	},		// Block back, limited slip -> vehicle drives off
+			{ Vec3(0, 0.5f, -1.5f),	false,	1.4f,		1.4f,		true,	true,	false,	false,	true	},		// Block back, limited slip, 2WD -> vehicle drives off
+		};
+
+		for (Test &t : tests)
+		{
+			PhysicsTestContext c;
+			BodyID floor_id = c.CreateFloor().GetID();
+
+			// Box under left side of the vehicle, left wheels won't be touching the ground
+			Body &box = c.CreateBox(t.mBlockPosition, Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3::sReplicate(0.5f));
+			box.SetFriction(1.0f);
+
+			// Create vehicle
+			VehicleSettings settings;
+			settings.mFourWheelDrive = t.mFourWheelDrive;
+			settings.mFrontBackLimitedSlipRatio = t.mFBLSRatio;
+			settings.mLeftRightLimitedSlipRatio = t.mLRLSRatio;
+
+			VehicleConstraint *constraint = AddVehicle(c, settings);
+			Body *body = constraint->GetVehicleBody();
+			WheeledVehicleController *controller = static_cast<WheeledVehicleController *>(constraint->GetController());
+
+			// Simulate till vehicle rests on block
+			bool vehicle_on_floor = false;
+			for (float time = 0; time < 2.0f; time += c.GetDeltaTime())
+			{
+				c.SimulateSingleStep();
+
+				// Check pre condition
+				if ((constraint->GetWheel(FL_WHEEL)->GetContactBodyID() == (t.mFLHasContactPre? floor_id : BodyID()))
+					&& (constraint->GetWheel(FR_WHEEL)->GetContactBodyID() == (t.mFRHasContactPre? floor_id : BodyID()))
+					&& (constraint->GetWheel(BL_WHEEL)->GetContactBodyID() == (t.mBLHasContactPre? floor_id : BodyID()))
+					&& (constraint->GetWheel(BR_WHEEL)->GetContactBodyID() == (t.mBRHasContactPre? floor_id : BodyID())))
+				{
+					vehicle_on_floor = true;
+					break;
+				}
+			}
+			CHECK(vehicle_on_floor);
+			CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0.0f, 0.02f);
+
+			// Start driving
+			controller->SetDriverInput(1.0f, 0, 0, 0);
+			c.GetBodyInterface().ActivateBody(body->GetID());
+			c.Simulate(1.0f);
+
+			// Check if vehicle had traction
+			if (t.mShouldMove)
+				CHECK(body->GetPosition().GetZ() > 0.5f);
+			else
+				CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0.0f, 0.05f);
+		}
 	}
 }
