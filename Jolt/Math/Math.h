@@ -108,7 +108,15 @@ inline uint CountTrailingZeros(uint32 inValue)
 		return __builtin_ctz(inValue);
 	#endif
 #elif defined(JPH_CPU_ARM64)
-	return __builtin_clz(__builtin_bitreverse32(inValue));
+	#if defined(JPH_COMPILER_MSVC)
+		if (inValue == 0)
+			return 32;
+		unsigned long result;
+		_BitScanForward(&result, inValue);
+		return result;
+	#else
+		return __builtin_clz(__builtin_bitreverse32(inValue));
+	#endif
 #else
 	#error Undefined
 #endif
@@ -132,7 +140,15 @@ inline uint CountLeadingZeros(uint32 inValue)
 		return __builtin_clz(inValue);
 	#endif
 #elif defined(JPH_CPU_ARM64)
-	return __builtin_clz(inValue);
+	#if defined(JPH_COMPILER_MSVC)
+		if (inValue == 0)
+			return 32;
+		unsigned long result;
+		_BitScanReverse(&result, inValue);
+		return 31 - result;
+	#else
+		return __builtin_clz(inValue);
+	#endif
 #else
 	#error Undefined
 #endif

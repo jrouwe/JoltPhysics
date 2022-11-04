@@ -40,21 +40,25 @@ class FPControlWord : public NonCopyable
 public:
 				FPControlWord()
 	{
+#ifndef JPH_COMPILER_MSVC // TODO
 		uint64 val;
 	    asm volatile("mrs %0, fpcr" : "=r" (val));
 		mPrevState = val;
 		val &= ~Mask;
 		val |= Value;
 	    asm volatile("msr fpcr, %0" : /* no output */ : "r" (val));
+#endif
 	}
 
 				~FPControlWord()
 	{
+#ifndef JPH_COMPILER_MSVC // TODO
 		uint64 val;
 		asm volatile("mrs %0, fpcr" : "=r" (val));
 		val &= ~Mask;
 		val |= mPrevState & Mask;
 		asm volatile("msr fpcr, %0" : /* no output */ : "r" (val));
+#endif
 	}
 
 private:

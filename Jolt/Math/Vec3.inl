@@ -28,7 +28,7 @@ JPH_INLINE Vec3::Type Vec3::sFixW(Type inValue)
 	#if defined(JPH_USE_SSE)
 		return _mm_shuffle_ps(inValue, inValue, _MM_SHUFFLE(2, 2, 1, 0)); 
 	#elif defined(JPH_USE_NEON)
-		return __builtin_shufflevector(inValue, inValue, 0, 1, 2, 2);
+		return JPH_NEON_SHUFFLE_F32x4(inValue, inValue, 0, 1, 2, 2);
 	#else
 		Type value;
 		value.mData[0] = inValue.mData[0];
@@ -97,7 +97,7 @@ Vec3 Vec3::Swizzle() const
 #if defined(JPH_USE_SSE)
 	return _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(SwizzleZ, SwizzleZ, SwizzleY, SwizzleX)); // Assure Z and W are the same
 #elif defined(JPH_USE_NEON)
-	return __builtin_shufflevector(mValue, mValue, SwizzleX, SwizzleY, SwizzleZ, SwizzleZ);
+	return JPH_NEON_SHUFFLE_F32x4(mValue, mValue, SwizzleX, SwizzleY, SwizzleZ, SwizzleZ);
 #else
 	return Vec3(mF32[SwizzleX], mF32[SwizzleY], mF32[SwizzleZ]);
 #endif
@@ -588,12 +588,12 @@ Vec3 Vec3::Cross(Vec3Arg inV2) const
     Type t3 = _mm_sub_ps(t1, t2);
     return _mm_shuffle_ps(t3, t3, _MM_SHUFFLE(0, 0, 2, 1)); // Assure Z and W are the same
 #elif defined(JPH_USE_NEON)
-	Type t1 = __builtin_shufflevector(inV2.mValue, inV2.mValue, 1, 2, 0, 0); // Assure Z and W are the same
+	Type t1 = JPH_NEON_SHUFFLE_F32x4(inV2.mValue, inV2.mValue, 1, 2, 0, 0); // Assure Z and W are the same
     t1 = vmulq_f32(t1, mValue);
-    Type t2 = __builtin_shufflevector(mValue, mValue, 1, 2, 0, 0); // Assure Z and W are the same
+    Type t2 = JPH_NEON_SHUFFLE_F32x4(mValue, mValue, 1, 2, 0, 0); // Assure Z and W are the same
     t2 = vmulq_f32(t2, inV2.mValue);
     Type t3 = vsubq_f32(t1, t2);
-    return __builtin_shufflevector(t3, t3, 1, 2, 0, 0); // Assure Z and W are the same
+    return JPH_NEON_SHUFFLE_F32x4(t3, t3, 1, 2, 0, 0); // Assure Z and W are the same
 #else
 	return Vec3(mF32[1] * inV2.mF32[2] - mF32[2] * inV2.mF32[1],
 				mF32[2] * inV2.mF32[0] - mF32[0] * inV2.mF32[2],
@@ -745,7 +745,7 @@ bool Vec3::IsNaN() const
 #elif defined(JPH_USE_SSE)
 	return (_mm_movemask_ps(_mm_cmpunord_ps(mValue, mValue)) & 0x7) != 0;
 #elif defined(JPH_USE_NEON)
-	uint32x4_t mask = { 1, 1, 1, 0 };
+	uint32x4_t mask = JPH_NEON_UINT32x4(1, 1, 1, 0);
 	uint32x4_t is_equal = vceqq_f32(mValue, mValue); // If a number is not equal to itself it's a NaN
 	return vaddvq_u32(vandq_u32(is_equal, mask)) != 3;
 #else

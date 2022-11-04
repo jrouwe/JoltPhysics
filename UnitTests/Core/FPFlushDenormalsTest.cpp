@@ -5,8 +5,8 @@
 #include <Jolt/Core/FPFlushDenormals.h>
 
 // Implemented as a global so the compiler can't optimize it to a constant
-extern volatile float TestFltMin;
-volatile float TestFltMin = FLT_MIN;
+extern float TestFltMin;
+float TestFltMin = FLT_MIN;
 
 TEST_SUITE("FlushDenormalsTests")
 {

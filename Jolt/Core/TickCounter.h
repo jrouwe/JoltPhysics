@@ -27,9 +27,13 @@ JPH_INLINE uint64 GetProcessorTickCount()
 #elif defined(JPH_CPU_X86)
 	return __rdtsc();
 #elif defined(JPH_CPU_ARM64)
-	uint64 val;
-    asm volatile("mrs %0, cntvct_el0" : "=r" (val));
-	return val;
+	#ifdef JPH_COMPILER_MSVC
+		return 0; // TODO
+	#else
+		uint64 val;
+		asm volatile("mrs %0, cntvct_el0" : "=r" (val));
+		return val;
+	#endif
 #elif defined(JPH_CPU_WASM)
 	return 0; // Not supported
 #else
