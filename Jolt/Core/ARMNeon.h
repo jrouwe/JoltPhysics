@@ -3,7 +3,7 @@
 
 #pragma once
 
-#ifdef JPH_CPU_ARM64
+#ifdef JPH_USE_NEON
 
 #ifdef JPH_COMPILER_MSVC
 	JPH_NAMESPACE_BEGIN
@@ -36,4 +36,4 @@
 	#define JPH_NEON_INT8x16(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16) { v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16 }
 #endif
 
-#endif // JPH_CPU_ARM64
+#endif // JPH_USE_NEON
