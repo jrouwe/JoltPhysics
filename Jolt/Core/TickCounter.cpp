@@ -24,7 +24,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-#ifdef JPH_PLATFORM_WINDOWS_UWP
+#if defined(JPH_PLATFORM_WINDOWS_UWP) || (defined(JPH_PLATFORM_WINDOWS) && defined(JPH_CPU_ARM64))
 
 uint64 GetProcessorTickCount()
 {
@@ -33,7 +33,7 @@ uint64 GetProcessorTickCount()
 	return uint64(count.QuadPart);
 }
 
-#endif // JPH_PLATFORM_WINDOWS_UWP
+#endif // JPH_PLATFORM_WINDOWS_UWP || (JPH_PLATFORM_WINDOWS && JPH_CPU_ARM64)
 
 static const uint64 sProcessorTicksPerSecond = []() {
 #if defined(JPH_PLATFORM_WINDOWS_UWP)
