@@ -387,7 +387,8 @@ bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime)
 	impulse |= mController->SolveLongitudinalAndLateralConstraints(inDeltaTime);
 
 	// Apply the pitch / roll constraint to avoid the vehicle from toppling over
-	impulse |= mPitchRollPart.SolveVelocityConstraint(*mBody, Body::sFixedToWorld, mPitchRollRotationAxis, 0, FLT_MAX);
+	if (mPitchRollPart.IsActive())
+		impulse |= mPitchRollPart.SolveVelocityConstraint(*mBody, Body::sFixedToWorld, mPitchRollRotationAxis, 0, FLT_MAX);
 
 	return impulse;
 }
