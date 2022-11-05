@@ -122,8 +122,8 @@ public:
 	}
 	
 private:
-	float						mBias;
-	float						mSoftness;
+	float						mBias  = 0.0f;
+	float						mSoftness  = 0.0f;
 };
 
 JPH_NAMESPACE_END
