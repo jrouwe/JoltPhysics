@@ -5,6 +5,7 @@
 #include "PhysicsTestContext.h"
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 #include "Layers.h"
 
@@ -303,6 +304,98 @@ TEST_SUITE("CharacterVirtualTests")
 
 			// Check that we travelled the right amount
 			CHECK_APPROX_EQUAL(translation, expected_translation, 1.0e-4f);
+		}
+	}
+
+	TEST_CASE("TestWalkStairs")
+	{
+		const float cStepHeight = 0.3f;
+		const int cNumSteps = 10;
+
+		// Create stairs from triangles
+		TriangleList triangles;
+		for (int i = 0; i < cNumSteps; ++i)
+		{
+			// Start of step
+			Vec3 base(0, cStepHeight * i, cStepHeight * i);
+
+			// Left side
+			Vec3 b1 = base + Vec3(2.0f, 0, 0);
+			Vec3 s1 = b1 + Vec3(0, cStepHeight, 0);
+			Vec3 p1 = s1 + Vec3(0, 0, cStepHeight);
+
+			// Right side
+			Vec3 width(-4.0f, 0, 0);
+			Vec3 b2 = b1 + width;
+			Vec3 s2 = s1 + width;
+			Vec3 p2 = p1 + width;
+
+			triangles.push_back(Triangle(s1, b1, s2));
+			triangles.push_back(Triangle(b1, b2, s2));
+			triangles.push_back(Triangle(s1, p2, p1));
+			triangles.push_back(Triangle(s1, s2, p2));
+		}
+
+		MeshShapeSettings mesh(triangles);
+		mesh.SetEmbedded();
+		BodyCreationSettings mesh_stairs(&mesh, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+
+		// Stair stepping is very delta time sensitive, so test various update frequencies
+		float frequencies[] = { 60.0f, 120.0f, 240.0f, 360.0f };
+		for (float frequency : frequencies)
+		{
+			float time_step = 1.0f / frequency;
+
+			PhysicsTestContext c(time_step);
+			c.CreateFloor();
+			c.GetBodyInterface().CreateAndAddBody(mesh_stairs, EActivation::DontActivate);
+
+			// Create character so that it is touching the slope
+			Character character(c);
+			character.mInitialPosition = Vec3(0, 0, -2.0f); // Start in front of the stairs
+			character.mUpdateSettings.mWalkStairsStepUp = Vec3::sZero(); // No stair walking
+			character.Create();
+
+			// Start moving towards the stairs
+			character.mHorizontalSpeed = Vec3(0, 0, 4.0f);
+			character.Simulate(1.0f);
+
+			// We should have gotten stuck at the start of the stairs (can't move up)
+			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), Vec3(0, 0, -radius_and_padding), 1.0e-2f);
+
+			// Enable stair walking
+			character.mUpdateSettings.mWalkStairsStepUp = Vec3(0, 0.4f, 0);
+
+			// Calculate time it should take to move up the stairs at constant speed
+			float movement_time = (cNumSteps * cStepHeight + radius_and_padding) / character.mHorizontalSpeed.GetZ();
+			int max_steps = int(1.5f * round(movement_time / time_step)); // In practise there is a bit of slowdown while stair stepping, so add a bit of slack
+
+			// Step until we reach the top of the stairs
+			Vec3 last_position = character.mCharacter->GetPosition();
+			bool reached_goal = false;
+			for (int i = 0; i < max_steps; ++i)
+			{
+				character.Step();
+
+				// We should always be on the floor during stair stepping
+				CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+
+				// Check position progression
+				Vec3 position = character.mCharacter->GetPosition();
+				CHECK_APPROX_EQUAL(position.GetX(), 0.0f); // No movement in X
+				CHECK(position.GetZ() > last_position.GetZ()); // Always moving forward
+				CHECK(position.GetZ() < cNumSteps * cStepHeight); // No movement beyond stairs
+				if (position.GetY() > cNumSteps * cStepHeight - 1.0e-3f)
+				{
+					reached_goal = true;
+					break;
+				}
+
+				last_position = position;
+			}
+			CHECK(reached_goal);
 		}
 	}
 }
