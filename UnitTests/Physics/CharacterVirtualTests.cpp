@@ -65,7 +65,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Update character velocity
 			mCharacter->SetLinearVelocity(new_velocity);
 
-			Vec3 old_pos = mCharacter->GetPosition();
+			Vec3 start_pos = mCharacter->GetPosition();
 
 			// Update the character position
 			TempAllocatorMalloc allocator;
@@ -77,7 +77,8 @@ TEST_SUITE("CharacterVirtualTests")
 				{ },
 				allocator);
 
-			mEffectiveVelocity = (mCharacter->GetPosition() - old_pos) / delta_time;
+			// Calculate effective velocity in this step
+			mEffectiveVelocity = (mCharacter->GetPosition() - start_pos) / delta_time;
 		}
 
 		// Simulate a longer period of time
@@ -105,27 +106,10 @@ TEST_SUITE("CharacterVirtualTests")
 		// Calculated effective velocity after a step
 		Vec3					mEffectiveVelocity = Vec3::sZero();
 
-		// Information on callbacks triggered
-		uint					mNumContactValidate = 0;
-		uint					mNumContactAdded = 0;
-		uint					mNumContactSolve = 0;
-
 	private:
-		virtual bool			OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2)
-		{
-			++mNumContactValidate;
-			return true;
-		}
-
-		virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
-		{
-			++mNumContactAdded;
-		}
-
+		// CharacterContactListener callback
 		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)
 		{
-			++mNumContactSolve;
-
 			// Don't allow sliding if the character doesn't want to move
 			if (mHorizontalSpeed.IsNearZero() && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))
 				ioNewCharacterVelocity = Vec3::sZero();
