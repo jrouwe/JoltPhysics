@@ -53,7 +53,7 @@ Vec4 Vec4::Swizzle() const
 #if defined(JPH_USE_SSE)
 	return _mm_shuffle_ps(mValue, mValue, _MM_SHUFFLE(SwizzleW, SwizzleZ, SwizzleY, SwizzleX));
 #elif defined(JPH_USE_NEON)
-	return __builtin_shufflevector(mValue, mValue, SwizzleX, SwizzleY, SwizzleZ, SwizzleW);
+	return JPH_NEON_SHUFFLE_F32x4(mValue, mValue, SwizzleX, SwizzleY, SwizzleZ, SwizzleW);
 #else
 	return Vec4(mF32[SwizzleX], mF32[SwizzleY], mF32[SwizzleZ], mF32[SwizzleW]);
 #endif
@@ -747,7 +747,7 @@ int Vec4::GetSignBits() const
 #if defined(JPH_USE_SSE)
 	return _mm_movemask_ps(mValue);
 #elif defined(JPH_USE_NEON)
-    int32x4_t shift = { 0, 1, 2, 3 };
+    int32x4_t shift = JPH_NEON_INT32x4(0, 1, 2, 3);
     return vaddvq_u32(vshlq_u32(vshrq_n_u32(vreinterpretq_u32_f32(mValue), 31), shift));
 #else
 	return (signbit(mF32[0])? 1 : 0) | (signbit(mF32[1])? 2 : 0) | (signbit(mF32[2])? 4 : 0) | (signbit(mF32[3])? 8 : 0);

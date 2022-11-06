@@ -13,6 +13,10 @@ JPH_NAMESPACE_BEGIN
 /// This can make floating point operations much faster when working with very small numbers
 class FPFlushDenormals : public FPControlWord<_MM_FLUSH_ZERO_ON, _MM_FLUSH_ZERO_MASK> { };
 
+#elif defined(JPH_USE_NEON) && defined(JPH_COMPILER_MSVC)
+
+class FPFlushDenormals : public FPControlWord<_DN_FLUSH, _MCW_DN> { };
+
 #elif defined(JPH_USE_NEON)
 
 /// Flush denormals to zero bit

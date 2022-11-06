@@ -3,10 +3,11 @@
 
 #include "UnitTestFramework.h"
 #include <Jolt/Core/FPFlushDenormals.h>
+#include <atomic>
 
-// Implemented as a global so the compiler can't optimize it to a constant
-extern volatile float TestFltMin;
-volatile float TestFltMin = FLT_MIN;
+// Implemented as a global atomic so the compiler can't optimize it to a constant
+extern atomic<float> TestFltMin;
+atomic<float> TestFltMin = FLT_MIN;
 
 TEST_SUITE("FlushDenormalsTests")
 {

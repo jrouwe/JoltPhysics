@@ -81,7 +81,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 ## Supported Platforms
 
-* Windows (VS2019, VS2022) x64/x86 (Desktop/UWP)
+* Windows (VS2019, VS2022) x64/x86/ARM64 (Desktop/UWP)
 * Linux (tested on Ubuntu 20.04) x64/ARM64
 * Android (tested on Android 10) x64/ARM64
 * Platform Blue (a popular game console) x64
