@@ -246,7 +246,12 @@ JPH_SUPPRESS_WARNINGS_STD_END
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)
-	#include <arm_neon.h>
+	#ifdef JPH_COMPILER_MSVC
+		#include <intrin.h>
+		#include <arm64_neon.h>
+	#else
+		#include <arm_neon.h>
+	#endif
 #endif
 
 JPH_NAMESPACE_BEGIN
