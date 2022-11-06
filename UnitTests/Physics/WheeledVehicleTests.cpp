@@ -177,7 +177,7 @@ TEST_SUITE("WheeledVehicleTests")
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone sleeping
 		Vec3 pos3 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos3.GetX(), 0, 1.0e-3f); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos3.GetX(), 0, 2.0e-3f); // Not moving left/right
 		CHECK(pos3.GetZ() > pos2.GetZ() + 1.0f); // Moving in Z direction while braking
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel, Vec3::sZero(), 1.0e-3f); // Not moving

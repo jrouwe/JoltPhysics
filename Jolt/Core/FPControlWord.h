@@ -34,17 +34,23 @@ private:
 
 /// Helper class that needs to be put on the stack to update the state of the floating point control word.
 /// This state is kept per thread.
-template <uint64 Value, uint64 Mask>
+template <unsigned int Value, unsigned int Mask>
 class FPControlWord : public NonCopyable
 {
 public:
 				FPControlWord()
 	{
-		_controlfp_s(&mPrevState, Value, Mask);
+		// Read state before change
+		_controlfp_s(&mPrevState, 0, 0);
+
+		// Update the state
+		unsigned int dummy;
+		_controlfp_s(&dummy, Value, Mask);
 	}
 
 				~FPControlWord()
 	{
+		// Restore state
 		unsigned int dummy;
 		_controlfp_s(&dummy, mPrevState, Mask);
 	}

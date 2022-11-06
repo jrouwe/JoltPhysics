@@ -290,7 +290,7 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(body->GetWorldTransform(), body_transform);
 		CHECK_APPROX_EQUAL(body->GetCenterOfMassPosition(), com_transform.GetTranslation());
 		CHECK_APPROX_EQUAL(body->GetCenterOfMassTransform(), com_transform);
-		CHECK_APPROX_EQUAL(body->GetInverseCenterOfMassTransform(), com_transform.InversedRotationTranslation());
+		CHECK_APPROX_EQUAL(body->GetInverseCenterOfMassTransform(), com_transform.InversedRotationTranslation(), 1.0e-5f);
 	}
 
 	TEST_CASE("TestPhysicsOverrideMassAndInertia")

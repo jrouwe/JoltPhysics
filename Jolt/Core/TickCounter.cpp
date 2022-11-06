@@ -36,7 +36,7 @@ uint64 GetProcessorTickCount()
 #endif // JPH_PLATFORM_WINDOWS_UWP || (JPH_PLATFORM_WINDOWS && JPH_CPU_ARM64)
 
 static const uint64 sProcessorTicksPerSecond = []() {
-#if defined(JPH_PLATFORM_WINDOWS_UWP)
+#if defined(JPH_PLATFORM_WINDOWS_UWP) || (defined(JPH_PLATFORM_WINDOWS) && defined(JPH_CPU_ARM64))
 	LARGE_INTEGER frequency { };
 	QueryPerformanceFrequency(&frequency);
 	return uint64(frequency.QuadPart);
