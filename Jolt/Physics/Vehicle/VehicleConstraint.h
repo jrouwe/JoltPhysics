@@ -99,6 +99,9 @@ public:
 	/// Get the state of a wheels (writable interface, allows you to make changes to the configuration which will take effect the next time step)
 	Wheels &					GetWheels()									{ return mWheels; }
 
+	/// Get the state of a wheel
+	Wheel *						GetWheel(uint inIdx)						{ return mWheels[inIdx]; }
+
 	/// Get the transform of a wheel in local space to the vehicle body, returns a matrix that transforms a cylinder aligned with the Y axis in body space (not COM space)
 	/// @param inWheelIndex Index of the wheel to fetch
 	/// @param inWheelRight Unit vector that indicates right in model space of the wheel (so if you only have 1 wheel model, you probably want to specify the opposite direction for the left and right wheels)
