@@ -10,7 +10,7 @@
 
 TEST_SUITE("CharacterVirtualTests")
 {
-	class Character
+	class Character : public CharacterContactListener
 	{
 	public:
 		// Construct
@@ -19,15 +19,16 @@ TEST_SUITE("CharacterVirtualTests")
 		// Create the character
 		void					Create()
 		{
+			// Create capsule
 			Ref<Shape> capsule = new CapsuleShape(0.5f * mHeightStanding, mRadiusStanding);
-			Ref<Shape> offset_capsule = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * mHeightStanding + mRadiusStanding, 0), Quat::sIdentity(), capsule).Create().Get();
+			mCharacterSettings.mShape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * mHeightStanding + mRadiusStanding, 0), Quat::sIdentity(), capsule).Create().Get();
 
-			CharacterVirtualSettings settings;
-			settings.mMaxSlopeAngle = mMaxSlopeAngle;
-			settings.mShape = offset_capsule;
-			settings.mSupportingVolume = Plane(Vec3::sAxisY(), -mHeightStanding); // Accept contacts that touch the lower sphere of the capsule
+			// Configure supporting volume
+			mCharacterSettings.mSupportingVolume = Plane(Vec3::sAxisY(), -mHeightStanding); // Accept contacts that touch the lower sphere of the capsule
 
-			mCharacter = new CharacterVirtual(&settings, mInitialPosition, Quat::sIdentity(), mContext.GetSystem());
+			// Create character
+			mCharacter = new CharacterVirtual(&mCharacterSettings, mInitialPosition, Quat::sIdentity(), mContext.GetSystem());
+			mCharacter->SetListener(this);
 		}
 
 		// Step the character and the world
@@ -82,8 +83,8 @@ TEST_SUITE("CharacterVirtualTests")
 		// Simulate a longer period of time
 		void					Simulate(float inTime)
 		{
-			float step = mContext.GetDeltaTime();
-			for (float t = 0.0f; t < inTime; t += step)
+			int num_steps = (int)round(inTime / mContext.GetDeltaTime());
+			for (int step = 0; step < num_steps; ++step)
 				Step();
 		}
 
@@ -91,7 +92,7 @@ TEST_SUITE("CharacterVirtualTests")
 		Vec3					mInitialPosition = Vec3::sZero();
 		float					mHeightStanding = 1.35f;
 		float					mRadiusStanding = 0.3f;
-		float					mMaxSlopeAngle = DegreesToRadians(50.0f);
+		CharacterVirtualSettings mCharacterSettings;
 		CharacterVirtual::ExtendedUpdateSettings mUpdateSettings;
 
 		// Character movement settings (update to control the movement of the character)
@@ -104,7 +105,32 @@ TEST_SUITE("CharacterVirtualTests")
 		// Calculated effective velocity after a step
 		Vec3					mEffectiveVelocity = Vec3::sZero();
 
+		// Information on callbacks triggered
+		uint					mNumContactValidate = 0;
+		uint					mNumContactAdded = 0;
+		uint					mNumContactSolve = 0;
+
 	private:
+		virtual bool			OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2)
+		{
+			++mNumContactValidate;
+			return true;
+		}
+
+		virtual void			OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+		{
+			++mNumContactAdded;
+		}
+
+		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)
+		{
+			++mNumContactSolve;
+
+			// Don't allow sliding if the character doesn't want to move
+			if (mHorizontalSpeed.IsNearZero() && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))
+				ioNewCharacterVelocity = Vec3::sZero();
+		}
+
 		PhysicsTestContext &	mContext;
 	};
 
@@ -142,5 +168,86 @@ TEST_SUITE("CharacterVirtualTests")
 		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), Vec3::sZero());
 		CHECK_APPROX_EQUAL(character.mEffectiveVelocity, Vec3::sZero());
+	}
+
+	TEST_CASE("TestMovingOnSlope")
+	{
+		constexpr float cFloorHalfHeight = 1.0f;
+		constexpr float cMovementTime = 1.5f;
+
+		// Iterate various slope angles
+		for (float slope_angle = DegreesToRadians(5.0f); slope_angle < DegreesToRadians(85.0f); slope_angle += DegreesToRadians(10.0f))
+		{
+			// Create sloped floor
+			PhysicsTestContext c;
+			Quat slope_rotation = Quat::sRotation(Vec3::sAxisZ(), slope_angle);
+			c.CreateBox(Vec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
+
+			// Create character so that it is touching the slope
+			Character character(c);
+			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
+			character.mInitialPosition = Vec3(0, (radius_and_padding + cFloorHalfHeight) / Cos(slope_angle) - radius_and_padding, 0);
+			character.Create();
+
+			// Determine if the slope is too steep for the character
+			bool too_steep = slope_angle > character.mCharacterSettings.mMaxSlopeAngle;
+			CharacterBase::EGroundState expected_ground_state = (too_steep? CharacterBase::EGroundState::OnSteepGround : CharacterBase::EGroundState::OnGround);
+
+			Vec3 gravity = c.GetSystem()->GetGravity();
+			float time_step = c.GetDeltaTime();
+			Vec3 slope_normal = slope_rotation.RotateAxisY();
+
+			// Calculate expected position after 1 time step
+			Vec3 position_after_1_step = character.mInitialPosition;
+			if (too_steep)
+			{
+				// Apply 1 frame of gravity and cancel movement in the slope normal direction
+				Vec3 velocity = gravity * time_step;
+				velocity -= velocity.Dot(slope_normal) * slope_normal;
+				position_after_1_step += velocity * time_step;
+			}
+
+			// After 1 step we should be on the slope
+			character.Step();
+			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), position_after_1_step);
+
+			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
+			character.mCharacter->SetLinearVelocity(Vec3::sZero());
+
+			// Start moving in X direction
+			character.mHorizontalSpeed = Vec3(2.0f, 0, 0);
+			character.Simulate(cMovementTime);
+			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
+
+			// Calculate resulting translation
+			Vec3 translation = character.mCharacter->GetPosition() - character.mInitialPosition;
+
+			// Calculate expected translation
+			Vec3 expected_translation;
+			if (too_steep)
+			{
+				// If too steep, we're just falling. Integrate using an Euler integrator.
+				Vec3 velocity = Vec3::sZero();
+				expected_translation = Vec3::sZero();
+				int num_steps = (int)round(cMovementTime / time_step);
+				for (int i = 0; i < num_steps; ++i)
+				{
+					velocity += gravity * time_step;
+					expected_translation += velocity * time_step;
+				}
+			}
+			else
+			{
+				// Every frame we apply 1 delta time * gravity which gets reset on the next update, add this to the horizontal speed
+				expected_translation = (character.mHorizontalSpeed + gravity * time_step) * cMovementTime;
+			}
+
+			// Cancel movement in slope direction
+			expected_translation -= expected_translation.Dot(slope_normal) * slope_normal;
+
+			// Check that we travelled the right amount
+			CHECK_APPROX_EQUAL(translation, expected_translation, 1.0e-2f);
+		}
 	}
 }
