@@ -215,13 +215,15 @@ TEST_SUITE("CharacterVirtualTests")
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
 
+			Vec3 start_pos = character.mCharacter->GetPosition();
+
 			// Start moving in X direction
 			character.mHorizontalSpeed = Vec3(2.0f, 0, 0);
 			character.Simulate(cMovementTime);
 			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
 
 			// Calculate resulting translation
-			Vec3 translation = character.mCharacter->GetPosition() - character.mInitialPosition;
+			Vec3 translation = character.mCharacter->GetPosition() - start_pos;
 
 			// Calculate expected translation
 			Vec3 expected_translation;
@@ -247,7 +249,76 @@ TEST_SUITE("CharacterVirtualTests")
 			expected_translation -= expected_translation.Dot(slope_normal) * slope_normal;
 
 			// Check that we travelled the right amount
-			CHECK_APPROX_EQUAL(translation, expected_translation, 1.0e-2f);
+			CHECK_APPROX_EQUAL(translation, expected_translation, 1.0e-4f);
+		}
+	}
+
+	TEST_CASE("TestStickToFloor")
+	{
+		constexpr float cFloorHalfHeight = 1.0f;
+		constexpr float cSlopeAngle = DegreesToRadians(45.0f);
+		constexpr float cMovementTime = 1.5f;
+
+		for (int mode = 0; mode < 2; ++mode)
+		{
+			// If this run is with 'stick to floor' enabled
+			bool stick_to_floor = mode == 0;
+
+			// Create sloped floor
+			PhysicsTestContext c;
+			Quat slope_rotation = Quat::sRotation(Vec3::sAxisZ(), cSlopeAngle);
+			c.CreateBox(Vec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
+
+			// Create character so that it is touching the slope
+			Character character(c);
+			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
+			character.mInitialPosition = Vec3(0, (radius_and_padding + cFloorHalfHeight) / Cos(cSlopeAngle) - radius_and_padding, 0);
+			character.mUpdateSettings.mStickToFloorStepDown = stick_to_floor? Vec3(0, -0.5f, 0) : Vec3::sZero();
+			character.Create();
+
+			// After 1 step we should be on the slope
+			character.Step();
+			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+
+			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
+			character.mCharacter->SetLinearVelocity(Vec3::sZero());
+
+			Vec3 start_pos = character.mCharacter->GetPosition();
+
+			// Start moving down the slope at a speed high enough so that gravity will not keep us on the floor
+			character.mHorizontalSpeed = Vec3(-10.0f, 0, 0);
+			character.Simulate(cMovementTime);
+			CHECK(character.mCharacter->GetGroundState() == (stick_to_floor? CharacterBase::EGroundState::OnGround : CharacterBase::EGroundState::InAir));
+
+			// Calculate resulting translation
+			Vec3 translation = character.mCharacter->GetPosition() - start_pos;
+
+			// Calculate expected translation
+			Vec3 expected_translation;
+			if (stick_to_floor)
+			{
+				// We should stick to the floor, so the vertical translation follows the slope perfectly
+				expected_translation = character.mHorizontalSpeed * cMovementTime;
+				expected_translation.SetY(expected_translation.GetX() * Tan(cSlopeAngle));
+			}
+			else
+			{
+				Vec3 gravity = c.GetSystem()->GetGravity();
+				float time_step = c.GetDeltaTime();
+
+				// If too steep, we're just falling. Integrate using an Euler integrator.
+				Vec3 velocity = character.mHorizontalSpeed;
+				expected_translation = Vec3::sZero();
+				int num_steps = (int)round(cMovementTime / time_step);
+				for (int i = 0; i < num_steps; ++i)
+				{
+					velocity += gravity * time_step;
+					expected_translation += velocity * time_step;
+				}
+			}
+
+			// Check that we travelled the right amount
+			CHECK_APPROX_EQUAL(translation, expected_translation, 1.0e-4f);
 		}
 	}
 }
