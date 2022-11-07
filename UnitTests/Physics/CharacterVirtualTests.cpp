@@ -398,4 +398,92 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK(reached_goal);
 		}
 	}
+
+	TEST_CASE("TestRotatingPlatform")
+	{
+		constexpr float cFloorHalfHeight = 1.0f;
+		constexpr float cFloorHalfWidth = 10.0f;
+		constexpr float cCharacterPosition = 0.9f * cFloorHalfWidth;
+		constexpr float cAngularVelocity = 2.0f * JPH_PI;
+
+		PhysicsTestContext c;
+
+		// Create box
+		Body &box = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
+		box.SetAllowSleeping(false);
+
+		// Create character so that it is touching the box at the 
+		Character character(c);
+		character.mInitialPosition = Vec3(cCharacterPosition, cFloorHalfHeight, 0);
+		character.Create();
+
+		// Step to ensure the character is on the box
+		character.Step();
+		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+
+		// Set the box to rotate a full circle per second
+		box.SetAngularVelocity(Vec3(0, cAngularVelocity, 0));
+
+		// Rotate and check that character stays on the box
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+
+			// Note that the character moves according to the ground velocity and the ground velocity is updated at the end of the step
+			// so the character is always 1 time step behind the platform. This is why we use t and not t + 1 to calculate the expected position.
+			Vec3 expected_position = Quat::sRotation(Vec3::sAxisY(), float(t) * c.GetDeltaTime() * cAngularVelocity) * character.mInitialPosition;
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-4f);
+		}
+	}
+
+	TEST_CASE("TestMovingPlatformUp")
+	{
+		constexpr float cFloorHalfHeight = 1.0f;
+		constexpr float cFloorHalfWidth = 10.0f;
+		constexpr float cLinearVelocity = 0.5f;
+		
+		PhysicsTestContext c;
+
+		// Create box
+		Body &box = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
+		box.SetAllowSleeping(false);
+
+		// Create character so that it is touching the box at the 
+		Character character(c);
+		character.mInitialPosition = Vec3(0, cFloorHalfHeight, 0);
+		character.Create();
+
+		// Step to ensure the character is on the box
+		character.Step();
+		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+
+		// Set the box to move up
+		box.SetLinearVelocity(Vec3(0, cLinearVelocity, 0));
+
+		// Check that character stays on the box
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+			Vec3 expected_position = box.GetPosition() + character.mInitialPosition;
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-2f);
+		}
+
+		// Stop box
+		box.SetLinearVelocity(Vec3::sZero());
+		character.Simulate(0.5f);
+
+		// Set the box to move down
+		box.SetLinearVelocity(Vec3(0, -cLinearVelocity, 0));
+
+		// Check that character stays on the box
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+			Vec3 expected_position = box.GetPosition() + character.mInitialPosition;
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-2f);
+		}
+	}
 }
