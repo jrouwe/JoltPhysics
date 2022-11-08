@@ -9,7 +9,10 @@
 #include <Application/DebugUI.h>
 #include <Utils/Log.h>
 #include <Layers.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSnapshotTest) 
 { 

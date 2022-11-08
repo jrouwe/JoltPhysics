@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 #include <TestFramework.h>
-#include <fstream>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 // Read file contents
 Array<uint8> ReadData(const char *inFileName)

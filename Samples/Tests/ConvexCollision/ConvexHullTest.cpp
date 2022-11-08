@@ -7,7 +7,10 @@
 #include <Jolt/Geometry/ConvexHullBuilder.h>
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullTest) 
 { 

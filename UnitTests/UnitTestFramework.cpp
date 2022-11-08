@@ -3,7 +3,6 @@
 
 #include <Jolt/Jolt.h>
 
-#include <cstdarg>
 #include <Jolt/Core/FPException.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
@@ -16,13 +15,19 @@
 #include <android_native_app_glue.h>
 #endif // JPH_PLATFORM_ANDROID
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <cstdarg>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 using namespace JPH;
 
 // Emit everything needed for the main function
 #define DOCTEST_CONFIG_IMPLEMENT
 #define DOCTEST_CONFIG_NO_WINDOWS_SEH
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include "doctest.h"
+JPH_SUPPRESS_WARNINGS_STD_END
 
 using namespace doctest;
 

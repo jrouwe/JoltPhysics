@@ -9,7 +9,9 @@
 JPH_SUPPRESS_WARNINGS
 JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include "doctest.h"
+JPH_SUPPRESS_WARNINGS_STD_END
 
 using namespace JPH;
 using namespace std;
