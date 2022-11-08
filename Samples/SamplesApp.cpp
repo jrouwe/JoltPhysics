@@ -39,7 +39,10 @@
 #include <Utils/ShapeCreator.h>
 #include <Utils/CustomMemoryHook.h>
 #include <Renderer/DebugRendererImp.h>
+
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 //-----------------------------------------------------------------------------
 // RTTI definitions

@@ -9,8 +9,10 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Collision/Shape/SubShapeID.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <iomanip>
 #include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 

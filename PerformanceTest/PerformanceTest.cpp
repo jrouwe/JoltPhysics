@@ -18,11 +18,13 @@
 #endif // JPH_DEBUG_RENDERER
 
 // STL includes
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <iostream>
 #include <thread>
 #include <chrono>
 #include <memory>
 #include <cstdarg>
+JPH_SUPPRESS_WARNINGS_STD_END
 
 using namespace JPH;
 using namespace std;
