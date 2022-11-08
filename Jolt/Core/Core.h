@@ -181,7 +181,8 @@
 	JPH_MSVC_SUPPRESS_WARNING(4583) /* 'X': destructor is not implicitly called */				\
 	JPH_MSVC_SUPPRESS_WARNING(4582) /* 'X': constructor is not implicitly called */				\
 	JPH_MSVC_SUPPRESS_WARNING(5219) /* implicit conversion from 'X' to 'Y', possible loss of data  */ \
-	JPH_MSVC_SUPPRESS_WARNING(4826) /* Conversion from 'X *' to 'JPH::uint64' is sign-extended. This may cause unexpected runtime behavior. (32-bit) */
+	JPH_MSVC_SUPPRESS_WARNING(4826) /* Conversion from 'X *' to 'JPH::uint64' is sign-extended. This may cause unexpected runtime behavior. (32-bit) */ \
+	JPH_MSVC_SUPPRESS_WARNING(5264) /* 'X': 'const' variable is not used */
 
 // OS-specific includes
 #if defined(JPH_PLATFORM_WINDOWS)
@@ -225,6 +226,8 @@
 	JPH_MSVC_SUPPRESS_WARNING(4711)																\
 	JPH_MSVC_SUPPRESS_WARNING(4820)																\
 	JPH_MSVC_SUPPRESS_WARNING(4514)																\
+	JPH_MSVC_SUPPRESS_WARNING(5262)																\
+	JPH_MSVC_SUPPRESS_WARNING(5264)																\
 																								\
 	JPH_GCC_SUPPRESS_WARNING("-Wstringop-overflow=")
 
