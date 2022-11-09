@@ -53,7 +53,13 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	endif()
 
 	# Set general compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17 /Zc:__cplusplus /GR- /Gm- /Wall /WX /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline /Zi")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17 /Zc:__cplusplus /Gm- /Wall /WX /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline /Zi")
+
+	# Remove any existing compiler flag that enables RTTI
+	string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+	# Set compiler flag for disabling RTTI
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
 	# Set compiler flags for various configurations
 	set(CMAKE_CXX_FLAGS_DEBUG "/GS /Od /Ob0 /RTC1")
