@@ -970,7 +970,7 @@ void CharacterVirtual::MoveToContact(Vec3Arg inPosition, const Contact &inContac
 			&& c.mSubShapeIDB == inContact.mSubShapeIDB)
 		{
 			c.mHadCollision = true;
-			JPH_IF_ENABLE_ASSERTS(found_contact = true;)
+			found_contact = true;
 		}
 	if (!found_contact)
 	{
