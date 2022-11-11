@@ -57,7 +57,7 @@ jobs:
 
   macos:
     runs-on: macos-latest
-    name: MacOS Determinism Check
+    name: macOS Determinism Check
 
     steps:
     - name: Checkout Code

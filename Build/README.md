@@ -118,7 +118,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 - Select 'Run' / 'Run...' and 'UnitTests'
 - If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)
 
-### MacOS
+### macOS
 
 - Install XCode
 - Download CMake 3.23+ (https://cmake.org/download/)
