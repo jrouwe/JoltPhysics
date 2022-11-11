@@ -68,37 +68,105 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 
 #ifdef JPH_PLATFORM_WINDOWS_UWP
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-{
-	// Register allocation hook
-	RegisterDefaultAllocator();
+JPH_SUPPRESS_WARNING_PUSH
+JPH_MSVC_SUPPRESS_WARNING(4265) // warning C4265: 'winrt::impl::implements_delegate<winrt::Windows::UI::Core::DispatchedHandler,H>': class has virtual functions, but its non-trivial destructor is not virtual; instances of this class may not be destructed correctly
+JPH_MSVC_SUPPRESS_WARNING(4668) // warning C4668: '_MANAGED' is not defined as a preprocessor macro, replacing with '0' for '#if/#elif'
+JPH_MSVC_SUPPRESS_WARNING(4946) // warning C4946: reinterpret_cast used between related classes: 'winrt::impl::abi<winrt::Windows::ApplicationModel::Core::IFrameworkViewSource,void>::type' and 'winrt::impl::abi<winrt::Windows::Foundation::IUnknown,void>::type'
+JPH_MSVC_SUPPRESS_WARNING(5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
+JPH_MSVC_SUPPRESS_WARNING(5204) // warning C5204: 'winrt::impl::produce_base<D,winrt::Windows::ApplicationModel::Core::IFrameworkViewSource,void>': class has virtual functions, but its trivial destructor is not virtual; instances of objects derived from this class may not be destructed correctly
+JPH_MSVC_SUPPRESS_WARNING(5246) // warning C5246: '_Elems': the initialization of a subobject should be wrapped in braces
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.UI.Composition.h>
+#include <winrt/Windows.UI.Input.h>
+JPH_SUPPRESS_WARNING_POP
 
-	// Install callbacks
-	Trace = TraceImpl;
-	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
+using namespace winrt;
+using namespace Windows;
+using namespace Windows::ApplicationModel::Core;
+using namespace Windows::UI;
+using namespace Windows::UI::Core;
+using namespace Windows::UI::Composition;
+
+struct App : implements<App, IFrameworkViewSource, IFrameworkView>
+{
+	CompositionTarget mTarget { nullptr };
+
+	IFrameworkView CreateView()
+	{
+		return *this;
+	}
+
+	void Initialize(CoreApplicationView const&)
+	{
+	}
+
+	void Load(hstring const&)
+	{
+	}
+
+	void Uninitialize()
+	{
+	}
+
+	void Run()
+	{
+		CoreWindow window = CoreWindow::GetForCurrentThread();
+		window.Activate();
+
+		CoreDispatcher dispatcher = window.Dispatcher();
+		dispatcher.ProcessEvents(CoreProcessEventsOption::ProcessUntilQuit);
+	}
+
+	void SetWindow(CoreWindow const& inWindow)
+	{
+		// Register allocation hook
+		RegisterDefaultAllocator();
+
+		// Install callbacks
+		Trace = TraceImpl;
+		JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
 
 #ifdef _DEBUG
-	// Enable leak detection
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+		// Enable leak detection
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-	// Enable floating point exceptions
-	FPExceptionsEnable enable_exceptions;
-	JPH_UNUSED(enable_exceptions);
+		// Enable floating point exceptions
+		FPExceptionsEnable enable_exceptions;
+		JPH_UNUSED(enable_exceptions);
 
-	// Create a factory
-	Factory::sInstance = new Factory();
+		// Create a factory
+		Factory::sInstance = new Factory();
 
-	// Register physics types
-	RegisterTypes();
+		// Register physics types
+		RegisterTypes();
 
-	int rv = Context().run();
+		// Run the tests
+		int rv = Context().run();
 
-	// Destroy the factory
-	delete Factory::sInstance;
-	Factory::sInstance = nullptr;
+		// Destroy the factory
+		delete Factory::sInstance;
+		Factory::sInstance = nullptr;
 
-	return rv;
+		// Color the screen according to the result
+		Compositor compositor;
+		ContainerVisual root = compositor.CreateContainerVisual();
+		mTarget = compositor.CreateTargetForCurrentView();
+		mTarget.Root(root);
+		SpriteVisual visual = compositor.CreateSpriteVisual();
+		visual.Brush(compositor.CreateColorBrush(rv != 0 ? Windows::UI::Color { 0xff, 0xff, 0x00, 0x00 } : Windows::UI::Color { 0xff, 0x00, 0xff, 0x00 }));
+		visual.Size({ inWindow.Bounds().Width, inWindow.Bounds().Height });
+		visual.Offset({ 0, 0, 0, });
+		root.Children().InsertAtTop(visual);
+	}
+};
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+{
+    CoreApplication::Run(make<App>());
 }
 
 #elif !defined(JPH_PLATFORM_ANDROID)
