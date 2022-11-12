@@ -73,13 +73,13 @@
 	#if (defined(__SSE4_1__) || defined(JPH_USE_SSE4_2)) && !defined(JPH_USE_SSE4_1)
 		#define JPH_USE_SSE4_1
 	#endif
-	#if (defined(__F16C__) || defined(JPH_USE_AVX)) && !defined(JPH_USE_F16C)
+	#if (defined(__F16C__) || defined(JPH_USE_AVX2)) && !defined(JPH_USE_F16C)
 		#define JPH_USE_F16C
 	#endif
-	#if (defined(__LZCNT__) || defined(JPH_USE_AVX)) && !defined(JPH_USE_LZCNT)
+	#if (defined(__LZCNT__) || defined(JPH_USE_AVX2)) && !defined(JPH_USE_LZCNT)
 		#define JPH_USE_LZCNT
 	#endif
-	#if (defined(__BMI__) || defined(JPH_USE_AVX)) && !defined(JPH_USE_TZCNT)
+	#if (defined(__BMI__) || defined(JPH_USE_AVX2)) && !defined(JPH_USE_TZCNT)
 		#define JPH_USE_TZCNT
 	#endif
 	#ifndef JPH_CROSS_PLATFORM_DETERMINISTIC // FMA is not compatible with cross platform determinism
