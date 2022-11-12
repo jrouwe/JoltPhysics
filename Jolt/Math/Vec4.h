@@ -9,7 +9,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-class [[nodiscard]] alignas(16) Vec4
+class [[nodiscard]] alignas(JPH_VECTOR_ALIGNMENT) Vec4
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -171,6 +171,6 @@ public:
 };
 
 static_assert(sizeof(TransformedShape) == 64, "Not properly packed");
-static_assert(alignof(TransformedShape) == 16, "Not properly aligned");
+static_assert(alignof(TransformedShape) == JPH_VECTOR_ALIGNMENT, "Not properly aligned");
 
 JPH_NAMESPACE_END

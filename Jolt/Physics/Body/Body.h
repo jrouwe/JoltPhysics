@@ -317,7 +317,7 @@ private:
 };
 
 static_assert(sizeof(Body) == 128, "Body should be 128 bytes");
-static_assert(alignof(Body) == 16, "Body should align to 16 bytes");
+static_assert(alignof(Body) == JPH_VECTOR_ALIGNMENT, "Body should properly align");
 
 JPH_NAMESPACE_END
 

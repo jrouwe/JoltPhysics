@@ -61,6 +61,11 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	# Set compiler flag for disabling RTTI
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
+	if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")
+		# On ARM the exception handling flag is missing which causes warnings
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+	endif()
+
 	# Set compiler flags for various configurations
 	set(CMAKE_CXX_FLAGS_DEBUG "/GS /Od /Ob0 /RTC1")
 	set(CMAKE_CXX_FLAGS_RELEASE "/GS- /Gy /O2 /Oi /Ot")
@@ -276,7 +281,7 @@ if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
 	   endif()
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
 	# Windows only targets
 	if (TARGET_SAMPLES OR TARGET_VIEWER)
 		include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)

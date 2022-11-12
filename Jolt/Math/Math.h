@@ -107,7 +107,7 @@ inline uint CountTrailingZeros(uint32 inValue)
 			return 32;
 		return __builtin_ctz(inValue);
 	#endif
-#elif defined(JPH_CPU_ARM64)
+#elif defined(JPH_CPU_ARM)
 	#if defined(JPH_COMPILER_MSVC)
 		if (inValue == 0)
 			return 32;
@@ -139,7 +139,7 @@ inline uint CountLeadingZeros(uint32 inValue)
 			return 32;
 		return __builtin_clz(inValue);
 	#endif
-#elif defined(JPH_CPU_ARM64)
+#elif defined(JPH_CPU_ARM)
 	#if defined(JPH_COMPILER_MSVC)
 		return _CountLeadingZeros(inValue);
 	#else
