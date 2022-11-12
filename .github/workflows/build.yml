@@ -14,13 +14,13 @@ on:
 
 jobs:
   linux-clang:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Linux Clang
     strategy:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution, ReleaseASAN, ReleaseUBSAN]
-            clang_version: [clang++-10, clang++-12]
+            clang_version: [clang++-12, clang++-14]
 
     steps:
     - name: Checkout Code
@@ -34,7 +34,7 @@ jobs:
       run: ctest --output-on-failure
 
   linux-gcc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Linux GCC
     strategy:
         fail-fast: false
@@ -163,7 +163,7 @@ jobs:
       run: ctest --output-on-failure
 
   android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Android
     strategy:
         fail-fast: false
