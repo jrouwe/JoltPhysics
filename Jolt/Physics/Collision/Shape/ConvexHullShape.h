@@ -156,7 +156,7 @@ private:
 	};
 
 	static_assert(sizeof(Point) == 32, "Unexpected size");
-	static_assert(alignof(Point) == 16, "Unexpected alignment");
+	static_assert(alignof(Point) == JPH_VECTOR_ALIGNMENT, "Unexpected alignment");
 
 	Vec3					mCenterOfMass;				///< Center of mass of this convex hull
 	Mat44					mInertia;					///< Inertia matrix assuming density is 1 (needs to be multiplied by density)

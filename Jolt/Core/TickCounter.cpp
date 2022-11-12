@@ -24,7 +24,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-#if defined(JPH_PLATFORM_WINDOWS_UWP) || (defined(JPH_PLATFORM_WINDOWS) && defined(JPH_CPU_ARM64))
+#if defined(JPH_PLATFORM_WINDOWS_UWP) || (defined(JPH_PLATFORM_WINDOWS) && defined(JPH_CPU_ARM))
 
 uint64 GetProcessorTickCount()
 {
@@ -33,10 +33,10 @@ uint64 GetProcessorTickCount()
 	return uint64(count.QuadPart);
 }
 
-#endif // JPH_PLATFORM_WINDOWS_UWP || (JPH_PLATFORM_WINDOWS && JPH_CPU_ARM64)
+#endif // JPH_PLATFORM_WINDOWS_UWP || (JPH_PLATFORM_WINDOWS && JPH_CPU_ARM)
 
 static const uint64 sProcessorTicksPerSecond = []() {
-#if defined(JPH_PLATFORM_WINDOWS_UWP) || (defined(JPH_PLATFORM_WINDOWS) && defined(JPH_CPU_ARM64))
+#if defined(JPH_PLATFORM_WINDOWS_UWP) || (defined(JPH_PLATFORM_WINDOWS) && defined(JPH_CPU_ARM))
 	LARGE_INTEGER frequency { };
 	QueryPerformanceFrequency(&frequency);
 	return uint64(frequency.QuadPart);
@@ -71,7 +71,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 		
 		#if defined(JPH_CPU_X86)
 			const char *cpu_str = "cpu MHz";
-		#elif defined(JPH_CPU_ARM64)
+		#elif defined(JPH_CPU_ARM)
 			const char *cpu_str = "BogoMIPS";
 		#else
 			#error Unsupported CPU architecture

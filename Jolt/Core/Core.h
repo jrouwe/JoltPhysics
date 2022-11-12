@@ -56,6 +56,7 @@
 		#define JPH_CPU_ADDRESS_BITS 32
 	#endif
 	#define JPH_USE_SSE
+	#define JPH_VECTOR_ALIGNMENT 16
 
 	// Detect enabled instruction sets
 	#if defined(__AVX512F__) && defined(__AVX512VL__) && defined(__AVX512DQ__) && !defined(JPH_USE_AVX512)
@@ -95,15 +96,22 @@
 			#error Undefined compiler
 		#endif
 	#endif
-#elif defined(__aarch64__) || defined(_M_ARM64)
-	// ARM64 CPU architecture
-	#define JPH_CPU_ARM64
-	#define JPH_USE_NEON
-	#define JPH_CPU_ADDRESS_BITS 64
+#elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm__) || defined(_M_ARM)
+	// ARM CPU architecture
+	#define JPH_CPU_ARM
+	#if defined(__aarch64__) || defined(_M_ARM64)
+		#define JPH_CPU_ADDRESS_BITS 64
+		#define JPH_USE_NEON
+		#define JPH_VECTOR_ALIGNMENT 16
+	#else
+		#define JPH_CPU_ADDRESS_BITS 32
+		#define JPH_VECTOR_ALIGNMENT 8 // 32-bit ARM does not support aligning on the stack on 16 byte boundaries
+	#endif
 #elif defined(JPH_PLATFORM_WASM)
 	// WebAssembly CPU architecture
 	#define JPH_CPU_WASM
 	#define JPH_CPU_ADDRESS_BITS 32
+	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DISABLE_CUSTOM_ALLOCATOR
 #else
 	#error Unsupported CPU architecture
@@ -197,7 +205,7 @@
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT		__asm volatile ("int $0x3")
-	#elif defined(JPH_CPU_ARM64)
+	#elif defined(JPH_CPU_ARM)
 		#define JPH_BREAKPOINT		__builtin_trap()
 	#endif
 #elif defined(JPH_PLATFORM_WASM)

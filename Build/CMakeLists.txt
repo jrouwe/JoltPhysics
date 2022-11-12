@@ -61,6 +61,11 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	# Set compiler flag for disabling RTTI
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
+	if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")
+		# On ARM the exception handling flag is missing which causes warnings
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+	endif()
+
 	# Set compiler flags for various configurations
 	set(CMAKE_CXX_FLAGS_DEBUG "/GS /Od /Ob0 /RTC1")
 	set(CMAKE_CXX_FLAGS_RELEASE "/GS- /Gy /O2 /Oi /Ot")
@@ -69,8 +74,8 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-fsanitize=undefined,implicit-conversion,float-divide-by-zero,local-bounds -fno-sanitize-recover=all")
 	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-fprofile-instr-generate -fcoverage-mapping")
 
-	if (NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64"))
-		# On ARM64, whole program optimization triggers an internal compiler error during code gen, so we don't turn it on
+	if (NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64") AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM"))
+		# On ARM, whole program optimization triggers an internal compiler error during code gen, so we don't turn it on
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
 		set(CMAKE_CXX_FLAGS_DISTRIBUTION "${CMAKE_CXX_FLAGS_DISTRIBUTION} /GL")
 	endif()
@@ -276,7 +281,7 @@ if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
 	   endif()
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
 	# Windows only targets
 	if (TARGET_SAMPLES OR TARGET_VIEWER)
 		include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)

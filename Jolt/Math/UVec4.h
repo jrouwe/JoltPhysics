@@ -7,7 +7,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-class [[nodiscard]] alignas(16) UVec4
+class [[nodiscard]] alignas(JPH_VECTOR_ALIGNMENT) UVec4
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
