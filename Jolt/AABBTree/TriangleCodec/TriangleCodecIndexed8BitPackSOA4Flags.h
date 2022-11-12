@@ -223,7 +223,7 @@ public:
 	{
 	private:
 		/// Private helper functions to unpack the 1 vertex of 4 triangles (outX contains the x coordinate of triangle 0 .. 3 etc.)
-		JPH_INLINE void				Unpack(const VertexData *inVertices, UVec4 inIndex, Vec4 &outX, Vec4 &outY, Vec4 &outZ) const
+		JPH_INLINE void				Unpack(const VertexData *inVertices, UVec4Arg inIndex, Vec4 &outX, Vec4 &outY, Vec4 &outZ) const
 		{
 			// Get compressed data
 			UVec4 c1 = UVec4::sGatherInt4<8>(&inVertices->mVertexXY, inIndex);

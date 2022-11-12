@@ -202,7 +202,7 @@ JPH_INLINE UVec4 AABox4VsSphere(Vec4Arg inCenterX, Vec4Arg inCenterY, Vec4Arg in
 }
 
 /// Test 4 AABoxes vs a sphere
-JPH_INLINE UVec4 AABox4VsSphere(Vec3 inCenter, float inRadiusSq, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
+JPH_INLINE UVec4 AABox4VsSphere(Vec3Arg inCenter, float inRadiusSq, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
 {
 	return AABox4VsSphere(inCenter.SplatX(), inCenter.SplatY(), inCenter.SplatZ(), Vec4::sReplicate(inRadiusSq), inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ);
 }

@@ -56,7 +56,7 @@ void HighSpeedTest::CreateDominoBlocks(Vec3Arg inOffset, int inNumWalls, float i
 	mBodyInterface->CreateAndAddBody(box_settings, EActivation::DontActivate);
 }
 
-void HighSpeedTest::CreateDynamicObject(Vec3 inPosition, Vec3 inVelocity, Shape *inShape, EMotionQuality inMotionQuality)
+void HighSpeedTest::CreateDynamicObject(Vec3Arg inPosition, Vec3Arg inVelocity, Shape *inShape, EMotionQuality inMotionQuality)
 {
 	BodyCreationSettings creation_settings;
 	creation_settings.SetShape(inShape);
