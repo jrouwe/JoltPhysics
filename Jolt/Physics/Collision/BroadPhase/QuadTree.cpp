@@ -503,7 +503,7 @@ QuadTree::NodeID QuadTree::BuildTree(const BodyVector &inBodies, TrackingVector 
 
 	// Calculate centers of all bodies that are to be inserted
 	Vec3 *centers = new Vec3 [inNumber];
-	JPH_ASSERT(IsAligned(centers, 16));
+	JPH_ASSERT(IsAligned(centers, JPH_VECTOR_ALIGNMENT));
 	Vec3 *c = centers;
 	for (const NodeID *n = ioNodeIDs, *n_end = ioNodeIDs + inNumber; n < n_end; ++n, ++c)
 		*c = GetNodeOrBodyBounds(inBodies, *n).GetCenter();
