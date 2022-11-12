@@ -58,29 +58,29 @@
 	#define JPH_USE_SSE
 
 	// Detect enabled instruction sets
-	#if (defined(__F16C__) || defined(__AVX2__)) && !defined(JPH_USE_F16C)
-		#define JPH_USE_F16C
-	#endif
-	#if (defined(__LZCNT__) || defined(__AVX2__)) && !defined(JPH_USE_LZCNT)
-		#define JPH_USE_LZCNT
-	#endif
-	#if (defined(__BMI__) || defined(__AVX2__)) && !defined(JPH_USE_TZCNT)
-		#define JPH_USE_TZCNT
-	#endif
-	#if (defined(__SSE4_1__) || defined(__AVX__)) && !defined(JPH_USE_SSE4_1)
-		#define JPH_USE_SSE4_1
-	#endif
-	#if (defined(__SSE4_2__) || defined(__AVX__)) && !defined(JPH_USE_SSE4_2)
-		#define JPH_USE_SSE4_2
-	#endif
-	#if defined(__AVX__) && !defined(JPH_USE_AVX)
-		#define JPH_USE_AVX
-	#endif
-	#if defined(__AVX2__) && !defined(JPH_USE_AVX2)
-		#define JPH_USE_AVX2
-	#endif
 	#if defined(__AVX512F__) && defined(__AVX512VL__) && defined(__AVX512DQ__) && !defined(JPH_USE_AVX512)
 		#define JPH_USE_AVX512
+	#endif
+	#if (defined(__AVX2__) || defined(JPH_USE_AVX512)) && !defined(JPH_USE_AVX2)
+		#define JPH_USE_AVX2
+	#endif
+	#if (defined(__AVX__) || defined(JPH_USE_AVX2)) && !defined(JPH_USE_AVX)
+		#define JPH_USE_AVX
+	#endif
+	#if (defined(__SSE4_2__) || defined(JPH_USE_AVX)) && !defined(JPH_USE_SSE4_2)
+		#define JPH_USE_SSE4_2
+	#endif
+	#if (defined(__SSE4_1__) || defined(JPH_USE_SSE4_2)) && !defined(JPH_USE_SSE4_1)
+		#define JPH_USE_SSE4_1
+	#endif
+	#if (defined(__F16C__) || defined(JPH_USE_AVX)) && !defined(JPH_USE_F16C)
+		#define JPH_USE_F16C
+	#endif
+	#if (defined(__LZCNT__) || defined(JPH_USE_AVX)) && !defined(JPH_USE_LZCNT)
+		#define JPH_USE_LZCNT
+	#endif
+	#if (defined(__BMI__) || defined(JPH_USE_AVX)) && !defined(JPH_USE_TZCNT)
+		#define JPH_USE_TZCNT
 	#endif
 	#ifndef JPH_CROSS_PLATFORM_DETERMINISTIC // FMA is not compatible with cross platform determinism
 		#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)

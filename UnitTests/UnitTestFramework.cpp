@@ -174,6 +174,46 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 // Generic entry point
 int main(int argc, char** argv)
 {
+	// Show used instruction sets
+	std::cout << JPH_CPU_ADDRESS_BITS << "-bit build with instructions: ";
+#ifdef JPH_USE_NEON
+	std::cout << "NEON ";
+#endif
+#ifdef JPH_USE_SSE
+	std::cout << "SSE2 ";
+#endif
+#ifdef JPH_USE_SSE4_1
+	std::cout << "SSE4.1 ";
+#endif
+#ifdef JPH_USE_SSE4_2
+	std::cout << "SSE4.2 ";
+#endif
+#ifdef JPH_USE_AVX
+	std::cout << "AVX ";
+#endif
+#ifdef JPH_USE_AVX2
+	std::cout << "AVX2 ";
+#endif
+#ifdef JPH_USE_AVX512
+	std::cout << "AVX512 ";
+#endif
+#ifdef JPH_USE_F16C
+	std::cout << "F16C ";
+#endif
+#ifdef JPH_USE_LZCNT
+	std::cout << "LZCNT ";
+#endif
+#ifdef JPH_USE_TZCNT
+	std::cout << "TZCNT ";
+#endif
+#ifdef JPH_USE_FMADD
+	std::cout << "FMADD ";
+#endif
+#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+	std::cout << "(Cross Platform Deterministic)";
+#endif
+	std::cout << std::endl;
+
 	// Register allocation hook
 	RegisterDefaultAllocator();
 
