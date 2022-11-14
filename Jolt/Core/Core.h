@@ -37,13 +37,14 @@
 // Determine compiler
 #if defined(__clang__)
 	#define JPH_COMPILER_CLANG
-#elif defined(__MINGW64__) || defined (__MINGW32__)
-	#define JPH_COMPILER_GCC
-	#define JPH_COMPILER_MINGW
 #elif defined(__GNUC__)
 	#define JPH_COMPILER_GCC
 #elif defined(_MSC_VER)
 	#define JPH_COMPILER_MSVC
+#endif
+
+#if defined(__MINGW64__) || defined (__MINGW32__)
+	#define JPH_COMPILER_MINGW
 #endif
 
 // Detect CPU architecture
