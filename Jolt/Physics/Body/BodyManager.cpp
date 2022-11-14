@@ -160,7 +160,23 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		mp->mIndexInActiveBodies = Body::cInactiveIndex;
 		mp->mIslandIndex = Body::cInactiveIndex;
 		JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
-		mp->SetMassProperties(inBodyCreationSettings.GetMassProperties());
+
+		MassProperties mass_properties = inBodyCreationSettings.GetMassProperties();
+		if (inBodyCreationSettings.mAllowedDOF == EAllowedDOF::XYPlane)
+		{
+			// Inverse mass is trivial
+			mp->SetInverseMass(1.0f / mass_properties.mMass);
+
+			// We can only rotate around Z so the inverse inertia is trivial to calculate too
+			mp->SetInverseInertia(Vec3(0, 0, 1.0f / mass_properties.mInertia.GetAxisZ().Length()), Quat::sIdentity());
+
+			// Flag the body that it is constrained
+			body->mFlags.fetch_or(uint8(Body::EFlags::ConstrainedToXYPlane));
+		}
+		else
+		{
+			mp->SetMassProperties(mass_properties);
+		}
 	}
 
 	// Position body

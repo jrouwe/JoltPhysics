@@ -304,6 +304,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mObjectLayer = GetObjectLayer();
 	result.mCollisionGroup = GetCollisionGroup();
 	result.mMotionType = GetMotionType();
+	result.mAllowedDOF = IsConstrainedToXYPlane()? EAllowedDOF::XYPlane : EAllowedDOF::Unconstrained;
 	result.mAllowDynamicOrKinematic = mMotionProperties != nullptr;
 	result.mIsSensor = IsSensor();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;

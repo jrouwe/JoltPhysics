@@ -165,6 +165,9 @@ public:
 	/// Check if this body has been changed in such a way that the collision cache should be considered invalid for any body interacting with this body
 	inline bool				IsCollisionCacheInvalid() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::InvalidateContactCache)) != 0; }
 
+	/// If this body can only move in the XY plane and rotate around Z
+	inline bool				IsConstrainedToXYPlane() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::ConstrainedToXYPlane)) != 0; }
+
 	/// Get the shape of this body
 	inline const Shape *	GetShape() const												{ return mShape; }
 
@@ -287,7 +290,8 @@ private:
 	{
 		IsSensor				= 1 << 0,													///< If this object is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
 		IsInBroadPhase			= 1 << 1,													///< Set this bit to indicate that the body is in the broadphase
-		InvalidateContactCache	= 1 << 2													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
+		InvalidateContactCache	= 1 << 2,													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
+		ConstrainedToXYPlane	= 1 << 3													///< If this body is constrained to the XY plane for a 2D simulation
 	};
 
 	// 16 byte aligned
