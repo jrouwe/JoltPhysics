@@ -263,7 +263,7 @@ int DVec3::GetTrues() const
 #if defined(JPH_USE_AVX)
 	return _mm256_movemask_pd(mValue) & 0x7;
 #else
-	return (sDToI(mD32[0]) >> 63) | ((sDToI(mD32[1]) >> 63) << 1) | ((sDToI(mD32[2]) >> 63) << 2);
+	return int((sDToI(mD32[0]) >> 63) | ((sDToI(mD32[1]) >> 63) << 1) | ((sDToI(mD32[2]) >> 63) << 2));
 #endif
 }
 
