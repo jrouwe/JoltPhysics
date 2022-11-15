@@ -4,8 +4,6 @@
 #include "UnitTestFramework.h"
 #include <Jolt/Math/DVec3.h>
 
-#ifdef JPH_USE_AVX2
-
 TEST_SUITE("DVec3Tests")
 {
 	TEST_CASE("TestDVec3Dot")
@@ -49,5 +47,3 @@ TEST_SUITE("DVec3Tests")
 		CHECK(DVec3(1, 0, 0).Cross(DVec3(0, 0, 1)) == DVec3(0, -1, 0));
 	}
 }
-
-#endif // JPH_USE_AVX2
