@@ -10,19 +10,6 @@ JPH_MAKE_HASHABLE(JPH::DVec3, t.GetX(), t.GetY(), t.GetZ())
 
 JPH_NAMESPACE_BEGIN
 
-static JPH_INLINE double sIToD(uint64 inValue)
-{
-	return reinterpret_cast<const double &>(inValue);
-}
-
-static JPH_INLINE uint64 sDToI(double inValue)
-{
-	return reinterpret_cast<const uint64 &>(inValue);
-}
-
-static const double cTrue = sIToD(~uint64(0));
-static const double cFalse = 0.0f;
-
 DVec3::DVec3(Vec3Arg inRHS)
 {
 #if defined(JPH_USE_AVX)
@@ -230,9 +217,9 @@ DVec3 DVec3::sOr(DVec3Arg inV1, DVec3Arg inV2)
 #if defined(JPH_USE_AVX)
 	return _mm256_or_pd(inV1.mValue, inV2.mValue);
 #else
-	return DVec3(sIToD(sDToI(inV1.mD32[0]) | sDToI(inV1.mD32[0])),
-				 sIToD(sDToI(inV1.mD32[1]) | sDToI(inV1.mD32[1])),
-				 sIToD(sDToI(inV1.mD32[2]) | sDToI(inV1.mD32[2])));
+	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) | BitCast<uint64>(inV1.mD32[0])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) | BitCast<uint64>(inV1.mD32[1])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) | BitCast<uint64>(inV1.mD32[2])));
 #endif
 }
 
@@ -241,9 +228,9 @@ DVec3 DVec3::sXor(DVec3Arg inV1, DVec3Arg inV2)
 #if defined(JPH_USE_AVX)
 	return _mm256_xor_pd(inV1.mValue, inV2.mValue);
 #else
-	return DVec3(sIToD(sDToI(inV1.mD32[0]) ^ sDToI(inV1.mD32[0])),
-				 sIToD(sDToI(inV1.mD32[1]) ^ sDToI(inV1.mD32[1])),
-				 sIToD(sDToI(inV1.mD32[2]) ^ sDToI(inV1.mD32[2])));
+	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) ^ BitCast<uint64>(inV1.mD32[0])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) ^ BitCast<uint64>(inV1.mD32[1])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) ^ BitCast<uint64>(inV1.mD32[2])));
 #endif
 }
 
@@ -252,9 +239,9 @@ DVec3 DVec3::sAnd(DVec3Arg inV1, DVec3Arg inV2)
 #if defined(JPH_USE_AVX)
 	return _mm256_and_pd(inV1.mValue, inV2.mValue);
 #else
-	return DVec3(sIToD(sDToI(inV1.mD32[0]) & sDToI(inV1.mD32[0])),
-				 sIToD(sDToI(inV1.mD32[1]) & sDToI(inV1.mD32[1])),
-				 sIToD(sDToI(inV1.mD32[2]) & sDToI(inV1.mD32[2])));
+	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) & BitCast<uint64>(inV1.mD32[0])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) & BitCast<uint64>(inV1.mD32[1])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) & BitCast<uint64>(inV1.mD32[2])));
 #endif
 }
 
@@ -263,7 +250,7 @@ int DVec3::GetTrues() const
 #if defined(JPH_USE_AVX)
 	return _mm256_movemask_pd(mValue) & 0x7;
 #else
-	return int((sDToI(mD32[0]) >> 63) | ((sDToI(mD32[1]) >> 63) << 1) | ((sDToI(mD32[2]) >> 63) << 2));
+	return int((BitCast<uint64>(mD32[0]) >> 63) | ((BitCast<uint64>(mD32[1]) >> 63) << 1) | ((BitCast<uint64>(mD32[2]) >> 63) << 2));
 #endif
 }
 

@@ -207,6 +207,10 @@ public:
 	/// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
 	static JPH_INLINE Type		sFixW(Type inValue);
 
+	/// Representations of true and false for boolean operations
+	inline static const double	cTrue = BitCast<double>(~uint64(0));
+	inline static const double	cFalse = 0.0f;
+
 private:
 	union
 	{
