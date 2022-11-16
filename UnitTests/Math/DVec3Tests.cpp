@@ -45,6 +45,11 @@ TEST_SUITE("DVec3Tests")
 		CHECK(DVec3::sReplicate(2) == DVec3(2, 2, 2));
 	}
 
+	TEST_CASE("TestDVec3ToVec3")
+	{
+		CHECK(DVec3(1, 3, 5).ToVec3() == Vec3(1, 3, 5));
+	}
+
 	TEST_CASE("TestVec3MinMax")
 	{
 		DVec3 v1(1, 5, 3);
@@ -52,6 +57,45 @@ TEST_SUITE("DVec3Tests")
 
 		CHECK(DVec3::sMin(v1, v2) == DVec3(1, 2, 3));
 		CHECK(DVec3::sMax(v1, v2) == DVec3(4, 5, 6));
+	}
+
+	TEST_CASE("TestDVec3Clamp")
+	{
+		DVec3 v1(1, 2, 3);
+		DVec3 v2(4, 5, 6);
+		DVec3 v(-1, 3, 7);
+
+		CHECK(DVec3::sClamp(v, v1, v2) == DVec3(1, 3, 6));
+	}
+
+	TEST_CASE("TestDVec3Trues")
+	{
+		CHECK(DVec3(DVec3::cFalse, DVec3::cFalse, DVec3::cFalse).GetTrues() == 0b0000);
+		CHECK(DVec3(DVec3::cTrue, DVec3::cFalse, DVec3::cFalse).GetTrues() == 0b0001);
+		CHECK(DVec3(DVec3::cFalse, DVec3::cTrue, DVec3::cFalse).GetTrues() == 0b0010);
+		CHECK(DVec3(DVec3::cTrue, DVec3::cTrue, DVec3::cFalse).GetTrues() == 0b0011);
+		CHECK(DVec3(DVec3::cFalse, DVec3::cFalse, DVec3::cTrue).GetTrues() == 0b0100);
+		CHECK(DVec3(DVec3::cTrue, DVec3::cFalse, DVec3::cTrue).GetTrues() == 0b0101);
+		CHECK(DVec3(DVec3::cFalse, DVec3::cTrue, DVec3::cTrue).GetTrues() == 0b0110);
+		CHECK(DVec3(DVec3::cTrue, DVec3::cTrue, DVec3::cTrue).GetTrues() == 0b0111);
+
+		CHECK(!DVec3(DVec3::cFalse, DVec3::cFalse, DVec3::cFalse).TestAnyTrue());
+		CHECK(DVec3(DVec3::cTrue, DVec3::cFalse, DVec3::cFalse).TestAnyTrue());
+		CHECK(DVec3(DVec3::cFalse, DVec3::cTrue, DVec3::cFalse).TestAnyTrue());
+		CHECK(DVec3(DVec3::cTrue, DVec3::cTrue, DVec3::cFalse).TestAnyTrue());
+		CHECK(DVec3(DVec3::cFalse, DVec3::cFalse, DVec3::cTrue).TestAnyTrue());
+		CHECK(DVec3(DVec3::cTrue, DVec3::cFalse, DVec3::cTrue).TestAnyTrue());
+		CHECK(DVec3(DVec3::cFalse, DVec3::cTrue, DVec3::cTrue).TestAnyTrue());
+		CHECK(DVec3(DVec3::cTrue, DVec3::cTrue, DVec3::cTrue).TestAnyTrue());
+
+		CHECK(!DVec3(DVec3::cFalse, DVec3::cFalse, DVec3::cFalse).TestAllTrue());
+		CHECK(!DVec3(DVec3::cTrue, DVec3::cFalse, DVec3::cFalse).TestAllTrue());
+		CHECK(!DVec3(DVec3::cFalse, DVec3::cTrue, DVec3::cFalse).TestAllTrue());
+		CHECK(!DVec3(DVec3::cTrue, DVec3::cTrue, DVec3::cFalse).TestAllTrue());
+		CHECK(!DVec3(DVec3::cFalse, DVec3::cFalse, DVec3::cTrue).TestAllTrue());
+		CHECK(!DVec3(DVec3::cTrue, DVec3::cFalse, DVec3::cTrue).TestAllTrue());
+		CHECK(!DVec3(DVec3::cFalse, DVec3::cTrue, DVec3::cTrue).TestAllTrue());
+		CHECK(DVec3(DVec3::cTrue, DVec3::cTrue, DVec3::cTrue).TestAllTrue());
 	}
 
 	TEST_CASE("TestDVec3Comparisons")
