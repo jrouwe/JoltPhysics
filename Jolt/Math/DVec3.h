@@ -30,6 +30,9 @@ public:
 	/// Create a vector from 3 components
 	JPH_INLINE					DVec3(double inX, double inY, double inZ);
 
+	/// Load 3 doubles from memory
+	explicit JPH_INLINE			DVec3(const double *inV);
+
 	/// Vector with all zeros
 	static JPH_INLINE DVec3		sZero();
 

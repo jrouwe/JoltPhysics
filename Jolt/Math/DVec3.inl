@@ -38,6 +38,24 @@ DVec3::DVec3(double inX, double inY, double inZ)
 #endif
 }
 
+DVec3::DVec3(const double *inV)
+{
+#if defined(JPH_USE_AVX)
+	Type x = _mm256_castpd128_pd256(_mm_load_sd(inV));
+	Type y = _mm256_castpd128_pd256(_mm_load_sd(inV + 1));
+	Type z = _mm256_broadcast_sd(inV + 2);
+	Type xy = _mm256_unpacklo_pd(x, y);
+	mValue = _mm256_blend_pd(xy, z, 0b1100); // Assure Z and W are the same
+#else
+	mD32[0] = inV[0];
+	mD32[1] = inV[1];
+	mD32[2] = inV[2];
+	#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+		mD32[3] = inV[2];
+	#endif
+#endif
+}
+
 void DVec3::CheckW() const
 {
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
@@ -204,7 +222,7 @@ DVec3 DVec3::sSelect(DVec3Arg inV1, DVec3Arg inV2, DVec3Arg inControl)
 #else
 	DVec3 result;
 	for (int i = 0; i < 3; i++)
-		result.mD32[i] = inControl.mD32[i] == cTrue? inV2.mD32[i] : inV1.mD32[i];
+		result.mD32[i] = BitCast<uint64>(inControl.mD32[i])? inV2.mD32[i] : inV1.mD32[i];
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	result.mD32[3] = result.mD32[2];
 #endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
@@ -217,9 +235,9 @@ DVec3 DVec3::sOr(DVec3Arg inV1, DVec3Arg inV2)
 #if defined(JPH_USE_AVX)
 	return _mm256_or_pd(inV1.mValue, inV2.mValue);
 #else
-	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) | BitCast<uint64>(inV1.mD32[0])),
-				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) | BitCast<uint64>(inV1.mD32[1])),
-				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) | BitCast<uint64>(inV1.mD32[2])));
+	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) | BitCast<uint64>(inV2.mD32[0])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) | BitCast<uint64>(inV2.mD32[1])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) | BitCast<uint64>(inV2.mD32[2])));
 #endif
 }
 
@@ -228,9 +246,9 @@ DVec3 DVec3::sXor(DVec3Arg inV1, DVec3Arg inV2)
 #if defined(JPH_USE_AVX)
 	return _mm256_xor_pd(inV1.mValue, inV2.mValue);
 #else
-	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) ^ BitCast<uint64>(inV1.mD32[0])),
-				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) ^ BitCast<uint64>(inV1.mD32[1])),
-				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) ^ BitCast<uint64>(inV1.mD32[2])));
+	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) ^ BitCast<uint64>(inV2.mD32[0])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) ^ BitCast<uint64>(inV2.mD32[1])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) ^ BitCast<uint64>(inV2.mD32[2])));
 #endif
 }
 
@@ -239,9 +257,9 @@ DVec3 DVec3::sAnd(DVec3Arg inV1, DVec3Arg inV2)
 #if defined(JPH_USE_AVX)
 	return _mm256_and_pd(inV1.mValue, inV2.mValue);
 #else
-	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) & BitCast<uint64>(inV1.mD32[0])),
-				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) & BitCast<uint64>(inV1.mD32[1])),
-				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) & BitCast<uint64>(inV1.mD32[2])));
+	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mD32[0]) & BitCast<uint64>(inV2.mD32[0])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[1]) & BitCast<uint64>(inV2.mD32[1])),
+				 BitCast<double>(BitCast<uint64>(inV1.mD32[2]) & BitCast<uint64>(inV2.mD32[2])));
 #endif
 }
 

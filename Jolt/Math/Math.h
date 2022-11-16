@@ -179,7 +179,7 @@ inline uint32 GetNextPowerOf2(uint32 inValue)
 
 // Simple implementation of C++20 std::bit_cast (unfortunately not constexpr)
 template <class To, class From>
-JPH_INLINE const To BitCast(const From &inValue)
+JPH_INLINE To BitCast(const From &inValue)
 {
 	static_assert(std::is_trivially_constructible_v<To>);
 	static_assert(sizeof(From) == sizeof(To));
