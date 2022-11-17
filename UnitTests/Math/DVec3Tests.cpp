@@ -164,6 +164,8 @@ TEST_SUITE("DVec3Tests")
 		CHECK(v == DVec3(4, 10, 18));
 		v += DVec3(1, 2, 3);
 		CHECK(v == DVec3(5, 12, 21));
+		v -= DVec3(1, 2, 3);
+		CHECK(v == DVec3(4, 10, 18));
 
 		CHECK(DVec3(2, 4, 8).Reciprocal() == DVec3(0.5, 0.25, 0.125));
 	}

@@ -173,6 +173,8 @@ TEST_SUITE("Vec3Tests")
 		CHECK(v == Vec3(4, 10, 18));
 		v += Vec3(1, 2, 3);
 		CHECK(v == Vec3(5, 12, 21));
+		v -= Vec3(1, 2, 3);
+		CHECK(v == Vec3(4, 10, 18));
 
 		CHECK(Vec3(2, 4, 8).Reciprocal() == Vec3(0.5f, 0.25f, 0.125f));
 	}
