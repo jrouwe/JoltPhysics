@@ -5,8 +5,6 @@
 
 #include <Jolt/Math/Swizzle.h>
 
-#ifdef JPH_USE_AVX2 // DVec3 currently uses AVX2 intrinsics but the class is currently unused so we can leave it out (it will be used in the future to support objects at a large distance from the origin)
-
 JPH_NAMESPACE_BEGIN
 
 /// 3 component vector of doubles (stored as 4 vectors). 
@@ -16,28 +14,24 @@ class [[nodiscard]] DVec3
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
-#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
-	/// Internal helper function that checks that W is equal to Z, so e.g. dividing by it should not generate div by 0
-	JPH_INLINE void				CheckW() const									{ JPH_ASSERT(reinterpret_cast<const uint64 *>(mD32)[2] == reinterpret_cast<const uint64 *>(mD32)[3]); } // Avoid asserts when both components are NaN
-	
-	/// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
-	static JPH_INLINE __m256d	sFixW(__m256d inValue)							{ return _mm256_shuffle_pd(inValue, inValue, 2); }
+	// Underlying vector type
+#if defined(JPH_USE_AVX)
+	using Type = __m256d;
 #else
-	/// Stub function
-	JPH_INLINE void				CheckW() const									{ }
-	
-	/// Stub function
-	static JPH_INLINE __m256d	sFixW(__m256d inValue)							{ return inValue; }
-#endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+	using Type = struct { double mData[4]; };
+#endif
 
 	/// Constructor
 								DVec3() = default; ///< Intentionally not initialized for performance reasons
 								DVec3(const DVec3 &inRHS) = default;
 	JPH_INLINE explicit			DVec3(Vec3Arg inRHS);
-	JPH_INLINE					DVec3(__m256d inRHS) : mValue(inRHS)			{ CheckW(); }
+	JPH_INLINE					DVec3(Type inRHS) : mValue(inRHS)				{ CheckW(); }
 
 	/// Create a vector from 3 components
 	JPH_INLINE					DVec3(double inX, double inY, double inZ);
+
+	/// Load 3 doubles from memory
+	explicit JPH_INLINE			DVec3(const double *inV);
 
 	/// Vector with all zeros
 	static JPH_INLINE DVec3		sZero();
@@ -105,7 +99,11 @@ public:
 	JPH_INLINE bool				TestAllTrue() const;
 
 	/// Get individual components
+#ifdef JPH_USE_AVX
 	JPH_INLINE double			GetX() const									{ return _mm_cvtsd_f64(_mm256_castpd256_pd128(mValue)); }
+#else
+	JPH_INLINE double			GetX() const									{ return mD32[0]; }
+#endif // JPH_USE_AVX
 	JPH_INLINE double			GetY() const									{ return mD32[1]; }
 	JPH_INLINE double			GetZ() const									{ return mD32[2]; }
 	
@@ -206,10 +204,20 @@ public:
 		return inStream;
 	}
 
+	/// Internal helper function that checks that W is equal to Z, so e.g. dividing by it should not generate div by 0
+	JPH_INLINE void				CheckW() const;
+	
+	/// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
+	static JPH_INLINE Type		sFixW(Type inValue);
+
+	/// Representations of true and false for boolean operations
+	inline static const double	cTrue = BitCast<double>(~uint64(0));
+	inline static const double	cFalse = 0.0f;
+
 private:
 	union
 	{
-		__m256d					mValue;
+		Type					mValue;
 		double					mD32[4];
 	};
 };
@@ -219,5 +227,3 @@ static_assert(is_trivial<DVec3>(), "Is supposed to be a trivial type!");
 JPH_NAMESPACE_END
 
 #include "DVec3.inl"
-
-#endif // JPH_USE_AVX2

@@ -7,20 +7,6 @@
 
 TEST_SUITE("HalfFloatTests")
 {
-	// Helper function to construct a float with a specific bit pattern
-	static inline float ReinterpretAsFloat(uint32 inValue)
-	{
-		static_assert(sizeof(float) == sizeof(uint32));
-		union IntToFloat
-		{
-			uint32	i;
-			float	f;
-		};
-		IntToFloat i_to_f;
-		i_to_f.i = inValue;
-		return i_to_f.f;
-	}
-
 #if defined(JPH_USE_F16C) || defined(JPH_USE_NEON)
 	TEST_CASE("TestHalfFloatToFloat")
 	{
@@ -44,7 +30,7 @@ TEST_SUITE("HalfFloatTests")
 	// Helper function to compare the intrinsics version with the fallback version
 	static inline void CheckFloatToHalfFloat(uint32 inValue, uint32 inSign)
 	{
-		const float fvalue = ReinterpretAsFloat(inValue + inSign * 0x80000000U);
+		const float fvalue = BitCast<float>(inValue + inSign * 0x80000000U);
 
 		HalfFloat hf1 = HalfFloatConversion::FromFloat<HalfFloatConversion::ROUND_TO_NEAREST>(fvalue);
 		HalfFloat hf2 = HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(fvalue);
@@ -89,8 +75,8 @@ TEST_SUITE("HalfFloatTests")
 	TEST_CASE("TestHalfFloatINF")
 	{
 		// Float -> half float
-		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(ReinterpretAsFloat(0x7f800000U)) == HALF_FLT_INF);
-		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(ReinterpretAsFloat(0xff800000U)) == HALF_FLT_INF_NEGATIVE);
+		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(BitCast<float>(0x7f800000U)) == HALF_FLT_INF);
+		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(BitCast<float>(0xff800000U)) == HALF_FLT_INF_NEGATIVE);
 
 		// Half float -> float
 		UVec4 half_float(uint32(HALF_FLT_INF) | (uint32(HALF_FLT_INF_NEGATIVE) << 16), 0, 0, 0);
@@ -101,8 +87,8 @@ TEST_SUITE("HalfFloatTests")
 	TEST_CASE("TestHalfFloatNaN")
 	{
 		// Float -> half float
-		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(ReinterpretAsFloat(0x7fc00000U)) == HALF_FLT_NANQ);
-		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(ReinterpretAsFloat(0xffc00000U)) == HALF_FLT_NANQ_NEGATIVE);
+		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(BitCast<float>(0x7fc00000U)) == HALF_FLT_NANQ);
+		CHECK(HalfFloatConversion::FromFloatFallback<HalfFloatConversion::ROUND_TO_NEAREST>(BitCast<float>(0xffc00000U)) == HALF_FLT_NANQ_NEGATIVE);
 
 		// Half float -> float
 		UVec4 half_float(uint32(HALF_FLT_NANQ) | (uint32(HALF_FLT_NANQ_NEGATIVE) << 16), 0, 0, 0);
