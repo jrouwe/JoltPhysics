@@ -167,8 +167,8 @@ void MultithreadedTest::RagdollSpawner()
 	
 			// Override root
 			SkeletonPose::JointState &root = ragdoll_pose.GetJoint(0);
-			root.mTranslation = RVec3(from_xz(random), 1.0f + from_y(random), from_xz(random));
 			root.mRotation = Quat::sRandom(random);
+			ragdoll_pose.SetRootOffset(RVec3(from_xz(random), 1.0f + from_y(random), from_xz(random)));
 			ragdoll_pose.CalculateJointMatrices();
 
 			// Drive to pose

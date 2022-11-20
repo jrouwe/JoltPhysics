@@ -114,7 +114,7 @@ public:
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawOpenCone(Vec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
-	void								DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawOpenCone(Vec3(inTop), inAxis, inPerpendicular, inHalfAngle, inLength, inColor, inCastShadow, inDrawMode); } // TODO_DP
+	void								DrawOpenCone(DVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawOpenCone(Vec3(inTop), inAxis, inPerpendicular, inHalfAngle, inLength, inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draws rotation limits as used by the SwingTwistConstraintPart.
 	/// @param inMatrix Matrix that transforms from constraint space to world space

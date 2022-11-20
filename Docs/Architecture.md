@@ -291,7 +291,7 @@ Jolt Physics uses a right handed coordinate system with Y-up. It is easy to use 
 
 We use column-major vectors and matrices, this means that to transform a point you need to multiply it on the right hand side: TransformedPoint = Matrix * Point.
 
-Note that the physics simulation works best if you use SI units (meters, radians, seconds, kg). In order for the simluation to be accurate, dynamic objects should be in the order [0.1, 10] meters long and have speeds in the order of [0, 500] m/s. Static object should be in the order [0.1, 2000] meter long. If you are using different units, consider scaling the objects before passing them on to the physics simulation. Also try to ensure that all simulation takes place within 2 km from the origin to avoid floating point accuracy problems.
+Note that the physics simulation works best if you use SI units (meters, radians, seconds, kg). In order for the simluation to be accurate, dynamic objects should be in the order [0.1, 10] meters long and have speeds in the order of [0, 500] m/s. Static object should be in the order [0.1, 2000] meter long. If you are using different units, consider scaling the objects before passing them on to the physics simulation. Also try to ensure that all simulation takes place within 2 km from the origin to avoid floating point accuracy problems unless you are compiling the library in double precision mode with the define JPH_DOUBLE_PRECISION.
 
 ## Continuous Collision Detection
 

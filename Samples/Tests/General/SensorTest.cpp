@@ -69,8 +69,7 @@ void SensorTest::Initialize()
 	SkeletonPose ragdoll_pose;
 	ragdoll_pose.SetSkeleton(ragdoll_settings->GetSkeleton());
 	animation->Sample(0.0f, ragdoll_pose);
-	SkeletonPose::JointState &root = ragdoll_pose.GetJoint(0);
-	root.mTranslation = RVec3(0, 30, 0);
+	ragdoll_pose.SetRootOffset(RVec3(0, 30, 0));
 	ragdoll_pose.CalculateJointMatrices();
 
 	// Create ragdoll
