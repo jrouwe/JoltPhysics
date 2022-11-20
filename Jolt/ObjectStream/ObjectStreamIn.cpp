@@ -478,6 +478,13 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 						break;
 					}
 				
+				case EOSDataType::T_double:
+					{	
+						double temporary;
+						continue_reading = ReadPrimitiveData(temporary);
+						break;
+					}
+				
 				case EOSDataType::T_bool:
 					{	
 						bool temporary;
@@ -506,6 +513,13 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 						break;
 					}
 
+				case EOSDataType::T_DVec3:
+					{	
+						DVec3 temporary;
+						continue_reading = ReadPrimitiveData(temporary);
+						break;
+					}
+
 				case EOSDataType::T_Vec4:
 					{	
 						Vec4 temporary;
@@ -523,6 +537,13 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 				case EOSDataType::T_Mat44:
 					{	
 						Mat44 temporary;
+						continue_reading = ReadPrimitiveData(temporary);
+						break;
+					}
+
+				case EOSDataType::T_DMat44:
+					{	
+						DMat44 temporary;
 						continue_reading = ReadPrimitiveData(temporary);
 						break;
 					}

@@ -32,8 +32,10 @@ public:
 	Float3						mFloat3 = { };
 	Quat						mQuat = Quat::sIdentity();
 	Vec3						mVec3 = Vec3::sZero();
+	DVec3						mDVec3 = DVec3::sZero();
 	Vec4						mVec4 = Vec4::sZero();
 	Mat44						mMat44 = Mat44::sIdentity();
+	DMat44						mDMat44 = DMat44::sIdentity();
 	JPH::String					mString;
 };
 
@@ -75,8 +77,10 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TestSerializableBase)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mFloat3)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mQuat)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mVec3)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mDVec3)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mVec4)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mMat44)
+	JPH_ADD_ATTRIBUTE(TestSerializableBase, mDMat44)
 	JPH_ADD_ATTRIBUTE(TestSerializableBase, mString)
 }
 
@@ -115,9 +119,11 @@ TEST_SUITE("ObjectStreamTest")
 		test->mBool = true;
 		test->mFloat3 = Float3(9, 10, 11);
 		test->mVec3 = Vec3(6, 7, 8);
+		test->mDVec3 = DVec3(7, 8, 9);
 		test->mVec4 = Vec4(9, 10, 11, 12);
 		test->mQuat = Quat::sRotation(Vec3::sAxisX(), 0.1234f);
 		test->mMat44 = Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisY(), 0.4567f), Vec3(13, 14, 15));
+		test->mDMat44 = DMat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisY(), 0.789f), DVec3(20, 21, 22));
 		test->mString = "\"test string\"";
 		test->mEnum = B;
 		test->mIntVector = { 1, 2, 3, 4, 5 };
@@ -154,8 +160,10 @@ TEST_SUITE("ObjectStreamTest")
 		CHECK(inInput->mFloat3 == inOutput->mFloat3);
 		CHECK(inInput->mQuat == inOutput->mQuat);
 		CHECK(inInput->mVec3 == inOutput->mVec3);
+		CHECK(inInput->mDVec3 == inOutput->mDVec3);
 		CHECK(inInput->mVec4 == inOutput->mVec4);
 		CHECK(inInput->mMat44 == inOutput->mMat44);
+		CHECK(inInput->mDMat44 == inOutput->mDMat44);
 		CHECK(inInput->mString == inOutput->mString);
 		CHECK(inInput->mEnum == inOutput->mEnum);
 		CHECK(inInput->mIntVector == inOutput->mIntVector);
