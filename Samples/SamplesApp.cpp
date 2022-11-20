@@ -230,6 +230,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(PoweredRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(RigPileTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveBinaryRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(SkeletonMapperTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(BigWorldTest)
 
 static TestNameAndRTTI sRigTests[] =
 {
@@ -239,7 +240,8 @@ static TestNameAndRTTI sRigTests[] =
 	{ "Kinematic Rig",						JPH_RTTI(KinematicRigTest) },
 	{ "Powered Rig",						JPH_RTTI(PoweredRigTest) },
 	{ "Skeleton Mapper",					JPH_RTTI(SkeletonMapperTest) },
-	{ "Rig Pile",							JPH_RTTI(RigPileTest) }
+	{ "Rig Pile",							JPH_RTTI(RigPileTest) },
+	{ "Big World",							JPH_RTTI(BigWorldTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(CharacterTest)
@@ -655,7 +657,9 @@ bool SamplesApp::CheckNextTest()
 	if (mTestTimeLeft >= 0.0f)
 	{
 		// Update status string
-		mStatusString = StringFormat("%s: Next test in %.1fs", mTestClass->GetName(), (double)mTestTimeLeft);
+		if (!mStatusString.empty())
+			mStatusString += "\n";
+		mStatusString += StringFormat("%s: Next test in %.1fs", mTestClass->GetName(), (double)mTestTimeLeft);
 
 		// Use physics time
 		mTestTimeLeft -= 1.0f / mUpdateFrequency;
@@ -664,8 +668,6 @@ bool SamplesApp::CheckNextTest()
 		if (mTestTimeLeft < 0.0f)
 			return NextTest();
 	}
-	else
-		mStatusString.clear();
 
 	return true;
 }
@@ -1712,6 +1714,9 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 		StartTest(mTestClass);
 		return true;
 	}
+
+	// Get the status string
+	mStatusString = mTest->GetStatusString();
 		
 	// Select the next test if automatic testing times out
 	if (!CheckNextTest())

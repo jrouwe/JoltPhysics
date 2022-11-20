@@ -85,6 +85,9 @@ public:
 	virtual void	SaveState(StateRecorder &inStream) const					{ }
 	virtual void	RestoreState(StateRecorder &inStream)						{ }
 
+	// Return a string that is displayed in the top left corner of the screen
+	virtual String	GetStatusString() const										{ return String(); }
+
 protected:
 	// Utility function to create a static floor body
 	Body &			CreateFloor(float inSize = 200.0f);
