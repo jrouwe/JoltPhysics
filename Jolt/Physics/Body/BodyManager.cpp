@@ -810,7 +810,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 
 			// Draw the shape
 			if (inDrawSettings.mDrawShape)
-				body->mShape->Draw(inRenderer, body->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), color, inDrawSettings.mDrawShapeColor == EShapeColor::MaterialColor, inDrawSettings.mDrawShapeWireframe || is_sensor);
+				body->mShape->Draw(inRenderer, body->GetCenterOfMassTransform().ToMat44(), Vec3::sReplicate(1.0f), color, inDrawSettings.mDrawShapeColor == EShapeColor::MaterialColor, inDrawSettings.mDrawShapeWireframe || is_sensor); // TODO_DP
 
 			// Draw bounding box
 			if (inDrawSettings.mDrawBoundingBox)
@@ -827,7 +827,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 			// Draw world space linear and angular velocity
 			if (inDrawSettings.mDrawVelocity)
 			{
-				Vec3 pos = body->GetCenterOfMassPosition();
+				RVec3 pos = body->GetCenterOfMassPosition();
 				inRenderer->DrawArrow(pos, pos + body->GetLinearVelocity(), Color::sGreen, 0.1f);
 				inRenderer->DrawArrow(pos, pos + body->GetAngularVelocity(), Color::sRed, 0.1f);
 			}

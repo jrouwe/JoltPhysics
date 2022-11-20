@@ -31,8 +31,8 @@ public:
 
 	/// Constructor
 							BodyCreationSettings() = default;
-							BodyCreationSettings(const ShapeSettings *inShape, Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, ObjectLayer inObjectLayer) : mPosition(inPosition), mRotation(inRotation), mObjectLayer(inObjectLayer), mMotionType(inMotionType), mShape(inShape) { }
-							BodyCreationSettings(const Shape *inShape, Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, ObjectLayer inObjectLayer) : mPosition(inPosition), mRotation(inRotation), mObjectLayer(inObjectLayer), mMotionType(inMotionType), mShapePtr(inShape) { }
+							BodyCreationSettings(const ShapeSettings *inShape, RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, ObjectLayer inObjectLayer) : mPosition(inPosition), mRotation(inRotation), mObjectLayer(inObjectLayer), mMotionType(inMotionType), mShape(inShape) { }
+							BodyCreationSettings(const Shape *inShape, RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, ObjectLayer inObjectLayer) : mPosition(inPosition), mRotation(inRotation), mObjectLayer(inObjectLayer), mMotionType(inMotionType), mShapePtr(inShape) { }
 
 	/// Access to the shape settings object. This contains serializable (non-runtime optimized) information about the Shape.
 	const ShapeSettings *	GetShapeSettings() const										{ return mShape; }
@@ -74,7 +74,7 @@ public:
 	/// Restore a shape, all its children and materials. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while reading multiple shapes from the same stream in order to restore duplicates.
 	static BCSResult		sRestoreWithChildren(StreamIn &inStream, IDToShapeMap &ioShapeMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap);
 
-	Vec3					mPosition = Vec3::sZero();										///< Position of the body (not of the center of mass)
+	RVec3					mPosition = RVec3::sZero();										///< Position of the body (not of the center of mass)
 	Quat					mRotation = Quat::sIdentity();									///< Rotation of the body
 	Vec3					mLinearVelocity = Vec3::sZero();								///< World space linear velocity of the center of mass (m/s)
 	Vec3					mAngularVelocity = Vec3::sZero();								///< World space angular velocity (rad/s)

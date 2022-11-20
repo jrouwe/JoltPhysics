@@ -28,12 +28,12 @@ public:
 
 	/// Body 1 constraint reference frame (space determined by mSpace).
 	/// Hinge axis is the axis where rotation is allowed, normal axis defines the 0 angle of the hinge.
-	Vec3						mPoint1 = Vec3::sZero();
+	RVec3						mPoint1 = RVec3::sZero();
 	Vec3						mHingeAxis1 = Vec3::sAxisY();
 	Vec3						mNormalAxis1 = Vec3::sAxisX();
 	
 	/// Body 2 constraint reference frame (space determined by mSpace)
-	Vec3						mPoint2 = Vec3::sZero();
+	RVec3						mPoint2 = RVec3::sZero();
 	Vec3						mHingeAxis2 = Vec3::sAxisY();
 	Vec3						mNormalAxis2 = Vec3::sAxisX();
 	

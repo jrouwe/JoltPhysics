@@ -18,7 +18,7 @@ bool TransformedShape::CastRay(const RayCast &inRay, RayCastResult &ioHit) const
 	if (mShape != nullptr)
 	{
 		// Transform the ray to local space
-		RayCast ray = inRay.Transformed(GetInverseCenterOfMassTransform());
+		RayCast ray = inRay.Transformed(GetInverseCenterOfMassTransform().ToMat44()); // TODO_DP
 
 		// Scale the ray
 		Vec3 inv_scale = GetShapeScale().Reciprocal();
@@ -48,7 +48,7 @@ void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 		inShapeFilter.mBodyID2 = mBodyID;
 
 		// Transform and scale the ray to local space
-		RayCast ray = inRay.Transformed(GetInverseCenterOfMassTransform());
+		RayCast ray = inRay.Transformed(GetInverseCenterOfMassTransform().ToMat44()); // TODO_DP
 
 		// Scale the ray
 		Vec3 inv_scale = GetShapeScale().Reciprocal();
@@ -61,7 +61,7 @@ void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 	}
 }
 
-void TransformedShape::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
+void TransformedShape::CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
@@ -70,7 +70,7 @@ void TransformedShape::CollidePoint(Vec3Arg inPoint, CollidePointCollector &ioCo
 		inShapeFilter.mBodyID2 = mBodyID;
 
 		// Transform and scale the point to local space
-		Vec3 point = (GetInverseCenterOfMassTransform() * inPoint) / GetShapeScale();
+		Vec3 point = Vec3(GetInverseCenterOfMassTransform() * inPoint) / GetShapeScale();
 
 		// Do point collide on the shape
 		SubShapeIDCreator sub_shape_id(mSubShapeIDCreator);
@@ -87,7 +87,7 @@ void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 		inShapeFilter.mBodyID2 = mBodyID;
 
 		SubShapeIDCreator sub_shape_id1, sub_shape_id2(mSubShapeIDCreator);
-		CollisionDispatch::sCollideShapeVsShape(inShape, mShape, inShapeScale, GetShapeScale(), inCenterOfMassTransform, GetCenterOfMassTransform(), sub_shape_id1, sub_shape_id2, inCollideShapeSettings, ioCollector, inShapeFilter);
+		CollisionDispatch::sCollideShapeVsShape(inShape, mShape, inShapeScale, GetShapeScale(), inCenterOfMassTransform, GetCenterOfMassTransform().ToMat44(), sub_shape_id1, sub_shape_id2, inCollideShapeSettings, ioCollector, inShapeFilter); // TODO_DP
 	}
 }
 
@@ -100,7 +100,7 @@ void TransformedShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 		inShapeFilter.mBodyID2 = mBodyID;
 
 		// Get center of mass of object we're casting against
-		Mat44 center_of_mass_transform2 = GetCenterOfMassTransform();
+		Mat44 center_of_mass_transform2 = GetCenterOfMassTransform().ToMat44(); // TODO_DP
 
 		SubShapeIDCreator sub_shape_id1, sub_shape_id2(mSubShapeIDCreator);
 		CollisionDispatch::sCastShapeVsShapeWorldSpace(inShapeCast, inShapeCastSettings, mShape, GetShapeScale(), inShapeFilter, center_of_mass_transform2, sub_shape_id1, sub_shape_id2, ioCollector);
@@ -121,7 +121,7 @@ void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedS
 void TransformedShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox) const
 {
 	if (mShape != nullptr)
-		mShape->GetTrianglesStart(ioContext, inBox, mShapePositionCOM, mShapeRotation, GetShapeScale());
+		mShape->GetTrianglesStart(ioContext, inBox, Vec3(mShapePositionCOM), mShapeRotation, GetShapeScale()); // TODO_DP
 }
 
 int TransformedShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const

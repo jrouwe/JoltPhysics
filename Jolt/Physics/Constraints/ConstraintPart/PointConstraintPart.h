@@ -152,7 +152,7 @@ public:
 	/// @param inBaumgarte Baumgarte constant (fraction of the error to correct)
 	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, float inBaumgarte) const
 	{
-		Vec3 separation = (ioBody2.GetCenterOfMassPosition() + mR2 - ioBody1.GetCenterOfMassPosition() - mR1);
+		Vec3 separation = (Vec3(ioBody2.GetCenterOfMassPosition() - ioBody1.GetCenterOfMassPosition()) + mR2 - mR1);
 		if (separation != Vec3::sZero())
 		{
 			// Calculate lagrange multiplier (lambda) for Baumgarte stabilization:

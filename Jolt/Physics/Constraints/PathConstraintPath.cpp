@@ -20,9 +20,9 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(PathConstraintPath)
 
 #ifdef JPH_DEBUG_RENDERER
 // Helper function to transform the results of GetPointOnPath to world space
-static inline void sTransformPathPoint(Mat44Arg inTransform, Vec3 &ioPosition, Vec3 &ioNormal, Vec3 &ioBinormal)
+static inline void sTransformPathPoint(RMat44Arg inTransform, Vec3 &ioPosition, Vec3 &ioNormal, Vec3 &ioBinormal)
 {
-	ioPosition = inTransform * ioPosition;
+	ioPosition = Vec3(inTransform * ioPosition); // TODO_DP
 	ioNormal = inTransform.Multiply3x3(ioNormal);
 	ioBinormal = inTransform.Multiply3x3(ioBinormal);
 }
@@ -35,7 +35,7 @@ static inline void sDrawPathSegment(DebugRenderer *inRenderer, Vec3Arg inPrevPos
 	inRenderer->DrawArrow(inPosition, inPosition + 0.1f * inBinormal, Color::sGreen, 0.02f);
 }
 
-void PathConstraintPath::DrawPath(DebugRenderer *inRenderer, Mat44Arg inBaseTransform) const
+void PathConstraintPath::DrawPath(DebugRenderer *inRenderer, RMat44Arg inBaseTransform) const
 {
 	// Calculate first point
 	Vec3 first_pos, first_tangent, first_normal, first_binormal;

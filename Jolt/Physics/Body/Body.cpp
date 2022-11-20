@@ -74,16 +74,16 @@ void Body::SetAllowSleeping(bool inAllow)
 		ResetSleepTestSpheres();
 }
 
-void Body::MoveKinematic(Vec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
+void Body::MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
 {
 	JPH_ASSERT(!IsStatic());
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
 
 	// Calculate center of mass at end situation
-	Vec3 new_com = inTargetPosition + inTargetRotation * mShape->GetCenterOfMass();
+	RVec3 new_com = inTargetPosition + inTargetRotation * mShape->GetCenterOfMass();
 
 	// Calculate delta position and rotation
-	Vec3 delta_pos = new_com - mPosition;
+	Vec3 delta_pos = Vec3(new_com - mPosition);
 	Quat delta_rotation = inTargetRotation * mRotation.Conjugated();
 
 	mMotionProperties->MoveKinematic(delta_pos, delta_rotation, inDeltaTime);
@@ -94,7 +94,7 @@ void Body::CalculateWorldSpaceBoundsInternal()
 	mBounds = mShape->GetWorldSpaceBounds(GetCenterOfMassTransform(), Vec3::sReplicate(1.0f));
 }
 
-void Body::SetPositionAndRotationInternal(Vec3Arg inPosition, QuatArg inRotation) 
+void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation) 
 { 
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
 
@@ -143,7 +143,7 @@ Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMov
 		return ECanSleep::CannotSleep;
 
 	// Get the points to test
-	Vec3 points[3];
+	RVec3 points[3];
 	GetSleepTestPoints(points);
 
 	for (int i = 0; i < 3; ++i)
@@ -151,7 +151,7 @@ Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMov
 		Sphere &sphere = mMotionProperties->mSleepTestSpheres[i];
 
 		// Encapsulate the point in a sphere
-		sphere.EncapsulatePoint(points[i]);
+		sphere.EncapsulatePoint(Vec3(points[i])); // TODO_DP
 
 		// Test if it exceeded the max movement
 		if (sphere.GetRadius() > inMaxMovement)
@@ -176,7 +176,7 @@ bool Body::ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float 
 	// Calculate amount of volume that is submerged and what the center of buoyancy is
 	float total_volume, submerged_volume;
 	Vec3 center_of_buoyancy;
-	mShape->GetSubmergedVolume(GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), inSurface, total_volume, submerged_volume, center_of_buoyancy);
+	mShape->GetSubmergedVolume(GetCenterOfMassTransform().ToMat44(), Vec3::sReplicate(1.0f), inSurface, total_volume, submerged_volume, center_of_buoyancy); // TODO_DP
 		
 	// If we're not submerged, there's no point in doing the rest of the calculations
 	if (submerged_volume > 0.0f)
@@ -201,7 +201,7 @@ bool Body::ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float 
 		Vec3 buoyancy_impulse = -fluid_density * submerged_volume * mMotionProperties->GetGravityFactor() * inGravity * inDeltaTime;
 
 		// Calculate the velocity of the center of buoyancy relative to the fluid
-		Vec3 relative_center_of_buoyancy = center_of_buoyancy - mPosition;
+		Vec3 relative_center_of_buoyancy = center_of_buoyancy - Vec3(mPosition); // TODO_DP
 		Vec3 linear_velocity = mMotionProperties->GetLinearVelocity();
 		Vec3 angular_velocity = mMotionProperties->GetAngularVelocity();
 		Vec3 center_of_buoyancy_velocity = linear_velocity + angular_velocity.Cross(relative_center_of_buoyancy);

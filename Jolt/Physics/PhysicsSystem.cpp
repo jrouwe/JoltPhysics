@@ -1080,7 +1080,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 					// Prune if we have more than 32 points (this means we could run out of space in the next iteration)
 					if (manifold->mWorldSpaceContactPointsOn1.size() > 32)
-						PruneContactPoints(mBody1->GetCenterOfMassPosition(), manifold->mFirstWorldSpaceNormal, manifold->mWorldSpaceContactPointsOn1, manifold->mWorldSpaceContactPointsOn2);
+						PruneContactPoints(Vec3(mBody1->GetCenterOfMassPosition()), manifold->mFirstWorldSpaceNormal, manifold->mWorldSpaceContactPointsOn1, manifold->mWorldSpaceContactPointsOn2); // TODO_DP
 				}
 
 				PhysicsSystem *		mSystem;
@@ -1093,7 +1093,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), body1->GetCenterOfMassTransform(), body2->GetCenterOfMassTransform(), part1, part2, settings, collector);
+			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), body1->GetCenterOfMassTransform().ToMat44(), body2->GetCenterOfMassTransform().ToMat44(), part1, part2, settings, collector); // TODO_DP
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1103,7 +1103,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 				// If we still have too many points, prune them now
 				if (manifold.mWorldSpaceContactPointsOn1.size() > 4)
-					PruneContactPoints(body1->GetCenterOfMassPosition(), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
+					PruneContactPoints(Vec3(body1->GetCenterOfMassPosition()), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2); // TODO_DP
 
 				// Actually add the contact points to the manager
 				constraint_created |= mContactManager.AddContactConstraint(ioContactAllocator, body_pair_handle, *body1, *body2, manifold);
@@ -1170,7 +1170,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			
 					// Prune if we have more than 4 points
 					if (manifold.mWorldSpaceContactPointsOn1.size() > 4)
-						PruneContactPoints(mBody1->GetCenterOfMassPosition(), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
+						PruneContactPoints(Vec3(mBody1->GetCenterOfMassPosition()), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2); // TODO_DP
 
 					// Set other properties
 					manifold.mSubShapeID1 = inResult.mSubShapeID1;
@@ -1192,7 +1192,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), body1->GetCenterOfMassTransform(), body2->GetCenterOfMassTransform(), part1, part2, settings, collector);
+			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), body1->GetCenterOfMassTransform().ToMat44(), body2->GetCenterOfMassTransform().ToMat44(), part1, part2, settings, collector); // TODO_DP
 
 			constraint_created = collector.mConstraintCreated;
 		}
@@ -1593,10 +1593,10 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		// Draw start and end shape of cast
 		if (sDrawMotionQualityLinearCast)
 		{
-			Mat44 com = body.GetCenterOfMassTransform();
-			body.GetShape()->Draw(DebugRenderer::sInstance, com, Vec3::sReplicate(1.0f), Color::sGreen, false, true);
+			RMat44 com = body.GetCenterOfMassTransform();
+			body.GetShape()->Draw(DebugRenderer::sInstance, com.ToMat44(), Vec3::sReplicate(1.0f), Color::sGreen, false, true); // TODO_DP
 			DebugRenderer::sInstance->DrawArrow(com.GetTranslation(), com.GetTranslation() + ccd_body.mDeltaPosition, Color::sGreen, 0.1f);
-			body.GetShape()->Draw(DebugRenderer::sInstance, Mat44::sTranslation(ccd_body.mDeltaPosition) * com, Vec3::sReplicate(1.0f), Color::sRed, false, true);
+			body.GetShape()->Draw(DebugRenderer::sInstance, com.PostTranslated(ccd_body.mDeltaPosition).ToMat44(), Vec3::sReplicate(1.0f), Color::sRed, false, true); // TODO_DP
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -1791,7 +1791,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		};
 
 		// Check if we collide with any other body. Note that we use the non-locking interface as we know the broadphase cannot be modified at this point.
-		ShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
+		ShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform().ToMat44(), ccd_body.mDeltaPosition); // TODO_DP
 		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, np_collector, mBodyManager, ioSubStep, ioContext->mSubStepDeltaTime);
 		mBroadPhase->CastAABoxNoLock({ shape_cast.mShapeWorldBounds, shape_cast.mDirection }, bp_collector, broadphase_layer_filter, object_layer_filter);
 
@@ -1818,10 +1818,10 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 				for (const Vec3 &v : manifold.mWorldSpaceContactPointsOn2)
 					average_contact_point += v;
 				average_contact_point /= (float)manifold.mWorldSpaceContactPointsOn2.size();
-				ccd_body.mContactPointOn2 = average_contact_point;
+				ccd_body.mContactPointOn2 = RVec3(average_contact_point); // TODO_DP
 			}
 			else
-				ccd_body.mContactPointOn2 = cast_shape_result.mContactPointOn2;
+				ccd_body.mContactPointOn2 = RVec3(cast_shape_result.mContactPointOn2); // TODO_DP
 		}
 	}
 
@@ -1915,8 +1915,8 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 				if (ccd_body2 == nullptr || ccd_body2->mFraction >= ccd_body->mFraction)
 				{
 					// Calculate contact points relative to center of mass of both bodies
-					Vec3 r1_plus_u = ccd_body->mContactPointOn2 - (body1.GetCenterOfMassPosition() + ccd_body->mFraction * ccd_body->mDeltaPosition);
-					Vec3 r2 = ccd_body->mContactPointOn2 - body2.GetCenterOfMassPosition();
+					Vec3 r1_plus_u = Vec3(ccd_body->mContactPointOn2 - (body1.GetCenterOfMassPosition() + ccd_body->mFraction * ccd_body->mDeltaPosition));
+					Vec3 r2 = Vec3(ccd_body->mContactPointOn2 - body2.GetCenterOfMassPosition());
 
 					// Calculate velocity of collision points
 					Vec3 v1 = body1.GetPointVelocityCOM(r1_plus_u); 
@@ -1980,12 +1980,12 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					if (sDrawMotionQualityLinearCast)
 					{
 						// Draw the collision location
-						Mat44 collision_transform = Mat44::sTranslation(ccd_body->mFraction * ccd_body->mDeltaPosition) * body1.GetCenterOfMassTransform();
-						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform, Vec3::sReplicate(1.0f), Color::sYellow, false, true);
+						RMat44 collision_transform = body1.GetCenterOfMassTransform().PostTranslated(ccd_body->mFraction * ccd_body->mDeltaPosition);
+						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform.ToMat44(), Vec3::sReplicate(1.0f), Color::sYellow, false, true); // TODO_DP
 
 						// Draw the collision location + slop
-						Mat44 collision_transform_plus_slop = Mat44::sTranslation(ccd_body->mFractionPlusSlop * ccd_body->mDeltaPosition) * body1.GetCenterOfMassTransform();
-						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform_plus_slop, Vec3::sReplicate(1.0f), Color::sOrange, false, true);
+						RMat44 collision_transform_plus_slop = body1.GetCenterOfMassTransform().PostTranslated(ccd_body->mFractionPlusSlop * ccd_body->mDeltaPosition);
+						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform_plus_slop.ToMat44(), Vec3::sReplicate(1.0f), Color::sOrange, false, true); // TODO_DP
 
 						// Draw contact normal
 						DebugRenderer::sInstance->DrawArrow(ccd_body->mContactPointOn2, ccd_body->mContactPointOn2 - ccd_body->mContactNormal, Color::sYellow, 0.1f);

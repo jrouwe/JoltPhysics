@@ -27,7 +27,7 @@ static inline const NarrowPhaseQuery &sGetNarrowPhaseQuery(const PhysicsSystem *
 	return inLockBodies? inSystem->GetNarrowPhaseQuery() : inSystem->GetNarrowPhaseQueryNoLock();
 }
 
-Character::Character(const CharacterSettings *inSettings, Vec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
+Character::Character(const CharacterSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
 	mLayer(inSettings->mLayer)
 {
@@ -68,7 +68,7 @@ void Character::Activate(bool inLockBodies)
 	sGetBodyInterface(mSystem, inLockBodies).ActivateBody(mBodyID);
 }
 
-void Character::CheckCollision(Mat44Arg inCenterOfMassTransform, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
+void Character::CheckCollision(RMat44Arg inCenterOfMassTransform, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
 {
 	// Create query broadphase layer filter
 	DefaultBroadPhaseLayerFilter broadphase_layer_filter = mSystem->GetDefaultBroadPhaseLayerFilter(mLayer);
@@ -86,13 +86,13 @@ void Character::CheckCollision(Mat44Arg inCenterOfMassTransform, Vec3Arg inMovem
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
 	settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
 
-	sGetNarrowPhaseQuery(mSystem, inLockBodies).CollideShape(inShape, Vec3::sReplicate(1.0f), inCenterOfMassTransform, settings, ioCollector, broadphase_layer_filter, object_layer_filter, body_filter);
+	sGetNarrowPhaseQuery(mSystem, inLockBodies).CollideShape(inShape, Vec3::sReplicate(1.0f), inCenterOfMassTransform.ToMat44(), settings, ioCollector, broadphase_layer_filter, object_layer_filter, body_filter); // TODO_DP
 }
 
-void Character::CheckCollision(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
+void Character::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
 {
 	// Calculate center of mass transform
-	Mat44 center_of_mass = Mat44::sRotationTranslation(inRotation, inPosition).PreTranslated(inShape->GetCenterOfMass());
+	RMat44 center_of_mass = RMat44::sRotationTranslation(inRotation, inPosition).PreTranslated(inShape->GetCenterOfMass());
 
 	CheckCollision(center_of_mass, inMovementDirection, inMaxSeparationDistance, inShape, ioCollector, inLockBodies);
 }
@@ -100,7 +100,7 @@ void Character::CheckCollision(Vec3Arg inPosition, QuatArg inRotation, Vec3Arg i
 void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistance, CollideShapeCollector &ioCollector, bool inLockBodies) const
 {
 	// Determine position and velocity of body
-	Mat44 query_transform;
+	RMat44 query_transform;
 	Vec3 velocity;
 	{
 		BodyLockRead lock(sGetBodyLockInterface(mSystem, inLockBodies), mBodyID);
@@ -120,7 +120,7 @@ void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistan
 void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 {
 	// Get character position, rotation and velocity
-	Vec3 char_pos;
+	RVec3 char_pos;
 	Quat char_rot;
 	Vec3 char_vel;
 	{
@@ -149,7 +149,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 			{
 				mGroundBodyID = inResult.mBodyID2;
 				mGroundBodySubShapeID = inResult.mSubShapeID2;
-				mGroundPosition = inResult.mContactPointOn2;
+				mGroundPosition = RVec3(inResult.mContactPointOn2); // TODO_DP
 				mGroundNormal = normal;
 				mBestDot = dot;
 			}
@@ -157,7 +157,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 
 		BodyID				mGroundBodyID;
 		SubShapeID			mGroundBodySubShapeID;
-		Vec3				mGroundPosition = Vec3::sZero();
+		RVec3				mGroundPosition = RVec3::sZero();
 		Vec3				mGroundNormal = Vec3::sZero();
 
 	private:
@@ -182,8 +182,8 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 		const Body &body = lock.GetBody();
 
 		// Update ground state
-		Mat44 inv_transform = Mat44::sInverseRotationTranslation(char_rot, char_pos);
-		if (mSupportingVolume.SignedDistance(inv_transform * mGroundPosition) > 0.0f)
+		RMat44 inv_transform = RMat44::sInverseRotationTranslation(char_rot, char_pos);
+		if (mSupportingVolume.SignedDistance(Vec3(inv_transform * mGroundPosition)) > 0.0f)
 			mGroundState = EGroundState::NotSupported;
 		else if (IsSlopeTooSteep(mGroundNormal))
 			mGroundState = EGroundState::OnSteepGround;
@@ -229,22 +229,22 @@ void Character::AddImpulse(Vec3Arg inImpulse, bool inLockBodies)
 	sGetBodyInterface(mSystem, inLockBodies).AddImpulse(mBodyID, inImpulse);
 }
 
-void Character::GetPositionAndRotation(Vec3 &outPosition, Quat &outRotation, bool inLockBodies) const
+void Character::GetPositionAndRotation(RVec3 &outPosition, Quat &outRotation, bool inLockBodies) const
 {
 	sGetBodyInterface(mSystem, inLockBodies).GetPositionAndRotation(mBodyID, outPosition, outRotation);
 }
 
-void Character::SetPositionAndRotation(Vec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode, bool inLockBodies) const
+void Character::SetPositionAndRotation(RVec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode, bool inLockBodies) const
 {
 	sGetBodyInterface(mSystem, inLockBodies).SetPositionAndRotation(mBodyID, inPosition, inRotation, inActivationMode);
 }
 
-Vec3 Character::GetPosition(bool inLockBodies) const
+RVec3 Character::GetPosition(bool inLockBodies) const
 {
 	return sGetBodyInterface(mSystem, inLockBodies).GetPosition(mBodyID);
 }
 
-void Character::SetPosition(Vec3Arg inPosition, EActivation inActivationMode, bool inLockBodies) 
+void Character::SetPosition(RVec3Arg inPosition, EActivation inActivationMode, bool inLockBodies) 
 {
 	sGetBodyInterface(mSystem, inLockBodies).SetPosition(mBodyID, inPosition, inActivationMode);
 }
@@ -259,12 +259,12 @@ void Character::SetRotation(QuatArg inRotation, EActivation inActivationMode, bo
 	sGetBodyInterface(mSystem, inLockBodies).SetRotation(mBodyID, inRotation, inActivationMode);
 }
 
-Vec3 Character::GetCenterOfMassPosition(bool inLockBodies) const
+RVec3 Character::GetCenterOfMassPosition(bool inLockBodies) const
 {
 	return sGetBodyInterface(mSystem, inLockBodies).GetCenterOfMassPosition(mBodyID);
 }
 
-Mat44 Character::GetWorldTransform(bool inLockBodies) const
+RMat44 Character::GetWorldTransform(bool inLockBodies) const
 {
 	return sGetBodyInterface(mSystem, inLockBodies).GetWorldTransform(mBodyID);
 }

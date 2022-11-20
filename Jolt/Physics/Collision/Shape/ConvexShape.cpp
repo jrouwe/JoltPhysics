@@ -436,7 +436,7 @@ void ConvexShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg i
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void ConvexShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
+void ConvexShape::DrawGetSupportFunction(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
 {
 	// Get the support function with convex radius
 	SupportBuffer buffer;
@@ -456,15 +456,15 @@ void ConvexShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inC
 		{
 			Vec3 direction = 0.05f * v;
 			Vec3 pos = add_convex.GetSupport(direction);
-			Vec3 from = inCenterOfMassTransform * pos;
-			Vec3 to = inCenterOfMassTransform * (pos + direction);
+			RVec3 from = inCenterOfMassTransform * pos;
+			RVec3 to = inCenterOfMassTransform * (pos + direction);
 			inRenderer->DrawMarker(from, Color::sWhite, 0.001f);
 			inRenderer->DrawArrow(from, to, Color::sWhite, 0.001f);
 		}
 	}
 }
 
-void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
+void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	// Sample directions and map which faces belong to which directions
 	using FaceToDirection = UnorderedMap<SupportingFace, Array<Vec3>>;
@@ -497,13 +497,13 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCe
 		Vec3 displacement = 0.001f * normal;
 		
 		// Transform face to world space and calculate center of mass
-		Vec3 com = Vec3::sZero();
+		Vec3 com_ls = Vec3::sZero();
 		for (Vec3 &v : face)
 		{
-			v = inCenterOfMassTransform * (v + displacement);
-			com += v;
+			v = inCenterOfMassTransform.Multiply3x3(v + displacement);
+			com_ls += v;
 		}
-		com /= (float)face.size();
+		RVec3 com = inCenterOfMassTransform.GetTranslation() + com_ls / (float)face.size();
 		
 		// Draw the polygon and directions
 		inRenderer->DrawWirePolygon(face, color, face.size() >= 3? 0.001f : 0.0f);

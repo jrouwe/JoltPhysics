@@ -28,7 +28,7 @@ bool Shape::sDrawSubmergedVolumes = false;
 
 ShapeFunctions ShapeFunctions::sRegistry[NumSubShapeTypes];
 
-TransformedShape Shape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
+TransformedShape Shape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {
 	// We have reached the leaf shape so there is no remainder
 	outRemainder = SubShapeID();
@@ -39,7 +39,7 @@ TransformedShape Shape::GetSubShapeTransformedShape(const SubShapeID &inSubShape
 	return ts;
 }
 
-void Shape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
+void Shape::CollectTransformedShapes(const AABox &inBox, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
 	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
@@ -50,10 +50,10 @@ void Shape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, 
 	ioCollector.AddHit(ts);
 }
 
-void Shape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
+void Shape::TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
 	Vec3 scale;
-	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
+	RMat44 transform = inCenterOfMassTransform.Decompose(scale);
 	TransformedShape ts(transform.GetTranslation(), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(scale);
 	ioCollector.AddHit(ts);
@@ -305,7 +305,7 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 		Array<TransformedShape>		mShapes;
 	};
 	Collector collector;
-	TransformShape(Mat44::sScale(inScale) * Mat44::sTranslation(GetCenterOfMass()), collector);
+	TransformShape(RMat44(Mat44::sScale(inScale) * Mat44::sTranslation(GetCenterOfMass())), collector);
 
 	// Construct a compound shape
 	StaticCompoundShapeSettings compound;
@@ -320,7 +320,7 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 			shape = new ScaledShape(shape, scale);
 
 		// Add the shape
-		compound.AddShape(ts.mShapePositionCOM - ts.mShapeRotation * shape->GetCenterOfMass(), ts.mShapeRotation, shape);
+		compound.AddShape(Vec3(ts.mShapePositionCOM) - ts.mShapeRotation * shape->GetCenterOfMass(), ts.mShapeRotation, shape);
 	}
 
 	return compound.Create();

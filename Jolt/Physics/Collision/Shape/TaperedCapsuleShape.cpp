@@ -331,10 +331,10 @@ AABox TaperedCapsuleShape::GetInertiaApproximation() const
 	return AABox(Vec3(-avg_radius, mBottomCenter - mBottomRadius, -avg_radius), Vec3(avg_radius, mTopCenter + mTopRadius, avg_radius));
 }
 
-void TaperedCapsuleShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
+void TaperedCapsuleShape::TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
 	Vec3 scale;
-	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
+	RMat44 transform = inCenterOfMassTransform.Decompose(scale);
 	TransformedShape ts(transform.GetTranslation(), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs()));
 	ioCollector.AddHit(ts);

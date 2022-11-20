@@ -88,7 +88,7 @@ public:
 	bool								IsSupported() const										{ return mGroundState == EGroundState::OnGround || mGroundState == EGroundState::OnSteepGround; }
 
 	/// Get the contact point with the ground
-	Vec3 								GetGroundPosition() const								{ return mGroundPosition; }
+	RVec3 								GetGroundPosition() const								{ return mGroundPosition; }
 
 	/// Get the contact normal with the ground
 	Vec3	 							GetGroundNormal() const									{ return mGroundNormal; }
@@ -135,7 +135,7 @@ protected:
 	EGroundState						mGroundState = EGroundState::InAir;
 	BodyID								mGroundBodyID;
 	SubShapeID							mGroundBodySubShapeID;
-	Vec3								mGroundPosition = Vec3::sZero();
+	RVec3								mGroundPosition = RVec3::sZero();
 	Vec3								mGroundNormal = Vec3::sZero();
 	Vec3								mGroundVelocity = Vec3::sZero();
 	RefConst<PhysicsMaterial>			mGroundMaterial = PhysicsMaterial::sDefault;

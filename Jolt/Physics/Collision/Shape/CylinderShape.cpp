@@ -298,10 +298,10 @@ void CylinderShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void CylinderShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
+void CylinderShape::TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
 	Vec3 scale;
-	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
+	RMat44 transform = inCenterOfMassTransform.Decompose(scale);
 	TransformedShape ts(transform.GetTranslation(), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	Vec3 abs_scale = scale.Abs();
 	float xz = 0.5f * (abs_scale.GetX() + abs_scale.GetZ());

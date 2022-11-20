@@ -194,6 +194,9 @@ public:
 	/// This function can be overridden to return a closer fitting world space bounding box, by default it will just transform what GetLocalBounds() returns.
 	virtual AABox					GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { return GetLocalBounds().Scaled(inScale).Transformed(inCenterOfMassTransform); }
 
+	/// Get world space bounds including convex radius.
+	AABox							GetWorldSpaceBounds(DMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { return GetLocalBounds().Scaled(inScale).Transformed(inCenterOfMassTransform); }
+
 	/// Returns the radius of the biggest sphere that fits entirely in the shape. In case this shape consists of multiple sub shapes, it returns the smallest sphere of the parts. 
 	/// This can be used as a measure of how far the shape can be moved without risking going through geometry.
 	virtual float					GetInnerRadius() const = 0;
@@ -230,7 +233,7 @@ public:
 	/// @param inScale Scale of this shape
 	/// @param outRemainder The remainder of the sub shape ID after removing the sub shape
 	/// @return Direct child sub shape and its transform, note that the body ID and sub shape ID will be invalid
-	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const;
+	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const;
 
 	/// Gets the properties needed to do buoyancy calculations for a body using this shape
 	/// @param inCenterOfMassTransform Transform that takes this shape (centered around center of mass) to world space
@@ -246,10 +249,10 @@ public:
 	virtual void					Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const = 0;
 
 	/// Draw the results of the GetSupportFunction with the convex radius added back on to show any errors introduced by this process (only relevant for convex shapes)
-	virtual void					DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const { /* Only implemented for convex shapes */ }
+	virtual void					DrawGetSupportFunction(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const { /* Only implemented for convex shapes */ }
 
 	/// Draw the results of the GetSupportingFace function to show any errors introduced by this process (only relevant for convex shapes)
-	virtual void					DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { /* Only implemented for convex shapes */ }
+	virtual void					DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { /* Only implemented for convex shapes */ }
 #endif // JPH_DEBUG_RENDERER
 
 	/// Cast a ray against this shape, returns true if it finds a hit closer than ioHit.mFraction and updates that fraction. Otherwise ioHit is left untouched and the function returns false.
@@ -272,13 +275,13 @@ public:
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.
 	/// inPositionCOM/inRotation/inScale describes the transform of this shape.
 	/// inSubShapeIDCeator represents the current sub shape ID of this shape.
-	virtual void					CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const;
+	virtual void					CollectTransformedShapes(const AABox &inBox, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const;
 	   
 	/// Transforms this shape and all of its children with inTransform, resulting shape(s) are passed to ioCollector.
 	/// Note that not all shapes support all transforms (especially true for scaling), the resulting shape will try to match the transform as accurately as possible.
 	/// @param inCenterOfMassTransform The transform (rotation, translation, scale) that the center of mass of the shape should get
 	/// @param ioCollector The transformed shapes will be passed to this collector
-	virtual void					TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const;
+	virtual void					TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const;
 
 	/// Scale this shape. Note that not all shapes support all scales, this will return a shape that matches the scale as accurately as possible.
 	/// @param inScale The scale to use for this shape (note: this scale is applied to the entire shape in the space it was created, most function apply the scale in the space of the leaf shapes and from the center of mass!)

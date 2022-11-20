@@ -71,12 +71,12 @@ ConeConstraint::ConeConstraint(Body &inBody1, Body &inBody2, const ConeConstrain
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
 		// If all properties were specified in world space, take them to local space now
-		Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
-		mLocalSpacePosition1 = inv_transform1 * mLocalSpacePosition1;
+		RMat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition1 = Vec3(inv_transform1 * mLocalSpacePosition1);
 		mLocalSpaceTwistAxis1 = inv_transform1.Multiply3x3(mLocalSpaceTwistAxis1);
 
-		Mat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
-		mLocalSpacePosition2 = inv_transform2 * mLocalSpacePosition2;
+		RMat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition2 = Vec3(inv_transform2 * mLocalSpacePosition2);
 		mLocalSpaceTwistAxis2 = inv_transform2.Multiply3x3(mLocalSpaceTwistAxis2);
 	}
 	else
@@ -152,11 +152,11 @@ bool ConeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 #ifdef JPH_DEBUG_RENDERER
 void ConeConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Mat44 transform2 = mBody2->GetCenterOfMassTransform();
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RMat44 transform2 = mBody2->GetCenterOfMassTransform();
 
-	Vec3 p1 = transform1 * mLocalSpacePosition1;
-	Vec3 p2 = transform2 * mLocalSpacePosition2;
+	RVec3 p1 = transform1 * mLocalSpacePosition1;
+	RVec3 p2 = transform2 * mLocalSpacePosition2;
 
 	// Draw constraint
 	inRenderer->DrawMarker(p1, Color::sRed, 0.1f);
@@ -170,8 +170,8 @@ void ConeConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 void ConeConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 {
 	// Get constraint properties in world space
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Vec3 position1 = transform1 * mLocalSpacePosition1;
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RVec3 position1 = transform1 * mLocalSpacePosition1;
 	Vec3 twist_axis1 = transform1.Multiply3x3(mLocalSpaceTwistAxis1);
 	Vec3 normal_axis1 = transform1.Multiply3x3(mLocalSpaceTwistAxis1.GetNormalizedPerpendicular());
 
@@ -202,9 +202,9 @@ Ref<ConstraintSettings> ConeConstraint::GetConstraintSettings() const
 	ConeConstraintSettings *settings = new ConeConstraintSettings;
 	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
-	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mPoint1 = RVec3(mLocalSpacePosition1);
 	settings->mTwistAxis1 = mLocalSpaceTwistAxis1;
-	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mPoint2 = RVec3(mLocalSpacePosition2);
 	settings->mTwistAxis2 = mLocalSpaceTwistAxis2;
 	settings->mHalfConeAngle = ACos(mCosHalfConeAngle);
 	return settings;

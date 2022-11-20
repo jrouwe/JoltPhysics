@@ -25,11 +25,11 @@ public:
 	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
 
 	/// Body 1 constraint reference frame (space determined by mSpace)
-	Vec3						mPoint1 = Vec3::sZero();
+	RVec3						mPoint1 = RVec3::sZero();
 	Vec3						mTwistAxis1 = Vec3::sAxisX();
 
 	/// Body 2 constraint reference frame (space determined by mSpace)
-	Vec3						mPoint2 = Vec3::sZero();
+	RVec3						mPoint2 = RVec3::sZero();
 	Vec3						mTwistAxis2 = Vec3::sAxisX();
 
 	/// Half of maximum angle between twist axis of body 1 and 2

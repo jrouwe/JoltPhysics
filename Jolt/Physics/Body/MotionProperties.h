@@ -143,7 +143,7 @@ public:
 	uint32					GetIndexInActiveBodiesInternal() const							{ return mIndexInActiveBodies; }
 
 	/// Reset spheres to center around inPoints with radius 0
-	inline void				ResetSleepTestSpheres(const Vec3 *inPoints);
+	inline void				ResetSleepTestSpheres(const RVec3 *inPoints);
 
 	/// Saving state for replay
 	void					SaveState(StateRecorder &inStream) const;

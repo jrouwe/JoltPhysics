@@ -72,12 +72,6 @@ TwoBodyConstraint *HingeConstraintSettings::Create(Body &inBody1, Body &inBody2)
 
 HingeConstraint::HingeConstraint(Body &inBody1, Body &inBody2, const HingeConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings),
-	mLocalSpacePosition1(inSettings.mPoint1),
-	mLocalSpacePosition2(inSettings.mPoint2),
-	mLocalSpaceHingeAxis1(inSettings.mHingeAxis1),
-	mLocalSpaceHingeAxis2(inSettings.mHingeAxis2),
-	mLocalSpaceNormalAxis1(inSettings.mNormalAxis1),
-	mLocalSpaceNormalAxis2(inSettings.mNormalAxis2),
 	mMaxFrictionTorque(inSettings.mMaxFrictionTorque),
 	mMotorSettings(inSettings.mMotorSettings)
 {
@@ -91,19 +85,29 @@ HingeConstraint::HingeConstraint(Body &inBody1, Body &inBody2, const HingeConstr
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
 		// If all properties were specified in world space, take them to local space now
-		Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
-		mLocalSpacePosition1 = inv_transform1 * mLocalSpacePosition1;
-		mLocalSpaceHingeAxis1 = inv_transform1.Multiply3x3(mLocalSpaceHingeAxis1).Normalized();
-		mLocalSpaceNormalAxis1 = inv_transform1.Multiply3x3(mLocalSpaceNormalAxis1).Normalized();
+		RMat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition1 = Vec3(inv_transform1 * inSettings.mPoint1);
+		mLocalSpaceHingeAxis1 = inv_transform1.Multiply3x3(inSettings.mHingeAxis1).Normalized();
+		mLocalSpaceNormalAxis1 = inv_transform1.Multiply3x3(inSettings.mNormalAxis1).Normalized();
 
-		Mat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
-		mLocalSpacePosition2 = inv_transform2 * mLocalSpacePosition2;
-		mLocalSpaceHingeAxis2 = inv_transform2.Multiply3x3(mLocalSpaceHingeAxis2).Normalized();
-		mLocalSpaceNormalAxis2 = inv_transform2.Multiply3x3(mLocalSpaceNormalAxis2).Normalized();
+		RMat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
+		mLocalSpacePosition2 = Vec3(inv_transform2 * inSettings.mPoint2);
+		mLocalSpaceHingeAxis2 = inv_transform2.Multiply3x3(inSettings.mHingeAxis2).Normalized();
+		mLocalSpaceNormalAxis2 = inv_transform2.Multiply3x3(inSettings.mNormalAxis2).Normalized();
 
 		// Constraints were specified in world space, so we should have replaced c1 with q10^-1 c1 and c2 with q20^-1 c2
 		// => r0^-1 = (q20^-1 c2) (q10^-1 c1)^1 = q20^-1 (c2 c1^-1) q10
 		mInvInitialOrientation = inBody2.GetRotation().Conjugated() * mInvInitialOrientation * inBody1.GetRotation();
+	}
+	else
+	{
+		mLocalSpacePosition1 = Vec3(inSettings.mPoint1);
+		mLocalSpaceHingeAxis1 = inSettings.mHingeAxis1;
+		mLocalSpaceNormalAxis1 = inSettings.mNormalAxis1;
+
+		mLocalSpacePosition2 = Vec3(inSettings.mPoint2);
+		mLocalSpaceHingeAxis2 = inSettings.mHingeAxis2;
+		mLocalSpaceNormalAxis2 = inSettings.mNormalAxis2;
 	}
 }
 
@@ -281,15 +285,15 @@ bool HingeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 #ifdef JPH_DEBUG_RENDERER
 void HingeConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Mat44 transform2 = mBody2->GetCenterOfMassTransform();
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RMat44 transform2 = mBody2->GetCenterOfMassTransform();
 
 	// Draw constraint
-	Vec3 constraint_pos1 = transform1 * mLocalSpacePosition1;
+	RVec3 constraint_pos1 = transform1 * mLocalSpacePosition1;
 	inRenderer->DrawMarker(constraint_pos1, Color::sRed, 0.1f);
 	inRenderer->DrawLine(constraint_pos1, transform1 * (mLocalSpacePosition1 + mDrawConstraintSize * mLocalSpaceHingeAxis1), Color::sRed);
 
-	Vec3 constraint_pos2 = transform2 * mLocalSpacePosition2;
+	RVec3 constraint_pos2 = transform2 * mLocalSpacePosition2;
 	inRenderer->DrawMarker(constraint_pos2, Color::sGreen, 0.1f);
 	inRenderer->DrawLine(constraint_pos2, transform2 * (mLocalSpacePosition2 + mDrawConstraintSize * mLocalSpaceHingeAxis2), Color::sGreen);
 	inRenderer->DrawLine(constraint_pos2, transform2 * (mLocalSpacePosition2 + mDrawConstraintSize * mLocalSpaceNormalAxis2), Color::sWhite);
@@ -300,8 +304,8 @@ void HingeConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	if (mHasLimits && mLimitsMax > mLimitsMin)
 	{
 		// Get constraint properties in world space
-		Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-		Vec3 position1 = transform1 * mLocalSpacePosition1;
+		RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+		RVec3 position1 = transform1 * mLocalSpacePosition1;
 		Vec3 hinge_axis1 = transform1.Multiply3x3(mLocalSpaceHingeAxis1);
 		Vec3 normal_axis1 = transform1.Multiply3x3(mLocalSpaceNormalAxis1);
 
@@ -344,10 +348,10 @@ Ref<ConstraintSettings> HingeConstraint::GetConstraintSettings() const
 	HingeConstraintSettings *settings = new HingeConstraintSettings;
 	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
-	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mPoint1 = RVec3(mLocalSpacePosition1);
 	settings->mHingeAxis1 = mLocalSpaceHingeAxis1;
 	settings->mNormalAxis1 = mLocalSpaceNormalAxis1;
-	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mPoint2 = RVec3(mLocalSpacePosition2);
 	settings->mHingeAxis2 = mLocalSpaceHingeAxis2;
 	settings->mNormalAxis2 = mLocalSpaceNormalAxis2;
 	settings->mLimitsMin = mLimitsMin;

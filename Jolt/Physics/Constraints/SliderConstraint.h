@@ -35,12 +35,12 @@ public:
 
 	/// Body 1 constraint reference frame (space determined by mSpace).
 	/// Slider axis is the axis along which movement is possible (direction), normal axis is a perpendicular vector to define the frame.
-	Vec3						mPoint1 = Vec3::sZero();
+	RVec3						mPoint1 = RVec3::sZero();
 	Vec3						mSliderAxis1 = Vec3::sAxisX();
 	Vec3						mNormalAxis1 = Vec3::sAxisY();
 	
 	/// Body 2 constraint reference frame (space determined by mSpace)
-	Vec3						mPoint2 = Vec3::sZero();
+	RVec3						mPoint2 = RVec3::sZero();
 	Vec3						mSliderAxis2 = Vec3::sAxisX();
 	Vec3						mNormalAxis2 = Vec3::sAxisY();
 
