@@ -27,6 +27,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 JPH_SUPPRESS_WARNINGS_STD_END
 
 using namespace JPH;
+using namespace JPH::literals;
 using namespace std;
 
 // Disable common warnings triggered by Jolt

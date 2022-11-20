@@ -180,7 +180,7 @@ TEST_SUITE("WheeledVehicleTests")
 		c.Simulate(1.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		RVec3 pos2 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos2.GetX(), 0, Real(1.0e-3)); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos2.GetX(), 0, 1.0e-3_r); // Not moving left/right
 		CHECK(pos2.GetZ() > pos1.GetZ() + 1.0f); // Moving in Z direction
 		Vec3 vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel.GetX(), 0, 1.0e-2f); // Not moving left/right
@@ -194,7 +194,7 @@ TEST_SUITE("WheeledVehicleTests")
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone sleeping
 		RVec3 pos3 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos3.GetX(), 0, Real(2.0e-3)); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos3.GetX(), 0, 2.0e-3_r); // Not moving left/right
 		CHECK(pos3.GetZ() > pos2.GetZ() + 1.0f); // Moving in Z direction while braking
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel, Vec3::sZero(), 1.0e-3f); // Not moving
@@ -205,7 +205,7 @@ TEST_SUITE("WheeledVehicleTests")
 		c.Simulate(2.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		RVec3 pos4 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos4.GetX(), 0, Real(1.0e-2)); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos4.GetX(), 0, 1.0e-2_r); // Not moving left/right
 		CHECK(pos4.GetZ() < pos3.GetZ() - 1.0f); // Moving in -Z direction
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel.GetX(), 0, 1.0e-2f); // Not moving left/right
@@ -219,7 +219,7 @@ TEST_SUITE("WheeledVehicleTests")
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone sleeping
 		RVec3 pos5 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos5.GetX(), 0, Real(1.0e-2)); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos5.GetX(), 0, 1.0e-2_r); // Not moving left/right
 		CHECK(pos5.GetZ() < pos4.GetZ() - 1.0f); // Moving in -Z direction while braking
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel, Vec3::sZero(), 1.0e-3f); // Not moving
@@ -321,7 +321,7 @@ TEST_SUITE("WheeledVehicleTests")
 				}
 			}
 			CHECK(vehicle_on_floor);
-			CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, Real(0.02));
+			CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.02_r);
 
 			// Start driving
 			controller->SetDriverInput(1.0f, 0, 0, 0);
@@ -332,7 +332,7 @@ TEST_SUITE("WheeledVehicleTests")
 			if (t.mShouldMove)
 				CHECK(body->GetPosition().GetZ() > 0.5f);
 			else
-				CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, Real(0.05));
+				CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.05_r);
 		}
 	}
 }

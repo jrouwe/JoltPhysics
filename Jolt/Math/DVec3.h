@@ -238,7 +238,7 @@ public:
 
 	/// Representations of true and false for boolean operations
 	inline static const double	cTrue = BitCast<double>(~uint64(0));
-	inline static const double	cFalse = 0.0f;
+	inline static const double	cFalse = 0.0;
 
 	union
 	{

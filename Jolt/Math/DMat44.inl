@@ -62,7 +62,7 @@ bool DMat44::IsClose(DMat44Arg inM2, float inMaxDistSq) const
 	for (int i = 0; i < 3; ++i)
 		if (!mCol[i].IsClose(inM2.mCol[i], inMaxDistSq))
 			return false;
-	return mCol3.IsClose(inM2.mCol3, inMaxDistSq);
+	return mCol3.IsClose(inM2.mCol3, double(inMaxDistSq));
 }
 
 DMat44 DMat44::operator * (Mat44Arg inM) const
@@ -90,25 +90,25 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 DVec3 DMat44::operator * (Vec3Arg inV) const
 {
 	return DVec3(
-		mCol3.mD32[0] + mCol[0].mF32[0] * inV.mF32[0] + mCol[1].mF32[0] * inV.mF32[1] + mCol[2].mF32[0] * inV.mF32[2], 
-		mCol3.mD32[1] + mCol[0].mF32[1] * inV.mF32[0] + mCol[1].mF32[1] * inV.mF32[1] + mCol[2].mF32[1] * inV.mF32[2], 
-		mCol3.mD32[2] + mCol[0].mF32[2] * inV.mF32[0] + mCol[1].mF32[2] * inV.mF32[1] + mCol[2].mF32[2] * inV.mF32[2]);
+		mCol3.mD32[0] + double(mCol[0].mF32[0] * inV.mF32[0] + mCol[1].mF32[0] * inV.mF32[1] + mCol[2].mF32[0] * inV.mF32[2]), 
+		mCol3.mD32[1] + double(mCol[0].mF32[1] * inV.mF32[0] + mCol[1].mF32[1] * inV.mF32[1] + mCol[2].mF32[1] * inV.mF32[2]), 
+		mCol3.mD32[2] + double(mCol[0].mF32[2] * inV.mF32[0] + mCol[1].mF32[2] * inV.mF32[1] + mCol[2].mF32[2] * inV.mF32[2]));
 }
 
 DVec3 DMat44::operator * (DVec3Arg inV) const
 {
 	return DVec3(
-		mCol3.mD32[0] + mCol[0].mF32[0] * inV.mD32[0] + mCol[1].mF32[0] * inV.mD32[1] + mCol[2].mF32[0] * inV.mD32[2], 
-		mCol3.mD32[1] + mCol[0].mF32[1] * inV.mD32[0] + mCol[1].mF32[1] * inV.mD32[1] + mCol[2].mF32[1] * inV.mD32[2], 
-		mCol3.mD32[2] + mCol[0].mF32[2] * inV.mD32[0] + mCol[1].mF32[2] * inV.mD32[1] + mCol[2].mF32[2] * inV.mD32[2]);
+		mCol3.mD32[0] + double(mCol[0].mF32[0]) * inV.mD32[0] + double(mCol[1].mF32[0]) * inV.mD32[1] + double(mCol[2].mF32[0]) * inV.mD32[2], 
+		mCol3.mD32[1] + double(mCol[0].mF32[1]) * inV.mD32[0] + double(mCol[1].mF32[1]) * inV.mD32[1] + double(mCol[2].mF32[1]) * inV.mD32[2], 
+		mCol3.mD32[2] + double(mCol[0].mF32[2]) * inV.mD32[0] + double(mCol[1].mF32[2]) * inV.mD32[1] + double(mCol[2].mF32[2]) * inV.mD32[2]);
 }
 
 DVec3 DMat44::Multiply3x3(DVec3Arg inV) const
 {
 	return DVec3(
-		mCol[0].mF32[0] * inV.mD32[0] + mCol[1].mF32[0] * inV.mD32[1] + mCol[2].mF32[0] * inV.mD32[2], 
-		mCol[0].mF32[1] * inV.mD32[0] + mCol[1].mF32[1] * inV.mD32[1] + mCol[2].mF32[1] * inV.mD32[2], 
-		mCol[0].mF32[2] * inV.mD32[0] + mCol[1].mF32[2] * inV.mD32[1] + mCol[2].mF32[2] * inV.mD32[2]);
+		double(mCol[0].mF32[0]) * inV.mD32[0] + double(mCol[1].mF32[0]) * inV.mD32[1] + double(mCol[2].mF32[0]) * inV.mD32[2], 
+		double(mCol[0].mF32[1]) * inV.mD32[0] + double(mCol[1].mF32[1]) * inV.mD32[1] + double(mCol[2].mF32[1]) * inV.mD32[2], 
+		double(mCol[0].mF32[2]) * inV.mD32[0] + double(mCol[1].mF32[2]) * inV.mD32[1] + double(mCol[2].mF32[2]) * inV.mD32[2]);
 }
 
 void DMat44::SetRotation(Mat44Arg inRotation)

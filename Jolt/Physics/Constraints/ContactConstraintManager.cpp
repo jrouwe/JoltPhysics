@@ -17,6 +17,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+using namespace literals;
+
 #ifdef JPH_DEBUG_RENDERER
 bool ContactConstraintManager::sDrawContactPoint = false;
 bool ContactConstraintManager::sDrawSupportingFaces = false;
@@ -33,7 +35,7 @@ bool ContactConstraintManager::sDrawContactManifolds = false;
 void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal)
 {
 	// Calculate collision points relative to body
-	RVec3 p = Real(0.5) * (inWorldSpacePosition1 + inWorldSpacePosition2);
+	RVec3 p = 0.5_r * (inWorldSpacePosition1 + inWorldSpacePosition2);
 	Vec3 r1 = Vec3(p - inBody1.GetCenterOfMassPosition());
 	Vec3 r2 = Vec3(p - inBody2.GetCenterOfMassPosition());
 
@@ -48,7 +50,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAn
 		<< " restitution: " << inCombinedRestitution << " friction: " << inCombinedFriction << " minv: " << inMinVelocityForRestitution);
 
 	// Calculate collision points relative to body
-	RVec3 p = 0.5f * (inWorldSpacePosition1 + inWorldSpacePosition2);
+	RVec3 p = 0.5_r * (inWorldSpacePosition1 + inWorldSpacePosition2);
 	Vec3 r1 = Vec3(p - inBody1.GetCenterOfMassPosition());
 	Vec3 r2 = Vec3(p - inBody2.GetCenterOfMassPosition());
 

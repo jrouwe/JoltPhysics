@@ -28,6 +28,9 @@ JPH_SUPPRESS_WARNINGS
 // All Jolt symbols are in the JPH namespace
 using namespace JPH;
 
+// If you want your code to compile using single or double precision write 0.0_r to get a Real value that compiles to double or float depending if JPH_DOUBLE_PRECISION is set or not.
+using namespace JPH::literals;
+
 // We're also using STL classes in this example
 using namespace std;
 
@@ -275,7 +278,7 @@ int main(int argc, char** argv)
 	ShapeRefC floor_shape = floor_shape_result.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
 
 	// Create the settings for the body itself. Note that here you can also set other properties like the restitution / friction.
-	BodyCreationSettings floor_settings(floor_shape, RVec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	BodyCreationSettings floor_settings(floor_shape, RVec3(0.0_r, -1.0_r, 0.0_r), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 
 	// Create the actual rigid body
 	Body *floor = body_interface.CreateBody(floor_settings); // Note that if we run out of bodies this can return nullptr
@@ -285,7 +288,7 @@ int main(int argc, char** argv)
 
 	// Now create a dynamic body to bounce on the floor
 	// Note that this uses the shorthand version of creating and adding a body to the world
-	BodyCreationSettings sphere_settings(new SphereShape(0.5f), RVec3(0.0f, 2.0f, 0.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings sphere_settings(new SphereShape(0.5f), RVec3(0.0_r, 2.0_r, 0.0_r), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	BodyID sphere_id = body_interface.CreateAndAddBody(sphere_settings, EActivation::Activate);
 
 	// Now you can interact with the dynamic body, in this case we're going to give it a velocity.

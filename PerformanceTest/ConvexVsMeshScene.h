@@ -70,7 +70,7 @@ public:
 		// Create mesh shape creation settings
 		mMeshSettings.mMotionType = EMotionType::Static;
 		mMeshSettings.mObjectLayer = Layers::NON_MOVING;
-		mMeshSettings.mPosition = RVec3(-center, max_height, -center);
+		mMeshSettings.mPosition = RVec3(Real(-center), Real(max_height), Real(-center));
 		mMeshSettings.mFriction = 0.5f;
 		mMeshSettings.mRestitution = 0.6f;
 		mMeshSettings.SetShapeSettings(mesh_shape_settings);
@@ -107,7 +107,7 @@ public:
 					creation_settings.mMotionType = EMotionType::Dynamic;
 					creation_settings.mMotionQuality = inMotionQuality;
 					creation_settings.mObjectLayer = Layers::MOVING;
-					creation_settings.mPosition = RVec3(7.5f * x, 15.0f + 2.0f * y, 7.5f * z);
+					creation_settings.mPosition = RVec3(7.5_r * x, 15.0_r + 2.0_r * y, 7.5_r * z);
 					creation_settings.mFriction = 0.5f;
 					creation_settings.mRestitution = 0.6f;
 					creation_settings.SetShape(mShapes[y]);

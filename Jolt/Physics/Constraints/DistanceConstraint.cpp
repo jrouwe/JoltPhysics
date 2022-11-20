@@ -14,6 +14,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+using namespace literals;
+
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(DistanceConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(DistanceConstraintSettings, TwoBodyConstraintSettings)
@@ -203,7 +205,7 @@ void DistanceConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 	inRenderer->DrawMarker(mWorldSpacePosition2, Color::sWhite, 0.1f);
 
 	// Draw current length
-	inRenderer->DrawText3D(0.5f * (mWorldSpacePosition1 + mWorldSpacePosition2), StringFormat("%.2f", (double)len));
+	inRenderer->DrawText3D(0.5_r * (mWorldSpacePosition1 + mWorldSpacePosition2), StringFormat("%.2f", (double)len));
 }
 #endif // JPH_DEBUG_RENDERER
 
