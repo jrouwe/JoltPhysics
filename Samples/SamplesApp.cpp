@@ -1187,7 +1187,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw shape
-			shape->Draw(mDebugRenderer, shape_transform, Vec3::sReplicate(1.0f), had_hit? Color::sGreen : Color::sGrey, false, false);
+			shape->Draw(mDebugRenderer, RMat44(shape_transform), Vec3::sReplicate(1.0f), had_hit? Color::sGreen : Color::sGrey, false, false); // TODO_DP
 		#endif // JPH_DEBUG_RENDERER
 		}
 		break;
@@ -1262,7 +1262,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						// Draw shape
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
 					#ifdef JPH_DEBUG_RENDERER
-						shape_cast.mShape->Draw(mDebugRenderer, shape_cast.mCenterOfMassStart.PostTranslated(hit.mFraction * shape_cast.mDirection), Vec3::sReplicate(1.0f), color, false, false);
+						shape_cast.mShape->Draw(mDebugRenderer, RMat44(shape_cast.mCenterOfMassStart.PostTranslated(hit.mFraction * shape_cast.mDirection)), Vec3::sReplicate(1.0f), color, false, false); // TODO_DP
 					#endif // JPH_DEBUG_RENDERER
 
 						// Draw normal
@@ -1298,7 +1298,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 				// Draw 'miss'
 				mDebugRenderer->DrawLine(start, start + direction, Color::sRed);
 			#ifdef JPH_DEBUG_RENDERER
-				shape_cast.mShape->Draw(mDebugRenderer, shape_cast.mCenterOfMassStart.PostTranslated(shape_cast.mDirection), Vec3::sReplicate(1.0f), Color::sRed, false, false);
+				shape_cast.mShape->Draw(mDebugRenderer, RMat44(shape_cast.mCenterOfMassStart.PostTranslated(shape_cast.mDirection)), Vec3::sReplicate(1.0f), Color::sRed, false, false); // TODO_DP
 			#endif // JPH_DEBUG_RENDERER
 			}
 		}

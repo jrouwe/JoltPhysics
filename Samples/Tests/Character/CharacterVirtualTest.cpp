@@ -39,7 +39,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Draw character pre update (the sim is also drawn pre update)
 	RMat44 com = mCharacter->GetCenterOfMassTransform();
 #ifdef JPH_DEBUG_RENDERER
-	mCharacter->GetShape()->Draw(mDebugRenderer, com.ToMat44(), Vec3::sReplicate(1.0f), Color::sGreen, false, true); // TODO_DP
+	mCharacter->GetShape()->Draw(mDebugRenderer, com, Vec3::sReplicate(1.0f), Color::sGreen, false, true);
 #endif // JPH_DEBUG_RENDERER
 
 	// Draw shape including padding (only implemented for capsules right now)

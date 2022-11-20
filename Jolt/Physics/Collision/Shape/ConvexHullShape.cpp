@@ -802,7 +802,7 @@ void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3A
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void ConvexHullShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void ConvexHullShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	if (mGeometry == nullptr)
 	{
@@ -834,7 +834,7 @@ void ConvexHullShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTra
 
 	// Draw the geometry
 	Color color = inUseMaterialColors? GetMaterial()->GetDebugColor() : inColor;
-	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
+	RMat44 transform = inCenterOfMassTransform.PreScaled(inScale);
 	inRenderer->DrawGeometry(transform, color, mGeometry, cull_mode, DebugRenderer::ECastShadow::On, draw_mode);
 
 	// Draw the outline if requested

@@ -1594,9 +1594,9 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		if (sDrawMotionQualityLinearCast)
 		{
 			RMat44 com = body.GetCenterOfMassTransform();
-			body.GetShape()->Draw(DebugRenderer::sInstance, com.ToMat44(), Vec3::sReplicate(1.0f), Color::sGreen, false, true); // TODO_DP
+			body.GetShape()->Draw(DebugRenderer::sInstance, com, Vec3::sReplicate(1.0f), Color::sGreen, false, true);
 			DebugRenderer::sInstance->DrawArrow(com.GetTranslation(), com.GetTranslation() + ccd_body.mDeltaPosition, Color::sGreen, 0.1f);
-			body.GetShape()->Draw(DebugRenderer::sInstance, com.PostTranslated(ccd_body.mDeltaPosition).ToMat44(), Vec3::sReplicate(1.0f), Color::sRed, false, true); // TODO_DP
+			body.GetShape()->Draw(DebugRenderer::sInstance, com.PostTranslated(ccd_body.mDeltaPosition), Vec3::sReplicate(1.0f), Color::sRed, false, true);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -1981,11 +1981,11 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					{
 						// Draw the collision location
 						RMat44 collision_transform = body1.GetCenterOfMassTransform().PostTranslated(ccd_body->mFraction * ccd_body->mDeltaPosition);
-						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform.ToMat44(), Vec3::sReplicate(1.0f), Color::sYellow, false, true); // TODO_DP
+						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform, Vec3::sReplicate(1.0f), Color::sYellow, false, true);
 
 						// Draw the collision location + slop
 						RMat44 collision_transform_plus_slop = body1.GetCenterOfMassTransform().PostTranslated(ccd_body->mFractionPlusSlop * ccd_body->mDeltaPosition);
-						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform_plus_slop.ToMat44(), Vec3::sReplicate(1.0f), Color::sOrange, false, true); // TODO_DP
+						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform_plus_slop, Vec3::sReplicate(1.0f), Color::sOrange, false, true);
 
 						// Draw contact normal
 						DebugRenderer::sInstance->DrawArrow(ccd_body->mContactPointOn2, ccd_body->mContactPointOn2 - ccd_body->mContactNormal, Color::sYellow, 0.1f);

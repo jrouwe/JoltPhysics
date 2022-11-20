@@ -299,7 +299,7 @@ AABox TaperedCapsuleShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform,
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void TaperedCapsuleShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void TaperedCapsuleShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	if (mGeometry == nullptr)
 	{
@@ -310,9 +310,9 @@ void TaperedCapsuleShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMas
 
 	// Preserve flip along y axis but make sure we're not inside out
 	Vec3 scale = ScaleHelpers::IsInsideOut(inScale)? Vec3(-1, 1, 1) * inScale : inScale;
-	Mat44 world_transform = inCenterOfMassTransform * Mat44::sScale(scale);
+	RMat44 world_transform = inCenterOfMassTransform * Mat44::sScale(scale);
 
-	AABox bounds = GetWorldSpaceBounds(inCenterOfMassTransform, inScale);
+	AABox bounds = Shape::GetWorldSpaceBounds(inCenterOfMassTransform, inScale);
 
 	float lod_scale_sq = Square(max(mTopRadius, mBottomRadius));
 

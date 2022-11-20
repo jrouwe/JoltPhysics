@@ -901,7 +901,7 @@ AABox HeightFieldShape::GetLocalBounds() const
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void HeightFieldShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	// Don't draw anything if we don't have any collision
 	if (mHeightSamples.empty())
@@ -983,7 +983,7 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTr
 	}
 
 	// Get transform including scale
-	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
+	RMat44 transform = inCenterOfMassTransform.PreScaled(inScale);
 
 	// Test if the shape is scaled inside out
 	DebugRenderer::ECullMode cull_mode = ScaleHelpers::IsInsideOut(inScale)? DebugRenderer::ECullMode::CullFrontFace : DebugRenderer::ECullMode::CullBackFace;
@@ -999,7 +999,7 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTr
 	{
 		struct Visitor
 		{
-			JPH_INLINE explicit		Visitor(const HeightFieldShape *inShape, DebugRenderer *inRenderer, Mat44Arg inTransform) :
+			JPH_INLINE explicit		Visitor(const HeightFieldShape *inShape, DebugRenderer *inRenderer, RMat44Arg inTransform) :
 				mShape(inShape),
 				mRenderer(inRenderer),
 				mTransform(inTransform)
@@ -1031,8 +1031,8 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTr
 				Vec3 v[] = { inV0, inV1, inV2 };
 				for (uint edge_idx = 0; edge_idx < 3; ++edge_idx)
 				{
-					Vec3 v1 = mTransform * v[edge_idx];
-					Vec3 v2 = mTransform * v[(edge_idx + 1) % 3];
+					RVec3 v1 = mTransform * v[edge_idx];
+					RVec3 v2 = mTransform * v[(edge_idx + 1) % 3];
 
 					// Draw active edge as a green arrow, other edges as grey
 					if (active_edges & (1 << edge_idx))
@@ -1044,10 +1044,10 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTr
 
 			const HeightFieldShape *mShape;
 			DebugRenderer *			mRenderer;
-			Mat44					mTransform;
+			RMat44					mTransform;
 		};
 
-		Visitor visitor(this, inRenderer, inCenterOfMassTransform * Mat44::sScale(inScale));
+		Visitor visitor(this, inRenderer, inCenterOfMassTransform.PreScaled(inScale));
 		WalkHeightField(visitor);
 	}
 }

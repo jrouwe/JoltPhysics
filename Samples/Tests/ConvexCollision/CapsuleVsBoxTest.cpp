@@ -46,8 +46,8 @@ void CapsuleVsBoxTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw the shapes
-	box_shape->Draw(mDebugRenderer, box_transform, Vec3::sReplicate(1.0f), Color::sWhite, false, false);
-	capsule_shape->Draw(mDebugRenderer, capsule_transform, Vec3::sReplicate(1.0f), Color::sWhite, false, false);
+	box_shape->Draw(mDebugRenderer, RMat44(box_transform), Vec3::sReplicate(1.0f), Color::sWhite, false, false); // TODO_DP
+	capsule_shape->Draw(mDebugRenderer, RMat44(capsule_transform), Vec3::sReplicate(1.0f), Color::sWhite, false, false); // TODO_DP
 #endif // JPH_DEBUG_RENDERER
 
 	// Draw contact points
@@ -64,8 +64,8 @@ void CapsuleVsBoxTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mDebugRenderer->DrawArrow(hit.mContactPointOn2, hit.mContactPointOn2 + pen_axis, Color::sYellow, 0.01f);
 
 #ifdef JPH_DEBUG_RENDERER
-		Mat44 resolved_box = Mat44::sTranslation(pen_axis) * box_transform;
-		box_shape->Draw(mDebugRenderer, resolved_box, Vec3::sReplicate(1.0f), Color::sGreen, false, false);
+		Mat44 resolved_box = box_transform.PostTranslated(pen_axis);
+		box_shape->Draw(mDebugRenderer, RMat44(resolved_box), Vec3::sReplicate(1.0f), Color::sGreen, false, false); // TODO_DP
 #endif // JPH_DEBUG_RENDERER
 	}
 }

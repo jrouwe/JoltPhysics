@@ -58,6 +58,7 @@ public:
 
 	/// Draw wireframe triangle
 	void								DrawWireTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor);
+	void								DrawWireTriangle(DVec3Arg inV1, DVec3Arg inV2, DVec3Arg inV3, ColorArg inColor) { DrawWireTriangle(Vec3(inV1), Vec3(inV2), Vec3(inV3), inColor); } // TODO_DP
 
 	/// Draw a wireframe polygon
 	template <class VERTEX_ARRAY>
@@ -85,14 +86,17 @@ public:
 
 	/// Draw a single back face culled triangle without any shadows
 	virtual void						DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor) = 0;
+	void								DrawTriangle(DVec3Arg inV1, DVec3Arg inV2, DVec3Arg inV3, ColorArg inColor) { return DrawTriangle(Vec3(inV1), Vec3(inV2), Vec3(inV3), inColor); } // TODO_DP
 
 	/// Draw a box
 	void								DrawBox(const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 	void								DrawBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawBox(DMat44Arg inMatrix, const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawBox(inMatrix.ToMat44(), inBox, inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draw a sphere
 	void								DrawSphere(Vec3Arg inCenter, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 	void								DrawUnitSphere(Mat44Arg inMatrix, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawUnitSphere(DMat44Arg inMatrix, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawUnitSphere(inMatrix.ToMat44(), inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draw a capsule with one half sphere at (0, -inHalfHeightOfCylinder, 0) and the other half sphere at (0, inHalfHeightOfCylinder, 0) and radius inRadius. 
 	/// The capsule will be transformed by inMatrix.

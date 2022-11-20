@@ -168,7 +168,7 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw the hulls
-	shape->Draw(DebugRenderer::sInstance, Mat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sRed, false, false);
+	shape->Draw(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sRed, false, false);
 	shape->DrawGetSupportFunction(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sLightGrey, false);
 	shape->DrawShrunkShape(DebugRenderer::sInstance, Mat44::sIdentity(), Vec3::sReplicate(1.0f));
 #endif // JPH_DEBUG_RENDERER

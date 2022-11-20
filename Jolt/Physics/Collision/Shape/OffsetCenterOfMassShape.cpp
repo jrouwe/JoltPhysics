@@ -78,7 +78,7 @@ void OffsetCenterOfMassShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransfor
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void OffsetCenterOfMassShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void OffsetCenterOfMassShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	mInnerShape->Draw(inRenderer, inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inColor, inUseMaterialColors, inDrawWireframe);
 }

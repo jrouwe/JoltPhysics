@@ -111,7 +111,7 @@ void RotatedTranslatedShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void RotatedTranslatedShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void RotatedTranslatedShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	mInnerShape->Draw(inRenderer, inCenterOfMassTransform * Mat44::sRotation(mRotation), TransformScale(inScale), inColor, inUseMaterialColors, inDrawWireframe);
 }

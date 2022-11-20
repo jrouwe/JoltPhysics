@@ -496,7 +496,7 @@ JPH_INLINE void MeshShape::WalkTreePerTriangle(const SubShapeIDCreator &inSubSha
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void MeshShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	// Reset the batch if we switch coloring mode
 	if (mCachedTrianglesColoredPerGroup != sDrawTriangleGroups || mCachedUseMaterialColors != inUseMaterialColors)
@@ -577,7 +577,7 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 	{
 		struct Visitor
 		{
-			JPH_INLINE 			Visitor(DebugRenderer *inRenderer, Mat44Arg inTransform) :
+			JPH_INLINE 			Visitor(DebugRenderer *inRenderer, RMat44Arg inTransform) :
 				mRenderer(inRenderer),
 				mTransform(inTransform)
 			{
@@ -614,8 +614,8 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 					// Loop through edges
 					for (uint edge_idx = 0; edge_idx < 3; ++edge_idx)
 					{
-						Vec3 v1 = mTransform * v[edge_idx];
-						Vec3 v2 = mTransform * v[(edge_idx + 1) % 3];
+						RVec3 v1 = mTransform * v[edge_idx];
+						RVec3 v2 = mTransform * v[(edge_idx + 1) % 3];
 
 						// Draw active edge as a green arrow, other edges as grey
 						if (*f & (1 << (edge_idx + FLAGS_ACTIVE_EGDE_SHIFT)))
@@ -627,10 +627,10 @@ void MeshShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform
 			}
 
 			DebugRenderer *	mRenderer;
-			Mat44			mTransform;
+			RMat44			mTransform;
 		};
 
-		Visitor visitor { inRenderer, inCenterOfMassTransform * Mat44::sScale(inScale) };
+		Visitor visitor { inRenderer, inCenterOfMassTransform.PreScaled(inScale) };
 		WalkTree(visitor);
 	}
 }

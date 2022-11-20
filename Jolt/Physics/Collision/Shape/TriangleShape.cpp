@@ -200,11 +200,11 @@ void TriangleShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void TriangleShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void TriangleShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
-	Vec3 v1 = inCenterOfMassTransform * (inScale * mV1);
-	Vec3 v2 = inCenterOfMassTransform * (inScale * mV2);
-	Vec3 v3 = inCenterOfMassTransform * (inScale * mV3);
+	RVec3 v1 = inCenterOfMassTransform * (inScale * mV1);
+	RVec3 v2 = inCenterOfMassTransform * (inScale * mV2);
+	RVec3 v3 = inCenterOfMassTransform * (inScale * mV3);
 
 	if (ScaleHelpers::IsInsideOut(inScale))
 		swap(v1, v2);

@@ -1088,7 +1088,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 		RVec3 debug_pos = new_position + contact.mFraction * down; 
 		DebugRenderer::sInstance->DrawArrow(new_position, debug_pos, Color::sWhite, 0.01f);
 		DebugRenderer::sInstance->DrawArrow(contact.mPosition, contact.mPosition + contact.mSurfaceNormal, Color::sWhite, 0.01f);
-		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape).ToMat44(), Vec3::sReplicate(1.0f), Color::sWhite, false, true); // TODO_DP
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sWhite, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 
@@ -1126,7 +1126,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 			RVec3 debug_pos = test_position + test_contact.mFraction * down; 
 			DebugRenderer::sInstance->DrawArrow(test_position, debug_pos, Color::sCyan, 0.01f);
 			DebugRenderer::sInstance->DrawArrow(test_contact.mPosition, test_contact.mPosition + test_contact.mSurfaceNormal, Color::sCyan, 0.01f);
-			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape).ToMat44(), Vec3::sReplicate(1.0f), Color::sCyan, false, true); // TODO_DP
+			mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(debug_pos, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sCyan, false, true);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -1163,7 +1163,7 @@ bool CharacterVirtual::StickToFloor(Vec3Arg inStepDown, const BroadPhaseLayerFil
 	if (sDrawStickToFloor)
 	{
 		DebugRenderer::sInstance->DrawArrow(mPosition, new_position, Color::sOrange, 0.01f);
-		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(new_position, mRotation, mShape).ToMat44(), Vec3::sReplicate(1.0f), Color::sOrange, false, true); // TODO_DP
+		mShape->Draw(DebugRenderer::sInstance, GetCenterOfMassTransform(new_position, mRotation, mShape), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
 	}
 #endif // JPH_DEBUG_RENDERER
 

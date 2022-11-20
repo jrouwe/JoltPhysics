@@ -810,7 +810,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 
 			// Draw the shape
 			if (inDrawSettings.mDrawShape)
-				body->mShape->Draw(inRenderer, body->GetCenterOfMassTransform().ToMat44(), Vec3::sReplicate(1.0f), color, inDrawSettings.mDrawShapeColor == EShapeColor::MaterialColor, inDrawSettings.mDrawShapeWireframe || is_sensor); // TODO_DP
+				body->mShape->Draw(inRenderer, body->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), color, inDrawSettings.mDrawShapeColor == EShapeColor::MaterialColor, inDrawSettings.mDrawShapeWireframe || is_sensor);
 
 			// Draw bounding box
 			if (inDrawSettings.mDrawBoundingBox)
