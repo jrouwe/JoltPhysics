@@ -62,7 +62,7 @@ void VehicleEngine::ApplyDamping(float inDeltaTime)
 
 #ifdef JPH_DEBUG_RENDERER
 
-void VehicleEngine::DrawRPM(DebugRenderer *inRenderer, Vec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inSize, float inShiftDownRPM, float inShiftUpRPM) const
+void VehicleEngine::DrawRPM(DebugRenderer *inRenderer, RVec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inSize, float inShiftDownRPM, float inShiftUpRPM) const
 {
 	// Function that converts RPM to an angle in radians
 	auto rpm_to_angle = [this](float inRPM) { return (-0.75f + 1.5f * (inRPM - mMinRPM) / (mMaxRPM - mMinRPM)) * JPH_PI; };

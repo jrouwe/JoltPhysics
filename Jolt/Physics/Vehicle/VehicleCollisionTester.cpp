@@ -13,13 +13,13 @@
 
 JPH_NAMESPACE_BEGIN
 
-bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, Vec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, Vec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
+bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
 {
 	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inPhysicsSystem.GetDefaultBroadPhaseLayerFilter(mObjectLayer);
 	DefaultObjectLayerFilter object_layer_filter = inPhysicsSystem.GetDefaultLayerFilter(mObjectLayer);
 	IgnoreSingleBodyFilter body_filter(inVehicleBodyID);
 
-	RayCast ray { inOrigin, inSuspensionMaxLength * inDirection };
+	RayCast ray { Vec3(inOrigin), inSuspensionMaxLength * inDirection }; // TODO_DP
 
 	class MyCollector : public CastRayCollector
 	{
@@ -47,7 +47,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 
 				// Test that we're not hitting a vertical wall
 				Vec3 contact_pos = mRay.GetPointOnRay(inResult.mFraction);
-				Vec3 normal = body->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, contact_pos);
+				Vec3 normal = body->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, RVec3(contact_pos)); // TODO_DP
 				if (normal.Dot(mUpDirection) > mCosMaxSlopeAngle)
 				{
 					// Update early out fraction to this hit
@@ -56,7 +56,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 					// Get the contact properties
 					mBody = body;
 					mSubShapeID2 = inResult.mSubShapeID2;
-					mContactPosition = contact_pos;
+					mContactPosition = RVec3(contact_pos); // TODO_DP
 					mContactNormal = normal;
 				}
 			}
@@ -71,7 +71,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 		// Resulting closest collision
 		const Body *		mBody = nullptr;
 		SubShapeID			mSubShapeID2;
-		Vec3				mContactPosition;
+		RVec3				mContactPosition;
 		Vec3				mContactNormal;
 	};
 
@@ -91,7 +91,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 	return true;
 }
 
-bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, Vec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, Vec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
+bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
 {
 	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inPhysicsSystem.GetDefaultBroadPhaseLayerFilter(mObjectLayer);
 	DefaultObjectLayerFilter object_layer_filter = inPhysicsSystem.GetDefaultLayerFilter(mObjectLayer);
@@ -101,7 +101,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 	sphere.SetEmbedded();
 
 	float cast_length = max(0.0f, inSuspensionMaxLength - mRadius);
-	ShapeCast shape_cast(&sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(inOrigin), inDirection * cast_length);
+	ShapeCast shape_cast(&sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(inOrigin)), inDirection * cast_length); // TODO_DP
 
 	ShapeCastSettings settings;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
@@ -141,7 +141,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 					// Get the contact properties
 					mBody = body;
 					mSubShapeID2 = inResult.mSubShapeID2;
-					mContactPosition = inResult.mContactPointOn2;
+					mContactPosition = RVec3(inResult.mContactPointOn2); // TODO_DP
 					mContactNormal = normal;
 				}
 			}
@@ -156,7 +156,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 		// Resulting closest collision
 		const Body *		mBody = nullptr;
 		SubShapeID			mSubShapeID2;
-		Vec3				mContactPosition;
+		RVec3				mContactPosition;
 		Vec3				mContactNormal;
 	};
 

@@ -31,24 +31,30 @@ public:
 
 	/// Draw line
 	void								DrawLine(Vec3Arg inFrom, Vec3Arg inTo, ColorArg inColor) { Float3 from, to; inFrom.StoreFloat3(&from); inTo.StoreFloat3(&to); DrawLine(from, to, inColor); }
+	void								DrawLine(DVec3Arg inFrom, DVec3Arg inTo, ColorArg inColor) { DrawLine(Vec3(inFrom), Vec3(inTo), inColor); } // TODO_DP
 	virtual void						DrawLine(const Float3 &inFrom, const Float3 &inTo, ColorArg inColor) = 0;
 
 	/// Draw wireframe box
 	void								DrawWireBox(const AABox &inBox, ColorArg inColor);
 	void								DrawWireBox(const OrientedBox &inBox, ColorArg inColor);
 	void								DrawWireBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg inColor);
+	void								DrawWireBox(DMat44Arg inMatrix, const AABox &inBox, ColorArg inColor) { DrawWireBox(inMatrix.ToMat44(), inBox, inColor); } // TODO_DP
 
 	/// Draw a marker on a position
 	void								DrawMarker(Vec3Arg inPosition, ColorArg inColor, float inSize);
+	void								DrawMarker(DVec3Arg inPosition, ColorArg inColor, float inSize) { DrawMarker(Vec3(inPosition), inColor, inSize); } // TODO_DP
 
 	/// Draw an arrow
 	void								DrawArrow(Vec3Arg inFrom, Vec3Arg inTo, ColorArg inColor, float inSize);
+	void								DrawArrow(DVec3Arg inFrom, DVec3Arg inTo, ColorArg inColor, float inSize) { DrawArrow(Vec3(inFrom), Vec3(inTo), inColor, inSize); } // TODO_DP
 
 	/// Draw coordinate system (3 arrows, x = red, y = green, z = blue)
 	void								DrawCoordinateSystem(Mat44Arg inTransform, float inSize = 1.0f);
+	void								DrawCoordinateSystem(DMat44Arg inTransform, float inSize = 1.0f) { DrawCoordinateSystem(inTransform.ToMat44(), inSize); } // TODO_DP
 
 	/// Draw a plane through inPoint with normal inNormal
 	void								DrawPlane(Vec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize);
+	void								DrawPlane(DVec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize) { DrawPlane(Vec3(inPoint), inNormal, inColor, inSize); } // TODO_DP
 
 	/// Draw wireframe triangle
 	void								DrawWireTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor);
@@ -91,10 +97,12 @@ public:
 	/// Draw a capsule with one half sphere at (0, -inHalfHeightOfCylinder, 0) and the other half sphere at (0, inHalfHeightOfCylinder, 0) and radius inRadius. 
 	/// The capsule will be transformed by inMatrix.
 	void								DrawCapsule(Mat44Arg inMatrix, float inHalfHeightOfCylinder, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawCapsule(DMat44Arg inMatrix, float inHalfHeightOfCylinder, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawCapsule(inMatrix.ToMat44(), inHalfHeightOfCylinder, inRadius, inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draw a cylinder with top (0, inHalfHeight, 0) and bottom (0, -inHalfHeight, 0) and radius inRadius.
 	/// The cylinder will be transformed by inMatrix
 	void								DrawCylinder(Mat44Arg inMatrix, float inHalfHeight, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawCylinder(DMat44Arg inMatrix, float inHalfHeight, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawCylinder(inMatrix.ToMat44(), inHalfHeight, inRadius, inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draw a bottomless cone. 
 	/// @param inTop Top of cone, center of base is at inTop + inAxis. 
@@ -106,6 +114,7 @@ public:
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawOpenCone(Vec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawOpenCone(Vec3(inTop), inAxis, inPerpendicular, inHalfAngle, inLength, inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draws rotation limits as used by the SwingTwistConstraintPart.
 	/// @param inMatrix Matrix that transforms from constraint space to world space
@@ -116,6 +125,7 @@ public:
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawSwingLimits(Mat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawSwingLimits(DMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawSwingLimits(inMatrix.ToMat44(), inSwingYHalfAngle, inSwingZHalfAngle, inEdgeLength, inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draw a pie (part of a circle). 
 	/// @param inCenter The center of the circle.
@@ -128,6 +138,7 @@ public:
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawPie(Vec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawPie(DVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawPie(Vec3(inCenter), inRadius, inNormal, inAxis, inMinAngle, inMaxAngle, inColor, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Singleton instance
 	static DebugRenderer *				sInstance;
@@ -218,9 +229,12 @@ public:
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	virtual void						DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) = 0;
 	void								DrawGeometry(Mat44Arg inModelMatrix, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawGeometry(inModelMatrix, inGeometry->mBounds.Transformed(inModelMatrix), max(max(inModelMatrix.GetAxisX().LengthSq(), inModelMatrix.GetAxisY().LengthSq()), inModelMatrix.GetAxisZ().LengthSq()), inModelColor, inGeometry, inCullMode, inCastShadow, inDrawMode); }
+	void								DrawGeometry(DMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawGeometry(inModelMatrix.ToMat44(), inWorldSpaceBounds, inLODScaleSq, inModelColor, inGeometry, inCullMode, inCastShadow, inDrawMode); } // TODO_DP
+	void								DrawGeometry(DMat44Arg inModelMatrix, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawGeometry(inModelMatrix.ToMat44(), inModelColor, inGeometry, inCullMode, inCastShadow, inDrawMode); } // TODO_DP
 
 	/// Draw text
-	virtual void						DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor = Color::sWhite, float inHeight = 0.5f)	= 0;
+	virtual void						DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor = Color::sWhite, float inHeight = 0.5f) = 0;
+	void								DrawText3D(DVec3Arg inPosition, const string_view &inString, ColorArg inColor = Color::sWhite, float inHeight = 0.5f) { DrawText3D(Vec3(inPosition), inString, inColor, inHeight); } // TODO_DP
 
 protected:
 	/// Initialize the system, must be called from the constructor of the DebugRenderer implementation

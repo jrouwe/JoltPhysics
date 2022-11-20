@@ -31,7 +31,7 @@ public:
 	/// @param outContactNormal Contact normal between wheel and floor, pointing away from the floor
 	/// @param outSuspensionLength New length of the suspension [0, inSuspensionMaxLength]
 	/// @return True when collision found, false if not
-	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, Vec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, Vec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const = 0;
+	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const = 0;
 };
 
 /// Collision tester that tests collision using a raycast
@@ -47,7 +47,7 @@ public:
 								VehicleCollisionTesterRay(ObjectLayer inObjectLayer, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mUp(inUp), mCosMaxSlopeAngle(Cos(inMaxSlopeAngle)) { }
 
 	// See: VehicleCollisionTester
-	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, Vec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, Vec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
+	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
 
 private:
 	ObjectLayer					mObjectLayer;
@@ -69,7 +69,7 @@ public:
 								VehicleCollisionTesterCastSphere(ObjectLayer inObjectLayer, float inRadius, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mRadius(inRadius), mUp(inUp), mCosMaxSlopeAngle(Cos(inMaxSlopeAngle)) { }
 
 	// See: VehicleCollisionTester
-	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, Vec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, Vec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
+	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
 
 private:
 	ObjectLayer					mObjectLayer;
