@@ -20,10 +20,10 @@ TEST_SUITE("ContactListenerTests")
 		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
 
 		const float cSimulationTime = 1.0f;
-		const Vec3 cDistanceTraveled = c.PredictPosition(Vec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
+		const RVec3 cDistanceTraveled = c.PredictPosition(RVec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
 		const float cFloorHitEpsilon = 1.0e-4f; // Apply epsilon so that we're sure that the collision algorithm will find a collision
-		const Vec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
-		const Vec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
+		const RVec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
+		const RVec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
 
 		// Register listener
@@ -91,10 +91,10 @@ TEST_SUITE("ContactListenerTests")
 		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
 
 		const float cSimulationTime = 1.0f;
-		const Vec3 cDistanceTraveled = c.PredictPosition(Vec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
+		const RVec3 cDistanceTraveled = c.PredictPosition(RVec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
 		const float cFloorHitEpsilon = 1.0e-4f; // Apply epsilon so that we're sure that the collision algorithm will find a collision
-		const Vec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
-		const Vec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
+		const RVec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
+		const RVec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
 
 		// Register listener

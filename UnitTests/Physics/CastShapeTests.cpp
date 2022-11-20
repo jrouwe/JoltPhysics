@@ -143,7 +143,7 @@ TEST_SUITE("CastShapeTests")
 		box.SetEmbedded();
 		ScaledShapeSettings scaled_box(&box, Vec3(10, 1, 1));
 		scaled_box.SetEmbedded();
-		Body &body2 = c.CreateBody(&scaled_box, Vec3(0, 1, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+		Body &body2 = c.CreateBody(&scaled_box, RVec3(0, 1, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 		// Set settings
 		ShapeCastSettings settings;
@@ -202,7 +202,7 @@ TEST_SUITE("CastShapeTests")
 		// Create 10 boxes that are 0.2 thick in the X axis and 4 in Y and Z, put them all next to each other on the X axis starting from X = 0 going to X = 2
 		Array<Body *> bodies;
 		for (int i = 0; i < 10; ++i)
-			bodies.push_back(&c.CreateBody(&box, Vec3(0.1f + 0.2f * i, 0, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate));
+			bodies.push_back(&c.CreateBody(&box, RVec3(0.1f + 0.2f * i, 0, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate));
 
 		// Set settings
 		ShapeCastSettings settings;

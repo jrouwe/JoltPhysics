@@ -275,7 +275,7 @@ TEST_SUITE("RayShapeTests")
 		BPLayerInterfaceImpl broad_phase_layer_interface;
 		PhysicsSystem system;
 		system.Init(1, 0, 4, 4, broad_phase_layer_interface, [](ObjectLayer, BroadPhaseLayer) { return true; }, [](ObjectLayer, ObjectLayer) { return true; });
-		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, cShapePosition, cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate);
+		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, RVec3(cShapePosition), cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate); // TODO_DP
 			   
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////

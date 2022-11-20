@@ -12,7 +12,7 @@ TEST_SUITE("SliderConstraintTests")
 	// Test a box attached to a slider constraint, test that the body doesn't move beyond the min limit
 	TEST_CASE("TestSliderConstraintLimitMin")
 	{
-		const Vec3 cInitialPos(3.0f, 0, 0);
+		const RVec3 cInitialPos(3.0f, 0, 0);
 		const float cLimitMin = -7.0f;
 
 		// Create group filter
@@ -20,7 +20,7 @@ TEST_SUITE("SliderConstraintTests")
 
 		// Create two boxes
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
 		Body &body2 = c.CreateBox(cInitialPos, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 
 		// Give body 2 velocity towards min limit (and ensure that it arrives well before 1 second)
@@ -51,12 +51,12 @@ TEST_SUITE("SliderConstraintTests")
 	// Test a box attached to a slider constraint, test that the body doesn't move beyond the max limit
 	TEST_CASE("TestSliderConstraintLimitMax")
 	{
-		const Vec3 cInitialPos(3.0f, 0, 0);
+		const RVec3 cInitialPos(3.0f, 0, 0);
 		const float cLimitMax = 7.0f;
 
 		// Create two boxes
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
 		Body &body2 = c.CreateBox(cInitialPos, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 
 		// Give body 2 velocity towards max limit (and ensure that it arrives well before 1 second)
@@ -83,12 +83,12 @@ TEST_SUITE("SliderConstraintTests")
 	// Test a box attached to a slider constraint, test that a motor can drive it to a specific velocity
 	TEST_CASE("TestSliderConstraintDriveVelocityStaticVsDynamic")
 	{
-		const Vec3 cInitialPos(3.0f, 0, 0);
+		const RVec3 cInitialPos(3.0f, 0, 0);
 		const float cMotorAcceleration = 2.0f;
 
 		// Create two boxes
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
 		Body &body2 = c.CreateBox(cInitialPos, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 
 		// Create slider constraint
@@ -116,20 +116,20 @@ TEST_SUITE("SliderConstraintTests")
 		CHECK_APPROX_EQUAL(expected_vel, body2.GetLinearVelocity(), 1.0e-4f);
 
 		// Test resulting position (1.5s of acceleration + 0.5s of constant speed)
-		Vec3 expected_pos = c.PredictPosition(cInitialPos, Vec3::sZero(), cMotorAcceleration * s.mSliderAxis1, 1.5f) + 0.5f * expected_vel;
+		RVec3 expected_pos = c.PredictPosition(cInitialPos, Vec3::sZero(), cMotorAcceleration * s.mSliderAxis1, 1.5f) + 0.5f * expected_vel;
 		CHECK_APPROX_EQUAL(expected_pos, body2.GetPosition(), 1.0e-4f);
 	}
 
 	// Test 2 dynamic boxes attached to a slider constraint, test that a motor can drive it to a specific velocity
 	TEST_CASE("TestSliderConstraintDriveVelocityDynamicVsDynamic")
 	{
-		const Vec3 cInitialPos(3.0f, 0, 0);
+		const RVec3 cInitialPos(3.0f, 0, 0);
 		const float cMotorAcceleration = 2.0f;
 
 		// Create two boxes
 		PhysicsTestContext c;
 		c.ZeroGravity();
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 		Body &body2 = c.CreateBox(cInitialPos, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 
 		// Create slider constraint
@@ -159,8 +159,8 @@ TEST_SUITE("SliderConstraintTests")
 		CHECK_APPROX_EQUAL(expected_vel, body2.GetLinearVelocity(), 1.0e-4f);
 
 		// Test resulting position (1.5s of acceleration + 0.5s of constant speed)
-		Vec3 expected_pos1 = c.PredictPosition(Vec3::sZero(), Vec3::sZero(), -cMotorAcceleration * s.mSliderAxis1, 1.5f) - 0.5f * expected_vel;
-		Vec3 expected_pos2 = c.PredictPosition(cInitialPos, Vec3::sZero(), cMotorAcceleration * s.mSliderAxis1, 1.5f) + 0.5f * expected_vel;
+		RVec3 expected_pos1 = c.PredictPosition(RVec3::sZero(), Vec3::sZero(), -cMotorAcceleration * s.mSliderAxis1, 1.5f) - 0.5f * expected_vel;
+		RVec3 expected_pos2 = c.PredictPosition(cInitialPos, Vec3::sZero(), cMotorAcceleration * s.mSliderAxis1, 1.5f) + 0.5f * expected_vel;
 		CHECK_APPROX_EQUAL(expected_pos1, body1.GetPosition(), 1.0e-4f);
 		CHECK_APPROX_EQUAL(expected_pos2, body2.GetPosition(), 1.0e-4f);
 	}
@@ -168,12 +168,12 @@ TEST_SUITE("SliderConstraintTests")
 	// Test a box attached to a slider constraint, test that a motor can drive it to a specific position
 	TEST_CASE("TestSliderConstraintDrivePosition")
 	{
-		const Vec3 cInitialPos(3.0f, 0, 0);
-		const Vec3 cMotorPos(10.0f, 0, 0);
+		const RVec3 cInitialPos(3.0f, 0, 0);
+		const RVec3 cMotorPos(10.0f, 0, 0);
 
 		// Create two boxes
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
 		Body &body2 = c.CreateBox(cInitialPos, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 
 		// Create slider constraint
@@ -182,7 +182,7 @@ TEST_SUITE("SliderConstraintTests")
 		s.SetSliderAxis(Vec3::sAxisX());
 		SliderConstraint &constraint = c.CreateConstraint<SliderConstraint>(body1, body2, s);
 		constraint.SetMotorState(EMotorState::Position);
-		constraint.SetTargetPosition((cMotorPos - cInitialPos).Dot(s.mSliderAxis1));
+		constraint.SetTargetPosition(Vec3(cMotorPos - cInitialPos).Dot(s.mSliderAxis1));
 
 		// Simulate
 		c.Simulate(2.0f);
@@ -197,14 +197,14 @@ TEST_SUITE("SliderConstraintTests")
 	// Test a box attached to a slider constraint, give it initial velocity and test that the friction provides the correct decelleration
 	TEST_CASE("TestSliderConstraintFriction")
 	{
-		const Vec3 cInitialPos(3.0f, 0, 0);
+		const RVec3 cInitialPos(3.0f, 0, 0);
 		const Vec3 cInitialVelocity(10.0f, 0, 0);
 		const float cFrictionAcceleration = 2.0f;
 		const float cSimulationTime = 2.0f;
 
 		// Create two boxes
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1));
 		Body &body2 = c.CreateBox(cInitialPos, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 		body2.SetLinearVelocity(cInitialVelocity);
 
@@ -224,7 +224,7 @@ TEST_SUITE("SliderConstraintTests")
 		CHECK_APPROX_EQUAL(expected_vel, body2.GetLinearVelocity(), 1.0e-4f);
 
 		// Test resulting position
-		Vec3 expected_pos = c.PredictPosition(cInitialPos, cInitialVelocity, -cFrictionAcceleration * s.mSliderAxis1, cSimulationTime);
+		RVec3 expected_pos = c.PredictPosition(cInitialPos, cInitialVelocity, -cFrictionAcceleration * s.mSliderAxis1, cSimulationTime);
 		CHECK_APPROX_EQUAL(expected_pos, body2.GetPosition(), 1.0e-4f);
 	}
 
@@ -233,8 +233,8 @@ TEST_SUITE("SliderConstraintTests")
 	{
 		// Create two boxes far away enough so they are not touching
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
-		Body &body2 = c.CreateBox(Vec3(10, 0, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body2 = c.CreateBox(RVec3(10, 0, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
 
 		// Create slider constraint
 		SliderConstraintSettings s;
@@ -267,8 +267,8 @@ TEST_SUITE("SliderConstraintTests")
 	{
 		// Create two boxes far away enough so they are not touching
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
-		Body &body2 = c.CreateBox(Vec3(10, 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body2 = c.CreateBox(RVec3(10, 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
 
 		// Create slider constraint
 		SliderConstraintSettings s;
@@ -301,8 +301,8 @@ TEST_SUITE("SliderConstraintTests")
 	{
 		// Create two boxes far away enough so they are not touching
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
-		Body &body2 = c.CreateBox(Vec3(10, 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body2 = c.CreateBox(RVec3(10, 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
 
 		// Create slider constraint
 		SliderConstraintSettings s;
@@ -335,8 +335,8 @@ TEST_SUITE("SliderConstraintTests")
 	{
 		// Create two boxes far away enough so they are not touching
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
-		Body &body2 = c.CreateBox(Vec3(10, 0, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body2 = c.CreateBox(RVec3(10, 0, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
 
 		// Create slider constraint
 		SliderConstraintSettings s;
@@ -369,8 +369,8 @@ TEST_SUITE("SliderConstraintTests")
 	{
 		// Create two boxes far away enough so they are not touching
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
-		Body &body2 = c.CreateBox(Vec3(10, 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
+		Body &body2 = c.CreateBox(RVec3(10, 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::DontActivate);
 
 		// Create slider constraint
 		SliderConstraintSettings s;
@@ -403,8 +403,8 @@ TEST_SUITE("SliderConstraintTests")
 	{
 		// Create two boxes in semi random position/orientation
 		PhysicsTestContext c;
-		Body &body1 = c.CreateBox(Vec3(1, 2, 3), Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.1f * JPH_PI), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::Activate);
-		Body &body2 = c.CreateBox(Vec3(-3, -2, -1), Quat::sRotation(Vec3(1, 0, 1).Normalized(), 0.2f * JPH_PI), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::Activate);
+		Body &body1 = c.CreateBox(RVec3(1, 2, 3), Quat::sRotation(Vec3(1, 1, 1).Normalized(), 0.1f * JPH_PI), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::Activate);
+		Body &body2 = c.CreateBox(RVec3(-3, -2, -1), Quat::sRotation(Vec3(1, 0, 1).Normalized(), 0.2f * JPH_PI), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1), EActivation::Activate);
 
 		// Disable collision between the boxes
 		GroupFilterTable *group_filter = new GroupFilterTable(2);
@@ -413,8 +413,8 @@ TEST_SUITE("SliderConstraintTests")
 		body2.SetCollisionGroup(CollisionGroup(group_filter, 0, 1));
 
 		// Get their transforms
-		Mat44 t1 = body1.GetCenterOfMassTransform();
-		Mat44 t2 = body2.GetCenterOfMassTransform();
+		RMat44 t1 = body1.GetCenterOfMassTransform();
+		RMat44 t2 = body2.GetCenterOfMassTransform();
 
 		// Create slider constraint so that slider connects the bodies at their center of mass and rotated XY -> YZ
 		SliderConstraintSettings s;

@@ -41,7 +41,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		{
 			// Create the triangle shape
 			PhysicsTestContext context;
-			context.CreateBody(new TriangleShapeSettings(v1, v2, v3), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			context.CreateBody(new TriangleShapeSettings(v1, v2, v3), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
@@ -56,7 +56,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 			TriangleList triangles;
 			triangles.push_back(Triangle(v1, v2, v3));
 			PhysicsTestContext context;
-			context.CreateBody(new MeshShapeSettings(triangles), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			context.CreateBody(new MeshShapeSettings(triangles), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
@@ -121,7 +121,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		{
 			// Create the triangle shape
 			PhysicsTestContext context;
-			Body &body = context.CreateBody(new TriangleShapeSettings(v1, v2, v3), translation, rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			Body &body = context.CreateBody(new TriangleShapeSettings(v1, v2, v3), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate); // TODO_DP
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
@@ -150,7 +150,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 			TriangleList triangles;
 			triangles.push_back(Triangle(v1, v2, v3));
 			PhysicsTestContext context;
-			Body &body = context.CreateBody(new MeshShapeSettings(triangles), translation, rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			Body &body = context.CreateBody(new MeshShapeSettings(triangles), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate); // TODO_DP
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;

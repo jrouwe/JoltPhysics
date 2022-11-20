@@ -22,10 +22,10 @@ TEST_SUITE("PhysicsTests")
 		const float cSimulationTime = 2.0f;
 
 		// For position: x = x0 + v0 * t + 1/2 * a * t^2
-		const Vec3 cInitialPos(0.0f, 10.0f, 0.0f);
+		const RVec3 cInitialPos(0.0f, 10.0f, 0.0f);
 		PhysicsTestContext c;
-		Vec3 simulated_pos = c.PredictPosition(cInitialPos, Vec3::sZero(), cGravity, cSimulationTime);
-		Vec3 integrated_position = cInitialPos + 0.5f * cGravity * Square(cSimulationTime);
+		RVec3 simulated_pos = c.PredictPosition(cInitialPos, Vec3::sZero(), cGravity, cSimulationTime);
+		RVec3 integrated_position = cInitialPos + 0.5f * cGravity * Square(cSimulationTime);
 		CHECK_APPROX_EQUAL(integrated_position, simulated_pos, 0.2f);
 
 		// For rotation
@@ -52,13 +52,13 @@ TEST_SUITE("PhysicsTests")
 		BodyID body1_id;
 		{
 			// Create a box
-			Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
 			body1_id = body1.GetID();
 			CHECK(body1_id.GetIndex() == 0);
 			CHECK(body1_id.GetSequenceNumber() == 1);
 
 			// Create another box
-			Body &body2 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body2 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
 			BodyID body2_id = body2.GetID();
 			CHECK(body2_id.GetIndex() == 1);
 			CHECK(body2_id.GetSequenceNumber() == 1);
@@ -92,7 +92,7 @@ TEST_SUITE("PhysicsTests")
 		}
 
 		// Create another box
-		Body &body3 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+		Body &body3 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
 		BodyID body3_id = body3.GetID();
 		CHECK(body3_id.GetIndex() == 0); // Check index reused
 		CHECK(body3_id.GetSequenceNumber() == 2); // Check sequence number changed
@@ -126,8 +126,8 @@ TEST_SUITE("PhysicsTests")
 
 		{
 			// Create two bodies
-			Body &body1 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
-			Body &body2 = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body1 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
+			Body &body2 = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, 0, Vec3::sReplicate(1.0f));
 			BodyID bodies[] = { body1.GetID(), body2.GetID() };
 
 			{
@@ -171,13 +171,13 @@ TEST_SUITE("PhysicsTests")
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Create a body and check it's id
-		BodyID body0_id = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1)).GetID();
+		BodyID body0_id = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1)).GetID();
 		CHECK(body0_id == BodyID(0, 1)); // Body 0, sequence number 1
 
 		// Check that the sequence numbers aren't reused until after 256 iterations
 		for (int seq_no = 1; seq_no < 258; ++seq_no)
 		{
-			BodyID body1_id = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1)).GetID();
+			BodyID body1_id = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1)).GetID();
 			CHECK(body1_id == BodyID(1, uint8(seq_no))); // Body 1
 
 			bi.RemoveBody(body1_id);
@@ -194,7 +194,7 @@ TEST_SUITE("PhysicsTests")
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Dummy creation settings
-		BodyCreationSettings bc(new BoxShape(Vec3::sReplicate(1.0f)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings bc(new BoxShape(Vec3::sReplicate(1.0f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 
 		// Create a body
 		Body *b1 = bi.CreateBody(bc);
@@ -255,7 +255,7 @@ TEST_SUITE("PhysicsTests")
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Create a body and pass user data through the creation settings
-		BodyCreationSettings body_settings(new BoxShape(Vec3::sReplicate(1.0f)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		BodyCreationSettings body_settings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		body_settings.mUserData = 0x1234567887654321;
 		Body *body = bi.CreateBody(body_settings);
 		CHECK(body->GetUserData() == 0x1234567887654321);
@@ -275,10 +275,10 @@ TEST_SUITE("PhysicsTests")
 		Quat box_rotation = Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI);
 
 		// Translate / rotate the body
-		Vec3 body_pos(4, 5, 6);
+		RVec3 body_pos(4, 5, 6);
 		Quat body_rotation = Quat::sRotation(Vec3::sAxisY(), 0.3f * JPH_PI);
-		Mat44 body_transform = Mat44::sRotationTranslation(body_rotation, body_pos);
-		Mat44 com_transform = body_transform * Mat44::sTranslation(box_pos);
+		RMat44 body_transform = RMat44::sRotationTranslation(body_rotation, body_pos);
+		RMat44 com_transform = body_transform * Mat44::sTranslation(box_pos);
 
 		// Create body
 		BodyCreationSettings body_settings(new RotatedTranslatedShapeSettings(box_pos, box_rotation, new BoxShape(Vec3::sReplicate(1.0f))), body_pos, body_rotation, EMotionType::Static, Layers::NON_MOVING);
@@ -308,7 +308,7 @@ TEST_SUITE("PhysicsTests")
 		Ref<BoxShapeSettings> shape_settings = new BoxShapeSettings(0.5f * cBoxExtent);
 		shape_settings->SetDensity(cDensity);
 
-		BodyCreationSettings body_settings(shape_settings, Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		BodyCreationSettings body_settings(shape_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 
 		// Create body as is
 		Body &b1 = *bi.CreateBody(body_settings);
@@ -342,7 +342,7 @@ TEST_SUITE("PhysicsTests")
 	// Test a box free falling under gravity
 	static void TestPhysicsFreeFall(PhysicsTestContext &ioContext)
 	{
-		const Vec3 cInitialPos(0.0f, 10.0f, 0.0f);
+		const RVec3 cInitialPos(0.0f, 10.0f, 0.0f);
 		const float cSimulationTime = 2.0f;
 
 		// Create box
@@ -356,7 +356,7 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(cSimulationTime * cGravity, body.GetLinearVelocity(), 1.0e-4f);
 			
 		// Test resulting position
-		Vec3 expected_pos = ioContext.PredictPosition(cInitialPos, Vec3::sZero(), cGravity, cSimulationTime);
+		RVec3 expected_pos = ioContext.PredictPosition(cInitialPos, Vec3::sZero(), cGravity, cSimulationTime);
 		CHECK_APPROX_EQUAL(expected_pos, body.GetPosition());
 	}
 
@@ -390,7 +390,7 @@ TEST_SUITE("PhysicsTests")
 	// Test acceleration of a box with force applied
 	static void TestPhysicsApplyForce(PhysicsTestContext &ioContext)
 	{
-		const Vec3 cInitialPos(0.0f, 10.0f, 0.0f);
+		const RVec3 cInitialPos(0.0f, 10.0f, 0.0f);
 		const Vec3 cAcceleration(2.0f, 0.0f, 0.0f);
 		const float cSimulationTime = 2.0f;
 
@@ -410,7 +410,7 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(cSimulationTime * (cGravity + cAcceleration), body.GetLinearVelocity(), 1.0e-4f);
 			
 		// Test resulting position
-		Vec3 expected_pos = ioContext.PredictPosition(cInitialPos, Vec3::sZero(), cGravity + cAcceleration, cSimulationTime);
+		RVec3 expected_pos = ioContext.PredictPosition(cInitialPos, Vec3::sZero(), cGravity + cAcceleration, cSimulationTime);
 		CHECK_APPROX_EQUAL(expected_pos, body.GetPosition());
 	}
 
@@ -444,7 +444,7 @@ TEST_SUITE("PhysicsTests")
 	// Test angular accelartion for a box by applying torque every frame
 	static void TestPhysicsApplyTorque(PhysicsTestContext &ioContext)
 	{
-		const Vec3 cInitialPos(0.0f, 10.0f, 0.0f);
+		const RVec3 cInitialPos(0.0f, 10.0f, 0.0f);
 		const Vec3 cAngularAcceleration(0.0f, 2.0f, 0.0f);
 		const float cSimulationTime = 2.0f;
 
@@ -501,10 +501,10 @@ TEST_SUITE("PhysicsTests")
 	static void TestPhysicsCollisionElastic(PhysicsTestContext &ioContext)
 	{
 		const float cSimulationTime = 1.0f;
-		const Vec3 cDistanceTraveled = ioContext.PredictPosition(Vec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
+		const RVec3 cDistanceTraveled = ioContext.PredictPosition(RVec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
 		const float cFloorHitEpsilon = 1.0e-4f; // Apply epsilon so that we're sure that the collision algorithm will find a collision
-		const Vec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
-		const Vec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
+		const RVec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
+		const RVec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
 
 		// Create sphere
 		ioContext.CreateFloor();
@@ -532,13 +532,13 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(reflected_velocity_after_full_step, body.GetLinearVelocity(), 1.0e-4f);
 
 		// Body should have bounced back
-		Vec3 pos_after_bounce_sub_step = cFloorHitPos + reflected_velocity_after_sub_step * sub_step_delta_time;
-		Vec3 pos_after_bounce_full_step = ioContext.PredictPosition(pos_after_bounce_sub_step, reflected_velocity_after_sub_step, cGravity, remaining_step_time);
+		RVec3 pos_after_bounce_sub_step = cFloorHitPos + reflected_velocity_after_sub_step * sub_step_delta_time;
+		RVec3 pos_after_bounce_full_step = ioContext.PredictPosition(pos_after_bounce_sub_step, reflected_velocity_after_sub_step, cGravity, remaining_step_time);
 		CHECK_APPROX_EQUAL(pos_after_bounce_full_step, body.GetPosition());
 
 		// Simulate same time, with a fully elastic body we should reach the initial position again
 		// In our physics engine because of the velocity being too big we actually end up a bit higher than our initial position
-		Vec3 expected_pos = ioContext.PredictPosition(pos_after_bounce_full_step, reflected_velocity_after_full_step, cGravity, cSimulationTime);
+		RVec3 expected_pos = ioContext.PredictPosition(pos_after_bounce_full_step, reflected_velocity_after_full_step, cGravity, cSimulationTime);
 		ioContext.Simulate(cSimulationTime);
 		CHECK_APPROX_EQUAL(expected_pos, body.GetPosition(), 1.0e-4f);
 		CHECK(expected_pos.GetY() >= cInitialPos.GetY());
@@ -572,10 +572,10 @@ TEST_SUITE("PhysicsTests")
 	static void TestPhysicsCollisionInelastic(PhysicsTestContext &ioContext)
 	{
 		const float cSimulationTime = 1.0f;
-		const Vec3 cDistanceTraveled = ioContext.PredictPosition(Vec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
+		const RVec3 cDistanceTraveled = ioContext.PredictPosition(RVec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
 		const float cFloorHitEpsilon = 1.0e-4f; // Apply epsilon so that we're sure that the collision algorithm will find a collision
-		const Vec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
-		const Vec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
+		const RVec3 cFloorHitPos(0.0f, 1.0f - cFloorHitEpsilon, 0.0f); // Sphere with radius 1 will hit floor when 1 above the floor
+		const RVec3 cInitialPos = cFloorHitPos - cDistanceTraveled;
 
 		// Create sphere
 		ioContext.CreateFloor();
@@ -633,7 +633,7 @@ TEST_SUITE("PhysicsTests")
 	{
 		const float cPenetrationSlop = ioContext.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
 		const float cSimulationTime = 1.0f;
-		const Vec3 cInitialPos(0.0f, 1.0f - cPenetrationSlop, 0.0f);
+		const RVec3 cInitialPos(0.0f, 1.0f - cPenetrationSlop, 0.0f);
 
 		// Create box, penetrating with floor
 		ioContext.CreateFloor();
@@ -668,8 +668,8 @@ TEST_SUITE("PhysicsTests")
 	{
 		const float cPenetrationSlop = ioContext.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
 		const float cSimulationTime = 1.0f;
-		const Vec3 cInitialPos(0.0f, 1.0f - 2.0f * cPenetrationSlop, 0.0f);
-		const Vec3 cFinalPos(0.0f, 1.0f - cPenetrationSlop, 0.0f);
+		const RVec3 cInitialPos(0.0f, 1.0f - 2.0f * cPenetrationSlop, 0.0f);
+		const RVec3 cFinalPos(0.0f, 1.0f - cPenetrationSlop, 0.0f);
 
 		// Create box, penetrating with floor
 		ioContext.CreateFloor();
@@ -704,7 +704,7 @@ TEST_SUITE("PhysicsTests")
 	{
 		const float cPenetrationSlop = ioContext.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
 		const float cSimulationTime = 1.0f;
-		const Vec3 cInitialPos(0.0f, 1.0f - 0.1f * cPenetrationSlop, 0.0f);
+		const RVec3 cInitialPos(0.0f, 1.0f - 0.1f * cPenetrationSlop, 0.0f);
 
 		// Create box, penetrating with floor
 		ioContext.CreateFloor();
@@ -746,8 +746,8 @@ TEST_SUITE("PhysicsTests")
 		// Create a box and a sphere just outside the speculative contact distance
 		const float cSpeculativeContactDistance = c.GetSystem()->GetPhysicsSettings().mSpeculativeContactDistance;
 		const float cDistanceAboveFloor = 1.1f * cSpeculativeContactDistance;
-		const Vec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
-		const Vec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
+		const RVec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
+		const RVec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
 
 		// Make it move 1 m per step down
 		const Vec3 cVelocity(0, -1.0f / c.GetDeltaTime(), 0);
@@ -789,8 +789,8 @@ TEST_SUITE("PhysicsTests")
 		// Create a box and a sphere just inside the speculative contact distance
 		const float cSpeculativeContactDistance = c.GetSystem()->GetPhysicsSettings().mSpeculativeContactDistance;
 		const float cDistanceAboveFloor = 0.9f * cSpeculativeContactDistance;
-		const Vec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
-		const Vec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
+		const RVec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
+		const RVec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
 
 		// Make it move 1 m per step down
 		const Vec3 cVelocity(0, -1.0f / c.GetDeltaTime(), 0);
@@ -816,12 +816,12 @@ TEST_SUITE("PhysicsTests")
 		const Vec3 cExpectedVelocity(0, -cDistanceAboveFloor / c.GetDeltaTime(), 0);
 
 		// Box collision is less accurate than sphere as it hits with 4 corners so there's some floating point precision loss in the calculation
-		CHECK_APPROX_EQUAL(box.GetPosition(), Vec3(0, 1, 0), 1.0e-3f);
+		CHECK_APPROX_EQUAL(box.GetPosition(), RVec3(0, 1, 0), 1.0e-3f);
 		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), cExpectedVelocity, 0.05f);
 		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 1.0e-2f);
 
 		// Sphere has only 1 contact point so is much more accurate
-		CHECK_APPROX_EQUAL(sphere.GetPosition(), Vec3(5, 1, 0));
+		CHECK_APPROX_EQUAL(sphere.GetPosition(), RVec3(5, 1, 0));
 		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cExpectedVelocity, 1.0e-4f); 
 		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
 
@@ -834,12 +834,12 @@ TEST_SUITE("PhysicsTests")
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Persist, sphere.GetID(), floor.GetID()));
 
 		// Box should have come to rest
-		CHECK_APPROX_EQUAL(box.GetPosition(), Vec3(0, 1, 0), 1.0e-3f);
+		CHECK_APPROX_EQUAL(box.GetPosition(), RVec3(0, 1, 0), 1.0e-3f);
 		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), Vec3::sZero(), 0.05f);
 		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 1.0e-2f);
 
 		// Sphere should have come to rest
-		CHECK_APPROX_EQUAL(sphere.GetPosition(), Vec3(5, 1, 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(sphere.GetPosition(), RVec3(5, 1, 0), 1.0e-4f);
 		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), Vec3::sZero(), 1.0e-4f); 
 		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
 	}
@@ -856,8 +856,8 @@ TEST_SUITE("PhysicsTests")
 		// Create a box and a sphere just inside the speculative contact distance
 		const float cSpeculativeContactDistance = c.GetSystem()->GetPhysicsSettings().mSpeculativeContactDistance;
 		const float cDistanceAboveFloor = 0.9f * cSpeculativeContactDistance;
-		const Vec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
-		const Vec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
+		const RVec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
+		const RVec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
 
 		// Make it move 1 m per step down
 		const Vec3 cVelocity(0, -1.0f / c.GetDeltaTime(), 0);
@@ -912,8 +912,8 @@ TEST_SUITE("PhysicsTests")
 		// Create a box and a sphere just inside the speculative contact distance
 		const float cSpeculativeContactDistance = c.GetSystem()->GetPhysicsSettings().mSpeculativeContactDistance;
 		const float cDistanceAboveFloor = 0.9f * cSpeculativeContactDistance;
-		const Vec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
-		const Vec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
+		const RVec3 cInitialPosBox(0, 1.0f + cDistanceAboveFloor, 0.0f);
+		const RVec3 cInitialPosSphere = cInitialPosBox + Vec3(5, 0, 0);
 
 		// Make it move 1 m per step up
 		const Vec3 cVelocity(0, 1.0f / c.GetDeltaTime(), 0);
@@ -965,17 +965,17 @@ TEST_SUITE("PhysicsTests")
 		ioContext.GetSystem()->SetBodyActivationListener(&activation_listener);
 
 		// Create floor
-		Body &floor = ioContext.CreateBox(Vec3(0, -1, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100, 1, 100));
+		Body &floor = ioContext.CreateBox(RVec3(0, -1, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100, 1, 100));
 		CHECK(!floor.IsActive());
 
 		// Create inactive box
-		Body &box = ioContext.CreateBox(Vec3(0, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
+		Body &box = ioContext.CreateBox(RVec3(0, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
 		CHECK(!box.IsActive());
 		CHECK(activation_listener.GetEntryCount() == 0);
 
 		// Box should not activate by itself
 		ioContext.Simulate(1.0f);
-		CHECK(box.GetPosition() == Vec3(0, 5, 0));
+		CHECK(box.GetPosition() == RVec3(0, 5, 0));
 		CHECK(!box.IsActive());
 		CHECK(activation_listener.GetEntryCount() == 0);
 
@@ -995,7 +995,7 @@ TEST_SUITE("PhysicsTests")
 
 		// Simulate 5 seconds and check it has settled on the floor and is no longer active
 		ioContext.Simulate(5.0f);
-		CHECK_APPROX_EQUAL(box.GetPosition(), Vec3(0, 0.5f, 0), 1.1f * cPenetrationSlop);
+		CHECK_APPROX_EQUAL(box.GetPosition(), RVec3(0, 0.5f, 0), 1.1f * cPenetrationSlop);
 		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), Vec3::sZero());
 		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero());
 		CHECK(!box.IsActive());
@@ -1041,10 +1041,10 @@ TEST_SUITE("PhysicsTests")
 		BodyIDVector body_ids;
 		if (inReverseCreate)
 			for (int i = cNumBodies - 1; i >= 0; --i)
-				body_ids.insert(body_ids.begin(), ioContext.CreateBox(Vec3(i * (2.0f * cBoxExtent - cPenetrationSlop), 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(cBoxExtent), EActivation::DontActivate).GetID());
+				body_ids.insert(body_ids.begin(), ioContext.CreateBox(RVec3(i * (2.0f * cBoxExtent - cPenetrationSlop), 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(cBoxExtent), EActivation::DontActivate).GetID());
 		else
 			for (int i = 0; i < cNumBodies; ++i)
-				body_ids.push_back(ioContext.CreateBox(Vec3(i * (2.0f * cBoxExtent - cPenetrationSlop), 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate).GetID());
+				body_ids.push_back(ioContext.CreateBox(RVec3(i * (2.0f * cBoxExtent - cPenetrationSlop), 0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate).GetID());
 
 		// Test that nothing is active yet
 		CHECK(activation_listener.GetEntryCount() == 0);
@@ -1125,16 +1125,16 @@ TEST_SUITE("PhysicsTests")
 		c.CreateFloor();
 
 		// Create MOVING boxes
-		Body &moving1 = c.CreateBox(Vec3(0, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::Activate);
-		Body &moving2 = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &moving1 = c.CreateBox(RVec3(0, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &moving2 = c.CreateBox(RVec3(0, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::Activate);
 
 		// Create HQ_DEBRIS boxes
-		Body &hq_debris1 = c.CreateBox(Vec3(0, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::HQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
-		Body &hq_debris2 = c.CreateBox(Vec3(0, 4, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::HQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &hq_debris1 = c.CreateBox(RVec3(0, 3, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::HQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &hq_debris2 = c.CreateBox(RVec3(0, 4, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::HQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
 
 		// Create LQ_DEBRIS boxes
-		Body &lq_debris1 = c.CreateBox(Vec3(0, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::LQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
-		Body &lq_debris2 = c.CreateBox(Vec3(0, 6, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::LQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &lq_debris1 = c.CreateBox(RVec3(0, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::LQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
+		Body &lq_debris2 = c.CreateBox(RVec3(0, 6, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::LQ_DEBRIS, Vec3::sReplicate(0.5f), EActivation::Activate);
 
 		// Check layers
 		CHECK(moving1.GetObjectLayer() == Layers::MOVING);
@@ -1163,16 +1163,16 @@ TEST_SUITE("PhysicsTests")
 
 		// MOVING boxes should have stacked
 		float slop = 0.02f;
-		CHECK_APPROX_EQUAL(moving1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(moving2.GetPosition(), Vec3(0, 1.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving2.GetPosition(), RVec3(0, 1.5f, 0), slop);
 
 		// HQ_DEBRIS boxes should have stacked on MOVING boxes but don't collide with each other
-		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), Vec3(0, 2.5f, 0), slop);
-		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), Vec3(0, 2.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), RVec3(0, 2.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), RVec3(0, 2.5f, 0), slop);
 
 		// LQ_DEBRIS should have fallen through all but the floor
-		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), RVec3(0, 0.5f, 0), slop);
 
 		// Now change HQ_DEBRIS to LQ_DEBRIS
 		bi.SetObjectLayer(hq_debris1.GetID(), Layers::LQ_DEBRIS);
@@ -1206,16 +1206,16 @@ TEST_SUITE("PhysicsTests")
 		CHECK_FALSE(lq_debris2.IsActive());
 
 		// MOVING boxes should have stacked
-		CHECK_APPROX_EQUAL(moving1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(moving2.GetPosition(), Vec3(0, 1.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving2.GetPosition(), RVec3(0, 1.5f, 0), slop);
 
 		// HQ_DEBRIS (now LQ_DEBRIS) boxes have fallen through all but the floor
-		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), RVec3(0, 0.5f, 0), slop);
 
 		// LQ_DEBRIS should have fallen through all but the floor
-		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), RVec3(0, 0.5f, 0), slop);
 
 		// Now change MOVING to HQ_DEBRIS (this doesn't change the broadphase layer so avoids adding/removing bodies)
 		bi.SetObjectLayer(moving1.GetID(), Layers::HQ_DEBRIS);
@@ -1249,15 +1249,15 @@ TEST_SUITE("PhysicsTests")
 		CHECK_FALSE(lq_debris2.IsActive());
 
 		// MOVING boxes now also fall through
-		CHECK_APPROX_EQUAL(moving1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(moving2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(moving2.GetPosition(), RVec3(0, 0.5f, 0), slop);
 
 		// HQ_DEBRIS (now LQ_DEBRIS) boxes have fallen through all but the floor
-		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(hq_debris2.GetPosition(), RVec3(0, 0.5f, 0), slop);
 
 		// LQ_DEBRIS should have fallen through all but the floor
-		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), Vec3(0, 0.5f, 0), slop);
-		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), Vec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), RVec3(0, 0.5f, 0), slop);
+		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), RVec3(0, 0.5f, 0), slop);
 	}
 }

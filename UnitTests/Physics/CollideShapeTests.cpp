@@ -61,7 +61,7 @@ TEST_SUITE("CollideShapeTests")
 
 		// Create sphere to collide against (shape 2)
 		PhysicsTestContext c;
-		Body &body2 = c.CreateSphere(cPosition2A, cRadius2, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING);
+		Body &body2 = c.CreateSphere(RVec3(cPosition2A), cRadius2, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING); // TODO_DP
 
 		// Filters
 		SpecifiedBroadPhaseLayerFilter broadphase_moving_filter(BroadPhaseLayers::MOVING);
@@ -117,7 +117,7 @@ TEST_SUITE("CollideShapeTests")
 		CHECK(position_a_collector.mWasHit);
 
 		// Now move body to position B
-		c.GetSystem()->GetBodyInterface().SetPositionAndRotation(body2.GetID(), cPosition2B, Quat::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI), EActivation::DontActivate);
+		c.GetSystem()->GetBodyInterface().SetPositionAndRotation(body2.GetID(), RVec3(cPosition2B), Quat::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI), EActivation::DontActivate); // TODO_DP
 
 		// Test that original position doesn't collide anymore
 		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, fail_collector, broadphase_non_moving_filter, object_non_moving_filter);
@@ -187,7 +187,7 @@ TEST_SUITE("CollideShapeTests")
 		box.SetEmbedded();
 		ScaledShapeSettings scaled_box(&box, Vec3(10, 1, 1));
 		scaled_box.SetEmbedded();
-		Body &body2 = c.CreateBody(&scaled_box, Vec3(0, 1, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+		Body &body2 = c.CreateBody(&scaled_box, RVec3(0, 1, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 		// Set settings
 		CollideShapeSettings settings;

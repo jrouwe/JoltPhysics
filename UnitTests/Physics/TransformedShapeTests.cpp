@@ -20,7 +20,7 @@ TEST_SUITE("TransformedShapeTests")
 		const Vec3 scale(-2, 3, 4);
 		const Vec3 rtshape_translation(1, 3, 5);
 		const Quat rtshape_rotation = Quat::sRotation(Vec3(1, 2, 3).Normalized(), 0.25f * JPH_PI);
-		const Vec3 translation(13, 9, 7);
+		const RVec3 translation(13, 9, 7);
 		const Quat rotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI); // A rotation of 90 degrees in order to not shear the shape
 
 		PhysicsMaterialSimple *material = new PhysicsMaterialSimple("Test Material", Color::sRed);
@@ -49,7 +49,7 @@ TEST_SUITE("TransformedShapeTests")
 		CHECK(ts.mShape == box_settings.Create().Get());
 
 		// Check that its transform matches the transform that we provided
-		Mat44 calc_transform = Mat44::sRotationTranslation(rotation, translation) * Mat44::sRotationTranslation(rtshape_rotation, rtshape_translation) * Mat44::sScale(scale);
+		RMat44 calc_transform = RMat44::sRotationTranslation(rotation, translation) * Mat44::sRotationTranslation(rtshape_rotation, rtshape_translation) * RMat44::sScale(scale);
 		CHECK_APPROX_EQUAL(calc_transform, ts.GetWorldTransform());
 
 		// Check that all corner points are in the bounding box
@@ -78,8 +78,8 @@ TEST_SUITE("TransformedShapeTests")
 		// Transform to world space and do the raycast
 		Vec3 ray_start_local = point_on_box - ray_direction_local;
 		Vec3 ray_end_local = point_on_box + ray_direction_local;
-		Vec3 ray_start_world = calc_transform * ray_start_local;
-		Vec3 ray_end_world = calc_transform * ray_end_local;
+		Vec3 ray_start_world = calc_transform.ToMat44() * ray_start_local; // TODO_DP
+		Vec3 ray_end_world = calc_transform.ToMat44() * ray_end_local; // TODO_DP
 		Vec3 ray_direction_world = ray_end_world - ray_start_world;
 		RayCast ray_in_world { ray_start_world, ray_direction_world };
 		RayCastResult hit;
@@ -89,13 +89,13 @@ TEST_SUITE("TransformedShapeTests")
 		CHECK_APPROX_EQUAL(hit.mFraction, 0.5f);
 		CHECK(hit.mBodyID == body.GetID());
 		CHECK(ts.GetMaterial(hit.mSubShapeID2) == material);
-		Vec3 world_space_normal = ts.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, ray_in_world.GetPointOnRay(hit.mFraction));
-		Vec3 expected_normal = (calc_transform.GetDirectionPreservingMatrix() * normal_on_box).Normalized();
+		Vec3 world_space_normal = ts.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, RVec3(ray_in_world.GetPointOnRay(hit.mFraction))); // TODO_DP
+		Vec3 expected_normal = (calc_transform.ToMat44().GetDirectionPreservingMatrix() * normal_on_box).Normalized(); // TODO_DP
 		CHECK_APPROX_EQUAL(world_space_normal, expected_normal);
 
 		// Reset the transform to identity and check that it worked
-		ts.SetWorldTransform(Mat44::sIdentity());
-		CHECK_APPROX_EQUAL(ts.GetWorldTransform(), Mat44::sIdentity());
+		ts.SetWorldTransform(RMat44::sIdentity());
+		CHECK_APPROX_EQUAL(ts.GetWorldTransform(), RMat44::sIdentity());
 
 		// Set the calculated world transform again to see if getting/setting a transform is symmetric
 		ts.SetWorldTransform(calc_transform);
