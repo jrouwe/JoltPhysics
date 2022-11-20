@@ -208,6 +208,11 @@ public:
 	/// will be made orthogonal using the modified Gram-Schmidt algorithm (see: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process)
 	JPH_INLINE Mat44			Decompose(Vec3 &outScale) const;
 
+#ifndef JPH_DOUBLE_PRECISION
+	/// In single precision mode just return the matrix itself
+	JPH_INLINE Mat44			ToMat44() const											{ return *this; }
+#endif // !JPH_DOUBLE_PRECISION
+
 	/// To String
 	friend ostream &			operator << (ostream &inStream, Mat44Arg inM)
 	{

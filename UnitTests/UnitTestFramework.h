@@ -21,6 +21,11 @@ inline void CHECK_APPROX_EQUAL(float inLHS, float inRHS, float inTolerance = 1.0
 	CHECK(abs(inRHS - inLHS) <= inTolerance);
 }
 
+inline void CHECK_APPROX_EQUAL(double inLHS, double inRHS, double inTolerance = 1.0e-6)
+{
+	CHECK(abs(inRHS - inLHS) <= inTolerance);
+}
+
 inline void CHECK_APPROX_EQUAL(Vec3Arg inLHS, Vec3Arg inRHS, float inTolerance = 1.0e-6f)
 {
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
@@ -32,6 +37,11 @@ inline void CHECK_APPROX_EQUAL(Vec4Arg inLHS, Vec4Arg inRHS, float inTolerance =
 }
 
 inline void CHECK_APPROX_EQUAL(Mat44Arg inLHS, Mat44Arg inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
+}
+
+inline void CHECK_APPROX_EQUAL(DMat44Arg inLHS, DMat44Arg inRHS, float inTolerance = 1.0e-6)
 {
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }

@@ -58,6 +58,7 @@
 	#endif
 	#define JPH_USE_SSE
 	#define JPH_VECTOR_ALIGNMENT 16
+	#define JPH_DVECTOR_ALIGNMENT 32
 
 	// Detect enabled instruction sets
 	#if defined(__AVX512F__) && defined(__AVX512VL__) && defined(__AVX512DQ__) && !defined(JPH_USE_AVX512)
@@ -104,15 +105,18 @@
 		#define JPH_CPU_ADDRESS_BITS 64
 		#define JPH_USE_NEON
 		#define JPH_VECTOR_ALIGNMENT 16
+		#define JPH_DVECTOR_ALIGNMENT 32
 	#else
 		#define JPH_CPU_ADDRESS_BITS 32
 		#define JPH_VECTOR_ALIGNMENT 8 // 32-bit ARM does not support aligning on the stack on 16 byte boundaries
+		#define JPH_DVECTOR_ALIGNMENT 8
 	#endif
 #elif defined(JPH_PLATFORM_WASM)
 	// WebAssembly CPU architecture
 	#define JPH_CPU_WASM
 	#define JPH_CPU_ADDRESS_BITS 32
 	#define JPH_VECTOR_ALIGNMENT 16
+	#define JPH_DVECTOR_ALIGNMENT 32
 	#define JPH_DISABLE_CUSTOM_ALLOCATOR
 #else
 	#error Unsupported CPU architecture
@@ -350,6 +354,17 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#define JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(...)	__VA_ARGS__
 #else
 	#define JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(...)
+#endif
+
+// Helper macros to detect if we're running in single or double precision mode
+#ifdef JPH_DOUBLE_PRECISION
+	#define JPH_IF_SINGLE_PRECISION(...)
+	#define JPH_IF_SINGLE_PRECISION_ELSE(s, d) d
+	#define JPH_IF_DOUBLE_PRECISION(...) __VA_ARGS__
+#else
+	#define JPH_IF_SINGLE_PRECISION(...) __VA_ARGS__
+	#define JPH_IF_SINGLE_PRECISION_ELSE(s, d) s
+	#define JPH_IF_DOUBLE_PRECISION(...)
 #endif
 
 // Macro to indicate that a parameter / variable is unused

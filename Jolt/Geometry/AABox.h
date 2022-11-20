@@ -143,6 +143,12 @@ public:
 		return UVec4::sAnd(Vec3::sLessOrEqual(mMin, inOther), Vec3::sGreaterOrEqual(mMax, inOther)).TestAllXYZTrue();
 	}
 
+	/// Check if this box contains a point
+	bool			Contains(DVec3Arg inOther) const
+	{
+		return Contains(Vec3(inOther));
+	}
+
 	/// Check if this box overlaps with another box
 	bool			Overlaps(const AABox &inOther) const
 	{
@@ -163,6 +169,13 @@ public:
 	{
 		mMin += inTranslation;
 		mMax += inTranslation;
+	}
+
+	/// Translate bounding box
+	void			Translate(DVec3Arg inTranslation)
+	{
+		mMin = (DVec3(mMin) + inTranslation).ToVec3RoundDown();
+		mMax = (DVec3(mMax) + inTranslation).ToVec3RoundUp();
 	}
 
 	/// Transform bounding box
@@ -186,6 +199,14 @@ public:
 
 		// Return the new bounding box
 		return AABox(new_min, new_max);
+	}
+
+	/// Transform bounding box
+	AABox			Transformed(DMat44Arg inMatrix) const
+	{
+		AABox transformed = Transformed(inMatrix.GetRotation());
+		transformed.Translate(inMatrix.GetTranslation());
+		return transformed;
 	}
 
 	/// Scale this bounding box, can handle non-uniform and negative scaling

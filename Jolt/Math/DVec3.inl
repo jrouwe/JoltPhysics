@@ -24,6 +24,20 @@ DVec3::DVec3(Vec3Arg inRHS)
 #endif
 }
 
+DVec3::DVec3(Vec4Arg inRHS)
+{
+#if defined(JPH_USE_AVX)
+	mValue = sFixW(_mm256_cvtps_pd(inRHS.mValue));
+#else
+	mD32[0] = (double)inRHS.GetX();
+	mD32[1] = (double)inRHS.GetY();
+	mD32[2] = (double)inRHS.GetZ();
+	#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+		mD32[3] = mD32[2];
+	#endif
+#endif
+}
+
 DVec3::DVec3(double inX, double inY, double inZ)
 {
 #if defined(JPH_USE_AVX)
@@ -38,20 +52,20 @@ DVec3::DVec3(double inX, double inY, double inZ)
 #endif
 }
 
-DVec3::DVec3(const double *inV)
+DVec3::DVec3(const Double3 &inV)
 {
 #if defined(JPH_USE_AVX)
-	Type x = _mm256_castpd128_pd256(_mm_load_sd(inV));
-	Type y = _mm256_castpd128_pd256(_mm_load_sd(inV + 1));
-	Type z = _mm256_broadcast_sd(inV + 2);
+	Type x = _mm256_castpd128_pd256(_mm_load_sd(&inV.x));
+	Type y = _mm256_castpd128_pd256(_mm_load_sd(&inV.y));
+	Type z = _mm256_broadcast_sd(&inV.z);
 	Type xy = _mm256_unpacklo_pd(x, y);
 	mValue = _mm256_blend_pd(xy, z, 0b1100); // Assure Z and W are the same
 #else
-	mD32[0] = inV[0];
-	mD32[1] = inV[1];
-	mD32[2] = inV[2];
+	mD32[0] = inV.x;
+	mD32[1] = inV.y;
+	mD32[2] = inV.z;
 	#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
-		mD32[3] = inV[2];
+		mD32[3] = mD32[2];
 	#endif
 #endif
 }
@@ -101,17 +115,22 @@ DVec3 DVec3::sReplicate(double inV)
 	#endif
 }
 
-DVec3 DVec3::sLoadDouble3Unsafe(const double *inV)
+DVec3 DVec3::sNaN()
+{
+	return sReplicate(numeric_limits<double>::quiet_NaN());
+}
+
+DVec3 DVec3::sLoadDouble3Unsafe(const Double3 &inV)
 {
 	#if defined(JPH_USE_AVX)
-		Type v = _mm256_loadu_pd(inV);
+		Type v = _mm256_loadu_pd(&inV.x);
 	#else
-		Type v = { inV[0], inV[1], inV[2] };
+		Type v = { inV.x, inV.y, inV.z };
 	#endif
 	return sFixW(v);
 }
 
-Vec3 DVec3::ToVec3() const
+DVec3::operator Vec3() const
 {
 	#if defined(JPH_USE_AVX)
 		return _mm256_cvtpd_ps(mValue);
@@ -375,6 +394,15 @@ DVec3 &DVec3::operator /= (double inV2)
 	return *this;
 }
 
+DVec3 DVec3::operator + (Vec3Arg inV2) const
+{
+#if defined(JPH_USE_AVX)
+	return _mm256_add_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#else
+	return DVec3(mD32[0] + inV2.mF32[0], mD32[1] + inV2.mF32[1], mD32[2] + inV2.mF32[2]);
+#endif
+}
+
 DVec3 DVec3::operator + (DVec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
@@ -382,6 +410,20 @@ DVec3 DVec3::operator + (DVec3Arg inV2) const
 #else
 	return DVec3(mD32[0] + inV2.mD32[0], mD32[1] + inV2.mD32[1], mD32[2] + inV2.mD32[2]);
 #endif
+}
+
+DVec3 &DVec3::operator += (Vec3Arg inV2)
+{
+#if defined(JPH_USE_AVX)
+	mValue = _mm256_add_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#else
+	for (int i = 0; i < 3; ++i)
+		mD32[i] += inV2.mF32[i];
+	#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+		mD32[3] = mD32[2];
+	#endif
+#endif
+	return *this;
 }
 
 DVec3 &DVec3::operator += (DVec3Arg inV2)
@@ -407,6 +449,15 @@ DVec3 DVec3::operator - () const
 #endif
 }
 
+DVec3 DVec3::operator - (Vec3Arg inV2) const
+{
+#if defined(JPH_USE_AVX)
+	return _mm256_sub_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#else
+	return DVec3(mD32[0] - inV2.mF32[0], mD32[1] - inV2.mF32[1], mD32[2] - inV2.mF32[2]);
+#endif
+}
+
 DVec3 DVec3::operator - (DVec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
@@ -414,6 +465,20 @@ DVec3 DVec3::operator - (DVec3Arg inV2) const
 #else
 	return DVec3(mD32[0] - inV2.mD32[0], mD32[1] - inV2.mD32[1], mD32[2] - inV2.mD32[2]);
 #endif
+}
+
+DVec3 &DVec3::operator -= (Vec3Arg inV2)
+{
+#if defined(JPH_USE_AVX)
+	mValue = _mm256_sub_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#else
+	for (int i = 0; i < 3; ++i)
+		mD32[i] -= inV2.mF32[i];
+	#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+		mD32[3] = mD32[2];
+	#endif
+#endif
+	return *this;
 }
 
 DVec3 &DVec3::operator -= (DVec3Arg inV2)
@@ -517,6 +582,15 @@ DVec3 DVec3::Normalized() const
 bool DVec3::IsNormalized(double inTolerance) const 
 { 
 	return abs(LengthSq() - 1.0) <= inTolerance; 
+}
+
+bool DVec3::IsNaN() const
+{
+#if defined(JPH_USE_AVX)
+	return (_mm256_movemask_pd(_mm256_cmp_pd(mValue, mValue, _CMP_UNORD_Q)) & 0x7) != 0;
+#else
+	return isnan(mD32[0]) || isnan(mD32[1]) || isnan(mD32[2]);
+#endif
 }
 
 DVec3 DVec3::GetSign() const

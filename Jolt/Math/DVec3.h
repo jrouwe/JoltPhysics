@@ -4,12 +4,13 @@
 #pragma once
 
 #include <Jolt/Math/Swizzle.h>
+#include <Jolt/Math/Double3.h>
 
 JPH_NAMESPACE_BEGIN
 
 /// 3 component vector of doubles (stored as 4 vectors). 
 /// Note that we keep the 4th component the same as the 3rd component to avoid divisions by zero when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED defined
-class [[nodiscard]] DVec3
+class [[nodiscard]] alignas(JPH_DVECTOR_ALIGNMENT) DVec3
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -25,13 +26,14 @@ public:
 								DVec3() = default; ///< Intentionally not initialized for performance reasons
 								DVec3(const DVec3 &inRHS) = default;
 	JPH_INLINE explicit			DVec3(Vec3Arg inRHS);
+	JPH_INLINE explicit			DVec3(Vec4Arg inRHS);
 	JPH_INLINE					DVec3(Type inRHS) : mValue(inRHS)				{ CheckW(); }
 
 	/// Create a vector from 3 components
 	JPH_INLINE					DVec3(double inX, double inY, double inZ);
 
 	/// Load 3 doubles from memory
-	explicit JPH_INLINE			DVec3(const double *inV);
+	explicit JPH_INLINE			DVec3(const Double3 &inV);
 
 	/// Vector with all zeros
 	static JPH_INLINE DVec3		sZero();
@@ -44,11 +46,20 @@ public:
 	/// Replicate inV across all components
 	static JPH_INLINE DVec3		sReplicate(double inV);
 		
-	/// Load 3 doubles from memory (reads 64 bits extra which it doesn't use)
-	static JPH_INLINE DVec3		sLoadDouble3Unsafe(const double *inV);
+	/// Vector with all NaN's
+	static JPH_INLINE DVec3		sNaN();
 
-	/// Convert to float vector 3
-	JPH_INLINE Vec3				ToVec3() const;
+	/// Load 3 doubles from memory (reads 64 bits extra which it doesn't use)
+	static JPH_INLINE DVec3		sLoadDouble3Unsafe(const Double3 &inV);
+
+	/// Convert to float vector 3 rounding to nearest
+	JPH_INLINE explicit			operator Vec3() const;
+
+	/// Convert to float vector 3 rounding down
+	JPH_INLINE Vec3				ToVec3RoundDown() const							{ return Vec3(*this); } // TODO_DP
+
+	/// Convert to float vector 3 rounding up
+	JPH_INLINE Vec3				ToVec3RoundUp() const							{ return Vec3(*this); } // TODO_DP
 
 	/// Return the minimum value of each of the components
 	static JPH_INLINE DVec3		sMin(DVec3Arg inV1, DVec3Arg inV2);
@@ -131,6 +142,9 @@ public:
 	/// Test if vector is normalized
 	JPH_INLINE bool				IsNormalized(double inTolerance = 1.0e-12) const;
 
+	/// Test if vector contains NaN elements
+	JPH_INLINE bool				IsNaN() const;
+
 	/// Multiply two double vectors (component wise)
 	JPH_INLINE DVec3			operator * (DVec3Arg inV2) const;
 
@@ -152,8 +166,14 @@ public:
 	/// Divide vector by double
 	JPH_INLINE DVec3 &			operator /= (double inV2);
 
+	/// Add two vectors (component wise)
+	JPH_INLINE DVec3			operator + (Vec3Arg inV2) const;
+
 	/// Add two double vectors (component wise)
 	JPH_INLINE DVec3			operator + (DVec3Arg inV2) const;
+
+	/// Add two vectors (component wise)
+	JPH_INLINE DVec3 &			operator += (Vec3Arg inV2);
 
 	/// Add two double vectors (component wise)
 	JPH_INLINE DVec3 &			operator += (DVec3Arg inV2);
@@ -161,8 +181,14 @@ public:
 	/// Negate
 	JPH_INLINE DVec3			operator - () const;
 
+	/// Subtract two vectors (component wise)
+	JPH_INLINE DVec3			operator - (Vec3Arg inV2) const;
+
 	/// Subtract two double vectors (component wise)
 	JPH_INLINE DVec3			operator - (DVec3Arg inV2) const;
+
+	/// Add two vectors (component wise)
+	JPH_INLINE DVec3 &			operator -= (Vec3Arg inV2);
 
 	/// Add two double vectors (component wise)
 	JPH_INLINE DVec3 &			operator -= (DVec3Arg inV2);
@@ -214,7 +240,6 @@ public:
 	inline static const double	cTrue = BitCast<double>(~uint64(0));
 	inline static const double	cFalse = 0.0f;
 
-private:
 	union
 	{
 		Type					mValue;
