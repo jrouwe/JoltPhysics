@@ -36,7 +36,7 @@ void VehicleSixDOFTest::Initialize()
 		Vec3(half_vehicle_width, -half_vehicle_height, -half_vehicle_length + 2.0f * half_wheel_height),
 	};
 
-	Vec3 position(0, 2, 0);
+	RVec3 position(0, 2, 0);
 
 	RefConst<Shape> body_shape = new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length));
 
@@ -57,8 +57,8 @@ void VehicleSixDOFTest::Initialize()
 		bool is_front = sIsFrontWheel((EWheel)i);
 		bool is_left = sIsLeftWheel((EWheel)i);
 
-		Vec3 wheel_pos1 = position + wheel_position[i];
-		Vec3 wheel_pos2 = wheel_pos1 - Vec3(0, half_wheel_travel, 0);
+		RVec3 wheel_pos1 = position + wheel_position[i];
+		RVec3 wheel_pos2 = wheel_pos1 - Vec3(0, half_wheel_travel, 0);
 
 		// Create body
 		Body &wheel = *mBodyInterface->CreateBody(BodyCreationSettings(wheel_shape, wheel_pos2, Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
@@ -210,5 +210,5 @@ Mat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPit
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec4(mCarBody->GetPosition(), 1.0f));
+	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec4(Vec3(mCarBody->GetPosition()), 1.0f)); // TODO_DP
 }

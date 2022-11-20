@@ -20,10 +20,10 @@ void CylinderShapeTest::Initialize()
 
 	// Cylinder on flat part
 	RefConst<Shape> big_cylinder = new CylinderShape(2.5f, 2);
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cylinder, Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cylinder, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 	
 	// Cylinder on round part
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cylinder, Vec3(10, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cylinder, RVec3(10, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 
 	// Tower of cylinders
 	RefConst<Shape> long_cylinder = new CylinderShape(5, 1);
@@ -31,16 +31,16 @@ void CylinderShapeTest::Initialize()
 	{
 		for (int j = 0; j < 2; ++j)
 		{
-			Vec3 position;
+			RVec3 position;
 			Quat rotation;
 			if (i & 1)
 			{
-				position = Vec3(-4.0f + 8.0f * j, 2.0f + 3.0f * i, -20.0f);
+				position = RVec3(-4.0f + 8.0f * j, 2.0f + 3.0f * i, -20.0f);
 				rotation = Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI);
 			}
 			else
 			{
-				position = Vec3(0, 2.0f + 3.0f * i, -20.0f - 4.0f + 8.0f * j);
+				position = RVec3(0, 2.0f + 3.0f * i, -20.0f - 4.0f + 8.0f * j);
 				rotation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
 			}
 			mBodyInterface->CreateAndAddBody(BodyCreationSettings(long_cylinder, position, rotation, EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
@@ -50,5 +50,5 @@ void CylinderShapeTest::Initialize()
 	// Tower of thin cylinders
 	RefConst<Shape> thin_cylinder = new CylinderShape(0.1f, 5.0f);
 	for (int i = 0; i < 10; ++i)
-		mBodyInterface->CreateAndAddBody(BodyCreationSettings(thin_cylinder, Vec3(20.0f, 10.0f - 1.0f * i, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(thin_cylinder, RVec3(20.0f, 10.0f - 1.0f * i, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }

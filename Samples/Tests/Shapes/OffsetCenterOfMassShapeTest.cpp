@@ -25,17 +25,17 @@ void OffsetCenterOfMassShapeTest::Initialize()
 	Ref<OffsetCenterOfMassShapeSettings> right = new OffsetCenterOfMassShapeSettings(Vec3(1, 0, 0), sphere);
 
 	// Sphere with center of mass moved to the left side
-	Body &body_left = *mBodyInterface->CreateBody(BodyCreationSettings(left, Vec3(-5, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Body &body_left = *mBodyInterface->CreateBody(BodyCreationSettings(left, RVec3(-5, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body_left.SetFriction(1.0f);
 	mBodyInterface->AddBody(body_left.GetID(), EActivation::Activate);
 
 	// Sphere with center of mass centered
-	Body &body_center = *mBodyInterface->CreateBody(BodyCreationSettings(sphere, Vec3(0, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Body &body_center = *mBodyInterface->CreateBody(BodyCreationSettings(sphere, RVec3(0, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body_center.SetFriction(1.0f);
 	mBodyInterface->AddBody(body_center.GetID(), EActivation::Activate);
 
 	// Sphere with center of mass moved to the right side
-	Body &body_right = *mBodyInterface->CreateBody(BodyCreationSettings(right, Vec3(5, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Body &body_right = *mBodyInterface->CreateBody(BodyCreationSettings(right, RVec3(5, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body_right.SetFriction(1.0f);
 	mBodyInterface->AddBody(body_right.GetID(), EActivation::Activate);
 }

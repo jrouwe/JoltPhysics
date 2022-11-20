@@ -40,7 +40,7 @@ void VehicleConstraintTest::Initialize()
 	mTesters[1] = new VehicleCollisionTesterCastSphere(Layers::MOVING, 0.5f * wheel_width);
 
 	// Create vehicle body
-	Vec3 position(0, 2, 0);
+	RVec3 position(0, 2, 0);
 	RefConst<Shape> car_shape = OffsetCenterOfMassShapeSettings(Vec3(0, -half_vehicle_height, 0), new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length))).Create().Get();
 	BodyCreationSettings car_body_settings(car_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	car_body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
@@ -179,7 +179,7 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	for (uint w = 0; w < 4; ++w)
 	{
 		const WheelSettings *settings = mVehicleConstraint->GetWheels()[w]->GetSettings();
-		Mat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cyclinder we draw is aligned with Y so we specify that as rotational axis
+		RMat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cyclinder we draw is aligned with Y so we specify that as rotational axis
 		mDebugRenderer->DrawCylinder(wheel_transform, 0.5f * settings->mWidth, settings->mRadius, Color::sGreen);
 	}
 }
@@ -204,7 +204,7 @@ Mat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCamer
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec4(mCarBody->GetPosition(), 1.0f));
+	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec4(Vec3(mCarBody->GetPosition()), 1.0f)); // TODO_DP
 }
 
 void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)

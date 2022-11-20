@@ -46,12 +46,12 @@ void MeshShapeTest::Initialize()
 		materials.push_back(new PhysicsMaterialSimple("Material " + ConvertToString(i), Color::sGetDistinctColor(i)));
 
 	// Floor
-	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new MeshShapeSettings(triangles, materials), Vec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING));
+	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new MeshShapeSettings(triangles, materials), RVec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 
 	// 1 body with zero friction to test active edge detection
 	Ref<BoxShape> box_shape = new BoxShape(Vec3(2.0f, 2.0f, 2.0f), cDefaultConvexRadius, new PhysicsMaterialSimple("Box Material", Color::sYellow));
-	Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, Vec3(0, 55.0f, -50.0f), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, RVec3(0, 55.0f, -50.0f), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	body.SetFriction(0.0f);
 	mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
 }

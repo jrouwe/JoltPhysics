@@ -19,7 +19,7 @@ Body &Test::CreateFloor(float inSize)
 {
 	const float scale = GetWorldScale();
 
-	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(scale * Vec3(0.5f * inSize, 1.0f, 0.5f * inSize), 0.0f), scale * Vec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(scale * Vec3(0.5f * inSize, 1.0f, 0.5f * inSize), 0.0f), RVec3(scale * Vec3(0.0f, -1.0f, 0.0f)), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 	return floor;
 }
@@ -95,7 +95,7 @@ Body &Test::CreateLargeTriangleFloor()
 	};
 	MeshShapeSettings mesh_settings(triangles);
 	mesh_settings.SetEmbedded();
-	BodyCreationSettings floor_settings(&mesh_settings, Vec3(-256.0f, 0.0f, 256.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	BodyCreationSettings floor_settings(&mesh_settings, RVec3(-256.0f, 0.0f, 256.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 	Body &floor = *mBodyInterface->CreateBody(floor_settings);
 	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 	return floor;
@@ -142,7 +142,7 @@ Body &Test::CreateMeshTerrain()
 		}
 
 	// Floor
-	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new MeshShapeSettings(triangles), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new MeshShapeSettings(triangles), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 	return floor;
 }
@@ -165,7 +165,7 @@ Body &Test::CreateHeightFieldTerrain()
 	RefConst<ShapeSettings> height_field = new HeightFieldShapeSettings(heights, Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n), Vec3(cell_size, 1.0f, cell_size), n);
 
 	// Floor
-	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(height_field, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(height_field, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
 	return floor;
 }

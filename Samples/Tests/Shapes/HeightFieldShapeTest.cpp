@@ -134,7 +134,7 @@ void HeightFieldShapeTest::Initialize()
 	settings.mBlockSize = 1 << sBlockSizeShift;
 	settings.mBitsPerSample = sBitsPerSample;
 	mHeightField = static_cast<const HeightFieldShape *>(settings.Create().Get().GetPtr());
-	Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(terrain.GetID(), EActivation::DontActivate);
 
 	// Validate it
@@ -195,7 +195,7 @@ void HeightFieldShapeTest::Initialize()
 		mHitPos = start + result.mFraction * direction;
 
 	// Dynamic body
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)), mHitPos + Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)), RVec3(mHitPos + Vec3(0, 10, 0)), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING)); // TODO_DP
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
 }
 

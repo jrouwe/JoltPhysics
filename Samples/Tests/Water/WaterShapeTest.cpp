@@ -25,15 +25,15 @@ void WaterShapeTest::Initialize()
 	CreateFloor();
 	   
 	// Create scaled box
-	BodyID body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShape(new BoxShape(Vec3(1.0f, 2.0f, 2.5f)), Vec3(0.5f, 0.6f, -0.7f)), Vec3(-10, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	BodyID body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShape(new BoxShape(Vec3(1.0f, 2.0f, 2.5f)), Vec3(0.5f, 0.6f, -0.7f)), RVec3(-10, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create box
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1.0f, 2.0f, 2.5f)), Vec3(-7, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1.0f, 2.0f, 2.5f)), RVec3(-7, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create sphere
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(2.0f), Vec3(-3, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(2.0f), RVec3(-3, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create static compound
@@ -41,7 +41,7 @@ void WaterShapeTest::Initialize()
 	static_compound->AddShape(Vec3(2.0f, 0, 0), Quat::sIdentity(), new SphereShape(2.0f));
 	static_compound->AddShape(Vec3(-1.0f, 0, 0), Quat::sIdentity(), new SphereShape(1.0f));
 
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(static_compound, Vec3(3, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(static_compound, RVec3(3, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create tetrahedron
@@ -51,11 +51,11 @@ void WaterShapeTest::Initialize()
 	tetrahedron.push_back(Vec3(2, 0, -2));
 	tetrahedron.push_back(Vec3(0, -2, 0));
 	Ref<ConvexHullShapeSettings> tetrahedron_shape = new ConvexHullShapeSettings(tetrahedron);
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(tetrahedron_shape, Vec3(10, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(tetrahedron_shape, RVec3(10, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Non-uniform scaled tetrahedron
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(tetrahedron_shape, Vec3(1, -1.5f, 2.0f)), Vec3(15, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(tetrahedron_shape, Vec3(1, -1.5f, 2.0f)), RVec3(15, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create convex hull box
@@ -68,7 +68,7 @@ void WaterShapeTest::Initialize()
 	box.push_back(Vec3(-1.5f, 1.0f, -0.5f));
 	box.push_back(Vec3(1.5f, -1.0f, -0.5f));
 	box.push_back(Vec3(-1.5f, -1.0f, -0.5f));
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(box), Vec3(18, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(box), RVec3(18, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create random convex shape
@@ -77,7 +77,7 @@ void WaterShapeTest::Initialize()
 	Array<Vec3> points;
 	for (int j = 0; j < 20; ++j)
 		points.push_back(hull_size(random) * Vec3::sRandom(random));
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(points), Vec3(21, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(points), RVec3(21, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create mutable compound
@@ -85,11 +85,11 @@ void WaterShapeTest::Initialize()
 	mutable_compound->AddShape(Vec3(1.0f, 0, 0), Quat::sIdentity(), new BoxShape(Vec3(0.5f, 0.75f, 1.0f)));
 	mutable_compound->AddShape(Vec3(-1.0f, 0, 0), Quat::sIdentity(), new SphereShape(1.0f));
 
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(mutable_compound, Vec3(25, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(mutable_compound, RVec3(25, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 
 	// Create box with center of mass offset
-	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new OffsetCenterOfMassShapeSettings(Vec3(-1.0f, 0.0f, 0.0f), new BoxShape(Vec3(2.0f, 0.25f, 0.25f))), Vec3(30, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
+	body_id = mBodyInterface->CreateBody(BodyCreationSettings(new OffsetCenterOfMassShapeSettings(Vec3(-1.0f, 0.0f, 0.0f), new BoxShape(Vec3(2.0f, 0.25f, 0.25f))), RVec3(30, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
 }
 
