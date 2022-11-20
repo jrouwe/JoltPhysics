@@ -100,7 +100,8 @@ private:
 	struct AttributeDescription
 	{
 		int						mArrayDepth = 0;
-		EOSDataType				mDataType = EOSDataType::Invalid;
+		EOSDataType				mSourceType = EOSDataType::Invalid;
+		EOSDataType				mDestinationType = EOSDataType::Invalid;
 		String					mClassName;
 		int						mIndex = -1;
 	};
