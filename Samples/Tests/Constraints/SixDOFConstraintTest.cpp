@@ -53,7 +53,7 @@ void SixDOFConstraintTest::Initialize()
 
 	// Create box
 	float half_box_height = 1.5f;
-	Vec3 position(0, 25, 0);
+	RVec3 position(0, 25, 0);
 	RefConst<BoxShape> box = new BoxShape(Vec3(0.5f, half_box_height, 0.25f));
 
 	// Create static body

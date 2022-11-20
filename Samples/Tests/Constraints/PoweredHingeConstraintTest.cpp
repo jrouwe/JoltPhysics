@@ -27,12 +27,12 @@ void PoweredHingeConstraintTest::Initialize()
 	float box_size = 4.0f;
 	RefConst<Shape> box = new BoxShape(Vec3::sReplicate(0.5f * box_size));
 
-	Vec3 body1_position(0, 10, 0);
+	RVec3 body1_position(0, 10, 0);
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(box, body1_position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	body1.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::DontActivate);
 
-	Vec3 body2_position = body1_position + Vec3(box_size, 0, 0);
+	RVec3 body2_position = body1_position + Vec3(box_size, 0, 0);
 	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(box, body2_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body2.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 	body2.GetMotionProperties()->SetLinearDamping(0.0f);
@@ -40,7 +40,7 @@ void PoweredHingeConstraintTest::Initialize()
 	body2.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
 
-	Vec3 constraint_position = body1_position + Vec3(0.5f * box_size, 0, 0.5f * box_size);
+	RVec3 constraint_position = body1_position + Vec3(0.5f * box_size, 0, 0.5f * box_size);
 
 	HingeConstraintSettings settings;
 	settings.mPoint1 = settings.mPoint2 = constraint_position;
@@ -55,7 +55,7 @@ void PoweredHingeConstraintTest::Initialize()
 	MassProperties body2_inertia_from_constraint;
 	body2_inertia_from_constraint.mMass = 1.0f / body2.GetMotionProperties()->GetInverseMass();
 	body2_inertia_from_constraint.mInertia = body2.GetMotionProperties()->GetLocalSpaceInverseInertia().Inversed3x3();
-	body2_inertia_from_constraint.Translate(body2_position - constraint_position);
+	body2_inertia_from_constraint.Translate(Vec3(body2_position - constraint_position));
 	mInertiaBody2AsSeenFromConstraint = (body2_inertia_from_constraint.mInertia * Vec3::sAxisY()).Length();
 }
 

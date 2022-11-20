@@ -25,7 +25,7 @@ void DynamicMeshTest::Initialize()
 
 	// Create torus
 	RefConst<Shape> mesh_shape = ShapeCreator::CreateTorusMesh(cTorusRadius, cTubeRadius);
-	BodyCreationSettings settings(mesh_shape, Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings settings(mesh_shape, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 
 	// Mesh cannot calculate its mass, we must provide it
 	settings.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
@@ -38,7 +38,7 @@ void DynamicMeshTest::Initialize()
 	for (int i = 0; i < 7; ++i)
 		for (int j = i / 2; j < 7 - (i + 1) / 2; ++j)
 		{
-			Vec3 position(-3.5f + j * 1.0f + (i & 1? 0.5f : 0.0f), 0.5f + i * 1.0f, 0.0f);
+			RVec3 position(-3.5f + j * 1.0f + (i & 1? 0.5f : 0.0f), 0.5f + i * 1.0f, 0.0f);
 			Body &wall = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 			mBodyInterface->AddBody(wall.GetID(), EActivation::Activate);
 		}

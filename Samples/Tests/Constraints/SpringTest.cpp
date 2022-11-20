@@ -20,7 +20,7 @@ void SpringTest::Initialize()
 	CreateFloor();
 		
 	// Top fixed body
-	Vec3 position(0, 75, 0);
+	RVec3 position(0, 75, 0);
 	Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(100.0f, 1.0f, 1.0f)), position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(top.GetID(), EActivation::DontActivate);
 
@@ -28,8 +28,8 @@ void SpringTest::Initialize()
 	for (int i = 0; i < 10; ++i)
 	{
 		// Create body
-		Vec3 attachment_point = position + Vec3(-100.0f + i * 5.0f, 0, 0);
-		Vec3 body_position = attachment_point - Vec3(0, 10.0f + i * 2.5f, 0);
+		RVec3 attachment_point = position + Vec3(-100.0f + i * 5.0f, 0, 0);
+		RVec3 body_position = attachment_point - Vec3(0, 10.0f + i * 2.5f, 0);
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.75f)), body_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		body.GetMotionProperties()->SetAngularDamping(0.0f);
 		body.GetMotionProperties()->SetLinearDamping(0.0f);
@@ -50,8 +50,8 @@ void SpringTest::Initialize()
 	for (int i = 0; i < 10; ++i)
 	{
 		// Create body
-		Vec3 attachment_point = position + Vec3(-25.0f + i * 5.0f, 0, 0);
-		Vec3 body_position = attachment_point - Vec3(0, 25.0f, 0);
+		RVec3 attachment_point = position + Vec3(-25.0f + i * 5.0f, 0, 0);
+		RVec3 body_position = attachment_point - Vec3(0, 25.0f, 0);
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.75f)), body_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		body.GetMotionProperties()->SetAngularDamping(0.0f);
 		body.GetMotionProperties()->SetLinearDamping(0.0f);
@@ -72,8 +72,8 @@ void SpringTest::Initialize()
 	for (int i = 0; i < 10; ++i)
 	{
 		// Create body
-		Vec3 attachment_point = position + Vec3(50.0f + i * 5.0f, 0, 0);
-		Vec3 body_position = attachment_point - Vec3(0, 25.0f, 0);
+		RVec3 attachment_point = position + Vec3(50.0f + i * 5.0f, 0, 0);
+		RVec3 body_position = attachment_point - Vec3(0, 25.0f, 0);
 		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.75f)), body_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		body.GetMotionProperties()->SetAngularDamping(0.0f);
 		body.GetMotionProperties()->SetLinearDamping(0.0f);

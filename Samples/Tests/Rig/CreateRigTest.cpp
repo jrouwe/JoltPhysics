@@ -56,19 +56,19 @@ void CreateRigTest::Initialize()
 	};
 
 	// Positions of body parts in world space
-	Vec3 positions[] = {
-		Vec3(0, 1.15f, 0),					// Lower Body
-		Vec3(0, 1.35f, 0),					// Mid Body
-		Vec3(0, 1.55f, 0),					// Upper Body
-		Vec3(0, 1.825f, 0),					// Head
-		Vec3(-0.425f, 1.55f, 0),			// Upper Arm L
-		Vec3(0.425f, 1.55f, 0),				// Upper Arm R
-		Vec3(-0.8f, 1.55f, 0),				// Lower Arm L
-		Vec3(0.8f, 1.55f, 0),				// Lower Arm R
-		Vec3(-0.15f, 0.8f, 0),				// Upper Leg L
-		Vec3(0.15f, 0.8f, 0),				// Upper Leg R
-		Vec3(-0.15f, 0.3f, 0),				// Lower Leg L
-		Vec3(0.15f, 0.3f, 0),				// Lower Leg R
+	RVec3 positions[] = {
+		RVec3(0, 1.15f, 0),					// Lower Body
+		RVec3(0, 1.35f, 0),					// Mid Body
+		RVec3(0, 1.55f, 0),					// Upper Body
+		RVec3(0, 1.825f, 0),				// Head
+		RVec3(-0.425f, 1.55f, 0),			// Upper Arm L
+		RVec3(0.425f, 1.55f, 0),			// Upper Arm R
+		RVec3(-0.8f, 1.55f, 0),				// Lower Arm L
+		RVec3(0.8f, 1.55f, 0),				// Lower Arm R
+		RVec3(-0.15f, 0.8f, 0),				// Upper Leg L
+		RVec3(0.15f, 0.8f, 0),				// Upper Leg R
+		RVec3(-0.15f, 0.3f, 0),				// Lower Leg L
+		RVec3(0.15f, 0.3f, 0),				// Lower Leg R
 	};
 
 	// Rotations of body parts in world space
@@ -88,19 +88,19 @@ void CreateRigTest::Initialize()
 	};
 
 	// World space constraint positions
-	Vec3 constraint_positions[] = {
-		Vec3::sZero(),				// Lower Body (unused, there's no parent)
-		Vec3(0, 1.25f, 0),			// Mid Body
-		Vec3(0, 1.45f, 0),			// Upper Body
-		Vec3(0, 1.65f, 0),			// Head
-		Vec3(-0.225f, 1.55f, 0),	// Upper Arm L
-		Vec3(0.225f, 1.55f, 0),		// Upper Arm R
-		Vec3(-0.65f, 1.55f, 0),		// Lower Arm L
-		Vec3(0.65f, 1.55f, 0),		// Lower Arm R
-		Vec3(-0.15f, 1.05f, 0),		// Upper Leg L
-		Vec3(0.15f, 1.05f, 0),		// Upper Leg R
-		Vec3(-0.15f, 0.55f, 0),		// Lower Leg L
-		Vec3(0.15f, 0.55f, 0),		// Lower Leg R
+	RVec3 constraint_positions[] = {
+		RVec3::sZero(),				// Lower Body (unused, there's no parent)
+		RVec3(0, 1.25f, 0),			// Mid Body
+		RVec3(0, 1.45f, 0),			// Upper Body
+		RVec3(0, 1.65f, 0),			// Head
+		RVec3(-0.225f, 1.55f, 0),	// Upper Arm L
+		RVec3(0.225f, 1.55f, 0),	// Upper Arm R
+		RVec3(-0.65f, 1.55f, 0),	// Lower Arm L
+		RVec3(0.65f, 1.55f, 0),		// Lower Arm R
+		RVec3(-0.15f, 1.05f, 0),	// Upper Leg L
+		RVec3(0.15f, 1.05f, 0),		// Upper Leg R
+		RVec3(-0.15f, 0.55f, 0),	// Lower Leg L
+		RVec3(0.15f, 0.55f, 0),		// Lower Leg R
 	};
 
 	// World space twist axis directions

@@ -28,7 +28,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
-	mCharacter = new CharacterVirtual(settings, Vec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
+	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
 
@@ -37,9 +37,9 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	CharacterBaseTest::PrePhysicsUpdate(inParams);
 
 	// Draw character pre update (the sim is also drawn pre update)
-	Mat44 com = mCharacter->GetCenterOfMassTransform();
+	RMat44 com = mCharacter->GetCenterOfMassTransform();
 #ifdef JPH_DEBUG_RENDERER
-	mCharacter->GetShape()->Draw(mDebugRenderer, com, Vec3::sReplicate(1.0f), Color::sGreen, false, true);
+	mCharacter->GetShape()->Draw(mDebugRenderer, com.ToMat44(), Vec3::sReplicate(1.0f), Color::sGreen, false, true); // TODO_DP
 #endif // JPH_DEBUG_RENDERER
 
 	// Draw shape including padding (only implemented for capsules right now)
@@ -52,7 +52,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	// Remember old position
-	Vec3 old_position = mCharacter->GetPosition();
+	RVec3 old_position = mCharacter->GetPosition();
 
 	// Settings for our update function
 	CharacterVirtual::ExtendedUpdateSettings update_settings;
@@ -71,8 +71,8 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		*mTempAllocator);
 
 	// Calculate effective velocity
-	Vec3 new_position = mCharacter->GetPosition();
-	Vec3 velocity = (new_position - old_position) / inParams.mDeltaTime;
+	RVec3 new_position = mCharacter->GetPosition();
+	Vec3 velocity = Vec3(new_position - old_position) / inParams.mDeltaTime;
 
 	// Draw state of character
 	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);
@@ -157,7 +157,7 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(mDesiredVelocity);
 }
 
-void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
 	// Dynamic boxes on the ramp go through all permutations
 	Array<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
@@ -173,7 +173,7 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 		mAllowSliding = true;
 }
 
-void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)
+void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity)
 {
 	// Don't allow the player to slide down static not-too-steep surfaces when not actively moving and when not on a moving platform
 	if (!mAllowSliding && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))

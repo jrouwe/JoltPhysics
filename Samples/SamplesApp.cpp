@@ -871,7 +871,7 @@ RefConst<Shape> SamplesApp::CreateShootObjectShape()
 void SamplesApp::ShootObject()
 {
 	// Configure body
-	BodyCreationSettings creation_settings(CreateShootObjectShape(), GetCamera().mPos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings creation_settings(CreateShootObjectShape(), RVec3(GetCamera().mPos), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING); // TODO_DP
 	creation_settings.mMotionQuality = mShootObjectMotionQuality;
 	creation_settings.mFriction = mShootObjectFriction;
 	creation_settings.mRestitution = mShootObjectRestitution;
@@ -949,7 +949,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 					mDebugRenderer->DrawText3D(outPosition, material2->GetDebugName());
 
 					// Draw normal
-					Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, outPosition);
+					Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, RVec3(outPosition)); // TODO_DP
 					mDebugRenderer->DrawArrow(outPosition, outPosition + normal, color, 0.01f);
 
 					// Draw perpendicular axis to indicate hit position
@@ -1041,7 +1041,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw normal
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, position);
+						Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, RVec3(position)); // TODO_DP
 						mDebugRenderer->DrawArrow(position, position + normal, color, 0.01f);
 
 						// Draw perpendicular axis to indicate hit position
@@ -1080,7 +1080,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 			// Collide point
 			AllHitCollisionCollector<CollidePointCollector> collector;
-			mPhysicsSystem->GetNarrowPhaseQuery().CollidePoint(point, collector);
+			mPhysicsSystem->GetNarrowPhaseQuery().CollidePoint(RVec3(point), collector); // TODO_DP
 
 			had_hit = !collector.mHits.empty();
 			if (had_hit)
@@ -1318,7 +1318,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 			// Draw results
 			for (const TransformedShape &ts : collector.mHits)
-				mDebugRenderer->DrawWireBox(Mat44::sRotationTranslation(ts.mShapeRotation, ts.mShapePositionCOM) * Mat44::sScale(ts.GetShapeScale()), ts.mShape->GetLocalBounds(), Color::sYellow);
+				mDebugRenderer->DrawWireBox(RMat44::sRotationTranslation(ts.mShapeRotation, ts.mShapePositionCOM) * Mat44::sScale(ts.GetShapeScale()), ts.mShape->GetLocalBounds(), Color::sYellow);
 
 			// Draw test location
 			mDebugRenderer->DrawWireBox(box, !collector.mHits.empty()? Color::sGreen : Color::sRed);
@@ -1653,14 +1653,14 @@ void SamplesApp::UpdateDebug()
 					{
 						// Create constraint to drag body
 						DistanceConstraintSettings settings;
-						settings.mPoint1 = settings.mPoint2 = hit_position;
+						settings.mPoint1 = settings.mPoint2 = RVec3(hit_position); // TODO_DP
 						settings.mFrequency = 2.0f / GetWorldScale();
 						settings.mDamping = 1.0f;
 
 						// Construct fixed body for the mouse constraint
 						// Note that we don't add it to the world since we don't want anything to collide with it, we just
 						// need an anchor for a constraint
-						Body *drag_anchor = bi.CreateBody(BodyCreationSettings(new SphereShape(0.01f), hit_position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+						Body *drag_anchor = bi.CreateBody(BodyCreationSettings(new SphereShape(0.01f), RVec3(hit_position), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING)); // TODO_DP
 						mDragAnchor = drag_anchor;
 
 						// Construct constraint that connects the drag anchor with the body that we want to drag
@@ -1692,7 +1692,7 @@ void SamplesApp::UpdateDebug()
 		else
 		{
 			// Else update position of anchor
-			bi.SetPositionAndRotation(mDragAnchor->GetID(), GetCamera().mPos + cDragRayLength * mDragFraction * GetCamera().mForward, Quat::sIdentity(), EActivation::DontActivate);
+			bi.SetPositionAndRotation(mDragAnchor->GetID(), RVec3(GetCamera().mPos + cDragRayLength * mDragFraction * GetCamera().mForward), Quat::sIdentity(), EActivation::DontActivate); // TODO_DP
 
 			// Activate other body
 			bi.ActivateBody(mDragBody);
@@ -2097,7 +2097,7 @@ void SamplesApp::DrawPhysics()
 					// Draw the geometry
 					Vec3 scale = transformed_shape.GetShapeScale();
 					bool inside_out = ScaleHelpers::IsInsideOut(scale);
-					Mat44 matrix = transformed_shape.GetCenterOfMassTransform() * Mat44::sScale(scale);
+					RMat44 matrix = transformed_shape.GetCenterOfMassTransform().PreScaled(scale);
 					mDebugRenderer->DrawGeometry(matrix, color, geometry, inside_out? DebugRenderer::ECullMode::CullFrontFace : DebugRenderer::ECullMode::CullBackFace, DebugRenderer::ECastShadow::On, body.IsSensor()? DebugRenderer::EDrawMode::Wireframe : DebugRenderer::EDrawMode::Solid);
 				}
 			}

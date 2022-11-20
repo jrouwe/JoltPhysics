@@ -22,7 +22,7 @@ void ChangeMotionTypeTest::Initialize()
 	// Create body as static, but allow to become dynamic
 	BodyCreationSettings settings;
 	settings.SetShape(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)));
-	settings.mPosition = Vec3(0, 10, 0);
+	settings.mPosition = RVec3(0, 10, 0);
 	settings.mMotionType = EMotionType::Static; 
 	settings.mObjectLayer = Layers::MOVING; // Put in moving layer, this will result in some overhead when the body is static
 	settings.mAllowDynamicOrKinematic = true;
@@ -45,7 +45,7 @@ void ChangeMotionTypeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Provide kinematic body a target
 	if (motion_type == EMotionType::Kinematic)
-		mBody->MoveKinematic(Vec3(Sin(mTime), 10, 0), Quat::sRotation(Vec3::sAxisX(), Cos(mTime)), inParams.mDeltaTime);
+		mBody->MoveKinematic(RVec3(Sin(mTime), 10, 0), Quat::sRotation(Vec3::sAxisX(), Cos(mTime)), inParams.mDeltaTime);
 }
 
 void ChangeMotionTypeTest::SaveState(StateRecorder &inStream) const

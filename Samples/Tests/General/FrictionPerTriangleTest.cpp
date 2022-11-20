@@ -45,11 +45,11 @@ void FrictionPerTriangleTest::Initialize()
 	}
 
 	// A ramp
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new MeshShapeSettings(triangles, materials), Vec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.2f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new MeshShapeSettings(triangles, materials), RVec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.2f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// A box with friction 1 that slides down the ramp
 	Ref<BoxShape> box_shape = new BoxShape(Vec3(2.0f, 2.0f, 2.0f), cDefaultConvexRadius, new MyMaterial("Box Friction 1", Color::sYellow, 1.0f, 0.0f));
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, Vec3(0, 60.0f, -75.0f), Quat::sRotation(Vec3::sAxisX(), 0.2f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, RVec3(0, 60.0f, -75.0f), Quat::sRotation(Vec3::sAxisX(), 0.2f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 }
 
 void FrictionPerTriangleTest::sGetFrictionAndRestitution(const Body &inBody, const SubShapeID &inSubShapeID, float &outFriction, float &outRestitution)

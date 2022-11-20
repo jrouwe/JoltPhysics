@@ -28,7 +28,7 @@ void ActivateDuringUpdateTest::Initialize()
 
 	for (int i = 0; i < cNumBodies; ++i)
 	{
-		settings.mPosition = Vec3(i * (1.0f - cPenetrationSlop), 2.0f, 0);
+		settings.mPosition = RVec3(i * (1.0f - cPenetrationSlop), 2.0f, 0);
 		BodyID body_id = mBodyInterface->CreateBody(settings)->GetID();
 		mBodyInterface->AddBody(body_id, EActivation::DontActivate);
 		if (i == 0)
@@ -37,7 +37,7 @@ void ActivateDuringUpdateTest::Initialize()
 
 	for (int i = 0; i < cNumBodies; ++i)
 	{
-		settings.mPosition = Vec3(i * (1.0f - cPenetrationSlop), 2.0f, 2.0f);
+		settings.mPosition = RVec3(i * (1.0f - cPenetrationSlop), 2.0f, 2.0f);
 		BodyID body_id = mBodyInterface->CreateBody(settings)->GetID();
 		mBodyInterface->AddBody(body_id, EActivation::DontActivate);
 		if (i == cNumBodies - 1)

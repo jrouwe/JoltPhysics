@@ -84,7 +84,7 @@ void MultithreadedTest::BoxSpawner()
 			Execute(random, "AddBody", [this, &body_id, &random]() {
 				uniform_real_distribution<float> from_y(0, 10);
 				uniform_real_distribution<float> from_xz(-5, 5);
-				Vec3 position = Vec3(from_xz(random), 1.0f + from_y(random), from_xz(random));
+				RVec3 position(from_xz(random), 1.0f + from_y(random), from_xz(random));
 				Quat orientation = Quat::sRandom(random);
 				Vec3 velocity = Vec3::sRandom(random);
 				Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 0.2f, 0.3f)), position, orientation, EMotionType::Dynamic, Layers::MOVING));
@@ -167,7 +167,7 @@ void MultithreadedTest::RagdollSpawner()
 	
 			// Override root
 			SkeletonPose::JointState &root = ragdoll_pose.GetJoint(0);
-			root.mTranslation = Vec3(from_xz(random), 1.0f + from_y(random), from_xz(random));
+			root.mTranslation = RVec3(from_xz(random), 1.0f + from_y(random), from_xz(random));
 			root.mRotation = Quat::sRandom(random);
 			ragdoll_pose.CalculateJointMatrices();
 
@@ -242,8 +242,8 @@ void MultithreadedTest::CasterMain()
 				{
 					// Draw normal
 					const Body &hit_body = lock.GetBody();
-					Mat44 inv_com = hit_body.GetInverseCenterOfMassTransform();
-					Vec3 normal = inv_com.Multiply3x3Transposed(hit_body.GetShape()->GetSurfaceNormal(hit.mSubShapeID2, inv_com * hit_position_world)).Normalized();
+					RMat44 inv_com = hit_body.GetInverseCenterOfMassTransform();
+					Vec3 normal = inv_com.Multiply3x3Transposed(hit_body.GetShape()->GetSurfaceNormal(hit.mSubShapeID2, Vec3(inv_com * hit_position_world))).Normalized();
 					mDebugRenderer->DrawArrow(hit_position_world, hit_position_world + normal, Color::sGreen, 0.1f);
 				}
 			}

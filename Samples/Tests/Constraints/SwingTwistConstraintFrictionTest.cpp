@@ -26,12 +26,12 @@ void SwingTwistConstraintFrictionTest::Initialize()
 	float half_cylinder_height = 1.5f;
 	RefConst<Shape> capsule = new CapsuleShape(half_cylinder_height, 0.5f);
 
-	Vec3 body1_position(0, 10, 0);
+	RVec3 body1_position(0, 10, 0);
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(capsule, body1_position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	body1.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::DontActivate);
 
-	Vec3 body2_position = body1_position + Vec3(0, -2.0f * half_cylinder_height, 0);
+	RVec3 body2_position = body1_position + Vec3(0, -2.0f * half_cylinder_height, 0);
 	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(capsule, body2_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body2.SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
 	body2.GetMotionProperties()->SetLinearDamping(0.0f);
