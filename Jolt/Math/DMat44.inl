@@ -21,7 +21,7 @@ DMat44::DMat44(Type inC1, Type inC2, Type inC3, DType inC4) :
 
 DMat44::DMat44(Mat44Arg inM) :
 	mCol { inM.GetColumn4(0), inM.GetColumn4(1), inM.GetColumn4(2) },
-	mCol3(inM.GetColumn4(1))
+	mCol3(inM.GetTranslation())
 {
 }
 
