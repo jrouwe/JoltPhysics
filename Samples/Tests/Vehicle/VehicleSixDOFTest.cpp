@@ -210,5 +210,5 @@ Mat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPit
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec4(Vec3(mCarBody->GetPosition()), 1.0f)); // TODO_DP
+	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec3(mCarBody->GetPosition())); // TODO_DP
 }

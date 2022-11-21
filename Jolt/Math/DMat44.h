@@ -47,7 +47,7 @@ public:
 	static JPH_INLINE DMat44	sScale(Vec3Arg inV)										{ return DMat44(Mat44::sScale(inV), DVec3::sZero()); }
 
 	/// Convert to Mat44 rounding to nearest
-	JPH_INLINE Mat44			ToMat44() const											{ return Mat44(mCol[0], mCol[1], mCol[2], Vec4(Vec3(mCol3), 1)); }
+	JPH_INLINE Mat44			ToMat44() const											{ return Mat44(mCol[0], mCol[1], mCol[2], Vec3(mCol3)); }
 
 	/// Comparsion
 	JPH_INLINE bool				operator == (DMat44Arg inM2) const;
