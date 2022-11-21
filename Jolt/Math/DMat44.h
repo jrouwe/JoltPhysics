@@ -89,6 +89,9 @@ public:
 	/// Post multiply by translation matrix: result = Mat44::sTranslation(inTranslation) * this (i.e. add inTranslation to the 4-th column)
 	JPH_INLINE DMat44			PostTranslated(Vec3Arg inTranslation) const;
 
+	/// Post multiply by translation matrix: result = Mat44::sTranslation(inTranslation) * this (i.e. add inTranslation to the 4-th column)
+	JPH_INLINE DMat44			PostTranslated(DVec3Arg inTranslation) const;
+
 	/// Access to the columns
 	JPH_INLINE Vec3				GetAxisX() const										{ return Vec3(mCol[0]); }
 	JPH_INLINE void				SetAxisX(Vec3Arg inV)									{ mCol[0] = Vec4(inV, 0.0f); }
