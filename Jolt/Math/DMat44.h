@@ -118,6 +118,9 @@ public:
 	/// Convert to quaternion
 	JPH_INLINE Quat				GetQuaternion() const									{ return GetRotation().GetQuaternion(); }
 
+	/// Get matrix that transforms a direction with the same transform as this matrix (length is not preserved)
+	JPH_INLINE Mat44			GetDirectionPreservingMatrix() const					{ return GetRotation().Inversed3x3().Transposed3x3(); }
+
 	/// Works identical to Mat44::Decompose
 	JPH_INLINE DMat44			Decompose(Vec3 &outScale) const							{ return DMat44(GetRotation().Decompose(outScale), mCol3); }
 

@@ -90,7 +90,7 @@ TEST_SUITE("TransformedShapeTests")
 		CHECK(hit.mBodyID == body.GetID());
 		CHECK(ts.GetMaterial(hit.mSubShapeID2) == material);
 		Vec3 world_space_normal = ts.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, RVec3(ray_in_world.GetPointOnRay(hit.mFraction))); // TODO_DP
-		Vec3 expected_normal = (calc_transform.ToMat44().GetDirectionPreservingMatrix() * normal_on_box).Normalized(); // TODO_DP
+		Vec3 expected_normal = (calc_transform.GetDirectionPreservingMatrix() * normal_on_box).Normalized();
 		CHECK_APPROX_EQUAL(world_space_normal, expected_normal);
 
 		// Reset the transform to identity and check that it worked
