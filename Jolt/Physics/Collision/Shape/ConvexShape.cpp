@@ -506,7 +506,7 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inC
 		RVec3 com = inCenterOfMassTransform.GetTranslation() + com_ls / (float)face.size();
 		
 		// Draw the polygon and directions
-		inRenderer->DrawWirePolygon(face, color, face.size() >= 3? 0.001f : 0.0f);
+		inRenderer->DrawWirePolygon(RMat44::sTranslation(inCenterOfMassTransform.GetTranslation()), face, color, face.size() >= 3? 0.001f : 0.0f);
 		if (face.size() >= 3)
 			inRenderer->DrawArrow(com, com + inCenterOfMassTransform.Multiply3x3(normal), color, 0.01f);
 		for (Vec3 &v : ftd.second)

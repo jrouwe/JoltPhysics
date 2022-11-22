@@ -797,15 +797,17 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			manifold.mWorldSpaceNormal = world_space_normal;
 			manifold.mSubShapeID1 = input_key.GetSubShapeID1();
 			manifold.mSubShapeID2 = input_key.GetSubShapeID2();
-			manifold.mWorldSpaceContactPointsOn1.resize(output_cm->mNumContactPoints);
-			manifold.mWorldSpaceContactPointsOn2.resize(output_cm->mNumContactPoints);
+			manifold.mBaseOffset = transform_body1.GetTranslation();
+			manifold.mRelativeContactPointsOn1.resize(output_cm->mNumContactPoints);
+			manifold.mRelativeContactPointsOn2.resize(output_cm->mNumContactPoints);
+			Mat44 local_transform_body2 = transform_body2.PostTranslated(-manifold.mBaseOffset).ToMat44();
 			float penetration_depth = -FLT_MAX;
 			for (uint32 i = 0; i < output_cm->mNumContactPoints; ++i)
 			{
 				const CachedContactPoint &ccp = output_cm->mContactPoints[i];
-				manifold.mWorldSpaceContactPointsOn1[i] = transform_body1.ToMat44() * Vec3::sLoadFloat3Unsafe(ccp.mPosition1); // TODO_DP
-				manifold.mWorldSpaceContactPointsOn2[i] = transform_body2.ToMat44() * Vec3::sLoadFloat3Unsafe(ccp.mPosition2); // TODO_DP
-				penetration_depth = max(penetration_depth, (manifold.mWorldSpaceContactPointsOn1[0] - manifold.mWorldSpaceContactPointsOn2[0]).Dot(world_space_normal));
+				manifold.mRelativeContactPointsOn1[i] = transform_body1.Multiply3x3(Vec3::sLoadFloat3Unsafe(ccp.mPosition1));
+				manifold.mRelativeContactPointsOn2[i] = local_transform_body2 * Vec3::sLoadFloat3Unsafe(ccp.mPosition2);
+				penetration_depth = max(penetration_depth, (manifold.mRelativeContactPointsOn1[0] - manifold.mRelativeContactPointsOn2[0]).Dot(world_space_normal));
 			}
 			manifold.mPenetrationDepth = penetration_depth; // We don't have the penetration depth anymore, estimate it
 
@@ -922,9 +924,9 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	uint64 key_hash = key.GetHash();
 
 	// Determine number of contact points
-	int num_contact_points = (int)inManifold.mWorldSpaceContactPointsOn1.size();
+	int num_contact_points = (int)inManifold.mRelativeContactPointsOn1.size();
 	JPH_ASSERT(num_contact_points <= MaxContactPoints);
-	JPH_ASSERT(num_contact_points == (int)inManifold.mWorldSpaceContactPointsOn2.size());
+	JPH_ASSERT(num_contact_points == (int)inManifold.mRelativeContactPointsOn2.size());
 
 	// Reserve space for new contact cache entry
 	// Note that for dynamic vs dynamic we always require the first body to have a lower body id to get a consistent key
@@ -988,8 +990,8 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		for (int i = 0; i < num_contact_points; ++i)
 		{
 			// Convert to local space to the body
-			Vec3 p1 = Vec3(inverse_transform_body1 * inManifold.mWorldSpaceContactPointsOn1[i]);
-			Vec3 p2 = Vec3(inverse_transform_body2 * inManifold.mWorldSpaceContactPointsOn2[i]);
+			Vec3 p1 = Vec3(inverse_transform_body1 * (inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn1[i]));
+			Vec3 p2 = Vec3(inverse_transform_body2 * (inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn2[i]));
 
 			// Create new contact point
 			CachedContactPoint &cp = new_manifold->mContactPoints[i];
@@ -1048,8 +1050,8 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		{
 			// Convert to world space and set positions
 			WorldContactPoint &wcp = constraint.mContactPoints[i];
-			RVec3 p1_ws = RVec3(inManifold.mWorldSpaceContactPointsOn1[i]); // TODO_DP
-			RVec3 p2_ws = RVec3(inManifold.mWorldSpaceContactPointsOn2[i]); // TODO_DP
+			RVec3 p1_ws = inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn1[i];
+			RVec3 p2_ws = inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn2[i];
 
 			// Convert to local space to the body
 			Vec3 p1_ls = Vec3(inverse_transform_body1 * p1_ws);

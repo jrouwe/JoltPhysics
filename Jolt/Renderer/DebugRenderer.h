@@ -65,9 +65,12 @@ public:
 	void								DrawWirePolygon(const VERTEX_ARRAY &inVertices, ColorArg inColor, float inArrowSize = 0.0f) { for (typename VERTEX_ARRAY::size_type i = 0; i < inVertices.size(); ++i) DrawArrow(inVertices[i], inVertices[(i + 1) % inVertices.size()], inColor, inArrowSize); }
 	template <class VERTEX_ARRAY>
 	void								DrawWirePolygon(Mat44Arg inTransform, const VERTEX_ARRAY &inVertices, ColorArg inColor, float inArrowSize = 0.0f) { for (typename VERTEX_ARRAY::size_type i = 0; i < inVertices.size(); ++i) DrawArrow(inTransform * inVertices[i], inTransform * inVertices[(i + 1) % inVertices.size()], inColor, inArrowSize); }
+	template <class VERTEX_ARRAY>
+	void								DrawWirePolygon(DMat44Arg inTransform, const VERTEX_ARRAY &inVertices, ColorArg inColor, float inArrowSize = 0.0f) { for (typename VERTEX_ARRAY::size_type i = 0; i < inVertices.size(); ++i) DrawArrow(inTransform * inVertices[i], inTransform * inVertices[(i + 1) % inVertices.size()], inColor, inArrowSize); } // TODO_DP
 
 	/// Draw wireframe sphere
 	void								DrawWireSphere(Vec3Arg inCenter, float inRadius, ColorArg inColor, int inLevel = 3);
+	void								DrawWireSphere(DVec3Arg inCenter, float inRadius, ColorArg inColor, int inLevel = 3) { DrawWireSphere(Vec3(inCenter), inRadius, inColor, inLevel); } // TODO_DP
 	void								DrawWireUnitSphere(Mat44Arg inMatrix, ColorArg inColor, int inLevel = 3);
 
 	/// Enum that determines if a shadow should be cast or not

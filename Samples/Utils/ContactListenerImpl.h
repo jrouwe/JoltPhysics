@@ -30,7 +30,8 @@ public:
 
 private:
 	// Map that keeps track of the current state of contacts based on the contact listener callbacks
-	using StateMap = UnorderedMap<SubShapeIDPair, ContactPoints>;
+	using StatePair = pair<RVec3, ContactPoints>;
+	using StateMap = UnorderedMap<SubShapeIDPair, StatePair>;
 	Mutex					mStateMutex;
 	StateMap				mState;
 

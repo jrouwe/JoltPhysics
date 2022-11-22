@@ -57,7 +57,7 @@ TEST_SUITE("CollideShapeTests")
 		// Create sphere to test with (shape 1)
 		Ref<Shape> shape1 = new SphereShape(cRadius1);
 		Mat44 shape1_com = Mat44::sTranslation(shape1->GetCenterOfMass());
-		Mat44 shape1_transform = Mat44::sTranslation(cPosition1A) * Mat44::sRotationX(0.1f * JPH_PI) * shape1_com;
+		RMat44 shape1_transform(Mat44::sTranslation(cPosition1A) * Mat44::sRotationX(0.1f * JPH_PI) * shape1_com);
 
 		// Create sphere to collide against (shape 2)
 		PhysicsTestContext c;
@@ -86,7 +86,7 @@ TEST_SUITE("CollideShapeTests")
 		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 
 		// Test against wrong layer
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, fail_collector, broadphase_moving_filter, object_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
 
 		// Collector that tests that collision happens at position A
 		class PositionACollideShapeCollector : public CollideShapeCollector
@@ -113,20 +113,20 @@ TEST_SUITE("CollideShapeTests")
 
 		// Test collision against correct layer
 		CHECK(!position_a_collector.mWasHit);
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, position_a_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), position_a_collector, broadphase_non_moving_filter, object_non_moving_filter);
 		CHECK(position_a_collector.mWasHit);
 
 		// Now move body to position B
 		c.GetSystem()->GetBodyInterface().SetPositionAndRotation(body2.GetID(), RVec3(cPosition2B), Quat::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI), EActivation::DontActivate); // TODO_DP
 
 		// Test that original position doesn't collide anymore
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, fail_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_non_moving_filter, object_non_moving_filter);
 
 		// Move test shape to position B
-		shape1_transform = Mat44::sTranslation(cPosition1B) * Mat44::sRotationZ(0.3f * JPH_PI) * shape1_com;
+		shape1_transform = RMat44(Mat44::sTranslation(cPosition1B) * Mat44::sRotationZ(0.3f * JPH_PI) * shape1_com);
 
 		// Test against wrong layer
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, fail_collector, broadphase_moving_filter, object_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
 
 		// Callback that tests that collision happens at position B
 		class PositionBCollideShapeCollector : public CollideShapeCollector
@@ -160,19 +160,19 @@ TEST_SUITE("CollideShapeTests")
 
 		// Test collision
 		CHECK(!position_b_collector.mWasHit);
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
 		CHECK(position_b_collector.mWasHit);
 
 		// Update the physics system (optimizes the broadphase)
 		c.Simulate(c.GetDeltaTime());
 
 		// Test against wrong layer
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, fail_collector, broadphase_moving_filter, object_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
 
 		// Test collision again
 		position_b_collector.Reset();
 		CHECK(!position_b_collector.mWasHit);
-		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
+		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), position_b_collector, broadphase_non_moving_filter, object_non_moving_filter);
 		CHECK(position_b_collector.mWasHit);
 	}
 
@@ -200,7 +200,7 @@ TEST_SUITE("CollideShapeTests")
 
 			// Collect hit with normal sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CollideShape(normal_sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(0, 11, 0)), settings, collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CollideShape(normal_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(0, 11, 0)), settings, RVec3::sZero(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const CollideShapeResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == body2.GetID());
@@ -217,7 +217,7 @@ TEST_SUITE("CollideShapeTests")
 
 			// Collect hit with scaled sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CollideShape(scaled_sphere, Vec3::sReplicate(2.0f), Mat44::sTranslation(Vec3(0, 11, 0)), settings, collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CollideShape(scaled_sphere, Vec3::sReplicate(2.0f), RMat44::sTranslation(RVec3(0, 11, 0)), settings, RVec3::sZero(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const CollideShapeResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == body2.GetID());

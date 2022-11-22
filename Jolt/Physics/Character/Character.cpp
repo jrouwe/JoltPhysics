@@ -68,7 +68,7 @@ void Character::Activate(bool inLockBodies)
 	sGetBodyInterface(mSystem, inLockBodies).ActivateBody(mBodyID);
 }
 
-void Character::CheckCollision(RMat44Arg inCenterOfMassTransform, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
+void Character::CheckCollision(RMat44Arg inCenterOfMassTransform, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector, bool inLockBodies) const
 {
 	// Create query broadphase layer filter
 	DefaultBroadPhaseLayerFilter broadphase_layer_filter = mSystem->GetDefaultBroadPhaseLayerFilter(mLayer);
@@ -86,18 +86,18 @@ void Character::CheckCollision(RMat44Arg inCenterOfMassTransform, Vec3Arg inMove
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
 	settings.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
 
-	sGetNarrowPhaseQuery(mSystem, inLockBodies).CollideShape(inShape, Vec3::sReplicate(1.0f), inCenterOfMassTransform.ToMat44(), settings, ioCollector, broadphase_layer_filter, object_layer_filter, body_filter); // TODO_DP
+	sGetNarrowPhaseQuery(mSystem, inLockBodies).CollideShape(inShape, Vec3::sReplicate(1.0f), inCenterOfMassTransform, settings, inBaseOffset, ioCollector, broadphase_layer_filter, object_layer_filter, body_filter);
 }
 
-void Character::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, CollideShapeCollector &ioCollector, bool inLockBodies) const
+void Character::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, Vec3Arg inMovementDirection, float inMaxSeparationDistance, const Shape *inShape, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector, bool inLockBodies) const
 {
 	// Calculate center of mass transform
 	RMat44 center_of_mass = RMat44::sRotationTranslation(inRotation, inPosition).PreTranslated(inShape->GetCenterOfMass());
 
-	CheckCollision(center_of_mass, inMovementDirection, inMaxSeparationDistance, inShape, ioCollector, inLockBodies);
+	CheckCollision(center_of_mass, inMovementDirection, inMaxSeparationDistance, inShape, inBaseOffset, ioCollector, inLockBodies);
 }
 
-void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistance, CollideShapeCollector &ioCollector, bool inLockBodies) const
+void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistance, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector, bool inLockBodies) const
 {
 	// Determine position and velocity of body
 	RMat44 query_transform;
@@ -114,7 +114,7 @@ void Character::CheckCollision(const Shape *inShape, float inMaxSeparationDistan
 		velocity = body.GetLinearVelocity();
 	}
 
-	CheckCollision(query_transform, velocity, inMaxSeparationDistance, inShape, ioCollector, inLockBodies);
+	CheckCollision(query_transform, velocity, inMaxSeparationDistance, inShape, inBaseOffset, ioCollector, inLockBodies);
 }
 
 void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
@@ -138,7 +138,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 	{
 	public:
 		// Constructor
-		explicit			MyCollector(Vec3Arg inUp) : mUp(inUp) { }
+		explicit			MyCollector(Vec3Arg inUp, RVec3 inBaseOffset) : mBaseOffset(inBaseOffset), mUp(inUp) { }
 
 		// See: CollectorType::AddHit
 		virtual void		AddHit(const CollideShapeResult &inResult) override
@@ -149,7 +149,7 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 			{
 				mGroundBodyID = inResult.mBodyID2;
 				mGroundBodySubShapeID = inResult.mSubShapeID2;
-				mGroundPosition = RVec3(inResult.mContactPointOn2); // TODO_DP
+				mGroundPosition = mBaseOffset + inResult.mContactPointOn2;
 				mGroundNormal = normal;
 				mBestDot = dot;
 			}
@@ -161,13 +161,14 @@ void Character::PostSimulation(float inMaxSeparationDistance, bool inLockBodies)
 		Vec3				mGroundNormal = Vec3::sZero();
 
 	private:
-		float				mBestDot = -FLT_MAX;
+		RVec3				mBaseOffset;
 		Vec3				mUp;
+		float				mBestDot = -FLT_MAX;
 	};
 
 	// Collide shape
-	MyCollector collector(mUp);
-	CheckCollision(char_pos, char_rot, char_vel, inMaxSeparationDistance, mShape, collector, inLockBodies);
+	MyCollector collector(mUp, char_pos);
+	CheckCollision(char_pos, char_rot, char_vel, inMaxSeparationDistance, mShape, char_pos, collector, inLockBodies);
 
 	// Copy results
 	mGroundBodyID = collector.mGroundBodyID;
@@ -302,8 +303,9 @@ bool Character::SetShape(const Shape *inShape, float inMaxPenetrationDepth, bool
 		};
 
 		// Test if anything is in the way of switching
+		RVec3 char_pos = GetPosition(inLockBodies);
 		MyCollector collector(inMaxPenetrationDepth);
-		CheckCollision(inShape, 0.0f, collector, inLockBodies);
+		CheckCollision(inShape, 0.0f, char_pos, collector, inLockBodies);
 		if (collector.mHadCollision)
 			return false;
 	}

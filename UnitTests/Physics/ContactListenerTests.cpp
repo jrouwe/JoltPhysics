@@ -63,10 +63,10 @@ TEST_SUITE("ContactListenerTests")
 			CHECK(add_contact.mBody2 == body.GetID()); // Highest ID should be second
 			CHECK(add_contact.mManifold.mSubShapeID2.GetValue() == SubShapeID().GetValue()); // Sphere doesn't have any sub shapes
 			CHECK_APPROX_EQUAL(add_contact.mManifold.mWorldSpaceNormal, Vec3::sAxisY()); // Normal should move body 2 out of collision
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn1.size() == 1);
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn2.size() == 1);
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn1[0].IsClose(Vec3::sZero(), Square(cPenetrationSlop)));
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn2[0].IsClose(Vec3::sZero(), Square(cPenetrationSlop)));
+			CHECK(add_contact.mManifold.mRelativeContactPointsOn1.size() == 1);
+			CHECK(add_contact.mManifold.mRelativeContactPointsOn2.size() == 1);
+			CHECK(add_contact.mManifold.GetWorldSpaceContactPointOn1(0).IsClose(RVec3::sZero(), Square(cPenetrationSlop)));
+			CHECK(add_contact.mManifold.GetWorldSpaceContactPointOn2(0).IsClose(RVec3::sZero(), Square(cPenetrationSlop)));
 		}
 		listener.Clear();
 
@@ -136,10 +136,10 @@ TEST_SUITE("ContactListenerTests")
 			CHECK(add_contact.mBody2 == body.GetID()); // Highest ID second
 			CHECK(add_contact.mManifold.mSubShapeID2.GetValue() == SubShapeID().GetValue()); // Sphere doesn't have any sub shapes
 			CHECK_APPROX_EQUAL(add_contact.mManifold.mWorldSpaceNormal, Vec3::sAxisY()); // Normal should move body 2 out of collision
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn1.size() == 1);
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn2.size() == 1);
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn1[0].IsClose(Vec3::sZero(), Square(cPenetrationSlop)));
-			CHECK(add_contact.mManifold.mWorldSpaceContactPointsOn2[0].IsClose(Vec3::sZero(), Square(cPenetrationSlop)));
+			CHECK(add_contact.mManifold.mRelativeContactPointsOn1.size() == 1);
+			CHECK(add_contact.mManifold.mRelativeContactPointsOn2.size() == 1);
+			CHECK(add_contact.mManifold.GetWorldSpaceContactPointOn1(0).IsClose(RVec3::sZero(), Square(cPenetrationSlop)));
+			CHECK(add_contact.mManifold.GetWorldSpaceContactPointOn2(0).IsClose(RVec3::sZero(), Square(cPenetrationSlop)));
 		}
 		listener.Clear();
 
@@ -159,10 +159,10 @@ TEST_SUITE("ContactListenerTests")
 			CHECK(persist_contact.mBody2 == body.GetID()); // Highest ID second
 			CHECK(persist_contact.mManifold.mSubShapeID2.GetValue() == SubShapeID().GetValue()); // Sphere doesn't have any sub shapes
 			CHECK_APPROX_EQUAL(persist_contact.mManifold.mWorldSpaceNormal, Vec3::sAxisY()); // Normal should move body 2 out of collision
-			CHECK(persist_contact.mManifold.mWorldSpaceContactPointsOn1.size() == 1);
-			CHECK(persist_contact.mManifold.mWorldSpaceContactPointsOn2.size() == 1);
-			CHECK(persist_contact.mManifold.mWorldSpaceContactPointsOn1[0].IsClose(Vec3::sZero(), Square(cPenetrationSlop)));
-			CHECK(persist_contact.mManifold.mWorldSpaceContactPointsOn2[0].IsClose(Vec3::sZero(), Square(cPenetrationSlop)));
+			CHECK(persist_contact.mManifold.mRelativeContactPointsOn1.size() == 1);
+			CHECK(persist_contact.mManifold.mRelativeContactPointsOn2.size() == 1);
+			CHECK(persist_contact.mManifold.GetWorldSpaceContactPointOn1(0).IsClose(RVec3::sZero(), Square(cPenetrationSlop)));
+			CHECK(persist_contact.mManifold.GetWorldSpaceContactPointOn2(0).IsClose(RVec3::sZero(), Square(cPenetrationSlop)));
 		}
 		listener.Clear();
 
@@ -227,10 +227,10 @@ TEST_SUITE("ContactListenerTests")
 				CHECK(entry.mBody2 == body.GetID()); // Highest ID second
 				CHECK(entry.mManifold.mSubShapeID2.GetValue() == SubShapeID().GetValue()); // Sphere doesn't have any sub shapes
 				CHECK_APPROX_EQUAL(entry.mManifold.mWorldSpaceNormal, Vec3::sAxisY()); // Normal should move body 2 out of collision
-				CHECK(entry.mManifold.mWorldSpaceContactPointsOn1.size() == 1);
-				CHECK(entry.mManifold.mWorldSpaceContactPointsOn2.size() == 1);
-				CHECK(abs(entry.mManifold.mWorldSpaceContactPointsOn1[0].GetY()) < cPenetrationSlop);
-				CHECK(abs(entry.mManifold.mWorldSpaceContactPointsOn2[0].GetY()) < cPenetrationSlop);
+				CHECK(entry.mManifold.mRelativeContactPointsOn1.size() == 1);
+				CHECK(entry.mManifold.mRelativeContactPointsOn2.size() == 1);
+				CHECK(abs(entry.mManifold.GetWorldSpaceContactPointOn1(0).GetY()) < cPenetrationSlop);
+				CHECK(abs(entry.mManifold.GetWorldSpaceContactPointOn2(0).GetY()) < cPenetrationSlop);
 				++persisted;
 				break;
 
