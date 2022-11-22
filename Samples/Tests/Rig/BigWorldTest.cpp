@@ -125,7 +125,7 @@ void BigWorldTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 						#ifdef JPH_DEBUG_RENDERER
 							// Draw the shape
-							body.GetShape()->Draw(mDebugRenderer, transform, Vec3::sReplicate(1.0f), color, false, true);
+							body.GetShape()->Draw(mDebugRenderer, transform, Vec3::sReplicate(1.0f), color, false, sDrawWireframe);
 						#endif // JPH_DEBUG_RENDERER
 						}
 					}
@@ -138,6 +138,9 @@ void BigWorldTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void BigWorldTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
+	// Draw in wireframe?
+	inUI->CreateCheckBox(inSubMenu, "Draw distant scenes in wireframe", sDrawWireframe, [](UICheckBox::EState inState) { sDrawWireframe = inState == UICheckBox::STATE_CHECKED; });
+
 	// Enable / disable drawing of a particular distance
 	int pile_idx = 0;
 	for (Pile &pile : mPiles)

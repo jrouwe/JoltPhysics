@@ -31,6 +31,9 @@ public:
 #endif // JPH_DOUBLE_PRECISION
 
 private:
+	// If we want to draw the further scenes in wireframe
+	inline static bool		sDrawWireframe = true;
+
 	// A bitfield that determines which piles to draw
 	inline static uint32	sDrawPileMask = ~uint32(0);
 
