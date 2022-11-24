@@ -146,12 +146,24 @@ Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMov
 	RVec3 points[3];
 	GetSleepTestPoints(points);
 
+#ifdef JPH_DOUBLE_PRECISION
+	// Get base offset for spheres
+	DVec3 offset = mMotionProperties->GetSleepTestOffset();
+#endif // JPH_DOUBLE_PRECISION
+
 	for (int i = 0; i < 3; ++i)
 	{
 		Sphere &sphere = mMotionProperties->mSleepTestSpheres[i];
 
+		// Make point relative to base offset
+#ifdef JPH_DOUBLE_PRECISION
+		Vec3 p = Vec3(points[i] - offset);
+#else
+		Vec3 p = points[i];
+#endif // JPH_DOUBLE_PRECISION
+
 		// Encapsulate the point in a sphere
-		sphere.EncapsulatePoint(Vec3(points[i])); // TODO_DP
+		sphere.EncapsulatePoint(p);
 
 		// Test if it exceeded the max movement
 		if (sphere.GetRadius() > inMaxMovement)
