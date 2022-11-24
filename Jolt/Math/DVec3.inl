@@ -130,6 +130,13 @@ DVec3 DVec3::sLoadDouble3Unsafe(const Double3 &inV)
 	return sFixW(v);
 }
 
+void DVec3::StoreDouble3(Double3 *outV) const
+{
+	outV->x = mD32[0];
+	outV->y = mD32[1];
+	outV->z = mD32[2];
+}
+
 DVec3::operator Vec3() const
 {
 	#if defined(JPH_USE_AVX)

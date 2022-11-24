@@ -12,6 +12,7 @@ JPH_NAMESPACE_BEGIN
 
 // Define real to double
 using Real = double;
+using Real3 = Double3;
 using RVec3 = DVec3;
 using RVec3Arg = DVec3Arg;
 using RMat44 = DMat44;
@@ -23,6 +24,7 @@ using RMat44Arg = DMat44Arg;
 
 // Define real to float
 using Real = float;
+using Real3 = Float3;
 using RVec3  = Vec3;
 using RVec3Arg = Vec3Arg;
 using RMat44 = Mat44;

@@ -228,13 +228,17 @@ TEST_SUITE("DVec3Tests")
 		CHECK(DVec3(13, 15, 17) != DVec3(13, 15, 19));
 	}
 
-	TEST_CASE("TestDVec3LoadDouble3Unsafe")
+	TEST_CASE("TestDVec3LoadStoreDouble3Unsafe")
 	{
 		double d4[4] = { 1, 2, 3, 4 };
 		Double3 &d3 = *(Double3 *)d4;
 		DVec3 v = DVec3::sLoadDouble3Unsafe(d3);
 		DVec3 v2(1, 2, 3);
 		CHECK(v == v2);
+
+		Double3 d3_out;
+		DVec3(1, 2, 3).StoreDouble3(&d3_out);
+		CHECK(d3 == d3_out);
 	}
 
 	TEST_CASE("TestDVec3Cross")

@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <Jolt/Math/Swizzle.h>
 #include <Jolt/Math/Double3.h>
 
 JPH_NAMESPACE_BEGIN
@@ -51,6 +50,9 @@ public:
 
 	/// Load 3 doubles from memory (reads 64 bits extra which it doesn't use)
 	static JPH_INLINE DVec3		sLoadDouble3Unsafe(const Double3 &inV);
+
+	/// Store 3 doubles to memory
+	JPH_INLINE void				StoreDouble3(Double3 *outV) const;
 
 	/// Convert to float vector 3 rounding to nearest
 	JPH_INLINE explicit			operator Vec3() const;
