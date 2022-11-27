@@ -306,7 +306,7 @@ void HighSpeedTest::CreateFastSmallConvexObjects()
 			if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
 			{
 				// Place 10m above terrain
-				body_settings.mPosition = ray.GetPointOnRay(hit.mFraction);
+				body_settings.mPosition = ray.GetPointOnRay(hit.mFraction) + RVec3(0, 10, 0);
 				body_settings.mRotation = Quat::sRandom(rnd);
 				body_settings.mRestitution = restitution_distrib(rnd);
 

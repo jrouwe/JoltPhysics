@@ -154,11 +154,11 @@ TEST_SUITE("CastShapeTests")
 		{
 			// Create shape cast
 			Ref<Shape> normal_sphere = new SphereShape(1.0f);
-			ShapeCast shape_cast { normal_sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(0, 11, 0)), Vec3(0, 1, 0) };
+			RShapeCast shape_cast { normal_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(0, 11, 0)), Vec3(0, 1, 0) };
 
 			// Shape is intersecting at the start
 			AllHitCollisionCollector<CastShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const ShapeCastResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == body2.GetID());
@@ -173,11 +173,11 @@ TEST_SUITE("CastShapeTests")
 		{
 			// This repeats the same test as above but uses scaling at all levels and validate that the penetration depth is still correct
 			Ref<Shape> scaled_sphere = new ScaledShape(new SphereShape(0.1f), Vec3::sReplicate(5.0f));
-			ShapeCast shape_cast { scaled_sphere, Vec3::sReplicate(2.0f), Mat44::sTranslation(Vec3(0, 11, 0)), Vec3(0, 1, 0) };
+			RShapeCast shape_cast { scaled_sphere, Vec3::sReplicate(2.0f), RMat44::sTranslation(RVec3(0, 11, 0)), Vec3(0, 1, 0) };
 
 			// Shape is intersecting at the start
 			AllHitCollisionCollector<CastShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 			CHECK(collector.mHits.size() == 1);
 			const ShapeCastResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == body2.GetID());
@@ -215,11 +215,11 @@ TEST_SUITE("CastShapeTests")
 		{
 			// Create shape cast in X from -5 to 5
 			RefConst<Shape> sphere = new SphereShape(1.0f);
-			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(-5, 0, 0)), Vec3(10, 0, 0) };
+			RShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(-5, 0, 0)), Vec3(10, 0, 0) };
 
 			// We should hit the first body
 			ClosestHitCollisionCollector<CastShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 			CHECK(collector.HadHit());
 			CHECK(collector.mHit.mBodyID2 == bodies.front()->GetID());
 			CHECK_APPROX_EQUAL(collector.mHit.mFraction, 4.0f / 10.0f);
@@ -233,11 +233,11 @@ TEST_SUITE("CastShapeTests")
 		{
 			// Create shape cast in X from 5 to -5
 			RefConst<Shape> sphere = new SphereShape(1.0f);
-			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(5, 0, 0)), Vec3(-10, 0, 0) };
+			RShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(5, 0, 0)), Vec3(-10, 0, 0) };
 
 			// We should hit the last body
 			ClosestHitCollisionCollector<CastShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 			CHECK(collector.HadHit());
 			CHECK(collector.mHit.mBodyID2 == bodies.back()->GetID());
 			CHECK_APPROX_EQUAL(collector.mHit.mFraction, 2.0f / 10.0f, 1.0e-4f);
@@ -251,11 +251,11 @@ TEST_SUITE("CastShapeTests")
 		{
 			// Create shape cast in X from 1.05 to 11, this should intersect with all bodies and have deepest penetration in bodies[5]
 			RefConst<Shape> sphere = new SphereShape(1.0f);
-			ShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(1.05f, 0, 0)), Vec3(10, 0, 0) };
+			RShapeCast shape_cast { sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(1.05_r, 0, 0)), Vec3(10, 0, 0) };
 
 			// We should hit bodies[5]
 			AllHitCollisionCollector<CastShapeCollector> collector;
-			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+			c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 			collector.Sort();
 			CHECK(collector.mHits.size() == 10);
 			const ShapeCastResult &result = collector.mHits.front();

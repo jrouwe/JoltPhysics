@@ -1199,7 +1199,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			// Create shape cast
 			RefConst<Shape> shape = CreateProbeShape();
 			Mat44 rotation = Mat44::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Mat44::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI);
-			ShapeCast shape_cast = ShapeCast::sFromWorldTransform(shape, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(start)) * rotation, direction); // TODO_DP
+			RShapeCast shape_cast = RShapeCast::sFromWorldTransform(shape, Vec3::sReplicate(1.0f), RMat44::sTranslation(start) * rotation, direction);
 
 			// Settings
 			ShapeCastSettings settings;
@@ -1215,21 +1215,21 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			if (mMaxHits == 0)
 			{
 				AnyHitCollisionCollector<CastShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
 			else if (mMaxHits == 1)
 			{
 				ClosestHitCollisionCollector<CastShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
 			else
 			{
 				AllHitCollisionCollector<CastShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, RVec3::sZero(), collector);
 				collector.Sort();
 				hits.insert(hits.end(), collector.mHits.begin(), collector.mHits.end());
 				if ((int)hits.size() > mMaxHits)
@@ -1264,7 +1264,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						// Draw shape
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
 					#ifdef JPH_DEBUG_RENDERER
-						shape_cast.mShape->Draw(mDebugRenderer, RMat44(shape_cast.mCenterOfMassStart.PostTranslated(hit.mFraction * shape_cast.mDirection)), Vec3::sReplicate(1.0f), color, false, false); // TODO_DP
+						shape_cast.mShape->Draw(mDebugRenderer, shape_cast.mCenterOfMassStart.PostTranslated(hit.mFraction * shape_cast.mDirection), Vec3::sReplicate(1.0f), color, false, false);
 					#endif // JPH_DEBUG_RENDERER
 
 						// Draw normal
@@ -1300,7 +1300,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 				// Draw 'miss'
 				mDebugRenderer->DrawLine(start, start + direction, Color::sRed);
 			#ifdef JPH_DEBUG_RENDERER
-				shape_cast.mShape->Draw(mDebugRenderer, RMat44(shape_cast.mCenterOfMassStart.PostTranslated(shape_cast.mDirection)), Vec3::sReplicate(1.0f), Color::sRed, false, false); // TODO_DP
+				shape_cast.mShape->Draw(mDebugRenderer, shape_cast.mCenterOfMassStart.PostTranslated(shape_cast.mDirection), Vec3::sReplicate(1.0f), Color::sRed, false, false);
 			#endif // JPH_DEBUG_RENDERER
 			}
 		}
@@ -1310,7 +1310,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center(start + fraction * direction); // TODO_DP
+			Vec3 center(start + fraction * direction);
 			Vec3 half_extent = 0.5f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 

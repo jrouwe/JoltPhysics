@@ -101,7 +101,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 	sphere.SetEmbedded();
 
 	float cast_length = max(0.0f, inSuspensionMaxLength - mRadius);
-	ShapeCast shape_cast(&sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(inOrigin)), inDirection * cast_length); // TODO_DP
+	RShapeCast shape_cast(&sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(inOrigin), inDirection * cast_length);
 
 	ShapeCastSettings settings;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
@@ -110,7 +110,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 	class MyCollector : public CastShapeCollector
 	{
 	public:
-							MyCollector(PhysicsSystem &inPhysicsSystem, const ShapeCast &inShapeCast, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) : 
+							MyCollector(PhysicsSystem &inPhysicsSystem, const RShapeCast &inShapeCast, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) : 
 			mPhysicsSystem(inPhysicsSystem),
 			mShapeCast(inShapeCast),
 			mUpDirection(inUpDirection),
@@ -141,7 +141,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 					// Get the contact properties
 					mBody = body;
 					mSubShapeID2 = inResult.mSubShapeID2;
-					mContactPosition = RVec3(inResult.mContactPointOn2); // TODO_DP
+					mContactPosition = mShapeCast.mCenterOfMassStart.GetTranslation() + inResult.mContactPointOn2;
 					mContactNormal = normal;
 				}
 			}
@@ -149,7 +149,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 
 		// Configuration
 		PhysicsSystem &		mPhysicsSystem;
-		const ShapeCast &	mShapeCast;
+		const RShapeCast &	mShapeCast;
 		Vec3				mUpDirection;
 		float				mCosMaxSlopeAngle;
 
@@ -161,7 +161,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, u
 	};
 
 	MyCollector collector(inPhysicsSystem, shape_cast, mUp, mCosMaxSlopeAngle);
-	inPhysicsSystem.GetNarrowPhaseQueryNoLock().CastShape(shape_cast, settings, collector, broadphase_layer_filter, object_layer_filter, body_filter);
+	inPhysicsSystem.GetNarrowPhaseQueryNoLock().CastShape(shape_cast, settings, shape_cast.mCenterOfMassStart.GetTranslation(), collector, broadphase_layer_filter, object_layer_filter, body_filter);
 	if (collector.mBody == nullptr)
 		return false;
 

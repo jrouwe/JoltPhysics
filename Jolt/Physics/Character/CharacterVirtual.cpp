@@ -90,7 +90,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 
 			mContacts.emplace_back();
 			Contact &contact = mContacts.back();
-			sFillContactProperties(contact, body, mUp, RVec3::sZero(), *this, inResult); // TODO_DP
+			sFillContactProperties(contact, body, mUp, mBaseOffset, *this, inResult);
 			contact.mFraction = inResult.mFraction;
 
 			// Protection from excess of contact points
@@ -225,9 +225,9 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	// Cast shape
 	TempContactList contacts(inAllocator);
 	contacts.reserve(mMaxNumHits);
-	ContactCastCollector collector(mSystem, inDisplacement, mMaxNumHits, mUp, inIgnoredContacts, contacts);
-	ShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start.ToMat44(), inDisplacement); // TODO_DP
-	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
+	ContactCastCollector collector(mSystem, inDisplacement, mMaxNumHits, mUp, inIgnoredContacts, start.GetTranslation(), contacts);
+	RShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
+	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, start.GetTranslation(), collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter);
 	if (contacts.empty())
 		return false;
 

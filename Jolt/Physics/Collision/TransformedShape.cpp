@@ -93,7 +93,7 @@ void TransformedShape::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 	}
 }
 
-void TransformedShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, CastShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
+void TransformedShape::CastShape(const RShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, RVec3Arg inBaseOffset, CastShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
@@ -101,11 +101,14 @@ void TransformedShape::CastShape(const ShapeCast &inShapeCast, const ShapeCastSe
 		ioCollector.SetContext(this);
 		inShapeFilter.mBodyID2 = mBodyID;
 
-		// Get center of mass of object we're casting against
-		Mat44 center_of_mass_transform2 = GetCenterOfMassTransform().ToMat44(); // TODO_DP
+		// Get the shape cast relative to the base offset and convert it to floats
+		ShapeCast shape_cast(inShapeCast.PostTranslated(-inBaseOffset));
+
+		// Get center of mass of object we're casting against relative to the base offset and convert it to floats
+		Mat44 center_of_mass_transform2 = GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
 
 		SubShapeIDCreator sub_shape_id1, sub_shape_id2(mSubShapeIDCreator);
-		CollisionDispatch::sCastShapeVsShapeWorldSpace(inShapeCast, inShapeCastSettings, mShape, GetShapeScale(), inShapeFilter, center_of_mass_transform2, sub_shape_id1, sub_shape_id2, ioCollector);
+		CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, mShape, GetShapeScale(), inShapeFilter, center_of_mass_transform2, sub_shape_id1, sub_shape_id2, ioCollector);
 	}
 }
 
