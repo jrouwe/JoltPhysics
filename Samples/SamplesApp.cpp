@@ -883,10 +883,10 @@ void SamplesApp::ShootObject()
 	mPhysicsSystem->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
 }
 
-bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPosition, BodyID &outID)
+bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPosition, BodyID &outID)
 {
 	const CameraState &camera = GetCamera();
-	Vec3 start = camera.mPos;
+	RVec3 start = RVec3(camera.mPos); // TODO_DP
 	Vec3 direction = inProbeLength * camera.mForward;
 
 	// Clear output
@@ -901,7 +901,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::Pick:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RRayCast ray { start, direction };
 
 			// Cast ray
 			RayCastResult hit;
@@ -922,7 +922,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::Ray:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RRayCast ray { start, direction };
 
 			// Cast ray
 			RayCastResult hit;
@@ -951,7 +951,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 					mDebugRenderer->DrawText3D(outPosition, material2->GetDebugName());
 
 					// Draw normal
-					Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, RVec3(outPosition)); // TODO_DP
+					Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, outPosition);
 					mDebugRenderer->DrawArrow(outPosition, outPosition + normal, color, 0.01f);
 
 					// Draw perpendicular axis to indicate hit position
@@ -979,7 +979,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::RayCollector:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RRayCast ray { start, direction };
 
 			// Create settings
 			RayCastSettings settings;
@@ -1022,12 +1022,12 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 				outID = first_hit.mBodyID;
 	
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const RayCastResult &hit : hits)
 				{
 					// Draw line
-					Vec3 position = ray.GetPointOnRay(hit.mFraction);
+					RVec3 position = ray.GetPointOnRay(hit.mFraction);
 					mDebugRenderer->DrawLine(prev_position, position, c? Color::sGrey : Color::sWhite);
 					c = !c;
 					prev_position = position;
@@ -1043,7 +1043,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw normal
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, RVec3(position)); // TODO_DP
+						Vec3 normal = hit_body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, position);
 						mDebugRenderer->DrawArrow(position, position + normal, color, 0.01f);
 
 						// Draw perpendicular axis to indicate hit position
@@ -1078,11 +1078,11 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create point
 			const float fraction = 0.1f;
-			Vec3 point = start + fraction * direction;
+			RVec3 point = start + fraction * direction;
 
 			// Collide point
 			AllHitCollisionCollector<CollidePointCollector> collector;
-			mPhysicsSystem->GetNarrowPhaseQuery().CollidePoint(RVec3(point), collector); // TODO_DP
+			mPhysicsSystem->GetNarrowPhaseQuery().CollidePoint(point, collector);
 
 			had_hit = !collector.mHits.empty();
 			if (had_hit)
@@ -1113,7 +1113,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			RefConst<Shape> shape = CreateProbeShape();
 			Mat44 rotation = Mat44::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Mat44::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI);
 			Mat44 com = Mat44::sTranslation(shape->GetCenterOfMass());
-			RMat44 shape_transform(Mat44::sTranslation(start + 5.0f * camera.mForward) * rotation * com);
+			RMat44 shape_transform(RMat44::sTranslation(start + 5.0f * camera.mForward) * rotation * com);
 
 			// Create settings
 			CollideShapeSettings settings;
@@ -1189,7 +1189,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 		#ifdef JPH_DEBUG_RENDERER
 			// Draw shape
-			shape->Draw(mDebugRenderer, RMat44(shape_transform), Vec3::sReplicate(1.0f), had_hit? Color::sGreen : Color::sGrey, false, false); // TODO_DP
+			shape->Draw(mDebugRenderer, shape_transform, Vec3::sReplicate(1.0f), had_hit? Color::sGreen : Color::sGrey, false, false);
 		#endif // JPH_DEBUG_RENDERER
 		}
 		break;
@@ -1199,7 +1199,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			// Create shape cast
 			RefConst<Shape> shape = CreateProbeShape();
 			Mat44 rotation = Mat44::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Mat44::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI);
-			ShapeCast shape_cast = ShapeCast::sFromWorldTransform(shape, Vec3::sReplicate(1.0f), Mat44::sTranslation(start) * rotation, direction);
+			ShapeCast shape_cast = ShapeCast::sFromWorldTransform(shape, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(start)) * rotation, direction); // TODO_DP
 
 			// Settings
 			ShapeCastSettings settings;
@@ -1246,12 +1246,12 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 				outID = first_hit.mBodyID2;
 
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const ShapeCastResult &hit : hits)
 				{
 					// Draw line
-					Vec3 position = start + hit.mFraction * direction;
+					RVec3 position = start + hit.mFraction * direction;
 					mDebugRenderer->DrawLine(prev_position, position, c? Color::sGrey : Color::sWhite);
 					c = !c;
 					prev_position = position;
@@ -1310,7 +1310,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			Vec3 center(start + fraction * direction); // TODO_DP
 			Vec3 half_extent = 0.5f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1331,7 +1331,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			Vec3 center(start + fraction * direction); // TODO_DP
 			Vec3 half_extent = 2.0f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1380,7 +1380,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::BroadPhaseRay:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RayCast ray { Vec3(start), direction };
 
 			// Cast ray
 			AllHitCollisionCollector<RayCastBodyCollector> collector;
@@ -1391,12 +1391,12 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			if (had_hit)
 			{
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const BroadPhaseCastResult &hit : collector.mHits)
 				{
 					// Draw line
-					Vec3 position = start + hit.mFraction * direction;
+					RVec3 position = start + hit.mFraction * direction;
 					Color cast_color = c? Color::sGrey : Color::sWhite;
 					mDebugRenderer->DrawLine(prev_position, position, cast_color);
 					mDebugRenderer->DrawMarker(position, cast_color, 0.1f);
@@ -1430,7 +1430,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			Vec3 center(start + fraction * direction);
 			Vec3 half_extent = 2.0f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1466,7 +1466,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			// Create sphere
 			const float fraction = 0.2f;
 			const float radius = mShapeScale.Length() * 2.0f;
-			Vec3 point = start + fraction * direction;
+			Vec3 point(start + fraction * direction);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeBodyCollector> collector;
@@ -1499,7 +1499,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create point
 			const float fraction = 0.1f;
-			Vec3 point = start + fraction * direction;
+			Vec3 point(start + fraction * direction);
 
 			// Collide point
 			AllHitCollisionCollector<CollideShapeBodyCollector> collector;
@@ -1532,7 +1532,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			Vec3 center(start + fraction * direction);
 			Vec3 half_extent = 2.0f * mShapeScale;
 			OrientedBox box(Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisZ(), 0.2f * JPH_PI) * Quat::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI), center), half_extent);
 
@@ -1567,7 +1567,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			Vec3 half_extent = 2.0f * mShapeScale;
-			AABox box(start - half_extent, start + half_extent);
+			AABox box(Vec3(start) - half_extent, Vec3(start) + half_extent);
 			AABoxCast box_cast { box, direction };
 
 			// Cast box
@@ -1579,15 +1579,15 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			if (had_hit)
 			{
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const BroadPhaseCastResult &hit : collector.mHits)
 				{
 					// Draw line
-					Vec3 position = start + hit.mFraction * direction;
+					RVec3 position = start + hit.mFraction * direction;
 					Color cast_color = c? Color::sGrey : Color::sWhite;
 					mDebugRenderer->DrawLine(prev_position, position, cast_color);
-					mDebugRenderer->DrawWireBox(AABox(position - half_extent, position + half_extent), cast_color);
+					mDebugRenderer->DrawWireBox(AABox(Vec3(position) - half_extent, Vec3(position) + half_extent), cast_color);
 					c = !c;
 					prev_position = position;
 
@@ -1609,7 +1609,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			{
 				// Draw 'miss'
 				mDebugRenderer->DrawLine(start, start + direction, Color::sRed);
-				mDebugRenderer->DrawWireBox(AABox(start + direction - half_extent, start + direction + half_extent), Color::sRed);
+				mDebugRenderer->DrawWireBox(AABox(Vec3(start) + direction - half_extent, Vec3(start) + direction + half_extent), Color::sRed);
 			}
 		}
 		break;
@@ -1639,7 +1639,7 @@ void SamplesApp::UpdateDebug()
 	if (mDragConstraint == nullptr)
 	{
 		// Not dragging yet
-		Vec3 hit_position;
+		RVec3 hit_position;
 		float hit_fraction;
 		if (CastProbe(cDragRayLength, hit_fraction, hit_position, mDragBody))
 		{
@@ -1655,14 +1655,14 @@ void SamplesApp::UpdateDebug()
 					{
 						// Create constraint to drag body
 						DistanceConstraintSettings settings;
-						settings.mPoint1 = settings.mPoint2 = RVec3(hit_position); // TODO_DP
+						settings.mPoint1 = settings.mPoint2 = hit_position;
 						settings.mFrequency = 2.0f / GetWorldScale();
 						settings.mDamping = 1.0f;
 
 						// Construct fixed body for the mouse constraint
 						// Note that we don't add it to the world since we don't want anything to collide with it, we just
 						// need an anchor for a constraint
-						Body *drag_anchor = bi.CreateBody(BodyCreationSettings(new SphereShape(0.01f), RVec3(hit_position), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING)); // TODO_DP
+						Body *drag_anchor = bi.CreateBody(BodyCreationSettings(new SphereShape(0.01f), hit_position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 						mDragAnchor = drag_anchor;
 
 						// Construct constraint that connects the drag anchor with the body that we want to drag

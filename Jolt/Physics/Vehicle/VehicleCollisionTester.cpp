@@ -19,12 +19,12 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 	DefaultObjectLayerFilter object_layer_filter = inPhysicsSystem.GetDefaultLayerFilter(mObjectLayer);
 	IgnoreSingleBodyFilter body_filter(inVehicleBodyID);
 
-	RayCast ray { Vec3(inOrigin), inSuspensionMaxLength * inDirection }; // TODO_DP
+	RRayCast ray { inOrigin, inSuspensionMaxLength * inDirection };
 
 	class MyCollector : public CastRayCollector
 	{
 	public:
-							MyCollector(PhysicsSystem &inPhysicsSystem, const RayCast &inRay, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) : 
+							MyCollector(PhysicsSystem &inPhysicsSystem, const RRayCast &inRay, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) : 
 			mPhysicsSystem(inPhysicsSystem),
 			mRay(inRay),
 			mUpDirection(inUpDirection),
@@ -46,8 +46,8 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 					return;
 
 				// Test that we're not hitting a vertical wall
-				Vec3 contact_pos = mRay.GetPointOnRay(inResult.mFraction);
-				Vec3 normal = body->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, RVec3(contact_pos)); // TODO_DP
+				RVec3 contact_pos = mRay.GetPointOnRay(inResult.mFraction);
+				Vec3 normal = body->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, contact_pos);
 				if (normal.Dot(mUpDirection) > mCosMaxSlopeAngle)
 				{
 					// Update early out fraction to this hit
@@ -56,7 +56,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 					// Get the contact properties
 					mBody = body;
 					mSubShapeID2 = inResult.mSubShapeID2;
-					mContactPosition = RVec3(contact_pos); // TODO_DP
+					mContactPosition = contact_pos;
 					mContactNormal = normal;
 				}
 			}
@@ -64,7 +64,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, uint inW
 
 		// Configuration
 		PhysicsSystem &		mPhysicsSystem;
-		RayCast				mRay;
+		RRayCast			mRay;
 		Vec3				mUpDirection;
 		float				mCosMaxSlopeAngle;
 

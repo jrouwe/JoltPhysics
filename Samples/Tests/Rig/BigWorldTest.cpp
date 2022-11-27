@@ -75,7 +75,7 @@ void BigWorldTest::Initialize()
 			SkeletonPose::JointState &root = pose.GetJoint(0);
 			root.mTranslation = Vec3::sZero();
 			root.mRotation = rotation[i];
-			pose.SetRootOffset(RVec3(distance, 5.0f + i, 0));
+			pose.SetRootOffset(RVec3(distance, 2.0_r + 0.6_r * i, 0));
 			pose.CalculateJointMatrices();
 
 			// Drive to pose

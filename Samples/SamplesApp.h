@@ -60,7 +60,7 @@ private:
 
 	// Probing the collision world
 	RefConst<Shape>			CreateProbeShape();
-	bool					CastProbe(float inProbeLength, float &outFraction, Vec3 &outPosition, BodyID &outID);
+	bool					CastProbe(float inProbeLength, float &outFraction, RVec3 &outPosition, BodyID &outID);
 
 	// Shooting an object
 	RefConst<Shape>			CreateShootObjectShape();

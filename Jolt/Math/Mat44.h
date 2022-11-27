@@ -16,6 +16,9 @@ public:
 	// Underlying column type
 	using Type = Vec4::Type;
 
+	// Argument type
+	using ArgType = Mat44Arg;
+
 	/// Constructor
 								Mat44() = default; ///< Intentionally not initialized for performance reasons
 	JPH_INLINE					Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec4Arg inC4);

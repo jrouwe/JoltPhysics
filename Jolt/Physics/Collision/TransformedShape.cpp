@@ -13,12 +13,12 @@
 
 JPH_NAMESPACE_BEGIN
 
-bool TransformedShape::CastRay(const RayCast &inRay, RayCastResult &ioHit) const
+bool TransformedShape::CastRay(const RRayCast &inRay, RayCastResult &ioHit) const
 {
 	if (mShape != nullptr)
 	{
-		// Transform the ray to local space
-		RayCast ray = inRay.Transformed(GetInverseCenterOfMassTransform().ToMat44()); // TODO_DP
+		// Transform the ray to local space, note that this drops precision which is possible because we're in local space now
+		RayCast ray(inRay.Transformed(GetInverseCenterOfMassTransform()));
 
 		// Scale the ray
 		Vec3 inv_scale = GetShapeScale().Reciprocal();
@@ -39,7 +39,7 @@ bool TransformedShape::CastRay(const RayCast &inRay, RayCastResult &ioHit) const
 	return false;
 }
 
-void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
+void TransformedShape::CastRay(const RRayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	if (mShape != nullptr)
 	{
@@ -47,8 +47,8 @@ void TransformedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 		ioCollector.SetContext(this);
 		inShapeFilter.mBodyID2 = mBodyID;
 
-		// Transform and scale the ray to local space
-		RayCast ray = inRay.Transformed(GetInverseCenterOfMassTransform().ToMat44()); // TODO_DP
+		// Transform the ray to local space, note that this drops precision which is possible because we're in local space now
+		RayCast ray(inRay.Transformed(GetInverseCenterOfMassTransform()));
 
 		// Scale the ray
 		Vec3 inv_scale = GetShapeScale().Reciprocal();

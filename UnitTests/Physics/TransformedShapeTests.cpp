@@ -78,10 +78,10 @@ TEST_SUITE("TransformedShapeTests")
 		// Transform to world space and do the raycast
 		Vec3 ray_start_local = point_on_box - ray_direction_local;
 		Vec3 ray_end_local = point_on_box + ray_direction_local;
-		Vec3 ray_start_world = calc_transform.ToMat44() * ray_start_local; // TODO_DP
-		Vec3 ray_end_world = calc_transform.ToMat44() * ray_end_local; // TODO_DP
-		Vec3 ray_direction_world = ray_end_world - ray_start_world;
-		RayCast ray_in_world { ray_start_world, ray_direction_world };
+		RVec3 ray_start_world = calc_transform * ray_start_local;
+		RVec3 ray_end_world = calc_transform * ray_end_local;
+		Vec3 ray_direction_world = Vec3(ray_end_world - ray_start_world);
+		RRayCast ray_in_world { ray_start_world, ray_direction_world };
 		RayCastResult hit;
 		ts.CastRay(ray_in_world, hit);
 
@@ -89,7 +89,7 @@ TEST_SUITE("TransformedShapeTests")
 		CHECK_APPROX_EQUAL(hit.mFraction, 0.5f);
 		CHECK(hit.mBodyID == body.GetID());
 		CHECK(ts.GetMaterial(hit.mSubShapeID2) == material);
-		Vec3 world_space_normal = ts.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, RVec3(ray_in_world.GetPointOnRay(hit.mFraction))); // TODO_DP
+		Vec3 world_space_normal = ts.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, ray_in_world.GetPointOnRay(hit.mFraction));
 		Vec3 expected_normal = (calc_transform.GetDirectionPreservingMatrix() * normal_on_box).Normalized();
 		CHECK_APPROX_EQUAL(world_space_normal, expected_normal);
 

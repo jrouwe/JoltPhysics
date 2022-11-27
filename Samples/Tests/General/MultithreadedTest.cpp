@@ -227,14 +227,14 @@ void MultithreadedTest::CasterMain()
 			// Cast a random ray
 			uniform_real_distribution<float> from_y(0, 10);
 			uniform_real_distribution<float> from_xz(-5, 5);
-			Vec3 from = Vec3(from_xz(random), from_y(random), from_xz(random));
-			Vec3 to = Vec3(from_xz(random), from_y(random), from_xz(random));
-			RayCast ray { from, to - from };
+			RVec3 from(from_xz(random), from_y(random), from_xz(random));
+			RVec3 to(from_xz(random), from_y(random), from_xz(random));
+			RRayCast ray { from, Vec3(to - from) };
 			RayCastResult hit;
 			if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::MOVING), SpecifiedObjectLayerFilter(Layers::MOVING)))
 			{
 				// Draw hit position
-				Vec3 hit_position_world = ray.mOrigin + hit.mFraction * ray.mDirection;
+				RVec3 hit_position_world = ray.GetPointOnRay(hit.mFraction);
 				mDebugRenderer->DrawMarker(hit_position_world, Color::sYellow, 0.2f);
 
 				BodyLockRead lock(mPhysicsSystem->GetBodyLockInterface(), hit.mBodyID);

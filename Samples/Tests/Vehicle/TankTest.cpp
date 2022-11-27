@@ -229,7 +229,7 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	static_cast<TrackedVehicleController *>(mVehicleConstraint->GetController())->SetDriverInput(forward, left_ratio, right_ratio, brake);
 
 	// Cast ray to find target
-	RayCast ray { inParams.mCameraState.mPos, 1000.0f * inParams.mCameraState.mForward };
+	RRayCast ray { RVec3(inParams.mCameraState.mPos), 1000.0f * inParams.mCameraState.mForward }; // TODO_DP
 	RayCastSettings ray_settings;
 	ClosestHitCollisionCollector<CastRayCollector> collector;
 	IgnoreMultipleBodiesFilter body_filter;

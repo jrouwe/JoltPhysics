@@ -188,14 +188,14 @@ void HeightFieldShapeTest::Initialize()
 
 	// Determine terrain height
 	RayCastResult result;
-	Vec3 start(0, 1000, 0);
+	RVec3 start(0, 1000, 0);
 	Vec3 direction(0, -2000, 0);
-	RayCast ray { start, direction };
+	RRayCast ray { start, direction };
 	if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, result, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
-		mHitPos = start + result.mFraction * direction;
+		mHitPos = ray.GetPointOnRay(result.mFraction);
 
 	// Dynamic body
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)), RVec3(mHitPos + Vec3(0, 10, 0)), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING)); // TODO_DP
+	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)), mHitPos + Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
 }
 
@@ -238,7 +238,7 @@ void HeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 void HeightFieldShapeTest::GetInitialCamera(CameraState &ioState) const
 {
 	// Correct camera pos for hit position
-	ioState.mPos += mHitPos;
+	ioState.mPos += Vec3(mHitPos); // TODO_DP
 }
 
 void HeightFieldShapeTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)

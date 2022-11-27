@@ -21,6 +21,9 @@ public:
 	using Type = struct { double mData[4]; };
 #endif
 
+	// Argument type
+	using ArgType = DVec3Arg;
+
 	/// Constructor
 								DVec3() = default; ///< Intentionally not initialized for performance reasons
 								DVec3(const DVec3 &inRHS) = default;

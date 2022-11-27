@@ -17,6 +17,9 @@ public:
 	using Type = Vec4::Type;
 	using DType = DVec3::Type;
 
+	// Argument type
+	using ArgType = DMat44Arg;
+
 	/// Constructor
 								DMat44() = default; ///< Intentionally not initialized for performance reasons
 	JPH_INLINE					DMat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, DVec3Arg inC4);

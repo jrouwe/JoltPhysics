@@ -299,13 +299,14 @@ void HighSpeedTest::CreateFastSmallConvexObjects()
 		for (int y = -25 ; y < 25; ++y)
 		{
 			// Cast a ray to find the terrain
-			Vec3 origin(float(x), 100.0f, float(y));
+			RVec3 origin(Real(x), 100.0_r, Real(y));
 			Vec3 direction(0, -100.0f, 0);
+			RRayCast ray { origin, direction };
 			RayCastResult hit;
-			if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay({ origin, direction }, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
+			if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
 			{
 				// Place 10m above terrain
-				body_settings.mPosition = RVec3(origin + hit.mFraction * direction + Vec3(0, 10.0f, 0)); // TODO_DP
+				body_settings.mPosition = ray.GetPointOnRay(hit.mFraction);
 				body_settings.mRotation = Quat::sRandom(rnd);
 				body_settings.mRestitution = restitution_distrib(rnd);
 
