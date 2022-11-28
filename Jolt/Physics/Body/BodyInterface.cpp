@@ -806,6 +806,22 @@ EMotionType BodyInterface::GetMotionType(const BodyID &inBodyID) const
 		return EMotionType::Static;
 }
 
+void BodyInterface::SetMotionQuality(const BodyID &inBodyID, EMotionQuality inMotionQuality)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		mBodyManager->SetMotionQuality(lock.GetBody(), inMotionQuality);
+}
+
+EMotionQuality BodyInterface::GetMotionQuality(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded() && !lock.GetBody().IsStatic())
+		return lock.GetBody().GetMotionProperties()->GetMotionQuality();
+	else
+		return EMotionQuality::Discrete;
+}
+
 Mat44 BodyInterface::GetInverseInertia(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);

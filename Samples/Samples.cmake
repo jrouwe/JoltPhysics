@@ -75,6 +75,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.h
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.cpp
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.h
+	${SAMPLES_ROOT}/Tests/General/ChangeMotionQualityTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ChangeMotionQualityTest.h
 	${SAMPLES_ROOT}/Tests/General/ChangeMotionTypeTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ChangeMotionTypeTest.h
 	${SAMPLES_ROOT}/Tests/General/ChangeShapeTest.cpp
