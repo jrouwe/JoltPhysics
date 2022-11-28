@@ -155,7 +155,7 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity
 		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
 		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
-		mp->SetMotionQuality(inBodyCreationSettings.mMotionQuality);
+		mp->mMotionQuality = inBodyCreationSettings.mMotionQuality;
 		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
 		mp->mIndexInActiveBodies = Body::cInactiveIndex;
 		mp->mIslandIndex = Body::cInactiveIndex;
@@ -480,6 +480,28 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 					mActivationListener->OnBodyDeactivated(body_id, body.GetUserData());
 			}
 		}
+}
+
+void BodyManager::SetMotionQuality(Body &ioBody, EMotionQuality inMotionQuality)
+{
+	if (ioBody.IsActive())
+	{
+		MotionProperties *mp = ioBody.GetMotionProperties();
+		if (mp->mMotionQuality != inMotionQuality)
+		{
+			UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+
+			JPH_ASSERT(!mActiveBodiesLocked);
+
+			if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
+				--mNumActiveCCDBodies;
+
+			mp->mMotionQuality = inMotionQuality;
+
+			if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
+				++mNumActiveCCDBodies;
+		}
+	}
 }
 
 void BodyManager::GetActiveBodies(BodyIDVector &outBodyIDs) const

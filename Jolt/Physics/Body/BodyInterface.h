@@ -7,6 +7,7 @@
 #include <Jolt/Physics/EActivation.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Body/MotionType.h>
+#include <Jolt/Physics/Body/MotionQuality.h>
 #include <Jolt/Core/Reference.h>
 
 JPH_NAMESPACE_BEGIN
@@ -195,6 +196,12 @@ public:
 	///@{
 	void						SetMotionType(const BodyID &inBodyID, EMotionType inMotionType, EActivation inActivationMode);
 	EMotionType					GetMotionType(const BodyID &inBodyID) const;
+	///@}
+
+	///@name Body motion quality
+	///@{
+	void						SetMotionQuality(const BodyID &inBodyID, EMotionQuality inMotionQuality);
+	EMotionQuality				GetMotionQuality(const BodyID &inBodyID) const;
 	///@}
 
 	/// Get inverse inertia tensor in world space
