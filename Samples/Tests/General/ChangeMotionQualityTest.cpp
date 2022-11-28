@@ -3,6 +3,7 @@
 #include <Tests/General/ChangeMotionQualityTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
@@ -16,11 +17,30 @@ void ChangeMotionQualityTest::Initialize()
 	// Floor
 	CreateFloor();
 
+	// Single shape that has 4 walls to surround fast moving sphere
+	BodyCreationSettings enclosing_settings;
+	Ref<BoxShapeSettings> box_shape = new BoxShapeSettings(Vec3(5.0f, 1.0f, 0.1f));
+	Ref<StaticCompoundShapeSettings> enclosing_shape = new StaticCompoundShapeSettings();
+	enclosing_shape->AddShape(Vec3(0, 0, 5), Quat::sIdentity(), box_shape);
+	enclosing_shape->AddShape(Vec3(0, 0, -5), Quat::sIdentity(), box_shape);
+	enclosing_shape->AddShape(Vec3(5, 0, 0), Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI), box_shape);
+	enclosing_shape->AddShape(Vec3(-5, 0, 0), Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI), box_shape);
+	enclosing_settings.SetShapeSettings(enclosing_shape);
+	enclosing_settings.mMotionType = EMotionType::Kinematic;
+	enclosing_settings.mObjectLayer = Layers::MOVING;
+	enclosing_settings.mPosition = Vec3(0, 1, 0);
+	Body &enclosing = *mBodyInterface->CreateBody(enclosing_settings);
+	mBodyInterface->AddBody(enclosing.GetID(), EActivation::Activate);
+
+	// Create high speed sphere inside
 	BodyCreationSettings settings;
-	settings.SetShape(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)));
-	settings.mPosition = Vec3(0, 10, 0);
+	settings.SetShape(new SphereShape(1.0f));
+	settings.mPosition = Vec3(0, 0.5f, 0);
 	settings.mMotionType = EMotionType::Dynamic;
-	settings.mMotionQuality = EMotionQuality::Discrete;
+	settings.mMotionQuality = EMotionQuality::LinearCast;
+	settings.mLinearVelocity = Vec3(-240, 0, -120);
+	settings.mFriction = 0.0f;
+	settings.mRestitution = 1.0f;
 	settings.mObjectLayer = Layers::MOVING;
 	mBody = mBodyInterface->CreateBody(settings);
 	mBodyInterface->AddBody(mBody->GetID(), EActivation::Activate);
@@ -32,17 +52,8 @@ void ChangeMotionQualityTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mTime += inParams.mDeltaTime;
 
 	// Calculate desired motion quality
-	static const EMotionQuality cycle[] = { EMotionQuality::LinearCast, EMotionQuality::Discrete, EMotionQuality::LinearCast };
-	EMotionQuality motion_quality = cycle[int(mTime) % size(cycle)];
-
-	BodyLockWrite body_lock(mPhysicsSystem->GetBodyLockInterface(), mBody->GetID());
-	if (body_lock.Succeeded())
-	{
-		// Update motion quality
-		JPH::MotionProperties* motion_properties = mBody->GetMotionProperties();
-		if (motion_quality != motion_properties->GetMotionQuality())
-			motion_properties->SetMotionQuality(motion_quality);
-	}
+	EMotionQuality motion_quality = (int(mTime) & 1) == 0? EMotionQuality::LinearCast : EMotionQuality::Discrete;
+	mBodyInterface->SetMotionQuality(mBody->GetID(), motion_quality);
 }
 
 void ChangeMotionQualityTest::SaveState(StateRecorder &inStream) const
