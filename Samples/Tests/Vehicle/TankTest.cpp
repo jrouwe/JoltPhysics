@@ -238,7 +238,7 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	body_filter.IgnoreBody(mTurretBody->GetID());
 	body_filter.IgnoreBody(mBarrelBody->GetID());
 	mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, ray_settings, collector, {}, {}, body_filter);
-	Vec3 hit_pos = collector.HadHit()? inParams.mCameraState.mPos + collector.mHit.mFraction * ray.mDirection : inParams.mCameraState.mPos + ray.mDirection;
+	RVec3 hit_pos = collector.HadHit()? inParams.mCameraState.mPos + collector.mHit.mFraction * ray.mDirection : inParams.mCameraState.mPos + ray.mDirection;
 	mDebugRenderer->DrawMarker(hit_pos, Color::sGreen, 1.0f);
 
 	// Orient the turret towards the hit position
@@ -289,13 +289,13 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 void TankTest::GetInitialCamera(CameraState &ioState) const 
 {
 	// Position camera behind tank
-	ioState.mPos = Vec3(0, 4.0f, 0);
+	ioState.mPos = RVec3(0, 4.0f, 0);
 	ioState.mForward = Vec3(0, -2.0f, 10.0f).Normalized();
 }
 
-Mat44 TankTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 TankTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
 	// Pivot is center of tank + a distance away from the tank based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
-	return Mat44::sTranslation(Vec3(mTankBody->GetPosition() - 10.0f * fwd)); // TODO_DP
+	return RMat44::sTranslation(mTankBody->GetPosition() - 10.0f * fwd);
 }

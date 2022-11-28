@@ -13,7 +13,7 @@
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Layers.h>
-#include <Renderer/DebugRendererImp.h>
+#include <Utils/DebugRendererSP.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(WaterShapeTest) 
 { 
@@ -99,8 +99,8 @@ void WaterShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	Vec3 surface_point = Vec3(0, 10, 0);
 	for (int i = -20; i <= 20; ++i)
 	{
-		mDebugRenderer->DrawLine(surface_point + Vec3(5.0f * i, 0, -100), surface_point + Vec3(5.0f * i, 0, 100), Color::sBlue);
-		mDebugRenderer->DrawLine(surface_point + Vec3(-100, 0, 5.0f * i), surface_point + Vec3(100, 0, 5.0f * i), Color::sBlue);
+		DebugDrawLine(mDebugRenderer, surface_point + Vec3(5.0f * i, 0, -100), surface_point + Vec3(5.0f * i, 0, 100), Color::sBlue); // TODO_DP
+		DebugDrawLine(mDebugRenderer, surface_point + Vec3(-100, 0, 5.0f * i), surface_point + Vec3(100, 0, 5.0f * i), Color::sBlue); // TODO_DP
 	}
 
 	// Broadphase results, will apply buoyancy to any body that intersects with the water volume

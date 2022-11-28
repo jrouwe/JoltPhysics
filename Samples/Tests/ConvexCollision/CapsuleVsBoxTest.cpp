@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
-#include <Renderer/DebugRendererImp.h>
+#include <Utils/DebugRendererSP.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CapsuleVsBoxTest) 
 { 
@@ -52,8 +52,8 @@ void CapsuleVsBoxTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Draw contact points
 	const CollideShapeResult &hit = collector.mHits[0];
-	mDebugRenderer->DrawMarker(hit.mContactPointOn1, Color::sRed, 1.0f);
-	mDebugRenderer->DrawMarker(hit.mContactPointOn2, Color::sGreen, 1.0f);
+	DebugDrawMarker(mDebugRenderer, hit.mContactPointOn1, Color::sRed, 1.0f);
+	DebugDrawMarker(mDebugRenderer, hit.mContactPointOn2, Color::sGreen, 1.0f);
 
 	// Draw penetration axis with length of the penetration
 	Vec3 pen_axis = hit.mPenetrationAxis;
@@ -61,7 +61,7 @@ void CapsuleVsBoxTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	if (pen_axis_len > 0.0f)
 	{
 		pen_axis *= hit.mPenetrationDepth / pen_axis_len;
-		mDebugRenderer->DrawArrow(hit.mContactPointOn2, hit.mContactPointOn2 + pen_axis, Color::sYellow, 0.01f);
+		DebugDrawArrow(mDebugRenderer, hit.mContactPointOn2, hit.mContactPointOn2 + pen_axis, Color::sYellow, 0.01f);
 
 #ifdef JPH_DEBUG_RENDERER
 		Mat44 resolved_box = box_transform.PostTranslated(pen_axis);

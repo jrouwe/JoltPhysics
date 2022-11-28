@@ -80,10 +80,18 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	DebugRenderer::Initialize();
 }
 
-void DebugRendererImp::DrawLine(const Float3 &inFrom, const Float3 &inTo, ColorArg inColor) 
-{ 
-	lock_guard lock(mLinesLock); 
-	mLines.push_back(Line(inFrom, inTo, inColor)); 
+void DebugRendererImp::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) 
+{
+	RVec3 offset = RVec3::sZero(); // TODO_DP
+
+	Line line;
+	Vec3(inFrom - offset).StoreFloat3(&line.mFrom);
+	line.mFromColor = inColor;
+	Vec3(inTo - offset).StoreFloat3(&line.mTo);
+	line.mToColor = inColor;
+
+	lock_guard lock(mLinesLock);
+	mLines.push_back(line); 
 }
 
 DebugRenderer::Batch DebugRendererImp::CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount)
@@ -109,29 +117,33 @@ DebugRenderer::Batch DebugRendererImp::CreateTriangleBatch(const Vertex *inVerti
 	return primitive;
 }
 
-void DebugRendererImp::DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRendererImp::DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
-	lock_guard lock(mPrimitivesLock); 
+	lock_guard lock(mPrimitivesLock);
+	
+	RVec3 offset = RVec3::sZero(); // TODO_DP
+
+	Mat44 model_matrix = inModelMatrix.PreTranslated(-offset).ToMat44();
 	   
 	// Our pixel shader uses alpha only to turn on/off shadows
 	Color color = inCastShadow == ECastShadow::On? Color(inModelColor, 255) : Color(inModelColor, 0);
 
 	if (inDrawMode == EDrawMode::Wireframe)
 	{
-		mWireframePrimitives[inGeometry].mInstances.push_back({ inModelMatrix, inModelMatrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
+		mWireframePrimitives[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
 		++mNumInstances;
 	}
 	else
 	{
 		if (inCullMode != ECullMode::CullFrontFace)
 		{
-			mPrimitives[inGeometry].mInstances.push_back({ inModelMatrix, inModelMatrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
+			mPrimitives[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
 			++mNumInstances;
 		}
 
 		if (inCullMode != ECullMode::CullBackFace)
 		{
-			mPrimitivesBackFacing[inGeometry].mInstances.push_back({ inModelMatrix, inModelMatrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
+			mPrimitivesBackFacing[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
 			++mNumInstances;
 		}
 	}
@@ -184,8 +196,14 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 	}
 }
 
-void DebugRendererImp::DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor)
+void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
 {
+	RVec3 offset = RVec3::sZero(); // TODO_DP
+
+	Vec3 v1(inV1 - offset);
+	Vec3 v2(inV2 - offset);
+	Vec3 v3(inV3 - offset);
+
 	lock_guard lock(mPrimitivesLock); 
 
 	EnsurePrimitiveSpace(3);
@@ -196,13 +214,13 @@ void DebugRendererImp::DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, Co
 	Color color(inColor, 0);
 
 	// Construct triangle
-	new ((Triangle *)mLockedVertices) Triangle(inV1, inV2, inV3, color);
+	new ((Triangle *)mLockedVertices) Triangle(v1, v2, v3, color);
 	mLockedVertices += 3;
 
 	// Update bounding box
-	mLockedPrimitiveBounds.Encapsulate(inV1);
-	mLockedPrimitiveBounds.Encapsulate(inV2);
-	mLockedPrimitiveBounds.Encapsulate(inV3);
+	mLockedPrimitiveBounds.Encapsulate(v1);
+	mLockedPrimitiveBounds.Encapsulate(v2);
+	mLockedPrimitiveBounds.Encapsulate(v3);
 }
 
 void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const Array<int> &inStartIdx)
@@ -226,10 +244,14 @@ void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const Array<int
 	}
 }
 
-void DebugRendererImp::DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
-{ 	
+void DebugRendererImp::DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
+{
+	RVec3 offset = RVec3::sZero(); // TODO_DP
+
+	Vec3 pos(inPosition - offset);
+
 	lock_guard lock(mTextsLock);  
-	mTexts.emplace_back(inPosition, inString, inColor, inHeight); 
+	mTexts.emplace_back(pos, inString, inColor, inHeight); 
 }
 
 void DebugRendererImp::DrawLines()
@@ -267,7 +289,7 @@ void DebugRendererImp::DrawTriangles()
 	mDepthTexture->ClearRenderTarget();
 
 	// Get the camera and light frustum for culling
-	Vec3 camera_pos = mRenderer->GetCameraState().mPos;
+	Vec3 camera_pos(mRenderer->GetCameraState().mPos); // TODO_DP
 	const Frustum &camera_frustum = mRenderer->GetCameraFrustum();
 	const Frustum &light_frustum = mRenderer->GetLightFrustum();
 

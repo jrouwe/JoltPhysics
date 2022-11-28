@@ -18,9 +18,9 @@ class Texture;
 /// Camera setup
 struct CameraState
 {
-									CameraState() : mPos(Vec3::sZero()), mForward(0, 0, -1), mUp(0, 1, 0), mFOVY(DegreesToRadians(70.0f)), mFarPlane(100.0f) { }
+									CameraState() : mPos(RVec3::sZero()), mForward(0, 0, -1), mUp(0, 1, 0), mFOVY(DegreesToRadians(70.0f)), mFarPlane(100.0f) { }
 
-	Vec3							mPos;								///< Camera position
+	RVec3							mPos;								///< Camera position
 	Vec3							mForward;							///< Camera forward vector
 	Vec3							mUp;								///< Camera up vector
 	float							mFOVY;								///< Field of view in radians in up direction

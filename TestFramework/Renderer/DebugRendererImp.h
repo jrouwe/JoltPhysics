@@ -30,12 +30,12 @@ public:
 										DebugRendererImp(Renderer *inRenderer, const Font *inFont);
 
 	/// Implementation of DebugRenderer interface
-	virtual void						DrawLine(const Float3 &inFrom, const Float3 &inTo, ColorArg inColor) override;
-	virtual void						DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor) override;
+	virtual void						DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) override;
+	virtual void						DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor) override;
 	virtual Batch						CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount) override;
 	virtual Batch						CreateTriangleBatch(const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount) override;
-	virtual void						DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
-	virtual void						DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) override;
+	virtual void						DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
+	virtual void						DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) override;
 	
 	/// Draw all primitives that were added
 	void								Draw();
@@ -172,8 +172,6 @@ private:
 	/// A single line segment
 	struct Line
 	{
-										Line(const Float3 &inFrom, const Float3 &inTo, ColorArg inColor) : mFrom(inFrom), mFromColor(inColor), mTo(inTo), mToColor(inColor) { }
-
 		Float3							mFrom;
 		Color							mFromColor;
 		Float3							mTo;

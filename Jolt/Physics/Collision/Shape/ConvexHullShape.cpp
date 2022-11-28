@@ -797,7 +797,7 @@ void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3A
 #ifdef JPH_DEBUG_RENDERER
 	// Draw center of buoyancy
 	if (sDrawSubmergedVolumes)
-		DebugRenderer::sInstance->DrawWireSphere(outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
+		DebugRenderer::sInstance->DrawWireSphere(RVec3(outCenterOfBuoyancy), 0.05f, Color::sRed, 1); // TODO_DP
 #endif // JPH_DEBUG_RENDERER
 }
 
@@ -851,19 +851,19 @@ void ConvexHullShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTr
 		}
 }
 
-void ConvexHullShape::DrawShrunkShape(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
+void ConvexHullShape::DrawShrunkShape(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	// Get the shrunk points
 	SupportBuffer buffer;
 	const HullNoConvex *support = mConvexRadius > 0.0f? static_cast<const HullNoConvex *>(GetSupportFunction(ESupportMode::ExcludeConvexRadius, buffer, inScale)) : nullptr;
 
-	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
+	RMat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
 
 	for (int p = 0; p < (int)mPoints.size(); ++p)
 	{
 		const Point &point = mPoints[p];
-		Vec3 position = transform * point.mPosition;
-		Vec3 shrunk_point = support != nullptr? transform * support->GetPoints()[p] : position;
+		RVec3 position = transform * point.mPosition;
+		RVec3 shrunk_point = support != nullptr? transform * support->GetPoints()[p] : position;
 
 		// Draw difference between shrunk position and position
 		inRenderer->DrawLine(position, shrunk_point, Color::sGreen);

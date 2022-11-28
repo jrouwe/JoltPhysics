@@ -197,8 +197,8 @@ bool Body::ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float 
 		// Draw submerged volume properties
 		if (Shape::sDrawSubmergedVolumes)
 		{
-			DebugRenderer::sInstance->DrawMarker(center_of_buoyancy, Color::sWhite, 2.0f);
-			DebugRenderer::sInstance->DrawText3D(center_of_buoyancy, StringFormat("%.3f / %.3f", (double)submerged_volume, (double)total_volume));
+			DebugRenderer::sInstance->DrawMarker(RVec3(center_of_buoyancy), Color::sWhite, 2.0f); // TODO_DP
+			DebugRenderer::sInstance->DrawText3D(RVec3(center_of_buoyancy), StringFormat("%.3f / %.3f", (double)submerged_volume, (double)total_volume)); // TODO_DP
 		}
 	#endif // JPH_DEBUG_RENDERER
 

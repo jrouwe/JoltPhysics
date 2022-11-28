@@ -500,8 +500,9 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Camera projection and view
 	vs->mProjection = sPerspective(camera_fovy, camera_aspect, camera_near, camera_far);
-	Vec3 tgt = inCamera.mPos + inCamera.mForward;
-	vs->mView = Mat44::sLookAt(inCamera.mPos, tgt, inCamera.mUp);
+	Vec3 cam_pos = Vec3(inCamera.mPos); // TODO_DP
+	Vec3 tgt = cam_pos + inCamera.mForward;
+	vs->mView = Mat44::sLookAt(cam_pos, tgt, inCamera.mUp);
 
 	// Light projection and view
 	vs->mLightProjection = sPerspective(light_fov, 1.0f, light_near, light_far);
@@ -527,7 +528,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	
 	// Set constants for pixel shader
 	PixelShaderConstantBuffer *ps = mPixelShaderConstantBuffer[mFrameIndex]->Map<PixelShaderConstantBuffer>();
-	ps->mCameraPos = Vec4(inCamera.mPos, 0);
+	ps->mCameraPos = Vec4(cam_pos, 0);
 	ps->mLightPos = Vec4(light_pos, 0);
 	mPixelShaderConstantBuffer[mFrameIndex]->Unmap();
 
@@ -535,7 +536,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 	mPixelShaderConstantBuffer[mFrameIndex]->Bind(1);
 
 	// Calculate camera frustum
-	mCameraFrustum = Frustum(inCamera.mPos, inCamera.mForward, inCamera.mUp, camera_fovx, camera_fovy, camera_near, camera_far);
+	mCameraFrustum = Frustum(cam_pos, inCamera.mForward, inCamera.mUp, camera_fovx, camera_fovy, camera_near, camera_far);
 
 	// Calculate light frustum
 	mLightFrustum = Frustum(light_pos, light_fwd, light_up, light_fov, light_fov, light_near, light_far);

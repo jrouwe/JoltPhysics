@@ -474,15 +474,15 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 void CharacterBaseTest::GetInitialCamera(CameraState& ioState) const
 {
 	// This will become the local space offset, look down the x axis and slightly down
-	ioState.mPos = Vec3::sZero();
+	ioState.mPos = RVec3::sZero();
 	ioState.mForward = Vec3(10.0f, -2.0f, 0).Normalized();
 }
 
-Mat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
-	return Mat44::sTranslation(Vec3(GetCharacterPosition() + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd)); // TODO_DP
+	return RMat44::sTranslation(GetCharacterPosition() + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
 }
 
 void CharacterBaseTest::SaveState(StateRecorder &inStream) const

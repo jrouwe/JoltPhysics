@@ -82,7 +82,7 @@ void SixDOFConstraintTest::Initialize()
 
 void SixDOFConstraintTest::GetInitialCamera(CameraState &ioState) const 
 {
-	ioState.mPos = Vec3(4, 30, 4);
+	ioState.mPos = RVec3(4, 30, 4);
 	ioState.mForward = Vec3(-1, -1, -1).Normalized();
 }
 

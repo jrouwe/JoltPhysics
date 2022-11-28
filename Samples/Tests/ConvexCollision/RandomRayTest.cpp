@@ -28,7 +28,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(RandomRayTest)
 // Tests the CastRay function
 //-----------------------------------------------------------------------------
 template <typename A, typename Context>
-void RandomRayTest::TestRay(const char *inTestName, Vec3Arg inRenderOffset, const A &inA, const Context &inContext, float (*inCompareFunc)(const Context &inContext, Vec3Arg inRayOrigin, Vec3Arg inRayDirection))
+void RandomRayTest::TestRay(const char *inTestName, RVec3Arg inRenderOffset, const A &inA, const Context &inContext, float (*inCompareFunc)(const Context &inContext, Vec3Arg inRayOrigin, Vec3Arg inRayDirection))
 {
 	default_random_engine random(12345);
 	uniform_real_distribution<float> random_scale(-2.0f, 2.0f);
@@ -125,7 +125,7 @@ void RandomRayTest::TestRay(const char *inTestName, Vec3Arg inRenderOffset, cons
 void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	{
-		Vec3 render_offset(0, 0, 0);
+		RVec3 render_offset(0, 0, 0);
 		Sphere sphere(Vec3(0.1f, 0.2f, 0.3f), 1.1f);
 		mDebugRenderer->DrawSphere(render_offset + sphere.GetCenter(), sphere.GetRadius(), Color::sYellow);
 		TestRay<Sphere, Sphere>("Sphere", render_offset, sphere, sphere, [](const Sphere &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
@@ -134,10 +134,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	{
-		Vec3 render_offset(5, 0, 0);
+		RVec3 render_offset(5, 0, 0);
 		SphereShape sphere_shape(1.1f);
 	#ifdef JPH_DEBUG_RENDERER
-		sphere_shape.Draw(mDebugRenderer, RMat44::sTranslation(RVec3(render_offset)), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
+		sphere_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = sphere_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
@@ -147,9 +147,9 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	{
-		Vec3 render_offset(10, 0, 0);
+		RVec3 render_offset(10, 0, 0);
 		AABox box(Vec3(-0.9f, -1.0f, -1.1f), Vec3(0.8f, 0.9f, 1.0f));
-		mDebugRenderer->DrawBox(box.Transformed(Mat44::sTranslation(render_offset)), Color::sYellow);
+		mDebugRenderer->DrawBox(box.Transformed(Mat44::sTranslation(Vec3(render_offset))), Color::sYellow);
 		TestRay<AABox, AABox>("Box", render_offset, box, box, [](const AABox &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
 			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), inBox.mMin, inBox.mMax); 
 			return max(fraction, 0.0f);
@@ -157,10 +157,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	{			
-		Vec3 render_offset(15, 0, 0);
+		RVec3 render_offset(15, 0, 0);
 		BoxShape box_shape(Vec3(0.9f, 1.0f, 1.1f), 0.0f);
 	#ifdef JPH_DEBUG_RENDERER
-		box_shape.Draw(mDebugRenderer, RMat44::sTranslation(RVec3(render_offset)), Vec3::sReplicate(1.0f), Color::sYellow, false, false); // TODO_DP
+		box_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = box_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
@@ -171,10 +171,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	{			
-		Vec3 render_offset(20, 0, 0);
+		RVec3 render_offset(20, 0, 0);
 		CapsuleShape capsule_shape(1.1f, 0.6f);
 	#ifdef JPH_DEBUG_RENDERER
-		capsule_shape.Draw(mDebugRenderer, RMat44::sTranslation(RVec3(render_offset)), Vec3::sReplicate(1.0f), Color::sYellow, false, false); // TODO_DP
+		capsule_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = capsule_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
@@ -184,10 +184,10 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	{			
-		Vec3 render_offset(25, 0, 0);
+		RVec3 render_offset(25, 0, 0);
 		CylinderShape cylinder_shape(1.5f, 0.6f, 0.0f);
 	#ifdef JPH_DEBUG_RENDERER
-		cylinder_shape.Draw(mDebugRenderer, RMat44::sTranslation(RVec3(render_offset)), Vec3::sReplicate(1.0f), Color::sYellow, false, false); // TODO_DP
+		cylinder_shape.Draw(mDebugRenderer, RMat44::sTranslation(render_offset), Vec3::sReplicate(1.0f), Color::sYellow, false, false);
 	#endif // JPH_DEBUG_RENDERER
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = cylinder_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
@@ -197,7 +197,7 @@ void RandomRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	{			
-		Vec3 render_offset(30, 0, 0);
+		RVec3 render_offset(30, 0, 0);
 		TriangleConvexSupport triangle(Vec3(0.1f, 0.9f, 0.3f), Vec3(-0.9f, -0.5f, 0.2f), Vec3(0.7f, -0.3f, -0.1f));
 		mDebugRenderer->DrawTriangle(render_offset + triangle.mV1, render_offset + triangle.mV2, render_offset + triangle.mV3, Color::sYellow);
 		TestRay<TriangleConvexSupport, TriangleConvexSupport>("Triangle", render_offset, triangle, triangle, [](const TriangleConvexSupport &inTriangle, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 

@@ -52,8 +52,8 @@ private:
 		// Draw intersection between tetrahedron and surface
 		if (Shape::sDrawSubmergedVolumes)
 		{
-			DebugRenderer::sInstance->DrawTriangle(v4, v3, v2, Color::sGreen);
-			DebugRenderer::sInstance->DrawWireTriangle(v4, v3, v2, Color::sWhite);
+			DebugRenderer::sInstance->DrawTriangle(RVec3(v4), RVec3(v3), RVec3(v2), Color::sGreen); // TODO_DP
+			DebugRenderer::sInstance->DrawWireTriangle(RVec3(v4), RVec3(v3), RVec3(v2), Color::sWhite); // TODO_DP
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -75,10 +75,10 @@ private:
 		// Draw intersection between tetrahedron and surface
 		if (Shape::sDrawSubmergedVolumes)
 		{
-			DebugRenderer::sInstance->DrawTriangle(c, e, d, Color::sGreen);
-			DebugRenderer::sInstance->DrawTriangle(c, f, e, Color::sGreen);
-			DebugRenderer::sInstance->DrawWireTriangle(c, e, d, Color::sWhite);
-			DebugRenderer::sInstance->DrawWireTriangle(c, f, e, Color::sWhite);
+			DebugRenderer::sInstance->DrawTriangle(RVec3(c), RVec3(e), RVec3(d), Color::sGreen); // TODO_DP
+			DebugRenderer::sInstance->DrawTriangle(RVec3(c), RVec3(f), RVec3(e), Color::sGreen); // TODO_DP
+			DebugRenderer::sInstance->DrawWireTriangle(RVec3(c), RVec3(e), RVec3(d), Color::sWhite); // TODO_DP
+			DebugRenderer::sInstance->DrawWireTriangle(RVec3(c), RVec3(f), RVec3(e), Color::sWhite); // TODO_DP
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -109,8 +109,8 @@ private:
 		// Draw intersection between tetrahedron and surface
 		if (Shape::sDrawSubmergedVolumes)
 		{
-			DebugRenderer::sInstance->DrawTriangle(v3, v2, v1, Color::sGreen);
-			DebugRenderer::sInstance->DrawWireTriangle(v3, v2, v1, Color::sWhite);
+			DebugRenderer::sInstance->DrawTriangle(RVec3(v3), RVec3(v2), RVec3(v1), Color::sGreen); // TODO_DP
+			DebugRenderer::sInstance->DrawWireTriangle(RVec3(v3), RVec3(v2), RVec3(v1), Color::sWhite); // TODO_DP
 		}
 	#endif // JPH_DEBUG_RENDERER
 

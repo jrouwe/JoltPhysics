@@ -187,12 +187,12 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const 
 {
 	// Position camera behind car
-	Vec3 cam_tgt = Vec3(0, 0, 5);
-	ioState.mPos = Vec3(0, 2.5f, -5);
-	ioState.mForward = (cam_tgt - ioState.mPos).Normalized();
+	RVec3 cam_tgt = RVec3(0, 0, 5);
+	ioState.mPos = RVec3(0, 2.5f, -5);
+	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-Mat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
 	// Pivot is center of car and rotates with car around Y axis only
 	Vec3 fwd = mCarBody->GetRotation().RotateAxisZ();
@@ -204,7 +204,7 @@ Mat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCamer
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec3(mCarBody->GetPosition())); // TODO_DP
+	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
 }
 
 void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)

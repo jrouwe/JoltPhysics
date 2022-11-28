@@ -97,12 +97,12 @@ void SkeletonMapperTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 #ifdef JPH_DEBUG_RENDERER
 	// Draw animated skeleton
 	mAnimatedPose.Draw(*inParams.mPoseDrawSettings, mDebugRenderer);
-	mDebugRenderer->DrawText3D(mAnimatedPose.GetJointMatrix(0).GetTranslation(), "Animated", Color::sWhite, 0.2f);
+	mDebugRenderer->DrawText3D(mAnimatedPose.GetRootOffset() + mAnimatedPose.GetJointMatrix(0).GetTranslation(), "Animated", Color::sWhite, 0.2f);
 
 	// Draw mapped skeleton
 	RMat44 offset = RMat44::sTranslation(RVec3(1.0f, 0, 0));
 	mRagdollPose.Draw(*inParams.mPoseDrawSettings, mDebugRenderer, offset);
-	mDebugRenderer->DrawText3D(offset * mAnimatedPose.GetJointMatrix(0).GetTranslation(), "Reverse Mapped", Color::sWhite, 0.2f);
+	mDebugRenderer->DrawText3D(offset * (mAnimatedPose.GetRootOffset() + mAnimatedPose.GetJointMatrix(0).GetTranslation()), "Reverse Mapped", Color::sWhite, 0.2f);
 #endif // JPH_DEBUG_RENDERER
 
 	// Get ragdoll pose in model space

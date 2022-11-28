@@ -9,14 +9,14 @@
 
 JPH_NAMESPACE_BEGIN
 
-void DebugRendererRecorder::DrawLine(const Float3 &inFrom, const Float3 &inTo, ColorArg inColor) 
+void DebugRendererRecorder::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) 
 { 
 	lock_guard lock(mMutex);
 
 	mCurrentFrame.mLines.push_back({ inFrom, inTo, inColor });
 }
 
-void DebugRendererRecorder::DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor)
+void DebugRendererRecorder::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
 {
 	lock_guard lock(mMutex);
 
@@ -61,7 +61,7 @@ DebugRenderer::Batch DebugRendererRecorder::CreateTriangleBatch(const Vertex *in
 	return new BatchImpl(batch_id);
 }
 
-void DebugRendererRecorder::DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRendererRecorder::DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	lock_guard lock(mMutex);
 
@@ -92,7 +92,7 @@ void DebugRendererRecorder::DrawGeometry(Mat44Arg inModelMatrix, const AABox &in
 	mCurrentFrame.mGeometries.push_back({ inModelMatrix, inModelColor, geometry_id, inCullMode, inCastShadow, inDrawMode });
 }
 
-void DebugRendererRecorder::DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
+void DebugRendererRecorder::DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
 { 	
 	lock_guard lock(mMutex);  
 

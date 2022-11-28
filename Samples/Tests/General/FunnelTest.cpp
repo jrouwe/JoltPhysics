@@ -135,6 +135,7 @@ void FunnelTest::Initialize()
 
 void FunnelTest::GetInitialCamera(CameraState &ioState) const
 {
-	ioState.mPos = Vec3(50, 100, 50);
-	ioState.mForward = (Vec3(0, 50, 0) - ioState.mPos).Normalized();
+	RVec3 cam_tgt = RVec3(0, 50, 0);
+	ioState.mPos = RVec3(50, 100, 50);
+	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }

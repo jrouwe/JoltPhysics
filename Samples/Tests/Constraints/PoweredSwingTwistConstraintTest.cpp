@@ -91,7 +91,7 @@ void PoweredSwingTwistConstraintTest::PrePhysicsUpdate(const PreUpdateParams &in
 
 void PoweredSwingTwistConstraintTest::GetInitialCamera(CameraState &ioState) const 
 {
-	ioState.mPos = Vec3(4, 25, 4);
+	ioState.mPos = RVec3(4, 25, 4);
 	ioState.mForward = Vec3(-1, -1, -1).Normalized();
 }
 

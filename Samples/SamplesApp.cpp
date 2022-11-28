@@ -965,7 +965,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					{
 						Shape::SupportingFace face;
 						hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
-						mDebugRenderer->DrawWirePolygon(face, Color::sWhite, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), face, Color::sWhite, 0.01f);
 					}
 				}
 			}
@@ -1057,7 +1057,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						{
 							Shape::SupportingFace face;
 							hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
-							mDebugRenderer->DrawWirePolygon(face, Color::sWhite, 0.01f);
+							mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), face, Color::sWhite, 0.01f);
 						}
 					}
 				}
@@ -1160,8 +1160,10 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						const Body &hit_body = lock.GetBody();
 
 						// Draw contact
-						mDebugRenderer->DrawMarker(hit.mContactPointOn1, Color::sGreen, 0.1f);
-						mDebugRenderer->DrawMarker(hit.mContactPointOn2, Color::sRed, 0.1f);
+						RVec3 contact_position1(hit.mContactPointOn1);
+						RVec3 contact_position2(hit.mContactPointOn2);
+						mDebugRenderer->DrawMarker(contact_position1, Color::sGreen, 0.1f);
+						mDebugRenderer->DrawMarker(contact_position2, Color::sRed, 0.1f);
 
 						Vec3 pen_axis = hit.mPenetrationAxis;
 						float pen_axis_len = pen_axis.Length();
@@ -1170,19 +1172,19 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 							pen_axis /= pen_axis_len;
 
 							// Draw penetration axis with length of the penetration
-							mDebugRenderer->DrawArrow(hit.mContactPointOn2, hit.mContactPointOn2 + pen_axis * hit.mPenetrationDepth, Color::sYellow, 0.01f);
+							mDebugRenderer->DrawArrow(contact_position2, contact_position2 + pen_axis * hit.mPenetrationDepth, Color::sYellow, 0.01f);
 
 							// Draw normal (flipped so it points towards body 1)
-							mDebugRenderer->DrawArrow(hit.mContactPointOn2, hit.mContactPointOn2 - pen_axis, Color::sOrange, 0.01f);
+							mDebugRenderer->DrawArrow(contact_position2, contact_position2 - pen_axis, Color::sOrange, 0.01f);
 						}
 
 						// Draw material
 						const PhysicsMaterial *material2 = hit_body.GetShape()->GetMaterial(hit.mSubShapeID2);
-						mDebugRenderer->DrawText3D(hit.mContactPointOn2, material2->GetDebugName());
+						mDebugRenderer->DrawText3D(contact_position2, material2->GetDebugName());
 
 						// Draw faces
-						mDebugRenderer->DrawWirePolygon(hit.mShape1Face, Color::sYellow, 0.01f);
-						mDebugRenderer->DrawWirePolygon(hit.mShape2Face, Color::sRed, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape1Face, Color::sYellow, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape2Face, Color::sRed, 0.01f);
 					}
 				}
 			}
@@ -1268,8 +1270,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					#endif // JPH_DEBUG_RENDERER
 
 						// Draw normal
-						Vec3 contact_position1 = hit.mContactPointOn1;
-						Vec3 contact_position2 = hit.mContactPointOn2;
+						RVec3 contact_position1(hit.mContactPointOn1);
+						RVec3 contact_position2(hit.mContactPointOn2);
 						Vec3 normal = hit.mPenetrationAxis.Normalized();
 						mDebugRenderer->DrawArrow(contact_position2, contact_position2 - normal, color, 0.01f); // Flip to make it point towards the cast body
 
@@ -1287,8 +1289,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						mDebugRenderer->DrawText3D(position, material2->GetDebugName());
 
 						// Draw faces
-						mDebugRenderer->DrawWirePolygon(hit.mShape1Face, Color::sYellow, 0.01f);
-						mDebugRenderer->DrawWirePolygon(hit.mShape2Face, Color::sRed, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape1Face, Color::sYellow, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape2Face, Color::sRed, 0.01f);
 					}
 				}
 
@@ -1364,8 +1366,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						Vec3 v1(v[0]), v2(v[1]), v3(v[2]);
 						Vec3 triangle_center = (v1 + v2 + v3) / 3.0f;
 						Vec3 triangle_normal = (v2 - v1).Cross(v3 - v1).Normalized();
-						mDebugRenderer->DrawWireTriangle(v1, v2, v3, (*m)->GetDebugColor());
-						mDebugRenderer->DrawArrow(triangle_center, triangle_center + triangle_normal, Color::sGreen, 0.01f);
+						mDebugRenderer->DrawWireTriangle(RVec3(v1), RVec3(v2), RVec3(v3), (*m)->GetDebugColor()); // TODO_DP
+						mDebugRenderer->DrawArrow(RVec3(triangle_center), RVec3(triangle_center) + triangle_normal, Color::sGreen, 0.01f); // TODO_DP
 					}
 
 					had_hit = true;
@@ -2219,14 +2221,14 @@ void SamplesApp::ValidateState(StateRecorderImpl &inExpectedState)
 void SamplesApp::GetInitialCamera(CameraState &ioState) const
 {
 	// Default if the test doesn't override it
-	ioState.mPos = GetWorldScale() * Vec3(30, 10, 30);
-	ioState.mForward = -ioState.mPos.Normalized();
+	ioState.mPos = GetWorldScale() * RVec3(30, 10, 30);
+	ioState.mForward = -Vec3(ioState.mPos).Normalized();
 	ioState.mFarPlane = 1000.0f;
 
 	mTest->GetInitialCamera(ioState);
 }
 
-Mat44 SamplesApp::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+RMat44 SamplesApp::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 { 
 	return mTest->GetCameraPivot(inCameraHeading, inCameraPitch); 
 }

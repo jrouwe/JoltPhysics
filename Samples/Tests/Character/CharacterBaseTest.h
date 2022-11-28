@@ -25,7 +25,7 @@ public:
 	virtual void			GetInitialCamera(CameraState &ioState) const override;
 
 	// Override to specify a camera pivot point and orientation (world space)
-	virtual Mat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+	virtual RMat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
 
 	// Optional settings menu
 	virtual bool			HasSettingsMenu() const override							{ return true; }

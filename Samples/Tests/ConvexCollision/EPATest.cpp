@@ -8,7 +8,7 @@
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Geometry/ConvexSupport.h>
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
-#include <Renderer/DebugRendererImp.h>
+#include <Utils/DebugRendererSP.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(EPATest) 
 { 
@@ -28,8 +28,8 @@ void EPATest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 bool EPATest::CollideBoxSphere(Mat44Arg inMatrix, const AABox &inBox, const Sphere &inSphere) const
 {
 	// Draw the box and shere
-	mDebugRenderer->DrawBox(inMatrix, inBox, Color::sGrey);
-	mDebugRenderer->DrawSphere(inMatrix * inSphere.GetCenter(), inSphere.GetRadius(), Color::sGrey); 
+	DebugDrawBox(mDebugRenderer, inMatrix, inBox, Color::sGrey);
+	DebugDrawSphere(mDebugRenderer, inMatrix * inSphere.GetCenter(), inSphere.GetRadius(), Color::sGrey); 
 
 	// Transform the box and sphere according to inMatrix
 	TransformedConvexObject<AABox> transformed_box(inMatrix, inBox);
@@ -43,9 +43,9 @@ bool EPATest::CollideBoxSphere(Mat44Arg inMatrix, const AABox &inBox, const Sphe
 	// Draw iterative solution
 	if (intersect1)
 	{
-		mDebugRenderer->DrawMarker(pa1, Color::sRed, 1.0f);
-		mDebugRenderer->DrawMarker(pb1, Color::sGreen, 1.0f);
-		mDebugRenderer->DrawArrow(pb1 + Vec3(0, 1, 0), pb1 + Vec3(0, 1, 0) + v1, Color::sYellow, 0.1f);
+		DebugDrawMarker(mDebugRenderer, pa1, Color::sRed, 1.0f);
+		DebugDrawMarker(mDebugRenderer, pb1, Color::sGreen, 1.0f);
+		DebugDrawArrow(mDebugRenderer, pb1 + Vec3(0, 1, 0), pb1 + Vec3(0, 1, 0) + v1, Color::sYellow, 0.1f);
 	}
 
 	// Calculate analytical solution
@@ -64,8 +64,8 @@ bool EPATest::CollideBoxSphere(Mat44Arg inMatrix, const AABox &inBox, const Sphe
 		pb2 = inMatrix * pb2;
 
 		// Draw analytical solution
-		mDebugRenderer->DrawMarker(pa2, Color::sOrange, 1.0f);
-		mDebugRenderer->DrawMarker(pb2, Color::sYellow, 1.0f);
+		DebugDrawMarker(mDebugRenderer, pa2, Color::sOrange, 1.0f);
+		DebugDrawMarker(mDebugRenderer, pb2, Color::sYellow, 1.0f);
 
 		// Check angle between v1 and v2
 		float dot = v1.Dot(v2);
