@@ -89,6 +89,9 @@ public:
 	/// Pre multiply by translation matrix: result = this * Mat44::sTranslation(inTranslation)
 	JPH_INLINE DMat44			PreTranslated(Vec3Arg inTranslation) const;
 
+	/// Pre multiply by translation matrix: result = this * Mat44::sTranslation(inTranslation)
+	JPH_INLINE DMat44			PreTranslated(DVec3Arg inTranslation) const;
+
 	/// Post multiply by translation matrix: result = Mat44::sTranslation(inTranslation) * this (i.e. add inTranslation to the 4-th column)
 	JPH_INLINE DMat44			PostTranslated(Vec3Arg inTranslation) const;
 

@@ -134,6 +134,11 @@ DMat44 DMat44::PreTranslated(Vec3Arg inTranslation) const
 	return DMat44(mCol[0], mCol[1], mCol[2], GetTranslation() + Multiply3x3(inTranslation));
 }
 
+DMat44 DMat44::PreTranslated(DVec3Arg inTranslation) const
+{
+	return DMat44(mCol[0], mCol[1], mCol[2], GetTranslation() + Multiply3x3(inTranslation));
+}
+
 DMat44 DMat44::PostTranslated(Vec3Arg inTranslation) const
 {
 	return DMat44(mCol[0], mCol[1], mCol[2], GetTranslation() + inTranslation);
