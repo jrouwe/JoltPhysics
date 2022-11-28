@@ -77,6 +77,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(ManifoldReductionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(CenterOfMassTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(HeavyOnLightTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(HighSpeedTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(ChangeMotionQualityTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeMotionTypeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeObjectLayerTest)
@@ -108,6 +109,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Center Of Mass",						JPH_RTTI(CenterOfMassTest) },
 	{ "Heavy On Light",						JPH_RTTI(HeavyOnLightTest) },
 	{ "High Speed",							JPH_RTTI(HighSpeedTest) },
+	{ "Change Motion Quality",				JPH_RTTI(ChangeMotionQualityTest) },
 	{ "Change Motion Type",					JPH_RTTI(ChangeMotionTypeTest) },
 	{ "Change Shape",						JPH_RTTI(ChangeShapeTest) },
 	{ "Change Object Layer",				JPH_RTTI(ChangeObjectLayerTest) },
