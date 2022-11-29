@@ -875,7 +875,7 @@ RefConst<Shape> SamplesApp::CreateShootObjectShape()
 void SamplesApp::ShootObject()
 {
 	// Configure body
-	BodyCreationSettings creation_settings(CreateShootObjectShape(), RVec3(GetCamera().mPos), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING); // TODO_DP
+	BodyCreationSettings creation_settings(CreateShootObjectShape(), GetCamera().mPos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	creation_settings.mMotionQuality = mShootObjectMotionQuality;
 	creation_settings.mFriction = mShootObjectFriction;
 	creation_settings.mRestitution = mShootObjectRestitution;
@@ -888,7 +888,7 @@ void SamplesApp::ShootObject()
 bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPosition, BodyID &outID)
 {
 	const CameraState &camera = GetCamera();
-	RVec3 start = RVec3(camera.mPos); // TODO_DP
+	RVec3 start = camera.mPos;
 	Vec3 direction = inProbeLength * camera.mForward;
 
 	// Clear output
@@ -1698,7 +1698,7 @@ void SamplesApp::UpdateDebug()
 		else
 		{
 			// Else update position of anchor
-			bi.SetPositionAndRotation(mDragAnchor->GetID(), RVec3(GetCamera().mPos + cDragRayLength * mDragFraction * GetCamera().mForward), Quat::sIdentity(), EActivation::DontActivate); // TODO_DP
+			bi.SetPositionAndRotation(mDragAnchor->GetID(), GetCamera().mPos + cDragRayLength * mDragFraction * GetCamera().mForward, Quat::sIdentity(), EActivation::DontActivate);
 
 			// Activate other body
 			bi.ActivateBody(mDragBody);
