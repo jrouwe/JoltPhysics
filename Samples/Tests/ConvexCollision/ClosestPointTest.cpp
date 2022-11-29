@@ -156,24 +156,24 @@ void ClosestPointTest::TestLine(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB)
 	uint32 set;
 	Vec3 closest = ClosestPoint::GetClosestPointOnLine(a, b, set) + inPosition;
 
-	DebugDrawLine(mDebugRenderer, inA, inB, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inA, inB, Color::sWhite);
 
-	DebugDrawMarker(mDebugRenderer, closest, Color::sRed, 0.1f);
+	DrawMarkerSP(mDebugRenderer, closest, Color::sRed, 0.1f);
 
 	if (set & 0b0001)
-		DebugDrawMarker(mDebugRenderer, inA, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inA, Color::sYellow, 0.5f);
 	if (set & 0b0010)
-		DebugDrawMarker(mDebugRenderer, inB, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inB, Color::sYellow, 0.5f);
 
 	Vec3 a2 = inA - closest;
 	Vec3 b2 = inB - closest;
 
 	float u, v;
 	ClosestPoint::GetBaryCentricCoordinates(a2, b2, u, v);
-	DebugDrawWireSphere(mDebugRenderer, u * inA + v * inB, 0.05f, Color::sGreen);
+	DrawWireSphereSP(mDebugRenderer, u * inA + v * inB, 0.05f, Color::sGreen);
 
-	DebugDrawText3D(mDebugRenderer, inA, "a");
-	DebugDrawText3D(mDebugRenderer, inB, "b");
+	DrawText3DSP(mDebugRenderer, inA, "a");
+	DrawText3DSP(mDebugRenderer, inB, "b");
 }
 
 void ClosestPointTest::TestTri(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB, Vec3Arg inC)
@@ -185,20 +185,20 @@ void ClosestPointTest::TestTri(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB, Vec
 	uint32 set;
 	Vec3 closest = ClosestPoint::GetClosestPointOnTriangle(a, b, c, set) + inPosition;
 
-	DebugDrawLine(mDebugRenderer, inA, inB, Color::sWhite);
-	DebugDrawLine(mDebugRenderer, inA, inC, Color::sWhite);
-	DebugDrawLine(mDebugRenderer, inB, inC, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inA, inB, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inA, inC, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inB, inC, Color::sWhite);
 
-	DebugDrawTriangle(mDebugRenderer, inA, inB, inC, Color::sGrey);
+	DrawTriangleSP(mDebugRenderer, inA, inB, inC, Color::sGrey);
 
-	DebugDrawMarker(mDebugRenderer, closest, Color::sRed, 0.1f);
+	DrawMarkerSP(mDebugRenderer, closest, Color::sRed, 0.1f);
 
 	if (set & 0b0001)
-		DebugDrawMarker(mDebugRenderer, inA, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inA, Color::sYellow, 0.5f);
 	if (set & 0b0010)
-		DebugDrawMarker(mDebugRenderer, inB, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inB, Color::sYellow, 0.5f);
 	if (set & 0b0100)
-		DebugDrawMarker(mDebugRenderer, inC, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inC, Color::sYellow, 0.5f);
 
 	Vec3 a2 = inA - closest;
 	Vec3 b2 = inB - closest;
@@ -206,11 +206,11 @@ void ClosestPointTest::TestTri(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB, Vec
 
 	float u, v, w;
 	ClosestPoint::GetBaryCentricCoordinates(a2, b2, c2, u, v, w);
-	DebugDrawWireSphere(mDebugRenderer, u * inA + v * inB + w * inC, 0.05f, Color::sGreen);
+	DrawWireSphereSP(mDebugRenderer, u * inA + v * inB + w * inC, 0.05f, Color::sGreen);
 
-	DebugDrawText3D(mDebugRenderer, inA, "a");
-	DebugDrawText3D(mDebugRenderer, inB, "b");
-	DebugDrawText3D(mDebugRenderer, inC, "c");
+	DrawText3DSP(mDebugRenderer, inA, "a");
+	DrawText3DSP(mDebugRenderer, inB, "b");
+	DrawText3DSP(mDebugRenderer, inC, "c");
 }
 
 void ClosestPointTest::TestTetra(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, Vec3Arg inD)
@@ -223,31 +223,31 @@ void ClosestPointTest::TestTetra(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB, V
 	uint32 set;
 	Vec3 closest = ClosestPoint::GetClosestPointOnTetrahedron(a, b, c, d, set) + inPosition;
 
-	DebugDrawLine(mDebugRenderer, inA, inB, Color::sWhite);
-	DebugDrawLine(mDebugRenderer, inA, inC, Color::sWhite);
-	DebugDrawLine(mDebugRenderer, inA, inD, Color::sWhite);
-	DebugDrawLine(mDebugRenderer, inB, inC, Color::sWhite);
-	DebugDrawLine(mDebugRenderer, inB, inD, Color::sWhite);
-	DebugDrawLine(mDebugRenderer, inC, inD, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inA, inB, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inA, inC, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inA, inD, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inB, inC, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inB, inD, Color::sWhite);
+	DrawLineSP(mDebugRenderer, inC, inD, Color::sWhite);
 
-	DebugDrawTriangle(mDebugRenderer, inA, inC, inB, Color::sGrey);
-	DebugDrawTriangle(mDebugRenderer, inA, inD, inC, Color::sGrey);
-	DebugDrawTriangle(mDebugRenderer, inA, inB, inD, Color::sGrey);
-	DebugDrawTriangle(mDebugRenderer, inB, inC, inD, Color::sGrey);
+	DrawTriangleSP(mDebugRenderer, inA, inC, inB, Color::sGrey);
+	DrawTriangleSP(mDebugRenderer, inA, inD, inC, Color::sGrey);
+	DrawTriangleSP(mDebugRenderer, inA, inB, inD, Color::sGrey);
+	DrawTriangleSP(mDebugRenderer, inB, inC, inD, Color::sGrey);
 
-	DebugDrawMarker(mDebugRenderer, closest, Color::sRed, 0.1f);
+	DrawMarkerSP(mDebugRenderer, closest, Color::sRed, 0.1f);
 
 	if (set & 0b0001)
-		DebugDrawMarker(mDebugRenderer, inA, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inA, Color::sYellow, 0.5f);
 	if (set & 0b0010)
-		DebugDrawMarker(mDebugRenderer, inB, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inB, Color::sYellow, 0.5f);
 	if (set & 0b0100)
-		DebugDrawMarker(mDebugRenderer, inC, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inC, Color::sYellow, 0.5f);
 	if (set & 0b1000)
-		DebugDrawMarker(mDebugRenderer, inD, Color::sYellow, 0.5f);
+		DrawMarkerSP(mDebugRenderer, inD, Color::sYellow, 0.5f);
 
-	DebugDrawText3D(mDebugRenderer, inA, "a");
-	DebugDrawText3D(mDebugRenderer, inB, "b");
-	DebugDrawText3D(mDebugRenderer, inC, "c");
-	DebugDrawText3D(mDebugRenderer, inD, "d");
+	DrawText3DSP(mDebugRenderer, inA, "a");
+	DrawText3DSP(mDebugRenderer, inB, "b");
+	DrawText3DSP(mDebugRenderer, inC, "c");
+	DrawText3DSP(mDebugRenderer, inD, "d");
 }

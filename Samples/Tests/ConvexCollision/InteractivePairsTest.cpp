@@ -114,7 +114,7 @@ void InteractivePairsTest::TestBoxVsBox(Vec3Arg inTranslationA, Vec3Arg inRotati
 	EPAPenetrationDepth pen_depth;
 	Vec3 v = Vec3::sAxisX(), pa, pb;
 
-	DebugDrawBox(mDebugRenderer, mat_a, inA, Color::sWhite);
+	DrawBoxSP(mDebugRenderer, mat_a, inA, Color::sWhite);
 
 	AABox widened_a = inA;
 	widened_a.ExpandBy(Vec3::sReplicate(inConvexRadiusA));
@@ -122,28 +122,28 @@ void InteractivePairsTest::TestBoxVsBox(Vec3Arg inTranslationA, Vec3Arg inRotati
 	AABox widened_b = inB;
 	widened_b.ExpandBy(Vec3::sReplicate(inConvexRadiusB));
 
-	DebugDrawBox(mDebugRenderer, mat_a, inA, Color::sWhite);
+	DrawBoxSP(mDebugRenderer, mat_a, inA, Color::sWhite);
 	if (inConvexRadiusA > 0.0f)
-		DebugDrawWireBox(mDebugRenderer, mat_a, widened_a, Color::sWhite);
+		DrawWireBoxSP(mDebugRenderer, mat_a, widened_a, Color::sWhite);
 
 	AddConvexRadius<TransformedConvexObject<AABox>> a_inc(a, inConvexRadiusA);
 	AddConvexRadius<TransformedConvexObject<AABox>> b_inc(b, inConvexRadiusB);
 
 	if (pen_depth.GetPenetrationDepth(a, a_inc, inConvexRadiusA, b, b_inc, inConvexRadiusB, 1.0e-4f, FLT_EPSILON, v, pa, pb))
 	{
-		DebugDrawBox(mDebugRenderer, mat_b, inB, Color::sRed);
+		DrawBoxSP(mDebugRenderer, mat_b, inB, Color::sRed);
 		if (inConvexRadiusB > 0.0f)
-			DebugDrawWireBox(mDebugRenderer, mat_b, widened_b, Color::sRed);
-		DebugDrawMarker(mDebugRenderer, pa, Color::sYellow, 2.0f);
-		DebugDrawMarker(mDebugRenderer, pb, Color::sCyan, 2.0f);
+			DrawWireBoxSP(mDebugRenderer, mat_b, widened_b, Color::sRed);
+		DrawMarkerSP(mDebugRenderer, pa, Color::sYellow, 2.0f);
+		DrawMarkerSP(mDebugRenderer, pb, Color::sCyan, 2.0f);
 	}
 	else
 	{
-		DebugDrawBox(mDebugRenderer, mat_b, inB, Color::sGreen);
+		DrawBoxSP(mDebugRenderer, mat_b, inB, Color::sGreen);
 		if (inConvexRadiusB > 0.0f)
-			DebugDrawWireBox(mDebugRenderer, mat_b, widened_b, Color::sGreen);
+			DrawWireBoxSP(mDebugRenderer, mat_b, widened_b, Color::sGreen);
 	}
-	DebugDrawArrow(mDebugRenderer, inTranslationB + Vec3(0, 2, 0), inTranslationB + v + Vec3(0, 2, 0), Color::sOrange, 0.05f);
+	DrawArrowSP(mDebugRenderer, inTranslationB + Vec3(0, 2, 0), inTranslationB + v + Vec3(0, 2, 0), Color::sOrange, 0.05f);
 }
 
 void InteractivePairsTest::TestSphereVsBox(Vec3Arg inTranslationA, float inRadiusA, Vec3Arg inTranslationB, Vec3Arg inRotationB, float inConvexRadiusB, const AABox &inB)
@@ -158,25 +158,25 @@ void InteractivePairsTest::TestSphereVsBox(Vec3Arg inTranslationA, float inRadiu
 	EPAPenetrationDepth pen_depth;
 	Vec3 v = Vec3::sAxisX(), pa, pb;
 
-	DebugDrawSphere(mDebugRenderer, inTranslationA, inRadiusA, Color::sWhite);
+	DrawSphereSP(mDebugRenderer, inTranslationA, inRadiusA, Color::sWhite);
 
 	AddConvexRadius<TransformedConvexObject<AABox>> b_inc(b, inConvexRadiusB);
 
 	if (pen_depth.GetPenetrationDepth(s, s, 0.0f, b, b_inc, inConvexRadiusB, 1.0e-4f, FLT_EPSILON, v, pa, pb))
 	{
-		DebugDrawBox(mDebugRenderer, mat_b, inB, Color::sRed);
+		DrawBoxSP(mDebugRenderer, mat_b, inB, Color::sRed);
 		if (inConvexRadiusB > 0.0f)
-			DebugDrawWireBox(mDebugRenderer, mat_b, widened_b, Color::sRed);
-		DebugDrawMarker(mDebugRenderer, pa, Color::sYellow, 2.0f);
-		DebugDrawMarker(mDebugRenderer, pb, Color::sCyan, 2.0f);
+			DrawWireBoxSP(mDebugRenderer, mat_b, widened_b, Color::sRed);
+		DrawMarkerSP(mDebugRenderer, pa, Color::sYellow, 2.0f);
+		DrawMarkerSP(mDebugRenderer, pb, Color::sCyan, 2.0f);
 	}
 	else
 	{
-		DebugDrawBox(mDebugRenderer, mat_b, inB, Color::sGreen);
+		DrawBoxSP(mDebugRenderer, mat_b, inB, Color::sGreen);
 		if (inConvexRadiusB > 0.0f)
-			DebugDrawWireBox(mDebugRenderer, mat_b, widened_b, Color::sGreen);
+			DrawWireBoxSP(mDebugRenderer, mat_b, widened_b, Color::sGreen);
 	}
-	DebugDrawArrow(mDebugRenderer, inTranslationB + Vec3(0, 2, 0), inTranslationB + v + Vec3(0, 2, 0), Color::sOrange, 0.05f);
+	DrawArrowSP(mDebugRenderer, inTranslationB + Vec3(0, 2, 0), inTranslationB + v + Vec3(0, 2, 0), Color::sOrange, 0.05f);
 }
 
 void InteractivePairsTest::TestSphereVsSphere(Vec3Arg inTranslationA, float inRadiusA, Vec3Arg inTranslationB, float inRadiusB, bool inTreatSphereAsPointWithConvexRadius)
@@ -185,9 +185,9 @@ void InteractivePairsTest::TestSphereVsSphere(Vec3Arg inTranslationA, float inRa
 	Sphere s2(inTranslationB, inRadiusB);
 
 	if (inTreatSphereAsPointWithConvexRadius)
-		DebugDrawWireSphere(mDebugRenderer, s1.GetCenter(), s1.GetRadius(), Color::sWhite);
+		DrawWireSphereSP(mDebugRenderer, s1.GetCenter(), s1.GetRadius(), Color::sWhite);
 	else
-		DebugDrawSphere(mDebugRenderer, s1.GetCenter(), s1.GetRadius(), Color::sWhite);
+		DrawSphereSP(mDebugRenderer, s1.GetCenter(), s1.GetRadius(), Color::sWhite);
 
 	bool intersects;
 	EPAPenetrationDepth pen_depth;
@@ -200,18 +200,18 @@ void InteractivePairsTest::TestSphereVsSphere(Vec3Arg inTranslationA, float inRa
 	if (intersects)
 	{
 		if (inTreatSphereAsPointWithConvexRadius)
-			DebugDrawWireSphere(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sRed);
+			DrawWireSphereSP(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sRed);
 		else
-			DebugDrawSphere(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sRed);
-		DebugDrawMarker(mDebugRenderer, pa, Color::sYellow, 2.0f);
-		DebugDrawMarker(mDebugRenderer, pb, Color::sCyan, 2.0f);
+			DrawSphereSP(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sRed);
+		DrawMarkerSP(mDebugRenderer, pa, Color::sYellow, 2.0f);
+		DrawMarkerSP(mDebugRenderer, pb, Color::sCyan, 2.0f);
 	}
 	else
 	{
 		if (inTreatSphereAsPointWithConvexRadius)
-			DebugDrawWireSphere(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sGreen);
+			DrawWireSphereSP(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sGreen);
 		else
-			DebugDrawSphere(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sGreen);
+			DrawSphereSP(mDebugRenderer, s2.GetCenter(), s2.GetRadius(), Color::sGreen);
 	}
-	DebugDrawArrow(mDebugRenderer, inTranslationB + Vec3(0, 2, 0), inTranslationB + v + Vec3(0, 2, 0), Color::sOrange, 0.05f);
+	DrawArrowSP(mDebugRenderer, inTranslationB + Vec3(0, 2, 0), inTranslationB + v + Vec3(0, 2, 0), Color::sOrange, 0.05f);
 }

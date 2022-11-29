@@ -207,8 +207,8 @@ void HeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	if (mHeightField->ProjectOntoSurface(test_pos, surface_pos, sub_shape_id))
 	{
 		Vec3 surface_normal = mHeightField->GetSurfaceNormal(sub_shape_id, surface_pos);
-		DebugDrawMarker(mDebugRenderer, surface_pos, Color::sWhite, 1.0f);
-		DebugDrawArrow(mDebugRenderer, surface_pos, surface_pos + surface_normal, Color::sRed, 0.1f);
+		DrawMarkerSP(mDebugRenderer, surface_pos, Color::sWhite, 1.0f);
+		DrawArrowSP(mDebugRenderer, surface_pos, surface_pos + surface_normal, Color::sRed, 0.1f);
 	}
 
 	// Draw the original uncompressed terrain
@@ -231,7 +231,7 @@ void HeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				const float cMaxError = 0.1f;
 				float error = (original - compressed).Length();
 				uint8 c = uint8(round(255.0f * min(error / cMaxError, 1.0f)));
-				DebugDrawMarker(mDebugRenderer, original, Color(c, 255 - c, 0, 255), 0.1f);
+				DrawMarkerSP(mDebugRenderer, original, Color(c, 255 - c, 0, 255), 0.1f);
 			}
 }
 

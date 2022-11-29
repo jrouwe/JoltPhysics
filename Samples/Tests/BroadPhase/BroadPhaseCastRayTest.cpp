@@ -52,6 +52,6 @@ void BroadPhaseCastRayTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Draw results
 	for (int i = 0; i < num_hits; ++i)
-		DebugDrawMarker(mDebugRenderer, ray.GetPointOnRay(results[i].mFraction), Color::sGreen, 10.0f);
-	DebugDrawLine(mDebugRenderer, ray.mOrigin, ray.mOrigin + ray.mDirection, Color::sRed);
+		DrawMarkerSP(mDebugRenderer, ray.GetPointOnRay(results[i].mFraction), Color::sGreen, 10.0f);
+	DrawLineSP(mDebugRenderer, ray.mOrigin, ray.mOrigin + ray.mDirection, Color::sRed);
 }

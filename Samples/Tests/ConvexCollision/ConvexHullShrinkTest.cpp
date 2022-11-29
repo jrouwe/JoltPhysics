@@ -162,8 +162,8 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		if (max_error > settings.mMaxErrorConvexRadius)
 		{
 			Trace("%d, %f, %f", mIteration - 1, (double)convex_radius, (double)max_error);
-			DebugDrawMarker(mDebugRenderer, max_error_support_point, Color::sPurple, 0.1f);
-			DebugDrawArrow(mDebugRenderer, max_error_support_point, max_error_support_point - max_error * planes[max_error_plane].GetNormal(), Color::sPurple, 0.01f);
+			DrawMarkerSP(mDebugRenderer, max_error_support_point, Color::sPurple, 0.1f);
+			DrawArrowSP(mDebugRenderer, max_error_support_point, max_error_support_point - max_error * planes[max_error_plane].GetNormal(), Color::sPurple, 0.01f);
 		}
 	}
 
