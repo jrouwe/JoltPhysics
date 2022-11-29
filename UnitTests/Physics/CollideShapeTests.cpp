@@ -45,23 +45,23 @@ TEST_SUITE("CollideShapeTests")
 	TEST_CASE("TestCollideShapeSphere")
 	{
 		// Locations of test sphere
-		static const Vec3 cPosition1A(10.0f, 11.0f, 12.0f);
-		static const Vec3 cPosition1B(10.0f, 21.0f, 12.0f);
+		static const RVec3 cPosition1A(10.0f, 11.0f, 12.0f);
+		static const RVec3 cPosition1B(10.0f, 21.0f, 12.0f);
 		static const float cRadius1 = 2.0f;
 
 		// Locations of sphere in the physics system
-		static const Vec3 cPosition2A(13.0f, 11.0f, 12.0f);
-		static const Vec3 cPosition2B(13.0f, 22.0f, 12.0f);
+		static const RVec3 cPosition2A(13.0f, 11.0f, 12.0f);
+		static const RVec3 cPosition2B(13.0f, 22.0f, 12.0f);
 		static const float cRadius2 = 1.5f;
 
 		// Create sphere to test with (shape 1)
 		Ref<Shape> shape1 = new SphereShape(cRadius1);
 		Mat44 shape1_com = Mat44::sTranslation(shape1->GetCenterOfMass());
-		RMat44 shape1_transform(Mat44::sTranslation(cPosition1A) * Mat44::sRotationX(0.1f * JPH_PI) * shape1_com);
+		RMat44 shape1_transform = RMat44::sTranslation(cPosition1A) * Mat44::sRotationX(0.1f * JPH_PI) * shape1_com;
 
 		// Create sphere to collide against (shape 2)
 		PhysicsTestContext c;
-		Body &body2 = c.CreateSphere(RVec3(cPosition2A), cRadius2, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING); // TODO_DP
+		Body &body2 = c.CreateSphere(cPosition2A, cRadius2, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING);
 
 		// Filters
 		SpecifiedBroadPhaseLayerFilter broadphase_moving_filter(BroadPhaseLayers::MOVING);
@@ -100,7 +100,7 @@ TEST_SUITE("CollideShapeTests")
 			virtual void	AddHit(const CollideShapeResult &inResult) override
 			{
 				CHECK(mBody2.GetID() == GetContext()->mBodyID);
-				sCompareCollideShapeResultSphere(cPosition1A, cRadius1, cPosition2A, cRadius2, inResult);
+				sCompareCollideShapeResultSphere(Vec3(cPosition1A), cRadius1, Vec3(cPosition2A), cRadius2, inResult);
 				mWasHit = true;
 			}
 
@@ -117,13 +117,13 @@ TEST_SUITE("CollideShapeTests")
 		CHECK(position_a_collector.mWasHit);
 
 		// Now move body to position B
-		c.GetSystem()->GetBodyInterface().SetPositionAndRotation(body2.GetID(), RVec3(cPosition2B), Quat::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI), EActivation::DontActivate); // TODO_DP
+		c.GetSystem()->GetBodyInterface().SetPositionAndRotation(body2.GetID(), cPosition2B, Quat::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI), EActivation::DontActivate);
 
 		// Test that original position doesn't collide anymore
 		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_non_moving_filter, object_non_moving_filter);
 
 		// Move test shape to position B
-		shape1_transform = RMat44(Mat44::sTranslation(cPosition1B) * Mat44::sRotationZ(0.3f * JPH_PI) * shape1_com);
+		shape1_transform = RMat44::sTranslation(cPosition1B) * Mat44::sRotationZ(0.3f * JPH_PI) * shape1_com;
 
 		// Test against wrong layer
 		c.GetSystem()->GetNarrowPhaseQuery().CollideShape(shape1, Vec3::sReplicate(1.0f), shape1_transform, settings, RVec3::sZero(), fail_collector, broadphase_moving_filter, object_moving_filter);
@@ -147,7 +147,7 @@ TEST_SUITE("CollideShapeTests")
 			virtual void	AddHit(const CollideShapeResult &inResult) override
 			{
 				CHECK(mBody2.GetID() == GetContext()->mBodyID);
-				sCompareCollideShapeResultSphere(cPosition1B, cRadius1, cPosition2B, cRadius2, inResult);
+				sCompareCollideShapeResultSphere(Vec3(cPosition1B), cRadius1, Vec3(cPosition2B), cRadius2, inResult);
 				mWasHit = true;
 			}
 
