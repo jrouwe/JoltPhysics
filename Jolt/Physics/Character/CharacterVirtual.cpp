@@ -179,7 +179,7 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 }
 
 template <class T>
-inline static bool sCorrectFractionForCharacterPadding(const Shape *inShape, RMat44Arg inStart, Vec3Arg inDisplacement, const T &inPolygon, float &ioFraction)
+inline static bool sCorrectFractionForCharacterPadding(const Shape *inShape, Mat44Arg inStart, Vec3Arg inDisplacement, const T &inPolygon, float &ioFraction)
 {
 	if (inShape->GetType() == EShapeType::Convex)
 	{
@@ -190,7 +190,7 @@ inline static bool sCorrectFractionForCharacterPadding(const Shape *inShape, RMa
 
 		// Cast the shape against the polygon
 		GJKClosestPoint gjk;
-		return gjk.CastShape(inStart.ToMat44(), inDisplacement, cDefaultCollisionTolerance, *support, inPolygon, ioFraction); // TODO_DP
+		return gjk.CastShape(inStart, inDisplacement, cDefaultCollisionTolerance, *support, inPolygon, ioFraction);
 	}
 	else if (inShape->GetSubType() == EShapeSubType::RotatedTranslated)
 	{
@@ -250,7 +250,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	// Fetch the face we're colliding with
 	TransformedShape ts = mSystem->GetBodyInterface().GetTransformedShape(outContact.mBodyB);
 	Shape::SupportingFace face;
-	ts.GetSupportingFace(outContact.mSubShapeIDB, -outContact.mContactNormal, face);
+	ts.GetSupportingFace(outContact.mSubShapeIDB, -outContact.mContactNormal, start.GetTranslation(), face);
 
 	bool corrected = false;
 	if (face.size() >= 2)
@@ -260,7 +260,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 		AddConvexRadius add_cvx(polygon, mCharacterPadding);
 
 		// Correct fraction to hit this inflated face instead of the inner shape
-		corrected = sCorrectFractionForCharacterPadding(mShape, start, inDisplacement, add_cvx, outContact.mFraction);
+		corrected = sCorrectFractionForCharacterPadding(mShape, start.GetRotation(), inDisplacement, add_cvx, outContact.mFraction);
 	}
 	if (!corrected)
 	{

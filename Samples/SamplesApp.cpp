@@ -972,8 +972,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					if (mDrawSupportingFace)
 					{
 						Shape::SupportingFace face;
-						hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
-						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), face, Color::sWhite, 0.01f);
+						hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, base_offset, face);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), face, Color::sWhite, 0.01f);
 					}
 				}
 			}
@@ -1064,8 +1064,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						if (mDrawSupportingFace)
 						{
 							Shape::SupportingFace face;
-							hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
-							mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), face, Color::sWhite, 0.01f);
+							hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, base_offset, face);
+							mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), face, Color::sWhite, 0.01f);
 						}
 					}
 				}
