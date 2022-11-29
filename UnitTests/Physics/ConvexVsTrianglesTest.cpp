@@ -121,7 +121,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		{
 			// Create the triangle shape
 			PhysicsTestContext context;
-			Body &body = context.CreateBody(new TriangleShapeSettings(v1, v2, v3), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate); // TODO_DP
+			Body &body = context.CreateBody(new TriangleShapeSettings(v1, v2, v3), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
@@ -150,7 +150,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 			TriangleList triangles;
 			triangles.push_back(Triangle(v1, v2, v3));
 			PhysicsTestContext context;
-			Body &body = context.CreateBody(new MeshShapeSettings(triangles), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate); // TODO_DP
+			Body &body = context.CreateBody(new MeshShapeSettings(triangles), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
