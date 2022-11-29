@@ -118,21 +118,21 @@ public:
 #ifdef JPH_USE_AVX
 	JPH_INLINE double			GetX() const									{ return _mm_cvtsd_f64(_mm256_castpd256_pd128(mValue)); }
 #else
-	JPH_INLINE double			GetX() const									{ return mD32[0]; }
+	JPH_INLINE double			GetX() const									{ return mF64[0]; }
 #endif // JPH_USE_AVX
-	JPH_INLINE double			GetY() const									{ return mD32[1]; }
-	JPH_INLINE double			GetZ() const									{ return mD32[2]; }
+	JPH_INLINE double			GetY() const									{ return mF64[1]; }
+	JPH_INLINE double			GetZ() const									{ return mF64[2]; }
 	
 	/// Set individual components
-	JPH_INLINE void				SetX(double inX)								{ mD32[0] = inX; }
-	JPH_INLINE void				SetY(double inY)								{ mD32[1] = inY; }
-	JPH_INLINE void				SetZ(double inZ)								{ mD32[2] = mD32[3] = inZ; } // Assure Z and W are the same
+	JPH_INLINE void				SetX(double inX)								{ mF64[0] = inX; }
+	JPH_INLINE void				SetY(double inY)								{ mF64[1] = inY; }
+	JPH_INLINE void				SetZ(double inZ)								{ mF64[2] = mF64[3] = inZ; } // Assure Z and W are the same
 	
 	/// Get double component by index
-	JPH_INLINE double			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 3); return mD32[inCoordinate]; }
+	JPH_INLINE double			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 3); return mF64[inCoordinate]; }
 
 	/// Set double component by index
-	JPH_INLINE void				SetComponent(uint inCoordinate, double inValue)	{ JPH_ASSERT(inCoordinate < 3); mD32[inCoordinate] = inValue; mValue = sFixW(mValue); } // Assure Z and W are the same
+	JPH_INLINE void				SetComponent(uint inCoordinate, double inValue)	{ JPH_ASSERT(inCoordinate < 3); mF64[inCoordinate] = inValue; mValue = sFixW(mValue); } // Assure Z and W are the same
 
 	/// Comparison
 	JPH_INLINE bool				operator == (DVec3Arg inV2) const;
@@ -231,7 +231,7 @@ public:
 	/// To String
 	friend ostream &			operator << (ostream &inStream, DVec3Arg inV)
 	{
-		inStream << inV.mD32[0] << ", " << inV.mD32[1] << ", " << inV.mD32[2];
+		inStream << inV.mF64[0] << ", " << inV.mF64[1] << ", " << inV.mF64[2];
 		return inStream;
 	}
 
@@ -248,7 +248,7 @@ public:
 	union
 	{
 		Type					mValue;
-		double					mD32[4];
+		double					mF64[4];
 	};
 };
 

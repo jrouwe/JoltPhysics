@@ -83,32 +83,32 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 	DMat44 result;
 	for (int i = 0; i < 3; ++i)
 		result.mCol[i] = mCol[0] * inM.mCol[i].mF32[0] + mCol[1] * inM.mCol[i].mF32[1] + mCol[2] * inM.mCol[i].mF32[2];
-	result.mCol3 = mCol3 + DVec3(mCol[0]) * inM.mCol3.mD32[0] + DVec3(mCol[1]) * inM.mCol3.mD32[1] + DVec3(mCol[2]) * inM.mCol3.mD32[2];
+	result.mCol3 = mCol3 + DVec3(mCol[0]) * inM.mCol3.mF64[0] + DVec3(mCol[1]) * inM.mCol3.mF64[1] + DVec3(mCol[2]) * inM.mCol3.mF64[2];
 	return result;
 }
 
 DVec3 DMat44::operator * (Vec3Arg inV) const
 {
 	return DVec3(
-		mCol3.mD32[0] + double(mCol[0].mF32[0] * inV.mF32[0] + mCol[1].mF32[0] * inV.mF32[1] + mCol[2].mF32[0] * inV.mF32[2]), 
-		mCol3.mD32[1] + double(mCol[0].mF32[1] * inV.mF32[0] + mCol[1].mF32[1] * inV.mF32[1] + mCol[2].mF32[1] * inV.mF32[2]), 
-		mCol3.mD32[2] + double(mCol[0].mF32[2] * inV.mF32[0] + mCol[1].mF32[2] * inV.mF32[1] + mCol[2].mF32[2] * inV.mF32[2]));
+		mCol3.mF64[0] + double(mCol[0].mF32[0] * inV.mF32[0] + mCol[1].mF32[0] * inV.mF32[1] + mCol[2].mF32[0] * inV.mF32[2]), 
+		mCol3.mF64[1] + double(mCol[0].mF32[1] * inV.mF32[0] + mCol[1].mF32[1] * inV.mF32[1] + mCol[2].mF32[1] * inV.mF32[2]), 
+		mCol3.mF64[2] + double(mCol[0].mF32[2] * inV.mF32[0] + mCol[1].mF32[2] * inV.mF32[1] + mCol[2].mF32[2] * inV.mF32[2]));
 }
 
 DVec3 DMat44::operator * (DVec3Arg inV) const
 {
 	return DVec3(
-		mCol3.mD32[0] + double(mCol[0].mF32[0]) * inV.mD32[0] + double(mCol[1].mF32[0]) * inV.mD32[1] + double(mCol[2].mF32[0]) * inV.mD32[2], 
-		mCol3.mD32[1] + double(mCol[0].mF32[1]) * inV.mD32[0] + double(mCol[1].mF32[1]) * inV.mD32[1] + double(mCol[2].mF32[1]) * inV.mD32[2], 
-		mCol3.mD32[2] + double(mCol[0].mF32[2]) * inV.mD32[0] + double(mCol[1].mF32[2]) * inV.mD32[1] + double(mCol[2].mF32[2]) * inV.mD32[2]);
+		mCol3.mF64[0] + double(mCol[0].mF32[0]) * inV.mF64[0] + double(mCol[1].mF32[0]) * inV.mF64[1] + double(mCol[2].mF32[0]) * inV.mF64[2], 
+		mCol3.mF64[1] + double(mCol[0].mF32[1]) * inV.mF64[0] + double(mCol[1].mF32[1]) * inV.mF64[1] + double(mCol[2].mF32[1]) * inV.mF64[2], 
+		mCol3.mF64[2] + double(mCol[0].mF32[2]) * inV.mF64[0] + double(mCol[1].mF32[2]) * inV.mF64[1] + double(mCol[2].mF32[2]) * inV.mF64[2]);
 }
 
 DVec3 DMat44::Multiply3x3(DVec3Arg inV) const
 {
 	return DVec3(
-		double(mCol[0].mF32[0]) * inV.mD32[0] + double(mCol[1].mF32[0]) * inV.mD32[1] + double(mCol[2].mF32[0]) * inV.mD32[2], 
-		double(mCol[0].mF32[1]) * inV.mD32[0] + double(mCol[1].mF32[1]) * inV.mD32[1] + double(mCol[2].mF32[1]) * inV.mD32[2], 
-		double(mCol[0].mF32[2]) * inV.mD32[0] + double(mCol[1].mF32[2]) * inV.mD32[1] + double(mCol[2].mF32[2]) * inV.mD32[2]);
+		double(mCol[0].mF32[0]) * inV.mF64[0] + double(mCol[1].mF32[0]) * inV.mF64[1] + double(mCol[2].mF32[0]) * inV.mF64[2], 
+		double(mCol[0].mF32[1]) * inV.mF64[0] + double(mCol[1].mF32[1]) * inV.mF64[1] + double(mCol[2].mF32[1]) * inV.mF64[2], 
+		double(mCol[0].mF32[2]) * inV.mF64[0] + double(mCol[1].mF32[2]) * inV.mF64[1] + double(mCol[2].mF32[2]) * inV.mF64[2]);
 }
 
 void DMat44::SetRotation(Mat44Arg inRotation)
