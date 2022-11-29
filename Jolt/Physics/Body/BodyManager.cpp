@@ -484,23 +484,21 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 
 void BodyManager::SetMotionQuality(Body &ioBody, EMotionQuality inMotionQuality)
 {
-	if (ioBody.IsActive())
+	MotionProperties *mp = ioBody.GetMotionPropertiesUnchecked();
+	if (mp != nullptr && mp->GetMotionQuality() != inMotionQuality)
 	{
-		MotionProperties *mp = ioBody.GetMotionProperties();
-		if (mp->mMotionQuality != inMotionQuality)
-		{
-			UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+		UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
 
-			JPH_ASSERT(!mActiveBodiesLocked);
+		JPH_ASSERT(!mActiveBodiesLocked);
 
-			if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
-				--mNumActiveCCDBodies;
+		bool is_active = ioBody.IsActive();
+		if (is_active && mp->GetMotionQuality() == EMotionQuality::LinearCast)
+			--mNumActiveCCDBodies;
 
-			mp->mMotionQuality = inMotionQuality;
+		mp->mMotionQuality = inMotionQuality;
 
-			if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
-				++mNumActiveCCDBodies;
-		}
+		if (is_active && mp->GetMotionQuality() == EMotionQuality::LinearCast)
+			++mNumActiveCCDBodies;
 	}
 }
 
