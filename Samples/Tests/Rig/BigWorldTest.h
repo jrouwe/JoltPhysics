@@ -26,6 +26,8 @@ public:
 	virtual bool			HasSettingsMenu() const override							{ return true; }
 	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
+	virtual RMat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+
 #ifndef JPH_DOUBLE_PRECISION
 	virtual String			GetStatusString() const override							{ return "Define JPH_DOUBLE_PRECISION for an accurate simulation!"; }
 #endif // JPH_DOUBLE_PRECISION
@@ -36,6 +38,9 @@ private:
 
 	// A bitfield that determines which piles to draw
 	inline static uint32	sDrawPileMask = ~uint32(0);
+
+	// Pivot for the camera
+	inline static RMat44	sPivot { RMat44::sIdentity() };
 
 	// Bookkeeping for a pile
 	struct Pile

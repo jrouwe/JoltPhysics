@@ -150,5 +150,13 @@ void BigWorldTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 			inUI->CreateCheckBox(inSubMenu, "Draw pile at " + pile.GetLabel(), (sDrawPileMask & mask) != 0, [mask](UICheckBox::EState inState) { if (inState == UICheckBox::STATE_CHECKED) sDrawPileMask |= mask; else sDrawPileMask &= ~mask; });
 			pile_idx++;
 		}
+
+	// Goto pile at a particular distance
+	for (Pile &pile : mPiles)
+		inUI->CreateTextButton(inSubMenu, "Goto pile at " + pile.GetLabel(), [inUI, distance = pile.mDistance]() { sPivot = RMat44::sTranslation(RVec3(distance, 0, 0)); });
 }
 
+RMat44 BigWorldTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+{
+	return sPivot;
+}
