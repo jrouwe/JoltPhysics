@@ -238,7 +238,7 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	body_filter.IgnoreBody(mTurretBody->GetID());
 	body_filter.IgnoreBody(mBarrelBody->GetID());
 	mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, ray_settings, collector, {}, {}, body_filter);
-	RVec3 hit_pos = collector.HadHit()? inParams.mCameraState.mPos + collector.mHit.mFraction * ray.mDirection : inParams.mCameraState.mPos + ray.mDirection;
+	RVec3 hit_pos = collector.HadHit()? ray.GetPointOnRay(collector.mHit.mFraction) : ray.mOrigin + ray.mDirection;
 	mDebugRenderer->DrawMarker(hit_pos, Color::sGreen, 1.0f);
 
 	// Orient the turret towards the hit position

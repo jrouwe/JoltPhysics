@@ -51,6 +51,12 @@ struct ShapeCastT
 		return { mShape, mScale, mCenterOfMassStart.PostTranslated(inTranslation), mDirection };
 	}
 
+	/// Get point with fraction inFraction on ray from mCenterOfMassStart to mCenterOfMassStart + mDirection (0 = start of ray, 1 = end of ray)
+	inline Vec					GetPointOnRay(float inFraction) const
+	{
+		return mCenterOfMassStart.GetTranslation() + inFraction * mDirection;
+	}
+
 	const Shape *				mShape;								///< Shape that's being cast (cannot be mesh shape). Note that this structure does not assume ownership over the shape for performance reasons.
 	const Vec3					mScale;								///< Scale in local space of the shape being cast
 	const Mat					mCenterOfMassStart;					///< Start position and orientation of the center of mass of the shape (construct using sFromWorldTransform if you have a world transform for your shape)

@@ -123,10 +123,10 @@ void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedS
 	}
 }
 
-void TransformedShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox) const
+void TransformedShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, RVec3Arg inBaseOffset) const
 {
 	if (mShape != nullptr)
-		mShape->GetTrianglesStart(ioContext, inBox, Vec3(mShapePositionCOM), mShapeRotation, GetShapeScale()); // TODO_DP
+		mShape->GetTrianglesStart(ioContext, inBox, Vec3(mShapePositionCOM - inBaseOffset), mShapeRotation, GetShapeScale());
 }
 
 int TransformedShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const

@@ -70,10 +70,11 @@ public:
 	using GetTrianglesContext = Shape::GetTrianglesContext;
 
 	/// To start iterating over triangles, call this function first. 
-	/// ioContext is a temporary buffer and should remain untouched until the last call to GetTrianglesNext.
-	/// inBox is the world space bounding in which you want to get the triangles.
 	/// To get the actual triangles call GetTrianglesNext.
-	void						GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox) const;
+	/// @param ioContext A temporary buffer and should remain untouched until the last call to GetTrianglesNext.
+	/// @param inBox The world space bounding in which you want to get the triangles.
+	/// @param inBaseOffset All hit results will be returned relative to this offset, can be zero to get results in world position, but when you're testing far from the origin you get better precision by picking a position that's closer e.g. inBox.GetCenter() since floats are most accurate near the origin
+	void						GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, RVec3Arg inBaseOffset) const;
 
 	/// Call this repeatedly to get all triangles in the box.
 	/// outTriangleVertices should be large enough to hold 3 * inMaxTriangleRequested entries
