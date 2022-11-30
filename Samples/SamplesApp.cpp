@@ -1718,6 +1718,13 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 	if (mMaxConcurrentJobs != mJobSystem->GetMaxConcurrency())
 		static_cast<JobSystemThreadPool *>(mJobSystem)->SetNumThreads(mMaxConcurrentJobs - 1);
 
+	// Restart the camera if the test requests this
+	if (mTest->NeedsCameraReset())
+	{
+		ResetCamera();
+		mTest->ResetCamera(false);
+	}
+
 	// Restart the test if the test requests this
 	if (mTest->NeedsRestart())
 	{

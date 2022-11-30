@@ -153,7 +153,7 @@ void BigWorldTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 
 	// Goto pile at a particular distance
 	for (Pile &pile : mPiles)
-		inUI->CreateTextButton(inSubMenu, "Goto pile at " + pile.GetLabel(), [inUI, distance = pile.mDistance]() { sPivot = RMat44::sTranslation(RVec3(distance, 0, 0)); });
+		inUI->CreateTextButton(inSubMenu, "Goto pile at " + pile.GetLabel(), [this, inUI, distance = pile.mDistance]() { sPivot = RMat44::sTranslation(RVec3(distance, 0, 0)); ResetCamera(); });
 }
 
 RMat44 BigWorldTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const

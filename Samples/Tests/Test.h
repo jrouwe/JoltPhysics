@@ -75,8 +75,12 @@ public:
 	virtual void	CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)		{ }
 
 	// Force the application to restart the test
-	virtual void	RestartTest()												{ mNeedsRestart = true; }
-	virtual bool	NeedsRestart() const										{ return mNeedsRestart; }
+	void			RestartTest()												{ mNeedsRestart = true; }
+	bool			NeedsRestart() const										{ return mNeedsRestart; }
+
+	// Force a camera update even if the menu is active
+	void			ResetCamera(bool inReset = true)							{ mResetCamera = inReset; }
+	bool			NeedsCameraReset() const									{ return mResetCamera; }
 
 	// If this test is supposed to be deterministic
 	virtual bool	IsDeterministic() const										{ return true; }
@@ -107,4 +111,5 @@ protected:
 
 private:
 	bool			mNeedsRestart = false;
+	bool			mResetCamera = false;
 };
