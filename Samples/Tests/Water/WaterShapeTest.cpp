@@ -13,7 +13,7 @@
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Layers.h>
-#include <Utils/DebugRendererSP.h>
+#include <Renderer/DebugRendererImp.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(WaterShapeTest) 
 { 
@@ -96,36 +96,37 @@ void WaterShapeTest::Initialize()
 void WaterShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Draw the water surface 5mm below actual surface to avoid z fighting with intersection shapes
-	Vec3 surface_point = Vec3(0, 10, 0);
+	RVec3 surface_point = RVec3(0, 10, 0);
 	for (int i = -20; i <= 20; ++i)
 	{
-		DrawLineSP(mDebugRenderer, surface_point + Vec3(5.0f * i, 0, -100), surface_point + Vec3(5.0f * i, 0, 100), Color::sBlue); // TODO_DP
-		DrawLineSP(mDebugRenderer, surface_point + Vec3(-100, 0, 5.0f * i), surface_point + Vec3(100, 0, 5.0f * i), Color::sBlue); // TODO_DP
+		mDebugRenderer->DrawLine(surface_point + Vec3(5.0f * i, 0, -100), surface_point + Vec3(5.0f * i, 0, 100), Color::sBlue);
+		mDebugRenderer->DrawLine(surface_point + Vec3(-100, 0, 5.0f * i), surface_point + Vec3(100, 0, 5.0f * i), Color::sBlue);
 	}
 
 	// Broadphase results, will apply buoyancy to any body that intersects with the water volume
 	class MyCollector : public CollideShapeBodyCollector 
 	{
 	public:
-								MyCollector(PhysicsSystem *inSystem, const Plane &inSurface, float inDeltaTime) : mSystem(inSystem), mSurface(inSurface), mDeltaTime(inDeltaTime) { }
+								MyCollector(PhysicsSystem *inSystem, RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float inDeltaTime) : mSystem(inSystem), mSurfacePosition(inSurfacePosition), mSurfaceNormal(inSurfaceNormal), mDeltaTime(inDeltaTime) { }
 
 		virtual void			AddHit(const BodyID &inBodyID) override
 		{
 			BodyLockWrite lock(mSystem->GetBodyLockInterface(), inBodyID);
 			Body &body = lock.GetBody();
 			if (body.IsActive())
-				body.ApplyBuoyancyImpulse(mSurface, 1.1f, 0.3f, 0.05f, Vec3::sZero(), mSystem->GetGravity(), mDeltaTime);
+				body.ApplyBuoyancyImpulse(mSurfacePosition, mSurfaceNormal, 1.1f, 0.3f, 0.05f, Vec3::sZero(), mSystem->GetGravity(), mDeltaTime);
 		}
 
 	private:
 		PhysicsSystem *			mSystem;
-		Plane					mSurface;
+		RVec3					mSurfacePosition;
+		Vec3					mSurfaceNormal;
 		float					mDeltaTime;
 	};
-	Plane surface = Plane::sFromPointAndNormal(surface_point, Vec3::sAxisY());
-	MyCollector collector(mPhysicsSystem, surface, inParams.mDeltaTime);
+	MyCollector collector(mPhysicsSystem, surface_point, Vec3::sAxisY(), inParams.mDeltaTime);
 	
 	// Apply buoyancy to all bodies that intersect with the water
-	AABox water_box(surface_point - Vec3(100, 100, 100), surface_point + Vec3(100, 0, 100));
+	AABox water_box(-Vec3(100, 100, 100), Vec3(100, 0, 100));
+	water_box.Translate(Vec3(surface_point));
 	mPhysicsSystem->GetBroadPhaseQuery().CollideAABox(water_box, collector, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::MOVING), SpecifiedObjectLayerFilter(Layers::MOVING));
 }

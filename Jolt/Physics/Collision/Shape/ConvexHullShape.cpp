@@ -720,7 +720,7 @@ void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg 
 	}
 }
 
-void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	// Trivially calculate total volume
 	Vec3 abs_scale = inScale.Abs();
@@ -732,7 +732,7 @@ void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3A
 	// Convert the points to world space and determine the distance to the surface
 	int num_points = int(mPoints.size());
 	PolyhedronSubmergedVolumeCalculator::Point *buffer = (PolyhedronSubmergedVolumeCalculator::Point *)JPH_STACK_ALLOC(num_points * sizeof(PolyhedronSubmergedVolumeCalculator::Point));
-	PolyhedronSubmergedVolumeCalculator submerged_vol_calc(inCenterOfMassTransform * Mat44::sScale(inScale), &mPoints[0].mPosition, sizeof(Point), num_points, inSurface, buffer);
+	PolyhedronSubmergedVolumeCalculator submerged_vol_calc(inCenterOfMassTransform * Mat44::sScale(inScale), &mPoints[0].mPosition, sizeof(Point), num_points, inSurface, buffer JPH_IF_DEBUG_RENDERER(, inBaseOffset));
 	
 	if (submerged_vol_calc.AreAllAbove())
 	{
@@ -797,7 +797,7 @@ void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3A
 #ifdef JPH_DEBUG_RENDERER
 	// Draw center of buoyancy
 	if (sDrawSubmergedVolumes)
-		DebugRenderer::sInstance->DrawWireSphere(RVec3(outCenterOfBuoyancy), 0.05f, Color::sRed, 1); // TODO_DP
+		DebugRenderer::sInstance->DrawWireSphere(inBaseOffset + outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
 #endif // JPH_DEBUG_RENDERER
 }
 

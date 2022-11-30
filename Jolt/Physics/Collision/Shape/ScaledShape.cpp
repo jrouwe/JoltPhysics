@@ -81,9 +81,9 @@ void ScaledShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDi
 	mInnerShape->GetSupportingFace(inSubShapeID, inDirection, inScale * mScale, inCenterOfMassTransform, outVertices);
 }
 
-void ScaledShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void ScaledShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
-	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform, inScale * mScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy);
+	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform, inScale * mScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, inBaseOffset));
 }
 
 #ifdef JPH_DEBUG_RENDERER

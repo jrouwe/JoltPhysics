@@ -182,7 +182,7 @@ void CompoundShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 	shape.mShape->GetSupportingFace(remainder, transform.Multiply3x3Transposed(inDirection), shape.TransformScale(inScale), inCenterOfMassTransform * transform, outVertices);
 }
 
-void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	outTotalVolume = 0.0f;
 	outSubmergedVolume = 0.0f;
@@ -196,7 +196,7 @@ void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg
 		// Recurse to child
 		float total_volume, submerged_volume;
 		Vec3 center_of_buoyancy;
-		shape.mShape->GetSubmergedVolume(transform, shape.TransformScale(inScale), inSurface, total_volume, submerged_volume, center_of_buoyancy);
+		shape.mShape->GetSubmergedVolume(transform, shape.TransformScale(inScale), inSurface, total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, inBaseOffset));
 
 		// Accumulate volumes
 		outTotalVolume += total_volume;
@@ -212,7 +212,7 @@ void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg
 #ifdef JPH_DEBUG_RENDERER
 	// Draw senter of buoyancy
 	if (sDrawSubmergedVolumes)
-		DebugRenderer::sInstance->DrawWireSphere(RVec3(outCenterOfBuoyancy), 0.05f, Color::sRed, 1); // TODO_DP
+		DebugRenderer::sInstance->DrawWireSphere(inBaseOffset + outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
 #endif // JPH_DEBUG_RENDERER
 }
 

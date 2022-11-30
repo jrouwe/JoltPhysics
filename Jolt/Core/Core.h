@@ -367,6 +367,15 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#define JPH_IF_DOUBLE_PRECISION(...)
 #endif
 
+// Helper macro to detect if the debug renderer is active
+#ifdef JPH_DEBUG_RENDERER
+	#define JPH_IF_DEBUG_RENDERER(...) __VA_ARGS__
+	#define JPH_IF_NOT_DEBUG_RENDERER(...)
+#else
+	#define JPH_IF_DEBUG_RENDERER(...)
+	#define JPH_IF_NOT_DEBUG_RENDERER(...) __VA_ARGS__
+#endif
+
 // Macro to indicate that a parameter / variable is unused
 #define JPH_UNUSED(x)			(void)x
 

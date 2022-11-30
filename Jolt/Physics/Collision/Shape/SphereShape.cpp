@@ -160,7 +160,7 @@ Vec3 SphereShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLoc
 	return len != 0.0f? inLocalSurfacePosition / len : Vec3::sAxisY();
 }
 
-void SphereShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void SphereShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	float scaled_radius = GetScaledRadius(inScale);
 	outTotalVolume = (4.0f / 3.0f * JPH_PI) * Cubed(scaled_radius);
@@ -196,7 +196,7 @@ void SphereShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg i
 		{
 			Vec3 circle_center = inCenterOfMassTransform.GetTranslation() - distance_to_surface * inSurface.GetNormal();
 			float circle_radius = sqrt(Square(scaled_radius) - Square(distance_to_surface));
-			DebugRenderer::sInstance->DrawPie(RVec3(circle_center), circle_radius, inSurface.GetNormal(), inSurface.GetNormal().GetNormalizedPerpendicular(), -JPH_PI, JPH_PI, Color::sGreen, DebugRenderer::ECastShadow::Off); // TODO_DP
+			DebugRenderer::sInstance->DrawPie(inBaseOffset + circle_center, circle_radius, inSurface.GetNormal(), inSurface.GetNormal().GetNormalizedPerpendicular(), -JPH_PI, JPH_PI, Color::sGreen, DebugRenderer::ECastShadow::Off);
 		}
 	#endif // JPH_DEBUG_RENDERER
 	}
@@ -204,7 +204,7 @@ void SphereShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg i
 #ifdef JPH_DEBUG_RENDERER
 	// Draw center of buoyancy
 	if (sDrawSubmergedVolumes)
-		DebugRenderer::sInstance->DrawWireSphere(RVec3(outCenterOfBuoyancy), 0.05f, Color::sRed, 1); // TODO_DP
+		DebugRenderer::sInstance->DrawWireSphere(inBaseOffset + outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
 #endif // JPH_DEBUG_RENDERER
 }
 

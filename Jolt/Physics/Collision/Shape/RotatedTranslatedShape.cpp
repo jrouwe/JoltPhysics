@@ -101,13 +101,13 @@ void RotatedTranslatedShape::GetSupportingFace(const SubShapeID &inSubShapeID, V
 	mInnerShape->GetSupportingFace(inSubShapeID, transform.Multiply3x3Transposed(inDirection), TransformScale(inScale), inCenterOfMassTransform * transform, outVertices);
 }
 
-void RotatedTranslatedShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void RotatedTranslatedShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	// Get center of mass transform of child
 	Mat44 transform = inCenterOfMassTransform * Mat44::sRotation(mRotation);
 
 	// Recurse to child
-	mInnerShape->GetSubmergedVolume(transform, TransformScale(inScale), inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy);
+	mInnerShape->GetSubmergedVolume(transform, TransformScale(inScale), inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, inBaseOffset));
 }
 
 #ifdef JPH_DEBUG_RENDERER

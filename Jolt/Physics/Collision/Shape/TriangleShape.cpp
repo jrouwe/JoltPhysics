@@ -192,7 +192,7 @@ Vec3 TriangleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inL
 	return len != 0.0f? cross / len : Vec3::sAxisY();
 }
 
-void TriangleShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void TriangleShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	// A triangle has no volume
 	outTotalVolume = outSubmergedVolume = 0.0f;
