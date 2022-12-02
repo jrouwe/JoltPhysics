@@ -60,11 +60,17 @@ public:
 	/// Convert to float vector 3 rounding to nearest
 	JPH_INLINE explicit			operator Vec3() const;
 
+	/// Prepare to convert to float vector 3 rounding towards zero (returns DVec3 that can be converted to a Vec3 to get the rounding)
+	JPH_INLINE DVec3			PrepareRoundToZero() const;
+
+	/// Prepare to convert to float vector 3 rounding towards positive/negative inf  (returns DVec3 that can be converted to a Vec3 to get the rounding)
+	JPH_INLINE DVec3			PrepareRoundToInf() const;
+
 	/// Convert to float vector 3 rounding down
-	JPH_INLINE Vec3				ToVec3RoundDown() const							{ return Vec3(*this); } // TODO_DP
+	JPH_INLINE Vec3				ToVec3RoundDown() const;
 
 	/// Convert to float vector 3 rounding up
-	JPH_INLINE Vec3				ToVec3RoundUp() const							{ return Vec3(*this); } // TODO_DP
+	JPH_INLINE Vec3				ToVec3RoundUp() const;
 
 	/// Return the minimum value of each of the components
 	static JPH_INLINE DVec3		sMin(DVec3Arg inV1, DVec3Arg inV2);

@@ -613,4 +613,46 @@ DVec3 DVec3::GetSign() const
 #endif
 }
 
+DVec3 DVec3::PrepareRoundToZero() const
+{
+	// Float has 23 bit mantissa, double 52 bit mantissa => we lose 29 bits when converting from double to float
+	constexpr uint64 cDoubleToFloatMantissaLoss = (1U << 29) - 1;
+
+	double x = BitCast<double>(BitCast<uint64>(mF64[0]) & ~cDoubleToFloatMantissaLoss);
+	double y = BitCast<double>(BitCast<uint64>(mF64[1]) & ~cDoubleToFloatMantissaLoss);
+	double z = BitCast<double>(BitCast<uint64>(mF64[2]) & ~cDoubleToFloatMantissaLoss);
+
+	return DVec3(x, y, z);
+}
+
+DVec3 DVec3::PrepareRoundToInf() const
+{
+	// Float has 23 bit mantissa, double 52 bit mantissa => we lose 29 bits when converting from double to float
+	constexpr uint64 cDoubleToFloatMantissaLoss = (1U << 29) - 1;
+
+	uint64 ux = BitCast<uint64>(mF64[0]);
+	uint64 uy = BitCast<uint64>(mF64[1]);
+	uint64 uz = BitCast<uint64>(mF64[2]);
+
+	double x = BitCast<double>((ux & cDoubleToFloatMantissaLoss) == 0? ux : (ux | cDoubleToFloatMantissaLoss));
+	double y = BitCast<double>((uy & cDoubleToFloatMantissaLoss) == 0? uy : (uy | cDoubleToFloatMantissaLoss));
+	double z = BitCast<double>((uz & cDoubleToFloatMantissaLoss) == 0? uz : (uz | cDoubleToFloatMantissaLoss));
+
+	return DVec3(x, y, z);
+}
+
+Vec3 DVec3::ToVec3RoundDown() const
+{
+	DVec3 to_zero = PrepareRoundToZero();
+	DVec3 to_inf = PrepareRoundToInf();
+	return Vec3(DVec3::sSelect(to_zero, to_inf, DVec3::sLess(*this, DVec3::sZero())));
+}
+
+Vec3 DVec3::ToVec3RoundUp() const
+{
+	DVec3 to_zero = PrepareRoundToZero();
+	DVec3 to_inf = PrepareRoundToInf();
+	return Vec3(DVec3::sSelect(to_inf, to_zero, DVec3::sLess(*this, DVec3::sZero())));
+}
+
 JPH_NAMESPACE_END

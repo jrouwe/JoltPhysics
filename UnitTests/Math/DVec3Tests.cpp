@@ -70,6 +70,10 @@ TEST_SUITE("DVec3Tests")
 	TEST_CASE("TestDVec3ToVec3")
 	{
 		CHECK(Vec3(DVec3(1, 3, 5)) == Vec3(1, 3, 5));
+
+		// Check rounding up and down
+		CHECK(DVec3(2.0, 0x1.0000000000001p1, -0x1.0000000000001p1).ToVec3RoundUp() == Vec3(2.0, 0x1.000002p1f, -2.0));
+		CHECK(DVec3(2.0, 0x1.0000000000001p1, -0x1.0000000000001p1).ToVec3RoundDown() == Vec3(2.0, 2.0, -0x1.000002p1f));
 	}
 
 	TEST_CASE("TestVec3MinMax")
