@@ -59,13 +59,16 @@ void BigWorldTest::Initialize()
 	Real distances[] = { 0.0_r, 1.0e3_r, 5.0e3_r, 1.0e4_r, 5.0e4_r, 1.0e5_r, 1.0e6_r, 1.0e7_r, 1.0e8_r };
 	for (Real distance : distances)
 	{
+		// Calculate origin for this simulation assuming we want to be 'distance' away and the same distance along each coordinate axis
+		RVec3 origin = RVec3::sReplicate(distance) / sqrt(3.0_r);
+
 		// Create floor (floor at 0 was already created)
 		if (distance != 0.0f)
-			mBodyInterface->CreateAndAddBody(BodyCreationSettings(shape, RVec3(distance, 0, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+			mBodyInterface->CreateAndAddBody(BodyCreationSettings(shape, origin, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 		// Create pile of ragdolls
 		Pile pile;
-		pile.mDistance = distance;
+		pile.mOrigin = origin;
 		for (int i = 0; i < cPileSize; ++i)
 		{
 			// Create ragdoll
@@ -75,7 +78,7 @@ void BigWorldTest::Initialize()
 			SkeletonPose::JointState &root = pose.GetJoint(0);
 			root.mTranslation = Vec3::sZero();
 			root.mRotation = rotation[i];
-			pose.SetRootOffset(RVec3(distance, 2.0_r + 0.6_r * i, 0));
+			pose.SetRootOffset(origin + Vec3(0, 2.0f + 0.6f * i, 0));
 			pose.CalculateJointMatrices();
 
 			// Drive to pose
@@ -95,7 +98,7 @@ void BigWorldTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	int pile_idx = 0;
 
 	for (Pile &pile : mPiles)
-		if (pile.mDistance != 0.0f) // Pile at 0 is drawn normally
+		if (!pile.mOrigin.IsNearZero()) // Pile at 0 is drawn normally
 		{
 			// Check if we need to draw this pile
 			if ((sDrawPileMask & (1 << pile_idx)) != 0)
@@ -114,7 +117,7 @@ void BigWorldTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 							// Shift the transform back to the origin
 							RMat44 transform = body.GetCenterOfMassTransform();
-							transform.SetTranslation(transform.GetTranslation() - RVec3(pile.mDistance, 0, 0));
+							transform.SetTranslation(transform.GetTranslation() - pile.mOrigin);
 
 							// Draw distance label for the first body
 							if (first)
@@ -144,7 +147,7 @@ void BigWorldTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 	// Enable / disable drawing of a particular distance
 	int pile_idx = 0;
 	for (Pile &pile : mPiles)
-		if (pile.mDistance != 0.0f)
+		if (!pile.mOrigin.IsNearZero())
 		{
 			uint32 mask = 1 << pile_idx;
 			inUI->CreateCheckBox(inSubMenu, "Draw pile at " + pile.GetLabel(), (sDrawPileMask & mask) != 0, [mask](UICheckBox::EState inState) { if (inState == UICheckBox::STATE_CHECKED) sDrawPileMask |= mask; else sDrawPileMask &= ~mask; });
@@ -153,15 +156,15 @@ void BigWorldTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 
 	// Goto pile at a particular distance
 	for (Pile &pile : mPiles)
-		inUI->CreateTextButton(inSubMenu, "Goto pile at " + pile.GetLabel(), [this, inUI, distance = pile.mDistance]() { sPivot = RMat44::sTranslation(RVec3(distance, 0, 0)); RestartTest(); });
+		inUI->CreateTextButton(inSubMenu, "Goto pile at " + pile.GetLabel(), [this, &pile]() { sPivot = pile.mOrigin; RestartTest(); });
 }
 
 RMat44 BigWorldTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
-	return sPivot;
+	return RMat44::sTranslation(sPivot);
 }
 
 RVec3 BigWorldTest::GetDrawOffset() const
 {
-	return sPivot.GetTranslation();
+	return sPivot;
 }

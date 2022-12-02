@@ -41,15 +41,15 @@ private:
 	inline static uint32	sDrawPileMask = ~uint32(0);
 
 	// Pivot for the camera
-	inline static RMat44	sPivot { RMat44::sIdentity() };
+	inline static RVec3		sPivot { RVec3::sZero() };
 
 	// Bookkeeping for a pile
 	struct Pile
 	{
 		// Distance label for this test
-		String				GetLabel() const											{ return StringFormat("%.0f km", 1.0e-3 * double(mDistance)); }
+		String				GetLabel() const											{ return StringFormat("%.0f km", 1.0e-3 * double(mOrigin.Length())); }
 
-		Real				mDistance;													///< Distance from origin
+		RVec3				mOrigin;													///< Origin for this pile
 		Array<Ref<Ragdoll>>	mRagdolls;													///< Ragdolls in the pile
 	};
 	Array<Pile>				mPiles;
