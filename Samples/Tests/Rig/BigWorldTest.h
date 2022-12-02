@@ -27,6 +27,7 @@ public:
 	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 	virtual RMat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+	virtual RVec3			GetDrawOffset() const override;
 
 #ifndef JPH_DOUBLE_PRECISION
 	virtual String			GetStatusString() const override							{ return "Define JPH_DOUBLE_PRECISION for an accurate simulation!"; }

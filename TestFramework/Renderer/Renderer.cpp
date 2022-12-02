@@ -500,7 +500,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Camera projection and view
 	vs->mProjection = sPerspective(camera_fovy, camera_aspect, camera_near, camera_far);
-	Vec3 cam_pos = Vec3(inCamera.mPos); // TODO_DP
+	Vec3 cam_pos = Vec3(inCamera.mPos - mBaseOffset);
 	Vec3 tgt = cam_pos + inCamera.mForward;
 	vs->mView = Mat44::sLookAt(cam_pos, tgt, inCamera.mUp);
 

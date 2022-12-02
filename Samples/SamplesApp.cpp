@@ -599,6 +599,9 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	// Optimize the broadphase to make the first update fast
 	mPhysicsSystem->OptimizeBroadPhase();
 
+	// Make the world render relative to offset specified by test
+	mRenderer->SetBaseOffset(mTest->GetDrawOffset());
+
 	// Reset the camera to the original position
 	ResetCamera();
 
@@ -1717,13 +1720,6 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 	// Reinitialize the job system if the concurrency setting changed
 	if (mMaxConcurrentJobs != mJobSystem->GetMaxConcurrency())
 		static_cast<JobSystemThreadPool *>(mJobSystem)->SetNumThreads(mMaxConcurrentJobs - 1);
-
-	// Restart the camera if the test requests this
-	if (mTest->NeedsCameraReset())
-	{
-		ResetCamera();
-		mTest->ResetCamera(false);
-	}
 
 	// Restart the test if the test requests this
 	if (mTest->NeedsRestart())

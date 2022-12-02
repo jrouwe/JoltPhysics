@@ -56,7 +56,7 @@ void BigWorldTest::Initialize()
 		rotation.push_back(Quat::sRotation(Vec3::sAxisY(), angle(random)) * pose.GetJoint(0).mRotation);
 
 	// Create piles at various distances
-	Real distances[] = { 0.0_r, 1.0e3_r, 5.0e3_r, 1.0e4_r, 5.0e4_r, 1.0e5_r, 5.0e5_r, 1.0e6_r };
+	Real distances[] = { 0.0_r, 1.0e3_r, 5.0e3_r, 1.0e4_r, 5.0e4_r, 1.0e5_r, 1.0e6_r, 1.0e7_r, 1.0e8_r };
 	for (Real distance : distances)
 	{
 		// Create floor (floor at 0 was already created)
@@ -153,10 +153,15 @@ void BigWorldTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 
 	// Goto pile at a particular distance
 	for (Pile &pile : mPiles)
-		inUI->CreateTextButton(inSubMenu, "Goto pile at " + pile.GetLabel(), [this, inUI, distance = pile.mDistance]() { sPivot = RMat44::sTranslation(RVec3(distance, 0, 0)); ResetCamera(); });
+		inUI->CreateTextButton(inSubMenu, "Goto pile at " + pile.GetLabel(), [this, inUI, distance = pile.mDistance]() { sPivot = RMat44::sTranslation(RVec3(distance, 0, 0)); RestartTest(); });
 }
 
 RMat44 BigWorldTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	return sPivot;
+}
+
+RVec3 BigWorldTest::GetDrawOffset() const
+{
+	return sPivot.GetTranslation();
 }

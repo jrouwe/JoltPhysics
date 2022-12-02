@@ -82,7 +82,7 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 
 void DebugRendererImp::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) 
 {
-	RVec3 offset = RVec3::sZero(); // TODO_DP
+	RVec3 offset = mRenderer->GetBaseOffset();
 
 	Line line;
 	Vec3(inFrom - offset).StoreFloat3(&line.mFrom);
@@ -121,29 +121,31 @@ void DebugRendererImp::DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorl
 {
 	lock_guard lock(mPrimitivesLock);
 	
-	RVec3 offset = RVec3::sZero(); // TODO_DP
+	RVec3 offset = mRenderer->GetBaseOffset();
 
-	Mat44 model_matrix = inModelMatrix.PreTranslated(-offset).ToMat44();
+	Mat44 model_matrix = inModelMatrix.PostTranslated(-offset).ToMat44();
+	AABox world_space_bounds = inWorldSpaceBounds;
+	world_space_bounds.Translate(Vec3(-offset));
 	   
 	// Our pixel shader uses alpha only to turn on/off shadows
 	Color color = inCastShadow == ECastShadow::On? Color(inModelColor, 255) : Color(inModelColor, 0);
 
 	if (inDrawMode == EDrawMode::Wireframe)
 	{
-		mWireframePrimitives[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
+		mWireframePrimitives[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, world_space_bounds, inLODScaleSq });
 		++mNumInstances;
 	}
 	else
 	{
 		if (inCullMode != ECullMode::CullFrontFace)
 		{
-			mPrimitives[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
+			mPrimitives[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, world_space_bounds, inLODScaleSq });
 			++mNumInstances;
 		}
 
 		if (inCullMode != ECullMode::CullBackFace)
 		{
-			mPrimitivesBackFacing[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, inWorldSpaceBounds, inLODScaleSq });
+			mPrimitivesBackFacing[inGeometry].mInstances.push_back({ model_matrix, model_matrix.GetDirectionPreservingMatrix(), color, world_space_bounds, inLODScaleSq });
 			++mNumInstances;
 		}
 	}
@@ -198,7 +200,7 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 
 void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
 {
-	RVec3 offset = RVec3::sZero(); // TODO_DP
+	RVec3 offset = mRenderer->GetBaseOffset();
 
 	Vec3 v1(inV1 - offset);
 	Vec3 v2(inV2 - offset);
@@ -246,7 +248,7 @@ void DebugRendererImp::DrawInstances(const Geometry *inGeometry, const Array<int
 
 void DebugRendererImp::DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
 {
-	RVec3 offset = RVec3::sZero(); // TODO_DP
+	RVec3 offset = mRenderer->GetBaseOffset();
 
 	Vec3 pos(inPosition - offset);
 
@@ -289,7 +291,7 @@ void DebugRendererImp::DrawTriangles()
 	mDepthTexture->ClearRenderTarget();
 
 	// Get the camera and light frustum for culling
-	Vec3 camera_pos(mRenderer->GetCameraState().mPos); // TODO_DP
+	Vec3 camera_pos(mRenderer->GetCameraState().mPos - mRenderer->GetBaseOffset());
 	const Frustum &camera_frustum = mRenderer->GetCameraFrustum();
 	const Frustum &light_frustum = mRenderer->GetLightFrustum();
 

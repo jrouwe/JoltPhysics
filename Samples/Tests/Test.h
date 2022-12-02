@@ -70,6 +70,9 @@ public:
 	// Override to specify a camera pivot point and orientation (world space)
 	virtual RMat44	GetCameraPivot(float inCameraHeading, float inCameraPitch) const { return RMat44::sIdentity(); }
 
+	// Offset around which to center drawing. This floating point accuracy issues when the camera is far from the origin.
+	virtual RVec3	GetDrawOffset() const										{ return RVec3::sZero(); }
+
 	// Optional settings menu
 	virtual bool	HasSettingsMenu() const										{ return false; }
 	virtual void	CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)		{ }
@@ -77,10 +80,6 @@ public:
 	// Force the application to restart the test
 	void			RestartTest()												{ mNeedsRestart = true; }
 	bool			NeedsRestart() const										{ return mNeedsRestart; }
-
-	// Force a camera update even if the menu is active
-	void			ResetCamera(bool inReset = true)							{ mResetCamera = inReset; }
-	bool			NeedsCameraReset() const									{ return mResetCamera; }
 
 	// If this test is supposed to be deterministic
 	virtual bool	IsDeterministic() const										{ return true; }

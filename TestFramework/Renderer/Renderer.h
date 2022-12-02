@@ -88,6 +88,10 @@ public:
 	const CameraState &				GetCameraState() const				{ return mCameraState; }
 	const Frustum &					GetCameraFrustum() const			{ return mCameraFrustum; }
 
+	/// Offset relative to which the world is rendered, helps avoiding rendering artifacts at big distances
+	RVec3							GetBaseOffset() const				{ return mBaseOffset; }
+	void							SetBaseOffset(RVec3 inOffset)		{ mBaseOffset = inOffset; }
+
 	/// Get the light frustum (only valid between BeginFrame() / EndFrame())
 	const Frustum &					GetLightFrustum() const				{ return mLightFrustum; }
 
@@ -135,6 +139,7 @@ private:
 	unique_ptr<ConstantBuffer>		mVertexShaderConstantBufferOrtho[cFrameCount];
 	unique_ptr<ConstantBuffer>		mPixelShaderConstantBuffer[cFrameCount];
 	CameraState						mCameraState;
+	RVec3							mBaseOffset { RVec3::sZero() };		///< Offset to subtract from the camera position to deal with large worlds
 	Frustum							mCameraFrustum;
 	Frustum							mLightFrustum;
 
