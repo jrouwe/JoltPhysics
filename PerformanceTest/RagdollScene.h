@@ -67,7 +67,7 @@ public:
 	virtual void			StartTest(PhysicsSystem &inPhysicsSystem, EMotionQuality inMotionQuality) override
 	{
 		// Test configuration
-		const float cHorizontalSeparation = 4.0f;
+		const Real cHorizontalSeparation = 4.0_r;
 		const float cVerticalSeparation = 0.6f;
 		#ifdef _DEBUG
 			const int cPileSize = 5;
@@ -94,7 +94,7 @@ public:
 			for (int col = 0; col < cNumCols; ++col)
 			{
 				// Determine start location of ray
-				RVec3 start(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0f), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0f));
+				RVec3 start(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0_r), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0_r));
 
 				// Cast ray down to terrain
 				RayCastResult hit;

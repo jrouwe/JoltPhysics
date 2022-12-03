@@ -86,14 +86,14 @@ void DebugRenderer::DrawWireBox(const AABox &inBox, ColorArg inColor)
 	JPH_PROFILE_FUNCTION();
 
 	// 8 vertices
-	RVec3 v1(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
-	RVec3 v2(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
-	RVec3 v3(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
-	RVec3 v4(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
-	RVec3 v5(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
-	RVec3 v6(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
-	RVec3 v7(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
-	RVec3 v8(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
+	RVec3 v1(Real(inBox.mMin.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v2(Real(inBox.mMin.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMax.GetZ()));
+	RVec3 v3(Real(inBox.mMin.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v4(Real(inBox.mMin.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMax.GetZ()));
+	RVec3 v5(Real(inBox.mMax.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v6(Real(inBox.mMax.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMax.GetZ()));
+	RVec3 v7(Real(inBox.mMax.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v8(Real(inBox.mMax.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMax.GetZ()));
 
 	// 12 edges
 	DrawLine(v1, v2, inColor);
