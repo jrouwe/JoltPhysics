@@ -108,6 +108,11 @@ void ObjectStreamBinaryOut::WritePrimitiveData(const Float3 &inPrimitive)
 	mStream.write((const char *)&inPrimitive, sizeof(Float3));
 }
 
+void ObjectStreamBinaryOut::WritePrimitiveData(const Double3 &inPrimitive)
+{
+	mStream.write((const char *)&inPrimitive, sizeof(Double3));
+}
+
 void ObjectStreamBinaryOut::WritePrimitiveData(const Vec3 &inPrimitive)
 {
 	mStream.write((const char *)&inPrimitive, 3 * sizeof(float));

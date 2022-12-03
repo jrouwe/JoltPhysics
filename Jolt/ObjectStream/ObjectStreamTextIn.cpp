@@ -48,6 +48,8 @@ bool ObjectStreamTextIn::ReadDataType(EOSDataType &outType)
 			outType  = EOSDataType::T_String;
 		else if (token == "float3")
 			outType  = EOSDataType::T_Float3;
+		else if (token == "double3")
+			outType  = EOSDataType::T_Double3;
 		else if (token == "vec3")
 			outType  = EOSDataType::T_Vec3;
 		else if (token == "dvec3")
@@ -282,6 +284,15 @@ bool ObjectStreamTextIn::ReadPrimitiveData(Float3 &outPrimitive)
 	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z))
 		return false;
 	outPrimitive = Float3(x, y, z);
+	return true;
+}
+
+bool ObjectStreamTextIn::ReadPrimitiveData(Double3 &outPrimitive)
+{
+	double x, y, z;
+	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z))
+		return false;
+	outPrimitive = Double3(x, y, z);
 	return true;
 }
 

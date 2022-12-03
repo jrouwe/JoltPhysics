@@ -548,6 +548,13 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 						break;
 					}
 
+				case EOSDataType::T_Double3:
+					{	
+						Double3 temporary;
+						continue_reading = ReadPrimitiveData(temporary);
+						break;
+					}
+
 				case EOSDataType::T_Vec3:
 					{	
 						Vec3 temporary;

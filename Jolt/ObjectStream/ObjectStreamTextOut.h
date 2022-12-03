@@ -32,6 +32,7 @@ public:
 	virtual void				WritePrimitiveData(const bool &inPrimitive) override;
 	virtual void				WritePrimitiveData(const String &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Float3 &inPrimitive) override;
+	virtual void				WritePrimitiveData(const Double3 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Vec3 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const DVec3 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const Vec4 &inPrimitive) override;

@@ -33,6 +33,7 @@ void ObjectStreamTextOut::WriteDataType(EOSDataType inType)
 	case EOSDataType::T_bool:		WriteWord("bool");			break;
 	case EOSDataType::T_String:		WriteWord("string");		break;
 	case EOSDataType::T_Float3:		WriteWord("float3");		break;
+	case EOSDataType::T_Double3:	WriteWord("double3");		break;
 	case EOSDataType::T_Vec3:		WriteWord("vec3");			break;
 	case EOSDataType::T_DVec3:		WriteWord("dvec3");			break;
 	case EOSDataType::T_Vec4:		WriteWord("vec4");			break;
@@ -106,6 +107,15 @@ void ObjectStreamTextOut::WritePrimitiveData(const bool &inPrimitive)
 }
 
 void ObjectStreamTextOut::WritePrimitiveData(const Float3 &inPrimitive)
+{
+	WritePrimitiveData(inPrimitive.x);
+	WriteChar(' ');
+	WritePrimitiveData(inPrimitive.y);
+	WriteChar(' ');
+	WritePrimitiveData(inPrimitive.z);
+}
+
+void ObjectStreamTextOut::WritePrimitiveData(const Double3 &inPrimitive)
 {
 	WritePrimitiveData(inPrimitive.x);
 	WriteChar(' ');

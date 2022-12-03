@@ -162,6 +162,15 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(Float3 &outPrimitive)
 	return true;
 }
 
+bool ObjectStreamBinaryIn::ReadPrimitiveData(Double3 &outPrimitive)
+{
+	Double3 primitive;
+	mStream.read((char *)&primitive, sizeof(Double3));
+	if (mStream.fail()) return false;
+	outPrimitive = primitive;
+	return true;
+}
+
 bool ObjectStreamBinaryIn::ReadPrimitiveData(Vec3 &outPrimitive)
 {
 	Float3 primitive;
