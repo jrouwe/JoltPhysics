@@ -68,13 +68,37 @@ bool DMat44::IsClose(DMat44Arg inM2, float inMaxDistSq) const
 DMat44 DMat44::operator * (Mat44Arg inM) const
 {
 	DMat44 result;
+
+	// Rotation part
+#if defined(JPH_USE_SSE)
+	for (int i = 0; i < 3; ++i)
+	{
+		__m128 c = inM.GetColumn4(i).mValue;
+		__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0)));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1))));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(2, 2, 2, 2))));
+		result.mCol[i].mValue = t;
+	}
+#else
 	for (int i = 0; i < 3; ++i)
 	{
 		Vec4 coli = inM.GetColumn4(i);
 		result.mCol[i] = mCol[0] * coli.mF32[0] + mCol[1] * coli.mF32[1] + mCol[2] * coli.mF32[2];
 	}
+#endif
+
+	// Translation part
+#if defined(JPH_USE_AVX)
+	__m128 col3 = inM.GetColumn4(3).mValue;
+	__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(0, 0, 0, 0)));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(1, 1, 1, 1))));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(2, 2, 2, 2))));
+	result.mCol3 = DVec3::sFixW(_mm256_add_pd(mCol3.mValue, _mm256_cvtps_pd(t)));
+#else
 	Vec4 col3 = inM.GetColumn4(3);
 	result.mCol3 = mCol3 + Vec3(mCol[0] * col3.mF32[0] + mCol[1] * col3.mF32[1] + mCol[2] * col3.mF32[2]);
+#endif
+
 	return result;
 }
 
@@ -94,7 +118,10 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 	}
 #else
 	for (int i = 0; i < 3; ++i)
-		result.mCol[i] = mCol[0] * inM.mCol[i].mF32[0] + mCol[1] * inM.mCol[i].mF32[1] + mCol[2] * inM.mCol[i].mF32[2];
+	{
+		Vec4 coli = inM.mCol[i];
+		result.mCol[i] = mCol[0] * coli.mF32[0] + mCol[1] * coli.mF32[1] + mCol[2] * coli.mF32[2];
+	}
 #endif // JPH_USE_SSE
 
 	// Translation part
@@ -113,26 +140,47 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 
 DVec3 DMat44::operator * (Vec3Arg inV) const
 {
+#if defined(JPH_USE_AVX)
+	__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(0, 0, 0, 0)));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(1, 1, 1, 1))));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
+	return DVec3::sFixW(_mm256_add_pd(mCol3.mValue, _mm256_cvtps_pd(t)));
+#else
 	return DVec3(
 		mCol3.mF64[0] + double(mCol[0].mF32[0] * inV.mF32[0] + mCol[1].mF32[0] * inV.mF32[1] + mCol[2].mF32[0] * inV.mF32[2]), 
 		mCol3.mF64[1] + double(mCol[0].mF32[1] * inV.mF32[0] + mCol[1].mF32[1] * inV.mF32[1] + mCol[2].mF32[1] * inV.mF32[2]), 
 		mCol3.mF64[2] + double(mCol[0].mF32[2] * inV.mF32[0] + mCol[1].mF32[2] * inV.mF32[1] + mCol[2].mF32[2] * inV.mF32[2]));
+#endif
 }
 
 DVec3 DMat44::operator * (DVec3Arg inV) const
 {
+#if defined(JPH_USE_AVX)
+	__m256d t = _mm256_add_pd(mCol3.mValue, _mm256_mul_pd(_mm256_cvtps_pd(mCol[0].mValue), _mm256_set1_pd(inV.mF64[0])));
+	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[1].mValue), _mm256_set1_pd(inV.mF64[1])));
+	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[2].mValue), _mm256_set1_pd(inV.mF64[2])));
+	return DVec3::sFixW(t);
+#else
 	return DVec3(
 		mCol3.mF64[0] + double(mCol[0].mF32[0]) * inV.mF64[0] + double(mCol[1].mF32[0]) * inV.mF64[1] + double(mCol[2].mF32[0]) * inV.mF64[2], 
 		mCol3.mF64[1] + double(mCol[0].mF32[1]) * inV.mF64[0] + double(mCol[1].mF32[1]) * inV.mF64[1] + double(mCol[2].mF32[1]) * inV.mF64[2], 
 		mCol3.mF64[2] + double(mCol[0].mF32[2]) * inV.mF64[0] + double(mCol[1].mF32[2]) * inV.mF64[1] + double(mCol[2].mF32[2]) * inV.mF64[2]);
+#endif
 }
 
 DVec3 DMat44::Multiply3x3(DVec3Arg inV) const
 {
+#if defined(JPH_USE_AVX)
+	__m256d t = _mm256_mul_pd(_mm256_cvtps_pd(mCol[0].mValue), _mm256_set1_pd(inV.mF64[0]));
+	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[1].mValue), _mm256_set1_pd(inV.mF64[1])));
+	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[2].mValue), _mm256_set1_pd(inV.mF64[2])));
+	return DVec3::sFixW(t);
+#else
 	return DVec3(
 		double(mCol[0].mF32[0]) * inV.mF64[0] + double(mCol[1].mF32[0]) * inV.mF64[1] + double(mCol[2].mF32[0]) * inV.mF64[2], 
 		double(mCol[0].mF32[1]) * inV.mF64[0] + double(mCol[1].mF32[1]) * inV.mF64[1] + double(mCol[2].mF32[1]) * inV.mF64[2], 
 		double(mCol[0].mF32[2]) * inV.mF64[0] + double(mCol[1].mF32[2]) * inV.mF64[1] + double(mCol[2].mF32[2]) * inV.mF64[2]);
+#endif
 }
 
 void DMat44::SetRotation(Mat44Arg inRotation)
