@@ -171,7 +171,9 @@ public:
 	/// @return Direct child sub shape and its transform, note that the body ID and sub shape ID will be invalid
 	TransformedShape			GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, SubShapeID &outRemainder) const
 	{
-		return mShape->GetSubShapeTransformedShape(inSubShapeID, mShapePositionCOM, mShapeRotation, GetShapeScale(), outRemainder);
+		TransformedShape ts = mShape->GetSubShapeTransformedShape(inSubShapeID, Vec3::sZero(), mShapeRotation, GetShapeScale(), outRemainder);
+		ts.mShapePositionCOM += mShapePositionCOM;
+		return ts;
 	}
 
 	/// Helper function to return the body id from a transformed shape. If the transformed shape is null an invalid body ID will be returned.

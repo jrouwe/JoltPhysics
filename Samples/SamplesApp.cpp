@@ -1108,13 +1108,13 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
 
 			// Draw test location
-			mDebugRenderer->DrawMarker(start + fraction * direction, had_hit? Color::sGreen : Color::sRed, 0.1f);
+			mDebugRenderer->DrawMarker(point, had_hit? Color::sGreen : Color::sRed, 0.1f);
 		}
 		break;
 
@@ -1194,8 +1194,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						mDebugRenderer->DrawText3D(contact_position2, material2->GetDebugName());
 
 						// Draw faces
-						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape1Face, Color::sYellow, 0.01f);
-						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape2Face, Color::sRed, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape1Face, Color::sYellow, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape2Face, Color::sRed, 0.01f);
 					}
 				}
 			}
@@ -1300,8 +1300,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 						mDebugRenderer->DrawText3D(position, material2->GetDebugName());
 
 						// Draw faces
-						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape1Face, Color::sYellow, 0.01f);
-						mDebugRenderer->DrawWirePolygon(RMat44::sIdentity(), hit.mShape2Face, Color::sRed, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape1Face, Color::sYellow, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape2Face, Color::sRed, 0.01f);
 					}
 				}
 
@@ -1323,7 +1323,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center(start + fraction * direction);
+			RVec3 center = start + fraction * direction;
 			Vec3 half_extent = 0.5f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1344,7 +1344,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center(start + fraction * direction);
+			RVec3 center = start + fraction * direction;
 			Vec3 half_extent = 2.0f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1423,7 +1423,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 
@@ -1443,7 +1443,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center(start + fraction * direction);
+			RVec3 center = start + fraction * direction;
 			Vec3 half_extent = 2.0f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1464,7 +1464,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
@@ -1498,13 +1498,13 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
 
 			// Draw test location
-			mDebugRenderer->DrawWireSphere(start + fraction * direction, radius, had_hit? Color::sGreen : Color::sRed);
+			mDebugRenderer->DrawWireSphere(RVec3(point), radius, had_hit? Color::sGreen : Color::sRed);
 		}
 		break;
 
@@ -1531,13 +1531,13 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
 
 			// Draw test location
-			mDebugRenderer->DrawMarker(start + fraction * direction, had_hit? Color::sGreen : Color::sRed, 0.1f);
+			mDebugRenderer->DrawMarker(RVec3(point), had_hit? Color::sGreen : Color::sRed, 0.1f);
 		}
 		break;
 
@@ -1566,7 +1566,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
@@ -1580,7 +1580,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 		{
 			// Create box
 			Vec3 half_extent = 2.0f * mShapeScale;
-			AABox box(Vec3(start) - half_extent, Vec3(start) + half_extent);
+			AABox box(start - half_extent, start + half_extent);
 			AABoxCast box_cast { box, direction };
 
 			// Cast box
@@ -1600,7 +1600,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					RVec3 position = start + hit.mFraction * direction;
 					Color cast_color = c? Color::sGrey : Color::sWhite;
 					mDebugRenderer->DrawLine(prev_position, position, cast_color);
-					mDebugRenderer->DrawWireBox(AABox(Vec3(position) - half_extent, Vec3(position) + half_extent), cast_color);
+					mDebugRenderer->DrawWireBox(RMat44::sTranslation(position), AABox(-half_extent, half_extent), cast_color);
 					c = !c;
 					prev_position = position;
 
@@ -1611,7 +1611,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 
@@ -1622,7 +1622,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			{
 				// Draw 'miss'
 				mDebugRenderer->DrawLine(start, start + direction, Color::sRed);
-				mDebugRenderer->DrawWireBox(AABox(Vec3(start) + direction - half_extent, Vec3(start) + direction + half_extent), Color::sRed);
+				mDebugRenderer->DrawWireBox(RMat44::sTranslation(start + direction), AABox(-half_extent, half_extent), Color::sRed);
 			}
 		}
 		break;

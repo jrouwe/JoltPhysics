@@ -51,12 +51,12 @@ AABox OffsetCenterOfMassShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransf
 	return mInnerShape->GetWorldSpaceBounds(inCenterOfMassTransform.PreTranslated(-mOffset), inScale);
 }
 
-TransformedShape OffsetCenterOfMassShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
+TransformedShape OffsetCenterOfMassShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {
 	// We don't use any bits in the sub shape ID
 	outRemainder = inSubShapeID;
 
-	TransformedShape ts(inPositionCOM - inRotation * mOffset, inRotation, mInnerShape, BodyID());
+	TransformedShape ts(RVec3(inPositionCOM - inRotation * mOffset), inRotation, mInnerShape, BodyID());
 	ts.SetShapeScale(inScale);
 	return ts;
 }
@@ -126,7 +126,7 @@ void OffsetCenterOfMassShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCrea
 	mInnerShape->CollidePoint(inPoint + mOffset, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void OffsetCenterOfMassShape::CollectTransformedShapes(const AABox &inBox, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
+void OffsetCenterOfMassShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
 	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
@@ -135,7 +135,7 @@ void OffsetCenterOfMassShape::CollectTransformedShapes(const AABox &inBox, RVec3
 	mInnerShape->CollectTransformedShapes(inBox, inPositionCOM - inRotation * mOffset, inRotation, inScale, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void OffsetCenterOfMassShape::TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
+void OffsetCenterOfMassShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
 	mInnerShape->TransformShape(inCenterOfMassTransform.PreTranslated(-mOffset), ioCollector);
 }

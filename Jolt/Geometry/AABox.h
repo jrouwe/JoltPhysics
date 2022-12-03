@@ -19,6 +19,7 @@ public:
 	/// Constructor
 					AABox()												: mMin(Vec3::sReplicate(FLT_MAX)), mMax(Vec3::sReplicate(-FLT_MAX)) { }
 					AABox(Vec3Arg inMin, Vec3Arg inMax)					: mMin(inMin), mMax(inMax) { }
+					AABox(DVec3Arg inMin, DVec3Arg inMax)				: mMin(inMin.ToVec3RoundDown()), mMax(inMax.ToVec3RoundUp()) { }
 					AABox(Vec3Arg inCenter, float inRadius)				: mMin(inCenter - Vec3::sReplicate(inRadius)), mMax(inCenter + Vec3::sReplicate(inRadius)) { }
 
 	/// Create box from 2 points

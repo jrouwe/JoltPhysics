@@ -55,12 +55,12 @@ AABox ScaledShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg
 	return mInnerShape->GetWorldSpaceBounds(inCenterOfMassTransform, inScale * mScale);
 }
 
-TransformedShape ScaledShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
+TransformedShape ScaledShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {
 	// We don't use any bits in the sub shape ID
 	outRemainder = inSubShapeID;
 
-	TransformedShape ts(inPositionCOM, inRotation, mInnerShape, BodyID());
+	TransformedShape ts(RVec3(inPositionCOM), inRotation, mInnerShape, BodyID());
 	ts.SetShapeScale(inScale * mScale);
 	return ts;
 }
@@ -131,7 +131,7 @@ void ScaledShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubSh
 	mInnerShape->CollidePoint(inv_scale * inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void ScaledShape::CollectTransformedShapes(const AABox &inBox, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const 
+void ScaledShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const 
 {
 	// Test shape filter
 	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
@@ -140,7 +140,7 @@ void ScaledShape::CollectTransformedShapes(const AABox &inBox, RVec3Arg inPositi
 	mInnerShape->CollectTransformedShapes(inBox, inPositionCOM, inRotation, inScale * mScale, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void ScaledShape::TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
+void ScaledShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
 	mInnerShape->TransformShape(inCenterOfMassTransform * Mat44::sScale(mScale), ioCollector);
 }

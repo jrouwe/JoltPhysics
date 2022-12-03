@@ -116,17 +116,55 @@ void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedS
 {
 	if (mShape != nullptr)
 	{
+		struct MyCollector : public TransformedShapeCollector
+		{
+										MyCollector(TransformedShapeCollector &ioCollector, RVec3 inShapePositionCOM) :
+				mCollector(ioCollector),
+				mShapePositionCOM(inShapePositionCOM)
+			{
+				UpdateEarlyOutFraction(ioCollector.GetEarlyOutFraction());
+			}
+
+			virtual void				AddHit(const TransformedShape &inResult) override
+			{
+				// Apply the center of mass offset
+				TransformedShape ts = inResult;
+				ts.mShapePositionCOM += mShapePositionCOM;
+
+				// Pass hit on to child collector
+				mCollector.AddHit(ts);
+
+				mCollector.UpdateEarlyOutFraction(GetEarlyOutFraction());
+			}
+
+			TransformedShapeCollector &	mCollector;
+			RVec3						mShapePositionCOM;
+		};
+
 		// Set the context on the collector
 		ioCollector.SetContext(this);
 
-		mShape->CollectTransformedShapes(inBox, mShapePositionCOM, mShapeRotation, GetShapeScale(), mSubShapeIDCreator, ioCollector, inShapeFilter);
+		// Wrap the collector so we can add the center of mass precision, we do this to avoid losing precision because CollectTransformedShapes uses single precision floats
+		MyCollector collector(ioCollector, mShapePositionCOM);
+
+		// Take box to local space for the shape
+		AABox box = inBox;
+		box.Translate(-mShapePositionCOM);
+
+		mShape->CollectTransformedShapes(box, Vec3::sZero(), mShapeRotation, GetShapeScale(), mSubShapeIDCreator, collector, inShapeFilter);
 	}
 }
 
 void TransformedShape::GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, RVec3Arg inBaseOffset) const
 {
 	if (mShape != nullptr)
-		mShape->GetTrianglesStart(ioContext, inBox, Vec3(mShapePositionCOM - inBaseOffset), mShapeRotation, GetShapeScale());
+	{
+		// Take box to local space for the shape
+		AABox box = inBox;
+		box.Translate(-inBaseOffset);
+
+		mShape->GetTrianglesStart(ioContext, box, Vec3(mShapePositionCOM - inBaseOffset), mShapeRotation, GetShapeScale());
+	}
 }
 
 int TransformedShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const

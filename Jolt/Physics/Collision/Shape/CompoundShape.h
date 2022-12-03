@@ -81,7 +81,7 @@ public:
 	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
 
 	// See Shape::GetSubShapeTransformedShape
-	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const override;
+	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const override;
 
 	// See Shape::GetSurfaceNormal
 	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const override;
@@ -104,7 +104,7 @@ public:
 #endif // JPH_DEBUG_RENDERER
 
 	// See Shape::TransformShape
-	virtual void					TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const override;
+	virtual void					TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const override;
 
 	// See Shape::GetTrianglesStart
 	virtual void					GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const override { JPH_ASSERT(false, "Cannot call on non-leaf shapes, use CollectTransformedShapes to collect the leaves first!"); }

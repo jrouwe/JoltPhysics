@@ -139,18 +139,18 @@ uint64 CompoundShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 	return mSubShapes[index].mShape->GetSubShapeUserData(remainder);
 }
 
-TransformedShape CompoundShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
+TransformedShape CompoundShape::GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const
 {
 	// Get the sub shape
 	const SubShape &sub_shape = mSubShapes[GetSubShapeIndexFromID(inSubShapeID, outRemainder)];
 
 	// Calculate transform for sub shape
-	RVec3 position = inPositionCOM + inRotation * (inScale * sub_shape.GetPositionCOM());
+	Vec3 position = inPositionCOM + inRotation * (inScale * sub_shape.GetPositionCOM());
 	Quat rotation = inRotation * sub_shape.GetRotation();
 	Vec3 scale = sub_shape.TransformScale(inScale);
 
 	// Return transformed shape
-	TransformedShape ts(position, rotation, sub_shape.mShape, BodyID());
+	TransformedShape ts(RVec3(position), rotation, sub_shape.mShape, BodyID());
 	ts.SetShapeScale(scale);
 	return ts;
 }
@@ -245,7 +245,7 @@ void CompoundShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg i
 }
 #endif // JPH_DEBUG_RENDERER
 
-void CompoundShape::TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
+void CompoundShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
 	for (const SubShape &shape : mSubShapes)
 		shape.mShape->TransformShape(inCenterOfMassTransform * Mat44::sRotationTranslation(shape.GetRotation(), shape.GetPositionCOM()), ioCollector);

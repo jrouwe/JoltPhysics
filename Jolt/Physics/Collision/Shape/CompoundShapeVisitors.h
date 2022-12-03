@@ -224,9 +224,9 @@ struct CompoundShape::CastShapeVisitor
 
 struct CompoundShape::CollectTransformedShapesVisitor
 {
-	JPH_INLINE 			CollectTransformedShapesVisitor(const AABox &inBox, const CompoundShape *inShape, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) :
+	JPH_INLINE 			CollectTransformedShapesVisitor(const AABox &inBox, const CompoundShape *inShape, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) :
 		mBox(inBox),
-		mLocalBox(Mat44::sInverseRotationTranslation(inRotation, Vec3(inPositionCOM)), inBox), // TODO_DP
+		mLocalBox(Mat44::sInverseRotationTranslation(inRotation, inPositionCOM), inBox),
 		mPositionCOM(inPositionCOM),
 		mRotation(inRotation),
 		mScale(inScale),
@@ -263,7 +263,7 @@ struct CompoundShape::CollectTransformedShapesVisitor
 		SubShapeIDCreator sub_shape_id = mSubShapeIDCreator.PushID(inSubShapeIndex, mSubShapeBits);
 
 		// Calculate world transform for sub shape
-		RVec3 position = mPositionCOM + mRotation * (mScale * inSubShape.GetPositionCOM());
+		Vec3 position = mPositionCOM + mRotation * (mScale * inSubShape.GetPositionCOM());
 		Quat rotation = mRotation * inSubShape.GetRotation();
 
 		// Recurse to sub shape
@@ -272,7 +272,7 @@ struct CompoundShape::CollectTransformedShapesVisitor
 
 	AABox 							mBox;
 	OrientedBox 					mLocalBox;
-	RVec3							mPositionCOM;
+	Vec3							mPositionCOM;
 	Quat							mRotation;
 	Vec3							mScale;
 	SubShapeIDCreator				mSubShapeIDCreator;

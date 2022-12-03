@@ -233,7 +233,7 @@ public:
 	/// @param inScale Scale of this shape
 	/// @param outRemainder The remainder of the sub shape ID after removing the sub shape
 	/// @return Direct child sub shape and its transform, note that the body ID and sub shape ID will be invalid
-	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const;
+	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const;
 
 	/// Gets the properties needed to do buoyancy calculations for a body using this shape
 	/// @param inCenterOfMassTransform Transform that takes this shape (centered around center of mass) to world space (or a desired other space)
@@ -276,13 +276,13 @@ public:
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.
 	/// inPositionCOM/inRotation/inScale describes the transform of this shape.
 	/// inSubShapeIDCeator represents the current sub shape ID of this shape.
-	virtual void					CollectTransformedShapes(const AABox &inBox, RVec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const;
+	virtual void					CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const;
 	   
 	/// Transforms this shape and all of its children with inTransform, resulting shape(s) are passed to ioCollector.
 	/// Note that not all shapes support all transforms (especially true for scaling), the resulting shape will try to match the transform as accurately as possible.
 	/// @param inCenterOfMassTransform The transform (rotation, translation, scale) that the center of mass of the shape should get
 	/// @param ioCollector The transformed shapes will be passed to this collector
-	virtual void					TransformShape(RMat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const;
+	virtual void					TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const;
 
 	/// Scale this shape. Note that not all shapes support all scales, this will return a shape that matches the scale as accurately as possible.
 	/// @param inScale The scale to use for this shape (note: this scale is applied to the entire shape in the space it was created, most function apply the scale in the space of the leaf shapes and from the center of mass!)
