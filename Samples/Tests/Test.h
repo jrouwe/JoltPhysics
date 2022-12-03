@@ -110,5 +110,4 @@ protected:
 
 private:
 	bool			mNeedsRestart = false;
-	bool			mResetCamera = false;
 };
