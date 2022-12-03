@@ -619,7 +619,7 @@ DVec3 DVec3::PrepareRoundToZero() const
 	constexpr uint64 cDoubleToFloatMantissaLoss = (1U << 29) - 1;
 
 #if defined(JPH_USE_AVX)
-	return _mm256_and_pd(mValue, _mm256_castsi256_pd(_mm256_set1_epi64x(~cDoubleToFloatMantissaLoss)));
+	return _mm256_and_pd(mValue, _mm256_castsi256_pd(_mm256_set1_epi64x(int64_t(~cDoubleToFloatMantissaLoss))));
 #else
 	double x = BitCast<double>(BitCast<uint64>(mF64[0]) & ~cDoubleToFloatMantissaLoss);
 	double y = BitCast<double>(BitCast<uint64>(mF64[1]) & ~cDoubleToFloatMantissaLoss);
@@ -636,7 +636,7 @@ DVec3 DVec3::PrepareRoundToInf() const
 
 #if defined(JPH_USE_AVX)
 	__m256i mantissa_loss = _mm256_set1_epi64x(cDoubleToFloatMantissaLoss);
-	__m256i value_and_mantissa_loss = _mm256_and_si256(_mm256_castpd_si256(mValue), mantissa_loss);
+	__m256i value_and_mantissa_loss = _mm256_castpd_si256(_mm256_and_pd(mValue, _mm256_castsi256_pd(mantissa_loss)));
 	__m256i is_zero = _mm256_cmpeq_epi64(value_and_mantissa_loss, _mm256_setzero_si256());
 	__m256d value_or_mantissa_loss = _mm256_or_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
 	return _mm256_blendv_pd(value_or_mantissa_loss, mValue, _mm256_castsi256_pd(is_zero));
