@@ -225,8 +225,8 @@ TEST_SUITE("ActiveEdgesTest")
 		if (inCheckActiveEdges)
 		{
 			// Box should have slided frictionless over the plane without encountering any collisions
-			CHECK_APPROX_EQUAL(box.GetPosition(), expected_position, 1.0e-4f);
-			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), initial_velocity, 1.0e-4f);
+			CHECK_APPROX_EQUAL(box.GetPosition(), expected_position, 1.0e-3f);
+			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), initial_velocity, 1.0e-3f);
 		}
 		else
 		{
