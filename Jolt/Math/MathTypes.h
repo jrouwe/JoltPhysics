@@ -17,7 +17,11 @@ class DMat44;
 
 // Types to use for passing arguments to functions
 using Vec3Arg = Vec3;
-using DVec3Arg = DVec3;
+#ifdef JPH_USE_AVX
+	using DVec3Arg = DVec3;
+#else
+	using DVec3Arg = const DVec3 &;
+#endif
 using Vec4Arg = Vec4;
 using UVec4Arg = UVec4;
 using Vec8Arg = Vec8;
