@@ -326,7 +326,7 @@ TEST_SUITE("WheeledVehicleTests")
 			// Start driving
 			controller->SetDriverInput(1.0f, 0, 0, 0);
 			c.GetBodyInterface().ActivateBody(body->GetID());
-			c.Simulate(1.0f);
+			c.Simulate(2.0f);
 
 			// Check if vehicle had traction
 			if (t.mShouldMove)
