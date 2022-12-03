@@ -123,6 +123,7 @@ void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedS
 				mShapePositionCOM(inShapePositionCOM)
 			{
 				UpdateEarlyOutFraction(ioCollector.GetEarlyOutFraction());
+				SetContext(ioCollector.GetContext());
 			}
 
 			virtual void				AddHit(const TransformedShape &inResult) override
