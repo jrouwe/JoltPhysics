@@ -12,7 +12,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-void PruneContactPoints(RVec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, ContactPoints &ioContactPointsOn1, ContactPoints &ioContactPointsOn2)
+void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPointsOn1, ContactPoints &ioContactPointsOn2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
 {
 	// Makes no sense to call this with 4 or less points
 	JPH_ASSERT(ioContactPointsOn1.size() > 4);
@@ -133,7 +133,7 @@ void PruneContactPoints(RVec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, Cont
 	ioContactPointsOn2 = points_to_keep_on_2;
 }	
 
-void ManifoldBetweenTwoFaces(RVec3Arg inCenterOfMass, Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2)
+void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
 {
 #ifdef JPH_DEBUG_RENDERER
 	if (ContactConstraintManager::sDrawContactPoint)
