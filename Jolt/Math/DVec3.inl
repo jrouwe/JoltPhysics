@@ -636,10 +636,10 @@ DVec3 DVec3::PrepareRoundToInf() const
 
 #if defined(JPH_USE_AVX)
 	__m256i mantissa_loss = _mm256_set1_epi64x(cDoubleToFloatMantissaLoss);
-	__m256i value_and_mantissa_loss = _mm256_castpd_si256(_mm256_and_pd(mValue, _mm256_castsi256_pd(mantissa_loss)));
-	__m256i is_zero = _mm256_cmpeq_epi64(value_and_mantissa_loss, _mm256_setzero_si256());
+	__m256d value_and_mantissa_loss = _mm256_and_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
+	__m256d is_zero = _mm256_cmp_pd(value_and_mantissa_loss, _mm256_setzero_pd(), _CMP_EQ_OQ);
 	__m256d value_or_mantissa_loss = _mm256_or_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
-	return _mm256_blendv_pd(value_or_mantissa_loss, mValue, _mm256_castsi256_pd(is_zero));
+	return _mm256_blendv_pd(value_or_mantissa_loss, mValue, is_zero);
 #else
 	uint64 ux = BitCast<uint64>(mF64[0]);
 	uint64 uy = BitCast<uint64>(mF64[1]);
