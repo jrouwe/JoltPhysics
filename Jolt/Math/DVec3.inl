@@ -99,20 +99,20 @@ DVec3::Type DVec3::sFixW(TypeArg inValue)
 
 DVec3 DVec3::sZero()
 {
-	#if defined(JPH_USE_AVX)
-		return _mm256_setzero_pd();
-	#else
-		return DVec3(0, 0, 0);
-	#endif
+#if defined(JPH_USE_AVX)
+	return _mm256_setzero_pd();
+#else
+	return DVec3(0, 0, 0);
+#endif
 }
 
 DVec3 DVec3::sReplicate(double inV)
 {
-	#if defined(JPH_USE_AVX)
-		return _mm256_set1_pd(inV);
-	#else
-		return DVec3(inV, inV, inV);
-	#endif
+#if defined(JPH_USE_AVX)
+	return _mm256_set1_pd(inV);
+#else
+	return DVec3(inV, inV, inV);
+#endif
 }
 
 DVec3 DVec3::sNaN()
@@ -122,11 +122,11 @@ DVec3 DVec3::sNaN()
 
 DVec3 DVec3::sLoadDouble3Unsafe(const Double3 &inV)
 {
-	#if defined(JPH_USE_AVX)
-		Type v = _mm256_loadu_pd(&inV.x);
-	#else
-		Type v = { inV.x, inV.y, inV.z };
-	#endif
+#if defined(JPH_USE_AVX)
+	Type v = _mm256_loadu_pd(&inV.x);
+#else
+	Type v = { inV.x, inV.y, inV.z };
+#endif
 	return sFixW(v);
 }
 
@@ -139,11 +139,11 @@ void DVec3::StoreDouble3(Double3 *outV) const
 
 DVec3::operator Vec3() const
 {
-	#if defined(JPH_USE_AVX)
-		return _mm256_cvtpd_ps(mValue);
-	#else
-		return Vec3((float)GetX(), (float)GetY(), (float)GetZ());
-	#endif
+#if defined(JPH_USE_AVX)
+	return _mm256_cvtpd_ps(mValue);
+#else
+	return Vec3((float)GetX(), (float)GetY(), (float)GetZ());
+#endif
 }
 
 DVec3 DVec3::sMin(DVec3Arg inV1, DVec3Arg inV2)
@@ -618,11 +618,15 @@ DVec3 DVec3::PrepareRoundToZero() const
 	// Float has 23 bit mantissa, double 52 bit mantissa => we lose 29 bits when converting from double to float
 	constexpr uint64 cDoubleToFloatMantissaLoss = (1U << 29) - 1;
 
+#if defined(JPH_USE_AVX)
+	return _mm256_and_pd(mValue, _mm256_castsi256_pd(_mm256_set1_epi64x(~cDoubleToFloatMantissaLoss)));
+#else
 	double x = BitCast<double>(BitCast<uint64>(mF64[0]) & ~cDoubleToFloatMantissaLoss);
 	double y = BitCast<double>(BitCast<uint64>(mF64[1]) & ~cDoubleToFloatMantissaLoss);
 	double z = BitCast<double>(BitCast<uint64>(mF64[2]) & ~cDoubleToFloatMantissaLoss);
 
 	return DVec3(x, y, z);
+#endif
 }
 
 DVec3 DVec3::PrepareRoundToInf() const
@@ -630,6 +634,13 @@ DVec3 DVec3::PrepareRoundToInf() const
 	// Float has 23 bit mantissa, double 52 bit mantissa => we lose 29 bits when converting from double to float
 	constexpr uint64 cDoubleToFloatMantissaLoss = (1U << 29) - 1;
 
+#if defined(JPH_USE_AVX)
+	__m256i mantissa_loss = _mm256_set1_epi64x(cDoubleToFloatMantissaLoss);
+	__m256i value_and_mantissa_loss = _mm256_and_si256(_mm256_castpd_si256(mValue), mantissa_loss);
+	__m256i is_zero = _mm256_cmpeq_epi64(value_and_mantissa_loss, _mm256_setzero_si256());
+	__m256d value_or_mantissa_loss = _mm256_or_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
+	return _mm256_blendv_pd(value_or_mantissa_loss, mValue, _mm256_castsi256_pd(is_zero));
+#else
 	uint64 ux = BitCast<uint64>(mF64[0]);
 	uint64 uy = BitCast<uint64>(mF64[1]);
 	uint64 uz = BitCast<uint64>(mF64[2]);
@@ -639,6 +650,7 @@ DVec3 DVec3::PrepareRoundToInf() const
 	double z = BitCast<double>((uz & cDoubleToFloatMantissaLoss) == 0? uz : (uz | cDoubleToFloatMantissaLoss));
 
 	return DVec3(x, y, z);
+#endif
 }
 
 Vec3 DVec3::ToVec3RoundDown() const
