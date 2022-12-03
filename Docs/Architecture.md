@@ -307,7 +307,7 @@ Keep in mind that:
 * When the collision results of a single query are kilometers apart, precision will suffer as they will be far away from the 'base offset'.
 * The effectiveness of the broad phase (which works in floats) will become less at large distances from the origin, e.g. at 10000 km from the origin, the resolution of the broad phase is reduced to 1 m which means that everything that's closer than 1 m will be considered colliding. This will not impact the quality of the simulation but it will result in extra collision tests in the narrow phase so will hurt performance.
 
-Because of the minimal use of doubles, the simulation runs less than 5% slower in double precision mode compared to float precision mode.
+Because of the minimal use of doubles, the simulation runs 10-20% slower in double precision mode compared to float precision mode.
 
 ## Continuous Collision Detection
 
