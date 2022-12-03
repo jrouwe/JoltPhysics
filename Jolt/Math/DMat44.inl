@@ -13,7 +13,7 @@ DMat44::DMat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, DVec3Arg inC4) :
 { 
 }
 
-DMat44::DMat44(Type inC1, Type inC2, Type inC3, DType inC4) : 
+DMat44::DMat44(Type inC1, Type inC2, Type inC3, DTypeArg inC4) : 
 	mCol { inC1, inC2, inC3 },
 	mCol3(inC4)
 {
@@ -81,9 +81,34 @@ DMat44 DMat44::operator * (Mat44Arg inM) const
 DMat44 DMat44::operator * (DMat44Arg inM) const
 {
 	DMat44 result;
+
+	// Rotation part
+#if defined(JPH_USE_SSE)
+	for (int i = 0; i < 3; ++i)
+	{
+		__m128 c = inM.mCol[i].mValue;
+		__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0)));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1))));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(2, 2, 2, 2))));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[3].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(3, 3, 3, 3))));
+		result.mCol[i].mValue = t;
+	}
+#else
 	for (int i = 0; i < 3; ++i)
 		result.mCol[i] = mCol[0] * inM.mCol[i].mF32[0] + mCol[1] * inM.mCol[i].mF32[1] + mCol[2] * inM.mCol[i].mF32[2];
+#endif // JPH_USE_SSE
+
+	// Translation part
+#if defined(JPH_USE_AVX)
+	__m256d t = mCol3.mValue;
+	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[0].mValue), _mm256_set1_pd(inM.mCol3.mF64[0])));
+	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[1].mValue), _mm256_set1_pd(inM.mCol3.mF64[1])));
+	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[2].mValue), _mm256_set1_pd(inM.mCol3.mF64[2])));
+	result.mCol3 = DVec3::sFixW(t);
+#else
 	result.mCol3 = mCol3 + DVec3(mCol[0]) * inM.mCol3.mF64[0] + DVec3(mCol[1]) * inM.mCol3.mF64[1] + DVec3(mCol[2]) * inM.mCol3.mF64[2];
+#endif
+
 	return result;
 }
 

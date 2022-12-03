@@ -79,7 +79,7 @@ void DVec3::CheckW() const
 } 
 	
 /// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
-DVec3::Type DVec3::sFixW(Type inValue)
+DVec3::Type DVec3::sFixW(TypeArg inValue)
 {
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	#if defined(JPH_USE_AVX)

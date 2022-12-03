@@ -17,8 +17,10 @@ public:
 	// Underlying vector type
 #if defined(JPH_USE_AVX)
 	using Type = __m256d;
+	using TypeArg = __m256d;
 #else
 	using Type = struct { double mData[4]; };
+	using TypeArg = const Type &;
 #endif
 
 	// Argument type
@@ -29,7 +31,7 @@ public:
 								DVec3(const DVec3 &inRHS) = default;
 	JPH_INLINE explicit			DVec3(Vec3Arg inRHS);
 	JPH_INLINE explicit			DVec3(Vec4Arg inRHS);
-	JPH_INLINE					DVec3(Type inRHS) : mValue(inRHS)				{ CheckW(); }
+	JPH_INLINE					DVec3(TypeArg inRHS) : mValue(inRHS)			{ CheckW(); }
 
 	/// Create a vector from 3 components
 	JPH_INLINE					DVec3(double inX, double inY, double inZ);
@@ -245,7 +247,7 @@ public:
 	JPH_INLINE void				CheckW() const;
 	
 	/// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
-	static JPH_INLINE Type		sFixW(Type inValue);
+	static JPH_INLINE Type		sFixW(TypeArg inValue);
 
 	/// Representations of true and false for boolean operations
 	inline static const double	cTrue = BitCast<double>(~uint64(0));
