@@ -43,5 +43,5 @@ public:
 
 	RefConst<HeightFieldShape> mHeightField;
 
-	Vec3				mHitPos = Vec3::sZero();
+	RVec3				mHitPos = RVec3::sZero();
 };

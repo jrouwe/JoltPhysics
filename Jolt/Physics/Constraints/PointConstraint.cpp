@@ -47,32 +47,35 @@ TwoBodyConstraint *PointConstraintSettings::Create(Body &inBody1, Body &inBody2)
 }
 
 PointConstraint::PointConstraint(Body &inBody1, Body &inBody2, const PointConstraintSettings &inSettings) :
-	TwoBodyConstraint(inBody1, inBody2, inSettings),
-	mLocalSpacePosition1(inSettings.mPoint1),
-	mLocalSpacePosition2(inSettings.mPoint2)
+	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
 		// If all properties were specified in world space, take them to local space now
-		mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
-		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+		mLocalSpacePosition1 = Vec3(inBody1.GetInverseCenterOfMassTransform() * inSettings.mPoint1);
+		mLocalSpacePosition2 = Vec3(inBody2.GetInverseCenterOfMassTransform() * inSettings.mPoint2);
+	}
+	else
+	{
+		mLocalSpacePosition1 = Vec3(inSettings.mPoint1);
+		mLocalSpacePosition2 = Vec3(inSettings.mPoint2);
 	}
 }
 
-void PointConstraint::SetPoint1(EConstraintSpace inSpace, Vec3Arg inPoint1)
+void PointConstraint::SetPoint1(EConstraintSpace inSpace, RVec3Arg inPoint1)
 {
-	mLocalSpacePosition1 = inPoint1;
-
 	if (inSpace == EConstraintSpace::WorldSpace)
-		mLocalSpacePosition1 = mBody1->GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
+		mLocalSpacePosition1 = Vec3(mBody1->GetInverseCenterOfMassTransform() * inPoint1);
+	else
+		mLocalSpacePosition1 = Vec3(inPoint1);
 }
 
-void PointConstraint::SetPoint2(EConstraintSpace inSpace, Vec3Arg inPoint2)
+void PointConstraint::SetPoint2(EConstraintSpace inSpace, RVec3Arg inPoint2)
 {
-	mLocalSpacePosition2 = inPoint2;
-
 	if (inSpace == EConstraintSpace::WorldSpace)
-		mLocalSpacePosition2 = mBody2->GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+		mLocalSpacePosition2 = Vec3(mBody2->GetInverseCenterOfMassTransform() * inPoint2);
+	else
+		mLocalSpacePosition2 = Vec3(inPoint2);
 }
 
 void PointConstraint::CalculateConstraintProperties()
@@ -132,8 +135,8 @@ Ref<ConstraintSettings> PointConstraint::GetConstraintSettings() const
 	PointConstraintSettings *settings = new PointConstraintSettings;
 	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
-	settings->mPoint1 = mLocalSpacePosition1;
-	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mPoint1 = RVec3(mLocalSpacePosition1);
+	settings->mPoint2 = RVec3(mLocalSpacePosition2);
 	return settings;
 }
 

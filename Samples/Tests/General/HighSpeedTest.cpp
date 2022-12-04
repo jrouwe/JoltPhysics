@@ -33,7 +33,7 @@ const char *HighSpeedTest::sScenes[] =
 
 int HighSpeedTest::sSelectedScene = 0;
 
-void HighSpeedTest::CreateDominoBlocks(Vec3Arg inOffset, int inNumWalls, float inDensity, float inRadius)
+void HighSpeedTest::CreateDominoBlocks(RVec3Arg inOffset, int inNumWalls, float inDensity, float inRadius)
 {
 	BodyCreationSettings box_settings;
 	Ref<BoxShape> box_shape = new BoxShape(Vec3(0.9f, 1.0f, 0.1f));
@@ -56,7 +56,7 @@ void HighSpeedTest::CreateDominoBlocks(Vec3Arg inOffset, int inNumWalls, float i
 	mBodyInterface->CreateAndAddBody(box_settings, EActivation::DontActivate);
 }
 
-void HighSpeedTest::CreateDynamicObject(Vec3Arg inPosition, Vec3Arg inVelocity, Shape *inShape, EMotionQuality inMotionQuality)
+void HighSpeedTest::CreateDynamicObject(RVec3Arg inPosition, Vec3Arg inVelocity, Shape *inShape, EMotionQuality inMotionQuality)
 {
 	BodyCreationSettings creation_settings;
 	creation_settings.SetShape(inShape);
@@ -83,7 +83,7 @@ void HighSpeedTest::CreateSimpleScene()
 	const float density = 2000.0f;
 	const float speed = 240.0f;
 
-	Vec3 offset(0, 0, -30);
+	RVec3 offset(0, 0, -30);
 
 	{
 		// U shaped set of thin walls
@@ -288,7 +288,7 @@ void HighSpeedTest::CreateFastSmallConvexObjects()
 	};
 	ConvexHullShapeSettings convex_settings(vertices);
 	convex_settings.SetEmbedded();
-	BodyCreationSettings body_settings(&convex_settings, Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings body_settings(&convex_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	body_settings.mMotionQuality = EMotionQuality::LinearCast;
 
 	// Create many instances with high velocity
@@ -299,13 +299,14 @@ void HighSpeedTest::CreateFastSmallConvexObjects()
 		for (int y = -25 ; y < 25; ++y)
 		{
 			// Cast a ray to find the terrain
-			Vec3 origin(float(x), 100.0f, float(y));
+			RVec3 origin(Real(x), 100.0_r, Real(y));
 			Vec3 direction(0, -100.0f, 0);
+			RRayCast ray { origin, direction };
 			RayCastResult hit;
-			if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay({ origin, direction }, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
+			if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
 			{
 				// Place 10m above terrain
-				body_settings.mPosition = origin + hit.mFraction * direction + Vec3(0, 10.0f, 0);
+				body_settings.mPosition = ray.GetPointOnRay(hit.mFraction) + RVec3(0, 10, 0);
 				body_settings.mRotation = Quat::sRandom(rnd);
 				body_settings.mRestitution = restitution_distrib(rnd);
 

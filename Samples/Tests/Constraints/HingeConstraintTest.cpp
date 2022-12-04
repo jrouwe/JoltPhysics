@@ -37,7 +37,7 @@ void HingeConstraintTest::Initialize()
 	{
 		CollisionGroup::GroupID group_id = CollisionGroup::GroupID(randomness);
 
-		Vec3 position(0, 50, -randomness * 20.0f);
+		RVec3 position(0, 50, -randomness * 20.0f);
 		Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(box, position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 		top.SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
 		mBodyInterface->AddBody(top.GetID(), EActivation::DontActivate);

@@ -78,6 +78,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 	* Virtual character. Does not have a rigid body in the world but simulates one using collision checks. Updated outside of the physics update for more control. Less accurate interaction with dynamic bodies.
 * Vehicle simulation of wheeled and tracked vehicles.
 * Water buoyancy calculations.
+* An optional double precision mode that allows large worlds.
 
 ## Supported Platforms
 

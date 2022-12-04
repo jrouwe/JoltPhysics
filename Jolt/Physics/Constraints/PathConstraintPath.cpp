@@ -20,45 +20,48 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(PathConstraintPath)
 
 #ifdef JPH_DEBUG_RENDERER
 // Helper function to transform the results of GetPointOnPath to world space
-static inline void sTransformPathPoint(Mat44Arg inTransform, Vec3 &ioPosition, Vec3 &ioNormal, Vec3 &ioBinormal)
+static inline void sTransformPathPoint(RMat44Arg inTransform, Vec3Arg inPosition, RVec3 &outPosition, Vec3 &ioNormal, Vec3 &ioBinormal)
 {
-	ioPosition = inTransform * ioPosition;
+	outPosition = inTransform * inPosition;
 	ioNormal = inTransform.Multiply3x3(ioNormal);
 	ioBinormal = inTransform.Multiply3x3(ioBinormal);
 }
 
 // Helper function to draw a path segment
-static inline void sDrawPathSegment(DebugRenderer *inRenderer, Vec3Arg inPrevPosition, Vec3Arg inPosition, Vec3Arg inNormal, Vec3Arg inBinormal)
+static inline void sDrawPathSegment(DebugRenderer *inRenderer, RVec3Arg inPrevPosition, RVec3Arg inPosition, Vec3Arg inNormal, Vec3Arg inBinormal)
 {
 	inRenderer->DrawLine(inPrevPosition, inPosition, Color::sWhite);
 	inRenderer->DrawArrow(inPosition, inPosition + 0.1f * inNormal, Color::sRed, 0.02f);
 	inRenderer->DrawArrow(inPosition, inPosition + 0.1f * inBinormal, Color::sGreen, 0.02f);
 }
 
-void PathConstraintPath::DrawPath(DebugRenderer *inRenderer, Mat44Arg inBaseTransform) const
+void PathConstraintPath::DrawPath(DebugRenderer *inRenderer, RMat44Arg inBaseTransform) const
 {
 	// Calculate first point
-	Vec3 first_pos, first_tangent, first_normal, first_binormal;
-	GetPointOnPath(0.0f, first_pos, first_tangent, first_normal, first_binormal);
-	sTransformPathPoint(inBaseTransform, first_pos, first_normal, first_binormal);
+	Vec3 lfirst_pos, first_tangent, first_normal, first_binormal;
+	GetPointOnPath(0.0f, lfirst_pos, first_tangent, first_normal, first_binormal);
+	RVec3 first_pos;
+	sTransformPathPoint(inBaseTransform, lfirst_pos, first_pos, first_normal, first_binormal);
 
 	float t_max = GetPathMaxFraction();
 
 	// Draw the segments
-	Vec3 prev_pos = first_pos;
+	RVec3 prev_pos = first_pos;
 	for (float t = 0.1f; t < t_max; t += 0.1f)
 	{
-		Vec3 pos, tangent, normal, binormal;
-		GetPointOnPath(t, pos, tangent, normal, binormal);
-		sTransformPathPoint(inBaseTransform, pos, normal, binormal);
+		Vec3 lpos, tangent, normal, binormal;
+		GetPointOnPath(t, lpos, tangent, normal, binormal);
+		RVec3 pos;
+		sTransformPathPoint(inBaseTransform, lpos, pos, normal, binormal);
 		sDrawPathSegment(inRenderer, prev_pos, pos, normal, binormal);
 		prev_pos = pos;
 	}
 
 	// Draw last point
-	Vec3 pos, tangent, normal, binormal;
-	GetPointOnPath(t_max, pos, tangent, normal, binormal);
-	sTransformPathPoint(inBaseTransform, pos, normal, binormal);
+	Vec3 lpos, tangent, normal, binormal;
+	GetPointOnPath(t_max, lpos, tangent, normal, binormal);
+	RVec3 pos;
+	sTransformPathPoint(inBaseTransform, lpos, pos, normal, binormal);
 	sDrawPathSegment(inRenderer, prev_pos, pos, normal, binormal);
 }
 #endif // JPH_DEBUG_RENDERER

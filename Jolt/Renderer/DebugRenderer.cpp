@@ -86,14 +86,14 @@ void DebugRenderer::DrawWireBox(const AABox &inBox, ColorArg inColor)
 	JPH_PROFILE_FUNCTION();
 
 	// 8 vertices
-	Float3 v1(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
-	Float3 v2(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
-	Float3 v3(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
-	Float3 v4(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
-	Float3 v5(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
-	Float3 v6(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
-	Float3 v7(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
-	Float3 v8(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
+	RVec3 v1(Real(inBox.mMin.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v2(Real(inBox.mMin.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMax.GetZ()));
+	RVec3 v3(Real(inBox.mMin.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v4(Real(inBox.mMin.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMax.GetZ()));
+	RVec3 v5(Real(inBox.mMax.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v6(Real(inBox.mMax.GetX()), Real(inBox.mMin.GetY()), Real(inBox.mMax.GetZ()));
+	RVec3 v7(Real(inBox.mMax.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMin.GetZ()));
+	RVec3 v8(Real(inBox.mMax.GetX()), Real(inBox.mMax.GetY()), Real(inBox.mMax.GetZ()));
 
 	// 12 edges
 	DrawLine(v1, v2, inColor);
@@ -115,14 +115,14 @@ void DebugRenderer::DrawWireBox(const OrientedBox &inBox, ColorArg inColor)
 	JPH_PROFILE_FUNCTION();
 
 	// 8 vertices
-	Vec3 v1 = inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ());
-	Vec3 v2 = inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ());
-	Vec3 v3 = inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ());
-	Vec3 v4 = inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ());
-	Vec3 v5 = inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ());
-	Vec3 v6 = inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ());
-	Vec3 v7 = inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ());
-	Vec3 v8 = inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ());
+	RVec3 v1(inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ()));
+	RVec3 v2(inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ()));
+	RVec3 v3(inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ()));
+	RVec3 v4(inBox.mOrientation * Vec3(-inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ()));
+	RVec3 v5(inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ()));
+	RVec3 v6(inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), -inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ()));
+	RVec3 v7(inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), -inBox.mHalfExtents.GetZ()));
+	RVec3 v8(inBox.mOrientation * Vec3(inBox.mHalfExtents.GetX(), inBox.mHalfExtents.GetY(), inBox.mHalfExtents.GetZ()));
 
 	// 12 edges
 	DrawLine(v1, v2, inColor);
@@ -139,19 +139,19 @@ void DebugRenderer::DrawWireBox(const OrientedBox &inBox, ColorArg inColor)
 	DrawLine(v7, v8, inColor);
 }
 
-void DebugRenderer::DrawWireBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg inColor)
+void DebugRenderer::DrawWireBox(RMat44Arg inMatrix, const AABox &inBox, ColorArg inColor)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// 8 vertices
-	Vec3 v1 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
-	Vec3 v2 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
-	Vec3 v3 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
-	Vec3 v4 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
-	Vec3 v5 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
-	Vec3 v6 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
-	Vec3 v7 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
-	Vec3 v8 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
+	RVec3 v1 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
+	RVec3 v2 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
+	RVec3 v3 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
+	RVec3 v4 = inMatrix * Vec3(inBox.mMin.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
+	RVec3 v5 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMin.GetZ());
+	RVec3 v6 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMin.GetY(), inBox.mMax.GetZ());
+	RVec3 v7 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMin.GetZ());
+	RVec3 v8 = inMatrix * Vec3(inBox.mMax.GetX(), inBox.mMax.GetY(), inBox.mMax.GetZ());
 
 	// 12 edges
 	DrawLine(v1, v2, inColor);
@@ -168,7 +168,7 @@ void DebugRenderer::DrawWireBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg 
 	DrawLine(v7, v8, inColor);
 }
 
-void DebugRenderer::DrawMarker(Vec3Arg inPosition, ColorArg inColor, float inSize)
+void DebugRenderer::DrawMarker(RVec3Arg inPosition, ColorArg inColor, float inSize)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -180,7 +180,7 @@ void DebugRenderer::DrawMarker(Vec3Arg inPosition, ColorArg inColor, float inSiz
 	DrawLine(inPosition - dz, inPosition + dz, inColor);
 }
 
-void DebugRenderer::DrawArrow(Vec3Arg inFrom, Vec3Arg inTo, ColorArg inColor, float inSize)
+void DebugRenderer::DrawArrow(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor, float inSize)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -190,7 +190,7 @@ void DebugRenderer::DrawArrow(Vec3Arg inFrom, Vec3Arg inTo, ColorArg inColor, fl
 	if (inSize > 0.0f)
 	{
 		// Draw arrow head
-		Vec3 dir = inTo - inFrom;
+		Vec3 dir = Vec3(inTo - inFrom);
 		float len = dir.Length();
 		if (len != 0.0f)
 			dir = dir * (inSize / len);
@@ -202,7 +202,7 @@ void DebugRenderer::DrawArrow(Vec3Arg inFrom, Vec3Arg inTo, ColorArg inColor, fl
 	}
 }
 
-void DebugRenderer::DrawCoordinateSystem(Mat44Arg inTransform, float inSize)
+void DebugRenderer::DrawCoordinateSystem(RMat44Arg inTransform, float inSize)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -211,7 +211,7 @@ void DebugRenderer::DrawCoordinateSystem(Mat44Arg inTransform, float inSize)
 	DrawArrow(inTransform.GetTranslation(), inTransform * Vec3(0, 0, inSize), Color::sBlue, 0.1f * inSize);
 }
 
-void DebugRenderer::DrawPlane(Vec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize)
+void DebugRenderer::DrawPlane(RVec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize)
 {
 	// Create orthogonal basis
 	Vec3 perp1 = inNormal.Cross(Vec3::sAxisY()).NormalizedOr(Vec3::sAxisX());
@@ -219,10 +219,10 @@ void DebugRenderer::DrawPlane(Vec3Arg inPoint, Vec3Arg inNormal, ColorArg inColo
 	perp1 = inNormal.Cross(perp2);
 
 	// Calculate corners
-	Vec3 corner1 = inPoint + inSize * (perp1 + perp2);
-	Vec3 corner2 = inPoint + inSize * (perp1 - perp2);
-	Vec3 corner3 = inPoint + inSize * (-perp1 - perp2);
-	Vec3 corner4 = inPoint + inSize * (-perp1 + perp2);
+	RVec3 corner1 = inPoint + inSize * (perp1 + perp2);
+	RVec3 corner2 = inPoint + inSize * (perp1 - perp2);
+	RVec3 corner3 = inPoint + inSize * (-perp1 - perp2);
+	RVec3 corner4 = inPoint + inSize * (-perp1 + perp2);
 
 	// Draw cross
 	DrawLine(corner1, corner3, inColor);
@@ -238,7 +238,7 @@ void DebugRenderer::DrawPlane(Vec3Arg inPoint, Vec3Arg inNormal, ColorArg inColo
 	DrawArrow(inPoint, inPoint + inSize * inNormal, inColor, 0.1f * inSize);
 }
 
-void DebugRenderer::DrawWireTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor)
+void DebugRenderer::DrawWireTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -247,14 +247,14 @@ void DebugRenderer::DrawWireTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, C
 	DrawLine(inV3, inV1, inColor);
 }
 
-void DebugRenderer::DrawWireSphere(Vec3Arg inCenter, float inRadius, ColorArg inColor, int inLevel)
+void DebugRenderer::DrawWireSphere(RVec3Arg inCenter, float inRadius, ColorArg inColor, int inLevel)
 {
-	Mat44 matrix = Mat44::sTranslation(inCenter) * Mat44::sScale(inRadius);
+	RMat44 matrix = RMat44::sTranslation(inCenter) * Mat44::sScale(inRadius);
 
 	DrawWireUnitSphere(matrix, inColor, inLevel);
 }
 
-void DebugRenderer::DrawWireUnitSphere(Mat44Arg inMatrix, ColorArg inColor, int inLevel)
+void DebugRenderer::DrawWireUnitSphere(RMat44Arg inMatrix, ColorArg inColor, int inLevel)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -268,13 +268,13 @@ void DebugRenderer::DrawWireUnitSphere(Mat44Arg inMatrix, ColorArg inColor, int 
 	DrawWireUnitSphereRecursive(inMatrix, inColor, -Vec3::sAxisX(), -Vec3::sAxisY(), -Vec3::sAxisZ(), inLevel);
 }
 
-void DebugRenderer::DrawWireUnitSphereRecursive(Mat44Arg inMatrix, ColorArg inColor, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel)
+void DebugRenderer::DrawWireUnitSphereRecursive(RMat44Arg inMatrix, ColorArg inColor, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel)
 {
 	if (inLevel == 0)
 	{
-		Vec3 d1 = inMatrix * inDir1;
-		Vec3 d2 = inMatrix * inDir2;
-		Vec3 d3 = inMatrix * inDir3;
+		RVec3 d1 = inMatrix * inDir1;
+		RVec3 d2 = inMatrix * inDir2;
+		RVec3 d3 = inMatrix * inDir3;
 
 		DrawLine(d1, d2, inColor);
 		DrawLine(d2, d3, inColor);
@@ -713,12 +713,12 @@ void DebugRenderer::DrawBox(const AABox &inBox, ColorArg inColor, ECastShadow in
 {
 	JPH_PROFILE_FUNCTION();
 
-	Mat44 m = Mat44::sScale(inBox.GetExtent());
-	m.SetTranslation(inBox.GetCenter());
+	RMat44 m = RMat44::sScale(inBox.GetExtent());
+	m.SetTranslation(RVec3(inBox.GetCenter()));
 	DrawGeometry(m, inColor, mBox, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 }
 
-void DebugRenderer::DrawBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawBox(RMat44Arg inMatrix, const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -727,23 +727,23 @@ void DebugRenderer::DrawBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg inCo
 	DrawGeometry(inMatrix * m, inColor, mBox, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 }
 
-void DebugRenderer::DrawSphere(Vec3Arg inCenter, float inRadius, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawSphere(RVec3Arg inCenter, float inRadius, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
-	Mat44 matrix = Mat44::sTranslation(inCenter) * Mat44::sScale(inRadius);
+	RMat44 matrix = RMat44::sTranslation(inCenter) * Mat44::sScale(inRadius);
 
 	DrawUnitSphere(matrix, inColor, inCastShadow, inDrawMode);
 }
 
-void DebugRenderer::DrawUnitSphere(Mat44Arg inMatrix, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawUnitSphere(RMat44Arg inMatrix, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
 	DrawGeometry(inMatrix, inColor, mSphere, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 }
 
-void DebugRenderer::DrawCapsule(Mat44Arg inMatrix, float inHalfHeightOfCylinder, float inRadius, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawCapsule(RMat44Arg inMatrix, float inHalfHeightOfCylinder, float inRadius, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -756,28 +756,28 @@ void DebugRenderer::DrawCapsule(Mat44Arg inMatrix, float inHalfHeightOfCylinder,
 	float radius_sq = Square(inRadius);
 
 	// Draw bottom half sphere
-	Mat44 bottom_matrix = inMatrix * Mat44::sTranslation(Vec3(0, -inHalfHeightOfCylinder, 0)) * scale_matrix;
+	RMat44 bottom_matrix = inMatrix * Mat44::sTranslation(Vec3(0, -inHalfHeightOfCylinder, 0)) * scale_matrix;
 	DrawGeometry(bottom_matrix, world_bounds, radius_sq, inColor, mCapsuleBottom, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 
 	// Draw top half sphere
-	Mat44 top_matrix = inMatrix * Mat44::sTranslation(Vec3(0, inHalfHeightOfCylinder, 0)) * scale_matrix;
+	RMat44 top_matrix = inMatrix * Mat44::sTranslation(Vec3(0, inHalfHeightOfCylinder, 0)) * scale_matrix;
 	DrawGeometry(top_matrix, world_bounds, radius_sq, inColor, mCapsuleTop, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 
 	// Draw middle part
 	DrawGeometry(inMatrix * Mat44::sScale(Vec3(inRadius, inHalfHeightOfCylinder, inRadius)), world_bounds, radius_sq, inColor, mCapsuleMid, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 }
 
-void DebugRenderer::DrawCylinder(Mat44Arg inMatrix, float inHalfHeight, float inRadius, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawCylinder(RMat44Arg inMatrix, float inHalfHeight, float inRadius, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
 	Mat44 local_transform(Vec4(inRadius, 0, 0, 0), Vec4(0, inHalfHeight, 0, 0), Vec4(0, 0, inRadius, 0), Vec4(0, 0, 0, 1));
-	Mat44 transform = inMatrix * local_transform;
+	RMat44 transform = inMatrix * local_transform;
 
 	DrawGeometry(transform, mCylinder->mBounds.Transformed(transform), Square(inRadius), inColor, mCylinder, ECullMode::CullBackFace, inCastShadow, inDrawMode);
 }
 
-void DebugRenderer::DrawOpenCone(Vec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -791,12 +791,12 @@ void DebugRenderer::DrawOpenCone(Vec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpen
 	{
 		Vec3 perp1 = scale * inPerpendicular;
 		Vec3 perp2 = scale * inAxis.Cross(inPerpendicular);
-		Mat44 transform(Vec4(perp1, 0), Vec4(axis, 0), Vec4(perp2, 0), Vec4(inTop, 1));
+		RMat44 transform(Vec4(perp1, 0), Vec4(axis, 0), Vec4(perp2, 0), inTop);
 		DrawGeometry(transform, inColor, mOpenCone, ECullMode::Off, inCastShadow, inDrawMode);
 	}
 }
 
-void DebugRenderer::DrawSwingLimits(Mat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -926,7 +926,7 @@ void DebugRenderer::DrawSwingLimits(Mat44Arg inMatrix, float inSwingYHalfAngle, 
 }
 
 
-void DebugRenderer::DrawPie(Vec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	if (inMinAngle >= inMaxAngle)
 		return;
@@ -981,7 +981,7 @@ void DebugRenderer::DrawPie(Vec3Arg inCenter, float inRadius, Vec3Arg inNormal, 
 	}
 	
 	// Construct matrix that transforms pie into world space
-	Mat44 matrix = Mat44(Vec4(inRadius * inAxis, 0), Vec4(inRadius * inNormal, 0), Vec4(inRadius * inNormal.Cross(inAxis), 0), Vec4(inCenter, 1)) * Mat44::sRotationY(-inMinAngle);
+	RMat44 matrix = RMat44(Vec4(inRadius * inAxis, 0), Vec4(inRadius * inNormal, 0), Vec4(inRadius * inNormal.Cross(inAxis), 0), inCenter) * Mat44::sRotationY(-inMinAngle);
 		
 	DrawGeometry(matrix, inColor, geometry, ECullMode::Off, inCastShadow, inDrawMode);
 }

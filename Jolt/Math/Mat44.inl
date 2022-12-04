@@ -16,6 +16,11 @@ Mat44::Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec4Arg inC4) :
 { 
 }
 
+Mat44::Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec3Arg inC4) : 
+	mCol { inC1, inC2, inC3, Vec4(inC4, 1.0f) } 
+{ 
+}
+
 Mat44::Mat44(Type inC1, Type inC2, Type inC3, Type inC4) : 
 	mCol { inC1, inC2, inC3, inC4 } 
 {

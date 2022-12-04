@@ -99,14 +99,14 @@ void RigPileTest::Initialize()
 		for (int col = 0; col < cNumCols; ++col)
 		{
 			// Determine start location of ray
-			Vec3 start = Vec3(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0f), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0f));
+			RVec3 start = RVec3(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0f), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0f));
 
 			// Cast ray down to terrain
 			RayCastResult hit;
 			Vec3 ray_direction(0, -200, 0);
-			RayCast ray { start, ray_direction };
+			RRayCast ray { start, ray_direction };
 			if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
-				start = start + hit.mFraction * ray_direction;
+				start = ray.GetPointOnRay(hit.mFraction);
 
 			for (int i = 0; i < cPileSize; ++i)
 			{
@@ -119,8 +119,9 @@ void RigPileTest::Initialize()
 				animation[random() % cAnimationCount]->Sample(0.0f, pose);
 
 				// Override root
+				pose.SetRootOffset(start);
 				SkeletonPose::JointState &root = pose.GetJoint(0);
-				root.mTranslation = start + Vec3(0, cVerticalSeparation * (i + 1), 0);
+				root.mTranslation = Vec3(0, cVerticalSeparation * (i + 1), 0);
 				root.mRotation = Quat::sRotation(Vec3::sAxisY(), angle(random)) * root.mRotation;
 				pose.CalculateJointMatrices();
 

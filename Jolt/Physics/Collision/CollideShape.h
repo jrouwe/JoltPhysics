@@ -55,15 +55,15 @@ public:
 
 	using Face = StaticArray<Vec3, 32>;
 
-	Vec3						mContactPointOn1;			///< Contact point on the surface of shape 1 (in world space)
-	Vec3						mContactPointOn2;			///< Contact point on the surface of shape 2 (in world space). If the penetration depth is 0, this will be the same as mContactPointOn1.
+	Vec3						mContactPointOn1;			///< Contact point on the surface of shape 1 (in world space or relative to base offset)
+	Vec3						mContactPointOn2;			///< Contact point on the surface of shape 2 (in world space or relative to base offset). If the penetration depth is 0, this will be the same as mContactPointOn1.
 	Vec3						mPenetrationAxis;			///< Direction to move shape 2 out of collision along the shortest path (magnitude is meaningless, in world space). You can use -mPenetrationAxis.Normalized() as contact normal.
 	float						mPenetrationDepth;			///< Penetration depth (move shape 2 by this distance to resolve the collision)
 	SubShapeID					mSubShapeID1;				///< Sub shape ID that identifies the face on shape 1
 	SubShapeID					mSubShapeID2;				///< Sub shape ID that identifies the face on shape 2
 	BodyID						mBodyID2;					///< BodyID to which shape 2 belongs to
-	Face						mShape1Face;				///< Colliding face on shape 1 (optional result, in world space)
-	Face						mShape2Face;				///< Colliding face on shape 2 (optional result, in world space)
+	Face						mShape1Face;				///< Colliding face on shape 1 (optional result, in world space or relative to base offset)
+	Face						mShape2Face;				///< Colliding face on shape 2 (optional result, in world space or relative to base offset)
 };
 
 /// Settings to be passed with a collision query

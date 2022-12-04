@@ -10,12 +10,13 @@
 JPH_NAMESPACE_BEGIN
 
 /// Structure that holds a single shape cast (a shape moving along a linear path in 3d space with no rotation)
-struct ShapeCast
+template <class Vec, class Mat, class ShapeCastType>
+struct ShapeCastT
 {
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructor
-								ShapeCast(const Shape *inShape, Vec3Arg inScale, Mat44Arg inCenterOfMassStart, Vec3Arg inDirection, const AABox &inWorldSpaceBounds) :
+								ShapeCastT(const Shape *inShape, Vec3Arg inScale, typename Mat::ArgType inCenterOfMassStart, Vec3Arg inDirection, const AABox &inWorldSpaceBounds) :
 		mShape(inShape),
 		mScale(inScale),
 		mCenterOfMassStart(inCenterOfMassStart),
@@ -25,30 +26,64 @@ struct ShapeCast
 	}
 
 	/// Constructor
-								ShapeCast(const Shape *inShape, Vec3Arg inScale, Mat44Arg inCenterOfMassStart, Vec3Arg inDirection) :
-		ShapeCast(inShape, inScale, inCenterOfMassStart, inDirection, inShape->GetWorldSpaceBounds(inCenterOfMassStart, inScale))
+								ShapeCastT(const Shape *inShape, Vec3Arg inScale, typename Mat::ArgType inCenterOfMassStart, Vec3Arg inDirection) :
+		ShapeCastT<Vec, Mat, ShapeCastType>(inShape, inScale, inCenterOfMassStart, inDirection, inShape->GetWorldSpaceBounds(inCenterOfMassStart, inScale))
 	{
 	}
 
 	/// Construct a shape cast using a world transform for a shape instead of a center of mass transform
-	static inline ShapeCast		sFromWorldTransform(const Shape *inShape, Vec3Arg inScale, Mat44Arg inWorldTransform, Vec3Arg inDirection)
+	static inline ShapeCastType	sFromWorldTransform(const Shape *inShape, Vec3Arg inScale, typename Mat::ArgType inWorldTransform, Vec3Arg inDirection)
 	{
-		return ShapeCast(inShape, inScale, inWorldTransform.PreTranslated(inShape->GetCenterOfMass()), inDirection);
+		return ShapeCastType(inShape, inScale, inWorldTransform.PreTranslated(inShape->GetCenterOfMass()), inDirection);
 	}
 
 	/// Transform this shape cast using inTransform. Multiply transform on the left left hand side.
-	ShapeCast					PostTransformed(Mat44Arg inTransform) const
+	ShapeCastType				PostTransformed(typename Mat::ArgType inTransform) const
 	{
 		Mat44 start = inTransform * mCenterOfMassStart;
 		Vec3 direction = inTransform.Multiply3x3(mDirection);
 		return { mShape, mScale, start, direction };
 	}
 
+	/// Translate this shape cast by inTranslation.
+	ShapeCastType				PostTranslated(typename Vec::ArgType inTranslation) const
+	{
+		return { mShape, mScale, mCenterOfMassStart.PostTranslated(inTranslation), mDirection };
+	}
+
+	/// Get point with fraction inFraction on ray from mCenterOfMassStart to mCenterOfMassStart + mDirection (0 = start of ray, 1 = end of ray)
+	inline Vec					GetPointOnRay(float inFraction) const
+	{
+		return mCenterOfMassStart.GetTranslation() + inFraction * mDirection;
+	}
+
 	const Shape *				mShape;								///< Shape that's being cast (cannot be mesh shape). Note that this structure does not assume ownership over the shape for performance reasons.
 	const Vec3					mScale;								///< Scale in local space of the shape being cast
-	const Mat44					mCenterOfMassStart;					///< Start position and orientation of the center of mass of the shape (construct using sFromWorldTransform if you have a world transform for your shape)
+	const Mat					mCenterOfMassStart;					///< Start position and orientation of the center of mass of the shape (construct using sFromWorldTransform if you have a world transform for your shape)
 	const Vec3					mDirection;							///< Direction and length of the cast (anything beyond this length will not be reported as a hit)
 	const AABox					mShapeWorldBounds;					///< Cached shape's world bounds, calculated in constructor
+};
+
+struct ShapeCast : public ShapeCastT<Vec3, Mat44, ShapeCast>
+{
+	using ShapeCastT<Vec3, Mat44, ShapeCast>::ShapeCastT;
+};
+
+struct RShapeCast : public ShapeCastT<RVec3, RMat44, RShapeCast>
+{
+	using ShapeCastT<RVec3, RMat44, RShapeCast>::ShapeCastT;
+
+	/// Convert from ShapeCast, converts single to double precision
+	explicit					RShapeCast(const ShapeCast &inCast) :
+		RShapeCast(inCast.mShape, inCast.mScale, RMat44(inCast.mCenterOfMassStart), inCast.mDirection, inCast.mShapeWorldBounds)
+	{
+	}
+
+	/// Convert to ShapeCast, which implies casting from double precision to single precision
+	explicit					operator ShapeCast() const
+	{
+		return ShapeCast(mShape, mScale, mCenterOfMassStart.ToMat44(), mDirection, mShapeWorldBounds);
+	}
 };
 
 /// Settings to be passed with a shape cast

@@ -24,7 +24,7 @@ void CenterOfMassTest::Initialize()
 	// Compound shape with center of mass offset
 	Ref<StaticCompoundShapeSettings> compound_shape1 = new StaticCompoundShapeSettings;
 	compound_shape1->AddShape(Vec3(10, 0, 0), Quat::sIdentity(), new SphereShape(2));
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape1, Vec3(0, 10.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape1, RVec3(0, 10.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
 
 	// Create box with center of mass offset
@@ -37,7 +37,7 @@ void CenterOfMassTest::Initialize()
 	box.push_back(Vec3(5, 10, 5));
 	box.push_back(Vec3(10, 5, 5));
 	box.push_back(Vec3(5, 5, 5));
-	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(box), Vec3(0, 10.0f, 20.0f), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(new ConvexHullShapeSettings(box), RVec3(0, 10.0f, 20.0f), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
 
 	// Compound
@@ -46,6 +46,6 @@ void CenterOfMassTest::Initialize()
 	compound_shape2->AddShape(Vec3(10, 0, 0), rotation, new CapsuleShape(5, 1));
 	compound_shape2->AddShape(rotation * Vec3(10, -5, 0), Quat::sIdentity(), new SphereShape(4));
 	compound_shape2->AddShape(rotation * Vec3(10, 5, 0), Quat::sIdentity(), new SphereShape(2));
-	Body &body3 = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape2, Vec3(0, 10.0f, 40.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Body &body3 = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape2, RVec3(0, 10.0f, 40.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(body3.GetID(), EActivation::Activate);
 }

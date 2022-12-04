@@ -8,15 +8,24 @@
 // Disable common warnings
 JPH_SUPPRESS_WARNINGS
 JPH_CLANG_SUPPRESS_WARNING("-Wheader-hygiene")
+#ifdef JPH_DOUBLE_PRECISION
+JPH_CLANG_SUPPRESS_WARNING("-Wdouble-promotion")
+#endif // JPH_DOUBLE_PRECISION
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include "doctest.h"
 JPH_SUPPRESS_WARNINGS_STD_END
 
 using namespace JPH;
+using namespace JPH::literals;
 using namespace std;
 
 inline void CHECK_APPROX_EQUAL(float inLHS, float inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(abs(inRHS - inLHS) <= inTolerance);
+}
+
+inline void CHECK_APPROX_EQUAL(double inLHS, double inRHS, double inTolerance = 1.0e-6)
 {
 	CHECK(abs(inRHS - inLHS) <= inTolerance);
 }
@@ -32,6 +41,11 @@ inline void CHECK_APPROX_EQUAL(Vec4Arg inLHS, Vec4Arg inRHS, float inTolerance =
 }
 
 inline void CHECK_APPROX_EQUAL(Mat44Arg inLHS, Mat44Arg inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
+}
+
+inline void CHECK_APPROX_EQUAL(DMat44Arg inLHS, DMat44Arg inRHS, float inTolerance = 1.0e-6f)
 {
 	CHECK(inLHS.IsClose(inRHS, inTolerance * inTolerance));
 }

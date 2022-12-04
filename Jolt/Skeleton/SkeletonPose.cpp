@@ -57,19 +57,21 @@ void SkeletonPose::CalculateLocalSpaceJointMatrices(Mat44 *outMatrices) const
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void SkeletonPose::Draw(const DrawSettings &inDrawSettings, DebugRenderer *inRenderer, Mat44Arg inOffset) const
+void SkeletonPose::Draw(const DrawSettings &inDrawSettings, DebugRenderer *inRenderer, RMat44Arg inOffset) const
 {
+	RMat44 offset = inOffset * RMat44::sTranslation(mRootOffset);
+
 	const Skeleton::JointVector &joints = mSkeleton->GetJoints();
 
 	for (int b = 0; b < mSkeleton->GetJointCount(); ++b)
 	{
-		Mat44 joint_transform = inOffset * mJointMatrices[b];
+		RMat44 joint_transform = offset * mJointMatrices[b];
 
 		if (inDrawSettings.mDrawJoints)
 		{
 			int parent = joints[b].mParentJointIndex;
 			if (parent >= 0)
-				inRenderer->DrawLine(inOffset * mJointMatrices[parent].GetTranslation(), joint_transform.GetTranslation(), Color::sGreen);
+				inRenderer->DrawLine(offset * mJointMatrices[parent].GetTranslation(), joint_transform.GetTranslation(), Color::sGreen);
 		}
 
 		if (inDrawSettings.mDrawJointOrientations)

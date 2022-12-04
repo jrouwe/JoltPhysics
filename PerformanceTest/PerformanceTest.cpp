@@ -27,6 +27,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 JPH_SUPPRESS_WARNINGS_STD_END
 
 using namespace JPH;
+using namespace JPH::literals;
 using namespace std;
 
 // Disable common warnings triggered by Jolt
@@ -363,8 +364,8 @@ int main(int argc, char** argv)
 			physics_system.GetBodies(body_ids);
 			for (BodyID id : body_ids)
 			{
-				Vec3 pos = bi.GetPosition(id);
-				hash = HashBytes(&pos, 3 * sizeof(float), hash);
+				RVec3 pos = bi.GetPosition(id);
+				hash = HashBytes(&pos, 3 * sizeof(Real), hash);
 				Quat rot = bi.GetRotation(id);
 				hash = HashBytes(&rot, sizeof(Quat), hash);
 			}

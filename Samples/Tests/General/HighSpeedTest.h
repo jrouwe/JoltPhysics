@@ -22,8 +22,8 @@ public:
 	virtual void		CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
-	void				CreateDynamicObject(Vec3Arg inPosition, Vec3Arg inVelocity, Shape *inShape, EMotionQuality inMotionQuality = EMotionQuality::LinearCast);
-	void				CreateDominoBlocks(Vec3Arg inOffset, int inNumWalls, float inDensity, float inRadius);
+	void				CreateDynamicObject(RVec3Arg inPosition, Vec3Arg inVelocity, Shape *inShape, EMotionQuality inMotionQuality = EMotionQuality::LinearCast);
+	void				CreateDominoBlocks(RVec3Arg inOffset, int inNumWalls, float inDensity, float inRadius);
 	void				CreateFastSmallConvexObjects();
 	void				CreateSimpleScene();
 	void				CreateConvexOnLargeTriangles();

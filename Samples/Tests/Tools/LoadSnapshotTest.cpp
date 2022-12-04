@@ -52,7 +52,7 @@ void LoadSnapshotTest::Initialize()
 		}
 
 		// Rotate the body so that it matches Y is up
-		settings.mPosition = up_rotation * settings.mPosition;
+		settings.mPosition = RMat44::sRotation(up_rotation) * settings.mPosition;
 		settings.mRotation = up_rotation * settings.mRotation;
 	}
 

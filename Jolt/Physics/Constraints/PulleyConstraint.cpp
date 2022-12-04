@@ -14,6 +14,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+using namespace literals;
+
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(PulleyConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(PulleyConstraintSettings, TwoBodyConstraintSettings)
@@ -63,27 +65,27 @@ TwoBodyConstraint *PulleyConstraintSettings::Create(Body &inBody1, Body &inBody2
 
 PulleyConstraint::PulleyConstraint(Body &inBody1, Body &inBody2, const PulleyConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings),
-	mLocalSpacePosition1(inSettings.mBodyPoint1),
-	mLocalSpacePosition2(inSettings.mBodyPoint2),
 	mFixedPosition1(inSettings.mFixedPoint1),
 	mFixedPosition2(inSettings.mFixedPoint2),
 	mRatio(inSettings.mRatio),
 	mMinLength(inSettings.mMinLength),
-	mMaxLength(inSettings.mMaxLength),
-	mWorldSpacePosition1(inSettings.mBodyPoint1),
-	mWorldSpacePosition2(inSettings.mBodyPoint2)
+	mMaxLength(inSettings.mMaxLength)
 {
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
 		// If all properties were specified in world space, take them to local space now
-		mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
-		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+		mLocalSpacePosition1 = Vec3(inBody1.GetInverseCenterOfMassTransform() * inSettings.mBodyPoint1);
+		mLocalSpacePosition2 = Vec3(inBody2.GetInverseCenterOfMassTransform() * inSettings.mBodyPoint2);
+		mWorldSpacePosition1 = inSettings.mBodyPoint1;
+		mWorldSpacePosition2 = inSettings.mBodyPoint2;
 	}
 	else
 	{
 		// If properties were specified in local space, we need to calculate world space positions
-		mWorldSpacePosition1 = inBody1.GetCenterOfMassTransform() * mWorldSpacePosition1;
-		mWorldSpacePosition2 = inBody2.GetCenterOfMassTransform() * mWorldSpacePosition2;
+		mLocalSpacePosition1 = Vec3(inSettings.mBodyPoint1);
+		mLocalSpacePosition2 = Vec3(inSettings.mBodyPoint2);
+		mWorldSpacePosition1 = inBody1.GetCenterOfMassTransform() * inSettings.mBodyPoint1;
+		mWorldSpacePosition2 = inBody2.GetCenterOfMassTransform() * inSettings.mBodyPoint2;
 	}
 
 	// Calculate min/max length if it was not provided
@@ -104,12 +106,12 @@ float PulleyConstraint::CalculatePositionsNormalsAndLength()
 	mWorldSpacePosition2 = mBody2->GetCenterOfMassTransform() * mLocalSpacePosition2;
 
 	// Calculate world space normals
-	Vec3 delta1 = mWorldSpacePosition1 - mFixedPosition1;
+	Vec3 delta1 = Vec3(mWorldSpacePosition1 - mFixedPosition1);
 	float delta1_len = delta1.Length();
 	if (delta1_len > 0.0f)
 		mWorldSpaceNormal1 = delta1 / delta1_len;
 
-	Vec3 delta2 = mWorldSpacePosition2 - mFixedPosition2;
+	Vec3 delta2 = Vec3(mWorldSpacePosition2 - mFixedPosition2);
 	float delta2_len = delta2.Length();
 	if (delta2_len > 0.0f)
 		mWorldSpaceNormal2 = delta2 / delta2_len;
@@ -121,8 +123,8 @@ float PulleyConstraint::CalculatePositionsNormalsAndLength()
 void PulleyConstraint::CalculateConstraintProperties()
 {
 	// Calculate attachment points relative to COM
-	Vec3 r1 = mWorldSpacePosition1 - mBody1->GetCenterOfMassPosition();
-	Vec3 r2 = mWorldSpacePosition2 - mBody2->GetCenterOfMassPosition();
+	Vec3 r1 = Vec3(mWorldSpacePosition1 - mBody1->GetCenterOfMassPosition());
+	Vec3 r2 = Vec3(mWorldSpacePosition2 - mBody2->GetCenterOfMassPosition());
 
 	mIndependentAxisConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, r1, mWorldSpaceNormal1, r2, mWorldSpaceNormal2, mRatio);
 }
@@ -197,7 +199,7 @@ void PulleyConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 	inRenderer->DrawLine(mFixedPosition2, mWorldSpacePosition2, color);
 
 	// Draw current length
-	inRenderer->DrawText3D(0.5f * (mFixedPosition1 + mFixedPosition2), StringFormat("%.2f", (double)current_length));
+	inRenderer->DrawText3D(0.5_r * (mFixedPosition1 + mFixedPosition2), StringFormat("%.2f", (double)current_length));
 }
 #endif // JPH_DEBUG_RENDERER
 
@@ -224,9 +226,9 @@ Ref<ConstraintSettings> PulleyConstraint::GetConstraintSettings() const
 	PulleyConstraintSettings *settings = new PulleyConstraintSettings;
 	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
-	settings->mBodyPoint1 = mLocalSpacePosition1;
+	settings->mBodyPoint1 = RVec3(mLocalSpacePosition1);
 	settings->mFixedPoint1 = mFixedPosition1;
-	settings->mBodyPoint2 = mLocalSpacePosition2;
+	settings->mBodyPoint2 = RVec3(mLocalSpacePosition2);
 	settings->mFixedPoint2 = mFixedPosition2;
 	settings->mRatio = mRatio;
 	settings->mMinLength = mMinLength;

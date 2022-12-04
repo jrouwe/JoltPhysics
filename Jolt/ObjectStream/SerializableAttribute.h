@@ -50,6 +50,12 @@ public:
 	void						SetName(const char *inName)							{ mName = inName; }
 	const char *				GetName() const										{ return mName; }
 
+	/// Access to the memory location that contains the member
+	template <class T>
+	inline T *					GetMemberPointer(void *inObject) const				{ return reinterpret_cast<T *>(reinterpret_cast<uint8 *>(inObject) + mMemberOffset); }
+	template <class T>
+	inline const T *			GetMemberPointer(const void *inObject) const		{ return reinterpret_cast<const T *>(reinterpret_cast<const uint8 *>(inObject) + mMemberOffset); }
+
 	/// In case this attribute contains an RTTI type, return it (note that a Array<sometype> will return the rtti of sometype)
 	const RTTI *				GetMemberPrimitiveType() const
 	{
@@ -65,13 +71,13 @@ public:
 	/// Read the data for this attribute into attribute containing class inObject
 	bool						ReadData(IObjectStreamIn &ioStream, void *inObject) const
 	{
-		return mReadData(ioStream, reinterpret_cast<uint8 *>(inObject) + mMemberOffset);
+		return mReadData(ioStream, GetMemberPointer<void>(inObject));
 	}
 
 	/// Write the data for this attribute from attribute containing class inObject
 	void						WriteData(IObjectStreamOut &ioStream, const void *inObject) const
 	{
-		mWriteData(ioStream, reinterpret_cast<const uint8 *>(inObject) + mMemberOffset);
+		mWriteData(ioStream, GetMemberPointer<void>(inObject));
 	}
 
 	/// Write the data type of this attribute to a stream

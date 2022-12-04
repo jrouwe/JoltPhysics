@@ -15,6 +15,23 @@ TEST_SUITE("DVec3Tests")
 		CHECK(v.GetZ() == 0);
 	}
 
+	TEST_CASE("TestVec3NaN")
+	{
+		DVec3 v = DVec3::sNaN();
+
+		CHECK(isnan(v.GetX()));
+		CHECK(isnan(v.GetY()));
+		CHECK(isnan(v.GetZ()));
+		CHECK(v.IsNaN());
+
+		v.SetComponent(0, 0);
+		CHECK(v.IsNaN());
+		v.SetComponent(1, 0);
+		CHECK(v.IsNaN());
+		v.SetComponent(2, 0);
+		CHECK(!v.IsNaN());
+	}
+
 	TEST_CASE("TestDVec3ConstructComponents")
 	{
 		DVec3 v(1, 2, 3);
@@ -40,6 +57,11 @@ TEST_SUITE("DVec3Tests")
 		CHECK(v == DVec3(4, 5, 6));
 	}
 
+	TEST_CASE("TestVec4ToDVec3")
+	{
+		CHECK(DVec3(Vec4(1, 3, 5, 7)) == DVec3(1, 3, 5));
+	}
+
 	TEST_CASE("TestDVec3Replicate")
 	{
 		CHECK(DVec3::sReplicate(2) == DVec3(2, 2, 2));
@@ -47,7 +69,11 @@ TEST_SUITE("DVec3Tests")
 
 	TEST_CASE("TestDVec3ToVec3")
 	{
-		CHECK(DVec3(1, 3, 5).ToVec3() == Vec3(1, 3, 5));
+		CHECK(Vec3(DVec3(1, 3, 5)) == Vec3(1, 3, 5));
+
+		// Check rounding up and down
+		CHECK(DVec3(2.0, 0x1.0000000000001p1, -0x1.0000000000001p1).ToVec3RoundUp() == Vec3(2.0, 0x1.000002p1f, -2.0));
+		CHECK(DVec3(2.0, 0x1.0000000000001p1, -0x1.0000000000001p1).ToVec3RoundDown() == Vec3(2.0, 2.0, -0x1.000002p1f));
 	}
 
 	TEST_CASE("TestVec3MinMax")
@@ -145,6 +171,9 @@ TEST_SUITE("DVec3Tests")
 	{
 		CHECK(-DVec3(1, 2, 3) == DVec3(-1, -2, -3));
 
+		CHECK(DVec3(1, 2, 3) + Vec3(4, 5, 6) == DVec3(5, 7, 9));
+		CHECK(DVec3(1, 2, 3) - Vec3(6, 5, 4) == DVec3(-5, -3, -1));
+
 		CHECK(DVec3(1, 2, 3) + DVec3(4, 5, 6) == DVec3(5, 7, 9));
 		CHECK(DVec3(1, 2, 3) - DVec3(6, 5, 4) == DVec3(-5, -3, -1));
 
@@ -165,6 +194,10 @@ TEST_SUITE("DVec3Tests")
 		v += DVec3(1, 2, 3);
 		CHECK(v == DVec3(5, 12, 21));
 		v -= DVec3(1, 2, 3);
+		CHECK(v == DVec3(4, 10, 18));
+		v += Vec3(1, 2, 3);
+		CHECK(v == DVec3(5, 12, 21));
+		v -= Vec3(1, 2, 3);
 		CHECK(v == DVec3(4, 10, 18));
 
 		CHECK(DVec3(2, 4, 8).Reciprocal() == DVec3(0.5, 0.25, 0.125));
@@ -199,12 +232,17 @@ TEST_SUITE("DVec3Tests")
 		CHECK(DVec3(13, 15, 17) != DVec3(13, 15, 19));
 	}
 
-	TEST_CASE("TestDVec3LoadDouble3Unsafe")
+	TEST_CASE("TestDVec3LoadStoreDouble3Unsafe")
 	{
-		double test[4] = { 1, 2, 3, 4 };
-		DVec3 v = DVec3::sLoadDouble3Unsafe(test);
+		double d4[4] = { 1, 2, 3, 4 };
+		Double3 &d3 = *(Double3 *)d4;
+		DVec3 v = DVec3::sLoadDouble3Unsafe(d3);
 		DVec3 v2(1, 2, 3);
 		CHECK(v == v2);
+
+		Double3 d3_out;
+		DVec3(1, 2, 3).StoreDouble3(&d3_out);
+		CHECK(d3 == d3_out);
 	}
 
 	TEST_CASE("TestDVec3Cross")

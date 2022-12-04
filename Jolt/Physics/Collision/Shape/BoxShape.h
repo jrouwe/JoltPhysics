@@ -65,7 +65,7 @@ public:
 
 #ifdef JPH_DEBUG_RENDERER
 	// See Shape::Draw
-	virtual void			Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const override;
+	virtual void			Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const override;
 #endif // JPH_DEBUG_RENDERER
 
 	// See Shape::CastRay

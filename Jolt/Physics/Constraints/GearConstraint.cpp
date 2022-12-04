@@ -132,8 +132,8 @@ bool GearConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 #ifdef JPH_DEBUG_RENDERER
 void GearConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Mat44 transform2 = mBody2->GetCenterOfMassTransform();
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RMat44 transform2 = mBody2->GetCenterOfMassTransform();
 
 	// Draw constraint axis
 	inRenderer->DrawArrow(transform1.GetTranslation(), transform1 * mLocalSpaceHingeAxis1, Color::sGreen, 0.01f);

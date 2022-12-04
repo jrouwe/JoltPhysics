@@ -133,8 +133,8 @@ bool RackAndPinionConstraint::SolvePositionConstraint(float inDeltaTime, float i
 #ifdef JPH_DEBUG_RENDERER
 void RackAndPinionConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Mat44 transform2 = mBody2->GetCenterOfMassTransform();
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RMat44 transform2 = mBody2->GetCenterOfMassTransform();
 
 	// Draw constraint axis
 	inRenderer->DrawArrow(transform1.GetTranslation(), transform1 * mLocalSpaceHingeAxis, Color::sGreen, 0.01f);

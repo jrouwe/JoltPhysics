@@ -41,11 +41,11 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		{
 			// Create the triangle shape
 			PhysicsTestContext context;
-			context.CreateBody(new TriangleShapeSettings(v1, v2, v3), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			context.CreateBody(new TriangleShapeSettings(v1, v2, v3), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), inSettings, collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(inCenter)), inSettings, RVec3::sZero(), collector);
 			CHECK(!collector.HadHit());
 		}
 
@@ -56,11 +56,11 @@ TEST_SUITE("ConvexVsTrianglesTest")
 			TriangleList triangles;
 			triangles.push_back(Triangle(v1, v2, v3));
 			PhysicsTestContext context;
-			context.CreateBody(new MeshShapeSettings(triangles), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			context.CreateBody(new MeshShapeSettings(triangles), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(inCenter), inSettings, collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(inCenter)), inSettings, RVec3::sZero(), collector);
 			CHECK(!collector.HadHit());
 		}
 	}
@@ -121,11 +121,11 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		{
 			// Create the triangle shape
 			PhysicsTestContext context;
-			Body &body = context.CreateBody(new TriangleShapeSettings(v1, v2, v3), translation, rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			Body &body = context.CreateBody(new TriangleShapeSettings(v1, v2, v3), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), sphere_transform, settings, collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44(sphere_transform), settings, RVec3::sZero(), collector);
 
 			// Test result
 			CHECK(collector.mHits.size() == 1);
@@ -150,11 +150,11 @@ TEST_SUITE("ConvexVsTrianglesTest")
 			TriangleList triangles;
 			triangles.push_back(Triangle(v1, v2, v3));
 			PhysicsTestContext context;
-			Body &body = context.CreateBody(new MeshShapeSettings(triangles), translation, rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+			Body &body = context.CreateBody(new MeshShapeSettings(triangles), RVec3(translation), rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
-			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), sphere_transform, settings, collector);
+			context.GetSystem()->GetNarrowPhaseQuery().CollideShape(sphere, Vec3::sReplicate(1.0f), RMat44(sphere_transform), settings, RVec3::sZero(), collector);
 
 			// Test result
 			CHECK(collector.mHits.size() == 1);

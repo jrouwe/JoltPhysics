@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <Jolt/Math/Swizzle.h>
+#include <Jolt/Math/Double3.h>
 
 JPH_NAMESPACE_BEGIN
 
 /// 3 component vector of doubles (stored as 4 vectors). 
 /// Note that we keep the 4th component the same as the 3rd component to avoid divisions by zero when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED defined
-class [[nodiscard]] DVec3
+class [[nodiscard]] alignas(JPH_DVECTOR_ALIGNMENT) DVec3
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -17,21 +17,27 @@ public:
 	// Underlying vector type
 #if defined(JPH_USE_AVX)
 	using Type = __m256d;
+	using TypeArg = __m256d;
 #else
 	using Type = struct { double mData[4]; };
+	using TypeArg = const Type &;
 #endif
+
+	// Argument type
+	using ArgType = DVec3Arg;
 
 	/// Constructor
 								DVec3() = default; ///< Intentionally not initialized for performance reasons
 								DVec3(const DVec3 &inRHS) = default;
 	JPH_INLINE explicit			DVec3(Vec3Arg inRHS);
-	JPH_INLINE					DVec3(Type inRHS) : mValue(inRHS)				{ CheckW(); }
+	JPH_INLINE explicit			DVec3(Vec4Arg inRHS);
+	JPH_INLINE					DVec3(TypeArg inRHS) : mValue(inRHS)			{ CheckW(); }
 
 	/// Create a vector from 3 components
 	JPH_INLINE					DVec3(double inX, double inY, double inZ);
 
 	/// Load 3 doubles from memory
-	explicit JPH_INLINE			DVec3(const double *inV);
+	explicit JPH_INLINE			DVec3(const Double3 &inV);
 
 	/// Vector with all zeros
 	static JPH_INLINE DVec3		sZero();
@@ -44,11 +50,29 @@ public:
 	/// Replicate inV across all components
 	static JPH_INLINE DVec3		sReplicate(double inV);
 		
-	/// Load 3 doubles from memory (reads 64 bits extra which it doesn't use)
-	static JPH_INLINE DVec3		sLoadDouble3Unsafe(const double *inV);
+	/// Vector with all NaN's
+	static JPH_INLINE DVec3		sNaN();
 
-	/// Convert to float vector 3
-	JPH_INLINE Vec3				ToVec3() const;
+	/// Load 3 doubles from memory (reads 64 bits extra which it doesn't use)
+	static JPH_INLINE DVec3		sLoadDouble3Unsafe(const Double3 &inV);
+
+	/// Store 3 doubles to memory
+	JPH_INLINE void				StoreDouble3(Double3 *outV) const;
+
+	/// Convert to float vector 3 rounding to nearest
+	JPH_INLINE explicit			operator Vec3() const;
+
+	/// Prepare to convert to float vector 3 rounding towards zero (returns DVec3 that can be converted to a Vec3 to get the rounding)
+	JPH_INLINE DVec3			PrepareRoundToZero() const;
+
+	/// Prepare to convert to float vector 3 rounding towards positive/negative inf  (returns DVec3 that can be converted to a Vec3 to get the rounding)
+	JPH_INLINE DVec3			PrepareRoundToInf() const;
+
+	/// Convert to float vector 3 rounding down
+	JPH_INLINE Vec3				ToVec3RoundDown() const;
+
+	/// Convert to float vector 3 rounding up
+	JPH_INLINE Vec3				ToVec3RoundUp() const;
 
 	/// Return the minimum value of each of the components
 	static JPH_INLINE DVec3		sMin(DVec3Arg inV1, DVec3Arg inV2);
@@ -102,21 +126,21 @@ public:
 #ifdef JPH_USE_AVX
 	JPH_INLINE double			GetX() const									{ return _mm_cvtsd_f64(_mm256_castpd256_pd128(mValue)); }
 #else
-	JPH_INLINE double			GetX() const									{ return mD32[0]; }
+	JPH_INLINE double			GetX() const									{ return mF64[0]; }
 #endif // JPH_USE_AVX
-	JPH_INLINE double			GetY() const									{ return mD32[1]; }
-	JPH_INLINE double			GetZ() const									{ return mD32[2]; }
+	JPH_INLINE double			GetY() const									{ return mF64[1]; }
+	JPH_INLINE double			GetZ() const									{ return mF64[2]; }
 	
 	/// Set individual components
-	JPH_INLINE void				SetX(double inX)								{ mD32[0] = inX; }
-	JPH_INLINE void				SetY(double inY)								{ mD32[1] = inY; }
-	JPH_INLINE void				SetZ(double inZ)								{ mD32[2] = mD32[3] = inZ; } // Assure Z and W are the same
+	JPH_INLINE void				SetX(double inX)								{ mF64[0] = inX; }
+	JPH_INLINE void				SetY(double inY)								{ mF64[1] = inY; }
+	JPH_INLINE void				SetZ(double inZ)								{ mF64[2] = mF64[3] = inZ; } // Assure Z and W are the same
 	
 	/// Get double component by index
-	JPH_INLINE double			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 3); return mD32[inCoordinate]; }
+	JPH_INLINE double			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 3); return mF64[inCoordinate]; }
 
 	/// Set double component by index
-	JPH_INLINE void				SetComponent(uint inCoordinate, double inValue)	{ JPH_ASSERT(inCoordinate < 3); mD32[inCoordinate] = inValue; mValue = sFixW(mValue); } // Assure Z and W are the same
+	JPH_INLINE void				SetComponent(uint inCoordinate, double inValue)	{ JPH_ASSERT(inCoordinate < 3); mF64[inCoordinate] = inValue; mValue = sFixW(mValue); } // Assure Z and W are the same
 
 	/// Comparison
 	JPH_INLINE bool				operator == (DVec3Arg inV2) const;
@@ -130,6 +154,9 @@ public:
 
 	/// Test if vector is normalized
 	JPH_INLINE bool				IsNormalized(double inTolerance = 1.0e-12) const;
+
+	/// Test if vector contains NaN elements
+	JPH_INLINE bool				IsNaN() const;
 
 	/// Multiply two double vectors (component wise)
 	JPH_INLINE DVec3			operator * (DVec3Arg inV2) const;
@@ -152,8 +179,14 @@ public:
 	/// Divide vector by double
 	JPH_INLINE DVec3 &			operator /= (double inV2);
 
+	/// Add two vectors (component wise)
+	JPH_INLINE DVec3			operator + (Vec3Arg inV2) const;
+
 	/// Add two double vectors (component wise)
 	JPH_INLINE DVec3			operator + (DVec3Arg inV2) const;
+
+	/// Add two vectors (component wise)
+	JPH_INLINE DVec3 &			operator += (Vec3Arg inV2);
 
 	/// Add two double vectors (component wise)
 	JPH_INLINE DVec3 &			operator += (DVec3Arg inV2);
@@ -161,8 +194,14 @@ public:
 	/// Negate
 	JPH_INLINE DVec3			operator - () const;
 
+	/// Subtract two vectors (component wise)
+	JPH_INLINE DVec3			operator - (Vec3Arg inV2) const;
+
 	/// Subtract two double vectors (component wise)
 	JPH_INLINE DVec3			operator - (DVec3Arg inV2) const;
+
+	/// Add two vectors (component wise)
+	JPH_INLINE DVec3 &			operator -= (Vec3Arg inV2);
 
 	/// Add two double vectors (component wise)
 	JPH_INLINE DVec3 &			operator -= (DVec3Arg inV2);
@@ -200,7 +239,7 @@ public:
 	/// To String
 	friend ostream &			operator << (ostream &inStream, DVec3Arg inV)
 	{
-		inStream << inV.mD32[0] << ", " << inV.mD32[1] << ", " << inV.mD32[2];
+		inStream << inV.mF64[0] << ", " << inV.mF64[1] << ", " << inV.mF64[2];
 		return inStream;
 	}
 
@@ -208,17 +247,16 @@ public:
 	JPH_INLINE void				CheckW() const;
 	
 	/// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
-	static JPH_INLINE Type		sFixW(Type inValue);
+	static JPH_INLINE Type		sFixW(TypeArg inValue);
 
 	/// Representations of true and false for boolean operations
 	inline static const double	cTrue = BitCast<double>(~uint64(0));
-	inline static const double	cFalse = 0.0f;
+	inline static const double	cFalse = 0.0;
 
-private:
 	union
 	{
 		Type					mValue;
-		double					mD32[4];
+		double					mF64[4];
 	};
 };
 

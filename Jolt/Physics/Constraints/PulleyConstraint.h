@@ -29,16 +29,16 @@ public:
 	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
 
 	/// Body 1 constraint attachment point (space determined by mSpace).
-	Vec3						mBodyPoint1 = Vec3::sZero();
+	RVec3						mBodyPoint1 = RVec3::sZero();
 
 	/// Fixed world point to which body 1 is connected (always world space)
-	Vec3						mFixedPoint1 = Vec3::sZero();
+	RVec3						mFixedPoint1 = RVec3::sZero();
 
 	/// Body 2 constraint attachment point (space determined by mSpace)
-	Vec3						mBodyPoint2 = Vec3::sZero();
+	RVec3						mBodyPoint2 = RVec3::sZero();
 
 	/// Fixed world point to which body 2 is connected (always world space)
-	Vec3						mFixedPoint2 = Vec3::sZero();
+	RVec3						mFixedPoint2 = RVec3::sZero();
 
 	/// Ratio between the two line segments (see formula above), can be used to create a block and tackle 
 	float						mRatio = 1.0f;
@@ -86,7 +86,7 @@ public:
 	float						GetMaxLength() const										{ return mMaxLength; }
 
 	/// Get the current length of both segments (multiplied by the ratio for segment 2)
-	float						GetCurrentLength() const									{ return (mWorldSpacePosition1 - mFixedPosition1).Length() + mRatio * (mWorldSpacePosition2 - mFixedPosition2).Length(); }
+	float						GetCurrentLength() const									{ return Vec3(mWorldSpacePosition1 - mFixedPosition1).Length() + mRatio * Vec3(mWorldSpacePosition2 - mFixedPosition2).Length(); }
 
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
 	inline float	 			GetTotalLambdaPosition() const								{ return mIndependentAxisConstraintPart.GetTotalLambda(); }
@@ -105,8 +105,8 @@ private:
 	Vec3						mLocalSpacePosition2;
 
 	// World space fixed positions
-	Vec3						mFixedPosition1;
-	Vec3						mFixedPosition2;
+	RVec3						mFixedPosition1;
+	RVec3						mFixedPosition2;
 
 	/// Ratio between the two line segments
 	float						mRatio;
@@ -118,8 +118,8 @@ private:
 	// RUN TIME PROPERTIES FOLLOW
 
 	// World space positions and normal
-	Vec3						mWorldSpacePosition1;
-	Vec3						mWorldSpacePosition2;
+	RVec3						mWorldSpacePosition1;
+	RVec3						mWorldSpacePosition2;
 	Vec3						mWorldSpaceNormal1;
 	Vec3						mWorldSpaceNormal2;
 

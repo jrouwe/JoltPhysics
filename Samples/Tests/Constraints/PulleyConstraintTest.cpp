@@ -25,11 +25,11 @@ void PulleyConstraintTest::Initialize()
 	// Variation 3: With ratio (block and tackle)
 	for (int variation = 0; variation < 4; ++variation)
 	{
-		Vec3 position1(-10, 10, -10.0f * variation);
+		RVec3 position1(-10, 10, -10.0f * variation);
 		Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), position1, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
 
-		Vec3 position2(10, 10, -10.0f * variation);
+		RVec3 position2(10, 10, -10.0f * variation);
 		Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), position2, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
 

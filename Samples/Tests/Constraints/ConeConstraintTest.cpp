@@ -34,7 +34,7 @@ void ConeConstraintTest::Initialize()
 	{
 		Body *prev = nullptr;
 		Quat rotation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
-		Vec3 position(0, 20.0f, 10.0f * j);
+		RVec3 position(0, 20.0f, 10.0f * j);
 		for (int i = 0; i < cChainLength; ++i)
 		{
 			position += Vec3(2.0f * half_cylinder_height, 0, 0);

@@ -175,7 +175,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 int main(int argc, char** argv)
 {
 	// Show used instruction sets
-	std::cout << JPH_CPU_ADDRESS_BITS << "-bit build with instructions: ";
+	std::cout << JPH_IF_SINGLE_PRECISION_ELSE("Single precision ", "Double precision ") << JPH_CPU_ADDRESS_BITS << "-bit build with instructions: ";
 #ifdef JPH_USE_NEON
 	std::cout << "NEON ";
 #endif

@@ -19,7 +19,7 @@ public:
 	/// Destructor
 	virtual							~TempAllocator() = default;
 
-	/// Allocates inSize bytes of memory, returned memory address must be 16 byte aligned
+	/// Allocates inSize bytes of memory, returned memory address must be JPH_RVECTOR_ALIGNMENT byte aligned
 	virtual void *					Allocate(uint inSize) = 0;
 
 	/// Frees inSize bytes of memory located at inAddress
@@ -34,7 +34,7 @@ public:
 
 	/// Constructs the allocator with a maximum allocatable size of inSize
 	explicit						TempAllocatorImpl(uint inSize) :
-		mBase(static_cast<uint8 *>(JPH::Allocate(inSize))),
+		mBase(static_cast<uint8 *>(AlignedAllocate(inSize, JPH_RVECTOR_ALIGNMENT))),
 		mSize(inSize)
 	{
 	}
@@ -43,7 +43,7 @@ public:
 	virtual							~TempAllocatorImpl() override
 	{
 		JPH_ASSERT(mTop == 0);
-		JPH::Free(mBase);
+		AlignedFree(mBase);
 	}
 
 	// See: TempAllocator
@@ -55,7 +55,7 @@ public:
 		}
 		else
 		{
-			uint new_top = mTop + AlignUp(inSize, 16);
+			uint new_top = mTop + AlignUp(inSize, JPH_RVECTOR_ALIGNMENT);
 			if (new_top > mSize)
 				JPH_CRASH; // Out of memory
 			void *address = mBase + mTop;
@@ -73,7 +73,7 @@ public:
 		}
 		else
 		{
-			mTop -= AlignUp(inSize, 16);
+			mTop -= AlignUp(inSize, JPH_RVECTOR_ALIGNMENT);
 			if (mBase + mTop != inAddress)
 				JPH_CRASH; // Freeing in the wrong order
 		}
@@ -101,7 +101,7 @@ public:
 	// See: TempAllocator
 	virtual void *					Allocate(uint inSize) override
 	{
-		return AlignedAllocate(inSize, 16);
+		return AlignedAllocate(inSize, JPH_RVECTOR_ALIGNMENT);
 	}
 
 	// See: TempAllocator

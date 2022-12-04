@@ -30,7 +30,7 @@ public:
 
 protected:
 	// Get position of the character
-	virtual Vec3			GetCharacterPosition() const override				{ return mCharacter->GetPosition(); }
+	virtual RVec3			GetCharacterPosition() const override				{ return mCharacter->GetPosition(); }
 
 	// Handle user input to the character
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) override;

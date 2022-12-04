@@ -766,8 +766,9 @@ void Vec3::StoreFloat3(Float3 *outV) const
     vst1_f32(&outV->x, xy);
     vst1q_lane_f32(&outV->z, mValue, 2);
 #else
-	for (int i = 0; i < 3; ++i)
-		(&outV->x)[i] = mF32[i];
+	outV->x = mF32[0];
+	outV->y = mF32[1];
+	outV->z = mF32[2];
 #endif
 }
 

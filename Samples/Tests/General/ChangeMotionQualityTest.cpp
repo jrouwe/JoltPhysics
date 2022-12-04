@@ -28,14 +28,14 @@ void ChangeMotionQualityTest::Initialize()
 	enclosing_settings.SetShapeSettings(enclosing_shape);
 	enclosing_settings.mMotionType = EMotionType::Kinematic;
 	enclosing_settings.mObjectLayer = Layers::MOVING;
-	enclosing_settings.mPosition = Vec3(0, 1, 0);
+	enclosing_settings.mPosition = RVec3(0, 1, 0);
 	Body &enclosing = *mBodyInterface->CreateBody(enclosing_settings);
 	mBodyInterface->AddBody(enclosing.GetID(), EActivation::Activate);
 
 	// Create high speed sphere inside
 	BodyCreationSettings settings;
 	settings.SetShape(new SphereShape(1.0f));
-	settings.mPosition = Vec3(0, 0.5f, 0);
+	settings.mPosition = RVec3(0, 0.5f, 0);
 	settings.mMotionType = EMotionType::Dynamic;
 	settings.mMotionQuality = EMotionQuality::LinearCast;
 	settings.mLinearVelocity = Vec3(-240, 0, -120);

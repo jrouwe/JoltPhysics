@@ -977,6 +977,11 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		settings.mMaxSeparationDistance = mPhysicsSettings.mSpeculativeContactDistance;
 		settings.mActiveEdgeMovementDirection = body1->GetLinearVelocity() - body2->GetLinearVelocity();
 
+		// Get transforms relative to body1
+		RVec3 offset = body1->GetCenterOfMassPosition();
+		Mat44 transform1 = Mat44::sRotation(body1->GetRotation());
+		Mat44 transform2 = body2->GetCenterOfMassTransform().PostTranslated(-offset).ToMat44();
+
 		if (mPhysicsSettings.mUseManifoldReduction)
 		{
 			// Version WITH contact manifold reduction
@@ -1064,23 +1069,23 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 								return;
 
 							// Replace the manifold
-							*manifold = { { world_space_normal, inResult.mPenetrationDepth, inResult.mSubShapeID1, inResult.mSubShapeID2, { }, { } }, world_space_normal };
+							*manifold = { { mBody1->GetCenterOfMassPosition(), world_space_normal, inResult.mPenetrationDepth, inResult.mSubShapeID1, inResult.mSubShapeID2, { }, { } }, world_space_normal };
 						}
 						else
 						{
 							// Not full, create new manifold
-							mManifolds.push_back({ { world_space_normal, inResult.mPenetrationDepth, inResult.mSubShapeID1, inResult.mSubShapeID2, { }, { } }, world_space_normal });
+							mManifolds.push_back({ { mBody1->GetCenterOfMassPosition(), world_space_normal, inResult.mPenetrationDepth, inResult.mSubShapeID1, inResult.mSubShapeID2, { }, { } }, world_space_normal });
 							manifold = mManifolds.end() - 1;
 						}
 					}
 
 					// Determine contact points
 					const PhysicsSettings &settings = mSystem->mPhysicsSettings;
-					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, Square(settings.mSpeculativeContactDistance) + settings.mManifoldToleranceSq, inResult.mShape1Face, inResult.mShape2Face, manifold->mWorldSpaceContactPointsOn1, manifold->mWorldSpaceContactPointsOn2);
+					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, Square(settings.mSpeculativeContactDistance) + settings.mManifoldToleranceSq, inResult.mShape1Face, inResult.mShape2Face, manifold->mRelativeContactPointsOn1, manifold->mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, mBody1->GetCenterOfMassPosition()));
 
 					// Prune if we have more than 32 points (this means we could run out of space in the next iteration)
-					if (manifold->mWorldSpaceContactPointsOn1.size() > 32)
-						PruneContactPoints(mBody1->GetCenterOfMassPosition(), manifold->mFirstWorldSpaceNormal, manifold->mWorldSpaceContactPointsOn1, manifold->mWorldSpaceContactPointsOn2);
+					if (manifold->mRelativeContactPointsOn1.size() > 32)
+						PruneContactPoints(manifold->mFirstWorldSpaceNormal, manifold->mRelativeContactPointsOn1, manifold->mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold->mBaseOffset));
 				}
 
 				PhysicsSystem *		mSystem;
@@ -1093,7 +1098,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), body1->GetCenterOfMassTransform(), body2->GetCenterOfMassTransform(), part1, part2, settings, collector);
+			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1102,8 +1107,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 				manifold.mWorldSpaceNormal = manifold.mWorldSpaceNormal.Normalized();
 
 				// If we still have too many points, prune them now
-				if (manifold.mWorldSpaceContactPointsOn1.size() > 4)
-					PruneContactPoints(body1->GetCenterOfMassPosition(), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
+				if (manifold.mRelativeContactPointsOn1.size() > 4)
+					PruneContactPoints(manifold.mWorldSpaceNormal, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 
 				// Actually add the contact points to the manager
 				constraint_created |= mContactManager.AddContactConstraint(ioContactAllocator, body_pair_handle, *body1, *body2, manifold);
@@ -1159,8 +1164,9 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 					// Determine contact points
 					ContactManifold manifold;
+					manifold.mBaseOffset = mBody1->GetCenterOfMassPosition();
 					const PhysicsSettings &settings = mSystem->mPhysicsSettings;
-					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, Square(settings.mSpeculativeContactDistance) + settings.mManifoldToleranceSq, inResult.mShape1Face, inResult.mShape2Face, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
+					ManifoldBetweenTwoFaces(inResult.mContactPointOn1, inResult.mContactPointOn2, inResult.mPenetrationAxis, Square(settings.mSpeculativeContactDistance) + settings.mManifoldToleranceSq, inResult.mShape1Face, inResult.mShape2Face, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 
 					// Calculate normal
 					manifold.mWorldSpaceNormal = inResult.mPenetrationAxis.Normalized();
@@ -1169,8 +1175,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					manifold.mPenetrationDepth = inResult.mPenetrationDepth;
 			
 					// Prune if we have more than 4 points
-					if (manifold.mWorldSpaceContactPointsOn1.size() > 4)
-						PruneContactPoints(mBody1->GetCenterOfMassPosition(), manifold.mWorldSpaceNormal, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
+					if (manifold.mRelativeContactPointsOn1.size() > 4)
+						PruneContactPoints(manifold.mWorldSpaceNormal, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 
 					// Set other properties
 					manifold.mSubShapeID1 = inResult.mSubShapeID1;
@@ -1192,7 +1198,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), body1->GetCenterOfMassTransform(), body2->GetCenterOfMassTransform(), part1, part2, settings, collector);
+			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
 
 			constraint_created = collector.mConstraintCreated;
 		}
@@ -1593,10 +1599,10 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		// Draw start and end shape of cast
 		if (sDrawMotionQualityLinearCast)
 		{
-			Mat44 com = body.GetCenterOfMassTransform();
+			RMat44 com = body.GetCenterOfMassTransform();
 			body.GetShape()->Draw(DebugRenderer::sInstance, com, Vec3::sReplicate(1.0f), Color::sGreen, false, true);
 			DebugRenderer::sInstance->DrawArrow(com.GetTranslation(), com.GetTranslation() + ccd_body.mDeltaPosition, Color::sGreen, 0.1f);
-			body.GetShape()->Draw(DebugRenderer::sInstance, Mat44::sTranslation(ccd_body.mDeltaPosition) * com, Vec3::sReplicate(1.0f), Color::sRed, false, true);
+			body.GetShape()->Draw(DebugRenderer::sInstance, com.PostTranslated(ccd_body.mDeltaPosition), Vec3::sReplicate(1.0f), Color::sRed, false, true);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -1710,7 +1716,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		class CCDBroadPhaseCollector : public CastShapeBodyCollector
 		{
 		public:
-										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const ShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::SubStep *inSubStep, float inDeltaTime) :
+										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const RShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::SubStep *inSubStep, float inDeltaTime) :
 				mCCDBody(inCCDBody),
 				mBody1(inBody1),
 				mBody1Extent(inShapeCast.mShapeWorldBounds.GetExtent()),
@@ -1758,7 +1764,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 				AABox bounds = body2.GetWorldSpaceBounds();
 				bounds.mMin -= mBody1Extent;
 				bounds.mMax += mBody1Extent;
-				float hit_fraction = RayAABox(mShapeCast.mCenterOfMassStart.GetTranslation(), RayInvDirection(direction), bounds.mMin, bounds.mMax);
+				float hit_fraction = RayAABox(Vec3(mShapeCast.mCenterOfMassStart.GetTranslation()), RayInvDirection(direction), bounds.mMin, bounds.mMax);
 				if (hit_fraction > max(FLT_MIN, GetEarlyOutFraction())) // If early out fraction <= 0, we have the possibility of finding a deeper hit so we need to clamp the early out fraction
 					return;
 
@@ -1771,8 +1777,8 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 				mShapeCastSettings.mActiveEdgeMovementDirection = direction;
 
 				// Do narrow phase collision check
-				ShapeCast relative_cast(mShapeCast.mShape, mShapeCast.mScale, mShapeCast.mCenterOfMassStart, direction, mShapeCast.mShapeWorldBounds);
-				body2.GetTransformedShape().CastShape(relative_cast, mShapeCastSettings, mCollector);
+				RShapeCast relative_cast(mShapeCast.mShape, mShapeCast.mScale, mShapeCast.mCenterOfMassStart, direction, mShapeCast.mShapeWorldBounds);
+				body2.GetTransformedShape().CastShape(relative_cast, mShapeCastSettings, mShapeCast.mCenterOfMassStart.GetTranslation(), mCollector);
 
 				// Update early out fraction based on narrow phase collector
 				if (!mCollector.mRejectAll)
@@ -1782,7 +1788,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			const CCDBody &				mCCDBody;
 			const Body &				mBody1;
 			Vec3						mBody1Extent;
-			ShapeCast					mShapeCast;
+			RShapeCast					mShapeCast;
 			ShapeCastSettings &			mShapeCastSettings;
 			CCDNarrowPhaseCollector &	mCollector;
 			const BodyManager &			mBodyManager;
@@ -1791,7 +1797,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		};
 
 		// Check if we collide with any other body. Note that we use the non-locking interface as we know the broadphase cannot be modified at this point.
-		ShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
+		RShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
 		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, np_collector, mBodyManager, ioSubStep, ioContext->mSubStepDeltaTime);
 		mBroadPhase->CastAABoxNoLock({ shape_cast.mShapeWorldBounds, shape_cast.mDirection }, bp_collector, broadphase_layer_filter, object_layer_filter);
 
@@ -1802,7 +1808,8 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 			// Determine contact manifold
 			ContactManifold manifold;
-			ManifoldBetweenTwoFaces(cast_shape_result.mContactPointOn1, cast_shape_result.mContactPointOn2, cast_shape_result.mPenetrationAxis, mPhysicsSettings.mManifoldToleranceSq, cast_shape_result.mShape1Face, cast_shape_result.mShape2Face, manifold.mWorldSpaceContactPointsOn1, manifold.mWorldSpaceContactPointsOn2);
+			manifold.mBaseOffset = shape_cast.mCenterOfMassStart.GetTranslation();
+			ManifoldBetweenTwoFaces(cast_shape_result.mContactPointOn1, cast_shape_result.mContactPointOn2, cast_shape_result.mPenetrationAxis, mPhysicsSettings.mManifoldToleranceSq, cast_shape_result.mShape1Face, cast_shape_result.mShape2Face, manifold.mRelativeContactPointsOn1, manifold.mRelativeContactPointsOn2 JPH_IF_DEBUG_RENDERER(, manifold.mBaseOffset));
 			manifold.mSubShapeID1 = cast_shape_result.mSubShapeID1;
 			manifold.mSubShapeID2 = cast_shape_result.mSubShapeID2;
 			manifold.mPenetrationDepth = cast_shape_result.mPenetrationDepth;
@@ -1812,16 +1819,16 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, ccd_body.mContactSettings);
 
 			// Calculate the average position from the manifold (this will result in the same impulse applied as when we apply impulses to all contact points)
-			if (manifold.mWorldSpaceContactPointsOn2.size() > 1)
+			if (manifold.mRelativeContactPointsOn2.size() > 1)
 			{
 				Vec3 average_contact_point = Vec3::sZero();
-				for (const Vec3 &v : manifold.mWorldSpaceContactPointsOn2)
+				for (const Vec3 &v : manifold.mRelativeContactPointsOn2)
 					average_contact_point += v;
-				average_contact_point /= (float)manifold.mWorldSpaceContactPointsOn2.size();
-				ccd_body.mContactPointOn2 = average_contact_point;
+				average_contact_point /= (float)manifold.mRelativeContactPointsOn2.size();
+				ccd_body.mContactPointOn2 = manifold.mBaseOffset + average_contact_point;
 			}
 			else
-				ccd_body.mContactPointOn2 = cast_shape_result.mContactPointOn2;
+				ccd_body.mContactPointOn2 = manifold.mBaseOffset + cast_shape_result.mContactPointOn2;
 		}
 	}
 
@@ -1915,8 +1922,8 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 				if (ccd_body2 == nullptr || ccd_body2->mFraction >= ccd_body->mFraction)
 				{
 					// Calculate contact points relative to center of mass of both bodies
-					Vec3 r1_plus_u = ccd_body->mContactPointOn2 - (body1.GetCenterOfMassPosition() + ccd_body->mFraction * ccd_body->mDeltaPosition);
-					Vec3 r2 = ccd_body->mContactPointOn2 - body2.GetCenterOfMassPosition();
+					Vec3 r1_plus_u = Vec3(ccd_body->mContactPointOn2 - (body1.GetCenterOfMassPosition() + ccd_body->mFraction * ccd_body->mDeltaPosition));
+					Vec3 r2 = Vec3(ccd_body->mContactPointOn2 - body2.GetCenterOfMassPosition());
 
 					// Calculate velocity of collision points
 					Vec3 v1 = body1.GetPointVelocityCOM(r1_plus_u); 
@@ -1980,11 +1987,11 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					if (sDrawMotionQualityLinearCast)
 					{
 						// Draw the collision location
-						Mat44 collision_transform = Mat44::sTranslation(ccd_body->mFraction * ccd_body->mDeltaPosition) * body1.GetCenterOfMassTransform();
+						RMat44 collision_transform = body1.GetCenterOfMassTransform().PostTranslated(ccd_body->mFraction * ccd_body->mDeltaPosition);
 						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform, Vec3::sReplicate(1.0f), Color::sYellow, false, true);
 
 						// Draw the collision location + slop
-						Mat44 collision_transform_plus_slop = Mat44::sTranslation(ccd_body->mFractionPlusSlop * ccd_body->mDeltaPosition) * body1.GetCenterOfMassTransform();
+						RMat44 collision_transform_plus_slop = body1.GetCenterOfMassTransform().PostTranslated(ccd_body->mFractionPlusSlop * ccd_body->mDeltaPosition);
 						body1.GetShape()->Draw(DebugRenderer::sInstance, collision_transform_plus_slop, Vec3::sReplicate(1.0f), Color::sOrange, false, true);
 
 						// Draw contact normal

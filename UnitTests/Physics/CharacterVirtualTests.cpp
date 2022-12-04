@@ -66,7 +66,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Update character velocity
 			mCharacter->SetLinearVelocity(new_velocity);
 
-			Vec3 start_pos = mCharacter->GetPosition();
+			RVec3 start_pos = mCharacter->GetPosition();
 
 			// Update the character position
 			TempAllocatorMalloc allocator;
@@ -79,7 +79,7 @@ TEST_SUITE("CharacterVirtualTests")
 				allocator);
 
 			// Calculate effective velocity in this step
-			mEffectiveVelocity = (mCharacter->GetPosition() - start_pos) / delta_time;
+			mEffectiveVelocity = Vec3(mCharacter->GetPosition() - start_pos) / delta_time;
 		}
 
 		// Simulate a longer period of time
@@ -91,7 +91,7 @@ TEST_SUITE("CharacterVirtualTests")
 		}
 
 		// Configuration
-		Vec3					mInitialPosition = Vec3::sZero();
+		RVec3					mInitialPosition = RVec3::sZero();
 		float					mHeightStanding = 1.35f;
 		float					mRadiusStanding = 0.3f;
 		CharacterVirtualSettings mCharacterSettings;
@@ -109,7 +109,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 	private:
 		// CharacterContactListener callback
-		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, Vec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override
+		virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override
 		{
 			// Don't allow sliding if the character doesn't want to move
 			if (mHorizontalSpeed.IsNearZero() && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))
@@ -127,7 +127,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 		// Create character
 		Character character(c);
-		character.mInitialPosition = Vec3(0, 2, 0);
+		character.mInitialPosition = RVec3(0, 2, 0);
 		character.Create();
 
 		// After 1 step we should still be in air
@@ -137,21 +137,21 @@ TEST_SUITE("CharacterVirtualTests")
 		// After some time we should be on the floor
 		character.Simulate(1.0f);
 		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), Vec3::sZero());
+		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3::sZero());
 		CHECK_APPROX_EQUAL(character.mEffectiveVelocity, Vec3::sZero());
 
 		// Jump
 		character.mJumpSpeed = 1.0f;
 		character.Step();
 		Vec3 velocity(0, 1.0f + c.GetDeltaTime() * c.GetSystem()->GetGravity().GetY(), 0);
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), velocity * c.GetDeltaTime());
+		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(velocity * c.GetDeltaTime()));
 		CHECK_APPROX_EQUAL(character.mEffectiveVelocity, velocity);
 		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::InAir);
 
 		// After some time we should be on the floor again
 		character.Simulate(1.0f);
 		CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), Vec3::sZero());
+		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3::sZero());
 		CHECK_APPROX_EQUAL(character.mEffectiveVelocity, Vec3::sZero());
 	}
 
@@ -166,12 +166,12 @@ TEST_SUITE("CharacterVirtualTests")
 			// Create sloped floor
 			PhysicsTestContext c;
 			Quat slope_rotation = Quat::sRotation(Vec3::sAxisZ(), slope_angle);
-			c.CreateBox(Vec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
+			c.CreateBox(RVec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
 
 			// Create character so that it is touching the slope
 			Character character(c);
 			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
-			character.mInitialPosition = Vec3(0, (radius_and_padding + cFloorHalfHeight) / Cos(slope_angle) - radius_and_padding, 0);
+			character.mInitialPosition = RVec3(0, (radius_and_padding + cFloorHalfHeight) / Cos(slope_angle) - radius_and_padding, 0);
 			character.Create();
 
 			// Determine if the slope is too steep for the character
@@ -183,7 +183,7 @@ TEST_SUITE("CharacterVirtualTests")
 			Vec3 slope_normal = slope_rotation.RotateAxisY();
 
 			// Calculate expected position after 1 time step
-			Vec3 position_after_1_step = character.mInitialPosition;
+			RVec3 position_after_1_step = character.mInitialPosition;
 			if (too_steep)
 			{
 				// Apply 1 frame of gravity and cancel movement in the slope normal direction
@@ -200,7 +200,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
 
-			Vec3 start_pos = character.mCharacter->GetPosition();
+			RVec3 start_pos = character.mCharacter->GetPosition();
 
 			// Start moving in X direction
 			character.mHorizontalSpeed = Vec3(2.0f, 0, 0);
@@ -208,7 +208,7 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
 
 			// Calculate resulting translation
-			Vec3 translation = character.mCharacter->GetPosition() - start_pos;
+			Vec3 translation = Vec3(character.mCharacter->GetPosition() - start_pos);
 
 			// Calculate expected translation
 			Vec3 expected_translation;
@@ -252,12 +252,12 @@ TEST_SUITE("CharacterVirtualTests")
 			// Create sloped floor
 			PhysicsTestContext c;
 			Quat slope_rotation = Quat::sRotation(Vec3::sAxisZ(), cSlopeAngle);
-			c.CreateBox(Vec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
+			c.CreateBox(RVec3::sZero(), slope_rotation, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, cFloorHalfHeight, 100.0f));
 
 			// Create character so that it is touching the slope
 			Character character(c);
 			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
-			character.mInitialPosition = Vec3(0, (radius_and_padding + cFloorHalfHeight) / Cos(cSlopeAngle) - radius_and_padding, 0);
+			character.mInitialPosition = RVec3(0, (radius_and_padding + cFloorHalfHeight) / Cos(cSlopeAngle) - radius_and_padding, 0);
 			character.mUpdateSettings.mStickToFloorStepDown = stick_to_floor? Vec3(0, -0.5f, 0) : Vec3::sZero();
 			character.Create();
 
@@ -268,7 +268,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
 
-			Vec3 start_pos = character.mCharacter->GetPosition();
+			RVec3 start_pos = character.mCharacter->GetPosition();
 
 			// Start moving down the slope at a speed high enough so that gravity will not keep us on the floor
 			character.mHorizontalSpeed = Vec3(-10.0f, 0, 0);
@@ -276,7 +276,7 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK(character.mCharacter->GetGroundState() == (stick_to_floor? CharacterBase::EGroundState::OnGround : CharacterBase::EGroundState::InAir));
 
 			// Calculate resulting translation
-			Vec3 translation = character.mCharacter->GetPosition() - start_pos;
+			Vec3 translation = Vec3(character.mCharacter->GetPosition() - start_pos);
 
 			// Calculate expected translation
 			Vec3 expected_translation;
@@ -338,7 +338,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 		MeshShapeSettings mesh(triangles);
 		mesh.SetEmbedded();
-		BodyCreationSettings mesh_stairs(&mesh, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings mesh_stairs(&mesh, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 
 		// Stair stepping is very delta time sensitive, so test various update frequencies
 		float frequencies[] = { 60.0f, 120.0f, 240.0f, 360.0f };
@@ -352,7 +352,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 			// Create character so that it is touching the slope
 			Character character(c);
-			character.mInitialPosition = Vec3(0, 0, -2.0f); // Start in front of the stairs
+			character.mInitialPosition = RVec3(0, 0, -2.0f); // Start in front of the stairs
 			character.mUpdateSettings.mWalkStairsStepUp = Vec3::sZero(); // No stair walking
 			character.Create();
 
@@ -363,7 +363,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// We should have gotten stuck at the start of the stairs (can't move up)
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), Vec3(0, 0, -radius_and_padding), 1.0e-2f);
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(0, 0, -radius_and_padding), 1.0e-2f);
 
 			// Enable stair walking
 			character.mUpdateSettings.mWalkStairsStepUp = Vec3(0, 0.4f, 0);
@@ -373,7 +373,7 @@ TEST_SUITE("CharacterVirtualTests")
 			int max_steps = int(1.5f * round(movement_time / time_step)); // In practise there is a bit of slowdown while stair stepping, so add a bit of slack
 
 			// Step until we reach the top of the stairs
-			Vec3 last_position = character.mCharacter->GetPosition();
+			RVec3 last_position = character.mCharacter->GetPosition();
 			bool reached_goal = false;
 			for (int i = 0; i < max_steps; ++i)
 			{
@@ -383,8 +383,8 @@ TEST_SUITE("CharacterVirtualTests")
 				CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 
 				// Check position progression
-				Vec3 position = character.mCharacter->GetPosition();
-				CHECK_APPROX_EQUAL(position.GetX(), 0.0f); // No movement in X
+				RVec3 position = character.mCharacter->GetPosition();
+				CHECK_APPROX_EQUAL(position.GetX(), 0); // No movement in X
 				CHECK(position.GetZ() > last_position.GetZ()); // Always moving forward
 				CHECK(position.GetZ() < cNumSteps * cStepHeight); // No movement beyond stairs
 				if (position.GetY() > cNumSteps * cStepHeight - 1.0e-3f)
@@ -409,12 +409,12 @@ TEST_SUITE("CharacterVirtualTests")
 		PhysicsTestContext c;
 
 		// Create box
-		Body &box = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
+		Body &box = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
 		box.SetAllowSleeping(false);
 
 		// Create character so that it is touching the box at the 
 		Character character(c);
-		character.mInitialPosition = Vec3(cCharacterPosition, cFloorHalfHeight, 0);
+		character.mInitialPosition = RVec3(cCharacterPosition, cFloorHalfHeight, 0);
 		character.Create();
 
 		// Step to ensure the character is on the box
@@ -432,7 +432,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 			// Note that the character moves according to the ground velocity and the ground velocity is updated at the end of the step
 			// so the character is always 1 time step behind the platform. This is why we use t and not t + 1 to calculate the expected position.
-			Vec3 expected_position = Quat::sRotation(Vec3::sAxisY(), float(t) * c.GetDeltaTime() * cAngularVelocity) * character.mInitialPosition;
+			RVec3 expected_position = RMat44::sRotation(Quat::sRotation(Vec3::sAxisY(), float(t) * c.GetDeltaTime() * cAngularVelocity)) * character.mInitialPosition;
 			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-4f);
 		}
 	}
@@ -446,12 +446,12 @@ TEST_SUITE("CharacterVirtualTests")
 		PhysicsTestContext c;
 
 		// Create box
-		Body &box = c.CreateBox(Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
+		Body &box = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
 		box.SetAllowSleeping(false);
 
 		// Create character so that it is touching the box at the 
 		Character character(c);
-		character.mInitialPosition = Vec3(0, cFloorHalfHeight, 0);
+		character.mInitialPosition = RVec3(0, cFloorHalfHeight, 0);
 		character.Create();
 
 		// Step to ensure the character is on the box
@@ -466,7 +466,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
-			Vec3 expected_position = box.GetPosition() + character.mInitialPosition;
+			RVec3 expected_position = box.GetPosition() + character.mInitialPosition;
 			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-2f);
 		}
 
@@ -482,7 +482,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
-			Vec3 expected_position = box.GetPosition() + character.mInitialPosition;
+			RVec3 expected_position = box.GetPosition() + character.mInitialPosition;
 			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-2f);
 		}
 	}

@@ -30,7 +30,7 @@ void CharacterTest::Initialize()
 	settings->mShape = mStandingShape;
 	settings->mFriction = 0.5f;
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
-	mCharacter = new Character(settings, Vec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
+	mCharacter = new Character(settings, RVec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->AddToPhysicsSystem(EActivation::Activate);
 }
 

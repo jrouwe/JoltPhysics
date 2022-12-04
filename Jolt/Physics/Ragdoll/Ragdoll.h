@@ -133,19 +133,19 @@ public:
 	void								SetPose(const SkeletonPose &inPose, bool inLockBodies = true);
 	
 	/// Lower level version of SetPose that directly takes the world space joint matrices
-	void								SetPose(const Mat44 *inJointMatrices, bool inLockBodies = true);
+	void								SetPose(RVec3Arg inRootOffset, const Mat44 *inJointMatrices, bool inLockBodies = true);
 
 	/// Get the ragdoll pose (uses the world transform of the bodies to calculate the pose)
 	void								GetPose(SkeletonPose &outPose, bool inLockBodies = true);
 
 	/// Lower level version of GetPose that directly returns the world space joint matrices
-	void								GetPose(Mat44 *outJointMatrices, bool inLockBodies = true);
+	void								GetPose(RVec3 &outRootOffset, Mat44 *outJointMatrices, bool inLockBodies = true);
 
 	/// Drive the ragdoll to a specific pose by setting velocities on each of the bodies so that it will reach inPose in inDeltaTime
 	void								DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies = true);
 	
 	/// Lower level version of DriveToPoseUsingKinematics that directly takes the world space joint matrices
-	void								DriveToPoseUsingKinematics(const Mat44 *inJointMatrices, float inDeltaTime, bool inLockBodies = true);
+	void								DriveToPoseUsingKinematics(RVec3Arg inRootOffset, const Mat44 *inJointMatrices, float inDeltaTime, bool inLockBodies = true);
 
 	/// Drive the ragdoll to a specific pose by activating the motors on each constraint
 	void								DriveToPoseUsingMotors(const SkeletonPose &inPose);
@@ -163,7 +163,7 @@ public:
 	void								AddImpulse(Vec3Arg inImpulse, bool inLockBodies = true);
 
 	/// Get the position and orientation of the root of the ragdoll
-	void								GetRootTransform(Vec3 &outPosition, Quat &outRotation, bool inLockBodies = true) const;
+	void								GetRootTransform(RVec3 &outPosition, Quat &outRotation, bool inLockBodies = true) const;
 
 	/// Get number of bodies in the ragdoll
 	size_t								GetBodyCount() const									{ return mBodyIDs.size(); }

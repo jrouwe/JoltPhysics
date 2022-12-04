@@ -28,13 +28,13 @@ public:
 	Body &				CreateFloor();
 
 	/// Create a body and add it to the world
-	Body &				CreateBody(const ShapeSettings *inShapeSettings, Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation);
+	Body &				CreateBody(const ShapeSettings *inShapeSettings, RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation);
 
 	// Create a box and add it to the world
-	Body &				CreateBox(Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, Vec3Arg inHalfExtent, EActivation inActivation = EActivation::Activate);
+	Body &				CreateBox(RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, Vec3Arg inHalfExtent, EActivation inActivation = EActivation::Activate);
 
 	// Create a sphere and add it to the world
-	Body &				CreateSphere(Vec3Arg inPosition, float inRadius, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation = EActivation::Activate);
+	Body &				CreateSphere(RVec3Arg inPosition, float inRadius, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation = EActivation::Activate);
 
 	// Create a constraint and add it to the world
 	template <typename T>
@@ -52,7 +52,7 @@ public:
 	void				Simulate(float inTotalTime, function<void()> inPreStepCallback = []() { });
 
 	// Predict position assuming ballistic motion using initial position, velocity acceleration and time
-	Vec3				PredictPosition(Vec3Arg inPosition, Vec3Arg inVelocity, Vec3Arg inAcceleration, float inTotalTime) const;
+	RVec3				PredictPosition(RVec3Arg inPosition, Vec3Arg inVelocity, Vec3Arg inAcceleration, float inTotalTime) const;
 
 	// Predict rotation assuming ballistic motion using initial orientation, angular velocity angular acceleration and time
 	Quat				PredictOrientation(QuatArg inRotation, Vec3Arg inAngularVelocity, Vec3Arg inAngularAcceleration, float inTotalTime) const;

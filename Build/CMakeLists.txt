@@ -9,6 +9,9 @@ option(TARGET_PERFORMANCE_TEST "Build Performance Test" ON)
 option(TARGET_SAMPLES "Build Samples" ON)
 option(TARGET_VIEWER "Build JoltViewer" ON)
 
+# When turning this option on, the library will be compiled using doubles for positions. This allows for much bigger worlds.
+option(DOUBLE_PRECISION "Use double precision math" OFF)
+
 # When turning this option on, the library will be compiled with debug symbols
 option(GENERATE_DEBUG_SYMBOLS "Generate debug symbols" ON)
 
@@ -35,10 +38,16 @@ include(CMakeDependentOption)
 # Windows Store only supports the DLL version
 cmake_dependent_option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Use the static MSVC runtime library" ON "MSVC;NOT WINDOWS_STORE" OFF)
 
+# Determine which configurations exist
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Distribution")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 	set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseASAN;ReleaseUBSAN;ReleaseCoverage;Distribution")
+endif()
+
+# Pass double precision flag on to the library
+if (DOUBLE_PRECISION)
+	add_compile_definitions(JPH_DOUBLE_PRECISION)
 endif()
 
 if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore") AND NOT MINGW)

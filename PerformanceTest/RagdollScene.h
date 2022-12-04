@@ -67,7 +67,7 @@ public:
 	virtual void			StartTest(PhysicsSystem &inPhysicsSystem, EMotionQuality inMotionQuality) override
 	{
 		// Test configuration
-		const float cHorizontalSeparation = 4.0f;
+		const Real cHorizontalSeparation = 4.0_r;
 		const float cVerticalSeparation = 0.6f;
 		#ifdef _DEBUG
 			const int cPileSize = 5;
@@ -94,14 +94,14 @@ public:
 			for (int col = 0; col < cNumCols; ++col)
 			{
 				// Determine start location of ray
-				Vec3 start = Vec3(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0f), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0f));
+				RVec3 start(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0_r), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0_r));
 
 				// Cast ray down to terrain
 				RayCastResult hit;
 				Vec3 ray_direction(0, -200, 0);
-				RayCast ray { start, ray_direction };
+				RRayCast ray { start, ray_direction };
 				if (inPhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
-					start = start + hit.mFraction * ray_direction;
+					start = ray.GetPointOnRay(hit.mFraction);
 
 				for (int i = 0; i < cPileSize; ++i)
 				{
@@ -110,8 +110,9 @@ public:
 	
 					// Override root
 					SkeletonPose pose_copy = mPose;
+					pose_copy.SetRootOffset(start);
 					SkeletonPose::JointState &root = pose_copy.GetJoint(0);
-					root.mTranslation = start + Vec3(0, cVerticalSeparation * (i + 1), 0);
+					root.mTranslation = Vec3(0, cVerticalSeparation * (i + 1), 0);
 					root.mRotation = Quat::sRotation(Vec3::sAxisY(), angle(random)) * root.mRotation;
 					pose_copy.CalculateJointMatrices();
 

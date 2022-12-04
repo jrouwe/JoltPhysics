@@ -30,7 +30,7 @@ void FunnelTest::Initialize()
 	{
 		Quat rotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i);
 
-		mBodyInterface->CreateAndAddBody(BodyCreationSettings(box, rotation * Vec3(25, 25, 0), rotation * Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(box, RVec3(rotation * Vec3(25, 25, 0)), rotation * Quat::sRotation(Vec3::sAxisZ(), 0.25f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 	}
 
 	default_random_engine random;
@@ -128,13 +128,14 @@ void FunnelTest::Initialize()
 		if ((random() % 3) == 0)
 			shape = new ScaledShape(shape, scale);
 
-		Vec3 position(position_variation(random), 100.0f + position_variation(random), position_variation(random));
+		RVec3 position(position_variation(random), 100.0f + position_variation(random), position_variation(random));
 		mBodyInterface->CreateAndAddBody(BodyCreationSettings(shape, position, Quat::sRandom(random), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 	}
 }
 
 void FunnelTest::GetInitialCamera(CameraState &ioState) const
 {
-	ioState.mPos = Vec3(50, 100, 50);
-	ioState.mForward = (Vec3(0, 50, 0) - ioState.mPos).Normalized();
+	RVec3 cam_tgt = RVec3(0, 50, 0);
+	ioState.mPos = RVec3(50, 100, 50);
+	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }

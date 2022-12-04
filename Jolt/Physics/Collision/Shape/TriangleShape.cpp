@@ -192,7 +192,7 @@ Vec3 TriangleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inL
 	return len != 0.0f? cross / len : Vec3::sAxisY();
 }
 
-void TriangleShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void TriangleShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	// A triangle has no volume
 	outTotalVolume = outSubmergedVolume = 0.0f;
@@ -200,11 +200,11 @@ void TriangleShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void TriangleShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void TriangleShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
-	Vec3 v1 = inCenterOfMassTransform * (inScale * mV1);
-	Vec3 v2 = inCenterOfMassTransform * (inScale * mV2);
-	Vec3 v3 = inCenterOfMassTransform * (inScale * mV3);
+	RVec3 v1 = inCenterOfMassTransform * (inScale * mV1);
+	RVec3 v2 = inCenterOfMassTransform * (inScale * mV2);
+	RVec3 v3 = inCenterOfMassTransform * (inScale * mV3);
 
 	if (ScaleHelpers::IsInsideOut(inScale))
 		swap(v1, v2);
@@ -300,7 +300,7 @@ void TriangleShape::TransformShape(Mat44Arg inCenterOfMassTransform, Transformed
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(transform.GetTranslation(), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(mConvexRadius == 0.0f? scale : scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs()));
 	ioCollector.AddHit(ts);
 }

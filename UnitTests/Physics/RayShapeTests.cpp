@@ -275,7 +275,7 @@ TEST_SUITE("RayShapeTests")
 		BPLayerInterfaceImpl broad_phase_layer_interface;
 		PhysicsSystem system;
 		system.Init(1, 0, 4, 4, broad_phase_layer_interface, [](ObjectLayer, BroadPhaseLayer) { return true; }, [](ObjectLayer, ObjectLayer) { return true; });
-		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, cShapePosition, cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate);
+		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, RVec3(cShapePosition), cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate);
 			   
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -289,12 +289,12 @@ TEST_SUITE("RayShapeTests")
 			RayCastResult hit;
 			if (inExpectedFraction1 != FLT_MAX)
 			{
-				CHECK(system.GetNarrowPhaseQuery().CastRay(ray, hit));
+				CHECK(system.GetNarrowPhaseQuery().CastRay(RRayCast(ray), hit));
 				CHECK_APPROX_EQUAL(hit.mFraction, inExpectedFraction1, 2.0e-5f);
 			}
 			else
 			{
-				CHECK_FALSE(system.GetNarrowPhaseQuery().CastRay(ray, hit));
+				CHECK_FALSE(system.GetNarrowPhaseQuery().CastRay(RRayCast(ray), hit));
 			}
 		};
 
@@ -319,7 +319,7 @@ TEST_SUITE("RayShapeTests")
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
-			system.GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+			system.GetNarrowPhaseQuery().CastRay(RRayCast(ray), settings, collector);
 
 			if (inExpectedFraction1 != FLT_MAX)
 			{
@@ -353,7 +353,7 @@ TEST_SUITE("RayShapeTests")
 			settings.mTreatConvexAsSolid = true;
 
 			AllHitCollisionCollector<CastRayCollector> collector;
-			system.GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+			system.GetNarrowPhaseQuery().CastRay(RRayCast(ray), settings, collector);
 			collector.Sort();
 
 			if (inExpectedFraction1 != FLT_MAX)

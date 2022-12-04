@@ -291,7 +291,23 @@ Jolt Physics uses a right handed coordinate system with Y-up. It is easy to use 
 
 We use column-major vectors and matrices, this means that to transform a point you need to multiply it on the right hand side: TransformedPoint = Matrix * Point.
 
-Note that the physics simulation works best if you use SI units (meters, radians, seconds, kg). In order for the simluation to be accurate, dynamic objects should be in the order [0.1, 10] meters long and have speeds in the order of [0, 500] m/s. Static object should be in the order [0.1, 2000] meter long. If you are using different units, consider scaling the objects before passing them on to the physics simulation. Also try to ensure that all simulation takes place within 2 km from the origin to avoid floating point accuracy problems.
+Note that the physics simulation works best if you use SI units (meters, radians, seconds, kg). In order for the simluation to be accurate, dynamic objects should be in the order [0.1, 10] meters long and have speeds in the order of [0, 500] m/s. Static object should be in the order [0.1, 2000] meter long. If you are using different units, consider scaling the objects before passing them on to the physics simulation.
+
+## Big Worlds
+
+By default the library compiles using floats. This means that the simulation gets less accurate the further you go from the origin. If all simulation takes place within roughly 5 km from the origin, floating point precision is accurate enough.
+
+If you have a bigger world, you may want to compile the library using the JPH_DOUBLE_PRECISION define. When you do this, all positions will be stored as doubles, which will make the simulation accurate even at thousands of kilometers away from the origin. 
+
+Calculations with doubles are much slower than calculations with floats. A naive implementation that changes all calculations to doubles has been measured to run more than 2x slower than the same calculations using floats. Because of this, Jolt Physics will only use doubles where necessary and drop down to floats as soon as possible. In order to do this, many of the collision query functions will need a 'base offset'. All collision results will be returned as floats relative to this base offset. By choosing the base offset wisely (i.e. close to where collision results are expected) the results will be accurate. Make sure your base offset is not kilometers away from the collision result.
+
+Keep in mind that:
+
+* There are a lot of 'epsilons' in the code that have been tuned for objects of sizes/speeds as described in the previous section. Try to keep the individual objects to the specified scale even if they're really far from the origin.
+* When the collision results of a single query are kilometers apart, precision will suffer as they will be far away from the 'base offset'.
+* The effectiveness of the broad phase (which works in floats) will become less at large distances from the origin, e.g. at 10000 km from the origin, the resolution of the broad phase is reduced to 1 m which means that everything that's closer than 1 m will be considered colliding. This will not impact the quality of the simulation but it will result in extra collision tests in the narrow phase so will hurt performance.
+
+Because of the minimal use of doubles, the simulation runs 10-20% slower in double precision mode compared to float precision mode.
 
 ## Continuous Collision Detection
 

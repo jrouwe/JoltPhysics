@@ -22,7 +22,7 @@ TEST_SUITE("WheeledVehicleTests")
 	// Simplified vehicle settings
 	struct VehicleSettings
 	{
-		Vec3		mPosition { 0, 2, 0 };
+		RVec3		mPosition { 0, 2, 0 };
 		bool		mUseCastSphere = true;
 		float		mWheelRadius = 0.3f;
 		float		mWheelWidth = 0.1f;
@@ -138,7 +138,7 @@ TEST_SUITE("WheeledVehicleTests")
 	static void CheckOnGround(VehicleConstraint *inConstraint, const VehicleSettings &inSettings, const BodyID &inGroundID)
 	{
 		// Between min and max suspension length
-		Vec3 pos = inConstraint->GetVehicleBody()->GetPosition();
+		RVec3 pos = inConstraint->GetVehicleBody()->GetPosition();
 		CHECK(pos.GetY() > inSettings.mSuspensionMinLength + inSettings.mWheelOffsetVertical + inSettings.mHalfVehicleHeight); 
 		CHECK(pos.GetY() < inSettings.mSuspensionMaxLength + inSettings.mWheelOffsetVertical + inSettings.mHalfVehicleHeight);
 
@@ -169,7 +169,7 @@ TEST_SUITE("WheeledVehicleTests")
 		// After 1 second we should be on ground but not moving horizontally
 		c.Simulate(1.0f);
 		CheckOnGround(constraint, settings, floor_id);
-		Vec3 pos1 = body->GetPosition();
+		RVec3 pos1 = body->GetPosition();
 		CHECK_APPROX_EQUAL(pos1.GetX(), 0); // Not moving horizontally
 		CHECK_APPROX_EQUAL(pos1.GetZ(), 0);
 		CHECK(controller->GetTransmission().GetCurrentGear() == 0);
@@ -179,8 +179,8 @@ TEST_SUITE("WheeledVehicleTests")
 		c.GetBodyInterface().ActivateBody(body->GetID());
 		c.Simulate(1.0f);
 		CheckOnGround(constraint, settings, floor_id);
-		Vec3 pos2 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos2.GetX(), 0, 1.0e-3f); // Not moving left/right
+		RVec3 pos2 = body->GetPosition();
+		CHECK_APPROX_EQUAL(pos2.GetX(), 0, 1.0e-3_r); // Not moving left/right
 		CHECK(pos2.GetZ() > pos1.GetZ() + 1.0f); // Moving in Z direction
 		Vec3 vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel.GetX(), 0, 1.0e-2f); // Not moving left/right
@@ -193,8 +193,8 @@ TEST_SUITE("WheeledVehicleTests")
 		c.Simulate(2.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone sleeping
-		Vec3 pos3 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos3.GetX(), 0, 2.0e-3f); // Not moving left/right
+		RVec3 pos3 = body->GetPosition();
+		CHECK_APPROX_EQUAL(pos3.GetX(), 0, 2.0e-3_r); // Not moving left/right
 		CHECK(pos3.GetZ() > pos2.GetZ() + 1.0f); // Moving in Z direction while braking
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel, Vec3::sZero(), 1.0e-3f); // Not moving
@@ -204,8 +204,8 @@ TEST_SUITE("WheeledVehicleTests")
 		c.GetBodyInterface().ActivateBody(body->GetID());
 		c.Simulate(2.0f);
 		CheckOnGround(constraint, settings, floor_id);
-		Vec3 pos4 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos4.GetX(), 0, 1.0e-2f); // Not moving left/right
+		RVec3 pos4 = body->GetPosition();
+		CHECK_APPROX_EQUAL(pos4.GetX(), 0, 1.0e-2_r); // Not moving left/right
 		CHECK(pos4.GetZ() < pos3.GetZ() - 1.0f); // Moving in -Z direction
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel.GetX(), 0, 1.0e-2f); // Not moving left/right
@@ -218,8 +218,8 @@ TEST_SUITE("WheeledVehicleTests")
 		c.Simulate(3.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone sleeping
-		Vec3 pos5 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos5.GetX(), 0, 1.0e-2f); // Not moving left/right
+		RVec3 pos5 = body->GetPosition();
+		CHECK_APPROX_EQUAL(pos5.GetX(), 0, 1.0e-2_r); // Not moving left/right
 		CHECK(pos5.GetZ() < pos4.GetZ() - 1.0f); // Moving in -Z direction while braking
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel, Vec3::sZero(), 1.0e-3f); // Not moving
@@ -256,7 +256,7 @@ TEST_SUITE("WheeledVehicleTests")
 	{
 		struct Test
 		{
-			Vec3	mBlockPosition;		// Location of the box under the vehicle
+			RVec3	mBlockPosition;		// Location of the box under the vehicle
 			bool	mFourWheelDrive;	// 4WD or not
 			float	mFBLSRatio;			// Limited slip ratio front-back
 			float	mLRLSRatio;			// Limited slip ratio left-right
@@ -268,21 +268,21 @@ TEST_SUITE("WheeledVehicleTests")
 		};
 
 		Test tests[] = {
-			// Block Position,		4WD,	FBSlip,		LRSlip		FLPre,	FRPre,	BLPre,	BRPre,	ShouldMove
-			{ Vec3(1, 0.5f, 0),		true,	FLT_MAX,	FLT_MAX,	false,	true,	false,	true,	false	},		// Block left, no limited slip -> vehicle can't move
-			{ Vec3(1, 0.5f, 0),		true,	1.4f,		FLT_MAX,	false,	true,	false,	true,	false	},		// Block left, only FB limited slip -> vehicle can't move
-			{ Vec3(1, 0.5f, 0),		true,	1.4f,		1.4f,		false,	true,	false,	true,	true	},		// Block left, limited slip -> vehicle drives off
-			{ Vec3(-1, 0.5f, 0),	true,	FLT_MAX,	FLT_MAX,	true,	false,	true,	false,	false	},		// Block right, no limited slip -> vehicle can't move
-			{ Vec3(-1, 0.5f, 0),	true,	1.4f,		FLT_MAX,	true,	false,	true,	false,	false	},		// Block right, only FB limited slip -> vehicle can't move
-			{ Vec3(-1, 0.5f, 0),	true,	1.4f,		1.4f,		true,	false,	true,	false,	true	},		// Block right, limited slip -> vehicle drives off
-			{ Vec3(0, 0.5f, 1.5f),	true,	FLT_MAX,	FLT_MAX,	false,	false,	true,	true,	false	},		// Block front, no limited slip -> vehicle can't move
-			{ Vec3(0, 0.5f, 1.5f),	true,	1.4f,		FLT_MAX,	false,	false,	true,	true,	true	},		// Block front, only FB limited slip -> vehicle drives off
-			{ Vec3(0, 0.5f, 1.5f),	true,	1.4f,		1.4f,		false,	false,	true,	true,	true	},		// Block front, limited slip -> vehicle drives off
-			{ Vec3(0, 0.5f, 1.5f),	false,	1.4f,		1.4f,		false,	false,	true,	true,	false	},		// Block front, limited slip, 2WD -> vehicle can't move
-			{ Vec3(0, 0.5f, -1.5f),	true,	FLT_MAX,	FLT_MAX,	true,	true,	false,	false,	false	},		// Block back, no limited slip -> vehicle can't move
-			{ Vec3(0, 0.5f, -1.5f),	true,	1.4f,		FLT_MAX,	true,	true,	false,	false,	true	},		// Block back, only FB limited slip -> vehicle drives off
-			{ Vec3(0, 0.5f, -1.5f),	true,	1.4f,		1.4f,		true,	true,	false,	false,	true	},		// Block back, limited slip -> vehicle drives off
-			{ Vec3(0, 0.5f, -1.5f),	false,	1.4f,		1.4f,		true,	true,	false,	false,	true	},		// Block back, limited slip, 2WD -> vehicle drives off
+			// Block Position,			4WD,	FBSlip,		LRSlip		FLPre,	FRPre,	BLPre,	BRPre,	ShouldMove
+			{ RVec3(1, 0.5f, 0),		true,	FLT_MAX,	FLT_MAX,	false,	true,	false,	true,	false	},		// Block left, no limited slip -> vehicle can't move
+			{ RVec3(1, 0.5f, 0),		true,	1.4f,		FLT_MAX,	false,	true,	false,	true,	false	},		// Block left, only FB limited slip -> vehicle can't move
+			{ RVec3(1, 0.5f, 0),		true,	1.4f,		1.4f,		false,	true,	false,	true,	true	},		// Block left, limited slip -> vehicle drives off
+			{ RVec3(-1, 0.5f, 0),		true,	FLT_MAX,	FLT_MAX,	true,	false,	true,	false,	false	},		// Block right, no limited slip -> vehicle can't move
+			{ RVec3(-1, 0.5f, 0),		true,	1.4f,		FLT_MAX,	true,	false,	true,	false,	false	},		// Block right, only FB limited slip -> vehicle can't move
+			{ RVec3(-1, 0.5f, 0),		true,	1.4f,		1.4f,		true,	false,	true,	false,	true	},		// Block right, limited slip -> vehicle drives off
+			{ RVec3(0, 0.5f, 1.5f),		true,	FLT_MAX,	FLT_MAX,	false,	false,	true,	true,	false	},		// Block front, no limited slip -> vehicle can't move
+			{ RVec3(0, 0.5f, 1.5f),		true,	1.4f,		FLT_MAX,	false,	false,	true,	true,	true	},		// Block front, only FB limited slip -> vehicle drives off
+			{ RVec3(0, 0.5f, 1.5f),		true,	1.4f,		1.4f,		false,	false,	true,	true,	true	},		// Block front, limited slip -> vehicle drives off
+			{ RVec3(0, 0.5f, 1.5f),		false,	1.4f,		1.4f,		false,	false,	true,	true,	false	},		// Block front, limited slip, 2WD -> vehicle can't move
+			{ RVec3(0, 0.5f, -1.5f),	true,	FLT_MAX,	FLT_MAX,	true,	true,	false,	false,	false	},		// Block back, no limited slip -> vehicle can't move
+			{ RVec3(0, 0.5f, -1.5f),	true,	1.4f,		FLT_MAX,	true,	true,	false,	false,	true	},		// Block back, only FB limited slip -> vehicle drives off
+			{ RVec3(0, 0.5f, -1.5f),	true,	1.4f,		1.4f,		true,	true,	false,	false,	true	},		// Block back, limited slip -> vehicle drives off
+			{ RVec3(0, 0.5f, -1.5f),	false,	1.4f,		1.4f,		true,	true,	false,	false,	true	},		// Block back, limited slip, 2WD -> vehicle drives off
 		};
 
 		for (Test &t : tests)
@@ -321,18 +321,18 @@ TEST_SUITE("WheeledVehicleTests")
 				}
 			}
 			CHECK(vehicle_on_floor);
-			CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0.0f, 0.02f);
+			CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.02_r);
 
 			// Start driving
 			controller->SetDriverInput(1.0f, 0, 0, 0);
 			c.GetBodyInterface().ActivateBody(body->GetID());
-			c.Simulate(1.0f);
+			c.Simulate(2.0f);
 
 			// Check if vehicle had traction
 			if (t.mShouldMove)
 				CHECK(body->GetPosition().GetZ() > 0.5f);
 			else
-				CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0.0f, 0.05f);
+				CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.05_r);
 		}
 	}
 }

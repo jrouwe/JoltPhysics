@@ -56,7 +56,7 @@ TransformedShape OffsetCenterOfMassShape::GetSubShapeTransformedShape(const SubS
 	// We don't use any bits in the sub shape ID
 	outRemainder = inSubShapeID;
 
-	TransformedShape ts(inPositionCOM - inRotation * mOffset, inRotation, mInnerShape, BodyID());
+	TransformedShape ts(RVec3(inPositionCOM - inRotation * mOffset), inRotation, mInnerShape, BodyID());
 	ts.SetShapeScale(inScale);
 	return ts;
 }
@@ -72,23 +72,23 @@ void OffsetCenterOfMassShape::GetSupportingFace(const SubShapeID &inSubShapeID, 
 	mInnerShape->GetSupportingFace(inSubShapeID, inDirection, inScale, inCenterOfMassTransform.PreTranslated(-mOffset), outVertices);
 }
 
-void OffsetCenterOfMassShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void OffsetCenterOfMassShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
-	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy);
+	mInnerShape->GetSubmergedVolume(inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inSurface, outTotalVolume, outSubmergedVolume, outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, inBaseOffset));
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void OffsetCenterOfMassShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void OffsetCenterOfMassShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	mInnerShape->Draw(inRenderer, inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inColor, inUseMaterialColors, inDrawWireframe);
 }
 
-void OffsetCenterOfMassShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
+void OffsetCenterOfMassShape::DrawGetSupportFunction(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
 {
 	mInnerShape->DrawGetSupportFunction(inRenderer, inCenterOfMassTransform.PreTranslated(-mOffset), inScale, inColor, inDrawSupportDirection);
 }
 
-void OffsetCenterOfMassShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
+void OffsetCenterOfMassShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	mInnerShape->DrawGetSupportingFace(inRenderer, inCenterOfMassTransform.PreTranslated(-mOffset), inScale);
 }
