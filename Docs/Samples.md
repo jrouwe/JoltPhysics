@@ -129,6 +129,10 @@ This category contains general simulation tests. It demonstrates things like fri
 |:-|
 |*We will automatically split up the simulation in islands of non-interacting bodies and distribute the work across multiple threads. Each island has its own color.*|
 
+|[![Single vs Double Precision](https://img.youtube.com/vi/KGnlYSW3550/hqdefault.jpg)](https://www.youtube.com/watch?v=KGnlYSW3550)|
+|:-|
+|*Shows the difference between compiling Jolt Physics in single precision and double precision (define JPH_DOUBLE_PRECISION).*|
+
 ### Shapes & Scaled Shapes
 
 These categories show off all of the supported shapes and how they can be scaled at run-time.
