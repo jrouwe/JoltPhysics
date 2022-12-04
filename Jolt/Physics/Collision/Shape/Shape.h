@@ -242,7 +242,9 @@ public:
 	/// @param outTotalVolume On return this contains the total volume of the shape
 	/// @param outSubmergedVolume On return this contains the submerged volume of the shape
 	/// @param outCenterOfBuoyancy On return this contains the world space center of mass of the submerged volume
+#ifdef JPH_DEBUG_RENDERER
 	/// @param inBaseOffset The offset to transform inCenterOfMassTransform to world space (in double precision mode this can be used to shift the whole operation closer to the origin). Only used for debug drawing.
+#endif
 	virtual void					GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy
 #ifdef JPH_DEBUG_RENDERER // Not using JPH_IF_DEBUG_RENDERER for Doxygen
 		, RVec3Arg inBaseOffset

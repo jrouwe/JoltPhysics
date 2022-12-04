@@ -158,7 +158,9 @@ public:
 	/// @param inNumPoints The amount of points
 	/// @param inSurface The plane that forms the fluid surface (normal should point up)
 	/// @param ioBuffer A temporary buffer of Point's that should have inNumPoints entries and should stay alive while this class is alive
+#ifdef JPH_DEBUG_RENDERER
 	/// @param inBaseOffset The offset to transform inTransform to world space (in double precision mode this can be used to shift the whole operation closer to the origin). Only used for debug drawing.
+#endif // JPH_DEBUG_RENDERER
 						PolyhedronSubmergedVolumeCalculator(const Mat44 &inTransform, const Vec3 *inPoints, int inPointStride, int inNumPoints, const Plane &inSurface, Point *ioBuffer
 #ifdef JPH_DEBUG_RENDERER // Not using JPH_IF_DEBUG_RENDERER for Doxygen
 		, RVec3 inBaseOffset
