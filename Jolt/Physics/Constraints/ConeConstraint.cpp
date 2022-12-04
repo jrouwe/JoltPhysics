@@ -56,11 +56,7 @@ TwoBodyConstraint *ConeConstraintSettings::Create(Body &inBody1, Body &inBody2) 
 }
 
 ConeConstraint::ConeConstraint(Body &inBody1, Body &inBody2, const ConeConstraintSettings &inSettings) :
-	TwoBodyConstraint(inBody1, inBody2, inSettings),
-	mLocalSpacePosition1(inSettings.mPoint1),
-	mLocalSpacePosition2(inSettings.mPoint2),
-	mLocalSpaceTwistAxis1(inSettings.mTwistAxis1),
-	mLocalSpaceTwistAxis2(inSettings.mTwistAxis2)
+	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {
 	// Store limits
 	SetHalfConeAngle(inSettings.mHalfConeAngle);
@@ -72,15 +68,21 @@ ConeConstraint::ConeConstraint(Body &inBody1, Body &inBody2, const ConeConstrain
 	{
 		// If all properties were specified in world space, take them to local space now
 		RMat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
-		mLocalSpacePosition1 = Vec3(inv_transform1 * mLocalSpacePosition1);
-		mLocalSpaceTwistAxis1 = inv_transform1.Multiply3x3(mLocalSpaceTwistAxis1);
+		mLocalSpacePosition1 = Vec3(inv_transform1 * inSettings.mPoint1);
+		mLocalSpaceTwistAxis1 = inv_transform1.Multiply3x3(inSettings.mTwistAxis1);
 
 		RMat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
-		mLocalSpacePosition2 = Vec3(inv_transform2 * mLocalSpacePosition2);
-		mLocalSpaceTwistAxis2 = inv_transform2.Multiply3x3(mLocalSpaceTwistAxis2);
+		mLocalSpacePosition2 = Vec3(inv_transform2 * inSettings.mPoint2);
+		mLocalSpaceTwistAxis2 = inv_transform2.Multiply3x3(inSettings.mTwistAxis2);
 	}
 	else
 	{
+		// Properties already in local space
+		mLocalSpacePosition1 = Vec3(inSettings.mPoint1);
+		mLocalSpacePosition2 = Vec3(inSettings.mPoint2);
+		mLocalSpaceTwistAxis1 = inSettings.mTwistAxis1;
+		mLocalSpaceTwistAxis2 = inSettings.mTwistAxis2;
+
 		// If they were in local space, we need to take the initial rotation axis to world space
 		mWorldSpaceRotationAxis = inBody1.GetRotation() * mWorldSpaceRotationAxis;
 	}
