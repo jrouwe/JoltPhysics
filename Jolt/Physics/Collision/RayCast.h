@@ -14,6 +14,7 @@ struct RayCastT
 	JPH_OVERRIDE_NEW_DELETE
 
 	/// Constructors
+								RayCastT() = default; // Allow raycast to be created uninitialized
 								RayCastT(typename Vec::ArgType inOrigin, Vec3Arg inDirection) : mOrigin(inOrigin), mDirection(inDirection) { }
 								RayCastT(const RayCastT<Vec, Mat, RayCastType> &) = default;
 
