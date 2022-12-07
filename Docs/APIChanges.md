@@ -7,11 +7,16 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 ## Changes between v2.0.1 and latest
 
 * 20221204 - Changes related to double precision support for positions (a2c1c22059fa031faf0208258e654bcff79a63e4)
+	* In many places in the public API Vec3 has been replaced by RVec3 (a Vec3 of Real values which can either be double or float depending on if JPH_DOUBLE_PRECISION is defined). In the same way RMat44 replaces Mat44. When compiling in single precision mode (the default) you should not notice a change.
 	* Shape::GetSubmergedVolume now takes a plane that's relative to inCenterOfMassTransform instead of one in world space
 	* Many of the NarrowPhaseQuery and TransformedShape collision queries now have a 'base offset' that you need to specify. Read the Big Worlds section in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for more info.
+	* The NarrowPhaseQuery/TransformedShape CastRay / CastShape functions now take a RRayCast / RShapeCast struct as input. When compiling in single precision mode this is the same as a RayCast or ShapeCast so only the type name needs to be updated.
 	* If you implement your own TempAllocator and want to compile in double precision, make sure you align to JPH_RVECTOR_ALIGNMENT bytes (instead of 16)
 	* The SkeletonPose got a 'root offset' member, this means that the ragdoll will now make the joint transform of the first body zero and put that offset in the 'root offset'.
+	* ContactManifold now stores the contacts relative to mBaseOffset, the arrays containing the contact points have been renamed from mWorldSpaceContactPointsOn1/2 to mRelativeContactPointsOn1/2 to reflect this.
+	* The DebugRenderer::DrawLine function now takes RVec3Arg parameters instead of Float3 parameters.
 	* The format of a recording recorded with DebugRendererRecorder has changed, this invalidates any prior recordings.
+* 20221128 - MotionProperties::SetMotionQuality has been removed because changing it for an active body could cause crashes. Use BodyInterface::SetMotionQuality instead. (64802d163a7336e60916365ad9bce764cec4ca70)
 
 ## Changes between v1.1.0 and v2.0.0
 
