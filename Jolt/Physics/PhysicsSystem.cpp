@@ -1017,7 +1017,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					// Test if we want to accept this hit
 					if (mValidateBodyPair)
 					{
-						switch (mSystem->mContactManager.ValidateContactPoint(*mBody1, *mBody2, inResult))
+						switch (mSystem->mContactManager.ValidateContactPoint(*mBody1, *mBody2, mBody1->GetCenterOfMassPosition(), inResult))
 						{
 						case ValidateResult::AcceptContact:
 							// We're just accepting this one, nothing to do
@@ -1140,7 +1140,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 					// Test if we want to accept this hit
 					if (mValidateBodyPair)
 					{
-						switch (mSystem->mContactManager.ValidateContactPoint(*mBody1, *mBody2, inResult))
+						switch (mSystem->mContactManager.ValidateContactPoint(*mBody1, *mBody2, mBody1->GetCenterOfMassPosition(), inResult))
 						{
 						case ValidateResult::AcceptContact:
 							// We're just accepting this one, nothing to do
@@ -1647,7 +1647,8 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 							if (mValidateBodyPair)
 							{
 								// Validate the contact result
-								ValidateResult validate_result = mContactConstraintManager.ValidateContactPoint(mBodyManager.GetBody(mCCDBody.mBodyID1), body2, inResult);
+								const Body &body1 = mBodyManager.GetBody(mCCDBody.mBodyID1);
+								ValidateResult validate_result = mContactConstraintManager.ValidateContactPoint(body1, body2, body1.GetCenterOfMassPosition(), inResult); // Note that the center of mass of body 1 is the start of the sweep and is used as base offset below
 								switch (validate_result)
 								{
 								case ValidateResult::AcceptContact:

@@ -6,9 +6,10 @@
 #include <Utils/ContactListenerImpl.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Core/QuickSort.h>
 
-ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult)
+ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
 {
 	// Expect body 1 to be dynamic (or one of the bodies must be a sensor)
 	if (!inBody1.IsDynamic() && !inBody1.IsSensor() && !inBody2.IsSensor())
@@ -16,9 +17,12 @@ ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const
 
 	ValidateResult result;
 	if (mNext != nullptr)
-		result = mNext->OnContactValidate(inBody1, inBody2, inCollisionResult);
+		result = mNext->OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
 	else
-		result = ContactListener::OnContactValidate(inBody1, inBody2, inCollisionResult);
+		result = ContactListener::OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
+
+	RVec3 contact_point = inBaseOffset + inCollisionResult.mContactPointOn1;
+	DebugRenderer::sInstance->DrawArrow(contact_point, contact_point + -inCollisionResult.mPenetrationAxis.NormalizedOr(Vec3::sZero()), Color::sBlue, 0.05f);
 
 	Trace("Validate %d and %d result %d", inBody1.GetID().GetIndex(), inBody2.GetID().GetIndex(), (int)result);
 
