@@ -26,6 +26,9 @@ public:
 	/// Maximum force with which the character can push other bodies (N).
 	float								mMaxStrength = 100.0f;
 
+	/// An extra offset applied to the shape in local space. This allows applying an extra offset to the shape in local space.
+	Vec3								mShapeOffset = Vec3::sZero();
+
 	///@name Movement settings
 	float								mPredictiveContactDistance = 0.1f;						///< How far to scan outside of the shape for predictive contacts
 	uint								mMaxCollisionIterations = 5;							///< Max amount of collision loops
@@ -49,8 +52,6 @@ public:
 class CharacterContactListener
 {
 public:
-	JPH_OVERRIDE_NEW_DELETE
-
 	/// Destructor
 	virtual								~CharacterContactListener() = default;
 
@@ -121,13 +122,27 @@ public:
 	RMat44								GetCenterOfMassTransform() const						{ return GetCenterOfMassTransform(mPosition, mRotation, mShape); }
 
 	/// Character mass (kg)
+	float								GetMass() const											{ return mMass; }
 	void								SetMass(float inMass)									{ mMass = inMass; }
 
 	/// Maximum force with which the character can push other bodies (N)
+	float								GetMaxStrength() const									{ return mMaxStrength; }
 	void								SetMaxStrength(float inMaxStrength)						{ mMaxStrength = inMaxStrength; }
+
+	/// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
+	float								GetPenetrationRecoverySpeed() const						{ return mPenetrationRecoverySpeed; }
+	void								SetPenetrationRecoverySpeed(float inSpeed)				{ mPenetrationRecoverySpeed = inSpeed; }
 
 	/// Character padding
 	float								GetCharacterPadding() const								{ return mCharacterPadding; }
+
+	/// Max num hits to collect in order to avoid excess of contact points collection
+	uint								GetMaxNumHits() const									{ return mMaxNumHits; }
+	void								SetMaxNumHits(uint inMaxHits)							{ mMaxNumHits = inMaxHits; }
+
+	/// An extra offset applied to the shape in local space. This allows applying an extra offset to the shape in local space. Note that setting it on the fly can cause the shape to teleport into collision.
+	Vec3								GetShapeOffset() const									{ return mShapeOffset; }
+	void								SetShapeOffset(Vec3Arg inShapeOffset)					{ mShapeOffset = inShapeOffset; }
 
 	/// This function can be called prior to calling Update() to convert a desired velocity into a velocity that won't make the character move further onto steep slopes.
 	/// This velocity can then be set on the character using SetLinearVelocity()
@@ -235,7 +250,6 @@ public:
 	static inline bool					sDrawStickToFloor = false;								///< Draw the state of the stick to floor algorithm
 #endif
 
-private:
 	// Encapsulates a collision contact
 	struct Contact
 	{
@@ -258,6 +272,10 @@ private:
 	using TempContactList = std::vector<Contact, STLTempAllocator<Contact>>;
 	using ContactList = Array<Contact>;
 
+	/// Access to the internal list of contacts that the character has found.
+	const ContactList &					GetActiveContacts() const								{ return mActiveContacts; }
+
+private:
 	// A contact that needs to be ignored
 	struct IgnoredContact
 	{
@@ -362,7 +380,7 @@ private:
 	// This function returns the actual center of mass of the shape, not corrected for the character padding
 	inline RMat44						GetCenterOfMassTransform(RVec3Arg inPosition, QuatArg inRotation, const Shape *inShape) const
 	{
-		return RMat44::sRotationTranslation(inRotation, inPosition).PreTranslated(inShape->GetCenterOfMass()).PostTranslated(mCharacterPadding * mUp);
+		return RMat44::sRotationTranslation(inRotation, inPosition).PreTranslated(mShapeOffset + inShape->GetCenterOfMass()).PostTranslated(mCharacterPadding * mUp);
 	}
 
 	// Our main listener for contacts
@@ -383,6 +401,9 @@ private:
 
 	// Maximum force with which the character can push other bodies (N)
 	float								mMaxStrength;
+
+	// An extra offset applied to the shape in local space. This allows applying an extra offset to the shape in local space.
+	Vec3								mShapeOffset = Vec3::sZero();
 
 	// Current position (of the base, not the center of mass)
 	RVec3								mPosition = RVec3::sZero();

@@ -28,6 +28,7 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	mCharacterPadding(inSettings->mCharacterPadding),
 	mMaxNumHits(inSettings->mMaxNumHits),
 	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed),
+	mShapeOffset(inSettings->mShapeOffset),
 	mPosition(inPosition),
 	mRotation(inRotation)
 {
@@ -623,9 +624,16 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 	// Flag contacts as having a collision if they're close enough but ignore contacts we're moving away from.
 	// Note that if we did MoveShape before we want to preserve any contacts that it marked as colliding
 	for (Contact &c : mActiveContacts)
-		if (!c.mWasDiscarded)
-			c.mHadCollision |= c.mDistance < mCollisionTolerance
-								&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f);
+		if (!c.mWasDiscarded
+			&& !c.mHadCollision
+			&& c.mDistance < mCollisionTolerance
+			&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f))
+		{
+			if (ValidateContact(c))
+				c.mHadCollision = true;
+			else
+				c.mWasDiscarded = true;
+		}
 
 	// Calculate transform that takes us to character local space
 	RMat44 inv_transform = RMat44::sInverseRotationTranslation(mRotation, mPosition);
