@@ -22,7 +22,7 @@ ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const
 		result = ContactListener::OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
 
 	RVec3 contact_point = inBaseOffset + inCollisionResult.mContactPointOn1;
-	DebugRenderer::sInstance->DrawArrow(contact_point, contact_point + -inCollisionResult.mPenetrationAxis.NormalizedOr(Vec3::sZero()), Color::sBlue, 0.05f);
+	DebugRenderer::sInstance->DrawArrow(contact_point, contact_point - inCollisionResult.mPenetrationAxis.NormalizedOr(Vec3::sZero()), Color::sBlue, 0.05f);
 
 	Trace("Validate %d and %d result %d", inBody1.GetID().GetIndex(), inBody2.GetID().GetIndex(), (int)result);
 
