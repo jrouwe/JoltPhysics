@@ -25,7 +25,13 @@ void SkeletonMapper::Initialize(const Skeleton *inSkeleton1, const Mat44 *inNeut
 		for (int j2 = 0; j2 < n2; ++j2)
 			if (inCanMapJoint(inSkeleton1, j1, inSkeleton2, j2))
 			{
-				mMappings.emplace_back(j1, j2, inNeutralPose1[j1].Inversed() * inNeutralPose2[j2]);
+				// Calculate the transform that takes this joint from skeleton 1 to 2
+				Mat44 joint_1_to_2 = inNeutralPose1[j1].Inversed() * inNeutralPose2[j2];
+
+				// Ensure bottom right element is 1 (numerical imprecision in the inverse can make this not so)
+				joint_1_to_2(3, 3) = 1.0f;
+
+				mMappings.emplace_back(j1, j2, joint_1_to_2);
 				mapped1[j1] = true;
 				mapped2[j2] = true;
 				break;
@@ -207,6 +213,24 @@ void SkeletonMapper::MapReverse(const Mat44 *inPose2ModelSpace, Mat44 *outPose1M
 	// Normally each joint in skeleton 1 should be present in the mapping, so we only need to apply the direct mappings
 	for (const Mapping &m : mMappings)
 		outPose1ModelSpace[m.mJointIdx1] = inPose2ModelSpace[m.mJointIdx2] * m.mJoint2To1;
+}
+
+int SkeletonMapper::GetMappedJointIdx(int inJoint1Idx) const
+{
+	for (const Mapping &m : mMappings)
+		if (m.mJointIdx1 == inJoint1Idx)
+			return m.mJointIdx2;
+
+	return -1;
+}
+
+bool SkeletonMapper::IsJointTranslationLocked(int inJoint2Idx) const
+{
+	for (const Locked &l : mLockedTranslations)
+		if (l.mJointIdx == inJoint2Idx)
+			return true;
+
+	return false;
 }
 
 JPH_NAMESPACE_END
