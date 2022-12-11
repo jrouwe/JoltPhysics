@@ -21,6 +21,9 @@ class ScaledShapeSettings final : public DecoratedShapeSettings
 	/// Constructor that decorates another shape with a scale
 									ScaledShapeSettings(const ShapeSettings *inShape, Vec3Arg inScale) : DecoratedShapeSettings(inShape), mScale(inScale) { }
 
+	/// Variant that uses a concrete shape, which means this object cannot be serialized.
+									ScaledShapeSettings(const Shape *inShape, Vec3Arg inScale) : DecoratedShapeSettings(inShape), mScale(inScale) { }
+
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;
 
