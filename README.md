@@ -124,6 +124,12 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
 * [Zig](https://github.com/michal-z/zig-gamedev)
 
+## Integrations in Other Engines
+
+* [ezEngine](https://github.com/ezEngine/ezEngine)
+* [Godot](https://github.com/godot-jolt/godot-jolt)
+* [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
+
 ## License
 
 The project is distributed under the [MIT license](LICENSE).
