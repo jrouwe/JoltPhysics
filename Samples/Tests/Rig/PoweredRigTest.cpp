@@ -68,8 +68,11 @@ void PoweredRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mAnimation->Sample(mTime, mPose);
 
 	// Place the root joint on the first body so that we draw the pose in the right place
+	RVec3 root_offset;
 	SkeletonPose::JointState &joint = mPose.GetJoint(0);
-	mRagdoll->GetRootTransform(joint.mTranslation, joint.mRotation);
+	joint.mTranslation = Vec3::sZero(); // All the translation goes into the root offset
+	mRagdoll->GetRootTransform(root_offset, joint.mRotation);
+	mPose.SetRootOffset(root_offset);
 	mPose.CalculateJointMatrices();
 #ifdef JPH_DEBUG_RENDERER
 	mPose.Draw(*inParams.mPoseDrawSettings, mDebugRenderer);

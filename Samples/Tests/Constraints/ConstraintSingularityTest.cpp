@@ -34,7 +34,7 @@ void ConstraintSingularityTest::Initialize()
 	for (int constraint_type = 0; constraint_type < num_constraint_types; ++constraint_type)
 		for (int configuration = 0; configuration < num_configurations; ++configuration)
 		{
-			Vec3 test_position(10.0f * constraint_type, 10.0f + 10.0f * configuration, 0);
+			RVec3 test_position(10.0f * constraint_type, 10.0f + 10.0f * configuration, 0);
 
 			Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(box, test_position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 			body1.SetCollisionGroup(CollisionGroup(group_filter, group_id, 0));
@@ -70,7 +70,7 @@ void ConstraintSingularityTest::Initialize()
 				
 			mPhysicsSystem->AddConstraint(constraint);
 
-			Vec3 position;
+			RVec3 position;
 			Quat orientation;
 			switch (configuration)
 			{

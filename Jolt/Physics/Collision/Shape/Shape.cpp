@@ -34,7 +34,7 @@ TransformedShape Shape::GetSubShapeTransformedShape(const SubShapeID &inSubShape
 	outRemainder = SubShapeID();
 
 	// Just return the transformed shape for this shape
-	TransformedShape ts(inPositionCOM, inRotation, this, BodyID());
+	TransformedShape ts(RVec3(inPositionCOM), inRotation, this, BodyID());
 	ts.SetShapeScale(inScale);
 	return ts;
 }
@@ -45,7 +45,7 @@ void Shape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, 
 	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
 		return;
 
-	TransformedShape ts(inPositionCOM, inRotation, this, TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator);
+	TransformedShape ts(RVec3(inPositionCOM), inRotation, this, TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator);
 	ts.SetShapeScale(inScale);
 	ioCollector.AddHit(ts);
 }
@@ -54,7 +54,7 @@ void Shape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCol
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(transform.GetTranslation(), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(scale);
 	ioCollector.AddHit(ts);
 }
@@ -320,7 +320,7 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 			shape = new ScaledShape(shape, scale);
 
 		// Add the shape
-		compound.AddShape(ts.mShapePositionCOM - ts.mShapeRotation * shape->GetCenterOfMass(), ts.mShapeRotation, shape);
+		compound.AddShape(Vec3(ts.mShapePositionCOM) - ts.mShapeRotation * shape->GetCenterOfMass(), ts.mShapeRotation, shape);
 	}
 
 	return compound.Create();

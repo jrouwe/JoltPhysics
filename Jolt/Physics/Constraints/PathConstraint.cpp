@@ -86,9 +86,8 @@ void PathConstraint::SetPath(const PathConstraintPath *inPath, float inPathFract
 
 		// Construct the matrix that takes us from the closest point on the path to body 2 center of mass space
 		Mat44 closest_point_to_path(Vec4(path_tangent, 0), Vec4(path_binormal, 0), Vec4(path_normal, 0), Vec4(path_point, 1));
-		Mat44 inv_transform2 = mBody2->GetInverseCenterOfMassTransform();
-		Mat44 path_to_world = mBody1->GetCenterOfMassTransform() * mPathToBody1;
-		mPathToBody2 = inv_transform2 * path_to_world * closest_point_to_path;
+		Mat44 cp_to_body1 = mPathToBody1 * closest_point_to_path;
+		mPathToBody2 = (mBody2->GetInverseCenterOfMassTransform() * mBody1->GetCenterOfMassTransform()).ToMat44() * cp_to_body1;
 
 		// Calculate initial orientation
 		if (mRotationConstraintType == EPathRotationConstraintType::FullyConstrained)
@@ -99,18 +98,18 @@ void PathConstraint::SetPath(const PathConstraintPath *inPath, float inPathFract
 void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 {
 	// Get transforms of body 1 and 2
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Mat44 transform2 = mBody2->GetCenterOfMassTransform();
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RMat44 transform2 = mBody2->GetCenterOfMassTransform();
 
 	// Get the transform of the path transform as seen from body 1 in world space
-	Mat44 path_to_world_1 = transform1 * mPathToBody1;
+	RMat44 path_to_world_1 = transform1 * mPathToBody1;
 
 	// Get the transform of from the point on path that body 2 is attached to in world space
-	Mat44 path_to_world_2 = transform2 * mPathToBody2;
+	RMat44 path_to_world_2 = transform2 * mPathToBody2;
 
 	// Calculate new closest point on path
-	Vec3 position2 = path_to_world_2.GetTranslation();
-	Vec3 position2_local_to_path = path_to_world_1.InversedRotationTranslation() * position2;
+	RVec3 position2 = path_to_world_2.GetTranslation();
+	Vec3 position2_local_to_path = Vec3(path_to_world_1.InversedRotationTranslation() * position2);
 	mPathFraction = mPath->GetClosestPoint(position2_local_to_path);
 
 	// Get the point on the path for this fraction
@@ -118,12 +117,12 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 	mPath->GetPointOnPath(mPathFraction, path_point, path_tangent, path_normal, path_binormal);
 
 	// Calculate R1 and R2
-	path_point = path_to_world_1 * path_point;
-	mR1 = path_point - mBody1->GetCenterOfMassPosition();
-	mR2 = position2 - mBody2->GetCenterOfMassPosition();
+	RVec3 path_point_ws = path_to_world_1 * path_point;
+	mR1 = Vec3(path_point_ws - mBody1->GetCenterOfMassPosition());
+	mR2 = Vec3(position2 - mBody2->GetCenterOfMassPosition());
 	
 	// Calculate U = X2 + R2 - X1 - R1
-	mU = position2 - path_point;
+	mU = Vec3(position2 - path_point_ws);
 
 	// Calculate world space normals
 	mPathNormal = path_to_world_1.Multiply3x3(path_normal);
@@ -352,12 +351,12 @@ bool PathConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 void PathConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
 	// Draw the path in world space
-	Mat44 path_to_world = mBody1->GetCenterOfMassTransform() * mPathToBody1;
+	RMat44 path_to_world = mBody1->GetCenterOfMassTransform() * mPathToBody1;
 	mPath->DrawPath(inRenderer, path_to_world);
 
 	// Draw anchor point of both bodies in world space
-	Vec3 x1 = mBody1->GetCenterOfMassPosition() + mR1;
-	Vec3 x2 = mBody2->GetCenterOfMassPosition() + mR2;
+	RVec3 x1 = mBody1->GetCenterOfMassPosition() + mR1;
+	RVec3 x2 = mBody2->GetCenterOfMassPosition() + mR2;
 	inRenderer->DrawMarker(x1, Color::sYellow, 0.1f);
 	inRenderer->DrawMarker(x2, Color::sYellow, 0.1f);
 	inRenderer->DrawArrow(x1, x1 + mPathTangent, Color::sBlue, 0.1f);
@@ -379,7 +378,7 @@ void PathConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 
 	case EMotorState::Velocity:
 		{
-			Vec3 position = mBody2->GetCenterOfMassPosition() + mR2;
+			RVec3 position = mBody2->GetCenterOfMassPosition() + mR2;
 			inRenderer->DrawArrow(position, position + mPathTangent * mTargetVelocity, Color::sRed, 0.1f);
 			break;
 		}

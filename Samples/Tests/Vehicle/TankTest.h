@@ -21,7 +21,7 @@ public:
 	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
 	virtual void				GetInitialCamera(CameraState &ioState) const override;
-	virtual Mat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
 
 private:
 	Body *						mTankBody;									///< The body of the tank

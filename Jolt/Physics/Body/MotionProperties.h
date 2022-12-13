@@ -22,7 +22,6 @@ public:
 
 	/// Motion quality, or how well it detects collisions when it has a high velocity
 	EMotionQuality			GetMotionQuality() const										{ return mMotionQuality; }
-	void					SetMotionQuality(EMotionQuality inQuality)						{ mMotionQuality = inQuality; }
 
 	/// Get world space linear velocity of the center of mass
 	inline Vec3				GetLinearVelocity() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::Read)); return mLinearVelocity; }
@@ -142,8 +141,12 @@ public:
 	/// Access to the index in the active bodies array
 	uint32					GetIndexInActiveBodiesInternal() const							{ return mIndexInActiveBodies; }
 
+#ifdef JPH_DOUBLE_PRECISION
+	inline DVec3			GetSleepTestOffset() const										{ return DVec3::sLoadDouble3Unsafe(mSleepTestOffset); }
+#endif // JPH_DOUBLE_PRECISION
+
 	/// Reset spheres to center around inPoints with radius 0
-	inline void				ResetSleepTestSpheres(const Vec3 *inPoints);
+	inline void				ResetSleepTestSpheres(const RVec3 *inPoints);
 
 	/// Saving state for replay
 	void					SaveState(StateRecorder &inStream) const;
@@ -180,7 +183,10 @@ private:
 	bool					mAllowSleeping;													///< If this body can go to sleep
 
 	// 3rd cache line (least frequently used)
-	// 4 byte aligned
+	// 4 byte aligned (or 8 byte if running in double precision)
+#ifdef JPH_DOUBLE_PRECISION
+	Double3					mSleepTestOffset;												///< mSleepTestSpheres are relative to this offset to prevent floating point inaccuracies. Warning: Loaded using sLoadDouble3Unsafe which will read 8 extra bytes.
+#endif // JPH_DOUBLE_PRECISION
 	Sphere					mSleepTestSpheres[3];											///< Measure motion for 3 points on the body to see if it is resting: COM, COM + largest bounding box axis, COM + second largest bounding box axis
 	float					mSleepTestTimer;												///< How long this body has been within the movement tolerance
 

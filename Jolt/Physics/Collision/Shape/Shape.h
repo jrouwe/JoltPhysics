@@ -194,6 +194,9 @@ public:
 	/// This function can be overridden to return a closer fitting world space bounding box, by default it will just transform what GetLocalBounds() returns.
 	virtual AABox					GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { return GetLocalBounds().Scaled(inScale).Transformed(inCenterOfMassTransform); }
 
+	/// Get world space bounds including convex radius.
+	AABox							GetWorldSpaceBounds(DMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { return GetLocalBounds().Scaled(inScale).Transformed(inCenterOfMassTransform); }
+
 	/// Returns the radius of the biggest sphere that fits entirely in the shape. In case this shape consists of multiple sub shapes, it returns the smallest sphere of the parts. 
 	/// This can be used as a measure of how far the shape can be moved without risking going through geometry.
 	virtual float					GetInnerRadius() const = 0;
@@ -233,23 +236,30 @@ public:
 	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const;
 
 	/// Gets the properties needed to do buoyancy calculations for a body using this shape
-	/// @param inCenterOfMassTransform Transform that takes this shape (centered around center of mass) to world space
+	/// @param inCenterOfMassTransform Transform that takes this shape (centered around center of mass) to world space (or a desired other space)
 	/// @param inScale Scale in local space of the shape
-	/// @param inSurface The surface plane of the liquid in world space
+	/// @param inSurface The surface plane of the liquid relative to inCenterOfMassTransform
 	/// @param outTotalVolume On return this contains the total volume of the shape
 	/// @param outSubmergedVolume On return this contains the submerged volume of the shape
 	/// @param outCenterOfBuoyancy On return this contains the world space center of mass of the submerged volume
-	virtual void					GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const = 0;
+#ifdef JPH_DEBUG_RENDERER
+	/// @param inBaseOffset The offset to transform inCenterOfMassTransform to world space (in double precision mode this can be used to shift the whole operation closer to the origin). Only used for debug drawing.
+#endif
+	virtual void					GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy
+#ifdef JPH_DEBUG_RENDERER // Not using JPH_IF_DEBUG_RENDERER for Doxygen
+		, RVec3Arg inBaseOffset
+#endif
+		) const = 0;
 	
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the shape at a particular location with a particular color (debugging purposes)
-	virtual void					Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const = 0;
+	virtual void					Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const = 0;
 
 	/// Draw the results of the GetSupportFunction with the convex radius added back on to show any errors introduced by this process (only relevant for convex shapes)
-	virtual void					DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const { /* Only implemented for convex shapes */ }
+	virtual void					DrawGetSupportFunction(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const { /* Only implemented for convex shapes */ }
 
 	/// Draw the results of the GetSupportingFace function to show any errors introduced by this process (only relevant for convex shapes)
-	virtual void					DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { /* Only implemented for convex shapes */ }
+	virtual void					DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { /* Only implemented for convex shapes */ }
 #endif // JPH_DEBUG_RENDERER
 
 	/// Cast a ray against this shape, returns true if it finds a hit closer than ioHit.mFraction and updates that fraction. Otherwise ioHit is left untouched and the function returns false.

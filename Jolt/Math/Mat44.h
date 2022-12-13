@@ -16,9 +16,13 @@ public:
 	// Underlying column type
 	using Type = Vec4::Type;
 
+	// Argument type
+	using ArgType = Mat44Arg;
+
 	/// Constructor
 								Mat44() = default; ///< Intentionally not initialized for performance reasons
 	JPH_INLINE					Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec4Arg inC4);
+	JPH_INLINE					Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec3Arg inC4);
 								Mat44(const Mat44 &inM2) = default;
 	JPH_INLINE					Mat44(Type inC1, Type inC2, Type inC3, Type inC4);
 
@@ -207,6 +211,11 @@ public:
 	/// This equation only holds when the matrix is orthogonal, if it is not the returned matrix
 	/// will be made orthogonal using the modified Gram-Schmidt algorithm (see: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process)
 	JPH_INLINE Mat44			Decompose(Vec3 &outScale) const;
+
+#ifndef JPH_DOUBLE_PRECISION
+	/// In single precision mode just return the matrix itself
+	JPH_INLINE Mat44			ToMat44() const											{ return *this; }
+#endif // !JPH_DOUBLE_PRECISION
 
 	/// To String
 	friend ostream &			operator << (ostream &inStream, Mat44Arg inM)

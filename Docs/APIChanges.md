@@ -4,6 +4,21 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
 
+## Changes between v2.0.1 and latest
+
+* 20221208 - ContactListener::OnContactValidate is reporting collisions relative to inBaseOffset. Add this to the contact point if you want world space positions. (428611482825e369e60e0a5daf17c69a4d0f2a6f)
+* 20221204 - Changes related to double precision support for positions (a2c1c22059fa031faf0208258e654bcff79a63e4)
+	* In many places in the public API Vec3 has been replaced by RVec3 (a Vec3 of Real values which can either be double or float depending on if JPH_DOUBLE_PRECISION is defined). In the same way RMat44 replaces Mat44. When compiling in single precision mode (the default) you should not notice a change.
+	* Shape::GetSubmergedVolume now takes a plane that's relative to inCenterOfMassTransform instead of one in world space
+	* Many of the NarrowPhaseQuery and TransformedShape collision queries now have a 'base offset' that you need to specify. Read the Big Worlds section in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for more info.
+	* The NarrowPhaseQuery/TransformedShape CastRay / CastShape functions now take a RRayCast / RShapeCast struct as input. When compiling in single precision mode this is the same as a RayCast or ShapeCast so only the type name needs to be updated.
+	* If you implement your own TempAllocator and want to compile in double precision, make sure you align to JPH_RVECTOR_ALIGNMENT bytes (instead of 16)
+	* The SkeletonPose got a 'root offset' member, this means that the ragdoll will now make the joint transform of the first body zero and put that offset in the 'root offset'.
+	* ContactManifold now stores the contacts relative to mBaseOffset, the arrays containing the contact points have been renamed from mWorldSpaceContactPointsOn1/2 to mRelativeContactPointsOn1/2 to reflect this.
+	* The DebugRenderer::DrawLine function now takes RVec3Arg parameters instead of Float3 parameters.
+	* The format of a recording recorded with DebugRendererRecorder has changed, this invalidates any prior recordings.
+* 20221128 - MotionProperties::SetMotionQuality has been removed because changing it for an active body could cause crashes. Use BodyInterface::SetMotionQuality instead. (64802d163a7336e60916365ad9bce764cec4ca70)
+
 ## Changes between v1.1.0 and v2.0.0
 
 * 20221027 - *SBS* (vehicles only) - Rewrote engine model for wheeled vehicle. Before engine inertia was only used when the clutch was pressed, now it is always used, so you may want to use a lower value. The way torque is distributed over the wheels has also changed and may require tweaking the vehicle parameters. (5ac751cee9afcc097fd4f884308f5e4dc9fdaeaf)

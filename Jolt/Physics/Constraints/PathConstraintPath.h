@@ -48,7 +48,7 @@ public:
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the path relative to inBaseTransform. Used for debug purposes.
-	void				DrawPath(DebugRenderer *inRenderer, Mat44Arg inBaseTransform) const;
+	void				DrawPath(DebugRenderer *inRenderer, RMat44Arg inBaseTransform) const;
 #endif // JPH_DEBUG_RENDERER
 
 	/// Saves the contents of the path in binary form to inStream.

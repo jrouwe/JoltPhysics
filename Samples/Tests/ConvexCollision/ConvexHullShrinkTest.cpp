@@ -5,6 +5,7 @@
 
 #include <Tests/ConvexCollision/ConvexHullShrinkTest.h>
 #include <Utils/Log.h>
+#include <Utils/DebugRendererSP.h>
 #include <Jolt/Geometry/ConvexSupport.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Renderer/DebugRendererImp.h>
@@ -161,15 +162,15 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		if (max_error > settings.mMaxErrorConvexRadius)
 		{
 			Trace("%d, %f, %f", mIteration - 1, (double)convex_radius, (double)max_error);
-			mDebugRenderer->DrawMarker(max_error_support_point, Color::sPurple, 0.1f);
-			mDebugRenderer->DrawArrow(max_error_support_point, max_error_support_point - max_error * planes[max_error_plane].GetNormal(), Color::sPurple, 0.01f);
+			DrawMarkerSP(mDebugRenderer, max_error_support_point, Color::sPurple, 0.1f);
+			DrawArrowSP(mDebugRenderer, max_error_support_point, max_error_support_point - max_error * planes[max_error_plane].GetNormal(), Color::sPurple, 0.01f);
 		}
 	}
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw the hulls
-	shape->Draw(DebugRenderer::sInstance, Mat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sRed, false, false);
-	shape->DrawGetSupportFunction(DebugRenderer::sInstance, Mat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sLightGrey, false);
-	shape->DrawShrunkShape(DebugRenderer::sInstance, Mat44::sIdentity(), Vec3::sReplicate(1.0f));
+	shape->Draw(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sRed, false, false);
+	shape->DrawGetSupportFunction(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f), Color::sLightGrey, false);
+	shape->DrawShrunkShape(DebugRenderer::sInstance, RMat44::sIdentity(), Vec3::sReplicate(1.0f));
 #endif // JPH_DEBUG_RENDERER
 }

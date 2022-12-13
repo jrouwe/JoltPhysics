@@ -89,10 +89,6 @@ TwoBodyConstraint *SliderConstraintSettings::Create(Body &inBody1, Body &inBody2
 
 SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings),
-	mLocalSpacePosition1(inSettings.mPoint1),
-	mLocalSpacePosition2(inSettings.mPoint2),
-	mLocalSpaceSliderAxis1(inSettings.mSliderAxis1),
-	mLocalSpaceNormal1(inSettings.mNormalAxis1),
 	mMaxFrictionForce(inSettings.mMaxFrictionForce),
 	mMotorSettings(inSettings.mMotorSettings)
 {
@@ -101,10 +97,13 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
+		RMat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
+		RMat44 inv_transform2 = inBody2.GetInverseCenterOfMassTransform();
+
 		if (inSettings.mAutoDetectPoint)
 		{
 			// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point
-			Vec3 anchor;
+			RVec3 anchor;
 			if (!inBody1.CanBeKinematicOrDynamic())
 				anchor = inBody2.GetCenterOfMassPosition();
 			else if (!inBody2.CanBeKinematicOrDynamic())
@@ -112,25 +111,39 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 			else
 			{
 				// Otherwise use weighted anchor point towards the lightest body
-				float inv_m1 = inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
-				float inv_m2 = inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+				Real inv_m1 = Real(inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked());
+				Real inv_m2 = Real(inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked());
 				anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
 			}
 
-			mLocalSpacePosition1 = mLocalSpacePosition2 = anchor;
+			// Store local positions
+			mLocalSpacePosition1 = Vec3(inv_transform1 * anchor);
+			mLocalSpacePosition2 = Vec3(inv_transform2 * anchor);
+		}
+		else
+		{
+			// Store local positions
+			mLocalSpacePosition1 = Vec3(inv_transform1 * inSettings.mPoint1);
+			mLocalSpacePosition2 = Vec3(inv_transform2 * inSettings.mPoint2);
 		}
 
 		// If all properties were specified in world space, take them to local space now
-		Mat44 inv_transform1 = inBody1.GetInverseCenterOfMassTransform();
-		mLocalSpacePosition1 = inv_transform1 * mLocalSpacePosition1;
-		mLocalSpaceSliderAxis1 = inv_transform1.Multiply3x3(mLocalSpaceSliderAxis1).Normalized();
-		mLocalSpaceNormal1 = inv_transform1.Multiply3x3(mLocalSpaceNormal1).Normalized();
-
-		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+		mLocalSpaceSliderAxis1 = inv_transform1.Multiply3x3(inSettings.mSliderAxis1).Normalized();
+		mLocalSpaceNormal1 = inv_transform1.Multiply3x3(inSettings.mNormalAxis1).Normalized();
 
 		// Constraints were specified in world space, so we should have replaced c1 with q10^-1 c1 and c2 with q20^-1 c2
 		// => r0^-1 = (q20^-1 c2) (q10^-1 c1)^1 = q20^-1 (c2 c1^-1) q10
 		mInvInitialOrientation = inBody2.GetRotation().Conjugated() * mInvInitialOrientation * inBody1.GetRotation();
+	}
+	else
+	{
+		// Store local positions
+		mLocalSpacePosition1 = Vec3(inSettings.mPoint1);
+		mLocalSpacePosition2 = Vec3(inSettings.mPoint2);
+
+		// Store local space axis
+		mLocalSpaceSliderAxis1 = inSettings.mSliderAxis1;
+		mLocalSpaceNormal1 = inSettings.mNormalAxis1;
 	}
 
 	// Calculate 2nd local space normal
@@ -150,7 +163,7 @@ float SliderConstraint::GetCurrentPosition() const
 	// See: CalculateR1R2U and CalculateSlidingAxisAndPosition
 	Vec3 r1 = mBody1->GetRotation() * mLocalSpacePosition1;
 	Vec3 r2 = mBody2->GetRotation() * mLocalSpacePosition2;
-	Vec3 u = mBody2->GetCenterOfMassPosition() + r2 - mBody1->GetCenterOfMassPosition() - r1;
+	Vec3 u = Vec3(mBody2->GetCenterOfMassPosition() - mBody1->GetCenterOfMassPosition()) + r2 - r1;
 	return u.Dot(mBody1->GetRotation() * mLocalSpaceSliderAxis1);
 }
 
@@ -170,7 +183,7 @@ void SliderConstraint::CalculateR1R2U(Mat44Arg inRotation1, Mat44Arg inRotation2
 	mR2 = inRotation2 * mLocalSpacePosition2;
 
 	// Calculate X2 + R2 - X1 - R1
-	mU = mBody2->GetCenterOfMassPosition() + mR2 - mBody1->GetCenterOfMassPosition() - mR1;
+	mU = Vec3(mBody2->GetCenterOfMassPosition() - mBody1->GetCenterOfMassPosition()) + mR2 - mR1;
 }
 
 void SliderConstraint::CalculatePositionConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2)
@@ -333,13 +346,13 @@ bool SliderConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 #ifdef JPH_DEBUG_RENDERER
 void SliderConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Mat44 transform2 = mBody2->GetCenterOfMassTransform();
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RMat44 transform2 = mBody2->GetCenterOfMassTransform();
 
 	// Transform the local positions into world space
 	Vec3 slider_axis = transform1.Multiply3x3(mLocalSpaceSliderAxis1);
-	Vec3 position1 = transform1 * mLocalSpacePosition1;
-	Vec3 position2 = transform2 * mLocalSpacePosition2;
+	RVec3 position1 = transform1 * mLocalSpacePosition1;
+	RVec3 position2 = transform2 * mLocalSpacePosition2;
 
 	// Draw constraint
 	inRenderer->DrawMarker(position1, Color::sRed, 0.1f);
@@ -370,17 +383,17 @@ void SliderConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 {
 	if (mHasLimits)
 	{
-		Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-		Mat44 transform2 = mBody2->GetCenterOfMassTransform();
+		RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+		RMat44 transform2 = mBody2->GetCenterOfMassTransform();
 
 		// Transform the local positions into world space
 		Vec3 slider_axis = transform1.Multiply3x3(mLocalSpaceSliderAxis1);
-		Vec3 position1 = transform1 * mLocalSpacePosition1;
-		Vec3 position2 = transform2 * mLocalSpacePosition2;
+		RVec3 position1 = transform1 * mLocalSpacePosition1;
+		RVec3 position2 = transform2 * mLocalSpacePosition2;
 
 		// Calculate the limits in world space
-		Vec3 limits_min = position1 + mLimitsMin * slider_axis;
-		Vec3 limits_max = position1 + mLimitsMax * slider_axis;
+		RVec3 limits_min = position1 + mLimitsMin * slider_axis;
+		RVec3 limits_max = position1 + mLimitsMax * slider_axis;
 
 		inRenderer->DrawLine(limits_min, position1, Color::sWhite);
 		inRenderer->DrawLine(position2, limits_max, Color::sWhite);
@@ -424,10 +437,10 @@ Ref<ConstraintSettings> SliderConstraint::GetConstraintSettings() const
 	SliderConstraintSettings *settings = new SliderConstraintSettings;
 	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
-	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mPoint1 = RVec3(mLocalSpacePosition1);
 	settings->mSliderAxis1 = mLocalSpaceSliderAxis1;
 	settings->mNormalAxis1 = mLocalSpaceNormal1;
-	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mPoint2 = RVec3(mLocalSpacePosition2);
 	Mat44 inv_initial_rotation = Mat44::sRotation(mInvInitialOrientation);
 	settings->mSliderAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceSliderAxis1);
 	settings->mNormalAxis2 = inv_initial_rotation.Multiply3x3(mLocalSpaceNormal1);

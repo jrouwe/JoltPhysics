@@ -28,6 +28,10 @@ public:
 	const Skeleton *			GetSkeleton() const														{ return mSkeleton; }
 	///@}
 
+	/// Extra offset applied to the root (and therefore also to all of its children)
+	void						SetRootOffset(RVec3Arg inOffset)										{ mRootOffset = inOffset; }
+	RVec3						GetRootOffset() const													{ return mRootOffset; }
+
 	///@name Properties of the joints
 	///@{
 	uint						GetJointCount() const													{ return (uint)mJoints.size(); }
@@ -64,11 +68,12 @@ public:
 	};
 
 	/// Draw current pose
-	void						Draw(const DrawSettings &inDrawSettings, DebugRenderer *inRenderer, Mat44Arg inOffset = Mat44::sIdentity()) const;
+	void						Draw(const DrawSettings &inDrawSettings, DebugRenderer *inRenderer, RMat44Arg inOffset = RMat44::sIdentity()) const;
 #endif // JPH_DEBUG_RENDERER
 
 private:
 	RefConst<Skeleton>			mSkeleton;																///< Skeleton definition
+	RVec3						mRootOffset { RVec3::sZero() };											///< Extra offset applied to the root (and therefore also to all of its children)
 	JointStateVector			mJoints;																///< Local joint orientations (local to parent Joint)
 	Mat44Vector					mJointMatrices;															///< Local joint matrices (local to world matrix)
 };

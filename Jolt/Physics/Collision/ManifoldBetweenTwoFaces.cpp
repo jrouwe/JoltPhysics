@@ -12,7 +12,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-void PruneContactPoints(Vec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, ContactPoints &ioContactPointsOn1, ContactPoints &ioContactPointsOn2)
+void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPointsOn1, ContactPoints &ioContactPointsOn2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
 {
 	// Makes no sense to call this with 4 or less points
 	JPH_ASSERT(ioContactPointsOn1.size() > 4);
@@ -32,9 +32,9 @@ void PruneContactPoints(Vec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, Conta
 	for (ContactPoints::size_type i = 0; i < ioContactPointsOn1.size(); ++i)
 	{
 		// Project contact points on the plane through inCenterOfMass with normal inPenetrationAxis and center around the center of mass of body 1
+		// (note that since all points are relative to inCenterOfMass we can project onto the plane through the origin)
 		Vec3 v1 = ioContactPointsOn1[i]; 
-		Vec3 v1_local = v1 - inCenterOfMass;
-		projected.push_back(v1_local - v1_local.Dot(inPenetrationAxis) * inPenetrationAxis);
+		projected.push_back(v1 - v1.Dot(inPenetrationAxis) * inPenetrationAxis);
 
 		// Calculate penetration depth^2 of each point and clamp against the minimal distance
 		Vec3 v2 = ioContactPointsOn2[i];
@@ -117,14 +117,14 @@ void PruneContactPoints(Vec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, Conta
 	if (ContactConstraintManager::sDrawContactPointReduction)
 	{
 		// Draw input polygon
-		DebugRenderer::sInstance->DrawWirePolygon(ioContactPointsOn1, Color::sOrange, 0.05f);
+		DebugRenderer::sInstance->DrawWirePolygon(RMat44::sTranslation(inCenterOfMass), ioContactPointsOn1, Color::sOrange, 0.05f);
 
 		// Draw primary axis
-		DebugRenderer::sInstance->DrawArrow(ioContactPointsOn1[point1], ioContactPointsOn1[point2], Color::sRed, 0.05f);
+		DebugRenderer::sInstance->DrawArrow(inCenterOfMass + ioContactPointsOn1[point1], inCenterOfMass + ioContactPointsOn1[point2], Color::sRed, 0.05f);
 
 		// Draw contact points we kept
 		for (Vec3 p : points_to_keep_on_1)
-			DebugRenderer::sInstance->DrawMarker(p, Color::sGreen, 0.1f);
+			DebugRenderer::sInstance->DrawMarker(inCenterOfMass + p, Color::sGreen, 0.1f);
 	}
 #endif // JPH_DEBUG_RENDERER
 
@@ -133,17 +133,20 @@ void PruneContactPoints(Vec3Arg inCenterOfMass, Vec3Arg inPenetrationAxis, Conta
 	ioContactPointsOn2 = points_to_keep_on_2;
 }	
 
-void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2)
+void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
 {
 #ifdef JPH_DEBUG_RENDERER
 	if (ContactConstraintManager::sDrawContactPoint)
 	{
+		RVec3 cp1 = inCenterOfMass + inContactPoint1;
+		RVec3 cp2 = inCenterOfMass + inContactPoint2;
+
 		// Draw contact points
-		DebugRenderer::sInstance->DrawMarker(inContactPoint1, Color::sRed, 0.1f);
-		DebugRenderer::sInstance->DrawMarker(inContactPoint2, Color::sGreen, 0.1f);
+		DebugRenderer::sInstance->DrawMarker(cp1, Color::sRed, 0.1f);
+		DebugRenderer::sInstance->DrawMarker(cp2, Color::sGreen, 0.1f);
 
 		// Draw contact normal
-		DebugRenderer::sInstance->DrawArrow(inContactPoint1, inContactPoint1 + inPenetrationAxis.Normalized(), Color::sRed, 0.05f);
+		DebugRenderer::sInstance->DrawArrow(cp1, cp1 + inPenetrationAxis.Normalized(), Color::sRed, 0.05f);
 	}
 #endif // JPH_DEBUG_RENDERER
 
@@ -199,20 +202,25 @@ void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, V
 	#ifdef JPH_DEBUG_RENDERER
 		if (ContactConstraintManager::sDrawSupportingFaces)
 		{
+			RMat44 com = RMat44::sTranslation(inCenterOfMass);
+
 			// Draw clipped poly
-			DebugRenderer::sInstance->DrawWirePolygon(clipped_face, Color::sOrange);
+			DebugRenderer::sInstance->DrawWirePolygon(com, clipped_face, Color::sOrange);
 
 			// Draw supporting faces
-			DebugRenderer::sInstance->DrawWirePolygon(inShape1Face, Color::sRed, 0.05f);
-			DebugRenderer::sInstance->DrawWirePolygon(inShape2Face, Color::sGreen, 0.05f);
+			DebugRenderer::sInstance->DrawWirePolygon(com, inShape1Face, Color::sRed, 0.05f);
+			DebugRenderer::sInstance->DrawWirePolygon(com, inShape2Face, Color::sGreen, 0.05f);
 
 			// Draw normal
 			if (plane_normal_len_sq > 0.0f)
-				DebugRenderer::sInstance->DrawArrow(plane_origin, plane_origin + plane_normal / sqrt(plane_normal_len_sq), Color::sYellow, 0.05f);
+			{
+				RVec3 plane_origin_ws = inCenterOfMass + plane_origin;
+				DebugRenderer::sInstance->DrawArrow(plane_origin_ws, plane_origin_ws + plane_normal / sqrt(plane_normal_len_sq), Color::sYellow, 0.05f);
+			}
 
 			// Draw contact points that remain after distance check
 			for (ContactPoints::size_type p = old_size; p < outContactPoints1.size(); ++p)
-				DebugRenderer::sInstance->DrawMarker(outContactPoints1[p], Color::sYellow, 0.1f);
+				DebugRenderer::sInstance->DrawMarker(inCenterOfMass + outContactPoints1[p], Color::sYellow, 0.1f);
 		}
 	#endif // JPH_DEBUG_RENDERER
 	}

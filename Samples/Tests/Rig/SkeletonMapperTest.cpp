@@ -97,17 +97,18 @@ void SkeletonMapperTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 #ifdef JPH_DEBUG_RENDERER
 	// Draw animated skeleton
 	mAnimatedPose.Draw(*inParams.mPoseDrawSettings, mDebugRenderer);
-	mDebugRenderer->DrawText3D(mAnimatedPose.GetJointMatrix(0).GetTranslation(), "Animated", Color::sWhite, 0.2f);
+	mDebugRenderer->DrawText3D(mAnimatedPose.GetRootOffset() + mAnimatedPose.GetJointMatrix(0).GetTranslation(), "Animated", Color::sWhite, 0.2f);
 
 	// Draw mapped skeleton
-	Mat44 offset = Mat44::sTranslation(Vec3(1.0f, 0, 0));
+	RMat44 offset = RMat44::sTranslation(RVec3(1.0f, 0, 0));
 	mRagdollPose.Draw(*inParams.mPoseDrawSettings, mDebugRenderer, offset);
-	mDebugRenderer->DrawText3D(offset * mAnimatedPose.GetJointMatrix(0).GetTranslation(), "Reverse Mapped", Color::sWhite, 0.2f);
+	mDebugRenderer->DrawText3D(offset * (mAnimatedPose.GetRootOffset() + mAnimatedPose.GetJointMatrix(0).GetTranslation()), "Reverse Mapped", Color::sWhite, 0.2f);
 #endif // JPH_DEBUG_RENDERER
 
 	// Get ragdoll pose in model space
+	RVec3 root_offset;
 	Array<Mat44> pose1_model(mRagdollPose.GetJointCount());
-	mRagdoll->GetPose(pose1_model.data());
+	mRagdoll->GetPose(root_offset, pose1_model.data());
 
 	// Get animated pose in local space
 	Array<Mat44> pose2_local(mAnimatedPose.GetJointCount());
@@ -116,6 +117,7 @@ void SkeletonMapperTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Map ragdoll to animated pose, filling in the extra joints using the local space animated pose
 	SkeletonPose pose2_world;
 	pose2_world.SetSkeleton(mAnimatedPose.GetSkeleton());
+	pose2_world.SetRootOffset(root_offset);
 	mRagdollToAnimated.Map(pose1_model.data(), pose2_local.data(), pose2_world.GetJointMatrices().data());
 
 #ifdef JPH_DEBUG_RENDERER

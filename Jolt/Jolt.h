@@ -12,3 +12,4 @@
 #include <Jolt/Math/Math.h>
 #include <Jolt/Math/Vec4.h>
 #include <Jolt/Math/Mat44.h>
+#include <Jolt/Math/Real.h>

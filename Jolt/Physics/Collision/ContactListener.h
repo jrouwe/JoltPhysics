@@ -19,14 +19,19 @@ class ContactManifold
 {
 public:
 	/// Swaps shape 1 and 2
-	ContactManifold			SwapShapes() const					{ return { -mWorldSpaceNormal, mPenetrationDepth, mSubShapeID2, mSubShapeID1, mWorldSpaceContactPointsOn2, mWorldSpaceContactPointsOn1 }; }
+	ContactManifold			SwapShapes() const					{ return { mBaseOffset, -mWorldSpaceNormal, mPenetrationDepth, mSubShapeID2, mSubShapeID1, mRelativeContactPointsOn2, mRelativeContactPointsOn1 }; }
 
+	/// Access to the world space contact positions
+	inline RVec3			GetWorldSpaceContactPointOn1(uint inIndex) const { return mBaseOffset + mRelativeContactPointsOn1[inIndex]; }
+	inline RVec3			GetWorldSpaceContactPointOn2(uint inIndex) const { return mBaseOffset + mRelativeContactPointsOn2[inIndex]; }
+
+	RVec3					mBaseOffset;						///< Offset to which all the contact points are relative
 	Vec3					mWorldSpaceNormal;					///< Normal for this manifold, direction along which to move body 2 out of collision along the shortest path
 	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision)
 	SubShapeID				mSubShapeID1;						///< Sub shapes that formed this manifold (note that when multiple manifolds are combined because they're coplanar, we lose some information here because we only keep track of one sub shape pair that we encounter)
 	SubShapeID				mSubShapeID2;
-	ContactPoints			mWorldSpaceContactPointsOn1;		///< Contact points on the surface of shape 1 in world space.
-	ContactPoints			mWorldSpaceContactPointsOn2;		///< Contact points on the surface of shape 2 in world space. If there's no penetration, this will be the same as mWorldSpaceContactPointsOn1. If there is penetration they will be different.
+	ContactPoints			mRelativeContactPointsOn1;			///< Contact points on the surface of shape 1 relative to mBaseOffset.
+	ContactPoints			mRelativeContactPointsOn2;			///< Contact points on the surface of shape 2 relative to mBaseOffset. If there's no penetration, this will be the same as mRelativeContactPointsOn1. If there is penetration they will be different.
 };
 
 /// When a contact point is added or persisted, the callback gets a chance to override certain properties of the contact constraint.
@@ -64,8 +69,9 @@ public:
 	/// This is a rather expensive time to reject a contact point since a lot of the collision detection has happened already, make sure you
 	/// filter out the majority of undesired body pairs through the ObjectLayerPairFilter that is registered on the PhysicsSystem.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// The order of body 1 and 2 is undefined, but when one of the two bodies is dynamic it will be body 1
-	virtual ValidateResult	OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult) { return ValidateResult::AcceptAllContactsForThisBodyPair; }
+	/// The order of body 1 and 2 is undefined, but when one of the two bodies is dynamic it will be body 1.
+	/// The collision result (inCollisionResult) is reported relative to inBaseOffset.
+	virtual ValidateResult	OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) { return ValidateResult::AcceptAllContactsForThisBodyPair; }
 
 	/// Called whenever a new contact point is detected.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!

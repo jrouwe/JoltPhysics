@@ -25,17 +25,17 @@ void ContactListenerTest::Initialize()
 	RefConst<Shape> box_shape = new BoxShape(Vec3(0.5f, 1.0f, 2.0f));
 
 	// Dynamic body 1
-	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body1.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);
 
 	// Dynamic body 2
-	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, Vec3(5, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	Body &body2 = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, RVec3(5, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	body2.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
 
 	// Dynamic body 3
-	Body &body3 = *mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(2.0f), Vec3(10, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	Body &body3 = *mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(2.0f), RVec3(10, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	body3.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body3.GetID(), EActivation::Activate);
 
@@ -44,7 +44,7 @@ void ContactListenerTest::Initialize()
 	compound_shape->AddShape(Vec3::sZero(), Quat::sIdentity(), new CapsuleShape(5, 1));
 	compound_shape->AddShape(Vec3(0, -5, 0), Quat::sIdentity(), new SphereShape(2));
 	compound_shape->AddShape(Vec3(0, 5, 0), Quat::sIdentity(), new SphereShape(2));
-	Body &body4 = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape, Vec3(15, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
+	Body &body4 = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape, RVec3(15, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	body4.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body4.GetID(), EActivation::Activate);
 	
@@ -55,7 +55,7 @@ void ContactListenerTest::Initialize()
 	mBody[3] = &body4;
 }
 
-ValidateResult ContactListenerTest::OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult)
+ValidateResult ContactListenerTest::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
 {
 	// Body 1 and 2 should never collide
 	return ((&inBody1 == mBody[0] && &inBody2 == mBody[1]) || (&inBody1 == mBody[1] && &inBody2 == mBody[0]))? ValidateResult::RejectAllContactsForThisBodyPair : ValidateResult::AcceptAllContactsForThisBodyPair;

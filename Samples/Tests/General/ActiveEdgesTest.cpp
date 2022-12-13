@@ -22,7 +22,7 @@ void ActiveEdgesTest::Initialize()
 
 	// Setings for a frictionless box
 	Ref<BoxShape> box_shape = new BoxShape(Vec3(1.0f, 1.0f, 1.0f), cDefaultConvexRadius);
-	BodyCreationSettings box_settings(box_shape, Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings box_settings(box_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	box_settings.mFriction = 0.0f;
 	box_settings.mLinearDamping = 0.0f;
 	box_settings.mAllowSleeping = false;
@@ -54,7 +54,7 @@ void ActiveEdgesTest::Initialize()
 			if (dot > best_dot)
 			{
 				best_dot = dot;
-				box_settings.mPosition = (v1 + v2 + v3 + v4) / 4 + normal;
+				box_settings.mPosition = RVec3((v1 + v2 + v3 + v4) / 4 + normal);
 				box_settings.mRotation = rotation;
 			}
 				
@@ -85,7 +85,7 @@ void ActiveEdgesTest::Initialize()
 	}
 
 	// Mesh
-	BodyCreationSettings mesh_settings(new MeshShapeSettings(triangles), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	BodyCreationSettings mesh_settings(new MeshShapeSettings(triangles), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 	mesh_settings.mFriction = 0.0f;
 	Body &mesh = *mBodyInterface->CreateBody(mesh_settings);
 	mBodyInterface->AddBody(mesh.GetID(), EActivation::DontActivate);

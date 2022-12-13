@@ -326,7 +326,7 @@ ObjectLayer BodyInterface::GetObjectLayer(const BodyID &inBodyID) const
 		return cObjectLayerInvalid;
 }
 
-void BodyInterface::SetPositionAndRotation(const BodyID &inBodyID, Vec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode)
+void BodyInterface::SetPositionAndRotation(const BodyID &inBodyID, RVec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -349,7 +349,7 @@ void BodyInterface::SetPositionAndRotation(const BodyID &inBodyID, Vec3Arg inPos
 	}
 }
 
-void BodyInterface::SetPositionAndRotationWhenChanged(const BodyID &inBodyID, Vec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode)
+void BodyInterface::SetPositionAndRotationWhenChanged(const BodyID &inBodyID, RVec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -377,7 +377,7 @@ void BodyInterface::SetPositionAndRotationWhenChanged(const BodyID &inBodyID, Ve
 	}
 }
 
-void BodyInterface::GetPositionAndRotation(const BodyID &inBodyID, Vec3 &outPosition, Quat &outRotation) const
+void BodyInterface::GetPositionAndRotation(const BodyID &inBodyID, RVec3 &outPosition, Quat &outRotation) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -388,12 +388,12 @@ void BodyInterface::GetPositionAndRotation(const BodyID &inBodyID, Vec3 &outPosi
 	}
 	else
 	{
-		outPosition = Vec3::sZero();
+		outPosition = RVec3::sZero();
 		outRotation = Quat::sIdentity();
 	}
 }
 
-void BodyInterface::SetPosition(const BodyID &inBodyID, Vec3Arg inPosition, EActivation inActivationMode)
+void BodyInterface::SetPosition(const BodyID &inBodyID, RVec3Arg inPosition, EActivation inActivationMode)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -416,22 +416,22 @@ void BodyInterface::SetPosition(const BodyID &inBodyID, Vec3Arg inPosition, EAct
 	}
 }
 
-Vec3 BodyInterface::GetPosition(const BodyID &inBodyID) const
+RVec3 BodyInterface::GetPosition(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 		return lock.GetBody().GetPosition();
 	else
-		return Vec3::sZero();
+		return RVec3::sZero();
 }
 
-Vec3 BodyInterface::GetCenterOfMassPosition(const BodyID &inBodyID) const
+RVec3 BodyInterface::GetCenterOfMassPosition(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 		return lock.GetBody().GetCenterOfMassPosition();
 	else
-		return Vec3::sZero();
+		return RVec3::sZero();
 }
 
 void BodyInterface::SetRotation(const BodyID &inBodyID, QuatArg inRotation, EActivation inActivationMode)
@@ -466,25 +466,25 @@ Quat BodyInterface::GetRotation(const BodyID &inBodyID) const
 		return Quat::sIdentity();
 }
 
-Mat44 BodyInterface::GetWorldTransform(const BodyID &inBodyID) const
+RMat44 BodyInterface::GetWorldTransform(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 		return lock.GetBody().GetWorldTransform();
 	else
-		return Mat44::sIdentity();
+		return RMat44::sIdentity();
 }
 
-Mat44 BodyInterface::GetCenterOfMassTransform(const BodyID &inBodyID) const
+RMat44 BodyInterface::GetCenterOfMassTransform(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
 		return lock.GetBody().GetCenterOfMassTransform();
 	else
-		return Mat44::sIdentity();
+		return RMat44::sIdentity();
 }
 
-void BodyInterface::MoveKinematic(const BodyID &inBodyID, Vec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
+void BodyInterface::MoveKinematic(const BodyID &inBodyID, RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -623,7 +623,7 @@ Vec3 BodyInterface::GetAngularVelocity(const BodyID &inBodyID) const
 	return Vec3::sZero();
 }
 
-Vec3 BodyInterface::GetPointVelocity(const BodyID &inBodyID, Vec3Arg inPoint) const
+Vec3 BodyInterface::GetPointVelocity(const BodyID &inBodyID, RVec3Arg inPoint) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -652,7 +652,7 @@ void BodyInterface::AddForce(const BodyID &inBodyID, Vec3Arg inForce)
 	}
 }
 
-void BodyInterface::AddForce(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inPoint)
+void BodyInterface::AddForce(const BodyID &inBodyID, Vec3Arg inForce, RVec3Arg inPoint)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -717,7 +717,7 @@ void BodyInterface::AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse)
 	}
 }
 
-void BodyInterface::AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse, Vec3Arg inPoint)
+void BodyInterface::AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse, RVec3Arg inPoint)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -749,7 +749,7 @@ void BodyInterface::AddAngularImpulse(const BodyID &inBodyID, Vec3Arg inAngularI
 	}
 }
 
-void BodyInterface::SetPositionRotationAndVelocity(const BodyID &inBodyID, Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity)
+void BodyInterface::SetPositionRotationAndVelocity(const BodyID &inBodyID, RVec3Arg inPosition, QuatArg inRotation, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity)
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())
@@ -804,6 +804,22 @@ EMotionType BodyInterface::GetMotionType(const BodyID &inBodyID) const
 		return lock.GetBody().GetMotionType();
 	else
 		return EMotionType::Static;
+}
+
+void BodyInterface::SetMotionQuality(const BodyID &inBodyID, EMotionQuality inMotionQuality)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		mBodyManager->SetMotionQuality(lock.GetBody(), inMotionQuality);
+}
+
+EMotionQuality BodyInterface::GetMotionQuality(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded() && !lock.GetBody().IsStatic())
+		return lock.GetBody().GetMotionProperties()->GetMotionQuality();
+	else
+		return EMotionQuality::Discrete;
 }
 
 Mat44 BodyInterface::GetInverseInertia(const BodyID &inBodyID) const

@@ -66,6 +66,11 @@ void ObjectStreamBinaryOut::WritePrimitiveData(const float &inPrimitive)
 	mStream.write((const char *)&inPrimitive, sizeof(inPrimitive));
 }
 
+void ObjectStreamBinaryOut::WritePrimitiveData(const double &inPrimitive)
+{
+	mStream.write((const char *)&inPrimitive, sizeof(inPrimitive));
+}
+
 void ObjectStreamBinaryOut::WritePrimitiveData(const bool &inPrimitive)
 {
 	mStream.write((const char *)&inPrimitive, sizeof(inPrimitive));
@@ -103,9 +108,19 @@ void ObjectStreamBinaryOut::WritePrimitiveData(const Float3 &inPrimitive)
 	mStream.write((const char *)&inPrimitive, sizeof(Float3));
 }
 
+void ObjectStreamBinaryOut::WritePrimitiveData(const Double3 &inPrimitive)
+{
+	mStream.write((const char *)&inPrimitive, sizeof(Double3));
+}
+
 void ObjectStreamBinaryOut::WritePrimitiveData(const Vec3 &inPrimitive)
 {
 	mStream.write((const char *)&inPrimitive, 3 * sizeof(float));
+}
+
+void ObjectStreamBinaryOut::WritePrimitiveData(const DVec3 &inPrimitive)
+{
+	mStream.write((const char *)&inPrimitive, 3 * sizeof(double));
 }
 
 void ObjectStreamBinaryOut::WritePrimitiveData(const Vec4 &inPrimitive)
@@ -121,6 +136,14 @@ void ObjectStreamBinaryOut::WritePrimitiveData(const Quat &inPrimitive)
 void ObjectStreamBinaryOut::WritePrimitiveData(const Mat44 &inPrimitive)
 {
 	mStream.write((const char *)&inPrimitive, sizeof(inPrimitive));
+}
+
+void ObjectStreamBinaryOut::WritePrimitiveData(const DMat44 &inPrimitive)
+{
+	WritePrimitiveData(inPrimitive.GetColumn4(0));
+	WritePrimitiveData(inPrimitive.GetColumn4(1));
+	WritePrimitiveData(inPrimitive.GetColumn4(2));
+	WritePrimitiveData(inPrimitive.GetTranslation());
 }
 
 JPH_NAMESPACE_END

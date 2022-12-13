@@ -31,12 +31,12 @@ public:
 	EConstraintSpace			mSpace = EConstraintSpace::WorldSpace;
 
 	///@name Body 1 constraint reference frame (space determined by mSpace)
-	Vec3						mPosition1 = Vec3::sZero();
+	RVec3						mPosition1 = RVec3::sZero();
 	Vec3						mTwistAxis1 = Vec3::sAxisX();
 	Vec3						mPlaneAxis1 = Vec3::sAxisY();
 
 	///@name Body 2 constraint reference frame (space determined by mSpace)
-	Vec3						mPosition2 = Vec3::sZero();
+	RVec3						mPosition2 = RVec3::sZero();
 	Vec3						mTwistAxis2 = Vec3::sAxisX();
 	Vec3						mPlaneAxis2 = Vec3::sAxisY();
 	

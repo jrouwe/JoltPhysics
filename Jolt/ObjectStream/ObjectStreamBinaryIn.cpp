@@ -98,6 +98,15 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(float &outPrimitive)
 	return true;
 }
 
+bool ObjectStreamBinaryIn::ReadPrimitiveData(double &outPrimitive)
+{
+	double primitive;
+	mStream.read((char *)&primitive, sizeof(primitive));
+	if (mStream.fail()) return false;
+	outPrimitive = primitive;
+	return true;
+}
+
 bool ObjectStreamBinaryIn::ReadPrimitiveData(bool &outPrimitive)
 {
 	bool primitive;
@@ -153,12 +162,30 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(Float3 &outPrimitive)
 	return true;
 }
 
+bool ObjectStreamBinaryIn::ReadPrimitiveData(Double3 &outPrimitive)
+{
+	Double3 primitive;
+	mStream.read((char *)&primitive, sizeof(Double3));
+	if (mStream.fail()) return false;
+	outPrimitive = primitive;
+	return true;
+}
+
 bool ObjectStreamBinaryIn::ReadPrimitiveData(Vec3 &outPrimitive)
 {
 	Float3 primitive;
 	mStream.read((char *)&primitive, sizeof(Float3));
 	if (mStream.fail()) return false;
 	outPrimitive = Vec3(primitive); // Use Float3 constructor so that we initialize W too
+	return true;
+}
+
+bool ObjectStreamBinaryIn::ReadPrimitiveData(DVec3 &outPrimitive)
+{
+	Double3 primitive;
+	mStream.read((char *)&primitive, sizeof(Double3));
+	if (mStream.fail()) return false;
+	outPrimitive = DVec3(primitive); // Use Float3 constructor so that we initialize W too
 	return true;
 }
 
@@ -186,6 +213,16 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(Mat44 &outPrimitive)
 	mStream.read((char *)&primitive, sizeof(primitive));
 	if (mStream.fail()) return false;
 	outPrimitive = primitive;
+	return true;
+}
+
+bool ObjectStreamBinaryIn::ReadPrimitiveData(DMat44 &outPrimitive)
+{
+	Vec4 c0, c1, c2;
+	DVec3 c3;
+	if (!ReadPrimitiveData(c0) || !ReadPrimitiveData(c1) || !ReadPrimitiveData(c2) || !ReadPrimitiveData(c3))
+		return false;
+	outPrimitive = DMat44(c0, c1, c2, c3);
 	return true;
 }
 

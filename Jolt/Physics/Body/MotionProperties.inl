@@ -117,10 +117,21 @@ void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, V
 	ClampAngularVelocity();
 }
 
-void MotionProperties::ResetSleepTestSpheres(const Vec3 *inPoints)
+void MotionProperties::ResetSleepTestSpheres(const RVec3 *inPoints)
 {
+#ifdef JPH_DOUBLE_PRECISION
+	// Make spheres relative to the first point and initialize them to zero radius
+	DVec3 offset = inPoints[0];
+	offset.StoreDouble3(&mSleepTestOffset);
+	mSleepTestSpheres[0] = Sphere(Vec3::sZero(), 0.0f);
+	for (int i = 1; i < 3; ++i)
+		mSleepTestSpheres[i] = Sphere(Vec3(inPoints[i] - offset), 0.0f);
+#else
+	// Initialize the spheres to zero radius around the supplied points
 	for (int i = 0; i < 3; ++i)
 		mSleepTestSpheres[i] = Sphere(inPoints[i], 0.0f);
+#endif
+
 	mSleepTestTimer = 0.0f;
 }
 

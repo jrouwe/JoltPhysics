@@ -36,7 +36,7 @@ void VehicleSixDOFTest::Initialize()
 		Vec3(half_vehicle_width, -half_vehicle_height, -half_vehicle_length + 2.0f * half_wheel_height),
 	};
 
-	Vec3 position(0, 2, 0);
+	RVec3 position(0, 2, 0);
 
 	RefConst<Shape> body_shape = new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length));
 
@@ -57,8 +57,8 @@ void VehicleSixDOFTest::Initialize()
 		bool is_front = sIsFrontWheel((EWheel)i);
 		bool is_left = sIsLeftWheel((EWheel)i);
 
-		Vec3 wheel_pos1 = position + wheel_position[i];
-		Vec3 wheel_pos2 = wheel_pos1 - Vec3(0, half_wheel_travel, 0);
+		RVec3 wheel_pos1 = position + wheel_position[i];
+		RVec3 wheel_pos2 = wheel_pos1 - Vec3(0, half_wheel_travel, 0);
 
 		// Create body
 		Body &wheel = *mBodyInterface->CreateBody(BodyCreationSettings(wheel_shape, wheel_pos2, Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
@@ -193,12 +193,12 @@ void VehicleSixDOFTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 void VehicleSixDOFTest::GetInitialCamera(CameraState &ioState) const 
 {
 	// Position camera behind car
-	Vec3 cam_tgt = Vec3(0, 0, 5);
-	ioState.mPos = Vec3(0, 2.5f, -5);
-	ioState.mForward = (cam_tgt - ioState.mPos).Normalized();
+	RVec3 cam_tgt = RVec3(0, 0, 5);
+	ioState.mPos = RVec3(0, 2.5_r, -5);
+	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-Mat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
 {
 	// Pivot is center of car and rotates with car around Y axis only
 	Vec3 fwd = mCarBody->GetRotation().RotateAxisZ();
@@ -210,5 +210,5 @@ Mat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPit
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), Vec4(mCarBody->GetPosition(), 1.0f));
+	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
 }

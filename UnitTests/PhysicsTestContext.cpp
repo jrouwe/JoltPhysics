@@ -41,7 +41,7 @@ Body &PhysicsTestContext::CreateFloor()
 {
 	BodyCreationSettings settings;
 	settings.SetShape(new BoxShape(Vec3(100.0f, 1.0f, 100.0f), 0.0f));
-	settings.mPosition = Vec3(0.0f, -1.0f, 0.0f);
+	settings.mPosition = RVec3(0.0f, -1.0f, 0.0f);
 	settings.mMotionType = EMotionType::Static;
 	settings.mObjectLayer = Layers::NON_MOVING;
 
@@ -50,7 +50,7 @@ Body &PhysicsTestContext::CreateFloor()
 	return floor;
 }
 
-Body &PhysicsTestContext::CreateBody(const ShapeSettings *inShapeSettings, Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation)
+Body &PhysicsTestContext::CreateBody(const ShapeSettings *inShapeSettings, RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation)
 {
 	BodyCreationSettings settings;
 	settings.SetShapeSettings(inShapeSettings);
@@ -67,12 +67,12 @@ Body &PhysicsTestContext::CreateBody(const ShapeSettings *inShapeSettings, Vec3A
 	return body;
 }
 
-Body &PhysicsTestContext::CreateBox(Vec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, Vec3Arg inHalfExtent, EActivation inActivation)
+Body &PhysicsTestContext::CreateBox(RVec3Arg inPosition, QuatArg inRotation, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, Vec3Arg inHalfExtent, EActivation inActivation)
 {
 	return CreateBody(new BoxShapeSettings(inHalfExtent), inPosition, inRotation, inMotionType, inMotionQuality, inLayer, inActivation);
 }
 
-Body &PhysicsTestContext::CreateSphere(Vec3Arg inPosition, float inRadius, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation)
+Body &PhysicsTestContext::CreateSphere(RVec3Arg inPosition, float inRadius, EMotionType inMotionType, EMotionQuality inMotionQuality, ObjectLayer inLayer, EActivation inActivation)
 {
 	return CreateBody(new SphereShapeSettings(inRadius), inPosition, Quat::sIdentity(), inMotionType, inMotionQuality, inLayer, inActivation);
 }
@@ -98,10 +98,10 @@ void PhysicsTestContext::SimulateSingleStep()
 #endif // JPH_DISABLE_TEMP_ALLOCATOR
 }
 
-Vec3 PhysicsTestContext::PredictPosition(Vec3Arg inPosition, Vec3Arg inVelocity, Vec3Arg inAcceleration, float inTotalTime) const
+RVec3 PhysicsTestContext::PredictPosition(RVec3Arg inPosition, Vec3Arg inVelocity, Vec3Arg inAcceleration, float inTotalTime) const
 {
 	// Integrate position using a Symplectic Euler step (just like the PhysicsSystem)
-	Vec3 pos = inPosition;
+	RVec3 pos = inPosition;
 	Vec3 vel = inVelocity;
 
 	const float delta_time = GetSubStepDeltaTime();

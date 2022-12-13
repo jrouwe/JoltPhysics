@@ -112,7 +112,7 @@ public:
 	/// @param inWheelIndex Index of the wheel to fetch
 	/// @param inWheelRight Unit vector that indicates right in model space of the wheel (so if you only have 1 wheel model, you probably want to specify the opposite direction for the left and right wheels)
 	/// @param inWheelUp Unit vector that indicates up in model space of the wheel
-	Mat44						GetWheelWorldTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const;
+	RMat44						GetWheelWorldTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const;
 
 	// Generic interface of a constraint
 	virtual bool				IsActive() const override					{ return mIsActive && Constraint::IsActive(); }
@@ -134,10 +134,10 @@ private:
 	virtual void				OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 
 	// Calculate the contact positions of the wheel in world space, relative to the center of mass of both bodies
-	void						CalculateWheelContactPoint(Mat44Arg inBodyTransform, const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const;
+	void						CalculateWheelContactPoint(RMat44Arg inBodyTransform, const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const;
 
 	// Calculate the constraint properties for mPitchRollPart
-	void						CalculatePitchRollConstraintProperties(float inDeltaTime, Mat44Arg inBodyTransform);
+	void						CalculatePitchRollConstraintProperties(float inDeltaTime, RMat44Arg inBodyTransform);
 
 	// Simluation information
 	Body *						mBody;										///< Body of the vehicle

@@ -68,15 +68,18 @@ public:
 	virtual void	GetInitialCamera(CameraState &ioState) const				{ }
 
 	// Override to specify a camera pivot point and orientation (world space)
-	virtual Mat44	GetCameraPivot(float inCameraHeading, float inCameraPitch) const { return Mat44::sIdentity(); }
+	virtual RMat44	GetCameraPivot(float inCameraHeading, float inCameraPitch) const { return RMat44::sIdentity(); }
+
+	// Offset around which to center drawing. This floating point accuracy issues when the camera is far from the origin.
+	virtual RVec3	GetDrawOffset() const										{ return RVec3::sZero(); }
 
 	// Optional settings menu
 	virtual bool	HasSettingsMenu() const										{ return false; }
 	virtual void	CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)		{ }
 
 	// Force the application to restart the test
-	virtual void	RestartTest()												{ mNeedsRestart = true; }
-	virtual bool	NeedsRestart() const										{ return mNeedsRestart; }
+	void			RestartTest()												{ mNeedsRestart = true; }
+	bool			NeedsRestart() const										{ return mNeedsRestart; }
 
 	// If this test is supposed to be deterministic
 	virtual bool	IsDeterministic() const										{ return true; }
@@ -84,6 +87,9 @@ public:
 	// Saving / restoring state for replay
 	virtual void	SaveState(StateRecorder &inStream) const					{ }
 	virtual void	RestoreState(StateRecorder &inStream)						{ }
+
+	// Return a string that is displayed in the top left corner of the screen
+	virtual String	GetStatusString() const										{ return String(); }
 
 protected:
 	// Utility function to create a static floor body

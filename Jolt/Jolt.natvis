@@ -13,7 +13,10 @@
     <DisplayString>{x}, {y}, {z}, {w}</DisplayString>
   </Type>
   <Type Name="JPH::Vec3">
-  <DisplayString>{mF32[0]}, {mF32[1]}, {mF32[2]}, L^2={mF32[0]*mF32[0]+mF32[1]*mF32[1]+mF32[2]*mF32[2]}</DisplayString>
+    <DisplayString>{mF32[0]}, {mF32[1]}, {mF32[2]}, L^2={mF32[0]*mF32[0]+mF32[1]*mF32[1]+mF32[2]*mF32[2]}</DisplayString>
+  </Type>
+  <Type Name="JPH::DVec3">
+    <DisplayString>{mF64[0]}, {mF64[1]}, {mF64[2]}, L^2={mF64[0]*mF64[0]+mF64[1]*mF64[1]+mF64[2]*mF64[2]}</DisplayString>
   </Type>
   <Type Name="JPH::Vec4">
     <DisplayString>{mF32[0]}, {mF32[1]}, {mF32[2]}, {mF32[3]}, L^2={mF32[0]*mF32[0]+mF32[1]*mF32[1]+mF32[2]*mF32[2]+mF32[3]*mF32[3]}</DisplayString>
@@ -38,6 +41,23 @@
       </Synthetic>
       <Synthetic Name="[Row 3]">
         <DisplayString>{mCol[0].mF32[3]}, {mCol[1].mF32[3]}, {mCol[2].mF32[3]}, {mCol[3].mF32[3]}</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+  <Type Name="JPH::DMat44">
+    <DisplayString>{mCol[0].mF32[0]}, {mCol[1].mF32[0]}, {mCol[2].mF32[0]}, {mCol3.mF64[0]} | {mCol[0].mF32[1]}, {mCol[1].mF32[1]}, {mCol[2].mF32[1]}, {mCol3.mF64[1]} | {mCol[0].mF32[2]}, {mCol[1].mF32[2]}, {mCol[2].mF32[2]}, {mCol3.mF64[2]}</DisplayString>
+    <Expand>
+      <Synthetic Name="[Row 0]">
+        <DisplayString>{mCol[0].mF32[0]}, {mCol[1].mF32[0]}, {mCol[2].mF32[0]}, {mCol3.mF64[0]}</DisplayString>
+      </Synthetic>
+      <Synthetic Name="[Row 1]">
+        <DisplayString>{mCol[0].mF32[1]}, {mCol[1].mF32[1]}, {mCol[2].mF32[1]}, {mCol3.mF64[1]}</DisplayString>
+      </Synthetic>
+      <Synthetic Name="[Row 2]">
+        <DisplayString>{mCol[0].mF32[2]}, {mCol[1].mF32[2]}, {mCol[2].mF32[2]}, {mCol3.mF64[2]}</DisplayString>
+      </Synthetic>
+      <Synthetic Name="[Row 3]">
+        <DisplayString>{mCol[0].mF32[3]}, {mCol[1].mF32[3]}, {mCol[2].mF32[3]}, 1}</DisplayString>
       </Synthetic>
     </Expand>
   </Type>

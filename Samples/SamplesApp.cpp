@@ -77,6 +77,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(ManifoldReductionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(CenterOfMassTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(HeavyOnLightTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(HighSpeedTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(ChangeMotionQualityTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeMotionTypeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ChangeObjectLayerTest)
@@ -110,6 +111,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Center Of Mass",						JPH_RTTI(CenterOfMassTest) },
 	{ "Heavy On Light",						JPH_RTTI(HeavyOnLightTest) },
 	{ "High Speed",							JPH_RTTI(HighSpeedTest) },
+	{ "Change Motion Quality",				JPH_RTTI(ChangeMotionQualityTest) },
 	{ "Change Motion Type",					JPH_RTTI(ChangeMotionTypeTest) },
 	{ "Change Shape",						JPH_RTTI(ChangeShapeTest) },
 	{ "Change Object Layer",				JPH_RTTI(ChangeObjectLayerTest) },
@@ -232,6 +234,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(PoweredRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(RigPileTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveBinaryRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(SkeletonMapperTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(BigWorldTest)
 
 static TestNameAndRTTI sRigTests[] =
 {
@@ -241,7 +244,8 @@ static TestNameAndRTTI sRigTests[] =
 	{ "Kinematic Rig",						JPH_RTTI(KinematicRigTest) },
 	{ "Powered Rig",						JPH_RTTI(PoweredRigTest) },
 	{ "Skeleton Mapper",					JPH_RTTI(SkeletonMapperTest) },
-	{ "Rig Pile",							JPH_RTTI(RigPileTest) }
+	{ "Rig Pile",							JPH_RTTI(RigPileTest) },
+	{ "Big World",							JPH_RTTI(BigWorldTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(CharacterTest)
@@ -597,6 +601,9 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 	// Optimize the broadphase to make the first update fast
 	mPhysicsSystem->OptimizeBroadPhase();
 
+	// Make the world render relative to offset specified by test
+	mRenderer->SetBaseOffset(mTest->GetDrawOffset());
+
 	// Reset the camera to the original position
 	ResetCamera();
 
@@ -657,7 +664,9 @@ bool SamplesApp::CheckNextTest()
 	if (mTestTimeLeft >= 0.0f)
 	{
 		// Update status string
-		mStatusString = StringFormat("%s: Next test in %.1fs", mTestClass->GetName(), (double)mTestTimeLeft);
+		if (!mStatusString.empty())
+			mStatusString += "\n";
+		mStatusString += StringFormat("%s: Next test in %.1fs", mTestClass->GetName(), (double)mTestTimeLeft);
 
 		// Use physics time
 		mTestTimeLeft -= 1.0f / mUpdateFrequency;
@@ -666,8 +675,6 @@ bool SamplesApp::CheckNextTest()
 		if (mTestTimeLeft < 0.0f)
 			return NextTest();
 	}
-	else
-		mStatusString.clear();
 
 	return true;
 }
@@ -883,11 +890,17 @@ void SamplesApp::ShootObject()
 	mPhysicsSystem->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
 }
 
-bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPosition, BodyID &outID)
+bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPosition, BodyID &outID)
 {
+	// Determine start and direction of the probe
 	const CameraState &camera = GetCamera();
-	Vec3 start = camera.mPos;
+	RVec3 start = camera.mPos;
 	Vec3 direction = inProbeLength * camera.mForward;
+
+	// Define a base offset that is halfway the probe to test getting the collision results relative to some offset.
+	// Note that this is not necessarily the best choice for a base offset, but we want something that's not zero
+	// and not the start of the collision test either to ensure that we'll see errors in the algorithm.
+	RVec3 base_offset = start + 0.5f * direction;
 
 	// Clear output
 	outPosition = start + direction;
@@ -901,14 +914,14 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::Pick:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RRayCast ray { start, direction };
 
 			// Cast ray
 			RayCastResult hit;
 			had_hit = mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::MOVING), SpecifiedObjectLayerFilter(Layers::MOVING));
 
 			// Fill in results
-			outPosition = start + hit.mFraction * direction;
+			outPosition = ray.GetPointOnRay(hit.mFraction);
 			outFraction = hit.mFraction;
 			outID = hit.mBodyID;
 
@@ -922,7 +935,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::Ray:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RRayCast ray { start, direction };
 
 			// Cast ray
 			RayCastResult hit;
@@ -964,8 +977,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 					if (mDrawSupportingFace)
 					{
 						Shape::SupportingFace face;
-						hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
-						mDebugRenderer->DrawWirePolygon(face, Color::sWhite, 0.01f);
+						hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, base_offset, face);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), face, Color::sWhite, 0.01f);
 					}
 				}
 			}
@@ -979,7 +992,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::RayCollector:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RRayCast ray { start, direction };
 
 			// Create settings
 			RayCastSettings settings;
@@ -1017,17 +1030,17 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			{
 				// Fill in results
 				RayCastResult &first_hit = hits.front();
-				outPosition = start + first_hit.mFraction * direction;
+				outPosition = ray.GetPointOnRay(first_hit.mFraction);
 				outFraction = first_hit.mFraction;
 				outID = first_hit.mBodyID;
 	
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const RayCastResult &hit : hits)
 				{
 					// Draw line
-					Vec3 position = ray.GetPointOnRay(hit.mFraction);
+					RVec3 position = ray.GetPointOnRay(hit.mFraction);
 					mDebugRenderer->DrawLine(prev_position, position, c? Color::sGrey : Color::sWhite);
 					c = !c;
 					prev_position = position;
@@ -1056,14 +1069,14 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						if (mDrawSupportingFace)
 						{
 							Shape::SupportingFace face;
-							hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, face);
-							mDebugRenderer->DrawWirePolygon(face, Color::sWhite, 0.01f);
+							hit_body.GetTransformedShape().GetSupportingFace(hit.mSubShapeID2, -normal, base_offset, face);
+							mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), face, Color::sWhite, 0.01f);
 						}
 					}
 				}
 
 				// Draw remainder of line
-				mDebugRenderer->DrawLine(start + hits.back().mFraction * direction, start + direction, Color::sRed);
+				mDebugRenderer->DrawLine(ray.GetPointOnRay(hits.back().mFraction), start + direction, Color::sRed);
 			}
 			else
 			{
@@ -1078,7 +1091,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create point
 			const float fraction = 0.1f;
-			Vec3 point = start + fraction * direction;
+			RVec3 point = start + fraction * direction;
 
 			// Collide point
 			AllHitCollisionCollector<CollidePointCollector> collector;
@@ -1097,13 +1110,13 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
 
 			// Draw test location
-			mDebugRenderer->DrawMarker(start + fraction * direction, had_hit? Color::sGreen : Color::sRed, 0.1f);
+			mDebugRenderer->DrawMarker(point, had_hit? Color::sGreen : Color::sRed, 0.1f);
 		}
 		break;
 
@@ -1113,7 +1126,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			RefConst<Shape> shape = CreateProbeShape();
 			Mat44 rotation = Mat44::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Mat44::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI);
 			Mat44 com = Mat44::sTranslation(shape->GetCenterOfMass());
-			Mat44 shape_transform = Mat44::sTranslation(start + 5.0f * camera.mForward) * rotation * com;
+			RMat44 shape_transform(RMat44::sTranslation(start + 5.0f * camera.mForward) * rotation * com);
 
 			// Create settings
 			CollideShapeSettings settings;
@@ -1126,21 +1139,21 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			if (mMaxHits == 0)
 			{
 				AnyHitCollisionCollector<CollideShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CollideShape(shape, Vec3::sReplicate(1.0f), shape_transform, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CollideShape(shape, Vec3::sReplicate(1.0f), shape_transform, settings, base_offset, collector);
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
 			else if (mMaxHits == 1)
 			{
 				ClosestHitCollisionCollector<CollideShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CollideShape(shape, Vec3::sReplicate(1.0f), shape_transform, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CollideShape(shape, Vec3::sReplicate(1.0f), shape_transform, settings, base_offset, collector);
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
 			else
 			{
 				AllHitCollisionCollector<CollideShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CollideShape(shape, Vec3::sReplicate(1.0f), shape_transform, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CollideShape(shape, Vec3::sReplicate(1.0f), shape_transform, settings, base_offset, collector);
 				collector.Sort();
 				hits.insert(hits.end(), collector.mHits.begin(), collector.mHits.end());
 				if ((int)hits.size() > mMaxHits)
@@ -1160,8 +1173,10 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						const Body &hit_body = lock.GetBody();
 
 						// Draw contact
-						mDebugRenderer->DrawMarker(hit.mContactPointOn1, Color::sGreen, 0.1f);
-						mDebugRenderer->DrawMarker(hit.mContactPointOn2, Color::sRed, 0.1f);
+						RVec3 contact_position1 = base_offset + hit.mContactPointOn1;
+						RVec3 contact_position2 = base_offset + hit.mContactPointOn2;
+						mDebugRenderer->DrawMarker(contact_position1, Color::sGreen, 0.1f);
+						mDebugRenderer->DrawMarker(contact_position2, Color::sRed, 0.1f);
 
 						Vec3 pen_axis = hit.mPenetrationAxis;
 						float pen_axis_len = pen_axis.Length();
@@ -1170,19 +1185,19 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 							pen_axis /= pen_axis_len;
 
 							// Draw penetration axis with length of the penetration
-							mDebugRenderer->DrawArrow(hit.mContactPointOn2, hit.mContactPointOn2 + pen_axis * hit.mPenetrationDepth, Color::sYellow, 0.01f);
+							mDebugRenderer->DrawArrow(contact_position2, contact_position2 + pen_axis * hit.mPenetrationDepth, Color::sYellow, 0.01f);
 
 							// Draw normal (flipped so it points towards body 1)
-							mDebugRenderer->DrawArrow(hit.mContactPointOn2, hit.mContactPointOn2 - pen_axis, Color::sOrange, 0.01f);
+							mDebugRenderer->DrawArrow(contact_position2, contact_position2 - pen_axis, Color::sOrange, 0.01f);
 						}
 
 						// Draw material
 						const PhysicsMaterial *material2 = hit_body.GetShape()->GetMaterial(hit.mSubShapeID2);
-						mDebugRenderer->DrawText3D(hit.mContactPointOn2, material2->GetDebugName());
+						mDebugRenderer->DrawText3D(contact_position2, material2->GetDebugName());
 
 						// Draw faces
-						mDebugRenderer->DrawWirePolygon(hit.mShape1Face, Color::sYellow, 0.01f);
-						mDebugRenderer->DrawWirePolygon(hit.mShape2Face, Color::sRed, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape1Face, Color::sYellow, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape2Face, Color::sRed, 0.01f);
 					}
 				}
 			}
@@ -1199,7 +1214,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			// Create shape cast
 			RefConst<Shape> shape = CreateProbeShape();
 			Mat44 rotation = Mat44::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Mat44::sRotation(Vec3::sAxisY(), 0.2f * JPH_PI);
-			ShapeCast shape_cast = ShapeCast::sFromWorldTransform(shape, Vec3::sReplicate(1.0f), Mat44::sTranslation(start) * rotation, direction);
+			RShapeCast shape_cast = RShapeCast::sFromWorldTransform(shape, Vec3::sReplicate(1.0f), RMat44::sTranslation(start) * rotation, direction);
 
 			// Settings
 			ShapeCastSettings settings;
@@ -1215,21 +1230,21 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			if (mMaxHits == 0)
 			{
 				AnyHitCollisionCollector<CastShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector);
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
 			else if (mMaxHits == 1)
 			{
 				ClosestHitCollisionCollector<CastShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector);
 				if (collector.HadHit())
 					hits.push_back(collector.mHit);
 			}
 			else
 			{
 				AllHitCollisionCollector<CastShapeCollector> collector;
-				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, collector);
+				mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector);
 				collector.Sort();
 				hits.insert(hits.end(), collector.mHits.begin(), collector.mHits.end());
 				if ((int)hits.size() > mMaxHits)
@@ -1241,17 +1256,17 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			{
 				// Fill in results
 				ShapeCastResult &first_hit = hits.front();
-				outPosition = start + first_hit.mFraction * direction;
+				outPosition = shape_cast.GetPointOnRay(first_hit.mFraction);
 				outFraction = first_hit.mFraction;
 				outID = first_hit.mBodyID2;
 
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const ShapeCastResult &hit : hits)
 				{
 					// Draw line
-					Vec3 position = start + hit.mFraction * direction;
+					RVec3 position = shape_cast.GetPointOnRay(hit.mFraction);
 					mDebugRenderer->DrawLine(prev_position, position, c? Color::sGrey : Color::sWhite);
 					c = !c;
 					prev_position = position;
@@ -1268,8 +1283,8 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 					#endif // JPH_DEBUG_RENDERER
 
 						// Draw normal
-						Vec3 contact_position1 = hit.mContactPointOn1;
-						Vec3 contact_position2 = hit.mContactPointOn2;
+						RVec3 contact_position1 = base_offset + hit.mContactPointOn1;
+						RVec3 contact_position2 = base_offset + hit.mContactPointOn2;
 						Vec3 normal = hit.mPenetrationAxis.Normalized();
 						mDebugRenderer->DrawArrow(contact_position2, contact_position2 - normal, color, 0.01f); // Flip to make it point towards the cast body
 
@@ -1287,13 +1302,13 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 						mDebugRenderer->DrawText3D(position, material2->GetDebugName());
 
 						// Draw faces
-						mDebugRenderer->DrawWirePolygon(hit.mShape1Face, Color::sYellow, 0.01f);
-						mDebugRenderer->DrawWirePolygon(hit.mShape2Face, Color::sRed, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape1Face, Color::sYellow, 0.01f);
+						mDebugRenderer->DrawWirePolygon(RMat44::sTranslation(base_offset), hit.mShape2Face, Color::sRed, 0.01f);
 					}
 				}
 
 				// Draw remainder of line
-				mDebugRenderer->DrawLine(start + hits.back().mFraction * direction, start + direction, Color::sRed);
+				mDebugRenderer->DrawLine(shape_cast.GetPointOnRay(hits.back().mFraction), start + direction, Color::sRed);
 			}
 			else
 			{
@@ -1310,7 +1325,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			RVec3 center = start + fraction * direction;
 			Vec3 half_extent = 0.5f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1320,7 +1335,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 			// Draw results
 			for (const TransformedShape &ts : collector.mHits)
-				mDebugRenderer->DrawWireBox(Mat44::sRotationTranslation(ts.mShapeRotation, ts.mShapePositionCOM) * Mat44::sScale(ts.GetShapeScale()), ts.mShape->GetLocalBounds(), Color::sYellow);
+				mDebugRenderer->DrawWireBox(RMat44::sRotationTranslation(ts.mShapeRotation, ts.mShapePositionCOM) * Mat44::sScale(ts.GetShapeScale()), ts.mShape->GetLocalBounds(), Color::sYellow);
 
 			// Draw test location
 			mDebugRenderer->DrawWireBox(box, !collector.mHits.empty()? Color::sGreen : Color::sRed);
@@ -1331,7 +1346,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			RVec3 center = start + fraction * direction;
 			Vec3 half_extent = 2.0f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1349,7 +1364,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 				// Start iterating triangles
 				Shape::GetTrianglesContext ctx;
-				ts.GetTrianglesStart(ctx, box);
+				ts.GetTrianglesStart(ctx, box, base_offset);
 				for (;;)
 				{
 					// Fetch next triangles
@@ -1361,9 +1376,9 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 					const PhysicsMaterial **m = materials;
 					for (Float3 *v = vertices, *v_end = vertices + 3 * count; v < v_end; v += 3, ++m)
 					{
-						Vec3 v1(v[0]), v2(v[1]), v3(v[2]);
-						Vec3 triangle_center = (v1 + v2 + v3) / 3.0f;
-						Vec3 triangle_normal = (v2 - v1).Cross(v3 - v1).Normalized();
+						RVec3 v1 = base_offset + Vec3(v[0]), v2 = base_offset + Vec3(v[1]), v3 = base_offset + Vec3(v[2]);
+						RVec3 triangle_center = (v1 + v2 + v3) / 3.0f;
+						Vec3 triangle_normal = Vec3(v2 - v1).Cross(Vec3(v3 - v1)).Normalized();
 						mDebugRenderer->DrawWireTriangle(v1, v2, v3, (*m)->GetDebugColor());
 						mDebugRenderer->DrawArrow(triangle_center, triangle_center + triangle_normal, Color::sGreen, 0.01f);
 					}
@@ -1380,7 +1395,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 	case EProbeMode::BroadPhaseRay:
 		{
 			// Create ray
-			RayCast ray { start, direction };
+			RayCast ray { Vec3(start), direction };
 
 			// Cast ray
 			AllHitCollisionCollector<RayCastBodyCollector> collector;
@@ -1391,12 +1406,12 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			if (had_hit)
 			{
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const BroadPhaseCastResult &hit : collector.mHits)
 				{
 					// Draw line
-					Vec3 position = start + hit.mFraction * direction;
+					RVec3 position = start + hit.mFraction * direction;
 					Color cast_color = c? Color::sGrey : Color::sWhite;
 					mDebugRenderer->DrawLine(prev_position, position, cast_color);
 					mDebugRenderer->DrawMarker(position, cast_color, 0.1f);
@@ -1410,7 +1425,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 
@@ -1430,7 +1445,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			RVec3 center = start + fraction * direction;
 			Vec3 half_extent = 2.0f * mShapeScale;
 			AABox box(center - half_extent, center + half_extent);
 
@@ -1451,7 +1466,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
@@ -1466,7 +1481,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			// Create sphere
 			const float fraction = 0.2f;
 			const float radius = mShapeScale.Length() * 2.0f;
-			Vec3 point = start + fraction * direction;
+			Vec3 point(start + fraction * direction);
 
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeBodyCollector> collector;
@@ -1485,13 +1500,13 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
 
 			// Draw test location
-			mDebugRenderer->DrawWireSphere(start + fraction * direction, radius, had_hit? Color::sGreen : Color::sRed);
+			mDebugRenderer->DrawWireSphere(RVec3(point), radius, had_hit? Color::sGreen : Color::sRed);
 		}
 		break;
 
@@ -1499,7 +1514,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create point
 			const float fraction = 0.1f;
-			Vec3 point = start + fraction * direction;
+			Vec3 point(start + fraction * direction);
 
 			// Collide point
 			AllHitCollisionCollector<CollideShapeBodyCollector> collector;
@@ -1518,13 +1533,13 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
 
 			// Draw test location
-			mDebugRenderer->DrawMarker(start + fraction * direction, had_hit? Color::sGreen : Color::sRed, 0.1f);
+			mDebugRenderer->DrawMarker(RVec3(point), had_hit? Color::sGreen : Color::sRed, 0.1f);
 		}
 		break;
 
@@ -1532,7 +1547,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 		{
 			// Create box
 			const float fraction = 0.2f;
-			Vec3 center = start + fraction * direction;
+			Vec3 center(start + fraction * direction);
 			Vec3 half_extent = 2.0f * mShapeScale;
 			OrientedBox box(Mat44::sRotationTranslation(Quat::sRotation(Vec3::sAxisZ(), 0.2f * JPH_PI) * Quat::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI), center), half_extent);
 
@@ -1553,7 +1568,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 			}
@@ -1579,15 +1594,15 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			if (had_hit)
 			{
 				// Draw results
-				Vec3 prev_position = start;
+				RVec3 prev_position = start;
 				bool c = false;
 				for (const BroadPhaseCastResult &hit : collector.mHits)
 				{
 					// Draw line
-					Vec3 position = start + hit.mFraction * direction;
+					RVec3 position = start + hit.mFraction * direction;
 					Color cast_color = c? Color::sGrey : Color::sWhite;
 					mDebugRenderer->DrawLine(prev_position, position, cast_color);
-					mDebugRenderer->DrawWireBox(AABox(position - half_extent, position + half_extent), cast_color);
+					mDebugRenderer->DrawWireBox(RMat44::sTranslation(position), AABox(-half_extent, half_extent), cast_color);
 					c = !c;
 					prev_position = position;
 
@@ -1598,7 +1613,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 
 						// Draw bounding box
 						Color color = hit_body.IsDynamic()? Color::sYellow : Color::sOrange;
-						mDebugRenderer->DrawWireBox(hit_body.GetWorldSpaceBounds(), color);
+						mDebugRenderer->DrawWireBox(hit_body.GetCenterOfMassTransform(), hit_body.GetShape()->GetLocalBounds(), color);
 					}
 				}
 
@@ -1609,7 +1624,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, Vec3 &outPos
 			{
 				// Draw 'miss'
 				mDebugRenderer->DrawLine(start, start + direction, Color::sRed);
-				mDebugRenderer->DrawWireBox(AABox(start + direction - half_extent, start + direction + half_extent), Color::sRed);
+				mDebugRenderer->DrawWireBox(RMat44::sTranslation(start + direction), AABox(-half_extent, half_extent), Color::sRed);
 			}
 		}
 		break;
@@ -1639,7 +1654,7 @@ void SamplesApp::UpdateDebug()
 	if (mDragConstraint == nullptr)
 	{
 		// Not dragging yet
-		Vec3 hit_position;
+		RVec3 hit_position;
 		float hit_fraction;
 		if (CastProbe(cDragRayLength, hit_fraction, hit_position, mDragBody))
 		{
@@ -1714,6 +1729,9 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 		StartTest(mTestClass);
 		return true;
 	}
+
+	// Get the status string
+	mStatusString = mTest->GetStatusString();
 		
 	// Select the next test if automatic testing times out
 	if (!CheckNextTest())
@@ -2099,7 +2117,7 @@ void SamplesApp::DrawPhysics()
 					// Draw the geometry
 					Vec3 scale = transformed_shape.GetShapeScale();
 					bool inside_out = ScaleHelpers::IsInsideOut(scale);
-					Mat44 matrix = transformed_shape.GetCenterOfMassTransform() * Mat44::sScale(scale);
+					RMat44 matrix = transformed_shape.GetCenterOfMassTransform().PreScaled(scale);
 					mDebugRenderer->DrawGeometry(matrix, color, geometry, inside_out? DebugRenderer::ECullMode::CullFrontFace : DebugRenderer::ECullMode::CullBackFace, DebugRenderer::ECastShadow::On, body.IsSensor()? DebugRenderer::EDrawMode::Wireframe : DebugRenderer::EDrawMode::Solid);
 				}
 			}
@@ -2216,14 +2234,14 @@ void SamplesApp::ValidateState(StateRecorderImpl &inExpectedState)
 void SamplesApp::GetInitialCamera(CameraState &ioState) const
 {
 	// Default if the test doesn't override it
-	ioState.mPos = GetWorldScale() * Vec3(30, 10, 30);
-	ioState.mForward = -ioState.mPos.Normalized();
+	ioState.mPos = GetWorldScale() * RVec3(30, 10, 30);
+	ioState.mForward = -Vec3(ioState.mPos).Normalized();
 	ioState.mFarPlane = 1000.0f;
 
 	mTest->GetInitialCamera(ioState);
 }
 
-Mat44 SamplesApp::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+RMat44 SamplesApp::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 { 
 	return mTest->GetCameraPivot(inCameraHeading, inCameraPitch); 
 }

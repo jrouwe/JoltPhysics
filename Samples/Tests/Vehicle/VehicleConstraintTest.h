@@ -20,7 +20,7 @@ public:
 	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
 	virtual void				GetInitialCamera(CameraState &ioState) const override;
-	virtual Mat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
 
 	virtual void				CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 

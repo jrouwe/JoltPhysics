@@ -41,7 +41,7 @@ private:
 	// Calculate submerged volume * 6 and center of mass * 4 for a tetrahedron with 1 vertex submerged
 	// inV1 is submerged, inV2 .. inV4 are not
 	// inD1 .. inD4 are the distances from the points to the plane
-	inline static void	sTetrahedronVolume1(Vec3Arg inV1, float inD1, Vec3Arg inV2, float inD2, Vec3Arg inV3, float inD3, Vec3Arg inV4, float inD4, float &outVolumeTimes6, Vec3 &outCenterTimes4)
+	inline JPH_IF_NOT_DEBUG_RENDERER(static) void sTetrahedronVolume1(Vec3Arg inV1, float inD1, Vec3Arg inV2, float inD2, Vec3Arg inV3, float inD3, Vec3Arg inV4, float inD4, float &outVolumeTimes6, Vec3 &outCenterTimes4)
 	{
 		// A tetrahedron with 1 point submerged is cut along 3 edges forming a new tetrahedron
 		Vec3 v2 = sGetPlaneIntersection(inV1, inD1, inV2, inD2);
@@ -52,8 +52,12 @@ private:
 		// Draw intersection between tetrahedron and surface
 		if (Shape::sDrawSubmergedVolumes)
 		{
-			DebugRenderer::sInstance->DrawTriangle(v4, v3, v2, Color::sGreen);
-			DebugRenderer::sInstance->DrawWireTriangle(v4, v3, v2, Color::sWhite);
+			RVec3 v2w = mBaseOffset + v2;
+			RVec3 v3w = mBaseOffset + v3;
+			RVec3 v4w = mBaseOffset + v4;
+
+			DebugRenderer::sInstance->DrawTriangle(v4w, v3w, v2w, Color::sGreen);
+			DebugRenderer::sInstance->DrawWireTriangle(v4w, v3w, v2w, Color::sWhite);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -63,7 +67,7 @@ private:
 	// Calculate submerged volume * 6 and center of mass * 4 for a tetrahedron with 2 vertices submerged
 	// inV1, inV2 are submerged, inV3, inV4 are not
 	// inD1 .. inD4 are the distances from the points to the plane
-	inline static void	sTetrahedronVolume2(Vec3Arg inV1, float inD1, Vec3Arg inV2, float inD2, Vec3Arg inV3, float inD3, Vec3Arg inV4, float inD4, float &outVolumeTimes6, Vec3 &outCenterTimes4)
+	inline JPH_IF_NOT_DEBUG_RENDERER(static) void sTetrahedronVolume2(Vec3Arg inV1, float inD1, Vec3Arg inV2, float inD2, Vec3Arg inV3, float inD3, Vec3Arg inV4, float inD4, float &outVolumeTimes6, Vec3 &outCenterTimes4)
 	{
 		// A tetrahedron with 2 points submerged is cut along 4 edges forming a quad
 		Vec3 c = sGetPlaneIntersection(inV1, inD1, inV3, inD3);
@@ -75,10 +79,15 @@ private:
 		// Draw intersection between tetrahedron and surface
 		if (Shape::sDrawSubmergedVolumes)
 		{
-			DebugRenderer::sInstance->DrawTriangle(c, e, d, Color::sGreen);
-			DebugRenderer::sInstance->DrawTriangle(c, f, e, Color::sGreen);
-			DebugRenderer::sInstance->DrawWireTriangle(c, e, d, Color::sWhite);
-			DebugRenderer::sInstance->DrawWireTriangle(c, f, e, Color::sWhite);
+			RVec3 cw = mBaseOffset + c;
+			RVec3 dw = mBaseOffset + d;
+			RVec3 ew = mBaseOffset + e;
+			RVec3 fw = mBaseOffset + f;
+
+			DebugRenderer::sInstance->DrawTriangle(cw, ew, dw, Color::sGreen);
+			DebugRenderer::sInstance->DrawTriangle(cw, fw, ew, Color::sGreen);
+			DebugRenderer::sInstance->DrawWireTriangle(cw, ew, dw, Color::sWhite);
+			DebugRenderer::sInstance->DrawWireTriangle(cw, fw, ew, Color::sWhite);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -98,7 +107,7 @@ private:
 	// Calculate submerged volume * 6 and center of mass * 4 for a tetrahedron with 3 vertices submerged
 	// inV1, inV2, inV3 are submerged, inV4 is not
 	// inD1 .. inD4 are the distances from the points to the plane
-	inline static void	sTetrahedronVolume3(Vec3Arg inV1, float inD1, Vec3Arg inV2, float inD2, Vec3Arg inV3, float inD3, Vec3Arg inV4, float inD4, float &outVolumeTimes6, Vec3 &outCenterTimes4)
+	inline JPH_IF_NOT_DEBUG_RENDERER(static) void sTetrahedronVolume3(Vec3Arg inV1, float inD1, Vec3Arg inV2, float inD2, Vec3Arg inV3, float inD3, Vec3Arg inV4, float inD4, float &outVolumeTimes6, Vec3 &outCenterTimes4)
 	{
 		// A tetrahedron with 1 point above the surface is cut along 3 edges forming a new tetrahedron
 		Vec3 v1 = sGetPlaneIntersection(inV1, inD1, inV4, inD4);
@@ -109,8 +118,12 @@ private:
 		// Draw intersection between tetrahedron and surface
 		if (Shape::sDrawSubmergedVolumes)
 		{
-			DebugRenderer::sInstance->DrawTriangle(v3, v2, v1, Color::sGreen);
-			DebugRenderer::sInstance->DrawWireTriangle(v3, v2, v1, Color::sWhite);
+			RVec3 v1w = mBaseOffset + v1;
+			RVec3 v2w = mBaseOffset + v2;
+			RVec3 v3w = mBaseOffset + v3;
+
+			DebugRenderer::sInstance->DrawTriangle(v3w, v2w, v1w, Color::sGreen);
+			DebugRenderer::sInstance->DrawWireTriangle(v3w, v2w, v1w, Color::sWhite);
 		}
 	#endif // JPH_DEBUG_RENDERER
 
@@ -145,8 +158,18 @@ public:
 	/// @param inNumPoints The amount of points
 	/// @param inSurface The plane that forms the fluid surface (normal should point up)
 	/// @param ioBuffer A temporary buffer of Point's that should have inNumPoints entries and should stay alive while this class is alive
-						PolyhedronSubmergedVolumeCalculator(const Mat44 &inTransform, const Vec3 *inPoints, int inPointStride, int inNumPoints, const Plane &inSurface, Point *ioBuffer) :
+#ifdef JPH_DEBUG_RENDERER
+	/// @param inBaseOffset The offset to transform inTransform to world space (in double precision mode this can be used to shift the whole operation closer to the origin). Only used for debug drawing.
+#endif // JPH_DEBUG_RENDERER
+						PolyhedronSubmergedVolumeCalculator(const Mat44 &inTransform, const Vec3 *inPoints, int inPointStride, int inNumPoints, const Plane &inSurface, Point *ioBuffer
+#ifdef JPH_DEBUG_RENDERER // Not using JPH_IF_DEBUG_RENDERER for Doxygen
+		, RVec3 inBaseOffset
+#endif // JPH_DEBUG_RENDERER
+		) :
 		mPoints(ioBuffer)
+#ifdef JPH_DEBUG_RENDERER
+		, mBaseOffset(inBaseOffset)
+#endif // JPH_DEBUG_RENDERER
 	{
 		// Convert the points to world space and determine the distance to the surface
 		float reference_dist = FLT_MAX;
@@ -285,6 +308,11 @@ private:
 	// Aggregator for submerged volume and center of buoyancy
 	float				mSubmergedVolume = 0.0f;
 	Vec3				mCenterOfBuoyancy = Vec3::sZero();
+
+#ifdef JPH_DEBUG_RENDERER
+	// Base offset used for drawing
+	RVec3				mBaseOffset;
+#endif
 };
 
 JPH_NAMESPACE_END

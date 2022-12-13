@@ -25,6 +25,9 @@ public:
 	using Type = Vec4::Type;
 #endif
 
+	// Argument type
+	using ArgType = Vec3Arg;
+
 	/// Constructor
 								Vec3() = default; ///< Intentionally not initialized for performance reasons
 								Vec3(const Vec3 &inRHS) = default;

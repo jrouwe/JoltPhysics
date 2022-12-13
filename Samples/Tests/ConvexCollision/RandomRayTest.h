@@ -16,5 +16,5 @@ public:
 
 private:
 	template <typename A, typename Context>
-	void			TestRay(const char *inTestName, Vec3Arg inRenderOffset, const A &inA, const Context &inContext, float (*inCompareFunc)(const Context &inContext, Vec3Arg inRayOrigin, Vec3Arg inRayDirection));
+	void			TestRay(const char *inTestName, RVec3Arg inRenderOffset, const A &inA, const Context &inContext, float (*inCompareFunc)(const Context &inContext, Vec3Arg inRayOrigin, Vec3Arg inRayDirection));
 };

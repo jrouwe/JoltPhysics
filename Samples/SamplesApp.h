@@ -34,7 +34,7 @@ public:
 	virtual void			GetInitialCamera(CameraState &ioState) const override;
 
 	// Override to specify a camera pivot point and orientation (world space)
-	virtual Mat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+	virtual RMat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
 
 	// Get scale factor for this world, used to boost camera speed and to scale detail of the shadows
 	virtual float			GetWorldScale() const override;
@@ -60,7 +60,7 @@ private:
 
 	// Probing the collision world
 	RefConst<Shape>			CreateProbeShape();
-	bool					CastProbe(float inProbeLength, float &outFraction, Vec3 &outPosition, BodyID &outID);
+	bool					CastProbe(float inProbeLength, float &outFraction, RVec3 &outPosition, BodyID &outID);
 
 	// Shooting an object
 	RefConst<Shape>			CreateShootObjectShape();

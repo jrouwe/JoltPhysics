@@ -7,6 +7,7 @@
 #include <Jolt/Physics/EActivation.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Body/MotionType.h>
+#include <Jolt/Physics/Body/MotionQuality.h>
 #include <Jolt/Core/Reference.h>
 
 JPH_NAMESPACE_BEGIN
@@ -145,20 +146,20 @@ public:
 
 	///@name Position and rotation of a body
 	///@{
-	void						SetPositionAndRotation(const BodyID &inBodyID, Vec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode);
-	void						SetPositionAndRotationWhenChanged(const BodyID &inBodyID, Vec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode); ///< Will only update the position/rotation and activate the body when the difference is larger than a very small number. This avoids updating the broadphase/waking up a body when the resulting position/orientation doesn't really change.
-	void						GetPositionAndRotation(const BodyID &inBodyID, Vec3 &outPosition, Quat &outRotation) const;
-	void						SetPosition(const BodyID &inBodyID, Vec3Arg inPosition, EActivation inActivationMode);
-	Vec3						GetPosition(const BodyID &inBodyID) const;
-	Vec3						GetCenterOfMassPosition(const BodyID &inBodyID) const;
+	void						SetPositionAndRotation(const BodyID &inBodyID, RVec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode);
+	void						SetPositionAndRotationWhenChanged(const BodyID &inBodyID, RVec3Arg inPosition, QuatArg inRotation, EActivation inActivationMode); ///< Will only update the position/rotation and activate the body when the difference is larger than a very small number. This avoids updating the broadphase/waking up a body when the resulting position/orientation doesn't really change.
+	void						GetPositionAndRotation(const BodyID &inBodyID, RVec3 &outPosition, Quat &outRotation) const;
+	void						SetPosition(const BodyID &inBodyID, RVec3Arg inPosition, EActivation inActivationMode);
+	RVec3						GetPosition(const BodyID &inBodyID) const;
+	RVec3						GetCenterOfMassPosition(const BodyID &inBodyID) const;
 	void						SetRotation(const BodyID &inBodyID, QuatArg inRotation, EActivation inActivationMode);
 	Quat						GetRotation(const BodyID &inBodyID) const;
-	Mat44						GetWorldTransform(const BodyID &inBodyID) const;
-	Mat44						GetCenterOfMassTransform(const BodyID &inBodyID) const;
+	RMat44						GetWorldTransform(const BodyID &inBodyID) const;
+	RMat44						GetCenterOfMassTransform(const BodyID &inBodyID) const;
 	///@}
 
 	/// Set velocity of body such that it will be positioned at inTargetPosition/Rotation in inDeltaTime seconds (will activate body if needed)
-	void						MoveKinematic(const BodyID &inBodyID, Vec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
+	void						MoveKinematic(const BodyID &inBodyID, RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
 
 	/// Linear or angular velocity (functions will activate body if needed).
 	/// Note that the linear velocity is the velocity of the center of mass, which may not coincide with the position of your object, to correct for this: \f$VelocityCOM = Velocity - AngularVelocity \times ShapeCOM\f$
@@ -170,16 +171,16 @@ public:
 	void						AddLinearAndAngularVelocity(const BodyID &inBodyID, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity); ///< Add linear and angular to current velocities
 	void						SetAngularVelocity(const BodyID &inBodyID, Vec3Arg inAngularVelocity);
 	Vec3						GetAngularVelocity(const BodyID &inBodyID) const;
-	Vec3						GetPointVelocity(const BodyID &inBodyID, Vec3Arg inPoint) const; ///< Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body
+	Vec3						GetPointVelocity(const BodyID &inBodyID, RVec3Arg inPoint) const; ///< Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body
 
 	/// Set the complete motion state of a body.
 	/// Note that the linear velocity is the velocity of the center of mass, which may not coincide with the position of your object, to correct for this: \f$VelocityCOM = Velocity - AngularVelocity \times ShapeCOM\f$
-	void						SetPositionRotationAndVelocity(const BodyID &inBodyID, Vec3Arg inPosition, QuatArg inRotation, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity);
+	void						SetPositionRotationAndVelocity(const BodyID &inBodyID, RVec3Arg inPosition, QuatArg inRotation, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity);
 
 	///@name Add forces to the body
 	///@{
 	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce); ///< See Body::AddForce
-	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inPoint); ///< Applied at inPoint
+	void						AddForce(const BodyID &inBodyID, Vec3Arg inForce, RVec3Arg inPoint); ///< Applied at inPoint
 	void						AddTorque(const BodyID &inBodyID, Vec3Arg inTorque); ///< See Body::AddTorque
 	void						AddForceAndTorque(const BodyID &inBodyID, Vec3Arg inForce, Vec3Arg inTorque); ///< A combination of Body::AddForce and Body::AddTorque
 	///@}
@@ -187,7 +188,7 @@ public:
 	///@name Add an impulse to the body
 	///@{
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse); ///< Applied at center of mass
-	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse, Vec3Arg inPoint); ///< Applied at inPoint
+	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse, RVec3Arg inPoint); ///< Applied at inPoint
 	void						AddAngularImpulse(const BodyID &inBodyID, Vec3Arg inAngularImpulse);
 	///@}
 
@@ -195,6 +196,12 @@ public:
 	///@{
 	void						SetMotionType(const BodyID &inBodyID, EMotionType inMotionType, EActivation inActivationMode);
 	EMotionType					GetMotionType(const BodyID &inBodyID) const;
+	///@}
+
+	///@name Body motion quality
+	///@{
+	void						SetMotionQuality(const BodyID &inBodyID, EMotionQuality inMotionQuality);
+	EMotionQuality				GetMotionQuality(const BodyID &inBodyID) const;
 	///@}
 
 	/// Get inverse inertia tensor in world space

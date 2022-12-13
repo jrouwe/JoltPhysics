@@ -60,10 +60,8 @@ TwoBodyConstraint *FixedConstraintSettings::Create(Body &inBody1, Body &inBody2)
 }
 
 FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstraintSettings &inSettings) :
-	TwoBodyConstraint(inBody1, inBody2, inSettings),
-	mLocalSpacePosition1(inSettings.mPoint1),
-	mLocalSpacePosition2(inSettings.mPoint2)
-{	
+	TwoBodyConstraint(inBody1, inBody2, inSettings)
+{
 	// Store inverse of initial rotation from body 1 to body 2 in body 1 space
 	mInvInitialOrientation = RotationEulerConstraintPart::sGetInvInitialOrientationXY(inSettings.mAxisX1, inSettings.mAxisY1, inSettings.mAxisX2, inSettings.mAxisY2);
 
@@ -72,7 +70,7 @@ FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstr
 		if (inSettings.mAutoDetectPoint)
 		{
 			// Determine anchor point: If any of the bodies can never be dynamic use the other body as anchor point
-			Vec3 anchor;
+			RVec3 anchor;
 			if (!inBody1.CanBeKinematicOrDynamic())
 				anchor = inBody2.GetCenterOfMassPosition();
 			else if (!inBody2.CanBeKinematicOrDynamic())
@@ -80,21 +78,31 @@ FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstr
 			else
 			{
 				// Otherwise use weighted anchor point towards the lightest body
-				float inv_m1 = inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
-				float inv_m2 = inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked();
+				Real inv_m1 = Real(inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked());
+				Real inv_m2 = Real(inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked());
 				anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
 			}
 
-			mLocalSpacePosition1 = mLocalSpacePosition2 = anchor;
+			// Store local positions
+			mLocalSpacePosition1 = Vec3(inBody1.GetInverseCenterOfMassTransform() * anchor);
+			mLocalSpacePosition2 = Vec3(inBody2.GetInverseCenterOfMassTransform() * anchor);
 		}
-
-		// Store local positions
-		mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
-		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+		else
+		{
+			// Store local positions
+			mLocalSpacePosition1 = Vec3(inBody1.GetInverseCenterOfMassTransform() * inSettings.mPoint1);
+			mLocalSpacePosition2 = Vec3(inBody2.GetInverseCenterOfMassTransform() * inSettings.mPoint2);
+		}
 
 		// Constraints were specified in world space, so we should have replaced c1 with q10^-1 c1 and c2 with q20^-1 c2
 		// => r0^-1 = (q20^-1 c2) (q10^-1 c1)^1 = q20^-1 (c2 c1^-1) q10
 		mInvInitialOrientation = inBody2.GetRotation().Conjugated() * mInvInitialOrientation * inBody1.GetRotation();
+	}
+	else
+	{
+		// Store local positions
+		mLocalSpacePosition1 = Vec3(inSettings.mPoint1);
+		mLocalSpacePosition2 = Vec3(inSettings.mPoint2);
 	}
 }
 
@@ -141,11 +149,11 @@ bool FixedConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 #ifdef JPH_DEBUG_RENDERER
 void FixedConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	Mat44 com1 = mBody1->GetCenterOfMassTransform();
-	Mat44 com2 = mBody2->GetCenterOfMassTransform();
+	RMat44 com1 = mBody1->GetCenterOfMassTransform();
+	RMat44 com2 = mBody2->GetCenterOfMassTransform();
 
-	Vec3 anchor1 = com1 * mLocalSpacePosition1;
-	Vec3 anchor2 = com2 * mLocalSpacePosition2;
+	RVec3 anchor1 = com1 * mLocalSpacePosition1;
+	RVec3 anchor2 = com2 * mLocalSpacePosition2;
 
 	// Draw constraint
 	inRenderer->DrawLine(com1.GetTranslation(), anchor1, Color::sGreen);
@@ -174,10 +182,10 @@ Ref<ConstraintSettings> FixedConstraint::GetConstraintSettings() const
 	FixedConstraintSettings *settings = new FixedConstraintSettings;
 	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
-	settings->mPoint1 = mLocalSpacePosition1;
+	settings->mPoint1 = RVec3(mLocalSpacePosition1);
 	settings->mAxisX1 = Vec3::sAxisX();
 	settings->mAxisY1 = Vec3::sAxisY();
-	settings->mPoint2 = mLocalSpacePosition2;
+	settings->mPoint2 = RVec3(mLocalSpacePosition2);
 	settings->mAxisX2 = mInvInitialOrientation.RotateAxisX();
 	settings->mAxisY2 = mInvInitialOrientation.RotateAxisY();
 	return settings;

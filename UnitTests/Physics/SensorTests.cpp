@@ -22,12 +22,12 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::DontActivate);
 
 		// Dynamic body moving downwards
-		Body &dynamic = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		Body &dynamic = c.CreateBox(RVec3(0, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
 		dynamic.SetLinearVelocity(Vec3(0, -1, 0));
 
 		// After a single step the dynamic object should not have touched the sensor yet
@@ -48,7 +48,7 @@ TEST_SUITE("SensorTests")
 		// After 3 more seconds we should have left the sensor at the bottom side
 		c.Simulate(3.0f + c.GetDeltaTime());
 		CHECK(listener.Contains(EType::Remove, dynamic.GetID(), sensor_id));
-		CHECK_APPROX_EQUAL(dynamic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(dynamic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 
 	TEST_CASE("TestKinematicVsSensor")
@@ -60,12 +60,12 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::DontActivate);
 
 		// Kinematic body moving downwards
-		Body &kinematic = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		Body &kinematic = c.CreateBox(RVec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
 		kinematic.SetLinearVelocity(Vec3(0, -1, 0));
 
 		// After a single step the kinematic object should not have touched the sensor yet
@@ -86,7 +86,7 @@ TEST_SUITE("SensorTests")
 		// After 3 more seconds we should have left the sensor at the bottom side
 		c.Simulate(3.0f + c.GetDeltaTime());
 		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
-		CHECK_APPROX_EQUAL(kinematic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(kinematic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 
 	TEST_CASE("TestKinematicVsKinematicSensor")
@@ -100,12 +100,12 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Kinematic sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
 
 		// Kinematic body moving downwards
-		Body &kinematic = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		Body &kinematic = c.CreateBox(RVec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
 		kinematic.SetLinearVelocity(Vec3(0, -1, 0));
 
 		// After a single step the kinematic object should not have touched the sensor yet
@@ -126,7 +126,7 @@ TEST_SUITE("SensorTests")
 		// After 3 more seconds we should have left the sensor at the bottom side
 		c.Simulate(3.0f + c.GetDeltaTime());
 		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
-		CHECK_APPROX_EQUAL(kinematic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(kinematic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 
 	TEST_CASE("TestKinematicVsKinematicSensorReversed")
@@ -140,11 +140,11 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Kinematic body moving downwards
-		Body &kinematic = c.CreateBox(Vec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		Body &kinematic = c.CreateBox(RVec3(0, 2, 0), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
 		kinematic.SetLinearVelocity(Vec3(0, -1, 0));
 
 		// Kinematic sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
 
@@ -166,7 +166,7 @@ TEST_SUITE("SensorTests")
 		// After 3 more seconds we should have left the sensor at the bottom side
 		c.Simulate(3.0f + c.GetDeltaTime());
 		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
-		CHECK_APPROX_EQUAL(kinematic.GetPosition(), Vec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(kinematic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 
 	TEST_CASE("TestDynamicSleepingVsStaticSensor")
@@ -178,7 +178,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 		sensor_settings.mIsSensor = true;
 		Body &sensor = *c.GetBodyInterface().CreateBody(sensor_settings);
 		c.GetBodyInterface().AddBody(sensor.GetID(), EActivation::DontActivate);
@@ -187,7 +187,7 @@ TEST_SUITE("SensorTests")
 		Body &floor = c.CreateFloor();
 
 		// Dynamic body on floor (make them penetrate)
-		Body &dynamic = c.CreateBox(Vec3(0, 0.5f - c.GetSystem()->GetPhysicsSettings().mMaxPenetrationDistance, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
+		Body &dynamic = c.CreateBox(RVec3(0, 0.5f - c.GetSystem()->GetPhysicsSettings().mMaxPenetrationDistance, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
 
 		// After a single step (because the object is sleeping) there should not be a contact
 		c.SimulateSingleStep();
@@ -233,7 +233,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Kinematic sensor that is active (so will keep detecting contacts with sleeping bodies)
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
 		sensor_settings.mIsSensor = true;
 		Body &sensor = *c.GetBodyInterface().CreateBody(sensor_settings);
 		c.GetBodyInterface().AddBody(sensor.GetID(), EActivation::Activate);
@@ -242,7 +242,7 @@ TEST_SUITE("SensorTests")
 		Body &floor = c.CreateFloor();
 
 		// Dynamic body on floor (make them penetrate)
-		Body &dynamic = c.CreateBox(Vec3(0, 0.5f - c.GetSystem()->GetPhysicsSettings().mMaxPenetrationDistance, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
+		Body &dynamic = c.CreateBox(RVec3(0, 0.5f - c.GetSystem()->GetPhysicsSettings().mMaxPenetrationDistance, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f), EActivation::DontActivate);
 
 		// After a single step, there should be a contact with the sensor only (the sensor is active)
 		c.SimulateSingleStep();
@@ -336,15 +336,15 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Body that will appear as a sensor to one object and as static to another
-		BodyID static_id = c.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(5, 1, 5)), Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+		BodyID static_id = c.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(5, 1, 5)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 		// Dynamic body moving down that will do a normal collision
-		Body &dynamic1 = c.CreateBox(Vec3(-2, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		Body &dynamic1 = c.CreateBox(RVec3(-2, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
 		dynamic1.SetAllowSleeping(false);
 		dynamic1.SetLinearVelocity(Vec3(0, -1, 0));
 
 		// Dynamic body moving down that will only see the static object as a sensor
-		Body &dynamic2 = c.CreateBox(Vec3(2, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
+		Body &dynamic2 = c.CreateBox(RVec3(2, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(0.5f));
 		dynamic2.SetAllowSleeping(false);
 		dynamic2.SetLinearVelocity(Vec3(0, -1, 0));
 		listener.mBodyThatSeesSensorID = dynamic2.GetID();
@@ -372,7 +372,7 @@ TEST_SUITE("SensorTests")
 		CHECK(listener.Contains(EType::Persist, dynamic1.GetID(), static_id));
 		CHECK(!listener.Contains(EType::Remove, dynamic1.GetID(), static_id));
 		CHECK(listener.Contains(EType::Remove, dynamic2.GetID(), static_id));
-		CHECK_APPROX_EQUAL(dynamic1.GetPosition(), Vec3(-2, 1.5f, 0), 5.0e-3f);
-		CHECK_APPROX_EQUAL(dynamic2.GetPosition(), Vec3(2, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+		CHECK_APPROX_EQUAL(dynamic1.GetPosition(), RVec3(-2, 1.5f, 0), 5.0e-3f);
+		CHECK_APPROX_EQUAL(dynamic2.GetPosition(), RVec3(2, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
 }

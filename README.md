@@ -78,6 +78,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 	* Virtual character. Does not have a rigid body in the world but simulates one using collision checks. Updated outside of the physics update for more control. Less accurate interaction with dynamic bodies.
 * Vehicle simulation of wheeled and tracked vehicles.
 * Water buoyancy calculations.
+* An optional double precision mode that allows large worlds.
 
 ## Supported Platforms
 
@@ -119,9 +120,16 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 
 ## Bindings For Other Languages
 
+* C [here](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics/libs) and [here](https://github.com/amerkoleci/JoltPhysicsSharp/tree/main/src/joltc)
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
 * [Zig](https://github.com/michal-z/zig-gamedev)
+
+## Integrations in Other Engines
+
+* [ezEngine](https://github.com/ezEngine/ezEngine)
+* [Godot](https://github.com/godot-jolt/godot-jolt)
+* [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
 
 ## License
 

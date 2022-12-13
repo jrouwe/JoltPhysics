@@ -6,9 +6,10 @@
 #include <Utils/ContactListenerImpl.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Core/QuickSort.h>
 
-ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult)
+ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
 {
 	// Expect body 1 to be dynamic (or one of the bodies must be a sensor)
 	if (!inBody1.IsDynamic() && !inBody1.IsSensor() && !inBody2.IsSensor())
@@ -16,9 +17,12 @@ ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const
 
 	ValidateResult result;
 	if (mNext != nullptr)
-		result = mNext->OnContactValidate(inBody1, inBody2, inCollisionResult);
+		result = mNext->OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
 	else
-		result = ContactListener::OnContactValidate(inBody1, inBody2, inCollisionResult);
+		result = ContactListener::OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
+
+	RVec3 contact_point = inBaseOffset + inCollisionResult.mContactPointOn1;
+	DebugRenderer::sInstance->DrawArrow(contact_point, contact_point - inCollisionResult.mPenetrationAxis.NormalizedOr(Vec3::sZero()), Color::sBlue, 0.05f);
 
 	Trace("Validate %d and %d result %d", inBody1.GetID().GetIndex(), inBody2.GetID().GetIndex(), (int)result);
 
@@ -33,9 +37,9 @@ void ContactListenerImpl::OnContactAdded(const Body &inBody1, const Body &inBody
 
 	Trace("Contact added %d (%08x) and %d (%08x)", inBody1.GetID().GetIndex(), inManifold.mSubShapeID1.GetValue(), inBody2.GetID().GetIndex(), inManifold.mSubShapeID2.GetValue());
 
-	DebugRenderer::sInstance->DrawWirePolygon(inManifold.mWorldSpaceContactPointsOn1, Color::sGreen, 0.05f);
-	DebugRenderer::sInstance->DrawWirePolygon(inManifold.mWorldSpaceContactPointsOn2, Color::sGreen, 0.05f);
-	DebugRenderer::sInstance->DrawArrow(inManifold.mWorldSpaceContactPointsOn1[0], inManifold.mWorldSpaceContactPointsOn1[0] + inManifold.mWorldSpaceNormal, Color::sGreen, 0.05f);
+	DebugRenderer::sInstance->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn1, Color::sGreen, 0.05f);
+	DebugRenderer::sInstance->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn2, Color::sGreen, 0.05f);
+	DebugRenderer::sInstance->DrawArrow(inManifold.GetWorldSpaceContactPointOn1(0), inManifold.GetWorldSpaceContactPointOn1(0) + inManifold.mWorldSpaceNormal, Color::sGreen, 0.05f);
 
 	// Insert new manifold into state map
 	{
@@ -43,7 +47,7 @@ void ContactListenerImpl::OnContactAdded(const Body &inBody1, const Body &inBody
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		if (mState.find(key) != mState.end())
 			JPH_BREAKPOINT; // Added contact that already existed
-		mState[key] = inManifold.mWorldSpaceContactPointsOn1;
+		mState[key] = StatePair(inManifold.mBaseOffset, inManifold.mRelativeContactPointsOn1);
 	}
 
 	if (mNext != nullptr)
@@ -58,9 +62,9 @@ void ContactListenerImpl::OnContactPersisted(const Body &inBody1, const Body &in
 
 	Trace("Contact persisted %d (%08x) and %d (%08x)", inBody1.GetID().GetIndex(), inManifold.mSubShapeID1.GetValue(), inBody2.GetID().GetIndex(), inManifold.mSubShapeID2.GetValue());
 
-	DebugRenderer::sInstance->DrawWirePolygon(inManifold.mWorldSpaceContactPointsOn1, Color::sYellow, 0.05f);
-	DebugRenderer::sInstance->DrawWirePolygon(inManifold.mWorldSpaceContactPointsOn2, Color::sYellow, 0.05f);
-	DebugRenderer::sInstance->DrawArrow(inManifold.mWorldSpaceContactPointsOn1[0], inManifold.mWorldSpaceContactPointsOn1[0] + inManifold.mWorldSpaceNormal, Color::sYellow, 0.05f);
+	DebugRenderer::sInstance->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn1, Color::sYellow, 0.05f);
+	DebugRenderer::sInstance->DrawWirePolygon(RMat44::sTranslation(inManifold.mBaseOffset), inManifold.mRelativeContactPointsOn2, Color::sYellow, 0.05f);
+	DebugRenderer::sInstance->DrawArrow(inManifold.GetWorldSpaceContactPointOn1(0), inManifold.GetWorldSpaceContactPointOn1(0) + inManifold.mWorldSpaceNormal, Color::sYellow, 0.05f);
 
 	// Update existing manifold in state map
 	{
@@ -68,7 +72,7 @@ void ContactListenerImpl::OnContactPersisted(const Body &inBody1, const Body &in
 		SubShapeIDPair key(inBody1.GetID(), inManifold.mSubShapeID1, inBody2.GetID(), inManifold.mSubShapeID2);
 		StateMap::iterator i = mState.find(key);
 		if (i != mState.end())
-			i->second = inManifold.mWorldSpaceContactPointsOn1;
+			i->second = StatePair(inManifold.mBaseOffset, inManifold.mRelativeContactPointsOn1);
 		else
 			JPH_BREAKPOINT; // Persisted contact that didn't exist
 	}
@@ -117,9 +121,10 @@ void ContactListenerImpl::SaveState(StateRecorder &inStream) const
 		inStream.Write(k);
 
 		// Write value
-		const ContactPoints &cp = mState.find(k)->second;
-		inStream.Write(cp.size());
-		inStream.WriteBytes(cp.data(), cp.size() * sizeof(Vec3));
+		const StatePair &sp = mState.find(k)->second;
+		inStream.Write(sp.first);
+		inStream.Write(sp.second.size());
+		inStream.WriteBytes(sp.second.data(), sp.second.size() * sizeof(Vec3));
 	}
 }
 
@@ -159,21 +164,25 @@ void ContactListenerImpl::RestoreState(StateRecorder &inStream)
 			key = keys[i];
 		inStream.Read(key);
 
-		// Read value length
+		StatePair sp;
+		if (inStream.IsValidating())
+			sp = old_state[key];
+
+		// Read offset
+		inStream.Read(sp.first);
+
+		// Read num contact points
 		ContactPoints::size_type num_contacts;
 		if (inStream.IsValidating())
-			num_contacts = old_state[key].size();
+			num_contacts = old_state[key].second.size();
 		inStream.Read(num_contacts);
 
-		// Read values
-		ContactPoints contacts;
-		if (inStream.IsValidating())
-			contacts = old_state[key];
-		contacts.resize(num_contacts);
-		inStream.ReadBytes(contacts.data(), num_contacts * sizeof(Vec3));
+		// Read contact points
+		sp.second.resize(num_contacts);
+		inStream.ReadBytes(sp.second.data(), num_contacts * sizeof(Vec3));
 
 		// Store the new value
-		mState[key] = contacts;
+		mState[key] = sp;
 	}
 }
 
@@ -183,6 +192,6 @@ void ContactListenerImpl::DrawState()
 
 	lock_guard lock(mStateMutex);
 	for (const StateMap::value_type &kv : mState)
-		for (Vec3 v : kv.second)
-			DebugRenderer::sInstance->DrawWireSphere(v, 0.05f, Color::sRed, 1);
+		for (Vec3 v : kv.second.second)
+			DebugRenderer::sInstance->DrawWireSphere(kv.second.first + v, 0.05f, Color::sRed, 1);
 }

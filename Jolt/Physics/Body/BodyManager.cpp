@@ -155,7 +155,7 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity
 		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
 		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
-		mp->SetMotionQuality(inBodyCreationSettings.mMotionQuality);
+		mp->mMotionQuality = inBodyCreationSettings.mMotionQuality;
 		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
 		mp->mIndexInActiveBodies = Body::cInactiveIndex;
 		mp->mIslandIndex = Body::cInactiveIndex;
@@ -496,6 +496,26 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 					mActivationListener->OnBodyDeactivated(body_id, body.GetUserData());
 			}
 		}
+}
+
+void BodyManager::SetMotionQuality(Body &ioBody, EMotionQuality inMotionQuality)
+{
+	MotionProperties *mp = ioBody.GetMotionPropertiesUnchecked();
+	if (mp != nullptr && mp->GetMotionQuality() != inMotionQuality)
+	{
+		UniqueLock lock(mActiveBodiesMutex, EPhysicsLockTypes::ActiveBodiesList);
+
+		JPH_ASSERT(!mActiveBodiesLocked);
+
+		bool is_active = ioBody.IsActive();
+		if (is_active && mp->GetMotionQuality() == EMotionQuality::LinearCast)
+			--mNumActiveCCDBodies;
+
+		mp->mMotionQuality = inMotionQuality;
+
+		if (is_active && mp->GetMotionQuality() == EMotionQuality::LinearCast)
+			++mNumActiveCCDBodies;
+	}
 }
 
 void BodyManager::GetActiveBodies(BodyIDVector &outBodyIDs) const
@@ -843,7 +863,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 			// Draw world space linear and angular velocity
 			if (inDrawSettings.mDrawVelocity)
 			{
-				Vec3 pos = body->GetCenterOfMassPosition();
+				RVec3 pos = body->GetCenterOfMassPosition();
 				inRenderer->DrawArrow(pos, pos + body->GetLinearVelocity(), Color::sGreen, 0.1f);
 				inRenderer->DrawArrow(pos, pos + body->GetAngularVelocity(), Color::sRed, 0.1f);
 			}
@@ -876,7 +896,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 				Color sleep_color = Color(0, 255 - g, g);
 				inRenderer->DrawText3D(body->GetCenterOfMassPosition(), text, sleep_color, 0.2f);
 				for (int i = 0; i < 3; ++i)
-					inRenderer->DrawWireSphere(body->mMotionProperties->mSleepTestSpheres[i].GetCenter(), body->mMotionProperties->mSleepTestSpheres[i].GetRadius(), sleep_color);
+					inRenderer->DrawWireSphere(JPH_IF_DOUBLE_PRECISION(body->mMotionProperties->GetSleepTestOffset() +) body->mMotionProperties->mSleepTestSpheres[i].GetCenter(), body->mMotionProperties->mSleepTestSpheres[i].GetRadius(), sleep_color);
 			}
 		}
 

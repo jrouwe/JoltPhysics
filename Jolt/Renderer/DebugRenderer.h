@@ -30,38 +30,35 @@ public:
 	virtual								~DebugRenderer();
 
 	/// Draw line
-	void								DrawLine(Vec3Arg inFrom, Vec3Arg inTo, ColorArg inColor) { Float3 from, to; inFrom.StoreFloat3(&from); inTo.StoreFloat3(&to); DrawLine(from, to, inColor); }
-	virtual void						DrawLine(const Float3 &inFrom, const Float3 &inTo, ColorArg inColor) = 0;
+	virtual void						DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) = 0;
 
 	/// Draw wireframe box
 	void								DrawWireBox(const AABox &inBox, ColorArg inColor);
 	void								DrawWireBox(const OrientedBox &inBox, ColorArg inColor);
-	void								DrawWireBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg inColor);
+	void								DrawWireBox(RMat44Arg inMatrix, const AABox &inBox, ColorArg inColor);
 
 	/// Draw a marker on a position
-	void								DrawMarker(Vec3Arg inPosition, ColorArg inColor, float inSize);
+	void								DrawMarker(RVec3Arg inPosition, ColorArg inColor, float inSize);
 
 	/// Draw an arrow
-	void								DrawArrow(Vec3Arg inFrom, Vec3Arg inTo, ColorArg inColor, float inSize);
+	void								DrawArrow(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor, float inSize);
 
 	/// Draw coordinate system (3 arrows, x = red, y = green, z = blue)
-	void								DrawCoordinateSystem(Mat44Arg inTransform, float inSize = 1.0f);
+	void								DrawCoordinateSystem(RMat44Arg inTransform, float inSize = 1.0f);
 
 	/// Draw a plane through inPoint with normal inNormal
-	void								DrawPlane(Vec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize);
+	void								DrawPlane(RVec3Arg inPoint, Vec3Arg inNormal, ColorArg inColor, float inSize);
 
 	/// Draw wireframe triangle
-	void								DrawWireTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor);
+	void								DrawWireTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor);
 
 	/// Draw a wireframe polygon
 	template <class VERTEX_ARRAY>
-	void								DrawWirePolygon(const VERTEX_ARRAY &inVertices, ColorArg inColor, float inArrowSize = 0.0f) { for (typename VERTEX_ARRAY::size_type i = 0; i < inVertices.size(); ++i) DrawArrow(inVertices[i], inVertices[(i + 1) % inVertices.size()], inColor, inArrowSize); }
-	template <class VERTEX_ARRAY>
-	void								DrawWirePolygon(Mat44Arg inTransform, const VERTEX_ARRAY &inVertices, ColorArg inColor, float inArrowSize = 0.0f) { for (typename VERTEX_ARRAY::size_type i = 0; i < inVertices.size(); ++i) DrawArrow(inTransform * inVertices[i], inTransform * inVertices[(i + 1) % inVertices.size()], inColor, inArrowSize); }
+	void								DrawWirePolygon(RMat44Arg inTransform, const VERTEX_ARRAY &inVertices, ColorArg inColor, float inArrowSize = 0.0f) { for (typename VERTEX_ARRAY::size_type i = 0; i < inVertices.size(); ++i) DrawArrow(inTransform * inVertices[i], inTransform * inVertices[(i + 1) % inVertices.size()], inColor, inArrowSize); }
 
 	/// Draw wireframe sphere
-	void								DrawWireSphere(Vec3Arg inCenter, float inRadius, ColorArg inColor, int inLevel = 3);
-	void								DrawWireUnitSphere(Mat44Arg inMatrix, ColorArg inColor, int inLevel = 3);
+	void								DrawWireSphere(RVec3Arg inCenter, float inRadius, ColorArg inColor, int inLevel = 3);
+	void								DrawWireUnitSphere(RMat44Arg inMatrix, ColorArg inColor, int inLevel = 3);
 
 	/// Enum that determines if a shadow should be cast or not
 	enum class ECastShadow
@@ -78,23 +75,23 @@ public:
 	};
 
 	/// Draw a single back face culled triangle without any shadows
-	virtual void						DrawTriangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, ColorArg inColor) = 0;
+	virtual void						DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor) = 0;
 
 	/// Draw a box
 	void								DrawBox(const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
-	void								DrawBox(Mat44Arg inMatrix, const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawBox(RMat44Arg inMatrix, const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draw a sphere
-	void								DrawSphere(Vec3Arg inCenter, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
-	void								DrawUnitSphere(Mat44Arg inMatrix, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawSphere(RVec3Arg inCenter, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawUnitSphere(RMat44Arg inMatrix, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draw a capsule with one half sphere at (0, -inHalfHeightOfCylinder, 0) and the other half sphere at (0, inHalfHeightOfCylinder, 0) and radius inRadius. 
 	/// The capsule will be transformed by inMatrix.
-	void								DrawCapsule(Mat44Arg inMatrix, float inHalfHeightOfCylinder, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawCapsule(RMat44Arg inMatrix, float inHalfHeightOfCylinder, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draw a cylinder with top (0, inHalfHeight, 0) and bottom (0, -inHalfHeight, 0) and radius inRadius.
 	/// The cylinder will be transformed by inMatrix
-	void								DrawCylinder(Mat44Arg inMatrix, float inHalfHeight, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawCylinder(RMat44Arg inMatrix, float inHalfHeight, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draw a bottomless cone. 
 	/// @param inTop Top of cone, center of base is at inTop + inAxis. 
@@ -105,7 +102,7 @@ public:
 	/// @param inColor Color to use for drawing the cone.
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
-	void								DrawOpenCone(Vec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draws rotation limits as used by the SwingTwistConstraintPart.
 	/// @param inMatrix Matrix that transforms from constraint space to world space
@@ -115,7 +112,7 @@ public:
 	/// @param inColor Color to use for drawing the cone.
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
-	void								DrawSwingLimits(Mat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draw a pie (part of a circle). 
 	/// @param inCenter The center of the circle.
@@ -127,7 +124,7 @@ public:
 	/// @param inColor Color to use for drawing the pie.
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
-	void								DrawPie(Vec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Singleton instance
 	static DebugRenderer *				sInstance;
@@ -216,11 +213,11 @@ public:
 	/// @param inCullMode determines which polygons are culled.
 	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
-	virtual void						DrawGeometry(Mat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) = 0;
-	void								DrawGeometry(Mat44Arg inModelMatrix, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawGeometry(inModelMatrix, inGeometry->mBounds.Transformed(inModelMatrix), max(max(inModelMatrix.GetAxisX().LengthSq(), inModelMatrix.GetAxisY().LengthSq()), inModelMatrix.GetAxisZ().LengthSq()), inModelColor, inGeometry, inCullMode, inCastShadow, inDrawMode); }
+	virtual void						DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) = 0;
+	void								DrawGeometry(RMat44Arg inModelMatrix, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode = ECullMode::CullBackFace, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid) { DrawGeometry(inModelMatrix, inGeometry->mBounds.Transformed(inModelMatrix), max(max(inModelMatrix.GetAxisX().LengthSq(), inModelMatrix.GetAxisY().LengthSq()), inModelMatrix.GetAxisZ().LengthSq()), inModelColor, inGeometry, inCullMode, inCastShadow, inDrawMode); }
 
 	/// Draw text
-	virtual void						DrawText3D(Vec3Arg inPosition, const string_view &inString, ColorArg inColor = Color::sWhite, float inHeight = 0.5f)	= 0;
+	virtual void						DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor = Color::sWhite, float inHeight = 0.5f) = 0;
 
 protected:
 	/// Initialize the system, must be called from the constructor of the DebugRenderer implementation
@@ -228,7 +225,7 @@ protected:
 
 private:
 	/// Recursive helper function for DrawWireUnitSphere
-	void								DrawWireUnitSphereRecursive(Mat44Arg inMatrix, ColorArg inColor, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel);
+	void								DrawWireUnitSphereRecursive(RMat44Arg inMatrix, ColorArg inColor, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, int inLevel);
 
 	/// Helper functions to create a box
 	void								CreateQuad(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, Vec3Arg inV4);

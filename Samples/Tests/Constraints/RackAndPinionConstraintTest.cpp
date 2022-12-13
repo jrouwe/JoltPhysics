@@ -66,7 +66,7 @@ void RackAndPinionConstraintTest::Initialize()
 		gear_settings.AddShape(rotation * Vec3(cGearRadius, 0, 0), rotation, &tooth_settings);
 	}
 
-	Vec3 gear_initial_p(0, 2.0f, 0);
+	RVec3 gear_initial_p(0, 2.0f, 0);
 	Quat gear_initial_r = Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI);
 	Body *gear = mBodyInterface->CreateBody(BodyCreationSettings(&gear_settings, gear_initial_p, gear_initial_r, EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(gear->GetID(), EActivation::Activate);
@@ -82,7 +82,7 @@ void RackAndPinionConstraintTest::Initialize()
 	for (int i = 0; i < cRackNumTeeth; ++i)
 		rack_settings.AddShape(Vec3(cRackHalfHeight, 0, -0.5f * cRackLength + (i + 0.5f) * cRackLength / cRackNumTeeth), Quat::sIdentity(), &tooth_settings);
 
-	Vec3 slider_initial_p = gear_initial_p - Vec3(0, cGearRadius + cRackHalfHeight + cToothHeight, 0);
+	RVec3 slider_initial_p = gear_initial_p - Vec3(0, cGearRadius + cRackHalfHeight + cToothHeight, 0);
 	Quat slider_initial_r = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI) * gear_initial_r;
 	Body *rack = mBodyInterface->CreateBody(BodyCreationSettings(&rack_settings, slider_initial_p, slider_initial_r, EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(rack->GetID(), EActivation::Activate);

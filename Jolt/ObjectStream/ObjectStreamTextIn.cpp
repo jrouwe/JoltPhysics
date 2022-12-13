@@ -40,20 +40,28 @@ bool ObjectStreamTextIn::ReadDataType(EOSDataType &outType)
 			outType  = EOSDataType::T_uint64;
 		else if (token == "float")
 			outType  = EOSDataType::T_float;
+		else if (token == "double")
+			outType  = EOSDataType::T_double;
 		else if (token == "bool")
 			outType  = EOSDataType::T_bool;
 		else if (token == "string")
 			outType  = EOSDataType::T_String;
 		else if (token == "float3")
 			outType  = EOSDataType::T_Float3;
+		else if (token == "double3")
+			outType  = EOSDataType::T_Double3;
 		else if (token == "vec3")
 			outType  = EOSDataType::T_Vec3;
+		else if (token == "dvec3")
+			outType  = EOSDataType::T_DVec3;
 		else if (token == "vec4")
 			outType  = EOSDataType::T_Vec4;
 		else if (token == "quat")
 			outType  = EOSDataType::T_Quat;
 		else if (token == "mat44")
 			outType  = EOSDataType::T_Mat44;
+		else if (token == "dmat44")
+			outType  = EOSDataType::T_DMat44;
 		else
 		{
 			Trace("ObjectStreamTextIn: Found unknown data type.");
@@ -151,6 +159,16 @@ bool ObjectStreamTextIn::ReadPrimitiveData(uint64 &outPrimitive)
 }
 
 bool ObjectStreamTextIn::ReadPrimitiveData(float &outPrimitive)
+{
+	String token;
+	if (!ReadWord(token))
+		return false;
+	IStringStream stream(token);
+	stream >> outPrimitive;
+	return !stream.fail();
+}
+
+bool ObjectStreamTextIn::ReadPrimitiveData(double &outPrimitive)
 {
 	String token;
 	if (!ReadWord(token))
@@ -269,12 +287,30 @@ bool ObjectStreamTextIn::ReadPrimitiveData(Float3 &outPrimitive)
 	return true;
 }
 
+bool ObjectStreamTextIn::ReadPrimitiveData(Double3 &outPrimitive)
+{
+	double x, y, z;
+	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z))
+		return false;
+	outPrimitive = Double3(x, y, z);
+	return true;
+}
+
 bool ObjectStreamTextIn::ReadPrimitiveData(Vec3 &outPrimitive)
 {
 	float x, y, z;
 	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z))
 		return false;
 	outPrimitive = Vec3(x, y, z);
+	return true;
+}
+
+bool ObjectStreamTextIn::ReadPrimitiveData(DVec3 &outPrimitive)
+{
+	double x, y, z;
+	if (!ReadPrimitiveData(x) || !ReadPrimitiveData(y) || !ReadPrimitiveData(z))
+		return false;
+	outPrimitive = DVec3(x, y, z);
 	return true;
 }
 
@@ -302,6 +338,16 @@ bool ObjectStreamTextIn::ReadPrimitiveData(Mat44 &outPrimitive)
 	if (!ReadPrimitiveData(c0) || !ReadPrimitiveData(c1) || !ReadPrimitiveData(c2) || !ReadPrimitiveData(c3))
 		return false;
 	outPrimitive = Mat44(c0, c1, c2, c3);
+	return true;
+}
+
+bool ObjectStreamTextIn::ReadPrimitiveData(DMat44 &outPrimitive)
+{
+	Vec4 c0, c1, c2;
+	DVec3 c3;
+	if (!ReadPrimitiveData(c0) || !ReadPrimitiveData(c1) || !ReadPrimitiveData(c2) || !ReadPrimitiveData(c3))
+		return false;
+	outPrimitive = DMat44(c0, c1, c2, c3);
 	return true;
 }
 

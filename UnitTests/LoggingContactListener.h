@@ -27,7 +27,7 @@ public:
 		ContactManifold				mManifold;
 	};
 
-	virtual ValidateResult			OnContactValidate(const Body &inBody1, const Body &inBody2, const CollideShapeResult &inCollisionResult) override
+	virtual ValidateResult			OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) override
 	{
 		// Check contract that body 1 is dynamic or that body2 is not dynamic
 		bool contract = inBody1.IsDynamic() || !inBody2.IsDynamic();

@@ -150,7 +150,7 @@ TransformedShape CompoundShape::GetSubShapeTransformedShape(const SubShapeID &in
 	Vec3 scale = sub_shape.TransformScale(inScale);
 
 	// Return transformed shape
-	TransformedShape ts(position, rotation, sub_shape.mShape, BodyID());
+	TransformedShape ts(RVec3(position), rotation, sub_shape.mShape, BodyID());
 	ts.SetShapeScale(scale);
 	return ts;
 }
@@ -182,7 +182,7 @@ void CompoundShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 	shape.mShape->GetSupportingFace(remainder, transform.Multiply3x3Transposed(inDirection), shape.TransformScale(inScale), inCenterOfMassTransform * transform, outVertices);
 }
 
-void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	outTotalVolume = 0.0f;
 	outSubmergedVolume = 0.0f;
@@ -196,7 +196,7 @@ void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg
 		// Recurse to child
 		float total_volume, submerged_volume;
 		Vec3 center_of_buoyancy;
-		shape.mShape->GetSubmergedVolume(transform, shape.TransformScale(inScale), inSurface, total_volume, submerged_volume, center_of_buoyancy);
+		shape.mShape->GetSubmergedVolume(transform, shape.TransformScale(inScale), inSurface, total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, inBaseOffset));
 
 		// Accumulate volumes
 		outTotalVolume += total_volume;
@@ -212,12 +212,12 @@ void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg
 #ifdef JPH_DEBUG_RENDERER
 	// Draw senter of buoyancy
 	if (sDrawSubmergedVolumes)
-		DebugRenderer::sInstance->DrawWireSphere(outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
+		DebugRenderer::sInstance->DrawWireSphere(inBaseOffset + outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
 #endif // JPH_DEBUG_RENDERER
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void CompoundShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void CompoundShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	for (const SubShape &shape : mSubShapes)
 	{
@@ -226,7 +226,7 @@ void CompoundShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTrans
 	}
 }
 
-void CompoundShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
+void CompoundShape::DrawGetSupportFunction(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const
 {
 	for (const SubShape &shape : mSubShapes)
 	{
@@ -235,7 +235,7 @@ void CompoundShape::DrawGetSupportFunction(DebugRenderer *inRenderer, Mat44Arg i
 	}
 }
 
-void CompoundShape::DrawGetSupportingFace(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
+void CompoundShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	for (const SubShape &shape : mSubShapes)
 	{

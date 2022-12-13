@@ -77,7 +77,7 @@ public:
 	SubShapeID				GetContactSubShapeID() const				{ return mContactSubShapeID; }
 
 	/// Returns the current contact position in world space (note by the time you call this the vehicle has moved)
-	Vec3					GetContactPosition() const					{ JPH_ASSERT(mContactBody != nullptr); return mContactPosition; }
+	RVec3					GetContactPosition() const					{ JPH_ASSERT(mContactBody != nullptr); return mContactPosition; }
 
 	/// Velocity of the contact point (m / s, not relative to the wheel but in world space)
 	Vec3					GetContactPointVelocity() const				{ JPH_ASSERT(mContactBody != nullptr); return mContactPointVelocity; }
@@ -120,7 +120,7 @@ protected:
 	SubShapeID				mContactSubShapeID;							///< Sub shape ID for ground
 	Body *					mContactBody = nullptr;						///< Body for ground
 	float					mContactLength;								///< Length between attachment point and ground
-	Vec3					mContactPosition;							///< Position of the contact point between wheel and ground
+	RVec3					mContactPosition;							///< Position of the contact point between wheel and ground
 	Vec3					mContactPointVelocity;						///< Velocity of the contact point (m / s, not relative to the wheel but in world space)
 	Vec3					mContactNormal;								///< Normal of the contact point between wheel and ground
 	Vec3					mContactLongitudinal;						///< Vector perpendicular to normal in the forward direction

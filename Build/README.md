@@ -27,6 +27,7 @@ There are a number of user configurable defines that turn on/off certain feature
 - JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.
 - JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).
 - JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.
+- JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.
 - JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x86/x64 only)
 - JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x86/x64 only)
 - JPH_USE_F16C - Enable half float CPU instructions (x86/x64 only)

@@ -75,6 +75,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.h
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.cpp
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.h
+	${SAMPLES_ROOT}/Tests/General/ChangeMotionQualityTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ChangeMotionQualityTest.h
 	${SAMPLES_ROOT}/Tests/General/ChangeMotionTypeTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ChangeMotionTypeTest.h
 	${SAMPLES_ROOT}/Tests/General/ChangeShapeTest.cpp
@@ -127,6 +129,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/WallTest.h
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.h
+	${SAMPLES_ROOT}/Tests/Rig/BigWorldTest.cpp
+	${SAMPLES_ROOT}/Tests/Rig/BigWorldTest.h
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.h
 	${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.cpp
@@ -207,6 +211,7 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Water/WaterShapeTest.h
 	${SAMPLES_ROOT}/Utils/ContactListenerImpl.cpp
 	${SAMPLES_ROOT}/Utils/ContactListenerImpl.h
+	${SAMPLES_ROOT}/Utils/DebugRendererSP.h
 	${SAMPLES_ROOT}/Utils/RagdollLoader.cpp
 	${SAMPLES_ROOT}/Utils/RagdollLoader.h
 	${SAMPLES_ROOT}/Utils/ShapeCreator.cpp

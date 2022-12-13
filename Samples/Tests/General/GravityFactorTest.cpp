@@ -23,7 +23,7 @@ void GravityFactorTest::Initialize()
 	// Bodies with increasing gravity fraction
 	for (int i = 0; i <= 10; ++i)
 	{
-		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(box, Vec3(-50.0f + i * 10.0f, 25.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		Body &body = *mBodyInterface->CreateBody(BodyCreationSettings(box, RVec3(-50.0f + i * 10.0f, 25.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 		body.GetMotionProperties()->SetGravityFactor(0.1f * i);
 		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
 	}

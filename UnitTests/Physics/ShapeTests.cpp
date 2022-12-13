@@ -312,7 +312,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, -0.001f, 0), Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, -0.001f, 0), Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 0.0f);
 		}
@@ -321,7 +321,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 12.001f, 0), Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 12.001f, 0), Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, 0));
@@ -331,7 +331,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 6.0f, 0), Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 6.0f, 0), Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 6.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 3, 0));
@@ -342,7 +342,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(-4, 12.001f, 0), -Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(-4, 12.001f, 0), -Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 0.0f);
 		}
@@ -351,7 +351,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, -0.001f, 0), -Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, -0.001f, 0), -Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, 0));
@@ -361,7 +361,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 6.0f, 0), -Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 6.0f, 0), -Vec3::sAxisY()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 6.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 9, 0));
@@ -372,7 +372,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(-2.001f, 0, 0), Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(-2.001f, 0, 0), Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 0.0f);
 		}
@@ -381,7 +381,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(2.001f, 0, 0), Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(2.001f, 0, 0), Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, 0));
@@ -391,7 +391,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 2.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(-1, 6, 0));
@@ -402,7 +402,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(2.001f, 0, 0), -Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(2.001f, 0, 0), -Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 0.0f);
 		}
@@ -411,7 +411,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(-2.001f, 0, 0), -Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(-2.001f, 0, 0), -Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, 0));
@@ -421,7 +421,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), -Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), -Vec3::sAxisX()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 2.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(1, 6, 0));
@@ -432,7 +432,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, -12.001f), Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, -12.001f), Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 0.0f);
 		}
@@ -441,7 +441,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 12.001f), Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 12.001f), Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, 0));
@@ -451,7 +451,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 12.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, -6));
@@ -462,7 +462,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 12.001f), -Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 12.001f), -Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 0.0f);
 		}
@@ -471,7 +471,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, -12.001f), -Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, -12.001f), -Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, 0));
@@ -481,7 +481,7 @@ TEST_SUITE("ShapeTests")
 		{
 			float total_volume, submerged_volume;
 			Vec3 center_of_buoyancy;
-			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), -Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy);
+			box->GetSubmergedVolume(translation, scale, Plane::sFromPointAndNormal(Vec3(0, 0, 0), -Vec3::sAxisZ()), total_volume, submerged_volume, center_of_buoyancy JPH_IF_DEBUG_RENDERER(, RVec3::sZero()));
 			CHECK_APPROX_EQUAL(total_volume, 4.0f * 12.0f * 24.0f);
 			CHECK_APPROX_EQUAL(submerged_volume, 4.0f * 12.0f * 12.0f);
 			CHECK_APPROX_EQUAL(center_of_buoyancy, Vec3(0, 6, 6));

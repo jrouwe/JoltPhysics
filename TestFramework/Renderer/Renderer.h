@@ -18,9 +18,9 @@ class Texture;
 /// Camera setup
 struct CameraState
 {
-									CameraState() : mPos(Vec3::sZero()), mForward(0, 0, -1), mUp(0, 1, 0), mFOVY(DegreesToRadians(70.0f)), mFarPlane(100.0f) { }
+									CameraState() : mPos(RVec3::sZero()), mForward(0, 0, -1), mUp(0, 1, 0), mFOVY(DegreesToRadians(70.0f)), mFarPlane(100.0f) { }
 
-	Vec3							mPos;								///< Camera position
+	RVec3							mPos;								///< Camera position
 	Vec3							mForward;							///< Camera forward vector
 	Vec3							mUp;								///< Camera up vector
 	float							mFOVY;								///< Field of view in radians in up direction
@@ -88,6 +88,10 @@ public:
 	const CameraState &				GetCameraState() const				{ return mCameraState; }
 	const Frustum &					GetCameraFrustum() const			{ return mCameraFrustum; }
 
+	/// Offset relative to which the world is rendered, helps avoiding rendering artifacts at big distances
+	RVec3							GetBaseOffset() const				{ return mBaseOffset; }
+	void							SetBaseOffset(RVec3 inOffset)		{ mBaseOffset = inOffset; }
+
 	/// Get the light frustum (only valid between BeginFrame() / EndFrame())
 	const Frustum &					GetLightFrustum() const				{ return mLightFrustum; }
 
@@ -135,6 +139,7 @@ private:
 	unique_ptr<ConstantBuffer>		mVertexShaderConstantBufferOrtho[cFrameCount];
 	unique_ptr<ConstantBuffer>		mPixelShaderConstantBuffer[cFrameCount];
 	CameraState						mCameraState;
+	RVec3							mBaseOffset { RVec3::sZero() };		///< Offset to subtract from the camera position to deal with large worlds
 	Frustum							mCameraFrustum;
 	Frustum							mLightFrustum;
 

@@ -87,8 +87,6 @@ void SwingTwistConstraint::UpdateLimits()
 
 SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const SwingTwistConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings),
-	mLocalSpacePosition1(inSettings.mPosition1),
-	mLocalSpacePosition2(inSettings.mPosition2),
 	mNormalHalfConeAngle(inSettings.mNormalHalfConeAngle),
 	mPlaneHalfConeAngle(inSettings.mPlaneHalfConeAngle),
 	mTwistMinAngle(inSettings.mTwistMinAngle),
@@ -110,11 +108,16 @@ SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const S
 	if (inSettings.mSpace == EConstraintSpace::WorldSpace)
 	{
 		// If all properties were specified in world space, take them to local space now
-		mLocalSpacePosition1 = inBody1.GetInverseCenterOfMassTransform() * mLocalSpacePosition1;
+		mLocalSpacePosition1 = Vec3(inBody1.GetInverseCenterOfMassTransform() * inSettings.mPosition1);
 		mConstraintToBody1 = inBody1.GetRotation().Conjugated() * mConstraintToBody1;
 
-		mLocalSpacePosition2 = inBody2.GetInverseCenterOfMassTransform() * mLocalSpacePosition2;
+		mLocalSpacePosition2 = Vec3(inBody2.GetInverseCenterOfMassTransform() * inSettings.mPosition2);
 		mConstraintToBody2 = inBody2.GetRotation().Conjugated() * mConstraintToBody2;
+	}
+	else
+	{
+		mLocalSpacePosition1 = Vec3(inSettings.mPosition1);
+		mLocalSpacePosition2 = Vec3(inSettings.mPosition2);
 	}
 
 	UpdateLimits();
@@ -388,13 +391,13 @@ bool SwingTwistConstraint::SolvePositionConstraint(float inDeltaTime, float inBa
 void SwingTwistConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
 	// Get constraint properties in world space
-	Mat44 transform1 = mBody1->GetCenterOfMassTransform();
-	Vec3 position1 = transform1 * mLocalSpacePosition1;
+	RMat44 transform1 = mBody1->GetCenterOfMassTransform();
+	RVec3 position1 = transform1 * mLocalSpacePosition1;
 	Quat rotation1 = mBody1->GetRotation() * mConstraintToBody1;
 	Quat rotation2 = mBody2->GetRotation() * mConstraintToBody2;
 
 	// Draw constraint orientation
-	inRenderer->DrawCoordinateSystem(Mat44::sRotationTranslation(rotation1, position1), mDrawConstraintSize);
+	inRenderer->DrawCoordinateSystem(RMat44::sRotationTranslation(rotation1, position1), mDrawConstraintSize);
 
 	// Draw current swing and twist	
 	Quat q = GetRotationInConstraintSpace();
@@ -421,7 +424,7 @@ void SwingTwistConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 void SwingTwistConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 {
 	// Get matrix that transforms from constraint space to world space
-	Mat44 constraint_to_world = Mat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
+	RMat44 constraint_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
 	inRenderer->DrawSwingLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
@@ -464,10 +467,10 @@ Ref<ConstraintSettings> SwingTwistConstraint::GetConstraintSettings() const
 	SwingTwistConstraintSettings *settings = new SwingTwistConstraintSettings;
 	ToConstraintSettings(*settings);
 	settings->mSpace = EConstraintSpace::LocalToBodyCOM;
-	settings->mPosition1 = mLocalSpacePosition1;
+	settings->mPosition1 = RVec3(mLocalSpacePosition1);
 	settings->mTwistAxis1 = mConstraintToBody1.RotateAxisX();
 	settings->mPlaneAxis1 = mConstraintToBody1.RotateAxisZ();
-	settings->mPosition2 = mLocalSpacePosition2;
+	settings->mPosition2 = RVec3(mLocalSpacePosition2);
 	settings->mTwistAxis2 = mConstraintToBody2.RotateAxisX();
 	settings->mPlaneAxis2 = mConstraintToBody2.RotateAxisZ();
 	settings->mNormalHalfConeAngle = mNormalHalfConeAngle;

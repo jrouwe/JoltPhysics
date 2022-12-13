@@ -116,13 +116,13 @@ public:
 	inline Vec3				GetPointVelocityCOM(Vec3Arg inPointRelativeToCOM) const			{ return !IsStatic()? mMotionProperties->GetPointVelocityCOM(inPointRelativeToCOM) : Vec3::sZero(); }
 
 	/// Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body (unit: m/s)
-	inline Vec3				GetPointVelocity(Vec3Arg inPoint) const							{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return GetPointVelocityCOM(inPoint - mPosition); }
+	inline Vec3				GetPointVelocity(RVec3Arg inPoint) const						{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return GetPointVelocityCOM(Vec3(inPoint - mPosition)); }
 
 	/// Add force (unit: N) at center of mass for the next time step, will be reset after the next call to PhysicsSimulation::Update
 	inline void				AddForce(Vec3Arg inForce)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mForce) + inForce).StoreFloat3(&mMotionProperties->mForce); }
 
 	/// Add force (unit: N) at inPosition for the next time step, will be reset after the next call to PhysicsSimulation::Update
-	inline void				AddForce(Vec3Arg inForce, Vec3Arg inPosition);
+	inline void				AddForce(Vec3Arg inForce, RVec3Arg inPosition);
 
 	/// Add torque (unit: N m) for the next time step, will be reset after the next call to PhysicsSimulation::Update
 	inline void				AddTorque(Vec3Arg inTorque)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mTorque) + inTorque).StoreFloat3(&mMotionProperties->mTorque); }
@@ -140,16 +140,17 @@ public:
 	inline void				AddImpulse(Vec3Arg inImpulse);
 
 	/// Add impulse to point in world space (unit: kg m/s)
-	inline void				AddImpulse(Vec3Arg inImpulse, Vec3Arg inPosition);
+	inline void				AddImpulse(Vec3Arg inImpulse, RVec3Arg inPosition);
 
 	/// Add angular impulse in world space (unit: N m s)
 	inline void				AddAngularImpulse(Vec3Arg inAngularImpulse);
 	
 	/// Set velocity of body such that it will be positioned at inTargetPosition/Rotation in inDeltaTime seconds.
-	void					MoveKinematic(Vec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
+	void					MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
 
 	/// Applies an impulse to the body that simulates fluid buoyancy and drag
-	/// @param inSurface The fluid surface (normal should point up) in world space
+	/// @param inSurfacePosition Position on the fluid surface in world space
+	/// @param inSurfaceNormal Normal of the fluid surface (should point up)
 	/// @param inBuoyancy The buoyancy factor for the body. 1 = neutral body, < 1 sinks, > 1 floats. Note that we don't use the fluid density since it is harder to configure than a simple number between [0, 2]
 	/// @param inLinearDrag Linear drag factor that slows down the body when in the fluid (approx. 0.5)
 	/// @param inAngularDrag Angular drag factor that slows down rotation when the body is in the fluid (approx. 0.01)
@@ -157,7 +158,7 @@ public:
 	/// @param inGravity The graviy vector (pointing down)
 	/// @param inDeltaTime Delta time of the next simulation step (in s)
 	/// @return true if an impulse was applied, false if the body was not in the fluid
-	bool					ApplyBuoyancyImpulse(const Plane &inSurface, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime);
+	bool					ApplyBuoyancyImpulse(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime);
 
 	/// Check if this body has been added to the physics system
 	inline bool				IsInBroadPhase() const											{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsInBroadPhase)) != 0; }
@@ -172,22 +173,22 @@ public:
 	inline const Shape *	GetShape() const												{ return mShape; }
 
 	/// World space position of the body
-	inline Vec3				GetPosition() const												{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mPosition - mRotation * mShape->GetCenterOfMass(); }
+	inline RVec3			GetPosition() const												{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mPosition - mRotation * mShape->GetCenterOfMass(); }
 
 	/// World space rotation of the body
 	inline Quat 			GetRotation() const												{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mRotation; }
 
 	/// Calculates the transform of this body
-	inline Mat44			GetWorldTransform() const;
+	inline RMat44			GetWorldTransform() const;
 
 	/// Gets the world space position of this body's center of mass
-	inline Vec3 			GetCenterOfMassPosition() const									{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mPosition; }
+	inline RVec3 			GetCenterOfMassPosition() const									{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return mPosition; }
 
 	/// Calculates the transform for this body's center of mass
-	inline Mat44			GetCenterOfMassTransform() const;
+	inline RMat44			GetCenterOfMassTransform() const;
 
 	/// Calculates the inverse of the transform for this body's center of mass
-	inline Mat44			GetInverseCenterOfMassTransform() const;
+	inline RMat44			GetInverseCenterOfMassTransform() const;
 
 	/// Get world space bounding box
 	inline const AABox &	GetWorldSpaceBounds() const										{ return mBounds; }
@@ -205,7 +206,7 @@ public:
 	void					SetUserData(uint64 inUserData)									{ mUserData = inUserData; }
 
 	/// Get surface normal of a particular sub shape and its world space surface position on this body
-	inline Vec3				GetWorldSpaceSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inPosition) const;
+	inline Vec3				GetWorldSpaceSurfaceNormal(const SubShapeID &inSubShapeID, RVec3Arg inPosition) const;
 
 	/// Get the transformed shape of this body, which can be used to do collision detection outside of a body lock
 	inline TransformedShape	GetTransformedShape() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return TransformedShape(mPosition, mRotation, mShape, mID); }
@@ -244,7 +245,7 @@ public:
 	void					CalculateWorldSpaceBoundsInternal();
 
 	/// Function to update body's position (should only be called by the BodyInterface since it also requires updating the broadphase)
-	void					SetPositionAndRotationInternal(Vec3Arg inPosition, QuatArg inRotation);
+	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation);
 
 	/// Updates the center of mass and optionally mass propertes after shifting the center of mass or changes to the shape (should only be called by the BodyInterface since it also requires updating the broadphase)
 	/// @param inPreviousCenterOfMass Center of mass of the shape before the alterations
@@ -283,7 +284,7 @@ private:
 
 	explicit				Body(bool);														///< Alternative constructor that initializes all members
 
-	inline void				GetSleepTestPoints(Vec3 *outPoints) const;						///< Determine points to test for checking if body is sleeping: COM, COM + largest bounding box axis, COM + second largest bounding box axis
+	inline void				GetSleepTestPoints(RVec3 *outPoints) const;						///< Determine points to test for checking if body is sleeping: COM, COM + largest bounding box axis, COM + second largest bounding box axis
 	inline void				ResetSleepTestSpheres();										///< Reset spheres to current position as returned by GetSleepTestPoints
 
 	enum class EFlags : uint8
@@ -295,7 +296,7 @@ private:
 	};
 
 	// 16 byte aligned
-	Vec3					mPosition;														///< World space position of center of mass
+	RVec3					mPosition;														///< World space position of center of mass
 	Quat					mRotation;														///< World space rotation of center of mass
 	AABox					mBounds;														///< World space bounding box of the body
 
@@ -318,16 +319,20 @@ private:
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 	
-	// 121 bytes up to here (64-bit mode)
+	// 121 bytes up to here (64-bit mode, single precision)
 
 #if JPH_CPU_ADDRESS_BITS == 32
 	// Padding for 32 bit mode
 	char					mPadding[19];
 #endif
+#ifdef JPH_DOUBLE_PRECISION
+	// Padding to align to 256 bit
+	char					mPadding2[16];
+#endif
 };
 
-static_assert(sizeof(Body) == 128, "Body should be 128 bytes");
-static_assert(alignof(Body) == JPH_VECTOR_ALIGNMENT, "Body should properly align");
+static_assert(sizeof(Body) == JPH_IF_SINGLE_PRECISION_ELSE(128, 160), "Body size is incorrect");
+static_assert(alignof(Body) == JPH_RVECTOR_ALIGNMENT, "Body should properly align");
 
 JPH_NAMESPACE_END
 

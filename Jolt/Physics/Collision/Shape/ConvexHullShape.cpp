@@ -720,7 +720,7 @@ void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg 
 	}
 }
 
-void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy) const
+void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
 {
 	// Trivially calculate total volume
 	Vec3 abs_scale = inScale.Abs();
@@ -732,7 +732,7 @@ void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3A
 	// Convert the points to world space and determine the distance to the surface
 	int num_points = int(mPoints.size());
 	PolyhedronSubmergedVolumeCalculator::Point *buffer = (PolyhedronSubmergedVolumeCalculator::Point *)JPH_STACK_ALLOC(num_points * sizeof(PolyhedronSubmergedVolumeCalculator::Point));
-	PolyhedronSubmergedVolumeCalculator submerged_vol_calc(inCenterOfMassTransform * Mat44::sScale(inScale), &mPoints[0].mPosition, sizeof(Point), num_points, inSurface, buffer);
+	PolyhedronSubmergedVolumeCalculator submerged_vol_calc(inCenterOfMassTransform * Mat44::sScale(inScale), &mPoints[0].mPosition, sizeof(Point), num_points, inSurface, buffer JPH_IF_DEBUG_RENDERER(, inBaseOffset));
 	
 	if (submerged_vol_calc.AreAllAbove())
 	{
@@ -797,12 +797,12 @@ void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3A
 #ifdef JPH_DEBUG_RENDERER
 	// Draw center of buoyancy
 	if (sDrawSubmergedVolumes)
-		DebugRenderer::sInstance->DrawWireSphere(outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
+		DebugRenderer::sInstance->DrawWireSphere(inBaseOffset + outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
 #endif // JPH_DEBUG_RENDERER
 }
 
 #ifdef JPH_DEBUG_RENDERER
-void ConvexHullShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
+void ConvexHullShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	if (mGeometry == nullptr)
 	{
@@ -834,7 +834,7 @@ void ConvexHullShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTra
 
 	// Draw the geometry
 	Color color = inUseMaterialColors? GetMaterial()->GetDebugColor() : inColor;
-	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
+	RMat44 transform = inCenterOfMassTransform.PreScaled(inScale);
 	inRenderer->DrawGeometry(transform, color, mGeometry, cull_mode, DebugRenderer::ECastShadow::On, draw_mode);
 
 	// Draw the outline if requested
@@ -851,19 +851,19 @@ void ConvexHullShape::Draw(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTra
 		}
 }
 
-void ConvexHullShape::DrawShrunkShape(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
+void ConvexHullShape::DrawShrunkShape(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	// Get the shrunk points
 	SupportBuffer buffer;
 	const HullNoConvex *support = mConvexRadius > 0.0f? static_cast<const HullNoConvex *>(GetSupportFunction(ESupportMode::ExcludeConvexRadius, buffer, inScale)) : nullptr;
 
-	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
+	RMat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
 
 	for (int p = 0; p < (int)mPoints.size(); ++p)
 	{
 		const Point &point = mPoints[p];
-		Vec3 position = transform * point.mPosition;
-		Vec3 shrunk_point = support != nullptr? transform * support->GetPoints()[p] : position;
+		RVec3 position = transform * point.mPosition;
+		RVec3 shrunk_point = support != nullptr? transform * support->GetPoints()[p] : position;
 
 		// Draw difference between shrunk position and position
 		inRenderer->DrawLine(position, shrunk_point, Color::sGreen);

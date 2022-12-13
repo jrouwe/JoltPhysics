@@ -10,10 +10,10 @@
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/RayCast.h>
-#include <Renderer/DebugRendererImp.h>
 #include <Application/DebugUI.h>
 #include <Utils/ReadData.h>
 #include <Utils/Log.h>
+#include <Utils/DebugRendererSP.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(HeightFieldShapeTest) 
@@ -134,7 +134,7 @@ void HeightFieldShapeTest::Initialize()
 	settings.mBlockSize = 1 << sBlockSizeShift;
 	settings.mBitsPerSample = sBitsPerSample;
 	mHeightField = static_cast<const HeightFieldShape *>(settings.Create().Get().GetPtr());
-	Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, Vec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(terrain.GetID(), EActivation::DontActivate);
 
 	// Validate it
@@ -188,11 +188,11 @@ void HeightFieldShapeTest::Initialize()
 
 	// Determine terrain height
 	RayCastResult result;
-	Vec3 start(0, 1000, 0);
+	RVec3 start(0, 1000, 0);
 	Vec3 direction(0, -2000, 0);
-	RayCast ray { start, direction };
+	RRayCast ray { start, direction };
 	if (mPhysicsSystem->GetNarrowPhaseQuery().CastRay(ray, result, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
-		mHitPos = start + result.mFraction * direction;
+		mHitPos = ray.GetPointOnRay(result.mFraction);
 
 	// Dynamic body
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)), mHitPos + Vec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
@@ -202,13 +202,13 @@ void HeightFieldShapeTest::Initialize()
 void HeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Test the 'GetHeight' function and draw a marker on the surface
-	Vec3 test_pos = inParams.mCameraState.mPos + 10.0f * inParams.mCameraState.mForward, surface_pos;
+	Vec3 test_pos = Vec3(inParams.mCameraState.mPos) + 10.0f * inParams.mCameraState.mForward, surface_pos;
 	SubShapeID sub_shape_id;
 	if (mHeightField->ProjectOntoSurface(test_pos, surface_pos, sub_shape_id))
 	{
 		Vec3 surface_normal = mHeightField->GetSurfaceNormal(sub_shape_id, surface_pos);
-		mDebugRenderer->DrawMarker(surface_pos, Color::sWhite, 1.0f);
-		mDebugRenderer->DrawArrow(surface_pos, surface_pos + surface_normal, Color::sRed, 0.1f);
+		DrawMarkerSP(mDebugRenderer, surface_pos, Color::sWhite, 1.0f);
+		DrawArrowSP(mDebugRenderer, surface_pos, surface_pos + surface_normal, Color::sRed, 0.1f);
 	}
 
 	// Draw the original uncompressed terrain
@@ -231,7 +231,7 @@ void HeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				const float cMaxError = 0.1f;
 				float error = (original - compressed).Length();
 				uint8 c = uint8(round(255.0f * min(error / cMaxError, 1.0f)));
-				mDebugRenderer->DrawMarker(original, Color(c, 255 - c, 0, 255), 0.1f);
+				DrawMarkerSP(mDebugRenderer, original, Color(c, 255 - c, 0, 255), 0.1f);
 			}
 }
 

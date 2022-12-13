@@ -1,5 +1,5 @@
 @echo off
-cmake -S . -B VS2022_Clang -G "Visual Studio 17 2022" -A x64 -T ClangCL
+cmake -S . -B VS2022_Clang -G "Visual Studio 17 2022" -A x64 -T ClangCL %*
 echo:
 echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 echo Make sure to install:
