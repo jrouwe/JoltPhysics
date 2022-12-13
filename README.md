@@ -120,7 +120,7 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 
 ## Bindings For Other Languages
 
-* [C](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics/libs)
+* C [here](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics/libs) and [here](https://github.com/amerkoleci/JoltPhysicsSharp/tree/main/src/joltc)
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
 * [Zig](https://github.com/michal-z/zig-gamedev)
