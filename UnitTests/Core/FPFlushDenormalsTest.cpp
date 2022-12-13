@@ -32,5 +32,8 @@ TEST_SUITE("FlushDenormalsTests")
 			float value = TestFltMin * 0.1f;
 			CHECK(value > 0.0f);
 		}
+
+		// Update TestFltMin to prevent the compiler from optimizing away TestFltMin and replace all calculations above with 0
+		TestFltMin = 1.0f;
 	}
 }

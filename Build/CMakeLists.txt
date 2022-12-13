@@ -21,6 +21,9 @@ option(CROSS_PLATFORM_DETERMINISTIC "Cross platform deterministic" OFF)
 # When turning this option on, the library will be compiled for ARM (aarch64-linux-gnu), requires compiling with clang
 option(CROSS_COMPILE_ARM "Cross compile to aarch64-linux-gnu" OFF)
 
+# When turning this option on, the library will be compiled with interprocedural optimizations enabled, also known as link-time optimizations or link-time code generation
+option(INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimizations" ON)
+
 # Select X86 processor features to use (if everything is off it will be SSE2 compatible)
 option(USE_SSE4_1 "Enable SSE4.1" ON)
 option(USE_SSE4_2 "Enable SSE4.2" ON)
@@ -91,12 +94,6 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-fsanitize=undefined,implicit-conversion,float-divide-by-zero,local-bounds -fno-sanitize-recover=all")
 	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-fprofile-instr-generate -fcoverage-mapping")
 
-	if (NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64") AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM"))
-		# On ARM, whole program optimization triggers an internal compiler error during code gen, so we don't turn it on
-		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
-		set(CMAKE_CXX_FLAGS_DISTRIBUTION "${CMAKE_CXX_FLAGS_DISTRIBUTION} /GL")
-	endif()
-
 	# Set linker flags
 	set(CMAKE_EXE_LINKER_FLAGS "/SUBSYSTEM:WINDOWS /ignore:4221 /DEBUG:FASTLINK")
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -134,8 +131,6 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 		endif()
 		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DJPH_FLOATING_POINT_EXCEPTIONS_ENABLED") # Clang turns Float2 into a vector sometimes causing floating point exceptions
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /DJPH_FLOATING_POINT_EXCEPTIONS_ENABLED")
-		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/INCREMENTAL:NO /LTCG:incremental /OPT:ICF /OPT:REF")
-		set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "/LTCG")
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /showFilenames")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments") # Clang emits warnings about unused arguments such as /MP and /GL
@@ -179,8 +174,9 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		# Somehow -Wcomment doesn't want to be turned off from code and we need this because Doxygen MathJax uses it
+		# Also disable -Wstringop-overflow or it will generate false positives that can't be disabled from code when link-time optimizations are enabled
 		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment -ffp-contract=off")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment -Wno-stringop-overflow -ffp-contract=off")
 	else()
 		# Do not use -ffast-math or -ffp-contract=on since it cannot be turned off in a single compilation unit under clang, see Core.h
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise -ffp-contract=off")
@@ -236,6 +232,22 @@ endif()
 # Setting to attempt cross platform determinism
 if (CROSS_PLATFORM_DETERMINISTIC)
 	add_compile_definitions(JPH_CROSS_PLATFORM_DETERMINISTIC)
+endif()
+
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE OFF)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DISTRIBUTION OFF)
+
+# On ARM, whole program optimization triggers an internal compiler error during code gen, so we don't turn it on
+if (INTERPROCEDURAL_OPTIMIZATION AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM64") AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM"))
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT IS_IPO_SUPPORTED OUTPUT IPO_CHECK_OUTPUT)
+
+	if (IS_IPO_SUPPORTED)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_DISTRIBUTION ON)
+	else()
+		message(WARNING "Interprocedural optimizations are not supported: ${IPO_CHECK_OUTPUT}")
+	endif()
 endif()
 
 # Set linker flags

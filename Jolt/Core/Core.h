@@ -242,9 +242,7 @@
 	JPH_MSVC_SUPPRESS_WARNING(4820)																\
 	JPH_MSVC_SUPPRESS_WARNING(4514)																\
 	JPH_MSVC_SUPPRESS_WARNING(5262)																\
-	JPH_MSVC_SUPPRESS_WARNING(5264)																\
-																								\
-	JPH_GCC_SUPPRESS_WARNING("-Wstringop-overflow=")
+	JPH_MSVC_SUPPRESS_WARNING(5264)
 
 #define JPH_SUPPRESS_WARNINGS_STD_END															\
 	JPH_SUPPRESS_WARNING_POP
