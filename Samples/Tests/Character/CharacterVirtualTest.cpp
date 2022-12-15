@@ -10,8 +10,8 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Application/DebugUI.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest) 
-{ 
+JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterVirtualTest)
+{
 	JPH_ADD_BASE_CLASS(CharacterVirtualTest, CharacterBaseTest)
 }
 
@@ -68,6 +68,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 		mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING),
 		{ },
+		{ },
 		*mTempAllocator);
 
 	// Calculate effective velocity
@@ -99,7 +100,7 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	{
 		// Assume velocity of ground when on ground
 		new_velocity = ground_velocity;
-		
+
 		// Jump
 		if (inJump)
 			new_velocity += Vec3(0, cJumpSpeed, 0);
@@ -118,7 +119,7 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 	// Stance switch
 	if (inSwitchStance)
-		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, *mTempAllocator);
+		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, { }, *mTempAllocator);
 }
 
 void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu)
@@ -152,7 +153,7 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 
 	bool is_standing = mCharacter->GetShape() == mStandingShape; // Initialize variable for validation mode
 	inStream.Read(is_standing);
-	mCharacter->SetShape(is_standing? mStandingShape : mCrouchingShape, FLT_MAX, { }, { }, { }, *mTempAllocator);
+	mCharacter->SetShape(is_standing? mStandingShape : mCrouchingShape, FLT_MAX, { }, { }, { }, { }, *mTempAllocator);
 
 	inStream.Read(mDesiredVelocity);
 }
