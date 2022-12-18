@@ -195,7 +195,16 @@ public:
 	virtual AABox					GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { return GetLocalBounds().Scaled(inScale).Transformed(inCenterOfMassTransform); }
 
 	/// Get world space bounds including convex radius.
-	AABox							GetWorldSpaceBounds(DMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { return GetLocalBounds().Scaled(inScale).Transformed(inCenterOfMassTransform); }
+	AABox							GetWorldSpaceBounds(DMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
+	{
+		// Use single precision version using the rotation only
+		AABox bounds = GetWorldSpaceBounds(inCenterOfMassTransform.GetRotation(), inScale);
+
+		// Apply translation
+		bounds.Translate(inCenterOfMassTransform.GetTranslation());
+
+		return bounds;
+	}
 
 	/// Returns the radius of the biggest sphere that fits entirely in the shape. In case this shape consists of multiple sub shapes, it returns the smallest sphere of the parts. 
 	/// This can be used as a measure of how far the shape can be moved without risking going through geometry.
