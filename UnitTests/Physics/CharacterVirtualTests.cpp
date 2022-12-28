@@ -76,6 +76,7 @@ TEST_SUITE("CharacterVirtualTests")
 				system->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 				system->GetDefaultLayerFilter(Layers::MOVING),
 				{ },
+				{ },
 				allocator);
 
 			// Calculate effective velocity in this step

@@ -96,7 +96,11 @@ void MeshShapeSettings::Sanitize()
 		const IndexedTriangle &tri = mIndexedTriangles[t];
 		if (tri.IsDegenerate()										// Degenerate triangle
 			|| !triangles.insert(tri.GetLowestIndexFirst()).second) // Duplicate triangle
-			mIndexedTriangles.erase(mIndexedTriangles.begin() + t);
+		{
+			// The order of triangles doesn't matter (gets reordered while building the tree), so we can just swap the last triangle into this slot
+			mIndexedTriangles[t] = mIndexedTriangles.back();
+			mIndexedTriangles.pop_back();
+		}
 	}
 }
 

@@ -350,41 +350,44 @@ bool PathConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 #ifdef JPH_DEBUG_RENDERER
 void PathConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
-	// Draw the path in world space
-	RMat44 path_to_world = mBody1->GetCenterOfMassTransform() * mPathToBody1;
-	mPath->DrawPath(inRenderer, path_to_world);
-
-	// Draw anchor point of both bodies in world space
-	RVec3 x1 = mBody1->GetCenterOfMassPosition() + mR1;
-	RVec3 x2 = mBody2->GetCenterOfMassPosition() + mR2;
-	inRenderer->DrawMarker(x1, Color::sYellow, 0.1f);
-	inRenderer->DrawMarker(x2, Color::sYellow, 0.1f);
-	inRenderer->DrawArrow(x1, x1 + mPathTangent, Color::sBlue, 0.1f);
-	inRenderer->DrawArrow(x1, x1 + mPathNormal, Color::sRed, 0.1f);
-	inRenderer->DrawArrow(x1, x1 + mPathBinormal, Color::sGreen, 0.1f);
-	inRenderer->DrawText3D(x1, StringFormat("%.1f", (double)mPathFraction));
-
-	// Draw motor
-	switch (mPositionMotorState)
+	if (mPath != nullptr)
 	{
-	case EMotorState::Position:
+		// Draw the path in world space
+		RMat44 path_to_world = mBody1->GetCenterOfMassTransform() * mPathToBody1;
+		mPath->DrawPath(inRenderer, path_to_world);
+
+		// Draw anchor point of both bodies in world space
+		RVec3 x1 = mBody1->GetCenterOfMassPosition() + mR1;
+		RVec3 x2 = mBody2->GetCenterOfMassPosition() + mR2;
+		inRenderer->DrawMarker(x1, Color::sYellow, 0.1f);
+		inRenderer->DrawMarker(x2, Color::sYellow, 0.1f);
+		inRenderer->DrawArrow(x1, x1 + mPathTangent, Color::sBlue, 0.1f);
+		inRenderer->DrawArrow(x1, x1 + mPathNormal, Color::sRed, 0.1f);
+		inRenderer->DrawArrow(x1, x1 + mPathBinormal, Color::sGreen, 0.1f);
+		inRenderer->DrawText3D(x1, StringFormat("%.1f", (double)mPathFraction));
+
+		// Draw motor
+		switch (mPositionMotorState)
 		{
-			// Draw target marker
-			Vec3 position, tangent, normal, binormal;
-			mPath->GetPointOnPath(mTargetPathFraction, position, tangent, normal, binormal);			
-			inRenderer->DrawMarker(path_to_world * position, Color::sYellow, 1.0f);
+		case EMotorState::Position:
+			{
+				// Draw target marker
+				Vec3 position, tangent, normal, binormal;
+				mPath->GetPointOnPath(mTargetPathFraction, position, tangent, normal, binormal);			
+				inRenderer->DrawMarker(path_to_world * position, Color::sYellow, 1.0f);
+				break;
+			}
+
+		case EMotorState::Velocity:
+			{
+				RVec3 position = mBody2->GetCenterOfMassPosition() + mR2;
+				inRenderer->DrawArrow(position, position + mPathTangent * mTargetVelocity, Color::sRed, 0.1f);
+				break;
+			}
+
+		case EMotorState::Off:
 			break;
 		}
-
-	case EMotorState::Velocity:
-		{
-			RVec3 position = mBody2->GetCenterOfMassPosition() + mR2;
-			inRenderer->DrawArrow(position, position + mPathTangent * mTargetVelocity, Color::sRed, 0.1f);
-			break;
-		}
-
-	case EMotorState::Off:
-		break;
 	}
 }
 #endif // JPH_DEBUG_RENDERER
