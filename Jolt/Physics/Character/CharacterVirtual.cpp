@@ -76,6 +76,9 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 
 void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inResult)
 {
+	// Should not have gotten here without a lower fraction
+	JPH_ASSERT(inResult.mFraction < mContact.mFraction);
+
 	if (inResult.mFraction > 0.0f // Ignore collisions at fraction = 0
 		&& inResult.mPenetrationAxis.Dot(mDisplacement) > 0.0f) // Ignore penetrations that we're moving away from
 	{
@@ -89,14 +92,18 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 		{
 			const Body &body = lock.GetBody();
 
-			mContacts.emplace_back();
-			Contact &contact = mContacts.back();
+			// Convert the hit result into a contact
+			Contact contact;
 			sFillContactProperties(contact, body, mUp, mBaseOffset, *this, inResult);
 			contact.mFraction = inResult.mFraction;
-
-			// Protection from excess of contact points
-			if (mContacts.size() == mMaxHits)
-				ForceEarlyOut();
+			
+			// Check if the contact that will make us penetrate more than the allowed tolerance
+			if (contact.mDistance + contact.mContactNormal.Dot(mDisplacement) < -mCharacter->mCollisionTolerance
+				&& mCharacter->ValidateContact(contact))
+			{
+				mContact = contact;
+				UpdateEarlyOutFraction(contact.mFraction);
+			}
 		}
 	}
 }
@@ -224,29 +231,16 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	settings.mReturnDeepestPoint = false;
 
 	// Cast shape
-	TempContactList contacts(inAllocator);
-	contacts.reserve(mMaxNumHits);
-	ContactCastCollector collector(mSystem, inDisplacement, mMaxNumHits, mUp, inIgnoredContacts, start.GetTranslation(), contacts);
+	Contact contact;
+	contact.mFraction = 1.0f + FLT_EPSILON;
+	ContactCastCollector collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, start.GetTranslation(), contact);
 	RShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
 	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, start.GetTranslation(), collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
-	if (contacts.empty())
+	if (contact.mBodyB.IsInvalid())
 		return false;
 
-	// Sort the contacts on fraction
-	QuickSort(contacts.begin(), contacts.end(), [](const Contact &inLHS, const Contact &inRHS) { return inLHS.mFraction < inRHS.mFraction; });
-
-	// Check the first contact that will make us penetrate more than the allowed tolerance
-	bool valid_contact = false;
-	for (const Contact &c : contacts)
-		if (c.mDistance + c.mContactNormal.Dot(inDisplacement) < -mCollisionTolerance
-			&& ValidateContact(c))
-		{
-			outContact = c;
-			valid_contact = true;
-			break;
-		}
-	if (!valid_contact)
-		return false;
+	// Store contact
+	outContact = contact;
 
 	// Fetch the face we're colliding with
 	TransformedShape ts = mSystem->GetBodyInterface().GetTransformedShape(outContact.mBodyB);

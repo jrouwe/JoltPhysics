@@ -325,7 +325,7 @@ private:
 	class ContactCastCollector : public CastShapeCollector
 	{
 	public:
-										ContactCastCollector(PhysicsSystem *inSystem, Vec3Arg inDisplacement, uint inMaxHits, Vec3Arg inUp, const IgnoredContactList &inIgnoredContacts, RVec3Arg inBaseOffset, TempContactList &outContacts) : mBaseOffset(inBaseOffset), mDisplacement(inDisplacement), mUp(inUp), mSystem(inSystem), mIgnoredContacts(inIgnoredContacts), mContacts(outContacts), mMaxHits(inMaxHits) { }
+										ContactCastCollector(PhysicsSystem *inSystem, const CharacterVirtual *inCharacter, Vec3Arg inDisplacement, Vec3Arg inUp, const IgnoredContactList &inIgnoredContacts, RVec3Arg inBaseOffset, Contact &outContact) : mBaseOffset(inBaseOffset), mDisplacement(inDisplacement), mUp(inUp), mSystem(inSystem), mCharacter(inCharacter), mIgnoredContacts(inIgnoredContacts), mContact(outContact) { }
 
 		virtual void					AddHit(const ShapeCastResult &inResult) override;
 
@@ -333,9 +333,9 @@ private:
 		Vec3							mDisplacement;
 		Vec3							mUp;
 		PhysicsSystem *					mSystem;
+		const CharacterVirtual *		mCharacter;
 		const IgnoredContactList &		mIgnoredContacts;
-		TempContactList &				mContacts;
-		uint							mMaxHits;
+		Contact &						mContact;
 	};
 
 	// Helper function to convert a Jolt collision result into a contact
