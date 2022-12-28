@@ -547,8 +547,8 @@ TEST_SUITE("CharacterVirtualTests")
 		BodyID cylinder_id = ctx.GetBodyInterface().CreateAndAddBody(mesh_cylinder, EActivation::DontActivate);
 
 		// End positions that can be reached by character
-		Vec3 pos_end(0.5f * cCylinderLength - character_radius, 1, 0);
-		Vec3 neg_end(-0.5f * cCylinderLength + character_radius, 1, 0);
+		RVec3 pos_end(0.5_r * cCylinderLength - character_radius, 1, 0);
+		RVec3 neg_end(-0.5_r * cCylinderLength + character_radius, 1, 0);
 
 		// Move towards positive cap and test if we hit the end
 		character.mHorizontalSpeed = Vec3(cCylinderLength, 0, 0);
@@ -585,8 +585,8 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
 			CHECK(character.mCharacter->GetActiveContacts().size() == character.mCharacter->GetMaxNumHits());
 		}
-		Vec3 cur_pos = character.mCharacter->GetPosition();
-		CHECK((pos_end - cur_pos).Length() > 0.01f);
+		RVec3 cur_pos = character.mCharacter->GetPosition();
+		CHECK((pos_end - cur_pos).Length() > 0.01_r);
 
 		// Move towards negative cap and test that we got stuck
 		character.mHorizontalSpeed = Vec3(-cCylinderLength, 0, 0);
@@ -599,7 +599,7 @@ TEST_SUITE("CharacterVirtualTests")
 		CHECK(cur_pos.IsClose(character.mCharacter->GetPosition(), 1.0e-6f));
 
 		// Now teleport the character next to the half cylinder
-		character.mCharacter->SetPosition(Vec3(0, 0, 1.0f));
+		character.mCharacter->SetPosition(RVec3(0, 0, 1));
 
 		// Move in positive X and check that we did not exceed max hits and that we were able to move unimpeded
 		character.mHorizontalSpeed = Vec3(cCylinderLength, 0, 0);
@@ -611,6 +611,6 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK(character.mCharacter->GetGroundBodyID() == floor.GetID());
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
-		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), Vec3(cCylinderLength, 0, 1.0f), 1.0e-4f);
+		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(cCylinderLength, 0, 1), 1.0e-4f);
 	}
 }
