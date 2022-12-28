@@ -487,4 +487,130 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), expected_position, 1.0e-2f);
 		}
 	}
+
+	TEST_CASE("TestContactPointLimit")
+	{
+		PhysicsTestContext ctx;
+		Body &floor = ctx.CreateFloor();
+
+		// Create character at the origin
+		Character character(ctx);
+		character.mInitialPosition = RVec3(0, 1, 0);
+		character.mUpdateSettings.mStickToFloorStepDown = Vec3::sZero();
+		character.mUpdateSettings.mWalkStairsStepUp = Vec3::sZero();
+		character.Create();
+
+		// Radius including pading
+		const float character_radius = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
+
+		// Create a half cylinder with caps for testing contact point limit
+		VertexList vertices;
+		IndexedTriangleList triangles;
+
+		// The half cylinder
+		const int cPosSegments = 2;
+		const int cAngleSegments = 768;
+		const float cCylinderLength = 2.0f;
+		for (int pos = 0; pos < cPosSegments; ++pos)
+			for (int angle = 0; angle < cAngleSegments; ++angle)
+			{
+				uint32 start = (uint32)vertices.size();
+
+				float radius = character_radius + 0.01f;
+				float angle_rad = (-0.5f + float(angle) / cAngleSegments) * JPH_PI;
+				float s = Sin(angle_rad);
+				float c = Cos(angle_rad);
+				float x = cCylinderLength * (-0.5f + float(pos) / (cPosSegments - 1));
+				float y = angle == 0 || angle == cAngleSegments - 1? 0.5f : (1.0f - c) * radius;
+				float z = s * radius;
+				vertices.push_back(Float3(x, y, z));
+
+				if (pos > 0 && angle > 0)
+				{
+					triangles.push_back(IndexedTriangle(start, start - 1, start - cAngleSegments));
+					triangles.push_back(IndexedTriangle(start - 1, start - cAngleSegments - 1, start - cAngleSegments));
+				}
+			}
+
+		// Add end caps
+		uint32 end = cAngleSegments * (cPosSegments - 1);
+		for (int angle = 0; angle < cAngleSegments - 1; ++angle)
+		{
+			triangles.push_back(IndexedTriangle(0, angle + 1, angle));
+			triangles.push_back(IndexedTriangle(end, end + angle, end + angle + 1));
+		}
+
+		// Create test body
+		MeshShapeSettings mesh(vertices, triangles);
+		mesh.SetEmbedded();
+		BodyCreationSettings mesh_cylinder(&mesh, character.mInitialPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyID cylinder_id = ctx.GetBodyInterface().CreateAndAddBody(mesh_cylinder, EActivation::DontActivate);
+
+		// End positions that can be reached by character
+		RVec3 pos_end(0.5_r * cCylinderLength - character_radius, 1, 0);
+		RVec3 neg_end(-0.5_r * cCylinderLength + character_radius, 1, 0);
+
+		// Move towards positive cap and test if we hit the end
+		character.mHorizontalSpeed = Vec3(cCylinderLength, 0, 0);
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(character.mCharacter->GetMaxHitsExceeded());
+			CHECK(character.mCharacter->GetActiveContacts().size() < character.mCharacter->GetMaxNumHits());
+			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
+			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
+		}
+		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), pos_end, 1.0e-4f);
+
+		// Move towards negative cap and test if we hit the end
+		character.mHorizontalSpeed = Vec3(-cCylinderLength, 0, 0);
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(character.mCharacter->GetMaxHitsExceeded());
+			CHECK(character.mCharacter->GetActiveContacts().size() < character.mCharacter->GetMaxNumHits());
+			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
+			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
+		}
+		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), neg_end, 1.0e-4f);
+
+		// Turn off contact point reduction
+		character.mCharacter->SetHitReductionCosMaxAngle(-1.0f);
+
+		// Move towards positive cap and test that we did not reach the end
+		character.mHorizontalSpeed = Vec3(cCylinderLength, 0, 0);
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(character.mCharacter->GetMaxHitsExceeded());
+			CHECK(character.mCharacter->GetActiveContacts().size() == character.mCharacter->GetMaxNumHits());
+		}
+		RVec3 cur_pos = character.mCharacter->GetPosition();
+		CHECK((pos_end - cur_pos).Length() > 0.01_r);
+
+		// Move towards negative cap and test that we got stuck
+		character.mHorizontalSpeed = Vec3(-cCylinderLength, 0, 0);
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(character.mCharacter->GetMaxHitsExceeded());
+			CHECK(character.mCharacter->GetActiveContacts().size() == character.mCharacter->GetMaxNumHits());
+		}
+		CHECK(cur_pos.IsClose(character.mCharacter->GetPosition(), 1.0e-6f));
+
+		// Now teleport the character next to the half cylinder
+		character.mCharacter->SetPosition(RVec3(0, 0, 1));
+
+		// Move in positive X and check that we did not exceed max hits and that we were able to move unimpeded
+		character.mHorizontalSpeed = Vec3(cCylinderLength, 0, 0);
+		for (int t = 0; t < 60; ++t)
+		{
+			character.Step();
+			CHECK(!character.mCharacter->GetMaxHitsExceeded());
+			CHECK(character.mCharacter->GetActiveContacts().size() == 1); // We should only hit the floor
+			CHECK(character.mCharacter->GetGroundBodyID() == floor.GetID());
+			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
+		}
+		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(cCylinderLength, 0, 1), 1.0e-4f);
+	}
 }

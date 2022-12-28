@@ -68,6 +68,7 @@ static const float cMeshWallWidth = 2.0f;
 static const float cMeshWallStepStart = 0.5f;
 static const float cMeshWallStepEnd = 4.0f;
 static const int cMeshWallSegments = 25;
+static const RVec3 cHalfCylinderPosition(5.0f, 0, 8.0f);
 
 void CharacterBaseTest::Initialize()
 {
@@ -360,6 +361,50 @@ void CharacterBaseTest::Initialize()
 			mesh.SetEmbedded();
 			BodyCreationSettings wall(&mesh, cMeshWallPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(wall, EActivation::DontActivate);
+		}
+
+		// Create a half cylinder with caps for testing contact point limit
+		{
+			VertexList vertices;
+			IndexedTriangleList triangles;
+
+			// The half cylinder
+			const int cPosSegments = 2;
+			const int cAngleSegments = 512;
+			const float cCylinderLength = 2.0f;
+			for (int pos = 0; pos < cPosSegments; ++pos)
+				for (int angle = 0; angle < cAngleSegments; ++angle)
+				{
+					uint32 start = (uint32)vertices.size();
+
+					float radius = cCharacterRadiusStanding + 0.05f;
+					float angle_rad = (-0.5f + float(angle) / cAngleSegments) * JPH_PI;
+					float s = Sin(angle_rad);
+					float c = Cos(angle_rad);
+					float x = cCylinderLength * (-0.5f + float(pos) / (cPosSegments - 1));
+					float y = angle == 0 || angle == cAngleSegments - 1? 0.5f : (1.0f - c) * radius;
+					float z = s * radius;
+					vertices.push_back(Float3(x, y, z));
+
+					if (pos > 0 && angle > 0)
+					{
+						triangles.push_back(IndexedTriangle(start, start - 1, start - cAngleSegments));
+						triangles.push_back(IndexedTriangle(start - 1, start - cAngleSegments - 1, start - cAngleSegments));
+					}
+				}
+
+			// Add end caps
+			uint32 end = cAngleSegments * (cPosSegments - 1);
+			for (int angle = 0; angle < cAngleSegments - 1; ++angle)
+			{
+				triangles.push_back(IndexedTriangle(0, angle + 1, angle));
+				triangles.push_back(IndexedTriangle(end, end + angle, end + angle + 1));
+			}
+
+			MeshShapeSettings mesh(vertices, triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings mesh_cylinder(&mesh, cHalfCylinderPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(mesh_cylinder, EActivation::DontActivate);
 		}
 	}
 	else
