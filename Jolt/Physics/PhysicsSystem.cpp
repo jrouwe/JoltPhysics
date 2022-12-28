@@ -1421,7 +1421,7 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 					mp->SetAngularVelocity(mp->GetAngularVelocity() * Vec3(0, 0, 1));
 
 					// Calculate how much the body position should be corrected to stay in the XY plane
-					body_correction = body.GetPosition() * Vec3(0, 0, -1);
+					body_correction = Vec3(body.GetPosition()) * Vec3(0, 0, -1);
 				}
 			}
 

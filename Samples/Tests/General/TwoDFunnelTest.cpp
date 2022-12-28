@@ -23,8 +23,8 @@ void TwoDFunnelTest::Initialize()
 	RefConst<Shape> wall = new BoxShape(Vec3(0.1f, 10, 1));
 
 	// 2D funnel
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, Vec3(-12, 8, 0), Quat::sRotation(Vec3::sAxisZ(), 0.2f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, Vec3(12, 8, 0), Quat::sRotation(Vec3::sAxisZ(), -0.2f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, RVec3(-12, 8, 0), Quat::sRotation(Vec3::sAxisZ(), 0.2f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, RVec3(12, 8, 0), Quat::sRotation(Vec3::sAxisZ(), -0.2f * JPH_PI), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Shapes falling in 2D funnel
 	Ref<Shape> shapes[] = {
@@ -32,13 +32,13 @@ void TwoDFunnelTest::Initialize()
 		new BoxShape(Vec3::sReplicate(0.5f)),
 		new CapsuleShape(0.2f, 0.3f)
 	};
-	BodyCreationSettings bcs(shapes[0], Vec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings bcs(shapes[0], RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	bcs.mAllowedDOF = EAllowedDOF::XYPlane;
 	for (int x = 0; x < 20; ++x)
 		for (int y = 0; y < 10; ++y)
 		{
 			bcs.SetShape(shapes[(x * y) % size(shapes)]);
-			bcs.mPosition = Vec3(-10.0f + x, 10.0f + y, 0);
+			bcs.mPosition = RVec3(-10.0_r + x, 10.0_r + y, 0);
 			mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 		}
 }
