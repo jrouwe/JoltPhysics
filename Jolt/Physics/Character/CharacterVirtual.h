@@ -141,6 +141,10 @@ public:
 	uint								GetMaxNumHits() const									{ return mMaxNumHits; }
 	void								SetMaxNumHits(uint inMaxHits)							{ mMaxNumHits = inMaxHits; }
 
+	/// Cos(angle) where angle is the maximum angle between two hits contact normals that are allowed to be merged during hit reduction. Default is around 2.5 degrees. Set to -1 to turn off.
+	float								GetHitReductionCosMaxAngle() const						{ return mHitReductionCosMaxAngle; }
+	void								SetHitReductionCosMaxAngle(float inCosMaxAngle)			{ mHitReductionCosMaxAngle = inCosMaxAngle; }
+
 	/// Returns if we exceeded the maximum number of hits during the last collision check and had to discard hits based on distance.
 	/// This can be used to find areas that have too complex geometry for the character to navigate properly.
 	/// To solve you can either increase the max number of hits or simplify the geometry. Note that the character simulation will

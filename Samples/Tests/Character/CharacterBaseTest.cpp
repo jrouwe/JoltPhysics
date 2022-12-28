@@ -68,7 +68,7 @@ static const float cMeshWallWidth = 2.0f;
 static const float cMeshWallStepStart = 0.5f;
 static const float cMeshWallStepEnd = 4.0f;
 static const int cMeshWallSegments = 25;
-static const RVec3 cHalfCylinderPosition(6.0f, 0, 8.0f);
+static const RVec3 cHalfCylinderPosition(5.0f, 0, 8.0f);
 
 void CharacterBaseTest::Initialize()
 {
@@ -368,9 +368,10 @@ void CharacterBaseTest::Initialize()
 			VertexList vertices;
 			IndexedTriangleList triangles;
 
-			// The cylinder
+			// The half cylinder
 			const int cPosSegments = 2;
 			const int cAngleSegments = 512;
+			const float cCylinderLength = 2.0f;
 			for (int pos = 0; pos < cPosSegments; ++pos)
 				for (int angle = 0; angle < cAngleSegments; ++angle)
 				{
@@ -380,7 +381,7 @@ void CharacterBaseTest::Initialize()
 					float angle_rad = (-0.5f + float(angle) / cAngleSegments) * JPH_PI;
 					float s = Sin(angle_rad);
 					float c = Cos(angle_rad);
-					float x = -2.0f + 4.0f * pos / cPosSegments;
+					float x = cCylinderLength * (-0.5f + float(pos) / (cPosSegments - 1));
 					float y = angle == 0 || angle == cAngleSegments - 1? 0.5f : (1.0f - c) * radius;
 					float z = s * radius;
 					vertices.push_back(Float3(x, y, z));
