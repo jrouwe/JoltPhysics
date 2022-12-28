@@ -37,6 +37,7 @@ public:
 	float								mCollisionTolerance = 1.0e-3f;							///< How far we're willing to penetrate geometry
 	float								mCharacterPadding = 0.02f;								///< How far we try to stay away from the geometry, this ensures that the sweep will hit as little as possible lowering the collision cost and reducing the risk of getting stuck
 	uint								mMaxNumHits = 256;										///< Max num hits to collect in order to avoid excess of contact points collection
+	float								mHitReductionCosMaxAngle = 0.999f;						///< Cos(angle) where angle is the maximum angle between two hits contact normals that are allowed to be merged during hit reduction. Default is around 2.5 degrees. Set to -1 to turn off.
 	float								mPenetrationRecoverySpeed = 1.0f;						///< This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
 };
 
@@ -139,6 +140,12 @@ public:
 	/// Max num hits to collect in order to avoid excess of contact points collection
 	uint								GetMaxNumHits() const									{ return mMaxNumHits; }
 	void								SetMaxNumHits(uint inMaxHits)							{ mMaxNumHits = inMaxHits; }
+
+	/// Returns if we exceeded the maximum number of hits during the last collision check and had to discard hits based on distance.
+	/// This can be used to find areas that have too complex geometry for the character to navigate properly.
+	/// To solve you can either increase the max number of hits or simplify the geometry. Note that the character simulation will
+	/// try to do its best to select the most relevant contacts to avoid the character from getting stuck.
+	bool								GetMaxHitsExceeded() const								{ return mMaxHitsExceeded; }
 
 	/// An extra offset applied to the shape in local space. This allows applying an extra offset to the shape in local space. Note that setting it on the fly can cause the shape to teleport into collision.
 	Vec3								GetShapeOffset() const									{ return mShapeOffset; }
@@ -310,7 +317,7 @@ private:
 	class ContactCollector : public CollideShapeCollector
 	{
 	public:
-										ContactCollector(PhysicsSystem *inSystem, uint inMaxHits, Vec3Arg inUp, RVec3Arg inBaseOffset, TempContactList &outContacts) : mBaseOffset(inBaseOffset), mUp(inUp), mSystem(inSystem), mContacts(outContacts), mMaxHits(inMaxHits) { }
+										ContactCollector(PhysicsSystem *inSystem, uint inMaxHits, float inHitReductionCosMaxAngle, Vec3Arg inUp, RVec3Arg inBaseOffset, TempContactList &outContacts) : mBaseOffset(inBaseOffset), mUp(inUp), mSystem(inSystem), mContacts(outContacts), mMaxHits(inMaxHits), mHitReductionCosMaxAngle(inHitReductionCosMaxAngle) { }
 
 		virtual void					AddHit(const CollideShapeResult &inResult) override;
 
@@ -319,6 +326,8 @@ private:
 		PhysicsSystem *					mSystem;
 		TempContactList &				mContacts;
 		uint							mMaxHits;
+		float							mHitReductionCosMaxAngle;
+		bool							mMaxHitsExceeded = false;
 	};
 
 	// A collision collector that collects hits for CastShape
@@ -400,6 +409,7 @@ private:
 	float								mCollisionTolerance;									// How far we're willing to penetrate geometry
 	float								mCharacterPadding;										// How far we try to stay away from the geometry, this ensures that the sweep will hit as little as possible lowering the collision cost and reducing the risk of getting stuck
 	uint								mMaxNumHits;											// Max num hits to collect in order to avoid excess of contact points collection
+	float								mHitReductionCosMaxAngle;								// Cos(angle) where angle is the maximum angle between two hits contact normals that are allowed to be merged during hit reduction. Default is around 2.5 degrees. Set to -1 to turn off.
 	float								mPenetrationRecoverySpeed;								// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
 
 	// Character mass (kg)
@@ -425,6 +435,9 @@ private:
 
 	// Remembers the delta time of the last update
 	float								mLastDeltaTime = 1.0f / 60.0f;
+
+	// Remember if we exceeded the maximum number of hits and had to remove similar contacts
+	mutable bool						mMaxHitsExceeded = false;
 };
 
 JPH_NAMESPACE_END

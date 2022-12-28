@@ -27,6 +27,7 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	mCollisionTolerance(inSettings->mCollisionTolerance),
 	mCharacterPadding(inSettings->mCharacterPadding),
 	mMaxNumHits(inSettings->mMaxNumHits),
+	mHitReductionCosMaxAngle(inSettings->mHitReductionCosMaxAngle),
 	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed),
 	mShapeOffset(inSettings->mShapeOffset),
 	mPosition(inPosition),
@@ -58,6 +59,60 @@ void CharacterVirtual::sFillContactProperties(Contact &outContact, const Body &i
 
 void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResult)
 {
+	// If we exceed our contact limit, try to clean up near-duplicate contacts
+	if (mContacts.size() == mMaxHits)
+	{
+		// Flag that we hit this code path
+		mMaxHitsExceeded = true;
+
+		// Check if we can do reduction
+		if (mHitReductionCosMaxAngle > -1.0f)
+		{
+			// Loop all contacts and find similar contacts
+			for (int i = (int)mContacts.size() - 1; i >= 0; --i)
+			{
+				Contact &contact_i = mContacts[i];
+				for (int j = i - 1; j >= 0; --j)
+				{
+					Contact &contact_j = mContacts[j];
+					if (contact_i.mBodyB == contact_j.mBodyB // Same body
+						&& contact_i.mContactNormal.Dot(contact_j.mContactNormal) > mHitReductionCosMaxAngle) // Very similar contact normals
+					{
+						// Remove the contact with the biggest distance
+						bool i_is_last = i == (int)mContacts.size() - 1;
+						if (contact_i.mDistance > contact_j.mDistance)
+						{
+							// Remove i
+							if (!i_is_last)
+								contact_i = mContacts.back();
+							mContacts.pop_back();
+
+							// Break out of the loop, i is now an element that we already processed
+							break;
+						}
+						else
+						{
+							// Remove j
+							contact_j = mContacts.back();
+							mContacts.pop_back();
+
+							// If i was the last element, we just moved it into position j. Break out of the loop, we'll see it again later.
+							if (i_is_last)
+								break;
+						}
+					}
+				}
+			}
+		}
+
+		if (mContacts.size() == mMaxHits)
+		{
+			// There are still too many hits, give up!
+			ForceEarlyOut();
+			return;
+		}
+	}
+
 	BodyLockRead lock(mSystem->GetBodyLockInterface(), inResult.mBodyID2);
 	if (lock.SucceededAndIsInBroadPhase())
 	{
@@ -67,10 +122,6 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 		Contact &contact = mContacts.back();
 		sFillContactProperties(contact, body, mUp, mBaseOffset, *this, inResult);
 		contact.mFraction = 0.0f;
-
-		// Protection from excess of contact points
-		if (mContacts.size() == mMaxHits)
-			ForceEarlyOut();
 	}
 }
 
@@ -130,8 +181,11 @@ void CharacterVirtual::GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMove
 	outContacts.clear();
 
 	// Collide shape
-	ContactCollector collector(mSystem, mMaxNumHits, mUp, mPosition, outContacts);
+	ContactCollector collector(mSystem, mMaxNumHits, mHitReductionCosMaxAngle, mUp, mPosition, outContacts);
 	CheckCollision(inPosition, mRotation, inMovementDirection, mPredictiveContactDistance, inShape, mPosition, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+
+	// Flag if we exceeded the max number of hits
+	mMaxHitsExceeded = collector.mMaxHitsExceeded;
 
 	// Reduce distance to contact by padding to ensure we stay away from the object by a little margin
 	// (this will make collision detection cheaper - especially for sweep tests as they won't hit the surface if we're properly sliding)
