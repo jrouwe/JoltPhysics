@@ -90,6 +90,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(ContactListenerTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(SensorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(DynamicMeshTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(TwoDFunnelTest)
 
 static TestNameAndRTTI sGeneralTests[] =
 {
@@ -98,6 +99,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Wall",								JPH_RTTI(WallTest) },
 	{ "Island",								JPH_RTTI(IslandTest) },
 	{ "Funnel",								JPH_RTTI(FunnelTest) },
+	{ "2D Funnel",							JPH_RTTI(TwoDFunnelTest) },
 	{ "Friction",							JPH_RTTI(FrictionTest) },
 	{ "Friction (Per Triangle)",			JPH_RTTI(FrictionPerTriangleTest) },
 	{ "Gravity Factor",						JPH_RTTI(GravityFactorTest) },

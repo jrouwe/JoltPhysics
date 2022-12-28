@@ -123,6 +123,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/SimpleTest.h
 	${SAMPLES_ROOT}/Tests/General/StackTest.cpp
 	${SAMPLES_ROOT}/Tests/General/StackTest.h
+	${SAMPLES_ROOT}/Tests/General/TwoDFunnelTest.cpp
+	${SAMPLES_ROOT}/Tests/General/TwoDFunnelTest.h
 	${SAMPLES_ROOT}/Tests/General/WallTest.cpp
 	${SAMPLES_ROOT}/Tests/General/WallTest.h
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.cpp
