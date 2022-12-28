@@ -68,7 +68,7 @@ static const float cMeshWallWidth = 2.0f;
 static const float cMeshWallStepStart = 0.5f;
 static const float cMeshWallStepEnd = 4.0f;
 static const int cMeshWallSegments = 25;
-static const RVec3 cHalfCylinderPosition(7.5f, 0, 7.5f);
+static const RVec3 cHalfCylinderPosition(6.0f, 0, 8.0f);
 
 void CharacterBaseTest::Initialize()
 {
@@ -363,24 +363,27 @@ void CharacterBaseTest::Initialize()
 			mBodyInterface->CreateAndAddBody(wall, EActivation::DontActivate);
 		}
 
-		// Create a half cylinder for testing contact point limit
+		// Create a half cylinder with caps for testing contact point limit
 		{
-			const int cPosSegments = 2;
-			const int cAngleSegments = 512;
-
 			VertexList vertices;
 			IndexedTriangleList triangles;
 
+			// The cylinder
+			const int cPosSegments = 2;
+			const int cAngleSegments = 512;
 			for (int pos = 0; pos < cPosSegments; ++pos)
 				for (int angle = 0; angle < cAngleSegments; ++angle)
 				{
 					uint32 start = (uint32)vertices.size();
 
-					float x = -2.0f + 4.0f * pos / cPosSegments;
+					float radius = cCharacterRadiusStanding + 0.05f;
 					float angle_rad = (-0.5f + float(angle) / cAngleSegments) * JPH_PI;
 					float s = Sin(angle_rad);
 					float c = Cos(angle_rad);
-					vertices.push_back(Float3(x, (1.0f - c) * cCharacterRadiusStanding, s * cCharacterRadiusStanding));
+					float x = -2.0f + 4.0f * pos / cPosSegments;
+					float y = angle == 0 || angle == cAngleSegments - 1? 0.5f : (1.0f - c) * radius;
+					float z = s * radius;
+					vertices.push_back(Float3(x, y, z));
 
 					if (pos > 0 && angle > 0)
 					{
@@ -388,6 +391,14 @@ void CharacterBaseTest::Initialize()
 						triangles.push_back(IndexedTriangle(start - 1, start - cAngleSegments - 1, start - cAngleSegments));
 					}
 				}
+
+			// Add end caps
+			uint32 end = cAngleSegments * (cPosSegments - 1);
+			for (int angle = 0; angle < cAngleSegments - 1; ++angle)
+			{
+				triangles.push_back(IndexedTriangle(0, angle + 1, angle));
+				triangles.push_back(IndexedTriangle(end, end + angle, end + angle + 1));
+			}
 
 			MeshShapeSettings mesh(vertices, triangles);
 			mesh.SetEmbedded();
