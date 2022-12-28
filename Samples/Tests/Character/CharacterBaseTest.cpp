@@ -68,6 +68,7 @@ static const float cMeshWallWidth = 2.0f;
 static const float cMeshWallStepStart = 0.5f;
 static const float cMeshWallStepEnd = 4.0f;
 static const int cMeshWallSegments = 25;
+static const RVec3 cHalfCylinderPosition(7.5f, 0, 7.5f);
 
 void CharacterBaseTest::Initialize()
 {
@@ -360,6 +361,38 @@ void CharacterBaseTest::Initialize()
 			mesh.SetEmbedded();
 			BodyCreationSettings wall(&mesh, cMeshWallPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(wall, EActivation::DontActivate);
+		}
+
+		// Create a half cylinder for testing contact point limit
+		{
+			const int cPosSegments = 2;
+			const int cAngleSegments = 512;
+
+			VertexList vertices;
+			IndexedTriangleList triangles;
+
+			for (int pos = 0; pos < cPosSegments; ++pos)
+				for (int angle = 0; angle < cAngleSegments; ++angle)
+				{
+					uint32 start = (uint32)vertices.size();
+
+					float x = -2.0f + 4.0f * pos / cPosSegments;
+					float angle_rad = (-0.5f + float(angle) / cAngleSegments) * JPH_PI;
+					float s = Sin(angle_rad);
+					float c = Cos(angle_rad);
+					vertices.push_back(Float3(x, (1.0f - c) * cCharacterRadiusStanding, s * cCharacterRadiusStanding));
+
+					if (pos > 0 && angle > 0)
+					{
+						triangles.push_back(IndexedTriangle(start, start - 1, start - cAngleSegments));
+						triangles.push_back(IndexedTriangle(start - 1, start - cAngleSegments - 1, start - cAngleSegments));
+					}
+				}
+
+			MeshShapeSettings mesh(vertices, triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings mesh_cylinder(&mesh, cHalfCylinderPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(mesh_cylinder, EActivation::DontActivate);
 		}
 	}
 	else
