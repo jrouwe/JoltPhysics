@@ -3,7 +3,7 @@
 
 #pragma once
 
-#define JPH_ENABLE_DETERMINISM_LOG
+//#define JPH_ENABLE_DETERMINISM_LOG
 #ifdef JPH_ENABLE_DETERMINISM_LOG
 
 #include <Jolt/Physics/Body/BodyID.h>
