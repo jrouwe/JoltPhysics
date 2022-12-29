@@ -134,7 +134,7 @@ private:
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	/// Factor to scale convex hull when debug drawing the construction process
-	static constexpr float cDrawScale = 10.0f;
+	static constexpr Real cDrawScale = 10;
 #endif
 
 	/// Class that holds an edge including start and end index
@@ -267,7 +267,7 @@ private:
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)	
-	mutable Vec3		mOffset;							///< Offset to use for state drawing
+	mutable RVec3		mOffset;							///< Offset to use for state drawing
 	Vec3				mDelta;								///< Delta offset between next states
 #endif
 };

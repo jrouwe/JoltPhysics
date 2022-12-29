@@ -918,7 +918,7 @@ private:
 	/// Draw state of algorithm
 	void		DrawState()
 	{
-		Mat44 origin = Mat44::sTranslation(mOffset);
+		RMat44 origin = RMat44::sTranslation(mOffset);
 
 		// Draw origin
 		DebugRenderer::sInstance->DrawCoordinateSystem(origin, 1.0f);
@@ -930,20 +930,20 @@ private:
 		for (int i = 0; i < mNumPoints; ++i)
 		{
 			// Draw support point
-			Vec3 y_i = origin * mY[i];
+			RVec3 y_i = origin * mY[i];
 			DebugRenderer::sInstance->DrawMarker(y_i, Color::sRed, 1.0f);
 			for (int j = i + 1; j < mNumPoints; ++j)
 			{
 				// Draw edge
-				Vec3 y_j = origin * mY[j];
+				RVec3 y_j = origin * mY[j];
 				DebugRenderer::sInstance->DrawLine(y_i, y_j, Color::sRed);
 				for (int k = j + 1; k < mNumPoints; ++k)
 				{
 					// Make sure triangle faces the origin
-					Vec3 y_k = origin * mY[k];
-					Vec3 center = (y_i + y_j + y_k) / 3.0f;
-					Vec3 normal = (y_j - y_i).Cross(y_k - y_i);
-					if (normal.Dot(center) < 0.0f)
+					RVec3 y_k = origin * mY[k];
+					RVec3 center = (y_i + y_j + y_k) / Real(3);
+					RVec3 normal = (y_j - y_i).Cross(y_k - y_i);
+					if (normal.Dot(center) < Real(0))
 						DebugRenderer::sInstance->DrawTriangle(y_i, y_j, y_k, Color::sLightGrey);
 					else
 						DebugRenderer::sInstance->DrawTriangle(y_i, y_k, y_j, Color::sLightGrey);
@@ -963,7 +963,7 @@ private:
 
 #ifdef JPH_GJK_DEBUG
 	DebugRenderer::GeometryRef	mGeometry;	///< A visualization of the minkowski difference for state drawing
-	Vec3		mOffset = Vec3::sZero();	///< Offset to use for state drawing
+	RVec3		mOffset = RVec3::sZero();	///< Offset to use for state drawing
 #endif
 };
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-//#define JPH_ENABLE_DETERMINISM_LOG
+#define JPH_ENABLE_DETERMINISM_LOG
 #ifdef JPH_ENABLE_DETERMINISM_LOG
 
 #include <Jolt/Physics/Body/BodyID.h>
@@ -23,6 +23,11 @@ private:
 	JPH_INLINE uint32		Convert(float inValue) const
 	{
 		return *(uint32 *)&inValue;
+	}
+
+	JPH_INLINE uint64		Convert(double inValue) const
+	{
+		return *(uint64 *)&inValue;
 	}
 
 public:
@@ -92,6 +97,12 @@ public:
 		return *this;
 	}
 	
+	DeterminismLog &		operator << (DVec3Arg inValue)
+	{
+		mLog << std::hex << std::setw(16) << Convert(inValue.GetX()) << " " << std::setw(16) << Convert(inValue.GetY()) << " " << std::setw(16) << Convert(inValue.GetZ());
+		return *this;
+	}
+	
 	DeterminismLog &		operator << (Vec4Arg inValue)
 	{
 		mLog << std::hex << std::setw(8) << Convert(inValue.GetX()) << " " << std::setw(8) << Convert(inValue.GetY()) << " " << std::setw(8) << Convert(inValue.GetZ()) << " " << std::setw(8) << Convert(inValue.GetW());
@@ -107,6 +118,12 @@ public:
 	DeterminismLog &		operator << (Mat44Arg inValue)
 	{
 		*this << inValue.GetColumn4(0) << " " << inValue.GetColumn4(1) << " " << inValue.GetColumn4(2) << " " << inValue.GetColumn4(3);
+		return *this;
+	}
+
+	DeterminismLog &		operator << (DMat44Arg inValue)
+	{
+		*this << inValue.GetColumn4(0) << " " << inValue.GetColumn4(1) << " " << inValue.GetColumn4(2) << " " << inValue.GetTranslation();
 		return *this;
 	}
 
