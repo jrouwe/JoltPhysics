@@ -93,6 +93,8 @@ private:
 	JobSystem *				mJobSystem = nullptr;										// The job system that runs physics jobs
 	JobSystem *				mJobSystemValidating = nullptr;								// The job system to use when validating determinism
 	BPLayerInterfaceImpl	mBroadPhaseLayerInterface;									// The broadphase layer interface that maps object layers to broadphase layers
+	ObjectVsBroadPhaseLayerFilterImpl mObjectVsBroadPhaseLayerFilter;					// Class that filters object vs broadphase layers
+	ObjectLayerPairFilterImpl mObjectVsObjectLayerFilter;								// Class that filters object vs object layers
 	PhysicsSystem *			mPhysicsSystem = nullptr;									// The physics system that simulates the world
 	ContactListenerImpl *	mContactListener = nullptr;									// Contact listener implementation
 	PhysicsSettings			mPhysicsSettings;											// Main physics simulation settings

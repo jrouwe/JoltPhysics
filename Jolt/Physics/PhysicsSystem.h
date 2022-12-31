@@ -34,12 +34,12 @@ public:
 	/// Initialize the system.
 	/// @param inMaxBodies Maximum number of bodies to support.
 	/// @param inNumBodyMutexes Number of body mutexes to use. Should be a power of 2 in the range [1, 64], use 0 to auto detect.
-	/// @param inMaxBodyPairs Maximum amount of body pairs to process (anything else will fall through the world), this number should generally be much higher than the max amount of contact points as there will be lots of bodies close that are not actually touching
-	/// @param inMaxContactConstraints Maximum amount of contact constraints to process (anything else will fall through the world)
-	/// @param inBroadPhaseLayerInterface Information on the mapping of object layers to broad phase layers, note since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem
-	/// @param inObjectVsBroadPhaseLayerFilter Filter callback function that is used to determine if an object layer collides with a broad phase layer.
-	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide.
-	void						Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter);
+	/// @param inMaxBodyPairs Maximum amount of body pairs to process (anything else will fall through the world), this number should generally be much higher than the max amount of contact points as there will be lots of bodies close that are not actually touching.
+	/// @param inMaxContactConstraints Maximum amount of contact constraints to process (anything else will fall through the world).
+	/// @param inBroadPhaseLayerInterface Information on the mapping of object layers to broad phase layers. Since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem.
+	/// @param inObjectVsBroadPhaseLayerFilter Filter callback function that is used to determine if an object layer collides with a broad phase layer. Since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem.
+	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide. Since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem.
+	void						Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, const ObjectLayerPairFilter &inObjectLayerPairFilter);
 	
 	/// Listener that is notified whenever a body is activated/deactivated
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
@@ -137,10 +137,10 @@ public:
 	inline const BodyLockInterfaceLocking &	GetBodyLockInterface() const					{ return mBodyLockInterfaceLocking; }
 
 	/// Get an broadphase layer filter that uses the default pair filter and a specified object layer to determine if broadphase layers collide
-	DefaultBroadPhaseLayerFilter GetDefaultBroadPhaseLayerFilter(ObjectLayer inLayer) const	{ return DefaultBroadPhaseLayerFilter(mObjectVsBroadPhaseLayerFilter, inLayer); }
+	DefaultBroadPhaseLayerFilter GetDefaultBroadPhaseLayerFilter(ObjectLayer inLayer) const	{ return DefaultBroadPhaseLayerFilter(*mObjectVsBroadPhaseLayerFilter, inLayer); }
 
 	/// Get an object layer filter that uses the default pair filter and a specified layer to determine if layers collide
-	DefaultObjectLayerFilter	GetDefaultLayerFilter(ObjectLayer inLayer) const			{ return DefaultObjectLayerFilter(mObjectLayerPairFilter, inLayer); }
+	DefaultObjectLayerFilter	GetDefaultLayerFilter(ObjectLayer inLayer) const			{ return DefaultObjectLayerFilter(*mObjectLayerPairFilter, inLayer); }
 
 	/// Gets the current amount of bodies that are in the body manager
 	uint						GetNumBodies() const										{ return mBodyManager.GetNumBodies(); }
@@ -218,10 +218,10 @@ private:
 	static constexpr int		cNumCCDBodiesPerJob = 4;
 
 	/// Broadphase layer filter that decides if two objects can collide
-	ObjectVsBroadPhaseLayerFilter mObjectVsBroadPhaseLayerFilter = nullptr;
+	const ObjectVsBroadPhaseLayerFilter *mObjectVsBroadPhaseLayerFilter = nullptr;
 
 	/// Object layer filter that decides if two objects can collide
-	ObjectLayerPairFilter		mObjectLayerPairFilter = nullptr;
+	const ObjectLayerPairFilter *mObjectLayerPairFilter = nullptr;
 
 	/// The body manager keeps track which bodies are in the simulation
 	BodyManager					mBodyManager;

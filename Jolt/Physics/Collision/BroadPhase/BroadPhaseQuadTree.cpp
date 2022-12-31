@@ -535,7 +535,7 @@ void BroadPhaseQuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollecto
 	CastAABoxNoLock(inBox, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
-void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const 
+void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, const ObjectLayerPairFilter &inObjectLayerPairFilter, BodyPairCollector &ioPairCollector) const 
 { 
 	JPH_PROFILE_FUNCTION();
 
@@ -562,7 +562,7 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 		for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
 		{
 			const QuadTree &tree = mLayers[l];
-			if (tree.HasBodies() && inObjectVsBroadPhaseLayerFilter(object_layer, BroadPhaseLayer(l)))
+			if (tree.HasBodies() && inObjectVsBroadPhaseLayerFilter.ShouldCollide(object_layer, BroadPhaseLayer(l)))
 			{
 				JPH_PROFILE(tree.GetName());
 				tree.FindCollidingPairs(bodies, b_start, int(b_mid - b_start), inSpeculativeContactDistance, ioPairCollector, inObjectLayerPairFilter);

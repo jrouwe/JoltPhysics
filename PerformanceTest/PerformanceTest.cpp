@@ -186,6 +186,12 @@ int main(int argc, char** argv)
 	// Create mapping table from object layer to broadphase layer
 	BPLayerInterfaceImpl broad_phase_layer_interface;
 
+	// Create class that filters object vs broadphase layers
+	ObjectVsBroadPhaseLayerFilterImpl object_vs_broadphase_layer_filter;
+
+	// Create class that filters object vs object layers
+	ObjectLayerPairFilterImpl object_vs_object_layer_filter;
+
 	// Start profiling this program
 	JPH_PROFILE_START("Main");
 
@@ -219,7 +225,7 @@ int main(int argc, char** argv)
 
 			// Create physics system
 			PhysicsSystem physics_system;
-			physics_system.Init(10240, 0, 65536, 10240, broad_phase_layer_interface, BroadPhaseCanCollide, ObjectCanCollide);
+			physics_system.Init(10240, 0, 65536, 10240, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
 
 			// Start test scene
 			scene->StartTest(physics_system, motion_quality);

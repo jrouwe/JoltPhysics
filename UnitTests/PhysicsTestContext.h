@@ -85,6 +85,8 @@ private:
 	TempAllocator *		mTempAllocator;
 	JobSystem *			mJobSystem;
 	BPLayerInterfaceImpl mBroadPhaseLayerInterface;
+	ObjectVsBroadPhaseLayerFilterImpl mObjectVsBroadPhaseLayerFilter;
+	ObjectLayerPairFilterImpl mObjectVsObjectLayerFilter;
 	PhysicsSystem *		mSystem;
 	float				mDeltaTime;
 	int					mCollisionSteps;

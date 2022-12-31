@@ -245,7 +245,7 @@ public:
 	void						CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const;
 
 	/// Find all colliding pairs between dynamic bodies, calls ioPairCollector for every pair found
-	void						FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, ObjectLayerPairFilter inObjectLayerPairFilter) const;
+	void						FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, const ObjectLayerPairFilter &inObjectLayerPairFilter) const;
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
 	/// Trace the stats of this tree to the TTY

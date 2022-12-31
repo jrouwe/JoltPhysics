@@ -24,7 +24,9 @@ void LoadSaveBinaryTest::Initialize()
 		// Create a new scene by instantiating the scene in a physics system and then converting it back to a scene
 		PhysicsSystem system;
 		BPLayerInterfaceImpl layer_interface;
-		system.Init(mPhysicsSystem->GetMaxBodies(), 0, 1024, 1024, layer_interface, BroadPhaseCanCollide, ObjectCanCollide);
+		ObjectVsBroadPhaseLayerFilterImpl object_vs_broadphase_layer_filter;
+		ObjectLayerPairFilterImpl object_vs_object_layer_filter;
+		system.Init(mPhysicsSystem->GetMaxBodies(), 0, 1024, 1024, layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
 		scene->CreateBodies(&system);
 		Ref<PhysicsScene> scene_copy = new PhysicsScene();
 		scene_copy->FromPhysicsSystem(&system);

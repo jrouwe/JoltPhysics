@@ -563,7 +563,7 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 	// Create physics system
 	mPhysicsSystem = new PhysicsSystem();
-	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, mBroadPhaseLayerInterface, BroadPhaseCanCollide, ObjectCanCollide);
+	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, mBroadPhaseLayerInterface, mObjectVsBroadPhaseLayerFilter, mObjectVsObjectLayerFilter);
 	mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings);
 
 	// Restore gravity
