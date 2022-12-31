@@ -64,10 +64,10 @@ PhysicsSystem::~PhysicsSystem()
 	delete mBroadPhase;
 }
 
-void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter)
+void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, const ObjectLayerPairFilter &inObjectLayerPairFilter)
 { 
-	mObjectVsBroadPhaseLayerFilter = inObjectVsBroadPhaseLayerFilter;
-	mObjectLayerPairFilter = inObjectLayerPairFilter;
+	mObjectVsBroadPhaseLayerFilter = &inObjectVsBroadPhaseLayerFilter;
+	mObjectLayerPairFilter = &inObjectLayerPairFilter;
 
 	// Initialize body manager
 	mBodyManager.Init(inMaxBodies, inNumBodyMutexes, inBroadPhaseLayerInterface); 
@@ -867,7 +867,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				memcpy(active_bodies, mBodyManager.GetActiveBodiesUnsafe() + active_bodies_read_idx, batch_size * sizeof(BodyID));
 
 				// Find pairs in the broadphase
-				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, mObjectVsBroadPhaseLayerFilter, mObjectLayerPairFilter, add_pair);
+				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, *mObjectVsBroadPhaseLayerFilter, *mObjectLayerPairFilter, add_pair);
 
 				// Check if we have enough pairs in the buffer to start a new job
 				const PhysicsUpdateContext::BodyPairQueue &queue = ioStep->mBodyPairQueues[inJobIndex];
