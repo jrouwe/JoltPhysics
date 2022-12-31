@@ -69,6 +69,7 @@ static const float cMeshWallStepStart = 0.5f;
 static const float cMeshWallStepEnd = 4.0f;
 static const int cMeshWallSegments = 25;
 static const RVec3 cHalfCylinderPosition(5.0f, 0, 8.0f);
+static const RVec3 cMeshBoxPosition(30.0f, 1.5f, 5.0f);
 
 void CharacterBaseTest::Initialize()
 {
@@ -405,6 +406,40 @@ void CharacterBaseTest::Initialize()
 			mesh.SetEmbedded();
 			BodyCreationSettings mesh_cylinder(&mesh, cHalfCylinderPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(mesh_cylinder, EActivation::DontActivate);
+		}
+
+		// Create a box made out of polygons (character should not get stuck behind back facing side)
+		{
+			VertexList vertices = {
+				Float3(-1,  1, -1),
+				Float3( 1,  1, -1),
+				Float3( 1,  1,  1),
+				Float3(-1,  1,  1),
+				Float3(-1, -1, -1),
+				Float3( 1, -1, -1),
+				Float3( 1, -1,  1),
+				Float3(-1, -1,  1)
+			};
+
+			IndexedTriangleList triangles = {
+				IndexedTriangle(0, 3, 2),
+				IndexedTriangle(0, 2, 1),
+				IndexedTriangle(4, 5, 6),
+				IndexedTriangle(4, 6, 7),
+				IndexedTriangle(0, 4, 3),
+				IndexedTriangle(3, 4, 7),
+				IndexedTriangle(2, 6, 5),
+				IndexedTriangle(2, 5, 1),
+				IndexedTriangle(3, 7, 6),
+				IndexedTriangle(3, 6, 2),
+				IndexedTriangle(0, 1, 5),
+				IndexedTriangle(0, 5, 4)
+			};
+
+			MeshShapeSettings mesh(vertices, triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings box(&mesh, cMeshBoxPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(box, EActivation::DontActivate);
 		}
 	}
 	else
