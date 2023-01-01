@@ -178,8 +178,8 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 		# Also turn off automatic fused multiply add contractions, there doesn't seem to be a way to do this selectively through the macro JPH_PRECISE_MATH_OFF
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment -Wno-stringop-overflow -ffp-contract=off")
 	else()
-		# Do not use -ffast-math or -ffp-contract=on since it cannot be turned off in a single compilation unit under clang, see Core.h
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise -ffp-contract=off")
+		# Do not use -ffast-math since it cannot be turned off in a single compilation unit under clang, see Core.h
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise")
 	endif()
 
 	# Platform specific compiler flags
