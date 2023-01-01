@@ -157,20 +157,11 @@ namespace ClosestPoint
 		// We first check which of the edges is shorter and if bc is shorter than ac then we swap a with c to a is always on the shortest edge
 		Vec3 ac = inC - inA;
 		Vec3 bc = inC - inB;
-		bool swap_ac = bc.LengthSq() < ac.LengthSq();
-		Vec3 a, c;
-		if (swap_ac)
-		{
-			a = inC;
-			c = inA;
-			ac = -ac;
-			bc = c - inB;
-		}
-		else
-		{
-			a = inA;
-			c = inC;
-		}
+		UVec4 swap_ac = Vec4::sLess(bc.DotV4(bc), ac.DotV4(ac));
+		Vec3 a = Vec3::sSelect(inA, inC, swap_ac);
+		Vec3 c = Vec3::sSelect(inC, inA, swap_ac);
+		ac = c - a;
+		bc = c - inB;
 
 		// Calculate normal
 		Vec3 ab = inB - a;
@@ -217,7 +208,7 @@ namespace ClosestPoint
 		float d2 = ac.Dot(ap); 
 		if (d1 <= 0.0f && d2 <= 0.0f)
 		{
-			outSet = swap_ac? 0b0100 : 0b0001;
+			outSet = swap_ac.TestAnyTrue()? 0b0100 : 0b0001;
 			return a; // barycentric coordinates (1,0,0)
 		}
 
@@ -236,7 +227,7 @@ namespace ClosestPoint
 		if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) 
 		{ 
 			float v = d1 / (d1 - d3); 
-			outSet = swap_ac? 0b0110 : 0b0011;
+			outSet = swap_ac.TestAnyTrue()? 0b0110 : 0b0011;
 			return a + v * ab; // barycentric coordinates (1-v,v,0) 
 		}
 
@@ -246,7 +237,7 @@ namespace ClosestPoint
 		float d6 = ac.Dot(cp); 
 		if (d6 >= 0.0f && d5 <= d6) 
 		{
-			outSet = swap_ac? 0b0001 : 0b0100;
+			outSet = swap_ac.TestAnyTrue()? 0b0001 : 0b0100;
 			return c; // barycentric coordinates (0,0,1)
 		}
 
@@ -266,7 +257,7 @@ namespace ClosestPoint
 		if (va <= 0.0f && d4_d3 >= 0.0f && d5_d6 >= 0.0f) 
 		{ 
 			float w = d4_d3 / (d4_d3 + d5_d6); 
-			outSet = swap_ac? 0b0011 : 0b0110;
+			outSet = swap_ac.TestAnyTrue()? 0b0011 : 0b0110;
 			return inB + w * bc; // barycentric coordinates (0,1-w,w) 
 		}
 
