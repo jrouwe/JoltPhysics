@@ -384,8 +384,8 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#define JPH_PRECISE_MATH_OFF
 #elif defined(JPH_COMPILER_CLANG)
 	// We compile without -ffast-math because it cannot be turned off for a single compilation unit
-	// If FMA is on, we need to turn it off
-	#ifdef __FMA__
+	// On clang 14 and later we can turn off float contraction through a pragma, so if FMA is on we can disable it through this macro
+	#if __clang_major__ >= 14 && defined(JPH_USE_FMADD)
 		#define JPH_PRECISE_MATH_ON					\
 			_Pragma("clang fp contract(off)")
 		#define JPH_PRECISE_MATH_OFF				\
