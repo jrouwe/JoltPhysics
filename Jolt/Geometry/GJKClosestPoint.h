@@ -924,7 +924,7 @@ private:
 		DebugRenderer::sInstance->DrawCoordinateSystem(origin, 1.0f);
 
 		// Draw the hull
-		DebugRenderer::sInstance->DrawGeometry(origin, mGeometry->mBounds, mGeometry->mBounds.GetExtent().LengthSq(), Color::sYellow, mGeometry);
+		DebugRenderer::sInstance->DrawGeometry(origin, mGeometry->mBounds.Transformed(origin), mGeometry->mBounds.GetExtent().LengthSq(), Color::sYellow, mGeometry);
 
 		// Draw Y
 		for (int i = 0; i < mNumPoints; ++i)
