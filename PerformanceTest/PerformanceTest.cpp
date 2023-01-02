@@ -73,6 +73,7 @@ int main(int argc, char** argv)
 	bool validate_state = false;
 	unique_ptr<PerformanceTestScene> scene;
 	const char *validate_hash = nullptr;
+	int repeat = 1;
 	for (int argidx = 1; argidx < argc; ++argidx)
 	{
 		const char *arg = argv[argidx];
@@ -143,6 +144,11 @@ int main(int argc, char** argv)
 		{
 			validate_hash = arg + 15;
 		}
+		else if (strncmp(arg, "-repeat=", 8) == 0)
+		{
+			// Parse repeat count
+			repeat = atoi(arg + 8);
+		}
 		else if (strcmp(arg, "-h") == 0)
 		{
 			// Print usage
@@ -157,7 +163,8 @@ int main(int argc, char** argv)
 				 << "-no_sleep: Disable sleeping" << endl
 				 << "-rs: Record state" << endl
 				 << "-vs: Validate state" << endl
-				 << "-validate_hash=<hash>: Validate hash (return 0 if successful, 1 if failed)" << endl;
+				 << "-validate_hash=<hash>: Validate hash (return 0 if successful, 1 if failed)" << endl
+				 << "-repeat=<num>: Repeat all tests <num> times" << endl;
 			return 0;
 		}
 	}
@@ -198,200 +205,204 @@ int main(int argc, char** argv)
 	// Trace header
 	cout << "Motion Quality, Thread Count, Steps / Second, Hash" << endl;
 
-	// Iterate motion qualities
-	for (uint mq = 0; mq < 2; ++mq)
+	// Repeat test
+	for (int r = 0; r < repeat; ++r)
 	{
-		// Skip quality if another was specified
-		if (specified_quality != -1 && mq != (uint)specified_quality)
-			continue;
-
-		// Determine motion quality
-		EMotionQuality motion_quality = mq == 0? EMotionQuality::Discrete : EMotionQuality::LinearCast;
-		String motion_quality_str = mq == 0? "Discrete" : "LinearCast";
-
-		// Determine which thread counts to test
-		Array<uint> thread_permutations;
-		if (specified_threads > 0)
-			thread_permutations.push_back((uint)specified_threads - 1);
-		else
-			for (uint num_threads = 0; num_threads < thread::hardware_concurrency(); ++num_threads)
-				thread_permutations.push_back(num_threads);
-
-		// Test thread permutations
-		for (uint num_threads : thread_permutations)
+		// Iterate motion qualities
+		for (uint mq = 0; mq < 2; ++mq)
 		{
-			// Create job system with desired number of threads
-			JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, num_threads);
+			// Skip quality if another was specified
+			if (specified_quality != -1 && mq != (uint)specified_quality)
+				continue;
 
-			// Create physics system
-			PhysicsSystem physics_system;
-			physics_system.Init(10240, 0, 65536, 10240, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+			// Determine motion quality
+			EMotionQuality motion_quality = mq == 0? EMotionQuality::Discrete : EMotionQuality::LinearCast;
+			String motion_quality_str = mq == 0? "Discrete" : "LinearCast";
 
-			// Start test scene
-			scene->StartTest(physics_system, motion_quality);
+			// Determine which thread counts to test
+			Array<uint> thread_permutations;
+			if (specified_threads > 0)
+				thread_permutations.push_back((uint)specified_threads - 1);
+			else
+				for (uint num_threads = 0; num_threads < thread::hardware_concurrency(); ++num_threads)
+					thread_permutations.push_back(num_threads);
 
-			// Disable sleeping if requested
-			if (disable_sleep)
+			// Test thread permutations
+			for (uint num_threads : thread_permutations)
 			{
-				const BodyLockInterface &bli = physics_system.GetBodyLockInterfaceNoLock();
-				BodyIDVector body_ids;
-				physics_system.GetBodies(body_ids);
-				for (BodyID id : body_ids)
+				// Create job system with desired number of threads
+				JobSystemThreadPool job_system(cMaxPhysicsJobs, cMaxPhysicsBarriers, num_threads);
+
+				// Create physics system
+				PhysicsSystem physics_system;
+				physics_system.Init(10240, 0, 65536, 10240, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+
+				// Start test scene
+				scene->StartTest(physics_system, motion_quality);
+
+				// Disable sleeping if requested
+				if (disable_sleep)
 				{
-					BodyLockWrite lock(bli, id);
-					if (lock.Succeeded())
+					const BodyLockInterface &bli = physics_system.GetBodyLockInterfaceNoLock();
+					BodyIDVector body_ids;
+					physics_system.GetBodies(body_ids);
+					for (BodyID id : body_ids)
 					{
-						Body &body = lock.GetBody();
-						if (!body.IsStatic())
-							body.SetAllowSleeping(false);
+						BodyLockWrite lock(bli, id);
+						if (lock.Succeeded())
+						{
+							Body &body = lock.GetBody();
+							if (!body.IsStatic())
+								body.SetAllowSleeping(false);
+						}
 					}
 				}
-			}
 
-			// Optimize the broadphase to prevent an expensive first frame
-			physics_system.OptimizeBroadPhase();
+				// Optimize the broadphase to prevent an expensive first frame
+				physics_system.OptimizeBroadPhase();
 
-			// A tag used to identify the test
-			String tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
+				// A tag used to identify the test
+				String tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
 					     
-		#ifdef JPH_DEBUG_RENDERER
-			// Open renderer output
-			ofstream renderer_file;
-			if (enable_debug_renderer)
-				renderer_file.open(("performance_test_" + tag + ".jor").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
-			StreamOutWrapper renderer_stream(renderer_file);
-			DebugRendererRecorder renderer(renderer_stream);
-		#endif // JPH_DEBUG_RENDERER
-
-			// Open per frame timing output
-			ofstream per_frame_file;
-			if (enable_per_frame_recording)
-			{
-				per_frame_file.open(("per_frame_" + tag + ".csv").c_str(), ofstream::out | ofstream::trunc);
-				per_frame_file << "Frame, Time (ms)" << endl;
-			}
-
-			ofstream record_state_file;
-			ifstream validate_state_file;
-			if (record_state)
-				record_state_file.open(("state_" + ToLower(motion_quality_str) + ".bin").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
-			else if (validate_state)
-				validate_state_file.open(("state_" + ToLower(motion_quality_str) + ".bin").c_str(), ifstream::in | ifstream::binary);
-
-			chrono::nanoseconds total_duration(0);
-
-			// Step the world for a fixed amount of iterations
-			for (uint iterations = 0; iterations < max_iterations; ++iterations)
-			{
-				JPH_PROFILE_NEXTFRAME();
-				JPH_DET_LOG("Iteration: " << iterations);
-
-				// Start measuring
-				chrono::high_resolution_clock::time_point clock_start = chrono::high_resolution_clock::now();
-
-				// Do a physics step
-				physics_system.Update(cDeltaTime, 1, 1, &temp_allocator, &job_system);
-
-				// Stop measuring
-				chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
-				chrono::nanoseconds duration = chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
-				total_duration += duration;
-
 			#ifdef JPH_DEBUG_RENDERER
+				// Open renderer output
+				ofstream renderer_file;
 				if (enable_debug_renderer)
-				{
-					// Draw the state of the world
-					BodyManager::DrawSettings settings;
-					physics_system.DrawBodies(settings, &renderer);
-
-					// Mark end of frame
-					renderer.EndFrame();
-				}
+					renderer_file.open(("performance_test_" + tag + ".jor").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
+				StreamOutWrapper renderer_stream(renderer_file);
+				DebugRendererRecorder renderer(renderer_stream);
 			#endif // JPH_DEBUG_RENDERER
 
-				// Record time taken this iteration
+				// Open per frame timing output
+				ofstream per_frame_file;
 				if (enable_per_frame_recording)
-					per_frame_file << iterations << ", " << (1.0e-6 * duration.count()) << endl;
-
-				// Dump profile information every 100 iterations
-				if (enable_profiler && iterations % 100 == 0)
 				{
-					JPH_PROFILE_DUMP(tag + "_it" + ConvertToString(iterations));
+					per_frame_file.open(("per_frame_" + tag + ".csv").c_str(), ofstream::out | ofstream::trunc);
+					per_frame_file << "Frame, Time (ms)" << endl;
 				}
 
+				ofstream record_state_file;
+				ifstream validate_state_file;
 				if (record_state)
-				{
-					// Record state
-					StateRecorderImpl recorder;
-					physics_system.SaveState(recorder);
-
-					// Write to file
-					string data = recorder.GetData();
-					size_t size = data.size();
-					record_state_file.write((char *)&size, sizeof(size));
-					record_state_file.write(data.data(), size);
-				}
+					record_state_file.open(("state_" + ToLower(motion_quality_str) + ".bin").c_str(), ofstream::out | ofstream::binary | ofstream::trunc);
 				else if (validate_state)
+					validate_state_file.open(("state_" + ToLower(motion_quality_str) + ".bin").c_str(), ifstream::in | ifstream::binary);
+
+				chrono::nanoseconds total_duration(0);
+
+				// Step the world for a fixed amount of iterations
+				for (uint iterations = 0; iterations < max_iterations; ++iterations)
 				{
-					// Read state
-					size_t size = 0;
-					validate_state_file.read((char *)&size, sizeof(size));
-					string data;
-					data.resize(size);
-					validate_state_file.read(data.data(), size);
+					JPH_PROFILE_NEXTFRAME();
+					JPH_DET_LOG("Iteration: " << iterations);
 
-					// Copy to validator
-					StateRecorderImpl validator;
-					validator.WriteBytes(data.data(), size);
+					// Start measuring
+					chrono::high_resolution_clock::time_point clock_start = chrono::high_resolution_clock::now();
 
-					// Validate state
-					validator.SetValidating(true);
-					physics_system.RestoreState(validator);
+					// Do a physics step
+					physics_system.Update(cDeltaTime, 1, 1, &temp_allocator, &job_system);
+
+					// Stop measuring
+					chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
+					chrono::nanoseconds duration = chrono::duration_cast<chrono::nanoseconds>(clock_end - clock_start);
+					total_duration += duration;
+
+				#ifdef JPH_DEBUG_RENDERER
+					if (enable_debug_renderer)
+					{
+						// Draw the state of the world
+						BodyManager::DrawSettings settings;
+						physics_system.DrawBodies(settings, &renderer);
+
+						// Mark end of frame
+						renderer.EndFrame();
+					}
+				#endif // JPH_DEBUG_RENDERER
+
+					// Record time taken this iteration
+					if (enable_per_frame_recording)
+						per_frame_file << iterations << ", " << (1.0e-6 * duration.count()) << endl;
+
+					// Dump profile information every 100 iterations
+					if (enable_profiler && iterations % 100 == 0)
+					{
+						JPH_PROFILE_DUMP(tag + "_it" + ConvertToString(iterations));
+					}
+
+					if (record_state)
+					{
+						// Record state
+						StateRecorderImpl recorder;
+						physics_system.SaveState(recorder);
+
+						// Write to file
+						string data = recorder.GetData();
+						size_t size = data.size();
+						record_state_file.write((char *)&size, sizeof(size));
+						record_state_file.write(data.data(), size);
+					}
+					else if (validate_state)
+					{
+						// Read state
+						size_t size = 0;
+						validate_state_file.read((char *)&size, sizeof(size));
+						string data;
+						data.resize(size);
+						validate_state_file.read(data.data(), size);
+
+						// Copy to validator
+						StateRecorderImpl validator;
+						validator.WriteBytes(data.data(), size);
+
+						// Validate state
+						validator.SetValidating(true);
+						physics_system.RestoreState(validator);
+					}
+
+				#ifdef JPH_ENABLE_DETERMINISM_LOG
+					const BodyLockInterface &bli = physics_system.GetBodyLockInterfaceNoLock();
+					BodyIDVector body_ids;
+					physics_system.GetBodies(body_ids);
+					for (BodyID id : body_ids)
+					{
+						BodyLockRead lock(bli, id);
+						const Body &body = lock.GetBody();
+						if (!body.IsStatic())
+							JPH_DET_LOG(id << ": p: " << body.GetPosition() << " r: " << body.GetRotation() << " v: " << body.GetLinearVelocity() << " w: " << body.GetAngularVelocity());
+					}
+				#endif // JPH_ENABLE_DETERMINISM_LOG
 				}
 
-			#ifdef JPH_ENABLE_DETERMINISM_LOG
-				const BodyLockInterface &bli = physics_system.GetBodyLockInterfaceNoLock();
+				// Calculate hash of all positions and rotations of the bodies
+				uint64 hash = HashBytes(nullptr, 0); // Ensure we start with the proper seed
+				BodyInterface &bi = physics_system.GetBodyInterfaceNoLock();
 				BodyIDVector body_ids;
 				physics_system.GetBodies(body_ids);
 				for (BodyID id : body_ids)
 				{
-					BodyLockRead lock(bli, id);
-					const Body &body = lock.GetBody();
-					if (!body.IsStatic())
-						JPH_DET_LOG(id << ": p: " << body.GetPosition() << " r: " << body.GetRotation() << " v: " << body.GetLinearVelocity() << " w: " << body.GetAngularVelocity());
+					RVec3 pos = bi.GetPosition(id);
+					hash = HashBytes(&pos, 3 * sizeof(Real), hash);
+					Quat rot = bi.GetRotation(id);
+					hash = HashBytes(&rot, sizeof(Quat), hash);
 				}
-			#endif // JPH_ENABLE_DETERMINISM_LOG
-			}
 
-			// Calculate hash of all positions and rotations of the bodies
-			uint64 hash = HashBytes(nullptr, 0); // Ensure we start with the proper seed
-			BodyInterface &bi = physics_system.GetBodyInterfaceNoLock();
-			BodyIDVector body_ids;
-			physics_system.GetBodies(body_ids);
-			for (BodyID id : body_ids)
-			{
-				RVec3 pos = bi.GetPosition(id);
-				hash = HashBytes(&pos, 3 * sizeof(Real), hash);
-				Quat rot = bi.GetRotation(id);
-				hash = HashBytes(&rot, sizeof(Quat), hash);
-			}
+				// Convert hash to string
+				stringstream hash_stream;
+				hash_stream << "0x" << hex << hash << dec;
+				string hash_str = hash_stream.str();
 
-			// Convert hash to string
-			stringstream hash_stream;
-			hash_stream << "0x" << hex << hash << dec;
-			string hash_str = hash_stream.str();
+				// Stop test scene
+				scene->StopTest(physics_system);
 
-			// Stop test scene
-			scene->StopTest(physics_system);
+				// Trace stat line
+				cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", " << hash_str << endl;
 
-			// Trace stat line
-			cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", " << hash_str << endl;
-
-			// Check hash code
-			if (validate_hash != nullptr && hash_str != validate_hash)
-			{
-				cout << "Fail hash validation. Was: " << hash_str << ", expected: " << validate_hash << endl;
-				return 1;
+				// Check hash code
+				if (validate_hash != nullptr && hash_str != validate_hash)
+				{
+					cout << "Fail hash validation. Was: " << hash_str << ", expected: " << validate_hash << endl;
+					return 1;
+				}
 			}
 		}
 	}
