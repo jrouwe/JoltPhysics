@@ -155,16 +155,18 @@ namespace ClosestPoint
 		// The difference in normals is most pronounced when one edge is much smaller than the others (in which case the other 2 must have roughly the same length).
 		// Therefore we can suffice by just picking the shortest from 2 edges and use that with the 3rd edge to calculate the normal.
 		// We first check which of the edges is shorter and if bc is shorter than ac then we swap a with c to a is always on the shortest edge
-		Vec3 ac = inC - inA;
-		Vec3 bc = inC - inB;
-		UVec4 swap_ac = Vec4::sLess(bc.DotV4(bc), ac.DotV4(ac));
+		UVec4 swap_ac;
+		{
+			Vec3 ac = inC - inA;
+			Vec3 bc = inC - inB;
+			swap_ac = Vec4::sLess(bc.DotV4(bc), ac.DotV4(ac));
+		}
 		Vec3 a = Vec3::sSelect(inA, inC, swap_ac);
 		Vec3 c = Vec3::sSelect(inC, inA, swap_ac);
-		ac = c - a;
-		bc = c - inB;
 
 		// Calculate normal
 		Vec3 ab = inB - a;
+		Vec3 ac = c - a;
 		Vec3 n = ab.Cross(ac);
 		float n_len_sq = n.LengthSq();
 
@@ -223,8 +225,7 @@ namespace ClosestPoint
 		}
 
 		// Check if P in edge region of AB, if so return projection of P onto AB 
-		float vc = d1 * d4 - d3 * d2; 
-		if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) 
+		if (d1 * d4 <= d3 * d2 && d1 >= 0.0f && d3 <= 0.0f) 
 		{ 
 			float v = d1 / (d1 - d3); 
 			outSet = swap_ac.TestAnyTrue()? 0b0110 : 0b0011;
@@ -242,8 +243,7 @@ namespace ClosestPoint
 		}
 
 		// Check if P in edge region of AC, if so return projection of P onto AC 
-		float vb = d5 * d2 - d1 * d6; 
-		if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f) 
+		if (d5 * d2 <= d1 * d6 && d2 >= 0.0f && d6 <= 0.0f) 
 		{ 
 			float w = d2 / (d2 - d6); 
 			outSet = 0b0101;
@@ -251,14 +251,13 @@ namespace ClosestPoint
 		}
 
 		// Check if P in edge region of BC, if so return projection of P onto BC 
-		float va = d3 * d6 - d5 * d4;
 		float d4_d3 = d4 - d3;
 		float d5_d6 = d5 - d6;
-		if (va <= 0.0f && d4_d3 >= 0.0f && d5_d6 >= 0.0f) 
+		if (d3 * d6 <= d5 * d4 && d4_d3 >= 0.0f && d5_d6 >= 0.0f) 
 		{ 
 			float w = d4_d3 / (d4_d3 + d5_d6); 
 			outSet = swap_ac.TestAnyTrue()? 0b0011 : 0b0110;
-			return inB + w * bc; // barycentric coordinates (0,1-w,w) 
+			return inB + w * (c - inB); // barycentric coordinates (0,1-w,w) 
 		}
 
 		// P inside face region.
