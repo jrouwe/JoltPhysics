@@ -182,8 +182,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-model=precise")
 
 		# On clang 14 and later we can turn off float contraction through a pragma, older versions need it off always, see Core.h
-		# Note that this does not seem to work on ARM so we turn fp contract off there always
-		if (CMAKE_CXX_COMPILER_VERSION LESS 14 OR CROSS_COMPILE_ARM OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
+		if (CMAKE_CXX_COMPILER_VERSION LESS 14)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffp-contract=off")
 		endif()
 	endif()
