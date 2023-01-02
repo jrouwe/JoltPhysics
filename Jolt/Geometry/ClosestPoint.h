@@ -150,22 +150,24 @@ namespace ClosestPoint
 		// Taken from: Real-Time Collision Detection - Christer Ericson (Section: Closest Point on Triangle to Point)
 		// With p = 0
 
-		// Calculate edges
-		Vec3 ab = inB - inA; 
-		Vec3 ac = inC - inA; 
-		Vec3 bc = inC - inB;
-
 		// The most accurate normal is calculated by using the two shortest edges
 		// See: https://box2d.org/posts/2014/01/troublesome-triangle/
 		// The difference in normals is most pronounced when one edge is much smaller than the others (in which case the other 2 must have roughly the same length).
 		// Therefore we can suffice by just picking the shortest from 2 edges and use that with the 3rd edge to calculate the normal.
-		// We first check which of the edges is shorter
-		UVec4 bc_shorter_than_ac = Vec4::sLess(bc.DotV4(bc), ac.DotV4(ac));
+		// We first check which of the edges is shorter and if bc is shorter than ac then we swap a with c to a is always on the shortest edge
+		UVec4 swap_ac;
+		{
+			Vec3 ac = inC - inA;
+			Vec3 bc = inC - inB;
+			swap_ac = Vec4::sLess(bc.DotV4(bc), ac.DotV4(ac));
+		}
+		Vec3 a = Vec3::sSelect(inA, inC, swap_ac);
+		Vec3 c = Vec3::sSelect(inC, inA, swap_ac);
 
-		// We calculate both normals and then select the one that had the shortest edge for our normal (this avoids branching)
-		Vec3 normal_bc = ab.Cross(bc);
-		Vec3 normal_ac = ab.Cross(ac);
-		Vec3 n = Vec3::sSelect(normal_ac, normal_bc, bc_shorter_than_ac);
+		// Calculate normal
+		Vec3 ab = inB - a;
+		Vec3 ac = c - a;
+		Vec3 n = ab.Cross(ac);
 		float n_len_sq = n.LengthSq();
 
 		// Check degenerate
@@ -203,13 +205,13 @@ namespace ClosestPoint
 		}
 
 		// Check if P in vertex region outside A 
-		Vec3 ap = -inA; 
+		Vec3 ap = -a; 
 		float d1 = ab.Dot(ap); 
 		float d2 = ac.Dot(ap); 
 		if (d1 <= 0.0f && d2 <= 0.0f)
 		{
-			outSet = 0b0001;
-			return inA; // barycentric coordinates (1,0,0)
+			outSet = swap_ac.TestAnyTrue()? 0b0100 : 0b0001;
+			return a; // barycentric coordinates (1,0,0)
 		}
 
 		// Check if P in vertex region outside B 
@@ -223,42 +225,39 @@ namespace ClosestPoint
 		}
 
 		// Check if P in edge region of AB, if so return projection of P onto AB 
-		float vc = d1 * d4 - d3 * d2; 
-		if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) 
+		if (d1 * d4 <= d3 * d2 && d1 >= 0.0f && d3 <= 0.0f) 
 		{ 
 			float v = d1 / (d1 - d3); 
-			outSet = 0b0011;
-			return inA + v * ab; // barycentric coordinates (1-v,v,0) 
+			outSet = swap_ac.TestAnyTrue()? 0b0110 : 0b0011;
+			return a + v * ab; // barycentric coordinates (1-v,v,0) 
 		}
 
 		// Check if P in vertex region outside C 
-		Vec3 cp = -inC; 
+		Vec3 cp = -c; 
 		float d5 = ab.Dot(cp); 
 		float d6 = ac.Dot(cp); 
 		if (d6 >= 0.0f && d5 <= d6) 
 		{
-			outSet = 0b0100;
-			return inC; // barycentric coordinates (0,0,1)
+			outSet = swap_ac.TestAnyTrue()? 0b0001 : 0b0100;
+			return c; // barycentric coordinates (0,0,1)
 		}
 
 		// Check if P in edge region of AC, if so return projection of P onto AC 
-		float vb = d5 * d2 - d1 * d6; 
-		if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f) 
+		if (d5 * d2 <= d1 * d6 && d2 >= 0.0f && d6 <= 0.0f) 
 		{ 
 			float w = d2 / (d2 - d6); 
 			outSet = 0b0101;
-			return inA + w * ac; // barycentric coordinates (1-w,0,w) 
+			return a + w * ac; // barycentric coordinates (1-w,0,w) 
 		}
 
 		// Check if P in edge region of BC, if so return projection of P onto BC 
-		float va = d3 * d6 - d5 * d4;
 		float d4_d3 = d4 - d3;
 		float d5_d6 = d5 - d6;
-		if (va <= 0.0f && d4_d3 >= 0.0f && d5_d6 >= 0.0f) 
+		if (d3 * d6 <= d5 * d4 && d4_d3 >= 0.0f && d5_d6 >= 0.0f) 
 		{ 
 			float w = d4_d3 / (d4_d3 + d5_d6); 
-			outSet = 0b0110;
-			return inB + w * bc; // barycentric coordinates (0,1-w,w) 
+			outSet = swap_ac.TestAnyTrue()? 0b0011 : 0b0110;
+			return inB + w * (c - inB); // barycentric coordinates (0,1-w,w) 
 		}
 
 		// P inside face region.
@@ -268,7 +267,7 @@ namespace ClosestPoint
 		// Note that this way of calculating the closest point is much more accurate than first calculating barycentric coordinates 
 		// and then calculating the closest point based on those coordinates.
 		outSet = 0b0111;
-		return n * (inA + inB + inC).Dot(n) / (3.0f * n_len_sq);
+		return n * (a + inB + c).Dot(n) / (3.0f * n_len_sq);
 	}
 
 	/// Check if the origin is outside the plane of triangle (inA, inB, inC). inD specifies the front side of the plane.
