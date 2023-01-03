@@ -14,6 +14,9 @@ DVec3::DVec3(Vec3Arg inRHS)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_cvtps_pd(inRHS.mValue);
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_cvtps_pd(inRHS.mValue);
+	mValue.mHigh = _mm_cvtps_pd(_mm_shuffle_ps(inRHS.mValue, inRHS.mValue, _MM_SHUFFLE(2, 2, 2, 2)));
 #else
 	mF64[0] = (double)inRHS.GetX();
 	mF64[1] = (double)inRHS.GetY();
@@ -24,24 +27,18 @@ DVec3::DVec3(Vec3Arg inRHS)
 #endif
 }
 
-DVec3::DVec3(Vec4Arg inRHS)
+DVec3::DVec3(Vec4Arg inRHS) :
+	DVec3(Vec3(inRHS))
 {
-#if defined(JPH_USE_AVX)
-	mValue = sFixW(_mm256_cvtps_pd(inRHS.mValue));
-#else
-	mF64[0] = (double)inRHS.GetX();
-	mF64[1] = (double)inRHS.GetY();
-	mF64[2] = (double)inRHS.GetZ();
-	#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
-		mF64[3] = mF64[2];
-	#endif
-#endif
 }
 
 DVec3::DVec3(double inX, double inY, double inZ)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_set_pd(inZ, inZ, inY, inX); // Assure Z and W are the same
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_set_pd(inY, inX);
+	mValue.mHigh = _mm_set_pd1(inZ);
 #else
 	mF64[0] = inX;
 	mF64[1] = inY;
@@ -60,6 +57,9 @@ DVec3::DVec3(const Double3 &inV)
 	Type z = _mm256_broadcast_sd(&inV.z);
 	Type xy = _mm256_unpacklo_pd(x, y);
 	mValue = _mm256_blend_pd(xy, z, 0b1100); // Assure Z and W are the same
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_load_pd(&inV.x);
+	mValue.mHigh = _mm_set_pd1(inV.z);
 #else
 	mF64[0] = inV.x;
 	mF64[1] = inV.y;
@@ -84,6 +84,11 @@ DVec3::Type DVec3::sFixW(TypeArg inValue)
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	#if defined(JPH_USE_AVX)
 		return _mm256_shuffle_pd(inValue, inValue, 2);
+	#elif defined(JPH_USE_SSE)
+		Type value;
+		value.mLow = inValue.mLow;
+		value.mHigh = _mm_shuffle_pd(inValue.mHigh, inValue.mHigh, 0);
+		return value;
 	#else
 		Type value;
 		value.mData[0] = inValue.mData[0];
@@ -101,6 +106,9 @@ DVec3 DVec3::sZero()
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_setzero_pd();
+#elif defined(JPH_USE_SSE)
+	__m128d zero = _mm_setzero_pd();
+	return DVec3({ zero, zero });
 #else
 	return DVec3(0, 0, 0);
 #endif
@@ -110,6 +118,9 @@ DVec3 DVec3::sReplicate(double inV)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_set1_pd(inV);
+#elif defined(JPH_USE_SSE)
+	__m128d value = _mm_set1_pd(inV);
+	return DVec3({ value, value });
 #else
 	return DVec3(inV, inV, inV);
 #endif
@@ -124,6 +135,10 @@ DVec3 DVec3::sLoadDouble3Unsafe(const Double3 &inV)
 {
 #if defined(JPH_USE_AVX)
 	Type v = _mm256_loadu_pd(&inV.x);
+#elif defined(JPH_USE_SSE)
+	Type v;
+	v.mLow = _mm_loadu_pd(&inV.x);
+	v.mHigh = _mm_set1_pd(inV.z);
 #else
 	Type v = { inV.x, inV.y, inV.z };
 #endif
@@ -141,6 +156,10 @@ DVec3::operator Vec3() const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_cvtpd_ps(mValue);
+#elif defined(JPH_USE_SSE)
+	__m128 low = _mm_cvtpd_ps(mValue.mLow);
+	__m128 high = _mm_cvtpd_ps(mValue.mHigh);
+	return _mm_shuffle_ps(low, high, _MM_SHUFFLE(1, 0, 1, 0));
 #else
 	return Vec3((float)GetX(), (float)GetY(), (float)GetZ());
 #endif
@@ -150,6 +169,8 @@ DVec3 DVec3::sMin(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_min_pd(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_min_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_min_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(min(inV1.mF64[0], inV2.mF64[0]), 
 				 min(inV1.mF64[1], inV2.mF64[1]), 
@@ -161,6 +182,8 @@ DVec3 DVec3::sMax(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_max_pd(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_max_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_max_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(max(inV1.mF64[0], inV2.mF64[0]), 
 				 max(inV1.mF64[1], inV2.mF64[1]), 
@@ -177,6 +200,8 @@ DVec3 DVec3::sEquals(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_cmp_pd(inV1.mValue, inV2.mValue, _CMP_EQ_OQ);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_cmpeq_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmpeq_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(inV1.mF64[0] == inV2.mF64[0]? cTrue : cFalse, 
 				 inV1.mF64[1] == inV2.mF64[1]? cTrue : cFalse, 
@@ -188,6 +213,8 @@ DVec3 DVec3::sLess(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_cmp_pd(inV1.mValue, inV2.mValue, _CMP_LT_OQ);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_cmplt_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmplt_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(inV1.mF64[0] < inV2.mF64[0]? cTrue : cFalse, 
 				 inV1.mF64[1] < inV2.mF64[1]? cTrue : cFalse, 
@@ -199,6 +226,8 @@ DVec3 DVec3::sLessOrEqual(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_cmp_pd(inV1.mValue, inV2.mValue, _CMP_LE_OQ);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_cmple_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmple_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(inV1.mF64[0] <= inV2.mF64[0]? cTrue : cFalse, 
 				 inV1.mF64[1] <= inV2.mF64[1]? cTrue : cFalse, 
@@ -210,6 +239,8 @@ DVec3 DVec3::sGreater(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_cmp_pd(inV1.mValue, inV2.mValue, _CMP_GT_OQ);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_cmpgt_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmpgt_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(inV1.mF64[0] > inV2.mF64[0]? cTrue : cFalse, 
 				 inV1.mF64[1] > inV2.mF64[1]? cTrue : cFalse, 
@@ -221,6 +252,8 @@ DVec3 DVec3::sGreaterOrEqual(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_cmp_pd(inV1.mValue, inV2.mValue, _CMP_GE_OQ);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_cmpge_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_cmpge_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(inV1.mF64[0] >= inV2.mF64[0]? cTrue : cFalse, 
 				 inV1.mF64[1] >= inV2.mF64[1]? cTrue : cFalse, 
@@ -245,6 +278,9 @@ DVec3 DVec3::sSelect(DVec3Arg inV1, DVec3Arg inV2, DVec3Arg inControl)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_blendv_pd(inV1.mValue, inV2.mValue, inControl.mValue);
+#elif defined(JPH_USE_SSE4_1)
+	Type v = { _mm_blendv_pd(inV1.mValue.mLow, inV2.mValue.mLow, inControl.mValue.mLow), _mm_blendv_pd(inV1.mValue.mHigh, inV2.mValue.mHigh, inControl.mValue.mHigh) };
+	return sFixW(v);
 #else
 	DVec3 result;
 	for (int i = 0; i < 3; i++)
@@ -260,6 +296,8 @@ DVec3 DVec3::sOr(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_or_pd(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_or_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_or_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) | BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) | BitCast<uint64>(inV2.mF64[1])),
@@ -271,6 +309,8 @@ DVec3 DVec3::sXor(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_xor_pd(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_xor_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_xor_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) ^ BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) ^ BitCast<uint64>(inV2.mF64[1])),
@@ -282,6 +322,8 @@ DVec3 DVec3::sAnd(DVec3Arg inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_and_pd(inV1.mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_and_pd(inV1.mValue.mLow, inV2.mValue.mLow), _mm_and_pd(inV1.mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(BitCast<double>(BitCast<uint64>(inV1.mF64[0]) & BitCast<uint64>(inV2.mF64[0])),
 				 BitCast<double>(BitCast<uint64>(inV1.mF64[1]) & BitCast<uint64>(inV2.mF64[1])),
@@ -293,6 +335,8 @@ int DVec3::GetTrues() const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_movemask_pd(mValue) & 0x7;
+#elif defined(JPH_USE_SSE)
+	return (_mm_movemask_pd(mValue.mLow) + (_mm_movemask_pd(mValue.mHigh) << 2)) & 0x7;
 #else
 	return int((BitCast<uint64>(mF64[0]) >> 63) | ((BitCast<uint64>(mF64[1]) >> 63) << 1) | ((BitCast<uint64>(mF64[2]) >> 63) << 2));
 #endif
@@ -327,6 +371,8 @@ DVec3 DVec3::operator * (DVec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_mul_pd(mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_mul_pd(mValue.mLow, inV2.mValue.mLow), _mm_mul_pd(mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(mF64[0] * inV2.mF64[0], mF64[1] * inV2.mF64[1], mF64[2] * inV2.mF64[2]);
 #endif
@@ -336,6 +382,9 @@ DVec3 DVec3::operator * (double inV2) const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_mul_pd(mValue, _mm256_set1_pd(inV2));
+#elif defined(JPH_USE_SSE)
+	__m128d v = _mm_set1_pd(inV2);
+	return DVec3({ _mm_mul_pd(mValue.mLow, v), _mm_mul_pd(mValue.mHigh, v) });
 #else
 	return DVec3(mF64[0] * inV2, mF64[1] * inV2, mF64[2] * inV2);
 #endif
@@ -345,6 +394,9 @@ DVec3 operator * (double inV1, DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_mul_pd(_mm256_set1_pd(inV1), inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	__m128d v = _mm_set1_pd(inV1);
+	return DVec3({ _mm_mul_pd(v, inV2.mValue.mLow), _mm_mul_pd(v, inV2.mValue.mHigh) });
 #else
 	return DVec3(inV1 * inV2.mF64[0], inV1 * inV2.mF64[1], inV1 * inV2.mF64[2]);
 #endif
@@ -354,6 +406,9 @@ DVec3 DVec3::operator / (double inV2) const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_div_pd(mValue, _mm256_set1_pd(inV2));
+#elif defined(JPH_USE_SSE)
+	__m128d v = _mm_set1_pd(inV2);
+	return DVec3({ _mm_div_pd(mValue.mLow, v), _mm_div_pd(mValue.mHigh, v) });
 #else
 	return DVec3(mF64[0] / inV2, mF64[1] / inV2, mF64[2] / inV2);
 #endif
@@ -363,6 +418,10 @@ DVec3 &DVec3::operator *= (double inV2)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_mul_pd(mValue, _mm256_set1_pd(inV2));
+#elif defined(JPH_USE_SSE)
+	__m128d v = _mm_set1_pd(inV2);
+	mValue.mLow = _mm_mul_pd(mValue.mLow, v);
+	mValue.mHigh = _mm_mul_pd(mValue.mHigh, v);
 #else
 	for (int i = 0; i < 3; ++i)
 		mF64[i] *= inV2;
@@ -377,6 +436,9 @@ DVec3 &DVec3::operator *= (DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_mul_pd(mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_mul_pd(mValue.mLow, inV2.mValue.mLow);
+	mValue.mHigh = _mm_mul_pd(mValue.mHigh, inV2.mValue.mHigh);
 #else
 	for (int i = 0; i < 3; ++i)
 		mF64[i] *= inV2.mF64[i];
@@ -391,6 +453,10 @@ DVec3 &DVec3::operator /= (double inV2)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_div_pd(mValue, _mm256_set1_pd(inV2));
+#elif defined(JPH_USE_SSE)
+	__m128d v = _mm_set1_pd(inV2);
+	mValue.mLow = _mm_div_pd(mValue.mLow, v);
+	mValue.mHigh = _mm_div_pd(mValue.mHigh, v);
 #else
 	for (int i = 0; i < 3; ++i)
 		mF64[i] /= inV2;
@@ -405,6 +471,8 @@ DVec3 DVec3::operator + (Vec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_add_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_add_pd(mValue.mLow, _mm_cvtps_pd(inV2.mValue)), _mm_add_pd(mValue.mHigh, _mm_cvtps_pd(_mm_shuffle_ps(inV2.mValue, inV2.mValue, _MM_SHUFFLE(2, 2, 2, 2)))) });
 #else
 	return DVec3(mF64[0] + inV2.mF32[0], mF64[1] + inV2.mF32[1], mF64[2] + inV2.mF32[2]);
 #endif
@@ -414,6 +482,8 @@ DVec3 DVec3::operator + (DVec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_add_pd(mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_add_pd(mValue.mLow, inV2.mValue.mLow), _mm_add_pd(mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(mF64[0] + inV2.mF64[0], mF64[1] + inV2.mF64[1], mF64[2] + inV2.mF64[2]);
 #endif
@@ -423,6 +493,9 @@ DVec3 &DVec3::operator += (Vec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_add_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_add_pd(mValue.mLow, _mm_cvtps_pd(inV2.mValue));
+	mValue.mHigh = _mm_add_pd(mValue.mHigh, _mm_cvtps_pd(_mm_shuffle_ps(inV2.mValue, inV2.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
 #else
 	for (int i = 0; i < 3; ++i)
 		mF64[i] += inV2.mF32[i];
@@ -437,6 +510,9 @@ DVec3 &DVec3::operator += (DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_add_pd(mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_add_pd(mValue.mLow, inV2.mValue.mLow);
+	mValue.mHigh = _mm_add_pd(mValue.mHigh, inV2.mValue.mHigh);
 #else
 	for (int i = 0; i < 3; ++i)
 		mF64[i] += inV2.mF64[i];
@@ -451,6 +527,9 @@ DVec3 DVec3::operator - () const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_sub_pd(_mm256_setzero_pd(), mValue);
+#elif defined(JPH_USE_SSE)
+	__m128d zero = _mm_setzero_pd();
+	return DVec3({ _mm_sub_pd(zero, mValue.mLow), _mm_sub_pd(zero, mValue.mHigh) });
 #else
 	return DVec3(-mF64[0], -mF64[1], -mF64[2]);
 #endif
@@ -460,6 +539,8 @@ DVec3 DVec3::operator - (Vec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_sub_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_sub_pd(mValue.mLow, _mm_cvtps_pd(inV2.mValue)), _mm_sub_pd(mValue.mHigh, _mm_cvtps_pd(_mm_shuffle_ps(inV2.mValue, inV2.mValue, _MM_SHUFFLE(2, 2, 2, 2)))) });
 #else
 	return DVec3(mF64[0] - inV2.mF32[0], mF64[1] - inV2.mF32[1], mF64[2] - inV2.mF32[2]);
 #endif
@@ -469,6 +550,8 @@ DVec3 DVec3::operator - (DVec3Arg inV2) const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_sub_pd(mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_sub_pd(mValue.mLow, inV2.mValue.mLow), _mm_sub_pd(mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(mF64[0] - inV2.mF64[0], mF64[1] - inV2.mF64[1], mF64[2] - inV2.mF64[2]);
 #endif
@@ -478,6 +561,9 @@ DVec3 &DVec3::operator -= (Vec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_sub_pd(mValue, _mm256_cvtps_pd(inV2.mValue));
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_sub_pd(mValue.mLow, _mm_cvtps_pd(inV2.mValue));
+	mValue.mHigh = _mm_sub_pd(mValue.mHigh, _mm_cvtps_pd(_mm_shuffle_ps(inV2.mValue, inV2.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
 #else
 	for (int i = 0; i < 3; ++i)
 		mF64[i] -= inV2.mF32[i];
@@ -492,6 +578,9 @@ DVec3 &DVec3::operator -= (DVec3Arg inV2)
 {
 #if defined(JPH_USE_AVX)
 	mValue = _mm256_sub_pd(mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	mValue.mLow = _mm_sub_pd(mValue.mLow, inV2.mValue.mLow);
+	mValue.mHigh = _mm_sub_pd(mValue.mHigh, inV2.mValue.mHigh);
 #else
 	for (int i = 0; i < 3; ++i)
 		mF64[i] -= inV2.mF64[i];
@@ -507,6 +596,8 @@ DVec3 DVec3::operator / (DVec3Arg inV2) const
 	inV2.CheckW();
 #if defined(JPH_USE_AVX)
 	return _mm256_div_pd(mValue, inV2.mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_div_pd(mValue.mLow, inV2.mValue.mLow), _mm_div_pd(mValue.mHigh, inV2.mValue.mHigh) });
 #else
 	return DVec3(mF64[0] / inV2.mF64[0], mF64[1] / inV2.mF64[1], mF64[2] / inV2.mF64[2]);
 #endif
@@ -518,6 +609,9 @@ DVec3 DVec3::Abs() const
 	return _mm256_range_pd(mValue, mValue, 0b1000);
 #elif defined(JPH_USE_AVX)
 	return _mm256_max_pd(_mm256_sub_pd(_mm256_setzero_pd(), mValue), mValue);
+#elif defined(JPH_USE_SSE)
+	__m128d zero = _mm_setzero_pd();
+	return DVec3({ _mm_max_pd(_mm_sub_pd(zero, mValue.mLow), mValue.mLow), _mm_max_pd(_mm_sub_pd(zero, mValue.mHigh), mValue.mHigh) });
 #else
 	return DVec3(abs(mF64[0]), abs(mF64[1]), abs(mF64[2]));
 #endif
@@ -554,6 +648,13 @@ double DVec3::Dot(DVec3Arg inV2) const
     __m128d zw = _mm256_extractf128_pd(mul, 1);
 	sum = _mm_add_pd(sum, zw);
 	return _mm_cvtsd_f64(sum);
+#elif defined(JPH_USE_SSE)
+	__m128d xy = _mm_mul_pd(mValue.mLow, inV2.mValue.mLow);
+	__m128d yx = _mm_shuffle_pd(xy, xy, 1);
+	__m128d sum = _mm_add_pd(xy, yx);
+	__m128d z = _mm_mul_sd(mValue.mHigh, inV2.mValue.mHigh);
+	sum = _mm_add_pd(sum, z);
+	return _mm_cvtsd_f64(sum);
 #else
 	double dot = 0.0;
 	for (int i = 0; i < 3; i++)
@@ -571,6 +672,8 @@ DVec3 DVec3::Sqrt() const
 {
 #if defined(JPH_USE_AVX)
 	return _mm256_sqrt_pd(mValue);
+#elif defined(JPH_USE_SSE)
+	return DVec3({ _mm_sqrt_pd(mValue.mLow), _mm_sqrt_pd(mValue.mHigh) });
 #else
 	return DVec3(sqrt(mF64[0]), sqrt(mF64[1]), sqrt(mF64[2]));
 #endif
@@ -595,6 +698,8 @@ bool DVec3::IsNaN() const
 {
 #if defined(JPH_USE_AVX)
 	return (_mm256_movemask_pd(_mm256_cmp_pd(mValue, mValue, _CMP_UNORD_Q)) & 0x7) != 0;
+#elif defined(JPH_USE_SSE)
+	return ((_mm_movemask_pd(_mm_cmpunord_pd(mValue.mLow, mValue.mLow)) + (_mm_movemask_pd(_mm_cmpunord_pd(mValue.mHigh, mValue.mHigh)) << 2)) & 0x7) != 0;
 #else
 	return isnan(mF64[0]) || isnan(mF64[1]) || isnan(mF64[2]);
 #endif
@@ -606,6 +711,10 @@ DVec3 DVec3::GetSign() const
 	__m256d minus_one = _mm256_set1_pd(-1.0);
 	__m256d one = _mm256_set1_pd(1.0);
 	return _mm256_or_pd(_mm256_and_pd(mValue, minus_one), one);
+#elif defined(JPH_USE_SSE)
+	__m128d minus_one = _mm_set1_pd(-1.0);
+	__m128d one = _mm_set1_pd(1.0);
+	return DVec3({ _mm_or_pd(_mm_and_pd(mValue.mLow, minus_one), one), _mm_or_pd(_mm_and_pd(mValue.mHigh, minus_one), one) });
 #else
 	return DVec3(std::signbit(mF64[0])? -1.0 : 1.0, 
 				 std::signbit(mF64[1])? -1.0 : 1.0, 
@@ -620,6 +729,9 @@ DVec3 DVec3::PrepareRoundToZero() const
 
 #if defined(JPH_USE_AVX)
 	return _mm256_and_pd(mValue, _mm256_castsi256_pd(_mm256_set1_epi64x(int64_t(~cDoubleToFloatMantissaLoss))));
+#elif defined(JPH_USE_SSE)
+	__m128d mask = _mm_castsi128_pd(_mm_set1_epi64x(int64_t(~cDoubleToFloatMantissaLoss)));
+	return DVec3({ _mm_and_pd(mValue.mLow, mask), _mm_and_pd(mValue.mHigh, mask) });
 #else
 	double x = BitCast<double>(BitCast<uint64>(mF64[0]) & ~cDoubleToFloatMantissaLoss);
 	double y = BitCast<double>(BitCast<uint64>(mF64[1]) & ~cDoubleToFloatMantissaLoss);
@@ -640,6 +752,16 @@ DVec3 DVec3::PrepareRoundToInf() const
 	__m256d is_zero = _mm256_cmp_pd(value_and_mantissa_loss, _mm256_setzero_pd(), _CMP_EQ_OQ);
 	__m256d value_or_mantissa_loss = _mm256_or_pd(mValue, _mm256_castsi256_pd(mantissa_loss));
 	return _mm256_blendv_pd(value_or_mantissa_loss, mValue, is_zero);
+#elif defined(JPH_USE_SSE4_1)
+	__m128i mantissa_loss = _mm_set1_epi64x(cDoubleToFloatMantissaLoss);
+	__m128d zero = _mm_setzero_pd();
+	__m128d value_and_mantissa_loss_low = _mm_and_pd(mValue.mLow, _mm_castsi128_pd(mantissa_loss));
+	__m128d is_zero_low = _mm_cmpeq_pd(value_and_mantissa_loss_low, zero);
+	__m128d value_or_mantissa_loss_low = _mm_or_pd(mValue.mLow, _mm_castsi128_pd(mantissa_loss));
+	__m128d value_and_mantissa_loss_high = _mm_and_pd(mValue.mHigh, _mm_castsi128_pd(mantissa_loss));
+	__m128d is_zero_high = _mm_cmpeq_pd(value_and_mantissa_loss_high, zero);
+	__m128d value_or_mantissa_loss_high = _mm_or_pd(mValue.mHigh, _mm_castsi128_pd(mantissa_loss));
+	return DVec3({ _mm_blendv_pd(value_or_mantissa_loss_low, mValue.mLow, is_zero_low), _mm_blendv_pd(value_or_mantissa_loss_high, mValue.mHigh, is_zero_high) });
 #else
 	uint64 ux = BitCast<uint64>(mF64[0]);
 	uint64 uy = BitCast<uint64>(mF64[1]);

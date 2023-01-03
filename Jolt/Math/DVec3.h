@@ -18,6 +18,9 @@ public:
 #if defined(JPH_USE_AVX)
 	using Type = __m256d;
 	using TypeArg = __m256d;
+#elif defined(JPH_USE_SSE)
+	using Type = struct { __m128d mLow, mHigh; };
+	using TypeArg = const Type &;
 #else
 	using Type = struct { double mData[4]; };
 	using TypeArg = const Type &;
@@ -123,11 +126,13 @@ public:
 	JPH_INLINE bool				TestAllTrue() const;
 
 	/// Get individual components
-#ifdef JPH_USE_AVX
+#if defined(JPH_USE_AVX)
 	JPH_INLINE double			GetX() const									{ return _mm_cvtsd_f64(_mm256_castpd256_pd128(mValue)); }
+#elif defined(JPH_USE_SSE)
+	JPH_INLINE double			GetX() const									{ return _mm_cvtsd_f64(mValue.mLow); }
 #else
 	JPH_INLINE double			GetX() const									{ return mF64[0]; }
-#endif // JPH_USE_AVX
+#endif
 	JPH_INLINE double			GetY() const									{ return mF64[1]; }
 	JPH_INLINE double			GetZ() const									{ return mF64[2]; }
 	
