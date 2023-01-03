@@ -210,7 +210,7 @@ namespace ClosestPoint
 		float d2 = ac.Dot(ap); 
 		if (d1 <= 0.0f && d2 <= 0.0f)
 		{
-			outSet = swap_ac.TestAnyTrue()? 0b0100 : 0b0001;
+			outSet = swap_ac.GetX()? 0b0100 : 0b0001;
 			return a; // barycentric coordinates (1,0,0)
 		}
 
@@ -228,7 +228,7 @@ namespace ClosestPoint
 		if (d1 * d4 <= d3 * d2 && d1 >= 0.0f && d3 <= 0.0f) 
 		{ 
 			float v = d1 / (d1 - d3); 
-			outSet = swap_ac.TestAnyTrue()? 0b0110 : 0b0011;
+			outSet = swap_ac.GetX()? 0b0110 : 0b0011;
 			return a + v * ab; // barycentric coordinates (1-v,v,0) 
 		}
 
@@ -238,7 +238,7 @@ namespace ClosestPoint
 		float d6 = ac.Dot(cp); 
 		if (d6 >= 0.0f && d5 <= d6) 
 		{
-			outSet = swap_ac.TestAnyTrue()? 0b0001 : 0b0100;
+			outSet = swap_ac.GetX()? 0b0001 : 0b0100;
 			return c; // barycentric coordinates (0,0,1)
 		}
 
@@ -256,7 +256,7 @@ namespace ClosestPoint
 		if (d3 * d6 <= d5 * d4 && d4_d3 >= 0.0f && d5_d6 >= 0.0f) 
 		{ 
 			float w = d4_d3 / (d4_d3 + d5_d6); 
-			outSet = swap_ac.TestAnyTrue()? 0b0011 : 0b0110;
+			outSet = swap_ac.GetX()? 0b0011 : 0b0110;
 			return inB + w * (c - inB); // barycentric coordinates (0,1-w,w) 
 		}
 
