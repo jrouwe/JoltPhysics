@@ -1339,7 +1339,7 @@ void CharacterVirtual::Contact::RestoreState(StateRecorder &inStream)
 	inStream.Read(mWasDiscarded);
 	inStream.Read(mCanPushCharacter);
 	mUserData = 0; // Cannot restore user data
-	mMaterial = nullptr; // Cannot restore material
+	mMaterial = PhysicsMaterial::sDefault; // Cannot restore material
 }
 
 void CharacterVirtual::SaveState(StateRecorder &inStream) const
