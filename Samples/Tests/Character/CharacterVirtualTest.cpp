@@ -142,6 +142,7 @@ void CharacterVirtualTest::SaveState(StateRecorder &inStream) const
 	bool is_standing = mCharacter->GetShape() == mStandingShape;
 	inStream.Write(is_standing);
 
+	inStream.Write(mAllowSliding);
 	inStream.Write(mDesiredVelocity);
 }
 
@@ -155,6 +156,7 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(is_standing);
 	mCharacter->SetShape(is_standing? mStandingShape : mCrouchingShape, FLT_MAX, { }, { }, { }, { }, *mTempAllocator);
 
+	inStream.Read(mAllowSliding);
 	inStream.Read(mDesiredVelocity);
 }
 

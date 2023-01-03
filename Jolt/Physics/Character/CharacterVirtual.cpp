@@ -1307,6 +1307,41 @@ void CharacterVirtual::ExtendedUpdate(float inDeltaTime, Vec3Arg inGravity, cons
 	}
 }
 
+void CharacterVirtual::Contact::SaveState(StateRecorder &inStream) const
+{
+	inStream.Write(mPosition);
+	inStream.Write(mLinearVelocity);
+	inStream.Write(mContactNormal);
+	inStream.Write(mSurfaceNormal);
+	inStream.Write(mDistance);
+	inStream.Write(mFraction);
+	inStream.Write(mBodyB);
+	inStream.Write(mSubShapeIDB);
+	inStream.Write(mMotionTypeB);
+	inStream.Write(mHadCollision);
+	inStream.Write(mWasDiscarded);
+	inStream.Write(mCanPushCharacter);
+	// Cannot store user data (may be a pointer) and material
+}
+
+void CharacterVirtual::Contact::RestoreState(StateRecorder &inStream)
+{
+	inStream.Read(mPosition);
+	inStream.Read(mLinearVelocity);
+	inStream.Read(mContactNormal);
+	inStream.Read(mSurfaceNormal);
+	inStream.Read(mDistance);
+	inStream.Read(mFraction);
+	inStream.Read(mBodyB);
+	inStream.Read(mSubShapeIDB);
+	inStream.Read(mMotionTypeB);
+	inStream.Read(mHadCollision);
+	inStream.Read(mWasDiscarded);
+	inStream.Read(mCanPushCharacter);
+	mUserData = 0; // Cannot restore user data
+	mMaterial = nullptr; // Cannot restore material
+}
+
 void CharacterVirtual::SaveState(StateRecorder &inStream) const
 {
 	CharacterBase::SaveState(inStream);
@@ -1314,6 +1349,18 @@ void CharacterVirtual::SaveState(StateRecorder &inStream) const
 	inStream.Write(mPosition);
 	inStream.Write(mRotation);
 	inStream.Write(mLinearVelocity);
+	inStream.Write(mLastDeltaTime);
+	inStream.Write(mMaxHitsExceeded);
+
+	// Store contacts that had collision, we're using it at the beginning of the step in CancelVelocityTowardsSteepSlopes
+	uint32 num_contacts = 0;
+	for (const Contact &c : mActiveContacts)
+		if (c.mHadCollision)
+			++num_contacts;
+	inStream.Write(num_contacts);
+	for (const Contact &c : mActiveContacts)
+		if (c.mHadCollision)
+			c.SaveState(inStream);
 }
 
 void CharacterVirtual::RestoreState(StateRecorder &inStream)
@@ -1323,6 +1370,20 @@ void CharacterVirtual::RestoreState(StateRecorder &inStream)
 	inStream.Read(mPosition);
 	inStream.Read(mRotation);
 	inStream.Read(mLinearVelocity);
+	inStream.Read(mLastDeltaTime);
+	inStream.Read(mMaxHitsExceeded);
+
+	// When validating remove contacts that don't have collision since we didn't save them
+	if (inStream.IsValidating())
+		for (int i = (int)mActiveContacts.size() - 1; i >= 0; --i)
+			if (!mActiveContacts[i].mHadCollision)
+				mActiveContacts.erase(mActiveContacts.begin() + i);
+
+	uint32 num_contacts = (uint32)mActiveContacts.size();
+	inStream.Read(num_contacts);
+	mActiveContacts.resize(num_contacts);
+	for (Contact &c : mActiveContacts)
+		c.RestoreState(inStream);
 }
 
 JPH_NAMESPACE_END

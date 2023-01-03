@@ -270,6 +270,10 @@ public:
 	// Encapsulates a collision contact
 	struct Contact
 	{
+		// Saving / restoring state for replay
+		void							SaveState(StateRecorder &inStream) const;
+		void							RestoreState(StateRecorder &inStream);
+
 		RVec3							mPosition;												///< Position where the character makes contact
 		Vec3							mLinearVelocity;										///< Velocity of the contact point
 		Vec3							mContactNormal;											///< Contact normal, pointing towards the character

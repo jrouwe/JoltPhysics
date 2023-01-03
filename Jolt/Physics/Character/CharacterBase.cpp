@@ -26,7 +26,7 @@ void CharacterBase::SaveState(StateRecorder &inStream) const
 	inStream.Write(mGroundPosition);
 	inStream.Write(mGroundNormal);
 	inStream.Write(mGroundVelocity);
-	// Can't save or restore user data (may be a pointer) and material
+	// Can't save user data (may be a pointer) and material
 }
 
 void CharacterBase::RestoreState(StateRecorder &inStream)
@@ -37,6 +37,8 @@ void CharacterBase::RestoreState(StateRecorder &inStream)
 	inStream.Read(mGroundPosition);
 	inStream.Read(mGroundNormal);
 	inStream.Read(mGroundVelocity);
+	mGroundUserData = 0; // Cannot restore user data
+	mGroundMaterial = nullptr; // Cannot restore material
 }
 
 JPH_NAMESPACE_END
