@@ -27,21 +27,9 @@ DVec3::DVec3(Vec3Arg inRHS)
 #endif
 }
 
-DVec3::DVec3(Vec4Arg inRHS)
+DVec3::DVec3(Vec4Arg inRHS) :
+	DVec3(Vec3(inRHS))
 {
-#if defined(JPH_USE_AVX)
-	mValue = sFixW(_mm256_cvtps_pd(inRHS.mValue));
-#elif defined(JPH_USE_SSE)
-	mValue.mLow = _mm_cvtps_pd(inRHS.mValue);
-	mValue.mHigh = _mm_cvtps_pd(_mm_shuffle_ps(inRHS.mValue, inRHS.mValue, _MM_SHUFFLE(2, 2, 2, 2)));
-#else
-	mF64[0] = (double)inRHS.GetX();
-	mF64[1] = (double)inRHS.GetY();
-	mF64[2] = (double)inRHS.GetZ();
-	#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
-		mF64[3] = mF64[2];
-	#endif
-#endif
 }
 
 DVec3::DVec3(double inX, double inY, double inZ)

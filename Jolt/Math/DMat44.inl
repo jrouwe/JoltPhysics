@@ -94,6 +94,13 @@ DMat44 DMat44::operator * (Mat44Arg inM) const
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(1, 1, 1, 1))));
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(2, 2, 2, 2))));
 	result.mCol3 = DVec3::sFixW(_mm256_add_pd(mCol3.mValue, _mm256_cvtps_pd(t)));
+#elif defined(JPH_USE_SSE)
+	__m128 col3 = inM.GetColumn4(3).mValue;
+	__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(0, 0, 0, 0)));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(1, 1, 1, 1))));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(2, 2, 2, 2))));
+	result.mCol3.mValue.mLow = _mm_add_pd(mCol3.mValue.mLow, _mm_cvtps_pd(t));
+	result.mCol3.mValue.mHigh = _mm_add_pd(mCol3.mValue.mHigh, _mm_cvtps_pd(_mm_shuffle_ps(t, t, _MM_SHUFFLE(2, 2, 2, 2))));
 #else
 	Vec4 col3 = inM.GetColumn4(3);
 	result.mCol3 = mCol3 + Vec3(mCol[0] * col3.mF32[0] + mCol[1] * col3.mF32[1] + mCol[2] * col3.mF32[2]);
@@ -131,6 +138,19 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[1].mValue), _mm256_set1_pd(inM.mCol3.mF64[1])));
 	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[2].mValue), _mm256_set1_pd(inM.mCol3.mF64[2])));
 	result.mCol3 = DVec3::sFixW(t);
+#elif defined(JPH_USE_SSE)
+	__m128d xxxx = _mm_set1_pd(inM.mCol3.mF64[0]);
+	__m128d yyyy = _mm_set1_pd(inM.mCol3.mF64[1]);
+	__m128d zzzz = _mm_set1_pd(inM.mCol3.mF64[2]);
+	__m128 col0 = mCol[0].mValue;
+	__m128 col1 = mCol[1].mValue;
+	__m128 col2 = mCol[2].mValue;
+	__m128d t_low = _mm_add_pd(mCol3.mValue.mLow, _mm_mul_pd(_mm_cvtps_pd(col0), xxxx));
+	t_low = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col1), yyyy));
+	result.mCol3.mValue.mLow = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col2), zzzz));
+	__m128d t_high = _mm_add_pd(mCol3.mValue.mHigh, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col0, col0, _MM_SHUFFLE(2, 2, 2, 2))), xxxx));
+	t_high = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col1, col1, _MM_SHUFFLE(2, 2, 2, 2))), yyyy));
+	result.mCol3.mValue.mHigh = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col2, col2, _MM_SHUFFLE(2, 2, 2, 2))), zzzz));	
 #else
 	result.mCol3 = mCol3 + DVec3(mCol[0]) * inM.mCol3.mF64[0] + DVec3(mCol[1]) * inM.mCol3.mF64[1] + DVec3(mCol[2]) * inM.mCol3.mF64[2];
 #endif
@@ -145,6 +165,13 @@ DVec3 DMat44::operator * (Vec3Arg inV) const
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(1, 1, 1, 1))));
 	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
 	return DVec3::sFixW(_mm256_add_pd(mCol3.mValue, _mm256_cvtps_pd(t)));
+#elif defined(JPH_USE_SSE)
+	__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(0, 0, 0, 0)));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(1, 1, 1, 1))));
+	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(inV.mValue, inV.mValue, _MM_SHUFFLE(2, 2, 2, 2))));
+	__m128d low = _mm_add_pd(mCol3.mValue.mLow, _mm_cvtps_pd(t));
+	__m128d high = _mm_add_pd(mCol3.mValue.mHigh, _mm_cvtps_pd(_mm_shuffle_ps(t, t, _MM_SHUFFLE(2, 2, 2, 2))));
+	return DVec3({ low, high });
 #else
 	return DVec3(
 		mCol3.mF64[0] + double(mCol[0].mF32[0] * inV.mF32[0] + mCol[1].mF32[0] * inV.mF32[1] + mCol[2].mF32[0] * inV.mF32[2]), 
@@ -160,6 +187,20 @@ DVec3 DMat44::operator * (DVec3Arg inV) const
 	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[1].mValue), _mm256_set1_pd(inV.mF64[1])));
 	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[2].mValue), _mm256_set1_pd(inV.mF64[2])));
 	return DVec3::sFixW(t);
+#elif defined(JPH_USE_SSE)
+	__m128d xxxx = _mm_set1_pd(inV.mF64[0]);
+	__m128d yyyy = _mm_set1_pd(inV.mF64[1]);
+	__m128d zzzz = _mm_set1_pd(inV.mF64[2]);
+	__m128 col0 = mCol[0].mValue;
+	__m128 col1 = mCol[1].mValue;
+	__m128 col2 = mCol[2].mValue;
+	__m128d t_low = _mm_add_pd(mCol3.mValue.mLow, _mm_mul_pd(_mm_cvtps_pd(col0), xxxx));
+	t_low = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col1), yyyy));
+	t_low = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col2), zzzz));
+	__m128d t_high = _mm_add_pd(mCol3.mValue.mHigh, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col0, col0, _MM_SHUFFLE(2, 2, 2, 2))), xxxx));
+	t_high = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col1, col1, _MM_SHUFFLE(2, 2, 2, 2))), yyyy));
+	t_high = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col2, col2, _MM_SHUFFLE(2, 2, 2, 2))), zzzz));
+	return DVec3({ t_low, t_high });
 #else
 	return DVec3(
 		mCol3.mF64[0] + double(mCol[0].mF32[0]) * inV.mF64[0] + double(mCol[1].mF32[0]) * inV.mF64[1] + double(mCol[2].mF32[0]) * inV.mF64[2], 
@@ -175,6 +216,20 @@ DVec3 DMat44::Multiply3x3(DVec3Arg inV) const
 	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[1].mValue), _mm256_set1_pd(inV.mF64[1])));
 	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[2].mValue), _mm256_set1_pd(inV.mF64[2])));
 	return DVec3::sFixW(t);
+#elif defined(JPH_USE_SSE)
+	__m128d xxxx = _mm_set1_pd(inV.mF64[0]);
+	__m128d yyyy = _mm_set1_pd(inV.mF64[1]);
+	__m128d zzzz = _mm_set1_pd(inV.mF64[2]);
+	__m128 col0 = mCol[0].mValue;
+	__m128 col1 = mCol[1].mValue;
+	__m128 col2 = mCol[2].mValue;
+	__m128d t_low = _mm_mul_pd(_mm_cvtps_pd(col0), xxxx);
+	t_low = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col1), yyyy));
+	t_low = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col2), zzzz));
+	__m128d t_high = _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col0, col0, _MM_SHUFFLE(2, 2, 2, 2))), xxxx);
+	t_high = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col1, col1, _MM_SHUFFLE(2, 2, 2, 2))), yyyy));
+	t_high = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col2, col2, _MM_SHUFFLE(2, 2, 2, 2))), zzzz));
+	return DVec3({ t_low, t_high });
 #else
 	return DVec3(
 		double(mCol[0].mF32[0]) * inV.mF64[0] + double(mCol[1].mF32[0]) * inV.mF64[1] + double(mCol[2].mF32[0]) * inV.mF64[2], 

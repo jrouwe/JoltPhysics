@@ -20,7 +20,7 @@ public:
 	using TypeArg = __m256d;
 #elif defined(JPH_USE_SSE)
 	using Type = struct { __m128d mLow, mHigh; };
-	using TypeArg = Type;
+	using TypeArg = const Type &;
 #else
 	using Type = struct { double mData[4]; };
 	using TypeArg = const Type &;
