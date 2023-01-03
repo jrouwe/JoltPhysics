@@ -65,99 +65,6 @@ bool DMat44::IsClose(DMat44Arg inM2, float inMaxDistSq) const
 	return mCol3.IsClose(inM2.mCol3, double(inMaxDistSq));
 }
 
-DMat44 DMat44::operator * (Mat44Arg inM) const
-{
-	DMat44 result;
-
-	// Rotation part
-#if defined(JPH_USE_SSE)
-	for (int i = 0; i < 3; ++i)
-	{
-		__m128 c = inM.GetColumn4(i).mValue;
-		__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0)));
-		t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1))));
-		t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(2, 2, 2, 2))));
-		result.mCol[i].mValue = t;
-	}
-#else
-	for (int i = 0; i < 3; ++i)
-	{
-		Vec4 coli = inM.GetColumn4(i);
-		result.mCol[i] = mCol[0] * coli.mF32[0] + mCol[1] * coli.mF32[1] + mCol[2] * coli.mF32[2];
-	}
-#endif
-
-	// Translation part
-#if defined(JPH_USE_AVX)
-	__m128 col3 = inM.GetColumn4(3).mValue;
-	__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(0, 0, 0, 0)));
-	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(1, 1, 1, 1))));
-	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(2, 2, 2, 2))));
-	result.mCol3 = DVec3::sFixW(_mm256_add_pd(mCol3.mValue, _mm256_cvtps_pd(t)));
-#elif defined(JPH_USE_SSE)
-	__m128 col3 = inM.GetColumn4(3).mValue;
-	__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(0, 0, 0, 0)));
-	t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(1, 1, 1, 1))));
-	t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(col3, col3, _MM_SHUFFLE(2, 2, 2, 2))));
-	result.mCol3.mValue.mLow = _mm_add_pd(mCol3.mValue.mLow, _mm_cvtps_pd(t));
-	result.mCol3.mValue.mHigh = _mm_add_pd(mCol3.mValue.mHigh, _mm_cvtps_pd(_mm_shuffle_ps(t, t, _MM_SHUFFLE(2, 2, 2, 2))));
-#else
-	Vec4 col3 = inM.GetColumn4(3);
-	result.mCol3 = mCol3 + Vec3(mCol[0] * col3.mF32[0] + mCol[1] * col3.mF32[1] + mCol[2] * col3.mF32[2]);
-#endif
-
-	return result;
-}
-
-DMat44 DMat44::operator * (DMat44Arg inM) const
-{
-	DMat44 result;
-
-	// Rotation part
-#if defined(JPH_USE_SSE)
-	for (int i = 0; i < 3; ++i)
-	{
-		__m128 c = inM.mCol[i].mValue;
-		__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0)));
-		t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1))));
-		t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(2, 2, 2, 2))));
-		result.mCol[i].mValue = t;
-	}
-#else
-	for (int i = 0; i < 3; ++i)
-	{
-		Vec4 coli = inM.mCol[i];
-		result.mCol[i] = mCol[0] * coli.mF32[0] + mCol[1] * coli.mF32[1] + mCol[2] * coli.mF32[2];
-	}
-#endif // JPH_USE_SSE
-
-	// Translation part
-#if defined(JPH_USE_AVX)
-	__m256d t = mCol3.mValue;
-	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[0].mValue), _mm256_set1_pd(inM.mCol3.mF64[0])));
-	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[1].mValue), _mm256_set1_pd(inM.mCol3.mF64[1])));
-	t = _mm256_add_pd(t, _mm256_mul_pd(_mm256_cvtps_pd(mCol[2].mValue), _mm256_set1_pd(inM.mCol3.mF64[2])));
-	result.mCol3 = DVec3::sFixW(t);
-#elif defined(JPH_USE_SSE)
-	__m128d xxxx = _mm_set1_pd(inM.mCol3.mF64[0]);
-	__m128d yyyy = _mm_set1_pd(inM.mCol3.mF64[1]);
-	__m128d zzzz = _mm_set1_pd(inM.mCol3.mF64[2]);
-	__m128 col0 = mCol[0].mValue;
-	__m128 col1 = mCol[1].mValue;
-	__m128 col2 = mCol[2].mValue;
-	__m128d t_low = _mm_add_pd(mCol3.mValue.mLow, _mm_mul_pd(_mm_cvtps_pd(col0), xxxx));
-	t_low = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col1), yyyy));
-	result.mCol3.mValue.mLow = _mm_add_pd(t_low, _mm_mul_pd(_mm_cvtps_pd(col2), zzzz));
-	__m128d t_high = _mm_add_pd(mCol3.mValue.mHigh, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col0, col0, _MM_SHUFFLE(2, 2, 2, 2))), xxxx));
-	t_high = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col1, col1, _MM_SHUFFLE(2, 2, 2, 2))), yyyy));
-	result.mCol3.mValue.mHigh = _mm_add_pd(t_high, _mm_mul_pd(_mm_cvtps_pd(_mm_shuffle_ps(col2, col2, _MM_SHUFFLE(2, 2, 2, 2))), zzzz));	
-#else
-	result.mCol3 = mCol3 + DVec3(mCol[0]) * inM.mCol3.mF64[0] + DVec3(mCol[1]) * inM.mCol3.mF64[1] + DVec3(mCol[2]) * inM.mCol3.mF64[2];
-#endif
-
-	return result;
-}
-
 DVec3 DMat44::operator * (Vec3Arg inV) const
 {
 #if defined(JPH_USE_AVX)
@@ -236,6 +143,62 @@ DVec3 DMat44::Multiply3x3(DVec3Arg inV) const
 		double(mCol[0].mF32[1]) * inV.mF64[0] + double(mCol[1].mF32[1]) * inV.mF64[1] + double(mCol[2].mF32[1]) * inV.mF64[2], 
 		double(mCol[0].mF32[2]) * inV.mF64[0] + double(mCol[1].mF32[2]) * inV.mF64[1] + double(mCol[2].mF32[2]) * inV.mF64[2]);
 #endif
+}
+
+DMat44 DMat44::operator * (Mat44Arg inM) const
+{
+	DMat44 result;
+
+	// Rotation part
+#if defined(JPH_USE_SSE)
+	for (int i = 0; i < 3; ++i)
+	{
+		__m128 c = inM.GetColumn4(i).mValue;
+		__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0)));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1))));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(2, 2, 2, 2))));
+		result.mCol[i].mValue = t;
+	}
+#else
+	for (int i = 0; i < 3; ++i)
+	{
+		Vec4 coli = inM.GetColumn4(i);
+		result.mCol[i] = mCol[0] * coli.mF32[0] + mCol[1] * coli.mF32[1] + mCol[2] * coli.mF32[2];
+	}
+#endif
+
+	// Translation part
+	result.mCol3 = *this * inM.GetTranslation();
+
+	return result;
+}
+
+DMat44 DMat44::operator * (DMat44Arg inM) const
+{
+	DMat44 result;
+
+	// Rotation part
+#if defined(JPH_USE_SSE)
+	for (int i = 0; i < 3; ++i)
+	{
+		__m128 c = inM.mCol[i].mValue;
+		__m128 t = _mm_mul_ps(mCol[0].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0)));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[1].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(1, 1, 1, 1))));
+		t = _mm_add_ps(t, _mm_mul_ps(mCol[2].mValue, _mm_shuffle_ps(c, c, _MM_SHUFFLE(2, 2, 2, 2))));
+		result.mCol[i].mValue = t;
+	}
+#else
+	for (int i = 0; i < 3; ++i)
+	{
+		Vec4 coli = inM.mCol[i];
+		result.mCol[i] = mCol[0] * coli.mF32[0] + mCol[1] * coli.mF32[1] + mCol[2] * coli.mF32[2];
+	}
+#endif // JPH_USE_SSE
+
+	// Translation part
+	result.mCol3 = *this * inM.GetTranslation();
+
+	return result;
 }
 
 void DMat44::SetRotation(Mat44Arg inRotation)
