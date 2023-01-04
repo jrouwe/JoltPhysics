@@ -138,23 +138,26 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 			if (c.mBodyID == inResult.mBodyID2 && c.mSubShapeID == inResult.mSubShapeID2)
 				return;
 
-		BodyLockRead lock(mSystem->GetBodyLockInterface(), inResult.mBodyID2);
-		if (lock.SucceededAndIsInBroadPhase())
+		Contact contact;
+
+		// Lock body only while we fetch contact properties
 		{
-			const Body &body = lock.GetBody();
+			BodyLockRead lock(mSystem->GetBodyLockInterface(), inResult.mBodyID2);
+			if (!lock.SucceededAndIsInBroadPhase())
+				return;
 
 			// Convert the hit result into a contact
-			Contact contact;
-			sFillContactProperties(contact, body, mUp, mBaseOffset, *this, inResult);
-			contact.mFraction = inResult.mFraction;
+			sFillContactProperties(contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
+		}
 			
-			// Check if the contact that will make us penetrate more than the allowed tolerance
-			if (contact.mDistance + contact.mContactNormal.Dot(mDisplacement) < -mCharacter->mCollisionTolerance
-				&& mCharacter->ValidateContact(contact))
-			{
-				mContact = contact;
-				UpdateEarlyOutFraction(contact.mFraction);
-			}
+		contact.mFraction = inResult.mFraction;
+
+		// Check if the contact that will make us penetrate more than the allowed tolerance
+		if (contact.mDistance + contact.mContactNormal.Dot(mDisplacement) < -mCharacter->mCollisionTolerance
+			&& mCharacter->ValidateContact(contact))
+		{
+			mContact = contact;
+			UpdateEarlyOutFraction(contact.mFraction);
 		}
 	}
 }
