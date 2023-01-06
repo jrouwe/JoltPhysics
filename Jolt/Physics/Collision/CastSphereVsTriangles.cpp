@@ -15,7 +15,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Vec3 &inScale, const ShapeFilter &inShapeFilter, const Mat44 &inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
+CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
 	mStart(inShapeCast.mCenterOfMassStart.GetTranslation()),
 	mDirection(inShapeCast.mDirection),
 	mShapeCastSettings(inShapeCastSettings),

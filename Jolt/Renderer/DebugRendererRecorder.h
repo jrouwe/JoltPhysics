@@ -64,7 +64,7 @@ public:
 	struct TextBlob
 	{
 										TextBlob() = default;
-										TextBlob(RVec3Arg inPosition, const string_view &inString, const Color &inColor, float inHeight) : mPosition(inPosition), mString(inString), mColor(inColor), mHeight(inHeight) { }
+										TextBlob(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) : mPosition(inPosition), mString(inString), mColor(inColor), mHeight(inHeight) { }
 
 		RVec3							mPosition;
 		String							mString;

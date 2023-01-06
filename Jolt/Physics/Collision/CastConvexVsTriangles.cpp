@@ -12,7 +12,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-CastConvexVsTriangles::CastConvexVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Vec3 &inScale, const ShapeFilter &inShapeFilter, const Mat44 &inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
+CastConvexVsTriangles::CastConvexVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
 	mShapeCast(inShapeCast),
 	mShapeCastSettings(inShapeCastSettings),
 	mShapeFilter(inShapeFilter), 

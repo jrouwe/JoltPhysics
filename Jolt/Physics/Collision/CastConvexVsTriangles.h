@@ -20,7 +20,7 @@ public:
 	/// @param inCenterOfMassTransform2 Is the center of mass transform of shape 2 (excluding scale), this is used to provide a transform to the shape cast result so that local quantities can be transformed into world space.
 	/// @param inSubShapeIDCreator1 Class that tracks the current sub shape ID for the casting shape
 	/// @param ioCollector The collector that receives the results.
-									CastConvexVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Vec3 &inScale, const ShapeFilter &inShapeFilter, const Mat44 &inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector);
+									CastConvexVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector);
 
 	/// Cast convex object with a single triangle
 	/// @param inV0 , inV1 , inV2: CCW triangle vertices
