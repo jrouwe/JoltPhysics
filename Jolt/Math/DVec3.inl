@@ -609,7 +609,7 @@ DVec3 DVec3::operator - () const
 	__m128d zero = _mm_setzero_pd();
 	return DVec3({ _mm_sub_pd(zero, mValue.mLow), _mm_sub_pd(zero, mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vnegq_f64(mValue.val[0]), vnegq_f64(mValue.val[0]) });
+	return DVec3({ vnegq_f64(mValue.val[0]), vnegq_f64(mValue.val[1]) });
 #else
 	return DVec3(-mF64[0], -mF64[1], -mF64[2]);
 #endif
@@ -837,7 +837,7 @@ DVec3 DVec3::PrepareRoundToZero() const
 	__m128d mask = _mm_castsi128_pd(_mm_set1_epi64x(int64_t(~cDoubleToFloatMantissaLoss)));
 	return DVec3({ _mm_and_pd(mValue.mLow, mask), _mm_and_pd(mValue.mHigh, mask) });
 #elif defined(JPH_USE_NEON)
-	float64x2_t mask = vreinterpretq_f64_u64(vdupq_n_f64(int64_t(~cDoubleToFloatMantissaLoss)));
+	float64x2_t mask = vreinterpretq_f64_u64(vdupq_n_u64(~cDoubleToFloatMantissaLoss));
 	return DVec3({ vandq_s64(mValue.val[0], mask), vandq_s64(mValue.val[1], mask) });
 #else
 	double x = BitCast<double>(BitCast<uint64>(mF64[0]) & ~cDoubleToFloatMantissaLoss);
@@ -870,15 +870,17 @@ DVec3 DVec3::PrepareRoundToInf() const
 	__m128d value_or_mantissa_loss_high = _mm_or_pd(mValue.mHigh, _mm_castsi128_pd(mantissa_loss));
 	return DVec3({ _mm_blendv_pd(value_or_mantissa_loss_low, mValue.mLow, is_zero_low), _mm_blendv_pd(value_or_mantissa_loss_high, mValue.mHigh, is_zero_high) });
 #elif defined(JPH_USE_NEON)
-	float64x2_t mantissa_loss = vreinterpretq_f64_u64(vdupq_n_f64(int64_t(~cDoubleToFloatMantissaLoss)));
+	float64x2_t mantissa_loss = vreinterpretq_f64_u64(vdupq_n_u64(cDoubleToFloatMantissaLoss));
 	float64x2_t zero = vdupq_n_f64(0.0);
 	float64x2_t value_and_mantissa_loss_low = vandq_s64(mValue.val[0], mantissa_loss);
 	float64x2_t is_zero_low = vceqq_f64(value_and_mantissa_loss_low, zero);
 	float64x2_t value_or_mantissa_loss_low = vorrq_s64(mValue.val[0], mantissa_loss);
 	float64x2_t value_and_mantissa_loss_high = vandq_s64(mValue.val[1], mantissa_loss);
+	float64x2_t value_low = vbslq_f64(is_zero_low, mValue.val[0], value_or_mantissa_loss_low);
 	float64x2_t is_zero_high = vceqq_f64(value_and_mantissa_loss_high, zero);
 	float64x2_t value_or_mantissa_loss_high = vorrq_s64(mValue.val[1], mantissa_loss);
-	return DVec3({ vbslq_f64(is_zero_low, value_or_mantissa_loss_low, mValue.val[0]), vbslq_f64(is_zero_high, value_or_mantissa_loss_high, mValue.val[1]) });
+	float64x2_t value_high = vbslq_f64(is_zero_high, mValue.val[1], value_or_mantissa_loss_high);
+	return DVec3({ value_low, value_high });
 #else
 	uint64 ux = BitCast<uint64>(mF64[0]);
 	uint64 uy = BitCast<uint64>(mF64[1]);
