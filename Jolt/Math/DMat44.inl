@@ -201,7 +201,6 @@ DMat44 DMat44::operator * (Mat44Arg inM) const
 		Type t = vmulq_f32(mCol[0].mValue, vdupq_laneq_f32(c, 0));
 		t = vmlaq_f32(t, mCol[1].mValue, vdupq_laneq_f32(c, 1));
 		t = vmlaq_f32(t, mCol[2].mValue, vdupq_laneq_f32(c, 2));
-		t = vmlaq_f32(t, mCol[3].mValue, vdupq_laneq_f32(c, 3));
 		result.mCol[i].mValue = t;
 	}
 #else
@@ -239,7 +238,6 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 		Type t = vmulq_f32(mCol[0].mValue, vdupq_laneq_f32(c, 0));
 		t = vmlaq_f32(t, mCol[1].mValue, vdupq_laneq_f32(c, 1));
 		t = vmlaq_f32(t, mCol[2].mValue, vdupq_laneq_f32(c, 2));
-		t = vmlaq_f32(t, mCol[3].mValue, vdupq_laneq_f32(c, 3));
 		result.mCol[i].mValue = t;
 	}
 #else
