@@ -246,7 +246,7 @@ DMat44 DMat44::operator * (DMat44Arg inM) const
 		Vec4 coli = inM.mCol[i];
 		result.mCol[i] = mCol[0] * coli.mF32[0] + mCol[1] * coli.mF32[1] + mCol[2] * coli.mF32[2];
 	}
-#endif // JPH_USE_SSE
+#endif
 
 	// Translation part
 	result.mCol3 = *this * inM.GetTranslation();
