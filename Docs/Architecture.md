@@ -171,6 +171,23 @@ will return a box of size 2x2x2 centered around the origin, so in order to get i
 
 Note that when you work with interface of [BroadPhaseQuery](@ref BroadPhaseQuery), [NarrowPhaseQuery](@ref NarrowPhaseQuery) or [TransformedShape](@ref TransformedShape) this transformation is done for you.
 
+## Creating Custom Shapes
+
+If the defined Shape classes are not sufficient, or if your application can make a more efficient implementation because it has specific domain knowledge, it is possible to create a custom collision shape:
+
+* Derive a new class from Shape (e.g. MyShape). If your shape is convex you can consider deriving from ConvexShape, if it contains multiple sub shapes you can derive from CompoundShape or if it wraps a single other shape it can be derived from DecoratedShape.
+* Create a settings class that configures your shape (e.g. MyShapeSettings) and inherit it from the corresponding settings class (e.g. ShapeSettings, CompoundShapeSettings or DecoratedShapeSettings).
+* Override the ```MyShapeSettings::Create``` function to construct an instance of MyShape.
+* If you want to serialize the settings class, register it with the factory: ```Factory::sInstance->Register(RTTI_OF(MyShapeSettings))```
+* If you inherited from Shape you need to select a shape type, use e.g. ```EShapeType::User1```
+* In all cases you will need to specify a sub shape type, use e.g. ```EShapeSubType::User1```
+* Implement the virtual functions that your selected base class exposes. Some functions could be implemented as a dummy if you don't care about the functionality, e.g. if you don't care about buoyancy then GetSubmergedVolume does not need to be implemented.
+* Create a ```MyShape::sRegister()``` function to register all collision functions, make sure you call this function after calling ```RegisterTypes()```, see [MeshShape::sRegister](@ref MeshShape::sRegister) for an example.
+* Now write collision detection functions to test collision with all other shape types that this shape could collide with and register them with [CollisionDispatch::sRegisterCollideShape](@ref CollisionDispatch::sRegisterCollideShape) and [CollisionDispatch::sRegisterCastShape](@ref CollisionDispatch::sRegisterCastShape). This can be a lot of work, but there are some helper functions that you can use to reduce the work:
+ * If you have implemented a collision test for type A vs B then you can register [CollisionDispatch::sReversedCastShape](@ref CollisionDispatch::sReversedCastShape) and [CollisionDispatch::sReversedCollideShape](@ref CollisionDispatch::sReversedCollideShape) for B vs A.
+ * If your shape is triangle based, you can forward the testing of a shape vs a single triangle to the [CollideConvexVsTriangles](@ref CollideConvexVsTriangles) and [CastConvexVsTriangles](@ref CastConvexVsTriangles) classes.
+ * If your shape contains sub shapes and you have determined that the shape intersects with one of the sub shapes you can forward the sub shape to the collision dispatch again through [CollisionDispatch::sCollideShapeVsShape](@ref CollisionDispatch::sCollideShapeVsShape) and [CollisionDispatch::sCastShapeVsShapeLocalSpace](@ref CollisionDispatch::sCastShapeVsShapeLocalSpace).
+
 ## Sensors
 
 Sensors are normal rigid bodies that report contacts with other Dynamic or Kinematic bodies through the [ContactListener](@ref ContactListener) interface. Any detected penetrations will however not be resolved. Sensors can be used to implement triggers that detect when an object enters their area.
@@ -299,7 +316,7 @@ In general, the system is stable when running at 60 Hz with 1 collision and 1 in
 
 ## Conventions and limits
 
-Jolt Physics uses a right handed coordinate system with Y-up. It is easy to use another axis as up axis by changing the gravity vector using [PhysicsSystem::SetGravity](@ref PhysicsSystem::SetGravity). Some shapes like the [HeightFieldShape](@ref HeightFieldShapeSettings) will need an additional [RotatedTranslatedShape](@ref RotatedTranslatedShapeSettings) to rotate it to the new up axis and vehicles ([VehicleConstraint](@ref VehicleConstraintSettings)) will need their new up-axis specified too.
+Jolt Physics uses a right handed coordinate system with Y-up. It is easy to use another axis as up axis by changing the gravity vector using [PhysicsSystem::SetGravity](@ref PhysicsSystem::SetGravity). Some shapes like the [HeightFieldShape](@ref HeightFieldShapeSettings) will need an additional [RotatedTranslatedShape](@ref RotatedTranslatedShapeSettings) to rotate it to the new up axis and vehicles ([VehicleConstraint](@ref VehicleConstraintSettings)) and characters ([CharacterBaseSettings](@ref CharacterBaseSettings)) will need their new up-axis specified too.
 
 We use column-major vectors and matrices, this means that to transform a point you need to multiply it on the right hand side: TransformedPoint = Matrix * Point.
 
