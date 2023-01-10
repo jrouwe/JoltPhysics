@@ -58,12 +58,16 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	CharacterVirtual::ExtendedUpdateSettings update_settings;
 	if (!sEnableStickToFloor)
 		update_settings.mStickToFloorStepDown = Vec3::sZero();
+	else
+		update_settings.mStickToFloorStepDown = -mCharacter->GetUp() * update_settings.mStickToFloorStepDown.Length();
 	if (!sEnableWalkStairs)
 		update_settings.mWalkStairsStepUp = Vec3::sZero();
+	else
+		update_settings.mWalkStairsStepUp = mCharacter->GetUp() * update_settings.mWalkStairsStepUp.Length();
 
 	// Update the character position
 	mCharacter->ExtendedUpdate(inParams.mDeltaTime,
-		mPhysicsSystem->GetGravity(),
+		-mCharacter->GetUp() * mPhysicsSystem->GetGravity().Length(),
 		update_settings,
 		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 		mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING),
@@ -91,8 +95,13 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// True if the player intended to move
 	mAllowSliding = !inMovementDirection.IsNearZero();
 
+	// Update the character rotation and its up vector to match the up vector set by the user settings
+	Quat character_up_rotation = Quat::sEulerAngles(Vec3(sUpRotationX, 0, sUpRotationZ));
+	mCharacter->SetUp(character_up_rotation.RotateAxisY());
+	mCharacter->SetRotation(character_up_rotation);
+
 	// Determine new basic velocity
-	Vec3 current_vertical_velocity = Vec3(0, mCharacter->GetLinearVelocity().GetY(), 0);
+	Vec3 current_vertical_velocity = mCharacter->GetLinearVelocity().Dot(mCharacter->GetUp()) * mCharacter->GetUp();
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
 	Vec3 new_velocity;
 	if (mCharacter->GetGroundState() == CharacterVirtual::EGroundState::OnGround // If on ground
@@ -103,16 +112,16 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 		// Jump
 		if (inJump)
-			new_velocity += Vec3(0, cJumpSpeed, 0);
+			new_velocity += cJumpSpeed * mCharacter->GetUp();
 	}
 	else
 		new_velocity = current_vertical_velocity;
 
 	// Gravity
-	new_velocity += mPhysicsSystem->GetGravity() * inDeltaTime;
+	new_velocity += (character_up_rotation * mPhysicsSystem->GetGravity()) * inDeltaTime;
 
 	// Player input
-	new_velocity += mDesiredVelocity;
+	new_velocity += character_up_rotation * mDesiredVelocity;
 
 	// Update character velocity
 	mCharacter->SetLinearVelocity(new_velocity);
@@ -124,6 +133,8 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu)
 {
+	inUI->CreateSlider(inSubMenu, "Up Rotation X (degrees)", RadiansToDegrees(sUpRotationX), -90.0f, 90.0f, 1.0f, [](float inValue) { sUpRotationX = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Up Rotation Z (degrees)", RadiansToDegrees(sUpRotationZ), -90.0f, 90.0f, 1.0f, [](float inValue) { sUpRotationZ = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Slope Angle (degrees)", RadiansToDegrees(sMaxSlopeAngle), 0.0f, 90.0f, 1.0f, [](float inValue) { sMaxSlopeAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Strength (N)", sMaxStrength, 0.0f, 500.0f, 1.0f, [](float inValue) { sMaxStrength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Character Padding", sCharacterPadding, 0.01f, 0.5f, 0.01f, [](float inValue) { sCharacterPadding = inValue; });
