@@ -40,6 +40,8 @@ protected:
 
 private:
 	// Test settings
+	static inline float		sUpRotationX = 0;
+	static inline float		sUpRotationZ = 0;	
 	static inline float		sMaxSlopeAngle = DegreesToRadians(45.0f);
 	static inline float		sMaxStrength = 100.0f;
 	static inline float		sCharacterPadding = 0.02f;
