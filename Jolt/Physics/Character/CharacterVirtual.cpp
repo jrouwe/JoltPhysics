@@ -679,7 +679,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		if (!c.mWasDiscarded
 			&& !c.mHadCollision
 			&& c.mDistance < mCollisionTolerance
-			&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 0.0f))
+			&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 1.0e-4f))
 		{
 			if (ValidateContact(c))
 				c.mHadCollision = true;
