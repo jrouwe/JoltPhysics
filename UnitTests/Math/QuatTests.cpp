@@ -370,6 +370,7 @@ TEST_SUITE("QuatTests")
 	TEST_CASE("TestQuatRotationFromTo")
 	{
 		{
+			// Parallel vectors
 			Vec3 v1(10, 0, 0);
 			Vec3 v2(20, 0, 0);
 			Quat q = Quat::sFromTo(v1, v2);
@@ -377,6 +378,7 @@ TEST_SUITE("QuatTests")
 		}
 
 		{
+			// Perpendicular vectors
 			Vec3 v1(10, 0, 0);
 			Vec3 v2(0, 20, 0);
 			Quat q = Quat::sFromTo(v1, v2);
@@ -384,8 +386,33 @@ TEST_SUITE("QuatTests")
 		}
 
 		{
+			// Vectors with 180 degree angle
 			Vec3 v1(10, 0, 0);
 			Vec3 v2(-20, 0, 0);
+			Quat q = Quat::sFromTo(v1, v2);
+			CHECK_APPROX_EQUAL(v2.Normalized(), (q * v1).Normalized());
+		}
+
+		{
+			// Test v1 zero
+			Vec3 v1 = Vec3::sZero();
+			Vec3 v2(10, 0, 0);
+			Quat q = Quat::sFromTo(v1, v2);
+			CHECK(q == Quat::sIdentity());
+		}
+
+		{
+			// Test v2 zero
+			Vec3 v1(10, 0, 0);
+			Vec3 v2 = Vec3::sZero();
+			Quat q = Quat::sFromTo(v1, v2);
+			CHECK(q == Quat::sIdentity());
+		}
+
+		{
+			// Length of a vector is squared inside the function: try with sqrt(FLT_MIN) to see if that still returns a valid rotation
+			Vec3 v1(0, sqrt(FLT_MIN), 0);
+			Vec3 v2(1, 0, 0);
 			Quat q = Quat::sFromTo(v1, v2);
 			CHECK_APPROX_EQUAL(v2.Normalized(), (q * v1).Normalized());
 		}
