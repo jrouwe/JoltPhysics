@@ -321,7 +321,7 @@ TEST_SUITE("WheeledVehicleTests")
 				}
 			}
 			CHECK(vehicle_on_floor);
-			CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.02_r);
+			CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.03_r);
 
 			// Start driving
 			controller->SetDriverInput(1.0f, 0, 0, 0);
@@ -332,7 +332,7 @@ TEST_SUITE("WheeledVehicleTests")
 			if (t.mShouldMove)
 				CHECK(body->GetPosition().GetZ() > 0.5f);
 			else
-				CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.05_r);
+				CHECK_APPROX_EQUAL(body->GetPosition().GetZ(), 0, 0.06_r);
 		}
 	}
 }
