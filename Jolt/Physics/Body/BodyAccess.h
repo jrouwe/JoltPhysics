@@ -24,6 +24,9 @@ public:
 	public:
 		inline							Grant(EAccess inVelocity, EAccess inPosition)
 		{
+			JPH_ASSERT(sVelocityAccess == EAccess::ReadWrite);
+			JPH_ASSERT(sPositionAccess == EAccess::ReadWrite);
+
 			sVelocityAccess = inVelocity;
 			sPositionAccess = inPosition;
 		}
