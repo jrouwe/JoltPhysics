@@ -140,14 +140,14 @@ void Body::AddImpulse(Vec3Arg inImpulse, RVec3Arg inPosition)
 
 	SetLinearVelocityClamped(mMotionProperties->GetLinearVelocity() + inImpulse * mMotionProperties->GetInverseMass());
 
-	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + GetInverseInertia() * Vec3(inPosition - mPosition).Cross(inImpulse));
+	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + mMotionProperties->MultiplyWorldSpaceInverseInertiaByVector(mRotation, Vec3(inPosition - mPosition).Cross(inImpulse)));
 }
 
 void Body::AddAngularImpulse(Vec3Arg inAngularImpulse)
 {
 	JPH_ASSERT(IsDynamic());
 
-	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + GetInverseInertia() * inAngularImpulse);
+	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + mMotionProperties->MultiplyWorldSpaceInverseInertiaByVector(mRotation, inAngularImpulse));
 }
 
 void Body::GetSleepTestPoints(RVec3 *outPoints) const
