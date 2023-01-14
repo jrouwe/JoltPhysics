@@ -38,4 +38,19 @@ void OffsetCenterOfMassShapeTest::Initialize()
 	Body &body_right = *mBodyInterface->CreateBody(BodyCreationSettings(right, RVec3(5, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	body_right.SetFriction(1.0f);
 	mBodyInterface->AddBody(body_right.GetID(), EActivation::Activate);
+
+	// Create body and apply a large angular impulse so see that it spins around the COM
+	BodyCreationSettings bcs(new OffsetCenterOfMassShapeSettings(Vec3(-3, 0, 0), new SphereShapeSettings(1.0f)), RVec3(-5, 5, 10), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	bcs.mGravityFactor = 0.0f;
+	bcs.mLinearDamping = 0.0f;
+	bcs.mAngularDamping = 0.0f;
+	Body *body_rotating1 = mBodyInterface->CreateBody(bcs);
+    mBodyInterface->AddBody(body_rotating1->GetID(), EActivation::Activate);
+	body_rotating1->AddAngularImpulse(Vec3(0, 1.0e6f, 0));
+
+	// Create the same body but this time apply a torque
+	bcs.mPosition = RVec3(5, 5, 10);
+	Body *body_rotating2 = mBodyInterface->CreateBody(bcs);
+    mBodyInterface->AddBody(body_rotating2->GetID(), EActivation::Activate);
+	body_rotating2->AddTorque(Vec3(0, 1.0e6f * 60.0f, 0)); // Assuming physics sim is at 60Hz here, otherwise the bodies won't rotate with the same speed
 }
