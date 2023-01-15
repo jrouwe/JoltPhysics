@@ -60,7 +60,14 @@ public:
 	virtual bool						OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) { return true; }
 
 	/// Called whenever the character collides with a body. Returns true if the contact can push the character.
-	virtual void						OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
+	/// @param inCharacter Character that is being solved
+	/// @param inBodyID2 Body ID of body that is being hit
+	/// @param inSubShapeID2 Sub shape ID of shape that is being hit
+	/// @param inContactPosition World space contact position
+	/// @param inContactNormal World space contact normal
+	/// @param ioContactVelocity World space velocity of contact point (e.g. for a moving platform). Can be adjusted by the callback to add/remove artificial velocity to the contact (e.g. implement a conveyor belt or an inertial dampener system of a sci-fi space ship)
+	/// @param ioSettings Settings returned by the contact callback to indicate how the character should behave
+	virtual void						OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3 &ioContactVelocity, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
 
 	/// Called whenever a contact is being used by the solver. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
 	/// @param inCharacter Character that is being solved

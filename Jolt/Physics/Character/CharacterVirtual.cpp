@@ -374,7 +374,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	// Send contact added event
 	CharacterContactSettings settings;
 	if (mListener != nullptr)
-		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
+		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, contact.mLinearVelocity, settings);
 	contact.mCanPushCharacter = settings.mCanPushCharacter;
 
 	// If body B cannot receive an impulse, we're done
