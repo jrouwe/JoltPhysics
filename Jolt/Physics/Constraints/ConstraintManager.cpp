@@ -14,7 +14,7 @@ JPH_NAMESPACE_BEGIN
 
 void ConstraintManager::Add(Constraint **inConstraints, int inNumber)						
 { 
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	mConstraints.reserve(mConstraints.size() + inNumber);
 
@@ -33,7 +33,7 @@ void ConstraintManager::Add(Constraint **inConstraints, int inNumber)
 
 void ConstraintManager::Remove(Constraint **inConstraints, int inNumber)
 {
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	for (Constraint **c = inConstraints, **c_end = inConstraints + inNumber; c < c_end; ++c)
 	{
@@ -60,7 +60,7 @@ void ConstraintManager::Remove(Constraint **inConstraints, int inNumber)
 
 Constraints ConstraintManager::GetConstraints() const
 {
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	Constraints copy = mConstraints;
 	return copy;
@@ -187,7 +187,7 @@ void ConstraintManager::DrawConstraints(DebugRenderer *inRenderer) const
 {
 	JPH_PROFILE_FUNCTION();
 
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	for (const Ref<Constraint> &c : mConstraints)			
 		c->DrawConstraint(inRenderer);
@@ -197,7 +197,7 @@ void ConstraintManager::DrawConstraintLimits(DebugRenderer *inRenderer) const
 {
 	JPH_PROFILE_FUNCTION();
 
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	for (const Ref<Constraint> &c : mConstraints)
 		c->DrawConstraintLimits(inRenderer);
@@ -207,7 +207,7 @@ void ConstraintManager::DrawConstraintReferenceFrame(DebugRenderer *inRenderer) 
 {
 	JPH_PROFILE_FUNCTION();
 
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	for (const Ref<Constraint> &c : mConstraints)
 		c->DrawConstraintReferenceFrame(inRenderer);
@@ -216,7 +216,7 @@ void ConstraintManager::DrawConstraintReferenceFrame(DebugRenderer *inRenderer) 
 
 void ConstraintManager::SaveState(StateRecorder &inStream) const
 {	
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	// Write state of constraints
 	size_t num_constraints = mConstraints.size();
@@ -227,7 +227,7 @@ void ConstraintManager::SaveState(StateRecorder &inStream) const
 
 bool ConstraintManager::RestoreState(StateRecorder &inStream)
 {
-	UniqueLock lock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList);
+	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	// Read state of constraints
 	size_t num_constraints = mConstraints.size(); // Initialize to current value for validation

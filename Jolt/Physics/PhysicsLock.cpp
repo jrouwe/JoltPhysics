@@ -9,7 +9,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-thread_local uint32 PhysicsLock::sLockedMutexes = 0;
+thread_local PhysicsLock::LockData PhysicsLock::sLocks[4];
 
 JPH_NAMESPACE_END
 

@@ -6,7 +6,6 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/AABoxCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
-#include <Jolt/Physics/PhysicsLock.h>
 #include <Jolt/Core/QuickSort.h>
 
 JPH_NAMESPACE_BEGIN
@@ -24,6 +23,11 @@ void BroadPhaseQuadTree::Init(BodyManager *inBodyManager, const BroadPhaseLayerI
 	mBroadPhaseLayerInterface = &inLayerInterface;
 	mNumLayers = inLayerInterface.GetNumBroadPhaseLayers();
 	JPH_ASSERT(mNumLayers < (BroadPhaseLayer::Type)cBroadPhaseLayerInvalid);
+
+#ifdef JPH_ENABLE_ASSERTS
+	// Store lock context
+	mLockContext = inBodyManager;
+#endif // JPH_ENABLE_ASSERTS
 
 	// Store max bodies
 	mMaxBodies = inBodyManager->GetMaxBodies();
@@ -58,7 +62,7 @@ void BroadPhaseQuadTree::FrameSync()
 	// Note that nothing should be locked at this point to avoid risking a lock inversion deadlock.
 	// Note that in other places where we lock this mutex we don't use SharedLock to detect lock inversions. As long as
 	// nothing else is locked this is safe. This is why BroadPhaseQuery should be the highest priority lock.
-	UniqueLock root_lock(mQueryLocks[mQueryLockIdx ^ 1], EPhysicsLockTypes::BroadPhaseQuery);
+	UniqueLock root_lock(mQueryLocks[mQueryLockIdx ^ 1] JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseQuery));
 
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
 		mLayers[l].DiscardOldTree();
@@ -91,7 +95,7 @@ void BroadPhaseQuadTree::Optimize()
 void BroadPhaseQuadTree::LockModifications()
 {
 	// From this point on we prevent modifications to the tree
-	PhysicsLock::sLock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+	PhysicsLock::sLock(mUpdateMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseUpdate));
 }
 
 BroadPhase::UpdateState BroadPhaseQuadTree::UpdatePrepare()
@@ -143,7 +147,7 @@ void BroadPhaseQuadTree::UpdateFinalize(const UpdateState &inUpdateState)
 void BroadPhaseQuadTree::UnlockModifications()
 {
 	// From this point on we allow modifications to the tree again
-	PhysicsLock::sUnlock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+	PhysicsLock::sUnlock(mUpdateMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseUpdate));
 }
 
 BroadPhase::AddState BroadPhaseQuadTree::AddBodiesPrepare(BodyID *ioBodies, int inNumber) 
@@ -204,7 +208,7 @@ void BroadPhaseQuadTree::AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddSt
 	JPH_PROFILE_FUNCTION();
 
 	// This cannot run concurrently with UpdatePrepare()/UpdateFinalize()
-	SharedLock lock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+	SharedLock lock(mUpdateMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseUpdate));
 
 	BodyVector &bodies = mBodyManager->GetBodies();
 	JPH_ASSERT(mMaxBodies == mBodyManager->GetMaxBodies());
@@ -274,7 +278,7 @@ void BroadPhaseQuadTree::RemoveBodies(BodyID *ioBodies, int inNumber)
 	JPH_PROFILE_FUNCTION();
 
 	// This cannot run concurrently with UpdatePrepare()/UpdateFinalize()
-	SharedLock lock(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+	SharedLock lock(mUpdateMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseUpdate));
 
 	JPH_ASSERT(inNumber > 0);
 
@@ -324,7 +328,7 @@ void BroadPhaseQuadTree::NotifyBodiesAABBChanged(BodyID *ioBodies, int inNumber,
 
 	// This cannot run concurrently with UpdatePrepare()/UpdateFinalize()
 	if (inTakeLock)
-		PhysicsLock::sLockShared(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+		PhysicsLock::sLockShared(mUpdateMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseUpdate));
 	else
 		JPH_ASSERT(mUpdateMutex.is_locked());
 
@@ -353,7 +357,7 @@ void BroadPhaseQuadTree::NotifyBodiesAABBChanged(BodyID *ioBodies, int inNumber,
 	}
 
 	if (inTakeLock)
-		PhysicsLock::sUnlockShared(mUpdateMutex, EPhysicsLockTypes::BroadPhaseUpdate);
+		PhysicsLock::sUnlockShared(mUpdateMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::BroadPhaseUpdate));
 }
 
 void BroadPhaseQuadTree::NotifyBodiesLayerChanged(BodyID *ioBodies, int inNumber)

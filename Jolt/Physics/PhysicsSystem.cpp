@@ -801,8 +801,11 @@ void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep
 void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex)
 {
 #ifdef JPH_ENABLE_ASSERTS
-	// We only read positions
-	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
+	// We read positions and read velocities (for elastic collisions)
+	BodyAccess::Grant grant(BodyAccess::EAccess::Read, BodyAccess::EAccess::Read);
+
+	// Can only activate bodies
+	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
 #endif
 
 	// Allocation context for allocating new contact points
@@ -932,14 +935,6 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const BodyPair &inBodyPair)
 {
 	JPH_PROFILE_FUNCTION();
-
-#ifdef JPH_ENABLE_ASSERTS
-	// We read positions and read velocities (for elastic collisions)
-	BodyAccess::Grant grant(BodyAccess::EAccess::Read, BodyAccess::EAccess::Read);
-
-	// Can only activate bodies
-	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
-#endif
 
 	// Fetch body pair
 	Body *body1 = &mBodyManager.GetBody(inBodyPair.mBodyA);
