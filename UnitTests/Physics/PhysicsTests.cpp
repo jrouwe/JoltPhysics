@@ -1277,6 +1277,7 @@ TEST_SUITE("PhysicsTests")
 		const Vec3 cBox1Velocity(1.0f, 0, 0);
 		const Vec3 cBox2Velocity(2.0f, 0, 0);
 		{
+			// This tests if we can lock bodies from multiple physics systems (normally locking 2 bodies at the same time without using BodyLockMultiWrite would trigger an assert)
 			BodyLockWrite lock1(c1.GetSystem()->GetBodyLockInterface(), box1.GetID());
 			BodyLockWrite lock2(c2.GetSystem()->GetBodyLockInterface(), box2.GetID());
 
@@ -1295,6 +1296,7 @@ TEST_SUITE("PhysicsTests")
 			BodyLockRead lock1(c1.GetSystem()->GetBodyLockInterface(), box1.GetID());
 			BodyLockRead lock2(c2.GetSystem()->GetBodyLockInterface(), box2.GetID());
 
+			// Check that the bodies in the different systems updated correctly
 			CHECK_APPROX_EQUAL(lock1.GetBody().GetPosition(), cBox1Position + cBox1Velocity * cTime);
 			CHECK_APPROX_EQUAL(lock2.GetBody().GetPosition(), cBox2Position + cBox2Velocity * cTime);
 		}		
