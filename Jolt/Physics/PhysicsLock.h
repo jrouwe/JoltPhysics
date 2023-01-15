@@ -114,7 +114,7 @@ template <class LockType>
 class UniqueLock : public NonCopyable
 {
 public:
-								UniqueLock(LockType &inLock JPH_IF_ENABLE_ASSERTS(, PhysicsLockContext inContext, EPhysicsLockTypes inType)) :
+	explicit					UniqueLock(LockType &inLock JPH_IF_ENABLE_ASSERTS(, PhysicsLockContext inContext, EPhysicsLockTypes inType)) :
 		mLock(inLock)
 #ifdef JPH_ENABLE_ASSERTS
 		, mContext(inContext),
@@ -142,7 +142,7 @@ template <class LockType>
 class SharedLock : public NonCopyable
 {
 public:
-								SharedLock(LockType &inLock JPH_IF_ENABLE_ASSERTS(, PhysicsLockContext inContext, EPhysicsLockTypes inType)) :
+	explicit					SharedLock(LockType &inLock JPH_IF_ENABLE_ASSERTS(, PhysicsLockContext inContext, EPhysicsLockTypes inType)) :
 		mLock(inLock)
 #ifdef JPH_ENABLE_ASSERTS
 		, mContext(inContext)
