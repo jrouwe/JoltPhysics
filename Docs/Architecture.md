@@ -376,6 +376,22 @@ When synchronizing two simulations via a network, it is possible that a change t
 
 If you wish to share saved state between server and client, you need to ensure that all APIs that modify the state of the world are called in the exact same order. So if the client creates physics objects for player 1 then 2 and the server creates the objects for 2 then 1 you already have a problem (the body IDs will be different, which will render the save state snapshots incompatible). When rolling back a simulation, you'll also need to ensure that the BodyIDs are kept the same, so you need to remove/add the body from/to the physics system instead of destroy/re-create them or you need to create bodies with the same ID on both sides using [BodyInterface::CreateBodyWithID](@ref BodyInterface::CreateBodyWithID).
 
+## Working With Multiple Physics Systems
+
+You can create, simulate and interact with multiple PhysicsSystems at the same time provided that you do not share any objects (bodies, constraints) between the systems. 
+When a Body is created it receives a BodyID that is unique for the PhysicsSystem that it was created for, so it cannot be shared. The only object that can be shared between PhysicsSystems is a Shape. 
+If you want to move a body from one PhysicsSystem to another, use Body::GetBodyCreationSettings to get the settings needed to create the body in the other PhysicsSystem.
+
+PhysicsSystems are not completely independent:
+
+* There is only 1 RTTI factory (Factory::sInstance).
+* There is only 1 default material (PhysicsMaterial::sDefault).
+* There is only 1 debug renderer (DebugRenderer::sInstance) although many functions take a custom DebugRenderer for drawing.
+* Custom shapes and CollisionDispatch functions are shared.
+* The custom memory allocation functions (e.g. Allocate), Trace and AssertFailed functions are shared.
+
+These functions / systems need to be registered in advance.
+
 ## The Simulation Step in Detail
 
 The job graph looks like this:

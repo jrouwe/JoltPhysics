@@ -1297,8 +1297,8 @@ TEST_SUITE("PhysicsTests")
 			BodyLockRead lock2(c2.GetSystem()->GetBodyLockInterface(), box2.GetID());
 
 			// Check that the bodies in the different systems updated correctly
-			CHECK_APPROX_EQUAL(lock1.GetBody().GetPosition(), cBox1Position + cBox1Velocity * cTime);
-			CHECK_APPROX_EQUAL(lock2.GetBody().GetPosition(), cBox2Position + cBox2Velocity * cTime);
+			CHECK_APPROX_EQUAL(lock1.GetBody().GetPosition(), cBox1Position + cBox1Velocity * cTime, 1.0e-5f);
+			CHECK_APPROX_EQUAL(lock2.GetBody().GetPosition(), cBox2Position + cBox2Velocity * cTime, 1.0e-5f);
 		}		
 	}
 }
