@@ -39,10 +39,17 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 }
 
 template <class taCollector>
-void CharacterVirtual::sFillContactProperties(Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
+void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
 {
 	outContact.mPosition = inBaseOffset + inResult.mContactPointOn2;
-	outContact.mLinearVelocity = inBody.GetPointVelocity(outContact.mPosition);
+
+	// Allow application to override velocity of body
+	Vec3 linear_velocity = inBody.GetLinearVelocity();
+	Vec3 angular_velocity = inBody.GetAngularVelocity();
+	if (inCharacter->mListener != nullptr)
+		inCharacter->mListener->OnAdjustVelocity(inCharacter, inBody, linear_velocity, angular_velocity);
+	outContact.mLinearVelocity = linear_velocity + angular_velocity.Cross(Vec3(outContact.mPosition - inBody.GetCenterOfMassPosition()));
+
 	outContact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
 	outContact.mSurfaceNormal = inCollector.GetContext()->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, outContact.mPosition);
 	if (outContact.mContactNormal.Dot(outContact.mSurfaceNormal) < 0.0f)
@@ -120,7 +127,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 
 		mContacts.emplace_back();
 		Contact &contact = mContacts.back();
-		sFillContactProperties(contact, body, mUp, mBaseOffset, *this, inResult);
+		sFillContactProperties(mCharacter, contact, body, mUp, mBaseOffset, *this, inResult);
 		contact.mFraction = 0.0f;
 	}
 }
@@ -147,7 +154,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 				return;
 
 			// Convert the hit result into a contact
-			sFillContactProperties(contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
+			sFillContactProperties(mCharacter, contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
 		}
 			
 		contact.mFraction = inResult.mFraction;
@@ -184,7 +191,7 @@ void CharacterVirtual::GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMove
 	outContacts.clear();
 
 	// Collide shape
-	ContactCollector collector(mSystem, mMaxNumHits, mHitReductionCosMaxAngle, mUp, mPosition, outContacts);
+	ContactCollector collector(mSystem, this, mMaxNumHits, mHitReductionCosMaxAngle, mUp, mPosition, outContacts);
 	CheckCollision(inPosition, mRotation, inMovementDirection, mPredictiveContactDistance, inShape, mPosition, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 
 	// Flag if we exceeded the max number of hits
@@ -374,7 +381,7 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	// Send contact added event
 	CharacterContactSettings settings;
 	if (mListener != nullptr)
-		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, contact.mLinearVelocity, settings);
+		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
 	contact.mCanPushCharacter = settings.mCanPushCharacter;
 
 	// If body B cannot receive an impulse, we're done
@@ -755,10 +762,15 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 						{
 							const Body &body = lock.GetBody();
 
+							// Allow application to override the velocity of this body
+							Vec3 linear_velocity = body.GetLinearVelocity();
+							angular_velocity = body.GetAngularVelocity();							
+							if (mListener != nullptr)
+								mListener->OnAdjustVelocity(this, body, linear_velocity, angular_velocity);
+							
 							// Add the linear velocity to the average velocity
-							avg_velocity += body.GetLinearVelocity();
+							avg_velocity += linear_velocity;
 
-							angular_velocity = body.GetAngularVelocity();
 							com = body.GetCenterOfMassPosition();
 						}
 						else

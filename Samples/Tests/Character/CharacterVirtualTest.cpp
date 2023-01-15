@@ -171,7 +171,14 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(mDesiredVelocity);
 }
 
-void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3 &ioContactVelocity, CharacterContactSettings &ioSettings)
+void CharacterVirtualTest::OnAdjustVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
+{
+	// Apply artificial velocity to the character when standing on the conveyor belt
+	if (inBody2.GetID() == mConveyorBeltBody)
+		ioLinearVelocity += Vec3(0, 0, 2);
+}
+
+void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
 	// Dynamic boxes on the ramp go through all permutations
 	Array<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
@@ -181,10 +188,6 @@ void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, c
 		ioSettings.mCanPushCharacter = (index & 1) != 0;
 		ioSettings.mCanReceiveImpulses = (index & 2) != 0;
 	}
-
-	// Apply artificial velocity to the character when standing on the conveyor belt
-	if (inBodyID2 == mConveyorBeltBody)
-		ioContactVelocity += Vec3(0, 0, 2);
 
 	// If we encounter an object that can push us, enable sliding
 	if (ioSettings.mCanPushCharacter && mPhysicsSystem->GetBodyInterface().GetMotionType(inBodyID2) != EMotionType::Static)

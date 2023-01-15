@@ -19,6 +19,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Character/CharacterTest.h
 	${SAMPLES_ROOT}/Tests/Character/CharacterVirtualTest.cpp
 	${SAMPLES_ROOT}/Tests/Character/CharacterVirtualTest.h
+	${SAMPLES_ROOT}/Tests/Character/CharacterSpaceShipTest.cpp
+	${SAMPLES_ROOT}/Tests/Character/CharacterSpaceShipTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.cpp
