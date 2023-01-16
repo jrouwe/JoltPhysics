@@ -38,18 +38,34 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	SetMass(inSettings->mMass);
 }
 
+void CharacterVirtual::GetAdjustedBodyVelocity(const Body& inBody, Vec3 &outLinearVelocity, Vec3 &outAngularVelocity) const
+{
+	// Get real velocity of body
+	if (!inBody.IsStatic())
+	{
+		const MotionProperties *mp = inBody.GetMotionPropertiesUnchecked();
+		outLinearVelocity = mp->GetLinearVelocity();
+		outAngularVelocity = mp->GetAngularVelocity();
+	}
+	else
+	{
+		outLinearVelocity = outAngularVelocity = Vec3::sZero();
+	}
+
+	// Allow application to override
+	if (mListener != nullptr)
+		mListener->OnAdjustBodyVelocity(this, inBody, outLinearVelocity, outAngularVelocity);
+}
+
 template <class taCollector>
 void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
 {
+	// Get adjusted body velocity
+	Vec3 linear_velocity, angular_velocity;
+	inCharacter->GetAdjustedBodyVelocity(inBody, linear_velocity, angular_velocity);
+
 	outContact.mPosition = inBaseOffset + inResult.mContactPointOn2;
-
-	// Allow application to override velocity of body
-	Vec3 linear_velocity = inBody.GetLinearVelocity();
-	Vec3 angular_velocity = inBody.GetAngularVelocity();
-	if (inCharacter->mListener != nullptr)
-		inCharacter->mListener->OnAdjustVelocity(inCharacter, inBody, linear_velocity, angular_velocity);
-	outContact.mLinearVelocity = linear_velocity + angular_velocity.Cross(Vec3(outContact.mPosition - inBody.GetCenterOfMassPosition()));
-
+	outContact.mLinearVelocity = linear_velocity + angular_velocity.Cross(Vec3(outContact.mPosition - inBody.GetCenterOfMassPosition())); // Calculate point velocity
 	outContact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
 	outContact.mSurfaceNormal = inCollector.GetContext()->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, outContact.mPosition);
 	if (outContact.mContactNormal.Dot(outContact.mSurfaceNormal) < 0.0f)
@@ -762,11 +778,9 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 						{
 							const Body &body = lock.GetBody();
 
-							// Allow application to override the velocity of this body
-							Vec3 linear_velocity = body.GetLinearVelocity();
-							angular_velocity = body.GetAngularVelocity();							
-							if (mListener != nullptr)
-								mListener->OnAdjustVelocity(this, body, linear_velocity, angular_velocity);
+							// Get adjusted body velocity
+							Vec3 linear_velocity;
+							GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
 							
 							// Add the linear velocity to the average velocity
 							avg_velocity += linear_velocity;

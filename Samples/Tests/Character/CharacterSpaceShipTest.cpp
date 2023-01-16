@@ -10,8 +10,6 @@
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
-#include <Renderer/DebugRendererImp.h>
-#include <Application/DebugUI.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterSpaceShipTest)
 {
@@ -20,6 +18,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterSpaceShipTest)
 
 void CharacterSpaceShipTest::Initialize()
 {
+	// Dimensions of our space ship
 	constexpr float cSpaceShipHeight = 2.0f;
 	constexpr float cSpaceShipRingHeight = 0.2f;
 	constexpr float cSpaceShipRadius = 100.0f;
@@ -91,7 +90,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			jump = true;
 	}
 
-	// Determine new basic velocity
+	// Determine new character velocity
 	Vec3 current_vertical_velocity = mCharacter->GetLinearVelocity().Dot(mSpaceShipPrevTransform.GetAxisY()) * mCharacter->GetUp();
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
 	Vec3 new_velocity;
@@ -108,8 +107,9 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	else
 		new_velocity = current_vertical_velocity;
 
-	// Gravity
-	new_velocity += (new_space_ship_transform.Multiply3x3(mPhysicsSystem->GetGravity())) * inParams.mDeltaTime;
+	// Gravity always acts relative to the ship
+	Vec3 gravity = new_space_ship_transform.Multiply3x3(mPhysicsSystem->GetGravity());
+	new_velocity += gravity * inParams.mDeltaTime;
 
 	// Transform player input to world space
 	new_velocity += new_space_ship_transform.Multiply3x3(mDesiredVelocity);
@@ -120,7 +120,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update the character position
 	CharacterVirtual::ExtendedUpdateSettings update_settings;
 	mCharacter->ExtendedUpdate(inParams.mDeltaTime,
-		-mCharacter->GetUp() * mPhysicsSystem->GetGravity().Length(),
+		gravity,
 		update_settings,
 		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 		mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING),
@@ -137,8 +137,10 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void CharacterSpaceShipTest::UpdateShipVelocity()
 {
+	// Make it a rocky ride...
 	mSpaceShipLinearVelocity = Vec3(Sin(mTime), 0, Cos(mTime)) * 50.0f;
 	mSpaceShipAngularVelocity = Vec3(Sin(2.0f * mTime), 1, Cos(2.0f * mTime)) * 0.5f;
+
 	mBodyInterface->SetLinearAndAngularVelocity(mSpaceShip, mSpaceShipLinearVelocity, mSpaceShipAngularVelocity);
 }
 
@@ -177,9 +179,9 @@ void CharacterSpaceShipTest::RestoreState(StateRecorder &inStream)
 	UpdateShipVelocity();
 }
 
-void CharacterSpaceShipTest::OnAdjustVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
+void CharacterSpaceShipTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
 {
-	// Cancel out velocity of space ship, we move relative to this
+	// Cancel out velocity of space ship, we move relative to this which means we don't feel any of the acceleration of the ship (= engage inertial dampeners!)
 	ioLinearVelocity -= mSpaceShipLinearVelocity;
 	ioAngularVelocity -= mSpaceShipAngularVelocity;
 }

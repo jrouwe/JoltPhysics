@@ -6,7 +6,9 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 
-// A test that demonstrates how a character may walk around a fast moving sci-fi space ship that is equipped with inertial dampeners (note: this is not physics!)
+// A test that demonstrates how a character may walk around a fast moving/accelerating sci-fi space ship that is equipped with inertial dampeners.
+// Note that this is 'game physics' and not real physics, inertial dampeners only exist in the movies.
+// You can walk off the ship and remain attached to the ship. A proper implementation would detect this and detach the character.
 class CharacterSpaceShipTest : public Test, public CharacterContactListener
 {
 public:
@@ -33,7 +35,7 @@ private:
 	void					UpdateShipVelocity();
 
 	/// Callback to adjust the velocity of a body as seen by the character. Can be adjusted to e.g. implement a conveyor belt or an inertial dampener system of a sci-fi space ship.
-	virtual void			OnAdjustVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity) override;
+	virtual void			OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity) override;
 
 	// Character size
 	static constexpr float	cCharacterHeightStanding = 1.35f;

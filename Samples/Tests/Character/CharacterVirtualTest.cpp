@@ -171,7 +171,7 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(mDesiredVelocity);
 }
 
-void CharacterVirtualTest::OnAdjustVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
+void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
 {
 	// Apply artificial velocity to the character when standing on the conveyor belt
 	if (inBody2.GetID() == mConveyorBeltBody)
