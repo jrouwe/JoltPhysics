@@ -38,11 +38,34 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	SetMass(inSettings->mMass);
 }
 
-template <class taCollector>
-void CharacterVirtual::sFillContactProperties(Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
+void CharacterVirtual::GetAdjustedBodyVelocity(const Body& inBody, Vec3 &outLinearVelocity, Vec3 &outAngularVelocity) const
 {
+	// Get real velocity of body
+	if (!inBody.IsStatic())
+	{
+		const MotionProperties *mp = inBody.GetMotionPropertiesUnchecked();
+		outLinearVelocity = mp->GetLinearVelocity();
+		outAngularVelocity = mp->GetAngularVelocity();
+	}
+	else
+	{
+		outLinearVelocity = outAngularVelocity = Vec3::sZero();
+	}
+
+	// Allow application to override
+	if (mListener != nullptr)
+		mListener->OnAdjustBodyVelocity(this, inBody, outLinearVelocity, outAngularVelocity);
+}
+
+template <class taCollector>
+void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
+{
+	// Get adjusted body velocity
+	Vec3 linear_velocity, angular_velocity;
+	inCharacter->GetAdjustedBodyVelocity(inBody, linear_velocity, angular_velocity);
+
 	outContact.mPosition = inBaseOffset + inResult.mContactPointOn2;
-	outContact.mLinearVelocity = inBody.GetPointVelocity(outContact.mPosition);
+	outContact.mLinearVelocity = linear_velocity + angular_velocity.Cross(Vec3(outContact.mPosition - inBody.GetCenterOfMassPosition())); // Calculate point velocity
 	outContact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
 	outContact.mSurfaceNormal = inCollector.GetContext()->GetWorldSpaceSurfaceNormal(inResult.mSubShapeID2, outContact.mPosition);
 	if (outContact.mContactNormal.Dot(outContact.mSurfaceNormal) < 0.0f)
@@ -120,7 +143,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 
 		mContacts.emplace_back();
 		Contact &contact = mContacts.back();
-		sFillContactProperties(contact, body, mUp, mBaseOffset, *this, inResult);
+		sFillContactProperties(mCharacter, contact, body, mUp, mBaseOffset, *this, inResult);
 		contact.mFraction = 0.0f;
 	}
 }
@@ -147,7 +170,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 				return;
 
 			// Convert the hit result into a contact
-			sFillContactProperties(contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
+			sFillContactProperties(mCharacter, contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
 		}
 			
 		contact.mFraction = inResult.mFraction;
@@ -184,7 +207,7 @@ void CharacterVirtual::GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMove
 	outContacts.clear();
 
 	// Collide shape
-	ContactCollector collector(mSystem, mMaxNumHits, mHitReductionCosMaxAngle, mUp, mPosition, outContacts);
+	ContactCollector collector(mSystem, this, mMaxNumHits, mHitReductionCosMaxAngle, mUp, mPosition, outContacts);
 	CheckCollision(inPosition, mRotation, inMovementDirection, mPredictiveContactDistance, inShape, mPosition, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 
 	// Flag if we exceeded the max number of hits
@@ -755,10 +778,13 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 						{
 							const Body &body = lock.GetBody();
 
+							// Get adjusted body velocity
+							Vec3 linear_velocity;
+							GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
+							
 							// Add the linear velocity to the average velocity
-							avg_velocity += body.GetLinearVelocity();
+							avg_velocity += linear_velocity;
 
-							angular_velocity = body.GetAngularVelocity();
 							com = body.GetCenterOfMassPosition();
 						}
 						else

@@ -64,6 +64,9 @@ protected:
 	Array<BodyID>			mRampBlocks;
 	float					mRampBlocksTimeLeft = 0.0f;
 
+	// Conveyor belt body
+	BodyID					mConveyorBeltBody;
+
 private:
 	// Shape types
 	enum class EType

@@ -171,6 +171,13 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(mDesiredVelocity);
 }
 
+void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
+{
+	// Apply artificial velocity to the character when standing on the conveyor belt
+	if (inBody2.GetID() == mConveyorBeltBody)
+		ioLinearVelocity += Vec3(0, 0, 2);
+}
+
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
 	// Dynamic boxes on the ramp go through all permutations

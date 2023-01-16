@@ -42,6 +42,7 @@ static const RVec3 cVerticallyMovingPosition(0, 2.0f, 15);
 static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
 static const RVec3 cHorizontallyMovingPosition(5, 1, 15);
 static const Quat cHorizontallyMovingOrientation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
+static const RVec3 cConveyorBeltPosition(-10, 0.15f, 15);
 static const RVec3 cRampPosition(15, 2.2f, 15);
 static const Quat cRampOrientation = Quat::sRotation(Vec3::sAxisX(), -0.25f * JPH_PI);
 static const RVec3 cRampBlocksStart = cRampPosition + Vec3(-3.0f, 3.0f, 1.5f);
@@ -109,6 +110,11 @@ void CharacterBaseTest::Initialize()
 			mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+		}
+
+		{
+			// Conveyor belt (only works with virtual character)
+			mConveyorBeltBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(1, 0.15f, 3.0f)), cConveyorBeltPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::Activate);
 		}
 
 		{
