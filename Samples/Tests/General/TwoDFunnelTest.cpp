@@ -35,7 +35,6 @@ void TwoDFunnelTest::Initialize()
 
 	// Constraint to limit motion in XY plane
 	SixDOFConstraintSettings constraint_settings;
-	constraint_settings.mSpace = EConstraintSpace::LocalToBodyCOM;
 	constraint_settings.MakeFreeAxis(SixDOFConstraintSettings::EAxis::RotationX); // Don't limit, we use inertia tensor to limit rotation
 	constraint_settings.MakeFreeAxis(SixDOFConstraintSettings::EAxis::RotationY); // Don't limit, we use inertia tensor to limit rotation
 	constraint_settings.MakeFreeAxis(SixDOFConstraintSettings::EAxis::RotationZ);
@@ -54,7 +53,7 @@ void TwoDFunnelTest::Initialize()
 			mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
 
 			// Constraint the body to the XY plane
-			constraint_settings.mPosition1 = body.GetCenterOfMassPosition(); // Attach it at the initial position of the body for best precision
+			constraint_settings.mPosition1 = constraint_settings.mPosition2 = body.GetCenterOfMassPosition(); // Attach it at the initial position of the body for best precision
 			TwoBodyConstraint *constraint = constraint_settings.Create(Body::sFixedToWorld, body);
 			mPhysicsSystem->AddConstraint(constraint);
 
