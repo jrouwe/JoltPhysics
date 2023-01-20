@@ -171,7 +171,7 @@ namespace ClosestPoint
 		float n_len_sq = n.LengthSq();
 
 		// Check degenerate
-		if (n_len_sq < 1.0e-13f) // Square(FLT_EPSILON) was too small and caused numerical problems, see test case TestCollideParallelTriangleVsCapsule
+		if (n_len_sq < 1.0e-11f) // Square(FLT_EPSILON) was too small and caused numerical problems, see test case TestCollideParallelTriangleVsCapsule
 		{
 			// Degenerate, fallback to edges
 
