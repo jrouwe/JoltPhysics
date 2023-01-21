@@ -173,31 +173,75 @@ namespace ClosestPoint
 		// Check degenerate
 		if (n_len_sq < 1.0e-11f) // Square(FLT_EPSILON) was too small and caused numerical problems, see test case TestCollideParallelTriangleVsCapsule
 		{
-			// Degenerate, fallback to edges
+			// Degenerate, fallback to vertices and edges
+
+			// Start with vertex A being the closest
+			uint32 closest_set = 0b0001;
+			Vec3 closest_point = inA;
+			float best_dist_sq = inA.LengthSq();
+
+			// Try vertex B
+			float b_len_sq = inB.LengthSq();
+			if (b_len_sq < best_dist_sq)
+			{
+				closest_set = 0b0010;
+				closest_point = inB;
+				best_dist_sq = b_len_sq;
+			}
+
+			// Try vertex C
+			float c_len_sq = inC.LengthSq();
+			if (c_len_sq < best_dist_sq)
+			{
+				closest_set = 0b0100;
+				closest_point = inC;
+				best_dist_sq = c_len_sq;
+			}
 
 			// Edge AB
-			uint32 closest_set;
-			Vec3 closest_point = GetClosestPointOnLine(inA, inB, closest_set);
-			float best_dist_sq = closest_point.LengthSq();
+			float ab_len_sq = ab.LengthSq();
+			if (ab_len_sq > Square(FLT_EPSILON))
+			{
+				float v = Clamp(-a.Dot(ab) / ab_len_sq, 0.0f, 1.0f);
+				Vec3 q = a + v * ab;
+				float dist_sq = q.LengthSq();
+				if (dist_sq < best_dist_sq)
+				{
+					closest_set = swap_ac.GetX()? 0b0110 : 0b0011;
+					closest_point = q;
+					best_dist_sq = dist_sq;
+				}
+			}
 
 			// Edge AC
-			uint32 set;
-			Vec3 q = GetClosestPointOnLine(inA, inC, set);
-			float dist_sq = q.LengthSq();
-			if (dist_sq < best_dist_sq)
+			float ac_len_sq = ac.LengthSq();
+			if (ac_len_sq > Square(FLT_EPSILON))
 			{
-				closest_point = q;
-				best_dist_sq = dist_sq;
-				closest_set = (set & 0b0001) + ((set & 0b0010) << 1);
+				float v = Clamp(-a.Dot(ac) / ac_len_sq, 0.0f, 1.0f);
+				Vec3 q = a + v * ac;
+				float dist_sq = q.LengthSq();
+				if (dist_sq < best_dist_sq)
+				{
+					closest_set = 0b0101;
+					closest_point = q;
+					best_dist_sq = dist_sq;
+				}
 			}
 
 			// Edge BC
-			q = GetClosestPointOnLine(inB, inC, set);
-			dist_sq = q.LengthSq();
-			if (dist_sq < best_dist_sq)
+			Vec3 bc = c - inB;
+			float bc_len_sq = bc.LengthSq();
+			if (bc_len_sq > Square(FLT_EPSILON))
 			{
-				closest_point = q;
-				closest_set = set << 1;
+				float v = Clamp(-inB.Dot(bc) / bc_len_sq, 0.0f, 1.0f);
+				Vec3 q = inB + v * bc;
+				float dist_sq = q.LengthSq();
+				if (dist_sq < best_dist_sq)
+				{
+					closest_set = swap_ac.GetX()? 0b0011 : 0b0110;
+					closest_point = q;
+					best_dist_sq = dist_sq;
+				}
 			}
 
 			outSet = closest_set;
