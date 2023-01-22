@@ -171,7 +171,7 @@ namespace ClosestPoint
 		float n_len_sq = n.LengthSq();
 
 		// Check degenerate
-		if (n_len_sq < 1.0e-11f) // Square(FLT_EPSILON) was too small and caused numerical problems, see test case TestCollideParallelTriangleVsCapsule
+		if (n_len_sq < 1.0e-13f) // Square(FLT_EPSILON) was too small and caused numerical problems, see test case TestCollideParallelTriangleVsCapsule
 		{
 			// Degenerate, fallback to vertices and edges
 
@@ -430,27 +430,33 @@ namespace ClosestPoint
 		// Repeat test for face adb 
 		if (origin_out_of_planes.GetZ()) // OriginOutsideOfPlane(inA, inD, inB, inC)
 		{
+			// Keep original vertex order, it doesn't matter if the triangle is facing inward or outward
+			// and it improves consistency for GJK which will always add a new vertex D and keep the closest
+			// feature from the previous iteration in ABC
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle(inA, inD, inB, set); 
+			Vec3 q = GetClosestPointOnTriangle(inA, inB, inD, set); 
 			float dist_sq = q.LengthSq(); 
 			if (dist_sq < best_dist_sq) 
 			{
 				best_dist_sq = dist_sq;
 				closest_point = q;
-				closest_set = (set & 0b0001) + ((set & 0b0010) << 2) + ((set & 0b0100) >> 1); 
+				closest_set = (set & 0b0011) + ((set & 0b0100) << 1); 
 			}
 		} 
 		
 		// Repeat test for face bdc 
 		if (origin_out_of_planes.GetW()) // OriginOutsideOfPlane(inB, inD, inC, inA)
 		{ 
+			// Keep original vertex order, it doesn't matter if the triangle is facing inward or outward
+			// and it improves consistency for GJK which will always add a new vertex D and keep the closest
+			// feature from the previous iteration in ABC
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle(inB, inD, inC, set); 
+			Vec3 q = GetClosestPointOnTriangle(inB, inC, inD, set); 
 			float dist_sq = q.LengthSq(); 
 			if (dist_sq < best_dist_sq) 
 			{
 				closest_point = q;
-				closest_set = ((set & 0b0001) << 1) + ((set & 0b0010) << 2) + (set & 0b0100); 
+				closest_set = set << 1;
 			}
 		} 
 	
