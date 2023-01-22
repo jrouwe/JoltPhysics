@@ -27,9 +27,12 @@ private:
 	/// @param outV Closest point
 	/// @param outVLenSq |outV|^2
 	/// @param outSet Set of points that form the new simplex closest to the origin (bit 1 = mY[0], bit 2 = mY[1], ...)
+	/// 
+	/// If LastPointPartOfClosestFeature is true then the last point added will be assumed to be part of the closest feature and the function will do less work.
 	///
 	/// @return True if new closest point was found.
 	/// False if the function failed, in this case the output variables are not modified
+	template <bool LastPointPartOfClosestFeature>
 	bool		GetClosest(float inPrevVLenSq, Vec3 &outV, float &outVLenSq, uint32 &outSet) const
 	{
 #ifdef JPH_GJK_DEBUG
@@ -55,12 +58,12 @@ private:
 
 		case 3:
 			// Triangle
-			v = ClosestPoint::GetClosestPointOnTriangle(mY[0], mY[1], mY[2], set);
+			v = ClosestPoint::GetClosestPointOnTriangle<LastPointPartOfClosestFeature>(mY[0], mY[1], mY[2], set);
 			break;
 
 		case 4:
 			// Tetrahedron
-			v = ClosestPoint::GetClosestPointOnTetrahedron(mY[0], mY[1], mY[2], mY[3], set);
+			v = ClosestPoint::GetClosestPointOnTetrahedron<LastPointPartOfClosestFeature>(mY[0], mY[1], mY[2], mY[3], set);
 			break;
 
 		default:
@@ -256,7 +259,7 @@ public:
 			// Determine the new closest point
 			float v_len_sq;			// Length^2 of v
 			uint32 set;				// Set of points that form the new simplex
-			if (!GetClosest(prev_v_len_sq, ioV, v_len_sq, set))
+			if (!GetClosest<true>(prev_v_len_sq, ioV, v_len_sq, set))
 				return false;
 
 			// If there are 4 points, the origin is inside the tetrahedron and we're done
@@ -407,7 +410,7 @@ public:
 #endif
 
 			uint32 set;
-			if (!GetClosest(prev_v_len_sq, ioV, v_len_sq, set))
+			if (!GetClosest<true>(prev_v_len_sq, ioV, v_len_sq, set))
 			{
 				--mNumPoints; // Undo add last point
 				break;
@@ -596,7 +599,7 @@ public:
 			// Determine the new closest point from Y to origin
 			bool needs_restart = false;
 			uint32 set;						// Set of points that form the new simplex
-			if (!GetClosest(v_len_sq, v, v_len_sq, set))
+			if (!GetClosest<false>(v_len_sq, v, v_len_sq, set))
 			{
 #ifdef JPH_GJK_DEBUG
 				Trace("Failed to converge");
@@ -805,7 +808,7 @@ public:
 			// Determine the new closest point from Y to origin
 			bool needs_restart = false;
 			uint32 set;						// Set of points that form the new simplex
-			if (!GetClosest(v_len_sq, v, v_len_sq, set))
+			if (!GetClosest<false>(v_len_sq, v, v_len_sq, set))
 			{
 #ifdef JPH_GJK_DEBUG
 				Trace("Failed to converge");
