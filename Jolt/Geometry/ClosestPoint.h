@@ -145,6 +145,8 @@ namespace ClosestPoint
 
 	/// Get the closest point to the origin of triangle (inA, inB, inC)
 	/// outSet describes which features are closest: 1 = a, 2 = b, 4 = c, 5 = line segment ac, 7 = triangle interior etc.
+	/// If MustIncludeC is true, the function assumes that C is part of the closest feature (vertex, edge, face) and does less work, if the assumption is not true then a closest point to the other features is returned.
+	template <bool MustIncludeC = false>
 	inline Vec3	GetClosestPointOnTriangle(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, uint32 &outSet)
 	{
 		// Taken from: Real-Time Collision Detection - Christer Ericson (Section: Closest Point on Triangle to Point)
@@ -171,33 +173,81 @@ namespace ClosestPoint
 		float n_len_sq = n.LengthSq();
 
 		// Check degenerate
-		if (n_len_sq < 1.0e-13f) // Square(FLT_EPSILON) was too small and caused numerical problems, see test case TestCollideParallelTriangleVsCapsule
+		if (n_len_sq < 1.0e-11f) // Square(FLT_EPSILON) was too small and caused numerical problems, see test case TestCollideParallelTriangleVsCapsule
 		{
-			// Degenerate, fallback to edges
+			// Degenerate, fallback to vertices and edges
 
-			// Edge AB
-			uint32 closest_set;
-			Vec3 closest_point = GetClosestPointOnLine(inA, inB, closest_set);
-			float best_dist_sq = closest_point.LengthSq();
+			// Start with vertex C being the closest
+			uint32 closest_set = 0b0100;
+			Vec3 closest_point = inC;
+			float best_dist_sq = inC.LengthSq();
+
+			// If the closest point must include C then A or B cannot be closest
+			if constexpr (!MustIncludeC)
+			{
+				// Try vertex A
+				float a_len_sq = inA.LengthSq();
+				if (a_len_sq < best_dist_sq)
+				{
+					closest_set = 0b0001;
+					closest_point = inA;
+					best_dist_sq = a_len_sq;
+				}
+
+				// Try vertex B
+				float b_len_sq = inB.LengthSq();
+				if (b_len_sq < best_dist_sq)
+				{
+					closest_set = 0b0010;
+					closest_point = inB;
+					best_dist_sq = b_len_sq;
+				}
+
+				// Edge AB
+				float ab_len_sq = ab.LengthSq();
+				if (ab_len_sq > Square(FLT_EPSILON))
+				{
+					float v = Clamp(-a.Dot(ab) / ab_len_sq, 0.0f, 1.0f);
+					Vec3 q = a + v * ab;
+					float dist_sq = q.LengthSq();
+					if (dist_sq < best_dist_sq)
+					{
+						closest_set = swap_ac.GetX()? 0b0110 : 0b0011;
+						closest_point = q;
+						best_dist_sq = dist_sq;
+					}
+				}
+			}
 
 			// Edge AC
-			uint32 set;
-			Vec3 q = GetClosestPointOnLine(inA, inC, set);
-			float dist_sq = q.LengthSq();
-			if (dist_sq < best_dist_sq)
+			float ac_len_sq = ac.LengthSq();
+			if (ac_len_sq > Square(FLT_EPSILON))
 			{
-				closest_point = q;
-				best_dist_sq = dist_sq;
-				closest_set = (set & 0b0001) + ((set & 0b0010) << 1);
+				float v = Clamp(-a.Dot(ac) / ac_len_sq, 0.0f, 1.0f);
+				Vec3 q = a + v * ac;
+				float dist_sq = q.LengthSq();
+				if (dist_sq < best_dist_sq)
+				{
+					closest_set = 0b0101;
+					closest_point = q;
+					best_dist_sq = dist_sq;
+				}
 			}
 
 			// Edge BC
-			q = GetClosestPointOnLine(inB, inC, set);
-			dist_sq = q.LengthSq();
-			if (dist_sq < best_dist_sq)
+			Vec3 bc = c - inB;
+			float bc_len_sq = bc.LengthSq();
+			if (bc_len_sq > Square(FLT_EPSILON))
 			{
-				closest_point = q;
-				closest_set = set << 1;
+				float v = Clamp(-inB.Dot(bc) / bc_len_sq, 0.0f, 1.0f);
+				Vec3 q = inB + v * bc;
+				float dist_sq = q.LengthSq();
+				if (dist_sq < best_dist_sq)
+				{
+					closest_set = swap_ac.GetX()? 0b0011 : 0b0110;
+					closest_point = q;
+					best_dist_sq = dist_sq;
+				}
 			}
 
 			outSet = closest_set;
@@ -342,6 +392,8 @@ namespace ClosestPoint
 
 	/// Get the closest point between tetrahedron (inA, inB, inC, inD) to the origin
 	/// outSet specifies which feature was closest, 1 = a, 2 = b, 4 = c, 8 = d. Edges have 2 bits set, triangles 3 and if the point is in the interior 4 bits are set.
+	/// If MustIncludeD is true, the function assumes that D is part of the closest feature (vertex, edge, face, tetrahedron) and does less work, if the assumption is not true then a closest point to the other features is returned.
+	template <bool MustIncludeD = false>
 	inline Vec3	GetClosestPointOnTetrahedron(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, Vec3Arg inD, uint32 &outSet)
 	{
 		// Taken from: Real-Time Collision Detection - Christer Ericson (Section: Closest Point on Tetrahedron to Point)
@@ -357,23 +409,27 @@ namespace ClosestPoint
 
 		// If point outside face abc then compute closest point on abc 
 		if (origin_out_of_planes.GetX()) // OriginOutsideOfPlane(inA, inB, inC, inD)
-		{ 
-			Vec3 q = GetClosestPointOnTriangle(inA, inB, inC, closest_set); 
-			float dist_sq = q.LengthSq(); 
-			
-			// Update best closest point if (squared) distance is less than current best 
-			if (dist_sq < best_dist_sq) 
+		{
+			if constexpr (MustIncludeD)
 			{
-				best_dist_sq = dist_sq;
-				closest_point = q; 
+				// If the closest point must include D then ABC cannot be closest but the closest point
+				// cannot be an interior point either so we return A as closest point
+				closest_set = 0b0001;
+				closest_point = inA;
 			}
-		} 
+			else
+			{
+				// Test the face normally
+				closest_point = GetClosestPointOnTriangle<false>(inA, inB, inC, closest_set); 
+			}
+			best_dist_sq = closest_point.LengthSq();
+		}
 		
 		// Repeat test for face acd 
 		if (origin_out_of_planes.GetY()) // OriginOutsideOfPlane(inA, inC, inD, inB)
 		{ 
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle(inA, inC, inD, set); 
+			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inA, inC, inD, set); 
 			float dist_sq = q.LengthSq(); 
 			if (dist_sq < best_dist_sq) 
 			{
@@ -386,27 +442,33 @@ namespace ClosestPoint
 		// Repeat test for face adb 
 		if (origin_out_of_planes.GetZ()) // OriginOutsideOfPlane(inA, inD, inB, inC)
 		{
+			// Keep original vertex order, it doesn't matter if the triangle is facing inward or outward
+			// and it improves consistency for GJK which will always add a new vertex D and keep the closest
+			// feature from the previous iteration in ABC
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle(inA, inD, inB, set); 
+			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inA, inB, inD, set); 
 			float dist_sq = q.LengthSq(); 
 			if (dist_sq < best_dist_sq) 
 			{
 				best_dist_sq = dist_sq;
 				closest_point = q;
-				closest_set = (set & 0b0001) + ((set & 0b0010) << 2) + ((set & 0b0100) >> 1); 
+				closest_set = (set & 0b0011) + ((set & 0b0100) << 1); 
 			}
 		} 
 		
 		// Repeat test for face bdc 
 		if (origin_out_of_planes.GetW()) // OriginOutsideOfPlane(inB, inD, inC, inA)
 		{ 
+			// Keep original vertex order, it doesn't matter if the triangle is facing inward or outward
+			// and it improves consistency for GJK which will always add a new vertex D and keep the closest
+			// feature from the previous iteration in ABC
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle(inB, inD, inC, set); 
+			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inB, inC, inD, set); 
 			float dist_sq = q.LengthSq(); 
 			if (dist_sq < best_dist_sq) 
 			{
 				closest_point = q;
-				closest_set = ((set & 0b0001) << 1) + ((set & 0b0010) << 2) + (set & 0b0100); 
+				closest_set = set << 1;
 			}
 		} 
 	
