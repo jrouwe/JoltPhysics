@@ -424,10 +424,23 @@ target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseASAN>:NDEBUG;JPH_PROFI
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseUBSAN>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseCoverage>:NDEBUG>")
 
-if (CROSS_COMPILE_ARM OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
-	# ARM
-elseif ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x86" OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
-	# x86
+# Determine processor type
+if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore") AND NOT MINGW)
+	if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x86" OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+		set(PROCESSOR_TYPE "x86")
+	else()
+		set(PROCESSOR_TYPE "ARM")
+	endif()
+else()
+	if (CROSS_COMPILE_ARM OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
+		set(PROCESSOR_TYPE "ARM")
+	else()
+		set(PROCESSOR_TYPE "x86")
+	endif()
+endif()
+
+# Emit x86 processor feature selection macros
+if ("${PROCESSOR_TYPE}" STREQUAL "x86")
 	if (USE_AVX512)
 		target_compile_definitions(Jolt PUBLIC JPH_USE_AVX512)
 	endif()
