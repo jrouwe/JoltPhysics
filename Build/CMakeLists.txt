@@ -48,11 +48,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}
 	set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseASAN;ReleaseUBSAN;ReleaseCoverage;Distribution")
 endif()
 
-# Pass double precision flag on to the library
-if (DOUBLE_PRECISION)
-	add_compile_definitions(JPH_DOUBLE_PRECISION)
-endif()
-
 if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore") AND NOT MINGW)
 	# Fill in the path to the asan libraries
 	set(CLANG_LIB_PATH "\"$(VSInstallDir)\\VC\\Tools\\Llvm\\x64\\lib\\clang\\${CMAKE_CXX_COMPILER_VERSION}\\lib\\windows\"")
@@ -110,24 +105,6 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 			elseif (USE_AVX)
 				set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX")
 			endif()	
-			if (USE_SSE4_1)
-				add_compile_definitions(JPH_USE_SSE4_1)
-			endif()
-			if (USE_SSE4_2)
-				add_compile_definitions(JPH_USE_SSE4_2)
-			endif()
-			if (USE_LZCNT)
-				add_compile_definitions(JPH_USE_LZCNT)
-			endif()
-			if (USE_TZCNT)
-				add_compile_definitions(JPH_USE_TZCNT)
-			endif()
-			if (USE_F16C)
-				add_compile_definitions(JPH_USE_F16C)
-			endif()
-			if (USE_FMADD AND NOT CROSS_PLATFORM_DETERMINISTIC)
-				add_compile_definitions(JPH_USE_FMADD)
-			endif()
 		endif()
 		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DJPH_FLOATING_POINT_EXCEPTIONS_ENABLED") # Clang turns Float2 into a vector sometimes causing floating point exceptions
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /DJPH_FLOATING_POINT_EXCEPTIONS_ENABLED")
@@ -232,11 +209,6 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 
 	# Set linker flags
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
-endif()
-
-# Setting to attempt cross platform determinism
-if (CROSS_PLATFORM_DETERMINISTIC)
-	add_compile_definitions(JPH_CROSS_PLATFORM_DETERMINISTIC)
 endif()
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE OFF)
