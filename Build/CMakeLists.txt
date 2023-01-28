@@ -48,11 +48,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}
 	set(CMAKE_CONFIGURATION_TYPES "Debug;Release;ReleaseASAN;ReleaseUBSAN;ReleaseCoverage;Distribution")
 endif()
 
-# Pass double precision flag on to the library
-if (DOUBLE_PRECISION)
-	add_compile_definitions(JPH_DOUBLE_PRECISION)
-endif()
-
 if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore") AND NOT MINGW)
 	# Fill in the path to the asan libraries
 	set(CLANG_LIB_PATH "\"$(VSInstallDir)\\VC\\Tools\\Llvm\\x64\\lib\\clang\\${CMAKE_CXX_COMPILER_VERSION}\\lib\\windows\"")
@@ -232,11 +227,6 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 
 	# Set linker flags
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
-endif()
-
-# Setting to attempt cross platform determinism
-if (CROSS_PLATFORM_DETERMINISTIC)
-	add_compile_definitions(JPH_CROSS_PLATFORM_DETERMINISTIC)
 endif()
 
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE OFF)
