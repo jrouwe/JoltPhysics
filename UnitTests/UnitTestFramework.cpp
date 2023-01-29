@@ -212,6 +212,9 @@ int main(int argc, char** argv)
 #ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
 	std::cout << "(Cross Platform Deterministic)";
 #endif
+#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+	std::cout << "(FP Exceptions)";
+#endif
 	std::cout << std::endl;
 
 	// Register allocation hook
