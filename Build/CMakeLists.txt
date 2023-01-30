@@ -2,13 +2,6 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 project(JoltPhysics CXX)
 
-# Ability to turn ON/OFF individual applications
-option(TARGET_UNIT_TESTS "Build Unit Tests" ON)
-option(TARGET_HELLO_WORLD "Build Hello World" ON)
-option(TARGET_PERFORMANCE_TEST "Build Performance Test" ON)
-option(TARGET_SAMPLES "Build Samples" ON)
-option(TARGET_VIEWER "Build JoltViewer" ON)
-
 # When turning this option on, the library will be compiled using doubles for positions. This allows for much bigger worlds.
 option(DOUBLE_PRECISION "Use double precision math" OFF)
 
@@ -179,68 +172,78 @@ if (IOS)
 	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt") 
 endif()
 
-if (TARGET_UNIT_TESTS)
-    # Create UnitTests executable
-    include(${PHYSICS_REPO_ROOT}/UnitTests/UnitTests.cmake)
-    add_executable(UnitTests ${UNIT_TESTS_SRC_FILES})
-    target_include_directories(UnitTests PUBLIC ${UNIT_TESTS_ROOT})
-    target_link_libraries(UnitTests LINK_PUBLIC Jolt)
-	target_precompile_headers(UnitTests PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
-    if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
-        target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
-    endif()
-    if (IOS)
-		# Set the bundle information
-		set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
-		set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
+# Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library 
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	# Ability to turn ON/OFF individual applications
+	option(TARGET_UNIT_TESTS "Build Unit Tests" ON)
+	option(TARGET_HELLO_WORLD "Build Hello World" ON)
+	option(TARGET_PERFORMANCE_TEST "Build Performance Test" ON)
+	option(TARGET_SAMPLES "Build Samples" ON)
+	option(TARGET_VIEWER "Build JoltViewer" ON)
 
-		# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
-		set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
-    endif()
-
-    # Register unit tests as a test so that it can be run with:
-    # ctest --output-on-failure
-    enable_testing()
-    add_test(UnitTests UnitTests)
-endif()
-
-if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
-	if (TARGET_HELLO_WORLD)
-		# Example 'Hello World' application
-		include(${PHYSICS_REPO_ROOT}/HelloWorld/HelloWorld.cmake)
-		add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
-		target_include_directories(HelloWorld PUBLIC ${HELLO_WORLD_ROOT})
-		target_link_libraries(HelloWorld LINK_PUBLIC Jolt)
+	if (TARGET_UNIT_TESTS)
+		# Create UnitTests executable
+		include(${PHYSICS_REPO_ROOT}/UnitTests/UnitTests.cmake)
+		add_executable(UnitTests ${UNIT_TESTS_SRC_FILES})
+		target_include_directories(UnitTests PUBLIC ${UNIT_TESTS_ROOT})
+		target_link_libraries(UnitTests LINK_PUBLIC Jolt)
+		target_precompile_headers(UnitTests PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
 		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
-			target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
+			target_link_options(UnitTests PUBLIC "/SUBSYSTEM:CONSOLE")
 		endif()
+		if (IOS)
+			# Set the bundle information
+			set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
+			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
+
+			# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
+			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
+		endif()
+
+		# Register unit tests as a test so that it can be run with:
+		# ctest --output-on-failure
+		enable_testing()
+		add_test(UnitTests UnitTests)
 	endif()
 
-	if (TARGET_PERFORMANCE_TEST)
-		# Performance Test application
-		include(${PHYSICS_REPO_ROOT}/PerformanceTest/PerformanceTest.cmake)
-		add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
-		target_include_directories(PerformanceTest PUBLIC ${PERFORMANCE_TEST_ROOT})
-		target_link_libraries(PerformanceTest LINK_PUBLIC Jolt)
-		if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
-			target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+	if (NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "WindowsStore")
+		if (TARGET_HELLO_WORLD)
+			# Example 'Hello World' application
+			include(${PHYSICS_REPO_ROOT}/HelloWorld/HelloWorld.cmake)
+			add_executable(HelloWorld ${HELLO_WORLD_SRC_FILES})
+			target_include_directories(HelloWorld PUBLIC ${HELLO_WORLD_ROOT})
+			target_link_libraries(HelloWorld LINK_PUBLIC Jolt)
+			if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
+				target_link_options(HelloWorld PUBLIC "/SUBSYSTEM:CONSOLE")
+			endif()
 		endif()
-		set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
-		
-		# Copy the assets folder
-		add_custom_command(TARGET PerformanceTest PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:PerformanceTest>/Assets/)
-	   endif()
-endif()
 
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
-	# Windows only targets
-	if (TARGET_SAMPLES OR TARGET_VIEWER)
-		include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
+		if (TARGET_PERFORMANCE_TEST)
+			# Performance Test application
+			include(${PHYSICS_REPO_ROOT}/PerformanceTest/PerformanceTest.cmake)
+			add_executable(PerformanceTest ${PERFORMANCE_TEST_SRC_FILES})
+			target_include_directories(PerformanceTest PUBLIC ${PERFORMANCE_TEST_ROOT})
+			target_link_libraries(PerformanceTest LINK_PUBLIC Jolt)
+			if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT MINGW)
+				target_link_options(PerformanceTest PUBLIC "/SUBSYSTEM:CONSOLE")
+			endif()
+			set_property(TARGET PerformanceTest PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${PHYSICS_REPO_ROOT}")
+			
+			# Copy the assets folder
+			add_custom_command(TARGET PerformanceTest PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${PHYSICS_REPO_ROOT}/Assets/ $<TARGET_FILE_DIR:PerformanceTest>/Assets/)
+		   endif()
 	endif()
-	if (TARGET_SAMPLES)
-		include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
-	endif()
-	if (TARGET_VIEWER)
-		include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
+
+	if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" AND NOT ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "ARM")) # ARM 32-bit is missing dinput8.lib
+		# Windows only targets
+		if (TARGET_SAMPLES OR TARGET_VIEWER)
+			include(${PHYSICS_REPO_ROOT}/TestFramework/TestFramework.cmake)
+		endif()
+		if (TARGET_SAMPLES)
+			include(${PHYSICS_REPO_ROOT}/Samples/Samples.cmake)
+		endif()
+		if (TARGET_VIEWER)
+			include(${PHYSICS_REPO_ROOT}/JoltViewer/JoltViewer.cmake)
+		endif()
 	endif()
 endif()
