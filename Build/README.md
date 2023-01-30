@@ -137,6 +137,16 @@ Note that you can also follow the steps in the 'Linux' section if you wish to bu
 - This will open XCode with a newly generated project
 - Build and run the project (note that this will only work in the simulator as the code signing information is not set up)
 
+## Link Errors
+
+If you receive the following error when linking:
+
+```
+/usr/bin/ld: libJolt.a: error adding symbols: file format not recognized
+```
+
+Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
+
 ## Doxygen on Windows
 
 Documentation can be generated through doxygen:
