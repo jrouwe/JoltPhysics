@@ -89,11 +89,20 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
 {
-	// Smooth the player input
-	mDesiredVelocity = 0.25f * inMovementDirection * cCharacterSpeed + 0.75f * mDesiredVelocity;
+	bool player_controls_horizontal_velocity = sControlMovementDuringJump || mCharacter->IsSupported();
+	if (player_controls_horizontal_velocity)
+	{
+		// Smooth the player input
+		mDesiredVelocity = 0.25f * inMovementDirection * sCharacterSpeed + 0.75f * mDesiredVelocity;
 
-	// True if the player intended to move
-	mAllowSliding = !inMovementDirection.IsNearZero();
+		// True if the player intended to move
+		mAllowSliding = !inMovementDirection.IsNearZero();
+	}
+	else
+	{
+		// While in air we allow sliding
+		mAllowSliding = true;
+	}
 
 	// Update the character rotation and its up vector to match the up vector set by the user settings
 	Quat character_up_rotation = Quat::sEulerAngles(Vec3(sUpRotationX, 0, sUpRotationZ));
@@ -112,7 +121,7 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 		// Jump
 		if (inJump)
-			new_velocity += cJumpSpeed * mCharacter->GetUp();
+			new_velocity += sJumpSpeed * mCharacter->GetUp();
 	}
 	else
 		new_velocity = current_vertical_velocity;
@@ -120,8 +129,17 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// Gravity
 	new_velocity += (character_up_rotation * mPhysicsSystem->GetGravity()) * inDeltaTime;
 
-	// Player input
-	new_velocity += character_up_rotation * mDesiredVelocity;
+	if (player_controls_horizontal_velocity)
+	{
+		// Player input
+		new_velocity += character_up_rotation * mDesiredVelocity;
+	}
+	else
+	{
+		// Preserve horizontal velocity
+		Vec3 current_horizontal_velocity = mCharacter->GetLinearVelocity() - current_vertical_velocity;
+		new_velocity += current_horizontal_velocity;
+	}
 
 	// Update character velocity
 	mCharacter->SetLinearVelocity(new_velocity);

@@ -547,6 +547,15 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 		inUI->ShowMenu(scene_name);
 	});
 
+	inUI->CreateTextButton(inSubMenu, "Character Movement Settings", [=]() {
+		UIElement *movement_settings = inUI->CreateMenu();
+
+		inUI->CreateCheckBox(movement_settings, "Control Movement During Jump", sControlMovementDuringJump, [](UICheckBox::EState inState) { sControlMovementDuringJump = inState == UICheckBox::STATE_CHECKED; });
+		inUI->CreateSlider(movement_settings, "Character Speed", sCharacterSpeed, 0.1f, 10.0f, 0.1f, [](float inValue) { sCharacterSpeed = inValue; });
+		inUI->CreateSlider(movement_settings, "Character Jump Speed", sJumpSpeed, 0.1f, 10.0f, 0.1f, [](float inValue) { sJumpSpeed = inValue; });
+		inUI->ShowMenu(movement_settings);
+	});
+
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
 
