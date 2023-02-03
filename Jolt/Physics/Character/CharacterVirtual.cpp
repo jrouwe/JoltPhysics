@@ -985,7 +985,8 @@ Vec3 CharacterVirtual::CancelVelocityTowardsSteepSlopes(Vec3Arg inDesiredVelocit
 		if (c.mHadCollision
 			&& IsSlopeTooSteep(c.mSurfaceNormal))
 		{
-			Vec3 normal = c.mSurfaceNormal;
+			// Note that we use the contact normal to allow for better sliding as the surface normal may be in the opposite direction of movement.
+			Vec3 normal = c.mContactNormal;
 
 			// Remove normal vertical component
 			normal -= normal.Dot(mUp) * mUp;
