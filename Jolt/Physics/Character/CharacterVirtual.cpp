@@ -20,6 +20,7 @@ JPH_NAMESPACE_BEGIN
 
 CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
+	mBackFaceMode(inSettings->mBackFaceMode),
 	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
 	mMaxCollisionIterations(inSettings->mMaxCollisionIterations),
 	mMaxConstraintIterations(inSettings->mMaxConstraintIterations),
@@ -193,7 +194,7 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	// Settings for collide shape
 	CollideShapeSettings settings;
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
-	settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+	settings.mBackFaceMode = mBackFaceMode;
 	settings.mActiveEdgeMovementDirection = inMovementDirection;
 	settings.mMaxSeparationDistance = mCharacterPadding + inMaxSeparationDistance;
 
@@ -304,7 +305,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 
 	// Settings for the cast
 	ShapeCastSettings settings;
-	settings.mBackFaceModeTriangles = EBackFaceMode::CollideWithBackFaces;
+	settings.mBackFaceModeTriangles = mBackFaceMode;
 	settings.mBackFaceModeConvex = EBackFaceMode::IgnoreBackFaces;
 	settings.mActiveEdgeMode = EActiveEdgeMode::CollideOnlyWithActive;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
