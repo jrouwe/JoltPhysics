@@ -141,6 +141,8 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 	body->mMotionType = inBodyCreationSettings.mMotionType;
 	if (inBodyCreationSettings.mIsSensor)
 		body->SetIsSensor(true);
+	if (inBodyCreationSettings.mUseManifoldReduction)
+		body->SetUseManifoldReduction(true);
 	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
 	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;

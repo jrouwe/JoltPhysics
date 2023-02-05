@@ -22,6 +22,8 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mObjectLayer)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mMotionType)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowDynamicOrKinematic)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mIsSensor)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mUseManifoldReduction)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mMotionQuality)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowSleeping)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mFriction)
@@ -46,6 +48,8 @@ void BodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mObjectLayer);
 	inStream.Write(mMotionType);
 	inStream.Write(mAllowDynamicOrKinematic);
+	inStream.Write(mIsSensor);
+	inStream.Write(mUseManifoldReduction);
 	inStream.Write(mMotionQuality);
 	inStream.Write(mAllowSleeping);
 	inStream.Write(mFriction);
@@ -70,6 +74,8 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mObjectLayer);
 	inStream.Read(mMotionType);
 	inStream.Read(mAllowDynamicOrKinematic);
+	inStream.Read(mIsSensor);
+	inStream.Read(mUseManifoldReduction);
 	inStream.Read(mMotionQuality);
 	inStream.Read(mAllowSleeping);
 	inStream.Read(mFriction);
