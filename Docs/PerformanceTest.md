@@ -17,6 +17,7 @@ The performance test application contains a couple of simple scenes to test perf
 - -h: Displays a help text
 - -rs: Record the simulation state in state_[tag].bin.
 - -vs: Validate the recorded simulation state from state_[tag].bin. This will after every simulation step check that the state is the same as the recorded state and trigger a breakpoint if this is not the case. This is used to validate cross platform determinism.
+- -repeat=[num]: Repeats all tests num times.
 - -validate_hash=[hash]: Will validate that the hash of the simulation matches the supplied hash. Program terminates with return code 1 if it doesn't. Can be used to automatically validate determinism.
 
 ## Output
