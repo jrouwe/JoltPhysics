@@ -24,6 +24,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mMaxSlopeAngle = sMaxSlopeAngle;
 	settings->mMaxStrength = sMaxStrength;
 	settings->mShape = mStandingShape;
+	settings->mBackFaceMode = sBackFaceMode;
 	settings->mCharacterPadding = sCharacterPadding;
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
@@ -151,6 +152,7 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu)
 {
+	inUI->CreateComboBox(inSubMenu, "Back Face Mode", { "Ignore", "Collide" }, (int)sBackFaceMode, [=](int inItem) { sBackFaceMode = (EBackFaceMode)inItem; });
 	inUI->CreateSlider(inSubMenu, "Up Rotation X (degrees)", RadiansToDegrees(sUpRotationX), -90.0f, 90.0f, 1.0f, [](float inValue) { sUpRotationX = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Up Rotation Z (degrees)", RadiansToDegrees(sUpRotationZ), -90.0f, 90.0f, 1.0f, [](float inValue) { sUpRotationZ = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Slope Angle (degrees)", RadiansToDegrees(sMaxSlopeAngle), 0.0f, 90.0f, 1.0f, [](float inValue) { sMaxSlopeAngle = DegreesToRadians(inValue); });

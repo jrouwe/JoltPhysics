@@ -43,6 +43,7 @@ protected:
 
 private:
 	// Test settings
+	static inline EBackFaceMode sBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 	static inline float		sUpRotationX = 0;
 	static inline float		sUpRotationZ = 0;	
 	static inline float		sMaxSlopeAngle = DegreesToRadians(45.0f);
