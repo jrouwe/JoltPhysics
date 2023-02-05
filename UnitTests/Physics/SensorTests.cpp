@@ -410,7 +410,7 @@ TEST_SUITE("SensorTests")
 		shape_settings->AddShape(Vec3(0, -1.0f, 0), Quat::sIdentity(), shape1);
 		shape_settings->AddShape(Vec3(0, 0.0f, 0), Quat::sIdentity(), shape2);
 		shape_settings->AddShape(Vec3(0, 1.0f, 0), Quat::sIdentity(), shape3);
-		BodyCreationSettings compound_body_settings(shape_settings, Vec3(0, 20, 0), Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+		BodyCreationSettings compound_body_settings(shape_settings, RVec3(0, 20, 0), Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 		compound_body_settings.mUseManifoldReduction = false; // Turn off manifold reduction for this body so that we can get proper callbacks for individual sub shapes
 		JPH::BodyID compound_body = bi.CreateAndAddBody(compound_body_settings, JPH::EActivation::Activate);
 
@@ -419,7 +419,6 @@ TEST_SUITE("SensorTests")
 			c.SimulateSingleStep();
 
 		// The expected events
-		using EType = LoggingContactListener::EType;
 		struct Expected
 		{
 
