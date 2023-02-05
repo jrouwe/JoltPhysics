@@ -977,7 +977,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		Mat44 transform1 = Mat44::sRotation(body1->GetRotation());
 		Mat44 transform2 = body2->GetCenterOfMassTransform().PostTranslated(-offset).ToMat44();
 
-		if (mPhysicsSettings.mUseManifoldReduction)
+		if (mPhysicsSettings.mUseManifoldReduction				// Check global flag
+			&& body1->GetUseManifoldReductionWithBody(*body2))	// Check body flag
 		{
 			// Version WITH contact manifold reduction
 
@@ -1128,8 +1129,10 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// Body 1 should always be dynamic, body 2 may be static / kinematic
-					JPH_ASSERT(mBody1->IsDynamic());
+					// One of the following should be true:
+					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
+					// - Body 1 is kinematic in which case body 2 should be a sensor
+					JPH_ASSERT(mBody1->IsDynamic() || (mBody1->IsKinematic() && mBody2->IsSensor()));
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit

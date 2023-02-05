@@ -67,6 +67,16 @@ public:
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
 
+	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body. Manifold reduction by default will combine contacts that come from different SubShapeIDs (e.g. different triangles or different compound shapes).
+	/// If the application requires tracking exactly which SubShapeIDs are in contact, you can turn off manifold reduction. Note that this comes at a performance cost.
+	inline void				SetUseManifoldReduction(bool inUseReduction)					{ if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
+
+	/// Check if this body can use manifold reduction.
+	inline bool				GetUseManifoldReduction() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::UseManifoldReduction)) != 0; }
+
+	/// Checks if the combination of this body and inBody2 should use manifold reduction
+	inline bool				GetUseManifoldReductionWithBody(const Body &inBody2) const		{ return ((mFlags.load(memory_order_relaxed) & inBody2.mFlags.load(memory_order_relaxed)) & uint8(EFlags::UseManifoldReduction)) != 0; }
+
 	/// Motion type of this body
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
 	void					SetMotionType(EMotionType inMotionType);
@@ -288,7 +298,8 @@ private:
 	{
 		IsSensor				= 1 << 0,													///< If this object is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
 		IsInBroadPhase			= 1 << 1,													///< Set this bit to indicate that the body is in the broadphase
-		InvalidateContactCache	= 1 << 2													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
+		InvalidateContactCache	= 1 << 2,													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
+		UseManifoldReduction	= 1 << 3,													///< Set this bit to indicate that this body can use manifold reduction (if PhysicsSettings::mUseManifoldReduction is true)
 	};
 
 	// 16 byte aligned

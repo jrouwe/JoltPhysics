@@ -6,6 +6,7 @@
 #include "Layers.h"
 #include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 
 TEST_SUITE("SensorTests")
 {
@@ -374,5 +375,97 @@ TEST_SUITE("SensorTests")
 		CHECK(listener.Contains(EType::Remove, dynamic2.GetID(), static_id));
 		CHECK_APPROX_EQUAL(dynamic1.GetPosition(), RVec3(-2, 1.5f, 0), 5.0e-3f);
 		CHECK_APPROX_EQUAL(dynamic2.GetPosition(), RVec3(2, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
+	}
+
+	TEST_CASE("TestSensorVsSubShapes")
+	{
+		PhysicsTestContext c;
+		BodyInterface &bi = c.GetBodyInterface();
+
+		// Register listener
+		LoggingContactListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Create sensor
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		sensor_settings.mIsSensor = true;
+		BodyID sensor_id = bi.CreateAndAddBody(sensor_settings, EActivation::DontActivate);
+
+		// We will be testing if we receive callbacks from the individual sub shapes
+		enum class EUserData
+		{
+			Bottom,
+			Middle,
+			Top,
+		};
+
+		// Create compound with 3 sub shapes
+		Ref<StaticCompoundShapeSettings> shape_settings = new StaticCompoundShapeSettings();
+		Ref<BoxShapeSettings> shape1 = new BoxShapeSettings(Vec3::sReplicate(0.4f));
+		shape1->mUserData = (uint64)EUserData::Bottom;
+		Ref<BoxShapeSettings> shape2 = new BoxShapeSettings(Vec3::sReplicate(0.4f));
+		shape2->mUserData = (uint64)EUserData::Middle;
+		Ref<BoxShapeSettings> shape3 = new BoxShapeSettings(Vec3::sReplicate(0.4f));
+		shape3->mUserData = (uint64)EUserData::Top;
+		shape_settings->AddShape(Vec3(0, -1.0f, 0), Quat::sIdentity(), shape1);
+		shape_settings->AddShape(Vec3(0, 0.0f, 0), Quat::sIdentity(), shape2);
+		shape_settings->AddShape(Vec3(0, 1.0f, 0), Quat::sIdentity(), shape3);
+		BodyCreationSettings compound_body_settings(shape_settings, Vec3(0, 20, 0), Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+		compound_body_settings.mUseManifoldReduction = false; // Turn off manifold reduction for this body so that we can get proper callbacks for individual sub shapes
+		JPH::BodyID compound_body = bi.CreateAndAddBody(compound_body_settings, JPH::EActivation::Activate);
+
+		// Simulate until the body passes the origin
+		while (bi.GetPosition(compound_body).GetY() > 0.0f)
+			c.SimulateSingleStep();
+
+		// The expected events
+		using EType = LoggingContactListener::EType;
+		struct Expected
+		{
+
+			EType		mType;
+			EUserData	mUserData;
+		};
+		const Expected expected[] = {
+			{ EType::Add, EUserData::Bottom },
+			{ EType::Add, EUserData::Middle },
+			{ EType::Add, EUserData::Top },
+			{ EType::Remove, EUserData::Bottom },
+			{ EType::Remove, EUserData::Middle },
+			{ EType::Remove, EUserData::Top }
+		};
+		const Expected *next = expected;
+		const Expected *end = expected + size(expected);
+
+		// Loop over events that we received
+		for (size_t e = 0; e < listener.GetEntryCount(); ++e)
+		{
+			const LoggingContactListener::LogEntry &entry = listener.GetEntry(e);
+
+			// Only interested in adds/removes
+			if (entry.mType != EType::Add && entry.mType != EType::Remove)
+				continue;
+
+			// Check if we have more expected events
+			if (next >= end)
+			{
+				CHECK(false);
+				break;
+			}
+
+			// Check if it is of expected type
+			CHECK(entry.mType == next->mType);
+			CHECK(entry.mBody1 == sensor_id);
+			CHECK(entry.mManifold.mSubShapeID1 == SubShapeID());
+			CHECK(entry.mBody2 == compound_body);
+			EUserData user_data = (EUserData)bi.GetShape(compound_body)->GetSubShapeUserData(entry.mManifold.mSubShapeID2);
+			CHECK(user_data == next->mUserData);
+
+			// Next expected event
+			++next;
+		}
+
+		// Check all expected events received
+		CHECK(next == end);
 	}
 }

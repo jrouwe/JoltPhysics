@@ -90,6 +90,7 @@ public:
 	EMotionType				mMotionType = EMotionType::Dynamic;								///< Motion type, determines if the object is static, dynamic or kinematic
 	bool					mAllowDynamicOrKinematic = false;								///< When this body is created as static, this setting tells the system to create a MotionProperties object so that the object can be switched to kinematic or dynamic
 	bool					mIsSensor = false;												///< If this body is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume. See description at Body::SetIsSensor.
+	bool					mUseManifoldReduction = true;									///< If this body should use manifold reduction (see description at Body::SetUseManifoldReduction)
 	EMotionQuality			mMotionQuality = EMotionQuality::Discrete;						///< Motion quality, or how well it detects collisions when it has a high velocity
 	bool					mAllowSleeping = true;											///< If this body can go to sleep or not
 	float					mFriction = 0.2f;												///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together)
