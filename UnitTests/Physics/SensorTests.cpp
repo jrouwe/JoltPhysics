@@ -23,7 +23,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::DontActivate);
 
@@ -61,7 +61,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::DontActivate);
 
@@ -101,7 +101,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Kinematic sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
 
@@ -145,7 +145,7 @@ TEST_SUITE("SensorTests")
 		kinematic.SetLinearVelocity(Vec3(0, -1, 0));
 
 		// Kinematic sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
 
@@ -179,7 +179,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		Body &sensor = *c.GetBodyInterface().CreateBody(sensor_settings);
 		c.GetBodyInterface().AddBody(sensor.GetID(), EActivation::DontActivate);
@@ -234,7 +234,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Kinematic sensor that is active (so will keep detecting contacts with sleeping bodies)
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		Body &sensor = *c.GetBodyInterface().CreateBody(sensor_settings);
 		c.GetBodyInterface().AddBody(sensor.GetID(), EActivation::Activate);
@@ -301,6 +301,67 @@ TEST_SUITE("SensorTests")
 		CHECK(!dynamic.IsActive());
 		CHECK(listener.Contains(EType::Remove, floor.GetID(), dynamic.GetID()));
 		CHECK(!listener.Contains(EType::Remove, sensor.GetID(), dynamic.GetID()));
+	}
+
+	TEST_CASE("TestSensorVsSensor")
+	{
+		for (int test = 0; test < 2; ++test)
+		{
+			bool sensor_detects_sensor = test == 1;
+
+			PhysicsTestContext c;
+
+			// Register listener
+			LoggingContactListener listener;
+			c.GetSystem()->SetContactListener(&listener);
+
+			// Depending on the iteration we either place the sensor in the moving layer which means it will collide with other sensors
+			// or we put it in the sensor layer which means it won't collide with other sensors
+			ObjectLayer layer = sensor_detects_sensor? Layers::MOVING : Layers::SENSOR;
+
+			// Sensor 1
+			BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, layer);
+			sensor_settings.mIsSensor = true;
+			BodyID sensor_id1 = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::DontActivate);
+
+			// Sensor 2 moving downwards
+			sensor_settings.mMotionType = EMotionType::Kinematic;
+			sensor_settings.mPosition = RVec3(0, 3, 0);
+			sensor_settings.mIsSensor = true;
+			sensor_settings.mLinearVelocity = Vec3(0, -2, 0);
+			BodyID sensor_id2 = c.GetBodyInterface().CreateAndAddBody(sensor_settings, EActivation::Activate);
+
+			// After a single step the sensors should not touch yet
+			c.SimulateSingleStep();
+			CHECK(listener.GetEntryCount() == 0);
+
+			// After half a second the sensors should be touching
+			c.Simulate(0.5f);
+			if (sensor_detects_sensor)
+				CHECK(listener.Contains(EType::Add, sensor_id1, sensor_id2));
+			else
+				CHECK(listener.GetEntryCount() == 0);
+			listener.Clear();
+
+			// The next step we require that the contact persists
+			c.SimulateSingleStep();
+			if (sensor_detects_sensor)
+			{
+				CHECK(listener.Contains(EType::Persist, sensor_id1, sensor_id2));
+				CHECK(!listener.Contains(EType::Remove, sensor_id1, sensor_id2));
+			}
+			else
+				CHECK(listener.GetEntryCount() == 0);
+			listener.Clear();
+
+			// After 2 more seconds we should have left the sensor at the bottom side
+			c.Simulate(2.0f + c.GetDeltaTime());
+			if (sensor_detects_sensor)
+				CHECK(listener.Contains(EType::Remove, sensor_id1, sensor_id2));
+			else
+				CHECK(listener.GetEntryCount() == 0);
+			CHECK_APPROX_EQUAL(c.GetBodyInterface().GetPosition(sensor_id2), sensor_settings.mPosition + sensor_settings.mLinearVelocity * (2.5f + 3.0f * c.GetDeltaTime()), 1.0e-4f);
+		}
 	}
 
 	TEST_CASE("TestContactListenerMakesSensor")
@@ -387,7 +448,7 @@ TEST_SUITE("SensorTests")
 		c.GetSystem()->SetContactListener(&listener);
 
 		// Create sensor
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		BodyID sensor_id = bi.CreateAndAddBody(sensor_settings, EActivation::DontActivate);
 
