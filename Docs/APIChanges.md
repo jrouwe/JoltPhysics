@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v2.0.1 and latest
 
+* 20230212 - Sensors are now able to detect other Sensors, make sure you put sensors in an ObjectLayer that doesn't collide with other sensors if you want to preserve the old behavior. (a76f5891ee429ae4fcde659c19f1eb769f9d8a21)
 * 20230205 - *SBS* - Added 'IsSensor' and 'UseManifoldReduction' to BodyCreationSettings::SaveBinaryState. (8f6f210f53fc71e43760e20aeb2eae28ea168f4b)
 * 20221231 - ObjectLayerPairFilter and ObjectVsBroadPhaseLayerFilter are now objects instead of function pointers. (4315ad53e354f094f753664fcf7a52870f6915e4)
 * 20221208 - ContactListener::OnContactValidate is reporting collisions relative to inBaseOffset. Add this to the contact point if you want world space positions. (428611482825e369e60e0a5daf17c69a4d0f2a6f)
