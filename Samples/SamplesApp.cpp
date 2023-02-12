@@ -64,6 +64,7 @@ struct TestCategory
 JPH_DECLARE_RTTI_FOR_FACTORY(SimpleTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(StackTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(WallTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(PyramidTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(IslandTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(FunnelTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(FrictionTest)
@@ -97,6 +98,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Simple",								JPH_RTTI(SimpleTest) },
 	{ "Stack",								JPH_RTTI(StackTest) },
 	{ "Wall",								JPH_RTTI(WallTest) },
+	{ "Pyramid",							JPH_RTTI(PyramidTest) },
 	{ "Island",								JPH_RTTI(IslandTest) },
 	{ "Funnel",								JPH_RTTI(FunnelTest) },
 	{ "2D Funnel",							JPH_RTTI(TwoDFunnelTest) },

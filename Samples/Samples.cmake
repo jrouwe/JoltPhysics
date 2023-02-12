@@ -117,6 +117,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ManifoldReductionTest.h
 	${SAMPLES_ROOT}/Tests/General/MultithreadedTest.cpp
 	${SAMPLES_ROOT}/Tests/General/MultithreadedTest.h
+	${SAMPLES_ROOT}/Tests/General/PyramidTest.cpp
+	${SAMPLES_ROOT}/Tests/General/PyramidTest.h
 	${SAMPLES_ROOT}/Tests/General/RestitutionTest.cpp
 	${SAMPLES_ROOT}/Tests/General/RestitutionTest.h
 	${SAMPLES_ROOT}/Tests/General/SensorTest.cpp
