@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Constraints/ContactConstraintManager.h>
 #include <Jolt/Physics/Constraints/ConstraintManager.h>
 #include <Jolt/Physics/IslandBuilder.h>
+#include <Jolt/Physics/IslandGroupBuilder.h>
 #include <Jolt/Physics/PhysicsUpdateContext.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 
@@ -252,6 +253,9 @@ private:
 
 	/// Keeps track of connected bodies and builds islands for multithreaded velocity/position update
 	IslandBuilder				mIslandBuilder;
+
+	/// Will split islands into groups of bodies that can be processed in parallel
+	IslandGroupBuilder			mIslandGroupBuilder;
 
 	/// Mutex protecting mStepListeners
 	Mutex						mStepListenersMutex;

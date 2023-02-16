@@ -379,8 +379,11 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 						// Store the number of active bodies at the start of the step
 						next_step->mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies();
 
-						// Clear the island builder
+						// Clear the island groups builder
 						TempAllocator *temp_allocator = next_step->mContext->mTempAllocator;
+						mIslandGroupBuilder.Reset(temp_allocator);
+
+						// Clear the island builder
 						mIslandBuilder.ResetIslands(temp_allocator);
 
 						// Setup island builder
@@ -584,7 +587,10 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 	// Validate that the cached bounds are correct
 	mBodyManager.ValidateActiveBodyBounds();
 #endif // _DEBUG
-	
+
+	// Clear the island groups builder
+	mIslandGroupBuilder.Reset(inTempAllocator);
+
 	// Clear the island builder
 	mIslandBuilder.ResetIslands(inTempAllocator);
 
@@ -1229,6 +1235,9 @@ void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
 
 	// Finish collecting the islands, at this point the active body list doesn't change so it's safe to access
 	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(), mBodyManager.GetNumActiveBodies(), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
+
+	// Prepare the island group builder
+	mIslandGroupBuilder.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
 }
 
 void PhysicsSystem::JobBodySetIslandIndex()
@@ -1278,7 +1287,9 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 		bool has_constraints = mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end);
 		uint32 *contacts_begin, *contacts_end;
 		bool has_contacts = mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end);
-		
+
+		IslandGroupBuilder::Groups groups;
+
 		if (first_sub_step)
 		{
 			// If we don't have any contacts or constraints, we know that none of the following islands have any contacts or constraints
@@ -1301,6 +1312,9 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 
 			// Sort contacts to give a deterministic simulation
 			mContactManager.SortContacts(contacts_begin, contacts_end);
+
+			// Build the groups within the island
+			mIslandGroupBuilder.BuildGroupsForIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, groups);
 		}
 		else
 		{
@@ -1338,9 +1352,28 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 		// Solve
 		for (int velocity_step = 0; velocity_step < num_velocity_steps; ++velocity_step)
 		{
-			bool constraint_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
-			bool contact_impulse = mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
-			if (!constraint_impulse && !contact_impulse)
+			bool applied_impulse = false;
+
+			for (uint group = 0; group < IslandGroupBuilder::cNumGroups; ++group)
+			{
+				// If we've processed all groups, jump to the non-parallel group
+				if (group >= groups.GetNumGroups())
+					group = IslandGroupBuilder::cNonParallelGroupIdx;
+
+				// Get the contacts in this group
+				uint32 *group_contacts_begin, *group_contacts_end;
+				groups.GetContactsInGroup(group, group_contacts_begin, group_contacts_end);
+
+				// Get the constraints in this group
+				uint32 *group_constraints_begin, *group_constraints_end;
+				groups.GetConstraintsInGroup(group, group_constraints_begin, group_constraints_end);
+
+				// Solve velocity constraints
+				applied_impulse |= ConstraintManager::sSolveVelocityConstraints(active_constraints, group_constraints_begin, group_constraints_end, delta_time);
+				applied_impulse |= mContactManager.SolveVelocityConstraints(group_contacts_begin, group_contacts_end);
+			}
+
+			if (!applied_impulse)
 				break;
 		}
 
