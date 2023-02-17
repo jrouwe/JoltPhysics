@@ -14,6 +14,7 @@ public:
 
 	// See: Test
 	virtual void			Initialize() override;
+	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
 	// If this test implements a contact listener, it should be returned here
 	virtual ContactListener *GetContactListener() override		{ return this; }

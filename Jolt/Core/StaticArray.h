@@ -87,7 +87,7 @@ public:
 	}
 
 	/// Returns maximum amount of elements the array can hold
-	size_type			capacity() const
+	static constexpr size_type capacity()
 	{
 		return N;
 	}

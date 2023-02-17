@@ -80,7 +80,7 @@ public:
 	/// bodies will receive an OnContactRemoved callback, if this is the case then Body::IsActive() will return false during the callback.
 	/// When contacts are added, the constraint solver has not run yet, so the collision impulse is unknown at that point.
 	/// The velocities of inBody1 and inBody2 are the velocities before the contact has been resolved, so you can use this to
-	/// estimate the collision impulse to e.g. determine the volume of the impact sound to play.
+	/// estimate the collision impulse to e.g. determine the volume of the impact sound to play (see: EstimateCollisionResponse).
 	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) { /* Do nothing */ }
 
 	/// Called whenever a contact is detected that was also detected last update.
