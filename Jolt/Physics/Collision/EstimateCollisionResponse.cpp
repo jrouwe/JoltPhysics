@@ -117,7 +117,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	for (int iteration = 0; iteration < num_iterations; ++iteration)
 		for (uint c = 0; c < inManifold.mRelativeContactPointsOn1.size(); ++c)
 		{
-			ContactConstraint &contact = constraints[c];
+			const ContactConstraint &contact = constraints[c];
 			float &total_lambda = outContactImpulses[c];
 
 			// Calculate jacobian multiplied by linear/angular velocity
