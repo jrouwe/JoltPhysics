@@ -14,6 +14,8 @@ public:
 
 	using size_type = uint;
 
+	static constexpr uint Capacity = N;
+
 	/// Default constructor
 						StaticArray() = default;
 
@@ -87,7 +89,7 @@ public:
 	}
 
 	/// Returns maximum amount of elements the array can hold
-	static constexpr size_type capacity()
+	size_type			capacity() const
 	{
 		return N;
 	}

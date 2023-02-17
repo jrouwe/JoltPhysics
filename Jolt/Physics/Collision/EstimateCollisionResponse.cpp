@@ -78,7 +78,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	};
 
 	// Initialize the constraint properties
-	ContactConstraint constraints[ContactPoints::capacity()];
+	ContactConstraint constraints[ContactPoints::Capacity];
 	JPH_ASSERT(inManifold.mRelativeContactPointsOn1.size() == inManifold.mRelativeContactPointsOn2.size());
 	for (uint c = 0; c < inManifold.mRelativeContactPointsOn1.size(); ++c)
 	{
