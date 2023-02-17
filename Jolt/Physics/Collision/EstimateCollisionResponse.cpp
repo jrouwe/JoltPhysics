@@ -92,8 +92,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
 		contact.mR1PlusUxAxis = r1.Cross(inManifold.mWorldSpaceNormal);
 		contact.mR2xAxis = r2.Cross(inManifold.mWorldSpaceNormal);
-		contact.mInvI1_R1PlusUxAxis = inv_i1 * contact.mR1PlusUxAxis;
-		contact.mInvI2_R2xAxis = inv_i2 * contact.mR2xAxis;
+		contact.mInvI1_R1PlusUxAxis = inv_i1.Multiply3x3(contact.mR1PlusUxAxis);
+		contact.mInvI2_R2xAxis = inv_i2.Multiply3x3(contact.mR2xAxis);
 		contact.mEffectiveMass = 1.0f / (inv_m1 + contact.mInvI1_R1PlusUxAxis.Dot(contact.mR1PlusUxAxis) + inv_m2 + contact.mInvI2_R2xAxis.Dot(contact.mR2xAxis));
 
 		// Handle elastic collisions
@@ -101,7 +101,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		if (inCombinedRestitution > 0.0f)
 		{
 			// Calculate velocity of contact point
-			Vec3 relative_velocity = outLinearVelocity1 + outAngularVelocity1.Cross(r2) - outLinearVelocity2 - outAngularVelocity2.Cross(r1);
+			Vec3 relative_velocity = outLinearVelocity2 + outAngularVelocity2.Cross(r2) - outLinearVelocity1 - outAngularVelocity1.Cross(r1);
 			float normal_velocity = relative_velocity.Dot(inManifold.mWorldSpaceNormal);
 
 			// If it is big enough, apply restitution

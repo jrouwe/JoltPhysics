@@ -56,7 +56,7 @@ void ContactListenerTest::Initialize()
 	mBody[3] = &body4;
 }
 
-void ContactListenerTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void ContactListenerTest::PostPhysicsUpdate(float inDeltaTime)
 {
 	for (Body *body : mBody)
 		Trace("State, body: %08x, v=%s, w=%s", body->GetID().GetIndex(), ConvertToString(body->GetLinearVelocity()).c_str(), ConvertToString(body->GetAngularVelocity()).c_str());
