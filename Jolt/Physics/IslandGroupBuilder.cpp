@@ -170,58 +170,73 @@ void IslandGroupBuilder::BuildGroupsForIsland(uint32 inIslandIndex, const Island
 			*cur_constraint_group_idx++ = group;
 		}
 
-		// Assume all groups used (non-parallel group doesn't count, it is always processed)
-		outGroups.mNumGroups = cNonParallelGroupIdx;
+		// Start with 0 groups
+		uint group_remap_table[cNumGroups];
+		outGroups.mNumGroups = 0;
 
 		// Allocate space to store the sorted constraint and contact indices per group
 		uint32 *buffer = mContactAndConstraintIndices + offset;
 		uint32 *constraint_buffer_cur[cNumGroups], *contact_buffer_cur[cNumGroups];
 		for (uint g = 0; g < cNumGroups; ++g)
 		{
-			// If this group is empty, process the non-parallel group instead
-			if (num_constraints_in_group[g] + num_contacts_in_group[g] == 0)
+			// If this group doesn't contain enough constraints and contacts, we will combine it with the non parallel group
+			if (num_constraints_in_group[g] + num_contacts_in_group[g] < cGroupCombineTreshold
+				&& g < cNonParallelGroupIdx) // The non-parallel group cannot merge into itself
 			{
-				outGroups.mNumGroups = g;
-				g = cNonParallelGroupIdx;
+				// Remap it
+				group_remap_table[g] = cNonParallelGroupIdx;
+
+				// Add the counts to the non parallel group
+				num_contacts_in_group[cNonParallelGroupIdx] += num_contacts_in_group[g];
+				num_constraints_in_group[cNonParallelGroupIdx] += num_constraints_in_group[g];
 			}
+			else
+			{
+				// This group is valid, map it to the next empty slot
+				uint target_group;
+				if (g < cNonParallelGroupIdx)
+					target_group = outGroups.mNumGroups++;
+				else
+					target_group = cNonParallelGroupIdx;
+				Group &group = outGroups.mGroups[target_group];
+				group_remap_table[g] = target_group;
 
-			Group &group = outGroups.mGroups[g];
+				// Allocate space for contacts
+				group.mContactBufferBegin = buffer;
+				group.mContactBufferEnd = group.mContactBufferBegin + num_contacts_in_group[g];
 
-			// Allocate space for contacts
-			group.mContactBufferBegin = buffer;
-			group.mContactBufferEnd = group.mContactBufferBegin + num_contacts_in_group[g];
+				// Allocate space for constraints
+				group.mConstraintBufferBegin = group.mContactBufferEnd;
+				group.mConstraintBufferEnd = group.mConstraintBufferBegin + num_constraints_in_group[g];
 
-			// Allocate space for constraints
-			group.mConstraintBufferBegin = group.mContactBufferEnd;
-			group.mConstraintBufferEnd = group.mConstraintBufferBegin + num_constraints_in_group[g];
+				// Store start for each group
+				contact_buffer_cur[target_group] = group.mContactBufferBegin;
+				constraint_buffer_cur[target_group] = group.mConstraintBufferBegin;
 
-			// Store start for each group
-			contact_buffer_cur[g] = group.mContactBufferBegin;
-			constraint_buffer_cur[g] = group.mConstraintBufferBegin;
-
-			// Update buffer pointer
-			buffer = group.mConstraintBufferEnd;
+				// Update buffer pointer
+				buffer = group.mConstraintBufferEnd;
+			}
 		}
 
 		// Group the contacts
 		for (int c = 0; c < num_contacts_in_island; ++c)
 		{
-			uint group = contact_group_idx[c];
+			uint group = group_remap_table[contact_group_idx[c]];
 			*contact_buffer_cur[group]++ = contacts_start[c];
 		}
 
 		// Group the constraints
 		for (int c = 0; c < num_constraints_in_island; ++c)
 		{
-			uint group = constraint_group_idx[c];
+			uint group = group_remap_table[constraint_group_idx[c]];
 			*constraint_buffer_cur[group]++ = constraints_start[c];
 		}
 
 	#ifdef JPH_ENABLE_ASSERTS
 		for (uint g = 0; g < cNumGroups; ++g)
 		{
-			// If this group is empty, process the non-parallel group instead
-			if (num_constraints_in_group[g] + num_contacts_in_group[g] == 0)
+			// If there are no more groups, process the non-parallel group
+			if (g >= outGroups.mNumGroups)
 				g = cNonParallelGroupIdx;
 
 			// Check that we wrote all elements

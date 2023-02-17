@@ -89,6 +89,7 @@ private:
 	void					ResetGroups(const Body *inBodies, const BodyID *inBodiesStart, const BodyID *inBodiesEnd);
 
 	static constexpr uint	cGroupBuilderTreshold = 100;						///< If the number of constraints + contacts in an island is larger than this, we will try to build groups
+	static constexpr uint	cGroupCombineTreshold = 50;							///< If the number of constraints + contacts in a group is lower than this, we will merge this group into the 'non-parallel group'
 
 	uint32					mNumActiveBodies = 0;								///< Cached number of active bodies
 
