@@ -85,7 +85,7 @@ void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody
 	// Trace the result
 	String impulses_str;
 	for (float impulse : impulses)
-		impulses_str += StringFormat("%f ", impulse);
+		impulses_str += StringFormat("%f ", (double)impulse);
 
 	Trace("Estimated velocity after collision, body1: %08x, v=%s, w=%s, body2: %08x, v=%s, w=%s, impulses: %s",
 		inBody1.GetID().GetIndex(), ConvertToString(v1).c_str(), ConvertToString(w1).c_str(),
