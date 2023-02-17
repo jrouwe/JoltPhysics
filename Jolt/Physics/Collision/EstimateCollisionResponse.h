@@ -7,7 +7,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-using ContactImpulses = StaticArray<float, ContactPoints::capacity()>;
+using ContactImpulses = StaticArray<float, ContactPoints::Capacity>;
 
 /// This function estimates the contact impulses and body velocity changes as a result of a collision.
 /// It can be used in the ContactListener::OnContactAdded to determine the strength of the collision to e.g. play a sound or trigger a particle system.
