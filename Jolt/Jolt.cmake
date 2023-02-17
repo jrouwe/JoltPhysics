@@ -219,6 +219,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionGroup.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionGroup.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ContactListener.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/EstimateCollisionResponse.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/EstimateCollisionResponse.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilter.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilter.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilterTable.cpp

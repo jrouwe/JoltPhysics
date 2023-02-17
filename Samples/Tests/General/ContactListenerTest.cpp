@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/EstimateCollisionResponse.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
@@ -55,6 +56,12 @@ void ContactListenerTest::Initialize()
 	mBody[3] = &body4;
 }
 
+void ContactListenerTest::PostPhysicsUpdate(float inDeltaTime)
+{
+	for (Body *body : mBody)
+		Trace("State, body: %08x, v=%s, w=%s", body->GetID().GetIndex(), ConvertToString(body->GetLinearVelocity()).c_str(), ConvertToString(body->GetAngularVelocity()).c_str());
+}
+
 ValidateResult ContactListenerTest::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
 {
 	// Body 1 and 2 should never collide
@@ -69,4 +76,19 @@ void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody
 		JPH_ASSERT(ioSettings.mCombinedRestitution == 0.0f);
 		ioSettings.mCombinedRestitution = 1.0f;
 	}
+
+	// Estimate the contact impulses. Note that these won't be 100% accurate unless you set the friction of the bodies to 0 (EstimateCollisionResponse ignores friction)
+	ContactImpulses impulses;
+	Vec3 v1, w1, v2, w2;
+	EstimateCollisionResponse(inBody1, inBody2, inManifold, v1, w1, v2, w2, impulses, ioSettings.mCombinedRestitution);
+
+	// Trace the result
+	String impulses_str;
+	for (float impulse : impulses)
+		impulses_str += StringFormat("%f ", (double)impulse);
+
+	Trace("Estimated velocity after collision, body1: %08x, v=%s, w=%s, body2: %08x, v=%s, w=%s, impulses: %s",
+		inBody1.GetID().GetIndex(), ConvertToString(v1).c_str(), ConvertToString(w1).c_str(),
+		inBody2.GetID().GetIndex(), ConvertToString(v2).c_str(), ConvertToString(w2).c_str(),
+		impulses_str.c_str());
 }
