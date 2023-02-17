@@ -64,8 +64,8 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	}
 
 	// Get center of masses relative to the base offset
-	Vec3 com1 = inBody1.GetCenterOfMassPosition() - inManifold.mBaseOffset;
-	Vec3 com2 = inBody2.GetCenterOfMassPosition() - inManifold.mBaseOffset;
+	Vec3 com1 = Vec3(inBody1.GetCenterOfMassPosition() - inManifold.mBaseOffset);
+	Vec3 com2 = Vec3(inBody2.GetCenterOfMassPosition() - inManifold.mBaseOffset);
 
 	struct ContactConstraint
 	{

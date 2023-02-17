@@ -77,15 +77,18 @@ void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody
 		ioSettings.mCombinedRestitution = 1.0f;
 	}
 
+	// Estimate the contact impulses. Note that these won't be 100% accurate unless you set the friction of the bodies to 0 (EstimateCollisionResponse ignores friction)
 	ContactImpulses impulses;
 	Vec3 v1, w1, v2, w2;
 	EstimateCollisionResponse(inBody1, inBody2, inManifold, v1, w1, v2, w2, impulses, ioSettings.mCombinedRestitution);
 
-	Trace("Estimated velocity after collision, body: %08x, v=%s, w=%s", inBody1.GetID().GetIndex(), ConvertToString(v1).c_str(), ConvertToString(w1).c_str());
-	Trace("Estimated velocity after collision, body: %08x, v=%s, w=%s", inBody2.GetID().GetIndex(), ConvertToString(v2).c_str(), ConvertToString(w2).c_str());
-
-	String impulses_str = "Impulses: ";
+	// Trace the result
+	String impulses_str;
 	for (float impulse : impulses)
-		impulses_str += StringFormat(" %f", impulse);
-	Trace(impulses_str.c_str());
+		impulses_str += StringFormat("%f ", impulse);
+
+	Trace("Estimated velocity after collision, body1: %08x, v=%s, w=%s, body2: %08x, v=%s, w=%s, impulses: %s",
+		inBody1.GetID().GetIndex(), ConvertToString(v1).c_str(), ConvertToString(w1).c_str(),
+		inBody2.GetID().GetIndex(), ConvertToString(v2).c_str(), ConvertToString(w2).c_str(),
+		impulses_str.c_str());
 }
