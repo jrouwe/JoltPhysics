@@ -6,10 +6,6 @@ project("JoltPhysicsUnitTests")
 set(APP_GLUE_DIR ${ANDROID_NDK}/sources/android/native_app_glue)
 include_directories(${APP_GLUE_DIR})
 
-if(${ANDROID_ABI} STREQUAL "x86_64")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mlzcnt -mpopcnt")
-endif()
-
 # Set repository root
 set(PHYSICS_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../")
 

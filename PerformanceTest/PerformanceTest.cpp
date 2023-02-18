@@ -3,6 +3,7 @@
 
 // Jolt includes
 #include <Jolt/Jolt.h>
+#include <Jolt/ConfigurationString.h>
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -202,50 +203,7 @@ int main(int argc, char** argv)
 		return 1;
 
 	// Show used instruction sets
-	Trace(JPH_IF_SINGLE_PRECISION_ELSE("Single precision ", "Double precision ") "%d-bit build with instructions: "
-#ifdef JPH_USE_NEON
-		"NEON "
-#endif
-#ifdef JPH_USE_SSE
-		"SSE2 "
-#endif
-#ifdef JPH_USE_SSE4_1
-		"SSE4.1 "
-#endif
-#ifdef JPH_USE_SSE4_2
-		"SSE4.2 "
-#endif
-#ifdef JPH_USE_AVX
-		"AVX "
-#endif
-#ifdef JPH_USE_AVX2
-		"AVX2 "
-#endif
-#ifdef JPH_USE_AVX512
-		"AVX512 "
-#endif
-#ifdef JPH_USE_F16C
-		"F16C "
-#endif
-#ifdef JPH_USE_LZCNT
-		"LZCNT "
-#endif
-#ifdef JPH_USE_TZCNT
-		"TZCNT "
-#endif
-#ifdef JPH_USE_FMADD
-		"FMADD "
-#endif
-#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
-		"(Cross Platform Deterministic) "
-#endif
-#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
-		"(FP Exceptions) "
-#endif
-#ifdef _DEBUG
-		"(Debug) "
-#endif
-		, JPH_CPU_ADDRESS_BITS);
+	Trace(GetConfigurationString());
 
 	// Output scene we're running
 	Trace("Running scene: %s", scene->GetName());
