@@ -43,6 +43,7 @@ android {
     buildFeatures {
         viewBinding true
     }
+    namespace 'com.joltphysics.unittests'
 }
 
 dependencies {
