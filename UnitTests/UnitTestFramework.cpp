@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
-
+#include <Jolt/ConfigurationString.h>
 #include <Jolt/Core/FPException.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/RegisterTypes.h>
@@ -175,47 +175,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 int main(int argc, char** argv)
 {
 	// Show used instruction sets
-	std::cout << JPH_IF_SINGLE_PRECISION_ELSE("Single precision ", "Double precision ") << JPH_CPU_ADDRESS_BITS << "-bit build with instructions: ";
-#ifdef JPH_USE_NEON
-	std::cout << "NEON ";
-#endif
-#ifdef JPH_USE_SSE
-	std::cout << "SSE2 ";
-#endif
-#ifdef JPH_USE_SSE4_1
-	std::cout << "SSE4.1 ";
-#endif
-#ifdef JPH_USE_SSE4_2
-	std::cout << "SSE4.2 ";
-#endif
-#ifdef JPH_USE_AVX
-	std::cout << "AVX ";
-#endif
-#ifdef JPH_USE_AVX2
-	std::cout << "AVX2 ";
-#endif
-#ifdef JPH_USE_AVX512
-	std::cout << "AVX512 ";
-#endif
-#ifdef JPH_USE_F16C
-	std::cout << "F16C ";
-#endif
-#ifdef JPH_USE_LZCNT
-	std::cout << "LZCNT ";
-#endif
-#ifdef JPH_USE_TZCNT
-	std::cout << "TZCNT ";
-#endif
-#ifdef JPH_USE_FMADD
-	std::cout << "FMADD ";
-#endif
-#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
-	std::cout << "(Cross Platform Deterministic)";
-#endif
-#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
-	std::cout << "(FP Exceptions)";
-#endif
-	std::cout << std::endl;
+	std::cout << GetConfigurationString() << std::endl;
 
 	// Register allocation hook
 	RegisterDefaultAllocator();
@@ -290,6 +250,9 @@ DOCTEST_REGISTER_REPORTER("android_log", 0, LogReporter);
 
 void AndroidInitialize(android_app *inApp)
 {
+	// Log configuration
+	__android_log_write(ANDROID_LOG_INFO, "Jolt", GetConfigurationString());
+
 	// Register allocation hook
 	RegisterDefaultAllocator();
 
@@ -332,6 +295,18 @@ void AndroidInitialize(android_app *inApp)
 			}
 			break;
 		}
+
+        case AHARDWAREBUFFER_FORMAT_R5G6B5_UNORM:
+        {
+            uint16 color_u16 = (color.b >> 3) + ((color.g >> 2) << 5) + ((color.r >> 3) << 11);
+            for (int y = 0; y < buffer.height; ++y)
+            {
+                uint16 *dest = (uint16 *) ((uint8 *) buffer.bits + y * buffer.stride * sizeof(uint16));
+                for (int x = 0; x < buffer.width; ++x)
+                    *dest++ = color_u16;
+            }
+            break;
+        }
 
 		default:
 			// TODO implement
