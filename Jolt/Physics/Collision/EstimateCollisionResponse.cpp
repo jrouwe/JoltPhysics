@@ -158,24 +158,25 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	// If there's only 1 contact point, we only need 1 iteration
 	int num_iterations = inCombinedFriction == 0.0f && num_points == 1? 1 : inNumIterations;
 
-	// Calculate the impulse needed to resolve the contacts
+	// Solve iteratively
 	for (int iteration = 0; iteration < num_iterations; ++iteration)
-		for (uint c = 0; c < num_points; ++c)
-		{
-			const Constraint &constraint = constraints[c];
-			CollisionEstimationResult::Impulse &impulse = outResult.mImpulses[c];
-
-			if (inCombinedFriction > 0.0f)
+	{
+		// Solve friction constraints first
+		if (inCombinedFriction > 0.0f)
+			for (uint c = 0; c < num_points; ++c)
 			{
-				// Solve friction constraints
+				const Constraint &constraint = constraints[c];
+				CollisionEstimationResult::Impulse &impulse = outResult.mImpulses[c];
+
 				float max_impulse = inCombinedFriction * impulse.mContactImpulse;
 				constraint.mFriction1.Solve(outResult.mTangent1, inv_m1, inv_m2, -max_impulse, max_impulse, impulse.mFrictionImpulse1, outResult);
 				constraint.mFriction2.Solve(outResult.mTangent2, inv_m1, inv_m2, -max_impulse, max_impulse, impulse.mFrictionImpulse2, outResult);
 			}
 
-			// Solve contact constraint
-			constraint.mContact.Solve(inManifold.mWorldSpaceNormal, inv_m1, inv_m2, 0.0f, FLT_MAX, impulse.mContactImpulse, outResult);
-		}
+		// Solve contact constraints last
+		for (uint c = 0; c < num_points; ++c)
+			constraints[c].mContact.Solve(inManifold.mWorldSpaceNormal, inv_m1, inv_m2, 0.0f, FLT_MAX, outResult.mImpulses[c].mContactImpulse, outResult);
+	}
 }
 
 JPH_NAMESPACE_END

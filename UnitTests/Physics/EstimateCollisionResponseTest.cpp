@@ -12,6 +12,9 @@ TEST_SUITE("EstimateCollisionResponseTests")
 	// Test CastShape ordering according to penetration depth
 	TEST_CASE("TestEstimateCollisionResponse")
 	{
+		PhysicsTestContext c;
+		c.ZeroGravity();
+
 		const Vec3 cBox1HalfExtents(0.1f, 1, 2);
 		const Vec3 cBox2HalfExtents(0.2f, 3, 4);
 
@@ -23,9 +26,6 @@ TEST_SUITE("EstimateCollisionResponseTests")
 						for (float z : { 0.0f, 0.5f, cBox2HalfExtents.GetZ() })
 							for (float w : { 0.0f, -1.0f, 1.0f })
 							{
-								PhysicsTestContext c;
-								c.ZeroGravity();
-
 								// Install a listener that predicts the collision response
 								class MyListener : public ContactListener
 								{
@@ -56,6 +56,7 @@ TEST_SUITE("EstimateCollisionResponseTests")
 								if (mt != EMotionType::Static)
 									box2.SetLinearVelocity(Vec3(-1, 0, 0));
 
+								// Step the simulation
 								c.SimulateSingleStep();
 
 								// Check that the predicted velocities are correct
@@ -63,6 +64,13 @@ TEST_SUITE("EstimateCollisionResponseTests")
 								CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity1, box1.GetAngularVelocity());
 								CHECK_APPROX_EQUAL(listener.mResult.mLinearVelocity2, box2.GetLinearVelocity());
 								CHECK_APPROX_EQUAL(listener.mResult.mAngularVelocity2, box2.GetAngularVelocity());
+
+								// Remove the bodies in reverse order
+								BodyInterface &bi = c.GetBodyInterface();
+								bi.RemoveBody(box2.GetID());
+								bi.RemoveBody(box1.GetID());
+								bi.DestroyBody(box2.GetID());
+								bi.DestroyBody(box1.GetID());
 							}
 	}
 }
