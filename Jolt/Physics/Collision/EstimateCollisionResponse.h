@@ -10,13 +10,13 @@ JPH_NAMESPACE_BEGIN
 /// A structure that contains the estimated contact and friction impulses and the resulting body velocities
 struct CollisionEstimationResult
 {
-	Vec3			mTangent1;						///< Normalized tangent of contact normal
-	Vec3			mTangent2;						///< Second normalized tangent of contact normal (forms a basis with mTangent1 and mWorldSpaceNormal)
-
 	Vec3			mLinearVelocity1;				///< The estimated linear velocity of body 1 after collision
 	Vec3			mAngularVelocity1;				///< The estimated angular velocity of body 1 after collision
 	Vec3			mLinearVelocity2;				///< The estimated linear velocity of body 2 after collision
 	Vec3			mAngularVelocity2;				///< The estimated angular velocity of body 2 after collision
+
+	Vec3			mTangent1;						///< Normalized tangent of contact normal
+	Vec3			mTangent2;						///< Second normalized tangent of contact normal (forms a basis with mTangent1 and mWorldSpaceNormal)
 
 	struct Impulse
 	{
