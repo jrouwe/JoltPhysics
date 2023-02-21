@@ -58,8 +58,28 @@ void ContactListenerTest::Initialize()
 
 void ContactListenerTest::PostPhysicsUpdate(float inDeltaTime)
 {
-	for (Body *body : mBody)
-		Trace("State, body: %08x, v=%s, w=%s", body->GetID().GetIndex(), ConvertToString(body->GetLinearVelocity()).c_str(), ConvertToString(body->GetAngularVelocity()).c_str());
+	// Check that predicted velocities match actual velocities
+	lock_guard lock(mPredictedVelocitiesMutex);
+	for (const PredictedVelocity &v : mPredictedVelocities)
+	{
+		BodyLockRead body_lock(mPhysicsSystem->GetBodyLockInterface(), v.mBodyID);
+		if (body_lock.Succeeded())
+		{
+			const Body &body = body_lock.GetBody();
+			Vec3 linear_velocity = body.GetLinearVelocity();
+			Vec3 angular_velocity = body.GetAngularVelocity();
+			float diff_v = (v.mLinearVelocity - linear_velocity).Length();
+			float diff_w = (v.mAngularVelocity - angular_velocity).Length();
+			if (diff_v > 1.0e-3f || diff_w > 1.0e-3f)
+				Trace("Mispredicted collision for body: %08x, v=%s, w=%s, predicted_v=%s, predicted_w=%s, diff_v=%f, diff_w=%f",
+					body.GetID().GetIndex(),
+					ConvertToString(linear_velocity).c_str(), ConvertToString(angular_velocity).c_str(),
+					ConvertToString(v.mLinearVelocity).c_str(), ConvertToString(v.mAngularVelocity).c_str(),
+					diff_v,
+					diff_w);
+		}
+	}
+	mPredictedVelocities.clear();
 }
 
 ValidateResult ContactListenerTest::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
@@ -90,4 +110,11 @@ void ContactListenerTest::OnContactAdded(const Body &inBody1, const Body &inBody
 		inBody1.GetID().GetIndex(), ConvertToString(result.mLinearVelocity1).c_str(), ConvertToString(result.mAngularVelocity1).c_str(),
 		inBody2.GetID().GetIndex(), ConvertToString(result.mLinearVelocity2).c_str(), ConvertToString(result.mAngularVelocity2).c_str(),
 		impulses_str.c_str());
+
+	// Log predicted velocities
+	{
+		lock_guard lock(mPredictedVelocitiesMutex);
+		mPredictedVelocities.push_back({ inBody1.GetID(), result.mLinearVelocity1, result.mAngularVelocity1 });
+		mPredictedVelocities.push_back({ inBody2.GetID(), result.mLinearVelocity2, result.mAngularVelocity2 });
+	}
 }

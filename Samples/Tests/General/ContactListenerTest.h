@@ -26,4 +26,14 @@ public:
 private:
 	// The 4 bodies that we create
 	Body *					mBody[4];
+
+	// Tracks predicted velocities so we can compare them with the actual velocities after time step
+	struct PredictedVelocity
+	{
+		BodyID				mBodyID;
+		Vec3				mLinearVelocity;
+		Vec3				mAngularVelocity;
+	};
+	Mutex					mPredictedVelocitiesMutex;
+	Array<PredictedVelocity> mPredictedVelocities;
 };

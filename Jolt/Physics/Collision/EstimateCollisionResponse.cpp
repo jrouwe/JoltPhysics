@@ -162,7 +162,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	for (int iteration = 0; iteration < num_iterations; ++iteration)
 	{
 		// Solve friction constraints first
-		if (inCombinedFriction > 0.0f)
+		if (inCombinedFriction > 0.0f && iteration > 0) // For first iteration the contact impulse is zero so there's no point in applying friction
 			for (uint c = 0; c < num_points; ++c)
 			{
 				const Constraint &constraint = constraints[c];
