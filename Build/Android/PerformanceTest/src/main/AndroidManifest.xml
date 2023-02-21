@@ -3,13 +3,13 @@
 
     <application
         android:allowBackup="true"
-        android:label="Jolt Physics Unit Tests"
+        android:label="Jolt Physics Performance Test"
         android:supportsRtl="false"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         <activity
             android:name="android.app.NativeActivity"
             android:exported="true">
-            <meta-data android:name="android.app.lib_name" android:value="UnitTests"/>
+            <meta-data android:name="android.app.lib_name" android:value="PerformanceTest"/>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

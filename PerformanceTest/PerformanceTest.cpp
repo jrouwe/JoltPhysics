@@ -3,6 +3,7 @@
 
 // Jolt includes
 #include <Jolt/Jolt.h>
+#include <Jolt/ConfigurationString.h>
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -16,6 +17,10 @@
 	#include <Jolt/Renderer/DebugRendererRecorder.h>
 	#include <Jolt/Core/StreamWrapper.h>
 #endif // JPH_DEBUG_RENDERER
+#ifdef JPH_PLATFORM_ANDROID
+#include <android/log.h>
+#include <android_native_app_glue.h>
+#endif // JPH_PLATFORM_ANDROID
 
 // STL includes
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -41,7 +46,7 @@ JPH_SUPPRESS_WARNINGS
 constexpr float cDeltaTime = 1.0f / 60.0f;
 
 static void TraceImpl(const char *inFMT, ...)
-{ 
+{
 	// Format the message
 	va_list list;
 	va_start(list, inFMT);
@@ -50,12 +55,19 @@ static void TraceImpl(const char *inFMT, ...)
 	va_end(list);
 
 	// Print to the TTY
+#ifndef JPH_PLATFORM_ANDROID
 	cout << buffer << endl;
+#else
+	__android_log_write(ANDROID_LOG_INFO, "Jolt", buffer);
+#endif
 }
 
 // Program entry point
 int main(int argc, char** argv)
 {
+	// Install callbacks
+	Trace = TraceImpl;
+
 	// Register allocation hook
 	RegisterDefaultAllocator();
 
@@ -87,7 +99,7 @@ int main(int argc, char** argv)
 				scene = unique_ptr<PerformanceTestScene>(new ConvexVsMeshScene);
 			else
 			{
-				cerr << "Invalid scene" << endl;
+				Trace("Invalid scene");
 				return 1;
 			}
 		}
@@ -105,9 +117,14 @@ int main(int argc, char** argv)
 				specified_quality = 1;
 			else
 			{
-				cerr << "Invalid quality" << endl;
+				Trace("Invalid quality");
 				return 1;
 			}
+		}
+		else if (strncmp(arg, "-t=max", 6) == 0)
+		{
+			// Default to number of threads on the system
+			specified_threads = thread::hardware_concurrency();
 		}
 		else if (strncmp(arg, "-t=", 3) == 0)
 		{
@@ -152,25 +169,23 @@ int main(int argc, char** argv)
 		else if (strcmp(arg, "-h") == 0)
 		{
 			// Print usage
-			cerr << "Usage:" << endl
-				 << "-s=<scene>: Select scene (Ragdoll, ConvexVsMesh)" << endl
-				 << "-i=<num physics steps>: Number of physics steps to simulate (default 500)" << endl
-				 << "-q=<quality>: Test only with specified quality (Discrete, LinearCast)" << endl
-				 << "-t=<num threads>: Test only with N threads (default is to iterate over 1 .. num hardware threads)" << endl
-				 << "-p: Write out profiles" << endl
-				 << "-r: Record debug renderer output for JoltViewer" << endl
-				 << "-f: Record per frame timings" << endl
-				 << "-no_sleep: Disable sleeping" << endl
-				 << "-rs: Record state" << endl
-				 << "-vs: Validate state" << endl
-				 << "-validate_hash=<hash>: Validate hash (return 0 if successful, 1 if failed)" << endl
-				 << "-repeat=<num>: Repeat all tests <num> times" << endl;
+			Trace("Usage:\n"
+				  "-s=<scene>: Select scene (Ragdoll, ConvexVsMesh)\n"
+				  "-i=<num physics steps>: Number of physics steps to simulate (default 500)\n"
+				  "-q=<quality>: Test only with specified quality (Discrete, LinearCast)\n"
+				  "-t=<num threads>: Test only with N threads (default is to iterate over 1 .. num hardware threads)\n"
+				  "-t=max: Test with the number of threads available on the system\n"
+				  "-p: Write out profiles\n"
+				  "-r: Record debug renderer output for JoltViewer\n"
+				  "-f: Record per frame timings\n"
+				  "-no_sleep: Disable sleeping\n"
+				  "-rs: Record state\n"
+				  "-vs: Validate state\n"
+				  "-validate_hash=<hash>: Validate hash (return 0 if successful, 1 if failed)\n"
+				  "-repeat=<num>: Repeat all tests <num> times");
 			return 0;
 		}
 	}
-
-	// Install callbacks
-	Trace = TraceImpl;
 
 	// Create a factory
 	Factory::sInstance = new Factory();
@@ -187,8 +202,11 @@ int main(int argc, char** argv)
 	if (!scene->Load())
 		return 1;
 
+	// Show used instruction sets
+	Trace(GetConfigurationString());
+
 	// Output scene we're running
-	cout << "Running scene: " << scene->GetName() << endl;
+	Trace("Running scene: %s", scene->GetName());
 
 	// Create mapping table from object layer to broadphase layer
 	BPLayerInterfaceImpl broad_phase_layer_interface;
@@ -203,7 +221,7 @@ int main(int argc, char** argv)
 	JPH_PROFILE_START("Main");
 
 	// Trace header
-	cout << "Motion Quality, Thread Count, Steps / Second, Hash" << endl;
+	Trace("Motion Quality, Thread Count, Steps / Second, Hash");
 
 	// Repeat test
 	for (int r = 0; r < repeat; ++r)
@@ -263,7 +281,7 @@ int main(int argc, char** argv)
 
 				// A tag used to identify the test
 				String tag = ToLower(motion_quality_str) + "_th" + ConvertToString(num_threads + 1);
-					     
+
 			#ifdef JPH_DEBUG_RENDERER
 				// Open renderer output
 				ofstream renderer_file;
@@ -395,12 +413,12 @@ int main(int argc, char** argv)
 				scene->StopTest(physics_system);
 
 				// Trace stat line
-				cout << motion_quality_str << ", " << num_threads + 1 << ", " << double(max_iterations) / (1.0e-9 * total_duration.count()) << ", " << hash_str << endl;
+				Trace("%s, %d, %f, %s", motion_quality_str.c_str(), num_threads + 1, double(max_iterations) / (1.0e-9 * total_duration.count()), hash_str.c_str());
 
 				// Check hash code
 				if (validate_hash != nullptr && hash_str != validate_hash)
 				{
-					cout << "Fail hash validation. Was: " << hash_str << ", expected: " << validate_hash << endl;
+					Trace("Fail hash validation. Was: %s, expected: %s", hash_str.c_str(), validate_hash);
 					return 1;
 				}
 			}
@@ -420,3 +438,15 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+
+#ifdef JPH_PLATFORM_ANDROID
+
+// Main entry point for android
+void android_main(struct android_app *ioApp)
+{
+	// Run the regular main function
+	const char *args[] = { "Unused", "-s=ConvexVsMesh", "-t=max" };
+	main(size(args), (char **)args);
+}
+
+#endif // JPH_PLATFORM_ANDROID

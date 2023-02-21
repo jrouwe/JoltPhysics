@@ -790,6 +790,9 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 						}
 						else
 						{
+							// Fall back to contact velocity
+							avg_velocity += c.mLinearVelocity;
+
 							angular_velocity = Vec3::sZero();
 							com = RVec3::sZero();
 						}

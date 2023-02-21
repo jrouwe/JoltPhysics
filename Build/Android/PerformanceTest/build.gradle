@@ -7,7 +7,7 @@ android {
     ndkVersion "25.0.8775105"
 
     defaultConfig {
-        applicationId "com.joltphysics.unittests"
+        applicationId "com.joltphysics.performancetest"
         minSdk 24
         targetSdk 33
         versionCode 1
@@ -16,8 +16,8 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags '-std=c++17 -Wall -Werror -ffp-contract=off -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
-                arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
+                cppFlags '-std=c++17 -Wall -Werror -ffp-model=precise -ffp-contract=off -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
+                arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static', '-DCROSS_PLATFORM_DETERMINISTIC=ON'
             }
         }
         signingConfig signingConfigs.debug
@@ -44,7 +44,7 @@ android {
     buildFeatures {
         viewBinding true
     }
-    namespace 'com.joltphysics.unittests'
+    namespace 'com.joltphysics.performancetest'
 }
 
 dependencies {

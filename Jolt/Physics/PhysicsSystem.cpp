@@ -2108,6 +2108,12 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 	float delta_time = ioContext->mSubStepDeltaTime;
 	Constraint **active_constraints = ioContext->mActiveConstraints;
 
+	// Keep a buffer of bodies that need to go to sleep in order to not constantly lock the active bodies mutex and create contention between all solving threads
+	constexpr int cBodiesToSleepSize = 512;
+	constexpr int cMaxBodiesToPutInBuffer = 64;
+	BodyID *bodies_to_sleep = (BodyID *)JPH_STACK_ALLOC(cBodiesToSleepSize * sizeof(BodyID));
+	BodyID *bodies_to_sleep_cur = bodies_to_sleep;
+
 	for (;;)
 	{
 		// Next island
@@ -2189,7 +2195,29 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 			// If all bodies indicate they can sleep we can deactivate them
 			if (all_can_sleep == int(Body::ECanSleep::CanSleep))
-				mBodyManager.DeactivateBodies(bodies_begin, int(bodies_end - bodies_begin));
+			{
+				int num_bodies_to_sleep = int(bodies_end - bodies_begin);
+				if (num_bodies_to_sleep > cMaxBodiesToPutInBuffer)
+				{
+					// Too many bodies, deactivate immediately
+					mBodyManager.DeactivateBodies(bodies_begin, num_bodies_to_sleep);
+				}
+				else
+				{
+					// Check if there's enough space in the bodies to sleep buffer
+					int num_bodies_in_buffer = int(bodies_to_sleep_cur - bodies_to_sleep);
+					if (num_bodies_in_buffer + num_bodies_to_sleep > cBodiesToSleepSize)
+					{
+						// Flush the bodies to sleep buffer
+						mBodyManager.DeactivateBodies(bodies_to_sleep, num_bodies_in_buffer);
+						bodies_to_sleep_cur = bodies_to_sleep;
+					}
+
+					// Copy the bodies in the buffer
+					memcpy(bodies_to_sleep_cur, bodies_begin, num_bodies_to_sleep * sizeof(BodyID));
+					bodies_to_sleep_cur += num_bodies_to_sleep;
+				}
+			}
 		}
 		else
 		{
@@ -2208,6 +2236,11 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 		// Note: Shuffles the BodyID's around!!!
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_begin, int(bodies_end - bodies_begin), false);
 	}
+
+	// Flush the bodies to sleep buffer
+	int num_bodies_in_buffer = int(bodies_to_sleep_cur - bodies_to_sleep);
+	if (num_bodies_in_buffer > 0)
+		mBodyManager.DeactivateBodies(bodies_to_sleep, num_bodies_in_buffer);
 }
 
 void PhysicsSystem::SaveState(StateRecorder &inStream) const
