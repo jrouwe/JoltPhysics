@@ -75,8 +75,8 @@ void ContactListenerTest::PostPhysicsUpdate(float inDeltaTime)
 					body.GetID().GetIndex(),
 					ConvertToString(linear_velocity).c_str(), ConvertToString(angular_velocity).c_str(),
 					ConvertToString(v.mLinearVelocity).c_str(), ConvertToString(v.mAngularVelocity).c_str(),
-					diff_v,
-					diff_w);
+					(double)diff_v,
+					(double)diff_w);
 		}
 	}
 	mPredictedVelocities.clear();
