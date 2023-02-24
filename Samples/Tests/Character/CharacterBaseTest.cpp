@@ -71,6 +71,7 @@ static const float cMeshWallStepEnd = 4.0f;
 static const int cMeshWallSegments = 25;
 static const RVec3 cHalfCylinderPosition(5.0f, 0, 8.0f);
 static const RVec3 cMeshBoxPosition(30.0f, 1.5f, 5.0f);
+static const RVec3 cSensorPosition(30, 0.9f, -5);
 
 void CharacterBaseTest::Initialize()
 {
@@ -446,6 +447,14 @@ void CharacterBaseTest::Initialize()
 			mesh.SetEmbedded();
 			BodyCreationSettings box(&mesh, cMeshBoxPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(box, EActivation::DontActivate);
+		}
+
+		// Create a sensor. 
+		// Note that the CharacterVirtual doesn't interact with sensors, you should pair it with a Character object (see CharacterVirtual class comments)
+		{
+			BodyCreationSettings sensor(new BoxShape(Vec3::sReplicate(1.0f)), cSensorPosition, Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
+			sensor.mIsSensor = true;
+			mSensorBody = mBodyInterface->CreateAndAddBody(sensor, EActivation::Activate);
 		}
 	}
 	else
