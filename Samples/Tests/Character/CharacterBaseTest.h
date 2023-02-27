@@ -70,6 +70,9 @@ protected:
 	// Conveyor belt body
 	BodyID					mConveyorBeltBody;
 
+	// Sensor body
+	BodyID					mSensorBody;
+
 private:
 	// Shape types
 	enum class EType

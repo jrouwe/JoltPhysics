@@ -102,3 +102,18 @@ void CharacterTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool i
 		mCharacter->SetLinearVelocity(new_velocity);
 	}
 }
+
+void CharacterTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+{
+	// Draw a box around the character when it enters the sensor
+	if (inBody1.GetID() == mSensorBody)
+		mDebugRenderer->DrawBox(inBody2.GetWorldSpaceBounds(), Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	else if (inBody2.GetID() == mSensorBody)
+		mDebugRenderer->DrawBox(inBody1.GetWorldSpaceBounds(), Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+}
+
+void CharacterTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+{
+	// Same behavior as contact added
+	OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
+}
