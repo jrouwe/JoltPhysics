@@ -55,7 +55,6 @@ void IslandGroupBuilder::Prepare(const IslandBuilder &inIslandBuilder, uint32 in
 		// Allocate contact and constraint buffer
 		mContactAndConstaintsGroupIdx = (uint32 *)inTempAllocator->Allocate(mContactAndConstraintsSize * sizeof(uint32));
 		mContactAndConstraintIndices = (uint32 *)inTempAllocator->Allocate(mContactAndConstraintsSize * sizeof(uint32));
-		mContactAndConstraintsNextFree = 0;
 	}
 }
 
@@ -263,6 +262,8 @@ void IslandGroupBuilder::Reset(TempAllocator *inTempAllocator)
 
 		inTempAllocator->Free(mContactAndConstaintsGroupIdx, mContactAndConstraintsSize * sizeof(uint32));
 		mContactAndConstaintsGroupIdx = nullptr;
+
+		mContactAndConstraintsNextFree = 0;
 	}
 
 	// Free group masks
