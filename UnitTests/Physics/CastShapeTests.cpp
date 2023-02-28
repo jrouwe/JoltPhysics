@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -223,10 +224,10 @@ TEST_SUITE("CastShapeTests")
 			CHECK(collector.HadHit());
 			CHECK(collector.mHit.mBodyID2 == bodies.front()->GetID());
 			CHECK_APPROX_EQUAL(collector.mHit.mFraction, 4.0f / 10.0f);
-			CHECK_APPROX_EQUAL(collector.mHit.mPenetrationAxis.Normalized(), Vec3(1, 0, 0), 2.0e-3f);
+			CHECK(collector.mHit.mPenetrationAxis.Normalized().Dot(Vec3(1, 0, 0)) > Cos(DegreesToRadians(1.0f)));
 			CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, 0.0f);
-			CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(0, 0, 0), 1.0e-4f);
-			CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn2, Vec3(0, 0, 0), 1.0e-4f);
+			CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(0, 0, 0), 2.0e-3f);
+			CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn2, Vec3(0, 0, 0), 2.0e-3f);
 			CHECK(!collector.mHit.mIsBackFaceHit);
 		}
 
@@ -241,7 +242,7 @@ TEST_SUITE("CastShapeTests")
 			CHECK(collector.HadHit());
 			CHECK(collector.mHit.mBodyID2 == bodies.back()->GetID());
 			CHECK_APPROX_EQUAL(collector.mHit.mFraction, 2.0f / 10.0f, 1.0e-4f);
-			CHECK_APPROX_EQUAL(collector.mHit.mPenetrationAxis.Normalized(), Vec3(-1, 0, 0), 2.0e-3f);
+			CHECK(collector.mHit.mPenetrationAxis.Normalized().Dot(Vec3(-1, 0, 0)) > Cos(DegreesToRadians(1.0f)));
 			CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, 0.0f);
 			CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn1, Vec3(2, 0, 0), 4.0e-4f);
 			CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn2, Vec3(2, 0, 0), 4.0e-4f);
@@ -261,7 +262,7 @@ TEST_SUITE("CastShapeTests")
 			const ShapeCastResult &result = collector.mHits.front();
 			CHECK(result.mBodyID2 == bodies[5]->GetID());
 			CHECK_APPROX_EQUAL(result.mFraction, 0.0f);
-			CHECK_APPROX_EQUAL(result.mPenetrationAxis.Normalized(), Vec3(1, 0, 0), 1.0e-3f);
+			CHECK(result.mPenetrationAxis.Normalized().Dot(Vec3(1, 0, 0)) > Cos(DegreesToRadians(1.0f)));
 			CHECK_APPROX_EQUAL(result.mPenetrationDepth, 1.05f);
 			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(2.05f, 0, 0), 1.0e-5f); // Box starts at 1.0, center of sphere adds 0.05, radius of sphere is 1
 			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(1.0f, 0, 0), 1.0e-5f); // Box starts at 1.0

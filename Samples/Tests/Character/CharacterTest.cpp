@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -82,20 +83,38 @@ void CharacterTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool i
 			inMovementDirection -= (dot * normal) / normal.LengthSq();
 	}
 
-	// Update velocity
-	Vec3 current_velocity = mCharacter->GetLinearVelocity();
-	Vec3 desired_velocity = cCharacterSpeed * inMovementDirection;
-	desired_velocity.SetY(current_velocity.GetY());
-	Vec3 new_velocity = 0.75f * current_velocity + 0.25f * desired_velocity;
-
 	// Stance switch
 	if (inSwitchStance)
 		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop);
 
-	// Jump
-	if (inJump && ground_state == Character::EGroundState::OnGround)
-		new_velocity += Vec3(0, cJumpSpeed, 0);
+	if (sControlMovementDuringJump || mCharacter->IsSupported())
+	{
+		// Update velocity
+		Vec3 current_velocity = mCharacter->GetLinearVelocity();
+		Vec3 desired_velocity = sCharacterSpeed * inMovementDirection;
+		desired_velocity.SetY(current_velocity.GetY());
+		Vec3 new_velocity = 0.75f * current_velocity + 0.25f * desired_velocity;
 
-	// Update the velocity
-	mCharacter->SetLinearVelocity(new_velocity);
+		// Jump
+		if (inJump && ground_state == Character::EGroundState::OnGround)
+			new_velocity += Vec3(0, sJumpSpeed, 0);
+
+		// Update the velocity
+		mCharacter->SetLinearVelocity(new_velocity);
+	}
+}
+
+void CharacterTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+{
+	// Draw a box around the character when it enters the sensor
+	if (inBody1.GetID() == mSensorBody)
+		mDebugRenderer->DrawBox(inBody2.GetWorldSpaceBounds(), Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	else if (inBody2.GetID() == mSensorBody)
+		mDebugRenderer->DrawBox(inBody1.GetWorldSpaceBounds(), Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+}
+
+void CharacterTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
+{
+	// Same behavior as contact added
+	OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
 }

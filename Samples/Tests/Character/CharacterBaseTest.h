@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -53,8 +54,11 @@ protected:
 	static constexpr float	cCharacterRadiusStanding = 0.3f;
 	static constexpr float	cCharacterHeightCrouching = 0.8f;
 	static constexpr float	cCharacterRadiusCrouching = 0.3f;
-	static constexpr float	cCharacterSpeed = 6.0f;
-	static constexpr float	cJumpSpeed = 4.0f;
+
+	// Character movement properties
+	inline static bool		sControlMovementDuringJump = true;					///< If false the character cannot change movement direction in mid air
+	inline static float		sCharacterSpeed = 6.0f;
+	inline static float		sJumpSpeed = 4.0f;
 
 	// The different stances for the character
 	RefConst<Shape>			mStandingShape;
@@ -63,6 +67,12 @@ protected:
 	// List of boxes on ramp
 	Array<BodyID>			mRampBlocks;
 	float					mRampBlocksTimeLeft = 0.0f;
+
+	// Conveyor belt body
+	BodyID					mConveyorBeltBody;
+
+	// Sensor body
+	BodyID					mSensorBody;
 
 private:
 	// Shape types

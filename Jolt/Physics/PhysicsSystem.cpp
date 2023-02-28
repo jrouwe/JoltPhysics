@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -64,10 +65,10 @@ PhysicsSystem::~PhysicsSystem()
 	delete mBroadPhase;
 }
 
-void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayerPairFilter inObjectLayerPairFilter)
+void PhysicsSystem::Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, const ObjectLayerPairFilter &inObjectLayerPairFilter)
 { 
-	mObjectVsBroadPhaseLayerFilter = inObjectVsBroadPhaseLayerFilter;
-	mObjectLayerPairFilter = inObjectLayerPairFilter;
+	mObjectVsBroadPhaseLayerFilter = &inObjectVsBroadPhaseLayerFilter;
+	mObjectLayerPairFilter = &inObjectLayerPairFilter;
 
 	// Initialize body manager
 	mBodyManager.Init(inMaxBodies, inNumBodyMutexes, inBroadPhaseLayerInterface); 
@@ -136,8 +137,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 		mBroadPhase->UnlockModifications();
 
 		// Call contact removal callbacks from contacts that existed in the previous update
-		mContactManager.ContactPointRemovedCallbacks();
-		mContactManager.FinalizeContactCache(0, 0);
+		mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(0, 0);
 
 		mBodyManager.UnlockAllBodies();
 		return;
@@ -801,8 +801,11 @@ void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep
 void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex)
 {
 #ifdef JPH_ENABLE_ASSERTS
-	// We only read positions
-	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
+	// We read positions and read velocities (for elastic collisions)
+	BodyAccess::Grant grant(BodyAccess::EAccess::Read, BodyAccess::EAccess::Read);
+
+	// Can only activate bodies
+	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
 #endif
 
 	// Allocation context for allocating new contact points
@@ -867,7 +870,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				memcpy(active_bodies, mBodyManager.GetActiveBodiesUnsafe() + active_bodies_read_idx, batch_size * sizeof(BodyID));
 
 				// Find pairs in the broadphase
-				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, mObjectVsBroadPhaseLayerFilter, mObjectLayerPairFilter, add_pair);
+				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, *mObjectVsBroadPhaseLayerFilter, *mObjectLayerPairFilter, add_pair);
 
 				// Check if we have enough pairs in the buffer to start a new job
 				const PhysicsUpdateContext::BodyPairQueue &queue = ioStep->mBodyPairQueues[inJobIndex];
@@ -933,14 +936,6 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 {
 	JPH_PROFILE_FUNCTION();
 
-#ifdef JPH_ENABLE_ASSERTS
-	// We read positions and read velocities (for elastic collisions)
-	BodyAccess::Grant grant(BodyAccess::EAccess::Read, BodyAccess::EAccess::Read);
-
-	// Can only activate bodies
-	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
-#endif
-
 	// Fetch body pair
 	Body *body1 = &mBodyManager.GetBody(inBodyPair.mBodyA);
 	Body *body2 = &mBodyManager.GetBody(inBodyPair.mBodyB);
@@ -982,7 +977,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		Mat44 transform1 = Mat44::sRotation(body1->GetRotation());
 		Mat44 transform2 = body2->GetCenterOfMassTransform().PostTranslated(-offset).ToMat44();
 
-		if (mPhysicsSettings.mUseManifoldReduction)
+		if (mPhysicsSettings.mUseManifoldReduction				// Check global flag
+			&& body1->GetUseManifoldReductionWithBody(*body2))	// Check body flag
 		{
 			// Version WITH contact manifold reduction
 
@@ -1133,8 +1129,10 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// Body 1 should always be dynamic, body 2 may be static / kinematic
-					JPH_ASSERT(mBody1->IsDynamic());
+					// One of the following should be true:
+					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
+					// - Body 1 is kinematic in which case body 2 should be a sensor
+					JPH_ASSERT(mBody1->IsDynamic() || (mBody1->IsKinematic() && mBody2->IsSensor()));
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit
@@ -2069,11 +2067,9 @@ void PhysicsSystem::JobContactRemovedCallbacks(const PhysicsUpdateContext::Step 
 	// Reset the Body::EFlags::InvalidateContactCache flag for all bodies
 	mBodyManager.ValidateContactCacheForAllBodies();
 
-	// Trigger all contact removed callbacks by looking at last step contact points that have not been flagged as reused
-	mContactManager.ContactPointRemovedCallbacks();
-
 	// Finalize the contact cache (this swaps the read and write versions of the contact cache)
-	mContactManager.FinalizeContactCache(ioStep->mNumBodyPairs, ioStep->mNumManifolds);
+	// Trigger all contact removed callbacks by looking at last step contact points that have not been flagged as reused
+	mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(ioStep->mNumBodyPairs, ioStep->mNumManifolds);
 }
 
 void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
@@ -2088,6 +2084,12 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 	float delta_time = ioContext->mSubStepDeltaTime;
 	Constraint **active_constraints = ioContext->mActiveConstraints;
+
+	// Keep a buffer of bodies that need to go to sleep in order to not constantly lock the active bodies mutex and create contention between all solving threads
+	constexpr int cBodiesToSleepSize = 512;
+	constexpr int cMaxBodiesToPutInBuffer = 64;
+	BodyID *bodies_to_sleep = (BodyID *)JPH_STACK_ALLOC(cBodiesToSleepSize * sizeof(BodyID));
+	BodyID *bodies_to_sleep_cur = bodies_to_sleep;
 
 	for (;;)
 	{
@@ -2170,7 +2172,29 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 			// If all bodies indicate they can sleep we can deactivate them
 			if (all_can_sleep == int(Body::ECanSleep::CanSleep))
-				mBodyManager.DeactivateBodies(bodies_begin, int(bodies_end - bodies_begin));
+			{
+				int num_bodies_to_sleep = int(bodies_end - bodies_begin);
+				if (num_bodies_to_sleep > cMaxBodiesToPutInBuffer)
+				{
+					// Too many bodies, deactivate immediately
+					mBodyManager.DeactivateBodies(bodies_begin, num_bodies_to_sleep);
+				}
+				else
+				{
+					// Check if there's enough space in the bodies to sleep buffer
+					int num_bodies_in_buffer = int(bodies_to_sleep_cur - bodies_to_sleep);
+					if (num_bodies_in_buffer + num_bodies_to_sleep > cBodiesToSleepSize)
+					{
+						// Flush the bodies to sleep buffer
+						mBodyManager.DeactivateBodies(bodies_to_sleep, num_bodies_in_buffer);
+						bodies_to_sleep_cur = bodies_to_sleep;
+					}
+
+					// Copy the bodies in the buffer
+					memcpy(bodies_to_sleep_cur, bodies_begin, num_bodies_to_sleep * sizeof(BodyID));
+					bodies_to_sleep_cur += num_bodies_to_sleep;
+				}
+			}
 		}
 		else
 		{
@@ -2189,6 +2213,11 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 		// Note: Shuffles the BodyID's around!!!
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_begin, int(bodies_end - bodies_begin), false);
 	}
+
+	// Flush the bodies to sleep buffer
+	int num_bodies_in_buffer = int(bodies_to_sleep_cur - bodies_to_sleep);
+	if (num_bodies_in_buffer > 0)
+		mBodyManager.DeactivateBodies(bodies_to_sleep, num_bodies_in_buffer);
 }
 
 void PhysicsSystem::SaveState(StateRecorder &inStream) const

@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -42,6 +43,7 @@ static const RVec3 cVerticallyMovingPosition(0, 2.0f, 15);
 static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
 static const RVec3 cHorizontallyMovingPosition(5, 1, 15);
 static const Quat cHorizontallyMovingOrientation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
+static const RVec3 cConveyorBeltPosition(-10, 0.15f, 15);
 static const RVec3 cRampPosition(15, 2.2f, 15);
 static const Quat cRampOrientation = Quat::sRotation(Vec3::sAxisX(), -0.25f * JPH_PI);
 static const RVec3 cRampBlocksStart = cRampPosition + Vec3(-3.0f, 3.0f, 1.5f);
@@ -68,6 +70,9 @@ static const float cMeshWallWidth = 2.0f;
 static const float cMeshWallStepStart = 0.5f;
 static const float cMeshWallStepEnd = 4.0f;
 static const int cMeshWallSegments = 25;
+static const RVec3 cHalfCylinderPosition(5.0f, 0, 8.0f);
+static const RVec3 cMeshBoxPosition(30.0f, 1.5f, 5.0f);
+static const RVec3 cSensorPosition(30, 0.9f, -5);
 
 void CharacterBaseTest::Initialize()
 {
@@ -107,6 +112,11 @@ void CharacterBaseTest::Initialize()
 			mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+		}
+
+		{
+			// Conveyor belt (only works with virtual character)
+			mConveyorBeltBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(1, 0.15f, 3.0f)), cConveyorBeltPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::Activate);
 		}
 
 		{
@@ -361,6 +371,92 @@ void CharacterBaseTest::Initialize()
 			BodyCreationSettings wall(&mesh, cMeshWallPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(wall, EActivation::DontActivate);
 		}
+
+		// Create a half cylinder with caps for testing contact point limit
+		{
+			VertexList vertices;
+			IndexedTriangleList triangles;
+
+			// The half cylinder
+			const int cPosSegments = 2;
+			const int cAngleSegments = 512;
+			const float cCylinderLength = 2.0f;
+			for (int pos = 0; pos < cPosSegments; ++pos)
+				for (int angle = 0; angle < cAngleSegments; ++angle)
+				{
+					uint32 start = (uint32)vertices.size();
+
+					float radius = cCharacterRadiusStanding + 0.05f;
+					float angle_rad = (-0.5f + float(angle) / cAngleSegments) * JPH_PI;
+					float s = Sin(angle_rad);
+					float c = Cos(angle_rad);
+					float x = cCylinderLength * (-0.5f + float(pos) / (cPosSegments - 1));
+					float y = angle == 0 || angle == cAngleSegments - 1? 0.5f : (1.0f - c) * radius;
+					float z = s * radius;
+					vertices.push_back(Float3(x, y, z));
+
+					if (pos > 0 && angle > 0)
+					{
+						triangles.push_back(IndexedTriangle(start, start - 1, start - cAngleSegments));
+						triangles.push_back(IndexedTriangle(start - 1, start - cAngleSegments - 1, start - cAngleSegments));
+					}
+				}
+
+			// Add end caps
+			uint32 end = cAngleSegments * (cPosSegments - 1);
+			for (int angle = 0; angle < cAngleSegments - 1; ++angle)
+			{
+				triangles.push_back(IndexedTriangle(0, angle + 1, angle));
+				triangles.push_back(IndexedTriangle(end, end + angle, end + angle + 1));
+			}
+
+			MeshShapeSettings mesh(vertices, triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings mesh_cylinder(&mesh, cHalfCylinderPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(mesh_cylinder, EActivation::DontActivate);
+		}
+
+		// Create a box made out of polygons (character should not get stuck behind back facing side)
+		{
+			VertexList vertices = {
+				Float3(-1,  1, -1),
+				Float3( 1,  1, -1),
+				Float3( 1,  1,  1),
+				Float3(-1,  1,  1),
+				Float3(-1, -1, -1),
+				Float3( 1, -1, -1),
+				Float3( 1, -1,  1),
+				Float3(-1, -1,  1)
+			};
+
+			IndexedTriangleList triangles = {
+				IndexedTriangle(0, 3, 2),
+				IndexedTriangle(0, 2, 1),
+				IndexedTriangle(4, 5, 6),
+				IndexedTriangle(4, 6, 7),
+				IndexedTriangle(0, 4, 3),
+				IndexedTriangle(3, 4, 7),
+				IndexedTriangle(2, 6, 5),
+				IndexedTriangle(2, 5, 1),
+				IndexedTriangle(3, 7, 6),
+				IndexedTriangle(3, 6, 2),
+				IndexedTriangle(0, 1, 5),
+				IndexedTriangle(0, 5, 4)
+			};
+
+			MeshShapeSettings mesh(vertices, triangles);
+			mesh.SetEmbedded();
+			BodyCreationSettings box(&mesh, cMeshBoxPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+			mBodyInterface->CreateAndAddBody(box, EActivation::DontActivate);
+		}
+
+		// Create a sensor. 
+		// Note that the CharacterVirtual doesn't interact with sensors, you should pair it with a Character object (see CharacterVirtual class comments)
+		{
+			BodyCreationSettings sensor(new BoxShape(Vec3::sReplicate(1.0f)), cSensorPosition, Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
+			sensor.mIsSensor = true;
+			mSensorBody = mBodyInterface->CreateAndAddBody(sensor, EActivation::Activate);
+		}
 	}
 	else
 	{
@@ -459,6 +555,15 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 		for (uint i = 0; i < size(sScenes); ++i)
 			inUI->CreateTextButton(scene_name, sScenes[i], [this, i]() { sSceneName = sScenes[i]; RestartTest(); });
 		inUI->ShowMenu(scene_name);
+	});
+
+	inUI->CreateTextButton(inSubMenu, "Character Movement Settings", [=]() {
+		UIElement *movement_settings = inUI->CreateMenu();
+
+		inUI->CreateCheckBox(movement_settings, "Control Movement During Jump", sControlMovementDuringJump, [](UICheckBox::EState inState) { sControlMovementDuringJump = inState == UICheckBox::STATE_CHECKED; });
+		inUI->CreateSlider(movement_settings, "Character Speed", sCharacterSpeed, 0.1f, 10.0f, 0.1f, [](float inValue) { sCharacterSpeed = inValue; });
+		inUI->CreateSlider(movement_settings, "Character Jump Speed", sJumpSpeed, 0.1f, 10.0f, 0.1f, [](float inValue) { sJumpSpeed = inValue; });
+		inUI->ShowMenu(movement_settings);
 	});
 
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {

@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -1259,5 +1260,46 @@ TEST_SUITE("PhysicsTests")
 		// LQ_DEBRIS should have fallen through all but the floor
 		CHECK_APPROX_EQUAL(lq_debris1.GetPosition(), RVec3(0, 0.5f, 0), slop);
 		CHECK_APPROX_EQUAL(lq_debris2.GetPosition(), RVec3(0, 0.5f, 0), slop);
+	}
+
+	TEST_CASE("TestMultiplePhysicsSystems")
+	{
+		PhysicsTestContext c1(1.0f / 60.0f, 1, 1);
+		c1.ZeroGravity();
+		PhysicsTestContext c2(1.0f / 60.0f, 1, 1);
+		c2.ZeroGravity();
+
+		const RVec3 cBox1Position(1.0f, 2.0f, 3.0f);
+		Body &box1 = c1.CreateBox(cBox1Position, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+
+		const RVec3 cBox2Position(4.0f, 5.0f, 6.0f);
+		Body& box2 = c2.CreateBox(cBox2Position, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+
+		const Vec3 cBox1Velocity(1.0f, 0, 0);
+		const Vec3 cBox2Velocity(2.0f, 0, 0);
+		{
+			// This tests if we can lock bodies from multiple physics systems (normally locking 2 bodies at the same time without using BodyLockMultiWrite would trigger an assert)
+			BodyLockWrite lock1(c1.GetSystem()->GetBodyLockInterface(), box1.GetID());
+			BodyLockWrite lock2(c2.GetSystem()->GetBodyLockInterface(), box2.GetID());
+
+			CHECK(lock1.GetBody().GetPosition() == cBox1Position);
+			CHECK(lock2.GetBody().GetPosition() == cBox2Position);
+
+			lock1.GetBody().SetLinearVelocity(cBox1Velocity);
+			lock2.GetBody().SetLinearVelocity(cBox2Velocity);
+		}
+
+		const float cTime = 1.0f;
+		c1.Simulate(cTime);
+		c2.Simulate(cTime);
+
+		{
+			BodyLockRead lock1(c1.GetSystem()->GetBodyLockInterface(), box1.GetID());
+			BodyLockRead lock2(c2.GetSystem()->GetBodyLockInterface(), box2.GetID());
+
+			// Check that the bodies in the different systems updated correctly
+			CHECK_APPROX_EQUAL(lock1.GetBody().GetPosition(), cBox1Position + cBox1Velocity * cTime, 1.0e-5f);
+			CHECK_APPROX_EQUAL(lock2.GetBody().GetPosition(), cBox2Position + cBox2Velocity * cTime, 1.0e-5f);
+		}		
 	}
 }

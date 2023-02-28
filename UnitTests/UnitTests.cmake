@@ -10,6 +10,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Core/StringToolsTest.cpp
 	${UNIT_TESTS_ROOT}/Core/QuickSortTest.cpp
 	${UNIT_TESTS_ROOT}/doctest.h
+	${UNIT_TESTS_ROOT}/Geometry/ClosestPointTests.cpp
 	${UNIT_TESTS_ROOT}/Geometry/ConvexHullBuilderTest.cpp
 	${UNIT_TESTS_ROOT}/Geometry/EllipseTest.cpp
 	${UNIT_TESTS_ROOT}/Geometry/EPATests.cpp
@@ -40,8 +41,10 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/CollisionGroupTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ContactListenerTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ConvexVsTrianglesTest.cpp
+	${UNIT_TESTS_ROOT}/Physics/EstimateCollisionResponseTest.cpp
 	${UNIT_TESTS_ROOT}/Physics/HeightFieldShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/MotionQualityLinearCastTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/OffsetCenterOfMassShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PathConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PhysicsDeterminismTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PhysicsStepListenerTests.cpp

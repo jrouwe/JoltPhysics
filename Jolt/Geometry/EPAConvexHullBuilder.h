@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -24,7 +25,7 @@ class EPAConvexHullBuilder : public NonCopyable
 private:
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
 	/// Factor to scale convex hull when debug drawing the construction process
-	static constexpr float cDrawScale = 10.0f;
+	static constexpr Real cDrawScale = 10;
 #endif
 
 public:
@@ -224,7 +225,7 @@ public:
 	{
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
 		mIteration = 0;
-		mOffset = Vec3::sZero();
+		mOffset = RVec3::sZero();
 #endif
 	}
 
@@ -545,8 +546,8 @@ private:
 		// Draw edge of facing triangles
 		for (int i = 0; i < (int)outEdges.size(); ++i)
 		{
-			Vec3 edge_start = cDrawScale * (mPositions[outEdges[i].mStartIdx] + mOffset);
-			DebugRenderer::sInstance->DrawArrow(edge_start, cDrawScale * (mPositions[outEdges[(i + 1) % outEdges.size()].mStartIdx] + mOffset), Color::sYellow, 0.01f);
+			RVec3 edge_start = cDrawScale * (mOffset + mPositions[outEdges[i].mStartIdx]);
+			DebugRenderer::sInstance->DrawArrow(edge_start, cDrawScale * (mOffset + mPositions[outEdges[(i + 1) % outEdges.size()].mStartIdx]), Color::sYellow, 0.01f);
 			DebugRenderer::sInstance->DrawText3D(edge_start, ConvertToString(outEdges[i].mStartIdx), Color::sWhite);
 		}
 
@@ -613,23 +614,23 @@ public:
 	void				DrawState()
 	{
 		// Draw origin
-		DebugRenderer::sInstance->DrawCoordinateSystem(Mat44::sTranslation(cDrawScale * mOffset), 1.0f);
+		DebugRenderer::sInstance->DrawCoordinateSystem(RMat44::sTranslation(cDrawScale * mOffset), 1.0f);
 
 		// Draw triangles
 		for (const Triangle *t : mTriangles)
 			if (!t->mRemoved)
 			{
 				// Calculate the triangle vertices
-				Vec3 p1 = cDrawScale * (mPositions[t->mEdge[0].mStartIdx] + mOffset);
-				Vec3 p2 = cDrawScale * (mPositions[t->mEdge[1].mStartIdx] + mOffset);
-				Vec3 p3 = cDrawScale * (mPositions[t->mEdge[2].mStartIdx] + mOffset);
+				RVec3 p1 = cDrawScale * (mOffset + mPositions[t->mEdge[0].mStartIdx]);
+				RVec3 p2 = cDrawScale * (mOffset + mPositions[t->mEdge[1].mStartIdx]);
+				RVec3 p3 = cDrawScale * (mOffset + mPositions[t->mEdge[2].mStartIdx]);
 
 				// Draw triangle
 				DebugRenderer::sInstance->DrawTriangle(p1, p2, p3, Color::sGetDistinctColor(t->mIteration));
 				DebugRenderer::sInstance->DrawWireTriangle(p1, p2, p3, Color::sGrey);
 
 				// Draw normal
-				Vec3 centroid = cDrawScale * (t->mCentroid + mOffset);
+				RVec3 centroid = cDrawScale * (mOffset + t->mCentroid);
 				float len = t->mNormal.Length();
 				if (len > 0.0f)
 					DebugRenderer::sInstance->DrawArrow(centroid, centroid + t->mNormal / len, Color::sDarkGreen, 0.01f);
@@ -651,10 +652,10 @@ public:
 	/// Draw a triangle for debugging purposes
 	void				DrawWireTriangle(const Triangle &inTriangle, ColorArg inColor)
 	{
-		Vec3 prev = cDrawScale * (mPositions[inTriangle.mEdge[2].mStartIdx] + mOffset);
+		RVec3 prev = cDrawScale * (mOffset + mPositions[inTriangle.mEdge[2].mStartIdx]);
 		for (const Edge &edge : inTriangle.mEdge)
 		{
-			Vec3 cur = cDrawScale * (mPositions[edge.mStartIdx] + mOffset);
+			RVec3 cur = cDrawScale * (mOffset + mPositions[edge.mStartIdx]);
 			DebugRenderer::sInstance->DrawArrow(prev, cur, inColor, 0.01f);
 			prev = cur;
 		}
@@ -684,7 +685,7 @@ private:
 
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
 	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)	
-	Vec3				mOffset;							///< Offset to use for state drawing
+	RVec3				mOffset;							///< Offset to use for state drawing
 #endif
 };
 

@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -112,7 +113,7 @@ ConvexHullBuilder::ConvexHullBuilder(const Positions &inPositions) :
 	mIteration = 0;
 
 	// Center the drawing of the first hull around the origin and calculate the delta offset between states
-	mOffset = Vec3::sZero();
+	mOffset = RVec3::sZero();
 	if (mPositions.empty())
 	{
 		// No hull will be generated
@@ -127,7 +128,7 @@ ConvexHullBuilder::ConvexHullBuilder(const Positions &inPositions) :
 			maxv = Vec3::sMax(maxv, v);
 			mOffset -= v;
 		}
-		mOffset /= float(mPositions.size());
+		mOffset /= Real(mPositions.size());
 		mDelta = Vec3((maxv - minv).GetX() + 0.5f, 0, 0);
 		mOffset += mDelta; // Don't start at origin, we're already drawing the final hull there
 	}
@@ -858,7 +859,7 @@ void ConvexHullBuilder::FindEdge(Face *inFacingFace, Vec3Arg inVertex, FullEdges
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 	// Draw edge of facing faces
 	for (int i = 0; i < (int)outEdges.size(); ++i)
-		DebugRenderer::sInstance->DrawArrow(cDrawScale * (mPositions[outEdges[i].mStartIdx] + mOffset), cDrawScale * (mPositions[outEdges[i].mEndIdx] + mOffset), Color::sWhite, 0.01f);
+		DebugRenderer::sInstance->DrawArrow(cDrawScale * (mOffset + mPositions[outEdges[i].mStartIdx]), cDrawScale * (mOffset + mPositions[outEdges[i].mEndIdx]), Color::sWhite, 0.01f);
 	DrawState();
 #endif
 }
@@ -1380,11 +1381,11 @@ void ConvexHullBuilder::DrawState(bool inDrawConflictList) const
 
 			// First point
 			const Edge *e = f->mFirstEdge;
-			Vec3 p1 = cDrawScale * (mPositions[e->mStartIdx] + mOffset);
+			RVec3 p1 = cDrawScale * (mOffset + mPositions[e->mStartIdx]);
 
 			// Second point
 			e = e->mNextEdge;
-			Vec3 p2 = cDrawScale * (mPositions[e->mStartIdx] + mOffset);
+			RVec3 p2 = cDrawScale * (mOffset + mPositions[e->mStartIdx]);
 
 			// First line
 			DebugRenderer::sInstance->DrawLine(p1, p2, Color::sGrey);
@@ -1393,7 +1394,7 @@ void ConvexHullBuilder::DrawState(bool inDrawConflictList) const
 			{
 				// Third point
 				e = e->mNextEdge;
-				Vec3 p3 = cDrawScale * (mPositions[e->mStartIdx] + mOffset);
+				RVec3 p3 = cDrawScale * (mOffset + mPositions[e->mStartIdx]);
 
 				DebugRenderer::sInstance->DrawTriangle(p1, p2, p3, iteration_color);
 
@@ -1404,7 +1405,7 @@ void ConvexHullBuilder::DrawState(bool inDrawConflictList) const
 			while (e != f->mFirstEdge);
 
 			// Draw normal
-			Vec3 centroid = cDrawScale * (f->mCentroid + mOffset);
+			RVec3 centroid = cDrawScale * (mOffset + f->mCentroid);
 			DebugRenderer::sInstance->DrawArrow(centroid, centroid + f->mNormal.NormalizedOr(Vec3::sZero()), face_color, 0.01f);
 
 			// Draw conflict list
@@ -1420,11 +1421,11 @@ void ConvexHullBuilder::DrawState(bool inDrawConflictList) const
 void ConvexHullBuilder::DrawWireFace(const Face *inFace, ColorArg inColor) const
 {
 	const Edge *e = inFace->mFirstEdge;
-	Vec3 prev = cDrawScale * (mPositions[e->mStartIdx] + mOffset);
+	RVec3 prev = cDrawScale * (mOffset + mPositions[e->mStartIdx]);
 	do
 	{ 
 		const Edge *next = e->mNextEdge;
-		Vec3 cur = cDrawScale * (mPositions[next->mStartIdx] + mOffset);
+		RVec3 cur = cDrawScale * (mOffset + mPositions[next->mStartIdx]);
 		DebugRenderer::sInstance->DrawArrow(prev, cur, inColor, 0.01f);
 		DebugRenderer::sInstance->DrawText3D(prev, ConvertToString(e->mStartIdx), inColor);
 		e = next;
@@ -1434,8 +1435,8 @@ void ConvexHullBuilder::DrawWireFace(const Face *inFace, ColorArg inColor) const
 
 void ConvexHullBuilder::DrawEdge(const Edge *inEdge, ColorArg inColor) const
 {
-	Vec3 p1 = cDrawScale * (mPositions[inEdge->mStartIdx] + mOffset);
-	Vec3 p2 = cDrawScale * (mPositions[inEdge->mNextEdge->mStartIdx] + mOffset);
+	RVec3 p1 = cDrawScale * (mOffset + mPositions[inEdge->mStartIdx]);
+	RVec3 p2 = cDrawScale * (mOffset + mPositions[inEdge->mNextEdge->mStartIdx]);
 	DebugRenderer::sInstance->DrawArrow(p1, p2, inColor, 0.01f);
 }
 

@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -128,11 +129,22 @@ Quat Quat::sFromTo(Vec3Arg inFrom, Vec3Arg inTo)
 		which then needs to be normalized because the whole equation was multiplied by 2 cos(angle / 2)
 	*/
 
-	float w = sqrt(inFrom.LengthSq() * inTo.LengthSq()) + inFrom.Dot(inTo);
+	float len_v1_v2 = sqrt(inFrom.LengthSq() * inTo.LengthSq());
+	float w = len_v1_v2 + inFrom.Dot(inTo);
 
-	// Check if vectors are perpendicular, if take one of the many 180 degree rotations that exist
 	if (w == 0.0f)
-		return Quat(Vec4(inFrom.GetNormalizedPerpendicular(), 0));
+	{
+		if (len_v1_v2 == 0.0f)
+		{
+			// If either of the vectors has zero length, there is no rotation and we return identity
+			return Quat::sIdentity();
+		}
+		else
+		{
+			// If vectors are perpendicular, take one of the many 180 degree rotations that exist	
+			return Quat(Vec4(inFrom.GetNormalizedPerpendicular(), 0));
+		}
+	}
 
 	Vec3 v = inFrom.Cross(inTo);
 	return Quat(Vec4(v, w)).Normalized();

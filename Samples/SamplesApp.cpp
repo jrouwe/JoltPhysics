@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -250,11 +251,13 @@ static TestNameAndRTTI sRigTests[] =
 
 JPH_DECLARE_RTTI_FOR_FACTORY(CharacterTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(CharacterVirtualTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(CharacterSpaceShipTest)
 
 static TestNameAndRTTI sCharacterTests[] =
 {
 	{ "Character",							JPH_RTTI(CharacterTest) },
 	{ "Character Virtual",					JPH_RTTI(CharacterVirtualTest) },
+	{ "Character Virtual vs Space Ship",	JPH_RTTI(CharacterSpaceShipTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(WaterShapeTest)
@@ -563,7 +566,7 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 	// Create physics system
 	mPhysicsSystem = new PhysicsSystem();
-	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, mBroadPhaseLayerInterface, BroadPhaseCanCollide, ObjectCanCollide);
+	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, mBroadPhaseLayerInterface, mObjectVsBroadPhaseLayerFilter, mObjectVsObjectLayerFilter);
 	mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings);
 
 	// Restore gravity

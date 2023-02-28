@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -35,15 +36,26 @@ public:
 #endif // JPH_TRACK_BROADPHASE_STATS
 };
 
-/// Function to test if two objects can collide based on their object layer. Used while finding collision pairs.
-using ObjectLayerPairFilter = bool (*)(ObjectLayer inLayer1, ObjectLayer inLayer2);
+/// Filter class to test if two objects can collide based on their object layer. Used while finding collision pairs.
+class ObjectLayerPairFilter : public NonCopyable
+{
+public:
+	/// Destructor
+	virtual					~ObjectLayerPairFilter() = default;
+
+	/// Returns true if two layers can collide
+	virtual bool			ShouldCollide(ObjectLayer inLayer1, ObjectLayer inLayer2) const
+	{
+		return true;
+	}
+};
 
 /// Default filter class that uses the pair filter in combination with a specified layer to filter layers
 class DefaultObjectLayerFilter : public ObjectLayerFilter
 {
 public:
 	/// Constructor
-							DefaultObjectLayerFilter(ObjectLayerPairFilter inObjectLayerPairFilter, ObjectLayer inLayer) :
+							DefaultObjectLayerFilter(const ObjectLayerPairFilter &inObjectLayerPairFilter, ObjectLayer inLayer) :
 		mObjectLayerPairFilter(inObjectLayerPairFilter),
 		mLayer(inLayer)
 	{
@@ -59,11 +71,11 @@ public:
 	// See ObjectLayerFilter::ShouldCollide
 	virtual bool			ShouldCollide(ObjectLayer inLayer) const override
 	{
-		return mObjectLayerPairFilter(mLayer, inLayer);
+		return mObjectLayerPairFilter.ShouldCollide(mLayer, inLayer);
 	}
 
 private:
-	ObjectLayerPairFilter	mObjectLayerPairFilter;
+	const ObjectLayerPairFilter & mObjectLayerPairFilter;
 	ObjectLayer				mLayer;
 };
 

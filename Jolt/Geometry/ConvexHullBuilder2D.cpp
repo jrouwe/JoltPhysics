@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -33,7 +34,7 @@ ConvexHullBuilder2D::ConvexHullBuilder2D(const Positions &inPositions) :
 {
 #ifdef JPH_CONVEX_BUILDER_2D_DEBUG
 	// Center the drawing of the first hull around the origin and calculate the delta offset between states
-	mOffset = Vec3::sZero();
+	mOffset = RVec3::sZero();
 	if (mPositions.empty())
 	{
 		// No hull will be generated
@@ -48,7 +49,7 @@ ConvexHullBuilder2D::ConvexHullBuilder2D(const Positions &inPositions) :
 			maxv = Vec3::sMax(maxv, v);
 			mOffset -= v;
 		}
-		mOffset /= float(mPositions.size());
+		mOffset /= Real(mPositions.size());
 		mDelta = Vec3((maxv - minv).GetX() + 0.5f, 0, 0);
 		mOffset += mDelta; // Don't start at origin, we're already drawing the final hull there
 	}
@@ -317,8 +318,8 @@ void ConvexHullBuilder2D::DrawState()
 		Color color = Color::sGetDistinctColor(color_idx++);
 
 		// Draw edge and normal
-		DebugRenderer::sInstance->DrawArrow(cDrawScale * (mPositions[edge->mStartIdx] + mOffset), cDrawScale * (mPositions[next->mStartIdx] + mOffset), color, 0.1f);
-		DebugRenderer::sInstance->DrawArrow(cDrawScale * (edge->mCenter + mOffset), cDrawScale * (edge->mCenter + mOffset) + edge->mNormal.NormalizedOr(Vec3::sZero()), Color::sGreen, 0.1f);
+		DebugRenderer::sInstance->DrawArrow(cDrawScale * (mOffset + mPositions[edge->mStartIdx]), cDrawScale * (mOffset + mPositions[next->mStartIdx]), color, 0.1f);
+		DebugRenderer::sInstance->DrawArrow(cDrawScale * (mOffset + edge->mCenter), cDrawScale * (mOffset + edge->mCenter) + edge->mNormal.NormalizedOr(Vec3::sZero()), Color::sGreen, 0.1f);
 
 		// Draw points that belong to this edge in the same color
 		for (int idx : edge->mConflictList)

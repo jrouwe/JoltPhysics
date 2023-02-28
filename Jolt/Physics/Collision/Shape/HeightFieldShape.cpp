@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -1309,7 +1310,7 @@ public:
 									}
 
 								#ifdef JPH_DEBUG_HEIGHT_FIELD
-									DebugRenderer::sInstance->DrawWireTriangle(v0, v1, v2, Color::sWhite);
+									DebugRenderer::sInstance->DrawWireTriangle(RVec3(v0), RVec3(v1), RVec3(v2), Color::sWhite);
 								#endif
 
 									// Call visitor

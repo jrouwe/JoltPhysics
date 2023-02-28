@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -273,8 +274,10 @@ TEST_SUITE("RayShapeTests")
 
 		// Make the shape part of a body and insert it into the physics system
 		BPLayerInterfaceImpl broad_phase_layer_interface;
+		ObjectVsBroadPhaseLayerFilter object_vs_broadphase_layer_filter;
+		ObjectLayerPairFilter object_vs_object_layer_filter;
 		PhysicsSystem system;
-		system.Init(1, 0, 4, 4, broad_phase_layer_interface, [](ObjectLayer, BroadPhaseLayer) { return true; }, [](ObjectLayer, ObjectLayer) { return true; });
+		system.Init(1, 0, 4, 4, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
 		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, RVec3(cShapePosition), cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate);
 			   
 

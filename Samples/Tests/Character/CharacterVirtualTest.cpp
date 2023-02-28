@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -24,6 +25,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mMaxSlopeAngle = sMaxSlopeAngle;
 	settings->mMaxStrength = sMaxStrength;
 	settings->mShape = mStandingShape;
+	settings->mBackFaceMode = sBackFaceMode;
 	settings->mCharacterPadding = sCharacterPadding;
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
@@ -58,12 +60,16 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	CharacterVirtual::ExtendedUpdateSettings update_settings;
 	if (!sEnableStickToFloor)
 		update_settings.mStickToFloorStepDown = Vec3::sZero();
+	else
+		update_settings.mStickToFloorStepDown = -mCharacter->GetUp() * update_settings.mStickToFloorStepDown.Length();
 	if (!sEnableWalkStairs)
 		update_settings.mWalkStairsStepUp = Vec3::sZero();
+	else
+		update_settings.mWalkStairsStepUp = mCharacter->GetUp() * update_settings.mWalkStairsStepUp.Length();
 
 	// Update the character position
 	mCharacter->ExtendedUpdate(inParams.mDeltaTime,
-		mPhysicsSystem->GetGravity(),
+		-mCharacter->GetUp() * mPhysicsSystem->GetGravity().Length(),
 		update_settings,
 		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
 		mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING),
@@ -85,14 +91,28 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
 {
-	// Smooth the player input
-	mDesiredVelocity = 0.25f * inMovementDirection * cCharacterSpeed + 0.75f * mDesiredVelocity;
+	bool player_controls_horizontal_velocity = sControlMovementDuringJump || mCharacter->IsSupported();
+	if (player_controls_horizontal_velocity)
+	{
+		// Smooth the player input
+		mDesiredVelocity = 0.25f * inMovementDirection * sCharacterSpeed + 0.75f * mDesiredVelocity;
 
-	// True if the player intended to move
-	mAllowSliding = !inMovementDirection.IsNearZero();
+		// True if the player intended to move
+		mAllowSliding = !inMovementDirection.IsNearZero();
+	}
+	else
+	{
+		// While in air we allow sliding
+		mAllowSliding = true;
+	}
+
+	// Update the character rotation and its up vector to match the up vector set by the user settings
+	Quat character_up_rotation = Quat::sEulerAngles(Vec3(sUpRotationX, 0, sUpRotationZ));
+	mCharacter->SetUp(character_up_rotation.RotateAxisY());
+	mCharacter->SetRotation(character_up_rotation);
 
 	// Determine new basic velocity
-	Vec3 current_vertical_velocity = Vec3(0, mCharacter->GetLinearVelocity().GetY(), 0);
+	Vec3 current_vertical_velocity = mCharacter->GetLinearVelocity().Dot(mCharacter->GetUp()) * mCharacter->GetUp();
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
 	Vec3 new_velocity;
 	if (mCharacter->GetGroundState() == CharacterVirtual::EGroundState::OnGround // If on ground
@@ -103,16 +123,25 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 		// Jump
 		if (inJump)
-			new_velocity += Vec3(0, cJumpSpeed, 0);
+			new_velocity += sJumpSpeed * mCharacter->GetUp();
 	}
 	else
 		new_velocity = current_vertical_velocity;
 
 	// Gravity
-	new_velocity += mPhysicsSystem->GetGravity() * inDeltaTime;
+	new_velocity += (character_up_rotation * mPhysicsSystem->GetGravity()) * inDeltaTime;
 
-	// Player input
-	new_velocity += mDesiredVelocity;
+	if (player_controls_horizontal_velocity)
+	{
+		// Player input
+		new_velocity += character_up_rotation * mDesiredVelocity;
+	}
+	else
+	{
+		// Preserve horizontal velocity
+		Vec3 current_horizontal_velocity = mCharacter->GetLinearVelocity() - current_vertical_velocity;
+		new_velocity += current_horizontal_velocity;
+	}
 
 	// Update character velocity
 	mCharacter->SetLinearVelocity(new_velocity);
@@ -124,6 +153,9 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 
 void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu)
 {
+	inUI->CreateComboBox(inSubMenu, "Back Face Mode", { "Ignore", "Collide" }, (int)sBackFaceMode, [=](int inItem) { sBackFaceMode = (EBackFaceMode)inItem; });
+	inUI->CreateSlider(inSubMenu, "Up Rotation X (degrees)", RadiansToDegrees(sUpRotationX), -90.0f, 90.0f, 1.0f, [](float inValue) { sUpRotationX = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Up Rotation Z (degrees)", RadiansToDegrees(sUpRotationZ), -90.0f, 90.0f, 1.0f, [](float inValue) { sUpRotationZ = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Slope Angle (degrees)", RadiansToDegrees(sMaxSlopeAngle), 0.0f, 90.0f, 1.0f, [](float inValue) { sMaxSlopeAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Strength (N)", sMaxStrength, 0.0f, 500.0f, 1.0f, [](float inValue) { sMaxStrength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Character Padding", sCharacterPadding, 0.01f, 0.5f, 0.01f, [](float inValue) { sCharacterPadding = inValue; });
@@ -142,6 +174,7 @@ void CharacterVirtualTest::SaveState(StateRecorder &inStream) const
 	bool is_standing = mCharacter->GetShape() == mStandingShape;
 	inStream.Write(is_standing);
 
+	inStream.Write(mAllowSliding);
 	inStream.Write(mDesiredVelocity);
 }
 
@@ -155,7 +188,15 @@ void CharacterVirtualTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(is_standing);
 	mCharacter->SetShape(is_standing? mStandingShape : mCrouchingShape, FLT_MAX, { }, { }, { }, { }, *mTempAllocator);
 
+	inStream.Read(mAllowSliding);
 	inStream.Read(mDesiredVelocity);
+}
+
+void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
+{
+	// Apply artificial velocity to the character when standing on the conveyor belt
+	if (inBody2.GetID() == mConveyorBeltBody)
+		ioLinearVelocity += Vec3(0, 0, 2);
 }
 
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)

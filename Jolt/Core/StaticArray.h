@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -13,6 +14,8 @@ public:
 	using value_type = T;
 
 	using size_type = uint;
+
+	static constexpr uint Capacity = N;
 
 	/// Default constructor
 						StaticArray() = default;

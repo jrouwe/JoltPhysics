@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -57,7 +58,12 @@ public:
 	virtual float					GetInnerRadius() const override							{ return mInnerShape->GetInnerRadius(); }
 
 	// See Shape::GetMassProperties
-	virtual MassProperties			GetMassProperties() const override						{ return mInnerShape->GetMassProperties(); }
+	virtual MassProperties			GetMassProperties() const override
+	{
+		MassProperties mp = mInnerShape->GetMassProperties();
+		mp.Translate(mOffset);
+		return mp;
+	}
 
 	// See Shape::GetSubShapeTransformedShape
 	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const override;

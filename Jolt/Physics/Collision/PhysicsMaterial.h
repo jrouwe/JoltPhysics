@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -31,7 +32,7 @@ public:
 
 	// Properties
 	virtual const char *					GetDebugName() const			{ return "Unknown"; }
-	virtual ColorArg 						GetDebugColor() const			{ return Color::sGrey; }
+	virtual Color							GetDebugColor() const			{ return Color::sGrey; }
 
 	/// Saves the contents of the material in binary form to inStream.
 	virtual void							SaveBinaryState(StreamOut &inStream) const;

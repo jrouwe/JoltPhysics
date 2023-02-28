@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -24,6 +25,9 @@ public:
 	public:
 		inline							Grant(EAccess inVelocity, EAccess inPosition)
 		{
+			JPH_ASSERT(sVelocityAccess == EAccess::ReadWrite);
+			JPH_ASSERT(sPositionAccess == EAccess::ReadWrite);
+
 			sVelocityAccess = inVelocity;
 			sPositionAccess = inPosition;
 		}

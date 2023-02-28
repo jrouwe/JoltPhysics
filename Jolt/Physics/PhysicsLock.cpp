@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -9,7 +10,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-thread_local uint32 PhysicsLock::sLockedMutexes = 0;
+thread_local PhysicsLock::LockData PhysicsLock::sLocks[4];
 
 JPH_NAMESPACE_END
 

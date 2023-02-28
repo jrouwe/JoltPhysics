@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -7,7 +8,7 @@
 #include <Jolt/Physics/Character/Character.h>
 
 // Simple test that test the Character class. Allows the user to move around with the arrow keys and jump with the J button.
-class CharacterTest : public CharacterBaseTest
+class CharacterTest : public CharacterBaseTest, public ContactListener
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(CharacterTest)
@@ -27,6 +28,13 @@ public:
 	// Saving / restoring state for replay
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;
+
+	// If this test implements a contact listener, it should be returned here
+	virtual ContactListener *GetContactListener() override	{ return this; }
+
+	// See: ContactListener
+	virtual void			OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
+	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
 
 protected:
 	// Get position of the character

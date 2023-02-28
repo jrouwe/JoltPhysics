@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -14,6 +15,7 @@ public:
 
 	// See: Test
 	virtual void			Initialize() override;
+	virtual void			PostPhysicsUpdate(float inDeltaTime) override;
 
 	// If this test implements a contact listener, it should be returned here
 	virtual ContactListener *GetContactListener() override		{ return this; }
@@ -25,4 +27,14 @@ public:
 private:
 	// The 4 bodies that we create
 	Body *					mBody[4];
+
+	// Tracks predicted velocities so we can compare them with the actual velocities after time step
+	struct PredictedVelocity
+	{
+		BodyID				mBodyID;
+		Vec3				mLinearVelocity;
+		Vec3				mAngularVelocity;
+	};
+	Mutex					mPredictedVelocitiesMutex;
+	Array<PredictedVelocity> mPredictedVelocities;
 };

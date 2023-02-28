@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -69,8 +70,19 @@ public:
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
 };
 
-/// Function to test if an object can collide with a broadphase layer. Used while finding collision pairs.
-using ObjectVsBroadPhaseLayerFilter = bool (*)(ObjectLayer inLayer1, BroadPhaseLayer inLayer2);
+/// Class to test if an object can collide with a broadphase layer. Used while finding collision pairs.
+class ObjectVsBroadPhaseLayerFilter : public NonCopyable
+{
+public:
+	/// Destructor
+	virtual							~ObjectVsBroadPhaseLayerFilter() = default;
+
+	/// Returns true if an object layer should collide with a broadphase layer
+	virtual bool					ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const
+	{
+		return true;
+	}
+};
 
 /// Filter class for broadphase layers
 class BroadPhaseLayerFilter : public NonCopyable
@@ -91,7 +103,7 @@ class DefaultBroadPhaseLayerFilter : public BroadPhaseLayerFilter
 {
 public:
 	/// Constructor
-									DefaultBroadPhaseLayerFilter(ObjectVsBroadPhaseLayerFilter inObjectVsBroadPhaseLayerFilter, ObjectLayer inLayer) :
+									DefaultBroadPhaseLayerFilter(const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, ObjectLayer inLayer) :
 		mObjectVsBroadPhaseLayerFilter(inObjectVsBroadPhaseLayerFilter),
 		mLayer(inLayer)
 	{
@@ -100,11 +112,11 @@ public:
 	// See BroadPhaseLayerFilter::ShouldCollide
 	virtual bool					ShouldCollide(BroadPhaseLayer inLayer) const override
 	{
-		return mObjectVsBroadPhaseLayerFilter(mLayer, inLayer);
+		return mObjectVsBroadPhaseLayerFilter.ShouldCollide(mLayer, inLayer);
 	}
 
 private:
-	ObjectVsBroadPhaseLayerFilter	mObjectVsBroadPhaseLayerFilter;
+	const ObjectVsBroadPhaseLayerFilter &mObjectVsBroadPhaseLayerFilter;
 	ObjectLayer						mLayer;
 };
 

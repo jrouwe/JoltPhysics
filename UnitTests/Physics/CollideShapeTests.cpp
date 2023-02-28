@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -336,6 +337,37 @@ TEST_SUITE("CollideShapeTests")
 		float capsule_center_to_triangle_v2_v3_len = capsule_center_to_triangle_v2_v3.Length();
 		Vec3 expected_penetration_axis = -capsule_center_to_triangle_v2_v3 / capsule_center_to_triangle_v2_v3_len;
 		float expected_penetration_depth = capsule_radius - capsule_center_to_triangle_v2_v3_len;
+
+		CHECK(collector.mHits.size() == 1);
+		const CollideShapeResult &hit = collector.mHits[0];
+		Vec3 actual_penetration_axis = hit.mPenetrationAxis.Normalized();
+		float actual_penetration_depth = hit.mPenetrationDepth;
+
+		CHECK_APPROX_EQUAL(actual_penetration_axis, expected_penetration_axis);
+		CHECK_APPROX_EQUAL(actual_penetration_depth, expected_penetration_depth);
+	}
+
+	// A test case of a triangle that's nearly parallel to a capsule and penetrating it. This one was causing numerical issues.
+	TEST_CASE("TestCollideParallelTriangleVsCapsule2")
+	{
+		Vec3 v1(-0.0904417038f, -4.72410202f, 0.307858467f);
+		Vec3 v2(-0.0904417038f, 5.27589798f, 0.307857513f);
+		Vec3 v3(9.90955830f, 5.27589798f, 0.307864189f);
+		TriangleShape triangle(v1, v2, v3);
+		triangle.SetEmbedded();
+
+		float capsule_radius = 0.42f;
+		float capsule_half_height = 0.675f;
+		CapsuleShape capsule(capsule_half_height, capsule_radius);
+		capsule.SetEmbedded();
+
+		CollideShapeSettings settings;
+		AllHitCollisionCollector<CollideShapeCollector> collector;
+		CollisionDispatch::sCollideShapeVsShape(&triangle, &capsule, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+
+		// The capsule intersects with the triangle and the closest point is in the interior of the triangle
+		Vec3 expected_penetration_axis = Vec3(0, 0, -1); // Triangle is in the XY plane so the normal is Z
+		float expected_penetration_depth = capsule_radius - v1.GetZ();
 
 		CHECK(collector.mHits.size() == 1);
 		const CollideShapeResult &hit = collector.mHits[0];

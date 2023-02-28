@@ -1,4 +1,5 @@
-﻿// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
+﻿// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
+// SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
 #pragma once
@@ -27,9 +28,12 @@ private:
 	/// @param outV Closest point
 	/// @param outVLenSq |outV|^2
 	/// @param outSet Set of points that form the new simplex closest to the origin (bit 1 = mY[0], bit 2 = mY[1], ...)
+	/// 
+	/// If LastPointPartOfClosestFeature is true then the last point added will be assumed to be part of the closest feature and the function will do less work.
 	///
 	/// @return True if new closest point was found.
 	/// False if the function failed, in this case the output variables are not modified
+	template <bool LastPointPartOfClosestFeature>
 	bool		GetClosest(float inPrevVLenSq, Vec3 &outV, float &outVLenSq, uint32 &outSet) const
 	{
 #ifdef JPH_GJK_DEBUG
@@ -55,12 +59,12 @@ private:
 
 		case 3:
 			// Triangle
-			v = ClosestPoint::GetClosestPointOnTriangle(mY[0], mY[1], mY[2], set);
+			v = ClosestPoint::GetClosestPointOnTriangle<LastPointPartOfClosestFeature>(mY[0], mY[1], mY[2], set);
 			break;
 
 		case 4:
 			// Tetrahedron
-			v = ClosestPoint::GetClosestPointOnTetrahedron(mY[0], mY[1], mY[2], mY[3], set);
+			v = ClosestPoint::GetClosestPointOnTetrahedron<LastPointPartOfClosestFeature>(mY[0], mY[1], mY[2], mY[3], set);
 			break;
 
 		default:
@@ -256,7 +260,7 @@ public:
 			// Determine the new closest point
 			float v_len_sq;			// Length^2 of v
 			uint32 set;				// Set of points that form the new simplex
-			if (!GetClosest(prev_v_len_sq, ioV, v_len_sq, set))
+			if (!GetClosest<true>(prev_v_len_sq, ioV, v_len_sq, set))
 				return false;
 
 			// If there are 4 points, the origin is inside the tetrahedron and we're done
@@ -407,7 +411,7 @@ public:
 #endif
 
 			uint32 set;
-			if (!GetClosest(prev_v_len_sq, ioV, v_len_sq, set))
+			if (!GetClosest<true>(prev_v_len_sq, ioV, v_len_sq, set))
 			{
 				--mNumPoints; // Undo add last point
 				break;
@@ -596,7 +600,7 @@ public:
 			// Determine the new closest point from Y to origin
 			bool needs_restart = false;
 			uint32 set;						// Set of points that form the new simplex
-			if (!GetClosest(v_len_sq, v, v_len_sq, set))
+			if (!GetClosest<false>(v_len_sq, v, v_len_sq, set))
 			{
 #ifdef JPH_GJK_DEBUG
 				Trace("Failed to converge");
@@ -805,7 +809,7 @@ public:
 			// Determine the new closest point from Y to origin
 			bool needs_restart = false;
 			uint32 set;						// Set of points that form the new simplex
-			if (!GetClosest(v_len_sq, v, v_len_sq, set))
+			if (!GetClosest<false>(v_len_sq, v, v_len_sq, set))
 			{
 #ifdef JPH_GJK_DEBUG
 				Trace("Failed to converge");
@@ -918,32 +922,32 @@ private:
 	/// Draw state of algorithm
 	void		DrawState()
 	{
-		Mat44 origin = Mat44::sTranslation(mOffset);
+		RMat44 origin = RMat44::sTranslation(mOffset);
 
 		// Draw origin
 		DebugRenderer::sInstance->DrawCoordinateSystem(origin, 1.0f);
 
 		// Draw the hull
-		DebugRenderer::sInstance->DrawGeometry(origin, mGeometry->mBounds, mGeometry->mBounds.GetExtent().LengthSq(), Color::sYellow, mGeometry);
+		DebugRenderer::sInstance->DrawGeometry(origin, mGeometry->mBounds.Transformed(origin), mGeometry->mBounds.GetExtent().LengthSq(), Color::sYellow, mGeometry);
 
 		// Draw Y
 		for (int i = 0; i < mNumPoints; ++i)
 		{
 			// Draw support point
-			Vec3 y_i = origin * mY[i];
+			RVec3 y_i = origin * mY[i];
 			DebugRenderer::sInstance->DrawMarker(y_i, Color::sRed, 1.0f);
 			for (int j = i + 1; j < mNumPoints; ++j)
 			{
 				// Draw edge
-				Vec3 y_j = origin * mY[j];
+				RVec3 y_j = origin * mY[j];
 				DebugRenderer::sInstance->DrawLine(y_i, y_j, Color::sRed);
 				for (int k = j + 1; k < mNumPoints; ++k)
 				{
 					// Make sure triangle faces the origin
-					Vec3 y_k = origin * mY[k];
-					Vec3 center = (y_i + y_j + y_k) / 3.0f;
-					Vec3 normal = (y_j - y_i).Cross(y_k - y_i);
-					if (normal.Dot(center) < 0.0f)
+					RVec3 y_k = origin * mY[k];
+					RVec3 center = (y_i + y_j + y_k) / Real(3);
+					RVec3 normal = (y_j - y_i).Cross(y_k - y_i);
+					if (normal.Dot(center) < Real(0))
 						DebugRenderer::sInstance->DrawTriangle(y_i, y_j, y_k, Color::sLightGrey);
 					else
 						DebugRenderer::sInstance->DrawTriangle(y_i, y_k, y_j, Color::sLightGrey);
@@ -963,7 +967,7 @@ private:
 
 #ifdef JPH_GJK_DEBUG
 	DebugRenderer::GeometryRef	mGeometry;	///< A visualization of the minkowski difference for state drawing
-	Vec3		mOffset = Vec3::sZero();	///< Offset to use for state drawing
+	RVec3		mOffset = RVec3::sZero();	///< Offset to use for state drawing
 #endif
 };
 

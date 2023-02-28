@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -18,31 +19,38 @@ namespace Layers
 	static constexpr uint8 MOVING = 6;
 	static constexpr uint8 HQ_DEBRIS = 7; // High quality debris collides with MOVING and NON_MOVING but not with any debris
 	static constexpr uint8 LQ_DEBRIS = 8; // Low quality debris only collides with NON_MOVING
-	static constexpr uint8 NUM_LAYERS = 9;
+	static constexpr uint8 SENSOR = 9; // Sensors only collide with MOVING objects
+	static constexpr uint8 NUM_LAYERS = 10;
 };
 
-/// Function that determines if two object layers can collide
-inline bool ObjectCanCollide(ObjectLayer inObject1, ObjectLayer inObject2)
+/// Class that determines if two object layers can collide
+class ObjectLayerPairFilterImpl : public ObjectLayerPairFilter
 {
-	switch (inObject1)
+public:
+	virtual bool					ShouldCollide(ObjectLayer inObject1, ObjectLayer inObject2) const override
 	{
-	case Layers::UNUSED1:
-	case Layers::UNUSED2:
-	case Layers::UNUSED3:
-	case Layers::UNUSED4:
-	case Layers::UNUSED5:
-		return false;
-	case Layers::NON_MOVING:
-		return inObject2 == Layers::MOVING || inObject2 == Layers::HQ_DEBRIS || inObject2 == Layers::LQ_DEBRIS;
-	case Layers::MOVING:
-		return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING || inObject2 == Layers::HQ_DEBRIS;
-	case Layers::HQ_DEBRIS:
-		return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING;
-	case Layers::LQ_DEBRIS:
-		return inObject2 == Layers::NON_MOVING;
-	default:
-		JPH_ASSERT(false);
-		return false;
+		switch (inObject1)
+		{
+		case Layers::UNUSED1:
+		case Layers::UNUSED2:
+		case Layers::UNUSED3:
+		case Layers::UNUSED4:
+		case Layers::UNUSED5:
+			return false;
+		case Layers::NON_MOVING:
+			return inObject2 == Layers::MOVING || inObject2 == Layers::HQ_DEBRIS || inObject2 == Layers::LQ_DEBRIS;
+		case Layers::MOVING:
+			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING || inObject2 == Layers::HQ_DEBRIS || inObject2 == Layers::SENSOR;
+		case Layers::HQ_DEBRIS:
+			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING;
+		case Layers::LQ_DEBRIS:
+			return inObject2 == Layers::NON_MOVING;
+		case Layers::SENSOR:
+			return inObject2 == Layers::MOVING;
+		default:
+			JPH_ASSERT(false);
+			return false;
+		}
 	}
 };
 
@@ -53,7 +61,8 @@ namespace BroadPhaseLayers
 	static constexpr BroadPhaseLayer MOVING(1); 
 	static constexpr BroadPhaseLayer LQ_DEBRIS(2);
 	static constexpr BroadPhaseLayer UNUSED(3);
-	static constexpr uint NUM_LAYERS(4);
+	static constexpr BroadPhaseLayer SENSOR(4);
+	static constexpr uint NUM_LAYERS(5);
 };
 
 /// BroadPhaseLayerInterface implementation
@@ -72,6 +81,7 @@ public:
 		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
 		mObjectToBroadPhase[Layers::HQ_DEBRIS] = BroadPhaseLayers::MOVING; // HQ_DEBRIS is also in the MOVING layer as an example on how to map multiple layers onto the same broadphase layer
 		mObjectToBroadPhase[Layers::LQ_DEBRIS] = BroadPhaseLayers::LQ_DEBRIS;
+		mObjectToBroadPhase[Layers::SENSOR] = BroadPhaseLayers::SENSOR;
 	}
 
 	virtual uint					GetNumBroadPhaseLayers() const override
@@ -94,6 +104,7 @@ public:
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::LQ_DEBRIS:	return "LQ_DEBRIS";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::UNUSED:		return "UNUSED";
+		case (BroadPhaseLayer::Type)BroadPhaseLayers::SENSOR:		return "SENSOR";
 		default:													JPH_ASSERT(false); return "INVALID";
 		}
 	}
@@ -103,26 +114,32 @@ private:
 	BroadPhaseLayer					mObjectToBroadPhase[Layers::NUM_LAYERS];
 };
 
-/// Function that determines if two broadphase layers can collide
-inline bool BroadPhaseCanCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2)
+/// Class that determines if an object layer can collide with a broadphase layer
+class ObjectVsBroadPhaseLayerFilterImpl : public ObjectVsBroadPhaseLayerFilter
 {
-	switch (inLayer1)
+public:
+	virtual bool					ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override
 	{
-	case Layers::NON_MOVING:
-		return inLayer2 == BroadPhaseLayers::MOVING;
-	case Layers::MOVING:
-	case Layers::HQ_DEBRIS:
-		return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING;
-	case Layers::LQ_DEBRIS:
-		return inLayer2 == BroadPhaseLayers::NON_MOVING;
-	case Layers::UNUSED1:
-	case Layers::UNUSED2:
-	case Layers::UNUSED3:
-	case Layers::UNUSED4:
-	case Layers::UNUSED5:
-		return false;			
-	default:
-		JPH_ASSERT(false);
-		return false;
+		switch (inLayer1)
+		{
+		case Layers::NON_MOVING:
+			return inLayer2 == BroadPhaseLayers::MOVING;
+		case Layers::MOVING:
+		case Layers::HQ_DEBRIS:
+			return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
+		case Layers::LQ_DEBRIS:
+			return inLayer2 == BroadPhaseLayers::NON_MOVING;
+		case Layers::SENSOR:
+			return inLayer2 == BroadPhaseLayers::MOVING;
+		case Layers::UNUSED1:
+		case Layers::UNUSED2:
+		case Layers::UNUSED3:
+		case Layers::UNUSED4:
+		case Layers::UNUSED5:
+			return false;
+		default:
+			JPH_ASSERT(false);
+			return false;
+		}
 	}
-}
+};

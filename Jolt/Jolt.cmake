@@ -1,3 +1,8 @@
+# Requires C++ 17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Root
 set(JOLT_PHYSICS_ROOT ${PHYSICS_REPO_ROOT}/Jolt)
 
@@ -214,6 +219,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionGroup.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionGroup.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ContactListener.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/EstimateCollisionResponse.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/EstimateCollisionResponse.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilter.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilter.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilterTable.cpp
@@ -423,3 +430,96 @@ target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Distribution>:NDEBUG>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseASAN>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DISABLE_TEMP_ALLOCATOR;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseUBSAN>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseCoverage>:NDEBUG>")
+
+# Setting floating point exceptions
+if (FLOATING_POINT_EXCEPTIONS_ENABLED AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>")
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>")
+endif()
+
+# Setting double precision flag
+if (DOUBLE_PRECISION)
+	target_compile_definitions(Jolt PUBLIC JPH_DOUBLE_PRECISION)
+endif()
+
+# Setting to attempt cross platform determinism
+if (CROSS_PLATFORM_DETERMINISTIC)
+	target_compile_definitions(Jolt PUBLIC JPH_CROSS_PLATFORM_DETERMINISTIC)
+endif()
+
+# Emit the instruction set definitions to ensure that child projects use the same settings even if they override the used instruction sets (a mismatch causes link errors)
+function(EMIT_X86_INSTRUCTION_SET_DEFINITIONS)
+	if (USE_AVX512)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_AVX512)
+	endif()
+	if (USE_AVX2)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_AVX2)
+	endif()
+	if (USE_AVX)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_AVX)
+	endif()	
+	if (USE_SSE4_1)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_SSE4_1)
+	endif()
+	if (USE_SSE4_2)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_SSE4_2)
+	endif()
+	if (USE_LZCNT)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_LZCNT)
+	endif()
+	if (USE_TZCNT)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_TZCNT)
+	endif()
+	if (USE_F16C)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_F16C)
+	endif()
+	if (USE_FMADD AND NOT CROSS_PLATFORM_DETERMINISTIC)
+		target_compile_definitions(Jolt PUBLIC JPH_USE_FMADD)
+	endif()
+endfunction()
+
+# Add the compiler commandline flags to select the right instruction sets
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	if ("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x86" OR "${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
+		if (USE_AVX512)
+			target_compile_options(Jolt PUBLIC /arch:AVX512)
+		elseif (USE_AVX2)
+			target_compile_options(Jolt PUBLIC /arch:AVX2)
+		elseif (USE_AVX)
+			target_compile_options(Jolt PUBLIC /arch:AVX)
+		endif()
+		EMIT_X86_INSTRUCTION_SET_DEFINITIONS()
+	endif()
+else()
+	if (CROSS_COMPILE_ARM OR CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
+		# ARM64 uses no special commandline flags
+	elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" OR "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
+		# x64
+		if (USE_AVX512)
+			target_compile_options(Jolt PUBLIC -mavx512f -mavx512vl -mavx512dq -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c)
+		elseif (USE_AVX2)
+			target_compile_options(Jolt PUBLIC -mavx2 -mbmi -mpopcnt -mlzcnt -mf16c)
+		elseif (USE_AVX)
+			target_compile_options(Jolt PUBLIC -mavx -mpopcnt)
+		elseif (USE_SSE4_2)
+			target_compile_options(Jolt PUBLIC -msse4.2 -mpopcnt)
+		elseif (USE_SSE4_1)
+			target_compile_options(Jolt PUBLIC -msse4.1)
+		else()
+			target_compile_options(Jolt PUBLIC -msse2)
+		endif()
+		if (USE_LZCNT)
+			target_compile_options(Jolt PUBLIC -mlzcnt)
+		endif()
+		if (USE_TZCNT)
+			target_compile_options(Jolt PUBLIC -mbmi)
+		endif()
+		if (USE_F16C)
+			target_compile_options(Jolt PUBLIC -mf16c)
+		endif()
+		if (USE_FMADD AND NOT CROSS_PLATFORM_DETERMINISTIC)
+			target_compile_options(Jolt PUBLIC -mfma)
+		endif()
+		EMIT_X86_INSTRUCTION_SET_DEFINITIONS()
+	endif()
+endif()

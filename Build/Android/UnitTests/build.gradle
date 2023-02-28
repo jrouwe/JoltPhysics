@@ -20,6 +20,7 @@ android {
                 arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
             }
         }
+        signingConfig signingConfigs.debug
     }
 
     buildTypes {
@@ -43,6 +44,7 @@ android {
     buildFeatures {
         viewBinding true
     }
+    namespace 'com.joltphysics.unittests'
 }
 
 dependencies {

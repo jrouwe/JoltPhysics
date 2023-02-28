@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -79,7 +80,7 @@ public:
 	JPH_INLINE Vec3				GetXYZ() const													{ return Vec3(mValue); }
 
 	/// Get the quaternion as a Vec4
-	JPH_INLINE Vec4Arg 			GetXYZW() const													{ return mValue; }
+	JPH_INLINE Vec4 			GetXYZW() const													{ return mValue; }
 
 	///@}
 	///@name Default quaternions

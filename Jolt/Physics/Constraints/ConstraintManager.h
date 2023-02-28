@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -23,6 +24,11 @@ class ConstraintManager : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
+
+#ifdef JPH_ENABLE_ASSERTS
+	/// Constructor
+							ConstraintManager(PhysicsLockContext inContext) : mLockContext(inContext) { }
+#endif // JPH_ENABLE_ASSERTS
 
 	/// Add a new constraint. This is thread safe.
 	/// Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
@@ -83,10 +89,13 @@ public:
 	bool					RestoreState(StateRecorder &inStream);
 
 	/// Lock all constraints. This should only be done during PhysicsSystem::Update().
-	void					LockAllConstraints()						{ PhysicsLock::sLock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList); }
-	void					UnlockAllConstraints()						{ PhysicsLock::sUnlock(mConstraintsMutex, EPhysicsLockTypes::ConstraintsList); }
+	void					LockAllConstraints()						{ PhysicsLock::sLock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList)); }
+	void					UnlockAllConstraints()						{ PhysicsLock::sUnlock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList)); }
 
 private:
+#ifdef JPH_ENABLE_ASSERTS
+	PhysicsLockContext		mLockContext;
+#endif // JPH_ENABLE_ASSERTS
 	Constraints				mConstraints;
 	mutable Mutex			mConstraintsMutex;
 };

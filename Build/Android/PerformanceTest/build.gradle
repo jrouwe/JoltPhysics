@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdk 33
+    ndkVersion "25.0.8775105"
+
+    defaultConfig {
+        applicationId "com.joltphysics.performancetest"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+        ndk.abiFilters 'arm64-v8a', 'x86_64'
+
+        externalNativeBuild {
+            cmake {
+                cppFlags '-std=c++17 -Wall -Werror -ffp-model=precise -ffp-contract=off -DJPH_PROFILE_ENABLED -DJPH_DEBUG_RENDERER'
+                arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static', '-DCROSS_PLATFORM_DETERMINISTIC=ON'
+            }
+        }
+        signingConfig signingConfigs.debug
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+    namespace 'com.joltphysics.performancetest'
+}
+
+dependencies {
+}

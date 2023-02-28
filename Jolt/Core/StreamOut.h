@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -61,9 +62,9 @@ public:
 	/// Write a DMat44 (don't write W component of translation)
 	void				Write(const DMat44 &inVec)
 	{
-		Write(inVec.GetAxisX());
-		Write(inVec.GetAxisY());
-		Write(inVec.GetAxisZ());
+		Write(inVec.GetColumn4(0));
+		Write(inVec.GetColumn4(1));
+		Write(inVec.GetColumn4(2));
 
 		Write(inVec.GetTranslation());
 	}

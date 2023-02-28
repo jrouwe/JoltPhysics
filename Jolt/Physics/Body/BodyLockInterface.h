@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -82,25 +83,25 @@ public:
 	virtual SharedMutex *		LockRead(const BodyID &inBodyID) const override
 	{
 		SharedMutex &mutex = mBodyManager.GetMutexForBody(inBodyID);
-		PhysicsLock::sLockShared(mutex, EPhysicsLockTypes::PerBody);
+		PhysicsLock::sLockShared(mutex JPH_IF_ENABLE_ASSERTS(, &mBodyManager, EPhysicsLockTypes::PerBody));
 		return &mutex;
 	}
 
 	virtual void				UnlockRead(SharedMutex *inMutex) const override
 	{
-		PhysicsLock::sUnlockShared(*inMutex, EPhysicsLockTypes::PerBody);
+		PhysicsLock::sUnlockShared(*inMutex JPH_IF_ENABLE_ASSERTS(, &mBodyManager, EPhysicsLockTypes::PerBody));
 	}
 	
 	virtual SharedMutex *		LockWrite(const BodyID &inBodyID) const override
 	{
 		SharedMutex &mutex = mBodyManager.GetMutexForBody(inBodyID);
-		PhysicsLock::sLock(mutex, EPhysicsLockTypes::PerBody);
+		PhysicsLock::sLock(mutex JPH_IF_ENABLE_ASSERTS(, &mBodyManager, EPhysicsLockTypes::PerBody));
 		return &mutex;
 	}
 
 	virtual void				UnlockWrite(SharedMutex *inMutex) const override
 	{
-		PhysicsLock::sUnlock(*inMutex, EPhysicsLockTypes::PerBody);
+		PhysicsLock::sUnlock(*inMutex JPH_IF_ENABLE_ASSERTS(, &mBodyManager, EPhysicsLockTypes::PerBody));
 	}
 
 	///@name Batch locking functions

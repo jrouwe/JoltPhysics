@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -67,7 +68,10 @@ public:
 
 		lock_guard lock(mLogMutex);
 		CHECK(mExistingContacts.erase(inSubShapePair) == 1); // Validate that OnContactAdded was called
-		mLog.push_back({ EType::Remove, inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID(), ContactManifold() });
+		ContactManifold manifold;
+		manifold.mSubShapeID1 = inSubShapePair.GetSubShapeID1();
+		manifold.mSubShapeID2 = inSubShapePair.GetSubShapeID2();
+		mLog.push_back({ EType::Remove, inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID(), manifold });
 	}
 
 	void							Clear()

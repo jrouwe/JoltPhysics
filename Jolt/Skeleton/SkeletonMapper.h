@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2022 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -17,7 +18,11 @@ public:
 	{
 	public:
 							Mapping() = default;
-							Mapping(int inJointIdx1, int inJointIdx2, Mat44Arg inJoint1To2) : mJointIdx1(inJointIdx1), mJointIdx2(inJointIdx2), mJoint1To2(inJoint1To2), mJoint2To1(inJoint1To2.Inversed()) { }
+							Mapping(int inJointIdx1, int inJointIdx2, Mat44Arg inJoint1To2) : mJointIdx1(inJointIdx1), mJointIdx2(inJointIdx2), mJoint1To2(inJoint1To2), mJoint2To1(inJoint1To2.Inversed())
+		{
+			// Ensure bottom right element is 1 (numerical imprecision in the inverse can make this not so)
+			mJoint2To1(3, 3) = 1.0f;
+		}
 
 		int					mJointIdx1;																	///< Index of joint from skeleton 1
 		int					mJointIdx2;																	///< Corresponding index of joint from skeleton 2

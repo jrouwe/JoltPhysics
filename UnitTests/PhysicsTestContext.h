@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -85,6 +86,8 @@ private:
 	TempAllocator *		mTempAllocator;
 	JobSystem *			mJobSystem;
 	BPLayerInterfaceImpl mBroadPhaseLayerInterface;
+	ObjectVsBroadPhaseLayerFilterImpl mObjectVsBroadPhaseLayerFilter;
+	ObjectLayerPairFilterImpl mObjectVsObjectLayerFilter;
 	PhysicsSystem *		mSystem;
 	float				mDeltaTime;
 	int					mCollisionSteps;

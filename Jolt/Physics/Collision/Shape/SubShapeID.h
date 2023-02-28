@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -5,7 +6,19 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// A sub shape id contains a path to an element (usually a triangle or other primitive type) of a compound shape
+/// @brief A sub shape id contains a path to an element (usually a triangle or other primitive type) of a compound shape
+/// 
+/// Each sub shape knows how many bits it needs to encode its ID, so knows how many bits to take from the sub shape ID.
+/// 
+/// For example:
+/// * We have a CompoundShape A with 5 child shapes (identify sub shape using 3 bits AAA)
+/// * One of its child shapes is CompoundShape B which has 3 child shapes (identify sub shape using 2 bits BB)
+/// * One of its child shapes is MeshShape C which contains enough triangles to need 7 bits to identify a triangle (identify sub shape using 7 bits CCCCCCC, note that MeshShape is block based and sorts triangles spatially, you can't assume that the first triangle will have bit pattern 0000000).
+/// 
+/// The bit pattern of the sub shape ID to identify a triangle in MeshShape C will then be CCCCCCCBBAAA.
+///
+/// A sub shape ID will become invalid when the structure of the shape changes. For example, if a child shape is removed from a compound shape, the sub shape ID will no longer be valid.
+/// This can be a problem when caching sub shape IDs from one frame to the next. See comments at ContactListener::OnContactPersisted / OnContactRemoved.
 class SubShapeID
 {
 public:

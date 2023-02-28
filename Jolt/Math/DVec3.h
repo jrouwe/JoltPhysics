@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -18,6 +19,12 @@ public:
 #if defined(JPH_USE_AVX)
 	using Type = __m256d;
 	using TypeArg = __m256d;
+#elif defined(JPH_USE_SSE)
+	using Type = struct { __m128d mLow, mHigh; };
+	using TypeArg = const Type &;
+#elif defined(JPH_USE_NEON)
+	using Type = float64x2x2_t;
+	using TypeArg = const Type &;
 #else
 	using Type = struct { double mData[4]; };
 	using TypeArg = const Type &;
@@ -123,13 +130,23 @@ public:
 	JPH_INLINE bool				TestAllTrue() const;
 
 	/// Get individual components
-#ifdef JPH_USE_AVX
+#if defined(JPH_USE_AVX)
 	JPH_INLINE double			GetX() const									{ return _mm_cvtsd_f64(_mm256_castpd256_pd128(mValue)); }
-#else
-	JPH_INLINE double			GetX() const									{ return mF64[0]; }
-#endif // JPH_USE_AVX
 	JPH_INLINE double			GetY() const									{ return mF64[1]; }
 	JPH_INLINE double			GetZ() const									{ return mF64[2]; }
+#elif defined(JPH_USE_SSE)
+	JPH_INLINE double			GetX() const									{ return _mm_cvtsd_f64(mValue.mLow); }
+	JPH_INLINE double			GetY() const									{ return mF64[1]; }
+	JPH_INLINE double			GetZ() const									{ return _mm_cvtsd_f64(mValue.mHigh); }
+#elif defined(JPH_USE_NEON)
+	JPH_INLINE double			GetX() const									{ return vgetq_lane_f64(mValue.val[0], 0); }
+	JPH_INLINE double			GetY() const									{ return vgetq_lane_f64(mValue.val[0], 1); }
+	JPH_INLINE double			GetZ() const									{ return vgetq_lane_f64(mValue.val[1], 0); }
+#else
+	JPH_INLINE double			GetX() const									{ return mF64[0]; }
+	JPH_INLINE double			GetY() const									{ return mF64[1]; }
+	JPH_INLINE double			GetZ() const									{ return mF64[2]; }
+#endif
 	
 	/// Set individual components
 	JPH_INLINE void				SetX(double inX)								{ mF64[0] = inX; }

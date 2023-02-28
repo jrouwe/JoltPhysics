@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -31,15 +32,9 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 	// One of these conditions must be true
 	// - One of the bodies must be dynamic to collide
 	// - A kinematic object can collide with a sensor
-	bool body1_sensor = inBody1.IsSensor();
-	bool body2_sensor = inBody2.IsSensor();
 	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic()) 
-		&& !(inBody1.IsKinematic() && body2_sensor)
-		&& !(inBody2.IsKinematic() && body1_sensor))
-		return false;
-
-	// If both bodies are sensors, there's no collision
-	if (body1_sensor && body2_sensor)
+		&& !(inBody1.IsKinematic() && inBody2.IsSensor())
+		&& !(inBody2.IsKinematic() && inBody1.IsSensor()))
 		return false;
 
 	// Check that body 1 is active
@@ -140,14 +135,14 @@ void Body::AddImpulse(Vec3Arg inImpulse, RVec3Arg inPosition)
 
 	SetLinearVelocityClamped(mMotionProperties->GetLinearVelocity() + inImpulse * mMotionProperties->GetInverseMass());
 
-	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + GetInverseInertia() * Vec3(inPosition - mPosition).Cross(inImpulse));
+	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + mMotionProperties->MultiplyWorldSpaceInverseInertiaByVector(mRotation, Vec3(inPosition - mPosition).Cross(inImpulse)));
 }
 
 void Body::AddAngularImpulse(Vec3Arg inAngularImpulse)
 {
 	JPH_ASSERT(IsDynamic());
 
-	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + GetInverseInertia() * inAngularImpulse);
+	SetAngularVelocityClamped(mMotionProperties->GetAngularVelocity() + mMotionProperties->MultiplyWorldSpaceInverseInertiaByVector(mRotation, inAngularImpulse));
 }
 
 void Body::GetSleepTestPoints(RVec3 *outPoints) const
