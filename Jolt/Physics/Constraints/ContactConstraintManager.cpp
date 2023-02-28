@@ -1,3 +1,4 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
@@ -357,6 +358,8 @@ void ContactConstraintManager::ManifoldCache::GetAllCCDManifoldsSorted(Array<con
 
 void ContactConstraintManager::ManifoldCache::ContactPointRemovedCallbacks(ContactListener *inListener)
 {
+	JPH_PROFILE_FUNCTION();
+
 	for (MKeyValue &kv : mCachedManifolds)
 		if ((kv.GetValue().mFlags & uint16(CachedManifold::EFlags::ContactPersisted)) == 0)
 			inListener->OnContactRemoved(kv.GetKey());
@@ -1299,7 +1302,7 @@ void ContactConstraintManager::SortContacts(uint32 *inConstraintIdxBegin, uint32
 	});
 }
 
-void ContactConstraintManager::FinalizeContactCache(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds)
+void ContactConstraintManager::FinalizeContactCacheAndCallContactPointRemovedCallbacks(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1316,23 +1319,32 @@ void ContactConstraintManager::FinalizeContactCache(uint inExpectedNumBodyPairs,
 	// Buffers are now complete, make write buffer the read buffer
 	mCacheWriteIdx ^= 1;
 
+	// Get the old read cache / new write cache
+	ManifoldCache &old_read_cache = mCache[mCacheWriteIdx];
+
+	// Call the contact point removal callbacks
+	if (mContactListener != nullptr)
+		old_read_cache.ContactPointRemovedCallbacks(mContactListener);
+
+	// We're done with the old read cache now
+	old_read_cache.Clear();
+
 	// Use the amount of contacts from the last iteration to determine the amount of buckets to use in the hash map for the next iteration
-	mCache[mCacheWriteIdx].Prepare(inExpectedNumBodyPairs, inExpectedNumManifolds);
+	old_read_cache.Prepare(inExpectedNumBodyPairs, inExpectedNumManifolds);
 }
 
-void ContactConstraintManager::ContactPointRemovedCallbacks()
+bool ContactConstraintManager::WereBodiesInContact(const BodyID &inBody1ID, const BodyID &inBody2ID) const
 {
-	JPH_PROFILE_FUNCTION();
-
-	// Get the read cache
-	ManifoldCache &read_cache = mCache[mCacheWriteIdx ^ 1];
-
-	// Call the actual callbacks
-	if (mContactListener != nullptr)
-		read_cache.ContactPointRemovedCallbacks(mContactListener);
-
-	// We're done with the cache now
-	read_cache.Clear();
+	// The body pair needs to be in the cache and it needs to have a manifold (otherwise it's just a record indicating that there are no collisions)
+	const ManifoldCache &read_cache = mCache[mCacheWriteIdx ^ 1];
+	BodyPair key;
+	if (inBody1ID < inBody2ID)
+		key = BodyPair(inBody1ID, inBody2ID);
+	else
+		key = BodyPair(inBody2ID, inBody1ID);
+	uint64 key_hash = key.GetHash();
+	const BPKeyValue *kv = read_cache.Find(key, key_hash);
+	return kv != nullptr && kv->GetValue().mFirstCachedManifold != ManifoldMap::cInvalidHandle;
 }
 
 void ContactConstraintManager::SetupVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
