@@ -136,8 +136,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 		mBroadPhase->UnlockModifications();
 
 		// Call contact removal callbacks from contacts that existed in the previous update
-		mContactManager.ContactPointRemovedCallbacks();
-		mContactManager.FinalizeContactCache(0, 0);
+		mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(0, 0);
 
 		mBodyManager.UnlockAllBodies();
 		return;
@@ -2055,11 +2054,9 @@ void PhysicsSystem::JobContactRemovedCallbacks(const PhysicsUpdateContext::Step 
 	// Reset the Body::EFlags::InvalidateContactCache flag for all bodies
 	mBodyManager.ValidateContactCacheForAllBodies();
 
-	// Trigger all contact removed callbacks by looking at last step contact points that have not been flagged as reused
-	mContactManager.ContactPointRemovedCallbacks();
-
 	// Finalize the contact cache (this swaps the read and write versions of the contact cache)
-	mContactManager.FinalizeContactCache(ioStep->mNumBodyPairs, ioStep->mNumManifolds);
+	// Trigger all contact removed callbacks by looking at last step contact points that have not been flagged as reused
+	mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(ioStep->mNumBodyPairs, ioStep->mNumManifolds);
 }
 
 void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)

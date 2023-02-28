@@ -140,12 +140,14 @@ public:
 	bool						AddContactConstraint(ContactAllocator &ioContactAllocator, BodyPairHandle inBodyPair, Body &inBody1, Body &inBody2, const ContactManifold &inManifold);
 
 	/// Finalizes the contact cache, the contact cache that was generated during the calls to AddContactConstraint in this update
-	/// will be used from now on to read from.
-	/// inExpectedNumBodyPairs / inExpectedNumManifolds are the amount of body pairs / manifolds found in the previous step and is used to determine the amount of buckets the contact cache hash map will use.
-	void						FinalizeContactCache(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds);
+	/// will be used from now on to read from. After finalizing the contact cache, the contact removed callbacks will be called.
+	/// inExpectedNumBodyPairs / inExpectedNumManifolds are the amount of body pairs / manifolds found in the previous step and is
+	/// used to determine the amount of buckets the contact cache hash map will use in the next update.
+	void						FinalizeContactCacheAndCallContactPointRemovedCallbacks(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds);
 
-	/// Notifies the listener of any contact points that were removed. Needs to be callsed after FinalizeContactCache().
-	void						ContactPointRemovedCallbacks();
+	/// Check if 2 bodies were in contact during the last simulation step. Since contacts are only detected between active bodies, at least one of the bodies must be active.
+	/// Uses the read collision cache to determine if 2 bodies are in contact.
+	bool						WereBodiesInContact(const BodyID &inBody1ID, const BodyID &inBody2ID) const;
 
 	/// Get the number of contact constraints that were found
 	uint32						GetNumConstraints() const											{ return min<uint32>(mNumConstraints, mMaxConstraints); }
