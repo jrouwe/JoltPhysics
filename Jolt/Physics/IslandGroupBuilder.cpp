@@ -31,14 +31,14 @@ void IslandGroupBuilder::Prepare(const IslandBuilder &inIslandBuilder, uint32 in
 		// Get the contacts in this island
 		uint32 *contacts_start, *contacts_end;
 		inIslandBuilder.GetContactsInIsland(island, contacts_start, contacts_end);
-		int num_contacts_in_island = int(contacts_end - contacts_start);
+		uint num_contacts_in_island = uint(contacts_end - contacts_start);
 
 		// Get the constraints in this island
 		uint32 *constraints_start, *constraints_end;
 		inIslandBuilder.GetConstraintsInIsland(island, constraints_start, constraints_end);
-		int num_constraints_in_island = int(constraints_end - constraints_start);
+		uint num_constraints_in_island = uint(constraints_end - constraints_start);
 
-		int island_size = num_contacts_in_island + num_constraints_in_island;
+		uint island_size = num_contacts_in_island + num_constraints_in_island;
 		if (island_size >= cGroupBuilderTreshold)
 			mContactAndConstraintsSize += island_size;
 		else
@@ -60,29 +60,37 @@ void IslandGroupBuilder::Prepare(const IslandBuilder &inIslandBuilder, uint32 in
 
 uint IslandGroupBuilder::AssignGroup(const Body *inBody1, const Body *inBody2)
 {
-	int idx1 = inBody1->GetIndexInActiveBodiesInternal();
-	int idx2 = inBody2->GetIndexInActiveBodiesInternal();
+	uint32 idx1 = inBody1->GetIndexInActiveBodiesInternal();
+	uint32 idx2 = inBody2->GetIndexInActiveBodiesInternal();
 
 	// Test if either index is negative
-	if ((idx1 | idx2) < 0)
+	if (idx1 == Body::cInactiveIndex || !inBody1->IsDynamic())
 	{
-		// If the body is interacting with a non-active body, we only need to set 1 group
-		int active_idx = max(idx1, idx2);
-		JPH_ASSERT(active_idx >= 0 && (uint32)active_idx < mNumActiveBodies);
-		GroupMask &mask = mGroupMasks[active_idx];
-		uint group = min(32 - CountLeadingZeros(mask), cNonParallelGroupIdx);
-		mask |= GroupMask(1) << group;
+		// Body 1 is not active or a kinematic body, so we only need to set 1 group
+		JPH_ASSERT(idx2 < mNumActiveBodies);
+		GroupMask &mask = mGroupMasks[idx2];
+		uint group = min(CountTrailingZeros(~mask), cNonParallelGroupIdx);
+		mask |= GroupMask(1 << group);
+		return group;
+	}
+	else if (idx2 == Body::cInactiveIndex || !inBody2->IsDynamic())
+	{
+		// Body 2 is not active or a kinematic body, so we only need to set 1 group
+		JPH_ASSERT(idx1 < mNumActiveBodies);
+		GroupMask &mask = mGroupMasks[idx1];
+		uint group = min(CountTrailingZeros(~mask), cNonParallelGroupIdx);
+		mask |= GroupMask(1 << group);
 		return group;
 	}
 	else
 	{
 		// If both bodies are active, we need to set 2 groups
-		JPH_ASSERT(idx1 >= 0 && (uint)idx1 < mNumActiveBodies);
-		JPH_ASSERT(idx2 >= 0 && (uint)idx2 < mNumActiveBodies);
+		JPH_ASSERT(idx1 < mNumActiveBodies);
+		JPH_ASSERT(idx2 < mNumActiveBodies);
 		GroupMask &mask1 = mGroupMasks[idx1];
 		GroupMask &mask2 = mGroupMasks[idx2];
-		uint group = min(32 - CountLeadingZeros(mask1 | mask2), cNonParallelGroupIdx);
-		GroupMask mask = GroupMask(1) << group;
+		uint group = min(CountTrailingZeros((~mask1) & (~mask2)), cNonParallelGroupIdx);
+		GroupMask mask = GroupMask(1 << group);
 		mask1 |= mask;
 		mask2 |= mask;
 		return group;
@@ -91,10 +99,10 @@ uint IslandGroupBuilder::AssignGroup(const Body *inBody1, const Body *inBody2)
 
 uint IslandGroupBuilder::AssignToNonParallelGroup(const Body *inBody)
 {
-	int idx = inBody->GetIndexInActiveBodiesInternal();
-	if (idx >= 0)
+	uint32 idx = inBody->GetIndexInActiveBodiesInternal();
+	if (idx != Body::cInactiveIndex)
 	{
-		JPH_ASSERT((uint)idx < mNumActiveBodies);
+		JPH_ASSERT(idx < mNumActiveBodies);
 		mGroupMasks[idx] |= 1 << cNonParallelGroupIdx;
 	}
 
@@ -108,15 +116,15 @@ void IslandGroupBuilder::BuildGroupsForIsland(uint32 inIslandIndex, const Island
 	// Get the contacts in this island
 	uint32 *contacts_start, *contacts_end;
 	inIslandBuilder.GetContactsInIsland(inIslandIndex, contacts_start, contacts_end);
-	int num_contacts_in_island = int(contacts_end - contacts_start);
+	uint num_contacts_in_island = uint(contacts_end - contacts_start);
 
 	// Get the constraints in this island
 	uint32 *constraints_start, *constraints_end;
 	inIslandBuilder.GetConstraintsInIsland(inIslandIndex, constraints_start, constraints_end);
-	int num_constraints_in_island = int(constraints_end - constraints_start);
+	uint num_constraints_in_island = uint(constraints_end - constraints_start);
 
 	// Check if it exceeds the treshold
-	int island_size = num_contacts_in_island + num_constraints_in_island;
+	uint island_size = num_contacts_in_island + num_constraints_in_island;
 	if (island_size < cGroupBuilderTreshold)
 	{
 		// Non parallel group doesn't count, it is always checked
@@ -218,14 +226,14 @@ void IslandGroupBuilder::BuildGroupsForIsland(uint32 inIslandIndex, const Island
 		}
 
 		// Group the contacts
-		for (int c = 0; c < num_contacts_in_island; ++c)
+		for (uint c = 0; c < num_contacts_in_island; ++c)
 		{
 			uint group = group_remap_table[contact_group_idx[c]];
 			*contact_buffer_cur[group]++ = contacts_start[c];
 		}
 
 		// Group the constraints
-		for (int c = 0; c < num_constraints_in_island; ++c)
+		for (uint c = 0; c < num_constraints_in_island; ++c)
 		{
 			uint group = group_remap_table[constraint_group_idx[c]];
 			*constraint_buffer_cur[group]++ = constraints_start[c];
@@ -243,6 +251,37 @@ void IslandGroupBuilder::BuildGroupsForIsland(uint32 inIslandIndex, const Island
 			JPH_ASSERT(contact_buffer_cur[g] == group.mContactBufferEnd);
 			JPH_ASSERT(constraint_buffer_cur[g] == group.mConstraintBufferEnd);
 		}
+
+	#ifdef _DEBUG
+		// Validate that the groups are indeed not touching the same body
+		for (uint g = 0; g < outGroups.mNumGroups; ++g)
+		{
+			Array<bool> body_used(mNumActiveBodies, false);
+
+			// Validate contacts
+			uint32 *group_contacts_begin, *group_contacts_end;
+			outGroups.GetContactsInGroup(g, group_contacts_begin, group_contacts_end);
+			for (uint32 *c = group_contacts_begin; c < group_contacts_end; ++c)
+			{
+				const Body *body1, *body2;
+				inContactManager.GetAffectedBodies(*c, body1, body2);
+
+				uint32 idx1 = body1->GetIndexInActiveBodiesInternal();
+				if (idx1 != Body::cInactiveIndex && !body1->IsDynamic())
+				{
+					JPH_ASSERT(!body_used[idx1]);
+					body_used[idx1] = true;
+				}
+
+				uint32 idx2 = body2->GetIndexInActiveBodiesInternal();
+				if (idx2 != Body::cInactiveIndex && !body2->IsDynamic())
+				{
+					JPH_ASSERT(!body_used[idx2]);
+					body_used[idx2] = true;
+				}
+			}
+		}
+	#endif // _DEBUG
 	#endif // JPH_ENABLE_ASSERTS
 	}
 }
