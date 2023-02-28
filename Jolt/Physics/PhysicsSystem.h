@@ -166,6 +166,13 @@ public:
 	/// @param outBodyIDs On return, this will contain the list of BodyIDs
 	void						GetActiveBodies(BodyIDVector &outBodyIDs) const				{ return mBodyManager.GetActiveBodies(outBodyIDs); }
 
+	/// Check if 2 bodies were in contact during the last simulation step. Since contacts are only detected between active bodies, so at least one of the bodies must be active in order for this function to work.
+	/// It queries the state at the time of the last PhysicsSystem::Update and will return true if the bodies were in contact, even if one of the bodies was moved / removed afterwards.
+	/// This function can be called from any thread when the PhysicsSystem::Update is not running. During PhysicsSystem::Update this function is only valid during contact callbacks:
+	/// - During the ContactListener::OnContactAdded callback this function can be used to determine if a different contact pair between the bodies was active in the previous simulation step (function returns true) or if this is the first step that the bodies are touching (function returns false).
+	/// - During the ContactListener::OnContactRemoved callback this function can be used to determine if this is the last contact pair between the bodies (function returns false) or if there are other contacts still present (function returns true).
+	bool						WereBodiesInContact(const BodyID &inBody1ID, const BodyID &inBody2ID) const { return mContactManager.WereBodiesInContact(inBody1ID, inBody2ID); }
+
 #ifdef JPH_TRACK_BROADPHASE_STATS
 	/// Trace the accumulated broadphase stats to the TTY
 	void						ReportBroadphaseStats()										{ mBroadPhase->ReportStats(); }

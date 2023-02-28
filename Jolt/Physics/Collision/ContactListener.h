@@ -100,6 +100,7 @@ public:
 	/// Body 1 and 2 will be sorted such that body 1 ID < body 2 ID, so body 1 may not be dynamic.
 	/// The sub shape ID were created in the previous simulation step too, so if the structure of a shape changes (e.g. by adding/removing a child shape of a compound shape),
 	/// the sub shape ID may not be valid / may not point to the same sub shape anymore.
+	/// If you want to know if this is the last contact between the two bodies, use PhysicsSystem::WereBodiesInContact.
 	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) { /* Do nothing */ }
 };
 
