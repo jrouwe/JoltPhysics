@@ -1,3 +1,7 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
+// SPDX-FileCopyrightText: 2023 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include <Tests/Test.h>
