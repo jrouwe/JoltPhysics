@@ -124,7 +124,7 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
 * [Java](https://github.com/aecsocket/jolt-jni)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
-* [Zig](https://github.com/michal-z/zig-gamedev)
+* [Zig](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics)
 
 ## Integrations in Other Engines
 
