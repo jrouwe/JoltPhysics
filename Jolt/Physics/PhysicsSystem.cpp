@@ -1237,7 +1237,8 @@ void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
 	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(), mBodyManager.GetNumActiveBodies(), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
 
 	// Prepare the island group builder
-	mIslandGroupBuilder.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
+	if (ioContext->CanBuildIslandGroups())
+		mIslandGroupBuilder.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
 }
 
 void PhysicsSystem::JobBodySetIslandIndex()
@@ -1270,117 +1271,148 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	bool first_sub_step = ioSubStep->mIsFirst;
 	bool last_sub_step = ioSubStep->mIsLast;
 
+	// Building grouped islands is only supported if we do 1 step
+	bool build_grouped_islands = ioContext->CanBuildIslandGroups();
+
 	// Only the first sub step of the first step needs to correct for the delta time difference in the previous update
 	float warm_start_impulse_ratio = ioSubStep->mIsFirstOfAll? ioContext->mWarmStartImpulseRatio : 1.0f; 
 
-	for (;;)
+	bool check_islands = true, check_grouped_islands = build_grouped_islands;
+	do
 	{
-		// Next island
-		uint32 island_idx = ioSubStep->mSolveVelocityConstraintsNextIsland++;
-		if (island_idx >= mIslandBuilder.GetNumIslands())
-			break;
+		int num_iterations = 0;
+		uint32 *constraints_begin = nullptr, *constraints_end = nullptr;
+		uint32 *contacts_begin = nullptr, *contacts_end = nullptr;
 
-		JPH_PROFILE("Island");
-
-		// Get iterators
-		uint32 *constraints_begin, *constraints_end;
-		bool has_constraints = mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end);
-		uint32 *contacts_begin, *contacts_end;
-		bool has_contacts = mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end);
-
-		IslandGroupBuilder::Groups groups;
-
-		if (first_sub_step)
+		// First try to get work from grouped islands
+		uint grouped_island_index = uint(-1);
+		if (check_grouped_islands)
 		{
-			// If we don't have any contacts or constraints, we know that none of the following islands have any contacts or constraints
-			// (because they're sorted by most constraints first). This means we're done.
-			if (!has_contacts && !has_constraints)
+			switch (mIslandGroupBuilder.FetchNextBatch(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end))
 			{
-			#ifdef JPH_ENABLE_ASSERTS
-				// Validate our assumption that the next islands don't have any constraints or contacts
-				for (; island_idx < mIslandBuilder.GetNumIslands(); ++island_idx)
-				{
-					JPH_ASSERT(!mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end));
-					JPH_ASSERT(!mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end));
-				}
-			#endif // JPH_ENABLE_ASSERTS
-				return;
+			case IslandGroupBuilder::EStatus::AllBatchesDone:
+				check_grouped_islands = false;
+				break;
+			case IslandGroupBuilder::EStatus::BatchRetrieved:
+				num_iterations = 1; // We can only do 1 iteration per batch
+				break;
+			case IslandGroupBuilder::EStatus::WaitingForBatch:
+				break;
+			}
+		}
+
+		// If that didn't succeed try to process an island
+		if (num_iterations == 0 && check_islands)
+		{
+			JPH_PROFILE("Island");
+
+			// Next island
+			uint32 island_idx = ioSubStep->mSolveVelocityConstraintsNextIsland++;
+			if (island_idx >= mIslandBuilder.GetNumIslands())
+			{
+				// We processed all islands, stop checking islands
+				check_islands = false;
+				continue;
 			}
 
-			// Sort constraints to give a deterministic simulation
-			ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
+			// Get iterators
+			bool has_constraints = mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end);
+			bool has_contacts = mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end);
 
-			// Sort contacts to give a deterministic simulation
-			mContactManager.SortContacts(contacts_begin, contacts_end);
+			if (first_sub_step)
+			{
+				// If we don't have any contacts or constraints, we know that none of the following islands have any contacts or constraints
+				// (because they're sorted by most constraints first). This means we're done.
+				if (!has_contacts && !has_constraints)
+				{
+				#ifdef JPH_ENABLE_ASSERTS
+					// Validate our assumption that the next islands don't have any constraints or contacts
+					for (; island_idx < mIslandBuilder.GetNumIslands(); ++island_idx)
+					{
+						JPH_ASSERT(!mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end));
+						JPH_ASSERT(!mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end));
+					}
+				#endif // JPH_ENABLE_ASSERTS
+
+					check_islands = false;
+					continue;
+				}
+
+				// Sort constraints to give a deterministic simulation
+				ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
+
+				// Sort contacts to give a deterministic simulation
+				mContactManager.SortContacts(contacts_begin, contacts_end);
+			}
+			else
+			{
+				{
+					JPH_PROFILE("Apply Gravity");
+
+					// Get bodies in this island
+					BodyID *bodies_begin, *bodies_end;
+					mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
+
+					// Apply gravity. In the first step this is done in a separate job.
+					for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
+					{
+						Body &body = mBodyManager.GetBody(*body_id);
+						if (body.IsDynamic())
+							body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
+					}
+				}
+
+				// If we don't have any contacts or constraints, we don't need to run the solver, but we do need to process
+				// the next island in order to apply gravity
+				if (!has_contacts && !has_constraints)
+					continue;
+
+				// Prepare velocity constraints. In the first step this is done when adding the contact constraints.
+				ConstraintManager::sSetupVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
+				mContactManager.SetupVelocityConstraints(contacts_begin, contacts_end, delta_time);
+			}
+
+			// Warm start
+			int num_velocity_steps = mPhysicsSettings.mNumVelocitySteps;
+			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, num_velocity_steps);
+			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
 
 			// Build the groups within the island
-			mIslandGroupBuilder.BuildGroupsForIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, groups);
+			if (build_grouped_islands
+				&& mIslandGroupBuilder.BuildGroupsForIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps))
+				continue; // Loop again to try to fetch the newly built groups
+
+			// We didn't create groups, just run the solver now for this island
+			num_iterations = num_velocity_steps; 
+		}
+
+		if (num_iterations > 0)
+		{
+			// Solve velocity constraints
+			for (int velocity_step = 0; velocity_step < num_iterations; ++velocity_step)
+			{
+				bool applied_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
+				applied_impulse |= mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
+				if (!applied_impulse)
+					break;
+			}
+
+			// Mark complete, and check if this is the last iteration
+			bool last_iteration = true;
+			if (grouped_island_index != uint(-1))
+				last_iteration = mIslandGroupBuilder.MarkBatchProcessed(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
+
+			// Save back the lambdas in the contact cache for the warm start of the next physics update
+			if (last_sub_step && last_iteration)
+				mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
 		}
 		else
 		{
-			{
-				JPH_PROFILE("Apply Gravity");
-
-				// Get bodies in this island
-				BodyID *bodies_begin, *bodies_end;
-				mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
-
-				// Apply gravity. In the first step this is done in a separate job.
-				for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
-				{
-					Body &body = mBodyManager.GetBody(*body_id);
-					if (body.IsDynamic())
-						body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
-				}
-			}
-
-			// If we don't have any contacts or constraints, we don't need to run the solver, but we do need to process
-			// the next island in order to apply gravity
-			if (!has_contacts && !has_constraints)
-				continue;
-
-			// Prepare velocity constraints. In the first step this is done when adding the contact constraints.
-			ConstraintManager::sSetupVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
-			mContactManager.SetupVelocityConstraints(contacts_begin, contacts_end, delta_time);
+			// If we didn't find any work, give up a time slice
+			std::this_thread::yield();
 		}
-
-		// Warm start
-		int num_velocity_steps = mPhysicsSettings.mNumVelocitySteps;
-		ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, num_velocity_steps);
-		mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
-
-		// Solve
-		for (int velocity_step = 0; velocity_step < num_velocity_steps; ++velocity_step)
-		{
-			bool applied_impulse = false;
-
-			for (uint group = 0; group < IslandGroupBuilder::cNumGroups; ++group)
-			{
-				// If we've processed all groups, jump to the non-parallel group
-				if (group >= groups.GetNumGroups())
-					group = IslandGroupBuilder::cNonParallelGroupIdx;
-
-				// Get the contacts in this group
-				uint32 *group_contacts_begin, *group_contacts_end;
-				groups.GetContactsInGroup(group, group_contacts_begin, group_contacts_end);
-
-				// Get the constraints in this group
-				uint32 *group_constraints_begin, *group_constraints_end;
-				groups.GetConstraintsInGroup(group, group_constraints_begin, group_constraints_end);
-
-				// Solve velocity constraints
-				applied_impulse |= ConstraintManager::sSolveVelocityConstraints(active_constraints, group_constraints_begin, group_constraints_end, delta_time);
-				applied_impulse |= mContactManager.SolveVelocityConstraints(group_contacts_begin, group_contacts_end);
-			}
-
-			if (!applied_impulse)
-				break;
-		}
-
-		// Save back the lambdas in the contact cache for the warm start of the next physics update
-		if (last_sub_step)
-			mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
 	}
+	while (check_islands || check_grouped_islands);
 }
 
 void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const

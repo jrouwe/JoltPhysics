@@ -152,6 +152,9 @@ public:
 	/// Maximum amount of concurrent jobs on this machine
 	int						GetMaxConcurrency() const								{ const int max_concurrency = PhysicsUpdateContext::cMaxConcurrency; return min(max_concurrency, mJobSystem->GetMaxConcurrency()); } ///< Need to put max concurrency in temp var as min requires a reference
 
+	/// Island grouper is work in progress and is only supported with 1 sub step currently, groups currently conflict with applying gravity etc. in the second step
+	bool					CanBuildIslandGroups() const							{ return mSteps.front().mSubSteps.size() == 1; }
+
 	PhysicsSystem *			mPhysicsSystem;											///< The physics system we belong to
 	TempAllocator *			mTempAllocator;											///< Temporary allocator used during the update
 	JobSystem *				mJobSystem;												///< Job system that processes jobs
