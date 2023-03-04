@@ -336,7 +336,7 @@ static TestCategory sAllCategories[] =
 static constexpr uint cNumBodies = 10240;
 static constexpr uint cNumBodyMutexes = 0; // Autodetect
 static constexpr uint cMaxBodyPairs = 65536;
-static constexpr uint cMaxContactConstraints = 10240;
+static constexpr uint cMaxContactConstraints = 20480;
 
 SamplesApp::SamplesApp()
 {
@@ -344,7 +344,7 @@ SamplesApp::SamplesApp()
 #ifdef JPH_DISABLE_TEMP_ALLOCATOR
 	mTempAllocator = new TempAllocatorMalloc();
 #else
-	mTempAllocator = new TempAllocatorImpl(16 * 1024 * 1024);
+	mTempAllocator = new TempAllocatorImpl(32 * 1024 * 1024);
 #endif
 
 	// Create job system
