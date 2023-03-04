@@ -10,7 +10,7 @@
 #include <Jolt/Physics/Constraints/ContactConstraintManager.h>
 #include <Jolt/Physics/Constraints/ConstraintManager.h>
 #include <Jolt/Physics/IslandBuilder.h>
-#include <Jolt/Physics/IslandGroupBuilder.h>
+#include <Jolt/Physics/LargeIslandSplitter.h>
 #include <Jolt/Physics/PhysicsUpdateContext.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 

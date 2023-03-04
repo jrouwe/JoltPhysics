@@ -6,7 +6,7 @@
 
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 #include <Jolt/Physics/IslandBuilder.h>
-#include <Jolt/Physics/IslandGroupBuilder.h>
+#include <Jolt/Physics/LargeIslandSplitter.h>
 #include <Jolt/Physics/Body/BodyManager.h>
 
 #ifdef JPH_DEBUG_RENDERER

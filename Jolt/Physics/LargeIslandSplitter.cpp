@@ -3,7 +3,7 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Physics/IslandGroupBuilder.h>
+#include <Jolt/Physics/LargeIslandSplitter.h>
 #include <Jolt/Physics/IslandBuilder.h>
 #include <Jolt/Physics/Constraints/Constraint.h>
 #include <Jolt/Physics/Constraints/ContactConstraintManager.h>
