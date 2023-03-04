@@ -1286,13 +1286,21 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 		uint grouped_island_index = uint(-1);
 		if (check_grouped_islands)
 		{
-			switch (mLargeIslandSplitter.FetchNextBatch(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end))
+			bool first_iteration;
+			switch (mLargeIslandSplitter.FetchNextBatch(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
 			{
 			case LargeIslandSplitter::EStatus::AllBatchesDone:
 				check_grouped_islands = false;
 				break;
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
 				num_iterations = 1; // We can only do 1 iteration per batch
+				if (first_iteration)
+				{
+					// This is the very first iteration, we need to warm start the contacts and constraints for this batch
+					int dummy = 0; // We don't use the calculated number of velocity steps here
+					ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, dummy);
+					mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
+				}
 				break;
 			case LargeIslandSplitter::EStatus::WaitingForBatch:
 				break;
@@ -1370,18 +1378,16 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				mContactManager.SetupVelocityConstraints(contacts_begin, contacts_end, delta_time);
 			}
 
-			// Warm start
-			int num_velocity_steps = mPhysicsSettings.mNumVelocitySteps;
-			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, num_velocity_steps);
-			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
-
 			// Split up large islands
+			int num_velocity_steps = mPhysicsSettings.mNumVelocitySteps;
 			if (ioContext->mUseLargeIslandSplitter
 				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps))
 				continue; // Loop again to try to fetch the newly split island
 
-			// We didn't create a split, just run the solver now for this island
-			num_iterations = num_velocity_steps; 
+			// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
+			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, num_velocity_steps);
+			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
+			num_iterations = num_velocity_steps;
 		}
 
 		if (num_iterations > 0)
