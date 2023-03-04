@@ -36,9 +36,9 @@ void TwoBodyConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &io
 	ioBuilder.LinkConstraint(inConstraintIndex, mBody1->GetIndexInActiveBodiesInternal(), mBody2->GetIndexInActiveBodiesInternal()); 
 }
 
-uint TwoBodyConstraint::BuildIslandGroups(IslandGroupBuilder &ioBuilder) const
+uint TwoBodyConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const
 {
-	return ioBuilder.AssignGroup(mBody1, mBody2);
+	return ioSplitter.AssignSplit(mBody1, mBody2);
 }
 
 #ifdef JPH_DEBUG_RENDERER

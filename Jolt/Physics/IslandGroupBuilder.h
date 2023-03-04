@@ -16,14 +16,14 @@ class Constraint;
 class BodyManager;
 class ContactConstraintManager;
 
-/// Assigns bodies in large islands to a group that can run in parallel
-class IslandGroupBuilder : public NonCopyable
+/// Assigns bodies in large islands to multiple groups that can run in parallel
+class LargeIslandSplitter : public NonCopyable
 {
 private:
-	using					GroupMask = uint16;
+	using					SplitMask = uint16;
 
-	/// Describes a group of constraints and contacts
-	struct Group
+	/// Describes a split of constraints and contacts
+	struct Split
 	{
 		inline uint			GetNumContacts() const								{ return uint(mContactBufferEnd - mContactBufferBegin); }
 		inline uint 		GetNumConstraints() const							{ return uint(mConstraintBufferEnd - mConstraintBufferBegin); }
@@ -37,51 +37,51 @@ private:
 	};
 
 public:
-	static constexpr uint	cNumGroups = sizeof(GroupMask) * 8;
-	static constexpr uint	cNonParallelGroupIdx = cNumGroups - 1;
+	static constexpr uint	cNumSplits = sizeof(SplitMask) * 8;
+	static constexpr uint	cNonParallelSplitIdx = cNumSplits - 1;
 
 	/// Status code for retrieving a batch
 	enum class EStatus
 	{
 		WaitingForBatch,														///< Work is expected to be available later
 		BatchRetrieved,															///< Work is being returned
-		AllBatchesDone,															///< No further work is expected from this group
+		AllBatchesDone,															///< No further work is expected from this
 	};
 
-	/// Structure that describes the resulting groups from the group builder
-	class Groups
+	/// Structure that describes the resulting splits from the large island splitter
+	class Splits
 	{
 	public:
-		inline uint			GetNumGroups() const
+		inline uint			GetNumSplits() const
 		{
-			return mNumGroups;
+			return mNumSplits;
 		}
 
-		inline void			GetConstraintsInGroup(uint inGroupIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd) const
+		inline void			GetConstraintsInSplit(uint inSplitIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd) const
 		{
-			const Group &group = mGroups[inGroupIndex];
-			outConstraintsBegin = group.mConstraintBufferBegin;
-			outConstraintsEnd = group.mConstraintBufferEnd;
+			const Split &split = mSplits[inSplitIndex];
+			outConstraintsBegin = split.mConstraintBufferBegin;
+			outConstraintsEnd = split.mConstraintBufferEnd;
 		}
 
-		inline void			GetContactsInGroup(uint inGroupIndex, uint32 *&outContactsBegin, uint32 *&outContactsEnd) const
+		inline void			GetContactsInSplit(uint inSplitIndex, uint32 *&outContactsBegin, uint32 *&outContactsEnd) const
 		{
-			const Group &group = mGroups[inGroupIndex];
-			outContactsBegin = group.mContactBufferBegin;
-			outContactsEnd = group.mContactBufferEnd;
+			const Split &split = mSplits[inSplitIndex];
+			outContactsBegin = split.mContactBufferBegin;
+			outContactsEnd = split.mContactBufferEnd;
 		}
 
-		/// Reset current status so that no work can be picked up from this group
+		/// Reset current status so that no work can be picked up from this split
 		inline void			ResetStatus()
 		{
-			mStatus.store((uint64(cNonParallelGroupIdx) << StatusGroupShift) | StatusItemMask, memory_order_relaxed);
+			mStatus.store((uint64(cNonParallelSplitIdx) << StatusSplitShift) | StatusItemMask, memory_order_relaxed);
 		}
 
 		/// Make the first batch available to other threads
 		inline void			StartFirstBatch()
 		{
-			uint group_index = mNumGroups > 0? 0 : cNonParallelGroupIdx;
-			mStatus.store(uint64(group_index) << StatusGroupShift, memory_order_release);
+			uint split_index = mNumSplits > 0? 0 : cNonParallelSplitIdx;
+			mStatus.store(uint64(split_index) << StatusSplitShift, memory_order_release);
 		}
 
 		/// Fetch the next batch to process
@@ -91,14 +91,14 @@ public:
 		bool				MarkBatchProcessed(const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd);
 
 	private:
-		friend class IslandGroupBuilder;
+		friend class LargeIslandSplitter;
 
 		enum EIterationStatus : uint64
 		{
 			StatusIterationMask		= 0xffff000000000000,
 			StatusIterationShift	= 48,
-			StatusGroupMask			= 0x0000ffff00000000,
-			StatusGroupShift		= 32,
+			StatusSplitMask			= 0x0000ffff00000000,
+			StatusSplitShift		= 32,
 			StatusItemMask			= 0x00000000ffffffff,
 		};
 
@@ -107,9 +107,9 @@ public:
 			return int((inStatus & StatusIterationMask) >> StatusIterationShift);
 		}
 
-		static inline uint	sGetGroup(uint64 inStatus)
+		static inline uint	sGetSplit(uint64 inStatus)
 		{
-			return uint((inStatus & StatusGroupMask) >> StatusGroupShift);
+			return uint((inStatus & StatusSplitMask) >> StatusSplitShift);
 		}
 
 		static inline uint	sGetItem(uint64 inStatus)
@@ -117,58 +117,55 @@ public:
 			return uint(inStatus & StatusItemMask);
 		}
 
-		Group				mGroups[cNumGroups];								///< Data per group
-		uint				mNumGroups;											///< Number of groups that were created (excluding the non-parallel group)
+		Split				mSplits[cNumSplits];								///< Data per split
+		uint				mNumSplits;											///< Number of splits that were created (excluding the non-parallel split)
 		int					mNumIterations;										///< Number of iterations to do
-		atomic<uint64>		mStatus;											///< Status of the group, see EIterationStatus
+		atomic<uint64>		mStatus;											///< Status of the split, see EIterationStatus
 		atomic<uint>		mItemsProcessed;									///< Number of items that have been marked as processed
 	};
 
 	/// Destructor
-							~IslandGroupBuilder();
+							~LargeIslandSplitter();
 
-	/// Prepare the island group builder by allocating memory
+	/// Prepare the island splitter by allocating memory
 	void					Prepare(const IslandBuilder &inIslandBuilder, uint32 inNumActiveBodies, TempAllocator *inTempAllocator);
 
-	/// Assign two bodies to a group. Returns the group index.
-	uint					AssignGroup(const Body *inBody1, const Body *inBody2);
+	/// Assign two bodies to a split. Returns the split index.
+	uint					AssignSplit(const Body *inBody1, const Body *inBody2);
 
-	/// Force a body to be in a non parallel group. Returns the group index.
-	uint					AssignToNonParallelGroup(const Body *inBody);
+	/// Force a body to be in a non parallel split. Returns the split index.
+	uint					AssignToNonParallelSplit(const Body *inBody);
 
-	/// Build groups for a single island, the created groups willb e added to the list of batches and can be fetched with FetchNextBatch
-	bool					BuildGroupsForIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumIterations);
+	/// Splits up and island, the created splits will be added to the list of batches and can be fetched with FetchNextBatch
+	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumIterations);
 
-	/// Fetch the next batch to process, returns a handle in outGroupedIslandIndex that must be provided to MarkBatchProcessed when complete
-	EStatus					FetchNextBatch(uint &outGroupedIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd);
+	/// Fetch the next batch to process, returns a handle in outSplitIslandIndex that must be provided to MarkBatchProcessed when complete
+	EStatus					FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd);
 
 	/// Mark a batch as processed, returns true if this is the final iteration for the batch
-	bool					MarkBatchProcessed(uint inGroupedIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd);
+	bool					MarkBatchProcessed(uint inSplitIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd);
 
-	/// Reset the group builder
+	/// Reset the island splitter
 	void					Reset(TempAllocator *inTempAllocator);
 
 private:
-	// Reset group ids for all bodies in the island
-	void					ResetGroups(const Body *inBodies, const BodyID *inBodiesStart, const BodyID *inBodiesEnd);
-
-	static constexpr uint	cGroupBuilderTreshold = 256;						///< If the number of constraints + contacts in an island is larger than this, we will try to build groups
-	static constexpr uint	cGroupCombineTreshold = 128;						///< If the number of constraints + contacts in a group is lower than this, we will merge this group into the 'non-parallel group'
+	static constexpr uint	cLargeIslandTreshold = 256;							///< If the number of constraints + contacts in an island is larger than this, we will try to split the island
+	static constexpr uint	cSplitCombineTreshold = 128;						///< If the number of constraints + contacts in a split is lower than this, we will merge this split into the 'non-parallel split'
 	static constexpr uint	cBatchSize = 64;									///< Number of items to process in a constraint batch
 
 	uint32					mNumActiveBodies = 0;								///< Cached number of active bodies
 
-	GroupMask *				mGroupMasks = nullptr;								///< Group bits for each body in the BodyManager::mActiveBodies list
+	SplitMask *				mSplitMasks = nullptr;								///< Bits that indicate for each body in the BodyManager::mActiveBodies list which split they already belong to
 
-	uint32 *				mContactAndConstaintsGroupIdx = nullptr;			///< Buffer to store the group index per constraint or contact
-	uint32 *				mContactAndConstraintIndices = nullptr;				///< Buffer to store the ordered constraint indices per group
-	uint					mContactAndConstraintsSize = 0;						///< Total size of mContactAndConstraintsGroupIdx and mContactAndConstraintIndices
+	uint32 *				mContactAndConstaintsSplitIdx = nullptr;			///< Buffer to store the split index per constraint or contact
+	uint32 *				mContactAndConstraintIndices = nullptr;				///< Buffer to store the ordered constraint indices per split
+	uint					mContactAndConstraintsSize = 0;						///< Total size of mContactAndConstraintsSplitIdx and mContactAndConstraintIndices
 	atomic<uint>			mContactAndConstraintsNextFree { 0 };				///< Next element that is free in both buffers
 
-	uint					mNumGroupedIslands = 0;								///< Total number of islands that required grouping
-	Groups *				mGroupedIslands = nullptr;							///< List of islands that required grouping
-	atomic<uint>			mNextGroupedIsland = 0;								///< Next grouped island to pick from mGroupedIslands
-	atomic<uint>			mNumGroupedIslandsCreated = 0;						///< Number of grouped islands that have been fully created and are available for other threads to read
+	uint					mNumSplitIslands = 0;								///< Total number of islands that required splitting
+	Splits *				mSplitIslands = nullptr;							///< List of islands that required splitting
+	atomic<uint>			mNextSplitIsland = 0;								///< Next split island to pick from mSplitIslands
+	atomic<uint>			mNumSplitIslandsCreated = 0;						///< Number of split islands that have been fully created and are available for other threads to read
 };
 
 JPH_NAMESPACE_END

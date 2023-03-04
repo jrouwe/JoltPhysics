@@ -280,9 +280,9 @@ void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &io
 	ioBuilder.LinkConstraint(inConstraintIndex, mBody->GetIndexInActiveBodiesInternal(), min_active_index); 
 }
 
-uint VehicleConstraint::BuildIslandGroups(IslandGroupBuilder &ioBuilder) const
+uint VehicleConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const
 {
-	return ioBuilder.AssignToNonParallelGroup(mBody);
+	return ioSplitter.AssignToNonParallelSplit(mBody);
 }
 
 void VehicleConstraint::CalculateWheelContactPoint(RMat44Arg inBodyTransform, const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const

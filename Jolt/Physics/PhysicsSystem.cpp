@@ -379,9 +379,9 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 						// Store the number of active bodies at the start of the step
 						next_step->mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies();
 
-						// Clear the island groups builder
+						// Clear the large island splitter
 						TempAllocator *temp_allocator = next_step->mContext->mTempAllocator;
-						mIslandGroupBuilder.Reset(temp_allocator);
+						mLargeIslandSplitter.Reset(temp_allocator);
 
 						// Clear the island builder
 						mIslandBuilder.ResetIslands(temp_allocator);
@@ -588,8 +588,8 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 	mBodyManager.ValidateActiveBodyBounds();
 #endif // _DEBUG
 
-	// Clear the island groups builder
-	mIslandGroupBuilder.Reset(inTempAllocator);
+	// Clear the large island splitter
+	mLargeIslandSplitter.Reset(inTempAllocator);
 
 	// Clear the island builder
 	mIslandBuilder.ResetIslands(inTempAllocator);
@@ -1236,9 +1236,9 @@ void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
 	// Finish collecting the islands, at this point the active body list doesn't change so it's safe to access
 	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(), mBodyManager.GetNumActiveBodies(), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
 
-	// Prepare the island group builder
-	if (ioContext->CanBuildIslandGroups())
-		mIslandGroupBuilder.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
+	// Prepare the large island splitter
+	if (ioContext->UseLargeIslandSplitter())
+		mLargeIslandSplitter.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
 }
 
 void PhysicsSystem::JobBodySetIslandIndex()
@@ -1271,32 +1271,32 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	bool first_sub_step = ioSubStep->mIsFirst;
 	bool last_sub_step = ioSubStep->mIsLast;
 
-	// Building grouped islands is only supported if we do 1 step
-	bool build_grouped_islands = ioContext->CanBuildIslandGroups();
+	// Splitting large islands is only supported if we do 1 step
+	bool use_large_island_splitter = ioContext->UseLargeIslandSplitter();
 
 	// Only the first sub step of the first step needs to correct for the delta time difference in the previous update
 	float warm_start_impulse_ratio = ioSubStep->mIsFirstOfAll? ioContext->mWarmStartImpulseRatio : 1.0f; 
 
-	bool check_islands = true, check_grouped_islands = build_grouped_islands;
+	bool check_islands = true, check_grouped_islands = use_large_island_splitter;
 	do
 	{
 		int num_iterations = 0;
 		uint32 *constraints_begin = nullptr, *constraints_end = nullptr;
 		uint32 *contacts_begin = nullptr, *contacts_end = nullptr;
 
-		// First try to get work from grouped islands
+		// First try to get work from large islands
 		uint grouped_island_index = uint(-1);
 		if (check_grouped_islands)
 		{
-			switch (mIslandGroupBuilder.FetchNextBatch(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end))
+			switch (mLargeIslandSplitter.FetchNextBatch(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end))
 			{
-			case IslandGroupBuilder::EStatus::AllBatchesDone:
+			case LargeIslandSplitter::EStatus::AllBatchesDone:
 				check_grouped_islands = false;
 				break;
-			case IslandGroupBuilder::EStatus::BatchRetrieved:
+			case LargeIslandSplitter::EStatus::BatchRetrieved:
 				num_iterations = 1; // We can only do 1 iteration per batch
 				break;
-			case IslandGroupBuilder::EStatus::WaitingForBatch:
+			case LargeIslandSplitter::EStatus::WaitingForBatch:
 				break;
 			}
 		}
@@ -1377,12 +1377,12 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, num_velocity_steps);
 			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
 
-			// Build the groups within the island
-			if (build_grouped_islands
-				&& mIslandGroupBuilder.BuildGroupsForIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps))
-				continue; // Loop again to try to fetch the newly built groups
+			// Split up large islands
+			if (use_large_island_splitter
+				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps))
+				continue; // Loop again to try to fetch the newly split island
 
-			// We didn't create groups, just run the solver now for this island
+			// We didn't create a split, just run the solver now for this island
 			num_iterations = num_velocity_steps; 
 		}
 
@@ -1400,7 +1400,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			// Mark complete, and check if this is the last iteration
 			bool last_iteration = true;
 			if (grouped_island_index != uint(-1))
-				last_iteration = mIslandGroupBuilder.MarkBatchProcessed(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
+				last_iteration = mLargeIslandSplitter.MarkBatchProcessed(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
 
 			// Save back the lambdas in the contact cache for the warm start of the next physics update
 			if (last_sub_step && last_iteration)

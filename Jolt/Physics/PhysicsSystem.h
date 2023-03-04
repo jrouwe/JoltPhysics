@@ -262,8 +262,8 @@ private:
 	/// Keeps track of connected bodies and builds islands for multithreaded velocity/position update
 	IslandBuilder				mIslandBuilder;
 
-	/// Will split islands into groups of bodies that can be processed in parallel
-	IslandGroupBuilder			mIslandGroupBuilder;
+	/// Will split large islands into smaller groups of bodies that can be processed in parallel
+	LargeIslandSplitter			mLargeIslandSplitter;
 
 	/// Mutex protecting mStepListeners
 	Mutex						mStepListenersMutex;
