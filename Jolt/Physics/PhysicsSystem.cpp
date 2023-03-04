@@ -1286,21 +1286,25 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 		uint split_island_index = uint(-1);
 		if (check_split_islands)
 		{
-			bool first_iteration;
-			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
+			bool warm_start;
+			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, warm_start))
 			{
 			case LargeIslandSplitter::EStatus::AllBatchesDone:
 				check_split_islands = false;
 				break;
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
-				num_iterations = 1; // We can only do 1 iteration per batch
-				if (first_iteration)
+				if (warm_start)
 				{
-					// This is the very first iteration, we need to warm start the contacts and constraints for this batch
+					// Warm start the batch
 					int dummy = 0; // We don't use the calculated number of velocity steps here
 					ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, dummy);
 					mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
+
+					// Continue to the next batch, we first need to warm start all bodies before we can start solving
+					mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
+					continue;
 				}
+				num_iterations = 1; // We can only do 1 iteration per batch
 				break;
 			case LargeIslandSplitter::EStatus::WaitingForBatch:
 				break;

@@ -15,7 +15,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outFirstIteration)
+LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outWarmStart)
 {
 	{
 		// First check if we can get a new batch (doing a relaxed read to avoid hammering an atomic with an atomic subtract)
@@ -52,7 +52,6 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 	int iteration = sGetIteration(status);
 	if (iteration >= mNumIterations)
 		return EStatus::AllBatchesDone;
-	outFirstIteration = iteration == 0;
 
 	uint split_index = sGetSplit(status);
 	JPH_ASSERT(split_index < mNumSplits || split_index == cNonParallelSplitIdx);
@@ -67,6 +66,7 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 			outConstraintsEnd = split.mConstraintBufferEnd;
 			outContactsBegin = split.mContactBufferBegin;
 			outContactsEnd = split.mContactBufferEnd;
+			outWarmStart = iteration == 0;
 			return EStatus::BatchRetrieved;
 		}
 		else
@@ -111,6 +111,8 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 		outContactsBegin = 0;
 		outContactsEnd = 0;
 	}
+
+	outWarmStart = iteration == 0;
 	return EStatus::BatchRetrieved;
 }
 
@@ -339,7 +341,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	JPH_ASSERT(new_split_idx < mNumSplitIslands);
 	Splits &splits = mSplitIslands[new_split_idx];
 	splits.mNumSplits = 0;
-	splits.mNumIterations = inNumVelocitySteps;
+	splits.mNumIterations = inNumVelocitySteps + 1; // Iteration 0 is used for warm starting
 	splits.mItemsProcessed.store(0, memory_order_release);
 
 	// Allocate space to store the sorted constraint and contact indices per split
@@ -467,7 +469,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	return true;
 }
 
-LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outFirstIteration)
+LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outWarmStart)
 {
 	// We can't be done when all islands haven't been submitted yet
 	uint num_splits_created = mNextSplitIsland.load(memory_order_acquire);
@@ -476,7 +478,7 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitI
 	// Loop over all split islands to find work
 	uint32 constraints_begin, constraints_end, contacts_begin, contacts_end;
 	for (Splits *s = mSplitIslands; s < mSplitIslands + num_splits_created; ++s)
-		switch (s->FetchNextBatch(constraints_begin, constraints_end, contacts_begin, contacts_end, outFirstIteration))
+		switch (s->FetchNextBatch(constraints_begin, constraints_end, contacts_begin, contacts_end, outWarmStart))
 		{
 		case EStatus::AllBatchesDone:
 			break;
