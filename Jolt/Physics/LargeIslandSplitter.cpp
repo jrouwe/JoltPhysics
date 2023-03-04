@@ -336,37 +336,37 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 
 	// Allocate space to store the sorted constraint and contact indices per split
 	uint32 *constraint_buffer_cur[cNumSplits], *contact_buffer_cur[cNumSplits];
-	for (uint g = 0; g < cNumSplits; ++g)
+	for (uint s = 0; s < cNumSplits; ++s)
 	{
 		// If this split doesn't contain enough constraints and contacts, we will combine it with the non parallel split
-		if (num_constraints_in_split[g] + num_contacts_in_split[g] < cSplitCombineTreshold
-			&& g < cNonParallelSplitIdx) // The non-parallel split cannot merge into itself
+		if (num_constraints_in_split[s] + num_contacts_in_split[s] < cSplitCombineTreshold
+			&& s < cNonParallelSplitIdx) // The non-parallel split cannot merge into itself
 		{
 			// Remap it
-			split_remap_table[g] = cNonParallelSplitIdx;
+			split_remap_table[s] = cNonParallelSplitIdx;
 
 			// Add the counts to the non parallel split
-			num_contacts_in_split[cNonParallelSplitIdx] += num_contacts_in_split[g];
-			num_constraints_in_split[cNonParallelSplitIdx] += num_constraints_in_split[g];
+			num_contacts_in_split[cNonParallelSplitIdx] += num_contacts_in_split[s];
+			num_constraints_in_split[cNonParallelSplitIdx] += num_constraints_in_split[s];
 		}
 		else
 		{
 			// This split is valid, map it to the next empty slot
 			uint target_split;
-			if (g < cNonParallelSplitIdx)
+			if (s < cNonParallelSplitIdx)
 				target_split = splits.mNumSplits++;
 			else
 				target_split = cNonParallelSplitIdx;
 			Split &split = splits.mSplits[target_split];
-			split_remap_table[g] = target_split;
+			split_remap_table[s] = target_split;
 
 			// Allocate space for contacts
 			split.mContactBufferBegin = offset;
-			split.mContactBufferEnd = split.mContactBufferBegin + num_contacts_in_split[g];
+			split.mContactBufferEnd = split.mContactBufferBegin + num_contacts_in_split[s];
 
 			// Allocate space for constraints
 			split.mConstraintBufferBegin = split.mContactBufferEnd;
-			split.mConstraintBufferEnd = split.mConstraintBufferBegin + num_constraints_in_split[g];
+			split.mConstraintBufferEnd = split.mConstraintBufferBegin + num_constraints_in_split[s];
 
 			// Store start for each split
 			contact_buffer_cur[target_split] = mContactAndConstraintIndices + split.mContactBufferBegin;
@@ -392,27 +392,27 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	}
 
 #ifdef JPH_ENABLE_ASSERTS
-	for (uint g = 0; g < cNumSplits; ++g)
+	for (uint s = 0; s < cNumSplits; ++s)
 	{
 		// If there are no more splits, process the non-parallel split
-		if (g >= splits.mNumSplits)
-			g = cNonParallelSplitIdx;
+		if (s >= splits.mNumSplits)
+			s = cNonParallelSplitIdx;
 
 		// Check that we wrote all elements
-		Split &split = splits.mSplits[g];
-		JPH_ASSERT(contact_buffer_cur[g] == mContactAndConstraintIndices + split.mContactBufferEnd);
-		JPH_ASSERT(constraint_buffer_cur[g] == mContactAndConstraintIndices + split.mConstraintBufferEnd);
+		Split &split = splits.mSplits[s];
+		JPH_ASSERT(contact_buffer_cur[s] == mContactAndConstraintIndices + split.mContactBufferEnd);
+		JPH_ASSERT(constraint_buffer_cur[s] == mContactAndConstraintIndices + split.mConstraintBufferEnd);
 	}
 
 #ifdef _DEBUG
 	// Validate that the splits are indeed not touching the same body
-	for (uint g = 0; g < splits.mNumSplits; ++g)
+	for (uint s = 0; s < splits.mNumSplits; ++s)
 	{
 		Array<bool> body_used(mNumActiveBodies, false);
 
 		// Validate contacts
 		uint32 split_contacts_begin, split_contacts_end;
-		splits.GetContactsInSplit(g, split_contacts_begin, split_contacts_end);
+		splits.GetContactsInSplit(s, split_contacts_begin, split_contacts_end);
 		for (uint32 *c = mContactAndConstraintIndices + split_contacts_begin; c < mContactAndConstraintIndices + split_contacts_end; ++c)
 		{
 			const Body *body1, *body2;
@@ -449,8 +449,8 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitI
 
 	// Loop over all split islands to find work
 	uint32 constraints_begin, constraints_end, contacts_begin, contacts_end;
-	for (Splits *g = mSplitIslands; g < mSplitIslands + num_splits_created; ++g)
-		switch (g->FetchNextBatch(constraints_begin, constraints_end, contacts_begin, contacts_end))
+	for (Splits *s = mSplitIslands; s < mSplitIslands + num_splits_created; ++s)
+		switch (s->FetchNextBatch(constraints_begin, constraints_end, contacts_begin, contacts_end))
 		{
 		case EStatus::AllBatchesDone:
 			break;
@@ -460,7 +460,7 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::FetchNextBatch(uint &outSplitI
 			break;
 
 		case EStatus::BatchRetrieved:
-			outSplitIslandIndex = uint(g - mSplitIslands);
+			outSplitIslandIndex = uint(s - mSplitIslands);
 			outConstraintsBegin = mContactAndConstraintIndices + constraints_begin;
 			outConstraintsEnd = mContactAndConstraintIndices + constraints_end;
 			outContactsBegin = mContactAndConstraintIndices + contacts_begin;
