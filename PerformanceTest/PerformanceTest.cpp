@@ -72,6 +72,9 @@ int main(int argc, char** argv)
 	// Register allocation hook
 	RegisterDefaultAllocator();
 
+	// Helper function that creates the default scene
+	auto create_default_scene = []{ return unique_ptr<PerformanceTestScene>(new RagdollScene(JPH_IF_DEBUG(2) JPH_IF_NOT_DEBUG(4), JPH_IF_DEBUG(5) JPH_IF_NOT_DEBUG(10), 0.6f)); };
+
 	// Parse command line parameters
 	int specified_quality = -1;
 	int specified_threads = -1;
@@ -95,9 +98,11 @@ int main(int argc, char** argv)
 		{
 			// Parse scene
 			if (strcmp(arg + 3, "Ragdoll") == 0)
-				scene = unique_ptr<PerformanceTestScene>(new RagdollScene);
+				scene = create_default_scene();
 			else if (strcmp(arg + 3, "ConvexVsMesh") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new ConvexVsMeshScene);
+			else if (strcmp(arg + 3, "LargeIsland") == 0)
+				scene = unique_ptr<PerformanceTestScene>(new RagdollScene(1, JPH_IF_DEBUG(20) JPH_IF_NOT_DEBUG(160), 0.4f));
 			else
 			{
 				Trace("Invalid scene");
@@ -171,7 +176,7 @@ int main(int argc, char** argv)
 		{
 			// Print usage
 			Trace("Usage:\n"
-				  "-s=<scene>: Select scene (Ragdoll, ConvexVsMesh)\n"
+				  "-s=<scene>: Select scene (Ragdoll, ConvexVsMesh, LargeIsland)\n"
 				  "-i=<num physics steps>: Number of physics steps to simulate (default 500)\n"
 				  "-q=<quality>: Test only with specified quality (Discrete, LinearCast)\n"
 				  "-t=<num threads>: Test only with N threads (default is to iterate over 1 .. num hardware threads)\n"
@@ -199,7 +204,7 @@ int main(int argc, char** argv)
 
 	// Load the scene
 	if (scene == nullptr)
-		scene = unique_ptr<PerformanceTestScene>(new RagdollScene);
+		scene = create_default_scene();
 	if (!scene->Load())
 		return 1;
 

@@ -19,9 +19,11 @@
 class RagdollScene : public PerformanceTestScene
 {
 public:
+							RagdollScene(int inNumPilesPerAxis, int inPileSize, float inVerticalSeparation) : mNumPilesPerAxis(inNumPilesPerAxis), mPileSize(inPileSize), mVerticalSeparation(inVerticalSeparation) { }
+
 	virtual const char *	GetName() const override
 	{
-		return "Ragdoll";
+		return mNumPilesPerAxis == 1? "LargeIsland" : "Ragdoll";
 	}
 
 	virtual bool			Load() override
@@ -69,16 +71,6 @@ public:
 	{
 		// Test configuration
 		const Real cHorizontalSeparation = 4.0_r;
-		const float cVerticalSeparation = 0.6f;
-		#ifdef _DEBUG
-			const int cPileSize = 5;
-			const int cNumRows = 2;
-			const int cNumCols = 2;
-		#else
-			const int cPileSize = 10;
-			const int cNumRows = 4;
-			const int cNumCols = 4;
-		#endif
 
 		// Set motion quality on ragdoll
 		for (BodyCreationSettings &body : mRagdollSettings->mParts)
@@ -91,11 +83,11 @@ public:
 		mt19937 random;
 		uniform_real_distribution<float> angle(0.0f, JPH_PI);
 		CollisionGroup::GroupID group_id = 1;
-		for (int row = 0; row < cNumRows; ++row)
-			for (int col = 0; col < cNumCols; ++col)
+		for (int row = 0; row < mNumPilesPerAxis; ++row)
+			for (int col = 0; col < mNumPilesPerAxis; ++col)
 			{
 				// Determine start location of ray
-				RVec3 start(cHorizontalSeparation * (col - (cNumCols - 1) / 2.0_r), 100, cHorizontalSeparation * (row - (cNumRows - 1) / 2.0_r));
+				RVec3 start(cHorizontalSeparation * (col - (mNumPilesPerAxis - 1) / 2.0_r), 100, cHorizontalSeparation * (row - (mNumPilesPerAxis - 1) / 2.0_r));
 
 				// Cast ray down to terrain
 				RayCastResult hit;
@@ -104,7 +96,7 @@ public:
 				if (inPhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, hit, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING)))
 					start = ray.GetPointOnRay(hit.mFraction);
 
-				for (int i = 0; i < cPileSize; ++i)
+				for (int i = 0; i < mPileSize; ++i)
 				{
 					// Create ragdoll
 					Ref<Ragdoll> ragdoll = mRagdollSettings->CreateRagdoll(group_id++, 0, &inPhysicsSystem);
@@ -113,7 +105,7 @@ public:
 					SkeletonPose pose_copy = mPose;
 					pose_copy.SetRootOffset(start);
 					SkeletonPose::JointState &root = pose_copy.GetJoint(0);
-					root.mTranslation = Vec3(0, cVerticalSeparation * (i + 1), 0);
+					root.mTranslation = Vec3(0, mVerticalSeparation * (i + 1), 0);
 					root.mRotation = Quat::sRotation(Vec3::sAxisY(), angle(random)) * root.mRotation;
 					pose_copy.CalculateJointMatrices();
 
@@ -137,6 +129,9 @@ public:
 	}
 
 private:
+	int 					mNumPilesPerAxis;
+	int 					mPileSize;
+	float 					mVerticalSeparation;
 	Ref<RagdollSettings>	mRagdollSettings;
 	Ref<SkeletalAnimation>	mAnimation;
 	SkeletonPose			mPose;
