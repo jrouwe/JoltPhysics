@@ -18,7 +18,8 @@ JPH_NAMESPACE_BEGIN
 LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outFirstIteration)
 {
 	{
-		// First check if we can get a new batch (doing a relaxed read to avoid hammering an atomic)
+		// First check if we can get a new batch (doing a relaxed read to avoid hammering an atomic with an atomic subtract)
+		// Note this also avoids overflowing the status counter if we're done but there's still one thread processing items
 		uint64 status = mStatus.load(memory_order_relaxed);
 		if (sGetIteration(status) >= mNumIterations)
 			return EStatus::AllBatchesDone;
@@ -117,7 +118,7 @@ bool LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed)
 {
 	// Add the number of items we processed to the total number of items processed
 	JPH_ASSERT(inNumProcessed > 0); // Logic will break if we mark a block of 0 items as processed
-	uint total_items_processed = mItemsProcessed.fetch_add(inNumProcessed, memory_order_release) + inNumProcessed;
+	uint total_items_processed = mItemsProcessed.fetch_add(inNumProcessed, memory_order_acq_rel) + inNumProcessed;
 
 	// We fetched this batch, nobody should change the split and or iteration until we mark the last batch as processed so we can safely get the current status
 	uint64 status = mStatus.load(memory_order_relaxed);
@@ -136,7 +137,7 @@ bool LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed)
 		JPH_ASSERT(total_items_processed == num_items_in_split); // Should not overflow, that means we're retiring more items than we should process
 
 		// Set items processed back to 0 for the next split/iteration
-		mItemsProcessed.store(0, memory_order_relaxed);
+		mItemsProcessed.store(0, memory_order_release);
 
 		// Determine next split
 		do
@@ -305,7 +306,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	uint num_constraints_in_split[cNumSplits] = { };
 
 	// Get space to store split indices
-	uint offset = mContactAndConstraintsNextFree.fetch_add(island_size);
+	uint offset = mContactAndConstraintsNextFree.fetch_add(island_size, memory_order_relaxed);
 	uint32 *contact_split_idx = mContactAndConstaintsSplitIdx + offset;
 	uint32 *constraint_split_idx = contact_split_idx + num_contacts_in_island;
 
@@ -338,7 +339,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	Splits &splits = mSplitIslands[new_split_idx];
 	splits.mNumSplits = 0;
 	splits.mNumIterations = inNumVelocitySteps;
-	splits.mItemsProcessed.store(0, memory_order_relaxed);
+	splits.mItemsProcessed.store(0, memory_order_release);
 
 	// Allocate space to store the sorted constraint and contact indices per split
 	uint32 *constraint_buffer_cur[cNumSplits], *contact_buffer_cur[cNumSplits];
@@ -509,8 +510,8 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 	JPH_PROFILE_FUNCTION();
 
 	// Everything should have been used
-	JPH_ASSERT(mContactAndConstraintsNextFree == mContactAndConstraintsSize);
-	JPH_ASSERT(mNextSplitIsland == mNumSplitIslands);
+	JPH_ASSERT(mContactAndConstraintsNextFree.load(memory_order_relaxed) == mContactAndConstraintsSize);
+	JPH_ASSERT(mNextSplitIsland.load(memory_order_relaxed) == mNumSplitIslands);
 
 	// Free split islands
 	if (mNumSplitIslands > 0)
@@ -519,7 +520,7 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 		mSplitIslands = nullptr;
 
 		mNumSplitIslands = 0;
-		mNextSplitIsland = 0;
+		mNextSplitIsland.store(0, memory_order_relaxed);
 	}
 
 	// Free contact and constraint buffers
@@ -532,7 +533,7 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 		mContactAndConstaintsSplitIdx = nullptr;
 
 		mContactAndConstraintsSize = 0;
-		mContactAndConstraintsNextFree = 0;
+		mContactAndConstraintsNextFree.store(0, memory_order_relaxed);
 	}
 
 	// Free split masks
