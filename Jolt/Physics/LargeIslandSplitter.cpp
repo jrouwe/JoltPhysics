@@ -116,10 +116,6 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 
 bool LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed)
 {
-	// Add the number of items we processed to the total number of items processed
-	JPH_ASSERT(inNumProcessed > 0); // Logic will break if we mark a block of 0 items as processed
-	uint total_items_processed = mItemsProcessed.fetch_add(inNumProcessed, memory_order_acq_rel) + inNumProcessed;
-
 	// We fetched this batch, nobody should change the split and or iteration until we mark the last batch as processed so we can safely get the current status
 	uint64 status = mStatus.load(memory_order_relaxed);
 	uint split_index = sGetSplit(status);
@@ -130,6 +126,11 @@ bool LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed)
 	// Determine if this is the last iteration before possibly incrementing it
 	int iteration = sGetIteration(status);
 	bool is_last_iteration = iteration == mNumIterations - 1;
+
+	// Add the number of items we processed to the total number of items processed
+	// Note: This needs to happen after we read the status as other threads may update the status after we mark items as processed
+	JPH_ASSERT(inNumProcessed > 0); // Logic will break if we mark a block of 0 items as processed
+	uint total_items_processed = mItemsProcessed.fetch_add(inNumProcessed, memory_order_acq_rel) + inNumProcessed;
 
 	// Check if we're at the end of the split
 	if (total_items_processed >= num_items_in_split)
