@@ -1275,7 +1275,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	// Only the first sub step of the first step needs to correct for the delta time difference in the previous update
 	float warm_start_impulse_ratio = ioSubStep->mIsFirstOfAll? ioContext->mWarmStartImpulseRatio : 1.0f; 
 
-	bool check_islands = true, check_grouped_islands = ioContext->mUseLargeIslandSplitter;
+	bool check_islands = true, check_split_islands = ioContext->mUseLargeIslandSplitter;
 	do
 	{
 		int num_iterations = 0;
@@ -1283,14 +1283,14 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 		uint32 *contacts_begin = nullptr, *contacts_end = nullptr;
 
 		// First try to get work from large islands
-		uint grouped_island_index = uint(-1);
-		if (check_grouped_islands)
+		uint split_island_index = uint(-1);
+		if (check_split_islands)
 		{
 			bool first_iteration;
-			switch (mLargeIslandSplitter.FetchNextBatch(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
+			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
 			{
 			case LargeIslandSplitter::EStatus::AllBatchesDone:
-				check_grouped_islands = false;
+				check_split_islands = false;
 				break;
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
 				num_iterations = 1; // We can only do 1 iteration per batch
@@ -1403,8 +1403,8 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 
 			// Mark complete, and check if this is the last iteration
 			bool last_iteration = true;
-			if (grouped_island_index != uint(-1))
-				last_iteration = mLargeIslandSplitter.MarkBatchProcessed(grouped_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
+			if (split_island_index != uint(-1))
+				last_iteration = mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
 
 			// Save back the lambdas in the contact cache for the warm start of the next physics update
 			if (last_sub_step && last_iteration)
@@ -1416,7 +1416,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			std::this_thread::yield();
 		}
 	}
-	while (check_islands || check_grouped_islands);
+	while (check_islands || check_split_islands);
 }
 
 void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const
