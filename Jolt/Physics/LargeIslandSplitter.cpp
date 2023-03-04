@@ -21,8 +21,13 @@ LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 
 		if (sGetIteration(status) >= mNumIterations)
 			return EStatus::AllBatchesDone;
 
-		uint split_index = sGetSplit(status);
+		// Check for special value that indicates that the splits are still being built
+		// (note we do not check for this condition again below as we reset all splits before kicking off jobs that fetch batches of work)
+		if (status == StatusItemMask)
+			return EStatus::WaitingForBatch;
+
 		uint item = sGetItem(status);
+		uint split_index = sGetSplit(status);
 		if (split_index == cNonParallelSplitIdx)
 		{
 			// Non parallel split needs to be taken as a single batch, only the thread that takes element 0 will do it

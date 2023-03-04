@@ -74,7 +74,7 @@ public:
 		/// Reset current status so that no work can be picked up from this split
 		inline void			ResetStatus()
 		{
-			mStatus.store((uint64(cNonParallelSplitIdx) << StatusSplitShift) | StatusItemMask, memory_order_relaxed);
+			mStatus.store(StatusItemMask, memory_order_relaxed);
 		}
 
 		/// Make the first batch available to other threads
