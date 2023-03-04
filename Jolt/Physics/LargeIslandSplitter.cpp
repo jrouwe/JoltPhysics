@@ -11,6 +11,8 @@
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/TempAllocator.h>
 
+//#define JPH_LARGE_ISLAND_SPLITTER_DEBUG
+
 JPH_NAMESPACE_BEGIN
 
 LargeIslandSplitter::EStatus LargeIslandSplitter::Splits::FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outFirstIteration)
@@ -394,6 +396,24 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		uint split = split_remap_table[constraint_split_idx[c]];
 		*constraint_buffer_cur[split]++ = constraints_start[c];
 	}
+
+#ifdef JPH_LARGE_ISLAND_SPLITTER_DEBUG
+	// Trace the size of all splits
+	uint sum = 0;
+	String stats;
+	for (uint s = 0; s < cNumSplits; ++s)
+	{
+		// If we've processed all splits, jump to the non-parallel split
+		if (s >= splits.GetNumSplits())
+			s = cNonParallelSplitIdx;
+
+		const Split &split = splits.mSplits[s];
+		stats += StringFormat("g:%d:%d:%d, ", s, split.GetNumContacts(), split.GetNumConstraints());
+		sum += split.GetNumItems();
+	}
+	stats += StringFormat("sum: %d", sum);
+	Trace(stats.c_str());
+#endif // JPH_LARGE_ISLAND_SPLITTER_DEBUG
 
 #ifdef JPH_ENABLE_ASSERTS
 	for (uint s = 0; s < cNumSplits; ++s)
