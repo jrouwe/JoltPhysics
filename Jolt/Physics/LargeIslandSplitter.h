@@ -25,15 +25,15 @@ private:
 	/// Describes a split of constraints and contacts
 	struct Split
 	{
-		inline uint			GetNumContacts() const								{ return uint(mContactBufferEnd - mContactBufferBegin); }
-		inline uint 		GetNumConstraints() const							{ return uint(mConstraintBufferEnd - mConstraintBufferBegin); }
+		inline uint			GetNumContacts() const								{ return mContactBufferEnd - mContactBufferBegin; }
+		inline uint 		GetNumConstraints() const							{ return mConstraintBufferEnd - mConstraintBufferBegin; }
 		inline uint			GetNumItems() const									{ return GetNumContacts() + GetNumConstraints(); }
 
-		uint32 *			mContactBufferBegin;								///< Begin of the contact buffer
-		uint32 *			mContactBufferEnd;									///< End of the contact buffer
+		uint32				mContactBufferBegin;								///< Begin of the contact buffer (offset relative to mContactAndConstraintIndices)
+		uint32				mContactBufferEnd;									///< End of the contact buffer
 
-		uint32 *			mConstraintBufferBegin;								///< Begin of the constraint buffer
-		uint32 *			mConstraintBufferEnd;								///< End of the constraint buffer
+		uint32				mConstraintBufferBegin;								///< Begin of the constraint buffer (offset relative to mContactAndConstraintIndices)
+		uint32				mConstraintBufferEnd;								///< End of the constraint buffer
 	};
 
 public:
@@ -57,14 +57,14 @@ public:
 			return mNumSplits;
 		}
 
-		inline void			GetConstraintsInSplit(uint inSplitIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd) const
+		inline void			GetConstraintsInSplit(uint inSplitIndex, uint32 &outConstraintsBegin, uint32 &outConstraintsEnd) const
 		{
 			const Split &split = mSplits[inSplitIndex];
 			outConstraintsBegin = split.mConstraintBufferBegin;
 			outConstraintsEnd = split.mConstraintBufferEnd;
 		}
 
-		inline void			GetContactsInSplit(uint inSplitIndex, uint32 *&outContactsBegin, uint32 *&outContactsEnd) const
+		inline void			GetContactsInSplit(uint inSplitIndex, uint32 &outContactsBegin, uint32 &outContactsEnd) const
 		{
 			const Split &split = mSplits[inSplitIndex];
 			outContactsBegin = split.mContactBufferBegin;
@@ -85,10 +85,10 @@ public:
 		}
 
 		/// Fetch the next batch to process
-		EStatus				FetchNextBatch(uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd);
+		EStatus				FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd);
 
 		/// Mark a batch as processed, returns true if this is the final iteration for the batch
-		bool				MarkBatchProcessed(const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd);
+		bool				MarkBatchProcessed(uint inNumProcessed);
 
 	private:
 		friend class LargeIslandSplitter;
@@ -165,7 +165,6 @@ private:
 	uint					mNumSplitIslands = 0;								///< Total number of islands that required splitting
 	Splits *				mSplitIslands = nullptr;							///< List of islands that required splitting
 	atomic<uint>			mNextSplitIsland = 0;								///< Next split island to pick from mSplitIslands
-	atomic<uint>			mNumSplitIslandsCreated = 0;						///< Number of split islands that have been fully created and are available for other threads to read
 };
 
 JPH_NAMESPACE_END
