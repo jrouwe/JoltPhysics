@@ -101,6 +101,9 @@ struct PhysicsSettings
 	/// Whether or not to reduce manifolds with similar contact normals into one contact manifold
 	bool		mUseManifoldReduction = true;
 
+	/// If we split up large islands into smaller parallel batches of work (to improve performance)
+	bool		mUseLargeIslandSplitter = true;
+
 	/// If objects can go to sleep or not
 	bool		mAllowSleeping = true;
 

@@ -507,6 +507,7 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 		inTempAllocator->Free(mContactAndConstaintsSplitIdx, mContactAndConstraintsSize * sizeof(uint32));
 		mContactAndConstaintsSplitIdx = nullptr;
 
+		mContactAndConstraintsSize = 0;
 		mContactAndConstraintsNextFree = 0;
 	}
 
@@ -515,6 +516,7 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 	{
 		inTempAllocator->Free(mSplitMasks, mNumActiveBodies * sizeof(SplitMask));
 		mSplitMasks = nullptr;
+
 		mNumActiveBodies = 0;
 	}
 }

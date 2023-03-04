@@ -157,6 +157,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 	context.mStepDeltaTime = inDeltaTime / inCollisionSteps;
 	context.mSubStepDeltaTime = sub_step_delta_time;
 	context.mWarmStartImpulseRatio = warm_start_impulse_ratio;
+	context.mUseLargeIslandSplitter = mPhysicsSettings.mUseLargeIslandSplitter && inIntegrationSubSteps == 1; // Only use large island splitter if we don't have sub steps, not yet supported
 	context.mSteps.resize(inCollisionSteps);
 
 	// Allocate space for body pairs
@@ -1237,7 +1238,7 @@ void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
 	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(), mBodyManager.GetNumActiveBodies(), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
 
 	// Prepare the large island splitter
-	if (ioContext->UseLargeIslandSplitter())
+	if (ioContext->mUseLargeIslandSplitter)
 		mLargeIslandSplitter.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
 }
 
@@ -1271,13 +1272,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	bool first_sub_step = ioSubStep->mIsFirst;
 	bool last_sub_step = ioSubStep->mIsLast;
 
-	// Splitting large islands is only supported if we do 1 step
-	bool use_large_island_splitter = ioContext->UseLargeIslandSplitter();
-
 	// Only the first sub step of the first step needs to correct for the delta time difference in the previous update
 	float warm_start_impulse_ratio = ioSubStep->mIsFirstOfAll? ioContext->mWarmStartImpulseRatio : 1.0f; 
 
-	bool check_islands = true, check_grouped_islands = use_large_island_splitter;
+	bool check_islands = true, check_grouped_islands = ioContext->mUseLargeIslandSplitter;
 	do
 	{
 		int num_iterations = 0;
@@ -1378,7 +1376,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
 
 			// Split up large islands
-			if (use_large_island_splitter
+			if (ioContext->mUseLargeIslandSplitter
 				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps))
 				continue; // Loop again to try to fetch the newly split island
 

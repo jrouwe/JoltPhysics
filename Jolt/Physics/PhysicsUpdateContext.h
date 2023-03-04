@@ -152,9 +152,6 @@ public:
 	/// Maximum amount of concurrent jobs on this machine
 	int						GetMaxConcurrency() const								{ const int max_concurrency = PhysicsUpdateContext::cMaxConcurrency; return min(max_concurrency, mJobSystem->GetMaxConcurrency()); } ///< Need to put max concurrency in temp var as min requires a reference
 
-	/// Large island spliter is work in progress and is only supported with 1 sub step currently, groups currently conflict with applying gravity etc. in the second step
-	bool					UseLargeIslandSplitter() const							{ return mSteps.front().mSubSteps.size() == 1; }
-
 	PhysicsSystem *			mPhysicsSystem;											///< The physics system we belong to
 	TempAllocator *			mTempAllocator;											///< Temporary allocator used during the update
 	JobSystem *				mJobSystem;												///< Job system that processes jobs
@@ -163,6 +160,7 @@ public:
 	float					mStepDeltaTime;											///< Delta time for a simulation step (collision step)
 	float					mSubStepDeltaTime;										///< Delta time for a simulation sub step (integration step)
 	float					mWarmStartImpulseRatio;									///< Ratio of this step delta time vs last step
+	bool					mUseLargeIslandSplitter;								///< If true, use large island splitting
 
 	Constraint **			mActiveConstraints = nullptr;							///< Constraints that were active at the start of the physics update step (activating bodies can activate constraints and we need a consistent snapshot). Only these constraints will be resolved.
 
