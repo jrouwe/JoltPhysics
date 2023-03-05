@@ -1296,8 +1296,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				if (warm_start)
 				{
 					// Warm start the batch
-					int dummy = 0; // We don't use the calculated number of velocity steps here
-					ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, dummy);
+					ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio);
 					mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
 
 					// Continue to the next batch, we first need to warm start all bodies before we can start solving

@@ -125,6 +125,17 @@ void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstrain
 	}
 }
 
+void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio)
+{
+	JPH_PROFILE_FUNCTION();
+
+	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
+	{
+		Constraint *c = inActiveConstraints[*constraint_idx];
+		c->WarmStartVelocityConstraint(inWarmStartImpulseRatio);
+	}
+}
+
 void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, int &ioNumVelocitySteps)
 {
 	JPH_PROFILE_FUNCTION();
