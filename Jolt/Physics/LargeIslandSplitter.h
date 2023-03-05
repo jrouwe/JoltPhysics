@@ -149,9 +149,9 @@ public:
 	void					Reset(TempAllocator *inTempAllocator);
 
 private:
-	static constexpr uint	cLargeIslandTreshold = 256;							///< If the number of constraints + contacts in an island is larger than this, we will try to split the island
-	static constexpr uint	cSplitCombineTreshold = 128;						///< If the number of constraints + contacts in a split is lower than this, we will merge this split into the 'non-parallel split'
-	static constexpr uint	cBatchSize = 64;									///< Number of items to process in a constraint batch
+	static constexpr uint	cLargeIslandTreshold = 128;							///< If the number of constraints + contacts in an island is larger than this, we will try to split the island
+	static constexpr uint	cSplitCombineTreshold = 32;							///< If the number of constraints + contacts in a split is lower than this, we will merge this split into the 'non-parallel split'
+	static constexpr uint	cBatchSize = 16;									///< Number of items to process in a constraint batch
 
 	uint32					mNumActiveBodies = 0;								///< Cached number of active bodies
 
