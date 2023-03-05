@@ -26,13 +26,12 @@ void PyramidTest::Initialize()
 
 	RefConst<Shape> box_shape = new BoxShape(Vec3::sReplicate(cHalfBoxSize));
 
-	// Wall
+	// Pyramid
 	for (int i = 0; i < cPyramidHeight; ++i)
 		for (int j = i / 2; j < cPyramidHeight - (i + 1) / 2; ++j)
 			for (int k = i / 2; k < cPyramidHeight - (i + 1) / 2; ++k)
 			{
 				RVec3 position(-cPyramidHeight + cBoxSize * j + (i & 1? cHalfBoxSize : 0.0f), 1.0f + (cBoxSize + cBoxSeparation) * i, -cPyramidHeight + cBoxSize * k + (i & 1? cHalfBoxSize : 0.0f));
-				Body &wall = *mBodyInterface->CreateBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
-				mBodyInterface->AddBody(wall.GetID(), EActivation::Activate);
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 			}
 }

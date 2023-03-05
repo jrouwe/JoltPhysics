@@ -23,7 +23,7 @@ public:
 
 	virtual const char *	GetName() const override
 	{
-		return mNumPilesPerAxis == 1? "LargeIsland" : "Ragdoll";
+		return mNumPilesPerAxis == 1? "RagdollSinglePile" : "Ragdoll";
 	}
 
 	virtual bool			Load() override
