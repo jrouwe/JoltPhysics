@@ -236,7 +236,7 @@ uint LargeIslandSplitter::AssignSplit(const Body *inBody1, const Body *inBody2)
 		// Body 1 is not active or a kinematic body, so we only need to set 1 body
 		JPH_ASSERT(idx2 < mNumActiveBodies);
 		SplitMask &mask = mSplitMasks[idx2];
-		uint split = min(CountTrailingZeros(~mask), cNonParallelSplitIdx);
+		uint split = min(CountTrailingZeros(~uint32(mask)), cNonParallelSplitIdx);
 		mask |= SplitMask(1 << split);
 		return split;
 	}
@@ -245,7 +245,7 @@ uint LargeIslandSplitter::AssignSplit(const Body *inBody1, const Body *inBody2)
 		// Body 2 is not active or a kinematic body, so we only need to set 1 body
 		JPH_ASSERT(idx1 < mNumActiveBodies);
 		SplitMask &mask = mSplitMasks[idx1];
-		uint split = min(CountTrailingZeros(~mask), cNonParallelSplitIdx);
+		uint split = min(CountTrailingZeros(~uint32(mask)), cNonParallelSplitIdx);
 		mask |= SplitMask(1 << split);
 		return split;
 	}
@@ -256,7 +256,7 @@ uint LargeIslandSplitter::AssignSplit(const Body *inBody1, const Body *inBody2)
 		JPH_ASSERT(idx2 < mNumActiveBodies);
 		SplitMask &mask1 = mSplitMasks[idx1];
 		SplitMask &mask2 = mSplitMasks[idx2];
-		uint split = min(CountTrailingZeros((~mask1) & (~mask2)), cNonParallelSplitIdx);
+		uint split = min(CountTrailingZeros((~uint32(mask1)) & (~uint32(mask2))), cNonParallelSplitIdx);
 		SplitMask mask = SplitMask(1 << split);
 		mask1 |= mask;
 		mask2 |= mask;
