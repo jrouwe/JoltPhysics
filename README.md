@@ -122,7 +122,7 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 
 * C [here](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics/libs) and [here](https://github.com/amerkoleci/JoltPhysicsSharp/tree/main/src/joltc)
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
-* [Java](https://github.com/aecsocket/jolt-jni)
+* [Java](https://github.com/aecsocket/jolt-java)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
 * [Zig](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics)
 
