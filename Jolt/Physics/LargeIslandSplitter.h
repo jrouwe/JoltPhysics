@@ -136,7 +136,7 @@ public:
 	/// Force a body to be in a non parallel split. Returns the split index.
 	uint					AssignToNonParallelSplit(const Body *inBody);
 
-	/// Splits up and island, the created splits will be added to the list of batches and can be fetched with FetchNextBatch
+	/// Splits up an island, the created splits will be added to the list of batches and can be fetched with FetchNextBatch. Returns false if the island did not need splitting.
 	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumIterations);
 
 	/// Fetch the next batch to process, returns a handle in outSplitIslandIndex that must be provided to MarkBatchProcessed when complete
