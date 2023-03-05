@@ -438,6 +438,9 @@ int main(int argc, char** argv)
 	NarrowPhaseStat::sReportStats();
 #endif // JPH_TRACK_NARROWPHASE_STATS
 
+	// Unregisters all types with the factory and cleans up the default material
+	UnregisterTypes();
+
 	// Destroy the factory
 	delete Factory::sInstance;
 	Factory::sInstance = nullptr;
