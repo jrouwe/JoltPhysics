@@ -22,6 +22,19 @@ class LargeIslandSplitter : public NonCopyable
 private:
 	using					SplitMask = uint16;
 
+public:
+	static constexpr uint	cNumSplits = sizeof(SplitMask) * 8;
+	static constexpr uint	cNonParallelSplitIdx = cNumSplits - 1;
+	static constexpr uint	cLargeIslandTreshold = 128;							///< If the number of constraints + contacts in an island is larger than this, we will try to split the island
+
+	/// Status code for retrieving a batch
+	enum class EStatus
+	{
+		WaitingForBatch,														///< Work is expected to be available later
+		BatchRetrieved,															///< Work is being returned
+		AllBatchesDone,															///< No further work is expected from this
+	};
+
 	/// Describes a split of constraints and contacts
 	struct Split
 	{
@@ -34,18 +47,6 @@ private:
 
 		uint32				mConstraintBufferBegin;								///< Begin of the constraint buffer (offset relative to mContactAndConstraintIndices)
 		uint32				mConstraintBufferEnd;								///< End of the constraint buffer
-	};
-
-public:
-	static constexpr uint	cNumSplits = sizeof(SplitMask) * 8;
-	static constexpr uint	cNonParallelSplitIdx = cNumSplits - 1;
-
-	/// Status code for retrieving a batch
-	enum class EStatus
-	{
-		WaitingForBatch,														///< Work is expected to be available later
-		BatchRetrieved,															///< Work is being returned
-		AllBatchesDone,															///< No further work is expected from this
 	};
 
 	/// Structure that describes the resulting splits from the large island splitter
@@ -85,13 +86,10 @@ public:
 		}
 
 		/// Fetch the next batch to process
-		EStatus				FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outWarmStart);
+		EStatus				FetchNextBatch(uint32 &outConstraintsBegin, uint32 &outConstraintsEnd, uint32 &outContactsBegin, uint32 &outContactsEnd, bool &outFirstIteration);
 
-		/// Mark a batch as processed, returns true if this is the final iteration for the batch
-		bool				MarkBatchProcessed(uint inNumProcessed);
-
-	private:
-		friend class LargeIslandSplitter;
+		/// Mark a batch as processed
+		void				MarkBatchProcessed(uint inNumProcessed, bool &outLastIteration, bool &outFinalBatch);
 
 		enum EIterationStatus : uint64
 		{
@@ -118,12 +116,16 @@ public:
 		}
 
 		Split				mSplits[cNumSplits];								///< Data per split
+		uint32				mIslandIndex;										///< Index of the island that was split
 		uint				mNumSplits;											///< Number of splits that were created (excluding the non-parallel split)
 		int					mNumIterations;										///< Number of iterations to do
+		int					mNumVelocitySteps;									///< Number of velocity steps to do (cached for 2nd sub step)
+		int					mNumPositionSteps;									///< Number of position steps to do
 		atomic<uint64>		mStatus;											///< Status of the split, see EIterationStatus
 		atomic<uint>		mItemsProcessed;									///< Number of items that have been marked as processed
 	};
 
+public:
 	/// Destructor
 							~LargeIslandSplitter();
 
@@ -137,19 +139,28 @@ public:
 	uint					AssignToNonParallelSplit(const Body *inBody);
 
 	/// Splits up an island, the created splits will be added to the list of batches and can be fetched with FetchNextBatch. Returns false if the island did not need splitting.
-	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumIterations);
+	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumVelocitySteps, int inNumPositionSteps);
 
 	/// Fetch the next batch to process, returns a handle in outSplitIslandIndex that must be provided to MarkBatchProcessed when complete
-	EStatus					FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outWarmStart);
+	EStatus					FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outFirstIteration);
 
-	/// Mark a batch as processed, returns true if this is the final iteration for the batch
-	bool					MarkBatchProcessed(uint inSplitIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd);
+	/// Mark a batch as processed
+	void					MarkBatchProcessed(uint inSplitIslandIndex, const uint32 *inConstraintsBegin, const uint32 *inConstraintsEnd, const uint32 *inContactsBegin, const uint32 *inContactsEnd, bool &outLastIteration, bool &outFinalBatch);
+
+	/// Get the island index of the island that was split for a particular split island index
+	inline uint32			GetIslandIndex(uint inSplitIslandIndex) const
+	{
+		JPH_ASSERT(inSplitIslandIndex < mNumSplitIslands);
+		return mSplitIslands[inSplitIslandIndex].mIslandIndex;
+	}
+
+	/// Prepare the island splitter for iterating over the split islands again for position solving. Marks all batches as startable.
+	void					PrepareForSolvePositions();
 
 	/// Reset the island splitter
 	void					Reset(TempAllocator *inTempAllocator);
 
 private:
-	static constexpr uint	cLargeIslandTreshold = 128;							///< If the number of constraints + contacts in an island is larger than this, we will try to split the island
 	static constexpr uint	cSplitCombineTreshold = 32;							///< If the number of constraints + contacts in a split is lower than this, we will merge this split into the 'non-parallel split'
 	static constexpr uint	cBatchSize = 16;									///< Number of items to process in a constraint batch
 

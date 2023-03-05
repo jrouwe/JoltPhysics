@@ -1286,21 +1286,22 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 		uint split_island_index = uint(-1);
 		if (check_split_islands)
 		{
-			bool warm_start;
-			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, warm_start))
+			bool first_iteration;
+			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
 			{
 			case LargeIslandSplitter::EStatus::AllBatchesDone:
 				check_split_islands = false;
 				break;
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
-				if (warm_start)
+				if (first_iteration)
 				{
 					// Warm start the batch
 					ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio);
 					mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
 
 					// Continue to the next batch, we first need to warm start all bodies before we can start solving
-					mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
+					bool last_iteration, final_batch;
+					mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
 					continue;
 				}
 				num_iterations = 1; // We can only do 1 iteration per batch
@@ -1384,7 +1385,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			// Split up large islands
 			int num_velocity_steps = mPhysicsSettings.mNumVelocitySteps;
 			if (ioContext->mUseLargeIslandSplitter
-				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps))
+				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps, mPhysicsSettings.mNumPositionSteps))
 				continue; // Loop again to try to fetch the newly split island
 
 			// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
@@ -1407,7 +1408,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			// Mark complete, and check if this is the last iteration
 			bool last_iteration = true;
 			if (split_island_index != uint(-1))
-				last_iteration = mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end);
+			{
+				bool final_batch;
+				mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
+			}
 
 			// Save back the lambdas in the contact cache for the warm start of the next physics update
 			if (last_sub_step && last_iteration)
@@ -1422,7 +1426,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	while (check_islands || check_split_islands);
 }
 
-void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const
+void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
 {
 	// Reserve enough space for all bodies that may need a cast
 	TempAllocator *temp_allocator = ioContext->mTempAllocator;
@@ -1434,6 +1438,9 @@ void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, Phy
 	JPH_ASSERT(ioSubStep->mActiveBodyToCCDBody == nullptr);
 	ioSubStep->mNumActiveBodyToCCDBody = mBodyManager.GetNumActiveBodies();
 	ioSubStep->mActiveBodyToCCDBody = (int *)temp_allocator->Allocate(ioSubStep->mNumActiveBodyToCCDBody * sizeof(int));
+
+	// Prepare the split island builder for solving the position constraints
+	mLargeIslandSplitter.PrepareForSolvePositions();
 }
 
 void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
@@ -2132,6 +2139,107 @@ void PhysicsSystem::JobContactRemovedCallbacks(const PhysicsUpdateContext::Step 
 	mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(ioStep->mNumBodyPairs, ioStep->mNumManifolds);
 }
 
+class PhysicsSystem::BodiesToSleep
+{
+public:
+	static constexpr int	cBodiesToSleepSize = 512;
+	static constexpr int	cMaxBodiesToPutInBuffer = 128;
+
+	inline					BodiesToSleep(BodyManager &inBodyManager, BodyID *inBodiesToSleepBuffer) : mBodyManager(inBodyManager), mBodiesToSleepBuffer(inBodiesToSleepBuffer), mBodiesToSleepCur(inBodiesToSleepBuffer) { }
+
+	inline					~BodiesToSleep()
+	{		
+		// Flush the bodies to sleep buffer
+		int num_bodies_in_buffer = int(mBodiesToSleepCur - mBodiesToSleepBuffer);
+		if (num_bodies_in_buffer > 0)
+			mBodyManager.DeactivateBodies(mBodiesToSleepBuffer, num_bodies_in_buffer);
+	}
+
+	inline void				PutToSleep(BodyID *inBegin, BodyID *inEnd)
+	{
+		int num_bodies_to_sleep = int(inEnd - inBegin);
+		if (num_bodies_to_sleep > cMaxBodiesToPutInBuffer)
+		{
+			// Too many bodies, deactivate immediately
+			mBodyManager.DeactivateBodies(inBegin, num_bodies_to_sleep);
+		}
+		else
+		{
+			// Check if there's enough space in the bodies to sleep buffer
+			int num_bodies_in_buffer = int(mBodiesToSleepCur - mBodiesToSleepBuffer);
+			if (num_bodies_in_buffer + num_bodies_to_sleep > cBodiesToSleepSize)
+			{
+				// Flush the bodies to sleep buffer
+				mBodyManager.DeactivateBodies(mBodiesToSleepBuffer, num_bodies_in_buffer);
+				mBodiesToSleepCur = mBodiesToSleepBuffer;
+			}
+
+			// Copy the bodies in the buffer
+			memcpy(mBodiesToSleepCur, inBegin, num_bodies_to_sleep * sizeof(BodyID));
+			mBodiesToSleepCur += num_bodies_to_sleep;
+		}
+	}
+
+private:
+	BodyManager &			mBodyManager;
+	BodyID *				mBodiesToSleepBuffer;
+	BodyID *				mBodiesToSleepCur;
+};
+
+void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep, BodiesToSleep &ioBodiesToSleep)
+{
+	// Get the bodies that belong to this island
+	BodyID *bodies_begin, *bodies_end;
+	mIslandBuilder.GetBodiesInIsland(inIslandIndex, bodies_begin, bodies_end);
+
+	// Only check sleeping in the last sub step of the last step
+	// Also resets force and torque used during the apply gravity phase
+	if (ioSubStep->mIsLastOfAll)
+	{
+		JPH_PROFILE("Check Sleeping");
+
+		static_assert(int(Body::ECanSleep::CannotSleep) == 0 && int(Body::ECanSleep::CanSleep) == 1, "Loop below makes this assumption");
+		int all_can_sleep = mPhysicsSettings.mAllowSleeping? int(Body::ECanSleep::CanSleep) : int(Body::ECanSleep::CannotSleep);
+
+		float time_before_sleep = mPhysicsSettings.mTimeBeforeSleep;
+		float max_movement = mPhysicsSettings.mPointVelocitySleepThreshold * time_before_sleep;
+
+		for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
+		{
+			Body &body = mBodyManager.GetBody(*body_id);
+
+			// Update bounding box
+			body.CalculateWorldSpaceBoundsInternal();
+
+			// Update sleeping
+			all_can_sleep &= int(body.UpdateSleepStateInternal(ioContext->mSubStepDeltaTime, max_movement, time_before_sleep));
+
+			// Reset force and torque
+			body.GetMotionProperties()->ResetForceAndTorqueInternal();
+		}
+
+		// If all bodies indicate they can sleep we can deactivate them
+		if (all_can_sleep == int(Body::ECanSleep::CanSleep))
+			ioBodiesToSleep.PutToSleep(bodies_begin, bodies_end);
+	}
+	else
+	{
+		JPH_PROFILE("Update Bounds");
+
+		// Update bounding box only for all other sub steps
+		for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
+		{
+			Body &body = mBodyManager.GetBody(*body_id);
+			body.CalculateWorldSpaceBoundsInternal();
+		}
+	}
+
+	// Notify broadphase of changed objects (find ccd contacts can do linear casts in the next step, so
+	// we need to do this every sub step)
+	// Note: Shuffles the BodyID's around!!!
+	mBroadPhase->NotifyBodiesAABBChanged(bodies_begin, int(bodies_end - bodies_begin), false);
+}
+
 void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
@@ -2143,141 +2251,107 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 #endif
 
 	float delta_time = ioContext->mSubStepDeltaTime;
+	float baumgarte = mPhysicsSettings.mBaumgarte;
 	Constraint **active_constraints = ioContext->mActiveConstraints;
 
 	// Keep a buffer of bodies that need to go to sleep in order to not constantly lock the active bodies mutex and create contention between all solving threads
-	constexpr int cBodiesToSleepSize = 512;
-	constexpr int cMaxBodiesToPutInBuffer = 64;
-	BodyID *bodies_to_sleep = (BodyID *)JPH_STACK_ALLOC(cBodiesToSleepSize * sizeof(BodyID));
-	BodyID *bodies_to_sleep_cur = bodies_to_sleep;
+	BodiesToSleep bodies_to_sleep(mBodyManager, (BodyID *)JPH_STACK_ALLOC(BodiesToSleep::cBodiesToSleepSize * sizeof(BodyID)));
 
-	for (;;)
+	bool check_islands = true, check_split_islands = ioContext->mUseLargeIslandSplitter;
+	do
 	{
-		// Next island
-		uint32 island_idx = ioSubStep->mSolvePositionConstraintsNextIsland++;
-		if (island_idx >= mIslandBuilder.GetNumIslands())
-			break;
-
-		JPH_PROFILE("Island");
-
-		// Get iterators for this island
-		BodyID *bodies_begin, *bodies_end;
-		mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
-		uint32 *constraints_begin, *constraints_end;
-		bool has_constraints = mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end);
-		uint32 *contacts_begin, *contacts_end;
-		bool has_contacts = mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end);
-
-		// Correct positions
-		if (has_contacts || has_constraints)
+		// First try to get work from large islands
+		if (check_split_islands)
 		{
-			float baumgarte = mPhysicsSettings.mBaumgarte;
-
-			// First iteration
-			int num_position_steps = mPhysicsSettings.mNumPositionSteps;
-			if (num_position_steps > 0)
+			bool first_iteration;
+			uint split_island_index;
+			uint32 *constraints_begin, *constraints_end, *contacts_begin, *contacts_end;
+			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
 			{
-				// In the first iteration also calculate the number of position steps (this way we avoid pulling all constraints into the cache twice)
-				bool constraint_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte, num_position_steps);
-				bool contact_impulse = mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
+			case LargeIslandSplitter::EStatus::AllBatchesDone:
+				check_split_islands = false;
+				break;
+			case LargeIslandSplitter::EStatus::BatchRetrieved:
+				// Solve the batch
+				ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
+				mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
 
-				// If no impulses were applied we can stop, otherwise we already did 1 iteration
-				if (!constraint_impulse && !contact_impulse)
-					num_position_steps = 0;
-				else
-					--num_position_steps;
-			}
-			else
-			{
-				// Iterate the constraints to see if they override the amount of position steps
-				for (const uint32 *c = constraints_begin; c < constraints_end; ++c)
-					num_position_steps = max(num_position_steps, active_constraints[*c]->GetNumPositionStepsOverride());
-			}
+				// Mark the batch as processed
+				bool last_iteration, final_batch;
+				mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
 
-			// Further iterations
-			for (int position_step = 0; position_step < num_position_steps; ++position_step)
-			{
-				bool constraint_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
-				bool contact_impulse = mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
-				if (!constraint_impulse && !contact_impulse)
-					break;
+				// The final batch will update all bounds and check sleeping
+				if (final_batch)
+					CheckSleepAndUpdateBounds(mLargeIslandSplitter.GetIslandIndex(split_island_index), ioContext, ioSubStep, bodies_to_sleep);
+				continue;
+			case LargeIslandSplitter::EStatus::WaitingForBatch:
+				break;
 			}
 		}
 
-		// Only check sleeping in the last sub step of the last step
-		// Also resets force and torque used during the apply gravity phase
-		if (ioSubStep->mIsLastOfAll)
+		// If that didn't succeed try to process an island
+		if (check_islands)
 		{
-			JPH_PROFILE("Check Sleeping");
+			JPH_PROFILE("Island");
 
-			static_assert(int(Body::ECanSleep::CannotSleep) == 0 && int(Body::ECanSleep::CanSleep) == 1, "Loop below makes this assumption");
-			int all_can_sleep = mPhysicsSettings.mAllowSleeping? int(Body::ECanSleep::CanSleep) : int(Body::ECanSleep::CannotSleep);
-
-			float time_before_sleep = mPhysicsSettings.mTimeBeforeSleep;
-			float max_movement = mPhysicsSettings.mPointVelocitySleepThreshold * time_before_sleep;
-
-			for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
+			// Next island
+			uint32 island_idx = ioSubStep->mSolvePositionConstraintsNextIsland++;
+			if (island_idx >= mIslandBuilder.GetNumIslands())
 			{
-				Body &body = mBodyManager.GetBody(*body_id);
-
-				// Update bounding box
-				body.CalculateWorldSpaceBoundsInternal();
-
-				// Update sleeping
-				all_can_sleep &= int(body.UpdateSleepStateInternal(ioContext->mSubStepDeltaTime, max_movement, time_before_sleep));
-
-				// Reset force and torque
-				body.GetMotionProperties()->ResetForceAndTorqueInternal();
+				check_islands = false;
+				continue;
 			}
 
-			// If all bodies indicate they can sleep we can deactivate them
-			if (all_can_sleep == int(Body::ECanSleep::CanSleep))
+			// Get iterators for this island
+			uint32 *constraints_begin, *constraints_end, *contacts_begin, *contacts_end;
+			mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end);
+			mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end);
+
+			// If this island is a large island, it will be picked up as a batch and we don't need to do anything here
+			uint num_items = uint(constraints_end - constraints_begin) + uint(contacts_end - contacts_begin);
+			if (ioContext->mUseLargeIslandSplitter
+				&& num_items >= LargeIslandSplitter::cLargeIslandTreshold)
+				continue;
+
+			// Check if this island has any work
+			if (num_items > 0)
 			{
-				int num_bodies_to_sleep = int(bodies_end - bodies_begin);
-				if (num_bodies_to_sleep > cMaxBodiesToPutInBuffer)
+				// First iteration
+				int num_position_steps = mPhysicsSettings.mNumPositionSteps;
+				if (num_position_steps > 0)
 				{
-					// Too many bodies, deactivate immediately
-					mBodyManager.DeactivateBodies(bodies_begin, num_bodies_to_sleep);
+					// In the first iteration also calculate the number of position steps (this way we avoid pulling all constraints into the cache twice)
+					bool applied_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte, num_position_steps);
+					applied_impulse |= mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
+
+					// If no impulses were applied we can stop, otherwise we already did 1 iteration
+					if (!applied_impulse)
+						num_position_steps = 0;
+					else
+						--num_position_steps;
 				}
 				else
 				{
-					// Check if there's enough space in the bodies to sleep buffer
-					int num_bodies_in_buffer = int(bodies_to_sleep_cur - bodies_to_sleep);
-					if (num_bodies_in_buffer + num_bodies_to_sleep > cBodiesToSleepSize)
-					{
-						// Flush the bodies to sleep buffer
-						mBodyManager.DeactivateBodies(bodies_to_sleep, num_bodies_in_buffer);
-						bodies_to_sleep_cur = bodies_to_sleep;
-					}
+					// Iterate the constraints to see if they override the amount of position steps
+					for (const uint32 *c = constraints_begin; c < constraints_end; ++c)
+						num_position_steps = max(num_position_steps, active_constraints[*c]->GetNumPositionStepsOverride());
+				}
 
-					// Copy the bodies in the buffer
-					memcpy(bodies_to_sleep_cur, bodies_begin, num_bodies_to_sleep * sizeof(BodyID));
-					bodies_to_sleep_cur += num_bodies_to_sleep;
+				// Further iterations
+				for (int position_step = 0; position_step < num_position_steps; ++position_step)
+				{
+					bool applied_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
+					applied_impulse |= mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
+					if (!applied_impulse)
+						break;
 				}
 			}
-		}
-		else
-		{
-			JPH_PROFILE("Update Bounds");
 
-			// Update bounding box only for all other sub steps
-			for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
-			{
-				Body &body = mBodyManager.GetBody(*body_id);
-				body.CalculateWorldSpaceBoundsInternal();
-			}
+			// After solving we will update all bounds and check sleeping
+			CheckSleepAndUpdateBounds(island_idx, ioContext, ioSubStep, bodies_to_sleep);
 		}
-
-		// Notify broadphase of changed objects (find ccd contacts can do linear casts in the next step, so
-		// we need to do this every sub step)
-		// Note: Shuffles the BodyID's around!!!
-		mBroadPhase->NotifyBodiesAABBChanged(bodies_begin, int(bodies_end - bodies_begin), false);
 	}
-
-	// Flush the bodies to sleep buffer
-	int num_bodies_in_buffer = int(bodies_to_sleep_cur - bodies_to_sleep);
-	if (num_bodies_in_buffer > 0)
-		mBodyManager.DeactivateBodies(bodies_to_sleep, num_bodies_in_buffer);
+	while (check_islands || check_split_islands);
 }
 
 void PhysicsSystem::SaveState(StateRecorder &inStream) const
