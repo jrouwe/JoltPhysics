@@ -153,4 +153,14 @@ void RegisterTypes()
 		PhysicsMaterial::sDefault = new PhysicsMaterialSimple("Default", Color::sGrey);
 }
 
+void UnregisterTypes()
+{
+	// Unregister all types
+	if (Factory::sInstance != nullptr)
+		Factory::sInstance->Clear();
+
+	// Delete default physics material
+	PhysicsMaterial::sDefault = nullptr;
+}
+
 JPH_NAMESPACE_END
