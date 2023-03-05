@@ -126,7 +126,6 @@ protected:
 	Vec3					mContactNormal;								///< Normal of the contact point between wheel and ground
 	Vec3					mContactLongitudinal;						///< Vector perpendicular to normal in the forward direction
 	Vec3					mContactLateral;							///< Vector perpendicular to normal and longitudinal direction in the right direction
-	Vec3					mWSDirection;								///< Suspension spring direction in world space
 	float					mAntiRollBarImpulse = 0.0f;					///< Amount of impulse applied to the suspension from the anti-rollbars
 
 	float					mSteerAngle = 0.0f;							///< Rotation around the suspension direction, positive is to the left

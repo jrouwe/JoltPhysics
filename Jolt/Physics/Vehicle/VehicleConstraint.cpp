@@ -167,8 +167,7 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 
 		// Test collision to find the floor
 		RVec3 origin = mBody->GetCenterOfMassPosition() + mBody->GetRotation() * (settings->mPosition - mBody->GetShape()->GetCenterOfMass());
-		w->mWSDirection = mBody->GetRotation() * settings->mDirection;
-		if (mVehicleCollisionTester->Collide(inPhysicsSystem, wheel_index, origin, w->mWSDirection, max_len, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mContactLength))
+		if (mVehicleCollisionTester->Collide(inPhysicsSystem, wheel_index, origin, mBody->GetRotation() * settings->mDirection, max_len, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mContactLength))
 		{
 			// Store ID (pointer is not valid outside of the simulation step)
 			w->mContactBodyID = w->mContactBody->GetID();
@@ -326,14 +325,14 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 			// Suspension spring
 			if (settings->mSuspensionMaxLength > settings->mSuspensionMinLength)
-				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, w->mWSDirection, w->mAntiRollBarImpulse, w->mContactLength - settings->mRadius - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength, settings->mSuspensionFrequency, settings->mSuspensionDamping);
+				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactNormal, w->mAntiRollBarImpulse, w->mContactLength - settings->mRadius - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength, settings->mSuspensionFrequency, settings->mSuspensionDamping);
 			else
 				w->mSuspensionPart.Deactivate();
 
 			// Check if we reached the 'max up' position
 			float max_up_error = w->mContactLength - settings->mRadius - settings->mSuspensionMinLength;
 			if (max_up_error < 0.0f)
-				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, w->mWSDirection, 0.0f, max_up_error);
+				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactNormal, 0.0f, max_up_error);
 			else
 				w->mSuspensionMaxUpPart.Deactivate();
 			
@@ -358,8 +357,8 @@ void VehicleConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRati
 	for (Wheel *w : mWheels)
 		if (w->mContactBody != nullptr)
 		{
-			w->mSuspensionPart.WarmStart(*mBody, *w->mContactBody, w->mWSDirection, inWarmStartImpulseRatio);
-			w->mSuspensionMaxUpPart.WarmStart(*mBody, *w->mContactBody, w->mWSDirection, inWarmStartImpulseRatio);
+			w->mSuspensionPart.WarmStart(*mBody, *w->mContactBody, -w->mContactNormal, inWarmStartImpulseRatio);
+			w->mSuspensionMaxUpPart.WarmStart(*mBody, *w->mContactBody, -w->mContactNormal, inWarmStartImpulseRatio);
 			w->mLongitudinalPart.WarmStart(*mBody, *w->mContactBody, -w->mContactLongitudinal, 0.0f); // Don't warm start the longitudinal part (the engine/brake force, we don't want to preserve anything from the last frame)
 			w->mLateralPart.WarmStart(*mBody, *w->mContactBody, -w->mContactLateral, inWarmStartImpulseRatio);	
 		}
@@ -377,11 +376,11 @@ bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime)
 		{
 			// Suspension spring, note that it can only push and not pull
 			if (w->mSuspensionPart.IsActive())
-				impulse |= w->mSuspensionPart.SolveVelocityConstraint(*mBody, *w->mContactBody, w->mWSDirection, 0.0f, FLT_MAX);
+				impulse |= w->mSuspensionPart.SolveVelocityConstraint(*mBody, *w->mContactBody, -w->mContactNormal, 0.0f, FLT_MAX);
 
 			// When reaching the minimal suspension length only allow forces pushing the bodies away
 			if (w->mSuspensionMaxUpPart.IsActive())
-				impulse |= w->mSuspensionMaxUpPart.SolveVelocityConstraint(*mBody, *w->mContactBody, w->mWSDirection, 0.0f, FLT_MAX);
+				impulse |= w->mSuspensionMaxUpPart.SolveVelocityConstraint(*mBody, *w->mContactBody, -w->mContactNormal, 0.0f, FLT_MAX);
 		}
 
 	// Solve the horizontal movement of the vehicle
