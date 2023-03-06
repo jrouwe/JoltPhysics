@@ -1278,44 +1278,51 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	bool check_islands = true, check_split_islands = ioContext->mUseLargeIslandSplitter;
 	do
 	{
-		int num_iterations = 0;
-		uint32 *constraints_begin = nullptr, *constraints_end = nullptr;
-		uint32 *contacts_begin = nullptr, *contacts_end = nullptr;
-
 		// First try to get work from large islands
-		uint split_island_index = uint(-1);
 		if (check_split_islands)
 		{
 			bool first_iteration;
+			uint split_island_index;
+			uint32 *constraints_begin, *constraints_end, *contacts_begin, *contacts_end;
 			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
 			{
-			case LargeIslandSplitter::EStatus::AllBatchesDone:
-				check_split_islands = false;
-				break;
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
-				if (first_iteration)
 				{
-					// Warm start the batch
-					ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio);
-					mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
+					if (first_iteration)
+					{
+						// Iteration 0 is used to warm start the batch (we added 1 to the number of iterations in LargeIslandSplitter::SplitIsland)
+						ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio);
+						mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
+					}
+					else
+					{
+						// Solve velocity constraints
+						ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
+						mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
+					}
 
-					// Continue to the next batch, we first need to warm start all bodies before we can start solving
+					// Mark the batch as processed
 					bool last_iteration, final_batch;
 					mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
+
+					// Save back the lambdas in the contact cache for the warm start of the next physics update
+					if (last_sub_step && last_iteration)
+						mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
+
+					// We processed work, loop again
 					continue;
 				}
-				num_iterations = 1; // We can only do 1 iteration per batch
-				break;
 			case LargeIslandSplitter::EStatus::WaitingForBatch:
+				break;
+			case LargeIslandSplitter::EStatus::AllBatchesDone:
+				check_split_islands = false;
 				break;
 			}
 		}
 
 		// If that didn't succeed try to process an island
-		if (num_iterations == 0 && check_islands)
+		if (check_islands)
 		{
-			JPH_PROFILE("Island");
-
 			// Next island
 			uint32 island_idx = ioSubStep->mSolveVelocityConstraintsNextIsland++;
 			if (island_idx >= mIslandBuilder.GetNumIslands())
@@ -1325,7 +1332,10 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 				continue;
 			}
 
-			// Get iterators
+			JPH_PROFILE("Island");
+
+			// Get iterators for this island
+			uint32 *constraints_begin, *constraints_end, *contacts_begin, *contacts_end;
 			bool has_constraints = mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end);
 			bool has_contacts = mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end);
 
@@ -1391,13 +1401,9 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
 			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, num_velocity_steps);
 			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
-			num_iterations = num_velocity_steps;
-		}
 
-		if (num_iterations > 0)
-		{
 			// Solve velocity constraints
-			for (int velocity_step = 0; velocity_step < num_iterations; ++velocity_step)
+			for (int velocity_step = 0; velocity_step < num_velocity_steps; ++velocity_step)
 			{
 				bool applied_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
 				applied_impulse |= mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
@@ -1405,23 +1411,16 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 					break;
 			}
 
-			// Mark complete, and check if this is the last iteration
-			bool last_iteration = true;
-			if (split_island_index != uint(-1))
-			{
-				bool final_batch;
-				mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
-			}
-
 			// Save back the lambdas in the contact cache for the warm start of the next physics update
-			if (last_sub_step && last_iteration)
+			if (last_sub_step)
 				mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
+
+			// We processed work, loop again
+			continue;
 		}
-		else
-		{
-			// If we didn't find any work, give up a time slice
-			std::this_thread::yield();
-		}
+
+		// If we didn't find any work, give up a time slice
+		std::this_thread::yield();
 	}
 	while (check_islands || check_split_islands);
 }
@@ -2268,9 +2267,6 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 			uint32 *constraints_begin, *constraints_end, *contacts_begin, *contacts_end;
 			switch (mLargeIslandSplitter.FetchNextBatch(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, first_iteration))
 			{
-			case LargeIslandSplitter::EStatus::AllBatchesDone:
-				check_split_islands = false;
-				break;
 			case LargeIslandSplitter::EStatus::BatchRetrieved:
 				// Solve the batch
 				ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
@@ -2283,8 +2279,13 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 				// The final batch will update all bounds and check sleeping
 				if (final_batch)
 					CheckSleepAndUpdateBounds(mLargeIslandSplitter.GetIslandIndex(split_island_index), ioContext, ioSubStep, bodies_to_sleep);
+
+				// We processed work, loop again
 				continue;
 			case LargeIslandSplitter::EStatus::WaitingForBatch:
+				break;
+			case LargeIslandSplitter::EStatus::AllBatchesDone:
+				check_split_islands = false;
 				break;
 			}
 		}
@@ -2292,15 +2293,16 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 		// If that didn't succeed try to process an island
 		if (check_islands)
 		{
-			JPH_PROFILE("Island");
-
 			// Next island
 			uint32 island_idx = ioSubStep->mSolvePositionConstraintsNextIsland++;
 			if (island_idx >= mIslandBuilder.GetNumIslands())
 			{
+				// We processed all islands, stop checking islands
 				check_islands = false;
 				continue;
 			}
+
+			JPH_PROFILE("Island");
 
 			// Get iterators for this island
 			uint32 *constraints_begin, *constraints_end, *contacts_begin, *contacts_end;
@@ -2313,7 +2315,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 				&& num_items >= LargeIslandSplitter::cLargeIslandTreshold)
 				continue;
 
-			// Check if this island has any work
+			// Check if this island needs solving
 			if (num_items > 0)
 			{
 				// First iteration
@@ -2332,7 +2334,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 				}
 				else
 				{
-					// Iterate the constraints to see if they override the amount of position steps
+					// Iterate the constraints to see if they override the number of position steps
 					for (const uint32 *c = constraints_begin; c < constraints_end; ++c)
 						num_position_steps = max(num_position_steps, active_constraints[*c]->GetNumPositionStepsOverride());
 				}
@@ -2349,7 +2351,13 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 			// After solving we will update all bounds and check sleeping
 			CheckSleepAndUpdateBounds(island_idx, ioContext, ioSubStep, bodies_to_sleep);
+
+			// We processed work, loop again
+			continue;
 		}
+
+		// If we didn't find any work, give up a time slice
+		std::this_thread::yield();
 	}
 	while (check_islands || check_split_islands);
 }
