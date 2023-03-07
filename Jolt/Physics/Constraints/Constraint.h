@@ -12,6 +12,7 @@
 JPH_NAMESPACE_BEGIN
 
 class IslandBuilder;
+class LargeIslandSplitter;
 class BodyManager;
 class StateRecorder;
 class StreamIn;
@@ -143,6 +144,9 @@ public:
 
 	/// Link bodies that are connected by this constraint in the island builder
 	virtual void				BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) = 0;
+
+	/// Link bodies that are connected by this constraint in the same split. Returns the split index.
+	virtual uint				BuildIslandSplits(LargeIslandSplitter &ioSplitter) const = 0;
 
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing interface

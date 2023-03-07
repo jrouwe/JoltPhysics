@@ -160,6 +160,7 @@ public:
 	float					mStepDeltaTime;											///< Delta time for a simulation step (collision step)
 	float					mSubStepDeltaTime;										///< Delta time for a simulation sub step (integration step)
 	float					mWarmStartImpulseRatio;									///< Ratio of this step delta time vs last step
+	bool					mUseLargeIslandSplitter;								///< If true, use large island splitting
 
 	Constraint **			mActiveConstraints = nullptr;							///< Constraints that were active at the start of the physics update step (activating bodies can activate constraints and we need a consistent snapshot). Only these constraints will be resolved.
 

@@ -156,6 +156,14 @@ public:
 	/// Sort contact constraints deterministically
 	void						SortContacts(uint32 *inConstraintIdxBegin, uint32 *inConstraintIdxEnd) const;
 
+	/// Get the affected bodies for a given constraint
+	inline void					GetAffectedBodies(uint32 inConstraintIdx, const Body *&outBody1, const Body *&outBody2) const
+	{
+		const ContactConstraint &constraint = mConstraints[inConstraintIdx];
+		outBody1 = constraint.mBody1;
+		outBody2 = constraint.mBody2;
+	}
+
 	/// AddContactConstraint will also setup the velocity constraints for the first sub step. For subsequent sub steps this function must be called prior to warm starting the constraint.
 	void						SetupVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime);
 

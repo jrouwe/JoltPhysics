@@ -6,6 +6,7 @@
 
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 #include <Jolt/Physics/IslandBuilder.h>
+#include <Jolt/Physics/LargeIslandSplitter.h>
 #include <Jolt/Physics/Body/BodyManager.h>
 
 #ifdef JPH_DEBUG_RENDERER
@@ -33,6 +34,11 @@ void TwoBodyConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &io
 
 	// Link the bodies into the same island
 	ioBuilder.LinkConstraint(inConstraintIndex, mBody1->GetIndexInActiveBodiesInternal(), mBody2->GetIndexInActiveBodiesInternal()); 
+}
+
+uint TwoBodyConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const
+{
+	return ioSplitter.AssignSplit(mBody1, mBody2);
 }
 
 #ifdef JPH_DEBUG_RENDERER
