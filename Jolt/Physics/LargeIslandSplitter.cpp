@@ -240,7 +240,7 @@ uint LargeIslandSplitter::AssignSplit(const Body *inBody1, const Body *inBody2)
 		JPH_ASSERT(idx2 < mNumActiveBodies);
 		SplitMask &mask = mSplitMasks[idx2];
 		uint split = min(CountTrailingZeros(~uint32(mask)), cNonParallelSplitIdx);
-		mask |= SplitMask(1 << split);
+		mask |= SplitMask(1U << split);
 		return split;
 	}
 	else if (idx2 == Body::cInactiveIndex || !inBody2->IsDynamic())
@@ -249,7 +249,7 @@ uint LargeIslandSplitter::AssignSplit(const Body *inBody1, const Body *inBody2)
 		JPH_ASSERT(idx1 < mNumActiveBodies);
 		SplitMask &mask = mSplitMasks[idx1];
 		uint split = min(CountTrailingZeros(~uint32(mask)), cNonParallelSplitIdx);
-		mask |= SplitMask(1 << split);
+		mask |= SplitMask(1U << split);
 		return split;
 	}
 	else
@@ -260,7 +260,7 @@ uint LargeIslandSplitter::AssignSplit(const Body *inBody1, const Body *inBody2)
 		SplitMask &mask1 = mSplitMasks[idx1];
 		SplitMask &mask2 = mSplitMasks[idx2];
 		uint split = min(CountTrailingZeros((~uint32(mask1)) & (~uint32(mask2))), cNonParallelSplitIdx);
-		SplitMask mask = SplitMask(1 << split);
+		SplitMask mask = SplitMask(1U << split);
 		mask1 |= mask;
 		mask2 |= mask;
 		return split;
@@ -273,7 +273,7 @@ uint LargeIslandSplitter::AssignToNonParallelSplit(const Body *inBody)
 	if (idx != Body::cInactiveIndex)
 	{
 		JPH_ASSERT(idx < mNumActiveBodies);
-		mSplitMasks[idx] |= 1 << cNonParallelSplitIdx;
+		mSplitMasks[idx] |= 1U << cNonParallelSplitIdx;
 	}
 
 	return cNonParallelSplitIdx;

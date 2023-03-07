@@ -143,6 +143,6 @@ void RigPileTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 		inUI->ShowMenu(scene_name);
 	});
 
-	inUI->CreateSlider(inSubMenu, "Num Ragdolls Per Pile", float(sPileSize), 1, 160, 1, [this](float inValue) { sPileSize = (int)inValue; });
-	inUI->CreateSlider(inSubMenu, "Num Piles Per Axis", float(sNumPilesPerAxis), 1, 4, 1, [this](float inValue) { sNumPilesPerAxis = (int)inValue; });
+	inUI->CreateSlider(inSubMenu, "Num Ragdolls Per Pile", float(sPileSize), 1, 160, 1, [](float inValue) { sPileSize = (int)inValue; });
+	inUI->CreateSlider(inSubMenu, "Num Piles Per Axis", float(sNumPilesPerAxis), 1, 4, 1, [](float inValue) { sNumPilesPerAxis = (int)inValue; });
 }
