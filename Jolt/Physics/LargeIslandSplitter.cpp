@@ -176,6 +176,7 @@ LargeIslandSplitter::~LargeIslandSplitter()
 	JPH_ASSERT(mSplitMasks == nullptr);
 	JPH_ASSERT(mContactAndConstaintsSplitIdx == nullptr);
 	JPH_ASSERT(mContactAndConstraintIndices == nullptr);
+	JPH_ASSERT(mSplitIslands == nullptr);
 }
 
 void LargeIslandSplitter::Prepare(const IslandBuilder &inIslandBuilder, uint32 inNumActiveBodies, TempAllocator *inTempAllocator)

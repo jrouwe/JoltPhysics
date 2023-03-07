@@ -20,7 +20,7 @@ class ContactConstraintManager;
 class LargeIslandSplitter : public NonCopyable
 {
 private:
-	using					SplitMask = uint16;
+	using					SplitMask = uint32;
 
 public:
 	static constexpr uint	cNumSplits = sizeof(SplitMask) * 8;
