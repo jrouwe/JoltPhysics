@@ -2138,7 +2138,7 @@ void PhysicsSystem::JobContactRemovedCallbacks(const PhysicsUpdateContext::Step 
 	mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(ioStep->mNumBodyPairs, ioStep->mNumManifolds);
 }
 
-class PhysicsSystem::BodiesToSleep
+class PhysicsSystem::BodiesToSleep : public NonCopyable
 {
 public:
 	static constexpr int	cBodiesToSleepSize = 512;
