@@ -212,7 +212,7 @@ private:
 	class BodiesToSleep;
 
 	/// Called at the end of JobSolveVelocityConstraints to check if bodies need to go to sleep and to update their bounding box in the broadphase
-	void						CheckSleepAndUpdateBounds(uint32 inIslandIndex, PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep, BodiesToSleep &ioBodiesToSleep);
+	void						CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::SubStep *ioSubStep, BodiesToSleep &ioBodiesToSleep);
 
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;

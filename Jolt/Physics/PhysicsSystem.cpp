@@ -2154,7 +2154,7 @@ public:
 			mBodyManager.DeactivateBodies(mBodiesToSleepBuffer, num_bodies_in_buffer);
 	}
 
-	inline void				PutToSleep(BodyID *inBegin, BodyID *inEnd)
+	inline void				PutToSleep(const BodyID *inBegin, const BodyID *inEnd)
 	{
 		int num_bodies_to_sleep = int(inEnd - inBegin);
 		if (num_bodies_to_sleep > cMaxBodiesToPutInBuffer)
@@ -2185,7 +2185,7 @@ private:
 	BodyID *				mBodiesToSleepCur;
 };
 
-void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep, BodiesToSleep &ioBodiesToSleep)
+void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::SubStep *ioSubStep, BodiesToSleep &ioBodiesToSleep)
 {
 	// Get the bodies that belong to this island
 	BodyID *bodies_begin, *bodies_end;

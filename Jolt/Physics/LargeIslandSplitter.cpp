@@ -318,7 +318,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 
 	// Assign the contacts to a split
 	uint32 *cur_contact_split_idx = contact_split_idx;
-	for (uint32 *c = contacts_start; c < contacts_end; ++c)
+	for (const uint32 *c = contacts_start; c < contacts_end; ++c)
 	{
 		const Body *body1, *body2;
 		inContactManager.GetAffectedBodies(*c, body1, body2);
@@ -329,7 +329,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 
 	// Assign the constraints to a split
 	uint32 *cur_constraint_split_idx = constraint_split_idx;
-	for (uint32 *c = constraints_start; c < constraints_end; ++c)
+	for (const uint32 *c = constraints_start; c < constraints_end; ++c)
 	{
 		const Constraint *constraint = inActiveConstraints[*c];
 		uint split = constraint->BuildIslandSplits(*this);
