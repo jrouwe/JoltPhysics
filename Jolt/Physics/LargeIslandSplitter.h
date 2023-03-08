@@ -17,6 +17,9 @@ class BodyManager;
 class ContactConstraintManager;
 
 /// Assigns bodies in large islands to multiple groups that can run in parallel
+///
+/// This basically implements what is described in: High-Performance Physical Simulations on Next-Generation Architecture with Many Cores by Chen et al.
+/// See: http://web.eecs.umich.edu/~msmelyan/papers/physsim_onmanycore_itj.pdf section "PARALLELIZATION METHODOLOGY"
 class LargeIslandSplitter : public NonCopyable
 {
 private:
