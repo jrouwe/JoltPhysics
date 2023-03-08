@@ -454,14 +454,14 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 			inContactManager.GetAffectedBodies(*c, body1, body2);
 
 			uint32 idx1 = body1->GetIndexInActiveBodiesInternal();
-			if (idx1 != Body::cInactiveIndex && !body1->IsDynamic())
+			if (idx1 != Body::cInactiveIndex && body1->IsDynamic())
 			{
 				JPH_ASSERT(!body_used[idx1]);
 				body_used[idx1] = true;
 			}
 
 			uint32 idx2 = body2->GetIndexInActiveBodiesInternal();
-			if (idx2 != Body::cInactiveIndex && !body2->IsDynamic())
+			if (idx2 != Body::cInactiveIndex && body2->IsDynamic())
 			{
 				JPH_ASSERT(!body_used[idx2]);
 				body_used[idx2] = true;
