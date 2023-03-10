@@ -39,7 +39,9 @@ const char *CharacterBaseTest::sSceneName = "ObstacleCourse";
 // Scene constants
 static const RVec3 cRotatingPosition(-5, 0.15f, 15);
 static const Quat cRotatingOrientation = Quat::sIdentity();
-static const RVec3 cRotatingAndTranslatingPosition(0, 0.15f, 30);
+static const RVec3 cRotatingWallPosition(5, 1.0f, 25.0f);
+static const Quat cRotatingWallOrientation = Quat::sIdentity();
+static const RVec3 cRotatingAndTranslatingPosition(-5, 0.15f, 27.5f);
 static const Quat cRotatingAndTranslatingOrientation = Quat::sIdentity();
 static const RVec3 cVerticallyMovingPosition(0, 2.0f, 15);
 static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
@@ -112,6 +114,7 @@ void CharacterBaseTest::Initialize()
 			// Kinematic blocks to test interacting with moving objects
 			Ref<Shape> kinematic = new BoxShape(Vec3(1, 0.15f, 3.0f));
 			mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+			mRotatingWallBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(3.0f, 1, 0.15f)), cRotatingWallPosition, cRotatingWallOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mRotatingAndTranslatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingAndTranslatingPosition, cRotatingAndTranslatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
@@ -531,8 +534,10 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
 		mBodyInterface->MoveKinematic(mRotatingBody, cRotatingPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
+	if (!mRotatingWallBody.IsInvalid())
+		mBodyInterface->MoveKinematic(mRotatingWallBody, cRotatingWallPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
 	if (!mRotatingAndTranslatingBody.IsInvalid())
-		mBodyInterface->MoveKinematic(mRotatingAndTranslatingBody, cRotatingAndTranslatingPosition + 5.0f * Vec3(Sin(JPH_PI * mTime), 0, Cos(JPH_PI * mTime)), Quat::sRotation(Vec3::sAxisY(), JPH_PI * mTime), inParams.mDeltaTime);
+		mBodyInterface->MoveKinematic(mRotatingAndTranslatingBody, cRotatingAndTranslatingPosition + 5.0f * Vec3(Sin(JPH_PI * mTime), 0, Cos(JPH_PI * mTime)), Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
 	if (!mHorizontallyMovingBody.IsInvalid())
 		mBodyInterface->MoveKinematic(mHorizontallyMovingBody, cHorizontallyMovingPosition + Vec3(3.0f * Sin(mTime), 0, 0), cHorizontallyMovingOrientation, inParams.mDeltaTime);
 	if (!mVerticallyMovingBody.IsInvalid())
