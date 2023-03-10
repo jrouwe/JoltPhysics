@@ -111,6 +111,10 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	mCharacter->SetUp(character_up_rotation.RotateAxisY());
 	mCharacter->SetRotation(character_up_rotation);
 
+	// A cheaper way to update the character's ground velocity, 
+	// the platforms that the character is standing on may have changed velocity
+	mCharacter->UpdateGroundVelocity();
+
 	// Determine new basic velocity
 	Vec3 current_vertical_velocity = mCharacter->GetLinearVelocity().Dot(mCharacter->GetUp()) * mCharacter->GetUp();
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
