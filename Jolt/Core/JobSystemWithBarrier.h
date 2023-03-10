@@ -27,7 +27,7 @@ public:
 
 	/// Constructs barriers
 	/// @see JobSystemWithBarrier::Init
-							JobSystemWithBarrier(uint inMaxBarriers);
+	explicit				JobSystemWithBarrier(uint inMaxBarriers);
 							JobSystemWithBarrier() = default;
 	virtual					~JobSystemWithBarrier() override;
 
