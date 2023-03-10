@@ -60,7 +60,9 @@ JPH_NAMESPACE_BEGIN
 /// * JobSystem::CreateBarrier - Create a new barrier.
 /// * JobSystem::DestroyBarrier - Destroy a barrier.
 /// * JobSystem::WaitForJobs - This is the main function that is used to wait for all jobs that have been added to a Barrier. WaitForJobs can execute jobs that have
-/// been added to the barrier while waiting. It is not wise to execute other jobs that touch physics structures as this can cause race conditions and deadlocks.
+/// been added to the barrier while waiting. It is not wise to execute other jobs that touch physics structures as this can cause race conditions and deadlocks. Please keep in mind that the barrier is 
+/// only intended to wait on the completion of the jolt jobs added to it, if you scheduled any jobs in your engine's job system to execute the Jolt jobs as part of QueueJob/QueueJobs, you might still need 
+/// to wait for these in this function after the barrier is finished waiting.
 ///
 /// An example implementation is JobSystemThreadPool, you can also use this as an example of how to implement Barriers (this implementation is not dependent on the underlying job system).
 class JobSystem : public NonCopyable
