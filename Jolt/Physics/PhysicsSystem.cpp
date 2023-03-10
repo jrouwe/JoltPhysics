@@ -1358,11 +1358,15 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 					continue;
 				}
 
-				// Sort constraints to give a deterministic simulation
-				ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
+				// Sorting is costly but needed for a deterministic simulation, allow the user to turn this off
+				if (mPhysicsSettings.mDeterministicSimulation)
+				{
+					// Sort constraints to give a deterministic simulation
+					ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
 
-				// Sort contacts to give a deterministic simulation
-				mContactManager.SortContacts(contacts_begin, contacts_end);
+					// Sort contacts to give a deterministic simulation
+					mContactManager.SortContacts(contacts_begin, contacts_end);
+				}
 			}
 			else
 			{

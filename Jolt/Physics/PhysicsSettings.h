@@ -89,6 +89,9 @@ struct PhysicsSettings
 	/// Velocity of points on bounding box of object below which an object can be considered sleeping (unit: m/s)
 	float		mPointVelocitySleepThreshold = 0.03f;
 
+	/// By default the simulation is deterministic, it is possible to turn this off by setting this setting to false. This will make the simulation run faster but it will no longer be deterministic.
+	bool		mDeterministicSimulation = true;
+
 	///@name These variables are mainly for debugging purposes, they allow turning on/off certain subsystems. You probably want to leave them alone.
 	///@{
 
