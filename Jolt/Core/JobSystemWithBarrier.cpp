@@ -7,6 +7,10 @@
 #include <Jolt/Core/JobSystemWithBarrier.h>
 #include <Jolt/Core/Profiler.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <thread>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 JPH_NAMESPACE_BEGIN
 
 JobSystemWithBarrier::BarrierImpl::BarrierImpl()

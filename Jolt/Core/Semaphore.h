@@ -14,6 +14,7 @@ JPH_NAMESPACE_BEGIN
 
 // Things we're using from STL
 using std::atomic;
+using std::mutex;
 using std::condition_variable;
 
 /// Implements a semaphore
