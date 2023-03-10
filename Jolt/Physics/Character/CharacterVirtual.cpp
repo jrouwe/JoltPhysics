@@ -1056,6 +1056,11 @@ void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhase
 	StoreActiveContacts(contacts, inAllocator);
 }
 
+void CharacterVirtual::RefreshGroundState(TempAllocator &inAllocator)
+{
+	UpdateSupportingContact(true, inAllocator);
+}
+
 void CharacterVirtual::MoveToContact(RVec3Arg inPosition, const Contact &inContact, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)
 {
 	// Set the new position

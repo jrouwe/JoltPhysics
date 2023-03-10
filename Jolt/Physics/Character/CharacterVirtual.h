@@ -244,6 +244,10 @@ public:
 	/// This function can be used after a character has teleported to determine the new contacts with the world.
 	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator);
 
+	/// This is a cheaper version of RefreshContacts that uses collision information from the last frame but updated velocity information from the bodies that it was touching with.
+	/// It can be used to get a better estimate of the ground velocity before updating the character (the ground may have changed velocity since the last frame).
+	void								RefreshGroundState(TempAllocator &inAllocator);
+
 	/// Switch the shape of the character (e.g. for stance).
 	/// @param inShape The shape to switch to.
 	/// @param inMaxPenetrationDepth When inMaxPenetrationDepth is not FLT_MAX, it checks if the new shape collides before switching shape. This is the max penetration we're willing to accept after the switch.

@@ -525,8 +525,6 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			jump = true;
 	}
 
-	HandleInput(control_input, jump, switch_stance, inParams.mDeltaTime);
-
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
 		mBodyInterface->MoveKinematic(mRotatingBody, cRotatingPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
@@ -546,6 +544,9 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		}
 		mRampBlocksTimeLeft = cRampBlocksTime;
 	}
+
+	// Call handle input after new velocities have been set to avoid frame delay
+	HandleInput(control_input, jump, switch_stance, inParams.mDeltaTime);
 }
 
 void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
