@@ -97,6 +97,7 @@ private:
 
 	// Moving bodies
 	BodyID					mRotatingBody;
+	BodyID					mRotatingAndTranslatingBody;
 	BodyID					mVerticallyMovingBody;
 	BodyID					mHorizontallyMovingBody;
 };
