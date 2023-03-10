@@ -244,9 +244,9 @@ public:
 	/// This function can be used after a character has teleported to determine the new contacts with the world.
 	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator);
 
-	/// This is a cheaper version of RefreshContacts that uses collision information from the last frame but updated velocity information from the bodies that it was touching with.
-	/// It can be used to get a better estimate of the ground velocity before updating the character (the ground may have changed velocity since the last frame).
-	void								RefreshGroundState(TempAllocator &inAllocator);
+	/// Use the ground body ID to get an updated estimate of the ground velocity. This function can be used if the ground body has moved / changed velocity and you want a new estimate of the ground velocity.
+	/// It will not perform collision detection, so is less accurate than RefreshContacts but a lot faster.
+	void								UpdateGroundVelocity();
 
 	/// Switch the shape of the character (e.g. for stance).
 	/// @param inShape The shape to switch to.
@@ -404,6 +404,11 @@ private:
 
 	// Get the velocity of a body adjusted by the contact listener
 	void								GetAdjustedBodyVelocity(const Body& inBody, Vec3 &outLinearVelocity, Vec3 &outAngularVelocity) const;
+
+	// Calculate the ground velocity of the character assuming it's standing on an object with specified linear and angular velocity and with specified center of mass.
+	// Note that we don't just take the point velocity because a point on an object with angular velocity traces an arc,
+	// so if you just take point velocity * delta time you get an error that accumulates over time
+	Vec3								CalculateCharacterGroundVelocity(RVec3Arg inCenterOfMass, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, float inDeltaTime) const;
 
 	// Handle contact with physics object that we're colliding against
 	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, float inDeltaTime) const;
