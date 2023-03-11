@@ -23,6 +23,23 @@ inline uint64 HashBytes(const void *inData, uint inSize, uint64 inSeed = 0xcbf29
 	return hash;
 }
 
+/// A 64 bit hash function by Thomas Wang, Jan 1997
+/// See: http://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
+/// @param inValue Value to hash
+/// @return Hash
+inline uint64 Hash64(uint64 inValue)
+{
+	uint64 hash = inValue;
+	hash = (~hash) + (hash << 21); // hash = (hash << 21) - hash - 1;
+	hash = hash ^ (hash >> 24);
+	hash = (hash + (hash << 3)) + (hash << 8); // hash * 265
+	hash = hash ^ (hash >> 14);
+	hash = (hash + (hash << 2)) + (hash << 4); // hash * 21
+	hash = hash ^ (hash >> 28);
+	hash = hash + (hash << 31);
+	return hash;
+}
+
 /// @brief Helper function that hashes a single value into ioSeed
 /// Taken from: https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
 template <typename T>
