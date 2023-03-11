@@ -181,6 +181,7 @@ If the defined Shape classes are not sufficient, or if your application can make
 * If you want to serialize the settings class, register it with the factory: ```Factory::sInstance->Register(RTTI_OF(MyShapeSettings))```
 * If you inherited from Shape you need to select a shape type, use e.g. ```EShapeType::User1```
 * In all cases you will need to specify a sub shape type, use e.g. ```EShapeSubType::User1```
+* If you inherited from ConvexShape you can also specify a convex sub shape type, e.g. ```EShapeSubType::UserConvex1```, in which case you don't need to implement or register the collision detection functions mentioned below.
 * Implement the virtual functions that your selected base class exposes. Some functions could be implemented as a dummy if you don't care about the functionality, e.g. if you don't care about buoyancy then GetSubmergedVolume does not need to be implemented.
 * Create a ```MyShape::sRegister()``` function to register all collision functions, make sure you call this function after calling ```RegisterTypes()```, see [MeshShape::sRegister](@ref MeshShape::sRegister) for an example.
 * Now write collision detection functions to test collision with all other shape types that this shape could collide with and register them with [CollisionDispatch::sRegisterCollideShape](@ref CollisionDispatch::sRegisterCollideShape) and [CollisionDispatch::sRegisterCastShape](@ref CollisionDispatch::sRegisterCastShape). This can be a lot of work, but there are some helper functions that you can use to reduce the work:
