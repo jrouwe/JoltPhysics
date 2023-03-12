@@ -46,13 +46,13 @@ Each body has a shape attached that determines the collision volume. The followi
 
 Next to this there are a number of decorator shapes that change the behavior of their children:
 
-* [ScaledShape](@ref ScaledShape) - This shape can uniformly scale a child shape. Note that if a shape is rotated first and then scaled, you can introduce shearing which is not supported by the library.
+* [ScaledShape](@ref ScaledShape) - This shape can scale a child shape. Note that if a shape is rotated first and then scaled, you can introduce shearing which is not supported by the library.
 * [RotatedTranslatedShape](@ref RotatedTranslatedShape) - This shape can rotate and translate a child shape, it can e.g. be used to offset a sphere from the origin.
 * [OffsetCenterOfMassShape](@ref OffsetCenterOfMassShape) - This shape does not change its child shape but it does shift the calculated center of mass for that shape. It allows you to e.g. shift the center of mass of a vehicle down to improve its handling.
 
 ### Creating Shapes
 
-Simple shapes like spheres and boxes can be constructed immediately by simply new-ing them. Other shapes need to be converted into an optimized format in order to be usable in the physics simulation. The uncooked data is usually stored in a [Settings](@ref ShapeSettings) object and then converted to cooked format by a [Create](@ref ShapeSettings::Create) function that returns a [Result](@ref Result) object that indicates success or failure and provides the cooked object. 
+Simple shapes like spheres and boxes can be constructed immediately by simply new-ing them. Other shapes need to be converted into an optimized format in order to be usable in the physics simulation. The uncooked data is usually stored in a [ShapeSettings](@ref ShapeSettings) object and then converted to cooked format by a [Create](@ref ShapeSettings::Create) function that returns a [Result](@ref Result) object that indicates success or failure and provides the cooked object. 
 
 Creating a convex hull for example looks like:
 
@@ -62,7 +62,7 @@ Creating a convex hull for example looks like:
 	// The ShapeSettings object is only required for building the shape, all information is copied into the Shape class
 	{
 		// Create an array of vertices
-		vector<JPH::Vec3> vertices = { ... };
+		JPH::Array<JPH::Vec3> vertices = { ... };
 
 		// Create the settings object for a convex hull
 		JPH::ConvexHullShapeSettings settings(vertices, JPH::cDefaultConvexRadius);
