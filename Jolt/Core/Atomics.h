@@ -16,6 +16,7 @@ using std::memory_order;
 using std::memory_order_relaxed;
 using std::memory_order_acquire;
 using std::memory_order_release;
+using std::memory_order_acq_rel;
 using std::memory_order_seq_cst;
 
 /// Atomically compute the min(ioAtomic, inValue) and store it in ioAtomic, returns true if value was updated

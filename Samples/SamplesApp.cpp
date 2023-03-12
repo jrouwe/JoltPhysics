@@ -65,6 +65,7 @@ struct TestCategory
 JPH_DECLARE_RTTI_FOR_FACTORY(SimpleTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(StackTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(WallTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(PyramidTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(IslandTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(FunnelTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(FrictionTest)
@@ -98,6 +99,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Simple",								JPH_RTTI(SimpleTest) },
 	{ "Stack",								JPH_RTTI(StackTest) },
 	{ "Wall",								JPH_RTTI(WallTest) },
+	{ "Pyramid",							JPH_RTTI(PyramidTest) },
 	{ "Island",								JPH_RTTI(IslandTest) },
 	{ "Funnel",								JPH_RTTI(FunnelTest) },
 	{ "2D Funnel",							JPH_RTTI(TwoDFunnelTest) },
@@ -334,7 +336,7 @@ static TestCategory sAllCategories[] =
 static constexpr uint cNumBodies = 10240;
 static constexpr uint cNumBodyMutexes = 0; // Autodetect
 static constexpr uint cMaxBodyPairs = 65536;
-static constexpr uint cMaxContactConstraints = 10240;
+static constexpr uint cMaxContactConstraints = 20480;
 
 SamplesApp::SamplesApp()
 {
@@ -342,7 +344,7 @@ SamplesApp::SamplesApp()
 #ifdef JPH_DISABLE_TEMP_ALLOCATOR
 	mTempAllocator = new TempAllocatorMalloc();
 #else
-	mTempAllocator = new TempAllocatorImpl(16 * 1024 * 1024);
+	mTempAllocator = new TempAllocatorImpl(32 * 1024 * 1024);
 #endif
 
 	// Create job system
@@ -399,9 +401,11 @@ SamplesApp::SamplesApp()
 		#if defined(_DEBUG) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) && !defined(JPH_COMPILER_MINGW)
 			mDebugUI->CreateCheckBox(phys_settings, "Enable Checking Memory Hook", IsCustomMemoryHookEnabled(), [](UICheckBox::EState inState) { EnableCustomMemoryHook(inState == UICheckBox::STATE_CHECKED); });
 		#endif
+			mDebugUI->CreateCheckBox(phys_settings, "Deterministic Simulation", mPhysicsSettings.mDeterministicSimulation, [this](UICheckBox::EState inState) { mPhysicsSettings.mDeterministicSimulation = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Constraint Warm Starting", mPhysicsSettings.mConstraintWarmStart, [this](UICheckBox::EState inState) { mPhysicsSettings.mConstraintWarmStart = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Use Body Pair Contact Cache", mPhysicsSettings.mUseBodyPairContactCache, [this](UICheckBox::EState inState) { mPhysicsSettings.mUseBodyPairContactCache = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Contact Manifold Reduction", mPhysicsSettings.mUseManifoldReduction, [this](UICheckBox::EState inState) { mPhysicsSettings.mUseManifoldReduction = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
+			mDebugUI->CreateCheckBox(phys_settings, "Use Large Island Splitter", mPhysicsSettings.mUseLargeIslandSplitter, [this](UICheckBox::EState inState) { mPhysicsSettings.mUseLargeIslandSplitter = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Allow Sleeping", mPhysicsSettings.mAllowSleeping, [this](UICheckBox::EState inState) { mPhysicsSettings.mAllowSleeping = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Check Active Triangle Edges", mPhysicsSettings.mCheckActiveEdges, [this](UICheckBox::EState inState) { mPhysicsSettings.mCheckActiveEdges = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Record State For Playback", mRecordState, [this](UICheckBox::EState inState) { mRecordState = inState == UICheckBox::STATE_CHECKED; });

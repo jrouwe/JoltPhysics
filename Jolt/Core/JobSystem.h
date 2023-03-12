@@ -39,6 +39,33 @@ JPH_NAMESPACE_BEGIN
 ///	
 ///	Jobs are guaranteed to be started in the order that their dependency counter becomes zero (in case they're scheduled on a background thread) 
 ///	or in the order they're added to the barrier (when dependency count is zero and when executing on the thread that calls WaitForJobs).
+///
+/// If you want to implement your own job system, inherit from JobSystem and implement:
+///
+/// * JobSystem::GetMaxConcurrency - This should return the maximum number of jobs that can run in parallel.
+/// * JobSystem::CreateJob - This should create a Job object and return it to the caller.
+/// * JobSystem::FreeJob - This should free the memory associated with the job object. It is called by the Job destructor when it is Release()-ed for the last time.
+/// * JobSystem::QueueJob/QueueJobs - These should store the job pointer in an internal queue to run immediately (dependencies are tracked internally, this function is called when the job can run).
+/// The Job objects are reference counted and are guaranteed to stay alive during the QueueJob(s) call. If you store the job in your own data structure you need to call AddRef() to take a reference.
+/// After the job has been executed you need to call Release() to release the reference. Make sure you no longer dereference the job pointer after calling Release().
+///
+/// JobSystem::Barrier is used to track the completion of a set of jobs. Jobs will be created by other jobs and added to the barrier while it is being waited on. This means that you cannot
+/// create a dependency graph beforehand as the graph changes while jobs are running. Implement the following functions:
+/// 
+/// * Barrier::AddJob/AddJobs - Add a job to the barrier, any call to WaitForJobs will now also wait for this job to complete.
+/// If you store the job in a data structure in the Barrier you need to call AddRef() on the job to keep it alive and Release() after you're done with it.
+/// * Barrier::OnJobFinished - This function is called when a job has finished executing, you can use this to track completion and remove the job from the list of jobs to wait on.
+///
+/// The functions on JobSystem that need to be implemented to support barriers are:
+/// 
+/// * JobSystem::CreateBarrier - Create a new barrier.
+/// * JobSystem::DestroyBarrier - Destroy a barrier.
+/// * JobSystem::WaitForJobs - This is the main function that is used to wait for all jobs that have been added to a Barrier. WaitForJobs can execute jobs that have
+/// been added to the barrier while waiting. It is not wise to execute other jobs that touch physics structures as this can cause race conditions and deadlocks. Please keep in mind that the barrier is 
+/// only intended to wait on the completion of the Jolt jobs added to it, if you scheduled any jobs in your engine's job system to execute the Jolt jobs as part of QueueJob/QueueJobs, you might still need 
+/// to wait for these in this function after the barrier is finished waiting.
+///
+/// An example implementation is JobSystemThreadPool. If you don't want to write the Barrier class you can also inherit from JobSystemWithBarrier.
 class JobSystem : public NonCopyable
 {
 protected:

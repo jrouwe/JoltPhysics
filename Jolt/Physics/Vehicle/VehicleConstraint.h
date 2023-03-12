@@ -122,6 +122,7 @@ public:
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
 	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;
 	virtual void				BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) override;
+	virtual uint				BuildIslandSplits(LargeIslandSplitter &ioSplitter) const override;
 #ifdef JPH_DEBUG_RENDERER
 	virtual void				DrawConstraint(DebugRenderer *inRenderer) const override;
 	virtual void				DrawConstraintLimits(DebugRenderer *inRenderer) const override;

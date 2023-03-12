@@ -59,6 +59,24 @@ void CharacterVirtual::GetAdjustedBodyVelocity(const Body& inBody, Vec3 &outLine
 		mListener->OnAdjustBodyVelocity(this, inBody, outLinearVelocity, outAngularVelocity);
 }
 
+Vec3 CharacterVirtual::CalculateCharacterGroundVelocity(RVec3Arg inCenterOfMass, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, float inDeltaTime) const
+{
+	// Get angular velocity
+	float angular_velocity_len_sq = inAngularVelocity.LengthSq();
+	if (angular_velocity_len_sq < 1.0e-12f)
+		return inLinearVelocity;
+	float angular_velocity_len = sqrt(angular_velocity_len_sq);
+
+	// Calculate the rotation that the object will make in the time step
+	Quat rotation = Quat::sRotation(inAngularVelocity / angular_velocity_len, angular_velocity_len * inDeltaTime);
+
+	// Calculate where the new character position will be
+	RVec3 new_position = inCenterOfMass + rotation * Vec3(mPosition - inCenterOfMass);
+
+	// Calculate the velocity
+	return inLinearVelocity + Vec3(new_position - mPosition) / inDeltaTime;
+}
+
 template <class taCollector>
 void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
 {
@@ -778,51 +796,22 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 				else
 				{
 					// For keyframed objects that support us calculate the velocity at our position rather than at the contact position so that we properly follow the object
-					// Note that we don't just take the point velocity because a point on an object with angular velocity traces an arc,
-					// so if you just take point velocity * delta time you get an error that accumulates over time
-
-					// Determine center of mass and angular velocity
-					Vec3 angular_velocity;
-					RVec3 com;
+					BodyLockRead lock(mSystem->GetBodyLockInterface(), c.mBodyB);
+					if (lock.SucceededAndIsInBroadPhase())
 					{
-						BodyLockRead lock(mSystem->GetBodyLockInterface(), c.mBodyB);
-						if (lock.SucceededAndIsInBroadPhase())
-						{
-							const Body &body = lock.GetBody();
+						const Body &body = lock.GetBody();
 
-							// Get adjusted body velocity
-							Vec3 linear_velocity;
-							GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
-							
-							// Add the linear velocity to the average velocity
-							avg_velocity += linear_velocity;
+						// Get adjusted body velocity
+						Vec3 linear_velocity, angular_velocity;
+						GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
 
-							com = body.GetCenterOfMassPosition();
-						}
-						else
-						{
-							// Fall back to contact velocity
-							avg_velocity += c.mLinearVelocity;
-
-							angular_velocity = Vec3::sZero();
-							com = RVec3::sZero();
-						}
+						// Calculate the ground velocity
+						avg_velocity += CalculateCharacterGroundVelocity(body.GetCenterOfMassPosition(), linear_velocity, angular_velocity, mLastDeltaTime);
 					}
-
-					// Get angular velocity
-					float angular_velocity_len_sq = angular_velocity.LengthSq();
-					if (angular_velocity_len_sq > 1.0e-12f)
+					else
 					{
-						float angular_velocity_len = sqrt(angular_velocity_len_sq);
-
-						// Calculate the rotation that the object will make in the time step
-						Quat rotation = Quat::sRotation(angular_velocity / angular_velocity_len, angular_velocity_len * mLastDeltaTime);
-
-						// Calculate where the new contact position will be
-						RVec3 new_position = com + rotation * Vec3(mPosition - com);
-
-						// Calculate the velocity
-						avg_velocity += Vec3(new_position - mPosition) / mLastDeltaTime;
+						// Fall back to contact velocity
+						avg_velocity += c.mLinearVelocity;
 					}
 				}
 			}
@@ -1054,6 +1043,22 @@ void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhase
 	GetContactsAtPosition(mPosition, mLinearVelocity.NormalizedOr(Vec3::sZero()), mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 
 	StoreActiveContacts(contacts, inAllocator);
+}
+
+void CharacterVirtual::UpdateGroundVelocity()
+{
+	BodyLockRead lock(mSystem->GetBodyLockInterface(), mGroundBodyID);
+	if (lock.SucceededAndIsInBroadPhase())
+	{
+		const Body &body = lock.GetBody();
+
+		// Get adjusted body velocity
+		Vec3 linear_velocity, angular_velocity;
+		GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
+
+		// Calculate the ground velocity
+		mGroundVelocity = CalculateCharacterGroundVelocity(body.GetCenterOfMassPosition(), linear_velocity, angular_velocity, mLastDeltaTime);
+	}
 }
 
 void CharacterVirtual::MoveToContact(RVec3Arg inPosition, const Contact &inContact, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)

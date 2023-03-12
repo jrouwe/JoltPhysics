@@ -32,6 +32,12 @@ private:
 	// Filename of animation to load for this test
 	static const char *		sSceneName;
 
+	// Number of ragdolls per pile
+	static int				sPileSize;
+
+	// Number of piles per axis
+	static int				sNumPilesPerAxis;
+
 	// All active ragdolls
 	Array<Ref<Ragdoll>>		mRagdolls;
 };
