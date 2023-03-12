@@ -102,6 +102,7 @@ public:
 
 	/// Get the state of a wheel
 	Wheel *						GetWheel(uint inIdx)						{ return mWheels[inIdx]; }
+	const Wheel *				GetWheel(uint inIdx) const					{ return mWheels[inIdx]; }
 
 	/// Get the transform of a wheel in local space to the vehicle body, returns a matrix that transforms a cylinder aligned with the Y axis in body space (not COM space)
 	/// @param inWheelIndex Index of the wheel to fetch

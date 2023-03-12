@@ -26,7 +26,7 @@ public:
 	virtual void				CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
-	static inline int			sCollisionMode = 1;
+	static inline int			sCollisionMode = 2;
 	static inline bool			sFourWheelDrive = false;
 	static inline bool			sAntiRollbar = true;
 	static inline bool			sLimitedSlipDifferentials = true;
@@ -35,6 +35,6 @@ private:
 
 	Body *						mCarBody;									///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint
-	Ref<VehicleCollisionTester>	mTesters[2];								///< Collision testers for the wheel
+	Ref<VehicleCollisionTester>	mTesters[3];								///< Collision testers for the wheel
 	float						mPreviousForward = 1.0f;					///< Keeps track of last car direction so we know when to brake and when to accelerate
 };

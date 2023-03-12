@@ -9,6 +9,7 @@
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
+class VehicleConstraint;
 
 /// Class that does collision detection between wheels and ground
 class VehicleCollisionTester : public RefTarget<VehicleCollisionTester>
@@ -21,10 +22,10 @@ public:
 
 	/// Do a collision test with the world
 	/// @param inPhysicsSystem The physics system that should be tested against
+	/// @param inVehicleConstraint The vehicle constraint
 	/// @param inWheelIndex Index of the wheel that we're testing collision for
 	/// @param inOrigin Origin for the test, corresponds to the world space position for the suspension attachment point
 	/// @param inDirection Direction for the test (unit vector, world space)
-	/// @param inSuspensionMaxLength Length of the suspension at max droop (m)
 	/// @param inVehicleBodyID This body should be filtered out during collision detection to avoid self collisions
 	/// @param outBody Body that the wheel collided with
 	/// @param outSubShapeID Sub shape ID that the wheel collided with
@@ -32,7 +33,7 @@ public:
 	/// @param outContactNormal Contact normal between wheel and floor, pointing away from the floor
 	/// @param outSuspensionLength New length of the suspension [0, inSuspensionMaxLength]
 	/// @return True when collision found, false if not
-	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const = 0;
+	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const = 0;
 };
 
 /// Collision tester that tests collision using a raycast
@@ -48,7 +49,7 @@ public:
 								VehicleCollisionTesterRay(ObjectLayer inObjectLayer, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mUp(inUp), mCosMaxSlopeAngle(Cos(inMaxSlopeAngle)) { }
 
 	// See: VehicleCollisionTester
-	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
+	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
 
 private:
 	ObjectLayer					mObjectLayer;
@@ -70,13 +71,34 @@ public:
 								VehicleCollisionTesterCastSphere(ObjectLayer inObjectLayer, float inRadius, Vec3Arg inUp = Vec3::sAxisY(), float inMaxSlopeAngle = DegreesToRadians(80.0f)) : mObjectLayer(inObjectLayer), mRadius(inRadius), mUp(inUp), mCosMaxSlopeAngle(Cos(inMaxSlopeAngle)) { }
 
 	// See: VehicleCollisionTester
-	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, float inSuspensionMaxLength, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
+	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
 
 private:
 	ObjectLayer					mObjectLayer;
 	float						mRadius;
 	Vec3						mUp;
 	float						mCosMaxSlopeAngle;
+};
+
+/// Collision tester that tests collision using a custom shape
+class VehicleCollisionTesterCastShape : public VehicleCollisionTester
+{
+public:
+	JPH_OVERRIDE_NEW_DELETE
+
+	using WheelShapes = Array<RefConst<Shape>>;
+
+	/// Constructor
+	/// @param inObjectLayer Object layer to test collision with
+	/// @param inWheelShapes Array of shapes to test collision with, one for each wheel. These shapes must be centered around the origin and oriented to align with the vehicle body.
+								VehicleCollisionTesterCastShape(ObjectLayer inObjectLayer, WheelShapes &inWheelShapes) : mObjectLayer(inObjectLayer), mWheelShapes(inWheelShapes) { }
+
+	// See: VehicleCollisionTester
+	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
+
+private:
+	ObjectLayer					mObjectLayer;
+	WheelShapes					mWheelShapes;	
 };
 
 JPH_NAMESPACE_END
