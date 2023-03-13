@@ -284,7 +284,7 @@ uint VehicleConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const
 	return ioSplitter.AssignToNonParallelSplit(mBody);
 }
 
-void VehicleConstraint::CalculateWheelContactPoint(RMat44Arg inBodyTransform, const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const
+void VehicleConstraint::CalculateWheelContactPoint(const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const
 {
 	outR1PlusU = Vec3(inWheel.mContactPosition - mBody->GetCenterOfMassPosition());
 	outR2 = Vec3(inWheel.mContactPosition - inWheel.mContactBody->GetCenterOfMassPosition());
@@ -325,7 +325,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 			const WheelSettings *settings = w->mSettings;
 
 			Vec3 r1_plus_u, r2;
-			CalculateWheelContactPoint(body_transform, *w, r1_plus_u, r2);
+			CalculateWheelContactPoint(*w, r1_plus_u, r2);
 
 			// Suspension spring
 			if (settings->mSuspensionMaxLength > settings->mSuspensionMinLength)
@@ -420,7 +420,7 @@ bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumg
 			{
 				// Recalculate constraint properties since the body may have moved
 				Vec3 r1_plus_u, r2;
-				CalculateWheelContactPoint(body_transform, *w, r1_plus_u, r2);
+				CalculateWheelContactPoint(*w, r1_plus_u, r2);
 				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, ws_direction, 0.0f, max_up_error);
 
 				impulse |= w->mSuspensionMaxUpPart.SolvePositionConstraint(*mBody, *w->mContactBody, ws_direction, max_up_error, inBaumgarte);
