@@ -39,6 +39,7 @@ void VehicleConstraintTest::Initialize()
 	// Create collision testers
 	mTesters[0] = new VehicleCollisionTesterRay(Layers::MOVING);
 	mTesters[1] = new VehicleCollisionTesterCastSphere(Layers::MOVING, 0.5f * wheel_width);
+	mTesters[2] = new VehicleCollisionTesterCastCylinder(Layers::MOVING);
 
 	// Create vehicle body
 	RVec3 position(0, 2, 0);
@@ -212,7 +213,7 @@ void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMe
 {
 	VehicleTest::CreateSettingsMenu(inUI, inSubMenu);
 
-	inUI->CreateComboBox(inSubMenu, "Collision Mode", { "Ray", "Cast Sphere" }, sCollisionMode, [](int inItem) { sCollisionMode = inItem; });
+	inUI->CreateComboBox(inSubMenu, "Collision Mode", { "Ray", "Cast Sphere", "Cast Cylinder" }, sCollisionMode, [](int inItem) { sCollisionMode = inItem; });
 	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [this](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; RestartTest(); });
 	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [this](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; RestartTest(); });
 	inUI->CreateCheckBox(inSubMenu, "Limited Slip Differentials", sLimitedSlipDifferentials, [](UICheckBox::EState inState) { sLimitedSlipDifferentials = inState == UICheckBox::STATE_CHECKED; });

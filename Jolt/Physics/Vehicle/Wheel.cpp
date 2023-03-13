@@ -51,7 +51,7 @@ void WheelSettings::RestoreBinaryState(StreamIn &inStream)
 
 Wheel::Wheel(const WheelSettings &inSettings) :
 	mSettings(&inSettings),
-	mContactLength(inSettings.mSuspensionMaxLength + inSettings.mRadius)
+	mSuspensionLength(inSettings.mSuspensionMaxLength)
 {
 	JPH_ASSERT(inSettings.mDirection.IsNormalized());
 	JPH_ASSERT(inSettings.mSuspensionMinLength >= 0.0f);

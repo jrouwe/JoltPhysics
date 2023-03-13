@@ -130,7 +130,7 @@ Mat44 VehicleConstraint::GetWheelLocalTransform(uint inWheelIndex, Vec3Arg inWhe
 	// Calculate the matrix that takes us from the rotational space to vehicle local space
 	Vec3 local_forward = Quat::sRotation(mUp, wheel->mSteerAngle) * mForward;
 	Vec3 local_right = local_forward.Cross(mUp);
-	Vec3 local_wheel_pos = settings->mPosition + settings->mDirection * (wheel->mContactLength - settings->mRadius);
+	Vec3 local_wheel_pos = settings->mPosition + settings->mDirection * wheel->mSuspensionLength;
 	Mat44 rotational_to_local(Vec4(local_right, 0), Vec4(mUp, 0), Vec4(local_forward, 0), Vec4(local_wheel_pos, 1));
 
 	// Calculate transform of rotated wheel
@@ -162,13 +162,12 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		w->mContactBodyID = BodyID();
 		w->mContactBody = nullptr;
 		w->mContactSubShapeID = SubShapeID();
-		float max_len = settings->mSuspensionMaxLength + settings->mRadius;
-		w->mContactLength = max_len;
+		w->mSuspensionLength = settings->mSuspensionMaxLength;
 
 		// Test collision to find the floor
 		RVec3 origin = mBody->GetCenterOfMassPosition() + mBody->GetRotation() * (settings->mPosition - mBody->GetShape()->GetCenterOfMass());
 		w->mWSDirection = mBody->GetRotation() * settings->mDirection;
-		if (mVehicleCollisionTester->Collide(inPhysicsSystem, wheel_index, origin, w->mWSDirection, max_len, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mContactLength))
+		if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, origin, w->mWSDirection, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
 		{
 			// Store ID (pointer is not valid outside of the simulation step)
 			w->mContactBodyID = w->mContactBody->GetID();
@@ -197,7 +196,7 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		if (lw->mContactBody != nullptr && rw->mContactBody != nullptr)
 		{
 			// Calculate the impulse to apply based on the difference in suspension length
-			float difference = rw->mContactLength - lw->mContactLength;
+			float difference = rw->mSuspensionLength - lw->mSuspensionLength;
 			float impulse = difference * r.mStiffness * inDeltaTime;
 			lw->mAntiRollBarImpulse = -impulse;
 			rw->mAntiRollBarImpulse = impulse;
@@ -285,11 +284,10 @@ uint VehicleConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const
 	return ioSplitter.AssignToNonParallelSplit(mBody);
 }
 
-void VehicleConstraint::CalculateWheelContactPoint(RMat44Arg inBodyTransform, const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const
+void VehicleConstraint::CalculateWheelContactPoint(const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const
 {
-	RVec3 contact_pos = inBodyTransform * (inWheel.mSettings->mPosition + inWheel.mSettings->mDirection * inWheel.mContactLength);
-	outR1PlusU = Vec3(contact_pos - mBody->GetCenterOfMassPosition());
-	outR2 = Vec3(contact_pos - inWheel.mContactBody->GetCenterOfMassPosition());
+	outR1PlusU = Vec3(inWheel.mContactPosition - mBody->GetCenterOfMassPosition());
+	outR2 = Vec3(inWheel.mContactPosition - inWheel.mContactBody->GetCenterOfMassPosition());
 }
 
 void VehicleConstraint::CalculatePitchRollConstraintProperties(float inDeltaTime, RMat44Arg inBodyTransform)
@@ -327,16 +325,16 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 			const WheelSettings *settings = w->mSettings;
 
 			Vec3 r1_plus_u, r2;
-			CalculateWheelContactPoint(body_transform, *w, r1_plus_u, r2);
+			CalculateWheelContactPoint(*w, r1_plus_u, r2);
 
 			// Suspension spring
 			if (settings->mSuspensionMaxLength > settings->mSuspensionMinLength)
-				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, w->mWSDirection, w->mAntiRollBarImpulse, w->mContactLength - settings->mRadius - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength, settings->mSuspensionFrequency, settings->mSuspensionDamping);
+				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, w->mWSDirection, w->mAntiRollBarImpulse, w->mSuspensionLength - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength, settings->mSuspensionFrequency, settings->mSuspensionDamping);
 			else
 				w->mSuspensionPart.Deactivate();
 
 			// Check if we reached the 'max up' position
-			float max_up_error = w->mContactLength - settings->mRadius - settings->mSuspensionMinLength;
+			float max_up_error = w->mSuspensionLength - settings->mSuspensionMinLength;
 			if (max_up_error < 0.0f)
 				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, w->mWSDirection, 0.0f, max_up_error);
 			else
@@ -422,7 +420,7 @@ bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumg
 			{
 				// Recalculate constraint properties since the body may have moved
 				Vec3 r1_plus_u, r2;
-				CalculateWheelContactPoint(body_transform, *w, r1_plus_u, r2);
+				CalculateWheelContactPoint(*w, r1_plus_u, r2);
 				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, ws_direction, 0.0f, max_up_error);
 
 				impulse |= w->mSuspensionMaxUpPart.SolvePositionConstraint(*mBody, *w->mContactBody, ws_direction, max_up_error, inBaumgarte);
