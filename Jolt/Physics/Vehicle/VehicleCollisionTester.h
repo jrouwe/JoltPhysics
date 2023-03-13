@@ -89,7 +89,7 @@ public:
 	/// Constructor
 	/// @param inObjectLayer Object layer to test collision with
 	/// @param inConvexRadiusFraction Fraction of half the wheel width (or wheel radius if it is smaller) that is used as the convex radius
-								VehicleCollisionTesterCastCylinder(ObjectLayer inObjectLayer, float inConvexRadiusFraction = 0.05f) : mObjectLayer(inObjectLayer), mConvexRadiusFraction(inConvexRadiusFraction) { }
+								VehicleCollisionTesterCastCylinder(ObjectLayer inObjectLayer, float inConvexRadiusFraction = 0.1f) : mObjectLayer(inObjectLayer), mConvexRadiusFraction(inConvexRadiusFraction) { }
 
 	// See: VehicleCollisionTester
 	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
