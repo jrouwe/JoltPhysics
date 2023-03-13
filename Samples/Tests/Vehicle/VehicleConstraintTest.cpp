@@ -6,8 +6,6 @@
 
 #include <Tests/Vehicle/VehicleConstraintTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
-#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Jolt/Physics/Vehicle/WheeledVehicleController.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
@@ -41,9 +39,7 @@ void VehicleConstraintTest::Initialize()
 	// Create collision testers
 	mTesters[0] = new VehicleCollisionTesterRay(Layers::MOVING);
 	mTesters[1] = new VehicleCollisionTesterCastSphere(Layers::MOVING, 0.5f * wheel_width);
-	RefConst<Shape> cylinder_shape = new RotatedTranslatedShape(Vec3::sZero(), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CylinderShape(wheel_width, wheel_radius, 0.2f * wheel_width));
-	VehicleCollisionTesterCastShape::WheelShapes wheel_shapes = { cylinder_shape, cylinder_shape, cylinder_shape, cylinder_shape };
-	mTesters[2] = new VehicleCollisionTesterCastShape(Layers::MOVING, wheel_shapes);
+	mTesters[2] = new VehicleCollisionTesterCastCylinder(Layers::MOVING);
 
 	// Create vehicle body
 	RVec3 position(0, 2, 0);

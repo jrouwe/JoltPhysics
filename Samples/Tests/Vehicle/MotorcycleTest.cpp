@@ -6,8 +6,6 @@
 
 #include <Tests/Vehicle/MotorcycleTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
-#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Jolt/Physics/Vehicle/WheeledVehicleController.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
@@ -90,14 +88,8 @@ void MotorcycleTest::Initialize()
 	controller->mDifferentials[0].mLeftWheel = -1;
 	controller->mDifferentials[0].mRightWheel = 1;
 
-	// Wheel shapes
-	VehicleCollisionTesterCastShape::WheelShapes wheel_shapes = {
-		new RotatedTranslatedShape(Vec3::sZero(), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CylinderShape(front_wheel_width, front_wheel_radius, 0.2f * front_wheel_width)),
-		new RotatedTranslatedShape(Vec3::sZero(), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new CylinderShape(back_wheel_width, back_wheel_radius, 0.2f * back_wheel_width))
-	};
-
 	mVehicleConstraint = new VehicleConstraint(*mMotorcycleBody, vehicle);
-	mVehicleConstraint->SetVehicleCollisionTester(new VehicleCollisionTesterCastShape(Layers::MOVING, wheel_shapes));
+	mVehicleConstraint->SetVehicleCollisionTester(new VehicleCollisionTesterCastCylinder(Layers::MOVING));
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
 }

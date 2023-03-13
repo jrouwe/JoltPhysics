@@ -80,25 +80,23 @@ private:
 	float						mCosMaxSlopeAngle;
 };
 
-/// Collision tester that tests collision using a custom shape
-class VehicleCollisionTesterCastShape : public VehicleCollisionTester
+/// Collision tester that tests collision using a cylinder shape
+class VehicleCollisionTesterCastCylinder : public VehicleCollisionTester
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
-	using WheelShapes = Array<RefConst<Shape>>;
-
 	/// Constructor
 	/// @param inObjectLayer Object layer to test collision with
-	/// @param inWheelShapes Array of shapes to test collision with, one for each wheel. These shapes must be centered around the origin and oriented to align with the vehicle body.
-								VehicleCollisionTesterCastShape(ObjectLayer inObjectLayer, WheelShapes &inWheelShapes) : mObjectLayer(inObjectLayer), mWheelShapes(inWheelShapes) { }
+	/// @param inConvexRadiusFraction Fraction of half the wheel width (or wheel radius if it is smaller) that is used as the convex radius
+								VehicleCollisionTesterCastCylinder(ObjectLayer inObjectLayer, float inConvexRadiusFraction = 0.05f) : mObjectLayer(inObjectLayer), mConvexRadiusFraction(inConvexRadiusFraction) { }
 
 	// See: VehicleCollisionTester
 	virtual bool				Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const override;
 
 private:
 	ObjectLayer					mObjectLayer;
-	WheelShapes					mWheelShapes;	
+	float						mConvexRadiusFraction;
 };
 
 JPH_NAMESPACE_END

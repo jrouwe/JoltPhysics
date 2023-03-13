@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/ShapeCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 
@@ -181,7 +182,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 	return true;
 }
 
-bool VehicleCollisionTesterCastShape::Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
+bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
 {
 	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inPhysicsSystem.GetDefaultBroadPhaseLayerFilter(mObjectLayer);
 	DefaultObjectLayerFilter object_layer_filter = inPhysicsSystem.GetDefaultLayerFilter(mObjectLayer);
@@ -189,9 +190,17 @@ bool VehicleCollisionTesterCastShape::Collide(PhysicsSystem &inPhysicsSystem, co
 
 	const WheelSettings *wheel_settings = inVehicleConstraint.GetWheel(inWheelIndex)->GetSettings();
 	float max_suspension_length = wheel_settings->mSuspensionMaxLength;
-	RMat44 shape_cast_start = inPhysicsSystem.GetBodyInterfaceNoLock().GetCenterOfMassTransform(inVehicleBodyID);
+
+	// Get the wheel transform given that the cylinder rotates around the Y axis
+	RMat44 shape_cast_start = inVehicleConstraint.GetWheelWorldTransform(inWheelIndex, Vec3::sAxisY(), Vec3::sAxisX());
 	shape_cast_start.SetTranslation(inOrigin);
-	RShapeCast shape_cast(mWheelShapes[inWheelIndex], Vec3::sReplicate(1.0f), shape_cast_start, inDirection * max_suspension_length);
+
+	// Construct a cylinder with the dimensions of the wheel
+	float wheel_half_width = 0.5f * wheel_settings->mWidth;
+	CylinderShape cylinder(wheel_half_width, wheel_settings->mRadius, min(wheel_half_width, wheel_settings->mRadius) * mConvexRadiusFraction);
+	cylinder.SetEmbedded();
+
+	RShapeCast shape_cast(&cylinder, Vec3::sReplicate(1.0f), shape_cast_start, inDirection * max_suspension_length);
 
 	ShapeCastSettings settings;
 	settings.mUseShrunkenShapeAndConvexRadius = true;
