@@ -857,7 +857,7 @@ void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Mesh);
 	const MeshShape *shape = static_cast<const MeshShape *>(inShape);
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	Visitor visitor(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
 	visitor.mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent();
@@ -910,7 +910,7 @@ void MeshShape::sCastSphereVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Mesh);
 	const MeshShape *shape = static_cast<const MeshShape *>(inShape);
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	Visitor visitor(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	shape->WalkTreePerTriangle(inSubShapeIDCreator2, visitor);
 }

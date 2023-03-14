@@ -1580,16 +1580,17 @@ void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, co
 
 		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
 		{			
+			const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(mShape);
+			
 			// Create sub shape id for this part
-			SubShapeID triangle_sub_shape_id = mShape2->EncodeSubShapeID(mSubShapeIDCreator2, inX, inY, inTriangle);
+			SubShapeID triangle_sub_shape_id = shape->EncodeSubShapeID(mSubShapeIDCreator2, inX, inY, inTriangle);
 
 			// Determine active edges
-			uint8 active_edges = mShape2->GetEdgeFlags(inX, inY, inTriangle);
+			uint8 active_edges = shape->GetEdgeFlags(inX, inY, inTriangle);
 
 			Cast(inV0, inV1, inV2, active_edges, triangle_sub_shape_id);
 		}
 
-		const HeightFieldShape *	mShape2;
 		RayInvDirection				mInvDirection;
 		Vec3						mBoxCenter;
 		Vec3						mBoxExtent;
@@ -1600,8 +1601,7 @@ void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, co
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
 	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
-	visitor.mShape2 = shape;
+	Visitor visitor(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
 	visitor.mBoxExtent = inShapeCast.mShapeWorldBounds.GetExtent();
@@ -1645,16 +1645,17 @@ void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, co
 
 		JPH_INLINE void				VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
 		{			
+			const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(mShape);
+
 			// Create sub shape id for this part
-			SubShapeID triangle_sub_shape_id = mShape2->EncodeSubShapeID(mSubShapeIDCreator2, inX, inY, inTriangle);
+			SubShapeID triangle_sub_shape_id = shape->EncodeSubShapeID(mSubShapeIDCreator2, inX, inY, inTriangle);
 
 			// Determine active edges
-			uint8 active_edges = mShape2->GetEdgeFlags(inX, inY, inTriangle);
+			uint8 active_edges = shape->GetEdgeFlags(inX, inY, inTriangle);
 
 			Cast(inV0, inV1, inV2, active_edges, triangle_sub_shape_id);
 		}
 
-		const HeightFieldShape *	mShape2;
 		RayInvDirection				mInvDirection;
 		SubShapeIDCreator			mSubShapeIDCreator2;
 		float						mDistanceStack[cStackSize];
@@ -1663,8 +1664,7 @@ void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, co
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
 	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
-	visitor.mShape2 = shape;
+	Visitor visitor(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;
 	shape->WalkHeightField(visitor);

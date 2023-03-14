@@ -13,9 +13,10 @@
 
 JPH_NAMESPACE_BEGIN
 
-CastConvexVsTriangles::CastConvexVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
+CastConvexVsTriangles::CastConvexVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
 	mShapeCast(inShapeCast),
 	mShapeCastSettings(inShapeCastSettings),
+	mShape(inShape),
 	mShapeFilter(inShapeFilter), 
 	mCenterOfMassTransform2(inCenterOfMassTransform2),
 	mScale(inScale),
@@ -46,7 +47,7 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 		return;
 
 	// Test the shape filter if this shape should collide
-	if (!mShapeFilter.ShouldCollide(mSubShapeIDCreator1.GetID(), inSubShapeID2))
+	if (!mShapeFilter.ShouldCollide(mShapeCast.mShape, mSubShapeIDCreator1.GetID(), mShape, inSubShapeID2))
 		return;
 
 	// Create triangle support function
