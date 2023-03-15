@@ -45,4 +45,25 @@ public:
 	mutable BodyID			mBodyID2;
 };
 
+/// Helper class to reverse the order of the shapes in the ShouldCollide function
+class ReversedShapeFilter : public ShapeFilter
+{
+public:
+	/// Constructor
+							ReversedShapeFilter(const ShapeFilter &inFilter) : mFilter(inFilter) { mBodyID2 = inFilter.mBodyID2; }
+
+	virtual bool			ShouldCollide(const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
+	{
+		return mFilter.ShouldCollide(inShape2, inSubShapeIDOfShape2);
+	}
+
+	virtual bool			ShouldCollide(const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
+	{
+		return mFilter.ShouldCollide(inShape2, inSubShapeIDOfShape2, inShape1, inSubShapeIDOfShape1);
+	}
+
+private:
+	const ShapeFilter &		mFilter;
+};
+
 JPH_NAMESPACE_END
