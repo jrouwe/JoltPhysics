@@ -21,7 +21,9 @@ public:
 
 	/// Filter function to determine if we should collide with a shape. Returns true if the filter passes.
 	/// This overload is called when the query doesn't have a source shape (e.g. ray cast / collide point)
-	virtual bool			ShouldCollide(const SubShapeID &inSubShapeID2) const
+	/// @param inShape2 Shape we're colliding against
+	/// @param inSubShapeIDOfShape2 The sub shape ID that will lead from the root shape to inShape2 (i.e. the shape of mBodyID2)
+	virtual bool			ShouldCollide(const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const
 	{
 		return true;
 	}
@@ -29,13 +31,12 @@ public:
 	/// Filter function to determine if two shapes should collide. Returns true if the filter passes.
 	/// This overload is called when querying a shape vs a shape (e.g. collide object / cast object).
 	/// It is called at each level of the shape hierarchy, so if you have a compound shape with a box, this function will be called twice.
+	/// It will not be called on triangles that are part of another shape, i.e a mesh shape will not trigger a callback per triangle. You can filter out individual triangles in the CollisionCollector::AddHit function by their sub shape ID.
 	/// @param inShape1 1st shape that is colliding
-	/// @param inSubShapeID1 Sub shape ID of the 1st shape (note that this is the sub shape ID from the top of the hierarchy,
-	/// so unless inShape1 happens to be the top it will not be valid for that shape)
+	/// @param inSubShapeIDOfShape1 The sub shape ID that will lead from the root shape to inShape1 (i.e. the shape that is used to collide or cast against shape 2)
 	/// @param inShape2 2nd shape that is colliding
-	/// @param inSubShapeID2 Sub shape ID of the 2nd shape (note that this is the sub shape ID from the top of the hierarchy,
-	/// so unless inShape2 happens to be the top it will not be valid for that shape, use mBodyID2 to get the top of the hierarchy shape)
-	virtual bool			ShouldCollide(const Shape *inShape1, const SubShapeID &inSubShapeID1, const Shape *inShape2, const SubShapeID &inSubShapeID2) const
+	/// @param inSubShapeIDOfShape2 The sub shape ID that will lead from the root shape to inShape2 (i.e. the shape of mBodyID2)
+	virtual bool			ShouldCollide(const Shape *inShape1, const SubShapeID &inSubShapeIDOfShape1, const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const
 	{
 		return true;
 	}

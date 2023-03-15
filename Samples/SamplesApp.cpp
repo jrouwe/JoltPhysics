@@ -93,6 +93,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(SensorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(DynamicMeshTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(TwoDFunnelTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(ShapeFilterTest)
 
 static TestNameAndRTTI sGeneralTests[] =
 {
@@ -127,6 +128,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
+	{ "Shape Filter",						JPH_RTTI(ShapeFilterTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(DistanceConstraintTest)
