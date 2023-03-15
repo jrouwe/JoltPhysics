@@ -16,13 +16,10 @@
 
 JPH_NAMESPACE_BEGIN
 
-CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
+CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
 	mStart(inShapeCast.mCenterOfMassStart.GetTranslation()),
 	mDirection(inShapeCast.mDirection),
-	mSphereShape(inShapeCast.mShape),
 	mShapeCastSettings(inShapeCastSettings),
-	mShape(inShape),
-	mShapeFilter(inShapeFilter), 
 	mCenterOfMassTransform2(inCenterOfMassTransform2),
 	mScale(inScale),
 	mSubShapeIDCreator1(inSubShapeIDCreator1),
@@ -134,10 +131,6 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	float normal_dot_direction = triangle_normal.Dot(mDirection);
 	bool back_facing = normal_dot_direction > 0.0f;
 	if (mShapeCastSettings.mBackFaceModeTriangles == EBackFaceMode::IgnoreBackFaces && back_facing)
-		return;
-
-	// Test the shape filter if this shape should collide
-	if (!mShapeFilter.ShouldCollide(mSphereShape, mSubShapeIDCreator1.GetID(), mShape, inSubShapeID2))
 		return;
 
 	// Test if distance between the sphere and plane of triangle is smaller or equal than the radius

@@ -284,7 +284,7 @@ void TriangleShape::sCastConvexVsTriangle(const ShapeCast &inShapeCast, const Sh
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Triangle);
 	const TriangleShape *shape = static_cast<const TriangleShape *>(inShape);
 
-	CastConvexVsTriangles caster(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	CastConvexVsTriangles caster(inShapeCast, inShapeCastSettings, inScale, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	caster.Cast(shape->mV1, shape->mV2, shape->mV3, 0b111, inSubShapeIDCreator2.GetID());
 }
 
@@ -293,7 +293,7 @@ void TriangleShape::sCastSphereVsTriangle(const ShapeCast &inShapeCast, const Sh
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Triangle);
 	const TriangleShape *shape = static_cast<const TriangleShape *>(inShape);
 
-	CastSphereVsTriangles caster(inShapeCast, inShapeCastSettings, shape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	CastSphereVsTriangles caster(inShapeCast, inShapeCastSettings, inScale, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	caster.Cast(shape->mV1, shape->mV2, shape->mV3, 0b111, inSubShapeIDCreator2.GetID());
 }
 
