@@ -10,7 +10,7 @@ public:
 
 	// See: Test
 	virtual void	Initialize() override;
-	virtual void	PostPhysicsUpdate(float inDeltaTime);
+	virtual void	PostPhysicsUpdate(float inDeltaTime) override;
 
 private:
 	/// A value used as user data for a shape
