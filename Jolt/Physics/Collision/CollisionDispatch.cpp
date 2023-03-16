@@ -56,8 +56,9 @@ void CollisionDispatch::sReversedCollideShape(const Shape *inShape1, const Shape
 		CollideShapeCollector &	mCollector;
 	};
 
+	ReversedShapeFilter shape_filter(inShapeFilter);
 	ReversedCollector collector(ioCollector);
-	sCollideShapeVsShape(inShape2, inShape1, inScale2, inScale1, inCenterOfMassTransform2, inCenterOfMassTransform1, inSubShapeIDCreator2, inSubShapeIDCreator1, inCollideShapeSettings, collector, inShapeFilter);
+	sCollideShapeVsShape(inShape2, inShape1, inScale2, inScale1, inCenterOfMassTransform2, inCenterOfMassTransform1, inSubShapeIDCreator2, inSubShapeIDCreator1, inCollideShapeSettings, collector, shape_filter);
 }
 
 void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
@@ -98,8 +99,9 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 	Vec3 world_direction = -inCenterOfMassTransform2.Multiply3x3(inShapeCast.mDirection);
 
 	// Forward the cast
+	ReversedShapeFilter shape_filter(inShapeFilter);
 	ReversedCollector collector(ioCollector, world_direction);
-	sCastShapeVsShapeLocalSpace(local_shape_cast, inShapeCastSettings, inShapeCast.mShape, inShapeCast.mScale, inShapeFilter, shape1_com, inSubShapeIDCreator2, inSubShapeIDCreator1, collector);
+	sCastShapeVsShapeLocalSpace(local_shape_cast, inShapeCastSettings, inShapeCast.mShape, inShapeCast.mScale, shape_filter, shape1_com, inSubShapeIDCreator2, inSubShapeIDCreator1, collector);
 }
 
 JPH_NAMESPACE_END

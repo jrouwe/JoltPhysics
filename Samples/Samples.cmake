@@ -75,6 +75,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ActiveEdgesTest.h
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.cpp
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.h
+	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.h
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.cpp
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.h
 	${SAMPLES_ROOT}/Tests/General/ChangeMotionQualityTest.cpp

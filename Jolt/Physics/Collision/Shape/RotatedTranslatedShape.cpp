@@ -140,7 +140,7 @@ bool RotatedTranslatedShape::CastRay(const RayCast &inRay, const SubShapeIDCreat
 void RotatedTranslatedShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	// Transform the ray
@@ -153,7 +153,7 @@ void RotatedTranslatedShape::CastRay(const RayCast &inRay, const RayCastSettings
 void RotatedTranslatedShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	// Transform the point
@@ -164,7 +164,7 @@ void RotatedTranslatedShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreat
 void RotatedTranslatedShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	mInnerShape->CollectTransformedShapes(inBox, inPositionCOM, inRotation * mRotation, TransformScale(inScale), inSubShapeIDCreator, ioCollector, inShapeFilter);

@@ -439,7 +439,7 @@ bool StaticCompoundShape::CastRay(const RayCast &inRay, const SubShapeIDCreator 
 void StaticCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	JPH_PROFILE_FUNCTION();
@@ -531,7 +531,7 @@ void StaticCompoundShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg i
 	JPH_PROFILE_FUNCTION();
 
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	struct Visitor : public CollectTransformedShapesVisitor

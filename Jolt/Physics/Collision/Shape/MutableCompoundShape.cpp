@@ -306,7 +306,7 @@ void MutableCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &
 	JPH_PROFILE_FUNCTION();
 
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	struct Visitor : public CastRayVisitorCollector
@@ -341,7 +341,7 @@ void MutableCompoundShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator
 	JPH_PROFILE_FUNCTION();
 
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	struct Visitor : public CollidePointVisitor
@@ -409,7 +409,7 @@ void MutableCompoundShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg 
 	JPH_PROFILE_FUNCTION();
 
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	struct Visitor : public CollectTransformedShapesVisitor

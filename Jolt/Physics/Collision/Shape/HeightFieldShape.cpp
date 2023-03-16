@@ -1472,7 +1472,7 @@ void HeightFieldShape::CastRay(const RayCast &inRay, const RayCastSettings &inRa
 	JPH_PROFILE_FUNCTION();
 
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	struct Visitor
@@ -1544,7 +1544,7 @@ void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &in
 	// A height field doesn't have volume, so we can't test insideness
 }
 
-void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1600,7 +1600,7 @@ void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, co
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
 	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mShape2 = shape;
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mBoxCenter = inShapeCast.mShapeWorldBounds.GetCenter();
@@ -1609,7 +1609,7 @@ void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, co
 	shape->WalkHeightField(visitor);
 }
 
-void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1663,7 +1663,7 @@ void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, co
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::HeightField);
 	const HeightFieldShape *shape = static_cast<const HeightFieldShape *>(inShape);
 
-	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	Visitor visitor(inShapeCast, inShapeCastSettings, inScale, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
 	visitor.mShape2 = shape;
 	visitor.mInvDirection.Set(inShapeCast.mDirection);
 	visitor.mSubShapeIDCreator2 = inSubShapeIDCreator2;

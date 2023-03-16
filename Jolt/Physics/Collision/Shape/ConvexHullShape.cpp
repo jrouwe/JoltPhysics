@@ -1011,7 +1011,7 @@ bool ConvexHullShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inS
 void ConvexHullShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	// Determine if ray hits the shape
@@ -1044,7 +1044,7 @@ void ConvexHullShape::CastRay(const RayCast &inRay, const RayCastSettings &inRay
 void ConvexHullShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
-	if (!inShapeFilter.ShouldCollide(inSubShapeIDCreator.GetID()))
+	if (!inShapeFilter.ShouldCollide(this, inSubShapeIDCreator.GetID()))
 		return;
 
 	// Check if point is behind all planes
