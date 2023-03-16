@@ -50,7 +50,10 @@ class ReversedShapeFilter : public ShapeFilter
 {
 public:
 	/// Constructor
-							ReversedShapeFilter(const ShapeFilter &inFilter) : mFilter(inFilter) { mBodyID2 = inFilter.mBodyID2; }
+	explicit				ReversedShapeFilter(const ShapeFilter &inFilter) : mFilter(inFilter)
+	{
+		mBodyID2 = inFilter.mBodyID2;
+	}
 
 	virtual bool			ShouldCollide(const Shape *inShape2, const SubShapeID &inSubShapeIDOfShape2) const override
 	{

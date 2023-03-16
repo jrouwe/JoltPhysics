@@ -279,7 +279,7 @@ void TriangleShape::sCollideSphereVsTriangle(const Shape *inShape1, const Shape 
 	collider.Collide(shape2->mV1, shape2->mV2, shape2->mV3, 0b111, inSubShapeIDCreator2.GetID());
 }
 
-void TriangleShape::sCastConvexVsTriangle(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+void TriangleShape::sCastConvexVsTriangle(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Triangle);
 	const TriangleShape *shape = static_cast<const TriangleShape *>(inShape);
@@ -288,7 +288,7 @@ void TriangleShape::sCastConvexVsTriangle(const ShapeCast &inShapeCast, const Sh
 	caster.Cast(shape->mV1, shape->mV2, shape->mV3, 0b111, inSubShapeIDCreator2.GetID());
 }
 
-void TriangleShape::sCastSphereVsTriangle(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+void TriangleShape::sCastSphereVsTriangle(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
 {
 	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::Triangle);
 	const TriangleShape *shape = static_cast<const TriangleShape *>(inShape);
