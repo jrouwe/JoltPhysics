@@ -111,7 +111,8 @@ void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 
 	StepListeners::iterator i = find(mStepListeners.begin(), mStepListeners.end(), inListener);
 	JPH_ASSERT(i != mStepListeners.end());
-	mStepListeners.erase(i);
+	*i = mStepListeners.back();
+	mStepListeners.pop_back();
 }
 
 void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem)
