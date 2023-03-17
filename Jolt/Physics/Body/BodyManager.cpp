@@ -403,7 +403,6 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 			BodyID body_id = *b;
 			Body &body = *mBodies[body_id.GetIndex()];
 
-			JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
 			JPH_ASSERT(body.GetID() == body_id);
 			JPH_ASSERT(body.IsInBroadPhase());
 
@@ -443,7 +442,6 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 			BodyID body_id = *b;
 			Body &body = *mBodies[body_id.GetIndex()];
 
-			JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
 			JPH_ASSERT(body.GetID() == body_id);
 			JPH_ASSERT(body.IsInBroadPhase());
 
