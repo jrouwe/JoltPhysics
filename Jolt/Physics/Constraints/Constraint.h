@@ -85,6 +85,9 @@ public:
 	/// Size of constraint when drawing it through the debug renderer
 	float						mDrawConstraintSize = 1.0f;
 
+	/// User data value (can be used by application)
+	uint64						mUserData = 0;
+
 protected:
 	/// This function should not be called directly, it is used by sRestoreFromBinaryState.
 	virtual void				RestoreBinaryState(StreamIn &inStream);
@@ -103,7 +106,8 @@ public:
 #endif // JPH_DEBUG_RENDERER
 		mNumVelocityStepsOverride(inSettings.mNumVelocityStepsOverride),
 		mNumPositionStepsOverride(inSettings.mNumPositionStepsOverride),
-		mEnabled(inSettings.mEnabled)
+		mEnabled(inSettings.mEnabled),
+		mUserData(inSettings.mUserData)
 	{
 	}
 
@@ -132,6 +136,10 @@ public:
 
 	/// Test if a constraint is enabled.
 	bool						GetEnabled() const							{ return mEnabled; }
+
+	/// Access to the user data, can be used for anything by the application
+	uint64						GetUserData() const							{ return mUserData; }
+	void						SetUserData(uint64 inUserData)				{ mUserData = inUserData; }
 
 	///@name Solver interface
 	///@{
@@ -194,6 +202,9 @@ private:
 
 	/// If this constraint is currently enabled
 	bool						mEnabled = true;
+
+	/// User data value (can be used by application)
+	uint64						mUserData;
 };
 
 JPH_NAMESPACE_END

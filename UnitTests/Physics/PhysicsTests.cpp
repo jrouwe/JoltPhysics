@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
+#include <Jolt/Physics/Constraints/PointConstraint.h>
 
 TEST_SUITE("PhysicsTests")
 {
@@ -264,6 +265,32 @@ TEST_SUITE("PhysicsTests")
 		// Change the user data
 		body->SetUserData(0x5678123443218765);
 		CHECK(body->GetUserData() == 0x5678123443218765);
+
+		// Convert back to body settings
+		BodyCreationSettings body_settings2 = body->GetBodyCreationSettings();
+		CHECK(body_settings2.mUserData == 0x5678123443218765);
+	}
+
+	TEST_CASE("TestPhysicsConstraintUserData")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+
+		// Create a body
+		Body &body = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
+
+		// Create constraint with user data
+		PointConstraintSettings constraint_settings;
+		constraint_settings.mUserData = 0x1234567887654321;
+		Constraint *constraint = constraint_settings.Create(body, Body::sFixedToWorld);
+		CHECK(constraint->GetUserData() == 0x1234567887654321);
+
+		// Change the user data
+		constraint->SetUserData(0x5678123443218765);
+		CHECK(constraint->GetUserData() == 0x5678123443218765);
+
+		// Convert back to constraint settings
+		Ref<ConstraintSettings> constraint_settings2 = constraint->GetConstraintSettings();
+		CHECK(constraint_settings2->mUserData == 0x5678123443218765);
 	}
 
 	TEST_CASE("TestPhysicsPosition")

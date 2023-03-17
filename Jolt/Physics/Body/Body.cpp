@@ -319,6 +319,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mLinearVelocity = mMotionProperties != nullptr? mMotionProperties->GetLinearVelocity() : Vec3::sZero();
 	result.mAngularVelocity = mMotionProperties != nullptr? mMotionProperties->GetAngularVelocity() : Vec3::sZero();
 	result.mObjectLayer = GetObjectLayer();
+	result.mUserData = mUserData;
 	result.mCollisionGroup = GetCollisionGroup();
 	result.mMotionType = GetMotionType();
 	result.mAllowDynamicOrKinematic = mMotionProperties != nullptr;
