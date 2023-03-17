@@ -281,7 +281,7 @@ TEST_SUITE("PhysicsTests")
 		// Create constraint with user data
 		PointConstraintSettings constraint_settings;
 		constraint_settings.mUserData = 0x1234567887654321;
-		Constraint *constraint = constraint_settings.Create(body, Body::sFixedToWorld);
+		Ref<Constraint> constraint = constraint_settings.Create(body, Body::sFixedToWorld);
 		CHECK(constraint->GetUserData() == 0x1234567887654321);
 
 		// Change the user data
