@@ -21,6 +21,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConstraintSettings)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mDrawConstraintSize)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mNumVelocityStepsOverride)
 	JPH_ADD_ATTRIBUTE(ConstraintSettings, mNumPositionStepsOverride)
+	JPH_ADD_ATTRIBUTE(ConstraintSettings, mUserData)
 }
 
 void ConstraintSettings::SaveBinaryState(StreamOut &inStream) const
@@ -90,6 +91,7 @@ void Constraint::ToConstraintSettings(ConstraintSettings &outSettings) const
 	outSettings.mEnabled = mEnabled;
 	outSettings.mNumVelocityStepsOverride = mNumVelocityStepsOverride;
 	outSettings.mNumPositionStepsOverride = mNumPositionStepsOverride;
+	outSettings.mUserData = mUserData;
 #ifdef JPH_DEBUG_RENDERER
 	outSettings.mDrawConstraintSize = mDrawConstraintSize;
 #endif // JPH_DEBUG_RENDERER
