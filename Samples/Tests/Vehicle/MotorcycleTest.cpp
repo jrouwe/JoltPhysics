@@ -26,21 +26,22 @@ void MotorcycleTest::Initialize()
 {
 	VehicleTest::Initialize();
 
-	const float back_wheel_radius = 0.45f;
-	const float back_wheel_width = 0.06f;
+	// Loosly based on: https://www.whitedogbikes.com/whitedogblog/yamaha-xj-900-specs/
+	const float back_wheel_radius = 0.31f;
+	const float back_wheel_width = 0.05f;
 	const float back_wheel_pos_z = -0.75f;
 	const float back_suspension_min_length = 0.3f;
 	const float back_suspension_max_length = 0.5f;
 
-	const float front_wheel_radius = 0.53f;
-	const float front_wheel_width = 0.04f;
+	const float front_wheel_radius = 0.31f;
+	const float front_wheel_width = 0.05f;
 	const float front_wheel_pos_z = 0.75f;
 	const float front_suspension_min_length = 0.3f;
 	const float front_suspension_max_length = 0.5f;
 
-	const float half_vehicle_length = 1.1f;
+	const float half_vehicle_length = 0.4f;
 	const float half_vehicle_width = 0.2f;
-	const float half_vehicle_height = 0.4f;
+	const float half_vehicle_height = 0.3f;
 
 	const float max_steering_angle = DegreesToRadians(30);
 
@@ -51,7 +52,7 @@ void MotorcycleTest::Initialize()
 	RefConst<Shape> motorcycle_shape = OffsetCenterOfMassShapeSettings(Vec3(0, -half_vehicle_height, 0), new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length))).Create().Get();
 	BodyCreationSettings motorcycle_body_settings(motorcycle_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	motorcycle_body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
-	motorcycle_body_settings.mMassPropertiesOverride.mMass = 1500.0f;
+	motorcycle_body_settings.mMassPropertiesOverride.mMass = 240.0f;
 	mMotorcycleBody = mBodyInterface->CreateBody(motorcycle_body_settings);
 	mBodyInterface->AddBody(mMotorcycleBody->GetID(), EActivation::Activate);
 
@@ -81,12 +82,20 @@ void MotorcycleTest::Initialize()
 	vehicle.mWheels = { front, back };
 
 	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
+	controller->mEngine.mMaxTorque = 80.0f;
+	controller->mEngine.mMinRPM = 1000.0f;
+	controller->mEngine.mMaxRPM = 10000.0f;
+	controller->mTransmission.mShiftDownRPM = 2000.0f;
+	controller->mTransmission.mShiftUpRPM = 9000.0f;
+	controller->mTransmission.mGearRatios = { 2.27f, 1.63f, 1.3f, 1.09f, 0.96f, 0.88f }; // From: https://www.blocklayer.com/rpm-gear-bikes
+	controller->mTransmission.mReverseGearRatios = { -4.0f };
 	vehicle.mController = controller;
 
 	// Differential (not really applicable to a motorcycle but we need one anyway to drive it)
 	controller->mDifferentials.resize(1);
 	controller->mDifferentials[0].mLeftWheel = -1;
 	controller->mDifferentials[0].mRightWheel = 1;
+	controller->mDifferentials[0].mDifferentialRatio = 1.93f * 40.0f / 16.0f; // Combining primary and final drive (back divided by front sprockets) from: https://www.blocklayer.com/rpm-gear-bikes
 
 	mVehicleConstraint = new VehicleConstraint(*mMotorcycleBody, vehicle);
 	mVehicleConstraint->SetVehicleCollisionTester(new VehicleCollisionTesterCastCylinder(Layers::MOVING));
