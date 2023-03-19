@@ -7,7 +7,7 @@
 #include <Tests/Vehicle/MotorcycleTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
-#include <Jolt/Physics/Vehicle/WheeledVehicleController.h>
+#include <Jolt/Physics/Vehicle/MotorcycleController.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
@@ -32,12 +32,14 @@ void MotorcycleTest::Initialize()
 	const float back_wheel_pos_z = -0.75f;
 	const float back_suspension_min_length = 0.3f;
 	const float back_suspension_max_length = 0.5f;
+	const float back_brake_torque = 500.0f;
 
 	const float front_wheel_radius = 0.31f;
 	const float front_wheel_width = 0.05f;
 	const float front_wheel_pos_z = 0.75f;
 	const float front_suspension_min_length = 0.3f;
 	const float front_suspension_max_length = 0.5f;
+	const float front_brake_torque = 250.0f;
 
 	const float half_vehicle_length = 0.4f;
 	const float half_vehicle_width = 0.2f;
@@ -45,7 +47,8 @@ void MotorcycleTest::Initialize()
 
 	const float max_steering_angle = DegreesToRadians(30);
 
-	const float rake = DegreesToRadians(30);
+	// Angle of the front suspension -> set to 0 for now because an angle is not properly supported yet
+	const float rake = 0; //DegreesToRadians(30);
 
 	// Create vehicle body
 	RVec3 position(0, 2, 0);
@@ -59,7 +62,7 @@ void MotorcycleTest::Initialize()
 	// Create vehicle constraint
 	VehicleConstraintSettings vehicle;
 	vehicle.mDrawConstraintSize = 0.1f;
-	vehicle.mMaxPitchRollAngle = DegreesToRadians(15.0f);
+	vehicle.mMaxPitchRollAngle = DegreesToRadians(60.0f);
 
 	// Wheels
 	WheelSettingsWV *front = new WheelSettingsWV;
@@ -70,6 +73,7 @@ void MotorcycleTest::Initialize()
 	front->mWidth = front_wheel_width;
 	front->mSuspensionMinLength = front_suspension_min_length;
 	front->mSuspensionMaxLength = front_suspension_max_length;
+	front->mMaxBrakeTorque = front_brake_torque;
 
 	WheelSettingsWV *back = new WheelSettingsWV;
 	back->mPosition = Vec3(0.0f, -0.9f * half_vehicle_height, back_wheel_pos_z);
@@ -78,10 +82,11 @@ void MotorcycleTest::Initialize()
 	back->mWidth = back_wheel_width;
 	back->mSuspensionMinLength = back_suspension_min_length;
 	back->mSuspensionMaxLength = back_suspension_max_length;
+	back->mMaxBrakeTorque = back_brake_torque;
 
 	vehicle.mWheels = { front, back };
 
-	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
+	MotorcycleControllerSettings *controller = new MotorcycleControllerSettings;
 	controller->mEngine.mMaxTorque = 80.0f;
 	controller->mEngine.mMinRPM = 1000.0f;
 	controller->mEngine.mMaxRPM = 10000.0f;
