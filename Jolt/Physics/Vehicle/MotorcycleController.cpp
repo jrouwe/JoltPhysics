@@ -170,12 +170,20 @@ void MotorcycleController::Draw(DebugRenderer *inRenderer) const
 {
 	WheeledVehicleController::Draw(inRenderer);
 
+	// Calculate average impulse on the wheel, this should match with the calculated lean angle but is too jittery to use in practice
+	Vec3 impulse = Vec3::sZero();
+	for (const Wheel *w : mConstraint.GetWheels())
+		if (w->HasContact())
+			impulse += w->GetContactNormal() * w->GetSuspensionLambda() + w->GetContactLateral() * w->GetLateralLambda();
+	impulse = impulse.NormalizedOr(Vec3::sZero());
+
 	// Draw current and desired lean angle
 	Body *body = mConstraint.GetVehicleBody();
 	RVec3 center_of_mass = body->GetCenterOfMassPosition();
 	Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
 	inRenderer->DrawArrow(center_of_mass, center_of_mass + up, Color::sYellow, 0.1f);
 	inRenderer->DrawArrow(center_of_mass, center_of_mass + mTargetLean, Color::sOrange, 0.1f);
+	inRenderer->DrawArrow(center_of_mass, center_of_mass + impulse, Color::sRed, 0.1f);
 }
 
 #endif // JPH_DEBUG_RENDERER
