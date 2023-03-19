@@ -27,4 +27,5 @@ private:
 	Body *						mMotorcycleBody;							///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint
 	float						mPreviousForward = 1.0f;					///< Keeps track of last motorcycle direction so we know when to brake and when to accelerate
+	float						mCurrentRight = 0.0f;						///< Keeps track of the current steering angle (radians)
 };

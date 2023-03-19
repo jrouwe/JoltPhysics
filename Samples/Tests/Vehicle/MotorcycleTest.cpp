@@ -140,14 +140,19 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		right = -1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
 		right = 1.0f;
+	const float steer_speed = 2.0f;
+	if (right > mCurrentRight)
+		mCurrentRight = min(mCurrentRight + steer_speed * inParams.mDeltaTime, right);
+	else if (right < mCurrentRight)
+		mCurrentRight = max(mCurrentRight - steer_speed * inParams.mDeltaTime, right);
 
 	// On user input, assure that the motorcycle is active
-	if (right != 0.0f || forward != 0.0f || brake != 0.0f)
+	if (mCurrentRight != 0.0f || forward != 0.0f || brake != 0.0f)
 		mBodyInterface->ActivateBody(mMotorcycleBody->GetID());
 
 	// Pass the input on to the constraint
 	WheeledVehicleController *controller = static_cast<WheeledVehicleController *>(mVehicleConstraint->GetController());
-	controller->SetDriverInput(forward, right, brake, false);
+	controller->SetDriverInput(forward, mCurrentRight, brake, false);
 
 	// Draw our wheels (this needs to be done in the pre update since we draw the bodies too in the state before the step)
 	for (uint w = 0; w < 2; ++w)

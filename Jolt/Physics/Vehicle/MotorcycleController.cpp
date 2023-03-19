@@ -81,7 +81,9 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	float velocity_sq = Square(velocity);
 
 	// Calculate max steering angle based on the max lean angle we're willing to take
+	// See: https://en.wikipedia.org/wiki/Bicycle_and_motorcycle_dynamics#Leaning
 	// LeanAngle = Atan(Velocity^2 / (Gravity * TurnRadius))
+	// And: https://en.wikipedia.org/wiki/Turning_radius (we're ignoring the tire width)
 	// TurnRadius = WheelBase / Sin(SteerAngle)
 	// => SteerAngle = ASin(WheelBase * Tan(LeanAngle) * Gravity / Velocity^2)
 	float max_steer_angle = FLT_MAX;
