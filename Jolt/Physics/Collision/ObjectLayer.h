@@ -21,7 +21,7 @@ JPH_NAMESPACE_BEGIN
 #endif
 
 /// Constant value used to indicate an invalid object layer
-static constexpr ObjectLayer cObjectLayerInvalid = ~ObjectLayer(0);
+static constexpr ObjectLayer cObjectLayerInvalid = ~ObjectLayer(0U);
 
 /// Filter class for object layers
 class ObjectLayerFilter : public NonCopyable
