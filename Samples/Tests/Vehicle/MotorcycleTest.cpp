@@ -140,7 +140,7 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		right = -1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
 		right = 1.0f;
-	const float steer_speed = 2.0f;
+	const float steer_speed = 4.0f;
 	if (right > mCurrentRight)
 		mCurrentRight = min(mCurrentRight + steer_speed * inParams.mDeltaTime, right);
 	else if (right < mCurrentRight)
