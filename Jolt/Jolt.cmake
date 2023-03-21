@@ -453,6 +453,11 @@ if (CROSS_PLATFORM_DETERMINISTIC)
 	target_compile_definitions(Jolt PUBLIC JPH_CROSS_PLATFORM_DETERMINISTIC)
 endif()
 
+# Setting to determine number of bits in ObjectLayer
+if (OBJECT_LAYER_BITS)
+	target_compile_definitions(Jolt PUBLIC JPH_OBJECT_LAYER_BITS=${OBJECT_LAYER_BITS})
+endif()
+
 # Emit the instruction set definitions to ensure that child projects use the same settings even if they override the used instruction sets (a mismatch causes link errors)
 function(EMIT_X86_INSTRUCTION_SET_DEFINITIONS)
 	if (USE_AVX512)
