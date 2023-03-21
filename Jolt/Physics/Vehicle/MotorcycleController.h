@@ -20,7 +20,7 @@ public:
 	virtual void				RestoreBinaryState(StreamIn &inStream) override;
 
 	/// How far we're willing to make the bike lean over in turns (in radians)
-	float						mMaxLeanAngle = DegreesToRadians(50.0f);
+	float						mMaxLeanAngle = DegreesToRadians(45.0f);
 
 	/// Spring constant for the lean spring
 	float						mLeanSpringConstant = 5000.0f;
