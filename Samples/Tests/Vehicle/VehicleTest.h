@@ -13,6 +13,7 @@ public:
 	JPH_DECLARE_RTTI_VIRTUAL(VehicleTest)
 
 	// See: Test
+	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams);
 	virtual void			Initialize() override;
  
 	// Optional settings menu
@@ -29,4 +30,13 @@ private:
 	void					CreateBridge();
 	void					CreateWall();
 	void					CreateRubble();
+	void					LoadRaceTrack(const char *inFileName);
+
+	// A set of line segments to render a race track
+	struct Line
+	{
+		Vec3				mStart;
+		Vec3				mEnd;
+	};
+	Array<Line>				mTrackData;
 };

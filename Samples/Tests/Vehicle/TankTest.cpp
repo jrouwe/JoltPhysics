@@ -164,6 +164,8 @@ void TankTest::Initialize()
 
 void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
+	VehicleTest::PrePhysicsUpdate(inParams);
+
 	const float min_velocity_pivot_turn = 1.0f;
 
 	const float bullet_radius = 0.061f; // 120 mm

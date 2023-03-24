@@ -110,6 +110,8 @@ void MotorcycleTest::Initialize()
 
 void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
+	VehicleTest::PrePhysicsUpdate(inParams);
+
 	// Determine acceleration and brake
 	float forward = 0.0f, right = 0.0f, brake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
