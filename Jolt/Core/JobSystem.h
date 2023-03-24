@@ -80,16 +80,16 @@ public:
 	{
 	public:
 		/// Constructor 
-		inline				JobHandle() = default;
-		inline				JobHandle(const JobHandle &inHandle) = default;
+		inline				JobHandle()									= default;
+		inline				JobHandle(const JobHandle &inHandle)		= default;
 		inline				JobHandle(JobHandle &&inHandle) noexcept	: Ref<Job>(std::move(inHandle)) { }
 
 		/// Constructor, only to be used by JobSystem
 		inline explicit		JobHandle(Job *inJob)						: Ref<Job>(inJob) { }
 
 		/// Assignment
-		inline JobHandle &	operator = (const JobHandle &inHandle)		{ Ref<Job>::operator = (inHandle); return *this; }
-		inline JobHandle &	operator = (JobHandle &&inHandle) noexcept	{ Ref<Job>::operator = (std::move(inHandle)); return *this; }
+		inline JobHandle &	operator = (const JobHandle &inHandle)		= default;
+		inline JobHandle &	operator = (JobHandle &&inHandle) noexcept	= default;
 
 		/// Check if this handle contains a job
 		inline bool			IsValid() const								{ return GetPtr() != nullptr; }

@@ -9,10 +9,19 @@
 JPH_NAMESPACE_BEGIN
 
 /// Layer that objects can be in, determines which other objects it can collide with
-using ObjectLayer = uint16;
+#ifndef JPH_OBJECT_LAYER_BITS
+	#define JPH_OBJECT_LAYER_BITS 16
+#endif // JPH_OBJECT_LAYER_BITS
+#if JPH_OBJECT_LAYER_BITS == 16
+	using ObjectLayer = uint16;
+#elif JPH_OBJECT_LAYER_BITS == 32
+	using ObjectLayer = uint32;
+#else
+	#error "JPH_OBJECT_LAYER_BITS must be 16 or 32"
+#endif
 
 /// Constant value used to indicate an invalid object layer
-static constexpr ObjectLayer cObjectLayerInvalid = 0xffff;
+static constexpr ObjectLayer cObjectLayerInvalid = ObjectLayer(~ObjectLayer(0U));
 
 /// Filter class for object layers
 class ObjectLayerFilter : public NonCopyable

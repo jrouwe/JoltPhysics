@@ -10,17 +10,17 @@
 /// Layer that objects can be in, determines which other objects it can collide with
 namespace Layers
 {
-	static constexpr uint8 UNUSED1 = 0; // 5 unused values so that broadphase layers values don't match with object layer values (for testing purposes)
-	static constexpr uint8 UNUSED2 = 1;
-	static constexpr uint8 UNUSED3 = 2;
-	static constexpr uint8 UNUSED4 = 3;
-	static constexpr uint8 UNUSED5 = 4;
-	static constexpr uint8 NON_MOVING = 5;
-	static constexpr uint8 MOVING = 6;
-	static constexpr uint8 HQ_DEBRIS = 7; // High quality debris collides with MOVING and NON_MOVING but not with any debris
-	static constexpr uint8 LQ_DEBRIS = 8; // Low quality debris only collides with NON_MOVING
-	static constexpr uint8 SENSOR = 9; // Sensors only collide with MOVING objects
-	static constexpr uint8 NUM_LAYERS = 10;
+	static constexpr ObjectLayer UNUSED1 = 0; // 5 unused values so that broadphase layers values don't match with object layer values (for testing purposes)
+	static constexpr ObjectLayer UNUSED2 = 1;
+	static constexpr ObjectLayer UNUSED3 = 2;
+	static constexpr ObjectLayer UNUSED4 = 3;
+	static constexpr ObjectLayer UNUSED5 = 4;
+	static constexpr ObjectLayer NON_MOVING = 5;
+	static constexpr ObjectLayer MOVING = 6;
+	static constexpr ObjectLayer HQ_DEBRIS = 7; // High quality debris collides with MOVING and NON_MOVING but not with any debris
+	static constexpr ObjectLayer LQ_DEBRIS = 8; // Low quality debris only collides with NON_MOVING
+	static constexpr ObjectLayer SENSOR = 9; // Sensors only collide with MOVING objects
+	static constexpr ObjectLayer NUM_LAYERS = 10;
 };
 
 /// Class that determines if two object layers can collide

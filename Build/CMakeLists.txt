@@ -24,6 +24,9 @@ option(INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimizations" ON)
 # Note that this currently only works using MSVC. Clang turns Float2 into a SIMD vector sometimes causing floating point exceptions (the option is ignored).
 option(FLOATING_POINT_EXCEPTIONS_ENABLED "Enable floating point exceptions" ON)
 
+# Number of bits to use in ObjectLayer. Can be 16 or 32.
+option(OBJECT_LAYER_BITS "Number of bits in ObjectLayer" 16)
+
 # Select X86 processor features to use (if everything is off it will be SSE2 compatible)
 option(USE_SSE4_1 "Enable SSE4.1" ON)
 option(USE_SSE4_2 "Enable SSE4.2" ON)
