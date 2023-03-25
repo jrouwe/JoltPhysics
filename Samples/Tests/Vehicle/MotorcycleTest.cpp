@@ -49,7 +49,7 @@ void MotorcycleTest::Initialize()
 
 	const float max_steering_angle = DegreesToRadians(30);
 
-	// Angle of the front suspension -> set to 0 for now because an angle is not properly supported yet
+	// Angle of the front suspension
 	const float rake = DegreesToRadians(30);
 
 	// Create vehicle body
