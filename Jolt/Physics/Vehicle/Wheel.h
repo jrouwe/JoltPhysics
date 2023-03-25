@@ -6,6 +6,7 @@
 
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
+#include <Jolt/Physics/Constraints/ConstraintPart/SuspensionConstraintPart.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
@@ -133,7 +134,7 @@ protected:
 	float					mAngularVelocity = 0.0f;					///< Rotation speed of wheel, positive when the wheels cause the vehicle to move forwards (rad/s)
 	float					mAngle = 0.0f;								///< Current rotation of the wheel (rad, [0, 2 pi])
 
-	AxisConstraintPart		mSuspensionPart;							///< Controls movement up/down
+	SuspensionConstraintPart mSuspensionPart;							///< Controls movement up/down along the contact normal
 	AxisConstraintPart		mSuspensionMaxUpPart;						///< Adds a hard limit when reaching the minimal suspension length
 	AxisConstraintPart		mLongitudinalPart;							///< Controls movement forward/backward
 	AxisConstraintPart		mLateralPart;								///< Controls movement sideways (slip)

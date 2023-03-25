@@ -332,7 +332,11 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 			// Suspension spring
 			if (settings->mSuspensionMaxLength > settings->mSuspensionMinLength)
-				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactNormal, w->mAntiRollBarImpulse, w->mSuspensionLength - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength, settings->mSuspensionFrequency, settings->mSuspensionDamping);
+			{
+				Vec3 ws_direction = body_transform.Multiply3x3(settings->mDirection);
+				float c = w->mSuspensionLength - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength;
+				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactNormal, ws_direction, w->mAntiRollBarImpulse, c, settings->mSuspensionFrequency, settings->mSuspensionDamping);
+			}
 			else
 				w->mSuspensionPart.Deactivate();
 
@@ -384,7 +388,7 @@ bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime)
 		{
 			// Suspension spring, note that it can only push and not pull
 			if (w->mSuspensionPart.IsActive())
-				impulse |= w->mSuspensionPart.SolveVelocityConstraint(*mBody, *w->mContactBody, -w->mContactNormal, 0.0f, FLT_MAX);
+				impulse |= w->mSuspensionPart.SolveVelocityConstraint(*mBody, *w->mContactBody, -w->mContactNormal);
 
 			// When reaching the minimal suspension length only allow forces pushing the bodies away
 			if (w->mSuspensionMaxUpPart.IsActive())
