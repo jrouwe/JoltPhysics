@@ -165,14 +165,18 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		w->mSuspensionLength = settings->mSuspensionMaxLength;
 
 		// Test collision to find the floor
-		RVec3 origin = mBody->GetCenterOfMassPosition() + mBody->GetRotation() * (settings->mPosition - mBody->GetShape()->GetCenterOfMass());
-		if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, origin, mBody->GetRotation() * settings->mDirection, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
+		RVec3 ws_origin = mBody->GetCenterOfMassPosition() + mBody->GetRotation() * (settings->mPosition - mBody->GetShape()->GetCenterOfMass());
+		Vec3 ws_direction = mBody->GetRotation() * settings->mDirection;
+		if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
 		{
 			// Store ID (pointer is not valid outside of the simulation step)
 			w->mContactBodyID = w->mContactBody->GetID();
 
 			// Store contact velocity, cache this as the contact body may be removed
 			w->mContactPointVelocity = w->mContactBody->GetPointVelocity(w->mContactPosition);
+
+			// Determine plane constant for axle contact plane
+			w->mAxlePlaneConstant = w->mContactNormal.Dot(ws_origin + w->mSuspensionLength * ws_direction);
 
 			// Check if body is active, if so the entire vehicle should be active
 			mIsActive |= w->mContactBody->IsActive();
@@ -332,10 +336,9 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 			else
 				w->mSuspensionPart.Deactivate();
 
-			// Check if we reached the 'max up' position
-			float max_up_error = w->mSuspensionLength - settings->mSuspensionMinLength;
-			if (max_up_error < 0.0f)
-				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactNormal, 0.0f, max_up_error);
+			// Check if we reached the 'max up' position and if so add a hard velocity constraint that stops any further movement in the normal direction
+			if (w->mSuspensionLength < settings->mSuspensionMinLength)
+				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactNormal);
 			else
 				w->mSuspensionMaxUpPart.Deactivate();
 			
@@ -409,22 +412,22 @@ bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumg
 		{
 			const WheelSettings *settings = w->mSettings;
 
-			// Calculate new contact length as the body may have moved
-			// TODO: This assumes that only the vehicle moved and not the ground (contact point/normal is stored in world space)
+			// Check if we reached the 'max up' position now that the body has possibly moved
+			// We do this by calculating the axle position at minimum suspension length and making sure it does not go through the
+			// plane defined by the contact normal and the axle position when the contact happened
+			// TODO: This assumes that only the vehicle moved and not the ground as we kept the axle contact plane in world space
 			Vec3 ws_direction = body_transform.Multiply3x3(settings->mDirection);
 			RVec3 ws_position = body_transform * settings->mPosition;
-			float contact_length = Vec3(w->mContactPosition - ws_position).Dot(ws_direction);
-
-			// Check if we reached the 'max up' position
-			float max_up_error = contact_length - settings->mRadius - settings->mSuspensionMinLength;
+			RVec3 min_suspension_pos = ws_position + settings->mSuspensionMinLength * ws_direction;
+			float max_up_error = w->mContactNormal.Dot(min_suspension_pos) - w->mAxlePlaneConstant;
 			if (max_up_error < 0.0f)
 			{
 				// Recalculate constraint properties since the body may have moved
 				Vec3 r1_plus_u, r2;
 				CalculateWheelContactPoint(*w, r1_plus_u, r2);
-				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, ws_direction, 0.0f, max_up_error);
+				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactNormal, 0.0f, max_up_error);
 
-				impulse |= w->mSuspensionMaxUpPart.SolvePositionConstraint(*mBody, *w->mContactBody, ws_direction, max_up_error, inBaumgarte);
+				impulse |= w->mSuspensionMaxUpPart.SolvePositionConstraint(*mBody, *w->mContactBody, -w->mContactNormal, max_up_error, inBaumgarte);
 			}
 		}
 
