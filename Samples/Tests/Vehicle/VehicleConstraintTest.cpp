@@ -32,8 +32,6 @@ void VehicleConstraintTest::Initialize()
 	const float half_vehicle_length = 2.0f;
 	const float half_vehicle_width = 0.9f;
 	const float half_vehicle_height = 0.2f;
-	const float suspension_min_length = 0.3f;
-	const float suspension_max_length = 0.5f;
 	const float max_steering_angle = DegreesToRadians(30);
 
 	// Create collision testers
@@ -44,7 +42,7 @@ void VehicleConstraintTest::Initialize()
 	// Create vehicle body
 	RVec3 position(0, 2, 0);
 	RefConst<Shape> car_shape = OffsetCenterOfMassShapeSettings(Vec3(0, -half_vehicle_height, 0), new BoxShape(Vec3(half_vehicle_width, half_vehicle_height, half_vehicle_length))).Create().Get();
-	BodyCreationSettings car_body_settings(car_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings car_body_settings(car_shape, position, Quat::sRotation(Vec3::sAxisZ(), sInitialRollAngle), EMotionType::Dynamic, Layers::MOVING);
 	car_body_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 	car_body_settings.mMassPropertiesOverride.mMass = 1500.0f;
 	mCarBody = mBodyInterface->CreateBody(car_body_settings);
@@ -53,25 +51,37 @@ void VehicleConstraintTest::Initialize()
 	// Create vehicle constraint
 	VehicleConstraintSettings vehicle;
 	vehicle.mDrawConstraintSize = 0.1f;
-	vehicle.mMaxPitchRollAngle = DegreesToRadians(60.0f);
+	vehicle.mMaxPitchRollAngle = sMaxRollAngle;
 
 	// Wheels
 	WheelSettingsWV *w1 = new WheelSettingsWV;
 	w1->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
+	w1->mDirection = Vec3(sFrontSuspensionSide, -1, sFrontSuspensionForward).Normalized();
+	w1->mSuspensionMinLength = sFrontSuspensionMinLength;
+	w1->mSuspensionMaxLength = sFrontSuspensionMaxLength;
 	w1->mMaxSteerAngle = max_steering_angle;
 	w1->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
 	WheelSettingsWV *w2 = new WheelSettingsWV;
 	w2->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
+	w2->mDirection = Vec3(-sFrontSuspensionSide, -1, sFrontSuspensionForward).Normalized();
+	w2->mSuspensionMinLength = sFrontSuspensionMinLength;
+	w2->mSuspensionMaxLength = sFrontSuspensionMaxLength;
 	w2->mMaxSteerAngle = max_steering_angle;
 	w2->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
 	WheelSettingsWV *w3 = new WheelSettingsWV;
 	w3->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
+	w3->mDirection = Vec3(sRearSuspensionSide, -1, -sRearSuspensionBackward).Normalized();
+	w3->mSuspensionMinLength = sRearSuspensionMinLength;
+	w3->mSuspensionMaxLength = sRearSuspensionMaxLength;
 	w3->mMaxSteerAngle = 0.0f;
 
 	WheelSettingsWV *w4 = new WheelSettingsWV;
 	w4->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
+	w4->mDirection = Vec3(-sRearSuspensionSide, -1, -sRearSuspensionBackward).Normalized();
+	w4->mSuspensionMinLength = sRearSuspensionMinLength;
+	w4->mSuspensionMaxLength = sRearSuspensionMaxLength;
 	w4->mMaxSteerAngle = 0.0f;
 
 	vehicle.mWheels = { w1, w2, w3, w4 };
@@ -80,8 +90,6 @@ void VehicleConstraintTest::Initialize()
 	{
 		w->mRadius = wheel_radius;
 		w->mWidth = wheel_width;
-		w->mSuspensionMinLength = suspension_min_length;
-		w->mSuspensionMaxLength = suspension_max_length;
 	}
 
 	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
@@ -215,10 +223,21 @@ void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMe
 {
 	VehicleTest::CreateSettingsMenu(inUI, inSubMenu);
 
+	inUI->CreateSlider(inSubMenu, "Initial Roll Angle", RadiansToDegrees(sInitialRollAngle), 0.0f, 90.0f, 0.1f, [](float inValue) { sInitialRollAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Max Roll Angle", RadiansToDegrees(sMaxRollAngle), 0.0f, 90.0f, 0.1f, [](float inValue) { sMaxRollAngle = DegreesToRadians(inValue); });
 	inUI->CreateComboBox(inSubMenu, "Collision Mode", { "Ray", "Cast Sphere", "Cast Cylinder" }, sCollisionMode, [](int inItem) { sCollisionMode = inItem; });
-	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [this](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; RestartTest(); });
-	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [this](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; RestartTest(); });
+	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [this](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [this](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Limited Slip Differentials", sLimitedSlipDifferentials, [](UICheckBox::EState inState) { sLimitedSlipDifferentials = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateSlider(inSubMenu, "Max Engine Torque", float(sMaxEngineTorque), 100.0f, 2000.0f, 10.0f, [](float inValue) { sMaxEngineTorque = inValue; });
 	inUI->CreateSlider(inSubMenu, "Clutch Strength", float(sClutchStrength), 1.0f, 40.0f, 1.0f, [](float inValue) { sClutchStrength = inValue; });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Forward", sFrontSuspensionForward, 0.0f, 10.0f, 0.01f, [](float inValue) { sFrontSuspensionForward = inValue; });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Side", sFrontSuspensionSide, 0.0f, 10.0f, 0.01f, [](float inValue) { sFrontSuspensionSide = inValue; });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Min Length", sFrontSuspensionMinLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sFrontSuspensionMinLength = inValue; });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Max Length", sFrontSuspensionMaxLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sFrontSuspensionMaxLength = inValue; });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Backward", sRearSuspensionBackward, 0.0f, 10.0f, 0.01f, [](float inValue) { sRearSuspensionBackward = inValue; });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Side", sRearSuspensionSide, 0.0f, 10.0f, 0.01f, [](float inValue) { sRearSuspensionSide = inValue; });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Min Length", sRearSuspensionMinLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sRearSuspensionMinLength = inValue; });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Max Length", sRearSuspensionMaxLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sRearSuspensionMaxLength = inValue; });
+	inUI->CreateTextButton(inSubMenu, "Accept", [this]() { RestartTest(); });
 }
