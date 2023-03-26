@@ -38,10 +38,12 @@ private:
 	static inline float 		sFrontSuspensionSideAngle = 0.0f;
 	static inline float			sFrontSuspensionMinLength = 0.3f;
 	static inline float			sFrontSuspensionMaxLength = 0.5f;
+	static inline float			sFrontSuspensionFrequency = 1.5f;
 	static inline float 		sRearSuspensionBackwardAngle = 0.0f;
 	static inline float 		sRearSuspensionSideAngle = 0.0f;
 	static inline float			sRearSuspensionMinLength = 0.3f;
 	static inline float			sRearSuspensionMaxLength = 0.5f;
+	static inline float			sRearSuspensionFrequency = 1.5f;
 
 	Body *						mCarBody;									///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint
