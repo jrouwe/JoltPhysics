@@ -39,7 +39,7 @@ public:
 			for (int j = i / 2; j < cPyramidHeight - (i + 1) / 2; ++j)
 				for (int k = i / 2; k < cPyramidHeight - (i + 1) / 2; ++k)
 				{
-					RVec3 position(-cPyramidHeight + cBoxSize * j + (i & 1? cHalfBoxSize : 0.0f), 1.0f + (cBoxSize + cBoxSeparation) * i, -cPyramidHeight + cBoxSize * k + (i & 1? cHalfBoxSize : 0.0f));
+					RVec3 position(Real(-cPyramidHeight + cBoxSize * j + (i & 1? cHalfBoxSize : 0.0f)), Real(1.0f + (cBoxSize + cBoxSeparation) * i), Real(-cPyramidHeight + cBoxSize * k + (i & 1? cHalfBoxSize : 0.0f)));
 					BodyCreationSettings settings(box_shape, position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 					settings.mAllowSleeping = false; // No sleeping to force the large island to stay awake
 					bi.CreateAndAddBody(settings, EActivation::Activate);

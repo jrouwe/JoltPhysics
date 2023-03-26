@@ -75,7 +75,7 @@ bool NarrowPhaseQuery::CastRay(const RRayCast &inRay, RayCastResult &ioHit, cons
 	
 	// Do broadphase test, note that the broadphase uses floats so we drop precision here
 	MyCollector collector(inRay, ioHit, *mBodyLockInterface, inBodyFilter);
-	mBroadPhase->CastRay(RayCast(inRay), collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
+	mBroadPhaseQuery->CastRay(RayCast(inRay), collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 	return ioHit.mFraction <= 1.0f;
 }
 
@@ -142,7 +142,7 @@ void NarrowPhaseQuery::CastRay(const RRayCast &inRay, const RayCastSettings &inR
 
 	// Do broadphase test, note that the broadphase uses floats so we drop precision here
 	MyCollector collector(inRay, inRayCastSettings, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
-	mBroadPhase->CastRay(RayCast(inRay), collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
+	mBroadPhaseQuery->CastRay(RayCast(inRay), collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 void NarrowPhaseQuery::CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
@@ -203,7 +203,7 @@ void NarrowPhaseQuery::CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioC
 
 	// Do broadphase test (note: truncates double to single precision since the broadphase uses single precision)
 	MyCollector collector(inPoint, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
-	mBroadPhase->CollidePoint(Vec3(inPoint), collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
+	mBroadPhaseQuery->CollidePoint(Vec3(inPoint), collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
@@ -276,7 +276,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 
 	// Do broadphase test
 	MyCollector collector(inShape, inShapeScale, inCenterOfMassTransform, inCollideShapeSettings, inBaseOffset, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
-	mBroadPhase->CollideAABox(bounds, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
+	mBroadPhaseQuery->CollideAABox(bounds, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 void NarrowPhaseQuery::CastShape(const RShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, RVec3Arg inBaseOffset, CastShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
@@ -355,7 +355,7 @@ void NarrowPhaseQuery::CastShape(const RShapeCast &inShapeCast, const ShapeCastS
 
 	// Do broadphase test
 	MyCollector collector(inShapeCast, inShapeCastSettings, inBaseOffset, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
-	mBroadPhase->CastAABox({ inShapeCast.mShapeWorldBounds, inShapeCast.mDirection }, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
+	mBroadPhaseQuery->CastAABox({ inShapeCast.mShapeWorldBounds, inShapeCast.mDirection }, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedShapeCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
@@ -414,7 +414,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 
 	// Do broadphase test
 	MyCollector collector(inBox, ioCollector, *mBodyLockInterface, inBodyFilter, inShapeFilter);
-	mBroadPhase->CollideAABox(inBox, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
+	mBroadPhaseQuery->CollideAABox(inBox, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 }
 
 JPH_NAMESPACE_END
