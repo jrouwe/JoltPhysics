@@ -32,7 +32,6 @@ void VehicleConstraintTest::Initialize()
 	const float half_vehicle_length = 2.0f;
 	const float half_vehicle_width = 0.9f;
 	const float half_vehicle_height = 0.2f;
-	const float max_steering_angle = DegreesToRadians(30);
 
 	// Create collision testers
 	mTesters[0] = new VehicleCollisionTesterRay(Layers::MOVING);
@@ -54,8 +53,8 @@ void VehicleConstraintTest::Initialize()
 	vehicle.mMaxPitchRollAngle = sMaxRollAngle;
 
 	// Suspension direction
-	Vec3 front_dir = Vec3(Tan(sFrontSuspensionSideAngle), -1, Tan(sFrontSuspensionForwardAngle)).Normalized();
-	Vec3 rear_dir = Vec3(Tan(sRearSuspensionSideAngle), -1, -Tan(sRearSuspensionBackwardAngle)).Normalized();
+	Vec3 front_dir = Vec3(Tan(sFrontSuspensionKinPinAngle), -1, Tan(sFrontSuspensionCasterAngle)).Normalized();
+	Vec3 rear_dir = Vec3(Tan(sRearSuspensionKingPinAngle), -1, Tan(sRearSuspensionCasterAngle)).Normalized();
 
 	// Wheels
 	WheelSettingsWV *w1 = new WheelSettingsWV;
@@ -64,7 +63,8 @@ void VehicleConstraintTest::Initialize()
 	w1->mSuspensionMinLength = sFrontSuspensionMinLength;
 	w1->mSuspensionMaxLength = sFrontSuspensionMaxLength;
 	w1->mSuspensionFrequency = sFrontSuspensionFrequency;
-	w1->mMaxSteerAngle = max_steering_angle;
+	w1->mSuspensionDamping = sFrontSuspensionDamping;
+	w1->mMaxSteerAngle = sMaxSteeringAngle;
 	w1->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
 	WheelSettingsWV *w2 = new WheelSettingsWV;
@@ -73,7 +73,8 @@ void VehicleConstraintTest::Initialize()
 	w2->mSuspensionMinLength = sFrontSuspensionMinLength;
 	w2->mSuspensionMaxLength = sFrontSuspensionMaxLength;
 	w2->mSuspensionFrequency = sFrontSuspensionFrequency;
-	w2->mMaxSteerAngle = max_steering_angle;
+	w2->mSuspensionDamping = sFrontSuspensionDamping;
+	w2->mMaxSteerAngle = sMaxSteeringAngle;
 	w2->mMaxHandBrakeTorque = 0.0f; // Front wheel doesn't have hand brake
 
 	WheelSettingsWV *w3 = new WheelSettingsWV;
@@ -82,6 +83,7 @@ void VehicleConstraintTest::Initialize()
 	w3->mSuspensionMinLength = sRearSuspensionMinLength;
 	w3->mSuspensionMaxLength = sRearSuspensionMaxLength;
 	w3->mSuspensionFrequency = sRearSuspensionFrequency;
+	w3->mSuspensionDamping = sRearSuspensionDamping;
 	w3->mMaxSteerAngle = 0.0f;
 
 	WheelSettingsWV *w4 = new WheelSettingsWV;
@@ -90,6 +92,7 @@ void VehicleConstraintTest::Initialize()
 	w4->mSuspensionMinLength = sRearSuspensionMinLength;
 	w4->mSuspensionMaxLength = sRearSuspensionMaxLength;
 	w4->mSuspensionFrequency = sRearSuspensionFrequency;
+	w4->mSuspensionDamping = sRearSuspensionDamping;
 	w4->mMaxSteerAngle = 0.0f;
 
 	vehicle.mWheels = { w1, w2, w3, w4 };
@@ -233,21 +236,24 @@ void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMe
 
 	inUI->CreateSlider(inSubMenu, "Initial Roll Angle", RadiansToDegrees(sInitialRollAngle), 0.0f, 90.0f, 0.1f, [](float inValue) { sInitialRollAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Roll Angle", RadiansToDegrees(sMaxRollAngle), 0.0f, 90.0f, 0.1f, [](float inValue) { sMaxRollAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Max Steering Angle", RadiansToDegrees(sMaxSteeringAngle), 0.0f, 90.0f, 0.1f, [](float inValue) { sMaxSteeringAngle = DegreesToRadians(inValue); });
 	inUI->CreateComboBox(inSubMenu, "Collision Mode", { "Ray", "Cast Sphere", "Cast Cylinder" }, sCollisionMode, [](int inItem) { sCollisionMode = inItem; });
 	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Limited Slip Differentials", sLimitedSlipDifferentials, [](UICheckBox::EState inState) { sLimitedSlipDifferentials = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateSlider(inSubMenu, "Max Engine Torque", float(sMaxEngineTorque), 100.0f, 2000.0f, 10.0f, [](float inValue) { sMaxEngineTorque = inValue; });
 	inUI->CreateSlider(inSubMenu, "Clutch Strength", float(sClutchStrength), 1.0f, 40.0f, 1.0f, [](float inValue) { sClutchStrength = inValue; });
-	inUI->CreateSlider(inSubMenu, "Front Suspension Forward Angle", RadiansToDegrees(sFrontSuspensionForwardAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sFrontSuspensionForwardAngle = DegreesToRadians(inValue); });
-	inUI->CreateSlider(inSubMenu, "Front Suspension Side Angle", RadiansToDegrees(sFrontSuspensionSideAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sFrontSuspensionSideAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Caster Angle", RadiansToDegrees(sFrontSuspensionCasterAngle), -89.0f, 89.0f, 1.0f, [](float inValue) { sFrontSuspensionCasterAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Front Suspension King Pin Angle", RadiansToDegrees(sFrontSuspensionKinPinAngle), -89.0f, 89.0f, 1.0f, [](float inValue) { sFrontSuspensionKinPinAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Front Suspension Min Length", sFrontSuspensionMinLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sFrontSuspensionMinLength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Front Suspension Max Length", sFrontSuspensionMaxLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sFrontSuspensionMaxLength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Front Suspension Frequency", sFrontSuspensionFrequency, 0.1f, 5.0f, 0.01f, [](float inValue) { sFrontSuspensionFrequency = inValue; });
-	inUI->CreateSlider(inSubMenu, "Rear Suspension Backward Angle", RadiansToDegrees(sRearSuspensionBackwardAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sRearSuspensionBackwardAngle = DegreesToRadians(inValue); });
-	inUI->CreateSlider(inSubMenu, "Rear Suspension Side Angle", RadiansToDegrees(sRearSuspensionSideAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sRearSuspensionSideAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Damping", sFrontSuspensionDamping, 0.0f, 2.0f, 0.01f, [](float inValue) { sFrontSuspensionDamping = inValue; });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Caster Angle", RadiansToDegrees(sRearSuspensionCasterAngle), -89.0f, 89.0f, 1.0f, [](float inValue) { sRearSuspensionCasterAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension King Pin Angle", RadiansToDegrees(sRearSuspensionKingPinAngle), -89.0f, 89.0f, 1.0f, [](float inValue) { sRearSuspensionKingPinAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Rear Suspension Min Length", sRearSuspensionMinLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sRearSuspensionMinLength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Rear Suspension Max Length", sRearSuspensionMaxLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sRearSuspensionMaxLength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Rear Suspension Frequency", sRearSuspensionFrequency, 0.1f, 5.0f, 0.01f, [](float inValue) { sRearSuspensionFrequency = inValue; });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Damping", sRearSuspensionDamping, 0.0f, 2.0f, 0.01f, [](float inValue) { sRearSuspensionDamping = inValue; });
 	inUI->CreateTextButton(inSubMenu, "Accept", [this]() { RestartTest(); });
 }
