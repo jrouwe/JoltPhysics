@@ -8,7 +8,7 @@
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/BodyLockInterface.h>
 #include <Jolt/Physics/Collision/ShapeFilter.h>
-#include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuery.h>
 #include <Jolt/Physics/Collision/BackFaceMode.h>
 
 JPH_NAMESPACE_BEGIN
@@ -22,7 +22,7 @@ class NarrowPhaseQuery : public NonCopyable
 {
 public:
 	/// Initialize the interface (should only be called by PhysicsSystem)
-	void						Init(BodyLockInterface &inBodyLockInterface, BroadPhase &inBroadPhase) { mBodyLockInterface = &inBodyLockInterface; mBroadPhase = &inBroadPhase; }
+	void						Init(BodyLockInterface &inBodyLockInterface, BroadPhaseQuery &inBroadPhaseQuery) { mBodyLockInterface = &inBodyLockInterface; mBroadPhaseQuery = &inBroadPhaseQuery; }
 
 	/// Cast a ray and find the closest hit. Returns true if it finds a hit. Hits further than ioHit.mFraction will not be considered and in this case ioHit will remain unmodified (and the function will return false).
 	/// Convex objects will be treated as solid (meaning if the ray starts inside, you'll get a hit fraction of 0) and back face hits against triangles are returned.
@@ -68,7 +68,7 @@ public:
 
 private:
 	BodyLockInterface *			mBodyLockInterface = nullptr;
-	BroadPhase *				mBroadPhase = nullptr;
+	BroadPhaseQuery *			mBroadPhaseQuery = nullptr;
 };
 
 JPH_NAMESPACE_END
