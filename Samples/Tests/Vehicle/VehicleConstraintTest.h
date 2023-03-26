@@ -34,12 +34,12 @@ private:
 	static inline bool			sLimitedSlipDifferentials = true;
 	static inline float			sMaxEngineTorque = 500.0f;
 	static inline float			sClutchStrength = 10.0f;
-	static inline float			sFrontSuspensionForward = 0.0f;
-	static inline float 		sFrontSuspensionSide = 0.0f;
+	static inline float			sFrontSuspensionForwardAngle = 0.0f;
+	static inline float 		sFrontSuspensionSideAngle = 0.0f;
 	static inline float			sFrontSuspensionMinLength = 0.3f;
 	static inline float			sFrontSuspensionMaxLength = 0.5f;
-	static inline float 		sRearSuspensionBackward = 0.0f;
-	static inline float 		sRearSuspensionSide = 0.0f;
+	static inline float 		sRearSuspensionBackwardAngle = 0.0f;
+	static inline float 		sRearSuspensionSideAngle = 0.0f;
 	static inline float			sRearSuspensionMinLength = 0.3f;
 	static inline float			sRearSuspensionMaxLength = 0.5f;
 

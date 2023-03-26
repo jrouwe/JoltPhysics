@@ -53,10 +53,14 @@ void VehicleConstraintTest::Initialize()
 	vehicle.mDrawConstraintSize = 0.1f;
 	vehicle.mMaxPitchRollAngle = sMaxRollAngle;
 
+	// Suspension direction
+	Vec3 front_dir = Vec3(Tan(sFrontSuspensionSideAngle), -1, Tan(sFrontSuspensionForwardAngle)).Normalized();
+	Vec3 rear_dir = Vec3(Tan(sRearSuspensionSideAngle), -1, -Tan(sRearSuspensionBackwardAngle)).Normalized();
+
 	// Wheels
 	WheelSettingsWV *w1 = new WheelSettingsWV;
 	w1->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
-	w1->mDirection = Vec3(sFrontSuspensionSide, -1, sFrontSuspensionForward).Normalized();
+	w1->mDirection = front_dir;
 	w1->mSuspensionMinLength = sFrontSuspensionMinLength;
 	w1->mSuspensionMaxLength = sFrontSuspensionMaxLength;
 	w1->mMaxSteerAngle = max_steering_angle;
@@ -64,7 +68,7 @@ void VehicleConstraintTest::Initialize()
 
 	WheelSettingsWV *w2 = new WheelSettingsWV;
 	w2->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, half_vehicle_length - 2.0f * wheel_radius);
-	w2->mDirection = Vec3(-sFrontSuspensionSide, -1, sFrontSuspensionForward).Normalized();
+	w2->mDirection = Vec3(-1, 1, 1) * front_dir;
 	w2->mSuspensionMinLength = sFrontSuspensionMinLength;
 	w2->mSuspensionMaxLength = sFrontSuspensionMaxLength;
 	w2->mMaxSteerAngle = max_steering_angle;
@@ -72,14 +76,14 @@ void VehicleConstraintTest::Initialize()
 
 	WheelSettingsWV *w3 = new WheelSettingsWV;
 	w3->mPosition = Vec3(half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
-	w3->mDirection = Vec3(sRearSuspensionSide, -1, -sRearSuspensionBackward).Normalized();
+	w3->mDirection = rear_dir;
 	w3->mSuspensionMinLength = sRearSuspensionMinLength;
 	w3->mSuspensionMaxLength = sRearSuspensionMaxLength;
 	w3->mMaxSteerAngle = 0.0f;
 
 	WheelSettingsWV *w4 = new WheelSettingsWV;
 	w4->mPosition = Vec3(-half_vehicle_width, -0.9f * half_vehicle_height, -half_vehicle_length + 2.0f * wheel_radius);
-	w4->mDirection = Vec3(-sRearSuspensionSide, -1, -sRearSuspensionBackward).Normalized();
+	w4->mDirection = Vec3(-1, 1, 1) * rear_dir;
 	w4->mSuspensionMinLength = sRearSuspensionMinLength;
 	w4->mSuspensionMaxLength = sRearSuspensionMaxLength;
 	w4->mMaxSteerAngle = 0.0f;
@@ -231,12 +235,12 @@ void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMe
 	inUI->CreateCheckBox(inSubMenu, "Limited Slip Differentials", sLimitedSlipDifferentials, [](UICheckBox::EState inState) { sLimitedSlipDifferentials = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateSlider(inSubMenu, "Max Engine Torque", float(sMaxEngineTorque), 100.0f, 2000.0f, 10.0f, [](float inValue) { sMaxEngineTorque = inValue; });
 	inUI->CreateSlider(inSubMenu, "Clutch Strength", float(sClutchStrength), 1.0f, 40.0f, 1.0f, [](float inValue) { sClutchStrength = inValue; });
-	inUI->CreateSlider(inSubMenu, "Front Suspension Forward", sFrontSuspensionForward, 0.0f, 10.0f, 0.01f, [](float inValue) { sFrontSuspensionForward = inValue; });
-	inUI->CreateSlider(inSubMenu, "Front Suspension Side", sFrontSuspensionSide, 0.0f, 10.0f, 0.01f, [](float inValue) { sFrontSuspensionSide = inValue; });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Forward Angle", RadiansToDegrees(sFrontSuspensionForwardAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sFrontSuspensionForwardAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Front Suspension Side Angle", RadiansToDegrees(sFrontSuspensionSideAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sFrontSuspensionSideAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Front Suspension Min Length", sFrontSuspensionMinLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sFrontSuspensionMinLength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Front Suspension Max Length", sFrontSuspensionMaxLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sFrontSuspensionMaxLength = inValue; });
-	inUI->CreateSlider(inSubMenu, "Rear Suspension Backward", sRearSuspensionBackward, 0.0f, 10.0f, 0.01f, [](float inValue) { sRearSuspensionBackward = inValue; });
-	inUI->CreateSlider(inSubMenu, "Rear Suspension Side", sRearSuspensionSide, 0.0f, 10.0f, 0.01f, [](float inValue) { sRearSuspensionSide = inValue; });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Backward Angle", RadiansToDegrees(sRearSuspensionBackwardAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sRearSuspensionBackwardAngle = DegreesToRadians(inValue); });
+	inUI->CreateSlider(inSubMenu, "Rear Suspension Side Angle", RadiansToDegrees(sRearSuspensionSideAngle), 0.0f, 89.0f, 0.1f, [](float inValue) { sRearSuspensionSideAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Rear Suspension Min Length", sRearSuspensionMinLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sRearSuspensionMinLength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Rear Suspension Max Length", sRearSuspensionMaxLength, 0.0f, 3.0f, 0.01f, [](float inValue) { sRearSuspensionMaxLength = inValue; });
 	inUI->CreateTextButton(inSubMenu, "Accept", [this]() { RestartTest(); });
