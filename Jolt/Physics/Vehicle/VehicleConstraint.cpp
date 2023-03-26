@@ -176,7 +176,7 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 			w->mContactPointVelocity = w->mContactBody->GetPointVelocity(w->mContactPosition);
 
 			// Determine plane constant for axle contact plane
-			w->mAxlePlaneConstant = w->mContactNormal.Dot(ws_origin + w->mSuspensionLength * ws_direction);
+			w->mAxlePlaneConstant = RVec3(w->mContactNormal).Dot(ws_origin + w->mSuspensionLength * ws_direction);
 
 			// Check if body is active, if so the entire vehicle should be active
 			mIsActive |= w->mContactBody->IsActive();
@@ -423,7 +423,7 @@ bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumg
 			Vec3 ws_direction = body_transform.Multiply3x3(settings->mDirection);
 			RVec3 ws_position = body_transform * settings->mPosition;
 			RVec3 min_suspension_pos = ws_position + settings->mSuspensionMinLength * ws_direction;
-			float max_up_error = w->mContactNormal.Dot(min_suspension_pos) - w->mAxlePlaneConstant;
+			float max_up_error = float(RVec3(w->mContactNormal).Dot(min_suspension_pos) - w->mAxlePlaneConstant);
 			if (max_up_error < 0.0f)
 			{
 				// Recalculate constraint properties since the body may have moved

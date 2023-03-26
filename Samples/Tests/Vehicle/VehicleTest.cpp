@@ -180,12 +180,13 @@ void VehicleTest::LoadRaceTrack(const char *inFileName)
 		float				mWidthRight;
 	};
 	Array<Segment> segments;
-	Real x, y, wl, wr;
+	Real x, y;
+	float wl, wr;
 	char c;
-	Vec3 track_center = Vec3::sZero();
+	RVec3 track_center = RVec3::sZero();
 	while (stream >> x >> c >> y >> c >> wl >> c >> wr)
 	{
-		Vec3 center(x, 0, y);
+		RVec3 center(x, 0, y);
 		segments.push_back({ center, wl, wr });
 		track_center += center;
 	}
@@ -214,7 +215,8 @@ void VehicleTest::LoadRaceTrack(const char *inFileName)
 			mTrackData.push_back({ prev_tright, tright });
 		}
 
-		prev_tleft = tleft, prev_tright = tright;
+		prev_tleft = tleft;
+		prev_tright = tright;
 	}
 }
 

@@ -226,8 +226,8 @@ void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMe
 	inUI->CreateSlider(inSubMenu, "Initial Roll Angle", RadiansToDegrees(sInitialRollAngle), 0.0f, 90.0f, 0.1f, [](float inValue) { sInitialRollAngle = DegreesToRadians(inValue); });
 	inUI->CreateSlider(inSubMenu, "Max Roll Angle", RadiansToDegrees(sMaxRollAngle), 0.0f, 90.0f, 0.1f, [](float inValue) { sMaxRollAngle = DegreesToRadians(inValue); });
 	inUI->CreateComboBox(inSubMenu, "Collision Mode", { "Ray", "Cast Sphere", "Cast Cylinder" }, sCollisionMode, [](int inItem) { sCollisionMode = inItem; });
-	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [this](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; });
-	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [this](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Limited Slip Differentials", sLimitedSlipDifferentials, [](UICheckBox::EState inState) { sLimitedSlipDifferentials = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateSlider(inSubMenu, "Max Engine Torque", float(sMaxEngineTorque), 100.0f, 2000.0f, 10.0f, [](float inValue) { sMaxEngineTorque = inValue; });
 	inUI->CreateSlider(inSubMenu, "Clutch Strength", float(sClutchStrength), 1.0f, 40.0f, 1.0f, [](float inValue) { sClutchStrength = inValue; });

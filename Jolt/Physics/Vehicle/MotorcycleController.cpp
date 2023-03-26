@@ -134,7 +134,6 @@ void MotorcycleController::WarmStartVelocityConstraint(float inWarmStartImpulseR
 	// Apply impulse from previous frame
 	Body *body = mConstraint.GetVehicleBody();
 	Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
-	Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
 	body->AddAngularImpulse(mAppliedImpulse * forward);
 }
 
