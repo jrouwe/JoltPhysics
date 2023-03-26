@@ -156,7 +156,7 @@ public:
 	/// Check if constraint is active
 	inline bool					IsActive() const
 	{
-		return mEffectiveMassParallel != 0.0f;
+		return mEffectiveMassParallel != 0.0f || mEffectiveMassPerpendicular != 0.0f;
 	}
 
 	/// See AxisConstraint::WarmStart
