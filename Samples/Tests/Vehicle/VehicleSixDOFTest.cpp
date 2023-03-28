@@ -120,6 +120,8 @@ void VehicleSixDOFTest::Initialize()
 
 void VehicleSixDOFTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
+	VehicleTest::PrePhysicsUpdate(inParams);
+
 	const float max_rotation_speed = 10.0f * JPH_PI;
 
 	// Determine steering and speed

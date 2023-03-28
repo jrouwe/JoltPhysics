@@ -165,15 +165,18 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		w->mSuspensionLength = settings->mSuspensionMaxLength;
 
 		// Test collision to find the floor
-		RVec3 origin = mBody->GetCenterOfMassPosition() + mBody->GetRotation() * (settings->mPosition - mBody->GetShape()->GetCenterOfMass());
-		w->mWSDirection = mBody->GetRotation() * settings->mDirection;
-		if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, origin, w->mWSDirection, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
+		RVec3 ws_origin = mBody->GetCenterOfMassPosition() + mBody->GetRotation() * (settings->mPosition - mBody->GetShape()->GetCenterOfMass());
+		Vec3 ws_direction = mBody->GetRotation() * settings->mDirection;
+		if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
 		{
 			// Store ID (pointer is not valid outside of the simulation step)
 			w->mContactBodyID = w->mContactBody->GetID();
 
 			// Store contact velocity, cache this as the contact body may be removed
 			w->mContactPointVelocity = w->mContactBody->GetPointVelocity(w->mContactPosition);
+
+			// Determine plane constant for axle contact plane
+			w->mAxlePlaneConstant = RVec3(w->mContactNormal).Dot(ws_origin + w->mSuspensionLength * ws_direction);
 
 			// Check if body is active, if so the entire vehicle should be active
 			mIsActive |= w->mContactBody->IsActive();
@@ -324,19 +327,71 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 		{
 			const WheelSettings *settings = w->mSettings;
 
+			Vec3 neg_contact_normal = -w->mContactNormal;
+
 			Vec3 r1_plus_u, r2;
 			CalculateWheelContactPoint(*w, r1_plus_u, r2);
 
 			// Suspension spring
 			if (settings->mSuspensionMaxLength > settings->mSuspensionMinLength)
-				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, w->mWSDirection, w->mAntiRollBarImpulse, w->mSuspensionLength - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength, settings->mSuspensionFrequency, settings->mSuspensionDamping);
+			{
+				// Calculate the damping and frequency of the suspension spring given the angle between the suspension direction and the contact normal
+				// If the angle between the suspension direction and the inverse of the contact normal is alpha then the force on the spring relates to the force along the contact normal as:
+				// 
+				// Fspring = Fnormal * cos(alpha)
+				//
+				// The spring force is:
+				//
+				// Fspring = -k * x
+				//
+				// where k is the spring constant and x is the displacement of the spring. So we have:
+				//
+				// Fnormal * cos(alpha) = -k * x <=> Fnormal = -k / cos(alpha) * x
+				//
+				// So we can see this as a spring with spring constant:
+				//
+				// k' = k / cos(alpha)
+				// 
+				// In the same way the velocity relates like:
+				// 
+				// Vspring = Vnormal * cos(alpha)
+				//
+				// Which results in the modified damping constant c:
+				//
+				// c' = c / cos(alpha)
+				//
+				// Since we're not supplying k and c directly but rather the frequency and damping we can calculate the spring constant and damping constant as:
+				//
+				// w = 2 * pi * f
+				// k = m * w^2
+				// c = 2 * m * w * d
+				//
+				// where m is the mass of the spring, f is the frequency and d is the damping factor (see SpringPart::CalculateSpringProperties). So we have:
+				//
+				// w' = w * pi * f'
+				// k' = m * w'^2
+				// c' = 2 * m * w' * d'
+				//
+				// where f' = f / sqrt(cos(alpha)) and d' = d / sqrt(cos(alpha))
+				//
+				// Note that we clamp 1 / cos(alpha) to the range [0.1, 1] in order not to increase the stiffness / damping by too much.
+				// We also ensure that the frequency doesn't go over half the simulation frequency to prevent the spring from getting unstable.
+				Vec3 ws_direction = body_transform.Multiply3x3(settings->mDirection);
+				float sqrt_cos_angle = sqrt(max(0.1f, ws_direction.Dot(neg_contact_normal)));
+				float damping = settings->mSuspensionDamping / sqrt_cos_angle;
+				float frequency = min(0.5f / inDeltaTime, settings->mSuspensionFrequency / sqrt_cos_angle);
+
+				// Get the value of the constraint equation
+				float c = w->mSuspensionLength - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength;
+
+				w->mSuspensionPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, neg_contact_normal, w->mAntiRollBarImpulse, c, frequency, damping);
+			}
 			else
 				w->mSuspensionPart.Deactivate();
 
-			// Check if we reached the 'max up' position
-			float max_up_error = w->mSuspensionLength - settings->mSuspensionMinLength;
-			if (max_up_error < 0.0f)
-				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, w->mWSDirection, 0.0f, max_up_error);
+			// Check if we reached the 'max up' position and if so add a hard velocity constraint that stops any further movement in the normal direction
+			if (w->mSuspensionLength < settings->mSuspensionMinLength)
+				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, neg_contact_normal);
 			else
 				w->mSuspensionMaxUpPart.Deactivate();
 			
@@ -361,8 +416,10 @@ void VehicleConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRati
 	for (Wheel *w : mWheels)
 		if (w->mContactBody != nullptr)
 		{
-			w->mSuspensionPart.WarmStart(*mBody, *w->mContactBody, w->mWSDirection, inWarmStartImpulseRatio);
-			w->mSuspensionMaxUpPart.WarmStart(*mBody, *w->mContactBody, w->mWSDirection, inWarmStartImpulseRatio);
+			Vec3 neg_contact_normal = -w->mContactNormal;
+
+			w->mSuspensionPart.WarmStart(*mBody, *w->mContactBody, neg_contact_normal, inWarmStartImpulseRatio);
+			w->mSuspensionMaxUpPart.WarmStart(*mBody, *w->mContactBody, neg_contact_normal, inWarmStartImpulseRatio);
 			w->mLongitudinalPart.WarmStart(*mBody, *w->mContactBody, -w->mContactLongitudinal, 0.0f); // Don't warm start the longitudinal part (the engine/brake force, we don't want to preserve anything from the last frame)
 			w->mLateralPart.WarmStart(*mBody, *w->mContactBody, -w->mContactLateral, inWarmStartImpulseRatio);	
 		}
@@ -378,13 +435,15 @@ bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime)
 	for (Wheel *w : mWheels)
 		if (w->mContactBody != nullptr)
 		{
+			Vec3 neg_contact_normal = -w->mContactNormal;
+
 			// Suspension spring, note that it can only push and not pull
 			if (w->mSuspensionPart.IsActive())
-				impulse |= w->mSuspensionPart.SolveVelocityConstraint(*mBody, *w->mContactBody, w->mWSDirection, 0.0f, FLT_MAX);
+				impulse |= w->mSuspensionPart.SolveVelocityConstraint(*mBody, *w->mContactBody, neg_contact_normal, 0.0f, FLT_MAX);
 
 			// When reaching the minimal suspension length only allow forces pushing the bodies away
 			if (w->mSuspensionMaxUpPart.IsActive())
-				impulse |= w->mSuspensionMaxUpPart.SolveVelocityConstraint(*mBody, *w->mContactBody, w->mWSDirection, 0.0f, FLT_MAX);
+				impulse |= w->mSuspensionMaxUpPart.SolveVelocityConstraint(*mBody, *w->mContactBody, neg_contact_normal, 0.0f, FLT_MAX);
 		}
 
 	// Solve the horizontal movement of the vehicle
@@ -408,22 +467,24 @@ bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumg
 		{
 			const WheelSettings *settings = w->mSettings;
 
-			// Calculate new contact length as the body may have moved
-			// TODO: This assumes that only the vehicle moved and not the ground (contact point/normal is stored in world space)
+			// Check if we reached the 'max up' position now that the body has possibly moved
+			// We do this by calculating the axle position at minimum suspension length and making sure it does not go through the
+			// plane defined by the contact normal and the axle position when the contact happened
+			// TODO: This assumes that only the vehicle moved and not the ground as we kept the axle contact plane in world space
 			Vec3 ws_direction = body_transform.Multiply3x3(settings->mDirection);
 			RVec3 ws_position = body_transform * settings->mPosition;
-			float contact_length = Vec3(w->mContactPosition - ws_position).Dot(ws_direction);
-
-			// Check if we reached the 'max up' position
-			float max_up_error = contact_length - settings->mRadius - settings->mSuspensionMinLength;
+			RVec3 min_suspension_pos = ws_position + settings->mSuspensionMinLength * ws_direction;
+			float max_up_error = float(RVec3(w->mContactNormal).Dot(min_suspension_pos) - w->mAxlePlaneConstant);
 			if (max_up_error < 0.0f)
 			{
+				Vec3 neg_contact_normal = -w->mContactNormal;
+
 				// Recalculate constraint properties since the body may have moved
 				Vec3 r1_plus_u, r2;
 				CalculateWheelContactPoint(*w, r1_plus_u, r2);
-				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, ws_direction, 0.0f, max_up_error);
+				w->mSuspensionMaxUpPart.CalculateConstraintProperties(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, neg_contact_normal, 0.0f, max_up_error);
 
-				impulse |= w->mSuspensionMaxUpPart.SolvePositionConstraint(*mBody, *w->mContactBody, ws_direction, max_up_error, inBaumgarte);
+				impulse |= w->mSuspensionMaxUpPart.SolvePositionConstraint(*mBody, *w->mContactBody, neg_contact_normal, max_up_error, inBaumgarte);
 			}
 		}
 

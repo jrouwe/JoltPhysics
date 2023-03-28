@@ -126,14 +126,14 @@ protected:
 	Vec3					mContactNormal;								///< Normal of the contact point between wheel and ground
 	Vec3					mContactLongitudinal;						///< Vector perpendicular to normal in the forward direction
 	Vec3					mContactLateral;							///< Vector perpendicular to normal and longitudinal direction in the right direction
-	Vec3					mWSDirection;								///< Suspension spring direction in world space
+	Real					mAxlePlaneConstant;							///< Constant for the contact plane of the axle, defined as ContactNormal . (WorldSpaceSuspensionPoint + SuspensionLength * WorldSpaceSuspensionDirection)
 	float					mAntiRollBarImpulse = 0.0f;					///< Amount of impulse applied to the suspension from the anti-rollbars
 
 	float					mSteerAngle = 0.0f;							///< Rotation around the suspension direction, positive is to the left
 	float					mAngularVelocity = 0.0f;					///< Rotation speed of wheel, positive when the wheels cause the vehicle to move forwards (rad/s)
 	float					mAngle = 0.0f;								///< Current rotation of the wheel (rad, [0, 2 pi])
 
-	AxisConstraintPart		mSuspensionPart;							///< Controls movement up/down
+	AxisConstraintPart		mSuspensionPart;							///< Controls movement up/down along the contact normal
 	AxisConstraintPart		mSuspensionMaxUpPart;						///< Adds a hard limit when reaching the minimal suspension length
 	AxisConstraintPart		mLongitudinalPart;							///< Controls movement forward/backward
 	AxisConstraintPart		mLateralPart;								///< Controls movement sideways (slip)

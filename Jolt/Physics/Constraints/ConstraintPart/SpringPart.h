@@ -47,7 +47,7 @@ public:
 
 			// Calculate bias factor (baumgarte stabilization):
 			// beta = dt * k / (c + dt * k) = dt * k^2 * softness
-			// b = beta / dt * C = dt * k * softness * C;
+			// b = beta / dt * C = dt * k * softness * C
 			mBias = inBias + inDeltaTime * k * mSoftness * inC;
 			
 			// Update the effective mass, see post by Erin Catto: http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=4&t=1354
