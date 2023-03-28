@@ -306,7 +306,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/RotationEulerConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/RotationQuatConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/SpringPart.h
-	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/SuspensionConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConstraintPart/SwingTwistConstraintPart.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ContactConstraintManager.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ContactConstraintManager.h
