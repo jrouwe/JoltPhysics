@@ -425,8 +425,6 @@ void VehicleConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRati
 		}
 
 	mPitchRollPart.WarmStart(*mBody, Body::sFixedToWorld, inWarmStartImpulseRatio);
-
-	mController->WarmStartVelocityConstraint(inWarmStartImpulseRatio);
 }
 
 bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime) 

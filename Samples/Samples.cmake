@@ -205,8 +205,6 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Shapes/TaperedCapsuleShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/TriangleShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/TriangleShapeTest.h
-	${SAMPLES_ROOT}/Tests/Vehicle/MotorcycleTest.cpp
-	${SAMPLES_ROOT}/Tests/Vehicle/MotorcycleTest.h
 	${SAMPLES_ROOT}/Tests/Vehicle/TankTest.cpp
 	${SAMPLES_ROOT}/Tests/Vehicle/TankTest.h
 	${SAMPLES_ROOT}/Tests/Vehicle/VehicleConstraintTest.cpp
