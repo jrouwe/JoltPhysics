@@ -273,11 +273,13 @@ static TestNameAndRTTI sWaterTests[] =
 
 JPH_DECLARE_RTTI_FOR_FACTORY(VehicleSixDOFTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(VehicleConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(MotorcycleTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(TankTest)
 
 static TestNameAndRTTI sVehicleTests[] =
 {
 	{ "Car (VehicleConstraint)",			JPH_RTTI(VehicleConstraintTest) },
+	{ "Motorcycle (VehicleConstraint)",		JPH_RTTI(MotorcycleTest) },
 	{ "Tank (VehicleConstraint)",			JPH_RTTI(TankTest) },
 	{ "Car (SixDOFConstraint)",				JPH_RTTI(VehicleSixDOFTest) },
 };
