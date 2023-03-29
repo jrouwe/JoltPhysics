@@ -249,24 +249,23 @@ void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &io
 				continue;
 
 			if (w->mContactBody->IsDynamic())
+			{
 				body_ids[num_bodies++] = id;
-			needs_to_activate |= !w->mContactBody->IsActive();
+				needs_to_activate |= !w->mContactBody->IsActive();
+			}
 		}
 
-	// Activate bodies
-	if (needs_to_activate)
+	// Activate bodies, note that if we get here we have already told the system that we're active so that means our main body needs to be active too
+	if (!mBody->IsActive())
 	{
-		if (!mBody->IsActive())
-		{
-			// Our main body is not active, activate it too
-			body_ids[num_bodies] = mBody->GetID();
-			inBodyManager.ActivateBodies(body_ids, num_bodies + 1);
-		}
-		else
-		{
-			// Only activate bodies the wheels are touching
-			inBodyManager.ActivateBodies(body_ids, num_bodies);
-		}
+		// Our main body is not active, activate it too
+		body_ids[num_bodies] = mBody->GetID();
+		inBodyManager.ActivateBodies(body_ids, num_bodies + 1);
+	}
+	else if (needs_to_activate)
+	{
+		// Only activate bodies the wheels are touching
+		inBodyManager.ActivateBodies(body_ids, num_bodies);
 	}
 
 	// Link the bodies into the same island
