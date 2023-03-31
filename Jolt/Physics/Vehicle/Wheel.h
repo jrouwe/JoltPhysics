@@ -27,7 +27,10 @@ public:
 	virtual void			RestoreBinaryState(StreamIn &inStream);
 
 	Vec3					mPosition { 0, 0, 0 };						///< Attachment point of wheel suspension in local space of the body
-	Vec3					mDirection { 0, -1, 0 };					///< Direction of the suspension in local space of the body
+	Vec3					mSuspensionDirection { 0, -1, 0 };			///< Direction of the suspension in local space of the body, should point down
+	Vec3					mSteeringAxis { 0, 1, 0 };					///< Direction of the steering axis in local space of the body, should point up (e.g. for a bike would be -mSuspensionDirection)
+	Vec3					mWheelUp { 0, 1, 0 };						///< Up direction when the wheel is in the neutral steering position (usually VehicleConstraintSettings::mUp but can be used to give the wheel camber or for a bike would be -mSuspensionDirection)
+	Vec3					mWheelForward { 0, 0, 1 };					///< Forward direction when the wheel is in the neutral steering position (usually VehicleConstraintSettings::mForward but can be used to give the wheel toe, does not need to be perpendicular to mWheelUp)
 	float					mSuspensionMinLength = 0.3f;				///< How long the suspension is in max raised position relative to the attachment point (m)
 	float					mSuspensionMaxLength = 0.5f;				///< How long the suspension is in max droop position relative to the attachment point (m)
 	float					mSuspensionPreloadLength = 0.0f;			///< The natural length (m) of the suspension spring is defined as mSuspensionMaxLength + mSuspensionPreloadLength. Can be used to preload the suspension as the spring is compressed by mSuspensionPreloadLength when the suspension is in max droop position. Note that this means when the vehicle touches the ground there is a discontinuity so it will also make the vehicle more bouncy as we're updating with discrete time steps.

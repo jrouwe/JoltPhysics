@@ -117,6 +117,17 @@ VehicleConstraint::~VehicleConstraint()
 		delete w;
 }
 
+void VehicleConstraint::GetWheelLocalBasis(const Wheel *inWheel, Vec3 &outForward, Vec3 &outUp, Vec3 &outRight) const
+{
+	const WheelSettings *settings = inWheel->mSettings;
+
+	Quat steer_rotation = Quat::sRotation(settings->mSteeringAxis, inWheel->mSteerAngle);
+	outUp = steer_rotation * settings->mWheelUp;
+	outForward = steer_rotation * settings->mWheelForward;
+	outRight = outForward.Cross(outUp).Normalized();
+	outForward = outUp.Cross(outRight).Normalized();
+}
+
 Mat44 VehicleConstraint::GetWheelLocalTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const
 {
 	JPH_ASSERT(inWheelIndex < mWheels.size());
@@ -128,10 +139,10 @@ Mat44 VehicleConstraint::GetWheelLocalTransform(uint inWheelIndex, Vec3Arg inWhe
 	Mat44 wheel_to_rotational = Mat44(Vec4(inWheelRight, 0), Vec4(inWheelUp, 0), Vec4(inWheelUp.Cross(inWheelRight), 0), Vec4(0, 0, 0, 1)).Transposed();
 
 	// Calculate the matrix that takes us from the rotational space to vehicle local space
-	Vec3 local_forward = Quat::sRotation(mUp, wheel->mSteerAngle) * mForward;
-	Vec3 local_right = local_forward.Cross(mUp);
-	Vec3 local_wheel_pos = settings->mPosition + settings->mDirection * wheel->mSuspensionLength;
-	Mat44 rotational_to_local(Vec4(local_right, 0), Vec4(mUp, 0), Vec4(local_forward, 0), Vec4(local_wheel_pos, 1));
+	Vec3 local_forward, local_up, local_right;
+	GetWheelLocalBasis(wheel, local_forward, local_up, local_right);
+	Vec3 local_wheel_pos = settings->mPosition + settings->mSuspensionDirection * wheel->mSuspensionLength;
+	Mat44 rotational_to_local(Vec4(local_right, 0), Vec4(local_up, 0), Vec4(local_forward, 0), Vec4(local_wheel_pos, 1));
 
 	// Calculate transform of rotated wheel
 	return rotational_to_local * Mat44::sRotationX(wheel->mAngle) * wheel_to_rotational;
@@ -152,6 +163,8 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 	// Calculate if this constraint is active by checking if our main vehicle body is active or any of the bodies we touch are active
 	mIsActive = mBody->IsActive();
 
+	RMat44 body_transform = mBody->GetWorldTransform();
+
 	// Test collision for wheels
 	for (uint wheel_index = 0; wheel_index < mWheels.size(); ++wheel_index)
 	{
@@ -165,8 +178,8 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		w->mSuspensionLength = settings->mSuspensionMaxLength;
 
 		// Test collision to find the floor
-		RVec3 ws_origin = mBody->GetCenterOfMassPosition() + mBody->GetRotation() * (settings->mPosition - mBody->GetShape()->GetCenterOfMass());
-		Vec3 ws_direction = mBody->GetRotation() * settings->mDirection;
+		RVec3 ws_origin = body_transform * settings->mPosition;
+		Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
 		if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
 		{
 			// Store ID (pointer is not valid outside of the simulation step)
@@ -182,11 +195,23 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 			mIsActive |= w->mContactBody->IsActive();
 
 			// Determine world space forward using steering angle and body rotation
-			Vec3 forward = mBody->GetRotation() * Quat::sRotation(mUp, w->mSteerAngle) * mForward;
+			Vec3 forward, up, right;
+			GetWheelLocalBasis(w, forward, up, right);
+			forward = body_transform.Multiply3x3(forward);
+			right = body_transform.Multiply3x3(right);
 
-			// Calculate frame of reference for the contact
-			w->mContactLateral = forward.Cross(w->mContactNormal).NormalizedOr(Vec3::sZero());
-			w->mContactLongitudinal = w->mContactNormal.Cross(w->mContactLateral);
+			// The longitudinal axis is in the up/forward plane
+			w->mContactLongitudinal = w->mContactNormal.Cross(right);
+
+			// Make sure that the longitudinal axis is aligned with the forward axis
+			if (w->mContactLongitudinal.Dot(forward) < 0.0f)
+				w->mContactLongitudinal = -w->mContactLongitudinal;
+
+			// Normalize it
+			w->mContactLongitudinal = w->mContactLongitudinal.NormalizedOr(w->mContactNormal.GetNormalizedPerpendicular());
+
+			// The lateral axis is perpendicular to contact normal and longitudinal axis
+			w->mContactLateral = w->mContactLongitudinal.Cross(w->mContactNormal).Normalized();
 		}
 	}
 
@@ -375,7 +400,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 				//
 				// Note that we clamp 1 / cos(alpha) to the range [0.1, 1] in order not to increase the stiffness / damping by too much.
 				// We also ensure that the frequency doesn't go over half the simulation frequency to prevent the spring from getting unstable.
-				Vec3 ws_direction = body_transform.Multiply3x3(settings->mDirection);
+				Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
 				float sqrt_cos_angle = sqrt(max(0.1f, ws_direction.Dot(neg_contact_normal)));
 				float damping = settings->mSuspensionDamping / sqrt_cos_angle;
 				float frequency = min(0.5f / inDeltaTime, settings->mSuspensionFrequency / sqrt_cos_angle);
@@ -470,7 +495,7 @@ bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumg
 			// We do this by calculating the axle position at minimum suspension length and making sure it does not go through the
 			// plane defined by the contact normal and the axle position when the contact happened
 			// TODO: This assumes that only the vehicle moved and not the ground as we kept the axle contact plane in world space
-			Vec3 ws_direction = body_transform.Multiply3x3(settings->mDirection);
+			Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
 			RVec3 ws_position = body_transform * settings->mPosition;
 			RVec3 min_suspension_pos = ws_position + settings->mSuspensionMinLength * ws_direction;
 			float max_up_error = float(RVec3(w->mContactNormal).Dot(min_suspension_pos) - w->mAxlePlaneConstant);

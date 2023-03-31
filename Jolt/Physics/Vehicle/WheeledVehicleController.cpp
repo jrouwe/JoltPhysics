@@ -654,14 +654,16 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 								 mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
 	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, constraint_size);
 
+	RMat44 body_transform = body->GetWorldTransform();
+
 	for (const Wheel *w_base : mConstraint.GetWheels())
 	{
 		const WheelWV *w = static_cast<const WheelWV *>(w_base);
 		const WheelSettings *settings = w->GetSettings();
 
 		// Calculate where the suspension attaches to the body in world space
-		RVec3 ws_position = body->GetCenterOfMassPosition() + body->GetRotation() * (settings->mPosition - body->GetShape()->GetCenterOfMass());
-		Vec3 ws_direction = body->GetRotation() * settings->mDirection;
+		RVec3 ws_position = body_transform * settings->mPosition;
+		Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
 
 		// Draw suspension
 		RVec3 min_suspension_pos = ws_position + ws_direction * settings->mSuspensionMinLength;
@@ -670,8 +672,20 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 		inRenderer->DrawLine(min_suspension_pos, max_suspension_pos, Color::sGreen);
 
 		// Draw current length
-		RVec3 cur_suspension_pos = ws_position + ws_direction * w->GetSuspensionLength();
-		inRenderer->DrawMarker(cur_suspension_pos, w->GetSuspensionLength() < settings->mSuspensionMinLength? Color::sRed : Color::sGreen, constraint_size);
+		RVec3 wheel_pos = ws_position + ws_direction * w->GetSuspensionLength();
+		inRenderer->DrawMarker(wheel_pos, w->GetSuspensionLength() < settings->mSuspensionMinLength? Color::sRed : Color::sGreen, constraint_size);
+
+		// Draw wheel basis
+		Vec3 wheel_forward, wheel_up, wheel_right;
+		mConstraint.GetWheelLocalBasis(w, wheel_forward, wheel_up, wheel_right);
+		wheel_forward = body_transform.Multiply3x3(wheel_forward);
+		wheel_up = body_transform.Multiply3x3(wheel_up);
+		wheel_right = body_transform.Multiply3x3(wheel_right);
+		Vec3 steering_axis = body_transform.Multiply3x3(settings->mSteeringAxis);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + wheel_forward, Color::sRed);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + wheel_up, Color::sGreen);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + wheel_right, Color::sBlue);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + steering_axis, Color::sYellow);
 
 		if (w->HasContact())
 		{
@@ -680,12 +694,12 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLongitudinal(), Color::sRed);
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLateral(), Color::sBlue);
 
-			DebugRenderer::sInstance->DrawText3D(cur_suspension_pos, StringFormat("W: %.1f, S: %.2f\nSlip: %.2f, FrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)w->mLongitudinalSlip, (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, constraint_size);
+			DebugRenderer::sInstance->DrawText3D(wheel_pos, StringFormat("W: %.1f, S: %.2f\nSlip: %.2f, FrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)w->mLongitudinalSlip, (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, constraint_size);
 		}
 		else
 		{
 			// Draw 'no hit'
-			DebugRenderer::sInstance->DrawText3D(cur_suspension_pos, StringFormat("W: %.1f", (double)w->GetAngularVelocity()), Color::sRed, constraint_size);
+			DebugRenderer::sInstance->DrawText3D(wheel_pos, StringFormat("W: %.1f", (double)w->GetAngularVelocity()), Color::sRed, constraint_size);
 		}
 	}
 }
