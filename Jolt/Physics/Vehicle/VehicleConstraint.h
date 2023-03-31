@@ -104,6 +104,13 @@ public:
 	Wheel *						GetWheel(uint inIdx)						{ return mWheels[inIdx]; }
 	const Wheel *				GetWheel(uint inIdx) const					{ return mWheels[inIdx]; }
 
+	/// Get the basis vectors for the wheel in local space to the vehicle body (note: basis does not rotate when the wheel rotates arounds its axis)
+	/// @param inWheel Wheel to fetch basis for
+	/// @param outForward Forward vector for the wheel
+	/// @param outUp Up vector for the wheel
+	/// @param outRight Right vector for the wheel
+	void						GetWheelLocalBasis(const Wheel *inWheel, Vec3 &outForward, Vec3 &outUp, Vec3 &outRight) const;
+
 	/// Get the transform of a wheel in local space to the vehicle body, returns a matrix that transforms a cylinder aligned with the Y axis in body space (not COM space)
 	/// @param inWheelIndex Index of the wheel to fetch
 	/// @param inWheelRight Unit vector that indicates right in model space of the wheel (so if you only have 1 wheel model, you probably want to specify the opposite direction for the left and right wheels)

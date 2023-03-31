@@ -13,7 +13,10 @@ JPH_NAMESPACE_BEGIN
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettings)
 {
 	JPH_ADD_ATTRIBUTE(WheelSettings, mPosition)
-	JPH_ADD_ATTRIBUTE(WheelSettings, mDirection)
+	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionDirection)
+	JPH_ADD_ATTRIBUTE(WheelSettings, mSteeringAxis)
+	JPH_ADD_ATTRIBUTE(WheelSettings, mWheelForward)
+	JPH_ADD_ATTRIBUTE(WheelSettings, mWheelUp)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionMinLength)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionMaxLength)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionPreloadLength)
@@ -26,7 +29,10 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettings)
 void WheelSettings::SaveBinaryState(StreamOut &inStream) const
 {
 	inStream.Write(mPosition);
-	inStream.Write(mDirection);
+	inStream.Write(mSuspensionDirection);
+	inStream.Write(mSteeringAxis);
+	inStream.Write(mWheelForward);
+	inStream.Write(mWheelUp);
 	inStream.Write(mSuspensionMinLength);
 	inStream.Write(mSuspensionMaxLength);
 	inStream.Write(mSuspensionPreloadLength);
@@ -39,7 +45,10 @@ void WheelSettings::SaveBinaryState(StreamOut &inStream) const
 void WheelSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	inStream.Read(mPosition);
-	inStream.Read(mDirection);
+	inStream.Read(mSuspensionDirection);
+	inStream.Read(mSteeringAxis);
+	inStream.Read(mWheelForward);
+	inStream.Read(mWheelUp);
 	inStream.Read(mSuspensionMinLength);
 	inStream.Read(mSuspensionMaxLength);
 	inStream.Read(mSuspensionPreloadLength);
@@ -53,7 +62,10 @@ Wheel::Wheel(const WheelSettings &inSettings) :
 	mSettings(&inSettings),
 	mSuspensionLength(inSettings.mSuspensionMaxLength)
 {
-	JPH_ASSERT(inSettings.mDirection.IsNormalized());
+	JPH_ASSERT(inSettings.mSuspensionDirection.IsNormalized());
+	JPH_ASSERT(inSettings.mSteeringAxis.IsNormalized());
+	JPH_ASSERT(inSettings.mWheelForward.IsNormalized());
+	JPH_ASSERT(inSettings.mWheelUp.IsNormalized());
 	JPH_ASSERT(inSettings.mSuspensionMinLength >= 0.0f);
 	JPH_ASSERT(inSettings.mSuspensionMaxLength >= inSettings.mSuspensionMinLength);
 	JPH_ASSERT(inSettings.mSuspensionPreloadLength >= 0.0f);

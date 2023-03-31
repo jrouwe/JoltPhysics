@@ -411,6 +411,8 @@ bool TrackedVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 
 void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const 
 {
+	float constraint_size = mConstraint.GetDrawConstraintSize();
+
 	// Draw RPM
 	Body *body = mConstraint.GetVehicleBody();
 	Vec3 rpm_meter_up = body->GetRotation() * mConstraint.GetLocalUp();
@@ -423,7 +425,7 @@ void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const
 								 "Gear: %d, Clutch: %.1f, EngineRPM: %.0f, V: %.1f km/h", 
 								 (double)mForwardInput, (double)mLeftRatio, (double)mRightRatio, (double)mBrakeInput, 
 								 mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
-	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, mConstraint.GetDrawConstraintSize());
+	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, constraint_size);
 
 	for (const VehicleTrack &t : mTracks)
 	{
@@ -433,8 +435,10 @@ void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const
 		// Calculate where the suspension attaches to the body in world space
 		RVec3 ws_position = body->GetCenterOfMassPosition() + body->GetRotation() * (settings->mPosition - body->GetShape()->GetCenterOfMass());
 
-		DebugRenderer::sInstance->DrawText3D(ws_position, StringFormat("W: %.1f", (double)t.mAngularVelocity), Color::sWhite, 0.1f);
+		DebugRenderer::sInstance->DrawText3D(ws_position, StringFormat("W: %.1f", (double)t.mAngularVelocity), Color::sWhite, constraint_size);
 	}
+
+	RMat44 body_transform = body->GetWorldTransform();
 
 	for (const Wheel *w_base : mConstraint.GetWheels())
 	{
@@ -442,23 +446,39 @@ void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const
 		const WheelSettings *settings = w->GetSettings();
 
 		// Calculate where the suspension attaches to the body in world space
-		RVec3 ws_position = body->GetCenterOfMassPosition() + body->GetRotation() * (settings->mPosition - body->GetShape()->GetCenterOfMass());
+		RVec3 ws_position = body_transform * settings->mPosition;
+		Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
+
+		// Draw suspension
+		RVec3 min_suspension_pos = ws_position + ws_direction * settings->mSuspensionMinLength;
+		RVec3 max_suspension_pos = ws_position + ws_direction * settings->mSuspensionMaxLength;
+		inRenderer->DrawLine(ws_position, min_suspension_pos, Color::sRed);
+		inRenderer->DrawLine(min_suspension_pos, max_suspension_pos, Color::sGreen);
+
+		// Draw current length
+		RVec3 wheel_pos = ws_position + ws_direction * w->GetSuspensionLength();
+		inRenderer->DrawMarker(wheel_pos, w->GetSuspensionLength() < settings->mSuspensionMinLength? Color::sRed : Color::sGreen, constraint_size);
+
+		// Draw wheel basis
+		Vec3 wheel_forward, wheel_up, wheel_right;
+		mConstraint.GetWheelLocalBasis(w, wheel_forward, wheel_up, wheel_right);
+		wheel_forward = body_transform.Multiply3x3(wheel_forward);
+		wheel_up = body_transform.Multiply3x3(wheel_up);
+		wheel_right = body_transform.Multiply3x3(wheel_right);
+		Vec3 steering_axis = body_transform.Multiply3x3(settings->mSteeringAxis);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + wheel_forward, Color::sRed);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + wheel_up, Color::sGreen);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + wheel_right, Color::sBlue);
+		inRenderer->DrawLine(wheel_pos, wheel_pos + steering_axis, Color::sYellow);
 
 		if (w->HasContact())
 		{
 			// Draw contact
-			inRenderer->DrawLine(ws_position, w->GetContactPosition(), w->HasHitHardPoint()? Color::sRed : Color::sGreen); // Red if we hit the 'max up' limit
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactNormal(), Color::sYellow);
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLongitudinal(), Color::sRed);
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLateral(), Color::sBlue);
 
-			DebugRenderer::sInstance->DrawText3D(w->GetContactPosition(), StringFormat("S: %.2f", (double)w->GetSuspensionLength()), Color::sWhite, 0.1f);
-		}
-		else
-		{
-			// Draw 'no hit'
-			Vec3 max_droop = body->GetRotation() * settings->mDirection * (settings->mSuspensionMaxLength + settings->mRadius);
-			inRenderer->DrawLine(ws_position, ws_position + max_droop, Color::sYellow);
+			DebugRenderer::sInstance->DrawText3D(w->GetContactPosition(), StringFormat("S: %.2f", (double)w->GetSuspensionLength()), Color::sWhite, constraint_size);
 		}
 	}
 }
