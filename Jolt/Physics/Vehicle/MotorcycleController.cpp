@@ -84,44 +84,64 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	// See: https://en.wikipedia.org/wiki/Bicycle_and_motorcycle_dynamics#Leaning
 	// LeanAngle = Atan(Velocity^2 / (Gravity * TurnRadius))
 	// And: https://en.wikipedia.org/wiki/Turning_radius (we're ignoring the tire width)
-	// TurnRadius = WheelBase / Sin(SteerAngle)
-	// => SteerAngle = ASin(WheelBase * Tan(LeanAngle) * Gravity / Velocity^2)
-	float max_steer_angle = FLT_MAX;
-	if (velocity_sq > 1.0e-6f)
-		max_steer_angle = ASin(wheel_base * Tan(mMaxLeanAngle) * gravity_len / velocity_sq);
+	// The CasterAngle is the added according to https://en.wikipedia.org/wiki/Bicycle_and_motorcycle_dynamics#Turning (this is the same formula but without small angle approximation)
+	// TurnRadius = WheelBase / (Sin(SteerAngle) * Cos(CasterAngle))
+	// => SteerAngle = ASin(WheelBase * Tan(LeanAngle) * Gravity / (Velocity^2 * Cos(CasterAngle))
+	// The caster angle is different for each wheel so we can only calculate part of the equation here
+	float max_steer_angle_factor = wheel_base * Tan(mMaxLeanAngle) * gravity_len;
 
 	// Decompose steering into sign and direction
 	float steer_strength = abs(mRightInput);
 	float steer_sign = -Sign(mRightInput);
 
-	float all_wheel_steer_angle = 0.0f;
+	// Track the minimum turning radius across all wheels based on the steering angle of each wheel
+	float min_turn_radius = FLT_MAX;
+
 	for (Wheel *w_base : mConstraint.GetWheels())
 	{
 		WheelWV *w = static_cast<WheelWV *>(w_base);
+		const WheelSettingsWV *s = w->GetSettings();
 
-		// Clamp steer angle to max steer angle
-		float steer_angle = min(steer_strength * w->GetSettings()->mMaxSteerAngle, max_steer_angle);
+		// Check if this wheel can steer
+		if (s->mMaxSteerAngle != 0.0f)
+		{
+			// Calculate cos(caster angle), the angle between the steering axis and the up vector
+			float cos_caster_angle = s->mSteeringAxis.Dot(mConstraint.GetLocalUp());
 
-		// Store steer angle across all wheels for calculating the lean angle later
-		all_wheel_steer_angle = max(all_wheel_steer_angle, steer_angle);
+			// Calculate steer angle
+			float steer_angle = steer_strength * w->GetSettings()->mMaxSteerAngle;
 
-		// Set steering angle
-		w->SetSteerAngle(steer_sign * steer_angle);
+			// Clamp to max steering angle
+			if (velocity_sq > 1.0e-6f)
+			{
+				float max_steer_angle = ASin(max_steer_angle_factor / (velocity_sq * cos_caster_angle));
+				steer_angle = min(steer_angle, max_steer_angle);
+			}
+
+			// Calculate minimum turning radius across all wheels
+			if (steer_angle > 1.0e-6f)
+			{
+				float turn_radius = wheel_base / (Sin(steer_angle) * cos_caster_angle);
+				min_turn_radius = min(min_turn_radius, turn_radius);
+			}
+
+			// Set steering angle
+			w->SetSteerAngle(steer_sign * steer_angle);
+		}
 	}
 
 	// Calculate the desired lean angle
-	if (all_wheel_steer_angle < 1.0e-6f)
+	if (min_turn_radius < FLT_MAX)
 	{
-		// Not steering -> no leaning
-		mTargetLean = world_up;
+		// Using the formulas above, calculate the resulting lean angle
+		float lean_angle = -steer_sign * ATan(velocity_sq / (gravity_len * min_turn_radius));
+		Vec3 world_right = forward.Cross(world_up).NormalizedOr(world_up.GetNormalizedPerpendicular());
+		mTargetLean = world_right * Sin(lean_angle) + world_up * Cos(lean_angle);
 	}
 	else
 	{
-		// Using the formulas above, calculate the resulting lean angle
-		float turn_radius = -wheel_base / Sin(steer_sign * all_wheel_steer_angle);
-		float lean_angle = ATan(velocity_sq / (gravity_len * turn_radius));
-		Vec3 world_right = forward.Cross(world_up).NormalizedOr(world_up.GetNormalizedPerpendicular());
-		mTargetLean = world_right * Sin(lean_angle) + world_up * Cos(lean_angle);
+		// Not steering -> no leaning
+		mTargetLean = world_up;
 	}
 }
 

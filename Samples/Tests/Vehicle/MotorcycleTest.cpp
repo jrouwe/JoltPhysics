@@ -50,7 +50,7 @@ void MotorcycleTest::Initialize()
 	const float max_steering_angle = DegreesToRadians(30);
 
 	// Angle of the front suspension
-	const float rake = DegreesToRadians(30);
+	const float caster_angle = DegreesToRadians(30);
 
 	// Create vehicle body
 	RVec3 position(0, 2, 0);
@@ -70,7 +70,7 @@ void MotorcycleTest::Initialize()
 	WheelSettingsWV *front = new WheelSettingsWV;
 	front->mPosition = Vec3(0.0f, -0.9f * half_vehicle_height, front_wheel_pos_z);
 	front->mMaxSteerAngle = max_steering_angle;
-	front->mSuspensionDirection = Vec3(0, -1, Tan(rake)).Normalized();
+	front->mSuspensionDirection = Vec3(0, -1, Tan(caster_angle)).Normalized();
 	front->mSteeringAxis = -front->mSuspensionDirection;
 	front->mRadius = front_wheel_radius;
 	front->mWidth = front_wheel_width;
