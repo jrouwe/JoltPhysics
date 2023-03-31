@@ -457,7 +457,7 @@ void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const
 		else
 		{
 			// Draw 'no hit'
-			Vec3 max_droop = body->GetRotation() * settings->mDirection * (settings->mSuspensionMaxLength + settings->mRadius);
+			Vec3 max_droop = body->GetRotation() * settings->mSuspensionDirection * (settings->mSuspensionMaxLength + settings->mRadius);
 			inRenderer->DrawLine(ws_position, ws_position + max_droop, Color::sYellow);
 		}
 	}
