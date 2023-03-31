@@ -56,7 +56,7 @@ float MotorcycleController::GetWheelBase() const
 		const WheelSettings *s = w->GetSettings();
 
 		// Measure distance along the forward axis by looking at the fully extended suspension
-		float value = (s->mPosition + s->mDirection * s->mSuspensionMaxLength).Dot(mConstraint.GetLocalForward());
+		float value = (s->mPosition + s->mSuspensionDirection * s->mSuspensionMaxLength).Dot(mConstraint.GetLocalForward());
 
 		// Update min and max
 		low = min(low, value);

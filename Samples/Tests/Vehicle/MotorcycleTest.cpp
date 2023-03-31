@@ -70,7 +70,8 @@ void MotorcycleTest::Initialize()
 	WheelSettingsWV *front = new WheelSettingsWV;
 	front->mPosition = Vec3(0.0f, -0.9f * half_vehicle_height, front_wheel_pos_z);
 	front->mMaxSteerAngle = max_steering_angle;
-	front->mDirection = Vec3(0, -1, Tan(rake)).Normalized();
+	front->mSuspensionDirection = Vec3(0, -1, Tan(rake)).Normalized();
+	front->mSteeringAxis = -front->mSuspensionDirection;
 	front->mRadius = front_wheel_radius;
 	front->mWidth = front_wheel_width;
 	front->mSuspensionMinLength = front_suspension_min_length;
