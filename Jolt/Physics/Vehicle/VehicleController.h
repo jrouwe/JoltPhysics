@@ -55,9 +55,6 @@ protected:
 	// Called after the wheel probes have been done
 	virtual void				PostCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) = 0;
 
-	// Apply last frame's impulses, must be called prior to SolveLongitudinalAndLateralConstraints
-	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) { /* Do nothing */ }
-
 	// Solve longitudinal and lateral constraint parts for all of the wheels
 	virtual bool				SolveLongitudinalAndLateralConstraints(float inDeltaTime) = 0;
 

@@ -143,18 +143,9 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 		// Not steering -> no leaning
 		mTargetLean = world_up;
 	}
-}
 
-void MotorcycleController::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
-{
-	WheeledVehicleController::WarmStartVelocityConstraint(inWarmStartImpulseRatio);
-
-	mAppliedImpulse *= inWarmStartImpulseRatio;
-
-	// Apply impulse from previous frame
-	Body *body = mConstraint.GetVehicleBody();
-	Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
-	body->AddAngularImpulse(mAppliedImpulse * forward);
+	// Reset applied impulse
+	mAppliedImpulse = 0;
 }
 
 bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime) 
