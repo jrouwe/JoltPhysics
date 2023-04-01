@@ -153,6 +153,8 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 	bool impulse = WheeledVehicleController::SolveLongitudinalAndLateralConstraints(inDeltaTime);
 
 	Body *body = mConstraint.GetVehicleBody();
+	MotionProperties *mp = body->GetMotionProperties();
+
 	Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
 	Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
 
@@ -163,10 +165,43 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 	// Calculate impulse to apply to get to target lean angle
 	float total_impulse = (mLeanSpringConstant * d_angle - mLeanSpringDamping * ddt_angle) * inDeltaTime;
 
+	// Remember angular velocity pre angular impulse
+	Vec3 old_w = mp->GetAngularVelocity();
+
 	// Apply impulse taking into account the impulse we've applied earlier
 	float delta_impulse = total_impulse - mAppliedImpulse;
 	body->AddAngularImpulse(delta_impulse * forward);
 	mAppliedImpulse = total_impulse;
+
+	// Calculate delta angular velocity due to angular impulse
+	Vec3 dw = mp->GetAngularVelocity() - old_w;
+	Vec3 linear_acceleration = Vec3::sZero();
+	for (Wheel *w_base : mConstraint.GetWheels())
+	{
+		WheelWV *w = static_cast<WheelWV *>(w_base);
+
+		// Determine vector from COM to contact point
+		Vec3 r;
+		if (w->HasContact())
+		{
+			// Use contact point to rotate around
+			r = w->GetContactPosition() - body->GetCenterOfMassPosition();
+		}
+		else
+		{
+			// Use bottom of wheel to rotate around
+			const WheelSettings *settings = w->GetSettings();
+			RMat44 body_transform = body->GetWorldTransform();
+			r = body_transform * (settings->mPosition + w->GetSuspensionLength() * settings->mSuspensionDirection - settings->mWheelUp * settings->mRadius) - body->GetCenterOfMassPosition();
+		}
+
+		// Linear acceleration of contact point is dw x r
+		linear_acceleration += dw.Cross(r);
+	}
+
+	// Apply linear impulse to COM to cancel the average velocity change on the wheels due to the angular impulse
+	Vec3 linear_impulse = -linear_acceleration / (float(mConstraint.GetWheels().size()) * mp->GetInverseMass());
+	body->AddImpulse(linear_impulse);
 
 	// Return true if we applied an impulse
 	impulse |= delta_impulse != 0.0f;
