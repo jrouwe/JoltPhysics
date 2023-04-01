@@ -80,6 +80,23 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	float velocity = body->GetLinearVelocity().Dot(forward);
 	float velocity_sq = Square(velocity);
 
+	// Calculate the target lean vector, this is in the direction of the total applied impulse by the ground on the wheels
+	Vec3 target_lean = Vec3::sZero();
+	for (const Wheel *w : mConstraint.GetWheels())
+		if (w->HasContact())
+			target_lean += w->GetContactNormal() * w->GetSuspensionLambda() + w->GetContactLateral() * w->GetLateralLambda();
+
+	// Normalize the impulse
+	target_lean = target_lean.NormalizedOr(world_up);
+
+	// Smooth the impulse to avoid jittery behavior
+	float smoothing_factor = 0.8f;
+	mTargetLean = smoothing_factor * mTargetLean + (1.0f - smoothing_factor) * target_lean;
+
+	// Remove forward component, we can only lean sideways
+	mTargetLean -= mTargetLean * mTargetLean.Dot(forward);
+	mTargetLean = mTargetLean.NormalizedOr(world_up);
+
 	// Calculate max steering angle based on the max lean angle we're willing to take
 	// See: https://en.wikipedia.org/wiki/Bicycle_and_motorcycle_dynamics#Leaning
 	// LeanAngle = Atan(Velocity^2 / (Gravity * TurnRadius))
@@ -93,9 +110,6 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	// Decompose steering into sign and direction
 	float steer_strength = abs(mRightInput);
 	float steer_sign = -Sign(mRightInput);
-
-	// Track the minimum turning radius across all wheels based on the steering angle of each wheel
-	float min_turn_radius = FLT_MAX;
 
 	for (Wheel *w_base : mConstraint.GetWheels())
 	{
@@ -118,30 +132,9 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 				steer_angle = min(steer_angle, max_steer_angle);
 			}
 
-			// Calculate minimum turning radius across all wheels
-			if (steer_angle > 1.0e-6f)
-			{
-				float turn_radius = wheel_base / (Sin(steer_angle) * cos_caster_angle);
-				min_turn_radius = min(min_turn_radius, turn_radius);
-			}
-
 			// Set steering angle
 			w->SetSteerAngle(steer_sign * steer_angle);
 		}
-	}
-
-	// Calculate the desired lean angle
-	if (min_turn_radius < FLT_MAX)
-	{
-		// Using the formulas above, calculate the resulting lean angle
-		float lean_angle = -steer_sign * ATan(velocity_sq / (gravity_len * min_turn_radius));
-		Vec3 world_right = forward.Cross(world_up).NormalizedOr(world_up.GetNormalizedPerpendicular());
-		mTargetLean = world_right * Sin(lean_angle) + world_up * Cos(lean_angle);
-	}
-	else
-	{
-		// Not steering -> no leaning
-		mTargetLean = world_up;
 	}
 
 	// Reset applied impulse
@@ -215,20 +208,12 @@ void MotorcycleController::Draw(DebugRenderer *inRenderer) const
 {
 	WheeledVehicleController::Draw(inRenderer);
 
-	// Calculate average impulse on the wheel, this should match with the calculated lean angle but is too jittery to use in practice
-	Vec3 impulse = Vec3::sZero();
-	for (const Wheel *w : mConstraint.GetWheels())
-		if (w->HasContact())
-			impulse += w->GetContactNormal() * w->GetSuspensionLambda() + w->GetContactLateral() * w->GetLateralLambda();
-	impulse = impulse.NormalizedOr(Vec3::sZero());
-
 	// Draw current and desired lean angle
 	Body *body = mConstraint.GetVehicleBody();
 	RVec3 center_of_mass = body->GetCenterOfMassPosition();
 	Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
 	inRenderer->DrawArrow(center_of_mass, center_of_mass + up, Color::sYellow, 0.1f);
-	inRenderer->DrawArrow(center_of_mass, center_of_mass + mTargetLean, Color::sOrange, 0.1f);
-	inRenderer->DrawArrow(center_of_mass, center_of_mass + impulse, Color::sRed, 0.1f);
+	inRenderer->DrawArrow(center_of_mass, center_of_mass + mTargetLean, Color::sRed, 0.1f);
 }
 
 #endif // JPH_DEBUG_RENDERER
