@@ -33,7 +33,7 @@ void MotorcycleTest::Initialize()
 	const float back_suspension_min_length = 0.3f;
 	const float back_suspension_max_length = 0.5f;
 	const float back_suspension_freq = 2.0f;
-	const float back_brake_torque = 500.0f;
+	const float back_brake_torque = 250.0f;
 
 	const float front_wheel_radius = 0.31f;
 	const float front_wheel_width = 0.05f;
@@ -41,7 +41,7 @@ void MotorcycleTest::Initialize()
 	const float front_suspension_min_length = 0.3f;
 	const float front_suspension_max_length = 0.5f;
 	const float front_suspension_freq = 1.5f;
-	const float front_brake_torque = 250.0f;
+	const float front_brake_torque = 500.0f;
 
 	const float half_vehicle_length = 0.4f;
 	const float half_vehicle_width = 0.2f;
@@ -153,8 +153,19 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	else if (right < mCurrentRight)
 		mCurrentRight = max(mCurrentRight - steer_speed * inParams.mDeltaTime, right);
 
+	// When leaned, we don't want to use the brakes fully as we'll spin out
+	if (brake > 0.0f)
+	{
+		Vec3 world_up = -mPhysicsSystem->GetGravity().Normalized();
+		Vec3 up = mMotorcycleBody->GetRotation() * mVehicleConstraint->GetLocalUp();
+		Vec3 fwd = mMotorcycleBody->GetRotation() * mVehicleConstraint->GetLocalForward();
+		float sin_lean_angle = abs(world_up.Cross(up).Dot(fwd));
+		float brake_multiplier = Square(1.0f - sin_lean_angle);
+		brake *= brake_multiplier;
+	}
+
 	// On user input, assure that the motorcycle is active
-	if (mCurrentRight != 0.0f || forward != 0.0f || brake != 0.0f)
+	if (mCurrentRight != 0.0f || forward != 0.0f)
 		mBodyInterface->ActivateBody(mMotorcycleBody->GetID());
 
 	// Pass the input on to the constraint
