@@ -22,6 +22,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MotorcycleControllerSettings)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mMaxLeanAngle)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringConstant)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringDamping)
+	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSmoothingFactor)
 }
 
 VehicleController *MotorcycleControllerSettings::ConstructController(VehicleConstraint &inConstraint) const
@@ -32,11 +33,21 @@ VehicleController *MotorcycleControllerSettings::ConstructController(VehicleCons
 void MotorcycleControllerSettings::SaveBinaryState(StreamOut &inStream) const
 {
 	WheeledVehicleControllerSettings::SaveBinaryState(inStream);
+
+	inStream.Write(mMaxLeanAngle);
+	inStream.Write(mLeanSpringConstant);
+	inStream.Write(mLeanSpringDamping);
+	inStream.Write(mLeanSmoothingFactor);
 }
 
 void MotorcycleControllerSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	WheeledVehicleControllerSettings::RestoreBinaryState(inStream);
+
+	inStream.Read(mMaxLeanAngle);
+	inStream.Read(mLeanSpringConstant);
+	inStream.Read(mLeanSpringDamping);
+	inStream.Read(mLeanSmoothingFactor);
 }
 
 MotorcycleController::MotorcycleController(const MotorcycleControllerSettings &inSettings, VehicleConstraint &inConstraint) :
@@ -220,15 +231,5 @@ void MotorcycleController::Draw(DebugRenderer *inRenderer) const
 }
 
 #endif // JPH_DEBUG_RENDERER
-
-void MotorcycleController::SaveState(StateRecorder &inStream) const
-{
-	WheeledVehicleController::SaveState(inStream);
-}
-
-void MotorcycleController::RestoreState(StateRecorder &inStream)
-{
-	WheeledVehicleController::RestoreState(inStream);
-}
 
 JPH_NAMESPACE_END
