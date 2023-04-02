@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 
 // This test shows how a motorcycle could be made with the vehicle constraint.
+/// Note: The motor cycle controller is still in development and may need a lot of tweaks/hacks to work properly!
 class MotorcycleTest : public VehicleTest
 {
 public:

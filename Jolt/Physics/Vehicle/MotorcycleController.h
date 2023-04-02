@@ -9,6 +9,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Settings of a two wheeled motorcycle (adds a spring to balance the motorcycle)
+/// Note: The motor cycle controller is still in development and may need a lot of tweaks/hacks to work properly!
 class MotorcycleControllerSettings : public WheeledVehicleControllerSettings
 {
 public:
