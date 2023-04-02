@@ -145,59 +145,62 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 {
 	bool impulse = WheeledVehicleController::SolveLongitudinalAndLateralConstraints(inDeltaTime);
 
-	Body *body = mConstraint.GetVehicleBody();
-	MotionProperties *mp = body->GetMotionProperties();
+	// Only apply a lean impulse if all wheels are in contact, otherwise we can easily spin out
+	bool all_in_contact = true;
+	for (Wheel *w : mConstraint.GetWheels())
+		if (!w->HasContact() || w->GetSuspensionLambda() <= 0.0f)
+		{
+			all_in_contact = false;
+			break;
+		}
 
-	Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
-	Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
-
-	// Calculate delta to target angle and derivative
-	float d_angle = -Sign(mTargetLean.Cross(up).Dot(forward)) * ACos(mTargetLean.Dot(up));
-	float ddt_angle = body->GetAngularVelocity().Dot(forward);
-
-	// Calculate impulse to apply to get to target lean angle
-	float total_impulse = (mLeanSpringConstant * d_angle - mLeanSpringDamping * ddt_angle) * inDeltaTime;
-
-	// Remember angular velocity pre angular impulse
-	Vec3 old_w = mp->GetAngularVelocity();
-
-	// Apply impulse taking into account the impulse we've applied earlier
-	float delta_impulse = total_impulse - mAppliedImpulse;
-	body->AddAngularImpulse(delta_impulse * forward);
-	mAppliedImpulse = total_impulse;
-
-	// Calculate delta angular velocity due to angular impulse
-	Vec3 dw = mp->GetAngularVelocity() - old_w;
-	Vec3 linear_acceleration = Vec3::sZero();
-	for (Wheel *w_base : mConstraint.GetWheels())
+	if (all_in_contact)
 	{
-		WheelWV *w = static_cast<WheelWV *>(w_base);
+		Body *body = mConstraint.GetVehicleBody();
+		MotionProperties *mp = body->GetMotionProperties();
 
-		// Determine vector from COM to contact point
-		Vec3 r;
-		if (w->HasContact())
+		Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
+		Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
+
+		// Calculate delta to target angle and derivative
+		float d_angle = -Sign(mTargetLean.Cross(up).Dot(forward)) * ACos(mTargetLean.Dot(up));
+		float ddt_angle = body->GetAngularVelocity().Dot(forward);
+
+		// Calculate impulse to apply to get to target lean angle
+		float total_impulse = (mLeanSpringConstant * d_angle - mLeanSpringDamping * ddt_angle) * inDeltaTime;
+
+		// Remember angular velocity pre angular impulse
+		Vec3 old_w = mp->GetAngularVelocity();
+
+		// Apply impulse taking into account the impulse we've applied earlier
+		float delta_impulse = total_impulse - mAppliedImpulse;
+		body->AddAngularImpulse(delta_impulse * forward);
+		mAppliedImpulse = total_impulse;
+
+		// Calculate delta angular velocity due to angular impulse
+		Vec3 dw = mp->GetAngularVelocity() - old_w;
+		Vec3 linear_acceleration = Vec3::sZero();
+		float total_lambda = 0.0f;
+		for (Wheel *w_base : mConstraint.GetWheels())
 		{
-			// Use contact point to rotate around
-			r = w->GetContactPosition() - body->GetCenterOfMassPosition();
-		}
-		else
-		{
-			// Use bottom of wheel to rotate around
-			const WheelSettings *settings = w->GetSettings();
-			RMat44 body_transform = body->GetWorldTransform();
-			r = body_transform * (settings->mPosition + w->GetSuspensionLength() * settings->mSuspensionDirection - settings->mWheelUp * settings->mRadius) - body->GetCenterOfMassPosition();
+			WheelWV *w = static_cast<WheelWV *>(w_base);
+
+			// We weigh the importance of each contact point according to the contact force
+			float lambda = w->GetSuspensionLambda();
+			total_lambda += lambda;
+
+			// Linear acceleration of contact point is dw x com_to_contact
+			Vec3 r = w->GetContactPosition() - body->GetCenterOfMassPosition();
+			linear_acceleration += lambda * dw.Cross(r);
 		}
 
-		// Linear acceleration of contact point is dw x r
-		linear_acceleration += dw.Cross(r);
+		// Apply linear impulse to COM to cancel the average velocity change on the wheels due to the angular impulse
+		Vec3 linear_impulse = -linear_acceleration / (total_lambda * mp->GetInverseMass());
+		body->AddImpulse(linear_impulse);
+
+		// Return true if we applied an impulse
+		impulse |= delta_impulse != 0.0f;
 	}
-
-	// Apply linear impulse to COM to cancel the average velocity change on the wheels due to the angular impulse
-	Vec3 linear_impulse = -linear_acceleration / (float(mConstraint.GetWheels().size()) * mp->GetInverseMass());
-	body->AddImpulse(linear_impulse);
-
-	// Return true if we applied an impulse
-	impulse |= delta_impulse != 0.0f;
 
 	return impulse;
 }
