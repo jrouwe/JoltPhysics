@@ -84,7 +84,7 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 
 	Vec3 gravity = inPhysicsSystem.GetGravity();
 	float gravity_len = gravity.Length();
-	Vec3 world_up = -gravity / gravity_len;
+	Vec3 world_up = gravity_len > 0.0f? -gravity / gravity_len : mConstraint.GetLocalUp();
 
 	Body *body = mConstraint.GetVehicleBody();
 	Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
