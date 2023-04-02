@@ -119,7 +119,9 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Determine acceleration and brake
 	float forward = 0.0f, right = 0.0f, brake = 0.0f;
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
+	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
+		brake = 1.0f;
+	else if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
 		forward = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		
 		forward = -1.0f;
@@ -165,7 +167,7 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	// On user input, assure that the motorcycle is active
-	if (mCurrentRight != 0.0f || forward != 0.0f)
+	if (mCurrentRight != 0.0f || forward != 0.0f || brake != 0.0f)
 		mBodyInterface->ActivateBody(mMotorcycleBody->GetID());
 
 	// Pass the input on to the constraint
