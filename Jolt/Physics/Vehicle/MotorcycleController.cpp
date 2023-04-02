@@ -86,7 +86,7 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	float gravity_len = gravity.Length();
 	Vec3 world_up = gravity_len > 0.0f? -gravity / gravity_len : mConstraint.GetLocalUp();
 
-	Body *body = mConstraint.GetVehicleBody();
+	const Body *body = mConstraint.GetVehicleBody();
 	Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
 	float wheel_base = GetWheelBase();
 	float velocity = body->GetLinearVelocity().Dot(forward);
@@ -158,7 +158,7 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 
 	// Only apply a lean impulse if all wheels are in contact, otherwise we can easily spin out
 	bool all_in_contact = true;
-	for (Wheel *w : mConstraint.GetWheels())
+	for (const Wheel *w : mConstraint.GetWheels())
 		if (!w->HasContact() || w->GetSuspensionLambda() <= 0.0f)
 		{
 			all_in_contact = false;
@@ -168,7 +168,7 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 	if (all_in_contact)
 	{
 		Body *body = mConstraint.GetVehicleBody();
-		MotionProperties *mp = body->GetMotionProperties();
+		const MotionProperties *mp = body->GetMotionProperties();
 
 		Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
 		Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
@@ -194,7 +194,7 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 		float total_lambda = 0.0f;
 		for (Wheel *w_base : mConstraint.GetWheels())
 		{
-			WheelWV *w = static_cast<WheelWV *>(w_base);
+			const WheelWV *w = static_cast<WheelWV *>(w_base);
 
 			// We weigh the importance of each contact point according to the contact force
 			float lambda = w->GetSuspensionLambda();
