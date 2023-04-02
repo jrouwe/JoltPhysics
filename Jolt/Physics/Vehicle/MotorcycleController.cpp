@@ -201,7 +201,7 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 			total_lambda += lambda;
 
 			// Linear acceleration of contact point is dw x com_to_contact
-			Vec3 r = w->GetContactPosition() - body->GetCenterOfMassPosition();
+			Vec3 r = Vec3(w->GetContactPosition() - body->GetCenterOfMassPosition());
 			linear_acceleration += lambda * dw.Cross(r);
 		}
 
