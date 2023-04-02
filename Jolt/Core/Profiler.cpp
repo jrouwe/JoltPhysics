@@ -191,7 +191,7 @@ void Profiler::DumpList(const char *inTag, const Aggregators &inAggregators)
 	<head>
 		<title>Profile List</title>
 		<link rel="stylesheet" href="WebIncludes/semantic.min.css">
-		<script type="text/javascript" src="WebIncludes/jquery-3.2.1.min.js"></script>
+		<script type="text/javascript" src="WebIncludes/jquery-3.6.4.min.js"></script>
 		<script type="text/javascript" src="WebIncludes/semantic.min.js"></script>
 		<script type="text/javascript" src="WebIncludes/tablesort.js"></script>
 		<script type="text/javascript">$(document).ready(function() { $('table').tablesort({ compare: function(a, b) { return isNaN(a) || isNaN(b)? a.localeCompare(b) : Number(a) - Number(b); } }); });</script>
