@@ -27,6 +27,10 @@ public:
 
 	/// Spring damping constant for the lean spring
 	float						mLeanSpringDamping = 1000.0f;
+
+	/// How much to smooth the lean angle (0 = no smoothing, 1 = lean angle never changes)
+	/// Note that this is frame rate dependent because the formula is: smoothing_factor * previous + (1 - smoothing_factor) * current
+	float						mLeanSmoothingFactor = 0.8f;
 };
 
 /// Runtime controller class
@@ -55,6 +59,7 @@ protected:
 	float						mMaxLeanAngle;
 	float						mLeanSpringConstant;
 	float						mLeanSpringDamping;
+	float						mLeanSmoothingFactor;
 
 	// Run-time calculated target lean vector
 	Vec3						mTargetLean = Vec3::sZero();

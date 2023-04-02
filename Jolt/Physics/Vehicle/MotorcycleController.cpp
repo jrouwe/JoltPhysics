@@ -43,7 +43,8 @@ MotorcycleController::MotorcycleController(const MotorcycleControllerSettings &i
 	WheeledVehicleController(inSettings, inConstraint),
 	mMaxLeanAngle(inSettings.mMaxLeanAngle),
 	mLeanSpringConstant(inSettings.mLeanSpringConstant),
-	mLeanSpringDamping(inSettings.mLeanSpringDamping)
+	mLeanSpringDamping(inSettings.mLeanSpringDamping),
+	mLeanSmoothingFactor(inSettings.mLeanSmoothingFactor)
 {
 }
 
@@ -90,8 +91,7 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	target_lean = target_lean.NormalizedOr(world_up);
 
 	// Smooth the impulse to avoid jittery behavior
-	float smoothing_factor = 0.8f;
-	mTargetLean = smoothing_factor * mTargetLean + (1.0f - smoothing_factor) * target_lean;
+	mTargetLean = mLeanSmoothingFactor * mTargetLean + (1.0f - mLeanSmoothingFactor) * target_lean;
 
 	// Remove forward component, we can only lean sideways
 	mTargetLean -= mTargetLean * mTargetLean.Dot(forward);
