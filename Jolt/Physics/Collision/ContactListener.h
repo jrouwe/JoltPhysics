@@ -57,6 +57,7 @@ enum class ValidateResult
 
 /// A listener class that receives collision contact events events.
 /// It can be registered with the ContactConstraintManager (or PhysicsSystem).
+/// Note that contact listener callbacks are called from multiple threads at the same time when all bodies are locked, you're only allowed to read from the bodies and you can't change physics state.
 class ContactListener
 {
 public:
