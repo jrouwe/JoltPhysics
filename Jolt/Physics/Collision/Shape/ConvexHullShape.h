@@ -116,6 +116,12 @@ public:
 	/// Get a vertex of this convex hull relative to the center of mass
 	inline Vec3				GetPoint(uint inIndex) const										{ return mPoints[inIndex].mPosition; }
 
+	/// Get the number of faces in this convex hull
+	inline uint				GetNumFaces() const													{ return (uint)mFaces.size(); }
+
+	/// Get the vertices indices this face is made of
+	inline void				GetFaceVertices(uint inFaceIndex, uint16 &outFirstVertex, uint16 &outNumVertices) const	{ outFirstVertex = mFaces[inFaceIndex].mFirstVertex; outNumVertices = mFaces[inFaceIndex].mNumVertices; }
+
 	// Register shape functions with the registry
 	static void				sRegister();
 
