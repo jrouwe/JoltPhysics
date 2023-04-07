@@ -119,8 +119,23 @@ public:
 	/// Get the number of faces in this convex hull
 	inline uint				GetNumFaces() const													{ return (uint)mFaces.size(); }
 
-	/// Get the vertices indices this face is made of
-	inline void				GetFaceVertices(uint inFaceIndex, uint16 &outFirstVertex, uint16 &outNumVertices) const	{ outFirstVertex = mFaces[inFaceIndex].mFirstVertex; outNumVertices = mFaces[inFaceIndex].mNumVertices; }
+	/// Get the number of vertices in a face
+	inline uint				GetNumVerticesInFace(uint inFaceIndex) const						{ return mFaces[inFaceIndex].mNumVertices; }
+
+	/// Get the vertices indices of a face
+	/// @param inFaceIndex Index of the face.
+	/// @param inMaxVertices Maximum number of vertices to return.
+	/// @param outVertices Array of vertices indices, must be at least inMaxVertices in size, the vertices are returned in counter clockwise order and the positions can be obtained using GetPoint(index).
+	/// @return Number of vertices in face, if this is bigger than inMaxVertices, not all vertices were retrieved.
+	inline uint				GetFaceVertices(uint inFaceIndex, uint inMaxVertices, uint *outVertices) const
+	{
+		const Face &face = mFaces[inFaceIndex];
+		const uint8 *first_vertex = mVertexIdx.data() + face.mFirstVertex;
+		uint num_vertices = min<uint>(face.mNumVertices, inMaxVertices);
+		for (uint i = 0; i < num_vertices; ++i)
+			outVertices[i] = first_vertex[i];
+		return face.mNumVertices;
+	}
 
 	// Register shape functions with the registry
 	static void				sRegister();
