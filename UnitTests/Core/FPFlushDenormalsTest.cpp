@@ -23,7 +23,6 @@ TEST_SUITE("FlushDenormalsTests")
 		// Turn flush denormal on
 		{
 			FPFlushDenormals flush_denormals;
-			(void)flush_denormals;
 
 			float value = TestFltMin * 0.1f;
 			CHECK(value == 0.0f);

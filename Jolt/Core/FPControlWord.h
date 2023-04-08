@@ -93,7 +93,34 @@ private:
 
 #elif defined(JPH_CPU_ARM)
 
-// Not supported
+/// Helper class that needs to be put on the stack to update the state of the floating point control word.
+/// This state is kept per thread.
+template <uint32 Value, uint32 Mask>
+class FPControlWord : public NonCopyable
+{
+public:
+	FPControlWord()
+	{
+		uint32 val;
+		asm volatile("vmrs %0, fpscr" : "=r" (val));
+		mPrevState = val;
+		val &= ~Mask;
+		val |= Value;
+		asm volatile("vmsr fpscr, %0" : /* no output */ : "r" (val));
+	}
+
+	~FPControlWord()
+	{
+		uint32 val;
+		asm volatile("vmrs %0, fpscr" : "=r" (val));
+		val &= ~Mask;
+		val |= mPrevState & Mask;
+		asm volatile("vmsr fpscr, %0" : /* no output */ : "r" (val));
+	}
+
+private:
+	uint32		mPrevState;
+};
 
 #elif defined(JPH_CPU_WASM)
 
