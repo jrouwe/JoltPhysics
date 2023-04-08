@@ -145,8 +145,14 @@
 #define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(warning (push))
 #define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(warning (pop))
 #define JPH_MSVC_SUPPRESS_WARNING(w)	JPH_PRAGMA(warning (disable : w))
+#if _MSC_VER >= 1920 && _MSC_VER < 1930
+	#define JPH_MSVC2019_SUPPRESS_WARNING(w) JPH_MSVC_SUPPRESS_WARNING(w)
+#else
+	#define JPH_MSVC2019_SUPPRESS_WARNING(w)
+#endif
 #else
 #define JPH_MSVC_SUPPRESS_WARNING(w)
+#define JPH_MSVC2019_SUPPRESS_WARNING(w)
 #endif
 
 // Disable common warnings triggered by Jolt when compiling with -Wall
@@ -197,7 +203,8 @@
 	JPH_MSVC_SUPPRESS_WARNING(4582) /* 'X': constructor is not implicitly called */				\
 	JPH_MSVC_SUPPRESS_WARNING(5219) /* implicit conversion from 'X' to 'Y', possible loss of data  */ \
 	JPH_MSVC_SUPPRESS_WARNING(4826) /* Conversion from 'X *' to 'JPH::uint64' is sign-extended. This may cause unexpected runtime behavior. (32-bit) */ \
-	JPH_MSVC_SUPPRESS_WARNING(5264) /* 'X': 'const' variable is not used */
+	JPH_MSVC_SUPPRESS_WARNING(5264) /* 'X': 'const' variable is not used */						\
+	JPH_MSVC2019_SUPPRESS_WARNING(5246) /* the initialization of a subobject should be wrapped in braces */
 
 // OS-specific includes
 #if defined(JPH_PLATFORM_WINDOWS)
