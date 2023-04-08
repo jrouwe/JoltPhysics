@@ -60,7 +60,7 @@ private:
 	unsigned int mPrevState;
 };
 
-#elif defined(JPH_CPU_ARM)
+#elif defined(JPH_CPU_ARM) && defined(JPH_USE_NEON)
 
 /// Helper class that needs to be put on the stack to update the state of the floating point control word.
 /// This state is kept per thread.
@@ -90,6 +90,10 @@ public:
 private:
 	uint64		mPrevState;
 };
+
+#elif defined(JPH_CPU_ARM)
+
+// Not supported
 
 #elif defined(JPH_CPU_WASM)
 

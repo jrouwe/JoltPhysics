@@ -32,7 +32,7 @@ class FPExceptionDisableInvalid : public FPControlWord<_EM_INVALID, _EM_INVALID>
 /// Disable division by zero floating point exceptions
 class FPExceptionDisableDivByZero : public FPControlWord<_EM_ZERODIVIDE, _EM_ZERODIVIDE> { };
 
-#elif defined(JPH_CPU_ARM)
+#elif defined(JPH_CPU_ARM) && defined(JPH_USE_NEON)
 
 /// Invalid operation exception bit
 static constexpr uint64 FP_IOE = 1 << 8;
@@ -48,6 +48,13 @@ class FPExceptionDisableInvalid : public FPControlWord<0, FP_IOE> { };
 
 /// Disable division by zero floating point exceptions
 class FPExceptionDisableDivByZero : public FPControlWord<0, FP_DZE> { };
+
+#elif defined(JPH_CPU_ARM)
+
+// Not supported
+class FPExceptionsEnable { };
+class FPExceptionDisableInvalid { };
+class FPExceptionDisableDivByZero { };
 
 #elif defined(JPH_CPU_WASM)
 
