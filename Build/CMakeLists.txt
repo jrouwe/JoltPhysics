@@ -38,6 +38,9 @@ option(USE_TZCNT "Enable TZCNT" ON)
 option(USE_F16C "Enable F16C" ON)
 option(USE_FMADD "Enable FMADD" ON)
 
+# Enable all warnings
+option(ENABLE_ALL_WARNINGS "Enable all warnings and warnings as errors" ON)
+
 include(CMakeDependentOption)
 
 # Ability to toggle between the static and DLL versions of the MSVC runtime library
@@ -64,8 +67,13 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	endif()
 
 	# Set general compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /Gm- /Wall /WX /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /Gm- /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline")
 	
+	# Enable warnings
+	if (ENABLE_ALL_WARNINGS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall /WX")
+	endif()
+
 	# Optionally generate debug symbols
 	if (GENERATE_DEBUG_SYMBOLS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
@@ -107,7 +115,12 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	endif()
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR MINGW OR EMSCRIPTEN)
 	# Set general compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I. -Wall -Werror")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I.")
+
+	# Enable warnings
+	if (ENABLE_ALL_WARNINGS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+	endif()
 
 	# Optionally generate debug symbols
 	if (GENERATE_DEBUG_SYMBOLS)
