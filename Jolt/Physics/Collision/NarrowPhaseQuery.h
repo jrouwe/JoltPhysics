@@ -17,7 +17,8 @@ class Shape;
 class CollideShapeSettings;
 class RayCastResult;
 
-/// Class that provides an interface for doing precise collision detection against the broad and then the narrow phase
+/// Class that provides an interface for doing precise collision detection against the broad and then the narrow phase.
+/// Unlike a BroadPhaseQuery, the NarrowPhaseQuery will test against shapes and will return collision information against triangles, spheres etc.
 class NarrowPhaseQuery : public NonCopyable
 {
 public:

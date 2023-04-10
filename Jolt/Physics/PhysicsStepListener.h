@@ -16,8 +16,10 @@ public:
 	virtual					~PhysicsStepListener() = default;
 
 	/// Called before every simulation step (received inCollisionSteps times for every PhysicsSystem::Update(...) call)
-	/// This is called while all bodies and constraints are locked for modifications. Multiple listeners can be executed in parallel and it is the responsibility of the listener
-	/// to avoid race conditions.
+	/// This is called while all body and constraint mutexes are locked. You can read/write bodies and constraints but not add/remove them.
+	/// Multiple listeners can be executed in parallel and it is the responsibility of the listener to avoid race conditions.
+	/// The best way to do this is to have each step listener operate on a subset of the bodies and constraints
+	/// and making sure that these bodies and constraints are not touched by any other step listener.
 	/// Note that this function is not called if there aren't any active bodies or when the physics system is updated with 0 delta time.
 	virtual void			OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem) = 0;
 };
