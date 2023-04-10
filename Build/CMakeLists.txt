@@ -192,6 +192,16 @@ if (IOS)
 	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt") 
 endif()
 
+# Install Jolt library and includes
+install(TARGETS Jolt DESTINATION lib)
+foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
+	string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
+	get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
+	if (NOT RELATIVE_SRC_FILE MATCHES "\.cpp")
+		install(FILES ${SRC_FILE} DESTINATION include/${DESTINATION_PATH})
+	endif()
+endforeach()
+
 # Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library 
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	# Ability to turn ON/OFF individual applications
