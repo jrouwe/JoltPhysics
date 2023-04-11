@@ -187,7 +187,7 @@ void VehicleTest::LoadRaceTrack(const char *inFileName)
 	RVec3 track_center = RVec3::sZero();
 	while (stream >> x >> c >> y >> c >> wl >> c >> wr)
 	{
-		RVec3 center(x, 0, y);
+		RVec3 center(x, 0, -y);
 		segments.push_back({ center, wl, wr });
 		track_center += center;
 	}
