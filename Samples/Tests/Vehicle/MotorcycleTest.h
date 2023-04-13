@@ -20,6 +20,8 @@ public:
 	// See: Test
 	virtual void				Initialize() override;
 	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+	virtual void				SaveState(StateRecorder& inStream) const override;
+	virtual void				RestoreState(StateRecorder& inStream) override;
 
 	virtual void				GetInitialCamera(CameraState &ioState) const override;
 	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;

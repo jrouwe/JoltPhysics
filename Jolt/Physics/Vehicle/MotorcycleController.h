@@ -50,6 +50,8 @@ protected:
 	// See: VehicleController
 	virtual void				PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 	virtual bool				SolveLongitudinalAndLateralConstraints(float inDeltaTime) override;
+	virtual void				SaveState(StateRecorder& inStream) const override;
+	virtual void				RestoreState(StateRecorder& inStream) override;
 #ifdef JPH_DEBUG_RENDERER
 	virtual void				Draw(DebugRenderer *inRenderer) const override;
 #endif // JPH_DEBUG_RENDERER

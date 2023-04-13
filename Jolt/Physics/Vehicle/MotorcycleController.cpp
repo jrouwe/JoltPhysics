@@ -216,6 +216,20 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 	return impulse;
 }
 
+void MotorcycleController::SaveState(StateRecorder& inStream) const
+{
+	WheeledVehicleController::SaveState(inStream);
+
+	inStream.Write(mTargetLean);
+}
+
+void MotorcycleController::RestoreState(StateRecorder& inStream)
+{
+	WheeledVehicleController::RestoreState(inStream);
+
+	inStream.Read(mTargetLean);
+}
+
 #ifdef JPH_DEBUG_RENDERER
 
 void MotorcycleController::Draw(DebugRenderer *inRenderer) const 
