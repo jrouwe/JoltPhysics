@@ -8,6 +8,7 @@
 #include "LoggingBodyActivationListener.h"
 #include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 #include <Jolt/Physics/Constraints/PointConstraint.h>
@@ -1328,5 +1329,57 @@ TEST_SUITE("PhysicsTests")
 			CHECK_APPROX_EQUAL(lock1.GetBody().GetPosition(), cBox1Position + cBox1Velocity * cTime, 1.0e-5f);
 			CHECK_APPROX_EQUAL(lock2.GetBody().GetPosition(), cBox2Position + cBox2Velocity * cTime, 1.0e-5f);
 		}		
+	}
+
+	TEST_CASE("TestOutOfBodies")
+	{
+		// Create a context with space for a single body
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1, 0, 1);
+
+		BodyInterface& bi = c.GetBodyInterface();
+
+		// First body
+		Body *b1 = bi.CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		CHECK(b1 != nullptr);
+
+		// Second body should fail
+		Body *b2 = bi.CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		CHECK(b2 == nullptr);
+
+		// Free first body
+		bi.DestroyBody(b1->GetID());
+
+		// Second body creation should succeed
+		b2 = bi.CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		CHECK(b2 != nullptr);
+
+		// Clean up
+		bi.DestroyBody(b2->GetID());
+	}
+
+	TEST_CASE("TestOutOfContactConstraints")
+	{
+		// Create a context with space for 8 constraints
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1, 0, 1024, 4096, 8);
+
+		c.CreateFloor();
+
+		// The first 8 boxes should be fine
+		for (int i = 0; i < 8; ++i)
+			c.CreateBox(RVec3(3.0_r * i, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+
+		// Step
+		EPhysicsUpdateError errors = c.SimulateSingleStep();
+		CHECK(errors == EPhysicsUpdateError::None);
+
+		// Adding one more box should introduce an error
+		c.CreateBox(RVec3(24.0_r, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+
+		// Step
+		{
+			JPH_IF_ENABLE_ASSERTS(ExpectAssert expect_assert(1);)
+			errors = c.SimulateSingleStep();
+		}
+		CHECK((errors & EPhysicsUpdateError::ContactConstraintsFull) != EPhysicsUpdateError::None);
 	}
 }

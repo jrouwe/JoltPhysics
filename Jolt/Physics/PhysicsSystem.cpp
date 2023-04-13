@@ -115,7 +115,7 @@ void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 	mStepListeners.pop_back();
 }
 
-void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem)
+EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem)
 {	
 	JPH_PROFILE_FUNCTION();
 
@@ -141,7 +141,7 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 		mContactManager.FinalizeContactCacheAndCallContactPointRemovedCallbacks(0, 0);
 
 		mBodyManager.UnlockAllBodies();
-		return;
+		return EPhysicsUpdateError::None;
 	}
 
 	// Calculate ratio between current and previous frame delta time to scale initial constraint forces
@@ -623,6 +623,11 @@ void PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegr
 
 	// Unlock step listeners
 	mStepListenersMutex.unlock();
+
+	// Return any errors
+	EPhysicsUpdateError errors = static_cast<EPhysicsUpdateError>(context.mErrors.load(memory_order_acquire));
+	JPH_ASSERT(errors == EPhysicsUpdateError::None, "An error occured during the physics update, see EPhysicsUpdateError for more information");
+	return errors;
 }
 
 void PhysicsSystem::JobStepListeners(PhysicsUpdateContext::Step *ioStep)
@@ -911,6 +916,9 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 						// Atomically accumulate the number of found manifolds and body pairs
 						ioStep->mNumBodyPairs += contact_allocator.mNumBodyPairs;
 						ioStep->mNumManifolds += contact_allocator.mNumManifolds;
+
+						// Combine update errors
+						ioStep->mContext->mErrors.fetch_or((uint32)contact_allocator.mErrors, memory_order_relaxed);
 
 						// Mark this job as inactive
 						ioStep->mActiveFindCollisionJobs.fetch_and(~PhysicsUpdateContext::JobMask(1 << inJobIndex));
@@ -1917,6 +1925,9 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 	// Atomically accumulate the number of found manifolds and body pairs
 	ioSubStep->mStep->mNumBodyPairs += contact_allocator.mNumBodyPairs;
 	ioSubStep->mStep->mNumManifolds += contact_allocator.mNumManifolds;
+
+	// Combine update errors
+	ioSubStep->mStep->mContext->mErrors.fetch_or((uint32)contact_allocator.mErrors, memory_order_relaxed);
 }
 
 void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)

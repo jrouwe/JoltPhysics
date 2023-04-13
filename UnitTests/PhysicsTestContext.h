@@ -19,7 +19,7 @@ class PhysicsTestContext
 {
 public:
 	// Constructor / destructor
-						PhysicsTestContext(float inDeltaTime = 1.0f / 60.0f, int inCollisionSteps = 1, int inIntegrationSubSteps = 1, int inWorkerThreads = 0);
+						PhysicsTestContext(float inDeltaTime = 1.0f / 60.0f, int inCollisionSteps = 1, int inIntegrationSubSteps = 1, int inWorkerThreads = 0, uint inMaxBodies = 1024, uint inMaxBodyPairs = 4096, uint inMaxContactConstraints = 1024);
 						~PhysicsTestContext();
 
 	// Set the gravity to zero
@@ -47,10 +47,10 @@ public:
 	}
 
 	// Simulate only for one delta time step
-	void				SimulateSingleStep();
+	EPhysicsUpdateError	SimulateSingleStep();
 
 	// Simulate the world for inTotalTime time
-	void				Simulate(float inTotalTime, function<void()> inPreStepCallback = []() { });
+	EPhysicsUpdateError	Simulate(float inTotalTime, function<void()> inPreStepCallback = []() { });
 
 	// Predict position assuming ballistic motion using initial position, velocity acceleration and time
 	RVec3				PredictPosition(RVec3Arg inPosition, Vec3Arg inVelocity, Vec3Arg inAcceleration, float inTotalTime) const;

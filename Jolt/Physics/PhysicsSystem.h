@@ -103,7 +103,7 @@ public:
 	/// Simulate the system.
 	/// The world steps for a total of inDeltaTime seconds. This is divided in inCollisionSteps iterations. Each iteration
 	/// consists of collision detection followed by inIntegrationSubSteps integration steps.
-	void						Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem);
+	EPhysicsUpdateError			Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem);
 
 	/// Saving state for replay
 	void						SaveState(StateRecorder &inStream) const;
