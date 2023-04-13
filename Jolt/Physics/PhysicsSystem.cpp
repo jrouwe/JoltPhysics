@@ -913,12 +913,8 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 					// If we're back at the first queue, we've looked at all of them and found nothing
 					if (read_queue_idx == first_read_queue_idx)
 					{
-						// Atomically accumulate the number of found manifolds and body pairs
-						ioStep->mNumBodyPairs += contact_allocator.mNumBodyPairs;
-						ioStep->mNumManifolds += contact_allocator.mNumManifolds;
-
-						// Combine update errors
-						ioStep->mContext->mErrors.fetch_or((uint32)contact_allocator.mErrors, memory_order_relaxed);
+						// Collect information from the contact allocator and accumulate it in the step.
+						ContactConstraintManager::sFinalizeContactAllocator(*ioStep, contact_allocator);
 
 						// Mark this job as inactive
 						ioStep->mActiveFindCollisionJobs.fetch_and(~PhysicsUpdateContext::JobMask(1 << inJobIndex));
@@ -1922,12 +1918,8 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 		}
 	}
 
-	// Atomically accumulate the number of found manifolds and body pairs
-	ioSubStep->mStep->mNumBodyPairs += contact_allocator.mNumBodyPairs;
-	ioSubStep->mStep->mNumManifolds += contact_allocator.mNumManifolds;
-
-	// Combine update errors
-	ioSubStep->mStep->mContext->mErrors.fetch_or((uint32)contact_allocator.mErrors, memory_order_relaxed);
+	// Collect information from the contact allocator and accumulate it in the step.
+	ContactConstraintManager::sFinalizeContactAllocator(*ioSubStep->mStep, contact_allocator);
 }
 
 void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)

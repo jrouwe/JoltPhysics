@@ -620,6 +620,16 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 	mConstraints = (ContactConstraint *)inContext->mTempAllocator->Allocate(mMaxConstraints * sizeof(ContactConstraint));
 }
 
+void ContactConstraintManager::sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, ContactAllocator &inAllocator)
+{
+	// Atomically accumulate the number of found manifolds and body pairs
+	ioStep.mNumBodyPairs += inAllocator.mNumBodyPairs;
+	ioStep.mNumManifolds += inAllocator.mNumManifolds;
+
+	// Combine update errors
+	ioStep.mContext->mErrors.fetch_or((uint32)inAllocator.mErrors, memory_order_relaxed);
+}
+
 template <EMotionType Type1, EMotionType Type2>
 JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, float inDeltaTime, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, Mat44Arg inInvI1, Mat44Arg inInvI2)
 {
