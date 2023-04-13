@@ -6,6 +6,8 @@
 
 #include <Jolt/Core/StaticArray.h>
 #include <Jolt/Core/LockFreeHashMap.h>
+#include <Jolt/Physics/EPhysicsUpdateError.h>
+#include <Jolt/Physics/PhysicsUpdateContext.h>
 #include <Jolt/Physics/Body/BodyPair.h>
 #include <Jolt/Physics/Collision/Shape/SubShapeIDPair.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
@@ -80,10 +82,14 @@ public:
 
 		uint					mNumBodyPairs = 0;													///< Total number of body pairs added using this allocator
 		uint					mNumManifolds = 0;													///< Total number of manifolds added using this allocator
+		EPhysicsUpdateError		mErrors = EPhysicsUpdateError::None;								///< Errors reported on this allocator
 	};
 
 	/// Get a new allocator context for storing contacts. Note that you should call this once and then add multiple contacts using the context.
 	ContactAllocator			GetContactAllocator()												{ return mCache[mCacheWriteIdx].GetContactAllocator(); }
+
+	/// Collect information from the contact allocator and accumulate it in the step.
+	static void					sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, const ContactAllocator &inAllocator);
 
 	/// Check if the contact points from the previous frame are reusable and if so copy them.
 	/// When the cache was usable and the pair has been handled: outPairHandled = true.

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include <Jolt/Jolt.h>
+#include <Jolt/Core/Atomics.h>
 #include <Jolt/Math/DVec3.h>
 #include <Jolt/Math/Float2.h>
 
@@ -70,3 +71,40 @@ inline void CHECK_APPROX_EQUAL(const Float2 &inLHS, const Float2 &inRHS, float i
 
 // Define the exact random number generator we want to use across platforms for consistency (default_random_engine's implementation is platform specific)
 using UnitTestRandom = mt19937;
+
+#ifdef JPH_ENABLE_ASSERTS
+
+// Stack based object that tests for an assert
+class ExpectAssert
+{
+public:
+	/// Expect inCount asserts
+	explicit					ExpectAssert(int inCount)
+	{
+		CHECK(sCount == 0);
+		sCount = inCount;
+
+		mPrevAssertFailed = AssertFailed;
+		AssertFailed = [](const char*, const char*, const char*, uint)
+		{
+			--sCount;
+			return false;
+		};
+	}
+
+	/// Verifies that the expected number of asserts were triggered
+								~ExpectAssert()
+	{
+		AssertFailed = mPrevAssertFailed;
+		CHECK(sCount == 0);
+	}
+
+private:
+	// Keeps track of number of asserts that are expected
+	inline static atomic<int>	sCount { 0 };
+
+	// Previous assert function
+	AssertFailedFunction		mPrevAssertFailed;
+};
+
+#endif // JPH_ENABLE_ASSERTS
