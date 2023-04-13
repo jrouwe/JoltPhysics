@@ -89,7 +89,7 @@ public:
 	ContactAllocator			GetContactAllocator()												{ return mCache[mCacheWriteIdx].GetContactAllocator(); }
 
 	/// Collect information from the contact allocator and accumulate it in the step.
-	static void					sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, ContactAllocator &inAllocator);
+	static void					sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, const ContactAllocator &inAllocator);
 
 	/// Check if the contact points from the previous frame are reusable and if so copy them.
 	/// When the cache was usable and the pair has been handled: outPairHandled = true.

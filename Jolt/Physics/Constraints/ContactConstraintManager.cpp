@@ -620,7 +620,7 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 	mConstraints = (ContactConstraint *)inContext->mTempAllocator->Allocate(mMaxConstraints * sizeof(ContactConstraint));
 }
 
-void ContactConstraintManager::sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, ContactAllocator &inAllocator)
+void ContactConstraintManager::sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, const ContactAllocator &inAllocator)
 {
 	// Atomically accumulate the number of found manifolds and body pairs
 	ioStep.mNumBodyPairs += inAllocator.mNumBodyPairs;
