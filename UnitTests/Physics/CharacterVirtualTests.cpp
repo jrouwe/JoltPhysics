@@ -7,6 +7,7 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 #include "Layers.h"
 
@@ -613,5 +614,34 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
 		CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(cCylinderLength, 0, 1), 1.0e-4f);
+	}
+
+	TEST_CASE("TestStairWalkAlongWall")
+	{
+		// Stair stepping is very delta time sensitive, so test various update frequencies
+		float frequencies[] = { 60.0f, 120.0f, 240.0f, 360.0f };
+		for (float frequency : frequencies)
+		{
+			float time_step = 1.0f / frequency;
+
+			PhysicsTestContext c(time_step);
+			c.CreateFloor();
+
+			// Create character
+			Character character(c);
+			character.Create();
+
+			// Create a wall
+			const float cWallHalfThickness = 0.05f;
+			c.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(50.0f, 1.0f, cWallHalfThickness)), RVec3(0, 1.0_r, Real(-character.mRadiusStanding - character.mCharacter->GetCharacterPadding() - cWallHalfThickness)), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+			// Start moving along the wall, if the stair stepping algorithm is working correctly it should not trigger and not apply extra speed to the character
+			character.mHorizontalSpeed = Vec3(5.0f, 0, -1.0f);
+			character.Simulate(1.0f);
+
+			// We should have moved along the wall at the desired speed
+			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(5.0f, 0, 0), 1.0e-2f);
+		}
 	}
 }
