@@ -543,6 +543,8 @@ void VehicleConstraint::SaveState(StateRecorder &inStream) const
 	{
 		inStream.Write(w->mAngularVelocity);
 		inStream.Write(w->mAngle);
+		inStream.Write(w->mContactNormal); // Used by MotorcycleController::PreCollide
+		inStream.Write(w->mContactLateral);
 
 		w->mSuspensionPart.SaveState(inStream);
 		w->mSuspensionMaxUpPart.SaveState(inStream);
@@ -564,6 +566,8 @@ void VehicleConstraint::RestoreState(StateRecorder &inStream)
 	{
 		inStream.Read(w->mAngularVelocity);
 		inStream.Read(w->mAngle);
+		inStream.Read(w->mContactNormal);
+		inStream.Read(w->mContactLateral);
 
 		w->mSuspensionPart.RestoreState(inStream);
 		w->mSuspensionMaxUpPart.RestoreState(inStream);

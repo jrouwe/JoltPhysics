@@ -119,6 +119,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 {	
 	JPH_PROFILE_FUNCTION();
 
+	JPH_DET_LOG("PhysicsSystem::Update: dt: " << inDeltaTime << " steps: " << inCollisionSteps << " substeps: " << inIntegrationSubSteps);
+
 	JPH_ASSERT(inDeltaTime >= 0.0f);
 	JPH_ASSERT(inIntegrationSubSteps <= PhysicsUpdateContext::cMaxSubSteps);
 
