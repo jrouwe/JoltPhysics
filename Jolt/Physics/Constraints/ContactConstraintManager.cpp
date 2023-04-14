@@ -263,7 +263,7 @@ ContactConstraintManager::MKeyValue *ContactConstraintManager::ManifoldCache::Cr
 	MKeyValue *kv = mCachedManifolds.Create(ioContactAllocator, inKey, inKeyHash, CachedManifold::sGetRequiredExtraSize(inNumContactPoints));
 	if (kv == nullptr)
 	{
-		JPH_ASSERT(false, "Out of cache space for manifold cache");
+		ioContactAllocator.mErrors |= EPhysicsUpdateError::ManifoldCacheFull;
 		return nullptr;
 	}
 	kv->GetValue().mNumContactPoints = uint16(inNumContactPoints);
@@ -304,7 +304,7 @@ ContactConstraintManager::BPKeyValue *ContactConstraintManager::ManifoldCache::C
 	BPKeyValue *kv = mCachedBodyPairs.Create(ioContactAllocator, inKey, inKeyHash, 0);
 	if (kv == nullptr)
 	{
-		JPH_ASSERT(false, "Out of cache space for body pair cache");
+		ioContactAllocator.mErrors |= EPhysicsUpdateError::BodyPairCacheFull;
 		return nullptr;
 	}
 	++ioContactAllocator.mNumBodyPairs;
@@ -826,7 +826,7 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			uint32 constraint_idx = mNumConstraints++;
 			if (constraint_idx >= mMaxConstraints)
 			{
-				JPH_ASSERT(false, "Out of contact constraints!");
+				ioContactAllocator.mErrors |= EPhysicsUpdateError::ContactConstraintsFull;
 				break;
 			}
 			
@@ -1016,7 +1016,7 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		uint32 constraint_idx = mNumConstraints++;
 		if (constraint_idx >= mMaxConstraints)
 		{
-			JPH_ASSERT(false, "Out of contact constraints!");
+			ioContactAllocator.mErrors |= EPhysicsUpdateError::ContactConstraintsFull;
 
 			// Manifold has been created already, we're not filling it in, so we need to reset the contact number of points.
 			// Note that we don't hook it up to the body pair cache so that it won't be used as a cache during the next simulation.

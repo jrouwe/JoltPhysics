@@ -10,7 +10,7 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/TempAllocator.h>
 
-PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, int inWorkerThreads) :
+PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, int inWorkerThreads, uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints) :
 #ifdef JPH_DISABLE_TEMP_ALLOCATOR
 	mTempAllocator(new TempAllocatorMalloc()),
 #else
@@ -23,7 +23,7 @@ PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, 
 {
 	// Create physics system
 	mSystem = new PhysicsSystem();
-	mSystem->Init(1024, 0, 4096, 1024, mBroadPhaseLayerInterface, mObjectVsBroadPhaseLayerFilter, mObjectVsObjectLayerFilter);
+	mSystem->Init(inMaxBodies, 0, inMaxBodyPairs, inMaxContactConstraints, mBroadPhaseLayerInterface, mObjectVsBroadPhaseLayerFilter, mObjectVsObjectLayerFilter);
 }
 
 PhysicsTestContext::~PhysicsTestContext()
@@ -78,25 +78,30 @@ Body &PhysicsTestContext::CreateSphere(RVec3Arg inPosition, float inRadius, EMot
 	return CreateBody(new SphereShapeSettings(inRadius), inPosition, Quat::sIdentity(), inMotionType, inMotionQuality, inLayer, inActivation);
 }
 
-void PhysicsTestContext::Simulate(float inTotalTime, function<void()> inPreStepCallback)
+EPhysicsUpdateError PhysicsTestContext::Simulate(float inTotalTime, function<void()> inPreStepCallback)
 {
+	EPhysicsUpdateError errors = EPhysicsUpdateError::None;
+
 	const int cNumSteps = int(round(inTotalTime / mDeltaTime));
 	for (int s = 0; s < cNumSteps; ++s)
 	{
 		inPreStepCallback();
-		mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+		errors |= mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
 	#ifndef JPH_DISABLE_TEMP_ALLOCATOR
 		JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
 	#endif // JPH_DISABLE_TEMP_ALLOCATOR
 	}
+
+	return errors;
 }
 
-void PhysicsTestContext::SimulateSingleStep()
+EPhysicsUpdateError PhysicsTestContext::SimulateSingleStep()
 {
-	mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+	EPhysicsUpdateError errors = mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
 #ifndef JPH_DISABLE_TEMP_ALLOCATOR
 	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
 #endif // JPH_DISABLE_TEMP_ALLOCATOR
+	return errors;
 }
 
 RVec3 PhysicsTestContext::PredictPosition(RVec3Arg inPosition, Vec3Arg inVelocity, Vec3Arg inAcceleration, float inTotalTime) const
