@@ -229,7 +229,21 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const 
+void VehicleConstraintTest::SaveState(StateRecorder& inStream) const
+{
+	VehicleTest::SaveState(inStream);
+
+	inStream.Write(mPreviousForward);
+}
+
+void VehicleConstraintTest::RestoreState(StateRecorder& inStream)
+{
+	VehicleTest::RestoreState(inStream);
+
+	inStream.Read(mPreviousForward);
+}
+
+void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const
 {
 	// Position camera behind car
 	RVec3 cam_tgt = RVec3(0, 0, 5);

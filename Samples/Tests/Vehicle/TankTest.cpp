@@ -289,7 +289,23 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-void TankTest::GetInitialCamera(CameraState &ioState) const 
+void TankTest::SaveState(StateRecorder& inStream) const
+{
+	VehicleTest::SaveState(inStream);
+
+	inStream.Write(mPreviousForward);
+	inStream.Write(mReloadTime);
+}
+
+void TankTest::RestoreState(StateRecorder& inStream)
+{
+	VehicleTest::RestoreState(inStream);
+
+	inStream.Read(mPreviousForward);
+	inStream.Read(mReloadTime);
+}
+
+void TankTest::GetInitialCamera(CameraState &ioState) const
 {
 	// Position camera behind tank
 	ioState.mPos = RVec3(0, 4.0f, 0);

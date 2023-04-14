@@ -108,6 +108,8 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	mTargetLean -= mTargetLean * mTargetLean.Dot(forward);
 	mTargetLean = mTargetLean.NormalizedOr(world_up);
 
+	JPH_DET_LOG("WheeledVehicleController::PreCollide: target_lean: " << target_lean << " mTargetLean: " << mTargetLean);
+
 	// Calculate max steering angle based on the max lean angle we're willing to take
 	// See: https://en.wikipedia.org/wiki/Bicycle_and_motorcycle_dynamics#Leaning
 	// LeanAngle = Atan(Velocity^2 / (Gravity * TurnRadius))
@@ -214,6 +216,20 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 	}
 
 	return impulse;
+}
+
+void MotorcycleController::SaveState(StateRecorder& inStream) const
+{
+	WheeledVehicleController::SaveState(inStream);
+
+	inStream.Write(mTargetLean);
+}
+
+void MotorcycleController::RestoreState(StateRecorder& inStream)
+{
+	WheeledVehicleController::RestoreState(inStream);
+
+	inStream.Read(mTargetLean);
 }
 
 #ifdef JPH_DEBUG_RENDERER

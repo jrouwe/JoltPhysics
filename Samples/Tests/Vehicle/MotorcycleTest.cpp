@@ -183,6 +183,22 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
+void MotorcycleTest::SaveState(StateRecorder& inStream) const
+{
+	VehicleTest::SaveState(inStream);
+
+	inStream.Write(mPreviousForward);
+	inStream.Write(mCurrentRight);
+}
+
+void MotorcycleTest::RestoreState(StateRecorder& inStream)
+{
+	VehicleTest::RestoreState(inStream);
+
+	inStream.Read(mPreviousForward);
+	inStream.Read(mCurrentRight);
+}
+
 void MotorcycleTest::GetInitialCamera(CameraState &ioState) const 
 {
 	// Position camera behind motorcycle
