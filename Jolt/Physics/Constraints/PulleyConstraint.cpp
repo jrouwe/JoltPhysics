@@ -100,6 +100,14 @@ PulleyConstraint::PulleyConstraint(Body &inBody1, Body &inBody2, const PulleyCon
 	mWorldSpaceNormal1 = mWorldSpaceNormal2 = -Vec3::sAxisY(); 
 }
 
+void PulleyConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mLocalSpacePosition1 -= inDeltaCOM;
+	else if (mBody2->GetID() == inBodyID)
+		mLocalSpacePosition2 -= inDeltaCOM;
+}
+
 float PulleyConstraint::CalculatePositionsNormalsAndLength()
 {
 	// Update world space positions (the bodies may have moved)

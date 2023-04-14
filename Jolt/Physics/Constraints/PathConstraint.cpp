@@ -74,6 +74,14 @@ PathConstraint::PathConstraint(Body &inBody1, Body &inBody2, const PathConstrain
 	SetPath(inSettings.mPath, inSettings.mPathFraction);
 }
 
+void PathConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mPathToBody1.SetTranslation(mPathToBody1.GetTranslation() - inDeltaCOM);
+	else if (mBody2->GetID() == inBodyID)
+		mPathToBody2.SetTranslation(mPathToBody2.GetTranslation() - inDeltaCOM);
+}
+
 void PathConstraint::SetPath(const PathConstraintPath *inPath, float inPathFraction)
 {
 	mPath = inPath;

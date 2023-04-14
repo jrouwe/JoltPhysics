@@ -149,6 +149,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(PathConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(RackAndPinionConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(GearConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(PulleyConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(ConstraintVsCOMChangeTest)
 
 static TestNameAndRTTI sConstraintTests[] =
 {
@@ -170,6 +171,7 @@ static TestNameAndRTTI sConstraintTests[] =
 	{ "Pulley Constraint",					JPH_RTTI(PulleyConstraintTest) },
 	{ "Spring",								JPH_RTTI(SpringTest) },
 	{ "Constraint Singularity",				JPH_RTTI(ConstraintSingularityTest) },
+	{ "Constraint vs Center Of Mass Change",JPH_RTTI(ConstraintVsCOMChangeTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(BoxShapeTest)

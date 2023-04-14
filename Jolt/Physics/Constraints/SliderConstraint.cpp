@@ -159,6 +159,14 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 	SetDamping(inSettings.mDamping);
 }
 
+void SliderConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mLocalSpacePosition1 -= inDeltaCOM;
+	else if (mBody2->GetID() == inBodyID)
+		mLocalSpacePosition2 -= inDeltaCOM;
+}
+
 float SliderConstraint::GetCurrentPosition() const
 {
 	// See: CalculateR1R2U and CalculateSlidingAxisAndPosition

@@ -85,6 +85,7 @@ public:
 
 	/// Recalculate the center of mass and shift all objects so they're centered around it 
 	/// (this needs to be done of dynamic bodies and if the center of mass changes significantly due to adding / removing / repositioning sub shapes or else the simulation will look unnatural)
+	/// Note that after adjusting the center of mass of an object you need to call BodyInterface::NotifyShapeChanged and Constraint::NotifyShapeChanged on the relevant bodies / constraints.
 	void							AdjustCenterOfMass();
 
 	///@}
