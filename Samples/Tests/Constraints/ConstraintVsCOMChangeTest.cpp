@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#include <Tests/Constraints/ConstraintVsCOMChange.h>
+#include <Tests/Constraints/ConstraintVsCOMChangeTest.h>
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/GroupFilterTable.h>
@@ -12,12 +12,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ConstraintVsCOMChange) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ConstraintVsCOMChangeTest) 
 { 
-	JPH_ADD_BASE_CLASS(ConstraintVsCOMChange, Test) 
+	JPH_ADD_BASE_CLASS(ConstraintVsCOMChangeTest, Test) 
 }
 
-void ConstraintVsCOMChange::Initialize()
+void ConstraintVsCOMChangeTest::Initialize()
 {
 	constexpr int cChainLength = 15;
 	constexpr float cMinAngle = DegreesToRadians(-10.0f);
@@ -70,7 +70,7 @@ void ConstraintVsCOMChange::Initialize()
 	}
 }
 
-void ConstraintVsCOMChange::PrePhysicsUpdate(const PreUpdateParams& inParams)
+void ConstraintVsCOMChangeTest::PrePhysicsUpdate(const PreUpdateParams& inParams)
 {
 	// Increment time
 	mTime += inParams.mDeltaTime;
@@ -78,19 +78,19 @@ void ConstraintVsCOMChange::PrePhysicsUpdate(const PreUpdateParams& inParams)
 	UpdateShapes();
 }
 
-void ConstraintVsCOMChange::SaveState(StateRecorder& inStream) const
+void ConstraintVsCOMChangeTest::SaveState(StateRecorder& inStream) const
 {
 	inStream.Write(mTime);
 }
 
-void ConstraintVsCOMChange::RestoreState(StateRecorder& inStream)
+void ConstraintVsCOMChangeTest::RestoreState(StateRecorder& inStream)
 {
 	inStream.Read(mTime);
 
 	UpdateShapes();
 }
 
-void ConstraintVsCOMChange::UpdateShapes()
+void ConstraintVsCOMChangeTest::UpdateShapes()
 {
 	// Check if we need to change the configuration
 	int num_shapes = int(mTime) & 1? 2 : 1;

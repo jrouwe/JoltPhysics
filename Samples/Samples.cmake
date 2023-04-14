@@ -25,8 +25,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.h
-	${SAMPLES_ROOT}/Tests/Constraints/ConstraintVsCOMChange.cpp
-	${SAMPLES_ROOT}/Tests/Constraints/ConstraintVsCOMChange.h
+	${SAMPLES_ROOT}/Tests/Constraints/ConstraintVsCOMChangeTest.cpp
+	${SAMPLES_ROOT}/Tests/Constraints/ConstraintVsCOMChangeTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/DistanceConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/DistanceConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/FixedConstraintTest.cpp

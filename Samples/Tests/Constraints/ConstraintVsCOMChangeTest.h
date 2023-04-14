@@ -7,10 +7,10 @@
 #include <Tests/Test.h>
 
 // This test demonstrates how to notify a constraint that the center of mass of a body changed (constraints store their attachment points in center of mass space).
-class ConstraintVsCOMChange : public Test
+class ConstraintVsCOMChangeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ConstraintVsCOMChange)
+	JPH_DECLARE_RTTI_VIRTUAL(ConstraintVsCOMChangeTest)
 
 	// See: Test
 	virtual void				Initialize() override;
