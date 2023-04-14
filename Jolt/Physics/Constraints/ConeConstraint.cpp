@@ -89,6 +89,14 @@ ConeConstraint::ConeConstraint(Body &inBody1, Body &inBody2, const ConeConstrain
 	}
 }
 
+void ConeConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mLocalSpacePosition1 -= inDeltaCOM;
+	else if (mBody2->GetID() == inBodyID)
+		mLocalSpacePosition2 -= inDeltaCOM;
+}
+
 void ConeConstraint::CalculateRotationConstraintProperties(float inDeltaTime, Mat44Arg inRotation1, Mat44Arg inRotation2)
 {
 	// Rotation is along the cross product of both twist axis

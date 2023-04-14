@@ -63,6 +63,14 @@ PointConstraint::PointConstraint(Body &inBody1, Body &inBody2, const PointConstr
 	}
 }
 
+void PointConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mLocalSpacePosition1 -= inDeltaCOM;
+	else if (mBody2->GetID() == inBodyID)
+		mLocalSpacePosition2 -= inDeltaCOM;
+}
+
 void PointConstraint::SetPoint1(EConstraintSpace inSpace, RVec3Arg inPoint1)
 {
 	if (inSpace == EConstraintSpace::WorldSpace)

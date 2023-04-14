@@ -95,6 +95,14 @@ DistanceConstraint::DistanceConstraint(Body &inBody1, Body &inBody2, const Dista
 	SetDamping(inSettings.mDamping);
 }
 
+void DistanceConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mLocalSpacePosition1 -= inDeltaCOM;
+	else if (mBody2->GetID() == inBodyID)
+		mLocalSpacePosition2 -= inDeltaCOM;
+}
+
 void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 {
 	// Update world space positions (the bodies may have moved)
