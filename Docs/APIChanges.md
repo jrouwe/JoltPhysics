@@ -4,9 +4,10 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
 
-## Changes between v2.0.1 and latest
+## Changes between v2.0.1 and v3.0.0
 
 * 20230331 - *SBS* - Vehicle wheels now support specifying the steering axis and wheel forward and up axis separately. This breaks the serialization format and requires setting extra properties on the wheels. (4269d8bbc77b889552a842c2e8476ba7ffc6b9a1)
+* 20230328 - Vehicle now supports suspension under an angle. The behavior of the suspension, even if it is under 90 degrees with the vehicle body, changed so this may require tweaking the spring constants. (172a99c718bded5faa169ac440517286684fa2f0)
 * 20230316 - The signature of ShapeFilter changed and the ShouldCollide function is no longer called for triangles inside a mesh/heightfield shape (you can use CollisionCollector::AddHit to filter per triangle). The previous implementation didn't pass in enough context for the application to fully determine which sub shapes were colliding. See [#473](https://github.com/jrouwe/JoltPhysics/discussions/473) for more information. (bc4fa997f15f2953dc87ee5c1ba51ecf2077c287)
 * 20230313 - VehicleCollisionTester::Collide parameter outSuspensionLength was returning suspension length + wheel radius, now it returns the suspension length. If you have your own implementation of VehicleCollisionTester you need to update your code. (fcd9cb0f1677709e30951f2748aefd5f72ffdae1)
 * 20230212 - Sensors are now able to detect other Sensors, make sure you put sensors in an ObjectLayer that doesn't collide with other sensors if you want to preserve the old behavior. (a76f5891ee429ae4fcde659c19f1eb769f9d8a21)
