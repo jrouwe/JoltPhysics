@@ -811,6 +811,16 @@ void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep
 	}
 }
 
+static void sFinalizeContactAllocator(PhysicsUpdateContext::Step &ioStep, const ContactConstraintManager::ContactAllocator &inAllocator)
+{
+	// Atomically accumulate the number of found manifolds and body pairs
+	ioStep.mNumBodyPairs.fetch_add(inAllocator.mNumBodyPairs, memory_order_relaxed);
+	ioStep.mNumManifolds.fetch_add(inAllocator.mNumManifolds, memory_order_relaxed);
+
+	// Combine update errors
+	ioStep.mContext->mErrors.fetch_or((uint32)inAllocator.mErrors, memory_order_relaxed);
+}
+
 void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex)
 {
 #ifdef JPH_ENABLE_ASSERTS
@@ -914,7 +924,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 					if (read_queue_idx == first_read_queue_idx)
 					{
 						// Collect information from the contact allocator and accumulate it in the step.
-						ContactConstraintManager::sFinalizeContactAllocator(*ioStep, contact_allocator);
+						sFinalizeContactAllocator(*ioStep, contact_allocator);
 
 						// Mark this job as inactive
 						ioStep->mActiveFindCollisionJobs.fetch_and(~PhysicsUpdateContext::JobMask(1 << inJobIndex));
@@ -1919,7 +1929,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 	}
 
 	// Collect information from the contact allocator and accumulate it in the step.
-	ContactConstraintManager::sFinalizeContactAllocator(*ioSubStep->mStep, contact_allocator);
+	sFinalizeContactAllocator(*ioSubStep->mStep, contact_allocator);
 }
 
 void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
