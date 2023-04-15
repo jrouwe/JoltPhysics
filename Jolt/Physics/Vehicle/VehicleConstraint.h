@@ -31,6 +31,7 @@ public:
 
 	Vec3						mUp { 0, 1, 0 };							///< Vector indicating the up direction of the vehicle (in local space to the body)
 	Vec3						mForward { 0, 0, 1 };						///< Vector indicating forward direction of the vehicle (in local space to the body)
+	Vec3						mWorldUp { 0, 1, 0 };						///< Vector indicating the world space up direction (used to limit vehicle pitch/roll)
 	float						mMaxPitchRollAngle = JPH_PI;				///< Defines the maximum pitch/roll angle (rad), can be used to avoid the car from getting upside down. The vehicle up direction will stay within a cone centered around the up axis with half top angle mMaxPitchRollAngle, set to pi to turn off.
 	Array<Ref<WheelSettings>>	mWheels;									///< List of wheels and their properties
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< List of anti rollbars and their properties
@@ -84,6 +85,9 @@ public:
 
 	/// Get the local space up vector of the vehicle
 	Vec3						GetLocalUp() const							{ return mUp; }
+
+	/// Vector indicating the world space up direction (used to limit vehicle pitch/roll)
+	Vec3						GetWorldUp() const							{ return mWorldUp; }
 
 	/// Access to the vehicle body
 	Body *						GetVehicleBody() const						{ return mBody; }
@@ -154,6 +158,7 @@ private:
 	Body *						mBody;										///< Body of the vehicle
 	Vec3						mForward;									///< Local space forward vector for the vehicle
 	Vec3						mUp;										///< Local space up vector for the vehicle
+	Vec3						mWorldUp;									///< Vector indicating the world space up direction (used to limit vehicle pitch/roll)
 	Wheels						mWheels;									///< Wheel states of the vehicle
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< Anti rollbars of the vehicle
 	VehicleController *			mController;								///< Controls the acceleration / declerration of the vehicle

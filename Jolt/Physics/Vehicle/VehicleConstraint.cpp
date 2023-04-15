@@ -20,6 +20,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(VehicleConstraintSettings)
 
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mUp)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mForward)
+	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mWorldUp)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mMaxPitchRollAngle)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mWheels)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mAntiRollBars)
@@ -32,6 +33,7 @@ void VehicleConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 
 	inStream.Write(mUp);
 	inStream.Write(mForward);
+	inStream.Write(mWorldUp);
 	inStream.Write(mMaxPitchRollAngle);
 
 	uint32 num_anti_rollbars = (uint32)mAntiRollBars.size();
@@ -54,6 +56,7 @@ void VehicleConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 
 	inStream.Read(mUp);
 	inStream.Read(mForward);
+	inStream.Read(mWorldUp);
 	inStream.Read(mMaxPitchRollAngle);
 
 	uint32 num_anti_rollbars = 0;
@@ -79,14 +82,16 @@ VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstrain
 	Constraint(inSettings)
 {
 	// Check sanity of incoming settings
-	JPH_ASSERT(inSettings.mForward.IsNormalized());
 	JPH_ASSERT(inSettings.mUp.IsNormalized());
+	JPH_ASSERT(inSettings.mForward.IsNormalized());
+	JPH_ASSERT(inSettings.mWorldUp.IsNormalized());
 	JPH_ASSERT(!inSettings.mWheels.empty());
 
 	// Store general properties
 	mBody = &inVehicleBody;
 	mUp = inSettings.mUp;
 	mForward = inSettings.mForward;
+	mWorldUp = inSettings.mWorldUp;
 	SetMaxPitchRollAngle(inSettings.mMaxPitchRollAngle);
 
 	// Copy anti-rollbar settings
@@ -320,15 +325,15 @@ void VehicleConstraint::CalculateWheelContactPoint(const Wheel &inWheel, Vec3 &o
 void VehicleConstraint::CalculatePitchRollConstraintProperties(float inDeltaTime, RMat44Arg inBodyTransform)
 {
 	// Check if a limit was specified
-	if (mCosMaxPitchRollAngle < JPH_PI)
+	if (mCosMaxPitchRollAngle > -1.0f)
 	{
 		// Calculate cos of angle between world up vector and vehicle up vector
 		Vec3 vehicle_up = inBodyTransform.Multiply3x3(mUp);
-		mCosPitchRollAngle = mUp.Dot(vehicle_up);
+		mCosPitchRollAngle = mWorldUp.Dot(vehicle_up);
 		if (mCosPitchRollAngle < mCosMaxPitchRollAngle)
 		{
 			// Calculate rotation axis to rotate vehicle towards up
-			Vec3 rotation_axis = mUp.Cross(vehicle_up);
+			Vec3 rotation_axis = mWorldUp.Cross(vehicle_up);
 			float len = rotation_axis.Length();
 			if (len > 0.0f)
 				mPitchRollRotationAxis = rotation_axis / len;
