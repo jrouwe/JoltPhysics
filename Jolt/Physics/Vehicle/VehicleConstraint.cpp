@@ -79,7 +79,11 @@ void VehicleConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 }
 
 VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstraintSettings &inSettings) :
-	Constraint(inSettings)
+	Constraint(inSettings),
+	mBody(&inVehicleBody),
+	mForward(inSettings.mForward),
+	mUp(inSettings.mUp),
+	mWorldUp(inSettings.mWorldUp)
 {
 	// Check sanity of incoming settings
 	JPH_ASSERT(inSettings.mUp.IsNormalized());
@@ -87,11 +91,7 @@ VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstrain
 	JPH_ASSERT(inSettings.mWorldUp.IsNormalized());
 	JPH_ASSERT(!inSettings.mWheels.empty());
 
-	// Store general properties
-	mBody = &inVehicleBody;
-	mUp = inSettings.mUp;
-	mForward = inSettings.mForward;
-	mWorldUp = inSettings.mWorldUp;
+	// Store max pitch/roll angle
 	SetMaxPitchRollAngle(inSettings.mMaxPitchRollAngle);
 
 	// Copy anti-rollbar settings
