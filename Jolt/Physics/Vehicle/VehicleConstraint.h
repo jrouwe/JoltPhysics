@@ -85,6 +85,9 @@ public:
 	/// Get the local space up vector of the vehicle
 	Vec3						GetLocalUp() const							{ return mUp; }
 
+	/// Vector indicating the world space up direction (used to limit vehicle pitch/roll), calculated every frame by inverting gravity
+	Vec3						GetWorldUp() const							{ return mWorldUp; }
+
 	/// Access to the vehicle body
 	Body *						GetVehicleBody() const						{ return mBody; }
 
@@ -154,6 +157,7 @@ private:
 	Body *						mBody;										///< Body of the vehicle
 	Vec3						mForward;									///< Local space forward vector for the vehicle
 	Vec3						mUp;										///< Local space up vector for the vehicle
+	Vec3						mWorldUp;									///< Vector indicating the world space up direction (used to limit vehicle pitch/roll)
 	Wheels						mWheels;									///< Wheel states of the vehicle
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< Anti rollbars of the vehicle
 	VehicleController *			mController;								///< Controls the acceleration / declerration of the vehicle
