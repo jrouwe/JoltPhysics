@@ -20,7 +20,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(VehicleConstraintSettings)
 
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mUp)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mForward)
-	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mWorldUp)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mMaxPitchRollAngle)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mWheels)
 	JPH_ADD_ATTRIBUTE(VehicleConstraintSettings, mAntiRollBars)
@@ -33,7 +32,6 @@ void VehicleConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 
 	inStream.Write(mUp);
 	inStream.Write(mForward);
-	inStream.Write(mWorldUp);
 	inStream.Write(mMaxPitchRollAngle);
 
 	uint32 num_anti_rollbars = (uint32)mAntiRollBars.size();
@@ -56,7 +54,6 @@ void VehicleConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 
 	inStream.Read(mUp);
 	inStream.Read(mForward);
-	inStream.Read(mWorldUp);
 	inStream.Read(mMaxPitchRollAngle);
 
 	uint32 num_anti_rollbars = 0;
@@ -83,12 +80,11 @@ VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstrain
 	mBody(&inVehicleBody),
 	mForward(inSettings.mForward),
 	mUp(inSettings.mUp),
-	mWorldUp(inSettings.mWorldUp)
+	mWorldUp(inSettings.mUp)
 {
 	// Check sanity of incoming settings
 	JPH_ASSERT(inSettings.mUp.IsNormalized());
 	JPH_ASSERT(inSettings.mForward.IsNormalized());
-	JPH_ASSERT(inSettings.mWorldUp.IsNormalized());
 	JPH_ASSERT(!inSettings.mWheels.empty());
 
 	// Store max pitch/roll angle
@@ -161,6 +157,9 @@ RMat44 VehicleConstraint::GetWheelWorldTransform(uint inWheelIndex, Vec3Arg inWh
 void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem)
 {
 	JPH_PROFILE_FUNCTION();
+
+	// Calculate new world up vector by inverting gravity
+	mWorldUp = (-inPhysicsSystem.GetGravity()).NormalizedOr(mWorldUp);
 
 	// Callback on our controller
 	mController->PreCollide(inDeltaTime, inPhysicsSystem);
