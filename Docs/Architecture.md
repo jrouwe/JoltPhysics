@@ -56,7 +56,7 @@ Each body has a shape attached that determines the collision volume. The followi
 * [ConvexHullShape](@ref ConvexHullShape) - A convex hull defined by a set of points.
 * [StaticCompoundShape](@ref StaticCompoundShape) - A shape containing other shapes. This shape is constructed once and cannot be changed afterwards. Child shapes are organized in a tree to speed up collision detection.
 * [MutableCompoundShape](@ref MutableCompoundShape) - A shape containing other shapes. This shape can be constructed/changed at runtime and trades construction time for runtime performance. Child shapes are organized in a list to make modification easy.
-* [MeshShape](@ref MeshShape) - A shape consisting of triangles. Any body that uses this shape needs to be static.
+* [MeshShape](@ref MeshShape) - A shape consisting of triangles. They are mostly used for static geometry but can be used for dynamic or kinematic objects as long as they don't collide with other mesh shapes or heightfield shapes.
 * [HeightFieldShape](@ref HeightFieldShape) - A shape consisting of NxN points that define the height at each point, very suitable for representing hilly terrain. Any body that uses this shape needs to be static.
 
 Next to this there are a number of decorator shapes that change the behavior of their children:
