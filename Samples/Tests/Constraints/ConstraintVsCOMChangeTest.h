@@ -10,7 +10,7 @@
 class ConstraintVsCOMChangeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ConstraintVsCOMChangeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ConstraintVsCOMChangeTest)
 
 	// See: Test
 	virtual void				Initialize() override;

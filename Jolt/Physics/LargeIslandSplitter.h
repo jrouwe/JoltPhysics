@@ -20,7 +20,7 @@ class ContactConstraintManager;
 ///
 /// This basically implements what is described in: High-Performance Physical Simulations on Next-Generation Architecture with Many Cores by Chen et al.
 /// See: http://web.eecs.umich.edu/~msmelyan/papers/physsim_onmanycore_itj.pdf section "PARALLELIZATION METHODOLOGY"
-class LargeIslandSplitter : public NonCopyable
+class JPH_EXPORT LargeIslandSplitter : public NonCopyable
 {
 private:
 	using					SplitMask = uint32;

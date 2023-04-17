@@ -15,10 +15,10 @@ JPH_NAMESPACE_BEGIN
 class PhysicsSystem;
 
 /// WheelSettings object specifically for TrackedVehicleController
-class WheelSettingsTV : public WheelSettings
+class JPH_EXPORT WheelSettingsTV : public WheelSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(WheelSettingsTV)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, WheelSettingsTV)
 
 	// See: WheelSettings
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -29,7 +29,7 @@ public:
 };
 
 /// Wheel object specifically for TrackedVehicleController
-class WheelTV : public Wheel
+class JPH_EXPORT WheelTV : public Wheel
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -56,10 +56,10 @@ public:
 ///
 /// Default settings are based around what I could find about the M1 Abrams tank.
 /// Note to avoid issues with very heavy objects vs very light objects the mass of the tank should be a lot lower (say 10x) than that of a real tank. That means that the engine/brake torque is also 10x less.
-class TrackedVehicleControllerSettings : public VehicleControllerSettings
+class JPH_EXPORT TrackedVehicleControllerSettings : public VehicleControllerSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(TrackedVehicleControllerSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, TrackedVehicleControllerSettings)
 
 	// Constructor
 								TrackedVehicleControllerSettings();
@@ -75,7 +75,7 @@ public:
 };
 
 /// Runtime controller class for vehicle with tank tracks
-class TrackedVehicleController : public VehicleController
+class JPH_EXPORT TrackedVehicleController : public VehicleController
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

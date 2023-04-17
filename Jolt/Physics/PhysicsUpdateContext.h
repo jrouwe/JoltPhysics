@@ -19,7 +19,7 @@ class Constraint;
 class TempAllocator;
 
 /// Information used during the Update call
-class PhysicsUpdateContext : public NonCopyable
+class JPH_EXPORT PhysicsUpdateContext : public NonCopyable
 {
 public:
 	/// Destructor

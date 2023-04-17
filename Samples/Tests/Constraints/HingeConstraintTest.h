@@ -9,7 +9,7 @@
 class HingeConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(HingeConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, HingeConstraintTest)
 
 	// See: Test
 	virtual void		Initialize() override;

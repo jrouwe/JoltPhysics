@@ -10,10 +10,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Gear constraint settings
-class GearConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT GearConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(GearConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, GearConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -49,7 +49,7 @@ protected:
 
 /// A gear constraint constrains the rotation of body1 to the rotation of body 2 using a gear.
 /// Note that this constraint needs to be used in conjunction with a two hinge constraints.
-class GearConstraint final : public TwoBodyConstraint
+class JPH_EXPORT GearConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

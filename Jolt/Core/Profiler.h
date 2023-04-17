@@ -74,7 +74,7 @@ class ProfileSample;
 class ProfileThread;
 
 /// Singleton class for managing profiling information
-class Profiler : public NonCopyable
+class JPH_EXPORT Profiler : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -157,7 +157,7 @@ private:
 };							
 
 // Class that contains the information of a single scoped measurement
-class alignas(16) ProfileSample : public NonCopyable
+class alignas(16) JPH_EXPORT ProfileSample : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -171,7 +171,7 @@ public:
 };
 
 /// Collects all samples of a single thread
-class ProfileThread : public NonCopyable
+class JPH_EXPORT ProfileThread : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -186,11 +186,11 @@ public:
 	ProfileSample				mSamples[cMaxSamples];												///< Buffer of samples
 	uint						mCurrentSample = 0;													///< Next position to write a sample to
 
-	static thread_local ProfileThread *sInstance;
+	static ProfileThread*& Instance();
 };
 
 /// Create this class on the stack to start sampling timing information of a particular scope
-class ProfileMeasurement : public NonCopyable
+class JPH_EXPORT ProfileMeasurement : public NonCopyable
 {	
 public:						
 	/// Constructor
@@ -222,10 +222,10 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 #define JPH_PROFILE_END()				do { JPH_PROFILE_THREAD_END(); delete Profiler::sInstance; Profiler::sInstance = nullptr; } while (false)
 
 /// Start instrumenting a thread
-#define JPH_PROFILE_THREAD_START(name)	do { if (Profiler::sInstance) ProfileThread::sInstance = new ProfileThread(name); } while (false)
+#define JPH_PROFILE_THREAD_START(name)	do { if (Profiler::sInstance) ProfileThread::Instance() = new ProfileThread(name); } while (false)
 
 /// End instrumenting a thread
-#define JPH_PROFILE_THREAD_END()		do { delete ProfileThread::sInstance; ProfileThread::sInstance = nullptr; } while (false)
+#define JPH_PROFILE_THREAD_END()		do { delete ProfileThread::Instance(); ProfileThread::Instance() = nullptr; } while (false)
 								
 /// Scope profiling measurement
 #define JPH_PROFILE_TAG2(line)			profile##line

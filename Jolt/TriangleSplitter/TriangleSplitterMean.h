@@ -9,7 +9,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Splitter using mean of axis with biggest centroid deviation
-class TriangleSplitterMean : public TriangleSplitter
+class JPH_EXPORT TriangleSplitterMean : public TriangleSplitter
 {
 public:
 	/// Constructor

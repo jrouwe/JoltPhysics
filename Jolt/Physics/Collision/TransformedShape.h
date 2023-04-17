@@ -22,7 +22,7 @@ class RayCastResult;
 /// This structure can be obtained from a body (e.g. after a broad phase query) under lock protection.
 /// The lock can then be released and collision detection operations can be safely performed since
 /// the class takes a reference on the shape and does not use anything from the body anymore.
-class TransformedShape
+class JPH_EXPORT TransformedShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

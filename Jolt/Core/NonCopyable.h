@@ -7,7 +7,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Class that makes another class non-copyable. Usage: Inherit from NonCopyable.
-class NonCopyable
+class JPH_EXPORT NonCopyable
 {
 public:
 			NonCopyable() = default;

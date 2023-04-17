@@ -82,7 +82,7 @@ struct MinkowskiDifference
 };
 
 /// Class that wraps a point so that it can be used with convex collision detection
-struct PointConvexSupport
+struct JPH_EXPORT PointConvexSupport
 {
 	/// Calculate the support vector for this convex shape.
 	Vec3					GetSupport([[maybe_unused]] Vec3Arg inDirection) const
@@ -94,7 +94,7 @@ struct PointConvexSupport
 };
 
 /// Class that wraps a triangle so that it can used with convex collision detection
-struct TriangleConvexSupport
+struct JPH_EXPORT TriangleConvexSupport
 {
 	/// Constructor
 							TriangleConvexSupport(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3) :

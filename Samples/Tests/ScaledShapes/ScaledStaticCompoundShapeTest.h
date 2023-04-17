@@ -9,7 +9,7 @@
 class ScaledStaticCompoundShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ScaledStaticCompoundShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ScaledStaticCompoundShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

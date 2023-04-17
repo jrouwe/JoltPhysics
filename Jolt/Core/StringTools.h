@@ -8,7 +8,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Create a formatted text string for debugging purposes.
 /// Note that this function has an internal buffer of 1024 characters, so long strings will be trimmed.
-String StringFormat(const char *inFMT, ...);
+JPH_EXPORT String StringFormat(const char *inFMT, ...);
 
 /// Convert type to string
 template<typename T>
@@ -34,18 +34,18 @@ constexpr uint64 HashString(const char *inString)
 }
 
 /// Replace substring with other string
-void StringReplace(String &ioString, const string_view &inSearch, const string_view &inReplace);
+JPH_EXPORT void StringReplace(String &ioString, const string_view &inSearch, const string_view &inReplace);
 
 /// Convert a delimited string to an array of strings
-void StringToVector(const string_view &inString, Array<String> &outVector, const string_view &inDelimiter = ",", bool inClearVector = true);
+JPH_EXPORT void StringToVector(const string_view &inString, Array<String> &outVector, const string_view &inDelimiter = ",", bool inClearVector = true);
 
 /// Convert an array strings to a delimited string
-void VectorToString(const Array<String> &inVector, String &outString, const string_view &inDelimiter = ",");
+JPH_EXPORT void VectorToString(const Array<String> &inVector, String &outString, const string_view &inDelimiter = ",");
 
 /// Convert a string to lower case
-String ToLower(const string_view &inString);
+JPH_EXPORT String ToLower(const string_view &inString);
 
 /// Converts the lower 4 bits of inNibble to a string that represents the number in binary format
-const char *NibbleToBinary(uint32 inNibble);
+JPH_EXPORT const char *NibbleToBinary(uint32 inNibble);
 
 JPH_NAMESPACE_END

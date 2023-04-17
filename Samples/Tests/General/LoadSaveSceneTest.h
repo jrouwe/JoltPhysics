@@ -11,7 +11,7 @@
 class LoadSaveSceneTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(LoadSaveSceneTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, LoadSaveSceneTest)
 
 	// See: Test
 	virtual void				Initialize() override;

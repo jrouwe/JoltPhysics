@@ -15,10 +15,10 @@ JPH_NAMESPACE_BEGIN
 class VehicleConstraint;
 
 /// Base class for wheel settings, each VehicleController can implement a derived class of this
-class WheelSettings : public SerializableObject, public RefTarget<WheelSettings>, public NonCopyable
+class JPH_EXPORT WheelSettings : public SerializableObject, public RefTarget<WheelSettings>, public NonCopyable
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(WheelSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, WheelSettings)
 
 	/// Saves the contents in binary form to inStream.
 	virtual void			SaveBinaryState(StreamOut &inStream) const;
@@ -41,7 +41,7 @@ public:
 };
 
 /// Base class for runtime data for a wheel, each VehicleController can implement a derived class of this
-class Wheel
+class JPH_EXPORT Wheel
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

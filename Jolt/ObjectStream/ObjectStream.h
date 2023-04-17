@@ -12,7 +12,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Base class for object stream input and output streams.
-class ObjectStream
+class JPH_EXPORT ObjectStream
 {
 public:
 	/// Stream type
@@ -35,7 +35,7 @@ protected:
 };
 
 /// Interface class for reading from an object stream
-class IObjectStreamIn : public ObjectStream
+class JPH_EXPORT IObjectStreamIn : public ObjectStream
 {
 public:
 	///@name Input type specific operations
@@ -69,7 +69,7 @@ public:
 };
 
 /// Interface class for writing to an object stream
-class IObjectStreamOut : public ObjectStream
+class JPH_EXPORT IObjectStreamOut : public ObjectStream
 {
 public:
 	///@name Output type specific operations
@@ -108,11 +108,11 @@ public:
 };
 
 // Define macro to declare functions for a specific primitive type
-#define JPH_DECLARE_PRIMITIVE(name)																	\
-	bool	OSIsType(name *, int inArrayDepth, EOSDataType inDataType, const char *inClassName);	\
-	bool	OSReadData(IObjectStreamIn &ioStream, name &outPrimitive);								\
-	void	OSWriteDataType(IObjectStreamOut &ioStream, name *);									\
-	void	OSWriteData(IObjectStreamOut &ioStream, const name &inPrimitive);
+#define JPH_DECLARE_PRIMITIVE(name)																			\
+	JPH_EXPORT bool	OSIsType(name *, int inArrayDepth, EOSDataType inDataType, const char *inClassName);	\
+	JPH_EXPORT bool	OSReadData(IObjectStreamIn &ioStream, name &outPrimitive);								\
+	JPH_EXPORT void	OSWriteDataType(IObjectStreamOut &ioStream, name *);									\
+	JPH_EXPORT void	OSWriteData(IObjectStreamOut &ioStream, const name &inPrimitive);
 
 // This file uses the JPH_DECLARE_PRIMITIVE macro to define all types
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>

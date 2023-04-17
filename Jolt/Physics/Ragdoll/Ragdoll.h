@@ -18,10 +18,10 @@ class Ragdoll;
 class PhysicsSystem;
 
 /// Contains the structure of a ragdoll
-class RagdollSettings : public RefTarget<RagdollSettings>
+class JPH_EXPORT RagdollSettings : public RefTarget<RagdollSettings>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(RagdollSettings)
+	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, RagdollSettings)
 
 	/// Stabilize the constraints of the ragdoll
 	/// @return True on success, false on failure.
@@ -84,7 +84,7 @@ public:
 	class Part : public BodyCreationSettings
 	{
 	public:
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(Part)
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Part)
 
 		Ref<TwoBodyConstraintSettings>	mToParent;
 	};
@@ -107,7 +107,7 @@ private:
 };
 
 /// Runtime ragdoll information
-class Ragdoll : public RefTarget<Ragdoll>, public NonCopyable
+class JPH_EXPORT Ragdoll : public RefTarget<Ragdoll>, public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -17,7 +17,7 @@ JPH_NAMESPACE_BEGIN
 
 /// ObjectStreamIn contains all logic for reading an object from disk. It is the base
 /// class for the text and binary input streams (ObjectStreamTextIn and ObjectStreamBinaryIn).
-class ObjectStreamIn : public IObjectStreamIn
+class JPH_EXPORT ObjectStreamIn : public IObjectStreamIn
 {
 private:
 	struct ClassDescription;

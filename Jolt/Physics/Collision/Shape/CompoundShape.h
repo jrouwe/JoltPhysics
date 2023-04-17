@@ -14,10 +14,10 @@ class CollideShapeSettings;
 class OrientedBox;
 
 /// Base class settings to construct a compound shape
-class CompoundShapeSettings : public ShapeSettings
+class JPH_EXPORT CompoundShapeSettings : public ShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_ABSTRACT(CompoundShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_ABSTRACT(JPH_EXPORT, CompoundShapeSettings)
 
 	/// Constructor. Use AddShape to add the parts.
 									CompoundShapeSettings() = default;
@@ -30,7 +30,7 @@ public:
 
 	struct SubShapeSettings
 	{
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(SubShapeSettings)
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SubShapeSettings)
 
 		RefConst<ShapeSettings>		mShape;													///< Sub shape (either this or mShapePtr needs to be filled up)
 		RefConst<Shape>				mShapePtr;												///< Sub shape (either this or mShape needs to be filled up)
@@ -45,7 +45,7 @@ public:
 };
 
 /// Base class for a compound shape
-class CompoundShape : public Shape
+class JPH_EXPORT CompoundShape : public Shape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -11,7 +11,7 @@
 class CreateRigTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CreateRigTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CreateRigTest)
 
 	// Destructor
 	virtual							~CreateRigTest() override;

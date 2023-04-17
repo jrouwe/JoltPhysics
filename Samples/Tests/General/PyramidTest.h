@@ -10,7 +10,7 @@
 class PyramidTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(PyramidTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, PyramidTest)
 
 	// See: Test
 	virtual void		Initialize() override;

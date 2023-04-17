@@ -10,7 +10,7 @@
 class PulleyConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(PulleyConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, PulleyConstraintTest)
 
 	// See: Test
 	virtual void		Initialize() override;

@@ -10,7 +10,7 @@
 class BigVsSmallTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(BigVsSmallTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BigVsSmallTest)
 
 	// See: Test
 	virtual void		Initialize() override;

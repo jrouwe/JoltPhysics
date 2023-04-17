@@ -9,7 +9,7 @@
 class DistanceConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(DistanceConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, DistanceConstraintTest)
 
 	// See: Test
 	virtual void		Initialize() override;

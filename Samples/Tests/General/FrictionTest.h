@@ -10,7 +10,7 @@
 class FrictionTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(FrictionTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, FrictionTest)
 
 	// See: Test
 	virtual void		Initialize() override;

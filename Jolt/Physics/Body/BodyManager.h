@@ -26,7 +26,7 @@ using BodyVector = Array<Body *>;
 using BodyIDVector = Array<BodyID>;
 
 /// Class that contains all bodies
-class BodyManager : public NonCopyable
+class JPH_EXPORT BodyManager : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -209,17 +209,17 @@ public:
 	public:
 		inline GrantActiveBodiesAccess(bool inAllowActivation, bool inAllowDeactivation)
 		{
-			JPH_ASSERT(!sOverrideAllowActivation);
-			sOverrideAllowActivation = inAllowActivation;
+			JPH_ASSERT(!OverrideAllowActivation());
+			OverrideAllowActivation() = inAllowActivation;
 
-			JPH_ASSERT(!sOverrideAllowDeactivation);
-			sOverrideAllowDeactivation = inAllowDeactivation;
+			JPH_ASSERT(!OverrideAllowDeactivation());
+			OverrideAllowDeactivation() = inAllowDeactivation;
 		}
 
 		inline ~GrantActiveBodiesAccess()
 		{
-			sOverrideAllowActivation = false;
-			sOverrideAllowDeactivation = false;
+			OverrideAllowActivation() = false;
+			OverrideAllowDeactivation() = false;
 		}
 	};
 #endif
@@ -302,8 +302,8 @@ private:
 #ifdef JPH_ENABLE_ASSERTS
 	/// Debug system that tries to limit changes to active bodies during the PhysicsSystem::Update()
 	bool							mActiveBodiesLocked = false;
-	static thread_local bool		sOverrideAllowActivation;
-	static thread_local bool		sOverrideAllowDeactivation;
+	static bool& OverrideAllowActivation();
+	static bool& OverrideAllowDeactivation();
 #endif
 };
 

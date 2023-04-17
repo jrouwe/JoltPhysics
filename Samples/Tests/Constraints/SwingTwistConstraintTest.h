@@ -10,7 +10,7 @@
 class SwingTwistConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SwingTwistConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SwingTwistConstraintTest)
 
 	virtual void			Initialize() override;
 

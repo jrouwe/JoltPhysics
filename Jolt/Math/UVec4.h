@@ -212,7 +212,7 @@ public:
 	};
 
 private:
-	static const UVec4			sFourMinusXShuffle[];
+	JPH_EXPORT static const UVec4	sFourMinusXShuffle[];
 };
 
 static_assert(is_trivial<UVec4>(), "Is supposed to be a trivial type!");

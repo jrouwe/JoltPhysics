@@ -21,10 +21,10 @@ enum class EMotorState
 
 /// Class that contains the settings for a constraint motor.
 /// See the main page of the API documentation for more information on how to configure a motor.
-class MotorSettings
+class JPH_EXPORT MotorSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(MotorSettings)
+	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, MotorSettings)
 
 	/// Constructor
 							MotorSettings() = default;

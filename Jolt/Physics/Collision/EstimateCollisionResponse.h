@@ -43,6 +43,6 @@ struct CollisionEstimationResult
 /// @param inCombinedRestitution The combined restitution of body 1 and body 2 (see ContactSettings::mCombinedRestitution)
 /// @param inMinVelocityForRestitution Minimal velocity required for restitution to be applied (see PhysicsSettings::mMinVelocityForRestitution)
 /// @param inNumIterations Number of iterations to use for the impulse estimation (see PhysicsSettings::mNumVelocitySteps, note you can probably use a lower number for a decent estimate). If you set the number of iterations to 1 then no friction will be calculated.
-void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, CollisionEstimationResult &outResult, float inCombinedFriction, float inCombinedRestitution, float inMinVelocityForRestitution = 1.0f, uint inNumIterations = 10);
+JPH_EXPORT void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, CollisionEstimationResult &outResult, float inCombinedFriction, float inCombinedRestitution, float inMinVelocityForRestitution = 1.0f, uint inNumIterations = 10);
 
 JPH_NAMESPACE_END

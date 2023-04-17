@@ -10,7 +10,7 @@
 class VehicleTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(VehicleTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, VehicleTest)
 
 	// See: Test
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;

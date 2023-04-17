@@ -14,10 +14,10 @@ JPH_NAMESPACE_BEGIN
 class VehicleController;
 
 /// Basic settings object for interface that controls acceleration / decelleration of the vehicle
-class VehicleControllerSettings : public SerializableObject, public RefTarget<VehicleControllerSettings>
+class JPH_EXPORT VehicleControllerSettings : public SerializableObject, public RefTarget<VehicleControllerSettings>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_ABSTRACT(VehicleControllerSettings)
+	JPH_DECLARE_SERIALIZABLE_ABSTRACT(JPH_EXPORT, VehicleControllerSettings)
 
 	/// Saves the contents of the controller settings in binary form to inStream.
 	virtual void				SaveBinaryState(StreamOut &inStream) const = 0;
@@ -30,7 +30,7 @@ public:
 };
 
 /// Runtime data for interface that controls acceleration / decelleration of the vehicle
-class VehicleController : public RefTarget<VehicleController>
+class JPH_EXPORT VehicleController : public RefTarget<VehicleController>
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

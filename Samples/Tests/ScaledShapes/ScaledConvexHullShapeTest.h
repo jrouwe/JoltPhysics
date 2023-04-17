@@ -9,7 +9,7 @@
 class ScaledConvexHullShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ScaledConvexHullShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ScaledConvexHullShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

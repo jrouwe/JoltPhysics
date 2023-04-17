@@ -11,10 +11,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Fixed constraint settings, used to create a fixed constraint
-class FixedConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT FixedConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(FixedConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, FixedConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -45,7 +45,7 @@ protected:
 
 /// A fixed constraint welds two bodies together removing all degrees of freedom between them.
 /// This variant uses euler angles for the rotation constraint.
-class FixedConstraint final : public TwoBodyConstraint
+class JPH_EXPORT FixedConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -430,7 +430,25 @@ endif()
 source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES})
 
 # Create Jolt lib
-add_library(Jolt STATIC ${JOLT_PHYSICS_SRC_FILES})
+
+if (COMPILE_AS_SHARED_LIBRARY)
+	add_library(Jolt SHARED ${JOLT_PHYSICS_SRC_FILES})
+
+	# The custom build type "Distribution" has no linker flags set yet, so copy them over from the Release build type.
+	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION ${CMAKE_SHARED_LINKER_FLAGS_RELEASE} CACHE STRING "" FORCE)
+
+	# Public define to instruct user code to import Jolt symbols (rather than use static linking)
+	target_compile_definitions(Jolt PUBLIC JPH_SHARED_LIBRARY)
+
+	# Private define to instruct the library to export symbols for shared linking
+	target_compile_definitions(Jolt PRIVATE JPH_BUILD_SHARED_LIBRARY)
+
+	# 4251 = class 'type' needs to have DLL-interface to be used by clients of class 'type2'
+	target_compile_options(Jolt PUBLIC /wd4251)
+else()
+	add_library(Jolt STATIC ${JOLT_PHYSICS_SRC_FILES})
+endif()
+
 target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
 target_precompile_headers(Jolt PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")

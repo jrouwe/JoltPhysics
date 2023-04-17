@@ -11,7 +11,7 @@
 class UIImage : public UIElement
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UIImage)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UIImage)
 
 	/// Set properties
 	void				SetImage(const UITexturedQuad &inImage)			{ mImage = inImage; }

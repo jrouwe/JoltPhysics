@@ -18,7 +18,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 JPH_NAMESPACE_BEGIN
 
 /// A simple class that logs the state of the simulation. The resulting text file can be used to diff between platforms and find issues in determinism.
-class DeterminismLog
+class JPH_EXPORT DeterminismLog
 {
 private:
 	JPH_INLINE uint32		Convert(float inValue) const

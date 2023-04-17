@@ -10,7 +10,7 @@
 class CenterOfMassTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CenterOfMassTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CenterOfMassTest)
 
 	// See: Test
 	virtual void		Initialize() override;

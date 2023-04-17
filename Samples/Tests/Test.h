@@ -22,7 +22,7 @@ namespace JPH {
 class Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL_BASE(Test)
+	JPH_DECLARE_RTTI_VIRTUAL_BASE(JPH_NO_EXPORT, Test)
 
 	// Destructor
 	virtual			~Test() = default;

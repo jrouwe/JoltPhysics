@@ -11,7 +11,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// A convex hull builder that tries to create 2D hulls as accurately as possible. Used for offline processing. 
-class ConvexHullBuilder2D : public NonCopyable
+class JPH_EXPORT ConvexHullBuilder2D : public NonCopyable
 {
 public:
 	using Positions = Array<Vec3>; 

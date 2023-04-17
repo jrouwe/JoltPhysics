@@ -10,7 +10,7 @@
 class MultithreadedTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(MultithreadedTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, MultithreadedTest)
 
 	// Destructor
 	virtual					~MultithreadedTest() override;

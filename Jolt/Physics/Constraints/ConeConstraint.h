@@ -11,10 +11,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Cone constraint settings, used to create a cone constraint
-class ConeConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT ConeConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(ConeConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, ConeConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -66,7 +66,7 @@ protected:
 /// Where J is the Jacobian.
 ///
 /// Note that this is the exact same equation as used in AngleConstraintPart if we use t2 x t1 as the world space axis
-class ConeConstraint final : public TwoBodyConstraint
+class JPH_EXPORT ConeConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

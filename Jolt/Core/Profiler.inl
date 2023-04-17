@@ -25,15 +25,15 @@ ProfileThread::~ProfileThread()
 
 ProfileMeasurement::ProfileMeasurement(const char *inName, uint32 inColor)	
 {
-	if (ProfileThread::sInstance == nullptr)
+	if (ProfileThread::Instance() == nullptr)
 	{
 		// Thread not instrumented
 		mSample = nullptr;
 	}
-	else if (ProfileThread::sInstance->mCurrentSample < ProfileThread::cMaxSamples)
+	else if (ProfileThread::Instance()->mCurrentSample < ProfileThread::cMaxSamples)
 	{
 		// Get pointer to write data to
-		mSample = &ProfileThread::sInstance->mSamples[ProfileThread::sInstance->mCurrentSample++];
+		mSample = &ProfileThread::Instance()->mSamples[ProfileThread::Instance()->mCurrentSample++];
 
 		// Start constructing sample (will end up on stack)
 		mTemp.mName = inName;

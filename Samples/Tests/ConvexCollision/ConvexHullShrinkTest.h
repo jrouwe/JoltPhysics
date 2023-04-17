@@ -10,7 +10,7 @@
 class ConvexHullShrinkTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ConvexHullShrinkTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ConvexHullShrinkTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

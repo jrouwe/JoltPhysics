@@ -11,7 +11,7 @@
 class ChangeMotionQualityTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ChangeMotionQualityTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ChangeMotionQualityTest)
 
 	// See: Test
 	virtual void	Initialize() override;

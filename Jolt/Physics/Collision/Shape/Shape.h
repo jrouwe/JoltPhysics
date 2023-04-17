@@ -131,10 +131,10 @@ static_assert(size(sSubShapeTypeNames) == NumSubShapeTypes);
 /// in a form that is optimized for collision detection. After this, the ShapeSettings object is no longer needed
 /// and can be destroyed. Each shape class has a derived class of the ShapeSettings object to store shape specific
 /// data.
-class ShapeSettings : public SerializableObject, public RefTarget<ShapeSettings>
+class JPH_EXPORT ShapeSettings : public SerializableObject, public RefTarget<ShapeSettings>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_ABSTRACT(ShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_ABSTRACT(JPH_EXPORT, ShapeSettings)
 
 	using ShapeResult = Result<Ref<Shape>>;
 
@@ -149,7 +149,7 @@ protected:
 };
 
 /// Function table for functions on shapes
-class ShapeFunctions
+class JPH_EXPORT ShapeFunctions
 {
 public:
 	/// Construct a shape
@@ -166,7 +166,7 @@ private:
 };
 
 /// Base class for all shapes (collision volume of a body). Defines a virtual interface for collision detection.
-class Shape : public RefTarget<Shape>, public NonCopyable
+class JPH_EXPORT Shape : public RefTarget<Shape>, public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

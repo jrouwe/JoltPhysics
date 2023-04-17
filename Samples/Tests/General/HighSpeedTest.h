@@ -10,7 +10,7 @@
 class HighSpeedTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(HighSpeedTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, HighSpeedTest)
 
 	// See: Test
 	virtual void		Initialize() override;

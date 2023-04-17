@@ -12,7 +12,7 @@
 class ChangeObjectLayerTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ChangeObjectLayerTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ChangeObjectLayerTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

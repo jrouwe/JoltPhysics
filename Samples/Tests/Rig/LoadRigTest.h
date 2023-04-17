@@ -12,7 +12,7 @@
 class LoadRigTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(LoadRigTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, LoadRigTest)
 
 	// Destructor
 	virtual							~LoadRigTest() override;

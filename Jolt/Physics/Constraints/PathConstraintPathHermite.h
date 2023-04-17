@@ -9,10 +9,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// A path that follows a Hermite spline
-class PathConstraintPathHermite final : public PathConstraintPath
+class JPH_EXPORT PathConstraintPathHermite final : public PathConstraintPath
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(PathConstraintPathHermite)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, PathConstraintPathHermite)
 
 	// See PathConstraintPath::GetPathMaxFraction
 	virtual float		GetPathMaxFraction() const override									{ return float(IsLooping()? mPoints.size() : mPoints.size() - 1); }
@@ -31,7 +31,7 @@ public:
 
 	struct Point
 	{
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(Point)
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Point)
 
 		Vec3			mPosition;															///< Position on the path
 		Vec3			mTangent;															///< Tangent of the path, does not need to be normalized (in the direction of the path)

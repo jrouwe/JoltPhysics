@@ -11,7 +11,7 @@
 class UIStaticText : public UIElement
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UIStaticText)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UIStaticText)
 
 	/// Cloning / copying
 	virtual void		CopyTo(UIElement *ioElement) const override;

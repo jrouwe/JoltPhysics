@@ -22,7 +22,12 @@ JPH_NAMESPACE_BEGIN
 //////////////////////////////////////////////////////////////////////////////////////////
 
 Profiler *Profiler::sInstance = nullptr;
-thread_local ProfileThread *ProfileThread::sInstance = nullptr;
+static thread_local ProfileThread *sInstance = nullptr;
+
+ProfileThread*& ProfileThread::Instance()
+{
+	return sInstance;
+}
 
 bool ProfileMeasurement::sOutOfSamplesReported = false;
 

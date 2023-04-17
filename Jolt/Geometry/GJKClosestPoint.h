@@ -19,7 +19,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Convex vs convex collision detection
 /// Based on: A Fast and Robust GJK Implementation for Collision Detection of Convex Objects - Gino van den Bergen
-class GJKClosestPoint : public NonCopyable
+class JPH_EXPORT GJKClosestPoint : public NonCopyable
 {
 private:
 	/// Get new closest point to origin given simplex mY of mNumPoints points

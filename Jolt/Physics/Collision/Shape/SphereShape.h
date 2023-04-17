@@ -9,10 +9,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a SphereShape
-class SphereShapeSettings final : public ConvexShapeSettings
+class JPH_EXPORT SphereShapeSettings final : public ConvexShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(SphereShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, SphereShapeSettings)
 
 	/// Default constructor for deserialization
 							SphereShapeSettings() = default;
@@ -28,7 +28,7 @@ public:
 
 /// A sphere, centered around the origin.
 /// Note that it is implemented as a point with convex radius.
-class SphereShape final : public ConvexShape
+class JPH_EXPORT SphereShape final : public ConvexShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

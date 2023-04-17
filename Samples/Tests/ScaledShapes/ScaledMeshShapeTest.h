@@ -9,7 +9,7 @@
 class ScaledMeshShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ScaledMeshShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ScaledMeshShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

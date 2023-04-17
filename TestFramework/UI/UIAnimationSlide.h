@@ -10,7 +10,7 @@
 class UIAnimationSlide : public UIAnimation
 {
 public:
-	JPH_DECLARE_RTTI_ABSTRACT(UIAnimationSlide)
+	JPH_DECLARE_RTTI_ABSTRACT(JPH_NO_EXPORT, UIAnimationSlide)
 
 	/// Mode of sliding
 	enum EMode

@@ -10,7 +10,7 @@
 class LoadSnapshotTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(LoadSnapshotTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, LoadSnapshotTest)
 
 	// See: Test
 	virtual void		Initialize() override;

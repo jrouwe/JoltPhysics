@@ -22,7 +22,7 @@ struct BodyPair;
 using BodyPairCollector = CollisionCollector<BodyPair, CollisionCollectorTraitsCollideShape>;
 
 /// Used to do coarse collision detection operations to quickly prune out bodies that will not collide.
-class BroadPhase : public BroadPhaseQuery
+class JPH_EXPORT BroadPhase : public BroadPhaseQuery
 {
 public:
 	/// Initialize the broadphase.
