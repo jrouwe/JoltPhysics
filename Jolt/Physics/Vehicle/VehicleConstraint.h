@@ -15,8 +15,6 @@
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
-class VehicleController;
-class VehicleControllerSettings;
 
 /// Configuration for constraint that simulates a wheeled vehicle.
 /// 

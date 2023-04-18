@@ -10,7 +10,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Ellipse centered around the origin
 /// @see https://en.wikipedia.org/wiki/Ellipse
-class JPH_EXPORT Ellipse
+class Ellipse
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

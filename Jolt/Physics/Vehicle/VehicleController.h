@@ -4,14 +4,21 @@
 
 #pragma once
 
-#include <Jolt/Physics/Vehicle/VehicleConstraint.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Jolt/Renderer/DebugRenderer.h>
+#endif // JPH_DEBUG_RENDERER
 
 JPH_NAMESPACE_BEGIN
 
+class PhysicsSystem;
 class VehicleController;
+class VehicleConstraint;
+class WheelSettings;
+class Wheel;
+class StateRecorder;
 
 /// Basic settings object for interface that controls acceleration / decelleration of the vehicle
 class JPH_EXPORT VehicleControllerSettings : public SerializableObject, public RefTarget<VehicleControllerSettings>

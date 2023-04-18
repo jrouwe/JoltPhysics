@@ -15,7 +15,7 @@ class TempAllocator;
 //#define JPH_VALIDATE_ISLAND_BUILDER
 
 /// Keeps track of connected bodies and builds islands for multithreaded velocity/position update
-class JPH_EXPORT IslandBuilder : public NonCopyable
+class IslandBuilder : public NonCopyable
 {
 public:
 	/// Destructor

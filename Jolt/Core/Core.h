@@ -4,17 +4,17 @@
 
 #pragma once
 
-// if this define is set, Jolt is compiled as a shared library
+// If this define is set, Jolt is compiled as a shared library
 #ifdef JPH_SHARED_LIBRARY
 	#ifdef JPH_BUILD_SHARED_LIBRARY
-		// while building the shared library, we must export these symbols
+		// While building the shared library, we must export these symbols
 		#define JPH_EXPORT __declspec(dllexport)
 	#else
-		// when linking against Jolt, we must import these symbols
+		// When linking against Jolt, we must import these symbols
 		#define JPH_EXPORT __declspec(dllimport)
 	#endif
 #else
-	// if the define is not set, we use static linking and symbols don't need to be imported or exported
+	// If the define is not set, we use static linking and symbols don't need to be imported or exported
 	#define JPH_EXPORT
 #endif
 

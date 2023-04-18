@@ -24,7 +24,7 @@ JPH_SUPPRESS_WARNING_POP
 JPH_NAMESPACE_BEGIN
 
 /// Structure that tracks narrow phase timing information for a particular combination of shapes
-class JPH_EXPORT NarrowPhaseStat
+class NarrowPhaseStat
 {
 public:
 	/// Trace an individual stat in CSV form.
@@ -44,7 +44,7 @@ public:
 };
 
 /// Object that tracks the start and end of a narrow phase operation
-class JPH_EXPORT TrackNarrowPhaseStat
+class TrackNarrowPhaseStat
 {
 public:
 							TrackNarrowPhaseStat(NarrowPhaseStat &inStat) : 
@@ -81,7 +81,7 @@ public:
 };
 
 /// Object that tracks the start and end of a hit being processed by a collision collector
-class JPH_EXPORT TrackNarrowPhaseCollector
+class TrackNarrowPhaseCollector
 {
 public:
 							TrackNarrowPhaseCollector() : 

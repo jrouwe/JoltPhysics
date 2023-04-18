@@ -12,7 +12,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Axis aligned box
-class [[nodiscard]] JPH_EXPORT AABox
+class [[nodiscard]] AABox
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

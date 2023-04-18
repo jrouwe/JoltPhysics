@@ -31,7 +31,7 @@ JPH_NAMESPACE_BEGIN
 /// - This will remove all faces that are facing the new point and will create new triangles to fill up the hole
 /// - Loop to A until no closer point found
 /// - The closest point indicates the position / direction of least penetration
-class JPH_EXPORT EPAPenetrationDepth
+class EPAPenetrationDepth
 {
 private:
 	// Typedefs
