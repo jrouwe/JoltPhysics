@@ -300,13 +300,14 @@ private:
 	const BroadPhaseLayerInterface *mBroadPhaseLayerInterface = nullptr;
 
 #ifdef JPH_ENABLE_ASSERTS
+	static bool						sGetOverrideAllowActivation();
+	static void						sSetOverrideAllowActivation(bool inValue);
+
+	static bool						sGetOverrideAllowDeactivation();
+	static void						sSetOverrideAllowDeactivation(bool inValue);
+
 	/// Debug system that tries to limit changes to active bodies during the PhysicsSystem::Update()
 	bool							mActiveBodiesLocked = false;
-	static bool sGetOverrideAllowActivation();
-	static void sSetOverrideAllowActivation(bool value);
-
-	static bool sGetOverrideAllowDeactivation();
-	static void sSetOverrideAllowDeactivation(bool value);
 #endif
 };
 

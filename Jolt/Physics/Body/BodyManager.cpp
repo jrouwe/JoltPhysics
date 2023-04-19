@@ -28,9 +28,9 @@ JPH_NAMESPACE_BEGIN
 		return sOverrideAllowActivation;
 	}
 
-	void BodyManager::sSetOverrideAllowActivation(bool value)
+	void BodyManager::sSetOverrideAllowActivation(bool inValue)
 	{
-		sOverrideAllowActivation = value;
+		sOverrideAllowActivation = inValue;
 	}
 
 	bool BodyManager::sGetOverrideAllowDeactivation()
@@ -38,9 +38,9 @@ JPH_NAMESPACE_BEGIN
 		return sOverrideAllowDeactivation;
 	}
 
-	void BodyManager::sSetOverrideAllowDeactivation(bool value)
+	void BodyManager::sSetOverrideAllowDeactivation(bool inValue)
 	{
-		sOverrideAllowDeactivation = value;
+		sOverrideAllowDeactivation = inValue;
 	}
 #endif
 
