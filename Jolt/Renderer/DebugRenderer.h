@@ -20,8 +20,12 @@ JPH_NAMESPACE_BEGIN
 
 class OrientedBox;
 
+#ifdef JPH_LOCAL_DEBUG_RENDERER
+class DebugRenderer
+#else
 /// Simple triangle renderer for debugging purposes.
 class JPH_EXPORT DebugRenderer
+#endif
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -141,7 +145,11 @@ public:
 	};
 
 	/// A single triangle
+#ifdef JPH_LOCAL_DEBUG_RENDERER
+	class Triangle
+#else
 	class JPH_EXPORT Triangle
+#endif
 	{
 	public:
 										Triangle() = default;

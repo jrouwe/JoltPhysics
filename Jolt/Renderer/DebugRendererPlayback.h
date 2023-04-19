@@ -15,7 +15,11 @@
 JPH_NAMESPACE_BEGIN
 
 /// Class that can read a recorded stream from DebugRendererRecorder and plays it back trough a DebugRenderer
+#ifdef JPH_LOCAL_DEBUG_RENDERER
+class DebugRendererPlayback
+#else
 class JPH_EXPORT DebugRendererPlayback
+#endif
 {
 public:
 	/// Constructor
