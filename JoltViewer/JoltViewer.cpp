@@ -18,11 +18,12 @@ JPH_SUPPRESS_WARNINGS_STD_END
 #ifndef JPH_DEBUG_RENDERER	
 	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
 	#define JPH_DEBUG_RENDERER
-	// make sure the debug renderer symbols don't get imported or exported
-	#define JPH_LOCAL_DEBUG_RENDERER
+	// Make sure the debug renderer symbols don't get imported or exported
+	#define JPH_DEBUG_RENDERER_EXPORT
 	#include <Jolt/Renderer/DebugRendererRecorder.cpp>
 	#include <Jolt/Renderer/DebugRendererPlayback.cpp>
 	#undef JPH_DEBUG_RENDERER
+	#undef JPH_DEBUG_RENDERER_EXPORT
 #endif
 
 JoltViewer::JoltViewer()

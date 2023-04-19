@@ -16,11 +16,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Implementation of DebugRenderer that records the API invocations to be played back later
-#ifdef JPH_LOCAL_DEBUG_RENDERER
-class DebugRendererRecorder final : public DebugRenderer
-#else
-class JPH_EXPORT DebugRendererRecorder final : public DebugRenderer
-#endif
+class JPH_DEBUG_RENDERER_EXPORT DebugRendererRecorder final : public DebugRenderer
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
