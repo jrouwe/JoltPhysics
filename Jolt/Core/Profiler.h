@@ -171,7 +171,7 @@ public:
 };
 
 /// Collects all samples of a single thread
-class JPH_EXPORT ProfileThread : public NonCopyable
+class ProfileThread : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -186,7 +186,12 @@ public:
 	ProfileSample				mSamples[cMaxSamples];												///< Buffer of samples
 	uint						mCurrentSample = 0;													///< Next position to write a sample to
 
-	static ProfileThread*& Instance();
+#ifdef JPH_SHARED_LIBRARY
+	JPH_EXPORT static ProfileThread*& Instance();
+#else
+	static thread_local ProfileThread* sInstance;
+	static inline ProfileThread*& Instance() { return sInstance; }
+#endif
 };
 
 /// Create this class on the stack to start sampling timing information of a particular scope
