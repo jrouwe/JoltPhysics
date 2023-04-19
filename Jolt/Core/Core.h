@@ -4,22 +4,6 @@
 
 #pragma once
 
-// If this define is set, Jolt is compiled as a shared library
-#ifdef JPH_SHARED_LIBRARY
-	#ifdef JPH_BUILD_SHARED_LIBRARY
-		// While building the shared library, we must export these symbols
-		#define JPH_EXPORT __declspec(dllexport)
-	#else
-		// When linking against Jolt, we must import these symbols
-		#define JPH_EXPORT __declspec(dllimport)
-	#endif
-#else
-	// If the define is not set, we use static linking and symbols don't need to be imported or exported
-	#define JPH_EXPORT
-#endif
-
-#define JPH_NO_EXPORT
-
 // Determine platform
 #if defined(JPH_PLATFORM_BLUE)
 	// Correct define already defined, this overrides everything else
@@ -139,6 +123,31 @@
 	#error Unsupported CPU architecture
 #endif
 
+// If this define is set, Jolt is compiled as a shared library
+#ifdef JPH_SHARED_LIBRARY
+	#ifdef JPH_BUILD_SHARED_LIBRARY
+		// While building the shared library, we must export these symbols
+		#ifdef JPH_COMPILER_MSVC
+			#define JPH_EXPORT __declspec(dllexport)
+		#else
+			#define JPH_EXPORT __attribute__ ((visibility ("default")))
+		#endif
+	#else
+		// When linking against Jolt, we must import these symbols
+		#ifdef JPH_COMPILER_MSVC
+			#define JPH_EXPORT __declspec(dllimport)
+		#else
+			#define JPH_EXPORT __attribute__ ((visibility ("default")))
+		#endif
+	#endif
+#else
+	// If the define is not set, we use static linking and symbols don't need to be imported or exported
+	#define JPH_EXPORT
+#endif
+
+// Macro used by the RTTI macros to not export a function
+#define JPH_NO_EXPORT
+
 // Pragmas to store / restore the warning state and to disable individual warnings
 #ifdef JPH_COMPILER_CLANG
 #define JPH_PRAGMA(x)					_Pragma(#x)
@@ -220,6 +229,7 @@
 	JPH_MSVC_SUPPRESS_WARNING(5219) /* implicit conversion from 'X' to 'Y', possible loss of data  */ \
 	JPH_MSVC_SUPPRESS_WARNING(4826) /* Conversion from 'X *' to 'JPH::uint64' is sign-extended. This may cause unexpected runtime behavior. (32-bit) */ \
 	JPH_MSVC_SUPPRESS_WARNING(5264) /* 'X': 'const' variable is not used */						\
+	JPH_MSVC_SUPPRESS_WARNING(4251) /* class 'X' needs to have DLL-interface to be used by clients of class 'Y' */ \
 	JPH_MSVC2019_SUPPRESS_WARNING(5246) /* the initialization of a subobject should be wrapped in braces */
 
 // OS-specific includes

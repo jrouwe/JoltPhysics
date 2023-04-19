@@ -433,6 +433,9 @@ source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES})
 if (COMPILE_AS_SHARED_LIBRARY)
 	add_library(Jolt SHARED ${JOLT_PHYSICS_SRC_FILES})
 
+	# Set default visibility to hidden
+	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
 	# The custom build type "Distribution" has no linker flags set yet, so copy them over from the Release build type.
 	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION ${CMAKE_SHARED_LINKER_FLAGS_RELEASE} CACHE STRING "" FORCE)
 
@@ -441,9 +444,6 @@ if (COMPILE_AS_SHARED_LIBRARY)
 
 	# Private define to instruct the library to export symbols for shared linking
 	target_compile_definitions(Jolt PRIVATE JPH_BUILD_SHARED_LIBRARY)
-
-	# 4251 = class 'type' needs to have DLL-interface to be used by clients of class 'type2'
-	target_compile_options(Jolt PUBLIC /wd4251)
 else()
 	add_library(Jolt STATIC ${JOLT_PHYSICS_SRC_FILES})
 endif()
