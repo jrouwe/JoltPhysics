@@ -13,11 +13,8 @@
 #ifndef JPH_DEBUG_RENDERER
 	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
 	#define JPH_DEBUG_RENDERER
-	// Make sure the debug renderer symbols don't get imported or exported
-	#define JPH_DEBUG_RENDERER_EXPORT
 	#include <Jolt/Renderer/DebugRenderer.cpp>
 	#undef JPH_DEBUG_RENDERER
-	#undef JPH_DEBUG_RENDERER_EXPORT
 #endif // !JPH_DEBUG_RENDERER
 
 DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
