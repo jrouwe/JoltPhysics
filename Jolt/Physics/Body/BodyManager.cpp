@@ -23,14 +23,24 @@ JPH_NAMESPACE_BEGIN
 	static thread_local bool sOverrideAllowActivation = false;
 	static thread_local bool sOverrideAllowDeactivation = false;
 
-	bool& BodyManager::OverrideAllowActivation()
+	bool BodyManager::sGetOverrideAllowActivation()
 	{
 		return sOverrideAllowActivation;
 	}
 
-	bool& BodyManager::OverrideAllowDeactivation()
+	void BodyManager::sSetOverrideAllowActivation(bool value)
+	{
+		sOverrideAllowActivation = value;
+	}
+
+	bool BodyManager::sGetOverrideAllowDeactivation()
 	{
 		return sOverrideAllowDeactivation;
+	}
+
+	void BodyManager::sSetOverrideAllowDeactivation(bool value)
+	{
+		sOverrideAllowDeactivation = value;
 	}
 #endif
 

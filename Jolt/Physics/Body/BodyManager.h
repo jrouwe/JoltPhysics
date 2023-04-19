@@ -209,17 +209,17 @@ public:
 	public:
 		inline GrantActiveBodiesAccess(bool inAllowActivation, bool inAllowDeactivation)
 		{
-			JPH_ASSERT(!OverrideAllowActivation());
-			OverrideAllowActivation() = inAllowActivation;
+			JPH_ASSERT(!sGetOverrideAllowActivation());
+			sSetOverrideAllowActivation(inAllowActivation);
 
-			JPH_ASSERT(!OverrideAllowDeactivation());
-			OverrideAllowDeactivation() = inAllowDeactivation;
+			JPH_ASSERT(!sGetOverrideAllowDeactivation());
+			sSetOverrideAllowDeactivation(inAllowDeactivation);
 		}
 
 		inline ~GrantActiveBodiesAccess()
 		{
-			OverrideAllowActivation() = false;
-			OverrideAllowDeactivation() = false;
+			sSetOverrideAllowActivation(false);
+			sSetOverrideAllowDeactivation(false);
 		}
 	};
 #endif
@@ -302,8 +302,11 @@ private:
 #ifdef JPH_ENABLE_ASSERTS
 	/// Debug system that tries to limit changes to active bodies during the PhysicsSystem::Update()
 	bool							mActiveBodiesLocked = false;
-	static bool& OverrideAllowActivation();
-	static bool& OverrideAllowDeactivation();
+	static bool sGetOverrideAllowActivation();
+	static void sSetOverrideAllowActivation(bool value);
+
+	static bool sGetOverrideAllowDeactivation();
+	static void sSetOverrideAllowDeactivation(bool value);
 #endif
 };
 
