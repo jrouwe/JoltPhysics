@@ -39,10 +39,10 @@ JPH_EXPORT void RegisterDefaultAllocator();
 #else
 
 // Directly define the allocation functions
-void *Allocate(size_t inSize);
-void Free(void *inBlock);
-void *AlignedAllocate(size_t inSize, size_t inAlignment);
-void AlignedFree(void *inBlock);
+JPH_EXPORT void *Allocate(size_t inSize);
+JPH_EXPORT void Free(void *inBlock);
+JPH_EXPORT void *AlignedAllocate(size_t inSize, size_t inAlignment);
+JPH_EXPORT void AlignedFree(void *inBlock);
 
 // Don't implement allocator registering
 inline void RegisterDefaultAllocator() { }

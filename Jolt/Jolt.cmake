@@ -444,8 +444,11 @@ if (COMPILE_AS_SHARED_LIBRARY)
 		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -g")
 	endif()
 
-	# The custom build type "Distribution" has no linker flags set yet, so copy them over from the Release build type.
-	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION ${CMAKE_SHARED_LINKER_FLAGS_RELEASE} CACHE STRING "" FORCE)
+	# Set linker flags for other build types to be the same as release
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEASAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEUBSAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 
 	# Public define to instruct user code to import Jolt symbols (rather than use static linking)
 	target_compile_definitions(Jolt PUBLIC JPH_SHARED_LIBRARY)

@@ -127,14 +127,14 @@
 #ifdef JPH_SHARED_LIBRARY
 	#ifdef JPH_BUILD_SHARED_LIBRARY
 		// While building the shared library, we must export these symbols
-		#ifdef JPH_COMPILER_MSVC
+		#ifdef JPH_PLATFORM_WINDOWS
 			#define JPH_EXPORT __declspec(dllexport)
 		#else
 			#define JPH_EXPORT __attribute__ ((visibility ("default")))
 		#endif
 	#else
 		// When linking against Jolt, we must import these symbols
-		#ifdef JPH_COMPILER_MSVC
+		#ifdef JPH_PLATFORM_WINDOWS
 			#define JPH_EXPORT __declspec(dllimport)
 		#else
 			#define JPH_EXPORT __attribute__ ((visibility ("default")))
@@ -202,6 +202,7 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
 	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
 	JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy")												\
+	JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy-with-dtor")									\
 	JPH_IF_NOT_ANDROID(JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion"))			\
 																								\
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
