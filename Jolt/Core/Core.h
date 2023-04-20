@@ -154,8 +154,14 @@
 #define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(clang diagnostic push)
 #define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(clang diagnostic pop)
 #define JPH_CLANG_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
+#if __clang_major__ >= 13
+	#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w) JPH_CLANG_SUPPRESS_WARNING(w)
+#else
+	#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w)
+#endif
 #else
 #define JPH_CLANG_SUPPRESS_WARNING(w)
+#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w)
 #endif
 #ifdef JPH_COMPILER_GCC
 #define JPH_PRAGMA(x)					_Pragma(#x)
@@ -202,7 +208,7 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
 	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
 	JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy")												\
-	JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy-with-dtor")									\
+	JPH_CLANG_13_PLUS_SUPPRESS_WARNING("-Wdeprecated-copy-with-dtor")							\
 	JPH_IF_NOT_ANDROID(JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion"))			\
 																								\
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
