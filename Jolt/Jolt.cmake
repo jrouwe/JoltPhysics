@@ -436,6 +436,14 @@ if (COMPILE_AS_SHARED_LIBRARY)
 	# Set default visibility to hidden
 	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
+	if (MSVC)
+		# MSVC specific option to enable PDB generation
+		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG:FASTLINK")
+	else()
+		# Clang/GCC option to enable debug symbol generation
+		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -g")
+	endif()
+
 	# The custom build type "Distribution" has no linker flags set yet, so copy them over from the Release build type.
 	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION ${CMAKE_SHARED_LINKER_FLAGS_RELEASE} CACHE STRING "" FORCE)
 
