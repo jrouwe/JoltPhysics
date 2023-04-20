@@ -14,10 +14,10 @@ class CollideShapeSettings;
 class TempAllocator;
 
 /// Class that constructs a StaticCompoundShape. Note that if you only want a compound of 1 shape, use a RotatedTranslatedShape instead.
-class StaticCompoundShapeSettings final : public CompoundShapeSettings
+class JPH_EXPORT StaticCompoundShapeSettings final : public CompoundShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(StaticCompoundShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, StaticCompoundShapeSettings)
 
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;
@@ -29,7 +29,7 @@ public:
 /// A compound shape, sub shapes can be rotated and translated.
 /// Sub shapes cannot be modified once the shape is constructed.
 /// Shifts all child objects so that they're centered around the center of mass.
-class StaticCompoundShape final : public CompoundShape
+class JPH_EXPORT StaticCompoundShape final : public CompoundShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -11,10 +11,10 @@ JPH_NAMESPACE_BEGIN
 class CollideShapeSettings;
 
 /// Class that constructs an OffsetCenterOfMassShape
-class OffsetCenterOfMassShapeSettings final : public DecoratedShapeSettings
+class JPH_EXPORT OffsetCenterOfMassShapeSettings final : public DecoratedShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(OffsetCenterOfMassShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, OffsetCenterOfMassShapeSettings)
 
 	/// Constructor
 									OffsetCenterOfMassShapeSettings() = default;
@@ -32,7 +32,7 @@ public:
 };
 
 /// This shape will shift the center of mass of a child shape, it can e.g. be used to lower the center of mass of an unstable object like a boat to make it stable
-class OffsetCenterOfMassShape final : public DecoratedShape
+class JPH_EXPORT OffsetCenterOfMassShape final : public DecoratedShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

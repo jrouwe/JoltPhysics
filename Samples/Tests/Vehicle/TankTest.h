@@ -12,7 +12,7 @@
 class TankTest : public VehicleTest
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(TankTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, TankTest)
 
 	// Destructor
 	virtual						~TankTest() override;

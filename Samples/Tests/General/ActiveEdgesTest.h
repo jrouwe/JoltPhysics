@@ -10,7 +10,7 @@
 class ActiveEdgesTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ActiveEdgesTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ActiveEdgesTest)
 
 	// See: Test
 	virtual void		Initialize() override;

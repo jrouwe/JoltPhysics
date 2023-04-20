@@ -11,7 +11,7 @@
 class CharacterBaseTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CharacterBaseTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterBaseTest)
 
 	// Number used to scale the terrain and camera movement to the scene
 	virtual float			GetWorldScale() const override								{ return 0.2f; }

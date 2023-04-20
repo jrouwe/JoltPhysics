@@ -11,7 +11,7 @@
 class KinematicTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(KinematicTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, KinematicTest)
 
 	// See: Test
 	virtual void	Initialize() override;

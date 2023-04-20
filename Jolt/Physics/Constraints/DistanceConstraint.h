@@ -10,10 +10,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Distance constraint settings, used to create a distance constraint
-class DistanceConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT DistanceConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(DistanceConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, DistanceConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -49,7 +49,7 @@ protected:
 };
 
 /// This constraint is a stiff spring that holds 2 points at a fixed distance from each other
-class DistanceConstraint final : public TwoBodyConstraint
+class JPH_EXPORT DistanceConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

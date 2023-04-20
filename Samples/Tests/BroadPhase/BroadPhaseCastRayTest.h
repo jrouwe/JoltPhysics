@@ -10,7 +10,7 @@
 class BroadPhaseCastRayTest : public BroadPhaseTest
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(BroadPhaseCastRayTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BroadPhaseCastRayTest)
 
 	// Initialize the test
 	virtual void	Initialize() override;

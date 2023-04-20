@@ -10,7 +10,7 @@
 class StackTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(StackTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, StackTest)
 
 	// See: Test
 	virtual void		Initialize() override;

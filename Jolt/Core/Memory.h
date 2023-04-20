@@ -17,13 +17,13 @@ using AlignedAllocateFunction = void *(*)(size_t inSize, size_t inAlignment);
 using AlignedFreeFunction = void (*)(void *inBlock);
 
 // User defined allocation / free functions
-extern AllocateFunction Allocate;
-extern FreeFunction Free;
-extern AlignedAllocateFunction AlignedAllocate;
-extern AlignedFreeFunction AlignedFree;
+JPH_EXPORT extern AllocateFunction Allocate;
+JPH_EXPORT extern FreeFunction Free;
+JPH_EXPORT extern AlignedAllocateFunction AlignedAllocate;
+JPH_EXPORT extern AlignedFreeFunction AlignedFree;
 
 /// Register platform default allocation / free functions
-void RegisterDefaultAllocator();
+JPH_EXPORT void RegisterDefaultAllocator();
 
 /// Macro to override the new and delete functions
 #define JPH_OVERRIDE_NEW_DELETE \
@@ -39,10 +39,10 @@ void RegisterDefaultAllocator();
 #else
 
 // Directly define the allocation functions
-void *Allocate(size_t inSize);
-void Free(void *inBlock);
-void *AlignedAllocate(size_t inSize, size_t inAlignment);
-void AlignedFree(void *inBlock);
+JPH_EXPORT void *Allocate(size_t inSize);
+JPH_EXPORT void Free(void *inBlock);
+JPH_EXPORT void *AlignedAllocate(size_t inSize, size_t inAlignment);
+JPH_EXPORT void AlignedFree(void *inBlock);
 
 // Don't implement allocator registering
 inline void RegisterDefaultAllocator() { }

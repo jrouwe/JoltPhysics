@@ -9,7 +9,7 @@
 class FixedConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(FixedConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, FixedConstraintTest)
 
 	// See: Test
 	virtual void		Initialize() override;

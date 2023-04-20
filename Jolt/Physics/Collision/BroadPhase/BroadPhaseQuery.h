@@ -25,7 +25,7 @@ using CollideShapeBodyCollector = CollisionCollector<BodyID, CollisionCollectorT
 
 /// Interface to the broadphase that can perform collision queries. These queries will only test the bounding box of the body to quickly determine a potential set of colliding bodies.
 /// The shapes of the bodies are not tested, if you want this then you should use the NarrowPhaseQuery interface.
-class BroadPhaseQuery : public NonCopyable
+class JPH_EXPORT BroadPhaseQuery : public NonCopyable
 {
 public:
 	/// Virtual destructor

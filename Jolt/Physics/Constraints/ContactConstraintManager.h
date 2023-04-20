@@ -24,7 +24,7 @@ JPH_NAMESPACE_BEGIN
 struct PhysicsSettings;
 class PhysicsUpdateContext;
 
-class ContactConstraintManager : public NonCopyable
+class JPH_EXPORT ContactConstraintManager : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

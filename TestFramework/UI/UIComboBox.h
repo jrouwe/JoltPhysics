@@ -11,7 +11,7 @@
 class UIComboBox : public UIElement
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UIComboBox)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UIComboBox)
 
 	using ItemChangedAction = function<void(int)>;
 	

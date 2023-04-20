@@ -12,10 +12,10 @@ JPH_NAMESPACE_BEGIN
 class CollideShapeSettings;
 
 /// Class that constructs a RotatedTranslatedShape
-class RotatedTranslatedShapeSettings final : public DecoratedShapeSettings
+class JPH_EXPORT RotatedTranslatedShapeSettings final : public DecoratedShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(RotatedTranslatedShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, RotatedTranslatedShapeSettings)
 
 	/// Constructor
 									RotatedTranslatedShapeSettings() = default;
@@ -35,7 +35,7 @@ public:
 
 /// A rotated translated shape will rotate and translate a child shape.
 /// Shifts the child object so that it is centered around the center of mass.
-class RotatedTranslatedShape final : public DecoratedShape
+class JPH_EXPORT RotatedTranslatedShape final : public DecoratedShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

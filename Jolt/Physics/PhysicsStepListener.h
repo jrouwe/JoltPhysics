@@ -9,7 +9,7 @@ JPH_NAMESPACE_BEGIN
 class PhysicsSystem;
 
 /// A listener class that receives a callback before every physics simulation step
-class PhysicsStepListener
+class JPH_EXPORT PhysicsStepListener
 {
 public:
 	/// Ensure virtual destructor

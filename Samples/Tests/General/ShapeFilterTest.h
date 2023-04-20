@@ -6,7 +6,7 @@
 class ShapeFilterTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ShapeFilterTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ShapeFilterTest)
 
 	// See: Test
 	virtual void	Initialize() override;

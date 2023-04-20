@@ -11,7 +11,7 @@
 class CharacterVirtualTest : public CharacterBaseTest, public CharacterContactListener
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CharacterVirtualTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterVirtualTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

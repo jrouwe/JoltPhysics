@@ -10,7 +10,7 @@
 class PathConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(PathConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, PathConstraintTest)
 
 	virtual void						Initialize() override;
 

@@ -10,7 +10,7 @@
 class LoadSaveBinaryTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(LoadSaveBinaryTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, LoadSaveBinaryTest)
 
 	// See: Test
 	virtual void		Initialize() override;

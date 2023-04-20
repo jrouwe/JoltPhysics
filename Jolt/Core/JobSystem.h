@@ -66,7 +66,7 @@ JPH_NAMESPACE_BEGIN
 /// to wait for these in this function after the barrier is finished waiting.
 ///
 /// An example implementation is JobSystemThreadPool. If you don't want to write the Barrier class you can also inherit from JobSystemWithBarrier.
-class JobSystem : public NonCopyable
+class JPH_EXPORT JobSystem : public NonCopyable
 {
 protected:
 	class Job;

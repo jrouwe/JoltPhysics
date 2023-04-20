@@ -9,7 +9,7 @@
 class TriangleShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(TriangleShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, TriangleShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

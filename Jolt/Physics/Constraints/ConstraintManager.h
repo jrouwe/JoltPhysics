@@ -20,7 +20,7 @@ class DebugRenderer;
 using Constraints = Array<Ref<Constraint>>;
 
 /// A constraint manager manages all constraints of the same type
-class ConstraintManager : public NonCopyable
+class JPH_EXPORT ConstraintManager : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

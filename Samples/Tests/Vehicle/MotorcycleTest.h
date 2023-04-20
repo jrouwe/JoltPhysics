@@ -12,7 +12,7 @@
 class MotorcycleTest : public VehicleTest
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(MotorcycleTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, MotorcycleTest)
 
 	// Destructor
 	virtual						~MotorcycleTest() override;

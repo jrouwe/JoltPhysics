@@ -20,7 +20,7 @@ JPH_NAMESPACE_BEGIN
 /// * JobSystem::QueueJob/QueueJobs
 ///
 /// See instructions in JobSystem for more information on how to implement these.
-class JobSystemWithBarrier : public JobSystem
+class JPH_EXPORT JobSystemWithBarrier : public JobSystem
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

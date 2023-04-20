@@ -9,7 +9,7 @@
 class ScaledBoxShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ScaledBoxShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ScaledBoxShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

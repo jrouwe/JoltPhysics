@@ -10,7 +10,7 @@
 class UIHorizontalStack : public UIElement
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UIHorizontalStack)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UIHorizontalStack)
 
 	/// Helper function to resize a list of child elements consisting of UIHorizontalStack's to make them the same width.
 	/// Can be used to give them the appearance of a table.

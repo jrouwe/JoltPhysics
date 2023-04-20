@@ -10,7 +10,7 @@
 class RotatedTranslatedShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(RotatedTranslatedShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, RotatedTranslatedShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

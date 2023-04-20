@@ -10,7 +10,7 @@
 class WaterShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(WaterShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, WaterShapeTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

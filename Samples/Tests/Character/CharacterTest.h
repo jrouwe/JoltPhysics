@@ -11,7 +11,7 @@
 class CharacterTest : public CharacterBaseTest, public ContactListener
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CharacterTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterTest)
 
 	// Destructor
 	virtual					~CharacterTest() override;

@@ -15,10 +15,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// 6 Degree Of Freedom Constraint setup structure. Allows control over each of the 6 degrees of freedom.
-class SixDOFConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT SixDOFConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(SixDOFConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, SixDOFConstraintSettings)
 
 	/// Constraint is split up into translation/rotation around X, Y and Z axis.
 	enum EAxis
@@ -88,7 +88,7 @@ protected:
 };
 
 /// 6 Degree Of Freedom Constraint. Allows control over each of the 6 degrees of freedom.
-class SixDOFConstraint final : public TwoBodyConstraint
+class JPH_EXPORT SixDOFConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

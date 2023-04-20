@@ -8,6 +8,11 @@
 	#error This file should only be included when JPH_DEBUG_RENDERER is defined
 #endif // !JPH_DEBUG_RENDERER
 
+#ifndef JPH_DEBUG_RENDERER_EXPORT
+	// By default export the debug renderer
+	#define JPH_DEBUG_RENDERER_EXPORT JPH_EXPORT
+#endif // !JPH_DEBUG_RENDERER_EXPORT
+
 #include <Jolt/Core/Color.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/HashCombine.h>
@@ -21,7 +26,7 @@ JPH_NAMESPACE_BEGIN
 class OrientedBox;
 
 /// Simple triangle renderer for debugging purposes.
-class DebugRenderer
+class JPH_DEBUG_RENDERER_EXPORT DebugRenderer
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -141,7 +146,7 @@ public:
 	};
 
 	/// A single triangle
-	class Triangle
+	class JPH_DEBUG_RENDERER_EXPORT Triangle
 	{
 	public:
 										Triangle() = default;

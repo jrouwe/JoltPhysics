@@ -16,7 +16,7 @@ JPH_NAMESPACE_BEGIN
 class StateRecorder;
 
 /// The Body class only keeps track of state for static bodies, the MotionProperties class keeps the additional state needed for a moving Body. It has a 1-on-1 relationship with the body.
-class MotionProperties
+class JPH_EXPORT MotionProperties
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

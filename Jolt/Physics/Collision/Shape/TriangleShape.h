@@ -9,10 +9,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a TriangleShape
-class TriangleShapeSettings final : public ConvexShapeSettings
+class JPH_EXPORT TriangleShapeSettings final : public ConvexShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(TriangleShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, TriangleShapeSettings)
 
 	/// Default constructor for deserialization
 							TriangleShapeSettings() = default;
@@ -31,7 +31,7 @@ public:
 };
 
 /// A single triangle, not the most efficient way of creating a world filled with triangles but can be used as a query shape for example.
-class TriangleShape final : public ConvexShape
+class JPH_EXPORT TriangleShape final : public ConvexShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

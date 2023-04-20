@@ -10,7 +10,7 @@
 class SixDOFConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SixDOFConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SixDOFConstraintTest)
 
 	virtual void			Initialize() override;
 

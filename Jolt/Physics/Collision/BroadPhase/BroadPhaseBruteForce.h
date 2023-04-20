@@ -10,7 +10,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Test BroadPhase implementation that does not do anything to speed up the operations. Can be used as a reference implementation.
-class BroadPhaseBruteForce final : public BroadPhase
+class JPH_EXPORT BroadPhaseBruteForce final : public BroadPhase
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

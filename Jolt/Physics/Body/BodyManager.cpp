@@ -20,8 +20,28 @@
 JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_ENABLE_ASSERTS
-	thread_local bool BodyManager::sOverrideAllowActivation = false;
-	thread_local bool BodyManager::sOverrideAllowDeactivation = false;
+	static thread_local bool sOverrideAllowActivation = false;
+	static thread_local bool sOverrideAllowDeactivation = false;
+
+	bool BodyManager::sGetOverrideAllowActivation()
+	{
+		return sOverrideAllowActivation;
+	}
+
+	void BodyManager::sSetOverrideAllowActivation(bool inValue)
+	{
+		sOverrideAllowActivation = inValue;
+	}
+
+	bool BodyManager::sGetOverrideAllowDeactivation()
+	{
+		return sOverrideAllowDeactivation;
+	}
+
+	void BodyManager::sSetOverrideAllowDeactivation(bool inValue)
+	{
+		sOverrideAllowDeactivation = inValue;
+	}
 #endif
 
 // Helper class that combines a body and its motion properties

@@ -26,10 +26,10 @@ enum class EPathRotationConstraintType
 };
 
 /// Path constraint settings, used to constrain the degrees of freedom between two bodies to a path
-class PathConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT PathConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(PathConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, PathConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
@@ -64,7 +64,7 @@ protected:
 };
 
 /// Path constraint, used to constrain the degrees of freedom between two bodies to a path
-class PathConstraint final : public TwoBodyConstraint
+class JPH_EXPORT PathConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -11,7 +11,7 @@
 class VehicleConstraintTest : public VehicleTest
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(VehicleConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, VehicleConstraintTest)
 
 	// Destructor
 	virtual						~VehicleConstraintTest() override;

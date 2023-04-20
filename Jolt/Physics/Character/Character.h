@@ -10,7 +10,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Contains the configuration of a character
-class CharacterSettings : public CharacterBaseSettings
+class JPH_EXPORT CharacterSettings : public CharacterBaseSettings
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -32,7 +32,7 @@ public:
 /// This object usually represents the player or a humanoid AI. It uses a single rigid body, 
 /// usually with a capsule shape to simulate movement and collision for the character.
 /// The character is a keyframed object, the application controls it by setting the velocity.
-class Character : public CharacterBase
+class JPH_EXPORT Character : public CharacterBase
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

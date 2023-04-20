@@ -10,10 +10,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Point constraint settings, used to create a point constraint
-class PointConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT PointConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(PointConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, PointConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -37,7 +37,7 @@ protected:
 };
 
 /// A point constraint constrains 2 bodies on a single point (removing 3 degrees of freedom)
-class PointConstraint final : public TwoBodyConstraint
+class JPH_EXPORT PointConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

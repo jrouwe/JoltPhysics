@@ -11,7 +11,7 @@
 class LoadSaveBinaryRigTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(LoadSaveBinaryRigTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, LoadSaveBinaryRigTest)
 
 	// Destructor
 	virtual							~LoadSaveBinaryRigTest() override;

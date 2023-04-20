@@ -13,10 +13,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Slider constraint settings, used to create a slider constraint
-class SliderConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT SliderConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(SliderConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, SliderConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -66,7 +66,7 @@ protected:
 };
 
 /// A slider constraint allows movement in only 1 axis (and no rotation). Also known as a prismatic constraint.
-class SliderConstraint final : public TwoBodyConstraint
+class JPH_EXPORT SliderConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

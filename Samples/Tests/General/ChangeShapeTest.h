@@ -12,7 +12,7 @@
 class ChangeShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ChangeShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ChangeShapeTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

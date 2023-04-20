@@ -9,7 +9,7 @@
 class TaperedCapsuleShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(TaperedCapsuleShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, TaperedCapsuleShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

@@ -8,7 +8,7 @@ JPH_NAMESPACE_BEGIN
 	
 /// Trace function, needs to be overridden by application. This should output a line of text to the log / TTY.
 using TraceFunction = void (*)(const char *inFMT, ...);
-extern TraceFunction Trace;
+JPH_EXPORT extern TraceFunction Trace;
 
 // Always turn on asserts in Debug mode
 #if defined(_DEBUG) && !defined(JPH_ENABLE_ASSERTS)
@@ -18,7 +18,7 @@ extern TraceFunction Trace;
 #ifdef JPH_ENABLE_ASSERTS
 	/// Function called when an assertion fails. This function should return true if a breakpoint needs to be triggered
 	using AssertFailedFunction = bool(*)(const char *inExpression, const char *inMessage, const char *inFile, uint inLine);
-	extern AssertFailedFunction AssertFailed;
+	JPH_EXPORT extern AssertFailedFunction AssertFailed;
 
 	// Helper functions to pass message on to failed function
 	struct AssertLastParam { };

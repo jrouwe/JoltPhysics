@@ -11,7 +11,7 @@
 class RigPileTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(RigPileTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, RigPileTest)
 
 	// Destructor
 	virtual					~RigPileTest() override;

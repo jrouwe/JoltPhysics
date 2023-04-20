@@ -61,10 +61,10 @@ enum class EConstraintSpace
 };
 
 /// Class used to store the configuration of a constraint. Allows run-time creation of constraints.
-class ConstraintSettings : public SerializableObject, public RefTarget<ConstraintSettings>
+class JPH_EXPORT ConstraintSettings : public SerializableObject, public RefTarget<ConstraintSettings>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(ConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, ConstraintSettings)
 
 	using ConstraintResult = Result<Ref<ConstraintSettings>>;
 
@@ -95,7 +95,7 @@ protected:
 };
 
 /// Base class for all physics constraints. A constraint removes one or more degrees of freedom for a rigid body.
-class Constraint : public RefTarget<Constraint>, public NonCopyable
+class JPH_EXPORT Constraint : public RefTarget<Constraint>, public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

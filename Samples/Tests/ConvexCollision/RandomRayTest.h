@@ -10,7 +10,7 @@
 class RandomRayTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(RandomRayTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, RandomRayTest)
 
 	// Update the test, called before the physics update
 	virtual void	PrePhysicsUpdate(const PreUpdateParams &inParams) override;

@@ -22,7 +22,7 @@ using std::thread;
 /// Note that this is considered an example implementation. It is expected that when you integrate
 /// the physics engine into your own project that you'll provide your own implementation of the
 /// JobSystem built on top of whatever job system your project uses.
-class JobSystemThreadPool final : public JobSystemWithBarrier
+class JPH_EXPORT JobSystemThreadPool final : public JobSystemWithBarrier
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

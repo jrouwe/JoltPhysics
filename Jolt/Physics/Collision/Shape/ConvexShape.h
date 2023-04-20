@@ -14,10 +14,10 @@ JPH_NAMESPACE_BEGIN
 class CollideShapeSettings;
 
 /// Class that constructs a ConvexShape (abstract)
-class ConvexShapeSettings : public ShapeSettings
+class JPH_EXPORT ConvexShapeSettings : public ShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_ABSTRACT(ConvexShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_ABSTRACT(JPH_EXPORT, ConvexShapeSettings)
 
 	/// Constructor
 									ConvexShapeSettings() = default;
@@ -32,7 +32,7 @@ public:
 };
 
 /// Base class for all convex shapes. Defines a virtual interface.
-class ConvexShape : public Shape
+class JPH_EXPORT ConvexShape : public Shape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -17,7 +17,7 @@ JPH_NAMESPACE_BEGIN
 /// Internal tree structure in broadphase, is essentially a quad AABB tree.
 /// Tree is lockless (except for UpdatePrepare/Finalize() function), modifying objects in the tree will widen the aabbs of parent nodes to make the node fit.
 /// During the UpdatePrepare/Finalize() call the tree is rebuilt to achieve a tight fit again.
-class QuadTree : public NonCopyable
+class JPH_EXPORT QuadTree : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

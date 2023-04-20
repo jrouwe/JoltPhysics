@@ -26,7 +26,7 @@ using BodyVector = Array<Body *>;
 using BodyIDVector = Array<BodyID>;
 
 /// Class that contains all bodies
-class BodyManager : public NonCopyable
+class JPH_EXPORT BodyManager : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -209,17 +209,17 @@ public:
 	public:
 		inline GrantActiveBodiesAccess(bool inAllowActivation, bool inAllowDeactivation)
 		{
-			JPH_ASSERT(!sOverrideAllowActivation);
-			sOverrideAllowActivation = inAllowActivation;
+			JPH_ASSERT(!sGetOverrideAllowActivation());
+			sSetOverrideAllowActivation(inAllowActivation);
 
-			JPH_ASSERT(!sOverrideAllowDeactivation);
-			sOverrideAllowDeactivation = inAllowDeactivation;
+			JPH_ASSERT(!sGetOverrideAllowDeactivation());
+			sSetOverrideAllowDeactivation(inAllowDeactivation);
 		}
 
 		inline ~GrantActiveBodiesAccess()
 		{
-			sOverrideAllowActivation = false;
-			sOverrideAllowDeactivation = false;
+			sSetOverrideAllowActivation(false);
+			sSetOverrideAllowDeactivation(false);
 		}
 	};
 #endif
@@ -300,10 +300,14 @@ private:
 	const BroadPhaseLayerInterface *mBroadPhaseLayerInterface = nullptr;
 
 #ifdef JPH_ENABLE_ASSERTS
+	static bool						sGetOverrideAllowActivation();
+	static void						sSetOverrideAllowActivation(bool inValue);
+
+	static bool						sGetOverrideAllowDeactivation();
+	static void						sSetOverrideAllowDeactivation(bool inValue);
+
 	/// Debug system that tries to limit changes to active bodies during the PhysicsSystem::Update()
 	bool							mActiveBodiesLocked = false;
-	static thread_local bool		sOverrideAllowActivation;
-	static thread_local bool		sOverrideAllowDeactivation;
 #endif
 };
 

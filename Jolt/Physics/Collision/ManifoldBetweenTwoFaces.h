@@ -17,7 +17,7 @@ JPH_NAMESPACE_BEGIN
 #ifdef JPH_DEBUG_RENDERER
 /// @param inCenterOfMass Center of mass position of body 1
 #endif
-void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPointsOn1, ContactPoints &ioContactPointsOn2
+JPH_EXPORT void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPointsOn1, ContactPoints &ioContactPointsOn2
 #ifdef JPH_DEBUG_RENDERER
 	, RVec3Arg inCenterOfMass
 #endif
@@ -35,7 +35,7 @@ void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPoint
 #ifdef JPH_DEBUG_RENDERER
 /// @param inCenterOfMass Center of mass position of body 1
 #endif
-void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2
+JPH_EXPORT void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2
 #ifdef JPH_DEBUG_RENDERER
 	, RVec3Arg inCenterOfMass
 #endif

@@ -74,7 +74,7 @@ class ProfileSample;
 class ProfileThread;
 
 /// Singleton class for managing profiling information
-class Profiler : public NonCopyable
+class JPH_EXPORT Profiler : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -157,7 +157,7 @@ private:
 };							
 
 // Class that contains the information of a single scoped measurement
-class alignas(16) ProfileSample : public NonCopyable
+class alignas(16) JPH_EXPORT ProfileSample : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -186,11 +186,20 @@ public:
 	ProfileSample				mSamples[cMaxSamples];												///< Buffer of samples
 	uint						mCurrentSample = 0;													///< Next position to write a sample to
 
+#ifdef JPH_SHARED_LIBRARY
+	JPH_EXPORT static void		sSetInstance(ProfileThread *inInstance);
+	JPH_EXPORT static ProfileThread *sGetInstance();
+#else
+	static inline void			sSetInstance(ProfileThread *inInstance)								{ sInstance = inInstance; }
+	static inline ProfileThread *sGetInstance()														{ return sInstance; }
+
+private:
 	static thread_local ProfileThread *sInstance;
+#endif
 };
 
 /// Create this class on the stack to start sampling timing information of a particular scope
-class ProfileMeasurement : public NonCopyable
+class JPH_EXPORT ProfileMeasurement : public NonCopyable
 {	
 public:						
 	/// Constructor
@@ -222,10 +231,10 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat-pedantic")
 #define JPH_PROFILE_END()				do { JPH_PROFILE_THREAD_END(); delete Profiler::sInstance; Profiler::sInstance = nullptr; } while (false)
 
 /// Start instrumenting a thread
-#define JPH_PROFILE_THREAD_START(name)	do { if (Profiler::sInstance) ProfileThread::sInstance = new ProfileThread(name); } while (false)
+#define JPH_PROFILE_THREAD_START(name)	do { if (Profiler::sInstance) ProfileThread::sSetInstance(new ProfileThread(name)); } while (false)
 
 /// End instrumenting a thread
-#define JPH_PROFILE_THREAD_END()		do { delete ProfileThread::sInstance; ProfileThread::sInstance = nullptr; } while (false)
+#define JPH_PROFILE_THREAD_END()		do { delete ProfileThread::sGetInstance(); ProfileThread::sSetInstance(nullptr); } while (false)
 								
 /// Scope profiling measurement
 #define JPH_PROFILE_TAG2(line)			profile##line

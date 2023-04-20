@@ -9,7 +9,7 @@
 class ConstraintSingularityTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ConstraintSingularityTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ConstraintSingularityTest)
 
 	// See: Test
 	virtual void		Initialize() override;

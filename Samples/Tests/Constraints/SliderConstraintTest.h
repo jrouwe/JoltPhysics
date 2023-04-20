@@ -9,7 +9,7 @@
 class SliderConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SliderConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SliderConstraintTest)
 
 	// See: Test
 	virtual void		Initialize() override;

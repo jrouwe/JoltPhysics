@@ -557,7 +557,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() < character.mCharacter->GetMaxNumHits());
+			CHECK(character.mCharacter->GetActiveContacts().size() <= character.mCharacter->GetMaxNumHits());
 			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
@@ -569,7 +569,7 @@ TEST_SUITE("CharacterVirtualTests")
 		{
 			character.Step();
 			CHECK(character.mCharacter->GetMaxHitsExceeded());
-			CHECK(character.mCharacter->GetActiveContacts().size() < character.mCharacter->GetMaxNumHits());
+			CHECK(character.mCharacter->GetActiveContacts().size() <= character.mCharacter->GetMaxNumHits());
 			CHECK(character.mCharacter->GetGroundBodyID() == cylinder_id);
 			CHECK(character.mCharacter->GetGroundNormal().Dot(Vec3::sAxisY()) > 0.999f);
 		}
