@@ -4,6 +4,10 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
 
+## Changes between v3.0.1 and latest
+
+* 20230420 - To support compiling Jolt as a shared library, the RTTI macros were changed to be able to specify if a symbol should be exported or not. If you're using Jolt's RTTI system in your own project you need to change e.g. JPH_DECLARE_RTTI_VIRTUAL(XXX) to JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, XXX). (d2f1d97004d036c6f759203c42e264e401472037)
+
 ## Changes between v2.0.1 and v3.0.0
 
 * 20230331 - *SBS* - Vehicle wheels now support specifying the steering axis and wheel forward and up axis separately. This breaks the serialization format and requires setting extra properties on the wheels. (4269d8bbc77b889552a842c2e8476ba7ffc6b9a1)
