@@ -1179,7 +1179,8 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 			&& c.mSurfaceNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
 			&& IsSlopeTooSteep(c.mSurfaceNormal)) // Slope too steep
 			steep_slope_normals.push_back(c.mSurfaceNormal);
-	JPH_ASSERT(!steep_slope_normals.empty(), "CanWalkStairs should have returned false!");
+	if (steep_slope_normals.empty())
+		return false; // No steep slopes, cancel
 
 	// Horizontal movement
 	RVec3 new_position = up_position;
