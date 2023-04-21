@@ -136,6 +136,6 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 
 The project is distributed under the [MIT license](LICENSE).
 
-## Constributions
+## Contributions
 
 All contributions are welcome! If you intend to make larger changes, please discuss first in the GitHub Discussion section. For non-trivial changes, we require that you agree to a [Contributor Agreement](ContributorAgreement.md). When you create a PR, [CLA assistent](https://cla-assistant.io/) will prompt you to sign it.
