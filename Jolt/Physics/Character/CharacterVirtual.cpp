@@ -1168,12 +1168,41 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 		DebugRenderer::sInstance->DrawArrow(mPosition, up_position, Color::sWhite, 0.01f);
 #endif // JPH_DEBUG_RENDERER
 
+	// Collect normals of steep slopes that we would like to walk stairs on.
+	// We need to do this before calling MoveShape because it will update mActiveContacts.
+	Vec3 character_velocity = inStepForward / inDeltaTime;
+	Vec3 horizontal_velocity = character_velocity - character_velocity.Dot(mUp) * mUp;
+	std::vector<Vec3, STLTempAllocator<Vec3>> steep_slope_normals(inAllocator);
+	steep_slope_normals.reserve(mActiveContacts.size());
+	for (const Contact &c : mActiveContacts)
+		if (c.mHadCollision
+			&& c.mSurfaceNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
+			&& IsSlopeTooSteep(c.mSurfaceNormal)) // Slope too steep
+			steep_slope_normals.push_back(c.mSurfaceNormal);
+	JPH_ASSERT(!steep_slope_normals.empty(), "CanWalkStairs should have returned false!");
+
 	// Horizontal movement
 	RVec3 new_position = up_position;
-	MoveShape(new_position, inStepForward / inDeltaTime, inDeltaTime, nullptr, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
-	float horizontal_movement_sq = Vec3(new_position - up_position).LengthSq();
+	MoveShape(new_position, character_velocity, inDeltaTime, nullptr, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
+	Vec3 horizontal_movement = Vec3(new_position - up_position);
+	float horizontal_movement_sq = horizontal_movement.LengthSq();
 	if (horizontal_movement_sq < 1.0e-8f)
 		return false; // No movement, cancel
+
+	// Check if we made any progress towards any of the steep slopes, if not we just slid along the slope
+	// so we need to cancel the stair walk or else we will move faster than we should as we've done
+	// normal movement first and then stair walk.
+	bool made_progress = false;
+	float max_dot = -0.05f * inStepForward.Length();
+	for (const Vec3 &normal : steep_slope_normals)
+		if (normal.Dot(horizontal_movement) < max_dot)
+		{
+			// We moved more than 5% of the forward step against a steep slope, accept this as progress
+			made_progress = true;
+			break;
+		}
+	if (!made_progress)
+		return false;
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw horizontal sweep
