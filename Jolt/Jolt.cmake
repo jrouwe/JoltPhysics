@@ -429,34 +429,33 @@ endif()
 source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES})
 
 # Create Jolt lib
+add_library(Jolt ${JOLT_PHYSICS_SRC_FILES})
 
-if (COMPILE_AS_SHARED_LIBRARY)
-	add_library(Jolt SHARED ${JOLT_PHYSICS_SRC_FILES})
-
+if (BUILD_SHARED_LIBS)
 	# Set default visibility to hidden
 	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-	if (MSVC)
-		# MSVC specific option to enable PDB generation
-		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG:FASTLINK")
-	else()
-		# Clang/GCC option to enable debug symbol generation
-		set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -g")
-	endif()
+	if (GENERATE_DEBUG_SYMBOLS)
+		if (MSVC)
+			# MSVC specific option to enable PDB generation
+			set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG:FASTLINK")
+		else()
+			# Clang/GCC option to enable debug symbol generation
+			set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -g")
+		endif()
 
-	# Set linker flags for other build types to be the same as release
-	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEASAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
-	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEUBSAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
-	set(CMAKE_SHARED_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
-	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+		# Set linker flags for other build types to be the same as release
+		set(CMAKE_SHARED_LINKER_FLAGS_RELEASEASAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+		set(CMAKE_SHARED_LINKER_FLAGS_RELEASEUBSAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+		set(CMAKE_SHARED_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+		set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	endif()
 
 	# Public define to instruct user code to import Jolt symbols (rather than use static linking)
 	target_compile_definitions(Jolt PUBLIC JPH_SHARED_LIBRARY)
 
 	# Private define to instruct the library to export symbols for shared linking
 	target_compile_definitions(Jolt PRIVATE JPH_BUILD_SHARED_LIBRARY)
-else()
-	add_library(Jolt STATIC ${JOLT_PHYSICS_SRC_FILES})
 endif()
 
 target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
