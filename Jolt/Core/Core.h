@@ -296,6 +296,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <sstream>
 #include <functional>
 #include <algorithm>
+#include <cstdint>
 JPH_SUPPRESS_WARNINGS_STD_END
 #include <limits.h>
 #include <float.h>
