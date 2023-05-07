@@ -797,7 +797,9 @@ bool DVec3::IsNormalized(double inTolerance) const
 
 bool DVec3::IsNaN() const
 {
-#if defined(JPH_USE_AVX)
+#if defined(JPH_USE_AVX512)
+	return (_mm256_fpclass_pd_mask(mValue, 0b10000001) & 0x7) != 0;
+#elif defined(JPH_USE_AVX)
 	return (_mm256_movemask_pd(_mm256_cmp_pd(mValue, mValue, _CMP_UNORD_Q)) & 0x7) != 0;
 #elif defined(JPH_USE_SSE)
 	return ((_mm_movemask_pd(_mm_cmpunord_pd(mValue.mLow, mValue.mLow)) + (_mm_movemask_pd(_mm_cmpunord_pd(mValue.mHigh, mValue.mHigh)) << 2)) & 0x7) != 0;
