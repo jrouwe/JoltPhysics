@@ -810,7 +810,9 @@ bool DVec3::IsNaN() const
 
 DVec3 DVec3::GetSign() const
 {
-#if defined(JPH_USE_AVX)
+#if defined(JPH_USE_AVX512)
+	return _mm256_fixupimm_pd(mValue, mValue, _mm256_set1_epi32(0xA9A90A00), 0);
+#elif defined(JPH_USE_AVX)
 	__m256d minus_one = _mm256_set1_pd(-1.0);
 	__m256d one = _mm256_set1_pd(1.0);
 	return _mm256_or_pd(_mm256_and_pd(mValue, minus_one), one);
