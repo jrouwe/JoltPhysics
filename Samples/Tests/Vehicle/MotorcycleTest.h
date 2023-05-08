@@ -26,6 +26,8 @@ public:
 	virtual void				GetInitialCamera(CameraState &ioState) const override;
 	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
 
+	virtual void				CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
+
 private:
 	Body *						mMotorcycleBody;							///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint

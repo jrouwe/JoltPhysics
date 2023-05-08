@@ -46,6 +46,12 @@ public:
 	/// Get the distance between the front and back wheels
 	float						GetWheelBase() const;
 
+	/// Enable or disable the lean spring. This allows you to temporarily disable the lean spring to allow the motorcycle to fall over.
+	void						EnableLeanController(bool inEnable)					{ mEnableLeanController = inEnable; }
+
+	/// Check if the lean spring is enabled.
+	bool						IsLeanControllerEnabled() const						{ return mEnableLeanController; }
+
 protected:
 	// See: VehicleController
 	virtual void				PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
@@ -57,6 +63,7 @@ protected:
 #endif // JPH_DEBUG_RENDERER
 
 	// Configuration properties
+	bool						mEnableLeanController = true;
 	float						mMaxLeanAngle;
 	float						mLeanSpringConstant;
 	float						mLeanSpringDamping;
