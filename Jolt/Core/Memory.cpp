@@ -37,7 +37,8 @@ JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAllocate)(size_t inSize, size_t inAlig
 #elif defined(JPH_PLATFORM_ANDROID)
 	return memalign(inAlignment, AlignUp(inSize, inAlignment));
 #else
-	return std::aligned_alloc(inAlignment, AlignUp(inSize, inAlignment));
+	// Using aligned_alloc instead of std::aligned_alloc because the latter is not available on some macOS versions
+	return aligned_alloc(inAlignment, AlignUp(inSize, inAlignment));
 #endif
 }
 
@@ -48,7 +49,7 @@ JPH_ALLOC_SCOPE void JPH_ALLOC_FN(AlignedFree)(void *inBlock)
 #elif defined(JPH_PLATFORM_ANDROID)
 	free(inBlock);
 #else
-	std::free(inBlock);
+	free(inBlock);
 #endif
 }
 
