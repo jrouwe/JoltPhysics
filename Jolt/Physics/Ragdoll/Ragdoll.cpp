@@ -455,6 +455,23 @@ void Ragdoll::Activate(bool inLockBodies)
 	sGetBodyInterface(mSystem, inLockBodies).ActivateBodies(mBodyIDs.data(), (int)mBodyIDs.size());
 }
 
+bool Ragdoll::IsActive(bool inLockBodies) const
+{
+	// Lock the bodies
+	int body_count = (int)mBodyIDs.size();
+	BodyLockMultiRead lock(sGetBodyLockInterface(mSystem, inLockBodies), mBodyIDs.data(), body_count);
+
+	// Test if any body is active
+	for (int b = 0; b < body_count; ++b)
+	{
+		const Body *body = lock.GetBody(b);
+		if (body->IsActive())
+			return true;
+	}
+
+	return false;
+}
+
 void Ragdoll::SetGroupID(CollisionGroup::GroupID inGroupID, bool inLockBodies)
 {
 	// Lock the bodies

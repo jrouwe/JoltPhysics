@@ -127,6 +127,12 @@ public:
 	/// Wake up all bodies in the ragdoll
 	void								Activate(bool inLockBodies = true);
 
+	/// Check if one or more of the bodies in the ragdoll are active.
+	/// Note that this involves locking the bodies (if inLockBodies is true) and looping over them. An alternative and possibly faster
+	/// way could be to install a BodyActivationListener and count the number of active bodies of a ragdoll as they're activated / deactivated
+	/// (basically check if the body that activates / deactivates is in GetBodyIDs() and increment / decrement a counter).
+	bool								IsActive(bool inLockBodies = true) const;
+
 	/// Set the group ID on all bodies in the ragdoll
 	void								SetGroupID(CollisionGroup::GroupID inGroupID, bool inLockBodies = true);
 
