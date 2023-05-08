@@ -202,9 +202,10 @@ void Renderer::Initialize()
 	// Find adapter
 	ComPtr<IDXGIAdapter1> adapter;
 
+	HRESULT result = E_FAIL;
+
 	// First check if we have the Windows 1803 IDXGIFactory6 interface
 	ComPtr<IDXGIFactory6> factory6;
-
 	if (SUCCEEDED(mDXGIFactory->QueryInterface(IID_PPV_ARGS(&factory6))))
 	{
 		for (UINT index = 0; DXGI_ERROR_NOT_FOUND != factory6->EnumAdapterByGpuPreference(index, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)); ++index)
@@ -217,7 +218,8 @@ void Renderer::Initialize()
 				continue;
 
 			// Check to see whether the adapter supports Direct3D 12
-			if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mDevice))))
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mDevice));
+			if (SUCCEEDED(result))
 				break;
 		}
 	}
@@ -234,10 +236,14 @@ void Renderer::Initialize()
 				continue;
 
 			// Check to see whether the adapter supports Direct3D 12
-			if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mDevice))))
+			result = D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mDevice));
+			if (SUCCEEDED(result))
 				break;
 		}
 	}
+
+	// Check if we managed to obtain a device
+	FatalErrorIfFailed(result);
 	
 #ifdef _DEBUG
 	// Enable breaking on errors
