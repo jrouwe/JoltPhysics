@@ -254,9 +254,14 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
     - name: Gradle Build
       working-directory: ${{github.workspace}}/Build/Android
-      run: ./gradlew build
+      run: ./gradlew build --no-daemon
 
   ios:
     runs-on: macos-latest
