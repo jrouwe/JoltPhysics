@@ -85,25 +85,31 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	const Body *body = mConstraint.GetVehicleBody();
 	Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
 	float wheel_base = GetWheelBase();
-	float velocity = body->GetLinearVelocity().Dot(forward);
-	float velocity_sq = Square(velocity);
-
-	// Calculate the target lean vector, this is in the direction of the total applied impulse by the ground on the wheels
-	Vec3 target_lean = Vec3::sZero();
-	for (const Wheel *w : mConstraint.GetWheels())
-		if (w->HasContact())
-			target_lean += w->GetContactNormal() * w->GetSuspensionLambda() + w->GetContactLateral() * w->GetLateralLambda();
-
-	// Normalize the impulse
 	Vec3 world_up = mConstraint.GetWorldUp();
-	target_lean = target_lean.NormalizedOr(world_up);
 
-	// Smooth the impulse to avoid jittery behavior
-	mTargetLean = mLeanSmoothingFactor * mTargetLean + (1.0f - mLeanSmoothingFactor) * target_lean;
+	if (mEnableLeanController)
+	{
+		// Calculate the target lean vector, this is in the direction of the total applied impulse by the ground on the wheels
+		Vec3 target_lean = Vec3::sZero();
+		for (const Wheel *w : mConstraint.GetWheels())
+			if (w->HasContact())
+				target_lean += w->GetContactNormal() * w->GetSuspensionLambda() + w->GetContactLateral() * w->GetLateralLambda();
 
-	// Remove forward component, we can only lean sideways
-	mTargetLean -= mTargetLean * mTargetLean.Dot(forward);
-	mTargetLean = mTargetLean.NormalizedOr(world_up);
+		// Normalize the impulse
+		target_lean = target_lean.NormalizedOr(world_up);
+
+		// Smooth the impulse to avoid jittery behavior
+		mTargetLean = mLeanSmoothingFactor * mTargetLean + (1.0f - mLeanSmoothingFactor) * target_lean;
+
+		// Remove forward component, we can only lean sideways
+		mTargetLean -= mTargetLean * mTargetLean.Dot(forward);
+		mTargetLean = mTargetLean.NormalizedOr(world_up);
+	}
+	else
+	{
+		// Controller not enabled, reset target lean
+		mTargetLean = world_up;
+	}
 
 	JPH_DET_LOG("WheeledVehicleController::PreCollide: target_lean: " << target_lean << " mTargetLean: " << mTargetLean);
 
@@ -116,6 +122,10 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	// => SteerAngle = ASin(WheelBase * Tan(LeanAngle) * Gravity / (Velocity^2 * Cos(CasterAngle))
 	// The caster angle is different for each wheel so we can only calculate part of the equation here
 	float max_steer_angle_factor = wheel_base * Tan(mMaxLeanAngle) * inPhysicsSystem.GetGravity().Length();
+
+	// Calculate forward velocity
+	float velocity = body->GetLinearVelocity().Dot(forward);
+	float velocity_sq = Square(velocity);
 
 	// Decompose steering into sign and direction
 	float steer_strength = abs(mRightInput);
@@ -155,61 +165,64 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 {
 	bool impulse = WheeledVehicleController::SolveLongitudinalAndLateralConstraints(inDeltaTime);
 
-	// Only apply a lean impulse if all wheels are in contact, otherwise we can easily spin out
-	bool all_in_contact = true;
-	for (const Wheel *w : mConstraint.GetWheels())
-		if (!w->HasContact() || w->GetSuspensionLambda() <= 0.0f)
-		{
-			all_in_contact = false;
-			break;
-		}
-
-	if (all_in_contact)
+	if (mEnableLeanController)
 	{
-		Body *body = mConstraint.GetVehicleBody();
-		const MotionProperties *mp = body->GetMotionProperties();
+		// Only apply a lean impulse if all wheels are in contact, otherwise we can easily spin out
+		bool all_in_contact = true;
+		for (const Wheel *w : mConstraint.GetWheels())
+			if (!w->HasContact() || w->GetSuspensionLambda() <= 0.0f)
+			{
+				all_in_contact = false;
+				break;
+			}
 
-		Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
-		Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
-
-		// Calculate delta to target angle and derivative
-		float d_angle = -Sign(mTargetLean.Cross(up).Dot(forward)) * ACos(mTargetLean.Dot(up));
-		float ddt_angle = body->GetAngularVelocity().Dot(forward);
-
-		// Calculate impulse to apply to get to target lean angle
-		float total_impulse = (mLeanSpringConstant * d_angle - mLeanSpringDamping * ddt_angle) * inDeltaTime;
-
-		// Remember angular velocity pre angular impulse
-		Vec3 old_w = mp->GetAngularVelocity();
-
-		// Apply impulse taking into account the impulse we've applied earlier
-		float delta_impulse = total_impulse - mAppliedImpulse;
-		body->AddAngularImpulse(delta_impulse * forward);
-		mAppliedImpulse = total_impulse;
-
-		// Calculate delta angular velocity due to angular impulse
-		Vec3 dw = mp->GetAngularVelocity() - old_w;
-		Vec3 linear_acceleration = Vec3::sZero();
-		float total_lambda = 0.0f;
-		for (Wheel *w_base : mConstraint.GetWheels())
+		if (all_in_contact)
 		{
-			const WheelWV *w = static_cast<WheelWV *>(w_base);
+			Body *body = mConstraint.GetVehicleBody();
+			const MotionProperties *mp = body->GetMotionProperties();
 
-			// We weigh the importance of each contact point according to the contact force
-			float lambda = w->GetSuspensionLambda();
-			total_lambda += lambda;
+			Vec3 forward = body->GetRotation() * mConstraint.GetLocalForward();
+			Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
 
-			// Linear acceleration of contact point is dw x com_to_contact
-			Vec3 r = Vec3(w->GetContactPosition() - body->GetCenterOfMassPosition());
-			linear_acceleration += lambda * dw.Cross(r);
+			// Calculate delta to target angle and derivative
+			float d_angle = -Sign(mTargetLean.Cross(up).Dot(forward)) * ACos(mTargetLean.Dot(up));
+			float ddt_angle = body->GetAngularVelocity().Dot(forward);
+
+			// Calculate impulse to apply to get to target lean angle
+			float total_impulse = (mLeanSpringConstant * d_angle - mLeanSpringDamping * ddt_angle) * inDeltaTime;
+
+			// Remember angular velocity pre angular impulse
+			Vec3 old_w = mp->GetAngularVelocity();
+
+			// Apply impulse taking into account the impulse we've applied earlier
+			float delta_impulse = total_impulse - mAppliedImpulse;
+			body->AddAngularImpulse(delta_impulse * forward);
+			mAppliedImpulse = total_impulse;
+
+			// Calculate delta angular velocity due to angular impulse
+			Vec3 dw = mp->GetAngularVelocity() - old_w;
+			Vec3 linear_acceleration = Vec3::sZero();
+			float total_lambda = 0.0f;
+			for (Wheel *w_base : mConstraint.GetWheels())
+			{
+				const WheelWV *w = static_cast<WheelWV *>(w_base);
+
+				// We weigh the importance of each contact point according to the contact force
+				float lambda = w->GetSuspensionLambda();
+				total_lambda += lambda;
+
+				// Linear acceleration of contact point is dw x com_to_contact
+				Vec3 r = Vec3(w->GetContactPosition() - body->GetCenterOfMassPosition());
+				linear_acceleration += lambda * dw.Cross(r);
+			}
+
+			// Apply linear impulse to COM to cancel the average velocity change on the wheels due to the angular impulse
+			Vec3 linear_impulse = -linear_acceleration / (total_lambda * mp->GetInverseMass());
+			body->AddImpulse(linear_impulse);
+
+			// Return true if we applied an impulse
+			impulse |= delta_impulse != 0.0f;
 		}
-
-		// Apply linear impulse to COM to cancel the average velocity change on the wheels due to the angular impulse
-		Vec3 linear_impulse = -linear_acceleration / (total_lambda * mp->GetInverseMass());
-		body->AddImpulse(linear_impulse);
-
-		// Return true if we applied an impulse
-		impulse |= delta_impulse != 0.0f;
 	}
 
 	return impulse;

@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Jolt/Physics/Vehicle/MotorcycleController.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Application/DebugUI.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
@@ -220,4 +221,12 @@ RMat44 MotorcycleTest::GetCameraPivot(float inCameraHeading, float inCameraPitch
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
 	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mMotorcycleBody->GetPosition());
+}
+
+void MotorcycleTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
+{
+	VehicleTest::CreateSettingsMenu(inUI, inSubMenu);
+
+	MotorcycleController *controller = static_cast<MotorcycleController *>(mVehicleConstraint->GetController());
+	inUI->CreateCheckBox(inSubMenu, "Enable Lean Controller", controller->IsLeanControllerEnabled(), [controller](UICheckBox::EState inState) { controller->EnableLeanController(inState == UICheckBox::STATE_CHECKED); });
 }
