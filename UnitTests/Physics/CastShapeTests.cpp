@@ -7,6 +7,7 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
@@ -268,5 +269,49 @@ TEST_SUITE("CastShapeTests")
 			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(1.0f, 0, 0), 1.0e-5f); // Box starts at 1.0
 			CHECK(!result.mIsBackFaceHit);
 		}
+	}
+
+	// Test casting a capsule against a mesh that is interecting at fraction 0 and test that it returns the deepest penetration
+	TEST_CASE("TestDeepestPenetrationAtFraction0")
+	{
+		// Create an n x n grid of triangles
+		const int n = 10;
+		const float s = 0.1f;
+		TriangleList triangles;
+		for (int z = 0; z < n; ++z)
+			for (int x = 0; x < n; ++x)
+			{
+				float fx = s * x - s * n / 2, fz = s * z - s * n / 2;
+				triangles.push_back(Triangle(Vec3(fx, 0, fz), Vec3(fx, 0, fz + s), Vec3(fx + s, 0, fz + s)));
+				triangles.push_back(Triangle(Vec3(fx, 0, fz), Vec3(fx + s, 0, fz + s), Vec3(fx + s, 0, fz)));
+			}
+		MeshShapeSettings mesh_settings(triangles);
+		mesh_settings.SetEmbedded();
+
+		// Add it to the scene
+		PhysicsTestContext c;
+		c.CreateBody(&mesh_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+		// We want the deepest hit
+		ShapeCastSettings cast_settings;
+		cast_settings.mReturnDeepestPoint = true;
+
+		// Create capsule to test
+		const float capsule_half_height = 2.0f;
+		const float capsule_radius = 1.0f;
+		RefConst<Shape> cast_shape = new CapsuleShape(capsule_half_height, capsule_radius);
+
+		// Cast the shape starting inside the mesh with a long distance so that internally in the mesh shape the RayAABox4 test will return a low negative fraction.
+		// This used to be confused with the penetration depth and would cause an early out and return the wrong result.
+		const float capsule_offset = 0.1f;
+		ClosestHitCollisionCollector<CastShapeCollector> collector;
+		c.GetSystem()->GetNarrowPhaseQuery().CastShape(RShapeCast(cast_shape, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(0, capsule_half_height + capsule_offset, 0)), Vec3(0, -100, 0)), cast_settings, RVec3::sZero(), collector);
+
+		// Check that it indeed found a hit at fraction 0 with the deepest penetration of all triangles
+		CHECK(collector.HadHit());
+		CHECK(collector.mHit.mFraction == 0.0f);
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, capsule_radius - capsule_offset, 1.0e-4f);
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationAxis.Normalized(), Vec3(0, -1, 0));
+		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn2, Vec3::sZero());
 	}
 }
