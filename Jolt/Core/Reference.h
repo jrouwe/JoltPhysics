@@ -113,12 +113,10 @@ public:
 	inline Ref<T> &			operator = (Ref<T> &&inRHS) noexcept			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
 						
 	/// Casting operators
-	inline					operator T * const () const						{ return mPtr; }
-	inline					operator T *()									{ return mPtr; }
+	inline					operator T *() const							{ return mPtr; }
 						
 	/// Access like a normal pointer
-	inline T * const 		operator -> () const							{ return mPtr; }
-	inline T *				operator -> ()									{ return mPtr; }
+	inline T * 				operator -> () const							{ return mPtr; }
 	inline T &				operator * () const								{ return *mPtr; }
 
 	/// Comparison
@@ -129,7 +127,6 @@ public:
 
 	/// Get pointer
 	inline T * 				GetPtr() const									{ return mPtr; }
-	inline T *				GetPtr()										{ return mPtr; }
 
 	/// INTERNAL HELPER FUNCTION USED BY SERIALIZATION
 	void **					InternalGetPointer()							{ return reinterpret_cast<void **>(&mPtr); }
