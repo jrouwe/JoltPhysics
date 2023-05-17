@@ -1788,7 +1788,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 							}
 
 							// Update early out fraction
-							CastShapeCollector::UpdateEarlyOutFraction(fraction_plus_slop);
+							UpdateEarlyOutFraction(fraction_plus_slop);
 						}
 					}
 				}
@@ -1867,7 +1867,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 					return;
 
 				// Reset collector (this is a new body pair)
-				mCollector.ResetEarlyOutFraction(GetEarlyOutFraction());
+				mCollector.CopyEarlyOutFraction(*this);
 				mCollector.mValidateBodyPair = true;
 				mCollector.mRejectAll = false;
 
@@ -1880,7 +1880,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 				// Update early out fraction based on narrow phase collector
 				if (!mCollector.mRejectAll)
-					UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+					CopyEarlyOutFraction(mCollector);
 			}
 
 			const CCDBody &				mCCDBody;

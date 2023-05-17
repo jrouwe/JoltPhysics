@@ -87,6 +87,7 @@ void NarrowPhaseQuery::CastRay(const RRayCast &inRay, const RayCastSettings &inR
 	{
 	public:
 							MyCollector(const RRayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
+			RayCastBodyCollector(ioCollector),
 			mRay(inRay),
 			mRayCastSettings(inRayCastSettings),
 			mCollector(ioCollector),
@@ -94,7 +95,6 @@ void NarrowPhaseQuery::CastRay(const RRayCast &inRay, const RayCastSettings &inR
 			mBodyFilter(inBodyFilter),
 			mShapeFilter(inShapeFilter)
 		{
-			UpdateEarlyOutFraction(ioCollector.GetEarlyOutFraction());
 		}
 
 		virtual void		AddHit(const ResultType &inResult) override
@@ -126,7 +126,7 @@ void NarrowPhaseQuery::CastRay(const RRayCast &inRay, const RayCastSettings &inR
 						ts.CastRay(mRay, mRayCastSettings, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						CopyEarlyOutFraction(mCollector);
 					}
 				}
 			}
@@ -153,6 +153,7 @@ void NarrowPhaseQuery::CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioC
 	{
 	public:
 							MyCollector(RVec3Arg inPoint, CollidePointCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
+			CollideShapeBodyCollector(ioCollector),
 			mPoint(inPoint),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
@@ -188,7 +189,7 @@ void NarrowPhaseQuery::CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioC
 						ts.CollidePoint(mPoint, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						CopyEarlyOutFraction(mCollector);
 					}
 				}
 			}
@@ -214,6 +215,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 	{
 	public:
 							MyCollector(const Shape *inShape, Vec3Arg inShapeScale, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
+			CollideShapeBodyCollector(ioCollector),
 			mShape(inShape),
 			mShapeScale(inShapeScale),
 			mCenterOfMassTransform(inCenterOfMassTransform),
@@ -253,7 +255,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 						ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mBaseOffset, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						CopyEarlyOutFraction(mCollector);
 					}
 				}
 			}
@@ -285,19 +287,9 @@ void NarrowPhaseQuery::CastShape(const RShapeCast &inShapeCast, const ShapeCastS
 
 	class MyCollector : public CastShapeBodyCollector
 	{
-	private:
-			/// Update early out fraction based on narrow phase collector
-			inline void		PropagateEarlyOutFraction()
-			{
-				// The CastShapeCollector uses negative values for penetration depth so we want to clamp to the smallest positive number to keep receiving deeper hits
-				if (mCollector.ShouldEarlyOut())
-					ForceEarlyOut();
-				else
-					UpdateEarlyOutFraction(max(FLT_MIN, mCollector.GetEarlyOutFraction()));
-			}
-
 	public:
 							MyCollector(const RShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, RVec3Arg inBaseOffset, CastShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
+			CastShapeBodyCollector(ioCollector),
 			mShapeCast(inShapeCast),
 			mShapeCastSettings(inShapeCastSettings),
 			mBaseOffset(inBaseOffset),
@@ -306,7 +298,6 @@ void NarrowPhaseQuery::CastShape(const RShapeCast &inShapeCast, const ShapeCastS
 			mBodyFilter(inBodyFilter),
 			mShapeFilter(inShapeFilter)
 		{
-			PropagateEarlyOutFraction();
 		}
 
 		virtual void		AddHit(const ResultType &inResult) override
@@ -338,7 +329,7 @@ void NarrowPhaseQuery::CastShape(const RShapeCast &inShapeCast, const ShapeCastS
 						ts.CastShape(mShapeCast, mShapeCastSettings, mBaseOffset, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						PropagateEarlyOutFraction();
+						CopyEarlyOutFraction(mCollector);
 					}
 				}
 			}
@@ -364,6 +355,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 	{
 	public:
 							MyCollector(const AABox &inBox, TransformedShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
+			CollideShapeBodyCollector(ioCollector),
 			mBox(inBox),
 			mCollector(ioCollector),
 			mBodyLockInterface(inBodyLockInterface),
@@ -399,7 +391,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 						ts.CollectTransformedShapes(mBox, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						CopyEarlyOutFraction(mCollector);
 					}
 				}
 			}
