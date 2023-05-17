@@ -26,6 +26,7 @@ const char *VehicleTest::sScenes[] =
 {
 	"Flat",
 	"Steep Slope",
+	"Step",
 	"Playground",
 	"Terrain1",
 };
@@ -50,6 +51,19 @@ void VehicleTest::Initialize()
 		Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1000.0f, 1.0f, 1000.0f), 0.0f), RVec3(0.0f, -1.0f, 0.0f), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(-20.0f)), EMotionType::Static, Layers::NON_MOVING));
 		floor.SetFriction(1.0f);
 		mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
+	}
+	else if (strcmp(sSceneName, "Step") == 0)
+	{
+		// Flat test floor
+		Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1000.0f, 1.0f, 1000.0f), 0.0f), RVec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		floor.SetFriction(1.0f);
+		mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
+
+		// A 5cm step rotated under an angle
+		constexpr float cStepHeight = 0.05f;
+		Body &step = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(5.0f, 0.5f * cStepHeight, 5.0f), 0.0f), RVec3(-2.0f, 0.5f * cStepHeight, 60.0f), Quat::sRotation(Vec3::sAxisY(), -0.3f * JPH_PI), EMotionType::Static, Layers::NON_MOVING));
+		step.SetFriction(1.0f);
+		mBodyInterface->AddBody(step.GetID(), EActivation::DontActivate);
 	}
 	else if (strcmp(sSceneName, "Playground") == 0)
 	{
