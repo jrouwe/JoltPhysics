@@ -126,7 +126,7 @@ void NarrowPhaseQuery::CastRay(const RRayCast &inRay, const RayCastSettings &inR
 						ts.CastRay(mRay, mRayCastSettings, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						CopyEarlyOutFraction(mCollector);
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 					}
 				}
 			}
@@ -189,7 +189,7 @@ void NarrowPhaseQuery::CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioC
 						ts.CollidePoint(mPoint, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						CopyEarlyOutFraction(mCollector);
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 					}
 				}
 			}
@@ -255,7 +255,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 						ts.CollideShape(mShape, mShapeScale, mCenterOfMassTransform, mCollideShapeSettings, mBaseOffset, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						CopyEarlyOutFraction(mCollector);
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 					}
 				}
 			}
@@ -329,7 +329,7 @@ void NarrowPhaseQuery::CastShape(const RShapeCast &inShapeCast, const ShapeCastS
 						ts.CastShape(mShapeCast, mShapeCastSettings, mBaseOffset, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						CopyEarlyOutFraction(mCollector);
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 					}
 				}
 			}
@@ -391,7 +391,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 						ts.CollectTransformedShapes(mBox, mCollector, mShapeFilter);
 
 						// Update early out fraction based on narrow phase collector
-						CopyEarlyOutFraction(mCollector);
+						UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 					}
 				}
 			}

@@ -136,7 +136,7 @@ void TransformedShape::CollectTransformedShapes(const AABox &inBox, TransformedS
 				mCollector.AddHit(ts);
 
 				// Update early out fraction based on child collector
-				CopyEarlyOutFraction(mCollector);
+				UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 			}
 
 			TransformedShapeCollector &	mCollector;

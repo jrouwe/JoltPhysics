@@ -49,7 +49,7 @@ void CollisionDispatch::sReversedCollideShape(const Shape *inShape1, const Shape
 			mCollector.AddHit(inResult.Reversed());
 
 			// If our chained collector updated its early out fraction, we need to follow
-			CopyEarlyOutFraction(mCollector);
+			UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 		}
 
 	private:
@@ -80,7 +80,7 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 			mCollector.AddHit(inResult.Reversed(mWorldDirection));
 
 			// If our chained collector updated its early out fraction, we need to follow
-			CopyEarlyOutFraction(mCollector);
+			UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
 		}
 
 	private:
