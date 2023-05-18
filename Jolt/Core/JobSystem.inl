@@ -25,7 +25,7 @@ void JobSystem::Job::RemoveDependencyAndQueue(int inCount)
 		mJobSystem->QueueJob(this);
 }
 
-void JobSystem::JobHandle::sRemoveDependencies(JobHandle *inHandles, uint inNumHandles, int inCount)
+void JobSystem::JobHandle::sRemoveDependencies(const JobHandle *inHandles, uint inNumHandles, int inCount)
 {
 	JPH_PROFILE_FUNCTION();
 

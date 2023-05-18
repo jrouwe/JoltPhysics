@@ -230,7 +230,7 @@ void BroadPhaseBruteForce::CastAABoxNoLock(const AABoxCast &inBox, CastShapeBody
 	RayInvDirection inv_direction(inBox.mDirection);
 
 	// For all bodies
-	float early_out_fraction = ioCollector.GetEarlyOutFraction();
+	float early_out_fraction = ioCollector.GetPositiveEarlyOutFraction();
 	for (BodyID b : mBodyIDs)
 	{
 		const Body &body = mBodyManager->GetBody(b);
@@ -248,7 +248,7 @@ void BroadPhaseBruteForce::CastAABoxNoLock(const AABoxCast &inBox, CastShapeBody
 				ioCollector.AddHit(result);
 				if (ioCollector.ShouldEarlyOut())
 					break;
-				early_out_fraction = ioCollector.GetEarlyOutFraction();
+				early_out_fraction = ioCollector.GetPositiveEarlyOutFraction();
 			}
 		}
 	}

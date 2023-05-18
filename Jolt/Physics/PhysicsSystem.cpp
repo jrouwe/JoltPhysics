@@ -1788,7 +1788,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 							}
 
 							// Update early out fraction
-							CastShapeCollector::UpdateEarlyOutFraction(fraction_plus_slop);
+							UpdateEarlyOutFraction(fraction_plus_slop);
 						}
 					}
 				}
@@ -1863,7 +1863,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 				bounds.mMin -= mBody1Extent;
 				bounds.mMax += mBody1Extent;
 				float hit_fraction = RayAABox(Vec3(mShapeCast.mCenterOfMassStart.GetTranslation()), RayInvDirection(direction), bounds.mMin, bounds.mMax);
-				if (hit_fraction > max(FLT_MIN, GetEarlyOutFraction())) // If early out fraction <= 0, we have the possibility of finding a deeper hit so we need to clamp the early out fraction
+				if (hit_fraction > GetPositiveEarlyOutFraction()) // If early out fraction <= 0, we have the possibility of finding a deeper hit so we need to clamp the early out fraction
 					return;
 
 				// Reset collector (this is a new body pair)

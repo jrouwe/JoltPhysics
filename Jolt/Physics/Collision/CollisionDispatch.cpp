@@ -38,9 +38,9 @@ void CollisionDispatch::sReversedCollideShape(const Shape *inShape1, const Shape
 	{
 	public:
 		explicit				ReversedCollector(CollideShapeCollector &ioCollector) :
+			CollideShapeCollector(ioCollector),
 			mCollector(ioCollector)
 		{
-			SetContext(ioCollector.GetContext());
 		}
 
 		virtual void			AddHit(const CollideShapeResult &inResult) override
@@ -68,10 +68,10 @@ void CollisionDispatch::sReversedCastShape(const ShapeCast &inShapeCast, const S
 	{
 	public:
 		explicit				ReversedCollector(CastShapeCollector &ioCollector, Vec3Arg inWorldDirection) :
+			CastShapeCollector(ioCollector),
 			mCollector(ioCollector),
 			mWorldDirection(inWorldDirection)
 		{
-			SetContext(ioCollector.GetContext());
 		}
 
 		virtual void			AddHit(const ShapeCastResult &inResult) override

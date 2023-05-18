@@ -250,7 +250,7 @@ bool ConstraintManager::RestoreState(StateRecorder &inStream)
 		return false;
 	}
 
-	for (Ref<Constraint> &c : mConstraints)
+	for (const Ref<Constraint> &c : mConstraints)
 		c->RestoreState(inStream);
 
 	return true;
