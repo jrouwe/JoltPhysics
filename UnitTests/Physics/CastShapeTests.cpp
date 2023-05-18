@@ -7,6 +7,7 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
@@ -288,12 +289,18 @@ TEST_SUITE("CastShapeTests")
 		MeshShapeSettings mesh_settings(triangles);
 		mesh_settings.SetEmbedded();
 
+		// Create a compound shape with two copies of the mesh
+		StaticCompoundShapeSettings compound_settings;
+		compound_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), &mesh_settings);
+		compound_settings.AddShape(Vec3(0, -0.01f, 0), Quat::sIdentity(), &mesh_settings); // This will not result in the deepest penetration
+		compound_settings.SetEmbedded();
+
 		// Add it to the scene
 		PhysicsTestContext c;
-		c.CreateBody(&mesh_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+		c.CreateBody(&compound_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
-		// Add the same mesh a little bit lower (this will not result in the deepest penetration)
-		c.CreateBody(&mesh_settings, RVec3(0, -0.1_r, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+		// Add the same compound a little bit lower (this will not result in the deepest penetration)
+		c.CreateBody(&compound_settings, RVec3(0, -0.1_r, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
 		// We want the deepest hit
 		ShapeCastSettings cast_settings;
