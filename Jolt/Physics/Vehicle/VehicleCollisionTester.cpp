@@ -138,8 +138,8 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 
 		virtual void		AddHit(const ShapeCastResult &inResult) override
 		{
-			// Test if this collision is closer than the previous one
-			if (inResult.mFraction < GetEarlyOutFraction())
+			// Test if this collision is closer/deeper than the previous one
+			if (inResult.GetEarlyOutFraction() < GetEarlyOutFraction())
 			{
 				// Lock the body
 				BodyLockRead lock(mPhysicsSystem.GetBodyLockInterfaceNoLock(), inResult.mBodyID2);
@@ -154,13 +154,14 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 				if (normal.Dot(mUpDirection) > mCosMaxSlopeAngle)
 				{
 					// Update early out fraction to this hit
-					UpdateEarlyOutFraction(inResult.mFraction);
+					UpdateEarlyOutFraction(inResult.GetEarlyOutFraction());
 
 					// Get the contact properties
 					mBody = body;
 					mSubShapeID2 = inResult.mSubShapeID2;
 					mContactPosition = mShapeCast.mCenterOfMassStart.GetTranslation() + inResult.mContactPointOn2;
 					mContactNormal = normal;
+					mFraction = inResult.mFraction;
 				}
 			}
 		}
@@ -176,6 +177,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 		SubShapeID			mSubShapeID2;
 		RVec3				mContactPosition;
 		Vec3				mContactNormal;
+		float				mFraction;
 	};
 
 	MyCollector collector(inPhysicsSystem, shape_cast, mUp, mCosMaxSlopeAngle);
@@ -187,7 +189,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 	outSubShapeID = collector.mSubShapeID2;
 	outContactPosition = collector.mContactPosition;
 	outContactNormal = collector.mContactNormal;
-	outSuspensionLength = max(0.0f, shape_cast_length * collector.GetEarlyOutFraction() + mRadius - wheel_radius);
+	outSuspensionLength = max(0.0f, shape_cast_length * collector.mFraction + mRadius - wheel_radius);
 
 	return true;
 }
@@ -232,8 +234,8 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 
 		virtual void		AddHit(const ShapeCastResult &inResult) override
 		{
-			// Test if this collision is closer than the previous one
-			if (inResult.mFraction < GetEarlyOutFraction())
+			// Test if this collision is closer/deeper than the previous one
+			if (inResult.GetEarlyOutFraction() < GetEarlyOutFraction())
 			{
 				// Lock the body
 				BodyLockRead lock(mPhysicsSystem.GetBodyLockInterfaceNoLock(), inResult.mBodyID2);
@@ -244,13 +246,14 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 					return;
 
 				// Update early out fraction to this hit
-				UpdateEarlyOutFraction(inResult.mFraction);
+				UpdateEarlyOutFraction(inResult.GetEarlyOutFraction());
 
 				// Get the contact properties
 				mBody = body;
 				mSubShapeID2 = inResult.mSubShapeID2;
 				mContactPosition = mShapeCast.mCenterOfMassStart.GetTranslation() + inResult.mContactPointOn2;
 				mContactNormal = -inResult.mPenetrationAxis.Normalized();
+				mFraction = inResult.mFraction;
 			}
 		}
 
@@ -263,6 +266,7 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 		SubShapeID			mSubShapeID2;
 		RVec3				mContactPosition;
 		Vec3				mContactNormal;
+		float				mFraction;
 	};
 
 	MyCollector collector(inPhysicsSystem, shape_cast);
@@ -274,7 +278,7 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 	outSubShapeID = collector.mSubShapeID2;
 	outContactPosition = collector.mContactPosition;
 	outContactNormal = collector.mContactNormal;
-	outSuspensionLength = max_suspension_length * collector.GetEarlyOutFraction();
+	outSuspensionLength = max_suspension_length * collector.mFraction;
 
 	return true;
 }
