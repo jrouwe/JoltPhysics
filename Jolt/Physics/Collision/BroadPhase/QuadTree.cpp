@@ -1312,7 +1312,7 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 		/// Returns true if this node / body should be visited, false if no hit can be generated
 		JPH_INLINE bool				ShouldVisitNode(int inStackTop) const
 		{
-			return mFractionStack[inStackTop] < mCollector.GetEarlyOutFraction();
+			return mFractionStack[inStackTop] < mCollector.GetPositiveEarlyOutFraction();
 		}
 
 		/// Visit nodes, returns number of hits found and sorts ioChildNodeIDs so that they are at the beginning of the vector.
@@ -1325,7 +1325,7 @@ void QuadTree::CastAABox(const AABoxCast &inBox, CastShapeBodyCollector &ioColle
 			Vec4 fraction = RayAABox4(mOrigin, mInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-			return SortReverseAndStore(fraction, mCollector.GetEarlyOutFraction(), ioChildNodeIDs, &mFractionStack[inStackTop]);
+			return SortReverseAndStore(fraction, mCollector.GetPositiveEarlyOutFraction(), ioChildNodeIDs, &mFractionStack[inStackTop]);
 		}
 
 		/// Visit a body, returns false if the algorithm should terminate because no hits can be generated anymore

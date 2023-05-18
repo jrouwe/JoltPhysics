@@ -284,6 +284,10 @@ void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeC
 
 		ShapeCastResult result(fraction, contact_point_a, contact_point_b, contact_normal_world, false, inSubShapeIDCreator1.GetID(), inSubShapeIDCreator2.GetID(), TransformedShape::sGetBodyID(ioCollector.GetContext()));
 
+		// Early out if this hit is deeper than the collector's early out value
+		if (fraction == 0.0f && -result.mPenetrationDepth >= ioCollector.GetEarlyOutFraction())
+			return;
+
 		// Gather faces
 		if (inShapeCastSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
 		{
