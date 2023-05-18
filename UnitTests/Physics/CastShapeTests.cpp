@@ -292,6 +292,9 @@ TEST_SUITE("CastShapeTests")
 		PhysicsTestContext c;
 		c.CreateBody(&mesh_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
 
+		// Add the same mesh a little bit lower (this will not result in the deepest penetration)
+		c.CreateBody(&mesh_settings, RVec3(0, -0.1_r, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
 		// We want the deepest hit
 		ShapeCastSettings cast_settings;
 		cast_settings.mReturnDeepestPoint = true;
@@ -304,8 +307,11 @@ TEST_SUITE("CastShapeTests")
 		// Cast the shape starting inside the mesh with a long distance so that internally in the mesh shape the RayAABox4 test will return a low negative fraction.
 		// This used to be confused with the penetration depth and would cause an early out and return the wrong result.
 		const float capsule_offset = 0.1f;
+		RShapeCast shape_cast(cast_shape, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(0, capsule_half_height + capsule_offset, 0)), Vec3(0, -100, 0));
+
+		// Cast first using the closest hit collector
 		ClosestHitCollisionCollector<CastShapeCollector> collector;
-		c.GetSystem()->GetNarrowPhaseQuery().CastShape(RShapeCast(cast_shape, Vec3::sReplicate(1.0f), RMat44::sTranslation(RVec3(0, capsule_half_height + capsule_offset, 0)), Vec3(0, -100, 0)), cast_settings, RVec3::sZero(), collector);
+		c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), collector);
 
 		// Check that it indeed found a hit at fraction 0 with the deepest penetration of all triangles
 		CHECK(collector.HadHit());
@@ -313,5 +319,23 @@ TEST_SUITE("CastShapeTests")
 		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, capsule_radius - capsule_offset, 1.0e-4f);
 		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationAxis.Normalized(), Vec3(0, -1, 0));
 		CHECK_APPROX_EQUAL(collector.mHit.mContactPointOn2, Vec3::sZero());
+
+		// Cast again while triggering a force early out after the first hit
+		class MyCollector : public CastShapeCollector
+		{
+		public:
+			virtual void	AddHit(const ShapeCastResult &inResult) override
+			{
+				++mNumHits;
+				ForceEarlyOut();
+			}
+
+			int				mNumHits = 0;
+		};
+		MyCollector collector2;
+		c.GetSystem()->GetNarrowPhaseQuery().CastShape(shape_cast, cast_settings, RVec3::sZero(), collector2);
+
+		// Ensure that we indeed stopped after the first hit
+		CHECK(collector2.mNumHits == 1);
 	}
 }
