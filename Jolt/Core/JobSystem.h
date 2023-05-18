@@ -105,7 +105,7 @@ public:
 		inline void			RemoveDependency(int inCount = 1) const		{ GetPtr()->RemoveDependencyAndQueue(inCount); }
 
 		/// Remove a dependency from a batch of jobs at once, this can be more efficient than removing them one by one as it requires less locking
-		static inline void	sRemoveDependencies(JobHandle *inHandles, uint inNumHandles, int inCount = 1);
+		static inline void	sRemoveDependencies(const JobHandle *inHandles, uint inNumHandles, int inCount = 1);
 
 		/// Helper function to remove dependencies on a static array of job handles
 		template <uint N>

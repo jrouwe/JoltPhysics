@@ -81,6 +81,10 @@ void CastConvexVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 		// Its a hit, store the sub shape id's
 		ShapeCastResult result(fraction, contact_point_a, contact_point_b, contact_normal_world, back_facing, mSubShapeIDCreator1.GetID(), inSubShapeID2, TransformedShape::sGetBodyID(mCollector.GetContext()));
 
+		// Early out if this hit is deeper than the collector's early out value
+		if (fraction == 0.0f && -result.mPenetrationDepth >= mCollector.GetEarlyOutFraction())
+			return;
+
 		// Gather faces
 		if (mShapeCastSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
 		{

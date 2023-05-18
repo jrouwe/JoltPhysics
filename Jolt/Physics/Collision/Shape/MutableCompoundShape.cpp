@@ -387,13 +387,13 @@ void MutableCompoundShape::sCastShapeVsCompound(const ShapeCast &inShapeCast, co
 
 		JPH_INLINE bool		ShouldVisitBlock(Vec4Arg inResult) const
 		{
-			UVec4 closer = Vec4::sLess(inResult, Vec4::sReplicate(mCollector.GetEarlyOutFraction()));
+			UVec4 closer = Vec4::sLess(inResult, Vec4::sReplicate(mCollector.GetPositiveEarlyOutFraction()));
 			return closer.TestAnyTrue();
 		}
 
 		JPH_INLINE bool		ShouldVisitSubShape(Vec4Arg inResult, uint inIndexInBlock) const
 		{
-			return inResult[inIndexInBlock] < mCollector.GetEarlyOutFraction();
+			return inResult[inIndexInBlock] < mCollector.GetPositiveEarlyOutFraction();
 		}
 	};
 
