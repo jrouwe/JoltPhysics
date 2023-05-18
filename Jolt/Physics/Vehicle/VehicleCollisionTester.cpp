@@ -139,7 +139,8 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 		virtual void		AddHit(const ShapeCastResult &inResult) override
 		{
 			// Test if this collision is closer/deeper than the previous one
-			if (inResult.GetEarlyOutFraction() < GetEarlyOutFraction())
+			float early_out = inResult.GetEarlyOutFraction();
+			if (early_out < GetEarlyOutFraction())
 			{
 				// Lock the body
 				BodyLockRead lock(mPhysicsSystem.GetBodyLockInterfaceNoLock(), inResult.mBodyID2);
@@ -154,7 +155,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 				if (normal.Dot(mUpDirection) > mCosMaxSlopeAngle)
 				{
 					// Update early out fraction to this hit
-					UpdateEarlyOutFraction(inResult.GetEarlyOutFraction());
+					UpdateEarlyOutFraction(early_out);
 
 					// Get the contact properties
 					mBody = body;
@@ -235,7 +236,8 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 		virtual void		AddHit(const ShapeCastResult &inResult) override
 		{
 			// Test if this collision is closer/deeper than the previous one
-			if (inResult.GetEarlyOutFraction() < GetEarlyOutFraction())
+			float early_out = inResult.GetEarlyOutFraction();
+			if (early_out < GetEarlyOutFraction())
 			{
 				// Lock the body
 				BodyLockRead lock(mPhysicsSystem.GetBodyLockInterfaceNoLock(), inResult.mBodyID2);
@@ -246,7 +248,7 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 					return;
 
 				// Update early out fraction to this hit
-				UpdateEarlyOutFraction(inResult.GetEarlyOutFraction());
+				UpdateEarlyOutFraction(early_out);
 
 				// Get the contact properties
 				mBody = body;
