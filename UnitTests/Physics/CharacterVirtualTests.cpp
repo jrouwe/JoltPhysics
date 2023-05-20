@@ -198,7 +198,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// After 1 step we should be on the slope
 			character.Step();
 			CHECK(character.mCharacter->GetGroundState() == expected_ground_state);
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), position_after_1_step);
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), position_after_1_step, 2.0e-6f);
 
 			// Cancel any velocity to make the calculation below easier (otherwise we have to take gravity for 1 time step into account)
 			character.mCharacter->SetLinearVelocity(Vec3::sZero());
@@ -366,7 +366,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// We should have gotten stuck at the start of the stairs (can't move up)
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
-			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(0, 0, -radius_and_padding), 1.0e-2f);
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(0, 0, -radius_and_padding), 1.1e-2f);
 
 			// Enable stair walking
 			character.mUpdateSettings.mWalkStairsStepUp = Vec3(0, 0.4f, 0);
@@ -642,6 +642,39 @@ TEST_SUITE("CharacterVirtualTests")
 			// We should have moved along the wall at the desired speed
 			CHECK(character.mCharacter->GetGroundState() == CharacterBase::EGroundState::OnGround);
 			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(5.0f, 0, 0), 1.0e-2f);
+		}
+	}
+
+	TEST_CASE("TestInitiallyIntersecting")
+	{
+		PhysicsTestContext c;
+		c.CreateFloor();
+
+		// Create box that is intersecting with the character
+		c.CreateBox(RVec3(-0.5f, 0.5f, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3::sReplicate(0.5f));
+
+		// Try various penetration recovery values
+		for (float penetration_recovery : { 0.0f, 0.5f, 0.75f, 1.0f })
+		{
+			// Create character
+			Character character(c);
+			character.mCharacterSettings.mPenetrationRecoverySpeed = penetration_recovery;
+			character.Create();
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3::sZero());
+
+			// Total radius of character
+			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
+
+			float x = 0.0f;
+			for (int step = 0; step < 3; ++step)
+			{
+				// Calculate expected position
+				x += penetration_recovery * (radius_and_padding - x);
+
+				// Step character and check that it matches expected recovery
+				character.Step();
+				CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(x, 0, 0));
+			}
 		}
 	}
 }

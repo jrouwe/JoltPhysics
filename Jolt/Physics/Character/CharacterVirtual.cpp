@@ -377,7 +377,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	return true;
 }
 
-void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, ConstraintList &outConstraints) const
+void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, float inDeltaTime, ConstraintList &outConstraints) const
 {
 	for (Contact &c : inContacts)
 	{
@@ -385,7 +385,7 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, Constra
 
 		// Penetrating contact: Add a contact velocity that pushes the character out at the desired speed
 		if (c.mDistance < 0.0f)
-			contact_velocity -= c.mContactNormal * c.mDistance * mPenetrationRecoverySpeed;
+			contact_velocity -= c.mContactNormal * c.mDistance * mPenetrationRecoverySpeed / inDeltaTime;
 
 		// Convert to a constraint
 		outConstraints.emplace_back();
@@ -869,7 +869,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		TempContactList contacts(mActiveContacts.begin(), mActiveContacts.end(), inAllocator);
 		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
-		DetermineConstraints(contacts, constraints);
+		DetermineConstraints(contacts, mLastDeltaTime, constraints);
 
 		// Solve the displacement using these constraints, this is used to check if we didn't move at all because we are supported
 		Vec3 displacement;
@@ -923,7 +923,7 @@ void CharacterVirtual::MoveShape(RVec3 &ioPosition, Vec3Arg inVelocity, float in
 		// Convert contacts into constraints
 		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
-		DetermineConstraints(contacts, constraints);
+		DetermineConstraints(contacts, inDeltaTime, constraints);
 
 #ifdef JPH_DEBUG_RENDERER
 		bool draw_constraints = inDrawConstraints && iteration == 0;

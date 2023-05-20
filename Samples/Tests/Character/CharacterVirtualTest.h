@@ -39,11 +39,17 @@ protected:
 	// Handle user input to the character
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) override;
 
+	// Add character movement settings
+	virtual void			AddCharacterMovementSettings(DebugUI* inUI, UIElement* inSubMenu) override;
+
 	// Add test configuration settings
 	virtual void			AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
-	// Test settings
+	// Character movement settings
+	static inline bool		sEnableCharacterInertia = true;
+
+	// Test configuration settings
 	static inline EBackFaceMode sBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 	static inline float		sUpRotationX = 0;
 	static inline float		sUpRotationZ = 0;	
