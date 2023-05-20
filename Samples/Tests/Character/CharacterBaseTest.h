@@ -99,6 +99,8 @@ private:
 	BodyID					mRotatingBody;
 	BodyID					mRotatingWallBody;
 	BodyID					mRotatingAndTranslatingBody;
-	BodyID					mVerticallyMovingBody;
+	BodyID					mSmoothVerticallyMovingBody;
+	BodyID					mReversingVerticallyMovingBody;
+	float					mReversingVerticallyMovingVelocity = 1.0f;
 	BodyID					mHorizontallyMovingBody;
 };
