@@ -19,6 +19,9 @@ public:
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
+	// Update the test, called after the physics update
+	virtual void			PostPhysicsUpdate(float inDeltaTime) override;
+
 	// Saving / restoring state for replay
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;
@@ -63,4 +66,7 @@ private:
 
 	// True when the player is pressing movement controls
 	bool					mAllowSliding = false;
+
+	// Measured character velocity
+	Vec3					mCharacterVelocity = Vec3::sZero();
 };

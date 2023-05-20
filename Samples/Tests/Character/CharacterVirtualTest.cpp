@@ -53,6 +53,16 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching + mCharacter->GetCharacterPadding(), Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	}
 
+	// Draw state of character
+	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), mCharacterVelocity);
+
+	// Draw labels on ramp blocks
+	for (size_t i = 0; i < mRampBlocks.size(); ++i)
+		mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mRampBlocks[i]), StringFormat("PushesPlayer: %s\nPushable: %s", (i & 1) != 0? "True" : "False", (i & 2) != 0? "True" : "False"), Color::sWhite, 0.25f);
+}
+
+void CharacterVirtualTest::PostPhysicsUpdate(float inDeltaTime)
+{
 	// Remember old position
 	RVec3 old_position = mCharacter->GetPosition();
 
@@ -68,7 +78,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		update_settings.mWalkStairsStepUp = mCharacter->GetUp() * update_settings.mWalkStairsStepUp.Length();
 
 	// Update the character position
-	mCharacter->ExtendedUpdate(inParams.mDeltaTime,
+	mCharacter->ExtendedUpdate(inDeltaTime,
 		-mCharacter->GetUp() * mPhysicsSystem->GetGravity().Length(),
 		update_settings,
 		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
@@ -79,14 +89,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Calculate effective velocity
 	RVec3 new_position = mCharacter->GetPosition();
-	Vec3 velocity = Vec3(new_position - old_position) / inParams.mDeltaTime;
-
-	// Draw state of character
-	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), velocity);
-
-	// Draw labels on ramp blocks
-	for (size_t i = 0; i < mRampBlocks.size(); ++i)
-		mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mRampBlocks[i]), StringFormat("PushesPlayer: %s\nPushable: %s", (i & 1) != 0? "True" : "False", (i & 2) != 0? "True" : "False"), Color::sWhite, 0.25f);
+	mCharacterVelocity = Vec3(new_position - old_position) / inDeltaTime;
 }
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
