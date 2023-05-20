@@ -98,7 +98,7 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	if (player_controls_horizontal_velocity)
 	{
 		// Smooth the player input
-		mDesiredVelocity = 0.25f * inMovementDirection * sCharacterSpeed + 0.75f * mDesiredVelocity;
+		mDesiredVelocity = sEnableCharacterInertia? 0.25f * inMovementDirection * sCharacterSpeed + 0.75f * mDesiredVelocity : inMovementDirection * sCharacterSpeed;
 
 		// True if the player intended to move
 		mAllowSliding = !inMovementDirection.IsNearZero();
@@ -122,14 +122,15 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	Vec3 current_vertical_velocity = mCharacter->GetLinearVelocity().Dot(mCharacter->GetUp()) * mCharacter->GetUp();
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
 	Vec3 new_velocity;
+	bool moving_towards_ground = (current_vertical_velocity.GetY() - ground_velocity.GetY()) < 0.1f;
 	if (mCharacter->GetGroundState() == CharacterVirtual::EGroundState::OnGround // If on ground
-		&& (current_vertical_velocity.GetY() - ground_velocity.GetY()) < 0.1f) // And not moving away from ground
+		&& (!sEnableCharacterInertia || moving_towards_ground)) // And not moving away from ground
 	{
 		// Assume velocity of ground when on ground
 		new_velocity = ground_velocity;
 
 		// Jump
-		if (inJump)
+		if (inJump && moving_towards_ground)
 			new_velocity += sJumpSpeed * mCharacter->GetUp();
 	}
 	else
@@ -156,6 +157,11 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	// Stance switch
 	if (inSwitchStance)
 		mCharacter->SetShape(mCharacter->GetShape() == mStandingShape? mCrouchingShape : mStandingShape, 1.5f * mPhysicsSystem->GetPhysicsSettings().mPenetrationSlop, mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING), mPhysicsSystem->GetDefaultLayerFilter(Layers::MOVING), { }, { }, *mTempAllocator);
+}
+
+void CharacterVirtualTest::AddCharacterMovementSettings(DebugUI* inUI, UIElement* inSubMenu)
+{
+	inUI->CreateCheckBox(inSubMenu, "Enable Character Inertia", sEnableCharacterInertia, [](UICheckBox::EState inState) { sEnableCharacterInertia = inState == UICheckBox::STATE_CHECKED; });
 }
 
 void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu)

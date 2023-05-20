@@ -46,6 +46,9 @@ protected:
 	// Draw the character state
 	void					DrawCharacterState(const CharacterBase *inCharacter, RMat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity);
 
+	// Add character movement settings
+	virtual void			AddCharacterMovementSettings(DebugUI* inUI, UIElement* inSubMenu) { /* Nothing by default */ }
+
 	// Add test configuration settings
 	virtual void			AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu) { /* Nothing by default */ }
 
