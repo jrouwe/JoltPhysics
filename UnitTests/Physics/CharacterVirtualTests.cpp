@@ -644,4 +644,37 @@ TEST_SUITE("CharacterVirtualTests")
 			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(5.0f, 0, 0), 1.0e-2f);
 		}
 	}
+
+	TEST_CASE("TestInitiallyIntersecting")
+	{
+		PhysicsTestContext c;
+		c.CreateFloor();
+
+		// Create box that is intersecting with the character
+		c.CreateBox(RVec3(-0.5f, 0.5f, 0), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3::sReplicate(0.5f));
+
+		// Try various penetration recovery values
+		for (float penetration_recovery : { 0.0f, 0.5f, 0.75f, 1.0f })
+		{
+			// Create character
+			Character character(c);
+			character.mCharacterSettings.mPenetrationRecoverySpeed = penetration_recovery;
+			character.Create();
+			CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3::sZero());
+
+			// Total radius of character
+			float radius_and_padding = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
+
+			float x = 0.0f;
+			for (int step = 0; step < 3; ++step)
+			{
+				// Calculate expected position
+				x += penetration_recovery * (radius_and_padding - x);
+
+				// Step character and check that it matches expected recovery
+				character.Step();
+				CHECK_APPROX_EQUAL(character.mCharacter->GetPosition(), RVec3(x, 0, 0));
+			}
+		}
+	}
 }

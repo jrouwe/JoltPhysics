@@ -30,6 +30,7 @@ const char *CharacterBaseTest::sScenes[] =
 	"PerlinMesh",
 	"PerlinHeightField",
 	"ObstacleCourse",
+	"InitiallyIntersecting",
 	"Terrain1",
 	"Terrain2",
 };
@@ -91,6 +92,21 @@ void CharacterBaseTest::Initialize()
 	{
 		// Default terrain
 		CreateHeightFieldTerrain();
+	}
+	else if (strcmp(sSceneName, "InitiallyIntersecting") == 0)
+	{
+		CreateFloor();
+
+		// Create a grid of boxes that are initially intersecting with the character
+		RefConst<Shape> box = new BoxShape(Vec3(0.1f, 0.1f, 0.1f));
+		BodyCreationSettings settings(box, RVec3(0, 0.5f, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		for (int x = 0; x < 4; ++x)
+			for (int y = 0; y <= 10; ++y)
+				for (int z = 0; z <= 10; ++z)
+				{
+					settings.mPosition = RVec3(-0.5f + 0.1f * x, 0.1f + 0.1f * y, -0.5f + 0.1f * z);
+					mBodyInterface->CreateAndAddBody(settings, EActivation::DontActivate);
+				}
 	}
 	else if (strcmp(sSceneName, "ObstacleCourse") == 0)
 	{
