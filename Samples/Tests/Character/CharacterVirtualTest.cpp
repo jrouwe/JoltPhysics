@@ -121,8 +121,10 @@ void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump,
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
 	Vec3 new_velocity;
 	bool moving_towards_ground = (current_vertical_velocity.GetY() - ground_velocity.GetY()) < 0.1f;
-	if (mCharacter->GetGroundState() == CharacterVirtual::EGroundState::OnGround // If on ground
-		&& (!sEnableCharacterInertia || moving_towards_ground)) // And not moving away from ground
+	if (mCharacter->GetGroundState() == CharacterVirtual::EGroundState::OnGround	// If on ground
+		&& (sEnableCharacterInertia?
+			moving_towards_ground													// Inertia enabled: And not moving away from ground
+			: !mCharacter->IsSlopeTooSteep(mCharacter->GetGroundNormal())))			// Inertia disabled: And not on a slope that is too steep
 	{
 		// Assume velocity of ground when on ground
 		new_velocity = ground_velocity;
