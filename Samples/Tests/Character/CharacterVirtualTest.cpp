@@ -40,6 +40,7 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Draw character pre update (the sim is also drawn pre update)
 	RMat44 com = mCharacter->GetCenterOfMassTransform();
+	RMat44 world_transform = mCharacter->GetWorldTransform();
 #ifdef JPH_DEBUG_RENDERER
 	mCharacter->GetShape()->Draw(mDebugRenderer, com, Vec3::sReplicate(1.0f), Color::sGreen, false, true);
 #endif // JPH_DEBUG_RENDERER
@@ -53,16 +54,6 @@ void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			mDebugRenderer->DrawCapsule(com, 0.5f * cCharacterHeightCrouching, cCharacterRadiusCrouching + mCharacter->GetCharacterPadding(), Color::sGrey, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
 	}
 
-	// Draw state of character
-	DrawCharacterState(mCharacter, mCharacter->GetWorldTransform(), mCharacterVelocity);
-
-	// Draw labels on ramp blocks
-	for (size_t i = 0; i < mRampBlocks.size(); ++i)
-		mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mRampBlocks[i]), StringFormat("PushesPlayer: %s\nPushable: %s", (i & 1) != 0? "True" : "False", (i & 2) != 0? "True" : "False"), Color::sWhite, 0.25f);
-}
-
-void CharacterVirtualTest::PostPhysicsUpdate(float inDeltaTime)
-{
 	// Remember old position
 	RVec3 old_position = mCharacter->GetPosition();
 
@@ -78,7 +69,7 @@ void CharacterVirtualTest::PostPhysicsUpdate(float inDeltaTime)
 		update_settings.mWalkStairsStepUp = mCharacter->GetUp() * update_settings.mWalkStairsStepUp.Length();
 
 	// Update the character position
-	mCharacter->ExtendedUpdate(inDeltaTime,
+	mCharacter->ExtendedUpdate(inParams.mDeltaTime,
 		-mCharacter->GetUp() * mPhysicsSystem->GetGravity().Length(),
 		update_settings,
 		mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
@@ -89,7 +80,14 @@ void CharacterVirtualTest::PostPhysicsUpdate(float inDeltaTime)
 
 	// Calculate effective velocity
 	RVec3 new_position = mCharacter->GetPosition();
-	mCharacterVelocity = Vec3(new_position - old_position) / inDeltaTime;
+	Vec3 velocity = Vec3(new_position - old_position) / inParams.mDeltaTime;
+
+	// Draw state of character
+	DrawCharacterState(mCharacter, world_transform, velocity);
+
+	// Draw labels on ramp blocks
+	for (size_t i = 0; i < mRampBlocks.size(); ++i)
+		mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mRampBlocks[i]), StringFormat("PushesPlayer: %s\nPushable: %s", (i & 1) != 0? "True" : "False", (i & 2) != 0? "True" : "False"), Color::sWhite, 0.25f);
 }
 
 void CharacterVirtualTest::HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime)
