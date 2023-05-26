@@ -132,6 +132,8 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 * [Godot](https://github.com/godot-jolt/godot-jolt)
 * [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
 
+See [a list of projects that use Jolt Physics here](Docs/ProjectsUsingJolt.md).
+
 ## License
 
 The project is distributed under the [MIT license](LICENSE).
