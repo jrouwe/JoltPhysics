@@ -96,7 +96,9 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAn
 		if (normal_velocity < -speculative_contact_velocity_bias)
 			normal_velocity_bias = inCombinedRestitution * normal_velocity;
 		else
-			normal_velocity_bias = 0.0f;
+			// In this case we have predicted that we don't hit the other object, but if we do (due to other constraints changing velocities)
+			// the speculative contact will prevent penetration but will not apply restitution leading to another artifact.
+			normal_velocity_bias = speculative_contact_velocity_bias;
 	}
 	else
 	{
