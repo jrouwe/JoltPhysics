@@ -103,7 +103,7 @@ public:
 
 	/// Restitution (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response)
 	inline float			GetRestitution() const											{ return mRestitution; }
-	void					SetRestitution(float inRestitution)								{ JPH_ASSERT(inRestitution >= 0.0f && inRestitution <= 1.0f); mRestitution = inRestitution; }
+	void					SetRestitution(float inRestitution)								{ mRestitution = inRestitution; }
 
 	/// Get world space linear velocity of the center of mass (unit: m/s)
 	inline Vec3				GetLinearVelocity() const										{ return !IsStatic()? mMotionProperties->GetLinearVelocity() : Vec3::sZero(); }

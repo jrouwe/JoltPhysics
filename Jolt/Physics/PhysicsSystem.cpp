@@ -2030,7 +2030,8 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 
 					// Calculate velocity bias due to restitution
 					float normal_velocity_bias;
-					if (ccd_body->mContactSettings.mCombinedRestitution > 0.0f && normal_velocity < -mPhysicsSettings.mMinVelocityForRestitution)
+					float combined_restitution = ccd_body->mContactSettings.mCombinedRestitution;
+					if ((combined_restitution > 0.0f && normal_velocity < -mPhysicsSettings.mMinVelocityForRestitution) || combined_restitution < 0.0f)
 						normal_velocity_bias = ccd_body->mContactSettings.mCombinedRestitution * normal_velocity;
 					else
 						normal_velocity_bias = 0.0f;

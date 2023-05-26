@@ -136,15 +136,15 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 		// Initialize contact constraint
 		constraint.mContact.Initialize(r1, r2, inManifold.mWorldSpaceNormal, inv_m1, inv_m2, inv_i1, inv_i2);
 
-		// Handle elastic collisions
-		if (inCombinedRestitution > 0.0f)
+		// Handle collisions with non-zero restitution
+		if (inCombinedRestitution != 0.0f)
 		{
 			// Calculate velocity of contact point
 			Vec3 relative_velocity = outResult.mLinearVelocity2 + outResult.mAngularVelocity2.Cross(r2) - outResult.mLinearVelocity1 - outResult.mAngularVelocity1.Cross(r1);
 			float normal_velocity = relative_velocity.Dot(inManifold.mWorldSpaceNormal);
 
 			// If it is big enough, apply restitution
-			if (normal_velocity < -inMinVelocityForRestitution)
+			if (normal_velocity < -inMinVelocityForRestitution || inCombinedRestitution < 0.0f)
 				constraint.mContact.mBias = inCombinedRestitution * normal_velocity;
 		}
 

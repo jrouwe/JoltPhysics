@@ -84,7 +84,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAn
 
 	// Determine if the velocity is big enough for restitution
 	float normal_velocity_bias;
-	if (inCombinedRestitution > 0.0f && normal_velocity < -inMinVelocityForRestitution)
+	if ((inCombinedRestitution > 0.0f && normal_velocity < -inMinVelocityForRestitution) || inCombinedRestitution < 0.0f)
 	{
 		// We have a velocity that is big enough for restitution. This is where speculative contacts don't work
 		// great as we have to decide now if we're going to apply the restitution or not. If the relative
@@ -1555,6 +1555,8 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
+		if (constraint.mCombinedRestitution < 0.0f)
+			continue; // Negative restitution means we can start penetrating so we don't want to solve the position constraint
 
 		// Fetch bodies
 		Body &body1 = *constraint.mBody1;
