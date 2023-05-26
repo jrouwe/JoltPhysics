@@ -2234,7 +2234,9 @@ void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const Physic
 			all_can_sleep &= int(body.UpdateSleepStateInternal(ioContext->mSubStepDeltaTime, max_movement, time_before_sleep));
 
 			// Reset force and torque
-			body.GetMotionProperties()->ResetForceAndTorqueInternal();
+			MotionProperties *mp = body.GetMotionProperties();
+			mp->ResetForce();
+			mp->ResetTorque();
 		}
 
 		// If all bodies indicate they can sleep we can deactivate them

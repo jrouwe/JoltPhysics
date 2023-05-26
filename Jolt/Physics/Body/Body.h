@@ -144,6 +144,12 @@ public:
 	// Get the total amount of torque applied to the center of mass this time step (through AddForce/AddTorque calls). Note that it will reset to zero after PhysicsSimulation::Update.
 	inline Vec3				GetAccumulatedTorque() const									{ JPH_ASSERT(IsDynamic()); return mMotionProperties->GetAccumulatedTorque(); }
 
+	// Reset the total accumulated force, not that this will be done automatically after every time step.
+	JPH_INLINE void			ResetForce()													{ JPH_ASSERT(IsDynamic()); return mMotionProperties->ResetForce(); }
+
+	// Reset the total accumulated torque, not that this will be done automatically after every time step.
+	JPH_INLINE void			ResetTorque()													{ JPH_ASSERT(IsDynamic()); return mMotionProperties->ResetTorque(); }
+
 	/// Get inverse inertia tensor in world space
 	inline Mat44			GetInverseInertia() const;
 
