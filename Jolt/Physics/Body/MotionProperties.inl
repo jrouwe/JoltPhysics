@@ -101,10 +101,10 @@ void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, V
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
 	// Update linear velocity
-	mLinearVelocity += inDeltaTime * (mGravityFactor * inGravity + mInvMass * Vec3::sLoadFloat3Unsafe(mForce));
+	mLinearVelocity += inDeltaTime * (mGravityFactor * inGravity + mInvMass * GetAccumulatedForce());
 
 	// Update angular velocity
-	mAngularVelocity += inDeltaTime * MultiplyWorldSpaceInverseInertiaByVector(inBodyRotation, Vec3::sLoadFloat3Unsafe(mTorque));
+	mAngularVelocity += inDeltaTime * MultiplyWorldSpaceInverseInertiaByVector(inBodyRotation, GetAccumulatedTorque());
 
 	// Linear damping: dv/dt = -c * v
 	// Solution: v(t) = v(0) * e^(-c * t) or v2 = v1 * e^(-c * dt)
