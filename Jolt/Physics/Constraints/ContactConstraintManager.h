@@ -445,27 +445,42 @@ private:
 		void					Draw(DebugRenderer *inRenderer, ColorArg inManifoldColor) const;
 	#endif // JPH_DEBUG_RENDERER
 
-		/// Get the tangents for this contact constraint
-		JPH_INLINE void			GetTangents(Vec3 &outWorldSpaceTangent1, Vec3 &outWorldSpaceTangent2) const
+		/// Convert the world space normal to a Vec3
+		JPH_INLINE Vec3			GetWorldSpaceNormal() const
 		{
-			ContactManifold::sGetTangents(mWorldSpaceNormal, outWorldSpaceTangent1, outWorldSpaceTangent2);
+			return Vec3::sLoadFloat3Unsafe(mWorldSpaceNormal);
 		}
 
-		Vec3					mWorldSpaceNormal;
+		/// Convert the relative surface velocity to a Vec3
+		JPH_INLINE Vec3			GetRelativeSurfaceVelocity() const
+		{
+			return Vec3::sLoadFloat3Unsafe(mRelativeSurfaceVelocity);
+		}
+
+		/// Get the tangents for this contact constraint
+		JPH_INLINE void			GetTangents(Vec3 &outTangent1, Vec3 &outTangent2) const
+		{
+			Vec3 ws_normal = GetWorldSpaceNormal();
+			outTangent1 = ws_normal.GetNormalizedPerpendicular();
+			outTangent2 = ws_normal.Cross(outTangent1);
+		}
+
 		Body *					mBody1;
 		Body *					mBody2;
 		uint64					mSortKey;
+		Float3					mWorldSpaceNormal;
 		float					mCombinedFriction;
+		Float3					mRelativeSurfaceVelocity;
 		float					mCombinedRestitution;
 		WorldContactPoints		mContactPoints;
 	};
 
 	/// Internal helper function to calculate the friction and non-penetration constraint properties. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE void				TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, float inDeltaTime, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, Mat44Arg inInvI1, Mat44Arg inInvI2, float inSurfaceVelocity1, float inSurfaceVelocity2);
+	JPH_INLINE void				TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, float inDeltaTime, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, Mat44Arg inInvI1, Mat44Arg inInvI2);
 
 	/// Internal helper function to calculate the friction and non-penetration constraint properties.
-	inline void					CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, float inDeltaTime, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, float inSurfaceVelocity1, float inSurfaceVelocity2);
+	inline void					CalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, float inDeltaTime, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2);
 
 	/// Internal helper function to add a contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>

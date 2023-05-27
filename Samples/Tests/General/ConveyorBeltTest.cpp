@@ -67,15 +67,7 @@ void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, 
 	Vec3 body2_surface_velocity = body2_belt? inBody2.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
 
 	// Calculate the relative surface velocity
-	Vec3 relative_surface_velocity = body2_surface_velocity - body1_surface_velocity;
-
-	// Get the tangents of the contact manifold
-	Vec3 tangent1, tangent2;
-	inManifold.GetTangents(tangent1, tangent2);
-
-	// Calculate surface velocities relative to tangents
-	ioSettings.mSurfaceVelocity1 = tangent1.Dot(relative_surface_velocity);
-	ioSettings.mSurfaceVelocity2 = tangent2.Dot(relative_surface_velocity);
+	ioSettings.mRelativeSurfaceVelocity = body2_surface_velocity - body1_surface_velocity;
 }
 
 void ConveyorBeltTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)

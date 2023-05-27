@@ -380,12 +380,6 @@ public:
 		return mTotalLambda;
 	}
 
-	/// Return the bias velocity
-	inline float				GetBias() const
-	{
-		return mSpringPart.GetBias(mTotalLambda);
-	}
-
 	/// Save state of this constraint part
 	void						SaveState(StateRecorder &inStream) const
 	{
