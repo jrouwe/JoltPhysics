@@ -28,7 +28,7 @@ void ConveyorBeltTest::Initialize()
 	{
 		belt_settings.mFriction = 0.25f * (i + 1);
 		belt_settings.mRotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i) * Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(1.0f));
-		belt_settings.mPosition = belt_settings.mRotation * RVec3(cBeltLength, 6.0f, cBeltWidth);
+		belt_settings.mPosition = RVec3(belt_settings.mRotation * Vec3(cBeltLength, 6.0f, cBeltWidth));
 		mBelts.push_back(mBodyInterface->CreateAndAddBody(belt_settings, EActivation::DontActivate));
 	}
 
