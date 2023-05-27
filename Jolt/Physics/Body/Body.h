@@ -101,9 +101,9 @@ public:
 	inline float			GetFriction() const												{ return mFriction; }
 	void					SetFriction(float inFriction)									{ JPH_ASSERT(inFriction >= 0.0f); mFriction = inFriction; }
 
-	/// Restitution (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response)
+	/// Restitution (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response). Note that bodies can have negative restitution but the combined restitution (see PhysicsSystem::SetCombineRestitution) should never go below zero.
 	inline float			GetRestitution() const											{ return mRestitution; }
-	void					SetRestitution(float inRestitution)								{ JPH_ASSERT(inRestitution >= 0.0f && inRestitution <= 1.0f); mRestitution = inRestitution; }
+	void					SetRestitution(float inRestitution)								{ mRestitution = inRestitution; }
 
 	/// Get world space linear velocity of the center of mass (unit: m/s)
 	inline Vec3				GetLinearVelocity() const										{ return !IsStatic()? mMotionProperties->GetLinearVelocity() : Vec3::sZero(); }
@@ -322,7 +322,7 @@ private:
 
 	// 4 byte aligned
 	float					mFriction;														///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together)
-	float					mRestitution;													///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response)
+	float					mRestitution;													///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response). Note that bodies can have negative restitution but the combined restitution (see PhysicsSystem::SetCombineRestitution) should never go below zero.
 	BodyID					mID;															///< ID of the body (index in the bodies array)
 
 	// 2 or 4 bytes aligned
