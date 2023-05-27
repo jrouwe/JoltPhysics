@@ -93,6 +93,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ContactListenerTest.h
 	${SAMPLES_ROOT}/Tests/General/ContactManifoldTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ContactManifoldTest.h
+	${SAMPLES_ROOT}/Tests/General/ConveyorBeltTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ConveyorBeltTest.h
 	${SAMPLES_ROOT}/Tests/General/DampingTest.cpp
 	${SAMPLES_ROOT}/Tests/General/DampingTest.h
 	${SAMPLES_ROOT}/Tests/General/DynamicMeshTest.cpp

@@ -26,6 +26,19 @@ public:
 	inline RVec3			GetWorldSpaceContactPointOn1(uint inIndex) const { return mBaseOffset + mRelativeContactPointsOn1[inIndex]; }
 	inline RVec3			GetWorldSpaceContactPointOn2(uint inIndex) const { return mBaseOffset + mRelativeContactPointsOn2[inIndex]; }
 
+	/// Calculate the tangents for a given contact normal
+	JPH_INLINE static void	sGetTangents(Vec3Arg inWorldSpaceNormal, Vec3 &outWorldSpaceTangent1, Vec3 &outWorldSpaceTangent2)
+	{
+		outWorldSpaceTangent1 = inWorldSpaceNormal.GetNormalizedPerpendicular();
+		outWorldSpaceTangent2 = inWorldSpaceNormal.Cross(outWorldSpaceTangent1);
+	}
+
+	/// Calculate the tangents that will be used for friction for this contact
+	inline void				GetTangents(Vec3 &outWorldSpaceTangent1, Vec3 &outWorldSpaceTangent2) const
+	{
+		sGetTangents(mWorldSpaceNormal, outWorldSpaceTangent1, outWorldSpaceTangent2);
+	}
+
 	RVec3					mBaseOffset;						///< Offset to which all the contact points are relative
 	Vec3					mWorldSpaceNormal;					///< Normal for this manifold, direction along which to move body 2 out of collision along the shortest path
 	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision)
@@ -40,9 +53,11 @@ public:
 class ContactSettings
 {
 public:
-	float					mCombinedFriction;					///< Combined friction for the body pair (usually calculated by sCombineFriction)
-	float					mCombinedRestitution;				///< Combined restitution for the body pair (usually calculated by sCombineRestitution)
+	float					mCombinedFriction;					///< Combined friction for the body pair (see: PhysicsSystem::SetCombineFriction)
+	float					mCombinedRestitution;				///< Combined restitution for the body pair (see: PhysicsSystem::SetCombineRestitution)
 	bool					mIsSensor;							///< If the contact should be treated as a sensor vs body contact (no collision response)
+	float					mSurfaceVelocity1 = 0.0f;			///< Relative surface velocity in the direction of tangent 1, should be (world space surface velocity v2 - world space surface velocity v1) dot tangent1 (see: ContactManifold::GetTangents), can be used to create a conveyor belt effect
+	float					mSurfaceVelocity2 = 0.0f;			///< Relative surface velocity in the direction of tangent 2, should be (world space surface velocity v2 - world space surface velocity v1) dot tangent2 (see: ContactManifold::GetTangents), can be used to create a conveyor belt effect
 };
 
 /// Return value for the OnContactValidate callback. Determines if the contact is being processed or not.

@@ -70,6 +70,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, IslandTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FunnelTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FrictionPerTriangleTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConveyorBeltTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, GravityFactorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RestitutionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DampingTest)
@@ -106,6 +107,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "2D Funnel",							JPH_RTTI(TwoDFunnelTest) },
 	{ "Friction",							JPH_RTTI(FrictionTest) },
 	{ "Friction (Per Triangle)",			JPH_RTTI(FrictionPerTriangleTest) },
+	{ "Conveyor Belt",						JPH_RTTI(ConveyorBeltTest) },
 	{ "Gravity Factor",						JPH_RTTI(GravityFactorTest) },
 	{ "Restitution",						JPH_RTTI(RestitutionTest) },
 	{ "Damping",							JPH_RTTI(DampingTest) },
