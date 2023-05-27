@@ -6,10 +6,8 @@
 
 #include <Tests/General/ConveyorBeltTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
-#include <Jolt/Renderer/DebugRenderer.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(ConveyorBeltTest) 
 { 
@@ -64,8 +62,6 @@ void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, 
 		const Vec3 cLocalSpaceVelocity(0, 0, -10.0f);
 		ioSettings.mSurfaceVelocity1 = tangent1.Dot(cLocalSpaceVelocity);
 		ioSettings.mSurfaceVelocity2 = tangent2.Dot(cLocalSpaceVelocity);
-
-		DebugRenderer::sInstance->DrawArrow(inBody1.GetPosition(), inBody1.GetPosition() + inBody1.GetRotation() * cLocalSpaceVelocity, Color::sRed, 1.0f);
 	}
 }
 
