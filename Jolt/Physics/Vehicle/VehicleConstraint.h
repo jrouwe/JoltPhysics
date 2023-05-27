@@ -78,6 +78,14 @@ public:
 	/// Set the interface that tests collision between wheel and ground
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
+	/// Callback function to combine the friction of a tire with the friction of the body it is colliding with.
+	using CombineFunction = float (*)(float inTireFriction, const Body &inBody2, const SubShapeID &inSubShapeID2);
+
+	/// Set the function that combines the friction of two bodies and returns it
+	/// Default method is the geometric mean: sqrt(friction1 * friction2).
+	void						SetCombineFriction(CombineFunction inCombineFriction) { mCombineFriction = inCombineFriction; }
+	CombineFunction				GetCombineFriction() const					{ return mCombineFriction; }
+
 	/// Get the local space forward vector of the vehicle
 	Vec3						GetLocalForward() const						{ return mForward; }
 
@@ -170,6 +178,7 @@ private:
 
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
+	CombineFunction				mCombineFriction = [](float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
 };
 
 JPH_NAMESPACE_END
