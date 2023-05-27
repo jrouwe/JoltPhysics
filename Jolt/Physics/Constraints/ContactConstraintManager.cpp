@@ -112,8 +112,8 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAn
 	if (inCombinedFriction > 0.0f)
 	{
 		// Implement friction as 2 AxisContraintParts
-		mFrictionConstraint1.TemplatedCalculateConstraintProperties<Type1, Type2>(inDeltaTime, mp1, inInvI1, r1, mp2, inInvI2, r2, inWorldSpaceTangent1, -inSurfaceVelocity1);
-		mFrictionConstraint2.TemplatedCalculateConstraintProperties<Type1, Type2>(inDeltaTime, mp1, inInvI1, r1, mp2, inInvI2, r2, inWorldSpaceTangent2, -inSurfaceVelocity2);
+		mFrictionConstraint1.TemplatedCalculateConstraintProperties<Type1, Type2>(inDeltaTime, mp1, inInvI1, r1, mp2, inInvI2, r2, inWorldSpaceTangent1, inSurfaceVelocity1);
+		mFrictionConstraint2.TemplatedCalculateConstraintProperties<Type1, Type2>(inDeltaTime, mp1, inInvI1, r1, mp2, inInvI2, r2, inWorldSpaceTangent2, inSurfaceVelocity2);
 	}
 	else
 	{
@@ -1367,8 +1367,8 @@ void ContactConstraintManager::SetupVelocityConstraints(const uint32 *inConstrai
 
 		// Note: This is not entirely correct. We should fire a callback to update the surface velocity based on the tangents.
 		// We're assuming here that the tangent's didn't change much so that the surface velocities are still valid.
-		float surface_velocity1 = -constraint.mContactPoints[0].mFrictionConstraint1.GetBias();
-		float surface_velocity2 = -constraint.mContactPoints[0].mFrictionConstraint2.GetBias();
+		float surface_velocity1 = constraint.mContactPoints[0].mFrictionConstraint1.GetBias();
+		float surface_velocity2 = constraint.mContactPoints[0].mFrictionConstraint2.GetBias();
 
 		// Calculate friction and non-penetration constraint properties for all contact points
 		CalculateFrictionAndNonPenetrationConstraintProperties(constraint, inDeltaTime, transform_body1, transform_body2, body1, body2, surface_velocity1, surface_velocity2);

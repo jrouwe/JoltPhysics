@@ -6,6 +6,7 @@
 
 #include <Tests/General/ConveyorBeltTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
@@ -17,18 +18,16 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(ConveyorBeltTest)
 void ConveyorBeltTest::Initialize()
 {
 	// Floor
-	Body &floor = CreateFloor();
-	floor.SetFriction(1.0f);
-
-	const float cBeltWidth = 10.0f;
-	const float cBeltLength = 50.0f;
+	CreateFloor();
 
 	// Create conveyor belts
+	const float cBeltWidth = 10.0f;
+	const float cBeltLength = 50.0f;
 	BodyCreationSettings belt_settings(new BoxShape(Vec3(cBeltWidth, 0.1f, cBeltLength)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 	for (int i = 0; i < 4; ++i)
 	{
 		belt_settings.mFriction = 0.25f * (i + 1);
-		belt_settings.mRotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i) * Quat::sRotation(Vec3::sAxisX(), 0.005f);
+		belt_settings.mRotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i) * Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(1.0f));
 		belt_settings.mPosition = belt_settings.mRotation * RVec3(cBeltLength, 6.0f, cBeltWidth);
 		mBelts.push_back(mBodyInterface->CreateAndAddBody(belt_settings, EActivation::DontActivate));
 	}
@@ -41,28 +40,42 @@ void ConveyorBeltTest::Initialize()
 		cargo_settings.mFriction = 1.0f - 0.1f * i;
 		mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
 	}
+
+	// Create 2 cylinders
+	BodyCreationSettings cylinder_settings(new CylinderShape(6.0f, 1.0f), RVec3(0, 1.0f, -20.0f), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING);
+	mBodyInterface->CreateAndAddBody(cylinder_settings, EActivation::Activate);
+	cylinder_settings.mPosition.SetZ(20.0f);
+	mBodyInterface->CreateAndAddBody(cylinder_settings, EActivation::Activate);
+
+	// Let a dynamic belt rest on it
+	BodyCreationSettings dynamic_belt(new BoxShape(Vec3(5.0f, 0.1f, 25.0f), 0.0f), RVec3(0, 3.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	mBelts.push_back(mBodyInterface->CreateAndAddBody(dynamic_belt, EActivation::Activate));
+
+	// Create cargo on the dynamic belt
+	cargo_settings.mPosition = RVec3(0, 6.0f, 15.0f);
+	cargo_settings.mFriction = 1.0f;
+	mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
 }
 
 void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
 {
-	// Body 1 should always be the belt because we create it before the other bodies so their ID will be lower
-	// Note that normally you cannot make this assumption so you need to handle both the case that body 1 is the belt and the case that body 2 is the belt
-	if (std::find(mBelts.begin(), mBelts.end(), inBody1.GetID()) != mBelts.end())
-	{
-		// Get the tangents of the contact manifold
-		Vec3 tangent1, tangent2;
-		inManifold.GetTangents(tangent1, tangent2);
+	// Determine the world space surface velocity of both bodies
+	const Vec3 cLocalSpaceVelocity(0, 0, -10.0f);
+	bool body1_belt = std::find(mBelts.begin(), mBelts.end(), inBody1.GetID()) != mBelts.end();
+	Vec3 body1_surface_velocity = body1_belt? inBody1.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
+	bool body2_belt = std::find(mBelts.begin(), mBelts.end(), inBody2.GetID()) != mBelts.end();
+	Vec3 body2_surface_velocity = body2_belt? inBody2.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
 
-		// Take the tangents to local space relative to body 1
-		Quat world_to_body1 = inBody1.GetRotation().Conjugated();
-		tangent1 = world_to_body1 * tangent1;
-		tangent2 = world_to_body1 * tangent2;
+	// Calculate the relative surface velocity
+	Vec3 relative_surface_velocity = body2_surface_velocity - body1_surface_velocity;
 
-		// We always move the body along our negative Z axis
-		const Vec3 cLocalSpaceVelocity(0, 0, -10.0f);
-		ioSettings.mSurfaceVelocity1 = tangent1.Dot(cLocalSpaceVelocity);
-		ioSettings.mSurfaceVelocity2 = tangent2.Dot(cLocalSpaceVelocity);
-	}
+	// Get the tangents of the contact manifold
+	Vec3 tangent1, tangent2;
+	inManifold.GetTangents(tangent1, tangent2);
+
+	// Calculate surface velocities relative to tangents
+	ioSettings.mSurfaceVelocity1 = tangent1.Dot(relative_surface_velocity);
+	ioSettings.mSurfaceVelocity2 = tangent2.Dot(relative_surface_velocity);
 }
 
 void ConveyorBeltTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
