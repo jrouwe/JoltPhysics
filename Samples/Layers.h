@@ -35,13 +35,13 @@ public:
 		case Layers::UNUSED4:
 			return false;
 		case Layers::NON_MOVING:
-			return inObject2 == Layers::MOVING || inObject2 == Layers::DEBRIS;
+			return inObject2 == Layers::MOVING || inObject2 == Layers::DEBRIS || inObject2 == Layers::SENSOR;
 		case Layers::MOVING:
 			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING || inObject2 == Layers::SENSOR;
 		case Layers::DEBRIS:
 			return inObject2 == Layers::NON_MOVING;
 		case Layers::SENSOR:
-			return inObject2 == Layers::MOVING;
+			return inObject2 == Layers::MOVING || inObject2 == Layers::NON_MOVING;
 		default:
 			JPH_ASSERT(false);
 			return false;
@@ -116,13 +116,13 @@ public:
 		switch (inLayer1)
 		{
 		case Layers::NON_MOVING:
-			return inLayer2 == BroadPhaseLayers::MOVING;
+			return inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
 		case Layers::MOVING:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
 		case Layers::DEBRIS:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING;
 		case Layers::SENSOR:
-			return inLayer2 == BroadPhaseLayers::MOVING;
+			return inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::NON_MOVING;
 		case Layers::UNUSED1:
 		case Layers::UNUSED2:
 		case Layers::UNUSED3:
