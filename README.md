@@ -38,7 +38,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 ## Features
 
-* Simulation of rigid bodies of various shapes using continous collision detection:
+* Simulation of rigid bodies of various shapes using continuous collision detection:
 	* Sphere.
 	* Box.
 	* Capsule.
