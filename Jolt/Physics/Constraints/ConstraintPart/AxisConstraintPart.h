@@ -123,7 +123,7 @@ public:
 		}
 
 		// Calculate effective mass and spring properties
-		mSpringPart.CalculateSpringProperties(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
+		mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
 
 		JPH_DET_LOG("TemplatedCalculateConstraintProperties: dt: " << inDeltaTime << " invI1: " << inInvI1 << " r1PlusU: " << inR1PlusU << " invI2: " << inInvI2 << " r2: " << inR2 << " bias: " << inBias << ", c: " << inC << ", frequency: " << inFrequency << ", damping: " << inDamping << " r1PlusUxAxis: " << mR1PlusUxAxis << " r2xAxis: " << mR2xAxis << " invI1_R1PlusUxAxis: " << mInvI1_R1PlusUxAxis << " invI2_R2xAxis: " << mInvI2_R2xAxis << " effectiveMass: " << mEffectiveMass << " totalLambda: " << mTotalLambda);
 	}

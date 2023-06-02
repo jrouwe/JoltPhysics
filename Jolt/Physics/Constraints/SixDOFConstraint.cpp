@@ -477,7 +477,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 					break;
 
 				case EMotorState::Position:
-					mMotorRotationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, rotation_axis, 0.0f, rotation_error[i], mMotorSettings[axis].mFrequency, mMotorSettings[axis].mDamping);
+					mMotorRotationConstraintPart[i].CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, *mBody2, rotation_axis, 0.0f, rotation_error[i], mMotorSettings[axis].mFrequency, mMotorSettings[axis].mDamping);
 					break;
 				}	
 			}
