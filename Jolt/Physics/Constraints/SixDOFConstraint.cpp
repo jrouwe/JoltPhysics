@@ -333,7 +333,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 			}
 
 			if (constraint_active)
-				mTranslationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis);
+				mTranslationConstraintPart[i].CalculateConstraintProperties(*mBody1, r1_plus_u, *mBody2, r2, translation_axis);
 			else
 				mTranslationConstraintPart[i].Deactivate();
 
@@ -342,17 +342,17 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 			{
 			case EMotorState::Off:
 				if (HasFriction(axis))
-					mMotorTranslationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis);
+					mMotorTranslationConstraintPart[i].CalculateConstraintProperties(*mBody1, r1_plus_u, *mBody2, r2, translation_axis);
 				else
 					mMotorTranslationConstraintPart[i].Deactivate();
 				break;
 
 			case EMotorState::Velocity:
-				mMotorTranslationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis, -mTargetVelocity[i]);
+				mMotorTranslationConstraintPart[i].CalculateConstraintProperties(*mBody1, r1_plus_u, *mBody2, r2, translation_axis, -mTargetVelocity[i]);
 				break;
 
 			case EMotorState::Position:
-				mMotorTranslationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis, 0.0f, translation_axis.Dot(u) - mTargetPosition[i], mMotorSettings[i].mFrequency, mMotorSettings[i].mDamping);
+				mMotorTranslationConstraintPart[i].CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis, 0.0f, translation_axis.Dot(u) - mTargetPosition[i], mMotorSettings[i].mFrequency, mMotorSettings[i].mDamping);
 				break;
 			}
 		}
@@ -372,7 +372,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 		// Use swing twist constraint part
 		if (IsRotationConstrained())
-			mSwingTwistConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, q, constraint_body1_to_world);
+			mSwingTwistConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, q, constraint_body1_to_world);
 		else
 			mSwingTwistConstraintPart.Deactivate();
 
@@ -467,13 +467,13 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 				{
 				case EMotorState::Off:
 					if (HasFriction(axis))
-						mMotorRotationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, rotation_axis);
+						mMotorRotationConstraintPart[i].CalculateConstraintProperties(*mBody1, *mBody2, rotation_axis);
 					else
 						mMotorRotationConstraintPart[i].Deactivate();
 					break;
 
 				case EMotorState::Velocity:
-					mMotorRotationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, rotation_axis, -mTargetAngularVelocity[i]);
+					mMotorRotationConstraintPart[i].CalculateConstraintProperties(*mBody1, *mBody2, rotation_axis, -mTargetAngularVelocity[i]);
 					break;
 
 				case EMotorState::Position:
@@ -666,7 +666,7 @@ bool SixDOFConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 			if (error != 0.0f)
 			{
 				// Setup axis constraint part and solve it
-				mTranslationConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis);
+				mTranslationConstraintPart[i].CalculateConstraintProperties(*mBody1, r1_plus_u, *mBody2, r2, translation_axis);
 				impulse |= mTranslationConstraintPart[i].SolvePositionConstraint(*mBody1, *mBody2, translation_axis, error, inBaumgarte);
 			}
 		}

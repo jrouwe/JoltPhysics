@@ -122,7 +122,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 
 	if (mMinDistance == mMaxDistance)
 	{
-		mAxisConstraint.CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
 
 		// Single distance, allow constraint forces in both directions
 		mMinLambda = -FLT_MAX;
@@ -130,7 +130,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 	}
 	if (delta_len <= mMinDistance)
 	{
-		mAxisConstraint.CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
 
 		// Allow constraint forces to make distance bigger only
 		mMinLambda = 0;
@@ -138,7 +138,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 	}
 	else if (delta_len >= mMaxDistance)
 	{
-		mAxisConstraint.CalculateConstraintProperties(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMaxDistance, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMaxDistance, mFrequency, mDamping);
 
 		// Allow constraint forces to make distance smaller only
 		mMinLambda = -FLT_MAX;

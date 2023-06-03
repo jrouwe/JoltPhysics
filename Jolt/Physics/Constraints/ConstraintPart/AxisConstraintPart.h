@@ -70,10 +70,9 @@ class AxisConstraintPart
 		return false;
 	}
 
-public:
-	/// Templated form of CalculateConstraintProperties with the motion types baked in
+	/// Internal helper function to calculate the inverse effective mass
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE void				TemplatedCalculateConstraintProperties(float inDeltaTime, const MotionProperties *inMotionProperties1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, const MotionProperties *inMotionProperties2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f, float inC = 0.0f, float inFrequency = 0.0f, float inDamping = 0.0f)
+	JPH_INLINE float			TemplatedCalculateInverseEffectiveMass(const MotionProperties *inMotionProperties1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, const MotionProperties *inMotionProperties2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
 	{
 		JPH_ASSERT(inWorldSpaceAxis.IsNormalized(1.0e-5f));
 
@@ -122,24 +121,11 @@ public:
 			JPH_IF_DEBUG(Vec3::sNaN().StoreFloat3(&mInvI2_R2xAxis);)
 		}
 
-		// Calculate effective mass and spring properties
-		mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
-
-		JPH_DET_LOG("TemplatedCalculateConstraintProperties: dt: " << inDeltaTime << " invI1: " << inInvI1 << " r1PlusU: " << inR1PlusU << " invI2: " << inInvI2 << " r2: " << inR2 << " bias: " << inBias << ", c: " << inC << ", frequency: " << inFrequency << ", damping: " << inDamping << " r1PlusUxAxis: " << mR1PlusUxAxis << " r2xAxis: " << mR2xAxis << " invI1_R1PlusUxAxis: " << mInvI1_R1PlusUxAxis << " invI2_R2xAxis: " << mInvI2_R2xAxis << " effectiveMass: " << mEffectiveMass << " totalLambda: " << mTotalLambda);
+		return inv_effective_mass;
 	}
 
-	/// Calculate properties used during the functions below
-	/// @param inDeltaTime Time step
-	/// @param inBody1 The first body that this constraint is attached to
-	/// @param inBody2 The second body that this constraint is attached to
-	/// @param inR1PlusU See equations above (r1 + u)
-	/// @param inR2 See equations above (r2)
-	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
-	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
-	///	@param inC Value of the constraint equation (C). Set to zero if you don't want to drive the constraint to zero with a spring.
-	///	@param inFrequency Oscillation frequency (Hz). Set to zero if you don't want to drive the constraint to zero with a spring.
-	///	@param inDamping Damping factor (0 = no damping, 1 = critical damping). Set to zero if you don't want to drive the constraint to zero with a spring.
-	inline void					CalculateConstraintProperties(float inDeltaTime, const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f, float inC = 0.0f, float inFrequency = 0.0f, float inDamping = 0.0f)
+	/// Internal helper function to calculate the inverse effective mass
+	JPH_INLINE float			CalculateInverseEffectiveMass(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
 	{
 		// Dispatch to the correct templated form
 		switch (inBody1.GetMotionType())
@@ -151,19 +137,15 @@ public:
 				switch (inBody2.GetMotionType())
 				{
 				case EMotionType::Dynamic:
-					TemplatedCalculateConstraintProperties<EMotionType::Dynamic, EMotionType::Dynamic>(inDeltaTime, mp1, invi1, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
-					break;
+					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Dynamic>(mp1, invi1, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
 
 				case EMotionType::Kinematic:
-					TemplatedCalculateConstraintProperties<EMotionType::Dynamic, EMotionType::Kinematic>(inDeltaTime, mp1, invi1, inR1PlusU, nullptr, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
-					break;
+					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Kinematic>(mp1, invi1, inR1PlusU, nullptr, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
 
 				case EMotionType::Static:
-					TemplatedCalculateConstraintProperties<EMotionType::Dynamic, EMotionType::Static>(inDeltaTime, mp1, invi1, inR1PlusU, nullptr, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
-					break;
+					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Static>(mp1, invi1, inR1PlusU, nullptr, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
 
 				default:
-					JPH_ASSERT(false);
 					break;
 				}
 				break;
@@ -171,18 +153,80 @@ public:
 
 		case EMotionType::Kinematic:
 			JPH_ASSERT(inBody2.IsDynamic());
-			TemplatedCalculateConstraintProperties<EMotionType::Kinematic, EMotionType::Dynamic>(inDeltaTime, nullptr, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
-			break;
+			return TemplatedCalculateInverseEffectiveMass<EMotionType::Kinematic, EMotionType::Dynamic>(nullptr, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
 
 		case EMotionType::Static:
 			JPH_ASSERT(inBody2.IsDynamic());
-			TemplatedCalculateConstraintProperties<EMotionType::Static, EMotionType::Dynamic>(inDeltaTime, nullptr, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis, inBias, inC, inFrequency, inDamping);
-			break;
+			return TemplatedCalculateInverseEffectiveMass<EMotionType::Static, EMotionType::Dynamic>(nullptr, Mat44() /* Will not be used */, inR1PlusU, inBody2.GetMotionPropertiesUnchecked(), inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
 
 		default:
-			JPH_ASSERT(false);
 			break;
 		}
+
+		JPH_ASSERT(false);
+		return 0.0f;
+	}
+
+public:
+	/// Templated form of CalculateConstraintProperties with the motion types baked in
+	template <EMotionType Type1, EMotionType Type2>
+	JPH_INLINE void				TemplatedCalculateConstraintProperties(const MotionProperties *inMotionProperties1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, const MotionProperties *inMotionProperties2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
+	{
+		mEffectiveMass = 1.0f / TemplatedCalculateInverseEffectiveMass<Type1, Type2>(inMotionProperties1, inInvI1, inR1PlusU, inMotionProperties2, inInvI2, inR2, inWorldSpaceAxis);
+
+		mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+
+		JPH_DET_LOG("TemplatedCalculateConstraintProperties: invI1: " << inInvI1 << " r1PlusU: " << inR1PlusU << " invI2: " << inInvI2 << " r2: " << inR2 << " bias: " << inBias << " r1PlusUxAxis: " << mR1PlusUxAxis << " r2xAxis: " << mR2xAxis << " invI1_R1PlusUxAxis: " << mInvI1_R1PlusUxAxis << " invI2_R2xAxis: " << mInvI2_R2xAxis << " effectiveMass: " << mEffectiveMass << " totalLambda: " << mTotalLambda);
+	}
+
+	/// Calculate properties used during the functions below
+	/// @param inBody1 The first body that this constraint is attached to
+	/// @param inBody2 The second body that this constraint is attached to
+	/// @param inR1PlusU See equations above (r1 + u)
+	/// @param inR2 See equations above (r2)
+	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
+	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
+	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
+	{
+		mEffectiveMass = 1.0f / CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
+
+		mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+	}
+
+	/// Calculate properties used during the functions below
+	/// @param inDeltaTime Time step
+	/// @param inBody1 The first body that this constraint is attached to
+	/// @param inBody2 The second body that this constraint is attached to
+	/// @param inR1PlusU See equations above (r1 + u)
+	/// @param inR2 See equations above (r2)
+	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
+	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
+	///	@param inC Value of the constraint equation (C).
+	///	@param inFrequency Oscillation frequency (Hz).
+	///	@param inDamping Damping factor (0 = no damping, 1 = critical damping).
+	inline void					CalculateConstraintPropertiesWithFrequencyAndDamping(float inDeltaTime, const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias, float inC, float inFrequency, float inDamping)
+	{
+		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
+
+		mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
+	}
+
+	/// Calculate properties used during the functions below
+	/// @param inDeltaTime Time step
+	/// @param inBody1 The first body that this constraint is attached to
+	/// @param inBody2 The second body that this constraint is attached to
+	/// @param inR1PlusU See equations above (r1 + u)
+	/// @param inR2 See equations above (r2)
+	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
+	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
+	///	@param inC Value of the constraint equation (C).
+	///	@param inStiffness Spring stiffness k.
+	///	@param inDamping Spring damping coefficient c.
+	inline void					CalculateConstraintPropertiesWithStiffnessAndDamping(float inDeltaTime, const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias, float inC, float inStiffness, float inDamping)
+	{
+		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
+
+		mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
 	}
 
 	/// Deactivate this constraint

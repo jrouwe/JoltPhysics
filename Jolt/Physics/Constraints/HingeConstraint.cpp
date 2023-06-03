@@ -168,11 +168,11 @@ void HingeConstraint::CalculateA1AndTheta()
 	}
 }
 
-void HingeConstraint::CalculateRotationLimitsConstraintProperties(float inDeltaTime)
+void HingeConstraint::CalculateRotationLimitsConstraintProperties()
 {
 	// Apply constraint if outside of limits
 	if (mHasLimits && (mTheta <= mLimitsMin || mTheta >= mLimitsMax))
-		mRotationLimitsConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mA1);
+		mRotationLimitsConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, mA1);
 	else
 		mRotationLimitsConstraintPart.Deactivate();
 }
@@ -183,13 +183,13 @@ void HingeConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 	{
 	case EMotorState::Off:
 		if (mMaxFrictionTorque > 0.0f)
-			mMotorConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mA1);
+			mMotorConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, mA1);
 		else
 			mMotorConstraintPart.Deactivate();
 		break;
 
 	case EMotorState::Velocity:
-		mMotorConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mA1, -mTargetAngularVelocity);
+		mMotorConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, mA1, -mTargetAngularVelocity);
 		break;
 
 	case EMotorState::Position:
@@ -206,7 +206,7 @@ void HingeConstraint::SetupVelocityConstraint(float inDeltaTime)
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, mLocalSpacePosition1, *mBody2, rotation2, mLocalSpacePosition2);
 	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, rotation1.Multiply3x3(mLocalSpaceHingeAxis1), *mBody2, rotation2, rotation2.Multiply3x3(mLocalSpaceHingeAxis2));
 	CalculateA1AndTheta();
-	CalculateRotationLimitsConstraintProperties(inDeltaTime);
+	CalculateRotationLimitsConstraintProperties();
 	CalculateMotorConstraintProperties(inDeltaTime);
 }
 
@@ -284,7 +284,7 @@ bool HingeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 	// Solve rotation limits
 	bool limit = false;
 	CalculateA1AndTheta();
-	CalculateRotationLimitsConstraintProperties(inDeltaTime);
+	CalculateRotationLimitsConstraintProperties();
 	if (mRotationLimitsConstraintPart.IsActive())
 		limit = mRotationLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, GetSmallestAngleToLimit(), inBaumgarte);
 

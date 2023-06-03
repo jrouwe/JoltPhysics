@@ -116,7 +116,7 @@ public:
 private:
 	// Internal helper function to calculate the values below
 	void						CalculateA1AndTheta();
-	void						CalculateRotationLimitsConstraintProperties(float inDeltaTime);
+	void						CalculateRotationLimitsConstraintProperties();
 	void						CalculateMotorConstraintProperties(float inDeltaTime);
 	inline float				GetSmallestAngleToLimit() const;
 
