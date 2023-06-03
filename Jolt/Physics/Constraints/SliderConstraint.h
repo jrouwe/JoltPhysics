@@ -49,6 +49,10 @@ public:
 	float						mLimitsMin = -FLT_MAX;
 	float						mLimitsMax = FLT_MAX;
 
+	/// Selects the way in which the spring is defined
+	/// If the mode is StiffnessAndDamping then mFrequency becomes the stiffness (k) and mDamping becomes the damping ratio (c) in the spring equation F = -k * x - c * v. Otherwise the properties are as documented.
+	ESpringMode 				mSpringMode = ESpringMode::FrequencyAndDamping;
+
 	/// If mFrequency > 0 the constraint limits will be soft and mFrequency specifies the oscillation frequency in Hz and mDamping the damping ratio (0 = no damping, 1 = critical damping).
 	/// If mFrequency <= 0, mDamping is ignored and the limits will be hard.
 	float						mFrequency = 0.0f;
@@ -118,6 +122,10 @@ public:
 	float						GetLimitsMax() const									{ return mLimitsMax; }
 	bool						HasLimits() const										{ return mHasLimits; }
 
+	/// Update the spring mode for the constraint see (SliderConstraintSettings::mSpringMode for more info)
+	void						SetSpringMode(ESpringMode inSpringMode)					{ mSpringMode = inSpringMode; }
+	ESpringMode					GetSpringMode() const									{ return mSpringMode; }
+
 	/// Update the spring frequency for the limits constraint
 	void						SetFrequency(float inFrequency)							{ JPH_ASSERT(inFrequency >= 0.0f); mFrequency = inFrequency; }
 	float						GetFrequency() const									{ return mFrequency; }
@@ -162,6 +170,7 @@ private:
 	float						mLimitsMax;
 
 	// Soft slider limits
+	ESpringMode					mSpringMode;
 	float						mFrequency;
 	float						mDamping;
 

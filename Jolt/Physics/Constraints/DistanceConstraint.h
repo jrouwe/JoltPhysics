@@ -36,6 +36,10 @@ public:
 	float						mMinDistance = -1.0f;
 	float						mMaxDistance = -1.0f;
 
+	/// Selects the way in which the spring is defined
+	/// If the mode is StiffnessAndDamping then mFrequency becomes the stiffness (k) and mDamping becomes the damping ratio (c) in the spring equation F = -k * x - c * v. Otherwise the properties are as documented.
+	ESpringMode 				mSpringMode = ESpringMode::FrequencyAndDamping;
+
 	/// If mFrequency > 0 the constraint will be soft and mFrequency specifies the oscillation frequency in Hz and mDamping the damping ratio (0 = no damping, 1 = critical damping).
 	/// If mFrequency <= 0, mDamping is ignored and the distance constraint will have hard limits (as hard as the time step / the number of velocity / position solver steps allows).
 	/// Note that if you set mDamping = 0, you will not get an infinite oscillation. Because we integrate physics using an explicit Euler scheme, there is always energy loss.
@@ -80,6 +84,10 @@ public:
 	float						GetMinDistance() const										{ return mMinDistance; }
 	float						GetMaxDistance() const										{ return mMaxDistance; }
 
+	/// Update the spring mode for the constraint see (DistanceConstraintSettings::mSpringMode for more info)
+	void						SetSpringMode(ESpringMode inSpringMode)						{ mSpringMode = inSpringMode; }
+	ESpringMode					GetSpringMode() const										{ return mSpringMode; }
+
 	/// Update the spring frequency for the constraint
 	void						SetFrequency(float inFrequency)								{ JPH_ASSERT(inFrequency >= 0.0f); mFrequency = inFrequency; }
 	float						GetFrequency() const										{ return mFrequency; }
@@ -106,6 +114,7 @@ private:
 	float						mMaxDistance;
 
 	// Soft constraint properties (see DistanceConstraintSettings)
+	ESpringMode 				mSpringMode;
 	float						mFrequency;
 	float						mDamping;
 

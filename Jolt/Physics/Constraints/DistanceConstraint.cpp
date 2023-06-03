@@ -26,6 +26,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(DistanceConstraintSettings)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mPoint2)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mMinDistance)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mMaxDistance)
+	JPH_ADD_ENUM_ATTRIBUTE(DistanceConstraintSettings, mSpringMode)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mFrequency)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mDamping)
 }
@@ -39,6 +40,7 @@ void DistanceConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mPoint2);
 	inStream.Write(mMinDistance);
 	inStream.Write(mMaxDistance);
+	inStream.Write(mSpringMode);
 	inStream.Write(mFrequency);
 	inStream.Write(mDamping);
 }
@@ -52,6 +54,7 @@ void DistanceConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mPoint2);
 	inStream.Read(mMinDistance);
 	inStream.Read(mMaxDistance);
+	inStream.Read(mSpringMode);
 	inStream.Read(mFrequency);
 	inStream.Read(mDamping);
 }
@@ -91,6 +94,7 @@ DistanceConstraint::DistanceConstraint(Body &inBody1, Body &inBody2, const Dista
 	mWorldSpaceNormal = Vec3::sAxisY(); 
 
 	// Store frequency and damping
+	SetSpringMode(inSettings.mSpringMode);
 	SetFrequency(inSettings.mFrequency);
 	SetDamping(inSettings.mDamping);
 }
@@ -122,7 +126,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 
 	if (mMinDistance == mMaxDistance)
 	{
-		mAxisConstraint.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mSpringMode, mFrequency, mDamping);
 
 		// Single distance, allow constraint forces in both directions
 		mMinLambda = -FLT_MAX;
@@ -130,7 +134,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 	}
 	if (delta_len <= mMinDistance)
 	{
-		mAxisConstraint.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mSpringMode, mFrequency, mDamping);
 
 		// Allow constraint forces to make distance bigger only
 		mMinLambda = 0;
@@ -138,7 +142,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 	}
 	else if (delta_len >= mMaxDistance)
 	{
-		mAxisConstraint.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMaxDistance, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMaxDistance, mSpringMode, mFrequency, mDamping);
 
 		// Allow constraint forces to make distance smaller only
 		mMinLambda = -FLT_MAX;

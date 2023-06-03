@@ -6,6 +6,7 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Physics/Constraints/ESpringMode.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -54,6 +55,7 @@ public:
 	void					RestoreBinaryState(StreamIn &inStream);
 
 	// Settings
+	ESpringMode				mSpringMode = ESpringMode::FrequencyAndDamping;	///< If the mode is StiffnessAndDamping then mFrequency becomes the stiffness (k) and mDamping becomes the damping ratio (c) in the spring equation F = -k * x - c * v. Otherwise the properties are as documented.
 	float					mFrequency = 2.0f;							///< Oscillation frequency when solving position target (Hz). Should be in the range (0, 0.5 * simulation frequency]. When simulating at 60 Hz, 20 is a good value for a strong motor. Only used for position motors.
 	float					mDamping = 1.0f;							///< Damping when solving position target (0 = minimal damping, 1 = critical damping). Only used for position motors.
 	float					mMinForceLimit = -FLT_MAX;					///< Minimum force to apply in case of a linear constraint (N). Usually this is -mMaxForceLimit unless you want a motor that can e.g. push but not pull. Not used when motor is an angular motor.

@@ -6,6 +6,7 @@
 
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/SpringPart.h>
+#include <Jolt/Physics/Constraints/ESpringMode.h>
 #include <Jolt/Physics/StateRecorder.h>
 
 JPH_NAMESPACE_BEGIN
@@ -116,6 +117,15 @@ public:
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inBody2, inWorldSpaceAxis);
 
 		mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
+	}
+
+	/// Selects one of the above functions based on the mode
+	inline void					CalculateConstraintPropertiesWithMode(float inDeltaTime, const Body &inBody1, const Body &inBody2, Vec3Arg inWorldSpaceAxis, float inBias, float inC, ESpringMode inMode, float inFrequencyOrStiffness, float inDamping)
+	{
+		if (inMode == ESpringMode::FrequencyAndDamping)
+			CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, inBody1, inBody2, inWorldSpaceAxis, inBias, inC, inFrequencyOrStiffness, inDamping);
+		else
+			CalculateConstraintPropertiesWithStiffnessAndDamping(inDeltaTime, inBody1, inBody2, inWorldSpaceAxis, inBias, inC, inFrequencyOrStiffness, inDamping);
 	}
 
 	/// Deactivate this constraint

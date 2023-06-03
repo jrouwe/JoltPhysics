@@ -211,7 +211,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 			}
 			else
 				c = mPathFraction - mTargetPathFraction;
-			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, 0.0f, c, mPositionMotorSettings.mFrequency, mPositionMotorSettings.mDamping);
+			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, 0.0f, c, mPositionMotorSettings.mSpringMode, mPositionMotorSettings.mFrequency, mPositionMotorSettings.mDamping);
 			break;
 		}
 	}	

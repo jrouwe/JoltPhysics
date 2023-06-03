@@ -310,6 +310,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ContactConstraintManager.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/DistanceConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/DistanceConstraint.h
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ESpringMode.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/FixedConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/FixedConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/GearConstraint.cpp

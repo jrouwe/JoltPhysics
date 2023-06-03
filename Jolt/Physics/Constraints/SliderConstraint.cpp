@@ -29,6 +29,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SliderConstraintSettings)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mNormalAxis2)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mLimitsMin)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mLimitsMax)
+	JPH_ADD_ENUM_ATTRIBUTE(SliderConstraintSettings, mSpringMode)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mFrequency)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mDamping)
 	JPH_ADD_ATTRIBUTE(SliderConstraintSettings, mMaxFrictionForce)
@@ -57,6 +58,7 @@ void SliderConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mNormalAxis2);
 	inStream.Write(mLimitsMin);
 	inStream.Write(mLimitsMax);
+	inStream.Write(mSpringMode);
 	inStream.Write(mFrequency);
 	inStream.Write(mDamping);
 	inStream.Write(mMaxFrictionForce);
@@ -77,6 +79,7 @@ void SliderConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mNormalAxis2);
 	inStream.Read(mLimitsMin);
 	inStream.Read(mLimitsMax);
+	inStream.Read(mSpringMode);
 	inStream.Read(mFrequency);
 	inStream.Read(mDamping);
 	inStream.Read(mMaxFrictionForce);
@@ -155,6 +158,7 @@ SliderConstraint::SliderConstraint(Body &inBody1, Body &inBody2, const SliderCon
 	SetLimits(inSettings.mLimitsMin, inSettings.mLimitsMax);
 
 	// Store frequency and damping
+	SetSpringMode(inSettings.mSpringMode);
 	SetFrequency(inSettings.mFrequency);
 	SetDamping(inSettings.mDamping);
 }
@@ -221,7 +225,7 @@ void SliderConstraint::CalculatePositionLimitsConstraintProperties(float inDelta
 	// Check if distance is within limits
 	bool below_min = mD <= mLimitsMin;
 	if (mHasLimits && (below_min || mD >= mLimitsMax))
-		mPositionLimitsConstraintPart.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - (below_min? mLimitsMin : mLimitsMax), mFrequency, mDamping);
+		mPositionLimitsConstraintPart.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - (below_min? mLimitsMin : mLimitsMax), mSpringMode, mFrequency, mDamping);
 	else
 		mPositionLimitsConstraintPart.Deactivate();
 }
@@ -242,7 +246,7 @@ void SliderConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 		break;
 
 	case EMotorState::Position:
-		mMotorConstraintPart.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - mTargetPosition, mMotorSettings.mFrequency, mMotorSettings.mDamping);
+		mMotorConstraintPart.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - mTargetPosition, mMotorSettings.mSpringMode, mMotorSettings.mFrequency, mMotorSettings.mDamping);
 		break;
 	}	
 }
