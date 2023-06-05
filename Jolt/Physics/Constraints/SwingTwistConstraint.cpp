@@ -273,7 +273,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 		case EMotorState::Position:
 			// Use motor to drive rotation error to zero
 			for (int i = 1; i < 3; ++i)
-				mMotorConstraintPart[i].CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], 0.0f, rotation_error[i], mSwingMotorSettings.mSpringMode, mSwingMotorSettings.mFrequency, mSwingMotorSettings.mDamping);
+				mMotorConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], 0.0f, rotation_error[i], mSwingMotorSettings.mSpringSettings);
 			break;
 		}	
 
@@ -300,7 +300,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 		case EMotorState::Position:
 			// Use motor to drive rotation error to zero
-			mMotorConstraintPart[0].CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f, rotation_error[0], mTwistMotorSettings.mSpringMode, mTwistMotorSettings.mFrequency, mTwistMotorSettings.mDamping);
+			mMotorConstraintPart[0].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f, rotation_error[0], mTwistMotorSettings.mSpringSettings);
 			break;
 		}	
 	}

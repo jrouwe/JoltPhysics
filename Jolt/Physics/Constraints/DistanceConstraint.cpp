@@ -26,9 +26,9 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(DistanceConstraintSettings)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mPoint2)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mMinDistance)
 	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mMaxDistance)
-	JPH_ADD_ENUM_ATTRIBUTE(DistanceConstraintSettings, mSpringMode)
-	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mFrequency)
-	JPH_ADD_ATTRIBUTE(DistanceConstraintSettings, mDamping)
+	JPH_ADD_ENUM_ATTRIBUTE_WITH_ALIAS(DistanceConstraintSettings, mLimitsSpringSettings.mMode, "mSpringMode")
+	JPH_ADD_ATTRIBUTE_WITH_ALIAS(DistanceConstraintSettings, mLimitsSpringSettings.mFrequency, "mFrequency") // Renaming attributes to stay compatible with old versions of the library
+	JPH_ADD_ATTRIBUTE_WITH_ALIAS(DistanceConstraintSettings, mLimitsSpringSettings.mDamping, "mDamping")
 }
 
 void DistanceConstraintSettings::SaveBinaryState(StreamOut &inStream) const
@@ -40,9 +40,7 @@ void DistanceConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mPoint2);
 	inStream.Write(mMinDistance);
 	inStream.Write(mMaxDistance);
-	inStream.Write(mSpringMode);
-	inStream.Write(mFrequency);
-	inStream.Write(mDamping);
+	mLimitsSpringSettings.SaveBinaryState(inStream);
 }
 
 void DistanceConstraintSettings::RestoreBinaryState(StreamIn &inStream)
@@ -54,9 +52,7 @@ void DistanceConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mPoint2);
 	inStream.Read(mMinDistance);
 	inStream.Read(mMaxDistance);
-	inStream.Read(mSpringMode);
-	inStream.Read(mFrequency);
-	inStream.Read(mDamping);
+	mLimitsSpringSettings.RestoreBinaryState(inStream);
 }
 
 TwoBodyConstraint *DistanceConstraintSettings::Create(Body &inBody1, Body &inBody2) const
@@ -93,10 +89,8 @@ DistanceConstraint::DistanceConstraint(Body &inBody1, Body &inBody2, const Dista
 	// Most likely gravity is going to tear us apart (this is only used when the distance between the points = 0)
 	mWorldSpaceNormal = Vec3::sAxisY(); 
 
-	// Store frequency and damping
-	SetSpringMode(inSettings.mSpringMode);
-	SetFrequency(inSettings.mFrequency);
-	SetDamping(inSettings.mDamping);
+	// Store spring settings
+	SetLimitsSpringSettings(inSettings.mLimitsSpringSettings);
 }
 
 void DistanceConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
@@ -126,7 +120,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 
 	if (mMinDistance == mMaxDistance)
 	{
-		mAxisConstraint.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mSpringMode, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mLimitsSpringSettings);
 
 		// Single distance, allow constraint forces in both directions
 		mMinLambda = -FLT_MAX;
@@ -134,7 +128,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 	}
 	if (delta_len <= mMinDistance)
 	{
-		mAxisConstraint.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mSpringMode, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mLimitsSpringSettings);
 
 		// Allow constraint forces to make distance bigger only
 		mMinLambda = 0;
@@ -142,7 +136,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 	}
 	else if (delta_len >= mMaxDistance)
 	{
-		mAxisConstraint.CalculateConstraintPropertiesWithMode(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMaxDistance, mSpringMode, mFrequency, mDamping);
+		mAxisConstraint.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMaxDistance, mLimitsSpringSettings);
 
 		// Allow constraint forces to make distance smaller only
 		mMinLambda = -FLT_MAX;
@@ -247,8 +241,7 @@ Ref<ConstraintSettings> DistanceConstraint::GetConstraintSettings() const
 	settings->mPoint2 = RVec3(mLocalSpacePosition2);
 	settings->mMinDistance = mMinDistance;
 	settings->mMaxDistance = mMaxDistance;
-	settings->mFrequency = mFrequency;
-	settings->mDamping = mDamping;
+	settings->mLimitsSpringSettings = mLimitsSpringSettings;
 	return settings;
 }
 

@@ -40,7 +40,7 @@ void SpringTest::Initialize()
 		DistanceConstraintSettings settings;
 		settings.mPoint1 = attachment_point;
 		settings.mPoint2 = body_position;
-		settings.mFrequency = 0.33f;
+		settings.mLimitsSpringSettings.mFrequency = 0.33f;
 		mPhysicsSystem->AddConstraint(settings.Create(top, body));
 
 		// Move the body up so that it can start oscillating
@@ -62,7 +62,7 @@ void SpringTest::Initialize()
 		DistanceConstraintSettings settings;
 		settings.mPoint1 = attachment_point;
 		settings.mPoint2 = body_position;
-		settings.mFrequency = 0.1f + 0.1f * i;
+		settings.mLimitsSpringSettings.mFrequency = 0.1f + 0.1f * i;
 		mPhysicsSystem->AddConstraint(settings.Create(top, body));
 
 		// Move the body up so that it can start oscillating
@@ -84,8 +84,8 @@ void SpringTest::Initialize()
 		DistanceConstraintSettings settings;
 		settings.mPoint1 = attachment_point;
 		settings.mPoint2 = body_position;
-		settings.mFrequency = 0.33f;
-		settings.mDamping = (1.0f / 9.0f) * i;
+		settings.mLimitsSpringSettings.mFrequency = 0.33f;
+		settings.mLimitsSpringSettings.mDamping = (1.0f / 9.0f) * i;
 		mPhysicsSystem->AddConstraint(settings.Create(top, body));
 
 		// Move the body up so that it can start oscillating

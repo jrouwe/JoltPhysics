@@ -142,8 +142,8 @@ void SliderConstraintTest::Initialize()
 		slider.SetSliderAxis(Vec3::sAxisY());
 		slider.mLimitsMin = 0.0f;
 		slider.mLimitsMax = 2.0f;
-		slider.mFrequency = 1.0f;
-		slider.mDamping = 0.5f;
+		slider.mLimitsSpringSettings.mFrequency = 1.0f;
+		slider.mLimitsSpringSettings.mDamping = 0.5f;
 		mPhysicsSystem->AddConstraint(slider.Create(*vert1, *vert2));
 	}
 }

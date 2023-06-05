@@ -6,7 +6,7 @@
 
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/SpringPart.h>
-#include <Jolt/Physics/Constraints/ESpringMode.h>
+#include <Jolt/Physics/Constraints/SpringSettings.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Physics/DeterminismLog.h>
 
@@ -230,13 +230,15 @@ public:
 		mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
 	}
 
-	/// Selects one of the above functions based on the mode
-	inline void					CalculateConstraintPropertiesWithMode(float inDeltaTime, const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias, float inC, ESpringMode inMode, float inFrequencyOrStiffness, float inDamping)
+	/// Selects one of the above functions based on the spring settings
+	inline void					CalculateConstraintPropertiesWithSettings(float inDeltaTime, const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias, float inC, const SpringSettings &inSpringSettings)
 	{
-		if (inMode == ESpringMode::FrequencyAndDamping)
-			CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis, inBias, inC, inFrequencyOrStiffness, inDamping);
+		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
+
+		if (inSpringSettings.mMode == ESpringMode::FrequencyAndDamping)
+			mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mFrequency, inSpringSettings.mDamping, mEffectiveMass);
 		else
-			CalculateConstraintPropertiesWithStiffnessAndDamping(inDeltaTime, inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis, inBias, inC, inFrequencyOrStiffness, inDamping);
+			mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);
 	}
 
 	/// Deactivate this constraint

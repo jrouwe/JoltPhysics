@@ -1687,8 +1687,8 @@ void SamplesApp::UpdateDebug()
 						// Create constraint to drag body
 						DistanceConstraintSettings settings;
 						settings.mPoint1 = settings.mPoint2 = hit_position;
-						settings.mFrequency = 2.0f / GetWorldScale();
-						settings.mDamping = 1.0f;
+						settings.mLimitsSpringSettings.mFrequency = 2.0f / GetWorldScale();
+						settings.mLimitsSpringSettings.mDamping = 1.0f;
 
 						// Construct fixed body for the mouse constraint
 						// Note that we don't add it to the world since we don't want anything to collide with it, we just

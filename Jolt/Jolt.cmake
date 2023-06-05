@@ -310,7 +310,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ContactConstraintManager.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/DistanceConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/DistanceConstraint.h
-	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ESpringMode.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/FixedConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/FixedConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/GearConstraint.cpp
@@ -335,6 +334,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SixDOFConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SliderConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SliderConstraint.h
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SpringSettings.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SpringSettings.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SwingTwistConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SwingTwistConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/TwoBodyConstraint.cpp
