@@ -29,6 +29,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(HingeConstraintSettings)
 	JPH_ADD_ATTRIBUTE(HingeConstraintSettings, mNormalAxis2)
 	JPH_ADD_ATTRIBUTE(HingeConstraintSettings, mLimitsMin)
 	JPH_ADD_ATTRIBUTE(HingeConstraintSettings, mLimitsMax)
+	JPH_ADD_ATTRIBUTE(HingeConstraintSettings, mLimitsSpringSettings)
 	JPH_ADD_ATTRIBUTE(HingeConstraintSettings, mMaxFrictionTorque)
 	JPH_ADD_ATTRIBUTE(HingeConstraintSettings, mMotorSettings)
 }
@@ -47,6 +48,7 @@ void HingeConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mLimitsMin);
 	inStream.Write(mLimitsMax);
 	inStream.Write(mMaxFrictionTorque);
+	mLimitsSpringSettings.SaveBinaryState(inStream);
 	mMotorSettings.SaveBinaryState(inStream);
 }
 
@@ -64,6 +66,7 @@ void HingeConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mLimitsMin);
 	inStream.Read(mLimitsMax);
 	inStream.Read(mMaxFrictionTorque);
+	mLimitsSpringSettings.RestoreBinaryState(inStream);
 	mMotorSettings.RestoreBinaryState(inStream);}
 
 TwoBodyConstraint *HingeConstraintSettings::Create(Body &inBody1, Body &inBody2) const
@@ -110,6 +113,9 @@ HingeConstraint::HingeConstraint(Body &inBody1, Body &inBody2, const HingeConstr
 		mLocalSpaceHingeAxis2 = inSettings.mHingeAxis2;
 		mLocalSpaceNormalAxis2 = inSettings.mNormalAxis2;
 	}
+
+	// Store spring settings
+	SetLimitsSpringSettings(inSettings.mLimitsSpringSettings);
 }
 
 void HingeConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
@@ -168,11 +174,11 @@ void HingeConstraint::CalculateA1AndTheta()
 	}
 }
 
-void HingeConstraint::CalculateRotationLimitsConstraintProperties()
+void HingeConstraint::CalculateRotationLimitsConstraintProperties(float inDeltaTime)
 {
 	// Apply constraint if outside of limits
 	if (mHasLimits && (mTheta <= mLimitsMin || mTheta >= mLimitsMax))
-		mRotationLimitsConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, mA1);
+		mRotationLimitsConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mA1, 0.0f, GetSmallestAngleToLimit(), mLimitsSpringSettings);
 	else
 		mRotationLimitsConstraintPart.Deactivate();
 }
@@ -206,7 +212,7 @@ void HingeConstraint::SetupVelocityConstraint(float inDeltaTime)
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, mLocalSpacePosition1, *mBody2, rotation2, mLocalSpacePosition2);
 	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, rotation1.Multiply3x3(mLocalSpaceHingeAxis1), *mBody2, rotation2, rotation2.Multiply3x3(mLocalSpaceHingeAxis2));
 	CalculateA1AndTheta();
-	CalculateRotationLimitsConstraintProperties();
+	CalculateRotationLimitsConstraintProperties(inDeltaTime);
 	CalculateMotorConstraintProperties(inDeltaTime);
 }
 
@@ -283,10 +289,13 @@ bool HingeConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 
 	// Solve rotation limits
 	bool limit = false;
-	CalculateA1AndTheta();
-	CalculateRotationLimitsConstraintProperties();
-	if (mRotationLimitsConstraintPart.IsActive())
-		limit = mRotationLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, GetSmallestAngleToLimit(), inBaumgarte);
+	if (mHasLimits && mLimitsSpringSettings.mFrequency <= 0.0f)
+	{
+		CalculateA1AndTheta();
+		CalculateRotationLimitsConstraintProperties(inDeltaTime);
+		if (mRotationLimitsConstraintPart.IsActive())
+			limit = mRotationLimitsConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, GetSmallestAngleToLimit(), inBaumgarte);
+	}
 
 	return pos || rot || limit;
 }
@@ -365,6 +374,7 @@ Ref<ConstraintSettings> HingeConstraint::GetConstraintSettings() const
 	settings->mNormalAxis2 = mLocalSpaceNormalAxis2;
 	settings->mLimitsMin = mLimitsMin;
 	settings->mLimitsMax = mLimitsMax;
+	settings->mLimitsSpringSettings = mLimitsSpringSettings;
 	settings->mMaxFrictionTorque = mMaxFrictionTorque;
 	settings->mMotorSettings = mMotorSettings;
 	return settings;
