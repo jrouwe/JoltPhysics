@@ -442,4 +442,66 @@ TEST_SUITE("SliderConstraintTests")
 		CHECK_APPROX_EQUAL(t1.GetColumn3(2), t2.GetColumn3(0), 1.0e-4f);
 		CHECK_APPROX_EQUAL(t1.GetTranslation(), t2.GetTranslation(), 1.0e-2f);
 	}
+
+	// Test if the slider constraint can be used to create a spring
+	TEST_CASE("TestSpring")
+	{
+		// Configuration of the spring
+		const RVec3 cInitialPosition(10, 0, 0);
+		const float cFrequency = 2.0f;
+		const float cDamping = 0.1f;
+
+		for (int mode = 0; mode < 2; ++mode)
+		{
+			// Create a sphere
+			PhysicsTestContext context;
+			Body &body = context.CreateSphere(cInitialPosition, 0.5f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+			body.GetMotionProperties()->SetLinearDamping(0.0f);
+
+			// Calculate stiffness and damping of spring
+			float m = 1.0f / body.GetMotionProperties()->GetInverseMass();
+			float omega = 2.0f * JPH_PI * cFrequency;
+			float k = m * Square(omega);
+			float c = 2.0f * m * cDamping * omega;
+
+			// Create spring
+			SliderConstraintSettings constraint;
+			constraint.mPoint2 = cInitialPosition;
+			if (mode == 0)
+			{
+				// First iteration use stiffness and damping
+				constraint.mLimitsSpringSettings.mMode = ESpringMode::StiffnessAndDamping;
+				constraint.mLimitsSpringSettings.mStiffness = k;
+				constraint.mLimitsSpringSettings.mDamping = c;
+			}
+			else
+			{
+				// Second iteration use frequency and damping
+				constraint.mLimitsSpringSettings.mMode = ESpringMode::FrequencyAndDamping;
+				constraint.mLimitsSpringSettings.mFrequency = cFrequency;
+				constraint.mLimitsSpringSettings.mDamping = cDamping;
+			}
+			constraint.mLimitsMin = constraint.mLimitsMax = 0.0f;
+			context.CreateConstraint<SliderConstraint>(Body::sFixedToWorld, body, constraint);
+
+			// Simulate spring
+			Real x = cInitialPosition.GetX();
+			float v = 0.0f;
+			float dt = context.GetDeltaTime();
+			for (int i = 0; i < 120; ++i)
+			{
+				// Using the equations from page 32 of Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
+				v = (v - dt * k / m * x) / (1.0f + dt * c / m + Square(dt) * k / m);
+				x += v * dt;
+
+				// Run physics simulation
+				context.SimulateSingleStep();
+
+				// Test if simulation matches prediction
+				CHECK_APPROX_EQUAL(x, body.GetPosition().GetX(), 2.0e-6f);
+				CHECK_APPROX_EQUAL(body.GetPosition().GetY(), 0);
+				CHECK_APPROX_EQUAL(body.GetPosition().GetZ(), 0);
+			}
+		}
+	}
 }

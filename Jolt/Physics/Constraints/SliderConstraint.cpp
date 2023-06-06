@@ -299,13 +299,14 @@ bool SliderConstraint::SolveVelocityConstraint(float inDeltaTime)
 	bool limit = false;
 	if (mPositionLimitsConstraintPart.IsActive())
 	{
-		if (mD <= mLimitsMin)
-			limit = mPositionLimitsConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceSliderAxis, 0, FLT_MAX);
+		float min_lambda, max_lambda;
+		if (mLimitsMin == mLimitsMax)
+			min_lambda = -FLT_MAX, max_lambda = FLT_MAX;
+		else if (mD <= mLimitsMin)
+			min_lambda = 0.0f, max_lambda = FLT_MAX;
 		else
-		{
-			JPH_ASSERT(mD >= mLimitsMax);
-			limit = mPositionLimitsConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceSliderAxis, -FLT_MAX, 0);
-		}
+			min_lambda = -FLT_MAX, max_lambda = 0.0f;
+		limit = mPositionLimitsConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceSliderAxis, min_lambda, max_lambda);
 	}
 
 	return motor || pos || rot || limit;
