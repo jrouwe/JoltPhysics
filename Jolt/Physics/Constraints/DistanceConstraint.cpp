@@ -126,7 +126,7 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 		mMinLambda = -FLT_MAX;
 		mMaxLambda = FLT_MAX;
 	}
-	if (delta_len <= mMinDistance)
+	else if (delta_len <= mMinDistance)
 	{
 		mAxisConstraint.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, mWorldSpaceNormal, 0.0f, delta_len - mMinDistance, mLimitsSpringSettings);
 
