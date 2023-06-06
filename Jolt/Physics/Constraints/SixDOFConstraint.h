@@ -32,6 +32,7 @@ public:
 		RotationZ,				///< When limited: MaxLimit between [0, PI]. MinLimit = -MaxLimit. Forms a cone shaped limit with Y.
 
 		Num,
+		NumTranslation = TranslationZ + 1,
 	};
 
 	// See: ConstraintSettings::SaveBinaryState
@@ -67,6 +68,11 @@ public:
 	/// Free movement over an axis is allowed when min = -FLT_MAX and max = FLT_MAX.
 	float						mLimitMin[EAxis::Num] = { -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX };
 	float						mLimitMax[EAxis::Num] = { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX };
+
+	/// When enabled, this makes the limits soft. When the constraint exceeds the limits, a spring force will pull it back.
+	/// Note that this is only supported when at least one of the the axis has limits (min < max).
+	/// Only soft translation limits are supported, soft rotation limits are not currently supported.
+	SpringSettings				mLimitsSpringSettings[EAxis::NumTranslation];
 
 	/// Make axis free (unconstrained)
 	void						MakeFreeAxis(EAxis inAxis)									{ mLimitMin[inAxis] = -FLT_MAX; mLimitMax[inAxis] = FLT_MAX; }
@@ -130,6 +136,11 @@ public:
 
 	inline bool					IsFixedAxis(EAxis inAxis) const								{ return (mFixedAxis & (1 << inAxis)) != 0; }
 	inline bool					IsFreeAxis(EAxis inAxis) const								{ return (mFreeAxis & (1 << inAxis)) != 0; }
+
+	/// Update the limits spring settings
+	const SpringSettings &		GetLimitsSpringSettings(EAxis inAxis) const					{ return mLimitsSpringSettings[inAxis]; }
+	SpringSettings &			GetLimitsSpringSettings(EAxis inAxis)						{ return mLimitsSpringSettings[inAxis]; }
+	void						SetLimitsSpringSettings(EAxis inAxis, const SpringSettings &inLimitsSpringSettings) { mLimitsSpringSettings[inAxis] = inLimitsSpringSettings; }
 
 	/// Set the max friction for each axis
 	void						SetMaxFriction(EAxis inAxis, float inFriction);
@@ -212,6 +223,7 @@ private:
 	uint8						mRotationPositionMotorActive = 0;							// Bitmask of axis that have position motor active (bit 0 = RotationX)
 	float						mLimitMin[EAxis::Num];
 	float						mLimitMax[EAxis::Num];
+	SpringSettings				mLimitsSpringSettings[EAxis::NumTranslation];
 
 	// Motor settings for each axis
 	MotorSettings				mMotorSettings[EAxis::Num];
