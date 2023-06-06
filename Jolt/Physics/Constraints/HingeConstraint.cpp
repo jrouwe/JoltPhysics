@@ -80,7 +80,7 @@ HingeConstraint::HingeConstraint(Body &inBody1, Body &inBody2, const HingeConstr
 	mMotorSettings(inSettings.mMotorSettings)
 {
 	// Store limits
-	JPH_ASSERT(inSettings.mLimitsMin != inSettings.mLimitsMax, "Better use a fixed constraint in this case");
+	JPH_ASSERT(inSettings.mLimitsMin != inSettings.mLimitsMax || inSettings.mLimitsSpringSettings.mFrequency > 0.0f, "Better use a fixed constraint in this case");
 	SetLimits(inSettings.mLimitsMin, inSettings.mLimitsMax);
 
 	// Store inverse of initial rotation from body 1 to body 2 in body 1 space
