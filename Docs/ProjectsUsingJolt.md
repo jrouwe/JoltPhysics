@@ -1,5 +1,6 @@
 # Projects Using Jolt
 
+* [Godot Jolt](https://github.com/godot-jolt/godot-jolt) - Godot extension that integrates the Jolt physics engine
 * [Horizon Forbidden West](https://www.playstation.com/en-us/games/horizon-forbidden-west/) - An open world action RPG adventure.
 * [Light Tracer Render](https://lighttracer.org/) - A rendering tool, uses Jolt for object placement. See [this](https://lighttracer.org/blog/light-tracer-render-2-4-0/) announcement.
 * [NeoAxis Engine](https://www.neoaxis.com/) - A 3D game engine. See [this](https://www.neoaxis.com/news/neoaxis_engine_2023_1_released) announcement.
