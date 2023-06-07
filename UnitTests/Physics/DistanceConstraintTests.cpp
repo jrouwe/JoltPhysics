@@ -10,7 +10,7 @@
 TEST_SUITE("DistanceConstraintTests")
 {
 	// Test if the distance constraint can be used to create a spring
-	TEST_CASE("TestSpring")
+	TEST_CASE("TestDistanceSpring")
 	{
 		// Configuration of the spring
 		const RVec3 cInitialPosition(10, 0, 0);

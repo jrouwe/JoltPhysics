@@ -444,7 +444,7 @@ TEST_SUITE("SliderConstraintTests")
 	}
 
 	// Test if the slider constraint can be used to create a spring
-	TEST_CASE("TestSpring")
+	TEST_CASE("TestSliderSpring")
 	{
 		// Configuration of the spring
 		const RVec3 cInitialPosition(10, 0, 0);
