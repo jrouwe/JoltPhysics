@@ -264,10 +264,14 @@ bool HingeConstraint::SolveVelocityConstraint(float inDeltaTime)
 	bool limit = false;
 	if (mRotationLimitsConstraintPart.IsActive())
 	{
-		if (GetSmallestAngleToLimit() < 0.0f)
-			limit = mRotationLimitsConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mA1, 0, FLT_MAX);
+		float min_lambda, max_lambda;
+		if (mLimitsMin == mLimitsMax)
+			min_lambda = -FLT_MAX, max_lambda = FLT_MAX;
+		else if (GetSmallestAngleToLimit() < 0.0f)
+			min_lambda = 0.0f, max_lambda = FLT_MAX;
 		else
-			limit = mRotationLimitsConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mA1, -FLT_MAX, 0);
+			min_lambda = -FLT_MAX, max_lambda = 0.0f;
+		limit = mRotationLimitsConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mA1, min_lambda, max_lambda);
 	}
 
 	return motor || pos || rot || limit;
