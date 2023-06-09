@@ -123,7 +123,7 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 		mLeanSpringIntegratedDeltaAngle = 0;
 	}
 
-	JPH_DET_LOG("WheeledVehicleController::PreCollide: target_lean: " << target_lean << " mTargetLean: " << mTargetLean);
+	JPH_DET_LOG("WheeledVehicleController::PreCollide: mTargetLean: " << mTargetLean);
 
 	// Calculate max steering angle based on the max lean angle we're willing to take
 	// See: https://en.wikipedia.org/wiki/Bicycle_and_motorcycle_dynamics#Leaning

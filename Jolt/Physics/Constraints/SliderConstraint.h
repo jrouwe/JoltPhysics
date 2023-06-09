@@ -49,10 +49,8 @@ public:
 	float						mLimitsMin = -FLT_MAX;
 	float						mLimitsMax = FLT_MAX;
 
-	/// If mFrequency > 0 the constraint limits will be soft and mFrequency specifies the oscillation frequency in Hz and mDamping the damping ratio (0 = no damping, 1 = critical damping).
-	/// If mFrequency <= 0, mDamping is ignored and the limits will be hard.
-	float						mFrequency = 0.0f;
-	float						mDamping = 0.0f;
+	/// When enabled, this makes the limits soft. When the constraint exceeds the limits, a spring force will pull it back.
+	SpringSettings				mLimitsSpringSettings;
 
 	/// Maximum amount of friction force to apply (N) when not driven by a motor.
 	float						mMaxFrictionForce = 0.0f;
@@ -118,13 +116,10 @@ public:
 	float						GetLimitsMax() const									{ return mLimitsMax; }
 	bool						HasLimits() const										{ return mHasLimits; }
 
-	/// Update the spring frequency for the limits constraint
-	void						SetFrequency(float inFrequency)							{ JPH_ASSERT(inFrequency >= 0.0f); mFrequency = inFrequency; }
-	float						GetFrequency() const									{ return mFrequency; }
-
-	/// Update the spring damping for the limits constraint
-	void						SetDamping(float inDamping)								{ JPH_ASSERT(inDamping >= 0.0f); mDamping = inDamping; }
-	float						GetDamping() const										{ return mDamping; }
+	/// Update the limits spring settings
+	const SpringSettings &		GetLimitsSpringSettings() const							{ return mLimitsSpringSettings; }
+	SpringSettings &			GetLimitsSpringSettings()								{ return mLimitsSpringSettings; }
+	void						SetLimitsSpringSettings(const SpringSettings &inLimitsSpringSettings) { mLimitsSpringSettings = inLimitsSpringSettings; }
 
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
 	inline Vector<2> 			GetTotalLambdaPosition() const							{ return mPositionConstraintPart.GetTotalLambda(); }
@@ -161,9 +156,8 @@ private:
 	float						mLimitsMin;
 	float						mLimitsMax;
 
-	// Soft slider limits
-	float						mFrequency;
-	float						mDamping;
+	// Soft constraint limits
+	SpringSettings				mLimitsSpringSettings;
 
 	// Friction
 	float						mMaxFrictionForce;

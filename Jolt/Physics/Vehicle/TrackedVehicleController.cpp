@@ -71,8 +71,9 @@ void WheelTV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 	{
 		// Friction at the point of this wheel between track and floor
 		const WheelSettingsTV *settings = GetSettings();
-		mCombinedLongitudinalFriction = sqrt(settings->mLongitudinalFriction * mContactBody->GetFriction());
-		mCombinedLateralFriction = sqrt(settings->mLateralFriction * mContactBody->GetFriction());
+		VehicleConstraint::CombineFunction combine_friction = inConstraint.GetCombineFriction();
+		mCombinedLongitudinalFriction = combine_friction(settings->mLongitudinalFriction, *mContactBody, mContactSubShapeID);
+		mCombinedLateralFriction = combine_friction(settings->mLateralFriction, *mContactBody, mContactSubShapeID);
 	}
 	else
 	{

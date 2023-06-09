@@ -38,7 +38,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 ## Features
 
-* Simulation of rigid bodies of various shapes using continous collision detection:
+* Simulation of rigid bodies of various shapes using continuous collision detection:
 	* Sphere.
 	* Box.
 	* Capsule.
@@ -131,6 +131,8 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 * [ezEngine](https://github.com/ezEngine/ezEngine)
 * [Godot](https://github.com/godot-jolt/godot-jolt)
 * [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
+
+See [a list of projects that use Jolt Physics here](Docs/ProjectsUsingJolt.md).
 
 ## License
 

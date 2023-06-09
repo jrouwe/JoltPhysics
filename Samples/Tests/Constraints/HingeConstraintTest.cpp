@@ -85,4 +85,42 @@ void HingeConstraintTest::Initialize()
 			prev = &segment;
 		}
 	}
+
+	{
+		// Two bodies connected with a hard hinge
+		Body *body1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(4, 5, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		body1->SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
+		mBodyInterface->AddBody(body1->GetID(), EActivation::DontActivate);
+		Body *body2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(6, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		body2->SetCollisionGroup(CollisionGroup(group_filter, 0, 1));
+		mBodyInterface->AddBody(body2->GetID(), EActivation::Activate);
+
+		HingeConstraintSettings hinge;
+		hinge.mPoint1 = hinge.mPoint2 = RVec3(5, 4, 0);
+		hinge.mHingeAxis1 = hinge.mHingeAxis2 = Vec3::sAxisZ();
+		hinge.mNormalAxis1 = hinge.mNormalAxis2 = Vec3::sAxisY();
+		hinge.mLimitsMin = DegreesToRadians(-10.0f);
+		hinge.mLimitsMax = DegreesToRadians(110.0f);
+		mPhysicsSystem->AddConstraint(hinge.Create(*body1, *body2));
+	}
+
+	{
+		// Two bodies connected with a soft hinge
+		Body *body1 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(10, 5, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		body1->SetCollisionGroup(CollisionGroup(group_filter, 0, 0));
+		mBodyInterface->AddBody(body1->GetID(), EActivation::DontActivate);
+		Body *body2 = mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(12, 5, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		body2->SetCollisionGroup(CollisionGroup(group_filter, 0, 1));
+		mBodyInterface->AddBody(body2->GetID(), EActivation::Activate);
+
+		HingeConstraintSettings hinge;
+		hinge.mPoint1 = hinge.mPoint2 = RVec3(11, 4, 0);
+		hinge.mHingeAxis1 = hinge.mHingeAxis2 = Vec3::sAxisZ();
+		hinge.mNormalAxis1 = hinge.mNormalAxis2 = Vec3::sAxisY();
+		hinge.mLimitsMin = DegreesToRadians(-10.0f);
+		hinge.mLimitsMax = DegreesToRadians(110.0f);
+		hinge.mLimitsSpringSettings.mFrequency = 1.0f;
+		hinge.mLimitsSpringSettings.mDamping = 0.5f;
+		mPhysicsSystem->AddConstraint(hinge.Create(*body1, *body2));
+	}
 }

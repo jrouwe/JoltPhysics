@@ -94,8 +94,8 @@ public:
 	bool					mUseManifoldReduction = true;									///< If this body should use manifold reduction (see description at Body::SetUseManifoldReduction)
 	EMotionQuality			mMotionQuality = EMotionQuality::Discrete;						///< Motion quality, or how well it detects collisions when it has a high velocity
 	bool					mAllowSleeping = true;											///< If this body can go to sleep or not
-	float					mFriction = 0.2f;												///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together)
-	float					mRestitution = 0.0f;											///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response)
+	float					mFriction = 0.2f;												///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
+	float					mRestitution = 0.0f;											///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response). Note that bodies can have negative restitution but the combined restitution (see PhysicsSystem::SetCombineRestitution) should never go below zero.
 	float					mLinearDamping = 0.05f;											///< Linear damping: dv/dt = -c * v. c must be between 0 and 1 but is usually close to 0.
 	float					mAngularDamping = 0.05f;										///< Angular damping: dw/dt = -c * w. c must be between 0 and 1 but is usually close to 0.
 	float					mMaxLinearVelocity = 500.0f;									///< Maximum linear velocity that this body can reach (m/s)

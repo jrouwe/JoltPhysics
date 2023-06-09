@@ -58,8 +58,8 @@ void Body::SetMotionType(EMotionType inMotionType)
 
 		case EMotionType::Kinematic:
 			// Cancel forces
-			mMotionProperties->mForce = Float3(0, 0, 0);
-			mMotionProperties->mTorque = Float3(0, 0, 0);
+			mMotionProperties->ResetForce();
+			mMotionProperties->ResetTorque();
 			break;
 
 		case EMotionType::Dynamic:

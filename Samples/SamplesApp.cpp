@@ -70,6 +70,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, IslandTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FunnelTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FrictionPerTriangleTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConveyorBeltTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, GravityFactorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RestitutionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DampingTest)
@@ -106,6 +107,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "2D Funnel",							JPH_RTTI(TwoDFunnelTest) },
 	{ "Friction",							JPH_RTTI(FrictionTest) },
 	{ "Friction (Per Triangle)",			JPH_RTTI(FrictionPerTriangleTest) },
+	{ "Conveyor Belt",						JPH_RTTI(ConveyorBeltTest) },
 	{ "Gravity Factor",						JPH_RTTI(GravityFactorTest) },
 	{ "Restitution",						JPH_RTTI(RestitutionTest) },
 	{ "Damping",							JPH_RTTI(DampingTest) },
@@ -401,6 +403,7 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateSlider(phys_settings, "Baumgarte Stabilization Factor", mPhysicsSettings.mBaumgarte, 0.01f, 1.0f, 0.05f, [this](float inValue) { mPhysicsSettings.mBaumgarte = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Speculative Contact Distance (m)", mPhysicsSettings.mSpeculativeContactDistance, 0.0f, 0.1f, 0.005f, [this](float inValue) { mPhysicsSettings.mSpeculativeContactDistance = inValue; });
 			mDebugUI->CreateSlider(phys_settings, "Penetration Slop (m)", mPhysicsSettings.mPenetrationSlop, 0.0f, 0.1f, 0.005f, [this](float inValue) { mPhysicsSettings.mPenetrationSlop = inValue; });
+			mDebugUI->CreateSlider(phys_settings, "Linear Cast Threshold", mPhysicsSettings.mLinearCastThreshold, 0.0f, 1.0f, 0.05f, [this](float inValue) { mPhysicsSettings.mLinearCastThreshold = inValue; });
 			mDebugUI->CreateSlider(phys_settings, "Min Velocity For Restitution (m/s)", mPhysicsSettings.mMinVelocityForRestitution, 0.0f, 10.0f, 0.1f, [this](float inValue) { mPhysicsSettings.mMinVelocityForRestitution = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Time Before Sleep (s)", mPhysicsSettings.mTimeBeforeSleep, 0.1f, 1.0f, 0.1f, [this](float inValue) { mPhysicsSettings.mTimeBeforeSleep = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Point Velocity Sleep Threshold (m/s)", mPhysicsSettings.mPointVelocitySleepThreshold, 0.01f, 1.0f, 0.01f, [this](float inValue) { mPhysicsSettings.mPointVelocitySleepThreshold = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
@@ -1684,8 +1687,8 @@ void SamplesApp::UpdateDebug()
 						// Create constraint to drag body
 						DistanceConstraintSettings settings;
 						settings.mPoint1 = settings.mPoint2 = hit_position;
-						settings.mFrequency = 2.0f / GetWorldScale();
-						settings.mDamping = 1.0f;
+						settings.mLimitsSpringSettings.mFrequency = 2.0f / GetWorldScale();
+						settings.mLimitsSpringSettings.mDamping = 1.0f;
 
 						// Construct fixed body for the mouse constraint
 						// Note that we don't add it to the world since we don't want anything to collide with it, we just

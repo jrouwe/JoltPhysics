@@ -421,9 +421,9 @@ private:
 	{
 	public:
 		/// Calculate constraint properties below
-		void					CalculateNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal);
+		void					CalculateNonPenetrationConstraintProperties(const Body &inBody1, const Body &inBody2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal);
 		template <EMotionType Type1, EMotionType Type2>
-		JPH_INLINE void			CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, float inCombinedRestitution, float inCombinedFriction, float inMinVelocityForRestitution);
+		JPH_INLINE void			CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, float inCombinedRestitution, float inCombinedFriction, float inMinVelocityForRestitution, float inSurfaceVelocity1, float inSurfaceVelocity2);
 
 		/// The constraint parts
 		AxisConstraintPart		mNonPenetrationConstraint;
@@ -445,18 +445,32 @@ private:
 		void					Draw(DebugRenderer *inRenderer, ColorArg inManifoldColor) const;
 	#endif // JPH_DEBUG_RENDERER
 
+		/// Convert the world space normal to a Vec3
+		JPH_INLINE Vec3			GetWorldSpaceNormal() const
+		{
+			return Vec3::sLoadFloat3Unsafe(mWorldSpaceNormal);
+		}
+
+		/// Convert the relative surface velocity to a Vec3
+		JPH_INLINE Vec3			GetRelativeSurfaceVelocity() const
+		{
+			return Vec3::sLoadFloat3Unsafe(mRelativeSurfaceVelocity);
+		}
+
 		/// Get the tangents for this contact constraint
 		JPH_INLINE void			GetTangents(Vec3 &outTangent1, Vec3 &outTangent2) const
 		{
-			outTangent1 = mWorldSpaceNormal.GetNormalizedPerpendicular();
-			outTangent2 = mWorldSpaceNormal.Cross(outTangent1);
+			Vec3 ws_normal = GetWorldSpaceNormal();
+			outTangent1 = ws_normal.GetNormalizedPerpendicular();
+			outTangent2 = ws_normal.Cross(outTangent1);
 		}
 
-		Vec3					mWorldSpaceNormal;
 		Body *					mBody1;
 		Body *					mBody2;
 		uint64					mSortKey;
+		Float3					mWorldSpaceNormal;
 		float					mCombinedFriction;
+		Float3					mRelativeSurfaceVelocity;
 		float					mCombinedRestitution;
 		WorldContactPoints		mContactPoints;
 	};

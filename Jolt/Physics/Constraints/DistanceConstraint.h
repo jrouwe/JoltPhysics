@@ -36,12 +36,8 @@ public:
 	float						mMinDistance = -1.0f;
 	float						mMaxDistance = -1.0f;
 
-	/// If mFrequency > 0 the constraint will be soft and mFrequency specifies the oscillation frequency in Hz and mDamping the damping ratio (0 = no damping, 1 = critical damping).
-	/// If mFrequency <= 0, mDamping is ignored and the distance constraint will have hard limits (as hard as the time step / the number of velocity / position solver steps allows).
-	/// Note that if you set mDamping = 0, you will not get an infinite oscillation. Because we integrate physics using an explicit Euler scheme, there is always energy loss.
-	/// This is done to keep the simulation from exploding, because with a damping of 0 and even the slightest rounding error, the oscillation could become bigger and bigger until the simluation explodes.
-	float						mFrequency = 0.0f;
-	float						mDamping = 0.0f;
+	/// When enabled, this makes the limits soft. When the constraint exceeds the limits, a spring force will pull it back.
+	SpringSettings				mLimitsSpringSettings;
 
 protected:
 	// See: ConstraintSettings::RestoreBinaryState
@@ -80,13 +76,10 @@ public:
 	float						GetMinDistance() const										{ return mMinDistance; }
 	float						GetMaxDistance() const										{ return mMaxDistance; }
 
-	/// Update the spring frequency for the constraint
-	void						SetFrequency(float inFrequency)								{ JPH_ASSERT(inFrequency >= 0.0f); mFrequency = inFrequency; }
-	float						GetFrequency() const										{ return mFrequency; }
-
-	/// Update the spring damping for the constraint
-	void						SetDamping(float inDamping)									{ JPH_ASSERT(inDamping >= 0.0f); mDamping = inDamping; }
-	float						GetDamping() const											{ return mDamping; }
+	/// Update the limits spring settings
+	const SpringSettings &		GetLimitsSpringSettings() const								{ return mLimitsSpringSettings; }
+	SpringSettings &			GetLimitsSpringSettings()									{ return mLimitsSpringSettings; }
+	void						SetLimitsSpringSettings(const SpringSettings &inLimitsSpringSettings) { mLimitsSpringSettings = inLimitsSpringSettings; }
 
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
 	inline float	 			GetTotalLambdaPosition() const								{ return mAxisConstraint.GetTotalLambda(); }
@@ -105,9 +98,8 @@ private:
 	float						mMinDistance;
 	float						mMaxDistance;
 
-	// Soft constraint properties (see DistanceConstraintSettings)
-	float						mFrequency;
-	float						mDamping;
+	// Soft constraint limits
+	SpringSettings				mLimitsSpringSettings;
 
 	// RUN TIME PROPERTIES FOLLOW
 
