@@ -148,6 +148,7 @@ SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFCon
 	memcpy(mLimitMax, inSettings.mLimitMax, sizeof(mLimitMax));
 	memcpy(mLimitsSpringSettings, inSettings.mLimitsSpringSettings, sizeof(mLimitsSpringSettings));
 	UpdateRotationLimits();
+	CacheHasSpringLimits();
 
 	// Store friction settings
 	memcpy(mMaxFriction, inSettings.mMaxFriction, sizeof(mMaxFriction));
@@ -244,6 +245,13 @@ void SixDOFConstraint::CacheRotationMotorActive()
 		|| HasFriction(EAxis::RotationX)
 		|| HasFriction(EAxis::RotationY)
 		|| HasFriction(EAxis::RotationZ);
+}
+
+void SixDOFConstraint::CacheHasSpringLimits()
+{
+	mHasSpringLimits = mLimitsSpringSettings[EAxis::TranslationX].mFrequency > 0.0f
+		|| mLimitsSpringSettings[EAxis::TranslationY].mFrequency > 0.0f
+		|| mLimitsSpringSettings[EAxis::TranslationZ].mFrequency > 0.0f;
 }
 
 void SixDOFConstraint::SetMotorState(EAxis inAxis, EMotorState inState)
