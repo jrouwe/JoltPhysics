@@ -138,9 +138,9 @@ public:
 	inline bool					IsFreeAxis(EAxis inAxis) const								{ return (mFreeAxis & (1 << inAxis)) != 0; }
 
 	/// Update the limits spring settings
-	const SpringSettings &		GetLimitsSpringSettings(EAxis inAxis) const					{ return mLimitsSpringSettings[inAxis]; }
-	SpringSettings &			GetLimitsSpringSettings(EAxis inAxis)						{ return mLimitsSpringSettings[inAxis]; }
-	void						SetLimitsSpringSettings(EAxis inAxis, const SpringSettings &inLimitsSpringSettings) { mLimitsSpringSettings[inAxis] = inLimitsSpringSettings; }
+	const SpringSettings &		GetLimitsSpringSettings(EAxis inAxis) const					{ JPH_ASSERT(inAxis < EAxis::NumTranslation); return mLimitsSpringSettings[inAxis]; }
+	SpringSettings &			GetLimitsSpringSettings(EAxis inAxis)						{ JPH_ASSERT(inAxis < EAxis::NumTranslation); return mLimitsSpringSettings[inAxis]; }
+	void						SetLimitsSpringSettings(EAxis inAxis, const SpringSettings &inLimitsSpringSettings) { JPH_ASSERT(inAxis < EAxis::NumTranslation); mLimitsSpringSettings[inAxis] = inLimitsSpringSettings; }
 
 	/// Set the max friction for each axis
 	void						SetMaxFriction(EAxis inAxis, float inFriction);

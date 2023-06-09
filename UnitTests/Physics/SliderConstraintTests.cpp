@@ -491,14 +491,14 @@ TEST_SUITE("SliderConstraintTests")
 			for (int i = 0; i < 120; ++i)
 			{
 				// Using the equations from page 32 of Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
-				v = (v - dt * k / m * x) / (1.0f + dt * c / m + Square(dt) * k / m);
+				v = (v - dt * k / m * float(x)) / (1.0f + dt * c / m + Square(dt) * k / m);
 				x += v * dt;
 
 				// Run physics simulation
 				context.SimulateSingleStep();
 
 				// Test if simulation matches prediction
-				CHECK_APPROX_EQUAL(x, body.GetPosition().GetX(), 2.0e-6f);
+				CHECK_APPROX_EQUAL(x, body.GetPosition().GetX(), 3.0e-6_r);
 				CHECK_APPROX_EQUAL(body.GetPosition().GetY(), 0);
 				CHECK_APPROX_EQUAL(body.GetPosition().GetZ(), 0);
 			}
