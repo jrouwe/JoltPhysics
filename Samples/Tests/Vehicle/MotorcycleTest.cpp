@@ -77,7 +77,7 @@ void MotorcycleTest::Initialize()
 	front->mWidth = front_wheel_width;
 	front->mSuspensionMinLength = front_suspension_min_length;
 	front->mSuspensionMaxLength = front_suspension_max_length;
-	front->mSuspensionFrequency = front_suspension_freq;
+	front->mSuspensionSpring.mFrequency = front_suspension_freq;
 	front->mMaxBrakeTorque = front_brake_torque;
 
 	WheelSettingsWV *back = new WheelSettingsWV;
@@ -87,7 +87,7 @@ void MotorcycleTest::Initialize()
 	back->mWidth = back_wheel_width;
 	back->mSuspensionMinLength = back_suspension_min_length;
 	back->mSuspensionMaxLength = back_suspension_max_length;
-	back->mSuspensionFrequency = back_suspension_freq;
+	back->mSuspensionSpring.mFrequency = back_suspension_freq;
 	back->mMaxBrakeTorque = back_brake_torque;
 
 	if (sOverrideFrontSuspensionForcePoint)
