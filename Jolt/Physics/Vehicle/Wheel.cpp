@@ -12,6 +12,7 @@ JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettings)
 {
+	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionForcePoint)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mPosition)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionDirection)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSteeringAxis)
@@ -24,10 +25,12 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettings)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionDamping)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mRadius)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mWidth)
+	JPH_ADD_ATTRIBUTE(WheelSettings, mEnableSuspensionForcePoint)
 }
 
 void WheelSettings::SaveBinaryState(StreamOut &inStream) const
 {
+	inStream.Write(mSuspensionForcePoint);
 	inStream.Write(mPosition);
 	inStream.Write(mSuspensionDirection);
 	inStream.Write(mSteeringAxis);
@@ -40,10 +43,12 @@ void WheelSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mSuspensionDamping);
 	inStream.Write(mRadius);
 	inStream.Write(mWidth);
+	inStream.Write(mEnableSuspensionForcePoint);
 }
 
 void WheelSettings::RestoreBinaryState(StreamIn &inStream)
 {
+	inStream.Read(mSuspensionForcePoint);
 	inStream.Read(mPosition);
 	inStream.Read(mSuspensionDirection);
 	inStream.Read(mSteeringAxis);
@@ -56,6 +61,7 @@ void WheelSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSuspensionDamping);
 	inStream.Read(mRadius);
 	inStream.Read(mWidth);
+	inStream.Read(mEnableSuspensionForcePoint);
 }
 
 Wheel::Wheel(const WheelSettings &inSettings) :
