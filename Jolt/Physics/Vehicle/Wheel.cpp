@@ -21,8 +21,9 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettings)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionMinLength)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionMaxLength)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionPreloadLength)
-	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionFrequency)
-	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionDamping)
+	JPH_ADD_ENUM_ATTRIBUTE_WITH_ALIAS(WheelSettings, mSuspensionSpring.mMode, "mSuspensionSpringMode")
+	JPH_ADD_ATTRIBUTE_WITH_ALIAS(WheelSettings, mSuspensionSpring.mFrequency, "mSuspensionFrequency") // Renaming attributes to stay compatible with old versions of the library
+	JPH_ADD_ATTRIBUTE_WITH_ALIAS(WheelSettings, mSuspensionSpring.mDamping, "mSuspensionDamping")
 	JPH_ADD_ATTRIBUTE(WheelSettings, mRadius)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mWidth)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mEnableSuspensionForcePoint)
@@ -39,8 +40,7 @@ void WheelSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mSuspensionMinLength);
 	inStream.Write(mSuspensionMaxLength);
 	inStream.Write(mSuspensionPreloadLength);
-	inStream.Write(mSuspensionFrequency);
-	inStream.Write(mSuspensionDamping);
+	mSuspensionSpring.SaveBinaryState(inStream);
 	inStream.Write(mRadius);
 	inStream.Write(mWidth);
 	inStream.Write(mEnableSuspensionForcePoint);
@@ -57,8 +57,7 @@ void WheelSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mSuspensionMinLength);
 	inStream.Read(mSuspensionMaxLength);
 	inStream.Read(mSuspensionPreloadLength);
-	inStream.Read(mSuspensionFrequency);
-	inStream.Read(mSuspensionDamping);
+	mSuspensionSpring.RestoreBinaryState(inStream);
 	inStream.Read(mRadius);
 	inStream.Read(mWidth);
 	inStream.Read(mEnableSuspensionForcePoint);
@@ -75,8 +74,8 @@ Wheel::Wheel(const WheelSettings &inSettings) :
 	JPH_ASSERT(inSettings.mSuspensionMinLength >= 0.0f);
 	JPH_ASSERT(inSettings.mSuspensionMaxLength >= inSettings.mSuspensionMinLength);
 	JPH_ASSERT(inSettings.mSuspensionPreloadLength >= 0.0f);
-	JPH_ASSERT(inSettings.mSuspensionFrequency > 0.0f);
-	JPH_ASSERT(inSettings.mSuspensionDamping >= 0.0f);
+	JPH_ASSERT(inSettings.mSuspensionSpring.mFrequency > 0.0f);
+	JPH_ASSERT(inSettings.mSuspensionSpring.mDamping >= 0.0f);
 	JPH_ASSERT(inSettings.mRadius > 0.0f);
 	JPH_ASSERT(inSettings.mWidth >= 0.0f);
 }

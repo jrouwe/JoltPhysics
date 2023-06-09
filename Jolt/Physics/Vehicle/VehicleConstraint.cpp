@@ -371,56 +371,69 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 			// Suspension spring
 			if (settings->mSuspensionMaxLength > settings->mSuspensionMinLength)
 			{
-				// Calculate the damping and frequency of the suspension spring given the angle between the suspension direction and the contact normal
-				// If the angle between the suspension direction and the inverse of the contact normal is alpha then the force on the spring relates to the force along the contact normal as:
-				// 
-				// Fspring = Fnormal * cos(alpha)
-				//
-				// The spring force is:
-				//
-				// Fspring = -k * x
-				//
-				// where k is the spring constant and x is the displacement of the spring. So we have:
-				//
-				// Fnormal * cos(alpha) = -k * x <=> Fnormal = -k / cos(alpha) * x
-				//
-				// So we can see this as a spring with spring constant:
-				//
-				// k' = k / cos(alpha)
-				// 
-				// In the same way the velocity relates like:
-				// 
-				// Vspring = Vnormal * cos(alpha)
-				//
-				// Which results in the modified damping constant c:
-				//
-				// c' = c / cos(alpha)
-				//
-				// Since we're not supplying k and c directly but rather the frequency and damping we can calculate the spring constant and damping constant as:
-				//
-				// w = 2 * pi * f
-				// k = m * w^2
-				// c = 2 * m * w * d
-				//
-				// where m is the mass of the spring, f is the frequency and d is the damping factor (see SpringPart::CalculateSpringProperties). So we have:
-				//
-				// w' = w * pi * f'
-				// k' = m * w'^2
-				// c' = 2 * m * w' * d'
-				//
-				// where f' = f / sqrt(cos(alpha)) and d' = d / sqrt(cos(alpha))
-				//
+				// Calculate cos(alpha) where alpha is the angle between suspension direction and contact normal
 				// Note that we clamp 1 / cos(alpha) to the range [0.1, 1] in order not to increase the stiffness / damping by too much.
-				// We also ensure that the frequency doesn't go over half the simulation frequency to prevent the spring from getting unstable.
 				Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
-				float sqrt_cos_angle = sqrt(max(0.1f, ws_direction.Dot(neg_contact_normal)));
-				float damping = settings->mSuspensionDamping / sqrt_cos_angle;
-				float frequency = min(0.5f / inDeltaTime, settings->mSuspensionFrequency / sqrt_cos_angle);
+				float cos_angle = max(0.1f, ws_direction.Dot(neg_contact_normal));
+
+				SpringSettings spring_settings = settings->mSuspensionSpring;
+				if (spring_settings.mMode == ESpringMode::FrequencyAndDamping)
+				{
+					// Calculate the damping and frequency of the suspension spring given the angle between the suspension direction and the contact normal
+					// If the angle between the suspension direction and the inverse of the contact normal is alpha then the force on the spring relates to the force along the contact normal as:
+					// 
+					// Fspring = Fnormal * cos(alpha)
+					//
+					// The spring force is:
+					//
+					// Fspring = -k * x
+					//
+					// where k is the spring constant and x is the displacement of the spring. So we have:
+					//
+					// Fnormal * cos(alpha) = -k * x <=> Fnormal = -k / cos(alpha) * x
+					//
+					// So we can see this as a spring with spring constant:
+					//
+					// k' = k / cos(alpha)
+					// 
+					// In the same way the velocity relates like:
+					// 
+					// Vspring = Vnormal * cos(alpha)
+					//
+					// Which results in the modified damping constant c:
+					//
+					// c' = c / cos(alpha)
+					//
+					// Since we're not supplying k and c directly but rather the frequency and damping we can calculate the spring constant and damping constant as:
+					//
+					// w = 2 * pi * f
+					// k = m * w^2
+					// c = 2 * m * w * d
+					//
+					// where m is the mass of the spring, f is the frequency and d is the damping factor (see SpringPart::CalculateSpringProperties). So we have:
+					//
+					// w' = w * pi * f'
+					// k' = m * w'^2
+					// c' = 2 * m * w' * d'
+					//
+					// where f' = f / sqrt(cos(alpha)) and d' = d / sqrt(cos(alpha))
+					//
+					// We ensure that the frequency doesn't go over half the simulation frequency to prevent the spring from getting unstable.
+					float sqrt_cos_angle = sqrt(cos_angle);
+					spring_settings.mDamping /= sqrt_cos_angle;
+					spring_settings.mFrequency = min(0.5f / inDeltaTime, spring_settings.mFrequency / sqrt_cos_angle);
+				}
+				else
+				{
+					// This case is similar to the one above but we're not supplying frequency and damping but rather the spring constant and damping constant directly.
+					spring_settings.mStiffness /= cos_angle;
+					spring_settings.mDamping /= cos_angle;
+				}
 
 				// Get the value of the constraint equation
 				float c = w->mSuspensionLength - settings->mSuspensionMaxLength - settings->mSuspensionPreloadLength;
 
-				w->mSuspensionPart.CalculateConstraintPropertiesWithFrequencyAndDamping(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, neg_contact_normal, w->mAntiRollBarImpulse, c, frequency, damping);
+				w->mSuspensionPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody, r1_plus_u, *w->mContactBody, r2, neg_contact_normal, w->mAntiRollBarImpulse, c, spring_settings);
 			}
 			else
 				w->mSuspensionPart.Deactivate();
