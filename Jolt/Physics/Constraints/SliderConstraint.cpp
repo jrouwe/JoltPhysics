@@ -301,11 +301,20 @@ bool SliderConstraint::SolveVelocityConstraint(float inDeltaTime)
 	{
 		float min_lambda, max_lambda;
 		if (mLimitsMin == mLimitsMax)
-			min_lambda = -FLT_MAX, max_lambda = FLT_MAX;
+		{
+			min_lambda = -FLT_MAX;
+			max_lambda = FLT_MAX;
+		}
 		else if (mD <= mLimitsMin)
-			min_lambda = 0.0f, max_lambda = FLT_MAX;
+		{
+			min_lambda = 0.0f;
+			max_lambda = FLT_MAX;
+		}
 		else
-			min_lambda = -FLT_MAX, max_lambda = 0.0f;
+		{
+			min_lambda = -FLT_MAX;
+			max_lambda = 0.0f;
+		}
 		limit = mPositionLimitsConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceSliderAxis, min_lambda, max_lambda);
 	}
 
