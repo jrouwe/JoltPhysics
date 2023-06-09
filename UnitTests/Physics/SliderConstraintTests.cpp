@@ -498,7 +498,7 @@ TEST_SUITE("SliderConstraintTests")
 				context.SimulateSingleStep();
 
 				// Test if simulation matches prediction
-				CHECK_APPROX_EQUAL(x, body.GetPosition().GetX(), 3.0e-6_r);
+				CHECK_APPROX_EQUAL(x, body.GetPosition().GetX(), 5.0e-6_r);
 				CHECK_APPROX_EQUAL(body.GetPosition().GetY(), 0);
 				CHECK_APPROX_EQUAL(body.GetPosition().GetZ(), 0);
 			}

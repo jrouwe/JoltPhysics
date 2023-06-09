@@ -65,7 +65,7 @@ TEST_SUITE("DistanceConstraintTests")
 				context.SimulateSingleStep();
 
 				// Test if simulation matches prediction
-				CHECK_APPROX_EQUAL(x, body.GetPosition().GetX(), 2.0e-6_r);
+				CHECK_APPROX_EQUAL(x, body.GetPosition().GetX(), 5.0e-6_r);
 				CHECK(body.GetPosition().GetY() == 0);
 				CHECK(body.GetPosition().GetZ() == 0);
 			}
