@@ -240,9 +240,8 @@ void MotorcycleTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
 	VehicleTest::CreateSettingsMenu(inUI, inSubMenu);
 
-	MotorcycleController *controller = static_cast<MotorcycleController *>(mVehicleConstraint->GetController());
-	inUI->CreateCheckBox(inSubMenu, "Override Front Suspension Force Point", sOverrideFrontSuspensionForcePoint, [controller](UICheckBox::EState inState) { sOverrideFrontSuspensionForcePoint = inState == UICheckBox::STATE_CHECKED; });
-	inUI->CreateCheckBox(inSubMenu, "Override Rear Suspension Force Point", sOverrideRearSuspensionForcePoint, [controller](UICheckBox::EState inState) { sOverrideRearSuspensionForcePoint = inState == UICheckBox::STATE_CHECKED; });
-	inUI->CreateCheckBox(inSubMenu, "Enable Lean Controller", sEnableLeanController, [controller](UICheckBox::EState inState) { sEnableLeanController = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Override Front Suspension Force Point", sOverrideFrontSuspensionForcePoint, [](UICheckBox::EState inState) { sOverrideFrontSuspensionForcePoint = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Override Rear Suspension Force Point", sOverrideRearSuspensionForcePoint, [](UICheckBox::EState inState) { sOverrideRearSuspensionForcePoint = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Enable Lean Controller", sEnableLeanController, [](UICheckBox::EState inState) { sEnableLeanController = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateTextButton(inSubMenu, "Accept", [this]() { RestartTest(); });
 }
