@@ -81,13 +81,13 @@ void PoweredSwingTwistConstraintTest::PrePhysicsUpdate(const PreUpdateParams &in
 
 	MotorSettings &swing = mConstraint->GetSwingMotorSettings();
 	swing.SetTorqueLimit(mInertiaBody2AsSeenFromConstraint * sMaxAngularAcceleration);
-	swing.mFrequency = sFrequency;
-	swing.mDamping = sDamping;
+	swing.mSpringSettings.mFrequency = sFrequency;
+	swing.mSpringSettings.mDamping = sDamping;
 
 	MotorSettings &twist = mConstraint->GetTwistMotorSettings();
 	twist.SetTorqueLimit(mInertiaBody2AsSeenFromConstraint * sMaxAngularAcceleration);
-	twist.mFrequency = sFrequency;
-	twist.mDamping = sDamping;
+	twist.mSpringSettings.mFrequency = sFrequency;
+	twist.mSpringSettings.mDamping = sDamping;
 }
 
 void PoweredSwingTwistConstraintTest::GetInitialCamera(CameraState &ioState) const 

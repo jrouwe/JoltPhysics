@@ -158,7 +158,7 @@ private:
 	void						CalculateWheelContactPoint(const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const;
 
 	// Calculate the constraint properties for mPitchRollPart
-	void						CalculatePitchRollConstraintProperties(float inDeltaTime, RMat44Arg inBodyTransform);
+	void						CalculatePitchRollConstraintProperties(RMat44Arg inBodyTransform);
 
 	// Simluation information
 	Body *						mBody;										///< Body of the vehicle

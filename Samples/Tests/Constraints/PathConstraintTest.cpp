@@ -101,8 +101,8 @@ void PathConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	{
 		MotorSettings &motor_settings = c->GetPositionMotorSettings();
 		motor_settings.SetForceLimit(sMaxMotorAcceleration / c->GetBody2()->GetMotionProperties()->GetInverseMass()); // F = m * a
-		motor_settings.mFrequency = sFrequency;
-		motor_settings.mDamping = sDamping;
+		motor_settings.mSpringSettings.mFrequency = sFrequency;
+		motor_settings.mSpringSettings.mDamping = sDamping;
 		c->SetMaxFrictionForce(sMaxFrictionAcceleration / c->GetBody2()->GetMotionProperties()->GetInverseMass());
 	}
 }
