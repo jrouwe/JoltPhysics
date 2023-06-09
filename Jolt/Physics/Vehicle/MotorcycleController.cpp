@@ -23,6 +23,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MotorcycleControllerSettings)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringConstant)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringDamping)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringIntegrationCoefficient)
+	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringIntegrationCoefficientDecay)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSmoothingFactor)
 }
 
@@ -39,6 +40,7 @@ void MotorcycleControllerSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mLeanSpringConstant);
 	inStream.Write(mLeanSpringDamping);
 	inStream.Write(mLeanSpringIntegrationCoefficient);
+	inStream.Write(mLeanSpringIntegrationCoefficientDecay);
 	inStream.Write(mLeanSmoothingFactor);
 }
 
@@ -50,6 +52,7 @@ void MotorcycleControllerSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mLeanSpringConstant);
 	inStream.Read(mLeanSpringDamping);
 	inStream.Read(mLeanSpringIntegrationCoefficient);
+	inStream.Read(mLeanSpringIntegrationCoefficientDecay);
 	inStream.Read(mLeanSmoothingFactor);
 }
 
@@ -59,6 +62,7 @@ MotorcycleController::MotorcycleController(const MotorcycleControllerSettings &i
 	mLeanSpringConstant(inSettings.mLeanSpringConstant),
 	mLeanSpringDamping(inSettings.mLeanSpringDamping),
 	mLeanSpringIntegrationCoefficient(inSettings.mLeanSpringIntegrationCoefficient),
+	mLeanSpringIntegrationCoefficientDecay(inSettings.mLeanSpringIntegrationCoefficientDecay),
 	mLeanSmoothingFactor(inSettings.mLeanSmoothingFactor)
 {
 }
@@ -237,8 +241,9 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 		}
 		else
 		{
-			// Reset the integrated angle because we won't be applying a torque this frame
-			mLeanSpringIntegratedDeltaAngle = 0.0f;
+			// Decay the integrated angle because we won't be applying a torque this frame
+			// Uses 1st order Taylor approximation of e^(-decay * dt) = 1 - decay * dt
+			mLeanSpringIntegratedDeltaAngle *= max(0.0f, 1.0f - mLeanSpringIntegrationCoefficientDecay * inDeltaTime);
 		}
 	}
 

@@ -30,7 +30,10 @@ public:
 	float						mLeanSpringDamping = 1000.0f;
 
 	/// The lean spring applies an additional force equal to this coefficient * Integral(delta angle, 0, t), this effectively makes the lean spring a PID controller
-	float						mLeanSpringIntegrationCoefficient = 10.0f;
+	float						mLeanSpringIntegrationCoefficient = 0.0f;
+
+	/// How much to decay the angle integral when the wheels are not touching the floor: new_value = e^(-decay * t) * initial_value
+	float						mLeanSpringIntegrationCoefficientDecay = 4.0f;
 
 	/// How much to smooth the lean angle (0 = no smoothing, 1 = lean angle never changes)
 	/// Note that this is frame rate dependent because the formula is: smoothing_factor * previous + (1 - smoothing_factor) * current
@@ -71,6 +74,7 @@ protected:
 	float						mLeanSpringConstant;
 	float						mLeanSpringDamping;
 	float						mLeanSpringIntegrationCoefficient;
+	float						mLeanSpringIntegrationCoefficientDecay;
 	float						mLeanSmoothingFactor;
 
 	// Run-time calculated target lean vector
