@@ -166,21 +166,24 @@ bool DistanceConstraint::SolveVelocityConstraint(float inDeltaTime)
 
 bool DistanceConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
 {
-	float distance = Vec3(mWorldSpacePosition2 - mWorldSpacePosition1).Dot(mWorldSpaceNormal);
-
-	// Calculate position error
-	float position_error = 0.0f;
-	if (distance < mMinDistance)
-		position_error = distance - mMinDistance;
-	else if (distance > mMaxDistance)
-		position_error = distance - mMaxDistance;
-
-	if (position_error != 0.0f)
+	if (mLimitsSpringSettings.mFrequency <= 0.0f) // When the spring is active, we don't need to solve the position constraint
 	{
-		// Update constraint properties (bodies may have moved)
-		CalculateConstraintProperties(inDeltaTime);
+		float distance = Vec3(mWorldSpacePosition2 - mWorldSpacePosition1).Dot(mWorldSpaceNormal);
 
-		return mAxisConstraint.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal, position_error, inBaumgarte);
+		// Calculate position error
+		float position_error = 0.0f;
+		if (distance < mMinDistance)
+			position_error = distance - mMinDistance;
+		else if (distance > mMaxDistance)
+			position_error = distance - mMaxDistance;
+
+		if (position_error != 0.0f)
+		{
+			// Update constraint properties (bodies may have moved)
+			CalculateConstraintProperties(inDeltaTime);
+
+			return mAxisConstraint.SolvePositionConstraint(*mBody1, *mBody2, mWorldSpaceNormal, position_error, inBaumgarte);
+		}
 	}
 
 	return false;
