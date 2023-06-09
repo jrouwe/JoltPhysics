@@ -66,7 +66,7 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, GroupFilterTable)
 
 JPH_NAMESPACE_BEGIN
 
-void RegisterTypes(uint64 inVersionID)
+void RegisterTypesInternal(uint64 inVersionID)
 {
 	// Version check
 	if (inVersionID != JPH_VERSION_ID)
