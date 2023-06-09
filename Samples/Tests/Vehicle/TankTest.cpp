@@ -101,7 +101,7 @@ void TankTest::Initialize()
 			w->mWidth = wheel_width;
 			w->mSuspensionMinLength = suspension_min_length;
 			w->mSuspensionMaxLength = wheel == 0 || wheel == size(wheel_pos) - 1? suspension_min_length : suspension_max_length;
-			w->mSuspensionFrequency = suspension_frequency;
+			w->mSuspensionSpring.mFrequency = suspension_frequency;
 
 			// Add the wheel to the vehicle
 			track.mWheels.push_back((uint)vehicle.mWheels.size());
