@@ -25,7 +25,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettings)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mSuspensionDamping)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mRadius)
 	JPH_ADD_ATTRIBUTE(WheelSettings, mWidth)
-	JPH_ADD_ATTRIBUTE(WheelSettings, mEnableSuspensionForcePoint);
+	JPH_ADD_ATTRIBUTE(WheelSettings, mEnableSuspensionForcePoint)
 }
 
 void WheelSettings::SaveBinaryState(StreamOut &inStream) const
