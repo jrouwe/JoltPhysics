@@ -154,8 +154,8 @@ private:
 	// See: PhysicsStepListener
 	virtual void				OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 
-	// Calculate the contact positions of the wheel in world space, relative to the center of mass of both bodies
-	void						CalculateWheelContactPoint(const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const;
+	// Calculate the position where the suspension and traction forces should be applied in world space, relative to the center of mass of both bodies
+	void						CalculateSuspensionForcePoint(const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const;
 
 	// Calculate the constraint properties for mPitchRollPart
 	void						CalculatePitchRollConstraintProperties(RMat44Arg inBodyTransform);

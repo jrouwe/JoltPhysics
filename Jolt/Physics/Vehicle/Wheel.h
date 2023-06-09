@@ -27,6 +27,7 @@ public:
 	virtual void			RestoreBinaryState(StreamIn &inStream);
 
 	Vec3					mPosition { 0, 0, 0 };						///< Attachment point of wheel suspension in local space of the body
+	Vec3					mSuspensionForcePoint { 0, 0, 0 };			///< Where tire forces (suspension and traction) are applied, in local space of the body. A good default is the center of the wheel in its neutral pose. See mEnableSuspensionForcePoint.
 	Vec3					mSuspensionDirection { 0, -1, 0 };			///< Direction of the suspension in local space of the body, should point down
 	Vec3					mSteeringAxis { 0, 1, 0 };					///< Direction of the steering axis in local space of the body, should point up (e.g. for a bike would be -mSuspensionDirection)
 	Vec3					mWheelUp { 0, 1, 0 };						///< Up direction when the wheel is in the neutral steering position (usually VehicleConstraintSettings::mUp but can be used to give the wheel camber or for a bike would be -mSuspensionDirection)
@@ -38,6 +39,7 @@ public:
 	float					mSuspensionDamping = 0.5f;					///< Damping factor of the suspension spring (0 = no damping, 1 = critical damping)
 	float					mRadius = 0.3f;								///< Radius of the wheel (m)
 	float					mWidth = 0.1f;								///< Width of the wheel (m)
+	bool					mEnableSuspensionForcePoint = false;		///< Enables mSuspensionForcePoint, if disabled, the forces are applied at the collision contect point. This leads to a more accurate simulation when interacting with dynamic objects but makes the vehicle less stable. When settings this to true, all forces will be applied to a fixed point on the vehicle body.
 };
 
 /// Base class for runtime data for a wheel, each VehicleController can implement a derived class of this

@@ -29,6 +29,10 @@ public:
 	virtual void				CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
+	static inline bool			sOverrideFrontSuspensionForcePoint = false;	///< If true, the front suspension force point is overridden
+	static inline bool			sOverrideRearSuspensionForcePoint = false;	///< If true, the rear suspension force point is overridden
+	static inline bool			sEnableLeanController = true;				///< If true, the lean controller is enabled
+
 	Body *						mMotorcycleBody;							///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint
 	float						mPreviousForward = 1.0f;					///< Keeps track of last motorcycle direction so we know when to brake and when to accelerate
