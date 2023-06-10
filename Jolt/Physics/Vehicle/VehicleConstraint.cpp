@@ -357,7 +357,6 @@ void VehicleConstraint::CalculatePitchRollConstraintProperties(RMat44Arg inBodyT
 void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	RMat44 body_transform = mBody->GetWorldTransform();
-	Vec3 neg_vehicle_up = -body_transform.Multiply3x3(mUp);
 
 	for (Wheel *w : mWheels)
 		if (w->mContactBody != nullptr)
@@ -375,10 +374,12 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 				float stiffness, damping;
 				if (settings->mSuspensionSpring.mMode == ESpringMode::FrequencyAndDamping)
 				{
-					// Calculate effective mass based on vehicle body alone (the stiffness of the spring should not be affected by the body we drive over): K = 1 / (J M^-1 J^T)
-					Vec3 r1_plus_u_x_axis = r1_plus_u.Cross(neg_vehicle_up);
+					// Calculate effective mass based on vehicle configuration (the stiffness of the spring should not be affected by the dynamics of the vehicle): K = 1 / (J M^-1 J^T)
+					// Note that if no suspension force point is supplied we don't know where the force is applied so we assume it is applied at average suspension length
+					Vec3 force_point = settings->mEnableSuspensionForcePoint? settings->mSuspensionForcePoint : settings->mPosition + 0.5f * (settings->mSuspensionMinLength + settings->mSuspensionMaxLength) * settings->mSuspensionDirection;
+					Vec3 force_point_x_neg_up = force_point.Cross(-mUp);
 					const MotionProperties *mp = mBody->GetMotionProperties();
-					float effective_mass = 1.0f / (mp->GetInverseMass() + r1_plus_u_x_axis.Dot(mp->GetInverseInertiaForRotation(body_transform.GetRotation()).Multiply3x3(r1_plus_u_x_axis)));
+					float effective_mass = 1.0f / (mp->GetInverseMass() + force_point_x_neg_up.Dot(mp->GetLocalSpaceInverseInertia().Multiply3x3(force_point_x_neg_up)));
 
 					// Convert frequency and damping to stiffness and damping
 					float omega = 2.0f * JPH_PI * settings->mSuspensionSpring.mFrequency;
