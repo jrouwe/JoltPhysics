@@ -355,7 +355,9 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid size of pointer" );
 
 // Define inline macro
-#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
+#if defined(JPH_NO_FORCE_INLINE)
+	#define JPH_INLINE inline
+#elif defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
 	#define JPH_INLINE __inline__ __attribute__((always_inline))
 #elif defined(JPH_COMPILER_MSVC)
 	#define JPH_INLINE __forceinline
