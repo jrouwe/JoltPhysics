@@ -357,6 +357,7 @@ void VehicleConstraint::CalculatePitchRollConstraintProperties(RMat44Arg inBodyT
 void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	RMat44 body_transform = mBody->GetWorldTransform();
+	Vec3 neg_vehicle_up = -body_transform.Multiply3x3(mUp);
 
 	for (Wheel *w : mWheels)
 		if (w->mContactBody != nullptr)
@@ -375,7 +376,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 				if (settings->mSuspensionSpring.mMode == ESpringMode::FrequencyAndDamping)
 				{
 					// Calculate effective mass based on vehicle body alone (the stiffness of the spring should not be affected by the body we drive over): K = 1 / (J M^-1 J^T)
-					Vec3 r1_plus_u_x_axis = r1_plus_u.Cross(neg_contact_normal);
+					Vec3 r1_plus_u_x_axis = r1_plus_u.Cross(neg_vehicle_up);
 					const MotionProperties *mp = mBody->GetMotionProperties();
 					float effective_mass = 1.0f / (mp->GetInverseMass() + r1_plus_u_x_axis.Dot(mp->GetInverseInertiaForRotation(body_transform).Multiply3x3(r1_plus_u_x_axis)));
 
