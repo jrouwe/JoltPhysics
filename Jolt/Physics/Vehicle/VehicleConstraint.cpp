@@ -378,7 +378,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 					// Calculate effective mass based on vehicle body alone (the stiffness of the spring should not be affected by the body we drive over): K = 1 / (J M^-1 J^T)
 					Vec3 r1_plus_u_x_axis = r1_plus_u.Cross(neg_vehicle_up);
 					const MotionProperties *mp = mBody->GetMotionProperties();
-					float effective_mass = 1.0f / (mp->GetInverseMass() + r1_plus_u_x_axis.Dot(mp->GetInverseInertiaForRotation(body_transform).Multiply3x3(r1_plus_u_x_axis)));
+					float effective_mass = 1.0f / (mp->GetInverseMass() + r1_plus_u_x_axis.Dot(mp->GetInverseInertiaForRotation(body_transform.GetRotation()).Multiply3x3(r1_plus_u_x_axis)));
 
 					// Convert frequency and damping to stiffness and damping
 					float omega = 2.0f * JPH_PI * settings->mSuspensionSpring.mFrequency;
