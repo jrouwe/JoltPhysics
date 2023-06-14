@@ -87,24 +87,37 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 			mBias = 0.0f;
 		}
 
-		inline void		Solve(Vec3Arg inWorldSpaceNormal, float inInvM1, float inInvM2, float inMinLambda, float inMaxLambda, float &ioTotalLambda, CollisionEstimationResult &ioResult) const
+		inline float	SolveGetLambda(Vec3Arg inWorldSpaceNormal, const CollisionEstimationResult &inResult) const
 		{
 			// Calculate jacobian multiplied by linear/angular velocity
-			float jv = inWorldSpaceNormal.Dot(ioResult.mLinearVelocity1 - ioResult.mLinearVelocity2) + mR1PlusUxAxis.Dot(ioResult.mAngularVelocity1) - mR2xAxis.Dot(ioResult.mAngularVelocity2);
+			float jv = inWorldSpaceNormal.Dot(inResult.mLinearVelocity1 - inResult.mLinearVelocity2) + mR1PlusUxAxis.Dot(inResult.mAngularVelocity1) - mR2xAxis.Dot(inResult.mAngularVelocity2);
 
 			// Lagrange multiplier is:
 			//
 			// lambda = -K^-1 (J v + b)
-			float lambda = mEffectiveMass * (jv - mBias);
-			float new_lambda = Clamp(ioTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
-			lambda = new_lambda - ioTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
-			ioTotalLambda = new_lambda; // Store accumulated impulse
+			return mEffectiveMass * (jv - mBias);
+		}
 
+		inline void		SolveApplyLambda(Vec3Arg inWorldSpaceNormal, float inInvM1, float inInvM2, float inLambda, CollisionEstimationResult &ioResult) const
+		{
 			// Apply impulse to body velocities
-			ioResult.mLinearVelocity1 -= (lambda * inInvM1) * inWorldSpaceNormal;
-			ioResult.mAngularVelocity1 -= lambda * mInvI1_R1PlusUxAxis;
-			ioResult.mLinearVelocity2 += (lambda * inInvM2) * inWorldSpaceNormal;
-			ioResult.mAngularVelocity2 += lambda * mInvI2_R2xAxis;
+			ioResult.mLinearVelocity1 -= (inLambda * inInvM1) * inWorldSpaceNormal;
+			ioResult.mAngularVelocity1 -= inLambda * mInvI1_R1PlusUxAxis;
+			ioResult.mLinearVelocity2 += (inLambda * inInvM2) * inWorldSpaceNormal;
+			ioResult.mAngularVelocity2 += inLambda * mInvI2_R2xAxis;
+		}
+
+		inline void		Solve(Vec3Arg inWorldSpaceNormal, float inInvM1, float inInvM2, float inMinLambda, float inMaxLambda, float &ioTotalLambda, CollisionEstimationResult &ioResult) const
+		{
+			// Calculate new total lambda
+			float total_lambda = ioTotalLambda + SolveGetLambda(inWorldSpaceNormal, ioResult);
+
+			// Clamp impulse
+			total_lambda = Clamp(total_lambda, inMinLambda, inMaxLambda);
+
+			SolveApplyLambda(inWorldSpaceNormal, inInvM1, inInvM2, total_lambda - ioTotalLambda, ioResult);
+
+			ioTotalLambda = total_lambda;
 		}
 
 		Vec3			mR1PlusUxAxis;
@@ -169,9 +182,26 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 				const Constraint &constraint = constraints[c];
 				CollisionEstimationResult::Impulse &impulse = outResult.mImpulses[c];
 
+				float lambda1 = impulse.mFrictionImpulse1 + constraint.mFriction1.SolveGetLambda(outResult.mTangent1, outResult);
+				float lambda2 = impulse.mFrictionImpulse2 + constraint.mFriction2.SolveGetLambda(outResult.mTangent2, outResult);
+
+				// Caclulate max impulse based on contact impulse
 				float max_impulse = inCombinedFriction * impulse.mContactImpulse;
-				constraint.mFriction1.Solve(outResult.mTangent1, inv_m1, inv_m2, -max_impulse, max_impulse, impulse.mFrictionImpulse1, outResult);
-				constraint.mFriction2.Solve(outResult.mTangent2, inv_m1, inv_m2, -max_impulse, max_impulse, impulse.mFrictionImpulse2, outResult);
+
+				// If the total lambda that we will apply is too large, scale it back
+				float total_lambda_sq = Square(lambda1) + Square(lambda2);
+				if (total_lambda_sq > Square(max_impulse))
+				{
+					float scale = max_impulse / sqrt(total_lambda_sq);
+					lambda1 *= scale;
+					lambda2 *= scale;
+				}
+
+				constraint.mFriction1.SolveApplyLambda(outResult.mTangent1, inv_m1, inv_m2, lambda1 - impulse.mFrictionImpulse1, outResult);
+				constraint.mFriction2.SolveApplyLambda(outResult.mTangent2, inv_m1, inv_m2, lambda2 - impulse.mFrictionImpulse2, outResult);
+
+				impulse.mFrictionImpulse1 = lambda1;
+				impulse.mFrictionImpulse2 = lambda2;
 			}
 
 		// Solve contact constraints last

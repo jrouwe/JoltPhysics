@@ -292,9 +292,9 @@ public:
 		}
 	}
 
-	/// Templated form of SolveVelocityConstraint with the motion types baked in
+	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 1: get the total lambda
 	template <EMotionType Type1, EMotionType Type2>
-	inline bool					TemplatedSolveVelocityConstraint(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	JPH_INLINE float			TemplatedSolveVelocityConstraintGetTotalLambda(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis)
 	{
 		// Calculate jacobian multiplied by linear velocity
 		float jv;
@@ -317,11 +317,31 @@ public:
 		//
 		// lambda = -K^-1 (J v + b)
 		float lambda = mEffectiveMass * (jv - mSpringPart.GetBias(mTotalLambda));
-		float new_lambda = Clamp(mTotalLambda + lambda, inMinLambda, inMaxLambda); // Clamp impulse
-		lambda = new_lambda - mTotalLambda; // Lambda potentially got clamped, calculate the new impulse to apply
-		mTotalLambda = new_lambda; // Store accumulated impulse
 
-		return ApplyVelocityStep<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inWorldSpaceAxis, lambda);
+		// Return the total accumulated lambda
+		return mTotalLambda + lambda;
+	}
+
+	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 2: apply new lambda
+	template <EMotionType Type1, EMotionType Type2>
+	JPH_INLINE bool				TemplatedSolveVelocityConstraintApplyLambda(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inTotalLambda)
+	{
+		float delta_lambda = inTotalLambda - mTotalLambda; // Calculate change in lambda
+		mTotalLambda = inTotalLambda; // Store accumulated impulse
+
+		return ApplyVelocityStep<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inWorldSpaceAxis, delta_lambda);
+	}
+
+	/// Templated form of SolveVelocityConstraint with the motion types baked in
+	template <EMotionType Type1, EMotionType Type2>
+	inline bool					TemplatedSolveVelocityConstraint(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis, float inMinLambda, float inMaxLambda)
+	{
+		float total_lambda = TemplatedSolveVelocityConstraintGetTotalLambda<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inWorldSpaceAxis);
+
+		// Clamp impulse to specified range
+		total_lambda = Clamp(total_lambda, inMinLambda, inMaxLambda);
+
+		return TemplatedSolveVelocityConstraintApplyLambda<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, inWorldSpaceAxis, total_lambda);
 	}
 
 	/// Iteratively update the velocity constraint. Makes sure d/dt C(...) = 0, where C is the constraint equation.
