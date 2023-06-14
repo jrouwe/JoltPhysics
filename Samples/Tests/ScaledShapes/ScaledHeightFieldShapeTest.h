@@ -9,7 +9,7 @@
 class ScaledHeightFieldShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ScaledHeightFieldShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ScaledHeightFieldShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

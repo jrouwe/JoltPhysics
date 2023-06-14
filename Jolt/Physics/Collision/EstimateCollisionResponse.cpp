@@ -157,7 +157,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 	}
 
 	// If there's only 1 contact point, we only need 1 iteration
-	int num_iterations = inCombinedFriction == 0.0f && num_points == 1? 1 : inNumIterations;
+	int num_iterations = inCombinedFriction <= 0.0f && num_points == 1? 1 : inNumIterations;
 
 	// Solve iteratively
 	for (int iteration = 0; iteration < num_iterations; ++iteration)

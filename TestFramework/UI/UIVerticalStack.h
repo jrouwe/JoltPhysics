@@ -10,7 +10,7 @@
 class UIVerticalStack : public UIElement
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UIVerticalStack)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UIVerticalStack)
 
 	/// Calculate auto layout
 	virtual void		AutoLayout() override;

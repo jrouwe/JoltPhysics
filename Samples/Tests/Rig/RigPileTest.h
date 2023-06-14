@@ -11,7 +11,7 @@
 class RigPileTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(RigPileTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, RigPileTest)
 
 	// Destructor
 	virtual					~RigPileTest() override;
@@ -31,6 +31,12 @@ private:
 
 	// Filename of animation to load for this test
 	static const char *		sSceneName;
+
+	// Number of ragdolls per pile
+	static int				sPileSize;
+
+	// Number of piles per axis
+	static int				sNumPilesPerAxis;
 
 	// All active ragdolls
 	Array<Ref<Ragdoll>>		mRagdolls;

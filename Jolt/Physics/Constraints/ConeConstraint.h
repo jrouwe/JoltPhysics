@@ -11,10 +11,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Cone constraint settings, used to create a cone constraint
-class ConeConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT ConeConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(ConeConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, ConeConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -66,7 +66,7 @@ protected:
 /// Where J is the Jacobian.
 ///
 /// Note that this is the exact same equation as used in AngleConstraintPart if we use t2 x t1 as the world space axis
-class ConeConstraint final : public TwoBodyConstraint
+class JPH_EXPORT ConeConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -76,6 +76,7 @@ public:
 
 	// Generic interface of a constraint
 	virtual EConstraintSubType	GetSubType() const override					{ return EConstraintSubType::Cone; }
+	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override;
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
@@ -102,7 +103,7 @@ public:
 
 private:
 	// Internal helper function to calculate the values below
-	void						CalculateRotationConstraintProperties(float inDeltaTime, Mat44Arg inRotation1, Mat44Arg inRotation2);
+	void						CalculateRotationConstraintProperties(Mat44Arg inRotation1, Mat44Arg inRotation2);
 
 	// CONFIGURATION PROPERTIES FOLLOW
 

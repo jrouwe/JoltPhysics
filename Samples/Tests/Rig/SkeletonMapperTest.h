@@ -16,7 +16,7 @@
 class SkeletonMapperTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SkeletonMapperTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SkeletonMapperTest)
 
 	// Destructor
 	virtual					~SkeletonMapperTest() override;

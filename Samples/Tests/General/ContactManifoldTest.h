@@ -10,7 +10,7 @@
 class ContactManifoldTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ContactManifoldTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ContactManifoldTest)
 
 	// See: Test
 	virtual void		Initialize() override;

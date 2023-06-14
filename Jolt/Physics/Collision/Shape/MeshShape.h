@@ -19,10 +19,10 @@ class ConvexShape;
 class CollideShapeSettings;
 
 /// Class that constructs a MeshShape
-class MeshShapeSettings final : public ShapeSettings
+class JPH_EXPORT MeshShapeSettings final : public ShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, MeshShapeSettings)
 
 	/// Default constructor for deserialization
 									MeshShapeSettings() = default;
@@ -49,8 +49,10 @@ public:
 	uint							mMaxTrianglesPerLeaf = 8;
 };
 
-/// A mesh shape, consisting of triangles. Cannot be used as a dynamic object.
-class MeshShape final : public Shape
+/// A mesh shape, consisting of triangles. Mesh shapes are mostly used for static geometry.
+/// They can be used by dynamic or kinematic objects but only if they don't collide with other mesh or heightfield shapes as those collisions are currently not supported.
+/// Note that if you make a mesh shape a dynamic or kinematic object, you need to provide a mass yourself as mesh shapes don't need to form a closed hull so don't have a well defined volume from which the mass can be calculated.
+class JPH_EXPORT MeshShape final : public Shape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

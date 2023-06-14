@@ -11,7 +11,7 @@
 class CharacterBaseTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CharacterBaseTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterBaseTest)
 
 	// Number used to scale the terrain and camera movement to the scene
 	virtual float			GetWorldScale() const override								{ return 0.2f; }
@@ -45,6 +45,9 @@ protected:
 
 	// Draw the character state
 	void					DrawCharacterState(const CharacterBase *inCharacter, RMat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity);
+
+	// Add character movement settings
+	virtual void			AddCharacterMovementSettings(DebugUI* inUI, UIElement* inSubMenu) { /* Nothing by default */ }
 
 	// Add test configuration settings
 	virtual void			AddConfigurationSettings(DebugUI *inUI, UIElement *inSubMenu) { /* Nothing by default */ }
@@ -97,6 +100,10 @@ private:
 
 	// Moving bodies
 	BodyID					mRotatingBody;
-	BodyID					mVerticallyMovingBody;
+	BodyID					mRotatingWallBody;
+	BodyID					mRotatingAndTranslatingBody;
+	BodyID					mSmoothVerticallyMovingBody;
+	BodyID					mReversingVerticallyMovingBody;
+	float					mReversingVerticallyMovingVelocity = 1.0f;
 	BodyID					mHorizontallyMovingBody;
 };

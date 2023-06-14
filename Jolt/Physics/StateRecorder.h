@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Class that records the state of a physics system. Can be used to check if the simulation is deterministic by putting the recorder in validation mode.
 /// Can be used to restore the state to an earlier point in time.
-class StateRecorder : public StreamIn, public StreamOut
+class JPH_EXPORT StateRecorder : public StreamIn, public StreamOut
 {
 public:
 	/// Constructor

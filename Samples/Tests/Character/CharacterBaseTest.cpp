@@ -30,6 +30,7 @@ const char *CharacterBaseTest::sScenes[] =
 	"PerlinMesh",
 	"PerlinHeightField",
 	"ObstacleCourse",
+	"InitiallyIntersecting",
 	"Terrain1",
 	"Terrain2",
 };
@@ -39,8 +40,14 @@ const char *CharacterBaseTest::sSceneName = "ObstacleCourse";
 // Scene constants
 static const RVec3 cRotatingPosition(-5, 0.15f, 15);
 static const Quat cRotatingOrientation = Quat::sIdentity();
-static const RVec3 cVerticallyMovingPosition(0, 2.0f, 15);
-static const Quat cVerticallyMovingOrientation = Quat::sIdentity();
+static const RVec3 cRotatingWallPosition(5, 1.0f, 25.0f);
+static const Quat cRotatingWallOrientation = Quat::sIdentity();
+static const RVec3 cRotatingAndTranslatingPosition(-10, 0.15f, 27.5f);
+static const Quat cRotatingAndTranslatingOrientation = Quat::sIdentity();
+static const RVec3 cSmoothVerticallyMovingPosition(0, 2.0f, 15);
+static const Quat cSmoothVerticallyMovingOrientation = Quat::sIdentity();
+static const RVec3 cReversingVerticallyMovingPosition(0, 0.15f, 25);
+static const Quat cReversingVerticallyMovingOrientation = Quat::sIdentity();
 static const RVec3 cHorizontallyMovingPosition(5, 1, 15);
 static const Quat cHorizontallyMovingOrientation = Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI);
 static const RVec3 cConveyorBeltPosition(-10, 0.15f, 15);
@@ -86,6 +93,21 @@ void CharacterBaseTest::Initialize()
 		// Default terrain
 		CreateHeightFieldTerrain();
 	}
+	else if (strcmp(sSceneName, "InitiallyIntersecting") == 0)
+	{
+		CreateFloor();
+
+		// Create a grid of boxes that are initially intersecting with the character
+		RefConst<Shape> box = new BoxShape(Vec3(0.1f, 0.1f, 0.1f));
+		BodyCreationSettings settings(box, RVec3(0, 0.5f, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+		for (int x = 0; x < 4; ++x)
+			for (int y = 0; y <= 10; ++y)
+				for (int z = 0; z <= 10; ++z)
+				{
+					settings.mPosition = RVec3(-0.5f + 0.1f * x, 0.1f + 0.1f * y, -0.5f + 0.1f * z);
+					mBodyInterface->CreateAndAddBody(settings, EActivation::DontActivate);
+				}
+	}
 	else if (strcmp(sSceneName, "ObstacleCourse") == 0)
 	{
 		// Default terrain
@@ -110,7 +132,10 @@ void CharacterBaseTest::Initialize()
 			// Kinematic blocks to test interacting with moving objects
 			Ref<Shape> kinematic = new BoxShape(Vec3(1, 0.15f, 3.0f));
 			mRotatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingPosition, cRotatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
-			mVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cVerticallyMovingPosition, cVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+			mRotatingWallBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(3.0f, 1, 0.15f)), cRotatingWallPosition, cRotatingWallOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+			mRotatingAndTranslatingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cRotatingAndTranslatingPosition, cRotatingAndTranslatingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+			mSmoothVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cSmoothVerticallyMovingPosition, cSmoothVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
+			mReversingVerticallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cReversingVerticallyMovingPosition, cReversingVerticallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 			mHorizontallyMovingBody = mBodyInterface->CreateAndAddBody(BodyCreationSettings(kinematic, cHorizontallyMovingPosition, cHorizontallyMovingOrientation, EMotionType::Kinematic, Layers::MOVING), EActivation::Activate);
 		}
 
@@ -525,15 +550,26 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			jump = true;
 	}
 
-	HandleInput(control_input, jump, switch_stance, inParams.mDeltaTime);
-
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
 		mBodyInterface->MoveKinematic(mRotatingBody, cRotatingPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
+	if (!mRotatingWallBody.IsInvalid())
+		mBodyInterface->MoveKinematic(mRotatingWallBody, cRotatingWallPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
+	if (!mRotatingAndTranslatingBody.IsInvalid())
+		mBodyInterface->MoveKinematic(mRotatingAndTranslatingBody, cRotatingAndTranslatingPosition + 5.0f * Vec3(Sin(JPH_PI * mTime), 0, Cos(JPH_PI * mTime)), Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
 	if (!mHorizontallyMovingBody.IsInvalid())
 		mBodyInterface->MoveKinematic(mHorizontallyMovingBody, cHorizontallyMovingPosition + Vec3(3.0f * Sin(mTime), 0, 0), cHorizontallyMovingOrientation, inParams.mDeltaTime);
-	if (!mVerticallyMovingBody.IsInvalid())
-		mBodyInterface->MoveKinematic(mVerticallyMovingBody, cVerticallyMovingPosition + Vec3(0, 1.75f * Sin(mTime), 0), cVerticallyMovingOrientation, inParams.mDeltaTime);
+	if (!mSmoothVerticallyMovingBody.IsInvalid())
+		mBodyInterface->MoveKinematic(mSmoothVerticallyMovingBody, cSmoothVerticallyMovingPosition + Vec3(0, 1.75f * Sin(mTime), 0), cSmoothVerticallyMovingOrientation, inParams.mDeltaTime);
+	if (!mReversingVerticallyMovingBody.IsInvalid())
+	{
+		RVec3 pos = mBodyInterface->GetPosition(mReversingVerticallyMovingBody);
+		if (pos.GetY() < cReversingVerticallyMovingPosition.GetY())
+			mReversingVerticallyMovingVelocity = 1.0f;
+		else if (pos.GetY() > cReversingVerticallyMovingPosition.GetY() + 5.0f)
+			mReversingVerticallyMovingVelocity = -1.0f;
+		mBodyInterface->MoveKinematic(mReversingVerticallyMovingBody, pos + Vec3(0, mReversingVerticallyMovingVelocity * 3.0f * inParams.mDeltaTime, 0), cReversingVerticallyMovingOrientation, inParams.mDeltaTime);
+	}
 
 	// Reset ramp blocks
 	mRampBlocksTimeLeft -= inParams.mDeltaTime;
@@ -546,6 +582,9 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		}
 		mRampBlocksTimeLeft = cRampBlocksTime;
 	}
+
+	// Call handle input after new velocities have been set to avoid frame delay
+	HandleInput(control_input, jump, switch_stance, inParams.mDeltaTime);
 }
 
 void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
@@ -563,6 +602,7 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 		inUI->CreateCheckBox(movement_settings, "Control Movement During Jump", sControlMovementDuringJump, [](UICheckBox::EState inState) { sControlMovementDuringJump = inState == UICheckBox::STATE_CHECKED; });
 		inUI->CreateSlider(movement_settings, "Character Speed", sCharacterSpeed, 0.1f, 10.0f, 0.1f, [](float inValue) { sCharacterSpeed = inValue; });
 		inUI->CreateSlider(movement_settings, "Character Jump Speed", sJumpSpeed, 0.1f, 10.0f, 0.1f, [](float inValue) { sJumpSpeed = inValue; });
+		AddCharacterMovementSettings(inUI, movement_settings);
 		inUI->ShowMenu(movement_settings);
 	});
 

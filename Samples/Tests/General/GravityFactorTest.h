@@ -10,7 +10,7 @@
 class GravityFactorTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(GravityFactorTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, GravityFactorTest)
 
 	// See: Test
 	virtual void		Initialize() override;

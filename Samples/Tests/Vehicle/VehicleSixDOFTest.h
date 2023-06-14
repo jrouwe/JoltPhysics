@@ -11,7 +11,7 @@
 class VehicleSixDOFTest : public VehicleTest
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(VehicleSixDOFTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, VehicleSixDOFTest)
 
 	// See: Test
 	virtual void			Initialize() override;

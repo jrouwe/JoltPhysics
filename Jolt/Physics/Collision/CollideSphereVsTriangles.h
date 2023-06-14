@@ -13,7 +13,7 @@ JPH_NAMESPACE_BEGIN
 class CollideShapeSettings;
 
 /// Collision detection helper that collides a sphere vs one or more triangles
-class CollideSphereVsTriangles
+class JPH_EXPORT CollideSphereVsTriangles
 {
 public:
 	/// Constructor

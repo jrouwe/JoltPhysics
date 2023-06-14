@@ -18,7 +18,7 @@ enum TestEnum
 
 class TestSerializableBase : public RefTarget<TestSerializableBase>
 {
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE(TestSerializableBase)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE(JPH_NO_EXPORT, TestSerializableBase)
 
 public:
 	virtual						~TestSerializableBase() = default;
@@ -44,7 +44,7 @@ public:
 
 class TestSerializableBase2
 {
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE(TestSerializableBase2)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL_BASE(JPH_NO_EXPORT, TestSerializableBase2)
 
 public:
 	virtual						~TestSerializableBase2() = default;
@@ -54,7 +54,7 @@ public:
 
 class TestSerializable : public TestSerializableBase, public TestSerializableBase2
 {
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(TestSerializable)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_NO_EXPORT, TestSerializable)
 
 public:
 	TestEnum					mEnum = A;

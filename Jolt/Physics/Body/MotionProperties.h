@@ -16,7 +16,7 @@ JPH_NAMESPACE_BEGIN
 class StateRecorder;
 
 /// The Body class only keeps track of state for static bodies, the MotionProperties class keeps the additional state needed for a moving Body. It has a 1-on-1 relationship with the body.
-class MotionProperties
+class JPH_EXPORT MotionProperties
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -117,6 +117,12 @@ public:
 	// Get the total amount of torque applied to the center of mass this time step (through Body::AddForce/Body::AddTorque calls). Note that it will reset to zero after PhysicsSimulation::Update.
 	JPH_INLINE Vec3			GetAccumulatedTorque() const									{ return Vec3::sLoadFloat3Unsafe(mTorque); }
 
+	// Reset the total accumulated force, not that this will be done automatically after every time step.
+	JPH_INLINE void			ResetForce()													{ mForce = Float3(0, 0, 0); }
+
+	// Reset the total accumulated torque, not that this will be done automatically after every time step.
+	JPH_INLINE void			ResetTorque()													{ mTorque = Float3(0, 0, 0); }
+
 	////////////////////////////////////////////////////////////
 	// FUNCTIONS BELOW THIS LINE ARE FOR INTERNAL USE ONLY
 	////////////////////////////////////////////////////////////
@@ -131,9 +137,6 @@ public:
 
 	/// Apply all accumulated forces, torques and drag (should only be called by the PhysicsSystem)
 	inline void				ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime);
-
-	/// At the end of a simulation update the forces and torques need to be reset for the next frame
-	inline void				ResetForceAndTorqueInternal()									{ mForce = Float3(0, 0, 0); mTorque = Float3(0, 0, 0); }
 
 	/// Access to the island index
 	uint32					GetIslandIndexInternal() const									{ return mIslandIndex; }

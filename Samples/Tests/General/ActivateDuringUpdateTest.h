@@ -12,7 +12,7 @@
 class ActivateDuringUpdateTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ActivateDuringUpdateTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ActivateDuringUpdateTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

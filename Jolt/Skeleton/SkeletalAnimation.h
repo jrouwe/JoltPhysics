@@ -12,16 +12,16 @@ JPH_NAMESPACE_BEGIN
 class SkeletonPose;
 
 /// Resource for a skinned animation
-class SkeletalAnimation : public RefTarget<SkeletalAnimation>
+class JPH_EXPORT SkeletalAnimation : public RefTarget<SkeletalAnimation>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(SkeletalAnimation)
+	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SkeletalAnimation)
 
 	/// Constains the current state of a joint, a local space transformation relative to its parent joint
 	class JointState
 	{
 	public:
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JointState)
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, JointState)
 
 		/// Convert from a local space matrix
 		void							FromMatrix(Mat44Arg inMatrix);
@@ -37,7 +37,7 @@ public:
 	class Keyframe : public JointState
 	{
 	public:
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(Keyframe)
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Keyframe)
 
 		float							mTime = 0.0f;										///< Time of keyframe in seconds
 	};
@@ -48,7 +48,7 @@ public:
 	class AnimatedJoint
 	{
 	public:
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(AnimatedJoint)
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, AnimatedJoint)
 
 		String							mJointName;											///< Name of the joint
 		KeyframeVector					mKeyframes;											///< List of keyframes over time

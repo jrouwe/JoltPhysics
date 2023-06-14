@@ -17,10 +17,10 @@ class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
 /// The path for a path constraint. It allows attaching two bodies to each other while giving the second body the freedom to move along a path relative to the first.
-class PathConstraintPath : public SerializableObject, public RefTarget<PathConstraintPath>
+class JPH_EXPORT PathConstraintPath : public SerializableObject, public RefTarget<PathConstraintPath>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_ABSTRACT(PathConstraintPath)
+	JPH_DECLARE_SERIALIZABLE_ABSTRACT(JPH_EXPORT, PathConstraintPath)
 
 	using PathResult = Result<Ref<PathConstraintPath>>;
 

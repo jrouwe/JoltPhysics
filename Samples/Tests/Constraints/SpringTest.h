@@ -9,7 +9,7 @@
 class SpringTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SpringTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SpringTest)
 
 	// See: Test
 	virtual void		Initialize() override;

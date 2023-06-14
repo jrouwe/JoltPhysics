@@ -9,7 +9,7 @@
 class PointConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(PointConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, PointConstraintTest)
 
 	// See: Test
 	virtual void		Initialize() override;

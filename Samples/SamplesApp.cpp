@@ -62,47 +62,52 @@ struct TestCategory
 	size_t				mNumTests;
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(SimpleTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(StackTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(WallTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(IslandTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(FunnelTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(FrictionTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(FrictionPerTriangleTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(GravityFactorTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(RestitutionTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(DampingTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(KinematicTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ContactManifoldTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ManifoldReductionTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(CenterOfMassTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(HeavyOnLightTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(HighSpeedTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ChangeMotionQualityTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ChangeMotionTypeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ChangeShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ChangeObjectLayerTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveSceneTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveBinaryTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(BigVsSmallTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ActiveEdgesTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(MultithreadedTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ContactListenerTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ActivateDuringUpdateTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SensorTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(DynamicMeshTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(TwoDFunnelTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SimpleTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, StackTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, WallTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PyramidTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, IslandTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FunnelTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FrictionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FrictionPerTriangleTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConveyorBeltTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, GravityFactorTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RestitutionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DampingTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, KinematicTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ContactManifoldTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ManifoldReductionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CenterOfMassTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HeavyOnLightTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HighSpeedTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeMotionQualityTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeMotionTypeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeObjectLayerTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveSceneTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveBinaryTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigVsSmallTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActiveEdgesTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MultithreadedTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ContactListenerTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActivateDuringUpdateTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SensorTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DynamicMeshTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TwoDFunnelTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ShapeFilterTest)
 
 static TestNameAndRTTI sGeneralTests[] =
 {
 	{ "Simple",								JPH_RTTI(SimpleTest) },
 	{ "Stack",								JPH_RTTI(StackTest) },
 	{ "Wall",								JPH_RTTI(WallTest) },
+	{ "Pyramid",							JPH_RTTI(PyramidTest) },
 	{ "Island",								JPH_RTTI(IslandTest) },
 	{ "Funnel",								JPH_RTTI(FunnelTest) },
 	{ "2D Funnel",							JPH_RTTI(TwoDFunnelTest) },
 	{ "Friction",							JPH_RTTI(FrictionTest) },
 	{ "Friction (Per Triangle)",			JPH_RTTI(FrictionPerTriangleTest) },
+	{ "Conveyor Belt",						JPH_RTTI(ConveyorBeltTest) },
 	{ "Gravity Factor",						JPH_RTTI(GravityFactorTest) },
 	{ "Restitution",						JPH_RTTI(RestitutionTest) },
 	{ "Damping",							JPH_RTTI(DampingTest) },
@@ -125,26 +130,28 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
+	{ "Shape Filter",						JPH_RTTI(ShapeFilterTest) },
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(DistanceConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(FixedConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ConeConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SwingTwistConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SixDOFConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(HingeConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(PoweredHingeConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(PointConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SliderConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(PoweredSliderConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SpringTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ConstraintSingularityTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(PoweredSwingTwistConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SwingTwistConstraintFrictionTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(PathConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(RackAndPinionConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(GearConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(PulleyConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DistanceConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, FixedConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConeConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SwingTwistConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SixDOFConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HingeConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredHingeConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PointConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SliderConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredSliderConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SpringTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConstraintSingularityTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredSwingTwistConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SwingTwistConstraintFrictionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PathConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RackAndPinionConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, GearConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PulleyConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConstraintVsCOMChangeTest)
 
 static TestNameAndRTTI sConstraintTests[] =
 {
@@ -166,21 +173,22 @@ static TestNameAndRTTI sConstraintTests[] =
 	{ "Pulley Constraint",					JPH_RTTI(PulleyConstraintTest) },
 	{ "Spring",								JPH_RTTI(SpringTest) },
 	{ "Constraint Singularity",				JPH_RTTI(ConstraintSingularityTest) },
+	{ "Constraint vs Center Of Mass Change",JPH_RTTI(ConstraintVsCOMChangeTest) },
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(BoxShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SphereShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(TaperedCapsuleShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(CapsuleShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(CylinderShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(StaticCompoundShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(MutableCompoundShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(TriangleShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ConvexHullShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(MeshShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(HeightFieldShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(RotatedTranslatedShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(OffsetCenterOfMassShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BoxShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SphereShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TaperedCapsuleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CapsuleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CylinderShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, StaticCompoundShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MutableCompoundShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TriangleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConvexHullShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MeshShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HeightFieldShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RotatedTranslatedShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, OffsetCenterOfMassShapeTest)
 
 static TestNameAndRTTI sShapeTests[] =
 {
@@ -199,18 +207,18 @@ static TestNameAndRTTI sShapeTests[] =
 	{ "Offset Center Of Mass Shape",		JPH_RTTI(OffsetCenterOfMassShapeTest) }
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledSphereShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledBoxShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledCapsuleShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledTaperedCapsuleShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledCylinderShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledConvexHullShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledMeshShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledHeightFieldShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledStaticCompoundShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledMutableCompoundShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledTriangleShapeTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ScaledOffsetCenterOfMassShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledSphereShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledBoxShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledCapsuleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledTaperedCapsuleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledCylinderShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledConvexHullShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledMeshShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledHeightFieldShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledStaticCompoundShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledMutableCompoundShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledTriangleShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledOffsetCenterOfMassShapeTest)
 
 static TestNameAndRTTI sScaledShapeTests[] =
 {
@@ -228,14 +236,14 @@ static TestNameAndRTTI sScaledShapeTests[] =
 	{ "Offset Center Of Mass Shape",		JPH_RTTI(ScaledOffsetCenterOfMassShapeTest) }
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(CreateRigTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(LoadRigTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(KinematicRigTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(PoweredRigTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(RigPileTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(LoadSaveBinaryRigTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(SkeletonMapperTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(BigWorldTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CreateRigTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadRigTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, KinematicRigTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredRigTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RigPileTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveBinaryRigTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SkeletonMapperTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigWorldTest)
 
 static TestNameAndRTTI sRigTests[] =
 {
@@ -249,9 +257,9 @@ static TestNameAndRTTI sRigTests[] =
 	{ "Big World",							JPH_RTTI(BigWorldTest) }
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(CharacterTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(CharacterVirtualTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(CharacterSpaceShipTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterVirtualTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterSpaceShipTest)
 
 static TestNameAndRTTI sCharacterTests[] =
 {
@@ -260,26 +268,28 @@ static TestNameAndRTTI sCharacterTests[] =
 	{ "Character Virtual vs Space Ship",	JPH_RTTI(CharacterSpaceShipTest) },
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(WaterShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, WaterShapeTest)
 
 static TestNameAndRTTI sWaterTests[] =
 {
 	{ "Shapes",								JPH_RTTI(WaterShapeTest) },
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(VehicleSixDOFTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(VehicleConstraintTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(TankTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, VehicleSixDOFTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, VehicleConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MotorcycleTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TankTest)
 
 static TestNameAndRTTI sVehicleTests[] =
 {
 	{ "Car (VehicleConstraint)",			JPH_RTTI(VehicleConstraintTest) },
+	{ "Motorcycle (VehicleConstraint)",		JPH_RTTI(MotorcycleTest) },
 	{ "Tank (VehicleConstraint)",			JPH_RTTI(TankTest) },
 	{ "Car (SixDOFConstraint)",				JPH_RTTI(VehicleSixDOFTest) },
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(BroadPhaseCastRayTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(BroadPhaseInsertionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseInsertionTest)
 
 static TestNameAndRTTI sBroadPhaseTests[] =
 {
@@ -287,13 +297,13 @@ static TestNameAndRTTI sBroadPhaseTests[] =
 	{ "Insertion",							JPH_RTTI(BroadPhaseInsertionTest) }
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(InteractivePairsTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(EPATest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ClosestPointTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ConvexHullTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(ConvexHullShrinkTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(RandomRayTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(CapsuleVsBoxTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, InteractivePairsTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, EPATest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ClosestPointTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConvexHullTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConvexHullShrinkTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RandomRayTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CapsuleVsBoxTest)
 
 static TestNameAndRTTI sConvexCollisionTests[] =
 {
@@ -306,7 +316,7 @@ static TestNameAndRTTI sConvexCollisionTests[] =
 	{ "Capsule Vs Box",						JPH_RTTI(CapsuleVsBoxTest) }
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(LoadSnapshotTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSnapshotTest)
 
 static TestNameAndRTTI sTools[] =
 {
@@ -334,7 +344,7 @@ static TestCategory sAllCategories[] =
 static constexpr uint cNumBodies = 10240;
 static constexpr uint cNumBodyMutexes = 0; // Autodetect
 static constexpr uint cMaxBodyPairs = 65536;
-static constexpr uint cMaxContactConstraints = 10240;
+static constexpr uint cMaxContactConstraints = 20480;
 
 SamplesApp::SamplesApp()
 {
@@ -342,7 +352,7 @@ SamplesApp::SamplesApp()
 #ifdef JPH_DISABLE_TEMP_ALLOCATOR
 	mTempAllocator = new TempAllocatorMalloc();
 #else
-	mTempAllocator = new TempAllocatorImpl(16 * 1024 * 1024);
+	mTempAllocator = new TempAllocatorImpl(32 * 1024 * 1024);
 #endif
 
 	// Create job system
@@ -393,15 +403,18 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateSlider(phys_settings, "Baumgarte Stabilization Factor", mPhysicsSettings.mBaumgarte, 0.01f, 1.0f, 0.05f, [this](float inValue) { mPhysicsSettings.mBaumgarte = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Speculative Contact Distance (m)", mPhysicsSettings.mSpeculativeContactDistance, 0.0f, 0.1f, 0.005f, [this](float inValue) { mPhysicsSettings.mSpeculativeContactDistance = inValue; });
 			mDebugUI->CreateSlider(phys_settings, "Penetration Slop (m)", mPhysicsSettings.mPenetrationSlop, 0.0f, 0.1f, 0.005f, [this](float inValue) { mPhysicsSettings.mPenetrationSlop = inValue; });
+			mDebugUI->CreateSlider(phys_settings, "Linear Cast Threshold", mPhysicsSettings.mLinearCastThreshold, 0.0f, 1.0f, 0.05f, [this](float inValue) { mPhysicsSettings.mLinearCastThreshold = inValue; });
 			mDebugUI->CreateSlider(phys_settings, "Min Velocity For Restitution (m/s)", mPhysicsSettings.mMinVelocityForRestitution, 0.0f, 10.0f, 0.1f, [this](float inValue) { mPhysicsSettings.mMinVelocityForRestitution = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Time Before Sleep (s)", mPhysicsSettings.mTimeBeforeSleep, 0.1f, 1.0f, 0.1f, [this](float inValue) { mPhysicsSettings.mTimeBeforeSleep = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Point Velocity Sleep Threshold (m/s)", mPhysicsSettings.mPointVelocitySleepThreshold, 0.01f, 1.0f, 0.01f, [this](float inValue) { mPhysicsSettings.mPointVelocitySleepThreshold = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 		#if defined(_DEBUG) && !defined(JPH_DISABLE_CUSTOM_ALLOCATOR) && !defined(JPH_COMPILER_MINGW)
 			mDebugUI->CreateCheckBox(phys_settings, "Enable Checking Memory Hook", IsCustomMemoryHookEnabled(), [](UICheckBox::EState inState) { EnableCustomMemoryHook(inState == UICheckBox::STATE_CHECKED); });
 		#endif
+			mDebugUI->CreateCheckBox(phys_settings, "Deterministic Simulation", mPhysicsSettings.mDeterministicSimulation, [this](UICheckBox::EState inState) { mPhysicsSettings.mDeterministicSimulation = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Constraint Warm Starting", mPhysicsSettings.mConstraintWarmStart, [this](UICheckBox::EState inState) { mPhysicsSettings.mConstraintWarmStart = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Use Body Pair Contact Cache", mPhysicsSettings.mUseBodyPairContactCache, [this](UICheckBox::EState inState) { mPhysicsSettings.mUseBodyPairContactCache = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Contact Manifold Reduction", mPhysicsSettings.mUseManifoldReduction, [this](UICheckBox::EState inState) { mPhysicsSettings.mUseManifoldReduction = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
+			mDebugUI->CreateCheckBox(phys_settings, "Use Large Island Splitter", mPhysicsSettings.mUseLargeIslandSplitter, [this](UICheckBox::EState inState) { mPhysicsSettings.mUseLargeIslandSplitter = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Allow Sleeping", mPhysicsSettings.mAllowSleeping, [this](UICheckBox::EState inState) { mPhysicsSettings.mAllowSleeping = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Check Active Triangle Edges", mPhysicsSettings.mCheckActiveEdges, [this](UICheckBox::EState inState) { mPhysicsSettings.mCheckActiveEdges = inState == UICheckBox::STATE_CHECKED; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateCheckBox(phys_settings, "Record State For Playback", mRecordState, [this](UICheckBox::EState inState) { mRecordState = inState == UICheckBox::STATE_CHECKED; });
@@ -1674,8 +1687,8 @@ void SamplesApp::UpdateDebug()
 						// Create constraint to drag body
 						DistanceConstraintSettings settings;
 						settings.mPoint1 = settings.mPoint2 = hit_position;
-						settings.mFrequency = 2.0f / GetWorldScale();
-						settings.mDamping = 1.0f;
+						settings.mLimitsSpringSettings.mFrequency = 2.0f / GetWorldScale();
+						settings.mLimitsSpringSettings.mDamping = 1.0f;
 
 						// Construct fixed body for the mouse constraint
 						// Note that we don't add it to the world since we don't want anything to collide with it, we just

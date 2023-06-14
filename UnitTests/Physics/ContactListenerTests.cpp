@@ -8,6 +8,7 @@
 #include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
 
 TEST_SUITE("ContactListenerTests")
 {
@@ -363,5 +364,52 @@ TEST_SUITE("ContactListenerTests")
 			CHECK(listener.GetAddCount() == -1);
 			CHECK((listener.mRemoved == 1 && !listener.mWasInContact));
 		}
+	}
+
+	TEST_CASE("TestSurfaceVelocity")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+
+		Body &floor = c.CreateBox(RVec3(0, -1, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(10.0f)), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, 1.0f, 100.0f));
+		floor.SetFriction(1.0f);
+
+		Body &box = c.CreateBox(RVec3(0, 0.999f, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(30.0f)), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
+		box.SetFriction(1.0f);
+
+		// Contact listener sets a constant surface velocity
+		class ContactListenerImpl : public ContactListener
+		{
+		public:
+							ContactListenerImpl(Body &inFloor, Body &inBox) : mFloor(inFloor), mBox(inBox) { }
+
+			virtual void	OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+			{
+				// Ensure that the body order is as expected
+				JPH_ASSERT(inBody1.GetID() == mFloor.GetID() || inBody2.GetID() == mBox.GetID());
+
+				// Calculate the relative surface velocity
+				ioSettings.mRelativeSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceVelocity);
+			}
+
+			virtual void	OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+			{
+				OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
+			}
+
+			Body &			mFloor;
+			Body &			mBox;
+			Vec3			mLocalSpaceVelocity = Vec3(0, 0, -2.0f);
+		};
+
+		// Set listener
+		ContactListenerImpl listener(floor, box);
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Simulate
+		c.Simulate(5.0f);
+
+		// Check that the box is moving
+		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), floor.GetRotation() * listener.mLocalSpaceVelocity, 0.005f);
+		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
 	}
 }

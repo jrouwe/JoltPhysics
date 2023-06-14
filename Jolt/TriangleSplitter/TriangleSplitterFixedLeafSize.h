@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Same as TriangleSplitterBinning, but ensuring that leaves have a fixed amount of triangles
 /// The resulting tree should be suitable for processing on GPU where we want all threads to process an equal amount of triangles
-class TriangleSplitterFixedLeafSize : public TriangleSplitter
+class JPH_EXPORT TriangleSplitterFixedLeafSize : public TriangleSplitter
 {
 public:
 	/// Constructor

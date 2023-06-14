@@ -14,6 +14,9 @@ option(CROSS_PLATFORM_DETERMINISTIC "Cross platform deterministic" OFF)
 # When turning this option on, the library will be compiled for ARM (aarch64-linux-gnu), requires compiling with clang
 option(CROSS_COMPILE_ARM "Cross compile to aarch64-linux-gnu" OFF)
 
+# When turning this option on, Jolt will be compiled as a shared library and public symbols will be exported.
+option(BUILD_SHARED_LIBS "Compile Jolt as a shared library" OFF)
+
 # When turning this option on, the library will be compiled with interprocedural optimizations enabled, also known as link-time optimizations or link-time code generation.
 # Note that if you turn this on you need to use SET_INTERPROCEDURAL_OPTIMIZATION() or set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON) to enable LTO specificly for your own project as well.
 # If you don't do this you may get an error: /usr/bin/ld: libJolt.a: error adding symbols: file format not recognized
@@ -23,6 +26,9 @@ option(INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimizations" ON)
 # and will enable floating point exceptions during simulation to detect divisions by zero. 
 # Note that this currently only works using MSVC. Clang turns Float2 into a SIMD vector sometimes causing floating point exceptions (the option is ignored).
 option(FLOATING_POINT_EXCEPTIONS_ENABLED "Enable floating point exceptions" ON)
+
+# Number of bits to use in ObjectLayer. Can be 16 or 32.
+option(OBJECT_LAYER_BITS "Number of bits in ObjectLayer" 16)
 
 # Select X86 processor features to use (if everything is off it will be SSE2 compatible)
 option(USE_SSE4_1 "Enable SSE4.1" ON)
@@ -34,6 +40,9 @@ option(USE_LZCNT "Enable LZCNT" ON)
 option(USE_TZCNT "Enable TZCNT" ON)
 option(USE_F16C "Enable F16C" ON)
 option(USE_FMADD "Enable FMADD" ON)
+
+# Enable all warnings
+option(ENABLE_ALL_WARNINGS "Enable all warnings and warnings as errors" ON)
 
 include(CMakeDependentOption)
 
@@ -58,13 +67,16 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	# Set runtime library
 	if (USE_STATIC_MSVC_RUNTIME_LIBRARY)
 		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	else()
-		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 	endif()
 
 	# Set general compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /Gm- /Wall /WX /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /Gm- /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline")
 	
+	# Enable warnings
+	if (ENABLE_ALL_WARNINGS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall /WX")
+	endif()
+
 	# Optionally generate debug symbols
 	if (GENERATE_DEBUG_SYMBOLS)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zi")
@@ -106,7 +118,12 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	endif()
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR "${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR MINGW OR EMSCRIPTEN)
 	# Set general compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I. -Wall -Werror")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I.")
+
+	# Enable warnings
+	if (ENABLE_ALL_WARNINGS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+	endif()
 
 	# Optionally generate debug symbols
 	if (GENERATE_DEBUG_SYMBOLS)
@@ -139,7 +156,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 	set(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3")
 	set(CMAKE_CXX_FLAGS_RELEASEASAN "-fsanitize=address")
 	set(CMAKE_CXX_FLAGS_RELEASEUBSAN "-fsanitize=undefined,implicit-conversion,float-divide-by-zero,local-bounds -fno-sanitize-recover=all")
-	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-fprofile-instr-generate -fcoverage-mapping")
+	set(CMAKE_CXX_FLAGS_RELEASECOVERAGE "-O0 -DJPH_NO_FORCE_INLINE -fprofile-instr-generate -fcoverage-mapping")
 
 	# Set linker flags
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
@@ -177,6 +194,16 @@ if (IOS)
 	# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
 	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt") 
 endif()
+
+# Install Jolt library and includes
+install(TARGETS Jolt DESTINATION lib)
+foreach(SRC_FILE ${JOLT_PHYSICS_SRC_FILES})
+	string(REPLACE ${PHYSICS_REPO_ROOT} "" RELATIVE_SRC_FILE ${SRC_FILE})
+	get_filename_component(DESTINATION_PATH ${RELATIVE_SRC_FILE} DIRECTORY)
+	if (NOT RELATIVE_SRC_FILE MATCHES "\.cpp")
+		install(FILES ${SRC_FILE} DESTINATION include/${DESTINATION_PATH})
+	endif()
+endforeach()
 
 # Check if we're the root CMakeLists.txt, if not we are included by another CMake file and we should disable everything except for the main library 
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)

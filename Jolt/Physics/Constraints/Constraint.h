@@ -11,7 +11,9 @@
 
 JPH_NAMESPACE_BEGIN
 
+class BodyID;
 class IslandBuilder;
+class LargeIslandSplitter;
 class BodyManager;
 class StateRecorder;
 class StreamIn;
@@ -59,10 +61,10 @@ enum class EConstraintSpace
 };
 
 /// Class used to store the configuration of a constraint. Allows run-time creation of constraints.
-class ConstraintSettings : public SerializableObject, public RefTarget<ConstraintSettings>
+class JPH_EXPORT ConstraintSettings : public SerializableObject, public RefTarget<ConstraintSettings>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(ConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, ConstraintSettings)
 
 	using ConstraintResult = Result<Ref<ConstraintSettings>>;
 
@@ -84,13 +86,16 @@ public:
 	/// Size of constraint when drawing it through the debug renderer
 	float						mDrawConstraintSize = 1.0f;
 
+	/// User data value (can be used by application)
+	uint64						mUserData = 0;
+
 protected:
 	/// This function should not be called directly, it is used by sRestoreFromBinaryState.
 	virtual void				RestoreBinaryState(StreamIn &inStream);
 };
 
 /// Base class for all physics constraints. A constraint removes one or more degrees of freedom for a rigid body.
-class Constraint : public RefTarget<Constraint>, public NonCopyable
+class JPH_EXPORT Constraint : public RefTarget<Constraint>, public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -102,7 +107,8 @@ public:
 #endif // JPH_DEBUG_RENDERER
 		mNumVelocityStepsOverride(inSettings.mNumVelocityStepsOverride),
 		mNumPositionStepsOverride(inSettings.mNumPositionStepsOverride),
-		mEnabled(inSettings.mEnabled)
+		mEnabled(inSettings.mEnabled),
+		mUserData(inSettings.mUserData)
 	{
 	}
 
@@ -132,6 +138,16 @@ public:
 	/// Test if a constraint is enabled.
 	bool						GetEnabled() const							{ return mEnabled; }
 
+	/// Access to the user data, can be used for anything by the application
+	uint64						GetUserData() const							{ return mUserData; }
+	void						SetUserData(uint64 inUserData)				{ mUserData = inUserData; }
+
+	/// Notify the constraint that the shape of a body has changed and that its center of mass has moved by inDeltaCOM.
+	/// Bodies don't know which constraints are connected to them so the user is responsible for notifying the relevant constraints when a body changes.
+	/// @param inBodyID ID of the body that has changed
+	/// @param inDeltaCOM The delta of the center of mass of the body (shape->GetCenterOfMass() - shape_before_change->GetCenterOfMass())
+	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) = 0;
+
 	///@name Solver interface
 	///@{
 	virtual bool				IsActive() const							{ return mEnabled; }
@@ -143,6 +159,9 @@ public:
 
 	/// Link bodies that are connected by this constraint in the island builder
 	virtual void				BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) = 0;
+
+	/// Link bodies that are connected by this constraint in the same split. Returns the split index.
+	virtual uint				BuildIslandSplits(LargeIslandSplitter &ioSplitter) const = 0;
 
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing interface
@@ -190,6 +209,9 @@ private:
 
 	/// If this constraint is currently enabled
 	bool						mEnabled = true;
+
+	/// User data value (can be used by application)
+	uint64						mUserData;
 };
 
 JPH_NAMESPACE_END

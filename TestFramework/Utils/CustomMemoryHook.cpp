@@ -36,6 +36,9 @@ struct InCustomAllocator
 // Add a tag to an allocation to track if it is aligned / unaligned
 static void *TagAllocation(void *inPointer, size_t inAlignment, char inMode)
 {
+	if (inPointer == nullptr)
+		return nullptr;
+
 	uint8 *p = reinterpret_cast<uint8 *>(inPointer);
 	*p = inMode;
 	return p + inAlignment;
@@ -44,6 +47,9 @@ static void *TagAllocation(void *inPointer, size_t inAlignment, char inMode)
 // Remove tag from allocation
 static void *UntagAllocation(void *inPointer, size_t inAlignment, char inMode)
 {
+	if (inPointer == nullptr)
+		return nullptr;
+
 	uint8 *p = reinterpret_cast<uint8 *>(inPointer) - inAlignment;
 	JPH_ASSERT(*p == inMode);
 	*p = 0;

@@ -11,7 +11,7 @@
 class SimpleTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SimpleTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SimpleTest)
 
 	// Destructor
 	virtual				~SimpleTest() override;

@@ -34,6 +34,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/JobSystem.inl
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemThreadPool.cpp
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemThreadPool.h
+	${JOLT_PHYSICS_ROOT}/Core/JobSystemWithBarrier.cpp
+	${JOLT_PHYSICS_ROOT}/Core/JobSystemWithBarrier.h
 	${JOLT_PHYSICS_ROOT}/Core/LinearCurve.cpp
 	${JOLT_PHYSICS_ROOT}/Core/LinearCurve.h
 	${JOLT_PHYSICS_ROOT}/Core/LockFreeHashMap.h
@@ -51,6 +53,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/Result.h
 	${JOLT_PHYSICS_ROOT}/Core/RTTI.cpp
 	${JOLT_PHYSICS_ROOT}/Core/RTTI.h
+	${JOLT_PHYSICS_ROOT}/Core/Semaphore.cpp
+	${JOLT_PHYSICS_ROOT}/Core/Semaphore.h
 	${JOLT_PHYSICS_ROOT}/Core/StaticArray.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamIn.h
 	${JOLT_PHYSICS_ROOT}/Core/StreamOut.h
@@ -119,7 +123,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Math/Real.h
 	${JOLT_PHYSICS_ROOT}/Math/Swizzle.h
 	${JOLT_PHYSICS_ROOT}/Math/Trigonometry.h
-	${JOLT_PHYSICS_ROOT}/Math/UVec4.cpp
 	${JOLT_PHYSICS_ROOT}/Math/UVec4.h
 	${JOLT_PHYSICS_ROOT}/Math/UVec4.inl
 	${JOLT_PHYSICS_ROOT}/Math/UVec8.h
@@ -331,6 +334,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SixDOFConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SliderConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SliderConstraint.h
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SpringSettings.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SpringSettings.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SwingTwistConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/SwingTwistConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/TwoBodyConstraint.cpp
@@ -338,8 +343,11 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/DeterminismLog.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/DeterminismLog.h
 	${JOLT_PHYSICS_ROOT}/Physics/EActivation.h
+	${JOLT_PHYSICS_ROOT}/Physics/EPhysicsUpdateError.h
 	${JOLT_PHYSICS_ROOT}/Physics/IslandBuilder.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/IslandBuilder.h
+	${JOLT_PHYSICS_ROOT}/Physics/LargeIslandSplitter.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/LargeIslandSplitter.h
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsLock.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsLock.h
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsScene.cpp
@@ -355,6 +363,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorder.h
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorderImpl.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorderImpl.h
+	${JOLT_PHYSICS_ROOT}/Physics/Vehicle/MotorcycleController.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/Vehicle/MotorcycleController.h
 	${JOLT_PHYSICS_ROOT}/Physics/Vehicle/TrackedVehicleController.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Vehicle/TrackedVehicleController.h
 	${JOLT_PHYSICS_ROOT}/Physics/Vehicle/VehicleAntiRollBar.cpp
@@ -421,7 +431,35 @@ endif()
 source_group(TREE ${JOLT_PHYSICS_ROOT} FILES ${JOLT_PHYSICS_SRC_FILES})
 
 # Create Jolt lib
-add_library(Jolt STATIC ${JOLT_PHYSICS_SRC_FILES})
+add_library(Jolt ${JOLT_PHYSICS_SRC_FILES})
+
+if (BUILD_SHARED_LIBS)
+	# Set default visibility to hidden
+	set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
+	if (GENERATE_DEBUG_SYMBOLS)
+		if (MSVC)
+			# MSVC specific option to enable PDB generation
+			set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG:FASTLINK")
+		else()
+			# Clang/GCC option to enable debug symbol generation
+			set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -g")
+		endif()
+	endif()
+
+	# Set linker flags for other build types to be the same as release
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEASAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASEUBSAN "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASECOVERAGE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+	set(CMAKE_SHARED_LINKER_FLAGS_DISTRIBUTION "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+
+	# Public define to instruct user code to import Jolt symbols (rather than use static linking)
+	target_compile_definitions(Jolt PUBLIC JPH_SHARED_LIBRARY)
+
+	# Private define to instruct the library to export symbols for shared linking
+	target_compile_definitions(Jolt PRIVATE JPH_BUILD_SHARED_LIBRARY)
+endif()
+
 target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
 target_precompile_headers(Jolt PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
@@ -445,6 +483,11 @@ endif()
 # Setting to attempt cross platform determinism
 if (CROSS_PLATFORM_DETERMINISTIC)
 	target_compile_definitions(Jolt PUBLIC JPH_CROSS_PLATFORM_DETERMINISTIC)
+endif()
+
+# Setting to determine number of bits in ObjectLayer
+if (OBJECT_LAYER_BITS)
+	target_compile_definitions(Jolt PUBLIC JPH_OBJECT_LAYER_BITS=${OBJECT_LAYER_BITS})
 endif()
 
 # Emit the instruction set definitions to ensure that child projects use the same settings even if they override the used instruction sets (a mismatch causes link errors)

@@ -12,7 +12,7 @@ JPH_NAMESPACE_BEGIN
 /// This allocator works as a stack: The blocks must always be freed in the reverse order as they are allocated.
 /// Note that allocations and frees can take place from different threads, but the order is guaranteed though
 /// job dependencies, so it is not needed to use any form of locking.
-class TempAllocator : public NonCopyable
+class JPH_EXPORT TempAllocator : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -28,7 +28,7 @@ public:
 };
 
 /// Default implementation of the temp allocator that allocates a large block through malloc upfront
-class TempAllocatorImpl final : public TempAllocator
+class JPH_EXPORT TempAllocatorImpl final : public TempAllocator
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -94,7 +94,7 @@ private:
 
 /// Implementation of the TempAllocator that just falls back to malloc/free
 /// Note: This can be quite slow when running in the debugger as large memory blocks need to be initialized with 0xcd
-class TempAllocatorMalloc final : public TempAllocator
+class JPH_EXPORT TempAllocatorMalloc final : public TempAllocator
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

@@ -108,10 +108,10 @@ public:
 	template <class Random>
 	inline static Quat			sRandom(Random &inRandom);
 
-	/// Conversion from Euler angles
+	/// Conversion from Euler angles. Rotation order is X then Y then Z (RotZ * RotY * RotX). Angles in radians.
 	inline static Quat			sEulerAngles(Vec3Arg inAngles);
 
-	/// Conversion to Euler angles
+	/// Conversion to Euler angles. Rotation order is X then Y then Z (RotZ * RotY * RotX). Angles in radians.
 	inline Vec3					GetEulerAngles() const;
 
 	///@name Length / normalization operations													

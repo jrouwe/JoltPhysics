@@ -10,10 +10,10 @@
 JPH_NAMESPACE_BEGIN
 
 /// Rack and pinion constraint (slider & gear) settings
-class RackAndPinionConstraintSettings final : public TwoBodyConstraintSettings
+class JPH_EXPORT RackAndPinionConstraintSettings final : public TwoBodyConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(RackAndPinionConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, RackAndPinionConstraintSettings)
 
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -51,7 +51,7 @@ protected:
 
 /// A rack and pinion constraint constrains the rotation of body1 to the translation of body 2.
 /// Note that this constraint needs to be used in conjunction with a hinge constraint for body 1 and a slider constraint for body 2.
-class RackAndPinionConstraint final : public TwoBodyConstraint
+class JPH_EXPORT RackAndPinionConstraint final : public TwoBodyConstraint
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -61,6 +61,7 @@ public:
 
 	// Generic interface of a constraint
 	virtual EConstraintSubType	GetSubType() const override												{ return EConstraintSubType::RackAndPinion; }
+	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override { /* Nothing */ }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;

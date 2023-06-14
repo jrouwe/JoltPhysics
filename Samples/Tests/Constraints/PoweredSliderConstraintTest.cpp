@@ -57,8 +57,8 @@ void PoweredSliderConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inPara
 { 
 	MotorSettings &motor_settings = mConstraint->GetMotorSettings();
 	motor_settings.SetForceLimit(sMaxMotorAcceleration / mBody2->GetMotionProperties()->GetInverseMass()); // F = m * a
-	motor_settings.mFrequency = sFrequency;
-	motor_settings.mDamping = sDamping;
+	motor_settings.mSpringSettings.mFrequency = sFrequency;
+	motor_settings.mSpringSettings.mDamping = sDamping;
 	mConstraint->SetMaxFrictionForce(sMaxFrictionAcceleration / mBody2->GetMotionProperties()->GetInverseMass());
 }
 

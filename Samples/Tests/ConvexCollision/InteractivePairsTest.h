@@ -10,7 +10,7 @@
 class InteractivePairsTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(InteractivePairsTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, InteractivePairsTest)
 
 	// Update the test, called before the physics update
 	virtual void	PrePhysicsUpdate(const PreUpdateParams &inParams) override;

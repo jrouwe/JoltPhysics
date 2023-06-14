@@ -210,9 +210,6 @@ public:
 		Type					mValue;
 		uint32					mU32[4];
 	};
-
-private:
-	static const UVec4			sFourMinusXShuffle[];
 };
 
 static_assert(is_trivial<UVec4>(), "Is supposed to be a trivial type!");

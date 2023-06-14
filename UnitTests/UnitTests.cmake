@@ -41,8 +41,10 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/CollisionGroupTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ContactListenerTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ConvexVsTrianglesTest.cpp
+	${UNIT_TESTS_ROOT}/Physics/DistanceConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/EstimateCollisionResponseTest.cpp
 	${UNIT_TESTS_ROOT}/Physics/HeightFieldShapeTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/HingeConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/MotionQualityLinearCastTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/OffsetCenterOfMassShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/PathConstraintTests.cpp
@@ -52,6 +54,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Physics/RayShapeTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SensorTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/ShapeTests.cpp
+	${UNIT_TESTS_ROOT}/Physics/SixDOFConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SliderConstraintTests.cpp
 	${UNIT_TESTS_ROOT}/Physics/SubShapeIDTest.cpp
 	${UNIT_TESTS_ROOT}/Physics/TransformedShapeTests.cpp

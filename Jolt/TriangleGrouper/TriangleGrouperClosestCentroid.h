@@ -11,7 +11,7 @@ JPH_NAMESPACE_BEGIN
 /// A class that groups triangles in batches of N.
 /// Starts with centroid with lowest X coordinate and finds N closest centroids, this repeats until all groups have been found.
 /// Time complexity: O(N^2)
-class TriangleGrouperClosestCentroid : public TriangleGrouper
+class JPH_EXPORT TriangleGrouperClosestCentroid : public TriangleGrouper
 {
 public:
 	// See: TriangleGrouper::Group

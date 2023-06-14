@@ -34,6 +34,26 @@ jobs:
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
       run: ctest --output-on-failure
 
+  linux-clang-so:
+    runs-on: ubuntu-22.04
+    name: Linux Clang Shared Library
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution]
+            clang_version: [clang++-14]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DBUILD_SHARED_LIBS=Yes Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      run: ctest --output-on-failure
+
   linux-gcc:
     runs-on: ubuntu-22.04
     name: Linux GCC
@@ -99,7 +119,28 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
-      run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}}
+      run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
+      run: ./UnitTests.exe
+
+  msvc_cl_dll:
+    runs-on: windows-latest
+    name: Visual Studio CL Shared Library
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.3
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DBUILD_SHARED_LIBS=Yes
+    - name: Build
+      run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL/${{matrix.build_type}}
       run: ./UnitTests.exe
@@ -120,7 +161,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/VS2022_CL_32_BIT -G "Visual Studio 17 2022" -A Win32 -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF Build
     - name: Build
-      run: msbuild Build\VS2022_CL_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}}
+      run: msbuild Build\VS2022_CL_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32_BIT/${{matrix.build_type}}
       run: ./UnitTests.exe
@@ -141,7 +182,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/VS2022_CL_ARM -G "Visual Studio 17 2022" -A ARM64 Build
     - name: Build
-      run: msbuild Build\VS2022_CL_ARM\JoltPhysics.sln /property:Configuration=${{matrix.build_type}}
+      run: msbuild Build\VS2022_CL_ARM\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
 
   msvc_cl_arm_32_bit:
     runs-on: windows-latest
@@ -159,7 +200,7 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/VS2022_CL_ARM_32_BIT -G "Visual Studio 17 2022" -A ARM Build
     - name: Build
-      run: msbuild Build\VS2022_CL_ARM_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}}
+      run: msbuild Build\VS2022_CL_ARM_32_BIT\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
 
   msvc_clang:
     runs-on: windows-latest
@@ -168,6 +209,7 @@ jobs:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution]
+            double_precision: [No, Yes]
 
     steps:
     - name: Checkout Code
@@ -175,9 +217,9 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.3
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_Clang -G "Visual Studio 17 2022" -A x64 -T ClangCL Build
+      run: cmake -B ${{github.workspace}}/Build/VS2022_Clang -G "Visual Studio 17 2022" -A x64 -T ClangCL Build -DDOUBLE_PRECISION=${{matrix.double_precision}}
     - name: Build
-      run: msbuild Build\VS2022_Clang\JoltPhysics.sln /property:Configuration=${{matrix.build_type}}
+      run: msbuild Build\VS2022_Clang\JoltPhysics.sln /property:Configuration=${{matrix.build_type}} -m
     - name: Test
       working-directory: ${{github.workspace}}/Build/VS2022_Clang/${{matrix.build_type}}
       run: ./UnitTests.exe
@@ -212,9 +254,14 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
     - name: Gradle Build
       working-directory: ${{github.workspace}}/Build/Android
-      run: ./gradlew build
+      run: ./gradlew build --no-daemon
 
   ios:
     runs-on: macos-latest

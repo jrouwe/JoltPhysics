@@ -546,10 +546,21 @@ UVec4 UVec4::Expand4Byte12() const
 
 UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 {
+#if defined(JPH_USE_SSE4_1) || defined(JPH_USE_NEON)
+	alignas(UVec4) static constexpr uint32 sFourMinusXShuffle[5][4] = 
+	{
+		{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
+		{ 0x0f0e0d0c, 0xffffffff, 0xffffffff, 0xffffffff },
+		{ 0x0b0a0908, 0x0f0e0d0c, 0xffffffff, 0xffffffff },
+		{ 0x07060504, 0x0b0a0908, 0x0f0e0d0c, 0xffffffff },
+		{ 0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c }
+	};
+#endif
+
 #if defined(JPH_USE_SSE4_1)
-	return _mm_shuffle_epi8(mValue, sFourMinusXShuffle[inCount].mValue);
+	return _mm_shuffle_epi8(mValue, *reinterpret_cast<const UVec4::Type *>(sFourMinusXShuffle[inCount]));
 #elif defined(JPH_USE_NEON)
-	uint8x16_t idx = vreinterpretq_u8_u32(sFourMinusXShuffle[inCount].mValue);
+	uint8x16_t idx = vreinterpretq_u8_u32(*reinterpret_cast<const UVec4::Type *>(sFourMinusXShuffle[inCount]));
 	return vreinterpretq_u32_s8(vqtbl1q_s8(vreinterpretq_s8_u32(mValue), idx));
 #else
 	UVec4 result = UVec4::sZero();

@@ -42,6 +42,7 @@ JPH_SUPPRESS_WARNINGS
 // Local includes
 #include "RagdollScene.h"
 #include "ConvexVsMeshScene.h"
+#include "PyramidScene.h"
 
 // Time step for physics
 constexpr float cDeltaTime = 1.0f / 60.0f;
@@ -72,6 +73,9 @@ int main(int argc, char** argv)
 	// Register allocation hook
 	RegisterDefaultAllocator();
 
+	// Helper function that creates the default scene
+	auto create_ragdoll_scene = []{ return unique_ptr<PerformanceTestScene>(new RagdollScene(4, 10, 0.6f)); };
+
 	// Parse command line parameters
 	int specified_quality = -1;
 	int specified_threads = -1;
@@ -95,9 +99,13 @@ int main(int argc, char** argv)
 		{
 			// Parse scene
 			if (strcmp(arg + 3, "Ragdoll") == 0)
-				scene = unique_ptr<PerformanceTestScene>(new RagdollScene);
+				scene = create_ragdoll_scene();
+			else if (strcmp(arg + 3, "RagdollSinglePile") == 0)
+				scene = unique_ptr<PerformanceTestScene>(new RagdollScene(1, 160, 0.4f));
 			else if (strcmp(arg + 3, "ConvexVsMesh") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new ConvexVsMeshScene);
+			else if (strcmp(arg + 3, "Pyramid") == 0)
+				scene = unique_ptr<PerformanceTestScene>(new PyramidScene);
 			else
 			{
 				Trace("Invalid scene");
@@ -171,7 +179,7 @@ int main(int argc, char** argv)
 		{
 			// Print usage
 			Trace("Usage:\n"
-				  "-s=<scene>: Select scene (Ragdoll, ConvexVsMesh)\n"
+				  "-s=<scene>: Select scene (Ragdoll, RagdollSinglePile, ConvexVsMesh, Pyramid)\n"
 				  "-i=<num physics steps>: Number of physics steps to simulate (default 500)\n"
 				  "-q=<quality>: Test only with specified quality (Discrete, LinearCast)\n"
 				  "-t=<num threads>: Test only with N threads (default is to iterate over 1 .. num hardware threads)\n"
@@ -195,11 +203,11 @@ int main(int argc, char** argv)
 	RegisterTypes();
 
 	// Create temp allocator
-	TempAllocatorImpl temp_allocator(10 * 1024 * 1024);
+	TempAllocatorImpl temp_allocator(32 * 1024 * 1024);
 
 	// Load the scene
 	if (scene == nullptr)
-		scene = unique_ptr<PerformanceTestScene>(new RagdollScene);
+		scene = create_ragdoll_scene();
 	if (!scene->Load())
 		return 1;
 
@@ -254,7 +262,7 @@ int main(int argc, char** argv)
 
 				// Create physics system
 				PhysicsSystem physics_system;
-				physics_system.Init(10240, 0, 65536, 10240, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+				physics_system.Init(10240, 0, 65536, 20480, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
 
 				// Start test scene
 				scene->StartTest(physics_system, motion_quality);
@@ -429,6 +437,9 @@ int main(int argc, char** argv)
 #ifdef JPH_TRACK_NARROWPHASE_STATS
 	NarrowPhaseStat::sReportStats();
 #endif // JPH_TRACK_NARROWPHASE_STATS
+
+	// Unregisters all types with the factory and cleans up the default material
+	UnregisterTypes();
 
 	// Destroy the factory
 	delete Factory::sInstance;

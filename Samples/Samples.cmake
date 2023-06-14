@@ -25,6 +25,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.h
+	${SAMPLES_ROOT}/Tests/Constraints/ConstraintVsCOMChangeTest.cpp
+	${SAMPLES_ROOT}/Tests/Constraints/ConstraintVsCOMChangeTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/DistanceConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/DistanceConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/FixedConstraintTest.cpp
@@ -75,6 +77,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ActiveEdgesTest.h
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.cpp
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.h
+	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.h
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.cpp
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.h
 	${SAMPLES_ROOT}/Tests/General/ChangeMotionQualityTest.cpp
@@ -89,6 +93,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ContactListenerTest.h
 	${SAMPLES_ROOT}/Tests/General/ContactManifoldTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ContactManifoldTest.h
+	${SAMPLES_ROOT}/Tests/General/ConveyorBeltTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ConveyorBeltTest.h
 	${SAMPLES_ROOT}/Tests/General/DampingTest.cpp
 	${SAMPLES_ROOT}/Tests/General/DampingTest.h
 	${SAMPLES_ROOT}/Tests/General/DynamicMeshTest.cpp
@@ -117,6 +123,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/ManifoldReductionTest.h
 	${SAMPLES_ROOT}/Tests/General/MultithreadedTest.cpp
 	${SAMPLES_ROOT}/Tests/General/MultithreadedTest.h
+	${SAMPLES_ROOT}/Tests/General/PyramidTest.cpp
+	${SAMPLES_ROOT}/Tests/General/PyramidTest.h
 	${SAMPLES_ROOT}/Tests/General/RestitutionTest.cpp
 	${SAMPLES_ROOT}/Tests/General/RestitutionTest.h
 	${SAMPLES_ROOT}/Tests/General/SensorTest.cpp
@@ -201,6 +209,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Shapes/TaperedCapsuleShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/TriangleShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/TriangleShapeTest.h
+	${SAMPLES_ROOT}/Tests/Vehicle/MotorcycleTest.cpp
+	${SAMPLES_ROOT}/Tests/Vehicle/MotorcycleTest.h
 	${SAMPLES_ROOT}/Tests/Vehicle/TankTest.cpp
 	${SAMPLES_ROOT}/Tests/Vehicle/TankTest.h
 	${SAMPLES_ROOT}/Tests/Vehicle/VehicleConstraintTest.cpp

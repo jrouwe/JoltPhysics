@@ -107,6 +107,14 @@ FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstr
 	}
 }
 
+void FixedConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mLocalSpacePosition1 -= inDeltaCOM;
+	else if (mBody2->GetID() == inBodyID)
+		mLocalSpacePosition2 -= inDeltaCOM;
+}
+
 void FixedConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	// Calculate constraint values that don't change when the bodies don't change position

@@ -11,7 +11,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Fast SIMD based quad tree BroadPhase that is multithreading aware and tries to do a minimal amount of locking.
-class BroadPhaseQuadTree final : public BroadPhase
+class JPH_EXPORT BroadPhaseQuadTree final : public BroadPhase
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

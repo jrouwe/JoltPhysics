@@ -91,4 +91,22 @@ TEST_SUITE("ClosestPointTests")
 
 		TestClosestPointToTriangle(a, b, c, Vec3::sZero(), expected_closest, 0b0101);
 	}
+
+	TEST_CASE("TestSmallTriangleWithPlaneGoingThroughOrigin")
+	{
+		// A small but non-degenerate triangle whose plane almost goes through the origin
+		Vec3 a(-0.132395342f, -0.294095188f, -0.164812326f);
+		Vec3 b(-0.126054004f, -0.283950001f, -0.159065604f);
+		Vec3 c(-0.154956535f, -0.284792334f, -0.160523415f);
+
+		float u, v, w;
+		ClosestPoint::GetBaryCentricCoordinates(a, b, c, u, v, w);
+
+		// Closest point should be close to origin
+		Vec3 p = a * u + b * v + c * w;
+		CHECK_APPROX_EQUAL(p, Vec3::sZero());
+
+		// Closest point should be outside triangle
+		CHECK((u < 0.0f || v > 0.0f || w < 0.0f));
+	}
 }

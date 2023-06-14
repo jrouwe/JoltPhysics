@@ -7,7 +7,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Simple binary output stream
-class StreamOut
+class JPH_EXPORT StreamOut
 {
 public:
 	/// Virtual destructor

@@ -13,7 +13,7 @@
 class CharacterSpaceShipTest : public Test, public CharacterContactListener
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(CharacterSpaceShipTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterSpaceShipTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

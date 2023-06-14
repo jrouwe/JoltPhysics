@@ -7,6 +7,9 @@
 JPH_NAMESPACE_BEGIN
 
 /// Register all physics types with the factory
-extern void RegisterTypes();
+JPH_EXPORT extern void RegisterTypes();
+
+/// Unregisters all types with the factory and cleans up the default material
+JPH_EXPORT extern void UnregisterTypes();
 
 JPH_NAMESPACE_END

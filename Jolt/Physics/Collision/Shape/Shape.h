@@ -100,11 +100,21 @@ enum class EShapeSubType : uint8
 	User6,
 	User7,
 	User8,
+
+	// User defined convex shapes
+	UserConvex1,
+	UserConvex2,
+	UserConvex3,
+	UserConvex4,
+	UserConvex5,
+	UserConvex6,
+	UserConvex7,
+	UserConvex8,
 };
 
 // Sets of shape sub types
-static constexpr EShapeSubType sAllSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull, EShapeSubType::StaticCompound, EShapeSubType::MutableCompound, EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass, EShapeSubType::Mesh, EShapeSubType::HeightField, EShapeSubType::User1, EShapeSubType::User2, EShapeSubType::User3, EShapeSubType::User4, EShapeSubType::User5, EShapeSubType::User6, EShapeSubType::User7, EShapeSubType::User8 };
-static constexpr EShapeSubType sConvexSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull };
+static constexpr EShapeSubType sAllSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull, EShapeSubType::StaticCompound, EShapeSubType::MutableCompound, EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass, EShapeSubType::Mesh, EShapeSubType::HeightField, EShapeSubType::User1, EShapeSubType::User2, EShapeSubType::User3, EShapeSubType::User4, EShapeSubType::User5, EShapeSubType::User6, EShapeSubType::User7, EShapeSubType::User8, EShapeSubType::UserConvex1, EShapeSubType::UserConvex2, EShapeSubType::UserConvex3, EShapeSubType::UserConvex4, EShapeSubType::UserConvex5, EShapeSubType::UserConvex6, EShapeSubType::UserConvex7, EShapeSubType::UserConvex8 };
+static constexpr EShapeSubType sConvexSubShapeTypes[] = { EShapeSubType::Sphere, EShapeSubType::Box, EShapeSubType::Triangle, EShapeSubType::Capsule, EShapeSubType::TaperedCapsule, EShapeSubType::Cylinder, EShapeSubType::ConvexHull, EShapeSubType::UserConvex1, EShapeSubType::UserConvex2, EShapeSubType::UserConvex3, EShapeSubType::UserConvex4, EShapeSubType::UserConvex5, EShapeSubType::UserConvex6, EShapeSubType::UserConvex7, EShapeSubType::UserConvex8 };
 static constexpr EShapeSubType sCompoundSubShapeTypes[] = { EShapeSubType::StaticCompound, EShapeSubType::MutableCompound };
 static constexpr EShapeSubType sDecoratorSubShapeTypes[] = { EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass };
 
@@ -112,7 +122,7 @@ static constexpr EShapeSubType sDecoratorSubShapeTypes[] = { EShapeSubType::Rota
 static constexpr uint NumSubShapeTypes = (uint)size(sAllSubShapeTypes);
 
 /// Names of sub shape types
-static constexpr const char *sSubShapeTypeNames[] = { "Sphere", "Box", "Triangle", "Capsule", "TaperedCapsule", "Cylinder", "ConvexHull", "StaticCompound", "MutableCompound", "RotatedTranslated", "Scaled", "OffsetCenterOfMass", "Mesh", "HeightField", "User1", "User2", "User3", "User4", "User5", "User6", "User7", "User8" };
+static constexpr const char *sSubShapeTypeNames[] = { "Sphere", "Box", "Triangle", "Capsule", "TaperedCapsule", "Cylinder", "ConvexHull", "StaticCompound", "MutableCompound", "RotatedTranslated", "Scaled", "OffsetCenterOfMass", "Mesh", "HeightField", "User1", "User2", "User3", "User4", "User5", "User6", "User7", "User8", "UserConvex1", "UserConvex2", "UserConvex3", "UserConvex4", "UserConvex5", "UserConvex6", "UserConvex7", "UserConvex8" };
 static_assert(size(sSubShapeTypeNames) == NumSubShapeTypes);
 
 /// Class that can construct shapes and that is serializable using the ObjectStream system.
@@ -121,10 +131,10 @@ static_assert(size(sSubShapeTypeNames) == NumSubShapeTypes);
 /// in a form that is optimized for collision detection. After this, the ShapeSettings object is no longer needed
 /// and can be destroyed. Each shape class has a derived class of the ShapeSettings object to store shape specific
 /// data.
-class ShapeSettings : public SerializableObject, public RefTarget<ShapeSettings>
+class JPH_EXPORT ShapeSettings : public SerializableObject, public RefTarget<ShapeSettings>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_ABSTRACT(ShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_ABSTRACT(JPH_EXPORT, ShapeSettings)
 
 	using ShapeResult = Result<Ref<Shape>>;
 
@@ -139,7 +149,7 @@ protected:
 };
 
 /// Function table for functions on shapes
-class ShapeFunctions
+class JPH_EXPORT ShapeFunctions
 {
 public:
 	/// Construct a shape
@@ -156,7 +166,7 @@ private:
 };
 
 /// Base class for all shapes (collision volume of a body). Defines a virtual interface for collision detection.
-class Shape : public RefTarget<Shape>, public NonCopyable
+class JPH_EXPORT Shape : public RefTarget<Shape>, public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

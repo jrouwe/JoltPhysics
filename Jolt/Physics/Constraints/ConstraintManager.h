@@ -20,7 +20,7 @@ class DebugRenderer;
 using Constraints = Array<Ref<Constraint>>;
 
 /// A constraint manager manages all constraints of the same type
-class ConstraintManager : public NonCopyable
+class JPH_EXPORT ConstraintManager : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -60,6 +60,9 @@ public:
 	static void				sSetupVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime);
 
 	/// Apply last frame's impulses, must be called prior to SolveVelocityConstraints
+	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio);
+
+	/// Same as above but also calculates the number of velocity steps
 	static void				sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, int &ioNumVelocitySteps);
 
 	/// This function is called multiple times to iteratively come to a solution that meets all velocity constraints

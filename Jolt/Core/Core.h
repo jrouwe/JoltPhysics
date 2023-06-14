@@ -123,14 +123,45 @@
 	#error Unsupported CPU architecture
 #endif
 
+// If this define is set, Jolt is compiled as a shared library
+#ifdef JPH_SHARED_LIBRARY
+	#ifdef JPH_BUILD_SHARED_LIBRARY
+		// While building the shared library, we must export these symbols
+		#ifdef JPH_PLATFORM_WINDOWS
+			#define JPH_EXPORT __declspec(dllexport)
+		#else
+			#define JPH_EXPORT __attribute__ ((visibility ("default")))
+		#endif
+	#else
+		// When linking against Jolt, we must import these symbols
+		#ifdef JPH_PLATFORM_WINDOWS
+			#define JPH_EXPORT __declspec(dllimport)
+		#else
+			#define JPH_EXPORT __attribute__ ((visibility ("default")))
+		#endif
+	#endif
+#else
+	// If the define is not set, we use static linking and symbols don't need to be imported or exported
+	#define JPH_EXPORT
+#endif
+
+// Macro used by the RTTI macros to not export a function
+#define JPH_NO_EXPORT
+
 // Pragmas to store / restore the warning state and to disable individual warnings
 #ifdef JPH_COMPILER_CLANG
 #define JPH_PRAGMA(x)					_Pragma(#x)
 #define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(clang diagnostic push)
 #define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(clang diagnostic pop)
 #define JPH_CLANG_SUPPRESS_WARNING(w)	JPH_PRAGMA(clang diagnostic ignored w)
+#if __clang_major__ >= 13
+	#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w) JPH_CLANG_SUPPRESS_WARNING(w)
+#else
+	#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w)
+#endif
 #else
 #define JPH_CLANG_SUPPRESS_WARNING(w)
+#define JPH_CLANG_13_PLUS_SUPPRESS_WARNING(w)
 #endif
 #ifdef JPH_COMPILER_GCC
 #define JPH_PRAGMA(x)					_Pragma(#x)
@@ -145,8 +176,14 @@
 #define JPH_SUPPRESS_WARNING_PUSH		JPH_PRAGMA(warning (push))
 #define JPH_SUPPRESS_WARNING_POP		JPH_PRAGMA(warning (pop))
 #define JPH_MSVC_SUPPRESS_WARNING(w)	JPH_PRAGMA(warning (disable : w))
+#if _MSC_VER >= 1920 && _MSC_VER < 1930
+	#define JPH_MSVC2019_SUPPRESS_WARNING(w) JPH_MSVC_SUPPRESS_WARNING(w)
+#else
+	#define JPH_MSVC2019_SUPPRESS_WARNING(w)
+#endif
 #else
 #define JPH_MSVC_SUPPRESS_WARNING(w)
+#define JPH_MSVC2019_SUPPRESS_WARNING(w)
 #endif
 
 // Disable common warnings triggered by Jolt when compiling with -Wall
@@ -171,6 +208,7 @@
 	JPH_CLANG_SUPPRESS_WARNING("-Wdocumentation-unknown-command")								\
 	JPH_CLANG_SUPPRESS_WARNING("-Wctad-maybe-unsupported")										\
 	JPH_CLANG_SUPPRESS_WARNING("-Wdeprecated-copy")												\
+	JPH_CLANG_13_PLUS_SUPPRESS_WARNING("-Wdeprecated-copy-with-dtor")							\
 	JPH_IF_NOT_ANDROID(JPH_CLANG_SUPPRESS_WARNING("-Wimplicit-int-float-conversion"))			\
 																								\
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
@@ -197,7 +235,9 @@
 	JPH_MSVC_SUPPRESS_WARNING(4582) /* 'X': constructor is not implicitly called */				\
 	JPH_MSVC_SUPPRESS_WARNING(5219) /* implicit conversion from 'X' to 'Y', possible loss of data  */ \
 	JPH_MSVC_SUPPRESS_WARNING(4826) /* Conversion from 'X *' to 'JPH::uint64' is sign-extended. This may cause unexpected runtime behavior. (32-bit) */ \
-	JPH_MSVC_SUPPRESS_WARNING(5264) /* 'X': 'const' variable is not used */
+	JPH_MSVC_SUPPRESS_WARNING(5264) /* 'X': 'const' variable is not used */						\
+	JPH_MSVC_SUPPRESS_WARNING(4251) /* class 'X' needs to have DLL-interface to be used by clients of class 'Y' */ \
+	JPH_MSVC2019_SUPPRESS_WARNING(5246) /* the initialization of a subobject should be wrapped in braces */
 
 // OS-specific includes
 #if defined(JPH_PLATFORM_WINDOWS)
@@ -256,6 +296,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <sstream>
 #include <functional>
 #include <algorithm>
+#include <cstdint>
 JPH_SUPPRESS_WARNINGS_STD_END
 #include <limits.h>
 #include <float.h>
@@ -300,10 +341,10 @@ using std::istream;
 
 // Standard types
 using uint = unsigned int;
-using uint8 = uint8_t;
-using uint16 = uint16_t;
-using uint32 = uint32_t;
-using uint64 = uint64_t;
+using uint8 = std::uint8_t;
+using uint16 = std::uint16_t;
+using uint32 = std::uint32_t;
+using uint64 = std::uint64_t;
 
 // Assert sizes of types
 static_assert(sizeof(uint) >= 4, "Invalid size of uint");
@@ -314,7 +355,9 @@ static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid size of pointer" );
 
 // Define inline macro
-#if defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
+#if defined(JPH_NO_FORCE_INLINE)
+	#define JPH_INLINE inline
+#elif defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
 	#define JPH_INLINE __inline__ __attribute__((always_inline))
 #elif defined(JPH_COMPILER_MSVC)
 	#define JPH_INLINE __forceinline

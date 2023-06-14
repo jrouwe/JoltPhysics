@@ -20,8 +20,28 @@
 JPH_NAMESPACE_BEGIN
 
 #ifdef JPH_ENABLE_ASSERTS
-	thread_local bool BodyManager::sOverrideAllowActivation = false;
-	thread_local bool BodyManager::sOverrideAllowDeactivation = false;
+	static thread_local bool sOverrideAllowActivation = false;
+	static thread_local bool sOverrideAllowDeactivation = false;
+
+	bool BodyManager::sGetOverrideAllowActivation()
+	{
+		return sOverrideAllowActivation;
+	}
+
+	void BodyManager::sSetOverrideAllowActivation(bool inValue)
+	{
+		sOverrideAllowActivation = inValue;
+	}
+
+	bool BodyManager::sGetOverrideAllowDeactivation()
+	{
+		return sOverrideAllowDeactivation;
+	}
+
+	void BodyManager::sSetOverrideAllowDeactivation(bool inValue)
+	{
+		sOverrideAllowDeactivation = inValue;
+	}
 #endif
 
 // Helper class that combines a body and its motion properties
@@ -419,7 +439,6 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 			BodyID body_id = *b;
 			Body &body = *mBodies[body_id.GetIndex()];
 
-			JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
 			JPH_ASSERT(body.GetID() == body_id);
 			JPH_ASSERT(body.IsInBroadPhase());
 
@@ -459,7 +478,6 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 			BodyID body_id = *b;
 			Body &body = *mBodies[body_id.GetIndex()];
 
-			JPH_ASSERT(GetMutexForBody(body_id).is_locked(), "Assuming that body has been locked!");
 			JPH_ASSERT(body.GetID() == body_id);
 			JPH_ASSERT(body.IsInBroadPhase());
 

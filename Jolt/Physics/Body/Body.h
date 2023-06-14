@@ -29,7 +29,7 @@ class BodyCreationSettings;
 /// The functions that get/set the position of the body all indicate if they are relative to the center of mass or to the original position in which the shape was created.
 ///
 /// The linear velocity is also velocity of the center of mass, to correct for this: \f$VelocityCOM = Velocity - AngularVelocity \times ShapeCOM\f$.
-class Body : public NonCopyable
+class alignas(JPH_RVECTOR_ALIGNMENT) JPH_EXPORT Body : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -97,13 +97,13 @@ public:
 	bool					GetAllowSleeping() const										{ return mMotionProperties->mAllowSleeping; }
 	void					SetAllowSleeping(bool inAllow);
 
-	/// Friction (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together)
+	/// Friction (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
 	inline float			GetFriction() const												{ return mFriction; }
-	void					SetFriction(float inFriction)									{ JPH_ASSERT(inFriction >= 0.0f); mFriction = inFriction; }
+	void					SetFriction(float inFriction)									{ mFriction = inFriction; }
 
-	/// Restitution (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response)
+	/// Restitution (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response). Note that bodies can have negative restitution but the combined restitution (see PhysicsSystem::SetCombineRestitution) should never go below zero.
 	inline float			GetRestitution() const											{ return mRestitution; }
-	void					SetRestitution(float inRestitution)								{ JPH_ASSERT(inRestitution >= 0.0f && inRestitution <= 1.0f); mRestitution = inRestitution; }
+	void					SetRestitution(float inRestitution)								{ mRestitution = inRestitution; }
 
 	/// Get world space linear velocity of the center of mass (unit: m/s)
 	inline Vec3				GetLinearVelocity() const										{ return !IsStatic()? mMotionProperties->GetLinearVelocity() : Vec3::sZero(); }
@@ -143,6 +143,12 @@ public:
 
 	// Get the total amount of torque applied to the center of mass this time step (through AddForce/AddTorque calls). Note that it will reset to zero after PhysicsSimulation::Update.
 	inline Vec3				GetAccumulatedTorque() const									{ JPH_ASSERT(IsDynamic()); return mMotionProperties->GetAccumulatedTorque(); }
+
+	// Reset the total accumulated force, not that this will be done automatically after every time step.
+	JPH_INLINE void			ResetForce()													{ JPH_ASSERT(IsDynamic()); return mMotionProperties->ResetForce(); }
+
+	// Reset the total accumulated torque, not that this will be done automatically after every time step.
+	JPH_INLINE void			ResetTorque()													{ JPH_ASSERT(IsDynamic()); return mMotionProperties->ResetTorque(); }
 
 	/// Get inverse inertia tensor in world space
 	inline Mat44			GetInverseInertia() const;
@@ -319,11 +325,11 @@ private:
 	CollisionGroup			mCollisionGroup;												///< The collision group this body belongs to (determines if two objects can collide)
 
 	// 4 byte aligned
-	float					mFriction;														///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together)
-	float					mRestitution;													///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response)
+	float					mFriction;														///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
+	float					mRestitution;													///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response). Note that bodies can have negative restitution but the combined restitution (see PhysicsSystem::SetCombineRestitution) should never go below zero.
 	BodyID					mID;															///< ID of the body (index in the bodies array)
 
-	// 2 bytes aligned
+	// 2 or 4 bytes aligned
 	ObjectLayer				mObjectLayer;													///< The collision layer this body belongs to (determines if two objects can collide)
 
 	// 1 byte aligned
@@ -331,15 +337,11 @@ private:
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 	
-	// 121 bytes up to here (64-bit mode, single precision)
+	// 121 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
 
 #if JPH_CPU_ADDRESS_BITS == 32
-	// Padding for 32 bit mode
-	char					mPadding[19];
-#endif
-#ifdef JPH_DOUBLE_PRECISION
-	// Padding to align to 256 bit
-	char					mPadding2[16];
+	// Padding for mShape, mMotionProperties, mCollisionGroup.mGroupFilter being 4 instead of 8 bytes in 32 bit mode
+	uint8					mPadding[12];
 #endif
 };
 

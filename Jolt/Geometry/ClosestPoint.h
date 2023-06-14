@@ -64,7 +64,7 @@ namespace ClosestPoint
 			float d01 = v0.Dot(v1); 
 		
 			float denominator = d00 * d11 - d01 * d01; 
-			if (abs(denominator) < FLT_EPSILON)
+			if (abs(denominator) < 1.0e-12f)
 			{
 				// Degenerate triangle, return coordinates along longest edge
 				if (d00 > d11)
@@ -93,7 +93,7 @@ namespace ClosestPoint
 			float d12 = v1.Dot(v2); 
 		
 			float denominator = d11 * d22 - d12 * d12; 
-			if (abs(denominator) < FLT_EPSILON)
+			if (abs(denominator) < 1.0e-12f)
 			{
 				// Degenerate triangle, return coordinates along longest edge
 				if (d11 > d22)

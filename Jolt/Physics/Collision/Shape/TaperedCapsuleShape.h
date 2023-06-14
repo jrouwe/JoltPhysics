@@ -12,9 +12,9 @@
 JPH_NAMESPACE_BEGIN
 
 /// Class that constructs a TaperedCapsuleShape
-class TaperedCapsuleShapeSettings final : public ConvexShapeSettings
+class JPH_EXPORT TaperedCapsuleShapeSettings final : public ConvexShapeSettings
 {
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(TaperedCapsuleShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, TaperedCapsuleShapeSettings)
 
 	/// Default constructor for deserialization
 							TaperedCapsuleShapeSettings() = default;
@@ -37,7 +37,7 @@ class TaperedCapsuleShapeSettings final : public ConvexShapeSettings
 };
 
 /// A capsule with different top and bottom radii
-class TaperedCapsuleShape final : public ConvexShape
+class JPH_EXPORT TaperedCapsuleShape final : public ConvexShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

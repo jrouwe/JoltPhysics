@@ -40,9 +40,10 @@ public:
 class ContactSettings
 {
 public:
-	float					mCombinedFriction;					///< Combined friction for the body pair (usually calculated by sCombineFriction)
-	float					mCombinedRestitution;				///< Combined restitution for the body pair (usually calculated by sCombineRestitution)
+	float					mCombinedFriction;					///< Combined friction for the body pair (see: PhysicsSystem::SetCombineFriction)
+	float					mCombinedRestitution;				///< Combined restitution for the body pair (see: PhysicsSystem::SetCombineRestitution)
 	bool					mIsSensor;							///< If the contact should be treated as a sensor vs body contact (no collision response)
+	Vec3					mRelativeSurfaceVelocity = Vec3::sZero(); ///< Relative surface velocity between the bodies (world space surface velocity of body 2 - world space surface velocity of body 1), can be used to create a conveyor belt effect
 };
 
 /// Return value for the OnContactValidate callback. Determines if the contact is being processed or not.
@@ -57,6 +58,7 @@ enum class ValidateResult
 
 /// A listener class that receives collision contact events events.
 /// It can be registered with the ContactConstraintManager (or PhysicsSystem).
+/// Note that contact listener callbacks are called from multiple threads at the same time when all bodies are locked, you're only allowed to read from the bodies and you can't change physics state.
 class ContactListener
 {
 public:

@@ -10,7 +10,7 @@
 class OffsetCenterOfMassShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(OffsetCenterOfMassShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, OffsetCenterOfMassShapeTest)
 
 	// See: Test
 	virtual void	Initialize() override;

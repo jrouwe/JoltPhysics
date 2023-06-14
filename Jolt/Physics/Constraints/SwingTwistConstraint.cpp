@@ -124,6 +124,14 @@ SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const S
 	UpdateLimits();
 }
 
+void SwingTwistConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mLocalSpacePosition1 -= inDeltaCOM;
+	else if (mBody2->GetID() == inBodyID)
+		mLocalSpacePosition2 -= inDeltaCOM;
+}
+
 Quat SwingTwistConstraint::GetRotationInConstraintSpace() const
 {
 	// Let b1, b2 be the center of mass transform of body1 and body2 (For body1 this is mBody1->GetCenterOfMassTransform())
@@ -196,7 +204,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 	Quat q = constraint_body1_to_world.Conjugated() * constraint_body2_to_world;
 
 	// Calculate constraint properties for the swing twist limit
-	mSwingTwistConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, q, constraint_body1_to_world);
+	mSwingTwistConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, q, constraint_body1_to_world);
 
 	if (mSwingMotorState != EMotorState::Off || mTwistMotorState != EMotorState::Off || mMaxFrictionTorque > 0.0f)
 	{
@@ -246,7 +254,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 			{
 				// Enable friction
 				for (int i = 1; i < 3; ++i)
-					mMotorConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], 0.0f);
+					mMotorConstraintPart[i].CalculateConstraintProperties(*mBody1, *mBody2, mWorldSpaceMotorAxis[i], 0.0f);
 			}
 			else
 			{
@@ -259,13 +267,13 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 		case EMotorState::Velocity:
 			// Use motor to create angular velocity around desired axis
 			for (int i = 1; i < 3; ++i)
-				mMotorConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], -mTargetAngularVelocity[i]);
+				mMotorConstraintPart[i].CalculateConstraintProperties(*mBody1, *mBody2, mWorldSpaceMotorAxis[i], -mTargetAngularVelocity[i]);
 			break;
 
 		case EMotorState::Position:
 			// Use motor to drive rotation error to zero
 			for (int i = 1; i < 3; ++i)
-				mMotorConstraintPart[i].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], 0.0f, rotation_error[i], mSwingMotorSettings.mFrequency, mSwingMotorSettings.mDamping);
+				mMotorConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], 0.0f, rotation_error[i], mSwingMotorSettings.mSpringSettings);
 			break;
 		}	
 
@@ -276,7 +284,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 			if (mMaxFrictionTorque > 0.0f)
 			{
 				// Enable friction
-				mMotorConstraintPart[0].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f);
+				mMotorConstraintPart[0].CalculateConstraintProperties(*mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f);
 			}
 			else
 			{
@@ -287,12 +295,12 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 		case EMotorState::Velocity:
 			// Use motor to create angular velocity around desired axis
-			mMotorConstraintPart[0].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], -mTargetAngularVelocity[0]);
+			mMotorConstraintPart[0].CalculateConstraintProperties(*mBody1, *mBody2, mWorldSpaceMotorAxis[0], -mTargetAngularVelocity[0]);
 			break;
 
 		case EMotorState::Position:
 			// Use motor to drive rotation error to zero
-			mMotorConstraintPart[0].CalculateConstraintProperties(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f, rotation_error[0], mTwistMotorSettings.mFrequency, mTwistMotorSettings.mDamping);
+			mMotorConstraintPart[0].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f, rotation_error[0], mTwistMotorSettings.mSpringSettings);
 			break;
 		}	
 	}

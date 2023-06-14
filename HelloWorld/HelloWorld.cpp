@@ -69,9 +69,9 @@ static bool AssertFailedImpl(const char *inExpression, const char *inMessage, co
 // but only if you do collision testing).
 namespace Layers
 {
-	static constexpr uint8 NON_MOVING = 0;
-	static constexpr uint8 MOVING = 1;
-	static constexpr uint8 NUM_LAYERS = 2;
+	static constexpr ObjectLayer NON_MOVING = 0;
+	static constexpr ObjectLayer MOVING = 1;
+	static constexpr ObjectLayer NUM_LAYERS = 2;
 };
 
 /// Class that determines if two object layers can collide
@@ -351,6 +351,9 @@ int main(int argc, char** argv)
 	// Remove and destroy the floor
 	body_interface.RemoveBody(floor->GetID());
 	body_interface.DestroyBody(floor->GetID());
+
+	// Unregisters all types with the factory and cleans up the default material
+	UnregisterTypes();
 
 	// Destroy the factory
 	delete Factory::sInstance;

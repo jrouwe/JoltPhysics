@@ -65,8 +65,8 @@ void PoweredHingeConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParam
 	// Torque = Inertia * Angular Acceleration (alpha)
 	MotorSettings &motor_settings = mConstraint->GetMotorSettings();
 	motor_settings.SetTorqueLimit(mInertiaBody2AsSeenFromConstraint * sMaxAngularAcceleration);
-	motor_settings.mFrequency = sFrequency;
-	motor_settings.mDamping = sDamping;
+	motor_settings.mSpringSettings.mFrequency = sFrequency;
+	motor_settings.mSpringSettings.mDamping = sDamping;
 	mConstraint->SetMaxFrictionTorque(mInertiaBody2AsSeenFromConstraint * sMaxFrictionAngularAcceleration);
 }
 

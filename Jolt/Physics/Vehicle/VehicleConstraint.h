@@ -10,21 +10,20 @@
 #include <Jolt/Physics/Vehicle/VehicleCollisionTester.h>
 #include <Jolt/Physics/Vehicle/VehicleAntiRollBar.h>
 #include <Jolt/Physics/Vehicle/Wheel.h>
+#include <Jolt/Physics/Vehicle/VehicleController.h>
 
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
-class VehicleController;
-class VehicleControllerSettings;
 
 /// Configuration for constraint that simulates a wheeled vehicle.
 /// 
 /// The properties in this constraint are largely based on "Car Physics for Games" by Marco Monster.
 /// See: https://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
-class VehicleConstraintSettings : public ConstraintSettings
+class JPH_EXPORT VehicleConstraintSettings : public ConstraintSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(VehicleConstraintSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, VehicleConstraintSettings)
 
 	/// Saves the contents of the constraint settings in binary form to inStream.
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
@@ -63,7 +62,7 @@ protected:
 ///
 /// Note that when driving over rubble, you may see the wheel jump up and down quite quickly because one frame a collision is found and the next frame not.
 /// To alleviate this, it may be needed to smooth the motion of the visual mesh for the wheel.
-class VehicleConstraint : public Constraint, public PhysicsStepListener
+class JPH_EXPORT VehicleConstraint : public Constraint, public PhysicsStepListener
 {
 public:
 	/// Constructor / destructor
@@ -79,11 +78,22 @@ public:
 	/// Set the interface that tests collision between wheel and ground
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
+	/// Callback function to combine the friction of a tire with the friction of the body it is colliding with.
+	using CombineFunction = float (*)(float inTireFriction, const Body &inBody2, const SubShapeID &inSubShapeID2);
+
+	/// Set the function that combines the friction of two bodies and returns it
+	/// Default method is the geometric mean: sqrt(friction1 * friction2).
+	void						SetCombineFriction(CombineFunction inCombineFriction) { mCombineFriction = inCombineFriction; }
+	CombineFunction				GetCombineFriction() const					{ return mCombineFriction; }
+
 	/// Get the local space forward vector of the vehicle
 	Vec3						GetLocalForward() const						{ return mForward; }
 
 	/// Get the local space up vector of the vehicle
 	Vec3						GetLocalUp() const							{ return mUp; }
+
+	/// Vector indicating the world space up direction (used to limit vehicle pitch/roll), calculated every frame by inverting gravity
+	Vec3						GetWorldUp() const							{ return mWorldUp; }
 
 	/// Access to the vehicle body
 	Body *						GetVehicleBody() const						{ return mBody; }
@@ -102,6 +112,14 @@ public:
 
 	/// Get the state of a wheel
 	Wheel *						GetWheel(uint inIdx)						{ return mWheels[inIdx]; }
+	const Wheel *				GetWheel(uint inIdx) const					{ return mWheels[inIdx]; }
+
+	/// Get the basis vectors for the wheel in local space to the vehicle body (note: basis does not rotate when the wheel rotates arounds its axis)
+	/// @param inWheel Wheel to fetch basis for
+	/// @param outForward Forward vector for the wheel
+	/// @param outUp Up vector for the wheel
+	/// @param outRight Right vector for the wheel
+	void						GetWheelLocalBasis(const Wheel *inWheel, Vec3 &outForward, Vec3 &outUp, Vec3 &outRight) const;
 
 	/// Get the transform of a wheel in local space to the vehicle body, returns a matrix that transforms a cylinder aligned with the Y axis in body space (not COM space)
 	/// @param inWheelIndex Index of the wheel to fetch
@@ -117,11 +135,13 @@ public:
 
 	// Generic interface of a constraint
 	virtual bool				IsActive() const override					{ return mIsActive && Constraint::IsActive(); }
+	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override { /* Do nothing */ }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
 	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;
 	virtual void				BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) override;
+	virtual uint				BuildIslandSplits(LargeIslandSplitter &ioSplitter) const override;
 #ifdef JPH_DEBUG_RENDERER
 	virtual void				DrawConstraint(DebugRenderer *inRenderer) const override;
 	virtual void				DrawConstraintLimits(DebugRenderer *inRenderer) const override;
@@ -134,16 +154,17 @@ private:
 	// See: PhysicsStepListener
 	virtual void				OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem) override;
 
-	// Calculate the contact positions of the wheel in world space, relative to the center of mass of both bodies
-	void						CalculateWheelContactPoint(RMat44Arg inBodyTransform, const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const;
+	// Calculate the position where the suspension and traction forces should be applied in world space, relative to the center of mass of both bodies
+	void						CalculateSuspensionForcePoint(const Wheel &inWheel, Vec3 &outR1PlusU, Vec3 &outR2) const;
 
 	// Calculate the constraint properties for mPitchRollPart
-	void						CalculatePitchRollConstraintProperties(float inDeltaTime, RMat44Arg inBodyTransform);
+	void						CalculatePitchRollConstraintProperties(RMat44Arg inBodyTransform);
 
 	// Simluation information
 	Body *						mBody;										///< Body of the vehicle
 	Vec3						mForward;									///< Local space forward vector for the vehicle
 	Vec3						mUp;										///< Local space up vector for the vehicle
+	Vec3						mWorldUp;									///< Vector indicating the world space up direction (used to limit vehicle pitch/roll)
 	Wheels						mWheels;									///< Wheel states of the vehicle
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< Anti rollbars of the vehicle
 	VehicleController *			mController;								///< Controls the acceleration / declerration of the vehicle
@@ -157,6 +178,7 @@ private:
 
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
+	CombineFunction				mCombineFriction = [](float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
 };
 
 JPH_NAMESPACE_END

@@ -15,7 +15,7 @@ JPH_NAMESPACE_BEGIN
 class CollideShapeSettings;
 
 /// Dispatch function, main function to handle collisions between shapes
-class CollisionDispatch
+class JPH_EXPORT CollisionDispatch
 {
 public:
 	/// Collide 2 shapes and pass any collision on to ioCollector
@@ -35,7 +35,7 @@ public:
 		JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseStat track(NarrowPhaseStat::sCollideShape[(int)inShape1->GetSubType()][(int)inShape2->GetSubType()]);)
 
 		// Only test shape if it passes the shape filter
-		if (inShapeFilter.ShouldCollide(inSubShapeIDCreator1.GetID(), inSubShapeIDCreator2.GetID()))
+		if (inShapeFilter.ShouldCollide(inShape1, inSubShapeIDCreator1.GetID(), inShape2, inSubShapeIDCreator2.GetID()))
 			sCollideShape[(int)inShape1->GetSubType()][(int)inShape2->GetSubType()](inShape1, inShape2, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector, inShapeFilter);
 	}
 
@@ -55,7 +55,7 @@ public:
 		JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseStat track(NarrowPhaseStat::sCastShape[(int)inShapeCast.mShape->GetSubType()][(int)inShape->GetSubType()]);)
 
 		// Only test shape if it passes the shape filter
-		if (inShapeFilter.ShouldCollide(inSubShapeIDCreator1.GetID(), inSubShapeIDCreator2.GetID()))
+		if (inShapeFilter.ShouldCollide(inShapeCastLocal.mShape, inSubShapeIDCreator1.GetID(), inShape, inSubShapeIDCreator2.GetID()))
 			sCastShape[(int)inShapeCastLocal.mShape->GetSubType()][(int)inShape->GetSubType()](inShapeCastLocal, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 	}
 

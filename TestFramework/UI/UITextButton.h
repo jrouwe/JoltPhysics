@@ -10,7 +10,7 @@
 class UITextButton : public UIStaticText
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UITextButton)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UITextButton)
 
 	using ClickAction = function<void()>;
 

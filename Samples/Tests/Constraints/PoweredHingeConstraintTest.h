@@ -10,7 +10,7 @@
 class PoweredHingeConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(PoweredHingeConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, PoweredHingeConstraintTest)
 
 	virtual void			Initialize() override;
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;

@@ -11,7 +11,7 @@
 class BigWorldTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(BigWorldTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BigWorldTest)
 
 	// Destructor
 	virtual					~BigWorldTest() override;

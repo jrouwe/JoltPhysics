@@ -16,11 +16,10 @@
 
 JPH_NAMESPACE_BEGIN
 
-CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
+CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, CastShapeCollector &ioCollector) :
 	mStart(inShapeCast.mCenterOfMassStart.GetTranslation()),
 	mDirection(inShapeCast.mDirection),
 	mShapeCastSettings(inShapeCastSettings),
-	mShapeFilter(inShapeFilter), 
 	mCenterOfMassTransform2(inCenterOfMassTransform2),
 	mScale(inScale),
 	mSubShapeIDCreator1(inSubShapeIDCreator1),
@@ -134,10 +133,6 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	if (mShapeCastSettings.mBackFaceModeTriangles == EBackFaceMode::IgnoreBackFaces && back_facing)
 		return;
 
-	// Test the shape filter if this shape should collide
-	if (!mShapeFilter.ShouldCollide(mSubShapeIDCreator1.GetID(), inSubShapeID2))
-		return;
-
 	// Test if distance between the sphere and plane of triangle is smaller or equal than the radius
 	if (abs(v0.Dot(triangle_normal)) <= mRadius)
 	{
@@ -147,10 +142,15 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 		float q_len_sq = q.LengthSq();
 		if (q_len_sq <= Square(mRadius))
 		{
-			// Yes it does, generate contacts now
+			// Early out if this hit is deeper than the collector's early out value
 			float q_len = sqrt(q_len_sq);
+			float penetration_depth = mRadius - q_len;
+			if (-penetration_depth >= mCollector.GetEarlyOutFraction())
+				return;
+
+			// Generate contact point
 			Vec3 contact_normal = q_len > 0.0f? q / q_len : Vec3::sAxisY();
-			Vec3 contact_point_a = q + contact_normal * (mRadius - q_len);
+			Vec3 contact_point_a = q + contact_normal * penetration_depth;
 			Vec3 contact_point_b = q;
 			AddHitWithActiveEdgeDetection(v0, v1, v2, back_facing, triangle_normal, inActiveEdges, inSubShapeID2, 0.0f, contact_point_a, contact_point_b, contact_normal);
 			return;

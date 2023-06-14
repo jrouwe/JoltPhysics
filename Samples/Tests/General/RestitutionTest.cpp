@@ -23,7 +23,7 @@ void RestitutionTest::Initialize()
 	RefConst<Shape> sphere = new SphereShape(2.0f);
 	RefConst<Shape> box = new BoxShape(Vec3(2.0f, 2.0f, 2.0f));
 
-	// Bodies with increasing friction
+	// Bodies with increasing restitution
 	for (int i = 0; i <= 10; ++i)
 	{
 		BodyCreationSettings settings(sphere, RVec3(-50.0f + i * 10.0f, 20.0f, -20.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);

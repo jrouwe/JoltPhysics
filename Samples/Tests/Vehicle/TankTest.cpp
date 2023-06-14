@@ -101,7 +101,7 @@ void TankTest::Initialize()
 			w->mWidth = wheel_width;
 			w->mSuspensionMinLength = suspension_min_length;
 			w->mSuspensionMaxLength = wheel == 0 || wheel == size(wheel_pos) - 1? suspension_min_length : suspension_max_length;
-			w->mSuspensionFrequency = suspension_frequency;
+			w->mSuspensionSpring.mFrequency = suspension_frequency;
 
 			// Add the wheel to the vehicle
 			track.mWheels.push_back((uint)vehicle.mWheels.size());
@@ -164,6 +164,8 @@ void TankTest::Initialize()
 
 void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
+	VehicleTest::PrePhysicsUpdate(inParams);
+
 	const float min_velocity_pivot_turn = 1.0f;
 
 	const float bullet_radius = 0.061f; // 120 mm
@@ -287,7 +289,23 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-void TankTest::GetInitialCamera(CameraState &ioState) const 
+void TankTest::SaveState(StateRecorder& inStream) const
+{
+	VehicleTest::SaveState(inStream);
+
+	inStream.Write(mPreviousForward);
+	inStream.Write(mReloadTime);
+}
+
+void TankTest::RestoreState(StateRecorder& inStream)
+{
+	VehicleTest::RestoreState(inStream);
+
+	inStream.Read(mPreviousForward);
+	inStream.Read(mReloadTime);
+}
+
+void TankTest::GetInitialCamera(CameraState &ioState) const
 {
 	// Position camera behind tank
 	ioState.mPos = RVec3(0, 4.0f, 0);

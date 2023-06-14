@@ -11,7 +11,7 @@
 class SensorTest : public Test, public ContactListener
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(SensorTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SensorTest)
 
 	virtual				~SensorTest() override;
 

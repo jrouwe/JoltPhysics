@@ -59,6 +59,24 @@ void CharacterVirtual::GetAdjustedBodyVelocity(const Body& inBody, Vec3 &outLine
 		mListener->OnAdjustBodyVelocity(this, inBody, outLinearVelocity, outAngularVelocity);
 }
 
+Vec3 CharacterVirtual::CalculateCharacterGroundVelocity(RVec3Arg inCenterOfMass, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, float inDeltaTime) const
+{
+	// Get angular velocity
+	float angular_velocity_len_sq = inAngularVelocity.LengthSq();
+	if (angular_velocity_len_sq < 1.0e-12f)
+		return inLinearVelocity;
+	float angular_velocity_len = sqrt(angular_velocity_len_sq);
+
+	// Calculate the rotation that the object will make in the time step
+	Quat rotation = Quat::sRotation(inAngularVelocity / angular_velocity_len, angular_velocity_len * inDeltaTime);
+
+	// Calculate where the new character position will be
+	RVec3 new_position = inCenterOfMass + rotation * Vec3(mPosition - inCenterOfMass);
+
+	// Calculate the velocity
+	return inLinearVelocity + Vec3(new_position - mPosition) / inDeltaTime;
+}
+
 template <class taCollector>
 void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
 {
@@ -359,7 +377,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	return true;
 }
 
-void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, ConstraintList &outConstraints) const
+void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, float inDeltaTime, ConstraintList &outConstraints) const
 {
 	for (Contact &c : inContacts)
 	{
@@ -367,7 +385,7 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, Constra
 
 		// Penetrating contact: Add a contact velocity that pushes the character out at the desired speed
 		if (c.mDistance < 0.0f)
-			contact_velocity -= c.mContactNormal * c.mDistance * mPenetrationRecoverySpeed;
+			contact_velocity -= c.mContactNormal * c.mDistance * mPenetrationRecoverySpeed / inDeltaTime;
 
 		// Convert to a constraint
 		outConstraints.emplace_back();
@@ -778,51 +796,22 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 				else
 				{
 					// For keyframed objects that support us calculate the velocity at our position rather than at the contact position so that we properly follow the object
-					// Note that we don't just take the point velocity because a point on an object with angular velocity traces an arc,
-					// so if you just take point velocity * delta time you get an error that accumulates over time
-
-					// Determine center of mass and angular velocity
-					Vec3 angular_velocity;
-					RVec3 com;
+					BodyLockRead lock(mSystem->GetBodyLockInterface(), c.mBodyB);
+					if (lock.SucceededAndIsInBroadPhase())
 					{
-						BodyLockRead lock(mSystem->GetBodyLockInterface(), c.mBodyB);
-						if (lock.SucceededAndIsInBroadPhase())
-						{
-							const Body &body = lock.GetBody();
+						const Body &body = lock.GetBody();
 
-							// Get adjusted body velocity
-							Vec3 linear_velocity;
-							GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
-							
-							// Add the linear velocity to the average velocity
-							avg_velocity += linear_velocity;
+						// Get adjusted body velocity
+						Vec3 linear_velocity, angular_velocity;
+						GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
 
-							com = body.GetCenterOfMassPosition();
-						}
-						else
-						{
-							// Fall back to contact velocity
-							avg_velocity += c.mLinearVelocity;
-
-							angular_velocity = Vec3::sZero();
-							com = RVec3::sZero();
-						}
+						// Calculate the ground velocity
+						avg_velocity += CalculateCharacterGroundVelocity(body.GetCenterOfMassPosition(), linear_velocity, angular_velocity, mLastDeltaTime);
 					}
-
-					// Get angular velocity
-					float angular_velocity_len_sq = angular_velocity.LengthSq();
-					if (angular_velocity_len_sq > 1.0e-12f)
+					else
 					{
-						float angular_velocity_len = sqrt(angular_velocity_len_sq);
-
-						// Calculate the rotation that the object will make in the time step
-						Quat rotation = Quat::sRotation(angular_velocity / angular_velocity_len, angular_velocity_len * mLastDeltaTime);
-
-						// Calculate where the new contact position will be
-						RVec3 new_position = com + rotation * Vec3(mPosition - com);
-
-						// Calculate the velocity
-						avg_velocity += Vec3(new_position - mPosition) / mLastDeltaTime;
+						// Fall back to contact velocity
+						avg_velocity += c.mLinearVelocity;
 					}
 				}
 			}
@@ -880,7 +869,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 		TempContactList contacts(mActiveContacts.begin(), mActiveContacts.end(), inAllocator);
 		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
-		DetermineConstraints(contacts, constraints);
+		DetermineConstraints(contacts, mLastDeltaTime, constraints);
 
 		// Solve the displacement using these constraints, this is used to check if we didn't move at all because we are supported
 		Vec3 displacement;
@@ -934,7 +923,7 @@ void CharacterVirtual::MoveShape(RVec3 &ioPosition, Vec3Arg inVelocity, float in
 		// Convert contacts into constraints
 		ConstraintList constraints(inAllocator);
 		constraints.reserve(contacts.size() * 2);
-		DetermineConstraints(contacts, constraints);
+		DetermineConstraints(contacts, inDeltaTime, constraints);
 
 #ifdef JPH_DEBUG_RENDERER
 		bool draw_constraints = inDrawConstraints && iteration == 0;
@@ -1056,6 +1045,22 @@ void CharacterVirtual::RefreshContacts(const BroadPhaseLayerFilter &inBroadPhase
 	StoreActiveContacts(contacts, inAllocator);
 }
 
+void CharacterVirtual::UpdateGroundVelocity()
+{
+	BodyLockRead lock(mSystem->GetBodyLockInterface(), mGroundBodyID);
+	if (lock.SucceededAndIsInBroadPhase())
+	{
+		const Body &body = lock.GetBody();
+
+		// Get adjusted body velocity
+		Vec3 linear_velocity, angular_velocity;
+		GetAdjustedBodyVelocity(body, linear_velocity, angular_velocity);
+
+		// Calculate the ground velocity
+		mGroundVelocity = CalculateCharacterGroundVelocity(body.GetCenterOfMassPosition(), linear_velocity, angular_velocity, mLastDeltaTime);
+	}
+}
+
 void CharacterVirtual::MoveToContact(RVec3Arg inPosition, const Contact &inContact, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator)
 {
 	// Set the new position
@@ -1163,12 +1168,42 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 		DebugRenderer::sInstance->DrawArrow(mPosition, up_position, Color::sWhite, 0.01f);
 #endif // JPH_DEBUG_RENDERER
 
+	// Collect normals of steep slopes that we would like to walk stairs on.
+	// We need to do this before calling MoveShape because it will update mActiveContacts.
+	Vec3 character_velocity = inStepForward / inDeltaTime;
+	Vec3 horizontal_velocity = character_velocity - character_velocity.Dot(mUp) * mUp;
+	std::vector<Vec3, STLTempAllocator<Vec3>> steep_slope_normals(inAllocator);
+	steep_slope_normals.reserve(mActiveContacts.size());
+	for (const Contact &c : mActiveContacts)
+		if (c.mHadCollision
+			&& c.mSurfaceNormal.Dot(horizontal_velocity - c.mLinearVelocity) < 0.0f // Pushing into the contact
+			&& IsSlopeTooSteep(c.mSurfaceNormal)) // Slope too steep
+			steep_slope_normals.push_back(c.mSurfaceNormal);
+	if (steep_slope_normals.empty())
+		return false; // No steep slopes, cancel
+
 	// Horizontal movement
 	RVec3 new_position = up_position;
-	MoveShape(new_position, inStepForward / inDeltaTime, inDeltaTime, nullptr, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
-	float horizontal_movement_sq = Vec3(new_position - up_position).LengthSq();
+	MoveShape(new_position, character_velocity, inDeltaTime, nullptr, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter, inAllocator);
+	Vec3 horizontal_movement = Vec3(new_position - up_position);
+	float horizontal_movement_sq = horizontal_movement.LengthSq();
 	if (horizontal_movement_sq < 1.0e-8f)
 		return false; // No movement, cancel
+
+	// Check if we made any progress towards any of the steep slopes, if not we just slid along the slope
+	// so we need to cancel the stair walk or else we will move faster than we should as we've done
+	// normal movement first and then stair walk.
+	bool made_progress = false;
+	float max_dot = -0.05f * inStepForward.Length();
+	for (const Vec3 &normal : steep_slope_normals)
+		if (normal.Dot(horizontal_movement) < max_dot)
+		{
+			// We moved more than 5% of the forward step against a steep slope, accept this as progress
+			made_progress = true;
+			break;
+		}
+	if (!made_progress)
+		return false;
 
 #ifdef JPH_DEBUG_RENDERER
 	// Draw horizontal sweep

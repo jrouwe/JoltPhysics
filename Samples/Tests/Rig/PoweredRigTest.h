@@ -14,7 +14,7 @@
 class PoweredRigTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(PoweredRigTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, PoweredRigTest)
 
 	// Destructor
 	virtual					~PoweredRigTest() override;

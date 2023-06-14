@@ -11,7 +11,7 @@
 class ContactListenerTest : public Test, public ContactListener
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ContactListenerTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ContactListenerTest)
 
 	// See: Test
 	virtual void			Initialize() override;

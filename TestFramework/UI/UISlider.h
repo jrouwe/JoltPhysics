@@ -11,7 +11,7 @@
 class UISlider : public UIElement
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UISlider)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UISlider)
 
 	using ValueChangedAction = function<void(float)>;
 	

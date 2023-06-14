@@ -8,8 +8,10 @@
 #include "LoggingBodyActivationListener.h"
 #include "LoggingContactListener.h"
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
+#include <Jolt/Physics/Constraints/PointConstraint.h>
 
 TEST_SUITE("PhysicsTests")
 {
@@ -264,6 +266,32 @@ TEST_SUITE("PhysicsTests")
 		// Change the user data
 		body->SetUserData(0x5678123443218765);
 		CHECK(body->GetUserData() == 0x5678123443218765);
+
+		// Convert back to body settings
+		BodyCreationSettings body_settings2 = body->GetBodyCreationSettings();
+		CHECK(body_settings2.mUserData == 0x5678123443218765);
+	}
+
+	TEST_CASE("TestPhysicsConstraintUserData")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+
+		// Create a body
+		Body &body = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
+
+		// Create constraint with user data
+		PointConstraintSettings constraint_settings;
+		constraint_settings.mUserData = 0x1234567887654321;
+		Ref<Constraint> constraint = constraint_settings.Create(body, Body::sFixedToWorld);
+		CHECK(constraint->GetUserData() == 0x1234567887654321);
+
+		// Change the user data
+		constraint->SetUserData(0x5678123443218765);
+		CHECK(constraint->GetUserData() == 0x5678123443218765);
+
+		// Convert back to constraint settings
+		Ref<ConstraintSettings> constraint_settings2 = constraint->GetConstraintSettings();
+		CHECK(constraint_settings2->mUserData == 0x5678123443218765);
 	}
 
 	TEST_CASE("TestPhysicsPosition")
@@ -901,6 +929,59 @@ TEST_SUITE("PhysicsTests")
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, sphere.GetID(), floor.GetID()));
 	}
 
+	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceNoHit")
+	{
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		Body &floor = c.CreateFloor();
+		floor.SetRestitution(1.0f);
+		c.ZeroGravity();
+
+		// Turn off the minimum velocity for restitution, our velocity is lower than the default
+		PhysicsSettings settings = c.GetSystem()->GetPhysicsSettings();
+		settings.mMinVelocityForRestitution = 0.0f;
+		c.GetSystem()->SetPhysicsSettings(settings);
+
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create a sphere inside speculative contact distance from the ground
+		const float cSpeculativeContactDistance = c.GetSystem()->GetPhysicsSettings().mSpeculativeContactDistance;
+		const float cDistanceAboveFloor = 0.9f * cSpeculativeContactDistance;
+		const RVec3 cInitialPosSphere(0, 1.0f + cDistanceAboveFloor, 0.0f);
+
+		// Make it move slow enough so that it will not touch the floor in 1 time step
+		const Vec3 cVelocity(0, -0.9f * cDistanceAboveFloor / c.GetDeltaTime(), 0);
+
+		Body &sphere = c.CreateSphere(cInitialPosSphere, 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+		sphere.SetLinearVelocity(cVelocity);
+		sphere.SetRestitution(1.0f);
+		sphere.GetMotionProperties()->SetLinearDamping(0.0f);
+
+		// Simulate a step
+		c.SimulateSingleStep();
+
+		// Check that it has triggered contact points from the speculative contacts
+		CHECK(contact_listener.GetEntryCount() == 2);
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Validate, sphere.GetID(), floor.GetID()));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, sphere.GetID(), floor.GetID()));
+		contact_listener.Clear();
+
+		// Check that sphere didn't actually change velocity (it hasn't actually interacted with the floor, the speculative contact was not an actual contact)
+		CHECK(sphere.GetLinearVelocity() == cVelocity);
+
+		// Simulate a step
+		c.SimulateSingleStep();
+
+		// Check again that it triggered contact points
+		CHECK(contact_listener.GetEntryCount() == 2);
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Validate, sphere.GetID(), floor.GetID()));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Persist, sphere.GetID(), floor.GetID()));
+		contact_listener.Clear();
+
+		// It should have bounced back up and inverted velocity due to restitution being 1
+		CHECK_APPROX_EQUAL(-sphere.GetLinearVelocity(), cVelocity);
+	}
+
 	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceMovingAway")
 	{
 		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
@@ -1301,5 +1382,57 @@ TEST_SUITE("PhysicsTests")
 			CHECK_APPROX_EQUAL(lock1.GetBody().GetPosition(), cBox1Position + cBox1Velocity * cTime, 1.0e-5f);
 			CHECK_APPROX_EQUAL(lock2.GetBody().GetPosition(), cBox2Position + cBox2Velocity * cTime, 1.0e-5f);
 		}		
+	}
+
+	TEST_CASE("TestOutOfBodies")
+	{
+		// Create a context with space for a single body
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1, 0, 1);
+
+		BodyInterface& bi = c.GetBodyInterface();
+
+		// First body
+		Body *b1 = bi.CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		CHECK(b1 != nullptr);
+
+		// Second body should fail
+		Body *b2 = bi.CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		CHECK(b2 == nullptr);
+
+		// Free first body
+		bi.DestroyBody(b1->GetID());
+
+		// Second body creation should succeed
+		b2 = bi.CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		CHECK(b2 != nullptr);
+
+		// Clean up
+		bi.DestroyBody(b2->GetID());
+	}
+
+	TEST_CASE("TestOutOfContactConstraints")
+	{
+		// Create a context with space for 8 constraints
+		PhysicsTestContext c(1.0f / 60.0f, 1, 1, 0, 1024, 4096, 8);
+
+		c.CreateFloor();
+
+		// The first 8 boxes should be fine
+		for (int i = 0; i < 8; ++i)
+			c.CreateBox(RVec3(3.0_r * i, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+
+		// Step
+		EPhysicsUpdateError errors = c.SimulateSingleStep();
+		CHECK(errors == EPhysicsUpdateError::None);
+
+		// Adding one more box should introduce an error
+		c.CreateBox(RVec3(24.0_r, 0.9_r, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+
+		// Step
+		{
+			JPH_IF_ENABLE_ASSERTS(ExpectAssert expect_assert(1);)
+			errors = c.SimulateSingleStep();
+		}
+		CHECK((errors & EPhysicsUpdateError::ContactConstraintsFull) != EPhysicsUpdateError::None);
 	}
 }

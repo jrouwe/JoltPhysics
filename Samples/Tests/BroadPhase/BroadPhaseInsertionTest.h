@@ -11,7 +11,7 @@
 class BroadPhaseInsertionTest : public BroadPhaseTest
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(BroadPhaseInsertionTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, BroadPhaseInsertionTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;

@@ -11,10 +11,10 @@ JPH_NAMESPACE_BEGIN
 class CollideShapeSettings;
 
 /// Class that constructs a MutableCompoundShape.
-class MutableCompoundShapeSettings final : public CompoundShapeSettings
+class JPH_EXPORT MutableCompoundShapeSettings final : public CompoundShapeSettings
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_VIRTUAL(MutableCompoundShapeSettings)
+	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, MutableCompoundShapeSettings)
 
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;
@@ -27,7 +27,7 @@ public:
 /// Note: If you're using MutableCompoundShapes and are querying data while modifying the shape you'll have a race condition. 
 /// In this case it is best to create a new MutableCompoundShape and set the new shape on the body using BodyInterface::SetShape. If a 
 /// query is still working on the old shape, it will have taken a reference and keep the old shape alive until the query finishes.
-class MutableCompoundShape final : public CompoundShape
+class JPH_EXPORT MutableCompoundShape final : public CompoundShape
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -85,6 +85,7 @@ public:
 
 	/// Recalculate the center of mass and shift all objects so they're centered around it 
 	/// (this needs to be done of dynamic bodies and if the center of mass changes significantly due to adding / removing / repositioning sub shapes or else the simulation will look unnatural)
+	/// Note that after adjusting the center of mass of an object you need to call BodyInterface::NotifyShapeChanged and Constraint::NotifyShapeChanged on the relevant bodies / constraints.
 	void							AdjustCenterOfMass();
 
 	///@}

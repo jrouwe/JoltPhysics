@@ -4,8 +4,20 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
 
-## Changes between v2.0.1 and latest
+## Changes between v3.0.1 and latest
 
+* 20230609 - *SBS* - The MotorcycleController lean controller is now a full PID controller. This changes binary serialization format. (70e7bb3e5808dabc17ee38fb823fbfa7e9140a91)
+* 20230609 - *SBS* - VehicleConstraint uses the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (0da97d8f3345f14c5b4b0ee3571c05832c556f98)
+* 20230609 - *SBS* - DistanceConstraintSettings, SliderConstraintSettings and MotorSettings now use the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (3cabc057c1267fde288c1ab2a23076702c71eb79)
+* 20230520 - A bug was fixed in CharacterVirtual that makes mPenetrationRecoverySpeed behave according to the documentation (1 = fully resolve collision in 1 update). With the bug the recovery was too little. If you want the penetration recovery to work as before with the bug multiply it by 1 / delta_time. (8dd93317d66a9a72d3afeff4ecb17c257a7e9d91)
+* 20230420 - To support compiling Jolt as a shared library, the RTTI macros were changed to be able to specify if a symbol should be exported or not. If you're using Jolt's RTTI system in your own project you need to change e.g. JPH_DECLARE_RTTI_VIRTUAL(XXX) to JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, XXX). (d2f1d97004d036c6f759203c42e264e401472037)
+
+## Changes between v2.0.1 and v3.0.0
+
+* 20230331 - *SBS* - Vehicle wheels now support specifying the steering axis and wheel forward and up axis separately. This breaks the serialization format and requires setting extra properties on the wheels. (4269d8bbc77b889552a842c2e8476ba7ffc6b9a1)
+* 20230328 - Vehicle now supports suspension under an angle. The behavior of the suspension, even if it is under 90 degrees with the vehicle body, changed so this may require tweaking the spring constants. (172a99c718bded5faa169ac440517286684fa2f0)
+* 20230316 - The signature of ShapeFilter changed and the ShouldCollide function is no longer called for triangles inside a mesh/heightfield shape (you can use CollisionCollector::AddHit to filter per triangle). The previous implementation didn't pass in enough context for the application to fully determine which sub shapes were colliding. See [#473](https://github.com/jrouwe/JoltPhysics/discussions/473) for more information. (bc4fa997f15f2953dc87ee5c1ba51ecf2077c287)
+* 20230313 - VehicleCollisionTester::Collide parameter outSuspensionLength was returning suspension length + wheel radius, now it returns the suspension length. If you have your own implementation of VehicleCollisionTester you need to update your code. (fcd9cb0f1677709e30951f2748aefd5f72ffdae1)
 * 20230212 - Sensors are now able to detect other Sensors, make sure you put sensors in an ObjectLayer that doesn't collide with other sensors if you want to preserve the old behavior. (a76f5891ee429ae4fcde659c19f1eb769f9d8a21)
 * 20230205 - *SBS* - Added 'IsSensor' and 'UseManifoldReduction' to BodyCreationSettings::SaveBinaryState. (8f6f210f53fc71e43760e20aeb2eae28ea168f4b)
 * 20221231 - ObjectLayerPairFilter and ObjectVsBroadPhaseLayerFilter are now objects instead of function pointers. (4315ad53e354f094f753664fcf7a52870f6915e4)

@@ -23,8 +23,9 @@ using RayCastBodyCollector = CollisionCollector<BroadPhaseCastResult, CollisionC
 using CastShapeBodyCollector = CollisionCollector<BroadPhaseCastResult, CollisionCollectorTraitsCastShape>;
 using CollideShapeBodyCollector = CollisionCollector<BodyID, CollisionCollectorTraitsCollideShape>;
 
-/// Interface to the broadphase that can perform collision queries. These queries will only test the bounding box of the body to quickly determine a potential set of colliding bodies
-class BroadPhaseQuery : public NonCopyable
+/// Interface to the broadphase that can perform collision queries. These queries will only test the bounding box of the body to quickly determine a potential set of colliding bodies.
+/// The shapes of the bodies are not tested, if you want this then you should use the NarrowPhaseQuery interface.
+class JPH_EXPORT BroadPhaseQuery : public NonCopyable
 {
 public:
 	/// Virtual destructor

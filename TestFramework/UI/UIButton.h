@@ -11,7 +11,7 @@
 class UIButton : public UITextButton
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(UIButton)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UIButton)
 
 	/// Cloning / copying
 	virtual void		CopyTo(UIElement *ioElement) const override;

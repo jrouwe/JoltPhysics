@@ -74,6 +74,14 @@ PathConstraint::PathConstraint(Body &inBody1, Body &inBody2, const PathConstrain
 	SetPath(inSettings.mPath, inSettings.mPathFraction);
 }
 
+void PathConstraint::NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM)
+{
+	if (mBody1->GetID() == inBodyID)
+		mPathToBody1.SetTranslation(mPathToBody1.GetTranslation() - inDeltaCOM);
+	else if (mBody2->GetID() == inBodyID)
+		mPathToBody2.SetTranslation(mPathToBody2.GetTranslation() - inDeltaCOM);
+}
+
 void PathConstraint::SetPath(const PathConstraintPath *inPath, float inPathFraction)
 {
 	mPath = inPath;
@@ -137,7 +145,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 
 	// Check if closest point is on the boundary of the path and if so apply limit
 	if (!mPath->IsLooping() && (mPathFraction <= 0.0f || mPathFraction >= mPath->GetPathMaxFraction()))
-		mPositionLimitsConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent);
+		mPositionLimitsConstraintPart.CalculateConstraintProperties(*mBody1, mR1 + mU, *mBody2, mR2, mPathTangent);
 	else
 		mPositionLimitsConstraintPart.Deactivate();
 
@@ -178,13 +186,13 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 	{
 	case EMotorState::Off:
 		if (mMaxFrictionForce > 0.0f)
-			mPositionMotorConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent);
+			mPositionMotorConstraintPart.CalculateConstraintProperties(*mBody1, mR1 + mU, *mBody2, mR2, mPathTangent);
 		else
 			mPositionMotorConstraintPart.Deactivate();
 		break;
 
 	case EMotorState::Velocity:
-		mPositionMotorConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, -mTargetVelocity);
+		mPositionMotorConstraintPart.CalculateConstraintProperties(*mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, -mTargetVelocity);
 		break;
 
 	case EMotorState::Position:
@@ -203,7 +211,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 			}
 			else
 				c = mPathFraction - mTargetPathFraction;
-			mPositionMotorConstraintPart.CalculateConstraintProperties(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, 0.0f, c, mPositionMotorSettings.mFrequency, mPositionMotorSettings.mDamping);
+			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, 0.0f, c, mPositionMotorSettings.mSpringSettings);
 			break;
 		}
 	}	

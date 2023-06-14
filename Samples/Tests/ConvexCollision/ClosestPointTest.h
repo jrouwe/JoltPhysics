@@ -10,7 +10,7 @@
 class ClosestPointTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ClosestPointTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ClosestPointTest)
 
 	// Update the test, called before the physics update
 	virtual void	PrePhysicsUpdate(const PreUpdateParams &inParams) override;

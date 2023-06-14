@@ -16,7 +16,7 @@ JPH_NAMESPACE_BEGIN
 class CharacterVirtual;
 
 /// Contains the configuration of a character
-class CharacterVirtualSettings : public CharacterBaseSettings
+class JPH_EXPORT CharacterVirtualSettings : public CharacterBaseSettings
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -52,7 +52,7 @@ public:
 };
 
 /// This class receives callbacks when a virtual character hits something.
-class CharacterContactListener
+class JPH_EXPORT CharacterContactListener
 {
 public:
 	/// Destructor
@@ -92,7 +92,7 @@ public:
 /// The advantage of this is that you can determine when the character moves in the frame (usually this has to happen at a very particular point in the frame)
 /// but the downside is that other objects don't see this virtual character. In order to make this work it is recommended to pair a CharacterVirtual with a Character that
 /// moves along. This Character should be keyframed (or at least have no gravity) and move along with the CharacterVirtual so that other rigid bodies can collide with it.
-class CharacterVirtual : public CharacterBase
+class JPH_EXPORT CharacterVirtual : public CharacterBase
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -244,6 +244,10 @@ public:
 	/// This function can be used after a character has teleported to determine the new contacts with the world.
 	void								RefreshContacts(const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator);
 
+	/// Use the ground body ID to get an updated estimate of the ground velocity. This function can be used if the ground body has moved / changed velocity and you want a new estimate of the ground velocity.
+	/// It will not perform collision detection, so is less accurate than RefreshContacts but a lot faster.
+	void								UpdateGroundVelocity();
+
 	/// Switch the shape of the character (e.g. for stance).
 	/// @param inShape The shape to switch to.
 	/// @param inMaxPenetrationDepth When inMaxPenetrationDepth is not FLT_MAX, it checks if the new shape collides before switching shape. This is the max penetration we're willing to accept after the switch.
@@ -389,7 +393,7 @@ private:
 	void								RemoveConflictingContacts(TempContactList &ioContacts, IgnoredContactList &outIgnoredContacts) const;
 
 	// Convert contacts into constraints. The character is assumed to start at the origin and the constraints are planes around the origin that confine the movement of the character.
-	void								DetermineConstraints(TempContactList &inContacts, ConstraintList &outConstraints) const;
+	void								DetermineConstraints(TempContactList &inContacts, float inDeltaTime, ConstraintList &outConstraints) const;
 
 	// Use the constraints to solve the displacement of the character. This will slide the character on the planes around the origin for as far as possible.
 	void								SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, float inTimeRemaining, ConstraintList &ioConstraints, IgnoredContactList &ioIgnoredContacts, float &outTimeSimulated, Vec3 &outDisplacement, TempAllocator &inAllocator
@@ -400,6 +404,11 @@ private:
 
 	// Get the velocity of a body adjusted by the contact listener
 	void								GetAdjustedBodyVelocity(const Body& inBody, Vec3 &outLinearVelocity, Vec3 &outAngularVelocity) const;
+
+	// Calculate the ground velocity of the character assuming it's standing on an object with specified linear and angular velocity and with specified center of mass.
+	// Note that we don't just take the point velocity because a point on an object with angular velocity traces an arc,
+	// so if you just take point velocity * delta time you get an error that accumulates over time
+	Vec3								CalculateCharacterGroundVelocity(RVec3Arg inCenterOfMass, Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, float inDeltaTime) const;
 
 	// Handle contact with physics object that we're colliding against
 	bool								HandleContact(Vec3Arg inVelocity, Constraint &ioConstraint, float inDeltaTime) const;

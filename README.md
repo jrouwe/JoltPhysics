@@ -38,7 +38,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 ## Features
 
-* Simulation of rigid bodies of various shapes using continous collision detection:
+* Simulation of rigid bodies of various shapes using continuous collision detection:
 	* Sphere.
 	* Box.
 	* Capsule.
@@ -122,9 +122,9 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 
 * C [here](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics/libs) and [here](https://github.com/amerkoleci/JoltPhysicsSharp/tree/main/src/joltc)
 * [C#](https://github.com/amerkoleci/JoltPhysicsSharp)
-* [Java](https://github.com/aecsocket/jolt-jni)
+* [Java](https://github.com/aecsocket/jolt-java)
 * [JavaScript](https://github.com/jrouwe/JoltPhysics.js)
-* [Zig](https://github.com/michal-z/zig-gamedev)
+* [Zig](https://github.com/michal-z/zig-gamedev/tree/main/libs/zphysics)
 
 ## Integrations in Other Engines
 
@@ -132,6 +132,12 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 * [Godot](https://github.com/godot-jolt/godot-jolt)
 * [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
 
+See [a list of projects that use Jolt Physics here](Docs/ProjectsUsingJolt.md).
+
 ## License
 
 The project is distributed under the [MIT license](LICENSE).
+
+## Contributions
+
+All contributions are welcome! If you intend to make larger changes, please discuss first in the GitHub Discussion section. For non-trivial changes, we require that you agree to a [Contributor Agreement](ContributorAgreement.md). When you create a PR, [CLA assistant](https://cla-assistant.io/) will prompt you to sign it.

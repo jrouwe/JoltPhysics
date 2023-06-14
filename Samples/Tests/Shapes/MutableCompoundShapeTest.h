@@ -9,7 +9,7 @@
 class MutableCompoundShapeTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(MutableCompoundShapeTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, MutableCompoundShapeTest)
 
 	// See: Test
 	virtual void			Initialize() override;

@@ -9,7 +9,7 @@
 class ConeConstraintTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(ConeConstraintTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, ConeConstraintTest)
 
 	// See: Test
 	virtual void		Initialize() override;

@@ -10,7 +10,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// Class that is able to map a low detail (ragdoll) skeleton to a high detail (animation) skeleton and vice versa
-class SkeletonMapper : public RefTarget<SkeletonMapper>
+class JPH_EXPORT SkeletonMapper : public RefTarget<SkeletonMapper>
 {
 public:
 	/// A joint that maps 1-on-1 to a joint in the other skeleton

@@ -47,6 +47,13 @@ public:
 	/// Declare ResultType so that derived classes can use it
 	using ResultType = ResultTypeArg;
 
+	/// Default constructor
+							CollisionCollector() = default;
+
+	/// Constructor to initialize from another collector
+	template <class ResultTypeArg2>
+	explicit				CollisionCollector(const CollisionCollector<ResultTypeArg2, TraitsType> &inRHS) : mEarlyOutFraction(inRHS.GetEarlyOutFraction()), mContext(inRHS.GetContext()) { }
+
 	/// Destructor
 	virtual					~CollisionCollector() = default;
 
@@ -79,6 +86,9 @@ public:
 
 	/// Get the current early out value
 	inline float			GetEarlyOutFraction() const						{ return mEarlyOutFraction; }
+
+	/// Get the current early out value but make sure it's bigger than zero, this is used for shape casting as negative values are used for penetration
+	inline float			GetPositiveEarlyOutFraction() const				{ return max(FLT_MIN, mEarlyOutFraction); }
 
 private:
 	/// The early out fraction determines the fraction below which the collector is still accepting a hit (can be used to reduce the amount of work)

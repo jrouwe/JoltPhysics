@@ -12,7 +12,7 @@
 class FrictionPerTriangleTest : public Test, public ContactListener
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(FrictionPerTriangleTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, FrictionPerTriangleTest)
 
 	// See: Test
 	virtual void	Initialize() override;
