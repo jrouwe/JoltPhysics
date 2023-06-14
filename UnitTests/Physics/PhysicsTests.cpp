@@ -1435,4 +1435,50 @@ TEST_SUITE("PhysicsTests")
 		}
 		CHECK((errors & EPhysicsUpdateError::ContactConstraintsFull) != EPhysicsUpdateError::None);
 	}
+
+	TEST_CASE("TestFriction")
+	{
+		const float friction_floor = 0.9f;
+		const float friction_box = 0.8f;
+		const float combined_friction = sqrt(friction_floor * friction_box);
+
+		for (float angle = 0; angle < 360.0f; angle += 30.0f)
+		{
+			// Create a context with space for 8 constraints
+			PhysicsTestContext c(1.0f / 60.0f, 1, 1, 0, 1024, 4096, 8);
+
+			// Create floor
+			Body &floor = c.CreateFloor();
+			floor.SetFriction(friction_floor);
+
+			// Create box with a velocity that will make it slide over the floor (making sure it intersects a little bit initially)
+			BodyCreationSettings box_settings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(0, 0.999_r, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			box_settings.mFriction = friction_box;
+			box_settings.mLinearDamping = 0;
+			box_settings.mLinearVelocity = Vec3(Sin(DegreesToRadians(angle)), 0, Cos(DegreesToRadians(angle))) * 20.0f;
+			Body &box = *c.GetBodyInterface().CreateBody(box_settings);
+			c.GetBodyInterface().AddBody(box.GetID(), EActivation::Activate);
+
+			// We know that the friction force equals the normal force times the friction coefficient
+			float friction_acceleration = combined_friction * c.GetSystem()->GetGravity().Length();
+
+			// Simulate
+			Vec3 velocity = box_settings.mLinearVelocity;
+			RVec3 position = box_settings.mPosition;
+			for (int i = 0; i < 60; ++i)
+			{
+				c.SimulateSingleStep();
+
+				// Integrate our own simulation
+				velocity -= velocity.Normalized() * friction_acceleration * c.GetDeltaTime();
+				position += velocity * c.GetDeltaTime();
+			}
+
+			// Note that the result is not very accurate so we need quite a high tolerance
+			CHECK_APPROX_EQUAL(box.GetCenterOfMassPosition(), position, 1.0e-2f);
+			CHECK_APPROX_EQUAL(box.GetRotation(), box_settings.mRotation, 1.0e-2f);
+			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), velocity, 2.0e-2f);
+			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 1.0e-2f);
+		}
+	}
 }
