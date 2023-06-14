@@ -294,7 +294,7 @@ public:
 
 	/// Templated form of SolveVelocityConstraint with the motion types baked in, part 1: get the total lambda
 	template <EMotionType Type1, EMotionType Type2>
-	JPH_INLINE float			TemplatedSolveVelocityConstraintGetTotalLambda(MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis)
+	JPH_INLINE float			TemplatedSolveVelocityConstraintGetTotalLambda(const MotionProperties *ioMotionProperties1, const MotionProperties *ioMotionProperties2, Vec3Arg inWorldSpaceAxis) const
 	{
 		// Calculate jacobian multiplied by linear velocity
 		float jv;
