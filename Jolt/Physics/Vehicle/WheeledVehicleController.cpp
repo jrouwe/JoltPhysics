@@ -428,8 +428,6 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// a * w(t + dt) = b
 		//
 		// We then invert the matrix to get the new angular velocities.
-		//
-		// Note that currently we set TW(i) = 0 so that the wheels will accelerate as if no external force was applied to them. These external forces are applied later and will slow down the wheel before the end of the time step.
 
 		// Dimension of matrix is N + 1
 		int n = (int)driven_wheels.size() + 1;
@@ -453,19 +451,22 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// dt / Ie
 		float dt_div_ie = inDeltaTime / mEngine.mInertia;
 
+		// Calculate scale factor for impulses based on previous delta time
+		float impulse_scale = mPreviousDeltaTime > 0.0f? inDeltaTime / mPreviousDeltaTime : 0.0f;
+
 		// Iterate the rows for the wheels
 		for (int i = 0; i < (int)driven_wheels.size(); ++i)
 		{
 			const DrivenWheel &w_i = driven_wheels[i];
 
-			// dt / Iw
-			float dt_div_iw = inDeltaTime / w_i.mWheel->GetSettings()->mInertia;
+			// Get wheel inertia
+			float inertia = w_i.mWheel->GetSettings()->mInertia;
 
 			// S * R(i)
 			float s_r = clutch_strength * w_i.mClutchToWheelRatio;
 
 			// dt * S * R(i) * F(i) / Iw
-			float dt_s_r_f_div_iw = dt_div_iw * s_r * w_i.mClutchToWheelTorqueRatio;
+			float dt_s_r_f_div_iw = inDeltaTime * s_r * w_i.mClutchToWheelTorqueRatio / inertia;
 
 			// Fill in the columns of a for wheel j
 			for (int j = 0; j < (int)driven_wheels.size(); ++j)
@@ -480,8 +481,10 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			// Add the column for the engine
 			a(i, engine) = -dt_s_r_f_div_iw;
 
-			// Fill in the constant b
-			b(i, 0) = w_i.mWheel->GetAngularVelocity(); // + dt_div_iw * (brake and tire torques)
+			// Fill in the constant b = ww(i,t)+(dt*TW(i))/Iw(i)
+			// Note that we don't know the wheel torque TW(i) yet, so we use the impulse applied from the last frame to estimate it to get a better value for engine rpm
+			// Wheel torque TW = force * radius = lambda / dt * radius
+			b(i, 0) = w_i.mWheel->GetAngularVelocity() - impulse_scale * w_i.mWheel->GetLongitudinalLambda() / inertia * w_i.mWheel->GetSettings()->mRadius;
 
 			// To avoid looping over the wheels again, we also fill in the wheel columns of the engine row here
 			a(engine, i) = -dt_div_ie * s_r / num_driven_wheels_float;
@@ -497,8 +500,14 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			// Update the angular velocities for the wheels
 			for (int i = 0; i < (int)driven_wheels.size(); ++i)
 			{
-				DrivenWheel &dw1 = driven_wheels[i];
-				dw1.mWheel->SetAngularVelocity(b(i, 0));
+				DrivenWheel &w_i = driven_wheels[i];
+
+				// We used the longitudinal impulse from last frame to estimate the wheel speed, but this impulse hasn't been applied yet.
+				// We calculate how much extra spin the wheel would get if it was not in contact with the floor and add it,
+				// this speed will be transferred to the ground when we solve the constraints.
+				float dw = impulse_scale * w_i.mWheel->GetLongitudinalLambda() / w_i.mWheel->GetSettings()->mInertia * w_i.mWheel->GetSettings()->mRadius;
+
+				w_i.mWheel->SetAngularVelocity(b(i, 0) + dw);
 			}
 
 			// Update the engine RPM
@@ -563,6 +572,9 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			w->mBrakeImpulse = 0.0f;
 		}
 	}
+
+	// Remember previous delta time so we can scale the impulses correctly
+	mPreviousDeltaTime = inDeltaTime;
 }
 
 bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime) 
@@ -732,6 +744,7 @@ void WheeledVehicleController::SaveState(StateRecorder &inStream) const
 	inStream.Write(mRightInput);
 	inStream.Write(mBrakeInput);
 	inStream.Write(mHandBrakeInput);
+	inStream.Write(mPreviousDeltaTime);
 
 	mEngine.SaveState(inStream);
 	mTransmission.SaveState(inStream);
@@ -743,6 +756,7 @@ void WheeledVehicleController::RestoreState(StateRecorder &inStream)
 	inStream.Read(mRightInput);
 	inStream.Read(mBrakeInput);
 	inStream.Read(mHandBrakeInput);
+	inStream.Read(mPreviousDeltaTime);
 
 	mEngine.RestoreState(inStream);
 	mTransmission.RestoreState(inStream);
