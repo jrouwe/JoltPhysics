@@ -65,12 +65,9 @@ void VehicleEngine::ApplyDamping(float inDeltaTime)
 
 void VehicleEngine::DrawRPM(DebugRenderer *inRenderer, RVec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inSize, float inShiftDownRPM, float inShiftUpRPM) const
 {
-	// Function that converts RPM to an angle in radians
-	auto rpm_to_angle = [this](float inRPM) { return (-0.75f + 1.5f * (inRPM - mMinRPM) / (mMaxRPM - mMinRPM)) * JPH_PI; };
-
 	// Function to draw part of a pie
-	auto draw_pie = [rpm_to_angle, inRenderer, inSize, inPosition, inForward, inUp](float inMinRPM, float inMaxRPM, Color inColor) { 
-		inRenderer->DrawPie(inPosition, inSize, inForward, inUp, rpm_to_angle(inMinRPM), rpm_to_angle(inMaxRPM), inColor, DebugRenderer::ECastShadow::Off);
+	auto draw_pie = [this, inRenderer, inSize, inPosition, inForward, inUp](float inMinRPM, float inMaxRPM, Color inColor) { 
+		inRenderer->DrawPie(inPosition, inSize, inForward, inUp, ConvertRPMToAngle(inMinRPM), ConvertRPMToAngle(inMaxRPM), inColor, DebugRenderer::ECastShadow::Off);
 	};
 
 	// Draw segment until inShiftDownRPM
