@@ -423,13 +423,13 @@ TEST_SUITE("ContactListenerTests")
 
 	TEST_CASE("TestMassOverride")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
-		c.ZeroGravity();
-
 		const float cInitialVelocity = 2.0f;
 
 		for (int i = 0; i < 16; ++i)
 		{
+			PhysicsTestContext c;
+			c.ZeroGravity();
+
 			// Create two spheres on a collision course
 			BodyCreationSettings bcs(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
@@ -483,16 +483,17 @@ TEST_SUITE("ContactListenerTests")
 			float inv_m1 = sGetInvMassScale(body1) * body1.GetMotionProperties()->GetInverseMass();
 			float inv_m2 = sGetInvMassScale(body2) * body2.GetMotionProperties()->GetInverseMass();
 
-			// Calculate resulting velocity using conservation of momentum and energy
-			// See: https://en.wikipedia.org/wiki/Elastic_collision where m1 = 1 / inv_m1 and m2 = 1 / inv_m2
 			float v1, v2;
 			if (inv_m1 == 0.0f && inv_m2 == 0.0f)
 			{
+				// If both bodies became kinematic they will pass through each other
 				v1 = cInitialVelocity;
 				v2 = -cInitialVelocity;
 			}
 			else
 			{
+				// Calculate resulting velocity using conservation of momentum and energy
+				// See: https://en.wikipedia.org/wiki/Elastic_collision where m1 = 1 / inv_m1 and m2 = 1 / inv_m2
 				v1 = cInitialVelocity * (inv_m2 - 3.0f * inv_m1) / (inv_m1 + inv_m2);
 				v2 = cInitialVelocity * (3.0f * inv_m2 - inv_m1) / (inv_m1 + inv_m2);
 			}
