@@ -423,7 +423,8 @@ TEST_SUITE("ContactListenerTests")
 
 	TEST_CASE("TestMassOverride")
 	{
-		const float cInitialVelocity = 2.0f;
+		const float cInitialVelocity1 = 2.0f;
+		const float cInitialVelocity2 = -3.0f;
 
 		for (int i = 0; i < 16; ++i)
 		{
@@ -437,15 +438,15 @@ TEST_SUITE("ContactListenerTests")
 			bcs.mRestitution = 1.0f;
 			bcs.mLinearDamping = 0.0f;
 			bcs.mPosition = RVec3(-2, 0, 0);
-			bcs.mLinearVelocity = Vec3(cInitialVelocity, 0, 0);
-			bcs.mUserData = (i << 1);
+			bcs.mLinearVelocity = Vec3(cInitialVelocity1, 0, 0);
+			bcs.mUserData = i << 1;
 			Body &body1 = *c.GetBodyInterface().CreateBody(bcs);
 			c.GetBodyInterface().AddBody(body1.GetID(), EActivation::Activate);
 
 			bcs.mMassPropertiesOverride.mMass = 2.0f;
 			bcs.mPosition = RVec3(2, 0, 0);
-			bcs.mLinearVelocity = Vec3(-cInitialVelocity, 0, 0);
-			bcs.mUserData = (i << 1) + 1;
+			bcs.mLinearVelocity = Vec3(cInitialVelocity2, 0, 0);
+			bcs.mUserData++;
 			Body &body2 = *c.GetBodyInterface().CreateBody(bcs);
 			c.GetBodyInterface().AddBody(body2.GetID(), EActivation::Activate);
 
@@ -487,15 +488,15 @@ TEST_SUITE("ContactListenerTests")
 			if (inv_m1 == 0.0f && inv_m2 == 0.0f)
 			{
 				// If both bodies became kinematic they will pass through each other
-				v1 = cInitialVelocity;
-				v2 = -cInitialVelocity;
+				v1 = cInitialVelocity1;
+				v2 = cInitialVelocity2;
 			}
 			else
 			{
 				// Calculate resulting velocity using conservation of momentum and energy
 				// See: https://en.wikipedia.org/wiki/Elastic_collision where m1 = 1 / inv_m1 and m2 = 1 / inv_m2
-				v1 = cInitialVelocity * (inv_m2 - 3.0f * inv_m1) / (inv_m1 + inv_m2);
-				v2 = cInitialVelocity * (3.0f * inv_m2 - inv_m1) / (inv_m1 + inv_m2);
+				v1 = (2.0f * inv_m1 * cInitialVelocity2 + (inv_m2 - inv_m1) * cInitialVelocity1) / (inv_m1 + inv_m2);
+				v2 = (2.0f * inv_m2 * cInitialVelocity1 + (inv_m1 - inv_m2) * cInitialVelocity2) / (inv_m1 + inv_m2);
 			}
 
 			// Check that the spheres move according to their overridden masses
