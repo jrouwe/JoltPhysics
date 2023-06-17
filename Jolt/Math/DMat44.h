@@ -114,6 +114,9 @@ public:
 	JPH_INLINE Vec4				GetColumn4(uint inCol) const							{ JPH_ASSERT(inCol < 3); return mCol[inCol]; }
 	JPH_INLINE void				SetColumn4(uint inCol, Vec4Arg inV)						{ JPH_ASSERT(inCol < 3); mCol[inCol] = inV; }
 
+	/// Transpose 3x3 subpart of matrix
+	JPH_INLINE Mat44			Transposed3x3() const									{ return GetRotation().Transposed3x3(); }
+
 	/// Inverse 4x4 matrix
 	JPH_INLINE DMat44			Inversed() const;
 
