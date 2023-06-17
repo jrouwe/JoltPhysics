@@ -32,6 +32,7 @@ public:
 		RotationZ,				///< When limited: MaxLimit between [0, PI]. MinLimit = -MaxLimit. Forms a cone shaped limit with Y.
 
 		Num,
+		NumTranslation = TranslationZ + 1,
 	};
 
 	// See: ConstraintSettings::SaveBinaryState
@@ -67,6 +68,10 @@ public:
 	/// Free movement over an axis is allowed when min = -FLT_MAX and max = FLT_MAX.
 	float						mLimitMin[EAxis::Num] = { -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX };
 	float						mLimitMax[EAxis::Num] = { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX };
+
+	/// When enabled, this makes the limits soft. When the constraint exceeds the limits, a spring force will pull it back.
+	/// Only soft translation limits are supported, soft rotation limits are not currently supported.
+	SpringSettings				mLimitsSpringSettings[EAxis::NumTranslation];
 
 	/// Make axis free (unconstrained)
 	void						MakeFreeAxis(EAxis inAxis)									{ mLimitMin[inAxis] = -FLT_MAX; mLimitMax[inAxis] = FLT_MAX; }
@@ -131,6 +136,10 @@ public:
 	inline bool					IsFixedAxis(EAxis inAxis) const								{ return (mFixedAxis & (1 << inAxis)) != 0; }
 	inline bool					IsFreeAxis(EAxis inAxis) const								{ return (mFreeAxis & (1 << inAxis)) != 0; }
 
+	/// Update the limits spring settings
+	const SpringSettings &		GetLimitsSpringSettings(EAxis inAxis) const					{ JPH_ASSERT(inAxis < EAxis::NumTranslation); return mLimitsSpringSettings[inAxis]; }
+	void						SetLimitsSpringSettings(EAxis inAxis, const SpringSettings& inLimitsSpringSettings) { JPH_ASSERT(inAxis < EAxis::NumTranslation); mLimitsSpringSettings[inAxis] = inLimitsSpringSettings; CacheHasSpringLimits(); }
+
 	/// Set the max friction for each axis
 	void						SetMaxFriction(EAxis inAxis, float inFriction);
 	float						GetMaxFriction(EAxis inAxis) const							{ return mMaxFriction[inAxis]; }
@@ -187,9 +196,12 @@ private:
 	// Cache the state of mRotationMotorActive
 	void						CacheRotationMotorActive();
 
+	/// Cache the state of mHasSpringLimits
+	void						CacheHasSpringLimits();
+
 	// Constraint settings helper functions
 	inline bool					IsTranslationConstrained() const							{ return (mFreeAxis & 0b111) != 0b111; }
-	inline bool					IsTranslationFullyConstrained() const						{ return (mFixedAxis & 0b111) == 0b111; }
+	inline bool					IsTranslationFullyConstrained() const						{ return (mFixedAxis & 0b111) == 0b111 && !mHasSpringLimits; }
 	inline bool					IsRotationConstrained() const								{ return (mFreeAxis & 0b111000) != 0b111000; }
 	inline bool					IsRotationFullyConstrained() const							{ return (mFixedAxis & 0b111000) == 0b111000; }
 	inline bool					HasFriction(EAxis inAxis) const								{ return !IsFixedAxis(inAxis) && mMaxFriction[inAxis] > 0.0f; }
@@ -210,8 +222,10 @@ private:
 	bool						mTranslationMotorActive = false;							// If any of the translational frictions / motors are active
 	bool						mRotationMotorActive = false;								// If any of the rotational frictions / motors are active
 	uint8						mRotationPositionMotorActive = 0;							// Bitmask of axis that have position motor active (bit 0 = RotationX)
+	bool						mHasSpringLimits = false;									// If any of the limit springs have a non-zero frequency/stiffness
 	float						mLimitMin[EAxis::Num];
 	float						mLimitMax[EAxis::Num];
+	SpringSettings				mLimitsSpringSettings[EAxis::NumTranslation];
 
 	// Motor settings for each axis
 	MotorSettings				mMotorSettings[EAxis::Num];

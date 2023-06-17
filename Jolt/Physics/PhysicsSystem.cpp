@@ -2037,7 +2037,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 
 					// Solve contact constraint
 					AxisConstraintPart contact_constraint;
-					contact_constraint.CalculateConstraintProperties(ioContext->mSubStepDeltaTime, body1, r1_plus_u, body2, r2, ccd_body->mContactNormal, normal_velocity_bias);
+					contact_constraint.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, ccd_body->mContactNormal, normal_velocity_bias);
 					contact_constraint.SolveVelocityConstraint(body1, body2, ccd_body->mContactNormal, -FLT_MAX, FLT_MAX);
 
 					// Apply friction
@@ -2049,11 +2049,11 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 						float max_lambda_f = ccd_body->mContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
 						AxisConstraintPart friction1;
-						friction1.CalculateConstraintProperties(ioContext->mSubStepDeltaTime, body1, r1_plus_u, body2, r2, tangent1, 0.0f);
+						friction1.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, tangent1);
 						friction1.SolveVelocityConstraint(body1, body2, tangent1, -max_lambda_f, max_lambda_f);
 
 						AxisConstraintPart friction2;
-						friction2.CalculateConstraintProperties(ioContext->mSubStepDeltaTime, body1, r1_plus_u, body2, r2, tangent2, 0.0f);
+						friction2.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, tangent2);
 						friction2.SolveVelocityConstraint(body1, body2, tangent2, -max_lambda_f, max_lambda_f);
 					}
 

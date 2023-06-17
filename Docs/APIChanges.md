@@ -6,6 +6,9 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v3.0.1 and latest
 
+* 20230609 - *SBS* - The MotorcycleController lean controller is now a full PID controller. This changes binary serialization format. (70e7bb3e5808dabc17ee38fb823fbfa7e9140a91)
+* 20230609 - *SBS* - VehicleConstraint uses the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (0da97d8f3345f14c5b4b0ee3571c05832c556f98)
+* 20230609 - *SBS* - DistanceConstraintSettings, SliderConstraintSettings and MotorSettings now use the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (3cabc057c1267fde288c1ab2a23076702c71eb79)
 * 20230520 - A bug was fixed in CharacterVirtual that makes mPenetrationRecoverySpeed behave according to the documentation (1 = fully resolve collision in 1 update). With the bug the recovery was too little. If you want the penetration recovery to work as before with the bug multiply it by 1 / delta_time. (8dd93317d66a9a72d3afeff4ecb17c257a7e9d91)
 * 20230420 - To support compiling Jolt as a shared library, the RTTI macros were changed to be able to specify if a symbol should be exported or not. If you're using Jolt's RTTI system in your own project you need to change e.g. JPH_DECLARE_RTTI_VIRTUAL(XXX) to JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, XXX). (d2f1d97004d036c6f759203c42e264e401472037)
 

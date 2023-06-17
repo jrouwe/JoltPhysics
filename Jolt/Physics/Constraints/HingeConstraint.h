@@ -43,6 +43,9 @@ public:
 	float						mLimitsMin = -JPH_PI;
 	float						mLimitsMax = JPH_PI;
 
+	/// When enabled, this makes the limits soft. When the constraint exceeds the limits, a spring force will pull it back.
+	SpringSettings				mLimitsSpringSettings;
+
 	/// Maximum amount of torque (N m) to apply as friction when the constraint is not powered by a motor
 	float						mMaxFrictionTorque = 0.0f;
 
@@ -107,6 +110,11 @@ public:
 	float						GetLimitsMax() const									{ return mLimitsMax; }
 	bool						HasLimits() const										{ return mHasLimits; }
 
+	/// Update the limits spring settings
+	const SpringSettings &		GetLimitsSpringSettings() const							{ return mLimitsSpringSettings; }
+	SpringSettings &			GetLimitsSpringSettings()								{ return mLimitsSpringSettings; }
+	void						SetLimitsSpringSettings(const SpringSettings &inLimitsSpringSettings) { mLimitsSpringSettings = inLimitsSpringSettings; }
+
 	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
 	inline Vec3		 			GetTotalLambdaPosition() const							{ return mPointConstraintPart.GetTotalLambda(); }
 	inline Vector<2>			GetTotalLambdaRotation() const							{ return mRotationConstraintPart.GetTotalLambda(); }
@@ -141,6 +149,9 @@ private:
 	bool						mHasLimits;
 	float						mLimitsMin;
 	float						mLimitsMax;
+
+	// Soft constraint limits
+	SpringSettings				mLimitsSpringSettings;
 
 	// Friction
 	float						mMaxFrictionTorque;

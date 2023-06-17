@@ -90,6 +90,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigVsSmallTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActiveEdgesTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MultithreadedTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ContactListenerTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ModifyMassTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SensorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DynamicMeshTest)
@@ -127,6 +128,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Active Edges",						JPH_RTTI(ActiveEdgesTest) },
 	{ "Multithreaded",						JPH_RTTI(MultithreadedTest) },
 	{ "Contact Listener",					JPH_RTTI(ContactListenerTest) },
+	{ "Modify Mass",						JPH_RTTI(ModifyMassTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
@@ -1687,8 +1689,8 @@ void SamplesApp::UpdateDebug()
 						// Create constraint to drag body
 						DistanceConstraintSettings settings;
 						settings.mPoint1 = settings.mPoint2 = hit_position;
-						settings.mFrequency = 2.0f / GetWorldScale();
-						settings.mDamping = 1.0f;
+						settings.mLimitsSpringSettings.mFrequency = 2.0f / GetWorldScale();
+						settings.mLimitsSpringSettings.mDamping = 1.0f;
 
 						// Construct fixed body for the mouse constraint
 						// Note that we don't add it to the world since we don't want anything to collide with it, we just

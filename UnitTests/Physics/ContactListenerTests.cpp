@@ -412,4 +412,96 @@ TEST_SUITE("ContactListenerTests")
 		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), floor.GetRotation() * listener.mLocalSpaceVelocity, 0.005f);
 		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
 	}
+
+	static float sGetInvMassScale(const Body &inBody)
+	{
+		uint64 ud = inBody.GetUserData();
+		int index = ((ud & 1) != 0? (ud >> 1) : (ud >> 3)) & 0b11;
+		float mass_overrides[] = { 1.0f, 0.0f, 0.5f, 2.0f };
+		return mass_overrides[index];
+	}
+
+	TEST_CASE("TestMassOverride")
+	{
+		const float cInitialVelocity1 = 2.0f;
+		const float cInitialVelocity2 = -3.0f;
+
+		for (int i = 0; i < 16; ++i)
+		{
+			PhysicsTestContext c;
+			c.ZeroGravity();
+
+			// Create two spheres on a collision course
+			BodyCreationSettings bcs(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+			bcs.mMassPropertiesOverride.mMass = 1.0f;
+			bcs.mRestitution = 1.0f;
+			bcs.mLinearDamping = 0.0f;
+			bcs.mPosition = RVec3(-2, 0, 0);
+			bcs.mLinearVelocity = Vec3(cInitialVelocity1, 0, 0);
+			bcs.mUserData = i << 1;
+			Body &body1 = *c.GetBodyInterface().CreateBody(bcs);
+			c.GetBodyInterface().AddBody(body1.GetID(), EActivation::Activate);
+
+			bcs.mMassPropertiesOverride.mMass = 2.0f;
+			bcs.mPosition = RVec3(2, 0, 0);
+			bcs.mLinearVelocity = Vec3(cInitialVelocity2, 0, 0);
+			bcs.mUserData++;
+			Body &body2 = *c.GetBodyInterface().CreateBody(bcs);
+			c.GetBodyInterface().AddBody(body2.GetID(), EActivation::Activate);
+
+			// Contact listener that modifies mass
+			class ContactListenerImpl : public ContactListener
+			{
+			public:
+				virtual void	OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+				{
+					// Override the mass of body 1
+					float scale1 = sGetInvMassScale(inBody1);
+					ioSettings.mInvMassScale1 = scale1;
+					ioSettings.mInvInertiaScale1 = scale1;
+
+					// Override the mass of body 2
+					float scale2 = sGetInvMassScale(inBody2);
+					ioSettings.mInvMassScale2 = scale2;
+					ioSettings.mInvInertiaScale2 = scale2;
+				}
+
+				virtual void	OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+				{
+					OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
+				}
+			};
+
+			// Set listener
+			ContactListenerImpl listener;
+			c.GetSystem()->SetContactListener(&listener);
+
+			// Simulate
+			c.Simulate(1.0f);
+
+			// Calculate resulting inverse mass
+			float inv_m1 = sGetInvMassScale(body1) * body1.GetMotionProperties()->GetInverseMass();
+			float inv_m2 = sGetInvMassScale(body2) * body2.GetMotionProperties()->GetInverseMass();
+
+			float v1, v2;
+			if (inv_m1 == 0.0f && inv_m2 == 0.0f)
+			{
+				// If both bodies became kinematic they will pass through each other
+				v1 = cInitialVelocity1;
+				v2 = cInitialVelocity2;
+			}
+			else
+			{
+				// Calculate resulting velocity using conservation of momentum and energy
+				// See: https://en.wikipedia.org/wiki/Elastic_collision where m1 = 1 / inv_m1 and m2 = 1 / inv_m2
+				v1 = (2.0f * inv_m1 * cInitialVelocity2 + (inv_m2 - inv_m1) * cInitialVelocity1) / (inv_m1 + inv_m2);
+				v2 = (2.0f * inv_m2 * cInitialVelocity1 + (inv_m1 - inv_m2) * cInitialVelocity2) / (inv_m1 + inv_m2);
+			}
+
+			// Check that the spheres move according to their overridden masses
+			CHECK_APPROX_EQUAL(body1.GetLinearVelocity(), Vec3(v1, 0, 0));
+			CHECK_APPROX_EQUAL(body2.GetLinearVelocity(), Vec3(v2, 0, 0));
+		}
+	}
 }

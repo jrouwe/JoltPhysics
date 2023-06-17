@@ -6,6 +6,7 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Physics/Constraints/SpringSettings.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -28,9 +29,9 @@ public:
 
 	/// Constructor
 							MotorSettings() = default;
-							MotorSettings(const MotorSettings &inRHS) = default;
-							MotorSettings(float inFrequency, float inDamping) : mFrequency(inFrequency), mDamping(inDamping) { JPH_ASSERT(IsValid()); }
-							MotorSettings(float inFrequency, float inDamping, float inForceLimit, float inTorqueLimit) : mFrequency(inFrequency), mDamping(inDamping), mMinForceLimit(-inForceLimit), mMaxForceLimit(inForceLimit), mMinTorqueLimit(-inTorqueLimit), mMaxTorqueLimit(inTorqueLimit) { JPH_ASSERT(IsValid()); }
+							MotorSettings(const MotorSettings &) = default;
+							MotorSettings(float inFrequency, float inDamping) : mSpringSettings(ESpringMode::FrequencyAndDamping, inFrequency, inDamping) { JPH_ASSERT(IsValid()); }
+							MotorSettings(float inFrequency, float inDamping, float inForceLimit, float inTorqueLimit) : mSpringSettings(ESpringMode::FrequencyAndDamping, inFrequency, inDamping), mMinForceLimit(-inForceLimit), mMaxForceLimit(inForceLimit), mMinTorqueLimit(-inTorqueLimit), mMaxTorqueLimit(inTorqueLimit) { JPH_ASSERT(IsValid()); }
 
 	/// Set asymmetric force limits
 	void					SetForceLimits(float inMin, float inMax)	{ JPH_ASSERT(inMin <= inMax); mMinForceLimit = inMin; mMaxForceLimit = inMax; }
@@ -45,7 +46,7 @@ public:
 	void					SetTorqueLimit(float inLimit)				{ mMinTorqueLimit = -inLimit; mMaxTorqueLimit = inLimit; }
 
 	/// Check if settings are valid
-	bool					IsValid() const								{ return mFrequency >= 0.0f && mDamping >= 0.0f && mMinForceLimit <= mMaxForceLimit && mMinTorqueLimit <= mMaxTorqueLimit; }
+	bool					IsValid() const								{ return mSpringSettings.mFrequency >= 0.0f && mSpringSettings.mDamping >= 0.0f && mMinForceLimit <= mMaxForceLimit && mMinTorqueLimit <= mMaxTorqueLimit; }
 
 	/// Saves the contents of the motor settings in binary form to inStream.
 	void					SaveBinaryState(StreamOut &inStream) const;
@@ -54,8 +55,7 @@ public:
 	void					RestoreBinaryState(StreamIn &inStream);
 
 	// Settings
-	float					mFrequency = 2.0f;							///< Oscillation frequency when solving position target (Hz). Should be in the range (0, 0.5 * simulation frequency]. When simulating at 60 Hz, 20 is a good value for a strong motor. Only used for position motors.
-	float					mDamping = 1.0f;							///< Damping when solving position target (0 = minimal damping, 1 = critical damping). Only used for position motors.
+	SpringSettings			mSpringSettings { ESpringMode::FrequencyAndDamping, 2.0f, 1.0f }; ///< Settings for the spring that is used to drive to the position target (not used when motor is a velocity motor).
 	float					mMinForceLimit = -FLT_MAX;					///< Minimum force to apply in case of a linear constraint (N). Usually this is -mMaxForceLimit unless you want a motor that can e.g. push but not pull. Not used when motor is an angular motor.
 	float					mMaxForceLimit = FLT_MAX;					///< Maximum force to apply in case of a linear constraint (N). Not used when motor is an angular motor.
 	float					mMinTorqueLimit = -FLT_MAX;					///< Minimum torque to apply in case of a angular constraint (N m). Usually this is -mMaxTorqueLimit unless you want a motor that can e.g. push but not pull. Not used when motor is a position motor.
