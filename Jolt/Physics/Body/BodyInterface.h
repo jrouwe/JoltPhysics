@@ -231,7 +231,7 @@ public:
 
 	/// Get the user data for a body
 	uint64						GetUserData(const BodyID &inBodyID) const;
-	void						SetUserData(const BodyID &inBodyID, uint64 inUserData);
+	void						SetUserData(const BodyID &inBodyID, uint64 inUserData) const;
 
 	/// Get the material for a particular sub shape
 	const PhysicsMaterial *		GetMaterial(const BodyID &inBodyID, const SubShapeID &inSubShapeID) const;

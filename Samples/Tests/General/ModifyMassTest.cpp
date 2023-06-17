@@ -59,17 +59,17 @@ void ModifyMassTest::PostPhysicsUpdate(float inDeltaTime)
 		if (body_lock.Succeeded())
 		{
 			const Body &body = body_lock.GetBody();
-			DebugRenderer::sInstance->DrawText3D(body.GetPosition(), StringFormat("Mass override: %.1f\nVelocity X: %.1f", sGetMassScale(body), body.GetLinearVelocity().GetX()), Color::sWhite);
+			DebugRenderer::sInstance->DrawText3D(body.GetPosition(), StringFormat("Inv mass scale: %.1f\nVelocity X: %.1f", (double)sGetInvMassScale(body), (double)body.GetLinearVelocity().GetX()), Color::sWhite);
 		}
 	}
 }
 
-float ModifyMassTest::sGetMassScale(const Body &inBody)
+float ModifyMassTest::sGetInvMassScale(const Body &inBody)
 {
-	float sMassOverrides[] = { 1.0f, 0.0f, 0.5f, 2.0f };
 	uint64 ud = inBody.GetUserData();
 	int index = ((ud & 1) != 0? (ud >> 1) : (ud >> 3)) & 0b11;
-	return sMassOverrides[index];
+	float mass_overrides[] = { 1.0f, 0.0f, 0.5f, 2.0f };
+	return mass_overrides[index];
 }
 
 void ModifyMassTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
@@ -79,12 +79,12 @@ void ModifyMassTest::OnContactAdded(const Body &inBody1, const Body &inBody2, co
 		return;
 
 	// Override the mass of body 1
-	float scale1 = sGetMassScale(inBody1);
+	float scale1 = sGetInvMassScale(inBody1);
 	ioSettings.mInvMassScale1 = scale1;
 	ioSettings.mInvInertiaScale1 = scale1;
 
 	// Override the mass of body 2
-	float scale2 = sGetMassScale(inBody2);
+	float scale2 = sGetInvMassScale(inBody2);
 	ioSettings.mInvMassScale2 = scale2;
 	ioSettings.mInvInertiaScale2 = scale2;
 }

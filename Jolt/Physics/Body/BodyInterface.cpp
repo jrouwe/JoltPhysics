@@ -898,7 +898,7 @@ uint64 BodyInterface::GetUserData(const BodyID &inBodyID) const
 		return 0;
 }
 
-void BodyInterface::SetUserData(const BodyID &inBodyID, uint64 inUserData)
+void BodyInterface::SetUserData(const BodyID &inBodyID, uint64 inUserData) const
 {
 	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
 	if (lock.Succeeded())

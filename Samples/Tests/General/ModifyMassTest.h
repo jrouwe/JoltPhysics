@@ -29,7 +29,7 @@ public:
 
 private:
 	// Get the scale factor for a body based on its user data
-	static float				sGetMassScale(const Body &inBody);
+	static float				sGetInvMassScale(const Body &inBody);
 
 	// Reset the bodies to their initial states
 	void						ResetBodies(int inCycle);
