@@ -44,9 +44,9 @@ void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstra
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE void ContactConstraintManager::WorldContactPoint::CalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, float inCombinedRestitution, float inCombinedFriction, float inMinVelocityForRestitution, float inSurfaceVelocity1, float inSurfaceVelocity2)
+JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, float inCombinedRestitution, float inCombinedFriction, float inMinVelocityForRestitution, float inSurfaceVelocity1, float inSurfaceVelocity2)
 {
-	JPH_DET_LOG("CalculateFrictionAndNonPenetrationConstraintProperties: p1: " << inWorldSpacePosition1 << " p2: " << inWorldSpacePosition2
+	JPH_DET_LOG("TemplatedCalculateFrictionAndNonPenetrationConstraintProperties: p1: " << inWorldSpacePosition1 << " p2: " << inWorldSpacePosition2
 		<< " normal: " << inWorldSpaceNormal << " tangent1: " << inWorldSpaceTangent1 << " tangent2: " << inWorldSpaceTangent2
 		<< " restitution: " << inCombinedRestitution << " friction: " << inCombinedFriction << " minv: " << inMinVelocityForRestitution
 		<< " surf1: " << inSurfaceVelocity1 << " surf2: " << inSurfaceVelocity2);
@@ -624,8 +624,37 @@ void ContactConstraintManager::PrepareConstraintBuffer(PhysicsUpdateContext *inC
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, float inDeltaTime, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2)
+JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(ContactConstraint &ioConstraint, const ContactSettings &inSettings, float inDeltaTime, RMat44Arg inTransformBody1, RMat44Arg inTransformBody2, const Body &inBody1, const Body &inBody2)
 {
+	// Calculate scaled mass and inertia
+	float inv_m1;
+	Mat44 inv_i1;
+	if constexpr (Type1 == EMotionType::Dynamic)
+	{
+		const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
+		inv_m1 = inSettings.mInvMassScale1 * mp1->GetInverseMass();
+		inv_i1 = inSettings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inTransformBody1.GetRotation());
+	}
+	else
+	{
+		inv_m1 = 0.0f;
+		inv_i1 = Mat44::sZero();
+	}
+
+	float inv_m2;
+	Mat44 inv_i2;
+	if constexpr (Type2 == EMotionType::Dynamic)
+	{
+		const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
+		inv_m2 = inSettings.mInvMassScale2 * mp2->GetInverseMass();
+		inv_i2 = inSettings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inTransformBody2.GetRotation());
+	}
+	else
+	{
+		inv_m2 = 0.0f;
+		inv_i2 = Mat44::sZero();
+	}
+
 	// Calculate tangents
 	Vec3 t1, t2;
 	ioConstraint.GetTangents(t1, t2);
@@ -643,7 +672,7 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	{
 		RVec3 p1 = inTransformBody1 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition1);
 		RVec3 p2 = inTransformBody2 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition2);
-		wcp.CalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(inDeltaTime, inBody1, inBody2, inInvM1, inInvM2, inInvI1, inInvI2, p1, p2, ws_normal, t1, t2, ioConstraint.mCombinedRestitution, ioConstraint.mCombinedFriction, min_velocity_for_restitution, surface_velocity1, surface_velocity2);
+		wcp.TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(inDeltaTime, inBody1, inBody2, inv_m1, inv_m2, inv_i1, inv_i2, p1, p2, ws_normal, t1, t2, ioConstraint.mCombinedRestitution, ioConstraint.mCombinedFriction, min_velocity_for_restitution, surface_velocity1, surface_velocity2);
 	}
 }
 
@@ -653,54 +682,34 @@ inline void ContactConstraintManager::CalculateFrictionAndNonPenetrationConstrai
 	switch (inBody1.GetMotionType())
 	{
 	case EMotionType::Dynamic:
+		switch (inBody2.GetMotionType())
 		{
-			const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-			float invm1 = inSettings.mInvMassScale1 * mp1->GetInverseMass();
-			Mat44 invi1 = inSettings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inTransformBody1.GetRotation());
-			switch (inBody2.GetMotionType())
-			{
-			case EMotionType::Dynamic:
-				{
-					const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-					float invm2 = inSettings.mInvMassScale2 * mp2->GetInverseMass();
-					Mat44 invi2 = inSettings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inTransformBody2.GetRotation());
-					TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Dynamic>(ioConstraint, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2, invm1, invm2, invi1, invi2);
-				}
-				break;
-
-			case EMotionType::Kinematic:
-				TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Kinematic>(ioConstraint, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2, invm1, 0 /* Will not be used */, invi1, Mat44() /* Will not be used */);
-				break;
-
-			case EMotionType::Static:
-				TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Static>(ioConstraint, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2, invm1, 0 /* Will not be used */, invi1, Mat44() /* Will not be used */);
-				break;
-
-			default:
-				JPH_ASSERT(false);
-				break;
-			}
+		case EMotionType::Dynamic:
+			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Dynamic>(ioConstraint, inSettings, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2);
 			break;
-		}
 
-	case EMotionType::Kinematic:
-		{
-			JPH_ASSERT(inBody2.IsDynamic());
-			const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-			float invm2 = inSettings.mInvMassScale2 * mp2->GetInverseMass();
-			Mat44 invi2 = inSettings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inTransformBody2.GetRotation());
-			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Kinematic, EMotionType::Dynamic>(ioConstraint, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2, 0 /* Will not be used */, invm2, Mat44() /* Will not be used */, invi2);
+		case EMotionType::Kinematic:
+			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Kinematic>(ioConstraint, inSettings, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2);
+			break;
+
+		case EMotionType::Static:
+			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Dynamic, EMotionType::Static>(ioConstraint, inSettings, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2);
+			break;
+
+		default:
+			JPH_ASSERT(false);
+			break;
 		}
 		break;
 
+	case EMotionType::Kinematic:
+		JPH_ASSERT(inBody2.IsDynamic());
+		TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Kinematic, EMotionType::Dynamic>(ioConstraint, inSettings, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2);
+		break;
+
 	case EMotionType::Static:
-		{
-			JPH_ASSERT(inBody2.IsDynamic());
-			const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-			float invm2 = inSettings.mInvMassScale2 * mp2->GetInverseMass();
-			Mat44 invi2 = inSettings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inTransformBody2.GetRotation());
-			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Static, EMotionType::Dynamic>(ioConstraint, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2, 0 /* Will not be used */, invm2, Mat44() /* Will not be used */, invi2);
-		}
+		JPH_ASSERT(inBody2.IsDynamic());
+		TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<EMotionType::Static, EMotionType::Dynamic>(ioConstraint, inSettings, inDeltaTime, inTransformBody1, inTransformBody2, inBody1, inBody2);
 		break;
 
 	default:
@@ -1074,32 +1083,32 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		float delta_time = mUpdateContext->mSubStepDeltaTime;
 
 		// Calculate scaled mass and inertia
-		float invm1, invm2;
-		Mat44 invi1, invi2;
+		float inv_m1;
+		Mat44 inv_i1;
 		if constexpr (Type1 == EMotionType::Dynamic)
 		{
 			const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-			invm1 = settings.mInvMassScale1 * mp1->GetInverseMass();
-			invi1 = settings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inverse_transform_body1.Transposed3x3());
+			inv_m1 = settings.mInvMassScale1 * mp1->GetInverseMass();
+			inv_i1 = settings.mInvInertiaScale1 * mp1->GetInverseInertiaForRotation(inverse_transform_body1.Transposed3x3());
 		}
 		else
 		{
-			// Will be unused
-			invm1 = 0;
-			invi1 = Mat44();
+			inv_m1 = 0.0f;
+			inv_i1 = Mat44::sZero();
 		}
 
+		float inv_m2;
+		Mat44 inv_i2;
 		if constexpr (Type2 == EMotionType::Dynamic)
 		{
 			const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-			invm2 = settings.mInvMassScale2 * mp2->GetInverseMass();
-			invi2 = settings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inverse_transform_body2.Transposed3x3());
+			inv_m2 = settings.mInvMassScale2 * mp2->GetInverseMass();
+			inv_i2 = settings.mInvInertiaScale2 * mp2->GetInverseInertiaForRotation(inverse_transform_body2.Transposed3x3());
 		}
 		else
 		{
-			// Will be unused
-			invm2 = 0;
-			invi2 = Mat44();
+			inv_m2 = 0.0f;
+			inv_i2 = Mat44::sZero();
 		}
 
 		// Calculate tangents
@@ -1149,7 +1158,7 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			wcp.mContactPoint = &cp;
 
 			// Setup velocity constraint
-			wcp.CalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(delta_time, inBody1, inBody2, invm1, invm2, invi1, invi2, p1_ws, p2_ws, inManifold.mWorldSpaceNormal, t1, t2, settings.mCombinedRestitution, settings.mCombinedFriction, mPhysicsSettings.mMinVelocityForRestitution, surface_velocity1, surface_velocity2);
+			wcp.TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(delta_time, inBody1, inBody2, inv_m1, inv_m2, inv_i1, inv_i2, p1_ws, p2_ws, inManifold.mWorldSpaceNormal, t1, t2, settings.mCombinedRestitution, settings.mCombinedFriction, mPhysicsSettings.mMinVelocityForRestitution, surface_velocity1, surface_velocity2);
 		}
 
 	#ifdef JPH_DEBUG_RENDERER
