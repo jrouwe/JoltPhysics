@@ -18,7 +18,8 @@ namespace Layers
 	static constexpr ObjectLayer MOVING = 5;
 	static constexpr ObjectLayer DEBRIS = 6; // Example: Debris collides only with NON_MOVING
 	static constexpr ObjectLayer SENSOR = 7; // Sensors only collide with MOVING objects
-	static constexpr ObjectLayer NUM_LAYERS = 8;
+	static constexpr ObjectLayer SENSOR_DETECTING_STATIC = 8; // Sensors also colliding with NON_MOVING
+	static constexpr ObjectLayer NUM_LAYERS = 9;
 };
 
 /// Class that determines if two object layers can collide
@@ -35,12 +36,14 @@ public:
 		case Layers::UNUSED4:
 			return false;
 		case Layers::NON_MOVING:
-			return inObject2 == Layers::MOVING || inObject2 == Layers::DEBRIS || inObject2 == Layers::SENSOR;
+			return inObject2 == Layers::MOVING || inObject2 == Layers::DEBRIS || inObject2 == Layers::SENSOR_DETECTING_STATIC;
 		case Layers::MOVING:
-			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING || inObject2 == Layers::SENSOR;
+			return inObject2 == Layers::NON_MOVING || inObject2 == Layers::MOVING || inObject2 == Layers::SENSOR || inObject2 == Layers::SENSOR_DETECTING_STATIC;
 		case Layers::DEBRIS:
 			return inObject2 == Layers::NON_MOVING;
 		case Layers::SENSOR:
+			return inObject2 == Layers::MOVING;
+		case Layers::SENSOR_DETECTING_STATIC:
 			return inObject2 == Layers::MOVING || inObject2 == Layers::NON_MOVING;
 		default:
 			JPH_ASSERT(false);
@@ -56,8 +59,9 @@ namespace BroadPhaseLayers
 	static constexpr BroadPhaseLayer MOVING(1);
 	static constexpr BroadPhaseLayer DEBRIS(2);
 	static constexpr BroadPhaseLayer SENSOR(3);
-	static constexpr BroadPhaseLayer UNUSED(4);
-	static constexpr uint NUM_LAYERS(5);
+	static constexpr BroadPhaseLayer SENSOR_DETECTING_STATIC(4);
+	static constexpr BroadPhaseLayer UNUSED(5);
+	static constexpr uint NUM_LAYERS(6);
 };
 
 /// BroadPhaseLayerInterface implementation
@@ -75,6 +79,7 @@ public:
 		mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
 		mObjectToBroadPhase[Layers::DEBRIS] = BroadPhaseLayers::DEBRIS;
 		mObjectToBroadPhase[Layers::SENSOR] = BroadPhaseLayers::SENSOR;
+		mObjectToBroadPhase[Layers::SENSOR_DETECTING_STATIC] = BroadPhaseLayers::SENSOR_DETECTING_STATIC;
 	}
 
 	virtual uint					GetNumBroadPhaseLayers() const override
@@ -97,6 +102,7 @@ public:
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::DEBRIS:		return "DEBRIS";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::SENSOR:		return "SENSOR";
+		case (BroadPhaseLayer::Type)BroadPhaseLayers::SENSOR_DETECTING_STATIC: return "SENSOR_DETECTING_STATIC";
 		case (BroadPhaseLayer::Type)BroadPhaseLayers::UNUSED:		return "UNUSED";
 		default:													JPH_ASSERT(false); return "INVALID";
 		}
@@ -116,12 +122,14 @@ public:
 		switch (inLayer1)
 		{
 		case Layers::NON_MOVING:
-			return inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
+			return inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR_DETECTING_STATIC;
 		case Layers::MOVING:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
 		case Layers::DEBRIS:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING;
 		case Layers::SENSOR:
+			return inLayer2 == BroadPhaseLayers::MOVING;
+		case Layers::SENSOR_DETECTING_STATIC:
 			return inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::NON_MOVING;
 		case Layers::UNUSED1:
 		case Layers::UNUSED2:

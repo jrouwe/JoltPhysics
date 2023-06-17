@@ -29,7 +29,7 @@ SensorTest::~SensorTest()
 void SensorTest::Initialize()
 {
 	// Floor
-	CreateFloor();
+	CreateFloor(400.0f);
 
 	{
 		// A static sensor that attrects dynamic bodies that enter its area
@@ -40,21 +40,33 @@ void SensorTest::Initialize()
 	
 	{
 		// A static sensor that only detects active bodies
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(-10, 5, 0), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(-10, 5.1f, 0), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		mSensorID[StaticSensor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::DontActivate);
 	}
 
 	{
 		// A kinematic sensor that also detects sleeping bodies
-		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(10, 5, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(10, 5.1f, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		mSensorID[KinematicSensor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
 	}
 
+	{
+		// A kinematic sensor that also detects static bodies
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(25, 5.1f, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR_DETECTING_STATIC);
+		sensor_settings.mIsSensor = true;
+		mSensorID[SensorDetectingStatic] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
+	}
+
 	// Dynamic bodies
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 15; ++i)
 		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.1f, 0.5f, 0.2f)), RVec3(-15.0f + i * 3.0f, 25, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
+
+	// Static bodies
+	RVec3 static_positions[] = { RVec3(-14, 1, 4), RVec3(6, 1, 4), RVec3(21, 1, 4) };
+	for (const RVec3 &p : static_positions)
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), p, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::Activate);
 
 	// Load ragdoll
 	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
@@ -95,7 +107,7 @@ void SensorTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mBodyInterface->MoveKinematic(mKinematicBodyID, kinematic_pos, Quat::sIdentity(), inParams.mDeltaTime);
 
 	// Draw if body is in sensor
-	Color sensor_color[] = { Color::sRed, Color::sGreen, Color::sBlue };
+	Color sensor_color[] = { Color::sRed, Color::sGreen, Color::sBlue, Color::sPurple };
 	for (int sensor = 0; sensor < NumSensors; ++sensor)
 		for (const BodyAndCount &body_and_count : mBodiesInSensor[sensor])
 		{
