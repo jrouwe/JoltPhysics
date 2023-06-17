@@ -854,9 +854,9 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			mContactListener->OnContactPersisted(*body1, *body2, manifold, settings);
 		}
 
-		// If one of the bodies is a sensor, don't actually create the constraint
 		JPH_ASSERT(settings.mIsSensor || !(body1->IsSensor() || body2->IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
-		if (!settings.mIsSensor)
+		if (!settings.mIsSensor // If one of the bodies is a sensor, don't actually create the constraint
+			&& (settings.mInvMassScale1 != 0.0f || settings.mInvMassScale2 != 0.0f)) // One of the bodies must have mass to be able to create a contact constraint
 		{
 			// Add contact constraint in world space for the solver
 			uint32 constraint_idx = mNumConstraints++;
@@ -1020,7 +1020,7 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 	// Get inverse transform for body 1
 	RMat44 inverse_transform_body1 = inBody1.GetInverseCenterOfMassTransform();
 
-	bool contact_constraint_created;
+	bool contact_constraint_created = false;
 
 	// If one of the bodies is a sensor, don't actually create the constraint
 	JPH_ASSERT(settings.mIsSensor || !(inBody1.IsSensor() || inBody2.IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
@@ -1043,11 +1043,8 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			cp.mFrictionLambda[0] = 0.0f;
 			cp.mFrictionLambda[1] = 0.0f;
 		}
-
-		// No constraint created
-		contact_constraint_created = false;
 	}
-	else
+	else if (settings.mInvMassScale1 != 0.0f || settings.mInvMassScale2 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
 	{
 		// Add contact constraint
 		uint32 constraint_idx = mNumConstraints++;
