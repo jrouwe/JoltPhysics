@@ -90,6 +90,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigVsSmallTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActiveEdgesTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MultithreadedTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ContactListenerTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ModifyMassTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SensorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DynamicMeshTest)
@@ -127,6 +128,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Active Edges",						JPH_RTTI(ActiveEdgesTest) },
 	{ "Multithreaded",						JPH_RTTI(MultithreadedTest) },
 	{ "Contact Listener",					JPH_RTTI(ContactListenerTest) },
+	{ "Modify Mass",						JPH_RTTI(ModifyMassTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
