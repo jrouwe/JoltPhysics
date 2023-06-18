@@ -2043,18 +2043,21 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					// Apply friction
 					if (ccd_body->mContactSettings.mCombinedFriction > 0.0f)
 					{
-						Vec3 tangent1 = ccd_body->mContactNormal.GetNormalizedPerpendicular();
-						Vec3 tangent2 = ccd_body->mContactNormal.Cross(tangent1);
+						// Calculate friction direction by removing normal velocity from the relative velocity
+						Vec3 friction_direction = relative_velocity - normal_velocity * ccd_body->mContactNormal;
+						float friction_direction_len_sq = friction_direction.LengthSq();
+						if (friction_direction_len_sq > 1.0e-12f)
+						{
+							// Normalize friction direction
+							friction_direction /= sqrt(friction_direction_len_sq);
 
-						float max_lambda_f = ccd_body->mContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
+							// Calculate max friction impulse
+							float max_lambda_f = ccd_body->mContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
-						AxisConstraintPart friction1;
-						friction1.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, tangent1);
-						friction1.SolveVelocityConstraint(body1, body2, tangent1, -max_lambda_f, max_lambda_f);
-
-						AxisConstraintPart friction2;
-						friction2.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, tangent2);
-						friction2.SolveVelocityConstraint(body1, body2, tangent2, -max_lambda_f, max_lambda_f);
+							AxisConstraintPart friction;
+							friction.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, friction_direction);
+							friction.SolveVelocityConstraint(body1, body2, friction_direction, -max_lambda_f, max_lambda_f);
+						}
 					}
 
 					// Clamp velocities
