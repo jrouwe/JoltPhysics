@@ -856,7 +856,8 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 
 		JPH_ASSERT(settings.mIsSensor || !(body1->IsSensor() || body2->IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
 		if (!settings.mIsSensor // If one of the bodies is a sensor, don't actually create the constraint
-			&& (settings.mInvMassScale1 != 0.0f || settings.mInvMassScale2 != 0.0f)) // One of the bodies must have mass to be able to create a contact constraint
+			&& ((body1->IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
+				|| (body2->IsDynamic() && settings.mInvMassScale2 != 0.0f))) 
 		{
 			// Add contact constraint in world space for the solver
 			uint32 constraint_idx = mNumConstraints++;
@@ -1044,7 +1045,8 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			cp.mFrictionLambda[1] = 0.0f;
 		}
 	}
-	else if (settings.mInvMassScale1 != 0.0f || settings.mInvMassScale2 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
+	else if ((inBody1.IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
+			|| (inBody2.IsDynamic() && settings.mInvMassScale2 != 0.0f)) 
 	{
 		// Add contact constraint
 		uint32 constraint_idx = mNumConstraints++;
