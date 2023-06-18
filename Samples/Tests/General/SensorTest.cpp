@@ -56,6 +56,7 @@ void SensorTest::Initialize()
 		// A kinematic sensor that also detects static bodies
 		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(25, 5.1f, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR_DETECTING_STATIC);
 		sensor_settings.mIsSensor = true;
+		sensor_settings.mSensorDetectsStatic = true;
 		mSensorID[SensorDetectingStatic] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
 	}
 

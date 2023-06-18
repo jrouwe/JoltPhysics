@@ -27,14 +27,26 @@ RMat44 Body::GetInverseCenterOfMassTransform() const
 	return RMat44::sInverseRotationTranslation(mRotation, mPosition);
 }
 
+inline static bool sIsValidSensorBodyPair(const Body &inSensor, const Body &inOther)
+{
+	// If the sensor is not an actual sensor then this is not a valid pair
+	if (!inSensor.IsSensor())
+		return false;
+	
+	if (inSensor.SensorDetectsStatic())
+		return !inOther.IsDynamic(); // If the other body is dynamic, the pair will be handled when the bodies are swapped, otherwise we'll detect the collision twice
+	else	
+		return inOther.IsKinematic(); // Only kinematic bodies are valid
+}
+
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
 {
 	// One of these conditions must be true
 	// - One of the bodies must be dynamic to collide
 	// - A sensor can collide with non-dynamic bodies
 	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic()) 
-		&& !(!inBody1.IsDynamic() && inBody2.IsSensor())
-		&& !(!inBody2.IsDynamic() && inBody1.IsSensor()))
+		&& !sIsValidSensorBodyPair(inBody1, inBody2)
+		&& !sIsValidSensorBodyPair(inBody2, inBody1))
 		return false;
 
 	// Check that body 1 is active

@@ -324,6 +324,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mMotionType = GetMotionType();
 	result.mAllowDynamicOrKinematic = mMotionProperties != nullptr;
 	result.mIsSensor = IsSensor();
+	result.mSensorDetectsStatic = SensorDetectsStatic();
 	result.mUseManifoldReduction = GetUseManifoldReduction();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;
 	result.mAllowSleeping = mMotionProperties != nullptr? GetAllowSleeping() : true;
