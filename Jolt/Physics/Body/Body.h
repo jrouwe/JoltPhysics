@@ -68,6 +68,12 @@ public:
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
 
+	// If this sensor detects static objects entering it. Note that the sensor must be kinematic and active for it to detect static objects.
+	inline void				SetSensorDetectsStatic(bool inDetectsStatic)					{ if (inDetectsStatic) mFlags.fetch_or(uint8(EFlags::SensorDetectsStatic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::SensorDetectsStatic)), memory_order_relaxed); }
+
+	/// Check if this sensor detects static objects entering it.
+	inline bool				SensorDetectsStatic() const										{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::SensorDetectsStatic)) != 0; }
+
 	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body. Manifold reduction by default will combine contacts that come from different SubShapeIDs (e.g. different triangles or different compound shapes).
 	/// If the application requires tracking exactly which SubShapeIDs are in contact, you can turn off manifold reduction. Note that this comes at a performance cost.
 	inline void				SetUseManifoldReduction(bool inUseReduction)					{ if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
@@ -304,9 +310,10 @@ private:
 	enum class EFlags : uint8
 	{
 		IsSensor				= 1 << 0,													///< If this object is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
-		IsInBroadPhase			= 1 << 1,													///< Set this bit to indicate that the body is in the broadphase
-		InvalidateContactCache	= 1 << 2,													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
-		UseManifoldReduction	= 1 << 3,													///< Set this bit to indicate that this body can use manifold reduction (if PhysicsSettings::mUseManifoldReduction is true)
+		SensorDetectsStatic		= 1 << 1,													///< If this sensor detects static objects entering it.
+		IsInBroadPhase			= 1 << 2,													///< Set this bit to indicate that the body is in the broadphase
+		InvalidateContactCache	= 1 << 3,													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
+		UseManifoldReduction	= 1 << 4,													///< Set this bit to indicate that this body can use manifold reduction (if PhysicsSettings::mUseManifoldReduction is true)
 	};
 
 	// 16 byte aligned

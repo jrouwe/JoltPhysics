@@ -973,7 +973,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	if ((!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA)) 
 		&& !body2->IsSensor())
 		swap(body1, body2);
-	JPH_ASSERT(body1->IsDynamic() || (body1->IsKinematic() && body2->IsSensor()));
+	JPH_ASSERT(body1->IsDynamic() || body2->IsSensor());
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, constraint_created = false;
@@ -1030,8 +1030,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 				{
 					// One of the following should be true:
 					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
-					// - Body 1 is kinematic in which case body 2 should be a sensor
-					JPH_ASSERT(mBody1->IsDynamic() || (mBody1->IsKinematic() && mBody2->IsSensor()));
+					// - Body 1 is not dynamic in which case body 2 should be a sensor
+					JPH_ASSERT(mBody1->IsDynamic() || mBody2->IsSensor());
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit

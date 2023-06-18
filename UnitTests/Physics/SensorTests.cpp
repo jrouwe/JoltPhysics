@@ -529,4 +529,51 @@ TEST_SUITE("SensorTests")
 		// Check all expected events received
 		CHECK(next == end);
 	}
+
+	TEST_CASE("TestSensorVsStatic")
+	{
+		PhysicsTestContext c;
+
+		// Register listener
+		LoggingContactListener listener;
+		c.GetSystem()->SetContactListener(&listener);
+
+		// Static body 1
+		Body &static1 = c.CreateSphere(RVec3::sZero(), 1.0f, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+		// Sensor
+		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(1)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING); // Put in layer that collides with static
+		sensor_settings.mIsSensor = true;
+		Body &sensor = *c.GetBodyInterface().CreateBody(sensor_settings);
+		BodyID sensor_id = sensor.GetID();
+		c.GetBodyInterface().AddBody(sensor_id, EActivation::Activate);
+
+		// Static body 2 (created after sensor to force higher body ID)
+		Body &static2 = c.CreateSphere(RVec3::sZero(), 1.0f, EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, EActivation::DontActivate);
+
+		// After a step we should not detect the static bodies
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() == 0);
+		listener.Clear();
+
+		// Start detecting static
+		sensor.SetSensorDetectsStatic(true);
+
+		// After a single step we should detect both static bodies
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() == 4); // Should also contain validates
+		CHECK(listener.Contains(EType::Add, static1.GetID(), sensor_id));
+		CHECK(listener.Contains(EType::Add, static2.GetID(), sensor_id));
+		listener.Clear();
+
+		// Stop detecting static
+		sensor.SetSensorDetectsStatic(false);
+
+		// After a single step we should stop detecting both static bodies
+		c.SimulateSingleStep();
+		CHECK(listener.GetEntryCount() == 2);
+		CHECK(listener.Contains(EType::Remove, static1.GetID(), sensor_id));
+		CHECK(listener.Contains(EType::Remove, static2.GetID(), sensor_id));
+		listener.Clear();
+	}
 }
