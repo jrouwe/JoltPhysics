@@ -1,8 +1,8 @@
 name: Determinism Check
 
 env:
-    CONVEX_VS_MESH_HASH: '0x694f34b44c755f7'
-    RAGDOLL_HASH: '0xea156c841e796fc9'
+    CONVEX_VS_MESH_HASH: '0x412693f5fd7ee9f6'
+    RAGDOLL_HASH: '0x62f3cf349a172dd4'
 
 on:
   push:
