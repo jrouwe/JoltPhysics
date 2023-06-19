@@ -56,17 +56,14 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateF
 	Vec3 r1 = Vec3(p - inBody1.GetCenterOfMassPosition());
 	Vec3 r2 = Vec3(p - inBody2.GetCenterOfMassPosition());
 
-	const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-	const MotionProperties *mp2 = inBody2.GetMotionPropertiesUnchecked();
-
 	// Calculate velocity of collision points
 	Vec3 relative_velocity;
 	if constexpr (Type1 != EMotionType::Static && Type2 != EMotionType::Static)
-		relative_velocity = mp2->GetPointVelocityCOM(r2) - mp1->GetPointVelocityCOM(r1);
+		relative_velocity = inBody2.GetMotionPropertiesUnchecked()->GetPointVelocityCOM(r2) - inBody1.GetMotionPropertiesUnchecked()->GetPointVelocityCOM(r1);
 	else if constexpr (Type1 != EMotionType::Static)
-		relative_velocity = -mp1->GetPointVelocityCOM(r1);
+		relative_velocity = -inBody1.GetMotionPropertiesUnchecked()->GetPointVelocityCOM(r1);
 	else if constexpr (Type2 != EMotionType::Static)
-		relative_velocity = mp2->GetPointVelocityCOM(r2);
+		relative_velocity = inBody2.GetMotionPropertiesUnchecked()->GetPointVelocityCOM(r2);
 	else
 	{
 		JPH_ASSERT(false); // Static vs static makes no sense
