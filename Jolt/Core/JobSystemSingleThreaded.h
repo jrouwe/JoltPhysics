@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Jolt/Core/JobSystem.h>
+#include <Jolt/Core/FixedSizeFreeList.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -13,6 +14,14 @@ class JPH_EXPORT JobSystemSingleThreaded final : public JobSystem
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
+
+	/// Constructor
+							JobSystemSingleThreaded() = default;
+							JobSystemSingleThreaded(uint inMaxJobs)			{ Init(inMaxJobs); }
+
+	/// Initialize the job system
+	/// @param inMaxJobs Max number of jobs that can be allocated at any time
+	void					Init(uint inMaxJobs);
 
 	// See JobSystem
 	virtual int				GetMaxConcurrency() const override				{ return 1; }
@@ -41,6 +50,13 @@ protected:
 	virtual void			QueueJob(Job *inJob) override;
 	virtual void			QueueJobs(Job **inJobs, uint inNumJobs) override;
 	virtual void			FreeJob(Job *inJob) override;
+
+	/// Shared barrier since the barrier implementation does nothing
+	BarrierImpl				mDummyBarrier;
+
+	/// Array of jobs (fixed size)
+	using AvailableJobs = FixedSizeFreeList<Job>;
+	AvailableJobs			mJobs;
 };
 
 JPH_NAMESPACE_END
