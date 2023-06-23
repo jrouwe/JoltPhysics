@@ -21,7 +21,7 @@ TEST_SUITE("ContactListenerTests")
 	// Let a sphere bounce on the floor with restition = 1
 	TEST_CASE("TestContactListenerElastic")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 
 		const float cSimulationTime = 1.0f;
 		const RVec3 cDistanceTraveled = c.PredictPosition(RVec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
@@ -92,7 +92,7 @@ TEST_SUITE("ContactListenerTests")
 	// Let a sphere fall on the floor with restition = 0, then give it horizontal velocity, then take it away from the floor
 	TEST_CASE("TestContactListenerInelastic")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 
 		const float cSimulationTime = 1.0f;
 		const RVec3 cDistanceTraveled = c.PredictPosition(RVec3::sZero(), Vec3::sZero(), cGravity, cSimulationTime);
@@ -270,7 +270,7 @@ TEST_SUITE("ContactListenerTests")
 	{
 		for (int sign = -1; sign <= 1; sign += 2)
 		{
-			PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+			PhysicsTestContext c;
 
 			PhysicsSystem *s = c.GetSystem();
 			BodyInterface &bi = c.GetBodyInterface();
@@ -368,7 +368,7 @@ TEST_SUITE("ContactListenerTests")
 
 	TEST_CASE("TestSurfaceVelocity")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 
 		Body &floor = c.CreateBox(RVec3(0, -1, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(10.0f)), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, 1.0f, 100.0f));
 		floor.SetFriction(1.0f);

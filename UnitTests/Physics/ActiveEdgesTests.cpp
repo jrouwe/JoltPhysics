@@ -198,7 +198,7 @@ TEST_SUITE("ActiveEdgesTest")
 	// Tests a discrete cube sliding over a mesh / heightfield shape
 	static void sDiscreteCubeSlide(Ref<ShapeSettings> inShape, bool inCheckActiveEdges)
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
 
@@ -269,7 +269,7 @@ TEST_SUITE("ActiveEdgesTest")
 	// Tests a linear cast cube sliding over a mesh / heightfield shape
 	static void sLinearCastCubeSlide(Ref<ShapeSettings> inShape, bool inCheckActiveEdges)
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
 

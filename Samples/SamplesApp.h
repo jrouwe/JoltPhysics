@@ -89,7 +89,6 @@ private:
 	int						mMaxConcurrentJobs = thread::hardware_concurrency();		// How many jobs to run in parallel
 	float					mUpdateFrequency = 60.0f;									// Physics update frequency
 	int						mCollisionSteps = 1;										// How many collision detection steps per physics update
-	int						mIntegrationSubSteps = 1;									// How many integration steps per physics update
 	TempAllocator *			mTempAllocator = nullptr;									// Allocator for temporary allocations
 	JobSystem *				mJobSystem = nullptr;										// The job system that runs physics jobs
 	JobSystem *				mJobSystemValidating = nullptr;								// The job system to use when validating determinism

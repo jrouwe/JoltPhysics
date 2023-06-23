@@ -327,7 +327,7 @@ int main(int argc, char** argv)
 					chrono::high_resolution_clock::time_point clock_start = chrono::high_resolution_clock::now();
 
 					// Do a physics step
-					physics_system.Update(cDeltaTime, 1, 1, &temp_allocator, &job_system);
+					physics_system.Update(cDeltaTime, 1, &temp_allocator, &job_system);
 
 					// Stop measuring
 					chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();

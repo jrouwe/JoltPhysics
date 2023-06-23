@@ -99,10 +99,10 @@ TEST_SUITE("PhysicsDeterminismTests")
 
 	TEST_CASE("TestGridOfBoxesDiscrete")
 	{
-		PhysicsTestContext c1(1.0f / 60.0f, 1, 1, 0);
+		PhysicsTestContext c1(1.0f / 60.0f, 1, 0);
 		CreateGridOfBoxesDiscrete(c1);
 
-		PhysicsTestContext c2(1.0f / 60.0f, 1, 1, 15);
+		PhysicsTestContext c2(1.0f / 60.0f, 1, 15);
 		CreateGridOfBoxesDiscrete(c2);
 
 		CompareSimulations(c1, c2, 5.0f);
@@ -126,10 +126,10 @@ TEST_SUITE("PhysicsDeterminismTests")
 
 	TEST_CASE("TestGridOfBoxesLinearCast")
 	{
-		PhysicsTestContext c1(1.0f / 60.0f, 1, 1, 0);
+		PhysicsTestContext c1(1.0f / 60.0f, 1, 0);
 		CreateGridOfBoxesLinearCast(c1);
 
-		PhysicsTestContext c2(1.0f / 60.0f, 1, 1, 15);
+		PhysicsTestContext c2(1.0f / 60.0f, 1, 15);
 		CreateGridOfBoxesLinearCast(c2);
 
 		CompareSimulations(c1, c2, 5.0f);
@@ -184,10 +184,10 @@ TEST_SUITE("PhysicsDeterminismTests")
 
 	TEST_CASE("TestGridOfBoxesConstrained")
 	{
-		PhysicsTestContext c1(1.0f / 60.0f, 1, 1, 0);
+		PhysicsTestContext c1(1.0f / 60.0f, 1, 0);
 		CreateGridOfBoxesConstrained(c1);
 
-		PhysicsTestContext c2(1.0f / 60.0f, 1, 1, 15);
+		PhysicsTestContext c2(1.0f / 60.0f, 1, 15);
 		CreateGridOfBoxesConstrained(c2);
 
 		CompareSimulations(c1, c2, 5.0f);

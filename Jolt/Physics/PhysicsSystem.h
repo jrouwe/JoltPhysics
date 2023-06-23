@@ -101,10 +101,10 @@ public:
 	void						RemoveStepListener(PhysicsStepListener *inListener);
 
 	/// Simulate the system.
-	/// The world steps for a total of inDeltaTime seconds. This is divided in inCollisionSteps iterations. Each iteration
-	/// consists of collision detection followed by inIntegrationSubSteps integration steps.
+	/// The world steps for a total of inDeltaTime seconds. This is divided in inCollisionSteps iterations.
+	/// Each iteration consists of collision detection followed by an integration step.
 	/// This function internally spawns jobs using inJobSystem and waits for them to complete, so no jobs will be running when this function returns.
-	EPhysicsUpdateError			Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem);
+	EPhysicsUpdateError			Update(float inDeltaTime, int inCollisionSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem);
 
 	/// Saving state for replay
 	void						SaveState(StateRecorder &inStream) const;
@@ -185,7 +185,7 @@ public:
 #endif // JPH_TRACK_BROADPHASE_STATS
 
 private:
-	using CCDBody = PhysicsUpdateContext::SubStep::CCDBody;
+	using CCDBody = PhysicsUpdateContext::Step::CCDBody;
 
 	// Various job entry points
 	void						JobStepListeners(PhysicsUpdateContext::Step *ioStep);
@@ -196,14 +196,14 @@ private:
 	void						JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex);
 	void						JobFinalizeIslands(PhysicsUpdateContext *ioContext);
 	void						JobBodySetIslandIndex();
-	void						JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
-	void						JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
-	void						JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
-	void						JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const;
-	void						JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
-	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
+	void						JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep) const;
+	void						JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobContactRemovedCallbacks(const PhysicsUpdateContext::Step *ioStep);
-	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep);
+	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
 	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const;
@@ -217,7 +217,7 @@ private:
 	class BodiesToSleep;
 
 	/// Called at the end of JobSolveVelocityConstraints to check if bodies need to go to sleep and to update their bounding box in the broadphase
-	void						CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::SubStep *ioSubStep, BodiesToSleep &ioBodiesToSleep);
+	void						CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::Step *ioStep, BodiesToSleep &ioBodiesToSleep);
 
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;
@@ -287,7 +287,7 @@ private:
 	Vec3						mGravity = Vec3(0, -9.81f, 0);
 
 	/// Previous frame's delta time of one sub step to allow scaling previous frame's constraint impulses
-	float						mPreviousSubStepDeltaTime = 0.0f;
+	float						mPreviousStepDeltaTime = 0.0f;
 };
 
 JPH_NAMESPACE_END
