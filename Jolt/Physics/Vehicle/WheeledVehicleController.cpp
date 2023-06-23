@@ -660,25 +660,6 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 	Vec3 rpm_meter_fwd = body->GetRotation() * mConstraint.GetLocalForward();
 	mEngine.DrawRPM(inRenderer, rpm_meter_pos, rpm_meter_fwd, rpm_meter_up, mRPMMeterSize, mTransmission.mShiftDownRPM, mTransmission.mShiftUpRPM);
 
-	// Calculate average wheel speed at clutch
-	float wheel_speed_at_clutch = 0.0f;
-	int num_driven_wheels = 0;
-	for (const VehicleDifferentialSettings &d : mDifferentials)
-	{
-		int wheels[] = { d.mLeftWheel, d.mRightWheel };
-		for (int w : wheels)
-			if (w >= 0)
-			{
-				wheel_speed_at_clutch += mConstraint.GetWheel(w)->GetAngularVelocity() * d.mDifferentialRatio;
-				num_driven_wheels++;
-			}
-	}
-	wheel_speed_at_clutch = abs(wheel_speed_at_clutch / float(num_driven_wheels) * VehicleEngine::cAngularVelocityToRPM * mTransmission.GetCurrentRatio());
-		
-	// Draw the average wheel speed measured at clutch to compare engine RPM with wheel RPM
-	if (wheel_speed_at_clutch > 1.0e-6f)
-		inRenderer->DrawLine(rpm_meter_pos, rpm_meter_pos + Quat::sRotation(rpm_meter_fwd, mEngine.ConvertRPMToAngle(wheel_speed_at_clutch)) * (rpm_meter_up * 1.1f * mRPMMeterSize), Color::sYellow);
-
 	// Draw current vehicle state
 	String status = StringFormat("Forward: %.1f, Right: %.1f\nBrake: %.1f, HandBrake: %.1f\n"
 								 "Gear: %d, Clutch: %.1f\nEngineRPM: %.0f, V: %.1f km/h", 

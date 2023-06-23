@@ -72,9 +72,6 @@ public:
 	void					ApplyDamping(float inDeltaTime);
 
 #ifdef JPH_DEBUG_RENDERER
-	// Function that converts RPM to an angle in radians for debugging purposes
-	float					ConvertRPMToAngle(float inRPM) const		{ return (-0.75f + 1.5f * (inRPM - mMinRPM) / (mMaxRPM - mMinRPM)) * JPH_PI; }
-
 	/// Debug draw a RPM meter
 	void					DrawRPM(DebugRenderer *inRenderer, RVec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inSize, float inShiftDownRPM, float inShiftUpRPM) const;
 #endif // JPH_DEBUG_RENDERER
