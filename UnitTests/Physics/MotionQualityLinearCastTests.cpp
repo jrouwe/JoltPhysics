@@ -19,7 +19,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 	// Two boxes colliding in the center, each has enough velocity to tunnel though in 1 step
 	TEST_CASE("TestDiscreteBoxVsDiscreteBox")
 	{
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		// Register listener
@@ -50,7 +50,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 	// Two boxes colliding in the center, each has enough velocity to step over the other in 1 step, restitution = 1
 	TEST_CASE("TestLinearCastBoxVsLinearCastBoxElastic")
 	{
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
@@ -111,7 +111,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 	// Two boxes colliding in the center, each has enough velocity to step over the other in 1 step, restitution = 0
 	TEST_CASE("TestLinearCastBoxVsLinearCastBoxInelastic")
 	{
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
@@ -166,7 +166,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 	// Two boxes colliding in the center, linear cast vs inactive linear cast
 	TEST_CASE("TestLinearCastBoxVsInactiveLinearCastBox")
 	{
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
@@ -217,7 +217,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 	// Two boxes colliding in the center, linear cast vs inactive discrete
 	TEST_CASE("TestLinearCastBoxVsInactiveDiscreteBox")
 	{
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
@@ -271,7 +271,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 		const Vec3 cAngledOffset1(1, 0, -2);
 		const Vec3 cAngledVelocity = -cFrequency * 2 * cAngledOffset1;
 
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;
@@ -315,7 +315,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 	// Two boxes colliding in the center, linear cast vs fast moving discrete, should tunnel through because all discrete bodies are moved before linear cast bodies are tested
 	TEST_CASE("TestLinearCastBoxVsFastDiscreteBox")
 	{
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		// Register listener
@@ -343,7 +343,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 	// Two boxes colliding in the center, linear cast vs moving discrete, discrete is slow enough not to tunnel through linear cast body
 	TEST_CASE("TestLinearCastBoxVsSlowDiscreteBox")
 	{
-		PhysicsTestContext c(1.0f / cFrequency, 1, 1);
+		PhysicsTestContext c(1.0f / cFrequency, 1);
 		c.ZeroGravity();
 
 		const float cPenetrationSlop = c.GetSystem()->GetPhysicsSettings().mPenetrationSlop;

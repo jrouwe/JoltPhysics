@@ -55,9 +55,8 @@ static const Color cColorIntegrateVelocity = Color::sGetDistinctColor(14);
 static const Color cColorPostIntegrateVelocity = Color::sGetDistinctColor(15);
 static const Color cColorResolveCCDContacts = Color::sGetDistinctColor(16);
 static const Color cColorSolvePositionConstraints = Color::sGetDistinctColor(17);
-static const Color cColorStartNextSubStep = Color::sGetDistinctColor(18);
-static const Color cColorFindCCDContacts = Color::sGetDistinctColor(19);
-static const Color cColorStepListeners = Color::sGetDistinctColor(20);
+static const Color cColorFindCCDContacts = Color::sGetDistinctColor(18);
+static const Color cColorStepListeners = Color::sGetDistinctColor(19);
 
 PhysicsSystem::~PhysicsSystem()
 {
@@ -115,14 +114,14 @@ void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 	mStepListeners.pop_back();
 }
 
-EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem)
+EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem)
 {	
 	JPH_PROFILE_FUNCTION();
 
-	JPH_DET_LOG("PhysicsSystem::Update: dt: " << inDeltaTime << " steps: " << inCollisionSteps << " substeps: " << inIntegrationSubSteps);
+	JPH_DET_LOG("PhysicsSystem::Update: dt: " << inDeltaTime << " steps: " << inCollisionSteps);
 
+	JPH_ASSERT(inCollisionSteps > 0);
 	JPH_ASSERT(inDeltaTime >= 0.0f);
-	JPH_ASSERT(inIntegrationSubSteps <= PhysicsUpdateContext::cMaxSubSteps);
 
 	// Sync point for the broadphase. This will allow it to do clean up operations without having any mutexes locked yet.
 	mBroadPhase->FrameSync();
@@ -147,9 +146,9 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	}
 
 	// Calculate ratio between current and previous frame delta time to scale initial constraint forces
-	float sub_step_delta_time = inDeltaTime / (inCollisionSteps * inIntegrationSubSteps);
-	float warm_start_impulse_ratio = mPhysicsSettings.mConstraintWarmStart && mPreviousSubStepDeltaTime > 0.0f? sub_step_delta_time / mPreviousSubStepDeltaTime : 0.0f;
-	mPreviousSubStepDeltaTime = sub_step_delta_time;
+	float step_delta_time = inDeltaTime / inCollisionSteps;
+	float warm_start_impulse_ratio = mPhysicsSettings.mConstraintWarmStart && mPreviousStepDeltaTime > 0.0f? step_delta_time / mPreviousStepDeltaTime : 0.0f;
+	mPreviousStepDeltaTime = step_delta_time;
 
 	// Create the context used for passing information between jobs
 	PhysicsUpdateContext context(*inTempAllocator);
@@ -157,10 +156,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	context.mJobSystem = inJobSystem;
 	context.mBarrier = inJobSystem->CreateBarrier();
 	context.mIslandBuilder = &mIslandBuilder;
-	context.mStepDeltaTime = inDeltaTime / inCollisionSteps;
-	context.mSubStepDeltaTime = sub_step_delta_time;
+	context.mStepDeltaTime = step_delta_time;
 	context.mWarmStartImpulseRatio = warm_start_impulse_ratio;
-	context.mUseLargeIslandSplitter = mPhysicsSettings.mUseLargeIslandSplitter && inIntegrationSubSteps == 1; // Only use large island splitter if we don't have sub steps, not yet supported
 	context.mSteps.resize(inCollisionSteps);
 
 	// Allocate space for body pairs
@@ -206,7 +203,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 			PhysicsUpdateContext::Step &step = context.mSteps[step_idx];
 			step.mContext = &context;
-			step.mSubSteps.resize(inIntegrationSubSteps);
+			step.mIsFirst = is_first_step;
+			step.mIsLast = is_last_step;
 
 			// Create job to do broadphase finalization
 			// This job must finish before integrating velocities. Until then the positions will not be updated neither will bodies be added / removed.
@@ -219,7 +217,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 					context.mPhysicsSystem->mBroadPhase->UpdateFinalize(step.mBroadPhaseUpdateState);
 
 					// Signal that it is done
-					step.mSubSteps[0].mPreIntegrateVelocity.RemoveDependency(); 
+					step.mPreIntegrateVelocity.RemoveDependency(); 
 				}, num_find_collisions_jobs + 2); // depends on: find collisions, broadphase prepare update, finish building jobs
 
 			// The immediate jobs below are only immediate for the first step, the all finished job will kick them for the next step
@@ -289,9 +287,9 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			// This job will setup velocity constraints for non-collision constraints
 			step.mSetupVelocityConstraints = inJobSystem->CreateJob("SetupVelocityConstraints", cColorSetupVelocityConstraints, [&context, &step]() 
 				{ 
-					context.mPhysicsSystem->JobSetupVelocityConstraints(context.mSubStepDeltaTime, &step);
+					context.mPhysicsSystem->JobSetupVelocityConstraints(context.mStepDeltaTime, &step);
 
-					JobHandle::sRemoveDependencies(step.mSubSteps[0].mSolveVelocityConstraints);
+					JobHandle::sRemoveDependencies(step.mSolveVelocityConstraints);
 				}, num_determine_active_constraints_jobs + 1); // depends on: determine active constraints, finish building jobs
 
 			// This job will build islands from constraints
@@ -342,7 +340,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 					context.mPhysicsSystem->JobFinalizeIslands(&context); 
 
-					JobHandle::sRemoveDependencies(step.mSubSteps[0].mSolveVelocityConstraints);
+					JobHandle::sRemoveDependencies(step.mSolveVelocityConstraints);
 					step.mBodySetIslandIndex.RemoveDependency();
 				}, num_find_collisions_jobs + 2); // depends on: find collisions, build islands from constraints, finish building jobs
 
@@ -357,7 +355,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 					if (step.mStartNextStep.IsValid())
 						step.mStartNextStep.RemoveDependency();
-				}, 1); // depends on the find ccd contacts of the last sub step
+				}, 1); // depends on the find ccd contacts
 
 			// This job will set the island index on each body (only used for debug drawing purposes)
 			// It will also delete any bodies that have been destroyed in the last frame
@@ -412,125 +410,87 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 					}, max_concurrency + 3); // depends on: solve position constraints of the last step, body set island index, contact removed callbacks, finish building the previous step
 			}
 
-			// Create solve jobs for each of the integration sub steps
-			for (int sub_step_idx = 0; sub_step_idx < inIntegrationSubSteps; ++sub_step_idx)
-			{
-				bool is_first_sub_step = sub_step_idx == 0;
-				bool is_last_sub_step = sub_step_idx == inIntegrationSubSteps - 1;
-
-				PhysicsUpdateContext::SubStep &sub_step = step.mSubSteps[sub_step_idx];
-				sub_step.mStep = &step;
-				sub_step.mIsFirst = is_first_sub_step;
-				sub_step.mIsLast = is_last_sub_step;
-				sub_step.mIsFirstOfAll = is_first_step && is_first_sub_step;
-				sub_step.mIsLastOfAll = is_last_step && is_last_sub_step;
-
-				// This job will solve the velocity constraints 
-				int num_dependencies_solve_velocity_constraints = is_first_sub_step? 3 : 2; // in first sub step depends on: finalize islands, setup velocity constraints, in later sub steps depends on: previous sub step finished. For both: finish building jobs.
-				sub_step.mSolveVelocityConstraints.resize(max_concurrency);
-				for (int i = 0; i < max_concurrency; ++i)
-					sub_step.mSolveVelocityConstraints[i] = inJobSystem->CreateJob("SolveVelocityConstraints", cColorSolveVelocityConstraints, [&context, &sub_step]() 
-						{ 
-							context.mPhysicsSystem->JobSolveVelocityConstraints(&context, &sub_step); 
-
-							sub_step.mPreIntegrateVelocity.RemoveDependency();
-						}, num_dependencies_solve_velocity_constraints); 
-
-				// Unblock previous jobs
-				if (is_first_sub_step)
-				{
-					// Kick find collisions after setup velocity constraints because the former job will use up all CPU cores
-					step.mSetupVelocityConstraints.RemoveDependency();
-					JobHandle::sRemoveDependencies(step.mFindCollisions);
-
-					// Finalize islands is a dependency on find collisions so it can go last
-					step.mFinalizeIslands.RemoveDependency();
-				}
-				else
-				{
-					step.mSubSteps[sub_step_idx - 1].mStartNextSubStep.RemoveDependency();
-				}
-
-				// This job will prepare the position update of all active bodies
-				int num_dependencies_integrate_velocity = is_first_sub_step? 2 + max_concurrency : 1 + max_concurrency;  // depends on: broadphase update finalize in first step, solve velocity constraints in all steps. For both: finish building jobs.
-				sub_step.mPreIntegrateVelocity = inJobSystem->CreateJob("PreIntegrateVelocity", cColorPreIntegrateVelocity, [&context, &sub_step]() 
+			// This job will solve the velocity constraints 
+			step.mSolveVelocityConstraints.resize(max_concurrency);
+			for (int i = 0; i < max_concurrency; ++i)
+				step.mSolveVelocityConstraints[i] = inJobSystem->CreateJob("SolveVelocityConstraints", cColorSolveVelocityConstraints, [&context, &step]() 
 					{ 
-						context.mPhysicsSystem->JobPreIntegrateVelocity(&context, &sub_step);
+						context.mPhysicsSystem->JobSolveVelocityConstraints(&context, &step); 
 
-						JobHandle::sRemoveDependencies(sub_step.mIntegrateVelocity);
-					}, num_dependencies_integrate_velocity);
+						step.mPreIntegrateVelocity.RemoveDependency();
+					}, 3); // depends on: finalize islands, setup velocity constraints, finish building jobs.
 
-				// Unblock previous jobs
-				if (is_first_sub_step)
-					step.mUpdateBroadphaseFinalize.RemoveDependency();
-				JobHandle::sRemoveDependencies(sub_step.mSolveVelocityConstraints);
+			// Kick find collisions after setup velocity constraints because the former job will use up all CPU cores
+			step.mSetupVelocityConstraints.RemoveDependency();
+			JobHandle::sRemoveDependencies(step.mFindCollisions);
 
-				// This job will update the positions of all active bodies
-				sub_step.mIntegrateVelocity.resize(num_integrate_velocity_jobs);
-				for (int i = 0; i < num_integrate_velocity_jobs; ++i)
-					sub_step.mIntegrateVelocity[i] = inJobSystem->CreateJob("IntegrateVelocity", cColorIntegrateVelocity, [&context, &sub_step]() 
-						{ 
-							context.mPhysicsSystem->JobIntegrateVelocity(&context, &sub_step);
+			// Finalize islands is a dependency on find collisions so it can go last
+			step.mFinalizeIslands.RemoveDependency();
 
-							sub_step.mPostIntegrateVelocity.RemoveDependency();
-						}, 2); // depends on: pre integrate velocity, finish building jobs.
+			// This job will prepare the position update of all active bodies
+			step.mPreIntegrateVelocity = inJobSystem->CreateJob("PreIntegrateVelocity", cColorPreIntegrateVelocity, [&context, &step]() 
+				{ 
+					context.mPhysicsSystem->JobPreIntegrateVelocity(&context, &step);
 
-				// Unblock previous job
-				sub_step.mPreIntegrateVelocity.RemoveDependency();
+					JobHandle::sRemoveDependencies(step.mIntegrateVelocity);
+				}, 2 + max_concurrency); // depends on: broadphase update finalize, solve velocity constraints, finish building jobs.
 
-				// This job will finish the position update of all active bodies
-				sub_step.mPostIntegrateVelocity = inJobSystem->CreateJob("PostIntegrateVelocity", cColorPostIntegrateVelocity, [&context, &sub_step]() 
+			// Unblock previous jobs
+			step.mUpdateBroadphaseFinalize.RemoveDependency();
+			JobHandle::sRemoveDependencies(step.mSolveVelocityConstraints);
+
+			// This job will update the positions of all active bodies
+			step.mIntegrateVelocity.resize(num_integrate_velocity_jobs);
+			for (int i = 0; i < num_integrate_velocity_jobs; ++i)
+				step.mIntegrateVelocity[i] = inJobSystem->CreateJob("IntegrateVelocity", cColorIntegrateVelocity, [&context, &step]() 
 					{ 
-						context.mPhysicsSystem->JobPostIntegrateVelocity(&context, &sub_step);
+						context.mPhysicsSystem->JobIntegrateVelocity(&context, &step);
 
-						sub_step.mResolveCCDContacts.RemoveDependency();
-					}, num_integrate_velocity_jobs + 1); // depends on: integrate velocity, finish building jobs
+						step.mPostIntegrateVelocity.RemoveDependency();
+					}, 2); // depends on: pre integrate velocity, finish building jobs.
 
-				// Unblock previous jobs
-				JobHandle::sRemoveDependencies(sub_step.mIntegrateVelocity);
+			// Unblock previous job
+			step.mPreIntegrateVelocity.RemoveDependency();
 
-				// This job will update the positions and velocities for all bodies that need continuous collision detection
-				sub_step.mResolveCCDContacts = inJobSystem->CreateJob("ResolveCCDContacts", cColorResolveCCDContacts, [&context, &sub_step]()
-					{
-						context.mPhysicsSystem->JobResolveCCDContacts(&context, &sub_step);
+			// This job will finish the position update of all active bodies
+			step.mPostIntegrateVelocity = inJobSystem->CreateJob("PostIntegrateVelocity", cColorPostIntegrateVelocity, [&context, &step]() 
+				{ 
+					context.mPhysicsSystem->JobPostIntegrateVelocity(&context, &step);
 
-						JobHandle::sRemoveDependencies(sub_step.mSolvePositionConstraints);
-					}, 2); // depends on: integrate velocities, detect ccd contacts (added dynamically), finish building jobs.
+					step.mResolveCCDContacts.RemoveDependency();
+				}, num_integrate_velocity_jobs + 1); // depends on: integrate velocity, finish building jobs
 
-				// Unblock previous job
-				sub_step.mPostIntegrateVelocity.RemoveDependency();
+			// Unblock previous jobs
+			JobHandle::sRemoveDependencies(step.mIntegrateVelocity);
 
-				// Fixes up drift in positions and updates the broadphase with new body positions
-				sub_step.mSolvePositionConstraints.resize(max_concurrency);
-				for (int i = 0; i < max_concurrency; ++i)
-					sub_step.mSolvePositionConstraints[i] = inJobSystem->CreateJob("SolvePositionConstraints", cColorSolvePositionConstraints, [&context, &sub_step]() 
-						{ 
-							context.mPhysicsSystem->JobSolvePositionConstraints(&context, &sub_step); 
+			// This job will update the positions and velocities for all bodies that need continuous collision detection
+			step.mResolveCCDContacts = inJobSystem->CreateJob("ResolveCCDContacts", cColorResolveCCDContacts, [&context, &step]()
+				{
+					context.mPhysicsSystem->JobResolveCCDContacts(&context, &step);
+
+					JobHandle::sRemoveDependencies(step.mSolvePositionConstraints);
+				}, 2); // depends on: integrate velocities, detect ccd contacts (added dynamically), finish building jobs.
+
+			// Unblock previous job
+			step.mPostIntegrateVelocity.RemoveDependency();
+
+			// Fixes up drift in positions and updates the broadphase with new body positions
+			step.mSolvePositionConstraints.resize(max_concurrency);
+			for (int i = 0; i < max_concurrency; ++i)
+				step.mSolvePositionConstraints[i] = inJobSystem->CreateJob("SolvePositionConstraints", cColorSolvePositionConstraints, [&context, &step]() 
+					{ 
+						context.mPhysicsSystem->JobSolvePositionConstraints(&context, &step); 
 			
-							// Kick the next sub step
-							if (sub_step.mStartNextSubStep.IsValid())
-								sub_step.mStartNextSubStep.RemoveDependency();
-						}, 2); // depends on: resolve ccd contacts, finish building jobs.
+						// Kick the next step
+						if (step.mStartNextStep.IsValid())
+							step.mStartNextStep.RemoveDependency();
+					}, 2); // depends on: resolve ccd contacts, finish building jobs.
 
-				// Unblock previous job.
-				sub_step.mResolveCCDContacts.RemoveDependency();
+			// Unblock previous job.
+			step.mResolveCCDContacts.RemoveDependency();
 
-				// This job starts the next sub step
-				if (!is_last_sub_step)
-				{
-					PhysicsUpdateContext::SubStep &next_sub_step = step.mSubSteps[sub_step_idx + 1];
-					sub_step.mStartNextSubStep = inJobSystem->CreateJob("StartNextSubStep", cColorStartNextSubStep, [&next_sub_step]() 
-						{ 			
-							// Kick velocity constraint solving for the next sub step
-							JobHandle::sRemoveDependencies(next_sub_step.mSolveVelocityConstraints);
-						}, max_concurrency + 1); // depends on: solve position constraints, finish building jobs.
-				}
-				else
-					sub_step.mStartNextSubStep = step.mStartNextStep;
-
-				// Unblock previous jobs
-				JobHandle::sRemoveDependencies(sub_step.mSolvePositionConstraints);
-			}
+			// Unblock previous jobs
+			JobHandle::sRemoveDependencies(step.mSolvePositionConstraints);
 		}
 	}
 	
@@ -558,21 +518,18 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			handles.push_back(step.mBuildIslandsFromConstraints);
 			handles.push_back(step.mFinalizeIslands);
 			handles.push_back(step.mBodySetIslandIndex);
-			for (const PhysicsUpdateContext::SubStep &sub_step : step.mSubSteps)
-			{
-				for (const JobHandle &h : sub_step.mSolveVelocityConstraints)
-					handles.push_back(h);
-				handles.push_back(sub_step.mPreIntegrateVelocity);
-				for (const JobHandle &h : sub_step.mIntegrateVelocity)
-					handles.push_back(h);
-				handles.push_back(sub_step.mPostIntegrateVelocity);
-				handles.push_back(sub_step.mResolveCCDContacts);
-				for (const JobHandle &h : sub_step.mSolvePositionConstraints)
-					handles.push_back(h);
-				if (sub_step.mStartNextSubStep.IsValid())
-					handles.push_back(sub_step.mStartNextSubStep);
-			}
+			for (const JobHandle &h : step.mSolveVelocityConstraints)
+				handles.push_back(h);
+			handles.push_back(step.mPreIntegrateVelocity);
+			for (const JobHandle &h : step.mIntegrateVelocity)
+				handles.push_back(h);
+			handles.push_back(step.mPostIntegrateVelocity);
+			handles.push_back(step.mResolveCCDContacts);
+			for (const JobHandle &h : step.mSolvePositionConstraints)
+				handles.push_back(h);
 			handles.push_back(step.mContactRemovedCallbacks);
+			if (step.mStartNextStep.IsValid())
+				handles.push_back(step.mStartNextStep);
 		}
 		barrier->AddJobs(handles.data(), handles.size());
 	}
@@ -705,7 +662,7 @@ void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, Physi
 	uint32 num_active_bodies_at_step_start = ioStep->mNumActiveBodiesAtStepStart;
 
 	// Fetch delta time once outside the loop
-	float delta_time = ioContext->mSubStepDeltaTime;
+	float delta_time = ioContext->mStepDeltaTime;
 
 	// Update velocities from forces
 	for (;;)
@@ -1255,7 +1212,7 @@ void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
 	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(), mBodyManager.GetNumActiveBodies(), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
 
 	// Prepare the large island splitter
-	if (ioContext->mUseLargeIslandSplitter)
+	if (mPhysicsSettings.mUseLargeIslandSplitter)
 		mLargeIslandSplitter.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
 }
 
@@ -1276,23 +1233,20 @@ void PhysicsSystem::JobBodySetIslandIndex()
 	}
 }
 
-void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We update velocities and need to read positions to do so
 	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::Read);
 #endif
 	
-	float delta_time = ioContext->mSubStepDeltaTime;
+	float delta_time = ioContext->mStepDeltaTime;
 	Constraint **active_constraints = ioContext->mActiveConstraints;
 
-	bool first_sub_step = ioSubStep->mIsFirst;
-	bool last_sub_step = ioSubStep->mIsLast;
+	// Only the first step to correct for the delta time difference in the previous update
+	float warm_start_impulse_ratio = ioStep->mIsFirst? ioContext->mWarmStartImpulseRatio : 1.0f; 
 
-	// Only the first sub step of the first step needs to correct for the delta time difference in the previous update
-	float warm_start_impulse_ratio = ioSubStep->mIsFirstOfAll? ioContext->mWarmStartImpulseRatio : 1.0f; 
-
-	bool check_islands = true, check_split_islands = ioContext->mUseLargeIslandSplitter;
+	bool check_islands = true, check_split_islands = mPhysicsSettings.mUseLargeIslandSplitter;
 	do
 	{
 		// First try to get work from large islands
@@ -1323,7 +1277,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 					mLargeIslandSplitter.MarkBatchProcessed(split_island_index, constraints_begin, constraints_end, contacts_begin, contacts_end, last_iteration, final_batch);
 
 					// Save back the lambdas in the contact cache for the warm start of the next physics update
-					if (last_sub_step && last_iteration)
+					if (last_iteration)
 						mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
 
 					// We processed work, loop again
@@ -1341,7 +1295,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 		if (check_islands)
 		{
 			// Next island
-			uint32 island_idx = ioSubStep->mSolveVelocityConstraintsNextIsland++;
+			uint32 island_idx = ioStep->mSolveVelocityConstraintsNextIsland++;
 			if (island_idx >= mIslandBuilder.GetNumIslands())
 			{
 				// We processed all islands, stop checking islands
@@ -1356,66 +1310,36 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			bool has_constraints = mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end);
 			bool has_contacts = mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end);
 
-			if (first_sub_step)
+			// If we don't have any contacts or constraints, we know that none of the following islands have any contacts or constraints
+			// (because they're sorted by most constraints first). This means we're done.
+			if (!has_contacts && !has_constraints)
 			{
-				// If we don't have any contacts or constraints, we know that none of the following islands have any contacts or constraints
-				// (because they're sorted by most constraints first). This means we're done.
-				if (!has_contacts && !has_constraints)
+			#ifdef JPH_ENABLE_ASSERTS
+				// Validate our assumption that the next islands don't have any constraints or contacts
+				for (; island_idx < mIslandBuilder.GetNumIslands(); ++island_idx)
 				{
-				#ifdef JPH_ENABLE_ASSERTS
-					// Validate our assumption that the next islands don't have any constraints or contacts
-					for (; island_idx < mIslandBuilder.GetNumIslands(); ++island_idx)
-					{
-						JPH_ASSERT(!mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end));
-						JPH_ASSERT(!mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end));
-					}
-				#endif // JPH_ENABLE_ASSERTS
-
-					check_islands = false;
-					continue;
+					JPH_ASSERT(!mIslandBuilder.GetConstraintsInIsland(island_idx, constraints_begin, constraints_end));
+					JPH_ASSERT(!mIslandBuilder.GetContactsInIsland(island_idx, contacts_begin, contacts_end));
 				}
+			#endif // JPH_ENABLE_ASSERTS
 
-				// Sorting is costly but needed for a deterministic simulation, allow the user to turn this off
-				if (mPhysicsSettings.mDeterministicSimulation)
-				{
-					// Sort constraints to give a deterministic simulation
-					ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
-
-					// Sort contacts to give a deterministic simulation
-					mContactManager.SortContacts(contacts_begin, contacts_end);
-				}
+				check_islands = false;
+				continue;
 			}
-			else
+
+			// Sorting is costly but needed for a deterministic simulation, allow the user to turn this off
+			if (mPhysicsSettings.mDeterministicSimulation)
 			{
-				{
-					JPH_PROFILE("Apply Gravity");
+				// Sort constraints to give a deterministic simulation
+				ConstraintManager::sSortConstraints(active_constraints, constraints_begin, constraints_end);
 
-					// Get bodies in this island
-					BodyID *bodies_begin, *bodies_end;
-					mIslandBuilder.GetBodiesInIsland(island_idx, bodies_begin, bodies_end);
-
-					// Apply gravity. In the first step this is done in a separate job.
-					for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
-					{
-						Body &body = mBodyManager.GetBody(*body_id);
-						if (body.IsDynamic())
-							body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
-					}
-				}
-
-				// If we don't have any contacts or constraints, we don't need to run the solver, but we do need to process
-				// the next island in order to apply gravity
-				if (!has_contacts && !has_constraints)
-					continue;
-
-				// Prepare velocity constraints. In the first step this is done when adding the contact constraints.
-				ConstraintManager::sSetupVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
-				mContactManager.SetupVelocityConstraints(contacts_begin, contacts_end, delta_time);
+				// Sort contacts to give a deterministic simulation
+				mContactManager.SortContacts(contacts_begin, contacts_end);
 			}
 
 			// Split up large islands
 			int num_velocity_steps = mPhysicsSettings.mNumVelocitySteps;
-			if (ioContext->mUseLargeIslandSplitter
+			if (mPhysicsSettings.mUseLargeIslandSplitter
 				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps, mPhysicsSettings.mNumPositionSteps))
 				continue; // Loop again to try to fetch the newly split island
 
@@ -1433,8 +1357,7 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			}
 
 			// Save back the lambdas in the contact cache for the warm start of the next physics update
-			if (last_sub_step)
-				mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
+			mContactManager.StoreAppliedImpulses(contacts_begin, contacts_end);
 
 			// We processed work, loop again
 			continue;
@@ -1446,34 +1369,34 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 	while (check_islands || check_split_islands);
 }
 
-void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 	// Reserve enough space for all bodies that may need a cast
 	TempAllocator *temp_allocator = ioContext->mTempAllocator;
-	JPH_ASSERT(ioSubStep->mCCDBodies == nullptr);
-	ioSubStep->mCCDBodiesCapacity = mBodyManager.GetNumActiveCCDBodies();
-	ioSubStep->mCCDBodies = (CCDBody *)temp_allocator->Allocate(ioSubStep->mCCDBodiesCapacity * sizeof(CCDBody));
+	JPH_ASSERT(ioStep->mCCDBodies == nullptr);
+	ioStep->mCCDBodiesCapacity = mBodyManager.GetNumActiveCCDBodies();
+	ioStep->mCCDBodies = (CCDBody *)temp_allocator->Allocate(ioStep->mCCDBodiesCapacity * sizeof(CCDBody));
 
 	// Initialize the mapping table between active body and CCD body
-	JPH_ASSERT(ioSubStep->mActiveBodyToCCDBody == nullptr);
-	ioSubStep->mNumActiveBodyToCCDBody = mBodyManager.GetNumActiveBodies();
-	ioSubStep->mActiveBodyToCCDBody = (int *)temp_allocator->Allocate(ioSubStep->mNumActiveBodyToCCDBody * sizeof(int));
+	JPH_ASSERT(ioStep->mActiveBodyToCCDBody == nullptr);
+	ioStep->mNumActiveBodyToCCDBody = mBodyManager.GetNumActiveBodies();
+	ioStep->mActiveBodyToCCDBody = (int *)temp_allocator->Allocate(ioStep->mNumActiveBodyToCCDBody * sizeof(int));
 
 	// Prepare the split island builder for solving the position constraints
 	mLargeIslandSplitter.PrepareForSolvePositions();
 }
 
-void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We update positions and need velocity to do so, we also clamp velocities so need to write to them
 	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::ReadWrite);
 #endif
 
-	float delta_time = ioContext->mSubStepDeltaTime;
+	float delta_time = ioContext->mStepDeltaTime;
 	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe();
 	uint32 num_active_bodies = mBodyManager.GetNumActiveBodies();
-	uint32 num_active_bodies_after_find_collisions = ioSubStep->mStep->mActiveBodyReadIdx;
+	uint32 num_active_bodies_after_find_collisions = ioStep->mActiveBodyReadIdx;
 
 	// We can move bodies that are not part of an island. In this case we need to notify the broadphase of the movement.
 	static constexpr int cBodiesBatch = 64;
@@ -1483,7 +1406,7 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 	for (;;)
 	{
 		// Atomically fetch a batch of bodies
-		uint32 active_body_idx = ioSubStep->mIntegrateVelocityReadIdx.fetch_add(cIntegrateVelocityBatchSize);
+		uint32 active_body_idx = ioStep->mIntegrateVelocityReadIdx.fetch_add(cIntegrateVelocityBatchSize);
 		if (active_body_idx >= num_active_bodies)
 			break;
 
@@ -1548,9 +1471,9 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 					if (delta_pos.LengthSq() > linear_cast_threshold_sq)
 					{
 						// This body needs a cast
-						uint32 ccd_body_idx = ioSubStep->mNumCCDBodies++;
-						ioSubStep->mActiveBodyToCCDBody[active_body_idx] = ccd_body_idx;
-						new (&ioSubStep->mCCDBodies[ccd_body_idx]) CCDBody(body_id, delta_pos, linear_cast_threshold_sq, min(mPhysicsSettings.mPenetrationSlop, mPhysicsSettings.mLinearCastMaxPenetration * inner_radius));
+						uint32 ccd_body_idx = ioStep->mNumCCDBodies++;
+						ioStep->mActiveBodyToCCDBody[active_body_idx] = ccd_body_idx;
+						new (&ioStep->mCCDBodies[ccd_body_idx]) CCDBody(body_id, delta_pos, linear_cast_threshold_sq, min(mPhysicsSettings.mPenetrationSlop, mPhysicsSettings.mLinearCastMaxPenetration * inner_radius));
 
 						update_position = false;
 					}
@@ -1580,7 +1503,7 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 				}
 
 				// We did not create a CCD body
-				ioSubStep->mActiveBodyToCCDBody[active_body_idx] = -1;
+				ioStep->mActiveBodyToCCDBody[active_body_idx] = -1;
 			}
 
 			active_body_idx++;
@@ -1592,33 +1515,30 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 }
 
-void PhysicsSystem::JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep) const
+void PhysicsSystem::JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep) const
 {
 	// Validate that our reservations were correct
-	JPH_ASSERT(ioSubStep->mNumCCDBodies <= mBodyManager.GetNumActiveCCDBodies());
+	JPH_ASSERT(ioStep->mNumCCDBodies <= mBodyManager.GetNumActiveCCDBodies());
 
-	if (ioSubStep->mNumCCDBodies == 0)
+	if (ioStep->mNumCCDBodies == 0)
 	{
 		// No continous collision detection jobs -> kick the next job ourselves
-		if (ioSubStep->mIsLast)
-			ioSubStep->mStep->mContactRemovedCallbacks.RemoveDependency();
+		ioStep->mContactRemovedCallbacks.RemoveDependency();
 	}
 	else
 	{
 		// Run the continous collision detection jobs
-		int num_continuous_collision_jobs = min(int(ioSubStep->mNumCCDBodies + cNumCCDBodiesPerJob - 1) / cNumCCDBodiesPerJob, ioContext->GetMaxConcurrency());
-		ioSubStep->mResolveCCDContacts.AddDependency(num_continuous_collision_jobs);
-		if (ioSubStep->mIsLast)
-			ioSubStep->mStep->mContactRemovedCallbacks.AddDependency(num_continuous_collision_jobs - 1); // Already had 1 dependency
+		int num_continuous_collision_jobs = min(int(ioStep->mNumCCDBodies + cNumCCDBodiesPerJob - 1) / cNumCCDBodiesPerJob, ioContext->GetMaxConcurrency());
+		ioStep->mResolveCCDContacts.AddDependency(num_continuous_collision_jobs);
+		ioStep->mContactRemovedCallbacks.AddDependency(num_continuous_collision_jobs - 1); // Already had 1 dependency
 		for (int i = 0; i < num_continuous_collision_jobs; ++i)
 		{
-			JobHandle job = ioContext->mJobSystem->CreateJob("FindCCDContacts", cColorFindCCDContacts, [ioContext, ioSubStep]() 
+			JobHandle job = ioContext->mJobSystem->CreateJob("FindCCDContacts", cColorFindCCDContacts, [ioContext, ioStep]() 
 			{
-				ioContext->mPhysicsSystem->JobFindCCDContacts(ioContext, ioSubStep);
+				ioContext->mPhysicsSystem->JobFindCCDContacts(ioContext, ioStep);
 
-				ioSubStep->mResolveCCDContacts.RemoveDependency();
-				if (ioSubStep->mIsLast)
-					ioSubStep->mStep->mContactRemovedCallbacks.RemoveDependency();
+				ioStep->mResolveCCDContacts.RemoveDependency();
+				ioStep->mContactRemovedCallbacks.RemoveDependency();
 			});
 			ioContext->mBarrier->AddJob(job);
 		}
@@ -1637,7 +1557,7 @@ inline static Vec3 sCalculateBodyMotion(const Body &inBody, float inDeltaTime)
 }
 
 // Helper function that finds the CCD body corresponding to a body (if it exists)
-inline static PhysicsUpdateContext::SubStep::CCDBody *sGetCCDBody(const Body &inBody, PhysicsUpdateContext::SubStep *inSubStep)
+inline static PhysicsUpdateContext::Step::CCDBody *sGetCCDBody(const Body &inBody, PhysicsUpdateContext::Step *inStep)
 {
 	// If the body has no motion properties it cannot have a CCD body
 	const MotionProperties *motion_properties = inBody.GetMotionPropertiesUnchecked();
@@ -1650,17 +1570,17 @@ inline static PhysicsUpdateContext::SubStep::CCDBody *sGetCCDBody(const Body &in
 		return nullptr;
 
 	// Check if the active body has a corresponding CCD body
-	JPH_ASSERT(active_index < inSubStep->mNumActiveBodyToCCDBody); // Ensure that the body has a mapping to CCD body
-	int ccd_index = inSubStep->mActiveBodyToCCDBody[active_index];
+	JPH_ASSERT(active_index < inStep->mNumActiveBodyToCCDBody); // Ensure that the body has a mapping to CCD body
+	int ccd_index = inStep->mActiveBodyToCCDBody[active_index];
 	if (ccd_index < 0)
 		return nullptr;
 
-	PhysicsUpdateContext::SubStep::CCDBody *ccd_body = &inSubStep->mCCDBodies[ccd_index];
+	PhysicsUpdateContext::Step::CCDBody *ccd_body = &inStep->mCCDBodies[ccd_index];
 	JPH_ASSERT(ccd_body->mBodyID1 == inBody.GetID(), "We found the wrong CCD body!");
 	return ccd_body;
 }
 
-void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We only read positions, but the validate callback may read body positions and velocities
@@ -1682,10 +1602,10 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 	for (;;)
 	{
 		// Fetch the next body to cast
-		uint32 idx = ioSubStep->mNextCCDBody++;
-		if (idx >= ioSubStep->mNumCCDBodies)
+		uint32 idx = ioStep->mNextCCDBody++;
+		if (idx >= ioStep->mNumCCDBodies)
 			break;
-		CCDBody &ccd_body = ioSubStep->mCCDBodies[idx];
+		CCDBody &ccd_body = ioStep->mCCDBodies[idx];
 		const Body &body = mBodyManager.GetBody(ccd_body.mBodyID1);
 
 		// Filter out layers
@@ -1808,13 +1728,13 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 		// Narrowphase collector
 		ShapeCastResult cast_shape_result;
-		CCDNarrowPhaseCollector np_collector(mBodyManager, mContactManager, ccd_body, cast_shape_result, ioContext->mSubStepDeltaTime);
+		CCDNarrowPhaseCollector np_collector(mBodyManager, mContactManager, ccd_body, cast_shape_result, ioContext->mStepDeltaTime);
 
 		// This collector wraps the narrowphase collector and collects the closest hit
 		class CCDBroadPhaseCollector : public CastShapeBodyCollector
 		{
 		public:
-										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const RShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::SubStep *inSubStep, float inDeltaTime) :
+										CCDBroadPhaseCollector(const CCDBody &inCCDBody, const Body &inBody1, const RShapeCast &inShapeCast, ShapeCastSettings &inShapeCastSettings, CCDNarrowPhaseCollector &ioCollector, const BodyManager &inBodyManager, PhysicsUpdateContext::Step *inStep, float inDeltaTime) :
 				mCCDBody(inCCDBody),
 				mBody1(inBody1),
 				mBody1Extent(inShapeCast.mShapeWorldBounds.GetExtent()),
@@ -1822,7 +1742,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 				mShapeCastSettings(inShapeCastSettings),
 				mCollector(ioCollector),
 				mBodyManager(inBodyManager),
-				mSubStep(inSubStep),
+				mStep(inStep),
 				mDeltaTime(inDeltaTime)
 			{
 			}
@@ -1839,7 +1759,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 
 				// Avoid treating duplicates, if both bodies are doing CCD then only consider collision if body ID < other body ID
 				const Body &body2 = mBodyManager.GetBody(inResult.mBodyID);
-				const CCDBody *ccd_body2 = sGetCCDBody(body2, mSubStep);
+				const CCDBody *ccd_body2 = sGetCCDBody(body2, mStep);
 				if (ccd_body2 != nullptr && mCCDBody.mBodyID1 > ccd_body2->mBodyID1)
 					return;
 
@@ -1890,13 +1810,13 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			ShapeCastSettings &			mShapeCastSettings;
 			CCDNarrowPhaseCollector &	mCollector;
 			const BodyManager &			mBodyManager;
-			PhysicsUpdateContext::SubStep *mSubStep;
+			PhysicsUpdateContext::Step *mStep;
 			float						mDeltaTime;
 		};
 
 		// Check if we collide with any other body. Note that we use the non-locking interface as we know the broadphase cannot be modified at this point.
 		RShapeCast shape_cast(body.GetShape(), Vec3::sReplicate(1.0f), body.GetCenterOfMassTransform(), ccd_body.mDeltaPosition);
-		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, np_collector, mBodyManager, ioSubStep, ioContext->mSubStepDeltaTime);
+		CCDBroadPhaseCollector bp_collector(ccd_body, body, shape_cast, settings, np_collector, mBodyManager, ioStep, ioContext->mStepDeltaTime);
 		mBroadPhase->CastAABoxNoLock({ shape_cast.mShapeWorldBounds, shape_cast.mDirection }, bp_collector, broadphase_layer_filter, object_layer_filter);
 
 		// Check if there was a hit
@@ -1931,10 +1851,10 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 	}
 
 	// Collect information from the contact allocator and accumulate it in the step.
-	sFinalizeContactAllocator(*ioSubStep->mStep, contact_allocator);
+	sFinalizeContactAllocator(*ioStep, contact_allocator);
 }
 
-void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// Read/write body access
@@ -1944,11 +1864,11 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
 #endif
 
-	uint32 num_active_bodies_after_find_collisions = ioSubStep->mStep->mActiveBodyReadIdx;
+	uint32 num_active_bodies_after_find_collisions = ioStep->mActiveBodyReadIdx;
 	TempAllocator *temp_allocator = ioContext->mTempAllocator;
 
 	// Check if there's anything to do
-	uint num_ccd_bodies = ioSubStep->mNumCCDBodies;
+	uint num_ccd_bodies = ioStep->mNumCCDBodies;
 	if (num_ccd_bodies > 0)
 	{
 		// Sort on fraction so that we process earliest collisions first
@@ -1960,7 +1880,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 			JPH_PROFILE("Sort");
 
 			// We don't want to copy the entire struct (it's quite big), so we create a pointer array first
-			CCDBody *src_ccd_bodies = ioSubStep->mCCDBodies;
+			CCDBody *src_ccd_bodies = ioStep->mCCDBodies;
 			CCDBody **dst_ccd_bodies = sorted_ccd_bodies;
 			CCDBody **dst_ccd_bodies_end = dst_ccd_bodies + num_ccd_bodies;
 			while (dst_ccd_bodies < dst_ccd_bodies_end)
@@ -1998,7 +1918,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 				Body &body2 = mBodyManager.GetBody(ccd_body->mBodyID2);
 
 				// Determine if the other body has a CCD body
-				CCDBody *ccd_body2 = sGetCCDBody(body2, ioSubStep);
+				CCDBody *ccd_body2 = sGetCCDBody(body2, ioStep);
 				if (ccd_body2 != nullptr)
 				{
 					JPH_ASSERT(ccd_body2->mBodyID2 != ccd_body->mBodyID1, "If we collided with another body, that other body should have ignored collisions with us!");
@@ -2138,12 +2058,12 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 	}
 
 	// Ensure we free the CCD bodies array now, will not call the destructor!
-	temp_allocator->Free(ioSubStep->mActiveBodyToCCDBody, ioSubStep->mNumActiveBodyToCCDBody * sizeof(int));
-	ioSubStep->mActiveBodyToCCDBody = nullptr;
-	ioSubStep->mNumActiveBodyToCCDBody = 0;
-	temp_allocator->Free(ioSubStep->mCCDBodies, ioSubStep->mCCDBodiesCapacity * sizeof(CCDBody));
-	ioSubStep->mCCDBodies = nullptr;
-	ioSubStep->mCCDBodiesCapacity = 0;
+	temp_allocator->Free(ioStep->mActiveBodyToCCDBody, ioStep->mNumActiveBodyToCCDBody * sizeof(int));
+	ioStep->mActiveBodyToCCDBody = nullptr;
+	ioStep->mNumActiveBodyToCCDBody = 0;
+	temp_allocator->Free(ioStep->mCCDBodies, ioStep->mCCDBodiesCapacity * sizeof(CCDBody));
+	ioStep->mCCDBodies = nullptr;
+	ioStep->mCCDBodiesCapacity = 0;
 }
 
 void PhysicsSystem::JobContactRemovedCallbacks(const PhysicsUpdateContext::Step *ioStep)
@@ -2208,15 +2128,15 @@ private:
 	BodyID *				mBodiesToSleepCur;
 };
 
-void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::SubStep *ioSubStep, BodiesToSleep &ioBodiesToSleep)
+void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const PhysicsUpdateContext *ioContext, const PhysicsUpdateContext::Step *ioStep, BodiesToSleep &ioBodiesToSleep)
 {
 	// Get the bodies that belong to this island
 	BodyID *bodies_begin, *bodies_end;
 	mIslandBuilder.GetBodiesInIsland(inIslandIndex, bodies_begin, bodies_end);
 
-	// Only check sleeping in the last sub step of the last step
+	// Only check sleeping in the last step
 	// Also resets force and torque used during the apply gravity phase
-	if (ioSubStep->mIsLastOfAll)
+	if (ioStep->mIsLast)
 	{
 		JPH_PROFILE("Check Sleeping");
 
@@ -2234,7 +2154,7 @@ void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const Physic
 			body.CalculateWorldSpaceBoundsInternal();
 
 			// Update sleeping
-			all_can_sleep &= int(body.UpdateSleepStateInternal(ioContext->mSubStepDeltaTime, max_movement, time_before_sleep));
+			all_can_sleep &= int(body.UpdateSleepStateInternal(ioContext->mStepDeltaTime, max_movement, time_before_sleep));
 
 			// Reset force and torque
 			MotionProperties *mp = body.GetMotionProperties();
@@ -2250,7 +2170,7 @@ void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const Physic
 	{
 		JPH_PROFILE("Update Bounds");
 
-		// Update bounding box only for all other sub steps
+		// Update bounding box only for all other steps
 		for (const BodyID *body_id = bodies_begin; body_id < bodies_end; ++body_id)
 		{
 			Body &body = mBodyManager.GetBody(*body_id);
@@ -2258,13 +2178,12 @@ void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const Physic
 		}
 	}
 
-	// Notify broadphase of changed objects (find ccd contacts can do linear casts in the next step, so
-	// we need to do this every sub step)
+	// Notify broadphase of changed objects (find ccd contacts can do linear casts in the next step, so we need to do this every step)
 	// Note: Shuffles the BodyID's around!!!
 	mBroadPhase->NotifyBodiesAABBChanged(bodies_begin, int(bodies_end - bodies_begin), false);
 }
 
-void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::SubStep *ioSubStep)
+void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
 {
 #ifdef JPH_ENABLE_ASSERTS
 	// We fix up position errors
@@ -2274,14 +2193,14 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 	BodyManager::GrantActiveBodiesAccess grant_active(false, true);
 #endif
 
-	float delta_time = ioContext->mSubStepDeltaTime;
+	float delta_time = ioContext->mStepDeltaTime;
 	float baumgarte = mPhysicsSettings.mBaumgarte;
 	Constraint **active_constraints = ioContext->mActiveConstraints;
 
 	// Keep a buffer of bodies that need to go to sleep in order to not constantly lock the active bodies mutex and create contention between all solving threads
 	BodiesToSleep bodies_to_sleep(mBodyManager, (BodyID *)JPH_STACK_ALLOC(BodiesToSleep::cBodiesToSleepSize * sizeof(BodyID)));
 
-	bool check_islands = true, check_split_islands = ioContext->mUseLargeIslandSplitter;
+	bool check_islands = true, check_split_islands = mPhysicsSettings.mUseLargeIslandSplitter;
 	do
 	{
 		// First try to get work from large islands
@@ -2303,7 +2222,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 				// The final batch will update all bounds and check sleeping
 				if (final_batch)
-					CheckSleepAndUpdateBounds(mLargeIslandSplitter.GetIslandIndex(split_island_index), ioContext, ioSubStep, bodies_to_sleep);
+					CheckSleepAndUpdateBounds(mLargeIslandSplitter.GetIslandIndex(split_island_index), ioContext, ioStep, bodies_to_sleep);
 
 				// We processed work, loop again
 				continue;
@@ -2319,7 +2238,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 		if (check_islands)
 		{
 			// Next island
-			uint32 island_idx = ioSubStep->mSolvePositionConstraintsNextIsland++;
+			uint32 island_idx = ioStep->mSolvePositionConstraintsNextIsland++;
 			if (island_idx >= mIslandBuilder.GetNumIslands())
 			{
 				// We processed all islands, stop checking islands
@@ -2336,7 +2255,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 
 			// If this island is a large island, it will be picked up as a batch and we don't need to do anything here
 			uint num_items = uint(constraints_end - constraints_begin) + uint(contacts_end - contacts_begin);
-			if (ioContext->mUseLargeIslandSplitter
+			if (mPhysicsSettings.mUseLargeIslandSplitter
 				&& num_items >= LargeIslandSplitter::cLargeIslandTreshold)
 				continue;
 
@@ -2375,7 +2294,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 			}
 
 			// After solving we will update all bounds and check sleeping
-			CheckSleepAndUpdateBounds(island_idx, ioContext, ioSubStep, bodies_to_sleep);
+			CheckSleepAndUpdateBounds(island_idx, ioContext, ioStep, bodies_to_sleep);
 
 			// We processed work, loop again
 			continue;
@@ -2391,7 +2310,7 @@ void PhysicsSystem::SaveState(StateRecorder &inStream) const
 {
 	JPH_PROFILE_FUNCTION();
 
-	inStream.Write(mPreviousSubStepDeltaTime);
+	inStream.Write(mPreviousStepDeltaTime);
 	inStream.Write(mGravity);
 
 	mBodyManager.SaveState(inStream);
@@ -2405,7 +2324,7 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 {
 	JPH_PROFILE_FUNCTION();
 
-	inStream.Read(mPreviousSubStepDeltaTime);
+	inStream.Read(mPreviousStepDeltaTime);
 	inStream.Read(mGravity);
 
 	if (!mBodyManager.RestoreState(inStream))

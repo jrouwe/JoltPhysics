@@ -153,6 +153,12 @@ TrackedVehicleController::TrackedVehicleController(const TrackedVehicleControlle
 	}
 }
 
+bool TrackedVehicleController::AllowSleep() const
+{
+	return mForwardInput == 0.0f								// No user input
+		&& mEngine.GetCurrentRPM() <= 1.01f * mEngine.mMinRPM;	// Engine is idling
+}
+
 void TrackedVehicleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem)
 {
 	Wheels &wheels = mConstraint.GetWheels();
