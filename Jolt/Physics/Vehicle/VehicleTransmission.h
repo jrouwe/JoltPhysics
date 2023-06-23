@@ -38,7 +38,7 @@ public:
 	float					mSwitchLatency = 0.5f;						///< How long to wait after releasing the clutch before another switch is attempted (s), only used in auto mode
 	float					mShiftUpRPM = 4000.0f;						///< If RPM of engine is bigger then this we will shift a gear up, only used in auto mode
 	float					mShiftDownRPM = 2000.0f;					///< If RPM of engine is smaller then this we will shift a gear down, only used in auto mode
-	float					mClutchStrength = 10.0f;					///< Strength of the clutch when fully engaged. Total torque a clutch applies is Torque = ClutchStrength * (Velocity Engine - Avg Velocity Wheels At Clutch) (units: k m^2 s^-1)
+	float					mClutchStrength = 10.0f;					///< Strength of the clutch when fully engaged. Total torque a clutch applies is Torque = ClutchStrength * (Velocity Engine - Avg Velocity Wheels) (units: k m^2 s^-1)
 };
 
 /// Runtime data for transmission
