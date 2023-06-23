@@ -43,7 +43,7 @@ protected:
 
 	protected:
 		/// Called by a Job to mark that it is finished
-		virtual void		OnJobFinished(Job *inJob)						{ }
+		virtual void		OnJobFinished(Job *inJob) override				{ }
 	};
 
 	// See JobSystem
