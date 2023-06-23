@@ -7,6 +7,7 @@
 #include <SamplesApp.h>
 #include <Application/EntryPoint.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Core/JobSystemSingleThreaded.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/StreamWrapper.h>
 #include <Jolt/Geometry/OrientedBox.h>
@@ -360,8 +361,8 @@ SamplesApp::SamplesApp()
 	// Create job system
 	mJobSystem = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, mMaxConcurrentJobs - 1);
 
-	// Create job system without extra threads for validating
-	mJobSystemValidating = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, 0);
+	// Create single threaded job system for validating
+	mJobSystemValidating = new JobSystemSingleThreaded(cMaxPhysicsJobs);
 
 	{
 		// Disable allocation checking
