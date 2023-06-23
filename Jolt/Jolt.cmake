@@ -32,6 +32,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/IssueReporting.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystem.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystem.inl
+	${JOLT_PHYSICS_ROOT}/Core/JobSystemSingleThreaded.cpp
+	${JOLT_PHYSICS_ROOT}/Core/JobSystemSingleThreaded.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemThreadPool.cpp
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemThreadPool.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemWithBarrier.cpp

@@ -114,17 +114,6 @@ void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstrain
 		(*c)->SetupVelocityConstraint(inDeltaTime);
 }
 
-void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
-{
-	JPH_PROFILE_FUNCTION();
-
-	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
-	{
-		Constraint *c = inActiveConstraints[*constraint_idx];
-		c->SetupVelocityConstraint(inDeltaTime);
-	}
-}
-
 void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio)
 {
 	JPH_PROFILE_FUNCTION();

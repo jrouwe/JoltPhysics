@@ -6,6 +6,8 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v3.0.1 and latest
 
+* 20230618 - *SBS* - A new flag was added to BodyCreationSettings that changes the binary serialization format. (107b70c7585909f0757a62c318261a18d670ff97)
+* 20230610 - A bug was fixed that causes the vehicle suspension to be weaker when driving over low mass objects. This also changes suspension behavior a bit when driving over static objects. (44b82e395697ea553574df3cd806ffe264bfa5c4)
 * 20230609 - *SBS* - The MotorcycleController lean controller is now a full PID controller. This changes binary serialization format. (70e7bb3e5808dabc17ee38fb823fbfa7e9140a91)
 * 20230609 - *SBS* - VehicleConstraint uses the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (0da97d8f3345f14c5b4b0ee3571c05832c556f98)
 * 20230609 - *SBS* - DistanceConstraintSettings, SliderConstraintSettings and MotorSettings now use the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (3cabc057c1267fde288c1ab2a23076702c71eb79)

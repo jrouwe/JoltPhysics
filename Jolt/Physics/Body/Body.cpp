@@ -325,6 +325,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mAllowedDOF = IsConstrainedToXYPlane()? EAllowedDOF::XYPlane : EAllowedDOF::Unconstrained;
 	result.mAllowDynamicOrKinematic = mMotionProperties != nullptr;
 	result.mIsSensor = IsSensor();
+	result.mSensorDetectsStatic = SensorDetectsStatic();
 	result.mUseManifoldReduction = GetUseManifoldReduction();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;
 	result.mAllowSleeping = mMotionProperties != nullptr? GetAllowSleeping() : true;

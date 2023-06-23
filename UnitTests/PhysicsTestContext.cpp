@@ -10,7 +10,7 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/TempAllocator.h>
 
-PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, int inWorkerThreads, uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints) :
+PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, int inWorkerThreads, uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints) :
 #ifdef JPH_DISABLE_TEMP_ALLOCATOR
 	mTempAllocator(new TempAllocatorMalloc()),
 #else
@@ -18,8 +18,7 @@ PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, 
 #endif
 	mJobSystem(new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, inWorkerThreads)),
 	mDeltaTime(inDeltaTime),
-	mCollisionSteps(inCollisionSteps),
-	mIntegrationSubSteps(inIntegrationSubSteps)
+	mCollisionSteps(inCollisionSteps)
 {
 	// Create physics system
 	mSystem = new PhysicsSystem();
@@ -86,7 +85,7 @@ EPhysicsUpdateError PhysicsTestContext::Simulate(float inTotalTime, function<voi
 	for (int s = 0; s < cNumSteps; ++s)
 	{
 		inPreStepCallback();
-		errors |= mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+		errors |= mSystem->Update(mDeltaTime, mCollisionSteps, mTempAllocator, mJobSystem);
 	#ifndef JPH_DISABLE_TEMP_ALLOCATOR
 		JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
 	#endif // JPH_DISABLE_TEMP_ALLOCATOR
@@ -97,7 +96,7 @@ EPhysicsUpdateError PhysicsTestContext::Simulate(float inTotalTime, function<voi
 
 EPhysicsUpdateError PhysicsTestContext::SimulateSingleStep()
 {
-	EPhysicsUpdateError errors = mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
+	EPhysicsUpdateError errors = mSystem->Update(mDeltaTime, mCollisionSteps, mTempAllocator, mJobSystem);
 #ifndef JPH_DISABLE_TEMP_ALLOCATOR
 	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
 #endif // JPH_DISABLE_TEMP_ALLOCATOR
@@ -110,7 +109,7 @@ RVec3 PhysicsTestContext::PredictPosition(RVec3Arg inPosition, Vec3Arg inVelocit
 	RVec3 pos = inPosition;
 	Vec3 vel = inVelocity;
 
-	const float delta_time = GetSubStepDeltaTime();
+	const float delta_time = GetStepDeltaTime();
 	const int cNumSteps = int(round(inTotalTime / delta_time));
 	for (int s = 0; s < cNumSteps; ++s)
 	{
@@ -127,7 +126,7 @@ Quat PhysicsTestContext::PredictOrientation(QuatArg inRotation, Vec3Arg inAngula
 	Quat rot = inRotation;
 	Vec3 vel = inAngularVelocity;
 
-	const float delta_time = GetSubStepDeltaTime();
+	const float delta_time = GetStepDeltaTime();
 	const int cNumSteps = int(round(inTotalTime / delta_time));
 	for (int s = 0; s < cNumSteps; ++s)
 	{

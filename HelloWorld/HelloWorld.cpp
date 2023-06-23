@@ -335,11 +335,8 @@ int main(int argc, char** argv)
 		// If you take larger steps than 1 / 60th of a second you need to do multiple collision steps in order to keep the simulation stable. Do 1 collision step per 1 / 60th of a second (round up).
 		const int cCollisionSteps = 1;
 
-		// If you want more accurate step results you can do multiple sub steps within a collision step. Usually you would set this to 1.
-		const int cIntegrationSubSteps = 1;
-
 		// Step the world
-		physics_system.Update(cDeltaTime, cCollisionSteps, cIntegrationSubSteps, &temp_allocator, &job_system);
+		physics_system.Update(cDeltaTime, cCollisionSteps, &temp_allocator, &job_system);
 	}
 
 	// Remove the sphere from the physics system. Note that the sphere itself keeps all of its state and can be re-added at any time.
