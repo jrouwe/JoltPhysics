@@ -17,7 +17,7 @@ public:
 
 	/// Constructor
 							JobSystemSingleThreaded() = default;
-							JobSystemSingleThreaded(uint inMaxJobs)			{ Init(inMaxJobs); }
+	explicit				JobSystemSingleThreaded(uint inMaxJobs)			{ Init(inMaxJobs); }
 
 	/// Initialize the job system
 	/// @param inMaxJobs Max number of jobs that can be allocated at any time
@@ -38,12 +38,12 @@ protected:
 		JPH_OVERRIDE_NEW_DELETE
 
 		// See Barrier
-		virtual void		AddJob(const JobHandle &inJob) override			{ }
-		virtual void		AddJobs(const JobHandle *inHandles, uint inNumHandles) override { }
+		virtual void		AddJob(const JobHandle &inJob) override			{ /* We don't need to track jobs */ }
+		virtual void		AddJobs(const JobHandle *inHandles, uint inNumHandles) override { /* We don't need to track jobs */ }
 
 	protected:
 		/// Called by a Job to mark that it is finished
-		virtual void		OnJobFinished(Job *inJob) override				{ }
+		virtual void		OnJobFinished(Job *inJob) override				{ /* We don't need to track jobs */ }
 	};
 
 	// See JobSystem
