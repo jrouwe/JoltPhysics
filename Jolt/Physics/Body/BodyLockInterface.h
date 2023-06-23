@@ -60,8 +60,8 @@ public:
 	using BodyLockInterface::BodyLockInterface;
 
 	///@name Locking functions
-	virtual SharedMutex *		LockRead([[maybe_unused]] const BodyID &inBodyID) const override		{ return nullptr; }
-	virtual void				UnlockRead([[maybe_unused]] SharedMutex *inMutex) const override		{ /* Nothing to do */ }
+	virtual SharedMutex *		LockRead([[maybe_unused]] const BodyID &inBodyID) const override	{ return nullptr; }
+	virtual void				UnlockRead([[maybe_unused]] SharedMutex *inMutex) const override	{ /* Nothing to do */ }
 	virtual SharedMutex *		LockWrite([[maybe_unused]] const BodyID &inBodyID) const override	{ return nullptr; }
 	virtual void				UnlockWrite([[maybe_unused]] SharedMutex *inMutex) const override	{ /* Nothing to do */ }
 
@@ -69,7 +69,7 @@ public:
 	virtual MutexMask			GetMutexMask([[maybe_unused]] const BodyID *inBodies, [[maybe_unused]] int inNumber) const override { return 0; }
 	virtual void				LockRead([[maybe_unused]] MutexMask inMutexMask) const override		{ /* Nothing to do */ }
 	virtual void				UnlockRead([[maybe_unused]] MutexMask inMutexMask) const override	{ /* Nothing to do */ }
-	virtual void				LockWrite([[maybe_unused]] MutexMask inMutexMask) const override		{ /* Nothing to do */ }
+	virtual void				LockWrite([[maybe_unused]] MutexMask inMutexMask) const override	{ /* Nothing to do */ }
 	virtual void				UnlockWrite([[maybe_unused]] MutexMask inMutexMask) const override	{ /* Nothing to do */ }
 };
 
