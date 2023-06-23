@@ -19,7 +19,7 @@ class PhysicsTestContext
 {
 public:
 	// Constructor / destructor
-						PhysicsTestContext(float inDeltaTime = 1.0f / 60.0f, int inCollisionSteps = 1, int inIntegrationSubSteps = 1, int inWorkerThreads = 0, uint inMaxBodies = 1024, uint inMaxBodyPairs = 4096, uint inMaxContactConstraints = 1024);
+						PhysicsTestContext(float inDeltaTime = 1.0f / 60.0f, int inCollisionSteps = 1, int inWorkerThreads = 0, uint inMaxBodies = 1024, uint inMaxBodyPairs = 4096, uint inMaxContactConstraints = 1024);
 						~PhysicsTestContext();
 
 	// Set the gravity to zero
@@ -76,10 +76,10 @@ public:
 		return mDeltaTime;
 	}
 
-	// Get delta time for a simulation integration sub step
-	inline float		GetSubStepDeltaTime() const
+	// Get delta time for a simulation collision step
+	inline float		GetStepDeltaTime() const
 	{
-		return mDeltaTime / (mCollisionSteps * mIntegrationSubSteps);
+		return mDeltaTime / mCollisionSteps;
 	}
 
 private:
@@ -91,5 +91,4 @@ private:
 	PhysicsSystem *		mSystem;
 	float				mDeltaTime;
 	int					mCollisionSteps;
-	int					mIntegrationSubSteps;
 };

@@ -12,7 +12,6 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
 #include "Layers.h"
-#include "PhysicsTestContext.h"
 
 TEST_SUITE("ConvexVsTrianglesTest")
 {
