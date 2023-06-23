@@ -1961,6 +1961,9 @@ void HeightFieldShape::sRegister()
 	{
 		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::HeightField, sCollideConvexVsHeightField);
 		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::HeightField, sCastConvexVsHeightField);
+
+		CollisionDispatch::sRegisterCastShape(EShapeSubType::HeightField, s, CollisionDispatch::sReversedCastShape);
+		CollisionDispatch::sRegisterCollideShape(EShapeSubType::HeightField, s, CollisionDispatch::sReversedCollideShape);
 	}
 
 	// Specialized collision functions

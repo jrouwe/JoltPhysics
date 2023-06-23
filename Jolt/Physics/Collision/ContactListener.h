@@ -42,6 +42,10 @@ class ContactSettings
 public:
 	float					mCombinedFriction;					///< Combined friction for the body pair (see: PhysicsSystem::SetCombineFriction)
 	float					mCombinedRestitution;				///< Combined restitution for the body pair (see: PhysicsSystem::SetCombineRestitution)
+	float					mInvMassScale1 = 1.0f;				///< Scale factor for the inverse mass of body 1 (0 = infinite mass, 1 = use original mass, 2 = body has half the mass). For the same contact pair, you should strive to keep the value the same over time.
+	float					mInvInertiaScale1 = 1.0f;			///< Scale factor for the inverse inertia of body 1 (usually same as mInvMassScale1)
+	float					mInvMassScale2 = 1.0f;				///< Scale factor for the inverse mass of body 2 (0 = infinite mass, 1 = use original mass, 2 = body has half the mass). For the same contact pair, you should strive to keep the value the same over time.
+	float					mInvInertiaScale2 = 1.0f;			///< Scale factor for the inverse inertia of body 2 (usually same as mInvMassScale2)
 	bool					mIsSensor;							///< If the contact should be treated as a sensor vs body contact (no collision response)
 	Vec3					mRelativeSurfaceVelocity = Vec3::sZero(); ///< Relative surface velocity between the bodies (world space surface velocity of body 2 - world space surface velocity of body 1), can be used to create a conveyor belt effect
 };

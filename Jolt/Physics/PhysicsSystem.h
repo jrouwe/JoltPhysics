@@ -103,6 +103,7 @@ public:
 	/// Simulate the system.
 	/// The world steps for a total of inDeltaTime seconds. This is divided in inCollisionSteps iterations. Each iteration
 	/// consists of collision detection followed by inIntegrationSubSteps integration steps.
+	/// This function internally spawns jobs using inJobSystem and waits for them to complete, so no jobs will be running when this function returns.
 	EPhysicsUpdateError			Update(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, TempAllocator *inTempAllocator, JobSystem *inJobSystem);
 
 	/// Saving state for replay
@@ -166,6 +167,10 @@ public:
 	/// Get copy of the list of active bodies under protection of a lock.
 	/// @param outBodyIDs On return, this will contain the list of BodyIDs
 	void						GetActiveBodies(BodyIDVector &outBodyIDs) const				{ return mBodyManager.GetActiveBodies(outBodyIDs); }
+
+	/// Get the list of active bodies, use GetNumActiveBodies() to find out how long the list is.
+	/// Note: Not thread safe. The active bodies list can change at any moment when other threads are doing work. Use GetActiveBodies() if you need a thread safe version.
+	const BodyID *				GetActiveBodiesUnsafe() const								{ return mBodyManager.GetActiveBodiesUnsafe(); }
 
 	/// Check if 2 bodies were in contact during the last simulation step. Since contacts are only detected between active bodies, so at least one of the bodies must be active in order for this function to work.
 	/// It queries the state at the time of the last PhysicsSystem::Update and will return true if the bodies were in contact, even if one of the bodies was moved / removed afterwards.

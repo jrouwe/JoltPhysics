@@ -973,7 +973,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 	if ((!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA)) 
 		&& !body2->IsSensor())
 		swap(body1, body2);
-	JPH_ASSERT(body1->IsDynamic() || (body1->IsKinematic() && body2->IsSensor()));
+	JPH_ASSERT(body1->IsDynamic() || body2->IsSensor());
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, constraint_created = false;
@@ -1030,8 +1030,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 				{
 					// One of the following should be true:
 					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
-					// - Body 1 is kinematic in which case body 2 should be a sensor
-					JPH_ASSERT(mBody1->IsDynamic() || (mBody1->IsKinematic() && mBody2->IsSensor()));
+					// - Body 1 is not dynamic in which case body 2 should be a sensor
+					JPH_ASSERT(mBody1->IsDynamic() || mBody2->IsSensor());
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit
@@ -1155,8 +1155,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 				{
 					// One of the following should be true:
 					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
-					// - Body 1 is kinematic in which case body 2 should be a sensor
-					JPH_ASSERT(mBody1->IsDynamic() || (mBody1->IsKinematic() && mBody2->IsSensor()));
+					// - Body 1 is not dynamic in which case body 2 should be a sensor
+					JPH_ASSERT(mBody1->IsDynamic() || mBody2->IsSensor());
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit
@@ -2043,18 +2043,21 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					// Apply friction
 					if (ccd_body->mContactSettings.mCombinedFriction > 0.0f)
 					{
-						Vec3 tangent1 = ccd_body->mContactNormal.GetNormalizedPerpendicular();
-						Vec3 tangent2 = ccd_body->mContactNormal.Cross(tangent1);
+						// Calculate friction direction by removing normal velocity from the relative velocity
+						Vec3 friction_direction = relative_velocity - normal_velocity * ccd_body->mContactNormal;
+						float friction_direction_len_sq = friction_direction.LengthSq();
+						if (friction_direction_len_sq > 1.0e-12f)
+						{
+							// Normalize friction direction
+							friction_direction /= sqrt(friction_direction_len_sq);
 
-						float max_lambda_f = ccd_body->mContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
+							// Calculate max friction impulse
+							float max_lambda_f = ccd_body->mContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
-						AxisConstraintPart friction1;
-						friction1.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, tangent1);
-						friction1.SolveVelocityConstraint(body1, body2, tangent1, -max_lambda_f, max_lambda_f);
-
-						AxisConstraintPart friction2;
-						friction2.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, tangent2);
-						friction2.SolveVelocityConstraint(body1, body2, tangent2, -max_lambda_f, max_lambda_f);
+							AxisConstraintPart friction;
+							friction.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, friction_direction);
+							friction.SolveVelocityConstraint(body1, body2, friction_direction, -max_lambda_f, max_lambda_f);
+						}
 					}
 
 					// Clamp velocities
