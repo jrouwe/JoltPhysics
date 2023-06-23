@@ -19,13 +19,13 @@ public:
 	virtual					~BodyFilter() = default;
 
 	/// Filter function. Returns true if we should collide with inBodyID
-	virtual bool			ShouldCollide(const BodyID &inBodyID) const
+	virtual bool			ShouldCollide(const BodyID &/*inBodyID*/) const
 	{
 		return true;
 	}
 
 	/// Filter function. Returns true if we should collide with inBody (this is called after the body is locked and makes it possible to filter based on body members)
-	virtual bool			ShouldCollideLocked(const Body &inBody) const
+	virtual bool			ShouldCollideLocked(const Body &/*inBody*/) const
 	{
 		return true;
 	}
@@ -92,7 +92,7 @@ public:
 	virtual					~BodyDrawFilter() = default;
 
 	/// Filter function. Returns true if inBody should be rendered
-	virtual bool			ShouldDraw(const Body& inBody) const
+	virtual bool			ShouldDraw(const Body& /*inBody*/) const
 	{
 		return true;
 	}

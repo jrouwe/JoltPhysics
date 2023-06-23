@@ -78,7 +78,7 @@ public:
 	virtual							~ObjectVsBroadPhaseLayerFilter() = default;
 
 	/// Returns true if an object layer should collide with a broadphase layer
-	virtual bool					ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const
+	virtual bool					ShouldCollide(ObjectLayer /*inLayer1*/, BroadPhaseLayer /*inLayer2*/) const
 	{
 		return true;
 	}
@@ -92,7 +92,7 @@ public:
 	virtual							~BroadPhaseLayerFilter() = default;
 
 	/// Function to filter out broadphase layers when doing collision query test (return true to allow testing against objects with this layer)
-	virtual bool					ShouldCollide(BroadPhaseLayer inLayer) const
+	virtual bool					ShouldCollide(BroadPhaseLayer /*inLayer*/) const
 	{
 		return true;
 	}

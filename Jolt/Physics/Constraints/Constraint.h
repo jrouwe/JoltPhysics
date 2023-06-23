@@ -166,8 +166,8 @@ public:
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing interface
 	virtual void				DrawConstraint(DebugRenderer *inRenderer) const = 0;
-	virtual void				DrawConstraintLimits(DebugRenderer *inRenderer) const { }
-	virtual void				DrawConstraintReferenceFrame(DebugRenderer *inRenderer) const { }
+	virtual void				DrawConstraintLimits(DebugRenderer * /*inRenderer*/) const { }
+	virtual void				DrawConstraintReferenceFrame(DebugRenderer * /*inRenderer*/) const { }
 
 	/// Size of constraint when drawing it through the debug renderer
 	float						GetDrawConstraintSize() const				{ return mDrawConstraintSize; }

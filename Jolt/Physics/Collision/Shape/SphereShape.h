@@ -60,7 +60,7 @@ public:
 	virtual Vec3			GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const override;
 
 	// See Shape::GetSupportingFace
-	virtual void			GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const override { /* Hit is always a single point, no point in returning anything */ }
+	virtual void			GetSupportingFace(const SubShapeID &/*inSubShapeID*/, Vec3Arg /*inDirection*/, Vec3Arg /*inScale*/, Mat44Arg /*inCenterOfMassTransform*/, SupportingFace &/*outVertices*/) const override { /* Hit is always a single point, no point in returning anything */ }
 
 	// See ConvexShape::GetSupportFunction
 	virtual const Support *	GetSupportFunction(ESupportMode inMode, SupportBuffer &inBuffer, Vec3Arg inScale) const override;

@@ -60,17 +60,17 @@ public:
 	using BodyLockInterface::BodyLockInterface;
 
 	///@name Locking functions
-	virtual SharedMutex *		LockRead(const BodyID &inBodyID) const override		{ return nullptr; }
-	virtual void				UnlockRead(SharedMutex *inMutex) const override		{ /* Nothing to do */ }
-	virtual SharedMutex *		LockWrite(const BodyID &inBodyID) const override	{ return nullptr; }
-	virtual void				UnlockWrite(SharedMutex *inMutex) const override	{ /* Nothing to do */ }
+	virtual SharedMutex *		LockRead(const BodyID &/*inBodyID*/) const override		{ return nullptr; }
+	virtual void				UnlockRead(SharedMutex * /*inMutex*/) const override		{ /* Nothing to do */ }
+	virtual SharedMutex *		LockWrite(const BodyID &/*inBodyID*/) const override	{ return nullptr; }
+	virtual void				UnlockWrite(SharedMutex * /*inMutex*/) const override	{ /* Nothing to do */ }
 
 	///@name Batch locking functions
 	virtual MutexMask			GetMutexMask(const BodyID *inBodies, int inNumber) const override { return 0; }
-	virtual void				LockRead(MutexMask inMutexMask) const override		{ /* Nothing to do */ }
-	virtual void				UnlockRead(MutexMask inMutexMask) const override	{ /* Nothing to do */ }
-	virtual void				LockWrite(MutexMask inMutexMask) const override		{ /* Nothing to do */ }
-	virtual void				UnlockWrite(MutexMask inMutexMask) const override	{ /* Nothing to do */ }
+	virtual void				LockRead(MutexMask /*inMutexMask*/) const override		{ /* Nothing to do */ }
+	virtual void				UnlockRead(MutexMask /*inMutexMask*/) const override	{ /* Nothing to do */ }
+	virtual void				LockWrite(MutexMask /*inMutexMask*/) const override		{ /* Nothing to do */ }
+	virtual void				UnlockWrite(MutexMask /*inMutexMask*/) const override	{ /* Nothing to do */ }
 };
 
 /// Implementation that uses the body manager to lock the correct mutex for a body
