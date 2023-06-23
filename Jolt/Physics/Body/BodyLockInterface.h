@@ -66,7 +66,7 @@ public:
 	virtual void				UnlockWrite(SharedMutex * /*inMutex*/) const override	{ /* Nothing to do */ }
 
 	///@name Batch locking functions
-	virtual MutexMask			GetMutexMask(const BodyID *inBodies, int inNumber) const override { return 0; }
+	virtual MutexMask			GetMutexMask(const BodyID * /*inBodies*/, int /*inNumber*/) const override { return 0; }
 	virtual void				LockRead(MutexMask /*inMutexMask*/) const override		{ /* Nothing to do */ }
 	virtual void				UnlockRead(MutexMask /*inMutexMask*/) const override	{ /* Nothing to do */ }
 	virtual void				LockWrite(MutexMask /*inMutexMask*/) const override		{ /* Nothing to do */ }
