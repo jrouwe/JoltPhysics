@@ -493,7 +493,7 @@ public:
 		DrawState();
 #endif
 
-		JPH_ASSERT(ioV.LengthSq() == v_len_sq);
+		JPH_ASSERT(fabsf(ioV.LengthSq() - v_len_sq) < 1e-6f);
 		return v_len_sq;
 	}
 
