@@ -63,7 +63,7 @@ public:
 	/// When running a query through the NarrowPhaseQuery class, this will be called for every body that is potentially colliding.
 	/// It allows collecting additional information needed by the collision collector implementation from the body under lock protection 
 	/// before AddHit is called (e.g. the user data pointer or the velocity of the body).
-	virtual void			OnBody(const Body &inBody)						{ /* Collects nothing by default */ }
+	virtual void			OnBody([[maybe_unused]] const Body &inBody)						{ /* Collects nothing by default */ }
 
 	/// Set by the collision detection functions to the current TransformedShape that we're colliding against before calling the AddHit function
 	void					SetContext(const TransformedShape *inContext)	{ mContext = inContext; }

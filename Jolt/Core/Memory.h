@@ -32,9 +32,9 @@ JPH_EXPORT void RegisterDefaultAllocator();
 	JPH_INLINE void *operator new[] (size_t inCount)											{ return JPH::Allocate(inCount); } \
 	JPH_INLINE void operator delete[] (void *inPointer) noexcept								{ JPH::Free(inPointer); } \
 	JPH_INLINE void *operator new (size_t inCount, std::align_val_t inAlignment)				{ return JPH::AlignedAllocate(inCount, static_cast<size_t>(inAlignment)); } \
-	JPH_INLINE void operator delete (void *inPointer, std::align_val_t inAlignment) noexcept	{ JPH::AlignedFree(inPointer); } \
+	JPH_INLINE void operator delete (void *inPointer, [[maybe_unused]] std::align_val_t inAlignment) noexcept	{ JPH::AlignedFree(inPointer); } \
 	JPH_INLINE void *operator new[] (size_t inCount, std::align_val_t inAlignment)				{ return JPH::AlignedAllocate(inCount, static_cast<size_t>(inAlignment)); } \
-	JPH_INLINE void operator delete[] (void *inPointer, std::align_val_t inAlignment) noexcept	{ JPH::AlignedFree(inPointer); }
+	JPH_INLINE void operator delete[] (void *inPointer, [[maybe_unused]] std::align_val_t inAlignment) noexcept	{ JPH::AlignedFree(inPointer); }
 
 #else
 

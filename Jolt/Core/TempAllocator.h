@@ -106,7 +106,7 @@ public:
 	}
 
 	// See: TempAllocator
-	virtual void					Free(void *inAddress, uint inSize) override
+	virtual void					Free(void *inAddress, [[maybe_unused]] uint inSize) override
 	{
 		AlignedFree(inAddress);
 	}

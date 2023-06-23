@@ -31,7 +31,7 @@ public:
 	virtual					~ObjectLayerFilter() = default;
 
 	/// Function to filter out object layers when doing collision query test (return true to allow testing against objects with this layer)
-	virtual bool			ShouldCollide(ObjectLayer inLayer) const
+	virtual bool			ShouldCollide([[maybe_unused]] ObjectLayer inLayer) const
 	{
 		return true;
 	}
@@ -53,7 +53,7 @@ public:
 	virtual					~ObjectLayerPairFilter() = default;
 
 	/// Returns true if two layers can collide
-	virtual bool			ShouldCollide(ObjectLayer inLayer1, ObjectLayer inLayer2) const
+	virtual bool			ShouldCollide([[maybe_unused]] ObjectLayer inLayer1, [[maybe_unused]] ObjectLayer inLayer2) const
 	{
 		return true;
 	}

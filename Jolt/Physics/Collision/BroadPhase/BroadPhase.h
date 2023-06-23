@@ -48,7 +48,7 @@ public:
 	virtual	UpdateState	UpdatePrepare()														{ return UpdateState(); }
 
 	/// Finalizing the update will quickly apply the changes
-	virtual void		UpdateFinalize(const UpdateState &inUpdateState)					{ /* Optionally overridden by implementation */ }
+	virtual void		UpdateFinalize([[maybe_unused]] const UpdateState &inUpdateState)					{ /* Optionally overridden by implementation */ }
 
 	/// Must be called after UpdateFinalize to allow modifications to the broadphase
 	virtual void		UnlockModifications()												{ /* Optionally overridden by implementation */ }
@@ -59,7 +59,7 @@ public:
 	/// Prepare adding inNumber bodies at ioBodies to the broadphase, returns a handle that should be used in AddBodiesFinalize/Abort.
 	/// This can be done on a background thread without influencing the broadphase.
 	/// ioBodies may be shuffled around by this function and should be kept that way until AddBodiesFinalize/Abort is called.
-	virtual AddState	AddBodiesPrepare(BodyID *ioBodies, int inNumber)					{ return nullptr; } // By default the broadphase doesn't support this
+	virtual AddState	AddBodiesPrepare([[maybe_unused]] BodyID *ioBodies, [[maybe_unused]] int inNumber)					{ return nullptr; } // By default the broadphase doesn't support this
 
 	/// Finalize adding bodies to the broadphase, supply the return value of AddBodiesPrepare in inAddState.
 	/// Please ensure that the ioBodies array passed to AddBodiesPrepare is unmodified and passed again to this function.
@@ -68,7 +68,7 @@ public:
 	/// Abort adding bodies to the broadphase, supply the return value of AddBodiesPrepare in inAddState.
 	/// This can be done on a background thread without influencing the broadphase.
 	/// Please ensure that the ioBodies array passed to AddBodiesPrepare is unmodified and passed again to this function.
-	virtual void		AddBodiesAbort(BodyID *ioBodies, int inNumber, AddState inAddState)	{ /* By default nothing needs to be done */ }
+	virtual void		AddBodiesAbort([[maybe_unused]] BodyID *ioBodies, [[maybe_unused]] int inNumber, [[maybe_unused]] AddState inAddState)	{ /* By default nothing needs to be done */ }
 
 	/// Remove inNumber bodies in ioBodies from the broadphase.
 	/// ioBodies may be shuffled around by this function.
