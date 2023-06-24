@@ -464,9 +464,10 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		for (int i = 0; i < (int)driven_wheels.size(); ++i)
 		{
 			const DrivenWheel &w_i = driven_wheels[i];
+			const WheelSettingsWV *settings = w_i.mWheel->GetSettings();
 
 			// Get wheel inertia
-			float inertia = w_i.mWheel->GetSettings()->mInertia;
+			float inertia = settings->mInertia;
 
 			// S * R(i)
 			float s_r = clutch_strength * w_i.mClutchToWheelRatio;
@@ -487,10 +488,30 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			// Add the column for the engine
 			a(i, engine) = -dt_s_r_f_div_iw;
 
+			float dt_tw = 0.0f;
+
+			// Combine brake with hand brake torque
+			float brake_torque = mBrakeInput * settings->mMaxBrakeTorque + mHandBrakeInput * settings->mMaxHandBrakeTorque;
+			if (brake_torque > 0.0f)
+			{
+				// We're braking
+				// Calculate relative velocity between wheel contact point and floor in longitudinal direction
+				Vec3 relative_velocity = mConstraint.GetVehicleBody()->GetPointVelocity(w_i.mWheel->GetContactPosition()) - w_i.mWheel->GetContactPointVelocity();
+				float relative_longitudinal_velocity = relative_velocity.Dot(w_i.mWheel->GetContactLongitudinal());
+
+				// Calculate brake angular impulse
+				dt_tw = Sign(relative_longitudinal_velocity) * inDeltaTime * brake_torque;
+			}
+			else if (w_i.mWheel->HasContact())
+			{
+				// We're driving and have wheel contact
+				// Note that we don't know the wheel torque TW(i) yet, so we use the impulse applied from the last frame to estimate it to get a better value for engine RPM
+				// Wheel torque TW = force * radius = lambda / dt * radius
+				dt_tw = impulse_scale * w_i.mWheel->GetLongitudinalLambda() * settings->mRadius;
+			}
+
 			// Fill in the constant b = ww(i,t)+(dt*TW(i))/Iw(i)
-			// Note that we don't know the wheel torque TW(i) yet, so we use the impulse applied from the last frame to estimate it to get a better value for engine rpm
-			// Wheel torque TW = force * radius = lambda / dt * radius
-			b(i, 0) = w_i.mWheel->GetAngularVelocity() - impulse_scale * w_i.mWheel->GetLongitudinalLambda() / inertia * w_i.mWheel->GetSettings()->mRadius;
+			b(i, 0) = w_i.mWheel->GetAngularVelocity() - dt_tw / inertia;
 
 			// To avoid looping over the wheels again, we also fill in the wheel columns of the engine row here
 			a(engine, i) = -dt_div_ie * s_r / num_driven_wheels_float;
@@ -507,13 +528,29 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			for (int i = 0; i < (int)driven_wheels.size(); ++i)
 			{
 				DrivenWheel &w_i = driven_wheels[i];
+				const WheelSettingsWV *settings = w_i.mWheel->GetSettings();
 
-				// We used the longitudinal impulse from last frame to estimate the wheel speed, but this impulse hasn't been applied yet.
-				// We calculate how much extra spin the wheel would get if it was not in contact with the floor and add it,
-				// this speed will be transferred to the ground when we solve the constraints.
-				float dw = impulse_scale * w_i.mWheel->GetLongitudinalLambda() / w_i.mWheel->GetSettings()->mInertia * w_i.mWheel->GetSettings()->mRadius;
+				// Get solved wheel angular velocity
+				float angular_velocity = b(i, 0);
 
-				w_i.mWheel->SetAngularVelocity(b(i, 0) + dw);
+				// Calculate brake torque
+				float brake_torque = mBrakeInput * settings->mMaxBrakeTorque + mHandBrakeInput * settings->mMaxHandBrakeTorque;
+				if (brake_torque > 0.0f)
+				{
+					// Ignore the calculated angular velocity because it won't change if the clutch has zero friction,
+					// the only purpose of applying the brake forces in the calculation above is to get a better estimate of engine RPM
+					angular_velocity = w_i.mWheel->GetAngularVelocity();
+				}
+				else if (w_i.mWheel->HasContact())
+				{
+					// We used the longitudinal impulse from last frame to estimate the wheel speed, but this impulse hasn't been applied yet.
+					// We calculate how much extra spin the wheel would get if it was not in contact with the floor and add it,
+					// this speed will be transferred to the ground when we solve the constraints.
+					angular_velocity += impulse_scale * w_i.mWheel->GetLongitudinalLambda() * settings->mRadius / settings->mInertia;
+				}
+
+				// Update angular velocity
+				w_i.mWheel->SetAngularVelocity(angular_velocity);
 			}
 
 			// Update the engine RPM
