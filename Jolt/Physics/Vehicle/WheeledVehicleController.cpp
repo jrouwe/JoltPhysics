@@ -329,6 +329,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		WheelWV *				mWheel;
 		float					mClutchToWheelRatio;
 		float					mClutchToWheelTorqueRatio;
+		float					mEstimatedAngularImpulse;
 	};
 	Array<DrivenWheel> driven_wheels;
 	driven_wheels.reserve(wheels.size());
@@ -351,18 +352,18 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			d.CalculateTorqueRatio(wl->GetAngularVelocity(), wr->GetAngularVelocity(), ratio_l, ratio_r);
 
 			// Add both wheels
-			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_l });
-			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_r });
+			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_l, 0.0f });
+			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_r, 0.0f });
 		}
 		else if (wl != nullptr)
 		{
 			// Only left wheel, all power to left
-			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio });
+			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio, 0.0f });
 		}
 		else if (wr != nullptr)
 		{
 			// Only right wheel, all power to right
-			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio });
+			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio, 0.0f });
 		}
 	}
 
@@ -463,7 +464,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// Iterate the rows for the wheels
 		for (int i = 0; i < (int)driven_wheels.size(); ++i)
 		{
-			const DrivenWheel &w_i = driven_wheels[i];
+			DrivenWheel &w_i = driven_wheels[i];
 			const WheelSettingsWV *settings = w_i.mWheel->GetSettings();
 
 			// Get wheel inertia
@@ -509,6 +510,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 				// Wheel torque TW = force * radius = lambda / dt * radius
 				dt_tw = impulse_scale * w_i.mWheel->GetLongitudinalLambda() * settings->mRadius;
 			}
+			w_i.mEstimatedAngularImpulse = dt_tw;
 
 			// Fill in the constant b = ww(i,t)+(dt*TW(i))/Iw(i)
 			b(i, 0) = w_i.mWheel->GetAngularVelocity() - dt_tw / inertia;
@@ -533,21 +535,9 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 				// Get solved wheel angular velocity
 				float angular_velocity = b(i, 0);
 
-				// Calculate brake torque
-				float brake_torque = mBrakeInput * settings->mMaxBrakeTorque + mHandBrakeInput * settings->mMaxHandBrakeTorque;
-				if (brake_torque > 0.0f)
-				{
-					// Ignore the calculated angular velocity because it won't change if the clutch has zero friction,
-					// the only purpose of applying the brake forces in the calculation above is to get a better estimate of engine RPM
-					angular_velocity = w_i.mWheel->GetAngularVelocity();
-				}
-				else if (w_i.mWheel->HasContact())
-				{
-					// We used the longitudinal impulse from last frame to estimate the wheel speed, but this impulse hasn't been applied yet.
-					// We calculate how much extra spin the wheel would get if it was not in contact with the floor and add it,
-					// this speed will be transferred to the ground when we solve the constraints.
-					angular_velocity += impulse_scale * w_i.mWheel->GetLongitudinalLambda() * settings->mRadius / settings->mInertia;
-				}
+				// We estimated TW and applied it in the equation above, but we haven't actually applied this torque yet so we undo it here.
+				// It will be applied when we solve the actual braking / the constraints with the floor.
+				angular_velocity += w_i.mEstimatedAngularImpulse / settings->mInertia;
 
 				// Update angular velocity
 				w_i.mWheel->SetAngularVelocity(angular_velocity);
