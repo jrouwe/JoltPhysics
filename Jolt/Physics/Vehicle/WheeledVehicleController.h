@@ -125,6 +125,9 @@ public:
 	float						GetDifferentialLimitedSlipRatio() const		{ return mDifferentialLimitedSlipRatio; }
 	void						SetDifferentialLimitedSlipRatio(float inV)	{ mDifferentialLimitedSlipRatio = inV; }
 
+	/// Get the average wheel speed of all driven wheels (measured at the clutch)
+	float						GetWheelSpeedAtClutch() const;
+
 #ifdef JPH_DEBUG_RENDERER
 	/// Debug drawing of RPM meter
 	void						SetRPMMeter(Vec3Arg inPosition, float inSize) { mRPMMeterPosition = inPosition; mRPMMeterSize = inSize; }
