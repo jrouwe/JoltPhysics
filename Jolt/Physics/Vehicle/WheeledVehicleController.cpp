@@ -256,7 +256,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Remember old RPM so we're increasing or decreasing
+	// Remember old RPM so we can detect if we're increasing or decreasing
 	float old_engine_rpm = mEngine.GetCurrentRPM();
 
 	Wheels &wheels = mConstraint.GetWheels();
@@ -273,9 +273,8 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	if (mTransmission.mMode == ETransmissionMode::Auto)
 		forward_input *= mTransmission.GetClutchFriction();
 
-	// Apply damping if there is no acceleration
-	if (forward_input < 1.0e-3f)
-		mEngine.ApplyDamping(inDeltaTime);
+	// Apply engine damping
+	mEngine.ApplyDamping(inDeltaTime);
 
 	// Calculate engine torque
 	float engine_torque = mEngine.GetTorque(forward_input);
