@@ -25,6 +25,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleTest)
 const char *VehicleTest::sScenes[] =
 {
 	"Flat",
+	"Flat With Slope",
 	"Steep Slope",
 	"Step",
 	"Playground",
@@ -44,6 +45,25 @@ void VehicleTest::Initialize()
 
 		// Load a race track to have something to assess speed and steering behavior
 		LoadRaceTrack("Assets/Racetracks/Zandvoort.csv");
+	}
+	else if (strcmp(sSceneName, "Flat With Slope") == 0)
+	{
+		const float cSlopeStartDistance = 100.0f;
+		const float cSlopeLength = 100.0f;
+		const float cSlopeAngle = DegreesToRadians(30.0f);
+
+		// Flat test floor
+		Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1000.0f, 1.0f, 1000.0f), 0.0f), RVec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		floor.SetFriction(1.0f);
+		mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
+
+		Body &slope_up = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(25.0f, 1.0f, cSlopeLength), 0.0f), RVec3(0.0f, cSlopeLength * Sin(cSlopeAngle) - 1.0f, cSlopeStartDistance + cSlopeLength * Cos(cSlopeAngle)), Quat::sRotation(Vec3::sAxisX(), -cSlopeAngle), EMotionType::Static, Layers::NON_MOVING));
+		slope_up.SetFriction(1.0f);
+		mBodyInterface->AddBody(slope_up.GetID(), EActivation::DontActivate);
+
+		Body &slope_down = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(25.0f, 1.0f, cSlopeLength), 0.0f), RVec3(0.0f, cSlopeLength * Sin(cSlopeAngle) - 1.0f, cSlopeStartDistance + 3.0f * cSlopeLength * Cos(cSlopeAngle)), Quat::sRotation(Vec3::sAxisX(), cSlopeAngle), EMotionType::Static, Layers::NON_MOVING));
+		slope_down.SetFriction(1.0f);
+		mBodyInterface->AddBody(slope_down.GetID(), EActivation::DontActivate);
 	}
 	else if (strcmp(sSceneName, "Steep Slope") == 0)
 	{
