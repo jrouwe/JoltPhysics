@@ -520,6 +520,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			// Add the column for the engine
 			a(i, engine) = -dt_s_r_f_div_iw;
 
+			// Calculate external angular impulse operating on the wheel: TW(i) * dt
 			float dt_tw = 0.0f;
 
 			// Combine brake with hand brake torque
@@ -527,20 +528,23 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			if (brake_torque > 0.0f)
 			{
 				// We're braking
-				// Calculate relative velocity between wheel contact point and floor in longitudinal direction
-				Vec3 relative_velocity = mConstraint.GetVehicleBody()->GetPointVelocity(w_i.mWheel->GetContactPosition()) - w_i.mWheel->GetContactPointVelocity();
-				float relative_longitudinal_velocity = relative_velocity.Dot(w_i.mWheel->GetContactLongitudinal());
-
 				// Calculate brake angular impulse
-				dt_tw = Sign(relative_longitudinal_velocity) * inDeltaTime * brake_torque;
+				float sign;
+				if (w_i.mWheel->GetAngularVelocity() != 0.0f)
+					sign = Sign(w_i.mWheel->GetAngularVelocity());
+				else
+					sign = Sign(mTransmission.GetCurrentRatio()); // When wheels have locked up use the transmission ratio to determine the sign
+				dt_tw = sign * inDeltaTime * brake_torque;
 			}
-			else if (w_i.mWheel->HasContact())
+
+			if (w_i.mWheel->HasContact())
 			{
-				// We're driving and have wheel contact
-				// Note that we don't know the wheel torque TW(i) yet, so we use the impulse applied from the last frame to estimate it to get a better value for engine RPM
+				// We have wheel contact with the floor
+				// Note that we don't know the torque due to the ground contact yet, so we use the impulse applied from the last frame to estimate it
 				// Wheel torque TW = force * radius = lambda / dt * radius
-				dt_tw = impulse_scale * w_i.mWheel->GetLongitudinalLambda() * settings->mRadius;
+				dt_tw += impulse_scale * w_i.mWheel->GetLongitudinalLambda() * settings->mRadius;
 			}
+
 			w_i.mEstimatedAngularImpulse = dt_tw;
 
 			// Fill in the constant b = ww(i,t)+(dt*TW(i))/Iw(i)
