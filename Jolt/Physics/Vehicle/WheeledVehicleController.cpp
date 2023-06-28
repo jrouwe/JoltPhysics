@@ -15,6 +15,8 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
+//#define JPH_TRACE_VEHICLE_STATS
+
 JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheeledVehicleControllerSettings)
@@ -202,6 +204,23 @@ WheeledVehicleController::WheeledVehicleController(const WheeledVehicleControlle
 	JPH_ASSERT(mDifferentialLimitedSlipRatio > 1.0f);
 }
 
+float WheeledVehicleController::GetWheelSpeedAtClutch() const
+{
+	float wheel_speed_at_clutch = 0.0f;
+	int num_driven_wheels = 0;
+	for (const VehicleDifferentialSettings &d : mDifferentials)
+	{
+		int wheels[] = { d.mLeftWheel, d.mRightWheel };
+		for (int w : wheels)
+			if (w >= 0)
+			{
+				wheel_speed_at_clutch += mConstraint.GetWheel(w)->GetAngularVelocity() * d.mDifferentialRatio;
+				num_driven_wheels++;
+			}
+	}
+	return wheel_speed_at_clutch / float(num_driven_wheels) * VehicleEngine::cAngularVelocityToRPM * mTransmission.GetCurrentRatio();
+}
+
 bool WheeledVehicleController::AllowSleep() const
 {
 	return mForwardInput == 0.0f								// No user input
@@ -211,6 +230,18 @@ bool WheeledVehicleController::AllowSleep() const
 void WheeledVehicleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem)
 {
 	JPH_PROFILE_FUNCTION();
+
+#ifdef JPH_TRACE_VEHICLE_STATS
+	static bool sTracedHeader = false;
+	if (!sTracedHeader)
+	{
+		Trace("Time, ForwardInput, Gear, ClutchFriction, EngineRPM, WheelRPM, Velocity (km/h)");
+		sTracedHeader = true;
+	}
+	static float sTime = 0.0f;
+	sTime += inDeltaTime;
+	Trace("%.3f, %.1f, %d, %.1f, %.1f, %.1f, %.1f", sTime, mForwardInput, mTransmission.GetCurrentGear(), mTransmission.GetClutchFriction(), mEngine.GetCurrentRPM(), GetWheelSpeedAtClutch(), mConstraint.GetVehicleBody()->GetLinearVelocity().Length() * 3.6f);
+#endif // JPH_TRACE_VEHICLE_STATS
 
 	for (Wheel *w_base : mConstraint.GetWheels())
 	{
@@ -694,19 +725,7 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 	mEngine.DrawRPM(inRenderer, rpm_meter_pos, rpm_meter_fwd, rpm_meter_up, mRPMMeterSize, mTransmission.mShiftDownRPM, mTransmission.mShiftUpRPM);
 
 	// Calculate average wheel speed at clutch
-	float wheel_speed_at_clutch = 0.0f;
-	int num_driven_wheels = 0;
-	for (const VehicleDifferentialSettings &d : mDifferentials)
-	{
-		int wheels[] = { d.mLeftWheel, d.mRightWheel };
-		for (int w : wheels)
-			if (w >= 0)
-			{
-				wheel_speed_at_clutch += mConstraint.GetWheel(w)->GetAngularVelocity() * d.mDifferentialRatio;
-				num_driven_wheels++;
-			}
-	}
-	wheel_speed_at_clutch = abs(wheel_speed_at_clutch / float(num_driven_wheels) * VehicleEngine::cAngularVelocityToRPM * mTransmission.GetCurrentRatio());
+	float wheel_speed_at_clutch = GetWheelSpeedAtClutch();
 		
 	// Draw the average wheel speed measured at clutch to compare engine RPM with wheel RPM
 	inRenderer->DrawLine(rpm_meter_pos, rpm_meter_pos + Quat::sRotation(rpm_meter_fwd, mEngine.ConvertRPMToAngle(wheel_speed_at_clutch)) * (rpm_meter_up * 1.1f * mRPMMeterSize), Color::sYellow);
