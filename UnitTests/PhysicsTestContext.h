@@ -9,9 +9,15 @@
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 #include "Layers.h"
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 namespace JPH {
 	class TempAllocator;
 	class JobSystem;
+	class DebugRendererRecorder;
+	class StreamOutWrapper;
 };
 
 // Helper class used in test cases for creating and manipulating physics objects
@@ -82,6 +88,11 @@ public:
 		return mDeltaTime / mCollisionSteps;
 	}
 
+#ifdef JPH_DEBUG_RENDERER
+	// Write the debug output to a file to be able to replay it with JoltViewer
+	void				RecordDebugOutput(const char *inFileName);
+#endif // JPH_DEBUG_RENDERER
+
 private:
 	TempAllocator *		mTempAllocator;
 	JobSystem *			mJobSystem;
@@ -89,6 +100,11 @@ private:
 	ObjectVsBroadPhaseLayerFilterImpl mObjectVsBroadPhaseLayerFilter;
 	ObjectLayerPairFilterImpl mObjectVsObjectLayerFilter;
 	PhysicsSystem *		mSystem;
+#ifdef JPH_DEBUG_RENDERER
+	DebugRendererRecorder *mDebugRenderer = nullptr;
+	ofstream *			mStream = nullptr;
+	StreamOutWrapper *	mStreamWrapper = nullptr;
+#endif // JPH_DEBUG_RENDERER
 	float				mDeltaTime;
 	int					mCollisionSteps;
 };
