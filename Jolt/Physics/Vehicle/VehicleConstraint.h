@@ -86,6 +86,15 @@ public:
 	void						SetCombineFriction(CombineFunction inCombineFriction) { mCombineFriction = inCombineFriction; }
 	CombineFunction				GetCombineFriction() const					{ return mCombineFriction; }
 
+	/// Callback function to notify that PhysicsStepListener::OnStep has completed for this vehicle.
+	using PostStepCallback = function<void(VehicleConstraint &inVehicle, float inDeltaTime, PhysicsSystem &inPhysicsSystem)>;
+
+	/// Callback function to notify that PhysicsStepListener::OnStep has completed for this vehicle. Default is to do nothing.
+	/// Can be used to adjust the velocity of the vehicle to allow higher-level code to e.g. control the vehicle in the air.
+	/// You should not change the position of the vehicle in this callback as the wheel collision checks have already been performed.
+	PostStepCallback			GetPostStepCallback() const					{ return mPostStepCallback; }
+	void						SetPostStepCallback(PostStepCallback inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
+
 	/// Get the local space forward vector of the vehicle
 	Vec3						GetLocalForward() const						{ return mForward; }
 
@@ -179,6 +188,7 @@ private:
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
 	CombineFunction				mCombineFriction = [](float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
+	PostStepCallback			mPostStepCallback;
 };
 
 JPH_NAMESPACE_END
