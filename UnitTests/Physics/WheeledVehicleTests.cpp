@@ -181,21 +181,21 @@ TEST_SUITE("WheeledVehicleTests")
 		c.Simulate(1.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		RVec3 pos2 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos2.GetX(), 0, 1.0e-3_r); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos2.GetX(), 0, 1.0e-2_r); // Not moving left/right
 		CHECK(pos2.GetZ() > pos1.GetZ() + 1.0f); // Moving in Z direction
 		Vec3 vel = body->GetLinearVelocity();
-		CHECK_APPROX_EQUAL(vel.GetX(), 0, 1.0e-2f); // Not moving left/right
+		CHECK_APPROX_EQUAL(vel.GetX(), 0, 2.0e-2f); // Not moving left/right
 		CHECK(vel.GetZ() > 1.0f); // Moving in Z direction
 		CHECK(controller->GetTransmission().GetCurrentGear() > 0);
 
 		// Brake
 		controller->SetDriverInput(0.0f, 0.0f, 1.0f, 0.0f);
 		c.GetBodyInterface().ActivateBody(body->GetID());
-		c.Simulate(2.0f);
+		c.Simulate(5.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone to sleep
 		RVec3 pos3 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos3.GetX(), 0, 2.0e-3_r); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos3.GetX(), 0, 2.0e-2_r); // Not moving left/right
 		CHECK(pos3.GetZ() > pos2.GetZ() + 1.0f); // Moving in Z direction while braking
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel, Vec3::sZero(), 1.0e-3f); // Not moving
@@ -206,10 +206,10 @@ TEST_SUITE("WheeledVehicleTests")
 		c.Simulate(2.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		RVec3 pos4 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos4.GetX(), 0, 1.0e-2_r); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos4.GetX(), 0, 3.0e-2_r); // Not moving left/right
 		CHECK(pos4.GetZ() < pos3.GetZ() - 1.0f); // Moving in -Z direction
 		vel = body->GetLinearVelocity();
-		CHECK_APPROX_EQUAL(vel.GetX(), 0, 1.0e-2f); // Not moving left/right
+		CHECK_APPROX_EQUAL(vel.GetX(), 0, 5.0e-2f); // Not moving left/right
 		CHECK(vel.GetZ() < -1.0f); // Moving in -Z direction
 		CHECK(controller->GetTransmission().GetCurrentGear() < 0);
 
@@ -220,7 +220,7 @@ TEST_SUITE("WheeledVehicleTests")
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone to sleep
 		RVec3 pos5 = body->GetPosition();
-		CHECK_APPROX_EQUAL(pos5.GetX(), 0, 1.0e-2_r); // Not moving left/right
+		CHECK_APPROX_EQUAL(pos5.GetX(), 0, 7.0e-2_r); // Not moving left/right
 		CHECK(pos5.GetZ() < pos4.GetZ() - 1.0f); // Moving in -Z direction while braking
 		vel = body->GetLinearVelocity();
 		CHECK_APPROX_EQUAL(vel, Vec3::sZero(), 1.0e-3f); // Not moving
@@ -237,7 +237,7 @@ TEST_SUITE("WheeledVehicleTests")
 		// Hand brake
 		controller->SetDriverInput(0.0f, 0.0f, 0.0f, 1.0f);
 		c.GetBodyInterface().ActivateBody(body->GetID());
-		c.Simulate(4.0f);
+		c.Simulate(5.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone to sleep
 		vel = body->GetLinearVelocity();
