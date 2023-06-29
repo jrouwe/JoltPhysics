@@ -92,8 +92,8 @@ public:
 	/// Callback function to notify that PhysicsStepListener::OnStep has completed for this vehicle. Default is to do nothing.
 	/// Can be used to adjust the velocity of the vehicle to allow higher-level code to e.g. control the vehicle in the air.
 	/// You should not change the position of the vehicle in this callback as the wheel collision checks have already been performed.
-	PostStepCallback			GetPostStepCallback() const					{ return mPostStepCallback; }
-	void						SetPostStepCallback(PostStepCallback inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
+	const PostStepCallback &	GetPostStepCallback() const					{ return mPostStepCallback; }
+	void						SetPostStepCallback(const PostStepCallback &inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
 
 	/// Get the local space forward vector of the vehicle
 	Vec3						GetLocalForward() const						{ return mForward; }
