@@ -657,9 +657,8 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	ioConstraint.GetTangents(t1, t2);
 
 	// Get surface velocity relative to tangents
-	Vec3 relative_surface_velocity = ioConstraint.GetRelativeSurfaceVelocity();
-	float surface_velocity1 = t1.Dot(relative_surface_velocity);
-	float surface_velocity2 = t2.Dot(relative_surface_velocity);
+	float surface_velocity1 = t1.Dot(inSettings.mRelativeSurfaceVelocity);
+	float surface_velocity2 = t2.Dot(inSettings.mRelativeSurfaceVelocity);
 
 	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
 
@@ -874,7 +873,6 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			constraint.mSortKey = input_hash;
 			world_space_normal.StoreFloat3(&constraint.mWorldSpaceNormal);
 			constraint.mCombinedFriction = settings.mCombinedFriction;
-			settings.mRelativeSurfaceVelocity.StoreFloat3(&constraint.mRelativeSurfaceVelocity);
 			constraint.mCombinedRestitution = settings.mCombinedRestitution;
 			constraint.mContactPoints.resize(output_cm->mNumContactPoints);
 			for (uint32 i = 0; i < output_cm->mNumContactPoints; ++i)
@@ -1067,7 +1065,6 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		constraint.mSortKey = key_hash;
 		inManifold.mWorldSpaceNormal.StoreFloat3(&constraint.mWorldSpaceNormal);
 		constraint.mCombinedFriction = settings.mCombinedFriction;
-		settings.mRelativeSurfaceVelocity.StoreFloat3(&constraint.mRelativeSurfaceVelocity);
 		constraint.mCombinedRestitution = settings.mCombinedRestitution;
 
 		JPH_DET_LOG("TemplatedAddContactConstraint: id1: " << constraint.mBody1->GetID() << " id2: " << constraint.mBody2->GetID() << " key: " << constraint.mSortKey);

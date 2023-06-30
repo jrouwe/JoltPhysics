@@ -449,12 +449,6 @@ private:
 			return Vec3::sLoadFloat3Unsafe(mWorldSpaceNormal);
 		}
 
-		/// Convert the relative surface velocity to a Vec3
-		JPH_INLINE Vec3			GetRelativeSurfaceVelocity() const
-		{
-			return Vec3::sLoadFloat3Unsafe(mRelativeSurfaceVelocity);
-		}
-
 		/// Get the tangents for this contact constraint
 		JPH_INLINE void			GetTangents(Vec3 &outTangent1, Vec3 &outTangent2) const
 		{
@@ -468,7 +462,6 @@ private:
 		uint64					mSortKey;
 		Float3					mWorldSpaceNormal;
 		float					mCombinedFriction;
-		Float3					mRelativeSurfaceVelocity;
 		float					mCombinedRestitution;
 		WorldContactPoints		mContactPoints;
 	};
