@@ -462,7 +462,6 @@ private:
 		uint64					mSortKey;
 		Float3					mWorldSpaceNormal;
 		float					mCombinedFriction;
-		float					mCombinedRestitution;
 		WorldContactPoints		mContactPoints;
 	};
 
