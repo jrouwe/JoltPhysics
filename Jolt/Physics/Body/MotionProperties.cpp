@@ -69,7 +69,7 @@ void MotionProperties::SetMassProperties(ELockedAxis inLockedAxis, const MassPro
 		else
 		{
 			JPH_ASSERT(num_locked_rotation_axis == 1);
-			uint locked_axis = CountLeadingZeros(locked_rotation_axis);
+			uint locked_axis = CountTrailingZeros(locked_rotation_axis);
 
 			Mat44 inverse_inertia = inMassProperties.mInertia.Inversed3x3();
 
@@ -84,7 +84,7 @@ void MotionProperties::SetMassProperties(ELockedAxis inLockedAxis, const MassPro
 					dest = inverse_inertia.GetColumn3(axis);
 					dest.SetComponent(locked_axis, 0.0f);
 					float dest_len = dest.Length();
-					dest /= axis_len[next_axis];
+					dest /= dest_len;
 					axis_len[next_axis] = dest_len;
 					++next_axis;
 				}
