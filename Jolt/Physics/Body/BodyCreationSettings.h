@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/CollisionGroup.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/MotionQuality.h>
+#include <Jolt/Physics/Body/LockedAxis.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
 JPH_NAMESPACE_BEGIN
@@ -22,13 +23,6 @@ enum class EOverrideMassProperties : uint8
 	CalculateMassAndInertia,			///< Tells the system to calculate the mass and inertia based on density
 	CalculateInertia,					///< Tells the system to take the mass from mMassPropertiesOverride and to calculate the inertia based on density of the shapes and to scale it to the provided mass
 	MassAndInertiaProvided				///< Tells the system to take the mass and inertia from mMassPropertiesOverride 
-};
-
-/// Enum used in BodyCreationSettings to indicate which degrees of freedom a body has
-enum class EAllowedDOF : uint8
-{
-	Unconstrained	= 0b111,			///< Body can move in 3D space
-	XYPlane			= 0b011,			///< Body is constrained to the XY plane and can only rotate around Z
 };
 
 /// Settings for constructing a rigid body
@@ -96,7 +90,7 @@ public:
 
 	///@name Simulation properties
 	EMotionType				mMotionType = EMotionType::Dynamic;								///< Motion type, determines if the object is static, dynamic or kinematic
-	EAllowedDOF				mAllowedDOF = EAllowedDOF::Unconstrained;						///< Which degrees of freedom this body has (can be used to limit simulation to 2D)
+	ELockedAxis				mLockedAxis = ELockedAxis::None;								///< Which degrees of freedom this body has (can be used to limit simulation to 2D)
 	bool					mAllowDynamicOrKinematic = false;								///< When this body is created as static, this setting tells the system to create a MotionProperties object so that the object can be switched to kinematic or dynamic
 	bool					mIsSensor = false;												///< If this body is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume. See description at Body::SetIsSensor.
 	bool					mSensorDetectsStatic = false;									///< If this sensor detects static objects entering it. Note that the sensor must be kinematic and active for it to detect static objects.

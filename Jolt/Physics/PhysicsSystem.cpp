@@ -1426,23 +1426,11 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 
 			JPH_DET_LOG("JobIntegrateVelocity: id: " << body_id << " v: " << body.GetLinearVelocity() << " w: " << body.GetAngularVelocity());
 
-			Vec3 body_correction = Vec3::sZero();
+			// Clamp velocities (not for kinematic bodies)
 			if (body.IsDynamic())
 			{
-				// Clamp velocities (not for kinematic bodies)
 				mp->ClampLinearVelocity();
 				mp->ClampAngularVelocity();
-
-				// If we're constrained to a 2d simulation
-				if (body.IsConstrainedToXYPlane())
-				{
-					// Cancel the velocity components that should remain zero
-					mp->SetLinearVelocity(mp->GetLinearVelocity() * Vec3(1, 1, 0));
-					mp->SetAngularVelocity(mp->GetAngularVelocity() * Vec3(0, 0, 1));
-
-					// Calculate how much the body position should be corrected to stay in the XY plane
-					body_correction = Vec3(body.GetPosition()) * Vec3(0, 0, -1);
-				}
 			}
 
 			// Update the rotation of the body according to the angular velocity
@@ -1459,7 +1447,7 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 			body.AddRotationStep(body.GetAngularVelocity() * delta_time);
 
 			// Get delta position
-			Vec3 delta_pos = body.GetLinearVelocity() * delta_time + body_correction;
+			Vec3 delta_pos = body.GetLinearVelocity() * delta_time;
 
 			// If the position should be updated (or if it is delayed because of CCD)
 			bool update_position = true;

@@ -6,29 +6,6 @@
 
 JPH_NAMESPACE_BEGIN
 
-void MotionProperties::SetMassProperties(const MassProperties &inMassProperties)
-{
-	// Set inverse mass
-	JPH_ASSERT(inMassProperties.mMass > 0.0f);
-	mInvMass = 1.0f / inMassProperties.mMass;
-
-	// Set inverse inertia
-	Mat44 rotation;
-	Vec3 diagonal;
-	if (inMassProperties.DecomposePrincipalMomentsOfInertia(rotation, diagonal) 
-		&& !diagonal.IsNearZero())
-	{	
-		mInvInertiaDiagonal = diagonal.Reciprocal();
-		mInertiaRotation = rotation.GetQuaternion();
-	}
-	else
-	{
-		// Failed! Fall back to inertia tensor of sphere with radius 1.
-		mInvInertiaDiagonal = Vec3::sReplicate(2.5f * mInvMass);
-		mInertiaRotation = Quat::sIdentity();
-	}
-}
-
 void MotionProperties::MoveKinematic(Vec3Arg inDeltaPosition, QuatArg inDeltaRotation, float inDeltaTime)
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); 
