@@ -34,7 +34,7 @@ void TwoDFunnelTest::Initialize()
 		new CapsuleShape(0.2f, 0.3f)
 	};
 	BodyCreationSettings bcs(shapes[0], RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-	bcs.mLockedAxis = ELockedAxis::LockToXYPlane;
+	bcs.mLockedAxis = ELockedAxis::Plane2D;
 	for (int x = 0; x < 20; ++x)
 		for (int y = 0; y < 10; ++y)
 		{

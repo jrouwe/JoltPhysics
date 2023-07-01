@@ -53,18 +53,18 @@ void AxisLockTest::PostPhysicsUpdate(float inDeltaTime)
 		{
 			const Body &body = body_lock.GetBody();
 			String locked_axis_str = "";
-			uint locked_axis = uint(body.GetMotionProperties()->GetLockedAxis());
-			if ((locked_axis & uint(ELockedAxis::LockTranslationX)) == 0)
+			ELockedAxis locked_axis = body.GetMotionProperties()->GetLockedAxis();
+			if ((locked_axis & ELockedAxis::TranslationX) == ELockedAxis::None)
 				locked_axis_str += "X ";
-			if ((locked_axis & uint(ELockedAxis::LockTranslationY)) == 0)
+			if ((locked_axis & ELockedAxis::TranslationY) == ELockedAxis::None)
 				locked_axis_str += "Y ";
-			if ((locked_axis & uint(ELockedAxis::LockTranslationZ)) == 0)
+			if ((locked_axis & ELockedAxis::TranslationZ) == ELockedAxis::None)
 				locked_axis_str += "Z ";
-			if ((locked_axis & uint(ELockedAxis::LockRotationX)) == 0)
+			if ((locked_axis & ELockedAxis::RotationX) == ELockedAxis::None)
 				locked_axis_str += "RX ";
-			if ((locked_axis & uint(ELockedAxis::LockRotationY)) == 0)
+			if ((locked_axis & ELockedAxis::RotationY) == ELockedAxis::None)
 				locked_axis_str += "RY ";
-			if ((locked_axis & uint(ELockedAxis::LockRotationZ)) == 0)
+			if ((locked_axis & ELockedAxis::RotationZ) == ELockedAxis::None)
 				locked_axis_str += "RZ ";
 			DebugRenderer::sInstance->DrawText3D(body.GetPosition(), locked_axis_str, Color::sWhite);
 		}
