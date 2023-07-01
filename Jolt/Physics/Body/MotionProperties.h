@@ -25,7 +25,7 @@ public:
 	/// Motion quality, or how well it detects collisions when it has a high velocity
 	EMotionQuality			GetMotionQuality() const										{ return mMotionQuality; }
 
-	/// Get the allowed degrees of freedom that this body has (note this cannot be changed at runtime)
+	/// Get the allowed degrees of freedom that this body has (this can be changed by calling SetMassProperties)
 	inline ELockedAxis		GetLockedAxis() const											{ return mLockedAxis; }
 
 	/// Get world space linear velocity of the center of mass
