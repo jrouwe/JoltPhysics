@@ -48,6 +48,7 @@ public:
 	float					mInvInertiaScale2 = 1.0f;			///< Scale factor for the inverse inertia of body 2 (usually same as mInvMassScale2)
 	bool					mIsSensor;							///< If the contact should be treated as a sensor vs body contact (no collision response)
 	Vec3					mRelativeSurfaceVelocity = Vec3::sZero(); ///< Relative surface velocity between the bodies (world space surface velocity of body 2 - world space surface velocity of body 1), can be used to create a conveyor belt effect
+	Vec3					mRelativeAngularSurfaceVelocity = Vec3::sZero(); ///< Relative angular surface velocity between the bodies (world space angular surface velocity of body 2 - world space angular surface velocity of body 1)
 };
 
 /// Return value for the OnContactValidate callback. Determines if the contact is being processed or not.

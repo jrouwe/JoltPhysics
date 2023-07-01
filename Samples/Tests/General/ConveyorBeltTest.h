@@ -23,5 +23,6 @@ public:
 	virtual void			OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
 
 private:
-	BodyIDVector			mBelts;
+	BodyIDVector			mLinearBelts;
+	BodyID					mAngularBelt;	
 };
