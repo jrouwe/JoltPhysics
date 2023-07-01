@@ -373,44 +373,53 @@ TEST_SUITE("ContactListenerTests")
 		Body &floor = c.CreateBox(RVec3(0, -1, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(10.0f)), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(100.0f, 1.0f, 100.0f));
 		floor.SetFriction(1.0f);
 
-		Body &box = c.CreateBox(RVec3(0, 0.999f, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(30.0f)), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
-		box.SetFriction(1.0f);
-
-		// Contact listener sets a constant surface velocity
-		class ContactListenerImpl : public ContactListener
+		for (int iteration = 0; iteration < 2; ++iteration)
 		{
-		public:
-							ContactListenerImpl(Body &inFloor, Body &inBox) : mFloor(inFloor), mBox(inBox) { }
+			Body &box = c.CreateBox(RVec3(0, 0.999f, 0), Quat::sRotation(Vec3::sAxisY(), DegreesToRadians(30.0f)), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
+			box.SetFriction(1.0f);
 
-			virtual void	OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+			// Contact listener sets a constant surface velocity
+			class ContactListenerImpl : public ContactListener
 			{
-				// Ensure that the body order is as expected
-				JPH_ASSERT(inBody1.GetID() == mFloor.GetID() || inBody2.GetID() == mBox.GetID());
+			public:
+								ContactListenerImpl(Body &inFloor, Body &inBox) : mFloor(inFloor), mBox(inBox) { }
 
-				// Calculate the relative surface velocity
-				ioSettings.mRelativeSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceVelocity);
-			}
+				virtual void	OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+				{
+					// Ensure that the body order is as expected
+					JPH_ASSERT(inBody1.GetID() == mFloor.GetID() || inBody2.GetID() == mBox.GetID());
 
-			virtual void	OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
-			{
-				OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
-			}
+					// Calculate the relative surface velocity
+					ioSettings.mRelativeSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceLinearVelocity);
+					ioSettings.mRelativeAngularSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceAngularVelocity);
+				}
 
-			Body &			mFloor;
-			Body &			mBox;
-			Vec3			mLocalSpaceVelocity = Vec3(0, 0, -2.0f);
-		};
+				virtual void	OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+				{
+					OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
+				}
 
-		// Set listener
-		ContactListenerImpl listener(floor, box);
-		c.GetSystem()->SetContactListener(&listener);
+				Body &			mFloor;
+				Body &			mBox;
+				Vec3			mLocalSpaceLinearVelocity;
+				Vec3			mLocalSpaceAngularVelocity;
+			};
 
-		// Simulate
-		c.Simulate(5.0f);
+			// Set listener
+			ContactListenerImpl listener(floor, box);
+			c.GetSystem()->SetContactListener(&listener);
 
-		// Check that the box is moving
-		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), floor.GetRotation() * listener.mLocalSpaceVelocity, 0.005f);
-		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
+			// Set linear velocity or angular velocity depending on the iteration
+			listener.mLocalSpaceLinearVelocity = iteration == 0? Vec3(0, 0, -2.0f) : Vec3::sZero();
+			listener.mLocalSpaceAngularVelocity = iteration == 0? Vec3::sZero() : Vec3(0, DegreesToRadians(30.0f), 0);
+
+			// Simulate
+			c.Simulate(5.0f);
+
+			// Check that the box is moving with the correct linear/angular velocity
+			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), floor.GetRotation() * listener.mLocalSpaceLinearVelocity, 0.005f);
+			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), floor.GetRotation() * listener.mLocalSpaceAngularVelocity, 1.0e-4f);
+		}
 	}
 
 	static float sGetInvMassScale(const Body &inBody)
