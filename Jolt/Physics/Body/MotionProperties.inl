@@ -78,7 +78,7 @@ void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, V
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
 	// Update linear velocity
-	mLinearVelocity += inDeltaTime * (mGravityFactor * inGravity + mInvMass * GetAccumulatedForce());
+	mLinearVelocity = LockTranslation(mLinearVelocity + inDeltaTime * (mGravityFactor * inGravity + mInvMass * GetAccumulatedForce()));
 
 	// Update angular velocity
 	mAngularVelocity += inDeltaTime * MultiplyWorldSpaceInverseInertiaByVector(inBodyRotation, GetAccumulatedTorque());
