@@ -29,7 +29,7 @@ void ConveyorBeltTest::Initialize()
 		belt_settings.mFriction = 0.25f * (i + 1);
 		belt_settings.mRotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i) * Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(1.0f));
 		belt_settings.mPosition = RVec3(belt_settings.mRotation * Vec3(cBeltLength, 6.0f, cBeltWidth));
-		mBelts.push_back(mBodyInterface->CreateAndAddBody(belt_settings, EActivation::DontActivate));
+		mLinearBelts.push_back(mBodyInterface->CreateAndAddBody(belt_settings, EActivation::DontActivate));
 	}
 
 	// Bodies with decreasing friction
@@ -42,32 +42,62 @@ void ConveyorBeltTest::Initialize()
 	}
 
 	// Create 2 cylinders
-	BodyCreationSettings cylinder_settings(new CylinderShape(6.0f, 1.0f), RVec3(0, 1.0f, -20.0f), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings cylinder_settings(new CylinderShape(6.0f, 1.0f), RVec3(-25.0f, 1.0f, -20.0f), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING);
 	mBodyInterface->CreateAndAddBody(cylinder_settings, EActivation::Activate);
 	cylinder_settings.mPosition.SetZ(20.0f);
 	mBodyInterface->CreateAndAddBody(cylinder_settings, EActivation::Activate);
 
 	// Let a dynamic belt rest on it
-	BodyCreationSettings dynamic_belt(new BoxShape(Vec3(5.0f, 0.1f, 25.0f), 0.0f), RVec3(0, 3.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-	mBelts.push_back(mBodyInterface->CreateAndAddBody(dynamic_belt, EActivation::Activate));
+	BodyCreationSettings dynamic_belt(new BoxShape(Vec3(5.0f, 0.1f, 25.0f), 0.0f), RVec3(-25.0f, 3.0f, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	mLinearBelts.push_back(mBodyInterface->CreateAndAddBody(dynamic_belt, EActivation::Activate));
 
 	// Create cargo on the dynamic belt
-	cargo_settings.mPosition = RVec3(0, 6.0f, 15.0f);
+	cargo_settings.mPosition = RVec3(-25.0f, 6.0f, 15.0f);
 	cargo_settings.mFriction = 1.0f;
 	mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
+
+	// Create an angular belt
+	BodyCreationSettings angular_belt(new BoxShape(Vec3(20.0f, 0.1f, 20.0f), 0.0f), RVec3(10.0f, 3.0f, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	mAngularBelt = mBodyInterface->CreateAndAddBody(angular_belt, EActivation::Activate);
+
+	// Bodies with decreasing friction dropping on the angular belt
+	for (int i = 0; i <= 6; ++i)
+	{
+		cargo_settings.mPosition = RVec3(10.0f, 10.0f, -15.0f + 5.0f * i);
+		cargo_settings.mFriction = 1.0f - 0.1f * i;
+		mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
+	}
 }
 
 void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)
 {
-	// Determine the world space surface velocity of both bodies
-	const Vec3 cLocalSpaceVelocity(0, 0, -10.0f);
-	bool body1_belt = std::find(mBelts.begin(), mBelts.end(), inBody1.GetID()) != mBelts.end();
-	Vec3 body1_surface_velocity = body1_belt? inBody1.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
-	bool body2_belt = std::find(mBelts.begin(), mBelts.end(), inBody2.GetID()) != mBelts.end();
-	Vec3 body2_surface_velocity = body2_belt? inBody2.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
+	// Linear belts
+	bool body1_linear_belt = std::find(mLinearBelts.begin(), mLinearBelts.end(), inBody1.GetID()) != mLinearBelts.end();
+	bool body2_linear_belt = std::find(mLinearBelts.begin(), mLinearBelts.end(), inBody2.GetID()) != mLinearBelts.end();
+	if (body1_linear_belt || body2_linear_belt)
+	{
+		// Determine the world space surface velocity of both bodies
+		const Vec3 cLocalSpaceVelocity(0, 0, -10.0f);
+		Vec3 body1_linear_surface_velocity = body1_linear_belt? inBody1.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
+		Vec3 body2_linear_surface_velocity = body2_linear_belt? inBody2.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
 
-	// Calculate the relative surface velocity
-	ioSettings.mRelativeSurfaceVelocity = body2_surface_velocity - body1_surface_velocity;
+		// Calculate the relative surface velocity
+		ioSettings.mRelativeSurfaceVelocity = body2_linear_surface_velocity - body1_linear_surface_velocity;
+	}
+
+	// Angular belt
+	bool body1_angular = inBody1.GetID() == mAngularBelt;
+	bool body2_angular = inBody2.GetID() == mAngularBelt;
+	if (body1_angular || body2_angular)
+	{		
+		// Determine the world space angular surface velocity of both bodies
+		const Vec3 cLocalSpaceAngularVelocity(0, DegreesToRadians(10.0f), 0);
+		Vec3 body1_angular_surface_velocity = body1_angular? inBody1.GetRotation() * cLocalSpaceAngularVelocity : Vec3::sZero();
+		Vec3 body2_angular_surface_velocity = body2_angular? inBody2.GetRotation() * cLocalSpaceAngularVelocity : Vec3::sZero();
+		
+		// Calculate the relative angular surface velocity
+		ioSettings.mRelativeAngularSurfaceVelocity = body2_angular_surface_velocity - body1_angular_surface_velocity;
+	}
 }
 
 void ConveyorBeltTest::OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings)

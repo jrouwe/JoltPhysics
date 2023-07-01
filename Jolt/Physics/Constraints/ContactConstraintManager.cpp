@@ -44,12 +44,12 @@ void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstra
 }
 
 template <EMotionType Type1, EMotionType Type2>
-JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, float inCombinedRestitution, float inCombinedFriction, float inMinVelocityForRestitution, float inSurfaceVelocity1, float inSurfaceVelocity2)
+JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution)
 {
 	JPH_DET_LOG("TemplatedCalculateFrictionAndNonPenetrationConstraintProperties: p1: " << inWorldSpacePosition1 << " p2: " << inWorldSpacePosition2
 		<< " normal: " << inWorldSpaceNormal << " tangent1: " << inWorldSpaceTangent1 << " tangent2: " << inWorldSpaceTangent2
-		<< " restitution: " << inCombinedRestitution << " friction: " << inCombinedFriction << " minv: " << inMinVelocityForRestitution
-		<< " surf1: " << inSurfaceVelocity1 << " surf2: " << inSurfaceVelocity2);
+		<< " restitution: " << inSettings.mCombinedRestitution << " friction: " << inSettings.mCombinedFriction << " minv: " << inMinVelocityForRestitution
+		<< " surface_vel: " << inSettings.mRelativeSurfaceVelocity << " surface_ang: " << inSettings.mRelativeAngularSurfaceVelocity);
 
 	// Calculate collision points relative to body
 	RVec3 p = 0.5_r * (inWorldSpacePosition1 + inWorldSpacePosition2);
@@ -82,7 +82,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateF
 
 	// Determine if the velocity is big enough for restitution
 	float normal_velocity_bias;
-	if (inCombinedRestitution > 0.0f && normal_velocity < -inMinVelocityForRestitution)
+	if (inSettings.mCombinedRestitution > 0.0f && normal_velocity < -inMinVelocityForRestitution)
 	{
 		// We have a velocity that is big enough for restitution. This is where speculative contacts don't work
 		// great as we have to decide now if we're going to apply the restitution or not. If the relative
@@ -92,7 +92,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateF
 		// position rather than from a position where it is touching the other object. This causes the object
 		// to appear to move faster for 1 frame (the opposite of time stealing).
 		if (normal_velocity < -speculative_contact_velocity_bias)
-			normal_velocity_bias = inCombinedRestitution * normal_velocity;
+			normal_velocity_bias = inSettings.mCombinedRestitution * normal_velocity;
 		else
 			// In this case we have predicted that we don't hit the other object, but if we do (due to other constraints changing velocities)
 			// the speculative contact will prevent penetration but will not apply restitution leading to another artifact.
@@ -107,11 +107,16 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateF
 	mNonPenetrationConstraint.TemplatedCalculateConstraintProperties<Type1, Type2>(inInvM1, inInvI1, r1, inInvM2, inInvI2, r2, inWorldSpaceNormal, normal_velocity_bias);
 
 	// Calculate friction part
-	if (inCombinedFriction > 0.0f)
+	if (inSettings.mCombinedFriction > 0.0f)
 	{
+		// Get surface velocity relative to tangents
+		Vec3 ws_surface_velocity = inSettings.mRelativeSurfaceVelocity + inSettings.mRelativeAngularSurfaceVelocity.Cross(r1);
+		float surface_velocity1 = inWorldSpaceTangent1.Dot(ws_surface_velocity);
+		float surface_velocity2 = inWorldSpaceTangent2.Dot(ws_surface_velocity);
+
 		// Implement friction as 2 AxisContraintParts
-		mFrictionConstraint1.TemplatedCalculateConstraintProperties<Type1, Type2>(inInvM1, inInvI1, r1, inInvM2, inInvI2, r2, inWorldSpaceTangent1, inSurfaceVelocity1);
-		mFrictionConstraint2.TemplatedCalculateConstraintProperties<Type1, Type2>(inInvM1, inInvI1, r1, inInvM2, inInvI2, r2, inWorldSpaceTangent2, inSurfaceVelocity2);
+		mFrictionConstraint1.TemplatedCalculateConstraintProperties<Type1, Type2>(inInvM1, inInvI1, r1, inInvM2, inInvI2, r2, inWorldSpaceTangent1, surface_velocity1);
+		mFrictionConstraint2.TemplatedCalculateConstraintProperties<Type1, Type2>(inInvM1, inInvI1, r1, inInvM2, inInvI2, r2, inWorldSpaceTangent2, surface_velocity2);
 	}
 	else
 	{
@@ -656,10 +661,6 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	Vec3 t1, t2;
 	ioConstraint.GetTangents(t1, t2);
 
-	// Get surface velocity relative to tangents
-	float surface_velocity1 = t1.Dot(inSettings.mRelativeSurfaceVelocity);
-	float surface_velocity2 = t2.Dot(inSettings.mRelativeSurfaceVelocity);
-
 	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
 
 	// Setup velocity constraint properties
@@ -668,7 +669,7 @@ JPH_INLINE void ContactConstraintManager::TemplatedCalculateFrictionAndNonPenetr
 	{
 		RVec3 p1 = inTransformBody1 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition1);
 		RVec3 p2 = inTransformBody2 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition2);
-		wcp.TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(inDeltaTime, inBody1, inBody2, inv_m1, inv_m2, inv_i1, inv_i2, p1, p2, ws_normal, t1, t2, inSettings.mCombinedRestitution, inSettings.mCombinedFriction, min_velocity_for_restitution, surface_velocity1, surface_velocity2);
+		wcp.TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(inDeltaTime, inBody1, inBody2, inv_m1, inv_m2, inv_i1, inv_i2, p1, p2, ws_normal, t1, t2, inSettings, min_velocity_for_restitution);
 	}
 }
 
@@ -1106,10 +1107,6 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		Vec3 t1, t2;
 		constraint.GetTangents(t1, t2);
 
-		// Get surface velocity relative to tangents
-		float surface_velocity1 = t1.Dot(settings.mRelativeSurfaceVelocity);
-		float surface_velocity2 = t2.Dot(settings.mRelativeSurfaceVelocity);
-
 		constraint.mContactPoints.resize(num_contact_points);
 		for (int i = 0; i < num_contact_points; ++i)
 		{
@@ -1149,7 +1146,7 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			wcp.mContactPoint = &cp;
 
 			// Setup velocity constraint
-			wcp.TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(delta_time, inBody1, inBody2, inv_m1, inv_m2, inv_i1, inv_i2, p1_ws, p2_ws, inManifold.mWorldSpaceNormal, t1, t2, settings.mCombinedRestitution, settings.mCombinedFriction, mPhysicsSettings.mMinVelocityForRestitution, surface_velocity1, surface_velocity2);
+			wcp.TemplatedCalculateFrictionAndNonPenetrationConstraintProperties<Type1, Type2>(delta_time, inBody1, inBody2, inv_m1, inv_m2, inv_i1, inv_i2, p1_ws, p2_ws, inManifold.mWorldSpaceNormal, t1, t2, settings, mPhysicsSettings.mMinVelocityForRestitution);
 		}
 
 	#ifdef JPH_DEBUG_RENDERER
