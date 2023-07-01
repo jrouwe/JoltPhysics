@@ -96,6 +96,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SensorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DynamicMeshTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TwoDFunnelTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, AxisLockTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ShapeFilterTest)
 
 static TestNameAndRTTI sGeneralTests[] =
@@ -133,6 +134,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
+	{ "Axis Lock",							JPH_RTTI(AxisLockTest) },
 	{ "Shape Filter",						JPH_RTTI(ShapeFilterTest) },
 };
 

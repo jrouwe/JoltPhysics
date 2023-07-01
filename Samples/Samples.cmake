@@ -75,6 +75,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/ConvexCollision/RandomRayTest.h
 	${SAMPLES_ROOT}/Tests/General/ActiveEdgesTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ActiveEdgesTest.h
+	${SAMPLES_ROOT}/Tests/General/AxisLockTest.cpp
+	${SAMPLES_ROOT}/Tests/General/AxisLockTest.h
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.cpp
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.h
 	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.cpp
