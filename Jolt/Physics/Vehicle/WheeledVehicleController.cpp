@@ -15,6 +15,8 @@
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
 
+//#define JPH_TRACE_VEHICLE_STATS
+
 JPH_NAMESPACE_BEGIN
 
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheeledVehicleControllerSettings)
@@ -202,6 +204,23 @@ WheeledVehicleController::WheeledVehicleController(const WheeledVehicleControlle
 	JPH_ASSERT(mDifferentialLimitedSlipRatio > 1.0f);
 }
 
+float WheeledVehicleController::GetWheelSpeedAtClutch() const
+{
+	float wheel_speed_at_clutch = 0.0f;
+	int num_driven_wheels = 0;
+	for (const VehicleDifferentialSettings &d : mDifferentials)
+	{
+		int wheels[] = { d.mLeftWheel, d.mRightWheel };
+		for (int w : wheels)
+			if (w >= 0)
+			{
+				wheel_speed_at_clutch += mConstraint.GetWheel(w)->GetAngularVelocity() * d.mDifferentialRatio;
+				num_driven_wheels++;
+			}
+	}
+	return wheel_speed_at_clutch / float(num_driven_wheels) * VehicleEngine::cAngularVelocityToRPM * mTransmission.GetCurrentRatio();
+}
+
 bool WheeledVehicleController::AllowSleep() const
 {
 	return mForwardInput == 0.0f								// No user input
@@ -211,6 +230,18 @@ bool WheeledVehicleController::AllowSleep() const
 void WheeledVehicleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysicsSystem)
 {
 	JPH_PROFILE_FUNCTION();
+
+#ifdef JPH_TRACE_VEHICLE_STATS
+	static bool sTracedHeader = false;
+	if (!sTracedHeader)
+	{
+		Trace("Time, ForwardInput, Gear, ClutchFriction, EngineRPM, WheelRPM, Velocity (km/h)");
+		sTracedHeader = true;
+	}
+	static float sTime = 0.0f;
+	sTime += inDeltaTime;
+	Trace("%.3f, %.1f, %d, %.1f, %.1f, %.1f, %.1f", sTime, mForwardInput, mTransmission.GetCurrentGear(), mTransmission.GetClutchFriction(), mEngine.GetCurrentRPM(), GetWheelSpeedAtClutch(), mConstraint.GetVehicleBody()->GetLinearVelocity().Length() * 3.6f);
+#endif // JPH_TRACE_VEHICLE_STATS
 
 	for (Wheel *w_base : mConstraint.GetWheels())
 	{
@@ -225,7 +256,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Remember old RPM so we're increasing or decreasing
+	// Remember old RPM so we can detect if we're increasing or decreasing
 	float old_engine_rpm = mEngine.GetCurrentRPM();
 
 	Wheels &wheels = mConstraint.GetWheels();
@@ -242,9 +273,8 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	if (mTransmission.mMode == ETransmissionMode::Auto)
 		forward_input *= mTransmission.GetClutchFriction();
 
-	// Apply damping if there is no acceleration
-	if (forward_input < 1.0e-3f)
-		mEngine.ApplyDamping(inDeltaTime);
+	// Apply engine damping
+	mEngine.ApplyDamping(inDeltaTime);
 
 	// Calculate engine torque
 	float engine_torque = mEngine.GetTorque(forward_input);
@@ -329,6 +359,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		WheelWV *				mWheel;
 		float					mClutchToWheelRatio;
 		float					mClutchToWheelTorqueRatio;
+		float					mEstimatedAngularImpulse;
 	};
 	Array<DrivenWheel> driven_wheels;
 	driven_wheels.reserve(wheels.size());
@@ -351,18 +382,18 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			d.CalculateTorqueRatio(wl->GetAngularVelocity(), wr->GetAngularVelocity(), ratio_l, ratio_r);
 
 			// Add both wheels
-			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_l });
-			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_r });
+			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_l, 0.0f });
+			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio * ratio_r, 0.0f });
 		}
 		else if (wl != nullptr)
 		{
 			// Only left wheel, all power to left
-			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio });
+			driven_wheels.push_back({ wl, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio, 0.0f });
 		}
 		else if (wr != nullptr)
 		{
 			// Only right wheel, all power to right
-			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio });
+			driven_wheels.push_back({ wr, clutch_to_wheel_ratio, dd.mClutchToDifferentialTorqueRatio, 0.0f });
 		}
 	}
 
@@ -434,8 +465,6 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// a * w(t + dt) = b
 		//
 		// We then invert the matrix to get the new angular velocities.
-		//
-		// Note that currently we set TW(i) = 0 so that the wheels will accelerate as if no external force was applied to them. These external forces are applied later and will slow down the wheel before the end of the time step.
 
 		// Dimension of matrix is N + 1
 		int n = (int)driven_wheels.size() + 1;
@@ -459,19 +488,23 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// dt / Ie
 		float dt_div_ie = inDeltaTime / mEngine.mInertia;
 
+		// Calculate scale factor for impulses based on previous delta time
+		float impulse_scale = mPreviousDeltaTime > 0.0f? inDeltaTime / mPreviousDeltaTime : 0.0f;
+
 		// Iterate the rows for the wheels
 		for (int i = 0; i < (int)driven_wheels.size(); ++i)
 		{
-			const DrivenWheel &w_i = driven_wheels[i];
+			DrivenWheel &w_i = driven_wheels[i];
+			const WheelSettingsWV *settings = w_i.mWheel->GetSettings();
 
-			// dt / Iw
-			float dt_div_iw = inDeltaTime / w_i.mWheel->GetSettings()->mInertia;
+			// Get wheel inertia
+			float inertia = settings->mInertia;
 
 			// S * R(i)
 			float s_r = clutch_strength * w_i.mClutchToWheelRatio;
 
 			// dt * S * R(i) * F(i) / Iw
-			float dt_s_r_f_div_iw = dt_div_iw * s_r * w_i.mClutchToWheelTorqueRatio;
+			float dt_s_r_f_div_iw = inDeltaTime * s_r * w_i.mClutchToWheelTorqueRatio / inertia;
 
 			// Fill in the columns of a for wheel j
 			for (int j = 0; j < (int)driven_wheels.size(); ++j)
@@ -486,8 +519,35 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			// Add the column for the engine
 			a(i, engine) = -dt_s_r_f_div_iw;
 
-			// Fill in the constant b
-			b(i, 0) = w_i.mWheel->GetAngularVelocity(); // + dt_div_iw * (brake and tire torques)
+			// Calculate external angular impulse operating on the wheel: TW(i) * dt
+			float dt_tw = 0.0f;
+
+			// Combine brake with hand brake torque
+			float brake_torque = mBrakeInput * settings->mMaxBrakeTorque + mHandBrakeInput * settings->mMaxHandBrakeTorque;
+			if (brake_torque > 0.0f)
+			{
+				// We're braking
+				// Calculate brake angular impulse
+				float sign;
+				if (w_i.mWheel->GetAngularVelocity() != 0.0f)
+					sign = Sign(w_i.mWheel->GetAngularVelocity());
+				else
+					sign = Sign(mTransmission.GetCurrentRatio()); // When wheels have locked up use the transmission ratio to determine the sign
+				dt_tw = sign * inDeltaTime * brake_torque;
+			}
+
+			if (w_i.mWheel->HasContact())
+			{
+				// We have wheel contact with the floor
+				// Note that we don't know the torque due to the ground contact yet, so we use the impulse applied from the last frame to estimate it
+				// Wheel torque TW = force * radius = lambda / dt * radius
+				dt_tw += impulse_scale * w_i.mWheel->GetLongitudinalLambda() * settings->mRadius;
+			}
+
+			w_i.mEstimatedAngularImpulse = dt_tw;
+
+			// Fill in the constant b = ww(i,t)+(dt*TW(i))/Iw(i)
+			b(i, 0) = w_i.mWheel->GetAngularVelocity() - dt_tw / inertia;
 
 			// To avoid looping over the wheels again, we also fill in the wheel columns of the engine row here
 			a(engine, i) = -dt_div_ie * s_r / num_driven_wheels_float;
@@ -503,8 +563,18 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			// Update the angular velocities for the wheels
 			for (int i = 0; i < (int)driven_wheels.size(); ++i)
 			{
-				DrivenWheel &dw1 = driven_wheels[i];
-				dw1.mWheel->SetAngularVelocity(b(i, 0));
+				DrivenWheel &w_i = driven_wheels[i];
+				const WheelSettingsWV *settings = w_i.mWheel->GetSettings();
+
+				// Get solved wheel angular velocity
+				float angular_velocity = b(i, 0);
+
+				// We estimated TW and applied it in the equation above, but we haven't actually applied this torque yet so we undo it here.
+				// It will be applied when we solve the actual braking / the constraints with the floor.
+				angular_velocity += w_i.mEstimatedAngularImpulse / settings->mInertia;
+
+				// Update angular velocity
+				w_i.mWheel->SetAngularVelocity(angular_velocity);
 			}
 
 			// Update the engine RPM
@@ -569,6 +639,9 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 			w->mBrakeImpulse = 0.0f;
 		}
 	}
+
+	// Remember previous delta time so we can scale the impulses correctly
+	mPreviousDeltaTime = inDeltaTime;
 }
 
 bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime) 
@@ -654,23 +727,14 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 	Vec3 rpm_meter_fwd = body->GetRotation() * mConstraint.GetLocalForward();
 	mEngine.DrawRPM(inRenderer, rpm_meter_pos, rpm_meter_fwd, rpm_meter_up, mRPMMeterSize, mTransmission.mShiftDownRPM, mTransmission.mShiftUpRPM);
 
-	// Calculate average wheel speed at clutch
-	float wheel_speed_at_clutch = 0.0f;
-	int num_driven_wheels = 0;
-	for (const VehicleDifferentialSettings &d : mDifferentials)
+	if (mTransmission.GetCurrentRatio() != 0.0f)
 	{
-		int wheels[] = { d.mLeftWheel, d.mRightWheel };
-		for (int w : wheels)
-			if (w >= 0)
-			{
-				wheel_speed_at_clutch += mConstraint.GetWheel(w)->GetAngularVelocity() * d.mDifferentialRatio;
-				num_driven_wheels++;
-			}
-	}
-	wheel_speed_at_clutch = abs(wheel_speed_at_clutch / float(num_driven_wheels) * VehicleEngine::cAngularVelocityToRPM * mTransmission.GetCurrentRatio());
+		// Calculate average wheel speed at clutch
+		float wheel_speed_at_clutch = GetWheelSpeedAtClutch();
 		
-	// Draw the average wheel speed measured at clutch to compare engine RPM with wheel RPM
-	inRenderer->DrawLine(rpm_meter_pos, rpm_meter_pos + Quat::sRotation(rpm_meter_fwd, mEngine.ConvertRPMToAngle(wheel_speed_at_clutch)) * (rpm_meter_up * 1.1f * mRPMMeterSize), Color::sYellow);
+		// Draw the average wheel speed measured at clutch to compare engine RPM with wheel RPM
+		inRenderer->DrawLine(rpm_meter_pos, rpm_meter_pos + Quat::sRotation(rpm_meter_fwd, mEngine.ConvertRPMToAngle(wheel_speed_at_clutch)) * (rpm_meter_up * 1.1f * mRPMMeterSize), Color::sYellow);
+	}
 
 	// Draw current vehicle state
 	String status = StringFormat("Forward: %.1f, Right: %.1f\nBrake: %.1f, HandBrake: %.1f\n"
@@ -737,6 +801,7 @@ void WheeledVehicleController::SaveState(StateRecorder &inStream) const
 	inStream.Write(mRightInput);
 	inStream.Write(mBrakeInput);
 	inStream.Write(mHandBrakeInput);
+	inStream.Write(mPreviousDeltaTime);
 
 	mEngine.SaveState(inStream);
 	mTransmission.SaveState(inStream);
@@ -748,6 +813,7 @@ void WheeledVehicleController::RestoreState(StateRecorder &inStream)
 	inStream.Read(mRightInput);
 	inStream.Read(mBrakeInput);
 	inStream.Read(mHandBrakeInput);
+	inStream.Read(mPreviousDeltaTime);
 
 	mEngine.RestoreState(inStream);
 	mTransmission.RestoreState(inStream);

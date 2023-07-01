@@ -243,6 +243,10 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 	// Callback on our controller
 	mController->PostCollide(inDeltaTime, inPhysicsSystem);
 
+	// Callback to higher-level systems. We do it before the sleep section, in case velocities change.
+	if (mPostStepCallback != nullptr)
+		mPostStepCallback(*this, inDeltaTime, inPhysicsSystem);
+
 	// If the wheels are rotating, we don't want to go to sleep yet
 	bool allow_sleep = mController->AllowSleep();
 	if (allow_sleep)

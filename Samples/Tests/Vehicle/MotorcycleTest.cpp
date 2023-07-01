@@ -105,13 +105,14 @@ void MotorcycleTest::Initialize()
 	vehicle.mWheels = { front, back };
 
 	MotorcycleControllerSettings *controller = new MotorcycleControllerSettings;
-	controller->mEngine.mMaxTorque = 80.0f;
+	controller->mEngine.mMaxTorque = 150.0f;
 	controller->mEngine.mMinRPM = 1000.0f;
 	controller->mEngine.mMaxRPM = 10000.0f;
 	controller->mTransmission.mShiftDownRPM = 2000.0f;
-	controller->mTransmission.mShiftUpRPM = 9000.0f;
+	controller->mTransmission.mShiftUpRPM = 8000.0f;
 	controller->mTransmission.mGearRatios = { 2.27f, 1.63f, 1.3f, 1.09f, 0.96f, 0.88f }; // From: https://www.blocklayer.com/rpm-gear-bikes
 	controller->mTransmission.mReverseGearRatios = { -4.0f };
+	controller->mTransmission.mClutchStrength = 2.0f;
 	vehicle.mController = controller;
 
 	// Differential (not really applicable to a motorcycle but we need one anyway to drive it)
