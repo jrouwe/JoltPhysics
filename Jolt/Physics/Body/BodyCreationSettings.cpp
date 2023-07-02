@@ -22,7 +22,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mCollisionGroup)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mObjectLayer)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mMotionType)
-	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mLockedAxis)
+	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mAllowedDOFs)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowDynamicOrKinematic)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mIsSensor)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mSensorDetectsStatic)
@@ -50,7 +50,7 @@ void BodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 	mCollisionGroup.SaveBinaryState(inStream);
 	inStream.Write(mObjectLayer);
 	inStream.Write(mMotionType);
-	inStream.Write(mLockedAxis);
+	inStream.Write(mAllowedDOFs);
 	inStream.Write(mAllowDynamicOrKinematic);
 	inStream.Write(mIsSensor);
 	inStream.Write(mSensorDetectsStatic);
@@ -78,7 +78,7 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	mCollisionGroup.RestoreBinaryState(inStream);
 	inStream.Read(mObjectLayer);
 	inStream.Read(mMotionType);
-	inStream.Read(mLockedAxis);
+	inStream.Read(mAllowedDOFs);
 	inStream.Read(mAllowDynamicOrKinematic);
 	inStream.Read(mIsSensor);
 	inStream.Read(mSensorDetectsStatic);

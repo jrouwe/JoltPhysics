@@ -5,7 +5,7 @@
 #pragma once
 
 #include <Jolt/Geometry/Sphere.h>
-#include <Jolt/Physics/Body/LockedAxis.h>
+#include <Jolt/Physics/Body/AllowedDOFs.h>
 #include <Jolt/Physics/Body/MotionQuality.h>
 #include <Jolt/Physics/Body/BodyAccess.h>
 #include <Jolt/Physics/Body/MotionType.h>
@@ -26,7 +26,7 @@ public:
 	EMotionQuality			GetMotionQuality() const										{ return mMotionQuality; }
 
 	/// Get the allowed degrees of freedom that this body has (this can be changed by calling SetMassProperties)
-	inline ELockedAxis		GetLockedAxis() const											{ return mLockedAxis; }
+	inline EAllowedDOFs		GetAllowedDOFs() const											{ return mAllowedDOFs; }
 
 	/// Get world space linear velocity of the center of mass
 	inline Vec3				GetLinearVelocity() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::Read)); return mLinearVelocity; }
@@ -78,7 +78,7 @@ public:
 	void					SetGravityFactor(float inGravityFactor)							{ mGravityFactor = inGravityFactor; }
 
 	/// Set the mass and inertia tensor
-	void					SetMassProperties(ELockedAxis inLockedAxis, const MassProperties &inMassProperties);
+	void					SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassProperties &inMassProperties);
 
 	/// Get inverse mass (1 / mass). Should only be called on a dynamic object (static or kinematic bodies have infinite mass so should be treated as 1 / mass = 0)
 	inline float			GetInverseMass() const											{ JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic); return mInvMass; }
@@ -87,6 +87,7 @@ public:
 	/// Set the inverse mass (1 / mass).
 	/// Note that mass and inertia are linearly related (e.g. inertia of a sphere with mass m and radius r is \f$2/5 \: m \: r^2\f$).
 	/// If you change mass, inertia should probably change as well. See MassProperties::ScaleToMass.
+	/// If your translation degrees of freedom are restricted, make sure this is zero (see EAllowedDOFs).
 	void					SetInverseMass(float inInverseMass)								{ mInvMass = inInverseMass; }
 
 	/// Diagonal of inverse inertia matrix: D. Should only be called on a dynamic object (static or kinematic bodies have infinite mass so should be treated as D = 0)
@@ -98,6 +99,7 @@ public:
 	/// Set the inverse inertia tensor in local space by setting the diagonal and the rotation: \f$I_{body}^{-1} = R \: D \: R^{-1}\f$.
 	/// Note that mass and inertia are linearly related (e.g. inertia of a sphere with mass m and radius r is \f$2/5 \: m \: r^2\f$).
 	/// If you change inertia, mass should probably change as well. See MassProperties::ScaleToMass.
+	/// If you don't allow all rotational degrees of freedom, make sure that the corresponding diagonal elements are zero (see EAllowedDOFs).
 	void					SetInverseInertia(Vec3Arg inDiagonal, QuatArg inRot)			{ mInvInertiaDiagonal = inDiagonal; mInertiaRotation = inRot; }
 
 	/// Get inverse inertia matrix (\f$I_{body}^{-1}\f$). Will be a matrix of zeros for a static or kinematic object.
@@ -127,12 +129,12 @@ public:
 	// Reset the total accumulated torque, not that this will be done automatically after every time step.
 	JPH_INLINE void			ResetTorque()													{ mTorque = Float3(0, 0, 0); }
 
-	/// Takes a translation vector inV and returns a vector where the components that are locked by mLockedAxis are set to 0
+	/// Takes a translation vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
 	JPH_INLINE Vec3			LockTranslation(Vec3Arg inV)
 	{
-		uint32 unlocked_axis = ~uint32(mLockedAxis);
-		UVec4 unlocked_axis_mask = UVec4(unlocked_axis << 31, unlocked_axis << 30, unlocked_axis << 29, 0).ArithmeticShiftRight<31>();
-		return Vec3::sAnd(inV, Vec3(unlocked_axis_mask.ReinterpretAsFloat()));
+		uint32 allowed_dofs = uint32(mAllowedDOFs);
+		UVec4 allowed_dofs_mask = UVec4(allowed_dofs << 31, allowed_dofs << 30, allowed_dofs << 29, 0).ArithmeticShiftRight<31>();
+		return Vec3::sAnd(inV, Vec3(allowed_dofs_mask.ReinterpretAsFloat()));
 	}
 
 	////////////////////////////////////////////////////////////
@@ -197,7 +199,7 @@ private:
 	// 1 byte aligned
 	EMotionQuality			mMotionQuality;													///< Motion quality, or how well it detects collisions when it has a high velocity
 	bool					mAllowSleeping;													///< If this body can go to sleep
-	ELockedAxis				mLockedAxis;													///< Allowed degrees of freedom for this body
+	EAllowedDOFs				mAllowedDOFs;													///< Allowed degrees of freedom for this body
 
 	// 3rd cache line (least frequently used)
 	// 4 byte aligned (or 8 byte if running in double precision)

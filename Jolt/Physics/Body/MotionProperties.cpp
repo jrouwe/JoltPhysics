@@ -9,17 +9,17 @@
 
 JPH_NAMESPACE_BEGIN
 
-void MotionProperties::SetMassProperties(ELockedAxis inLockedAxis, const MassProperties &inMassProperties)
+void MotionProperties::SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassProperties &inMassProperties)
 {
-	// Store locked axis
-	mLockedAxis = inLockedAxis;
+	// Store allowed DOFs
+	mAllowedDOFs = inAllowedDOFs;
 
-	// Decompose locked axis
-	uint locked_translation_axis = uint(inLockedAxis) & 0b111;
-	uint locked_rotation_axis = (uint(inLockedAxis) >> 3) & 0b111;
+	// Decompose DOFs
+	uint allowed_translation_axis = uint(inAllowedDOFs) & 0b111;
+	uint allowed_rotation_axis = (uint(inAllowedDOFs) >> 3) & 0b111;
 
 	// Set inverse mass
-	if (locked_translation_axis == 0b111)
+	if (allowed_translation_axis == 0)
 	{
 		// No translation possible
 		mInvMass = 0.0f;
@@ -30,7 +30,7 @@ void MotionProperties::SetMassProperties(ELockedAxis inLockedAxis, const MassPro
 		mInvMass = 1.0f / inMassProperties.mMass;
 	}
 
-	if (locked_rotation_axis == 0)
+	if (allowed_rotation_axis == 0b111)
 	{
 		// Set inverse inertia
 		Mat44 rotation;
@@ -48,7 +48,7 @@ void MotionProperties::SetMassProperties(ELockedAxis inLockedAxis, const MassPro
 			mInertiaRotation = Quat::sIdentity();
 		}
 	}
-	else if (locked_rotation_axis == 0b111)
+	else if (allowed_rotation_axis == 0)
 	{
 		// No rotation possible
 		mInvInertiaDiagonal = Vec3::sZero();
@@ -56,20 +56,20 @@ void MotionProperties::SetMassProperties(ELockedAxis inLockedAxis, const MassPro
 	}
 	else
 	{
-		uint num_locked_rotation_axis = CountBits(locked_rotation_axis);
-		if (num_locked_rotation_axis == 2)
+		uint num_allowed_rotation_axis = CountBits(allowed_rotation_axis);
+		if (num_allowed_rotation_axis == 1)
 		{
 			// We can only rotate around one axis so the inverse inertia is trivial to calculate
 			mInertiaRotation = Quat::sIdentity();
 			mInvInertiaDiagonal = Vec3::sZero();
 			for (int axis = 0; axis < 3; ++axis)
-				if ((locked_rotation_axis & (1 << axis)) == 0)
+				if ((allowed_rotation_axis & (1 << axis)) != 0)
 					mInvInertiaDiagonal.SetComponent(axis, 1.0f / inMassProperties.mInertia(axis, axis));
 		}
 		else
 		{
-			JPH_ASSERT(num_locked_rotation_axis == 1);
-			uint locked_axis = CountTrailingZeros(locked_rotation_axis);
+			JPH_ASSERT(num_allowed_rotation_axis == 2);
+			uint locked_axis = CountTrailingZeros(~allowed_rotation_axis);
 
 			// Get inverse inertia matrix and set locked axis elements to 0
 			Mat44 inverse_inertia = inMassProperties.mInertia.Inversed3x3();

@@ -185,7 +185,7 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		mp->mIndexInActiveBodies = Body::cInactiveIndex;
 		mp->mIslandIndex = Body::cInactiveIndex;
 		JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
-		mp->SetMassProperties(inBodyCreationSettings.mLockedAxis, inBodyCreationSettings.GetMassProperties());
+		mp->SetMassProperties(inBodyCreationSettings.mAllowedDOFs, inBodyCreationSettings.GetMassProperties());
 	}
 
 	// Position body

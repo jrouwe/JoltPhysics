@@ -6,11 +6,11 @@
 
 #include <Tests/Test.h>
 
-// This test tests all permutations of axis locking (see EAxisLock)
-class AxisLockTest : public Test
+// This test tests all permutations of allowed degrees of freedom (see EAllowedDOFs)
+class AllowedDOFsTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, AxisLockTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, AllowedDOFsTest)
 
 	// See: Test
 	virtual void		Initialize() override;

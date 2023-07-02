@@ -34,18 +34,15 @@ Character::Character(const CharacterSettings *inSettings, RVec3Arg inPosition, Q
 {
 	// Construct rigid body
 	BodyCreationSettings settings(mShape, inPosition, inRotation, EMotionType::Dynamic, mLayer);
+	settings.mAllowedDOFs = EAllowedDOFs::TranslationX | EAllowedDOFs::TranslationY | EAllowedDOFs::TranslationZ;
+	settings.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
+	settings.mMassPropertiesOverride.mMass = inSettings->mMass;
 	settings.mFriction = inSettings->mFriction;
 	settings.mGravityFactor = inSettings->mGravityFactor;
 	settings.mUserData = inUserData;
 	Body *body = mSystem->GetBodyInterface().CreateBody(settings);
 	if (body != nullptr)
-	{
-		// Update the mass properties of the shape so that we set the correct mass and don't allow any rotation
-		body->GetMotionProperties()->SetInverseMass(1.0f / inSettings->mMass);
-		body->GetMotionProperties()->SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
-
 		mBodyID = body->GetID();
-	}
 }
 
 Character::~Character()
