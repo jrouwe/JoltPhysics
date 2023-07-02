@@ -134,7 +134,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
-	{ "Axis Lock",							JPH_RTTI(AllowedDOFsTest) },
+	{ "Allowed Degrees of Freedom",			JPH_RTTI(AllowedDOFsTest) },
 	{ "Shape Filter",						JPH_RTTI(ShapeFilterTest) },
 };
 
