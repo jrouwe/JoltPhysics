@@ -94,8 +94,12 @@ void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, 
 		const Vec3 cLocalSpaceAngularVelocity(0, DegreesToRadians(10.0f), 0);
 		Vec3 body1_angular_surface_velocity = body1_angular? inBody1.GetRotation() * cLocalSpaceAngularVelocity : Vec3::sZero();
 		Vec3 body2_angular_surface_velocity = body2_angular? inBody2.GetRotation() * cLocalSpaceAngularVelocity : Vec3::sZero();
+
+		// Note that the angular velocity is the angular velocity around body 1's center of mass, so we need to add the linear velocity of body 2's center of mass
+		Vec3 body2_linear_surface_velocity = body2_angular? (inBody2.GetCenterOfMassPosition() - inBody1.GetCenterOfMassPosition()).Cross(body2_angular_surface_velocity) : Vec3::sZero();
 		
 		// Calculate the relative angular surface velocity
+		ioSettings.mRelativeSurfaceVelocity = body2_linear_surface_velocity;
 		ioSettings.mRelativeAngularSurfaceVelocity = body2_angular_surface_velocity - body1_angular_surface_velocity;
 	}
 }
