@@ -40,7 +40,7 @@ Character::Character(const CharacterSettings *inSettings, RVec3Arg inPosition, Q
 	settings.mFriction = inSettings->mFriction;
 	settings.mGravityFactor = inSettings->mGravityFactor;
 	settings.mUserData = inUserData;
-	Body *body = mSystem->GetBodyInterface().CreateBody(settings);
+	const Body *body = mSystem->GetBodyInterface().CreateBody(settings);
 	if (body != nullptr)
 		mBodyID = body->GetID();
 }
