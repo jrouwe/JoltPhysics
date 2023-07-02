@@ -199,7 +199,7 @@ private:
 	// 1 byte aligned
 	EMotionQuality			mMotionQuality;													///< Motion quality, or how well it detects collisions when it has a high velocity
 	bool					mAllowSleeping;													///< If this body can go to sleep
-	EAllowedDOFs				mAllowedDOFs;													///< Allowed degrees of freedom for this body
+	EAllowedDOFs			mAllowedDOFs;													///< Allowed degrees of freedom for this body
 
 	// 3rd cache line (least frequently used)
 	// 4 byte aligned (or 8 byte if running in double precision)
