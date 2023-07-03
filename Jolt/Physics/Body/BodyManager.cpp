@@ -878,21 +878,24 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 			if (inDrawSettings.mDrawMassAndInertia && body->IsDynamic())
 			{
 				const MotionProperties *mp = body->GetMotionProperties();
+				if (mp->GetInverseMass() > 0.0f
+					&& !Vec3::sEquals(mp->GetInverseInertiaDiagonal(), Vec3::sZero()).TestAnyXYZTrue())
+				{
+					// Invert mass again
+					float mass = 1.0f / mp->GetInverseMass();
 
-				// Invert mass again
-				float mass = 1.0f / mp->GetInverseMass();
+					// Invert diagonal again
+					Vec3 diagonal = mp->GetInverseInertiaDiagonal().Reciprocal();
 
-				// Invert diagonal again
-				Vec3 diagonal = mp->GetInverseInertiaDiagonal().Reciprocal();
+					// Determine how big of a box has the equivalent inertia
+					Vec3 box_size = MassProperties::sGetEquivalentSolidBoxSize(mass, diagonal);
 
-				// Determine how big of a box has the equivalent inertia
-				Vec3 box_size = MassProperties::sGetEquivalentSolidBoxSize(mass, diagonal);
+					// Draw box with equivalent inertia
+					inRenderer->DrawWireBox(body->GetCenterOfMassTransform() * Mat44::sRotation(mp->GetInertiaRotation()), AABox(-0.5f * box_size, 0.5f * box_size), Color::sOrange);
 
-				// Draw box with equivalent inertia
-				inRenderer->DrawWireBox(body->GetCenterOfMassTransform() * Mat44::sRotation(mp->GetInertiaRotation()), AABox(-0.5f * box_size, 0.5f * box_size), Color::sOrange);
-
-				// Draw mass
-				inRenderer->DrawText3D(body->GetCenterOfMassPosition(), StringFormat("%.2f", (double)mass), Color::sOrange, 0.2f);
+					// Draw mass
+					inRenderer->DrawText3D(body->GetCenterOfMassPosition(), StringFormat("%.2f", (double)mass), Color::sOrange, 0.2f);
+				}
 			}
 
 			if (inDrawSettings.mDrawSleepStats && body->IsDynamic() && body->IsActive())
