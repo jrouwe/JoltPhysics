@@ -87,7 +87,7 @@ void MotionProperties::SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassP
 		}
 	}
 
-	JPH_ASSERT(mInvMass != 0.0f || mInvInertiaDiagonal != Vec3::sZero(), "Can't lock all axes, use a Kinematic body for this!");
+	JPH_ASSERT(mInvMass != 0.0f || mInvInertiaDiagonal != Vec3::sZero(), "Can't lock all axes, use a static body for this. This will crash with a division by zero later!");
 }
 
 void MotionProperties::SaveState(StateRecorder &inStream) const
