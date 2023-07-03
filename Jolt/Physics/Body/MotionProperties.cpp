@@ -71,19 +71,49 @@ void MotionProperties::SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassP
 			JPH_ASSERT(num_allowed_rotation_axis == 2);
 			uint locked_axis = CountTrailingZeros(~allowed_rotation_axis);
 
-			// Get inverse inertia matrix and set locked axis elements to 0
-			Mat44 inverse_inertia = inMassProperties.mInertia.Inversed3x3();
+			// Copy the mass properties so we can modify it
+			MassProperties copy = inMassProperties;
+			Mat44 &inertia = copy.mInertia;
+
+			// Set the locked row and column to 0
 			for (uint axis = 0; axis < 3; ++axis)
 			{
-				inverse_inertia(axis, locked_axis) = 0.0f;
-				inverse_inertia(locked_axis, axis) = 0.0f;
+				inertia(axis, locked_axis) = 0.0f;
+				inertia(locked_axis, axis) = 0.0f;
 			}
 
-			// Set the 2 components that are non zero
-			mInertiaRotation = Quat::sIdentity();
-			mInvInertiaDiagonal = Vec3::sZero();
-			for (int axis = 0; axis < 3; ++axis)
-				mInvInertiaDiagonal.SetComponent(axis, inverse_inertia.GetColumn3(axis).Length());
+			// Set the diagonal entry to 1
+			inertia(locked_axis, locked_axis) = 1.0f;
+
+			// Decompose the inertia matrix, note that using a 2x2 matrix would have been more efficient
+			// but we happen to have a 3x3 matrix version lying around so we use that.
+			Mat44 rotation;
+			Vec3 diagonal;
+			if (copy.DecomposePrincipalMomentsOfInertia(rotation, diagonal))
+			{
+				mInvInertiaDiagonal = diagonal.Reciprocal();
+				mInertiaRotation = rotation.GetQuaternion();
+
+				// Now set the diagonal entry corresponding to the locked axis to 0
+				for (uint axis = 0; axis < 3; ++axis)
+					if (abs(inertia.GetColumn3(locked_axis).Dot(rotation.GetColumn3(axis))) > 0.999f)
+					{
+						mInvInertiaDiagonal.SetComponent(axis, 0.0f);
+						break;
+					}
+
+				// Check that we placed a zero
+				JPH_ASSERT(Vec3::sEquals(mInvInertiaDiagonal, Vec3::sZero()).TestAnyXYZTrue());
+			}
+			else
+			{
+				// Failed! Fall back to inaccurate version.
+				mInertiaRotation = Quat::sIdentity();
+				mInvInertiaDiagonal = Vec3::sZero();
+				for (uint axis = 0; axis < 3; ++axis)
+					if (axis != locked_axis)
+						mInvInertiaDiagonal.SetComponent(axis, 1.0f / inertia.GetColumn3(axis).Length());
+			}
 		}
 	}
 
