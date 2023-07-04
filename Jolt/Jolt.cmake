@@ -160,6 +160,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.h
 	${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.cpp
 	${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.h
+	${JOLT_PHYSICS_ROOT}/Physics/Body/AllowedDOFs.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.inl
