@@ -10,12 +10,12 @@ JPH_NAMESPACE_BEGIN
 enum class EAllowedDOFs : uint8
 {
 	All					= 0b111111,									///< All degrees of freedom are allowed
-	TranslationX		= 0b000001,									///< Body cannot move in X axis
-	TranslationY		= 0b000010,									///< Body cannot move in Y axis
-	TranslationZ		= 0b000100,									///< Body cannot move in Z axis
-	RotationX			= 0b001000,									///< Body cannot rotate around X axis
-	RotationY			= 0b010000,									///< Body cannot rotate around Y axis
-	RotationZ			= 0b100000,									///< Body cannot rotate around Z axis
+	TranslationX		= 0b000001,									///< Body cannot move in world space X axis
+	TranslationY		= 0b000010,									///< Body cannot move in world space Y axis
+	TranslationZ		= 0b000100,									///< Body cannot move in world space Z axis
+	RotationX			= 0b001000,									///< Body cannot rotate around local space X axis
+	RotationY			= 0b010000,									///< Body cannot rotate around local space Y axis
+	RotationZ			= 0b100000,									///< Body cannot rotate around local space Z axis
 	Plane2D				= TranslationX | TranslationY | RotationZ,	///< Body can only move in X and Y axis and rotate around Z axis
 };
 
