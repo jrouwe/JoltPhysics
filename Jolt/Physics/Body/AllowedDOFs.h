@@ -45,21 +45,21 @@ constexpr EAllowedDOFs operator ~ (EAllowedDOFs inAllowedDOFs)
 }
 
 /// Bitwise OR assignment operator for EAllowedDOFs
-constexpr EAllowedDOFs operator |= (EAllowedDOFs &ioLHS, EAllowedDOFs inRHS)
+constexpr EAllowedDOFs & operator |= (EAllowedDOFs &ioLHS, EAllowedDOFs inRHS)
 {
 	ioLHS = ioLHS | inRHS;
 	return ioLHS;
 }
 
 /// Bitwise AND assignment operator for EAllowedDOFs
-constexpr EAllowedDOFs operator &= (EAllowedDOFs &ioLHS, EAllowedDOFs inRHS)
+constexpr EAllowedDOFs & operator &= (EAllowedDOFs &ioLHS, EAllowedDOFs inRHS)
 {
 	ioLHS = ioLHS & inRHS;
 	return ioLHS;
 }
 
 /// Bitwise XOR assignment operator for EAllowedDOFs
-constexpr EAllowedDOFs operator ^= (EAllowedDOFs &ioLHS, EAllowedDOFs inRHS)
+constexpr EAllowedDOFs & operator ^= (EAllowedDOFs &ioLHS, EAllowedDOFs inRHS)
 {
 	ioLHS = ioLHS ^ inRHS;
 	return ioLHS;
