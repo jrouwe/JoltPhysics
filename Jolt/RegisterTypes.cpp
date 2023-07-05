@@ -66,8 +66,15 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, GroupFilterTable)
 
 JPH_NAMESPACE_BEGIN
 
-void RegisterTypes()
+void RegisterTypesInternal(uint64 inVersionID)
 {
+	// Version check
+	if (inVersionID != JPH_VERSION_ID)
+	{
+		JPH_ASSERT(false, "Version mismatch, make sure you compile the client code with the same Jolt version and compiler definitions!");
+		JPH_CRASH;
+	}
+
 #ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 	JPH_ASSERT(Allocate != nullptr && Free != nullptr && AlignedAllocate != nullptr && AlignedFree != nullptr, "Need to supply an allocator first or call RegisterDefaultAllocator()");
 #endif // !JPH_DISABLE_CUSTOM_ALLOCATOR

@@ -4,6 +4,62 @@
 
 #pragma once
 
+// Jolt library version
+#define JPH_VERSION_MAJOR 3
+#define JPH_VERSION_MINOR 0
+#define JPH_VERSION_PATCH 1
+
+// Determine which features the library was compiled with
+#ifdef JPH_DOUBLE_PRECISION
+	#define JPH_VERSION_FEATURE_BIT_1 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_1 0
+#endif
+#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+	#define JPH_VERSION_FEATURE_BIT_2 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_2 0
+#endif
+#ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
+	#define JPH_VERSION_FEATURE_BIT_3 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_3 0
+#endif
+#ifdef JPH_PROFILE_ENABLED
+	#define JPH_VERSION_FEATURE_BIT_4 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_4 0
+#endif
+#ifdef JPH_EXTERNAL_PROFILE
+	#define JPH_VERSION_FEATURE_BIT_5 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_5 0
+#endif
+#ifdef JPH_DEBUG_RENDERER
+	#define JPH_VERSION_FEATURE_BIT_6 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_6 0
+#endif
+#ifdef JPH_DISABLE_TEMP_ALLOCATOR
+	#define JPH_VERSION_FEATURE_BIT_7 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_7 0
+#endif
+#ifdef JPH_DISABLE_CUSTOM_ALLOCATOR
+	#define JPH_VERSION_FEATURE_BIT_8 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_8 0
+#endif
+#if defined(JPH_OBJECT_LAYER_BITS) && JPH_OBJECT_LAYER_BITS == 32
+	#define JPH_VERSION_FEATURE_BIT_9 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_9 0
+#endif
+#define JPH_VERSION_FEATURES (uint64(JPH_VERSION_FEATURE_BIT_1) | (JPH_VERSION_FEATURE_BIT_2 << 1) | (JPH_VERSION_FEATURE_BIT_3 << 2) | (JPH_VERSION_FEATURE_BIT_4 << 3) | (JPH_VERSION_FEATURE_BIT_5 << 4) | (JPH_VERSION_FEATURE_BIT_6 << 5) | (JPH_VERSION_FEATURE_BIT_7 << 6) | (JPH_VERSION_FEATURE_BIT_8 << 7) | (JPH_VERSION_FEATURE_BIT_9 << 8))
+
+// Combine the version and features in a single ID
+#define JPH_VERSION_ID ((JPH_VERSION_FEATURES << 24) | (JPH_VERSION_MAJOR << 16) | (JPH_VERSION_MINOR << 8) | JPH_VERSION_PATCH)
+
 // Determine platform
 #if defined(JPH_PLATFORM_BLUE)
 	// Correct define already defined, this overrides everything else
