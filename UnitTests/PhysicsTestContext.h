@@ -9,9 +9,15 @@
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 #include "Layers.h"
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <fstream>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 namespace JPH {
 	class TempAllocator;
 	class JobSystem;
+	class DebugRendererRecorder;
+	class StreamOutWrapper;
 };
 
 // Helper class used in test cases for creating and manipulating physics objects
@@ -19,7 +25,7 @@ class PhysicsTestContext
 {
 public:
 	// Constructor / destructor
-						PhysicsTestContext(float inDeltaTime = 1.0f / 60.0f, int inCollisionSteps = 1, int inIntegrationSubSteps = 1, int inWorkerThreads = 0, uint inMaxBodies = 1024, uint inMaxBodyPairs = 4096, uint inMaxContactConstraints = 1024);
+						PhysicsTestContext(float inDeltaTime = 1.0f / 60.0f, int inCollisionSteps = 1, int inWorkerThreads = 0, uint inMaxBodies = 1024, uint inMaxBodyPairs = 4096, uint inMaxContactConstraints = 1024);
 						~PhysicsTestContext();
 
 	// Set the gravity to zero
@@ -76,11 +82,16 @@ public:
 		return mDeltaTime;
 	}
 
-	// Get delta time for a simulation integration sub step
-	inline float		GetSubStepDeltaTime() const
+	// Get delta time for a simulation collision step
+	inline float		GetStepDeltaTime() const
 	{
-		return mDeltaTime / (mCollisionSteps * mIntegrationSubSteps);
+		return mDeltaTime / mCollisionSteps;
 	}
+
+#ifdef JPH_DEBUG_RENDERER
+	// Write the debug output to a file to be able to replay it with JoltViewer
+	void				RecordDebugOutput(const char *inFileName);
+#endif // JPH_DEBUG_RENDERER
 
 private:
 	TempAllocator *		mTempAllocator;
@@ -89,7 +100,11 @@ private:
 	ObjectVsBroadPhaseLayerFilterImpl mObjectVsBroadPhaseLayerFilter;
 	ObjectLayerPairFilterImpl mObjectVsObjectLayerFilter;
 	PhysicsSystem *		mSystem;
+#ifdef JPH_DEBUG_RENDERER
+	DebugRendererRecorder *mDebugRenderer = nullptr;
+	ofstream *			mStream = nullptr;
+	StreamOutWrapper *	mStreamWrapper = nullptr;
+#endif // JPH_DEBUG_RENDERER
 	float				mDeltaTime;
 	int					mCollisionSteps;
-	int					mIntegrationSubSteps;
 };

@@ -22,6 +22,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MotorcycleControllerSettings)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mMaxLeanAngle)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringConstant)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringDamping)
+	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringIntegrationCoefficient)
+	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSpringIntegrationCoefficientDecay)
 	JPH_ADD_ATTRIBUTE(MotorcycleControllerSettings, mLeanSmoothingFactor)
 }
 
@@ -37,6 +39,8 @@ void MotorcycleControllerSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mMaxLeanAngle);
 	inStream.Write(mLeanSpringConstant);
 	inStream.Write(mLeanSpringDamping);
+	inStream.Write(mLeanSpringIntegrationCoefficient);
+	inStream.Write(mLeanSpringIntegrationCoefficientDecay);
 	inStream.Write(mLeanSmoothingFactor);
 }
 
@@ -47,6 +51,8 @@ void MotorcycleControllerSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mMaxLeanAngle);
 	inStream.Read(mLeanSpringConstant);
 	inStream.Read(mLeanSpringDamping);
+	inStream.Read(mLeanSpringIntegrationCoefficient);
+	inStream.Read(mLeanSpringIntegrationCoefficientDecay);
 	inStream.Read(mLeanSmoothingFactor);
 }
 
@@ -55,6 +61,8 @@ MotorcycleController::MotorcycleController(const MotorcycleControllerSettings &i
 	mMaxLeanAngle(inSettings.mMaxLeanAngle),
 	mLeanSpringConstant(inSettings.mLeanSpringConstant),
 	mLeanSpringDamping(inSettings.mLeanSpringDamping),
+	mLeanSpringIntegrationCoefficient(inSettings.mLeanSpringIntegrationCoefficient),
+	mLeanSpringIntegrationCoefficientDecay(inSettings.mLeanSpringIntegrationCoefficientDecay),
 	mLeanSmoothingFactor(inSettings.mLeanSmoothingFactor)
 {
 }
@@ -104,11 +112,19 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 		// Remove forward component, we can only lean sideways
 		mTargetLean -= mTargetLean * mTargetLean.Dot(forward);
 		mTargetLean = mTargetLean.NormalizedOr(world_up);
+
+		// Integrate the delta angle
+		Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
+		float d_angle = -Sign(mTargetLean.Cross(up).Dot(forward)) * ACos(mTargetLean.Dot(up));
+		mLeanSpringIntegratedDeltaAngle += d_angle * inDeltaTime;
 	}
 	else
 	{
 		// Controller not enabled, reset target lean
 		mTargetLean = world_up;
+
+		// Reset integrated delta angle
+		mLeanSpringIntegratedDeltaAngle = 0;
 	}
 
 	JPH_DET_LOG("WheeledVehicleController::PreCollide: mTargetLean: " << mTargetLean);
@@ -189,7 +205,7 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 			float ddt_angle = body->GetAngularVelocity().Dot(forward);
 
 			// Calculate impulse to apply to get to target lean angle
-			float total_impulse = (mLeanSpringConstant * d_angle - mLeanSpringDamping * ddt_angle) * inDeltaTime;
+			float total_impulse = (mLeanSpringConstant * d_angle - mLeanSpringDamping * ddt_angle + mLeanSpringIntegrationCoefficient * mLeanSpringIntegratedDeltaAngle) * inDeltaTime;
 
 			// Remember angular velocity pre angular impulse
 			Vec3 old_w = mp->GetAngularVelocity();
@@ -222,6 +238,12 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 
 			// Return true if we applied an impulse
 			impulse |= delta_impulse != 0.0f;
+		}
+		else
+		{
+			// Decay the integrated angle because we won't be applying a torque this frame
+			// Uses 1st order Taylor approximation of e^(-decay * dt) = 1 - decay * dt
+			mLeanSpringIntegratedDeltaAngle *= max(0.0f, 1.0f - mLeanSpringIntegrationCoefficientDecay * inDeltaTime);
 		}
 	}
 

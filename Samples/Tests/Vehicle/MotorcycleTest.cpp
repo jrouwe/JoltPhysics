@@ -77,7 +77,7 @@ void MotorcycleTest::Initialize()
 	front->mWidth = front_wheel_width;
 	front->mSuspensionMinLength = front_suspension_min_length;
 	front->mSuspensionMaxLength = front_suspension_max_length;
-	front->mSuspensionFrequency = front_suspension_freq;
+	front->mSuspensionSpring.mFrequency = front_suspension_freq;
 	front->mMaxBrakeTorque = front_brake_torque;
 
 	WheelSettingsWV *back = new WheelSettingsWV;
@@ -87,19 +87,32 @@ void MotorcycleTest::Initialize()
 	back->mWidth = back_wheel_width;
 	back->mSuspensionMinLength = back_suspension_min_length;
 	back->mSuspensionMaxLength = back_suspension_max_length;
-	back->mSuspensionFrequency = back_suspension_freq;
+	back->mSuspensionSpring.mFrequency = back_suspension_freq;
 	back->mMaxBrakeTorque = back_brake_torque;
+
+	if (sOverrideFrontSuspensionForcePoint)
+	{
+		front->mEnableSuspensionForcePoint = true;
+		front->mSuspensionForcePoint = front->mPosition + front->mSuspensionDirection * front->mSuspensionMinLength;
+	}
+
+	if (sOverrideRearSuspensionForcePoint)
+	{
+		back->mEnableSuspensionForcePoint = true;
+		back->mSuspensionForcePoint = back->mPosition + back->mSuspensionDirection * back->mSuspensionMinLength;
+	}
 
 	vehicle.mWheels = { front, back };
 
 	MotorcycleControllerSettings *controller = new MotorcycleControllerSettings;
-	controller->mEngine.mMaxTorque = 80.0f;
+	controller->mEngine.mMaxTorque = 150.0f;
 	controller->mEngine.mMinRPM = 1000.0f;
 	controller->mEngine.mMaxRPM = 10000.0f;
 	controller->mTransmission.mShiftDownRPM = 2000.0f;
-	controller->mTransmission.mShiftUpRPM = 9000.0f;
+	controller->mTransmission.mShiftUpRPM = 8000.0f;
 	controller->mTransmission.mGearRatios = { 2.27f, 1.63f, 1.3f, 1.09f, 0.96f, 0.88f }; // From: https://www.blocklayer.com/rpm-gear-bikes
 	controller->mTransmission.mReverseGearRatios = { -4.0f };
+	controller->mTransmission.mClutchStrength = 2.0f;
 	vehicle.mController = controller;
 
 	// Differential (not really applicable to a motorcycle but we need one anyway to drive it)
@@ -172,8 +185,9 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mBodyInterface->ActivateBody(mMotorcycleBody->GetID());
 
 	// Pass the input on to the constraint
-	WheeledVehicleController *controller = static_cast<WheeledVehicleController *>(mVehicleConstraint->GetController());
+	MotorcycleController *controller = static_cast<MotorcycleController *>(mVehicleConstraint->GetController());
 	controller->SetDriverInput(forward, mCurrentRight, brake, false);
+	controller->EnableLeanController(sEnableLeanController);
 
 	// Draw our wheels (this needs to be done in the pre update since we draw the bodies too in the state before the step)
 	for (uint w = 0; w < 2; ++w)
@@ -227,6 +241,8 @@ void MotorcycleTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
 	VehicleTest::CreateSettingsMenu(inUI, inSubMenu);
 
-	MotorcycleController *controller = static_cast<MotorcycleController *>(mVehicleConstraint->GetController());
-	inUI->CreateCheckBox(inSubMenu, "Enable Lean Controller", controller->IsLeanControllerEnabled(), [controller](UICheckBox::EState inState) { controller->EnableLeanController(inState == UICheckBox::STATE_CHECKED); });
+	inUI->CreateCheckBox(inSubMenu, "Override Front Suspension Force Point", sOverrideFrontSuspensionForcePoint, [](UICheckBox::EState inState) { sOverrideFrontSuspensionForcePoint = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Override Rear Suspension Force Point", sOverrideRearSuspensionForcePoint, [](UICheckBox::EState inState) { sOverrideRearSuspensionForcePoint = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Enable Lean Controller", sEnableLeanController, [](UICheckBox::EState inState) { sEnableLeanController = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateTextButton(inSubMenu, "Accept", [this]() { RestartTest(); });
 }

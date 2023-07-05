@@ -117,7 +117,7 @@ void Body::UpdateCenterOfMassInternal(Vec3Arg inPreviousCenterOfMass, bool inUpd
 
 	// Recalculate mass and inertia if requested
 	if (inUpdateMassProperties && mMotionProperties != nullptr)
-		mMotionProperties->SetMassProperties(mShape->GetMassProperties());
+		mMotionProperties->SetMassProperties(mMotionProperties->GetAllowedDOFs(), mShape->GetMassProperties());
 }
 
 void Body::SetShapeInternal(const Shape *inShape, bool inUpdateMassProperties)
@@ -322,8 +322,10 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mUserData = mUserData;
 	result.mCollisionGroup = GetCollisionGroup();
 	result.mMotionType = GetMotionType();
+	result.mAllowedDOFs = mMotionProperties != nullptr? mMotionProperties->GetAllowedDOFs() : EAllowedDOFs::All;
 	result.mAllowDynamicOrKinematic = mMotionProperties != nullptr;
 	result.mIsSensor = IsSensor();
+	result.mSensorDetectsStatic = SensorDetectsStatic();
 	result.mUseManifoldReduction = GetUseManifoldReduction();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;
 	result.mAllowSleeping = mMotionProperties != nullptr? GetAllowSleeping() : true;

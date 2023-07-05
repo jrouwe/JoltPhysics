@@ -9,8 +9,12 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/StreamWrapper.h>
+#ifdef JPH_DEBUG_RENDERER
+	#include <Jolt/Renderer/DebugRendererRecorder.h>
+#endif
 
-PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, int inIntegrationSubSteps, int inWorkerThreads, uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints) :
+PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, int inWorkerThreads, uint inMaxBodies, uint inMaxBodyPairs, uint inMaxContactConstraints) :
 #ifdef JPH_DISABLE_TEMP_ALLOCATOR
 	mTempAllocator(new TempAllocatorMalloc()),
 #else
@@ -18,8 +22,7 @@ PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, 
 #endif
 	mJobSystem(new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, inWorkerThreads)),
 	mDeltaTime(inDeltaTime),
-	mCollisionSteps(inCollisionSteps),
-	mIntegrationSubSteps(inIntegrationSubSteps)
+	mCollisionSteps(inCollisionSteps)
 {
 	// Create physics system
 	mSystem = new PhysicsSystem();
@@ -28,6 +31,11 @@ PhysicsTestContext::PhysicsTestContext(float inDeltaTime, int inCollisionSteps, 
 
 PhysicsTestContext::~PhysicsTestContext()
 {
+#ifdef JPH_DEBUG_RENDERER
+	delete mDebugRenderer;
+	delete mStreamWrapper;
+	delete mStream;
+#endif // JPH_DEBUG_RENDERER
 	delete mSystem;
 	delete mJobSystem;
 	delete mTempAllocator;
@@ -78,6 +86,23 @@ Body &PhysicsTestContext::CreateSphere(RVec3Arg inPosition, float inRadius, EMot
 	return CreateBody(new SphereShapeSettings(inRadius), inPosition, Quat::sIdentity(), inMotionType, inMotionQuality, inLayer, inActivation);
 }
 
+EPhysicsUpdateError PhysicsTestContext::SimulateSingleStep()
+{
+	EPhysicsUpdateError errors = mSystem->Update(mDeltaTime, mCollisionSteps, mTempAllocator, mJobSystem);
+#ifndef JPH_DISABLE_TEMP_ALLOCATOR
+	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
+#endif // JPH_DISABLE_TEMP_ALLOCATOR
+#ifdef JPH_DEBUG_RENDERER
+	if (mDebugRenderer != nullptr)
+	{
+		mSystem->DrawBodies(BodyManager::DrawSettings(), mDebugRenderer);
+		mSystem->DrawConstraints(mDebugRenderer);
+		mDebugRenderer->EndFrame();
+	}
+#endif // JPH_DEBUG_RENDERER
+	return errors;
+}
+
 EPhysicsUpdateError PhysicsTestContext::Simulate(float inTotalTime, function<void()> inPreStepCallback)
 {
 	EPhysicsUpdateError errors = EPhysicsUpdateError::None;
@@ -85,22 +110,10 @@ EPhysicsUpdateError PhysicsTestContext::Simulate(float inTotalTime, function<voi
 	const int cNumSteps = int(round(inTotalTime / mDeltaTime));
 	for (int s = 0; s < cNumSteps; ++s)
 	{
-		inPreStepCallback();
-		errors |= mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
-	#ifndef JPH_DISABLE_TEMP_ALLOCATOR
-		JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
-	#endif // JPH_DISABLE_TEMP_ALLOCATOR
+		inPreStepCallback();		
+		errors |= SimulateSingleStep();
 	}
 
-	return errors;
-}
-
-EPhysicsUpdateError PhysicsTestContext::SimulateSingleStep()
-{
-	EPhysicsUpdateError errors = mSystem->Update(mDeltaTime, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, mJobSystem);
-#ifndef JPH_DISABLE_TEMP_ALLOCATOR
-	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
-#endif // JPH_DISABLE_TEMP_ALLOCATOR
 	return errors;
 }
 
@@ -110,7 +123,7 @@ RVec3 PhysicsTestContext::PredictPosition(RVec3Arg inPosition, Vec3Arg inVelocit
 	RVec3 pos = inPosition;
 	Vec3 vel = inVelocity;
 
-	const float delta_time = GetSubStepDeltaTime();
+	const float delta_time = GetStepDeltaTime();
 	const int cNumSteps = int(round(inTotalTime / delta_time));
 	for (int s = 0; s < cNumSteps; ++s)
 	{
@@ -127,7 +140,7 @@ Quat PhysicsTestContext::PredictOrientation(QuatArg inRotation, Vec3Arg inAngula
 	Quat rot = inRotation;
 	Vec3 vel = inAngularVelocity;
 
-	const float delta_time = GetSubStepDeltaTime();
+	const float delta_time = GetStepDeltaTime();
 	const int cNumSteps = int(round(inTotalTime / delta_time));
 	for (int s = 0; s < cNumSteps; ++s)
 	{
@@ -138,3 +151,23 @@ Quat PhysicsTestContext::PredictOrientation(QuatArg inRotation, Vec3Arg inAngula
 	}
 	return rot;
 }
+
+#ifdef JPH_DEBUG_RENDERER
+
+void PhysicsTestContext::RecordDebugOutput(const char *inFileName)
+{
+	mStream = new ofstream;
+	mStream->open(inFileName, ofstream::out | ofstream::binary | ofstream::trunc);
+	if (mStream->is_open())
+	{
+		mStreamWrapper = new StreamOutWrapper(*mStream);
+		mDebugRenderer = new DebugRendererRecorder(*mStreamWrapper);
+	}
+	else
+	{
+		delete mStream;
+		mStream = nullptr;
+	}
+}
+
+#endif // JPH_DEBUG_RENDERER

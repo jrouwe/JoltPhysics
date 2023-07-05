@@ -214,6 +214,8 @@ When you make a sensor Kinematic or Dynamic and activate it, it will also detect
 
 To create a sensor, either set [BodyCreationSettings::mIsSensor](@ref BodyCreationSettings::mIsSensor) to true when constructing a body or set it after construction through [Body::SetIsSensor](@ref Body::SetIsSensor). A sensor can only use the discrete motion quality type at this moment.
 
+To make sensors detect collisions with static objects, set the [BodyCreationSettings::mSensorDetectsStatic](@ref BodyCreationSettings::mSensorDetectsStatic) to true or call [Body::SetSensorDetectsStatic](@ref Body::SetSensorDetectsStatic). Note that it can place a large burden on the collision detection system if you have a large sensor intersect with e.g. a large mesh terrain or a height field as you will get many contact callbacks and these contacts will take up a lot of space in the contact cache. Ensure that your sensor is in an object layer that collides with as few static bodies as possible.
+
 ## Constraints
 
 Bodies can be connected to each other using constraints ([Constraint](@ref Constraint)).
@@ -261,7 +263,7 @@ For an angular motor, the units are Newton Meters. The formula is Torque = Inert
 
 When settings the force or torque limits to [-FLT_MAX, FLT_MAX] a velocity motor will accelerate the bodies to the desired relative velocity in a single time step (if no other forces act on those bodies).
 
-Position motors have two additional parameters: Frequency (MotorSettings::mFrequency, Hz) and damping (MotorSettings::mDamping, no units). They are implemented as described in [Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf).
+Position motors have two additional parameters: Frequency (MotorSettings::mSpringSettings.mFrequency, Hz) and damping (MotorSettings::mSpringSettings.mDamping, no units). They are implemented as described in [Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011](https://box2d.org/files/ErinCatto_SoftConstraints_GDC2011.pdf).
 
 You can see a position motor as a spring between the target position and the rigid body. The force applied to reach the target is linear with the distance between current position and target position. When there is no damping, the position motor will cause the rigid body to oscillate around its target.
 
@@ -319,18 +321,14 @@ The filter functions are listed in the order they're called. To avoid work, try 
 
 The simulation step [PhysicsSystem::Update](@ref PhysicsSystem::Update) uses jobs ([JobSystem](@ref JobSystem)) to perform the needed work. This allows spreading the workload across multiple CPU's. We use a Sequential Impulse solver with warm starting as described in [Modeling and Solving Constraints - Erin Catto](https://box2d.org/files/ErinCatto_ModelingAndSolvingConstraints_GDC2009.pdf)
 
-Each physics step can be divided into multiple sub steps. There are collision and integration steps. For each collision step we run X integration steps, so if you run the simulation at 60 Hz with 2 collision steps and 3 integration steps we run:
+Each physics step can be divided into multiple collision steps. So if you run the simulation at 60 Hz with 2 collision steps we run:
 
-* Collision
-	* Integration (1/360s)
-	* Integration (1/360s)
-	* Integration (1/360s)
-* Collision
-	* Integration (1/360s)
-	* Integration (1/360s)
-	* Integration (1/360s)
+* Collision (1/120s)
+* Integration (1/120s)
+* Collision (1/120s)
+* Integration (1/120s)
 
-In general, the system is stable when running at 60 Hz with 1 collision and 1 integration step.
+In general, the system is stable when running at 60 Hz with 1 collision step.
 
 ## Conventions and limits
 
@@ -481,9 +479,9 @@ This job does some housekeeping work that can be executed concurrent to the solv
 
 ### Solve Velocity Constraints
 
-A number of these jobs will run in parallel. Each job takes the next unprocessed island and will run the iterative constraint solver for that island. It will first apply the impulses applied from the previous simulation step (which are stored in the contact cache) to warm start the solver. It will then repeatedly iterate over all contact and non-contact constraints until either the applied impulses are too small or a max iteration count is reached ([PhysicsSettings::mNumVelocitySteps](@ref PhysicsSettings::mNumVelocitySteps)). The result will be that the new velocities are known for all active bodies. In the last integration step, the applied impulses are stored in the contact cache for the next step. 
+A number of these jobs will run in parallel. Each job takes the next unprocessed island and will run the iterative constraint solver for that island. It will first apply the impulses applied from the previous simulation step (which are stored in the contact cache) to warm start the solver. It will then repeatedly iterate over all contact and non-contact constraints until either the applied impulses are too small or a max iteration count is reached ([PhysicsSettings::mNumVelocitySteps](@ref PhysicsSettings::mNumVelocitySteps)). The result will be that the new velocities are known for all active bodies. The applied impulses are stored in the contact cache for the next step.
 
-When an island consists of more than LargeIslandSplitter::cLargeIslandTreshold contacts plus constraints it is considered a large island. In order to not do all work on a single thread, this island will be split up by the LargeIslandSplitter. This follows an algorithm described in High-Performance Physical Simulations on Next-Generation Architecture with Many Cores by Chen et al. This is basically a greedy algorithm that tries to group contacts and constraints into groups where no contact or constraint affects the same body. Within a group, the order of execution does not matter since every memory location is only read/written once, so we can parallelize the update. At the end of each group, we need to synchronize the CPU cores before starting on the next group. When the number of groups becomes too large, a final group is created that contains all other contacts and constraints and these are solved on a single thread. The groups are processed PhysicsSettings::mNumVelocitySteps times so the end result is almost the same as an island that was not split up (only the evalutation order changes in a consistent way). Note that the large island splitter can only be used when the number of integration sub steps passed to PhysicsSettings::Update is 1.
+When an island consists of more than LargeIslandSplitter::cLargeIslandTreshold contacts plus constraints it is considered a large island. In order to not do all work on a single thread, this island will be split up by the LargeIslandSplitter. This follows an algorithm described in High-Performance Physical Simulations on Next-Generation Architecture with Many Cores by Chen et al. This is basically a greedy algorithm that tries to group contacts and constraints into groups where no contact or constraint affects the same body. Within a group, the order of execution does not matter since every memory location is only read/written once, so we can parallelize the update. At the end of each group, we need to synchronize the CPU cores before starting on the next group. When the number of groups becomes too large, a final group is created that contains all other contacts and constraints and these are solved on a single thread. The groups are processed PhysicsSettings::mNumVelocitySteps times so the end result is almost the same as an island that was not split up (only the evalutation order changes in a consistent way).
 
 ### Pre Integrate
 
@@ -520,8 +518,4 @@ A number of these jobs will run in parallel. Each job takes the next unprocessed
 
 It will also notify the broad phase of the new body positions / AABBs. 
 
-When objects move too little the body will be put to sleep. This is detected by taking the biggest two axis of the local space bounding box of the shape together with the center of mass of the shape (all points in world space) and keep track of 3 bounding spheres for those points over time. If the bounding spheres become too big, the bounding spheres are reset and the timer restarted. When the timer reaches a certain time, the object has is considered non-moving and is put to sleep.  
-
-### Apply Gravity, Setup/Solve Velocity Constraints
-
-In the second and later integration sub steps, we combine the Apply Gravity, Setup Velocity Constraints and the Solve Velocity Constraints jobs. There are multiple of these jobs and they each process simulation islands until there are no more.
+When objects move too little the body will be put to sleep. This is detected by taking the biggest two axis of the local space bounding box of the shape together with the center of mass of the shape (all points in world space) and keep track of 3 bounding spheres for those points over time. If the bounding spheres become too big, the bounding spheres are reset and the timer restarted. When the timer reaches a certain time, the object has is considered non-moving and is put to sleep.

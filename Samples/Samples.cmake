@@ -75,6 +75,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/ConvexCollision/RandomRayTest.h
 	${SAMPLES_ROOT}/Tests/General/ActiveEdgesTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ActiveEdgesTest.h
+	${SAMPLES_ROOT}/Tests/General/AllowedDOFsTest.cpp
+	${SAMPLES_ROOT}/Tests/General/AllowedDOFsTest.h
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.cpp
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.h
 	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.cpp
@@ -121,6 +123,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/LoadSaveSceneTest.h
 	${SAMPLES_ROOT}/Tests/General/ManifoldReductionTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ManifoldReductionTest.h
+	${SAMPLES_ROOT}/Tests/General/ModifyMassTest.cpp
+	${SAMPLES_ROOT}/Tests/General/ModifyMassTest.h
 	${SAMPLES_ROOT}/Tests/General/MultithreadedTest.cpp
 	${SAMPLES_ROOT}/Tests/General/MultithreadedTest.h
 	${SAMPLES_ROOT}/Tests/General/PyramidTest.cpp

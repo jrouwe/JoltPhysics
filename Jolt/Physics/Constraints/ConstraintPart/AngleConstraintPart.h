@@ -124,7 +124,9 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inBody2, inWorldSpaceAxis);
 
-		if (inSpringSettings.mMode == ESpringMode::FrequencyAndDamping)
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else if (inSpringSettings.mMode == ESpringMode::FrequencyAndDamping)
 			mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mFrequency, inSpringSettings.mDamping, mEffectiveMass);
 		else
 			mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inSpringSettings.mStiffness, inSpringSettings.mDamping, mEffectiveMass);

@@ -6,6 +6,12 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v3.0.1 and latest
 
+* 20230629 - Fix for engine RPM being much higher than wheel RPM when measured at clutch. Before we were ignoring bake and wheel torques in engine RPM calculation. Now they're much closer but this unfortunately means that the simulation of the vehicle has changed and mainly the engine torque and clutch strength need to be re-tweaked. (b40090766c545a68dccfac76cde8c6345ca626a6)
+* 20230623 - The parameter inIntegrationSubSteps was removed from PhysicsSystem::Update because more and more features didn't support it. If you were using it multiply inCollisionSteps with the value of inIntegrationSubSteps to get roughly the same behavior. (8fcc7a78ec051b215bf13b037b9f975baa803b6f)
+* 20230618 - *SBS* - A new flag was added to BodyCreationSettings that changes the binary serialization format. (107b70c7585909f0757a62c318261a18d670ff97)
+* 20230610 - A bug was fixed that causes the vehicle suspension to be weaker when driving over low mass objects. This also changes suspension behavior a bit when driving over static objects. (44b82e395697ea553574df3cd806ffe264bfa5c4)
+* 20230609 - *SBS* - The MotorcycleController lean controller is now a full PID controller. This changes binary serialization format. (70e7bb3e5808dabc17ee38fb823fbfa7e9140a91)
+* 20230609 - *SBS* - VehicleConstraint uses the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (0da97d8f3345f14c5b4b0ee3571c05832c556f98)
 * 20230609 - *SBS* - DistanceConstraintSettings, SliderConstraintSettings and MotorSettings now use the new SpringSettings class as a member which contains the mFrequency and mDamping members. This requires minor code changes. (3cabc057c1267fde288c1ab2a23076702c71eb79)
 * 20230520 - A bug was fixed in CharacterVirtual that makes mPenetrationRecoverySpeed behave according to the documentation (1 = fully resolve collision in 1 update). With the bug the recovery was too little. If you want the penetration recovery to work as before with the bug multiply it by 1 / delta_time. (8dd93317d66a9a72d3afeff4ecb17c257a7e9d91)
 * 20230420 - To support compiling Jolt as a shared library, the RTTI macros were changed to be able to specify if a symbol should be exported or not. If you're using Jolt's RTTI system in your own project you need to change e.g. JPH_DECLARE_RTTI_VIRTUAL(XXX) to JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, XXX). (d2f1d97004d036c6f759203c42e264e401472037)

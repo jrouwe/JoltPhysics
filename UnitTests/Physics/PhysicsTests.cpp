@@ -170,7 +170,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsBodyIDSequenceNumber")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Create a body and check it's id
@@ -193,7 +193,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsBodyIDOverride")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Dummy creation settings
@@ -254,7 +254,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsBodyUserData")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Create a body and pass user data through the creation settings
@@ -274,7 +274,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsConstraintUserData")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 
 		// Create a body
 		Body &body = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f));
@@ -296,7 +296,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsPosition")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Translate / rotate the box
@@ -324,7 +324,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsOverrideMassAndInertia")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		BodyInterface &bi = c.GetBodyInterface();
 
 		const float cDensity = 1234.0f;
@@ -391,29 +391,17 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsFreeFall")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsFreeFall(c);
 	}
 
-	TEST_CASE("TestPhysicsFreeFallSubStep")
+	TEST_CASE("TestPhysicsFreeFallStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 2);
 		TestPhysicsFreeFall(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsFreeFall(c2);
-
-		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
-		TestPhysicsFreeFall(c3);
-
-		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
-		TestPhysicsFreeFall(c4);
-
-		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
-		TestPhysicsFreeFall(c5);
-
-		PhysicsTestContext c6(4.0f / 60.0f, 4, 1);
-		TestPhysicsFreeFall(c6);
 	}
 
 	// Test acceleration of a box with force applied
@@ -445,29 +433,17 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsApplyForce")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsApplyForce(c);
 	}
 
-	TEST_CASE("TestPhysicsApplyForceSubStep")
+	TEST_CASE("TestPhysicsApplyForceStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 2);
 		TestPhysicsApplyForce(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsApplyForce(c2);
-
-		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
-		TestPhysicsApplyForce(c3);
-
-		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
-		TestPhysicsApplyForce(c4);
-
-		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
-		TestPhysicsApplyForce(c5);
-
-		PhysicsTestContext c6(4.0f / 60.0f, 4, 1);
-		TestPhysicsApplyForce(c6);
 	}
 
 	// Test angular accelartion for a box by applying torque every frame
@@ -501,29 +477,17 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsApplyTorque")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsApplyTorque(c);
 	}
 
-	TEST_CASE("TestPhysicsApplyTorqueSubStep")
+	TEST_CASE("TestPhysicsApplyTorqueStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 2);
 		TestPhysicsApplyTorque(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsApplyTorque(c2);
-
-		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
-		TestPhysicsApplyTorque(c3);
-
-		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
-		TestPhysicsApplyTorque(c4);
-
-		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
-		TestPhysicsApplyTorque(c5);
-
-		PhysicsTestContext c6(4.0f / 60.0f, 4, 1);
-		TestPhysicsApplyTorque(c6);
 	}		
 
 	// Let a sphere bounce on the floor with restition = 1
@@ -552,10 +516,10 @@ TEST_SUITE("PhysicsTests")
 
 		// Assert that collision is processed and velocity is reversed (which is required for a fully elastic collision). 
 		// Note that the physics engine will first apply gravity for the time step and then do collision detection, 
-		// hence the reflected velocity is actually 1 sub-step times gravity bigger than it would be in reality
+		// hence the reflected velocity is actually 1 step times gravity bigger than it would be in reality
 		// For the remainder of cDeltaTime normal gravity will be applied
-		float sub_step_delta_time = ioContext.GetSubStepDeltaTime();
-		float remaining_step_time = ioContext.GetDeltaTime() - ioContext.GetSubStepDeltaTime();
+		float sub_step_delta_time = ioContext.GetStepDeltaTime();
+		float remaining_step_time = ioContext.GetDeltaTime() - ioContext.GetStepDeltaTime();
 		Vec3 reflected_velocity_after_sub_step = -(cSimulationTime + sub_step_delta_time) * cGravity;
 		Vec3 reflected_velocity_after_full_step = reflected_velocity_after_sub_step + remaining_step_time * cGravity;
 		CHECK_APPROX_EQUAL(reflected_velocity_after_full_step, body.GetLinearVelocity(), 1.0e-4f);
@@ -575,26 +539,17 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsCollisionElastic")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsCollisionElastic(c);
 	}
 
-	TEST_CASE("TestPhysicsCollisionElasticSubStep")
+	TEST_CASE("TestPhysicsCollisionElasticStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 2);
 		TestPhysicsCollisionElastic(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsCollisionElastic(c2);
-
-		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
-		TestPhysicsCollisionElastic(c3);
-
-		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
-		TestPhysicsCollisionElastic(c4);
-
-		PhysicsTestContext c5(4.0f / 60.0f, 4, 1);
-		TestPhysicsCollisionElastic(c5);
 	}		
 
 	// Let a sphere bounce on the floor with restitution = 0
@@ -635,26 +590,17 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsCollisionInelastic")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsCollisionInelastic(c);
 	}
 
-	TEST_CASE("TestPhysicsCollisionInelasticSubStep")
+	TEST_CASE("TestPhysicsCollisionInelasticStep")
 	{
-		PhysicsTestContext c1(2.0f / 60.0f, 1, 2);
+		PhysicsTestContext c1(2.0f / 60.0f, 2);
 		TestPhysicsCollisionInelastic(c1);
 
-		PhysicsTestContext c2(4.0f / 60.0f, 1, 4);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsCollisionInelastic(c2);
-
-		PhysicsTestContext c3(4.0f / 60.0f, 2, 2);
-		TestPhysicsCollisionInelastic(c3);
-
-		PhysicsTestContext c4(2.0f / 60.0f, 2, 1);
-		TestPhysicsCollisionInelastic(c4);
-
-		PhysicsTestContext c5(4.0f / 60.0f, 4, 1);
-		TestPhysicsCollisionInelastic(c5);
 	}		
 		
 	// Let box intersect with floor by cPenetrationSlop. It should not move, this is the maximum penetration allowed.
@@ -679,16 +625,16 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsPenetrationSlop1")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsPenetrationSlop1(c);
 	}
 
-	TEST_CASE("TestPhysicsPenetrationSlop1SubStep")
+	TEST_CASE("TestPhysicsPenetrationSlop1Step")
 	{
-		PhysicsTestContext c(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c(2.0f / 60.0f, 2);
 		TestPhysicsPenetrationSlop1(c);
 
-		PhysicsTestContext c2(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsPenetrationSlop1(c2);
 	}		
 
@@ -715,16 +661,16 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsPenetrationSlop2")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsPenetrationSlop2(c);
 	}
 
-	TEST_CASE("TestPhysicsPenetrationSlop2SubStep")
+	TEST_CASE("TestPhysicsPenetrationSlop2Step")
 	{
-		PhysicsTestContext c(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c(2.0f / 60.0f, 2);
 		TestPhysicsPenetrationSlop2(c);
 
-		PhysicsTestContext c2(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsPenetrationSlop2(c2);
 	}		
 
@@ -750,22 +696,22 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsPenetrationSlop3")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsPenetrationSlop3(c);
 	}
 
-	TEST_CASE("TestPhysicsPenetrationSlop3SubStep")
+	TEST_CASE("TestPhysicsPenetrationSlop3Step")
 	{
-		PhysicsTestContext c(1.0f / 30.0f, 1, 2);
+		PhysicsTestContext c(2.0f / 60.0f, 2);
 		TestPhysicsPenetrationSlop3(c);
 
-		PhysicsTestContext c2(1.0f / 30.0f, 2, 1);
+		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsPenetrationSlop3(c2);
 	}
 
 	TEST_CASE("TestPhysicsOutsideOfSpeculativeContactDistance")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		Body &floor = c.CreateFloor();
 		c.ZeroGravity();
 
@@ -808,7 +754,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceNoRestitution")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		Body &floor = c.CreateFloor();
 		c.ZeroGravity();
 
@@ -875,7 +821,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceWithRestitution")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		Body &floor = c.CreateFloor();
 		c.ZeroGravity();
 
@@ -931,7 +877,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceNoHit")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		Body &floor = c.CreateFloor();
 		floor.SetRestitution(1.0f);
 		c.ZeroGravity();
@@ -984,7 +930,7 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceMovingAway")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		Body &floor = c.CreateFloor();
 		c.ZeroGravity();
 
@@ -1087,20 +1033,14 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsActivationDeactivation")
 	{
-		PhysicsTestContext c1(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c1(1.0f / 60.0f, 1);
 		TestPhysicsActivationDeactivation(c1);
 
-		PhysicsTestContext c2(2.0f / 60.0f, 1, 2);
+		PhysicsTestContext c2(2.0f / 60.0f, 2);
 		TestPhysicsActivationDeactivation(c2);
 
-		PhysicsTestContext c3(2.0f / 60.0f, 2, 1);
+		PhysicsTestContext c3(4.0f / 60.0f, 4);
 		TestPhysicsActivationDeactivation(c3);
-
-		PhysicsTestContext c4(4.0f / 60.0f, 4, 1);
-		TestPhysicsActivationDeactivation(c4);
-
-		PhysicsTestContext c5(8.0f / 60.0f, 4, 2);
-		TestPhysicsActivationDeactivation(c5);
 	}
 
 	// A test that checks that a row of penetrating boxes will all activate and handle collision in 1 frame so that active bodies cannot tunnel through inactive bodies
@@ -1186,16 +1126,16 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestPhysicsActivateDuringStep")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		TestPhysicsActivateDuringStep(c, false);
 
-		PhysicsTestContext c2(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c2;
 		TestPhysicsActivateDuringStep(c2, true);
 	}
 
 	TEST_CASE("TestPhysicsBroadPhaseLayers")
 	{
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c;
 		BodyInterface &bi = c.GetBodyInterface();
 
 		// Reduce slop
@@ -1345,9 +1285,9 @@ TEST_SUITE("PhysicsTests")
 
 	TEST_CASE("TestMultiplePhysicsSystems")
 	{
-		PhysicsTestContext c1(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c1;
 		c1.ZeroGravity();
-		PhysicsTestContext c2(1.0f / 60.0f, 1, 1);
+		PhysicsTestContext c2;
 		c2.ZeroGravity();
 
 		const RVec3 cBox1Position(1.0f, 2.0f, 3.0f);
@@ -1387,7 +1327,7 @@ TEST_SUITE("PhysicsTests")
 	TEST_CASE("TestOutOfBodies")
 	{
 		// Create a context with space for a single body
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1, 0, 1);
+		PhysicsTestContext c(1.0f / 60.0f, 1, 0, 1);
 
 		BodyInterface& bi = c.GetBodyInterface();
 
@@ -1413,7 +1353,7 @@ TEST_SUITE("PhysicsTests")
 	TEST_CASE("TestOutOfContactConstraints")
 	{
 		// Create a context with space for 8 constraints
-		PhysicsTestContext c(1.0f / 60.0f, 1, 1, 0, 1024, 4096, 8);
+		PhysicsTestContext c(1.0f / 60.0f, 1, 0, 1024, 4096, 8);
 
 		c.CreateFloor();
 
@@ -1434,5 +1374,107 @@ TEST_SUITE("PhysicsTests")
 			errors = c.SimulateSingleStep();
 		}
 		CHECK((errors & EPhysicsUpdateError::ContactConstraintsFull) != EPhysicsUpdateError::None);
+	}
+
+	TEST_CASE("TestFriction")
+	{
+		const float friction_floor = 0.9f;
+		const float friction_box = 0.8f;
+		const float combined_friction = sqrt(friction_floor * friction_box);
+
+		for (float angle = 0; angle < 360.0f; angle += 30.0f)
+		{
+			// Create a context with space for 8 constraints
+			PhysicsTestContext c(1.0f / 60.0f, 1, 0, 1024, 4096, 8);
+
+			// Create floor
+			Body &floor = c.CreateFloor();
+			floor.SetFriction(friction_floor);
+
+			// Create box with a velocity that will make it slide over the floor (making sure it intersects a little bit initially)
+			BodyCreationSettings box_settings(new BoxShape(Vec3::sReplicate(1.0f)), RVec3(0, 0.999_r, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			box_settings.mFriction = friction_box;
+			box_settings.mLinearDamping = 0;
+			box_settings.mLinearVelocity = Vec3(Sin(DegreesToRadians(angle)), 0, Cos(DegreesToRadians(angle))) * 20.0f;
+			Body &box = *c.GetBodyInterface().CreateBody(box_settings);
+			c.GetBodyInterface().AddBody(box.GetID(), EActivation::Activate);
+
+			// We know that the friction force equals the normal force times the friction coefficient
+			float friction_acceleration = combined_friction * c.GetSystem()->GetGravity().Length();
+
+			// Simulate
+			Vec3 velocity = box_settings.mLinearVelocity;
+			RVec3 position = box_settings.mPosition;
+			for (int i = 0; i < 60; ++i)
+			{
+				c.SimulateSingleStep();
+
+				// Integrate our own simulation
+				velocity -= velocity.Normalized() * friction_acceleration * c.GetDeltaTime();
+				position += velocity * c.GetDeltaTime();
+			}
+
+			// Note that the result is not very accurate so we need quite a high tolerance
+			CHECK_APPROX_EQUAL(box.GetCenterOfMassPosition(), position, 1.0e-2f);
+			CHECK_APPROX_EQUAL(box.GetRotation(), box_settings.mRotation, 1.0e-2f);
+			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), velocity, 2.0e-2f);
+			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 1.0e-2f);
+		}
+	}
+
+	TEST_CASE("TestAllowedDOFs")
+	{
+		for (uint allowed_dofs = 1; allowed_dofs <= 0b111111; ++allowed_dofs)
+		{
+			// Create a context
+			PhysicsTestContext c;
+			c.ZeroGravity();
+
+			// Create box
+			RVec3 initial_position(1, 2, 3);
+			Quat initial_rotation = Quat::sRotation(Vec3::sReplicate(sqrt(1.0f / 3.0f)), DegreesToRadians(20.0f));
+			ShapeRefC box_shape = new BoxShape(Vec3(0.3f, 0.5f, 0.7f));
+			BodyCreationSettings box_settings(box_shape, initial_position, initial_rotation, EMotionType::Dynamic, Layers::MOVING);
+			box_settings.mLinearDamping = 0;
+			box_settings.mAngularDamping = 0;
+			box_settings.mAllowedDOFs = (EAllowedDOFs)allowed_dofs;
+			Body &box = *c.GetBodyInterface().CreateBody(box_settings);
+			c.GetBodyInterface().AddBody(box.GetID(), EActivation::Activate);
+
+			// Apply a force and torque in 3D
+			Vec3 force(100000, 110000, 120000);
+			box.AddForce(force);
+			Vec3 local_torque(13000, 14000, 15000);
+			box.AddTorque(initial_rotation * local_torque);
+
+			// Simulate
+			c.SimulateSingleStep();
+
+			// Cancel components that should not be allowed by the allowed DOFs
+			for (uint axis = 0; axis < 3; ++axis)
+			{
+				if ((allowed_dofs & (1 << axis)) == 0)
+					force.SetComponent(axis, 0.0f);
+
+				if ((allowed_dofs & (0b1000 << axis)) == 0)
+					local_torque.SetComponent(axis, 0.0f);
+			}
+
+			// Check resulting linear velocity
+			MassProperties mp = box_shape->GetMassProperties();
+			Vec3 expected_linear_velocity = force / mp.mMass * c.GetDeltaTime();
+			CHECK((force == Vec3::sZero() || expected_linear_velocity.Length() > 1.0f)); // Just to check that we applied a high enough force
+			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), expected_linear_velocity);
+			RVec3 expected_position = initial_position + expected_linear_velocity * c.GetDeltaTime();
+			CHECK_APPROX_EQUAL(box.GetPosition(), expected_position);
+
+			// Check resulting angular velocity
+			Vec3 expected_angular_velocity = initial_rotation * (mp.mInertia.Inversed3x3() * local_torque) * c.GetDeltaTime();
+			CHECK((local_torque == Vec3::sZero() || expected_angular_velocity.Length() > 1.0f)); // Just to check that we applied a high enough torque
+			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), expected_angular_velocity);
+			float expected_angular_velocity_len = expected_angular_velocity.Length();
+			Quat expected_rotation = expected_angular_velocity_len > 0.0f? Quat::sRotation(expected_angular_velocity / expected_angular_velocity_len, expected_angular_velocity_len * c.GetDeltaTime()) * initial_rotation : initial_rotation;
+			CHECK_APPROX_EQUAL(box.GetRotation(), expected_rotation);
+		}
 	}
 }

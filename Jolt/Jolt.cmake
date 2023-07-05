@@ -32,6 +32,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Core/IssueReporting.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystem.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystem.inl
+	${JOLT_PHYSICS_ROOT}/Core/JobSystemSingleThreaded.cpp
+	${JOLT_PHYSICS_ROOT}/Core/JobSystemSingleThreaded.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemThreadPool.cpp
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemThreadPool.h
 	${JOLT_PHYSICS_ROOT}/Core/JobSystemWithBarrier.cpp
@@ -158,6 +160,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/ObjectStream/SerializableObject.h
 	${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.cpp
 	${JOLT_PHYSICS_ROOT}/ObjectStream/TypeDeclarations.h
+	${JOLT_PHYSICS_ROOT}/Physics/Body/AllowedDOFs.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/Body.inl

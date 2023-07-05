@@ -31,14 +31,29 @@ ShapeSettings::ShapeResult StaticCompoundShapeSettings::Create(TempAllocator &in
 		}
 		else if (mSubShapes.size() == 1)
 		{
-			// If there's only 1 part, we can use a RotatedTranslatedShape instead
-			RotatedTranslatedShapeSettings settings;
+			// If there's only 1 part we don't need a StaticCompoundShape
 			const SubShapeSettings &s = mSubShapes[0];
-			settings.mPosition = s.mPosition;
-			settings.mRotation = s.mRotation;
-			settings.mInnerShape = s.mShape;
-			settings.mInnerShapePtr = s.mShapePtr;
-			Ref<Shape> shape = new RotatedTranslatedShape(settings, mCachedResult);
+			if (s.mPosition == Vec3::sZero()
+				&& s.mRotation == Quat::sIdentity())
+			{
+				// No rotation or translation, we can use the shape directly
+				if (s.mShapePtr != nullptr)
+					mCachedResult.Set(const_cast<Shape *>(s.mShapePtr.GetPtr()));
+				else if (s.mShape != nullptr)
+					mCachedResult = s.mShape->Create();
+				else
+					mCachedResult.SetError("Sub shape is null!");
+			}
+			else
+			{
+				// We can use a RotatedTranslatedShape instead
+				RotatedTranslatedShapeSettings settings;
+				settings.mPosition = s.mPosition;
+				settings.mRotation = s.mRotation;
+				settings.mInnerShape = s.mShape;
+				settings.mInnerShapePtr = s.mShapePtr;
+				Ref<Shape> shape = new RotatedTranslatedShape(settings, mCachedResult);
+			}
 		}
 		else
 		{

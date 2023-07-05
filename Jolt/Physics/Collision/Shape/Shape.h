@@ -241,10 +241,10 @@ public:
 	/// @param inCenterOfMassTransform Transform to transform outVertices with
 	/// @param inScale Scale of this shape
 	/// @param outVertices Resulting face. The returned face can be empty if the shape doesn't have polygons to return (e.g. because it's a sphere). The face will be returned in world space.
-	virtual void					GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const { /* Nothing */ }
+	virtual void					GetSupportingFace([[maybe_unused]] const SubShapeID &inSubShapeID, [[maybe_unused]] Vec3Arg inDirection, [[maybe_unused]] Vec3Arg inScale, [[maybe_unused]] Mat44Arg inCenterOfMassTransform, [[maybe_unused]] SupportingFace &outVertices) const { /* Nothing */ }
 
 	/// Get the user data of a particular sub shape ID
-	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const			{ return mUserData; }
+	virtual uint64					GetSubShapeUserData([[maybe_unused]] const SubShapeID &inSubShapeID) const			{ return mUserData; }
 
 	/// Get the direct child sub shape and its transform for a sub shape ID.
 	/// @param inSubShapeID Sub shape ID that indicates the path to the leaf shape
@@ -276,10 +276,10 @@ public:
 	virtual void					Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const = 0;
 
 	/// Draw the results of the GetSupportFunction with the convex radius added back on to show any errors introduced by this process (only relevant for convex shapes)
-	virtual void					DrawGetSupportFunction(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inDrawSupportDirection) const { /* Only implemented for convex shapes */ }
+	virtual void					DrawGetSupportFunction([[maybe_unused]] DebugRenderer *inRenderer, [[maybe_unused]] RMat44Arg inCenterOfMassTransform, [[maybe_unused]] Vec3Arg inScale, [[maybe_unused]] ColorArg inColor, [[maybe_unused]] bool inDrawSupportDirection) const { /* Only implemented for convex shapes */ }
 
 	/// Draw the results of the GetSupportingFace function to show any errors introduced by this process (only relevant for convex shapes)
-	virtual void					DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const { /* Only implemented for convex shapes */ }
+	virtual void					DrawGetSupportingFace([[maybe_unused]] DebugRenderer *inRenderer, [[maybe_unused]] RMat44Arg inCenterOfMassTransform, [[maybe_unused]] Vec3Arg inScale) const { /* Only implemented for convex shapes */ }
 #endif // JPH_DEBUG_RENDERER
 
 	/// Cast a ray against this shape, returns true if it finds a hit closer than ioHit.mFraction and updates that fraction. Otherwise ioHit is left untouched and the function returns false.
@@ -348,16 +348,16 @@ public:
 	static ShapeResult				sRestoreFromBinaryState(StreamIn &inStream);
 
 	/// Outputs the material references that this shape has to outMaterials.
-	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const			{ /* By default do nothing */ }
+	virtual void					SaveMaterialState([[maybe_unused]] PhysicsMaterialList &outMaterials) const			{ /* By default do nothing */ }
 
 	/// Restore the material references after calling sRestoreFromBinaryState. Note that the exact same materials need to be provided in the same order as returned by SaveMaterialState.
-	virtual void					RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) { JPH_ASSERT(inNumMaterials == 0); }
+	virtual void					RestoreMaterialState([[maybe_unused]] const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) { JPH_ASSERT(inNumMaterials == 0); }
 
 	/// Outputs the shape references that this shape has to outSubShapes.
-	virtual void					SaveSubShapeState(ShapeList &outSubShapes) const					{ /* By default do nothing */ }
+	virtual void					SaveSubShapeState([[maybe_unused]] ShapeList &outSubShapes) const					{ /* By default do nothing */ }
 
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
-	virtual void					RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
+	virtual void					RestoreSubShapeState([[maybe_unused]] const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
 	using ShapeToIDMap = UnorderedMap<const Shape *, uint32>;
 	using MaterialToIDMap = UnorderedMap<const PhysicsMaterial *, uint32>;

@@ -7,6 +7,7 @@
 #include <SamplesApp.h>
 #include <Application/EntryPoint.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Core/JobSystemSingleThreaded.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/StreamWrapper.h>
 #include <Jolt/Geometry/OrientedBox.h>
@@ -90,10 +91,12 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigVsSmallTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActiveEdgesTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MultithreadedTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ContactListenerTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ModifyMassTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActivateDuringUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SensorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DynamicMeshTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TwoDFunnelTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, AllowedDOFsTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ShapeFilterTest)
 
 static TestNameAndRTTI sGeneralTests[] =
@@ -127,9 +130,11 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Active Edges",						JPH_RTTI(ActiveEdgesTest) },
 	{ "Multithreaded",						JPH_RTTI(MultithreadedTest) },
 	{ "Contact Listener",					JPH_RTTI(ContactListenerTest) },
+	{ "Modify Mass",						JPH_RTTI(ModifyMassTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
 	{ "Sensor",								JPH_RTTI(SensorTest) },
 	{ "Dynamic Mesh",						JPH_RTTI(DynamicMeshTest) },
+	{ "Allowed Degrees of Freedom",			JPH_RTTI(AllowedDOFsTest) },
 	{ "Shape Filter",						JPH_RTTI(ShapeFilterTest) },
 };
 
@@ -358,8 +363,8 @@ SamplesApp::SamplesApp()
 	// Create job system
 	mJobSystem = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, mMaxConcurrentJobs - 1);
 
-	// Create job system without extra threads for validating
-	mJobSystemValidating = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, 0);
+	// Create single threaded job system for validating
+	mJobSystemValidating = new JobSystemSingleThreaded(cMaxPhysicsJobs);
 
 	{
 		// Disable allocation checking
@@ -397,7 +402,6 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateSlider(phys_settings, "Gravity (m/s^2)", -mPhysicsSystem->GetGravity().GetY(), 0.0f, 20.0f, 1.0f, [this](float inValue) { mPhysicsSystem->SetGravity(Vec3(0, -inValue, 0)); });
 			mDebugUI->CreateSlider(phys_settings, "Update Frequency (Hz)", mUpdateFrequency, 7.5f, 300.0f, 2.5f, [this](float inValue) { mUpdateFrequency = inValue; });
 			mDebugUI->CreateSlider(phys_settings, "Num Collision Steps", float(mCollisionSteps), 1.0f, 4.0f, 1.0f, [this](float inValue) { mCollisionSteps = int(inValue); });
-			mDebugUI->CreateSlider(phys_settings, "Num Integration Sub Steps", float(mIntegrationSubSteps), 1.0f, 4.0f, 1.0f, [this](float inValue) { mIntegrationSubSteps = int(inValue); });
 			mDebugUI->CreateSlider(phys_settings, "Num Velocity Steps", float(mPhysicsSettings.mNumVelocitySteps), 0, 30, 1, [this](float inValue) { mPhysicsSettings.mNumVelocitySteps = int(round(inValue)); mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Num Position Steps", float(mPhysicsSettings.mNumPositionSteps), 0, 30, 1, [this](float inValue) { mPhysicsSettings.mNumPositionSteps = int(round(inValue)); mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
 			mDebugUI->CreateSlider(phys_settings, "Baumgarte Stabilization Factor", mPhysicsSettings.mBaumgarte, 0.01f, 1.0f, 0.05f, [this](float inValue) { mPhysicsSettings.mBaumgarte = inValue; mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings); });
@@ -2165,7 +2169,7 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 	uint64 start_tick = GetProcessorTickCount();
 
 	// Step the world (with fixed frequency)
-	mPhysicsSystem->Update(delta_time, mCollisionSteps, mIntegrationSubSteps, mTempAllocator, inJobSystem);
+	mPhysicsSystem->Update(delta_time, mCollisionSteps, mTempAllocator, inJobSystem);
 #ifndef JPH_DISABLE_TEMP_ALLOCATOR
 	JPH_ASSERT(static_cast<TempAllocatorImpl *>(mTempAllocator)->IsEmpty());
 #endif // JPH_DISABLE_TEMP_ALLOCATOR
