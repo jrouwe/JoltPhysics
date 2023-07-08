@@ -95,7 +95,14 @@ void MeshShapeSettings::Sanitize()
 	for (int t = (int)mIndexedTriangles.size() - 1; t >= 0; --t)
 	{
 		const IndexedTriangle &tri = mIndexedTriangles[t];
+
+		// Get vertices
+		Vec3 v0(mTriangleVertices[tri.mIdx[0]]);
+		Vec3 v1(mTriangleVertices[tri.mIdx[1]]);
+		Vec3 v2(mTriangleVertices[tri.mIdx[2]]);
+
 		if (tri.IsDegenerate()										// Degenerate triangle
+			|| (v1 - v0).Cross(v2 - v0).IsNearZero()				// Sliver
 			|| !triangles.insert(tri.GetLowestIndexFirst()).second) // Duplicate triangle
 		{
 			// The order of triangles doesn't matter (gets reordered while building the tree), so we can just swap the last triangle into this slot
