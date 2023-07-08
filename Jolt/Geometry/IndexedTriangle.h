@@ -41,9 +41,13 @@ public:
 	}
 
 	/// Check if triangle is degenerate
-	bool			IsDegenerate() const
+	bool			IsDegenerate(const VertexList &inVertices) const
 	{
-		return mIdx[0] == mIdx[1] || mIdx[1] == mIdx[2] || mIdx[2] == mIdx[0];
+		Vec3 v0(inVertices[mIdx[0]]);
+		Vec3 v1(inVertices[mIdx[1]]);
+		Vec3 v2(inVertices[mIdx[2]]);
+
+		return (v1 - v0).Cross(v2 - v0).IsNearZero();
 	}
 
 	/// Rotate the vertices so that the second vertex becomes first etc. This does not change the represented triangle.
