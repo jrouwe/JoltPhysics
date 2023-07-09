@@ -293,6 +293,13 @@ static TestNameAndRTTI sVehicleTests[] =
 	{ "Car (SixDOFConstraint)",				JPH_RTTI(VehicleSixDOFTest) },
 };
 
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyTest)
+
+static TestNameAndRTTI sSoftBodyTests[] =
+{
+	{ "Soft Body",							JPH_RTTI(SoftBodyTest) },
+};
+
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseInsertionTest)
 
@@ -338,6 +345,7 @@ static TestCategory sAllCategories[] =
 	{ "Character", sCharacterTests, size(sCharacterTests) },
 	{ "Water", sWaterTests, size(sWaterTests) },
 	{ "Vehicle", sVehicleTests, size(sVehicleTests) },
+	{ "Soft Body", sSoftBodyTests, size(sSoftBodyTests) },
 	{ "Broad Phase", sBroadPhaseTests, size(sBroadPhaseTests) },
 	{ "Convex Collision", sConvexCollisionTests, size(sConvexCollisionTests) },
 	{ "Tools", sTools, size(sTools) } 
