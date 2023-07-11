@@ -79,6 +79,9 @@ public:
 	void					DrawRPM(DebugRenderer *inRenderer, RVec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inSize, float inShiftDownRPM, float inShiftUpRPM) const;
 #endif // JPH_DEBUG_RENDERER
 
+	/// If the engine is idle we allow the vehicle to sleep
+	bool					AllowSleep() const							{ return mCurrentRPM <= 1.01f * mMinRPM; }
+
 	/// Saving state for replay
 	void					SaveState(StateRecorder &inStream) const;
 	void					RestoreState(StateRecorder &inStream);

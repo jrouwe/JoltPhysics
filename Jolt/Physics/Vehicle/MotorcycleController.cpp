@@ -75,8 +75,10 @@ float MotorcycleController::GetWheelBase() const
 	{
 		const WheelSettings *s = w->GetSettings();
 
-		// Measure distance along the forward axis by looking at the fully extended suspension
-		float value = (s->mPosition + s->mSuspensionDirection * s->mSuspensionMaxLength).Dot(mConstraint.GetLocalForward());
+		// Measure distance along the forward axis by looking at the fully extended suspension.
+		// If the suspension force point is active, use that instead.
+		Vec3 force_point = s->mEnableSuspensionForcePoint? s->mSuspensionForcePoint : s->mPosition + s->mSuspensionDirection * s->mSuspensionMaxLength;
+		float value = force_point.Dot(mConstraint.GetLocalForward());
 
 		// Update min and max
 		low = min(low, value);
@@ -110,9 +112,16 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 		mTargetLean = mLeanSmoothingFactor * mTargetLean + (1.0f - mLeanSmoothingFactor) * target_lean;
 
 		// Remove forward component, we can only lean sideways
-		mTargetLean -= mTargetLean * mTargetLean.Dot(forward);
+		mTargetLean -= forward * mTargetLean.Dot(forward);
 		mTargetLean = mTargetLean.NormalizedOr(world_up);
 
+		// Clamp the target lean against the max lean angle
+		Vec3 adjusted_world_up = world_up - forward * world_up.Dot(forward);
+		adjusted_world_up = adjusted_world_up.NormalizedOr(world_up);
+		float w_angle = -Sign(mTargetLean.Cross(adjusted_world_up).Dot(forward)) * ACos(mTargetLean.Dot(adjusted_world_up));
+		if (abs(w_angle) > mMaxLeanAngle)
+			mTargetLean = Quat::sRotation(forward, Sign(w_angle) * mMaxLeanAngle) * adjusted_world_up;
+			
 		// Integrate the delta angle
 		Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
 		float d_angle = -Sign(mTargetLean.Cross(up).Dot(forward)) * ACos(mTargetLean.Dot(up));
