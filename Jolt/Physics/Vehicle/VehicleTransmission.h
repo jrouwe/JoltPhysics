@@ -69,6 +69,9 @@ public:
 	/// Return the transmission ratio based on the current gear (ratio between engine and differential)
 	float					GetCurrentRatio() const;
 
+	/// Only allow sleeping when the transmission is idle
+	bool					AllowSleep() const							{ return mGearSwitchTimeLeft <= 0.0f && mClutchReleaseTimeLeft <= 0.0f && mGearSwitchLatencyTimeLeft <= 0.0f; }
+
 	/// Saving state for replay
 	void					SaveState(StateRecorder &inStream) const;
 	void					RestoreState(StateRecorder &inStream);
