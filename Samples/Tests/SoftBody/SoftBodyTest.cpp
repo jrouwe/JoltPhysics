@@ -221,7 +221,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, float inLinearDampin
 					float v_tangential_length = v_tangential.Length();
 					if (v_tangential_length > 0.0f)
 					{
-						float lambda = v.mProjectedDistance * v.mInvMass;
+						float lambda = v.mProjectedDistance / v.mInvMass;
 						v.mVelocity -= v_tangential * min(friction * lambda / (v_tangential_length * dt), 1.0f);
 					}
 				}
