@@ -78,6 +78,7 @@ public:
 		Vec3 			mPosition;
 		Vec3 			mVelocity;
 		float			mInvMass;
+		float			mProjectedDistance;
 	};
 
 	using Edge = SoftBodySettings::Edge;
@@ -128,6 +129,9 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, float inLinearDampin
 				// Integrate
 				v.mPreviousPosition = v.mPosition;
 				v.mPosition += v.mVelocity * dt;
+
+				// Reset projected distance
+				v.mProjectedDistance = 0.0f;
 			}
 
 		// Satisfy edge constraints
@@ -146,7 +150,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, float inLinearDampin
 			v1.mPosition -= v1.mInvMass * correction;
 		}
 
-		// Satify volume constraints
+		// Satisfy volume constraints
 		for (const Volume &v : mVolumeConstraints)
 		{
 			Vertex &v1 = mVertices[v.mVertex[0]];
@@ -184,20 +188,44 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, float inLinearDampin
 			v4.mPosition += lambda * w4 * d4c;
 		}
 
-		// Satisfy collision (for now a single plane)
+		// Satisfy collision (for now a single static plane)
 		Plane plane(Vec3::sAxisY(), 0.0f);
+		float friction = 0.5f;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
 				float distance = plane.SignedDistance(v.mPosition);
 				if (distance < 0.0f)
+				{
 					v.mPosition -= plane.GetNormal() * distance;
+					v.mProjectedDistance -= distance; // For friction calculation
+				}
 			}
 
 		// Update velocity
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
+			{
 				v.mVelocity = (v.mPosition - v.mPreviousPosition) / dt;
+
+				// Apply friction as described in Detailed Rigid Body Simulation with Extended Position Based Dynamics - Matthias Muller et al.
+				// See section 3.6:
+				// lagrange multiplier for contact: lambda = -c / (1 / m1 + 1 / m2) where m2 is the mass of the plane (infinite) and c the constraint equation (the distance to the plane)
+				// contact normal force: fn = lambda / dt^2
+				// delta velocity due to friction = vt / |vt| * min(dt * friction * fn, |vt|)
+				// normal velocity: vn = (v1 - v2) . contact_normal (but v2 is zero because the plane is static)
+				// tangential velocity: vt = v1 - v2 - contact_normal * vn
+				if (v.mProjectedDistance > 0.0f)
+				{
+					Vec3 v_tangential = v.mVelocity - plane.GetNormal() * plane.GetNormal().Dot(v.mVelocity);
+					float v_tangential_length = v_tangential.Length();
+					if (v_tangential_length > 0.0f)
+					{
+						float lambda = v.mProjectedDistance * v.mInvMass;
+						v.mVelocity -= v_tangential * min(friction * lambda / (v_tangential_length * dt), 1.0f);
+					}
+				}
+			}
 	}
 }
 
