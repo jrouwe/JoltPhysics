@@ -27,6 +27,7 @@ public:
 	/// Constructor
 								SpringSettings() = default;
 								SpringSettings(const SpringSettings &) = default;
+	SpringSettings &			operator=(const SpringSettings &) = default;
 								SpringSettings(ESpringMode inMode, float inFrequencyOrStiffness, float inDamping) : mMode(inMode), mFrequency(inFrequencyOrStiffness), mDamping(inDamping) { }
 
 	/// Saves the contents of the spring settings in binary form to inStream.

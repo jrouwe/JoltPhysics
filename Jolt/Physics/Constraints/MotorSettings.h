@@ -30,6 +30,7 @@ public:
 	/// Constructor
 							MotorSettings() = default;
 							MotorSettings(const MotorSettings &) = default;
+	MotorSettings &			operator=(const MotorSettings &) = default;
 							MotorSettings(float inFrequency, float inDamping) : mSpringSettings(ESpringMode::FrequencyAndDamping, inFrequency, inDamping) { JPH_ASSERT(IsValid()); }
 							MotorSettings(float inFrequency, float inDamping, float inForceLimit, float inTorqueLimit) : mSpringSettings(ESpringMode::FrequencyAndDamping, inFrequency, inDamping), mMinForceLimit(-inForceLimit), mMaxForceLimit(inForceLimit), mMinTorqueLimit(-inTorqueLimit), mMaxTorqueLimit(inTorqueLimit) { JPH_ASSERT(IsValid()); }
 

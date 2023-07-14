@@ -53,6 +53,7 @@ public:
 	/// Constructor to initialize from another collector
 	template <class ResultTypeArg2>
 	explicit				CollisionCollector(const CollisionCollector<ResultTypeArg2, TraitsType> &inRHS) : mEarlyOutFraction(inRHS.GetEarlyOutFraction()), mContext(inRHS.GetContext()) { }
+							CollisionCollector(const CollisionCollector<ResultTypeArg, TraitsType> &inRHS) = default;
 
 	/// Destructor
 	virtual					~CollisionCollector() = default;
