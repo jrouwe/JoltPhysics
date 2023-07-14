@@ -19,7 +19,7 @@ public:
 	/// Constructor
 							SubShapeIDPair() = default;
 							SubShapeIDPair(const BodyID &inBody1ID, const SubShapeID &inSubShapeID1, const BodyID &inBody2ID, const SubShapeID &inSubShapeID2) : mBody1ID(inBody1ID), mSubShapeID1(inSubShapeID1), mBody2ID(inBody2ID), mSubShapeID2(inSubShapeID2) { }
-	SubShapeIDPair &		operator=(const SubShapeIDPair &) = default;
+	SubShapeIDPair &		operator = (const SubShapeIDPair &) = default;
 							SubShapeIDPair(const SubShapeIDPair &) = default;
 
 	/// Equality operator

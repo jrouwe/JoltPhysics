@@ -25,12 +25,11 @@ public:
 	/// Constructor
 								UVec4() = default; ///< Intentionally not initialized for performance reasons
 								UVec4(const UVec4 &inRHS) = default;
-	UVec4 &						operator=(const UVec4& inRHS) = default;
+	UVec4 &						operator = (const UVec4 &inRHS) = default;
 	JPH_INLINE					UVec4(Type inRHS) : mValue(inRHS)					{ }
 
 	/// Create a vector from 4 integer components
 	JPH_INLINE					UVec4(uint32 inX, uint32 inY, uint32 inZ, uint32 inW);
-
 
 	/// Comparison
 	JPH_INLINE bool				operator == (UVec4Arg inV2) const;

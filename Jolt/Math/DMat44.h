@@ -26,7 +26,7 @@ public:
 								DMat44() = default; ///< Intentionally not initialized for performance reasons
 	JPH_INLINE					DMat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, DVec3Arg inC4);
 								DMat44(const DMat44 &inM2) = default;
-	DMat44 &					operator=(const DMat44 &inM2) = default;
+	DMat44 &					operator = (const DMat44 &inM2) = default;
 	JPH_INLINE explicit			DMat44(Mat44Arg inM);
 	JPH_INLINE					DMat44(Mat44Arg inRot, DVec3Arg inT);
 	JPH_INLINE					DMat44(Type inC1, Type inC2, Type inC3, DTypeArg inC4);
