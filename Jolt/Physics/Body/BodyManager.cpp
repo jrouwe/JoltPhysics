@@ -640,38 +640,42 @@ void BodyManager::UnlockAllBodies() const
 
 void BodyManager::SaveState(StateRecorder &inStream) const
 {
+	BodyIDVector active_bodies;
+
 	{
 		LockAllBodies();
+
+		active_bodies.reserve(mNumActiveBodies);
 
 		// Count number of bodies
 		size_t num_bodies = 0;
 		for (const Body *b : mBodies)
-			if (sIsValidBodyPointer(b) && b->IsInBroadPhase())
+			if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && inStream.ShouldSaveBody(*b))
 				++num_bodies;
 		inStream.Write(num_bodies);
 	
 		// Write state of bodies
 		for (const Body *b : mBodies)
-			if (sIsValidBodyPointer(b) && b->IsInBroadPhase())
+			if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && inStream.ShouldSaveBody(*b))
 			{
 				inStream.Write(b->GetID());
 				b->SaveState(inStream);
+
+				// Add to list of active bodies
+				if (b->IsActive())
+					active_bodies.push_back(b->GetID());
 			}
 
 		UnlockAllBodies();
 	}
 
 	{
-		UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
-
 		// Write active bodies, sort because activation can come from multiple threads, so order is not deterministic
-		inStream.Write(mNumActiveBodies);
-		BodyIDVector sorted_active_bodies(mActiveBodies, mActiveBodies + mNumActiveBodies);
-		QuickSort(sorted_active_bodies.begin(), sorted_active_bodies.end());
-		for (const BodyID &id : sorted_active_bodies)
+		uint32 num_active_bodies = (uint32)active_bodies.size();
+		inStream.Write(num_active_bodies);
+		QuickSort(active_bodies.begin(), active_bodies.end());
+		for (const BodyID &id : active_bodies)
 			inStream.Write(id);
-
-		inStream.Write(mNumActiveCCDBodies);
 	}
 }
 
@@ -680,33 +684,57 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 	{
 		LockAllBodies();
 
-		// Read state of bodies, note this reads it in a way to be consistent with validation
-		size_t old_num_bodies = 0;
-		for (const Body *b : mBodies)
-			if (sIsValidBodyPointer(b) && b->IsInBroadPhase())
-				++old_num_bodies;
-		size_t num_bodies = old_num_bodies; // Initialize to current value for validation
-		inStream.Read(num_bodies);
-		if (num_bodies != old_num_bodies)
+		if (inStream.IsValidating())
 		{
-			JPH_ASSERT(false, "Cannot handle adding/removing bodies");
-			UnlockAllBodies();
-			return false;
-		}
-
-		for (Body *b : mBodies)
-			if (sIsValidBodyPointer(b) && b->IsInBroadPhase())
+			// Read state of bodies, note this reads it in a way to be consistent with validation
+			size_t old_num_bodies = 0;
+			for (const Body *b : mBodies)
+				if (sIsValidBodyPointer(b) && b->IsInBroadPhase())
+					++old_num_bodies;
+			size_t num_bodies = old_num_bodies; // Initialize to current value for validation
+			inStream.Read(num_bodies);
+			if (num_bodies != old_num_bodies)
 			{
-				BodyID body_id = b->GetID(); // Initialize to current value for validation
-				inStream.Read(body_id);
-				if (body_id != b->GetID())
+				JPH_ASSERT(false, "Cannot handle adding/removing bodies");
+				UnlockAllBodies();
+				return false;
+			}
+
+			for (Body *b : mBodies)
+				if (sIsValidBodyPointer(b) && b->IsInBroadPhase())
 				{
-					JPH_ASSERT(false, "Cannot handle adding/removing bodies");
+					BodyID body_id = b->GetID(); // Initialize to current value for validation
+					inStream.Read(body_id);
+					if (body_id != b->GetID())
+					{
+						JPH_ASSERT(false, "Cannot handle adding/removing bodies");
+						UnlockAllBodies();
+						return false;
+					}
+					b->RestoreState(inStream);
+				}
+		}
+		else
+		{
+			// Not validating, we can be a bit more loose, read number of bodies
+			size_t num_bodies = 0;
+			inStream.Read(num_bodies);
+
+			// Iterate over the stored bodies and restore their state
+			for (size_t idx = 0; idx < num_bodies; ++idx)
+			{
+				BodyID body_id;
+				inStream.Read(body_id);
+				Body *b = TryGetBody(body_id);
+				if (b == nullptr)
+				{
+					JPH_ASSERT(false, "Restoring state for non-existing body");
 					UnlockAllBodies();
 					return false;
 				}
 				b->RestoreState(inStream);
 			}
+		}
 
 		UnlockAllBodies();
 	}
@@ -717,6 +745,7 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 		// Mark current active bodies as deactivated
 		for (const BodyID *id = mActiveBodies, *id_end = mActiveBodies + mNumActiveBodies; id < id_end; ++id)
 			mBodies[id->GetIndex()]->mMotionProperties->mIndexInActiveBodies = Body::cInactiveIndex;
+		mNumActiveCCDBodies = 0;
 
 		QuickSort(mActiveBodies, mActiveBodies + mNumActiveBodies); // Sort for validation
 
@@ -725,10 +754,13 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 		for (BodyID *id = mActiveBodies, *id_end = mActiveBodies + mNumActiveBodies; id < id_end; ++id)
 		{
 			inStream.Read(*id);
-			mBodies[id->GetIndex()]->mMotionProperties->mIndexInActiveBodies = uint32(id - mActiveBodies);
-		}
+			MotionProperties *mp = mBodies[id->GetIndex()]->mMotionProperties;
+			mp->mIndexInActiveBodies = uint32(id - mActiveBodies);
 
-		inStream.Read(mNumActiveCCDBodies);
+			// Update number of CCD bodies
+			if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
+				++mNumActiveCCDBodies;
+		}
 	}
 
 	return true;

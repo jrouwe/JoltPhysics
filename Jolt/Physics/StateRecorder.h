@@ -9,6 +9,10 @@
 
 JPH_NAMESPACE_BEGIN
 
+class Body;
+class Constraint;
+class BodyID;
+
 /// Class that records the state of a physics system. Can be used to check if the simulation is deterministic by putting the recorder in validation mode.
 /// Can be used to restore the state to an earlier point in time.
 class JPH_EXPORT StateRecorder : public StreamIn, public StreamOut
@@ -24,6 +28,12 @@ public:
 	/// due to a ReadBytes function can be caught to find out which part of the simulation is not deterministic
 	void				SetValidating(bool inValidating)							{ mIsValidating = inValidating; }
 	bool				IsValidating() const										{ return mIsValidating; }
+
+	/// User callbacks that allow determining which parts of the simulation should be saved
+	/// Note that these functions will be called repeatedly for the same object(s) and should consistently return the same value or the saved state will be corrupt
+	virtual bool		ShouldSaveBody(const Body &inBody) const					{ return true; }
+	virtual bool		ShouldSaveConstraint(const Constraint &inConstraint) const	{ return true; }
+	virtual bool		ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const { return true; }
 
 private:
 	bool				mIsValidating = false;
