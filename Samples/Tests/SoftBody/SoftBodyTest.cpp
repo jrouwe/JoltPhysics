@@ -138,24 +138,6 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 				v.mProjectedDistance = 0.0f;
 			}
 
-		// Satisfy edge constraints
-		for (const Edge &e : mSettings->mEdgeConstraints)
-		{
-			Vertex &v0 = mVertices[e.mVertex[0]];
-			Vertex &v1 = mVertices[e.mVertex[1]];
-
-			// Calculate current length
-			Vec3 delta = v1.mPosition - v0.mPosition;
-			float length = delta.Length();
-			if (length > 0.0f)
-			{
-				// Apply correction
-				Vec3 correction = delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq));
-				v0.mPosition += v0.mInvMass * correction;
-				v1.mPosition -= v1.mInvMass * correction;
-			}
-		}
-
 		// Satisfy volume constraints
 		for (const Volume &v : mSettings->mVolumeConstraints)
 		{
@@ -193,6 +175,24 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 			v2.mPosition += lambda * w2 * d2c;
 			v3.mPosition += lambda * w3 * d3c;
 			v4.mPosition += lambda * w4 * d4c;
+		}
+
+		// Satisfy edge constraints
+		for (const Edge &e : mSettings->mEdgeConstraints)
+		{
+			Vertex &v0 = mVertices[e.mVertex[0]];
+			Vertex &v1 = mVertices[e.mVertex[1]];
+
+			// Calculate current length
+			Vec3 delta = v1.mPosition - v0.mPosition;
+			float length = delta.Length();
+			if (length > 0.0f)
+			{
+				// Apply correction
+				Vec3 correction = delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq));
+				v0.mPosition += v0.mInvMass * correction;
+				v1.mPosition -= v1.mInvMass * correction;
+			}
 		}
 
 		// Satisfy collision (for now a single static plane)
