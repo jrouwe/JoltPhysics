@@ -210,20 +210,24 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, float inLinearDampin
 
 				// Apply friction as described in Detailed Rigid Body Simulation with Extended Position Based Dynamics - Matthias Muller et al.
 				// See section 3.6:
-				// lagrange multiplier for contact: lambda = -c / (1 / m1 + 1 / m2) where m2 is the mass of the plane (infinite) and c the constraint equation (the distance to the plane)
-				// contact normal force: fn = lambda / dt^2
-				// delta velocity due to friction = vt / |vt| * min(dt * friction * fn, |vt|)
-				// normal velocity: vn = (v1 - v2) . contact_normal (but v2 is zero because the plane is static)
-				// tangential velocity: vt = v1 - v2 - contact_normal * vn
+				// Inverse mass: w1 = 1 / m1 (particle has no inertia), w2 = 0 (plane is static)
+				// Lagrange multiplier for contact: lambda = -c / (w1 + w2)
+				// Where c is the constraint equation (the distance to the plane, negative because penetrating)
+				// Contact normal force: fn = lambda / dt^2
+				// Delta velocity due to friction dv = -vt / |vt| * min(dt * friction * fn * (w1 + w2), |vt|) = -vt * min(-friction * c / (|vt| * dt), 1)
+				// Note that I think there is an error in the paper, I added a mass term, see: https://github.com/matthias-research/pages/issues/29
+				// Normal velocity: vn = (v1 - v2) . contact_normal (but v2 is zero because the plane is static)
+				// Tangential velocity: vt = v1 - v2 - contact_normal * vn
+				// Impulse: p = dv / (w1 + w2)
+				// Changes in particle velocities:
+				// v1 = v1 + p / m1
+				// v2 = v2 - p / m2 (but the plane is static so this is zero)
 				if (v.mProjectedDistance > 0.0f)
 				{
 					Vec3 v_tangential = v.mVelocity - plane.GetNormal() * plane.GetNormal().Dot(v.mVelocity);
 					float v_tangential_length = v_tangential.Length();
 					if (v_tangential_length > 0.0f)
-					{
-						float lambda = v.mProjectedDistance / v.mInvMass;
-						v.mVelocity -= v_tangential * min(friction * lambda / (v_tangential_length * dt), 1.0f);
-					}
+						v.mVelocity -= v_tangential * min(friction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
 				}
 			}
 	}
