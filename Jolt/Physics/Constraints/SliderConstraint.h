@@ -121,7 +121,7 @@ public:
 	SpringSettings &			GetLimitsSpringSettings()								{ return mLimitsSpringSettings; }
 	void						SetLimitsSpringSettings(const SpringSettings &inLimitsSpringSettings) { mLimitsSpringSettings = inLimitsSpringSettings; }
 
-	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
+	///@name Get Lagrange multiplier from last physics update (the linear/angular impulse applied to satisfy the constraint)
 	inline Vector<2> 			GetTotalLambdaPosition() const							{ return mPositionConstraintPart.GetTotalLambda(); }
 	inline float				GetTotalLambdaPositionLimits() const					{ return mPositionLimitsConstraintPart.GetTotalLambda(); }
 	inline Vec3					GetTotalLambdaRotation() const							{ return mRotationConstraintPart.GetTotalLambda(); }

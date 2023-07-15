@@ -78,7 +78,7 @@ public:
 	/// The constraints that constrain both gears (2 hinges), optional and used to calculate the rotation error and fix numerical drift.
 	void						SetConstraints(const Constraint *inGear1, const Constraint *inGear2)	{ mGear1Constraint = inGear1; mGear2Constraint = inGear2; }
 
-	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
+	///@name Get Lagrange multiplier from last physics update (the angular impulse applied to satisfy the constraint)
 	inline float				GetTotalLambda() const									{ return mGearConstraintPart.GetTotalLambda(); }
 
 private:

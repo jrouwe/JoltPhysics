@@ -25,6 +25,7 @@ public:
 	JPH_INLINE					Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec4Arg inC4);
 	JPH_INLINE					Mat44(Vec4Arg inC1, Vec4Arg inC2, Vec4Arg inC3, Vec3Arg inC4);
 								Mat44(const Mat44 &inM2) = default;
+	Mat44 &						operator = (const Mat44 &inM2) = default;
 	JPH_INLINE					Mat44(Type inC1, Type inC2, Type inC3, Type inC4);
 
 	/// Zero matrix

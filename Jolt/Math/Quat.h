@@ -38,6 +38,7 @@ public:
 	///@{
 	inline						Quat() = default; ///< Intentionally not initialized for performance reasons
 								Quat(const Quat &inRHS) = default;
+	Quat &						operator = (const Quat &inRHS) = default;
 	inline						Quat(float inX, float inY, float inZ, float inW)				: mValue(inX, inY, inZ, inW) { }
 	inline explicit				Quat(Vec4Arg inV)												: mValue(inV) { }
 	///@}
