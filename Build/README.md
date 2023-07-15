@@ -96,7 +96,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 - Install cmake (apt-get install cmake)
 - Run: ./cmake_linux_clang_gcc.sh
 - Go to the Linux_Debug folder
-- Run: make -j 8 && ./UnitTests
+- Run: make -j$(nproc) && ./UnitTests
 
 ### Linux (Debian flavor, MinGW Cross Compile)
 
@@ -109,7 +109,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 - Run: export WINEPATH="/usr/x86_64-w64-mingw32/lib;/usr/lib/gcc/x86_64-w64-mingw32/10-posix" (change it based on your environment)
 - Run: ./cmake_linux_mingw.sh Release (Debug doesn't work)
 - Go to the MinGW_Release folder
-- Run: make -j 8 && wine UnitTests.exe
+- Run: make -j$(nproc) && wine UnitTests.exe
 - Run: wine Samples.exe
 
 ### Android

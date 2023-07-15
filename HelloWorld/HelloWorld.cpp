@@ -37,7 +37,7 @@ using namespace std;
 
 // Callback for traces, connect this to your own trace function if you have one
 static void TraceImpl(const char *inFMT, ...)
-{ 
+{
 	// Format the message
 	va_list list;
 	va_start(list, inFMT);
@@ -53,7 +53,7 @@ static void TraceImpl(const char *inFMT, ...)
 
 // Callback for asserts, connect this to your own assert handler if you have one
 static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, uint inLine)
-{ 
+{
 	// Print to the TTY
 	cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr? inMessage : "") << endl;
 
@@ -155,7 +155,7 @@ public:
 		case Layers::NON_MOVING:
 			return inLayer2 == BroadPhaseLayers::MOVING;
 		case Layers::MOVING:
-			return true;	
+			return true;
 		default:
 			JPH_ASSERT(false);
 			return false;
@@ -187,7 +187,7 @@ public:
 	}
 
 	virtual void			OnContactRemoved(const SubShapeIDPair &inSubShapePair) override
-	{ 
+	{
 		cout << "A contact was removed" << endl;
 	}
 };
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
 	RegisterTypes();
 
 	// We need a temp allocator for temporary allocations during the physics update. We're
-	// pre-allocating 10 MB to avoid having to do allocations during the physics update. 
+	// pre-allocating 10 MB to avoid having to do allocations during the physics update.
 	// B.t.w. 10 MB is way too much for this example but it is a typical value you can use.
 	// If you don't want to pre-allocate you can also use TempAllocatorMalloc to fall back to
 	// malloc / free.
@@ -286,7 +286,7 @@ int main(int argc, char** argv)
 	BodyInterface &body_interface = physics_system.GetBodyInterface();
 
 	// Next we can create a rigid body to serve as the floor, we make a large box
-	// Create the settings for the collision volume (the shape). 
+	// Create the settings for the collision volume (the shape).
 	// Note that for simple shapes (like boxes) you can also directly construct a BoxShape.
 	BoxShapeSettings floor_shape_settings(Vec3(100.0f, 1.0f, 100.0f));
 

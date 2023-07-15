@@ -36,6 +36,7 @@ public:
 	/// Constructor
 								DVec3() = default; ///< Intentionally not initialized for performance reasons
 								DVec3(const DVec3 &inRHS) = default;
+	DVec3 &						operator = (const DVec3 &inRHS) = default;
 	JPH_INLINE explicit			DVec3(Vec3Arg inRHS);
 	JPH_INLINE explicit			DVec3(Vec4Arg inRHS);
 	JPH_INLINE					DVec3(TypeArg inRHS) : mValue(inRHS)			{ CheckW(); }
