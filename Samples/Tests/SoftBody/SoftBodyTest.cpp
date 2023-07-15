@@ -17,7 +17,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyTest)
 class SoftBodySettings : public RefTarget<SoftBodySettings>
 {
 public:
-	void				CalculateRestLengths()
+	void				CalculateEdgeLengths()
 	{
 		for (Edge &e : mEdgeConstraints)
 		{
@@ -26,7 +26,16 @@ public:
 		}
 	}
 
-	void				CalculateRestVolumes()
+	void				CalculateLRAMaxLengths()
+	{
+		for (LRA &l : mLRAConstraints)
+		{
+			l.mMaxLength = (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
+			JPH_ASSERT(l.mMaxLength > 0.0f);
+		}
+	}
+
+	void				CalculateVolumeConstraintVolumes()
 	{
 		for (Volume &v : mVolumeConstraints)
 		{
@@ -49,6 +58,12 @@ public:
 		float			mInvMass = 1.0f;
 	};
 
+	struct Face
+	{
+		uint32			mVertex[3];
+	};
+
+	/// An edge is kept at a constant length
 	struct Edge
 	{
 		uint32			mVertex[2];
@@ -56,11 +71,14 @@ public:
 		float			mCompliance = 0.0f;
 	};
 
-	struct Face
+	/// Long range attachment, a stick which only enforces a max length
+	struct LRA
 	{
-		uint32			mVertex[3];
+		uint32			mVertex[2];
+		float			mMaxLength = 1.0f;
 	};
 
+	/// Volume constraint, keeps the volume of a tetrahedron constant
 	struct Volume
 	{
 		uint32			mVertex[4];
@@ -69,14 +87,15 @@ public:
 	};
 
 	Array<Vertex>		mVertices;
+	Array<Face>			mFaces;
 	Array<Edge>			mEdgeConstraints;
-	Array<Face>			mFaceConstraints;
+	Array<LRA>			mLRAConstraints;
 	Array<Volume>		mVolumeConstraints;
 
 	float				mLinearDamping = 0.05f;
 	float				mRestitution = 0.0f;
 	float				mFriction = 0.2f;
-	float				mPressure = 0.0f; // n R T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
+	float				mPressure = 0.0f; ///< n R T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 };
 
 class SoftBody
@@ -89,9 +108,10 @@ public:
 	struct DrawSettings
 	{
 		bool			mDrawVertices = true;
-		bool			mDrawEdges = true;
 		bool			mDrawFaces = true;
-		bool			mDrawVolumes = true;
+		bool			mDrawEdges = true;
+		bool			mDrawLRAConstraints = true;
+		bool			mDrawVolumeConstraints = true;
 	};
 
 	void				Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSettings) const;
@@ -107,6 +127,7 @@ public:
 
 	using Edge = SoftBodySettings::Edge;
 	using Face = SoftBodySettings::Face;
+	using LRA = SoftBodySettings::LRA;
 	using Volume = SoftBodySettings::Volume;
 
 	RefConst<SoftBodySettings> mSettings;
@@ -145,7 +166,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 			// Calculate total volume
 			float six_volume = 0.0f;
 			Vec3 origin = mVertices[0].mPosition;
-			for (const Face &f : mSettings->mFaceConstraints)
+			for (const Face &f : mSettings->mFaces)
 			{
 				Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
 				Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
@@ -159,7 +180,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 				// Our pressure coefficient is n R T so the impulse is:
 				// P = F dt = pressure_coefficient / V * A * dt
 				float coefficient = pressure_coefficient * dt / six_volume; // Need to still multiply by 6 for the volume
-				for (const Face &f : mSettings->mFaceConstraints)
+				for (const Face &f : mSettings->mFaces)
 				{
 					Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
 					Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
@@ -230,6 +251,24 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 			v2.mPosition += lambda * w2 * d2c;
 			v3.mPosition += lambda * w3 * d3c;
 			v4.mPosition += lambda * w4 * d4c;
+		}
+
+		// Satisfy LRA constraints
+		for (const LRA &l : mSettings->mLRAConstraints)
+		{
+			Vertex &v0 = mVertices[l.mVertex[0]];
+			Vertex &v1 = mVertices[l.mVertex[1]];
+
+			// Calculate current length
+			Vec3 delta = v1.mPosition - v0.mPosition;
+			float length = delta.Length();
+			if (length > l.mMaxLength)
+			{
+				// Apply correction
+				Vec3 correction = delta * (length - l.mMaxLength) / (length * (v0.mInvMass + v1.mInvMass));
+				v0.mPosition += v0.mInvMass * correction;
+				v1.mPosition -= v1.mInvMass * correction;
+			}
 		}
 
 		// Satisfy edge constraints
@@ -318,12 +357,8 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 		for (const Vertex &v : mVertices)
 			inRenderer->DrawMarker(v.mPosition, Color::sRed, 0.05f);
 
-	if (inDrawSettings.mDrawEdges)
-		for (const Edge &e : mSettings->mEdgeConstraints)
-			inRenderer->DrawLine(mVertices[e.mVertex[0]].mPosition, mVertices[e.mVertex[1]].mPosition, Color::sWhite);
-
 	if (inDrawSettings.mDrawFaces)
-		for (const Face &f : mSettings->mFaceConstraints)
+		for (const Face &f : mSettings->mFaces)
 		{
 			Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
 			Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
@@ -332,7 +367,15 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 			inRenderer->DrawTriangle(x1, x2, x3, Color::sOrange);
 		}
 
-	if (inDrawSettings.mDrawVolumes)
+	if (inDrawSettings.mDrawEdges)
+		for (const Edge &e : mSettings->mEdgeConstraints)
+			inRenderer->DrawLine(mVertices[e.mVertex[0]].mPosition, mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+
+	if (inDrawSettings.mDrawLRAConstraints)
+		for (const LRA &l : mSettings->mLRAConstraints)
+			inRenderer->DrawLine(mVertices[l.mVertex[0]].mPosition, mVertices[l.mVertex[1]].mPosition, Color::sGreen);
+
+	if (inDrawSettings.mDrawVolumeConstraints)
 		for (const Volume &v : mSettings->mVolumeConstraints)
 		{
 			Vec3 x1 = mVertices[v.mVertex[0]].mPosition;
@@ -402,7 +445,7 @@ const SoftBodySettings *sCreateCloth()
 				settings->mEdgeConstraints.push_back(e);
 			}
 		}
-	settings->CalculateRestLengths();
+	settings->CalculateEdgeLengths();
 
 	return settings;
 }
@@ -446,7 +489,7 @@ static SoftBodySettings *sCreateCube()
 					settings->mEdgeConstraints.push_back(e);
 				}
 			}
-	settings->CalculateRestLengths();
+	settings->CalculateEdgeLengths();
 
 	// Tetrahedrons to fill a cube
 	const int tetra_indices[6][4][3] = {
@@ -470,7 +513,7 @@ static SoftBodySettings *sCreateCube()
 					settings->mVolumeConstraints.push_back(v);
 				}
 
-	settings->CalculateRestVolumes();
+	settings->CalculateVolumeConstraintVolumes();
 
 	return settings;
 }
@@ -507,28 +550,28 @@ static SoftBodySettings *sCreatePressurizedSphere()
 			return 2 + (inTheta - 1) * cNumPhi + inPhi % cNumPhi;
 	};
 
-	// Create edges
+	// Create LRA constraints
 	for (uint phi = 0; phi < cNumPhi; ++phi)
 	{
 		for (uint theta = 0; theta < cNumTheta - 1; ++theta)
 		{
-			SoftBodySettings::Edge e;
-			e.mVertex[0] = vertex_index(theta, phi);
+			SoftBodySettings::LRA l;
+			l.mVertex[0] = vertex_index(theta, phi);
 
-			e.mVertex[1] = vertex_index(theta + 1, phi);
-			settings->mEdgeConstraints.push_back(e);
+			l.mVertex[1] = vertex_index(theta + 1, phi);
+			settings->mLRAConstraints.push_back(l);
 
-			e.mVertex[1] = vertex_index(theta + 1, phi + 1);
-			settings->mEdgeConstraints.push_back(e);
+			l.mVertex[1] = vertex_index(theta + 1, phi + 1);
+			settings->mLRAConstraints.push_back(l);
 			
 			if (theta > 0)
 			{
-				e.mVertex[1] =  vertex_index(theta, phi + 1);
-				settings->mEdgeConstraints.push_back(e);
+				l.mVertex[1] =  vertex_index(theta, phi + 1);
+				settings->mLRAConstraints.push_back(l);
 			}
 		}
 	}
-	settings->CalculateRestLengths();
+	settings->CalculateLRAMaxLengths();
 
 	// Create faces
 	SoftBodySettings::Face f;
@@ -539,20 +582,20 @@ static SoftBodySettings *sCreatePressurizedSphere()
 			f.mVertex[0] = vertex_index(theta, phi);
 			f.mVertex[1] = vertex_index(theta + 1, phi);
 			f.mVertex[2] = vertex_index(theta + 1, phi + 1);
-			settings->mFaceConstraints.push_back(f);
+			settings->mFaces.push_back(f);
 
 			if (theta > 0 && theta < cNumTheta - 2)
 			{
 				f.mVertex[1] = vertex_index(theta + 1, phi + 1);
 				f.mVertex[2] = vertex_index(theta, phi + 1);
-				settings->mFaceConstraints.push_back(f);
+				settings->mFaces.push_back(f);
 			}
 		}
 
 		f.mVertex[0] = vertex_index(cNumTheta - 2, phi + 1);
 		f.mVertex[1] = vertex_index(cNumTheta - 2, phi);
 		f.mVertex[2] = vertex_index(cNumTheta - 1, 0);
-		settings->mFaceConstraints.push_back(f);
+		settings->mFaces.push_back(f);
 	}
 
 	settings->mPressure = 1000.0f;
