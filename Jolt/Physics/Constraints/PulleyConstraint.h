@@ -90,7 +90,7 @@ public:
 	/// Get the current length of both segments (multiplied by the ratio for segment 2)
 	float						GetCurrentLength() const									{ return Vec3(mWorldSpacePosition1 - mFixedPosition1).Length() + mRatio * Vec3(mWorldSpacePosition2 - mFixedPosition2).Length(); }
 
-	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
+	///@name Get Lagrange multiplier from last physics update (the linear impulse applied to satisfy the constraint)
 	inline float	 			GetTotalLambdaPosition() const								{ return mIndependentAxisConstraintPart.GetTotalLambda(); }
 
 private:

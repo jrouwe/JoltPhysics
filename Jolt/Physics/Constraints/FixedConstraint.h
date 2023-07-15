@@ -71,7 +71,7 @@ public:
 	virtual Mat44				GetConstraintToBody1Matrix() const override					{ return Mat44::sTranslation(mLocalSpacePosition1); }
 	virtual Mat44				GetConstraintToBody2Matrix() const override					{ return Mat44::sRotationTranslation(mInvInitialOrientation, mLocalSpacePosition2); }
 
-	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
+	///@name Get Lagrange multiplier from last physics update (the linear/angular impulse applied to satisfy the constraint)
 	inline Vec3					GetTotalLambdaPosition() const								{ return mPointConstraintPart.GetTotalLambda(); }
 	inline Vec3					GetTotalLambdaRotation() const								{ return mRotationConstraintPart.GetTotalLambda(); }
 

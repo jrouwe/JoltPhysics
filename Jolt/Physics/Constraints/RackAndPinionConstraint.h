@@ -80,7 +80,7 @@ public:
 	/// The constraints that constrain the rack and pinion (a slider and a hinge), optional and used to calculate the position error and fix numerical drift.
 	void						SetConstraints(const Constraint *inPinion, const Constraint *inRack)	{ mPinionConstraint = inPinion; mRackConstraint = inRack; }
 
-	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
+	///@name Get Lagrange multiplier from last physics update (the linear/angular impulse applied to satisfy the constraint)
 	inline float				GetTotalLambda() const													{ return mRackAndPinionConstraintPart.GetTotalLambda(); }
 
 private:

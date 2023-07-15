@@ -141,7 +141,7 @@ public:
 	/// Solve: R2 * ConstraintToBody2 = R1 * ConstraintToBody1 * q for q.
 	inline Quat					GetRotationInConstraintSpace() const;
 
-	///@name Get Lagrange multiplier from last physics update (relates to how much force/torque was applied to satisfy the constraint)
+	///@name Get Lagrange multiplier from last physics update (the linear/angular impulse applied to satisfy the constraint)
 	inline Vec3		 			GetTotalLambdaPosition() const								{ return mPointConstraintPart.GetTotalLambda(); }
 	inline float				GetTotalLambdaTwist() const									{ return mSwingTwistConstraintPart.GetTotalTwistLambda(); }
 	inline float				GetTotalLambdaSwingY() const								{ return mSwingTwistConstraintPart.GetTotalSwingYLambda(); }
