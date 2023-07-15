@@ -20,7 +20,10 @@ public:
 	void				CalculateRestLengths()
 	{
 		for (Edge &e : mEdgeConstraints)
+		{
 			e.mRestLength = (Vec3(mVertices[e.mVertex[1]].mPosition) - Vec3(mVertices[e.mVertex[0]].mPosition)).Length();
+			JPH_ASSERT(e.mRestLength > 0.0f);
+		}
 	}
 
 	void				CalculateRestVolumes()
@@ -53,6 +56,11 @@ public:
 		float			mCompliance = 0.0f;
 	};
 
+	struct Face
+	{
+		uint32			mVertex[3];
+	};
+
 	struct Volume
 	{
 		uint32			mVertex[4];
@@ -62,11 +70,13 @@ public:
 
 	Array<Vertex>		mVertices;
 	Array<Edge>			mEdgeConstraints;
+	Array<Face>			mFaceConstraints;
 	Array<Volume>		mVolumeConstraints;
 
 	float				mLinearDamping = 0.05f;
 	float				mRestitution = 0.0f;
 	float				mFriction = 0.2f;
+	float				mPressure = 0.0f;
 };
 
 class SoftBody
@@ -75,7 +85,16 @@ public:
 						SoftBody(const SoftBodySettings *inSettings, Mat44Arg inWorldTransform);
 
 	void				Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations);
-	void				Draw(DebugRenderer *inRenderer) const;
+
+	struct DrawSettings
+	{
+		bool			mDrawVertices = true;
+		bool			mDrawEdges = true;
+		bool			mDrawFaces = true;
+		bool			mDrawVolumes = true;
+	};
+
+	void				Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSettings) const;
 
 	struct Vertex
 	{
@@ -87,7 +106,7 @@ public:
 	};
 
 	using Edge = SoftBodySettings::Edge;
-
+	using Face = SoftBodySettings::Face;
 	using Volume = SoftBodySettings::Volume;
 
 	RefConst<SoftBodySettings> mSettings;
@@ -257,29 +276,42 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 	}
 }
 
-void SoftBody::Draw(DebugRenderer *inRenderer) const
+void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSettings) const
 {
-	for (const Vertex &v : mVertices)
-		inRenderer->DrawMarker(v.mPosition, Color::sRed, 0.05f);
+	if (inDrawSettings.mDrawVertices)
+		for (const Vertex &v : mVertices)
+			inRenderer->DrawMarker(v.mPosition, Color::sRed, 0.05f);
 
-	for (const Edge &e : mSettings->mEdgeConstraints)
-		inRenderer->DrawLine(mVertices[e.mVertex[0]].mPosition, mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+	if (inDrawSettings.mDrawEdges)
+		for (const Edge &e : mSettings->mEdgeConstraints)
+			inRenderer->DrawLine(mVertices[e.mVertex[0]].mPosition, mVertices[e.mVertex[1]].mPosition, Color::sWhite);
 
-	for (const Volume &v : mSettings->mVolumeConstraints)
-	{
-		Vec3 x1 = mVertices[v.mVertex[0]].mPosition;
-		Vec3 x2 = mVertices[v.mVertex[1]].mPosition;
-		Vec3 x3 = mVertices[v.mVertex[2]].mPosition;
-		Vec3 x4 = mVertices[v.mVertex[3]].mPosition;
+	if (inDrawSettings.mDrawFaces)
+		for (const Face &f : mSettings->mFaceConstraints)
+		{
+			Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
+			Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
+			Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
 
-		inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow);
-		inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow);
-		inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow);
-		inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow);
-	}
+			inRenderer->DrawTriangle(x1, x2, x3, Color::sOrange);
+		}
+
+	if (inDrawSettings.mDrawVolumes)
+		for (const Volume &v : mSettings->mVolumeConstraints)
+		{
+			Vec3 x1 = mVertices[v.mVertex[0]].mPosition;
+			Vec3 x2 = mVertices[v.mVertex[1]].mPosition;
+			Vec3 x3 = mVertices[v.mVertex[2]].mPosition;
+			Vec3 x4 = mVertices[v.mVertex[3]].mPosition;
+
+			inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow);
+			inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow);
+			inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow);
+			inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow);
+		}
 }
 
-static SoftBody *sSoftBodies[3];
+static SoftBody *sSoftBodies[4];
 
 SoftBodyTest::~SoftBodyTest()
 {
@@ -407,6 +439,89 @@ static SoftBodySettings *sCreateCube()
 	return settings;
 }
 
+static SoftBodySettings *sCreatePressurizedSphere()
+{
+	const uint cNumTheta = 10;
+	const uint cNumPhi = 20;
+
+	// Create settings
+	SoftBodySettings *settings = new SoftBodySettings;
+
+	// Create vertices
+	SoftBodySettings::Vertex v;
+	Vec3::sUnitSpherical(0, 0).StoreFloat3(&v.mPosition);
+	settings->mVertices.push_back(v);
+	Vec3::sUnitSpherical(JPH_PI, 0).StoreFloat3(&v.mPosition);
+	settings->mVertices.push_back(v);
+	for (uint theta = 1; theta < cNumTheta - 1; ++theta)
+		for (uint phi = 0; phi < cNumPhi; ++phi)
+		{
+			Vec3::sUnitSpherical(JPH_PI * theta / (cNumTheta - 1), 2.0f * JPH_PI * phi / cNumPhi).StoreFloat3(&v.mPosition);
+			settings->mVertices.push_back(v);
+		}
+
+	// Function to get the vertex index of a point on the sphere
+	auto vertex_index = [cNumTheta, cNumPhi](uint inTheta, uint inPhi) -> uint
+	{
+		if (inTheta == 0)
+			return 0;
+		else if (inTheta == cNumTheta - 1)
+			return 1;
+		else
+			return 2 + (inTheta - 1) * cNumPhi + inPhi % cNumPhi;
+	};
+
+	// Create edges
+	for (uint phi = 0; phi < cNumPhi; ++phi)
+	{
+		for (uint theta = 0; theta < cNumTheta - 1; ++theta)
+		{
+			SoftBodySettings::Edge e;
+			e.mVertex[0] = vertex_index(theta, phi);
+
+			e.mVertex[1] = vertex_index(theta + 1, phi);
+			settings->mEdgeConstraints.push_back(e);
+
+			e.mVertex[1] = vertex_index(theta + 1, phi + 1);
+			settings->mEdgeConstraints.push_back(e);
+			
+			if (theta > 0)
+			{
+				e.mVertex[1] =  vertex_index(theta, phi + 1);
+				settings->mEdgeConstraints.push_back(e);
+			}
+		}
+	}
+	settings->CalculateRestLengths();
+
+	// Create faces
+	SoftBodySettings::Face f;
+	for (uint phi = 0; phi < cNumPhi; ++phi)
+	{
+		for (uint theta = 0; theta < cNumTheta - 1; ++theta)
+		{
+			f.mVertex[0] = vertex_index(theta, phi);
+			f.mVertex[1] = vertex_index(theta + 1, phi);
+			f.mVertex[2] = vertex_index(theta + 1, phi + 1);
+			settings->mFaceConstraints.push_back(f);
+
+			if (theta > 0 && theta < cNumTheta - 2)
+			{
+				f.mVertex[1] = vertex_index(theta + 1, phi + 1);
+				f.mVertex[2] = vertex_index(theta, phi + 1);
+				settings->mFaceConstraints.push_back(f);
+			}
+		}
+
+		f.mVertex[0] = vertex_index(cNumTheta - 2, phi + 1);
+		f.mVertex[1] = vertex_index(cNumTheta - 2, phi);
+		f.mVertex[2] = vertex_index(cNumTheta - 1, 0);
+		settings->mFaceConstraints.push_back(f);
+	}
+
+	return settings;
+}
+
 void SoftBodyTest::Initialize()
 {
 	const Quat cCubeOrientation = Quat::sRotation(Vec3::sReplicate(sqrt(1.0f / 3.0f)), DegreesToRadians(45.0f));
@@ -423,6 +538,9 @@ void SoftBodyTest::Initialize()
 	SoftBodySettings *cube2 = sCreateCube();
 	cube2->mRestitution = 1.0f;
 	sSoftBodies[2] = new SoftBody(cube2, Mat44::sRotationTranslation(cCubeOrientation, Vec3(40.0f, 10.0f, 0.0f)));
+
+	SoftBodySettings *sphere = sCreatePressurizedSphere();
+	sSoftBodies[3] = new SoftBody(sphere, Mat44::sTranslation(Vec3(30.0f, 10.0f, 10.0f)));
 }
 
 void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -431,6 +549,7 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	{
 		s->Update(1.0f / 60.0f, Vec3(0.0f, -9.8f, 0.0f), 5);
 
-		s->Draw(DebugRenderer::sInstance);
+		SoftBody::DrawSettings settings;
+		s->Draw(DebugRenderer::sInstance, settings);
 	}
 }
