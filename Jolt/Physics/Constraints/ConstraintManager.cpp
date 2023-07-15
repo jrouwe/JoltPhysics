@@ -103,7 +103,15 @@ void ConstraintManager::sSortConstraints(Constraint **inActiveConstraints, uint3
 {
 	JPH_PROFILE_FUNCTION();
 
-	QuickSort(inConstraintIdxBegin, inConstraintIdxEnd, [inActiveConstraints](uint32 inLHS, uint32 inRHS) { return inActiveConstraints[inLHS]->mConstraintIndex < inActiveConstraints[inRHS]->mConstraintIndex; });
+	QuickSort(inConstraintIdxBegin, inConstraintIdxEnd, [inActiveConstraints](uint32 inLHS, uint32 inRHS) {
+		const Constraint *lhs = inActiveConstraints[inLHS];
+		const Constraint *rhs = inActiveConstraints[inRHS];
+
+		if (lhs->GetConstraintPriority() != rhs->GetConstraintPriority())
+			return lhs->GetConstraintPriority() < rhs->GetConstraintPriority();
+
+		return lhs->mConstraintIndex < rhs->mConstraintIndex;
+	});
 }
 
 void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstraints, uint32 inNumActiveConstraints, float inDeltaTime)
