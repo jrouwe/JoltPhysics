@@ -76,7 +76,7 @@ public:
 	float				mLinearDamping = 0.05f;
 	float				mRestitution = 0.0f;
 	float				mFriction = 0.2f;
-	float				mPressure = 0.0f;
+	float				mPressure = 0.0f; // n R T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 };
 
 class SoftBody
@@ -139,6 +139,42 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 
 	for (uint iteration = 0; iteration < inNumIterations; ++iteration)
 	{
+		float pressure_coefficient = mSettings->mPressure;
+		if (pressure_coefficient > 0.0f)
+		{
+			// Calculate total volume
+			float six_volume = 0.0f;
+			Vec3 origin = mVertices[0].mPosition;
+			for (const Face &f : mSettings->mFaceConstraints)
+			{
+				Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
+				Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
+				Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
+				six_volume += (x1 - origin).Cross(x2 - origin).Dot(x3 - origin);
+			}
+			if (six_volume > 0.0f)
+			{
+				// Apply pressure
+				// p = F / A = n R T / V (see https://en.wikipedia.org/wiki/Pressure)
+				// Our pressure coefficient is n R T so the impulse is:
+				// P = F dt = pressure_coefficient / V * A * dt
+				float coefficient = pressure_coefficient * dt / six_volume; // Need to still multiply by 6 for the volume
+				for (const Face &f : mSettings->mFaceConstraints)
+				{
+					Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
+					Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
+					Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
+
+					Vec3 impulse = coefficient * (x2 - x1).Cross(x3 - x1); // Area is half the cross product so need to still divide by 2
+					for (int i = 0; i < 3; ++i)
+					{
+						Vertex &v = mVertices[f.mVertex[i]];
+						v.mVelocity += v.mInvMass * impulse; // Want to divide by 3 because we spread over 3 vertices
+					}
+				}
+			}
+		}
+
 		// Integrate
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
@@ -518,6 +554,8 @@ static SoftBodySettings *sCreatePressurizedSphere()
 		f.mVertex[2] = vertex_index(cNumTheta - 1, 0);
 		settings->mFaceConstraints.push_back(f);
 	}
+
+	settings->mPressure = 1000.0f;
 
 	return settings;
 }
