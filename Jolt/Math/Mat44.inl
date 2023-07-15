@@ -732,18 +732,12 @@ float Mat44::GetDeterminant3x3() const
 Mat44 Mat44::Adjointed3x3() const
 {
 	return Mat44(
-		Vec4(JPH_EL(1, 1) * JPH_EL(2, 2) - JPH_EL(1, 2) * JPH_EL(2, 1),
-			JPH_EL(1, 2) * JPH_EL(2, 0) - JPH_EL(1, 0) * JPH_EL(2, 2),
-			JPH_EL(1, 0) * JPH_EL(2, 1) - JPH_EL(1, 1) * JPH_EL(2, 0),
-			0),
-		Vec4(JPH_EL(0, 2) * JPH_EL(2, 1) - JPH_EL(0, 1) * JPH_EL(2, 2),
-			JPH_EL(0, 0) * JPH_EL(2, 2) - JPH_EL(0, 2) * JPH_EL(2, 0),
-			JPH_EL(0, 1) * JPH_EL(2, 0) - JPH_EL(0, 0) * JPH_EL(2, 1),
-			0),
-		Vec4(JPH_EL(0, 1) * JPH_EL(1, 2) - JPH_EL(0, 2) * JPH_EL(1, 1),
-			JPH_EL(0, 2) * JPH_EL(1, 0) - JPH_EL(0, 0) * JPH_EL(1, 2),
-			JPH_EL(0, 0) * JPH_EL(1, 1) - JPH_EL(0, 1) * JPH_EL(1, 0),
-			0),
+		Vec4(JPH_EL(1, 1), JPH_EL(1, 2), JPH_EL(1, 0), 0) * Vec4(JPH_EL(2, 2), JPH_EL(2, 0), JPH_EL(2, 1), 0)
+			- Vec4(JPH_EL(1, 2), JPH_EL(1, 0), JPH_EL(1, 1), 0) * Vec4(JPH_EL(2, 1), JPH_EL(2, 2), JPH_EL(2, 0), 0),
+		Vec4(JPH_EL(0, 2), JPH_EL(0, 0), JPH_EL(0, 1), 0) * Vec4(JPH_EL(2, 1), JPH_EL(2, 2), JPH_EL(2, 0), 0)
+			- Vec4(JPH_EL(0, 1), JPH_EL(0, 2), JPH_EL(0, 0), 0) * Vec4(JPH_EL(2, 2), JPH_EL(2, 0), JPH_EL(2, 1), 0),
+		Vec4(JPH_EL(0, 1), JPH_EL(0, 2), JPH_EL(0, 0), 0) * Vec4(JPH_EL(1, 2), JPH_EL(1, 0), JPH_EL(1, 1), 0)
+			- Vec4(JPH_EL(0, 2), JPH_EL(0, 0), JPH_EL(0, 1), 0) * Vec4(JPH_EL(1, 1), JPH_EL(1, 2), JPH_EL(1, 0), 0),
 		Vec4(0, 0, 0, 1));
 }
 
@@ -752,18 +746,12 @@ Mat44 Mat44::Inversed3x3() const
 	float det = GetDeterminant3x3();
 
 	return Mat44(
-		Vec4((JPH_EL(1, 1) * JPH_EL(2, 2) - JPH_EL(1, 2) * JPH_EL(2, 1)),
-			(JPH_EL(1, 2) * JPH_EL(2, 0) - JPH_EL(1, 0) * JPH_EL(2, 2)),
-			(JPH_EL(1, 0) * JPH_EL(2, 1) - JPH_EL(1, 1) * JPH_EL(2, 0)),
-			0) / det,
-		Vec4((JPH_EL(0, 2) * JPH_EL(2, 1) - JPH_EL(0, 1) * JPH_EL(2, 2)),
-			(JPH_EL(0, 0) * JPH_EL(2, 2) - JPH_EL(0, 2) * JPH_EL(2, 0)),
-			(JPH_EL(0, 1) * JPH_EL(2, 0) - JPH_EL(0, 0) * JPH_EL(2, 1)),
-			0) / det,
-		Vec4((JPH_EL(0, 1) * JPH_EL(1, 2) - JPH_EL(0, 2) * JPH_EL(1, 1)),
-			(JPH_EL(0, 2) * JPH_EL(1, 0) - JPH_EL(0, 0) * JPH_EL(1, 2)),
-			(JPH_EL(0, 0) * JPH_EL(1, 1) - JPH_EL(0, 1) * JPH_EL(1, 0)),
-			0) / det,
+		(Vec4(JPH_EL(1, 1), JPH_EL(1, 2), JPH_EL(1, 0), 0) * Vec4(JPH_EL(2, 2), JPH_EL(2, 0), JPH_EL(2, 1), 0)
+			- Vec4(JPH_EL(1, 2), JPH_EL(1, 0), JPH_EL(1, 1), 0) * Vec4(JPH_EL(2, 1), JPH_EL(2, 2), JPH_EL(2, 0), 0)) / det,
+		(Vec4(JPH_EL(0, 2), JPH_EL(0, 0), JPH_EL(0, 1), 0) * Vec4(JPH_EL(2, 1), JPH_EL(2, 2), JPH_EL(2, 0), 0)
+			- Vec4(JPH_EL(0, 1), JPH_EL(0, 2), JPH_EL(0, 0), 0) * Vec4(JPH_EL(2, 2), JPH_EL(2, 0), JPH_EL(2, 1), 0)) / det,
+		(Vec4(JPH_EL(0, 1), JPH_EL(0, 2), JPH_EL(0, 0), 0) * Vec4(JPH_EL(1, 2), JPH_EL(1, 0), JPH_EL(1, 1), 0)
+			- Vec4(JPH_EL(0, 2), JPH_EL(0, 0), JPH_EL(0, 1), 0) * Vec4(JPH_EL(1, 1), JPH_EL(1, 2), JPH_EL(1, 0), 0)) / det,
 		Vec4(0, 0, 0, 1));
 }
 
