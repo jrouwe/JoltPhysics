@@ -640,23 +640,30 @@ void BodyManager::UnlockAllBodies() const
 
 void BodyManager::SaveState(StateRecorder &inStream) const
 {
+	const StateRecorderFilter *filter = inStream.GetFilter();
+
 	BodyIDVector active_bodies;
 
 	{
 		LockAllBodies();
 
-		active_bodies.reserve(mNumActiveBodies);
+		// Determine which bodies to save
+		Array<const Body *> bodies;
+		if (filter == nullptr || filter->ShouldSaveBodies())
+		{
+			bodies.reserve(mNumBodies);
+			for (const Body *b : mBodies)
+				if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && (filter == nullptr || filter->ShouldSaveBody(*b)))
+					bodies.push_back(b);
+		}
 
-		// Count number of bodies
-		size_t num_bodies = 0;
-		for (const Body *b : mBodies)
-			if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && inStream.ShouldSaveBody(*b))
-				++num_bodies;
-		inStream.Write(num_bodies);
-	
 		// Write state of bodies
-		for (const Body *b : mBodies)
-			if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && inStream.ShouldSaveBody(*b))
+		size_t num_bodies = bodies.size();
+		inStream.Write(num_bodies);
+		if (num_bodies > 0)
+		{
+			active_bodies.reserve(mNumActiveBodies);
+			for (const Body *b : bodies)
 			{
 				inStream.Write(b->GetID());
 				b->SaveState(inStream);
@@ -665,18 +672,17 @@ void BodyManager::SaveState(StateRecorder &inStream) const
 				if (b->IsActive())
 					active_bodies.push_back(b->GetID());
 			}
+		}
 
 		UnlockAllBodies();
 	}
 
-	{
-		// Write active bodies, sort because activation can come from multiple threads, so order is not deterministic
-		uint32 num_active_bodies = (uint32)active_bodies.size();
-		inStream.Write(num_active_bodies);
-		QuickSort(active_bodies.begin(), active_bodies.end());
-		for (const BodyID &id : active_bodies)
-			inStream.Write(id);
-	}
+	// Write active bodies, sort because activation can come from multiple threads, so order is not deterministic
+	uint32 num_active_bodies = (uint32)active_bodies.size();
+	inStream.Write(num_active_bodies);
+	QuickSort(active_bodies.begin(), active_bodies.end());
+	for (const BodyID &id : active_bodies)
+		inStream.Write(id);
 }
 
 bool BodyManager::RestoreState(StateRecorder &inStream)

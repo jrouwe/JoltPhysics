@@ -390,71 +390,85 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream)
 {
 	JPH_ASSERT(mIsFinalized);
 
+	const StateRecorderFilter *filter = inStream.GetFilter();
+
 	// Get contents of cache
 	Array<const BPKeyValue *> all_bp;
 	GetAllBodyPairsSorted(all_bp);
 
-	// Write amount of body pairs
-	size_t num_body_pairs = 0;
-	for (const BPKeyValue *bp_kv : all_bp)
-		if (inStream.ShouldSaveContact(bp_kv->GetKey().mBodyA, bp_kv->GetKey().mBodyB))
-			++num_body_pairs;
+	// Determine which ones to save
+	Array<const BPKeyValue *> selected_bp;
+	if (filter == nullptr)
+		selected_bp = std::move(all_bp);
+	else if (filter->ShouldSaveContacts())
+	{
+		selected_bp.reserve(all_bp.size());
+		for (const BPKeyValue *bp_kv : all_bp)
+			if (filter->ShouldSaveContact(bp_kv->GetKey().mBodyA, bp_kv->GetKey().mBodyB))
+				selected_bp.push_back(bp_kv);
+	}
+
+	// Write body pairs
+	size_t num_body_pairs = selected_bp.size();
 	inStream.Write(num_body_pairs);
+	for (const BPKeyValue *bp_kv : selected_bp)
+	{
+		// Write body pair key
+		inStream.Write(bp_kv->GetKey());
 
-	// Write all body pairs
-	for (const BPKeyValue *bp_kv : all_bp)
-		if (inStream.ShouldSaveContact(bp_kv->GetKey().mBodyA, bp_kv->GetKey().mBodyB))
+		// Write body pair
+		const CachedBodyPair &bp = bp_kv->GetValue();
+		bp.SaveState(inStream);
+
+		// Get attached manifolds
+		Array<const MKeyValue *> all_m;
+		GetAllManifoldsSorted(bp, all_m);
+
+		// Write num manifolds
+		size_t num_manifolds = all_m.size();
+		inStream.Write(num_manifolds);
+
+		// Write all manifolds
+		for (const MKeyValue *m_kv : all_m)
 		{
-			// Write body pair key
-			inStream.Write(bp_kv->GetKey());
+			// Write key
+			inStream.Write(m_kv->GetKey());
+			const CachedManifold &cm = m_kv->GetValue();
+			JPH_ASSERT((cm.mFlags & (uint16)CachedManifold::EFlags::CCDContact) == 0);
 
-			// Write body pair
-			const CachedBodyPair &bp = bp_kv->GetValue();
-			bp.SaveState(inStream);
+			// Write amount of contacts
+			inStream.Write(cm.mNumContactPoints);
 
-			// Get attached manifolds
-			Array<const MKeyValue *> all_m;
-			GetAllManifoldsSorted(bp, all_m);
+			// Write manifold
+			cm.SaveState(inStream);
 
-			// Write num manifolds
-			size_t num_manifolds = all_m.size();
-			inStream.Write(num_manifolds);
-
-			// Write all manifolds
-			for (const MKeyValue *m_kv : all_m)
-			{
-				// Write key
-				inStream.Write(m_kv->GetKey());
-				const CachedManifold &cm = m_kv->GetValue();
-				JPH_ASSERT((cm.mFlags & (uint16)CachedManifold::EFlags::CCDContact) == 0);
-
-				// Write amount of contacts
-				inStream.Write(cm.mNumContactPoints);
-
-				// Write manifold
-				cm.SaveState(inStream);
-
-				// Write contact points
-				for (uint32 i = 0; i < cm.mNumContactPoints; ++i)
-					cm.mContactPoints[i].SaveState(inStream);
-			}
+			// Write contact points
+			for (uint32 i = 0; i < cm.mNumContactPoints; ++i)
+				cm.mContactPoints[i].SaveState(inStream);
 		}
+	}
 
 	// Get CCD manifolds
 	Array<const MKeyValue *> all_m;
 	GetAllCCDManifoldsSorted(all_m);
 
-	// Write num CCD manifolds
-	size_t num_manifolds = 0;
-	for (const MKeyValue *m_kv : all_m)
-		if (inStream.ShouldSaveContact(m_kv->GetKey().GetBody1ID(), m_kv->GetKey().GetBody2ID()))
-			++num_manifolds;
-	inStream.Write(num_manifolds);
+	// Determine which ones to save
+	Array<const MKeyValue *> selected_m;
+	if (filter == nullptr)
+		selected_m = std::move(all_m);
+	else if (filter->ShouldSaveContacts())
+	{
+		selected_m.reserve(all_m.size());
+		for (const MKeyValue *m_kv : all_m)
+			if (filter->ShouldSaveContact(m_kv->GetKey().GetBody1ID(), m_kv->GetKey().GetBody2ID()))
+				selected_m.push_back(m_kv);
+	}
 
 	// Write all CCD manifold keys
-	for (const MKeyValue *m_kv : all_m)
-		if (inStream.ShouldSaveContact(m_kv->GetKey().GetBody1ID(), m_kv->GetKey().GetBody2ID()))
-			inStream.Write(m_kv->GetKey());
+	size_t num_manifolds = selected_m.size();
+	inStream.Write(num_manifolds);
+	for (const MKeyValue *m_kv : selected_m)
+		inStream.Write(m_kv->GetKey());
 }
 
 bool ContactConstraintManager::ManifoldCache::RestoreState(const ManifoldCache &inReadCache, StateRecorder &inStream)

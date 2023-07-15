@@ -217,20 +217,43 @@ void ConstraintManager::DrawConstraintReferenceFrame(DebugRenderer *inRenderer) 
 
 void ConstraintManager::SaveState(StateRecorder &inStream) const
 {	
+	const StateRecorderFilter *filter = inStream.GetFilter();
+
 	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	// Write state of constraints
-	size_t num_constraints = 0;
-	for (const Ref<Constraint> &c : mConstraints)
-		if (inStream.ShouldSaveConstraint(*c))
-			++num_constraints;
-	inStream.Write(num_constraints);
-	for (const Ref<Constraint> &c : mConstraints)
-		if (inStream.ShouldSaveConstraint(*c))
+	if (filter != nullptr)
+	{
+		// Determine which constraints to save
+		Array<Constraint *> constraints;
+		if (filter->ShouldSaveConstraints())
+		{
+			constraints.reserve(mConstraints.size());
+			for (const Ref<Constraint> &c : mConstraints)
+				if (filter->ShouldSaveConstraint(*c))
+					constraints.push_back(c);
+		}
+
+		// Save them
+		size_t num_constraints = constraints.size();
+		inStream.Write(num_constraints);
+		for (const Ref<Constraint> &c : constraints)
 		{
 			inStream.Write(c->mConstraintIndex);
 			c->SaveState(inStream);
 		}
+	}
+	else
+	{
+		// Save all constraints
+		size_t num_constraints = mConstraints.size();
+		inStream.Write(num_constraints);
+		for (const Ref<Constraint> &c : mConstraints)
+		{
+			inStream.Write(c->mConstraintIndex);
+			c->SaveState(inStream);
+		}
+	}
 }
 
 bool ConstraintManager::RestoreState(StateRecorder &inStream)
@@ -247,10 +270,9 @@ bool ConstraintManager::RestoreState(StateRecorder &inStream)
 			JPH_ASSERT(false, "Cannot handle adding/removing constraints");
 			return false;
 		}
-
 		for (const Ref<Constraint> &c : mConstraints)
 		{
-			uint32 constraint_index;
+			uint32 constraint_index = c->mConstraintIndex;
 			inStream.Read(constraint_index);
 			if (constraint_index != c->mConstraintIndex)
 			{
