@@ -380,7 +380,7 @@ If you want cross platform determinism then please turn on the CROSS_PLATFORM_DE
 * Compiler used to compile the library (tested MSVC2022 vs clang)
 * Configuration (Debug, Release or Distribution)
 * OS (tested Windows vs Linux)
-* Architecture (x86 or ARM)
+* Architecture (x86 or ARM). Note that 32-bit architectures are currently not compatible with 64-bit architectures.
 
 Note that the same source code must be used to compile the library on all platforms. Also note that it is quite difficult to verify cross platform determinism, so this feature is less tested than other features.
 
