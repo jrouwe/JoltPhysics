@@ -739,8 +739,6 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		s->Update(1.0f / 60.0f, *mPhysicsSystem);
 
 		SoftBody::DrawSettings settings;
-		settings.mDrawVertices = false;
-		settings.mDrawEdges = false;
 		s->Draw(DebugRenderer::sInstance, settings);
 	}
 }
