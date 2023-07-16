@@ -26,15 +26,6 @@ public:
 		}
 	}
 
-	void				CalculateLRAMaxLengths()
-	{
-		for (LRA &l : mLRAConstraints)
-		{
-			l.mMaxLength = (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
-			JPH_ASSERT(l.mMaxLength > 0.0f);
-		}
-	}
-
 	void				CalculateVolumeConstraintVolumes()
 	{
 		for (Volume &v : mVolumeConstraints)
@@ -71,15 +62,6 @@ public:
 		float			mCompliance = 0.0f;
 	};
 
-	/// Long range attachment, a distance constraint with a max length: |x1 - x2| <= max length
-	/// See: Long Range Attachments - A Method to Simulate Inextensible Clothing in Computer Games by Tae-Yong Kim et al.
-	/// https://matthias-research.github.io/pages/publications/sca2012cloth.pdf
-	struct LRA
-	{
-		uint32			mVertex[2];
-		float			mMaxLength = 1.0f;
-	};
-
 	/// Volume constraint, keeps the volume of a tetrahedron constant
 	struct Volume
 	{
@@ -91,7 +73,6 @@ public:
 	Array<Vertex>		mVertices;
 	Array<Face>			mFaces;
 	Array<Edge>			mEdgeConstraints;
-	Array<LRA>			mLRAConstraints;
 	Array<Volume>		mVolumeConstraints;
 
 	float				mLinearDamping = 0.05f;
@@ -112,7 +93,6 @@ public:
 		bool			mDrawVertices = true;
 		bool			mDrawFaces = true;
 		bool			mDrawEdges = true;
-		bool			mDrawLRAConstraints = true;
 		bool			mDrawVolumeConstraints = true;
 	};
 
@@ -129,7 +109,6 @@ public:
 
 	using Edge = SoftBodySettings::Edge;
 	using Face = SoftBodySettings::Face;
-	using LRA = SoftBodySettings::LRA;
 	using Volume = SoftBodySettings::Volume;
 
 	RefConst<SoftBodySettings> mSettings;
@@ -255,25 +234,6 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 			v4.mPosition += lambda * w4 * d4c;
 		}
 
-		// Satisfy LRA constraints
-		for (const LRA &l : mSettings->mLRAConstraints)
-		{
-			Vertex &v0 = mVertices[l.mVertex[0]];
-			Vertex &v1 = mVertices[l.mVertex[1]];
-
-			// Calculate current length
-			Vec3 delta = v1.mPosition - v0.mPosition;
-			float length_sq = delta.LengthSq();
-			if (length_sq > Square(l.mMaxLength))
-			{
-				// Apply correction
-				float length = sqrt(length_sq);
-				Vec3 correction = delta * (length - l.mMaxLength) / (length * (v0.mInvMass + v1.mInvMass));
-				v0.mPosition += v0.mInvMass * correction;
-				v1.mPosition -= v1.mInvMass * correction;
-			}
-		}
-
 		// Satisfy edge constraints
 		for (const Edge &e : mSettings->mEdgeConstraints)
 		{
@@ -373,10 +333,6 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 	if (inDrawSettings.mDrawEdges)
 		for (const Edge &e : mSettings->mEdgeConstraints)
 			inRenderer->DrawLine(mVertices[e.mVertex[0]].mPosition, mVertices[e.mVertex[1]].mPosition, Color::sWhite);
-
-	if (inDrawSettings.mDrawLRAConstraints)
-		for (const LRA &l : mSettings->mLRAConstraints)
-			inRenderer->DrawLine(mVertices[l.mVertex[0]].mPosition, mVertices[l.mVertex[1]].mPosition, Color::sGreen);
 
 	if (inDrawSettings.mDrawVolumeConstraints)
 		for (const Volume &v : mSettings->mVolumeConstraints)
@@ -553,32 +509,29 @@ static SoftBodySettings *sCreatePressurizedSphere()
 			return 2 + (inTheta - 1) * cNumPhi + inPhi % cNumPhi;
 	};
 
-	// Create LRA constraints
+	// Create edge constraints
 	for (uint phi = 0; phi < cNumPhi; ++phi)
 	{
 		for (uint theta = 0; theta < cNumTheta - 1; ++theta)
 		{
-			SoftBodySettings::LRA l;
-			l.mVertex[0] = vertex_index(theta, phi);
+			SoftBodySettings::Edge e;
+			e.mCompliance = 0.0001f;
+			e.mVertex[0] = vertex_index(theta, phi);
 
-			l.mVertex[1] = vertex_index(theta + 1, phi);
-			settings->mLRAConstraints.push_back(l);
+			e.mVertex[1] = vertex_index(theta + 1, phi);
+			settings->mEdgeConstraints.push_back(e);
 
-			l.mVertex[1] = vertex_index(theta + 1, phi + 1);
-			settings->mLRAConstraints.push_back(l);
+			e.mVertex[1] = vertex_index(theta + 1, phi + 1);
+			settings->mEdgeConstraints.push_back(e);
 			
 			if (theta > 0)
 			{
-				l.mVertex[1] =  vertex_index(theta, phi + 1);
-				settings->mLRAConstraints.push_back(l);
+				e.mVertex[1] =  vertex_index(theta, phi + 1);
+				settings->mEdgeConstraints.push_back(e);
 			}
 		}
 	}
-	settings->CalculateLRAMaxLengths();
-
-	// Add slack so the sphere can be inflated
-	for (SoftBody::LRA &l : settings->mLRAConstraints)
-		l.mMaxLength *= 2.0f;
+	settings->CalculateEdgeLengths();
 
 	// Create faces
 	SoftBodySettings::Face f;
@@ -605,7 +558,7 @@ static SoftBodySettings *sCreatePressurizedSphere()
 		settings->mFaces.push_back(f);
 	}
 
-	settings->mPressure = 5000.0f;
+	settings->mPressure = 2000.0f;
 
 	return settings;
 }
