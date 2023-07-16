@@ -187,22 +187,22 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem 
 	for (Vertex &v : mVertices)
 		if (v.mInvMass > 0.0f)
 		{
-			// Create a ray in the direction the particle is expected to move
-			RayCast ray(v.mPosition, (v.mVelocity + step_gravity) * inDeltaTime);
+			// Create a ray in the direction the particle is expected to move, start before the particle to avoid falling through a thin floor
+			Vec3 direction = (v.mVelocity + step_gravity) * inDeltaTime;
+			RayCast ray(v.mPosition - 0.5f * direction, direction);
 
 			// Find the closest collision
 			RayCastResult hit;
-			hit.mFraction = 1.5f; // Add a little extra distance in case the particle speeds up
+			hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
 			SubShapeID hit_sub_shape_id;
 			const CollidingShape *hit_colliding_shape = nullptr;
 			for (const CollidingShape &shape : colliding_shapes)
 			{
 				RayCast local_ray(ray.Transformed(shape.mInverseShapeTransform));
-				SubShapeIDCreator sub_shape_id_creator;
-				if (shape.mShape->CastRay(local_ray, sub_shape_id_creator, hit))
+				if (shape.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
 				{
 					hit.mBodyID = shape.mBodyID;
-					hit_sub_shape_id = sub_shape_id_creator.GetID();
+					hit_sub_shape_id = hit.mSubShapeID2;
 					hit_colliding_shape = &shape;
 				}
 			}
@@ -702,20 +702,20 @@ void SoftBodyTest::Initialize()
 	const Quat cCubeOrientation = Quat::sRotation(Vec3::sReplicate(sqrt(1.0f / 3.0f)), DegreesToRadians(45.0f));
 
 	// Floor
-	CreateFloor();
+	CreateMeshTerrain();
 
 	sSoftBodies[0] = new SoftBody(sCreateCloth(), RVec3(0, 10.0f, 0), Quat::sIdentity());
 
 	SoftBodySettings *cube1 = sCreateCube();
 	cube1->mRestitution = 0.0f;
-	sSoftBodies[1] = new SoftBody(cube1, RVec3(30.0f, 10.0f, 0.0f), cCubeOrientation);
+	sSoftBodies[1] = new SoftBody(cube1, RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation);
 
 	SoftBodySettings *cube2 = sCreateCube();
 	cube2->mRestitution = 1.0f;
-	sSoftBodies[2] = new SoftBody(cube2, RVec3(40.0f, 10.0f, 0.0f), cCubeOrientation);
+	sSoftBodies[2] = new SoftBody(cube2, RVec3(25.0f, 10.0f, 0.0f), cCubeOrientation);
 
 	SoftBodySettings *sphere = sCreatePressurizedSphere();
-	sSoftBodies[3] = new SoftBody(sphere, RVec3(30.0f, 10.0f, 10.0f), Quat::sIdentity());
+	sSoftBodies[3] = new SoftBody(sphere, RVec3(15.0f, 10.0f, 15.0f), Quat::sIdentity());
 }
 
 void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
