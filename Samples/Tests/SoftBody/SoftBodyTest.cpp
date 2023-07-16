@@ -80,17 +80,20 @@ public:
 	float				mRestitution = 0.0f;		///< Restitution when colliding
 	float				mFriction = 0.2f;			///< Friction coefficient when colliding
 	float				mPressure = 0.0f;			///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
+	bool				mUpdatePosition = true;		///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 };
 
 class SoftBody
 {
 public:
-						SoftBody(const SoftBodySettings *inSettings, Mat44Arg inWorldTransform);
+						SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat inOrientation);
 
 	void				Update(float inDeltaTime, Vec3Arg inGravity);
 
 	struct DrawSettings
 	{
+		bool			mDrawPosition = false;
+		bool			mDrawBounds = false;
 		bool			mDrawVertices = true;
 		bool			mDrawFaces = true;
 		bool			mDrawEdges = true;
@@ -114,20 +117,27 @@ public:
 
 	RefConst<SoftBodySettings> mSettings;
 	Array<Vertex>		mVertices;
+	RVec3				mPosition;
+	AABox				mLocalBounds;
 };
 
-SoftBody::SoftBody(const SoftBodySettings *inSettings, Mat44Arg inWorldTransform)
+SoftBody::SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat inOrientation)
 {
 	mSettings = inSettings;
+
+	mPosition = inPosition;
+	Mat44 orientation = Mat44::sRotation(inOrientation);
 
 	mVertices.resize(inSettings->mVertices.size());
 	for (Array<Vertex>::size_type v = 0; v < mVertices.size(); ++v)
 	{
 		const SoftBodySettings::Vertex &in_vertex = inSettings->mVertices[v];
 		Vertex &out_vertex = mVertices[v];
-		out_vertex.mPreviousPosition = out_vertex.mPosition = inWorldTransform * Vec3(in_vertex.mPosition);
+		out_vertex.mPreviousPosition = out_vertex.mPosition = orientation * Vec3(in_vertex.mPosition);
 		out_vertex.mVelocity = Vec3::sZero();
 		out_vertex.mInvMass = in_vertex.mInvMass;
+
+		mLocalBounds.Encapsulate(out_vertex.mPosition);
 	}
 }
 
@@ -135,6 +145,15 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
+
+	if (mSettings->mUpdatePosition)
+	{
+		// Shift the body so that the position is the center of the local bounds
+		Vec3 delta = mLocalBounds.GetCenter();
+		mPosition += delta;
+		for (Vertex &v : mVertices)
+			v.mPosition -= delta;
+	}
 
 	uint32 num_iterations = mSettings->mNumIterations;
 	float dt = inDeltaTime / num_iterations;
@@ -255,7 +274,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 		}
 
 		// Satisfy collision (for now a single static plane)
-		Plane plane(Vec3::sAxisY(), 0.0f);
+		Plane plane(Vec3::sAxisY(), float(mPosition.GetY()));
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
@@ -313,42 +332,53 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 						v.mVelocity -= restitution * prev_v_normal * contact_normal;
 				}
 			}
-	}
+		}
+
+	// Update local bounding box
+	mLocalBounds = AABox();
+	for (Vertex &v : mVertices)
+		mLocalBounds.Encapsulate(v.mPosition);
 }
 
 void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSettings) const
 {
+	if (inDrawSettings.mDrawPosition)
+		inRenderer->DrawMarker(mPosition, Color::sYellow, 0.5f);
+
 	if (inDrawSettings.mDrawVertices)
 		for (const Vertex &v : mVertices)
-			inRenderer->DrawMarker(v.mPosition, Color::sRed, 0.05f);
+			inRenderer->DrawMarker(mPosition + v.mPosition, Color::sRed, 0.05f);
 
 	if (inDrawSettings.mDrawFaces)
 		for (const Face &f : mSettings->mFaces)
 		{
-			Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
-			Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
-			Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
+			RVec3 x1 = mPosition + mVertices[f.mVertex[0]].mPosition;
+			RVec3 x2 = mPosition + mVertices[f.mVertex[1]].mPosition;
+			RVec3 x3 = mPosition + mVertices[f.mVertex[2]].mPosition;
 
 			inRenderer->DrawTriangle(x1, x2, x3, Color::sOrange);
 		}
 
 	if (inDrawSettings.mDrawEdges)
 		for (const Edge &e : mSettings->mEdgeConstraints)
-			inRenderer->DrawLine(mVertices[e.mVertex[0]].mPosition, mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+			inRenderer->DrawLine(mPosition + mVertices[e.mVertex[0]].mPosition, mPosition + mVertices[e.mVertex[1]].mPosition, Color::sWhite);
 
 	if (inDrawSettings.mDrawVolumeConstraints)
 		for (const Volume &v : mSettings->mVolumeConstraints)
 		{
-			Vec3 x1 = mVertices[v.mVertex[0]].mPosition;
-			Vec3 x2 = mVertices[v.mVertex[1]].mPosition;
-			Vec3 x3 = mVertices[v.mVertex[2]].mPosition;
-			Vec3 x4 = mVertices[v.mVertex[3]].mPosition;
+			RVec3 x1 = mPosition + mVertices[v.mVertex[0]].mPosition;
+			RVec3 x2 = mPosition + mVertices[v.mVertex[1]].mPosition;
+			RVec3 x3 = mPosition + mVertices[v.mVertex[2]].mPosition;
+			RVec3 x4 = mPosition + mVertices[v.mVertex[3]].mPosition;
 
 			inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow);
 			inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow);
 			inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow);
 			inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow);
 		}
+
+	if (inDrawSettings.mDrawBounds)
+		inRenderer->DrawWireBox(RMat44::sTranslation(mPosition), mLocalBounds, Color::sGreen);
 }
 
 static SoftBody *sSoftBodies[4];
@@ -363,6 +393,7 @@ const SoftBodySettings *sCreateCloth()
 {
 	const uint cGridSize = 20;
 	const float cGridSpacing = 1.0f;
+	const float cOffset = -0.5f * cGridSpacing * (cGridSize - 1);
 
 	// Create settings
 	SoftBodySettings *settings = new SoftBodySettings;
@@ -370,7 +401,7 @@ const SoftBodySettings *sCreateCloth()
 		for (uint x = 0; x < cGridSize; ++x)
 		{
 			SoftBodySettings::Vertex v;
-			v.mPosition = Float3(x * cGridSpacing, 10.0f, y * cGridSpacing);
+			v.mPosition = Float3(cOffset + x * cGridSpacing, 0.0f, cOffset + y * cGridSpacing);
 			settings->mVertices.push_back(v);
 		}
 
@@ -430,6 +461,9 @@ const SoftBodySettings *sCreateCloth()
 			settings->mFaces.push_back(f);
 		}
 
+	// Don't update the position of the cloth as it is fixed to the world
+	settings->mUpdatePosition = false;
+
 	return settings;
 }
 
@@ -437,6 +471,7 @@ static SoftBodySettings *sCreateCube()
 {
 	const uint cGridSize = 5;
 	const float cGridSpacing = 0.5f;
+	const Vec3 cOffset = Vec3::sReplicate(-0.5f * cGridSpacing * (cGridSize - 1));
 
 	// Create settings
 	SoftBodySettings *settings = new SoftBodySettings;
@@ -445,7 +480,7 @@ static SoftBodySettings *sCreateCube()
 			for (uint x = 0; x < cGridSize; ++x)
 			{
 				SoftBodySettings::Vertex v;
-				Vec3(x * cGridSpacing, y * cGridSpacing, z * cGridSpacing).StoreFloat3(&v.mPosition);
+				(cOffset + Vec3::sReplicate(cGridSpacing) * Vec3(float(x), float(y), float(z))).StoreFloat3(&v.mPosition);
 				settings->mVertices.push_back(v);
 			}
 
@@ -601,18 +636,18 @@ void SoftBodyTest::Initialize()
 	// Floor
 	CreateFloor();
 
-	sSoftBodies[0] = new SoftBody(sCreateCloth(), Mat44::sIdentity());
+	sSoftBodies[0] = new SoftBody(sCreateCloth(), RVec3(0, 10.0f, 0), Quat::sIdentity());
 
 	SoftBodySettings *cube1 = sCreateCube();
 	cube1->mRestitution = 0.0f;
-	sSoftBodies[1] = new SoftBody(cube1, Mat44::sRotationTranslation(cCubeOrientation, Vec3(30.0f, 10.0f, 0.0f)));
+	sSoftBodies[1] = new SoftBody(cube1, RVec3(30.0f, 10.0f, 0.0f), cCubeOrientation);
 
 	SoftBodySettings *cube2 = sCreateCube();
 	cube2->mRestitution = 1.0f;
-	sSoftBodies[2] = new SoftBody(cube2, Mat44::sRotationTranslation(cCubeOrientation, Vec3(40.0f, 10.0f, 0.0f)));
+	sSoftBodies[2] = new SoftBody(cube2, RVec3(40.0f, 10.0f, 0.0f), cCubeOrientation);
 
 	SoftBodySettings *sphere = sCreatePressurizedSphere();
-	sSoftBodies[3] = new SoftBody(sphere, Mat44::sTranslation(Vec3(30.0f, 10.0f, 10.0f)));
+	sSoftBodies[3] = new SoftBody(sphere, RVec3(30.0f, 10.0f, 10.0f), Quat::sIdentity());
 }
 
 void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
