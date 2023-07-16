@@ -45,29 +45,29 @@ public:
 
 	struct Vertex
 	{
-		Float3			mPosition;
-		float			mInvMass = 1.0f;
+		Float3			mPosition;					///< Initial position of the vertex
+		float			mInvMass = 1.0f;			///< Inverse of the mass of the vertex
 	};
 
 	struct Face
 	{
-		uint32			mVertex[3];
+		uint32			mVertex[3];					///< Indices of the vertices that form the face
 	};
 
 	/// An edge is kept at a constant length: |x1 - x2| = rest length
 	struct Edge
 	{
-		uint32			mVertex[2];
-		float			mRestLength = 1.0f;
-		float			mCompliance = 0.0f;
+		uint32			mVertex[2];					///< Indices of the vertices that form the edge
+		float			mRestLength = 1.0f;			///< Rest length of the spring
+		float			mCompliance = 0.0f;			///< Inverse of the stiffness of the spring
 	};
 
 	/// Volume constraint, keeps the volume of a tetrahedron constant
 	struct Volume
 	{
-		uint32			mVertex[4];
-		float			mSixRestVolume = 1.0f;
-		float			mCompliance = 0.0f;
+		uint32			mVertex[4];					///< Indices of the vertices that form the tetrhedron
+		float			mSixRestVolume = 1.0f;		///< 6 times the rest volume of the tetrahedron
+		float			mCompliance = 0.0f;			///< Inverse of the stiffness of the constraint
 	};
 
 	Array<Vertex>		mVertices;
@@ -75,10 +75,11 @@ public:
 	Array<Edge>			mEdgeConstraints;
 	Array<Volume>		mVolumeConstraints;
 
-	float				mLinearDamping = 0.05f;
-	float				mRestitution = 0.0f;
-	float				mFriction = 0.2f;
-	float				mPressure = 0.0f; ///< n R T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
+	uint32				mNumIterations = 5;			///< Number of solver iterations
+	float				mLinearDamping = 0.05f;		///< Linear damping: dv/dt = -mLinearDamping * v
+	float				mRestitution = 0.0f;		///< Restitution when colliding
+	float				mFriction = 0.2f;			///< Friction coefficient when colliding
+	float				mPressure = 0.0f;			///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 };
 
 class SoftBody
@@ -86,7 +87,7 @@ class SoftBody
 public:
 						SoftBody(const SoftBodySettings *inSettings, Mat44Arg inWorldTransform);
 
-	void				Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations);
+	void				Update(float inDeltaTime, Vec3Arg inGravity);
 
 	struct DrawSettings
 	{
@@ -130,16 +131,17 @@ SoftBody::SoftBody(const SoftBodySettings *inSettings, Mat44Arg inWorldTransform
 	}
 }
 
-void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations)
+void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
 
-	float dt = inDeltaTime / inNumIterations;
+	uint32 num_iterations = mSettings->mNumIterations;
+	float dt = inDeltaTime / num_iterations;
 	float inv_dt_sq = 1.0f / Square(dt);
 	float linear_damping = max(0.0f, 1.0f - mSettings->mLinearDamping * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
 
-	for (uint iteration = 0; iteration < inNumIterations; ++iteration)
+	for (uint iteration = 0; iteration < num_iterations; ++iteration)
 	{
 		float pressure_coefficient = mSettings->mPressure;
 		if (pressure_coefficient > 0.0f)
@@ -447,26 +449,32 @@ static SoftBodySettings *sCreateCube()
 				settings->mVertices.push_back(v);
 			}
 
+	// Function to get the vertex index of a point on the cloth
+	auto vertex_index = [cGridSize](uint inX, uint inY, uint inZ) -> uint
+	{
+		return inX + inY * cGridSize + inZ * cGridSize * cGridSize;
+	};
+
 	// Create edges
 	for (uint z = 0; z < cGridSize; ++z)
 		for (uint y = 0; y < cGridSize; ++y)
 			for (uint x = 0; x < cGridSize; ++x)
 			{
 				SoftBodySettings::Edge e;
-				e.mVertex[0] = x + y * cGridSize + z * cGridSize * cGridSize;
+				e.mVertex[0] = vertex_index(x, y, z);
 				if (x < cGridSize - 1)
 				{
-					e.mVertex[1] = x + 1 + y * cGridSize + z * cGridSize * cGridSize;
+					e.mVertex[1] = vertex_index(x + 1, y, z);
 					settings->mEdgeConstraints.push_back(e);
 				}
 				if (y < cGridSize - 1)
 				{
-					e.mVertex[1] = x + (y + 1) * cGridSize + z * cGridSize * cGridSize;
+					e.mVertex[1] = vertex_index(x, y + 1, z);
 					settings->mEdgeConstraints.push_back(e);
 				}
 				if (z < cGridSize - 1)
 				{
-					e.mVertex[1] = x + y * cGridSize + (z + 1) * cGridSize * cGridSize;
+					e.mVertex[1] = vertex_index(x, y, z + 1);
 					settings->mEdgeConstraints.push_back(e);
 				}
 			}
@@ -490,7 +498,7 @@ static SoftBodySettings *sCreateCube()
 				{
 					SoftBodySettings::Volume v;
 					for (uint i = 0; i < 4; ++i)
-						v.mVertex[i] = x + tetra_indices[t][i][0] + (y + tetra_indices[t][i][1]) * cGridSize + (z + tetra_indices[t][i][2]) * cGridSize * cGridSize;
+						v.mVertex[i] = vertex_index(x + tetra_indices[t][i][0], y + tetra_indices[t][i][1], z + tetra_indices[t][i][2]);
 					settings->mVolumeConstraints.push_back(v);
 				}
 
@@ -553,6 +561,7 @@ static SoftBodySettings *sCreatePressurizedSphere()
 			}
 		}
 	}
+
 	settings->CalculateEdgeLengths();
 
 	// Create faces
@@ -610,7 +619,7 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	for (SoftBody *s : sSoftBodies)
 	{
-		s->Update(1.0f / 60.0f, Vec3(0.0f, -9.8f, 0.0f), 5);
+		s->Update(1.0f / 60.0f, Vec3(0.0f, -9.8f, 0.0f));
 
 		SoftBody::DrawSettings settings;
 		s->Draw(DebugRenderer::sInstance, settings);
