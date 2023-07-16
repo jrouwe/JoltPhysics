@@ -63,7 +63,7 @@ public:
 		uint32			mVertex[3];
 	};
 
-	/// An edge is kept at a constant length
+	/// An edge is kept at a constant length: |x1 - x2| = rest length
 	struct Edge
 	{
 		uint32			mVertex[2];
@@ -71,7 +71,9 @@ public:
 		float			mCompliance = 0.0f;
 	};
 
-	/// Long range attachment, a stick which only enforces a max length
+	/// Long range attachment, a distance constraint with a max length: |x1 - x2| <= max length
+	/// See: Long Range Attachments - A Method to Simulate Inextensible Clothing in Computer Games by Tae-Yong Kim et al.
+	/// https://matthias-research.github.io/pages/publications/sca2012cloth.pdf
 	struct LRA
 	{
 		uint32			mVertex[2];
@@ -261,10 +263,11 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, uint inNumIterations
 
 			// Calculate current length
 			Vec3 delta = v1.mPosition - v0.mPosition;
-			float length = delta.Length();
-			if (length > l.mMaxLength)
+			float length_sq = delta.LengthSq();
+			if (length_sq > Square(l.mMaxLength))
 			{
 				// Apply correction
+				float length = sqrt(length_sq);
 				Vec3 correction = delta * (length - l.mMaxLength) / (length * (v0.mInvMass + v1.mInvMass));
 				v0.mPosition += v0.mInvMass * correction;
 				v1.mPosition -= v1.mInvMass * correction;
@@ -573,6 +576,10 @@ static SoftBodySettings *sCreatePressurizedSphere()
 	}
 	settings->CalculateLRAMaxLengths();
 
+	// Add slack so the sphere can be inflated
+	for (SoftBody::LRA &l : settings->mLRAConstraints)
+		l.mMaxLength *= 2.0f;
+
 	// Create faces
 	SoftBodySettings::Face f;
 	for (uint phi = 0; phi < cNumPhi; ++phi)
@@ -598,7 +605,7 @@ static SoftBodySettings *sCreatePressurizedSphere()
 		settings->mFaces.push_back(f);
 	}
 
-	settings->mPressure = 1000.0f;
+	settings->mPressure = 5000.0f;
 
 	return settings;
 }
