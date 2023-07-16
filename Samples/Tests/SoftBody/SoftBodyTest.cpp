@@ -160,67 +160,81 @@ void SoftBody::Update(float inDeltaTime, const PhysicsSystem &inSystem)
 			v.mPosition -= delta;
 	}
 
-	// Collect all colliding bodies
-	AllHitCollisionCollector<CollideShapeBodyCollector> collector;
-	AABox bounds = mLocalBounds;
-	bounds.Translate(mPosition);
-	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
-
 	// Collect information about the colliding bodies
-	const BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
 	struct CollidingShape
 	{
 		Mat44			mInverseShapeTransform;
 		RefConst<Shape>	mShape;
 		BodyID			mBodyID;
 	};
-	Array<CollidingShape> colliding_shapes;
-	colliding_shapes.reserve(collector.mHits.size());
-	for (const BodyID &id : collector.mHits)
+	struct Collector : public CollideShapeBodyCollector
 	{
-		TransformedShape ts = body_interface.GetTransformedShape(id);
-		colliding_shapes.push_back({ Mat44::sInverseRotationTranslation(ts.mShapeRotation, Vec3(ts.mShapePositionCOM - mPosition)), ts.mShape, ts.mBodyID });
-	}
+								Collector(RVec3Arg inPosition, const BodyInterface &inBodyInterface) : mPosition(inPosition), mBodyInterface(inBodyInterface) { }
+
+		virtual void			AddHit(const BodyID &inResult) override
+		{
+			TransformedShape ts = mBodyInterface.GetTransformedShape(inResult);
+			mHits.push_back({ Mat44::sInverseRotationTranslation(ts.mShapeRotation, Vec3(ts.mShapePositionCOM - mPosition)), ts.mShape, ts.mBodyID });
+		}
+
+		RVec3					mPosition;
+		const BodyInterface &	mBodyInterface;
+		Array<CollidingShape>	mHits;
+	};
+	Collector collector(mPosition, inSystem.GetBodyInterfaceNoLock());
+	AABox bounds = mLocalBounds;
+	bounds.Translate(mPosition);
+	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
 
 	// Generate collision planes
-	Vec3 step_gravity = inSystem.GetGravity() * inDeltaTime;
-	for (Vertex &v : mVertices)
-		if (v.mInvMass > 0.0f)
-		{
-			// Create a ray in the direction the particle is expected to move, start before the particle to avoid falling through a thin floor
-			Vec3 direction = (v.mVelocity + step_gravity) * inDeltaTime;
-			RayCast ray(v.mPosition - 0.5f * direction, direction);
-
-			// Find the closest collision
-			RayCastResult hit;
-			hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
-			SubShapeID hit_sub_shape_id;
-			const CollidingShape *hit_colliding_shape = nullptr;
-			for (const CollidingShape &shape : colliding_shapes)
+	if (collector.mHits.empty())
+	{
+		// No collisions
+		for (Vertex &v : mVertices)
+			v.mCollisionBodyID = BodyID();
+	}
+	else
+	{
+		// Process collisions
+		Vec3 step_gravity = inSystem.GetGravity() * inDeltaTime;
+		for (Vertex &v : mVertices)
+			if (v.mInvMass > 0.0f)
 			{
-				RayCast local_ray(ray.Transformed(shape.mInverseShapeTransform));
-				if (shape.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
+				// Create a ray in the direction the particle is expected to move, start before the particle to avoid falling through a thin floor
+				Vec3 direction = (v.mVelocity + step_gravity) * inDeltaTime;
+				RayCast ray(v.mPosition - 0.5f * direction, direction);
+
+				// Find the closest collision
+				RayCastResult hit;
+				hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
+				SubShapeID hit_sub_shape_id;
+				const CollidingShape *hit_colliding_shape = nullptr;
+				for (const CollidingShape &shape : collector.mHits)
 				{
-					hit.mBodyID = shape.mBodyID;
-					hit_sub_shape_id = hit.mSubShapeID2;
-					hit_colliding_shape = &shape;
+					RayCast local_ray(ray.Transformed(shape.mInverseShapeTransform));
+					if (shape.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
+					{
+						hit.mBodyID = shape.mBodyID;
+						hit_sub_shape_id = hit.mSubShapeID2;
+						hit_colliding_shape = &shape;
+					}
+				}
+
+				if (hit_colliding_shape != nullptr)
+				{
+					// Store collision
+					Vec3 point = ray.GetPointOnRay(hit.mFraction);
+					Vec3 normal = hit_colliding_shape->mShape->GetSurfaceNormal(hit_sub_shape_id, hit_colliding_shape->mInverseShapeTransform * point);
+					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
+					v.mCollisionBodyID = hit.mBodyID;
+				}
+				else
+				{
+					// No collision
+					v.mCollisionBodyID = BodyID();
 				}
 			}
-
-			if (hit_colliding_shape != nullptr)
-			{
-				// Store collision
-				Vec3 point = ray.GetPointOnRay(hit.mFraction);
-				Vec3 normal = hit_colliding_shape->mShape->GetSurfaceNormal(hit_sub_shape_id, hit_colliding_shape->mInverseShapeTransform * point);
-				v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-				v.mCollisionBodyID = hit.mBodyID;
-			}
-			else
-			{
-				// No collision
-				v.mCollisionBodyID = BodyID();
-			}
-		}
+	}
 
 	uint32 num_iterations = mSettings->mNumIterations;
 	float dt = inDeltaTime / num_iterations;
