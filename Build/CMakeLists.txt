@@ -190,8 +190,8 @@ set(PHYSICS_REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 # Make Jolt Library
 include(${PHYSICS_REPO_ROOT}/Jolt/Jolt.cmake)
-if (IOS)
-	# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
+if (XCODE)
+	# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 	set_property(TARGET Jolt PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt") 
 endif()
 
@@ -228,8 +228,9 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			# Set the bundle information
 			set_property(TARGET UnitTests PROPERTY MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/iOS/UnitTestsInfo.plist")
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.joltphysics.unittests")
-
-			# Ensure that we enable SSE4.2 for the x86_64 build, CMAKE_SYSTEM_PROCESSOR is not set for iOS
+		endif()
+		if (XCODE)
+			# Ensure that we enable SSE4.2 for the x86_64 build, XCode builds multiple architectures
 			set_property(TARGET UnitTests PROPERTY XCODE_ATTRIBUTE_OTHER_CPLUSPLUSFLAGS[arch=x86_64] "$(inherited) -msse4.2 -mpopcnt")
 		endif()
 
