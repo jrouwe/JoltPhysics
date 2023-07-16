@@ -5,8 +5,11 @@
 #include <TestFramework.h>
 
 #include <Tests/SoftBody/SoftBodyTest.h>
-#include <Jolt/Renderer/DebugRenderer.h>
 #include <Jolt/Core/Reference.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Renderer/DebugRenderer.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyTest) 
@@ -88,7 +91,7 @@ class SoftBody
 public:
 						SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat inOrientation);
 
-	void				Update(float inDeltaTime, Vec3Arg inGravity);
+	void				Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem &inSystem);
 
 	struct DrawSettings
 	{
@@ -107,6 +110,8 @@ public:
 		Vec3			mPreviousPosition;
 		Vec3 			mPosition;
 		Vec3 			mVelocity;
+		Plane			mCollisionPlane;			///< Nearest collision plane
+		BodyID			mCollisionBodyID;			///< ID of the body we may collide with
 		float			mInvMass;
 		float			mProjectedDistance;
 	};
@@ -141,7 +146,7 @@ SoftBody::SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat in
 	}
 }
 
-void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
+void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
@@ -154,6 +159,68 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 		for (Vertex &v : mVertices)
 			v.mPosition -= delta;
 	}
+
+	// Collect all colliding bodies
+	AllHitCollisionCollector<CollideShapeBodyCollector> collector;
+	AABox bounds = mLocalBounds;
+	bounds.Translate(mPosition);
+	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
+
+	// Collect information about the colliding bodies
+	const BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
+	struct CollidingShape
+	{
+		Mat44			mInverseShapeTransform;
+		RefConst<Shape>	mShape;
+		BodyID			mBodyID;
+	};
+	Array<CollidingShape> colliding_shapes;
+	colliding_shapes.reserve(collector.mHits.size());
+	for (const BodyID &id : collector.mHits)
+	{
+		TransformedShape ts = body_interface.GetTransformedShape(id);
+		colliding_shapes.push_back({ Mat44::sInverseRotationTranslation(ts.mShapeRotation, Vec3(ts.mShapePositionCOM - mPosition)), ts.mShape, ts.mBodyID });
+	}
+
+	// Generate collision planes
+	Vec3 step_gravity = inGravity * inDeltaTime;
+	for (Vertex &v : mVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			// Create a ray in the direction the particle is expected to move
+			RayCast ray(v.mPosition, (v.mVelocity + step_gravity) * inDeltaTime);
+
+			// Find the closest collision
+			RayCastResult hit;
+			hit.mFraction = 1.5f; // Add a little extra distance in case the particle speeds up
+			SubShapeID hit_sub_shape_id;
+			const CollidingShape *hit_colliding_shape = nullptr;
+			for (const CollidingShape &shape : colliding_shapes)
+			{
+				RayCast local_ray(ray.Transformed(shape.mInverseShapeTransform));
+				SubShapeIDCreator sub_shape_id_creator;
+				if (shape.mShape->CastRay(local_ray, sub_shape_id_creator, hit))
+				{
+					hit.mBodyID = shape.mBodyID;
+					hit_sub_shape_id = sub_shape_id_creator.GetID();
+					hit_colliding_shape = &shape;
+				}
+			}
+
+			if (hit_colliding_shape != nullptr)
+			{
+				// Store collision
+				Vec3 point = ray.GetPointOnRay(hit.mFraction);
+				Vec3 normal = hit_colliding_shape->mShape->GetSurfaceNormal(hit_sub_shape_id, hit_colliding_shape->mInverseShapeTransform * point);
+				v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
+				v.mCollisionBodyID = hit.mBodyID;
+			}
+			else
+			{
+				// No collision
+				v.mCollisionBodyID = BodyID();
+			}
+		}
 
 	uint32 num_iterations = mSettings->mNumIterations;
 	float dt = inDeltaTime / num_iterations;
@@ -199,11 +266,12 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 		}
 
 		// Integrate
+		Vec3 sub_step_gravity = inGravity * dt;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
 				// Gravity
-				v.mVelocity += inGravity * dt;
+				v.mVelocity += sub_step_gravity;
 
 				// Damping
 				v.mVelocity *= linear_damping;
@@ -273,15 +341,15 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 			}
 		}
 
-		// Satisfy collision (for now a single static plane)
+		// Satisfy collision
 		Plane plane(Vec3::sAxisY(), float(mPosition.GetY()));
 		for (Vertex &v : mVertices)
-			if (v.mInvMass > 0.0f)
+			if (!v.mCollisionBodyID.IsInvalid())
 			{
-				float distance = plane.SignedDistance(v.mPosition);
+				float distance = v.mCollisionPlane.SignedDistance(v.mPosition);
 				if (distance < 0.0f)
 				{
-					v.mPosition -= plane.GetNormal() * distance;
+					v.mPosition -= v.mCollisionPlane.GetNormal() * distance;
 					v.mProjectedDistance -= distance; // For friction calculation
 				}
 			}
@@ -315,7 +383,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity)
 					// Changes in particle velocities:
 					// v1 = v1 + p / m1
 					// v2 = v2 - p / m2 (but the plane is static so this is zero)
-					Vec3 contact_normal = plane.GetNormal();
+					Vec3 contact_normal = v.mCollisionPlane.GetNormal();
 					Vec3 v_normal = contact_normal * contact_normal.Dot(v.mVelocity);
 					Vec3 v_tangential = v.mVelocity - v_normal;
 					float v_tangential_length = v_tangential.Length();
@@ -654,7 +722,7 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	for (SoftBody *s : sSoftBodies)
 	{
-		s->Update(1.0f / 60.0f, Vec3(0.0f, -9.8f, 0.0f));
+		s->Update(1.0f / 60.0f, Vec3(0.0f, -9.8f, 0.0f), *mPhysicsSystem);
 
 		SoftBody::DrawSettings settings;
 		s->Draw(DebugRenderer::sInstance, settings);
