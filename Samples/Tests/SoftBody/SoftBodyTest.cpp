@@ -372,39 +372,61 @@ const SoftBodySettings *sCreateCloth()
 			settings->mVertices.push_back(v);
 		}
 
+	// Function to get the vertex index of a point on the cloth
+	auto vertex_index = [cGridSize](uint inX, uint inY) -> uint
+	{
+		return inX + inY * cGridSize;
+	};
+
 	// Fixate corners
-	settings->mVertices[0].mInvMass = 0.0f;
-	settings->mVertices[cGridSize - 1].mInvMass = 0.0f;
-	settings->mVertices[(cGridSize - 1) * cGridSize].mInvMass = 0.0f;
-	settings->mVertices[(cGridSize - 1) * cGridSize + cGridSize - 1].mInvMass = 0.0f;
+	settings->mVertices[vertex_index(0, 0)].mInvMass = 0.0f;
+	settings->mVertices[vertex_index(cGridSize - 1, 0)].mInvMass = 0.0f;
+	settings->mVertices[vertex_index(0, cGridSize - 1)].mInvMass = 0.0f;
+	settings->mVertices[vertex_index(cGridSize - 1, cGridSize - 1)].mInvMass = 0.0f;
 
 	// Create edges
 	for (uint y = 0; y < cGridSize; ++y)
 		for (uint x = 0; x < cGridSize; ++x)
 		{
 			SoftBodySettings::Edge e;
-			e.mVertex[0] = x + y * cGridSize;
+			e.mCompliance = 0.0001f;
+			e.mVertex[0] = vertex_index(x, y);
 			if (x < cGridSize - 1)
 			{
-				e.mVertex[1] = x + 1 + y * cGridSize;
+				e.mVertex[1] = vertex_index(x + 1, y);
 				settings->mEdgeConstraints.push_back(e);
 			}
 			if (y < cGridSize - 1)
 			{
-				e.mVertex[1] = x + (y + 1) * cGridSize;
+				e.mVertex[1] = vertex_index(x, y + 1);
 				settings->mEdgeConstraints.push_back(e);
 			}
 			if (x < cGridSize - 1 && y < cGridSize - 1)
 			{
-				e.mVertex[1] = x + 1 + (y + 1) * cGridSize;
+				e.mVertex[1] = vertex_index(x + 1, y + 1);
 				settings->mEdgeConstraints.push_back(e);
 
-				e.mVertex[0] = x + 1 + y * cGridSize;
-				e.mVertex[1] = x + (y + 1) * cGridSize;
+				e.mVertex[0] = vertex_index(x + 1, y);
+				e.mVertex[1] = vertex_index(x, y + 1);
 				settings->mEdgeConstraints.push_back(e);
 			}
 		}
 	settings->CalculateEdgeLengths();
+
+	// Create faces
+	for (uint y = 0; y < cGridSize - 1; ++y)
+		for (uint x = 0; x < cGridSize - 1; ++x)
+		{
+			SoftBodySettings::Face f;
+			f.mVertex[0] = vertex_index(x, y);
+			f.mVertex[1] = vertex_index(x, y + 1);
+			f.mVertex[2] = vertex_index(x + 1, y + 1);
+			settings->mFaces.push_back(f);
+
+			f.mVertex[1] = vertex_index(x + 1, y + 1);
+			f.mVertex[2] = vertex_index(x + 1, y);
+			settings->mFaces.push_back(f);
+		}
 
 	return settings;
 }
