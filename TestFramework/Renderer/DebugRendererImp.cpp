@@ -199,7 +199,7 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 	}
 }
 
-void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
+void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, ECastShadow inCastShadow)
 {
 	RVec3 offset = mRenderer->GetBaseOffset();
 
@@ -211,10 +211,8 @@ void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3,
 
 	EnsurePrimitiveSpace(3);
 
-	// Set alpha to zero to tell our pixel shader to not cast shadows for this triangle
-	// this is because our algorithm only renders shadows for backfacing triangles and this
-	// triangle doesn't have one
-	Color color(inColor, 0);
+	// Set alpha to zero if we don't want to cast shadows to notify the pixel shader
+	Color color(inColor, inCastShadow == ECastShadow::Off? 0 : 0xff);
 
 	// Construct triangle
 	new ((Triangle *)mLockedVertices) Triangle(v1, v2, v3, color);

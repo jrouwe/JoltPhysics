@@ -80,8 +80,8 @@ public:
 		Wireframe,						///< Draw as wireframe
 	};
 
-	/// Draw a single back face culled triangle without any shadows
-	virtual void						DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor) = 0;
+	/// Draw a single back face culled triangle
+	virtual void						DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::Off) = 0;
 
 	/// Draw a box
 	void								DrawBox(const AABox &inBox, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);

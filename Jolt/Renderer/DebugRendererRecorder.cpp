@@ -17,7 +17,7 @@ void DebugRendererRecorder::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg in
 	mCurrentFrame.mLines.push_back({ inFrom, inTo, inColor });
 }
 
-void DebugRendererRecorder::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
+void DebugRendererRecorder::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, [[maybe_unused]] ECastShadow inCastShadow)
 {
 	lock_guard lock(mMutex);
 

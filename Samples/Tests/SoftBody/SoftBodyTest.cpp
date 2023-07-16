@@ -438,7 +438,7 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 			RVec3 x2 = mPosition + mVertices[f.mVertex[1]].mPosition;
 			RVec3 x3 = mPosition + mVertices[f.mVertex[2]].mPosition;
 
-			inRenderer->DrawTriangle(x1, x2, x3, Color::sOrange);
+			inRenderer->DrawTriangle(x1, x2, x3, Color::sOrange, DebugRenderer::ECastShadow::On);
 		}
 
 	if (inDrawSettings.mDrawEdges)
@@ -453,10 +453,10 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 			RVec3 x3 = mPosition + mVertices[v.mVertex[2]].mPosition;
 			RVec3 x4 = mPosition + mVertices[v.mVertex[3]].mPosition;
 
-			inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow);
-			inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow);
-			inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow);
-			inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow);
+			inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
 		}
 
 	if (inDrawSettings.mDrawBounds)
@@ -739,6 +739,8 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		s->Update(1.0f / 60.0f, *mPhysicsSystem);
 
 		SoftBody::DrawSettings settings;
+		settings.mDrawVertices = false;
+		settings.mDrawEdges = false;
 		s->Draw(DebugRenderer::sInstance, settings);
 	}
 }
