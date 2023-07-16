@@ -91,7 +91,7 @@ class SoftBody
 public:
 						SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat inOrientation);
 
-	void				Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem &inSystem);
+	void				Update(float inDeltaTime, const PhysicsSystem &inSystem);
 
 	struct DrawSettings
 	{
@@ -146,7 +146,7 @@ SoftBody::SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat in
 	}
 }
 
-void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem &inSystem)
+void SoftBody::Update(float inDeltaTime, const PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
@@ -183,7 +183,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem 
 	}
 
 	// Generate collision planes
-	Vec3 step_gravity = inGravity * inDeltaTime;
+	Vec3 step_gravity = inSystem.GetGravity() * inDeltaTime;
 	for (Vertex &v : mVertices)
 		if (v.mInvMass > 0.0f)
 		{
@@ -266,7 +266,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem 
 		}
 
 		// Integrate
-		Vec3 sub_step_gravity = inGravity * dt;
+		Vec3 sub_step_gravity = inSystem.GetGravity() * dt;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
@@ -357,7 +357,7 @@ void SoftBody::Update(float inDeltaTime, Vec3Arg inGravity, const PhysicsSystem 
 		// Update velocity
 		float friction = mSettings->mFriction;
 		float restitution = mSettings->mRestitution;
-		float restitution_treshold = -2.0f * inGravity.Length() * dt;
+		float restitution_treshold = -2.0f * inSystem.GetGravity().Length() * dt;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
@@ -490,7 +490,7 @@ const SoftBodySettings *sCreateCloth()
 		for (uint x = 0; x < cGridSize; ++x)
 		{
 			SoftBodySettings::Edge e;
-			e.mCompliance = 0.0001f;
+			e.mCompliance = 0.00001f;
 			e.mVertex[0] = vertex_index(x, y);
 			if (x < cGridSize - 1)
 			{
@@ -722,7 +722,7 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	for (SoftBody *s : sSoftBodies)
 	{
-		s->Update(1.0f / 60.0f, Vec3(0.0f, -9.8f, 0.0f), *mPhysicsSystem);
+		s->Update(1.0f / 60.0f, *mPhysicsSystem);
 
 		SoftBody::DrawSettings settings;
 		s->Draw(DebugRenderer::sInstance, settings);
