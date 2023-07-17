@@ -379,12 +379,29 @@ If you want cross platform determinism then please turn on the CROSS_PLATFORM_DE
 
 * Compiler used to compile the library (tested MSVC2022 vs clang)
 * Configuration (Debug, Release or Distribution)
-* OS (tested Windows vs Linux)
-* Architecture (x86 or ARM). Note that 32-bit architectures are currently not compatible with 64-bit architectures.
+* OS (tested Windows, macOS, Linux)
+* Architecture (x86 or ARM).
 
-Note that the same source code must be used to compile the library on all platforms. Also note that it is quite difficult to verify cross platform determinism, so this feature is less tested than other features.
+Some caveats:
 
-When running the Samples Application you can press ESC, Physics Settings and check the 'Check Determinism' checkbox. Before every simulation step we will record the state using the [StateRecorder](@ref StateRecorder) interface, rewind the simulation and do the step again to validate that the simulation runs deterministically. Some of the tests (e.g. the MultiThreaded) test will explicitly disable the check because they randomly add/remove bodies from different threads. This violates the first rule so will not result in a deterministic simulation.
+* The same source code must be used to compile the library on all platforms.
+* Applications compiled in 32-bit mode do not produce the same results as applications compiled in 64-bit mode. Compile your application in the same mode for all platforms.
+
+It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results:
+
+* Windows MSVC x86 64-bit with AVX2
+* macOS clang x86 64-bit with AVX
+* Linux clang x86 64-bit with AVX2
+* Linux clang ARM 64-bit with NEON 
+
+The most important things to look out for in your own application:
+
+* Compile your application mode in Precise mode (clang: -ffp-model=precise, MSVC: /fp:precise)
+* Turn off floating point contract operations (clang: -ffp-contract=off)
+* Do not use the standard trigonometry functions (sin, cos etc.) as they have different implementations on different platforms, use Jolt's functions (Sin, Cos etc.)
+* Do not use std::sort as it has a different implementation on different platforms, use Jolt's QuickSort function
+
+When running the Samples Application you can press ESC, Physics Settings and check the 'Check Determinism' checkbox. Before every simulation step we will record the state using the [StateRecorder](@ref StateRecorder) interface, rewind the simulation and do the step again to validate that the simulation runs deterministically. Some of the tests (e.g. the MultiThreaded) test will explicitly disable the check because they randomly add/remove bodies from different threads. This violates the rule that the API calls must be done in the same order so will not result in a deterministic simulation.
 
 ## Rolling Back a Simulation
 
