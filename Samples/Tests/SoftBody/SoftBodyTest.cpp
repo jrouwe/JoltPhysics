@@ -248,13 +248,12 @@ void SoftBody::Update(float inDeltaTime, const PhysicsSystem &inSystem)
 		{
 			// Calculate total volume
 			float six_volume = 0.0f;
-			Vec3 origin = mVertices[0].mPosition;
 			for (const Face &f : mSettings->mFaces)
 			{
 				Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
 				Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
 				Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
-				six_volume += (x1 - origin).Cross(x2 - origin).Dot(x3 - origin);
+				six_volume += x1.Cross(x2).Dot(x3); // We pick zero as the origin as this is the center of the bounding box so should give good accuracy
 			}
 			if (six_volume > 0.0f)
 			{
