@@ -614,10 +614,8 @@ Vec4 Vec4::DotV(Vec4Arg inV2) const
     float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
     return vdupq_n_f32(vaddvq_f32(mul));
 #else
-	float dot = 0.0f;
-	for (int i = 0; i < 4; i++)
-		dot += mF32[i] * inV2.mF32[i];
-	return Vec4::sReplicate(dot);
+	// Brackets placed so that the order is consistent with the vectorized version
+	return Vec4::sReplicate((mF32[0] * inV2.mF32[0] + mF32[1] * inV2.mF32[1]) + (mF32[2] * inV2.mF32[2] + mF32[3] * inV2.mF32[3]));
 #endif
 }
 
@@ -629,10 +627,8 @@ float Vec4::Dot(Vec4Arg inV2) const
     float32x4_t mul = vmulq_f32(mValue, inV2.mValue);
     return vaddvq_f32(mul);
 #else
-	float dot = 0.0f;
-	for (int i = 0; i < 4; i++)
-		dot += mF32[i] * inV2.mF32[i];
-	return dot;
+	// Brackets placed so that the order is consistent with the vectorized version
+	return (mF32[0] * inV2.mF32[0] + mF32[1] * inV2.mF32[1]) + (mF32[2] * inV2.mF32[2] + mF32[3] * inV2.mF32[3]);
 #endif
 }
 
@@ -644,10 +640,8 @@ float Vec4::LengthSq() const
     float32x4_t mul = vmulq_f32(mValue, mValue);
     return vaddvq_f32(mul);
 #else
-	float len_sq = 0.0f;
-	for (int i = 0; i < 4; i++)
-		len_sq += mF32[i] * mF32[i];
-	return len_sq;
+	// Brackets placed so that the order is consistent with the vectorized version
+	return (mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]);
 #endif
 }
 
@@ -660,7 +654,8 @@ float Vec4::Length() const
     float32x2_t sum = vdup_n_f32(vaddvq_f32(mul));
     return vget_lane_f32(vsqrt_f32(sum), 0);
 #else
-	return sqrt(LengthSq());
+	// Brackets placed so that the order is consistent with the vectorized version
+	return sqrt((mF32[0] * mF32[0] + mF32[1] * mF32[1]) + (mF32[2] * mF32[2] + mF32[3] * mF32[3]));
 #endif
 }
 
