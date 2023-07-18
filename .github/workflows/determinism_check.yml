@@ -65,7 +65,8 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.3
     - name: Configure CMake
-      run: Build\cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+      working-directory: ${{github.workspace}}/Build
+      run: cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
     - name: Build
       run: msbuild Build\VS2022_CL_32BIT\JoltPhysics.sln /property:Configuration=Distribution
     - name: Test ConvexVsMesh
