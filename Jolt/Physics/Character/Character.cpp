@@ -243,7 +243,7 @@ RVec3 Character::GetPosition(bool inLockBodies) const
 	return sGetBodyInterface(mSystem, inLockBodies).GetPosition(mBodyID);
 }
 
-void Character::SetPosition(RVec3Arg inPosition, EActivation inActivationMode, bool inLockBodies) 
+void Character::SetPosition(RVec3Arg inPosition, EActivation inActivationMode, bool inLockBodies)
 {
 	sGetBodyInterface(mSystem, inLockBodies).SetPosition(mBodyID, inPosition, inActivationMode);
 }
@@ -253,7 +253,7 @@ Quat Character::GetRotation(bool inLockBodies) const
 	return sGetBodyInterface(mSystem, inLockBodies).GetRotation(mBodyID);
 }
 
-void Character::SetRotation(QuatArg inRotation, EActivation inActivationMode, bool inLockBodies) 
+void Character::SetRotation(QuatArg inRotation, EActivation inActivationMode, bool inLockBodies)
 {
 	sGetBodyInterface(mSystem, inLockBodies).SetRotation(mBodyID, inRotation, inActivationMode);
 }

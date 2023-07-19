@@ -24,7 +24,7 @@ public:
 
 	///@name Interface
 	virtual void	Init(UIElement *inElement) override;
-	virtual bool	Update(UIElement *inElement, float inDeltaTime) override; 
+	virtual bool	Update(UIElement *inElement, float inDeltaTime) override;
 	virtual void	Exit(UIElement *inElement) override;
 
 private:

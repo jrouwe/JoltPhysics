@@ -6,7 +6,7 @@
 
 // Include for __rdtsc
 #if defined(JPH_PLATFORM_WINDOWS)
-	#include <intrin.h> 
+	#include <intrin.h>
 #elif defined(JPH_CPU_X86) && defined(JPH_COMPILER_GCC)
 	#include <x86intrin.h>
 #endif

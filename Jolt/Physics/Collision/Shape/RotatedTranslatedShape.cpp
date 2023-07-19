@@ -24,9 +24,9 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(RotatedTranslatedShapeSettings)
 }
 
 ShapeSettings::ShapeResult RotatedTranslatedShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new RotatedTranslatedShape(*this, mCachedResult); 
+		Ref<Shape> shape = new RotatedTranslatedShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
@@ -37,7 +37,7 @@ RotatedTranslatedShape::RotatedTranslatedShape(const RotatedTranslatedShapeSetti
 		return;
 
 	// Calculate center of mass position
-	mCenterOfMass = inSettings.mPosition + inSettings.mRotation * mInnerShape->GetCenterOfMass(); 
+	mCenterOfMass = inSettings.mPosition + inSettings.mRotation * mInnerShape->GetCenterOfMass();
 
 	// Store rotation (position is always zero because we center around the center of mass)
 	mRotation = inSettings.mRotation;
@@ -50,7 +50,7 @@ RotatedTranslatedShape::RotatedTranslatedShape(Vec3Arg inPosition, QuatArg inRot
 	DecoratedShape(EShapeSubType::RotatedTranslated, inShape)
 {
 	// Calculate center of mass position
-	mCenterOfMass = inPosition + inRotation * mInnerShape->GetCenterOfMass(); 
+	mCenterOfMass = inPosition + inRotation * mInnerShape->GetCenterOfMass();
 
 	// Store rotation (position is always zero because we center around the center of mass)
 	mRotation = inRotation;
@@ -71,7 +71,7 @@ AABox RotatedTranslatedShape::GetLocalBounds() const
 }
 
 AABox RotatedTranslatedShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
-{ 
+{
 	Mat44 transform = inCenterOfMassTransform * Mat44::sRotation(mRotation);
 	return mInnerShape->GetWorldSpaceBounds(transform, TransformScale(inScale));
 }
@@ -86,8 +86,8 @@ TransformedShape RotatedTranslatedShape::GetSubShapeTransformedShape(const SubSh
 	return ts;
 }
 
-Vec3 RotatedTranslatedShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
+Vec3 RotatedTranslatedShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
 	// Transform surface position to local space and pass call on
 	Mat44 transform = Mat44::sRotation(mRotation.Conjugated());
 	Vec3 normal = mInnerShape->GetSurfaceNormal(inSubShapeID, transform * inLocalSurfacePosition);
@@ -129,7 +129,7 @@ void RotatedTranslatedShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RM
 #endif // JPH_DEBUG_RENDERER
 
 bool RotatedTranslatedShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const
-{	
+{
 	// Transform the ray
 	Mat44 transform = Mat44::sRotation(mRotation.Conjugated());
 	RayCast ray = inRay.Transformed(transform);
@@ -176,7 +176,7 @@ void RotatedTranslatedShape::TransformShape(Mat44Arg inCenterOfMassTransform, Tr
 }
 
 void RotatedTranslatedShape::sCollideRotatedTranslatedVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
-{	
+{
 	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::RotatedTranslated);
 	const RotatedTranslatedShape *shape1 = static_cast<const RotatedTranslatedShape *>(inShape1);
 

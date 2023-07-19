@@ -27,7 +27,7 @@ public:
 	// Constructor / destructor
 							SamplesApp();
 	virtual					~SamplesApp() override;
-		
+
 	// Render the frame.
 	virtual bool			RenderFrame(float inDeltaTime) override;
 

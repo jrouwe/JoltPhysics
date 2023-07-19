@@ -101,7 +101,7 @@ jobs:
     - name: Test
       working-directory: Build/MSYS2_MinGW_GCC
       run: ctest --output-on-failure
-      
+
   msvc_cl:
     runs-on: windows-latest
     name: Visual Studio CL

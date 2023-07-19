@@ -56,7 +56,7 @@ public:
 
 	// See Shape::GetLocalBounds
 	virtual AABox					GetLocalBounds() const override;
-		
+
 	// See Shape::GetWorldSpaceBounds
 	virtual AABox					GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const override;
 	using Shape::GetWorldSpaceBounds;
@@ -144,7 +144,7 @@ private:
 
 		return ScaleHelpers::RotateScale(mRotation, inScale);
 	}
-		
+
 	bool							mIsRotationIdentity;									///< If mRotation is close to identity (put here because it falls in padding bytes)
 	Vec3							mCenterOfMass;											///< Position of the center of mass
 	Quat							mRotation;												///< Rotation of the child shape

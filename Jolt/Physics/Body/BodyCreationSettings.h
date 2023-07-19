@@ -22,7 +22,7 @@ enum class EOverrideMassProperties : uint8
 {
 	CalculateMassAndInertia,			///< Tells the system to calculate the mass and inertia based on density
 	CalculateInertia,					///< Tells the system to take the mass from mMassPropertiesOverride and to calculate the inertia based on density of the shapes and to scale it to the provided mass
-	MassAndInertiaProvided				///< Tells the system to take the mass and inertia from mMassPropertiesOverride 
+	MassAndInertiaProvided				///< Tells the system to take the mass and inertia from mMassPropertiesOverride
 };
 
 /// Settings for constructing a rigid body

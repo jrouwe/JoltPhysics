@@ -30,13 +30,13 @@ public:
 private:
 	/// Get centroid for group
 	Vec3					GetCentroidForGroup(uint inFirstTriangleInGroup);
-	
+
 	// Configuration
 	const uint				mLeafSize;
 	const uint				mMinNumBins;
 	const uint				mMaxNumBins;
 	const uint				mNumTrianglesPerBin;
-	
+
 	struct Bin
 	{
 		// Properties of this bin
@@ -45,10 +45,10 @@ private:
 		uint				mNumTriangles;
 
 		// Accumulated data from left most / right most bin to current (including this bin)
-		AABox				mBoundsAccumulatedLeft;				
-		AABox				mBoundsAccumulatedRight;			
-		uint				mNumTrianglesAccumulatedLeft;		
-		uint				mNumTrianglesAccumulatedRight;		
+		AABox				mBoundsAccumulatedLeft;
+		AABox				mBoundsAccumulatedRight;
+		uint				mNumTrianglesAccumulatedLeft;
+		uint				mNumTrianglesAccumulatedRight;
 	};
 };
 

@@ -11,9 +11,9 @@
 #include <Jolt/Geometry/Triangle.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ActiveEdgesTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ActiveEdgesTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ActiveEdgesTest)
+{
+	JPH_ADD_BASE_CLASS(ActiveEdgesTest, Test)
 }
 
 void ActiveEdgesTest::Initialize()
@@ -58,7 +58,7 @@ void ActiveEdgesTest::Initialize()
 				box_settings.mPosition = RVec3((v1 + v2 + v3 + v4) / 4 + normal);
 				box_settings.mRotation = rotation;
 			}
-				
+
 			// Add segment
 			triangles.push_back(Triangle(v1, v3, v4));
 			triangles.push_back(Triangle(v1, v4, v2));

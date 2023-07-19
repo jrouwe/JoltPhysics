@@ -41,8 +41,8 @@ struct PhysicsSettings
 	/// Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update) (unit: dimensionless, 0 = nothing, 1 = 100%)
 	float		mBaumgarte = 0.2f;
 
-	/// Radius around objects inside which speculative contact points will be detected. Note that if this is too big 
-	/// you will get ghost collisions as speculative contacts are based on the closest points during the collision detection 
+	/// Radius around objects inside which speculative contact points will be detected. Note that if this is too big
+	/// you will get ghost collisions as speculative contacts are based on the closest points during the collision detection
 	/// step which may not be the actual closest points by the time the two objects hit (unit: meters)
 	float		mSpeculativeContactDistance = 0.02f;
 

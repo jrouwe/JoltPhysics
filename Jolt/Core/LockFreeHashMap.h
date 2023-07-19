@@ -84,7 +84,7 @@ public:
 	/// Remove all elements.
 	/// Note that this cannot happen simultaneously with adding new elements.
 	void					Clear();
-	
+
 	/// Get the current amount of buckets that the map is using
 	uint32					GetNumBuckets() const			{ return mNumBuckets; }
 
@@ -115,7 +115,7 @@ public:
 	/// Multiple threads can be inserting in the map at the same time.
 	template <class... Params>
 	inline KeyValue *		Create(LFHMAllocatorContext &ioContext, const Key &inKey, uint64 inKeyHash, int inExtraBytes, Params &&... inConstructorParams);
-	
+
 	/// Find an element, returns null if not found
 	inline const KeyValue *	Find(const Key &inKey, uint64 inKeyHash) const;
 
@@ -150,12 +150,12 @@ public:
 		/// Next item
 		Iterator &			operator ++ ();
 
-		MapType *			mMap;		
+		MapType *			mMap;
 		uint32				mBucket;
 		uint32				mOffset;
 	};
 
-	/// Iterate over the map, note that it is not safe to do this in parallel to Clear(). 
+	/// Iterate over the map, note that it is not safe to do this in parallel to Clear().
 	/// It is safe to do this while adding elements to the map, but newly added elements may or may not be returned by the iterator.
 	Iterator				begin();
 	Iterator				end();

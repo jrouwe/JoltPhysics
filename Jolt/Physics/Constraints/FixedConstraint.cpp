@@ -28,7 +28,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(FixedConstraintSettings)
 }
 
 void FixedConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -147,11 +147,11 @@ bool FixedConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 	// Solve rotation constraint
 	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), *mBody2, Mat44::sRotation(mBody2->GetRotation()));
 	bool rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mInvInitialOrientation, inBaumgarte);
-	
+
 	// Solve position constraint
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
 	bool pos = mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-	
+
 	return rot || pos;
 }
 

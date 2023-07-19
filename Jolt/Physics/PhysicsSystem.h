@@ -42,7 +42,7 @@ public:
 	/// @param inObjectVsBroadPhaseLayerFilter Filter callback function that is used to determine if an object layer collides with a broad phase layer. Since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem.
 	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide. Since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem.
 	void						Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, const ObjectLayerPairFilter &inObjectLayerPairFilter);
-	
+
 	/// Listener that is notified whenever a body is activated/deactivated
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
 	BodyActivationListener *	GetBodyActivationListener() const							{ return mBodyManager.GetBodyActivationListener(); }
@@ -78,7 +78,7 @@ public:
 
 	/// Add constraint to the world
 	void						AddConstraint(Constraint *inConstraint)						{ mConstraintManager.Add(&inConstraint, 1); }
-	
+
 	/// Remove constraint from the world
 	void						RemoveConstraint(Constraint *inConstraint)					{ mConstraintManager.Remove(&inConstraint, 1); }
 
@@ -190,7 +190,7 @@ private:
 	// Various job entry points
 	void						JobStepListeners(PhysicsUpdateContext::Step *ioStep);
 	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep) const;
-	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);	
+	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep) const;
 	void						JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex);
@@ -260,7 +260,7 @@ private:
 
 	/// The broadphase does quick collision detection between body pairs
 	BroadPhase *				mBroadPhase = nullptr;
-    
+
     /// Simulation settings
 	PhysicsSettings				mPhysicsSettings;
 

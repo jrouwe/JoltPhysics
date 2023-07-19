@@ -17,7 +17,7 @@ public:
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;
-	
+
 private:
 	float					mTime = 0.0f;
 	SwingTwistConstraint *	mConstraint = nullptr;

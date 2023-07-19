@@ -29,7 +29,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 	float best_split = 0;
 
 	// Bin in all dimensions
-	uint num_bins = Clamp(inTriangles.Count() / mNumTrianglesPerBin, mMinNumBins, mMaxNumBins);	
+	uint num_bins = Clamp(inTriangles.Count() / mNumTrianglesPerBin, mMinNumBins, mMaxNumBins);
 	for (uint dim = 0; dim < 3; ++dim)
 	{
 		float bounds_min = centroid_bounds.mMin[dim];
@@ -53,7 +53,7 @@ bool TriangleSplitterBinning::Split(const Range &inTriangles, Range &outLeft, Ra
 		{
 			float centroid_pos = mCentroids[mSortedTriangleIdx[t]][dim];
 
-			// Select bin 
+			// Select bin
 			uint bin_no = min(uint((centroid_pos - bounds_min) / bounds_size * num_bins), num_bins - 1);
 			Bin &bin = mBins[bin_no];
 

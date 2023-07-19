@@ -10,9 +10,9 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ModifyMassTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ModifyMassTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ModifyMassTest)
+{
+	JPH_ADD_BASE_CLASS(ModifyMassTest, Test)
 }
 
 void ModifyMassTest::ResetBodies(int inCycle)

@@ -50,15 +50,15 @@ public:
 	}
 
 	/// Encapsulate point in bounding box
-	void			Encapsulate(Vec3Arg inPos)						
-	{ 
-		mMin = Vec3::sMin(mMin, inPos); 
-		mMax = Vec3::sMax(mMax, inPos); 
+	void			Encapsulate(Vec3Arg inPos)
+	{
+		mMin = Vec3::sMin(mMin, inPos);
+		mMax = Vec3::sMax(mMax, inPos);
 	}
 
 	/// Encapsulate bounding box in bounding box
-	void			Encapsulate(const AABox &inRHS)			
-	{ 
+	void			Encapsulate(const AABox &inRHS)
+	{
 		mMin = Vec3::sMin(mMin, inRHS.mMin);
 		mMax = Vec3::sMax(mMax, inRHS.mMax);
 	}
@@ -93,7 +93,7 @@ public:
 		Vec3 min_length = Vec3::sReplicate(inMinEdgeLength);
 		mMax = Vec3::sSelect(mMax, mMin + min_length, Vec3::sLess(mMax - mMin, min_length));
 	}
-	
+
 	/// Widen the box on both sides by inVector
 	void			ExpandBy(Vec3Arg inVector)
 	{
@@ -120,8 +120,8 @@ public:
 	}
 
 	/// Get surface area of bounding box
-	float			GetSurfaceArea() const							
-	{ 
+	float			GetSurfaceArea() const
+	{
 		Vec3 extent = mMax - mMin;
 		return 2.0f * (extent.GetX() * extent.GetY() + extent.GetX() * extent.GetZ() + extent.GetY() * extent.GetZ());
 	}
@@ -186,7 +186,7 @@ public:
 		// Start with the translation of the matrix
 		Vec3 new_min, new_max;
 		new_min = new_max = inMatrix.GetTranslation();
-		
+
 		// Now find the extreme points by considering the product of the min and max with each column of inMatrix
 		for (int c = 0; c < 3; ++c)
 		{

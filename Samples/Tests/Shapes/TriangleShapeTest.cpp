@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(TriangleShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(TriangleShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(TriangleShapeTest)
+{
+	JPH_ADD_BASE_CLASS(TriangleShapeTest, Test)
 }
 
 void TriangleShapeTest::Initialize()

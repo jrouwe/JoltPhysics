@@ -20,7 +20,7 @@ public:
 	};
 
 	using ClickAction = function<void(EState)>;
-	
+
 	/// Properties
 	void				SetState(EState inState)							{ mState = inState; }
 	EState				GetState() const									{ return mState; }

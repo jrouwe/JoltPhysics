@@ -12,16 +12,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CenterOfMassTest) 
-{ 
-	JPH_ADD_BASE_CLASS(CenterOfMassTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(CenterOfMassTest)
+{
+	JPH_ADD_BASE_CLASS(CenterOfMassTest, Test)
 }
 
 void CenterOfMassTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	// Compound shape with center of mass offset
 	Ref<StaticCompoundShapeSettings> compound_shape1 = new StaticCompoundShapeSettings;
 	compound_shape1->AddShape(Vec3(10, 0, 0), Quat::sIdentity(), new SphereShape(2));

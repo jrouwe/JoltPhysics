@@ -79,7 +79,7 @@ private:
 			return true;
 		}
 
-		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int				VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Test if point overlaps with box
 			UVec4 collides = GetIntersectingSubShapesVisitor<BoxType>::TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
@@ -91,7 +91,7 @@ private:
 	/// After the function returns ioBodyIdx and ioBounds will be shuffled
 	static void						sPartition(uint *ioBodyIdx, AABox *ioBounds, int inNumber, int &outMidPoint);
 
-	/// Sorts ioBodyIdx from inBegin to (but excluding) inEnd spatially into 4 groups. 
+	/// Sorts ioBodyIdx from inBegin to (but excluding) inEnd spatially into 4 groups.
 	/// outSplit needs to be 5 ints long, when the function returns each group runs from outSplit[i] to (but excluding) outSplit[i + 1]
 	/// After the function returns ioBodyIdx and ioBounds will be shuffled
 	static void						sPartition4(uint *ioBodyIdx, AABox *ioBounds, int inBegin, int inEnd, int *outSplit);
@@ -128,7 +128,7 @@ private:
 		HalfFloat					mBoundsMaxZ[4];
 		uint32						mNodeProperties[4];										///< 4 child node properties
 	};
-	
+
 	static_assert(sizeof(Node) == 64, "Node should be 64 bytes");
 
 	using Nodes = Array<Node>;

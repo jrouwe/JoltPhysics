@@ -34,7 +34,7 @@ public:
 	/// If you want the surface normal of the hit use Body::GetWorldSpaceSurfaceNormal(collected sub shape ID, inRay.GetPointOnRay(collected fraction)) on body with collected body ID.
 	void						CastRay(const RRayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter = { }, const ObjectLayerFilter &inObjectLayerFilter = { }, const BodyFilter &inBodyFilter = { }, const ShapeFilter &inShapeFilter = { }) const;
 
-	/// Check if inPoint is inside any shapes. For this tests all shapes are treated as if they were solid. 
+	/// Check if inPoint is inside any shapes. For this tests all shapes are treated as if they were solid.
 	/// For a mesh shape, this test will only provide sensible information if the mesh is a closed manifold.
 	/// For each shape that collides, ioCollector will receive a hit
 	void						CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter = { }, const ObjectLayerFilter &inObjectLayerFilter = { }, const BodyFilter &inBodyFilter = { }, const ShapeFilter &inShapeFilter = { }) const;

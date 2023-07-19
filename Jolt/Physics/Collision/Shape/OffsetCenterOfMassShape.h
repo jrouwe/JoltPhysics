@@ -49,7 +49,7 @@ public:
 
 	// See Shape::GetLocalBounds
 	virtual AABox					GetLocalBounds() const override;
-		
+
 	// See Shape::GetWorldSpaceBounds
 	virtual AABox					GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const override;
 	using Shape::GetWorldSpaceBounds;

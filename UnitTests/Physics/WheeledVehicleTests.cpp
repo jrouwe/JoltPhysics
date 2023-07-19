@@ -81,7 +81,7 @@ TEST_SUITE("WheeledVehicleTests")
 		vehicle.mWheels[FR_WHEEL] = fr;
 		vehicle.mWheels[BL_WHEEL] = bl;
 		vehicle.mWheels[BR_WHEEL] = br;
-	
+
 		for (WheelSettings *w : vehicle.mWheels)
 		{
 			w->mRadius = inSettings.mWheelRadius;
@@ -140,11 +140,11 @@ TEST_SUITE("WheeledVehicleTests")
 	{
 		// Between min and max suspension length
 		RVec3 pos = inConstraint->GetVehicleBody()->GetPosition();
-		CHECK(pos.GetY() > inSettings.mSuspensionMinLength + inSettings.mWheelOffsetVertical + inSettings.mHalfVehicleHeight); 
+		CHECK(pos.GetY() > inSettings.mSuspensionMinLength + inSettings.mWheelOffsetVertical + inSettings.mHalfVehicleHeight);
 		CHECK(pos.GetY() < inSettings.mSuspensionMaxLength + inSettings.mWheelOffsetVertical + inSettings.mHalfVehicleHeight);
 
 		// Wheels touching ground
-		for (const Wheel *w : inConstraint->GetWheels()) 
+		for (const Wheel *w : inConstraint->GetWheels())
 			CHECK(w->GetContactBodyID() == inGroundID);
 	}
 

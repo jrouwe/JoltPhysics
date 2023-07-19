@@ -20,7 +20,7 @@ JPH_NAMESPACE_BEGIN
 ///
 /// Which roughly corresponds to an elliptic cone shape with major axis (inSwingYHalfAngle, inSwingZHalfAngle).
 ///
-/// In case inSwingYHalfAngle = 0, the rotation around Y will be constrained to 0 and the rotation around Z 
+/// In case inSwingYHalfAngle = 0, the rotation around Y will be constrained to 0 and the rotation around Z
 /// will be constrained between [-inSwingZHalfAngle, inSwingZHalfAngle]. Vice versa if inSwingZHalfAngle = 0.
 class SwingTwistConstraintPart
 {
@@ -307,7 +307,7 @@ public:
 			// Twist has limits
 			if (twist_clamped)
 			{
-				mWorldSpaceTwistLimitRotationAxis = (inConstraintToWorld * q_swing).RotateAxisX();				
+				mWorldSpaceTwistLimitRotationAxis = (inConstraintToWorld * q_swing).RotateAxisX();
 				if (Sign(q_twist.GetW()) * q_twist.GetX() < 0.0f)
 					mWorldSpaceTwistLimitRotationAxis = -mWorldSpaceTwistLimitRotationAxis; // Flip axis if angle is negative because the impulse limit is going to be between [-FLT_MAX, 0]
 				mTwistLimitConstraintPart.CalculateConstraintProperties(inBody1, inBody2, mWorldSpaceTwistLimitRotationAxis);

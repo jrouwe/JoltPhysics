@@ -45,17 +45,17 @@ static const Vec3 sUnitBoxTriangles[] = {
 };
 
 ShapeSettings::ShapeResult BoxShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new BoxShape(*this, mCachedResult); 
+		Ref<Shape> shape = new BoxShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
-BoxShape::BoxShape(const BoxShapeSettings &inSettings, ShapeResult &outResult) : 
-	ConvexShape(EShapeSubType::Box, inSettings, outResult), 
-	mHalfExtent(inSettings.mHalfExtent), 
-	mConvexRadius(inSettings.mConvexRadius) 
-{ 
+BoxShape::BoxShape(const BoxShapeSettings &inSettings, ShapeResult &outResult) :
+	ConvexShape(EShapeSubType::Box, inSettings, outResult),
+	mHalfExtent(inSettings.mHalfExtent),
+	mConvexRadius(inSettings.mConvexRadius)
+{
 	// Check convex radius
 	if (inSettings.mConvexRadius < 0.0f
 		|| inSettings.mHalfExtent.ReduceMin() <= inSettings.mConvexRadius)
@@ -71,17 +71,17 @@ BoxShape::BoxShape(const BoxShapeSettings &inSettings, ShapeResult &outResult) :
 class BoxShape::Box final : public Support
 {
 public:
-					Box(const AABox &inBox, float inConvexRadius) : 
+					Box(const AABox &inBox, float inConvexRadius) :
 		mBox(inBox),
 		mConvexRadius(inConvexRadius)
-	{ 
-		static_assert(sizeof(Box) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(Box) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(Box)));
 	}
 
 	virtual Vec3	GetSupport(Vec3Arg inDirection) const override
-	{ 
-		return mBox.GetSupport(inDirection); 
+	{
+		return mBox.GetSupport(inDirection);
 	}
 
 	virtual float	GetConvexRadius() const override
@@ -125,13 +125,13 @@ const ConvexShape::Support *BoxShape::GetSupportFunction(ESupportMode inMode, Su
 	return nullptr;
 }
 
-void BoxShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const 
-{ 
+void BoxShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
+{
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	Vec3 scaled_half_extent = inScale.Abs() * mHalfExtent;
 	AABox box(-scaled_half_extent, scaled_half_extent);
-	box.GetSupportingFace(inDirection, outVertices); 
+	box.GetSupportingFace(inDirection, outVertices);
 
 	// Transform to world space
 	for (Vec3 &v : outVertices)
@@ -145,9 +145,9 @@ MassProperties BoxShape::GetMassProperties() const
 	return p;
 }
 
-Vec3 BoxShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
-	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID"); 
+Vec3 BoxShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	// Get component that is closest to the surface of the box
 	int index = (inLocalSurfacePosition.Abs() - mHalfExtent).Abs().GetLowestComponentIndex();
@@ -204,7 +204,7 @@ void BoxShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSet
 		}
 
 		// Check back side hit
-		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces 
+		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces
 			&& max_fraction < ioCollector.GetEarlyOutFraction())
 		{
 			hit.mFraction = max_fraction;

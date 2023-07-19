@@ -126,7 +126,7 @@ public:
 		case Layers::UNUSED1:
 		case Layers::UNUSED2:
 		case Layers::UNUSED3:
-			return false;			
+			return false;
 		default:
 			JPH_ASSERT(false);
 			return false;

@@ -38,6 +38,6 @@ VS_OUTPUT main(VS_INPUT input)
 		pos = mul(LightProjection, pos);
 		output.Position = pos;
 	}
-	
+
     return output;
 }

@@ -34,7 +34,7 @@ bool TaperedCapsuleShapeSettings::IsSphere() const
 }
 
 ShapeSettings::ShapeResult TaperedCapsuleShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
 	{
 		Ref<Shape> shape;
@@ -68,25 +68,25 @@ ShapeSettings::ShapeResult TaperedCapsuleShapeSettings::Create() const
 		else
 		{
 			// Normal tapered capsule shape
-			shape = new TaperedCapsuleShape(*this, mCachedResult); 
+			shape = new TaperedCapsuleShape(*this, mCachedResult);
 		}
 	}
 	return mCachedResult;
 }
 
-TaperedCapsuleShapeSettings::TaperedCapsuleShapeSettings(float inHalfHeightOfTaperedCylinder, float inTopRadius, float inBottomRadius, const PhysicsMaterial *inMaterial) : 
+TaperedCapsuleShapeSettings::TaperedCapsuleShapeSettings(float inHalfHeightOfTaperedCylinder, float inTopRadius, float inBottomRadius, const PhysicsMaterial *inMaterial) :
 	ConvexShapeSettings(inMaterial),
 	mHalfHeightOfTaperedCylinder(inHalfHeightOfTaperedCylinder),
-	mTopRadius(inTopRadius), 
+	mTopRadius(inTopRadius),
 	mBottomRadius(inBottomRadius)
-{ 
+{
 }
 
 TaperedCapsuleShape::TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSettings, ShapeResult &outResult) :
 	ConvexShape(EShapeSubType::TaperedCapsule, inSettings, outResult),
-	mTopRadius(inSettings.mTopRadius), 
+	mTopRadius(inSettings.mTopRadius),
 	mBottomRadius(inSettings.mBottomRadius)
-{ 
+{
 	if (mTopRadius <= 0.0f)
 	{
 		outResult.SetError("Invalid top radius");
@@ -135,19 +135,19 @@ TaperedCapsuleShape::TaperedCapsuleShape(const TaperedCapsuleShapeSettings &inSe
 class TaperedCapsuleShape::TaperedCapsule final : public Support
 {
 public:
-					TaperedCapsule(Vec3Arg inTopCenter, Vec3Arg inBottomCenter, float inTopRadius, float inBottomRadius, float inConvexRadius) : 
+					TaperedCapsule(Vec3Arg inTopCenter, Vec3Arg inBottomCenter, float inTopRadius, float inBottomRadius, float inConvexRadius) :
 		mTopCenter(inTopCenter),
 		mBottomCenter(inBottomCenter),
 		mTopRadius(inTopRadius),
 		mBottomRadius(inBottomRadius),
 		mConvexRadius(inConvexRadius)
-	{ 
-		static_assert(sizeof(TaperedCapsule) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(TaperedCapsule) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(TaperedCapsule)));
 	}
 
 	virtual Vec3	GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		// Check zero vector
 		float len = inDirection.Length();
 		if (len == 0.0f)
@@ -210,7 +210,7 @@ const ConvexShape::Support *TaperedCapsuleShape::GetSupportFunction(ESupportMode
 }
 
 void TaperedCapsuleShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
-{	
+{
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 	JPH_ASSERT(IsValidScale(inScale));
 
@@ -253,9 +253,9 @@ MassProperties TaperedCapsuleShape::GetMassProperties() const
 	return p;
 }
 
-Vec3 TaperedCapsuleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
-	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID"); 
+Vec3 TaperedCapsuleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	// See: TaperedCapsuleShape.gliffy
 	// We need to calculate ty and by in order to see if the position is on the top or bottom sphere
@@ -284,7 +284,7 @@ AABox TaperedCapsuleShape::GetLocalBounds() const
 }
 
 AABox TaperedCapsuleShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
-{ 
+{
 	JPH_ASSERT(IsValidScale(inScale));
 
 	Vec3 abs_scale = inScale.Abs();

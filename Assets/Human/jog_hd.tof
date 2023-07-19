@@ -1,12 +1,12 @@
 TOS 1.00
 
 declare SkeletalAnimation 2
-  mAnimatedJoints array instance SkeletalAnimation::AnimatedJoint 
+  mAnimatedJoints array instance SkeletalAnimation::AnimatedJoint
   mIsLooping bool
 
 declare SkeletalAnimation::AnimatedJoint 2
   mJointName string
-  mKeyframes array instance SkeletalAnimation::Keyframe 
+  mKeyframes array instance SkeletalAnimation::Keyframe
 
 declare SkeletalAnimation::Keyframe 3
   mRotation quat

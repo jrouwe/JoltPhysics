@@ -34,7 +34,7 @@ void UIAnimationSlide::Init(UIElement *inElement)
 	int dt = inElement->GetY();
 	int db = renderer->GetWindowHeight() - (inElement->GetY() + inElement->GetHeight());
 
-	if (min(dl, dr) < min(dt, db)) 
+	if (min(dl, dr) < min(dt, db))
 	{
 		mInitialRelativeX = mTargetRelativeX + (dl < dr? -mSlideDistanceH : mSlideDistanceH);
 		mInitialRelativeY = mTargetRelativeY;
@@ -54,14 +54,14 @@ void UIAnimationSlide::Init(UIElement *inElement)
 bool UIAnimationSlide::Update(UIElement *inElement, float inDeltaTime)
 {
 	mTime += inDeltaTime;
-	
+
 	float factor = (mTime - mTimeBeforeSlide) / mSlideTime;
 	if (factor >= 1.0f)
 		return false;
-	if (factor < 0.0f) 
+	if (factor < 0.0f)
 		factor = 0.0f;
 
-	if (mSlideMode == SLIDE_OFF_SCREEN) 
+	if (mSlideMode == SLIDE_OFF_SCREEN)
 		factor = 1.0f - factor;
 
 	float x = mInitialRelativeX * (1.0f - factor) + mTargetRelativeX * factor;

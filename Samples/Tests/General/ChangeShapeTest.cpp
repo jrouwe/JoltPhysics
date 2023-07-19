@@ -14,9 +14,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ChangeShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ChangeShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ChangeShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ChangeShapeTest, Test)
 }
 
 void ChangeShapeTest::Initialize()
@@ -41,14 +41,14 @@ void ChangeShapeTest::Initialize()
 	BodyCreationSettings settings;
 	settings.SetShape(mShapes[mShapeIdx]);
 	settings.mPosition = RVec3(0, 10, 0);
-	settings.mMotionType = EMotionType::Dynamic; 
+	settings.mMotionType = EMotionType::Dynamic;
 	settings.mObjectLayer = Layers::MOVING;
 	mBodyID = mBodyInterface->CreateBody(settings)->GetID();
 	mBodyInterface->AddBody(mBodyID, EActivation::Activate);
 }
 
 void ChangeShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	const float cSwitchTime = 3.0f;
 
 	// Increment time

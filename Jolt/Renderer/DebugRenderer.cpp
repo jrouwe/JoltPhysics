@@ -54,7 +54,7 @@ DebugRenderer::Triangle::Triangle(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, Colo
 	mV[0].mColor = mV[1].mColor = mV[2].mColor = inColor;
 
 	// Calculate normal
-	Vec3 normal = (inV2 - inV1).Cross(inV3 - inV1).Normalized();	
+	Vec3 normal = (inV2 - inV1).Cross(inV3 - inV1).Normalized();
 	Float3 normal3;
 	normal.StoreFloat3(&normal3);
 	mV[0].mNormal = mV[1].mNormal = mV[2].mNormal = normal3;
@@ -315,7 +315,7 @@ void DebugRenderer::Create8thSphereRecursive(Array<uint32> &ioIndices, Array<Ver
 			inDir2.StoreFloat3(&normal);
 			ioVertices.push_back({ position, normal, inUV, Color::sWhite });
 		}
-		
+
 		if (ioIdx3 == 0xffffffff)
 		{
 			ioIdx3 = (uint32)ioVertices.size();
@@ -338,7 +338,7 @@ void DebugRenderer::Create8thSphereRecursive(Array<uint32> &ioIndices, Array<Ver
 		uint32 idx1 = 0xffffffff;
 		uint32 idx2 = 0xffffffff;
 		uint32 idx3 = 0xffffffff;
-		
+
 		Create8thSphereRecursive(ioIndices, ioVertices, inDir1,  ioIdx1, center1, idx1,   center3, idx3,   inUV, inGetSupport, inLevel - 1);
 		Create8thSphereRecursive(ioIndices, ioVertices, center1, idx1,	  center2, idx2,   center3, idx3,   inUV, inGetSupport, inLevel - 1);
 		Create8thSphereRecursive(ioIndices, ioVertices, center1, idx1,   inDir2,  ioIdx2, center2, idx2,   inUV, inGetSupport, inLevel - 1);
@@ -372,7 +372,7 @@ void DebugRenderer::CreateQuad(Array<uint32> &ioIndices, Array<Vertex> &ioVertic
 	vertices[0].mColor = vertices[1].mColor = vertices[2].mColor = vertices[3].mColor = Color::sWhite;
 
 	// Calculate normal
-	Vec3 normal = (inV2 - inV1).Cross(inV3 - inV1).Normalized();	
+	Vec3 normal = (inV2 - inV1).Cross(inV3 - inV1).Normalized();
 	Float3 normal3;
 	normal.StoreFloat3(&normal3);
 	vertices[0].mNormal = vertices[1].mNormal = vertices[2].mNormal = vertices[3].mNormal = normal3;
@@ -480,9 +480,9 @@ void DebugRenderer::Initialize()
 			for (int q = 0; q < 4; ++q)
 			{
 				Float2 uv = (q & 1) == 0? Float2(0.25f, 0.25f) : Float2(0.25f, 0.75f);
-		
+
 				uint32 start_idx = (uint32)capsule_mid_vertices.size();
-		
+
 				int num_parts = 1 << level;
 				for (int i = 0; i <= num_parts; ++i)
 				{
@@ -520,9 +520,9 @@ void DebugRenderer::Initialize()
 			for (int q = 0; q < 4; ++q)
 			{
 				Float2 uv = (q & 1) == 0? Float2(0.25f, 0.25f) : Float2(0.25f, 0.75f);
-		
+
 				uint32 start_idx = (uint32)open_cone_vertices.size();
-		
+
 				int num_parts = 2 << level;
 				Float3 vt(0, 0, 0);
 				for (int i = 0; i <= num_parts; ++i)
@@ -535,7 +535,7 @@ void DebugRenderer::Initialize()
 
 					// Calculate normal
 					// perpendicular = Y cross vb (perpendicular to the plane in which 0, y and vb exists)
-					// normal = perpendicular cross vb (normal to the edge 0 vb)					
+					// normal = perpendicular cross vb (normal to the edge 0 vb)
 					Vec3 normal = Vec3(s, -Square(s) - Square(c), c).Normalized();
 					Float3 n; normal.StoreFloat3(&n);
 
@@ -562,9 +562,9 @@ void DebugRenderer::Initialize()
 			for (int q = 0; q < 4; ++q)
 			{
 				Float2 uv = (q & 1) == 0? Float2(0.25f, 0.75f) : Float2(0.25f, 0.25f);
-		
+
 				uint32 center_start_idx = (uint32)cylinder_vertices.size();
-		
+
 				Float3 nt(0.0f, 1.0f, 0.0f);
 				Float3 nb(0.0f, -1.0f, 0.0f);
 				cylinder_vertices.push_back({ Float3(0.0f, 1.0f, 0.0f), nt, uv, Color::sWhite });
@@ -617,7 +617,7 @@ void DebugRenderer::Initialize()
 	}
 }
 
-AABox DebugRenderer::sCalculateBounds(const Vertex *inVertices, int inVertexCount) 
+AABox DebugRenderer::sCalculateBounds(const Vertex *inVertices, int inVertexCount)
 {
 	AABox bounds;
 	for (const Vertex *v = inVertices, *v_end = inVertices + inVertexCount; v < v_end; ++v)
@@ -753,7 +753,7 @@ void DebugRenderer::DrawCapsule(RMat44Arg inMatrix, float inHalfHeightOfCylinder
 	// Calculate world space bounding box
 	AABox local_bounds(Vec3(-inRadius, -inHalfHeightOfCylinder - inRadius, -inRadius), Vec3(inRadius, inHalfHeightOfCylinder + inRadius, inRadius));
 	AABox world_bounds = local_bounds.Transformed(inMatrix);
-	
+
 	float radius_sq = Square(inRadius);
 
 	// Draw bottom half sphere
@@ -887,7 +887,7 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 			Vec3 &prev_pos = ls_vertices[(i + num_segments - 1) % num_segments];
 			Vec3 &next_pos = ls_vertices[(i + 1) % num_segments];
 			Vec3 normal = 0.5f * (next_pos.Cross(pos).Normalized() + pos.Cross(prev_pos).Normalized());
-			
+
 			// Store top vertex
 			top.mPosition = { 0, 0, 0 };
 			normal.StoreFloat3(&top.mNormal);
@@ -914,7 +914,7 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 			int third = first + 1;
 
 			// Triangle
-			*indices++ = first; 
+			*indices++ = first;
 			*indices++ = second;
 			*indices++ = third;
 		}
@@ -937,12 +937,12 @@ void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal,
 	JPH_ASSERT(inAxis.IsNormalized(1.0e-4f));
 	JPH_ASSERT(inNormal.IsNormalized(1.0e-4f));
 	JPH_ASSERT(abs(inNormal.Dot(inAxis)) < 1.0e-4f);
-		
+
 	// Pies have a unique batch based on the difference between min and max angle
 	float delta_angle = inMaxAngle - inMinAngle;
 	GeometryRef &geometry = mPieLimits[delta_angle];
 	if (geometry == nullptr)
-	{	
+	{
 		int num_parts = (int)ceil(64.0f * delta_angle / (2.0f * JPH_PI));
 
 		Float3 normal = { 0, 1, 0 };
@@ -955,7 +955,7 @@ void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal,
 
 		// Center of circle
 		*vertices++ = { center, normal, { 0, 0 }, Color::sWhite };
-	
+
 		// Outer edge of pie
 		for (int i = 0; i <= num_parts; ++i)
 		{
@@ -980,10 +980,10 @@ void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal,
 		// Convert to triangle batch
 		geometry = new Geometry(CreateTriangleBatch(vertices_start, num_vertices, indices_start, num_indices), sCalculateBounds(vertices_start, num_vertices));
 	}
-	
+
 	// Construct matrix that transforms pie into world space
 	RMat44 matrix = RMat44(Vec4(inRadius * inAxis, 0), Vec4(inRadius * inNormal, 0), Vec4(inRadius * inNormal.Cross(inAxis), 0), inCenter) * Mat44::sRotationY(-inMinAngle);
-		
+
 	DrawGeometry(matrix, inColor, geometry, ECullMode::Off, inCastShadow, inDrawMode);
 }
 

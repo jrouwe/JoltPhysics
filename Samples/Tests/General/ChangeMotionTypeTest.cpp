@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ChangeMotionTypeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ChangeMotionTypeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ChangeMotionTypeTest)
+{
+	JPH_ADD_BASE_CLASS(ChangeMotionTypeTest, Test)
 }
 
 void ChangeMotionTypeTest::Initialize()
@@ -24,7 +24,7 @@ void ChangeMotionTypeTest::Initialize()
 	BodyCreationSettings settings;
 	settings.SetShape(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)));
 	settings.mPosition = RVec3(0, 10, 0);
-	settings.mMotionType = EMotionType::Static; 
+	settings.mMotionType = EMotionType::Static;
 	settings.mObjectLayer = Layers::MOVING; // Put in moving layer, this will result in some overhead when the body is static
 	settings.mAllowDynamicOrKinematic = true;
 	mBody = mBodyInterface->CreateBody(settings);
@@ -32,7 +32,7 @@ void ChangeMotionTypeTest::Initialize()
 }
 
 void ChangeMotionTypeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	// Increment time
 	mTime += inParams.mDeltaTime;
 

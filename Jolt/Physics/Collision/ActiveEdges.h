@@ -21,7 +21,7 @@ namespace ActiveEdges
 		float cos_angle_normals = inNormal1.Dot(inNormal2);
 		if (cos_angle_normals < -0.99984769515639123915701155881391f) // cos(179 degrees)
 			return true;
-			
+
 		// Check if concave edge, if so we are not active
 		if (inNormal1.Cross(inNormal2).Dot(inEdgeDirection) < 0.0f)
 			return false;

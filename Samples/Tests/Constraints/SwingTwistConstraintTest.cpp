@@ -11,16 +11,16 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SwingTwistConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SwingTwistConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SwingTwistConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(SwingTwistConstraintTest, Test)
 }
 
 void SwingTwistConstraintTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	float half_cylinder_height = 1.5f;
 
 	const int cChainLength = 10;
@@ -63,8 +63,8 @@ void SwingTwistConstraintTest::Initialize()
 	}
 }
 
-void SwingTwistConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams) 
-{ 
+void SwingTwistConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
 	for (SwingTwistConstraint *c : mConstraints)
 	{
 		c->SetNormalHalfConeAngle(sNormalHalfConeAngle);

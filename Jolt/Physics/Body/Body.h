@@ -23,8 +23,8 @@ class BodyCreationSettings;
 
 /// A rigid body that can be simulated using the physics system
 ///
-/// Note that internally all properties (position, velocity etc.) are tracked relative to the center of mass of the object to simplify the simulation of the object. 
-/// 
+/// Note that internally all properties (position, velocity etc.) are tracked relative to the center of mass of the object to simplify the simulation of the object.
+///
 /// The offset between the position of the body and the center of mass position of the body is GetShape()->GetCenterOfMass().
 /// The functions that get/set the position of the body all indicate if they are relative to the center of mass or to the original position in which the shape was created.
 ///
@@ -37,7 +37,7 @@ public:
 	/// Default constructor
 							Body() = default;
 
-	/// Destructor							
+	/// Destructor
 							~Body()															{ JPH_ASSERT(mMotionProperties == nullptr); }
 
 	/// Get the id of this body
@@ -89,7 +89,7 @@ public:
 	void					SetMotionType(EMotionType inMotionType);
 
 	/// Get broadphase layer, this determines in which broad phase sub-tree the object is placed
-	inline BroadPhaseLayer	GetBroadPhaseLayer() const										{ return mBroadPhaseLayer; }	
+	inline BroadPhaseLayer	GetBroadPhaseLayer() const										{ return mBroadPhaseLayer; }
 
 	/// Get object layer, this determines which other objects it collides with
 	inline ObjectLayer		GetObjectLayer() const											{ return mObjectLayer; }
@@ -167,7 +167,7 @@ public:
 
 	/// Add angular impulse in world space (unit: N m s)
 	inline void				AddAngularImpulse(Vec3Arg inAngularImpulse);
-	
+
 	/// Set velocity of body such that it will be positioned at inTargetPosition/Rotation in inDeltaTime seconds.
 	void					MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
 
@@ -339,7 +339,7 @@ private:
 	BroadPhaseLayer			mBroadPhaseLayer;												///< The broad phase layer this body belongs to
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
-	
+
 	// 121 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
 
 #if JPH_CPU_ADDRESS_BITS == 32

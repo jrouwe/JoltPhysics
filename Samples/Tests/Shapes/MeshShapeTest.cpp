@@ -12,12 +12,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(MeshShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(MeshShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(MeshShapeTest)
+{
+	JPH_ADD_BASE_CLASS(MeshShapeTest, Test)
 }
 
-void MeshShapeTest::Initialize() 
+void MeshShapeTest::Initialize()
 {
 	// Create regular grid of triangles
 	uint32 max_material_index = 0;

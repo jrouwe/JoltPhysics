@@ -12,8 +12,8 @@
 
 class DebugUI;
 class UIElement;
-namespace JPH { 
-	class StateRecorder; 
+namespace JPH {
+	class StateRecorder;
 	class JobSystem;
 	class ContactListener;
 	class DebugRenderer;

@@ -57,7 +57,7 @@ TEST_SUITE("RayShapeTests")
 		// --------|--------|-O---->-
 		inTestFunction(RayCast { r1, r2 - l1 }, FLT_MAX, FLT_MAX);
 	}
-	
+
 	static void TestRayHelper(const Shape *inShape, Vec3Arg inHitA, Vec3Arg inHitB)
 	{
 		//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +171,7 @@ TEST_SUITE("RayShapeTests")
 		// Test inverse ray
 		TestRayHelperInternal(inHitB, inHitA, TestShapeRayMultiHitWithBackFace);
 
-		
+
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		// Test function that directly tests against a shape allowing multiple hits but no back facing hits, treating convex object as non-solids
 		//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -262,7 +262,7 @@ TEST_SUITE("RayShapeTests")
 		// Test inverse ray
 		TestRayHelperInternal(inHitB, inHitA, TestShapeRayMultiHitWithBackFaceNonSolid);
 
-		
+
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		// Insert the shape into the world
 		//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,7 +279,7 @@ TEST_SUITE("RayShapeTests")
 		PhysicsSystem system;
 		system.Init(1, 0, 4, 4, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
 		system.GetBodyInterface().CreateAndAddBody(BodyCreationSettings(inShape, RVec3(cShapePosition), cShapeRotation, EMotionType::Static, 0), EActivation::DontActivate);
-			   
+
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		// Test a ray against a shape through a physics system
@@ -401,7 +401,7 @@ TEST_SUITE("RayShapeTests")
 		BoxShape box(Vec3(2, 3, 4)); // Allocate on the stack to test embedded refcounted structs
 		box.SetEmbedded();
 		Ref<Shape> shape = &box; // Add a reference to see if we don't hit free() of a stack allocated struct
-		
+
 		TestRayHelper(shape, Vec3(-2, 0, 0), Vec3(2, 0, 0));
 		TestRayHelper(shape, Vec3(0, -3, 0), Vec3(0, 3, 0));
 		TestRayHelper(shape, Vec3(0, 0, -4), Vec3(0, 0, 4));
@@ -486,14 +486,14 @@ TEST_SUITE("RayShapeTests")
 
 		// Scale the hull
 		Ref<Shape> shape1 = new ScaledShape(hull, Vec3(2, 3, 4));
-		
+
 		TestRayHelper(shape1, Vec3(-4, 0, 0), Vec3(6, 0, 0));
 		TestRayHelper(shape1, Vec3(0, -12, 0), Vec3(0, 15, 0));
 		TestRayHelper(shape1, Vec3(0, 0, -24), Vec3(0, 0, 28));
 
 		// Scale the hull (and flip it inside out)
 		Ref<Shape> shape2 = new ScaledShape(hull, Vec3(-2, 3, 4));
-		
+
 		TestRayHelper(shape2, Vec3(-6, 0, 0), Vec3(4, 0, 0));
 		TestRayHelper(shape2, Vec3(0, -12, 0), Vec3(0, 15, 0));
 		TestRayHelper(shape2, Vec3(0, 0, -24), Vec3(0, 0, 28));
@@ -523,7 +523,7 @@ TEST_SUITE("RayShapeTests")
 		compound_settings.AddShape(cShape1Position, cShape1Rotation, hull); // Shape 1
 		compound_settings.AddShape(cShape2Position, cShape2Rotation, hull); // Shape 2
 		RefConst<Shape> compound = compound_settings.Create().Get();
-		
+
 		// Hitting shape 1
 		TestRayHelper(compound, cShape1Position + cShape1Rotation * Vec3(-2, 0, 0), cShape1Position + cShape1Rotation * Vec3(3, 0, 0));
 		TestRayHelper(compound, cShape1Position + cShape1Rotation * Vec3(0, -4, 0), cShape1Position + cShape1Rotation * Vec3(0, 5, 0));
@@ -559,7 +559,7 @@ TEST_SUITE("RayShapeTests")
 		compound_settings.AddShape(cShape1Position, cShape1Rotation, hull); // Shape 1
 		compound_settings.AddShape(cShape2Position, cShape2Rotation, hull); // Shape 2
 		RefConst<Shape> compound = compound_settings.Create().Get();
-		
+
 		// Hitting shape 1
 		TestRayHelper(compound, cShape1Position + cShape1Rotation * Vec3(-2, 0, 0), cShape1Position + cShape1Rotation * Vec3(3, 0, 0));
 		TestRayHelper(compound, cShape1Position + cShape1Rotation * Vec3(0, -4, 0), cShape1Position + cShape1Rotation * Vec3(0, 5, 0));

@@ -202,7 +202,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 			// Convert the hit result into a contact
 			sFillContactProperties(mCharacter, contact, body, mUp, mBaseOffset, *this, inResult);
 		}
-			
+
 		contact.mFraction = inResult.mFraction;
 
 		// Check if the contact that will make us penetrate more than the allowed tolerance
@@ -397,7 +397,7 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, float i
 		// Next check if the angle is too steep and if it is add an additional constraint that holds the character back
 		if (IsSlopeTooSteep(c.mSurfaceNormal))
 		{
-			// Only take planes that point up. 
+			// Only take planes that point up.
 			// Note that we use the contact normal to allow for better sliding as the surface normal may be in the opposite direction of movement.
 			float dot = c.mContactNormal.Dot(mUp);
 			if (dot > 1.0e-3f) // Add a little slack, if the normal is perfectly horizontal we already have our vertical plane.

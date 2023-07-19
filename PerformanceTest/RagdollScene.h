@@ -100,7 +100,7 @@ public:
 				{
 					// Create ragdoll
 					Ref<Ragdoll> ragdoll = mRagdollSettings->CreateRagdoll(group_id++, 0, &inPhysicsSystem);
-	
+
 					// Override root
 					SkeletonPose pose_copy = mPose;
 					pose_copy.SetRootOffset(start);

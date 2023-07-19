@@ -1,17 +1,17 @@
 TOS 1.00
 
 declare RagdollSettings 2
-  mSkeleton instance Skeleton 
-  mParts array instance RagdollSettings::Part 
+  mSkeleton instance Skeleton
+  mParts array instance RagdollSettings::Part
 
 declare Skeleton 1
-  mJoints array instance Skeleton::Joint 
+  mJoints array instance Skeleton::Joint
 
 declare RagdollSettings::Part 19
   mPosition vec3
   mRotation quat
-  mShape instance ShapeSettings 
-  mCollisionGroup instance CollisionGroup 
+  mShape instance ShapeSettings
+  mCollisionGroup instance CollisionGroup
   mObjectLayer uint32
   mMotionType uint32
   mAllowDynamicOrKinematic bool
@@ -25,8 +25,8 @@ declare RagdollSettings::Part 19
   mMaxAngularVelocity float
   mGravityFactor float
   mOverrideMassProperties uint32
-  mMassPropertiesOverride instance MassProperties 
-  mToParent instance TwoBodyConstraintSettings 
+  mMassPropertiesOverride instance MassProperties
+  mToParent instance TwoBodyConstraintSettings
 
 declare Skeleton::Joint 2
   mName string
@@ -36,7 +36,7 @@ declare ShapeSettings 1
   mUserData uint32
 
 declare CollisionGroup 3
-  mGroupFilter instance GroupFilter 
+  mGroupFilter instance GroupFilter
   mGroupID uint32
   mSubGroupID uint32
 
@@ -610,10 +610,10 @@ object Skeleton 00000002
 
 declare StaticCompoundShapeSettings 2
   mUserData uint32
-  mSubShapes array instance CompoundShapeSettings::SubShapeSettings 
+  mSubShapes array instance CompoundShapeSettings::SubShapeSettings
 
 declare CompoundShapeSettings::SubShapeSettings 4
-  mShape instance ShapeSettings 
+  mShape instance ShapeSettings
   mPosition vec3
   mRotation quat
   mUserData uint32
@@ -687,8 +687,8 @@ declare SwingTwistConstraintSettings 14
   mTwistMinAngle float
   mTwistMaxAngle float
   mMaxFrictionTorque float
-  mSwingMotorSettings instance MotorSettings 
-  mTwistMotorSettings instance MotorSettings 
+  mSwingMotorSettings instance MotorSettings
+  mTwistMotorSettings instance MotorSettings
 
 declare MotorSettings 6
   mFrequency float
@@ -1449,7 +1449,7 @@ object SwingTwistConstraintSettings 00000030
 declare CapsuleShapeSettings 5
   mUserData uint32
   mDensity float
-  mMaterial instance PhysicsMaterial 
+  mMaterial instance PhysicsMaterial
   mRadius float
   mHalfHeightOfCylinder float
 
@@ -1465,7 +1465,7 @@ object CapsuleShapeSettings 00000031
 declare TaperedCapsuleShapeSettings 6
   mUserData uint32
   mDensity float
-  mMaterial instance PhysicsMaterial 
+  mMaterial instance PhysicsMaterial
   mHalfHeightOfTaperedCylinder float
   mTopRadius float
   mBottomRadius float
@@ -1489,7 +1489,7 @@ object TaperedCapsuleShapeSettings 00000033
 declare BoxShapeSettings 5
   mUserData uint32
   mDensity float
-  mMaterial instance PhysicsMaterial 
+  mMaterial instance PhysicsMaterial
   mHalfExtent vec3
   mConvexRadius float
 

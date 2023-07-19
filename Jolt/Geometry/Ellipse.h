@@ -52,13 +52,13 @@ public:
 				return Float2(a_sq * inPoint.x / t_plus_a_sq, b_sq * inPoint.y / t_plus_b_sq);
 
 			// Get derivative dg/dt = g'(t) = -2 (b^2 y^2 / (t + b^2)^3 + a^2 x^2 / (t + a^2)^3)
-			float gt_accent = -2.0f * 
-				(a_sq * Square(inPoint.x) / Cubed(t_plus_a_sq) 
+			float gt_accent = -2.0f *
+				(a_sq * Square(inPoint.x) / Cubed(t_plus_a_sq)
 				+ b_sq * Square(inPoint.y) / Cubed(t_plus_b_sq));
 
 			// Calculate t for next iteration: tn+1 = tn - g(t) / g'(t)
 			float tn = t - gt / gt_accent;
-			t = tn;			
+			t = tn;
 		}
 	}
 

@@ -69,13 +69,13 @@ public:
 			uint *							mParentChildNodeStart = nullptr;			// Where to store mNodeStart (to patch mChildNodeStart of my parent)
 			uint *							mParentTrianglesStart = nullptr;			// Where to store mTriangleStart (to patch mChildTrianglesStart of my parent)
 		};
-		
+
 		Deque<NodeData *> to_process;
 		Deque<NodeData *> to_process_triangles;
 		Array<NodeData> node_list;
 
 		node_list.reserve(node_count); // Needed to ensure that array is not reallocated, so we can keep pointers in the array
-		
+
 		NodeData root;
 		root.mNode = inRoot;
 		root.mNodeBoundsMin = inRoot->mBounds.mMin;
@@ -155,7 +155,7 @@ public:
 					}
 				}
 				else
-				{				
+				{
 					// Add triangles
 					node_data->mTriangleStart = tri_ctx.Pack(node_data->mNode->mTriangles, mTree, outError);
 					if (node_data->mTriangleStart == uint(-1))
@@ -176,12 +176,12 @@ public:
 			else
 				to_process.swap(to_process_triangles);
 		}
-		
+
 		// Finalize all nodes
 		for (NodeData &n : node_list)
 			if (!node_ctx.NodeFinalize(n.mNode, n.mNodeStart, n.mNumChildren, n.mChildNodeStart, n.mChildTrianglesStart, mTree, outError))
 				return false;
-		
+
 		// Finalize the triangles
 		tri_ctx.Finalize(inVertices, triangle_header, mTree);
 
@@ -236,7 +236,7 @@ public:
 	{
 		return mTree.Get<void>(HeaderSize + TriangleHeaderSize);
 	}
-	
+
 private:
 	ByteBuffer						mTree;									///< Resulting tree structure
 	uint							mNodesSize;								///< Size in bytes of the nodes in the buffer

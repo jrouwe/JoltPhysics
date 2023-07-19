@@ -3315,7 +3315,7 @@ namespace detail {
 
 namespace timer_large_integer
 {
-    
+
 #if defined(DOCTEST_PLATFORM_WINDOWS)
     using type = ULONGLONG;
 #else // DOCTEST_PLATFORM_WINDOWS
@@ -4949,7 +4949,7 @@ namespace detail {
             m_string = tlssPop();
             logged = true;
         }
-        
+
         DOCTEST_ITERATE_THROUGH_REPORTERS(log_message, *this);
 
         const bool isWarn = m_severity & assertType::is_warn;
@@ -5500,7 +5500,7 @@ namespace {
             test_case_start_impl(in);
             xml.ensureTagClosed();
         }
-        
+
         void test_case_reenter(const TestCaseData&) override {}
 
         void test_case_end(const CurrentTestCaseStats& st) override {
@@ -6222,7 +6222,7 @@ namespace {
             subcasesStack.clear();
             currentSubcaseLevel = 0;
         }
-        
+
         void test_case_reenter(const TestCaseData&) override {
             subcasesStack.clear();
         }
@@ -6905,7 +6905,7 @@ int Context::run() {
             DOCTEST_ITERATE_THROUGH_REPORTERS(test_case_start, tc);
 
             p->timer.start();
-            
+
             bool run_test = true;
 
             do {
@@ -6946,7 +6946,7 @@ DOCTEST_MSVC_SUPPRESS_WARNING_POP
                     run_test = false;
                     p->failure_flags |= TestCaseFailureReason::TooManyFailedAsserts;
                 }
-                
+
                 if(!p->nextSubcaseStack.empty() && run_test)
                     DOCTEST_ITERATE_THROUGH_REPORTERS(test_case_reenter, tc);
                 if(p->nextSubcaseStack.empty())

@@ -46,7 +46,7 @@ private:
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			if (ioBody1.IsDynamic())
 				ioBody1.GetMotionProperties()->SubAngularVelocityStep(mInvI1.Multiply3x3(inLambda));
@@ -62,8 +62,8 @@ public:
 	/// Return inverse of initial rotation from body 1 to body 2 in body 1 space
 	static Quat					sGetInvInitialOrientation(const Body &inBody1, const Body &inBody2)
 	{
-		// q20 = q10 r0 
-		// <=> r0 = q10^-1 q20 
+		// q20 = q10 r0
+		// <=> r0 = q10^-1 q20
 		// <=> r0^-1 = q20^-1 q10
 		//
 		// where:
@@ -83,8 +83,8 @@ public:
 	{
 		// Store inverse of initial rotation from body 1 to body 2 in body 1 space:
 		//
-		// q20 = q10 r0 
-		// <=> r0 = q10^-1 q20 
+		// q20 = q10 r0
+		// <=> r0 = q10^-1 q20
 		// <=> r0^-1 = q20^-1 q10
 		//
 		// where:
@@ -93,14 +93,14 @@ public:
 		// r0 = initial rotation rotation from body 1 to body 2 in local space of body 1
 		//
 		// We can also write this in terms of the constraint matrices:
-		// 
+		//
 		// q20 c2 = q10 c1
 		// <=> q20 = q10 c1 c2^-1
 		// => r0 = c1 c2^-1
 		// <=> r0^-1 = c2 c1^-1
-		// 
+		//
 		// where:
-		// 
+		//
 		// c1, c2 = matrix that takes us from body 1 and 2 COM to constraint space 1 and 2
 		if (inAxisX1 == inAxisX2 && inAxisY1 == inAxisY2)
 		{
@@ -176,7 +176,7 @@ public:
 		mTotalLambda += lambda;
 		return ApplyVelocityStep(ioBody1, ioBody2, lambda);
 	}
-	
+
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.
 	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, QuatArg inInvInitialOrientation, float inBaumgarte) const
 	{
@@ -204,7 +204,7 @@ public:
 		// Where:
 		// v = rotation vector
 		// theta = rotation angle
-		// 
+		//
 		// If we assume theta is small (error is small) then sin(x) = x so an approximation of the error angles is:
 		Vec3 error = 2.0f * diff.EnsureWPositive().GetXYZ();
 		if (error != Vec3::sZero())
@@ -218,7 +218,7 @@ public:
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -227,9 +227,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			if (ioBody1.IsDynamic())
 				ioBody1.SubRotationStep(mInvI1.Multiply3x3(lambda));
@@ -259,7 +259,7 @@ public:
 		inStream.Read(mTotalLambda);
 	}
 
-private:	
+private:
 	Mat44						mInvI1;
 	Mat44						mInvI2;
 	Mat44						mEffectiveMass;

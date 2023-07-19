@@ -39,8 +39,8 @@ private:
 	void							Reset();
 	void							ResetKeyboard();
 
-	enum 
-	{ 
+	enum
+	{
 		BUFFERSIZE					= 64,								///< Number of keys cached
 		DCLICKTIME					= 300								///< Minimum time between key release and key down to make it a double click
 	};

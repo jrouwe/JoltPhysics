@@ -19,7 +19,7 @@ TriangleSplitter::TriangleSplitter(const VertexList &inVertices, const IndexedTr
 	{
 		// Initially triangles start unsorted
 		mSortedTriangleIdx[t] = t;
-		
+
 		// Calculate centroid
 		inTriangles[t].GetCentroid(inVertices).StoreFloat3(&mCentroids[t]);
 	}

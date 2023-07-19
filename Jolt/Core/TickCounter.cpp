@@ -58,7 +58,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 	return uint64(mhz) * 1000000UL;
 #elif defined(JPH_PLATFORM_BLUE)
 	return JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY();
-#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) 
+#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID)
 	// Open /proc/cpuinfo
     std::ifstream ifs("/proc/cpuinfo");
     if (ifs.is_open())
@@ -69,7 +69,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 			// Get next line
 			string line;
 			getline(ifs, line);
-		
+
 		#if defined(JPH_CPU_X86)
 			const char *cpu_str = "cpu MHz";
 		#elif defined(JPH_CPU_ARM)
@@ -85,7 +85,7 @@ static const uint64 sProcessorTicksPerSecond = []() {
 				// Find ':'
 				string::size_type pos = line.find(':', num_chars);
 				if (pos != String::npos)
-				{		
+				{
 					// Convert to number
 					string freq = line.substr(pos + 1);
 					return uint64(stod(freq) * 1000000.0);

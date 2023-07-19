@@ -33,10 +33,10 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(ConvexShapeSettings)
 	JPH_ADD_ATTRIBUTE(ConvexShapeSettings, mMaterial)
 }
 
-const std::vector<Vec3> ConvexShape::sUnitSphereTriangles = []() { 
+const std::vector<Vec3> ConvexShape::sUnitSphereTriangles = []() {
 	const int level = 2;
 
-	std::vector<Vec3> verts;	
+	std::vector<Vec3> verts;
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereTop(verts, level);
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereBottom(verts, level);
 	return verts;
@@ -87,7 +87,7 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 
 		// Transform shape 2 in the space of shape 1
 		TransformedConvexObject<Support> transformed2_excl_cvx_radius(transform_2_to_1, *shape2_excl_cvx_radius);
-	
+
 		// Perform GJK step
 		status = pen_depth.GetPenetrationDepthStepGJK(*shape1_excl_cvx_radius, shape1_excl_cvx_radius->GetConvexRadius() + inCollideShapeSettings.mMaxSeparationDistance, transformed2_excl_cvx_radius, shape2_excl_cvx_radius->GetConvexRadius(), inCollideShapeSettings.mCollisionTolerance, penetration_axis, point1, point2);
 	}
@@ -147,7 +147,7 @@ void ConvexShape::sCollideConvexVsConvex(const Shape *inShape1, const Shape *inS
 		// Get supporting face of shape 1
 		shape1->GetSupportingFace(SubShapeID(), -penetration_axis, inScale1, inCenterOfMassTransform1, result.mShape1Face);
 
-		// Get supporting face of shape 2 
+		// Get supporting face of shape 2
 		shape2->GetSupportingFace(SubShapeID(), transform_2_to_1.Multiply3x3Transposed(penetration_axis), inScale2, inCenterOfMassTransform2, result.mShape2Face);
 	}
 
@@ -210,7 +210,7 @@ void ConvexShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCast
 				// Cast another ray
 				RayCastResult inverted_hit;
 				inverted_hit.mFraction = 1.0f;
-				if (CastRay(inverted_ray, inSubShapeIDCreator, inverted_hit) 
+				if (CastRay(inverted_ray, inSubShapeIDCreator, inverted_hit)
 					&& inverted_hit.mFraction > 0.0f) // Ignore hits with fraction 0, this means the ray ends inside the object and we don't want to report it as a back facing hit
 				{
 					// Invert fraction and rescale it to the fraction of the original ray
@@ -252,10 +252,10 @@ void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeC
 	JPH_PROFILE_FUNCTION();
 
 	// Only supported for convex shapes
-	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Convex); 
+	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Convex);
 	const ConvexShape *cast_shape = static_cast<const ConvexShape *>(inShapeCast.mShape);
 
-	JPH_ASSERT(inShape->GetType() == EShapeType::Convex); 
+	JPH_ASSERT(inShape->GetType() == EShapeType::Convex);
 	const ConvexShape *shape = static_cast<const ConvexShape *>(inShape);
 
 	// Determine if we want to use the actual shape or a shrunken shape with convex radius
@@ -274,7 +274,7 @@ void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeC
 	float fraction = ioCollector.GetEarlyOutFraction();
 	Vec3 contact_point_a, contact_point_b, contact_normal;
 	if (epa.CastShape(inShapeCast.mCenterOfMassStart, inShapeCast.mDirection, inShapeCastSettings.mCollisionTolerance, inShapeCastSettings.mPenetrationTolerance, *cast_support, *target_support, cast_support->GetConvexRadius(), target_support->GetConvexRadius(), inShapeCastSettings.mReturnDeepestPoint, fraction, contact_point_a, contact_point_b, contact_normal)
-		&& (inShapeCastSettings.mBackFaceModeConvex == EBackFaceMode::CollideWithBackFaces 
+		&& (inShapeCastSettings.mBackFaceModeConvex == EBackFaceMode::CollideWithBackFaces
 			|| contact_normal.Dot(inShapeCast.mDirection) > 0.0f)) // Test if backfacing
 	{
 		// Convert to world space
@@ -308,10 +308,10 @@ void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeC
 class ConvexShape::CSGetTrianglesContext
 {
 public:
-				CSGetTrianglesContext(const ConvexShape *inShape, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) : 		
-		mLocalToWorld(Mat44::sRotationTranslation(inRotation, inPositionCOM) * Mat44::sScale(inScale)), 
-		mIsInsideOut(ScaleHelpers::IsInsideOut(inScale)) 
-	{ 
+				CSGetTrianglesContext(const ConvexShape *inShape, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) :
+		mLocalToWorld(Mat44::sRotationTranslation(inRotation, inPositionCOM) * Mat44::sScale(inScale)),
+		mIsInsideOut(ScaleHelpers::IsInsideOut(inScale))
+	{
 		mSupport = inShape->GetSupportFunction(ESupportMode::IncludeConvexRadius, mSupportBuffer, Vec3::sReplicate(1.0f));
 	}
 
@@ -477,10 +477,10 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inC
 	for (Vec3 v : Vec3::sUnitSphere)
 	{
 		Vec3 direction = 0.05f * v;
-			
+
 		SupportingFace face;
 		GetSupportingFace(SubShapeID(), direction, inScale, Mat44::sIdentity(), face);
-			
+
 		if (!face.empty())
 		{
 			JPH_ASSERT(face.size() >= 2, "The GetSupportingFace function should either return nothing or at least an edge");
@@ -500,7 +500,7 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inC
 		// Displace the face a little bit forward so it is easier to see
 		Vec3 normal = face.size() >= 3? (face[2] - face[1]).Cross(face[0] - face[1]).Normalized() : Vec3::sZero();
 		Vec3 displacement = 0.001f * normal;
-		
+
 		// Transform face to world space and calculate center of mass
 		Vec3 com_ls = Vec3::sZero();
 		for (Vec3 &v : face)
@@ -509,7 +509,7 @@ void ConvexShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inC
 			com_ls += v;
 		}
 		RVec3 com = inCenterOfMassTransform.GetTranslation() + com_ls / (float)face.size();
-		
+
 		// Draw the polygon and directions
 		inRenderer->DrawWirePolygon(RMat44::sTranslation(inCenterOfMassTransform.GetTranslation()), face, color, face.size() >= 3? 0.001f : 0.0f);
 		if (face.size() >= 3)
@@ -535,15 +535,15 @@ void ConvexShape::RestoreBinaryState(StreamIn &inStream)
 }
 
 void ConvexShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const
-{ 
+{
 	outMaterials.clear();
 	outMaterials.push_back(mMaterial);
 }
 
-void ConvexShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) 
-{ 
-	JPH_ASSERT(inNumMaterials == 1); 
-	mMaterial = inMaterials[0]; 
+void ConvexShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials)
+{
+	JPH_ASSERT(inNumMaterials == 1);
+	mMaterial = inMaterials[0];
 }
 
 void ConvexShape::sRegister()

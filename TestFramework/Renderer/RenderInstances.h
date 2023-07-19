@@ -30,7 +30,7 @@ public:
 
 private:
 	Renderer *				mRenderer;
-	
+
 	ComPtr<ID3D12Resource>	mInstanceBuffer;
 	int						mInstanceBufferSize = 0;
 	int						mInstanceSize = 0;

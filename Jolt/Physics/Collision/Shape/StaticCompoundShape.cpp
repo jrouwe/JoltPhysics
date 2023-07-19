@@ -21,7 +21,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(StaticCompoundShapeSettings)
 }
 
 ShapeSettings::ShapeResult StaticCompoundShapeSettings::Create(TempAllocator &inTempAllocator) const
-{ 
+{
 	if (mCachedResult.IsEmpty())
 	{
 		if (mSubShapes.size() == 0)
@@ -58,7 +58,7 @@ ShapeSettings::ShapeResult StaticCompoundShapeSettings::Create(TempAllocator &in
 		else
 		{
 			// Build a regular compound shape
-			Ref<Shape> shape = new StaticCompoundShape(*this, inTempAllocator, mCachedResult); 
+			Ref<Shape> shape = new StaticCompoundShape(*this, inTempAllocator, mCachedResult);
 		}
 	}
 	return mCachedResult;
@@ -148,7 +148,7 @@ void StaticCompoundShape::sPartition(uint *ioBodyIdx, AABox *ioBounds, int inNum
 	else
 	{
 		// Failed to divide bodies
-		outMidPoint = inNumber / 2; 
+		outMidPoint = inNumber / 2;
 	}
 }
 
@@ -159,15 +159,15 @@ void StaticCompoundShape::sPartition4(uint *ioBodyIdx, AABox *ioBounds, int inBe
 	int number = inEnd - inBegin;
 
 	// Partition entire range
-	sPartition(body_idx, node_bounds, number, outSplit[2]); 
-	
+	sPartition(body_idx, node_bounds, number, outSplit[2]);
+
 	// Partition lower half
-	sPartition(body_idx, node_bounds, outSplit[2], outSplit[1]); 
+	sPartition(body_idx, node_bounds, outSplit[2], outSplit[1]);
 
 	// Partition upper half
-	sPartition(body_idx + outSplit[2], node_bounds + outSplit[2], number - outSplit[2], outSplit[3]); 
+	sPartition(body_idx + outSplit[2], node_bounds + outSplit[2], number - outSplit[2], outSplit[3]);
 
-	// Convert to proper range 
+	// Convert to proper range
 	outSplit[0] = inBegin;
 	outSplit[1] += inBegin;
 	outSplit[2] += inBegin;
@@ -201,7 +201,7 @@ StaticCompoundShape::StaticCompoundShape(const StaticCompoundShapeSettings &inSe
 
 		// Calculate mass properties of child
 		MassProperties child = out_shape.mShape->GetMassProperties();
-	
+
 		// Accumulate center of mass
 		mass += child.mMass;
 		mCenterOfMass += out_shape.GetPositionCOM() * child.mMass;
@@ -316,7 +316,7 @@ StaticCompoundShape::StaticCompoundShape(const StaticCompoundShapeSettings &inSe
 				// Encapsulate bounding box in parent
 				cur_stack.mBounds.Encapsulate(child_bounds);
 			}
-			else 
+			else
 			{
 				// Allocate new node
 				StackEntry &new_stack = stack[++top];
@@ -379,7 +379,7 @@ inline void StaticCompoundShape::WalkTree(Visitor &ioVisitor) const
 				UVec4 bounds_minxy = UVec4::sLoadInt4(reinterpret_cast<const uint32 *>(&node.mBoundsMinX[0]));
 				Vec4 bounds_minx = HalfFloatConversion::ToFloat(bounds_minxy);
 				Vec4 bounds_miny = HalfFloatConversion::ToFloat(bounds_minxy.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
-					
+
 				UVec4 bounds_minzmaxx = UVec4::sLoadInt4(reinterpret_cast<const uint32 *>(&node.mBoundsMinZ[0]));
 				Vec4 bounds_minz = HalfFloatConversion::ToFloat(bounds_minzmaxx);
 				Vec4 bounds_maxx = HalfFloatConversion::ToFloat(bounds_minzmaxx.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
@@ -400,7 +400,7 @@ inline void StaticCompoundShape::WalkTree(Visitor &ioVisitor) const
 				top += num_results;
 			}
 			else
-			{	
+			{
 				// Points to a sub shape
 				uint32 sub_shape_idx = node_properties ^ IS_SUBSHAPE;
 				const SubShape &sub_shape = mSubShapes[sub_shape_idx];
@@ -414,7 +414,7 @@ inline void StaticCompoundShape::WalkTree(Visitor &ioVisitor) const
 		}
 
 		// Fetch next node until we find one that the visitor wants to see
-		do 
+		do
 			--top;
 		while (top >= 0 && !ioVisitor.ShouldVisitNode(top));
 	}
@@ -434,11 +434,11 @@ bool StaticCompoundShape::CastRay(const RayCast &inRay, const SubShapeIDCreator 
 			return mDistanceStack[inStackTop] < mHit.mFraction;
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Test bounds of 4 children
 			Vec4 distance = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mHit.mFraction, ioProperties, &mDistanceStack[inStackTop]);
 		}
@@ -468,11 +468,11 @@ void StaticCompoundShape::CastRay(const RayCast &inRay, const RayCastSettings &i
 			return mDistanceStack[inStackTop] < mCollector.GetEarlyOutFraction();
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Test bounds of 4 children
 			Vec4 distance = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
@@ -522,11 +522,11 @@ void StaticCompoundShape::sCastShapeVsCompound(const ShapeCast &inShapeCast, con
 			return mDistanceStack[inStackTop] < mCollector.GetPositiveEarlyOutFraction();
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Test bounds of 4 children
 			Vec4 distance = TestBounds(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetPositiveEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
@@ -589,7 +589,7 @@ int StaticCompoundShape::GetIntersectingSubShapes(const OrientedBox &inBox, uint
 }
 
 void StaticCompoundShape::sCollideCompoundVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
-{	
+{
 	JPH_PROFILE_FUNCTION();
 
 	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::StaticCompound);

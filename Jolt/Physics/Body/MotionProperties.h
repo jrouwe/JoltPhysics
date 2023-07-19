@@ -55,7 +55,7 @@ public:
 	/// Maximum linear velocity that a body can achieve. Used to prevent the system from exploding.
 	inline float			GetMaxLinearVelocity() const									{ return mMaxLinearVelocity; }
 	inline void				SetMaxLinearVelocity(float inLinearVelocity)					{ JPH_ASSERT(inLinearVelocity >= 0.0f); mMaxLinearVelocity = inLinearVelocity; }
-	
+
 	/// Maximum angular velocity that a body can achieve. Used to prevent the system from exploding.
 	inline float			GetMaxAngularVelocity() const									{ return mMaxAngularVelocity; }
 	inline void				SetMaxAngularVelocity(float inAngularVelocity)					{ JPH_ASSERT(inAngularVelocity >= 0.0f); mMaxAngularVelocity = inAngularVelocity; }
@@ -194,7 +194,7 @@ private:
 	float					mMaxAngularVelocity;											///< Maximum angular velocity that this body can reach (rad/s)
 	float					mGravityFactor;													///< Factor to multiply gravity with
 	uint32					mIndexInActiveBodies;											///< If the body is active, this is the index in the active body list or cInactiveIndex if it is not active
-	uint32					mIslandIndex;													///< Index of the island that this body is part of, when the body has not yet been updated or is not active this is cInactiveIndex 
+	uint32					mIslandIndex;													///< Index of the island that this body is part of, when the body has not yet been updated or is not active this is cInactiveIndex
 
 	// 1 byte aligned
 	EMotionQuality			mMotionQuality;													///< Motion quality, or how well it detects collisions when it has a high velocity

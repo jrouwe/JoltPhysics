@@ -91,7 +91,7 @@ public:
 	void								DrawSphere(RVec3Arg inCenter, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 	void								DrawUnitSphere(RMat44Arg inMatrix, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
-	/// Draw a capsule with one half sphere at (0, -inHalfHeightOfCylinder, 0) and the other half sphere at (0, inHalfHeightOfCylinder, 0) and radius inRadius. 
+	/// Draw a capsule with one half sphere at (0, -inHalfHeightOfCylinder, 0) and the other half sphere at (0, inHalfHeightOfCylinder, 0) and radius inRadius.
 	/// The capsule will be transformed by inMatrix.
 	void								DrawCapsule(RMat44Arg inMatrix, float inHalfHeightOfCylinder, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -99,8 +99,8 @@ public:
 	/// The cylinder will be transformed by inMatrix
 	void								DrawCylinder(RMat44Arg inMatrix, float inHalfHeight, float inRadius, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
-	/// Draw a bottomless cone. 
-	/// @param inTop Top of cone, center of base is at inTop + inAxis. 
+	/// Draw a bottomless cone.
+	/// @param inTop Top of cone, center of base is at inTop + inAxis.
 	/// @param inAxis Height and direction of cone
 	/// @param inPerpendicular Perpendicular vector to inAxis.
 	/// @param inHalfAngle Specifies the cone angle in radians (angle measured between inAxis and cone surface).
@@ -120,11 +120,11 @@ public:
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
-	/// Draw a pie (part of a circle). 
+	/// Draw a pie (part of a circle).
 	/// @param inCenter The center of the circle.
 	/// @param inRadius Radius of the circle.
 	/// @param inNormal The plane normal in which the pie resides.
-	/// @param inAxis The axis that defines an angle of 0 radians. 
+	/// @param inAxis The axis that defines an angle of 0 radians.
 	/// @param inMinAngle The pie will be drawn between [inMinAngle, inMaxAngle] (in radians).
 	/// @param inMaxAngle The pie will be drawn between [inMinAngle, inMaxAngle] (in radians).
 	/// @param inColor Color to use for drawing the pie.
@@ -199,7 +199,7 @@ public:
 
 	/// Create a primitive for a convex shape using its support function
 	using SupportFunction = function<Vec3 (Vec3Arg inDirection)>;
-	Batch								CreateTriangleBatchForConvex(SupportFunction inGetSupport, int inLevel, AABox *outBounds = nullptr); 
+	Batch								CreateTriangleBatchForConvex(SupportFunction inGetSupport, int inLevel, AABox *outBounds = nullptr);
 	GeometryRef							CreateTriangleGeometryForConvex(SupportFunction inGetSupport);
 
 	/// Determines which polygons are culled

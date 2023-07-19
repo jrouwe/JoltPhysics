@@ -16,18 +16,18 @@ JPH_MAKE_HASHABLE(JPH::Vec3, t.GetX(), t.GetY(), t.GetZ())
 JPH_NAMESPACE_BEGIN
 
 void Vec3::CheckW() const
-{ 
+{
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	// Avoid asserts when both components are NaN
-	JPH_ASSERT(reinterpret_cast<const uint32 *>(mF32)[2] == reinterpret_cast<const uint32 *>(mF32)[3]); 
+	JPH_ASSERT(reinterpret_cast<const uint32 *>(mF32)[2] == reinterpret_cast<const uint32 *>(mF32)[3]);
 #endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
-} 
-	
+}
+
 JPH_INLINE Vec3::Type Vec3::sFixW(Type inValue)
-{ 
+{
 #ifdef JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 	#if defined(JPH_USE_SSE)
-		return _mm_shuffle_ps(inValue, inValue, _MM_SHUFFLE(2, 2, 1, 0)); 
+		return _mm_shuffle_ps(inValue, inValue, _MM_SHUFFLE(2, 2, 1, 0));
 	#elif defined(JPH_USE_NEON)
 		return JPH_NEON_SHUFFLE_F32x4(inValue, inValue, 0, 1, 2, 2);
 	#else
@@ -43,9 +43,9 @@ JPH_INLINE Vec3::Type Vec3::sFixW(Type inValue)
 #endif // JPH_FLOATING_POINT_EXCEPTIONS_ENABLED
 }
 
-Vec3::Vec3(Vec4Arg inRHS) : 
+Vec3::Vec3(Vec4Arg inRHS) :
 	mValue(sFixW(inRHS.mValue))
-{ 
+{
 }
 
 Vec3::Vec3(const Float3 &inV)
@@ -150,8 +150,8 @@ Vec3 Vec3::sMin(Vec3Arg inV1, Vec3Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vminq_f32(inV1.mValue, inV2.mValue);
 #else
-	return Vec3(min(inV1.mF32[0], inV2.mF32[0]), 
-				min(inV1.mF32[1], inV2.mF32[1]), 
+	return Vec3(min(inV1.mF32[0], inV2.mF32[0]),
+				min(inV1.mF32[1], inV2.mF32[1]),
 				min(inV1.mF32[2], inV2.mF32[2]));
 #endif
 }
@@ -163,8 +163,8 @@ Vec3 Vec3::sMax(Vec3Arg inV1, Vec3Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vmaxq_f32(inV1.mValue, inV2.mValue);
 #else
-	return Vec3(max(inV1.mF32[0], inV2.mF32[0]), 
-				max(inV1.mF32[1], inV2.mF32[1]), 
+	return Vec3(max(inV1.mF32[0], inV2.mF32[0]),
+				max(inV1.mF32[1], inV2.mF32[1]),
 				max(inV1.mF32[2], inV2.mF32[2]));
 #endif
 }
@@ -182,9 +182,9 @@ UVec4 Vec3::sEquals(Vec3Arg inV1, Vec3Arg inV2)
 	return vceqq_f32(inV1.mValue, inV2.mValue);
 #else
 	uint32 z = inV1.mF32[2] == inV2.mF32[2]? 0xffffffffu : 0;
-	return UVec4(inV1.mF32[0] == inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] == inV2.mF32[1]? 0xffffffffu : 0, 
-				 z, 
+	return UVec4(inV1.mF32[0] == inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] == inV2.mF32[1]? 0xffffffffu : 0,
+				 z,
 				 z);
 #endif
 }
@@ -197,9 +197,9 @@ UVec4 Vec3::sLess(Vec3Arg inV1, Vec3Arg inV2)
 	return vcltq_f32(inV1.mValue, inV2.mValue);
 #else
 	uint32 z = inV1.mF32[2] < inV2.mF32[2]? 0xffffffffu : 0;
-	return UVec4(inV1.mF32[0] < inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] < inV2.mF32[1]? 0xffffffffu : 0, 
-				 z, 
+	return UVec4(inV1.mF32[0] < inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] < inV2.mF32[1]? 0xffffffffu : 0,
+				 z,
 				 z);
 #endif
 }
@@ -212,9 +212,9 @@ UVec4 Vec3::sLessOrEqual(Vec3Arg inV1, Vec3Arg inV2)
 	return vcleq_f32(inV1.mValue, inV2.mValue);
 #else
 	uint32 z = inV1.mF32[2] <= inV2.mF32[2]? 0xffffffffu : 0;
-	return UVec4(inV1.mF32[0] <= inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] <= inV2.mF32[1]? 0xffffffffu : 0, 
-				 z, 
+	return UVec4(inV1.mF32[0] <= inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] <= inV2.mF32[1]? 0xffffffffu : 0,
+				 z,
 				 z);
 #endif
 }
@@ -227,9 +227,9 @@ UVec4 Vec3::sGreater(Vec3Arg inV1, Vec3Arg inV2)
 	return vcgtq_f32(inV1.mValue, inV2.mValue);
 #else
 	uint32 z = inV1.mF32[2] > inV2.mF32[2]? 0xffffffffu : 0;
-	return UVec4(inV1.mF32[0] > inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] > inV2.mF32[1]? 0xffffffffu : 0, 
-				 z, 
+	return UVec4(inV1.mF32[0] > inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] > inV2.mF32[1]? 0xffffffffu : 0,
+				 z,
 				 z);
 #endif
 }
@@ -242,9 +242,9 @@ UVec4 Vec3::sGreaterOrEqual(Vec3Arg inV1, Vec3Arg inV2)
 	return vcgeq_f32(inV1.mValue, inV2.mValue);
 #else
 	uint32 z = inV1.mF32[2] >= inV2.mF32[2]? 0xffffffffu : 0;
-	return UVec4(inV1.mF32[0] >= inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] >= inV2.mF32[1]? 0xffffffffu : 0, 
-				 z, 
+	return UVec4(inV1.mF32[0] >= inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] >= inV2.mF32[1]? 0xffffffffu : 0,
+				 z,
 				 z);
 #endif
 }
@@ -334,8 +334,8 @@ Vec3 Vec3::sRandom(Random &inRandom)
 	return sUnitSpherical(theta, phi);
 }
 
-bool Vec3::operator == (Vec3Arg inV2) const 
-{ 
+bool Vec3::operator == (Vec3Arg inV2) const
+{
 	return sEquals(*this, inV2).TestAllXYZTrue();
 }
 
@@ -734,9 +734,9 @@ Vec3 Vec3::NormalizedOr(Vec3Arg inZeroValue) const
 #endif
 }
 
-bool Vec3::IsNormalized(float inTolerance) const 
-{ 
-	return abs(LengthSq() - 1.0f) <= inTolerance; 
+bool Vec3::IsNormalized(float inTolerance) const
+{
+	return abs(LengthSq() - 1.0f) <= inTolerance;
 }
 
 bool Vec3::IsNaN() const
@@ -836,8 +836,8 @@ Vec3 Vec3::GetSign() const
 	Type one = vdupq_n_f32(1.0f);
 	return vorrq_s32(vandq_s32(mValue, minus_one), one);
 #else
-	return Vec3(signbit(mF32[0])? -1.0f : 1.0f, 
-				signbit(mF32[1])? -1.0f : 1.0f, 
+	return Vec3(signbit(mF32[0])? -1.0f : 1.0f,
+				signbit(mF32[1])? -1.0f : 1.0f,
 				signbit(mF32[2])? -1.0f : 1.0f);
 #endif
 }

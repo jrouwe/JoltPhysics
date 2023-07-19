@@ -20,9 +20,9 @@
 #include <Utils/Log.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(HighSpeedTest) 
-{ 
-	JPH_ADD_BASE_CLASS(HighSpeedTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(HighSpeedTest)
+{
+	JPH_ADD_BASE_CLASS(HighSpeedTest, Test)
 }
 
 const char *HighSpeedTest::sScenes[] =
@@ -364,7 +364,7 @@ void HighSpeedTest::Initialize()
 
 void HighSpeedTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() {
 		UIElement *scene_name = inUI->CreateMenu();
 		for (uint i = 0; i < size(sScenes); ++i)
 			inUI->CreateTextButton(scene_name, sScenes[i], [this, i]() { sSelectedScene = i; RestartTest(); });

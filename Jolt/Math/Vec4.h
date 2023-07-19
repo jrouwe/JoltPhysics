@@ -89,7 +89,7 @@ public:
 
 	/// Logical and (component wise)
 	static JPH_INLINE Vec4		sAnd(Vec4Arg inV1, Vec4Arg inV2);
-	
+
 	/// Sort the four elements of ioValue and sort ioIndex at the same time.
 	/// Based on a sorting network: http://en.wikipedia.org/wiki/Sorting_network
 	static JPH_INLINE void		sSort4(Vec4 &ioValue, UVec4 &ioIndex);
@@ -199,10 +199,10 @@ public:
 
 	/// Reciprocal vector (1 / value) for each of the components
 	JPH_INLINE Vec4				Reciprocal() const;
-	
+
 	/// Dot product, returns the dot product in X, Y and Z components
 	JPH_INLINE Vec4				DotV(Vec4Arg inV2) const;
-	
+
 	/// Dot product
 	JPH_INLINE float			Dot(Vec4Arg inV2) const;
 

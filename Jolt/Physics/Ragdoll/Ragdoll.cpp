@@ -61,7 +61,7 @@ bool RagdollSettings::Stabilize()
 		// Mark static bodies as visited so we won't process these
 		Part &p = mParts[v];
 		bool has_mass_properties = p.HasMassProperties();
-		visited[v] = !has_mass_properties; 
+		visited[v] = !has_mass_properties;
 
 		if (has_mass_properties && p.mOverrideMassProperties != EOverrideMassProperties::MassAndInertiaProvided)
 		{
@@ -83,7 +83,7 @@ bool RagdollSettings::Stabilize()
 			indices.reserve(mSkeleton->GetJointCount());
 			visited[first_idx] = true;
 			indices.push_back(first_idx);
-			do 
+			do
 			{
 				int parent_idx = indices[next_to_process++];
 				for (int child_idx = 0; child_idx < mSkeleton->GetJointCount(); ++child_idx)
@@ -100,7 +100,7 @@ bool RagdollSettings::Stabilize()
 
 			const float cMinMassRatio = 0.8f;
 			const float cMaxMassRatio = 1.2f;
-	
+
 			// Ensure that the mass ratio from parent to child is within a range
 			float total_mass_ratio = 1.0f;
 			Array<float> mass_ratios;
@@ -142,7 +142,7 @@ bool RagdollSettings::Stabilize()
 				Mat44	mRotation;
 				Vec3	mDiagonal;
 				float	mChildSum = 0.0f;
-			};	
+			};
 			Array<Principal> principals;
 			principals.resize(mParts.size());
 			for (int i : indices)
@@ -217,7 +217,7 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 					const Shape *shape2 = part2.GetShape();
 					Vec3 scale2;
 					Mat44 com2 = (inJointMatrices[j2].PreTranslated(shape2->GetCenterOfMass())).Decompose(scale2);
-					
+
 					// Collision settings
 					CollideShapeSettings settings;
 					settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
@@ -409,7 +409,7 @@ void RagdollSettings::CalculateConstraintIndexToBodyIdxPair()
 }
 
 Ragdoll::~Ragdoll()
-{	
+{
 	// Destroy all bodies
 	mSystem->GetBodyInterface().DestroyBodies(mBodyIDs.data(), (int)mBodyIDs.size());
 }

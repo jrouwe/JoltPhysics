@@ -33,14 +33,14 @@ struct BitmapInfoHeader
     uint32			mYPelsPerMeter;
     uint32			mClrUsed;
     uint32			mClrImportant;
-};	
+};
 
 #pragma pack ()
 
 Ref<Surface> LoadBMP(istream &inStream)
 {
 	bool loaded = true;
-	
+
 	// Read bitmap info
 	BitmapFileHeader bfh;
 	BitmapInfoHeader bih;
@@ -75,9 +75,9 @@ Ref<Surface> LoadBMP(istream &inStream)
 		Trace("Is compressed");
 		return nullptr;
 	}
-	
+
 	Ref<Surface> surface;
-	
+
 	if (bih.mBitCount == 8)
 	{
 		// Load palette
@@ -88,7 +88,7 @@ Ref<Surface> LoadBMP(istream &inStream)
 
 		// Seek to image data
 		inStream.seekg(bfh.mOffBits);
-	
+
 		// Convert pixel data to a surface
 		surface = new SoftwareSurface(bih.mWidth, bih.mHeight, ESurfaceFormat::X8R8G8B8);
 		surface->Lock(ESurfaceLockMode::Write);
@@ -97,8 +97,8 @@ Ref<Surface> LoadBMP(istream &inStream)
 		{
 			// Load one scan line
 			inStream.read((char *)scan_line, scan_width);
-			loaded = loaded && !inStream.fail();	
-			
+			loaded = loaded && !inStream.fail();
+
 			// Copy one scan line
 			uint8 *in_pixel = scan_line;
 			uint32 *out_pixel = (uint32 *)surface->GetScanLine(y);
@@ -111,7 +111,7 @@ Ref<Surface> LoadBMP(istream &inStream)
 		delete [] palette;
 		delete [] scan_line;
 	}
-	else 
+	else
 	{
 		// Determine pixel format
 		ESurfaceFormat format;
@@ -124,18 +124,18 @@ Ref<Surface> LoadBMP(istream &inStream)
 
 		// Seek to image data
 		inStream.seekg(bfh.mOffBits);
-	
+
 		// Convert pixel data to a surface
 		surface = new SoftwareSurface(bih.mWidth, bih.mHeight, format, scan_width);
 		surface->Lock(ESurfaceLockMode::Write);
 		for (int y = bih.mHeight - 1; y >= 0; --y)
 		{
 			inStream.read((char *)surface->GetScanLine(y), scan_width);
-			loaded = loaded && !inStream.fail();	
+			loaded = loaded && !inStream.fail();
 		}
 		surface->UnLock();
 	}
-	
+
 	return loaded? surface : Ref<Surface>(nullptr);
 }
 
@@ -156,10 +156,10 @@ bool SaveBMP(RefConst<Surface> inSurface, ostream &inStream)
 	// Lock the surface
 	src->Lock(ESurfaceLockMode::Read);
 	JPH_ASSERT(src->GetStride() % 4 == 0);
-	
+
 	BitmapFileHeader bfh;
 	BitmapInfoHeader bih;
-	
+
 	// Fill in headers
 	bfh.mTypeB				= 'B';
 	bfh.mTypeM				= 'M';

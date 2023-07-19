@@ -12,14 +12,14 @@ In general, body ID's ([BodyID](@ref BodyID)) are used to refer to bodies. You c
 
 	JPH::BodyLockInterface lock_interface = physics_system.GetBodyLockInterface(); // Or GetBodyLockInterfaceNoLock
 	JPH::BodyID body_id = ...; // Obtain ID to body
-	
+
 	// Scoped lock
 	{
 		JPH::BodyLockRead lock(lock_interface, body_id);
 		if (lock.Succeeded()) // body_id may no longer be valid
 		{
 			const JPH::Body &body = lock.GetBody();
-	
+
 			// Do something with body
 			...
 		}
@@ -40,7 +40,7 @@ Note that there are still some restrictions:
 * You cannot read from / write to bodies or constraints while PhysicsSystem::Update is running. As soon as the Update starts, all body / constraint mutexes are locked.
 * Collision callbacks (see ContactListener) are called from within the PhysicsSystem::Update call from multiple threads. You can only read the body data during a callback.
 * Activation callbacks (see BodyActivationListener) are called in the same way. Again you should only read the body during the callback and not make any modifications.
-* Step callbacks (see PhysicsStepListener) are also called from PhysicsSystem::Update from multiple threads. You're responsible for making sure that there are no race conditions. In a step listener you can read/write bodies or constraints but you cannot add/remove them. 
+* Step callbacks (see PhysicsStepListener) are also called from PhysicsSystem::Update from multiple threads. You're responsible for making sure that there are no race conditions. In a step listener you can read/write bodies or constraints but you cannot add/remove them.
 
 If you are accessing the physics system from multiple threads, you should probably use BodyID's and the locking variant of the body interface. It is however still possible to use Body pointers if you're really careful. E.g. if there is a clear owner of a Body and you ensure that this owner does not read/write state during PhysicsSystem::Update or while other threads are reading the Body there will not be any race conditions.
 
@@ -67,7 +67,7 @@ Next to this there are a number of decorator shapes that change the behavior of 
 
 ### Creating Shapes
 
-Simple shapes like spheres and boxes can be constructed immediately by simply new-ing them. Other shapes need to be converted into an optimized format in order to be usable in the physics simulation. The uncooked data is usually stored in a [ShapeSettings](@ref ShapeSettings) object and then converted to cooked format by a [Create](@ref ShapeSettings::Create) function that returns a [Result](@ref Result) object that indicates success or failure and provides the cooked object. 
+Simple shapes like spheres and boxes can be constructed immediately by simply new-ing them. Other shapes need to be converted into an optimized format in order to be usable in the physics simulation. The uncooked data is usually stored in a [ShapeSettings](@ref ShapeSettings) object and then converted to cooked format by a [Create](@ref ShapeSettings::Create) function that returns a [Result](@ref Result) object that indicates success or failure and provides the cooked object.
 
 Creating a convex hull for example looks like:
 
@@ -143,7 +143,7 @@ In order to speed up the collision detection system, all convex shapes use a con
 
 ### Center of Mass
 
-__Beware: When a shape is created, it will automatically recenter itself around its center of mass.__ The center of mass can be obtained by calling [Shape::GetCenterOfMass](@ref Shape::GetCenterOfMass) and most functions operate in this Center of Mass (COM) space. Some functions work in the original space the shape was created in, they usually have World Space (WS) or Shape Space (SS) in their name (or documentation). 
+__Beware: When a shape is created, it will automatically recenter itself around its center of mass.__ The center of mass can be obtained by calling [Shape::GetCenterOfMass](@ref Shape::GetCenterOfMass) and most functions operate in this Center of Mass (COM) space. Some functions work in the original space the shape was created in, they usually have World Space (WS) or Shape Space (SS) in their name (or documentation).
 
 ![Shape Center of Mass](Images/ShapeCenterOfMass.jpg)
 
@@ -166,7 +166,7 @@ As an example, say we create a box and then translate it:
 	JPH::RayCastResult hit;
 	bool had_hit = translated_box_shape->CastRay(ray, JPH::SubShapeIDCreator(), hit);
 	JPH_ASSERT(!had_hit); // There's no hit because we did not correct for COM!
-		
+
 	// Convert the ray to center of mass space for the shape (CORRECT!)
 	ray.mOrigin -= translated_box_shape->GetCenterOfMass();
 
@@ -177,7 +177,7 @@ As an example, say we create a box and then translate it:
 In the same way calling:
 
 	translated_box_shape->GetLocalBounds();
-	
+
 will return a box of size 2x2x2 centered around the origin, so in order to get it back to the space in which it was originally created you need to offset the bounding box:
 
 	JPH::AABox shape_bounds = translated_box_shape->GetLocalBounds();
@@ -300,7 +300,7 @@ When doing a query against the broad phase ([BroadPhaseQuery](@ref BroadPhaseQue
 ## Narrow Phase
 
 A narrow phase query ([NarrowPhaseQuery](@ref NarrowPhaseQuery)) will first query the broad phase for intersecting bodies and will under the protection of a body lock construct a transformed shape ([TransformedShape](@ref TransformedShape)) object. This object contains the transform, a reference counted shape and a body ID. Since the shape will not be deleted until you destroy the TransformedShape object, it is a consistent snapshot of the collision information of the body. This ensures that the body is only locked for a short time frame and makes it possible to do the bulk of the collision detection work outside the protection of a lock.
- 
+
 For very long running jobs (e.g. navigation mesh creation) it is possible to query all transformed shapes in an area and then do the processing work using a long running thread without requiring additional locks (see [NarrowPhaseQuery::CollectTransformedShapes](@ref NarrowPhaseQuery::CollectTransformedShapes)).
 
 The narrow phase queries are all handled through the [GJK](@ref GJKClosestPoint) and [EPA](@ref EPAPenetrationDepth) algorithms.
@@ -342,7 +342,7 @@ Note that the physics simulation works best if you use SI units (meters, radians
 
 By default the library compiles using floats. This means that the simulation gets less accurate the further you go from the origin. If all simulation takes place within roughly 5 km from the origin, floating point precision is accurate enough.
 
-If you have a bigger world, you may want to compile the library using the JPH_DOUBLE_PRECISION define. When you do this, all positions will be stored as doubles, which will make the simulation accurate even at thousands of kilometers away from the origin. 
+If you have a bigger world, you may want to compile the library using the JPH_DOUBLE_PRECISION define. When you do this, all positions will be stored as doubles, which will make the simulation accurate even at thousands of kilometers away from the origin.
 
 Calculations with doubles are much slower than calculations with floats. A naive implementation that changes all calculations to doubles has been measured to run more than 2x slower than the same calculations using floats. Because of this, Jolt Physics will only use doubles where necessary and drop down to floats as soon as possible. In order to do this, many of the collision query functions will need a 'base offset'. All collision results will be returned as floats relative to this base offset. By choosing the base offset wisely (i.e. close to where collision results are expected) the results will be accurate. Make sure your base offset is not kilometers away from the collision result.
 
@@ -356,7 +356,7 @@ Because of the minimal use of doubles, the simulation runs 5-10% slower in doubl
 
 ## Continuous Collision Detection
 
-Each body has a motion quality setting ([EMotionQuality](@ref EMotionQuality)). By default the motion quality is [Discrete](@ref Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented. 
+Each body has a motion quality setting ([EMotionQuality](@ref EMotionQuality)). By default the motion quality is [Discrete](@ref Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented.
 
 |![Motion Quality](Images/MotionQuality.jpg)|
 |:-|
@@ -373,7 +373,7 @@ Fast rotating long objects are also to be avoided, as the LinearCast motion qual
 The physics simulation is deterministic provided that:
 
 * The APIs that modify the simulation are called in exactly the same order. For example, bodies and constraints need to be added/removed/modified in exactly the same order so that the state at the beginning of a simulation step is exactly the same for both simulations.
-* The same binary code is used to run the simulation. For example, when you run the simulation on Windows it doesn't matter if you have an AMD or Intel processor. 
+* The same binary code is used to run the simulation. For example, when you run the simulation on Windows it doesn't matter if you have an AMD or Intel processor.
 
 If you want cross platform determinism then please turn on the CROSS_PLATFORM_DETERMINISTIC option in CMake. This will make the library approximately 8% slower but the simulation will be deterministic regardless of:
 
@@ -393,7 +393,7 @@ It is quite difficult to verify cross platform determinism, so this feature is l
 * Windows MSVC x86 32-bit with SSE2
 * macOS clang x86 64-bit with AVX
 * Linux clang x86 64-bit with AVX2
-* Linux clang ARM 64-bit with NEON 
+* Linux clang ARM 64-bit with NEON
 
 The most important things to look out for in your own application:
 
@@ -412,8 +412,8 @@ If you wish to share saved state between server and client, you need to ensure t
 
 ## Working With Multiple Physics Systems
 
-You can create, simulate and interact with multiple PhysicsSystems at the same time provided that you do not share any objects (bodies, constraints) between the systems. 
-When a Body is created it receives a BodyID that is unique for the PhysicsSystem that it was created for, so it cannot be shared. The only object that can be shared between PhysicsSystems is a Shape. 
+You can create, simulate and interact with multiple PhysicsSystems at the same time provided that you do not share any objects (bodies, constraints) between the systems.
+When a Body is created it receives a BodyID that is unique for the PhysicsSystem that it was created for, so it cannot be shared. The only object that can be shared between PhysicsSystems is a Shape.
 If you want to move a body from one PhysicsSystem to another, use Body::GetBodyCreationSettings to get the settings needed to create the body in the other PhysicsSystem.
 
 PhysicsSystems are not completely independent:
@@ -434,7 +434,7 @@ The job graph looks like this:
 
 Note that each job indicates if it reads/writes positions/velocities and if it deactivates/activates bodies. We do not allow jobs to read/write the same data concurrently. The arrows indicate the order in which jobs are executed. Yellow blocks mean that there are multiple jobs of this type. Dotted arrows have special meaning and are explained below.
 
-### Broad Phase Update Prepare 
+### Broad Phase Update Prepare
 
 This job will refit the AABBs of the broad phase. It does this by building a new tree while keeping the old one available as described in the "Broad Phase" section.
 
@@ -456,7 +456,7 @@ This job will go through all non-contact constraints and determine which constra
 
 ### Build Islands from Constraints
 
-This job will go through all non-contact constraints and assign the involved bodies and constraint to the same island. Since we allow concurrent insertion/removal of bodies we do not want to keep island data across multiple simulation steps, so we recreate the islands from scratch every simulation step. The operation is lock-free and O(N) where N is the number of constraints. 
+This job will go through all non-contact constraints and assign the involved bodies and constraint to the same island. Since we allow concurrent insertion/removal of bodies we do not want to keep island data across multiple simulation steps, so we recreate the islands from scratch every simulation step. The operation is lock-free and O(N) where N is the number of constraints.
 
 If a constraint connects an active and a non-active body, the non-active body is woken up. One find collisions job will not start until this job has finished in order to pick up any collision testing for newly activated bodies.
 
@@ -464,7 +464,7 @@ If a constraint connects an active and a non-active body, the non-active body is
 
 This job will do broad and narrow phase checks. Initially a number of jobs are started based on the amount of active bodies. The job will do the following:
 
-- Take a batch of active bodies and collide them against the broadphase. 
+- Take a batch of active bodies and collide them against the broadphase.
 - When a collision pair is found it is inserted in a lock free queue to be processed later.
 - If the queue is full, it will be processed immediately (more Find Collisions jobs are spawned if not all CPU cores are occupied yet as the queue starts to fill up).
 - If there are no more active bodies to process, the job will start to perform narrow phase collision detection and set up contact constraints if any collisions are found.
@@ -473,7 +473,7 @@ This job will do broad and narrow phase checks. Initially a number of jobs are s
 
 Note that this job cannot start until apply gravity is done because the velocity needs to be known for elastic collisions to be calculated properly.
 
-The contact points between the two bodies will be determined by the [GJK](@ref GJKClosestPoint) and [EPA](@ref EPAPenetrationDepth) algorithms. For each contact point we will calculate the face that belongs to that contact point. The faces of both bodies are clipped against each other ([ManifoldBetweenTwoFaces](@ref ManifoldBetweenTwoFaces)) so that we have a polygon (or point / line) that represents the contact between the two bodies (contact manifold). 
+The contact points between the two bodies will be determined by the [GJK](@ref GJKClosestPoint) and [EPA](@ref EPAPenetrationDepth) algorithms. For each contact point we will calculate the face that belongs to that contact point. The faces of both bodies are clipped against each other ([ManifoldBetweenTwoFaces](@ref ManifoldBetweenTwoFaces)) so that we have a polygon (or point / line) that represents the contact between the two bodies (contact manifold).
 
 Multiple contact manifolds with similar normals are merged together (PhysicsSystem::ProcessBodyPair::ReductionCollideShapeCollector). After this the contact constraints are created in the [ContactConstraintManager](@ref ContactConstraintManager) and their Jacobians / effective masses calculated.
 
@@ -493,7 +493,7 @@ This job will finalize the building of the simulation islands. Each island conta
 
 This job does some housekeeping work that can be executed concurrent to the solver:
 
-* It will assign the island ID to all bodies (which is mainly used for debugging purposes) 
+* It will assign the island ID to all bodies (which is mainly used for debugging purposes)
 
 ### Solve Velocity Constraints
 
@@ -507,7 +507,7 @@ This job prepares the CCD buffers.
 
 ### Integrate & Clamp Velocities
 
-This job will integrate the velocity and update the position. It will clamp the velocity to the max velocity. 
+This job will integrate the velocity and update the position. It will clamp the velocity to the max velocity.
 
 Depending on the motion quality ([EMotionQuality](@ref EMotionQuality)) of the body, it will schedule a body for continuous collision detection (CCD) if its movement is bigger than some treshold based on the [inner radius](@ref Shape::GetInnerRadius)) of the shape.
 
@@ -527,13 +527,13 @@ This job will take the collision results from the previous job and update positi
 
 This job will:
 
-* Swap the read/write contact cache and prepare the contact cache for the next step. 
+* Swap the read/write contact cache and prepare the contact cache for the next step.
 * It will detect all contacts that existed previous step and do not exist anymore to fire callbacks for them through the [ContactListener](@ref ContactListener) interface.
 
 ### Solve Position Constraints, Update Bodies Broad Phase
 
 A number of these jobs will run in parallel. Each job takes the next unprocessed island and run the position based constraint solver. This fixes numerical drift that may have caused constrained bodies to separate (remember that the constraints are solved in the velocity domain, so errors get introduced when doing a linear integration step). It will run until either the applied position corrections are too small or until the max amount of iterations is reached ([PhysicsSettings::mNumPositionSteps](@ref PhysicsSettings::mNumPositionSteps)). Here there is also support for large islands, the island splits that were calculated in the Solve Velocity Constraints job are reused to solve partial islands in the same way as before.
 
-It will also notify the broad phase of the new body positions / AABBs. 
+It will also notify the broad phase of the new body positions / AABBs.
 
 When objects move too little the body will be put to sleep. This is detected by taking the biggest two axis of the local space bounding box of the shape together with the center of mass of the shape (all points in world space) and keep track of 3 bounding spheres for those points over time. If the bounding spheres become too big, the bounding spheres are reset and the timer restarted. When the timer reaches a certain time, the object has is considered non-moving and is put to sleep.

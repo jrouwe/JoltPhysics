@@ -113,7 +113,7 @@ TEST_SUITE("PhysicsTests")
 			CHECK_FALSE(lock1.Succeeded());
 			CHECK_FALSE(lock1.SucceededAndIsInBroadPhase());
 		}
-	}		
+	}
 
 	TEST_CASE("TestPhysicsBodyLockMulti")
 	{
@@ -378,12 +378,12 @@ TEST_SUITE("PhysicsTests")
 		Body &body = ioContext.CreateBox(cInitialPos, Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1, 1, 1));
 		CHECK_APPROX_EQUAL(cInitialPos, body.GetPosition());
 		CHECK_APPROX_EQUAL(Vec3::sZero(), body.GetLinearVelocity());
-			
+
 		ioContext.Simulate(cSimulationTime);
-			
+
 		// Test resulting velocity (due to gravity)
 		CHECK_APPROX_EQUAL(cSimulationTime * cGravity, body.GetLinearVelocity(), 1.0e-4f);
-			
+
 		// Test resulting position
 		RVec3 expected_pos = ioContext.PredictPosition(cInitialPos, Vec3::sZero(), cGravity, cSimulationTime);
 		CHECK_APPROX_EQUAL(expected_pos, body.GetPosition());
@@ -422,10 +422,10 @@ TEST_SUITE("PhysicsTests")
 
 		// Simulate while applying force
 		ioContext.Simulate(cSimulationTime, [&]() { body.AddForce(mass * cAcceleration); });
-			
+
 		// Test resulting velocity (due to gravity and applied force)
 		CHECK_APPROX_EQUAL(cSimulationTime * (cGravity + cAcceleration), body.GetLinearVelocity(), 1.0e-4f);
-			
+
 		// Test resulting position
 		RVec3 expected_pos = ioContext.PredictPosition(cInitialPos, Vec3::sZero(), cGravity + cAcceleration, cSimulationTime);
 		CHECK_APPROX_EQUAL(expected_pos, body.GetPosition());
@@ -463,13 +463,13 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(1.0f / mass, body.GetMotionProperties()->GetInverseMass());
 		constexpr float inertia = mass * 8.0f / 12.0f; // See: https://en.wikipedia.org/wiki/List_of_moments_of_inertia
 		CHECK_APPROX_EQUAL(Mat44::sScale(1.0f / inertia), body.GetMotionProperties()->GetLocalSpaceInverseInertia());
-			
+
 		// Simulate while applying torque
 		ioContext.Simulate(cSimulationTime, [&]() { body.AddTorque(inertia * cAngularAcceleration); });
-			
+
 		// Get resulting angular velocity
 		CHECK_APPROX_EQUAL(cSimulationTime * cAngularAcceleration, body.GetAngularVelocity(), 1.0e-4f);
-			
+
 		// Test resulting rotation
 		Quat expected_rot = ioContext.PredictOrientation(Quat::sIdentity(), Vec3::sZero(), cAngularAcceleration, cSimulationTime);
 		CHECK_APPROX_EQUAL(expected_rot, body.GetRotation(), 1.0e-4f);
@@ -488,7 +488,7 @@ TEST_SUITE("PhysicsTests")
 
 		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsApplyTorque(c2);
-	}		
+	}
 
 	// Let a sphere bounce on the floor with restition = 1
 	static void TestPhysicsCollisionElastic(PhysicsTestContext &ioContext)
@@ -509,13 +509,13 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(cFloorHitPos, body.GetPosition());
 
 		// Assert collision not yet processed
-		CHECK_APPROX_EQUAL(cSimulationTime * cGravity, body.GetLinearVelocity(), 1.0e-4f); 
+		CHECK_APPROX_EQUAL(cSimulationTime * cGravity, body.GetLinearVelocity(), 1.0e-4f);
 
 		// Simulate one more step to process the collision
 		ioContext.Simulate(ioContext.GetDeltaTime());
 
-		// Assert that collision is processed and velocity is reversed (which is required for a fully elastic collision). 
-		// Note that the physics engine will first apply gravity for the time step and then do collision detection, 
+		// Assert that collision is processed and velocity is reversed (which is required for a fully elastic collision).
+		// Note that the physics engine will first apply gravity for the time step and then do collision detection,
 		// hence the reflected velocity is actually 1 step times gravity bigger than it would be in reality
 		// For the remainder of cDeltaTime normal gravity will be applied
 		float sub_step_delta_time = ioContext.GetStepDeltaTime();
@@ -550,7 +550,7 @@ TEST_SUITE("PhysicsTests")
 
 		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsCollisionElastic(c2);
-	}		
+	}
 
 	// Let a sphere bounce on the floor with restitution = 0
 	static void TestPhysicsCollisionInelastic(PhysicsTestContext &ioContext)
@@ -571,7 +571,7 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(cFloorHitPos, body.GetPosition());
 
 		// Assert collision not yet processed
-		CHECK_APPROX_EQUAL(cSimulationTime * cGravity, body.GetLinearVelocity(), 1.0e-4f); 
+		CHECK_APPROX_EQUAL(cSimulationTime * cGravity, body.GetLinearVelocity(), 1.0e-4f);
 
 		// Simulate one more step to process the collision
 		ioContext.Simulate(ioContext.GetDeltaTime());
@@ -601,8 +601,8 @@ TEST_SUITE("PhysicsTests")
 
 		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsCollisionInelastic(c2);
-	}		
-		
+	}
+
 	// Let box intersect with floor by cPenetrationSlop. It should not move, this is the maximum penetration allowed.
 	static void TestPhysicsPenetrationSlop1(PhysicsTestContext &ioContext)
 	{
@@ -636,7 +636,7 @@ TEST_SUITE("PhysicsTests")
 
 		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsPenetrationSlop1(c2);
-	}		
+	}
 
 	// Let box intersect with floor with more than cPenetrationSlop. It should be resolved by SolvePositionConstraint until interpenetration is cPenetrationSlop.
 	static void TestPhysicsPenetrationSlop2(PhysicsTestContext &ioContext)
@@ -672,7 +672,7 @@ TEST_SUITE("PhysicsTests")
 
 		PhysicsTestContext c2(4.0f / 60.0f, 4);
 		TestPhysicsPenetrationSlop2(c2);
-	}		
+	}
 
 	// Let box intersect with floor with less than cPenetrationSlop. Body should not move because SolveVelocityConstraint should reset velocity.
 	static void TestPhysicsPenetrationSlop3(PhysicsTestContext &ioContext)
@@ -797,7 +797,7 @@ TEST_SUITE("PhysicsTests")
 
 		// Sphere has only 1 contact point so is much more accurate
 		CHECK_APPROX_EQUAL(sphere.GetPosition(), RVec3(5, 1, 0));
-		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cExpectedVelocity, 1.0e-4f); 
+		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cExpectedVelocity, 1.0e-4f);
 		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
 
 		// Simulate a step
@@ -815,7 +815,7 @@ TEST_SUITE("PhysicsTests")
 
 		// Sphere should have come to rest
 		CHECK_APPROX_EQUAL(sphere.GetPosition(), RVec3(5, 1, 0), 1.0e-4f);
-		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), Vec3::sZero(), 1.0e-4f); 
+		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), Vec3::sZero(), 1.0e-4f);
 		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero(), 1.0e-4f);
 	}
 
@@ -858,12 +858,12 @@ TEST_SUITE("PhysicsTests")
 
 		// Box collision is less accurate than sphere as it hits with 4 corners so there's some floating point precision loss in the calculation
 		CHECK_APPROX_EQUAL(box.GetPosition(), cInitialPosBox - cVelocity * c.GetDeltaTime(), 0.01f);
-		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), -cVelocity, 0.1f); 
+		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), -cVelocity, 0.1f);
 		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero(), 0.02f);
 
 		// Sphere has only 1 contact point so is much more accurate
 		CHECK_APPROX_EQUAL(sphere.GetPosition(), cInitialPosSphere - cVelocity * c.GetDeltaTime(), 1.0e-5f);
-		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), -cVelocity, 2.0e-4f); 
+		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), -cVelocity, 2.0e-4f);
 		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero(), 2.0e-4f);
 
 		// Simulate a step
@@ -967,12 +967,12 @@ TEST_SUITE("PhysicsTests")
 
 		// Box should have moved unimpeded
 		CHECK_APPROX_EQUAL(box.GetPosition(), cInitialPosBox + cVelocity * c.GetDeltaTime());
-		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), cVelocity); 
+		CHECK_APPROX_EQUAL(box.GetLinearVelocity(), cVelocity);
 		CHECK_APPROX_EQUAL(box.GetAngularVelocity(), Vec3::sZero());
 
 		// Sphere should have moved unimpeded
 		CHECK_APPROX_EQUAL(sphere.GetPosition(), cInitialPosSphere + cVelocity * c.GetDeltaTime());
-		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cVelocity); 
+		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cVelocity);
 		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero());
 
 		// Simulate a step
@@ -1088,7 +1088,7 @@ TEST_SUITE("PhysicsTests")
 
 		// Step the world
 		ioContext.SimulateSingleStep();
-		
+
 		// Other bodies should now be awake and each body should only collide with its neighbour
 		CHECK(activation_listener.GetEntryCount() == cNumBodies - 1);
 		CHECK(contact_listener.GetEntryCount() == 2 * (cNumBodies - 1));
@@ -1321,7 +1321,7 @@ TEST_SUITE("PhysicsTests")
 			// Check that the bodies in the different systems updated correctly
 			CHECK_APPROX_EQUAL(lock1.GetBody().GetPosition(), cBox1Position + cBox1Velocity * cTime, 1.0e-5f);
 			CHECK_APPROX_EQUAL(lock2.GetBody().GetPosition(), cBox2Position + cBox2Velocity * cTime, 1.0e-5f);
-		}		
+		}
 	}
 
 	TEST_CASE("TestOutOfBodies")

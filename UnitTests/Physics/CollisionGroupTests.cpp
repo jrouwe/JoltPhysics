@@ -31,12 +31,12 @@ TEST_SUITE("CollisionGroupTests")
 
 		// Disable some pairs
 		using SubGroupPair = pair<CollisionGroup::SubGroupID, CollisionGroup::SubGroupID>;
-		Array<SubGroupPair> pairs = { 
-			SubGroupPair(CollisionGroup::SubGroupID(1), CollisionGroup::SubGroupID(2)), 
-			SubGroupPair(CollisionGroup::SubGroupID(9), CollisionGroup::SubGroupID(5)), 
-			SubGroupPair(CollisionGroup::SubGroupID(3), CollisionGroup::SubGroupID(7)), 
-			SubGroupPair(CollisionGroup::SubGroupID(6), CollisionGroup::SubGroupID(1)), 
-			SubGroupPair(CollisionGroup::SubGroupID(8), CollisionGroup::SubGroupID(1)) 
+		Array<SubGroupPair> pairs = {
+			SubGroupPair(CollisionGroup::SubGroupID(1), CollisionGroup::SubGroupID(2)),
+			SubGroupPair(CollisionGroup::SubGroupID(9), CollisionGroup::SubGroupID(5)),
+			SubGroupPair(CollisionGroup::SubGroupID(3), CollisionGroup::SubGroupID(7)),
+			SubGroupPair(CollisionGroup::SubGroupID(6), CollisionGroup::SubGroupID(1)),
+			SubGroupPair(CollisionGroup::SubGroupID(8), CollisionGroup::SubGroupID(1))
 		};
 		for (const SubGroupPair &p : pairs)
 		{
@@ -53,8 +53,8 @@ TEST_SUITE("CollisionGroupTests")
 
 				// Same filter, same group, check if pairs collide
 				CollisionGroup g2(group_filter1, 0, j);
-				if (i == j 
-					|| find(pairs.begin(), pairs.end(), SubGroupPair(i, j)) != pairs.end() 
+				if (i == j
+					|| find(pairs.begin(), pairs.end(), SubGroupPair(i, j)) != pairs.end()
 					|| find(pairs.begin(), pairs.end(), SubGroupPair(j, i)) != pairs.end())
 				{
 					CHECK(!g1.CanCollide(g2));
@@ -65,7 +65,7 @@ TEST_SUITE("CollisionGroupTests")
 					CHECK(g1.CanCollide(g2));
 					CHECK(g2.CanCollide(g1));
 				}
-				
+
 				// Using different group always collides
 				CollisionGroup g3(group_filter1, 1, j);
 				CHECK(g1.CanCollide(g3));

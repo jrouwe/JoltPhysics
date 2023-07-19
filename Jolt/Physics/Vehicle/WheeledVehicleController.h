@@ -65,7 +65,7 @@ public:
 };
 
 /// Settings of a vehicle with regular wheels
-/// 
+///
 /// The properties in this controller are largely based on "Car Physics for Games" by Marco Monster.
 /// See: https://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
 class JPH_EXPORT WheeledVehicleControllerSettings : public VehicleControllerSettings

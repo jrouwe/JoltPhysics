@@ -15,9 +15,9 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullShrinkTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ConvexHullShrinkTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullShrinkTest)
+{
+	JPH_ADD_BASE_CLASS(ConvexHullShrinkTest, Test)
 }
 
 void ConvexHullShrinkTest::Initialize()

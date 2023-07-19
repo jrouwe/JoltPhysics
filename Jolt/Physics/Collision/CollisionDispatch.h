@@ -68,7 +68,7 @@ public:
 		sCastShapeVsShapeLocalSpace(local_shape_cast, inShapeCastSettings, inShape, inScale, inShapeFilter, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, ioCollector);
 	}
 
-	/// Function that collides 2 shapes (see sCollideShapeVsShape) 
+	/// Function that collides 2 shapes (see sCollideShapeVsShape)
 	using CollideShape = void (*)(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter);
 
 	/// Function that casts a shape vs another shape (see sCastShapeVsShapeLocalSpace)

@@ -31,7 +31,7 @@ public:
 	virtual Batch						CreateTriangleBatch(const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount) override;
 	virtual void						DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
 	virtual void						DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) override;
-	
+
 	/// Mark the end of a frame
 	void								EndFrame();
 
@@ -51,7 +51,7 @@ public:
 		RVec3							mTo;
 		Color							mColor;
 	};
-	
+
 	/// Holds a single triangle
 	struct TriangleBlob
 	{

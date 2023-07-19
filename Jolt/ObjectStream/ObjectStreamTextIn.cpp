@@ -16,13 +16,13 @@ ObjectStreamTextIn::ObjectStreamTextIn(istream &inStream) :
 bool ObjectStreamTextIn::ReadDataType(EOSDataType &outType)
 {
 	String token;
-	if (ReadWord(token)) 
+	if (ReadWord(token))
 	{
 		transform(token.begin(), token.end(), token.begin(), [](char inValue) { return (char)tolower(inValue); });
 		if (token == "declare")
 			outType = EOSDataType::Declare;
 		else if (token == "object")
-			outType = EOSDataType::Object;		
+			outType = EOSDataType::Object;
 		else if (token == "instance")
 			outType = EOSDataType::Instance;
 		else if (token == "pointer")
@@ -109,7 +109,7 @@ bool ObjectStreamTextIn::ReadPrimitiveData(uint8 &outPrimitive)
 	{
 		outPrimitive = (uint8)temporary;
 		return true;
-	}	
+	}
 	return false;
 }
 
@@ -125,7 +125,7 @@ bool ObjectStreamTextIn::ReadPrimitiveData(uint16 &outPrimitive)
 	{
 		outPrimitive = (uint16)temporary;
 		return true;
-	}	
+	}
 	return false;
 }
 
@@ -212,54 +212,54 @@ bool ObjectStreamTextIn::ReadPrimitiveData(String &outPrimitive)
 	// Read string and interpret special characters
 	String result;
 	bool escaped = false;
-	for (;;) 
+	for (;;)
 	{
 		if (!ReadChar(c))
 			break;
 
-		switch (c) 
+		switch (c)
 		{
 		case '\n':
 		case '\t':
 			break;
 
 		case '\\':
-			if (escaped) 
+			if (escaped)
 			{
 				result += '\\';
 				escaped = false;
-			} 
-			else 
+			}
+			else
 				escaped = true;
 			break;
 
 		case 'n':
-			if (escaped) 
+			if (escaped)
 			{
 				result += '\n';
 				escaped = false;
-			} 
-			else 
+			}
+			else
 				result += 'n';
 			break;
 
 		case 't':
-			if (escaped) 
+			if (escaped)
 			{
 				result += '\t';
 				escaped = false;
-			} 
-			else 
+			}
+			else
 				result += 't';
 			break;
 
 		case '\"':
-			if (escaped) 
+			if (escaped)
 			{
 				result += '\"';
 				escaped = false;
-			} 
-			else 
+			}
+			else
 			{
 				// Found closing double quote
 				outPrimitive = result;
@@ -268,9 +268,9 @@ bool ObjectStreamTextIn::ReadPrimitiveData(String &outPrimitive)
 			break;
 
 		default:
-			if (escaped) 
+			if (escaped)
 				escaped = false;
-			else 
+			else
 				result += c;
 			break;
 		}

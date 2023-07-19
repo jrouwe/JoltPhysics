@@ -23,7 +23,7 @@ jobs:
         run: echo "defined=true" >> $GITHUB_OUTPUT
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          
+
   build:
     name: Build
     needs: [check-secret]

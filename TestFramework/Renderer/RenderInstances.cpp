@@ -49,7 +49,7 @@ void RenderInstances::Unlock()
 {
 	mInstanceBuffer->Unmap(0, nullptr);
 }
-	
+
 void RenderInstances::Draw(RenderPrimitive *inPrimitive, int inStartInstance, int inNumInstances) const
 {
 	if (inNumInstances <= 0)

@@ -10,12 +10,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(RotatedTranslatedShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(RotatedTranslatedShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(RotatedTranslatedShapeTest)
+{
+	JPH_ADD_BASE_CLASS(RotatedTranslatedShapeTest, Test)
 }
 
-void RotatedTranslatedShapeTest::Initialize() 
+void RotatedTranslatedShapeTest::Initialize()
 {
 	// Floor
 	CreateFloor();

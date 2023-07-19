@@ -76,7 +76,7 @@ public:
 		else if (inOther.mGroupFilter != nullptr)
 			return inOther.mGroupFilter->CanCollide(inOther, *this);
 		else
-			return true;		
+			return true;
 	}
 
 	/// Saves the state of this object in binary form to inStream. Does not save group filter.

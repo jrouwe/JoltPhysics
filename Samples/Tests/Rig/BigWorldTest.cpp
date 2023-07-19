@@ -18,9 +18,9 @@
 #include <Utils/Log.h>
 #include <random>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(BigWorldTest) 
-{ 
-	JPH_ADD_BASE_CLASS(BigWorldTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(BigWorldTest)
+{
+	JPH_ADD_BASE_CLASS(BigWorldTest, Test)
 }
 
 BigWorldTest::~BigWorldTest()
@@ -33,7 +33,7 @@ BigWorldTest::~BigWorldTest()
 void BigWorldTest::Initialize()
 {
 	constexpr int cPileSize = 5;
-	
+
 	// Default terrain
 	Body &floor = CreateMeshTerrain();
 	RefConst<Shape> shape = floor.GetShape();
@@ -74,7 +74,7 @@ void BigWorldTest::Initialize()
 		{
 			// Create ragdoll
 			Ref<Ragdoll> ragdoll = settings->CreateRagdoll(0, 0, mPhysicsSystem);
-	
+
 			// Override root
 			SkeletonPose::JointState &root = pose.GetJoint(0);
 			root.mTranslation = Vec3::sZero();

@@ -11,12 +11,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(FrictionPerTriangleTest) 
-{ 
-	JPH_ADD_BASE_CLASS(FrictionPerTriangleTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(FrictionPerTriangleTest)
+{
+	JPH_ADD_BASE_CLASS(FrictionPerTriangleTest, Test)
 }
 
-void FrictionPerTriangleTest::Initialize() 
+void FrictionPerTriangleTest::Initialize()
 {
 	const int num_sections = 5;
 	const float section_size = 50.0f;

@@ -14,12 +14,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ManifoldReductionTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ManifoldReductionTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ManifoldReductionTest)
+{
+	JPH_ADD_BASE_CLASS(ManifoldReductionTest, Test)
 }
 
-void ManifoldReductionTest::Initialize() 
+void ManifoldReductionTest::Initialize()
 {
 	constexpr float cPerturbance = 0.02f;
 

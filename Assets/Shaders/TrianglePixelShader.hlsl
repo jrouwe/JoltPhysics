@@ -60,16 +60,16 @@ PS_OUTPUT main(PS_INPUT input)
 		// Modify shadow bias according to the angle between the normal and the light dir
 		float modified_bias = bias * tan(acos(normal_dot_light_dir));
 		modified_bias = min(modified_bias, 10.0 * bias);
-		
+
 		// Get texture size
-		float width, height, levels; 
-		LightDepthTexture.GetDimensions(0, width, height, levels); 
+		float width, height, levels;
+		LightDepthTexture.GetDimensions(0, width, height, levels);
 		width = 1.0 / width;
 		height = 1.0 / height;
 
 		// Samples to take
 		uint num_samples = 16;
-		float2 offsets[] = { 
+		float2 offsets[] = {
 			float2(-1.5 * width, -1.5 * height),
 			float2(-0.5 * width, -1.5 * height),
 			float2(0.5 * width, -1.5 * height),

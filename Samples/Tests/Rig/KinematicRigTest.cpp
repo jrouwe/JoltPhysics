@@ -12,9 +12,9 @@
 #include <Layers.h>
 #include <Utils/Log.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(KinematicRigTest) 
-{ 
-	JPH_ADD_BASE_CLASS(KinematicRigTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(KinematicRigTest)
+{
+	JPH_ADD_BASE_CLASS(KinematicRigTest, Test)
 }
 
 const char *KinematicRigTest::sAnimations[] =
@@ -72,7 +72,7 @@ void KinematicRigTest::Initialize()
 }
 
 void KinematicRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	// Sample previous pose and draw it (ragdoll should have achieved this position)
 	mAnimation->Sample(mTime, mPose);
 	mPose.CalculateJointMatrices();
@@ -86,13 +86,13 @@ void KinematicRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Sample new pose
 	mAnimation->Sample(mTime, mPose);
 	mPose.CalculateJointMatrices();
-	
+
 	mRagdoll->DriveToPoseUsingKinematics(mPose, inParams.mDeltaTime);
 }
 
 void KinematicRigTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Select Animation", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Select Animation", [this, inUI]() {
 		UIElement *animation_name = inUI->CreateMenu();
 		for (uint i = 0; i < size(sAnimations); ++i)
 			inUI->CreateTextButton(animation_name, sAnimations[i], [this, i]() { sAnimationName = sAnimations[i]; RestartTest(); });

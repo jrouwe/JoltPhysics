@@ -13,9 +13,9 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(VehicleConstraintTest, VehicleTest) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(VehicleConstraintTest, VehicleTest)
 }
 
 VehicleConstraintTest::~VehicleConstraintTest()
@@ -118,7 +118,7 @@ void VehicleConstraintTest::Initialize()
 	w4->mMaxSteerAngle = 0.0f;
 
 	vehicle.mWheels = { w1, w2, w3, w4 };
-	
+
 	for (WheelSettings *w : vehicle.mWheels)
 	{
 		w->mRadius = wheel_radius;
@@ -164,7 +164,7 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	float forward = 0.0f, right = 0.0f, brake = 0.0f, hand_brake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
 		forward = 1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		
+	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
 		forward = -1.0f;
 
 	// Check if we're reversing direction
@@ -251,7 +251,7 @@ void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	// Pivot is center of car and rotates with car around Y axis only
 	Vec3 fwd = mCarBody->GetRotation().RotateAxisZ();

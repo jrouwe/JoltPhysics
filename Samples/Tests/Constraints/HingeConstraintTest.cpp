@@ -11,16 +11,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(HingeConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(HingeConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(HingeConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(HingeConstraintTest, Test)
 }
 
 void HingeConstraintTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	float box_size = 4.0f;
 	RefConst<Shape> box = new BoxShape(Vec3::sReplicate(0.5f * box_size));
 
@@ -73,7 +73,7 @@ void HingeConstraintTest::Initialize()
 				settings.mNormalAxis1 = settings.mNormalAxis2 = Vec3::sAxisX();
 			}
 			else
-			{ 
+			{
 				settings.mPoint1 = settings.mPoint2 = position + Vec3(-0.5f * box_size, -0.5f * box_size, 0);
 				settings.mHingeAxis1 = settings.mHingeAxis2 = Vec3::sAxisZ();
 				settings.mNormalAxis1 = settings.mNormalAxis2 = Vec3::sAxisX();

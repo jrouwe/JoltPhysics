@@ -236,7 +236,7 @@ TEST_SUITE("ObjectStreamTest")
 
 		TestSerializable *test_out = nullptr;
 		REQUIRE(ObjectStreamIn::sReadObject(stream, test_out));
-		
+
 		CompareObjects(test, test_out);
 
 		delete test;

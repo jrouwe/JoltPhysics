@@ -61,7 +61,7 @@ void Shape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCol
 }
 
 void Shape::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	inStream.Write(mShapeSubType);
 	inStream.Write(mUserData);
 }

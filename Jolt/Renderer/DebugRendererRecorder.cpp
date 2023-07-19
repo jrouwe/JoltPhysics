@@ -10,8 +10,8 @@
 
 JPH_NAMESPACE_BEGIN
 
-void DebugRendererRecorder::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) 
-{ 
+void DebugRendererRecorder::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor)
+{
 	lock_guard lock(mMutex);
 
 	mCurrentFrame.mLines.push_back({ inFrom, inTo, inColor });
@@ -94,15 +94,15 @@ void DebugRendererRecorder::DrawGeometry(RMat44Arg inModelMatrix, const AABox &i
 }
 
 void DebugRendererRecorder::DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight)
-{ 	
-	lock_guard lock(mMutex);  
+{
+	lock_guard lock(mMutex);
 
 	mCurrentFrame.mTexts.push_back({ inPosition, inString, inColor, inHeight });
 }
 
 void DebugRendererRecorder::EndFrame()
-{ 	
-	lock_guard lock(mMutex);  
+{
+	lock_guard lock(mMutex);
 
 	mStream.Write(ECommand::EndFrame);
 

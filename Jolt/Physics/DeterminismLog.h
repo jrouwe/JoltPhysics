@@ -97,25 +97,25 @@ public:
 		mLog << std::hex << std::setw(8) << Convert(inValue.GetX()) << " " << std::setw(8) << Convert(inValue.GetY()) << " " << std::setw(8) << Convert(inValue.GetZ());
 		return *this;
 	}
-	
+
 	DeterminismLog &		operator << (DVec3Arg inValue)
 	{
 		mLog << std::hex << std::setw(16) << Convert(inValue.GetX()) << " " << std::setw(16) << Convert(inValue.GetY()) << " " << std::setw(16) << Convert(inValue.GetZ());
 		return *this;
 	}
-	
+
 	DeterminismLog &		operator << (Vec4Arg inValue)
 	{
 		mLog << std::hex << std::setw(8) << Convert(inValue.GetX()) << " " << std::setw(8) << Convert(inValue.GetY()) << " " << std::setw(8) << Convert(inValue.GetZ()) << " " << std::setw(8) << Convert(inValue.GetW());
 		return *this;
 	}
-	
+
 	DeterminismLog &		operator << (const Float3 &inValue)
 	{
 		mLog << std::hex << std::setw(8) << Convert(inValue.x) << " " << std::setw(8) << Convert(inValue.y) << " " << std::setw(8) << Convert(inValue.z);
 		return *this;
 	}
-	
+
 	DeterminismLog &		operator << (Mat44Arg inValue)
 	{
 		*this << inValue.GetColumn4(0) << " " << inValue.GetColumn4(1) << " " << inValue.GetColumn4(2) << " " << inValue.GetColumn4(3);

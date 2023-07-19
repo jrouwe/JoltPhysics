@@ -1,11 +1,11 @@
 TOS 1.00
 
 declare SkeletalAnimation 1
-  mAnimatedJoints array instance SkeletalAnimation::AnimatedJoint 
+  mAnimatedJoints array instance SkeletalAnimation::AnimatedJoint
 
 declare SkeletalAnimation::AnimatedJoint 2
   mJointName string
-  mKeyframes array instance SkeletalAnimation::Keyframe 
+  mKeyframes array instance SkeletalAnimation::Keyframe
 
 declare SkeletalAnimation::Keyframe 3
   mRotation quat

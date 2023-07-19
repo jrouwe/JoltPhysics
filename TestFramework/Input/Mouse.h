@@ -31,8 +31,8 @@ public:
 	int								GetDY() const						{ return mMouseState.lY; }
 
 	bool							IsLeftPressed() const				{ return (mMouseState.rgbButtons[0] & 0x80) != 0; }
-	bool							IsRightPressed() const				{ return (mMouseState.rgbButtons[1] & 0x80) != 0; }	
-	bool							IsMiddlePressed() const				{ return (mMouseState.rgbButtons[2] & 0x80) != 0; }	
+	bool							IsRightPressed() const				{ return (mMouseState.rgbButtons[1] & 0x80) != 0; }
+	bool							IsMiddlePressed() const				{ return (mMouseState.rgbButtons[2] & 0x80) != 0; }
 
 	bool							IsLeftDoubleClicked() const			{ return mLeftButtonDoubleClicked; }
 
@@ -45,8 +45,8 @@ private:
 	void							Reset();
 	void							ResetMouse();
 
-	enum 
-	{ 
+	enum
+	{
 		BUFFERSIZE					= 64,								///< Number of keys cached
 		DCLICKTIME					= 300								///< Minimum time between key release and key down to make it a double click
 	};

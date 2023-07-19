@@ -28,16 +28,16 @@ public:
 	bool								Stabilize();
 
 	/// After the ragdoll has been fully configured, call this function to automatically create and add a GroupFilterTable collision filter to all bodies
-	/// and configure them so that parent and children don't collide. 
-	/// 
+	/// and configure them so that parent and children don't collide.
+	///
 	/// This will:
 	/// - Create a GroupFilterTable and assign it to all of the bodies in a ragdoll.
 	/// - Each body in your ragdoll will get a SubGroupID that is equal to the joint index in the Skeleton that it is attached to.
 	/// - Loop over all joints in the Skeleton and call GroupFilterTable::DisableCollision(joint index, parent joint index).
-	/// - When a pose is provided through inJointMatrices the function will detect collisions between joints 
+	/// - When a pose is provided through inJointMatrices the function will detect collisions between joints
 	/// (they must be separated by more than inMinSeparationDistance to be treated as not colliding) and automatically disable collisions.
-	/// 
-	/// When you create an instance using Ragdoll::CreateRagdoll pass in a unique GroupID for each ragdoll (e.g. a simple counter), note that this number 
+	///
+	/// When you create an instance using Ragdoll::CreateRagdoll pass in a unique GroupID for each ragdoll (e.g. a simple counter), note that this number
 	/// should be unique throughout the PhysicsSystem, so if you have different types of ragdolls they should not share the same GroupID.
 	void								DisableParentChildCollisions(const Mat44 *inJointMatrices = nullptr, float inMinSeparationDistance = 0.0f);
 
@@ -138,7 +138,7 @@ public:
 
 	/// Set the ragdoll to a pose (calls BodyInterface::SetPositionAndRotation to instantly move the ragdoll)
 	void								SetPose(const SkeletonPose &inPose, bool inLockBodies = true);
-	
+
 	/// Lower level version of SetPose that directly takes the world space joint matrices
 	void								SetPose(RVec3Arg inRootOffset, const Mat44 *inJointMatrices, bool inLockBodies = true);
 
@@ -150,7 +150,7 @@ public:
 
 	/// Drive the ragdoll to a specific pose by setting velocities on each of the bodies so that it will reach inPose in inDeltaTime
 	void								DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies = true);
-	
+
 	/// Lower level version of DriveToPoseUsingKinematics that directly takes the world space joint matrices
 	void								DriveToPoseUsingKinematics(RVec3Arg inRootOffset, const Mat44 *inJointMatrices, float inDeltaTime, bool inLockBodies = true);
 
@@ -159,10 +159,10 @@ public:
 
 	/// Control the linear and velocity of all bodies in the ragdoll
 	void								SetLinearAndAngularVelocity(Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, bool inLockBodies = true);
-	
+
 	/// Set the world space linear velocity of all bodies in the ragdoll.
 	void								SetLinearVelocity(Vec3Arg inLinearVelocity, bool inLockBodies = true);
-	
+
 	/// Add a world space velocity (in m/s) to all bodies in the ragdoll.
 	void								AddLinearVelocity(Vec3Arg inLinearVelocity, bool inLockBodies = true);
 

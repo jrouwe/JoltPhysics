@@ -83,7 +83,7 @@ public:
 	virtual void			SaveBinaryState(StreamOut &inStream) const override;
 
 	// See Shape::GetStats
-	virtual Stats			GetStats() const override												{ return Stats(sizeof(*this), 0); } 
+	virtual Stats			GetStats() const override												{ return Stats(sizeof(*this), 0); }
 
 	// See Shape::GetVolume
 	virtual float			GetVolume() const override												{ return GetLocalBounds().GetVolume(); } // Volume is approximate!

@@ -72,7 +72,7 @@ bool NarrowPhaseQuery::CastRay(const RRayCast &inRay, RayCastResult &ioHit, cons
 		const BodyLockInterface &	mBodyLockInterface;
 		const BodyFilter &			mBodyFilter;
 	};
-	
+
 	// Do broadphase test, note that the broadphase uses floats so we drop precision here
 	MyCollector collector(inRay, ioHit, *mBodyLockInterface, inBodyFilter);
 	mBroadPhaseQuery->CastRay(RayCast(inRay), collector, inBroadPhaseLayerFilter, inObjectLayerFilter);

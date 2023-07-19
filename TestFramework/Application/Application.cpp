@@ -16,7 +16,7 @@
 #include <crtdbg.h>
 
 // Constructor
-Application::Application() : 
+Application::Application() :
 	mDebugRenderer(nullptr),
 	mRenderer(nullptr),
 	mKeyboard(nullptr),
@@ -202,7 +202,7 @@ void Application::Run()
 
 			if (mUI->IsVisible())
 			{
-				// Send mouse input to UI		
+				// Send mouse input to UI
 				bool left_pressed = mMouse->IsLeftPressed();
 				if (left_pressed && !mLeftMousePressed)
 					mUI->MouseDown(mMouse->GetX(), mMouse->GetY());

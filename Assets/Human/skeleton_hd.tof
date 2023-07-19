@@ -1,7 +1,7 @@
 TOS 1.00
 
 declare Skeleton 1
-  mJoints array instance Skeleton::Joint 
+  mJoints array instance Skeleton::Joint
 
 declare Skeleton::Joint 2
   mName string

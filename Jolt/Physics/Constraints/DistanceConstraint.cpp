@@ -32,7 +32,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(DistanceConstraintSettings)
 }
 
 void DistanceConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -87,7 +87,7 @@ DistanceConstraint::DistanceConstraint(Body &inBody1, Body &inBody2, const Dista
 	SetDistance(mMinDistance < 0.0f? distance : mMinDistance, mMaxDistance < 0.0f? distance : mMaxDistance);
 
 	// Most likely gravity is going to tear us apart (this is only used when the distance between the points = 0)
-	mWorldSpaceNormal = Vec3::sAxisY(); 
+	mWorldSpaceNormal = Vec3::sAxisY();
 
 	// Store spring settings
 	SetLimitsSpringSettings(inSettings.mLimitsSpringSettings);

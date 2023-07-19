@@ -12,7 +12,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(LoadRigTest)
 	JPH_ADD_BASE_CLASS(LoadRigTest, Test)
 }
 
-LoadRigTest::ConstraintNameAndType LoadRigTest::sTypes[] = 
+LoadRigTest::ConstraintNameAndType LoadRigTest::sTypes[] =
 {
 	{ "Fixed",		EConstraintOverride::TypeFixed },
 	{ "Point",		EConstraintOverride::TypePoint },
@@ -44,7 +44,7 @@ void LoadRigTest::Initialize()
 
 void LoadRigTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Constraint Type", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Constraint Type", [this, inUI]() {
 		UIElement *constraint_type = inUI->CreateMenu();
 		for (uint i = 0; i < size(sTypes); ++i)
 			inUI->CreateTextButton(constraint_type, sTypes[i].mName, [this, i]() { sConstraintType = sTypes[i].mType; RestartTest(); });

@@ -32,11 +32,11 @@ class JPH_EXPORT BodyInterface : public NonCopyable
 public:
 	/// Initialize the interface (should only be called by PhysicsSystem)
 	void						Init(BodyLockInterface &inBodyLockInterface, BodyManager &inBodyManager, BroadPhase &inBroadPhase) { mBodyLockInterface = &inBodyLockInterface; mBodyManager = &inBodyManager; mBroadPhase = &inBroadPhase; }
-	
+
 	/// Create a body
 	/// @return Created body or null when out of bodies
 	Body *						CreateBody(const BodyCreationSettings &inSettings);
-	
+
 	/// Create a body with specified ID. This function can be used if a simulation is to run in sync between clients or if a simulation needs to be restored exactly.
 	/// The ID created on the server can be replicated to the client and used to create a deterministic simulation.
 	/// @return Created body or null when the body ID is invalid or a body of the same ID already exists.
@@ -71,7 +71,7 @@ public:
 
 	/// Destroy a body
 	void						DestroyBody(const BodyID &inBodyID);
-	
+
 	/// Destroy multiple bodies
 	void						DestroyBodies(const BodyID *inBodyIDs, int inNumber);
 
@@ -80,10 +80,10 @@ public:
 	/// Adding many bodies, one at a time, results in a really inefficient broadphase until PhysicsSystem::OptimizeBroadPhase is called or when PhysicsSystem::Update rebuilds the tree!
 	/// After adding, to get a body by ID use the BodyLockRead or BodyLockWrite interface!
 	void						AddBody(const BodyID &inBodyID, EActivation inActivationMode);
-	
+
 	/// Remove body from the physics system.
 	void						RemoveBody(const BodyID &inBodyID);
-	
+
 	/// Check if a body has been added to the physics system.
 	bool						IsAdded(const BodyID &inBodyID) const;
 
