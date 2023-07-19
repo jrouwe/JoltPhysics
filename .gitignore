@@ -1,4 +1,5 @@
 .vs
+.vscode
 .DS_Store
 /profile_list_*.html
 /profile_chart_*.html
