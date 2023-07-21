@@ -125,10 +125,32 @@ public:
 	Body &							GetBody(const BodyID &inID)					{ return *mBodies[inID.GetIndex()]; }
 
 	/// Access a body, will return a nullptr if the body ID is no longer valid (not protected by lock)
-	const Body *					TryGetBody(const BodyID &inID) const		{ if (inID.GetIndex() >= mBodies.size()) { return nullptr; } const Body *body = mBodies[inID.GetIndex()]; return sIsValidBodyPointer(body) && body->GetID() == inID? body : nullptr; }
+	const Body *					TryGetBody(const BodyID &inID) const
+	{
+		uint32 idx = inID.GetIndex();
+		if (idx >= mBodies.size())
+			return nullptr;
+
+		const Body *body = mBodies[idx];
+		if (sIsValidBodyPointer(body) && body->GetID() == inID)
+			return body;
+
+		return nullptr;
+	}
 
 	/// Access a body, will return a nullptr if the body ID is no longer valid (not protected by lock)
-	Body *							TryGetBody(const BodyID &inID)				{ if (inID.GetIndex() >= mBodies.size()) { return nullptr; } Body *body = mBodies[inID.GetIndex()]; return sIsValidBodyPointer(body) && body->GetID() == inID? body : nullptr; }
+	Body *							TryGetBody(const BodyID &inID)
+	{
+		uint32 idx = inID.GetIndex();
+		if (idx >= mBodies.size())
+			return nullptr;
+
+		Body *body = mBodies[idx];
+		if (sIsValidBodyPointer(body) && body->GetID() == inID)
+			return body;
+
+		return nullptr;
+	}
 
 	/// Access the mutex for a single body
 	SharedMutex &					GetMutexForBody(const BodyID &inID) const	{ return mBodyMutexes.GetMutexByObjectIndex(inID.GetIndex()); }
