@@ -51,6 +51,7 @@ public:
 	struct Vertex
 	{
 		Float3			mPosition;					///< Initial position of the vertex
+		Float3			mVelocity { 0, 0, 0 };		///< Initial velocity of the vertex	
 		float			mInvMass = 1.0f;			///< Inverse of the mass of the vertex
 	};
 
@@ -141,7 +142,7 @@ SoftBody::SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat in
 		const SoftBodySettings::Vertex &in_vertex = inSettings->mVertices[v];
 		Vertex &out_vertex = mVertices[v];
 		out_vertex.mPreviousPosition = out_vertex.mPosition = orientation * Vec3(in_vertex.mPosition);
-		out_vertex.mVelocity = Vec3::sZero();
+		out_vertex.mVelocity = orientation.Multiply3x3(Vec3(in_vertex.mVelocity));
 		out_vertex.mInvMass = in_vertex.mInvMass;
 
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
@@ -165,6 +166,12 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	// Collect information about the colliding bodies
 	struct CollidingShape
 	{
+		/// Get the velocity of a point on this body
+		Vec3			GetPointVelocity(Vec3Arg inPointRelativeToCOM) const
+		{
+			return mLinearVelocity + mAngularVelocity.Cross(inPointRelativeToCOM);
+		}
+
 		Vec3			mCenterOfMassPosition;
 		Mat44			mInverseShapeTransform;
 		RefConst<Shape>	mShape;
@@ -211,7 +218,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		Array<CollidingShape>		mHits;
 	};
 	Collector collector(mPosition, inSystem.GetBodyLockInterfaceNoLock());
-	AABox bounds = mLocalBounds;
+	AABox bounds = mLocalBounds; // TODO: Needs some slack based on velocity of vertices
 	bounds.Translate(mPosition);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
 
@@ -229,38 +236,64 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
-				// Create a ray in the direction the particle is expected to move, start before the particle to avoid falling through a thin floor
-				Vec3 direction = (v.mVelocity + step_gravity) * inDeltaTime;
-				RayCast ray(v.mPosition - 0.5f * direction, direction);
+				// Start with no collision
+				v.mCollidingShapeIndex = -1;
 
-				// Find the closest collision
-				RayCastResult hit;
-				hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
-				SubShapeID hit_sub_shape_id;
-				const CollidingShape *hit_colliding_shape = nullptr;
+				// Calculate the distance we will move this frame
+				Vec3 movement = (v.mVelocity + step_gravity) * inDeltaTime;
+
+				// Create a collision plane for each vertex
+				float largest_penetration = -FLT_MAX;
 				for (const CollidingShape &shape : collector.mHits)
 				{
-					RayCast local_ray(ray.Transformed(shape.mInverseShapeTransform));
-					if (shape.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
+					// TODO: Needs to be implemented on the shape itself
+					if (shape.mShape->GetSubType() == EShapeSubType::Sphere)
 					{
-						hit.mBodyID = shape.mBodyID;
-						hit_sub_shape_id = hit.mSubShapeID2;
-						hit_colliding_shape = &shape;
+						// Special case for spheres
+						const SphereShape *sphere = static_cast<const SphereShape *>(shape.mShape.GetPtr());
+						float radius = sphere->GetRadius();
+						Vec3 delta = v.mPosition - shape.mCenterOfMassPosition;
+						float distance = delta.Length();
+						float penetration = radius - distance;
+						if (penetration > largest_penetration)
+						{
+							largest_penetration = penetration;
+							Vec3 point, normal;
+							if (distance > 0.0f)
+							{
+								point = shape.mCenterOfMassPosition + delta * (radius / distance);
+								normal = delta / distance;
+							}
+							else
+							{
+								point = shape.mCenterOfMassPosition + Vec3(0, radius, 0);
+								normal = Vec3::sAxisY();
+							}
+							v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
+							v.mCollidingShapeIndex = int(&shape - collector.mHits.data());
+						}
 					}
-				}
-
-				if (hit_colliding_shape != nullptr)
-				{
-					// Store collision
-					Vec3 point = ray.GetPointOnRay(hit.mFraction);
-					Vec3 normal = hit_colliding_shape->mShape->GetSurfaceNormal(hit_sub_shape_id, hit_colliding_shape->mInverseShapeTransform * point);
-					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-					v.mCollidingShapeIndex = int(hit_colliding_shape - collector.mHits.data());
-				}
-				else
-				{
-					// No collision
-					v.mCollidingShapeIndex = -1;
+					else
+					{
+						// Fallback
+						RayCastResult hit;
+						hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
+						RayCast ray(v.mPosition - 0.5f * movement, movement);
+						RayCast local_ray(ray.Transformed(shape.mInverseShapeTransform));
+						if (shape.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
+						{
+							float penetration = (hit.mFraction - 0.5f) * movement.Length();
+							if (penetration > largest_penetration)
+							{
+								// Store collision
+								largest_penetration = penetration;
+								Vec3 point = ray.GetPointOnRay(hit.mFraction);
+								Vec3 normal = shape.mShape->GetSurfaceNormal(hit.mSubShapeID2, shape.mInverseShapeTransform * point);
+								v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
+								v.mCollidingShapeIndex = int(&shape - collector.mHits.data());
+							}
+						}
+					}
 				}
 			}
 	}
@@ -384,14 +417,15 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		}
 
 		// Satisfy collision
-		Plane plane(Vec3::sAxisY(), float(mPosition.GetY()));
 		for (Vertex &v : mVertices)
 			if (v.mCollidingShapeIndex >= 0)
 			{
 				float distance = v.mCollisionPlane.SignedDistance(v.mPosition);
 				if (distance < 0.0f)
 				{
-					v.mPosition -= v.mCollisionPlane.GetNormal() * distance;
+					Vec3 delta = v.mCollisionPlane.GetNormal() * distance;
+					v.mPosition -= delta;
+					v.mPreviousPosition -= delta; // Apply delta to previous position so that we will not accumulate velocity by being pushed out of collision
 					v.mProjectedDistance -= distance; // For friction calculation
 				}
 			}
@@ -411,6 +445,9 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 				// If there was a collision
 				if (v.mProjectedDistance > 0.0f)
 				{
+					JPH_ASSERT(v.mCollidingShapeIndex >= 0);
+					CollidingShape &cs = collector.mHits[v.mCollidingShapeIndex];
+
 					// Apply friction as described in Detailed Rigid Body Simulation with Extended Position Based Dynamics - Matthias Muller et al.
 					// See section 3.6:
 					// Inverse mass: w1 = 1 / m1, w2 = 1 / m2 + (r2 x n)^T I^-1 (r2 x n) = 0 for a static object
@@ -420,56 +457,74 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 					// Contact normal force: fn = lambda / dt^2
 					// Delta velocity due to friction dv = -vt / |vt| * min(dt * friction * fn * (w1 + w2), |vt|) = -vt * min(-friction * c / (|vt| * dt), 1)
 					// Note that I think there is an error in the paper, I added a mass term, see: https://github.com/matthias-research/pages/issues/29
-					// Normal velocity: vn = (v1 - v2) . contact_normal (but v2 is zero because the plane is static)
-					// Tangential velocity: vt = v1 - v2 - contact_normal * vn
+					// Relative velocity: vr = v1 - v2 - omega2 x r2
+					// Normal velocity: vn = vr . contact_normal
+					// Tangential velocity: vt = vr - contact_normal * vn
 					// Impulse: p = dv / (w1 + w2)
 					// Changes in particle velocities:
 					// v1 = v1 + p / m1
 					// v2 = v2 - p / m2 (no change when colliding with a static body)
 					// w2 = w2 - I^-1 (r2 x p) (no change when colliding with a static body)
 					Vec3 contact_normal = v.mCollisionPlane.GetNormal();
-					Vec3 v_normal = contact_normal * contact_normal.Dot(v.mVelocity);
-					Vec3 v_tangential = v.mVelocity - v_normal;
-					float v_tangential_length = v_tangential.Length();
-					if (v_tangential_length > 0.0f)
+					if (cs.mMotionType == EMotionType::Dynamic)
 					{
-						JPH_ASSERT(v.mCollidingShapeIndex >= 0);
-						CollidingShape &cs = collector.mHits[v.mCollidingShapeIndex];
-						if (cs.mMotionType == EMotionType::Dynamic)
-						{
-							// Calculate inverse effective mass
-							Vec3 r2 = v.mPosition - cs.mCenterOfMassPosition;
-							Vec3 r2_cross_n = r2.Cross(contact_normal);
-							float w2 = cs.mInvMass + r2_cross_n.Dot(cs.mInvInertia * r2_cross_n);
+						// Calculate normal and tangential velocity (equation 30)
+						Vec3 r2 = v.mPosition - cs.mCenterOfMassPosition;
+						Vec3 v2 = cs.GetPointVelocity(r2);
+						Vec3 relative_velocity = v.mVelocity - v2;
+						Vec3 v_normal = contact_normal * contact_normal.Dot(relative_velocity);
+						Vec3 v_tangential = relative_velocity - v_normal;
+						float v_tangential_length = v_tangential.Length();
 
-							// Calculate impulse
-							Vec3 p = v_tangential * min(friction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f) / (v.mInvMass + w2);
+						// Calculate inverse effective mass
+						Vec3 r2_cross_n = r2.Cross(contact_normal);
+						float w2 = cs.mInvMass + r2_cross_n.Dot(cs.mInvInertia * r2_cross_n);
+						float w1_plus_w2 = v.mInvMass + w2;
 
-							// Apply impulse to particle
-							v.mVelocity -= p * v.mInvMass;
-
-							// Apply impulse to rigid body
-							cs.mLinearVelocity += p * cs.mInvMass;
-							cs.mAngularVelocity += cs.mInvInertia * r2.Cross(p);
-
-							// TODO: Friction and restitution
-
-							cs.mUpdateVelocities = true;
-						}
+						// Calculate delta relative velocity due to friction (modified equation 31)
+						Vec3 dv;
+						if (v_tangential_length > 0.0f)
+							dv = v_tangential * min(friction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
 						else
-						{
-							// Body is not moveable, equations are simpler
+							dv = Vec3::sZero();
+
+						// Calculate delta relative velocity due to restitution (equation 35)
+						dv += v_normal;
+						float prev_v_normal = (prev_v - v2).Dot(contact_normal);
+						if (prev_v_normal < restitution_treshold)
+							dv += restitution * prev_v_normal * contact_normal;
+
+						// Calculate impulse
+						Vec3 p = dv / w1_plus_w2;
+
+						// Apply impulse to particle
+						v.mVelocity -= p * v.mInvMass;
+
+						// Apply impulse to rigid body
+						cs.mLinearVelocity += p * cs.mInvMass;
+						cs.mAngularVelocity += cs.mInvInertia * r2.Cross(p);
+
+						// Mark that the velocities of the body we hit need to be updated
+						cs.mUpdateVelocities = true;
+					}
+					else
+					{
+						// Body is not moveable, equations are simpler
+
+						// Calculate normal and tangential velocity (equation 30)
+						Vec3 v_normal = contact_normal * contact_normal.Dot(v.mVelocity);
+						Vec3 v_tangential = v.mVelocity - v_normal;
+						float v_tangential_length = v_tangential.Length();
+
+						// Apply friction (modified equation 31)
+						if (v_tangential_length > 0.0f)
 							v.mVelocity -= v_tangential * min(friction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
 
-							// Apply restitution (equation 35)
-							// First cancel out the normal velocity
-							v.mVelocity -= v_normal;
-
-							// Then apply restitution if the velocity is above the treshold
-							float prev_v_normal = prev_v.Dot(contact_normal);
-							if (prev_v_normal < restitution_treshold)
-								v.mVelocity -= restitution * prev_v_normal * contact_normal;
-						}
+						// Apply restitution (equation 35)
+						v.mVelocity -= v_normal;
+						float prev_v_normal = prev_v.Dot(contact_normal);
+						if (prev_v_normal < restitution_treshold)
+							v.mVelocity -= restitution * prev_v_normal * contact_normal;
 					}
 				}
 			}
@@ -536,8 +591,8 @@ SoftBodyTest::~SoftBodyTest()
 
 const SoftBodySettings *sCreateCloth()
 {
-	const uint cGridSize = 20;
-	const float cGridSpacing = 1.0f;
+	const uint cGridSize = 30;
+	const float cGridSpacing = 0.75f;
 	const float cOffset = -0.5f * cGridSpacing * (cGridSize - 1);
 
 	// Create settings
@@ -794,15 +849,18 @@ void SoftBodyTest::Initialize()
 	SoftBodySettings *sphere = sCreatePressurizedSphere();
 	mSoftBodies.push_back(new SoftBody(sphere, RVec3(15.0f, 10.0f, 15.0f), Quat::sIdentity()));
 
-	// Sphere below sphere
-	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 5.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	// Sphere below pressurized sphere
+	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 7.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 	bcs.mMassPropertiesOverride.mMass = 100.0f;
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 	
-	// Sphere above cloth
-	bcs.mPosition = RVec3(0, 15.0f, 0);
-	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+	// Spheres above cloth
+	for (int i = 0; i < 5; ++i)
+	{
+		bcs.mPosition = RVec3(0, 15.0f + 3.0f * i, 0);
+		mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+	}
 }
 
 void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
