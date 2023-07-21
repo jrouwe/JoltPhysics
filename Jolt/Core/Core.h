@@ -293,6 +293,7 @@
 	JPH_MSVC_SUPPRESS_WARNING(4826) /* Conversion from 'X *' to 'JPH::uint64' is sign-extended. This may cause unexpected runtime behavior. (32-bit) */ \
 	JPH_MSVC_SUPPRESS_WARNING(5264) /* 'X': 'const' variable is not used */						\
 	JPH_MSVC_SUPPRESS_WARNING(4251) /* class 'X' needs to have DLL-interface to be used by clients of class 'Y' */ \
+	JPH_MSVC_SUPPRESS_WARNING(4738) /* storing 32-bit float result in memory, possible loss of performance */ \
 	JPH_MSVC2019_SUPPRESS_WARNING(5246) /* the initialization of a subobject should be wrapped in braces */
 
 // OS-specific includes
@@ -340,7 +341,8 @@
 	JPH_MSVC_SUPPRESS_WARNING(4820)																\
 	JPH_MSVC_SUPPRESS_WARNING(4514)																\
 	JPH_MSVC_SUPPRESS_WARNING(5262)																\
-	JPH_MSVC_SUPPRESS_WARNING(5264)
+	JPH_MSVC_SUPPRESS_WARNING(5264)																\
+	JPH_MSVC_SUPPRESS_WARNING(4738)
 
 #define JPH_SUPPRESS_WARNINGS_STD_END															\
 	JPH_SUPPRESS_WARNING_POP

@@ -1,5 +1,5 @@
 @echo off
-cmake -S . -B VS2019_Clang -G "Visual Studio 16 2019" -A x64 -T ClangCL
+cmake -S . -B VS2019_Clang -G "Visual Studio 16 2019" -A x64 -T ClangCL %*
 echo:
 echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 echo Make sure to install:

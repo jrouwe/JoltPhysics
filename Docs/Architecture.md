@@ -385,11 +385,12 @@ If you want cross platform determinism then please turn on the CROSS_PLATFORM_DE
 Some caveats:
 
 * The same source code must be used to compile the library on all platforms.
-* Applications compiled in 32-bit mode do not produce the same results as applications compiled in 64-bit mode. Compile your application in the same mode for all platforms.
+* The source code must be compiled with the same defines, e.g. you can't have one platform using JPH_DOUBLE_PRECISION and another not.
 
 It is quite difficult to verify cross platform determinism, so this feature is less tested than other features. With every build, the following architectures are verified to produce the same results:
 
 * Windows MSVC x86 64-bit with AVX2
+* Windows MSVC x86 32-bit with SSE2
 * macOS clang x86 64-bit with AVX
 * Linux clang x86 64-bit with AVX2
 * Linux clang ARM 64-bit with NEON 
