@@ -528,11 +528,9 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 		inRenderer->DrawWireBox(RMat44::sTranslation(mPosition), mLocalBounds, Color::sGreen);
 }
 
-static SoftBody *sSoftBodies[4];
-
 SoftBodyTest::~SoftBodyTest()
 {
-	for (SoftBody *s : sSoftBodies)
+	for (SoftBody *s : mSoftBodies)
 		delete s;
 }
 
@@ -783,18 +781,18 @@ void SoftBodyTest::Initialize()
 	// Floor
 	CreateMeshTerrain();
 
-	sSoftBodies[0] = new SoftBody(sCreateCloth(), RVec3(0, 10.0f, 0), Quat::sIdentity());
+	mSoftBodies.push_back(new SoftBody(sCreateCloth(), RVec3(0, 10.0f, 0), Quat::sIdentity()));
 
 	SoftBodySettings *cube1 = sCreateCube();
 	cube1->mRestitution = 0.0f;
-	sSoftBodies[1] = new SoftBody(cube1, RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation);
+	mSoftBodies.push_back(new SoftBody(cube1, RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation));
 
 	SoftBodySettings *cube2 = sCreateCube();
 	cube2->mRestitution = 1.0f;
-	sSoftBodies[2] = new SoftBody(cube2, RVec3(25.0f, 10.0f, 0.0f), cCubeOrientation);
+	mSoftBodies.push_back(new SoftBody(cube2, RVec3(25.0f, 10.0f, 0.0f), cCubeOrientation));
 
 	SoftBodySettings *sphere = sCreatePressurizedSphere();
-	sSoftBodies[3] = new SoftBody(sphere, RVec3(15.0f, 10.0f, 15.0f), Quat::sIdentity());
+	mSoftBodies.push_back(new SoftBody(sphere, RVec3(15.0f, 10.0f, 15.0f), Quat::sIdentity()));
 
 	// Sphere below sphere
 	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 5.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
@@ -809,7 +807,7 @@ void SoftBodyTest::Initialize()
 
 void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	for (SoftBody *s : sSoftBodies)
+	for (SoftBody *s : mSoftBodies)
 	{
 		s->Update(1.0f / 60.0f, *mPhysicsSystem);
 

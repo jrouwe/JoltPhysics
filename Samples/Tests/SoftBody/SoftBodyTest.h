@@ -6,6 +6,8 @@
 
 #include <Tests/Test.h>
 
+class SoftBody;
+
 // This is a very basic soft body test
 class SoftBodyTest : public Test
 {
@@ -18,4 +20,7 @@ public:
 	// See: Test
 	virtual void		Initialize() override;
 	virtual void		PrePhysicsUpdate(const PreUpdateParams &inParams);
+
+private:
+	Array<SoftBody *>	mSoftBodies;
 };
