@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -z $1 ] 
+if [ -z $1 ]
 then
 	BUILD_TYPE=Debug
 else
@@ -8,7 +8,7 @@ else
 	shift
 fi
 
-if [ -z $1 ] 
+if [ -z $1 ]
 then
 	COMPILER=clang++
 else

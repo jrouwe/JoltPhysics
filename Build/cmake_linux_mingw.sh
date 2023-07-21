@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -z $1 ] 
+if [ -z $1 ]
 then
 	BUILD_TYPE=Release
 else
