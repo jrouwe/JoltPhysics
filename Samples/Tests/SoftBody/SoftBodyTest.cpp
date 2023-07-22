@@ -127,6 +127,7 @@ public:
 	Array<Vertex>		mVertices;
 	RVec3				mPosition;
 	AABox				mLocalBounds;
+	AABox				mLocalPredictedBounds;
 };
 
 SoftBody::SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat inOrientation)
@@ -147,6 +148,9 @@ SoftBody::SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat in
 
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
 	}
+
+	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
+	mLocalPredictedBounds = mLocalBounds;
 }
 
 void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
@@ -218,9 +222,21 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		Array<CollidingShape>		mHits;
 	};
 	Collector collector(mPosition, inSystem.GetBodyLockInterfaceNoLock());
-	AABox bounds = mLocalBounds; // TODO: Needs some slack based on velocity of vertices
+	AABox bounds = mLocalBounds;
+	bounds.Encapsulate(mLocalPredictedBounds);
 	bounds.Translate(mPosition);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
+
+	// Calculate delta time for sub step
+	uint32 num_iterations = mSettings->mNumIterations;
+	float dt = inDeltaTime / num_iterations;
+	float dt_sq = Square(dt);
+
+	// Calculate total displacement we'll have due to gravity over all sub steps
+	// The total displacement as produced by our integrator can be written as: Sum(i * g * dt^2, i = 0..num_iterations).
+	// This is bigger than 0.5 * g * dt^2 because we first increment the velocity and then update the position
+	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
+	Vec3 displacement_due_to_gravity = (0.5f * num_iterations * (num_iterations + 1) * dt_sq) * inSystem.GetGravity();
 
 	// Generate collision planes
 	if (collector.mHits.empty())
@@ -232,7 +248,6 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	else
 	{
 		// Process collisions
-		Vec3 step_gravity = inSystem.GetGravity() * inDeltaTime;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
@@ -240,7 +255,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 				v.mCollidingShapeIndex = -1;
 
 				// Calculate the distance we will move this frame
-				Vec3 movement = (v.mVelocity + step_gravity) * inDeltaTime;
+				Vec3 movement = v.mVelocity * inDeltaTime + displacement_due_to_gravity;
 
 				// Create a collision plane for each vertex
 				float largest_penetration = -FLT_MAX;
@@ -298,9 +313,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 			}
 	}
 
-	uint32 num_iterations = mSettings->mNumIterations;
-	float dt = inDeltaTime / num_iterations;
-	float inv_dt_sq = 1.0f / Square(dt);
+	float inv_dt_sq = 1.0f / dt_sq;
 	float linear_damping = max(0.0f, 1.0f - mSettings->mLinearDamping * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
 
 	for (uint iteration = 0; iteration < num_iterations; ++iteration)
@@ -531,9 +544,14 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		}
 
 	// Update local bounding box
-	mLocalBounds = AABox();
+	mLocalPredictedBounds = mLocalBounds = { };
 	for (Vertex &v : mVertices)
+	{
 		mLocalBounds.Encapsulate(v.mPosition);
+
+		// Create predicted position for the next frame in order to detect collisions before they happen
+		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
+	}
 
 	// Write back velocities
 	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
@@ -580,7 +598,10 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 		}
 
 	if (inDrawSettings.mDrawBounds)
+	{
 		inRenderer->DrawWireBox(RMat44::sTranslation(mPosition), mLocalBounds, Color::sGreen);
+		inRenderer->DrawWireBox(RMat44::sTranslation(mPosition), mLocalPredictedBounds, Color::sRed);
+	}
 }
 
 SoftBodyTest::~SoftBodyTest()
