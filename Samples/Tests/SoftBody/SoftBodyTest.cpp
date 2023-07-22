@@ -21,18 +21,18 @@ SoftBodyTest::~SoftBodyTest()
 		delete s;
 }
 
-const SoftBodySettings *sCreateCloth()
+const SoftBodyParticleSettings *sCreateCloth(bool inFixateCorners = true)
 {
 	const uint cGridSize = 30;
 	const float cGridSpacing = 0.75f;
 	const float cOffset = -0.5f * cGridSpacing * (cGridSize - 1);
 
 	// Create settings
-	SoftBodySettings *settings = new SoftBodySettings;
+	SoftBodyParticleSettings *settings = new SoftBodyParticleSettings;
 	for (uint y = 0; y < cGridSize; ++y)
 		for (uint x = 0; x < cGridSize; ++x)
 		{
-			SoftBodySettings::Vertex v;
+			SoftBodyParticleSettings::Vertex v;
 			v.mPosition = Float3(cOffset + x * cGridSpacing, 0.0f, cOffset + y * cGridSpacing);
 			settings->mVertices.push_back(v);
 		}
@@ -43,17 +43,20 @@ const SoftBodySettings *sCreateCloth()
 		return inX + inY * cGridSize;
 	};
 
-	// Fixate corners
-	settings->mVertices[vertex_index(0, 0)].mInvMass = 0.0f;
-	settings->mVertices[vertex_index(cGridSize - 1, 0)].mInvMass = 0.0f;
-	settings->mVertices[vertex_index(0, cGridSize - 1)].mInvMass = 0.0f;
-	settings->mVertices[vertex_index(cGridSize - 1, cGridSize - 1)].mInvMass = 0.0f;
+	if (inFixateCorners)
+	{
+		// Fixate corners
+		settings->mVertices[vertex_index(0, 0)].mInvMass = 0.0f;
+		settings->mVertices[vertex_index(cGridSize - 1, 0)].mInvMass = 0.0f;
+		settings->mVertices[vertex_index(0, cGridSize - 1)].mInvMass = 0.0f;
+		settings->mVertices[vertex_index(cGridSize - 1, cGridSize - 1)].mInvMass = 0.0f;
+	}
 
 	// Create edges
 	for (uint y = 0; y < cGridSize; ++y)
 		for (uint x = 0; x < cGridSize; ++x)
 		{
-			SoftBodySettings::Edge e;
+			SoftBodyParticleSettings::Edge e;
 			e.mCompliance = 0.00001f;
 			e.mVertex[0] = vertex_index(x, y);
 			if (x < cGridSize - 1)
@@ -82,7 +85,7 @@ const SoftBodySettings *sCreateCloth()
 	for (uint y = 0; y < cGridSize - 1; ++y)
 		for (uint x = 0; x < cGridSize - 1; ++x)
 		{
-			SoftBodySettings::Face f;
+			SoftBodyParticleSettings::Face f;
 			f.mVertex[0] = vertex_index(x, y);
 			f.mVertex[1] = vertex_index(x, y + 1);
 			f.mVertex[2] = vertex_index(x + 1, y + 1);
@@ -93,25 +96,22 @@ const SoftBodySettings *sCreateCloth()
 			settings->mFaces.push_back(f);
 		}
 
-	// Don't update the position of the cloth as it is fixed to the world
-	settings->mUpdatePosition = false;
-
 	return settings;
 }
 
-static SoftBodySettings *sCreateCube()
+static SoftBodyParticleSettings *sCreateCube()
 {
 	const uint cGridSize = 5;
 	const float cGridSpacing = 0.5f;
 	const Vec3 cOffset = Vec3::sReplicate(-0.5f * cGridSpacing * (cGridSize - 1));
 
 	// Create settings
-	SoftBodySettings *settings = new SoftBodySettings;
+	SoftBodyParticleSettings *settings = new SoftBodyParticleSettings;
 	for (uint z = 0; z < cGridSize; ++z)
 		for (uint y = 0; y < cGridSize; ++y)
 			for (uint x = 0; x < cGridSize; ++x)
 			{
-				SoftBodySettings::Vertex v;
+				SoftBodyParticleSettings::Vertex v;
 				(cOffset + Vec3::sReplicate(cGridSpacing) * Vec3(float(x), float(y), float(z))).StoreFloat3(&v.mPosition);
 				settings->mVertices.push_back(v);
 			}
@@ -127,7 +127,7 @@ static SoftBodySettings *sCreateCube()
 		for (uint y = 0; y < cGridSize; ++y)
 			for (uint x = 0; x < cGridSize; ++x)
 			{
-				SoftBodySettings::Edge e;
+				SoftBodyParticleSettings::Edge e;
 				e.mVertex[0] = vertex_index(x, y, z);
 				if (x < cGridSize - 1)
 				{
@@ -163,7 +163,7 @@ static SoftBodySettings *sCreateCube()
 			for (uint x = 0; x < cGridSize - 1; ++x)
 				for (uint t = 0; t < 6; ++t)
 				{
-					SoftBodySettings::Volume v;
+					SoftBodyParticleSettings::Volume v;
 					for (uint i = 0; i < 4; ++i)
 						v.mVertex[i] = vertex_index(x + tetra_indices[t][i][0], y + tetra_indices[t][i][1], z + tetra_indices[t][i][2]);
 					settings->mVolumeConstraints.push_back(v);
@@ -174,16 +174,16 @@ static SoftBodySettings *sCreateCube()
 	return settings;
 }
 
-static SoftBodySettings *sCreatePressurizedSphere()
+static SoftBodyParticleSettings *sCreateSphere()
 {
 	const uint cNumTheta = 10;
 	const uint cNumPhi = 20;
 
 	// Create settings
-	SoftBodySettings *settings = new SoftBodySettings;
+	SoftBodyParticleSettings *settings = new SoftBodyParticleSettings;
 
 	// Create vertices
-	SoftBodySettings::Vertex v;
+	SoftBodyParticleSettings::Vertex v;
 	Vec3::sUnitSpherical(0, 0).StoreFloat3(&v.mPosition);
 	settings->mVertices.push_back(v);
 	Vec3::sUnitSpherical(JPH_PI, 0).StoreFloat3(&v.mPosition);
@@ -211,7 +211,7 @@ static SoftBodySettings *sCreatePressurizedSphere()
 	{
 		for (uint theta = 0; theta < cNumTheta - 1; ++theta)
 		{
-			SoftBodySettings::Edge e;
+			SoftBodyParticleSettings::Edge e;
 			e.mCompliance = 0.0001f;
 			e.mVertex[0] = vertex_index(theta, phi);
 
@@ -232,7 +232,7 @@ static SoftBodySettings *sCreatePressurizedSphere()
 	settings->CalculateEdgeLengths();
 
 	// Create faces
-	SoftBodySettings::Face f;
+	SoftBodyParticleSettings::Face f;
 	for (uint phi = 0; phi < cNumPhi; ++phi)
 	{
 		for (uint theta = 0; theta < cNumTheta - 1; ++theta)
@@ -256,8 +256,6 @@ static SoftBodySettings *sCreatePressurizedSphere()
 		settings->mFaces.push_back(f);
 	}
 
-	settings->mPressure = 2000.0f;
-
 	return settings;
 }
 
@@ -268,18 +266,25 @@ void SoftBodyTest::Initialize()
 	// Floor
 	CreateMeshTerrain();
 
-	mSoftBodies.push_back(new SoftBody(sCreateCloth(), RVec3(0, 10.0f, 0), Quat::sIdentity()));
+	// Create cloth that's fixated at the corners
+	SoftBodyCreationSettings cloth(sCreateCloth(), RVec3(0, 10.0f, 0));
+	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
+	mSoftBodies.push_back(new SoftBody(cloth));
 
-	SoftBodySettings *cube1 = sCreateCube();
-	cube1->mRestitution = 0.0f;
-	mSoftBodies.push_back(new SoftBody(cube1, RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation));
+	// Create cube
+	SoftBodyCreationSettings cube(sCreateCube(), RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation);
+	cube.mRestitution = 0.0f;
+	mSoftBodies.push_back(new SoftBody(cube));
 
-	SoftBodySettings *cube2 = sCreateCube();
-	cube2->mRestitution = 1.0f;
-	mSoftBodies.push_back(new SoftBody(cube2, RVec3(25.0f, 10.0f, 0.0f), cCubeOrientation));
+	// Create another cube that shares information with the first cube
+	cube.mPosition = RVec3(25.0f, 10.0f, 0.0f);
+	cube.mRestitution = 1.0f;
+	mSoftBodies.push_back(new SoftBody(cube));
 
-	SoftBodySettings *sphere = sCreatePressurizedSphere();
-	mSoftBodies.push_back(new SoftBody(sphere, RVec3(15.0f, 10.0f, 15.0f), Quat::sIdentity()));
+	// Create pressurized sphere
+	SoftBodyCreationSettings sphere(sCreateSphere(), RVec3(15.0f, 10.0f, 15.0f));
+	sphere.mPressure = 2000.0f;
+	mSoftBodies.push_back(new SoftBody(sphere));
 
 	// Sphere below pressurized sphere
 	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 7.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);

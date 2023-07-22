@@ -16,20 +16,27 @@
 
 JPH_NAMESPACE_BEGIN
 
-SoftBody::SoftBody(const SoftBodySettings *inSettings, RVec3 inPosition, Quat inOrientation)
+SoftBody::SoftBody(const SoftBodyCreationSettings &inSettings)
 {
-	mSettings = inSettings;
+	mSettings = inSettings.mSettings;
 
-	mPosition = inPosition;
-	Mat44 orientation = Mat44::sRotation(inOrientation);
+	mPosition = inSettings.mPosition;
+	Mat44 rotation = Mat44::sRotation(inSettings.mRotation);
 
-	mVertices.resize(inSettings->mVertices.size());
+	mNumIterations = inSettings.mNumIterations;
+	mLinearDamping = inSettings.mLinearDamping;
+	mRestitution = inSettings.mRestitution;
+	mFriction = inSettings.mFriction;
+	mPressure = inSettings.mPressure;
+	mUpdatePosition = inSettings.mUpdatePosition;
+
+	mVertices.resize(inSettings.mSettings->mVertices.size());
 	for (Array<Vertex>::size_type v = 0; v < mVertices.size(); ++v)
 	{
-		const SoftBodySettings::Vertex &in_vertex = inSettings->mVertices[v];
+		const SoftBodyParticleSettings::Vertex &in_vertex = inSettings.mSettings->mVertices[v];
 		Vertex &out_vertex = mVertices[v];
-		out_vertex.mPreviousPosition = out_vertex.mPosition = orientation * Vec3(in_vertex.mPosition);
-		out_vertex.mVelocity = orientation.Multiply3x3(Vec3(in_vertex.mVelocity));
+		out_vertex.mPreviousPosition = out_vertex.mPosition = rotation * Vec3(in_vertex.mPosition);
+		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
 		out_vertex.mInvMass = in_vertex.mInvMass;
 
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
@@ -44,7 +51,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
 
-	if (mSettings->mUpdatePosition)
+	if (mUpdatePosition)
 	{
 		// Shift the body so that the position is the center of the local bounds
 		Vec3 delta = mLocalBounds.GetCenter();
@@ -118,15 +125,14 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
 
 	// Calculate delta time for sub step
-	uint32 num_iterations = mSettings->mNumIterations;
-	float dt = inDeltaTime / num_iterations;
+	float dt = inDeltaTime / mNumIterations;
 	float dt_sq = Square(dt);
 
 	// Calculate total displacement we'll have due to gravity over all sub steps
-	// The total displacement as produced by our integrator can be written as: Sum(i * g * dt^2, i = 0..num_iterations).
+	// The total displacement as produced by our integrator can be written as: Sum(i * g * dt^2, i = 0..mNumIterations).
 	// This is bigger than 0.5 * g * dt^2 because we first increment the velocity and then update the position
 	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
-	Vec3 displacement_due_to_gravity = (0.5f * num_iterations * (num_iterations + 1) * dt_sq) * inSystem.GetGravity();
+	Vec3 displacement_due_to_gravity = (0.5f * mNumIterations * (mNumIterations + 1) * dt_sq) * inSystem.GetGravity();
 
 	// Generate collision planes
 	if (collector.mHits.empty())
@@ -204,11 +210,11 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	}
 
 	float inv_dt_sq = 1.0f / dt_sq;
-	float linear_damping = max(0.0f, 1.0f - mSettings->mLinearDamping * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
+	float linear_damping = max(0.0f, 1.0f - mLinearDamping * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
 
-	for (uint iteration = 0; iteration < num_iterations; ++iteration)
+	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
 	{
-		float pressure_coefficient = mSettings->mPressure;
+		float pressure_coefficient = mPressure;
 		if (pressure_coefficient > 0.0f)
 		{
 			// Calculate total volume
@@ -334,8 +340,8 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 			}
 
 		// Update velocity
-		float friction = mSettings->mFriction;
-		float restitution = mSettings->mRestitution;
+		float friction = mFriction;
+		float restitution = mRestitution;
 		float restitution_treshold = -2.0f * inSystem.GetGravity().Length() * dt;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
