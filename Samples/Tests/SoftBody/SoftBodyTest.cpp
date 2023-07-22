@@ -165,6 +165,10 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		mPosition += delta;
 		for (Vertex &v : mVertices)
 			v.mPosition -= delta;
+
+		// Offset bounds to match new position
+		mLocalBounds.Translate(-delta);
+		mLocalPredictedBounds.Translate(-delta);
 	}
 
 	// Collect information about the colliding bodies
