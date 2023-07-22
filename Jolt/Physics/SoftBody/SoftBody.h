@@ -7,6 +7,7 @@
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Geometry/Plane.h>
 #include <Jolt/Geometry/AABox.h>
+#include <Jolt/Physics/Body/Body.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -104,11 +105,14 @@ public:
 };
 
 /// This class contains the runtime information of a soft body. Soft bodies are implemented using XPBD, a particle and springs based approach.
-class JPH_EXPORT SoftBody
+class JPH_EXPORT SoftBody : public Body
 {
 public:
 	/// Constructor
 						SoftBody(const SoftBodyCreationSettings &inCreationSettings);
+
+	/// Destructor
+						~SoftBody()							{ mMotionProperties = nullptr; }
 
 	/// Update the soft body
 	void				Update(float inDeltaTime, PhysicsSystem &inSystem);
@@ -145,15 +149,12 @@ public:
 	using Face = SoftBodyParticleSettings::Face;
 	using Volume = SoftBodyParticleSettings::Volume;
 
+	MotionProperties	mMotionPropertiesImpl;				///< Motion properties class for the soft body, note that not everything will be used
 	RefConst<SoftBodyParticleSettings> mSettings;
 	Array<Vertex>		mVertices;							///< Current state of all vertices in the simulation
-	RVec3				mPosition;							///< Current position of the body (average particle position)
 	AABox				mLocalBounds;						///< Current bounding box for all vertices (relative to mPosition)
 	AABox				mLocalPredictedBounds;				///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time (relative to mPosition)
 	uint32				mNumIterations;						///< Number of solver iterations
-	float				mLinearDamping;						///< Linear damping: dv/dt = -mLinearDamping * v
-	float				mRestitution;						///< Restitution when colliding
-	float				mFriction;							///< Friction coefficient when colliding
 	float				mPressure;							///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	bool				mUpdatePosition;					///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 };

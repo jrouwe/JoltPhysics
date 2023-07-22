@@ -18,13 +18,15 @@ JPH_NAMESPACE_BEGIN
 
 SoftBody::SoftBody(const SoftBodyCreationSettings &inSettings)
 {
+	mMotionProperties = &mMotionPropertiesImpl;
+
 	mSettings = inSettings.mSettings;
 
 	mPosition = inSettings.mPosition;
 	Mat44 rotation = Mat44::sRotation(inSettings.mRotation);
 
 	mNumIterations = inSettings.mNumIterations;
-	mLinearDamping = inSettings.mLinearDamping;
+	mMotionPropertiesImpl.SetLinearDamping(inSettings.mLinearDamping);
 	mRestitution = inSettings.mRestitution;
 	mFriction = inSettings.mFriction;
 	mPressure = inSettings.mPressure;
@@ -44,6 +46,10 @@ SoftBody::SoftBody(const SoftBodyCreationSettings &inSettings)
 
 	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
 	mLocalPredictedBounds = mLocalBounds;
+
+	// Init world bounds
+	mBounds = mLocalBounds;
+	mBounds.Translate(mPosition);
 }
 
 void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
@@ -210,7 +216,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	}
 
 	float inv_dt_sq = 1.0f / dt_sq;
-	float linear_damping = max(0.0f, 1.0f - mLinearDamping * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
+	float linear_damping = max(0.0f, 1.0f - mMotionPropertiesImpl.GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
 
 	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
 	{
@@ -448,6 +454,10 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		// Create predicted position for the next frame in order to detect collisions before they happen
 		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
 	}
+
+	// Store world bounds
+	mBounds = mLocalBounds;
+	mBounds.Translate(mPosition);
 
 	// Write back velocities
 	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
