@@ -69,23 +69,25 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 			if (lock.Succeeded())
 			{
 				const Body &body = lock.GetBody();
-
-				CollidingShape cs;
-				cs.mCenterOfMassPosition = Vec3(body.GetCenterOfMassPosition() - mPosition);
-				cs.mInverseShapeTransform = Mat44::sInverseRotationTranslation(body.GetRotation(), cs.mCenterOfMassPosition);
-				cs.mShape = body.GetShape();
-				cs.mBodyID = inResult;
-				cs.mMotionType = body.GetMotionType();
-				cs.mUpdateVelocities = false;
-				if (cs.mMotionType == EMotionType::Dynamic)
+				if (body.IsRigidBody()) // TODO: We should support soft body vs soft body
 				{
-					const MotionProperties *mp = body.GetMotionProperties();
-					cs.mInvMass = mp->GetInverseMass();
-					cs.mInvInertia = mp->GetInverseInertiaForRotation(Mat44::sRotation(body.GetRotation()));
-					cs.mLinearVelocity = mp->GetLinearVelocity();
-					cs.mAngularVelocity = mp->GetAngularVelocity();
+					CollidingShape cs;
+					cs.mCenterOfMassPosition = Vec3(body.GetCenterOfMassPosition() - mPosition);
+					cs.mInverseShapeTransform = Mat44::sInverseRotationTranslation(body.GetRotation(), cs.mCenterOfMassPosition);
+					cs.mShape = body.GetShape();
+					cs.mBodyID = inResult;
+					cs.mMotionType = body.GetMotionType();
+					cs.mUpdateVelocities = false;
+					if (cs.mMotionType == EMotionType::Dynamic)
+					{
+						const MotionProperties *mp = body.GetMotionProperties();
+						cs.mInvMass = mp->GetInverseMass();
+						cs.mInvInertia = mp->GetInverseInertiaForRotation(Mat44::sRotation(body.GetRotation()));
+						cs.mLinearVelocity = mp->GetLinearVelocity();
+						cs.mAngularVelocity = mp->GetAngularVelocity();
+					}
+					mHits.push_back(cs);
 				}
-				mHits.push_back(cs);
 			}
 		}
 
@@ -426,6 +428,10 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 
 	// Store world bounds
 	CalculateWorldSpaceBoundsInternal();
+
+	// Update bounds
+	// TODO: We shouldn't be casting here, the broadphase should be provided
+	const_cast<BroadPhase &>(static_cast<const BroadPhase &>(inSystem.GetBroadPhaseQuery())).NotifyBodiesAABBChanged(&mID, 1);
 
 	// Write back velocities
 	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();

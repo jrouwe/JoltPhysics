@@ -21,5 +21,5 @@ public:
 	virtual void		PrePhysicsUpdate(const PreUpdateParams &inParams);
 
 private:
-	Array<SoftBody *>	mSoftBodies;
+	BodyIDVector		mSoftBodies;
 };

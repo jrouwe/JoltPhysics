@@ -157,6 +157,15 @@ BodyID BodyInterface::CreateAndAddBody(const BodyCreationSettings &inSettings, E
 	return b->GetID();
 }
 
+BodyID BodyInterface::CreateAndAddSoftBody(const SoftBodyCreationSettings &inSettings, EActivation inActivationMode)
+{
+	const Body *b = CreateSoftBody(inSettings);
+	if (b == nullptr)
+		return BodyID(); // Out of bodies
+	AddBody(b->GetID(), inActivationMode);
+	return b->GetID();
+}
+
 BodyInterface::AddState BodyInterface::AddBodiesPrepare(BodyID *ioBodies, int inNumber)
 {
 	return mBroadPhase->AddBodiesPrepare(ioBodies, inNumber);

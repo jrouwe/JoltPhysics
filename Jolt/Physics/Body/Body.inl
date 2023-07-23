@@ -41,6 +41,10 @@ inline static bool sIsValidSensorBodyPair(const Body &inSensor, const Body &inOt
 
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
 {
+	// Soft bodies collide later in the pipeline
+	if (inBody1.IsSoftBody() || inBody2.IsSoftBody())
+		return false;
+
 	// One of these conditions must be true
 	// - One of the bodies must be dynamic to collide
 	// - A sensor can collide with non-dynamic bodies

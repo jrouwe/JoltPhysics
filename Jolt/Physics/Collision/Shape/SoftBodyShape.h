@@ -21,15 +21,18 @@ public:
 	/// Constructor
 									SoftBodyShape() : Shape(EShapeType::SoftBody, EShapeSubType::SoftBody) { }
 
+	/// Determine amount of bits needed to encode sub shape id
+	uint							GetSubShapeIDBits() const;
+
 	// See Shape
 	virtual bool					MustBeStatic() const override							{ return false; }
 	virtual Vec3					GetCenterOfMass() const override						{ return Vec3::sZero(); }
 	virtual AABox					GetLocalBounds() const override							{ return mLocalBounds; }
-	virtual uint					GetSubShapeIDBitsRecursive() const override				{ return 0; /* TODO */ }
+	virtual uint					GetSubShapeIDBitsRecursive() const override				{ return GetSubShapeIDBits(); }
 	virtual float					GetInnerRadius() const override							{ return 0.0f; /* TODO */ }
 	virtual MassProperties			GetMassProperties() const								{ return MassProperties(); /* TODO */ }
-	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override { return nullptr; /* TODO */ }
-	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const { return Vec3::sAxisY(); /* TODO */ }
+	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
+	virtual Vec3					GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const;
 	virtual void					GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const override { /* TODO */ }
 	virtual void					GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy
 #ifdef JPH_DEBUG_RENDERER // Not using JPH_IF_DEBUG_RENDERER for Doxygen
@@ -39,8 +42,8 @@ public:
 #ifdef JPH_DEBUG_RENDERER
 	virtual void					Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const override;
 #endif // JPH_DEBUG_RENDERER
-	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override { /* TODO */ return false; }
-	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const override { /* TODO */ }
+	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
+	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const override;
 	virtual void					CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const override { /* TODO */ }
 	virtual void					GetTrianglesStart(GetTrianglesContext &ioContext, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const override { /* TODO */ }
 	virtual int						GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials = nullptr) const override { /* TODO */ return 0; }

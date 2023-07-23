@@ -17,8 +17,11 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyTest)
 
 SoftBodyTest::~SoftBodyTest()
 {
-	for (SoftBody *s : mSoftBodies)
-		mBodyInterface->DestroyBodyWithoutID(s);
+	for (const BodyID &id : mSoftBodies)
+	{
+		mBodyInterface->RemoveBody(id);
+		mBodyInterface->DestroyBody(id);
+	}
 }
 
 const SoftBodyParticleSettings *sCreateCloth(bool inFixateCorners = true)
@@ -268,24 +271,27 @@ void SoftBodyTest::Initialize()
 
 	// Create cloth that's fixated at the corners
 	SoftBodyCreationSettings cloth(sCreateCloth(), RVec3(0, 10.0f, 0));
+	cloth.mObjectLayer = Layers::MOVING;
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
-	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(cloth)));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::DontActivate));
 
 	// Create cube
 	SoftBodyCreationSettings cube(sCreateCube(), RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation);
+	cube.mObjectLayer = Layers::MOVING;
 	cube.mRestitution = 0.0f;
-	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(cube)));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cube, EActivation::DontActivate));
 
 	// Create another cube that shares information with the first cube
 	cube.mPosition = RVec3(25.0f, 10.0f, 0.0f);
 	cube.mRestitution = 1.0f;
 	cube.mGravityFactor = 0.5f;
-	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(cube)));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cube, EActivation::DontActivate));
 
 	// Create pressurized sphere
 	SoftBodyCreationSettings sphere(sCreateSphere(), RVec3(15.0f, 10.0f, 15.0f));
+	sphere.mObjectLayer = Layers::MOVING;
 	sphere.mPressure = 2000.0f;
-	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(sphere)));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::DontActivate));
 
 	// Sphere below pressurized sphere
 	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 7.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
@@ -303,24 +309,30 @@ void SoftBodyTest::Initialize()
 
 void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	for (SoftBody *s : mSoftBodies)
+	for (const BodyID &id : mSoftBodies)
 	{
-		s->Update(1.0f / 60.0f, *mPhysicsSystem);
+		BodyLockWrite lock(mPhysicsSystem->GetBodyLockInterface(), id);
+		if (lock.Succeeded())
+		{
+			SoftBody &s = static_cast<SoftBody &>(lock.GetBody());
 
 #ifdef JPH_DEBUG_RENDERER
-		// Regular drawing
-		SoftBody::DrawSettings settings;
-		s->Draw(DebugRenderer::sInstance, settings);
+			// Regular drawing
+			SoftBody::DrawSettings settings;
+			s.Draw(DebugRenderer::sInstance, settings);
 #else
-		// Fallback for distribution builds
-		for (const SoftBody::Face &f : s->mSettings->mFaces)
-		{
-			RVec3 x1 = s->mPosition + s->mVertices[f.mVertex[0]].mPosition;
-			RVec3 x2 = s->mPosition + s->mVertices[f.mVertex[1]].mPosition;
-			RVec3 x3 = s->mPosition + s->mVertices[f.mVertex[2]].mPosition;
+			// Fallback for distribution builds
+			for (const SoftBody::Face &f : s.mSettings->mFaces)
+			{
+				RVec3 x1 = s->mPosition + s.mVertices[f.mVertex[0]].mPosition;
+				RVec3 x2 = s->mPosition + s.mVertices[f.mVertex[1]].mPosition;
+				RVec3 x3 = s->mPosition + s.mVertices[f.mVertex[2]].mPosition;
 
-			DebugRenderer::sInstance->DrawTriangle(x1, x2, x3, Color::sOrange, DebugRenderer::ECastShadow::On);
-		}
+				DebugRenderer::sInstance->DrawTriangle(x1, x2, x3, Color::sOrange, DebugRenderer::ECastShadow::On);
+			}
 #endif
+
+			s.Update(1.0f / 60.0f, *mPhysicsSystem);
+		}
 	}
 }

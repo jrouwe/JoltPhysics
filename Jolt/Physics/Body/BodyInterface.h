@@ -102,6 +102,10 @@ public:
 	/// @return Created body ID or an invalid ID when out of bodies
 	BodyID						CreateAndAddBody(const BodyCreationSettings &inSettings, EActivation inActivationMode);
 
+	/// Combines CreateSoftBody and AddBody
+	/// @return Created body ID or an invalid ID when out of bodies
+	BodyID						CreateAndAddSoftBody(const SoftBodyCreationSettings &inSettings, EActivation inActivationMode);
+
 	/// Broadphase add state handle, used to keep track of a batch while ading to the broadphase.
 	using AddState = void *;
 
