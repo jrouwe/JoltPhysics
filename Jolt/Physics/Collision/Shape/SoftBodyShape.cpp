@@ -9,7 +9,6 @@
 #include <Jolt/Geometry/RayTriangle.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
-#include <Jolt/Physics/Collision/PhysicsMaterial.h>
 #include <Jolt/Physics/SoftBody/SoftBody.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
@@ -93,7 +92,12 @@ void SoftBodyShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 
 const PhysicsMaterial *SoftBodyShape::GetMaterial(const SubShapeID &inSubShapeID) const
 {
-	return PhysicsMaterial::sDefault;
+	SubShapeID remainder;
+	uint triangle_idx = inSubShapeID.PopID(GetSubShapeIDBits(), remainder);
+	JPH_ASSERT(remainder.IsEmpty());
+
+	const SoftBody::Face &f = mSoftBody->mSettings->mFaces[triangle_idx];
+	return mSoftBody->mSettings->mMaterials[f.mMaterialIndex];
 }
 
 Vec3 SoftBodyShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
