@@ -323,11 +323,12 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			s.Draw(DebugRenderer::sInstance, settings);
 #else
 			// Fallback for distribution builds
+			RMat44 com = s.GetCenterOfMassTransform();
 			for (const SoftBody::Face &f : s.mSettings->mFaces)
 			{
-				RVec3 x1 = s->mPosition + s.mVertices[f.mVertex[0]].mPosition;
-				RVec3 x2 = s->mPosition + s.mVertices[f.mVertex[1]].mPosition;
-				RVec3 x3 = s->mPosition + s.mVertices[f.mVertex[2]].mPosition;
+				RVec3 x1 = com * s.mVertices[f.mVertex[0]].mPosition;
+				RVec3 x2 = com * s.mVertices[f.mVertex[1]].mPosition;
+				RVec3 x3 = com * s.mVertices[f.mVertex[2]].mPosition;
 
 				DebugRenderer::sInstance->DrawTriangle(x1, x2, x3, Color::sOrange, DebugRenderer::ECastShadow::On);
 			}
