@@ -9,6 +9,8 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
+#include <Jolt/Physics/SoftBody/SoftBody.h>
+#include <Jolt/Physics/Collision/Shape/SoftBodyShape.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/QuickSort.h>
@@ -53,12 +55,31 @@ public:
 	MotionProperties		mMotionProperties;
 };
 
+// Helper class that combines a soft body its motion properties and shape
+class SoftBodyWithMotionPropertiesAndShape : public SoftBody
+{
+public:
+							SoftBodyWithMotionPropertiesAndShape()
+	{
+		mShape.SetEmbedded();
+	}
+
+	MotionProperties		mMotionProperties;
+	SoftBodyShape			mShape;
+};
+
 inline void BodyManager::sDeleteBody(Body *inBody)
 {
 	if (inBody->mMotionProperties != nullptr)
 	{
 		JPH_IF_ENABLE_ASSERTS(inBody->mMotionProperties = nullptr;)
-		delete static_cast<BodyWithMotionProperties *>(inBody);
+		if (inBody->IsSoftBody())
+		{
+			static_cast<SoftBody *>(inBody)->mShape = nullptr;
+			delete static_cast<SoftBodyWithMotionPropertiesAndShape *>(inBody);
+		}
+		else
+			delete static_cast<BodyWithMotionProperties *>(inBody);
 	}
 	else
 		delete inBody;
@@ -155,6 +176,7 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 	{
 	 	body = new Body;
 	}
+	body->mBodyType = EBodyType::RigidBody;
 	body->mShape = inBodyCreationSettings.GetShape();
 	body->mUserData = inBodyCreationSettings.mUserData;
 	body->SetFriction(inBodyCreationSettings.mFriction);
@@ -190,6 +212,67 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 
 	// Position body
 	body->SetPositionAndRotationInternal(inBodyCreationSettings.mPosition, inBodyCreationSettings.mRotation);
+
+	return body;
+}
+
+/// Create a soft body using creation settings. The returned body will not be part of the body manager yet.
+Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCreationSettings) const
+{
+	// Fill in basic properties
+	SoftBodyWithMotionPropertiesAndShape *bmp = new SoftBodyWithMotionPropertiesAndShape;
+	MotionProperties *mp = &bmp->mMotionProperties;
+	SoftBodyShape *shape = &bmp->mShape;
+	SoftBody *body = bmp;
+	shape->mSoftBody = body;
+	body->mBodyType = EBodyType::SoftBody;
+	body->mMotionProperties = mp;
+	body->mSettings = inSoftBodyCreationSettings.mSettings;
+	body->mShape = shape;
+	body->mUserData = inSoftBodyCreationSettings.mUserData;
+	body->SetFriction(inSoftBodyCreationSettings.mFriction);
+	body->SetRestitution(inSoftBodyCreationSettings.mRestitution);
+	body->mMotionType = EMotionType::Dynamic;;
+	SetBodyObjectLayerInternal(*body, inSoftBodyCreationSettings.mObjectLayer);
+	body->mObjectLayer = inSoftBodyCreationSettings.mObjectLayer;
+	body->mCollisionGroup = inSoftBodyCreationSettings.mCollisionGroup;
+	mp->SetLinearDamping(inSoftBodyCreationSettings.mLinearDamping);
+	mp->SetAngularDamping(0);
+	mp->SetMaxLinearVelocity(FLT_MAX);
+	mp->SetMaxAngularVelocity(FLT_MAX);
+	mp->SetLinearVelocity(Vec3::sZero());
+	mp->SetAngularVelocity(Vec3::sZero());
+	mp->SetGravityFactor(inSoftBodyCreationSettings.mGravityFactor);
+	mp->mMotionQuality = EMotionQuality::Discrete;
+	mp->mAllowSleeping = inSoftBodyCreationSettings.mAllowSleeping;
+	mp->mIndexInActiveBodies = Body::cInactiveIndex;
+	mp->mIslandIndex = Body::cInactiveIndex;
+	JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
+	mp->mAllowedDOFs = EAllowedDOFs::All;
+	mp->SetInverseMass(0.0f);
+	mp->SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
+	body->mNumIterations = inSoftBodyCreationSettings.mNumIterations;
+	body->mPressure = inSoftBodyCreationSettings.mPressure;
+	body->mUpdatePosition = inSoftBodyCreationSettings.mUpdatePosition;
+
+	// Initialize vertices
+	Mat44 rotation = Mat44::sRotation(inSoftBodyCreationSettings.mRotation);
+	body->mVertices.resize(inSoftBodyCreationSettings.mSettings->mVertices.size());
+	for (Array<SoftBody::Vertex>::size_type v = 0; v < body->mVertices.size(); ++v)
+	{
+		const SoftBodyParticleSettings::Vertex &in_vertex = inSoftBodyCreationSettings.mSettings->mVertices[v];
+		SoftBody::Vertex &out_vertex = body->mVertices[v];
+		out_vertex.mPreviousPosition = out_vertex.mPosition = rotation * Vec3(in_vertex.mPosition);
+		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
+		out_vertex.mInvMass = in_vertex.mInvMass;
+
+		shape->mLocalBounds.Encapsulate(out_vertex.mPosition);
+	}
+
+	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
+	body->mLocalPredictedBounds = shape->mLocalBounds;
+
+	body->SetPositionAndRotationInternal(inSoftBodyCreationSettings.mPosition, Quat::sIdentity());
 
 	return body;
 }

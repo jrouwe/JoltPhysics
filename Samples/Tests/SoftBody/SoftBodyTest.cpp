@@ -18,7 +18,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyTest)
 SoftBodyTest::~SoftBodyTest()
 {
 	for (SoftBody *s : mSoftBodies)
-		delete s;
+		mBodyInterface->DestroyBodyWithoutID(s);
 }
 
 const SoftBodyParticleSettings *sCreateCloth(bool inFixateCorners = true)
@@ -269,22 +269,23 @@ void SoftBodyTest::Initialize()
 	// Create cloth that's fixated at the corners
 	SoftBodyCreationSettings cloth(sCreateCloth(), RVec3(0, 10.0f, 0));
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
-	mSoftBodies.push_back(new SoftBody(cloth));
+	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(cloth)));
 
 	// Create cube
 	SoftBodyCreationSettings cube(sCreateCube(), RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation);
 	cube.mRestitution = 0.0f;
-	mSoftBodies.push_back(new SoftBody(cube));
+	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(cube)));
 
 	// Create another cube that shares information with the first cube
 	cube.mPosition = RVec3(25.0f, 10.0f, 0.0f);
 	cube.mRestitution = 1.0f;
-	mSoftBodies.push_back(new SoftBody(cube));
+	cube.mGravityFactor = 0.5f;
+	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(cube)));
 
 	// Create pressurized sphere
 	SoftBodyCreationSettings sphere(sCreateSphere(), RVec3(15.0f, 10.0f, 15.0f));
 	sphere.mPressure = 2000.0f;
-	mSoftBodies.push_back(new SoftBody(sphere));
+	mSoftBodies.push_back(static_cast<SoftBody *>(mBodyInterface->CreateSoftBodyWithoutID(sphere)));
 
 	// Sphere below pressurized sphere
 	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 7.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);

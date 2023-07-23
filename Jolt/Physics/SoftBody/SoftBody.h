@@ -94,26 +94,31 @@ public:
 						SoftBodyCreationSettings(const SoftBodyParticleSettings *inSettings, RVec3Arg inPosition = RVec3::sZero(), QuatArg inRotation = Quat::sIdentity()) : mSettings(inSettings), mPosition(inPosition), mRotation(inRotation) { }
 
 	RefConst<SoftBodyParticleSettings> mSettings;			///< Defines the configuration of this soft body
+
 	RVec3				mPosition { RVec3::sZero() };		///< Initial position of the soft body
 	Quat				mRotation { Quat::sIdentity() };	///< Initial rotation of the soft body
+
+	/// User data value (can be used by application)
+	uint64				mUserData = 0;
+
+	///@name Collision settings
+	ObjectLayer			mObjectLayer = 0;					///< The collision layer this body belongs to (determines if two objects can collide)
+	CollisionGroup		mCollisionGroup;					///< The collision group this body belongs to (determines if two objects can collide)
+
 	uint32				mNumIterations = 5;					///< Number of solver iterations
 	float				mLinearDamping = 0.05f;				///< Linear damping: dv/dt = -mLinearDamping * v
 	float				mRestitution = 0.0f;				///< Restitution when colliding
 	float				mFriction = 0.2f;					///< Friction coefficient when colliding
 	float				mPressure = 0.0f;					///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
+	float				mGravityFactor = 1.0f;				///< Value to multiply gravity with for this body
 	bool				mUpdatePosition = true;				///< Update the position of the body while simulating (set to false for something that is attached to the static world)
+	bool				mAllowSleeping = true;				///< If this body can go to sleep or not
 };
 
 /// This class contains the runtime information of a soft body. Soft bodies are implemented using XPBD, a particle and springs based approach.
 class JPH_EXPORT SoftBody : public Body
 {
 public:
-	/// Constructor
-						SoftBody(const SoftBodyCreationSettings &inCreationSettings);
-
-	/// Destructor
-						~SoftBody()							{ mMotionProperties = nullptr; }
-
 	/// Update the soft body
 	void				Update(float inDeltaTime, PhysicsSystem &inSystem);
 
@@ -122,9 +127,8 @@ public:
 	struct DrawSettings
 	{
 		bool			mDrawPosition = false;
-		bool			mDrawBounds = false;
+		bool			mDrawPredictedBounds = false;
 		bool			mDrawVertices = true;
-		bool			mDrawFaces = true;
 		bool			mDrawEdges = true;
 		bool			mDrawVolumeConstraints = true;
 	};
@@ -149,10 +153,8 @@ public:
 	using Face = SoftBodyParticleSettings::Face;
 	using Volume = SoftBodyParticleSettings::Volume;
 
-	MotionProperties	mMotionPropertiesImpl;				///< Motion properties class for the soft body, note that not everything will be used
 	RefConst<SoftBodyParticleSettings> mSettings;
 	Array<Vertex>		mVertices;							///< Current state of all vertices in the simulation
-	AABox				mLocalBounds;						///< Current bounding box for all vertices (relative to mPosition)
 	AABox				mLocalPredictedBounds;				///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time (relative to mPosition)
 	uint32				mNumIterations;						///< Number of solver iterations
 	float				mPressure;							///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure

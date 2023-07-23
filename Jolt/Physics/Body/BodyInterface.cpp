@@ -27,6 +27,17 @@ Body *BodyInterface::CreateBody(const BodyCreationSettings &inSettings)
 	return body;
 }
 
+Body *BodyInterface::CreateSoftBody(const SoftBodyCreationSettings &inSettings)
+{
+	Body *body = mBodyManager->AllocateSoftBody(inSettings);
+	if (!mBodyManager->AddBody(body))
+	{
+		mBodyManager->FreeBody(body);
+		return nullptr;
+	}
+	return body;
+}
+
 Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings)
 {
 	Body *body = mBodyManager->AllocateBody(inSettings);
@@ -38,9 +49,25 @@ Body *BodyInterface::CreateBodyWithID(const BodyID &inBodyID, const BodyCreation
 	return body;
 }
 
+Body *BodyInterface::CreateSoftBodyWithID(const BodyID &inBodyID, const SoftBodyCreationSettings &inSettings)
+{
+	Body *body = mBodyManager->AllocateSoftBody(inSettings);
+	if (!mBodyManager->AddBodyWithCustomID(body, inBodyID))
+	{
+		mBodyManager->FreeBody(body);
+		return nullptr;
+	}
+	return body;
+}
+
 Body *BodyInterface::CreateBodyWithoutID(const BodyCreationSettings &inSettings) const
 {
 	return mBodyManager->AllocateBody(inSettings);
+}
+
+Body *BodyInterface::CreateSoftBodyWithoutID(const SoftBodyCreationSettings &inSettings) const
+{
+	return mBodyManager->AllocateSoftBody(inSettings);
 }
 
 void BodyInterface::DestroyBodyWithoutID(Body *inBody) const

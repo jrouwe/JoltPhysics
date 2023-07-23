@@ -58,6 +58,7 @@ enum class EShapeType : uint8
 	Decorated,						///< Used by DecoratedShape
 	Mesh,							///< Used by MeshShape
 	HeightField,					///< Used by HeightFieldShape
+	SoftBody,						///< Used by SoftBodyShape
 	
 	// User defined shapes
 	User1,
@@ -90,7 +91,8 @@ enum class EShapeSubType : uint8
 	// Other shapes
 	Mesh,
 	HeightField,
-	
+	SoftBody,
+
 	// User defined shapes
 	User1,
 	User2,

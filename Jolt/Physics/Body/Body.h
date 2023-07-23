@@ -21,6 +21,13 @@ JPH_NAMESPACE_BEGIN
 class StateRecorder;
 class BodyCreationSettings;
 
+/// Type of body
+enum class EBodyType : uint8
+{
+	RigidBody,				///< Rigid body consisting of a rigid shape
+	SoftBody,				///< Soft body consisting of a deformable shape
+};
+
 /// A rigid body that can be simulated using the physics system
 ///
 /// Note that internally all properties (position, velocity etc.) are tracked relative to the center of mass of the object to simplify the simulation of the object. 
@@ -42,6 +49,15 @@ public:
 
 	/// Get the id of this body
 	inline const BodyID &	GetID() const													{ return mID; }
+
+	/// Get the type of body (rigid or soft)
+	inline EBodyType		GetBodyType() const												{ return mBodyType; }
+
+	/// Check if this body is a rigid body
+	inline bool				IsRigidBody() const												{ return mBodyType == EBodyType::RigidBody; }
+
+	/// Check if this body is a soft body
+	inline bool				IsSoftBody() const												{ return mBodyType == EBodyType::SoftBody; }
 
 	/// If this body is currently actively simulating (true) or sleeping (false)
 	inline bool				IsActive() const												{ return mMotionProperties != nullptr && mMotionProperties->mIndexInActiveBodies != cInactiveIndex; }
@@ -337,11 +353,12 @@ private:
 	ObjectLayer				mObjectLayer;													///< The collision layer this body belongs to (determines if two objects can collide)
 
 	// 1 byte aligned
+	EBodyType				mBodyType;														///< Type of body (rigid or soft)
 	BroadPhaseLayer			mBroadPhaseLayer;												///< The broad phase layer this body belongs to
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 	
-	// 121 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
+	// 122 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
 
 #if JPH_CPU_ADDRESS_BITS == 32
 	// Padding for mShape, mMotionProperties, mCollisionGroup.mGroupFilter being 4 instead of 8 bytes in 32 bit mode

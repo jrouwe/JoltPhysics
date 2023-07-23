@@ -6,6 +6,7 @@
 
 #include <Jolt/Physics/SoftBody/SoftBody.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/SoftBodyShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
@@ -16,57 +17,25 @@
 
 JPH_NAMESPACE_BEGIN
 
-SoftBody::SoftBody(const SoftBodyCreationSettings &inSettings)
-{
-	mMotionProperties = &mMotionPropertiesImpl;
-
-	mSettings = inSettings.mSettings;
-
-	mPosition = inSettings.mPosition;
-	Mat44 rotation = Mat44::sRotation(inSettings.mRotation);
-
-	mNumIterations = inSettings.mNumIterations;
-	mMotionPropertiesImpl.SetLinearDamping(inSettings.mLinearDamping);
-	mRestitution = inSettings.mRestitution;
-	mFriction = inSettings.mFriction;
-	mPressure = inSettings.mPressure;
-	mUpdatePosition = inSettings.mUpdatePosition;
-
-	mVertices.resize(inSettings.mSettings->mVertices.size());
-	for (Array<Vertex>::size_type v = 0; v < mVertices.size(); ++v)
-	{
-		const SoftBodyParticleSettings::Vertex &in_vertex = inSettings.mSettings->mVertices[v];
-		Vertex &out_vertex = mVertices[v];
-		out_vertex.mPreviousPosition = out_vertex.mPosition = rotation * Vec3(in_vertex.mPosition);
-		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
-		out_vertex.mInvMass = in_vertex.mInvMass;
-
-		mLocalBounds.Encapsulate(out_vertex.mPosition);
-	}
-
-	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
-	mLocalPredictedBounds = mLocalBounds;
-
-	// Init world bounds
-	mBounds = mLocalBounds;
-	mBounds.Translate(mPosition);
-}
-
 void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
 
+	SoftBodyShape *shape = static_cast<SoftBodyShape *>(const_cast<Shape *>(GetShape()));
+
+	Vec3 gravity = GetMotionProperties()->GetGravityFactor() * inSystem.GetGravity();
+
 	if (mUpdatePosition)
 	{
 		// Shift the body so that the position is the center of the local bounds
-		Vec3 delta = mLocalBounds.GetCenter();
+		Vec3 delta = shape->mLocalBounds.GetCenter();
 		mPosition += delta;
 		for (Vertex &v : mVertices)
 			v.mPosition -= delta;
 
 		// Offset bounds to match new position
-		mLocalBounds.Translate(-delta);
+		shape->mLocalBounds.Translate(-delta);
 		mLocalPredictedBounds.Translate(-delta);
 	}
 
@@ -125,7 +94,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		Array<CollidingShape>		mHits;
 	};
 	Collector collector(mPosition, inSystem.GetBodyLockInterfaceNoLock());
-	AABox bounds = mLocalBounds;
+	AABox bounds = shape->mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
 	bounds.Translate(mPosition);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
@@ -138,7 +107,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	// The total displacement as produced by our integrator can be written as: Sum(i * g * dt^2, i = 0..mNumIterations).
 	// This is bigger than 0.5 * g * dt^2 because we first increment the velocity and then update the position
 	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
-	Vec3 displacement_due_to_gravity = (0.5f * mNumIterations * (mNumIterations + 1) * dt_sq) * inSystem.GetGravity();
+	Vec3 displacement_due_to_gravity = (0.5f * mNumIterations * (mNumIterations + 1) * dt_sq) * gravity;
 
 	// Generate collision planes
 	if (collector.mHits.empty())
@@ -161,15 +130,15 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 
 				// Create a collision plane for each vertex
 				float largest_penetration = -FLT_MAX;
-				for (const CollidingShape &shape : collector.mHits)
+				for (const CollidingShape &cs : collector.mHits)
 				{
 					// TODO: Needs to be implemented on the shape itself
-					if (shape.mShape->GetSubType() == EShapeSubType::Sphere)
+					if (cs.mShape->GetSubType() == EShapeSubType::Sphere)
 					{
 						// Special case for spheres
-						const SphereShape *sphere = static_cast<const SphereShape *>(shape.mShape.GetPtr());
+						const SphereShape *sphere = static_cast<const SphereShape *>(cs.mShape.GetPtr());
 						float radius = sphere->GetRadius();
-						Vec3 delta = v.mPosition - shape.mCenterOfMassPosition;
+						Vec3 delta = v.mPosition - cs.mCenterOfMassPosition;
 						float distance = delta.Length();
 						float penetration = radius - distance;
 						if (penetration > largest_penetration)
@@ -178,16 +147,16 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 							Vec3 point, normal;
 							if (distance > 0.0f)
 							{
-								point = shape.mCenterOfMassPosition + delta * (radius / distance);
+								point = cs.mCenterOfMassPosition + delta * (radius / distance);
 								normal = delta / distance;
 							}
 							else
 							{
-								point = shape.mCenterOfMassPosition + Vec3(0, radius, 0);
+								point = cs.mCenterOfMassPosition + Vec3(0, radius, 0);
 								normal = Vec3::sAxisY();
 							}
 							v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-							v.mCollidingShapeIndex = int(&shape - collector.mHits.data());
+							v.mCollidingShapeIndex = int(&cs - collector.mHits.data());
 						}
 					}
 					else
@@ -196,8 +165,8 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 						RayCastResult hit;
 						hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
 						RayCast ray(v.mPosition - 0.5f * movement, movement);
-						RayCast local_ray(ray.Transformed(shape.mInverseShapeTransform));
-						if (shape.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
+						RayCast local_ray(ray.Transformed(cs.mInverseShapeTransform));
+						if (cs.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
 						{
 							float penetration = (hit.mFraction - 0.5f) * movement.Length();
 							if (penetration > largest_penetration)
@@ -205,9 +174,9 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 								// Store collision
 								largest_penetration = penetration;
 								Vec3 point = ray.GetPointOnRay(hit.mFraction);
-								Vec3 normal = shape.mShape->GetSurfaceNormal(hit.mSubShapeID2, shape.mInverseShapeTransform * point);
+								Vec3 normal = cs.mShape->GetSurfaceNormal(hit.mSubShapeID2, cs.mInverseShapeTransform * point);
 								v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-								v.mCollidingShapeIndex = int(&shape - collector.mHits.data());
+								v.mCollidingShapeIndex = int(&cs - collector.mHits.data());
 							}
 						}
 					}
@@ -216,7 +185,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	}
 
 	float inv_dt_sq = 1.0f / dt_sq;
-	float linear_damping = max(0.0f, 1.0f - mMotionPropertiesImpl.GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
+	float linear_damping = max(0.0f, 1.0f - GetMotionProperties()->GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
 
 	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
 	{
@@ -256,7 +225,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		}
 
 		// Integrate
-		Vec3 sub_step_gravity = inSystem.GetGravity() * dt;
+		Vec3 sub_step_gravity = gravity * dt;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
@@ -348,7 +317,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		// Update velocity
 		float friction = mFriction;
 		float restitution = mRestitution;
-		float restitution_treshold = -2.0f * inSystem.GetGravity().Length() * dt;
+		float restitution_treshold = -2.0f * gravity.Length() * dt;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
 			{
@@ -446,18 +415,17 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		}
 
 	// Update local bounding box
-	mLocalPredictedBounds = mLocalBounds = { };
+	mLocalPredictedBounds = shape->mLocalBounds = { };
 	for (Vertex &v : mVertices)
 	{
-		mLocalBounds.Encapsulate(v.mPosition);
+		shape->mLocalBounds.Encapsulate(v.mPosition);
 
 		// Create predicted position for the next frame in order to detect collisions before they happen
 		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
 	}
 
 	// Store world bounds
-	mBounds = mLocalBounds;
-	mBounds.Translate(mPosition);
+	CalculateWorldSpaceBoundsInternal();
 
 	// Write back velocities
 	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
@@ -477,16 +445,6 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 		for (const Vertex &v : mVertices)
 			inRenderer->DrawMarker(mPosition + v.mPosition, Color::sRed, 0.05f);
 
-	if (inDrawSettings.mDrawFaces)
-		for (const Face &f : mSettings->mFaces)
-		{
-			RVec3 x1 = mPosition + mVertices[f.mVertex[0]].mPosition;
-			RVec3 x2 = mPosition + mVertices[f.mVertex[1]].mPosition;
-			RVec3 x3 = mPosition + mVertices[f.mVertex[2]].mPosition;
-
-			inRenderer->DrawTriangle(x1, x2, x3, Color::sOrange, DebugRenderer::ECastShadow::On);
-		}
-
 	if (inDrawSettings.mDrawEdges)
 		for (const Edge &e : mSettings->mEdgeConstraints)
 			inRenderer->DrawLine(mPosition + mVertices[e.mVertex[0]].mPosition, mPosition + mVertices[e.mVertex[1]].mPosition, Color::sWhite);
@@ -505,11 +463,8 @@ void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSetting
 			inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
 		}
 
-	if (inDrawSettings.mDrawBounds)
-	{
-		inRenderer->DrawWireBox(RMat44::sTranslation(mPosition), mLocalBounds, Color::sGreen);
+	if (inDrawSettings.mDrawPredictedBounds)
 		inRenderer->DrawWireBox(RMat44::sTranslation(mPosition), mLocalPredictedBounds, Color::sRed);
-	}
 }
 
 #endif // JPH_DEBUG_RENDERER
