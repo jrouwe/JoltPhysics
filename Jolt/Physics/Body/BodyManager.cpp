@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Physics/SoftBody/SoftBody.h>
+#include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/SoftBodyShape.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Core/StringTools.h>

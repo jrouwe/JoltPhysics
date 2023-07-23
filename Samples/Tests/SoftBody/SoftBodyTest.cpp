@@ -6,6 +6,7 @@
 
 #include <Tests/SoftBody/SoftBodyTest.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
