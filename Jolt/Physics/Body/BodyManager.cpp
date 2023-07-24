@@ -992,6 +992,24 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 				for (int i = 0; i < 3; ++i)
 					inRenderer->DrawWireSphere(JPH_IF_DOUBLE_PRECISION(body->mMotionProperties->GetSleepTestOffset() +) body->mMotionProperties->mSleepTestSpheres[i].GetCenter(), body->mMotionProperties->mSleepTestSpheres[i].GetRadius(), sleep_color);
 			}
+
+			if (body->IsSoftBody())
+			{
+				const SoftBody *soft_body = static_cast<const SoftBody *>(body);
+				RMat44 com = soft_body->GetCenterOfMassTransform();
+
+				if (inDrawSettings.mDrawSoftBodyVertices)
+					soft_body->DrawVertices(inRenderer, com);
+
+				if (inDrawSettings.mDrawSoftBodyEdgeConstraints)
+					soft_body->DrawEdgeConstraints(inRenderer, com);
+
+				if (inDrawSettings.mDrawSoftBodyVolumeConstraints)
+					soft_body->DrawVolumeConstraints(inRenderer, com);
+
+				if (inDrawSettings.mDrawSoftBodyPredictedBounds)
+					soft_body->DrawPredictedBounds(inRenderer, com);
+			}
 		}
 
 	UnlockAllBodies();

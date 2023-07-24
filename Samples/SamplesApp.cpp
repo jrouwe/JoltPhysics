@@ -469,6 +469,10 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Constraints", CharacterVirtual::sDrawConstraints, [](UICheckBox::EState inState) { CharacterVirtual::sDrawConstraints = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Walk Stairs", CharacterVirtual::sDrawWalkStairs, [](UICheckBox::EState inState) { CharacterVirtual::sDrawWalkStairs = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Stick To Floor", CharacterVirtual::sDrawStickToFloor, [](UICheckBox::EState inState) { CharacterVirtual::sDrawStickToFloor = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Vertices", mBodyDrawSettings.mDrawSoftBodyVertices, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVertices = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Edge Constraints", mBodyDrawSettings.mDrawSoftBodyEdgeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyEdgeConstraints = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Volume Constraints", mBodyDrawSettings.mDrawSoftBodyVolumeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVolumeConstraints = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Predicted Bounds", mBodyDrawSettings.mDrawSoftBodyPredictedBounds, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyPredictedBounds = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->ShowMenu(drawing_options);
 		});
 	#endif // JPH_DEBUG_RENDERER

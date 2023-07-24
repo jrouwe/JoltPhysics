@@ -13,13 +13,6 @@ class SoftBodyTest : public Test
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyTest)
 
-	// Destructor
-	virtual				~SoftBodyTest() override;
-
 	// See: Test
 	virtual void		Initialize() override;
-	virtual void		PrePhysicsUpdate(const PreUpdateParams &inParams);
-
-private:
-	BodyIDVector		mSoftBodies;
 };

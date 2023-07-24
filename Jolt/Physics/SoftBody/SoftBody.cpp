@@ -435,35 +435,37 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 
 #ifdef JPH_DEBUG_RENDERER
 
-void SoftBody::Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSettings) const
+void SoftBody::DrawVertices(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
 {
-	if (inDrawSettings.mDrawPosition)
-		inRenderer->DrawMarker(mPosition, Color::sYellow, 0.5f);
+	for (const Vertex &v : mVertices)
+		inRenderer->DrawMarker(inCenterOfMassTransform * v.mPosition, Color::sRed, 0.05f);
+}
 
-	if (inDrawSettings.mDrawVertices)
-		for (const Vertex &v : mVertices)
-			inRenderer->DrawMarker(mPosition + v.mPosition, Color::sRed, 0.05f);
+void SoftBody::DrawEdgeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+{
+	for (const Edge &e : mSettings->mEdgeConstraints)
+		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, mPosition + mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+}
 
-	if (inDrawSettings.mDrawEdges)
-		for (const Edge &e : mSettings->mEdgeConstraints)
-			inRenderer->DrawLine(mPosition + mVertices[e.mVertex[0]].mPosition, mPosition + mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+void SoftBody::DrawVolumeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+{
+	for (const Volume &v : mSettings->mVolumeConstraints)
+	{
+		RVec3 x1 = inCenterOfMassTransform * mVertices[v.mVertex[0]].mPosition;
+		RVec3 x2 = inCenterOfMassTransform * mVertices[v.mVertex[1]].mPosition;
+		RVec3 x3 = inCenterOfMassTransform * mVertices[v.mVertex[2]].mPosition;
+		RVec3 x4 = inCenterOfMassTransform * mVertices[v.mVertex[3]].mPosition;
 
-	if (inDrawSettings.mDrawVolumeConstraints)
-		for (const Volume &v : mSettings->mVolumeConstraints)
-		{
-			RVec3 x1 = mPosition + mVertices[v.mVertex[0]].mPosition;
-			RVec3 x2 = mPosition + mVertices[v.mVertex[1]].mPosition;
-			RVec3 x3 = mPosition + mVertices[v.mVertex[2]].mPosition;
-			RVec3 x4 = mPosition + mVertices[v.mVertex[3]].mPosition;
+		inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow, DebugRenderer::ECastShadow::On);
+		inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
+		inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow, DebugRenderer::ECastShadow::On);
+		inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
+	}
+}
 
-			inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow, DebugRenderer::ECastShadow::On);
-			inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
-			inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow, DebugRenderer::ECastShadow::On);
-			inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
-		}
-
-	if (inDrawSettings.mDrawPredictedBounds)
-		inRenderer->DrawWireBox(RMat44::sTranslation(mPosition), mLocalPredictedBounds, Color::sRed);
+void SoftBody::DrawPredictedBounds(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+{
+	inRenderer->DrawWireBox(inCenterOfMassTransform, mLocalPredictedBounds, Color::sRed);
 }
 
 #endif // JPH_DEBUG_RENDERER

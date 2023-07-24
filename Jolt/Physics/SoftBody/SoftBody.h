@@ -24,18 +24,11 @@ public:
 	void				Update(float inDeltaTime, PhysicsSystem &inSystem);
 
 #ifdef JPH_DEBUG_RENDERER
-	/// Settings for drawing soft bodies
-	struct DrawSettings
-	{
-		bool			mDrawPosition = false;
-		bool			mDrawPredictedBounds = false;
-		bool			mDrawVertices = true;
-		bool			mDrawEdges = true;
-		bool			mDrawVolumeConstraints = true;
-	};
-
 	/// Draw the state of a soft body
-	void				Draw(DebugRenderer *inRenderer, const DrawSettings &inDrawSettings) const;
+	void				DrawVertices(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const;
+	void				DrawEdgeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const;
+	void				DrawVolumeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const;
+	void				DrawPredictedBounds(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
 
 	/// Run time information for a single particle
