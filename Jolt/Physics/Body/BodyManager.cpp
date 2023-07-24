@@ -245,7 +245,7 @@ Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCr
 	mp->SetAngularVelocity(Vec3::sZero());
 	mp->SetGravityFactor(inSoftBodyCreationSettings.mGravityFactor);
 	mp->mMotionQuality = EMotionQuality::Discrete;
-	mp->mAllowSleeping = inSoftBodyCreationSettings.mAllowSleeping;
+	mp->mAllowSleeping = false;
 	mp->mIndexInActiveBodies = Body::cInactiveIndex;
 	mp->mIslandIndex = Body::cInactiveIndex;
 	JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)

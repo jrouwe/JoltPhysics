@@ -21,6 +21,7 @@
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Jolt/Physics/DeterminismLog.h>
+#include <Jolt/Physics/SoftBody/SoftBody.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -57,6 +58,7 @@ static const Color cColorResolveCCDContacts = Color::sGetDistinctColor(16);
 static const Color cColorSolvePositionConstraints = Color::sGetDistinctColor(17);
 static const Color cColorFindCCDContacts = Color::sGetDistinctColor(18);
 static const Color cColorStepListeners = Color::sGetDistinctColor(19);
+static const Color cColorUpdateSoftBodies = Color::sGetDistinctColor(20);
 
 PhysicsSystem::~PhysicsSystem()
 {
@@ -407,7 +409,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 							// Kick the step listeners job first
 							JobHandle::sRemoveDependencies(next_step->mStepListeners);
 						}
-					}, max_concurrency + 3); // depends on: solve position constraints of the last step, body set island index, contact removed callbacks, finish building the previous step
+					}, 4); // depends on: update soft bodies, body set island index, contact removed callbacks, finish building the previous step
 			}
 
 			// This job will solve the velocity constraints 
@@ -482,12 +484,21 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						context.mPhysicsSystem->JobSolvePositionConstraints(&context, &step); 
 			
 						// Kick the next step
-						if (step.mStartNextStep.IsValid())
-							step.mStartNextStep.RemoveDependency();
+						if (step.mUpdateSoftBodies.IsValid())
+							step.mUpdateSoftBodies.RemoveDependency();
 					}, 2); // depends on: resolve ccd contacts, finish building jobs.
 
 			// Unblock previous job.
 			step.mResolveCCDContacts.RemoveDependency();
+
+			step.mUpdateSoftBodies = inJobSystem->CreateJob("UpdateSoftBodies", cColorUpdateSoftBodies, [&context, &step]() 
+					{ 
+						context.mPhysicsSystem->JobUpdateSoftBodies(&context); 
+			
+						// Kick the next step
+						if (step.mStartNextStep.IsValid())
+							step.mStartNextStep.RemoveDependency();
+					}, max_concurrency); // depends on: solve position constraints.
 
 			// Unblock previous jobs
 			JobHandle::sRemoveDependencies(step.mSolvePositionConstraints);
@@ -528,6 +539,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			for (const JobHandle &h : step.mSolvePositionConstraints)
 				handles.push_back(h);
 			handles.push_back(step.mContactRemovedCallbacks);
+			if (step.mUpdateSoftBodies.IsValid())
+				handles.push_back(step.mUpdateSoftBodies);
 			if (step.mStartNextStep.IsValid())
 				handles.push_back(step.mStartNextStep);
 		}
@@ -679,7 +692,7 @@ void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, Physi
 		while (active_body_idx < active_body_idx_end)
 		{
 			Body &body = mBodyManager.GetBody(active_bodies[active_body_idx]);
-			if (body.IsDynamic())
+			if (body.IsDynamic() && !body.IsSoftBody())
 				body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
 			active_body_idx++;
 		}
@@ -2304,6 +2317,44 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 		std::this_thread::yield();
 	}
 	while (check_islands || check_split_islands);
+}
+
+void PhysicsSystem::JobUpdateSoftBodies(PhysicsUpdateContext *ioContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	static constexpr int cBodiesBatch = 64;
+	BodyID *bodies_to_update_bounds = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
+	int num_bodies_to_update_bounds = 0;
+
+	// Loop through active bodies
+	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe();
+	const BodyID *active_bodies_end = active_bodies + mBodyManager.GetNumActiveBodies();
+	for (const BodyID *b = active_bodies; b < active_bodies_end; ++b)
+	{
+		// Only update soft bodies
+		Body &body = mBodyManager.GetBody(*b);
+		if (body.IsSoftBody())
+		{
+			SoftBody &s = static_cast<SoftBody &>(body);
+
+			s.Update(ioContext->mStepDeltaTime, *this);
+
+			s.CalculateWorldSpaceBoundsInternal();
+
+			bodies_to_update_bounds[num_bodies_to_update_bounds++] = *b;
+			if (num_bodies_to_update_bounds == cBodiesBatch)
+			{
+				// Buffer full, flush now
+				mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
+				num_bodies_to_update_bounds = 0;
+			}
+		}
+	}
+
+	// Notify change bounds on requested bodies
+	if (num_bodies_to_update_bounds > 0)
+		mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 }
 
 void PhysicsSystem::SaveState(StateRecorder &inStream) const

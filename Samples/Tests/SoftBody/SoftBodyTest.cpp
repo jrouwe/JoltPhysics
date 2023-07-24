@@ -274,25 +274,25 @@ void SoftBodyTest::Initialize()
 	SoftBodyCreationSettings cloth(sCreateCloth(), RVec3(0, 10.0f, 0));
 	cloth.mObjectLayer = Layers::MOVING;
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
-	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::DontActivate));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate));
 
 	// Create cube
 	SoftBodyCreationSettings cube(sCreateCube(), RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation);
 	cube.mObjectLayer = Layers::MOVING;
 	cube.mRestitution = 0.0f;
-	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cube, EActivation::DontActivate));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate));
 
 	// Create another cube that shares information with the first cube
 	cube.mPosition = RVec3(25.0f, 10.0f, 0.0f);
 	cube.mRestitution = 1.0f;
 	cube.mGravityFactor = 0.5f;
-	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cube, EActivation::DontActivate));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate));
 
 	// Create pressurized sphere
 	SoftBodyCreationSettings sphere(sCreateSphere(), RVec3(15.0f, 10.0f, 15.0f));
 	sphere.mObjectLayer = Layers::MOVING;
 	sphere.mPressure = 2000.0f;
-	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::DontActivate));
+	mSoftBodies.push_back(mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate));
 
 	// Sphere below pressurized sphere
 	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 7.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
@@ -333,8 +333,6 @@ void SoftBodyTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				DebugRenderer::sInstance->DrawTriangle(x1, x2, x3, Color::sOrange, DebugRenderer::ECastShadow::On);
 			}
 #endif
-
-			s.Update(1.0f / 60.0f, *mPhysicsSystem);
 		}
 	}
 }

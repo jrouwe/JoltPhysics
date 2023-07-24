@@ -130,6 +130,7 @@ public:
 		JobHandle			mResolveCCDContacts;									///< Updates the positions and velocities for all bodies that need continuous collision detection
 		JobHandleArray		mSolvePositionConstraints;								///< Solve all constraints in the position domain
 		JobHandle			mContactRemovedCallbacks;								///< Calls the contact removed callbacks
+		JobHandle			mUpdateSoftBodies;										///< Updates all soft bodies
 		JobHandle			mStartNextStep;											///< Job that kicks the next step (empty for the last step)
 	};
 

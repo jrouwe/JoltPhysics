@@ -426,13 +426,6 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
 	}
 
-	// Store world bounds
-	CalculateWorldSpaceBoundsInternal();
-
-	// Update bounds
-	// TODO: We shouldn't be casting here, the broadphase should be provided
-	const_cast<BroadPhase &>(static_cast<const BroadPhase &>(inSystem.GetBroadPhaseQuery())).NotifyBodiesAABBChanged(&mID, 1);
-
 	// Write back velocities
 	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
 	for (const CollidingShape &cs : collector.mHits)

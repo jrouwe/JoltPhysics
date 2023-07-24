@@ -37,7 +37,6 @@ public:
 	float				mPressure = 0.0f;					///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	float				mGravityFactor = 1.0f;				///< Value to multiply gravity with for this body
 	bool				mUpdatePosition = true;				///< Update the position of the body while simulating (set to false for something that is attached to the static world)
-	bool				mAllowSleeping = true;				///< If this body can go to sleep or not
 };
 
 JPH_NAMESPACE_END
