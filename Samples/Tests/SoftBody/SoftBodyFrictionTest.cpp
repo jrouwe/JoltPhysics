@@ -41,7 +41,6 @@ void SoftBodyFrictionTest::Initialize()
 		v.mVelocity = Float3(0, 0, 10);
 	SoftBodyCreationSettings cube(cube_settings);
 	cube.mObjectLayer = Layers::MOVING;
-	cube.mRestitution = 0.0f;
 
 	for (int i = 0; i <= 10; ++i)
 	{
