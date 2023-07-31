@@ -241,6 +241,12 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 				// Reset projected distance
 				v.mProjectedDistance = 0.0f;
 			}
+			else
+			{
+				// Integrate
+				v.mPreviousPosition = v.mPosition;
+				v.mPosition += v.mVelocity * dt;
+			}
 
 		// Satisfy volume constraints
 		for (const Volume &v : mSettings->mVolumeConstraints)
