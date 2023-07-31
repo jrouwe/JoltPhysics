@@ -234,6 +234,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Utils/RagdollLoader.h
 	${SAMPLES_ROOT}/Utils/ShapeCreator.cpp
 	${SAMPLES_ROOT}/Utils/ShapeCreator.h
+	${SAMPLES_ROOT}/Utils/SoftBodyCreator.cpp
+	${SAMPLES_ROOT}/Utils/SoftBodyCreator.h
 )
 
 # Group source files
