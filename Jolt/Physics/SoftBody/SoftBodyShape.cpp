@@ -139,4 +139,46 @@ void SoftBodyShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTran
 
 #endif // JPH_DEBUG_RENDERER
 
+struct SoftBodyShape::SBSGetTrianglesContext
+{
+	Mat44		mCenterOfMassTransform;
+	int			mTriangleIndex;
+};
+
+void SoftBodyShape::GetTrianglesStart(GetTrianglesContext &ioContext, [[maybe_unused]] const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) const
+{
+	SBSGetTrianglesContext &context = reinterpret_cast<SBSGetTrianglesContext &>(ioContext);
+	context.mCenterOfMassTransform = Mat44::sRotationTranslation(inRotation, inPositionCOM) * Mat44::sScale(inScale);
+	context.mTriangleIndex = 0;
+}
+
+int SoftBodyShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTrianglesRequested, Float3 *outTriangleVertices, const PhysicsMaterial **outMaterials) const
+{
+	SBSGetTrianglesContext &context = reinterpret_cast<SBSGetTrianglesContext &>(ioContext);
+
+	const Array<SoftBodyMotionProperties::Face> &faces = mSoftBodyMotionProperties->mSettings->mFaces;
+	const Array<SoftBodyMotionProperties::Vertex> &vertices = mSoftBodyMotionProperties->mVertices;
+	const PhysicsMaterialList &materials = mSoftBodyMotionProperties->mSettings->mMaterials;
+
+	int num_triangles = min(inMaxTrianglesRequested, (int)faces.size() - context.mTriangleIndex);
+	for (int i = 0; i < num_triangles; ++i)
+	{
+		const SoftBodyMotionProperties::Face &f = faces[context.mTriangleIndex + i];
+
+		Vec3 x1 = context.mCenterOfMassTransform * vertices[f.mVertex[0]].mPosition;
+		Vec3 x2 = context.mCenterOfMassTransform * vertices[f.mVertex[1]].mPosition;
+		Vec3 x3 = context.mCenterOfMassTransform * vertices[f.mVertex[2]].mPosition;
+
+		x1.StoreFloat3(outTriangleVertices++);
+		x2.StoreFloat3(outTriangleVertices++);
+		x3.StoreFloat3(outTriangleVertices++);
+
+		if (outMaterials != nullptr)
+			*outMaterials++ = materials[f.mMaterialIndex];
+	}
+
+	context.mTriangleIndex += num_triangles;
+	return num_triangles;
+}
+
 JPH_NAMESPACE_END

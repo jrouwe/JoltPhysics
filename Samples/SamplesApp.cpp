@@ -2122,7 +2122,8 @@ void SamplesApp::DrawPhysics()
 					}
 
 					// Ensure that we cache the geometry for next frame
-					shape_to_geometry[transformed_shape.mShape] = geometry;
+					if (!body.IsSoftBody())
+						shape_to_geometry[transformed_shape.mShape] = geometry;
 
 					// Determine color
 					Color color;
