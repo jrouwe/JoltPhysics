@@ -21,7 +21,7 @@
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Jolt/Physics/DeterminismLog.h>
-#include <Jolt/Physics/SoftBody/SoftBody.h>
+#include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Geometry/RayAABox.h>
 #include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/TempAllocator.h>
@@ -2336,11 +2336,11 @@ void PhysicsSystem::JobUpdateSoftBodies(PhysicsUpdateContext *ioContext)
 		Body &body = mBodyManager.GetBody(*b);
 		if (body.IsSoftBody())
 		{
-			SoftBody &s = static_cast<SoftBody &>(body);
+			SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
 
-			s.Update(ioContext->mStepDeltaTime, *this);
-
-			s.CalculateWorldSpaceBoundsInternal();
+			RVec3 position = body.GetPosition();
+			mp->Update(ioContext->mStepDeltaTime, body.GetFriction(), body.GetRestitution(), position, *this);
+			body.SetPositionAndRotationInternal(position, body.GetRotation());
 
 			bodies_to_update_bounds[num_bodies_to_update_bounds++] = *b;
 			if (num_bodies_to_update_bounds == cBodiesBatch)

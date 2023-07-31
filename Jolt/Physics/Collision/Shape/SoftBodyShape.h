@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-class SoftBody;
+class SoftBodyMotionProperties;
 
 /// Shape used exclusively for soft bodies.
 /// It adds collision detection to the soft body.
@@ -27,7 +27,7 @@ public:
 	// See Shape
 	virtual bool					MustBeStatic() const override							{ return false; }
 	virtual Vec3					GetCenterOfMass() const override						{ return Vec3::sZero(); }
-	virtual AABox					GetLocalBounds() const override							{ return mLocalBounds; }
+	virtual AABox					GetLocalBounds() const override;
 	virtual uint					GetSubShapeIDBitsRecursive() const override				{ return GetSubShapeIDBits(); }
 	virtual float					GetInnerRadius() const override							{ return 0.0f; /* TODO */ }
 	virtual MassProperties			GetMassProperties() const								{ return MassProperties(); /* TODO */ }
@@ -50,9 +50,7 @@ public:
 	virtual Stats					GetStats() const override { return Stats(sizeof(this), 1); /* TODO */ }
 	virtual float					GetVolume() const override { /* TODO */ return 0.0f; }
 
-	SoftBody *						mSoftBody;
-
-	AABox							mLocalBounds;
+	SoftBodyMotionProperties *		mSoftBodyMotionProperties;
 };
 
 JPH_NAMESPACE_END

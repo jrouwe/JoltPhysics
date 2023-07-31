@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Jolt/Physics/SoftBody/SoftBody.h>
 
 // This is a very basic soft body test
 class SoftBodyTest : public Test

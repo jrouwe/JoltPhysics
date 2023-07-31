@@ -317,7 +317,6 @@ public:
 
 private:
 	friend class BodyManager;
-	friend class SoftBody;
 
 	explicit				Body(bool);														///< Alternative constructor that initializes all members
 

@@ -6,7 +6,7 @@
 
 #include <Jolt/Geometry/Plane.h>
 #include <Jolt/Geometry/AABox.h>
-#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Body/MotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyParticleSettings.h>
 
 JPH_NAMESPACE_BEGIN
@@ -17,11 +17,11 @@ class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
 
 /// This class contains the runtime information of a soft body. Soft bodies are implemented using XPBD, a particle and springs based approach.
-class JPH_EXPORT SoftBody : public Body
+class JPH_EXPORT SoftBodyMotionProperties : public MotionProperties
 {
 public:
 	/// Update the soft body
-	void				Update(float inDeltaTime, PhysicsSystem &inSystem);
+	void				Update(float inDeltaTime, float inFriction, float inRestitution, RVec3 &ioPosition, PhysicsSystem &inSystem);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the state of a soft body
@@ -49,7 +49,8 @@ public:
 
 	RefConst<SoftBodyParticleSettings> mSettings;
 	Array<Vertex>		mVertices;							///< Current state of all vertices in the simulation
-	AABox				mLocalPredictedBounds;				///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time (relative to mPosition)
+	AABox				mLocalBounds;						///< Bounding box of all vertices
+	AABox				mLocalPredictedBounds;				///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time
 	uint32				mNumIterations;						///< Number of solver iterations
 	float				mPressure;							///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	bool				mUpdatePosition;					///< Update the position of the body while simulating (set to false for something that is attached to the static world)

@@ -9,7 +9,7 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
-#include <Jolt/Physics/SoftBody/SoftBody.h>
+#include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/SoftBodyShape.h>
 #include <Jolt/Physics/StateRecorder.h>
@@ -53,20 +53,20 @@ class BodyWithMotionProperties : public Body
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
-	MotionProperties		mMotionProperties;
+	MotionProperties			mMotionProperties;
 };
 
 // Helper class that combines a soft body its motion properties and shape
-class SoftBodyWithMotionPropertiesAndShape : public SoftBody
+class SoftBodyWithMotionPropertiesAndShape : public Body
 {
 public:
-							SoftBodyWithMotionPropertiesAndShape()
+								SoftBodyWithMotionPropertiesAndShape()
 	{
 		mShape.SetEmbedded();
 	}
 
-	MotionProperties		mMotionProperties;
-	SoftBodyShape			mShape;
+	SoftBodyMotionProperties	mMotionProperties;
+	SoftBodyShape				mShape;
 };
 
 inline void BodyManager::sDeleteBody(Body *inBody)
@@ -76,7 +76,7 @@ inline void BodyManager::sDeleteBody(Body *inBody)
 		JPH_IF_ENABLE_ASSERTS(inBody->mMotionProperties = nullptr;)
 		if (inBody->IsSoftBody())
 		{
-			static_cast<SoftBody *>(inBody)->mShape = nullptr;
+			inBody->mShape = nullptr;
 			delete static_cast<SoftBodyWithMotionPropertiesAndShape *>(inBody);
 		}
 		else
@@ -222,13 +222,12 @@ Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCr
 {
 	// Fill in basic properties
 	SoftBodyWithMotionPropertiesAndShape *bmp = new SoftBodyWithMotionPropertiesAndShape;
-	MotionProperties *mp = &bmp->mMotionProperties;
+	SoftBodyMotionProperties *mp = &bmp->mMotionProperties;
 	SoftBodyShape *shape = &bmp->mShape;
-	SoftBody *body = bmp;
-	shape->mSoftBody = body;
+	Body *body = bmp;
+	shape->mSoftBodyMotionProperties = mp;
 	body->mBodyType = EBodyType::SoftBody;
 	body->mMotionProperties = mp;
-	body->mSettings = inSoftBodyCreationSettings.mSettings;
 	body->mShape = shape;
 	body->mUserData = inSoftBodyCreationSettings.mUserData;
 	body->SetFriction(inSoftBodyCreationSettings.mFriction);
@@ -252,26 +251,27 @@ Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCr
 	mp->mAllowedDOFs = EAllowedDOFs::All;
 	mp->SetInverseMass(0.0f);
 	mp->SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
-	body->mNumIterations = inSoftBodyCreationSettings.mNumIterations;
-	body->mPressure = inSoftBodyCreationSettings.mPressure;
-	body->mUpdatePosition = inSoftBodyCreationSettings.mUpdatePosition;
+	mp->mSettings = inSoftBodyCreationSettings.mSettings;
+	mp->mNumIterations = inSoftBodyCreationSettings.mNumIterations;
+	mp->mPressure = inSoftBodyCreationSettings.mPressure;
+	mp->mUpdatePosition = inSoftBodyCreationSettings.mUpdatePosition;
 
 	// Initialize vertices
 	Mat44 rotation = Mat44::sRotation(inSoftBodyCreationSettings.mRotation);
-	body->mVertices.resize(inSoftBodyCreationSettings.mSettings->mVertices.size());
-	for (Array<SoftBody::Vertex>::size_type v = 0; v < body->mVertices.size(); ++v)
+	mp->mVertices.resize(inSoftBodyCreationSettings.mSettings->mVertices.size());
+	for (Array<SoftBodyMotionProperties::Vertex>::size_type v = 0; v < mp->mVertices.size(); ++v)
 	{
 		const SoftBodyParticleSettings::Vertex &in_vertex = inSoftBodyCreationSettings.mSettings->mVertices[v];
-		SoftBody::Vertex &out_vertex = body->mVertices[v];
+		SoftBodyMotionProperties::Vertex &out_vertex = mp->mVertices[v];
 		out_vertex.mPreviousPosition = out_vertex.mPosition = rotation * Vec3(in_vertex.mPosition);
 		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
 		out_vertex.mInvMass = in_vertex.mInvMass;
 
-		shape->mLocalBounds.Encapsulate(out_vertex.mPosition);
+		mp->mLocalBounds.Encapsulate(out_vertex.mPosition);
 	}
 
 	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
-	body->mLocalPredictedBounds = shape->mLocalBounds;
+	mp->mLocalPredictedBounds = mp->mLocalBounds;
 
 	body->SetPositionAndRotationInternal(inSoftBodyCreationSettings.mPosition, Quat::sIdentity());
 
@@ -995,20 +995,20 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 
 			if (body->IsSoftBody())
 			{
-				const SoftBody *soft_body = static_cast<const SoftBody *>(body);
-				RMat44 com = soft_body->GetCenterOfMassTransform();
+				const SoftBodyMotionProperties *mp = static_cast<const SoftBodyMotionProperties *>(body->GetMotionProperties());
+				RMat44 com = body->GetCenterOfMassTransform();
 
 				if (inDrawSettings.mDrawSoftBodyVertices)
-					soft_body->DrawVertices(inRenderer, com);
+					mp->DrawVertices(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodyEdgeConstraints)
-					soft_body->DrawEdgeConstraints(inRenderer, com);
+					mp->DrawEdgeConstraints(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodyVolumeConstraints)
-					soft_body->DrawVolumeConstraints(inRenderer, com);
+					mp->DrawVolumeConstraints(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodyPredictedBounds)
-					soft_body->DrawPredictedBounds(inRenderer, com);
+					mp->DrawPredictedBounds(inRenderer, com);
 			}
 		}
 

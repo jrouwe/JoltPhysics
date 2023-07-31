@@ -4,9 +4,8 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Physics/SoftBody/SoftBody.h>
+#include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
-#include <Jolt/Physics/Collision/Shape/SoftBodyShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
@@ -17,25 +16,23 @@
 
 JPH_NAMESPACE_BEGIN
 
-void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float inRestitution, RVec3 &ioPosition, PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
 
-	SoftBodyShape *shape = static_cast<SoftBodyShape *>(const_cast<Shape *>(GetShape()));
-
-	Vec3 gravity = GetMotionProperties()->GetGravityFactor() * inSystem.GetGravity();
+	Vec3 gravity = GetGravityFactor() * inSystem.GetGravity();
 
 	if (mUpdatePosition)
 	{
 		// Shift the body so that the position is the center of the local bounds
-		Vec3 delta = shape->mLocalBounds.GetCenter();
-		mPosition += delta;
+		Vec3 delta = mLocalBounds.GetCenter();
+		ioPosition += delta;
 		for (Vertex &v : mVertices)
 			v.mPosition -= delta;
 
 		// Offset bounds to match new position
-		shape->mLocalBounds.Translate(-delta);
+		mLocalBounds.Translate(-delta);
 		mLocalPredictedBounds.Translate(-delta);
 	}
 
@@ -95,10 +92,10 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 		const BodyLockInterface &	mBodyLockInterface;
 		Array<CollidingShape>		mHits;
 	};
-	Collector collector(mPosition, inSystem.GetBodyLockInterfaceNoLock());
-	AABox bounds = shape->mLocalBounds;
+	Collector collector(ioPosition, inSystem.GetBodyLockInterfaceNoLock());
+	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
-	bounds.Translate(mPosition);
+	bounds.Translate(ioPosition);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
 
 	// Calculate delta time for sub step
@@ -187,7 +184,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 	}
 
 	float inv_dt_sq = 1.0f / dt_sq;
-	float linear_damping = max(0.0f, 1.0f - GetMotionProperties()->GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
+	float linear_damping = max(0.0f, 1.0f - GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
 
 	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
 	{
@@ -317,8 +314,6 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 			}
 
 		// Update velocity
-		float friction = mFriction;
-		float restitution = mRestitution;
 		float restitution_treshold = -2.0f * gravity.Length() * dt;
 		for (Vertex &v : mVertices)
 			if (v.mInvMass > 0.0f)
@@ -370,7 +365,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 						// Calculate delta relative velocity due to friction (modified equation 31)
 						Vec3 dv;
 						if (v_tangential_length > 0.0f)
-							dv = v_tangential * min(friction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
+							dv = v_tangential * min(inFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
 						else
 							dv = Vec3::sZero();
 
@@ -378,7 +373,7 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 						dv += v_normal;
 						float prev_v_normal = (prev_v - v2).Dot(contact_normal);
 						if (prev_v_normal < restitution_treshold)
-							dv += restitution * prev_v_normal * contact_normal;
+							dv += inRestitution * prev_v_normal * contact_normal;
 
 						// Calculate impulse
 						Vec3 p = dv / w1_plus_w2;
@@ -404,23 +399,23 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 
 						// Apply friction (modified equation 31)
 						if (v_tangential_length > 0.0f)
-							v.mVelocity -= v_tangential * min(friction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
+							v.mVelocity -= v_tangential * min(inFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
 
 						// Apply restitution (equation 35)
 						v.mVelocity -= v_normal;
 						float prev_v_normal = prev_v.Dot(contact_normal);
 						if (prev_v_normal < restitution_treshold)
-							v.mVelocity -= restitution * prev_v_normal * contact_normal;
+							v.mVelocity -= inRestitution * prev_v_normal * contact_normal;
 					}
 				}
 			}
 		}
 
 	// Update local bounding box
-	mLocalPredictedBounds = shape->mLocalBounds = { };
+	mLocalPredictedBounds = mLocalBounds = { };
 	for (Vertex &v : mVertices)
 	{
-		shape->mLocalBounds.Encapsulate(v.mPosition);
+		mLocalBounds.Encapsulate(v.mPosition);
 
 		// Create predicted position for the next frame in order to detect collisions before they happen
 		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
@@ -435,19 +430,19 @@ void SoftBody::Update(float inDeltaTime, PhysicsSystem &inSystem)
 
 #ifdef JPH_DEBUG_RENDERER
 
-void SoftBody::DrawVertices(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawVertices(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
 {
 	for (const Vertex &v : mVertices)
 		inRenderer->DrawMarker(inCenterOfMassTransform * v.mPosition, Color::sRed, 0.05f);
 }
 
-void SoftBody::DrawEdgeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
 {
 	for (const Edge &e : mSettings->mEdgeConstraints)
-		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, mPosition + mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, Color::sWhite);
 }
 
-void SoftBody::DrawVolumeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
 {
 	for (const Volume &v : mSettings->mVolumeConstraints)
 	{
@@ -463,7 +458,7 @@ void SoftBody::DrawVolumeConstraints(DebugRenderer *inRenderer, Mat44Arg inCente
 	}
 }
 
-void SoftBody::DrawPredictedBounds(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
 {
 	inRenderer->DrawWireBox(inCenterOfMassTransform, mLocalPredictedBounds, Color::sRed);
 }
