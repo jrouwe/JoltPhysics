@@ -159,6 +159,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Rig/RigPileTest.h
 	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyTest.h
 	${SAMPLES_ROOT}/Tests/Test.cpp
