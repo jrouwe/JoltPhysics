@@ -11,7 +11,7 @@
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
-#include <Jolt/Physics/Collision/Shape/SoftBodyShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyShape.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/QuickSort.h>

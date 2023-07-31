@@ -4,7 +4,7 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Physics/Collision/Shape/SoftBodyShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyShape.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Geometry/RayTriangle.h>
 #include <Jolt/Physics/Collision/RayCast.h>

@@ -275,8 +275,6 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/ScaleHelpers.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/Shape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/Shape.h
-	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/SoftBodyShape.cpp
-	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/SoftBodyShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/SphereShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/SphereShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/Shape/StaticCompoundShape.cpp
@@ -369,6 +367,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyParticleSettings.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyShape.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyShape.h
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorder.h
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorderImpl.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorderImpl.h
