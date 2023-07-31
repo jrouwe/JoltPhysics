@@ -50,7 +50,7 @@ public:
 	virtual Stats					GetStats() const override { return Stats(sizeof(this), 1); /* TODO */ }
 	virtual float					GetVolume() const override { /* TODO */ return 0.0f; }
 
-	SoftBodyMotionProperties *		mSoftBodyMotionProperties;
+	const SoftBodyMotionProperties *mSoftBodyMotionProperties;
 };
 
 JPH_NAMESPACE_END
