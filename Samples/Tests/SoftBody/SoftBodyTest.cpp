@@ -166,6 +166,73 @@ static SoftBodyParticleSettings *sCreateCube()
 
 	settings->CalculateVolumeConstraintVolumes();
 
+	// Create faces
+	for (uint y = 0; y < cGridSize - 1; ++y)
+		for (uint x = 0; x < cGridSize - 1; ++x)
+		{
+			SoftBodyParticleSettings::Face f;
+
+			// Face 1
+			f.mVertex[0] = vertex_index(x, y, 0);
+			f.mVertex[1] = vertex_index(x, y + 1, 0);
+			f.mVertex[2] = vertex_index(x + 1, y + 1, 0);
+			settings->mFaces.push_back(f);
+
+			f.mVertex[1] = vertex_index(x + 1, y + 1, 0);
+			f.mVertex[2] = vertex_index(x + 1, y, 0);
+			settings->mFaces.push_back(f);
+
+			// Face 2
+			f.mVertex[0] = vertex_index(x, y, cGridSize - 1);
+			f.mVertex[1] = vertex_index(x + 1, y + 1, cGridSize - 1);
+			f.mVertex[2] = vertex_index(x, y + 1, cGridSize - 1);
+			settings->mFaces.push_back(f);
+
+			f.mVertex[1] = vertex_index(x + 1, y, cGridSize - 1);
+			f.mVertex[2] = vertex_index(x + 1, y + 1, cGridSize - 1);
+			settings->mFaces.push_back(f);
+
+			// Face 3
+			f.mVertex[0] = vertex_index(x, 0, y);
+			f.mVertex[1] = vertex_index(x + 1, 0, y + 1);
+			f.mVertex[2] = vertex_index(x, 0, y + 1);
+			settings->mFaces.push_back(f);
+
+			f.mVertex[1] = vertex_index(x + 1, 0, y);
+			f.mVertex[2] = vertex_index(x + 1, 0, y + 1);
+			settings->mFaces.push_back(f);
+
+			// Face 4
+			f.mVertex[0] = vertex_index(x, cGridSize - 1, y);
+			f.mVertex[1] = vertex_index(x, cGridSize - 1, y + 1);
+			f.mVertex[2] = vertex_index(x + 1, cGridSize - 1, y + 1);
+			settings->mFaces.push_back(f);
+
+			f.mVertex[1] = vertex_index(x + 1, cGridSize - 1, y + 1);
+			f.mVertex[2] = vertex_index(x + 1, cGridSize - 1, y);
+			settings->mFaces.push_back(f);
+
+			// Face 5
+			f.mVertex[0] = vertex_index(0, x, y);
+			f.mVertex[1] = vertex_index(0, x, y + 1);
+			f.mVertex[2] = vertex_index(0, x + 1, y + 1);
+			settings->mFaces.push_back(f);
+
+			f.mVertex[1] = vertex_index(0, x + 1, y + 1);
+			f.mVertex[2] = vertex_index(0, x + 1, y);
+			settings->mFaces.push_back(f);
+
+			// Face 6
+			f.mVertex[0] = vertex_index(cGridSize - 1, x, y);
+			f.mVertex[1] = vertex_index(cGridSize - 1, x + 1, y + 1);
+			f.mVertex[2] = vertex_index(cGridSize - 1, x, y + 1);
+			settings->mFaces.push_back(f);
+
+			f.mVertex[1] = vertex_index(cGridSize - 1, x + 1, y);
+			f.mVertex[2] = vertex_index(cGridSize - 1, x + 1, y + 1);
+			settings->mFaces.push_back(f);
+		}
+
 	return settings;
 }
 
