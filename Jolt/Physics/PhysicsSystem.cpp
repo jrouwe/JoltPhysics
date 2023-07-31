@@ -1497,7 +1497,7 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 					if (num_bodies_to_update_bounds == cBodiesBatch)
 					{
 						// Buffer full, flush now
-						mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds);
+						mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 						num_bodies_to_update_bounds = 0;
 					}
 				}
@@ -2039,7 +2039,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 				if (num_bodies_to_update_bounds == cBodiesBatch)
 				{
 					// Buffer full, flush now
-					mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds);
+					mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 					num_bodies_to_update_bounds = 0;
 				}
 			}
