@@ -6,7 +6,7 @@
 
 #include <Tests/Test.h>
 
-// This test tests soft bodies with various values for friction
+// This test tests soft bodies with various values for restitution
 class SoftBodyRestitutionTest : public Test
 {
 public:
