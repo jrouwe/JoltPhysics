@@ -5,8 +5,6 @@
 #include <TestFramework.h>
 
 #include <Tests/SoftBody/SoftBodyFrictionTest.h>
-#include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Utils/SoftBodyCreator.h>
 #include <Layers.h>

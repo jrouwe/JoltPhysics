@@ -296,12 +296,14 @@ static TestNameAndRTTI sVehicleTests[] =
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyFrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyRestitutionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyPressureTest)
 
 static TestNameAndRTTI sSoftBodyTests[] =
 {
 	{ "Soft Body",							JPH_RTTI(SoftBodyTest) },
 	{ "Soft Body Friction Test",			JPH_RTTI(SoftBodyFrictionTest) },
 	{ "Soft Body Restitution Test",			JPH_RTTI(SoftBodyRestitutionTest) },
+	{ "Soft Body Pressure Test",			JPH_RTTI(SoftBodyPressureTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
