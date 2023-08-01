@@ -55,6 +55,27 @@ jobs:
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
 
+  msvc_cl_32:
+    runs-on: windows-latest
+    name: Visual Studio CL 32-bit Determinism Check
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.3
+    - name: Configure CMake
+      working-directory: ${{github.workspace}}/Build
+      run: ./cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+    - name: Build
+      run: msbuild Build\VS2022_CL_32BIT\JoltPhysics.sln /property:Configuration=Distribution
+    - name: Test ConvexVsMesh
+      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
+    - name: Test Ragdoll
+      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll "-validate_hash=$env:RAGDOLL_HASH"
+
   macos:
     runs-on: macos-latest
     name: macOS Determinism Check
