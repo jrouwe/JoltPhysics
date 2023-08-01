@@ -25,7 +25,7 @@ public:
 	void				Initialize(const SoftBodyCreationSettings &inSettings);
 
 	/// Update the soft body
-	void				Update(float inDeltaTime, float inFriction, float inRestitution, RMat44Arg inTransform, Vec3 &outDeltaPosition, PhysicsSystem &inSystem);
+	void				Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the state of a soft body

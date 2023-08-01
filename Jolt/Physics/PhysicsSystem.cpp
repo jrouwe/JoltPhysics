@@ -2347,7 +2347,7 @@ void PhysicsSystem::JobUpdateSoftBodies(PhysicsUpdateContext *ioContext)
 
 		// Update the soft body
 		Vec3 delta_position;
-		mp->Update(ioContext->mStepDeltaTime, body.GetFriction(), body.GetRestitution(), body.GetCenterOfMassTransform(), delta_position, *this);
+		mp->Update(ioContext->mStepDeltaTime, body, delta_position, *this);
 		body.SetPositionAndRotationInternal(body.GetPosition() + delta_position, body.GetRotation());
 
 		bodies_to_update_bounds[num_bodies_to_update_bounds++] = *b;

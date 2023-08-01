@@ -17,7 +17,8 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyFrictionTest)
 void SoftBodyFrictionTest::Initialize()
 {
 	// Floor
-	CreateFloor();
+	Body &floor = CreateFloor();
+	floor.SetFriction(1.0f);
 
 	// Bodies with increasing friction
 	Ref<SoftBodyParticleSettings> sphere_settings = SoftBodyCreator::CreateSphere();

@@ -45,13 +45,14 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 	mLocalPredictedBounds = mLocalBounds;
 }
 
-void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float inRestitution, RMat44Arg inTransform, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
 
 	// Convert gravity to local space
-	Vec3 gravity = inTransform.Multiply3x3Transposed(GetGravityFactor() * inSystem.GetGravity());
+	RMat44 body_transform = inSoftBody.GetCenterOfMassTransform();
+	Vec3 gravity = body_transform.Multiply3x3Transposed(GetGravityFactor() * inSystem.GetGravity());
 
 	// Collect information about the colliding bodies
 	struct CollidingShape
@@ -68,6 +69,8 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 		BodyID			mBodyID;
 		EMotionType		mMotionType;
 		float			mInvMass;
+		float			mFriction;
+		float			mRestitution;
 		bool 			mUpdateVelocities;
 		Mat44			mInvInertia;
 		Vec3			mLinearVelocity;
@@ -75,7 +78,14 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 	};
 	struct Collector : public CollideShapeBodyCollector
 	{
-									Collector(RMat44Arg inTransform, const BodyLockInterface &inBodyLockInterface) : mInverseTransform(inTransform.InversedRotationTranslation()), mBodyLockInterface(inBodyLockInterface) { }
+									Collector(Body &inSoftBody, RMat44Arg inTransform, PhysicsSystem &inSystem) :
+										mSoftBody(inSoftBody),
+										mInverseTransform(inTransform.InversedRotationTranslation()),
+										mBodyLockInterface(inSystem.GetBodyLockInterfaceNoLock()),
+										mCombineFriction(inSystem.GetCombineFriction()),
+										mCombineRestitution(inSystem.GetCombineRestitution())
+		{
+		}
 
 		virtual void				AddHit(const BodyID &inResult) override
 		{
@@ -93,6 +103,8 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 					cs.mBodyID = inResult;
 					cs.mMotionType = body.GetMotionType();
 					cs.mUpdateVelocities = false;
+					cs.mFriction = mCombineFriction(mSoftBody, SubShapeID(), body, SubShapeID());
+					cs.mRestitution = mCombineRestitution(mSoftBody, SubShapeID(), body, SubShapeID());
 					if (cs.mMotionType == EMotionType::Dynamic)
 					{
 						const MotionProperties *mp = body.GetMotionProperties();
@@ -106,14 +118,17 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 			}
 		}
 
+		Body &						mSoftBody;
 		RMat44						mInverseTransform;
 		const BodyLockInterface &	mBodyLockInterface;
+		ContactConstraintManager::CombineFunction mCombineFriction;
+		ContactConstraintManager::CombineFunction mCombineRestitution;
 		Array<CollidingShape>		mHits;
 	};
-	Collector collector(inTransform, inSystem.GetBodyLockInterfaceNoLock());
+	Collector collector(inSoftBody, body_transform, inSystem);
 	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
-	bounds = bounds.Transformed(inTransform);
+	bounds = bounds.Transformed(body_transform);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
 
 	// Calculate delta time for sub step
@@ -389,7 +404,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 						// Calculate delta relative velocity due to friction (modified equation 31)
 						Vec3 dv;
 						if (v_tangential_length > 0.0f)
-							dv = v_tangential * min(inFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
+							dv = v_tangential * min(cs.mFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
 						else
 							dv = Vec3::sZero();
 
@@ -397,7 +412,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 						dv += v_normal;
 						float prev_v_normal = (prev_v - v2).Dot(contact_normal);
 						if (prev_v_normal < restitution_treshold)
-							dv += inRestitution * prev_v_normal * contact_normal;
+							dv += cs.mRestitution * prev_v_normal * contact_normal;
 
 						// Calculate impulse
 						Vec3 p = dv / w1_plus_w2;
@@ -423,13 +438,13 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 
 						// Apply friction (modified equation 31)
 						if (v_tangential_length > 0.0f)
-							v.mVelocity -= v_tangential * min(inFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
+							v.mVelocity -= v_tangential * min(cs.mFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
 
 						// Apply restitution (equation 35)
 						v.mVelocity -= v_normal;
 						float prev_v_normal = prev_v.Dot(contact_normal);
 						if (prev_v_normal < restitution_treshold)
-							v.mVelocity -= inRestitution * prev_v_normal * contact_normal;
+							v.mVelocity -= cs.mRestitution * prev_v_normal * contact_normal;
 					}
 				}
 			}
@@ -449,7 +464,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 	{
 		// Shift the body so that the position is the center of the local bounds
 		Vec3 delta = mLocalBounds.GetCenter();
-		outDeltaPosition = inTransform.Multiply3x3(delta);
+		outDeltaPosition = body_transform.Multiply3x3(delta);
 		for (Vertex &v : mVertices)
 			v.mPosition -= delta;
 

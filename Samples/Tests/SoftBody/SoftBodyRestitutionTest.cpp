@@ -17,7 +17,8 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyRestitutionTest)
 void SoftBodyRestitutionTest::Initialize()
 {
 	// Floor
-	CreateFloor();
+	Body &floor = CreateFloor();
+	floor.SetRestitution(0.0f);
 
 	// Bodies with increasing restitution
 	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere());
