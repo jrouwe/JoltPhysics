@@ -1849,17 +1849,26 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 			// Call contact point callbacks
 			mContactManager.OnCCDContactAdded(contact_allocator, body, body2, manifold, ccd_body.mContactSettings);
 
-			// Calculate the average position from the manifold (this will result in the same impulse applied as when we apply impulses to all contact points)
-			if (manifold.mRelativeContactPointsOn2.size() > 1)
+			if (ccd_body.mContactSettings.mIsSensor)
 			{
-				Vec3 average_contact_point = Vec3::sZero();
-				for (const Vec3 &v : manifold.mRelativeContactPointsOn2)
-					average_contact_point += v;
-				average_contact_point /= (float)manifold.mRelativeContactPointsOn2.size();
-				ccd_body.mContactPointOn2 = manifold.mBaseOffset + average_contact_point;
+				// If this is a sensor, we don't want to solve the contact
+				ccd_body.mFractionPlusSlop = 1.0f;
+				ccd_body.mBodyID2 = BodyID();
 			}
 			else
-				ccd_body.mContactPointOn2 = manifold.mBaseOffset + cast_shape_result.mContactPointOn2;
+			{
+				// Calculate the average position from the manifold (this will result in the same impulse applied as when we apply impulses to all contact points)
+				if (manifold.mRelativeContactPointsOn2.size() > 1)
+				{
+					Vec3 average_contact_point = Vec3::sZero();
+					for (const Vec3 &v : manifold.mRelativeContactPointsOn2)
+						average_contact_point += v;
+					average_contact_point /= (float)manifold.mRelativeContactPointsOn2.size();
+					ccd_body.mContactPointOn2 = manifold.mBaseOffset + average_contact_point;
+				}
+				else
+					ccd_body.mContactPointOn2 = manifold.mBaseOffset + cast_shape_result.mContactPointOn2;
+			}
 		}
 	}
 
