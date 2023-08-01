@@ -150,6 +150,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SliderConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredSliderConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SpringTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConstraintSingularityTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConstraintPriorityTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredSwingTwistConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SwingTwistConstraintFrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PathConstraintTest)
@@ -179,6 +180,7 @@ static TestNameAndRTTI sConstraintTests[] =
 	{ "Spring",								JPH_RTTI(SpringTest) },
 	{ "Constraint Singularity",				JPH_RTTI(ConstraintSingularityTest) },
 	{ "Constraint vs Center Of Mass Change",JPH_RTTI(ConstraintVsCOMChangeTest) },
+	{ "Constraint Priority",				JPH_RTTI(ConstraintPriorityTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BoxShapeTest)
@@ -328,8 +330,8 @@ static TestNameAndRTTI sTools[] =
 	{ "Load Snapshot",						JPH_RTTI(LoadSnapshotTest) },
 };
 
-static TestCategory sAllCategories[] = 
-{ 
+static TestCategory sAllCategories[] =
+{
 	{ "General", sGeneralTests, size(sGeneralTests) },
 	{ "Shapes", sShapeTests, size(sShapeTests) },
 	{ "Scaled Shapes", sScaledShapeTests, size(sScaledShapeTests) },
@@ -340,7 +342,7 @@ static TestCategory sAllCategories[] =
 	{ "Vehicle", sVehicleTests, size(sVehicleTests) },
 	{ "Broad Phase", sBroadPhaseTests, size(sBroadPhaseTests) },
 	{ "Convex Collision", sConvexCollisionTests, size(sConvexCollisionTests) },
-	{ "Tools", sTools, size(sTools) } 
+	{ "Tools", sTools, size(sTools) }
 };
 
 //-----------------------------------------------------------------------------
@@ -372,11 +374,11 @@ SamplesApp::SamplesApp()
 
 		// Create UI
 		UIElement *main_menu = mDebugUI->CreateMenu();
-		mDebugUI->CreateTextButton(main_menu, "Select Test", [this]() { 
+		mDebugUI->CreateTextButton(main_menu, "Select Test", [this]() {
 			UIElement *tests = mDebugUI->CreateMenu();
 			for (TestCategory &c : sAllCategories)
 			{
-				mDebugUI->CreateTextButton(tests, c.mName, [=]() { 
+				mDebugUI->CreateTextButton(tests, c.mName, [=]() {
 					UIElement *category = mDebugUI->CreateMenu();
 					for (uint j = 0; j < c.mNumTests; ++j)
 						mDebugUI->CreateTextButton(category, c.mTests[j].mName, [=]() { StartTest(c.mTests[j].mRTTI); });
@@ -396,7 +398,7 @@ SamplesApp::SamplesApp()
 		mNextTestButton->SetDisabled(true);
 		mDebugUI->CreateTextButton(main_menu, "Take Snapshot", [this]() { TakeSnapshot(); });
 		mDebugUI->CreateTextButton(main_menu, "Take And Reload Snapshot", [this]() { TakeAndReloadSnapshot(); });
-		mDebugUI->CreateTextButton(main_menu, "Physics Settings", [this]() { 
+		mDebugUI->CreateTextButton(main_menu, "Physics Settings", [this]() {
 			UIElement *phys_settings = mDebugUI->CreateMenu();
 			mDebugUI->CreateSlider(phys_settings, "Max Concurrent Jobs", float(mMaxConcurrentJobs), 1, float(thread::hardware_concurrency()), 1, [this](float inValue) { mMaxConcurrentJobs = (int)inValue; });
 			mDebugUI->CreateSlider(phys_settings, "Gravity (m/s^2)", -mPhysicsSystem->GetGravity().GetY(), 0.0f, 20.0f, 1.0f, [this](float inValue) { mPhysicsSystem->SetGravity(Vec3(0, -inValue, 0)); });
@@ -427,7 +429,7 @@ SamplesApp::SamplesApp()
 			mDebugUI->ShowMenu(phys_settings);
 		});
 	#ifdef JPH_DEBUG_RENDERER
-		mDebugUI->CreateTextButton(main_menu, "Drawing Options", [this]() { 
+		mDebugUI->CreateTextButton(main_menu, "Drawing Options", [this]() {
 			UIElement *drawing_options = mDebugUI->CreateMenu();
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Shapes (H)", mBodyDrawSettings.mDrawShape, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawShape = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Shapes Wireframe (Alt+W)", mBodyDrawSettings.mDrawShapeWireframe, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawShapeWireframe = inState == UICheckBox::STATE_CHECKED; });
@@ -464,7 +466,7 @@ SamplesApp::SamplesApp()
 			mDebugUI->ShowMenu(drawing_options);
 		});
 	#endif // JPH_DEBUG_RENDERER
-		mDebugUI->CreateTextButton(main_menu, "Mouse Probe", [this]() { 
+		mDebugUI->CreateTextButton(main_menu, "Mouse Probe", [this]() {
 			UIElement *probe_options = mDebugUI->CreateMenu();
 			mDebugUI->CreateComboBox(probe_options, "Mode", { "Pick", "Ray", "RayCollector", "CollidePoint", "CollideShape", "CastShape", "TransfShape", "GetTriangles", "BP Ray", "BP Box", "BP Sphere", "BP Point", "BP OBox", "BP Cast Box" }, (int)mProbeMode, [this](int inItem) { mProbeMode = (EProbeMode)inItem; });
 			mDebugUI->CreateComboBox(probe_options, "Shape", { "Sphere", "Box", "ConvexHull", "Capsule", "TaperedCapsule", "Cylinder", "Triangle", "StaticCompound", "StaticCompound2", "MutableCompound", "Mesh" }, (int)mProbeShape, [=](int inItem) { mProbeShape = (EProbeShape)inItem; });
@@ -483,7 +485,7 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateSlider(probe_options, "Max Hits", float(mMaxHits), 0, 10, 1, [this](float inValue) { mMaxHits = (int)inValue; });
 			mDebugUI->ShowMenu(probe_options);
 		});
-		mDebugUI->CreateTextButton(main_menu, "Shoot Object", [this]() { 
+		mDebugUI->CreateTextButton(main_menu, "Shoot Object", [this]() {
 			UIElement *shoot_options = mDebugUI->CreateMenu();
 			mDebugUI->CreateTextButton(shoot_options, "Shoot Object (B)", [=]() { ShootObject(); });
 			mDebugUI->CreateSlider(shoot_options, "Initial Velocity", mShootObjectVelocity, 0.0f, 500.0f, 10.0f, [this](float inValue) { mShootObjectVelocity = inValue; });
@@ -544,7 +546,7 @@ SamplesApp::SamplesApp()
 						test = t.mRTTI;
 						break;
 					}
-				}		
+				}
 
 			// Construct test
 			StartTest(test);
@@ -617,7 +619,7 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 		mPhysicsSystem->SetContactListener(mTest->GetContactListener());
 	}
 	mTest->Initialize();
-				
+
 	// Optimize the broadphase to make the first update fast
 	mPhysicsSystem->OptimizeBroadPhase();
 
@@ -1053,7 +1055,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 				outPosition = ray.GetPointOnRay(first_hit.mFraction);
 				outFraction = first_hit.mFraction;
 				outID = first_hit.mBodyID;
-	
+
 				// Draw results
 				RVec3 prev_position = start;
 				bool c = false;
@@ -1271,7 +1273,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					hits.resize(mMaxHits);
 			}
 
-			had_hit = !hits.empty();		
+			had_hit = !hits.empty();
 			if (had_hit)
 			{
 				// Fill in results
@@ -1660,7 +1662,7 @@ void SamplesApp::UpdateDebug()
 	const float cDragRayLength = 40.0f;
 
 	BodyInterface &bi = mPhysicsSystem->GetBodyInterface();
-			
+
 	// Handle keyboard input for which simulation needs to be running
 	for (int key = mKeyboard->GetFirstKey(); key != 0; key = mKeyboard->GetNextKey())
 		switch (key)
@@ -1752,7 +1754,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 
 	// Get the status string
 	mStatusString = mTest->GetStatusString();
-		
+
 	// Select the next test if automatic testing times out
 	if (!CheckNextTest())
 		return false;
@@ -1804,7 +1806,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 		case DIK_3:
 			ContactConstraintManager::sDrawContactPointReduction = !ContactConstraintManager::sDrawContactPointReduction;
 			break;
-				
+
 		case DIK_C:
 			mDrawConstraints = !mDrawConstraints;
 			break;
@@ -1914,7 +1916,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			// Restore state to what it was during that time
 			StateRecorderImpl &recorder = mPlaybackFrames[mCurrentPlaybackFrame];
 			RestoreState(recorder);
-				
+
 			// Physics world is drawn using debug lines, when not paused
 			// Draw state prior to step so that debug lines are created from the same state
 			// (the constraints are solved on the current state and then the world is stepped)
@@ -1945,7 +1947,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 		if (mCurrentPlaybackFrame == 0)
 			mPlaybackMode = EPlaybackMode::Stop;
 	}
-	else 
+	else
 	{
 		// Normal update
 		JPH_ASSERT(mCurrentPlaybackFrame == -1);
@@ -2061,7 +2063,7 @@ void SamplesApp::DrawPhysics()
 
 						// Start iterating all triangles of the shape
 						Shape::GetTrianglesContext context;
-						transformed_shape.mShape->GetTrianglesStart(context, AABox::sBiggest(), Vec3::sZero(), Quat::sIdentity(), Vec3::sReplicate(1.0f));						
+						transformed_shape.mShape->GetTrianglesStart(context, AABox::sBiggest(), Vec3::sZero(), Quat::sIdentity(), Vec3::sReplicate(1.0f));
 						for (;;)
 						{
 							// Get the next batch of vertices
@@ -2262,13 +2264,13 @@ void SamplesApp::GetInitialCamera(CameraState &ioState) const
 }
 
 RMat44 SamplesApp::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
-{ 
-	return mTest->GetCameraPivot(inCameraHeading, inCameraPitch); 
+{
+	return mTest->GetCameraPivot(inCameraHeading, inCameraPitch);
 }
 
 float SamplesApp::GetWorldScale() const
-{ 
-	return mTest != nullptr? mTest->GetWorldScale() : 1.0f; 
+{
+	return mTest != nullptr? mTest->GetWorldScale() : 1.0f;
 }
 
 ENTRY_POINT(SamplesApp, RegisterCustomMemoryHook)
