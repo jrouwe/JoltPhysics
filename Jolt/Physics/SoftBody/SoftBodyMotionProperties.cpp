@@ -93,7 +93,8 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 			if (lock.Succeeded())
 			{
 				const Body &body = lock.GetBody();
-				if (body.IsRigidBody()) // TODO: We should support soft body vs soft body
+				if (body.IsRigidBody() // TODO: We should support soft body vs soft body
+					&& mSoftBody.GetCollisionGroup().CanCollide(body.GetCollisionGroup()))
 				{
 					CollidingShape cs;
 					Mat44 shape_transform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
@@ -129,7 +130,9 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
 	bounds = bounds.Transformed(body_transform);
-	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
+	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inSystem.GetDefaultBroadPhaseLayerFilter(inSoftBody.GetObjectLayer());
+	DefaultObjectLayerFilter object_layer_filter = inSystem.GetDefaultLayerFilter(inSoftBody.GetObjectLayer());
+	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector, broadphase_layer_filter, object_layer_filter);
 
 	// Calculate delta time for sub step
 	float dt = inDeltaTime / mNumIterations;
