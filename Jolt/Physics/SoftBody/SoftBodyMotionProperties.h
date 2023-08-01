@@ -12,6 +12,7 @@
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
+class Body;
 class SoftBodyCreationSettings;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;

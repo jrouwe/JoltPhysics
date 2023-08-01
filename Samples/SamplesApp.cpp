@@ -1810,7 +1810,7 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 					{
 						Body &body = lock.GetBody();
 						SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
-						mp->mVertices[mDragVertexIndex].mVelocity = body.GetRotation().Conjugated() * (new_pos - body.GetCenterOfMassTransform() * mp->mVertices[mDragVertexIndex].mPosition) / inDeltaTime;
+						mp->mVertices[mDragVertexIndex].mVelocity = body.GetRotation().Conjugated() * Vec3(new_pos - body.GetCenterOfMassTransform() * mp->mVertices[mDragVertexIndex].mPosition) / inDeltaTime;
 					}
 				}
 				break;

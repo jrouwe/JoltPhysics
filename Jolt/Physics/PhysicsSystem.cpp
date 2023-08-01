@@ -2333,8 +2333,10 @@ void PhysicsSystem::JobUpdateSoftBodies(PhysicsUpdateContext *ioContext)
 {
 	JPH_PROFILE_FUNCTION();
 
+#ifdef JPH_ENABLE_ASSERTS
 	// Can activate bodies only
 	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
+#endif
 
 	static constexpr int cBodiesBatch = 64;
 	BodyID *bodies_to_update_bounds = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
