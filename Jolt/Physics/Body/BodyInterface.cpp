@@ -834,6 +834,15 @@ void BodyInterface::SetMotionType(const BodyID &inBodyID, EMotionType inMotionTy
 	}
 }
 
+EBodyType BodyInterface::GetBodyType(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		return lock.GetBody().GetBodyType();
+	else
+		return EBodyType::RigidBody;
+}
+
 EMotionType BodyInterface::GetMotionType(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);

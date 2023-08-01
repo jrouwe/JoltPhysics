@@ -133,7 +133,7 @@ void SoftBodyShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTran
 		RVec3 x2 = inCenterOfMassTransform * vertices[f.mVertex[1]].mPosition;
 		RVec3 x3 = inCenterOfMassTransform * vertices[f.mVertex[2]].mPosition;
 
-		inRenderer->DrawTriangle(x1, x2, x3, Color::sOrange, DebugRenderer::ECastShadow::On);
+		inRenderer->DrawTriangle(x1, x2, x3, inColor, DebugRenderer::ECastShadow::On);
 	}
 }
 

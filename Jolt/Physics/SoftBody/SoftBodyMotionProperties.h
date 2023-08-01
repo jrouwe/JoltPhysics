@@ -39,9 +39,9 @@ public:
 	struct Vertex
 	{
 		Vec3			mPreviousPosition;
-		Vec3 			mPosition;
-		Vec3 			mVelocity;
-		Plane			mCollisionPlane;					///< Nearest collision plane
+		Vec3 			mPosition;							///< Position, relative to the center of mass of the soft body
+		Vec3 			mVelocity;							///< Velocity, relative to the center of mass of the soft body
+		Plane			mCollisionPlane;					///< Nearest collision plane, relative to the center of mass of the soft body
 		int				mCollidingShapeIndex;				///< Index in the colliding shapes list of the body we may collide with
 		float			mInvMass;
 		float			mProjectedDistance;

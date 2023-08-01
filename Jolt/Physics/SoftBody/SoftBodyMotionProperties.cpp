@@ -487,8 +487,8 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 			if (lock.Succeeded())
 			{
 				Body &body = lock.GetBody();
-				body.SetLinearVelocity(cs.mLinearVelocity);
-				body.SetAngularVelocity(cs.mAngularVelocity);
+				body.SetLinearVelocityClamped(cs.mLinearVelocity);
+				body.SetAngularVelocityClamped(cs.mAngularVelocity);
 			}
 		}
 }

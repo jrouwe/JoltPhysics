@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/MotionQuality.h>
+#include <Jolt/Physics/Body/BodyType.h>
 #include <Jolt/Core/Reference.h>
 
 JPH_NAMESPACE_BEGIN
@@ -206,6 +207,11 @@ public:
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse); ///< Applied at center of mass
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse, RVec3Arg inPoint); ///< Applied at inPoint
 	void						AddAngularImpulse(const BodyID &inBodyID, Vec3Arg inAngularImpulse);
+	///@}
+
+	///@name Body type
+	///@{
+	EBodyType					GetBodyType(const BodyID &inBodyID) const;
 	///@}
 
 	///@name Body motion type
