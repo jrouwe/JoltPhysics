@@ -26,7 +26,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConstraintSettings)
 }
 
 void ConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	inStream.Write(GetRTTI()->GetHash());
 	inStream.Write(mEnabled);
 	inStream.Write(mDrawConstraintSize);

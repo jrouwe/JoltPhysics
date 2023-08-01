@@ -10,9 +10,9 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ConstraintPriorityTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ConstraintPriorityTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ConstraintPriorityTest)
+{
+	JPH_ADD_BASE_CLASS(ConstraintPriorityTest, Test)
 }
 
 void ConstraintPriorityTest::Initialize()
@@ -43,7 +43,7 @@ void ConstraintPriorityTest::Initialize()
 			Ref<Constraint> c = settings.Create(*prev, segment);
 			mPhysicsSystem->AddConstraint(c);
 			mConstraints.push_back(static_cast<FixedConstraint *>(c.GetPtr()));
-					
+
 			prev = &segment;
 		}
 	}
