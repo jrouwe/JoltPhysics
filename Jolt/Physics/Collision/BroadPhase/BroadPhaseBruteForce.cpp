@@ -269,6 +269,8 @@ void BroadPhaseBruteForce::FindCollidingPairs(BodyID *ioActiveBodies, int inNumA
 	{
 		BodyID b1_id = ioActiveBodies[b1];
 		const Body &body1 = mBodyManager->GetBody(b1_id);
+		if (body1.IsSoftBody())
+			continue; // Soft bodies collide later in the pipeline
 		const ObjectLayer layer1 = body1.GetObjectLayer();
 
 		// Expand the bounding box by the speculative contact distance

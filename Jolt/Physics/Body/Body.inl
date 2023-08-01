@@ -42,7 +42,8 @@ inline static bool sIsValidSensorBodyPair(const Body &inSensor, const Body &inOt
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
 {
 	// Soft bodies collide later in the pipeline
-	if (inBody1.IsSoftBody() || inBody2.IsSoftBody())
+	JPH_ASSERT(!inBody1.IsSoftBody());
+	if (inBody2.IsSoftBody())
 		return false;
 
 	// One of these conditions must be true
