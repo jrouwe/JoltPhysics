@@ -479,18 +479,10 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 		outDeltaPosition = Vec3::sZero();
 
 	// Write back velocities
-	const BodyLockInterface &body_lock_interface = inSystem.GetBodyLockInterfaceNoLock();
+	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
 	for (const CollidingShape &cs : collector.mHits)
 		if (cs.mUpdateVelocities)
-		{
-			BodyLockWrite lock(body_lock_interface, cs.mBodyID);
-			if (lock.Succeeded())
-			{
-				Body &body = lock.GetBody();
-				body.SetLinearVelocityClamped(cs.mLinearVelocity);
-				body.SetAngularVelocityClamped(cs.mAngularVelocity);
-			}
-		}
+			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, cs.mLinearVelocity, cs.mAngularVelocity);
 }
 
 #ifdef JPH_DEBUG_RENDERER
