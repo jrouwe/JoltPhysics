@@ -11,6 +11,8 @@ JPH_NAMESPACE_BEGIN
 
 void MotionProperties::SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassProperties &inMassProperties)
 {
+	JPH_ASSERT(mCachedBodyType == EBodyType::RigidBody);
+
 	// Store allowed DOFs
 	mAllowedDOFs = inAllowedDOFs;
 

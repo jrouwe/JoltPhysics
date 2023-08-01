@@ -1367,8 +1367,6 @@ void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inAc
 		BodyID b1_id = inActiveBodies[b1];
 		const Body &body1 = *inBodies[b1_id.GetIndex()];
 		JPH_ASSERT(!body1.IsStatic());
-		if (body1.IsSoftBody())
-			continue; // Soft bodies collide later in the pipeline
 
 		// Expand the bounding box by the speculative contact distance
 		AABox bounds1 = body1.GetWorldSpaceBounds();

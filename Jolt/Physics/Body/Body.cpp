@@ -78,6 +78,7 @@ void Body::SetAllowSleeping(bool inAllow)
 
 void Body::MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
 {
+	JPH_ASSERT(IsRigidBody()); // Only valid for rigid bodies
 	JPH_ASSERT(!IsStatic());
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
 
@@ -123,6 +124,7 @@ void Body::UpdateCenterOfMassInternal(Vec3Arg inPreviousCenterOfMass, bool inUpd
 
 void Body::SetShapeInternal(const Shape *inShape, bool inUpdateMassProperties)
 {
+	JPH_ASSERT(IsRigidBody()); // Only valid for rigid bodies
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
 
 	// Get the old center of mass
@@ -183,6 +185,8 @@ Body::ECanSleep Body::UpdateSleepStateInternal(float inDeltaTime, float inMaxMov
 bool Body::ApplyBuoyancyImpulse(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime)
 {
 	JPH_PROFILE_FUNCTION();
+
+	JPH_ASSERT(IsRigidBody()); // Only implemented for rigid bodies currently
 
 	// We follow the approach from 'Game Programming Gems 6' 2.5 Exact Buoyancy for Polyhedra
 	// All quantities below are in world space
@@ -313,6 +317,8 @@ void Body::RestoreState(StateRecorder &inStream)
 
 BodyCreationSettings Body::GetBodyCreationSettings() const
 {
+	JPH_ASSERT(IsRigidBody());
+
 	BodyCreationSettings result;
 
 	result.mPosition = GetPosition();

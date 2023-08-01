@@ -129,8 +129,9 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	mBroadPhase->FrameSync();
 
 	// If there are no active bodies or there's no time delta
-	uint32 num_active_bodies = mBodyManager.GetNumActiveBodies();
-	if (num_active_bodies == 0 || inDeltaTime <= 0.0f)
+	uint32 num_active_rigid_bodies = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
+	uint32 num_active_soft_bodies = mBodyManager.GetNumActiveBodies(EBodyType::SoftBody);
+	if ((num_active_rigid_bodies == 0 && num_active_soft_bodies == 0) || inDeltaTime <= 0.0f)
 	{
 		mBodyManager.LockAllBodies();
 
@@ -180,7 +181,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	// Number of gravity jobs depends on the amount of active bodies.
 	// Launch max 1 job per batch of active bodies
 	// Leave 1 thread for update broadphase prepare and 1 for determine active constraints
-	int num_apply_gravity_jobs = max(1, min(((int)num_active_bodies + cApplyGravityBatchSize - 1) / cApplyGravityBatchSize, max_concurrency - 2));
+	int num_apply_gravity_jobs = max(1, min(((int)num_active_rigid_bodies + cApplyGravityBatchSize - 1) / cApplyGravityBatchSize, max_concurrency - 2));
 
 	// Number of determine active constraints jobs to run depends on number of constraints.
 	// Leave 1 thread for update broadphase prepare and 1 for apply gravity
@@ -189,10 +190,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	// Number of find collisions jobs to run depends on number of active bodies.
 	// Note that when we have more than 1 thread, we always spawn at least 2 find collisions jobs so that the first job can wait for build islands from constraints
 	// (which may activate additional bodies that need to be processed) while the second job can start processing collision work.
-	int num_find_collisions_jobs = max(max_concurrency == 1? 1 : 2, min(((int)num_active_bodies + cActiveBodiesBatchSize - 1) / cActiveBodiesBatchSize, max_concurrency));
+	int num_find_collisions_jobs = max(max_concurrency == 1? 1 : 2, min(((int)num_active_rigid_bodies + cActiveBodiesBatchSize - 1) / cActiveBodiesBatchSize, max_concurrency));
 
 	// Number of integrate velocity jobs depends on number of active bodies.
-	int num_integrate_velocity_jobs = max(1, min(((int)num_active_bodies + cIntegrateVelocityBatchSize - 1) / cIntegrateVelocityBatchSize, max_concurrency));
+	int num_integrate_velocity_jobs = max(1, min(((int)num_active_rigid_bodies + cIntegrateVelocityBatchSize - 1) / cIntegrateVelocityBatchSize, max_concurrency));
 
 	{
 		JPH_PROFILE("Build Jobs");
@@ -260,7 +261,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			#endif
 
 				// Store the number of active bodies at the start of the step
-				step.mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies();
+				step.mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
 
 				// Lock all constraints
 				mConstraintManager.LockAllConstraints();
@@ -381,7 +382,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 					#endif // _DEBUG
 
 						// Store the number of active bodies at the start of the step
-						next_step->mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies();
+						next_step->mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
 
 						// Clear the large island splitter
 						TempAllocator *temp_allocator = next_step->mContext->mTempAllocator;
@@ -671,7 +672,7 @@ void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, Physi
 	// Any body that is activated as part of the simulation step does not receive gravity this frame.
 	// Note that bodies may be activated during this job but not deactivated, this means that only elements
 	// will be added to the array. Since the array is made to not reallocate, this is a safe operation.
-	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe();
+	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe(EBodyType::RigidBody);
 	uint32 num_active_bodies_at_step_start = ioStep->mNumActiveBodiesAtStepStart;
 
 	// Fetch delta time once outside the loop
@@ -692,7 +693,7 @@ void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, Physi
 		while (active_body_idx < active_body_idx_end)
 		{
 			Body &body = mBodyManager.GetBody(active_bodies[active_body_idx]);
-			if (body.IsDynamic() && !body.IsSoftBody())
+			if (body.IsDynamic())
 				body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
 			active_body_idx++;
 		}
@@ -739,7 +740,7 @@ void PhysicsSystem::TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep
 		num_body_pairs += queue.mWriteIdx - queue.mReadIdx;
 
 	// Count how many active bodies we have waiting
-	uint32 num_active_bodies = mBodyManager.GetNumActiveBodies() - ioStep->mActiveBodyReadIdx;
+	uint32 num_active_bodies = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody) - ioStep->mActiveBodyReadIdx;
 
 	// Calculate how many jobs we would like
 	uint desired_num_jobs = min((num_body_pairs + cNarrowPhaseBatchSize - 1) / cNarrowPhaseBatchSize + (num_active_bodies + cActiveBodiesBatchSize - 1) / cActiveBodiesBatchSize, max_jobs);
@@ -814,7 +815,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 	{
 		// Check if there are active bodies to be processed
 		uint32 active_bodies_read_idx = ioStep->mActiveBodyReadIdx;
-		uint32 num_active_bodies = mBodyManager.GetNumActiveBodies();
+		uint32 num_active_bodies = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
 		if (active_bodies_read_idx < num_active_bodies)
 		{
 			// Take a batch of active bodies
@@ -862,7 +863,7 @@ void PhysicsSystem::JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int in
 				// Copy active bodies to temporary array, broadphase will reorder them
 				uint32 batch_size = active_bodies_read_idx_end - active_bodies_read_idx;
 				BodyID *active_bodies = (BodyID *)JPH_STACK_ALLOC(batch_size * sizeof(BodyID));
-				memcpy(active_bodies, mBodyManager.GetActiveBodiesUnsafe() + active_bodies_read_idx, batch_size * sizeof(BodyID));
+				memcpy(active_bodies, mBodyManager.GetActiveBodiesUnsafe(EBodyType::RigidBody) + active_bodies_read_idx, batch_size * sizeof(BodyID));
 
 				// Find pairs in the broadphase
 				mBroadPhase->FindCollidingPairs(active_bodies, batch_size, mPhysicsSettings.mSpeculativeContactDistance, *mObjectVsBroadPhaseLayerFilter, *mObjectLayerPairFilter, add_pair);
@@ -1222,11 +1223,11 @@ void PhysicsSystem::JobFinalizeIslands(PhysicsUpdateContext *ioContext)
 #endif
 
 	// Finish collecting the islands, at this point the active body list doesn't change so it's safe to access
-	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(), mBodyManager.GetNumActiveBodies(), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
+	mIslandBuilder.Finalize(mBodyManager.GetActiveBodiesUnsafe(EBodyType::RigidBody), mBodyManager.GetNumActiveBodies(EBodyType::RigidBody), mContactManager.GetNumConstraints(), ioContext->mTempAllocator);
 
 	// Prepare the large island splitter
 	if (mPhysicsSettings.mUseLargeIslandSplitter)
-		mLargeIslandSplitter.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(), ioContext->mTempAllocator);
+		mLargeIslandSplitter.Prepare(mIslandBuilder, mBodyManager.GetNumActiveBodies(EBodyType::RigidBody), ioContext->mTempAllocator);
 }
 
 void PhysicsSystem::JobBodySetIslandIndex()
@@ -1392,7 +1393,7 @@ void PhysicsSystem::JobPreIntegrateVelocity(PhysicsUpdateContext *ioContext, Phy
 
 	// Initialize the mapping table between active body and CCD body
 	JPH_ASSERT(ioStep->mActiveBodyToCCDBody == nullptr);
-	ioStep->mNumActiveBodyToCCDBody = mBodyManager.GetNumActiveBodies();
+	ioStep->mNumActiveBodyToCCDBody = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
 	ioStep->mActiveBodyToCCDBody = (int *)temp_allocator->Allocate(ioStep->mNumActiveBodyToCCDBody * sizeof(int));
 
 	// Prepare the split island builder for solving the position constraints
@@ -1407,8 +1408,8 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 #endif
 
 	float delta_time = ioContext->mStepDeltaTime;
-	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe();
-	uint32 num_active_bodies = mBodyManager.GetNumActiveBodies();
+	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe(EBodyType::RigidBody);
+	uint32 num_active_bodies = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
 	uint32 num_active_bodies_after_find_collisions = ioStep->mActiveBodyReadIdx;
 
 	// We can move bodies that are not part of an island. In this case we need to notify the broadphase of the movement.
@@ -2337,27 +2338,24 @@ void PhysicsSystem::JobUpdateSoftBodies(PhysicsUpdateContext *ioContext)
 	int num_bodies_to_update_bounds = 0;
 
 	// Loop through active bodies
-	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe();
-	const BodyID *active_bodies_end = active_bodies + mBodyManager.GetNumActiveBodies();
+	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe(EBodyType::SoftBody);
+	const BodyID *active_bodies_end = active_bodies + mBodyManager.GetNumActiveBodies(EBodyType::SoftBody);
 	for (const BodyID *b = active_bodies; b < active_bodies_end; ++b)
 	{
 		// Only update soft bodies
 		Body &body = mBodyManager.GetBody(*b);
-		if (body.IsSoftBody())
+		SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
+
+		RVec3 position = body.GetPosition();
+		mp->Update(ioContext->mStepDeltaTime, body.GetFriction(), body.GetRestitution(), position, *this);
+		body.SetPositionAndRotationInternal(position, body.GetRotation());
+
+		bodies_to_update_bounds[num_bodies_to_update_bounds++] = *b;
+		if (num_bodies_to_update_bounds == cBodiesBatch)
 		{
-			SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
-
-			RVec3 position = body.GetPosition();
-			mp->Update(ioContext->mStepDeltaTime, body.GetFriction(), body.GetRestitution(), position, *this);
-			body.SetPositionAndRotationInternal(position, body.GetRotation());
-
-			bodies_to_update_bounds[num_bodies_to_update_bounds++] = *b;
-			if (num_bodies_to_update_bounds == cBodiesBatch)
-			{
-				// Buffer full, flush now
-				mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
-				num_bodies_to_update_bounds = 0;
-			}
+			// Buffer full, flush now
+			mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
+			num_bodies_to_update_bounds = 0;
 		}
 	}
 

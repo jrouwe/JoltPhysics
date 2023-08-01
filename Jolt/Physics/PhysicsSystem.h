@@ -149,7 +149,7 @@ public:
 	uint						GetNumBodies() const										{ return mBodyManager.GetNumBodies(); }
 
 	/// Gets the current amount of active bodies that are in the body manager
-	uint32						GetNumActiveBodies() const									{ return mBodyManager.GetNumActiveBodies(); }
+	uint32						GetNumActiveBodies(EBodyType inType) const					{ return mBodyManager.GetNumActiveBodies(inType); }
 
 	/// Get the maximum amount of bodies that this physics system supports
 	uint						GetMaxBodies() const										{ return mBodyManager.GetMaxBodies(); }
@@ -166,11 +166,11 @@ public:
 
 	/// Get copy of the list of active bodies under protection of a lock.
 	/// @param outBodyIDs On return, this will contain the list of BodyIDs
-	void						GetActiveBodies(BodyIDVector &outBodyIDs) const				{ return mBodyManager.GetActiveBodies(outBodyIDs); }
+	void						GetActiveBodies(EBodyType inType, BodyIDVector &outBodyIDs) const { return mBodyManager.GetActiveBodies(inType, outBodyIDs); }
 
 	/// Get the list of active bodies, use GetNumActiveBodies() to find out how long the list is.
 	/// Note: Not thread safe. The active bodies list can change at any moment when other threads are doing work. Use GetActiveBodies() if you need a thread safe version.
-	const BodyID *				GetActiveBodiesUnsafe() const								{ return mBodyManager.GetActiveBodiesUnsafe(); }
+	const BodyID *				GetActiveBodiesUnsafe(EBodyType inType) const				{ return mBodyManager.GetActiveBodiesUnsafe(inType); }
 
 	/// Check if 2 bodies were in contact during the last simulation step. Since contacts are only detected between active bodies, so at least one of the bodies must be active in order for this function to work.
 	/// It queries the state at the time of the last PhysicsSystem::Update and will return true if the bodies were in contact, even if one of the bodies was moved / removed afterwards.

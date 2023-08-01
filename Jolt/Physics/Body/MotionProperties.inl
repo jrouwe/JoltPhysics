@@ -9,7 +9,8 @@ JPH_NAMESPACE_BEGIN
 void MotionProperties::MoveKinematic(Vec3Arg inDeltaPosition, QuatArg inDeltaRotation, float inDeltaTime)
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); 
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read));
+	JPH_ASSERT(mCachedBodyType == EBodyType::RigidBody);
 	JPH_ASSERT(mCachedMotionType != EMotionType::Static);
 
 	// Calculate required linear velocity
@@ -75,6 +76,7 @@ Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRo
 void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime)
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); 
+	JPH_ASSERT(mCachedBodyType == EBodyType::RigidBody);
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
 	// Update linear velocity

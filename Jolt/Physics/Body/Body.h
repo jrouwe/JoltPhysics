@@ -14,19 +14,13 @@
 #include <Jolt/Physics/Body/MotionProperties.h>
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Body/BodyAccess.h>
+#include <Jolt/Physics/Body/BodyType.h>
 #include <Jolt/Core/StringTools.h>
 
 JPH_NAMESPACE_BEGIN
 
 class StateRecorder;
 class BodyCreationSettings;
-
-/// Type of body
-enum class EBodyType : uint8
-{
-	RigidBody,				///< Rigid body consisting of a rigid shape
-	SoftBody,				///< Soft body consisting of a deformable shape
-};
 
 /// A rigid body that can be simulated using the physics system
 ///
@@ -79,20 +73,20 @@ public:
 	/// These sensors will only detect collisions with active Dynamic or Kinematic bodies. As soon as a body go to sleep, the contact point with the sensor will be lost.
 	/// If you make a sensor Dynamic or Kinematic and activate them, the sensor will be able to detect collisions with sleeping bodies too. An active sensor will never go to sleep automatically.
 	/// When you make a Dynamic or Kinematic sensor, make sure it is in an ObjectLayer that does not collide with Static bodies or other sensors to avoid extra overhead in the broad phase.
-	inline void				SetIsSensor(bool inIsSensor)									{ if (inIsSensor) mFlags.fetch_or(uint8(EFlags::IsSensor), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::IsSensor)), memory_order_relaxed); }
+	inline void				SetIsSensor(bool inIsSensor)									{ JPH_ASSERT(IsRigidBody()); if (inIsSensor) mFlags.fetch_or(uint8(EFlags::IsSensor), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::IsSensor)), memory_order_relaxed); }
 
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
 
 	// If this sensor detects static objects entering it. Note that the sensor must be kinematic and active for it to detect static objects.
-	inline void				SetSensorDetectsStatic(bool inDetectsStatic)					{ if (inDetectsStatic) mFlags.fetch_or(uint8(EFlags::SensorDetectsStatic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::SensorDetectsStatic)), memory_order_relaxed); }
+	inline void				SetSensorDetectsStatic(bool inDetectsStatic)					{ JPH_ASSERT(IsRigidBody()); if (inDetectsStatic) mFlags.fetch_or(uint8(EFlags::SensorDetectsStatic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::SensorDetectsStatic)), memory_order_relaxed); }
 
 	/// Check if this sensor detects static objects entering it.
 	inline bool				SensorDetectsStatic() const										{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::SensorDetectsStatic)) != 0; }
 
 	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body. Manifold reduction by default will combine contacts that come from different SubShapeIDs (e.g. different triangles or different compound shapes).
 	/// If the application requires tracking exactly which SubShapeIDs are in contact, you can turn off manifold reduction. Note that this comes at a performance cost.
-	inline void				SetUseManifoldReduction(bool inUseReduction)					{ if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
+	inline void				SetUseManifoldReduction(bool inUseReduction)					{ JPH_ASSERT(IsRigidBody()); if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
 
 	/// Check if this body can use manifold reduction.
 	inline bool				GetUseManifoldReduction() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::UseManifoldReduction)) != 0; }
@@ -261,8 +255,8 @@ public:
 	static inline bool		sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2);
 
 	/// Update position using an Euler step (used during position integrate & constraint solving)
-	inline void				AddPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime)			{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition += mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
-	inline void				SubPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime) 		{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition -= mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
+	inline void				AddPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime)			{ JPH_ASSERT(IsRigidBody()); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition += mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
+	inline void				SubPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime) 		{ JPH_ASSERT(IsRigidBody()); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition -= mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
 
 	/// Update rotation using an Euler step (using during position integrate & constraint solving)
 	inline void				AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime);

@@ -90,7 +90,8 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 }
 
 void Body::AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime)
-{ 
+{
+	JPH_ASSERT(IsRigidBody());
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
 
 	// This used to use the equation: d/dt R(t) = 1/2 * w(t) * R(t) so that R(t + dt) = R(t) + 1/2 * w(t) * R(t) * dt
@@ -109,6 +110,7 @@ void Body::AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime)
 
 void Body::SubRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime)
 { 
+	JPH_ASSERT(IsRigidBody());
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
 
 	// See comment at Body::AddRotationStep

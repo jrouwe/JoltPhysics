@@ -57,6 +57,9 @@ public:
 
 		uint						mNumBodiesKinematic			= 0;			///< Number of kinematic bodies
 		uint						mNumActiveBodiesKinematic	= 0;			///< Number of kinematic bodies that are currently active
+
+		uint						mNumSoftBodies				= 0;			///< Number of soft bodies
+		uint						mNumActiveSoftBodies		= 0;			///< Number of soft bodies that are currently active
 	};
 
 	/// Get stats about the bodies in the body manager (slow, iterates through all bodies)
@@ -95,13 +98,13 @@ public:
 	void							SetMotionQuality(Body &ioBody, EMotionQuality inMotionQuality);
 
 	/// Get copy of the list of active bodies under protection of a lock.
-	void							GetActiveBodies(BodyIDVector &outBodyIDs) const;
+	void							GetActiveBodies(EBodyType inType, BodyIDVector &outBodyIDs) const;
 
 	/// Get the list of active bodies. Note: Not thread safe. The active bodies list can change at any moment.
-	const BodyID *					GetActiveBodiesUnsafe() const				{ return mActiveBodies; }
+	const BodyID *					GetActiveBodiesUnsafe(EBodyType inType) const { return mActiveBodies[(int)inType]; }
 
 	/// Get the number of active bodies.
-	uint32							GetNumActiveBodies() const					{ return mNumActiveBodies; }
+	uint32							GetNumActiveBodies(EBodyType inType) const	{ return mNumActiveBodies[(int)inType]; }
 
 	/// Get the number of active bodies that are using continuous collision detection
 	uint32							GetNumActiveCCDBodies() const				{ return mNumActiveCCDBodies; }
@@ -309,10 +312,10 @@ private:
 	mutable Mutex					mActiveBodiesMutex;
 
 	/// List of all active dynamic bodies (size is equal to max amount of bodies)
-	BodyID *						mActiveBodies = nullptr;
+	BodyID *						mActiveBodies[cBodyTypeCount] = { };
 
 	/// How many bodies there are in the list of active bodies
-	atomic<uint32>					mNumActiveBodies = 0;
+	atomic<uint32>					mNumActiveBodies[cBodyTypeCount] = { };
 
 	/// How many of the active bodies have continuous collision detection enabled
 	uint32							mNumActiveCCDBodies = 0;
