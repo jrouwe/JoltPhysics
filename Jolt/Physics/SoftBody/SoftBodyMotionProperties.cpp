@@ -6,10 +6,6 @@
 
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
-#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
-#include <Jolt/Physics/Collision/RayCast.h>
-#include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
@@ -31,13 +27,14 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 
 	// Initialize vertices
 	mVertices.resize(inSettings.mSettings->mVertices.size());
-	for (Array<SoftBodyMotionProperties::Vertex>::size_type v = 0, s = mVertices.size(); v < s; ++v)
+	for (Array<Vertex>::size_type v = 0, s = mVertices.size(); v < s; ++v)
 	{
 		const SoftBodyParticleSettings::Vertex &in_vertex = inSettings.mSettings->mVertices[v];
-		SoftBodyMotionProperties::Vertex &out_vertex = mVertices[v];
+		Vertex &out_vertex = mVertices[v];
 		out_vertex.mPreviousPosition = out_vertex.mPosition = Vec3(in_vertex.mPosition);
 		out_vertex.mVelocity = Vec3(in_vertex.mVelocity);
 		out_vertex.mInvMass = in_vertex.mInvMass;
+		out_vertex.mProjectedDistance = 0.0f;
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
 	}
 
@@ -63,8 +60,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 			return mLinearVelocity + mAngularVelocity.Cross(inPointRelativeToCOM);
 		}
 
-		Vec3			mCenterOfMassPosition;
-		Mat44			mInverseShapeTransform;
+		Mat44			mCenterOfMassTransform;
 		RefConst<Shape>	mShape;
 		BodyID			mBodyID;
 		EMotionType		mMotionType;
@@ -97,9 +93,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 					&& mSoftBody.GetCollisionGroup().CanCollide(body.GetCollisionGroup()))
 				{
 					CollidingShape cs;
-					Mat44 shape_transform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
-					cs.mCenterOfMassPosition = Vec3(shape_transform.GetTranslation());
-					cs.mInverseShapeTransform = shape_transform.InversedRotationTranslation();
+					cs.mCenterOfMassTransform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
 					cs.mShape = body.GetShape();
 					cs.mBodyID = inResult;
 					cs.mMotionType = body.GetMotionType();
@@ -110,7 +104,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 					{
 						const MotionProperties *mp = body.GetMotionProperties();
 						cs.mInvMass = mp->GetInverseMass();
-						cs.mInvInertia = mp->GetInverseInertiaForRotation(shape_transform.GetRotation());
+						cs.mInvInertia = mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
 						cs.mLinearVelocity = mp->GetLinearVelocity();
 						cs.mAngularVelocity = mp->GetAngularVelocity();
 					}
@@ -144,80 +138,16 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
 	Vec3 displacement_due_to_gravity = (0.5f * mNumIterations * (mNumIterations + 1) * dt_sq) * gravity;
 
+	// Reset collisions
+	for (Vertex &v : mVertices)
+	{
+		v.mCollidingShapeIndex = -1;
+		v.mLargestPenetration = -FLT_MAX;
+	}
+
 	// Generate collision planes
-	if (collector.mHits.empty())
-	{
-		// No collisions
-		for (Vertex &v : mVertices)
-			v.mCollidingShapeIndex = -1;
-	}
-	else
-	{
-		// Process collisions
-		for (Vertex &v : mVertices)
-			if (v.mInvMass > 0.0f)
-			{
-				// Start with no collision
-				v.mCollidingShapeIndex = -1;
-
-				// Calculate the distance we will move this frame
-				Vec3 movement = v.mVelocity * inDeltaTime + displacement_due_to_gravity;
-
-				// Create a collision plane for each vertex
-				float largest_penetration = -FLT_MAX;
-				for (const CollidingShape &cs : collector.mHits)
-				{
-					// TODO: Needs to be implemented on the shape itself
-					if (cs.mShape->GetSubType() == EShapeSubType::Sphere)
-					{
-						// Special case for spheres
-						const SphereShape *sphere = static_cast<const SphereShape *>(cs.mShape.GetPtr());
-						float radius = sphere->GetRadius();
-						Vec3 delta = v.mPosition - cs.mCenterOfMassPosition;
-						float distance = delta.Length();
-						float penetration = radius - distance;
-						if (penetration > largest_penetration)
-						{
-							largest_penetration = penetration;
-							Vec3 point, normal;
-							if (distance > 0.0f)
-							{
-								point = cs.mCenterOfMassPosition + delta * (radius / distance);
-								normal = delta / distance;
-							}
-							else
-							{
-								point = cs.mCenterOfMassPosition + Vec3(0, radius, 0);
-								normal = Vec3::sAxisY();
-							}
-							v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-							v.mCollidingShapeIndex = int(&cs - collector.mHits.data());
-						}
-					}
-					else
-					{
-						// Fallback
-						RayCastResult hit;
-						hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
-						RayCast ray(v.mPosition - 0.5f * movement, movement);
-						RayCast local_ray(ray.Transformed(cs.mInverseShapeTransform));
-						if (cs.mShape->CastRay(local_ray, SubShapeIDCreator(), hit))
-						{
-							float penetration = (hit.mFraction - 0.5f) * movement.Length();
-							if (penetration > largest_penetration)
-							{
-								// Store collision
-								largest_penetration = penetration;
-								Vec3 point = ray.GetPointOnRay(hit.mFraction);
-								Vec3 normal = cs.mInverseShapeTransform.Multiply3x3Transposed(cs.mShape->GetSurfaceNormal(hit.mSubShapeID2, cs.mInverseShapeTransform * point));
-								v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-								v.mCollidingShapeIndex = int(&cs - collector.mHits.data());
-							}
-						}
-					}
-				}
-			}
-	}
+	for (const CollidingShape &cs : collector.mHits)
+		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, mVertices, inDeltaTime, displacement_due_to_gravity, int(&cs - collector.mHits.data()));
 
 	float inv_dt_sq = 1.0f / dt_sq;
 	float linear_damping = max(0.0f, 1.0f - GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
@@ -392,7 +322,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 					if (cs.mMotionType == EMotionType::Dynamic)
 					{
 						// Calculate normal and tangential velocity (equation 30)
-						Vec3 r2 = v.mPosition - cs.mCenterOfMassPosition;
+						Vec3 r2 = v.mPosition - cs.mCenterOfMassTransform.GetTranslation();
 						Vec3 v2 = cs.GetPointVelocity(r2);
 						Vec3 relative_velocity = v.mVelocity - v2;
 						Vec3 v_normal = contact_normal * contact_normal.Dot(relative_velocity);

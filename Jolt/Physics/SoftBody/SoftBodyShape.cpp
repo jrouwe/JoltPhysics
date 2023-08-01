@@ -36,7 +36,7 @@ bool SoftBodyShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSub
 	uint num_triangle_bits = GetSubShapeIDBits();
 	uint triangle_idx = uint(-1);
 
-	const Array<SoftBodyMotionProperties::Vertex> &vertices = mSoftBodyMotionProperties->mVertices;
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
 	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->mSettings->mFaces)
 	{
 		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
@@ -71,7 +71,7 @@ void SoftBodyShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 
 	uint num_triangle_bits = GetSubShapeIDBits();
 
-	const Array<SoftBodyMotionProperties::Vertex> &vertices = mSoftBodyMotionProperties->mVertices;
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
 	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->mSettings->mFaces)
 	{
 		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
@@ -113,7 +113,7 @@ Vec3 SoftBodyShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inL
 	JPH_ASSERT(remainder.IsEmpty());
 
 	const SoftBodyMotionProperties::Face &f = mSoftBodyMotionProperties->mSettings->mFaces[triangle_idx];
-	const Array<SoftBodyMotionProperties::Vertex> &vertices = mSoftBodyMotionProperties->mVertices;
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
 
 	Vec3 x1 = vertices[f.mVertex[0]].mPosition;
 	Vec3 x2 = vertices[f.mVertex[1]].mPosition;
@@ -126,7 +126,7 @@ Vec3 SoftBodyShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inL
 
 void SoftBodyShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
-	const Array<SoftBodyMotionProperties::Vertex> &vertices = mSoftBodyMotionProperties->mVertices;
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
 	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->mSettings->mFaces)
 	{
 		RVec3 x1 = inCenterOfMassTransform * vertices[f.mVertex[0]].mPosition;
@@ -157,7 +157,7 @@ int SoftBodyShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTri
 	SBSGetTrianglesContext &context = reinterpret_cast<SBSGetTrianglesContext &>(ioContext);
 
 	const Array<SoftBodyMotionProperties::Face> &faces = mSoftBodyMotionProperties->mSettings->mFaces;
-	const Array<SoftBodyMotionProperties::Vertex> &vertices = mSoftBodyMotionProperties->mVertices;
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
 	const PhysicsMaterialList &materials = mSoftBodyMotionProperties->mSettings->mMaterials;
 
 	int num_triangles = min(inMaxTrianglesRequested, (int)faces.size() - context.mTriangleIndex);

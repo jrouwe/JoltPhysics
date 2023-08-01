@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <Jolt/Geometry/Plane.h>
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Physics/Body/MotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyParticleSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -35,23 +35,12 @@ public:
 	void				DrawPredictedBounds(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
 
-	/// Run time information for a single particle
-	struct Vertex
-	{
-		Vec3			mPreviousPosition;
-		Vec3 			mPosition;							///< Position, relative to the center of mass of the soft body
-		Vec3 			mVelocity;							///< Velocity, relative to the center of mass of the soft body
-		Plane			mCollisionPlane;					///< Nearest collision plane, relative to the center of mass of the soft body
-		int				mCollidingShapeIndex;				///< Index in the colliding shapes list of the body we may collide with
-		float			mInvMass;
-		float			mProjectedDistance;
-	};
-
+	using Vertex = SoftBodyVertex;
 	using Edge = SoftBodyParticleSettings::Edge;
 	using Face = SoftBodyParticleSettings::Face;
 	using Volume = SoftBodyParticleSettings::Volume;
 
-	RefConst<SoftBodyParticleSettings> mSettings;
+	RefConst<SoftBodyParticleSettings> mSettings;			///< Configuration of the particles and constraints
 	Array<Vertex>		mVertices;							///< Current state of all vertices in the simulation
 	AABox				mLocalBounds;						///< Bounding box of all vertices
 	AABox				mLocalPredictedBounds;				///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time

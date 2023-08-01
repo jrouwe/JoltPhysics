@@ -1719,7 +1719,7 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 						// Find closest vertex
 						Vec3 local_hit_position = Vec3(drag_body.GetInverseCenterOfMassTransform() * hit_position);
 						float closest_dist_sq = FLT_MAX;
-						for (SoftBodyMotionProperties::Vertex &v : mp->mVertices)
+						for (SoftBodyVertex &v : mp->mVertices)
 						{
 							float dist_sq = (v.mPosition - local_hit_position).LengthSq();
 							if (dist_sq < closest_dist_sq)

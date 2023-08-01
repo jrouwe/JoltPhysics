@@ -9,6 +9,9 @@
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Factory.h>
@@ -325,6 +328,41 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 	}
 
 	return compound.Create();
+}
+
+void Shape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	for (SoftBodyVertex &v : ioVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			// Calculate the distance we will move this frame
+			Vec3 movement = v.mVelocity * inDeltaTime + inDisplacementDueToGravity;
+
+			RayCastResult hit;
+			hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
+
+			RayCast ray(v.mPosition - 0.5f * movement, movement); // Start a little early in case we penetrated before
+
+			if (CastRay(ray.Transformed(inverse_transform), SubShapeIDCreator(), hit))
+			{
+				// Calculate penetration
+				float penetration = (hit.mFraction - 0.5f) * movement.Length();
+				if (penetration > v.mLargestPenetration)
+				{
+					v.mLargestPenetration = penetration;
+
+					// Calculate contact point and normal
+					Vec3 point = ray.GetPointOnRay(hit.mFraction);
+					Vec3 normal = inCenterOfMassTransform.Multiply3x3(GetSurfaceNormal(hit.mSubShapeID2, inverse_transform * point));
+
+					// Store collision
+					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
+					v.mCollidingShapeIndex = inCollidingShapeIndex;
+				}
+			}
+		}
 }
 
 JPH_NAMESPACE_END
