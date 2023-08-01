@@ -23,6 +23,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Character/CharacterSpaceShipTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/ConeConstraintTest.h
+	${SAMPLES_ROOT}/Tests/Constraints/ConstraintPriorityTest.cpp
+	${SAMPLES_ROOT}/Tests/Constraints/ConstraintPriorityTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintSingularityTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/ConstraintVsCOMChangeTest.cpp
@@ -247,7 +249,7 @@ set(SAMPLES_SRC_FILES
 )
 
 # Group source files
-source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})	
+source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
 # Create Samples executable
 add_executable(Samples  ${SAMPLES_SRC_FILES})

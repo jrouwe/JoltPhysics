@@ -17,11 +17,11 @@ void DebugRendererRecorder::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg in
 	mCurrentFrame.mLines.push_back({ inFrom, inTo, inColor });
 }
 
-void DebugRendererRecorder::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, [[maybe_unused]] ECastShadow inCastShadow)
+void DebugRendererRecorder::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, ECastShadow inCastShadow)
 {
 	lock_guard lock(mMutex);
 
-	mCurrentFrame.mTriangles.push_back({ inV1, inV2, inV3, inColor });
+	mCurrentFrame.mTriangles.push_back({ inV1, inV2, inV3, inColor, inCastShadow });
 }
 
 DebugRenderer::Batch DebugRendererRecorder::CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount)
@@ -124,6 +124,7 @@ void DebugRendererRecorder::EndFrame()
 		mStream.Write(triangle.mV2);
 		mStream.Write(triangle.mV3);
 		mStream.Write(triangle.mColor);
+		mStream.Write(triangle.mCastShadow);
 	}
 	mCurrentFrame.mTriangles.clear();
 

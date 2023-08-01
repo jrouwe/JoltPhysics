@@ -59,6 +59,7 @@ public:
 		RVec3							mV2;
 		RVec3							mV3;
 		Color							mColor;
+		ECastShadow						mCastShadow;
 	};
 
 	/// Holds a single text entry
