@@ -60,17 +60,17 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 			return mLinearVelocity + mAngularVelocity.Cross(inPointRelativeToCOM);
 		}
 
-		Mat44			mCenterOfMassTransform;
+		Mat44			mCenterOfMassTransform;				///< Transform of the body relative to the soft body
 		RefConst<Shape>	mShape;
-		BodyID			mBodyID;
-		EMotionType		mMotionType;
-		float			mInvMass;
-		float			mFriction;
-		float			mRestitution;
-		bool 			mUpdateVelocities;
-		Mat44			mInvInertia;
-		Vec3			mLinearVelocity;
-		Vec3			mAngularVelocity;
+		BodyID			mBodyID;							///< Body ID of the body we hit
+		EMotionType		mMotionType;						///< Motion type of the body we hit
+		float			mInvMass;							///< Inverse mass of the body we hit
+		float			mFriction;							///< Combined friction of the two bodies
+		float			mRestitution;						///< Combined restitution of the two bodies
+		bool 			mUpdateVelocities;					///< If the linear/angular velocity changed and the body needs to be updated
+		Mat44			mInvInertia;						///< Inverse inertia in local space to the soft body
+		Vec3			mLinearVelocity;					///< Linear velocity of the body in local space to the soft body
+		Vec3			mAngularVelocity;					///< Angular velocity of the body in local space to the soft body
 	};
 	struct Collector : public CollideShapeBodyCollector
 	{
@@ -105,8 +105,8 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 						const MotionProperties *mp = body.GetMotionProperties();
 						cs.mInvMass = mp->GetInverseMass();
 						cs.mInvInertia = mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
-						cs.mLinearVelocity = mp->GetLinearVelocity();
-						cs.mAngularVelocity = mp->GetAngularVelocity();
+						cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
+						cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
 					}
 					mHits.push_back(cs);
 				}
@@ -412,7 +412,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
 	for (const CollidingShape &cs : collector.mHits)
 		if (cs.mUpdateVelocities)
-			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, cs.mLinearVelocity, cs.mAngularVelocity);
+			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, body_transform.Multiply3x3(cs.mLinearVelocity), body_transform.Multiply3x3(cs.mAngularVelocity));
 }
 
 #ifdef JPH_DEBUG_RENDERER
