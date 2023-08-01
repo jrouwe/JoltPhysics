@@ -237,7 +237,7 @@ set(SAMPLES_SRC_FILES
 )
 
 # Group source files
-source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})	
+source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})
 
 # Create Samples executable
 add_executable(Samples  ${SAMPLES_SRC_FILES})
