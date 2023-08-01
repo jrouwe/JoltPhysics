@@ -57,7 +57,7 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	mTriangleStateBF = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
 	mTriangleStateFF = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_SOLID, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::FrontFace);
 	mTriangleStateWire = mRenderer->CreatePipelineState(vtx_triangle.Get(), triangles_vertex_desc, ARRAYSIZE(triangles_vertex_desc), pix_triangle.Get(), D3D12_FILL_MODE_WIREFRAME, D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE, PipelineState::EDepthTest::On, PipelineState::EBlendMode::AlphaBlend, PipelineState::ECullMode::Backface);
-	
+
 	// Shadow pass
 	ComPtr<ID3DBlob> vtx_shadow = mRenderer->CreateVertexShader("Assets/Shaders/TriangleDepthVertexShader.hlsl");
 	ComPtr<ID3DBlob> pix_shadow = mRenderer->CreatePixelShader("Assets/Shaders/TriangleDepthPixelShader.hlsl");
@@ -81,7 +81,7 @@ DebugRendererImp::DebugRendererImp(Renderer *inRenderer, const Font *inFont) :
 	DebugRenderer::Initialize();
 }
 
-void DebugRendererImp::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) 
+void DebugRendererImp::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor)
 {
 	RVec3 offset = mRenderer->GetBaseOffset();
 
@@ -92,7 +92,7 @@ void DebugRendererImp::DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor
 	line.mToColor = inColor;
 
 	lock_guard lock(mLinesLock);
-	mLines.push_back(line); 
+	mLines.push_back(line);
 }
 
 DebugRenderer::Batch DebugRendererImp::CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount)
@@ -121,13 +121,13 @@ DebugRenderer::Batch DebugRendererImp::CreateTriangleBatch(const Vertex *inVerti
 void DebugRendererImp::DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	lock_guard lock(mPrimitivesLock);
-	
+
 	RVec3 offset = mRenderer->GetBaseOffset();
 
 	Mat44 model_matrix = inModelMatrix.PostTranslated(-offset).ToMat44();
 	AABox world_space_bounds = inWorldSpaceBounds;
 	world_space_bounds.Translate(Vec3(-offset));
-	   
+
 	// Our pixel shader uses alpha only to turn on/off shadows
 	Color color = inCastShadow == ECastShadow::On? Color(inModelColor, 255) : Color(inModelColor, 0);
 
@@ -183,7 +183,7 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 {
 	const int cVertexBufferSize = 10240;
 
-	if (mLockedPrimitive == nullptr 
+	if (mLockedPrimitive == nullptr
 		|| mLockedVerticesEnd - mLockedVertices < inVtxSize)
 	{
 		FinalizePrimitive();
@@ -199,7 +199,7 @@ void DebugRendererImp::EnsurePrimitiveSpace(int inVtxSize)
 	}
 }
 
-void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor)
+void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, ECastShadow inCastShadow)
 {
 	RVec3 offset = mRenderer->GetBaseOffset();
 
@@ -207,14 +207,12 @@ void DebugRendererImp::DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3,
 	Vec3 v2(inV2 - offset);
 	Vec3 v3(inV3 - offset);
 
-	lock_guard lock(mPrimitivesLock); 
+	lock_guard lock(mPrimitivesLock);
 
 	EnsurePrimitiveSpace(3);
 
-	// Set alpha to zero to tell our pixel shader to not cast shadows for this triangle
-	// this is because our algorithm only renders shadows for backfacing triangles and this
-	// triangle doesn't have one
-	Color color(inColor, 0);
+	// Set alpha to zero if we don't want to cast shadows to notify the pixel shader
+	Color color(inColor, inCastShadow == ECastShadow::Off? 0 : 0xff);
 
 	// Construct triangle
 	new ((Triangle *)mLockedVertices) Triangle(v1, v2, v3, color);
@@ -253,15 +251,15 @@ void DebugRendererImp::DrawText3D(RVec3Arg inPosition, const string_view &inStri
 
 	Vec3 pos(inPosition - offset);
 
-	lock_guard lock(mTextsLock);  
-	mTexts.emplace_back(pos, inString, inColor, inHeight); 
+	lock_guard lock(mTextsLock);
+	mTexts.emplace_back(pos, inString, inColor, inHeight);
 }
 
 void DebugRendererImp::DrawLines()
 {
 	JPH_PROFILE_FUNCTION();
 
-	lock_guard lock(mLinesLock); 
+	lock_guard lock(mLinesLock);
 
 	// Draw the lines
 	if (!mLines.empty())
@@ -280,7 +278,7 @@ void DebugRendererImp::DrawTriangles()
 {
 	JPH_PROFILE_FUNCTION();
 
-	lock_guard lock(mPrimitivesLock); 
+	lock_guard lock(mPrimitivesLock);
 
 	// Finish the last primitive
 	FinalizePrimitive();
@@ -352,7 +350,7 @@ void DebugRendererImp::DrawTriangles()
 
 				// Loop over both passes: 0 = light, 1 = geometry
 				Array<int> *start_idx[] = { &v.second.mLightStartIdx, &v.second.mGeometryStartIdx };
-				for (int type = 0; type < 2; ++type) 
+				for (int type = 0; type < 2; ++type)
 				{
 					// Reserve space for instance indices
 					Array<int> &type_start_idx = *start_idx[type];
@@ -459,7 +457,7 @@ void DebugRendererImp::DrawTriangles()
 
 void DebugRendererImp::DrawTexts()
 {
-	lock_guard lock(mTextsLock); 
+	lock_guard lock(mTextsLock);
 
 	JPH_PROFILE_FUNCTION();
 
@@ -484,15 +482,15 @@ void DebugRendererImp::Draw()
 }
 
 void DebugRendererImp::ClearLines()
-{ 
-	lock_guard lock(mLinesLock); 
-	mLines.clear(); 
+{
+	lock_guard lock(mLinesLock);
+	mLines.clear();
 }
 
 void DebugRendererImp::ClearMap(InstanceMap &ioInstances)
 {
 	Array<GeometryRef> to_delete;
-	
+
 	for (InstanceMap::value_type &kv : ioInstances)
 	{
 		if (kv.second.mInstances.empty())
@@ -506,12 +504,12 @@ void DebugRendererImp::ClearMap(InstanceMap &ioInstances)
 }
 
 void DebugRendererImp::ClearTriangles()
-{ 
-	lock_guard lock(mPrimitivesLock); 
+{
+	lock_guard lock(mPrimitivesLock);
 
 	// Close any primitive that's being built
-	FinalizePrimitive(); 
-	
+	FinalizePrimitive();
+
 	// Move primitives to draw back to the free list
 	ClearMap(mWireframePrimitives);
 	ClearMap(mPrimitives);
@@ -522,7 +520,7 @@ void DebugRendererImp::ClearTriangles()
 
 void DebugRendererImp::ClearTexts()
 {
-	lock_guard lock(mTextsLock); 
+	lock_guard lock(mTextsLock);
 	mTexts.clear();
 }
 
