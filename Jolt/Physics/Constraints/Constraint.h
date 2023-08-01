@@ -77,6 +77,10 @@ public:
 	/// If this constraint is enabled initially. Use Constraint::SetEnabled to toggle after creation.
 	bool						mEnabled = true;
 
+	/// Priority of the constraint when solving. Higher numbers have are more likely to be solved correctly.
+	/// Note that if you want a deterministic simulation and you cannot guarantee the order in which constraints are added/removed, you can make the priority for all constraints unique to get a deterministic ordering.
+	uint32						mConstraintPriority = 0;
+
 	/// Override for the number of solver velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumVelocitySteps and this for all constraints in the island.
 	int							mNumVelocityStepsOverride = 0;
 
@@ -105,6 +109,7 @@ public:
 #ifdef JPH_DEBUG_RENDERER
 		mDrawConstraintSize(inSettings.mDrawConstraintSize),
 #endif // JPH_DEBUG_RENDERER
+		mConstraintPriority(inSettings.mConstraintPriority),
 		mNumVelocityStepsOverride(inSettings.mNumVelocityStepsOverride),
 		mNumPositionStepsOverride(inSettings.mNumPositionStepsOverride),
 		mEnabled(inSettings.mEnabled),
@@ -120,6 +125,11 @@ public:
 
 	/// Get the sub type of a constraint
 	virtual EConstraintSubType	GetSubType() const = 0;
+
+	/// Priority of the constraint when solving. Higher numbers have are more likely to be solved correctly.
+	/// Note that if you want a deterministic simulation and you cannot guarantee the order in which constraints are added/removed, you can make the priority for all constraints unique to get a deterministic ordering.
+	uint32						GetConstraintPriority() const				{ return mConstraintPriority; }
+	void						SetConstraintPriority(uint32 inPriority)	{ mConstraintPriority = inPriority; }
 
 	/// Override for the number of solver velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumVelocitySteps and this for all constraints in the island.
 	void						SetNumVelocityStepsOverride(int inN)		{ mNumVelocityStepsOverride = inN; }
@@ -200,6 +210,9 @@ private:
 
 	/// Index in the mConstraints list of the ConstraintManager for easy finding
 	uint32						mConstraintIndex = cInvalidConstraintIndex;
+
+	/// Priority of the constraint when solving. Higher numbers have are more likely to be solved correctly.
+	uint32						mConstraintPriority = 0;
 
 	/// Override for the number of solver velocity iterations to run, the total amount of iterations is the max of PhysicsSettings::mNumVelocitySteps and this for all constraints in the island.
 	int							mNumVelocityStepsOverride = 0;

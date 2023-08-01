@@ -150,6 +150,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SliderConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredSliderConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SpringTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConstraintSingularityTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConstraintPriorityTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredSwingTwistConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SwingTwistConstraintFrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PathConstraintTest)
@@ -179,6 +180,7 @@ static TestNameAndRTTI sConstraintTests[] =
 	{ "Spring",								JPH_RTTI(SpringTest) },
 	{ "Constraint Singularity",				JPH_RTTI(ConstraintSingularityTest) },
 	{ "Constraint vs Center Of Mass Change",JPH_RTTI(ConstraintVsCOMChangeTest) },
+	{ "Constraint Priority",				JPH_RTTI(ConstraintPriorityTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BoxShapeTest)
