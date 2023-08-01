@@ -76,7 +76,7 @@ inline void BodyManager::sDeleteBody(Body *inBody)
 		JPH_IF_ENABLE_ASSERTS(inBody->mMotionProperties = nullptr;)
 		if (inBody->IsSoftBody())
 		{
-			inBody->mShape = nullptr;
+			inBody->mShape = nullptr; // Release the shape to avoid assertion on shape destruction because of embedded object with refcount > 0
 			delete static_cast<SoftBodyWithMotionPropertiesAndShape *>(inBody);
 		}
 		else

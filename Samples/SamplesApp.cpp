@@ -2130,6 +2130,7 @@ void SamplesApp::DrawPhysics()
 					}
 
 					// Ensure that we cache the geometry for next frame
+					// Don't cache soft bodies as their shape changes every frame
 					if (!body.IsSoftBody())
 						shape_to_geometry[transformed_shape.mShape] = geometry;
 
