@@ -35,18 +35,18 @@ public:
 
 	/// Implementation of DebugRenderer interface
 	virtual void						DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) override;
-	virtual void						DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor) override;
+	virtual void						DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::Off) override;
 	virtual Batch						CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount) override;
 	virtual Batch						CreateTriangleBatch(const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount) override;
 	virtual void						DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
 	virtual void						DrawText3D(RVec3Arg inPosition, const string_view &inString, ColorArg inColor, float inHeight) override;
-	
+
 	/// Draw all primitives that were added
 	void								Draw();
 
 	/// Clear all primitives (to be called after drawing)
 	void								Clear();
-	
+
 private:
 	/// Helper functions to draw sub parts
 	void								DrawLines();
@@ -119,7 +119,7 @@ private:
 		/// Square of scale factor for LODding (1 = original, > 1 = lod out further, < 1 = lod out earlier)
 		float							mLODScaleSq;
 	};
-	
+
 	/// Properties for a batch of instances that have the same primitive
 	struct Instances
 	{
