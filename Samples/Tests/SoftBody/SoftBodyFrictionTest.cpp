@@ -9,9 +9,9 @@
 #include <Utils/SoftBodyCreator.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyFrictionTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SoftBodyFrictionTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyFrictionTest)
+{
+	JPH_ADD_BASE_CLASS(SoftBodyFrictionTest, Test)
 }
 
 void SoftBodyFrictionTest::Initialize()

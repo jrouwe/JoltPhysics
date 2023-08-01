@@ -9,9 +9,9 @@
 #include <Utils/SoftBodyCreator.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyRestitutionTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SoftBodyRestitutionTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyRestitutionTest)
+{
+	JPH_ADD_BASE_CLASS(SoftBodyRestitutionTest, Test)
 }
 
 void SoftBodyRestitutionTest::Initialize()

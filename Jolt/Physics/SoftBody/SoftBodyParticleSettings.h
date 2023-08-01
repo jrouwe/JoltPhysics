@@ -46,7 +46,7 @@ public:
 	struct Vertex
 	{
 		Float3			mPosition { 0, 0, 0 };						///< Initial position of the vertex
-		Float3			mVelocity { 0, 0, 0 };						///< Initial velocity of the vertex	
+		Float3			mVelocity { 0, 0, 0 };						///< Initial velocity of the vertex
 		float			mInvMass = 1.0f;							///< Inverse of the mass of the vertex
 	};
 

@@ -10,9 +10,9 @@
 #include <Utils/SoftBodyCreator.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyKinematicTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SoftBodyKinematicTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyKinematicTest)
+{
+	JPH_ADD_BASE_CLASS(SoftBodyKinematicTest, Test)
 }
 
 void SoftBodyKinematicTest::Initialize()

@@ -267,7 +267,7 @@ Ref<SoftBodyParticleSettings> CreateSphere(float inRadius, uint inNumTheta, uint
 
 			e.mVertex[1] = vertex_index(theta + 1, phi + 1);
 			settings->mEdgeConstraints.push_back(e);
-			
+
 			if (theta > 0)
 			{
 				e.mVertex[1] =  vertex_index(theta, phi + 1);

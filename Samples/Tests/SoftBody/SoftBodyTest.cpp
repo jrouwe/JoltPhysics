@@ -12,9 +12,9 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SoftBodyTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyTest)
+{
+	JPH_ADD_BASE_CLASS(SoftBodyTest, Test)
 }
 
 void SoftBodyTest::Initialize()
@@ -53,7 +53,7 @@ void SoftBodyTest::Initialize()
 	bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 	bcs.mMassPropertiesOverride.mMass = 100.0f;
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
-	
+
 	// Spheres above cloth
 	for (int i = 0; i < 5; ++i)
 	{
