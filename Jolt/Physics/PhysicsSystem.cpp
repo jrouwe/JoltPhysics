@@ -2342,13 +2342,13 @@ void PhysicsSystem::JobUpdateSoftBodies(PhysicsUpdateContext *ioContext)
 	const BodyID *active_bodies_end = active_bodies + mBodyManager.GetNumActiveBodies(EBodyType::SoftBody);
 	for (const BodyID *b = active_bodies; b < active_bodies_end; ++b)
 	{
-		// Only update soft bodies
 		Body &body = mBodyManager.GetBody(*b);
 		SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
 
-		RVec3 position = body.GetPosition();
-		mp->Update(ioContext->mStepDeltaTime, body.GetFriction(), body.GetRestitution(), position, *this);
-		body.SetPositionAndRotationInternal(position, body.GetRotation());
+		// Update the soft body
+		Vec3 delta_position;
+		mp->Update(ioContext->mStepDeltaTime, body.GetFriction(), body.GetRestitution(), body.GetCenterOfMassTransform(), delta_position, *this);
+		body.SetPositionAndRotationInternal(body.GetPosition() + delta_position, body.GetRotation());
 
 		bodies_to_update_bounds[num_bodies_to_update_bounds++] = *b;
 		if (num_bodies_to_update_bounds == cBodiesBatch)

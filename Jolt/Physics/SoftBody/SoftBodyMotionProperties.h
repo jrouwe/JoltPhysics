@@ -12,6 +12,7 @@
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
+class SoftBodyCreationSettings;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
@@ -20,8 +21,11 @@ class DebugRenderer;
 class JPH_EXPORT SoftBodyMotionProperties : public MotionProperties
 {
 public:
+	/// Initialize the soft body motion properties
+	void				Initialize(const SoftBodyCreationSettings &inSettings);
+
 	/// Update the soft body
-	void				Update(float inDeltaTime, float inFriction, float inRestitution, RVec3 &ioPosition, PhysicsSystem &inSystem);
+	void				Update(float inDeltaTime, float inFriction, float inRestitution, RMat44Arg inTransform, Vec3 &outDeltaPosition, PhysicsSystem &inSystem);
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the state of a soft body

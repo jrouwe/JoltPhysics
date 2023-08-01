@@ -5,6 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
+#include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/RayCast.h>
@@ -16,25 +17,41 @@
 
 JPH_NAMESPACE_BEGIN
 
-void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float inRestitution, RVec3 &ioPosition, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSettings)
+{
+	// TODO: Set a sensible mass and inertia
+	SetInverseMass(0.0f);
+	SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
+
+	// Store settings
+	mSettings = inSettings.mSettings;
+	mNumIterations = inSettings.mNumIterations;
+	mPressure = inSettings.mPressure;
+	mUpdatePosition = inSettings.mUpdatePosition;
+
+	// Initialize vertices
+	mVertices.resize(inSettings.mSettings->mVertices.size());
+	for (Array<SoftBodyMotionProperties::Vertex>::size_type v = 0, s = mVertices.size(); v < s; ++v)
+	{
+		const SoftBodyParticleSettings::Vertex &in_vertex = inSettings.mSettings->mVertices[v];
+		SoftBodyMotionProperties::Vertex &out_vertex = mVertices[v];
+		out_vertex.mPreviousPosition = out_vertex.mPosition = Vec3(in_vertex.mPosition);
+		out_vertex.mVelocity = Vec3(in_vertex.mVelocity);
+		out_vertex.mInvMass = in_vertex.mInvMass;
+		mLocalBounds.Encapsulate(out_vertex.mPosition);
+	}
+
+	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
+	mLocalPredictedBounds = mLocalBounds;
+}
+
+void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float inRestitution, RMat44Arg inTransform, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
 
-	Vec3 gravity = GetGravityFactor() * inSystem.GetGravity();
-
-	if (mUpdatePosition)
-	{
-		// Shift the body so that the position is the center of the local bounds
-		Vec3 delta = mLocalBounds.GetCenter();
-		ioPosition += delta;
-		for (Vertex &v : mVertices)
-			v.mPosition -= delta;
-
-		// Offset bounds to match new position
-		mLocalBounds.Translate(-delta);
-		mLocalPredictedBounds.Translate(-delta);
-	}
+	// Convert gravity to local space
+	Vec3 gravity = inTransform.Multiply3x3Transposed(GetGravityFactor() * inSystem.GetGravity());
 
 	// Collect information about the colliding bodies
 	struct CollidingShape
@@ -58,7 +75,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 	};
 	struct Collector : public CollideShapeBodyCollector
 	{
-									Collector(RVec3Arg inPosition, const BodyLockInterface &inBodyLockInterface) : mPosition(inPosition), mBodyLockInterface(inBodyLockInterface) { }
+									Collector(RMat44Arg inTransform, const BodyLockInterface &inBodyLockInterface) : mInverseTransform(inTransform.InversedRotationTranslation()), mBodyLockInterface(inBodyLockInterface) { }
 
 		virtual void				AddHit(const BodyID &inResult) override
 		{
@@ -69,8 +86,9 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 				if (body.IsRigidBody()) // TODO: We should support soft body vs soft body
 				{
 					CollidingShape cs;
-					cs.mCenterOfMassPosition = Vec3(body.GetCenterOfMassPosition() - mPosition);
-					cs.mInverseShapeTransform = Mat44::sInverseRotationTranslation(body.GetRotation(), cs.mCenterOfMassPosition);
+					Mat44 shape_transform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
+					cs.mCenterOfMassPosition = Vec3(shape_transform.GetTranslation());
+					cs.mInverseShapeTransform = shape_transform.InversedRotationTranslation();
 					cs.mShape = body.GetShape();
 					cs.mBodyID = inResult;
 					cs.mMotionType = body.GetMotionType();
@@ -79,7 +97,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 					{
 						const MotionProperties *mp = body.GetMotionProperties();
 						cs.mInvMass = mp->GetInverseMass();
-						cs.mInvInertia = mp->GetInverseInertiaForRotation(Mat44::sRotation(body.GetRotation()));
+						cs.mInvInertia = mp->GetInverseInertiaForRotation(shape_transform.GetRotation());
 						cs.mLinearVelocity = mp->GetLinearVelocity();
 						cs.mAngularVelocity = mp->GetAngularVelocity();
 					}
@@ -88,14 +106,14 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 			}
 		}
 
-		RVec3						mPosition;
+		RMat44						mInverseTransform;
 		const BodyLockInterface &	mBodyLockInterface;
 		Array<CollidingShape>		mHits;
 	};
-	Collector collector(ioPosition, inSystem.GetBodyLockInterfaceNoLock());
+	Collector collector(inTransform, inSystem.GetBodyLockInterfaceNoLock());
 	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
-	bounds.Translate(ioPosition);
+	bounds = bounds.Transformed(inTransform);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector);
 
 	// Calculate delta time for sub step
@@ -173,7 +191,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 								// Store collision
 								largest_penetration = penetration;
 								Vec3 point = ray.GetPointOnRay(hit.mFraction);
-								Vec3 normal = cs.mShape->GetSurfaceNormal(hit.mSubShapeID2, cs.mInverseShapeTransform * point);
+								Vec3 normal = cs.mInverseShapeTransform.Multiply3x3Transposed(cs.mShape->GetSurfaceNormal(hit.mSubShapeID2, cs.mInverseShapeTransform * point));
 								v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
 								v.mCollidingShapeIndex = int(&cs - collector.mHits.data());
 							}
@@ -427,11 +445,34 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, float inFriction, float
 		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
 	}
 
+	if (mUpdatePosition)
+	{
+		// Shift the body so that the position is the center of the local bounds
+		Vec3 delta = mLocalBounds.GetCenter();
+		outDeltaPosition = inTransform.Multiply3x3(delta);
+		for (Vertex &v : mVertices)
+			v.mPosition -= delta;
+
+		// Offset bounds to match new position
+		mLocalBounds.Translate(-delta);
+		mLocalPredictedBounds.Translate(-delta);
+	}
+	else
+		outDeltaPosition = Vec3::sZero();
+
 	// Write back velocities
-	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
+	const BodyLockInterface &body_lock_interface = inSystem.GetBodyLockInterfaceNoLock();
 	for (const CollidingShape &cs : collector.mHits)
 		if (cs.mUpdateVelocities)
-			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, cs.mLinearVelocity, cs.mAngularVelocity);
+		{
+			BodyLockWrite lock(body_lock_interface, cs.mBodyID);
+			if (lock.Succeeded())
+			{
+				Body &body = lock.GetBody();
+				body.SetLinearVelocity(cs.mLinearVelocity);
+				body.SetAngularVelocity(cs.mAngularVelocity);
+			}
+		}
 }
 
 #ifdef JPH_DEBUG_RENDERER

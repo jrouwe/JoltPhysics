@@ -218,8 +218,6 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
 		mp->mMotionQuality = inBodyCreationSettings.mMotionQuality;
 		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
-		mp->mIndexInActiveBodies = Body::cInactiveIndex;
-		mp->mIslandIndex = Body::cInactiveIndex;
 		JPH_IF_ENABLE_ASSERTS(mp->mCachedBodyType = body->mBodyType;)
 		JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
 		mp->SetMassProperties(inBodyCreationSettings.mAllowedDOFs, inBodyCreationSettings.GetMassProperties());
@@ -259,36 +257,11 @@ Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCr
 	mp->SetGravityFactor(inSoftBodyCreationSettings.mGravityFactor);
 	mp->mMotionQuality = EMotionQuality::Discrete;
 	mp->mAllowSleeping = false;
-	mp->mIndexInActiveBodies = Body::cInactiveIndex;
-	mp->mIslandIndex = Body::cInactiveIndex;
 	JPH_IF_ENABLE_ASSERTS(mp->mCachedBodyType = body->mBodyType;)
 	JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
-	mp->mAllowedDOFs = EAllowedDOFs::All;
-	mp->SetInverseMass(0.0f);
-	mp->SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
-	mp->mSettings = inSoftBodyCreationSettings.mSettings;
-	mp->mNumIterations = inSoftBodyCreationSettings.mNumIterations;
-	mp->mPressure = inSoftBodyCreationSettings.mPressure;
-	mp->mUpdatePosition = inSoftBodyCreationSettings.mUpdatePosition;
+	mp->Initialize(inSoftBodyCreationSettings);
 
-	// Initialize vertices
-	Mat44 rotation = Mat44::sRotation(inSoftBodyCreationSettings.mRotation);
-	mp->mVertices.resize(inSoftBodyCreationSettings.mSettings->mVertices.size());
-	for (Array<SoftBodyMotionProperties::Vertex>::size_type v = 0; v < mp->mVertices.size(); ++v)
-	{
-		const SoftBodyParticleSettings::Vertex &in_vertex = inSoftBodyCreationSettings.mSettings->mVertices[v];
-		SoftBodyMotionProperties::Vertex &out_vertex = mp->mVertices[v];
-		out_vertex.mPreviousPosition = out_vertex.mPosition = rotation * Vec3(in_vertex.mPosition);
-		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
-		out_vertex.mInvMass = in_vertex.mInvMass;
-
-		mp->mLocalBounds.Encapsulate(out_vertex.mPosition);
-	}
-
-	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
-	mp->mLocalPredictedBounds = mp->mLocalBounds;
-
-	body->SetPositionAndRotationInternal(inSoftBodyCreationSettings.mPosition, Quat::sIdentity());
+	body->SetPositionAndRotationInternal(inSoftBodyCreationSettings.mPosition, inSoftBodyCreationSettings.mRotation);
 
 	return body;
 }

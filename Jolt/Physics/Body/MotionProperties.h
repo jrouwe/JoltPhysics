@@ -173,6 +173,8 @@ public:
 	/// Restoring state for replay
 	void					RestoreState(StateRecorder &inStream);
 
+	static constexpr uint32	cInactiveIndex = uint32(-1);									///< Constant indicating that body is not active
+
 private:
 	friend class BodyManager;
 	friend class Body;
@@ -194,13 +196,13 @@ private:
 	float					mMaxLinearVelocity;												///< Maximum linear velocity that this body can reach (m/s)
 	float					mMaxAngularVelocity;											///< Maximum angular velocity that this body can reach (rad/s)
 	float					mGravityFactor;													///< Factor to multiply gravity with
-	uint32					mIndexInActiveBodies;											///< If the body is active, this is the index in the active body list or cInactiveIndex if it is not active (note that there are 2 lists, one for rigid and one for soft bodies)
-	uint32					mIslandIndex;													///< Index of the island that this body is part of, when the body has not yet been updated or is not active this is cInactiveIndex 
+	uint32					mIndexInActiveBodies = cInactiveIndex;							///< If the body is active, this is the index in the active body list or cInactiveIndex if it is not active (note that there are 2 lists, one for rigid and one for soft bodies)
+	uint32					mIslandIndex = cInactiveIndex;									///< Index of the island that this body is part of, when the body has not yet been updated or is not active this is cInactiveIndex 
 
 	// 1 byte aligned
 	EMotionQuality			mMotionQuality;													///< Motion quality, or how well it detects collisions when it has a high velocity
 	bool					mAllowSleeping;													///< If this body can go to sleep
-	EAllowedDOFs			mAllowedDOFs;													///< Allowed degrees of freedom for this body
+	EAllowedDOFs			mAllowedDOFs = EAllowedDOFs::All;								///< Allowed degrees of freedom for this body
 
 	// 3rd cache line (least frequently used)
 	// 4 byte aligned (or 8 byte if running in double precision)
