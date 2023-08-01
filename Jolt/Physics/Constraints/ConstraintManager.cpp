@@ -245,7 +245,7 @@ void ConstraintManager::SaveState(StateRecorder &inStream) const
 		// Save them
 		size_t num_constraints = constraints.size();
 		inStream.Write(num_constraints);
-		for (const Ref<Constraint> &c : constraints)
+		for (const Constraint *c : constraints)
 		{
 			inStream.Write(c->mConstraintIndex);
 			c->SaveState(inStream);
