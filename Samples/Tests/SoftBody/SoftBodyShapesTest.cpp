@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#include <Tests/SoftBody/SoftBodyTest.h>
+#include <Tests/SoftBody/SoftBodyShapesTest.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
@@ -19,12 +19,12 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyTest)
+JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyShapesTest)
 {
-	JPH_ADD_BASE_CLASS(SoftBodyTest, Test)
+	JPH_ADD_BASE_CLASS(SoftBodyShapesTest, Test)
 }
 
-void SoftBodyTest::Initialize()
+void SoftBodyShapesTest::Initialize()
 {
 	const Quat cCubeOrientation = Quat::sRotation(Vec3::sReplicate(sqrt(1.0f / 3.0f)), DegreesToRadians(45.0f));
 
@@ -41,12 +41,6 @@ void SoftBodyTest::Initialize()
 	SoftBodyCreationSettings cube(SoftBodyCreator::CreateCube(), RVec3(15.0f, 10.0f, 0.0f), cCubeOrientation);
 	cube.mObjectLayer = Layers::MOVING;
 	cube.mRestitution = 0.0f;
-	mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
-
-	// Create another cube that shares information with the first cube
-	cube.mPosition = RVec3(25.0f, 10.0f, 0.0f);
-	cube.mRestitution = 1.0f;
-	cube.mGravityFactor = 0.5f;
 	mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
 
 	// Create pressurized sphere

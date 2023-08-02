@@ -6,11 +6,11 @@
 
 #include <Tests/Test.h>
 
-// This is a very basic soft body test
-class SoftBodyTest : public Test
+// This test shows interaction between various collision shapes and soft bodies
+class SoftBodyShapesTest : public Test
 {
 public:
-	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyTest)
+	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyShapesTest)
 
 	// See: Test
 	virtual void		Initialize() override;

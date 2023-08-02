@@ -169,8 +169,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.h
-	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyTest.cpp
-	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.h
 	${SAMPLES_ROOT}/Tests/Test.cpp
 	${SAMPLES_ROOT}/Tests/Test.h
 	${SAMPLES_ROOT}/Tests/Tools/LoadSnapshotTest.cpp

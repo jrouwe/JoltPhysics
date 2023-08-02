@@ -296,7 +296,7 @@ static TestNameAndRTTI sVehicleTests[] =
 	{ "Car (SixDOFConstraint)",				JPH_RTTI(VehicleSixDOFTest) },
 };
 
-JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyShapesTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyFrictionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyRestitutionTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyPressureTest)
@@ -304,11 +304,11 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyKinematicTest)
 
 static TestNameAndRTTI sSoftBodyTests[] =
 {
-	{ "Soft Body",							JPH_RTTI(SoftBodyTest) },
-	{ "Soft Body Friction Test",			JPH_RTTI(SoftBodyFrictionTest) },
-	{ "Soft Body Restitution Test",			JPH_RTTI(SoftBodyRestitutionTest) },
-	{ "Soft Body Pressure Test",			JPH_RTTI(SoftBodyPressureTest) },
-	{ "Soft Body Kinematic Test",			JPH_RTTI(SoftBodyKinematicTest) },
+	{ "Soft Body vs Shapes",			JPH_RTTI(SoftBodyShapesTest) },
+	{ "Soft Body Friction",				JPH_RTTI(SoftBodyFrictionTest) },
+	{ "Soft Body Restitution",			JPH_RTTI(SoftBodyRestitutionTest) },
+	{ "Soft Body Pressure",				JPH_RTTI(SoftBodyPressureTest) },
+	{ "Soft Body Kinematic",			JPH_RTTI(SoftBodyKinematicTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
