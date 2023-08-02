@@ -11,6 +11,7 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Geometry/RayCylinder.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -297,6 +298,50 @@ void CylinderShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 	if (abs(inPoint.GetY()) <= mHalfHeight											// Within the height
 		&& Square(inPoint.GetX()) + Square(inPoint.GetZ()) <= Square(mRadius))		// Within the radius
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
+}
+
+void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	for (SoftBodyVertex &v : ioVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			Vec3 local_pos = inverse_transform * v.mPosition;
+
+			// Calculate penetration into side surface
+			Vec3 side_normal = local_pos;
+			side_normal.SetY(0.0f);
+			float side_normal_length = side_normal.Length();
+			float side_penetration = mRadius - side_normal_length;
+
+			// Calculate penetration into top or bottom plane
+			float top_penetration = mHalfHeight - abs(local_pos.GetY());
+
+			Vec3 point, normal;
+			if (side_penetration < 0.0f && top_penetration < 0.0f)
+			{
+				// We're outside the cylinder height and radius
+				point = side_normal / (mRadius * side_normal_length) + Vec3(0, mHalfHeight * Sign(local_pos.GetY()), 0);
+				normal = point.Normalized();
+			}
+			else if (side_penetration < top_penetration)
+			{
+				// Side surface is closest
+				normal = side_normal / side_normal_length;
+				point = mRadius * normal;
+			}
+			else
+			{
+				// Top or bottom plane is closest
+				normal = Vec3(0, Sign(local_pos.GetY()), 0);
+				point = mHalfHeight * normal;
+			}
+
+			// Store collision
+			v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
+			v.mCollidingShapeIndex = inCollidingShapeIndex;
+		}
 }
 
 void CylinderShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
