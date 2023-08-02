@@ -122,7 +122,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 	};
 	struct Collector : public CollideShapeBodyCollector
 	{
-									Collector(Body &inSoftBody, RMat44Arg inTransform, PhysicsSystem &inSystem) :
+									Collector(Body &inSoftBody, RMat44Arg inTransform, const PhysicsSystem &inSystem) :
 										mSoftBody(inSoftBody),
 										mInverseTransform(inTransform.InversedRotationTranslation()),
 										mBodyLockInterface(inSystem.GetBodyLockInterfaceNoLock()),
@@ -214,9 +214,9 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 					Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
 
 					Vec3 impulse = coefficient * (x2 - x1).Cross(x3 - x1); // Area is half the cross product so need to still divide by 2
-					for (int i = 0; i < 3; ++i)
+					for (uint32 i : f.mVertex)
 					{
-						Vertex &v = mVertices[f.mVertex[i]];
+						Vertex &v = mVertices[i];
 						v.mVelocity += v.mInvMass * impulse; // Want to divide by 3 because we spread over 3 vertices
 					}
 				}

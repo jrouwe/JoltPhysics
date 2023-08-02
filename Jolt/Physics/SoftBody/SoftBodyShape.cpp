@@ -173,8 +173,8 @@ void SoftBodyShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg in
 	const SoftBodyMotionProperties::Face &f = mSoftBodyMotionProperties->GetFace(triangle_idx);
 	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->GetVertices();
 
-	for (int i = 0; i < 3; ++i)
-		outVertices.push_back(inCenterOfMassTransform * (inScale * vertices[f.mVertex[i]].mPosition));
+	for (uint32 i : f.mVertex)
+		outVertices.push_back(inCenterOfMassTransform * (inScale * vertices[i].mPosition));
 }
 
 void SoftBodyShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const

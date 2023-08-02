@@ -2329,7 +2329,7 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 	while (check_islands || check_split_islands);
 }
 
-void PhysicsSystem::JobUpdateSoftBodies(PhysicsUpdateContext *ioContext)
+void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
 {
 	JPH_PROFILE_FUNCTION();
 
