@@ -11,9 +11,6 @@
 
 JPH_NAMESPACE_BEGIN
 
-class StreamIn;
-class StreamOut;
-
 /// This class contains the information needed to create a soft body object
 class JPH_EXPORT SoftBodyCreationSettings
 {

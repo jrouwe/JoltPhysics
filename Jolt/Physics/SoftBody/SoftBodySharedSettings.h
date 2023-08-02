@@ -28,14 +28,14 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the material list.
 	void				RestoreBinaryState(StreamIn &inStream);
 
-	/// A vertex is a particle
+	/// A vertex is a particle, the data in this structure is only used during creation of the soft body and not during simulation
 	struct JPH_EXPORT Vertex
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Vertex)
 
 		Float3			mPosition { 0, 0, 0 };						///< Initial position of the vertex
 		Float3			mVelocity { 0, 0, 0 };						///< Initial velocity of the vertex
-		float			mInvMass = 1.0f;							///< Inverse of the mass of the vertex
+		float			mInvMass = 1.0f;							///< Initial inverse of the mass of the vertex
 	};
 
 	/// A face defines the surface of the body
