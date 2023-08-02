@@ -95,8 +95,8 @@ BodyManager::~BodyManager()
 		if (sIsValidBodyPointer(b))
 			sDeleteBody(b);
 
-	for (uint type = 0; type < cBodyTypeCount; ++type)
-		delete [] mActiveBodies[type];
+	for (BodyID *active_bodies : mActiveBodies)
+		delete [] active_bodies;
 }
 
 void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes, const BroadPhaseLayerInterface &inLayerInterface)
@@ -113,10 +113,10 @@ void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes, const BroadPhase
 	mBodies.reserve(inMaxBodies);
 
 	// Allocate space for active bodies
-	for (uint type = 0; type < cBodyTypeCount; ++type)
+	for (BodyID *&active_bodies : mActiveBodies)
 	{
-		JPH_ASSERT(mActiveBodies[type] == nullptr);
-		mActiveBodies[type] = new BodyID [inMaxBodies];
+		JPH_ASSERT(active_bodies == nullptr);
+		active_bodies = new BodyID [inMaxBodies];
 	}
 
 	// Allocate space for sequence numbers
