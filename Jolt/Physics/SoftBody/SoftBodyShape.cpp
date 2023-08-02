@@ -12,6 +12,11 @@
 #include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
+#include <Jolt/Physics/Collision/CastConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/CastSphereVsTriangles.h>
+#include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
+#include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -246,6 +251,107 @@ Shape::Stats SoftBodyShape::GetStats() const
 float SoftBodyShape::GetVolume() const
 {
 	return mSoftBodyMotionProperties->GetVolume();
+}
+
+void SoftBodyShape::sCollideConvexVsSoftBody(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, [[maybe_unused]] const ShapeFilter &inShapeFilter)
+{
+	JPH_ASSERT(inShape1->GetType() == EShapeType::Convex);
+	const ConvexShape *shape1 = static_cast<const ConvexShape *>(inShape1);
+	JPH_ASSERT(inShape2->GetSubType() == EShapeSubType::SoftBody);
+	const SoftBodyShape *shape2 = static_cast<const SoftBodyShape *>(inShape2);
+
+	const Array<SoftBodyVertex> &vertices = shape2->mSoftBodyMotionProperties->GetVertices();
+	const Array<SoftBodyMotionProperties::Face> &faces = shape2->mSoftBodyMotionProperties->GetFaces();
+	uint num_triangle_bits = shape2->GetSubShapeIDBits();
+
+	CollideConvexVsTriangles collider(shape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
+	for (const SoftBodyMotionProperties::Face &f : faces)
+	{
+		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
+		Vec3 x2 = vertices[f.mVertex[1]].mPosition;
+		Vec3 x3 = vertices[f.mVertex[2]].mPosition;
+
+		collider.Collide(x1, x2, x3, 0b111, inSubShapeIDCreator2.PushID(uint(&f - faces.data()), num_triangle_bits).GetID());
+	}
+}
+
+void SoftBodyShape::sCollideSphereVsSoftBody(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, [[maybe_unused]] const ShapeFilter &inShapeFilter)
+{
+	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::Sphere);
+	const SphereShape *shape1 = static_cast<const SphereShape *>(inShape1);
+	JPH_ASSERT(inShape2->GetSubType() == EShapeSubType::SoftBody);
+	const SoftBodyShape *shape2 = static_cast<const SoftBodyShape *>(inShape2);
+
+	const Array<SoftBodyVertex> &vertices = shape2->mSoftBodyMotionProperties->GetVertices();
+	const Array<SoftBodyMotionProperties::Face> &faces = shape2->mSoftBodyMotionProperties->GetFaces();
+	uint num_triangle_bits = shape2->GetSubShapeIDBits();
+
+	CollideSphereVsTriangles collider(shape1, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1.GetID(), inCollideShapeSettings, ioCollector);
+	for (const SoftBodyMotionProperties::Face &f : faces)
+	{
+		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
+		Vec3 x2 = vertices[f.mVertex[1]].mPosition;
+		Vec3 x3 = vertices[f.mVertex[2]].mPosition;
+
+		collider.Collide(x1, x2, x3, 0b111, inSubShapeIDCreator2.PushID(uint(&f - faces.data()), num_triangle_bits).GetID());
+	}
+}
+
+void SoftBodyShape::sCastConvexVsSoftBody(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::SoftBody);
+	const SoftBodyShape *shape = static_cast<const SoftBodyShape *>(inShape);
+
+	const Array<SoftBodyVertex> &vertices = shape->mSoftBodyMotionProperties->GetVertices();
+	const Array<SoftBodyMotionProperties::Face> &faces = shape->mSoftBodyMotionProperties->GetFaces();
+	uint num_triangle_bits = shape->GetSubShapeIDBits();
+
+	CastConvexVsTriangles caster(inShapeCast, inShapeCastSettings, inScale, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	for (const SoftBodyMotionProperties::Face &f : faces)
+	{
+		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
+		Vec3 x2 = vertices[f.mVertex[1]].mPosition;
+		Vec3 x3 = vertices[f.mVertex[2]].mPosition;
+
+		caster.Cast(x1, x2, x3, 0b111, inSubShapeIDCreator2.PushID(uint(&f - faces.data()), num_triangle_bits).GetID());
+	}
+}
+
+void SoftBodyShape::sCastSphereVsSoftBody(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
+{
+	JPH_ASSERT(inShape->GetSubType() == EShapeSubType::SoftBody);
+	const SoftBodyShape *shape = static_cast<const SoftBodyShape *>(inShape);
+
+	const Array<SoftBodyVertex> &vertices = shape->mSoftBodyMotionProperties->GetVertices();
+	const Array<SoftBodyMotionProperties::Face> &faces = shape->mSoftBodyMotionProperties->GetFaces();
+	uint num_triangle_bits = shape->GetSubShapeIDBits();
+
+	CastSphereVsTriangles caster(inShapeCast, inShapeCastSettings, inScale, inCenterOfMassTransform2, inSubShapeIDCreator1, ioCollector);
+	for (const SoftBodyMotionProperties::Face &f : faces)
+	{
+		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
+		Vec3 x2 = vertices[f.mVertex[1]].mPosition;
+		Vec3 x3 = vertices[f.mVertex[2]].mPosition;
+
+		caster.Cast(x1, x2, x3, 0b111, inSubShapeIDCreator2.PushID(uint(&f - faces.data()), num_triangle_bits).GetID());
+	}
+}
+
+void SoftBodyShape::sRegister()
+{
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Triangle);
+	f.mConstruct = nullptr; // Not supposed to be constructed by users!
+	f.mColor = Color::sDarkGreen;
+
+	for (EShapeSubType s : sConvexSubShapeTypes)
+	{
+		CollisionDispatch::sRegisterCollideShape(s, EShapeSubType::SoftBody, sCollideConvexVsSoftBody);
+		CollisionDispatch::sRegisterCastShape(s, EShapeSubType::SoftBody, sCastConvexVsSoftBody);
+	}
+
+	// Specialized collision functions
+	CollisionDispatch::sRegisterCollideShape(EShapeSubType::Sphere, EShapeSubType::SoftBody, sCollideSphereVsSoftBody);
+	CollisionDispatch::sRegisterCastShape(EShapeSubType::Sphere, EShapeSubType::SoftBody, sCastSphereVsSoftBody);
 }
 
 JPH_NAMESPACE_END

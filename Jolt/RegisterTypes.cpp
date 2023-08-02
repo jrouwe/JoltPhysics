@@ -23,6 +23,7 @@
 #include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/PhysicsMaterialSimple.h>
+#include <Jolt/Physics/SoftBody/SoftBodyShape.h>
 
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, Skeleton)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SkeletalAnimation)
@@ -102,6 +103,7 @@ void RegisterTypesInternal(uint64 inVersionID)
 	MeshShape::sRegister();
 	ConvexHullShape::sRegister();
 	HeightFieldShape::sRegister();
+	SoftBodyShape::sRegister();
 
 	// Register these last because their collision functions are simple so we want to execute them first (register them in reverse order of collision complexity)
 	RotatedTranslatedShape::sRegister();
