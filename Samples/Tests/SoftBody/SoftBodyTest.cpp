@@ -10,7 +10,10 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Utils/SoftBodyCreator.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
@@ -28,7 +31,7 @@ void SoftBodyTest::Initialize()
 	CreateMeshTerrain();
 
 	// Create cloth that's fixated at the corners
-	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(), RVec3(0, 10.0f, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI));
+	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(40), RVec3(0, 10.0f, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI));
 	cloth.mObjectLayer = Layers::MOVING;
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
@@ -59,21 +62,29 @@ void SoftBodyTest::Initialize()
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 
 	// Various shapes above cloth
+	ConvexHullShapeSettings tetrahedron({ Vec3(-1, 1, -1), Vec3(0, 1, 1), Vec3(1, 1, -1), Vec3(0, -1, 0) });
+	tetrahedron.SetEmbedded();
+
 	StaticCompoundShapeSettings compound_shape;
 	compound_shape.SetEmbedded();
-	compound_shape.AddShape(Vec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), new CapsuleShape(2, 0.5f));
+	Quat rotate_x = Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI);
+	compound_shape.AddShape(Vec3::sZero(), rotate_x, new CapsuleShape(2, 0.5f));
 	compound_shape.AddShape(Vec3(0, 0, -2), Quat::sIdentity(), new SphereShape(1));
 	compound_shape.AddShape(Vec3(0, 0, 2), Quat::sIdentity(), new SphereShape(1));
 
 	RefConst<Shape> shapes[] = {
 		sphere_shape,
 		new BoxShape(Vec3(0.75f, 1.0f, 1.25f)),
+		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, new CapsuleShape(1, 0.5f)),
+		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, new CylinderShape(1, 0.5f)),
+		tetrahedron.Create().Get(),
 		compound_shape.Create().Get(),
 	};
+	int num_shapes = (int)std::size(shapes);
 
-	for (int i = 0; i < 6; ++i)
+	for (int i = 0; i < 2 * num_shapes; ++i)
 	{
-		bcs.SetShape(shapes[i % std::size(shapes)]);
+		bcs.SetShape(shapes[i % num_shapes]);
 		bcs.mPosition = RVec3(0, 15.0f + 3.0f * i, 0);
 		mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 	}
