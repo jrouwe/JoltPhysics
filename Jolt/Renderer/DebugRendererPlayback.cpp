@@ -112,6 +112,7 @@ void DebugRendererPlayback::Parse(StreamIn &inStream)
 				inStream.Read(triangle.mV2);
 				inStream.Read(triangle.mV3);
 				inStream.Read(triangle.mColor);
+				inStream.Read(triangle.mCastShadow);
 			}
 
 			// Read all texts
@@ -153,7 +154,7 @@ void DebugRendererPlayback::DrawFrame(uint inFrameNumber) const
 		mRenderer.DrawLine(line.mFrom, line.mTo, line.mColor);
 
 	for (const DebugRendererRecorder::TriangleBlob &triangle : frame.mTriangles)
-		mRenderer.DrawTriangle(triangle.mV1, triangle.mV2, triangle.mV3, triangle.mColor);
+		mRenderer.DrawTriangle(triangle.mV1, triangle.mV2, triangle.mV3, triangle.mColor, triangle.mCastShadow);
 
 	for (const DebugRendererRecorder::TextBlob &text : frame.mTexts)
 		mRenderer.DrawText3D(text.mPosition, text.mString, text.mColor, text.mHeight);
