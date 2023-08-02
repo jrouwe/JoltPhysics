@@ -74,11 +74,11 @@ Ref<SoftBodyParticleSettings> CreateCloth(uint inGridSize, float inGridSpacing, 
 			f.mVertex[0] = vertex_index(x, y);
 			f.mVertex[1] = vertex_index(x, y + 1);
 			f.mVertex[2] = vertex_index(x + 1, y + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			f.mVertex[1] = vertex_index(x + 1, y + 1);
 			f.mVertex[2] = vertex_index(x + 1, y);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 		}
 
 	return settings;
@@ -164,61 +164,61 @@ Ref<SoftBodyParticleSettings> CreateCube(uint inGridSize, float inGridSpacing)
 			f.mVertex[0] = vertex_index(x, y, 0);
 			f.mVertex[1] = vertex_index(x, y + 1, 0);
 			f.mVertex[2] = vertex_index(x + 1, y + 1, 0);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			f.mVertex[1] = vertex_index(x + 1, y + 1, 0);
 			f.mVertex[2] = vertex_index(x + 1, y, 0);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			// Face 2
 			f.mVertex[0] = vertex_index(x, y, inGridSize - 1);
 			f.mVertex[1] = vertex_index(x + 1, y + 1, inGridSize - 1);
 			f.mVertex[2] = vertex_index(x, y + 1, inGridSize - 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			f.mVertex[1] = vertex_index(x + 1, y, inGridSize - 1);
 			f.mVertex[2] = vertex_index(x + 1, y + 1, inGridSize - 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			// Face 3
 			f.mVertex[0] = vertex_index(x, 0, y);
 			f.mVertex[1] = vertex_index(x + 1, 0, y + 1);
 			f.mVertex[2] = vertex_index(x, 0, y + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			f.mVertex[1] = vertex_index(x + 1, 0, y);
 			f.mVertex[2] = vertex_index(x + 1, 0, y + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			// Face 4
 			f.mVertex[0] = vertex_index(x, inGridSize - 1, y);
 			f.mVertex[1] = vertex_index(x, inGridSize - 1, y + 1);
 			f.mVertex[2] = vertex_index(x + 1, inGridSize - 1, y + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			f.mVertex[1] = vertex_index(x + 1, inGridSize - 1, y + 1);
 			f.mVertex[2] = vertex_index(x + 1, inGridSize - 1, y);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			// Face 5
 			f.mVertex[0] = vertex_index(0, x, y);
 			f.mVertex[1] = vertex_index(0, x, y + 1);
 			f.mVertex[2] = vertex_index(0, x + 1, y + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			f.mVertex[1] = vertex_index(0, x + 1, y + 1);
 			f.mVertex[2] = vertex_index(0, x + 1, y);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			// Face 6
 			f.mVertex[0] = vertex_index(inGridSize - 1, x, y);
 			f.mVertex[1] = vertex_index(inGridSize - 1, x + 1, y + 1);
 			f.mVertex[2] = vertex_index(inGridSize - 1, x, y + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
 			f.mVertex[1] = vertex_index(inGridSize - 1, x + 1, y);
 			f.mVertex[2] = vertex_index(inGridSize - 1, x + 1, y + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 		}
 
 	return settings;
@@ -282,25 +282,25 @@ Ref<SoftBodyParticleSettings> CreateSphere(float inRadius, uint inNumTheta, uint
 	SoftBodyParticleSettings::Face f;
 	for (uint phi = 0; phi < inNumPhi; ++phi)
 	{
-		for (uint theta = 0; theta < inNumTheta - 1; ++theta)
+		for (uint theta = 0; theta < inNumTheta - 2; ++theta)
 		{
 			f.mVertex[0] = vertex_index(theta, phi);
 			f.mVertex[1] = vertex_index(theta + 1, phi);
 			f.mVertex[2] = vertex_index(theta + 1, phi + 1);
-			settings->mFaces.push_back(f);
+			settings->AddFace(f);
 
-			if (theta > 0 && theta < inNumTheta - 2)
+			if (theta > 0)
 			{
 				f.mVertex[1] = vertex_index(theta + 1, phi + 1);
 				f.mVertex[2] = vertex_index(theta, phi + 1);
-				settings->mFaces.push_back(f);
+				settings->AddFace(f);
 			}
 		}
 
 		f.mVertex[0] = vertex_index(inNumTheta - 2, phi + 1);
 		f.mVertex[1] = vertex_index(inNumTheta - 2, phi);
 		f.mVertex[2] = vertex_index(inNumTheta - 1, 0);
-		settings->mFaces.push_back(f);
+		settings->AddFace(f);
 	}
 
 	return settings;

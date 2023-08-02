@@ -125,7 +125,11 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	Vec3 v2 = mScale * inV2 - mStart;
 
 	// Calculate triangle normal
-	Vec3 triangle_normal = mScaleSign * (v1 - v0).Cross(v2 - v0).Normalized();
+	Vec3 triangle_normal = mScaleSign * (v1 - v0).Cross(v2 - v0);
+	float triangle_normal_len = triangle_normal.Length();
+	if (triangle_normal_len == 0.0f)
+		return; // Degenerate triangle
+	triangle_normal /= triangle_normal_len;
 
 	// Backface check
 	float normal_dot_direction = triangle_normal.Dot(mDirection);

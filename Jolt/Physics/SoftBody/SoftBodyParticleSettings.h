@@ -53,6 +53,9 @@ public:
 	/// A face defines the surface of the body
 	struct Face
 	{
+		/// Check if this is a degenerate face (a face which points to the same vertex twice)
+		bool			IsDegenerate() const						{ return mVertex[0] == mVertex[1] || mVertex[0] == mVertex[2] || mVertex[1] == mVertex[2]; }
+
 		uint32			mVertex[3];									///< Indices of the vertices that form the face
 		uint32			mMaterialIndex = 0;							///< Index of the material of the face in SoftBodyParticleSettings::mMaterials
 	};
@@ -72,6 +75,9 @@ public:
 		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
 	};
+
+	/// Add a face to this soft body
+	void				AddFace(const Face &inFace)					{ JPH_ASSERT(!inFace.IsDegenerate()); mFaces.push_back(inFace); }
 
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
