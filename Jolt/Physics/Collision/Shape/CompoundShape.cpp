@@ -246,6 +246,12 @@ void CompoundShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg i
 }
 #endif // JPH_DEBUG_RENDERER
 
+void CompoundShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	for (const SubShape &shape : mSubShapes)
+		shape.mShape->CollideSoftBodyVertices(inCenterOfMassTransform * Mat44::sRotationTranslation(shape.GetRotation(), shape.GetPositionCOM()), ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+}
+
 void CompoundShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
 	for (const SubShape &shape : mSubShapes)

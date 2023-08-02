@@ -9,6 +9,8 @@
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Utils/SoftBodyCreator.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
@@ -57,10 +59,21 @@ void SoftBodyTest::Initialize()
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 
 	// Various shapes above cloth
-	RefConst<Shape> box_shape = new BoxShape(Vec3(0.75f, 1.0f, 1.25f));
-	for (int i = 0; i < 5; ++i)
+	StaticCompoundShapeSettings compound_shape;
+	compound_shape.SetEmbedded();
+	compound_shape.AddShape(Vec3::sZero(), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), new CapsuleShape(2, 0.5f));
+	compound_shape.AddShape(Vec3(0, 0, -2), Quat::sIdentity(), new SphereShape(1));
+	compound_shape.AddShape(Vec3(0, 0, 2), Quat::sIdentity(), new SphereShape(1));
+
+	RefConst<Shape> shapes[] = {
+		sphere_shape,
+		new BoxShape(Vec3(0.75f, 1.0f, 1.25f)),
+		compound_shape.Create().Get(),
+	};
+
+	for (int i = 0; i < 6; ++i)
 	{
-		bcs.SetShape(i % 2 == 0? sphere_shape : box_shape);
+		bcs.SetShape(shapes[i % std::size(shapes)]);
 		bcs.mPosition = RVec3(0, 15.0f + 3.0f * i, 0);
 		mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 	}
