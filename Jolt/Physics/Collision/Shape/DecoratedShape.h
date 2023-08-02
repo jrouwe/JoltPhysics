@@ -56,6 +56,9 @@ public:
 	// See Shape::GetSubShapeUserData
 	virtual uint64					GetSubShapeUserData(const SubShapeID &inSubShapeID) const override;
 
+	// See: Shape::ColideSoftBodyVertices
+	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const override;
+
 	// See Shape
 	virtual void					SaveSubShapeState(ShapeList &outSubShapes) const override;
 	virtual void					RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes) override;
