@@ -33,6 +33,8 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 		Vertex &out_vertex = mVertices[v];
 		out_vertex.mPreviousPosition = out_vertex.mPosition = Vec3(in_vertex.mPosition);
 		out_vertex.mVelocity = Vec3(in_vertex.mVelocity);
+		out_vertex.mCollidingShapeIndex = -1;
+		out_vertex.mLargestPenetration = -FLT_MAX;
 		out_vertex.mInvMass = in_vertex.mInvMass;
 		out_vertex.mProjectedDistance = 0.0f;
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
@@ -150,13 +152,6 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 	// This is bigger than 0.5 * g * dt^2 because we first increment the velocity and then update the position
 	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
 	Vec3 displacement_due_to_gravity = (0.5f * mNumIterations * (mNumIterations + 1) * dt_sq) * gravity;
-
-	// Reset collisions
-	for (Vertex &v : mVertices)
-	{
-		v.mCollidingShapeIndex = -1;
-		v.mLargestPenetration = -FLT_MAX;
-	}
 
 	// Generate collision planes
 	for (const CollidingShape &cs : collector.mHits)
@@ -389,15 +384,30 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 			}
 		}
 
-	// Update local bounding box
+	// Loop through vertices once more to update the global state
+	Vec3 linear_velocity = Vec3::sZero(), angular_velocity = Vec3::sZero();
 	mLocalPredictedBounds = mLocalBounds = { };
 	for (Vertex &v : mVertices)
 	{
+		// Calculate local linear/angular velocity
+		linear_velocity += v.mVelocity;
+		angular_velocity += v.mPosition.Cross(v.mVelocity);
+
+		// Update local bounding box
 		mLocalBounds.Encapsulate(v.mPosition);
 
 		// Create predicted position for the next frame in order to detect collisions before they happen
 		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
+
+		// Reset collision data for the next iteration
+		v.mCollidingShapeIndex = -1;
+		v.mLargestPenetration = -FLT_MAX;
 	}
+
+	// Calculate linear/angular velocity of the body by averaging all vertices and bringing the value to world space
+	float num_vertices_divider = float(max(int(mVertices.size()), 1));
+	SetLinearVelocity(body_transform.Multiply3x3(linear_velocity / num_vertices_divider));
+	SetAngularVelocity(body_transform.Multiply3x3(angular_velocity / num_vertices_divider));
 
 	if (mUpdatePosition)
 	{
