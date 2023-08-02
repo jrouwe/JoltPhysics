@@ -244,7 +244,7 @@ Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCr
 	body->mUserData = inSoftBodyCreationSettings.mUserData;
 	body->SetFriction(inSoftBodyCreationSettings.mFriction);
 	body->SetRestitution(inSoftBodyCreationSettings.mRestitution);
-	body->mMotionType = EMotionType::Dynamic;;
+	body->mMotionType = EMotionType::Dynamic;
 	SetBodyObjectLayerInternal(*body, inSoftBodyCreationSettings.mObjectLayer);
 	body->mObjectLayer = inSoftBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inSoftBodyCreationSettings.mCollisionGroup;
