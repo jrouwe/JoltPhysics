@@ -71,6 +71,9 @@ public:
 	/// Get the volume of the soft body. Note can become negative if the shape is inside out!
 	float								GetVolume() const							{ return GetVolumeTimesSix() / 6.0f; }
 
+	/// Calculate the total mass and inertia of this body based on the current state of the vertices
+	void								CalculateMassAndInertia();
+
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the state of a soft body
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;

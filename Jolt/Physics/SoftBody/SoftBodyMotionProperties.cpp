@@ -13,12 +13,43 @@
 
 JPH_NAMESPACE_BEGIN
 
+void SoftBodyMotionProperties::CalculateMassAndInertia()
+{
+	MassProperties mp;
+
+	for (const Vertex &v : mVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			Vec3 pos = v.mPosition;
+
+			// Accumulate mass
+			float mass = 1.0f / v.mInvMass;
+			mp.mMass += mass;
+
+			// Inertia tensor, diagonal
+			// See equations https://en.wikipedia.org/wiki/Moment_of_inertia section 'Inertia Tensor'
+			for (int i = 0; i < 3; ++i)
+				mp.mInertia(i, i) += mass * (Square(pos[(i + 1) % 3]) + Square(pos[(i + 2) % 3]));
+
+			// Inertia tensor off diagonal
+			for (int i = 0; i < 3; ++i)
+				for (int j = 0; j < 3; ++j)
+					if (i != j)
+						mp.mInertia(i, j) -= mass * pos[i] * pos[j];
+		}
+		else
+		{
+			// If one vertex is kinematic, the entire body will have infinite mass and inertia
+			SetInverseMass(0.0f);
+			SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
+			return;
+		}
+
+	SetMassProperties(EAllowedDOFs::All, mp);
+}
+
 void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSettings)
 {
-	// TODO: Set a sensible mass and inertia
-	SetInverseMass(0.0f);
-	SetInverseInertia(Vec3::sZero(), Quat::sIdentity());
-
 	// Store settings
 	mSettings = inSettings.mSettings;
 	mNumIterations = inSettings.mNumIterations;
@@ -42,6 +73,8 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 
 	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
 	mLocalPredictedBounds = mLocalBounds;
+
+	CalculateMassAndInertia();
 }
 
 float SoftBodyMotionProperties::GetVolumeTimesSix() const
