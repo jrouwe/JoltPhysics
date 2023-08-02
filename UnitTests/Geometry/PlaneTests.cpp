@@ -14,6 +14,20 @@ TEST_SUITE("PlaneTests")
 		CHECK(p.SignedDistance(Vec3(5, -3, 0)) == -5.0f);
 	}
 
+	TEST_CASE("TestPlaneGetTransformed")
+	{
+		Mat44 transform = Mat44::sRotationTranslation(Quat::sRotation(Vec3(1.0f, 2.0f, 3.0f).Normalized(), 0.1f * JPH_PI), Vec3(5.0f, -7.0f, 9.0f));
+
+		Vec3 point = Vec3(11.0f, 13.0f, 15.0f);
+		Vec3 normal = Vec3(-3.0f, 5.0f, -7.0f).Normalized();
+
+		Plane p1 = Plane::sFromPointAndNormal(point, normal).GetTransformed(transform);
+		Plane p2 = Plane::sFromPointAndNormal(transform * point, transform.Multiply3x3(normal));
+
+		CHECK_APPROX_EQUAL(p1.GetNormal(), p2.GetNormal());
+		CHECK_APPROX_EQUAL(p1.GetConstant(), p2.GetConstant());
+	}
+
 	TEST_CASE("TestPlaneIntersectPlanes")
 	{
 		Plane p1 = Plane::sFromPointAndNormal(Vec3(0, 2, 0), Vec3(0, 1, 0));
