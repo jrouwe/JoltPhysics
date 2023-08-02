@@ -9,6 +9,7 @@
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaleHelpers.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Geometry/RayCapsule.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -297,6 +298,53 @@ AABox TaperedCapsuleShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform,
 	Vec3 p1 = Vec3::sMin(top_center - top_extent, bottom_center - bottom_extent);
 	Vec3 p2 = Vec3::sMax(top_center + top_extent, bottom_center + bottom_extent);
 	return AABox(p1, p2);
+}
+
+void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	for (SoftBodyVertex &v : ioVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			Vec3 local_pos = inverse_transform * v.mPosition;
+
+			// See comments at TaperedCapsuleShape::GetSurfaceNormal for rationale behind the math
+			Vec3 position, normal;
+			if (local_pos.GetY() > mTopCenter + mSinAlpha * mTopRadius)
+			{
+				// Top sphere
+				Vec3 top = Vec3(0, mTopCenter, 0);
+				normal = (local_pos - top).NormalizedOr(Vec3::sAxisY());
+				position = top + mTopRadius * normal;
+			}
+			else if (local_pos.GetY() < mBottomCenter + mSinAlpha * mBottomRadius)
+			{
+				// Bottom sphere
+				Vec3 bottom(0, mBottomCenter, 0);
+				normal = (local_pos - bottom).NormalizedOr(-Vec3::sAxisY());
+				position = bottom + mBottomRadius * normal;
+			}
+			else
+			{
+				// Tapered cylinder
+				normal = Vec3(local_pos.GetX(), 0, local_pos.GetZ()).NormalizedOr(Vec3::sAxisX());
+				normal.SetY(mTanAlpha);
+				normal = normal.NormalizedOr(Vec3::sAxisX());
+				position = Vec3(0, mBottomCenter, 0) + mBottomRadius * normal;
+			}
+
+			Plane plane = Plane::sFromPointAndNormal(position, normal);
+			float penetration = -plane.SignedDistance(local_pos);
+			if (penetration > v.mLargestPenetration)
+			{
+				v.mLargestPenetration = penetration;
+
+				// Store collision
+				v.mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
+				v.mCollidingShapeIndex = inCollidingShapeIndex;
+			}
+		}
 }
 
 #ifdef JPH_DEBUG_RENDERER

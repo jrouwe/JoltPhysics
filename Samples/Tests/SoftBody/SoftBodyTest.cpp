@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
@@ -76,6 +77,7 @@ void SoftBodyTest::Initialize()
 		sphere_shape,
 		new BoxShape(Vec3(0.75f, 1.0f, 1.25f)),
 		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, new CapsuleShape(1, 0.5f)),
+		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, TaperedCapsuleShapeSettings(1.0f, 1.0f, 0.5f).Create().Get()),
 		new RotatedTranslatedShape(Vec3::sZero(), rotate_x, new CylinderShape(1, 0.5f)),
 		tetrahedron.Create().Get(),
 		compound_shape.Create().Get(),
