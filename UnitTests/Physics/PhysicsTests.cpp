@@ -1513,6 +1513,8 @@ TEST_SUITE("PhysicsTests")
 	{
 		StateRecorderFilterUTest filter;
 
+		StateRecorderImpl absolute_initial_state;
+
 		for(int mode = 0; mode < 3; mode++)
 		{
 			PhysicsTestContext c;
@@ -1532,6 +1534,9 @@ TEST_SUITE("PhysicsTests")
 			if (mode == 0)
 			{
 				// It's testing the global state save & restore.
+				// Store the absolute initial state, that will be used for the
+				// final test.
+				c.GetSystem()->SaveState(absolute_initial_state);
 			}
 			else if (mode == 1)
 			{
@@ -1608,7 +1613,13 @@ TEST_SUITE("PhysicsTests")
 			{
 				CHECK_APPROX_EQUAL(box2.GetWorldTransform(), initial_box2_transform);
 				CHECK_APPROX_EQUAL(sphere2.GetWorldTransform(), initial_sphere2_transform);
+				CHECK(box1.IsActive());
+				CHECK(sphere1.IsActive());
+				CHECK(box2.IsActive());
+				CHECK(sphere2.IsActive());
 			}else{
+				CHECK(box1.IsActive());
+				CHECK(sphere1.IsActive());
 				CHECK(!box2.IsActive());
 				CHECK(!sphere2.IsActive());
 			}
@@ -1617,6 +1628,17 @@ TEST_SUITE("PhysicsTests")
 			for (int i = 0; i < 10; i++)
 			{
 				c.SimulateSingleStep();
+
+				// Move the box2 and spehre2, to make sure this is not causing
+				// any issue.
+				if (mode == 2)
+				{
+					BodyInterface &bi = c.GetBodyInterface();
+					RMat44 t = box2.GetWorldTransform();
+					bi.SetPositionAndRotation(box2.GetID(), t.GetTranslation() + Vec3(0.f, -1.f, 0.f), t.GetQuaternion(), JPH::EActivation::DontActivate);
+					t = sphere2.GetWorldTransform();
+					bi.SetPositionAndRotation(sphere2.GetID(), t.GetTranslation() + Vec3(0.f, 1.f, 0.f), t.GetQuaternion(), JPH::EActivation::DontActivate);
+				}
 			}
 
 			if (mode == 0 || mode == 1)
@@ -1626,6 +1648,10 @@ TEST_SUITE("PhysicsTests")
 				CHECK_APPROX_EQUAL(sphere1.GetWorldTransform(), intermediate_sphere1_transform);
 				CHECK_APPROX_EQUAL(box2.GetWorldTransform(), intermediate_box2_transform);
 				CHECK_APPROX_EQUAL(sphere2.GetWorldTransform(), intermediate_sphere2_transform);
+				CHECK(box1.IsActive());
+				CHECK(sphere1.IsActive());
+				CHECK(box2.IsActive());
+				CHECK(sphere2.IsActive());
 
 				// Save the final state.
 				StateRecorderImpl final_state;
@@ -1650,6 +1676,30 @@ TEST_SUITE("PhysicsTests")
 	
 				// Compare the states to make sure they are NOT the same.
 				CHECK(final_state.IsEqual(intermediate_state));
+
+				// Now restore the absolute initial state and make sure all the
+				// bodies are being active and ready to be processed again.
+				c.GetSystem()->RestoreState(absolute_initial_state);
+
+				CHECK(box1.IsActive());
+				CHECK(sphere1.IsActive());
+				CHECK(box2.IsActive());
+				CHECK(sphere2.IsActive());
+
+				// Simulate 10 frames - again
+				for (int i = 0; i < 10; i++)
+				{
+					c.SimulateSingleStep();
+				}
+
+				CHECK_APPROX_EQUAL(box1.GetWorldTransform(), intermediate_box1_transform);
+				CHECK_APPROX_EQUAL(sphere1.GetWorldTransform(), intermediate_sphere1_transform);
+				CHECK_APPROX_EQUAL(box2.GetWorldTransform(), intermediate_box2_transform);
+				CHECK_APPROX_EQUAL(sphere2.GetWorldTransform(), intermediate_sphere2_transform);
+				CHECK(box1.IsActive());
+				CHECK(sphere1.IsActive());
+				CHECK(box2.IsActive());
+				CHECK(sphere2.IsActive());
 			}
 		}
 	}
