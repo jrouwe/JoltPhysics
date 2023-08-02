@@ -11,10 +11,10 @@ JPH_NAMESPACE_BEGIN
 
 /// This class defines the setup of all particles and their constraints.
 /// It is used during the simulation and can be shared between multiple soft bodies.
-class JPH_EXPORT SoftBodyParticleSettings : public RefTarget<SoftBodyParticleSettings>
+class JPH_EXPORT SoftBodySharedSettings : public RefTarget<SoftBodySharedSettings>
 {
 public:
-	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodyParticleSettings)
+	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
 	/// Calculate the initial lengths of all springs of the edges of this soft body
 	void				CalculateEdgeLengths();
@@ -47,7 +47,7 @@ public:
 		bool			IsDegenerate() const						{ return mVertex[0] == mVertex[1] || mVertex[0] == mVertex[2] || mVertex[1] == mVertex[2]; }
 
 		uint32			mVertex[3];									///< Indices of the vertices that form the face
-		uint32			mMaterialIndex = 0;							///< Index of the material of the face in SoftBodyParticleSettings::mMaterials
+		uint32			mMaterialIndex = 0;							///< Index of the material of the face in SoftBodySharedSettings::mMaterials
 	};
 
 	/// An edge keeps two vertices at a constant distance using a spring: |x1 - x2| = rest length

@@ -8,16 +8,16 @@
 
 namespace SoftBodyCreator {
 
-Ref<SoftBodyParticleSettings> CreateCloth(uint inGridSize, float inGridSpacing, bool inFixateCorners)
+Ref<SoftBodySharedSettings> CreateCloth(uint inGridSize, float inGridSpacing, bool inFixateCorners)
 {
 	const float cOffset = -0.5f * inGridSpacing * (inGridSize - 1);
 
 	// Create settings
-	SoftBodyParticleSettings *settings = new SoftBodyParticleSettings;
+	SoftBodySharedSettings *settings = new SoftBodySharedSettings;
 	for (uint y = 0; y < inGridSize; ++y)
 		for (uint x = 0; x < inGridSize; ++x)
 		{
-			SoftBodyParticleSettings::Vertex v;
+			SoftBodySharedSettings::Vertex v;
 			v.mPosition = Float3(cOffset + x * inGridSpacing, 0.0f, cOffset + y * inGridSpacing);
 			settings->mVertices.push_back(v);
 		}
@@ -41,7 +41,7 @@ Ref<SoftBodyParticleSettings> CreateCloth(uint inGridSize, float inGridSpacing, 
 	for (uint y = 0; y < inGridSize; ++y)
 		for (uint x = 0; x < inGridSize; ++x)
 		{
-			SoftBodyParticleSettings::Edge e;
+			SoftBodySharedSettings::Edge e;
 			e.mCompliance = 0.00001f;
 			e.mVertex[0] = vertex_index(x, y);
 			if (x < inGridSize - 1)
@@ -70,7 +70,7 @@ Ref<SoftBodyParticleSettings> CreateCloth(uint inGridSize, float inGridSpacing, 
 	for (uint y = 0; y < inGridSize - 1; ++y)
 		for (uint x = 0; x < inGridSize - 1; ++x)
 		{
-			SoftBodyParticleSettings::Face f;
+			SoftBodySharedSettings::Face f;
 			f.mVertex[0] = vertex_index(x, y);
 			f.mVertex[1] = vertex_index(x, y + 1);
 			f.mVertex[2] = vertex_index(x + 1, y + 1);
@@ -84,17 +84,17 @@ Ref<SoftBodyParticleSettings> CreateCloth(uint inGridSize, float inGridSpacing, 
 	return settings;
 }
 
-Ref<SoftBodyParticleSettings> CreateCube(uint inGridSize, float inGridSpacing)
+Ref<SoftBodySharedSettings> CreateCube(uint inGridSize, float inGridSpacing)
 {
 	const Vec3 cOffset = Vec3::sReplicate(-0.5f * inGridSpacing * (inGridSize - 1));
 
 	// Create settings
-	SoftBodyParticleSettings *settings = new SoftBodyParticleSettings;
+	SoftBodySharedSettings *settings = new SoftBodySharedSettings;
 	for (uint z = 0; z < inGridSize; ++z)
 		for (uint y = 0; y < inGridSize; ++y)
 			for (uint x = 0; x < inGridSize; ++x)
 			{
-				SoftBodyParticleSettings::Vertex v;
+				SoftBodySharedSettings::Vertex v;
 				(cOffset + Vec3::sReplicate(inGridSpacing) * Vec3(float(x), float(y), float(z))).StoreFloat3(&v.mPosition);
 				settings->mVertices.push_back(v);
 			}
@@ -110,7 +110,7 @@ Ref<SoftBodyParticleSettings> CreateCube(uint inGridSize, float inGridSpacing)
 		for (uint y = 0; y < inGridSize; ++y)
 			for (uint x = 0; x < inGridSize; ++x)
 			{
-				SoftBodyParticleSettings::Edge e;
+				SoftBodySharedSettings::Edge e;
 				e.mVertex[0] = vertex_index(x, y, z);
 				if (x < inGridSize - 1)
 				{
@@ -146,7 +146,7 @@ Ref<SoftBodyParticleSettings> CreateCube(uint inGridSize, float inGridSpacing)
 			for (uint x = 0; x < inGridSize - 1; ++x)
 				for (uint t = 0; t < 6; ++t)
 				{
-					SoftBodyParticleSettings::Volume v;
+					SoftBodySharedSettings::Volume v;
 					for (uint i = 0; i < 4; ++i)
 						v.mVertex[i] = vertex_index(x + tetra_indices[t][i][0], y + tetra_indices[t][i][1], z + tetra_indices[t][i][2]);
 					settings->mVolumeConstraints.push_back(v);
@@ -158,7 +158,7 @@ Ref<SoftBodyParticleSettings> CreateCube(uint inGridSize, float inGridSpacing)
 	for (uint y = 0; y < inGridSize - 1; ++y)
 		for (uint x = 0; x < inGridSize - 1; ++x)
 		{
-			SoftBodyParticleSettings::Face f;
+			SoftBodySharedSettings::Face f;
 
 			// Face 1
 			f.mVertex[0] = vertex_index(x, y, 0);
@@ -224,13 +224,13 @@ Ref<SoftBodyParticleSettings> CreateCube(uint inGridSize, float inGridSpacing)
 	return settings;
 }
 
-Ref<SoftBodyParticleSettings> CreateSphere(float inRadius, uint inNumTheta, uint inNumPhi)
+Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint inNumPhi)
 {
 	// Create settings
-	SoftBodyParticleSettings *settings = new SoftBodyParticleSettings;
+	SoftBodySharedSettings *settings = new SoftBodySharedSettings;
 
 	// Create vertices
-	SoftBodyParticleSettings::Vertex v;
+	SoftBodySharedSettings::Vertex v;
 	Vec3::sUnitSpherical(0, 0).StoreFloat3(&v.mPosition);
 	settings->mVertices.push_back(v);
 	Vec3::sUnitSpherical(JPH_PI, 0).StoreFloat3(&v.mPosition);
@@ -258,7 +258,7 @@ Ref<SoftBodyParticleSettings> CreateSphere(float inRadius, uint inNumTheta, uint
 	{
 		for (uint theta = 0; theta < inNumTheta - 1; ++theta)
 		{
-			SoftBodyParticleSettings::Edge e;
+			SoftBodySharedSettings::Edge e;
 			e.mCompliance = 0.0001f;
 			e.mVertex[0] = vertex_index(theta, phi);
 
@@ -279,7 +279,7 @@ Ref<SoftBodyParticleSettings> CreateSphere(float inRadius, uint inNumTheta, uint
 	settings->CalculateEdgeLengths();
 
 	// Create faces
-	SoftBodyParticleSettings::Face f;
+	SoftBodySharedSettings::Face f;
 	for (uint phi = 0; phi < inNumPhi; ++phi)
 	{
 		for (uint theta = 0; theta < inNumTheta - 2; ++theta)

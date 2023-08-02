@@ -6,7 +6,7 @@
 
 #include <Jolt/Geometry/AABox.h>
 #include <Jolt/Physics/Body/MotionProperties.h>
-#include <Jolt/Physics/SoftBody/SoftBodyParticleSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 
 JPH_NAMESPACE_BEGIN
@@ -23,9 +23,9 @@ class JPH_EXPORT SoftBodyMotionProperties : public MotionProperties
 {
 public:
 	using Vertex = SoftBodyVertex;
-	using Edge = SoftBodyParticleSettings::Edge;
-	using Face = SoftBodyParticleSettings::Face;
-	using Volume = SoftBodyParticleSettings::Volume;
+	using Edge = SoftBodySharedSettings::Edge;
+	using Face = SoftBodySharedSettings::Face;
+	using Volume = SoftBodySharedSettings::Volume;
 
 	/// Initialize the soft body motion properties
 	void								Initialize(const SoftBodyCreationSettings &inSettings);
@@ -33,8 +33,8 @@ public:
 	/// Update the soft body
 	void								Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem);
 
-	/// Get the settings of the soft body
-	const SoftBodyParticleSettings *	GetSettings() const							{ return mSettings; }
+	/// Get the shared settings of the soft body
+	const SoftBodySharedSettings *		GetSettings() const							{ return mSettings; }
 
 	/// Get the vertices of the soft body
 	const Array<Vertex> &				GetVertices() const							{ return mVertices; }
@@ -86,7 +86,7 @@ private:
 	/// Returns 6 times the volume of the soft body
 	float								GetVolumeTimesSix() const;
 
-	RefConst<SoftBodyParticleSettings>	mSettings;									///< Configuration of the particles and constraints
+	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints
 	Array<Vertex>						mVertices;									///< Current state of all vertices in the simulation
 	AABox								mLocalBounds;								///< Bounding box of all vertices
 	AABox								mLocalPredictedBounds;						///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time

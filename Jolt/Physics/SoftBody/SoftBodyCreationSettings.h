@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <Jolt/Physics/SoftBody/SoftBodyParticleSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/CollisionGroup.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
@@ -22,15 +22,15 @@ public:
 
 	/// Constructor
 						SoftBodyCreationSettings() = default;
-						SoftBodyCreationSettings(const SoftBodyParticleSettings *inSettings, RVec3Arg inPosition = RVec3::sZero(), QuatArg inRotation = Quat::sIdentity()) : mSettings(inSettings), mPosition(inPosition), mRotation(inRotation) { }
+						SoftBodyCreationSettings(const SoftBodySharedSettings *inSettings, RVec3Arg inPosition = RVec3::sZero(), QuatArg inRotation = Quat::sIdentity()) : mSettings(inSettings), mPosition(inPosition), mRotation(inRotation) { }
 
-	/// Saves the state of this object in binary form to inStream. Doesn't store the particle settings nor the group filter.
+	/// Saves the state of this object in binary form to inStream. Doesn't store the shared settings nor the group filter.
 	void				SaveBinaryState(StreamOut &inStream) const;
 
-	/// Restore the state of this object from inStream. Doesn't restore the particle settings nor the group filter.
+	/// Restore the state of this object from inStream. Doesn't restore the shared settings nor the group filter.
 	void				RestoreBinaryState(StreamIn &inStream);
 
-	RefConst<SoftBodyParticleSettings> mSettings;			///< Defines the configuration of this soft body
+	RefConst<SoftBodySharedSettings> mSettings;				///< Defines the configuration of this soft body
 
 	RVec3				mPosition { RVec3::sZero() };		///< Initial position of the soft body
 	Quat				mRotation { Quat::sIdentity() };	///< Initial rotation of the soft body

@@ -60,7 +60,7 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 	mVertices.resize(inSettings.mSettings->mVertices.size());
 	for (Array<Vertex>::size_type v = 0, s = mVertices.size(); v < s; ++v)
 	{
-		const SoftBodyParticleSettings::Vertex &in_vertex = inSettings.mSettings->mVertices[v];
+		const SoftBodySharedSettings::Vertex &in_vertex = inSettings.mSettings->mVertices[v];
 		Vertex &out_vertex = mVertices[v];
 		out_vertex.mPreviousPosition = out_vertex.mPosition = Vec3(in_vertex.mPosition);
 		out_vertex.mVelocity = Vec3(in_vertex.mVelocity);

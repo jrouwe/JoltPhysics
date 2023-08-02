@@ -21,7 +21,7 @@ void SoftBodyKinematicTest::Initialize()
 	CreateFloor();
 
 	// A sphere
-	Ref<SoftBodyParticleSettings> sphere_settings = SoftBodyCreator::CreateSphere();
+	Ref<SoftBodySharedSettings> sphere_settings = SoftBodyCreator::CreateSphere();
 	sphere_settings->mVertices[0].mInvMass = 0.0f;
 	sphere_settings->mVertices[0].mVelocity = Float3(0, 0, 5);
 	SoftBodyCreationSettings sphere(sphere_settings, RVec3(0, 5, 0));

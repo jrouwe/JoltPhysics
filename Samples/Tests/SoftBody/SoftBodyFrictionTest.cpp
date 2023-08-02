@@ -21,8 +21,8 @@ void SoftBodyFrictionTest::Initialize()
 	floor.SetFriction(1.0f);
 
 	// Bodies with increasing friction
-	Ref<SoftBodyParticleSettings> sphere_settings = SoftBodyCreator::CreateSphere();
-	for (SoftBodyParticleSettings::Vertex &v : sphere_settings->mVertices)
+	Ref<SoftBodySharedSettings> sphere_settings = SoftBodyCreator::CreateSphere();
+	for (SoftBodySharedSettings::Vertex &v : sphere_settings->mVertices)
 		v.mVelocity = Float3(0, 0, 10);
 	SoftBodyCreationSettings sphere(sphere_settings);
 	sphere.mObjectLayer = Layers::MOVING;
@@ -35,8 +35,8 @@ void SoftBodyFrictionTest::Initialize()
 		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 	}
 
-	Ref<SoftBodyParticleSettings> cube_settings = SoftBodyCreator::CreateCube();
-	for (SoftBodyParticleSettings::Vertex &v : cube_settings->mVertices)
+	Ref<SoftBodySharedSettings> cube_settings = SoftBodyCreator::CreateCube();
+	for (SoftBodySharedSettings::Vertex &v : cube_settings->mVertices)
 		v.mVelocity = Float3(0, 0, 10);
 	SoftBodyCreationSettings cube(cube_settings);
 	cube.mObjectLayer = Layers::MOVING;
