@@ -64,6 +64,8 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, PhysicsScene)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, PhysicsMaterial)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, GroupFilter)
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, GroupFilterTable)
+JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, BodyCreationSettings)
+JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SoftBodyCreationSettings)
 
 JPH_NAMESPACE_BEGIN
 
@@ -151,7 +153,9 @@ void RegisterTypesInternal(uint64 inVersionID)
 		JPH_RTTI(PhysicsMaterial),
 		JPH_RTTI(PhysicsMaterialSimple),
 		JPH_RTTI(GroupFilter),
-		JPH_RTTI(GroupFilterTable)
+		JPH_RTTI(GroupFilterTable),
+		JPH_RTTI(BodyCreationSettings),
+		JPH_RTTI(SoftBodyCreationSettings)
 	};
 
 	// Register them all

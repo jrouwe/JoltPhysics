@@ -364,7 +364,9 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsUpdateContext.h
 	${JOLT_PHYSICS_ROOT}/Physics/Ragdoll/Ragdoll.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Ragdoll/Ragdoll.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyParticleSettings.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyParticleSettings.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.cpp

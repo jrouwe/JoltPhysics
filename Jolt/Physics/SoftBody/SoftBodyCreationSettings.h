@@ -7,16 +7,28 @@
 #include <Jolt/Physics/SoftBody/SoftBodyParticleSettings.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/CollisionGroup.h>
+#include <Jolt/ObjectStream/SerializableObject.h>
 
 JPH_NAMESPACE_BEGIN
+
+class StreamIn;
+class StreamOut;
 
 /// This class contains the information needed to create a soft body object
 class JPH_EXPORT SoftBodyCreationSettings
 {
 public:
+	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodyCreationSettings)
+
 	/// Constructor
 						SoftBodyCreationSettings() = default;
 						SoftBodyCreationSettings(const SoftBodyParticleSettings *inSettings, RVec3Arg inPosition = RVec3::sZero(), QuatArg inRotation = Quat::sIdentity()) : mSettings(inSettings), mPosition(inPosition), mRotation(inRotation) { }
+
+	/// Saves the state of this object in binary form to inStream. Doesn't store the particle settings nor the group filter.
+	void				SaveBinaryState(StreamOut &inStream) const;
+
+	/// Restore the state of this object from inStream. Doesn't restore the particle settings nor the group filter.
+	void				RestoreBinaryState(StreamIn &inStream);
 
 	RefConst<SoftBodyParticleSettings> mSettings;			///< Defines the configuration of this soft body
 

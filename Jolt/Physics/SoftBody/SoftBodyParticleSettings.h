@@ -14,45 +14,35 @@ JPH_NAMESPACE_BEGIN
 class JPH_EXPORT SoftBodyParticleSettings : public RefTarget<SoftBodyParticleSettings>
 {
 public:
+	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodyParticleSettings)
+
 	/// Calculate the initial lengths of all springs of the edges of this soft body
-	void				CalculateEdgeLengths()
-	{
-		for (Edge &e : mEdgeConstraints)
-		{
-			e.mRestLength = (Vec3(mVertices[e.mVertex[1]].mPosition) - Vec3(mVertices[e.mVertex[0]].mPosition)).Length();
-			JPH_ASSERT(e.mRestLength > 0.0f);
-		}
-	}
+	void				CalculateEdgeLengths();
 
 	/// Calculates the initial volume of all tetrahedra of this soft body
-	void				CalculateVolumeConstraintVolumes()
-	{
-		for (Volume &v : mVolumeConstraints)
-		{
-			Vec3 x1(mVertices[v.mVertex[0]].mPosition);
-			Vec3 x2(mVertices[v.mVertex[1]].mPosition);
-			Vec3 x3(mVertices[v.mVertex[2]].mPosition);
-			Vec3 x4(mVertices[v.mVertex[3]].mPosition);
+	void				CalculateVolumeConstraintVolumes();
 
-			Vec3 x1x2 = x2 - x1;
-			Vec3 x1x3 = x3 - x1;
-			Vec3 x1x4 = x4 - x1;
+	/// Saves the state of this object in binary form to inStream. Doesn't store the material list.
+	void				SaveBinaryState(StreamOut &inStream) const;
 
-			v.mSixRestVolume = abs(x1x2.Cross(x1x3).Dot(x1x4));
-		}
-	}
+	/// Restore the state of this object from inStream. Doesn't restore the material list.
+	void				RestoreBinaryState(StreamIn &inStream);
 
 	/// A vertex is a particle
-	struct Vertex
+	struct JPH_EXPORT Vertex
 	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Vertex)
+
 		Float3			mPosition { 0, 0, 0 };						///< Initial position of the vertex
 		Float3			mVelocity { 0, 0, 0 };						///< Initial velocity of the vertex
 		float			mInvMass = 1.0f;							///< Inverse of the mass of the vertex
 	};
 
 	/// A face defines the surface of the body
-	struct Face
+	struct JPH_EXPORT Face
 	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Face)
+
 		/// Check if this is a degenerate face (a face which points to the same vertex twice)
 		bool			IsDegenerate() const						{ return mVertex[0] == mVertex[1] || mVertex[0] == mVertex[2] || mVertex[1] == mVertex[2]; }
 
@@ -61,16 +51,20 @@ public:
 	};
 
 	/// An edge keeps two vertices at a constant distance using a spring: |x1 - x2| = rest length
-	struct Edge
+	struct JPH_EXPORT Edge
 	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Edge)
+
 		uint32			mVertex[2];									///< Indices of the vertices that form the edge
 		float			mRestLength = 1.0f;							///< Rest length of the spring
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
 	};
 
 	/// Volume constraint, keeps the volume of a tetrahedron constant
-	struct Volume
+	struct JPH_EXPORT Volume
 	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Volume)
+
 		uint32			mVertex[4];									///< Indices of the vertices that form the tetrhedron
 		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
