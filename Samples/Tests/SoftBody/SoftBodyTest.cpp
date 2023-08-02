@@ -62,7 +62,7 @@ void SoftBodyTest::Initialize()
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 
 	// Various shapes above cloth
-	ConvexHullShapeSettings tetrahedron({ Vec3(-1, 1, -1), Vec3(0, 1, 1), Vec3(1, 1, -1), Vec3(0, -1, 0) });
+	ConvexHullShapeSettings tetrahedron({ Vec3(-2, -2, -2), Vec3(0, -2, 2), Vec3(2, -2, -2), Vec3(0, 2, 0) });
 	tetrahedron.SetEmbedded();
 
 	StaticCompoundShapeSettings compound_shape;

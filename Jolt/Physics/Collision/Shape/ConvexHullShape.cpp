@@ -11,7 +11,9 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Geometry/ConvexHullBuilder.h>
+#include <Jolt/Geometry/ClosestPoint.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
@@ -1054,6 +1056,78 @@ void ConvexHullShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inS
 
 	// Point is inside
 	ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
+}
+
+void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	for (SoftBodyVertex &v : ioVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			Vec3 local_pos = inverse_transform * v.mPosition;
+
+			// Find most facing plane
+			float max_distance = -FLT_MAX;
+			const Plane *max_plane = nullptr;
+			for (const Plane &p : mPlanes)
+			{
+				float distance = p.SignedDistance(local_pos);
+				if (distance > max_distance)
+				{
+					max_distance = distance;
+					max_plane = &p;
+				}
+			}
+
+			// Check edges if we're outside the hull (when inside we know the closest face is also the closest point to the surface)
+			float closest_edge_distance = FLT_MAX;
+			Plane closest_plane = *max_plane;
+			if (max_distance <= 0.0f)
+			{
+				// Loop over edges
+				const Face &face = mFaces[int(max_plane - mPlanes.data())];
+				for (const uint8 *v_start = &mVertexIdx[face.mFirstVertex], *v1 = v_start, *v_end = v_start + face.mNumVertices; v1 < v_end; ++v1)
+				{
+					// Find second point
+					const uint8 *v2 = v1 + 1;
+					if (v2 == v_end)
+						v2 = v_start;
+
+					// Get edge points
+					Vec3 p1 = mPoints[*v1].mPosition;
+					Vec3 p2 = mPoints[*v2].mPosition;
+
+					// Check if the position is outside the edge (if not, the face will be closer)
+					Vec3 edge_normal = (p2 - p1).Cross(max_plane->GetNormal());
+					if (edge_normal.Dot(local_pos - p1) > 0.0f)
+					{
+						// Get closest point on edge
+						uint32 set;
+						Vec3 closest = ClosestPoint::GetClosestPointOnLine(p1 - local_pos, p2 - local_pos, set);
+						float distance = closest.Length();
+						if (distance < closest_edge_distance)
+						{
+							closest_edge_distance = distance;
+							Vec3 point = local_pos + closest;
+							Vec3 normal = (local_pos - point).NormalizedOr(max_plane->GetNormal());
+							closest_plane = Plane::sFromPointAndNormal(point, normal);
+						}
+					}
+				}
+			}
+
+			// Closest point on edge
+			float penetration = -(closest_edge_distance != FLT_MAX? closest_edge_distance : max_distance);
+			if (penetration > v.mLargestPenetration)
+			{
+				v.mLargestPenetration = penetration;
+
+				// Store collision
+				v.mCollisionPlane = closest_plane.GetTransformed(inCenterOfMassTransform);
+				v.mCollidingShapeIndex = inCollidingShapeIndex;
+			}
+		}
 }
 
 class ConvexHullShape::CHSGetTrianglesContext
