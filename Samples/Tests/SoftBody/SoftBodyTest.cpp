@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Utils/SoftBodyCreator.h>
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
@@ -49,14 +50,17 @@ void SoftBodyTest::Initialize()
 	mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 
 	// Sphere below pressurized sphere
-	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(15.5f, 7.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	RefConst<Shape> sphere_shape = new SphereShape(1.0f);
+	BodyCreationSettings bcs(sphere_shape, RVec3(15.5f, 7.0f, 15.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 	bcs.mMassPropertiesOverride.mMass = 100.0f;
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 
-	// Spheres above cloth
+	// Various shapes above cloth
+	RefConst<Shape> box_shape = new BoxShape(Vec3(0.75f, 1.0f, 1.25f));
 	for (int i = 0; i < 5; ++i)
 	{
+		bcs.SetShape(i % 2 == 0? sphere_shape : box_shape);
 		bcs.mPosition = RVec3(0, 15.0f + 3.0f * i, 0);
 		mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 	}
