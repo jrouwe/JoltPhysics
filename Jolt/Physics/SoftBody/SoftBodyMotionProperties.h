@@ -74,9 +74,6 @@ public:
 	/// Calculate the total mass and inertia of this body based on the current state of the vertices
 	void								CalculateMassAndInertia();
 
-	/// Calculate the global body state based on the current state of the vertices, calculates bounding box and 
-	void								CalculateBodyState();
-
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the state of a soft body
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;

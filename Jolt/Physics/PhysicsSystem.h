@@ -167,6 +167,7 @@ public:
 	void						GetBodies(BodyIDVector &outBodyIDs) const					{ return mBodyManager.GetBodyIDs(outBodyIDs); }
 
 	/// Get copy of the list of active bodies under protection of a lock.
+	/// @param inType The type of bodies to get
 	/// @param outBodyIDs On return, this will contain the list of BodyIDs
 	void						GetActiveBodies(EBodyType inType, BodyIDVector &outBodyIDs) const { return mBodyManager.GetActiveBodies(inType, outBodyIDs); }
 

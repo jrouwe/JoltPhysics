@@ -9,6 +9,9 @@
 JPH_NAMESPACE_BEGIN
 
 /// Run time information for a single particle of a soft body
+/// Note that at run-time you should only modify the inverse mass and/or velocity of a vertex to control the soft body.
+/// Modifying the position can lead to missed collisions.
+/// The other members are used internally by the soft body solver.
 class SoftBodyVertex
 {
 public:

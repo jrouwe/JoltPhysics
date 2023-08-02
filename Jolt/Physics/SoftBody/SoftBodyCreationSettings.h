@@ -12,6 +12,7 @@
 JPH_NAMESPACE_BEGIN
 
 /// This class contains the information needed to create a soft body object
+/// Note: Soft bodies are still in development and come with several caveats. Read the Architecture and API documentation for more information!
 class JPH_EXPORT SoftBodyCreationSettings
 {
 public:

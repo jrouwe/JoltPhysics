@@ -287,6 +287,28 @@ Because Jolt Physics uses a Symplectic Euler integrator, there will still be a s
 
 Constraints can be turned on / off by calling Constraint::SetEnabled. After every simulation step, check the total 'lambda' applied on each constraint and disable the constraint if the value goes over a certain threshold. Use e.g. SliderConstraint::GetTotalLambdaPosition / HingeConstraint::GetTotalLambdaRotation. You can see 'lambda' as the linear/angular impulse applied at the constraint in the last physics step to keep the constraint together.
 
+## Soft Bodies
+
+Soft bodies (also known as deformable bodies) can be used to create e.g. a soft ball or a piece of cloth. They are created in a very similar way to normal rigid bodies:
+
+* First allocate a new SoftBodySharedSettings object on the heap. This object will contain the initial positions of all particles and the constraints between the particles. This object can be shared between multiple soft bodies and should remain constant during its lifetime.
+* Then create a SoftBodyCreationSettings object (e.g. on the stack) and fill in the desired properties of the soft body.
+* Finally construct the body and add it to the world through BodyInterface::CreateAndAddSoftBody.
+
+Soft bodies use the Body class just like rigid bodies but can be identified by checking Body::IsSoftBody. To get to the soft body state, cast the result of Body::GetMotionProperties to SoftBodyMotionProperties and use its API.
+
+Soft bodies try to implement as much as possible of the normal Body interface, but this interface provides a simplified version of reality, e.g. Body::GetLinearVelocity will return the average particle speed and Body::GetPosition returns the average particle position. During simulation, a soft body will never update its rotation. Internally it stores particle velocities in local space, so if you rotate a soft body e.g. by calling BodyInterface::SetRotation, the body will rotate but its velocity will as well.
+
+Soft bodies are currently in development, please note the following:
+
+* Soft bodies currently can't sleep, are executed on a single CPU core and collision checks are not as efficient as they could be.
+* Soft bodies can only collide with rigid bodies, collisions between soft bodies are not implemented yet.
+* ContactListener callbacks are not triggered for soft bodies.
+* AddForce/AddTorque/SetLinearVelocity/SetLinearVelocityClamped/SetAngularVelocity/SetAngularVelocityClamped/AddImpulse/AddAngularImpulse have no effect on soft bodies as the velocity is stored per particle rather than per body.
+* Buoyancy calculations have not been implemented yet.
+* Constraints cannot operate on soft bodies, set the inverse mass of a particle to zero and move it by setting a velocity to constrain a soft body to something else.
+* When calculating friction / restitution an empty SubShapeID will be passed to the ContactConstraintManager::CombineFunction because this is called once per body pair rather than once per sub shape as is common for rigid bodies.
+
 ## Broad Phase
 
 When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body.
