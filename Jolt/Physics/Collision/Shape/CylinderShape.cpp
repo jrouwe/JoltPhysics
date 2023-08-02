@@ -322,13 +322,13 @@ void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ar
 			if (side_penetration < 0.0f && top_penetration < 0.0f)
 			{
 				// We're outside the cylinder height and radius
-				point = side_normal / (mRadius * side_normal_length) + Vec3(0, mHalfHeight * Sign(local_pos.GetY()), 0);
+				point = side_normal * (mRadius / side_normal_length) + Vec3(0, mHalfHeight * Sign(local_pos.GetY()), 0);
 				normal = point.Normalized();
 			}
 			else if (side_penetration < top_penetration)
 			{
 				// Side surface is closest
-				normal = side_normal / side_normal_length;
+				normal = side_normal_length > 0.0f? side_normal / side_normal_length : Vec3::sAxisX();
 				point = mRadius * normal;
 			}
 			else
@@ -338,9 +338,17 @@ void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ar
 				point = mHalfHeight * normal;
 			}
 
-			// Store collision
-			v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
-			v.mCollidingShapeIndex = inCollidingShapeIndex;
+			// Calculate penetration
+			Plane plane = Plane::sFromPointAndNormal(point, normal);
+			float penetration = -plane.SignedDistance(local_pos);
+			if (penetration > v.mLargestPenetration)
+			{
+				v.mLargestPenetration = penetration;
+
+				// Store collision
+				v.mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
+				v.mCollidingShapeIndex = inCollidingShapeIndex;
+			}
 		}
 }
 

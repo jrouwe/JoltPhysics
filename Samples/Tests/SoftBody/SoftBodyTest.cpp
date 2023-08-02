@@ -31,7 +31,7 @@ void SoftBodyTest::Initialize()
 	CreateMeshTerrain();
 
 	// Create cloth that's fixated at the corners
-	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(40), RVec3(0, 10.0f, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI));
+	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(), RVec3(0, 10.0f, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI));
 	cloth.mObjectLayer = Layers::MOVING;
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
@@ -82,10 +82,10 @@ void SoftBodyTest::Initialize()
 	};
 	int num_shapes = (int)std::size(shapes);
 
-	for (int i = 0; i < 2 * num_shapes; ++i)
+	for (int i = 0; i < num_shapes; ++i)
 	{
 		bcs.SetShape(shapes[i % num_shapes]);
-		bcs.mPosition = RVec3(0, 15.0f + 3.0f * i, 0);
+		bcs.mPosition = RVec3(-float(num_shapes) + 2.0f * i, 15.0f, 0);
 		mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 	}
 }
