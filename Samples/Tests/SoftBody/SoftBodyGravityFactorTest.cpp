@@ -4,23 +4,22 @@
 
 #include <TestFramework.h>
 
-#include <Tests/SoftBody/SoftBodyRestitutionTest.h>
+#include <Tests/SoftBody/SoftBodyGravityFactorTest.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Utils/SoftBodyCreator.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyRestitutionTest)
+JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodyGravityFactorTest)
 {
-	JPH_ADD_BASE_CLASS(SoftBodyRestitutionTest, Test)
+	JPH_ADD_BASE_CLASS(SoftBodyGravityFactorTest, Test)
 }
 
-void SoftBodyRestitutionTest::Initialize()
+void SoftBodyGravityFactorTest::Initialize()
 {
 	// Floor
-	Body &floor = CreateFloor();
-	floor.SetRestitution(0.0f);
+	CreateFloor();
 
-	// Bodies with increasing restitution
+	// Bodies with increasing gravity factor
 	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere());
 	sphere.mObjectLayer = Layers::MOVING;
 	sphere.mPressure = 2000.0f;
@@ -28,7 +27,7 @@ void SoftBodyRestitutionTest::Initialize()
 	for (int i = 0; i <= 10; ++i)
 	{
 		sphere.mPosition = RVec3(-50.0f + i * 10.0f, 10.0f, 0);
-		sphere.mRestitution = 0.1f * i;
+		sphere.mGravityFactor = 0.1f * i;
 		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 	}
 
@@ -38,7 +37,7 @@ void SoftBodyRestitutionTest::Initialize()
 	for (int i = 0; i <= 10; ++i)
 	{
 		cube.mPosition = RVec3(-50.0f + i * 10.0f, 10.0f, -5.0f);
-		cube.mRestitution = 0.1f * i;
+		cube.mGravityFactor = 0.1f * i;
 		mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
 	}
 }

@@ -20,7 +20,7 @@ void SoftBodyPressureTest::Initialize()
 	CreateFloor();
 
 	// Bodies with increasing pressure
-	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere());
+	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere(2.0f));
 	sphere.mObjectLayer = Layers::MOVING;
 
 	for (int i = 0; i <= 10; ++i)

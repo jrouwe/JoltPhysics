@@ -231,9 +231,9 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 
 	// Create vertices
 	SoftBodySharedSettings::Vertex v;
-	Vec3::sUnitSpherical(0, 0).StoreFloat3(&v.mPosition);
+	(inRadius * Vec3::sUnitSpherical(0, 0)).StoreFloat3(&v.mPosition);
 	settings->mVertices.push_back(v);
-	Vec3::sUnitSpherical(JPH_PI, 0).StoreFloat3(&v.mPosition);
+	(inRadius * Vec3::sUnitSpherical(JPH_PI, 0)).StoreFloat3(&v.mPosition);
 	settings->mVertices.push_back(v);
 	for (uint theta = 1; theta < inNumTheta - 1; ++theta)
 		for (uint phi = 0; phi < inNumPhi; ++phi)

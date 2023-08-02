@@ -163,6 +163,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyGravityFactorTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyGravityFactorTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.cpp

@@ -43,8 +43,8 @@ void SoftBodyFrictionTest::Initialize()
 
 	for (int i = 0; i <= 10; ++i)
 	{
-		cube.mFriction = 0.1f * i;
 		cube.mPosition = RVec3(-50.0f + i * 10.0f, 1.0f, -5.0f);
+		cube.mFriction = 0.1f * i;
 		mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
 	}
 }
