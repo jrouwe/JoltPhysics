@@ -22,6 +22,53 @@ using namespace JPH;
 using namespace JPH::literals;
 using namespace std;
 
+inline void CHECK_APPROX_NOT_EQUAL(float inLHS, float inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(abs(inRHS - inLHS) >= inTolerance);
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(double inLHS, double inRHS, double inTolerance = 1.0e-6)
+{
+	CHECK(abs(inRHS - inLHS) >= inTolerance);
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(Vec3Arg inLHS, Vec3Arg inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(!inLHS.IsClose(inRHS, inTolerance * inTolerance));
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(Vec4Arg inLHS, Vec4Arg inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(!inLHS.IsClose(inRHS, inTolerance * inTolerance));
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(Mat44Arg inLHS, Mat44Arg inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(!inLHS.IsClose(inRHS, inTolerance * inTolerance));
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(DMat44Arg inLHS, DMat44Arg inRHS, float inTolerance = 1.0e-6f)
+{
+	CHECK(!inLHS.IsClose(inRHS, inTolerance * inTolerance));
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(QuatArg inLHS, QuatArg inRHS, float inTolerance = 1.0e-6f)
+{
+	bool close = inLHS.IsClose(inRHS, inTolerance * inTolerance) || inLHS.IsClose(-inRHS, inTolerance * inTolerance);
+	CHECK(!close);
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(DVec3Arg inLHS, DVec3Arg inRHS, double inTolerance = 1.0e-6)
+{
+	CHECK(!inLHS.IsClose(inRHS, inTolerance * inTolerance));
+}
+
+inline void CHECK_APPROX_NOT_EQUAL(const Float2 &inLHS, const Float2 &inRHS, float inTolerance = 1.0e-6f)
+{
+	Float2 diff(inLHS.x - inRHS.x, inLHS.y - inRHS.y);
+	CHECK(Square(diff.x) + Square(diff.y) > inTolerance * inTolerance);
+}
+
 inline void CHECK_APPROX_EQUAL(float inLHS, float inRHS, float inTolerance = 1.0e-6f)
 {
 	CHECK(abs(inRHS - inLHS) <= inTolerance);
