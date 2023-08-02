@@ -20,6 +20,12 @@ public:
 	/// Destructor
 	virtual						~StateRecorderFilter() = default;
 
+	/// If the state of previous delta time should be saved
+	virtual bool				ShouldSavePreviousDeltaTime() const							{ return true; }
+
+	/// If the state of gravity should be saved
+	virtual bool				ShouldSaveGravity() const									{ return true; }
+
 	/// If the state of any body should be saved
 	virtual bool				ShouldSaveBodies() const									{ return true; }
 
