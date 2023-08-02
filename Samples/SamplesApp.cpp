@@ -1719,19 +1719,20 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 						// Find closest vertex
 						Vec3 local_hit_position = Vec3(drag_body.GetInverseCenterOfMassTransform() * hit_position);
 						float closest_dist_sq = FLT_MAX;
-						for (SoftBodyVertex &v : mp->mVertices)
+						for (SoftBodyVertex &v : mp->GetVertices())
 						{
 							float dist_sq = (v.mPosition - local_hit_position).LengthSq();
 							if (dist_sq < closest_dist_sq)
 							{
 								closest_dist_sq = dist_sq;
-								mDragVertexIndex = uint(&v - mp->mVertices.data());
+								mDragVertexIndex = uint(&v - mp->GetVertices().data());
 							}
 						}
 
 						// Make the vertex kinematic
-						mDragVertexPreviousInvMass = mp->mVertices[mDragVertexIndex].mInvMass;
-						mp->mVertices[mDragVertexIndex].mInvMass = 0.0f;
+						SoftBodyVertex &v = mp->GetVertex(mDragVertexIndex);
+						mDragVertexPreviousInvMass = v.mInvMass;
+						v.mInvMass = 0.0f;
 					}
 					else if (drag_body.IsDynamic())
 					{
@@ -1783,7 +1784,7 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 					Body &body = lock.GetBody();
 					JPH_ASSERT(body.IsSoftBody());
 					SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
-					mp->mVertices[mDragVertexIndex].mInvMass = mDragVertexPreviousInvMass;
+					mp->GetVertex(mDragVertexIndex).mInvMass = mDragVertexPreviousInvMass;
 				}
 				mDragVertexIndex = ~uint(0);
 				mDragVertexPreviousInvMass = 0;
@@ -1810,7 +1811,8 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 					{
 						Body &body = lock.GetBody();
 						SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
-						mp->mVertices[mDragVertexIndex].mVelocity = body.GetRotation().Conjugated() * Vec3(new_pos - body.GetCenterOfMassTransform() * mp->mVertices[mDragVertexIndex].mPosition) / inDeltaTime;
+						SoftBodyVertex &v = mp->GetVertex(mDragVertexIndex);
+						v.mVelocity = body.GetRotation().Conjugated() * Vec3(new_pos - body.GetCenterOfMassTransform() * v.mPosition) / inDeltaTime;
 					}
 				}
 				break;

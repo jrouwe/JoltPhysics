@@ -42,6 +42,19 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 	mLocalPredictedBounds = mLocalBounds;
 }
 
+float SoftBodyMotionProperties::GetVolumeTimesSix() const
+{
+	float six_volume = 0.0f;
+	for (const Face &f : mSettings->mFaces)
+	{
+		Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
+		Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
+		Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
+		six_volume += x1.Cross(x2).Dot(x3); // We pick zero as the origin as this is the center of the bounding box so should give good accuracy
+	}
+	return six_volume;
+}
+
 void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
@@ -158,14 +171,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 		if (pressure_coefficient > 0.0f)
 		{
 			// Calculate total volume
-			float six_volume = 0.0f;
-			for (const Face &f : mSettings->mFaces)
-			{
-				Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
-				Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
-				Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
-				six_volume += x1.Cross(x2).Dot(x3); // We pick zero as the origin as this is the center of the bounding box so should give good accuracy
-			}
+			float six_volume = GetVolumeTimesSix();
 			if (six_volume > 0.0f)
 			{
 				// Apply pressure
@@ -417,19 +423,19 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 
 #ifdef JPH_DEBUG_RENDERER
 
-void SoftBodyMotionProperties::DrawVertices(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	for (const Vertex &v : mVertices)
 		inRenderer->DrawMarker(inCenterOfMassTransform * v.mPosition, Color::sRed, 0.05f);
 }
 
-void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	for (const Edge &e : mSettings->mEdgeConstraints)
 		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, Color::sWhite);
 }
 
-void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	for (const Volume &v : mSettings->mVolumeConstraints)
 	{
@@ -445,7 +451,7 @@ void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, 
 	}
 }
 
-void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, Mat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	inRenderer->DrawWireBox(inCenterOfMassTransform, mLocalPredictedBounds, Color::sRed);
 }

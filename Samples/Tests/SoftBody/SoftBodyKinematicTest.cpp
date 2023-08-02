@@ -40,8 +40,8 @@ void SoftBodyKinematicTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
 		RVec3 com = body.GetCenterOfMassPosition();
 		if (com.GetZ() >= 10.0f)
-			mp->mVertices[0].mVelocity = Vec3(0, 0, -5);
+			mp->GetVertex(0).mVelocity = Vec3(0, 0, -5);
 		else if (com.GetZ() <= -10.0f)
-			mp->mVertices[0].mVelocity = Vec3(0, 0, 5);
+			mp->GetVertex(0).mVelocity = Vec3(0, 0, 5);
 	}
 }

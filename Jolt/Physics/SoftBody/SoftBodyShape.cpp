@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
@@ -20,13 +21,13 @@ JPH_NAMESPACE_BEGIN
 uint SoftBodyShape::GetSubShapeIDBits() const
 {
 	// Ensure we have enough bits to encode our shape [0, n - 1]
-	uint32 n = (uint32)mSoftBodyMotionProperties->mSettings->mFaces.size() - 1;
+	uint32 n = (uint32)mSoftBodyMotionProperties->GetFaces().size() - 1;
 	return 32 - CountLeadingZeros(n);
 }
 
 AABox SoftBodyShape::GetLocalBounds() const
 {
-	return mSoftBodyMotionProperties->mLocalBounds;
+	return mSoftBodyMotionProperties->GetLocalBounds();
 }
 
 bool SoftBodyShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const
@@ -36,8 +37,8 @@ bool SoftBodyShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSub
 	uint num_triangle_bits = GetSubShapeIDBits();
 	uint triangle_idx = uint(-1);
 
-	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
-	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->mSettings->mFaces)
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->GetVertices();
+	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->GetFaces())
 	{
 		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
 		Vec3 x2 = vertices[f.mVertex[1]].mPosition;
@@ -50,7 +51,7 @@ bool SoftBodyShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSub
 			ioHit.mFraction = fraction;
 
 			// Store triangle index
-			triangle_idx = uint(&f - mSoftBodyMotionProperties->mSettings->mFaces.data());
+			triangle_idx = uint(&f - mSoftBodyMotionProperties->GetFaces().data());
 		}
 	}
 
@@ -71,8 +72,8 @@ void SoftBodyShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 
 	uint num_triangle_bits = GetSubShapeIDBits();
 
-	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
-	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->mSettings->mFaces)
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->GetVertices();
+	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->GetFaces())
 	{
 		Vec3 x1 = vertices[f.mVertex[0]].mPosition;
 		Vec3 x2 = vertices[f.mVertex[1]].mPosition;
@@ -90,9 +91,45 @@ void SoftBodyShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 			RayCastResult hit;
 			hit.mBodyID = TransformedShape::sGetBodyID(ioCollector.GetContext());
 			hit.mFraction = fraction;
-			hit.mSubShapeID2 = inSubShapeIDCreator.PushID(uint(&f - mSoftBodyMotionProperties->mSettings->mFaces.data()), num_triangle_bits).GetID();
+			hit.mSubShapeID2 = inSubShapeIDCreator.PushID(uint(&f - mSoftBodyMotionProperties->GetFaces().data()), num_triangle_bits).GetID();
 			ioCollector.AddHit(hit);
 		}
+	}
+}
+
+void SoftBodyShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
+{
+	// First test if we're inside our bounding box
+	AABox bounds = GetLocalBounds();
+	if (bounds.Contains(inPoint))
+	{
+		// A collector that just counts the number of hits
+		class HitCountCollector : public CastRayCollector	
+		{
+		public:
+			virtual void	AddHit(const RayCastResult &inResult) override
+			{
+				// Store the last sub shape ID so that we can provide something to our outer hit collector
+				mSubShapeID = inResult.mSubShapeID2;
+
+				++mHitCount;
+			}
+
+			int				mHitCount = 0;
+			SubShapeID		mSubShapeID;
+		};
+		HitCountCollector collector;
+
+		// Configure the raycast
+		RayCastSettings settings;
+		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+
+		// Cast a ray that's 10% longer than the heigth of our bounding box
+		CastRay(RayCast { inPoint, 1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, settings, inSubShapeIDCreator, collector, inShapeFilter);
+
+		// Odd amount of hits means inside
+		if ((collector.mHitCount & 1) == 1)
+			ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), collector.mSubShapeID });
 	}
 }
 
@@ -102,8 +139,8 @@ const PhysicsMaterial *SoftBodyShape::GetMaterial(const SubShapeID &inSubShapeID
 	uint triangle_idx = inSubShapeID.PopID(GetSubShapeIDBits(), remainder);
 	JPH_ASSERT(remainder.IsEmpty());
 
-	const SoftBodyMotionProperties::Face &f = mSoftBodyMotionProperties->mSettings->mFaces[triangle_idx];
-	return mSoftBodyMotionProperties->mSettings->mMaterials[f.mMaterialIndex];
+	const SoftBodyMotionProperties::Face &f = mSoftBodyMotionProperties->GetFace(triangle_idx);
+	return mSoftBodyMotionProperties->GetMaterials()[f.mMaterialIndex];
 }
 
 Vec3 SoftBodyShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
@@ -112,8 +149,8 @@ Vec3 SoftBodyShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inL
 	uint triangle_idx = inSubShapeID.PopID(GetSubShapeIDBits(), remainder);
 	JPH_ASSERT(remainder.IsEmpty());
 
-	const SoftBodyMotionProperties::Face &f = mSoftBodyMotionProperties->mSettings->mFaces[triangle_idx];
-	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
+	const SoftBodyMotionProperties::Face &f = mSoftBodyMotionProperties->GetFace(triangle_idx);
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->GetVertices();
 
 	Vec3 x1 = vertices[f.mVertex[0]].mPosition;
 	Vec3 x2 = vertices[f.mVertex[1]].mPosition;
@@ -122,12 +159,32 @@ Vec3 SoftBodyShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inL
 	return (x2 - x1).Cross(x3 - x1).NormalizedOr(Vec3::sAxisY());
 }
 
+void SoftBodyShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
+{
+	SubShapeID remainder;
+	uint triangle_idx = inSubShapeID.PopID(GetSubShapeIDBits(), remainder);
+	JPH_ASSERT(remainder.IsEmpty());
+
+	const SoftBodyMotionProperties::Face &f = mSoftBodyMotionProperties->GetFace(triangle_idx);
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->GetVertices();
+
+	for (int i = 0; i < 3; ++i)
+		outVertices.push_back(inCenterOfMassTransform * (inScale * vertices[f.mVertex[i]].mPosition));
+}
+
+void SoftBodyShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const Plane &inSurface, float &outTotalVolume, float &outSubmergedVolume, Vec3 &outCenterOfBuoyancy JPH_IF_DEBUG_RENDERER(, RVec3Arg inBaseOffset)) const
+{
+	outSubmergedVolume = 0.0f;
+	outTotalVolume = mSoftBodyMotionProperties->GetVolume();
+	outCenterOfBuoyancy = Vec3::sZero();
+}
+
 #ifdef JPH_DEBUG_RENDERER
 
 void SoftBodyShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
-	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
-	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->mSettings->mFaces)
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->GetVertices();
+	for (const SoftBodyMotionProperties::Face &f : mSoftBodyMotionProperties->GetFaces())
 	{
 		RVec3 x1 = inCenterOfMassTransform * vertices[f.mVertex[0]].mPosition;
 		RVec3 x2 = inCenterOfMassTransform * vertices[f.mVertex[1]].mPosition;
@@ -156,9 +213,9 @@ int SoftBodyShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTri
 {
 	SBSGetTrianglesContext &context = reinterpret_cast<SBSGetTrianglesContext &>(ioContext);
 
-	const Array<SoftBodyMotionProperties::Face> &faces = mSoftBodyMotionProperties->mSettings->mFaces;
-	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->mVertices;
-	const PhysicsMaterialList &materials = mSoftBodyMotionProperties->mSettings->mMaterials;
+	const Array<SoftBodyMotionProperties::Face> &faces = mSoftBodyMotionProperties->GetFaces();
+	const Array<SoftBodyVertex> &vertices = mSoftBodyMotionProperties->GetVertices();
+	const PhysicsMaterialList &materials = mSoftBodyMotionProperties->GetMaterials();
 
 	int num_triangles = min(inMaxTrianglesRequested, (int)faces.size() - context.mTriangleIndex);
 	for (int i = 0; i < num_triangles; ++i)
@@ -179,6 +236,16 @@ int SoftBodyShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTri
 
 	context.mTriangleIndex += num_triangles;
 	return num_triangles;
+}
+
+Shape::Stats SoftBodyShape::GetStats() const
+{
+	return Stats(sizeof(this), (uint)mSoftBodyMotionProperties->GetFaces().size());
+}
+
+float SoftBodyShape::GetVolume() const
+{
+	return mSoftBodyMotionProperties->GetVolume();
 }
 
 JPH_NAMESPACE_END
