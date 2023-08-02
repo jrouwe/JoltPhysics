@@ -501,4 +501,34 @@ void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, RM
 
 #endif // JPH_DEBUG_RENDERER
 
+void SoftBodyMotionProperties::SaveState(StateRecorder &inStream) const
+{
+	MotionProperties::SaveState(inStream);
+
+	for (const Vertex &v : mVertices)
+	{
+		inStream.Write(v.mPreviousPosition);
+		inStream.Write(v.mPosition);
+		inStream.Write(v.mVelocity);
+	}
+
+	inStream.Write(mLocalBounds);
+	inStream.Write(mLocalPredictedBounds);
+}
+
+void SoftBodyMotionProperties::RestoreState(StateRecorder &inStream)
+{
+	MotionProperties::RestoreState(inStream);
+
+	for (Vertex &v : mVertices)
+	{
+		inStream.Read(v.mPreviousPosition);
+		inStream.Read(v.mPosition);
+		inStream.Read(v.mVelocity);
+	}
+
+	inStream.Read(mLocalBounds);
+	inStream.Read(mLocalPredictedBounds);
+}
+
 JPH_NAMESPACE_END

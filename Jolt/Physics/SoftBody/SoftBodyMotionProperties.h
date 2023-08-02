@@ -74,6 +74,9 @@ public:
 	/// Calculate the total mass and inertia of this body based on the current state of the vertices
 	void								CalculateMassAndInertia();
 
+	/// Calculate the global body state based on the current state of the vertices, calculates bounding box and 
+	void								CalculateBodyState();
+
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the state of a soft body
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
@@ -81,6 +84,12 @@ public:
 	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
+
+	/// Saving state for replay
+	void								SaveState(StateRecorder &inStream) const;
+
+	/// Restoring state for replay
+	void								RestoreState(StateRecorder &inStream);
 
 private:
 	/// Returns 6 times the volume of the soft body

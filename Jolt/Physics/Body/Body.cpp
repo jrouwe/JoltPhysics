@@ -6,6 +6,7 @@
 
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
@@ -293,7 +294,12 @@ void Body::SaveState(StateRecorder &inStream) const
 	inStream.Write(mMotionType);
 
 	if (mMotionProperties != nullptr)
-		mMotionProperties->SaveState(inStream);
+	{
+		if (IsSoftBody())
+			static_cast<const SoftBodyMotionProperties *>(mMotionProperties)->SaveState(inStream);
+		else
+			mMotionProperties->SaveState(inStream);
+	}
 }
 
 void Body::RestoreState(StateRecorder &inStream)
@@ -307,7 +313,11 @@ void Body::RestoreState(StateRecorder &inStream)
 
 	if (mMotionProperties != nullptr)
 	{
-		mMotionProperties->RestoreState(inStream);
+		if (IsSoftBody())
+			static_cast<SoftBodyMotionProperties *>(mMotionProperties)->RestoreState(inStream);
+		else
+			mMotionProperties->RestoreState(inStream);
+
 		JPH_IF_ENABLE_ASSERTS(mMotionProperties->mCachedMotionType = mMotionType);
 	}
 
