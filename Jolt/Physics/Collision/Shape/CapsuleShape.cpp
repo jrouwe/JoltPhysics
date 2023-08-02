@@ -12,6 +12,7 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Geometry/RayCapsule.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
@@ -319,6 +320,58 @@ void CapsuleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubS
 
 	if (in_sphere || in_cylinder)
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
+}
+
+void CapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	for (SoftBodyVertex &v : ioVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			// Calculate penetration
+			Vec3 local_pos = inverse_transform * v.mPosition;
+			if (abs(local_pos.GetY()) <= mHalfHeightOfCylinder)
+			{
+				// Near cylinder
+				Vec3 normal = local_pos;
+				normal.SetY(0.0f);
+				float normal_length = normal.Length();
+				float penetration = mRadius - normal_length;
+				if (penetration > v.mLargestPenetration)
+				{
+					v.mLargestPenetration = penetration;
+
+					// Calculate contact point and normal
+					normal = normal_length > 0.0f? normal / normal_length : Vec3::sAxisX();
+					Vec3 point = mRadius * normal;
+
+					// Store collision
+					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
+					v.mCollidingShapeIndex = inCollidingShapeIndex;
+				}
+			}
+			else
+			{
+				// Near cap
+				Vec3 center = Vec3(0, Sign(local_pos.GetY()) * mHalfHeightOfCylinder, 0);
+				Vec3 delta = local_pos - center;
+				float distance = delta.Length();
+				float penetration = mRadius - distance;
+				if (penetration > v.mLargestPenetration)
+				{
+					v.mLargestPenetration = penetration;
+
+					// Calculate contact point and normal
+					Vec3 normal = delta / distance;
+					Vec3 point = center + mRadius * normal;
+
+					// Store collision
+					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
+					v.mCollidingShapeIndex = inCollidingShapeIndex;
+				}
+			}
+		}
 }
 
 void CapsuleShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
