@@ -261,7 +261,7 @@ Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCr
 	JPH_IF_ENABLE_ASSERTS(mp->mCachedMotionType = body->mMotionType;)
 	mp->Initialize(inSoftBodyCreationSettings);
 
-	body->SetPositionAndRotationInternal(inSoftBodyCreationSettings.mPosition, inSoftBodyCreationSettings.mRotation);
+	body->SetPositionAndRotationInternal(inSoftBodyCreationSettings.mPosition, inSoftBodyCreationSettings.mMakeRotationIdentity? Quat::sIdentity() : inSoftBodyCreationSettings.mRotation);
 
 	return body;
 }

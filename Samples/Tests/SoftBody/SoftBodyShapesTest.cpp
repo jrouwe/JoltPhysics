@@ -35,6 +35,7 @@ void SoftBodyShapesTest::Initialize()
 	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(), RVec3(0, 10.0f, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI));
 	cloth.mObjectLayer = Layers::MOVING;
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
+	cloth.mMakeRotationIdentity = false; // Test explicitly checks if soft bodies with a rotation collide with shapes properly
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 
 	// Create cube

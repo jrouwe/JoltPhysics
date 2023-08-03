@@ -25,6 +25,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodyCreationSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mPressure)
 	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mGravityFactor)
 	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mUpdatePosition)
+	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mMakeRotationIdentity)
 }
 
 void SoftBodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
@@ -40,6 +41,7 @@ void SoftBodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mPressure);
 	inStream.Write(mGravityFactor);
 	inStream.Write(mUpdatePosition);
+	inStream.Write(mMakeRotationIdentity);
 }
 
 void SoftBodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
@@ -55,6 +57,7 @@ void SoftBodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mPressure);
 	inStream.Read(mGravityFactor);
 	inStream.Read(mUpdatePosition);
+	inStream.Read(mMakeRotationIdentity);
 }
 
 JPH_NAMESPACE_END

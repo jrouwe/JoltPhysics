@@ -58,12 +58,13 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 
 	// Initialize vertices
 	mVertices.resize(inSettings.mSettings->mVertices.size());
+	Mat44 rotation = inSettings.mMakeRotationIdentity? Mat44::sRotation(inSettings.mRotation) : Mat44::sIdentity();
 	for (Array<Vertex>::size_type v = 0, s = mVertices.size(); v < s; ++v)
 	{
 		const SoftBodySharedSettings::Vertex &in_vertex = inSettings.mSettings->mVertices[v];
 		Vertex &out_vertex = mVertices[v];
-		out_vertex.mPreviousPosition = out_vertex.mPosition = Vec3(in_vertex.mPosition);
-		out_vertex.mVelocity = Vec3(in_vertex.mVelocity);
+		out_vertex.mPreviousPosition = out_vertex.mPosition = rotation * Vec3(in_vertex.mPosition);
+		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
 		out_vertex.mCollidingShapeIndex = -1;
 		out_vertex.mLargestPenetration = -FLT_MAX;
 		out_vertex.mInvMass = in_vertex.mInvMass;

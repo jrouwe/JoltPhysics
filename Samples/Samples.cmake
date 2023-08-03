@@ -173,6 +173,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyUpdatePositionTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyUpdatePositionTest.h
 	${SAMPLES_ROOT}/Tests/Test.cpp
 	${SAMPLES_ROOT}/Tests/Test.h
 	${SAMPLES_ROOT}/Tests/Tools/LoadSnapshotTest.cpp
