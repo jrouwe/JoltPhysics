@@ -2321,12 +2321,12 @@ void PhysicsSystem::SaveState(StateRecorder &inStream) const
 
 	const StateRecorderFilter *filter = inStream.GetFilter();
 
-	if(filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
 	{
 		inStream.Write(mPreviousStepDeltaTime);
 	}
 
-	if(filter == nullptr || filter->ShouldSaveGravity())
+	if (filter == nullptr || filter->ShouldSaveGravity())
 	{
 		inStream.Write(mGravity);
 	}
@@ -2344,12 +2344,12 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 
 	const StateRecorderFilter *filter = inStream.GetFilter();
 
-	if(filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
 	{
 		inStream.Read(mPreviousStepDeltaTime);
 	}
 
-	if(filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
 	{
 		inStream.Read(mGravity);
 	}

@@ -1479,7 +1479,8 @@ TEST_SUITE("PhysicsTests")
 		}
 	}
 
-	class StateRecorderFilterUTest : public StateRecorderFilter {
+	class StateRecorderFilterUTest : public StateRecorderFilter
+	{
 	public:
 		bool						mShouldSavePreviousDeltaTime	= true;
 		bool						mShouldSaveGravity				= true;
@@ -1492,7 +1493,7 @@ TEST_SUITE("PhysicsTests")
 
 		bool						ShouldSaveBody(const BodyID &inBodyID) const
 		{ 
-			return find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();;
+			return find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
 		}
 
 		virtual bool				ShouldSaveBody(const Body &inBody) const
@@ -1523,13 +1524,13 @@ TEST_SUITE("PhysicsTests")
 			Vec3 upside_down_gravity = -gravity;
 
   			// Create the ground.
-			Body &ground = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3(1.f, 1.f, 1.f), EActivation::DontActivate);
+			Body &ground = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3::sReplicate(1.0f), EActivation::DontActivate);
 
 			// Create the bodies all at the same location (overlapping each other)
-			Body &box1 = c.CreateBox(RVec3(0, 10.0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1.f, 1.f, 1.f), EActivation::Activate);
-			Body &sphere1 = c.CreateSphere(RVec3(0, 10.0, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
-			Body &box2 = c.CreateBox(RVec3(5.0, 10.0, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3(1.f, 1.f, 1.f), EActivation::Activate);
-			Body &sphere2 = c.CreateSphere(RVec3(5.0, 10.0, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
+			Body &box1 = c.CreateBox(RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+			Body &sphere1 = c.CreateSphere(RVec3(0, 10, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
+			Body &box2 = c.CreateBox(RVec3(5, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+			Body &sphere2 = c.CreateSphere(RVec3(5, 10, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
 
 			if (mode == 0)
 			{
@@ -1541,7 +1542,6 @@ TEST_SUITE("PhysicsTests")
 			else if (mode == 1)
 			{
 				// It's testing ignoring Gravity & Delta.
-
 				filter = StateRecorderFilterUTest();
 				filter.mShouldSavePreviousDeltaTime = false;
 				filter.mShouldSaveGravity = false;
@@ -1569,19 +1569,17 @@ TEST_SUITE("PhysicsTests")
 
 			// Simulate 10 frames
 			for (int i = 0; i < 10; i++)
-			{
 				c.SimulateSingleStep();
-			}
 
 			// Validate the bodies changed.
 			const RMat44 intermediate_box1_transform = box1.GetWorldTransform();
 			const RMat44 intermediate_sphere1_transform = sphere1.GetWorldTransform();
 			const RMat44 intermediate_box2_transform = box2.GetWorldTransform();
 			const RMat44 intermediate_sphere2_transform = sphere2.GetWorldTransform();
-			CHECK_APPROX_NOT_EQUAL(intermediate_box1_transform, initial_box1_transform);
-			CHECK_APPROX_NOT_EQUAL(intermediate_sphere1_transform, initial_sphere1_transform);
-			CHECK_APPROX_NOT_EQUAL(intermediate_box2_transform, initial_box2_transform);
-			CHECK_APPROX_NOT_EQUAL(intermediate_sphere2_transform, initial_sphere2_transform);
+			CHECK(intermediate_box1_transform != initial_box1_transform);
+			CHECK(intermediate_sphere1_transform != initial_sphere1_transform);
+			CHECK(intermediate_box2_transform != initial_box2_transform);
+			CHECK(intermediate_sphere2_transform != initial_sphere2_transform);
 
 			// Save the intermediate state.
 			StateRecorderImpl intermediate_state;
@@ -1597,27 +1595,29 @@ TEST_SUITE("PhysicsTests")
 			if (mode == 0)
 			{
 				// Make sure the gravity is restored.
-				CHECK_APPROX_EQUAL(c.GetSystem()->GetGravity(), gravity);
+				CHECK(c.GetSystem()->GetGravity() == gravity);
 			}
 			if (mode == 1 || mode == 2)
 			{
 				// Make sure the gravity is NOT restored.
-				CHECK_APPROX_EQUAL(c.GetSystem()->GetGravity(), upside_down_gravity);
+				CHECK(c.GetSystem()->GetGravity() == upside_down_gravity);
 				c.GetSystem()->SetGravity(gravity);
 			}
 
 			// Make sure the state is properly set back to the initial state.
-			CHECK_APPROX_EQUAL(box1.GetWorldTransform(), initial_box1_transform);
-			CHECK_APPROX_EQUAL(sphere1.GetWorldTransform(), initial_sphere1_transform);
+			CHECK(box1.GetWorldTransform() == initial_box1_transform);
+			CHECK(sphere1.GetWorldTransform() == initial_sphere1_transform);
 			if (mode == 0 || mode == 1)
 			{
-				CHECK_APPROX_EQUAL(box2.GetWorldTransform(), initial_box2_transform);
-				CHECK_APPROX_EQUAL(sphere2.GetWorldTransform(), initial_sphere2_transform);
+				CHECK(box2.GetWorldTransform() == initial_box2_transform);
+				CHECK(sphere2.GetWorldTransform() == initial_sphere2_transform);
 				CHECK(box1.IsActive());
 				CHECK(sphere1.IsActive());
 				CHECK(box2.IsActive());
 				CHECK(sphere2.IsActive());
-			}else{
+			}
+			else
+			{
 				CHECK(box1.IsActive());
 				CHECK(sphere1.IsActive());
 				CHECK(!box2.IsActive());
@@ -1629,25 +1629,24 @@ TEST_SUITE("PhysicsTests")
 			{
 				c.SimulateSingleStep();
 
-				// Move the box2 and spehre2, to make sure this is not causing
-				// any issue.
+				// Move the box2 and sphere2, to make sure this is not causing any issue.
 				if (mode == 2)
 				{
 					BodyInterface &bi = c.GetBodyInterface();
 					RMat44 t = box2.GetWorldTransform();
-					bi.SetPositionAndRotation(box2.GetID(), t.GetTranslation() + Vec3(0.f, -1.f, 0.f), t.GetQuaternion(), JPH::EActivation::DontActivate);
+					bi.SetPositionAndRotation(box2.GetID(), t.GetTranslation() + Vec3(0.0f, -1.0f, 0.0f), t.GetRotation().GetQuaternion(), JPH::EActivation::DontActivate);
 					t = sphere2.GetWorldTransform();
-					bi.SetPositionAndRotation(sphere2.GetID(), t.GetTranslation() + Vec3(0.f, 1.f, 0.f), t.GetQuaternion(), JPH::EActivation::DontActivate);
+					bi.SetPositionAndRotation(sphere2.GetID(), t.GetTranslation() + Vec3(0.0f, 1.0f, 0.0f), t.GetRotation().GetQuaternion(), JPH::EActivation::DontActivate);
 				}
 			}
 
 			if (mode == 0 || mode == 1)
 			{
 				// Make sure the state is the same as the previous one.
-				CHECK_APPROX_EQUAL(box1.GetWorldTransform(), intermediate_box1_transform);
-				CHECK_APPROX_EQUAL(sphere1.GetWorldTransform(), intermediate_sphere1_transform);
-				CHECK_APPROX_EQUAL(box2.GetWorldTransform(), intermediate_box2_transform);
-				CHECK_APPROX_EQUAL(sphere2.GetWorldTransform(), intermediate_sphere2_transform);
+				CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
+				CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
+				CHECK(box2.GetWorldTransform() == intermediate_box2_transform);
+				CHECK(sphere2.GetWorldTransform() == intermediate_sphere2_transform);
 				CHECK(box1.IsActive());
 				CHECK(sphere1.IsActive());
 				CHECK(box2.IsActive());
@@ -1664,8 +1663,8 @@ TEST_SUITE("PhysicsTests")
 			else if (mode == 2)
 			{
 				// Make sure the state is the same as the previous one.
-				CHECK_APPROX_EQUAL(box1.GetWorldTransform(), intermediate_box1_transform);
-				CHECK_APPROX_EQUAL(sphere1.GetWorldTransform(), intermediate_sphere1_transform);
+				CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
+				CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
 				CHECK(!box2.IsActive());
 				CHECK(!sphere2.IsActive());
 
@@ -1688,14 +1687,12 @@ TEST_SUITE("PhysicsTests")
 
 				// Simulate 10 frames - again
 				for (int i = 0; i < 10; i++)
-				{
 					c.SimulateSingleStep();
-				}
 
-				CHECK_APPROX_EQUAL(box1.GetWorldTransform(), intermediate_box1_transform);
-				CHECK_APPROX_EQUAL(sphere1.GetWorldTransform(), intermediate_sphere1_transform);
-				CHECK_APPROX_EQUAL(box2.GetWorldTransform(), intermediate_box2_transform);
-				CHECK_APPROX_EQUAL(sphere2.GetWorldTransform(), intermediate_sphere2_transform);
+				CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
+				CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
+				CHECK(box2.GetWorldTransform() == intermediate_box2_transform);
+				CHECK(sphere2.GetWorldTransform() == intermediate_sphere2_transform);
 				CHECK(box1.IsActive());
 				CHECK(sphere1.IsActive());
 				CHECK(box2.IsActive());
