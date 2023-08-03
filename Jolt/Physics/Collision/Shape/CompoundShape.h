@@ -62,7 +62,7 @@ public:
 
 	// See Shape::GetLocalBounds
 	virtual AABox					GetLocalBounds() const override							{ return mLocalBounds; }
-		
+
 	// See Shape::GetSubShapeIDBitsRecursive
 	virtual uint					GetSubShapeIDBitsRecursive() const override;
 
@@ -104,6 +104,9 @@ public:
 	// See Shape::DrawGetSupportingFace
 	virtual void					DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale) const override;
 #endif // JPH_DEBUG_RENDERER
+
+	// See: Shape::ColideSoftBodyVertices
+	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const override;
 
 	// See Shape::TransformShape
 	virtual void					TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const override;
@@ -224,7 +227,7 @@ public:
 		{
 			return mIsRotationIdentity? Quat::sIdentity() : Quat::sLoadFloat3Unsafe(mRotation);
 		}
-		
+
 		RefConst<Shape>				mShape;
 		Float3						mPositionCOM;											///< Note: Position of center of mass of sub shape!
 		Float3						mRotation;												///< Note: X, Y, Z of rotation quaternion - note we read 4 bytes beyond this so make sure there's something there
@@ -255,19 +258,19 @@ public:
 	/// Check if a sub shape ID is still valid for this shape
 	/// @param inSubShapeID Sub shape id that indicates the leaf shape relative to this shape
 	/// @return True if the ID is valid, false if not
-	inline bool						IsSubShapeIDValid(SubShapeID inSubShapeID) const 
+	inline bool						IsSubShapeIDValid(SubShapeID inSubShapeID) const
 	{
 		SubShapeID remainder;
-		return inSubShapeID.PopID(GetSubShapeIDBits(), remainder) < mSubShapes.size(); 
+		return inSubShapeID.PopID(GetSubShapeIDBits(), remainder) < mSubShapes.size();
 	}
 
 	/// Convert SubShapeID to sub shape index
 	/// @param inSubShapeID Sub shape id that indicates the leaf shape relative to this shape
 	/// @param outRemainder This is the sub shape ID for the sub shape of the compound after popping off the index
 	/// @return The index of the sub shape of this compound
-	inline uint32					GetSubShapeIndexFromID(SubShapeID inSubShapeID, SubShapeID &outRemainder) const 
-	{ 
-		uint32 idx = inSubShapeID.PopID(GetSubShapeIDBits(), outRemainder); 
+	inline uint32					GetSubShapeIndexFromID(SubShapeID inSubShapeID, SubShapeID &outRemainder) const
+	{
+		uint32 idx = inSubShapeID.PopID(GetSubShapeIDBits(), outRemainder);
 		JPH_ASSERT(idx < mSubShapes.size(), "Invalid SubShapeID");
 		return idx;
 	}

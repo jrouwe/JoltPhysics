@@ -179,6 +179,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyManager.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyManager.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyPair.h
+	${JOLT_PHYSICS_ROOT}/Physics/Body/BodyType.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/MassProperties.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Body/MassProperties.h
 	${JOLT_PHYSICS_ROOT}/Physics/Body/MotionProperties.cpp
@@ -363,6 +364,15 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsUpdateContext.h
 	${JOLT_PHYSICS_ROOT}/Physics/Ragdoll/Ragdoll.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Ragdoll/Ragdoll.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyShape.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodySharedSettings.cpp
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodySharedSettings.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyVertex.h
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorder.h
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorderImpl.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/StateRecorderImpl.h
@@ -503,7 +513,7 @@ function(EMIT_X86_INSTRUCTION_SET_DEFINITIONS)
 	endif()
 	if (USE_AVX)
 		target_compile_definitions(Jolt PUBLIC JPH_USE_AVX)
-	endif()	
+	endif()
 	if (USE_SSE4_1)
 		target_compile_definitions(Jolt PUBLIC JPH_USE_SSE4_1)
 	endif()

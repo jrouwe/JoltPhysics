@@ -14,6 +14,7 @@
 #include <Jolt/Physics/Body/MotionProperties.h>
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Body/BodyAccess.h>
+#include <Jolt/Physics/Body/BodyType.h>
 #include <Jolt/Core/StringTools.h>
 
 JPH_NAMESPACE_BEGIN
@@ -23,8 +24,8 @@ class BodyCreationSettings;
 
 /// A rigid body that can be simulated using the physics system
 ///
-/// Note that internally all properties (position, velocity etc.) are tracked relative to the center of mass of the object to simplify the simulation of the object. 
-/// 
+/// Note that internally all properties (position, velocity etc.) are tracked relative to the center of mass of the object to simplify the simulation of the object.
+///
 /// The offset between the position of the body and the center of mass position of the body is GetShape()->GetCenterOfMass().
 /// The functions that get/set the position of the body all indicate if they are relative to the center of mass or to the original position in which the shape was created.
 ///
@@ -37,11 +38,20 @@ public:
 	/// Default constructor
 							Body() = default;
 
-	/// Destructor							
+	/// Destructor
 							~Body()															{ JPH_ASSERT(mMotionProperties == nullptr); }
 
 	/// Get the id of this body
 	inline const BodyID &	GetID() const													{ return mID; }
+
+	/// Get the type of body (rigid or soft)
+	inline EBodyType		GetBodyType() const												{ return mBodyType; }
+
+	/// Check if this body is a rigid body
+	inline bool				IsRigidBody() const												{ return mBodyType == EBodyType::RigidBody; }
+
+	/// Check if this body is a soft body
+	inline bool				IsSoftBody() const												{ return mBodyType == EBodyType::SoftBody; }
 
 	/// If this body is currently actively simulating (true) or sleeping (false)
 	inline bool				IsActive() const												{ return mMotionProperties != nullptr && mMotionProperties->mIndexInActiveBodies != cInactiveIndex; }
@@ -63,20 +73,20 @@ public:
 	/// These sensors will only detect collisions with active Dynamic or Kinematic bodies. As soon as a body go to sleep, the contact point with the sensor will be lost.
 	/// If you make a sensor Dynamic or Kinematic and activate them, the sensor will be able to detect collisions with sleeping bodies too. An active sensor will never go to sleep automatically.
 	/// When you make a Dynamic or Kinematic sensor, make sure it is in an ObjectLayer that does not collide with Static bodies or other sensors to avoid extra overhead in the broad phase.
-	inline void				SetIsSensor(bool inIsSensor)									{ if (inIsSensor) mFlags.fetch_or(uint8(EFlags::IsSensor), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::IsSensor)), memory_order_relaxed); }
+	inline void				SetIsSensor(bool inIsSensor)									{ JPH_ASSERT(IsRigidBody()); if (inIsSensor) mFlags.fetch_or(uint8(EFlags::IsSensor), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::IsSensor)), memory_order_relaxed); }
 
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
 
 	// If this sensor detects static objects entering it. Note that the sensor must be kinematic and active for it to detect static objects.
-	inline void				SetSensorDetectsStatic(bool inDetectsStatic)					{ if (inDetectsStatic) mFlags.fetch_or(uint8(EFlags::SensorDetectsStatic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::SensorDetectsStatic)), memory_order_relaxed); }
+	inline void				SetSensorDetectsStatic(bool inDetectsStatic)					{ JPH_ASSERT(IsRigidBody()); if (inDetectsStatic) mFlags.fetch_or(uint8(EFlags::SensorDetectsStatic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::SensorDetectsStatic)), memory_order_relaxed); }
 
 	/// Check if this sensor detects static objects entering it.
 	inline bool				SensorDetectsStatic() const										{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::SensorDetectsStatic)) != 0; }
 
 	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body. Manifold reduction by default will combine contacts that come from different SubShapeIDs (e.g. different triangles or different compound shapes).
 	/// If the application requires tracking exactly which SubShapeIDs are in contact, you can turn off manifold reduction. Note that this comes at a performance cost.
-	inline void				SetUseManifoldReduction(bool inUseReduction)					{ if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
+	inline void				SetUseManifoldReduction(bool inUseReduction)					{ JPH_ASSERT(IsRigidBody()); if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
 
 	/// Check if this body can use manifold reduction.
 	inline bool				GetUseManifoldReduction() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::UseManifoldReduction)) != 0; }
@@ -89,7 +99,7 @@ public:
 	void					SetMotionType(EMotionType inMotionType);
 
 	/// Get broadphase layer, this determines in which broad phase sub-tree the object is placed
-	inline BroadPhaseLayer	GetBroadPhaseLayer() const										{ return mBroadPhaseLayer; }	
+	inline BroadPhaseLayer	GetBroadPhaseLayer() const										{ return mBroadPhaseLayer; }
 
 	/// Get object layer, this determines which other objects it collides with
 	inline ObjectLayer		GetObjectLayer() const											{ return mObjectLayer; }
@@ -167,7 +177,7 @@ public:
 
 	/// Add angular impulse in world space (unit: N m s)
 	inline void				AddAngularImpulse(Vec3Arg inAngularImpulse);
-	
+
 	/// Set velocity of body such that it will be positioned at inTargetPosition/Rotation in inDeltaTime seconds.
 	void					MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
 
@@ -245,8 +255,8 @@ public:
 	static inline bool		sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2);
 
 	/// Update position using an Euler step (used during position integrate & constraint solving)
-	inline void				AddPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime)			{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition += mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
-	inline void				SubPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime) 		{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition -= mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
+	inline void				AddPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime)			{ JPH_ASSERT(IsRigidBody()); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition += mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
+	inline void				SubPositionStep(Vec3Arg inLinearVelocityTimesDeltaTime) 		{ JPH_ASSERT(IsRigidBody()); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); mPosition -= mMotionProperties->LockTranslation(inLinearVelocityTimesDeltaTime); JPH_ASSERT(!mPosition.IsNaN()); }
 
 	/// Update rotation using an Euler step (using during position integrate & constraint solving)
 	inline void				AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime);
@@ -297,7 +307,7 @@ public:
 
 	///@}
 
-	static constexpr uint32	cInactiveIndex = uint32(-1);									///< Constant indicating that body is not active
+	static constexpr uint32	cInactiveIndex = MotionProperties::cInactiveIndex;				///< Constant indicating that body is not active
 
 private:
 	friend class BodyManager;
@@ -336,11 +346,12 @@ private:
 	ObjectLayer				mObjectLayer;													///< The collision layer this body belongs to (determines if two objects can collide)
 
 	// 1 byte aligned
+	EBodyType				mBodyType;														///< Type of body (rigid or soft)
 	BroadPhaseLayer			mBroadPhaseLayer;												///< The broad phase layer this body belongs to
 	EMotionType				mMotionType;													///< Type of motion (static, dynamic or kinematic)
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
-	
-	// 121 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
+
+	// 122 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
 
 #if JPH_CPU_ADDRESS_BITS == 32
 	// Padding for mShape, mMotionProperties, mCollisionGroup.mGroupFilter being 4 instead of 8 bytes in 32 bit mode

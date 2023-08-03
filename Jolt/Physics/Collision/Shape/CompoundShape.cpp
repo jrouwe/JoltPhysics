@@ -86,12 +86,12 @@ MassProperties CompoundShape::GetMassProperties() const
 
 	// Ensure that inertia is a 3x3 matrix, adding inertias causes the bottom right element to change
 	p.mInertia.SetColumn4(3, Vec4(0, 0, 0, 1));
-	
+
 	return p;
 }
 
 AABox CompoundShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
-{ 
+{
 	if (mSubShapes.size() <= 10)
 	{
 		AABox bounds;
@@ -156,8 +156,8 @@ TransformedShape CompoundShape::GetSubShapeTransformedShape(const SubShapeID &in
 	return ts;
 }
 
-Vec3 CompoundShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
+Vec3 CompoundShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
 	// Decode sub shape index
 	SubShapeID remainder;
 	uint32 index = GetSubShapeIndexFromID(inSubShapeID, remainder);
@@ -245,6 +245,12 @@ void CompoundShape::DrawGetSupportingFace(DebugRenderer *inRenderer, RMat44Arg i
 	}
 }
 #endif // JPH_DEBUG_RENDERER
+
+void CompoundShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	for (const SubShape &shape : mSubShapes)
+		shape.mShape->CollideSoftBodyVertices(inCenterOfMassTransform * Mat44::sRotationTranslation(shape.GetRotation(), shape.GetPositionCOM()), ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+}
 
 void CompoundShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const
 {
@@ -335,7 +341,7 @@ void CompoundShape::RestoreBinaryState(StreamIn &inStream)
 }
 
 void CompoundShape::SaveSubShapeState(ShapeList &outSubShapes) const
-{ 
+{
 	outSubShapes.clear();
 	outSubShapes.reserve(mSubShapes.size());
 	for (const SubShape &shape : mSubShapes)
@@ -343,7 +349,7 @@ void CompoundShape::SaveSubShapeState(ShapeList &outSubShapes) const
 }
 
 void CompoundShape::RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes)
-{ 
+{
 	JPH_ASSERT(mSubShapes.size() == inNumShapes);
 	for (uint i = 0; i < inNumShapes; ++i)
 		mSubShapes[i].mShape = inSubShapes[i];

@@ -73,6 +73,12 @@ This category demonstrates how ragdolls can be made and controlled using keyfram
 |:-|
 |*A pile of ragdolls that are driven to a specific animated death pose. This gives the ragdolls 'stiffness'.*|
 
+### Soft Body
+
+|[![Character Demo](https://img.youtube.com/vi/vJX_3FNISkw/hqdefault.jpg)](https://www.youtube.com/watch?v=vJX_3FNISkw)|
+|:-|
+|*Demonstrates Soft Body physics as simulated by Jolt Physics. Soft body physics can be used for things like cloth and soft balls.*|
+
 ### Character
 
 This category shows how you can simulate a (humanoid) character using a capsule.

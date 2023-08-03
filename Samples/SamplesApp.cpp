@@ -14,6 +14,7 @@
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/ShapeCast.h>
@@ -295,6 +296,25 @@ static TestNameAndRTTI sVehicleTests[] =
 	{ "Car (SixDOFConstraint)",				JPH_RTTI(VehicleSixDOFTest) },
 };
 
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyShapesTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyFrictionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyRestitutionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyPressureTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyGravityFactorTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyKinematicTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyUpdatePositionTest)
+
+static TestNameAndRTTI sSoftBodyTests[] =
+{
+	{ "Soft Body vs Shapes",			JPH_RTTI(SoftBodyShapesTest) },
+	{ "Soft Body Friction",				JPH_RTTI(SoftBodyFrictionTest) },
+	{ "Soft Body Restitution",			JPH_RTTI(SoftBodyRestitutionTest) },
+	{ "Soft Body Pressure",				JPH_RTTI(SoftBodyPressureTest) },
+	{ "Soft Body Gravity Factor",		JPH_RTTI(SoftBodyGravityFactorTest) },
+	{ "Soft Body Kinematic",			JPH_RTTI(SoftBodyKinematicTest) },
+	{ "Soft Body Update Position",		JPH_RTTI(SoftBodyUpdatePositionTest) },
+};
+
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseInsertionTest)
 
@@ -340,6 +360,7 @@ static TestCategory sAllCategories[] =
 	{ "Character", sCharacterTests, size(sCharacterTests) },
 	{ "Water", sWaterTests, size(sWaterTests) },
 	{ "Vehicle", sVehicleTests, size(sVehicleTests) },
+	{ "Soft Body", sSoftBodyTests, size(sSoftBodyTests) },
 	{ "Broad Phase", sBroadPhaseTests, size(sBroadPhaseTests) },
 	{ "Convex Collision", sConvexCollisionTests, size(sConvexCollisionTests) },
 	{ "Tools", sTools, size(sTools) }
@@ -463,6 +484,10 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Constraints", CharacterVirtual::sDrawConstraints, [](UICheckBox::EState inState) { CharacterVirtual::sDrawConstraints = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Walk Stairs", CharacterVirtual::sDrawWalkStairs, [](UICheckBox::EState inState) { CharacterVirtual::sDrawWalkStairs = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Character Virtual Stick To Floor", CharacterVirtual::sDrawStickToFloor, [](UICheckBox::EState inState) { CharacterVirtual::sDrawStickToFloor = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Vertices", mBodyDrawSettings.mDrawSoftBodyVertices, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVertices = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Edge Constraints", mBodyDrawSettings.mDrawSoftBodyEdgeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyEdgeConstraints = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Volume Constraints", mBodyDrawSettings.mDrawSoftBodyVolumeConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyVolumeConstraints = inState == UICheckBox::STATE_CHECKED; });
+			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Predicted Bounds", mBodyDrawSettings.mDrawSoftBodyPredictedBounds, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyPredictedBounds = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->ShowMenu(drawing_options);
 		});
 	#endif // JPH_DEBUG_RENDERER
@@ -593,7 +618,11 @@ void SamplesApp::StartTest(const RTTI *inRTTI)
 
 	// Reset dragging
 	mDragAnchor = nullptr;
+	mDragBody = BodyID();
 	mDragConstraint = nullptr;
+	mDragVertexIndex = ~uint(0);
+	mDragVertexPreviousInvMass = 0.0f;
+	mDragFraction = 0.0f;
 
 	// Reset playback state
 	mPlaybackFrames.clear();
@@ -1655,7 +1684,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 	return had_hit;
 }
 
-void SamplesApp::UpdateDebug()
+void SamplesApp::UpdateDebug(float inDeltaTime)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -1672,13 +1701,12 @@ void SamplesApp::UpdateDebug()
 			break;
 		}
 
-	// Allow the user to drag rigid bodies around
-	if (mDragConstraint == nullptr)
+	// Allow the user to drag rigid/soft bodies around
+	if (mDragConstraint == nullptr && mDragVertexIndex == ~uint(0))
 	{
 		// Not dragging yet
 		RVec3 hit_position;
-		float hit_fraction;
-		if (CastProbe(cDragRayLength, hit_fraction, hit_position, mDragBody))
+		if (CastProbe(cDragRayLength, mDragFraction, hit_position, mDragBody))
 		{
 			// If key is pressed create constraint to start dragging
 			if (mKeyboard->IsKeyPressed(DIK_SPACE))
@@ -1688,7 +1716,29 @@ void SamplesApp::UpdateDebug()
 				if (lock.Succeeded())
 				{
 					Body &drag_body = lock.GetBody();
-					if (drag_body.IsDynamic())
+					if (drag_body.IsSoftBody())
+					{
+						SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(drag_body.GetMotionProperties());
+
+						// Find closest vertex
+						Vec3 local_hit_position = Vec3(drag_body.GetInverseCenterOfMassTransform() * hit_position);
+						float closest_dist_sq = FLT_MAX;
+						for (SoftBodyVertex &v : mp->GetVertices())
+						{
+							float dist_sq = (v.mPosition - local_hit_position).LengthSq();
+							if (dist_sq < closest_dist_sq)
+							{
+								closest_dist_sq = dist_sq;
+								mDragVertexIndex = uint(&v - mp->GetVertices().data());
+							}
+						}
+
+						// Make the vertex kinematic
+						SoftBodyVertex &v = mp->GetVertex(mDragVertexIndex);
+						mDragVertexPreviousInvMass = v.mInvMass;
+						v.mInvMass = 0.0f;
+					}
+					else if (drag_body.IsDynamic())
 					{
 						// Create constraint to drag body
 						DistanceConstraintSettings settings;
@@ -1705,8 +1755,6 @@ void SamplesApp::UpdateDebug()
 						// Construct constraint that connects the drag anchor with the body that we want to drag
 						mDragConstraint = settings.Create(*drag_anchor, drag_body);
 						mPhysicsSystem->AddConstraint(mDragConstraint);
-
-						mDragFraction = hit_fraction;
 					}
 				}
 			}
@@ -1718,20 +1766,61 @@ void SamplesApp::UpdateDebug()
 		{
 			// If key released, destroy constraint
 			if (mDragConstraint != nullptr)
+			{
 				mPhysicsSystem->RemoveConstraint(mDragConstraint);
-			mDragConstraint = nullptr;
+				mDragConstraint = nullptr;
+			}
 
 			// Destroy drag anchor
-			bi.DestroyBody(mDragAnchor->GetID());
-			mDragAnchor = nullptr;
+			if (mDragAnchor != nullptr)
+			{
+				bi.DestroyBody(mDragAnchor->GetID());
+				mDragAnchor = nullptr;
+			}
+
+			// Release dragged vertex
+			if (mDragVertexIndex != ~uint(0))
+			{
+				// Restore vertex mass
+				BodyLockWrite lock(mPhysicsSystem->GetBodyLockInterface(), mDragBody);
+				if (lock.Succeeded())
+				{
+					Body &body = lock.GetBody();
+					JPH_ASSERT(body.IsSoftBody());
+					SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
+					mp->GetVertex(mDragVertexIndex).mInvMass = mDragVertexPreviousInvMass;
+				}
+				mDragVertexIndex = ~uint(0);
+				mDragVertexPreviousInvMass = 0;
+			}
 
 			// Forget the drag body
 			mDragBody = BodyID();
 		}
 		else
 		{
-			// Else update position of anchor
-			bi.SetPositionAndRotation(mDragAnchor->GetID(), GetCamera().mPos + cDragRayLength * mDragFraction * GetCamera().mForward, Quat::sIdentity(), EActivation::DontActivate);
+			// Else drag the body to the new position
+			RVec3 new_pos = GetCamera().mPos + cDragRayLength * mDragFraction * GetCamera().mForward;
+
+			switch (bi.GetBodyType(mDragBody))
+			{
+			case EBodyType::RigidBody:
+				bi.SetPositionAndRotation(mDragAnchor->GetID(), new_pos, Quat::sIdentity(), EActivation::DontActivate);
+				break;
+
+			case EBodyType::SoftBody:
+				{
+					BodyLockWrite lock(mPhysicsSystem->GetBodyLockInterface(), mDragBody);
+					if (lock.Succeeded())
+					{
+						Body &body = lock.GetBody();
+						SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
+						SoftBodyVertex &v = mp->GetVertex(mDragVertexIndex);
+						v.mVelocity = body.GetRotation().Conjugated() * Vec3(new_pos - body.GetCenterOfMassTransform() * v.mPosition) / inDeltaTime;
+					}
+				}
+				break;
+			}
 
 			// Activate other body
 			bi.ActivateBody(mDragBody);
@@ -1955,7 +2044,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 		if (inDeltaTime > 0.0f)
 		{
 			// Debugging functionality like shooting a ball and dragging objects
-			UpdateDebug();
+			UpdateDebug(inDeltaTime);
 
 			if (mRecordState || check_determinism)
 			{
@@ -2112,7 +2201,9 @@ void SamplesApp::DrawPhysics()
 					}
 
 					// Ensure that we cache the geometry for next frame
-					shape_to_geometry[transformed_shape.mShape] = geometry;
+					// Don't cache soft bodies as their shape changes every frame
+					if (!body.IsSoftBody())
+						shape_to_geometry[transformed_shape.mShape] = geometry;
 
 					// Determine color
 					Color color;

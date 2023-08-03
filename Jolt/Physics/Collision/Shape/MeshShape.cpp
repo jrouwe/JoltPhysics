@@ -12,7 +12,6 @@
 #include <Jolt/Physics/Collision/ShapeCast.h>
 #include <Jolt/Physics/Collision/ShapeFilter.h>
 #include <Jolt/Physics/Collision/CastResult.h>
-#include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
 #include <Jolt/Physics/Collision/CastConvexVsTriangles.h>
@@ -66,7 +65,7 @@ static JPH_INLINE const NodeCodec::Header *sGetNodeHeader(const ByteBuffer &inTr
 }
 
 // Get header for triangles
-static JPH_INLINE const TriangleCodec::TriangleHeader *sGetTriangleHeader(const ByteBuffer &inTree) 
+static JPH_INLINE const TriangleCodec::TriangleHeader *sGetTriangleHeader(const ByteBuffer &inTree)
 {
 	return inTree.Get<TriangleCodec::TriangleHeader>(NodeCodec::HeaderSize);
 }
@@ -109,11 +108,11 @@ void MeshShapeSettings::Sanitize()
 ShapeSettings::ShapeResult MeshShapeSettings::Create() const
 {
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new MeshShape(*this, mCachedResult); 
+		Ref<Shape> shape = new MeshShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
-MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult) : 
+MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult) :
 	Shape(EShapeType::Mesh, EShapeSubType::Mesh, inSettings, outResult)
 {
 	// Check if there are any triangles
@@ -185,7 +184,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 
 	// Create triangle splitter
 	TriangleSplitterBinning splitter(inSettings.mTriangleVertices, indexed_triangles);
-	
+
 	// Build tree
 	AABBTreeBuilder builder(splitter, inSettings.mMaxTrianglesPerLeaf);
 	AABBTreeBuilderStats builder_stats;
@@ -344,7 +343,7 @@ MassProperties MeshShape::GetMassProperties() const
 void MeshShape::DecodeSubShapeID(const SubShapeID &inSubShapeID, const void *&outTriangleBlock, uint32 &outTriangleIndex) const
 {
 	// Get block
-	SubShapeID triangle_idx_subshape_id;	
+	SubShapeID triangle_idx_subshape_id;
 	uint32 block_id = inSubShapeID.PopID(NodeCodec::DecodingContext::sTriangleBlockIDBits(mTree), triangle_idx_subshape_id);
 	outTriangleBlock = NodeCodec::DecodingContext::sGetTriangleBlockStart(&mTree[0], block_id);
 
@@ -360,7 +359,7 @@ uint MeshShape::GetMaterialIndex(const SubShapeID &inSubShapeID) const
 	const void *block_start;
 	uint32 triangle_idx;
 	DecodeSubShapeID(inSubShapeID, block_start, triangle_idx);
-		
+
 	// Fetch the flags
 	uint8 flags = TriangleCodec::DecodingContext::sGetFlags(block_start, triangle_idx);
 	return flags & FLAGS_MATERIAL_MASK;
@@ -375,8 +374,8 @@ const PhysicsMaterial *MeshShape::GetMaterial(const SubShapeID &inSubShapeID) co
 	return mMaterials[GetMaterialIndex(inSubShapeID)];
 }
 
-Vec3 MeshShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
+Vec3 MeshShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
 	// Decode ID
 	const void *block_start;
 	uint32 triangle_idx;
@@ -398,7 +397,7 @@ void MeshShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDire
 	uint32 triangle_idx;
 	DecodeSubShapeID(inSubShapeID, block_start, triangle_idx);
 
-	// Decode triangle	
+	// Decode triangle
 	const TriangleCodec::DecodingContext triangle_ctx(sGetTriangleHeader(mTree));
 	outVertices.resize(3);
 	triangle_ctx.GetTriangle(block_start, triangle_idx, outVertices[0], outVertices[1], outVertices[2]);
@@ -421,7 +420,7 @@ AABox MeshShape::GetLocalBounds() const
 	return AABox(Vec3::sLoadFloat3Unsafe(header->mRootBoundsMin), Vec3::sLoadFloat3Unsafe(header->mRootBoundsMax));
 }
 
-uint MeshShape::GetSubShapeIDBitsRecursive() const 
+uint MeshShape::GetSubShapeIDBitsRecursive() const
 {
 	return NodeCodec::DecodingContext::sTriangleBlockIDBits(mTree) + NumTriangleBits;
 }
@@ -459,12 +458,12 @@ JPH_INLINE void MeshShape::WalkTreePerTriangle(const SubShapeIDCreator &inSubSha
 			return mVisitor.ShouldVisitNode(inStackTop);
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			return mVisitor.VisitNodes(inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ, ioProperties, inStackTop);
 		}
 
-		JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+		JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID)
 		{
 			// Create ID for triangle block
 			SubShapeIDCreator block_sub_shape_id = mSubShapeIDCreator2.PushID(inTriangleBlockID, mTriangleBlockIDBits);
@@ -526,13 +525,13 @@ void MeshShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransfor
 				return true;
 			}
 
-			JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+			JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 			{
 				UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
 				return CountAndSortTrues(valid, ioProperties);
 			}
 
-			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
+			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID)
 			{
 				JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
 				Vec3 vertices[MaxTrianglesPerLeaf * 3];
@@ -563,7 +562,7 @@ void MeshShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransfor
 			bool									mDrawTriangleGroups;
 			int										mColorIdx = 0;
 		};
-		
+
 		Array<DebugRenderer::Triangle> triangles;
 		Visitor visitor { triangles, mMaterials, mCachedUseMaterialColors, mCachedTrianglesColoredPerGroup };
 		WalkTree(visitor);
@@ -599,13 +598,13 @@ void MeshShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransfor
 				return true;
 			}
 
-			JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+			JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 			{
 				UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
 				return CountAndSortTrues(valid, ioProperties);
 			}
 
-			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+			JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID)
 			{
 				// Decode vertices and flags
 				JPH_ASSERT(inNumTriangles <= MaxTrianglesPerLeaf);
@@ -648,7 +647,7 @@ bool MeshShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShap
 
 	struct Visitor
 	{
-		JPH_INLINE explicit	Visitor(RayCastResult &ioHit) : 
+		JPH_INLINE explicit	Visitor(RayCastResult &ioHit) :
 			mHit(ioHit)
 		{
 		}
@@ -663,16 +662,16 @@ bool MeshShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShap
 			return mDistanceStack[inStackTop] < mHit.mFraction;
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mRayOrigin, mRayInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mHit.mFraction, ioProperties, &mDistanceStack[inStackTop]);
 		}
 
-		JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID) 
+		JPH_INLINE void		VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, uint32 inTriangleBlockID)
 		{
 			// Test against triangles
 			uint32 triangle_idx;
@@ -716,7 +715,7 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 
 	struct Visitor
 	{
-		JPH_INLINE explicit	Visitor(CastRayCollector &ioCollector) : 
+		JPH_INLINE explicit	Visitor(CastRayCollector &ioCollector) :
 			mCollector(ioCollector)
 		{
 		}
@@ -731,16 +730,16 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 			return mDistanceStack[inStackTop] < mCollector.GetEarlyOutFraction();
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mRayOrigin, mRayInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
-		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, [[maybe_unused]] uint8 inActiveEdges, SubShapeID inSubShapeID2) 
+		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, [[maybe_unused]] uint8 inActiveEdges, SubShapeID inSubShapeID2)
 		{
 			// Back facing check
 			if (mBackFaceMode == EBackFaceMode::IgnoreBackFaces && (inV2 - inV0).Cross(inV1 - inV0).Dot(mRayDirection) < 0)
@@ -776,38 +775,12 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 
 void MeshShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
-	// First test if we're inside our bounding box
-	AABox bounds = GetLocalBounds();
-	if (bounds.Contains(inPoint))
-	{
-		// A collector that just counts the number of hits
-		class HitCountCollector : public CastRayCollector	
-		{
-		public:
-			virtual void	AddHit(const RayCastResult &inResult) override
-			{
-				// Store the last sub shape ID so that we can provide something to our outer hit collector
-				mSubShapeID = inResult.mSubShapeID2;
+	sCollidePointUsingRayCast(*this, inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
+}
 
-				++mHitCount;
-			}
-
-			int				mHitCount = 0;
-			SubShapeID		mSubShapeID;
-		};
-		HitCountCollector collector;
-
-		// Configure the raycast
-		RayCastSettings settings;
-		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
-
-		// Cast a ray that's 10% longer than the heigth of our bounding box
-		CastRay(RayCast { inPoint, 1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, settings, inSubShapeIDCreator, collector, inShapeFilter);
-
-		// Odd amount of hits means inside
-		if ((collector.mHitCount & 1) == 1)
-			ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), collector.mSubShapeID });
-	}
+void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
 }
 
 void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
@@ -828,7 +801,7 @@ void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 			return mDistanceStack[inStackTop] < mCollector.GetPositiveEarlyOutFraction();
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Scale the bounding boxes of this node
 			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
@@ -839,12 +812,12 @@ void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mBoxCenter, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetPositiveEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
-		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
+		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2)
 		{
 			Cast(inV0, inV1, inV2, inActiveEdges, inSubShapeID2);
 		}
@@ -883,7 +856,7 @@ void MeshShape::sCastSphereVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 			return mDistanceStack[inStackTop] < mCollector.GetPositiveEarlyOutFraction();
 		}
 
-		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop) 
+		JPH_INLINE int		VisitNodes(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
 		{
 			// Scale the bounding boxes of this node
 			Vec4 bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z;
@@ -894,12 +867,12 @@ void MeshShape::sCastSphereVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mStart, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
-	
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetPositiveEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
 
-		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
+		JPH_INLINE void		VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2)
 		{
 			Cast(inV0, inV1, inV2, inActiveEdges, inSubShapeID2);
 		}
@@ -918,7 +891,7 @@ void MeshShape::sCastSphereVsMesh(const ShapeCast &inShapeCast, const ShapeCastS
 
 struct MeshShape::MSGetTrianglesContext
 {
-	JPH_INLINE 		MSGetTrianglesContext(const MeshShape *inShape, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) : 
+	JPH_INLINE 		MSGetTrianglesContext(const MeshShape *inShape, const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale) :
 		mDecodeCtx(sGetNodeHeader(inShape->mTree)),
 		mShape(inShape),
 		mLocalBox(Mat44::sInverseRotationTranslation(inRotation, inPositionCOM), inBox),
@@ -949,7 +922,7 @@ struct MeshShape::MSGetTrianglesContext
 		return CountAndSortTrues(collides, ioProperties);
 	}
 
-	JPH_INLINE void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
+	JPH_INLINE void	VisitTriangles(const TriangleCodec::DecodingContext &ioContext, const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID)
 	{
 		// When the buffer is full and we cannot process the triangles, abort the tree walk. The next time GetTrianglesNext is called we will continue here.
 		if (mNumTrianglesFound + inNumTriangles > mMaxTrianglesRequested)
@@ -995,7 +968,7 @@ struct MeshShape::MSGetTrianglesContext
 				// Decode triangle flags
 				uint8 flags[MaxTrianglesPerLeaf];
 				TriangleCodec::DecodingContext::sGetFlags(inTriangles, inNumTriangles, flags);
-	
+
 				// Store materials
 				for (const uint8 *f = flags, *f_end = f + inNumTriangles; f < f_end; ++f)
 					*mMaterials++ = mShape->mMaterials[*f & FLAGS_MATERIAL_MASK].GetPtr();
@@ -1043,7 +1016,7 @@ int MeshShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTriangl
 	context.mMaterials = outMaterials;
 	context.mShouldAbort = false; // Reset the abort flag
 	context.mNumTrianglesFound = 0;
-	
+
 	// Continue (or start) walking the tree
 	const TriangleCodec::DecodingContext triangle_ctx(sGetTriangleHeader(mTree));
 	const uint8 *buffer_start = &mTree[0];
@@ -1086,7 +1059,7 @@ void MeshShape::sCollideConvexVsMesh(const Shape *inShape1, const Shape *inShape
 			return CountAndSortTrues(collides, ioProperties);
 		}
 
-		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
+		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2)
 		{
 			Collide(inV0, inV1, inV2, inActiveEdges, inSubShapeID2);
 		}
@@ -1131,7 +1104,7 @@ void MeshShape::sCollideSphereVsMesh(const Shape *inShape1, const Shape *inShape
 			return CountAndSortTrues(collides, ioProperties);
 		}
 
-		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2) 
+		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2)
 		{
 			Collide(inV0, inV1, inV2, inActiveEdges, inSubShapeID2);
 		}
@@ -1156,12 +1129,12 @@ void MeshShape::RestoreBinaryState(StreamIn &inStream)
 }
 
 void MeshShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const
-{ 
+{
 	outMaterials = mMaterials;
 }
 
-void MeshShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) 
-{ 
+void MeshShape::RestoreMaterialState(const PhysicsMaterialRefC *inMaterials, uint inNumMaterials)
+{
 	mMaterials.assign(inMaterials, inMaterials + inNumMaterials);
 }
 
@@ -1187,7 +1160,7 @@ Shape::Stats MeshShape::GetStats() const
 			return CountAndSortTrues(valid, ioProperties);
 		}
 
-		JPH_INLINE void		VisitTriangles([[maybe_unused]] const TriangleCodec::DecodingContext &ioContext, [[maybe_unused]] const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID) 
+		JPH_INLINE void		VisitTriangles([[maybe_unused]] const TriangleCodec::DecodingContext &ioContext, [[maybe_unused]] const void *inTriangles, int inNumTriangles, [[maybe_unused]] uint32 inTriangleBlockID)
 		{
 			mNumTriangles += inNumTriangles;
 		}
@@ -1197,7 +1170,7 @@ Shape::Stats MeshShape::GetStats() const
 
 	Visitor visitor;
 	WalkTree(visitor);
-	
+
 	return Stats(sizeof(*this) + mMaterials.size() * sizeof(Ref<PhysicsMaterial>) + mTree.size() * sizeof(uint8), visitor.mNumTriangles);
 }
 
