@@ -312,7 +312,7 @@ void SoftBodyShape::sCastSphereVsSoftBody(const ShapeCast &inShapeCast, const Sh
 
 void SoftBodyShape::sRegister()
 {
-	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::Triangle);
+	ShapeFunctions &f = ShapeFunctions::sGet(EShapeSubType::SoftBody);
 	f.mConstruct = nullptr; // Not supposed to be constructed by users!
 	f.mColor = Color::sDarkGreen;
 
