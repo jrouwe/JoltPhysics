@@ -725,33 +725,24 @@ void BodyManager::SaveState(StateRecorder &inStream) const
 {
 	const StateRecorderFilter *filter = inStream.GetFilter();
 
-	BodyIDVector active_bodies;
-
 	{
 		LockAllBodies();
 
 		// Determine which bodies to save
 		Array<const Body *> bodies;
-		if (filter == nullptr || filter->ShouldSaveBodies())
-		{
-			bodies.reserve(mNumBodies);
-			for (const Body *b : mBodies)
-				if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && (filter == nullptr || filter->ShouldSaveBody(*b)))
-					bodies.push_back(b);
-		}
+		bodies.reserve(mNumBodies);
+		for (const Body *b : mBodies)
+			if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && (filter == nullptr || filter->ShouldSaveBody(*b)))
+				bodies.push_back(b);
 
 		// Write state of bodies
 		size_t num_bodies = bodies.size();
 		inStream.Write(num_bodies);
-		if (num_bodies > 0)
+		for (const Body *b : bodies)
 		{
-			active_bodies.reserve(GetNumActiveBodies(EBodyType::RigidBody) + GetNumActiveBodies(EBodyType::SoftBody));
-			for (const Body *b : bodies)
-			{
-				inStream.Write(b->GetID());
-				inStream.Write(b->IsActive());
-				b->SaveState(inStream);
-			}
+			inStream.Write(b->GetID());
+			inStream.Write(b->IsActive());
+			b->SaveState(inStream);
 		}
 
 		UnlockAllBodies();
