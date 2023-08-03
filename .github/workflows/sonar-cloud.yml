@@ -36,11 +36,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Configure CMake
@@ -49,6 +44,7 @@ jobs:
             ./cmake_linux_clang_gcc.sh ReleaseCoverage clang++-${{ env.CLANG_VERSION }}
       - name: Run build-wrapper
         run: |
+          export JAVA_HOME=${JAVA_HOME_17_X64}
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build ${{github.workspace}}/Build/Linux_ReleaseCoverage
       - name: Run unit tests and create coverage report
         run: |
@@ -61,4 +57,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          export JAVA_HOME=${JAVA_HOME_17_X64}
           sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}" --define sonar.cfamily.llvm-cov.reportPath="${{github.workspace}}/Build/Linux_ReleaseCoverage/coverage.txt"
