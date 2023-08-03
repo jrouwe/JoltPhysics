@@ -513,8 +513,10 @@ void SoftBodyMotionProperties::SaveState(StateRecorder &inStream) const
 		inStream.Write(v.mVelocity);
 	}
 
-	inStream.Write(mLocalBounds);
-	inStream.Write(mLocalPredictedBounds);
+	inStream.Write(mLocalBounds.mMin);
+	inStream.Write(mLocalBounds.mMax);
+	inStream.Write(mLocalPredictedBounds.mMin);
+	inStream.Write(mLocalPredictedBounds.mMax);
 }
 
 void SoftBodyMotionProperties::RestoreState(StateRecorder &inStream)
@@ -528,8 +530,10 @@ void SoftBodyMotionProperties::RestoreState(StateRecorder &inStream)
 		inStream.Read(v.mVelocity);
 	}
 
-	inStream.Read(mLocalBounds);
-	inStream.Read(mLocalPredictedBounds);
+	inStream.Read(mLocalBounds.mMin);
+	inStream.Read(mLocalBounds.mMax);
+	inStream.Read(mLocalPredictedBounds.mMin);
+	inStream.Read(mLocalPredictedBounds.mMax);
 }
 
 JPH_NAMESPACE_END
