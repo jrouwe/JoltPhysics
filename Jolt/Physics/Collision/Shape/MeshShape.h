@@ -75,7 +75,7 @@ public:
 
 	// See Shape::GetMassProperties
 	virtual MassProperties			GetMassProperties() const override;
-	
+
 	// See Shape::GetMaterial
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
 
@@ -102,7 +102,7 @@ public:
 	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const override;
 
 	/// See: Shape::CollidePoint
-	/// Note that for CollidePoint to work for a mesh shape, the mesh needs to be closed (a manifold) or multiple non-intersecting manifolds. Triangles may be facing the interior of the manifold. 
+	/// Note that for CollidePoint to work for a mesh shape, the mesh needs to be closed (a manifold) or multiple non-intersecting manifolds. Triangles may be facing the interior of the manifold.
 	/// Insideness is tested by counting the amount of triangles encountered when casting an infinite ray from inPoint. If the number of hits is odd we're inside, if it's even we're outside.
 	virtual void					CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const override;
 
@@ -146,7 +146,7 @@ private:
 	struct							MSGetTrianglesContext;										///< Context class for GetTrianglesStart/Next
 
 	static constexpr int			NumTriangleBits = 3;										///< How many bits to reserve to encode the triangle index
-	static constexpr int			MaxTrianglesPerLeaf = 1 << NumTriangleBits;					///< Number of triangles that are stored max per leaf aabb node 
+	static constexpr int			MaxTrianglesPerLeaf = 1 << NumTriangleBits;					///< Number of triangles that are stored max per leaf aabb node
 
 	/// Find and flag active edges
 	static void						sFindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices);

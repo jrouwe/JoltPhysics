@@ -45,7 +45,7 @@ static const Vec3 cTopFace[] =
 	Vec3(-cSin45,	1.0f,	cSin45)
 };
 
-static const std::vector<Vec3> sUnitCylinderTriangles = []() { 
+static const std::vector<Vec3> sUnitCylinderTriangles = []() {
 	std::vector<Vec3> verts;
 
 	const Vec3 bottom_offset(0.0f, -2.0f, 0.0f);
@@ -82,18 +82,18 @@ static const std::vector<Vec3> sUnitCylinderTriangles = []() {
 }();
 
 ShapeSettings::ShapeResult CylinderShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new CylinderShape(*this, mCachedResult); 
+		Ref<Shape> shape = new CylinderShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
-CylinderShape::CylinderShape(const CylinderShapeSettings &inSettings, ShapeResult &outResult) : 
+CylinderShape::CylinderShape(const CylinderShapeSettings &inSettings, ShapeResult &outResult) :
 	ConvexShape(EShapeSubType::Cylinder, inSettings, outResult),
-	mHalfHeight(inSettings.mHalfHeight), 
+	mHalfHeight(inSettings.mHalfHeight),
 	mRadius(inSettings.mRadius),
 	mConvexRadius(inSettings.mConvexRadius)
-{ 
+{
 	if (inSettings.mHalfHeight < inSettings.mConvexRadius)
 	{
 		outResult.SetError("Invalid height");
@@ -115,32 +115,32 @@ CylinderShape::CylinderShape(const CylinderShapeSettings &inSettings, ShapeResul
 	outResult.Set(this);
 }
 
-CylinderShape::CylinderShape(float inHalfHeight, float inRadius, float inConvexRadius, const PhysicsMaterial *inMaterial) : 
+CylinderShape::CylinderShape(float inHalfHeight, float inRadius, float inConvexRadius, const PhysicsMaterial *inMaterial) :
 	ConvexShape(EShapeSubType::Cylinder, inMaterial),
-	mHalfHeight(inHalfHeight), 
+	mHalfHeight(inHalfHeight),
 	mRadius(inRadius),
 	mConvexRadius(inConvexRadius)
-{ 
-	JPH_ASSERT(inHalfHeight >= inConvexRadius); 
-	JPH_ASSERT(inRadius >= inConvexRadius); 
+{
+	JPH_ASSERT(inHalfHeight >= inConvexRadius);
+	JPH_ASSERT(inRadius >= inConvexRadius);
 	JPH_ASSERT(inConvexRadius >= 0.0f);
 }
 
 class CylinderShape::Cylinder final : public Support
 {
 public:
-					Cylinder(float inHalfHeight, float inRadius, float inConvexRadius) : 
+					Cylinder(float inHalfHeight, float inRadius, float inConvexRadius) :
 		mHalfHeight(inHalfHeight),
 		mRadius(inRadius),
 		mConvexRadius(inConvexRadius)
-	{ 
-		static_assert(sizeof(Cylinder) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(Cylinder) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(Cylinder)));
 	}
 
 	virtual Vec3	GetSupport(Vec3Arg inDirection) const override
-	{ 
-		// Support mapping, taken from: 
+	{
+		// Support mapping, taken from:
 		// A Fast and Robust GJK Implementation for Collision Detection of Convex Objects - Gino van den Bergen
 		// page 8
 		float x = inDirection.GetX(), y = inDirection.GetY(), z = inDirection.GetZ();
@@ -188,7 +188,7 @@ const ConvexShape::Support *CylinderShape::GetSupportFunction(ESupportMode inMod
 }
 
 void CylinderShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
-{	
+{
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 	JPH_ASSERT(IsValidScale(inScale));
 
@@ -238,13 +238,13 @@ MassProperties CylinderShape::GetMassProperties() const
 
 	// Set inertia
 	p.mInertia = Mat44::sScale(Vec3(inertia_x, inertia_y, inertia_z));
-	
+
 	return p;
 }
 
-Vec3 CylinderShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
-	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID"); 
+Vec3 CylinderShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	// Calculate distance to infinite cylinder surface
 	Vec3 local_surface_position_xz(inLocalSurfacePosition.GetX(), 0, inLocalSurfacePosition.GetZ());

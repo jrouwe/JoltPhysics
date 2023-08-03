@@ -65,7 +65,7 @@ void Shape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCol
 }
 
 void Shape::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	inStream.Write(mShapeSubType);
 	inStream.Write(mUserData);
 }
@@ -373,7 +373,7 @@ void Shape::sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, con
 	if (bounds.Contains(inPoint))
 	{
 		// A collector that just counts the number of hits
-		class HitCountCollector : public CastRayCollector	
+		class HitCountCollector : public CastRayCollector
 		{
 		public:
 			virtual void	AddHit(const RayCastResult &inResult) override

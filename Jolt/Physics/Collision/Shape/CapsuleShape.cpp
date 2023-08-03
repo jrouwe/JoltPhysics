@@ -33,26 +33,26 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(CapsuleShapeSettings)
 
 static const int cCapsuleDetailLevel = 2;
 
-static const std::vector<Vec3> sCapsuleTopTriangles = []() { 
-	std::vector<Vec3> verts;	
+static const std::vector<Vec3> sCapsuleTopTriangles = []() {
+	std::vector<Vec3> verts;
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereTop(verts, cCapsuleDetailLevel);
 	return verts;
 }();
 
-static const std::vector<Vec3> sCapsuleMiddleTriangles = []() { 
+static const std::vector<Vec3> sCapsuleMiddleTriangles = []() {
 	std::vector<Vec3> verts;
 	GetTrianglesContextVertexList::sCreateUnitOpenCylinder(verts, cCapsuleDetailLevel);
 	return verts;
 }();
 
-static const std::vector<Vec3> sCapsuleBottomTriangles = []() { 
-	std::vector<Vec3> verts;	
+static const std::vector<Vec3> sCapsuleBottomTriangles = []() {
+	std::vector<Vec3> verts;
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereBottom(verts, cCapsuleDetailLevel);
 	return verts;
 }();
 
 ShapeSettings::ShapeResult CapsuleShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
 	{
 		Ref<Shape> shape;
@@ -63,22 +63,22 @@ ShapeSettings::ShapeResult CapsuleShapeSettings::Create() const
 			mCachedResult.Set(shape);
 		}
 		else
-			shape = new CapsuleShape(*this, mCachedResult); 
+			shape = new CapsuleShape(*this, mCachedResult);
 	}
 	return mCachedResult;
 }
 
-CapsuleShape::CapsuleShape(const CapsuleShapeSettings &inSettings, ShapeResult &outResult) : 
-	ConvexShape(EShapeSubType::Capsule, inSettings, outResult), 
-	mRadius(inSettings.mRadius), 
-	mHalfHeightOfCylinder(inSettings.mHalfHeightOfCylinder) 
-{ 
+CapsuleShape::CapsuleShape(const CapsuleShapeSettings &inSettings, ShapeResult &outResult) :
+	ConvexShape(EShapeSubType::Capsule, inSettings, outResult),
+	mRadius(inSettings.mRadius),
+	mHalfHeightOfCylinder(inSettings.mHalfHeightOfCylinder)
+{
 	if (inSettings.mHalfHeightOfCylinder <= 0.0f)
 	{
 		outResult.SetError("Invalid height");
 		return;
 	}
-	
+
 	if (inSettings.mRadius <= 0.0f)
 	{
 		outResult.SetError("Invalid radius");
@@ -91,16 +91,16 @@ CapsuleShape::CapsuleShape(const CapsuleShapeSettings &inSettings, ShapeResult &
 class CapsuleShape::CapsuleNoConvex final : public Support
 {
 public:
-					CapsuleNoConvex(Vec3Arg inHalfHeightOfCylinder, float inConvexRadius) : 
+					CapsuleNoConvex(Vec3Arg inHalfHeightOfCylinder, float inConvexRadius) :
 		mHalfHeightOfCylinder(inHalfHeightOfCylinder),
 		mConvexRadius(inConvexRadius)
-	{ 
-		static_assert(sizeof(CapsuleNoConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(CapsuleNoConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(CapsuleNoConvex)));
 	}
 
 	virtual Vec3	GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		if (inDirection.GetY() > 0)
 			return mHalfHeightOfCylinder;
 		else
@@ -108,7 +108,7 @@ public:
 	}
 
 	virtual float	GetConvexRadius() const override
-	{ 
+	{
 		return mConvexRadius;
 	}
 
@@ -120,16 +120,16 @@ private:
 class CapsuleShape::CapsuleWithConvex final : public Support
 {
 public:
-					CapsuleWithConvex(Vec3Arg inHalfHeightOfCylinder, float inRadius) : 
+					CapsuleWithConvex(Vec3Arg inHalfHeightOfCylinder, float inRadius) :
 		mHalfHeightOfCylinder(inHalfHeightOfCylinder),
 		mRadius(inRadius)
-	{ 
-		static_assert(sizeof(CapsuleWithConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(CapsuleWithConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(CapsuleWithConvex)));
 	}
 
 	virtual Vec3	GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		float len = inDirection.Length();
 		Vec3 radius = len > 0.0f? inDirection * (mRadius / len) : Vec3::sZero();
 
@@ -140,7 +140,7 @@ public:
 	}
 
 	virtual float	GetConvexRadius() const override
-	{ 
+	{
 		return 0.0f;
 	}
 
@@ -173,7 +173,7 @@ const ConvexShape::Support *CapsuleShape::GetSupportFunction(ESupportMode inMode
 }
 
 void CapsuleShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
-{	
+{
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 	JPH_ASSERT(IsValidScale(inScale));
 
@@ -217,13 +217,13 @@ MassProperties CapsuleShape::GetMassProperties() const
 
 	float density = GetDensity();
 
-	// Calculate inertia and mass according to: 
+	// Calculate inertia and mass according to:
 	// https://www.gamedev.net/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
 	float radius_sq = mRadius * mRadius;
 	float height = 2.0f * mHalfHeightOfCylinder;
 	float cylinder_mass = JPH_PI * height * radius_sq * density;
 	float hemisphere_mass = (2.0f * JPH_PI / 3.0f) * radius_sq * mRadius * density;
-    
+
 	// From cylinder
 	float inertia_y = radius_sq * cylinder_mass * 0.5f;
 	float inertia_x = inertia_y * 0.5f + cylinder_mass * height * height / 12.0f;
@@ -242,13 +242,13 @@ MassProperties CapsuleShape::GetMassProperties() const
 
 	// Set inertia
 	p.mInertia = Mat44::sScale(Vec3(inertia_x, inertia_y, inertia_z));
-	
+
 	return p;
 }
 
-Vec3 CapsuleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
-	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID"); 
+Vec3 CapsuleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	if (inLocalSurfacePosition.GetY() > mHalfHeightOfCylinder)
 		return (inLocalSurfacePosition - Vec3(0, mHalfHeightOfCylinder, 0)).Normalized();
@@ -265,7 +265,7 @@ AABox CapsuleShape::GetLocalBounds() const
 }
 
 AABox CapsuleShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
-{ 
+{
 	JPH_ASSERT(IsValidScale(inScale));
 
 	Vec3 abs_scale = inScale.Abs();

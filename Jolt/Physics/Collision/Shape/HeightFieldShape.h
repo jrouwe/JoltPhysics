@@ -71,7 +71,7 @@ public:
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 	uint32							mSampleCount = 0;
 
-	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only, 
+	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only,
 	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [2, 8], does not need to be
 	/// a power of 2. Note that at run-time we'll perform one more grid subdivision, so the effective block size is half of what is provided here.
 	uint32							mBlockSize = 2;
@@ -112,7 +112,7 @@ public:
 
 	// See Shape::GetMassProperties
 	virtual MassProperties			GetMassProperties() const override;
-	
+
 	// See Shape::GetMaterial
 	virtual const PhysicsMaterial *	GetMaterial(const SubShapeID &inSubShapeID) const override;
 
@@ -183,7 +183,7 @@ protected:
 	// See: Shape::RestoreBinaryState
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
 
-private:	
+private:
 	class							DecodingContext;						///< Context class for walking through all nodes of a heightfield
 	struct							HSGetTrianglesContext;					///< Context class for GetTrianglesStart/Next
 
@@ -192,7 +192,7 @@ private:
 
 	/// Calculate bit mask for all active edges in the heightfield
 	void							CalculateActiveEdges();
-	
+
 	/// Store material indices in the least amount of bits per index possible
 	void							StoreMaterialIndices(const Array<uint8> &inMaterialIndices);
 
@@ -201,7 +201,7 @@ private:
 
 	/// Get the maximum level (amount of grids) of the tree
 	static inline uint				sGetMaxLevel(uint inNumBlocks)			{ return CountTrailingZeros(inNumBlocks); }
-	
+
 	/// Get the range block offset and stride for GetBlockOffsetAndScale
 	static inline void				sGetRangeBlockOffsetAndStride(uint inNumBlocks, uint inMaxLevel, uint &outRangeBlockOffset, uint &outRangeBlockStride);
 
@@ -213,7 +213,7 @@ private:
 
 	/// Faster version of GetPosition when block offset and scale are already known
 	inline Vec3						GetPosition(uint inX, uint inY, float inBlockOffset, float inBlockScale, bool &outNoCollision) const;
-		
+
 	/// Determine amount of bits needed to encode sub shape id
 	uint							GetSubShapeIDBits() const;
 
@@ -258,7 +258,7 @@ private:
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
 	Array<RangeBlock>				mRangeBlocks;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
 	Array<uint8>					mHeightSamples;						///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
-	Array<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags. 
+	Array<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags.
 
 	/// Materials
 	PhysicsMaterialList				mMaterials;							///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]

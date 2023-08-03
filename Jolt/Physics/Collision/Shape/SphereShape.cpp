@@ -31,16 +31,16 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SphereShapeSettings)
 }
 
 ShapeSettings::ShapeResult SphereShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new SphereShape(*this, mCachedResult); 
+		Ref<Shape> shape = new SphereShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
-SphereShape::SphereShape(const SphereShapeSettings &inSettings, ShapeResult &outResult) : 
-	ConvexShape(EShapeSubType::Sphere, inSettings, outResult), 
-	mRadius(inSettings.mRadius) 
-{ 
+SphereShape::SphereShape(const SphereShapeSettings &inSettings, ShapeResult &outResult) :
+	ConvexShape(EShapeSubType::Sphere, inSettings, outResult),
+	mRadius(inSettings.mRadius)
+{
 	if (inSettings.mRadius <= 0.0f)
 	{
 		outResult.SetError("Invalid radius");
@@ -58,19 +58,19 @@ float SphereShape::GetScaledRadius(Vec3Arg inScale) const
 	return abs_scale.GetX() * mRadius;
 }
 
-AABox SphereShape::GetLocalBounds() const 
-{ 
-	Vec3 half_extent = Vec3::sReplicate(mRadius); 
-	return AABox(-half_extent, half_extent); 
+AABox SphereShape::GetLocalBounds() const
+{
+	Vec3 half_extent = Vec3::sReplicate(mRadius);
+	return AABox(-half_extent, half_extent);
 }
-		
+
 AABox SphereShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
-{ 
+{
 	float scaled_radius = GetScaledRadius(inScale);
 	Vec3 half_extent = Vec3::sReplicate(scaled_radius);
-	AABox bounds(-half_extent, half_extent); 
-	bounds.Translate(inCenterOfMassTransform.GetTranslation()); 
-	return bounds; 
+	AABox bounds(-half_extent, half_extent);
+	bounds.Translate(inCenterOfMassTransform.GetTranslation());
+	return bounds;
 }
 
 class SphereShape::SphereNoConvex final : public Support
@@ -78,13 +78,13 @@ class SphereShape::SphereNoConvex final : public Support
 public:
 	explicit		SphereNoConvex(float inRadius) :
 		mRadius(inRadius)
-	{ 
-		static_assert(sizeof(SphereNoConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(SphereNoConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(SphereNoConvex)));
 	}
 
 	virtual Vec3	GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		return Vec3::sZero();
 	}
 
@@ -102,13 +102,13 @@ class SphereShape::SphereWithConvex final : public Support
 public:
 	explicit		SphereWithConvex(float inRadius) :
 		mRadius(inRadius)
-	{ 
-		static_assert(sizeof(SphereWithConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(SphereWithConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(SphereWithConvex)));
 	}
 
 	virtual Vec3	GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		float len = inDirection.Length();
 		return len > 0.0f? (mRadius / len) * inDirection : Vec3::sZero();
 	}
@@ -154,11 +154,11 @@ MassProperties SphereShape::GetMassProperties() const
 	return p;
 }
 
-Vec3 SphereShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
-	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID"); 
+Vec3 SphereShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
-	float len = inLocalSurfacePosition.Length(); 
+	float len = inLocalSurfacePosition.Length();
 	return len != 0.0f? inLocalSurfacePosition / len : Vec3::sAxisY();
 }
 
@@ -255,7 +255,7 @@ void SphereShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCast
 		}
 
 		// Check back side hit
-		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces 
+		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces
 			&& num_results > 1 // Ray should have 2 intersections
 			&& max_fraction < ioCollector.GetEarlyOutFraction()) // End of ray should be before early out fraction
 		{

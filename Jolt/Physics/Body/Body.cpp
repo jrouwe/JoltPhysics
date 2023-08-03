@@ -70,10 +70,10 @@ void Body::SetMotionType(EMotionType inMotionType)
 	}
 }
 
-void Body::SetAllowSleeping(bool inAllow)									
-{ 
-	mMotionProperties->mAllowSleeping = inAllow; 
-	if (inAllow) 
+void Body::SetAllowSleeping(bool inAllow)
+{
+	mMotionProperties->mAllowSleeping = inAllow;
+	if (inAllow)
 		ResetSleepTestSpheres();
 }
 
@@ -81,7 +81,7 @@ void Body::MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, fl
 {
 	JPH_ASSERT(IsRigidBody()); // Only valid for rigid bodies
 	JPH_ASSERT(!IsStatic());
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read));
 
 	// Calculate center of mass at end situation
 	RVec3 new_com = inTargetPosition + inTargetRotation * mShape->GetCenterOfMass();
@@ -98,12 +98,12 @@ void Body::CalculateWorldSpaceBoundsInternal()
 	mBounds = mShape->GetWorldSpaceBounds(GetCenterOfMassTransform(), Vec3::sReplicate(1.0f));
 }
 
-void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation) 
-{ 
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
+void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation)
+{
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite));
 
 	mPosition = inPosition + inRotation * mShape->GetCenterOfMass();
-	mRotation = inRotation; 
+	mRotation = inRotation;
 
 	// Initialize bounding box
 	CalculateWorldSpaceBoundsInternal();
@@ -126,7 +126,7 @@ void Body::UpdateCenterOfMassInternal(Vec3Arg inPreviousCenterOfMass, bool inUpd
 void Body::SetShapeInternal(const Shape *inShape, bool inUpdateMassProperties)
 {
 	JPH_ASSERT(IsRigidBody()); // Only valid for rigid bodies
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite));
 
 	// Get the old center of mass
 	Vec3 old_com = mShape->GetCenterOfMass();
@@ -200,7 +200,7 @@ bool Body::ApplyBuoyancyImpulse(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNor
 	float total_volume, submerged_volume;
 	Vec3 relative_center_of_buoyancy;
 	mShape->GetSubmergedVolume(rotation, Vec3::sReplicate(1.0f), surface_relative_to_body, total_volume, submerged_volume, relative_center_of_buoyancy JPH_IF_DEBUG_RENDERER(, mPosition));
-		
+
 	// If we're not submerged, there's no point in doing the rest of the calculations
 	if (submerged_volume > 0.0f)
 	{

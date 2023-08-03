@@ -164,7 +164,7 @@ public:
 
 	/// Bodies are protected using an array of mutexes (so a fixed number, not 1 per body). Each bit in this mask indicates a locked mutex.
 	using MutexMask = uint64;
-	
+
 	///@name Batch body mutex access (do not use directly)
 	///@{
 	MutexMask						GetAllBodiesMutexMask() const				{ return mBodyMutexes.GetNumMutexes() == sizeof(MutexMask) * 8? ~MutexMask(0) : (MutexMask(1) << mBodyMutexes.GetNumMutexes()) - 1; }
@@ -210,7 +210,7 @@ public:
 	/// Draw settings
 	struct DrawSettings
 	{
-		bool						mDrawGetSupportFunction = false;				///< Draw the GetSupport() function, used for convex collision detection	
+		bool						mDrawGetSupportFunction = false;				///< Draw the GetSupport() function, used for convex collision detection
 		bool						mDrawSupportDirection = false;					///< When drawing the support function, also draw which direction mapped to a specific support point
 		bool						mDrawGetSupportingFace = false;					///< Draw the faces that were found colliding during collision detection
 		bool						mDrawShape = true;								///< Draw the shapes of all bodies
@@ -299,7 +299,7 @@ private:
 	uintptr_t						mBodyIDFreeListStart = cBodyIDFreeListEnd;
 
 	/// Protects mBodies array (but not the bodies it points to), mNumBodies and mBodyIDFreeListStart
-	mutable Mutex					mBodiesMutex; 
+	mutable Mutex					mBodiesMutex;
 
 	/// An array of mutexes protecting the bodies in the mBodies array
 	using BodyMutexes = MutexArray<SharedMutex>;

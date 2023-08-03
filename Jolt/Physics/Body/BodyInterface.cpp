@@ -135,7 +135,7 @@ void BodyInterface::RemoveBody(const BodyID &inBodyID)
 		// Deactivate body
 		if (body.IsActive())
 			mBodyManager->DeactivateBodies(&inBodyID, 1);
-	
+
 		// Remove from broadphase
 		BodyID id = inBodyID;
 		mBroadPhase->RemoveBodies(&id, 1);
@@ -825,7 +825,7 @@ void BodyInterface::SetMotionType(const BodyID &inBodyID, EMotionType inMotionTy
 		// Deactivate if we're making the body static
 		if (body.IsActive() && inMotionType == EMotionType::Static)
 			mBodyManager->DeactivateBodies(&inBodyID, 1);
-			
+
 		body.SetMotionType(inMotionType);
 
 		// Activate body if requested
