@@ -8,21 +8,21 @@ JPH_NAMESPACE_BEGIN
 
 RMat44 Body::GetWorldTransform() const
 {
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read));
 
 	return RMat44::sRotationTranslation(mRotation, mPosition).PreTranslated(-mShape->GetCenterOfMass());
 }
 
 RMat44 Body::GetCenterOfMassTransform() const
 {
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read));
 
 	return RMat44::sRotationTranslation(mRotation, mPosition);
 }
 
 RMat44 Body::GetInverseCenterOfMassTransform() const
 {
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read));
 
 	return RMat44::sInverseRotationTranslation(mRotation, mPosition);
 }
@@ -32,19 +32,24 @@ inline static bool sIsValidSensorBodyPair(const Body &inSensor, const Body &inOt
 	// If the sensor is not an actual sensor then this is not a valid pair
 	if (!inSensor.IsSensor())
 		return false;
-	
+
 	if (inSensor.SensorDetectsStatic())
 		return !inOther.IsDynamic(); // If the other body is dynamic, the pair will be handled when the bodies are swapped, otherwise we'll detect the collision twice
-	else	
+	else
 		return inOther.IsKinematic(); // Only kinematic bodies are valid
 }
 
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
 {
+	// Soft bodies collide later in the pipeline
+	JPH_ASSERT(!inBody1.IsSoftBody());
+	if (inBody2.IsSoftBody())
+		return false;
+
 	// One of these conditions must be true
 	// - One of the bodies must be dynamic to collide
 	// - A sensor can collide with non-dynamic bodies
-	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic()) 
+	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic())
 		&& !sIsValidSensorBodyPair(inBody1, inBody2)
 		&& !sIsValidSensorBodyPair(inBody2, inBody1))
 		return false;
@@ -61,15 +66,15 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 	//	- A is active and B will become active during this simulation step (4)
 	//	- A is active and B is active, we require a condition that makes A, B collide and B, A not (5)
 	//
-	// In order to implement this we use the index in the active body list and make use of the fact that 
+	// In order to implement this we use the index in the active body list and make use of the fact that
 	// a body not in the active list has Body.Index = 0xffffffff which is the highest possible value for an uint32.
 	//
 	// Because we know that A is active we know that A.Index != 0xffffffff:
 	// (1) Because A.Index != 0xffffffff, if A.Index = B.Index then A = B, so to collide A.Index != B.Index
 	// (2) A.Index != 0xffffffff, B.Index = 0xffffffff (because it's static and cannot be in the active list), so to collide A.Index != B.Index
 	// (3) A.Index != 0xffffffff, B.Index = 0xffffffff (because it's not yet active), so to collide A.Index != B.Index
-	// (4) A.Index != 0xffffffff, B.Index = 0xffffffff currently. But it can activate during the Broad/NarrowPhase step at which point it 
-	//     will be added to the end of the active list which will make B.Index > A.Index (this holds only true when we don't deactivate 
+	// (4) A.Index != 0xffffffff, B.Index = 0xffffffff currently. But it can activate during the Broad/NarrowPhase step at which point it
+	//     will be added to the end of the active list which will make B.Index > A.Index (this holds only true when we don't deactivate
 	//     bodies during the Broad/NarrowPhase step), so to collide A.Index < B.Index.
 	// (5) As tie breaker we can use the same condition A.Index < B.Index to collide, this means that if A, B collides then B, A won't
 	static_assert(Body::cInactiveIndex == 0xffffffff, "The algorithm below uses this value");
@@ -85,8 +90,9 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 }
 
 void Body::AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime)
-{ 
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
+{
+	JPH_ASSERT(IsRigidBody());
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite));
 
 	// This used to use the equation: d/dt R(t) = 1/2 * w(t) * R(t) so that R(t + dt) = R(t) + 1/2 * w(t) * R(t) * dt
 	// See: Appendix B of An Introduction to Physically Based Modeling: Rigid Body Simulation II-Nonpenetration Constraints
@@ -94,24 +100,25 @@ void Body::AddRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime)
 	// But this is a first order approximation and does not work well for kinematic ragdolls that are driven to a new
 	// pose if the poses differ enough. So now we split w(t) * dt into an axis and angle part and create a quaternion with it.
 	// Note that the resulting quaternion is normalized since otherwise numerical drift will eventually make the rotation non-normalized.
-	float len = inAngularVelocityTimesDeltaTime.Length(); 
-	if (len > 1.0e-6f) 
+	float len = inAngularVelocityTimesDeltaTime.Length();
+	if (len > 1.0e-6f)
 	{
-		mRotation = (Quat::sRotation(inAngularVelocityTimesDeltaTime / len, len) * mRotation).Normalized(); 
-		JPH_ASSERT(!mRotation.IsNaN()); 
+		mRotation = (Quat::sRotation(inAngularVelocityTimesDeltaTime / len, len) * mRotation).Normalized();
+		JPH_ASSERT(!mRotation.IsNaN());
 	}
 }
 
 void Body::SubRotationStep(Vec3Arg inAngularVelocityTimesDeltaTime)
-{ 
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite)); 
+{
+	JPH_ASSERT(IsRigidBody());
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite));
 
 	// See comment at Body::AddRotationStep
-	float len = inAngularVelocityTimesDeltaTime.Length(); 
-	if (len > 1.0e-6f) 
+	float len = inAngularVelocityTimesDeltaTime.Length();
+	if (len > 1.0e-6f)
 	{
-		mRotation = (Quat::sRotation(inAngularVelocityTimesDeltaTime / len, -len) * mRotation).Normalized(); 
-		JPH_ASSERT(!mRotation.IsNaN()); 
+		mRotation = (Quat::sRotation(inAngularVelocityTimesDeltaTime / len, -len) * mRotation).Normalized();
+		JPH_ASSERT(!mRotation.IsNaN());
 	}
 }
 
@@ -159,7 +166,7 @@ void Body::AddAngularImpulse(Vec3Arg inAngularImpulse)
 
 void Body::GetSleepTestPoints(RVec3 *outPoints) const
 {
-	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); 
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read));
 
 	// Center of mass is the first position
 	outPoints[0] = mPosition;

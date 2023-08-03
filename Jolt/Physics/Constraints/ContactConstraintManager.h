@@ -50,21 +50,23 @@ public:
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
 	void						SetCombineFriction(CombineFunction inCombineFriction)				{ mCombineFriction = inCombineFriction; }
+	CombineFunction				GetCombineFriction() const											{ return mCombineFriction; }
 
 	/// Set the function that combines the restitution of two bodies and returns it
 	/// Default method is max(restitution1, restitution1)
 	void						SetCombineRestitution(CombineFunction inCombineRestitution)			{ mCombineRestitution = inCombineRestitution; }
+	CombineFunction				GetCombineRestitution() const										{ return mCombineRestitution; }
 
 	/// Get the max number of contact constraints that are allowed
 	uint32						GetMaxConstraints() const											{ return mMaxConstraints; }
 
 	/// Check with the listener if inBody1 and inBody2 could collide, returns false if not
-	inline ValidateResult		ValidateContactPoint(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) const	
-	{ 
-		if (mContactListener == nullptr) 
-			return ValidateResult::AcceptAllContactsForThisBodyPair; 
+	inline ValidateResult		ValidateContactPoint(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) const
+	{
+		if (mContactListener == nullptr)
+			return ValidateResult::AcceptAllContactsForThisBodyPair;
 
-		return mContactListener->OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult); 
+		return mContactListener->OnContactValidate(inBody1, inBody2, inBaseOffset, inCollisionResult);
 	}
 
 	/// Sets up the constraint buffer. Should be called before starting collision detection.
@@ -111,7 +113,7 @@ public:
 	/// This is using the approach described in 'Modeling and Solving Constraints' by Erin Catto presented at GDC 2009 (and later years with slight modifications).
 	/// We're using the formulas from slide 50 - 53 combined.
 	///
-	/// Euler velocity integration: 
+	/// Euler velocity integration:
 	///
 	/// v1' = v1 + M^-1 P
 	///
@@ -134,7 +136,7 @@ public:
 	/// Jacobian (for position constraint)
 	///
 	/// J = [-n, -r1 x n, n, r2 x n]
-	/// 
+	///
 	/// n = contact normal (pointing away from body 1).
 	/// p1, p2 = positions of collision on body 1 and 2.
 	/// r1, r2 = contact point relative to center of mass of body 1 and body 2 (r1 = p1 - x1, r2 = p2 - x2).
@@ -183,7 +185,7 @@ public:
 	/// |lambda_T| <= mu |lambda_N|
 	///
 	/// And the constraint that needs to be applied is exactly the same as a non penetration constraint
-	/// except that we use a tangent instead of a normal. The tangent should point in the direction of the 
+	/// except that we use a tangent instead of a normal. The tangent should point in the direction of the
 	/// tangential velocity of the point:
 	///
 	/// J = [-T, -r1 x T, T, r2 x T]
@@ -271,7 +273,7 @@ private:
 
 	static_assert(sizeof(CachedContactPoint) == 36, "Unexpected size");
 	static_assert(alignof(CachedContactPoint) == 4, "Assuming 4 byte aligned");
-	
+
 	/// A single cached manifold
 	class CachedManifold
 	{
@@ -338,7 +340,7 @@ private:
 		uint32					mFirstCachedManifold;
 	};
 
-	static_assert(sizeof(CachedBodyPair) == 28, "Unexpected size"); 
+	static_assert(sizeof(CachedBodyPair) == 28, "Unexpected size");
 	static_assert(alignof(CachedBodyPair) == 4, "Assuming 4 byte aligned");
 
 	/// Define a map that maps BodyPair -> CachedBodyPair
@@ -355,7 +357,7 @@ private:
 		/// Reset all entries from the cache
 		void					Clear();
 
-		/// Prepare cache before creating new contacts. 
+		/// Prepare cache before creating new contacts.
 		/// inExpectedNumBodyPairs / inExpectedNumManifolds are the amount of body pairs / manifolds found in the previous step and is used to determine the amount of buckets the contact cache hash map will use.
 		void					Prepare(uint inExpectedNumBodyPairs, uint inExpectedNumManifolds);
 
@@ -427,7 +429,7 @@ private:
 		AxisConstraintPart		mNonPenetrationConstraint;
 		AxisConstraintPart		mFrictionConstraint1;
 		AxisConstraintPart		mFrictionConstraint2;
-		
+
 		/// Contact cache
 		CachedContactPoint *	mContactPoint;
 	};

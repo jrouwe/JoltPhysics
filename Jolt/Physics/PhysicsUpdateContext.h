@@ -63,13 +63,13 @@ public:
 
 		atomic<uint32>		mConstraintReadIdx { 0 };								///< Next constraint for determine active constraints
 		uint8				mPadding1[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
-		
+
 		atomic<uint32>		mNumActiveConstraints { 0 };							///< Number of constraints in the mActiveConstraints array
 		uint8				mPadding2[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
-		
+
 		atomic<uint32>		mStepListenerReadIdx { 0 };								///< Next step listener to call
 		uint8				mPadding3[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
-		
+
 		atomic<uint32>		mApplyGravityReadIdx { 0 };								///< Next body to apply gravity to
 		uint8				mPadding4[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
@@ -130,6 +130,7 @@ public:
 		JobHandle			mResolveCCDContacts;									///< Updates the positions and velocities for all bodies that need continuous collision detection
 		JobHandleArray		mSolvePositionConstraints;								///< Solve all constraints in the position domain
 		JobHandle			mContactRemovedCallbacks;								///< Calls the contact removed callbacks
+		JobHandle			mUpdateSoftBodies;										///< Updates all soft bodies
 		JobHandle			mStartNextStep;											///< Job that kicks the next step (empty for the last step)
 	};
 

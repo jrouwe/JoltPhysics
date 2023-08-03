@@ -11,7 +11,9 @@
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Geometry/ConvexHullBuilder.h>
+#include <Jolt/Geometry/ClosestPoint.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
@@ -32,9 +34,9 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConvexHullShapeSettings)
 }
 
 ShapeSettings::ShapeResult ConvexHullShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new ConvexHullShape(*this, mCachedResult); 
+		Ref<Shape> shape = new ConvexHullShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
@@ -45,7 +47,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	using BuilderFace = ConvexHullBuilder::Face;
 	using Edge = ConvexHullBuilder::Edge;
 	using Faces = Array<BuilderFace *>;
-	
+
 	// Check convex radius
 	if (mConvexRadius < 0.0f)
 	{
@@ -82,7 +84,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	builder.GetCenterOfMassAndVolume(mCenterOfMass, mVolume);
 
 	// Calculate covariance matrix
-	// See: 
+	// See:
 	// - Why the inertia tensor is the inertia tensor - Jonathan Blow (http://number-none.com/blow/inertia/deriving_i.html)
 	// - How to find the inertia tensor (or other mass properties) of a 3D solid body represented by a triangle mesh (Draft) - Jonathan Blow, Atman J Binstock (http://number-none.com/blow/inertia/bb_inertia.doc)
 	Mat44 covariance_canonical(Vec4(1.0f / 60.0f, 1.0f / 120.0f, 1.0f / 120.0f, 0), Vec4(1.0f / 120.0f, 1.0f / 60.0f, 1.0f / 120.0f, 0), Vec4(1.0f / 120.0f, 1.0f / 120.0f, 1.0f / 60.0f, 0), Vec4(0, 0, 0, 1));
@@ -129,7 +131,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 		// Determine where the vertices go
 		uint16 first_vertex = (uint16)mVertexIdx.size();
 		uint16 num_vertices = 0;
-		
+
 		// Loop over vertices in face
 		Edge *edge = builder_face->mFirstEdge;
 		do
@@ -208,9 +210,9 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 			// Find the 3 normals that form the largest tetrahedron
 			// The largest tetrahedron we can get is ((1, 0, 0) x (0, 1, 0)) . (0, 0, 1) = 1, if the volume is only 5% of that,
 			// the three vectors are too coplanar and we fall back to using only 2 plane normals
-			float biggest_volume = 0.05f; 
+			float biggest_volume = 0.05f;
 			int best3[3] = { -1, -1, -1 };
-			
+
 			// When using 2 normals, we get the two with the biggest angle between them with a minimal difference of 1 degree
 			// otherwise we fall back to just using 1 plane normal
 			float smallest_dot = Cos(DegreesToRadians(1.0f));
@@ -305,7 +307,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 					p3 = mPlanes[point.mFaces[2]];
 
 					// All 3 planes will be offset by the convex radius
-					offset_mask = Vec3::sReplicate(1); 
+					offset_mask = Vec3::sReplicate(1);
 				}
 				else
 				{
@@ -314,7 +316,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 					p3 = Plane::sFromPointAndNormal(point.mPosition, p1.GetNormal().Cross(p2.GetNormal()));
 
 					// Only the first and 2nd plane will be offset, the 3rd plane is only there to guide the intersection point
-					offset_mask = Vec3(1, 1, 0); 
+					offset_mask = Vec3(1, 1, 0);
 				}
 
 				// Plane equation: point . normal + constant = 0
@@ -365,13 +367,13 @@ MassProperties ConvexHullShape::GetMassProperties() const
 	// Calculate inertia matrix
 	p.mInertia = density * mInertia;
 	p.mInertia(3, 3) = 1.0f;
-	
+
 	return p;
 }
 
-Vec3 ConvexHullShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
-	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID"); 
+Vec3 ConvexHullShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	const Plane &first_plane = mPlanes[0];
 	Vec3 best_normal = first_plane.GetNormal();
@@ -396,19 +398,19 @@ Vec3 ConvexHullShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg i
 class ConvexHullShape::HullNoConvex final : public Support
 {
 public:
-	explicit				HullNoConvex(float inConvexRadius) : 
+	explicit				HullNoConvex(float inConvexRadius) :
 		mConvexRadius(inConvexRadius)
-	{ 
-		static_assert(sizeof(HullNoConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(HullNoConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(HullNoConvex)));
 	}
 
 	virtual Vec3			GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		// Find the point with the highest projection on inDirection
 		float best_dot = -FLT_MAX;
 		Vec3 best_point = Vec3::sZero();
-	
+
 		for (Vec3 point : mPoints)
 		{
 			// Check if its support is bigger than the current max
@@ -448,19 +450,19 @@ private:
 class ConvexHullShape::HullWithConvex final : public Support
 {
 public:
-	explicit				HullWithConvex(const ConvexHullShape *inShape) : 
+	explicit				HullWithConvex(const ConvexHullShape *inShape) :
 		mShape(inShape)
-	{ 
-		static_assert(sizeof(HullWithConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(HullWithConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(HullWithConvex)));
 	}
 
 	virtual Vec3			GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		// Find the point with the highest projection on inDirection
 		float best_dot = -FLT_MAX;
 		Vec3 best_point = Vec3::sZero();
-	
+
 		for (const Point &point : mShape->mPoints)
 		{
 			// Check if its support is bigger than the current max
@@ -487,20 +489,20 @@ private:
 class ConvexHullShape::HullWithConvexScaled final : public Support
 {
 public:
-							HullWithConvexScaled(const ConvexHullShape *inShape, Vec3Arg inScale) : 
+							HullWithConvexScaled(const ConvexHullShape *inShape, Vec3Arg inScale) :
 		mShape(inShape),
 		mScale(inScale)
-	{ 
-		static_assert(sizeof(HullWithConvexScaled) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(HullWithConvexScaled) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(HullWithConvexScaled)));
 	}
 
 	virtual Vec3			GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		// Find the point with the highest projection on inDirection
 		float best_dot = -FLT_MAX;
 		Vec3 best_point = Vec3::sZero();
-	
+
 		for (const Point &point : mShape->mPoints)
 		{
 			// Calculate scaled position
@@ -619,7 +621,7 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 				Vec3 n1 = (inv_scale * mPlanes[point.mFaces[0]].GetNormal()).Normalized();
 
 				Vec3 new_point;
-				
+
 				if (point.mNumFaces == 1)
 				{
 					// Simply shift back by the convex radius using our 1 plane
@@ -670,12 +672,12 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 	return nullptr;
 }
 
-void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const 
+void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg inDirection, Vec3Arg inScale, Mat44Arg inCenterOfMassTransform, SupportingFace &outVertices) const
 {
 	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	Vec3 inv_scale = inScale.Reciprocal();
-	
+
 	// Need to transform the plane normals using inScale
 	// Transforming a direction with matrix M is done through multiplying by (M^-1)^T
 	// In this case M is a diagonal matrix with the scale vector, so we need to multiply our normal by 1 / scale and renormalize afterwards
@@ -695,7 +697,7 @@ void ConvexHullShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg 
 	}
 
 	// Get vertices
-	const Face &best_face = mFaces[best_face_idx];		
+	const Face &best_face = mFaces[best_face_idx];
 	const uint8 *first_vtx = mVertexIdx.data() + best_face.mFirstVertex;
 	const uint8 *end_vtx = first_vtx + best_face.mNumVertices;
 
@@ -734,7 +736,7 @@ void ConvexHullShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3A
 	int num_points = int(mPoints.size());
 	PolyhedronSubmergedVolumeCalculator::Point *buffer = (PolyhedronSubmergedVolumeCalculator::Point *)JPH_STACK_ALLOC(num_points * sizeof(PolyhedronSubmergedVolumeCalculator::Point));
 	PolyhedronSubmergedVolumeCalculator submerged_vol_calc(inCenterOfMassTransform * Mat44::sScale(inScale), &mPoints[0].mPosition, sizeof(Point), num_points, inSurface, buffer JPH_IF_DEBUG_RENDERER(, inBaseOffset));
-	
+
 	if (submerged_vol_calc.AreAllAbove())
 	{
 		// We're above the water
@@ -1032,7 +1034,7 @@ void ConvexHullShape::CastRay(const RayCast &inRay, const RayCastSettings &inRay
 		}
 
 		// Check back side hit
-		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces 
+		if (inRayCastSettings.mBackFaceMode == EBackFaceMode::CollideWithBackFaces
 			&& max_fraction < ioCollector.GetEarlyOutFraction())
 		{
 			hit.mFraction = max_fraction;
@@ -1054,6 +1056,78 @@ void ConvexHullShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inS
 
 	// Point is inside
 	ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
+}
+
+void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	for (SoftBodyVertex &v : ioVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			Vec3 local_pos = inverse_transform * v.mPosition;
+
+			// Find most facing plane
+			float max_distance = -FLT_MAX;
+			const Plane *max_plane = nullptr;
+			for (const Plane &p : mPlanes)
+			{
+				float distance = p.SignedDistance(local_pos);
+				if (distance > max_distance)
+				{
+					max_distance = distance;
+					max_plane = &p;
+				}
+			}
+
+			// Check edges if we're outside the hull (when inside we know the closest face is also the closest point to the surface)
+			float closest_edge_distance = FLT_MAX;
+			Plane closest_plane = *max_plane;
+			if (max_distance <= 0.0f)
+			{
+				// Loop over edges
+				const Face &face = mFaces[int(max_plane - mPlanes.data())];
+				for (const uint8 *v_start = &mVertexIdx[face.mFirstVertex], *v1 = v_start, *v_end = v_start + face.mNumVertices; v1 < v_end; ++v1)
+				{
+					// Find second point
+					const uint8 *v2 = v1 + 1;
+					if (v2 == v_end)
+						v2 = v_start;
+
+					// Get edge points
+					Vec3 p1 = mPoints[*v1].mPosition;
+					Vec3 p2 = mPoints[*v2].mPosition;
+
+					// Check if the position is outside the edge (if not, the face will be closer)
+					Vec3 edge_normal = (p2 - p1).Cross(max_plane->GetNormal());
+					if (edge_normal.Dot(local_pos - p1) > 0.0f)
+					{
+						// Get closest point on edge
+						uint32 set;
+						Vec3 closest = ClosestPoint::GetClosestPointOnLine(p1 - local_pos, p2 - local_pos, set);
+						float distance = closest.Length();
+						if (distance < closest_edge_distance)
+						{
+							closest_edge_distance = distance;
+							Vec3 point = local_pos + closest;
+							Vec3 normal = (local_pos - point).NormalizedOr(max_plane->GetNormal());
+							closest_plane = Plane::sFromPointAndNormal(point, normal);
+						}
+					}
+				}
+			}
+
+			// Closest point on edge
+			float penetration = -(closest_edge_distance != FLT_MAX? closest_edge_distance : max_distance);
+			if (penetration > v.mLargestPenetration)
+			{
+				v.mLargestPenetration = penetration;
+
+				// Store collision
+				v.mCollisionPlane = closest_plane.GetTransformed(inCenterOfMassTransform);
+				v.mCollidingShapeIndex = inCollidingShapeIndex;
+			}
+		}
 }
 
 class ConvexHullShape::CHSGetTrianglesContext
@@ -1184,9 +1258,9 @@ Shape::Stats ConvexHullShape::GetStats() const
 		triangle_count += f.mNumVertices - 2;
 
 	return Stats(
-		sizeof(*this) 
-			+ mPoints.size() * sizeof(Point) 
-			+ mFaces.size() * sizeof(Face) 
+		sizeof(*this)
+			+ mPoints.size() * sizeof(Point)
+			+ mFaces.size() * sizeof(Face)
 			+ mPlanes.size() * sizeof(Plane)
 			+ mVertexIdx.size() * sizeof(uint8),
 		triangle_count);

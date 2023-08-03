@@ -42,7 +42,7 @@ public:
 	/// @param inObjectVsBroadPhaseLayerFilter Filter callback function that is used to determine if an object layer collides with a broad phase layer. Since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem.
 	/// @param inObjectLayerPairFilter Filter callback function that is used to determine if two object layers collide. Since this is a virtual interface, the instance needs to stay alive during the lifetime of the PhysicsSystem.
 	void						Init(uint inMaxBodies, uint inNumBodyMutexes, uint inMaxBodyPairs, uint inMaxContactConstraints, const BroadPhaseLayerInterface &inBroadPhaseLayerInterface, const ObjectVsBroadPhaseLayerFilter &inObjectVsBroadPhaseLayerFilter, const ObjectLayerPairFilter &inObjectLayerPairFilter);
-	
+
 	/// Listener that is notified whenever a body is activated/deactivated
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
 	BodyActivationListener *	GetBodyActivationListener() const							{ return mBodyManager.GetBodyActivationListener(); }
@@ -54,10 +54,12 @@ public:
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
 	void						SetCombineFriction(ContactConstraintManager::CombineFunction inCombineFriction) { mContactManager.SetCombineFriction(inCombineFriction); }
+	ContactConstraintManager::CombineFunction GetCombineFriction() const					{ return mContactManager.GetCombineFriction(); }
 
 	/// Set the function that combines the restitution of two bodies and returns it
 	/// Default method is max(restitution1, restitution1)
 	void						SetCombineRestitution(ContactConstraintManager::CombineFunction inCombineRestition) { mContactManager.SetCombineRestitution(inCombineRestition); }
+	ContactConstraintManager::CombineFunction GetCombineRestitution() const					{ return mContactManager.GetCombineRestitution(); }
 
 	/// Control the main constants of the physics simulation
 	void						SetPhysicsSettings(const PhysicsSettings &inSettings)		{ mPhysicsSettings = inSettings; }
@@ -78,7 +80,7 @@ public:
 
 	/// Add constraint to the world
 	void						AddConstraint(Constraint *inConstraint)						{ mConstraintManager.Add(&inConstraint, 1); }
-	
+
 	/// Remove constraint from the world
 	void						RemoveConstraint(Constraint *inConstraint)					{ mConstraintManager.Remove(&inConstraint, 1); }
 
@@ -149,7 +151,7 @@ public:
 	uint						GetNumBodies() const										{ return mBodyManager.GetNumBodies(); }
 
 	/// Gets the current amount of active bodies that are in the body manager
-	uint32						GetNumActiveBodies() const									{ return mBodyManager.GetNumActiveBodies(); }
+	uint32						GetNumActiveBodies(EBodyType inType) const					{ return mBodyManager.GetNumActiveBodies(inType); }
 
 	/// Get the maximum amount of bodies that this physics system supports
 	uint						GetMaxBodies() const										{ return mBodyManager.GetMaxBodies(); }
@@ -165,12 +167,13 @@ public:
 	void						GetBodies(BodyIDVector &outBodyIDs) const					{ return mBodyManager.GetBodyIDs(outBodyIDs); }
 
 	/// Get copy of the list of active bodies under protection of a lock.
+	/// @param inType The type of bodies to get
 	/// @param outBodyIDs On return, this will contain the list of BodyIDs
-	void						GetActiveBodies(BodyIDVector &outBodyIDs) const				{ return mBodyManager.GetActiveBodies(outBodyIDs); }
+	void						GetActiveBodies(EBodyType inType, BodyIDVector &outBodyIDs) const { return mBodyManager.GetActiveBodies(inType, outBodyIDs); }
 
 	/// Get the list of active bodies, use GetNumActiveBodies() to find out how long the list is.
 	/// Note: Not thread safe. The active bodies list can change at any moment when other threads are doing work. Use GetActiveBodies() if you need a thread safe version.
-	const BodyID *				GetActiveBodiesUnsafe() const								{ return mBodyManager.GetActiveBodiesUnsafe(); }
+	const BodyID *				GetActiveBodiesUnsafe(EBodyType inType) const				{ return mBodyManager.GetActiveBodiesUnsafe(inType); }
 
 	/// Check if 2 bodies were in contact during the last simulation step. Since contacts are only detected between active bodies, so at least one of the bodies must be active in order for this function to work.
 	/// It queries the state at the time of the last PhysicsSystem::Update and will return true if the bodies were in contact, even if one of the bodies was moved / removed afterwards.
@@ -190,7 +193,7 @@ private:
 	// Various job entry points
 	void						JobStepListeners(PhysicsUpdateContext::Step *ioStep);
 	void						JobDetermineActiveConstraints(PhysicsUpdateContext::Step *ioStep) const;
-	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);	
+	void						JobApplyGravity(const PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdateContext::Step *ioStep) const;
 	void						JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobFindCollisions(PhysicsUpdateContext::Step *ioStep, int inJobIndex);
@@ -204,6 +207,7 @@ private:
 	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobContactRemovedCallbacks(const PhysicsUpdateContext::Step *ioStep);
 	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext);
 
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
 	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const;
@@ -260,7 +264,7 @@ private:
 
 	/// The broadphase does quick collision detection between body pairs
 	BroadPhase *				mBroadPhase = nullptr;
-    
+
     /// Simulation settings
 	PhysicsSettings				mPhysicsSettings;
 

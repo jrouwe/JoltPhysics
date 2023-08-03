@@ -23,9 +23,9 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(OffsetCenterOfMassShapeSettings)
 }
 
 ShapeSettings::ShapeResult OffsetCenterOfMassShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new OffsetCenterOfMassShape(*this, mCachedResult); 
+		Ref<Shape> shape = new OffsetCenterOfMassShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
@@ -48,7 +48,7 @@ AABox OffsetCenterOfMassShape::GetLocalBounds() const
 }
 
 AABox OffsetCenterOfMassShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
-{ 
+{
 	return mInnerShape->GetWorldSpaceBounds(inCenterOfMassTransform.PreTranslated(-inScale * mOffset), inScale);
 }
 
@@ -62,8 +62,8 @@ TransformedShape OffsetCenterOfMassShape::GetSubShapeTransformedShape(const SubS
 	return ts;
 }
 
-Vec3 OffsetCenterOfMassShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
-{ 
+Vec3 OffsetCenterOfMassShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
+{
 	// Transform surface position to local space and pass call on
 	return mInnerShape->GetSurfaceNormal(inSubShapeID, inLocalSurfacePosition + mOffset);
 }
@@ -96,7 +96,7 @@ void OffsetCenterOfMassShape::DrawGetSupportingFace(DebugRenderer *inRenderer, R
 #endif // JPH_DEBUG_RENDERER
 
 bool OffsetCenterOfMassShape::CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const
-{	
+{
 	// Transform the ray to local space
 	RayCast ray = inRay;
 	ray.mOrigin += mOffset;
@@ -127,6 +127,11 @@ void OffsetCenterOfMassShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCrea
 	mInnerShape->CollidePoint(inPoint + mOffset, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
+void OffsetCenterOfMassShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	mInnerShape->CollideSoftBodyVertices(inCenterOfMassTransform.PreTranslated(-mOffset), ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+}
+
 void OffsetCenterOfMassShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Test shape filter
@@ -142,7 +147,7 @@ void OffsetCenterOfMassShape::TransformShape(Mat44Arg inCenterOfMassTransform, T
 }
 
 void OffsetCenterOfMassShape::sCollideOffsetCenterOfMassVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
-{	
+{
 	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::OffsetCenterOfMass);
 	const OffsetCenterOfMassShape *shape1 = static_cast<const OffsetCenterOfMassShape *>(inShape1);
 

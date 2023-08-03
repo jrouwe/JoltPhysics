@@ -39,19 +39,19 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(TriangleShapeSettings)
 }
 
 ShapeSettings::ShapeResult TriangleShapeSettings::Create() const
-{ 
+{
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new TriangleShape(*this, mCachedResult); 
+		Ref<Shape> shape = new TriangleShape(*this, mCachedResult);
 	return mCachedResult;
 }
 
 TriangleShape::TriangleShape(const TriangleShapeSettings &inSettings, ShapeResult &outResult) :
-	ConvexShape(EShapeSubType::Triangle, inSettings, outResult), 
-	mV1(inSettings.mV1), 
-	mV2(inSettings.mV2), 
-	mV3(inSettings.mV3), 
-	mConvexRadius(inSettings.mConvexRadius) 
-{ 
+	ConvexShape(EShapeSubType::Triangle, inSettings, outResult),
+	mV1(inSettings.mV1),
+	mV2(inSettings.mV2),
+	mV3(inSettings.mV3),
+	mConvexRadius(inSettings.mConvexRadius)
+{
 	if (inSettings.mConvexRadius < 0.0f)
 	{
 		outResult.SetError("Invalid convex radius");
@@ -61,15 +61,15 @@ TriangleShape::TriangleShape(const TriangleShapeSettings &inSettings, ShapeResul
 	outResult.Set(this);
 }
 
-AABox TriangleShape::GetLocalBounds() const 
-{ 
+AABox TriangleShape::GetLocalBounds() const
+{
 	AABox bounds(mV1, mV1);
 	bounds.Encapsulate(mV2);
 	bounds.Encapsulate(mV3);
 	bounds.ExpandBy(Vec3::sReplicate(mConvexRadius));
 	return bounds;
 }
-		
+
 AABox TriangleShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale) const
 {
 	JPH_ASSERT(IsValidScale(inScale));
@@ -90,13 +90,13 @@ class TriangleShape::TriangleNoConvex final : public Support
 public:
 							TriangleNoConvex(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3) :
 		mTriangleSuport(inV1, inV2, inV3)
-	{ 
-		static_assert(sizeof(TriangleNoConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(TriangleNoConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(TriangleNoConvex)));
 	}
 
 	virtual Vec3			GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		return mTriangleSuport.GetSupport(inDirection);
 	}
 
@@ -115,13 +115,13 @@ public:
 							TriangleWithConvex(Vec3Arg inV1, Vec3Arg inV2, Vec3Arg inV3, float inConvexRadius) :
 		mConvexRadius(inConvexRadius),
 		mTriangleSuport(inV1, inV2, inV3)
-	{ 
-		static_assert(sizeof(TriangleWithConvex) <= sizeof(SupportBuffer), "Buffer size too small"); 
+	{
+		static_assert(sizeof(TriangleWithConvex) <= sizeof(SupportBuffer), "Buffer size too small");
 		JPH_ASSERT(IsAligned(this, alignof(TriangleWithConvex)));
 	}
 
 	virtual Vec3			GetSupport(Vec3Arg inDirection) const override
-	{ 
+	{
 		Vec3 support = mTriangleSuport.GetSupport(inDirection);
 		float len = inDirection.Length();
 		if (len > 0.0f)
@@ -184,12 +184,12 @@ MassProperties TriangleShape::GetMassProperties() const
 	return MassProperties();
 }
 
-Vec3 TriangleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const 
+Vec3 TriangleShape::GetSurfaceNormal(const SubShapeID &inSubShapeID, Vec3Arg inLocalSurfacePosition) const
 {
-	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID"); 
+	JPH_ASSERT(inSubShapeID.IsEmpty(), "Invalid subshape ID");
 
 	Vec3 cross = (mV2 - mV1).Cross(mV3 - mV1);
-	float len = cross.Length(); 
+	float len = cross.Length();
 	return len != 0.0f? cross / len : Vec3::sAxisY();
 }
 
@@ -255,6 +255,11 @@ void TriangleShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
 	// Can't be inside a triangle
+}
+
+void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
 }
 
 void TriangleShape::sCollideConvexVsTriangle(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, [[maybe_unused]] const ShapeFilter &inShapeFilter)

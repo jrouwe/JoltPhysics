@@ -161,6 +161,20 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Rig/RigPileTest.h
 	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyGravityFactorTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyGravityFactorTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyUpdatePositionTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyUpdatePositionTest.h
 	${SAMPLES_ROOT}/Tests/Test.cpp
 	${SAMPLES_ROOT}/Tests/Test.h
 	${SAMPLES_ROOT}/Tests/Tools/LoadSnapshotTest.cpp
@@ -234,6 +248,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Utils/RagdollLoader.h
 	${SAMPLES_ROOT}/Utils/ShapeCreator.cpp
 	${SAMPLES_ROOT}/Utils/ShapeCreator.h
+	${SAMPLES_ROOT}/Utils/SoftBodyCreator.cpp
+	${SAMPLES_ROOT}/Utils/SoftBodyCreator.h
 )
 
 # Group source files

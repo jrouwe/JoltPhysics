@@ -23,8 +23,8 @@ CastSphereVsTriangles::CastSphereVsTriangles(const ShapeCast &inShapeCast, const
 	mCenterOfMassTransform2(inCenterOfMassTransform2),
 	mScale(inScale),
 	mSubShapeIDCreator1(inSubShapeIDCreator1),
-	mCollector(ioCollector) 
-{ 
+	mCollector(ioCollector)
+{
 	// Cast to sphere shape
 	JPH_ASSERT(inShapeCast.mShape->GetSubType() == EShapeSubType::Sphere);
 	const SphereShape *sphere = static_cast<const SphereShape *>(inShapeCast.mShape);
@@ -42,7 +42,7 @@ void CastSphereVsTriangles::AddHit(bool inBackFacing, const SubShapeID &inSubSha
 	Vec3 contact_point_a = mCenterOfMassTransform2 * (mStart + inContactPointA);
 	Vec3 contact_point_b = mCenterOfMassTransform2 * (mStart + inContactPointB);
 	Vec3 contact_normal_world = mCenterOfMassTransform2.Multiply3x3(inContactNormal);
-	
+
 	// Its a hit, store the sub shape id's
 	ShapeCastResult result(inFraction, contact_point_a, contact_point_b, contact_normal_world, inBackFacing, mSubShapeIDCreator1.GetID(), inSubShapeID2, TransformedShape::sGetBodyID(mCollector.GetContext()));
 
@@ -84,12 +84,12 @@ float CastSphereVsTriangles::RayCylinder(Vec3Arg inRayDirection, Vec3Arg inCylin
 	float start_dot_axis = start.Dot(axis);
 	float direction_dot_axis = inRayDirection.Dot(axis);
 	float end_dot_axis = start_dot_axis + direction_dot_axis;
-	if (start_dot_axis < 0.0f && end_dot_axis < 0.0f) 
+	if (start_dot_axis < 0.0f && end_dot_axis < 0.0f)
 		return FLT_MAX;
 
 	// Test if segment is fully on the B side of the cylinder
 	float axis_len_sq = axis.LengthSq();
-	if (start_dot_axis > axis_len_sq && end_dot_axis > axis_len_sq) 
+	if (start_dot_axis > axis_len_sq && end_dot_axis > axis_len_sq)
 		return FLT_MAX;
 
 	// Calculate a, b and c, the factors for quadratic equation
@@ -103,14 +103,14 @@ float CastSphereVsTriangles::RayCylinder(Vec3Arg inRayDirection, Vec3Arg inCylin
 	float b = axis_len_sq * start.Dot(inRayDirection) - direction_dot_axis * start_dot_axis; // should be multiplied by 2, instead we'll divide a and c by 2 when we solve the quadratic equation
 	float c = axis_len_sq * (start.LengthSq() - Square(inRadius)) - Square(start_dot_axis);
 	float det = Square(b) - a * c; // normally 4 * a * c but since both a and c need to be divided by 2 we lose the 4
-	if (det < 0.0f) 
+	if (det < 0.0f)
 		return FLT_MAX; // No solution to quadractic equation
-	
+
 	// Solve fraction t where the ray hits the cylinder
 	float t = -(b + sqrt(det)) / a; // normally divided by 2 * a but since a should be divided by 2 we lose the 2
-	if (t < 0.0f || t > 1.0f) 
+	if (t < 0.0f || t > 1.0f)
 		return FLT_MAX; // Intersection lies outside segment
-	if (start_dot_axis + t * direction_dot_axis < 0.0f || start_dot_axis + t * direction_dot_axis > axis_len_sq) 
+	if (start_dot_axis + t * direction_dot_axis < 0.0f || start_dot_axis + t * direction_dot_axis > axis_len_sq)
 		return FLT_MAX; // Intersection outside the end point of the cyclinder, stop processing, we will possibly hit a vertex
 	return t;
 }
@@ -125,7 +125,11 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 	Vec3 v2 = mScale * inV2 - mStart;
 
 	// Calculate triangle normal
-	Vec3 triangle_normal = mScaleSign * (v1 - v0).Cross(v2 - v0).Normalized();
+	Vec3 triangle_normal = mScaleSign * (v1 - v0).Cross(v2 - v0);
+	float triangle_normal_len = triangle_normal.Length();
+	if (triangle_normal_len == 0.0f)
+		return; // Degenerate triangle
+	triangle_normal /= triangle_normal_len;
 
 	// Backface check
 	float normal_dot_direction = triangle_normal.Dot(mDirection);

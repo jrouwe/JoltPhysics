@@ -9,12 +9,14 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/MotionQuality.h>
+#include <Jolt/Physics/Body/BodyType.h>
 #include <Jolt/Core/Reference.h>
 
 JPH_NAMESPACE_BEGIN
 
 class Body;
 class BodyCreationSettings;
+class SoftBodyCreationSettings;
 class BodyLockInterface;
 class BroadPhase;
 class BodyManager;
@@ -32,20 +34,30 @@ class JPH_EXPORT BodyInterface : public NonCopyable
 public:
 	/// Initialize the interface (should only be called by PhysicsSystem)
 	void						Init(BodyLockInterface &inBodyLockInterface, BodyManager &inBodyManager, BroadPhase &inBroadPhase) { mBodyLockInterface = &inBodyLockInterface; mBodyManager = &inBodyManager; mBroadPhase = &inBroadPhase; }
-	
-	/// Create a body
+
+	/// Create a rigid body
 	/// @return Created body or null when out of bodies
 	Body *						CreateBody(const BodyCreationSettings &inSettings);
-	
-	/// Create a body with specified ID. This function can be used if a simulation is to run in sync between clients or if a simulation needs to be restored exactly.
+
+	/// Create a soft body
+	/// @return Created body or null when out of bodies
+	Body *						CreateSoftBody(const SoftBodyCreationSettings &inSettings);
+
+	/// Create a rigid body with specified ID. This function can be used if a simulation is to run in sync between clients or if a simulation needs to be restored exactly.
 	/// The ID created on the server can be replicated to the client and used to create a deterministic simulation.
 	/// @return Created body or null when the body ID is invalid or a body of the same ID already exists.
 	Body *						CreateBodyWithID(const BodyID &inBodyID, const BodyCreationSettings &inSettings);
 
-	/// Advanced use only. Creates a body without specifying an ID. This body cannot be added to the physics system until it has been assigned a body ID.
+	/// Create a soft body with specified ID. See comments at CreateBodyWithID.
+	Body *						CreateSoftBodyWithID(const BodyID &inBodyID, const SoftBodyCreationSettings &inSettings);
+
+	/// Advanced use only. Creates a rigid body without specifying an ID. This body cannot be added to the physics system until it has been assigned a body ID.
 	/// This can be used to decouple allocation from registering the body. A call to CreateBodyWithoutID followed by AssignBodyID is equivalent to calling CreateBodyWithID.
 	/// @return Created body
 	Body *						CreateBodyWithoutID(const BodyCreationSettings &inSettings) const;
+
+	/// Advanced use only. Creates a body without specifying an ID. See comments at CreateBodyWithoutID.
+	Body *						CreateSoftBodyWithoutID(const SoftBodyCreationSettings &inSettings) const;
 
 	/// Advanced use only. Destroy a body previously created with CreateBodyWithoutID that hasn't gotten an ID yet through the AssignBodyID function,
 	/// or a body that has had its body ID unassigned through UnassignBodyIDs. Bodies that have an ID should be destroyed through DestroyBody.
@@ -71,7 +83,7 @@ public:
 
 	/// Destroy a body
 	void						DestroyBody(const BodyID &inBodyID);
-	
+
 	/// Destroy multiple bodies
 	void						DestroyBodies(const BodyID *inBodyIDs, int inNumber);
 
@@ -80,16 +92,20 @@ public:
 	/// Adding many bodies, one at a time, results in a really inefficient broadphase until PhysicsSystem::OptimizeBroadPhase is called or when PhysicsSystem::Update rebuilds the tree!
 	/// After adding, to get a body by ID use the BodyLockRead or BodyLockWrite interface!
 	void						AddBody(const BodyID &inBodyID, EActivation inActivationMode);
-	
+
 	/// Remove body from the physics system.
 	void						RemoveBody(const BodyID &inBodyID);
-	
+
 	/// Check if a body has been added to the physics system.
 	bool						IsAdded(const BodyID &inBodyID) const;
 
 	/// Combines CreateBody and AddBody
 	/// @return Created body ID or an invalid ID when out of bodies
 	BodyID						CreateAndAddBody(const BodyCreationSettings &inSettings, EActivation inActivationMode);
+
+	/// Combines CreateSoftBody and AddBody
+	/// @return Created body ID or an invalid ID when out of bodies
+	BodyID						CreateAndAddSoftBody(const SoftBodyCreationSettings &inSettings, EActivation inActivationMode);
 
 	/// Broadphase add state handle, used to keep track of a batch while ading to the broadphase.
 	using AddState = void *;
@@ -191,6 +207,11 @@ public:
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse); ///< Applied at center of mass
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse, RVec3Arg inPoint); ///< Applied at inPoint
 	void						AddAngularImpulse(const BodyID &inBodyID, Vec3Arg inAngularImpulse);
+	///@}
+
+	///@name Body type
+	///@{
+	EBodyType					GetBodyType(const BodyID &inBodyID) const;
 	///@}
 
 	///@name Body motion type

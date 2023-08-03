@@ -27,7 +27,7 @@ public:
 	// Constructor / destructor
 							SamplesApp();
 	virtual					~SamplesApp() override;
-		
+
 	// Render the frame.
 	virtual bool			RenderFrame(float inDeltaTime) override;
 
@@ -68,7 +68,7 @@ private:
 	void					ShootObject();
 
 	// Debug functionality: firing a ball, mouse dragging
-	void					UpdateDebug();
+	void					UpdateDebug(float inDeltaTime);
 
 	// Draw the state of the physics system
 	void					DrawPhysics();
@@ -211,9 +211,11 @@ private:
 	Vec3					mShootObjectShapeScale = Vec3::sReplicate(1.0f);			// Scale of the object to shoot
 
 	// Mouse dragging
-	Body *					mDragAnchor = nullptr;										// A anchor point for the distance constraint. Corresponds to the current crosshair position.
+	Body *					mDragAnchor = nullptr;										// Rigid bodies only: A anchor point for the distance constraint. Corresponds to the current crosshair position.
 	BodyID					mDragBody;													// The body ID of the body that the user is currently dragging.
-	Ref<Constraint>			mDragConstraint;											// The distance constraint that connects the body to be dragged and the anchor point.
+	Ref<Constraint>			mDragConstraint;											// Rigid bodies only: The distance constraint that connects the body to be dragged and the anchor point.
+	uint					mDragVertexIndex = ~uint(0);								// Soft bodies only: The vertex index of the body that the user is currently dragging.
+	float					mDragVertexPreviousInvMass = 0.0f;							// Soft bodies only: The inverse mass of the vertex that the user is currently dragging.
 	float					mDragFraction;												// Fraction along cDragRayLength (see cpp) where the hit occurred. This will be combined with the crosshair position to get a 3d anchor point.
 
 	// Timing
