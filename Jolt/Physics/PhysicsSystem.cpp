@@ -2373,8 +2373,17 @@ void PhysicsSystem::SaveState(StateRecorder &inStream) const
 {
 	JPH_PROFILE_FUNCTION();
 
-	inStream.Write(mPreviousStepDeltaTime);
-	inStream.Write(mGravity);
+	const StateRecorderFilter *filter = inStream.GetFilter();
+
+	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	{
+		inStream.Write(mPreviousStepDeltaTime);
+	}
+
+	if (filter == nullptr || filter->ShouldSaveGravity())
+	{
+		inStream.Write(mGravity);
+	}
 
 	mBodyManager.SaveState(inStream);
 
@@ -2387,8 +2396,17 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 {
 	JPH_PROFILE_FUNCTION();
 
-	inStream.Read(mPreviousStepDeltaTime);
-	inStream.Read(mGravity);
+	const StateRecorderFilter *filter = inStream.GetFilter();
+
+	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	{
+		inStream.Read(mPreviousStepDeltaTime);
+	}
+
+	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	{
+		inStream.Read(mGravity);
+	}
 
 	if (!mBodyManager.RestoreState(inStream))
 		return false;
