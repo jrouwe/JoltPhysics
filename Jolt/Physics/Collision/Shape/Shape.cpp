@@ -9,9 +9,10 @@
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
-#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollidePointResult.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Factory.h>
@@ -330,7 +331,7 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 	return compound.Create();
 }
 
-void Shape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void Shape::sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex)
 {
 	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
 
@@ -345,7 +346,7 @@ void Shape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<Soft
 
 			RayCast ray(v.mPosition - 0.5f * movement, movement); // Start a little early in case we penetrated before
 
-			if (CastRay(ray.Transformed(inverse_transform), SubShapeIDCreator(), hit))
+			if (inShape.CastRay(ray.Transformed(inverse_transform), SubShapeIDCreator(), hit))
 			{
 				// Calculate penetration
 				float penetration = (hit.mFraction - 0.5f) * movement.Length();
@@ -355,7 +356,7 @@ void Shape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<Soft
 
 					// Calculate contact point and normal
 					Vec3 point = ray.GetPointOnRay(hit.mFraction);
-					Vec3 normal = inCenterOfMassTransform.Multiply3x3(GetSurfaceNormal(hit.mSubShapeID2, inverse_transform * point));
+					Vec3 normal = inCenterOfMassTransform.Multiply3x3(inShape.GetSurfaceNormal(hit.mSubShapeID2, inverse_transform * point));
 
 					// Store collision
 					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
@@ -363,6 +364,42 @@ void Shape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<Soft
 				}
 			}
 		}
+}
+
+void Shape::sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter)
+{
+	// First test if we're inside our bounding box
+	AABox bounds = inShape.GetLocalBounds();
+	if (bounds.Contains(inPoint))
+	{
+		// A collector that just counts the number of hits
+		class HitCountCollector : public CastRayCollector	
+		{
+		public:
+			virtual void	AddHit(const RayCastResult &inResult) override
+			{
+				// Store the last sub shape ID so that we can provide something to our outer hit collector
+				mSubShapeID = inResult.mSubShapeID2;
+
+				++mHitCount;
+			}
+
+			int				mHitCount = 0;
+			SubShapeID		mSubShapeID;
+		};
+		HitCountCollector collector;
+
+		// Configure the raycast
+		RayCastSettings settings;
+		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
+
+		// Cast a ray that's 10% longer than the heigth of our bounding box
+		inShape.CastRay(RayCast { inPoint, 1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, settings, inSubShapeIDCreator, collector, inShapeFilter);
+
+		// Odd amount of hits means inside
+		if ((collector.mHitCount & 1) == 1)
+			ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), collector.mSubShapeID });
+	}
 }
 
 JPH_NAMESPACE_END

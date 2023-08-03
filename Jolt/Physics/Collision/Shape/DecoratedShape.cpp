@@ -59,11 +59,6 @@ uint64 DecoratedShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 	return mInnerShape->GetSubShapeUserData(inSubShapeID);
 }
 
-void DecoratedShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
-{
-	mInnerShape->CollideSoftBodyVertices(inCenterOfMassTransform, ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
-}
-
 void DecoratedShape::SaveSubShapeState(ShapeList &outSubShapes) const
 { 
 	outSubShapes.clear();

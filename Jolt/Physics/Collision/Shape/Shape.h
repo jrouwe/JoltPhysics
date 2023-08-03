@@ -307,7 +307,7 @@ public:
 	/// @param inDeltaTime Delta time of this time step (can be used to extrapolate the position using the velocity of the particle)
 	/// @param inDisplacementDueToGravity Displacement due to gravity during this time step
 	/// @param inCollidingShapeIndex Value to store in SoftBodyVertex::mCollidingShapeIndex when a collision was found
-	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const;
+	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const = 0;
 
 	/// Collect the leaf transformed shapes of all leaf shapes of this shape.
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.
@@ -416,6 +416,12 @@ public:
 protected:
 	/// This function should not be called directly, it is used by sRestoreFromBinaryState.
 	virtual void					RestoreBinaryState(StreamIn &inStream);
+
+	/// A fallback version of CollidePoint that uses a ray cast and counts the number of hits to determine if the point is inside the shape. Odd number of hits means inside, even number of hits means outside.
+	static void						sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter);
+
+	/// A fallback version of CollideSoftBodyVertices that uses a raycast to collide the vertices with the shape.
+	static void						sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex);
 
 private:
 	uint64							mUserData = 0;

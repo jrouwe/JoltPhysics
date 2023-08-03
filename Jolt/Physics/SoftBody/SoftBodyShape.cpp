@@ -10,7 +10,6 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/TransformedShape.h>
-#include <Jolt/Physics/Collision/CollidePointResult.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/Collision/CastConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/CastSphereVsTriangles.h>
@@ -104,38 +103,12 @@ void SoftBodyShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCa
 
 void SoftBodyShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) const
 {
-	// First test if we're inside our bounding box
-	AABox bounds = GetLocalBounds();
-	if (bounds.Contains(inPoint))
-	{
-		// A collector that just counts the number of hits
-		class HitCountCollector : public CastRayCollector	
-		{
-		public:
-			virtual void	AddHit(const RayCastResult &inResult) override
-			{
-				// Store the last sub shape ID so that we can provide something to our outer hit collector
-				mSubShapeID = inResult.mSubShapeID2;
+	sCollidePointUsingRayCast(*this, inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
+}
 
-				++mHitCount;
-			}
-
-			int				mHitCount = 0;
-			SubShapeID		mSubShapeID;
-		};
-		HitCountCollector collector;
-
-		// Configure the raycast
-		RayCastSettings settings;
-		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
-
-		// Cast a ray that's 10% longer than the heigth of our bounding box
-		CastRay(RayCast { inPoint, 1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, settings, inSubShapeIDCreator, collector, inShapeFilter);
-
-		// Odd amount of hits means inside
-		if ((collector.mHitCount & 1) == 1)
-			ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), collector.mSubShapeID });
-	}
+void SoftBodyShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+{
+	JPH_ASSERT(false, "Should not be called");
 }
 
 const PhysicsMaterial *SoftBodyShape::GetMaterial(const SubShapeID &inSubShapeID) const
