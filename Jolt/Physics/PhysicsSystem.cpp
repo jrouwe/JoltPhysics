@@ -2395,7 +2395,7 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 {
 	JPH_PROFILE_FUNCTION();
 
-	EStateRecorderState state = EStateRecorderState::None;
+	EStateRecorderState state = EStateRecorderState::All; // Set this value for validation. If a partial state is saved, validation will not work anyway.
 	inStream.Read(state);
 
 	if (uint8(state) & uint8(EStateRecorderState::Global))
