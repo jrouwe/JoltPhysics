@@ -1489,12 +1489,12 @@ TEST_SUITE("PhysicsTests")
 				return find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
 			}
 
-			virtual bool				ShouldSaveBody(const Body &inBody) const
+			virtual bool				ShouldSaveBody(const Body &inBody) const override
 			{
 				return ShouldSaveBody(inBody.GetID());
 			}
 
-			virtual bool				ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const
+			virtual bool				ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const override
 			{
 				return ShouldSaveBody(inBody1) && ShouldSaveBody(inBody2);
 			}
