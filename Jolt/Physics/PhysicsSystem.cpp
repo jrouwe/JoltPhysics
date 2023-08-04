@@ -2373,8 +2373,6 @@ void PhysicsSystem::SaveState(StateRecorder &inStream, EStateRecorderState inSta
 {
 	JPH_PROFILE_FUNCTION();
 
-	inStream.Write(inState);
-
 	if (uint8(inState) & uint8(EStateRecorderState::Global))
 	{
 		inStream.Write(mPreviousStepDeltaTime);
@@ -2391,32 +2389,29 @@ void PhysicsSystem::SaveState(StateRecorder &inStream, EStateRecorderState inSta
 		mConstraintManager.SaveState(inStream, inFilter);
 }
 
-bool PhysicsSystem::RestoreState(StateRecorder &inStream)
+bool PhysicsSystem::RestoreState(StateRecorder &inStream, EStateRecorderState inState)
 {
 	JPH_PROFILE_FUNCTION();
 
-	EStateRecorderState state = EStateRecorderState::None;
-	inStream.Read(state);
-
-	if (uint8(state) & uint8(EStateRecorderState::Global))
+	if (uint8(inState) & uint8(EStateRecorderState::Global))
 	{
 		inStream.Read(mPreviousStepDeltaTime);
 		inStream.Read(mGravity);
 	}
 
-	if (uint8(state) & uint8(EStateRecorderState::Bodies))
+	if (uint8(inState) & uint8(EStateRecorderState::Bodies))
 	{
 		if (!mBodyManager.RestoreState(inStream))
 			return false;
 	}
 
-	if (uint8(state) & uint8(EStateRecorderState::Contacts))
+	if (uint8(inState) & uint8(EStateRecorderState::Contacts))
 	{
 		if (!mContactManager.RestoreState(inStream))
 			return false;
 	}
 
-	if (uint8(state) & uint8(EStateRecorderState::Constraints))
+	if (uint8(inState) & uint8(EStateRecorderState::Constraints))
 	{
 		if (!mConstraintManager.RestoreState(inStream))
 			return false;

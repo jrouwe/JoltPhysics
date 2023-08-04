@@ -112,7 +112,7 @@ public:
 	void						SaveState(StateRecorder &inStream, EStateRecorderState inState = EStateRecorderState::All, const StateRecorderFilter *inFilter = nullptr) const;
 
 	/// Restoring state for replay. Returns false if failed.
-	bool						RestoreState(StateRecorder &inStream);
+	bool						RestoreState(StateRecorder &inStream, EStateRecorderState inState = EStateRecorderState::All);
 
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing properties

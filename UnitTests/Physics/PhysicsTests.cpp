@@ -1523,6 +1523,16 @@ TEST_SUITE("PhysicsTests")
 			StateRecorderImpl absolute_initial_state;
 			c.GetSystem()->SaveState(absolute_initial_state);
 
+			// Validate the state.
+			{
+				absolute_initial_state.Rewind();
+				absolute_initial_state.SetValidating(true);
+				c.GetSystem()->RestoreState(absolute_initial_state);
+				CHECK(!absolute_initial_state.IsFailed());
+				absolute_initial_state.SetValidating(false);
+				absolute_initial_state.Rewind();
+			}
+
 			EStateRecorderState state_to_save = EStateRecorderState::All;
 			MyFilter filter;
 			if (mode == 1)
@@ -1546,6 +1556,16 @@ TEST_SUITE("PhysicsTests")
 			StateRecorderImpl initial_state;
 			c.GetSystem()->SaveState(initial_state, state_to_save, &filter);
 
+			// Validate the state.
+			{
+				initial_state.Rewind();
+				initial_state.SetValidating(true);
+				c.GetSystem()->RestoreState(initial_state, state_to_save);
+				CHECK(!initial_state.IsFailed());
+				initial_state.SetValidating(false);
+				initial_state.Rewind();
+			}
+
 			// Simulate for 2 seconds
 			c.Simulate(2.0f);
 
@@ -1567,11 +1587,21 @@ TEST_SUITE("PhysicsTests")
 			StateRecorderImpl intermediate_state;
 			c.GetSystem()->SaveState(intermediate_state, state_to_save, &filter);
 
+			// Validate the state.
+			{
+				intermediate_state.Rewind();
+				intermediate_state.SetValidating(true);
+				c.GetSystem()->RestoreState(intermediate_state, state_to_save);
+				CHECK(!intermediate_state.IsFailed());
+				intermediate_state.SetValidating(false);
+				intermediate_state.Rewind();
+			}
+
 			// Change the gravity.
 			c.GetSystem()->SetGravity(upside_down_gravity);
 
 			// Restore the initial state.
-			c.GetSystem()->RestoreState(initial_state);
+			c.GetSystem()->RestoreState(initial_state, state_to_save);
 
 			// Make sure the state is properly set back to the initial state.
 			CHECK(box1.GetWorldTransform() == initial_box1_transform);
@@ -1634,6 +1664,16 @@ TEST_SUITE("PhysicsTests")
 			// Save the final state
 			StateRecorderImpl final_state;
 			c.GetSystem()->SaveState(final_state, state_to_save, &filter);
+
+			// Validate the state.
+			{
+				final_state.Rewind();
+				final_state.SetValidating(true);
+				c.GetSystem()->RestoreState(final_state, state_to_save);
+				CHECK(!final_state.IsFailed());
+				final_state.SetValidating(false);
+				final_state.Rewind();
+			}
 
 			// Compare the states to make sure they are the same
 			CHECK(final_state.IsEqual(intermediate_state));
