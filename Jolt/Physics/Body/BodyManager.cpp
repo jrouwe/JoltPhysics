@@ -481,6 +481,56 @@ void BodyManager::DestroyBodies(const BodyID *inBodyIDs, int inNumber)
 #endif // defined(_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
 }
 
+void BodyManager::AddBodyToActiveBodies(Body &ioBody)
+{
+	// Select the correct array to use
+	int type = (int)ioBody.GetBodyType();
+	atomic<uint32> &num_active_bodies = mNumActiveBodies[type];
+	BodyID *active_bodies = mActiveBodies[type];
+
+	MotionProperties *mp = ioBody.mMotionProperties;
+	mp->mIndexInActiveBodies = num_active_bodies;
+	JPH_ASSERT(num_active_bodies < GetMaxBodies());
+	active_bodies[num_active_bodies] = ioBody.GetID();
+	num_active_bodies++; // Increment atomic after setting the body ID so that PhysicsSystem::JobFindCollisions (which doesn't lock the mActiveBodiesMutex) will only read valid IDs
+
+	// Count CCD bodies
+	if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
+		mNumActiveCCDBodies++;
+}
+
+void BodyManager::RemoveBodyFromActiveBodies(Body &ioBody)
+{
+	// Select the correct array to use
+	int type = (int)ioBody.GetBodyType();
+	atomic<uint32> &num_active_bodies = mNumActiveBodies[type];
+	BodyID *active_bodies = mActiveBodies[type];
+
+	uint32 last_body_index = num_active_bodies - 1;
+	MotionProperties *mp = ioBody.mMotionProperties;
+	if (mp->mIndexInActiveBodies != last_body_index)
+	{
+		// This is not the last body, use the last body to fill the hole
+		BodyID last_body_id = active_bodies[last_body_index];
+		active_bodies[mp->mIndexInActiveBodies] = last_body_id;
+
+		// Update that body's index in the active list
+		Body &last_body = *mBodies[last_body_id.GetIndex()];
+		JPH_ASSERT(last_body.mMotionProperties->mIndexInActiveBodies == last_body_index);
+		last_body.mMotionProperties->mIndexInActiveBodies = mp->mIndexInActiveBodies;
+	}
+
+	// Mark this body as no longer active
+	mp->mIndexInActiveBodies = Body::cInactiveIndex;
+
+	// Remove unused element from active bodies list
+	--num_active_bodies;
+
+	// Count CCD bodies
+	if (mp->GetMotionQuality() == EMotionQuality::LinearCast)
+		mNumActiveCCDBodies--;
+}
+
 void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 {
 	// Don't take lock if no bodies are to be activated
@@ -503,20 +553,10 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 			if (!body.IsStatic()
 				&& body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
 			{
-				// Select the correct array to use
-				int type = (int)body.GetBodyType();
-				atomic<uint32> &num_active_bodies = mNumActiveBodies[type];
-				BodyID *active_bodies = mActiveBodies[type];
-
-				body.mMotionProperties->mIndexInActiveBodies = num_active_bodies;
+				// Reset sleeping
 				body.ResetSleepTestSpheres();
-				JPH_ASSERT(num_active_bodies < GetMaxBodies());
-				active_bodies[num_active_bodies] = body_id;
-				num_active_bodies++; // Increment atomic after setting the body ID so that PhysicsSystem::JobFindCollisions (which doesn't lock the mActiveBodiesMutex) will only read valid IDs
 
-				// Count CCD bodies
-				if (body.mMotionProperties->GetMotionQuality() == EMotionQuality::LinearCast)
-					mNumActiveCCDBodies++;
+				AddBodyToActiveBodies(body);
 
 				// Call activation listener
 				if (mActivationListener != nullptr)
@@ -547,38 +587,15 @@ void BodyManager::DeactivateBodies(const BodyID *inBodyIDs, int inNumber)
 			if (body.mMotionProperties != nullptr
 				&& body.mMotionProperties->mIndexInActiveBodies != Body::cInactiveIndex)
 			{
-				// Select the correct array to use
-				int type = (int)body.GetBodyType();
-				atomic<uint32> &num_active_bodies = mNumActiveBodies[type];
-				BodyID *active_bodies = mActiveBodies[type];
-
-				uint32 last_body_index = num_active_bodies - 1;
-				if (body.mMotionProperties->mIndexInActiveBodies != last_body_index)
-				{
-					// This is not the last body, use the last body to fill the hole
-					BodyID last_body_id = active_bodies[last_body_index];
-					active_bodies[body.mMotionProperties->mIndexInActiveBodies] = last_body_id;
-
-					// Update that body's index in the active list
-					Body &last_body = *mBodies[last_body_id.GetIndex()];
-					JPH_ASSERT(last_body.mMotionProperties->mIndexInActiveBodies == last_body_index);
-					last_body.mMotionProperties->mIndexInActiveBodies = body.mMotionProperties->mIndexInActiveBodies;
-				}
+				// Remove the body from the active bodies list
+				RemoveBodyFromActiveBodies(body);
 
 				// Mark this body as no longer active
-				body.mMotionProperties->mIndexInActiveBodies = Body::cInactiveIndex;
 				body.mMotionProperties->mIslandIndex = Body::cInactiveIndex;
 
 				// Reset velocity
 				body.mMotionProperties->mLinearVelocity = Vec3::sZero();
 				body.mMotionProperties->mAngularVelocity = Vec3::sZero();
-
-				// Remove unused element from active bodies list
-				--num_active_bodies;
-
-				// Count CCD bodies
-				if (body.mMotionProperties->GetMotionQuality() == EMotionQuality::LinearCast)
-					mNumActiveCCDBodies--;
 
 				// Call activation listener
 				if (mActivationListener != nullptr)
@@ -833,48 +850,16 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 		for (BodyID body_id : bodies_to_activate)
 		{
 			Body *body = TryGetBody(body_id);
-
-			// Select the correct array to use
-			int type = (int)body->GetBodyType();
-			atomic<uint32> &num_active_bodies = mNumActiveBodies[type];
-			BodyID *active_bodies = mActiveBodies[type];
-
-			body->mMotionProperties->mIndexInActiveBodies = num_active_bodies;
-			JPH_ASSERT(num_active_bodies < GetMaxBodies());
-			active_bodies[num_active_bodies] = body_id;
-			num_active_bodies++;
+			AddBodyToActiveBodies(*body);
 		}
 
 		for (BodyID body_id : bodies_to_deactivate)
 		{
 			Body *body = TryGetBody(body_id);
-
-			// Select the correct array to use
-			int type = (int)body->GetBodyType();
-			atomic<uint32> &num_active_bodies = mNumActiveBodies[type];
-			BodyID *active_bodies = mActiveBodies[type];
-
-			uint32 last_body_index = num_active_bodies - 1;
-			if (body->mMotionProperties->mIndexInActiveBodies != last_body_index)
-			{
-				// This is not the last body, use the last body to fill the hole
-				BodyID last_body_id = active_bodies[last_body_index];
-				active_bodies[body->mMotionProperties->mIndexInActiveBodies] = last_body_id;
-
-				// Update that body's index in the active list
-				Body &last_body = *mBodies[last_body_id.GetIndex()];
-				JPH_ASSERT(last_body.mMotionProperties->mIndexInActiveBodies == last_body_index);
-				last_body.mMotionProperties->mIndexInActiveBodies = body->mMotionProperties->mIndexInActiveBodies;
-			}
-
-			// Mark this body as no longer active
-			body->mMotionProperties->mIndexInActiveBodies = Body::cInactiveIndex;
-
-			// Remove unused element from active bodies list
-			--num_active_bodies;
+			RemoveBodyFromActiveBodies(*body);
 		}
 
-		// Count CCD bodies
+		// Count CCD bodies (needs to be done because Body::RestoreState can change the motion quality without notifying the system)
 		mNumActiveCCDBodies = 0;
 		for (const BodyID *id = mActiveBodies[(int)EBodyType::RigidBody], *end = id + mNumActiveBodies[(int)EBodyType::RigidBody]; id < end; ++id)
 			if (mBodies[id->GetIndex()]->GetMotionProperties()->GetMotionQuality() == EMotionQuality::LinearCast)

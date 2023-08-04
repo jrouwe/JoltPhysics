@@ -270,6 +270,12 @@ private:
 #endif
 	inline uint8					GetNextSequenceNumber(int inBodyIndex)		{ return ++mBodySequenceNumbers[inBodyIndex]; }
 
+	/// Add a single body to mActiveBodies, note doesn't lock the active body mutex!
+	inline void						AddBodyToActiveBodies(Body &ioBody);
+
+	/// Remove a single body from mActiveBodies, note doesn't lock the active body mutex!
+	inline void						RemoveBodyFromActiveBodies(Body &ioBody);
+
 	/// Helper function to remove a body from the manager
 	JPH_INLINE Body *				RemoveBodyInternal(const BodyID &inBodyID);
 
