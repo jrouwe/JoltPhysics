@@ -12,6 +12,7 @@ JPH_NAMESPACE_BEGIN
 
 class IslandBuilder;
 class BodyManager;
+class StateRecorderFilter;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER
@@ -83,7 +84,7 @@ public:
 #endif // JPH_DEBUG_RENDERER
 
 	/// Save state of constraints
-	void					SaveState(StateRecorder &inStream) const;
+	void					SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
 
 	/// Restore the state of constraints. Returns false if failed.
 	bool					RestoreState(StateRecorder &inStream);

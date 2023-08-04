@@ -247,7 +247,7 @@ public:
 #endif // JPH_DEBUG_RENDERER
 
 	/// Saving state for replay
-	void						SaveState(StateRecorder &inStream) const;
+	void						SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
 
 	/// Restoring state for replay. Returns false when failed.
 	bool						RestoreState(StateRecorder &inStream);
@@ -391,7 +391,7 @@ private:
 #endif
 
 		/// Saving / restoring state for replay
-		void					SaveState(StateRecorder &inStream) const;
+		void					SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
 		bool					RestoreState(const ManifoldCache &inReadCache, StateRecorder &inStream);
 
 	private:

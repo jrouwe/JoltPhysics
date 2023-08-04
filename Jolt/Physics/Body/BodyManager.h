@@ -14,6 +14,7 @@ JPH_NAMESPACE_BEGIN
 class BodyCreationSettings;
 class SoftBodyCreationSettings;
 class BodyActivationListener;
+class StateRecorderFilter;
 struct PhysicsSettings;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
@@ -191,7 +192,7 @@ public:
 	void							ValidateContactCacheForAllBodies();
 
 	/// Saving state for replay
-	void							SaveState(StateRecorder &inStream) const;
+	void							SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
 
 	/// Restoring state for replay. Returns false if failed.
 	bool							RestoreState(StateRecorder &inStream);
@@ -268,6 +269,12 @@ private:
 	__attribute__((no_sanitize("implicit-conversion"))) // We intentionally overflow the uint8 sequence number
 #endif
 	inline uint8					GetNextSequenceNumber(int inBodyIndex)		{ return ++mBodySequenceNumbers[inBodyIndex]; }
+
+	/// Add a single body to mActiveBodies, note doesn't lock the active body mutex!
+	inline void						AddBodyToActiveBodies(Body &ioBody);
+
+	/// Remove a single body from mActiveBodies, note doesn't lock the active body mutex!
+	inline void						RemoveBodyFromActiveBodies(Body &ioBody);
 
 	/// Helper function to remove a body from the manager
 	JPH_INLINE Body *				RemoveBodyInternal(const BodyID &inBodyID);

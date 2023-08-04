@@ -9,6 +9,38 @@
 
 JPH_NAMESPACE_BEGIN
 
+class Body;
+class Constraint;
+class BodyID;
+
+/// A bit field that determines which aspects of the simulation to save
+enum class EStateRecorderState : uint8
+{
+	None				= 0,														///< Save nothing
+	Global				= 1,														///< Save global physics system state (delta time, gravity, etc.)
+	Bodies				= 2,														///< Save the state of bodies
+	Contacts			= 4,														///< Save the state of contacts
+	Constraints			= 8,														///< Save the state of constraints
+	All					= Global | Bodies | Contacts | Constraints					///< Save all state
+};
+
+/// User callbacks that allow determining which parts of the simulation should be saved by a StateRecorder
+class JPH_EXPORT StateRecorderFilter
+{
+public:
+	/// Destructor
+	virtual				~StateRecorderFilter() = default;
+
+	/// If the state of a specific body should be saved
+	virtual bool		ShouldSaveBody(const Body &inBody) const					{ return true; }
+
+	/// If the state of a specific constraint should be saved
+	virtual bool		ShouldSaveConstraint(const Constraint &inConstraint) const	{ return true; }
+
+	/// If the state of a specific contact should be saved
+	virtual bool		ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const { return true; }
+};
+
 /// Class that records the state of a physics system. Can be used to check if the simulation is deterministic by putting the recorder in validation mode.
 /// Can be used to restore the state to an earlier point in time.
 class JPH_EXPORT StateRecorder : public StreamIn, public StreamOut
