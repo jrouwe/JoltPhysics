@@ -13,6 +13,17 @@ class Body;
 class Constraint;
 class BodyID;
 
+/// A bit field that determines which aspects of the simulation to save
+enum class EStateRecorderState : uint8
+{
+	None						= 0,														///< Save nothing
+	Global						= 1,														///< Save global physics system state (delta time, gravity, etc.)
+	Bodies						= 2,														///< Save the state of bodies
+	Contacts					= 4,														///< Save the state of contacts
+	Constraints					= 8,														///< Save the state of constraints
+	All							= Global | Bodies | Contacts | Constraints					///< Save all state
+};
+
 /// User callbacks that allow determining which parts of the simulation should be saved by a StateRecorder
 class JPH_EXPORT StateRecorderFilter
 {
@@ -20,26 +31,11 @@ public:
 	/// Destructor
 	virtual						~StateRecorderFilter() = default;
 
-	/// If the state of previous delta time should be saved
-	virtual bool				ShouldSavePreviousDeltaTime() const							{ return true; }
-
-	/// If the state of gravity should be saved
-	virtual bool				ShouldSaveGravity() const									{ return true; }
-
-	/// If the state of any body should be saved
-	virtual bool				ShouldSaveBodies() const									{ return true; }
-
 	/// If the state of a specific body should be saved
 	virtual bool				ShouldSaveBody(const Body &inBody) const					{ return true; }
 
-	/// If any constraints should be saved
-	virtual bool				ShouldSaveConstraints() const								{ return true; }
-
 	/// If the state of a specific constraint should be saved
 	virtual bool				ShouldSaveConstraint(const Constraint &inConstraint) const	{ return true; }
-
-	/// If any contacts should be saved
-	virtual bool				ShouldSaveContacts() const									{ return true; }
 
 	/// If the state of a specific contact should be saved
 	virtual bool				ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const { return true; }
@@ -58,16 +54,11 @@ public:
 	/// ensure that those bytes contain the current state. This makes it possible to step and save the state, restore to the previous
 	/// step and step again and when the recorded state is not the same it can restore the expected state and any byte that changes
 	/// due to a ReadBytes function can be caught to find out which part of the simulation is not deterministic
-	void						SetValidating(bool inValidating)							{ JPH_ASSERT(mFilter == nullptr || !inValidating); mIsValidating = inValidating; }
+	void						SetValidating(bool inValidating)							{ mIsValidating = inValidating; }
 	bool						IsValidating() const										{ return mIsValidating; }
-
-	/// Sets the filter that determines which parts of the simulation should be saved. The filter is ignored while restoring the state and it can also not be used in validation mode.
-	void						SetFilter(const StateRecorderFilter *inFilter)				{ JPH_ASSERT(inFilter == nullptr || !mIsValidating); mFilter = inFilter; }
-	const StateRecorderFilter *	GetFilter() const											{ return mFilter; }
 
 private:
 	bool						mIsValidating = false;
-	const StateRecorderFilter *	mFilter = nullptr;
 };
 
 JPH_NAMESPACE_END

@@ -386,11 +386,9 @@ void ContactConstraintManager::ManifoldCache::Finalize()
 
 #endif
 
-void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream) const
+void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const
 {
 	JPH_ASSERT(mIsFinalized);
-
-	const StateRecorderFilter *filter = inStream.GetFilter();
 
 	// Get contents of cache
 	Array<const BPKeyValue *> all_bp;
@@ -398,13 +396,13 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream)
 
 	// Determine which ones to save
 	Array<const BPKeyValue *> selected_bp;
-	if (filter == nullptr)
+	if (inFilter == nullptr)
 		selected_bp = std::move(all_bp);
-	else if (filter->ShouldSaveContacts())
+	else
 	{
 		selected_bp.reserve(all_bp.size());
 		for (const BPKeyValue *bp_kv : all_bp)
-			if (filter->ShouldSaveContact(bp_kv->GetKey().mBodyA, bp_kv->GetKey().mBodyB))
+			if (inFilter->ShouldSaveContact(bp_kv->GetKey().mBodyA, bp_kv->GetKey().mBodyB))
 				selected_bp.push_back(bp_kv);
 	}
 
@@ -454,13 +452,13 @@ void ContactConstraintManager::ManifoldCache::SaveState(StateRecorder &inStream)
 
 	// Determine which ones to save
 	Array<const MKeyValue *> selected_m;
-	if (filter == nullptr)
+	if (inFilter == nullptr)
 		selected_m = std::move(all_m);
-	else if (filter->ShouldSaveContacts())
+	else
 	{
 		selected_m.reserve(all_m.size());
 		for (const MKeyValue *m_kv : all_m)
-			if (filter->ShouldSaveContact(m_kv->GetKey().GetBody1ID(), m_kv->GetKey().GetBody2ID()))
+			if (inFilter->ShouldSaveContact(m_kv->GetKey().GetBody1ID(), m_kv->GetKey().GetBody2ID()))
 				selected_m.push_back(m_kv);
 	}
 
@@ -1681,9 +1679,9 @@ void ContactConstraintManager::FinishConstraintBuffer()
 	mUpdateContext = nullptr;
 }
 
-void ContactConstraintManager::SaveState(StateRecorder &inStream) const
+void ContactConstraintManager::SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const
 {
-	mCache[mCacheWriteIdx ^ 1].SaveState(inStream);
+	mCache[mCacheWriteIdx ^ 1].SaveState(inStream, inFilter);
 }
 
 bool ContactConstraintManager::RestoreState(StateRecorder &inStream)

@@ -721,10 +721,8 @@ void BodyManager::UnlockAllBodies() const
 	mBodyMutexes.UnlockAll();
 }
 
-void BodyManager::SaveState(StateRecorder &inStream) const
+void BodyManager::SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const
 {
-	const StateRecorderFilter *filter = inStream.GetFilter();
-
 	{
 		LockAllBodies();
 
@@ -732,7 +730,7 @@ void BodyManager::SaveState(StateRecorder &inStream) const
 		Array<const Body *> bodies;
 		bodies.reserve(mNumBodies);
 		for (const Body *b : mBodies)
-			if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && (filter == nullptr || filter->ShouldSaveBody(*b)))
+			if (sIsValidBodyPointer(b) && b->IsInBroadPhase() && (inFilter == nullptr || inFilter->ShouldSaveBody(*b)))
 				bodies.push_back(b);
 
 		// Write state of bodies

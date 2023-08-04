@@ -14,6 +14,7 @@ JPH_NAMESPACE_BEGIN
 class BodyCreationSettings;
 class SoftBodyCreationSettings;
 class BodyActivationListener;
+class StateRecorderFilter;
 struct PhysicsSettings;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
@@ -191,7 +192,7 @@ public:
 	void							ValidateContactCacheForAllBodies();
 
 	/// Saving state for replay
-	void							SaveState(StateRecorder &inStream) const;
+	void							SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
 
 	/// Restoring state for replay. Returns false if failed.
 	bool							RestoreState(StateRecorder &inStream);

@@ -2369,53 +2369,58 @@ void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 }
 
-void PhysicsSystem::SaveState(StateRecorder &inStream) const
+void PhysicsSystem::SaveState(StateRecorder &inStream, EStateRecorderState inState, const StateRecorderFilter *inFilter) const
 {
 	JPH_PROFILE_FUNCTION();
 
-	const StateRecorderFilter *filter = inStream.GetFilter();
+	inStream.Write(inState);
 
-	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	if (uint8(inState) & uint8(EStateRecorderState::Global))
 	{
 		inStream.Write(mPreviousStepDeltaTime);
-	}
-
-	if (filter == nullptr || filter->ShouldSaveGravity())
-	{
 		inStream.Write(mGravity);
 	}
 
-	mBodyManager.SaveState(inStream);
+	if (uint8(inState) & uint8(EStateRecorderState::Bodies))
+		mBodyManager.SaveState(inStream, inFilter);
 
-	mContactManager.SaveState(inStream);
+	if (uint8(inState) & uint8(EStateRecorderState::Contacts))
+		mContactManager.SaveState(inStream, inFilter);
 
-	mConstraintManager.SaveState(inStream);
+	if (uint8(inState) & uint8(EStateRecorderState::Constraints))
+		mConstraintManager.SaveState(inStream, inFilter);
 }
 
 bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 {
 	JPH_PROFILE_FUNCTION();
 
-	const StateRecorderFilter *filter = inStream.GetFilter();
+	EStateRecorderState state = EStateRecorderState::None;
+	inStream.Read(state);
 
-	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
+	if (uint8(state) & uint8(EStateRecorderState::Global))
 	{
 		inStream.Read(mPreviousStepDeltaTime);
-	}
-
-	if (filter == nullptr || filter->ShouldSavePreviousDeltaTime())
-	{
 		inStream.Read(mGravity);
 	}
 
-	if (!mBodyManager.RestoreState(inStream))
-		return false;
+	if (uint8(state) & uint8(EStateRecorderState::Bodies))
+	{
+		if (!mBodyManager.RestoreState(inStream))
+			return false;
+	}
 
-	if (!mContactManager.RestoreState(inStream))
-		return false;
+	if (uint8(state) & uint8(EStateRecorderState::Contacts))
+	{
+		if (!mContactManager.RestoreState(inStream))
+			return false;
+	}
 
-	if (!mConstraintManager.RestoreState(inStream))
-		return false;
+	if (uint8(state) & uint8(EStateRecorderState::Constraints))
+	{
+		if (!mConstraintManager.RestoreState(inStream))
+			return false;
+	}
 
 	// Update bounding boxes for all bodies in the broadphase
 	Array<BodyID> bodies;

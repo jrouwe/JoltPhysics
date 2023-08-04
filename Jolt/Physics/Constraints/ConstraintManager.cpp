@@ -223,24 +223,19 @@ void ConstraintManager::DrawConstraintReferenceFrame(DebugRenderer *inRenderer) 
 }
 #endif // JPH_DEBUG_RENDERER
 
-void ConstraintManager::SaveState(StateRecorder &inStream) const
+void ConstraintManager::SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const
 {
-	const StateRecorderFilter *filter = inStream.GetFilter();
-
 	UniqueLock lock(mConstraintsMutex JPH_IF_ENABLE_ASSERTS(, mLockContext, EPhysicsLockTypes::ConstraintsList));
 
 	// Write state of constraints
-	if (filter != nullptr)
+	if (inFilter != nullptr)
 	{
 		// Determine which constraints to save
 		Array<Constraint *> constraints;
-		if (filter->ShouldSaveConstraints())
-		{
-			constraints.reserve(mConstraints.size());
-			for (const Ref<Constraint> &c : mConstraints)
-				if (filter->ShouldSaveConstraint(*c))
-					constraints.push_back(c);
-		}
+		constraints.reserve(mConstraints.size());
+		for (const Ref<Constraint> &c : mConstraints)
+			if (inFilter->ShouldSaveConstraint(*c))
+				constraints.push_back(c);
 
 		// Save them
 		size_t num_constraints = constraints.size();

@@ -1479,44 +1479,30 @@ TEST_SUITE("PhysicsTests")
 		}
 	}
 
-	class StateRecorderFilterUTest : public StateRecorderFilter
-	{
-	public:
-		bool						mShouldSavePreviousDeltaTime	= true;
-		bool						mShouldSaveGravity				= true;
-		bool						mShouldSaveBodies				= true;
-		Array<BodyID>				mIgnoreBodies;
-
-		virtual bool				ShouldSavePreviousDeltaTime() const							{ return mShouldSavePreviousDeltaTime; }
-		virtual bool				ShouldSaveGravity() const									{ return mShouldSaveGravity; }
-		virtual bool				ShouldSaveBodies() const									{ return mShouldSaveBodies; }
-
-		bool						ShouldSaveBody(const BodyID &inBodyID) const
-		{ 
-			return find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
-		}
-
-		virtual bool				ShouldSaveBody(const Body &inBody) const
-		{ 
-			return ShouldSaveBody(inBody.GetID());
-		}
-
-		virtual bool				ShouldSaveConstraints() const								{ return true; }
-		virtual bool				ShouldSaveConstraint(const Constraint &inConstraint) const	{ return true; }
-		virtual bool				ShouldSaveContacts() const									{ return true; }
-		virtual bool				ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const
-		{
-			return ShouldSaveBody(inBody1) && ShouldSaveBody(inBody2);
-		}
-	};
-
 	TEST_CASE("TestSelectiveStateSaveAndRestore")
 	{
-		StateRecorderFilterUTest filter;
+		class MyFilter : public StateRecorderFilter
+		{
+		public:
+			bool						ShouldSaveBody(const BodyID &inBodyID) const
+			{ 
+				return find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
+			}
 
-		StateRecorderImpl absolute_initial_state;
+			virtual bool				ShouldSaveBody(const Body &inBody) const
+			{ 
+				return ShouldSaveBody(inBody.GetID());
+			}
 
-		for(int mode = 0; mode < 3; mode++)
+			virtual bool				ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const
+			{
+				return ShouldSaveBody(inBody1) && ShouldSaveBody(inBody2);
+			}
+
+			Array<BodyID>				mIgnoreBodies;
+		};
+
+		for (int mode = 0; mode < 2; mode++)
 		{
 			PhysicsTestContext c;
 
@@ -1524,34 +1510,27 @@ TEST_SUITE("PhysicsTests")
 			Vec3 upside_down_gravity = -gravity;
 
   			// Create the ground.
-			Body &ground = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, EMotionQuality::Discrete, Layers::NON_MOVING, Vec3::sReplicate(1.0f), EActivation::DontActivate);
+			Body &ground = c.CreateFloor();
 
-			// Create the bodies all at the same location (overlapping each other)
-			Body &box1 = c.CreateBox(RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
-			Body &sphere1 = c.CreateSphere(RVec3(0, 10, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
-			Body &box2 = c.CreateBox(RVec3(5, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
-			Body &sphere2 = c.CreateSphere(RVec3(5, 10, 0), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
+			// Create two sets of bodies that each overlap
+			Body &box1 = c.CreateBox(RVec3(0, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+			Body &sphere1 = c.CreateSphere(RVec3(0, 1, 0.1f), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
 
-			if (mode == 0)
+			Body &box2 = c.CreateBox(RVec3(5, 1, 0), Quat::sIdentity(), EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, Vec3::sReplicate(1.0f), EActivation::Activate);
+			Body &sphere2 = c.CreateSphere(RVec3(5, 1, 0.1f), 1.0f, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING, EActivation::Activate);
+
+			// Store the absolute initial state, that will be used for the final test.
+			StateRecorderImpl absolute_initial_state;
+			c.GetSystem()->SaveState(absolute_initial_state);
+
+			EStateRecorderState state_to_save = EStateRecorderState::All;
+			MyFilter filter;
+			if (mode == 1)
 			{
-				// It's testing the global state save & restore.
-				// Store the absolute initial state, that will be used for the
-				// final test.
-				c.GetSystem()->SaveState(absolute_initial_state);
-			}
-			else if (mode == 1)
-			{
-				// It's testing ignoring Gravity & Delta.
-				filter = StateRecorderFilterUTest();
-				filter.mShouldSavePreviousDeltaTime = false;
-				filter.mShouldSaveGravity = false;
-			}
-			else if (mode == 2)
-			{
-				// It's testing ignoring Gravity & Delta and the two last bodies + ground.
-				filter = StateRecorderFilterUTest();
-				filter.mShouldSavePreviousDeltaTime = false;
-				filter.mShouldSaveGravity = false;
+				// Don't save the global state
+				state_to_save = EStateRecorderState(uint(EStateRecorderState::All) ^ uint(EStateRecorderState::Global));
+
+				// Don't save some bodies
 				filter.mIgnoreBodies.push_back(ground.GetID());
 				filter.mIgnoreBodies.push_back(box2.GetID());
 				filter.mIgnoreBodies.push_back(sphere2.GetID());
@@ -1563,15 +1542,14 @@ TEST_SUITE("PhysicsTests")
 			const RMat44 initial_box2_transform = box2.GetWorldTransform();
 			const RMat44 initial_sphere2_transform = sphere2.GetWorldTransform();
 
+			// Save partial state
 			StateRecorderImpl initial_state;
-			initial_state.SetFilter(&filter);
-			c.GetSystem()->SaveState(initial_state);
+			c.GetSystem()->SaveState(initial_state, state_to_save, &filter);
 
-			// Simulate 10 frames
-			for (int i = 0; i < 10; i++)
-				c.SimulateSingleStep();
+			// Simulate for 2 seconds
+			c.Simulate(2.0f);
 
-			// Validate the bodies changed.
+			// The bodies should have moved and come to rest
 			const RMat44 intermediate_box1_transform = box1.GetWorldTransform();
 			const RMat44 intermediate_sphere1_transform = sphere1.GetWorldTransform();
 			const RMat44 intermediate_box2_transform = box2.GetWorldTransform();
@@ -1580,11 +1558,14 @@ TEST_SUITE("PhysicsTests")
 			CHECK(intermediate_sphere1_transform != initial_sphere1_transform);
 			CHECK(intermediate_box2_transform != initial_box2_transform);
 			CHECK(intermediate_sphere2_transform != initial_sphere2_transform);
+			CHECK(!box1.IsActive());
+			CHECK(!sphere1.IsActive());
+			CHECK(!box2.IsActive());
+			CHECK(!sphere2.IsActive());
 
 			// Save the intermediate state.
 			StateRecorderImpl intermediate_state;
-			intermediate_state.SetFilter(&filter);
-			c.GetSystem()->SaveState(intermediate_state);
+			c.GetSystem()->SaveState(intermediate_state, state_to_save, &filter);
 
 			// Change the gravity.
 			c.GetSystem()->SetGravity(upside_down_gravity);
@@ -1592,112 +1573,96 @@ TEST_SUITE("PhysicsTests")
 			// Restore the initial state.
 			c.GetSystem()->RestoreState(initial_state);
 
+			// Make sure the state is properly set back to the initial state.
+			CHECK(box1.GetWorldTransform() == initial_box1_transform);
+			CHECK(sphere1.GetWorldTransform() == initial_sphere1_transform);
+			CHECK(box1.IsActive());
+			CHECK(sphere1.IsActive());
 			if (mode == 0)
 			{
 				// Make sure the gravity is restored.
 				CHECK(c.GetSystem()->GetGravity() == gravity);
-			}
-			if (mode == 1 || mode == 2)
-			{
-				// Make sure the gravity is NOT restored.
-				CHECK(c.GetSystem()->GetGravity() == upside_down_gravity);
-				c.GetSystem()->SetGravity(gravity);
-			}
 
-			// Make sure the state is properly set back to the initial state.
-			CHECK(box1.GetWorldTransform() == initial_box1_transform);
-			CHECK(sphere1.GetWorldTransform() == initial_sphere1_transform);
-			if (mode == 0 || mode == 1)
-			{
+				// The second set of bodies should have been restored as well
 				CHECK(box2.GetWorldTransform() == initial_box2_transform);
 				CHECK(sphere2.GetWorldTransform() == initial_sphere2_transform);
-				CHECK(box1.IsActive());
-				CHECK(sphere1.IsActive());
 				CHECK(box2.IsActive());
 				CHECK(sphere2.IsActive());
 			}
 			else
 			{
-				CHECK(box1.IsActive());
-				CHECK(sphere1.IsActive());
-				CHECK(!box2.IsActive());
-				CHECK(!sphere2.IsActive());
-			}
+				// Make sure the gravity is NOT restored.
+				CHECK(c.GetSystem()->GetGravity() == upside_down_gravity);
+				c.GetSystem()->SetGravity(gravity);
 
-			// Simulate 10 frames - again
-			for (int i = 0; i < 10; i++)
-			{
-				c.SimulateSingleStep();
-
-				// Move the box2 and sphere2, to make sure this is not causing any issue.
-				if (mode == 2)
-				{
-					BodyInterface &bi = c.GetBodyInterface();
-					RMat44 t = box2.GetWorldTransform();
-					bi.SetPositionAndRotation(box2.GetID(), t.GetTranslation() + Vec3(0.0f, -1.0f, 0.0f), t.GetRotation().GetQuaternion(), JPH::EActivation::DontActivate);
-					t = sphere2.GetWorldTransform();
-					bi.SetPositionAndRotation(sphere2.GetID(), t.GetTranslation() + Vec3(0.0f, 1.0f, 0.0f), t.GetRotation().GetQuaternion(), JPH::EActivation::DontActivate);
-				}
-			}
-
-			if (mode == 0 || mode == 1)
-			{
-				// Make sure the state is the same as the previous one.
-				CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
-				CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
+				// The second set of bodies should NOT have been restored
 				CHECK(box2.GetWorldTransform() == intermediate_box2_transform);
 				CHECK(sphere2.GetWorldTransform() == intermediate_sphere2_transform);
-				CHECK(box1.IsActive());
-				CHECK(sphere1.IsActive());
-				CHECK(box2.IsActive());
-				CHECK(sphere2.IsActive());
-
-				// Save the final state.
-				StateRecorderImpl final_state;
-				final_state.SetFilter(&filter);
-				c.GetSystem()->SaveState(final_state);
-	
-				// Compare the states to make sure they are exactly the same.
-				CHECK(final_state.IsEqual(intermediate_state));
-			}
-			else if (mode == 2)
-			{
-				// Make sure the state is the same as the previous one.
-				CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
-				CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
 				CHECK(!box2.IsActive());
 				CHECK(!sphere2.IsActive());
 
-				// Save the final state.
-				StateRecorderImpl final_state;
-				final_state.SetFilter(&filter);
-				c.GetSystem()->SaveState(final_state);
-	
-				// Compare the states to make sure they are NOT the same.
-				CHECK(final_state.IsEqual(intermediate_state));
+				// Apply a velocity to the second set of bodies to make sure they are active again
+				c.GetBodyInterface().SetLinearVelocity(box2.GetID(), Vec3(0, 0, 0.1f));
+				c.GetBodyInterface().SetLinearVelocity(sphere2.GetID(), Vec3(0, 0, 0.1f));
+			}
 
-				// Now restore the absolute initial state and make sure all the
-				// bodies are being active and ready to be processed again.
-				c.GetSystem()->RestoreState(absolute_initial_state);
+			// Simulate for 2 seconds - again
+			c.Simulate(2.0f);
 
-				CHECK(box1.IsActive());
-				CHECK(sphere1.IsActive());
-				CHECK(box2.IsActive());
-				CHECK(sphere2.IsActive());
-
-				// Simulate 10 frames - again
-				for (int i = 0; i < 10; i++)
-					c.SimulateSingleStep();
-
-				CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
-				CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
+			// The first set of bodies have been saved and should have returned to the same positions again
+			CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
+			CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
+			CHECK(!box1.IsActive());
+			CHECK(!sphere1.IsActive());
+			if (mode == 0)
+			{
+				// The second set of bodies have been saved and should have returned to the same positions again
 				CHECK(box2.GetWorldTransform() == intermediate_box2_transform);
 				CHECK(sphere2.GetWorldTransform() == intermediate_sphere2_transform);
-				CHECK(box1.IsActive());
-				CHECK(sphere1.IsActive());
-				CHECK(box2.IsActive());
-				CHECK(sphere2.IsActive());
+				CHECK(!box2.IsActive());
+				CHECK(!sphere2.IsActive());
 			}
+			else
+			{
+				// The second set of bodies have not been saved and should have moved on
+				CHECK(box2.GetWorldTransform() != intermediate_box2_transform);
+				CHECK(sphere2.GetWorldTransform() != intermediate_sphere2_transform);
+				CHECK(!box2.IsActive());
+				CHECK(sphere2.IsActive()); // The sphere keeps rolling
+			}
+
+			// Save the final state
+			StateRecorderImpl final_state;
+			c.GetSystem()->SaveState(final_state, state_to_save, &filter);
+	
+			// Compare the states to make sure they are the same
+			CHECK(final_state.IsEqual(intermediate_state));
+
+			// Now restore the absolute initial state and make sure all the
+			// bodies are being active and ready to be processed again
+			c.GetSystem()->RestoreState(absolute_initial_state);
+
+			CHECK(box1.GetWorldTransform() == initial_box1_transform);
+			CHECK(sphere1.GetWorldTransform() == initial_sphere1_transform);
+			CHECK(box2.GetWorldTransform() == initial_box2_transform);
+			CHECK(sphere2.GetWorldTransform() == initial_sphere2_transform);
+			CHECK(box1.IsActive());
+			CHECK(sphere1.IsActive());
+			CHECK(box2.IsActive());
+			CHECK(sphere2.IsActive());
+
+			// Simulate for 2 seconds - again
+			c.Simulate(2.0f);
+
+			// We should have reached the same state as before
+			CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
+			CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
+			CHECK(box2.GetWorldTransform() == intermediate_box2_transform);
+			CHECK(sphere2.GetWorldTransform() == intermediate_sphere2_transform);
+			CHECK(!box1.IsActive());
+			CHECK(!sphere1.IsActive());
+			CHECK(!box2.IsActive());
+			CHECK(!sphere2.IsActive());
 		}
 	}
 }
