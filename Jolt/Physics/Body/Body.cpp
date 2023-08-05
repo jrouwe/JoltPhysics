@@ -288,10 +288,6 @@ void Body::SaveState(StateRecorder &inStream) const
 	// Only write properties that can change at runtime
 	inStream.Write(mPosition);
 	inStream.Write(mRotation);
-	inStream.Write(mFriction);
-	inStream.Write(mRestitution);
-	mCollisionGroup.SaveBinaryState(inStream);
-	inStream.Write(mMotionType);
 
 	if (mMotionProperties != nullptr)
 	{
@@ -306,10 +302,6 @@ void Body::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mPosition);
 	inStream.Read(mRotation);
-	inStream.Read(mFriction);
-	inStream.Read(mRestitution);
-	mCollisionGroup.RestoreBinaryState(inStream);
-	inStream.Read(mMotionType);
 
 	if (mMotionProperties != nullptr)
 	{

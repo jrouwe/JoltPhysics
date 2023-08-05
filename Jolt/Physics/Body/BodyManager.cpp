@@ -751,7 +751,7 @@ void BodyManager::SaveState(StateRecorder &inStream, const StateRecorderFilter *
 				bodies.push_back(b);
 
 		// Write state of bodies
-		size_t num_bodies = bodies.size();
+		uint32 num_bodies = (uint32)bodies.size();
 		inStream.Write(num_bodies);
 		for (const Body *b : bodies)
 		{
@@ -774,11 +774,11 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 		if (inStream.IsValidating())
 		{
 			// Read state of bodies, note this reads it in a way to be consistent with validation
-			size_t old_num_bodies = 0;
+			uint32 old_num_bodies = 0;
 			for (const Body *b : mBodies)
 				if (sIsValidBodyPointer(b) && b->IsInBroadPhase())
 					++old_num_bodies;
-			size_t num_bodies = old_num_bodies; // Initialize to current value for validation
+			uint32 num_bodies = old_num_bodies; // Initialize to current value for validation
 			inStream.Read(num_bodies);
 			if (num_bodies != old_num_bodies)
 			{
@@ -813,11 +813,11 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 		else
 		{
 			// Not validating, we can be a bit more loose, read number of bodies
-			size_t num_bodies = 0;
+			uint32 num_bodies = 0;
 			inStream.Read(num_bodies);
 
 			// Iterate over the stored bodies and restore their state
-			for (size_t idx = 0; idx < num_bodies; ++idx)
+			for (uint32 idx = 0; idx < num_bodies; ++idx)
 			{
 				BodyID body_id;
 				inStream.Read(body_id);
@@ -858,12 +858,6 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 			Body *body = TryGetBody(body_id);
 			RemoveBodyFromActiveBodies(*body);
 		}
-
-		// Count CCD bodies (needs to be done because Body::RestoreState can change the motion quality without notifying the system)
-		mNumActiveCCDBodies = 0;
-		for (const BodyID *id = mActiveBodies[(int)EBodyType::RigidBody], *end = id + mNumActiveBodies[(int)EBodyType::RigidBody]; id < end; ++id)
-			if (mBodies[id->GetIndex()]->GetMotionProperties()->GetMotionQuality() == EMotionQuality::LinearCast)
-				mNumActiveCCDBodies++;
 	}
 
 	return true;

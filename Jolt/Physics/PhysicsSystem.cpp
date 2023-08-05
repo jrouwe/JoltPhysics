@@ -2408,6 +2408,14 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 	{
 		if (!mBodyManager.RestoreState(inStream))
 			return false;
+
+		// Update bounding boxes for all bodies in the broadphase
+		Array<BodyID> bodies;
+		for (const Body *b : mBodyManager.GetBodies())
+			if (BodyManager::sIsValidBodyPointer(b) && b->IsInBroadPhase())
+				bodies.push_back(b->GetID());
+		if (!bodies.empty())
+			mBroadPhase->NotifyBodiesAABBChanged(&bodies[0], (int)bodies.size());
 	}
 
 	if (uint8(state) & uint8(EStateRecorderState::Contacts))
@@ -2421,14 +2429,6 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 		if (!mConstraintManager.RestoreState(inStream))
 			return false;
 	}
-
-	// Update bounding boxes for all bodies in the broadphase
-	Array<BodyID> bodies;
-	for (const Body *b : mBodyManager.GetBodies())
-		if (BodyManager::sIsValidBodyPointer(b) && b->IsInBroadPhase())
-			bodies.push_back(b->GetID());
-	if (!bodies.empty())
-		mBroadPhase->NotifyBodiesAABBChanged(&bodies[0], (int)bodies.size());
 
 	return true;
 }
