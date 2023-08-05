@@ -1079,13 +1079,16 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 					max_plane = &p;
 				}
 			}
+			bool is_outside = max_distance > 0.0f;
+
+			// Project point onto that plane
+			Vec3 closest_point = local_pos - max_distance * max_plane->GetNormal();
 
 			// Check edges if we're outside the hull (when inside we know the closest face is also the closest point to the surface)
-			float closest_edge_distance = FLT_MAX;
-			Plane closest_plane = *max_plane;
-			if (max_distance <= 0.0f)
+			if (is_outside)
 			{
 				// Loop over edges
+				float closest_point_dist_sq = FLT_MAX;
 				const Face &face = mFaces[int(max_plane - mPlanes.data())];
 				for (const uint8 *v_start = &mVertexIdx[face.mFirstVertex], *v1 = v_start, *v_end = v_start + face.mNumVertices; v1 < v_end; ++v1)
 				{
@@ -1105,26 +1108,31 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 						// Get closest point on edge
 						uint32 set;
 						Vec3 closest = ClosestPoint::GetClosestPointOnLine(p1 - local_pos, p2 - local_pos, set);
-						float distance = closest.Length();
-						if (distance < closest_edge_distance)
-						{
-							closest_edge_distance = distance;
-							Vec3 point = local_pos + closest;
-							Vec3 normal = (local_pos - point).NormalizedOr(max_plane->GetNormal());
-							closest_plane = Plane::sFromPointAndNormal(point, normal);
-						}
+						float distance_sq = closest.LengthSq();
+						if (distance_sq < closest_point_dist_sq)
+							closest_point = local_pos + closest;
 					}
 				}
 			}
 
-			// Closest point on edge
-			float penetration = -(closest_edge_distance != FLT_MAX? closest_edge_distance : max_distance);
+			// Check if this is the largest penetration
+			Vec3 normal = local_pos - closest_point;
+			float normal_length = normal.Length();
+			float penetration = normal_length;
+			if (is_outside)
+				penetration = -penetration;
+			else
+				normal = -normal;
 			if (penetration > v.mLargestPenetration)
 			{
 				v.mLargestPenetration = penetration;
 
+				// Calculate contact plane
+				normal = normal_length > 0.0f? normal / normal_length : max_plane->GetNormal();
+				Plane plane = Plane::sFromPointAndNormal(closest_point, normal);
+
 				// Store collision
-				v.mCollisionPlane = closest_plane.GetTransformed(inCenterOfMassTransform);
+				v.mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
 				v.mCollidingShapeIndex = inCollidingShapeIndex;
 			}
 		}
