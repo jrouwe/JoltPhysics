@@ -35,9 +35,9 @@ void MotionProperties::SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassP
 		// Set inverse inertia
 		Mat44 rotation;
 		Vec3 diagonal;
-		if (inMassProperties.DecomposePrincipalMomentsOfInertia(rotation, diagonal) 
+		if (inMassProperties.DecomposePrincipalMomentsOfInertia(rotation, diagonal)
 			&& !diagonal.IsNearZero())
-		{	
+		{
 			mInvInertiaDiagonal = diagonal.Reciprocal();
 			mInertiaRotation = rotation.GetQuaternion();
 		}
