@@ -1408,7 +1408,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			SoftBodyVertex tmp_vertex;
 			tmp_vertex.mInvMass = 1.0f;
 			tmp_vertex.mPosition = fraction * direction;
-			tmp_vertex.mVelocity = Vec3(0, -9.81f / 60.0f, 0);
+			tmp_vertex.mVelocity = 10.0f * direction;
 			tmp_vertex.mCollidingShapeIndex = -1;
 			tmp_vertex.mLargestPenetration = -FLT_MAX;
 			Array<SoftBodyVertex> vertices = { tmp_vertex };
@@ -1426,7 +1426,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			for (const TransformedShape &ts : collector.mHits)
 			{
 				int colliding_shape_index = int(&ts - collector.mHits.data());
-				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), ts.GetShapeScale(), vertices, 1.0f / 60.0f, Vec3(0, -0.5f * 9.81f / Square(60.0f), 0), colliding_shape_index);
+				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), ts.GetShapeScale(), vertices, 1.0f / 60.0f, Vec3::sZero(), colliding_shape_index);
 				if (vertices[0].mCollidingShapeIndex == colliding_shape_index)
 				{
 					// To draw a plane, we need a point but CollideSoftBodyVertices doesn't provide one, so we use CollideShape with a tiny sphere to get the closest point and then project that onto the plane to draw the plane

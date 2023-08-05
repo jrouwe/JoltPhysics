@@ -333,7 +333,8 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 
 void Shape::sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex)
 {
-	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+	Mat44 inverse_transform = Mat44::sScale(inScale.Reciprocal()) * inCenterOfMassTransform.InversedRotationTranslation();
+	Mat44 direction_preserving_transform = inverse_transform.Transposed3x3(); // To transform normals: transpose of the inverse
 
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
@@ -356,7 +357,7 @@ void Shape::sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg 
 
 					// Calculate contact point and normal
 					Vec3 point = ray.GetPointOnRay(hit.mFraction);
-					Vec3 normal = inCenterOfMassTransform.Multiply3x3(inShape.GetSurfaceNormal(hit.mSubShapeID2, inverse_transform * point));
+					Vec3 normal = direction_preserving_transform.Multiply3x3(inShape.GetSurfaceNormal(hit.mSubShapeID2, inverse_transform * point)).Normalized();
 
 					// Store collision
 					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
