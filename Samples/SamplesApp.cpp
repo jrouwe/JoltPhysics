@@ -10,6 +10,7 @@
 #include <Jolt/Core/JobSystemSingleThreaded.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/StreamWrapper.h>
+#include <Jolt/Core/StringTools.h>
 #include <Jolt/Geometry/OrientedBox.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
@@ -1376,6 +1377,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 		{
 			// Create a soft body vertex
 			const float fraction = 0.2f;
+			const float max_distance = 10.0f;
 			SoftBodyVertex tmp_vertex;
 			tmp_vertex.mInvMass = 1.0f;
 			tmp_vertex.mPosition = fraction * direction;
@@ -1385,22 +1387,48 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			Array<SoftBodyVertex> vertices = { tmp_vertex };
 
 			// Get shapes in a large radius around the start position
-			AABox box(Vec3(start + vertices[0].mPosition), 10.0f);
+			AABox box(Vec3(start + vertices[0].mPosition), max_distance);
 			AllHitCollisionCollector<TransformedShapeCollector> collector;
 			mPhysicsSystem->GetNarrowPhaseQuery().CollectTransformedShapes(box, collector);
 
+			// Closest point found using CollideShape, position relative to 'start'
+			Vec3 closest_point = vertices[0].mPosition;
+			float closest_point_penetration = 0;
+
 			// Test against each shape
 			for (const TransformedShape &ts : collector.mHits)
-				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), vertices, 1.0f / 60.0f, Vec3(0, -0.5f * 9.81f / Square(60.0f), 0), 0);
+			{
+				int colliding_shape_index = int(&ts - collector.mHits.data());
+				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), vertices, 1.0f / 60.0f, Vec3(0, -0.5f * 9.81f / Square(60.0f), 0), colliding_shape_index);
+				if (vertices[0].mCollidingShapeIndex == colliding_shape_index)
+				{
+					// To draw a plane, we need a point but CollideSoftBodyVertices doesn't provide one, so we use CollideShape with a tiny sphere to get the closest point and then project that onto the plane to draw the plane
+					SphereShape point_sphere(1.0e-6f);
+					point_sphere.SetEmbedded();
+					CollideShapeSettings settings;
+					settings.mMaxSeparationDistance = max_distance;
+					ClosestHitCollisionCollector<CollideShapeCollector> collide_shape_collector;
+					ts.CollideShape(&point_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(start + vertices[0].mPosition), settings, start, collide_shape_collector);
+					if (collide_shape_collector.HadHit())
+					{
+						closest_point = collide_shape_collector.mHit.mContactPointOn2;
+						closest_point_penetration = collide_shape_collector.mHit.mPenetrationDepth;
+					}
+				}
+			}
 
 			// Draw test point
 			mDebugRenderer->DrawMarker(start + vertices[0].mPosition, Color::sYellow, 0.1f);
+			mDebugRenderer->DrawMarker(start + closest_point, Color::sRed, 0.1f);
 
 			// Draw collision plane
-			if (vertices[0].mCollidingShapeIndex == 0)
+			if (vertices[0].mCollidingShapeIndex != -1)
 			{
-				RVec3 plane_point = start + vertices[0].mPosition - vertices[0].mCollisionPlane.GetNormal() * vertices[0].mCollisionPlane.SignedDistance(vertices[0].mPosition);
+				RVec3 plane_point = start + closest_point - vertices[0].mCollisionPlane.GetNormal() * vertices[0].mCollisionPlane.SignedDistance(closest_point);
 				mDebugRenderer->DrawPlane(plane_point, vertices[0].mCollisionPlane.GetNormal(), Color::sGreen, 2.0f);
+
+				if (abs(closest_point_penetration - vertices[0].mLargestPenetration) > 0.001f)
+					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", vertices[0].mLargestPenetration, closest_point_penetration));
 			}
 		}
 		break;
