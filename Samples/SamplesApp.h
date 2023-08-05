@@ -200,6 +200,7 @@ private:
 		Sphere,
 		ConvexHull,
 		ThinBar,
+		SoftBodyCube,
 	};
 
 	// Shoot object settings

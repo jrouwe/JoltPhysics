@@ -322,29 +322,36 @@ void CapsuleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubS
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void CapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void CapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
+	JPH_ASSERT(IsValidScale(inScale));
+
 	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	// Get scaled capsule
+	float scale = abs(inScale.GetX());
+	float half_height_of_cylinder = scale * mHalfHeightOfCylinder;
+	float radius = scale * mRadius;
 
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
 		{
 			// Calculate penetration
 			Vec3 local_pos = inverse_transform * v.mPosition;
-			if (abs(local_pos.GetY()) <= mHalfHeightOfCylinder)
+			if (abs(local_pos.GetY()) <= half_height_of_cylinder)
 			{
 				// Near cylinder
 				Vec3 normal = local_pos;
 				normal.SetY(0.0f);
 				float normal_length = normal.Length();
-				float penetration = mRadius - normal_length;
+				float penetration = radius - normal_length;
 				if (penetration > v.mLargestPenetration)
 				{
 					v.mLargestPenetration = penetration;
 
 					// Calculate contact point and normal
 					normal = normal_length > 0.0f? normal / normal_length : Vec3::sAxisX();
-					Vec3 point = mRadius * normal;
+					Vec3 point = radius * normal;
 
 					// Store collision
 					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
@@ -354,17 +361,17 @@ void CapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Arr
 			else
 			{
 				// Near cap
-				Vec3 center = Vec3(0, Sign(local_pos.GetY()) * mHalfHeightOfCylinder, 0);
+				Vec3 center = Vec3(0, Sign(local_pos.GetY()) * half_height_of_cylinder, 0);
 				Vec3 delta = local_pos - center;
 				float distance = delta.Length();
-				float penetration = mRadius - distance;
+				float penetration = radius - distance;
 				if (penetration > v.mLargestPenetration)
 				{
 					v.mLargestPenetration = penetration;
 
 					// Calculate contact point and normal
 					Vec3 normal = delta / distance;
-					Vec3 point = center + mRadius * normal;
+					Vec3 point = center + radius * normal;
 
 					// Store collision
 					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);

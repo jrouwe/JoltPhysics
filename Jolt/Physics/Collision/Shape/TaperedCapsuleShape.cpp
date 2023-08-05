@@ -300,30 +300,42 @@ AABox TaperedCapsuleShape::GetWorldSpaceBounds(Mat44Arg inCenterOfMassTransform,
 	return AABox(p1, p2);
 }
 
-void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
+	JPH_ASSERT(IsValidScale(inScale));
+
 	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
 
+	// Get scaled tapered capsule
+	Vec3 abs_scale = inScale.Abs();
+	float scale_y = abs_scale.GetY();
+	float scale_xz = abs_scale.GetX();
+	Vec3 scale_y_flip(1, Sign(inScale.GetY()), 1);
+	float scaled_top_center = scale_y * mTopCenter;
+	float scaled_bottom_center = scale_y * mBottomCenter;
+	float scaled_top_radius = scale_xz * mTopRadius;
+	float scaled_bottom_radius = scale_xz * mBottomRadius;
+	
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
 		{
-			Vec3 local_pos = inverse_transform * v.mPosition;
+			Vec3 local_pos = scale_y_flip * (inverse_transform * v.mPosition);
 
 			// See comments at TaperedCapsuleShape::GetSurfaceNormal for rationale behind the math
 			Vec3 position, normal;
-			if (local_pos.GetY() > mTopCenter + mSinAlpha * mTopRadius)
+			if (local_pos.GetY() > scaled_top_center + mSinAlpha * scaled_top_radius)
 			{
 				// Top sphere
-				Vec3 top = Vec3(0, mTopCenter, 0);
+				Vec3 top = Vec3(0, scaled_top_center, 0);
 				normal = (local_pos - top).NormalizedOr(Vec3::sAxisY());
-				position = top + mTopRadius * normal;
+				position = top + scaled_top_radius * normal;
 			}
-			else if (local_pos.GetY() < mBottomCenter + mSinAlpha * mBottomRadius)
+			else if (local_pos.GetY() < scaled_bottom_center + mSinAlpha * scaled_bottom_radius)
 			{
 				// Bottom sphere
-				Vec3 bottom(0, mBottomCenter, 0);
+				Vec3 bottom(0, scaled_bottom_center, 0);
 				normal = (local_pos - bottom).NormalizedOr(-Vec3::sAxisY());
-				position = bottom + mBottomRadius * normal;
+				position = bottom + scaled_bottom_radius * normal;
 			}
 			else
 			{
@@ -331,7 +343,7 @@ void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransfo
 				normal = Vec3(local_pos.GetX(), 0, local_pos.GetZ()).NormalizedOr(Vec3::sAxisX());
 				normal.SetY(mTanAlpha);
 				normal = normal.NormalizedOr(Vec3::sAxisX());
-				position = Vec3(0, mBottomCenter, 0) + mBottomRadius * normal;
+				position = Vec3(0, scaled_bottom_center, 0) + scaled_bottom_radius * normal;
 			}
 
 			Plane plane = Plane::sFromPointAndNormal(position, normal);
@@ -339,6 +351,9 @@ void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransfo
 			if (penetration > v.mLargestPenetration)
 			{
 				v.mLargestPenetration = penetration;
+
+				// Need to flip the normal's y if capsule is flipped (this corresponds to flipping both the point and the normal around y)
+				plane.SetNormal(scale_y_flip * plane.GetNormal());
 
 				// Store collision
 				v.mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
