@@ -16,6 +16,7 @@
 #include <Jolt/Physics/StateRecorderImpl.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
+#include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/ShapeCast.h>
@@ -42,6 +43,7 @@
 #include <Utils/Log.h>
 #include <Utils/ShapeCreator.h>
 #include <Utils/CustomMemoryHook.h>
+#include <Utils/SoftBodyCreator.h>
 #include <Renderer/DebugRendererImp.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
@@ -515,7 +517,7 @@ SamplesApp::SamplesApp()
 			UIElement *shoot_options = mDebugUI->CreateMenu();
 			mDebugUI->CreateTextButton(shoot_options, "Shoot Object (B)", [=]() { ShootObject(); });
 			mDebugUI->CreateSlider(shoot_options, "Initial Velocity", mShootObjectVelocity, 0.0f, 500.0f, 10.0f, [this](float inValue) { mShootObjectVelocity = inValue; });
-			mDebugUI->CreateComboBox(shoot_options, "Shape", { "Sphere", "ConvexHull", "Thin Bar" }, (int)mShootObjectShape, [=](int inItem) { mShootObjectShape = (EShootObjectShape)inItem; });
+			mDebugUI->CreateComboBox(shoot_options, "Shape", { "Sphere", "ConvexHull", "Thin Bar", "Soft Body Cube" }, (int)mShootObjectShape, [=](int inItem) { mShootObjectShape = (EShootObjectShape)inItem; });
 			mDebugUI->CreateComboBox(shoot_options, "Motion Quality", { "Discrete", "LinearCast" }, (int)mShootObjectMotionQuality, [=](int inItem) { mShootObjectMotionQuality = (EMotionQuality)inItem; });
 			mDebugUI->CreateSlider(shoot_options, "Friction", mShootObjectFriction, 0.0f, 1.0f, 0.05f, [this](float inValue) { mShootObjectFriction = inValue; });
 			mDebugUI->CreateSlider(shoot_options, "Restitution", mShootObjectRestitution, 0.0f, 1.0f, 0.05f, [this](float inValue) { mShootObjectRestitution = inValue; });
@@ -920,6 +922,10 @@ RefConst<Shape> SamplesApp::CreateShootObjectShape()
 	case EShootObjectShape::ThinBar:
 		shape = BoxShapeSettings(Vec3(0.05f, 0.8f, 0.03f), 0.015f).Create().Get();
 		break;
+
+	case EShootObjectShape::SoftBodyCube:
+		JPH_ASSERT(false);
+		break;
 	}
 
 	// Scale shape if needed
@@ -931,15 +937,36 @@ RefConst<Shape> SamplesApp::CreateShootObjectShape()
 
 void SamplesApp::ShootObject()
 {
-	// Configure body
-	BodyCreationSettings creation_settings(CreateShootObjectShape(), GetCamera().mPos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-	creation_settings.mMotionQuality = mShootObjectMotionQuality;
-	creation_settings.mFriction = mShootObjectFriction;
-	creation_settings.mRestitution = mShootObjectRestitution;
-	creation_settings.mLinearVelocity = mShootObjectVelocity * GetCamera().mForward;
+	if (mShootObjectShape != EShootObjectShape::SoftBodyCube)
+	{
+		// Configure body
+		BodyCreationSettings creation_settings(CreateShootObjectShape(), GetCamera().mPos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		creation_settings.mMotionQuality = mShootObjectMotionQuality;
+		creation_settings.mFriction = mShootObjectFriction;
+		creation_settings.mRestitution = mShootObjectRestitution;
+		creation_settings.mLinearVelocity = mShootObjectVelocity * GetCamera().mForward;
 
-	// Create body
-	mPhysicsSystem->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
+		// Create body
+		mPhysicsSystem->GetBodyInterface().CreateAndAddBody(creation_settings, EActivation::Activate);
+	}
+	else
+	{
+		Ref<SoftBodySharedSettings> shared_settings = SoftBodyCreator::CreateCube(5, 0.5f * GetWorldScale());
+		for (SoftBodySharedSettings::Vertex &v : shared_settings->mVertices)
+		{
+			v.mInvMass = 0.025f;
+			(mShootObjectVelocity * GetCamera().mForward).StoreFloat3(&v.mVelocity);
+		}
+
+		// Confgure soft body
+		SoftBodyCreationSettings creation_settings(shared_settings, GetCamera().mPos);
+		creation_settings.mObjectLayer = Layers::MOVING;
+		creation_settings.mFriction = mShootObjectFriction;
+		creation_settings.mRestitution = mShootObjectRestitution;
+
+		// Create body
+		mPhysicsSystem->GetBodyInterface().CreateAndAddSoftBody(creation_settings, EActivation::Activate);
+	}
 }
 
 bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPosition, BodyID &outID)
