@@ -300,9 +300,16 @@ void CylinderShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
+	JPH_ASSERT(IsValidScale(inScale));
+
 	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
+
+	// Get scaled cylinder
+	Vec3 abs_scale = inScale.Abs();
+	float half_height = abs_scale.GetY() * mHalfHeight;
+	float radius = abs_scale.GetX() * mRadius;
 
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
@@ -313,29 +320,29 @@ void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ar
 			Vec3 side_normal = local_pos;
 			side_normal.SetY(0.0f);
 			float side_normal_length = side_normal.Length();
-			float side_penetration = mRadius - side_normal_length;
+			float side_penetration = radius - side_normal_length;
 
 			// Calculate penetration into top or bottom plane
-			float top_penetration = mHalfHeight - abs(local_pos.GetY());
+			float top_penetration = half_height - abs(local_pos.GetY());
 
 			Vec3 point, normal;
 			if (side_penetration < 0.0f && top_penetration < 0.0f)
 			{
 				// We're outside the cylinder height and radius
-				point = side_normal * (mRadius / side_normal_length) + Vec3(0, mHalfHeight * Sign(local_pos.GetY()), 0);
+				point = side_normal * (radius / side_normal_length) + Vec3(0, half_height * Sign(local_pos.GetY()), 0);
 				normal = point.Normalized();
 			}
 			else if (side_penetration < top_penetration)
 			{
 				// Side surface is closest
 				normal = side_normal_length > 0.0f? side_normal / side_normal_length : Vec3::sAxisX();
-				point = mRadius * normal;
+				point = radius * normal;
 			}
 			else
 			{
 				// Top or bottom plane is closest
 				normal = Vec3(0, Sign(local_pos.GetY()), 0);
-				point = mHalfHeight * normal;
+				point = half_height * normal;
 			}
 
 			// Calculate penetration

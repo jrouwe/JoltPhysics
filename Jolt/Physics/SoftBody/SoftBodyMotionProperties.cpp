@@ -189,7 +189,7 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 
 	// Generate collision planes
 	for (const CollidingShape &cs : collector.mHits)
-		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, mVertices, inDeltaTime, displacement_due_to_gravity, int(&cs - collector.mHits.data()));
+		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices, inDeltaTime, displacement_due_to_gravity, int(&cs - collector.mHits.data()));
 
 	float inv_dt_sq = 1.0f / dt_sq;
 	float linear_damping = max(0.0f, 1.0f - GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal

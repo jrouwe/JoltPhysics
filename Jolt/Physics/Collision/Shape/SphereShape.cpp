@@ -275,9 +275,10 @@ void SphereShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubSh
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void SphereShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void SphereShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
 	Vec3 center = inCenterOfMassTransform.GetTranslation();
+	float radius = GetScaledRadius(inScale);
 
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
@@ -285,14 +286,14 @@ void SphereShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Arra
 			// Calculate penetration
 			Vec3 delta = v.mPosition - center;
 			float distance = delta.Length();
-			float penetration = mRadius - distance;
+			float penetration = radius - distance;
 			if (penetration > v.mLargestPenetration)
 			{
 				v.mLargestPenetration = penetration;
 
 				// Calculate contact point and normal
 				Vec3 normal = distance > 0.0f? delta / distance : Vec3::sAxisY();
-				Vec3 point = center + mRadius * normal;
+				Vec3 point = center + radius * normal;
 
 				// Store collision
 				v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
