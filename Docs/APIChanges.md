@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v3.0.1 and latest
 
+* 20230805 - Body::SaveState and MotionProperties::SaveState now only save the state that can be changed by the simulation. Configuration properties like friction, restitution etc. must be saved by the user if desired. (7ff50429abd53f1914fd25a9e80ff47f22bc9f0e)
 * 20230801 - *SBS* - Constraint priority was added to all constraints which changes the binary serialization format. (e341bb3e959460fbe196032095c1ab0346d7e746)
 * 20230704 - *SBS* - A new flag was added to BodyCreationSettings that changes the binary serialization format. (2dd3a033a41e422eb470484029324cc9bbaf0825)
 * 20230629 - Fix for engine RPM being much higher than wheel RPM when measured at clutch. Before we were ignoring bake and wheel torques in engine RPM calculation. Now they're much closer but this unfortunately means that the simulation of the vehicle has changed and mainly the engine torque and clutch strength need to be re-tweaked. (b40090766c545a68dccfac76cde8c6345ca626a6)
