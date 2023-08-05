@@ -152,6 +152,7 @@ private:
 		CollidePoint,
 		CollideShape,
 		CastShape,
+		CollideSoftBody,
 		TransformedShape,
 		GetTriangles,
 		BroadPhaseRay,

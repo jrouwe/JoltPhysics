@@ -10,6 +10,7 @@
 #include <Jolt/Core/JobSystemSingleThreaded.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/StreamWrapper.h>
+#include <Jolt/Core/StringTools.h>
 #include <Jolt/Geometry/OrientedBox.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
@@ -493,7 +494,7 @@ SamplesApp::SamplesApp()
 	#endif // JPH_DEBUG_RENDERER
 		mDebugUI->CreateTextButton(main_menu, "Mouse Probe", [this]() {
 			UIElement *probe_options = mDebugUI->CreateMenu();
-			mDebugUI->CreateComboBox(probe_options, "Mode", { "Pick", "Ray", "RayCollector", "CollidePoint", "CollideShape", "CastShape", "TransfShape", "GetTriangles", "BP Ray", "BP Box", "BP Sphere", "BP Point", "BP OBox", "BP Cast Box" }, (int)mProbeMode, [this](int inItem) { mProbeMode = (EProbeMode)inItem; });
+			mDebugUI->CreateComboBox(probe_options, "Mode", { "Pick", "Ray", "RayCollector", "CollidePoint", "CollideShape", "CastShape", "CollideSoftBody", "TransfShape", "GetTriangles", "BP Ray", "BP Box", "BP Sphere", "BP Point", "BP OBox", "BP Cast Box" }, (int)mProbeMode, [this](int inItem) { mProbeMode = (EProbeMode)inItem; });
 			mDebugUI->CreateComboBox(probe_options, "Shape", { "Sphere", "Box", "ConvexHull", "Capsule", "TaperedCapsule", "Cylinder", "Triangle", "StaticCompound", "StaticCompound2", "MutableCompound", "Mesh" }, (int)mProbeShape, [=](int inItem) { mProbeShape = (EProbeShape)inItem; });
 			mDebugUI->CreateCheckBox(probe_options, "Scale Shape", mScaleShape, [this](UICheckBox::EState inState) { mScaleShape = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateSlider(probe_options, "Scale X", mShapeScale.GetX(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetX(inValue); });
@@ -1368,6 +1369,66 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			#ifdef JPH_DEBUG_RENDERER
 				shape_cast.mShape->Draw(mDebugRenderer, shape_cast.mCenterOfMassStart.PostTranslated(shape_cast.mDirection), Vec3::sReplicate(1.0f), Color::sRed, false, false);
 			#endif // JPH_DEBUG_RENDERER
+			}
+		}
+		break;
+
+	case EProbeMode::CollideSoftBody:
+		{
+			// Create a soft body vertex
+			const float fraction = 0.2f;
+			const float max_distance = 10.0f;
+			SoftBodyVertex tmp_vertex;
+			tmp_vertex.mInvMass = 1.0f;
+			tmp_vertex.mPosition = fraction * direction;
+			tmp_vertex.mVelocity = Vec3(0, -9.81f / 60.0f, 0);
+			tmp_vertex.mCollidingShapeIndex = -1;
+			tmp_vertex.mLargestPenetration = -FLT_MAX;
+			Array<SoftBodyVertex> vertices = { tmp_vertex };
+
+			// Get shapes in a large radius around the start position
+			AABox box(Vec3(start + vertices[0].mPosition), max_distance);
+			AllHitCollisionCollector<TransformedShapeCollector> collector;
+			mPhysicsSystem->GetNarrowPhaseQuery().CollectTransformedShapes(box, collector);
+
+			// Closest point found using CollideShape, position relative to 'start'
+			Vec3 closest_point = vertices[0].mPosition;
+			float closest_point_penetration = 0;
+
+			// Test against each shape
+			for (const TransformedShape &ts : collector.mHits)
+			{
+				int colliding_shape_index = int(&ts - collector.mHits.data());
+				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), vertices, 1.0f / 60.0f, Vec3(0, -0.5f * 9.81f / Square(60.0f), 0), colliding_shape_index);
+				if (vertices[0].mCollidingShapeIndex == colliding_shape_index)
+				{
+					// To draw a plane, we need a point but CollideSoftBodyVertices doesn't provide one, so we use CollideShape with a tiny sphere to get the closest point and then project that onto the plane to draw the plane
+					SphereShape point_sphere(1.0e-6f);
+					point_sphere.SetEmbedded();
+					CollideShapeSettings settings;
+					settings.mMaxSeparationDistance = max_distance;
+					ClosestHitCollisionCollector<CollideShapeCollector> collide_shape_collector;
+					ts.CollideShape(&point_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(start + vertices[0].mPosition), settings, start, collide_shape_collector);
+					if (collide_shape_collector.HadHit())
+					{
+						closest_point = collide_shape_collector.mHit.mContactPointOn2;
+						closest_point_penetration = collide_shape_collector.mHit.mPenetrationDepth;
+					}
+				}
+			}
+
+			// Draw test point
+			mDebugRenderer->DrawMarker(start + vertices[0].mPosition, Color::sYellow, 0.1f);
+			mDebugRenderer->DrawMarker(start + closest_point, Color::sRed, 0.1f);
+
+			// Draw collision plane
+			if (vertices[0].mCollidingShapeIndex != -1)
+			{
+				RVec3 plane_point = start + closest_point - vertices[0].mCollisionPlane.GetNormal() * vertices[0].mCollisionPlane.SignedDistance(closest_point);
+				mDebugRenderer->DrawPlane(plane_point, vertices[0].mCollisionPlane.GetNormal(), Color::sGreen, 2.0f);
+
+				if (abs(closest_point_penetration - vertices[0].mLargestPenetration) > 0.001f)
+					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", (double)vertices[0].mLargestPenetration, (double)closest_point_penetration));
 			}
 		}
 		break;
