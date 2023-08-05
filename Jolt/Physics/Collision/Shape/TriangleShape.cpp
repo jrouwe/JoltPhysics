@@ -17,8 +17,10 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Geometry/ConvexSupport.h>
 #include <Jolt/Geometry/RayTriangle.h>
+#include <Jolt/Geometry/ClosestPoint.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
@@ -259,7 +261,56 @@ void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 
 void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
-	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, inScale, ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+	Vec3 v1 = inCenterOfMassTransform * (inScale * mV1);
+	Vec3 v2 = inCenterOfMassTransform * (inScale * mV2);
+	Vec3 v3 = inCenterOfMassTransform * (inScale * mV3);
+
+	if (ScaleHelpers::IsInsideOut(inScale))
+		swap(v1, v2);
+
+	Vec3 triangle_normal = (v2 - v1).Cross(v3 - v1).NormalizedOr(Vec3::sAxisY());
+
+	for (SoftBodyVertex &v : ioVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			// Get the closest point from the vertex to the triangle
+			uint32 set;
+			Vec3 v1_minus_position = v1 - v.mPosition;
+			Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(v1_minus_position, v2 - v.mPosition, v3 - v.mPosition, set);
+			float closest_point_length = closest_point.Length();
+
+			if (set == 0b111 || closest_point_length == 0.0f)
+			{
+				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 10cm penetration
+				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
+				float penetration = min(triangle_normal.Dot(v1_minus_position), 0.1f);
+				if (penetration > v.mLargestPenetration)
+				{
+					v.mLargestPenetration = penetration;
+
+					// Store collision
+					v.mCollisionPlane = Plane::sFromPointAndNormal(v1, triangle_normal);
+					v.mCollidingShapeIndex = inCollidingShapeIndex;
+				}
+			}
+			else
+			{
+				// Closest point is on an edge or vertex, use closest point as collision plane
+				float penetration = -closest_point_length;
+				if (penetration > v.mLargestPenetration)
+				{
+					v.mLargestPenetration = penetration;
+
+					// Calculate contact point and normal
+					Vec3 point = v.mPosition + closest_point;
+					Vec3 normal = -closest_point / closest_point_length;
+
+					// Store collision
+					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
+					v.mCollidingShapeIndex = inCollidingShapeIndex;
+				}
+			}
+		}
 }
 
 void TriangleShape::sCollideConvexVsTriangle(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, [[maybe_unused]] const ShapeFilter &inShapeFilter)
