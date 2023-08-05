@@ -1107,7 +1107,7 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 					}
 				}
 			}
-			bool is_outside = scale_flip * max_distance > 0.0f;
+			bool is_outside = max_distance > 0.0f;
 
 			// Project point onto that plane
 			Vec3 closest_point = local_pos - max_distance * max_plane_normal;
