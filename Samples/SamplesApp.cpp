@@ -1428,7 +1428,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 				mDebugRenderer->DrawPlane(plane_point, vertices[0].mCollisionPlane.GetNormal(), Color::sGreen, 2.0f);
 
 				if (abs(closest_point_penetration - vertices[0].mLargestPenetration) > 0.001f)
-					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", vertices[0].mLargestPenetration, closest_point_penetration));
+					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", (double)vertices[0].mLargestPenetration, (double)closest_point_penetration));
 			}
 		}
 		break;
