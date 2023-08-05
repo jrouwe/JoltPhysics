@@ -330,7 +330,7 @@ void CylinderShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 			{
 				// We're outside the cylinder height and radius
 				point = side_normal * (radius / side_normal_length) + Vec3(0, half_height * Sign(local_pos.GetY()), 0);
-				normal = point.Normalized();
+				normal = (local_pos - point).NormalizedOr(Vec3::sAxisY());
 			}
 			else if (side_penetration < top_penetration)
 			{
