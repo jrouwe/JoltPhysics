@@ -37,7 +37,7 @@ void ConveyorBeltTest::Initialize()
 	for (int i = 0; i <= 10; ++i)
 	{
 		cargo_settings.mPosition = RVec3(-cBeltLength + i * 10.0f, 10.0f, -cBeltLength);
-		cargo_settings.mFriction = 1.0f - 0.1f * i;
+		cargo_settings.mFriction = max(0.0f, 1.0f - 0.1f * i);
 		mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
 	}
 
@@ -64,7 +64,7 @@ void ConveyorBeltTest::Initialize()
 	for (int i = 0; i <= 6; ++i)
 	{
 		cargo_settings.mPosition = RVec3(10.0f, 10.0f, -15.0f + 5.0f * i);
-		cargo_settings.mFriction = 1.0f - 0.1f * i;
+		cargo_settings.mFriction = max(0.0f, 1.0f - 0.1f * i);
 		mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
 	}
 }
