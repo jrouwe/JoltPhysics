@@ -1062,6 +1062,10 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 {
 	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
 
+	Vec3 inv_scale = inScale.Reciprocal();
+	bool is_not_scaled = ScaleHelpers::IsNotScaled(inScale);
+	float scale_flip = ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f;
+
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
 		{
@@ -1069,27 +1073,51 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 
 			// Find most facing plane
 			float max_distance = -FLT_MAX;
-			const Plane *max_plane = nullptr;
-			for (const Plane &p : mPlanes)
+			Vec3 max_plane_normal = Vec3::sZero();
+			uint max_plane_idx = 0;
+			if (is_not_scaled)
 			{
-				float distance = p.SignedDistance(local_pos);
-				if (distance > max_distance)
+				// Without scale, it is trivial to calculate the distance to the hull
+				for (const Plane &p : mPlanes)
 				{
-					max_distance = distance;
-					max_plane = &p;
+					float distance = p.SignedDistance(local_pos);
+					if (distance > max_distance)
+					{
+						max_distance = distance;
+						max_plane_normal = p.GetNormal();
+						max_plane_idx = uint(&p - mPlanes.data());
+					}
 				}
 			}
-			bool is_outside = max_distance > 0.0f;
+			else
+			{
+				// When there's scale we need to calculate the planes first
+				for (uint i = 0; i < (uint)mPlanes.size(); ++i)
+				{
+					// Calculate plane normal and point by scaling the original plane
+					Vec3 plane_normal = (inv_scale * mPlanes[i].GetNormal()).Normalized();
+					Vec3 plane_point = inScale * mPoints[mVertexIdx[mFaces[i].mFirstVertex]].mPosition;
+
+					float distance = plane_normal.Dot(local_pos - plane_point);
+					if (distance > max_distance)
+					{
+						max_distance = distance;
+						max_plane_normal = plane_normal;
+						max_plane_idx = i;
+					}
+				}
+			}
+			bool is_outside = scale_flip * max_distance > 0.0f;
 
 			// Project point onto that plane
-			Vec3 closest_point = local_pos - max_distance * max_plane->GetNormal();
+			Vec3 closest_point = local_pos - max_distance * max_plane_normal;
 
 			// Check edges if we're outside the hull (when inside we know the closest face is also the closest point to the surface)
 			if (is_outside)
 			{
 				// Loop over edges
 				float closest_point_dist_sq = FLT_MAX;
-				const Face &face = mFaces[int(max_plane - mPlanes.data())];
+				const Face &face = mFaces[max_plane_idx];
 				for (const uint8 *v_start = &mVertexIdx[face.mFirstVertex], *v1 = v_start, *v_end = v_start + face.mNumVertices; v1 < v_end; ++v1)
 				{
 					// Find second point
@@ -1098,12 +1126,12 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 						v2 = v_start;
 
 					// Get edge points
-					Vec3 p1 = mPoints[*v1].mPosition;
-					Vec3 p2 = mPoints[*v2].mPosition;
+					Vec3 p1 = inScale * mPoints[*v1].mPosition;
+					Vec3 p2 = inScale * mPoints[*v2].mPosition;
 
 					// Check if the position is outside the edge (if not, the face will be closer)
-					Vec3 edge_normal = (p2 - p1).Cross(max_plane->GetNormal());
-					if (edge_normal.Dot(local_pos - p1) > 0.0f)
+					Vec3 edge_normal = (p2 - p1).Cross(max_plane_normal);
+					if (scale_flip * edge_normal.Dot(local_pos - p1) > 0.0f)
 					{
 						// Get closest point on edge
 						uint32 set;
@@ -1128,7 +1156,7 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 				v.mLargestPenetration = penetration;
 
 				// Calculate contact plane
-				normal = normal_length > 0.0f? normal / normal_length : max_plane->GetNormal();
+				normal = normal_length > 0.0f? normal / normal_length : max_plane_normal;
 				Plane plane = Plane::sFromPointAndNormal(closest_point, normal);
 
 				// Store collision
