@@ -232,14 +232,17 @@ void BoxShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<S
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
 		{
+			// Convert to local space
 			Vec3 local_pos = inverse_transform * v.mPosition;
-			Vec3 delta = half_extent - local_pos.Abs();
-			UVec4 point_inside = Vec3::sGreaterOrEqual(delta, Vec3::sZero());
 
-			// Test if inside
-			if (point_inside.TestAllXYZTrue())
+			// Clamp point to inside box
+			Vec3 clamped_point = Vec3::sMax(Vec3::sMin(local_pos, half_extent), -half_extent);
+
+			// Test if point was inside
+			if (clamped_point == local_pos)
 			{
 				// Calculate closest distance to surface
+				Vec3 delta = half_extent - local_pos.Abs();
 				int index = delta.GetLowestComponentIndex();
 				float penetration = delta[index];
 				if (penetration > v.mLargestPenetration)
@@ -258,19 +261,20 @@ void BoxShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Array<S
 			}
 			else
 			{
-				// Point is outside find point and normal of the closest surface
-				Vec3 normal = Vec3::sSelect(local_pos.GetSign(), Vec3::sZero(), point_inside);
-				Vec3 point = normal * half_extent;
-				normal = normal.Normalized();
+				// Calculate normal
+				Vec3 normal = local_pos - clamped_point;
+				float normal_length = normal.Length();
 
 				// Penetration will be negative since we're not penetrating
-				float penetration = (point - local_pos).Dot(normal);
+				float penetration = -normal_length;
 				if (penetration > v.mLargestPenetration)
 				{
+					normal /= normal_length;
+
 					v.mLargestPenetration = penetration;
 
 					// Store collision
-					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
+					v.mCollisionPlane = Plane::sFromPointAndNormal(clamped_point, normal).GetTransformed(inCenterOfMassTransform);
 					v.mCollidingShapeIndex = inCollidingShapeIndex;
 				}
 			}
