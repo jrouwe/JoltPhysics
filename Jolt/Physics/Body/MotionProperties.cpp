@@ -35,9 +35,9 @@ void MotionProperties::SetMassProperties(EAllowedDOFs inAllowedDOFs, const MassP
 		// Set inverse inertia
 		Mat44 rotation;
 		Vec3 diagonal;
-		if (inMassProperties.DecomposePrincipalMomentsOfInertia(rotation, diagonal) 
+		if (inMassProperties.DecomposePrincipalMomentsOfInertia(rotation, diagonal)
 			&& !diagonal.IsNearZero())
-		{	
+		{
 			mInvInertiaDiagonal = diagonal.Reciprocal();
 			mInertiaRotation = rotation.GetQuaternion();
 		}
@@ -127,17 +127,11 @@ void MotionProperties::SaveState(StateRecorder &inStream) const
 	inStream.Write(mAngularVelocity);
 	inStream.Write(mForce);
 	inStream.Write(mTorque);
-	inStream.Write(mLinearDamping);
-	inStream.Write(mAngularDamping);
-	inStream.Write(mMaxLinearVelocity);
-	inStream.Write(mMaxAngularVelocity);
-	inStream.Write(mGravityFactor);
 #ifdef JPH_DOUBLE_PRECISION
 	inStream.Write(mSleepTestOffset);
 #endif // JPH_DOUBLE_PRECISION
 	inStream.Write(mSleepTestSpheres);
 	inStream.Write(mSleepTestTimer);
-	inStream.Write(mMotionQuality);
 	inStream.Write(mAllowSleeping);
 }
 
@@ -147,17 +141,11 @@ void MotionProperties::RestoreState(StateRecorder &inStream)
 	inStream.Read(mAngularVelocity);
 	inStream.Read(mForce);
 	inStream.Read(mTorque);
-	inStream.Read(mLinearDamping);
-	inStream.Read(mAngularDamping);
-	inStream.Read(mMaxLinearVelocity);
-	inStream.Read(mMaxAngularVelocity);
-	inStream.Read(mGravityFactor);
 #ifdef JPH_DOUBLE_PRECISION
 	inStream.Read(mSleepTestOffset);
 #endif // JPH_DOUBLE_PRECISION
 	inStream.Read(mSleepTestSpheres);
 	inStream.Read(mSleepTestTimer);
-	inStream.Read(mMotionQuality);
 	inStream.Read(mAllowSleeping);
 }
 

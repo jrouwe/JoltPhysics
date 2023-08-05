@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ChangeMotionTypeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ChangeMotionTypeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ChangeMotionTypeTest)
+{
+	JPH_ADD_BASE_CLASS(ChangeMotionTypeTest, Test)
 }
 
 void ChangeMotionTypeTest::Initialize()
@@ -24,18 +24,15 @@ void ChangeMotionTypeTest::Initialize()
 	BodyCreationSettings settings;
 	settings.SetShape(new BoxShape(Vec3(0.5f, 1.0f, 2.0f)));
 	settings.mPosition = RVec3(0, 10, 0);
-	settings.mMotionType = EMotionType::Static; 
+	settings.mMotionType = EMotionType::Dynamic;
 	settings.mObjectLayer = Layers::MOVING; // Put in moving layer, this will result in some overhead when the body is static
 	settings.mAllowDynamicOrKinematic = true;
 	mBody = mBodyInterface->CreateBody(settings);
-	mBodyInterface->AddBody(mBody->GetID(), EActivation::DontActivate);
+	mBodyInterface->AddBody(mBody->GetID(), EActivation::Activate);
 }
 
-void ChangeMotionTypeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
-	// Increment time
-	mTime += inParams.mDeltaTime;
-
+void ChangeMotionTypeTest::UpdateMotionType()
+{
 	// Calculate desired motion type
 	static const EMotionType cycle[] = { EMotionType::Dynamic, EMotionType::Kinematic, EMotionType::Static, EMotionType::Kinematic, EMotionType::Dynamic, EMotionType::Static };
 	EMotionType motion_type = cycle[int(mTime) % size(cycle)];
@@ -43,9 +40,17 @@ void ChangeMotionTypeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update motion type and reactivate the body
 	if (motion_type != mBody->GetMotionType())
 		mBodyInterface->SetMotionType(mBody->GetID(), motion_type, EActivation::Activate);
+}
+
+void ChangeMotionTypeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	// Increment time
+	mTime += inParams.mDeltaTime;
+
+	UpdateMotionType();
 
 	// Provide kinematic body a target
-	if (motion_type == EMotionType::Kinematic)
+	if (mBody->IsKinematic())
 		mBody->MoveKinematic(RVec3(Sin(mTime), 10, 0), Quat::sRotation(Vec3::sAxisX(), Cos(mTime)), inParams.mDeltaTime);
 }
 
@@ -57,4 +62,6 @@ void ChangeMotionTypeTest::SaveState(StateRecorder &inStream) const
 void ChangeMotionTypeTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
+
+	UpdateMotionType();
 }

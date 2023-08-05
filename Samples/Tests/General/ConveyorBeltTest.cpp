@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ConveyorBeltTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ConveyorBeltTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ConveyorBeltTest)
+{
+	JPH_ADD_BASE_CLASS(ConveyorBeltTest, Test)
 }
 
 void ConveyorBeltTest::Initialize()
@@ -37,7 +37,7 @@ void ConveyorBeltTest::Initialize()
 	for (int i = 0; i <= 10; ++i)
 	{
 		cargo_settings.mPosition = RVec3(-cBeltLength + i * 10.0f, 10.0f, -cBeltLength);
-		cargo_settings.mFriction = 1.0f - 0.1f * i;
+		cargo_settings.mFriction = max(0.0f, 1.0f - 0.1f * i);
 		mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
 	}
 
@@ -64,7 +64,7 @@ void ConveyorBeltTest::Initialize()
 	for (int i = 0; i <= 6; ++i)
 	{
 		cargo_settings.mPosition = RVec3(10.0f, 10.0f, -15.0f + 5.0f * i);
-		cargo_settings.mFriction = 1.0f - 0.1f * i;
+		cargo_settings.mFriction = max(0.0f, 1.0f - 0.1f * i);
 		mBodyInterface->CreateAndAddBody(cargo_settings, EActivation::Activate);
 	}
 }
@@ -89,7 +89,7 @@ void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, 
 	bool body1_angular = inBody1.GetID() == mAngularBelt;
 	bool body2_angular = inBody2.GetID() == mAngularBelt;
 	if (body1_angular || body2_angular)
-	{		
+	{
 		// Determine the world space angular surface velocity of both bodies
 		const Vec3 cLocalSpaceAngularVelocity(0, DegreesToRadians(10.0f), 0);
 		Vec3 body1_angular_surface_velocity = body1_angular? inBody1.GetRotation() * cLocalSpaceAngularVelocity : Vec3::sZero();
@@ -97,7 +97,7 @@ void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, 
 
 		// Note that the angular velocity is the angular velocity around body 1's center of mass, so we need to add the linear velocity of body 2's center of mass
 		Vec3 body2_linear_surface_velocity = body2_angular? body2_angular_surface_velocity.Cross(Vec3(inBody1.GetCenterOfMassPosition() - inBody2.GetCenterOfMassPosition())) : Vec3::sZero();
-		
+
 		// Calculate the relative angular surface velocity
 		ioSettings.mRelativeSurfaceVelocity = body2_linear_surface_velocity;
 		ioSettings.mRelativeAngularSurfaceVelocity = body2_angular_surface_velocity - body1_angular_surface_velocity;

@@ -238,7 +238,7 @@ void ConstraintManager::SaveState(StateRecorder &inStream, const StateRecorderFi
 				constraints.push_back(c);
 
 		// Save them
-		size_t num_constraints = constraints.size();
+		uint32 num_constraints = (uint32)constraints.size();
 		inStream.Write(num_constraints);
 		for (const Constraint *c : constraints)
 		{
@@ -249,7 +249,7 @@ void ConstraintManager::SaveState(StateRecorder &inStream, const StateRecorderFi
 	else
 	{
 		// Save all constraints
-		size_t num_constraints = mConstraints.size();
+		uint32 num_constraints = (uint32)mConstraints.size();
 		inStream.Write(num_constraints);
 		for (const Ref<Constraint> &c : mConstraints)
 		{
@@ -266,7 +266,7 @@ bool ConstraintManager::RestoreState(StateRecorder &inStream)
 	if (inStream.IsValidating())
 	{
 		// Read state of constraints
-		size_t num_constraints = mConstraints.size(); // Initialize to current value for validation
+		uint32 num_constraints = (uint32)mConstraints.size(); // Initialize to current value for validation
 		inStream.Read(num_constraints);
 		if (num_constraints != mConstraints.size())
 		{
@@ -288,10 +288,10 @@ bool ConstraintManager::RestoreState(StateRecorder &inStream)
 	else
 	{
 		// Not validating, use more flexible reading, read number of constraints
-		size_t num_constraints = 0;
+		uint32 num_constraints = 0;
 		inStream.Read(num_constraints);
 
-		for (size_t idx = 0; idx < num_constraints; ++idx)
+		for (uint32 idx = 0; idx < num_constraints; ++idx)
 		{
 			uint32 constraint_index;
 			inStream.Read(constraint_index);

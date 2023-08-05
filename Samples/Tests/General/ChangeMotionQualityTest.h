@@ -20,6 +20,8 @@ public:
 	virtual void	RestoreState(StateRecorder &inStream) override;
 
 private:
+	void			UpdateMotionQuality();
+
 	Body *			mBody = nullptr;
 	float			mTime = 0.0f;
 };

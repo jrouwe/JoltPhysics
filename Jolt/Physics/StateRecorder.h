@@ -42,7 +42,8 @@ public:
 };
 
 /// Class that records the state of a physics system. Can be used to check if the simulation is deterministic by putting the recorder in validation mode.
-/// Can be used to restore the state to an earlier point in time.
+/// Can be used to restore the state to an earlier point in time. Note that only the state that is modified by the simulation is saved, configuration settings
+/// like body friction or restitution, motion quality etc. are not saved and need to be saved by the user if desired.
 class JPH_EXPORT StateRecorder : public StreamIn, public StreamOut
 {
 public:
@@ -53,7 +54,8 @@ public:
 	/// Sets the stream in validation mode. In this case the physics system ensures that before it calls ReadBytes that it will
 	/// ensure that those bytes contain the current state. This makes it possible to step and save the state, restore to the previous
 	/// step and step again and when the recorded state is not the same it can restore the expected state and any byte that changes
-	/// due to a ReadBytes function can be caught to find out which part of the simulation is not deterministic
+	/// due to a ReadBytes function can be caught to find out which part of the simulation is not deterministic.
+	/// Note that validation only works when saving the full state of the simulation (EStateRecorderState::All, StateRecorderFilter == nullptr).
 	void				SetValidating(bool inValidating)							{ mIsValidating = inValidating; }
 	bool				IsValidating() const										{ return mIsValidating; }
 
