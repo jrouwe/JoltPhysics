@@ -277,9 +277,8 @@ void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 			uint32 set;
 			Vec3 v1_minus_position = v1 - v.mPosition;
 			Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(v1_minus_position, v2 - v.mPosition, v3 - v.mPosition, set);
-			float closest_point_length = closest_point.Length();
 
-			if (set == 0b111 || closest_point_length == 0.0f)
+			if (set == 0b111)
 			{
 				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 10cm penetration
 				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
@@ -293,9 +292,10 @@ void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 					v.mCollidingShapeIndex = inCollidingShapeIndex;
 				}
 			}
-			else
+			else if (closest_point.Dot(triangle_normal) < 0.0f) // Ignore back facing edges
 			{
 				// Closest point is on an edge or vertex, use closest point as collision plane
+				float closest_point_length = closest_point.Length();
 				float penetration = -closest_point_length;
 				if (penetration > v.mLargestPenetration)
 				{
