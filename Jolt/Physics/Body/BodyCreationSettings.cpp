@@ -97,7 +97,7 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	mMassPropertiesOverride.RestoreBinaryState(inStream);
 }
 
-Shape::ShapeResult BodyCreationSettings::ConvertShapeSettings() 
+Shape::ShapeResult BodyCreationSettings::ConvertShapeSettings()
 {
 	// If we already have a shape, return it
 	if (mShapePtr != nullptr)
@@ -125,8 +125,8 @@ Shape::ShapeResult BodyCreationSettings::ConvertShapeSettings()
 	return result;
 }
 
-const Shape *BodyCreationSettings::GetShape() const												
-{ 
+const Shape *BodyCreationSettings::GetShape() const
+{
 	// If we already have a shape, return it
 	if (mShapePtr != nullptr)
 		return mShapePtr;
@@ -142,7 +142,7 @@ const Shape *BodyCreationSettings::GetShape() const
 
 	Trace("Error: %s", result.GetError().c_str());
 	JPH_ASSERT(false, "An error occurred during shape creation. Use ConvertShapeSettings() to convert the shape and get the error!");
-	return nullptr;		
+	return nullptr;
 }
 
 MassProperties BodyCreationSettings::GetMassProperties() const
@@ -181,7 +181,7 @@ void BodyCreationSettings::SaveWithChildren(StreamOut &inStream, ShapeToIDMap *i
 		inStream.Write(~uint32(0));
 
 	// Save group filter
-	mCollisionGroup.SaveWithGroupFilter(inStream, ioGroupFilterMap);
+	GroupFilter::sSaveGroupFilter(inStream, mCollisionGroup.GetGroupFilter(), ioGroupFilterMap);
 }
 
 BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap &ioShapeMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap)
@@ -207,13 +207,13 @@ BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(Strea
 	settings.SetShape(shape_result.Get());
 
 	// Read group filter
-	CollisionGroup::CGResult cgresult = CollisionGroup::sRestoreWithGroupFilter(inStream, ioGroupFilterMap);
-	if (cgresult.HasError())
+	GroupFilter::GroupFilterResult gfresult = GroupFilter::sRestoreGroupFilter(inStream, ioGroupFilterMap);
+	if (gfresult.HasError())
 	{
-		result.SetError(cgresult.GetError());
+		result.SetError(gfresult.GetError());
 		return result;
 	}
-	settings.mCollisionGroup = cgresult.Get();
+	settings.mCollisionGroup.SetGroupFilter(gfresult.Get());
 
 	result.Set(settings);
 	return result;

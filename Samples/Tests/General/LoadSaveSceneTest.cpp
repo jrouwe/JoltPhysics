@@ -28,9 +28,9 @@
 #include <Utils/Log.h>
 #include <Utils/SoftBodyCreator.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveSceneTest) 
-{ 
-	JPH_ADD_BASE_CLASS(LoadSaveSceneTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveSceneTest)
+{
+	JPH_ADD_BASE_CLASS(LoadSaveSceneTest, Test)
 }
 
 static const float cMaxHeight = 4.0f;

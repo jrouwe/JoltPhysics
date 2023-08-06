@@ -6,7 +6,6 @@
 
 #include <Jolt/Physics/Collision/GroupFilter.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
-#include <Jolt/Core/UnorderedMap.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -77,7 +76,7 @@ public:
 		else if (inOther.mGroupFilter != nullptr)
 			return inOther.mGroupFilter->CanCollide(inOther, *this);
 		else
-			return true;		
+			return true;
 	}
 
 	/// Saves the state of this object in binary form to inStream. Does not save group filter.
@@ -85,18 +84,6 @@ public:
 
 	/// Restore the state of this object from inStream. Does not save group filter.
 	void					RestoreBinaryState(StreamIn &inStream);
-
-	using GroupFilterToIDMap = UnorderedMap<const GroupFilter *, uint32>;
-	using IDToGroupFilterMap = Array<RefConst<GroupFilter>>;
-
-	/// Save this collision group and group filter. Pass in an empty map in ioGroupFilterMap or reuse the same map while saving multiple filters to the same stream in order to avoid writing duplicates.
-	/// Pass nullptr to ioGroupFilterMap to skip saving group filters
-	void					SaveWithGroupFilter(StreamOut &inStream, GroupFilterToIDMap *ioGroupFilterMap) const;
-
-	using CGResult = Result<CollisionGroup>;
-
-	/// Restore a collision group and group filter. Pass in an empty map in ioGroupFilterMap or reuse the same map while reading multiple filters from the same stream in order to restore duplicates.
-	static CGResult			sRestoreWithGroupFilter(StreamIn &inStream, IDToGroupFilterMap &ioGroupFilterMap);
 
 private:
 	RefConst<GroupFilter>	mGroupFilter;

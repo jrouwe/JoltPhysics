@@ -367,7 +367,7 @@ SoftBodyCreationSettings Body::GetSoftBodyCreationSettings() const
 	result.mCollisionGroup = GetCollisionGroup();
 	result.mFriction = GetFriction();
 	result.mRestitution = GetRestitution();
-	SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(mMotionProperties);
+	const SoftBodyMotionProperties *mp = static_cast<const SoftBodyMotionProperties *>(mMotionProperties);
 	result.mNumIterations = mp->GetNumIterations();
 	result.mLinearDamping = mp->GetLinearDamping();
 	result.mGravityFactor = mp->GetGravityFactor();

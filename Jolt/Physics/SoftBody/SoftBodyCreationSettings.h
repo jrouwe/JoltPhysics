@@ -28,8 +28,8 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the shared settings nor the group filter.
 	void				RestoreBinaryState(StreamIn &inStream);
 
-	using GroupFilterToIDMap = CollisionGroup::GroupFilterToIDMap;
-	using IDToGroupFilterMap = CollisionGroup::IDToGroupFilterMap;
+	using GroupFilterToIDMap = GroupFilter::GroupFilterToIDMap;
+	using IDToGroupFilterMap = GroupFilter::IDToGroupFilterMap;
 	using SharedSettingsToIDMap = SoftBodySharedSettings::SharedSettingsToIDMap;
 	using IDToSharedSettingsMap = SoftBodySharedSettings::IDToSharedSettingsMap;
 	using MaterialToIDMap = PhysicsMaterial::MaterialToIDMap;

@@ -72,7 +72,7 @@ void SoftBodyCreationSettings::SaveWithChildren(StreamOut &inStream, SharedSetti
 		inStream.Write(~uint32(0));
 
 	// Save group filter
-	mCollisionGroup.SaveWithGroupFilter(inStream, ioGroupFilterMap);
+	GroupFilter::sSaveGroupFilter(inStream, mCollisionGroup.GetGroupFilter(), ioGroupFilterMap);
 }
 
 SoftBodyCreationSettings::SBCSResult SoftBodyCreationSettings::sRestoreWithChildren(StreamIn &inStream, IDToSharedSettingsMap &ioSharedSettingsMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap)
@@ -98,13 +98,13 @@ SoftBodyCreationSettings::SBCSResult SoftBodyCreationSettings::sRestoreWithChild
 	settings.mSettings = settings_result.Get();
 
 	// Read group filter
-	CollisionGroup::CGResult cgresult = CollisionGroup::sRestoreWithGroupFilter(inStream, ioGroupFilterMap);
-	if (cgresult.HasError())
+	GroupFilter::GroupFilterResult gfresult = GroupFilter::sRestoreGroupFilter(inStream, ioGroupFilterMap);
+	if (gfresult.HasError())
 	{
-		result.SetError(cgresult.GetError());
+		result.SetError(gfresult.GetError());
 		return result;
 	}
-	settings.mCollisionGroup = cgresult.Get();
+	settings.mCollisionGroup.SetGroupFilter(gfresult.Get());
 
 	result.Set(settings);
 	return result;
