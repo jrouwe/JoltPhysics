@@ -59,21 +59,21 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the shape nor the group filter.
 	void					RestoreBinaryState(StreamIn &inStream);
 
-	using GroupFilterToIDMap = UnorderedMap<const GroupFilter *, uint32>;
-	using IDToGroupFilterMap = Array<RefConst<GroupFilter>>;
+	using GroupFilterToIDMap = CollisionGroup::GroupFilterToIDMap;
+	using IDToGroupFilterMap = CollisionGroup::IDToGroupFilterMap;
 	using ShapeToIDMap = Shape::ShapeToIDMap;
 	using IDToShapeMap = Shape::IDToShapeMap;
 	using MaterialToIDMap = Shape::MaterialToIDMap;
 	using IDToMaterialMap = Shape::IDToMaterialMap;
 
-	/// Save this body creation settings, its shape and gropu filter. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
+	/// Save body creation settings, its shape, materials and group filter. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	/// Pass nullptr to ioShapeMap and ioMaterial map to skip saving shapes
 	/// Pass nullptr to ioGroupFilterMap to skip saving group filters
 	void					SaveWithChildren(StreamOut &inStream, ShapeToIDMap *ioShapeMap, MaterialToIDMap *ioMaterialMap, GroupFilterToIDMap *ioGroupFilterMap) const;
 
 	using BCSResult = Result<BodyCreationSettings>;
 
-	/// Restore a shape, all its children and materials. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while reading multiple shapes from the same stream in order to restore duplicates.
+	/// Restore body creation settings, its shape, materials and group filter. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while reading multiple shapes from the same stream in order to restore duplicates.
 	static BCSResult		sRestoreWithChildren(StreamIn &inStream, IDToShapeMap &ioShapeMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap);
 
 	RVec3					mPosition = RVec3::sZero();										///< Position of the body (not of the center of mass)

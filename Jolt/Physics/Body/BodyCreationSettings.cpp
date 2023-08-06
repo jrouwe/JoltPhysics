@@ -181,31 +181,7 @@ void BodyCreationSettings::SaveWithChildren(StreamOut &inStream, ShapeToIDMap *i
 		inStream.Write(~uint32(0));
 
 	// Save group filter
-	const GroupFilter *group_filter = mCollisionGroup.GetGroupFilter();
-	if (ioGroupFilterMap == nullptr || group_filter == nullptr)
-	{
-		// Write null ID
-		inStream.Write(~uint32(0));
-	}
-	else
-	{
-		GroupFilterToIDMap::const_iterator group_filter_id = ioGroupFilterMap->find(group_filter);
-		if (group_filter_id != ioGroupFilterMap->end())
-		{
-			// Existing group filter, write ID
-			inStream.Write(group_filter_id->second);
-		}
-		else
-		{
-			// New group filter, write the ID
-			uint32 new_group_filter_id = (uint32)ioGroupFilterMap->size();
-			(*ioGroupFilterMap)[group_filter] = new_group_filter_id;
-			inStream.Write(new_group_filter_id);
-
-			// Write the group filter
-			group_filter->SaveBinaryState(inStream);
-		}
-	}
+	mCollisionGroup.SaveWithGroupFilter(inStream, ioGroupFilterMap);
 }
 
 BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap &ioShapeMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap)
@@ -231,34 +207,13 @@ BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(Strea
 	settings.SetShape(shape_result.Get());
 
 	// Read group filter
-	const GroupFilter *group_filter = nullptr;
-	uint32 group_filter_id = ~uint32(0);
-	inStream.Read(group_filter_id);
-	if (group_filter_id != ~uint32(0))
+	CollisionGroup::CGResult cgresult = CollisionGroup::sRestoreWithGroupFilter(inStream, ioGroupFilterMap);
+	if (cgresult.HasError())
 	{
-		// Check if it already exists
-		if (group_filter_id >= ioGroupFilterMap.size())
-		{
-			// New group filter, restore it
-			GroupFilter::GroupFilterResult group_filter_result = GroupFilter::sRestoreFromBinaryState(inStream);
-			if (group_filter_result.HasError())
-			{
-				result.SetError(group_filter_result.GetError());
-				return result;
-			}
-			group_filter = group_filter_result.Get();
-			JPH_ASSERT(group_filter_id == ioGroupFilterMap.size());
-			ioGroupFilterMap.push_back(group_filter);
-		}
-		else
-		{
-			// Existing group filter
-			group_filter = ioGroupFilterMap[group_filter_id];
-		}
+		result.SetError(cgresult.GetError());
+		return result;
 	}
-
-	// Set the group filter on the part
-	settings.mCollisionGroup.SetGroupFilter(group_filter);
+	settings.mCollisionGroup = cgresult.Get();
 
 	result.Set(settings);
 	return result;

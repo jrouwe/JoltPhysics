@@ -28,6 +28,23 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the shared settings nor the group filter.
 	void				RestoreBinaryState(StreamIn &inStream);
 
+	using GroupFilterToIDMap = CollisionGroup::GroupFilterToIDMap;
+	using IDToGroupFilterMap = CollisionGroup::IDToGroupFilterMap;
+	using SharedSettingsToIDMap = SoftBodySharedSettings::SharedSettingsToIDMap;
+	using IDToSharedSettingsMap = SoftBodySharedSettings::IDToSharedSettingsMap;
+	using MaterialToIDMap = PhysicsMaterial::MaterialToIDMap;
+	using IDToMaterialMap = PhysicsMaterial::IDToMaterialMap;
+
+	/// Save this body creation settings, its shared settings and group filter. Pass in an empty map in ioSharedSettingsMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
+	/// Pass nullptr to ioSharedSettingsMap and ioMaterial map to skip saving shared settings and materials
+	/// Pass nullptr to ioGroupFilterMap to skip saving group filters
+	void				SaveWithChildren(StreamOut &inStream, SharedSettingsToIDMap *ioSharedSettingsMap, MaterialToIDMap *ioMaterialMap, GroupFilterToIDMap *ioGroupFilterMap) const;
+
+	using SBCSResult = Result<SoftBodyCreationSettings>;
+
+	/// Restore a shape, all its children and materials. Pass in an empty map in ioSharedSettingsMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while reading multiple shapes from the same stream in order to restore duplicates.
+	static SBCSResult	sRestoreWithChildren(StreamIn &inStream, IDToSharedSettingsMap &ioSharedSettingsMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap);
+
 	RefConst<SoftBodySharedSettings> mSettings;				///< Defines the configuration of this soft body
 
 	RVec3				mPosition { RVec3::sZero() };		///< Initial position of the soft body

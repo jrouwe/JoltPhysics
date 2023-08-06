@@ -26,6 +26,7 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 #include <Utils/Log.h>
+#include <Utils/SoftBodyCreator.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveSceneTest) 
 { 
@@ -176,6 +177,21 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	DistanceConstraintSettings *dist_constraint = new DistanceConstraintSettings();
 	dist_constraint->mSpace = EConstraintSpace::LocalToBodyCOM;
 	scene->AddConstraint(dist_constraint, 3, 4);
+
+	// Add soft body cube
+	SoftBodyCreationSettings sb_cube(SoftBodyCreator::CreateCube(5, 0.2f), RVec3(0, cMaxHeight + 10.0f, 0));
+	sb_cube.mObjectLayer = Layers::MOVING;
+	scene->AddSoftBody(sb_cube);
+
+	// Add the same shape again to test sharing
+	sb_cube.mPosition = RVec3(0, cMaxHeight + 11.0f, 0);
+	scene->AddSoftBody(sb_cube);
+
+	// Add soft body sphere
+	SoftBodyCreationSettings sb_sphere(SoftBodyCreator::CreateSphere(0.5f), RVec3(0, cMaxHeight + 12.0f, 0));
+	sb_sphere.mObjectLayer = Layers::MOVING;
+	sb_sphere.mPressure = 2000.0f;
+	scene->AddSoftBody(sb_sphere);
 
 	return scene;
 }
