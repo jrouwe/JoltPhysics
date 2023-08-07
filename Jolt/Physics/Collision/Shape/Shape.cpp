@@ -130,7 +130,7 @@ void Shape::SaveWithChildren(StreamOut &inStream, ShapeToIDMap &ioShapeMap, Mate
 		// Write the materials
 		PhysicsMaterialList materials;
 		SaveMaterialState(materials);
-		StreamUtils::sSaveObjectArray(inStream, materials, &ioMaterialMap);
+		StreamUtils::SaveObjectArray(inStream, materials, &ioMaterialMap);
 	}
 	else
 	{
@@ -193,7 +193,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 	result.Get()->RestoreSubShapeState(sub_shapes.data(), (uint)sub_shapes.size());
 
 	// Read the materials
-	Result mlresult = StreamUtils::sRestoreObjectArray<PhysicsMaterialList>(inStream, ioMaterialMap);
+	Result mlresult = StreamUtils::RestoreObjectArray<PhysicsMaterialList>(inStream, ioMaterialMap);
 	if (mlresult.HasError())
 	{
 		result.SetError(mlresult.GetError());

@@ -21,7 +21,7 @@ using IDToObjectMap = Array<Ref<Type>>;
 
 /// Save an object reference to a stream. Uses a map to map objects to IDs which is also used to prevent writing duplicates.
 template <class Type>
-void				sSaveObjectReference(StreamOut &inStream, const Type *inObject, ObjectToIDMap<Type> *ioObjectToIDMap)
+void				SaveObjectReference(StreamOut &inStream, const Type *inObject, ObjectToIDMap<Type> *ioObjectToIDMap)
 {
 	// Save group filter
 	if (ioObjectToIDMap == nullptr || inObject == nullptr)
@@ -52,7 +52,7 @@ void				sSaveObjectReference(StreamOut &inStream, const Type *inObject, ObjectTo
 
 /// Restore an object reference from stream.
 template <class Type>
-Result<Ref<Type>>	sRestoreObjectReference(StreamIn &inStream, IDToObjectMap<Type> &ioIDToObjectMap)
+Result<Ref<Type>>	RestoreObjectReference(StreamIn &inStream, IDToObjectMap<Type> &ioIDToObjectMap)
 {
 	Result<Ref<Type>> result;
 
@@ -85,15 +85,15 @@ Result<Ref<Type>>	sRestoreObjectReference(StreamIn &inStream, IDToObjectMap<Type
 }
 
 template <class ArrayType, class ValueType>
-void				sSaveObjectArray(StreamOut &inStream, const ArrayType &inArray, ObjectToIDMap<ValueType> *ioObjectToIDMap)
+void				SaveObjectArray(StreamOut &inStream, const ArrayType &inArray, ObjectToIDMap<ValueType> *ioObjectToIDMap)
 {
 	inStream.Write((size_t)inArray.size());
 	for (const ValueType *value: inArray)
-		sSaveObjectReference(inStream, value, ioObjectToIDMap);
+		SaveObjectReference(inStream, value, ioObjectToIDMap);
 }
 
 template <class ArrayType, class ValueType>
-Result<ArrayType>	sRestoreObjectArray(StreamIn &inStream, IDToObjectMap<ValueType> &ioIDToObjectMap)
+Result<ArrayType>	RestoreObjectArray(StreamIn &inStream, IDToObjectMap<ValueType> &ioIDToObjectMap)
 {
 	Result<ArrayType> result;
 
@@ -109,7 +109,7 @@ Result<ArrayType>	sRestoreObjectArray(StreamIn &inStream, IDToObjectMap<ValueTyp
 	values.reserve(len);
 	for (size_t i = 0; i < len; ++i)
 	{
-		Result value = sRestoreObjectReference(inStream, ioIDToObjectMap);
+		Result value = RestoreObjectReference(inStream, ioIDToObjectMap);
 		if (value.HasError())
 		{
 			result.SetError(value.GetError());

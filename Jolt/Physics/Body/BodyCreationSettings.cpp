@@ -181,7 +181,7 @@ void BodyCreationSettings::SaveWithChildren(StreamOut &inStream, ShapeToIDMap *i
 		inStream.Write(~uint32(0));
 
 	// Save group filter
-	StreamUtils::sSaveObjectReference(inStream, mCollisionGroup.GetGroupFilter(), ioGroupFilterMap);
+	StreamUtils::SaveObjectReference(inStream, mCollisionGroup.GetGroupFilter(), ioGroupFilterMap);
 }
 
 BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap &ioShapeMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap)
@@ -207,7 +207,7 @@ BodyCreationSettings::BCSResult BodyCreationSettings::sRestoreWithChildren(Strea
 	settings.SetShape(shape_result.Get());
 
 	// Read group filter
-	Result gfresult = StreamUtils::sRestoreObjectReference(inStream, ioGroupFilterMap);
+	Result gfresult = StreamUtils::RestoreObjectReference(inStream, ioGroupFilterMap);
 	if (gfresult.HasError())
 	{
 		result.SetError(gfresult.GetError());

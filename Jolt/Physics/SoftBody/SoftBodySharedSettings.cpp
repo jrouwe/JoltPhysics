@@ -103,7 +103,7 @@ void SoftBodySharedSettings::SaveWithMaterials(StreamOut &inStream, SharedSettin
 		SaveBinaryState(inStream);
 
 		// Write materials
-		StreamUtils::sSaveObjectArray(inStream, mMaterials, &ioMaterialMap);
+		StreamUtils::SaveObjectArray(inStream, mMaterials, &ioMaterialMap);
 	}
 	else
 	{
@@ -146,7 +146,7 @@ SoftBodySharedSettings::SettingsResult SoftBodySharedSettings::sRestoreWithMater
 	settings->RestoreBinaryState(inStream);
 
 	// Read materials
-	Result mlresult = StreamUtils::sRestoreObjectArray<PhysicsMaterialList>(inStream, ioMaterialMap);
+	Result mlresult = StreamUtils::RestoreObjectArray<PhysicsMaterialList>(inStream, ioMaterialMap);
 	if (mlresult.HasError())
 	{
 		result.SetError(mlresult.GetError());
