@@ -938,6 +938,17 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 	JPH_DET_LOG("ProcessBodyPair: id1: " << inBodyPair.mBodyA << " id2: " << inBodyPair.mBodyB << " p1: " << body1->GetCenterOfMassPosition() << " p2: " << body2->GetCenterOfMassPosition() << " r1: " << body1->GetRotation() << " r2: " << body2->GetRotation());
 
+	// Check for soft bodies
+	if (body2->IsSoftBody())
+	{
+		// If the 2nd body is a soft body and not active, we activate it now
+		if (!body2->IsActive())
+			mBodyManager.ActivateBodies(&inBodyPair.mBodyB, 1);
+
+		// Soft body processing is done later in the pipeline
+		return;
+	}
+
 	// Ensure that body1 is dynamic, this ensures that we do the collision detection in the space of a moving body, which avoids accuracy problems when testing a very large static object against a small dynamic object
 	// Ensure that body1 id < body2 id for dynamic vs dynamic
 	// Keep body order unchanged when colliding with a sensor

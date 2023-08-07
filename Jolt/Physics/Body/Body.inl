@@ -41,10 +41,8 @@ inline static bool sIsValidSensorBodyPair(const Body &inSensor, const Body &inOt
 
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
 {
-	// Soft bodies collide later in the pipeline
+	// First body should never be a soft body
 	JPH_ASSERT(!inBody1.IsSoftBody());
-	if (inBody2.IsSoftBody())
-		return false;
 
 	// One of these conditions must be true
 	// - One of the bodies must be dynamic to collide
@@ -78,7 +76,7 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 	//     bodies during the Broad/NarrowPhase step), so to collide A.Index < B.Index.
 	// (5) As tie breaker we can use the same condition A.Index < B.Index to collide, this means that if A, B collides then B, A won't
 	static_assert(Body::cInactiveIndex == 0xffffffff, "The algorithm below uses this value");
-	if (body1_index_in_active_bodies >= inBody2.GetIndexInActiveBodiesInternal())
+	if (!inBody2.IsSoftBody() && body1_index_in_active_bodies >= inBody2.GetIndexInActiveBodiesInternal())
 		return false;
 	JPH_ASSERT(inBody1.GetID() != inBody2.GetID(), "Read the comment above, A and B are the same body which should not be possible!");
 
