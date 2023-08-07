@@ -66,7 +66,7 @@ void PathConstraintPath::DrawPath(DebugRenderer *inRenderer, RMat44Arg inBaseTra
 #endif // JPH_DEBUG_RENDERER
 
 void PathConstraintPath::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	inStream.Write(GetRTTI()->GetHash());
 	inStream.Write(mIsLooping);
 }
