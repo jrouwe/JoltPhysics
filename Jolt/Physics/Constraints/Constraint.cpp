@@ -7,9 +7,7 @@
 #include <Jolt/Physics/Constraints/Constraint.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
-#include <Jolt/Core/StreamIn.h>
-#include <Jolt/Core/StreamOut.h>
-#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/StreamUtils.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -47,36 +45,7 @@ void ConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 
 ConstraintSettings::ConstraintResult ConstraintSettings::sRestoreFromBinaryState(StreamIn &inStream)
 {
-	ConstraintResult result;
-
-	// Read the type of the constraint
-	uint32 hash;
-	inStream.Read(hash);
-	if (inStream.IsEOF() || inStream.IsFailed())
-	{
-		result.SetError("Failed to read type id");
-		return result;
-	}
-
-	// Get the RTTI for the shape
-	const RTTI *rtti = Factory::sInstance->Find(hash);
-	if (rtti == nullptr)
-	{
-		result.SetError("Failed to resolve type. Type not registered in factory?");
-		return result;
-	}
-
-	// Construct and read the data of the shape
-	Ref<ConstraintSettings> constraint = reinterpret_cast<ConstraintSettings *>(rtti->CreateObject());
-	constraint->RestoreBinaryState(inStream);
-	if (inStream.IsEOF() || inStream.IsFailed())
-	{
-		result.SetError("Failed to restore constraint");
-		return result;
-	}
-
-	result.Set(constraint);
-	return result;
+	return StreamUtils::RestoreObject<ConstraintSettings>(inStream, &RestoreBinaryState);
 }
 
 void Constraint::SaveState(StateRecorder &inStream) const
