@@ -86,7 +86,7 @@ TEST_SUITE("ContactListenerTests")
 			CHECK(remove.mType == EType::Remove);
 			CHECK(remove.mBody1 == floor.GetID()); // Lowest ID should be first
 			CHECK(remove.mBody2 == body.GetID()); // Highest ID should be second
-		}		
+		}
 	}
 
 	// Let a sphere fall on the floor with restition = 0, then give it horizontal velocity, then take it away from the floor
@@ -263,7 +263,7 @@ TEST_SUITE("ContactListenerTests")
 			CHECK(remove.mType == EType::Remove);
 			CHECK(remove.mBody1 == floor.GetID()); // Lowest ID first
 			CHECK(remove.mBody2 == body.GetID()); // Highest ID second
-		}		
+		}
 	}
 
 	TEST_CASE("TestWereBodiesInContact")
@@ -348,7 +348,7 @@ TEST_SUITE("ContactListenerTests")
 			// At that point it has to select one of the sub shapes for the contact and if that sub shape no longer collides we get a remove for this sub shape and then an add callback for the other sub shape.
 			CHECK(s->WereBodiesInContact(floor.GetID(), body.GetID()));
 			CHECK(s->WereBodiesInContact(body.GetID(), floor.GetID()));
-			CHECK(listener.GetAddCount() == 0); 
+			CHECK(listener.GetAddCount() == 0);
 			CHECK((listener.mRemoved == 0 || listener.mWasInContact));
 			listener.Reset();
 
@@ -390,7 +390,7 @@ TEST_SUITE("ContactListenerTests")
 					JPH_ASSERT(inBody1.GetID() == mFloor.GetID() || inBody2.GetID() == mBox.GetID());
 
 					// Calculate the relative surface velocity
-					ioSettings.mRelativeSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceLinearVelocity);
+					ioSettings.mRelativeLinearSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceLinearVelocity);
 					ioSettings.mRelativeAngularSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceAngularVelocity);
 				}
 

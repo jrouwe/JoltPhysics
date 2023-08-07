@@ -82,7 +82,7 @@ void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, 
 		Vec3 body2_linear_surface_velocity = body2_linear_belt? inBody2.GetRotation() * cLocalSpaceVelocity : Vec3::sZero();
 
 		// Calculate the relative surface velocity
-		ioSettings.mRelativeSurfaceVelocity = body2_linear_surface_velocity - body1_linear_surface_velocity;
+		ioSettings.mRelativeLinearSurfaceVelocity = body2_linear_surface_velocity - body1_linear_surface_velocity;
 	}
 
 	// Angular belt
@@ -99,7 +99,7 @@ void ConveyorBeltTest::OnContactAdded(const Body &inBody1, const Body &inBody2, 
 		Vec3 body2_linear_surface_velocity = body2_angular? body2_angular_surface_velocity.Cross(Vec3(inBody1.GetCenterOfMassPosition() - inBody2.GetCenterOfMassPosition())) : Vec3::sZero();
 
 		// Calculate the relative angular surface velocity
-		ioSettings.mRelativeSurfaceVelocity = body2_linear_surface_velocity;
+		ioSettings.mRelativeLinearSurfaceVelocity = body2_linear_surface_velocity;
 		ioSettings.mRelativeAngularSurfaceVelocity = body2_angular_surface_velocity - body1_angular_surface_velocity;
 	}
 }
