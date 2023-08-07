@@ -161,6 +161,7 @@ bool OSReadData(IObjectStreamIn &ioStream, Array<T> &inArray)
 	// Read array items
 	if (continue_reading) 
 	{
+		inArray.clear();
 		inArray.resize(array_length);
 		for (uint32 el = 0; el < array_length && continue_reading; ++el) 
 			continue_reading = OSReadData(ioStream, inArray[el]);
@@ -186,6 +187,7 @@ bool OSReadData(IObjectStreamIn &ioStream, StaticArray<T, N> &inArray)
 	// Read array items
 	if (continue_reading) 
 	{
+		inArray.clear();
 		inArray.resize(array_length);
 		for (uint32 el = 0; el < array_length && continue_reading; ++el) 
 			continue_reading = OSReadData(ioStream, inArray[el]);
