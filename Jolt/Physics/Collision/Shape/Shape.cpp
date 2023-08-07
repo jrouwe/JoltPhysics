@@ -199,7 +199,7 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 		result.SetError(mlresult.GetError());
 		return result;
 	}
-	PhysicsMaterialList materials = mlresult.Get();
+	const PhysicsMaterialList &materials = mlresult.Get();
 	result.Get()->RestoreMaterialState(materials.data(), (uint)materials.size());
 
 	return result;

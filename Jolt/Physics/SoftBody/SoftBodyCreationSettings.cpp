@@ -88,7 +88,7 @@ SoftBodyCreationSettings::SBCSResult SoftBodyCreationSettings::sRestoreWithChild
 		return result;
 	}
 
-	// Read shape
+	// Read shared settings
 	SoftBodySharedSettings::SettingsResult settings_result = SoftBodySharedSettings::sRestoreWithMaterials(inStream, ioSharedSettingsMap, ioMaterialMap);
 	if (settings_result.HasError())
 	{

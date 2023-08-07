@@ -143,7 +143,7 @@ public:
 	void				Set(const Type &inResult)					{ Clear(); ::new (&mResult) Type(inResult); mState = EState::Valid; }
 
 	/// Set the result value (move value)
-	void				Set(const Type &&inResult)					{ Clear(); ::new (&mResult) Type(std::move(inResult)); mState = EState::Valid; }
+	void				Set(Type &&inResult)						{ Clear(); ::new (&mResult) Type(std::move(inResult)); mState = EState::Valid; }
 
 	/// Check if we had an error
 	bool				HasError() const							{ return mState == EState::Error; }

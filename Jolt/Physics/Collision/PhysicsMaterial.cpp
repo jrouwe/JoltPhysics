@@ -140,10 +140,10 @@ PhysicsMaterial::MLResult PhysicsMaterial::sRestoreMaterialList(StreamIn &inStre
 			}
 		}
 
-		materials.push_back(material);
+		materials.push_back(std::move(material));
 	}
 
-	result.Set(materials);
+	result.Set(std::move(materials));
 	return result;
 }
 
