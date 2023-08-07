@@ -2393,7 +2393,7 @@ void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 
 	// Notify bodies to go to sleep
-	if (num_bodies_to_put_to_sleep)
+	if (num_bodies_to_put_to_sleep > 0)
 		mBodyManager.DeactivateBodies(bodies_to_put_to_sleep, num_bodies_to_put_to_sleep);
 }
 
