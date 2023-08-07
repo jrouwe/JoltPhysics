@@ -54,7 +54,7 @@ public:
 			break;
 		}
 
-		inRHS.mState = EState::Invalid;
+		// Don't reset the state of inRHS, the destructors still need to be called after a move operation
 	}
 
 	/// Destructor
@@ -105,7 +105,7 @@ public:
 			break;
 		}
 
-		inRHS.mState = EState::Invalid;
+		// Don't reset the state of inRHS, the destructors still need to be called after a move operation
 
 		return *this;
 	}
