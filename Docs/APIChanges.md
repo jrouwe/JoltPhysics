@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v3.0.1 and latest
 
+* 20230807 - Renamed ContactSettings::mRelativeSurfaceVelocity to mRelativeLinearSurfaceVelocity. (76b809ddb1abf96641acc587fffa70101323d323)
 * 20230807 - *SBS* - PhysicsScene is now able to load/save soft bodies. This changes the binary serialization format. (779ba3673beebdc4021842516f4ff6aa7c1e09b4)
 * 20230805 - Body::SaveState and MotionProperties::SaveState now only save the state that can be changed by the simulation. Configuration properties like friction, restitution etc. must be saved by the user if desired. (7ff50429abd53f1914fd25a9e80ff47f22bc9f0e)
 * 20230801 - *SBS* - Constraint priority was added to all constraints which changes the binary serialization format. (e341bb3e959460fbe196032095c1ab0346d7e746)
