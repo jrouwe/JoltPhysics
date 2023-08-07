@@ -130,34 +130,7 @@ void Shape::SaveWithChildren(StreamOut &inStream, ShapeToIDMap &ioShapeMap, Mate
 		// Write the materials
 		PhysicsMaterialList materials;
 		SaveMaterialState(materials);
-		inStream.Write(materials.size());
-		for (const PhysicsMaterial *mat : materials)
-		{
-			if (mat == nullptr)
-			{
-				// Write nullptr
-				inStream.Write(~uint32(0));
-			}
-			else
-			{
-				MaterialToIDMap::const_iterator material_id = ioMaterialMap.find(mat);
-				if (material_id == ioMaterialMap.end())
-				{
-					// New material, write the ID
-					uint32 new_material_id = (uint32)ioMaterialMap.size();
-					ioMaterialMap[mat] = new_material_id;
-					inStream.Write(new_material_id);
-
-					// Write the material
-					mat->SaveBinaryState(inStream);
-				}
-				else
-				{
-					// Known material, just write the ID
-					inStream.Write(material_id->second);
-				}
-			}
-		}
+		StreamUtils::SaveObjectArray(inStream, materials, &ioMaterialMap);
 	}
 	else
 	{
@@ -220,46 +193,13 @@ Shape::ShapeResult Shape::sRestoreWithChildren(StreamIn &inStream, IDToShapeMap 
 	result.Get()->RestoreSubShapeState(sub_shapes.data(), (uint)sub_shapes.size());
 
 	// Read the materials
-	inStream.Read(len);
-	if (inStream.IsEOF() || inStream.IsFailed())
+	Result mlresult = StreamUtils::RestoreObjectArray<PhysicsMaterialList>(inStream, ioMaterialMap);
+	if (mlresult.HasError())
 	{
-		result.SetError("Failed to read stream");
+		result.SetError(mlresult.GetError());
 		return result;
 	}
-	PhysicsMaterialList materials;
-	materials.reserve(len);
-	for (size_t i = 0; i < len; ++i)
-	{
-		Ref<PhysicsMaterial> material;
-
-		uint32 material_id;
-		inStream.Read(material_id);
-
-		// Check nullptr
-		if (material_id != ~uint32(0))
-		{
-			if (material_id >= ioMaterialMap.size())
-			{
-				// New material, restore material
-				PhysicsMaterial::PhysicsMaterialResult material_result = PhysicsMaterial::sRestoreFromBinaryState(inStream);
-				if (material_result.HasError())
-				{
-					result.SetError(material_result.GetError());
-					return result;
-				}
-				material = material_result.Get();
-				JPH_ASSERT(material_id == ioMaterialMap.size());
-				ioMaterialMap.push_back(material);
-			}
-			else
-			{
-				// Existing material
-				material = ioMaterialMap[material_id];
-			}
-		}
-
-		materials.push_back(material);
-	}
+	const PhysicsMaterialList &materials = mlresult.Get();
 	result.Get()->RestoreMaterialState(materials.data(), (uint)materials.size());
 
 	return result;

@@ -60,4 +60,54 @@ void SoftBodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mMakeRotationIdentity);
 }
 
+void SoftBodyCreationSettings::SaveWithChildren(StreamOut &inStream, SharedSettingsToIDMap *ioSharedSettingsMap, MaterialToIDMap *ioMaterialMap, GroupFilterToIDMap *ioGroupFilterMap) const
+{
+	// Save creation settings
+	SaveBinaryState(inStream);
+
+	// Save shared settings
+	if (ioSharedSettingsMap != nullptr && ioMaterialMap != nullptr)
+		mSettings->SaveWithMaterials(inStream, *ioSharedSettingsMap, *ioMaterialMap);
+	else
+		inStream.Write(~uint32(0));
+
+	// Save group filter
+	StreamUtils::SaveObjectReference(inStream, mCollisionGroup.GetGroupFilter(), ioGroupFilterMap);
+}
+
+SoftBodyCreationSettings::SBCSResult SoftBodyCreationSettings::sRestoreWithChildren(StreamIn &inStream, IDToSharedSettingsMap &ioSharedSettingsMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap)
+{
+	SBCSResult result;
+
+	// Read creation settings
+	SoftBodyCreationSettings settings;
+	settings.RestoreBinaryState(inStream);
+	if (inStream.IsEOF() || inStream.IsFailed())
+	{
+		result.SetError("Error reading body creation settings");
+		return result;
+	}
+
+	// Read shared settings
+	SoftBodySharedSettings::SettingsResult settings_result = SoftBodySharedSettings::sRestoreWithMaterials(inStream, ioSharedSettingsMap, ioMaterialMap);
+	if (settings_result.HasError())
+	{
+		result.SetError(settings_result.GetError());
+		return result;
+	}
+	settings.mSettings = settings_result.Get();
+
+	// Read group filter
+	Result gfresult = StreamUtils::RestoreObjectReference(inStream, ioGroupFilterMap);
+	if (gfresult.HasError())
+	{
+		result.SetError(gfresult.GetError());
+		return result;
+	}
+	settings.mCollisionGroup.SetGroupFilter(gfresult.Get());
+
+	result.Set(settings);
+	return result;
+}
+
 JPH_NAMESPACE_END

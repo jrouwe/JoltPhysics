@@ -15,6 +15,7 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Core/UnorderedSet.h>
+#include <Jolt/Core/StreamUtils.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
 
 JPH_NAMESPACE_BEGIN
@@ -371,10 +372,10 @@ public:
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
 	virtual void					RestoreSubShapeState([[maybe_unused]] const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
-	using ShapeToIDMap = UnorderedMap<const Shape *, uint32>;
-	using MaterialToIDMap = UnorderedMap<const PhysicsMaterial *, uint32>;
-	using IDToShapeMap = Array<Ref<Shape>>;
-	using IDToMaterialMap = Array<Ref<PhysicsMaterial>>;
+	using ShapeToIDMap = StreamUtils::ObjectToIDMap<Shape>;
+	using IDToShapeMap = StreamUtils::IDToObjectMap<Shape>;
+	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
+	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
 
 	/// Save this shape, all its children and its materials. Pass in an empty map in ioShapeMap / ioMaterialMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	void							SaveWithChildren(StreamOut &inStream, ShapeToIDMap &ioShapeMap, MaterialToIDMap &ioMaterialMap) const;

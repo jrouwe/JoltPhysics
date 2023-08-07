@@ -11,6 +11,7 @@
 #include <Jolt/Physics/Body/MotionQuality.h>
 #include <Jolt/Physics/Body/AllowedDOFs.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Core/StreamUtils.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -22,7 +23,7 @@ enum class EOverrideMassProperties : uint8
 {
 	CalculateMassAndInertia,			///< Tells the system to calculate the mass and inertia based on density
 	CalculateInertia,					///< Tells the system to take the mass from mMassPropertiesOverride and to calculate the inertia based on density of the shapes and to scale it to the provided mass
-	MassAndInertiaProvided				///< Tells the system to take the mass and inertia from mMassPropertiesOverride 
+	MassAndInertiaProvided				///< Tells the system to take the mass and inertia from mMassPropertiesOverride
 };
 
 /// Settings for constructing a rigid body
@@ -59,21 +60,21 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the shape nor the group filter.
 	void					RestoreBinaryState(StreamIn &inStream);
 
-	using GroupFilterToIDMap = UnorderedMap<const GroupFilter *, uint32>;
-	using IDToGroupFilterMap = Array<RefConst<GroupFilter>>;
+	using GroupFilterToIDMap = StreamUtils::ObjectToIDMap<GroupFilter>;
+	using IDToGroupFilterMap = StreamUtils::IDToObjectMap<GroupFilter>;
 	using ShapeToIDMap = Shape::ShapeToIDMap;
 	using IDToShapeMap = Shape::IDToShapeMap;
-	using MaterialToIDMap = Shape::MaterialToIDMap;
-	using IDToMaterialMap = Shape::IDToMaterialMap;
+	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
+	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
 
-	/// Save this body creation settings, its shape and gropu filter. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
+	/// Save body creation settings, its shape, materials and group filter. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	/// Pass nullptr to ioShapeMap and ioMaterial map to skip saving shapes
 	/// Pass nullptr to ioGroupFilterMap to skip saving group filters
 	void					SaveWithChildren(StreamOut &inStream, ShapeToIDMap *ioShapeMap, MaterialToIDMap *ioMaterialMap, GroupFilterToIDMap *ioGroupFilterMap) const;
 
 	using BCSResult = Result<BodyCreationSettings>;
 
-	/// Restore a shape, all its children and materials. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while reading multiple shapes from the same stream in order to restore duplicates.
+	/// Restore body creation settings, its shape, materials and group filter. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while reading multiple shapes from the same stream in order to restore duplicates.
 	static BCSResult		sRestoreWithChildren(StreamIn &inStream, IDToShapeMap &ioShapeMap, IDToMaterialMap &ioMaterialMap, IDToGroupFilterMap &ioGroupFilterMap);
 
 	RVec3					mPosition = RVec3::sZero();										///< Position of the body (not of the center of mass)

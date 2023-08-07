@@ -6,6 +6,7 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
+#include <Jolt/Core/StreamUtils.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -27,6 +28,19 @@ public:
 
 	/// Restore the state of this object from inStream. Doesn't restore the material list.
 	void				RestoreBinaryState(StreamIn &inStream);
+
+	using SharedSettingsToIDMap = StreamUtils::ObjectToIDMap<SoftBodySharedSettings>;
+	using IDToSharedSettingsMap = StreamUtils::IDToObjectMap<SoftBodySharedSettings>;
+	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
+	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
+
+	/// Save this shared settings and its materials. Pass in an empty map ioSettingsMap / ioMaterialMap or reuse the same map while saving multiple settings objects to the same stream in order to avoid writing duplicates.
+	void				SaveWithMaterials(StreamOut &inStream, SharedSettingsToIDMap &ioSettingsMap, MaterialToIDMap &ioMaterialMap) const;
+
+	using SettingsResult = Result<Ref<SoftBodySharedSettings>>;
+
+	/// Restore a shape and materials. Pass in an empty map in ioSettingsMap / ioMaterialMap or reuse the same map while reading multiple settings objects from the same stream in order to restore duplicates.
+	static SettingsResult sRestoreWithMaterials(StreamIn &inStream, IDToSharedSettingsMap &ioSettingsMap, IDToMaterialMap &ioMaterialMap);
 
 	/// A vertex is a particle, the data in this structure is only used during creation of the soft body and not during simulation
 	struct JPH_EXPORT Vertex

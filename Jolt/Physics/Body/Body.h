@@ -21,6 +21,7 @@ JPH_NAMESPACE_BEGIN
 
 class StateRecorder;
 class BodyCreationSettings;
+class SoftBodyCreationSettings;
 
 /// A rigid body that can be simulated using the physics system
 ///
@@ -243,6 +244,9 @@ public:
 
 	/// Debug function to convert a body back to a body creation settings object to be able to save/recreate the body later
 	BodyCreationSettings	GetBodyCreationSettings() const;
+
+	/// Debug function to convert a soft body back to a soft body creation settings object to be able to save/recreate the body later
+	SoftBodyCreationSettings GetSoftBodyCreationSettings() const;
 
 	/// A dummy body that can be used by constraints to attach a constraint to the world instead of another body
 	static Body				sFixedToWorld;

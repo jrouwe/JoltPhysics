@@ -5,9 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Constraints/PathConstraintPath.h>
-#include <Jolt/Core/StreamIn.h>
-#include <Jolt/Core/StreamOut.h>
-#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/StreamUtils.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -68,7 +66,7 @@ void PathConstraintPath::DrawPath(DebugRenderer *inRenderer, RMat44Arg inBaseTra
 #endif // JPH_DEBUG_RENDERER
 
 void PathConstraintPath::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	inStream.Write(GetRTTI()->GetHash());
 	inStream.Write(mIsLooping);
 }
@@ -81,36 +79,7 @@ void PathConstraintPath::RestoreBinaryState(StreamIn &inStream)
 
 PathConstraintPath::PathResult PathConstraintPath::sRestoreFromBinaryState(StreamIn &inStream)
 {
-	PathResult result;
-
-	// Read the type of the constraint
-	uint32 hash;
-	inStream.Read(hash);
-	if (inStream.IsEOF() || inStream.IsFailed())
-	{
-		result.SetError("Failed to read type id");
-		return result;
-	}
-
-	// Get the RTTI for the shape
-	const RTTI *rtti = Factory::sInstance->Find(hash);
-	if (rtti == nullptr)
-	{
-		result.SetError("Failed to resolve type. Type not registered in factory?");
-		return result;
-	}
-
-	// Construct and read the data of the shape
-	Ref<PathConstraintPath> path = reinterpret_cast<PathConstraintPath *>(rtti->CreateObject());
-	path->RestoreBinaryState(inStream);
-	if (inStream.IsEOF() || inStream.IsFailed())
-	{
-		result.SetError("Failed to restore constraint");
-		return result;
-	}
-
-	result.Set(path);
-	return result;
+	return StreamUtils::RestoreObject<PathConstraintPath>(inStream, &PathConstraintPath::RestoreBinaryState);
 }
 
 JPH_NAMESPACE_END

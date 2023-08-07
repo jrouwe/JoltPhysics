@@ -5,9 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Collision/GroupFilter.h>
-#include <Jolt/Core/StreamIn.h>
-#include <Jolt/Core/StreamOut.h>
-#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/StreamUtils.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -28,41 +26,7 @@ void GroupFilter::RestoreBinaryState(StreamIn &inStream)
 
 GroupFilter::GroupFilterResult GroupFilter::sRestoreFromBinaryState(StreamIn &inStream)
 {
-	GroupFilterResult result;
-
-	// Read the type of the group filter
-	uint32 hash;
-	inStream.Read(hash);
-	if (inStream.IsEOF() || inStream.IsFailed())
-	{
-		result.SetError("Failed to read type hash");
-		return result;
-	}
-
-	// Get the RTTI for the group filter
-	const RTTI *rtti = Factory::sInstance->Find(hash);
-	if (rtti == nullptr)
-	{
-		result.SetError("Failed to create instance of group filter");
-		return result;
-	}
-
-	// Construct and read the data of the group filter
-	Ref<GroupFilter> group_filter = reinterpret_cast<GroupFilter *>(rtti->CreateObject());
-	if (group_filter == nullptr)
-	{
-		result.SetError("Failed to create instance of group filter");
-		return result;
-	}
-	group_filter->RestoreBinaryState(inStream);
-	if (inStream.IsEOF() || inStream.IsFailed())
-	{
-		result.SetError("Failed to restore group filter");
-		return result;
-	}
-
-	result.Set(group_filter);
-	return result;
+	return StreamUtils::RestoreObject<GroupFilter>(inStream, &GroupFilter::RestoreBinaryState);
 }
 
 JPH_NAMESPACE_END

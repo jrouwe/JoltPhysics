@@ -6,6 +6,7 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
 #include <Jolt/Physics/Constraints/TwoBodyConstraint.h>
 
 JPH_NAMESPACE_BEGIN
@@ -29,6 +30,9 @@ public:
 	/// @param inBody1 Index in the bodies list of first body to attach constraint to
 	/// @param inBody2 Index in the bodies list of the second body to attach constraint to
 	void									AddConstraint(const TwoBodyConstraintSettings *inConstraint, uint32 inBody1, uint32 inBody2);
+
+	/// Add a soft body to the scene
+	void									AddSoftBody(const SoftBodyCreationSettings &inSoftBody);
 
 	/// Get number of bodies in this scene
 	size_t									GetNumBodies() const							{ return mBodies.size(); }
@@ -58,6 +62,13 @@ public:
 	const Array<ConnectedConstraint> &		GetConstraints() const							{ return mConstraints; }
 	Array<ConnectedConstraint> &			GetConstraints()								{ return mConstraints; }
 
+	/// Get number of bodies in this scene
+	size_t									GetNumSoftBodies() const						{ return mSoftBodies.size(); }
+
+	/// Access to the soft body settings for this scene
+	const Array<SoftBodyCreationSettings> &	GetSoftBodies() const							{ return mSoftBodies; }
+	Array<SoftBodyCreationSettings> &		GetSoftBodies()									{ return mSoftBodies; }
+
 	/// Instantiate all bodies, returns false if not all bodies could be created
 	bool									CreateBodies(PhysicsSystem *inSystem) const;
 
@@ -85,6 +96,9 @@ private:
 
 	/// Constraints that are part of this scene
 	Array<ConnectedConstraint>				mConstraints;
+
+	/// Soft bodies that are part of this scene
+	Array<SoftBodyCreationSettings>			mSoftBodies;
 };
 
 JPH_NAMESPACE_END

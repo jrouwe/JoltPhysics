@@ -89,4 +89,76 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mVolumeConstraints);
 }
 
+void SoftBodySharedSettings::SaveWithMaterials(StreamOut &inStream, SharedSettingsToIDMap &ioSettingsMap, MaterialToIDMap &ioMaterialMap) const
+{
+	SharedSettingsToIDMap::const_iterator settings_iter = ioSettingsMap.find(this);
+	if (settings_iter == ioSettingsMap.end())
+	{
+		// Write settings ID
+		uint32 settings_id = (uint32)ioSettingsMap.size();
+		ioSettingsMap[this] = settings_id;
+		inStream.Write(settings_id);
+
+		// Write the settings
+		SaveBinaryState(inStream);
+
+		// Write materials
+		StreamUtils::SaveObjectArray(inStream, mMaterials, &ioMaterialMap);
+	}
+	else
+	{
+		// Known settings, just write the ID
+		inStream.Write(settings_iter->second);
+	}
+}
+
+SoftBodySharedSettings::SettingsResult SoftBodySharedSettings::sRestoreWithMaterials(StreamIn &inStream, IDToSharedSettingsMap &ioSettingsMap, IDToMaterialMap &ioMaterialMap)
+{
+	SettingsResult result;
+
+	// Read settings id
+	uint32 settings_id;
+	inStream.Read(settings_id);
+	if (inStream.IsEOF() || inStream.IsFailed())
+	{
+		result.SetError("Failed to read settings id");
+		return result;
+	}
+
+	// Check nullptr settings
+	if (settings_id == ~uint32(0))
+	{
+		result.Set(nullptr);
+		return result;
+	}
+
+	// Check if we already read this settings
+	if (settings_id < ioSettingsMap.size())
+	{
+		result.Set(ioSettingsMap[settings_id]);
+		return result;
+	}
+
+	// Create new object
+	Ref<SoftBodySharedSettings> settings = new SoftBodySharedSettings;
+
+	// Read state
+	settings->RestoreBinaryState(inStream);
+
+	// Read materials
+	Result mlresult = StreamUtils::RestoreObjectArray<PhysicsMaterialList>(inStream, ioMaterialMap);
+	if (mlresult.HasError())
+	{
+		result.SetError(mlresult.GetError());
+		return result;
+	}
+	settings->mMaterials = mlresult.Get();
+
+	// Add the settings to the map
+	ioSettingsMap.push_back(settings);
+
+	result.Set(settings);
+	return result;
+}
+
 JPH_NAMESPACE_END
