@@ -29,8 +29,8 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the material list.
 	void				RestoreBinaryState(StreamIn &inStream);
 
-	using SharedSettingsToIDMap = UnorderedMap<const SoftBodySharedSettings *, uint32>;
-	using IDToSharedSettingsMap = Array<Ref<SoftBodySharedSettings>>;
+	using SharedSettingsToIDMap = StreamUtils::ObjectToIDMap<SoftBodySharedSettings>;
+	using IDToSharedSettingsMap = StreamUtils::IDToObjectMap<SoftBodySharedSettings>;
 	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
 	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
 

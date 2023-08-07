@@ -372,8 +372,8 @@ public:
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
 	virtual void					RestoreSubShapeState([[maybe_unused]] const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
-	using ShapeToIDMap = UnorderedMap<const Shape *, uint32>;
-	using IDToShapeMap = Array<Ref<Shape>>;
+	using ShapeToIDMap = StreamUtils::ObjectToIDMap<Shape>;
+	using IDToShapeMap = StreamUtils::IDToObjectMap<Shape>;
 	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
 	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
 
