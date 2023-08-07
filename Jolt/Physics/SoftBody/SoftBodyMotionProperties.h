@@ -31,7 +31,7 @@ public:
 	void								Initialize(const SoftBodyCreationSettings &inSettings);
 
 	/// Update the soft body
-	void								Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem);
+	ECanSleep							Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem);
 
 	/// Get the shared settings of the soft body
 	const SoftBodySharedSettings *		GetSettings() const							{ return mSettings; }

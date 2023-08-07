@@ -250,7 +250,7 @@ Body *BodyManager::AllocateSoftBody(const SoftBodyCreationSettings &inSoftBodyCr
 	body->mCollisionGroup = inSoftBodyCreationSettings.mCollisionGroup;
 	mp->SetLinearDamping(inSoftBodyCreationSettings.mLinearDamping);
 	mp->SetAngularDamping(0);
-	mp->SetMaxLinearVelocity(FLT_MAX);
+	mp->SetMaxLinearVelocity(inSoftBodyCreationSettings.mMaxLinearVelocity);
 	mp->SetMaxAngularVelocity(FLT_MAX);
 	mp->SetLinearVelocity(Vec3::sZero());
 	mp->SetAngularVelocity(Vec3::sZero());

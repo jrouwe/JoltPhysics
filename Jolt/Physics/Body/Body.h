@@ -279,7 +279,7 @@ public:
 	void					CalculateWorldSpaceBoundsInternal();
 
 	/// Function to update body's position (should only be called by the BodyInterface since it also requires updating the broadphase)
-	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation);
+	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTestSpheres = true);
 
 	/// Updates the center of mass and optionally mass propertes after shifting the center of mass or changes to the shape (should only be called by the BodyInterface since it also requires updating the broadphase)
 	/// @param inPreviousCenterOfMass Center of mass of the shape before the alterations
@@ -293,12 +293,6 @@ public:
 
 	/// Access to the index in the BodyManager::mActiveBodies list
 	uint32					GetIndexInActiveBodiesInternal() const							{ return mMotionProperties != nullptr? mMotionProperties->mIndexInActiveBodies : cInactiveIndex; }
-
-	enum class ECanSleep
-	{
-		CannotSleep = 0,																	///< Object cannot go to sleep
-		CanSleep = 1,																		///< Object can go to sleep
-	};
 
 	/// Update eligibility for sleeping
 	ECanSleep				UpdateSleepStateInternal(float inDeltaTime, float inMaxMovement, float inTimeBeforeSleep);

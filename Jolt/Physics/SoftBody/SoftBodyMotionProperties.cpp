@@ -91,7 +91,7 @@ float SoftBodyMotionProperties::GetVolumeTimesSix() const
 	return six_volume;
 }
 
-void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
+ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
 {
 	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
 	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
@@ -419,10 +419,20 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 		}
 
 	// Loop through vertices once more to update the global state
+	float max_linear_velocity_sq = Square(GetMaxLinearVelocity());
+	float max_v_sq = 0.0f;
 	Vec3 linear_velocity = Vec3::sZero(), angular_velocity = Vec3::sZero();
 	mLocalPredictedBounds = mLocalBounds = { };
 	for (Vertex &v : mVertices)
 	{
+		// Calculate max square velocity
+		float v_sq = v.mVelocity.LengthSq();
+		max_v_sq = max(max_v_sq, v_sq);
+
+		// Clamp if velocity is too high
+		if (v_sq > max_linear_velocity_sq)
+			v.mVelocity *= sqrt(max_linear_velocity_sq / v_sq);
+
 		// Calculate local linear/angular velocity
 		linear_velocity += v.mVelocity;
 		angular_velocity += v.mPosition.Cross(v.mVelocity);
@@ -463,6 +473,16 @@ void SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 
 	for (const CollidingShape &cs : collector.mHits)
 		if (cs.mUpdateVelocities)
 			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, body_transform.Multiply3x3(cs.mLinearVelocity), body_transform.Multiply3x3(cs.mAngularVelocity));
+
+	// Test if we should go to sleep
+	const PhysicsSettings &physics_settings = inSystem.GetPhysicsSettings();
+	if (max_v_sq > physics_settings.mPointVelocitySleepThreshold)
+	{
+		ResetSleepTestTimer();
+		return ECanSleep::CannotSleep;
+	}
+
+	return AccumulateSleepTime(inDeltaTime, physics_settings.mTimeBeforeSleep);
 }
 
 #ifdef JPH_DEBUG_RENDERER
