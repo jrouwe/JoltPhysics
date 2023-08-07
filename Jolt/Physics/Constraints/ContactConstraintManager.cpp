@@ -49,7 +49,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateF
 	JPH_DET_LOG("TemplatedCalculateFrictionAndNonPenetrationConstraintProperties: p1: " << inWorldSpacePosition1 << " p2: " << inWorldSpacePosition2
 		<< " normal: " << inWorldSpaceNormal << " tangent1: " << inWorldSpaceTangent1 << " tangent2: " << inWorldSpaceTangent2
 		<< " restitution: " << inSettings.mCombinedRestitution << " friction: " << inSettings.mCombinedFriction << " minv: " << inMinVelocityForRestitution
-		<< " surface_vel: " << inSettings.mRelativeSurfaceVelocity << " surface_ang: " << inSettings.mRelativeAngularSurfaceVelocity);
+		<< " surface_vel: " << inSettings.mRelativeLinearSurfaceVelocity << " surface_ang: " << inSettings.mRelativeAngularSurfaceVelocity);
 
 	// Calculate collision points relative to body
 	RVec3 p = 0.5_r * (inWorldSpacePosition1 + inWorldSpacePosition2);
@@ -110,7 +110,7 @@ JPH_INLINE void ContactConstraintManager::WorldContactPoint::TemplatedCalculateF
 	if (inSettings.mCombinedFriction > 0.0f)
 	{
 		// Get surface velocity relative to tangents
-		Vec3 ws_surface_velocity = inSettings.mRelativeSurfaceVelocity + inSettings.mRelativeAngularSurfaceVelocity.Cross(r1);
+		Vec3 ws_surface_velocity = inSettings.mRelativeLinearSurfaceVelocity + inSettings.mRelativeAngularSurfaceVelocity.Cross(r1);
 		float surface_velocity1 = inWorldSpaceTangent1.Dot(ws_surface_velocity);
 		float surface_velocity2 = inWorldSpaceTangent2.Dot(ws_surface_velocity);
 

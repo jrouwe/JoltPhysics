@@ -390,7 +390,7 @@ TEST_SUITE("ContactListenerTests")
 					JPH_ASSERT(inBody1.GetID() == mFloor.GetID() || inBody2.GetID() == mBox.GetID());
 
 					// Calculate the relative surface velocity
-					ioSettings.mRelativeSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceLinearVelocity);
+					ioSettings.mRelativeLinearSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceLinearVelocity);
 					ioSettings.mRelativeAngularSurfaceVelocity = -(inBody1.GetRotation() * mLocalSpaceAngularVelocity);
 				}
 
