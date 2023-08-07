@@ -115,4 +115,10 @@ void MotionProperties::ResetSleepTestSpheres(const RVec3 *inPoints)
 	mSleepTestTimer = 0.0f;
 }
 
+ECanSleep MotionProperties::AccumulateSleepTime(float inDeltaTime, float inTimeBeforeSleep)
+{
+	mSleepTestTimer += inDeltaTime;
+	return mSleepTestTimer >= inTimeBeforeSleep? ECanSleep::CanSleep : ECanSleep::CannotSleep;
+}
+
 JPH_NAMESPACE_END

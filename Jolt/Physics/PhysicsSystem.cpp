@@ -938,6 +938,17 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 	JPH_DET_LOG("ProcessBodyPair: id1: " << inBodyPair.mBodyA << " id2: " << inBodyPair.mBodyB << " p1: " << body1->GetCenterOfMassPosition() << " p2: " << body2->GetCenterOfMassPosition() << " r1: " << body1->GetRotation() << " r2: " << body2->GetRotation());
 
+	// Check for soft bodies
+	if (body2->IsSoftBody())
+	{
+		// If the 2nd body is a soft body and not active, we activate it now
+		if (!body2->IsActive())
+			mBodyManager.ActivateBodies(&inBodyPair.mBodyB, 1);
+
+		// Soft body processing is done later in the pipeline
+		return;
+	}
+
 	// Ensure that body1 is dynamic, this ensures that we do the collision detection in the space of a moving body, which avoids accuracy problems when testing a very large static object against a small dynamic object
 	// Ensure that body1 id < body2 id for dynamic vs dynamic
 	// Keep body order unchanged when colliding with a sensor
@@ -2163,8 +2174,8 @@ void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const Physic
 	{
 		JPH_PROFILE("Check Sleeping");
 
-		static_assert(int(Body::ECanSleep::CannotSleep) == 0 && int(Body::ECanSleep::CanSleep) == 1, "Loop below makes this assumption");
-		int all_can_sleep = mPhysicsSettings.mAllowSleeping? int(Body::ECanSleep::CanSleep) : int(Body::ECanSleep::CannotSleep);
+		static_assert(int(ECanSleep::CannotSleep) == 0 && int(ECanSleep::CanSleep) == 1, "Loop below makes this assumption");
+		int all_can_sleep = mPhysicsSettings.mAllowSleeping? int(ECanSleep::CanSleep) : int(ECanSleep::CannotSleep);
 
 		float time_before_sleep = mPhysicsSettings.mTimeBeforeSleep;
 		float max_movement = mPhysicsSettings.mPointVelocitySleepThreshold * time_before_sleep;
@@ -2186,7 +2197,7 @@ void PhysicsSystem::CheckSleepAndUpdateBounds(uint32 inIslandIndex, const Physic
 		}
 
 		// If all bodies indicate they can sleep we can deactivate them
-		if (all_can_sleep == int(Body::ECanSleep::CanSleep))
+		if (all_can_sleep == int(ECanSleep::CanSleep))
 			ioBodiesToSleep.PutToSleep(bodies_begin, bodies_end);
 	}
 	else
@@ -2335,38 +2346,55 @@ void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
 
 #ifdef JPH_ENABLE_ASSERTS
 	// Can activate bodies only
-	BodyManager::GrantActiveBodiesAccess grant_active(true, false);
+	BodyManager::GrantActiveBodiesAccess grant_active(true, true);
 #endif
 
 	static constexpr int cBodiesBatch = 64;
 	BodyID *bodies_to_update_bounds = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
 	int num_bodies_to_update_bounds = 0;
+	BodyID *bodies_to_put_to_sleep = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
+	int num_bodies_to_put_to_sleep = 0;
 
 	// Loop through active bodies
-	const BodyID *active_bodies = mBodyManager.GetActiveBodiesUnsafe(EBodyType::SoftBody);
-	const BodyID *active_bodies_end = active_bodies + mBodyManager.GetNumActiveBodies(EBodyType::SoftBody);
-	for (const BodyID *b = active_bodies; b < active_bodies_end; ++b)
+	BodyIDVector active_bodies;
+	mBodyManager.GetActiveBodies(EBodyType::SoftBody, active_bodies);
+	for (BodyID b : active_bodies)
 	{
-		Body &body = mBodyManager.GetBody(*b);
+		Body &body = mBodyManager.GetBody(b);
 		SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
 
 		// Update the soft body
 		Vec3 delta_position;
-		mp->Update(ioContext->mStepDeltaTime, body, delta_position, *this);
-		body.SetPositionAndRotationInternal(body.GetPosition() + delta_position, body.GetRotation());
+		ECanSleep can_sleep = mp->Update(ioContext->mStepDeltaTime, body, delta_position, *this);
+		body.SetPositionAndRotationInternal(body.GetPosition() + delta_position, body.GetRotation(), false);
 
-		bodies_to_update_bounds[num_bodies_to_update_bounds++] = *b;
+		bodies_to_update_bounds[num_bodies_to_update_bounds++] = b;
 		if (num_bodies_to_update_bounds == cBodiesBatch)
 		{
 			// Buffer full, flush now
 			mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
 			num_bodies_to_update_bounds = 0;
 		}
+
+		if (can_sleep == ECanSleep::CanSleep)
+		{
+			// This body should go to sleep
+			bodies_to_put_to_sleep[num_bodies_to_put_to_sleep++] = b;
+			if (num_bodies_to_put_to_sleep == cBodiesBatch)
+			{
+				mBodyManager.DeactivateBodies(bodies_to_put_to_sleep, num_bodies_to_put_to_sleep);
+				num_bodies_to_put_to_sleep = 0;
+			}
+		}
 	}
 
 	// Notify change bounds on requested bodies
 	if (num_bodies_to_update_bounds > 0)
 		mBroadPhase->NotifyBodiesAABBChanged(bodies_to_update_bounds, num_bodies_to_update_bounds, false);
+
+	// Notify bodies to go to sleep
+	if (num_bodies_to_put_to_sleep > 0)
+		mBodyManager.DeactivateBodies(bodies_to_put_to_sleep, num_bodies_to_put_to_sleep);
 }
 
 void PhysicsSystem::SaveState(StateRecorder &inStream, EStateRecorderState inState, const StateRecorderFilter *inFilter) const

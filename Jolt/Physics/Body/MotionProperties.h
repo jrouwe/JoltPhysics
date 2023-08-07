@@ -17,6 +17,13 @@ JPH_NAMESPACE_BEGIN
 
 class StateRecorder;
 
+/// Enum that determines if an object can go to sleep
+enum class ECanSleep
+{
+	CannotSleep = 0,																		///< Object cannot go to sleep
+	CanSleep = 1,																			///< Object can go to sleep
+};
+
 /// The Body class only keeps track of state for static bodies, the MotionProperties class keeps the additional state needed for a moving Body. It has a 1-on-1 relationship with the body.
 class JPH_EXPORT MotionProperties
 {
@@ -166,6 +173,12 @@ public:
 
 	/// Reset spheres to center around inPoints with radius 0
 	inline void				ResetSleepTestSpheres(const RVec3 *inPoints);
+
+	/// Reset the sleep test timer without resetting the sleep test spheres
+	inline void				ResetSleepTestTimer()											{ mSleepTestTimer = 0.0f; }
+
+	/// Accumulate sleep time and return if a body can go to sleep
+	inline ECanSleep		AccumulateSleepTime(float inDeltaTime, float inTimeBeforeSleep);
 
 	/// Saving state for replay
 	void					SaveState(StateRecorder &inStream) const;
