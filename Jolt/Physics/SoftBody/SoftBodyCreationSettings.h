@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/CollisionGroup.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Core/StreamUtils.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -28,12 +29,12 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the shared settings nor the group filter.
 	void				RestoreBinaryState(StreamIn &inStream);
 
-	using GroupFilterToIDMap = GroupFilter::GroupFilterToIDMap;
-	using IDToGroupFilterMap = GroupFilter::IDToGroupFilterMap;
+	using GroupFilterToIDMap = StreamUtils::ObjectToIDMap<GroupFilter>;
+	using IDToGroupFilterMap = StreamUtils::IDToObjectMap<GroupFilter>;
 	using SharedSettingsToIDMap = SoftBodySharedSettings::SharedSettingsToIDMap;
 	using IDToSharedSettingsMap = SoftBodySharedSettings::IDToSharedSettingsMap;
-	using MaterialToIDMap = PhysicsMaterial::MaterialToIDMap;
-	using IDToMaterialMap = PhysicsMaterial::IDToMaterialMap;
+	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
+	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
 
 	/// Save this body creation settings, its shared settings and group filter. Pass in an empty map in ioSharedSettingsMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	/// Pass nullptr to ioSharedSettingsMap and ioMaterial map to skip saving shared settings and materials

@@ -11,6 +11,7 @@
 #include <Jolt/Physics/Body/MotionQuality.h>
 #include <Jolt/Physics/Body/AllowedDOFs.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
+#include <Jolt/Core/StreamUtils.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -59,12 +60,12 @@ public:
 	/// Restore the state of this object from inStream. Doesn't restore the shape nor the group filter.
 	void					RestoreBinaryState(StreamIn &inStream);
 
-	using GroupFilterToIDMap = GroupFilter::GroupFilterToIDMap;
-	using IDToGroupFilterMap = GroupFilter::IDToGroupFilterMap;
+	using GroupFilterToIDMap = StreamUtils::ObjectToIDMap<GroupFilter>;
+	using IDToGroupFilterMap = StreamUtils::IDToObjectMap<GroupFilter>;
 	using ShapeToIDMap = Shape::ShapeToIDMap;
 	using IDToShapeMap = Shape::IDToShapeMap;
-	using MaterialToIDMap = Shape::MaterialToIDMap;
-	using IDToMaterialMap = Shape::IDToMaterialMap;
+	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
+	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
 
 	/// Save body creation settings, its shape, materials and group filter. Pass in an empty map in ioShapeMap / ioMaterialMap / ioGroupFilterMap or reuse the same map while saving multiple shapes to the same stream in order to avoid writing duplicates.
 	/// Pass nullptr to ioShapeMap and ioMaterial map to skip saving shapes

@@ -6,7 +6,7 @@
 
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
-#include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/StreamUtils.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -31,8 +31,8 @@ public:
 
 	using SharedSettingsToIDMap = UnorderedMap<const SoftBodySharedSettings *, uint32>;
 	using IDToSharedSettingsMap = Array<Ref<SoftBodySharedSettings>>;
-	using MaterialToIDMap = PhysicsMaterial::MaterialToIDMap;
-	using IDToMaterialMap = PhysicsMaterial::IDToMaterialMap;
+	using MaterialToIDMap = StreamUtils::ObjectToIDMap<PhysicsMaterial>;
+	using IDToMaterialMap = StreamUtils::IDToObjectMap<PhysicsMaterial>;
 
 	/// Save this shared settings and its materials. Pass in an empty map ioSettingsMap / ioMaterialMap or reuse the same map while saving multiple settings objects to the same stream in order to avoid writing duplicates.
 	void				SaveWithMaterials(StreamOut &inStream, SharedSettingsToIDMap &ioSettingsMap, MaterialToIDMap &ioMaterialMap) const;

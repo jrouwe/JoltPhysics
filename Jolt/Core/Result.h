@@ -16,7 +16,7 @@ class Result
 public:
 	/// Default constructor
 						Result()									{ }
-						
+
 	/// Copy constructor
 						Result(const Result<Type> &inRHS) :
 		mState(inRHS.mState)
@@ -112,12 +112,12 @@ public:
 
 	/// Clear result or error
 	void				Clear()
-	{ 
-		switch (mState) 
-		{ 
-		case EState::Valid: 
-			mResult.~Type(); 
-			break; 
+	{
+		switch (mState)
+		{
+		case EState::Valid:
+			mResult.~Type();
+			break;
 
 		case EState::Error:
 			mError.~String();
