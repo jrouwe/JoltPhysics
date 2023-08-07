@@ -5,6 +5,8 @@
 #pragma once
 
 #include <Jolt/Core/Result.h>
+#include <Jolt/Core/StreamIn.h>
+#include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/UnorderedMap.h>
 
 JPH_NAMESPACE_BEGIN
@@ -29,7 +31,7 @@ void				sSaveObjectReference(StreamOut &inStream, const Type *inObject, ObjectTo
 	}
 	else
 	{
-		ObjectToIDMap<Type>::const_iterator id = ioObjectToIDMap->find(inObject);
+		typename ObjectToIDMap<Type>::const_iterator id = ioObjectToIDMap->find(inObject);
 		if (id != ioObjectToIDMap->end())
 		{
 			// Existing group filter, write ID
