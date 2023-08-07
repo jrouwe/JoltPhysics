@@ -29,7 +29,7 @@ void PhysicsMaterial::RestoreBinaryState(StreamIn &inStream)
 
 PhysicsMaterial::PhysicsMaterialResult PhysicsMaterial::sRestoreFromBinaryState(StreamIn &inStream)
 {
-	return StreamUtils::RestoreObject<PhysicsMaterial>(inStream, &RestoreBinaryState);
+	return StreamUtils::RestoreObject<PhysicsMaterial>(inStream, &PhysicsMaterial::RestoreBinaryState);
 }
 
 JPH_NAMESPACE_END

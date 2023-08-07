@@ -79,7 +79,7 @@ void PathConstraintPath::RestoreBinaryState(StreamIn &inStream)
 
 PathConstraintPath::PathResult PathConstraintPath::sRestoreFromBinaryState(StreamIn &inStream)
 {
-	return StreamUtils::RestoreObject<PathConstraintPath>(inStream, &RestoreBinaryState);
+	return StreamUtils::RestoreObject<PathConstraintPath>(inStream, &PathConstraintPath::RestoreBinaryState);
 }
 
 JPH_NAMESPACE_END

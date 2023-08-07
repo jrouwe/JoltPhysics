@@ -45,7 +45,7 @@ void ConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 
 ConstraintSettings::ConstraintResult ConstraintSettings::sRestoreFromBinaryState(StreamIn &inStream)
 {
-	return StreamUtils::RestoreObject<ConstraintSettings>(inStream, &RestoreBinaryState);
+	return StreamUtils::RestoreObject<ConstraintSettings>(inStream, &ConstraintSettings::RestoreBinaryState);
 }
 
 void Constraint::SaveState(StateRecorder &inStream) const

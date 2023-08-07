@@ -26,7 +26,7 @@ void GroupFilter::RestoreBinaryState(StreamIn &inStream)
 
 GroupFilter::GroupFilterResult GroupFilter::sRestoreFromBinaryState(StreamIn &inStream)
 {
-	return StreamUtils::RestoreObject<GroupFilter>(inStream, &RestoreBinaryState);
+	return StreamUtils::RestoreObject<GroupFilter>(inStream, &GroupFilter::RestoreBinaryState);
 }
 
 JPH_NAMESPACE_END
