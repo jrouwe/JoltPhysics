@@ -46,7 +46,7 @@ public:
 	/// Create a height field shape of inSampleCount * inSampleCount vertices.
 	/// The height field is a surface defined by: inOffset + inScale * (x, inSamples[y * inSampleCount + x], y).
 	/// where x and y are integers in the range x and y e [0, inSampleCount - 1].
-	/// inSampleCount: inSampleCount / mBlockSize must be a power of 2 and minimally 2.
+	/// inSampleCount: inSampleCount / mBlockSize must be minimally 2 and a power of 2 is the most efficient in terms of performance and storage.
 	/// inSamples: inSampleCount^2 vertices.
 	/// inMaterialIndices: (inSampleCount - 1)^2 indices that index into inMaterialList.
 									HeightFieldShapeSettings(const float *inSamples, Vec3Arg inOffset, Vec3Arg inScale, uint32 inSampleCount, const uint8 *inMaterialIndices = nullptr, const PhysicsMaterialList &inMaterialList = PhysicsMaterialList());
