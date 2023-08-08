@@ -25,17 +25,20 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(HeightFieldShapeTest)
 static int sTerrainType = 0;
 
 static const char *sTerrainTypes[] = {
-	"Procedural Terrain",
+	"Procedural Terrain 2^N",
+	"Procedural Terrain 2^N + 1",
 	"Heightfield 1",
-	"Flat",
-	"No Collision"
+	"Flat 2^N",
+	"Flat 2^N + 1",
+	"No Collision 2^N",
+	"No Collision 2^N + 1"
 };
 
 void HeightFieldShapeTest::Initialize()
 {
-	if (sTerrainType == 0)
+	if (sTerrainType == 0 || sTerrainType == 1)
 	{
-		const int n = 128;
+		const int n = sTerrainType == 0? 128 : 129;
 		const float cell_size = 1.0f;
 		const float max_height = 5.0f;
 
@@ -81,7 +84,7 @@ void HeightFieldShapeTest::Initialize()
 		mTerrainOffset = Vec3(-0.5f * cell_size * n, -2.0f, -0.5f * cell_size * n);
 		mTerrainScale = Vec3(cell_size, 1.5f, cell_size);
 	}
-	else if (sTerrainType == 1)
+	else if (sTerrainType == 2)
 	{
 		const int n = 1024;
 		const float cell_size = 0.5f;
@@ -98,9 +101,9 @@ void HeightFieldShapeTest::Initialize()
 		mTerrainOffset = Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n);
 		mTerrainScale = Vec3(cell_size, 1.0f, cell_size);
 	}
-	else if (sTerrainType == 2)
+	else if (sTerrainType == 3 || sTerrainType == 4)
 	{
-		const int n = 128;
+		const int n = sTerrainType == 3? 128 : 129;
 		const float cell_size = 1.0f;
 		const float height = JPH_PI;
 
@@ -108,15 +111,15 @@ void HeightFieldShapeTest::Initialize()
 		mTerrainOffset = Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n);
 		mTerrainScale = Vec3(cell_size, 1.0f, cell_size);
 
-		// Mark the entire terrain as no collision
+		// Mark the entire terrain as single height
 		mTerrainSize = n;
 		mTerrain.resize(n * n);
 		for (float &v : mTerrain)
 			v = height;
 	}
-	else if (sTerrainType == 3)
+	else if (sTerrainType == 5 || sTerrainType == 6)
 	{
-		const int n = 128;
+		const int n = sTerrainType == 4? 128 : 129;
 		const float cell_size = 1.0f;
 
 		// Determine scale and offset
