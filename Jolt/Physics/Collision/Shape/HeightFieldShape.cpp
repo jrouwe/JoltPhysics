@@ -1027,7 +1027,7 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassT
 
 			JPH_INLINE int			VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 			{
-				UVec4 valid = UVec4::sAnd(UVec4::sAnd(Vec4::sLessOrEqual(inBoundsMinX, inBoundsMaxX), Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY)), Vec4::sLessOrEqual(inBoundsMinZ, inBoundsMaxZ));
+				UVec4 valid = Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY);
 				return CountAndSortTrues(valid, ioProperties);
 			}
 
