@@ -17,9 +17,9 @@
 #include <Utils/DebugRendererSP.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(HeightFieldShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(HeightFieldShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(HeightFieldShapeTest)
+{
+	JPH_ADD_BASE_CLASS(HeightFieldShapeTest, Test)
 }
 
 static int sTerrainType = 0;
@@ -88,7 +88,7 @@ void HeightFieldShapeTest::Initialize()
 	{
 		const int n = 1024;
 		const float cell_size = 0.5f;
-		
+
 		// Get height samples
 		Array<uint8> data = ReadData("Assets/heightfield1.bin");
 		if (data.size() != sizeof(float) * n * n)
@@ -247,21 +247,21 @@ void HeightFieldShapeTest::GetInitialCamera(CameraState &ioState) const
 
 void HeightFieldShapeTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Select Terrain", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Select Terrain", [this, inUI]() {
 		UIElement *terrain_name = inUI->CreateMenu();
 		for (uint i = 0; i < size(sTerrainTypes); ++i)
 			inUI->CreateTextButton(terrain_name, sTerrainTypes[i], [this, i]() { sTerrainType = i; RestartTest(); });
 		inUI->ShowMenu(terrain_name);
 	});
 
-	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI]() {
 		UIElement *terrain_settings = inUI->CreateMenu();
 		inUI->CreateComboBox(terrain_settings, "Block Size", { "2", "4", "8" }, sBlockSizeShift - 1, [=](int inItem) { sBlockSizeShift = inItem + 1; });
 		inUI->CreateSlider(terrain_settings, "Bits Per Sample", (float)sBitsPerSample, 1.0f, 8.0f, 1.0f, [=](float inValue) { sBitsPerSample = (int)inValue; });
 		inUI->CreateTextButton(terrain_settings, "Accept", [this]() { RestartTest(); });
 		inUI->ShowMenu(terrain_settings);
 	});
-	
+
 	inUI->CreateCheckBox(inSubMenu, "Show Original Terrain", sShowOriginalTerrain, [](UICheckBox::EState inState) { sShowOriginalTerrain = inState == UICheckBox::STATE_CHECKED; });
 }
 
