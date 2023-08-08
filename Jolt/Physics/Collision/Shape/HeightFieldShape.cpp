@@ -1589,6 +1589,9 @@ void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, co
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mBoxCenter, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
 
+			// Clear distance for invalid bounds
+			distance = Vec4::sSelect(Vec4::sReplicate(FLT_MAX), distance, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetPositiveEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
@@ -1654,6 +1657,9 @@ void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, co
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mStart, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
 
+			// Clear distance for invalid bounds
+			distance = Vec4::sSelect(Vec4::sReplicate(FLT_MAX), distance, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetPositiveEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
@@ -1715,6 +1721,10 @@ struct HeightFieldShape::HSGetTrianglesContext
 
 		// Test which nodes collide
 		UVec4 collides = AABox4VsBox(mLocalBox, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+		// Filter out invalid bounding boxes
+		collides = UVec4::sAnd(collides, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 		return CountAndSortTrues(collides, ioProperties);
 	}
 
@@ -1826,6 +1836,10 @@ void HeightFieldShape::sCollideConvexVsHeightField(const Shape *inShape1, const 
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsBox(mBoundsOf1InSpaceOf2, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Filter out invalid bounding boxes
+			collides = UVec4::sAnd(collides, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			return CountAndSortTrues(collides, ioProperties);
 		}
 
@@ -1882,6 +1896,10 @@ void HeightFieldShape::sCollideSphereVsHeightField(const Shape *inShape1, const 
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsSphere(mSphereCenterIn2, mRadiusPlusMaxSeparationSq, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Filter out invalid bounding boxes
+			collides = UVec4::sAnd(collides, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			return CountAndSortTrues(collides, ioProperties);
 		}
 
