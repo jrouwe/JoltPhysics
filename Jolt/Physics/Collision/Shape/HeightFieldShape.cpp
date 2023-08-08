@@ -270,21 +270,23 @@ void HeightFieldShape::CalculateActiveEdges()
 		}
 }
 
-void HeightFieldShape::StoreMaterialIndices(const Array<uint8> &inMaterialIndices)
+void HeightFieldShape::StoreMaterialIndices(const HeightFieldShapeSettings &inSettings)
 {
-	uint count_min_1 = mSampleCount - 1;
+	// We need to account for any rounding of the sample count to the nearest block size
+	uint in_count_min_1 = inSettings.mSampleCount - 1;
+	uint out_count_min_1 = mSampleCount - 1;
 
 	mNumBitsPerMaterialIndex = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
-	mMaterialIndices.resize(((Square(count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
+	mMaterialIndices.resize(((Square(out_count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
 
-	for (uint y = 0; y < count_min_1; ++y)
-		for (uint x = 0; x < count_min_1; ++x)
+	for (uint y = 0; y < out_count_min_1; ++y)
+		for (uint x = 0; x < out_count_min_1; ++x)
 		{
 			// Read material
-			uint sample_pos = x + y * count_min_1;
-			uint16 material_index = uint16(inMaterialIndices[sample_pos]);
+			uint16 material_index = x < in_count_min_1 && y < in_count_min_1? uint16(inSettings.mMaterialIndices[x + y * in_count_min_1]) : 0;
 
 			// Calculate byte and bit position where the material index needs to go
+			uint sample_pos = x + y * out_count_min_1;
 			uint bit_pos = sample_pos * mNumBitsPerMaterialIndex;
 			uint byte_pos = bit_pos >> 3;
 			bit_pos &= 0b111;
@@ -306,7 +308,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	Shape(EShapeType::HeightField, EShapeSubType::HeightField, inSettings, outResult),
 	mOffset(inSettings.mOffset),
 	mScale(inSettings.mScale),
-	mSampleCount(inSettings.mSampleCount),
+	mSampleCount(((inSettings.mSampleCount + inSettings.mBlockSize - 1) / inSettings.mBlockSize) * inSettings.mBlockSize), // Round sample count to nearest block size
 	mBlockSize(inSettings.mBlockSize),
 	mBitsPerSample(uint8(inSettings.mBitsPerSample)),
 	mMaterials(inSettings.mMaterials)
@@ -320,13 +322,6 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		return;
 	}
 
-	// Check sample count
-	if (mSampleCount % mBlockSize != 0)
-	{
-		outResult.SetError("HeightFieldShape: Sample count must be a multiple of block size!");
-		return;
-	}
-
 	// Check bits per sample
 	if (inSettings.mBitsPerSample < 1 || inSettings.mBitsPerSample > 8)
 	{
@@ -335,24 +330,17 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	}
 
 	// We stop at mBlockSize x mBlockSize height sample blocks
-	uint n = GetNumBlocks();
-
-	// Required to be power of two to allow creating a hierarchical grid
-	if (!IsPowerOf2(n))
-	{
-		outResult.SetError("HeightFieldShape: Sample count / block size must be power of 2!");
-		return;
-	}
+	uint num_blocks = GetNumBlocks();
 
 	// We want at least 1 grid layer
-	if (n < 2)
+	if (num_blocks < 2)
 	{
 		outResult.SetError("HeightFieldShape: Sample count too low!");
 		return;
 	}
 
 	// Check that we don't overflow our 32 bit 'properties'
-	if (n > (1 << cNumBitsXY))
+	if (num_blocks > (1 << cNumBitsXY))
 	{
 		outResult.SetError("HeightFieldShape: Sample count too high!");
 		return;
@@ -404,21 +392,34 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	// Quantize to uint16
 	Array<uint16> quantized_samples;
 	quantized_samples.reserve(mSampleCount * mSampleCount);
-	for (float h : inSettings.mHeightSamples)
-		if (h == cNoCollisionValue)
+	for (uint y = 0; y < inSettings.mSampleCount; ++y)
+	{
+		for (uint x = 0; x < inSettings.mSampleCount; ++x)
 		{
+			float h = inSettings.mHeightSamples[x + y * inSettings.mSampleCount];
+			if (h == cNoCollisionValue)
+			{
+				quantized_samples.push_back(cNoCollisionValue16);
+			}
+			else
+			{
+				// Floor the quantized height to get a lower bound for the quantized value
+				int quantized_height = (int)floor(scale * (h - min_value));
+
+				// Ensure that the height says below the max height value so we can safely add 1 to get the upper bound for the quantized value
+				quantized_height = Clamp(quantized_height, 0, int(cMaxHeightValue16 - 1));
+
+				quantized_samples.push_back(uint16(quantized_height));
+			}
+		}
+		// Pad remaining columns with no collision
+		for (uint x = inSettings.mSampleCount; x < mSampleCount; ++x)
 			quantized_samples.push_back(cNoCollisionValue16);
-		}
-		else
-		{
-			// Floor the quantized height to get a lower bound for the quantized value
-			int quantized_height = (int)floor(scale * (h - min_value));
-
-			// Ensure that the height says below the max height value so we can safely add 1 to get the upper bound for the quantized value
-			quantized_height = Clamp(quantized_height, 0, int(cMaxHeightValue16 - 1));
-
-			quantized_samples.push_back(uint16(quantized_height));
-		}
+	}
+	// Pad remaining rows with no collision
+	for (uint y = inSettings.mSampleCount; y < mSampleCount; ++y)
+		for (uint x = 0; x < mSampleCount; ++x)
+			quantized_samples.push_back(cNoCollisionValue16);
 
 	// Update offset and scale to account for the compression to uint16
 	if (min_value <= max_value) // Only when there was collision
@@ -432,7 +433,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	mScale.SetY(mScale.GetY() / scale);
 
 	// Calculate amount of grids
-	uint max_level = sGetMaxLevel(n);
+	uint max_level = sGetMaxLevel(num_blocks);
 
 	// Temporary data structure used during creating of a hierarchy of grids
 	struct Range
@@ -447,30 +448,36 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 
 	// Calculate highest detail grid by combining mBlockSize x mBlockSize height samples
 	Array<Range> *cur_range_vector = &ranges.back();
-	cur_range_vector->resize(n * n);
+	uint num_blocks_pow2 = GetNextPowerOf2(num_blocks); // We calculate the range blocks as if the heightfield was a power of 2, when we save the range blocks we'll ignore the extra samples (this makes downsampling easier)
+	cur_range_vector->resize(num_blocks_pow2 * num_blocks_pow2);
 	Range *range_dst = &cur_range_vector->front();
-	for (uint y = 0; y < n; ++y)
-		for (uint x = 0; x < n; ++x)
+	for (uint y = 0; y < num_blocks_pow2; ++y)
+		for (uint x = 0; x < num_blocks_pow2; ++x)
 		{
 			range_dst->mMin = 0xffff;
 			range_dst->mMax = 0;
-			uint max_bx = x == n - 1? mBlockSize : mBlockSize + 1; // for interior blocks take 1 more because the triangles connect to the next block so we must include their height too
-			uint max_by = y == n - 1? mBlockSize : mBlockSize + 1;
+			uint max_bx = x == num_blocks_pow2 - 1? mBlockSize : mBlockSize + 1; // for interior blocks take 1 more because the triangles connect to the next block so we must include their height too
+			uint max_by = y == num_blocks_pow2 - 1? mBlockSize : mBlockSize + 1;
 			for (uint by = 0; by < max_by; ++by)
 				for (uint bx = 0; bx < max_bx; ++bx)
 				{
-					uint16 h = quantized_samples[(y * mBlockSize + by) * mSampleCount + (x * mBlockSize + bx)];
-					if (h != cNoCollisionValue16)
+					uint sx = x * mBlockSize + bx;
+					uint sy = y * mBlockSize + by;
+					if (sx < mSampleCount && sy < mSampleCount)
 					{
-						range_dst->mMin = min(range_dst->mMin, h);
-						range_dst->mMax = max(range_dst->mMax, uint16(h + 1)); // Add 1 to the max so we know the real value is between mMin and mMax
+						uint16 h = quantized_samples[sy * mSampleCount + sx];
+						if (h != cNoCollisionValue16)
+						{
+							range_dst->mMin = min(range_dst->mMin, h);
+							range_dst->mMax = max(range_dst->mMax, uint16(h + 1)); // Add 1 to the max so we know the real value is between mMin and mMax
+						}
 					}
 				}
 			++range_dst;
 		}
 
 	// Calculate remaining grids
-	while (n > 1)
+	for (uint n = num_blocks_pow2 >> 1; n >= 1; n >>= 1)
 	{
 		// Get source buffer
 		const Range *range_src = &cur_range_vector->front();
@@ -479,7 +486,6 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		--cur_range_vector;
 
 		// Make space for this grid
-		n >>= 1;
 		cur_range_vector->resize(n * n);
 
 		// Get target buffer
@@ -523,22 +529,24 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	ranges.erase(ranges.begin());
 
 	// Create blocks
+	uint max_stride = (num_blocks + 1) >> 1;
 	mRangeBlocks.reserve(sGridOffsets[ranges.size()]);
 	for (uint level = 0; level < ranges.size(); ++level)
 	{
 		JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[level]);
 
-		n = 1 << level;
+		uint in_n = 1 << level;
+		uint out_n = min(in_n, max_stride); // At the most detailed level we store a non-power of 2 number of blocks
 
-		for (uint y = 0; y < n; ++y)
-			for (uint x = 0; x < n; ++x)
+		for (uint y = 0; y < out_n; ++y)
+			for (uint x = 0; x < out_n; ++x)
 			{
 				// Convert from 2x2 Range structure to 1 RangeBlock structure
 				RangeBlock rb;
 				for (uint by = 0; by < 2; ++by)
 					for (uint bx = 0; bx < 2; ++bx)
 					{
-						uint src_pos = (y * 2 + by) * n * 2 + (x * 2 + bx);
+						uint src_pos = (y * 2 + by) * 2 * in_n + (x * 2 + bx);
 						uint dst_pos = by * 2 + bx;
 						rb.mMin[dst_pos] = ranges[level][src_pos].mMin;
 						rb.mMax[dst_pos] = ranges[level][src_pos].mMax;
@@ -548,7 +556,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 				mRangeBlocks.push_back(rb);
 			}
 	}
-	JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[ranges.size()]);
+	JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[ranges.size() - 1] + Square(max_stride));
 
 	// Quantize height samples
 	mHeightSamples.resize((mSampleCount * mSampleCount * inSettings.mBitsPerSample + 7) / 8 + 1);
@@ -558,7 +566,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		{
 			uint32 output_value;
 
-			float h = inSettings.mHeightSamples[y * mSampleCount + x];
+			float h = x < inSettings.mSampleCount && y < inSettings.mSampleCount? inSettings.mHeightSamples[x + y * inSettings.mSampleCount] : cNoCollisionValue;
 			if (h == cNoCollisionValue)
 			{
 				// No collision
@@ -569,7 +577,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 				// Get range of block so we know what range to compress to
 				uint bx = x / mBlockSize;
 				uint by = y / mBlockSize;
-				const Range &range = ranges.back()[by * (mSampleCount / mBlockSize) + bx];
+				const Range &range = ranges.back()[by * num_blocks_pow2 + bx];
 				JPH_ASSERT(range.mMin < range.mMax);
 
 				// Quantize to mBitsPerSample bits, note that mSampleMask is reserved for indicating that there's no collision.
@@ -595,7 +603,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 
 	// Compress material indices
 	if (mMaterials.size() > 1)
-		StoreMaterialIndices(inSettings.mMaterialIndices);
+		StoreMaterialIndices(inSettings);
 
 	outResult.Set(this);
 }
@@ -603,7 +611,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 inline void HeightFieldShape::sGetRangeBlockOffsetAndStride(uint inNumBlocks, uint inMaxLevel, uint &outRangeBlockOffset, uint &outRangeBlockStride)
 {
 	outRangeBlockOffset = sGridOffsets[inMaxLevel - 1];
-	outRangeBlockStride = inNumBlocks >> 1;
+	outRangeBlockStride = (inNumBlocks + 1) >> 1;
 }
 
 inline void HeightFieldShape::GetBlockOffsetAndScale(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, float &outBlockOffset, float &outBlockScale) const
@@ -1019,7 +1027,7 @@ void HeightFieldShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassT
 
 			JPH_INLINE int			VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, [[maybe_unused]] int inStackTop) const
 			{
-				UVec4 valid = UVec4::sOr(UVec4::sOr(Vec4::sLess(inBoundsMinX, inBoundsMaxX), Vec4::sLess(inBoundsMinY, inBoundsMaxY)), Vec4::sLess(inBoundsMinZ, inBoundsMaxZ));
+				UVec4 valid = Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY);
 				return CountAndSortTrues(valid, ioProperties);
 			}
 
@@ -1083,6 +1091,7 @@ public:
 		uint num_blocks = mShape->GetNumBlocks();
 		uint num_blocks_min_1 = num_blocks - 1;
 		uint max_level = HeightFieldShape::sGetMaxLevel(num_blocks);
+		uint32 max_stride = (num_blocks + 1) >> 1;
 
 		// Precalculate range block offset and stride for GetBlockOffsetAndScale
 		uint range_block_offset, range_block_stride;
@@ -1332,7 +1341,8 @@ public:
 			else
 			{
 				// Visit child grid
-				uint32 offset = sGridOffsets[level] + (1 << level) * y + x;
+				uint32 stride = min(1U << level, max_stride); // At the most detailed level we store a non-power of 2 number of blocks
+				uint32 offset = sGridOffsets[level] + stride * y + x;
 
 				// Decode min/max height
 				UVec4 block = UVec4::sLoadInt4Aligned(reinterpret_cast<const uint32 *>(&mShape->mRangeBlocks[offset]));
@@ -1579,6 +1589,9 @@ void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, co
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mBoxCenter, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
 
+			// Clear distance for invalid bounds
+			distance = Vec4::sSelect(Vec4::sReplicate(FLT_MAX), distance, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetPositiveEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
@@ -1644,6 +1657,9 @@ void HeightFieldShape::sCastSphereVsHeightField(const ShapeCast &inShapeCast, co
 			// Test bounds of 4 children
 			Vec4 distance = RayAABox4(mStart, mInvDirection, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
 
+			// Clear distance for invalid bounds
+			distance = Vec4::sSelect(Vec4::sReplicate(FLT_MAX), distance, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
 			return SortReverseAndStore(distance, mCollector.GetPositiveEarlyOutFraction(), ioProperties, &mDistanceStack[inStackTop]);
 		}
@@ -1705,6 +1721,10 @@ struct HeightFieldShape::HSGetTrianglesContext
 
 		// Test which nodes collide
 		UVec4 collides = AABox4VsBox(mLocalBox, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+		// Filter out invalid bounding boxes
+		collides = UVec4::sAnd(collides, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 		return CountAndSortTrues(collides, ioProperties);
 	}
 
@@ -1816,6 +1836,10 @@ void HeightFieldShape::sCollideConvexVsHeightField(const Shape *inShape1, const 
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsBox(mBoundsOf1InSpaceOf2, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Filter out invalid bounding boxes
+			collides = UVec4::sAnd(collides, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			return CountAndSortTrues(collides, ioProperties);
 		}
 
@@ -1872,6 +1896,10 @@ void HeightFieldShape::sCollideSphereVsHeightField(const Shape *inShape1, const 
 
 			// Test which nodes collide
 			UVec4 collides = AABox4VsSphere(mSphereCenterIn2, mRadiusPlusMaxSeparationSq, bounds_min_x, bounds_min_y, bounds_min_z, bounds_max_x, bounds_max_y, bounds_max_z);
+
+			// Filter out invalid bounding boxes
+			collides = UVec4::sAnd(collides, Vec4::sLessOrEqual(inBoundsMinY, inBoundsMaxY));
+
 			return CountAndSortTrues(collides, ioProperties);
 		}
 
