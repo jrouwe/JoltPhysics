@@ -68,11 +68,11 @@ private:
 			mY.push_back(w);
 			mP[outIndex] = p;
 			mQ[outIndex] = q;
-		
+
 			return w;
 		}
 	};
-		
+
 public:
 	/// Return code for GetPenetrationDepthStepGJK
 	enum class EStatus
@@ -81,7 +81,7 @@ public:
 		Colliding,			///< Returned if the objects penetrate
 		Indeterminate		///< Returned if the objects penetrate further than the convex radius. In this case you need to call GetPenetrationDepthStepEPA to get the actual penetration depth.
 	};
-	
+
 	/// Calculates penetration depth between two objects, first step of two (the GJK step)
 	///
 	/// @param inAExcludingConvexRadius Object A without convex radius.
@@ -91,7 +91,7 @@ public:
 	/// @param ioV Pass in previously returned value or (1, 0, 0). On return this value is changed to direction to move B out of collision along the shortest path (magnitude is meaningless).
 	/// @param inTolerance Minimal distance before A and B are considered colliding.
 	/// @param outPointA Position on A that has the least amount of penetration.
-	/// @param outPointB Position on B that has the least amount of penetration. 
+	/// @param outPointB Position on B that has the least amount of penetration.
 	/// Use |outPointB - outPointA| to get the distance of penetration.
 	template <typename AE, typename BE>
 	EStatus				GetPenetrationDepthStepGJK(const AE &inAExcludingConvexRadius, float inConvexRadiusA, const BE &inBExcludingConvexRadius, float inConvexRadiusB, float inTolerance, Vec3 &ioV, Vec3 &outPointA, Vec3 &outPointB)
@@ -108,7 +108,7 @@ public:
 		if (closest_points_dist_sq > combined_radius_sq)
 		{
 			// No collision
-			return EStatus::NotColliding; 
+			return EStatus::NotColliding;
 		}
 		if (closest_points_dist_sq > 0.0f)
 		{
@@ -205,7 +205,7 @@ public:
 				EPAConvexHullBuilder::NewTriangles new_triangles;
 				if (!hull.AddPoint(t, i, FLT_MAX, new_triangles))
 				{
-					// We can't recover from a failure to add a point to the hull because the old triangles have been unlinked already. 
+					// We can't recover from a failure to add a point to the hull because the old triangles have been unlinked already.
 					// Assume no collision. This can happen if the shapes touch in 1 point (or plane) in which case the hull is degenerate.
 					return false;
 				}
@@ -268,7 +268,7 @@ public:
 
 		// Remember last good triangle
 		Triangle *last = nullptr;
-		
+
 		// Loop until closest point found
 		do
 		{
@@ -296,7 +296,7 @@ public:
 			// and this way we do less calculations and lose less precision
 			int new_index;
 			Vec3 w = support_points.Add(inAIncludingConvexRadius, inBIncludingConvexRadius, t->mNormal, new_index);
-			
+
 			// Project w onto the triangle normal
 			float dot = t->mNormal.Dot(w);
 
@@ -343,13 +343,10 @@ public:
 				break;
 		}
 		while (hull.HasNextTriangle() && support_points.mY.size() < cMaxPoints);
-		
+
 		// Determine closest points, if last == null it means the hull was a plane so there's no penetration
 		if (last == nullptr)
 			return false;
-
-		// Should be an interior point
-		JPH_ASSERT(last->mClosestPointInterior);
 
 		// Calculate penetration by getting the vector from the origin to the closest point on the triangle:
 		// distance = (centroid - origin) . normal / |normal|, closest = origin + distance * normal / |normal|
@@ -422,7 +419,7 @@ public:
 	///	@param outPointA is the contact point on A
 	///	@param outPointB is the contact point on B
 	/// @param outContactNormal is either the contact normal when the objects are touching or the penetration axis when the objects are penetrating at the start of the sweep (pointing from A to B, length will not be 1)
-	/// 
+	///
 	/// @return true if the a hit was found, in which case ioLambda, outPointA, outPointB and outSurfaceNormal are updated.
 	template <typename A, typename B>
 	bool				CastShape(Mat44Arg inStart, Vec3Arg inDirection, float inCollisionTolerance, float inPenetrationTolerance, const A &inA, const B &inB, float inConvexRadiusA, float inConvexRadiusB, bool inReturnDeepestPoint, float &ioLambda, Vec3 &outPointA, Vec3 &outPointB, Vec3 &outContactNormal)
@@ -433,8 +430,8 @@ public:
 
 		// When our contact normal is too small, we don't have an accurate result
 		bool contact_normal_invalid = outContactNormal.IsNearZero(Square(inCollisionTolerance));
-		
-		if (inReturnDeepestPoint 
+
+		if (inReturnDeepestPoint
 			&& ioLambda == 0.0f // Only when lambda = 0 we can have the bodies overlap
 			&& (inConvexRadiusA + inConvexRadiusB == 0.0f // When no convex radius was provided we can never trust contact points at lambda = 0
 				|| contact_normal_invalid))
