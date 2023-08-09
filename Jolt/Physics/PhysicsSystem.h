@@ -135,6 +135,18 @@ public:
 	void						SetGravity(Vec3Arg inGravity)								{ mGravity = inGravity; }
 	Vec3		 				GetGravity() const											{ return mGravity; }
 
+	/// Returns the raw BodyManager without locking it, use `GetBodyLockInterface` instead.
+	inline const BodyManager&	UnsafeGetBodyManager() const								{ return mBodyManager; }
+
+	/// Returns the raw BodyManager without locking it, use `GetBodyLockInterface` instead.
+	inline BodyManager&			UnsafeGetBodyManager()										{ return mBodyManager; }
+
+	/// Returns the raw BroadPhase.
+	inline const BroadPhase*	UnsafeGetBroadPhase() const									{ return mBroadPhase; }
+
+	/// Returns the raw BroadPhase.
+	inline BroadPhase*			UnsafeGetBroadPhase()										{ return mBroadPhase; }
+
 	/// Returns a locking interface that won't actually lock the body. Use with great care!
 	inline const BodyLockInterfaceNoLock &	GetBodyLockInterfaceNoLock() const				{ return mBodyLockInterfaceNoLock; }
 

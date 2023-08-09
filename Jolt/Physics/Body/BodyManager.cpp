@@ -863,6 +863,16 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 	return true;
 }
 
+void BodyManager::UnsafeAddBodyToActiveBodies(Body &ioBody)
+{
+	AddBodyToActiveBodies(ioBody);
+}
+
+void BodyManager::UnsafeRemoveBodyFromActiveBodies(Body &ioBody)
+{
+	RemoveBodyFromActiveBodies(ioBody);
+}
+
 #ifdef JPH_DEBUG_RENDERER
 void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer, const BodyDrawFilter *inBodyFilter)
 {

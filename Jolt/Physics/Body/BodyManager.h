@@ -197,6 +197,12 @@ public:
 	/// Restoring state for replay. Returns false if failed.
 	bool							RestoreState(StateRecorder &inStream);
 
+	/// Add a single body to mActiveBodies, note doesn't lock the active body mutex!
+	void							UnsafeAddBodyToActiveBodies(Body &ioBody);
+
+	/// Remove a single body from mActiveBodies, note doesn't lock the active body mutex!
+	void							UnsafeRemoveBodyFromActiveBodies(Body &ioBody);
+	
 	enum class EShapeColor
 	{
 		InstanceColor,				///< Random color per instance
