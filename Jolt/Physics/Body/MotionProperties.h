@@ -36,6 +36,9 @@ public:
 	/// Get the allowed degrees of freedom that this body has (this can be changed by calling SetMassProperties)
 	inline EAllowedDOFs		GetAllowedDOFs() const											{ return mAllowedDOFs; }
 
+	/// If this body can go to sleep.
+	inline bool				GetAllowSleeping() const										{ return mAllowSleeping; }
+
 	/// Get world space linear velocity of the center of mass
 	inline Vec3				GetLinearVelocity() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::Read)); return mLinearVelocity; }
 

@@ -475,6 +475,9 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, body_transform.Multiply3x3(cs.mLinearVelocity), body_transform.Multiply3x3(cs.mAngularVelocity));
 
 	// Test if we should go to sleep
+	if (!GetAllowSleeping())
+		return ECanSleep::CannotSleep;
+
 	const PhysicsSettings &physics_settings = inSystem.GetPhysicsSettings();
 	if (max_v_sq > physics_settings.mPointVelocitySleepThreshold)
 	{
