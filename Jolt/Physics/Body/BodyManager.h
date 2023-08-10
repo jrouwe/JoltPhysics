@@ -197,6 +197,12 @@ public:
 	/// Restoring state for replay. Returns false if failed.
 	bool							RestoreState(StateRecorder &inStream);
 
+	/// Save the state of a single body for replay
+	void							SaveBodyState(const Body &inBody, StateRecorder &inStream) const;
+
+	/// Save the state of a single body for replay
+	void							RestoreBodyState(Body &inBody, StateRecorder &inStream);
+
 	enum class EShapeColor
 	{
 		InstanceColor,				///< Random color per instance

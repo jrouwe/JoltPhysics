@@ -863,6 +863,33 @@ bool BodyManager::RestoreState(StateRecorder &inStream)
 	return true;
 }
 
+void BodyManager::SaveBodyState(const Body &inBody, StateRecorder &inStream) const
+{
+	inStream.Write(inBody.IsActive());
+
+	inBody.SaveState(inStream);
+}
+
+void BodyManager::RestoreBodyState(Body &ioBody, StateRecorder &inStream)
+{
+	bool is_active = ioBody.IsActive();
+	inStream.Read(is_active);
+
+	ioBody.RestoreState(inStream);
+
+	if (is_active != ioBody.IsActive())
+	{
+		UniqueLock lock(mActiveBodiesMutex JPH_IF_ENABLE_ASSERTS(, this, EPhysicsLockTypes::ActiveBodiesList));
+
+		JPH_ASSERT(!mActiveBodiesLocked || sOverrideAllowActivation);
+
+		if (is_active)
+			AddBodyToActiveBodies(ioBody);
+		else
+			RemoveBodyFromActiveBodies(ioBody);
+	}
+}
+
 #ifdef JPH_DEBUG_RENDERER
 void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings &inPhysicsSettings, DebugRenderer *inRenderer, const BodyDrawFilter *inBodyFilter)
 {
