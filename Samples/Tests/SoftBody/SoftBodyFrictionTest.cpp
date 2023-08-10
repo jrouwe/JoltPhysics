@@ -24,8 +24,7 @@ void SoftBodyFrictionTest::Initialize()
 	Ref<SoftBodySharedSettings> sphere_settings = SoftBodyCreator::CreateSphere();
 	for (SoftBodySharedSettings::Vertex &v : sphere_settings->mVertices)
 		v.mVelocity = Float3(0, 0, 10);
-	SoftBodyCreationSettings sphere(sphere_settings);
-	sphere.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings sphere(sphere_settings, RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);
 	sphere.mPressure = 2000.0f;
 
 	for (int i = 0; i <= 10; ++i)
@@ -38,8 +37,7 @@ void SoftBodyFrictionTest::Initialize()
 	Ref<SoftBodySharedSettings> cube_settings = SoftBodyCreator::CreateCube();
 	for (SoftBodySharedSettings::Vertex &v : cube_settings->mVertices)
 		v.mVelocity = Float3(0, 0, 10);
-	SoftBodyCreationSettings cube(cube_settings);
-	cube.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings cube(cube_settings, RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);
 
 	for (int i = 0; i <= 10; ++i)
 	{

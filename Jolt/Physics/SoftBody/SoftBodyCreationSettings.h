@@ -21,7 +21,7 @@ public:
 
 	/// Constructor
 						SoftBodyCreationSettings() = default;
-						SoftBodyCreationSettings(const SoftBodySharedSettings *inSettings, RVec3Arg inPosition = RVec3::sZero(), QuatArg inRotation = Quat::sIdentity()) : mSettings(inSettings), mPosition(inPosition), mRotation(inRotation) { }
+						SoftBodyCreationSettings(const SoftBodySharedSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, ObjectLayer inObjectLayer) : mSettings(inSettings), mPosition(inPosition), mRotation(inRotation), mObjectLayer(inObjectLayer) { }
 
 	/// Saves the state of this object in binary form to inStream. Doesn't store the shared settings nor the group filter.
 	void				SaveBinaryState(StreamOut &inStream) const;

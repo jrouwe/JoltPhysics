@@ -32,21 +32,18 @@ void SoftBodyShapesTest::Initialize()
 	CreateMeshTerrain();
 
 	// Create cloth that's fixated at the corners
-	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(), RVec3(0, 10.0f, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI));
-	cloth.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(), RVec3(0, 10.0f, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), Layers::MOVING);
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
 	cloth.mMakeRotationIdentity = false; // Test explicitly checks if soft bodies with a rotation collide with shapes properly
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 
 	// Create cube
-	SoftBodyCreationSettings cube(SoftBodyCreator::CreateCube(), RVec3(20.0f, 10.0f, 0.0f), cCubeOrientation);
-	cube.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings cube(SoftBodyCreator::CreateCube(), RVec3(20.0f, 10.0f, 0.0f), cCubeOrientation, Layers::MOVING);
 	cube.mRestitution = 0.0f;
 	mBodyInterface->CreateAndAddSoftBody(cube, EActivation::Activate);
 
 	// Create pressurized sphere
-	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere(), RVec3(15.0f, 10.0f, 15.0f));
-	sphere.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere(), RVec3(15.0f, 10.0f, 15.0f), Quat::sIdentity(), Layers::MOVING);
 	sphere.mPressure = 2000.0f;
 	mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 

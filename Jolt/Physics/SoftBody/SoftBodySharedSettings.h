@@ -47,6 +47,10 @@ public:
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Vertex)
 
+		/// Constructor
+						Vertex() = default;
+						Vertex(const Float3 &inPosition, const Float3 &inVelocity = Float3(0, 0, 0), float inInvMass = 1.0f) : mPosition(inPosition), mVelocity(inVelocity), mInvMass(inInvMass) { }
+
 		Float3			mPosition { 0, 0, 0 };						///< Initial position of the vertex
 		Float3			mVelocity { 0, 0, 0 };						///< Initial velocity of the vertex
 		float			mInvMass = 1.0f;							///< Initial inverse of the mass of the vertex
@@ -56,6 +60,10 @@ public:
 	struct JPH_EXPORT Face
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Face)
+
+		/// Constructor
+						Face() = default;
+						Face(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inMaterialIndex = 0) : mVertex { inVertex1, inVertex2, inVertex3 }, mMaterialIndex(inMaterialIndex) { }
 
 		/// Check if this is a degenerate face (a face which points to the same vertex twice)
 		bool			IsDegenerate() const						{ return mVertex[0] == mVertex[1] || mVertex[0] == mVertex[2] || mVertex[1] == mVertex[2]; }
@@ -69,6 +77,10 @@ public:
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Edge)
 
+		/// Constructor
+						Edge() = default;
+						Edge(uint32 inVertex1, uint32 inVertex2, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2 }, mCompliance(inCompliance) { }
+
 		uint32			mVertex[2];									///< Indices of the vertices that form the edge
 		float			mRestLength = 1.0f;							///< Rest length of the spring
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
@@ -78,6 +90,10 @@ public:
 	struct JPH_EXPORT Volume
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Volume)
+
+		/// Constructor
+						Volume() = default;
+						Volume(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
 
 		uint32			mVertex[4];									///< Indices of the vertices that form the tetrhedron
 		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron

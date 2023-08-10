@@ -959,8 +959,7 @@ void SamplesApp::ShootObject()
 		}
 
 		// Confgure soft body
-		SoftBodyCreationSettings creation_settings(shared_settings, GetCamera().mPos);
-		creation_settings.mObjectLayer = Layers::MOVING;
+		SoftBodyCreationSettings creation_settings(shared_settings, GetCamera().mPos, Quat::sIdentity(), Layers::MOVING);
 		creation_settings.mFriction = mShootObjectFriction;
 		creation_settings.mRestitution = mShootObjectRestitution;
 

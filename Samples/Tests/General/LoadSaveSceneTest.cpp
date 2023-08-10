@@ -181,8 +181,7 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	// Add soft body cube
 	Ref<SoftBodySharedSettings> sb_cube_settings = SoftBodyCreator::CreateCube(5, 0.2f);
 	sb_cube_settings->mMaterials = { new PhysicsMaterialSimple("Soft Body Cube Material", Color::sGetDistinctColor(13)) };
-	SoftBodyCreationSettings sb_cube(sb_cube_settings, RVec3(0, cMaxHeight + 10.0f, 0));
-	sb_cube.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings sb_cube(sb_cube_settings, RVec3(0, cMaxHeight + 10.0f, 0), Quat::sIdentity(), Layers::MOVING);
 	scene->AddSoftBody(sb_cube);
 
 	// Add the same shape again to test sharing
@@ -192,8 +191,7 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 	// Add soft body sphere
 	Ref<SoftBodySharedSettings> sb_sphere_settings = SoftBodyCreator::CreateSphere(0.5f);
 	sb_sphere_settings->mMaterials = { new PhysicsMaterialSimple("Soft Body Sphere Material", Color::sGetDistinctColor(14)) };
-	SoftBodyCreationSettings sb_sphere(sb_sphere_settings, RVec3(0, cMaxHeight + 12.0f, 0));
-	sb_sphere.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings sb_sphere(sb_sphere_settings, RVec3(0, cMaxHeight + 12.0f, 0), Quat::sIdentity(), Layers::MOVING);
 	sb_sphere.mPressure = 2000.0f;
 	scene->AddSoftBody(sb_sphere);
 

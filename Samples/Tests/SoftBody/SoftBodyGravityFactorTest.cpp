@@ -20,8 +20,7 @@ void SoftBodyGravityFactorTest::Initialize()
 	CreateFloor();
 
 	// Bodies with increasing gravity factor
-	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere());
-	sphere.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings sphere(SoftBodyCreator::CreateSphere(), RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);
 	sphere.mPressure = 2000.0f;
 
 	for (int i = 0; i <= 10; ++i)
@@ -31,8 +30,7 @@ void SoftBodyGravityFactorTest::Initialize()
 		mBodyInterface->CreateAndAddSoftBody(sphere, EActivation::Activate);
 	}
 
-	SoftBodyCreationSettings cube(SoftBodyCreator::CreateCube());
-	cube.mObjectLayer = Layers::MOVING;
+	SoftBodyCreationSettings cube(SoftBodyCreator::CreateCube(), RVec3::sZero(), Quat::sIdentity(), Layers::MOVING);
 
 	for (int i = 0; i <= 10; ++i)
 	{
