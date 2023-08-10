@@ -114,6 +114,12 @@ public:
 	/// Restoring state for replay. Returns false if failed.
 	bool						RestoreState(StateRecorder &inStream);
 
+	/// Saving state of a single body.
+	void						SaveBodyState(const Body &inBody, StateRecorder &inStream) const;
+
+	/// Restoring state of a single body.
+	void						RestoreBodyState(Body &ioBody, StateRecorder &inStream);
+
 #ifdef JPH_DEBUG_RENDERER
 	// Drawing properties
 	static bool					sDrawMotionQualityLinearCast;								///< Draw debug info for objects that perform continuous collision detection through the linear cast motion quality
@@ -128,7 +134,7 @@ public:
 	void						DrawConstraintLimits(DebugRenderer *inRenderer)				{ mConstraintManager.DrawConstraintLimits(inRenderer); }
 
 	/// Draw the constraint reference frames only (debugging purposes)
-	void						DrawConstraintReferenceFrame(DebugRenderer *inRenderer)	{ mConstraintManager.DrawConstraintReferenceFrame(inRenderer); }
+	void						DrawConstraintReferenceFrame(DebugRenderer *inRenderer)		{ mConstraintManager.DrawConstraintReferenceFrame(inRenderer); }
 #endif // JPH_DEBUG_RENDERER
 
 	/// Set gravity value

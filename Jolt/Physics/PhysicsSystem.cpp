@@ -2461,4 +2461,17 @@ bool PhysicsSystem::RestoreState(StateRecorder &inStream)
 	return true;
 }
 
+void PhysicsSystem::SaveBodyState(const Body &inBody, StateRecorder &inStream) const
+{
+	mBodyManager.SaveBodyState(inBody, inStream);
+}
+
+void PhysicsSystem::RestoreBodyState(Body &ioBody, StateRecorder &inStream)
+{
+	mBodyManager.RestoreBodyState(ioBody, inStream);
+
+	BodyID id = ioBody.GetID();
+	mBroadPhase->NotifyBodiesAABBChanged(&id, 1);
+}
+
 JPH_NAMESPACE_END

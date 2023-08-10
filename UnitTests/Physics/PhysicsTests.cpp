@@ -1651,6 +1651,10 @@ TEST_SUITE("PhysicsTests")
 			CHECK(box2.IsActive());
 			CHECK(sphere2.IsActive());
 
+			// Save the state of a single body
+			StateRecorderImpl single_body;
+			c.GetSystem()->SaveBodyState(box2, single_body);
+
 			// Simulate for 2 seconds - again
 			c.Simulate(2.0f);
 
@@ -1662,6 +1666,19 @@ TEST_SUITE("PhysicsTests")
 			CHECK(!box1.IsActive());
 			CHECK(!sphere1.IsActive());
 			CHECK(!box2.IsActive());
+			CHECK(!sphere2.IsActive());
+
+			// Restore the single body
+			c.GetSystem()->RestoreBodyState(box2, single_body);
+
+			// Only that body should have been restored
+			CHECK(box1.GetWorldTransform() == intermediate_box1_transform);
+			CHECK(sphere1.GetWorldTransform() == intermediate_sphere1_transform);
+			CHECK(box2.GetWorldTransform() == initial_box2_transform);
+			CHECK(sphere2.GetWorldTransform() == intermediate_sphere2_transform);
+			CHECK(!box1.IsActive());
+			CHECK(!sphere1.IsActive());
+			CHECK(box2.IsActive());
 			CHECK(!sphere2.IsActive());
 		}
 	}
