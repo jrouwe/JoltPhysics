@@ -67,6 +67,7 @@ public:
 	float				mGravityFactor = 1.0f;				///< Value to multiply gravity with for this body
 	bool				mUpdatePosition = true;				///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 	bool				mMakeRotationIdentity = true;		///< Bake specified mRotation in the vertices and set the body rotation to identity (simulation is slightly more accurate if the rotation of a soft body is kept to identity)
+	bool				mAllowSleeping = true;				///< If this body can go to sleep or not
 };
 
 JPH_NAMESPACE_END

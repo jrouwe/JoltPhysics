@@ -28,6 +28,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodyCreationSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mGravityFactor)
 	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mUpdatePosition)
 	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mMakeRotationIdentity)
+	JPH_ADD_ATTRIBUTE(SoftBodyCreationSettings, mAllowSleeping)
 }
 
 void SoftBodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
@@ -46,6 +47,7 @@ void SoftBodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mGravityFactor);
 	inStream.Write(mUpdatePosition);
 	inStream.Write(mMakeRotationIdentity);
+	inStream.Write(mAllowSleeping);
 }
 
 void SoftBodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
@@ -64,6 +66,7 @@ void SoftBodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mGravityFactor);
 	inStream.Read(mUpdatePosition);
 	inStream.Read(mMakeRotationIdentity);
+	inStream.Read(mAllowSleeping);
 }
 
 void SoftBodyCreationSettings::SaveWithChildren(StreamOut &inStream, SharedSettingsToIDMap *ioSharedSettingsMap, MaterialToIDMap *ioMaterialMap, GroupFilterToIDMap *ioGroupFilterMap) const
