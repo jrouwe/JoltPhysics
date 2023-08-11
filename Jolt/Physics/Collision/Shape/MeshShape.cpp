@@ -70,18 +70,18 @@ static JPH_INLINE const TriangleCodec::TriangleHeader *sGetTriangleHeader(const 
 	return inTree.Get<TriangleCodec::TriangleHeader>(NodeCodec::HeaderSize);
 }
 
-MeshShapeSettings::MeshShapeSettings(const TriangleList &inTriangles, const PhysicsMaterialList &inMaterials) :
-	mMaterials(inMaterials)
+MeshShapeSettings::MeshShapeSettings(const TriangleList &inTriangles, PhysicsMaterialList inMaterials) :
+	mMaterials(std::move(inMaterials))
 {
 	Indexify(inTriangles, mTriangleVertices, mIndexedTriangles);
 
 	Sanitize();
 }
 
-MeshShapeSettings::MeshShapeSettings(const VertexList &inVertices, const IndexedTriangleList &inTriangles, const PhysicsMaterialList &inMaterials) :
-	mTriangleVertices(inVertices),
-	mIndexedTriangles(inTriangles),
-	mMaterials(inMaterials)
+MeshShapeSettings::MeshShapeSettings(VertexList inVertices, IndexedTriangleList inTriangles, PhysicsMaterialList inMaterials) :
+	mTriangleVertices(std::move(inVertices)),
+	mIndexedTriangles(std::move(inTriangles)),
+	mMaterials(std::move(inMaterials))
 {
 	Sanitize();
 }
