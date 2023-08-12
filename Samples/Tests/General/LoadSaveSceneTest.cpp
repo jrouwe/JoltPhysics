@@ -88,7 +88,7 @@ static MeshShapeSettings *sCreateMesh()
 	for (uint i = 0; i <= max_material_index; ++i)
 		materials.push_back(new PhysicsMaterialSimple("Mesh Material " + ConvertToString(i), Color::sGetDistinctColor(i)));
 
-	return new MeshShapeSettings(triangles, materials);
+	return new MeshShapeSettings(triangles, std::move(materials));
 }
 
 static HeightFieldShapeSettings *sCreateHeightField()
