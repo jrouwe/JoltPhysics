@@ -43,7 +43,7 @@ void ManifoldReductionTest::Initialize()
 		}
 	PhysicsMaterialList materials;
 	materials.push_back(new PhysicsMaterialSimple());
-	Ref<ShapeSettings> mesh_shape = new MeshShapeSettings(triangles, materials);
+	Ref<ShapeSettings> mesh_shape = new MeshShapeSettings(triangles, std::move(materials));
 
 	// Floor
 	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShapeSettings(mesh_shape, Vec3::sReplicate(20)), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));

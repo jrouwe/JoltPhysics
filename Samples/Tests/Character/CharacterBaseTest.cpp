@@ -435,7 +435,7 @@ void CharacterBaseTest::Initialize()
 				triangles.push_back(IndexedTriangle(end, end + angle, end + angle + 1));
 			}
 
-			MeshShapeSettings mesh(vertices, triangles);
+			MeshShapeSettings mesh(std::move(vertices), std::move(triangles));
 			mesh.SetEmbedded();
 			BodyCreationSettings mesh_cylinder(&mesh, cHalfCylinderPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(mesh_cylinder, EActivation::DontActivate);
@@ -469,7 +469,7 @@ void CharacterBaseTest::Initialize()
 				IndexedTriangle(0, 5, 4)
 			};
 
-			MeshShapeSettings mesh(vertices, triangles);
+			MeshShapeSettings mesh(std::move(vertices), std::move(triangles));
 			mesh.SetEmbedded();
 			BodyCreationSettings box(&mesh, cMeshBoxPosition, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 			mBodyInterface->CreateAndAddBody(box, EActivation::DontActivate);
