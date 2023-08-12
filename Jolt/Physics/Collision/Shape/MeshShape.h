@@ -28,10 +28,8 @@ public:
 									MeshShapeSettings() = default;
 
 	/// Create a mesh shape.
-									MeshShapeSettings(const TriangleList &inTriangles, const PhysicsMaterialList &inMaterials = PhysicsMaterialList());
-									MeshShapeSettings(const TriangleList &inTriangles, PhysicsMaterialList &&inMaterials);
-									MeshShapeSettings(const VertexList &inVertices, const IndexedTriangleList &inTriangles, const PhysicsMaterialList &inMaterials = PhysicsMaterialList());
-									MeshShapeSettings(VertexList &&inVertices, IndexedTriangleList &&inTriangles, PhysicsMaterialList &&inMaterials = PhysicsMaterialList());
+									MeshShapeSettings(const TriangleList &inTriangles, PhysicsMaterialList inMaterials = PhysicsMaterialList());
+									MeshShapeSettings(VertexList inVertices, IndexedTriangleList inTriangles, PhysicsMaterialList inMaterials = PhysicsMaterialList());
 
 	/// Sanitize the mesh data. Remove duplicate and degenerate triangles.
 	void							Sanitize();
