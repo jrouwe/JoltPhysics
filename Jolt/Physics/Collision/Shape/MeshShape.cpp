@@ -52,6 +52,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mIndexedTriangles)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaxTrianglesPerLeaf)
+	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mActiveEdgeCosThresholdAngle)
 }
 
 // Codecs this mesh shape is using
@@ -180,7 +181,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 
 	// Fill in active edge bits
 	IndexedTriangleList indexed_triangles = inSettings.mIndexedTriangles; // Copy indices since we're adding the 'active edge' flag
-	sFindActiveEdges(inSettings.mTriangleVertices, indexed_triangles);
+	sFindActiveEdges(inSettings, indexed_triangles);
 
 	// Create triangle splitter
 	TriangleSplitterBinning splitter(inSettings.mTriangleVertices, indexed_triangles);
@@ -216,7 +217,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	outResult.Set(this);
 }
 
-void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices)
+void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTriangleList &ioIndices)
 {
 	// A struct to hold the two vertex indices of an edge
 	struct Edge
@@ -301,19 +302,19 @@ void MeshShape::sFindActiveEdges(const VertexList &inVertices, IndexedTriangleLi
 			uint edge_idx2 = edge.first.GetIndexInTriangle(triangle2);
 
 			// Construct a plane for triangle 1 (e1 = edge vertex 1, e2 = edge vertex 2, op = opposing vertex)
-			Vec3 triangle1_e1 = Vec3(inVertices[triangle1.mIdx[edge_idx1]]);
-			Vec3 triangle1_e2 = Vec3(inVertices[triangle1.mIdx[(edge_idx1 + 1) % 3]]);
-			Vec3 triangle1_op = Vec3(inVertices[triangle1.mIdx[(edge_idx1 + 2) % 3]]);
+			Vec3 triangle1_e1 = Vec3(inSettings.mTriangleVertices[triangle1.mIdx[edge_idx1]]);
+			Vec3 triangle1_e2 = Vec3(inSettings.mTriangleVertices[triangle1.mIdx[(edge_idx1 + 1) % 3]]);
+			Vec3 triangle1_op = Vec3(inSettings.mTriangleVertices[triangle1.mIdx[(edge_idx1 + 2) % 3]]);
 			Plane triangle1_plane = Plane::sFromPointsCCW(triangle1_e1, triangle1_e2, triangle1_op);
 
 			// Construct a plane for triangle 2
-			Vec3 triangle2_e1 = Vec3(inVertices[triangle2.mIdx[edge_idx2]]);
-			Vec3 triangle2_e2 = Vec3(inVertices[triangle2.mIdx[(edge_idx2 + 1) % 3]]);
-			Vec3 triangle2_op = Vec3(inVertices[triangle2.mIdx[(edge_idx2 + 2) % 3]]);
+			Vec3 triangle2_e1 = Vec3(inSettings.mTriangleVertices[triangle2.mIdx[edge_idx2]]);
+			Vec3 triangle2_e2 = Vec3(inSettings.mTriangleVertices[triangle2.mIdx[(edge_idx2 + 1) % 3]]);
+			Vec3 triangle2_op = Vec3(inSettings.mTriangleVertices[triangle2.mIdx[(edge_idx2 + 2) % 3]]);
 			Plane triangle2_plane = Plane::sFromPointsCCW(triangle2_e1, triangle2_e2, triangle2_op);
 
 			// Determine if the edge is active
-			num_active = ActiveEdges::IsEdgeActive(triangle1_plane.GetNormal(), triangle2_plane.GetNormal(), triangle1_e2 - triangle1_e1)? 2 : 0;
+			num_active = ActiveEdges::IsEdgeActive(triangle1_plane.GetNormal(), triangle2_plane.GetNormal(), triangle1_e2 - triangle1_e1, inSettings.mActiveEdgeCosThresholdAngle)? 2 : 0;
 		}
 		else
 		{

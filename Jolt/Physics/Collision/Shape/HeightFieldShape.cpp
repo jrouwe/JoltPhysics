@@ -53,6 +53,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(HeightFieldShapeSettings)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mBitsPerSample)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mMaterialIndices)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mMaterials)
+	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mActiveEdgeCosThresholdAngle)
 }
 
 const uint HeightFieldShape::sGridOffsets[] =
@@ -194,7 +195,7 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 	return bits_per_sample;
 }
 
-void HeightFieldShape::CalculateActiveEdges()
+void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSettings)
 {
 	// Store active edges. The triangles are organized like this:
 	//  +       +
@@ -255,9 +256,9 @@ void HeightFieldShape::CalculateActiveEdges()
 
 			// Calculate the edge flags (3 bits)
 			uint offset = 2 * (count_min_1 * y + x);
-			bool edge0_active = x == 0 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset - 1], x1y2 - x1y1);
-			bool edge1_active = y == count_min_1 - 1 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 2 * count_min_1 + 1], x2y2 - x1y2);
-			bool edge2_active = ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 1], x1y1 - x2y2);
+			bool edge0_active = x == 0 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset - 1], x1y2 - x1y1, inSettings.mActiveEdgeCosThresholdAngle);
+			bool edge1_active = y == count_min_1 - 1 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 2 * count_min_1 + 1], x2y2 - x1y2, inSettings.mActiveEdgeCosThresholdAngle);
+			bool edge2_active = ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 1], x1y1 - x2y2, inSettings.mActiveEdgeCosThresholdAngle);
 			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
 
 			// Store the edge flags in the array
@@ -599,7 +600,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		}
 
 	// Calculate the active edges
-	CalculateActiveEdges();
+	CalculateActiveEdges(inSettings);
 
 	// Compress material indices
 	if (mMaterials.size() > 1)
