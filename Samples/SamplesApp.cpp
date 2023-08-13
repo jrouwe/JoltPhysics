@@ -334,6 +334,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConvexHullTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConvexHullShrinkTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RandomRayTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CapsuleVsBoxTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BoxVsConvexHullTest)
 
 static TestNameAndRTTI sConvexCollisionTests[] =
 {
@@ -343,7 +344,8 @@ static TestNameAndRTTI sConvexCollisionTests[] =
 	{ "Convex Hull",						JPH_RTTI(ConvexHullTest) },
 	{ "Convex Hull Shrink",					JPH_RTTI(ConvexHullShrinkTest) },
 	{ "Random Ray",							JPH_RTTI(RandomRayTest) },
-	{ "Capsule Vs Box",						JPH_RTTI(CapsuleVsBoxTest) }
+	{ "Capsule Vs Box",						JPH_RTTI(CapsuleVsBoxTest) },
+	{ "Box Vs Convex Hull",					JPH_RTTI(BoxVsConvexHullTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSnapshotTest)

@@ -61,6 +61,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Constraints/SliderConstraintTest.h
 	${SAMPLES_ROOT}/Tests/Constraints/SpringTest.cpp
 	${SAMPLES_ROOT}/Tests/Constraints/SpringTest.h
+	${SAMPLES_ROOT}/Tests/ConvexCollision/BoxVsConvexHullTest.cpp
+	${SAMPLES_ROOT}/Tests/ConvexCollision/BoxVsConvexHullTest.h
 	${SAMPLES_ROOT}/Tests/ConvexCollision/CapsuleVsBoxTest.cpp
 	${SAMPLES_ROOT}/Tests/ConvexCollision/CapsuleVsBoxTest.h
 	${SAMPLES_ROOT}/Tests/ConvexCollision/ClosestPointTest.cpp
