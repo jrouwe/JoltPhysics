@@ -15,19 +15,20 @@ namespace ActiveEdges
 	/// @param inNormal1 Triangle normal of triangle on the left side of the edge (when looking along the edge from the top)
 	/// @param inNormal2 Triangle normal of triangle on the right side of the edge
 	/// @param inEdgeDirection Vector that points along the edge
-	inline static bool					IsEdgeActive(Vec3Arg inNormal1, Vec3Arg inNormal2, Vec3Arg inEdgeDirection)
+	/// @param inCosThresholdAngle Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive)
+	inline static bool					IsEdgeActive(Vec3Arg inNormal1, Vec3Arg inNormal2, Vec3Arg inEdgeDirection, float inCosThresholdAngle)
 	{
 		// If normals are opposite the edges are active (the triangles are back to back)
 		float cos_angle_normals = inNormal1.Dot(inNormal2);
-		if (cos_angle_normals < -0.99984769515639123915701155881391f) // cos(179 degrees)
+		if (cos_angle_normals < -0.999848f) // cos(179 degrees)
 			return true;
-			
+
 		// Check if concave edge, if so we are not active
 		if (inNormal1.Cross(inNormal2).Dot(inEdgeDirection) < 0.0f)
 			return false;
 
 		// Convex edge, active when angle bigger than threshold
-		return cos_angle_normals < 0.99619469809174553229501040247389f; // cos(5 degrees)
+		return cos_angle_normals < inCosThresholdAngle;
 	}
 
 	/// Replace normal by triangle normal if a hit is hitting an inactive edge
@@ -58,7 +59,7 @@ namespace ActiveEdges
 
 		// Some edges are active.
 		// If normal is parallel to the triangle normal we don't need to check the active edges.
-		if (inTriangleNormal.Dot(inNormal) > 0.99619469809174553229501040247389f * normal_length * triangle_normal_length) // cos(5 degrees)
+		if (inTriangleNormal.Dot(inNormal) > 0.996195f * normal_length * triangle_normal_length) // cos(5 degrees)
 			return inNormal;
 
 		const float cEpsilon = 1.0e-4f;

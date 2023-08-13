@@ -86,6 +86,11 @@ public:
 
 	/// The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
 	PhysicsMaterialList				mMaterials;
+
+	/// Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive).
+	/// Setting this value too small can cause ghost collisions with edges, setting it too big can cause depenetration artifacts (objects not depenetrating quickly).
+	/// Valid ranges are between cos(0 degrees) and cos(90 degrees). The default value is cos(5 degrees).
+	float							mActiveEdgeCosThresholdAngle = 0.996195f;							// cos(5 degrees)
 };
 
 /// A height field shape. Cannot be used as a dynamic object.
@@ -191,7 +196,7 @@ private:
 	void							CacheValues();
 
 	/// Calculate bit mask for all active edges in the heightfield
-	void							CalculateActiveEdges();
+	void							CalculateActiveEdges(const HeightFieldShapeSettings &inSettings);
 
 	/// Store material indices in the least amount of bits per index possible
 	void							StoreMaterialIndices(const HeightFieldShapeSettings &inSettings);

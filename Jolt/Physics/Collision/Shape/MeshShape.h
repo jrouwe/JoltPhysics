@@ -47,6 +47,11 @@ public:
 	/// Maximum number of triangles in each leaf of the axis aligned box tree. This is a balance between memory and performance. Can be in the range [1, MeshShape::MaxTrianglesPerLeaf].
 	/// Sensible values are between 4 (for better performance) and 8 (for less memory usage).
 	uint							mMaxTrianglesPerLeaf = 8;
+
+	/// Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive).
+	/// Setting this value too small can cause ghost collisions with edges, setting it too big can cause depenetration artifacts (objects not depenetrating quickly).
+	/// Valid ranges are between cos(0 degrees) and cos(90 degrees). The default value is cos(5 degrees).
+	float							mActiveEdgeCosThresholdAngle = 0.996195f;					// cos(5 degrees)
 };
 
 /// A mesh shape, consisting of triangles. Mesh shapes are mostly used for static geometry.
@@ -149,7 +154,7 @@ private:
 	static constexpr int			MaxTrianglesPerLeaf = 1 << NumTriangleBits;					///< Number of triangles that are stored max per leaf aabb node
 
 	/// Find and flag active edges
-	static void						sFindActiveEdges(const VertexList &inVertices, IndexedTriangleList &ioIndices);
+	static void						sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTriangleList &ioIndices);
 
 	/// Visit the entire tree using a visitor pattern
 	template <class Visitor>

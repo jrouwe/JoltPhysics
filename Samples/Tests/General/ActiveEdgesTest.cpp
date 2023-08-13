@@ -11,9 +11,9 @@
 #include <Jolt/Geometry/Triangle.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ActiveEdgesTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ActiveEdgesTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ActiveEdgesTest)
+{
+	JPH_ADD_BASE_CLASS(ActiveEdgesTest, Test)
 }
 
 void ActiveEdgesTest::Initialize()
@@ -58,7 +58,7 @@ void ActiveEdgesTest::Initialize()
 				box_settings.mPosition = RVec3((v1 + v2 + v3 + v4) / 4 + normal);
 				box_settings.mRotation = rotation;
 			}
-				
+
 			// Add segment
 			triangles.push_back(Triangle(v1, v3, v4));
 			triangles.push_back(Triangle(v1, v4, v2));
@@ -85,8 +85,13 @@ void ActiveEdgesTest::Initialize()
 			body.SetLinearVelocity(Vec3(0, 0, 2.0f));
 	}
 
+	// Mesh shape
+	MeshShapeSettings mesh_shape(triangles);
+	mesh_shape.SetEmbedded();
+	mesh_shape.mActiveEdgeCosThresholdAngle = Cos(DegreesToRadians(50.0f));
+
 	// Mesh
-	BodyCreationSettings mesh_settings(new MeshShapeSettings(triangles), RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	BodyCreationSettings mesh_settings(&mesh_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
 	mesh_settings.mFriction = 0.0f;
 	Body &mesh = *mBodyInterface->CreateBody(mesh_settings);
 	mBodyInterface->AddBody(mesh.GetID(), EActivation::DontActivate);
