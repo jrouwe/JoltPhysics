@@ -32,13 +32,13 @@ public:
 	virtual				~StateRecorderFilter() = default;
 
 	/// If the state of a specific body should be saved
-	virtual bool		ShouldSaveBody(const Body &inBody) const					{ return true; }
+	virtual bool		ShouldSaveBody([[maybe_unused]] const Body &inBody) const					{ return true; }
 
 	/// If the state of a specific constraint should be saved
-	virtual bool		ShouldSaveConstraint(const Constraint &inConstraint) const	{ return true; }
+	virtual bool		ShouldSaveConstraint([[maybe_unused]] const Constraint &inConstraint) const	{ return true; }
 
 	/// If the state of a specific contact should be saved
-	virtual bool		ShouldSaveContact(const BodyID &inBody1, const BodyID &inBody2) const { return true; }
+	virtual bool		ShouldSaveContact([[maybe_unused]] const BodyID &inBody1, [[maybe_unused]] const BodyID &inBody2) const { return true; }
 };
 
 /// Class that records the state of a physics system. Can be used to check if the simulation is deterministic by putting the recorder in validation mode.
