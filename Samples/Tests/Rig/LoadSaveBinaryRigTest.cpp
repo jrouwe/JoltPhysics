@@ -7,6 +7,7 @@
 #include <Tests/Rig/LoadSaveBinaryRigTest.h>
 #include <Application/DebugUI.h>
 #include <Jolt/Core/StreamWrapper.h>
+#include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Utils/Log.h>
 #include <Utils/RagdollLoader.h>
 
@@ -30,6 +31,16 @@ void LoadSaveBinaryRigTest::Initialize()
 	{
 		// Load ragdoll
 		Ref<RagdollSettings> settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
+
+		// Add an additional constraint between the left and right arm to test loading/saving of additional constraints
+		const Skeleton *skeleton = settings->GetSkeleton();
+		int left_arm = skeleton->GetJointIndex("L_Wrist_sjnt_0");
+		int right_arm = skeleton->GetJointIndex("R_Wrist_sjnt_0");
+		Ref<DistanceConstraintSettings> constraint = new DistanceConstraintSettings;
+		constraint->mSpace = EConstraintSpace::LocalToBodyCOM;
+		constraint->mMaxDistance = 0.1f;
+		constraint->mMinDistance = 0.1f;
+		settings->mAdditionalConstraints.push_back(RagdollSettings::AdditionalConstraint(left_arm, right_arm , constraint));
 
 		// Save it to a binary stream
 		StreamOutWrapper stream_out(data);
