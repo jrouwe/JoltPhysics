@@ -252,6 +252,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, KinematicRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RigPileTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveBinaryRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SkeletonMapperTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigWorldTest)
@@ -260,6 +261,7 @@ static TestNameAndRTTI sRigTests[] =
 {
 	{ "Create Rig",							JPH_RTTI(CreateRigTest) },
 	{ "Load Rig",							JPH_RTTI(LoadRigTest) },
+	{ "Load / Save Rig",					JPH_RTTI(LoadSaveRigTest) },
 	{ "Load / Save Binary Rig",				JPH_RTTI(LoadSaveBinaryRigTest) },
 	{ "Kinematic Rig",						JPH_RTTI(KinematicRigTest) },
 	{ "Powered Rig",						JPH_RTTI(PoweredRigTest) },

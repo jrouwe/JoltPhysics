@@ -27,8 +27,6 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(RagdollSettings::Part)
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(RagdollSettings::AdditionalConstraint)
 {
-	JPH_ADD_BASE_CLASS(RagdollSettings::AdditionalConstraint, BodyCreationSettings)
-
 	JPH_ADD_ATTRIBUTE(RagdollSettings::AdditionalConstraint, mBodyIdx)
 	JPH_ADD_ATTRIBUTE(RagdollSettings::AdditionalConstraint, mConstraint)
 }

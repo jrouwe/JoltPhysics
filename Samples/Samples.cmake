@@ -153,6 +153,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.h
 	${SAMPLES_ROOT}/Tests/Rig/LoadSaveBinaryRigTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/LoadSaveBinaryRigTest.h
+	${SAMPLES_ROOT}/Tests/Rig/LoadSaveRigTest.cpp
+	${SAMPLES_ROOT}/Tests/Rig/LoadSaveRigTest.h
 	${SAMPLES_ROOT}/Tests/Rig/LoadRigTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/LoadRigTest.h
 	${SAMPLES_ROOT}/Tests/Rig/PoweredRigTest.cpp

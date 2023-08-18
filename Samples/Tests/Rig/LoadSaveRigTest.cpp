@@ -4,23 +4,24 @@
 
 #include <TestFramework.h>
 
-#include <Tests/Rig/LoadSaveBinaryRigTest.h>
-#include <Jolt/Core/StreamWrapper.h>
+#include <Tests/Rig/LoadSaveRigTest.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
+#include <Jolt/ObjectStream/ObjectStreamOut.h>
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Utils/Log.h>
 #include <Utils/RagdollLoader.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveBinaryRigTest)
+JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveRigTest)
 {
-	JPH_ADD_BASE_CLASS(LoadSaveBinaryRigTest, Test)
+	JPH_ADD_BASE_CLASS(LoadSaveRigTest, Test)
 }
 
-LoadSaveBinaryRigTest::~LoadSaveBinaryRigTest()
+LoadSaveRigTest::~LoadSaveRigTest()
 {
 	mRagdoll->RemoveFromPhysicsSystem();
 }
 
-void LoadSaveBinaryRigTest::Initialize()
+void LoadSaveRigTest::Initialize()
 {
 	// Floor
 	CreateFloor();
@@ -41,17 +42,20 @@ void LoadSaveBinaryRigTest::Initialize()
 		constraint->mMinDistance = 0.1f;
 		settings->mAdditionalConstraints.push_back(RagdollSettings::AdditionalConstraint(left_arm, right_arm , constraint));
 
-		// Save it to a binary stream
-		StreamOutWrapper stream_out(data);
-		settings->SaveBinaryState(stream_out, true /* Save shape */, true /* Save group filter */);
+		// Write ragdoll
+		if (!ObjectStreamOut::sWriteObject(data, ObjectStream::EStreamType::Text, *settings))
+			FatalError("Failed to save ragdoll");
 	}
 
-	StreamInWrapper stream_in(data);
-	RagdollSettings::RagdollResult result = RagdollSettings::sRestoreFromBinaryState(stream_in);
-	if (result.HasError())
-		FatalError(result.GetError().c_str());
+	// Read ragdoll back in
+	Ref<RagdollSettings> settings;
+	if (!ObjectStreamIn::sReadObject(data, settings))
+		FatalError("Failed to load ragdoll");
+
+	// Parent joint indices are not stored so need to be calculated again
+	settings->GetSkeleton()->CalculateParentJointIndices();
 
 	// Create ragdoll
-	mRagdoll = result.Get()->CreateRagdoll(0, 0, mPhysicsSystem);
+	mRagdoll = settings->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 }
