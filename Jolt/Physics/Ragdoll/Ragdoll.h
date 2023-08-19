@@ -28,16 +28,16 @@ public:
 	bool								Stabilize();
 
 	/// After the ragdoll has been fully configured, call this function to automatically create and add a GroupFilterTable collision filter to all bodies
-	/// and configure them so that parent and children don't collide. 
-	/// 
+	/// and configure them so that parent and children don't collide.
+	///
 	/// This will:
 	/// - Create a GroupFilterTable and assign it to all of the bodies in a ragdoll.
 	/// - Each body in your ragdoll will get a SubGroupID that is equal to the joint index in the Skeleton that it is attached to.
 	/// - Loop over all joints in the Skeleton and call GroupFilterTable::DisableCollision(joint index, parent joint index).
-	/// - When a pose is provided through inJointMatrices the function will detect collisions between joints 
+	/// - When a pose is provided through inJointMatrices the function will detect collisions between joints
 	/// (they must be separated by more than inMinSeparationDistance to be treated as not colliding) and automatically disable collisions.
-	/// 
-	/// When you create an instance using Ragdoll::CreateRagdoll pass in a unique GroupID for each ragdoll (e.g. a simple counter), note that this number 
+	///
+	/// When you create an instance using Ragdoll::CreateRagdoll pass in a unique GroupID for each ragdoll (e.g. a simple counter), note that this number
 	/// should be unique throughout the PhysicsSystem, so if you have different types of ragdolls they should not share the same GroupID.
 	void								DisableParentChildCollisions(const Mat44 *inJointMatrices = nullptr, float inMinSeparationDistance = 0.0f);
 
@@ -64,6 +64,7 @@ public:
 	void								CalculateBodyIndexToConstraintIndex();
 
 	/// Get table that maps a body index to the constraint index with which it is connected to its parent. -1 if there is no constraint associated with the body.
+	/// Note that this will only tell you which constraint connects the body to its parent, it will not look in the additional constraint list.
 	const Array<int> &					GetBodyIndexToConstraintIndex() const							{ return mBodyIndexToConstraintIndex; }
 
 	/// Map a single body index to a constraint index
@@ -92,11 +93,31 @@ public:
 	/// List of ragdoll parts
 	using PartVector = Array<Part>;																	///< The constraint that connects this part to its parent part (should be null for the root)
 
+	/// A constraint that connects two bodies in a ragdoll (for non parent child related constraints)
+	class AdditionalConstraint
+	{
+	public:
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, AdditionalConstraint)
+
+		/// Constructors
+										AdditionalConstraint() = default;
+										AdditionalConstraint(int inBodyIdx1, int inBodyIdx2, TwoBodyConstraintSettings *inConstraint) : mBodyIdx { inBodyIdx1, inBodyIdx2 }, mConstraint(inConstraint) { }
+
+		int								mBodyIdx[2];												///< Indices of the bodies that this constraint connects
+		Ref<TwoBodyConstraintSettings>	mConstraint;												///< The constraint that connects these bodies
+	};
+
+	/// List of additional constraints
+	using AdditionalConstraintVector = Array<AdditionalConstraint>;
+
 	/// The skeleton for this ragdoll
 	Ref<Skeleton>						mSkeleton;
 
 	/// For each of the joints, the body and constraint attaching it to its parent body (1-on-1 with mSkeleton.GetJoints())
 	PartVector							mParts;
+
+	/// A list of constraints that connects two bodies in a ragdoll (for non parent child related constraints)
+	AdditionalConstraintVector			mAdditionalConstraints;
 
 private:
 	/// Table that maps a body index (index in mBodyIDs) to the constraint index with which it is connected to its parent. -1 if there is no constraint associated with the body.
@@ -138,7 +159,7 @@ public:
 
 	/// Set the ragdoll to a pose (calls BodyInterface::SetPositionAndRotation to instantly move the ragdoll)
 	void								SetPose(const SkeletonPose &inPose, bool inLockBodies = true);
-	
+
 	/// Lower level version of SetPose that directly takes the world space joint matrices
 	void								SetPose(RVec3Arg inRootOffset, const Mat44 *inJointMatrices, bool inLockBodies = true);
 
@@ -150,7 +171,7 @@ public:
 
 	/// Drive the ragdoll to a specific pose by setting velocities on each of the bodies so that it will reach inPose in inDeltaTime
 	void								DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies = true);
-	
+
 	/// Lower level version of DriveToPoseUsingKinematics that directly takes the world space joint matrices
 	void								DriveToPoseUsingKinematics(RVec3Arg inRootOffset, const Mat44 *inJointMatrices, float inDeltaTime, bool inLockBodies = true);
 
@@ -159,10 +180,10 @@ public:
 
 	/// Control the linear and velocity of all bodies in the ragdoll
 	void								SetLinearAndAngularVelocity(Vec3Arg inLinearVelocity, Vec3Arg inAngularVelocity, bool inLockBodies = true);
-	
+
 	/// Set the world space linear velocity of all bodies in the ragdoll.
 	void								SetLinearVelocity(Vec3Arg inLinearVelocity, bool inLockBodies = true);
-	
+
 	/// Add a world space velocity (in m/s) to all bodies in the ragdoll.
 	void								AddLinearVelocity(Vec3Arg inLinearVelocity, bool inLockBodies = true);
 

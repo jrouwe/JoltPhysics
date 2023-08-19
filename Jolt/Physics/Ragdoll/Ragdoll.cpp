@@ -25,10 +25,17 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(RagdollSettings::Part)
 	JPH_ADD_ATTRIBUTE(RagdollSettings::Part, mToParent)
 }
 
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(RagdollSettings::AdditionalConstraint)
+{
+	JPH_ADD_ATTRIBUTE(RagdollSettings::AdditionalConstraint, mBodyIdx)
+	JPH_ADD_ATTRIBUTE(RagdollSettings::AdditionalConstraint, mConstraint)
+}
+
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(RagdollSettings)
 {
 	JPH_ADD_ATTRIBUTE(RagdollSettings, mSkeleton)
 	JPH_ADD_ATTRIBUTE(RagdollSettings, mParts)
+	JPH_ADD_ATTRIBUTE(RagdollSettings, mAdditionalConstraints)
 }
 
 static inline BodyInterface &sGetBodyInterface(PhysicsSystem *inSystem, bool inLockBodies)
@@ -61,7 +68,7 @@ bool RagdollSettings::Stabilize()
 		// Mark static bodies as visited so we won't process these
 		Part &p = mParts[v];
 		bool has_mass_properties = p.HasMassProperties();
-		visited[v] = !has_mass_properties; 
+		visited[v] = !has_mass_properties;
 
 		if (has_mass_properties && p.mOverrideMassProperties != EOverrideMassProperties::MassAndInertiaProvided)
 		{
@@ -83,7 +90,7 @@ bool RagdollSettings::Stabilize()
 			indices.reserve(mSkeleton->GetJointCount());
 			visited[first_idx] = true;
 			indices.push_back(first_idx);
-			do 
+			do
 			{
 				int parent_idx = indices[next_to_process++];
 				for (int child_idx = 0; child_idx < mSkeleton->GetJointCount(); ++child_idx)
@@ -100,7 +107,7 @@ bool RagdollSettings::Stabilize()
 
 			const float cMinMassRatio = 0.8f;
 			const float cMaxMassRatio = 1.2f;
-	
+
 			// Ensure that the mass ratio from parent to child is within a range
 			float total_mass_ratio = 1.0f;
 			Array<float> mass_ratios;
@@ -142,7 +149,7 @@ bool RagdollSettings::Stabilize()
 				Mat44	mRotation;
 				Vec3	mDiagonal;
 				float	mChildSum = 0.0f;
-			};	
+			};
 			Array<Principal> principals;
 			principals.resize(mParts.size());
 			for (int i : indices)
@@ -217,7 +224,7 @@ void RagdollSettings::DisableParentChildCollisions(const Mat44 *inJointMatrices,
 					const Shape *shape2 = part2.GetShape();
 					Vec3 scale2;
 					Mat44 com2 = (inJointMatrices[j2].PreTranslated(shape2->GetCenterOfMass())).Decompose(scale2);
-					
+
 					// Collision settings
 					CollideShapeSettings settings;
 					settings.mActiveEdgeMode = EActiveEdgeMode::CollideWithAll;
@@ -269,6 +276,17 @@ void RagdollSettings::SaveBinaryState(StreamOut &inStream, bool inSaveShapes, bo
 		inStream.Write(p.mToParent != nullptr);
 		if (p.mToParent != nullptr)
 			p.mToParent->SaveBinaryState(inStream);
+	}
+
+	// Save additional constraints
+	inStream.Write((uint32)mAdditionalConstraints.size());
+	for (const AdditionalConstraint &c : mAdditionalConstraints)
+	{
+		// Save bodies indices
+		inStream.Write(c.mBodyIdx);
+
+		// Save constraint
+		c.mConstraint->SaveBinaryState(inStream);
 	}
 }
 
@@ -327,6 +345,25 @@ RagdollSettings::RagdollResult RagdollSettings::sRestoreFromBinaryState(StreamIn
 		}
 	}
 
+	// Read additional constraints
+	len = 0;
+	inStream.Read(len);
+	ragdoll->mAdditionalConstraints.resize(len);
+	for (AdditionalConstraint &c : ragdoll->mAdditionalConstraints)
+	{
+		// Read body indices
+		inStream.Read(c.mBodyIdx);
+
+		// Read constraint
+		ConstraintSettings::ConstraintResult constraint_result = ConstraintSettings::sRestoreFromBinaryState(inStream);
+		if (constraint_result.HasError())
+		{
+			result.SetError(constraint_result.GetError());
+			return result;
+		}
+		c.mConstraint = DynamicCast<TwoBodyConstraintSettings>(constraint_result.Get().GetPtr());
+	}
+
 	// Create mapping tables
 	ragdoll->CalculateBodyIndexToConstraintIndex();
 	ragdoll->CalculateConstraintIndexToBodyIdxPair();
@@ -340,8 +377,9 @@ Ragdoll *RagdollSettings::CreateRagdoll(CollisionGroup::GroupID inCollisionGroup
 	Ragdoll *r = new Ragdoll(inSystem);
 	r->mRagdollSettings = this;
 	r->mBodyIDs.reserve(mParts.size());
-	r->mConstraints.reserve(mParts.size());
+	r->mConstraints.reserve(mParts.size() + mAdditionalConstraints.size());
 
+	// Create bodies and constraints
 	BodyInterface &bi = inSystem->GetBodyInterface();
 	Body **bodies = (Body **)JPH_STACK_ALLOC(mParts.size() * sizeof(Body *));
 	int joint_idx = 0;
@@ -373,6 +411,14 @@ Ragdoll *RagdollSettings::CreateRagdoll(CollisionGroup::GroupID inCollisionGroup
 		++joint_idx;
 	}
 
+	// Add additional constraints
+	for (const AdditionalConstraint &c : mAdditionalConstraints)
+	{
+		Body *body1 = bodies[c.mBodyIdx[0]];
+		Body *body2 = bodies[c.mBodyIdx[1]];
+		r->mConstraints.push_back(c.mConstraint->Create(*body1, *body2));
+	}
+
 	return r;
 }
 
@@ -394,7 +440,9 @@ void RagdollSettings::CalculateBodyIndexToConstraintIndex()
 void RagdollSettings::CalculateConstraintIndexToBodyIdxPair()
 {
 	mConstraintIndexToBodyIdxPair.clear();
+	mConstraintIndexToBodyIdxPair.reserve(mParts.size() + mAdditionalConstraints.size());
 
+	// Add constraints between parts
 	int joint_idx = 0;
 	for (const Part &p : mParts)
 	{
@@ -406,10 +454,14 @@ void RagdollSettings::CalculateConstraintIndexToBodyIdxPair()
 
 		++joint_idx;
 	}
+
+	// Add additional constraints
+	for (const AdditionalConstraint &c : mAdditionalConstraints)
+		mConstraintIndexToBodyIdxPair.push_back(BodyIdxPair(c.mBodyIdx[0], c.mBodyIdx[1]));
 }
 
 Ragdoll::~Ragdoll()
-{	
+{
 	// Destroy all bodies
 	mSystem->GetBodyInterface().DestroyBodies(mBodyIDs.data(), (int)mBodyIDs.size());
 }
