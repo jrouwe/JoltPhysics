@@ -95,7 +95,7 @@ class CollideShapeSettings : public CollideSettingsBase
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
-	/// When > 0 contacts in the vicinity of the query shape can be found. All nearest contacts that are not further away than this distance will be found (uint: meter)
+	/// When > 0 contacts in the vicinity of the query shape can be found. All nearest contacts that are not further away than this distance will be found (unit: meter)
 	float						mMaxSeparationDistance		= 0.0f;
 
 	/// How backfacing triangles should be treated
