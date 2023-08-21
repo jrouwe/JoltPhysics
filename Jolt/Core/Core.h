@@ -497,7 +497,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	// On clang 14 and later we can turn off float contraction through a pragma (before it was buggy), so if FMA is on we can disable it through this macro
 	#if __clang_major__ >= 14 && !defined(JPH_PLATFORM_ANDROID)
 		#define JPH_PRECISE_MATH_ON						\
-			_Pragma("float_control(precise, on, push)")
+			_Pragma("float_control(precise, on, push)")	\
 			_Pragma("clang fp contract(off)")
 		#define JPH_PRECISE_MATH_OFF					\
 			_Pragma("float_control(pop)")
