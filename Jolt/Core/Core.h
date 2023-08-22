@@ -501,7 +501,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 			_Pragma("clang fp contract(off)")
 		#define JPH_PRECISE_MATH_OFF					\
 			_Pragma("float_control(pop)")
-	#elif __clang_major__ >= 14 && defined(JPH_USE_FMADD)
+	#elif __clang_major__ >= 14 && (defined(JPH_USE_FMADD) || defined(JPH_CPU_ARM))
 		#define JPH_PRECISE_MATH_ON						\
 			_Pragma("clang fp contract(off)")
 		#define JPH_PRECISE_MATH_OFF					\
