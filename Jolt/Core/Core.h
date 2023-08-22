@@ -495,7 +495,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 #elif defined(JPH_COMPILER_CLANG)
 	// We compile without -ffast-math because pragma float_control(precise, on) doesn't seem to actually negate all of the -ffast-math effects and causes the unit tests to fail (even if the pragma is added to all files)
 	// On clang 14 and later we can turn off float contraction through a pragma (before it was buggy), so if FMA is on we can disable it through this macro
-	#if __clang_major__ >= 16 || (defined(JPH_CPU_X86) && __clang_major__ >= 14)
+	#if (defined(JPH_CPU_ARM) && __clang_major__ >= 16) || (defined(JPH_CPU_X86) && __clang_major__ >= 14)
 		#define JPH_PRECISE_MATH_ON						\
 			_Pragma("float_control(precise, on, push)")	\
 			_Pragma("clang fp contract(off)")
