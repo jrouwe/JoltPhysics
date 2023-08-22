@@ -6,7 +6,7 @@
 #include <atomic>
 
 // Only when actually using FMA and optimizations are enabled
-#if defined(NDEBUG) && defined(JPH_USE_FMADD)
+#if defined(NDEBUG) && defined(JPH_USE_FMADD) && (defined(JPH_COMPILER_MSVC) || (defined(JPH_COMPILER_CLANG) && __clang_major__ >= 14))
 
 // Implemented as a global atomic so the compiler can't optimize it to a constant
 extern atomic<float> One, OneTenth, Ten;
@@ -25,6 +25,8 @@ TEST_SUITE("NormalMathTest")
 		One = OneTenth = Ten = 2.0f;
 	}
 }
+
+#endif // defined(NDEBUG) && defined(JPH_USE_FMADD) && (defined(JPH_COMPILER_MSVC) || (defined(JPH_COMPILER_CLANG) && __clang_major__ >= 14))
 
 JPH_PRECISE_MATH_ON
 
@@ -46,5 +48,3 @@ TEST_SUITE("PreciseMathTest")
 }
 
 JPH_PRECISE_MATH_OFF
-
-#endif // !defined(JPH_DEBUG) && defined(JPH_USE_FMADD)
