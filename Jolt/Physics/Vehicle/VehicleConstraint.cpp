@@ -27,7 +27,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(VehicleConstraintSettings)
 }
 
 void VehicleConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mUp);
@@ -158,6 +158,10 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Callback to higher-level systems. We do it before PreCollide, in case steering changes.
+	if (mPreStepCallback != nullptr)
+		mPreStepCallback(*this, inDeltaTime, inPhysicsSystem);
+
 	// Calculate new world up vector by inverting gravity
 	mWorldUp = (-inPhysicsSystem.GetGravity()).NormalizedOr(mWorldUp);
 
@@ -219,6 +223,10 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		}
 	}
 
+	// Callback to higher-level systems. We do it immediately after wheel collision.
+	if (mPostCollideCallback != nullptr)
+		mPostCollideCallback(*this, inDeltaTime, inPhysicsSystem);
+
 	// Calculate anti-rollbar impulses
 	for (const VehicleAntiRollBar &r : mAntiRollBars)
 	{
@@ -260,7 +268,7 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		mBody->SetAllowSleeping(allow_sleep);
 }
 
-void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) 
+void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager)
 {
 	// Find dynamic bodies that our wheels are touching
 	BodyID *body_ids = (BodyID *)JPH_STACK_ALLOC((mWheels.size() + 1) * sizeof(BodyID));
@@ -311,7 +319,7 @@ void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &io
 	}
 
 	// Link the constraint in the island
-	ioBuilder.LinkConstraint(inConstraintIndex, mBody->GetIndexInActiveBodiesInternal(), min_active_index); 
+	ioBuilder.LinkConstraint(inConstraintIndex, mBody->GetIndexInActiveBodiesInternal(), min_active_index);
 }
 
 uint VehicleConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const
@@ -399,7 +407,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 				// Calculate the damping and frequency of the suspension spring given the angle between the suspension direction and the contact normal
 				// If the angle between the suspension direction and the inverse of the contact normal is alpha then the force on the spring relates to the force along the contact normal as:
-				// 
+				//
 				// Fspring = Fnormal * cos(alpha)
 				//
 				// The spring force is:
@@ -413,15 +421,15 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 				// So we can see this as a spring with spring constant:
 				//
 				// k' = k / cos(alpha)
-				// 
+				//
 				// In the same way the velocity relates like:
-				// 
+				//
 				// Vspring = Vnormal * cos(alpha)
 				//
 				// Which results in the modified damping constant c:
 				//
 				// c' = c / cos(alpha)
-				// 
+				//
 				// Note that we clamp 1 / cos(alpha) to the range [0.1, 1] in order not to increase the stiffness / damping by too much.
 				Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
 				float cos_angle = max(0.1f, ws_direction.Dot(neg_contact_normal));
@@ -441,7 +449,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 				w->mSuspensionMaxUpPart.CalculateConstraintProperties(*mBody, r1_plus_u, *w->mContactBody, r2, neg_contact_normal);
 			else
 				w->mSuspensionMaxUpPart.Deactivate();
-			
+
 			// Friction and propulsion
 			w->mLongitudinalPart.CalculateConstraintProperties(*mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactLongitudinal);
 			w->mLateralPart.CalculateConstraintProperties(*mBody, r1_plus_u, *w->mContactBody, r2, -w->mContactLateral);
@@ -458,7 +466,7 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculatePitchRollConstraintProperties(body_transform);
 }
 
-void VehicleConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio) 
+void VehicleConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	for (Wheel *w : mWheels)
 		if (w->mContactBody != nullptr)
@@ -468,13 +476,13 @@ void VehicleConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRati
 			w->mSuspensionPart.WarmStart(*mBody, *w->mContactBody, neg_contact_normal, inWarmStartImpulseRatio);
 			w->mSuspensionMaxUpPart.WarmStart(*mBody, *w->mContactBody, neg_contact_normal, inWarmStartImpulseRatio);
 			w->mLongitudinalPart.WarmStart(*mBody, *w->mContactBody, -w->mContactLongitudinal, 0.0f); // Don't warm start the longitudinal part (the engine/brake force, we don't want to preserve anything from the last frame)
-			w->mLateralPart.WarmStart(*mBody, *w->mContactBody, -w->mContactLateral, inWarmStartImpulseRatio);	
+			w->mLateralPart.WarmStart(*mBody, *w->mContactBody, -w->mContactLateral, inWarmStartImpulseRatio);
 		}
 
 	mPitchRollPart.WarmStart(*mBody, Body::sFixedToWorld, inWarmStartImpulseRatio);
 }
 
-bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime) 
+bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime)
 {
 	bool impulse = false;
 
@@ -503,7 +511,7 @@ bool VehicleConstraint::SolveVelocityConstraint(float inDeltaTime)
 	return impulse;
 }
 
-bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte) 
+bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgarte)
 {
 	bool impulse = false;
 
@@ -545,12 +553,12 @@ bool VehicleConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumg
 
 #ifdef JPH_DEBUG_RENDERER
 
-void VehicleConstraint::DrawConstraint(DebugRenderer *inRenderer) const 
+void VehicleConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 {
 	mController->Draw(inRenderer);
 }
 
-void VehicleConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const 
+void VehicleConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 {
 }
 

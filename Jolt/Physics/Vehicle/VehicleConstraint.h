@@ -17,7 +17,7 @@ JPH_NAMESPACE_BEGIN
 class PhysicsSystem;
 
 /// Configuration for constraint that simulates a wheeled vehicle.
-/// 
+///
 /// The properties in this constraint are largely based on "Car Physics for Games" by Marco Monster.
 /// See: https://www.asawicki.info/Mirror/Car%20Physics%20for%20Games/Car%20Physics%20for%20Games.html
 class JPH_EXPORT VehicleConstraintSettings : public ConstraintSettings
@@ -46,14 +46,14 @@ protected:
 /// When the vehicle drives over very light objects (rubble) you may see the car body dip down. This is a known issue and is an artifact of the iterative solver that Jolt is using.
 /// Basically if a light object is sandwiched between two heavy objects (the static floor and the car body), the light object is not able to transfer enough force from the ground to
 /// the car body to keep the car body up. You can see this effect in the HeavyOnLightTest sample, the boxes on the right have a lot of penetration because they're on top of light objects.
-/// 
+///
 /// There are a couple of ways to improve this:
-/// 
+///
 /// 1. You can increase the number of velocity steps (global settings PhysicsSettings::mNumVelocitySteps or if you only want to increase it on
 /// the vehicle you can use VehicleConstraintSettings::mNumVelocityStepsOverride). E.g. going from 10 to 30 steps in the HeavyOnLightTest sample makes the penetration a lot less.
 /// The number of position steps can also be increased (the first prevents the body from going down, the second corrects it if the problem did
 /// occur which inevitably happens due to numerical drift). This solution costs CPU cycles.
-/// 
+///
 /// 2. You can reduce the mass difference between the vehicle body and the rubble on the floor (by making the rubble heavier or the car lighter).
 ///
 /// 3. You could filter out collisions between the vehicle collision test and the rubble completely. This would make the wheels ignore the rubble but would cause the vehicle to drive
@@ -74,7 +74,7 @@ public:
 
 	/// Defines the maximum pitch/roll angle (rad), can be used to avoid the car from getting upside down. The vehicle up direction will stay within a cone centered around the up axis with half top angle mMaxPitchRollAngle, set to pi to turn off.
 	void						SetMaxPitchRollAngle(float inMaxPitchRollAngle) { mCosMaxPitchRollAngle = Cos(inMaxPitchRollAngle); }
-	
+
 	/// Set the interface that tests collision between wheel and ground
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
@@ -86,14 +86,26 @@ public:
 	void						SetCombineFriction(CombineFunction inCombineFriction) { mCombineFriction = inCombineFriction; }
 	CombineFunction				GetCombineFriction() const					{ return mCombineFriction; }
 
-	/// Callback function to notify that PhysicsStepListener::OnStep has completed for this vehicle.
-	using PostStepCallback = function<void(VehicleConstraint &inVehicle, float inDeltaTime, PhysicsSystem &inPhysicsSystem)>;
+	/// Callback function to notify of current stage in PhysicsStepListener::OnStep.
+	using StepCallback = function<void(VehicleConstraint &inVehicle, float inDeltaTime, PhysicsSystem &inPhysicsSystem)>;
+
+	/// Callback function to notify that PhysicsStepListener::OnStep has started for this vehicle. Default is to do nothing.
+	/// Can be used to allow higher-level code to e.g. control steering. This is the last moment that the position/orientation of the vehicle can be changed.
+	/// Wheel collision checks have not been performed yet.
+	const StepCallback &		GetPreStepCallback() const					{ return mPreStepCallback; }
+	void						SetPreStepCallback(const StepCallback &inPreStepCallback) { mPreStepCallback = inPreStepCallback; }
+
+	/// Callback function to notify that PhysicsStepListener::OnStep has just completed wheel collision checks. Default is to do nothing.
+	/// Can be used to allow higher-level code to e.g. detect tire contact or to modify the velocity of the vehicle based on the wheel contacts.
+	/// You should not change the position of the vehicle in this callback as the wheel collision checks have already been performed.
+	const StepCallback &		GetPostCollideCallback() const				{ return mPostCollideCallback; }
+	void						SetPostCollideCallback(const StepCallback &inPostCollideCallback) { mPostCollideCallback = inPostCollideCallback; }
 
 	/// Callback function to notify that PhysicsStepListener::OnStep has completed for this vehicle. Default is to do nothing.
-	/// Can be used to adjust the velocity of the vehicle to allow higher-level code to e.g. control the vehicle in the air.
+	/// Can be used to allow higher-level code to e.g. control the vehicle in the air.
 	/// You should not change the position of the vehicle in this callback as the wheel collision checks have already been performed.
-	const PostStepCallback &	GetPostStepCallback() const					{ return mPostStepCallback; }
-	void						SetPostStepCallback(const PostStepCallback &inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
+	const StepCallback &		GetPostStepCallback() const					{ return mPostStepCallback; }
+	void						SetPostStepCallback(const StepCallback &inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
 
 	/// Get the local space forward vector of the vehicle
 	Vec3						GetLocalForward() const						{ return mForward; }
@@ -188,7 +200,11 @@ private:
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
 	CombineFunction				mCombineFriction = [](float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
-	PostStepCallback			mPostStepCallback;
+
+	// Callbacks
+	StepCallback				mPreStepCallback;
+	StepCallback				mPostCollideCallback;
+	StepCallback				mPostStepCallback;
 };
 
 JPH_NAMESPACE_END

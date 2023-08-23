@@ -32,7 +32,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheeledVehicleControllerSettings)
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(WheelSettingsWV)
 {
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mInertia)
-	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mAngularDamping)	
+	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mAngularDamping)
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mMaxSteerAngle)
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mLongitudinalFriction)
 	JPH_ADD_ATTRIBUTE(WheelSettingsWV, mLateralFriction)
@@ -116,7 +116,8 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 
 		// Calculate lateral friction based on slip angle
 		float relative_velocity_len = relative_velocity.Length();
-		float lateral_slip_angle = relative_velocity_len < 1.0e-3f? 0.0f : RadiansToDegrees(ACos(abs(relative_longitudinal_velocity) / relative_velocity_len));
+		mLateralSlip = relative_velocity_len < 1.0e-3f ? 0.0f : ACos(abs(relative_longitudinal_velocity) / relative_velocity_len);
+		float lateral_slip_angle = RadiansToDegrees(mLateralSlip);
 		float lateral_slip_friction = settings->mLateralFriction.GetValue(lateral_slip_angle);
 
 		// Tire friction
@@ -128,6 +129,7 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 	{
 		// No collision
 		mLongitudinalSlip = 0.0f;
+		mLateralSlip = 0.0f;
 		mCombinedLongitudinalFriction = mCombinedLateralFriction = 0.0f;
 	}
 }
@@ -138,7 +140,7 @@ VehicleController *WheeledVehicleControllerSettings::ConstructController(Vehicle
 }
 
 void WheeledVehicleControllerSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	mEngine.SaveBinaryState(inStream);
 
 	mTransmission.SaveBinaryState(inStream);
@@ -402,7 +404,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	if (!driven_wheels.empty())
 	{
 		// Define the torque at the clutch at time t as:
-		// 
+		//
 		// tc(t):=S*(we(t)-sum(R(j)*ww(j,t),j,1,N)/N)
 		//
 		// Where:
@@ -413,7 +415,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// N is the amount of wheels
 		//
 		// The torque that increases the engine angular velocity at time t is:
-		// 
+		//
 		// te(t):=TE-tc(t)
 		//
 		// Where:
@@ -454,7 +456,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// Expanding both equations (the equations above are in wxMaxima format and this can easily be done by expand(%)):
 		//
 		// For wheel:
-		// 
+		//
 		// ww(i,t+dt) + (S*dt*F(i)*R(i)*sum(R(j)*ww(j,t+dt),j,1,N))/(N*Iw(i)) - (S*dt*F(i)*R(i)*we(t+dt))/Iw(i) = ww(i,t)+(dt*TW(i))/Iw(i)
 		//
 		// For engine:
@@ -479,7 +481,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 
 		// Get number of driven wheels as a float
 		float num_driven_wheels_float = float(driven_wheels.size());
-	
+
 		// Angular velocity of engine
 		float w_engine = mEngine.GetAngularVelocity();
 
@@ -608,7 +610,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 
 	// Update transmission
 	mTransmission.Update(inDeltaTime, mEngine.GetCurrentRPM(), mForwardInput, can_shift_up);
-	
+
 	// Braking
 	for (Wheel *w_base : wheels)
 	{
@@ -645,7 +647,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	mPreviousDeltaTime = inDeltaTime;
 }
 
-bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime) 
+bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime)
 {
 	bool impulse = false;
 
@@ -717,7 +719,7 @@ bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 
 #ifdef JPH_DEBUG_RENDERER
 
-void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const 
+void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 {
 	float constraint_size = mConstraint.GetDrawConstraintSize();
 
@@ -732,15 +734,15 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 	{
 		// Calculate average wheel speed at clutch
 		float wheel_speed_at_clutch = GetWheelSpeedAtClutch();
-		
+
 		// Draw the average wheel speed measured at clutch to compare engine RPM with wheel RPM
 		inRenderer->DrawLine(rpm_meter_pos, rpm_meter_pos + Quat::sRotation(rpm_meter_fwd, mEngine.ConvertRPMToAngle(wheel_speed_at_clutch)) * (rpm_meter_up * 1.1f * mRPMMeterSize), Color::sYellow);
 	}
 
 	// Draw current vehicle state
 	String status = StringFormat("Forward: %.1f, Right: %.1f\nBrake: %.1f, HandBrake: %.1f\n"
-								 "Gear: %d, Clutch: %.1f\nEngineRPM: %.0f, V: %.1f km/h", 
-								 (double)mForwardInput, (double)mRightInput, (double)mBrakeInput, (double)mHandBrakeInput, 
+								 "Gear: %d, Clutch: %.1f\nEngineRPM: %.0f, V: %.1f km/h",
+								 (double)mForwardInput, (double)mRightInput, (double)mBrakeInput, (double)mHandBrakeInput,
 								 mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
 	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, constraint_size);
 
@@ -784,7 +786,7 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLongitudinal(), Color::sRed);
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLateral(), Color::sBlue);
 
-			DebugRenderer::sInstance->DrawText3D(wheel_pos, StringFormat("W: %.1f, S: %.2f\nSlip: %.2f, FrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)w->mLongitudinalSlip, (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, constraint_size);
+			DebugRenderer::sInstance->DrawText3D(wheel_pos, StringFormat("W: %.1f, S: %.2f\nSlipLateral: %.1f, SlipLong: %.2f\nFrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)RadiansToDegrees(w->mLateralSlip), (double)w->mLongitudinalSlip, (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, constraint_size);
 		}
 		else
 		{
