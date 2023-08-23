@@ -59,6 +59,7 @@ public:
 	void						Update(float inDeltaTime, const VehicleConstraint &inConstraint);
 
 	float						mLongitudinalSlip = 0.0f;					///< Velocity difference between ground and wheel relative to ground velocity
+	float						mLateralSlip = 0.0f;						///< Angular difference (in radians) between ground and wheel relative to ground velocity
 	float						mCombinedLongitudinalFriction = 0.0f;		///< Combined friction coefficient in longitudinal direction (combines terrain and tires)
 	float						mCombinedLateralFriction = 0.0f;			///< Combined friction coefficient in lateral direction (combines terrain and tires)
 	float						mBrakeImpulse = 0.0f;						///< Amount of impulse that the brakes can apply to the floor (excluding friction)
@@ -102,6 +103,22 @@ public:
 	/// @param inBrake Value between 0 and 1 indicating how strong the brake pedal is pressed
 	/// @param inHandBrake Value between 0 and 1 indicating how strong the hand brake is pulled
 	void						SetDriverInput(float inForward, float inRight, float inBrake, float inHandBrake) { mForwardInput = inForward; mRightInput = inRight; mBrakeInput = inBrake; mHandBrakeInput = inHandBrake; }
+
+	/// Value between -1 and 1 for auto transmission and value between 0 and 1 indicating desired driving direction and amount the gas pedal is pressed
+	void						SetForwardInput(float inForward)			{ mForwardInput = inForward; }
+	float						GetForwardInput() const						{ return mForwardInput; }
+
+	/// Value between -1 and 1 indicating desired steering angle (1 = right)
+	void						SetRightInput(float inRight)				{ mRightInput = inRight; }
+	float						GetRightInput() const						{ return mRightInput; }
+
+	/// Value between 0 and 1 indicating how strong the brake pedal is pressed
+	void						SetBrakeInput(float inBrake)				{ mBrakeInput = inBrake; }
+	float						GetBrakeInput() const						{ return mBrakeInput; }
+
+	/// Value between 0 and 1 indicating how strong the hand brake is pulled
+	void						SetHandBrakeInput(float inHandBrake)		{ mHandBrakeInput = inHandBrake; }
+	float						GetHandBrakeInput() const					{ return mHandBrakeInput; }
 
 	/// Get current engine state
 	const VehicleEngine &		GetEngine() const							{ return mEngine; }

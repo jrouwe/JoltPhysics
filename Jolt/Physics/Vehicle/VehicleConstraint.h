@@ -86,14 +86,26 @@ public:
 	void						SetCombineFriction(CombineFunction inCombineFriction) { mCombineFriction = inCombineFriction; }
 	CombineFunction				GetCombineFriction() const					{ return mCombineFriction; }
 
-	/// Callback function to notify that PhysicsStepListener::OnStep has completed for this vehicle.
-	using PostStepCallback = function<void(VehicleConstraint &inVehicle, float inDeltaTime, PhysicsSystem &inPhysicsSystem)>;
+	/// Callback function to notify of current stage in PhysicsStepListener::OnStep.
+	using StepCallback = function<void(VehicleConstraint &inVehicle, float inDeltaTime, PhysicsSystem &inPhysicsSystem)>;
+
+	/// Callback function to notify that PhysicsStepListener::OnStep has started for this vehicle. Default is to do nothing.
+	/// Can be used to allow higher-level code to e.g. control steering. This is the last moment that the position/orientation of the vehicle can be changed.
+	/// Wheel collision checks have not been performed yet.
+	const StepCallback &		GetPreStepCallback() const					{ return mPreStepCallback; }
+	void						SetPreStepCallback(const StepCallback &inPreStepCallback) { mPreStepCallback = inPreStepCallback; }
+
+	/// Callback function to notify that PhysicsStepListener::OnStep has just completed wheel collision checks. Default is to do nothing.
+	/// Can be used to allow higher-level code to e.g. detect tire contact or to modify the velocity of the vehicle based on the wheel contacts.
+	/// You should not change the position of the vehicle in this callback as the wheel collision checks have already been performed.
+	const StepCallback &		GetPostCollideCallback() const				{ return mPostCollideCallback; }
+	void						SetPostCollideCallback(const StepCallback &inPostCollideCallback) { mPostCollideCallback = inPostCollideCallback; }
 
 	/// Callback function to notify that PhysicsStepListener::OnStep has completed for this vehicle. Default is to do nothing.
-	/// Can be used to adjust the velocity of the vehicle to allow higher-level code to e.g. control the vehicle in the air.
+	/// Can be used to allow higher-level code to e.g. control the vehicle in the air.
 	/// You should not change the position of the vehicle in this callback as the wheel collision checks have already been performed.
-	const PostStepCallback &	GetPostStepCallback() const					{ return mPostStepCallback; }
-	void						SetPostStepCallback(const PostStepCallback &inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
+	const StepCallback &		GetPostStepCallback() const					{ return mPostStepCallback; }
+	void						SetPostStepCallback(const StepCallback &inPostStepCallback) { mPostStepCallback = inPostStepCallback; }
 
 	/// Get the local space forward vector of the vehicle
 	Vec3						GetLocalForward() const						{ return mForward; }
@@ -188,7 +200,11 @@ private:
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
 	CombineFunction				mCombineFriction = [](float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
-	PostStepCallback			mPostStepCallback;
+
+	// Callbacks
+	StepCallback				mPreStepCallback;
+	StepCallback				mPostCollideCallback;
+	StepCallback				mPostStepCallback;
 };
 
 JPH_NAMESPACE_END

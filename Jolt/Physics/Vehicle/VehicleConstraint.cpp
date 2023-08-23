@@ -158,6 +158,10 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Callback to higher-level systems. We do it before PreCollide, in case steering changes.
+	if (mPreStepCallback != nullptr)
+		mPreStepCallback(*this, inDeltaTime, inPhysicsSystem);
+
 	// Calculate new world up vector by inverting gravity
 	mWorldUp = (-inPhysicsSystem.GetGravity()).NormalizedOr(mWorldUp);
 
@@ -218,6 +222,10 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 			w->mContactLateral = w->mContactLongitudinal.Cross(w->mContactNormal).Normalized();
 		}
 	}
+
+	// Callback to higher-level systems. We do it immediately after wheel collision.
+	if (mPostCollideCallback != nullptr)
+		mPostCollideCallback(*this, inDeltaTime, inPhysicsSystem);
 
 	// Calculate anti-rollbar impulses
 	for (const VehicleAntiRollBar &r : mAntiRollBars)

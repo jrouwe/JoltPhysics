@@ -116,7 +116,8 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 
 		// Calculate lateral friction based on slip angle
 		float relative_velocity_len = relative_velocity.Length();
-		float lateral_slip_angle = relative_velocity_len < 1.0e-3f? 0.0f : RadiansToDegrees(ACos(abs(relative_longitudinal_velocity) / relative_velocity_len));
+		mLateralSlip = relative_velocity_len < 1.0e-3f ? 0.0f : ACos(abs(relative_longitudinal_velocity) / relative_velocity_len);
+		float lateral_slip_angle = RadiansToDegrees(mLateralSlip);
 		float lateral_slip_friction = settings->mLateralFriction.GetValue(lateral_slip_angle);
 
 		// Tire friction
@@ -128,6 +129,7 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 	{
 		// No collision
 		mLongitudinalSlip = 0.0f;
+		mLateralSlip = 0.0f;
 		mCombinedLongitudinalFriction = mCombinedLateralFriction = 0.0f;
 	}
 }
@@ -784,7 +786,7 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLongitudinal(), Color::sRed);
 			inRenderer->DrawLine(w->GetContactPosition(), w->GetContactPosition() + w->GetContactLateral(), Color::sBlue);
 
-			DebugRenderer::sInstance->DrawText3D(wheel_pos, StringFormat("W: %.1f, S: %.2f\nSlip: %.2f, FrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)w->mLongitudinalSlip, (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, constraint_size);
+			DebugRenderer::sInstance->DrawText3D(wheel_pos, StringFormat("W: %.1f, S: %.2f\nSlipLateral: %.1f, SlipLong: %.2f\nFrLateral: %.1f, FrLong: %.1f", (double)w->GetAngularVelocity(), (double)w->GetSuspensionLength(), (double)RadiansToDegrees(w->mLateralSlip), (double)w->mLongitudinalSlip, (double)w->mCombinedLateralFriction, (double)w->mCombinedLongitudinalFriction), Color::sWhite, constraint_size);
 		}
 		else
 		{
