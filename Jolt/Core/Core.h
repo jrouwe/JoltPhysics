@@ -306,12 +306,12 @@
 // OS-specific includes
 #if defined(JPH_PLATFORM_WINDOWS)
 	#define JPH_BREAKPOINT		__debugbreak()
-#elif defined(JPH_PLATFORM_BLUE) 
+#elif defined(JPH_PLATFORM_BLUE)
 	// Configuration for a popular game console.
-	// This file is not distributed because it would violate an NDA. 
-	// Creating one should only be a couple of minutes of work if you have the documentation for the platform 
+	// This file is not distributed because it would violate an NDA.
+	// Creating one should only be a couple of minutes of work if you have the documentation for the platform
 	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS and JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY and include the right header).
-	#include <Jolt/Core/PlatformBlue.h> 
+	#include <Jolt/Core/PlatformBlue.h>
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT		__asm volatile ("int $0x3")
@@ -447,7 +447,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 
 // Stack allocation
 #define JPH_STACK_ALLOC(n)		alloca(n)
-	
+
 // Shorthand for #ifdef _DEBUG / #endif
 #ifdef _DEBUG
 	#define JPH_IF_DEBUG(...)	__VA_ARGS__
@@ -493,12 +493,18 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#define JPH_PRECISE_MATH_ON
 	#define JPH_PRECISE_MATH_OFF
 #elif defined(JPH_COMPILER_CLANG)
-	// We compile without -ffast-math because it cannot be turned off for a single compilation unit
-	// On clang 14 and later we can turn off float contraction through a pragma, so if FMA is on we can disable it through this macro
-	#if __clang_major__ >= 14 && defined(JPH_USE_FMADD)
-		#define JPH_PRECISE_MATH_ON					\
+	// We compile without -ffast-math because pragma float_control(precise, on) doesn't seem to actually negate all of the -ffast-math effects and causes the unit tests to fail (even if the pragma is added to all files)
+	// On clang 14 and later we can turn off float contraction through a pragma (before it was buggy), so if FMA is on we can disable it through this macro
+	#if (defined(JPH_CPU_ARM) && __clang_major__ >= 16) || (defined(JPH_CPU_X86) && __clang_major__ >= 14)
+		#define JPH_PRECISE_MATH_ON						\
+			_Pragma("float_control(precise, on, push)")	\
 			_Pragma("clang fp contract(off)")
-		#define JPH_PRECISE_MATH_OFF				\
+		#define JPH_PRECISE_MATH_OFF					\
+			_Pragma("float_control(pop)")
+	#elif __clang_major__ >= 14 && (defined(JPH_USE_FMADD) || defined(FP_FAST_FMA))
+		#define JPH_PRECISE_MATH_ON						\
+			_Pragma("clang fp contract(off)")
+		#define JPH_PRECISE_MATH_OFF					\
 			_Pragma("clang fp contract(on)")
 	#else
 		#define JPH_PRECISE_MATH_ON
@@ -506,11 +512,11 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 	#endif
 #elif defined(JPH_COMPILER_MSVC)
 	// Unfortunately there is no way to push the state of fp_contract, so we have to assume it was turned on before JPH_PRECISE_MATH_ON
-	#define JPH_PRECISE_MATH_ON						\
-		__pragma(float_control(precise, on, push))	\
+	#define JPH_PRECISE_MATH_ON							\
+		__pragma(float_control(precise, on, push))		\
 		__pragma(fp_contract(off))
-	#define JPH_PRECISE_MATH_OFF					\
-		__pragma(fp_contract(on))					\
+	#define JPH_PRECISE_MATH_OFF						\
+		__pragma(fp_contract(on))						\
 		__pragma(float_control(pop))
 #else
 	#error Undefined
