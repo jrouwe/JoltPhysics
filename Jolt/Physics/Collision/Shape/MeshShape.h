@@ -31,15 +31,21 @@ public:
 									MeshShapeSettings(const TriangleList &inTriangles, PhysicsMaterialList inMaterials = PhysicsMaterialList());
 									MeshShapeSettings(VertexList inVertices, IndexedTriangleList inTriangles, PhysicsMaterialList inMaterials = PhysicsMaterialList());
 
-	/// Sanitize the mesh data. Remove duplicate and degenerate triangles.
+	/// Sanitize the mesh data. Remove duplicate and degenerate triangles. This is called automatically when constructing the MeshShapeSettings with a list of (indexed-) triangles.
 	void							Sanitize();
 
 	// See: ShapeSettings
 	virtual ShapeResult				Create() const override;
 
-	/// Mesh data.
-	VertexList						mTriangleVertices;											///< Vertices belonging to mIndexedTriangles
-	IndexedTriangleList				mIndexedTriangles;											///< Original list of indexed triangles
+	/// Vertices belonging to mIndexedTriangles
+	VertexList						mTriangleVertices;
+
+	/// Original list of indexed triangles (triangles will be reordered internally in the mesh shape).
+	/// Triangles must be provided in counter clockwise order.
+	/// For simulation, the triangles are considered to be single sided.
+	/// For ray casts you can choose to make triangles double sided by setting RayCastSettings::mBackFaceMode to EBackFaceMode::CollideWithBackFaces.
+	/// For collide shape tests you can use CollideShapeSettings::mBackFaceMode and for shape casts you can use ShapeCastSettings::mBackFaceModeTriangles.
+	IndexedTriangleList				mIndexedTriangles;
 
 	/// Materials assigned to the triangles. Each triangle specifies which material it uses through its mMaterialIndex
 	PhysicsMaterialList				mMaterials;
