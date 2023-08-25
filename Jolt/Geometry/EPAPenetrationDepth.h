@@ -414,9 +414,11 @@ public:
 		if (last == nullptr)
 			return false;
 
-		// Fall back to before last triangle if the distance to the origin is closer.
-		// This fixes an issue where the last triangle comes from an invalid hull (due to numerical precision issues).
-		if (before_last_dist_sq < last_dist_sq)
+		// Fall back to before last triangle if the last triangle is significantly worse.
+		// This fixes an issue that when the hull becomes invalid due to numerical precision issues and we did one step too many.
+		// Note that when colliding curved surfaces the last triangle describes the surface better and results in a better contact point,
+		// that's why we only do this when the last triangle is significantly worse than the before last triangle.
+		if (before_last_dist_sq < 0.99f * last_dist_sq)
 		{
 			JPH_ASSERT(before_last != nullptr);
 			last = before_last;
