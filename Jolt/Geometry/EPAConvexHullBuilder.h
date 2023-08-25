@@ -649,6 +649,14 @@ public:
 		mOffset += Vec3(max_x - min_x + 0.5f, 0.0f, 0.0f);
 	}
 
+	/// Draw a label to indicate the next stage in the algorithm
+	void				DrawLabel(const string_view &inText)
+	{
+		DebugRenderer::sInstance->DrawText3D(cDrawScale * mOffset, inText, Color::sWhite, 0.1f * cDrawScale);
+
+		mOffset += Vec3(5.0f, 0.0f, 0.0f);
+	}
+
 	/// Draw a triangle for debugging purposes
 	void				DrawWireTriangle(const Triangle &inTriangle, ColorArg inColor)
 	{

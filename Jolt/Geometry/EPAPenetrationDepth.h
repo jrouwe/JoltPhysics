@@ -9,6 +9,8 @@
 #include <Jolt/Geometry/GJKClosestPoint.h>
 #include <Jolt/Geometry/EPAConvexHullBuilder.h>
 
+//#define JPH_EPA_PENETRATION_DEPTH_DEBUG
+
 JPH_NAMESPACE_BEGIN
 
 /// Implementation of Expanding Polytope Algorithm as described in:
@@ -195,6 +197,12 @@ public:
 		// Create hull out of the initial points
 		JPH_ASSERT(support_points.mY.size() >= 3);
 		EPAConvexHullBuilder hull(support_points.mY);
+#ifdef JPH_EPA_CONVEX_BUILDER_DRAW
+		hull.DrawLabel("Build initial hull");
+#endif
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+		Trace("Init: num_points = %d", support_points.mY.size());
+#endif
 		hull.Initialize(0, 1, 2);
 		for (typename Points::size_type i = 3; i < support_points.mY.size(); ++i)
 		{
@@ -211,6 +219,10 @@ public:
 				}
 			}
 		}
+
+#ifdef JPH_EPA_CONVEX_BUILDER_DRAW
+		hull.DrawLabel("Ensure origin in hull");
+#endif
 
 		// Loop until we are sure that the origin is inside the hull
 		for (;;)
@@ -234,6 +246,17 @@ public:
 			// If the closest to the triangle is zero or positive, the origin is in the hull and we can proceed to the main algorithm
 			if (t->mClosestLenSq >= 0.0f)
 				break;
+
+#ifdef JPH_EPA_CONVEX_BUILDER_DRAW
+			hull.DrawLabel("Next iteration");
+#endif
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+			Trace("EncapsulateOrigin: verts = (%d, %d, %d), closest_dist_sq = %g, centroid = (%g, %g, %g), normal = (%g, %g, %g)",
+				t->mEdge[0].mStartIdx, t->mEdge[1].mStartIdx, t->mEdge[2].mStartIdx,
+				t->mClosestLenSq,
+				t->mCentroid.GetX(), t->mCentroid.GetY(), t->mCentroid.GetZ(),
+				t->mNormal.GetX(), t->mNormal.GetY(), t->mNormal.GetZ());
+#endif
 
 			// Remove the triangle from the queue before we start adding new ones (which may result in a new closest triangle at the front of the queue)
 			hull.PopClosestTriangleFromQueue();
@@ -263,6 +286,10 @@ public:
 				return false;
 		}
 
+#ifdef JPH_EPA_CONVEX_BUILDER_DRAW
+		hull.DrawLabel("Main algorithm");
+#endif
+
 		// Current closest distance to origin
 		float closest_dist_sq = FLT_MAX;
 
@@ -282,14 +309,19 @@ public:
 				continue;
 			}
 
+#ifdef JPH_EPA_CONVEX_BUILDER_DRAW
+			hull.DrawLabel("Next iteration");
+#endif
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+			Trace("FindClosest: verts = (%d, %d, %d), closest_len_sq = %g, centroid = (%g, %g, %g), normal = (%g, %g, %g)",
+				t->mEdge[0].mStartIdx, t->mEdge[1].mStartIdx, t->mEdge[2].mStartIdx,
+				t->mClosestLenSq,
+				t->mCentroid.GetX(), t->mCentroid.GetY(), t->mCentroid.GetZ(),
+				t->mNormal.GetX(), t->mNormal.GetY(), t->mNormal.GetZ());
+#endif
 			// Check if next triangle is further away than closest point, we've found the closest point
 			if (t->mClosestLenSq >= closest_dist_sq)
 				break;
-
-			// Replace last good with this triangle
-			if (last != nullptr)
-				hull.FreeTriangle(last);
-			last = t;
 
 			// Add support point in direction of normal of the plane
 			// Note that the article uses the closest point between the origin and plane, but this always has the exact same direction as the normal (if the origin is behind the plane)
@@ -306,8 +338,13 @@ public:
 				return false;
 
 			// Get the distance squared (along normal) to the support point
-			float dist_sq = dot * dot / t->mNormal.LengthSq();
+			float dist_sq = Square(dot) / t->mNormal.LengthSq();
 
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+			Trace("FindClosest: w = (%g, %g, %g), dot = %g, dist_sq = %g",
+				w.GetX(), w.GetY(), w.GetZ(),
+				dot, dist_sq);
+#endif
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
 			// Draw the point that we're adding
 			hull.DrawMarker(w, Color::sPurple, 1.0f);
@@ -315,21 +352,51 @@ public:
 			hull.DrawState();
 #endif
 
+			// Update the closest triangle
+			if (last == nullptr)
+			{
+				// No closest triangle yet
+				last = t;
+			}
+			// Don't accept triangles whose support point is significantly further away than the current closest as this will give a wrong contact if the algorithm terminates due to e.g. hull defects.
+			// In other cases we need to accept it because on a round surface, the new triangle approximates the surface better so will give a better contact point (even if the distance is the same).
+			else if (dist_sq < 1.01f * closest_dist_sq)
+			{
+				// Use this triangle as closest and free the previous one
+				hull.FreeTriangle(last);
+				last = t;
+			}
+
 			// If the error became small enough, we've converged
 			if (dist_sq - t->mClosestLenSq < t->mClosestLenSq * inTolerance)
+			{
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+				Trace("Converged");
+#endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
 				break;
+			}
 
 			// Keep track of the minimum distance
 			closest_dist_sq = min(closest_dist_sq, dist_sq);
 
 			// If the triangle thinks this point is not front facing, we've reached numerical precision and we're done
 			if (!t->IsFacing(w))
+			{
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+				Trace("Not facing triangle");
+#endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
 				break;
+			}
 
 			// Add point to hull
 			EPAConvexHullBuilder::NewTriangles new_triangles;
 			if (!hull.AddPoint(t, new_index, closest_dist_sq, new_triangles))
+			{
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+				Trace("Could not add point");
+#endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
 				break;
+			}
 
 			// If the hull is starting to form defects then we're reaching numerical precision and we have to stop
 			bool has_defect = false;
@@ -340,13 +407,29 @@ public:
 					break;
 				}
 			if (has_defect)
+			{
+#ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
+				Trace("Has defect");
+#endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
 				break;
+			}
+
+			// If we did not accept this triangle as the new closest we need to free it			
+			if (last != t)
+				hull.FreeTriangle(t);
 		}
 		while (hull.HasNextTriangle() && support_points.mY.size() < cMaxPoints);
 
 		// Determine closest points, if last == null it means the hull was a plane so there's no penetration
 		if (last == nullptr)
 			return false;
+
+#ifdef JPH_EPA_CONVEX_BUILDER_DRAW
+		hull.DrawLabel("Closest found");
+		hull.DrawWireTriangle(*last, Color::sWhite);
+		hull.DrawArrow(last->mCentroid, last->mCentroid + last->mNormal.NormalizedOr(Vec3::sZero()), Color::sWhite, 0.1f);
+		hull.DrawState();
+#endif
 
 		// Calculate penetration by getting the vector from the origin to the closest point on the triangle:
 		// distance = (centroid - origin) . normal / |normal|, closest = origin + distance * normal / |normal|
