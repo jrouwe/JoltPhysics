@@ -377,4 +377,57 @@ TEST_SUITE("CollideShapeTests")
 		CHECK_APPROX_EQUAL(actual_penetration_axis, expected_penetration_axis);
 		CHECK_APPROX_EQUAL(actual_penetration_depth, expected_penetration_depth);
 	}
+
+	// A test case of a box and a convex hull that are nearly touching and that should return a contact with correct normal because the collision settings specify a max separation distance. This was producing the wrong normal.
+	TEST_CASE("BoxVsConvexHullNoConvexRadius")
+	{
+		const float separation_distance = 0.001f;
+		const float box_separation_from_hull = 0.5f * separation_distance;
+		const float hull_height = 0.25f;
+
+		// Box with no convex radius
+		Ref<BoxShapeSettings> box_settings = new BoxShapeSettings(Vec3(0.25f, 0.75f, 0.375f), 0.0f);
+		Ref<Shape> box_shape = box_settings->Create().Get();
+
+		// Convex hull (also a box) with no convex radius
+		Vec3 hull_points[] =
+		{
+			Vec3(-2.5f, -hull_height, -1.5f),
+			Vec3(-2.5f, hull_height, -1.5f),
+			Vec3(2.5f, -hull_height, -1.5f),
+			Vec3(-2.5f, -hull_height, 1.5f),
+			Vec3(-2.5f, hull_height, 1.5f),
+			Vec3(2.5f, hull_height, -1.5f),
+			Vec3(2.5f, -hull_height, 1.5f),
+			Vec3(2.5f, hull_height, 1.5f)
+		};
+		Ref<ConvexHullShapeSettings> hull_settings = new ConvexHullShapeSettings(hull_points, 8, 0.0f);
+		Ref<Shape> hull_shape = hull_settings->Create().Get();
+
+		float angle = 0.0f;
+		for (int i = 0; i < 481; ++i)
+		{
+			// Slowly rotate both box and convex hull
+			angle += DegreesToRadians(45.0f) / 60.0f;
+			Mat44 hull_transform = Mat44::sRotationY(angle);
+			const Mat44 box_local_translation = Mat44::sTranslation(Vec3(0.1f, 1.0f + box_separation_from_hull, -0.5f));
+			const Mat44 box_local_rotation = Mat44::sRotationY(DegreesToRadians(-45.0f));
+			const Mat44 box_local_transform = box_local_translation * box_local_rotation;
+			const Mat44 box_transform = hull_transform * box_local_transform;
+
+			CollideShapeSettings settings;
+			settings.mMaxSeparationDistance = separation_distance;
+			ClosestHitCollisionCollector<CollideShapeCollector> collector;
+			CollisionDispatch::sCollideShapeVsShape(box_shape, hull_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), box_transform, hull_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+
+			// Check that there was a hit and that the contact normal is correct
+			CHECK(collector.HadHit());
+			const CollideShapeResult &hit = collector.mHit;
+			CHECK_APPROX_EQUAL(hit.mContactPointOn1.GetY(), hull_height + box_separation_from_hull, 2.0e-4f);
+			CHECK_APPROX_EQUAL(hit.mContactPointOn2.GetY(), hull_height);
+			CHECK_APPROX_EQUAL(hit.mPenetrationAxis.NormalizedOr(Vec3::sZero()), -Vec3::sAxisY(), 1.0e-3f);
+		}
+
+		CHECK(angle >= 2.0f * JPH_PI);
+	}
 }
