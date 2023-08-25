@@ -93,9 +93,9 @@ TEST_SUITE("CollideShapeTests")
 		class PositionACollideShapeCollector : public CollideShapeCollector
 		{
 		public:
-							PositionACollideShapeCollector(const Body &inBody2) : 
+							PositionACollideShapeCollector(const Body &inBody2) :
 				mBody2(inBody2)
-			{ 
+			{
 			}
 
 			virtual void	AddHit(const CollideShapeResult &inResult) override
@@ -133,9 +133,9 @@ TEST_SUITE("CollideShapeTests")
 		class PositionBCollideShapeCollector : public CollideShapeCollector
 		{
 		public:
-							PositionBCollideShapeCollector(const Body &inBody2) : 
+							PositionBCollideShapeCollector(const Body &inBody2) :
 				mBody2(inBody2)
-			{ 
+			{
 			}
 
 			virtual void	Reset() override
@@ -257,11 +257,11 @@ TEST_SUITE("CollideShapeTests")
 		// Collide the two shapes
 		AllHitCollisionCollector<CollideShapeCollector> collector;
 		CollisionDispatch::sCollideShapeVsShape(capsule_shape, box_shape, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), capsule_transform, box_transform, SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
-		
+
 		// Check that there was a hit
 		CHECK(collector.mHits.size() == 1);
 		const CollideShapeResult &result = collector.mHits.front();
-		
+
 		// Now move the box 1% further than the returned penetration depth and check that it is no longer in collision
 		Vec3 distance_to_move_box = result.mPenetrationAxis.Normalized() * result.mPenetrationDepth;
 		collector.Reset();

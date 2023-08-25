@@ -294,7 +294,8 @@ public:
 		float closest_dist_sq = FLT_MAX;
 
 		// Remember last good triangle
-		Triangle *last = nullptr;
+		Triangle *before_last = nullptr, *last = nullptr;
+		float before_last_dist_sq = FLT_MAX, last_dist_sq = FLT_MAX;
 
 		// Loop until closest point found
 		do
@@ -340,6 +341,14 @@ public:
 			// Get the distance squared (along normal) to the support point
 			float dist_sq = Square(dot) / t->mNormal.LengthSq();
 
+			// Replace last good with this triangle and shift last good to before last
+			if (before_last != nullptr)
+				hull.FreeTriangle(before_last);
+			before_last = last;
+			last = t;
+			before_last_dist_sq = last_dist_sq;
+			last_dist_sq = dist_sq;
+
 #ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
 			Trace("FindClosest: w = (%g, %g, %g), dot = %g, dist_sq = %g",
 				w.GetX(), w.GetY(), w.GetZ(),
@@ -351,21 +360,6 @@ public:
 			hull.DrawWireTriangle(*t, Color::sPurple);
 			hull.DrawState();
 #endif
-
-			// Update the closest triangle
-			if (last == nullptr)
-			{
-				// No closest triangle yet
-				last = t;
-			}
-			// Don't accept triangles whose support point is significantly further away than the current closest as this will give a wrong contact if the algorithm terminates due to e.g. hull defects.
-			// In other cases we need to accept it because on a round surface, the new triangle approximates the surface better so will give a better contact point (even if the distance is the same).
-			else if (dist_sq < 1.01f * closest_dist_sq)
-			{
-				// Use this triangle as closest and free the previous one
-				hull.FreeTriangle(last);
-				last = t;
-			}
 
 			// If the error became small enough, we've converged
 			if (dist_sq - t->mClosestLenSq < t->mClosestLenSq * inTolerance)
@@ -413,16 +407,20 @@ public:
 #endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
 				break;
 			}
-
-			// If we did not accept this triangle as the new closest we need to free it			
-			if (last != t)
-				hull.FreeTriangle(t);
 		}
 		while (hull.HasNextTriangle() && support_points.mY.size() < cMaxPoints);
 
 		// Determine closest points, if last == null it means the hull was a plane so there's no penetration
 		if (last == nullptr)
 			return false;
+
+		// Fall back to before last triangle if the distance to the origin is closer.
+		// This fixes an issue where the last triangle comes from an invalid hull (due to numerical precision issues).
+		if (before_last_dist_sq < last_dist_sq)
+		{
+			JPH_ASSERT(before_last != nullptr);
+			last = before_last;
+		}
 
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
 		hull.DrawLabel("Closest found");
