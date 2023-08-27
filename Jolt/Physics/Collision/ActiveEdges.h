@@ -59,7 +59,7 @@ namespace ActiveEdges
 
 		// Some edges are active.
 		// If normal is parallel to the triangle normal we don't need to check the active edges.
-		if (inTriangleNormal.Dot(inNormal) > 0.996195f * normal_length * triangle_normal_length) // cos(5 degrees)
+		if (inTriangleNormal.Dot(inNormal) > 0.999848f * normal_length * triangle_normal_length) // cos(1 degree)
 			return inNormal;
 
 		const float cEpsilon = 1.0e-4f;
