@@ -14,7 +14,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Constraint that constrains motion along 1 axis
 ///
-/// @see "Constraints Derivation for Rigid Body Simulation in 3D" - Daniel Chappuis, section 2.1.1 
+/// @see "Constraints Derivation for Rigid Body Simulation in 3D" - Daniel Chappuis, section 2.1.1
 /// (we're not using the approximation of eq 27 but instead add the U term as in eq 55)
 ///
 /// Constraint equation (eq 25):
@@ -53,7 +53,7 @@ class AxisConstraintPart
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			if constexpr (Type1 == EMotionType::Dynamic)
 			{
@@ -99,7 +99,7 @@ class AxisConstraintPart
 			mInverseMass2 = inInvMass2;
 			r2_x_axis = inR2.Cross(inWorldSpaceAxis);
 			r2_x_axis.StoreFloat3(&mR2xAxis);
-		}		
+		}
 		else
 		{
 		#ifdef _DEBUG
@@ -203,9 +203,15 @@ public:
 	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
 	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
-		mEffectiveMass = 1.0f / CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
+		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
 
-		mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+		{
+			mEffectiveMass = 1.0f / inv_effective_mass;
+			mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+		}
 	}
 
 	/// Calculate properties used during the functions below
@@ -223,7 +229,10 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
 
-		mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
 	}
 
 	/// Calculate properties used during the functions below
@@ -241,7 +250,10 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
 
-		mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
 	}
 
 	/// Selects one of the above functions based on the spring settings
@@ -427,11 +439,11 @@ public:
 			// lambda = -K^-1 * beta / dt * C
 			//
 			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			float lambda = -mEffectiveMass * inBaumgarte * inC; 
+			float lambda = -mEffectiveMass * inBaumgarte * inC;
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -440,9 +452,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			if (ioBody1.IsDynamic())
 			{

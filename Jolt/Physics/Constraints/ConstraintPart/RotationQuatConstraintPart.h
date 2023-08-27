@@ -11,19 +11,19 @@ JPH_NAMESPACE_BEGIN
 
 /// Quaternion based constraint that constrains rotation around all axis so that only translation is allowed.
 ///
-/// NOTE: This constraint part is more expensive than the RotationEulerConstraintPart and slightly more correct since 
+/// NOTE: This constraint part is more expensive than the RotationEulerConstraintPart and slightly more correct since
 /// RotationEulerConstraintPart::SolvePositionConstraint contains an approximation. In practice the difference
 /// is small, so the RotationEulerConstraintPart is probably the better choice.
 ///
 /// Rotation is fixed between bodies like this:
 ///
 /// q2 = q1 r0
-/// 
+///
 /// Where:
 /// q1, q2 = world space quaternions representing rotation of body 1 and 2.
 /// r0 = initial rotation between bodies in local space of body 1, this can be calculated by:
 ///
-/// q20 = q10 r0 
+/// q20 = q10 r0
 /// <=> r0 = q10^* q20
 ///
 /// Where:
@@ -77,7 +77,7 @@ JPH_NAMESPACE_BEGIN
 ///
 /// Jacobian:
 ///
-/// J = [0, -1/2 A ML(q1^*) MR(q2 r0^*) A^T, 0, 1/2 A ML(q1^*) MR(q2 r0^*) A^T] 
+/// J = [0, -1/2 A ML(q1^*) MR(q2 r0^*) A^T, 0, 1/2 A ML(q1^*) MR(q2 r0^*) A^T]
 /// = [0, -JP, 0, JP]
 ///
 /// Suggested reading:
@@ -97,7 +97,7 @@ private:
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			if (ioBody1.IsDynamic())
 				ioBody1.GetMotionProperties()->SubAngularVelocityStep(mInvI1_JPT.Multiply3x3(inLambda));
@@ -113,8 +113,8 @@ public:
 	/// Return inverse of initial rotation from body 1 to body 2 in body 1 space
 	static Quat					sGetInvInitialOrientation(const Body &inBody1, const Body &inBody2)
 	{
-		// q20 = q10 r0 
-		// <=> r0 = q10^-1 q20 
+		// q20 = q10 r0
+		// <=> r0 = q10^-1 q20
 		// <=> r0^-1 = q20^-1 q10
 		//
 		// where:
@@ -137,11 +137,27 @@ public:
 		mInvI1_JPT = invi1.Multiply3x3RightTransposed(jp);
 		mInvI2_JPT = invi2.Multiply3x3RightTransposed(jp);
 
-		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1 
+		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
 		// = (JP * I1^-1 * JP^T + JP * I2^-1 * JP^T)^-1
 		// = (JP * (I1^-1 + I2^-1) * JP^T)^-1
-		mEffectiveMass = jp.Multiply3x3(invi1 + invi2).Multiply3x3RightTransposed(jp).Inversed3x3();
-		mEffectiveMass_JP = mEffectiveMass.Multiply3x3(jp);
+		if (!mEffectiveMass.SetInversed3x3(jp.Multiply3x3(invi1 + invi2).Multiply3x3RightTransposed(jp)))
+			Deactivate();
+		else
+			mEffectiveMass_JP = mEffectiveMass.Multiply3x3(jp);
+	}
+
+	/// Deactivate this constraint
+	inline void					Deactivate()
+	{
+		mEffectiveMass = Mat44::sZero();
+		mEffectiveMass_JP = Mat44::sZero();
+		mTotalLambda = Vec3::sZero();
+	}
+
+	/// Check if constraint is active
+	inline bool					IsActive() const
+	{
+		return mEffectiveMass(3, 3) != 0.0f;
 	}
 
 	/// Must be called from the WarmStartVelocityConstraint call to apply the previous frame's impulses
@@ -178,7 +194,7 @@ public:
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -187,9 +203,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			if (ioBody1.IsDynamic())
 				ioBody1.SubRotationStep(mInvI1_JPT.Multiply3x3(lambda));
@@ -219,7 +235,7 @@ public:
 		inStream.Read(mTotalLambda);
 	}
 
-private:	
+private:
 	Mat44						mInvI1_JPT;
 	Mat44						mInvI2_JPT;
 	Mat44						mEffectiveMass;
