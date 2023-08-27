@@ -149,10 +149,7 @@ public:
 		}
 
 		if (!mEffectiveMass.SetInversed(inv_effective_mass))
-		{
-			JPH_ASSERT(false, "Determinant is zero!");
 			Deactivate();
-		}
 	}
 
 	/// Deactivate this constraint

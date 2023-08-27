@@ -78,7 +78,11 @@ public:
 		mInvI2_B = inBody2.GetMotionProperties()->MultiplyWorldSpaceInverseInertiaByVector(inBody2.GetRotation(), inWorldSpaceHingeAxis2);
 
 		// K^-1 = 1 / (J M^-1 J^T) = 1 / (a^T I1^-1 a + r^2 * b^T I2^-1 b)
-		mEffectiveMass = 1.0f / (inWorldSpaceHingeAxis1.Dot(mInvI1_A) + inWorldSpaceHingeAxis2.Dot(mInvI2_B) * Square(inRatio));
+		float inv_effective_mass = (inWorldSpaceHingeAxis1.Dot(mInvI1_A) + inWorldSpaceHingeAxis2.Dot(mInvI2_B) * Square(inRatio));
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mEffectiveMass = 1.0f / inv_effective_mass;
 	}
 
 	/// Deactivate this constraint

@@ -121,7 +121,21 @@ public:
 		}
 
 		inv_effective_mass += Mat44::sScale(summed_inv_mass);
-		mEffectiveMass = inv_effective_mass.Inversed3x3();
+		if (!mEffectiveMass.SetInversed3x3(inv_effective_mass))
+			Deactivate();
+	}
+
+	/// Deactivate this constraint
+	inline void					Deactivate()
+	{
+		mEffectiveMass = Mat44::sZero();
+		mTotalLambda = Vec3::sZero();
+	}
+
+	/// Check if constraint is active
+	inline bool					IsActive() const
+	{
+		return mEffectiveMass(3, 3) != 0.0f;
 	}
 
 	/// Must be called from the WarmStartVelocityConstraint call to apply the previous frame's impulses

@@ -79,7 +79,11 @@ public:
 		mRatio_InvM2_B = inRatio * inv_m2 * inWorldSpaceSliderAxis;
 
 		// K^-1 = 1 / (J M^-1 J^T) = 1 / (a^T I1^-1 a + 1/m2 * r^2 * b . b)
-		mEffectiveMass = 1.0f / (inWorldSpaceHingeAxis.Dot(mInvI1_A) + inv_m2 * Square(inRatio));
+		float inv_effective_mass = (inWorldSpaceHingeAxis.Dot(mInvI1_A) + inv_m2 * Square(inRatio));
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mEffectiveMass = 1.0f / inv_effective_mass;
 	}
 
 	/// Deactivate this constraint

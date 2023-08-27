@@ -218,6 +218,22 @@ TEST_SUITE("Mat44Tests")
 		CHECK(identity == Mat44::sIdentity());
 	}
 
+	TEST_CASE("TestMat44SetInversed3x3")
+	{
+		Mat44 mat(Vec4(1, 2, 0, 0), Vec4(4, 0, 8, 0), Vec4(0, 16, 0, 0), Vec4(1, 2, 3, 1));
+
+		// First test succeeding inverse
+		Mat44 inverse;
+		CHECK(inverse.SetInversed3x3(mat));
+		CHECK(inverse.GetColumn4(3) == Vec4(0, 0, 0, 1));
+		Mat44 identity = mat.Multiply3x3(inverse);
+		CHECK(identity == Mat44::sIdentity());
+
+		// Now make singular
+		mat(0, 0) = 0.0f;
+		CHECK(!inverse.SetInversed3x3(mat));
+	}
+
 	TEST_CASE("TestMat44GetDeterminant3x3")
 	{
 		Mat44 mat(Vec4(1, 2, 0, 0), Vec4(4, 0, 8, 0), Vec4(0, 16, 0, 0), Vec4(1, 2, 3, 1));

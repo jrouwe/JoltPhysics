@@ -140,8 +140,24 @@ public:
 		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1 
 		// = (JP * I1^-1 * JP^T + JP * I2^-1 * JP^T)^-1
 		// = (JP * (I1^-1 + I2^-1) * JP^T)^-1
-		mEffectiveMass = jp.Multiply3x3(invi1 + invi2).Multiply3x3RightTransposed(jp).Inversed3x3();
-		mEffectiveMass_JP = mEffectiveMass.Multiply3x3(jp);
+		if (!mEffectiveMass.SetInversed3x3(jp.Multiply3x3(invi1 + invi2).Multiply3x3RightTransposed(jp)))
+			Deactivate();
+		else
+			mEffectiveMass_JP = mEffectiveMass.Multiply3x3(jp);
+	}
+
+	/// Deactivate this constraint
+	inline void					Deactivate()
+	{
+		mEffectiveMass = Mat44::sZero();
+		mEffectiveMass_JP = Mat44::sZero();
+		mTotalLambda = Vec3::sZero();
+	}
+
+	/// Check if constraint is active
+	inline bool					IsActive() const
+	{
+		return mEffectiveMass(3, 3) != 0.0f;
 	}
 
 	/// Must be called from the WarmStartVelocityConstraint call to apply the previous frame's impulses

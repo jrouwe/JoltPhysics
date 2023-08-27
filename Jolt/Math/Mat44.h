@@ -181,6 +181,9 @@ public:
 	/// Inverse 3x3 matrix
 	JPH_INLINE Mat44			Inversed3x3() const;
 
+	/// *this = inM.Inversed3x3(), returns false if the matrix is singular in which case *this is unchanged
+	JPH_INLINE bool				SetInversed3x3(Mat44Arg inM);
+
 	/// Get rotation part only (note: retains the first 3 values from the bottom row)
 	JPH_INLINE Mat44			GetRotation() const;
 

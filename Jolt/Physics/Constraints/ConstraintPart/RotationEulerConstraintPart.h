@@ -143,7 +143,8 @@ public:
 		mInvI2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inRotation2) : Mat44::sZero();
 
 		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
-		mEffectiveMass = (mInvI1 + mInvI2).Inversed3x3();
+		if (!mEffectiveMass.SetInversed3x3(mInvI1 + mInvI2))
+			Deactivate();
 	}
 
 	/// Deactivate this constraint

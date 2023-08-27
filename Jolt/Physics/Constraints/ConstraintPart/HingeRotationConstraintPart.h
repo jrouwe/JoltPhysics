@@ -110,10 +110,7 @@ public:
 		inv_effective_mass(1, 0) = mC2xA1.Dot(summed_inv_inertia.Multiply3x3(mB2xA1));
 		inv_effective_mass(1, 1) = mC2xA1.Dot(summed_inv_inertia.Multiply3x3(mC2xA1));
 		if (!mEffectiveMass.SetInversed(inv_effective_mass))
-		{
-			JPH_ASSERT(false, "Determinant is zero!");
 			Deactivate();
-		}
 	}
 
 	/// Deactivate this constraint

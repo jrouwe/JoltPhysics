@@ -755,6 +755,22 @@ Mat44 Mat44::Inversed3x3() const
 		Vec4(0, 0, 0, 1));
 }
 
+bool Mat44::SetInversed3x3(Mat44Arg inM)
+{
+	float det = inM.GetDeterminant3x3();
+
+	// If the determinant is zero the matrix is singular and we return false
+	if (det == 0.0f)
+		return false;
+
+	// Finish calculating the inverse
+	*this = inM.Adjointed3x3();
+	mCol[0] /= det;
+	mCol[1] /= det;
+	mCol[2] /= det;
+	return true;
+}
+
 Quat Mat44::GetQuaternion() const
 {
 	JPH_ASSERT(mCol[3] == Vec4(0, 0, 0, 1));

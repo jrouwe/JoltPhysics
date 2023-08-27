@@ -203,9 +203,15 @@ public:
 	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
 	inline void					CalculateConstraintProperties(const Body &inBody1, Vec3Arg inR1PlusU, const Body &inBody2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
-		mEffectiveMass = 1.0f / CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
+		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
 
-		mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+		{
+			mEffectiveMass = 1.0f / inv_effective_mass;
+			mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+		}
 	}
 
 	/// Calculate properties used during the functions below
@@ -223,7 +229,10 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
 
-		mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mSpringPart.CalculateSpringPropertiesWithFrequencyAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inFrequency, inDamping, mEffectiveMass);
 	}
 
 	/// Calculate properties used during the functions below
@@ -241,7 +250,10 @@ public:
 	{
 		float inv_effective_mass = CalculateInverseEffectiveMass(inBody1, inR1PlusU, inBody2, inR2, inWorldSpaceAxis);
 
-		mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mSpringPart.CalculateSpringPropertiesWithStiffnessAndDamping(inDeltaTime, inv_effective_mass, inBias, inC, inStiffness, inDamping, mEffectiveMass);
 	}
 
 	/// Selects one of the above functions based on the spring settings
