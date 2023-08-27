@@ -38,7 +38,7 @@ public:
 	// Constants
 	static constexpr int cMaxEdgeLength = 128;				///< Max number of edges in FindEdge
 	static constexpr float cMinTriangleArea = 1.0e-10f;		///< Minimum area of a triangle before, if smaller than this it will not be added to the priority queue
-	static constexpr float cBarycentricEpsilon = 1.0e-3f;	///< Epsilon value used to determine if a point is in the interior of a triangle 
+	static constexpr float cBarycentricEpsilon = 1.0e-3f;	///< Epsilon value used to determine if a point is in the interior of a triangle
 
 	// Forward declare
 	class Triangle;
@@ -50,7 +50,7 @@ public:
 		/// Information about neighbouring triangle
 		Triangle *		mNeighbourTriangle;					///< Triangle that neighbours this triangle
 		int				mNeighbourEdge;						///< Index in mEdge that specifies edge that this Edge is connected to
-															
+
 		int				mStartIdx;							///< Vertex index in mPositions that indicates the start vertex of this edge
 	};
 
@@ -309,7 +309,7 @@ public:
 
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
 		// Draw new support point
-		DrawMarker(pos, Color::sYellow, 1.0f); 
+		DrawMarker(pos, Color::sYellow, 1.0f);
 #endif
 
 #ifdef JPH_EPA_CONVEX_BUILDER_VALIDATE
@@ -337,7 +337,7 @@ public:
 				|| nt->mClosestLenSq < 0.0f)										// For when the origin is not inside the hull yet
 				mTriangleQueue.push_back(nt);
 		}
-		
+
 		// Link edges
 		for (int i = 0; i < num_edges; ++i)
 		{
@@ -555,12 +555,12 @@ private:
 		DrawState();
 #endif
 
-		// When we start with two triangles facing away from each other and adding a point that is on the plane, 
+		// When we start with two triangles facing away from each other and adding a point that is on the plane,
 		// sometimes we consider the point in front of both causing both triangles to be removed resulting in an empty edge list.
 		// In this case we fail to add the point which will result in no collision reported (the shapes are contacting in 1 point so there's 0 penetration)
 		return outEdges.size() >= 3;
 	}
-	
+
 #ifdef JPH_EPA_CONVEX_BUILDER_VALIDATE
 	/// Check consistency of 1 triangle
 	void				ValidateTriangle(const Triangle *inT) const
@@ -649,6 +649,14 @@ public:
 		mOffset += Vec3(max_x - min_x + 0.5f, 0.0f, 0.0f);
 	}
 
+	/// Draw a label to indicate the next stage in the algorithm
+	void				DrawLabel(const string_view &inText)
+	{
+		DebugRenderer::sInstance->DrawText3D(cDrawScale * mOffset, inText, Color::sWhite, 0.1f * cDrawScale);
+
+		mOffset += Vec3(5.0f, 0.0f, 0.0f);
+	}
+
 	/// Draw a triangle for debugging purposes
 	void				DrawWireTriangle(const Triangle &inTriangle, ColorArg inColor)
 	{
@@ -680,11 +688,11 @@ private:
 	TriangleQueue 		mTriangleQueue;						///< List of triangles that are part of the hull that still need to be checked (if !mRemoved)
 
 #if defined(JPH_EPA_CONVEX_BUILDER_VALIDATE) || defined(JPH_EPA_CONVEX_BUILDER_DRAW)
-	Triangles			mTriangles;							///< The list of all triangles in this hull (for debug purposes)	
+	Triangles			mTriangles;							///< The list of all triangles in this hull (for debug purposes)
 #endif
 
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
-	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)	
+	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)
 	RVec3				mOffset;							///< Offset to use for state drawing
 #endif
 };
@@ -767,7 +775,7 @@ EPAConvexHullBuilder::Triangle::Triangle(int inIdx0, int inIdx1, int inIdx2, con
 				mLambda[0] = l0;
 				mLambda[1] = l1;
 				mLambdaRelativeTo0 = true;
-	
+
 				// Check if closest point is interior to the triangle. For a convex hull which contains the origin each face must contain the origin, but because
 				// our faces are triangles, we can have multiple coplanar triangles and only 1 will have the origin as an interior point. We want to use this triangle
 				// to calculate the contact points because it gives the most accurate results, so we will only add these triangles to the priority queue.
