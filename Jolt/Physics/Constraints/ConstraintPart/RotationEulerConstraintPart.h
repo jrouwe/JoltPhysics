@@ -150,7 +150,7 @@ public:
 	/// Deactivate this constraint
 	inline void					Deactivate()
 	{
-		mEffectiveMass(3, 3) = 0.0f;
+		mEffectiveMass = Mat44::sZero();
 		mTotalLambda = Vec3::sZero();
 	}
 
