@@ -48,7 +48,7 @@ TEST_SUITE("Mat44Tests")
 				CHECK(GetNextPowerOf2(pow - 1) == pow);
 			CHECK(GetNextPowerOf2(pow) == pow);
 			CHECK(GetNextPowerOf2(pow + 1) == pow << 1);
-		}		
+		}
 
 		CHECK(GetNextPowerOf2(0x8000000U - 1) == 0x8000000U);
 		CHECK(GetNextPowerOf2(0x8000000U) == 0x8000000U);

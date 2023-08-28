@@ -20,9 +20,9 @@
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_ABSTRACT(CharacterBaseTest) 
-{ 
-	JPH_ADD_BASE_CLASS(CharacterBaseTest, Test) 
+JPH_IMPLEMENT_RTTI_ABSTRACT(CharacterBaseTest)
+{
+	JPH_ADD_BASE_CLASS(CharacterBaseTest, Test)
 }
 
 const char *CharacterBaseTest::sScenes[] =
@@ -123,7 +123,7 @@ void CharacterBaseTest::Initialize()
 		{
 			// Create wall consisting of vertical pillars
 			// Note: Convex radius 0 because otherwise it will be a bumpy wall
-			Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f); 
+			Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f);
 			for (int z = 0; z < 30; ++z)
 				mBodyInterface->CreateAndAddBody(BodyCreationSettings(wall, RVec3(0.0f, 2.5f, 2.0f + 0.2f * z), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 		}
@@ -475,7 +475,7 @@ void CharacterBaseTest::Initialize()
 			mBodyInterface->CreateAndAddBody(box, EActivation::DontActivate);
 		}
 
-		// Create a sensor. 
+		// Create a sensor.
 		// Note that the CharacterVirtual doesn't interact with sensors, you should pair it with a Character object (see CharacterVirtual class comments)
 		{
 			BodyCreationSettings sensor(new BoxShape(Vec3::sReplicate(1.0f)), cSensorPosition, Quat::sIdentity(), EMotionType::Kinematic, Layers::SENSOR);
@@ -589,7 +589,7 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() {
 		UIElement *scene_name = inUI->CreateMenu();
 		for (uint i = 0; i < size(sScenes); ++i)
 			inUI->CreateTextButton(scene_name, sScenes[i], [this, i]() { sSceneName = sScenes[i]; RestartTest(); });
@@ -623,7 +623,7 @@ void CharacterBaseTest::GetInitialCamera(CameraState& ioState) const
 	ioState.mForward = Vec3(10.0f, -2.0f, 0).Normalized();
 }
 
-RMat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));

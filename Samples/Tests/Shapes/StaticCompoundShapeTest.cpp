@@ -14,16 +14,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(StaticCompoundShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(StaticCompoundShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(StaticCompoundShapeTest)
+{
+	JPH_ADD_BASE_CLASS(StaticCompoundShapeTest, Test)
 }
 
-void StaticCompoundShapeTest::Initialize() 
+void StaticCompoundShapeTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	// Simple compound
 	Ref<StaticCompoundShapeSettings> compound_shape1 = new StaticCompoundShapeSettings;
 	compound_shape1->AddShape(Vec3::sZero(), Quat::sIdentity(), new CapsuleShape(5, 1));

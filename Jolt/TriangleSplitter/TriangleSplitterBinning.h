@@ -39,10 +39,10 @@ private:
 		uint				mNumTriangles;
 
 		// Accumulated data from left most / right most bin to current (including this bin)
-		AABox				mBoundsAccumulatedLeft;				
-		AABox				mBoundsAccumulatedRight;			
-		uint				mNumTrianglesAccumulatedLeft;		
-		uint				mNumTrianglesAccumulatedRight;		
+		AABox				mBoundsAccumulatedLeft;
+		AABox				mBoundsAccumulatedRight;
+		uint				mNumTrianglesAccumulatedLeft;
+		uint				mNumTrianglesAccumulatedRight;
 	};
 
 	// Scratch area to store the bins

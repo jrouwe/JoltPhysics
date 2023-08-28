@@ -11,9 +11,9 @@
 #include <Utils/RagdollLoader.h>
 #include <Utils/Log.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredRigTest) 
-{ 
-	JPH_ADD_BASE_CLASS(PoweredRigTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredRigTest)
+{
+	JPH_ADD_BASE_CLASS(PoweredRigTest, Test)
 }
 
 const char *PoweredRigTest::sAnimations[] =
@@ -45,7 +45,7 @@ void PoweredRigTest::Initialize()
 	// Create ragdoll
 	mRagdoll = mRagdollSettings->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
-	
+
 	// Load animation
 	String filename = String("Assets/Human/") + sAnimationName + ".tof";
 	if (!ObjectStreamIn::sReadObject(filename.c_str(), mAnimation))
@@ -61,7 +61,7 @@ void PoweredRigTest::Initialize()
 }
 
 void PoweredRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	// Update time
 	mTime += inParams.mDeltaTime;
 
@@ -84,7 +84,7 @@ void PoweredRigTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void PoweredRigTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Select Animation", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Select Animation", [this, inUI]() {
 		UIElement *animation_name = inUI->CreateMenu();
 		for (uint i = 0; i < size(sAnimations); ++i)
 			inUI->CreateTextButton(animation_name, sAnimations[i], [this, i]() { sAnimationName = sAnimations[i]; RestartTest(); });

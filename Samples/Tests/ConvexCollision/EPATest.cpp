@@ -11,9 +11,9 @@
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
 #include <Utils/DebugRendererSP.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(EPATest) 
-{ 
-	JPH_ADD_BASE_CLASS(EPATest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(EPATest)
+{
+	JPH_ADD_BASE_CLASS(EPATest, Test)
 }
 
 void EPATest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -30,7 +30,7 @@ bool EPATest::CollideBoxSphere(Mat44Arg inMatrix, const AABox &inBox, const Sphe
 {
 	// Draw the box and shere
 	DrawBoxSP(mDebugRenderer, inMatrix, inBox, Color::sGrey);
-	DrawSphereSP(mDebugRenderer, inMatrix * inSphere.GetCenter(), inSphere.GetRadius(), Color::sGrey); 
+	DrawSphereSP(mDebugRenderer, inMatrix * inSphere.GetCenter(), inSphere.GetRadius(), Color::sGrey);
 
 	// Transform the box and sphere according to inMatrix
 	TransformedConvexObject<AABox> transformed_box(inMatrix, inBox);

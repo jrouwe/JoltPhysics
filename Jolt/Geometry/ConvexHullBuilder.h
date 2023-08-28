@@ -207,7 +207,7 @@ private:
 	/// Merges inFace with a neighbour if it is degenerate (a sliver)
 	void				MergeDegenerateFace(Face *inFace, Faces &ioAffectedFaces);
 
-	/// Merges any coplanar as well as neighbours that form a non-convex edge into inFace. 
+	/// Merges any coplanar as well as neighbours that form a non-convex edge into inFace.
 	/// Faces are considered coplanar if the distance^2 of the other face's centroid is smaller than inToleranceSq.
 	void				MergeCoplanarOrConcaveFaces(Face *inFace, float inToleranceSq, Faces &ioAffectedFaces);
 
@@ -267,7 +267,7 @@ private:
 	CoplanarList		mCoplanarList;						///< List of positions that are coplanar to a face but outside of the face, these are added to the hull at the end
 
 #ifdef JPH_CONVEX_BUILDER_DEBUG
-	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)	
+	int					mIteration;							///< Number of iterations we've had so far (for debug purposes)
 	mutable RVec3		mOffset;							///< Offset to use for state drawing
 	Vec3				mDelta;								///< Delta offset between next states
 #endif

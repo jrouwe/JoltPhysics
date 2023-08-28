@@ -66,7 +66,7 @@ void VehicleEngine::ApplyDamping(float inDeltaTime)
 void VehicleEngine::DrawRPM(DebugRenderer *inRenderer, RVec3Arg inPosition, Vec3Arg inForward, Vec3Arg inUp, float inSize, float inShiftDownRPM, float inShiftUpRPM) const
 {
 	// Function to draw part of a pie
-	auto draw_pie = [this, inRenderer, inSize, inPosition, inForward, inUp](float inMinRPM, float inMaxRPM, Color inColor) { 
+	auto draw_pie = [this, inRenderer, inSize, inPosition, inForward, inUp](float inMinRPM, float inMaxRPM, Color inColor) {
 		inRenderer->DrawPie(inPosition, inSize, inForward, inUp, ConvertRPMToAngle(inMinRPM), ConvertRPMToAngle(inMaxRPM), inColor, DebugRenderer::ECastShadow::Off);
 	};
 

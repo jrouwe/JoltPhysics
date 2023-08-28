@@ -23,9 +23,9 @@ public:
 /// A compound shape, sub shapes can be rotated and translated.
 /// This shape is optimized for adding / removing and changing the rotation / translation of sub shapes but is less efficient in querying.
 /// Shifts all child objects so that they're centered around the center of mass (which needs to be kept up to date by calling AdjustCenterOfMass).
-/// 
-/// Note: If you're using MutableCompoundShapes and are querying data while modifying the shape you'll have a race condition. 
-/// In this case it is best to create a new MutableCompoundShape and set the new shape on the body using BodyInterface::SetShape. If a 
+///
+/// Note: If you're using MutableCompoundShapes and are querying data while modifying the shape you'll have a race condition.
+/// In this case it is best to create a new MutableCompoundShape and set the new shape on the body using BodyInterface::SetShape. If a
 /// query is still working on the old shape, it will have taken a reference and keep the old shape alive until the query finishes.
 class JPH_EXPORT MutableCompoundShape final : public CompoundShape
 {
@@ -35,7 +35,7 @@ public:
 	/// Constructor
 									MutableCompoundShape() : CompoundShape(EShapeSubType::MutableCompound) { }
 									MutableCompoundShape(const MutableCompoundShapeSettings &inSettings, ShapeResult &outResult);
-		
+
 	// See Shape::CastRay
 	virtual bool					CastRay(const RayCast &inRay, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) const override;
 	virtual void					CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const override;
@@ -83,7 +83,7 @@ public:
 	/// @param inRotationStride The orientation stride (the number of bytes between the first and second element)
 	void							ModifyShapes(uint inStartIndex, uint inNumber, const Vec3 *inPositions, const Quat *inRotations, uint inPositionStride = sizeof(Vec3), uint inRotationStride = sizeof(Quat));
 
-	/// Recalculate the center of mass and shift all objects so they're centered around it 
+	/// Recalculate the center of mass and shift all objects so they're centered around it
 	/// (this needs to be done of dynamic bodies and if the center of mass changes significantly due to adding / removing / repositioning sub shapes or else the simulation will look unnatural)
 	/// Note that after adjusting the center of mass of an object you need to call BodyInterface::NotifyShapeChanged and Constraint::NotifyShapeChanged on the relevant bodies / constraints.
 	void							AdjustCenterOfMass();

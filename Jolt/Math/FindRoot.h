@@ -28,7 +28,7 @@ inline int FindRoot(const T inA, const T inB, const T inC, T &outX1, T &outX2)
 	T det = Square(inB) - T(4) * inA * inC;
 	if (det < T(0))
 		return 0;
-	T q = (inB + Sign(inB) * sqrt(det)) / T(-2);	
+	T q = (inB + Sign(inB) * sqrt(det)) / T(-2);
 	outX1 = q / inA;
 	if (q == T(0))
 	{

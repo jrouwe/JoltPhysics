@@ -53,14 +53,14 @@ public:
 	RVec3						mPosition2 = RVec3::sZero();
 	Vec3						mAxisX2 = Vec3::sAxisX();
 	Vec3						mAxisY2 = Vec3::sAxisY();
-	
+
 	/// Friction settings.
 	/// For translation: Max friction force in N. 0 = no friction.
 	/// For rotation: Max friction torque in Nm. 0 = no friction.
 	float						mMaxFriction[EAxis::Num] = { 0, 0, 0, 0, 0, 0 };
 
 	/// Limits.
-	/// For translation: Min and max linear limits in m (0 is frame of body 1 and 2 coincide). 
+	/// For translation: Min and max linear limits in m (0 is frame of body 1 and 2 coincide).
 	/// For rotation: Min and max angular limits in rad (0 is frame of body 1 and 2 coincide). See comments at Axis enum for limit ranges.
 	///
 	/// Remove degree of freedom by setting min = FLT_MAX and max = -FLT_MAX. The constraint will be driven to 0 for this axis.

@@ -37,7 +37,7 @@ bool UITextButton::MouseDown(int inX, int inY)
 		mRepeatTimeLeft = mRepeatStartTime;
 		return true;
 	}
-	
+
 	return false;
 }
 

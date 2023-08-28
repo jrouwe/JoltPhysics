@@ -11,9 +11,9 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredSwingTwistConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(PoweredSwingTwistConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredSwingTwistConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(PoweredSwingTwistConstraintTest, Test)
 }
 
 Vec3 PoweredSwingTwistConstraintTest::sBodyRotation[] = { Vec3::sZero(), Vec3::sZero() };
@@ -45,7 +45,7 @@ void PoweredSwingTwistConstraintTest::Initialize()
 	body2.GetMotionProperties()->SetAngularDamping(0.0f);
 	body2.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body2.GetID(), EActivation::Activate);
-	
+
 	Ref<SwingTwistConstraintSettings> settings = new SwingTwistConstraintSettings;
 	settings->mNormalHalfConeAngle = sNormalHalfConeAngle;
 	settings->mPlaneHalfConeAngle = sPlaneHalfConeAngle;
@@ -64,8 +64,8 @@ void PoweredSwingTwistConstraintTest::Initialize()
 	mInertiaBody2AsSeenFromConstraint = (body2_inertia * Vec3::sAxisY()).Length();
 }
 
-void PoweredSwingTwistConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams) 
-{ 
+void PoweredSwingTwistConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
 	// Torque = Inertia * Angular Acceleration (alpha)
 	mConstraint->SetMaxFrictionTorque(mInertiaBody2AsSeenFromConstraint * sMaxFrictionAngularAcceleration);
 
@@ -90,7 +90,7 @@ void PoweredSwingTwistConstraintTest::PrePhysicsUpdate(const PreUpdateParams &in
 	twist.mSpringSettings.mDamping = sDamping;
 }
 
-void PoweredSwingTwistConstraintTest::GetInitialCamera(CameraState &ioState) const 
+void PoweredSwingTwistConstraintTest::GetInitialCamera(CameraState &ioState) const
 {
 	ioState.mPos = RVec3(4, 25, 4);
 	ioState.mForward = Vec3(-1, -1, -1).Normalized();
@@ -128,7 +128,7 @@ void PoweredSwingTwistConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElemen
 			inUI->CreateSlider(runtime_settings, "Target Angular Velocity " + constraint_label[i] + " (deg/s)", RadiansToDegrees(sTargetVelocityCS[i]), -90.0f, 90.0f, 1.0f, [i](float inValue) { sTargetVelocityCS.SetComponent(i, DegreesToRadians(inValue)); });
 
 		for (int i = 0; i < 3; ++i)
-			inUI->CreateSlider(runtime_settings, "Target Angle " + constraint_label[i] + " (deg)", RadiansToDegrees(sTargetOrientationCS[i]), -180, 180.0f, 1.0f, [i](float inValue) { 
+			inUI->CreateSlider(runtime_settings, "Target Angle " + constraint_label[i] + " (deg)", RadiansToDegrees(sTargetOrientationCS[i]), -180, 180.0f, 1.0f, [i](float inValue) {
 				sTargetOrientationCS.SetComponent(i, DegreesToRadians(Clamp(inValue, -179.99f, 179.99f))); // +/- 180 degrees is ambiguous, so add a little bit of a margin
 			});
 

@@ -13,9 +13,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledHeightFieldShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledHeightFieldShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledHeightFieldShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledHeightFieldShapeTest, Test)
 }
 
 void ScaledHeightFieldShapeTest::Initialize()
@@ -48,7 +48,7 @@ void ScaledHeightFieldShapeTest::Initialize()
 
 	// Create height field
 	RefConst<ShapeSettings> height_field = new HeightFieldShapeSettings(heights, Vec3(-0.5f * cell_size * n, 0.0f, -0.5f * cell_size * n), Vec3(cell_size, 1.0f, cell_size), n);
-		
+
 	// Original shape
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(height_field, RVec3(-60, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::DontActivate);

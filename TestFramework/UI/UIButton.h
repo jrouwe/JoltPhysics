@@ -29,8 +29,8 @@ private:
 	Color				mDownColor { Color::sGrey };
 	UITexturedQuad		mHighlightQuad;
 	Color				mHighlightColor { Color::sWhite };
-	UITexturedQuad		mSelectedQuad;	
+	UITexturedQuad		mSelectedQuad;
 	Color				mSelectedColor { Color::sWhite };
-	UITexturedQuad		mDisabledQuad;	
+	UITexturedQuad		mDisabledQuad;
 	Color				mDisabledColor { Color::sGrey };
 };

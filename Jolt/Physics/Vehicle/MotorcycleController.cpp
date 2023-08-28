@@ -121,7 +121,7 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 		float w_angle = -Sign(mTargetLean.Cross(adjusted_world_up).Dot(forward)) * ACos(mTargetLean.Dot(adjusted_world_up));
 		if (abs(w_angle) > mMaxLeanAngle)
 			mTargetLean = Quat::sRotation(forward, Sign(w_angle) * mMaxLeanAngle) * adjusted_world_up;
-			
+
 		// Integrate the delta angle
 		Vec3 up = body->GetRotation() * mConstraint.GetLocalUp();
 		float d_angle = -Sign(mTargetLean.Cross(up).Dot(forward)) * ACos(mTargetLean.Dot(up));
@@ -186,7 +186,7 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	mAppliedImpulse = 0;
 }
 
-bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime) 
+bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime)
 {
 	bool impulse = WheeledVehicleController::SolveLongitudinalAndLateralConstraints(inDeltaTime);
 
@@ -275,7 +275,7 @@ void MotorcycleController::RestoreState(StateRecorder& inStream)
 
 #ifdef JPH_DEBUG_RENDERER
 
-void MotorcycleController::Draw(DebugRenderer *inRenderer) const 
+void MotorcycleController::Draw(DebugRenderer *inRenderer) const
 {
 	WheeledVehicleController::Draw(inRenderer);
 

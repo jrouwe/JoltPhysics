@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledConvexHullShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledConvexHullShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledConvexHullShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledConvexHullShapeTest, Test)
 }
 
 void ScaledConvexHullShapeTest::Initialize()

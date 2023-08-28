@@ -80,19 +80,19 @@ private:
 };
 
 /// A body lock takes a body ID and locks the underlying body so that other threads cannot access its members
-/// 
+///
 /// The common usage pattern is:
-/// 
+///
 ///		BodyLockInterface lock_interface = physics_system.GetBodyLockInterface(); // Or non-locking interface if the lock is already taken
 ///		BodyID body_id = ...; // Obtain ID to body
-///		
+///
 ///		// Scoped lock
 ///		{
 ///			BodyLockRead lock(lock_interface, body_id);
 ///			if (lock.Succeeded()) // body_id may no longer be valid
 ///			{
 ///				const Body &body = lock.GetBody();
-///		
+///
 ///				// Do something with body
 ///				...
 ///			}

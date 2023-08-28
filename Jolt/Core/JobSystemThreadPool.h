@@ -18,7 +18,7 @@ JPH_NAMESPACE_BEGIN
 using std::thread;
 
 /// Implementation of a JobSystem using a thread pool
-/// 
+///
 /// Note that this is considered an example implementation. It is expected that when you integrate
 /// the physics engine into your own project that you'll provide your own implementation of the
 /// JobSystem built on top of whatever job system your project uses.
@@ -45,7 +45,7 @@ public:
 
 	/// Change the max concurrency after initialization
 	void					SetNumThreads(int inNumThreads)					{ StopThreads(); StartThreads(inNumThreads); }
-	
+
 protected:
 	// See JobSystem
 	virtual void			QueueJob(Job *inJob) override;
@@ -56,7 +56,7 @@ private:
 	/// Start/stop the worker threads
 	void					StartThreads(int inNumThreads);
 	void					StopThreads();
-	
+
 	/// Entry point for a thread
 	void					ThreadMain(int inThreadIndex);
 

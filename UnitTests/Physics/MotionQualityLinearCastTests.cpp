@@ -149,7 +149,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 			{
 				// Only in the first step we will receive a validate callback since after this step the contact cache will be used
 				CHECK(listener.GetEntryCount() == 2);
-				CHECK(listener.Contains(LoggingContactListener::EType::Validate, box1.GetID(), box2.GetID())); 
+				CHECK(listener.Contains(LoggingContactListener::EType::Validate, box1.GetID(), box2.GetID()));
 			}
 			else
 				CHECK(listener.GetEntryCount() == 1);

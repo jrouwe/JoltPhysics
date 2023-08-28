@@ -10,12 +10,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledSphereShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledSphereShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledSphereShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledSphereShapeTest, Test)
 }
 
-void ScaledSphereShapeTest::Initialize() 
+void ScaledSphereShapeTest::Initialize()
 {
 	// Floor
 	CreateFloor();

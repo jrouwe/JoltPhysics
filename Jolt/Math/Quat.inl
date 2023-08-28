@@ -5,7 +5,7 @@
 JPH_NAMESPACE_BEGIN
 
 Quat Quat::operator * (QuatArg inRHS) const
-{ 
+{
 #if defined(JPH_USE_SSE4_1)
 	// Taken from: http://momchil-velikov.blogspot.nl/2013/10/fast-sse-quternion-multiplication.html
 	__m128 abcd = mValue.mValue;
@@ -13,42 +13,42 @@ Quat Quat::operator * (QuatArg inRHS) const
 
 	__m128 t0 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(3, 3, 3, 3));
 	__m128 t1 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 3, 0, 1));
- 
+
 	__m128 t3 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(0, 0, 0, 0));
 	__m128 t4 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(1, 0, 3, 2));
- 
+
 	__m128 t5 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(1, 1, 1, 1));
 	__m128 t6 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(2, 0, 3, 1));
- 
+
 	// [d,d,d,d] * [z,w,x,y] = [dz,dw,dx,dy]
 	__m128 m0 = _mm_mul_ps(t0, t1);
- 
+
 	// [a,a,a,a] * [y,x,w,z] = [ay,ax,aw,az]
 	__m128 m1 = _mm_mul_ps(t3, t4);
- 
+
 	// [b,b,b,b] * [z,x,w,y] = [bz,bx,bw,by]
 	__m128 m2 = _mm_mul_ps(t5, t6);
- 
+
 	// [c,c,c,c] * [w,z,x,y] = [cw,cz,cx,cy]
 	__m128 t7 = _mm_shuffle_ps(abcd, abcd, _MM_SHUFFLE(2, 2, 2, 2));
-	__m128 t8 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(3, 2, 0, 1)); 
+	__m128 t8 = _mm_shuffle_ps(xyzw, xyzw, _MM_SHUFFLE(3, 2, 0, 1));
 	__m128 m3 = _mm_mul_ps(t7, t8);
- 
+
 	// [dz,dw,dx,dy] + -[ay,ax,aw,az] = [dz+ay,dw-ax,dx+aw,dy-az]
 	__m128 e = _mm_addsub_ps(m0, m1);
- 
+
 	// [dx+aw,dz+ay,dy-az,dw-ax]
 	e = _mm_shuffle_ps(e, e, _MM_SHUFFLE(1, 3, 0, 2));
- 
+
 	// [dx+aw,dz+ay,dy-az,dw-ax] + -[bz,bx,bw,by] = [dx+aw+bz,dz+ay-bx,dy-az+bw,dw-ax-by]
 	e = _mm_addsub_ps(e, m2);
- 
+
 	// [dz+ay-bx,dw-ax-by,dy-az+bw,dx+aw+bz]
 	e = _mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 0, 1, 3));
- 
+
 	// [dz+ay-bx,dw-ax-by,dy-az+bw,dx+aw+bz] + -[cw,cz,cx,cy] = [dz+ay-bx+cw,dw-ax-by-cz,dy-az+bw+cx,dx+aw+bz-cy]
 	e = _mm_addsub_ps(e, m3);
- 
+
 	// [dw-ax-by-cz,dz+ay-bx+cw,dy-az+bw+cx,dx+aw+bz-cy]
 	return Quat(Vec4(_mm_shuffle_ps(e, e, _MM_SHUFFLE(2, 3, 1, 0))));
 #else
@@ -86,7 +86,7 @@ void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 	Quat w_pos = EnsureWPositive();
 	float abs_w = w_pos.GetW();
 	if (abs_w >= 1.0f)
-	{ 
+	{
 		outAxis = Vec3::sZero();
 		outAngle = 0.0f;
 	}
@@ -99,18 +99,18 @@ void Quat::GetAxisAngle(Vec3 &outAxis, float &outAngle) const
 
 Quat Quat::sFromTo(Vec3Arg inFrom, Vec3Arg inTo)
 {
-	/* 
-		Uses (inFrom = v1, inTo = v2): 
+	/*
+		Uses (inFrom = v1, inTo = v2):
 
 		angle = arcos(v1 . v2 / |v1||v2|)
 		axis = normalize(v1 x v2)
 
 		Quaternion is then:
 
-		s = sin(angle / 2) 
-		x = axis.x * s 
-		y = axis.y * s 
-		z = axis.z * s 
+		s = sin(angle / 2)
+		x = axis.x * s
+		y = axis.y * s
+		z = axis.z * s
 		w = cos(angle / 2)
 
 		Using identities:
@@ -141,7 +141,7 @@ Quat Quat::sFromTo(Vec3Arg inFrom, Vec3Arg inTo)
 		}
 		else
 		{
-			// If vectors are perpendicular, take one of the many 180 degree rotations that exist	
+			// If vectors are perpendicular, take one of the many 180 degree rotations that exist
 			return Quat(Vec4(inFrom.GetNormalizedPerpendicular(), 0));
 		}
 	}
@@ -197,13 +197,13 @@ Vec3 Quat::GetEulerAngles() const
 
 	// Z
 	float t3 = 2.0f * (GetW() * GetZ() + GetX() * GetY());
-	float t4 = 1.0f - 2.0f * (y_sq + GetZ() * GetZ());  
+	float t4 = 1.0f - 2.0f * (y_sq + GetZ() * GetZ());
 
 	return Vec3(ATan2(t0, t1), ASin(t2), ATan2(t3, t4));
 }
 
 Quat Quat::GetTwist(Vec3Arg inAxis) const
-{ 
+{
 	Quat twist(Vec4(GetXYZ().Dot(inAxis) * inAxis, GetW()));
 	float twist_len = twist.LengthSq();
 	if (twist_len != 0.0f)
@@ -236,33 +236,33 @@ Quat Quat::LERP(QuatArg inDestination, float inFraction) const
 }
 
 Quat Quat::SLERP(QuatArg inDestination, float inFraction) const
-{	
+{
     // Difference at which to LERP instead of SLERP
 	const float delta = 0.0001f;
 
 	// Calc cosine
 	float sign_scale1 = 1.0f;
     float cos_omega = Dot(inDestination);
-	
+
 	// Adjust signs (if necessary)
 	if (cos_omega < 0.0f)
 	{
 		cos_omega = -cos_omega;
 		sign_scale1 = -1.0f;
 	}
-	
+
 	// Calculate coefficients
 	float scale0, scale1;
-	if (1.0f - cos_omega > delta) 
+	if (1.0f - cos_omega > delta)
 	{
 		// Standard case (slerp)
 		float omega = ACos(cos_omega);
 		float sin_omega = Sin(omega);
 		scale0 = Sin((1.0f - inFraction) * omega) / sin_omega;
 		scale1 = sign_scale1 * Sin(inFraction * omega) / sin_omega;
-	} 
-	else 
-	{        
+	}
+	else
+	{
 		// Quaternions are very close so we can do a linear interpolation
 		scale0 = 1.0f - inFraction;
 		scale1 = sign_scale1 * inFraction;
@@ -285,31 +285,31 @@ Vec3 Quat::InverseRotate(Vec3Arg inValue) const
 	return Vec3((Conjugated() * Quat(Vec4(inValue, 0)) * *this).mValue);
 }
 
-Vec3 Quat::RotateAxisX() const												
-{ 
+Vec3 Quat::RotateAxisX() const
+{
 	// This is *this * Vec3::sAxisX() written out:
 	JPH_ASSERT(IsNormalized());
 	float x = GetX(), y = GetY(), z = GetZ(), w = GetW();
-	float tx = 2.0f * x, tw = 2.0f * w; 
-	return Vec3(tx * x + tw * w - 1.0f, tx * y + z * tw, tx * z - y * tw); 
+	float tx = 2.0f * x, tw = 2.0f * w;
+	return Vec3(tx * x + tw * w - 1.0f, tx * y + z * tw, tx * z - y * tw);
 }
 
-Vec3 Quat::RotateAxisY() const												
-{ 
+Vec3 Quat::RotateAxisY() const
+{
 	// This is *this * Vec3::sAxisY() written out:
 	JPH_ASSERT(IsNormalized());
 	float x = GetX(), y = GetY(), z = GetZ(), w = GetW();
-	float ty = 2.0f * y, tw = 2.0f * w; 
-	return Vec3(x * ty - z * tw, tw * w + ty * y - 1.0f, x * tw + ty * z); 
+	float ty = 2.0f * y, tw = 2.0f * w;
+	return Vec3(x * ty - z * tw, tw * w + ty * y - 1.0f, x * tw + ty * z);
 }
 
-Vec3 Quat::RotateAxisZ() const												
-{ 
+Vec3 Quat::RotateAxisZ() const
+{
 	// This is *this * Vec3::sAxisZ() written out:
 	JPH_ASSERT(IsNormalized());
 	float x = GetX(), y = GetY(), z = GetZ(), w = GetW();
-	float tz = 2.0f * z, tw = 2.0f * w; 
-	return Vec3(x * tz + y * tw, y * tz - x * tw, tw * w + tz * z - 1.0f); 
+	float tz = 2.0f * z, tw = 2.0f * w;
+	return Vec3(x * tz + y * tw, y * tz - x * tw, tw * w + tz * z - 1.0f);
 }
 
 void Quat::StoreFloat3(Float3 *outV) const

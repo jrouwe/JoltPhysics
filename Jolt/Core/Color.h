@@ -22,11 +22,11 @@ public:
 	explicit constexpr		Color(uint32 inColor)													: mU32(inColor) { }
 	constexpr				Color(uint8 inRed, uint8 inGreen, uint8 inBlue, uint8 inAlpha = 255)	: r(inRed), g(inGreen), b(inBlue), a(inAlpha) { }
 	constexpr				Color(ColorArg inRHS, uint8 inAlpha)									: r(inRHS.r), g(inRHS.g), b(inRHS.b), a(inAlpha) { }
-											
-	/// Comparison			
+
+	/// Comparison
 	inline bool				operator == (ColorArg inRHS) const										{ return mU32 == inRHS.mU32; }
 	inline bool				operator != (ColorArg inRHS) const										{ return mU32 != inRHS.mU32; }
-	
+
 	/// Convert to uint32
 	uint32					GetUInt32() const														{ return mU32; }
 

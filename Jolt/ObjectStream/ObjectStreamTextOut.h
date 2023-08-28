@@ -22,7 +22,7 @@ public:
 	virtual void				WriteName(const char *inName) override;
 	virtual void				WriteIdentifier(Identifier inIdentifier) override;
 	virtual void				WriteCount(uint32 inCount) override;
-								
+
 	virtual void				WritePrimitiveData(const uint8 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const uint16 &inPrimitive) override;
 	virtual void				WritePrimitiveData(const int &inPrimitive) override;

@@ -27,7 +27,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 		Vec3 v1(0, 0, 0);
 		Vec3 v2(0, 0, cEdgeLength);
 		Vec3 v3(cEdgeLength, 0, 0);
-				
+
 		{
 			// Collide sphere
 			AllHitCollisionCollector<CollideShapeCollector> collector;
@@ -84,7 +84,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 
 		// The transform for the sphere
 		Mat44 sphere_transform = transform * Mat44::sTranslation(inCenter);
-		
+
 		// Transform incoming settings
 		CollideShapeSettings settings = inSettings;
 		settings.mActiveEdgeMovementDirection = transform.Multiply3x3(inSettings.mActiveEdgeMovementDirection);
@@ -285,7 +285,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 					settings.mActiveEdgeMovementDirection = Vec3(0, 1, 0);
 					break;
 				}
-		
+
 				{
 					// Hit edge 1
 					Vec3 expected2(0, 0, 0.5f * cEdgeLength);

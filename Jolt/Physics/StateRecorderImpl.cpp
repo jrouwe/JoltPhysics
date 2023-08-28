@@ -48,7 +48,7 @@ void StateRecorderImpl::ReadBytes(void *outData, size_t inNumBytes)
 }
 
 bool StateRecorderImpl::IsEqual(StateRecorderImpl &inReference)
-{	
+{
 	// Get length of new state
 	mStream.seekg(0, std::stringstream::end);
 	std::streamoff this_len = mStream.tellg();

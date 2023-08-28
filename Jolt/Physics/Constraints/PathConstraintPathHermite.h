@@ -47,7 +47,7 @@ private:
 	inline void			GetIndexAndT(float inFraction, int &outIndex, float &outT) const;
 
 	using Points = Array<Point>;
-	   
+
 	Points				mPoints;															///< Points on the Hermite spline
 };
 

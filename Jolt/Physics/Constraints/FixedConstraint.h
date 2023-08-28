@@ -77,7 +77,7 @@ public:
 
 private:
 	// CONFIGURATION PROPERTIES FOLLOW
-		
+
 	// Local space constraint positions
 	Vec3						mLocalSpacePosition1;
 	Vec3						mLocalSpacePosition2;

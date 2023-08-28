@@ -28,7 +28,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(ConeConstraintSettings)
 }
 
 void ConeConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -115,7 +115,7 @@ void ConeConstraint::CalculateRotationConstraintProperties(Mat44Arg inRotation1,
 		if (len > 0.0f)
 			mWorldSpaceRotationAxis = rot_axis / len;
 
-		mAngleConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, mWorldSpaceRotationAxis);		
+		mAngleConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, mWorldSpaceRotationAxis);
 	}
 	else
 		mAngleConstraintPart.Deactivate();
@@ -221,20 +221,20 @@ Ref<ConstraintSettings> ConeConstraint::GetConstraintSettings() const
 	return settings;
 }
 
-Mat44 ConeConstraint::GetConstraintToBody1Matrix() const 
-{ 
-	Vec3 perp = mLocalSpaceTwistAxis1.GetNormalizedPerpendicular(); 
-	Vec3 perp2 = mLocalSpaceTwistAxis1.Cross(perp); 
-	return Mat44(Vec4(mLocalSpaceTwistAxis1, 0), Vec4(perp, 0), Vec4(perp2, 0), Vec4(mLocalSpacePosition1, 1)); 
+Mat44 ConeConstraint::GetConstraintToBody1Matrix() const
+{
+	Vec3 perp = mLocalSpaceTwistAxis1.GetNormalizedPerpendicular();
+	Vec3 perp2 = mLocalSpaceTwistAxis1.Cross(perp);
+	return Mat44(Vec4(mLocalSpaceTwistAxis1, 0), Vec4(perp, 0), Vec4(perp2, 0), Vec4(mLocalSpacePosition1, 1));
 }
 
-Mat44 ConeConstraint::GetConstraintToBody2Matrix() const 
-{ 
+Mat44 ConeConstraint::GetConstraintToBody2Matrix() const
+{
 	// Note: Incorrect in rotation around the twist axis (the perpendicular does not match that of body 1),
 	// this should not matter as we're not limiting rotation around the twist axis.
-	Vec3 perp = mLocalSpaceTwistAxis2.GetNormalizedPerpendicular(); 
-	Vec3 perp2 = mLocalSpaceTwistAxis2.Cross(perp); 
-	return Mat44(Vec4(mLocalSpaceTwistAxis2, 0), Vec4(perp, 0), Vec4(perp2, 0), Vec4(mLocalSpacePosition2, 1)); 
+	Vec3 perp = mLocalSpaceTwistAxis2.GetNormalizedPerpendicular();
+	Vec3 perp2 = mLocalSpaceTwistAxis2.Cross(perp);
+	return Mat44(Vec4(mLocalSpaceTwistAxis2, 0), Vec4(perp, 0), Vec4(perp2, 0), Vec4(mLocalSpacePosition2, 1));
 }
 
 JPH_NAMESPACE_END

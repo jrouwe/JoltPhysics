@@ -13,12 +13,12 @@
 class BlitSettings
 {
 public:
-	/// Constructor									
+	/// Constructor
 							BlitSettings();
 
 	/// Comparison operators
 	bool					operator == (const BlitSettings &inRHS) const;
-	
+
 	/// Default settings
 	static const BlitSettings	sDefault;
 
@@ -31,7 +31,7 @@ public:
 	Color					mColorKeyStart;
 	Color					mColorKeyEnd;
 	ZoomSettings			mZoomSettings;											///< Settings for resizing the image
-};	
+};
 
 /// Copies an image from inSrc to inDst, converting it on the fly as defined by inBlitSettings
 bool BlitSurface(RefConst<Surface> inSrc, Ref<Surface> ioDst, const BlitSettings &inBlitSettings = BlitSettings::sDefault);

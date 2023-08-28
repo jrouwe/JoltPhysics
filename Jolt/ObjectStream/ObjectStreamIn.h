@@ -24,13 +24,13 @@ private:
 
 public:
 	/// Main function to read an object from a stream
-	template <class T> 
+	template <class T>
 	static bool sReadObject(istream &inStream, T *&outObject)
 	{
 		// Create the input stream
 		bool result = false;
 		ObjectStreamIn *stream = ObjectStreamIn::Open(inStream);
-		if (stream) 
+		if (stream)
 		{
 			// Read the object
 			outObject = (T *)stream->Read(JPH_RTTI(T));
@@ -41,7 +41,7 @@ public:
 	}
 
 	/// Main function to read an object from a stream (reference counting pointer version)
-	template <class T> 
+	template <class T>
 	static bool sReadObject(istream &inStream, Ref<T> &outObject)
 	{
 		T *object = nullptr;
@@ -56,7 +56,7 @@ public:
 	{
 		std::ifstream stream;
 		stream.open(inFileName, std::ifstream::in | std::ifstream::binary);
-		if (!stream.is_open()) 
+		if (!stream.is_open())
 			return false;
 		return sReadObject(stream, outObject);
 	}
@@ -115,7 +115,7 @@ private:
 		const RTTI *			mRTTI = nullptr;
 		Array<AttributeDescription>	mAttributes;
 	};
-	
+
 	struct ObjectInfo
 	{
 								ObjectInfo() = default;
@@ -132,7 +132,7 @@ private:
 		Identifier				mIdentifier;
 		const RTTI *			mRTTI;
 	};
-	
+
 	using IdentifierMap = UnorderedMap<Identifier, ObjectInfo>;
 	using ClassDescriptionMap = UnorderedMap<String, ClassDescription>;
 

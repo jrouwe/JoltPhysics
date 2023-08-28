@@ -15,15 +15,15 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSnapshotTest) 
-{ 
-	JPH_ADD_BASE_CLASS(LoadSnapshotTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSnapshotTest)
+{
+	JPH_ADD_BASE_CLASS(LoadSnapshotTest, Test)
 }
 
 void LoadSnapshotTest::Initialize()
 {
 	ifstream stream("snapshot.bin", ifstream::in | ifstream::binary);
-	if (!stream.is_open()) 
+	if (!stream.is_open())
 		FatalError("Unable to open 'snapshot.bin'");
 
 	StreamInWrapper wrapper(stream);

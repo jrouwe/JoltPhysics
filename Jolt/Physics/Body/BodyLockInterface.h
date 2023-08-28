@@ -45,7 +45,7 @@ public:
 	virtual void				LockWrite(MutexMask inMutexMask) const = 0;
 	virtual void				UnlockWrite(MutexMask inMutexMask) const = 0;
 	///@}
-		
+
 	/// Convert body ID to body
 	inline Body *				TryGetBody(const BodyID &inBodyID) const			{ return mBodyManager.TryGetBody(inBodyID); }
 
@@ -91,7 +91,7 @@ public:
 	{
 		PhysicsLock::sUnlockShared(*inMutex JPH_IF_ENABLE_ASSERTS(, &mBodyManager, EPhysicsLockTypes::PerBody));
 	}
-	
+
 	virtual SharedMutex *		LockWrite(const BodyID &inBodyID) const override
 	{
 		SharedMutex &mutex = mBodyManager.GetMutexForBody(inBodyID);
@@ -105,8 +105,8 @@ public:
 	}
 
 	///@name Batch locking functions
-	virtual MutexMask			GetMutexMask(const BodyID *inBodies, int inNumber) const override	
-	{ 
+	virtual MutexMask			GetMutexMask(const BodyID *inBodies, int inNumber) const override
+	{
 		return mBodyManager.GetMutexMask(inBodies, inNumber);
 	}
 

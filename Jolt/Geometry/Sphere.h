@@ -30,9 +30,9 @@ public:
 	inline float		GetRadius() const										{ return mRadius; }
 
 	/// Test if two spheres overlap
-	inline bool			Overlaps(const Sphere &inB) const						
-	{ 
-		return (Vec3::sLoadFloat3Unsafe(mCenter) - Vec3::sLoadFloat3Unsafe(inB.mCenter)).LengthSq() <= Square(mRadius + inB.mRadius); 
+	inline bool			Overlaps(const Sphere &inB) const
+	{
+		return (Vec3::sLoadFloat3Unsafe(mCenter) - Vec3::sLoadFloat3Unsafe(inB.mCenter)).LengthSq() <= Square(mRadius + inB.mRadius);
 	}
 
 	/// Check if this sphere overlaps with a box

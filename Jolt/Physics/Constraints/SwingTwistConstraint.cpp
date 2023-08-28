@@ -36,7 +36,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SwingTwistConstraintSettings)
 }
 
 void SwingTwistConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -151,12 +151,12 @@ Quat SwingTwistConstraint::GetRotationInConstraintSpace() const
 }
 
 void SwingTwistConstraint::SetSwingMotorState(EMotorState inState)
-{ 
-	JPH_ASSERT(inState == EMotorState::Off || mSwingMotorSettings.IsValid()); 
+{
+	JPH_ASSERT(inState == EMotorState::Off || mSwingMotorSettings.IsValid());
 
 	if (mSwingMotorState != inState)
 	{
-		mSwingMotorState = inState; 
+		mSwingMotorState = inState;
 
 		// Ensure that warm starting next frame doesn't apply any impulses (motor parts are repurposed for different modes)
 		for (AngleConstraintPart &c : mMotorConstraintPart)
@@ -165,20 +165,20 @@ void SwingTwistConstraint::SetSwingMotorState(EMotorState inState)
 }
 
 void SwingTwistConstraint::SetTwistMotorState(EMotorState inState)
-{ 
-	JPH_ASSERT(inState == EMotorState::Off || mTwistMotorSettings.IsValid()); 
+{
+	JPH_ASSERT(inState == EMotorState::Off || mTwistMotorSettings.IsValid());
 
 	if (mTwistMotorState != inState)
 	{
-		mTwistMotorState = inState; 
+		mTwistMotorState = inState;
 
 		// Ensure that warm starting next frame doesn't apply any impulses (motor parts are repurposed for different modes)
 		mMotorConstraintPart[0].Deactivate();
 	}
 }
 
-void SwingTwistConstraint::SetTargetOrientationCS(QuatArg inOrientation)		
-{ 
+void SwingTwistConstraint::SetTargetOrientationCS(QuatArg inOrientation)
+{
 	Quat q_swing, q_twist;
 	inOrientation.GetSwingTwist(q_swing, q_twist);
 
@@ -188,7 +188,7 @@ void SwingTwistConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 	if (swing_y_clamped || swing_z_clamped || twist_clamped)
 		mTargetOrientation = q_swing * q_twist;
 	else
-		mTargetOrientation = inOrientation; 
+		mTargetOrientation = inOrientation;
 }
 
 void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
@@ -275,7 +275,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 			for (int i = 1; i < 3; ++i)
 				mMotorConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[i], 0.0f, rotation_error[i], mSwingMotorSettings.mSpringSettings);
 			break;
-		}	
+		}
 
 		// Twist motor
 		switch (mTwistMotorState)
@@ -302,7 +302,7 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 			// Use motor to drive rotation error to zero
 			mMotorConstraintPart[0].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mWorldSpaceMotorAxis[0], 0.0f, rotation_error[0], mTwistMotorSettings.mSpringSettings);
 			break;
-		}	
+		}
 	}
 	else
 	{
@@ -388,7 +388,7 @@ bool SwingTwistConstraint::SolvePositionConstraint(float inDeltaTime, float inBa
 	// Solve rotation violations
 	Quat q = GetRotationInConstraintSpace();
 	impulse |= mSwingTwistConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, q, mConstraintToBody1, mConstraintToBody2, inBaumgarte);
-		
+
 	// Solve position violations
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
 	impulse |= mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
@@ -408,7 +408,7 @@ void SwingTwistConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 	// Draw constraint orientation
 	inRenderer->DrawCoordinateSystem(RMat44::sRotationTranslation(rotation1, position1), mDrawConstraintSize);
 
-	// Draw current swing and twist	
+	// Draw current swing and twist
 	Quat q = GetRotationInConstraintSpace();
 	Quat q_swing, q_twist;
 	q.GetSwingTwist(q_swing, q_twist);

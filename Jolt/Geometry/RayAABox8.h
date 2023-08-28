@@ -31,7 +31,7 @@ JPH_INLINE Vec8 RayAABox8(Vec3Arg inOrigin, const RayInvDirection &inInvDirectio
 	Vec8 invdirx = Vec8::sSplatX(Vec4(inInvDirection.mInvDirection));
 	Vec8 invdiry = Vec8::sSplatY(Vec4(inInvDirection.mInvDirection));
 	Vec8 invdirz = Vec8::sSplatZ(Vec4(inInvDirection.mInvDirection));
-	
+
 	// Test against all three axii simultaneously.
 	Vec8 t1x = (inBoundsMinX - originx) * invdirx;
 	Vec8 t1y = (inBoundsMinY - originy) * invdiry;

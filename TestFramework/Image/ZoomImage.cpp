@@ -25,22 +25,22 @@ public:
 	virtual			~ImageFilter() = default;
 
 	// Get support of this filter (+/- the range the filter function is not zero)
-	virtual float	GetSupport() const = 0;						
+	virtual float	GetSupport() const = 0;
 
 	// Sample filter function at a certain point
-	virtual float	GetValue(float t) const = 0;				
-};																
-								
+	virtual float	GetValue(float t) const = 0;
+};
+
 class ImageFilterBox : public ImageFilter
 {
 	virtual float GetSupport() const override
-	{ 
+	{
 		return 0.5f;
 	}
 
 	virtual float GetValue(float t) const override
 	{
-		if (abs(t) <= 0.5f) 
+		if (abs(t) <= 0.5f)
 			return 1.0f;
 		else
 			return 0.0f;
@@ -50,7 +50,7 @@ class ImageFilterBox : public ImageFilter
 class ImageFilterTriangle : public ImageFilter
 {
 	virtual float GetSupport() const override
-	{ 
+	{
 		return 1.0f;
 	}
 
@@ -58,7 +58,7 @@ class ImageFilterTriangle : public ImageFilter
 	{
 		t = abs(t);
 
-		if (t < 1.0f) 
+		if (t < 1.0f)
 			return 1.0f - t;
 		else
 			return 0.0f;
@@ -68,7 +68,7 @@ class ImageFilterTriangle : public ImageFilter
 class ImageFilterBell : public ImageFilter
 {
 	virtual float GetSupport() const override
-	{ 
+	{
 		return 1.5f;
 	}
 
@@ -76,9 +76,9 @@ class ImageFilterBell : public ImageFilter
 	{
 		t = abs(t);
 
-		if (t < 0.5f) 
-			return 0.75f - t * t;		
-		else if (t < 1.5f) 
+		if (t < 0.5f)
+			return 0.75f - t * t;
+		else if (t < 1.5f)
 		{
 			t = t - 1.5f;
 			return 0.5f * t * t;
@@ -91,7 +91,7 @@ class ImageFilterBell : public ImageFilter
 class ImageFilterBSpline : public ImageFilter
 {
 	virtual float GetSupport() const override
-	{ 
+	{
 		return 2.0f;
 	}
 
@@ -99,12 +99,12 @@ class ImageFilterBSpline : public ImageFilter
 	{
 		t = abs(t);
 
-		if (t < 1.0f) 
+		if (t < 1.0f)
 		{
 			float tt = t * t;
 			return (0.5f * tt * t) - tt + (2.0f / 3.0f);
-		} 
-		else if (t < 2.0f) 
+		}
+		else if (t < 2.0f)
 		{
 			t = 2.0f - t;
 			return (1.0f / 6.0f) * (t * t * t);
@@ -117,7 +117,7 @@ class ImageFilterBSpline : public ImageFilter
 class ImageFilterLanczos3 : public ImageFilter
 {
 	virtual float GetSupport() const override
-	{ 
+	{
 		return 3.0f;
 	}
 
@@ -125,7 +125,7 @@ class ImageFilterLanczos3 : public ImageFilter
 	{
 		t = abs(t);
 
-		if (t < 3.0f) 
+		if (t < 3.0f)
 			return Sinc(t) * Sinc(t / 3.0f);
 		else
 			return 0.0f;
@@ -139,7 +139,7 @@ private:
 		if (abs(x) < 1.0e-5f)
 			return 1.0f;
 
-		return Sin(x) / x;		
+		return Sin(x) / x;
 	}
 
 };
@@ -147,7 +147,7 @@ private:
 class ImageFilterMitchell : public ImageFilter
 {
 	virtual float GetSupport() const override
-	{ 
+	{
 		return 2.0f;
 	}
 
@@ -156,9 +156,9 @@ class ImageFilterMitchell : public ImageFilter
 		float tt = t * t;
 		t = abs(t);
 
-		if (t < 1.0f) 
+		if (t < 1.0f)
 			return (7.0f * (t * tt) - 12.0f * tt + (16.0f / 3.0f)) / 6.0f;
-		else if (t < 2.0f) 
+		else if (t < 2.0f)
 			return ((-7.0f / 3.0f) * (t * tt) + 12.0f * tt + -20.0f * t + (32.0f / 3.0f)) / 6.0f;
 		else
 			return 0.0f;
@@ -192,17 +192,17 @@ static const ImageFilter &GetFilter(EFilter inFilter)
 
 const ZoomSettings ZoomSettings::sDefault;
 
-ZoomSettings::ZoomSettings() : 
-	mFilter(FilterMitchell), 
-	mWrapFilter(true), 
+ZoomSettings::ZoomSettings() :
+	mFilter(FilterMitchell),
+	mWrapFilter(true),
 	mBlur(1.0f)
-{ 
+{
 }
 
 bool ZoomSettings::operator == (const ZoomSettings &inRHS) const
-{ 
-	return mFilter == inRHS.mFilter 
-		&& mWrapFilter == inRHS.mWrapFilter 
+{
+	return mFilter == inRHS.mFilter
+		&& mWrapFilter == inRHS.mWrapFilter
 		&& mBlur == inRHS.mBlur;
 }
 
@@ -255,7 +255,7 @@ static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLen
 	outContrib.resize(inNewLength);
 
 	// Loop over the whole scanline
-	for (int i = 0; i < inNewLength; ++i) 
+	for (int i = 0; i < inNewLength; ++i)
 	{
 		// Compute center and left- and rightmost pixels affected
 		float center = float(i) / scale;
@@ -264,13 +264,13 @@ static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLen
 
 		// Reserve required elements
 		Array<Contrib> &a = outContrib[i];
-		a.reserve(right - left + 1);		
+		a.reserve(right - left + 1);
 
 		// Total sum of all weights, for renormalization of the filter
 		int filter_sum = 0;
 
 		// Compute the contributions for each
-		for (int source = left; source <= right; ++source) 
+		for (int source = left; source <= right; ++source)
 		{
 			Contrib c;
 
@@ -280,11 +280,11 @@ static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLen
 			// Compute weight at this position in 0.12 fixed point
 			c.mWeight = int(4096.0f * filter.GetValue(fscale * (center - source)));
 			if (c.mWeight == 0) continue;
-			
-			// Add weight to filter total
-			filter_sum += c.mWeight;	
 
-			// Reflect the filter at the edges if the filter is not to be wrapped (clamp)				
+			// Add weight to filter total
+			filter_sum += c.mWeight;
+
+			// Reflect the filter at the edges if the filter is not to be wrapped (clamp)
 			if (!inZoomSettings.mWrapFilter && (c.mOffset < 0 || c.mOffset >= inOldLength))
 				c.mOffset = -c.mOffset - 1;
 
@@ -296,11 +296,11 @@ static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLen
 
 			// Multiply the offset with the specified factor
 			c.mOffset *= inOffsetFactor;
-			
+
 			// Add the filter element
 			a.push_back(c);
 		}
-		
+
 		// Normalize the filter to 0.12 fixed point
 		if (filter_sum != 0)
 			for (uint n = 0; n < a.size(); ++n)
@@ -309,7 +309,7 @@ static void sPrecalculateFilter(const ZoomSettings &inZoomSettings, int inOldLen
 }
 
 static void sZoomHorizontal(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &inZoomSettings)
-{	
+{
 	JPH_PROFILE("ZoomHorizontal");
 
 	// Check zoom parameters
@@ -323,16 +323,16 @@ static void sZoomHorizontal(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Z
 	const int delta_d = ioDst->GetBytesPerPixel() - components;
 
 	// Pre-calculate filter contributions for a row
-	Array<Array<Contrib>> contrib;	
+	Array<Array<Contrib>> contrib;
 	sPrecalculateFilter(inZoomSettings, inSrc->GetWidth(), ioDst->GetWidth(), inSrc->GetBytesPerPixel(), contrib);
 
 	// Do the zoom
-	for (int y = 0; y < height; ++y) 
+	for (int y = 0; y < height; ++y)
 	{
 		const uint8 *s = inSrc->GetScanLine(y);
 		uint8 *d = ioDst->GetScanLine(y);
 
-		for (int x = 0; x < width; ++x) 
+		for (int x = 0; x < width; ++x)
 		{
 			const Array<Contrib> &line = contrib[x];
 			const size_t line_size_min_one = line.size() - 1;
@@ -372,7 +372,7 @@ static void sZoomHorizontal(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Z
 }
 
 static void sZoomVertical(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &inZoomSettings)
-{	
+{
 	JPH_PROFILE("ZoomVertical");
 
 	// Check zoom parameters
@@ -384,20 +384,20 @@ static void sZoomVertical(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Zoo
 	const int components = ioDst->GetNumberOfComponents();
 	const int delta_s = inSrc->GetBytesPerPixel() - components;
 	const int delta_d = ioDst->GetBytesPerPixel() - components;
-	
+
 	// Pre-calculate filter contributions for a row
-	Array<Array<Contrib>> contrib;	
+	Array<Array<Contrib>> contrib;
 	sPrecalculateFilter(inZoomSettings, inSrc->GetHeight(), ioDst->GetHeight(), inSrc->GetStride(), contrib);
 
 	// Do the zoom
-	for (int y = 0; y < height; ++y) 
+	for (int y = 0; y < height; ++y)
 	{
 		const uint8 *s = inSrc->GetScanLine(0);
 		uint8 *d = ioDst->GetScanLine(y);
-		const Array<Contrib> &line = contrib[y];		
+		const Array<Contrib> &line = contrib[y];
 		const size_t line_size_min_one = line.size() - 1;
 
-		for (int x = 0; x < width; ++x) 
+		for (int x = 0; x < width; ++x)
 		{
 			int c = components;
 			do
@@ -408,7 +408,7 @@ static void sZoomVertical(RefConst<Surface> inSrc, Ref<Surface> ioDst, const Zoo
 				size_t j = line_size_min_one;
 				do
 				{
-					const Contrib &cmp = line[j];	
+					const Contrib &cmp = line[j];
 					pixel += cmp.mWeight * s[cmp.mOffset];
 				}
 				while (j--);
@@ -439,7 +439,7 @@ bool ZoomImage(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &
 
 	// Get filter
 	const ImageFilter &filter = GetFilter(inZoomSettings.mFilter);
-	
+
 	// Determine the temporary format that will require the least amount of components to be zoomed and the least amount of bytes pushed around
 	ESurfaceFormat tmp_format;
 	ESurfaceFormat src_format = inSrc->GetClosest8BitFormat();
@@ -462,7 +462,7 @@ bool ZoomImage(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &
 		Ref<Surface> tmp = new SoftwareSurface(inSrc->GetWidth(), inSrc->GetHeight(), tmp_format);
 		if (!BlitSurface(inSrc, tmp))
 			return false;
-		src = tmp;		
+		src = tmp;
 	}
 
 	// Create temporary destination buffer if nessecary
@@ -493,7 +493,7 @@ bool ZoomImage(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &
 			// Create temporary buffer to hold the vertical scale
 			Ref<Surface> tmp = new SoftwareSurface(src->GetWidth(), dst->GetHeight(), tmp_format);
 			tmp->Lock(ESurfaceLockMode::ReadWrite);
-			
+
 			// First scale vertically then horizontally
 			sZoomVertical(src, tmp, inZoomSettings);
 			sZoomHorizontal(tmp, dst, inZoomSettings);
@@ -505,7 +505,7 @@ bool ZoomImage(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &
 			// Create temporary buffer to hold the horizontal scale
 			Ref<Surface> tmp = new SoftwareSurface(dst->GetWidth(), src->GetHeight(), tmp_format);
 			tmp->Lock(ESurfaceLockMode::ReadWrite);
-			
+
 			// First scale horizontally then vertically
 			sZoomHorizontal(src, tmp, inZoomSettings);
 			sZoomVertical(tmp, dst, inZoomSettings);

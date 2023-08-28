@@ -12,12 +12,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledOffsetCenterOfMassShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledOffsetCenterOfMassShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledOffsetCenterOfMassShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledOffsetCenterOfMassShapeTest, Test)
 }
 
-void ScaledOffsetCenterOfMassShapeTest::Initialize() 
+void ScaledOffsetCenterOfMassShapeTest::Initialize()
 {
 	// Floor
 	Body &floor = CreateFloor();
@@ -51,7 +51,7 @@ void ScaledOffsetCenterOfMassShapeTest::Initialize()
 	mBodyInterface->AddBody(body_pre_scaled.GetID(), EActivation::Activate);
 
 	// Shape that is scaled after the offset center of mass offset is applied
-	ShapeRefC post_scaled = new ScaledShape(OffsetCenterOfMassShapeSettings(Vec3(0, 0, 5.0f), new SphereShape(1.0f)).Create().Get(), JPH::Vec3::sReplicate(2.0f));    
+	ShapeRefC post_scaled = new ScaledShape(OffsetCenterOfMassShapeSettings(Vec3(0, 0, 5.0f), new SphereShape(1.0f)).Create().Get(), JPH::Vec3::sReplicate(2.0f));
     Body &body_post_scaled = *mBodyInterface->CreateBody(BodyCreationSettings(post_scaled, RVec3(5, 5, -15), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
     mBodyInterface->AddBody(body_post_scaled.GetID(), EActivation::Activate);
 }

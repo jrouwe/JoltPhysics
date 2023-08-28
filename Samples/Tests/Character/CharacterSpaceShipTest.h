@@ -56,7 +56,7 @@ private:
 	// Space ship velocity
 	Vec3					mSpaceShipLinearVelocity;
 	Vec3					mSpaceShipAngularVelocity;
-	
+
 	// Global time
 	float					mTime = 0.0f;
 

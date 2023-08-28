@@ -68,11 +68,11 @@ public:
 			mCol[rc].mF32[rc] = inV[rc];
 	}
 
-	inline static Matrix					sDiagonal(const Vector<Rows < Cols? Rows : Cols> &inV)	
-	{ 
-		Matrix m; 
-		m.SetDiagonal(inV); 
-		return m; 
+	inline static Matrix					sDiagonal(const Vector<Rows < Cols? Rows : Cols> &inV)
+	{
+		Matrix m;
+		m.SetDiagonal(inV);
+		return m;
 	}
 
 	/// Copy a (part) of another matrix into this matrix
@@ -85,20 +85,20 @@ public:
 		}
 
 	/// Get float component by element index
-	inline float							operator () (uint inRow, uint inColumn) const			
-	{ 
-		JPH_ASSERT(inRow < Rows); 
-		JPH_ASSERT(inColumn < Cols); 
-		return mCol[inColumn].mF32[inRow]; 
+	inline float							operator () (uint inRow, uint inColumn) const
+	{
+		JPH_ASSERT(inRow < Rows);
+		JPH_ASSERT(inColumn < Cols);
+		return mCol[inColumn].mF32[inRow];
 	}
-	
+
 	inline float &							operator () (uint inRow, uint inColumn)
-	{ 
-		JPH_ASSERT(inRow < Rows); 
-		JPH_ASSERT(inColumn < Cols); 
-		return mCol[inColumn].mF32[inRow]; 
+	{
+		JPH_ASSERT(inRow < Rows);
+		JPH_ASSERT(inColumn < Cols);
+		return mCol[inColumn].mF32[inRow];
 	}
-	
+
 	/// Comparison
 	inline bool								operator == (const Matrix &inM2) const
 	{
@@ -163,9 +163,9 @@ public:
 		return m;
 	}
 
-	inline friend Matrix					operator * (float inV, const Matrix &inM)				
-	{ 
-		return inM * inV; 
+	inline friend Matrix					operator * (float inV, const Matrix &inM)
+	{
+		return inM * inV;
 	}
 
 	/// Per element addition of matrix
@@ -193,7 +193,7 @@ public:
 		for (uint r = 0; r < Rows; ++r)
 			for (uint c = 0; c < Cols; ++c)
 				m.mCol[r].mF32[c] = mCol[c].mF32[r];
-		return m;		
+		return m;
 	}
 
 	/// Inverse matrix
@@ -201,7 +201,7 @@ public:
 	{
 		if constexpr (Rows != Cols) JPH_ASSERT(false);
 		Matrix copy(inM);
-		SetIdentity(); 
+		SetIdentity();
 		return GaussianElimination(copy, *this);
 	}
 
@@ -250,7 +250,7 @@ inline bool Matrix<2, 2>::SetInversed(const Matrix<2, 2> &inM)
 	mCol[0].mF32[0] = d / det;
 	mCol[1].mF32[0] = -b / det;
 	mCol[0].mF32[1] = -c / det;
-	mCol[1].mF32[1] = a / det;	
+	mCol[1].mF32[1] = a / det;
 	return true;
 }
 

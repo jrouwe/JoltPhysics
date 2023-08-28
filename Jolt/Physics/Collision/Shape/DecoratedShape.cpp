@@ -60,13 +60,13 @@ uint64 DecoratedShape::GetSubShapeUserData(const SubShapeID &inSubShapeID) const
 }
 
 void DecoratedShape::SaveSubShapeState(ShapeList &outSubShapes) const
-{ 
+{
 	outSubShapes.clear();
 	outSubShapes.push_back(mInnerShape);
 }
 
 void DecoratedShape::RestoreSubShapeState(const ShapeRefC *inSubShapes, uint inNumShapes)
-{ 
+{
 	JPH_ASSERT(inNumShapes == 1);
 	mInnerShape = inSubShapes[0];
 }
@@ -80,7 +80,7 @@ Shape::Stats DecoratedShape::GetStatsRecursive(VisitedShapes &ioVisitedShapes) c
 	Stats child_stats = mInnerShape->GetStatsRecursive(ioVisitedShapes);
 	stats.mSizeBytes += child_stats.mSizeBytes;
 	stats.mNumTriangles += child_stats.mNumTriangles;
-	
+
 	return stats;
 }
 

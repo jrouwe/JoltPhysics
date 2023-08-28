@@ -20,9 +20,9 @@ enum class EMotionQuality : uint8
 	/// and will not bounce off the surface until the next integration step). This will make the body appear
 	/// to go slower when it collides with high velocity. In order to not get stuck, the body is always
 	/// allowed to move by a fraction of it's inner radius, which may eventually lead it to pass through geometry.
-	/// 
+	///
 	/// Note that if you're using a collision listener, you can receive contact added/persisted notifications of contacts
-	/// that may in the end not happen. This happens between bodies that are using casting: If bodies A and B collide at t1 
+	/// that may in the end not happen. This happens between bodies that are using casting: If bodies A and B collide at t1
 	/// and B and C collide at t2 where t2 < t1 and A and C don't collide. In this case you may receive an incorrect contact
 	/// point added callback between A and B (which will be removed the next frame).
 	LinearCast,

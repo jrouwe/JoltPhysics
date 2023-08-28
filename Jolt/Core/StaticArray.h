@@ -65,7 +65,7 @@ public:
 	/// Construct element at the back of the array
 	template <class... A>
 	void				emplace_back(A &&... inElement)
-	{	
+	{
 		JPH_ASSERT(mSize < N);
 		::new (&mElements[mSize++]) T(std::forward<A>(inElement)...);
 	}
@@ -245,7 +245,7 @@ public:
 
 		return *this;
 	}
-	
+
 	/// Comparing arrays
 	bool				operator == (const StaticArray<T, N> &inRHS) const
 	{
@@ -266,7 +266,7 @@ public:
 				return true;
 		return false;
 	}
-	
+
 protected:
 	struct alignas(T) Storage
 	{

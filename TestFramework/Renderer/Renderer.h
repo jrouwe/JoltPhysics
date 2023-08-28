@@ -71,7 +71,7 @@ public:
 	Ref<Texture>					CreateRenderTarget(int inWidth, int inHeight);
 
 	/// Change the render target to a texture. Use nullptr to set back to the main render target.
-	void							SetRenderTarget(Texture *inRenderTarget); 
+	void							SetRenderTarget(Texture *inRenderTarget);
 
 	/// Compile a vertex shader
 	ComPtr<ID3DBlob>				CreateVertexShader(const char *inFileName);

@@ -9,7 +9,7 @@ set(JOLT_VIEWER_SRC_FILES
 )
 
 # Group source files
-source_group(TREE ${JOLT_VIEWER_ROOT} FILES ${JOLT_VIEWER_SRC_FILES})	
+source_group(TREE ${JOLT_VIEWER_ROOT} FILES ${JOLT_VIEWER_SRC_FILES})
 
 # Create JoltViewer executable
 add_executable(JoltViewer ${JOLT_VIEWER_SRC_FILES})

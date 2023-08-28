@@ -71,11 +71,11 @@ public:
 		/// Warning: Virtual destructor will not be called on this object!
 		virtual						~Support() = default;
 
-		/// Calculate the support vector for this convex shape (includes / excludes the convex radius depending on how this was obtained). 
+		/// Calculate the support vector for this convex shape (includes / excludes the convex radius depending on how this was obtained).
 		/// Support vector is relative to the center of mass of the shape.
 		virtual Vec3				GetSupport(Vec3Arg inDirection) const = 0;
 
-		/// Convex radius of shape. Collision detection on penetrating shapes is much more expensive, 
+		/// Convex radius of shape. Collision detection on penetrating shapes is much more expensive,
 		/// so you can add a radius around objects to increase the shape. This makes it far less likely that they will actually penetrate.
 		virtual float				GetConvexRadius() const = 0;
 	};
@@ -88,7 +88,7 @@ public:
 	};
 
 	/// How the GetSupport function should behave
-	enum class ESupportMode	
+	enum class ESupportMode
 	{
 		ExcludeConvexRadius,		///< Return the shape excluding the convex radius
 		IncludeConvexRadius,		///< Return the shape including the convex radius

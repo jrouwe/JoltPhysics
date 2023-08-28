@@ -19,7 +19,7 @@ JPH_NAMESPACE_BEGIN
 /// class)
 ///
 /// Notes:
-///  - An extra virtual member function is added. This adds 8 bytes to the size of 
+///  - An extra virtual member function is added. This adds 8 bytes to the size of
 ///    an instance of the class (unless you are already using virtual functions).
 ///
 /// To use RTTI on a specific class use:
@@ -43,7 +43,7 @@ JPH_NAMESPACE_BEGIN
 ///		}
 ///
 ///		JPH_IMPLEMENT_RTTI_VIRTUAL(Bar)
-///		{ 
+///		{
 ///			JPH_ADD_BASE_CLASS(Bar, Foo) // Multiple inheritance is allowed, just do JPH_ADD_BASE_CLASS for every base class
 ///		}
 ///
@@ -74,7 +74,7 @@ JPH_NAMESPACE_BEGIN
 ///		}
 ///
 ///		JPH_IMPLEMENT_RTTI_VIRTUAL(Bar)
-///		{ 
+///		{
 ///			JPH_ADD_BASE_CLASS(Bar, Foo)
 ///		}
 ///
@@ -97,14 +97,14 @@ JPH_NAMESPACE_BEGIN
 ///		DynamicCast<Bar>(bar_ptr) returns bar_ptr casted to pBar
 ///
 /// Other feature of DynamicCast:
-/// 
+///
 ///		class A { int data[5]; };
 ///		class B { int data[7]; };
 ///		class C : public A, public B { int data[9]; };
-///		
+///
 ///		C *c = new C;
 ///		A *a = c;
-/// 
+///
 /// Note that:
 ///
 ///		B *b = (B *)a;
@@ -116,7 +116,7 @@ JPH_NAMESPACE_BEGIN
 /// doesn't compile, and
 ///
 ///		B *b = DynamicCast<B>(a);
-/// 
+///
 /// does the correct cast
 class JPH_EXPORT RTTI
 {
@@ -151,7 +151,7 @@ public:
 
 	/// Add base class
 	void						AddBaseClass(const RTTI *inRTTI, int inOffset);
-	
+
 	/// Equality operators
 	bool						operator == (const RTTI &inRHS) const;
 	bool						operator != (const RTTI &inRHS) const						{ return !(*this == inRHS); }
@@ -333,7 +333,7 @@ public:																												\
 /// Define very dirty macro to get the offset of a baseclass into a class
 #define JPH_BASE_CLASS_OFFSET(inClass, inBaseClass)	((int(uint64((inBaseClass *)((inClass *)0x10000))))-0x10000)
 
-// JPH_ADD_BASE_CLASS 
+// JPH_ADD_BASE_CLASS
 #define JPH_ADD_BASE_CLASS(class_name, base_class_name)																\
 								inRTTI.AddBaseClass(JPH_RTTI(base_class_name), JPH_BASE_CLASS_OFFSET(class_name, base_class_name));
 

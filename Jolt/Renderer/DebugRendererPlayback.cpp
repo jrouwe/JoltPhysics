@@ -10,8 +10,8 @@
 
 JPH_NAMESPACE_BEGIN
 
-void DebugRendererPlayback::Parse(StreamIn &inStream) 
-{ 
+void DebugRendererPlayback::Parse(StreamIn &inStream)
+{
 	using ECommand = DebugRendererRecorder::ECommand;
 
 	for (;;)
@@ -30,22 +30,22 @@ void DebugRendererPlayback::Parse(StreamIn &inStream)
 
 			uint32 triangle_count;
 			inStream.Read(triangle_count);
-		
+
 			DebugRenderer::Triangle *triangles = new DebugRenderer::Triangle [triangle_count];
 			inStream.ReadBytes(triangles, triangle_count * sizeof(DebugRenderer::Triangle));
-		
+
 			mBatches.insert({ id, mRenderer.CreateTriangleBatch(triangles, triangle_count) });
-		
+
 			delete [] triangles;
 		}
 		else if (command == ECommand::CreateBatchIndexed)
-		{	
+		{
 			uint32 id;
 			inStream.Read(id);
 
 			uint32 vertex_count;
 			inStream.Read(vertex_count);
-		
+
 			DebugRenderer::Vertex *vertices = new DebugRenderer::Vertex [vertex_count];
 			inStream.ReadBytes(vertices, vertex_count * sizeof(DebugRenderer::Vertex));
 
@@ -54,9 +54,9 @@ void DebugRendererPlayback::Parse(StreamIn &inStream)
 
 			uint32 *indices = new uint32 [index_count];
 			inStream.ReadBytes(indices, index_count * sizeof(uint32));
-		
+
 			mBatches.insert({ id, mRenderer.CreateTriangleBatch(vertices, vertex_count, indices, index_count) });
-		
+
 			delete [] indices;
 			delete [] vertices;
 		}

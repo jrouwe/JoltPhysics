@@ -81,7 +81,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Smooth the player input in local space to the ship
 	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
-		
+
 	// Check jump
 	bool jump = false;
 	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
@@ -113,7 +113,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Transform player input to world space
 	new_velocity += new_space_ship_transform.Multiply3x3(mDesiredVelocity);
-	
+
 	// Update character velocity
 	mCharacter->SetLinearVelocity(new_velocity);
 
@@ -151,7 +151,7 @@ void CharacterSpaceShipTest::GetInitialCamera(CameraState& ioState) const
 	ioState.mForward = Vec3(10.0f, -2.0f, 0).Normalized();
 }
 
-RMat44 CharacterSpaceShipTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 CharacterSpaceShipTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));

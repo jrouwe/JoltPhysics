@@ -18,7 +18,7 @@ inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char
 {
 	inRTTI.AddAttribute(SerializableAttribute(inName, inOffset,
 		[]() -> const RTTI *
-		{ 
+		{
 			return nullptr;
 		},
 		[](int inArrayDepth, EOSDataType inDataType, [[maybe_unused]] const char *inClassName)
@@ -28,7 +28,7 @@ inline void AddSerializableAttributeEnum(RTTI &inRTTI, uint inOffset, const char
 		[](IObjectStreamIn &ioStream, void *inObject)
 		{
 			uint32 temporary;
-			if (OSReadData(ioStream, temporary)) 
+			if (OSReadData(ioStream, temporary))
 			{
 				*reinterpret_cast<MemberType *>(inObject) = static_cast<MemberType>(temporary);
 				return true;

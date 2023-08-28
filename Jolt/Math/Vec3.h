@@ -10,7 +10,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// 3 component vector (stored as 4 vectors). 
+/// 3 component vector (stored as 4 vectors).
 /// Note that we keep the 4th component the same as the 3rd component to avoid divisions by zero when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED defined
 class [[nodiscard]] alignas(JPH_VECTOR_ALIGNMENT) Vec3
 {
@@ -55,7 +55,7 @@ public:
 
 	/// Replicate inV across all components
 	static JPH_INLINE Vec3		sReplicate(float inV);
-		
+
 	/// Load 3 floats from memory (reads 32 bits extra which it doesn't use)
 	static JPH_INLINE Vec3		sLoadFloat3Unsafe(const Float3 &inV);
 
@@ -124,7 +124,7 @@ public:
 	JPH_INLINE float			GetY() const									{ return mF32[1]; }
 	JPH_INLINE float			GetZ() const									{ return mF32[2]; }
 #endif
-	
+
 	/// Set individual components
 	JPH_INLINE void				SetX(float inX)									{ mF32[0] = inX; }
 	JPH_INLINE void				SetY(float inY)									{ mF32[1] = inY; }
@@ -273,7 +273,7 @@ public:
 
 	/// Internal helper function that checks that W is equal to Z, so e.g. dividing by it should not generate div by 0
 	JPH_INLINE void				CheckW() const;
-	
+
 	/// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
 	static JPH_INLINE Type		sFixW(Type inValue);
 

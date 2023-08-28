@@ -13,9 +13,9 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(MotorcycleTest) 
-{ 
-	JPH_ADD_BASE_CLASS(MotorcycleTest, VehicleTest) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(MotorcycleTest)
+{
+	JPH_ADD_BASE_CLASS(MotorcycleTest, VehicleTest)
 }
 
 MotorcycleTest::~MotorcycleTest()
@@ -137,7 +137,7 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		brake = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
 		forward = 1.0f;
-	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		
+	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
 		forward = -1.0f;
 
 	// Check if we're reversing direction
@@ -214,7 +214,7 @@ void MotorcycleTest::RestoreState(StateRecorder& inStream)
 	inStream.Read(mCurrentRight);
 }
 
-void MotorcycleTest::GetInitialCamera(CameraState &ioState) const 
+void MotorcycleTest::GetInitialCamera(CameraState &ioState) const
 {
 	// Position camera behind motorcycle
 	RVec3 cam_tgt = RVec3(0, 0, 5);
@@ -222,7 +222,7 @@ void MotorcycleTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 MotorcycleTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 MotorcycleTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	// Pivot is center of motorcycle and rotates with motorcycle around Y axis only
 	Vec3 fwd = mMotorcycleBody->GetRotation().RotateAxisZ();

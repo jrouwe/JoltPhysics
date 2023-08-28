@@ -179,11 +179,11 @@ public:
 	JPH_INLINE UVec4			ArithmeticShiftRight() const;
 
 	/// Takes the lower 4 16 bits and expands them to X, Y, Z and W
-	JPH_INLINE UVec4			Expand4Uint16Lo() const;	
+	JPH_INLINE UVec4			Expand4Uint16Lo() const;
 
 	/// Takes the upper 4 16 bits and expands them to X, Y, Z and W
 	JPH_INLINE UVec4			Expand4Uint16Hi() const;
-	
+
 	/// Takes byte 0 .. 3 and expands them to X, Y, Z and W
 	JPH_INLINE UVec4			Expand4Byte0() const;
 
@@ -192,7 +192,7 @@ public:
 
 	/// Takes byte 8 .. 11 and expands them to X, Y, Z and W
 	JPH_INLINE UVec4			Expand4Byte8() const;
-	
+
 	/// Takes byte 12 .. 15 and expands them to X, Y, Z and W
 	JPH_INLINE UVec4			Expand4Byte12() const;
 

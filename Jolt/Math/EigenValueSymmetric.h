@@ -37,7 +37,7 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 
 	// Get problem dimension
 	const uint n = inMatrix.GetRows();
-	
+
 	// Make sure the dimensions are right
 	JPH_ASSERT(inMatrix.GetRows() == n);
 	JPH_ASSERT(inMatrix.GetCols() == n);
@@ -50,7 +50,7 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 	Matrix a = inMatrix;
 
 	Vector b, z;
-	
+
 	for (uint ip = 0; ip < n; ++ip)
 	{
 		// Initialize b to diagonal of a
@@ -99,9 +99,9 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 			for (uint iq = ip + 1; iq < n; ++iq)
 			{
 				float g = 100.0f * abs(a(ip, iq));
-				
+
 				// After four sweeps, skip the rotation if the off-diagonal element is small
-				if (sweep > 4 
+				if (sweep > 4
 					&& abs(outEigVal[ip]) + g == abs(outEigVal[ip])
 					&& abs(outEigVal[iq]) + g == abs(outEigVal[iq]))
 				{
@@ -122,12 +122,12 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 						t = 1.0f / (abs(theta) + sqrt(1.0f + theta * theta)); // Warning: Squaring large value can make it inf
 						if (theta < 0.0f) t = -t;
 					}
-					
+
 					float c = 1.0f / sqrt(1.0f + t * t);
 					float s = t * c;
 					float tau = s / (1.0f + c);
 					h = t * a(ip, iq);
-					
+
 					a(ip, iq) = 0.0f;
 
 					// !Modification from Numerical Recipes!
@@ -137,7 +137,7 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 					{
 						z[ip] -= h;
 						z[iq] += h;
-					
+
 						outEigVal[ip] -= h;
 						outEigVal[iq] += h;
 
@@ -152,7 +152,7 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 						for (j = ip + 1; j < iq; ++j)	JPH_EVS_ROTATE(a, ip, j, j, iq);
 						for (j = iq + 1; j < n; ++j)	JPH_EVS_ROTATE(a, ip, j, iq, j);
 						for (j = 0; j < n; ++j)			JPH_EVS_ROTATE(outEigVec, j, ip, j, iq);
-					
+
 						#undef JPH_EVS_ROTATE
 					}
 				}

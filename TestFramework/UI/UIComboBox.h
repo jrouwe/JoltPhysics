@@ -14,7 +14,7 @@ public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, UIComboBox)
 
 	using ItemChangedAction = function<void(int)>;
-	
+
 	/// Properties
 	void				SetItems(const Array<String> &inItems)				{ mItems = inItems; }
 	void				SetCurrentItem(int inItem)							{ mCurrentItem = inItem; }
@@ -22,7 +22,7 @@ public:
 	void				SetNextButton(UIButton *inNextButton)				{ mNextButton = inNextButton; }
 	void				SetStaticText(UIStaticText *inStaticText)			{ mStaticText = inStaticText; UpdateStaticText(); }
 	void				SetItemChangedAction(ItemChangedAction inAction)	{ mItemChangedAction = inAction; }
-	
+
 	/// Cloning / copying
 	virtual void		CopyTo(UIElement *ioElement) const override;
 

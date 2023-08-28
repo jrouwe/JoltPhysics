@@ -15,22 +15,22 @@
 
 const BlitSettings BlitSettings::sDefault;
 
-BlitSettings::BlitSettings() : 
-	mConvertRGBToAlpha(false), 
-	mConvertAlphaToRGB(false), 
-	mConvertToGrayScale(false), 
-	mInvertAlpha(false), 
+BlitSettings::BlitSettings() :
+	mConvertRGBToAlpha(false),
+	mConvertAlphaToRGB(false),
+	mConvertToGrayScale(false),
+	mInvertAlpha(false),
 	mColorKeyAlpha(false),
 	mColorKeyStart(240, 0, 240),
 	mColorKeyEnd(255, 15, 255)
-{ 
+{
 }
 
 bool BlitSettings::operator == (const BlitSettings &inRHS) const
-{ 
-	return mConvertRGBToAlpha == inRHS.mConvertRGBToAlpha 
+{
+	return mConvertRGBToAlpha == inRHS.mConvertRGBToAlpha
 		&& mConvertAlphaToRGB == inRHS.mConvertAlphaToRGB
-		&& mConvertToGrayScale == inRHS.mConvertToGrayScale 
+		&& mConvertToGrayScale == inRHS.mConvertToGrayScale
 		&& mInvertAlpha == inRHS.mInvertAlpha
 		&& mColorKeyAlpha == inRHS.mColorKeyAlpha
 		&& mColorKeyStart == inRHS.mColorKeyStart
@@ -49,7 +49,7 @@ bool BlitSettings::operator == (const BlitSettings &inRHS) const
 static void sComputeTranslationTable(const FormatDescription & inSrcDesc, const FormatDescription & inDstDesc, uint32 *outMask, uint32 *outShift, uint32 *outMap)
 {
 	JPH_PROFILE("sComputeTranslationTable");
-	
+
 	// Compute translation tables for each color component
 	uint32 written_mask = 0;
 	for (int c = 0; c < 4; ++c)
@@ -70,7 +70,7 @@ static void sComputeTranslationTable(const FormatDescription & inSrcDesc, const 
 		}
 		else
 			written_mask |= dst_mask;
-		
+
 		float scale = float(dst_shifted_mask) / src_shifted_mask;
 
 		uint32 entry = 0;
@@ -87,7 +87,7 @@ static void sComputeTranslationTable(const FormatDescription & inSrcDesc, const 
 static bool sConvertImageDifferentTypes(RefConst<Surface> inSrc, Ref<Surface> ioDst)
 {
 	JPH_PROFILE("sConvertImageDifferentTypes");
-	
+
 	// Get image properties
 	int sbpp = inSrc->GetBytesPerPixel();
 	int dbpp = ioDst->GetBytesPerPixel();
@@ -147,7 +147,7 @@ static bool sConvertImageSameTypes(RefConst<Surface> inSrc, Ref<Surface> ioDst)
 
 	// Copy the image line by line to compensate for stride
 	for (int y = 0; y < height; ++y)
-		memcpy(ioDst->GetScanLine(y), inSrc->GetScanLine(y), width * dbpp);			
+		memcpy(ioDst->GetScanLine(y), inSrc->GetScanLine(y), width * dbpp);
 
 	inSrc->UnLock();
 	ioDst->UnLock();
@@ -156,7 +156,7 @@ static bool sConvertImageSameTypes(RefConst<Surface> inSrc, Ref<Surface> ioDst)
 }
 
 static bool sConvertImage(RefConst<Surface> inSrc, Ref<Surface> ioDst)
-{	
+{
 	JPH_PROFILE("sConvertImage");
 
 	if (inSrc->GetFormat() == ioDst->GetFormat())
@@ -315,7 +315,7 @@ bool BlitSurface(RefConst<Surface> inSrc, Ref<Surface> ioDst, const BlitSettings
 		// Do them on A8R8G8B8 format so the conversion routines are simple
 		Ref<Surface> tmp = new SoftwareSurface(inSrc->GetWidth(), inSrc->GetHeight(), ESurfaceFormat::A8R8G8B8);
 		sConvertImage(inSrc, tmp);
-		src = tmp;		
+		src = tmp;
 
 		// Perform all optional conversions
 		tmp->Lock(ESurfaceLockMode::ReadWrite);

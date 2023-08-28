@@ -19,10 +19,10 @@ void ConvexHullBuilder2D::Edge::CalculateNormalAndCenter(const Vec3 *inPositions
 
 	// Center of edge
 	mCenter = 0.5f * (p1 + p2);
-			
-	// Create outward pointing normal. 
+
+	// Create outward pointing normal.
 	// We have two choices for the normal (which satisfies normal . edge = 0):
-	// normal1 = (-edge.y, edge.x, 0) 
+	// normal1 = (-edge.y, edge.x, 0)
 	// normal2 = (edge.y, -edge.x, 0)
 	// We want (normal x edge).z > 0 so that the normal points out of the polygon. Only normal2 satisfies this condition.
 	Vec3 edge = p2 - p1;
@@ -99,7 +99,7 @@ void ConvexHullBuilder2D::ValidateEdges() const
 
 		++count;
 		edge = edge->mNextEdge;
-	} while (edge != mFirstEdge);	
+	} while (edge != mFirstEdge);
 
 	// Validate that count matches
 	JPH_ASSERT(count == mNumEdges);

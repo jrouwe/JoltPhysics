@@ -36,16 +36,16 @@ public:
 		}
 
 	/// Get float component by index
-	inline float				operator [] (uint inCoordinate) const			
-	{ 
-		JPH_ASSERT(inCoordinate < Rows); 
-		return mF32[inCoordinate]; 
+	inline float				operator [] (uint inCoordinate) const
+	{
+		JPH_ASSERT(inCoordinate < Rows);
+		return mF32[inCoordinate];
 	}
-	
+
 	inline float &				operator [] (uint inCoordinate)
-	{ 
-		JPH_ASSERT(inCoordinate < Rows); 
-		return mF32[inCoordinate]; 
+	{
+		JPH_ASSERT(inCoordinate < Rows);
+		return mF32[inCoordinate];
 	}
 
 	/// Comparison
@@ -97,7 +97,7 @@ public:
 		return v;
 	}
 
-	inline Vector &				operator *= (const float inV2) 
+	inline Vector &				operator *= (const float inV2)
 	{
 		for (uint r = 0; r < Rows; ++r)
 			mF32[r] *= inV2;
@@ -153,7 +153,7 @@ public:
 		return v;
 	}
 
-	inline Vector &				operator -= (const Vector &inV2) 
+	inline Vector &				operator -= (const Vector &inV2)
 	{
 		for (uint r = 0; r < Rows; ++r)
 			mF32[r] -= inV2.mF32[r];

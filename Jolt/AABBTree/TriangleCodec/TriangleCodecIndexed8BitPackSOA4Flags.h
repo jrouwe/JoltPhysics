@@ -34,7 +34,7 @@ public:
 	static constexpr int			TriangleHeaderSize = sizeof(TriangleHeader);
 
 	/// If this codec could return a different offset than the current buffer size when calling Pack()
-	static constexpr bool			ChangesOffsetOnPack = false; 
+	static constexpr bool			ChangesOffsetOnPack = false;
 
 	/// Amount of bits per component
 	enum EComponentData : uint32
@@ -67,7 +67,7 @@ public:
 	};
 
 	static_assert(sizeof(VertexData) == 8, "Compiler added padding");
-	
+
 	/// A block of 4 triangles
 	struct TriangleBlock
 	{
@@ -257,10 +257,10 @@ public:
 		{
 			JPH_ASSERT(inNumTriangles > 0);
 			const TriangleBlockHeader *header = reinterpret_cast<const TriangleBlockHeader *>(inTriangleStart);
-			const VertexData *vertices = header->GetVertexData();			
+			const VertexData *vertices = header->GetVertexData();
 			const TriangleBlock *t = header->GetTriangleBlock();
 			const TriangleBlock *end = t + ((inNumTriangles + 3) >> 2);
-			
+
 			int triangles_left = inNumTriangles;
 
 			do
@@ -291,7 +291,7 @@ public:
 				}
 
 				++t;
-			} 
+			}
 			while (t < end);
 		}
 
@@ -300,7 +300,7 @@ public:
 		{
 			JPH_ASSERT(inNumTriangles > 0);
 			const TriangleBlockHeader *header = reinterpret_cast<const TriangleBlockHeader *>(inTriangleStart);
-			const VertexData *vertices = header->GetVertexData();			
+			const VertexData *vertices = header->GetVertexData();
 			const TriangleBlock *t = header->GetTriangleBlock();
 			const TriangleBlock *end = t + ((inNumTriangles + 3) >> 2);
 
@@ -336,7 +336,7 @@ public:
 				// Next block
 				++t;
 				start_triangle_idx += UVec4::sReplicate(4);
-			} 
+			}
 			while (t < end);
 
 			// Get the smallest component
@@ -380,13 +380,13 @@ public:
 		}
 
 		/// Get flags for entire triangle block
-		JPH_INLINE static void		sGetFlags(const void *inTriangleStart, uint32 inNumTriangles, uint8 *outTriangleFlags) 
+		JPH_INLINE static void		sGetFlags(const void *inTriangleStart, uint32 inNumTriangles, uint8 *outTriangleFlags)
 		{
 			JPH_ASSERT(inNumTriangles > 0);
 			const TriangleBlockHeader *header = reinterpret_cast<const TriangleBlockHeader *>(inTriangleStart);
 			const TriangleBlock *t = header->GetTriangleBlock();
 			const TriangleBlock *end = t + ((inNumTriangles + 3) >> 2);
-			
+
 			int triangles_left = inNumTriangles;
 			do
 			{
@@ -394,7 +394,7 @@ public:
 					*outTriangleFlags++ = t->mFlags[i];
 
 				++t;
-			} 
+			}
 			while (t < end);
 		}
 

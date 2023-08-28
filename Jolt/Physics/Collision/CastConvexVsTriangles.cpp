@@ -19,8 +19,8 @@ CastConvexVsTriangles::CastConvexVsTriangles(const ShapeCast &inShapeCast, const
 	mCenterOfMassTransform2(inCenterOfMassTransform2),
 	mScale(inScale),
 	mSubShapeIDCreator1(inSubShapeIDCreator1),
-	mCollector(ioCollector) 
-{ 
+	mCollector(ioCollector)
+{
 	JPH_ASSERT(inShapeCast.mShape->GetType() == EShapeType::Convex);
 
 	// Determine if shape is inside out or not

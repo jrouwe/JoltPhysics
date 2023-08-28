@@ -11,16 +11,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SliderConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SliderConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SliderConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(SliderConstraintTest, Test)
 }
 
 void SliderConstraintTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	const int cChainLength = 10;
 
 	// Create group filter

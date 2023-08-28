@@ -40,7 +40,7 @@ public:
 	/// If you want the surface normal of the hit use GetWorldSpaceSurfaceNormal(collected sub shape ID, inRay.GetPointOnRay(collected fraction)) on this object.
 	void						CastRay(const RRayCast &inRay, const RayCastSettings &inRayCastSettings, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const;
 
-	/// Check if inPoint is inside any shapes. For this tests all shapes are treated as if they were solid. 
+	/// Check if inPoint is inside any shapes. For this tests all shapes are treated as if they were solid.
 	/// For a mesh shape, this test will only provide sensible information if the mesh is a closed manifold.
 	/// For each shape that collides, ioCollector will receive a hit
 	void						CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter = { }) const;
@@ -70,7 +70,7 @@ public:
 	/// Use the context from Shape
 	using GetTrianglesContext = Shape::GetTrianglesContext;
 
-	/// To start iterating over triangles, call this function first. 
+	/// To start iterating over triangles, call this function first.
 	/// To get the actual triangles call GetTrianglesNext.
 	/// @param ioContext A temporary buffer and should remain untouched until the last call to GetTrianglesNext.
 	/// @param inBox The world space bounding in which you want to get the triangles.
@@ -112,8 +112,8 @@ public:
 	}
 
 	/// Calculates the world transform including scale of this shape (not from the center of mass but in the space the shape was created)
-	inline RMat44				GetWorldTransform() const					
-	{	
+	inline RMat44				GetWorldTransform() const
+	{
 		RMat44 transform = RMat44::sRotation(mShapeRotation).PreScaled(GetShapeScale());
 		transform.SetTranslation(mShapePositionCOM - transform.Multiply3x3(mShape->GetCenterOfMass()));
 		return transform;
@@ -143,7 +143,7 @@ public:
 	}
 
 	/// Get the vertices of the face that faces inDirection the most (includes any convex radius). Note that this function can only return faces of
-	/// convex shapes or triangles, which is why a sub shape ID to get to that leaf must be provided. 
+	/// convex shapes or triangles, which is why a sub shape ID to get to that leaf must be provided.
 	/// @param inSubShapeID Sub shape ID of target shape
 	/// @param inDirection Direction that the face should be facing (in world space)
 	/// @param inBaseOffset The vertices will be returned relative to this offset, can be zero to get results in world position, but when you're testing far from the origin you get better precision by picking a position that's closer e.g. mShapePositionCOM since floats are most accurate near the origin

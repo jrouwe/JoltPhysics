@@ -12,9 +12,9 @@
 #include <Utils/Log.h>
 #include <Application/DebugUI.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SkeletonMapperTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SkeletonMapperTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SkeletonMapperTest)
+{
+	JPH_ADD_BASE_CLASS(SkeletonMapperTest, Test)
 }
 
 SkeletonMapperTest::~SkeletonMapperTest()
@@ -87,7 +87,7 @@ void SkeletonMapperTest::CalculateRagdollPose()
 }
 
 void SkeletonMapperTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	// Update time
 	mTime += inParams.mDeltaTime;
 

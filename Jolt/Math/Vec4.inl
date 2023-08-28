@@ -9,9 +9,9 @@
 JPH_NAMESPACE_BEGIN
 
 // Constructor
-Vec4::Vec4(Vec3Arg inRHS) : 
-	mValue(inRHS.mValue) 
-{ 
+Vec4::Vec4(Vec3Arg inRHS) :
+	mValue(inRHS.mValue)
+{
 }
 
 Vec4::Vec4(Vec3Arg inRHS, float inW)
@@ -142,9 +142,9 @@ Vec4 Vec4::sMin(Vec4Arg inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vminq_f32(inV1.mValue, inV2.mValue);
 #else
-	return Vec4(min(inV1.mF32[0], inV2.mF32[0]), 
-				min(inV1.mF32[1], inV2.mF32[1]), 
-				min(inV1.mF32[2], inV2.mF32[2]), 
+	return Vec4(min(inV1.mF32[0], inV2.mF32[0]),
+				min(inV1.mF32[1], inV2.mF32[1]),
+				min(inV1.mF32[2], inV2.mF32[2]),
 				min(inV1.mF32[3], inV2.mF32[3]));
 #endif
 }
@@ -156,9 +156,9 @@ Vec4 Vec4::sMax(Vec4Arg inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vmaxq_f32(inV1.mValue, inV2.mValue);
 #else
-	return Vec4(max(inV1.mF32[0], inV2.mF32[0]), 
-				max(inV1.mF32[1], inV2.mF32[1]), 
-				max(inV1.mF32[2], inV2.mF32[2]), 
+	return Vec4(max(inV1.mF32[0], inV2.mF32[0]),
+				max(inV1.mF32[1], inV2.mF32[1]),
+				max(inV1.mF32[2], inV2.mF32[2]),
 				max(inV1.mF32[3], inV2.mF32[3]));
 #endif
 }
@@ -170,9 +170,9 @@ UVec4 Vec4::sEquals(Vec4Arg inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vceqq_f32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mF32[0] == inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] == inV2.mF32[1]? 0xffffffffu : 0, 
-				 inV1.mF32[2] == inV2.mF32[2]? 0xffffffffu : 0, 
+	return UVec4(inV1.mF32[0] == inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] == inV2.mF32[1]? 0xffffffffu : 0,
+				 inV1.mF32[2] == inV2.mF32[2]? 0xffffffffu : 0,
 				 inV1.mF32[3] == inV2.mF32[3]? 0xffffffffu : 0);
 #endif
 }
@@ -184,9 +184,9 @@ UVec4 Vec4::sLess(Vec4Arg inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vcltq_f32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mF32[0] < inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] < inV2.mF32[1]? 0xffffffffu : 0, 
-				 inV1.mF32[2] < inV2.mF32[2]? 0xffffffffu : 0, 
+	return UVec4(inV1.mF32[0] < inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] < inV2.mF32[1]? 0xffffffffu : 0,
+				 inV1.mF32[2] < inV2.mF32[2]? 0xffffffffu : 0,
 				 inV1.mF32[3] < inV2.mF32[3]? 0xffffffffu : 0);
 #endif
 }
@@ -198,9 +198,9 @@ UVec4 Vec4::sLessOrEqual(Vec4Arg inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vcleq_f32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mF32[0] <= inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] <= inV2.mF32[1]? 0xffffffffu : 0, 
-				 inV1.mF32[2] <= inV2.mF32[2]? 0xffffffffu : 0, 
+	return UVec4(inV1.mF32[0] <= inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] <= inV2.mF32[1]? 0xffffffffu : 0,
+				 inV1.mF32[2] <= inV2.mF32[2]? 0xffffffffu : 0,
 				 inV1.mF32[3] <= inV2.mF32[3]? 0xffffffffu : 0);
 #endif
 }
@@ -212,9 +212,9 @@ UVec4 Vec4::sGreater(Vec4Arg inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vcgtq_f32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mF32[0] > inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] > inV2.mF32[1]? 0xffffffffu : 0, 
-				 inV1.mF32[2] > inV2.mF32[2]? 0xffffffffu : 0, 
+	return UVec4(inV1.mF32[0] > inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] > inV2.mF32[1]? 0xffffffffu : 0,
+				 inV1.mF32[2] > inV2.mF32[2]? 0xffffffffu : 0,
 				 inV1.mF32[3] > inV2.mF32[3]? 0xffffffffu : 0);
 #endif
 }
@@ -226,9 +226,9 @@ UVec4 Vec4::sGreaterOrEqual(Vec4Arg inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vcgeq_f32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mF32[0] >= inV2.mF32[0]? 0xffffffffu : 0, 
-				 inV1.mF32[1] >= inV2.mF32[1]? 0xffffffffu : 0, 
-				 inV1.mF32[2] >= inV2.mF32[2]? 0xffffffffu : 0, 
+	return UVec4(inV1.mF32[0] >= inV2.mF32[0]? 0xffffffffu : 0,
+				 inV1.mF32[1] >= inV2.mF32[1]? 0xffffffffu : 0,
+				 inV1.mF32[2] >= inV2.mF32[2]? 0xffffffffu : 0,
 				 inV1.mF32[3] >= inV2.mF32[3]? 0xffffffffu : 0);
 #endif
 }
@@ -346,8 +346,8 @@ void Vec4::sSort4Reverse(Vec4 &ioValue, UVec4 &ioIndex)
 	ioIndex = UVec4::sSelect(ioIndex, i3, c3);
 }
 
-bool Vec4::operator == (Vec4Arg inV2) const 
-{ 
+bool Vec4::operator == (Vec4Arg inV2) const
+{
 	return sEquals(*this, inV2).TestAllTrue();
 }
 
@@ -356,9 +356,9 @@ bool Vec4::IsClose(Vec4Arg inV2, float inMaxDistSq) const
 	return (inV2 - *this).LengthSq() <= inMaxDistSq;
 }
 
-bool Vec4::IsNormalized(float inTolerance) const 
-{ 
-	return abs(LengthSq() - 1.0f) <= inTolerance; 
+bool Vec4::IsNormalized(float inTolerance) const
+{
+	return abs(LengthSq() - 1.0f) <= inTolerance;
 }
 
 bool Vec4::IsNaN() const
@@ -382,9 +382,9 @@ Vec4 Vec4::operator * (Vec4Arg inV2) const
 #elif defined(JPH_USE_NEON)
 	return vmulq_f32(mValue, inV2.mValue);
 #else
-	return Vec4(mF32[0] * inV2.mF32[0], 
-				mF32[1] * inV2.mF32[1], 
-				mF32[2] * inV2.mF32[2], 
+	return Vec4(mF32[0] * inV2.mF32[0],
+				mF32[1] * inV2.mF32[1],
+				mF32[2] * inV2.mF32[2],
 				mF32[3] * inV2.mF32[3]);
 #endif
 }
@@ -408,9 +408,9 @@ Vec4 operator * (float inV1, Vec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vmulq_n_f32(inV2.mValue, inV1);
 #else
-	return Vec4(inV1 * inV2.mF32[0], 
-				inV1 * inV2.mF32[1], 
-				inV1 * inV2.mF32[2], 
+	return Vec4(inV1 * inV2.mF32[0],
+				inV1 * inV2.mF32[1],
+				inV1 * inV2.mF32[2],
 				inV1 * inV2.mF32[3]);
 #endif
 }
@@ -472,9 +472,9 @@ Vec4 Vec4::operator + (Vec4Arg inV2) const
 #elif defined(JPH_USE_NEON)
 	return vaddq_f32(mValue, inV2.mValue);
 #else
-	return Vec4(mF32[0] + inV2.mF32[0], 
-				mF32[1] + inV2.mF32[1], 
-				mF32[2] + inV2.mF32[2], 
+	return Vec4(mF32[0] + inV2.mF32[0],
+				mF32[1] + inV2.mF32[1],
+				mF32[2] + inV2.mF32[2],
 				mF32[3] + inV2.mF32[3]);
 #endif
 }
@@ -510,9 +510,9 @@ Vec4 Vec4::operator - (Vec4Arg inV2) const
 #elif defined(JPH_USE_NEON)
 	return vsubq_f32(mValue, inV2.mValue);
 #else
-	return Vec4(mF32[0] - inV2.mF32[0], 
-				mF32[1] - inV2.mF32[1], 
-				mF32[2] - inV2.mF32[2], 
+	return Vec4(mF32[0] - inV2.mF32[0],
+				mF32[1] - inV2.mF32[1],
+				mF32[2] - inV2.mF32[2],
 				mF32[3] - inV2.mF32[3]);
 #endif
 }
@@ -537,9 +537,9 @@ Vec4 Vec4::operator / (Vec4Arg inV2) const
 #elif defined(JPH_USE_NEON)
 	return vdivq_f32(mValue, inV2.mValue);
 #else
-	return Vec4(mF32[0] / inV2.mF32[0], 
-				mF32[1] / inV2.mF32[1], 
-				mF32[2] / inV2.mF32[2], 
+	return Vec4(mF32[0] / inV2.mF32[0],
+				mF32[1] / inV2.mF32[1],
+				mF32[2] / inV2.mF32[2],
 				mF32[3] / inV2.mF32[3]);
 #endif
 }
@@ -684,9 +684,9 @@ Vec4 Vec4::GetSign() const
 	Type one = vdupq_n_f32(1.0f);
 	return vorrq_s32(vandq_s32(mValue, minus_one), one);
 #else
-	return Vec4(signbit(mF32[0])? -1.0f : 1.0f, 
-				signbit(mF32[1])? -1.0f : 1.0f, 
-				signbit(mF32[2])? -1.0f : 1.0f, 
+	return Vec4(signbit(mF32[0])? -1.0f : 1.0f,
+				signbit(mF32[1])? -1.0f : 1.0f,
+				signbit(mF32[2])? -1.0f : 1.0f,
 				signbit(mF32[3])? -1.0f : 1.0f);
 #endif
 }
@@ -802,7 +802,7 @@ void Vec4::SinCos(Vec4 &outSin, Vec4 &outCos) const
 	// Let x be the original input value and x' our value that has been mapped to the range [-PI / 4, PI / 4].
 	// since cos(x) = sin(x - PI / 2) and since we want to use the Taylor expansion as close as possible to 0,
 	// we can alternate between using the Taylor expansion for sin and cos according to the following table:
-	// 
+	//
 	// quadrant	 sin(x)		 cos(x)
 	// XXX00b	 sin(x')	 cos(x')
 	// XXX01b	 cos(x')	-sin(x')
@@ -842,7 +842,7 @@ Vec4 Vec4::Tan() const
 	Vec4 float_quadrant = quadrant.ToFloat();
 	x = ((x - float_quadrant * 1.5703125f) - float_quadrant * 0.0004837512969970703125f) - float_quadrant * 7.549789948768648e-8f;
 
-	// Calculate x2 = x^2	
+	// Calculate x2 = x^2
 	Vec4 x2 = x * x;
 
 	// Roughly equivalent to the Taylor expansion:
@@ -911,11 +911,11 @@ Vec4 Vec4::ATan() const
 	Vec4 y = Vec4::sZero();
 
 	// If x > Tan(PI / 8)
-	UVec4 greater1 = Vec4::sGreater(x, Vec4::sReplicate(0.4142135623730950f)); 
+	UVec4 greater1 = Vec4::sGreater(x, Vec4::sReplicate(0.4142135623730950f));
 	Vec4 x1 = (x - Vec4::sReplicate(1.0f)) / (x + Vec4::sReplicate(1.0f));
 
 	// If x > Tan(3 * PI / 8)
-	UVec4 greater2 = Vec4::sGreater(x, Vec4::sReplicate(2.414213562373095f)); 
+	UVec4 greater2 = Vec4::sGreater(x, Vec4::sReplicate(2.414213562373095f));
 	Vec4 x2 = Vec4::sReplicate(-1.0f) / (x JPH_IF_FLOATING_POINT_EXCEPTIONS_ENABLED(+ Vec4::sReplicate(FLT_MIN))); // Add small epsilon to prevent div by zero, works because x is always positive
 
 	// Apply first if

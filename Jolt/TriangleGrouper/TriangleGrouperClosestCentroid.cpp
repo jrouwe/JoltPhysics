@@ -58,12 +58,12 @@ void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const I
 		Vec3 first_centroid = centroids[*batch_begin];
 
 		// Sort remaining triangles in batch on distance to first triangle
-		QuickSort(batch_begin_plus_1, batch_end, 
+		QuickSort(batch_begin_plus_1, batch_end,
 			[&first_centroid, &centroids](uint inLHS, uint inRHS)
-			{ 
-				return (centroids[inLHS] - first_centroid).LengthSq() < (centroids[inRHS] - first_centroid).LengthSq(); 
+			{
+				return (centroids[inLHS] - first_centroid).LengthSq() < (centroids[inRHS] - first_centroid).LengthSq();
 			});
-			
+
 		// Loop over remaining triangles
 		float furthest_dist = (centroids[*batch_end_minus_1] - first_centroid).LengthSq();
 		for (Array<uint>::iterator other = batch_end; other != triangles_end; ++other)
@@ -77,10 +77,10 @@ void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const I
 				*other = *batch_end_minus_1;
 
 				// Find first element that is bigger than this one and insert the current item before it
-				Array<uint>::iterator upper = std::upper_bound(batch_begin_plus_1, batch_end, dist, 
+				Array<uint>::iterator upper = std::upper_bound(batch_begin_plus_1, batch_end, dist,
 					[&first_centroid, &centroids](float inLHS, uint inRHS)
 					{
-						return inLHS < (centroids[inRHS] - first_centroid).LengthSq(); 
+						return inLHS < (centroids[inRHS] - first_centroid).LengthSq();
 					});
 				copy_backward(upper, batch_end_minus_1, batch_end);
 				*upper = other_val;

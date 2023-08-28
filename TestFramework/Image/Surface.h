@@ -10,10 +10,10 @@
 
 /// Possible lock modes of a Surface
 enum class ESurfaceLockMode : uint
-{								
+{
 	None						= 0 << 0,															///< Not locked, cannot be used as a parameter
-	Read						= 1 << 0,													
-	Write						= 2 << 0,													
+	Read						= 1 << 0,
+	Write						= 2 << 0,
 	ReadWrite					= Read | Write,
 };
 
@@ -78,7 +78,7 @@ private:
 	int							mNumberOfComponents;												///< Number of color components per pixel
 	ESurfaceFormat				mClosest8BitFormat;													///< Closest matching format that has 8 bit color components
 	ESurfaceFormat				mClosestAlphaFormat;												///< Closest matching format that has an alpha channel
-	
+
 	uint32						mRedMask;															///< Bitmasks indicating which bits are used by which color components
 	uint32						mGreenMask;
 	uint32						mBlueMask;
@@ -98,34 +98,34 @@ public:
 
 	/// Type of the image data
 	const FormatDescription &	GetFormatDescription() const										{ return ::GetFormatDescription(mFormat); }
-	
+
 	const string_view &			GetFormatName() const												{ return GetFormatDescription().GetFormatName(); }
 	int							GetBytesPerPixel() const											{ return GetFormatDescription().GetBytesPerPixel(); }
 	int							GetNumberOfComponents() const										{ return GetFormatDescription().GetNumberOfComponents(); }
 	ESurfaceFormat				GetClosest8BitFormat() const										{ return GetFormatDescription().GetClosest8BitFormat(); }
-	
+
 	int							GetBitsPerPixel() const												{ return GetFormatDescription().GetBitsPerPixel(); }
 	int							GetRedBitsPerPixel() const											{ return GetFormatDescription().GetRedBitsPerPixel(); }
 	int							GetGreenBitsPerPixel() const										{ return GetFormatDescription().GetGreenBitsPerPixel(); }
 	int							GetBlueBitsPerPixel() const											{ return GetFormatDescription().GetBlueBitsPerPixel(); }
 	int							GetAlphaBitsPerPixel() const										{ return GetFormatDescription().GetAlphaBitsPerPixel(); }
 	int							GetComponentBitCount(int inComponent) const							{ return GetFormatDescription().GetComponentBitCount(inComponent); }
-	
+
 	uint32						GetRedMask() const													{ return GetFormatDescription().GetRedMask(); }
 	uint32						GetGreenMask() const												{ return GetFormatDescription().GetGreenMask(); }
 	uint32						GetBlueMask() const													{ return GetFormatDescription().GetBlueMask(); }
 	uint32						GetAlphaMask() const												{ return GetFormatDescription().GetAlphaMask(); }
 	uint32						GetComponentMask(int inComponent) const								{ return GetFormatDescription().GetComponentMask(inComponent); }
-																									
+
 	/// Get properties of this surface
 	inline ESurfaceFormat		GetFormat() const													{ return mFormat; }
-	inline int					GetWidth() const													{ return mWidth; } 
-	inline int					GetHeight() const													{ return mHeight; } 
+	inline int					GetWidth() const													{ return mWidth; }
+	inline int					GetHeight() const													{ return mHeight; }
 
 	/// Sets the image to a specific color
 	void						Clear(ColorArg inColor = Color::sBlack);
 
-	/// Locking functions																	
+	/// Locking functions
 	void						Lock(ESurfaceLockMode inMode) const;
 	void						UnLock() const;
 
@@ -145,7 +145,7 @@ public:
 	/// Get start of a specific scanline
 	inline const uint8 *		GetScanLine(int inScanLine) const									{ JPH_ASSERT(inScanLine >= 0 && inScanLine < GetHeight()); return GetData() + inScanLine * GetStride(); }
 	inline uint8 *				GetScanLine(int inScanLine)											{ JPH_ASSERT(inScanLine >= 0 && inScanLine < GetHeight()); return GetData() + inScanLine * GetStride(); }
-		
+
 protected:
 	/// These functions must be overridden by the hardware buffer
 	virtual void				HardwareLock() const = 0;

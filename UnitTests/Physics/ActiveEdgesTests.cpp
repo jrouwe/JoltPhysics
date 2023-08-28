@@ -25,7 +25,7 @@ TEST_SUITE("ActiveEdgesTest")
 	static Ref<Shape> sCreateProbeCapsule()
 	{
 		// Ensure capsule is long enough so that when active edges mode is on, we will always get a horizontal penetration axis rather than a vertical one
-		CapsuleShapeSettings capsule(1.0f, cCapsuleRadius); 
+		CapsuleShapeSettings capsule(1.0f, cCapsuleRadius);
 		capsule.SetEmbedded();
 		return capsule.Create().Get();
 	}
@@ -70,7 +70,7 @@ TEST_SUITE("ActiveEdgesTest")
 		{
 			bool found = false;
 			for (const ResultType &result : inResult)
-				if (result.mContactPointOn2.IsClose(hit.mPosition, inAccuracySq) 
+				if (result.mContactPointOn2.IsClose(hit.mPosition, inAccuracySq)
 					&& result.mPenetrationAxis.Normalized().IsClose(hit.mPenetrationAxis, inAccuracySq))
 				{
 					found = true;

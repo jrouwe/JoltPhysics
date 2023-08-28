@@ -28,7 +28,7 @@ public:
 	{
 		ReadBytes(&outT, sizeof(outT));
 	}
-	
+
 	/// Read a vector of primitives from the binary stream
 	template <class T, class A>
 	void				Read(std::vector<T, A> &outT)

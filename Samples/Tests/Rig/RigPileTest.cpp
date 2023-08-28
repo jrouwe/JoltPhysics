@@ -19,9 +19,9 @@
 #include <Utils/Log.h>
 #include <random>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(RigPileTest) 
-{ 
-	JPH_ADD_BASE_CLASS(RigPileTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(RigPileTest)
+{
+	JPH_ADD_BASE_CLASS(RigPileTest, Test)
 }
 
 const char *RigPileTest::sScenes[] =
@@ -59,7 +59,7 @@ void RigPileTest::Initialize()
 	{
 		// Default terrain
 		CreateHeightFieldTerrain();
-	}	
+	}
 	else
 	{
 		// Load scene
@@ -111,7 +111,7 @@ void RigPileTest::Initialize()
 			{
 				// Create ragdoll
 				Ref<Ragdoll> ragdoll = settings->CreateRagdoll(group_id++, 0, mPhysicsSystem);
-	
+
 				// Sample pose
 				SkeletonPose pose;
 				pose.SetSkeleton(settings->GetSkeleton());
@@ -136,7 +136,7 @@ void RigPileTest::Initialize()
 
 void RigPileTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() {
 		UIElement *scene_name = inUI->CreateMenu();
 		for (uint i = 0; i < size(sScenes); ++i)
 			inUI->CreateTextButton(scene_name, sScenes[i], [this, i]() { sSceneName = sScenes[i]; RestartTest(); });

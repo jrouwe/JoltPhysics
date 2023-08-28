@@ -35,7 +35,7 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, const Ve
 	class MyCollector : public CastRayCollector
 	{
 	public:
-							MyCollector(PhysicsSystem &inPhysicsSystem, const RRayCast &inRay, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) : 
+							MyCollector(PhysicsSystem &inPhysicsSystem, const RRayCast &inRay, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) :
 			mPhysicsSystem(inPhysicsSystem),
 			mRay(inRay),
 			mUpDirection(inUpDirection),
@@ -128,7 +128,7 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 	class MyCollector : public CastShapeCollector
 	{
 	public:
-							MyCollector(PhysicsSystem &inPhysicsSystem, const RShapeCast &inShapeCast, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) : 
+							MyCollector(PhysicsSystem &inPhysicsSystem, const RShapeCast &inShapeCast, Vec3Arg inUpDirection, float inCosMaxSlopeAngle) :
 			mPhysicsSystem(inPhysicsSystem),
 			mShapeCast(inShapeCast),
 			mUpDirection(inUpDirection),
@@ -227,7 +227,7 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 	class MyCollector : public CastShapeCollector
 	{
 	public:
-							MyCollector(PhysicsSystem &inPhysicsSystem, const RShapeCast &inShapeCast) : 
+							MyCollector(PhysicsSystem &inPhysicsSystem, const RShapeCast &inShapeCast) :
 			mPhysicsSystem(inPhysicsSystem),
 			mShapeCast(inShapeCast)
 		{

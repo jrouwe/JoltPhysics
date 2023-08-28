@@ -9,9 +9,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CylinderShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(CylinderShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(CylinderShapeTest)
+{
+	JPH_ADD_BASE_CLASS(CylinderShapeTest, Test)
 }
 
 void CylinderShapeTest::Initialize()
@@ -22,7 +22,7 @@ void CylinderShapeTest::Initialize()
 	// Cylinder on flat part
 	RefConst<Shape> big_cylinder = new CylinderShape(2.5f, 2);
 	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cylinder, RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
-	
+
 	// Cylinder on round part
 	mBodyInterface->CreateAndAddBody(BodyCreationSettings(big_cylinder, RVec3(10, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.5f * JPH_PI), EMotionType::Dynamic, Layers::MOVING), EActivation::Activate);
 

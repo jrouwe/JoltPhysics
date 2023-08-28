@@ -47,7 +47,7 @@ void SliderConstraintSettings::SetSliderAxis(Vec3Arg inSliderAxis)
 }
 
 void SliderConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -214,7 +214,7 @@ void SliderConstraint::CalculateSlidingAxisAndPosition(Mat44Arg inRotation1)
 	{
 		// Calculate world space slider axis
 		mWorldSpaceSliderAxis = inRotation1 * mLocalSpaceSliderAxis1;
-		
+
 		// Calculate slide distance along axis
 		mD = mU.Dot(mWorldSpaceSliderAxis);
 	}
@@ -248,7 +248,7 @@ void SliderConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 	case EMotorState::Position:
 		mMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mWorldSpaceSliderAxis, 0.0f, mD - mTargetPosition, mMotorSettings.mSpringSettings);
 		break;
-	}	
+	}
 }
 
 void SliderConstraint::SetupVelocityConstraint(float inDeltaTime)
@@ -286,7 +286,7 @@ bool SliderConstraint::SolveVelocityConstraint(float inDeltaTime)
 				float max_lambda = mMaxFrictionForce * inDeltaTime;
 				motor = mMotorConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mWorldSpaceSliderAxis, -max_lambda, max_lambda);
 				break;
-			}	
+			}
 
 		case EMotorState::Velocity:
 		case EMotorState::Position:
@@ -438,7 +438,7 @@ void SliderConstraint::SaveState(StateRecorder &inStream) const
 
 	inStream.Write(mMotorState);
 	inStream.Write(mTargetVelocity);
-	inStream.Write(mTargetPosition);	
+	inStream.Write(mTargetPosition);
 }
 
 void SliderConstraint::RestoreState(StateRecorder &inStream)
@@ -476,15 +476,15 @@ Ref<ConstraintSettings> SliderConstraint::GetConstraintSettings() const
 }
 
 Mat44 SliderConstraint::GetConstraintToBody1Matrix() const
-{ 
-	return Mat44(Vec4(mLocalSpaceSliderAxis1, 0), Vec4(mLocalSpaceNormal1, 0), Vec4(mLocalSpaceNormal2, 0), Vec4(mLocalSpacePosition1, 1)); 
+{
+	return Mat44(Vec4(mLocalSpaceSliderAxis1, 0), Vec4(mLocalSpaceNormal1, 0), Vec4(mLocalSpaceNormal2, 0), Vec4(mLocalSpacePosition1, 1));
 }
 
-Mat44 SliderConstraint::GetConstraintToBody2Matrix() const 
-{ 
-	Mat44 mat = Mat44::sRotation(mInvInitialOrientation).Multiply3x3(Mat44(Vec4(mLocalSpaceSliderAxis1, 0), Vec4(mLocalSpaceNormal1, 0), Vec4(mLocalSpaceNormal2, 0), Vec4(0, 0, 0, 1))); 
-	mat.SetTranslation(mLocalSpacePosition2); 
-	return mat; 
+Mat44 SliderConstraint::GetConstraintToBody2Matrix() const
+{
+	Mat44 mat = Mat44::sRotation(mInvInitialOrientation).Multiply3x3(Mat44(Vec4(mLocalSpaceSliderAxis1, 0), Vec4(mLocalSpaceNormal1, 0), Vec4(mLocalSpaceNormal2, 0), Vec4(0, 0, 0, 1)));
+	mat.SetTranslation(mLocalSpacePosition2);
+	return mat;
 }
 
 JPH_NAMESPACE_END

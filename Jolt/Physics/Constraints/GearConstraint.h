@@ -35,7 +35,7 @@ public:
 
 	/// Body 1 constraint reference frame (space determined by mSpace).
 	Vec3						mHingeAxis1 = Vec3::sAxisX();
-	
+
 	/// Body 2 constraint reference frame (space determined by mSpace)
 	Vec3						mHingeAxis2 = Vec3::sAxisX();
 

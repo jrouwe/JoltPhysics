@@ -16,7 +16,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		// Create materials
 		for (uint i = 0; i < inMaxMaterials; ++i)
 			ioSettings.mMaterials.push_back(new PhysicsMaterialSimple("Material " + ConvertToString(i), Color::sGetDistinctColor(i)));
-		
+
 		if (inMaxMaterials > 1)
 		{
 			// Make random material indices
@@ -123,7 +123,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		sRandomizeMaterials(settings, 256);
 		sValidateGetPosition(settings, 0.0f);
 	}
-	
+
 	TEST_CASE("TestPlaneCloseToOrigin")
 	{
 		// Create flat plane very close to origin, this tests that we don't introduce a quantization error on a flat plane

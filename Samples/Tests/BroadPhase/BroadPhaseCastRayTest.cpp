@@ -11,9 +11,9 @@
 #include <Utils/DebugRendererSP.h>
 #include <random>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(BroadPhaseCastRayTest) 
-{ 
-	JPH_ADD_BASE_CLASS(BroadPhaseCastRayTest, BroadPhaseTest) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(BroadPhaseCastRayTest)
+{
+	JPH_ADD_BASE_CLASS(BroadPhaseCastRayTest, BroadPhaseTest)
 }
 
 void BroadPhaseCastRayTest::Initialize()

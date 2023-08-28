@@ -181,7 +181,7 @@ void Renderer::Initialize()
 	// Create window
 	RECT rc = { 0, 0, mWindowWidth, mWindowHeight };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-	mhWnd = CreateWindow(TEXT("TestFrameworkClass"), TEXT("TestFramework"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 
+	mhWnd = CreateWindow(TEXT("TestFrameworkClass"), TEXT("TestFramework"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
 		rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, wcex.hInstance, nullptr);
 	if (!mhWnd)
 		FatalError("Failed to create window");
@@ -244,7 +244,7 @@ void Renderer::Initialize()
 
 	// Check if we managed to obtain a device
 	FatalErrorIfFailed(result);
-	
+
 #ifdef _DEBUG
 	// Enable breaking on errors
 	ComPtr<ID3D12InfoQueue> info_queue;
@@ -308,7 +308,7 @@ void Renderer::Initialize()
 
 	// Create a root signature suitable for all our shaders
 	D3D12_ROOT_PARAMETER params[3] = {};
-		
+
 	// Mapping a constant buffer to slot 0 for the vertex shader
 	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	params[0].Descriptor.ShaderRegister = 0;
@@ -369,13 +369,13 @@ void Renderer::Initialize()
 	ComPtr<ID3DBlob> error;
 	FatalErrorIfFailed(D3D12SerializeRootSignature(&root_signature_desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
 	FatalErrorIfFailed(mDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
-		
+
 	// Create the command list
 	FatalErrorIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocators[mFrameIndex].Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
 
 	// Command lists are created in the recording state, but there is nothing to record yet. The main loop expects it to be closed, so close it now
 	FatalErrorIfFailed(mCommandList->Close());
-		
+
 	// Create synchronization object
 	FatalErrorIfFailed(mDevice->CreateFence(mFenceValues[mFrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
 
@@ -532,7 +532,7 @@ void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 
 	// Switch to 3d projection mode
 	SetProjectionMode();
-	
+
 	// Set constants for pixel shader
 	PixelShaderConstantBuffer *ps = mPixelShaderConstantBuffer[mFrameIndex]->Map<PixelShaderConstantBuffer>();
 	ps->mCameraPos = Vec4(cam_pos, 0);
@@ -600,12 +600,12 @@ void Renderer::EndFrame()
 }
 
 void Renderer::SetProjectionMode()
-{ 
+{
 	mVertexShaderConstantBufferProjection[mFrameIndex]->Bind(0);
 }
 
 void Renderer::SetOrthoMode()
-{ 
+{
 	mVertexShaderConstantBufferOrtho[mFrameIndex]->Bind(0);
 }
 
@@ -654,7 +654,7 @@ ComPtr<ID3DBlob> Renderer::CreateVertexShader(const char *inFileName)
 	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-	const D3D_SHADER_MACRO defines[] = 
+	const D3D_SHADER_MACRO defines[] =
 	{
 		{ nullptr, nullptr }
 	};
@@ -666,14 +666,14 @@ ComPtr<ID3DBlob> Renderer::CreateVertexShader(const char *inFileName)
 	ComPtr<ID3DBlob> shader_blob, error_blob;
 	HRESULT hr = D3DCompile(&data[0],
 							(uint)data.size(),
-							inFileName, 
-							defines, 
+							inFileName,
+							defines,
 							D3D_COMPILE_STANDARD_FILE_INCLUDE,
-							"main", 
+							"main",
 							"vs_5_0",
-							flags, 
-							0, 
-							shader_blob.GetAddressOf(), 
+							flags,
+							0,
+							shader_blob.GetAddressOf(),
 							error_blob.GetAddressOf());
 	if (FAILED(hr))
 	{
@@ -681,7 +681,7 @@ ComPtr<ID3DBlob> Renderer::CreateVertexShader(const char *inFileName)
 		if (error_blob)
 			OutputDebugStringA((const char *)error_blob->GetBufferPointer());
 		FatalError("Failed to compile vertex shader");
-	}	
+	}
 
 	return shader_blob;
 }
@@ -693,7 +693,7 @@ ComPtr<ID3DBlob> Renderer::CreatePixelShader(const char *inFileName)
 	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
-	const D3D_SHADER_MACRO defines[] = 
+	const D3D_SHADER_MACRO defines[] =
 	{
 		{ nullptr, nullptr }
 	};
@@ -705,14 +705,14 @@ ComPtr<ID3DBlob> Renderer::CreatePixelShader(const char *inFileName)
 	ComPtr<ID3DBlob> shader_blob, error_blob;
 	HRESULT hr = D3DCompile(&data[0],
 							(uint)data.size(),
-							inFileName, 
-							defines, 
+							inFileName,
+							defines,
 							D3D_COMPILE_STANDARD_FILE_INCLUDE,
-							"main", 
+							"main",
 							"ps_5_0",
-							flags, 
-							0, 
-							shader_blob.GetAddressOf(), 
+							flags,
+							0,
+							shader_blob.GetAddressOf(),
 							error_blob.GetAddressOf());
 	if (FAILED(hr))
 	{
@@ -720,7 +720,7 @@ ComPtr<ID3DBlob> Renderer::CreatePixelShader(const char *inFileName)
 		if (error_blob)
 			OutputDebugStringA((const char *)error_blob->GetBufferPointer());
 		FatalError("Failed to compile pixel shader");
-	}	
+	}
 
 	return shader_blob;
 }
@@ -774,7 +774,7 @@ void Renderer::CopyD3DResource(ID3D12Resource *inDest, const void *inSrc, uint64
 }
 
 void Renderer::CopyD3DResource(ID3D12Resource *inDest, ID3D12Resource *inSrc, uint64 inSize)
-{	
+{
 	// Start a commandlist for the upload
 	ID3D12GraphicsCommandList *list = mUploadQueue.Start();
 
@@ -805,8 +805,8 @@ ComPtr<ID3D12Resource> Renderer::CreateD3DResourceOnDefaultHeap(const void *inDa
 	return resource;
 }
 
-ComPtr<ID3D12Resource> Renderer::CreateD3DResourceOnUploadHeap(uint64 inSize) 
-{ 
+ComPtr<ID3D12Resource> Renderer::CreateD3DResourceOnUploadHeap(uint64 inSize)
+{
 	// Try cache first
 	ResourceCache::iterator i = mResourceCache.find(inSize);
 	if (i != mResourceCache.end() && !i->second.empty())
@@ -816,7 +816,7 @@ ComPtr<ID3D12Resource> Renderer::CreateD3DResourceOnUploadHeap(uint64 inSize)
 		return resource;
 	}
 
-	return CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, inSize); 
+	return CreateD3DResource(D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, inSize);
 }
 
 void Renderer::RecycleD3DResourceOnUploadHeap(ID3D12Resource *inResource, uint64 inSize)
@@ -825,8 +825,8 @@ void Renderer::RecycleD3DResourceOnUploadHeap(ID3D12Resource *inResource, uint64
 		mDelayCached[mFrameIndex][inSize].push_back(inResource);
 }
 
-void Renderer::RecycleD3DObject(ID3D12Object *inResource) 
-{ 
-	if (!mIsExiting) 
-		mDelayReleased[mFrameIndex].push_back(inResource); 
+void Renderer::RecycleD3DObject(ID3D12Object *inResource)
+{
+	if (!mIsExiting)
+		mDelayReleased[mFrameIndex].push_back(inResource);
 }

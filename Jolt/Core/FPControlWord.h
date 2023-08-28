@@ -28,7 +28,7 @@ public:
 	}
 
 private:
-	uint		mPrevState;	
+	uint		mPrevState;
 };
 
 #elif defined(JPH_CPU_ARM) && defined(JPH_COMPILER_MSVC)

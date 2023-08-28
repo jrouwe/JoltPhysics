@@ -19,7 +19,7 @@ public:
 	inline float	GetEarlyOutFraction() const			{ return mFraction; }
 
 	BodyID			mBodyID;							///< Body that was hit
-	float			mFraction = 1.0f + FLT_EPSILON;		///< Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start) 
+	float			mFraction = 1.0f + FLT_EPSILON;		///< Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
 };
 
 /// Specialization of cast result against a shape

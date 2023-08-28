@@ -19,7 +19,7 @@ inline void AddSerializableAttributeTyped(RTTI &inRTTI, uint inOffset, const cha
 {
 	inRTTI.AddAttribute(SerializableAttribute(inName, inOffset,
 		[]()
-		{ 
+		{
 			return GetPrimitiveTypeOfType((MemberType *)nullptr);
 		},
 		[](int inArrayDepth, EOSDataType inDataType, const char *inClassName)
