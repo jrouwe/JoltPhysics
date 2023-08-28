@@ -294,8 +294,7 @@ public:
 		float closest_dist_sq = FLT_MAX;
 
 		// Remember last good triangle
-		Triangle *before_last = nullptr, *last = nullptr;
-		float before_last_dist_sq = FLT_MAX, last_dist_sq = FLT_MAX;
+		Triangle *last = nullptr;
 
 		// Loop until closest point found
 		do
@@ -324,6 +323,11 @@ public:
 			if (t->mClosestLenSq >= closest_dist_sq)
 				break;
 
+			// Replace last good with this triangle
+			if (last != nullptr)
+				hull.FreeTriangle(last);
+			last = t;
+
 			// Add support point in direction of normal of the plane
 			// Note that the article uses the closest point between the origin and plane, but this always has the exact same direction as the normal (if the origin is behind the plane)
 			// and this way we do less calculations and lose less precision
@@ -340,14 +344,6 @@ public:
 
 			// Get the distance squared (along normal) to the support point
 			float dist_sq = Square(dot) / t->mNormal.LengthSq();
-
-			// Replace last good with this triangle and shift last good to before last
-			if (before_last != nullptr)
-				hull.FreeTriangle(before_last);
-			before_last = last;
-			last = t;
-			before_last_dist_sq = last_dist_sq;
-			last_dist_sq = dist_sq;
 
 #ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
 			Trace("FindClosest: w = (%g, %g, %g), dot = %g, dist_sq = %g",
@@ -413,16 +409,6 @@ public:
 		// Determine closest points, if last == null it means the hull was a plane so there's no penetration
 		if (last == nullptr)
 			return false;
-
-		// Fall back to before last triangle if the last triangle is significantly worse.
-		// This fixes an issue that when the hull becomes invalid due to numerical precision issues and we did one step too many.
-		// Note that when colliding curved surfaces the last triangle describes the surface better and results in a better contact point,
-		// that's why we only do this when the last triangle is significantly worse than the before last triangle.
-		if (before_last_dist_sq < 0.81f * last_dist_sq) // 10%
-		{
-			JPH_ASSERT(before_last != nullptr);
-			last = before_last;
-		}
 
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
 		hull.DrawLabel("Closest found");
