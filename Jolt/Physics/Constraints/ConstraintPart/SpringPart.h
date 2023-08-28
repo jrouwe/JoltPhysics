@@ -31,36 +31,36 @@ private:
 		// beta = dt * k / (c + dt * k) = dt * k^2 * softness
 		// b = beta / dt * C = dt * k * softness * C
 		mBias = inBias + inDeltaTime * inStiffness * mSoftness * inC;
-			
+
 		// Update the effective mass, see post by Erin Catto: http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=4&t=1354
-		// 
-		// Newton's Law: 
-		// M * (v2 - v1) = J^T * lambda 
-		// 
-		// Velocity constraint with softness and Baumgarte: 
-		// J * v2 + softness * lambda + b = 0 
-		// 
-		// where b = beta * C / dt 
-		// 
-		// We know everything except v2 and lambda. 
-		// 
-		// First solve Newton's law for v2 in terms of lambda: 
-		// 
-		// v2 = v1 + M^-1 * J^T * lambda 
-		// 
-		// Substitute this expression into the velocity constraint: 
-		// 
-		// J * (v1 + M^-1 * J^T * lambda) + softness * lambda + b = 0 
-		// 
-		// Now collect coefficients of lambda: 
-		// 
-		// (J * M^-1 * J^T + softness) * lambda = - J * v1 - b 
-		// 
-		// Now we define: 
-		// 
-		// K = J * M^-1 * J^T + softness 
-		// 
-		// So our new effective mass is K^-1 
+		//
+		// Newton's Law:
+		// M * (v2 - v1) = J^T * lambda
+		//
+		// Velocity constraint with softness and Baumgarte:
+		// J * v2 + softness * lambda + b = 0
+		//
+		// where b = beta * C / dt
+		//
+		// We know everything except v2 and lambda.
+		//
+		// First solve Newton's law for v2 in terms of lambda:
+		//
+		// v2 = v1 + M^-1 * J^T * lambda
+		//
+		// Substitute this expression into the velocity constraint:
+		//
+		// J * (v1 + M^-1 * J^T * lambda) + softness * lambda + b = 0
+		//
+		// Now collect coefficients of lambda:
+		//
+		// (J * M^-1 * J^T + softness) * lambda = - J * v1 - b
+		//
+		// Now we define:
+		//
+		// K = J * M^-1 * J^T + softness
+		//
+		// So our new effective mass is K^-1
 		outEffectiveMass = 1.0f / (inInvEffectiveMass + mSoftness);
 	}
 
@@ -138,21 +138,21 @@ public:
 	{
 		// Remainder of post by Erin Catto: http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=4&t=1354
 		//
-		// Each iteration we are not computing the whole impulse, we are computing an increment to the impulse and we are updating the velocity. 
-		// Also, as we solve each constraint we get a perfect v2, but then some other constraint will come along and mess it up. 
-		// So we want to patch up the constraint while acknowledging the accumulated impulse and the damaged velocity. 
-		// To help with that we use P for the accumulated impulse and lambda as the update. Mathematically we have: 
-		// 
-		// M * (v2new - v2damaged) = J^T * lambda 
-		// J * v2new + softness * (total_lambda + lambda) + b = 0 
-		// 
-		// If we solve this we get: 
-		// 
-		// v2new = v2damaged + M^-1 * J^T * lambda 
-		// J * (v2damaged + M^-1 * J^T * lambda) + softness * total_lambda + softness * lambda + b = 0 
-		// 
-		// (J * M^-1 * J^T + softness) * lambda = -(J * v2damaged + softness * total_lambda + b) 
-		// 
+		// Each iteration we are not computing the whole impulse, we are computing an increment to the impulse and we are updating the velocity.
+		// Also, as we solve each constraint we get a perfect v2, but then some other constraint will come along and mess it up.
+		// So we want to patch up the constraint while acknowledging the accumulated impulse and the damaged velocity.
+		// To help with that we use P for the accumulated impulse and lambda as the update. Mathematically we have:
+		//
+		// M * (v2new - v2damaged) = J^T * lambda
+		// J * v2new + softness * (total_lambda + lambda) + b = 0
+		//
+		// If we solve this we get:
+		//
+		// v2new = v2damaged + M^-1 * J^T * lambda
+		// J * (v2damaged + M^-1 * J^T * lambda) + softness * total_lambda + softness * lambda + b = 0
+		//
+		// (J * M^-1 * J^T + softness) * lambda = -(J * v2damaged + softness * total_lambda + b)
+		//
 		// So our lagrange multiplier becomes:
 		//
 		// lambda = -K^-1 (J v + softness * total_lambda + b)
@@ -160,7 +160,7 @@ public:
 		// So we return the bias: softness * total_lambda + b
 		return mSoftness * inTotalLambda + mBias;
 	}
-	
+
 private:
 	float						mBias  = 0.0f;
 	float						mSoftness  = 0.0f;

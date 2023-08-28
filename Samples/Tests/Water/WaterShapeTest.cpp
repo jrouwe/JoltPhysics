@@ -16,15 +16,15 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(WaterShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(WaterShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(WaterShapeTest)
+{
+	JPH_ADD_BASE_CLASS(WaterShapeTest, Test)
 }
 
 void WaterShapeTest::Initialize()
 {
 	CreateFloor();
-	   
+
 	// Create scaled box
 	BodyID body_id = mBodyInterface->CreateBody(BodyCreationSettings(new ScaledShape(new BoxShape(Vec3(1.0f, 2.0f, 2.5f)), Vec3(0.5f, 0.6f, -0.7f)), RVec3(-10, 20, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING))->GetID();
 	mBodyInterface->AddBody(body_id, EActivation::Activate);
@@ -105,7 +105,7 @@ void WaterShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	// Broadphase results, will apply buoyancy to any body that intersects with the water volume
-	class MyCollector : public CollideShapeBodyCollector 
+	class MyCollector : public CollideShapeBodyCollector
 	{
 	public:
 								MyCollector(PhysicsSystem *inSystem, RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float inDeltaTime) : mSystem(inSystem), mSurfacePosition(inSurfacePosition), mSurfaceNormal(inSurfaceNormal), mDeltaTime(inDeltaTime) { }
@@ -125,7 +125,7 @@ void WaterShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		float					mDeltaTime;
 	};
 	MyCollector collector(mPhysicsSystem, surface_point, Vec3::sAxisY(), inParams.mDeltaTime);
-	
+
 	// Apply buoyancy to all bodies that intersect with the water
 	AABox water_box(-Vec3(100, 100, 100), Vec3(100, 0, 100));
 	water_box.Translate(Vec3(surface_point));

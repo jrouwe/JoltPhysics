@@ -18,7 +18,7 @@ Mouse::~Mouse()
 	Shutdown();
 }
 
-void 
+void
 Mouse::Reset()
 {
 	mDI = nullptr;
@@ -26,7 +26,7 @@ Mouse::Reset()
 	mMousePos.x = 0;
 	mMousePos.y = 0;
 
-	ResetMouse();	
+	ResetMouse();
 }
 
 void Mouse::ResetMouse()
@@ -54,7 +54,7 @@ bool Mouse::Initialize(Renderer *inRenderer)
 		Trace("Unable to create DirectInput interface, DirectX 8.0 is required");
 		return false;
 	}
-	
+
 	// Initialize direct input interface
 	if (FAILED(mDI->Initialize((HINSTANCE)GetModuleHandle(nullptr), DIRECTINPUT_VERSION)))
 	{
@@ -68,10 +68,10 @@ bool Mouse::Initialize(Renderer *inRenderer)
 		Trace("Unable to get DirectInputDevice interface, DirectX 8.0 is required");
 		return false;
 	}
-	
+
 	// Set cooperative level for Mouse
 	SetExclusive(false);
-	
+
 	// Set data format
 	if (FAILED(mMouse->SetDataFormat(&c_dfDIMouse)))
 	{
@@ -97,7 +97,7 @@ bool Mouse::Initialize(Renderer *inRenderer)
 
 void Mouse::Shutdown()
 {
-	if (mMouse) 
+	if (mMouse)
 	{
 		mMouse->Unacquire();
 		mMouse = nullptr;
@@ -135,13 +135,13 @@ void Mouse::Poll()
 		ResetMouse();
 		return;
 	}
- 
+
 	// Get relative movement
 	if (FAILED(mMouse->GetDeviceState(sizeof(mMouseState), &mMouseState)))
 	{
-		// Mouse input was lost, reacquire		
+		// Mouse input was lost, reacquire
 		mMouse->Acquire();
-		
+
 		if (FAILED(mMouse->GetDeviceState(sizeof(mMouseState), &mMouseState)))
 		{
 			ResetMouse();
@@ -158,33 +158,33 @@ void Mouse::Poll()
 		mMouseState.lX = mMousePos.x - old_mouse_pos.x;
 		mMouseState.lY = mMousePos.y - old_mouse_pos.y;
 	}
-	
-	// Get the state in a buffer for checking doubleclicks	
+
+	// Get the state in a buffer for checking doubleclicks
 	if (FAILED(mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), mDOD, &mDODLength, 0)))
 	{
-		// We lost mMouse input, reacquire		
+		// We lost mMouse input, reacquire
 		mMouse->Acquire();
-		
+
 		if (FAILED(mMouse->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), mDOD, &mDODLength, 0)))
 		{
-			// Unable to reacquire, reset button info			
+			// Unable to reacquire, reset button info
 			mTimeLeftButtonLastReleased = 0;
-			mLeftButtonDoubleClicked = false;			
+			mLeftButtonDoubleClicked = false;
 			return;
 		}
 	}
-	
+
 	// Check for double clicks
     for (DWORD d = 0; d < mDODLength; d++)
     {
-		// Check if this means left button is pressed		
+		// Check if this means left button is pressed
 		if (mDOD[d].dwOfs == DIMOFS_BUTTON0)
 		{
 			if (mDOD[d].dwData & 0x80)
 			{
 				if (mDOD[d].dwTimeStamp - mTimeLeftButtonLastReleased <= DCLICKTIME)
 				{
-					// This is a double click				
+					// This is a double click
 					mTimeLeftButtonLastReleased = 0;
 					mLeftButtonDoubleClicked = true;
 				}

@@ -89,7 +89,7 @@ JPH_INLINE Vec4 RayAABox4(Vec3Arg inOrigin, const RayInvDirection &inInvDirectio
 	Vec4 invdirx = inInvDirection.mInvDirection.SplatX();
 	Vec4 invdiry = inInvDirection.mInvDirection.SplatY();
 	Vec4 invdirz = inInvDirection.mInvDirection.SplatZ();
-	
+
 	// Test against all three axii simultaneously.
 	Vec4 t1x = (inBoundsMinX - originx) * invdirx;
 	Vec4 t1y = (inBoundsMinY - originy) * invdiry;
@@ -219,7 +219,7 @@ JPH_INLINE bool RayAABoxHits(Vec3Arg inOrigin, Vec3Arg inDirection, Vec3Arg inBo
 
 	Vec3 diff = 2.0f * inOrigin - inBoundsMin - inBoundsMax;
 	Vec3 abs_diff = diff.Abs();
-		
+
 	UVec4 no_intersection = UVec4::sAnd(Vec3::sGreater(abs_diff, extents), Vec3::sGreaterOrEqual(diff * inDirection, Vec3::sZero()));
 
 	Vec3 abs_dir = inDirection.Abs();

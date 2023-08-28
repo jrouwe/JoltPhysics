@@ -28,7 +28,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(RackAndPinionConstraintSettings)
 }
 
 void RackAndPinionConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -116,7 +116,7 @@ bool RackAndPinionConstraint::SolvePositionConstraint(float inDeltaTime, float i
 		translation = static_cast<const SliderConstraint *>(mRackConstraint.GetPtr())->GetCurrentPosition();
 	}
 	else
-	{		
+	{
 		JPH_ASSERT(false, "Unsupported");
 		return false;
 	}
@@ -172,13 +172,13 @@ Ref<ConstraintSettings> RackAndPinionConstraint::GetConstraintSettings() const
 Mat44 RackAndPinionConstraint::GetConstraintToBody1Matrix() const
 {
 	Vec3 perp = mLocalSpaceHingeAxis.GetNormalizedPerpendicular();
-	return Mat44(Vec4(mLocalSpaceHingeAxis, 0), Vec4(perp, 0), Vec4(mLocalSpaceHingeAxis.Cross(perp), 0), Vec4(0, 0, 0, 1)); 
+	return Mat44(Vec4(mLocalSpaceHingeAxis, 0), Vec4(perp, 0), Vec4(mLocalSpaceHingeAxis.Cross(perp), 0), Vec4(0, 0, 0, 1));
 }
 
-Mat44 RackAndPinionConstraint::GetConstraintToBody2Matrix() const 
-{ 
+Mat44 RackAndPinionConstraint::GetConstraintToBody2Matrix() const
+{
 	Vec3 perp = mLocalSpaceSliderAxis.GetNormalizedPerpendicular();
-	return Mat44(Vec4(mLocalSpaceSliderAxis, 0), Vec4(perp, 0), Vec4(mLocalSpaceSliderAxis.Cross(perp), 0), Vec4(0, 0, 0, 1)); 
+	return Mat44(Vec4(mLocalSpaceSliderAxis, 0), Vec4(perp, 0), Vec4(mLocalSpaceSliderAxis.Cross(perp), 0), Vec4(0, 0, 0, 1));
 }
 
 JPH_NAMESPACE_END

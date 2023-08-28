@@ -96,7 +96,7 @@ public:
 
 	/// Velocity in world space of ground
 	Vec3								GetGroundVelocity() const								{ return mGroundVelocity; }
-	
+
 	/// Material that the character is standing on
 	const PhysicsMaterial *				GetGroundMaterial() const								{ return mGroundMaterial; }
 

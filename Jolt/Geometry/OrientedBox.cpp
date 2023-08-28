@@ -30,7 +30,7 @@ bool OrientedBox::Overlaps(const AABox &inBox, float inEpsilon) const
 
 	// Test axes L = A0, L = A1, L = A2
 	float ra, rb;
-	for (int i = 0; i < 3; i++) 
+	for (int i = 0; i < 3; i++)
 	{
 		ra = a_half_extents[i];
 		rb = mHalfExtents[0] * abs_r[0][i] + mHalfExtents[1] * abs_r[1][i] + mHalfExtents[2] * abs_r[2][i];
@@ -38,7 +38,7 @@ bool OrientedBox::Overlaps(const AABox &inBox, float inEpsilon) const
 	}
 
 	// Test axes L = B0, L = B1, L = B2
-	for (int i = 0; i < 3; i++) 
+	for (int i = 0; i < 3; i++)
 	{
 		ra = a_half_extents.Dot(abs_r[i]);
 		rb = mHalfExtents[i];
@@ -62,34 +62,34 @@ bool OrientedBox::Overlaps(const AABox &inBox, float inEpsilon) const
 
 	// Test axis L = A1 x B0
 	ra = a_half_extents[0] * abs_r[0][2] + a_half_extents[2] * abs_r[0][0];
-	rb = mHalfExtents[1] * abs_r[2][1] + mHalfExtents[2] * abs_r[1][1];	
+	rb = mHalfExtents[1] * abs_r[2][1] + mHalfExtents[2] * abs_r[1][1];
 	if (abs(rot(0, 3) * rot(2, 0) - rot(2, 3) * rot(0, 0)) > ra + rb) return false;
 
 	// Test axis L = A1 x B1
 	ra = a_half_extents[0] * abs_r[1][2] + a_half_extents[2] * abs_r[1][0];
 	rb = mHalfExtents[0] * abs_r[2][1] + mHalfExtents[2] * abs_r[0][1];
 	if (abs(rot(0, 3) * rot(2, 1) - rot(2, 3) * rot(0, 1)) > ra + rb) return false;
-	
+
 	// Test axis L = A1 x B2
 	ra = a_half_extents[0] * abs_r[2][2] + a_half_extents[2] * abs_r[2][0];
 	rb = mHalfExtents[0] * abs_r[1][1] + mHalfExtents[1] * abs_r[0][1];
 	if (abs(rot(0, 3) * rot(2, 2) - rot(2, 3) * rot(0, 2)) > ra + rb) return false;
-	
+
 	// Test axis L = A2 x B0
 	ra = a_half_extents[0] * abs_r[0][1] + a_half_extents[1] * abs_r[0][0];
 	rb = mHalfExtents[1] * abs_r[2][2] + mHalfExtents[2] * abs_r[1][2];
 	if (abs(rot(1, 3) * rot(0, 0) - rot(0, 3) * rot(1, 0)) > ra + rb) return false;
-	
+
 	// Test axis L = A2 x B1
 	ra = a_half_extents[0] * abs_r[1][1] + a_half_extents[1] * abs_r[1][0];
 	rb = mHalfExtents[0] * abs_r[2][2] + mHalfExtents[2] * abs_r[0][2];
 	if (abs(rot(1, 3) * rot(0, 1) - rot(0, 3) * rot(1, 1)) > ra + rb) return false;
-	
+
 	// Test axis L = A2 x B2
 	ra = a_half_extents[0] * abs_r[2][1] + a_half_extents[1] * abs_r[2][0];
 	rb = mHalfExtents[0] * abs_r[1][2] + mHalfExtents[1] * abs_r[0][2];
 	if (abs(rot(1, 3) * rot(0, 2) - rot(0, 3) * rot(1, 2)) > ra + rb) return false;
-	
+
 	// Since no separating axis is found, the OBB and AAB must be intersecting
 	return true;
 }
@@ -111,7 +111,7 @@ bool OrientedBox::Overlaps(const OrientedBox &inBox, float inEpsilon) const
 
 	// Test axes L = A0, L = A1, L = A2
 	float ra, rb;
-	for (int i = 0; i < 3; i++) 
+	for (int i = 0; i < 3; i++)
 	{
 		ra = mHalfExtents[i];
 		rb = inBox.mHalfExtents[0] * abs_r[0][i] + inBox.mHalfExtents[1] * abs_r[1][i] + inBox.mHalfExtents[2] * abs_r[2][i];
@@ -119,7 +119,7 @@ bool OrientedBox::Overlaps(const OrientedBox &inBox, float inEpsilon) const
 	}
 
 	// Test axes L = B0, L = B1, L = B2
-	for (int i = 0; i < 3; i++) 
+	for (int i = 0; i < 3; i++)
 	{
 		ra = mHalfExtents.Dot(abs_r[i]);
 		rb = inBox.mHalfExtents[i];
@@ -143,34 +143,34 @@ bool OrientedBox::Overlaps(const OrientedBox &inBox, float inEpsilon) const
 
 	// Test axis L = A1 x B0
 	ra = mHalfExtents[0] * abs_r[0][2] + mHalfExtents[2] * abs_r[0][0];
-	rb = inBox.mHalfExtents[1] * abs_r[2][1] + inBox.mHalfExtents[2] * abs_r[1][1];	
+	rb = inBox.mHalfExtents[1] * abs_r[2][1] + inBox.mHalfExtents[2] * abs_r[1][1];
 	if (abs(rot(0, 3) * rot(2, 0) - rot(2, 3) * rot(0, 0)) > ra + rb) return false;
 
 	// Test axis L = A1 x B1
 	ra = mHalfExtents[0] * abs_r[1][2] + mHalfExtents[2] * abs_r[1][0];
 	rb = inBox.mHalfExtents[0] * abs_r[2][1] + inBox.mHalfExtents[2] * abs_r[0][1];
 	if (abs(rot(0, 3) * rot(2, 1) - rot(2, 3) * rot(0, 1)) > ra + rb) return false;
-	
+
 	// Test axis L = A1 x B2
 	ra = mHalfExtents[0] * abs_r[2][2] + mHalfExtents[2] * abs_r[2][0];
 	rb = inBox.mHalfExtents[0] * abs_r[1][1] + inBox.mHalfExtents[1] * abs_r[0][1];
 	if (abs(rot(0, 3) * rot(2, 2) - rot(2, 3) * rot(0, 2)) > ra + rb) return false;
-	
+
 	// Test axis L = A2 x B0
 	ra = mHalfExtents[0] * abs_r[0][1] + mHalfExtents[1] * abs_r[0][0];
 	rb = inBox.mHalfExtents[1] * abs_r[2][2] + inBox.mHalfExtents[2] * abs_r[1][2];
 	if (abs(rot(1, 3) * rot(0, 0) - rot(0, 3) * rot(1, 0)) > ra + rb) return false;
-	
+
 	// Test axis L = A2 x B1
 	ra = mHalfExtents[0] * abs_r[1][1] + mHalfExtents[1] * abs_r[1][0];
 	rb = inBox.mHalfExtents[0] * abs_r[2][2] + inBox.mHalfExtents[2] * abs_r[0][2];
 	if (abs(rot(1, 3) * rot(0, 1) - rot(0, 3) * rot(1, 1)) > ra + rb) return false;
-	
+
 	// Test axis L = A2 x B2
 	ra = mHalfExtents[0] * abs_r[2][1] + mHalfExtents[1] * abs_r[2][0];
 	rb = inBox.mHalfExtents[0] * abs_r[1][2] + inBox.mHalfExtents[1] * abs_r[0][2];
 	if (abs(rot(1, 3) * rot(0, 2) - rot(0, 3) * rot(1, 2)) > ra + rb) return false;
-	
+
 	// Since no separating axis is found, the OBBs must be intersecting
 	return true;
 }

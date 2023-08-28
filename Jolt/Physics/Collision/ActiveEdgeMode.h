@@ -6,7 +6,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// How to treat active/inactive edges. 
+/// How to treat active/inactive edges.
 /// An active edge is an edge that either has no neighbouring edge or if the angle between the two connecting faces is too large, see: ActiveEdges
 enum class EActiveEdgeMode : uint8
 {

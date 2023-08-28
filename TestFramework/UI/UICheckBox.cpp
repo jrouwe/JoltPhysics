@@ -28,7 +28,7 @@ void UICheckBox::CopyTo(UIElement *ioElement) const
 
 void UICheckBox::OnAdded()
 {
-	mTextPadLeft = max(mUncheckedState.mWidth, mCheckedState.mWidth) + mPaddingBetweenCheckboxAndText; 
+	mTextPadLeft = max(mUncheckedState.mWidth, mCheckedState.mWidth) + mPaddingBetweenCheckboxAndText;
 }
 
 bool UICheckBox::MouseDown(int inX, int inY)
@@ -41,7 +41,7 @@ bool UICheckBox::MouseDown(int inX, int inY)
 		mPressed = true;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -57,7 +57,7 @@ bool UICheckBox::MouseUp(int inX, int inY)
 		if (Contains(inX, inY))
 		{
 			mState = mState == STATE_CHECKED? STATE_UNCHECKED : STATE_CHECKED;
-			
+
 			if (mClickAction)
 				mClickAction(mState);
 		}

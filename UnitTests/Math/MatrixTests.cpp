@@ -39,7 +39,7 @@ TEST_SUITE("MatrixTests")
 				m2(r, c) = float(r * 4 + c + 1);
 
 		Matrix<3, 4> m3 = m1 * m2;
-			
+
 		CHECK(m3(0, 0) == 175.0f);
 		CHECK(m3(1, 0) == 400.0f);
 		CHECK(m3(2, 0) == 625.0f);

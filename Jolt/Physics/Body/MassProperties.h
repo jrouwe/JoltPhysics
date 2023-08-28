@@ -21,7 +21,7 @@ public:
 	/// @see https://en.wikipedia.org/wiki/Moment_of_inertia section 'Principal axes'
 	/// @param outRotation The rotation matrix R
 	/// @param outDiagonal The diagonal of the diagonal matrix D
-	/// @return True if successful, false if failed 
+	/// @return True if successful, false if failed
 	bool					DecomposePrincipalMomentsOfInertia(Mat44 &outRotation, Vec3 &outDiagonal) const;
 
 	/// Set the mass and inertia of a box with edge size inBoxSize and density inDensity

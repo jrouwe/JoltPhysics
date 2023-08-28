@@ -43,7 +43,7 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	JPH_PROFILE_FUNCTION();
 
 	// Scale triangle and transform it to the space of 1
-	Vec3 v0 = mTransform2To1 * (mScale2 * inV0); 
+	Vec3 v0 = mTransform2To1 * (mScale2 * inV0);
 	Vec3 v1 = mTransform2To1 * (mScale2 * inV1);
 	Vec3 v2 = mTransform2To1 * (mScale2 * inV2);
 
@@ -142,7 +142,7 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 		for (Vec3 &p : result.mShape2Face)
 			p = mTransform1 * p;
 	}
-	
+
 	// Notify the collector
 	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)
 	mCollector.AddHit(result);

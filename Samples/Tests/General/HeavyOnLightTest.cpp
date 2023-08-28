@@ -9,12 +9,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(HeavyOnLightTest) 
-{ 
-	JPH_ADD_BASE_CLASS(HeavyOnLightTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(HeavyOnLightTest)
+{
+	JPH_ADD_BASE_CLASS(HeavyOnLightTest, Test)
 }
 
-void HeavyOnLightTest::Initialize() 
+void HeavyOnLightTest::Initialize()
 {
 	// Floor
 	CreateFloor();

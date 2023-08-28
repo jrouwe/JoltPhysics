@@ -15,12 +15,12 @@ JPH_NAMESPACE_BEGIN
 ///
 /// Constraint equation (eq 45):
 ///
-/// \f[C = p_2 - p_1\f] 
+/// \f[C = p_2 - p_1\f]
 ///
 /// Jacobian (transposed) (eq 47):
 ///
-/// \f[J^T = \begin{bmatrix}-E & r1x & E & -r2x^T\end{bmatrix} 
-/// = \begin{bmatrix}-E^T \\ r1x^T \\ E^T \\ -r2x^T\end{bmatrix} 
+/// \f[J^T = \begin{bmatrix}-E & r1x & E & -r2x^T\end{bmatrix}
+/// = \begin{bmatrix}-E^T \\ r1x^T \\ E^T \\ -r2x^T\end{bmatrix}
 /// = \begin{bmatrix}-E \\ -r1x \\ E \\ r2x\end{bmatrix}\f]
 ///
 /// Used terms (here and below, everything in world space):\n
@@ -49,7 +49,7 @@ class PointConstraintPart
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			if (ioBody1.IsDynamic())
 			{
@@ -121,7 +121,21 @@ public:
 		}
 
 		inv_effective_mass += Mat44::sScale(summed_inv_mass);
-		mEffectiveMass = inv_effective_mass.Inversed3x3();
+		if (!mEffectiveMass.SetInversed3x3(inv_effective_mass))
+			Deactivate();
+	}
+
+	/// Deactivate this constraint
+	inline void					Deactivate()
+	{
+		mEffectiveMass = Mat44::sZero();
+		mTotalLambda = Vec3::sZero();
+	}
+
+	/// Check if constraint is active
+	inline bool					IsActive() const
+	{
+		return mEffectiveMass(3, 3) != 0.0f;
 	}
 
 	/// Must be called from the WarmStartVelocityConstraint call to apply the previous frame's impulses
@@ -161,11 +175,11 @@ public:
 			// lambda = -K^-1 * beta / dt * C
 			//
 			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			Vec3 lambda = mEffectiveMass * -inBaumgarte * separation; 
+			Vec3 lambda = mEffectiveMass * -inBaumgarte * separation;
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -174,9 +188,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			if (ioBody1.IsDynamic())
 			{
@@ -194,7 +208,7 @@ public:
 
 		return false;
 	}
-	
+
 	/// Return lagrange multiplier
 	Vec3		 				GetTotalLambda() const
 	{

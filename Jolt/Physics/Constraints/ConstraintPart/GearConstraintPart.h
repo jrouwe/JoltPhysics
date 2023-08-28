@@ -49,7 +49,7 @@ class GearConstraintPart
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			ioBody1.GetMotionProperties()->AddAngularVelocityStep(inLambda * mInvI1_A);
 			ioBody2.GetMotionProperties()->AddAngularVelocityStep(inLambda * mInvI2_B);
@@ -78,7 +78,11 @@ public:
 		mInvI2_B = inBody2.GetMotionProperties()->MultiplyWorldSpaceInverseInertiaByVector(inBody2.GetRotation(), inWorldSpaceHingeAxis2);
 
 		// K^-1 = 1 / (J M^-1 J^T) = 1 / (a^T I1^-1 a + r^2 * b^T I2^-1 b)
-		mEffectiveMass = 1.0f / (inWorldSpaceHingeAxis1.Dot(mInvI1_A) + inWorldSpaceHingeAxis2.Dot(mInvI2_B) * Square(inRatio));
+		float inv_effective_mass = (inWorldSpaceHingeAxis1.Dot(mInvI1_A) + inWorldSpaceHingeAxis2.Dot(mInvI2_B) * Square(inRatio));
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mEffectiveMass = 1.0f / inv_effective_mass;
 	}
 
 	/// Deactivate this constraint
@@ -142,11 +146,11 @@ public:
 			// lambda = -K^-1 * beta / dt * C
 			//
 			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			float lambda = -mEffectiveMass * inBaumgarte * inC; 
+			float lambda = -mEffectiveMass * inBaumgarte * inC;
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -155,9 +159,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			if (ioBody1.IsDynamic())
 				ioBody1.AddRotationStep(lambda * mInvI1_A);

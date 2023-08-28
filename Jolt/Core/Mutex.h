@@ -116,7 +116,7 @@ using SharedMutexBase = shared_mutex;
 
 #if defined(JPH_ENABLE_ASSERTS) || defined(JPH_PROFILE_ENABLED) || defined(JPH_EXTERNAL_PROFILE)
 
-/// Very simple wrapper around MutexBase which tracks lock contention in the profiler 
+/// Very simple wrapper around MutexBase which tracks lock contention in the profiler
 /// and asserts that locks/unlocks take place on the same thread
 class Mutex : public MutexBase
 {

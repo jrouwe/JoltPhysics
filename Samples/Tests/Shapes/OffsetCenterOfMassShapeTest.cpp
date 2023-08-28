@@ -10,12 +10,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(OffsetCenterOfMassShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(OffsetCenterOfMassShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(OffsetCenterOfMassShapeTest)
+{
+	JPH_ADD_BASE_CLASS(OffsetCenterOfMassShapeTest, Test)
 }
 
-void OffsetCenterOfMassShapeTest::Initialize() 
+void OffsetCenterOfMassShapeTest::Initialize()
 {
 	// Floor
 	Body &floor = CreateFloor();

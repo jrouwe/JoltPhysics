@@ -24,5 +24,5 @@ public:
 
 private:
 	BodyIDVector			mLinearBelts;
-	BodyID					mAngularBelt;	
+	BodyID					mAngularBelt;
 };

@@ -28,7 +28,7 @@ public:
 	// See: ContactListener
 	virtual void		OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override;
 	virtual void		OnContactRemoved(const SubShapeIDPair &inSubShapePair) override;
-	
+
 	// Saving / restoring state for replay
 	virtual void		SaveState(StateRecorder &inStream) const override;
 	virtual void		RestoreState(StateRecorder &inStream) override;

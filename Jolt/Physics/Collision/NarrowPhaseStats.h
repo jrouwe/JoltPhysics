@@ -47,7 +47,7 @@ public:
 class TrackNarrowPhaseStat
 {
 public:
-							TrackNarrowPhaseStat(NarrowPhaseStat &inStat) : 
+							TrackNarrowPhaseStat(NarrowPhaseStat &inStat) :
 		mStat(inStat),
 		mParent(sRoot),
 		mStart(GetProcessorTickCount())
@@ -84,7 +84,7 @@ public:
 class TrackNarrowPhaseCollector
 {
 public:
-							TrackNarrowPhaseCollector() : 
+							TrackNarrowPhaseCollector() :
 		mStart(GetProcessorTickCount())
 	{
 	}

@@ -23,7 +23,7 @@ TEST_SUITE("GJKTests")
 	TEST_CASE("TestGJKIntersectSphere")
 	{
 		GJKClosestPoint gjk;
-			
+
 		// Sphere 1 is centered around the origin
 		Sphere s1(Vec3::sZero(), 1.0f);
 
@@ -69,8 +69,8 @@ TEST_SUITE("GJKTests")
 
 	template <typename A, typename B>
 	static void TestIntersect(
-		A (*inCreateFuncA)(UnitTestRandom &), 
-		B (*inCreateFuncB)(UnitTestRandom &), 
+		A (*inCreateFuncA)(UnitTestRandom &),
+		B (*inCreateFuncB)(UnitTestRandom &),
 		bool (*inCompareFunc)(const A &inA, const B &inB, bool inIsIntersecting, float inTolerance))
 	{
 		UnitTestRandom random(12345);
@@ -93,7 +93,7 @@ TEST_SUITE("GJKTests")
 
 			// Compare with reference function and increase tolerance a bit to account for floating point imprecision
 			CHECK(inCompareFunc(shape1, shape2, result_gjk, 2.0f * cTolerance));
-		
+
 			if (result_gjk)
 				++hits;
 		}
@@ -113,8 +113,8 @@ TEST_SUITE("GJKTests")
 			};
 
 		TestIntersect<Sphere, Sphere>(
-			sphere_creator, 
-			sphere_creator, 
+			sphere_creator,
+			sphere_creator,
 			[](const Sphere &inSphereA, const Sphere &inSphereB, bool inIsIntersecting, float inTolerance) {
 
 				// Test without and with tolerance if the results are equal
@@ -139,10 +139,10 @@ TEST_SUITE("GJKTests")
 			};
 
 		TestIntersect<Sphere, AABox>(
-			sphere_creator, 
-			box_creator, 
+			sphere_creator,
+			box_creator,
 			[](const Sphere &inSphereA, const AABox &inBoxB, bool inIsIntersecting, float inTolerance) {
-				
+
 				// Test without and with tolerance if the results are equal
 				return inSphereA.Overlaps(inBoxB) == inIsIntersecting
 					|| Sphere(inSphereA.GetCenter(), inSphereA.GetRadius() + inTolerance).Overlaps(inBoxB) == inIsIntersecting;
@@ -183,8 +183,8 @@ TEST_SUITE("GJKTests")
 	TEST_CASE("TestGJKRaySphere")
 	{
 		Sphere sphere(Vec3(0.1f, 0.2f, 0.3f), 1.1f);
-		TestRay<Sphere, Sphere>(sphere, sphere, [](const Sphere &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
-			return RaySphere(inRayOrigin, inRayDirection, inSphere.GetCenter(), inSphere.GetRadius()); 
+		TestRay<Sphere, Sphere>(sphere, sphere, [](const Sphere &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
+			return RaySphere(inRayOrigin, inRayDirection, inSphere.GetCenter(), inSphere.GetRadius());
 		});
 	}
 
@@ -193,55 +193,55 @@ TEST_SUITE("GJKTests")
 		SphereShape sphere_shape(1.1f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = sphere_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, SphereShape>(*support, sphere_shape, [](const SphereShape &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
-			return RaySphere(inRayOrigin, inRayDirection, Vec3::sZero(), inSphere.GetRadius()); 
+		TestRay<ConvexShape::Support, SphereShape>(*support, sphere_shape, [](const SphereShape &inSphere, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
+			return RaySphere(inRayOrigin, inRayDirection, Vec3::sZero(), inSphere.GetRadius());
 		});
 	}
 
 	TEST_CASE("TestGJKRayBox")
 	{
 		AABox box(Vec3(-0.9f, -1.0f, -1.1f), Vec3(0.8f, 0.9f, 1.0f));
-		TestRay<AABox, AABox>(box, box, [](const AABox &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
-			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), inBox.mMin, inBox.mMax); 
+		TestRay<AABox, AABox>(box, box, [](const AABox &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
+			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), inBox.mMin, inBox.mMax);
 			return max(fraction, 0.0f);
 		});
 	}
 
 	TEST_CASE("TestGJKRayBoxShape")
-	{			
+	{
 		BoxShape box_shape(Vec3(0.9f, 1.0f, 1.1f), 0.0f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = box_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, BoxShape>(*support, box_shape, [](const BoxShape &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
-			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), -inBox.GetHalfExtent(), inBox.GetHalfExtent()); 
+		TestRay<ConvexShape::Support, BoxShape>(*support, box_shape, [](const BoxShape &inBox, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
+			float fraction = RayAABox(inRayOrigin, RayInvDirection(inRayDirection), -inBox.GetHalfExtent(), inBox.GetHalfExtent());
 			return max(fraction, 0.0f);
 		});
 	}
 
 	TEST_CASE("TestGJKRayCapsuleShape")
-	{			
+	{
 		CapsuleShape capsule_shape(1.1f, 0.6f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = capsule_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, CapsuleShape>(*support, capsule_shape, [](const CapsuleShape &inCapsule, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
-			return RayCapsule(inRayOrigin, inRayDirection, inCapsule.GetHalfHeightOfCylinder(), inCapsule.GetRadius()); 
+		TestRay<ConvexShape::Support, CapsuleShape>(*support, capsule_shape, [](const CapsuleShape &inCapsule, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
+			return RayCapsule(inRayOrigin, inRayDirection, inCapsule.GetHalfHeightOfCylinder(), inCapsule.GetRadius());
 		});
 	}
 
 	TEST_CASE("TestGJKRayCylinderShape")
-	{			
+	{
 		CylinderShape cylinder_shape(1.5f, 0.6f, 0.0f);
 		ConvexShape::SupportBuffer buffer;
 		const ConvexShape::Support *support = cylinder_shape.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
-		TestRay<ConvexShape::Support, CylinderShape>(*support, cylinder_shape, [](const CylinderShape &inCylinder, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
-			return RayCylinder(inRayOrigin, inRayDirection, inCylinder.GetHalfHeight(), inCylinder.GetRadius()); 
+		TestRay<ConvexShape::Support, CylinderShape>(*support, cylinder_shape, [](const CylinderShape &inCylinder, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
+			return RayCylinder(inRayOrigin, inRayDirection, inCylinder.GetHalfHeight(), inCylinder.GetRadius());
 		});
 	}
 
 	TEST_CASE("TestGJKRayTriangle")
-	{			
+	{
 		TriangleConvexSupport triangle(Vec3(0.1f, 0.9f, 0.3f), Vec3(-0.9f, -0.5f, 0.2f), Vec3(0.7f, -0.3f, -0.1f));
-		TestRay<TriangleConvexSupport, TriangleConvexSupport>(triangle, triangle, [](const TriangleConvexSupport &inTriangle, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) { 
+		TestRay<TriangleConvexSupport, TriangleConvexSupport>(triangle, triangle, [](const TriangleConvexSupport &inTriangle, Vec3Arg inRayOrigin, Vec3Arg inRayDirection) {
 			return RayTriangle(inRayOrigin, inRayDirection, inTriangle.mV1, inTriangle.mV2, inTriangle.mV3);
 		});
 	}

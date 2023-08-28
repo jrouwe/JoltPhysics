@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace JPH { 
+namespace JPH {
 	class RagdollSettings;
 	enum class EMotionType : uint8;
 }

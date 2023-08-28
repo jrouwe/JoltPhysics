@@ -300,7 +300,7 @@ TEST_SUITE("ShapeTests")
 			CHECK(!result.IsValid());
 		}
 	}
-	
+
 	// Test submerged volume calculation
 	TEST_CASE("TestGetSubmergedVolume")
 	{
@@ -533,7 +533,7 @@ TEST_SUITE("ShapeTests")
 	{
 		MutableCompoundShapeSettings shape1_settings;
 		RefConst<CompoundShape> shape1 = static_cast<const CompoundShape *>(shape1_settings.Create().Get().GetPtr());
-		
+
 		MutableCompoundShapeSettings shape2_settings;
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));

@@ -9,16 +9,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CapsuleShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(CapsuleShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(CapsuleShapeTest)
+{
+	JPH_ADD_BASE_CLASS(CapsuleShapeTest, Test)
 }
 
-void CapsuleShapeTest::Initialize() 
+void CapsuleShapeTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	RefConst<Shape> big_capsule = new CapsuleShape(2.5f, 2);
 
 	// Capsule on outer sphere

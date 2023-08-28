@@ -90,7 +90,7 @@ public:
 	/// Get float component by element index
 	JPH_INLINE float			operator () (uint inRow, uint inColumn) const			{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
 	JPH_INLINE float &			operator () (uint inRow, uint inColumn)					{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
-	
+
 	/// Comparsion
 	JPH_INLINE bool				operator == (Mat44Arg inM2) const;
 	JPH_INLINE bool				operator != (Mat44Arg inM2) const						{ return !(*this == inM2); }
@@ -180,6 +180,9 @@ public:
 
 	/// Inverse 3x3 matrix
 	JPH_INLINE Mat44			Inversed3x3() const;
+
+	/// *this = inM.Inversed3x3(), returns false if the matrix is singular in which case *this is unchanged
+	JPH_INLINE bool				SetInversed3x3(Mat44Arg inM);
 
 	/// Get rotation part only (note: retains the first 3 values from the bottom row)
 	JPH_INLINE Mat44			GetRotation() const;

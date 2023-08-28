@@ -19,7 +19,7 @@ public:
 
 	/// Set 256 bit vector from 2 128 bit vectors
 	JPH_INLINE					UVec8(UVec4Arg inLo, UVec4Arg inHi);
-	
+
 	/// Comparison
 	JPH_INLINE bool				operator == (UVec8Arg inV2) const;
 	JPH_INLINE bool				operator != (UVec8Arg inV2) const					{ return !(*this == inV2); }
@@ -54,7 +54,7 @@ public:
 	/// Get float component by index
 	JPH_INLINE uint32			operator [] (uint inCoordinate) const				{ JPH_ASSERT(inCoordinate < 8); return mU32[inCoordinate]; }
 	JPH_INLINE uint32 &			operator [] (uint inCoordinate)						{ JPH_ASSERT(inCoordinate < 8); return mU32[inCoordinate]; }
-	
+
 	/// 256 bit variant of Vec::Swizzle (no cross 128 bit lane swizzle)
 	template<uint32 SwizzleX, uint32 SwizzleY, uint32 SwizzleZ, uint32 SwizzleW>
 	JPH_INLINE UVec8			Swizzle() const;
@@ -73,7 +73,7 @@ public:
 
 	/// Converts int to float
 	JPH_INLINE Vec8				ToFloat() const;
-	
+
 	/// Shift all components by Count bits to the left (filling with zeros from the left)
 	template <const uint Count>
 	JPH_INLINE UVec8			LogicalShiftLeft() const;

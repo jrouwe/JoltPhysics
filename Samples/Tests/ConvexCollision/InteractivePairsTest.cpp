@@ -12,9 +12,9 @@
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
 #include <Utils/DebugRendererSP.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(InteractivePairsTest) 
-{ 
-	JPH_ADD_BASE_CLASS(InteractivePairsTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(InteractivePairsTest)
+{
+	JPH_ADD_BASE_CLASS(InteractivePairsTest, Test)
 }
 
 void InteractivePairsTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -87,13 +87,13 @@ void InteractivePairsTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		z += 4;
 		TestSphereVsBox(Vec3(0, 0, z), 1.0f, Vec3(mDistance, 0, z), Vec3(r1, 0, 0), cvx_radius, b);
 		z += 4;
-		
+
 		// Sphere vs edge
 		TestSphereVsBox(Vec3(0, 0, z), 1.0f, Vec3(mDistance, 0, z), Vec3(0, r1, 0), cvx_radius, b);
 		z += 4;
 		TestSphereVsBox(Vec3(0, 0, z), 1.0f, Vec3(mDistance, 0, z), Vec3(0, 0, r1), cvx_radius, b);
 		z += 4;
-		
+
 		// Sphere vs vertex
 		TestSphereVsBox(Vec3(0, 0, z), 1.0f, Vec3(mDistance, 0, z), Vec3(0, r2, r1), cvx_radius, b);
 		z += 4;

@@ -125,10 +125,10 @@ JobHandle JobSystemThreadPool::CreateJob(const char *inJobName, ColorArg inColor
 		std::this_thread::sleep_for(std::chrono::microseconds(100));
 	}
 	Job *job = &mJobs.Get(index);
-	
+
 	// Construct handle to keep a reference, the job is queued below and may immediately complete
 	JobHandle handle(job);
-	
+
 	// If there are no dependencies, queue the job now
 	if (inNumDependencies == 0)
 		QueueJob(job);
@@ -170,12 +170,12 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 			// We calculated the head outside of the loop, update head (and we also need to update tail to prevent it from passing head)
 			head = GetHead();
 			old_value = mTail;
-	
+
 			// Second check if there's space in the queue
 			if (old_value - head >= cQueueLength)
 			{
 				// Wake up all threads in order to ensure that they can clear any nullptrs they may not have processed yet
-				mSemaphore.Release((uint)mThreads.size()); 
+				mSemaphore.Release((uint)mThreads.size());
 
 				// Sleep a little (we have to wait for other threads to update their head pointer in order for us to be able to continue)
 				std::this_thread::sleep_for(std::chrono::microseconds(100));
@@ -187,7 +187,7 @@ void JobSystemThreadPool::QueueJobInternal(Job *inJob)
 		Job *expected_job = nullptr;
 		bool success = mQueue[old_value & (cQueueLength - 1)].compare_exchange_strong(expected_job, inJob);
 
-		// Regardless of who wrote the slot, we will update the tail (if the successful thread got scheduled out 
+		// Regardless of who wrote the slot, we will update the tail (if the successful thread got scheduled out
 		// after writing the pointer we still want to be able to continue)
 		mTail.compare_exchange_strong(old_value, old_value + 1);
 

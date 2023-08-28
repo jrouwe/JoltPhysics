@@ -9,9 +9,9 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Utils/DebugRendererSP.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ClosestPointTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ClosestPointTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ClosestPointTest)
+{
+	JPH_ADD_BASE_CLASS(ClosestPointTest, Test)
 }
 
 void ClosestPointTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -24,7 +24,7 @@ void ClosestPointTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		Vec3 b(1, 0, 1);
 		Vec3 c(2, 0, 1);
 		Vec3 d(1, 1, 0);
-						
+
 		TestTetra(pos, a, b, c, d);
 	}
 
@@ -140,7 +140,7 @@ void ClosestPointTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		Vec3 b(9, 0, 1);
 		TestLine(pos, a, b);
 	}
-			   
+
 	{
 		// Degenerate line
 		Vec3 a(10, 3, 0);
@@ -153,7 +153,7 @@ void ClosestPointTest::TestLine(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB)
 {
 	Vec3 a = inA - inPosition;
 	Vec3 b = inB - inPosition;
-	
+
 	uint32 set;
 	Vec3 closest = ClosestPoint::GetClosestPointOnLine(a, b, set) + inPosition;
 
@@ -182,7 +182,7 @@ void ClosestPointTest::TestTri(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB, Vec
 	Vec3 a = inA - inPosition;
 	Vec3 b = inB - inPosition;
 	Vec3 c = inC - inPosition;
-	
+
 	uint32 set;
 	Vec3 closest = ClosestPoint::GetClosestPointOnTriangle(a, b, c, set) + inPosition;
 
@@ -220,7 +220,7 @@ void ClosestPointTest::TestTetra(Vec3Arg inPosition, Vec3Arg inA, Vec3Arg inB, V
 	Vec3 b = inB - inPosition;
 	Vec3 c = inC - inPosition;
 	Vec3 d = inD - inPosition;
-	
+
 	uint32 set;
 	Vec3 closest = ClosestPoint::GetClosestPointOnTetrahedron(a, b, c, d, set) + inPosition;
 

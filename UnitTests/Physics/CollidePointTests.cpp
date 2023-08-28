@@ -394,7 +394,7 @@ TEST_SUITE("CollidePointTests")
 					settings.mIndexedTriangles.resize(idx + size(indices));
 					for (uint i = 0; i < size(indices); ++i)
 						settings.mIndexedTriangles[idx + i] = IndexedTriangle(vtx + indices[i][0], vtx + indices[i][flip? 2 : 1], vtx + indices[i][flip? 1 : 2]);
-				}	
+				}
 
 		// Create body with random orientation
 		PhysicsTestContext context;

@@ -11,16 +11,16 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredHingeConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(PoweredHingeConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(PoweredHingeConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(PoweredHingeConstraintTest, Test)
 }
 
 void PoweredHingeConstraintTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	// Create group filter
 	Ref<GroupFilterTable> group_filter = new GroupFilterTable;
 
@@ -61,7 +61,7 @@ void PoweredHingeConstraintTest::Initialize()
 }
 
 void PoweredHingeConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	// Torque = Inertia * Angular Acceleration (alpha)
 	MotorSettings &motor_settings = mConstraint->GetMotorSettings();
 	motor_settings.SetTorqueLimit(mInertiaBody2AsSeenFromConstraint * sMaxAngularAcceleration);

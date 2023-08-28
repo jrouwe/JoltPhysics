@@ -9,16 +9,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(BoxShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(BoxShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(BoxShapeTest)
+{
+	JPH_ADD_BASE_CLASS(BoxShapeTest, Test)
 }
 
-void BoxShapeTest::Initialize() 
+void BoxShapeTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	// Different sized boxes
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(20, 1, 1)), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);

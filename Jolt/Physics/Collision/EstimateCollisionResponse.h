@@ -34,7 +34,7 @@ struct CollisionEstimationResult
 /// This function estimates the contact impulses and body velocity changes as a result of a collision.
 /// It can be used in the ContactListener::OnContactAdded to determine the strength of the collision to e.g. play a sound or trigger a particle system.
 /// This function is accurate when two bodies collide but will not be accurate when more than 2 bodies collide at the same time as it does not know about these other collisions.
-/// 
+///
 /// @param inBody1 Colliding body 1
 /// @param inBody2 Colliding body 2
 /// @param inManifold The collision manifold

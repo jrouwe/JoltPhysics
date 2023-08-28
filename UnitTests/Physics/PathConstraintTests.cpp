@@ -10,7 +10,7 @@
 
 TEST_SUITE("PathConstraintTests")
 {
-	// Test a straight line using a hermite spline. 
+	// Test a straight line using a hermite spline.
 	TEST_CASE("TestPathConstraintPathHermite")
 	{
 		// A straight spline

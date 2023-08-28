@@ -34,14 +34,14 @@ void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPoint
 	{
 		// Project contact points on the plane through inCenterOfMass with normal inPenetrationAxis and center around the center of mass of body 1
 		// (note that since all points are relative to inCenterOfMass we can project onto the plane through the origin)
-		Vec3 v1 = ioContactPointsOn1[i]; 
+		Vec3 v1 = ioContactPointsOn1[i];
 		projected.push_back(v1 - v1.Dot(inPenetrationAxis) * inPenetrationAxis);
 
 		// Calculate penetration depth^2 of each point and clamp against the minimal distance
 		Vec3 v2 = ioContactPointsOn2[i];
 		penetration_depth_sq.push_back(max(cMinDistanceSq, (v2 - v1).LengthSq()));
 	}
-	
+
 	// Find the point that is furthest away from the center of mass (its torque will have the biggest influence)
 	// and the point that has the deepest penetration depth. Use the heuristic (distance to center of mass) * (penetration depth) for this.
 	uint point1 = 0;
@@ -67,7 +67,7 @@ void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPoint
 			float v = max(cMinDistanceSq, (projected[i] - point1v).LengthSq()) * penetration_depth_sq[i];
 			if (v > val)
 			{
-				val = v; 
+				val = v;
 				point2 = i;
 			}
 		}
@@ -91,7 +91,7 @@ void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPoint
 			}
 			else if (v > max_val)
 			{
-				max_val = v; 
+				max_val = v;
 				point4 = i;
 			}
 		}
@@ -132,7 +132,7 @@ void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPoint
 	// Copy the points back to the input buffer
 	ioContactPointsOn1 = points_to_keep_on_1;
 	ioContactPointsOn2 = points_to_keep_on_2;
-}	
+}
 
 void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
 {
@@ -194,12 +194,12 @@ void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, V
 					// p1 = p2 - (distance / sqrt(plane_normal_len_sq)) * (plane_normal / sqrt(plane_normal_len_sq));
 					Vec3 p1 = p2 - (distance / plane_normal_len_sq) * plane_normal;
 
-					outContactPoints1.push_back(p1); 
+					outContactPoints1.push_back(p1);
 					outContactPoints2.push_back(p2);
 				}
 			}
 		}
-	
+
 	#ifdef JPH_DEBUG_RENDERER
 		if (ContactConstraintManager::sDrawSupportingFaces)
 		{

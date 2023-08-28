@@ -161,7 +161,7 @@ void FixedSizeFreeList<Object>::DestructObjectBatch(Batch &ioBatch)
 				// Mark the batch as freed
 #ifdef JPH_ENABLE_ASSERTS
 				ioBatch.mNumObjects = uint32(-1);
-#endif		
+#endif
 				return;
 			}
 		}
@@ -174,7 +174,7 @@ void FixedSizeFreeList<Object>::DestructObject(uint32 inObjectIndex)
 	JPH_ASSERT(inObjectIndex != cInvalidObjectIndex);
 
 	// Call destructor
-	ObjectStorage &storage = GetStorage(inObjectIndex); 
+	ObjectStorage &storage = GetStorage(inObjectIndex);
 	storage.mObject.~Object();
 
 	// Add to object free list

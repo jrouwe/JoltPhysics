@@ -35,7 +35,7 @@ JPH_INLINE Vec8 RayTriangle8(Vec3Arg inOrigin, Vec3Arg inDirection, Vec8Arg inV0
 	Vec8 px = dy * e2z - dz * e2y;
 	Vec8 py = dz * e2x - dx * e2z;
 	Vec8 pz = dx * e2y - dy * e2x;
-	
+
 	// if determinant is near zero, ray lies in plane of triangle
 	Vec8 det = e1x * px + e1y * py + e1z * pz;
 
@@ -57,7 +57,7 @@ JPH_INLINE Vec8 RayTriangle8(Vec3Arg inOrigin, Vec3Arg inDirection, Vec8Arg inV0
 	Vec8 qx = sy * e1z - sz * e1y;
 	Vec8 qy = sz * e1x - sx * e1z;
 	Vec8 qz = sx * e1y - sy * e1x;
-				    
+
 	// Calculate v parameter and flip sign if determinant was negative
 	Vec8 v = (dx * qx + dy * qy + dz * qz) / det;
 
@@ -65,22 +65,22 @@ JPH_INLINE Vec8 RayTriangle8(Vec3Arg inOrigin, Vec3Arg inDirection, Vec8Arg inV0
 	Vec8 t = (e2x * qx + e2y * qy + e2z * qz) / det;
 
 	// Check if there is an intersection
-	UVec8 no_intersection = 
+	UVec8 no_intersection =
 		UVec8::sOr
 		(
 			UVec8::sOr
 			(
 				UVec8::sOr
 				(
-					det_near_zero, 
+					det_near_zero,
 					Vec8::sLess(u, zero)
 				),
 				UVec8::sOr
 				(
-					Vec8::sLess(v, zero), 
+					Vec8::sLess(v, zero),
 					Vec8::sGreater(u + v, one)
 				)
-			), 
+			),
 			Vec8::sLess(t, zero)
 		);
 

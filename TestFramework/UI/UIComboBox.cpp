@@ -44,7 +44,7 @@ bool UIComboBox::HandleUIEvent(EUIEvent inEvent, UIElement *inSender)
 	return UIElement::HandleUIEvent(inEvent, inSender);
 }
 
-void UIComboBox::AutoLayout() 
+void UIComboBox::AutoLayout()
 {
 	UIElement::AutoLayout();
 
@@ -62,7 +62,7 @@ void UIComboBox::AutoLayout()
 }
 
 void UIComboBox::SetItemInternal(int inItem)
-{ 
+{
 	int old_item = mCurrentItem;
 
 	if (inItem < 0)
@@ -71,10 +71,10 @@ void UIComboBox::SetItemInternal(int inItem)
 		mCurrentItem = int(mItems.size()) - 1;
 	else
 		mCurrentItem = inItem;
-		
+
 	if (mCurrentItem != old_item)
 	{
-		if (mItemChangedAction) 
+		if (mItemChangedAction)
 			mItemChangedAction(mCurrentItem);
 
 		UpdateStaticText();

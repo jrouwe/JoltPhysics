@@ -142,9 +142,9 @@ UVec4 UVec4::sEquals(UVec4Arg inV1, UVec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vceqq_u32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mU32[0] == inV2.mU32[0]? 0xffffffffu : 0, 
-				 inV1.mU32[1] == inV2.mU32[1]? 0xffffffffu : 0, 
-				 inV1.mU32[2] == inV2.mU32[2]? 0xffffffffu : 0, 
+	return UVec4(inV1.mU32[0] == inV2.mU32[0]? 0xffffffffu : 0,
+				 inV1.mU32[1] == inV2.mU32[1]? 0xffffffffu : 0,
+				 inV1.mU32[2] == inV2.mU32[2]? 0xffffffffu : 0,
 				 inV1.mU32[3] == inV2.mU32[3]? 0xffffffffu : 0);
 #endif
 }
@@ -170,9 +170,9 @@ UVec4 UVec4::sOr(UVec4Arg inV1, UVec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vorrq_u32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mU32[0] | inV2.mU32[0], 
-				 inV1.mU32[1] | inV2.mU32[1], 
-				 inV1.mU32[2] | inV2.mU32[2], 
+	return UVec4(inV1.mU32[0] | inV2.mU32[0],
+				 inV1.mU32[1] | inV2.mU32[1],
+				 inV1.mU32[2] | inV2.mU32[2],
 				 inV1.mU32[3] | inV2.mU32[3]);
 #endif
 }
@@ -184,9 +184,9 @@ UVec4 UVec4::sXor(UVec4Arg inV1, UVec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return veorq_u32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mU32[0] ^ inV2.mU32[0], 
-				 inV1.mU32[1] ^ inV2.mU32[1], 
-				 inV1.mU32[2] ^ inV2.mU32[2], 
+	return UVec4(inV1.mU32[0] ^ inV2.mU32[0],
+				 inV1.mU32[1] ^ inV2.mU32[1],
+				 inV1.mU32[2] ^ inV2.mU32[2],
 				 inV1.mU32[3] ^ inV2.mU32[3]);
 #endif
 }
@@ -198,9 +198,9 @@ UVec4 UVec4::sAnd(UVec4Arg inV1, UVec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vandq_u32(inV1.mValue, inV2.mValue);
 #else
-	return UVec4(inV1.mU32[0] & inV2.mU32[0], 
-				 inV1.mU32[1] & inV2.mU32[1], 
-				 inV1.mU32[2] & inV2.mU32[2], 
+	return UVec4(inV1.mU32[0] & inV2.mU32[0],
+				 inV1.mU32[1] & inV2.mU32[1],
+				 inV1.mU32[2] & inV2.mU32[2],
 				 inV1.mU32[3] & inV2.mU32[3]);
 #endif
 }
@@ -254,9 +254,9 @@ UVec4 UVec4::operator + (UVec4Arg inV2)
 #elif defined(JPH_USE_NEON)
 	return vaddq_u32(mValue, inV2.mValue);
 #else
-	return UVec4(mU32[0] + inV2.mU32[0], 
-				 mU32[1] + inV2.mU32[1], 
-				 mU32[2] + inV2.mU32[2], 
+	return UVec4(mU32[0] + inV2.mU32[0],
+				 mU32[1] + inV2.mU32[1],
+				 mU32[2] + inV2.mU32[2],
 				 mU32[3] + inV2.mU32[3]);
 #endif
 }
@@ -445,9 +445,9 @@ UVec4 UVec4::ArithmeticShiftRight() const
 #elif defined(JPH_USE_NEON)
 	return vshrq_n_s32(mValue, Count);
 #else
-	return UVec4(uint32(int32_t(mU32[0]) >> Count), 
-				 uint32(int32_t(mU32[1]) >> Count), 
-				 uint32(int32_t(mU32[2]) >> Count), 
+	return UVec4(uint32(int32_t(mU32[0]) >> Count),
+				 uint32(int32_t(mU32[1]) >> Count),
+				 uint32(int32_t(mU32[2]) >> Count),
 				 uint32(int32_t(mU32[3]) >> Count));
 #endif
 }
@@ -461,9 +461,9 @@ UVec4 UVec4::Expand4Uint16Lo() const
 	int16x4_t zero = vdup_n_s16(0);
 	return vcombine_s16(vzip1_s16(value, zero), vzip2_s16(value, zero));
 #else
-	return UVec4(mU32[0] & 0xffff, 
-				 (mU32[0] >> 16) & 0xffff, 
-				 mU32[1] & 0xffff, 
+	return UVec4(mU32[0] & 0xffff,
+				 (mU32[0] >> 16) & 0xffff,
+				 mU32[1] & 0xffff,
 				 (mU32[1] >> 16) & 0xffff);
 #endif
 }
@@ -477,9 +477,9 @@ UVec4 UVec4::Expand4Uint16Hi() const
 	int16x4_t zero = vdup_n_s16(0);
 	return vcombine_s16(vzip1_s16(value, zero), vzip2_s16(value, zero));
 #else
-	return UVec4(mU32[2] & 0xffff, 
-				 (mU32[2] >> 16) & 0xffff, 
-				 mU32[3] & 0xffff, 
+	return UVec4(mU32[2] & 0xffff,
+				 (mU32[2] >> 16) & 0xffff,
+				 mU32[3] & 0xffff,
 				 (mU32[3] >> 16) & 0xffff);
 #endif
 }
@@ -547,7 +547,7 @@ UVec4 UVec4::Expand4Byte12() const
 UVec4 UVec4::ShiftComponents4Minus(int inCount) const
 {
 #if defined(JPH_USE_SSE4_1) || defined(JPH_USE_NEON)
-	alignas(UVec4) static constexpr uint32 sFourMinusXShuffle[5][4] = 
+	alignas(UVec4) static constexpr uint32 sFourMinusXShuffle[5][4] =
 	{
 		{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff },
 		{ 0x0f0e0d0c, 0xffffffff, 0xffffffff, 0xffffffff },

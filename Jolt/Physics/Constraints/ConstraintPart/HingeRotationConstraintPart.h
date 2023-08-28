@@ -56,7 +56,7 @@ private:
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			Vec3 impulse = mB2xA1 * inLambda[0] + mC2xA1 * inLambda[1];
 			if (ioBody1.IsDynamic())
@@ -110,10 +110,7 @@ public:
 		inv_effective_mass(1, 0) = mC2xA1.Dot(summed_inv_inertia.Multiply3x3(mB2xA1));
 		inv_effective_mass(1, 1) = mC2xA1.Dot(summed_inv_inertia.Multiply3x3(mC2xA1));
 		if (!mEffectiveMass.SetInversed(inv_effective_mass))
-		{
-			JPH_ASSERT(false, "Determinant is zero!");
 			Deactivate();
-		}
 	}
 
 	/// Deactivate this constraint
@@ -143,8 +140,8 @@ public:
 		Vec2 lambda = mEffectiveMass * jv;
 
 		// Store accumulated lambda
-		mTotalLambda += lambda; 
-		
+		mTotalLambda += lambda;
+
 		return ApplyVelocityStep(ioBody1, ioBody2, lambda);
 	}
 
@@ -166,7 +163,7 @@ public:
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -175,9 +172,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			Vec3 impulse = mB2xA1 * lambda[0] + mC2xA1 * lambda[1];
 			if (ioBody1.IsDynamic())
@@ -195,7 +192,7 @@ public:
 	{
 		return mTotalLambda;
 	}
-	
+
 	/// Save state of this constraint part
 	void						SaveState(StateRecorder &inStream) const
 	{

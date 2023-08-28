@@ -101,7 +101,7 @@ TrackedVehicleControllerSettings::TrackedVehicleControllerSettings()
 }
 
 void TrackedVehicleControllerSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	mEngine.SaveBinaryState(inStream);
 
 	mTransmission.SaveBinaryState(inStream);
@@ -211,7 +211,7 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		WheelTV *w = static_cast<WheelTV *>(w_base);
 		w->Update(inDeltaTime, mConstraint);
 	}
-	
+
 	// First calculate engine speed based on speed of all wheels
 	bool can_engine_apply_torque = false;
 	if (mTransmission.GetCurrentGear() != 0 && mTransmission.GetClutchFriction() > 1.0e-3f)
@@ -340,7 +340,7 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	}
 }
 
-bool TrackedVehicleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime) 
+bool TrackedVehicleController::SolveLongitudinalAndLateralConstraints(float inDeltaTime)
 {
 	bool impulse = false;
 
@@ -417,7 +417,7 @@ bool TrackedVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 
 #ifdef JPH_DEBUG_RENDERER
 
-void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const 
+void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const
 {
 	float constraint_size = mConstraint.GetDrawConstraintSize();
 
@@ -430,8 +430,8 @@ void TrackedVehicleController::Draw(DebugRenderer *inRenderer) const
 
 	// Draw current vehicle state
 	String status = StringFormat("Forward: %.1f, LRatio: %.1f, RRatio: %.1f, Brake: %.1f\n"
-								 "Gear: %d, Clutch: %.1f, EngineRPM: %.0f, V: %.1f km/h", 
-								 (double)mForwardInput, (double)mLeftRatio, (double)mRightRatio, (double)mBrakeInput, 
+								 "Gear: %d, Clutch: %.1f, EngineRPM: %.0f, V: %.1f km/h",
+								 (double)mForwardInput, (double)mLeftRatio, (double)mRightRatio, (double)mBrakeInput,
 								 mTransmission.GetCurrentGear(), (double)mTransmission.GetClutchFriction(), (double)mEngine.GetCurrentRPM(), (double)body->GetLinearVelocity().Length() * 3.6);
 	inRenderer->DrawText3D(body->GetPosition(), status, Color::sWhite, constraint_size);
 

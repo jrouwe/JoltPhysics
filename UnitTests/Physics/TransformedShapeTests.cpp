@@ -75,7 +75,7 @@ TEST_SUITE("TransformedShapeTests")
 		const Vec3 point_on_box(half_extents.GetX() - 0.01f, half_extents.GetY() - 0.01f, half_extents.GetZ());
 		const Vec3 normal_on_box(0, 0, 1);
 		const Vec3 ray_direction_local(1, 1, -1);
-		
+
 		// Transform to world space and do the raycast
 		Vec3 ray_start_local = point_on_box - ray_direction_local;
 		Vec3 ray_end_local = point_on_box + ray_direction_local;

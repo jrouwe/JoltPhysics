@@ -37,7 +37,7 @@ public:
 
 private:
 	inline static bool		sLockTranslations = false;
-	
+
 	void					CalculateRagdollPose();
 
 	float					mTime = 0.0f;

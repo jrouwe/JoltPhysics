@@ -29,7 +29,7 @@ public:
 	void				Add(UIElement *inElement);
 	void				Clear();
 	virtual void		OnAdded()									{ }
-	
+
 	/// Start / stop animations
 	void				StartAnimation(UIAnimation *inAnimation);
 	void				StopAnimation(const RTTI *inAnimationType);
@@ -37,14 +37,14 @@ public:
 	/// Cloning / copying
 	UIElement *			Clone() const;
 	virtual void		CopyTo(UIElement *ioElement) const;
-	
+
 	/// Units
 	enum EUnits
 	{
 		PIXELS,
 		PERCENTAGE,
 	};
-	
+
 	/// Alignment
 	enum EAlignment
 	{
@@ -64,9 +64,9 @@ public:
 	int					GetRelativeY() const						{ return mRelativeY.GetPosition(this, &UIElement::GetHeight); }
 	void				SetRelativeY(int inY, EUnits inUnits = PIXELS, EAlignment inAlignment = LEFT) { mRelativeY.Set(inY, inUnits, inAlignment); }
 	int					GetWidth() const							{ return mWidth.GetSize(this, &UIElement::GetWidth); }
-	void				SetWidth(int inWidth, EUnits inUnits = PIXELS) { mWidth.Set(inWidth, inUnits); } 
+	void				SetWidth(int inWidth, EUnits inUnits = PIXELS) { mWidth.Set(inWidth, inUnits); }
 	int					GetHeight() const							{ return mHeight.GetSize(this, &UIElement::GetHeight); }
-	void				SetHeight(int inHeight, EUnits inUnits = PIXELS) { mHeight.Set(inHeight, inUnits); } 
+	void				SetHeight(int inHeight, EUnits inUnits = PIXELS) { mHeight.Set(inHeight, inUnits); }
 	int					GetPaddingRight() const						{ return mPaddingRight.GetSize(this, &UIElement::GetWidth); }
 	void				SetPaddingRight(int inY, EUnits inUnits = PIXELS) { mPaddingRight.Set(inY, inUnits); }
 	int					GetPaddingBottom() const					{ return mPaddingBottom.GetSize(this, &UIElement::GetHeight); }
@@ -137,7 +137,7 @@ protected:
 		/// Constructor
 						Size() : mSize(0), mUnit(PIXELS) { }
 
-		/// Get size 
+		/// Get size
 		int				GetSize(const UIElement *inElement, fGetSize inGetSize) const;
 
 		/// Assignment

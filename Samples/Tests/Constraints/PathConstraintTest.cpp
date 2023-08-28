@@ -12,9 +12,9 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(PathConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(PathConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(PathConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(PathConstraintTest, Test)
 }
 
 EPathRotationConstraintType PathConstraintTest::sOrientationType = EPathRotationConstraintType::Free;
@@ -96,7 +96,7 @@ void PathConstraintTest::Initialize()
 }
 
 void PathConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	for (PathConstraint *c : mConstraints)
 	{
 		MotorSettings &motor_settings = c->GetPositionMotorSettings();

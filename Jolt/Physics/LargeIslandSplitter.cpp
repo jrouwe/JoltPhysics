@@ -156,7 +156,7 @@ void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed, bool &
 				// At start of next split
 				++split_index;
 			}
-		
+
 			// If we're beyond the end of splits, go to the non-parallel split
 			if (split_index >= mNumSplits)
 				split_index = cNonParallelSplitIdx;

@@ -81,7 +81,7 @@ protected:
 	Vec3						mTargetLean = Vec3::sZero();
 
 	// Integrated error for the lean spring
-	float						mLeanSpringIntegratedDeltaAngle = 0.0f;	
+	float						mLeanSpringIntegratedDeltaAngle = 0.0f;
 
 	// Run-time total angular impulse applied to turn the cycle towards the target lean angle
 	float						mAppliedImpulse = 0.0f;

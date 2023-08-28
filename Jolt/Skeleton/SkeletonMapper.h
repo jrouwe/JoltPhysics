@@ -72,7 +72,7 @@ public:
 
 	/// Initialize the skeleton mapper. Skeleton 1 should be the (low detail) ragdoll skeleton and skeleton 2 the (high detail) animation skeleton.
 	/// We assume that each joint in skeleton 1 can be mapped to a joint in skeleton 2 (if not mapping from animation skeleton to ragdoll skeleton will be undefined).
-	/// Skeleton 2 should have the same hierarchy as skeleton 1 but can contain extra joints between those in skeleton 1 and it can have extra joints at the root and leaves of the skeleton. 
+	/// Skeleton 2 should have the same hierarchy as skeleton 1 but can contain extra joints between those in skeleton 1 and it can have extra joints at the root and leaves of the skeleton.
 	/// @param inSkeleton1 Source skeleton to map from.
 	/// @param inNeutralPose1 Neutral pose of the source skeleton (model space)
 	/// @param inSkeleton2 Target skeleton to map to.

@@ -15,7 +15,7 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
-#ifndef JPH_DEBUG_RENDERER	
+#ifndef JPH_DEBUG_RENDERER
 	// Hack to still compile DebugRenderer inside the test framework when Jolt is compiled without
 	#define JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRendererRecorder.cpp>
@@ -29,7 +29,7 @@ JoltViewer::JoltViewer()
 	String cmd_line = GetCommandLineA();
 	Array<String> args;
 	StringToVector(cmd_line, args, " ");
-	
+
 	// Check arguments
 	if (args.size() != 2 || args[1].empty())
 	{

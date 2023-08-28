@@ -230,22 +230,22 @@ inline static void sDrawQuad(QuadVertex *&v ,float x1, float y1, float x2, float
 	v->mTexCoord = Float2(tx1, ty2);
 	v->mColor = inColor;
 	++v;
-	
+
 	v->mPosition = Float3(x2, y2, 0);
 	v->mTexCoord = Float2(tx2, ty2);
 	v->mColor = inColor;
 	++v;
-	
+
 	v->mPosition = Float3(x1, y1, 0);
 	v->mTexCoord = Float2(tx1, ty1);
 	v->mColor = inColor;
 	++v;
-	
+
 	v->mPosition = Float3(x2, y2, 0);
 	v->mTexCoord = Float2(tx2, ty2);
 	v->mColor = inColor;
 	++v;
-	
+
 	v->mPosition = Float3(x2, y1, 0);
 	v->mTexCoord = Float2(tx2, ty1);
 	v->mColor = inColor;

@@ -9,9 +9,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(IslandTest) 
-{ 
-	JPH_ADD_BASE_CLASS(IslandTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(IslandTest)
+{
+	JPH_ADD_BASE_CLASS(IslandTest, Test)
 }
 
 void IslandTest::Initialize()

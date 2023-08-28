@@ -13,6 +13,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+using namespace literals;
+
 JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(FixedConstraintSettings)
 {
 	JPH_ADD_BASE_CLASS(FixedConstraintSettings, TwoBodyConstraintSettings)
@@ -28,7 +30,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(FixedConstraintSettings)
 }
 
 void FixedConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -81,7 +83,11 @@ FixedConstraint::FixedConstraint(Body &inBody1, Body &inBody2, const FixedConstr
 				// Otherwise use weighted anchor point towards the lightest body
 				Real inv_m1 = Real(inBody1.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked());
 				Real inv_m2 = Real(inBody2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked());
-				anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
+				Real total_inv_mass = inv_m1 + inv_m2;
+				if (total_inv_mass != 0.0_r)
+					anchor = (inv_m1 * inBody1.GetCenterOfMassPosition() + inv_m2 * inBody2.GetCenterOfMassPosition()) / (inv_m1 + inv_m2);
+				else
+					anchor = inBody1.GetCenterOfMassPosition();
 			}
 
 			// Store local positions
@@ -147,11 +153,11 @@ bool FixedConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgar
 	// Solve rotation constraint
 	mRotationConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), *mBody2, Mat44::sRotation(mBody2->GetRotation()));
 	bool rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mInvInitialOrientation, inBaumgarte);
-	
+
 	// Solve position constraint
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, Mat44::sRotation(mBody1->GetRotation()), mLocalSpacePosition1, *mBody2, Mat44::sRotation(mBody2->GetRotation()), mLocalSpacePosition2);
 	bool pos = mPointConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
-	
+
 	return rot || pos;
 }
 

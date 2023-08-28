@@ -25,7 +25,7 @@ public:
 
 		/// Convert from a local space matrix
 		void							FromMatrix(Mat44Arg inMatrix);
-		
+
 		/// Convert to matrix representation
 		inline Mat44					ToMatrix() const									{ return Mat44::sRotationTranslation(mRotation, mTranslation); }
 
@@ -65,7 +65,7 @@ public:
 	/// Get the (interpolated) joint transforms at time inTime
 	void								Sample(float inTime, SkeletonPose &ioPose) const;
 
-	/// Get joint samples			
+	/// Get joint samples
 	const AnimatedJointVector &			GetAnimatedJoints() const							{ return mAnimatedJoints; }
 	AnimatedJointVector &				GetAnimatedJoints()									{ return mAnimatedJoints; }
 

@@ -315,7 +315,7 @@ void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransfo
 	float scaled_bottom_center = scale_y * mBottomCenter;
 	float scaled_top_radius = scale_xz * mTopRadius;
 	float scaled_bottom_radius = scale_xz * mBottomRadius;
-	
+
 	for (SoftBodyVertex &v : ioVertices)
 		if (v.mInvMass > 0.0f)
 		{

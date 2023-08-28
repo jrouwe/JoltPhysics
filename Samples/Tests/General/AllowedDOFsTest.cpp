@@ -11,9 +11,9 @@
 #include <Renderer/DebugRendererImp.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(AllowedDOFsTest) 
-{ 
-	JPH_ADD_BASE_CLASS(AllowedDOFsTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(AllowedDOFsTest)
+{
+	JPH_ADD_BASE_CLASS(AllowedDOFsTest, Test)
 }
 
 void AllowedDOFsTest::Initialize()
@@ -29,7 +29,7 @@ void AllowedDOFsTest::Initialize()
 		float x = -35.0f + 10.0f * (allowed_dofs & 0b111);
 		float z = -35.0f + 10.0f * ((allowed_dofs >> 3) & 0b111);
 
-		// Create body 
+		// Create body
 		BodyCreationSettings bcs(box_shape, RVec3(x, 10, z), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 		bcs.mAllowedDOFs = (EAllowedDOFs)allowed_dofs;
 		BodyID id = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);

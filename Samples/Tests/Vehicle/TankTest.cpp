@@ -19,9 +19,9 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(TankTest) 
-{ 
-	JPH_ADD_BASE_CLASS(TankTest, VehicleTest) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(TankTest)
+{
+	JPH_ADD_BASE_CLASS(TankTest, VehicleTest)
 }
 
 TankTest::~TankTest()
@@ -50,16 +50,16 @@ void TankTest::Initialize()
 	const float barrel_radius = 0.1f;
 	const float barrel_rotation_offset = 0.2f;
 
-	static Vec3 wheel_pos[] = { 
-		Vec3(0.0f, -0.0f, 2.95f), 
-		Vec3(0.0f, -0.3f, 2.1f), 
-		Vec3(0.0f, -0.3f, 1.4f), 
-		Vec3(0.0f, -0.3f, 0.7f), 
-		Vec3(0.0f, -0.3f, 0.0f), 
-		Vec3(0.0f, -0.3f, -0.7f), 
-		Vec3(0.0f, -0.3f, -1.4f), 
-		Vec3(0.0f, -0.3f, -2.1f), 
-		Vec3(0.0f, -0.0f, -2.75f), 
+	static Vec3 wheel_pos[] = {
+		Vec3(0.0f, -0.0f, 2.95f),
+		Vec3(0.0f, -0.3f, 2.1f),
+		Vec3(0.0f, -0.3f, 1.4f),
+		Vec3(0.0f, -0.3f, 0.7f),
+		Vec3(0.0f, -0.3f, 0.0f),
+		Vec3(0.0f, -0.3f, -0.7f),
+		Vec3(0.0f, -0.3f, -1.4f),
+		Vec3(0.0f, -0.3f, -2.1f),
+		Vec3(0.0f, -0.0f, -2.75f),
 	};
 
 	// Create filter to prevent body, turret and barrel from colliding
@@ -312,7 +312,7 @@ void TankTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(0, -2.0f, 10.0f).Normalized();
 }
 
-RMat44 TankTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 TankTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	// Pivot is center of tank + a distance away from the tank based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));

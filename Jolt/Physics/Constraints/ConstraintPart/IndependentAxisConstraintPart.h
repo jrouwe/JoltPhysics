@@ -23,7 +23,7 @@ JPH_NAMESPACE_BEGIN
 ///
 /// \f[(v_1 + w_1 \times r_1) \cdot n_1 + r (v_2 + w_2 \times r_2) \cdot n_2\f]
 /// \f[= v_1 \cdot n_1 + r_1 \times n_1 \cdot w_1 + r v_2 \cdot n_2 + r r_2 \times n_2 \cdot w_2\f]
-/// 
+///
 /// Jacobian:
 ///
 /// \f[J = \begin{bmatrix}n_1 & r_1 \times n_1 & r n_2 & r r_2 \times n_2\end{bmatrix}\f]
@@ -57,7 +57,7 @@ class IndependentAxisConstraintPart
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			if (ioBody1.IsDynamic())
 			{
@@ -95,10 +95,10 @@ public:
 		if (!inBody1.IsStatic())
 		{
 			const MotionProperties *mp1 = inBody1.GetMotionProperties();
-			
+
 			mR1xN1 = inR1.Cross(inN1);
 			mInvI1_R1xN1 = mp1->MultiplyWorldSpaceInverseInertiaByVector(inBody1.GetRotation(), mR1xN1);
-			
+
 			inv_effective_mass += mp1->GetInverseMass() + mInvI1_R1xN1.Dot(mR1xN1);
 		}
 
@@ -113,7 +113,10 @@ public:
 		}
 
 		// Calculate inverse effective mass: K = J M^-1 J^T
-		mEffectiveMass = 1.0f / inv_effective_mass;
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+			mEffectiveMass = 1.0f / inv_effective_mass;
 	}
 
 	/// Deactivate this constraint
@@ -186,11 +189,11 @@ public:
 			// lambda = -K^-1 * beta / dt * C
 			//
 			// We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
-			float lambda = -mEffectiveMass * inBaumgarte * inC; 
+			float lambda = -mEffectiveMass * inBaumgarte * inC;
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -199,9 +202,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			if (ioBody1.IsDynamic())
 			{

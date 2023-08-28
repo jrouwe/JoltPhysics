@@ -25,7 +25,7 @@ JPH_NAMESPACE_BEGIN
 /// -n_1					& -n_2					\\
 /// -(r_1 + u) \times n_1	& -(r_1 + u) \times n_2	\\
 /// n_1						& n_2					\\
-/// r_2 \times n_1			& r_2 \times n_2        
+/// r_2 \times n_1			& r_2 \times n_2
 /// \end{bmatrix}\f]
 ///
 /// Used terms (here and below, everything in world space):\n
@@ -60,7 +60,7 @@ private:
 			// Impulse:
 			// P = J^T lambda
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// v' = v + M^-1 P
 			Vec3 impulse = inN1 * inLambda[0] + inN2 * inLambda[1];
 			if (ioBody1.IsDynamic())
@@ -80,7 +80,7 @@ private:
 
 		return false;
 	}
-	
+
 	/// Internal helper function to calculate the lagrange multiplier
 	inline void					CalculateLagrangeMultiplier(const Body &inBody1, const Body &inBody2, Vec3Arg inN1, Vec3Arg inN2, Vec2 &outLambda) const
 	{
@@ -133,7 +133,7 @@ public:
 		if (inBody2.IsDynamic())
 		{
 			const MotionProperties *mp2 = inBody2.GetMotionProperties();
-			Mat44 inv_i2 = mp2->GetInverseInertiaForRotation(inRotation2);	
+			Mat44 inv_i2 = mp2->GetInverseInertiaForRotation(inRotation2);
 			mInvI2_R2xN1 = inv_i2.Multiply3x3(mR2xN1);
 			mInvI2_R2xN2 = inv_i2.Multiply3x3(mR2xN2);
 
@@ -149,10 +149,7 @@ public:
 		}
 
 		if (!mEffectiveMass.SetInversed(inv_effective_mass))
-		{
-			JPH_ASSERT(false, "Determinant is zero!");
 			Deactivate();
-		}
 	}
 
 	/// Deactivate this constraint
@@ -182,13 +179,13 @@ public:
 	{
 		Vec2 lambda;
 		CalculateLagrangeMultiplier(ioBody1, ioBody2, inN1, inN2, lambda);
-		
+
 		// Store accumulated lambda
-		mTotalLambda += lambda; 
-		
+		mTotalLambda += lambda;
+
 		return ApplyVelocityStep(ioBody1, ioBody2, inN1, inN2, lambda);
 	}
-	
+
 	/// Iteratively update the position constraint. Makes sure C(...) = 0.
 	/// All input vectors are in world space
 	inline bool					SolvePositionConstraint(Body &ioBody1, Body &ioBody2, Vec3Arg inU, Vec3Arg inN1, Vec3Arg inN2, float inBaumgarte) const
@@ -207,7 +204,7 @@ public:
 
 			// Directly integrate velocity change for one time step
 			//
-			// Euler velocity integration: 
+			// Euler velocity integration:
 			// dv = M^-1 P
 			//
 			// Impulse:
@@ -216,9 +213,9 @@ public:
 			// Euler position integration:
 			// x' = x + dv * dt
 			//
-			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and 
-			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte 
-			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity 
+			// Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+			// Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+			// stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
 			// integrate + a position integrate and then discard the velocity change.
 			Vec3 impulse = inN1 * lambda[0] + inN2 * lambda[1];
 			if (ioBody1.IsDynamic())

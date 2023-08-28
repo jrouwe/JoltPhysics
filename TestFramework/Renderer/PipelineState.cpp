@@ -16,7 +16,7 @@ PipelineState::PipelineState(Renderer *inRenderer, ID3DBlob *inVertexShader, con
     pso_desc.pRootSignature = mRenderer->GetRootSignature();
     pso_desc.VS = { inVertexShader->GetBufferPointer(), inVertexShader->GetBufferSize() };
     pso_desc.PS = { inPixelShader->GetBufferPointer(), inPixelShader->GetBufferSize() };
-    
+
     pso_desc.RasterizerState.FillMode = inFillMode;
     pso_desc.RasterizerState.CullMode = inCullMode == ECullMode::Backface? D3D12_CULL_MODE_FRONT : D3D12_CULL_MODE_BACK; // DX uses left handed system so we reverse the options
     pso_desc.RasterizerState.FrontCounterClockwise = FALSE;
@@ -28,7 +28,7 @@ PipelineState::PipelineState(Renderer *inRenderer, ID3DBlob *inVertexShader, con
     pso_desc.RasterizerState.AntialiasedLineEnable = FALSE;
     pso_desc.RasterizerState.ForcedSampleCount = 0;
     pso_desc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-    
+
     pso_desc.BlendState.AlphaToCoverageEnable = FALSE;
     pso_desc.BlendState.IndependentBlendEnable = FALSE;
 

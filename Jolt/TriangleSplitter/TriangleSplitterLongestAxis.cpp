@@ -15,7 +15,7 @@ TriangleSplitterLongestAxis::TriangleSplitterLongestAxis(const VertexList &inVer
 }
 
 bool TriangleSplitterLongestAxis::Split(const Range &inTriangles, Range &outLeft, Range &outRight)
-{	
+{
 	// Calculate bounding box for triangles
 	AABox bounds;
 	for (uint t = inTriangles.mBegin; t < inTriangles.mEnd; ++t)

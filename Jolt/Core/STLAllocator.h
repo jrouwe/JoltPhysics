@@ -89,7 +89,7 @@ JPH_NAMESPACE_END
 namespace std
 {
 	/// Declare std::hash for String, for some reason on Linux based platforms template deduction takes the wrong variant
-	template <> 
+	template <>
 	struct hash<JPH::String>
 	{
 		inline size_t operator () (const JPH::String &inRHS) const

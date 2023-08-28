@@ -238,7 +238,7 @@ public:
 
 	/// Get bodies intersecting with a point and any hits to ioCollector
 	void						CollidePoint(Vec3Arg inPoint, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const;
-	
+
 	/// Get bodies intersecting with an oriented box and any hits to ioCollector
 	void						CollideOrientedBox(const OrientedBox &inBox, CollideShapeBodyCollector &ioCollector, const ObjectLayerFilter &inObjectLayerFilter, const TrackingVector &inTracking) const;
 
@@ -303,7 +303,7 @@ private:
 	/// After the function returns ioNodeIDs and ioNodeCenters will be shuffled
 	static void					sPartition(NodeID *ioNodeIDs, Vec3 *ioNodeCenters, int inNumber, int &outMidPoint);
 
-	/// Sorts ioNodeIDs from inBegin to (but excluding) inEnd spatially into 4 groups. 
+	/// Sorts ioNodeIDs from inBegin to (but excluding) inEnd spatially into 4 groups.
 	/// outSplit needs to be 5 ints long, when the function returns each group runs from outSplit[i] to (but excluding) outSplit[i + 1]
 	/// After the function returns ioNodeIDs and ioNodeCenters will be shuffled
 	static void					sPartition4(NodeID *ioNodeIDs, Vec3 *ioNodeCenters, int inBegin, int inEnd, int *outSplit);
@@ -332,12 +332,12 @@ private:
 		uint64					mTotalTicks = 0;
 		uint64					mCollectorTicks = 0;
 	};
-	
+
 	using LayerToStats = UnorderedMap<String, Stat>;
 
 	/// Trace the stats of a single query type to the TTY
 	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;
-	
+
 	mutable LayerToStats		mCastRayStats;
 	mutable LayerToStats		mCollideAABoxStats;
 	mutable LayerToStats		mCollideSphereStats;

@@ -32,25 +32,25 @@ TriangleSplitterMorton::TriangleSplitterMorton(const VertexList &inVertices, con
 }
 
 bool TriangleSplitterMorton::Split(const Range &inTriangles, Range &outLeft, Range &outRight)
-{	
+{
 	uint32 first_code = mMortonCodes[mSortedTriangleIdx[inTriangles.mBegin]];
 	uint32 last_code = mMortonCodes[mSortedTriangleIdx[inTriangles.mEnd - 1]];
 
 	uint common_prefix = CountLeadingZeros(first_code ^ last_code);
 
 	// Use binary search to find where the next bit differs
-	uint split = inTriangles.mBegin; // Initial guess    
+	uint split = inTriangles.mBegin; // Initial guess
 	uint step = inTriangles.Count();
-	do    
+	do
 	{
-		step = (step + 1) >> 1; // Exponential decrease        
+		step = (step + 1) >> 1; // Exponential decrease
 		uint new_split = split + step; // Proposed new position
 		if (new_split < inTriangles.mEnd)
 		{
 			uint32 split_code = mMortonCodes[mSortedTriangleIdx[new_split]];
 			uint split_prefix = CountLeadingZeros(first_code ^ split_code);
 			if (split_prefix > common_prefix)
-				split = new_split; // Accept proposal        
+				split = new_split; // Accept proposal
 		}
 	}
 	while (step > 1);

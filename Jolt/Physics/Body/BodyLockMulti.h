@@ -26,7 +26,7 @@ public:
 		if (mMutexMask != 0)
 		{
 			// Get mutex
-			if (Write) 
+			if (Write)
 				inBodyLockInterface.LockWrite(mMutexMask);
 			else
 				inBodyLockInterface.LockRead(mMutexMask);
@@ -68,13 +68,13 @@ private:
 };
 
 /// A multi body lock takes a number of body IDs and locks the underlying bodies so that other threads cannot access its members
-/// 
+///
 /// The common usage pattern is:
-/// 
+///
 ///		BodyLockInterface lock_interface = physics_system.GetBodyLockInterface(); // Or non-locking interface if the lock is already taken
 ///		const BodyID *body_id = ...; // Obtain IDs to bodies
 ///		int num_body_ids = ...;
-///		
+///
 ///		// Scoped lock
 ///		{
 ///			BodyLockMultiRead lock(lock_interface, body_ids, num_body_ids);
@@ -84,7 +84,7 @@ private:
 ///				if (body != nullptr)
 ///				{
 ///					const Body &body = lock.Body();
-///		
+///
 ///					// Do something with body
 ///					...
 ///				}

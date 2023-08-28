@@ -13,12 +13,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledMeshShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledMeshShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledMeshShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledMeshShapeTest, Test)
 }
 
-void ScaledMeshShapeTest::Initialize() 
+void ScaledMeshShapeTest::Initialize()
 {
 	// Floor
 	CreateFloor();
@@ -68,7 +68,7 @@ void ScaledMeshShapeTest::Initialize()
 		}
 
 	RefConst<ShapeSettings> mesh_shape = new MeshShapeSettings(triangles);
-		
+
 	// Original shape
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(mesh_shape, RVec3(-60, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::DontActivate);

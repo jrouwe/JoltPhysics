@@ -8,8 +8,8 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterTest) 
-{ 
+JPH_IMPLEMENT_RTTI_VIRTUAL(CharacterTest)
+{
 	JPH_ADD_BASE_CLASS(CharacterTest, CharacterBaseTest)
 }
 

@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ContactManifoldTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ContactManifoldTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ContactManifoldTest)
+{
+	JPH_ADD_BASE_CLASS(ContactManifoldTest, Test)
 }
 
 void ContactManifoldTest::Initialize()

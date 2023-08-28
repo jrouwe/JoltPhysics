@@ -29,26 +29,26 @@ Font::Create(const char *inFontName, int inCharHeight)
 	mVerticalTexels = 64;
 
 	// Check font name length
-	if (mFontName.size() >= LF_FACESIZE) 
+	if (mFontName.size() >= LF_FACESIZE)
 		return false;
 
 	// Create font
 	LOGFONTA font_desc;
 	memset(&font_desc, 0, sizeof(font_desc));
-	font_desc.lfHeight			= mCharHeight; 
-	font_desc.lfWeight			= FW_NORMAL; 
-	font_desc.lfCharSet			= DEFAULT_CHARSET; 
-	font_desc.lfOutPrecision	= OUT_DEFAULT_PRECIS; 
-	font_desc.lfClipPrecision	= CLIP_DEFAULT_PRECIS; 
-	font_desc.lfQuality			= ANTIALIASED_QUALITY; 
+	font_desc.lfHeight			= mCharHeight;
+	font_desc.lfWeight			= FW_NORMAL;
+	font_desc.lfCharSet			= DEFAULT_CHARSET;
+	font_desc.lfOutPrecision	= OUT_DEFAULT_PRECIS;
+	font_desc.lfClipPrecision	= CLIP_DEFAULT_PRECIS;
+	font_desc.lfQuality			= ANTIALIASED_QUALITY;
 	font_desc.lfPitchAndFamily	= VARIABLE_PITCH;
 	strcpy_s(font_desc.lfFaceName, mFontName.c_str());
 	HFONT font = CreateFontIndirectA(&font_desc);
-    if (font == nullptr) 
+    if (font == nullptr)
 		return false;
-    
+
 	// Create a DC for the font
-    HDC dc = CreateCompatibleDC(nullptr);	
+    HDC dc = CreateCompatibleDC(nullptr);
 	if (dc == nullptr)
 	{
 		DeleteObject(font);
@@ -165,7 +165,7 @@ Font::Create(const char *inFontName, int inCharHeight)
 		{
 			// Allocate room for character
 			uint8 *char_data = new uint8 [char_size];
-		
+
 			// Get character
 			GetGlyphOutlineA(dc, c, GGO_GRAY8_BITMAP, &metrics, char_size, char_data, &identity);
 			uint src_pitch = (metrics.gmBlackBoxX + 3) & ~uint(3);
@@ -178,14 +178,14 @@ Font::Create(const char *inFontName, int inCharHeight)
 
 				for (uint src_x = 0; src_x < metrics.gmBlackBoxX; ++src_x, ++src, ++dst)
 					*dst = uint8(min(int(*src) << 2, 255));
-			}				
+			}
 
 			// Destroy temporary character data
 			delete [] char_data;
 		}
 
 		// Go to the next character
-		x += widths[c].abcB + cSpacingH;			
+		x += widths[c].abcB + cSpacingH;
 	}
 
 	// Unlock surface
@@ -240,7 +240,7 @@ Float2 Font::MeasureText(const string_view &inText) const
 		if (ch > cBeginChar && ch < cEndChar)
 		{
 			// Update extents
-			int c1 = ch - cBeginChar;		
+			int c1 = ch - cBeginChar;
 			extents.x = max(extents.x, x + float(mWidth[c1]) / mCharHeight);
 		}
 
@@ -254,7 +254,7 @@ Float2 Font::MeasureText(const string_view &inText) const
 		else if (i + 1 < inText.size())
 		{
 			// Do spacing between the two characters
-			int c1 = ch - cBeginChar;		
+			int c1 = ch - cBeginChar;
 			int c2 = inText[i + 1] - cBeginChar;
 
 			if (c1 >= 0 && c1 < cNumChars && c2 >= 0 && c2 < cNumChars)
@@ -264,7 +264,7 @@ Float2 Font::MeasureText(const string_view &inText) const
 
 	return extents;
 }
-	
+
 bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorArg inColor, RenderPrimitive &ioPrimitive) const
 {
 	JPH_PROFILE("CreateString");
@@ -287,12 +287,12 @@ bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorAr
 	// Get correction factor for texture size
 	float texel_to_u = 1.0f / mHorizontalTexels;
 	float texel_to_v = 1.0f / mVerticalTexels;
-	
+
 	int vtx_size = printable * 4;
 	int idx_size = printable * 6;
 	ioPrimitive.CreateVertexBuffer(vtx_size, sizeof(FontVertex));
 	ioPrimitive.CreateIndexBuffer(idx_size);
-			
+
 	// Current vertex
 	uint32 vtx = 0;
 
@@ -300,7 +300,7 @@ bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorAr
 	FontVertex *font_vtx = (FontVertex *)ioPrimitive.LockVertexBuffer();
 	uint32 *idx_start = ioPrimitive.LockIndexBuffer();
 	uint32 *idx = idx_start;
-	
+
 	// Current raster position
 	float x = 0, y = -1.0f;
 
@@ -315,8 +315,8 @@ bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorAr
 		if (ch > cBeginChar && ch < cEndChar)
 		{
 			// Get index for character
-			int c1 = ch - cBeginChar;		
-			
+			int c1 = ch - cBeginChar;
+
 			// Create indices
 			*idx = vtx;
 			++idx;
@@ -369,7 +369,7 @@ bool Font::CreateString(Mat44Arg inTransform, const string_view &inText, ColorAr
 		else if (i + 1 < inText.size())
 		{
 			// Do spacing between the two characters
-			int c1 = ch - cBeginChar;		
+			int c1 = ch - cBeginChar;
 			int c2 = inText[i + 1] - cBeginChar;
 
 			if (c1 >= 0 && c1 < cNumChars && c2 >= 0 && c2 < cNumChars)

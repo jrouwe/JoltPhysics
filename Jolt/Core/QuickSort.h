@@ -13,11 +13,11 @@ template <typename Iterator, typename Compare>
 inline void QuickSortMedianOfThree(Iterator inFirst, Iterator inMiddle, Iterator inLast, Compare inCompare)
 {
 	// This should be guaranteed because we switch over to insertion sort when there's 32 or less elements
-	JPH_ASSERT(inFirst != inMiddle && inMiddle != inLast); 
+	JPH_ASSERT(inFirst != inMiddle && inMiddle != inLast);
 
 	if (inCompare(*inMiddle, *inFirst))
 		swap(*inFirst, *inMiddle);
-	
+
 	if (inCompare(*inLast, *inFirst))
 		swap(*inFirst, *inLast);
 

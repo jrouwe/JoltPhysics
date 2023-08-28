@@ -11,9 +11,9 @@
 #include <Layers.h>
 #include <Utils/ShapeCreator.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(DynamicMeshTest) 
-{ 
-	JPH_ADD_BASE_CLASS(DynamicMeshTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(DynamicMeshTest)
+{
+	JPH_ADD_BASE_CLASS(DynamicMeshTest, Test)
 }
 
 void DynamicMeshTest::Initialize()

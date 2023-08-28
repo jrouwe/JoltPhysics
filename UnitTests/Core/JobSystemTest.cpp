@@ -63,13 +63,13 @@ TEST_SUITE("JobSystemTest")
 		JobHandle handles[cMaxJobs];
 		for (int i = 0; i < cMaxJobs; ++i)
 		{
-			handles[i] = system.CreateJob("JobTestChain", Color::sRed, [&values, &counter, &handles, i] { 
+			handles[i] = system.CreateJob("JobTestChain", Color::sRed, [&values, &counter, &handles, i] {
 				// Set sequence number
-				values[i] = counter++; 
+				values[i] = counter++;
 
 				// Start previous job
-				if (i > 0) 
-					handles[i - 1].RemoveDependency(); 
+				if (i > 0)
+					handles[i - 1].RemoveDependency();
 			}, 1);
 
 			barrier->AddJob(handles[i]);
