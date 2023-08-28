@@ -50,7 +50,7 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	JPH_PROFILE_FUNCTION();
 
 	// Scale triangle and make it relative to the center of the sphere
-	Vec3 v0 = mScale2 * inV0 - mSphereCenterIn2; 
+	Vec3 v0 = mScale2 * inV0 - mSphereCenterIn2;
 	Vec3 v1 = mScale2 * inV1 - mSphereCenterIn2;
 	Vec3 v2 = mScale2 * inV2 - mSphereCenterIn2;
 
@@ -82,7 +82,7 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 
 	// Check if we have enabled active edge detection
 	JPH_ASSERT(closest_feature != 0);
-	if (mCollideShapeSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive 
+	if (mCollideShapeSettings.mActiveEdgeMode == EActiveEdgeMode::CollideOnlyWithActive
 		&& closest_feature != 0b111 // For an interior hit we should already have the right normal
 		&& (inActiveEdges & sClosestFeatureToActiveEdgesMask[closest_feature]) == 0) // If we didn't hit an active edge we should take the triangle normal
 	{

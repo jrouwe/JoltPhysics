@@ -11,9 +11,9 @@
 #include <Jolt/Core/StreamWrapper.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveBinaryTest) 
-{ 
-	JPH_ADD_BASE_CLASS(LoadSaveBinaryTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSaveBinaryTest)
+{
+	JPH_ADD_BASE_CLASS(LoadSaveBinaryTest, Test)
 }
 
 void LoadSaveBinaryTest::Initialize()

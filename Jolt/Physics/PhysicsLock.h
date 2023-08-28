@@ -124,7 +124,7 @@ public:
 	{
 		PhysicsLock::sLock(mLock JPH_IF_ENABLE_ASSERTS(, mContext, mType));
 	}
-								
+
 								~UniqueLock()
 	{
 		PhysicsLock::sUnlock(mLock JPH_IF_ENABLE_ASSERTS(, mContext, mType));
@@ -152,7 +152,7 @@ public:
 	{
 		PhysicsLock::sLockShared(mLock JPH_IF_ENABLE_ASSERTS(, mContext, mType));
 	}
-								
+
 								~SharedLock()
 	{
 		PhysicsLock::sUnlockShared(mLock JPH_IF_ENABLE_ASSERTS(, mContext, mType));

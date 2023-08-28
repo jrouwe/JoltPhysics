@@ -31,8 +31,8 @@ template <class T> class RefConst;
 /// (and particularly identifying who owns who in the class hierarchy) you can avoid
 /// these problems.
 template <class T>
-class RefTarget		
-{	
+class RefTarget
+{
 public:
 	/// Constructor
 	inline					RefTarget() = default;
@@ -75,7 +75,7 @@ protected:
 	static constexpr uint32 cEmbedded = 0x0ebedded;							///< A large value that gets added to the refcount to mark the object as embedded
 
 	mutable atomic<uint32>	mRefCount = 0;									///< Current reference count
-};							
+};
 
 /// Pure virtual version of RefTarget
 class JPH_EXPORT RefTargetVirtual
@@ -106,15 +106,15 @@ public:
 	inline					Ref(const Ref<T> &inRHS)						: mPtr(inRHS.mPtr) { AddRef(); }
 	inline					Ref(Ref<T> &&inRHS) noexcept					: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
 	inline					~Ref()											{ Release(); }
-						
+
 	/// Assignment operators
 	inline Ref<T> &			operator = (T *inRHS) 							{ if (mPtr != inRHS) { Release(); mPtr = inRHS; AddRef(); } return *this; }
 	inline Ref<T> &			operator = (const Ref<T> &inRHS)				{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
 	inline Ref<T> &			operator = (Ref<T> &&inRHS) noexcept			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
-						
+
 	/// Casting operators
 	inline					operator T *() const							{ return mPtr; }
-						
+
 	/// Access like a normal pointer
 	inline T * 				operator -> () const							{ return mPtr; }
 	inline T &				operator * () const								{ return *mPtr; }
@@ -137,9 +137,9 @@ private:
 	/// Use "variable = nullptr;" to release an object, do not call these functions
 	inline void				AddRef()										{ if (mPtr != nullptr) mPtr->AddRef(); }
 	inline void				Release()										{ if (mPtr != nullptr) mPtr->Release(); }
-	
+
 	T *						mPtr;											///< Pointer to object that we are reference counting
-};						
+};
 
 /// Class for automatic referencing, this is the equivalent of a CONST pointer to type T
 /// if you assign a value to this class it will increment the reference count by one
@@ -158,17 +158,17 @@ public:
 	inline					RefConst(const Ref<T> &inRHS)					: mPtr(inRHS.mPtr) { AddRef(); }
 	inline					RefConst(Ref<T> &&inRHS) noexcept				: mPtr(inRHS.mPtr) { inRHS.mPtr = nullptr; }
 	inline					~RefConst()										{ Release(); }
-						
+
 	/// Assignment operators
 	inline RefConst<T> &	operator = (const T * inRHS) 					{ if (mPtr != inRHS) { Release(); mPtr = inRHS; AddRef(); } return *this; }
 	inline RefConst<T> &	operator = (const RefConst<T> &inRHS)			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
 	inline RefConst<T> &	operator = (RefConst<T> &&inRHS) noexcept		{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
 	inline RefConst<T> &	operator = (const Ref<T> &inRHS)				{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; AddRef(); } return *this; }
 	inline RefConst<T> &	operator = (Ref<T> &&inRHS) noexcept			{ if (mPtr != inRHS.mPtr) { Release(); mPtr = inRHS.mPtr; inRHS.mPtr = nullptr; } return *this; }
-						
+
 	/// Casting operators
 	inline					operator const T * () const						{ return mPtr; }
-						
+
 	/// Access like a normal pointer
 	inline const T * 	 	operator -> () const							{ return mPtr; }
 	inline const T &		operator * () const								{ return *mPtr; }
@@ -191,9 +191,9 @@ private:
 	/// Use "variable = nullptr;" to release an object, do not call these functions
 	inline void				AddRef()										{ if (mPtr != nullptr) mPtr->AddRef(); }
 	inline void				Release()										{ if (mPtr != nullptr) mPtr->Release(); }
-	
+
 	const T *				mPtr;											///< Pointer to object that we are reference counting
-};						
+};
 
 JPH_NAMESPACE_END
 
@@ -203,7 +203,7 @@ JPH_CLANG_SUPPRESS_WARNING("-Wc++98-compat")
 namespace std
 {
 	/// Declare std::hash for Ref
-	template <class T> 
+	template <class T>
 	struct hash<JPH::Ref<T>>
 	{
 		size_t operator () (const JPH::Ref<T> &inRHS) const
@@ -213,7 +213,7 @@ namespace std
 	};
 
 	/// Declare std::hash for RefConst
-	template <class T> 
+	template <class T>
 	struct hash<JPH::RefConst<T>>
 	{
 		size_t operator () (const JPH::RefConst<T> &inRHS) const

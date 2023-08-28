@@ -21,7 +21,7 @@ ObjectStreamOut::ObjectStreamOut(ostream &inStream) :
 
 ObjectStreamOut *ObjectStreamOut::Open(EStreamType inType, ostream &inStream)
 {
-	switch (inType) 
+	switch (inType)
 	{
 	case EStreamType::Text:		return new ObjectStreamTextOut(inStream);
 	case EStreamType::Binary:	return new ObjectStreamBinaryOut(inStream);
@@ -38,7 +38,7 @@ bool ObjectStreamOut::Write(const void *inObject, const RTTI *inRTTI)
 	WriteObject(inObject);
 
 	// Write all linked objects
-	while (!mObjectQueue.empty() && !mStream.fail()) 
+	while (!mObjectQueue.empty() && !mStream.fail())
 	{
 		const void *linked_object = mObjectQueue.front();
 		WriteObject(linked_object);
@@ -55,7 +55,7 @@ void ObjectStreamOut::WriteObject(const void *inObject)
 
 	// Write class description and associated descriptions
 	QueueRTTI(i->second.mRTTI);
-	while (!mClassQueue.empty() && !mStream.fail()) 
+	while (!mClassQueue.empty() && !mStream.fail())
 	{
 		WriteRTTI(mClassQueue.front());
 		mClassQueue.pop();
@@ -76,7 +76,7 @@ void ObjectStreamOut::WriteObject(const void *inObject)
 void ObjectStreamOut::QueueRTTI(const RTTI *inRTTI)
 {
 	ClassSet::const_iterator i = mClassSet.find(inRTTI);
-	if (i == mClassSet.end()) 
+	if (i == mClassSet.end())
 	{
 		mClassSet.insert(inRTTI);
 		mClassQueue.push(inRTTI);
@@ -95,7 +95,7 @@ void ObjectStreamOut::WriteRTTI(const RTTI *inRTTI)
 
 	// Write class attribute info
 	HintIndentUp();
-	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index) 
+	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index)
 	{
 		// Get attribute
 		const SerializableAttribute &attr = inRTTI->GetAttribute(attr_index);
@@ -120,7 +120,7 @@ void ObjectStreamOut::WriteClassData(const RTTI *inRTTI, const void *inInstance)
 
 	// Write attributes
 	HintIndentUp();
-	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index) 
+	for (int attr_index = 0; attr_index < inRTTI->GetAttributeCount(); ++attr_index)
 	{
 		// Get attribute
 		const SerializableAttribute &attr = inRTTI->GetAttribute(attr_index);
@@ -133,24 +133,24 @@ void ObjectStreamOut::WritePointerData(const RTTI *inRTTI, const void *inPointer
 {
 	Identifier identifier;
 
-	if (inPointer) 
+	if (inPointer)
 	{
 		// Check if this object has an identifier
 		IdentifierMap::iterator i = mIdentifierMap.find(inPointer);
-		if (i != mIdentifierMap.end()) 
+		if (i != mIdentifierMap.end())
 		{
 			// Object already has an identifier
 			identifier = i->second.mIdentifier;
-		} 
-		else 
+		}
+		else
 		{
 			// Assign a new identifier to this object and queue it for serialization
 			identifier = mNextIdentifier++;
 			mIdentifierMap.try_emplace(inPointer, identifier, inRTTI);
 			mObjectQueue.push(inPointer);
 		}
-	} 
-	else 
+	}
+	else
 	{
 		// Write nullptr pointer
 		identifier = sNullIdentifier;

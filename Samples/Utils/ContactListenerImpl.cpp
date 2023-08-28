@@ -157,7 +157,7 @@ void ContactListenerImpl::RestoreState(StateRecorder &inStream)
 	// Ensure we have the corect size
 	keys.resize(length);
 
-	for (size_t i = 0; i < length; ++i)	
+	for (size_t i = 0; i < length; ++i)
 	{
 		// Read key
 		SubShapeIDPair key;

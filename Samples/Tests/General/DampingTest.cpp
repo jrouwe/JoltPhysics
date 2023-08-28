@@ -9,9 +9,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(DampingTest) 
-{ 
-	JPH_ADD_BASE_CLASS(DampingTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(DampingTest)
+{
+	JPH_ADD_BASE_CLASS(DampingTest, Test)
 }
 
 void DampingTest::Initialize()

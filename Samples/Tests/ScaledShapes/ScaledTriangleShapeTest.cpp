@@ -12,9 +12,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledTriangleShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledTriangleShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledTriangleShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledTriangleShapeTest, Test)
 }
 
 void ScaledTriangleShapeTest::Initialize()
@@ -24,7 +24,7 @@ void ScaledTriangleShapeTest::Initialize()
 
 	// Single triangle
 	RefConst<TriangleShape> triangle_shape = new TriangleShape(Vec3(-10, -1, 0), Vec3(0, 1, 10), Vec3(10, -2, -10));
-		
+
 	// Original shape
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(triangle_shape, RVec3(-60, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::DontActivate);

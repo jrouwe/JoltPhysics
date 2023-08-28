@@ -19,7 +19,7 @@ public:
 
 	// See: CollectorType::Reset
 	virtual void		Reset() override
-	{ 
+	{
 		CollectorType::Reset();
 
 		mHits.clear();
@@ -56,7 +56,7 @@ public:
 
 	// See: CollectorType::Reset
 	virtual void		Reset() override
-	{ 
+	{
 		CollectorType::Reset();
 
 		mHadHit = false;
@@ -99,7 +99,7 @@ public:
 
 	// See: CollectorType::Reset
 	virtual void		Reset() override
-	{ 
+	{
 		CollectorType::Reset();
 
 		mHadHit = false;

@@ -9,16 +9,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(StackTest) 
-{ 
-	JPH_ADD_BASE_CLASS(StackTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(StackTest)
+{
+	JPH_ADD_BASE_CLASS(StackTest, Test)
 }
 
 void StackTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	RefConst<Shape> box_shape = new BoxShape(Vec3(0.5f, 1.0f, 2.0f));
 
 	// Dynamic body stack

@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Tests a ray starting at inRayOrigin and extending infinitely in inRayDirection against a sphere, 
+/// Tests a ray starting at inRayOrigin and extending infinitely in inRayDirection against a sphere,
 /// @return FLT_MAX if there is no intersection, otherwise the fraction along the ray.
 /// @param inRayOrigin Ray origin. If the ray starts inside the sphere, the returned fraction will be 0.
 /// @param inRayDirection Ray direction. Does not need to be normalized.
@@ -41,7 +41,7 @@ JPH_INLINE float RaySphere(Vec3Arg inRayOrigin, Vec3Arg inRayDirection, Vec3Arg 
 	return FLT_MAX;
 }
 
-/// Tests a ray starting at inRayOrigin and extending infinitely in inRayDirection against a sphere. 
+/// Tests a ray starting at inRayOrigin and extending infinitely in inRayDirection against a sphere.
 /// Outputs entry and exit points (outMinFraction and outMaxFraction) along the ray (which could be negative if the hit point is before the start of the ray).
 /// @param inRayOrigin Ray origin. If the ray starts inside the sphere, the returned fraction will be 0.
 /// @param inRayDirection Ray direction. Does not need to be normalized.

@@ -13,9 +13,9 @@
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Utils/DebugRendererSP.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(CapsuleVsBoxTest) 
-{ 
-	JPH_ADD_BASE_CLASS(CapsuleVsBoxTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(CapsuleVsBoxTest)
+{
+	JPH_ADD_BASE_CLASS(CapsuleVsBoxTest, Test)
 }
 
 void CapsuleVsBoxTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

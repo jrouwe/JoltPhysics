@@ -9,16 +9,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SphereShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SphereShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SphereShapeTest)
+{
+	JPH_ADD_BASE_CLASS(SphereShapeTest, Test)
 }
 
-void SphereShapeTest::Initialize() 
+void SphereShapeTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-	
+
 	// Create different sized spheres
 	Body &body1 = *mBodyInterface->CreateBody(BodyCreationSettings(new SphereShape(1.0f), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
 	mBodyInterface->AddBody(body1.GetID(), EActivation::Activate);

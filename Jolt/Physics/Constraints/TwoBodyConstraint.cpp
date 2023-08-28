@@ -20,8 +20,8 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(TwoBodyConstraintSettings)
 	JPH_ADD_BASE_CLASS(TwoBodyConstraintSettings, ConstraintSettings)
 }
 
-void TwoBodyConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager) 
-{ 
+void TwoBodyConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager)
+{
 	// Activate bodies
 	BodyID body_ids[2];
 	int num_bodies = 0;
@@ -33,7 +33,7 @@ void TwoBodyConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &io
 		inBodyManager.ActivateBodies(body_ids, num_bodies);
 
 	// Link the bodies into the same island
-	ioBuilder.LinkConstraint(inConstraintIndex, mBody1->GetIndexInActiveBodiesInternal(), mBody2->GetIndexInActiveBodiesInternal()); 
+	ioBuilder.LinkConstraint(inConstraintIndex, mBody1->GetIndexInActiveBodiesInternal(), mBody2->GetIndexInActiveBodiesInternal());
 }
 
 uint TwoBodyConstraint::BuildIslandSplits(LargeIslandSplitter &ioSplitter) const

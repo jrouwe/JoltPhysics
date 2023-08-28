@@ -37,7 +37,7 @@ public:
 
 	/// Body 1 (pinion) constraint reference frame (space determined by mSpace).
 	Vec3						mHingeAxis = Vec3::sAxisX();
-	
+
 	/// Body 2 (rack) constraint reference frame (space determined by mSpace)
 	Vec3						mSliderAxis = Vec3::sAxisX();
 

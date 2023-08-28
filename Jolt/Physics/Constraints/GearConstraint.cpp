@@ -27,7 +27,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(GearConstraintSettings)
 }
 
 void GearConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -115,7 +115,7 @@ bool GearConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 		gear2rot = static_cast<const HingeConstraint *>(mGear2Constraint.GetPtr())->GetCurrentAngle();
 	}
 	else
-	{		
+	{
 		JPH_ASSERT(false, "Unsupported");
 		return false;
 	}
@@ -171,13 +171,13 @@ Ref<ConstraintSettings> GearConstraint::GetConstraintSettings() const
 Mat44 GearConstraint::GetConstraintToBody1Matrix() const
 {
 	Vec3 perp = mLocalSpaceHingeAxis1.GetNormalizedPerpendicular();
-	return Mat44(Vec4(mLocalSpaceHingeAxis1, 0), Vec4(perp, 0), Vec4(mLocalSpaceHingeAxis1.Cross(perp), 0), Vec4(0, 0, 0, 1)); 
+	return Mat44(Vec4(mLocalSpaceHingeAxis1, 0), Vec4(perp, 0), Vec4(mLocalSpaceHingeAxis1.Cross(perp), 0), Vec4(0, 0, 0, 1));
 }
 
-Mat44 GearConstraint::GetConstraintToBody2Matrix() const 
-{ 
+Mat44 GearConstraint::GetConstraintToBody2Matrix() const
+{
 	Vec3 perp = mLocalSpaceHingeAxis2.GetNormalizedPerpendicular();
-	return Mat44(Vec4(mLocalSpaceHingeAxis2, 0), Vec4(perp, 0), Vec4(mLocalSpaceHingeAxis2.Cross(perp), 0), Vec4(0, 0, 0, 1)); 
+	return Mat44(Vec4(mLocalSpaceHingeAxis2, 0), Vec4(perp, 0), Vec4(mLocalSpaceHingeAxis2.Cross(perp), 0), Vec4(0, 0, 0, 1));
 }
 
 JPH_NAMESPACE_END

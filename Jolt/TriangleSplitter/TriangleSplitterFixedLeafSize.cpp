@@ -53,7 +53,7 @@ bool TriangleSplitterFixedLeafSize::Split(const Range &inTriangles, Range &outLe
 	float best_split = 0;
 
 	// Bin in all dimensions
-	uint num_bins = Clamp(inTriangles.Count() / mNumTrianglesPerBin, mMinNumBins, mMaxNumBins);	
+	uint num_bins = Clamp(inTriangles.Count() / mNumTrianglesPerBin, mMinNumBins, mMaxNumBins);
 	Array<Bin> bins(num_bins);
 	for (uint dim = 0; dim < 3; ++dim)
 	{
@@ -79,7 +79,7 @@ bool TriangleSplitterFixedLeafSize::Split(const Range &inTriangles, Range &outLe
 			// Calculate average centroid for group
 			float centroid_pos = GetCentroidForGroup(t)[dim];
 
-			// Select bin 
+			// Select bin
 			uint bin_no = min(uint((centroid_pos - bounds_min) / bounds_size * num_bins), num_bins - 1);
 			Bin &bin = bins[bin_no];
 
@@ -159,7 +159,7 @@ bool TriangleSplitterFixedLeafSize::Split(const Range &inTriangles, Range &outLe
 	// No suitable split found, doing random split in half
 	if (start == inTriangles.mBegin || start == inTriangles.mEnd)
 		start = inTriangles.mBegin + (inTriangles.Count() / mLeafSize + 1) / 2 * mLeafSize;
-	
+
 	outLeft = Range(inTriangles.mBegin, start);
 	outRight = Range(start, inTriangles.mEnd);
 	JPH_ASSERT(outLeft.mEnd > outLeft.mBegin && outRight.mEnd > outRight.mBegin);

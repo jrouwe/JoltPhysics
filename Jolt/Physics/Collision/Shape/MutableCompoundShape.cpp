@@ -19,10 +19,10 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MutableCompoundShapeSettings)
 }
 
 ShapeSettings::ShapeResult MutableCompoundShapeSettings::Create() const
-{ 
+{
 	// Build a mutable compound shape
 	if (mCachedResult.IsEmpty())
-		Ref<Shape> shape = new MutableCompoundShape(*this, mCachedResult); 
+		Ref<Shape> shape = new MutableCompoundShape(*this, mCachedResult);
 
 	return mCachedResult;
 }
@@ -133,7 +133,7 @@ void MutableCompoundShape::CalculateSubShapeBounds(uint inStartIdx, uint inNumbe
 {
 	// Ensure that we have allocated the required space for mSubShapeBounds
 	EnsureSubShapeBoundsCapacity();
-	
+
 	// Loop over blocks of 4 sub shapes
 	for (uint sub_shape_idx_start = inStartIdx & ~uint(3), sub_shape_idx_end = inStartIdx + inNumber; sub_shape_idx_start < sub_shape_idx_end; sub_shape_idx_start += 4)
 	{
@@ -457,7 +457,7 @@ int MutableCompoundShape::GetIntersectingSubShapes(const OrientedBox &inBox, uin
 }
 
 void MutableCompoundShape::sCollideCompoundVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter)
-{	
+{
 	JPH_PROFILE_FUNCTION();
 
 	JPH_ASSERT(inShape1->GetSubType() == EShapeSubType::MutableCompound);

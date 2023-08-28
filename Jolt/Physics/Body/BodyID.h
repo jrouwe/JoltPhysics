@@ -26,16 +26,16 @@ public:
 	}
 
 	/// Construct from index and sequence number combined in a single uint32 (use with care!)
-	explicit				BodyID(uint32 inID) : 
-		mID(inID) 
-	{ 
+	explicit				BodyID(uint32 inID) :
+		mID(inID)
+	{
 		JPH_ASSERT((inID & cBroadPhaseBit) == 0 || inID == cInvalidBodyID); // Check bit used by broadphase
 	}
 
 	/// Construct from index and sequence number
-	explicit				BodyID(uint32 inID, uint8 inSequenceNumber) : 
-		mID((uint32(inSequenceNumber) << 24) | inID) 
-	{ 
+	explicit				BodyID(uint32 inID, uint8 inSequenceNumber) :
+		mID((uint32(inSequenceNumber) << 24) | inID)
+	{
 		JPH_ASSERT(inID < cMaxBodyIndex); // Should not use bit pattern for invalid ID and should not use the broadphase bit
 	}
 

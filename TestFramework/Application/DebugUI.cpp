@@ -35,7 +35,7 @@ DebugUI::DebugUI(UIManager *inUIManager, const Font *inFont) :
 	mUITexture = mUI->GetRenderer()->CreateTexture(texture_surface);
 
 	// Install callback that pops a layer when the deactivate animation finishes
-	mUI->SetDeactivatedAction([this]() { 
+	mUI->SetDeactivatedAction([this]() {
 		mUI->PopLayer();
 	});
 
@@ -132,7 +132,7 @@ UISlider *DebugUI::CreateSlider(UIElement *inMenu, const string_view &inName, fl
 	incr_button->SetRepeat(0.5f, 0.2f);
 	incr_button->SetButtonQuad(UITexturedQuad(mUITexture, 13, 31, 17, 21));
 	slider->Add(incr_button);
-	slider->SetIncreaseButton(incr_button);	
+	slider->SetIncreaseButton(incr_button);
 
 	UIImage *image = new UIImage();
 	image->SetImage(UITexturedQuad(mUITexture, 34, 0, 13, 24, 36, 2, 9, 20));

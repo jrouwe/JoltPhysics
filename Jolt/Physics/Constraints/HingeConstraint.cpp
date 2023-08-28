@@ -35,7 +35,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(HingeConstraintSettings)
 }
 
 void HingeConstraintSettings::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	ConstraintSettings::SaveBinaryState(inStream);
 
 	inStream.Write(mSpace);
@@ -201,7 +201,7 @@ void HingeConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 	case EMotorState::Position:
 		mMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mA1, 0.0f, CenterAngleAroundZero(mTheta - mTargetAngle), mMotorSettings.mSpringSettings);
 		break;
-	}	
+	}
 }
 
 void HingeConstraint::SetupVelocityConstraint(float inDeltaTime)
@@ -245,7 +245,7 @@ bool HingeConstraint::SolveVelocityConstraint(float inDeltaTime)
 				float max_lambda = mMaxFrictionTorque * inDeltaTime;
 				motor = mMotorConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2, mA1, -max_lambda, max_lambda);
 				break;
-			}	
+			}
 
 		case EMotorState::Velocity:
 		case EMotorState::Position:
@@ -356,7 +356,7 @@ void HingeConstraint::SaveState(StateRecorder &inStream) const
 
 	inStream.Write(mMotorState);
 	inStream.Write(mTargetAngularVelocity);
-	inStream.Write(mTargetAngle);	
+	inStream.Write(mTargetAngle);
 }
 
 void HingeConstraint::RestoreState(StateRecorder &inStream)
@@ -394,13 +394,13 @@ Ref<ConstraintSettings> HingeConstraint::GetConstraintSettings() const
 }
 
 Mat44 HingeConstraint::GetConstraintToBody1Matrix() const
-{ 
-	return Mat44(Vec4(mLocalSpaceHingeAxis1, 0), Vec4(mLocalSpaceNormalAxis1, 0), Vec4(mLocalSpaceHingeAxis1.Cross(mLocalSpaceNormalAxis1), 0), Vec4(mLocalSpacePosition1, 1)); 
+{
+	return Mat44(Vec4(mLocalSpaceHingeAxis1, 0), Vec4(mLocalSpaceNormalAxis1, 0), Vec4(mLocalSpaceHingeAxis1.Cross(mLocalSpaceNormalAxis1), 0), Vec4(mLocalSpacePosition1, 1));
 }
 
 Mat44 HingeConstraint::GetConstraintToBody2Matrix() const
-{ 
-	return Mat44(Vec4(mLocalSpaceHingeAxis2, 0), Vec4(mLocalSpaceNormalAxis2, 0), Vec4(mLocalSpaceHingeAxis2.Cross(mLocalSpaceNormalAxis2), 0), Vec4(mLocalSpacePosition2, 1)); 
+{
+	return Mat44(Vec4(mLocalSpaceHingeAxis2, 0), Vec4(mLocalSpaceNormalAxis2, 0), Vec4(mLocalSpaceHingeAxis2.Cross(mLocalSpaceNormalAxis2), 0), Vec4(mLocalSpacePosition2, 1));
 }
 
 JPH_NAMESPACE_END

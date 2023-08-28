@@ -19,12 +19,12 @@ JPH_NAMESPACE_BEGIN
 
 struct CompoundShape::CastRayVisitor
 {
-	JPH_INLINE 			CastRayVisitor(const RayCast &inRay, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) : 
+	JPH_INLINE 			CastRayVisitor(const RayCast &inRay, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, RayCastResult &ioHit) :
 		mRay(inRay),
 		mHit(ioHit),
 		mSubShapeIDCreator(inSubShapeIDCreator),
 		mSubShapeBits(inShape->GetSubShapeIDBits())
-	{ 
+	{
 		// Determine ray properties of cast
 		mInvDirection.Set(inRay.mDirection);
 	}
@@ -64,14 +64,14 @@ struct CompoundShape::CastRayVisitor
 
 struct CompoundShape::CastRayVisitorCollector
 {
-	JPH_INLINE 			CastRayVisitorCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) : 
+	JPH_INLINE 			CastRayVisitorCollector(const RayCast &inRay, const RayCastSettings &inRayCastSettings, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CastRayCollector &ioCollector, const ShapeFilter &inShapeFilter) :
 		mRay(inRay),
 		mCollector(ioCollector),
 		mSubShapeIDCreator(inSubShapeIDCreator),
 		mSubShapeBits(inShape->GetSubShapeIDBits()),
 		mRayCastSettings(inRayCastSettings),
 		mShapeFilter(inShapeFilter)
-	{ 
+	{
 		// Determine ray properties of cast
 		mInvDirection.Set(inRay.mDirection);
 	}
@@ -83,7 +83,7 @@ struct CompoundShape::CastRayVisitorCollector
 	}
 
 	/// Test ray against 4 bounding boxes and returns the distance where the ray enters the bounding box
-	JPH_INLINE Vec4		TestBounds(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ) const 
+	JPH_INLINE Vec4		TestBounds(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ) const
 	{
 		return RayAABox4(mRay.mOrigin, mInvDirection, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
 	}
@@ -111,13 +111,13 @@ struct CompoundShape::CastRayVisitorCollector
 
 struct CompoundShape::CollidePointVisitor
 {
-	JPH_INLINE			CollidePointVisitor(Vec3Arg inPoint, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) : 
+	JPH_INLINE			CollidePointVisitor(Vec3Arg inPoint, const CompoundShape *inShape, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter) :
 		mPoint(inPoint),
 		mSubShapeIDCreator(inSubShapeIDCreator),
 		mCollector(ioCollector),
 		mSubShapeBits(inShape->GetSubShapeIDBits()),
 		mShapeFilter(inShapeFilter)
-	{ 
+	{
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -152,19 +152,19 @@ struct CompoundShape::CollidePointVisitor
 
 struct CompoundShape::CastShapeVisitor
 {
-	JPH_INLINE			CastShapeVisitor(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const CompoundShape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) : 
+	JPH_INLINE			CastShapeVisitor(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const CompoundShape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector) :
 		mBoxCenter(inShapeCast.mShapeWorldBounds.GetCenter()),
 		mBoxExtent(inShapeCast.mShapeWorldBounds.GetExtent()),
 		mScale(inScale),
 		mShapeCast(inShapeCast),
 		mShapeCastSettings(inShapeCastSettings),
-		mShapeFilter(inShapeFilter), 
+		mShapeFilter(inShapeFilter),
 		mCollector(ioCollector),
 		mCenterOfMassTransform2(inCenterOfMassTransform2),
 		mSubShapeIDCreator1(inSubShapeIDCreator1),
 		mSubShapeIDCreator2(inSubShapeIDCreator2),
 		mSubShapeBits(inShape->GetSubShapeIDBits())
-	{ 
+	{
 		// Determine ray properties of cast
 		mInvDirection.Set(inShapeCast.mDirection);
 	}
@@ -301,7 +301,7 @@ struct CompoundShape::CollideCompoundVsShapeVisitor
 		Mat44 transform2_to_1 = inCenterOfMassTransform1.InversedRotationTranslation() * inCenterOfMassTransform2;
 
 		// Convert bounding box of 2 into space of 1
-		mBoundsOf2InSpaceOf1 = inShape2->GetLocalBounds().Scaled(inScale2).Transformed(transform2_to_1);	
+		mBoundsOf2InSpaceOf1 = inShape2->GetLocalBounds().Scaled(inScale2).Transformed(transform2_to_1);
 	}
 
 	/// Returns true when collision detection should abort because it's not possible to find a better hit
@@ -329,7 +329,7 @@ struct CompoundShape::CollideCompoundVsShapeVisitor
 
 		// Create ID for sub shape
 		SubShapeIDCreator shape1_sub_shape_id = mSubShapeIDCreator1.PushID(inSubShapeIndex, mSubShapeBits);
-		
+
 		CollisionDispatch::sCollideShapeVsShape(inSubShape.mShape, mShape2, inSubShape.TransformScale(mScale1), mScale2, transform1, mTransform2, shape1_sub_shape_id, mSubShapeIDCreator2, mCollideShapeSettings, mCollector, mShapeFilter);
 	}
 
@@ -392,7 +392,7 @@ struct CompoundShape::CollideShapeVsCompoundVisitor
 	{
 		// Create ID for sub shape
 		SubShapeIDCreator shape2_sub_shape_id = mSubShapeIDCreator2.PushID(inSubShapeIndex, mSubShapeBits);
-		
+
 		// Get world transform of 2
 		Mat44 transform2 = mTransform2 * inSubShape.GetLocalTransformNoScale(mScale2);
 
@@ -428,7 +428,7 @@ struct CompoundShape::GetIntersectingSubShapesVisitor
 	{
 		return mNumResults >= mMaxSubShapeIndices;
 	}
-		
+
 	/// Tests the box vs 4 bounding boxes, returns true for the ones that intersect
 	JPH_INLINE UVec4	TestBounds(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ) const
 	{

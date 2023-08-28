@@ -19,9 +19,9 @@
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(MultithreadedTest) 
-{ 
-	JPH_ADD_BASE_CLASS(MultithreadedTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(MultithreadedTest)
+{
+	JPH_ADD_BASE_CLASS(MultithreadedTest, Test)
 }
 
 MultithreadedTest::~MultithreadedTest()
@@ -33,11 +33,11 @@ MultithreadedTest::~MultithreadedTest()
 	mCasterThread.join();
 }
 
-void MultithreadedTest::Initialize() 
+void MultithreadedTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	// Start threads
 	mBoxSpawnerThread = thread([this]() { BoxSpawner(); });
 	mRagdollSpawnerThread = thread([this]() { RagdollSpawner(); });
@@ -165,7 +165,7 @@ void MultithreadedTest::RagdollSpawner()
 		{
 			// Create ragdoll
 			Ref<Ragdoll> ragdoll = ragdoll_settings->CreateRagdoll(group_id++, 0, mPhysicsSystem);
-	
+
 			// Override root
 			SkeletonPose::JointState &root = ragdoll_pose.GetJoint(0);
 			root.mRotation = Quat::sRandom(random);

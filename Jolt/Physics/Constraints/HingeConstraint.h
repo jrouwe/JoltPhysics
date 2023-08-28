@@ -32,12 +32,12 @@ public:
 	RVec3						mPoint1 = RVec3::sZero();
 	Vec3						mHingeAxis1 = Vec3::sAxisY();
 	Vec3						mNormalAxis1 = Vec3::sAxisX();
-	
+
 	/// Body 2 constraint reference frame (space determined by mSpace)
 	RVec3						mPoint2 = RVec3::sZero();
 	Vec3						mHingeAxis2 = Vec3::sAxisY();
 	Vec3						mNormalAxis2 = Vec3::sAxisX();
-	
+
 	/// Bodies are assumed to be placed so that the hinge angle = 0, movement will be limited between [mLimitsMin, mLimitsMax] where mLimitsMin e [-pi, 0] and mLimitsMax e [0, pi].
 	/// Both angles are in radians.
 	float						mLimitsMin = -JPH_PI;
@@ -141,7 +141,7 @@ private:
 	// Local space normal direction (direction relative to which to draw constraint limits)
 	Vec3						mLocalSpaceNormalAxis1;
 	Vec3						mLocalSpaceNormalAxis2;
-		
+
 	// Inverse of initial relative orientation between bodies (which defines hinge angle = 0)
 	Quat						mInvInitialOrientation;
 
@@ -166,7 +166,7 @@ private:
 
 	// Current rotation around the hinge axis
 	float						mTheta = 0.0f;
-	
+
 	// World space hinge axis for body 1
 	Vec3						mA1;
 

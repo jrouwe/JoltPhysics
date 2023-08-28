@@ -39,7 +39,7 @@ public:
 	RVec3						mPoint1 = RVec3::sZero();
 	Vec3						mSliderAxis1 = Vec3::sAxisX();
 	Vec3						mNormalAxis1 = Vec3::sAxisY();
-	
+
 	/// Body 2 constraint reference frame (space determined by mSpace)
 	RVec3						mPoint2 = RVec3::sZero();
 	Vec3						mSliderAxis2 = Vec3::sAxisX();
@@ -150,7 +150,7 @@ private:
 
 	// Inverse of initial rotation from body 1 to body 2 in body 1 space
 	Quat						mInvInitialOrientation;
-		
+
 	// Slider limits
 	bool						mHasLimits;
 	float						mLimitsMin;

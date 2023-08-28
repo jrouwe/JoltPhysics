@@ -25,7 +25,7 @@ void Keyboard::Reset()
 	mDI = nullptr;
 	mKeyboard = nullptr;
 
-	ResetKeyboard();	
+	ResetKeyboard();
 }
 
 void Keyboard::ResetKeyboard()
@@ -40,7 +40,7 @@ void Keyboard::ResetKeyboard()
 	memcpy(mPreviousWUIState, mCurrentWUIState, sizeof(mPreviousWUIState));
 }
 
-bool Keyboard::Initialize(Renderer *inRenderer) 
+bool Keyboard::Initialize(Renderer *inRenderer)
 #ifdef JPH_COMPILER_CLANG
 	// DIPROP_BUFFERSIZE is a pointer to 1 which causes UBSan: runtime error: reference binding to misaligned address 0x000000000001
 	__attribute__((no_sanitize("alignment")))
@@ -52,7 +52,7 @@ bool Keyboard::Initialize(Renderer *inRenderer)
 		Trace("Unable to create DirectInput interface, DirectX 8.0 is required");
 		return false;
 	}
-	
+
 	// Initialize direct input interface
 	if (FAILED(mDI->Initialize((HINSTANCE)GetModuleHandle(nullptr), DIRECTINPUT_VERSION)))
 	{
@@ -66,7 +66,7 @@ bool Keyboard::Initialize(Renderer *inRenderer)
 		Trace("Unable to get DirectInputDevice interface, DirectX 8.0 is required");
 		return false;
 	}
-	
+
 	// Set cooperative level for keyboard
 	if (FAILED(mKeyboard->SetCooperativeLevel(inRenderer->GetWindowHandle(), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
 	{
@@ -87,7 +87,7 @@ bool Keyboard::Initialize(Renderer *inRenderer)
 	dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER);
 	dipdw.diph.dwObj = 0;
 	dipdw.diph.dwHow = DIPH_DEVICE;
-	dipdw.dwData = BUFFERSIZE;	
+	dipdw.dwData = BUFFERSIZE;
     if (FAILED(mKeyboard->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph)))
 	{
 		Trace("Unable to set keyboard buffer size");
@@ -102,7 +102,7 @@ bool Keyboard::Initialize(Renderer *inRenderer)
 
 void Keyboard::Shutdown()
 {
-	if (mKeyboard) 
+	if (mKeyboard)
 	{
 		mKeyboard->Unacquire();
 		mKeyboard = nullptr;
@@ -127,7 +127,7 @@ void Keyboard::Poll()
 			ResetKeyboard();
 			return;
 		}
-	}	
+	}
 
 	// Get the state in a buffer
 	mDODLength = BUFFERSIZE;
@@ -148,7 +148,7 @@ void Keyboard::Poll()
     {
 		// Check if this means a button is pressed
 		if (mDOD[d].dwData & 0x80)
-		{			
+		{
 			if (mDOD[d].dwTimeStamp - mTimeKeyLastReleased[mDOD[d].dwOfs] <= DCLICKTIME)
 			{
 				// This is a double click
@@ -175,18 +175,18 @@ int	Keyboard::GetFirstKey()
 
 static void sPress(BYTE &ioValue)
 {
-	ioValue |= 0x80; 
+	ioValue |= 0x80;
 	ioValue ^= 0x01;
 }
 
 static void sRelease(BYTE &ioValue)
 {
 	ioValue &= 0x7f;
-}	
+}
 
-int 
-Keyboard::GetNextKey()							
-{ 
+int
+Keyboard::GetNextKey()
+{
 	while (mCurrentPosition < mDODLength)
 	{
 		// Get next key
@@ -233,13 +233,13 @@ uint Keyboard::GetVKValue()
 }
 
 char Keyboard::GetASCIIValue()
-{	
+{
 	WORD result;
-	
+
 	JPH_ASSERT(mCurrentPosition > 0, "First call GetFirstKey() to get the first key, then you can convert it to an ASCII code");
 	int key = mDOD[mCurrentPosition - 1].dwOfs;
 	if (ToAsciiEx(GetVKValue(), key, mTrackedWUIState, &result, 0, mKeyboardLayout) != 1)
 		return 0;
-	
+
 	return (char)result;
 }

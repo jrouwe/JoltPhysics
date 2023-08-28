@@ -11,9 +11,9 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SixDOFConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SixDOFConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SixDOFConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(SixDOFConstraintTest, Test)
 }
 
 float SixDOFConstraintTest::sLimitMin[EAxis::Num] = { 0, 0, 0, 0, 0, 0 };
@@ -81,7 +81,7 @@ void SixDOFConstraintTest::Initialize()
 	mPhysicsSystem->AddConstraint(mConstraint);
 }
 
-void SixDOFConstraintTest::GetInitialCamera(CameraState &ioState) const 
+void SixDOFConstraintTest::GetInitialCamera(CameraState &ioState) const
 {
 	ioState.mPos = RVec3(4, 30, 4);
 	ioState.mForward = Vec3(-1, -1, -1).Normalized();
@@ -94,7 +94,7 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 
 	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
-		
+
 		for (int i = 0; i < 3; ++i)
 		{
 			inUI->CreateCheckBox(configuration_settings, "Enable Limits " + labels[i], sEnableLimits[i], [=](UICheckBox::EState inState) { sEnableLimits[i] = inState == UICheckBox::STATE_CHECKED; });
@@ -135,8 +135,8 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 
 			UIComboBox *combo = inUI->CreateComboBox(runtime_settings, "Motor " + labels[i], motor_states, (int)mConstraint->GetMotorState(axis), [=](int inItem) { mConstraint->SetMotorState(axis, (EMotorState)inItem); });
 			combo->SetDisabled(sSettings->IsFixedAxis(axis));
-	
-			UISlider *velocity = inUI->CreateSlider(runtime_settings, "Target Velocity", mConstraint->GetTargetVelocityCS()[i], -10.0f, 10.0f, 0.1f, [=](float inValue) { 
+
+			UISlider *velocity = inUI->CreateSlider(runtime_settings, "Target Velocity", mConstraint->GetTargetVelocityCS()[i], -10.0f, 10.0f, 0.1f, [=](float inValue) {
 				Vec3 v = mConstraint->GetTargetVelocityCS();
 				v.SetComponent(i, inValue);
 				mConstraint->SetTargetVelocityCS(v); });
@@ -154,13 +154,13 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 			EAxis axis = EAxis(EAxis::RotationX + i);
 
 			inUI->CreateComboBox(runtime_settings, "Motor " + labels[axis], motor_states, (int)mConstraint->GetMotorState(axis), [=](int inItem) { mConstraint->SetMotorState(axis, (EMotorState)inItem); });
-	
-			inUI->CreateSlider(runtime_settings, "Target Velocity", RadiansToDegrees(mConstraint->GetTargetAngularVelocityCS()[i]), -90.0f, 90.0f, 1.0f, [this, i](float inValue) { 
+
+			inUI->CreateSlider(runtime_settings, "Target Velocity", RadiansToDegrees(mConstraint->GetTargetAngularVelocityCS()[i]), -90.0f, 90.0f, 1.0f, [this, i](float inValue) {
 				Vec3 v = mConstraint->GetTargetAngularVelocityCS();
-				v.SetComponent(i, DegreesToRadians(inValue)); 
+				v.SetComponent(i, DegreesToRadians(inValue));
 				mConstraint->SetTargetAngularVelocityCS(v); });
 
-			inUI->CreateSlider(runtime_settings, "Target Position", RadiansToDegrees(mTargetOrientationCS[i]), -180.0f, 180.0f, 1.0f, [this, i](float inValue) { 
+			inUI->CreateSlider(runtime_settings, "Target Position", RadiansToDegrees(mTargetOrientationCS[i]), -180.0f, 180.0f, 1.0f, [this, i](float inValue) {
 				mTargetOrientationCS.SetComponent(i, DegreesToRadians(Clamp(inValue, -179.99f, 179.99f))); // +/- 180 degrees is ambiguous, so add a little bit of a margin
 				mConstraint->SetTargetOrientationCS(Quat::sEulerAngles(mTargetOrientationCS)); });
 		}

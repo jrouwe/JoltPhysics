@@ -12,9 +12,9 @@
 #include <Application/DebugUI.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleSixDOFTest) 
-{ 
-	JPH_ADD_BASE_CLASS(VehicleSixDOFTest, VehicleTest) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleSixDOFTest)
+{
+	JPH_ADD_BASE_CLASS(VehicleSixDOFTest, VehicleTest)
 }
 
 void VehicleSixDOFTest::Initialize()
@@ -94,11 +94,11 @@ void VehicleSixDOFTest::Initialize()
 		settings.mMotorSettings[EAxis::RotationX] = MotorSettings(2.0f, 1.0f, 0.0f, 0.5e4f);
 
 		// The front wheel needs to be able to steer around the Y axis
-		// However the motors work in the constraint space of the wheel, and since this rotates around the 
+		// However the motors work in the constraint space of the wheel, and since this rotates around the
 		// X axis we need to drive both the Y and Z to steer
 		if (is_front)
 			settings.mMotorSettings[EAxis::RotationY] = settings.mMotorSettings[EAxis::RotationZ] = MotorSettings(10.0f, 1.0f, 0.0f, 1.0e6f);
-		
+
 		SixDOFConstraint *wheel_constraint = static_cast<SixDOFConstraint *>(settings.Create(*mCarBody, wheel));
 		mPhysicsSystem->AddConstraint(wheel_constraint);
 		mWheels[i] = wheel_constraint;
@@ -144,7 +144,7 @@ void VehicleSixDOFTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	for (EWheel w : front_wheels)
 	{
 		SixDOFConstraint *wheel_constraint = mWheels[(int)w];
-		if (wheel_constraint == nullptr) 
+		if (wheel_constraint == nullptr)
 			continue;
 
 		// Steer front wheels
@@ -176,7 +176,7 @@ void VehicleSixDOFTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	for (EWheel w : rear_wheels)
 	{
 		SixDOFConstraint *wheel_constraint = mWheels[(int)w];
-		if (wheel_constraint == nullptr) 
+		if (wheel_constraint == nullptr)
 			continue;
 
 		if (brake)
@@ -193,7 +193,7 @@ void VehicleSixDOFTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-void VehicleSixDOFTest::GetInitialCamera(CameraState &ioState) const 
+void VehicleSixDOFTest::GetInitialCamera(CameraState &ioState) const
 {
 	// Position camera behind car
 	RVec3 cam_tgt = RVec3(0, 0, 5);
@@ -201,7 +201,7 @@ void VehicleSixDOFTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const 
+RMat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	// Pivot is center of car and rotates with car around Y axis only
 	Vec3 fwd = mCarBody->GetRotation().RotateAxisZ();

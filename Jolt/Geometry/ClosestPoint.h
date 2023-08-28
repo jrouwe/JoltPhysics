@@ -40,7 +40,7 @@ namespace ClosestPoint
 			outU = 1.0f - outV;
 		}
 	}
-	
+
 	/// Compute barycentric coordinates of closest point to origin for plane defined by (inA, inB, inC)
 	/// Point can then be computed as inA * outU + inB * outV + inC * outW
 	inline void GetBaryCentricCoordinates(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, float &outU, float &outV, float &outW)
@@ -55,15 +55,15 @@ namespace ClosestPoint
 		Vec3 v2 = inC - inB;
 
 		// Make sure that the shortest edge is included in the calculation to keep the products a * b - c * d as small as possible to preserve accuracy
-		float d00 = v0.Dot(v0); 
-		float d11 = v1.Dot(v1); 
+		float d00 = v0.Dot(v0);
+		float d11 = v1.Dot(v1);
 		float d22 = v2.Dot(v2);
 		if (d00 <= d22)
 		{
 			// Use v0 and v1 to calculate barycentric coordinates
-			float d01 = v0.Dot(v1); 
-		
-			float denominator = d00 * d11 - d01 * d01; 
+			float d01 = v0.Dot(v1);
+
+			float denominator = d00 * d11 - d01 * d01;
 			if (abs(denominator) < 1.0e-12f)
 			{
 				// Degenerate triangle, return coordinates along longest edge
@@ -81,18 +81,18 @@ namespace ClosestPoint
 			else
 			{
 				float a0 = inA.Dot(v0);
-				float a1 = inA.Dot(v1); 
-				outV = (d01 * a1 - d11 * a0) / denominator; 
-				outW = (d01 * a0 - d00 * a1) / denominator; 
+				float a1 = inA.Dot(v1);
+				outV = (d01 * a1 - d11 * a0) / denominator;
+				outW = (d01 * a0 - d00 * a1) / denominator;
 				outU = 1.0f - outV - outW;
 			}
 		}
 		else
 		{
 			// Use v1 and v2 to calculate barycentric coordinates
-			float d12 = v1.Dot(v2); 
-		
-			float denominator = d11 * d22 - d12 * d12; 
+			float d12 = v1.Dot(v2);
+
+			float denominator = d11 * d22 - d12 * d12;
 			if (abs(denominator) < 1.0e-12f)
 			{
 				// Degenerate triangle, return coordinates along longest edge
@@ -110,9 +110,9 @@ namespace ClosestPoint
 			else
 			{
 				float c1 = inC.Dot(v1);
-				float c2 = inC.Dot(v2); 
-				outU = (d22 * c1 - d12 * c2) / denominator; 
-				outV = (d11 * c2 - d12 * c1) / denominator; 
+				float c2 = inC.Dot(v2);
+				outU = (d22 * c1 - d12 * c2) / denominator;
+				outV = (d11 * c2 - d12 * c1) / denominator;
 				outW = 1.0f - outU - outV;
 			}
 		}
@@ -120,7 +120,7 @@ namespace ClosestPoint
 
 	/// Get the closest point to the origin of line (inA, inB)
 	/// outSet describes which features are closest: 1 = a, 2 = b, 3 = line segment ab
-	inline Vec3	GetClosestPointOnLine(Vec3Arg inA, Vec3Arg inB, uint32 &outSet) 
+	inline Vec3	GetClosestPointOnLine(Vec3Arg inA, Vec3Arg inB, uint32 &outSet)
 	{
 		float u, v;
 		GetBaryCentricCoordinates(inA, inB, u, v);
@@ -255,67 +255,67 @@ namespace ClosestPoint
 			return closest_point;
 		}
 
-		// Check if P in vertex region outside A 
-		Vec3 ap = -a; 
-		float d1 = ab.Dot(ap); 
-		float d2 = ac.Dot(ap); 
+		// Check if P in vertex region outside A
+		Vec3 ap = -a;
+		float d1 = ab.Dot(ap);
+		float d2 = ac.Dot(ap);
 		if (d1 <= 0.0f && d2 <= 0.0f)
 		{
 			outSet = swap_ac.GetX()? 0b0100 : 0b0001;
 			return a; // barycentric coordinates (1,0,0)
 		}
 
-		// Check if P in vertex region outside B 
-		Vec3 bp = -inB; 
-		float d3 = ab.Dot(bp); 
-		float d4 = ac.Dot(bp); 
-		if (d3 >= 0.0f && d4 <= d3) 
+		// Check if P in vertex region outside B
+		Vec3 bp = -inB;
+		float d3 = ab.Dot(bp);
+		float d4 = ac.Dot(bp);
+		if (d3 >= 0.0f && d4 <= d3)
 		{
 			outSet = 0b0010;
 			return inB; // barycentric coordinates (0,1,0)
 		}
 
-		// Check if P in edge region of AB, if so return projection of P onto AB 
-		if (d1 * d4 <= d3 * d2 && d1 >= 0.0f && d3 <= 0.0f) 
-		{ 
-			float v = d1 / (d1 - d3); 
+		// Check if P in edge region of AB, if so return projection of P onto AB
+		if (d1 * d4 <= d3 * d2 && d1 >= 0.0f && d3 <= 0.0f)
+		{
+			float v = d1 / (d1 - d3);
 			outSet = swap_ac.GetX()? 0b0110 : 0b0011;
-			return a + v * ab; // barycentric coordinates (1-v,v,0) 
+			return a + v * ab; // barycentric coordinates (1-v,v,0)
 		}
 
-		// Check if P in vertex region outside C 
-		Vec3 cp = -c; 
-		float d5 = ab.Dot(cp); 
-		float d6 = ac.Dot(cp); 
-		if (d6 >= 0.0f && d5 <= d6) 
+		// Check if P in vertex region outside C
+		Vec3 cp = -c;
+		float d5 = ab.Dot(cp);
+		float d6 = ac.Dot(cp);
+		if (d6 >= 0.0f && d5 <= d6)
 		{
 			outSet = swap_ac.GetX()? 0b0001 : 0b0100;
 			return c; // barycentric coordinates (0,0,1)
 		}
 
-		// Check if P in edge region of AC, if so return projection of P onto AC 
-		if (d5 * d2 <= d1 * d6 && d2 >= 0.0f && d6 <= 0.0f) 
-		{ 
-			float w = d2 / (d2 - d6); 
+		// Check if P in edge region of AC, if so return projection of P onto AC
+		if (d5 * d2 <= d1 * d6 && d2 >= 0.0f && d6 <= 0.0f)
+		{
+			float w = d2 / (d2 - d6);
 			outSet = 0b0101;
-			return a + w * ac; // barycentric coordinates (1-w,0,w) 
+			return a + w * ac; // barycentric coordinates (1-w,0,w)
 		}
 
-		// Check if P in edge region of BC, if so return projection of P onto BC 
+		// Check if P in edge region of BC, if so return projection of P onto BC
 		float d4_d3 = d4 - d3;
 		float d5_d6 = d5 - d6;
-		if (d3 * d6 <= d5 * d4 && d4_d3 >= 0.0f && d5_d6 >= 0.0f) 
-		{ 
-			float w = d4_d3 / (d4_d3 + d5_d6); 
+		if (d3 * d6 <= d5 * d4 && d4_d3 >= 0.0f && d5_d6 >= 0.0f)
+		{
+			float w = d4_d3 / (d4_d3 + d5_d6);
 			outSet = swap_ac.GetX()? 0b0011 : 0b0110;
-			return inB + w * (c - inB); // barycentric coordinates (0,1-w,w) 
+			return inB + w * (c - inB); // barycentric coordinates (0,1-w,w)
 		}
 
 		// P inside face region.
 		// Here we deviate from Christer Ericson's article to improve accuracy.
 		// Determine distance between triangle and origin: distance = (centroid - origin) . normal / |normal|
 		// Closest point to origin is then: distance . normal / |normal|
-		// Note that this way of calculating the closest point is much more accurate than first calculating barycentric coordinates 
+		// Note that this way of calculating the closest point is much more accurate than first calculating barycentric coordinates
 		// and then calculating the closest point based on those coordinates.
 		outSet = 0b0111;
 		return n * (a + inB + c).Dot(n) / (3.0f * n_len_sq);
@@ -327,22 +327,22 @@ namespace ClosestPoint
 		// Taken from: Real-Time Collision Detection - Christer Ericson (Section: Closest Point on Tetrahedron to Point)
 		// With p = 0
 
-		// Test if point p and d lie on opposite sides of plane through abc 
+		// Test if point p and d lie on opposite sides of plane through abc
 		Vec3 n = (inB - inA).Cross(inC - inA);
 		float signp = inA.Dot(n); // [AP AB AC]
-		float signd = (inD - inA).Dot(n); // [AD AB AC] 
-													   
+		float signd = (inD - inA).Dot(n); // [AD AB AC]
+
 		// Points on opposite sides if expression signs are the same
 		// Note that we left out the minus sign in signp so we need to check > 0 instead of < 0 as in Christer's book
 		// We compare against a small negative value to allow for a little bit of slop in the calculations
-		return signp * signd > -FLT_EPSILON; 
+		return signp * signd > -FLT_EPSILON;
 	}
 
 	/// Returns for each of the planes of the tetrahedron if the origin is inside it
-	/// Roughly equivalent to: 
-	///	[OriginOutsideOfPlane(inA, inB, inC, inD), 
-	///	 OriginOutsideOfPlane(inA, inC, inD, inB), 
-	///	 OriginOutsideOfPlane(inA, inD, inB, inC), 
+	/// Roughly equivalent to:
+	///	[OriginOutsideOfPlane(inA, inB, inC, inD),
+	///	 OriginOutsideOfPlane(inA, inC, inD, inB),
+	///	 OriginOutsideOfPlane(inA, inD, inB, inC),
 	///	 OriginOutsideOfPlane(inB, inD, inC, inA)]
 	inline UVec4 OriginOutsideOfTetrahedronPlanes(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, Vec3Arg inD)
 	{
@@ -356,7 +356,7 @@ namespace ClosestPoint
 		Vec3 ac_cross_ad = ac.Cross(ad);
 		Vec3 ad_cross_ab = ad.Cross(ab);
 		Vec3 bd_cross_bc = bd.Cross(bc);
-		
+
 		// For each plane get the side on which the origin is
 		float signp0 = inA.Dot(ab_cross_ac); // ABC
 		float signp1 = inA.Dot(ac_cross_ad); // ACD
@@ -400,15 +400,15 @@ namespace ClosestPoint
 		// Taken from: Real-Time Collision Detection - Christer Ericson (Section: Closest Point on Tetrahedron to Point)
 		// With p = 0
 
-		// Start out assuming point inside all halfspaces, so closest to itself 
+		// Start out assuming point inside all halfspaces, so closest to itself
 		uint32 closest_set = 0b1111;
-		Vec3 closest_point = Vec3::sZero(); 
-		float best_dist_sq = FLT_MAX; 
-		
+		Vec3 closest_point = Vec3::sZero();
+		float best_dist_sq = FLT_MAX;
+
 		// Determine for each of the faces of the tetrahedron if the origin is in front of the plane
 		UVec4 origin_out_of_planes = OriginOutsideOfTetrahedronPlanes(inA, inB, inC, inD);
 
-		// If point outside face abc then compute closest point on abc 
+		// If point outside face abc then compute closest point on abc
 		if (origin_out_of_planes.GetX()) // OriginOutsideOfPlane(inA, inB, inC, inD)
 		{
 			if constexpr (MustIncludeD)
@@ -421,18 +421,18 @@ namespace ClosestPoint
 			else
 			{
 				// Test the face normally
-				closest_point = GetClosestPointOnTriangle<false>(inA, inB, inC, closest_set); 
+				closest_point = GetClosestPointOnTriangle<false>(inA, inB, inC, closest_set);
 			}
 			best_dist_sq = closest_point.LengthSq();
 		}
-		
-		// Repeat test for face acd 
+
+		// Repeat test for face acd
 		if (origin_out_of_planes.GetY()) // OriginOutsideOfPlane(inA, inC, inD, inB)
-		{ 
+		{
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inA, inC, inD, set); 
-			float dist_sq = q.LengthSq(); 
-			if (dist_sq < best_dist_sq) 
+			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inA, inC, inD, set);
+			float dist_sq = q.LengthSq();
+			if (dist_sq < best_dist_sq)
 			{
 				best_dist_sq = dist_sq;
 				closest_point = q;
@@ -440,39 +440,39 @@ namespace ClosestPoint
 			}
 		}
 
-		// Repeat test for face adb 
+		// Repeat test for face adb
 		if (origin_out_of_planes.GetZ()) // OriginOutsideOfPlane(inA, inD, inB, inC)
 		{
 			// Keep original vertex order, it doesn't matter if the triangle is facing inward or outward
 			// and it improves consistency for GJK which will always add a new vertex D and keep the closest
 			// feature from the previous iteration in ABC
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inA, inB, inD, set); 
-			float dist_sq = q.LengthSq(); 
-			if (dist_sq < best_dist_sq) 
+			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inA, inB, inD, set);
+			float dist_sq = q.LengthSq();
+			if (dist_sq < best_dist_sq)
 			{
 				best_dist_sq = dist_sq;
 				closest_point = q;
-				closest_set = (set & 0b0011) + ((set & 0b0100) << 1); 
+				closest_set = (set & 0b0011) + ((set & 0b0100) << 1);
 			}
-		} 
-		
-		// Repeat test for face bdc 
+		}
+
+		// Repeat test for face bdc
 		if (origin_out_of_planes.GetW()) // OriginOutsideOfPlane(inB, inD, inC, inA)
-		{ 
+		{
 			// Keep original vertex order, it doesn't matter if the triangle is facing inward or outward
 			// and it improves consistency for GJK which will always add a new vertex D and keep the closest
 			// feature from the previous iteration in ABC
 			uint32 set;
-			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inB, inC, inD, set); 
-			float dist_sq = q.LengthSq(); 
-			if (dist_sq < best_dist_sq) 
+			Vec3 q = GetClosestPointOnTriangle<MustIncludeD>(inB, inC, inD, set);
+			float dist_sq = q.LengthSq();
+			if (dist_sq < best_dist_sq)
 			{
 				closest_point = q;
 				closest_set = set << 1;
 			}
-		} 
-	
+		}
+
 		outSet = closest_set;
 		return closest_point;
 	}

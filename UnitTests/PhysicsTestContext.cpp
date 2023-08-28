@@ -110,7 +110,7 @@ EPhysicsUpdateError PhysicsTestContext::Simulate(float inTotalTime, function<voi
 	const int cNumSteps = int(round(inTotalTime / mDeltaTime));
 	for (int s = 0; s < cNumSteps; ++s)
 	{
-		inPreStepCallback();		
+		inPreStepCallback();
 		errors |= SimulateSingleStep();
 	}
 

@@ -11,16 +11,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ConeConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ConeConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ConeConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(ConeConstraintTest, Test)
 }
 
 void ConeConstraintTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	float half_cylinder_height = 2.5f;
 
 	const int cChainLength = 5;

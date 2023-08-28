@@ -117,7 +117,7 @@ void JobSystemWithBarrier::BarrierImpl::Wait()
 
 				// Loop through the jobs and erase jobs from the beginning of the list that are done
 				while (mJobReadIndex < mJobWriteIndex)
-				{				
+				{
 					atomic<Job *> &job = mJobs[mJobReadIndex & (cMaxJobs - 1)];
 					Job *job_ptr = job.load();
 					if (job_ptr == nullptr || !job_ptr->IsDone())
@@ -154,7 +154,7 @@ void JobSystemWithBarrier::BarrierImpl::Wait()
 
 	// All jobs should be done now, release them
 	while (mJobReadIndex < mJobWriteIndex)
-	{				
+	{
 		atomic<Job *> &job = mJobs[mJobReadIndex & (cMaxJobs - 1)];
 		Job *job_ptr = job.load();
 		JPH_ASSERT(job_ptr != nullptr && job_ptr->IsDone());

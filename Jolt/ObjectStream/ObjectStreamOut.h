@@ -18,7 +18,7 @@ JPH_NAMESPACE_BEGIN
 
 template <class T> using Queue = std::queue<T, std::deque<T, STLAllocator<T>>>;
 
-/// ObjectStreamOut contains all logic for writing an object to disk. It is the base 
+/// ObjectStreamOut contains all logic for writing an object to disk. It is the base
 /// class for the text and binary output streams (ObjectStreamTextOut and ObjectStreamBinaryOut).
 class JPH_EXPORT ObjectStreamOut : public IObjectStreamOut
 {
@@ -27,20 +27,20 @@ private:
 
 public:
 	/// Main function to write an object to a stream
-	template <class T> 
+	template <class T>
 	static bool	sWriteObject(ostream &inStream, ObjectStream::EStreamType inType, const T &inObject)
 	{
 		// Create the output stream
 		bool result = false;
 		ObjectStreamOut *stream = ObjectStreamOut::Open(inType, inStream);
-		if (stream) 
+		if (stream)
 		{
 			// Write the object to the stream
 			result = stream->Write((void *)&inObject, GetRTTI(&inObject));
 			delete stream;
 		}
 
-		return result;		
+		return result;
 	}
 
 	/// Main function to write an object to a file
@@ -49,7 +49,7 @@ public:
 	{
 		std::ofstream stream;
 		stream.open(inFileName, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-		if (!stream.is_open()) 
+		if (!stream.is_open())
 			return false;
 		return sWriteObject(stream, inType, inObject);
 	}
@@ -95,6 +95,6 @@ private:
 	ObjectQueue					mObjectQueue;												///< Queue of objects to be written
 	ClassSet					mClassSet;													///< List of classes already written
 	ClassQueue					mClassQueue;												///< List of classes waiting to be written
-};	
+};
 
 JPH_NAMESPACE_END

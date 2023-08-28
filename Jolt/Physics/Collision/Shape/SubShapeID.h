@@ -7,14 +7,14 @@
 JPH_NAMESPACE_BEGIN
 
 /// @brief A sub shape id contains a path to an element (usually a triangle or other primitive type) of a compound shape
-/// 
+///
 /// Each sub shape knows how many bits it needs to encode its ID, so knows how many bits to take from the sub shape ID.
-/// 
+///
 /// For example:
 /// * We have a CompoundShape A with 5 child shapes (identify sub shape using 3 bits AAA)
 /// * One of its child shapes is CompoundShape B which has 3 child shapes (identify sub shape using 2 bits BB)
 /// * One of its child shapes is MeshShape C which contains enough triangles to need 7 bits to identify a triangle (identify sub shape using 7 bits CCCCCCC, note that MeshShape is block based and sorts triangles spatially, you can't assume that the first triangle will have bit pattern 0000000).
-/// 
+///
 /// The bit pattern of the sub shape ID to identify a triangle in MeshShape C will then be CCCCCCCBBAAA.
 ///
 /// A sub shape ID will become invalid when the structure of the shape changes. For example, if a child shape is removed from a compound shape, the sub shape ID will no longer be valid.
@@ -43,8 +43,8 @@ public:
 	{
 		Type mask_bits = Type((BiggerType(1) << inBits) - 1);
 		Type fill_bits = Type(BiggerType(cEmpty) << (MaxBits - inBits)); // Fill left side bits with 1 so that if there's no remainder all bits will be set, note that we do this using a BiggerType since on intel 0xffffffff << 32 == 0xffffffff
-		Type v = mValue & mask_bits;		
-		outRemainder = SubShapeID(Type(BiggerType(mValue) >> inBits) | fill_bits); 
+		Type v = mValue & mask_bits;
+		outRemainder = SubShapeID(Type(BiggerType(mValue) >> inBits) | fill_bits);
 		return v;
 	}
 
@@ -60,7 +60,7 @@ public:
 		mValue = inValue;
 	}
 
-	/// Check if there is any bits of subshape ID left. 
+	/// Check if there is any bits of subshape ID left.
 	/// Note that this is not a 100% guarantee as the subshape ID could consist of all 1 bits. Use for asserts only.
 	inline bool			IsEmpty() const
 	{
@@ -102,7 +102,7 @@ private:
 	Type				mValue = cEmpty;
 };
 
-/// A sub shape id creator can be used to create a new sub shape id by recursing through the shape 
+/// A sub shape id creator can be used to create a new sub shape id by recursing through the shape
 /// hierarchy and pushing new ID's onto the chain
 class SubShapeIDCreator
 {

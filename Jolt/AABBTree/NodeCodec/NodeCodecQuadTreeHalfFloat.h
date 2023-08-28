@@ -27,7 +27,7 @@ public:
 
 	/// Size of the header (an empty struct is always > 0 bytes so this needs a separate variable)
 	static constexpr int				HeaderSize = sizeof(Header);
-	
+
 	/// Stack size to use during DecodingContext::sWalkTree
 	static constexpr int				StackSize = 128;
 
@@ -54,7 +54,7 @@ public:
 		HalfFloat						mBoundsMaxZ[4];
 		uint32							mNodeProperties[4];		///< 4 child node properties
 	};
-	
+
 	static_assert(sizeof(Node) == 64, "Node should be 64 bytes");
 
 	/// This class encodes and compresses quad tree nodes
@@ -67,7 +67,7 @@ public:
 			return inNodeCount * (sizeof(Node) + Alignment - 1);
 		}
 
-		/// Allocate a new node for inNode. 
+		/// Allocate a new node for inNode.
 		/// Algorithm can modify the order of ioChildren to indicate in which order children should be compressed
 		/// Algorithm can enlarge the bounding boxes of the children during compression and returns these in outChildBoundsMin, outChildBoundsMax
 		/// inNodeBoundsMin, inNodeBoundsMax is the bounding box if inNode possibly widened by compressing the parent node
@@ -77,7 +77,7 @@ public:
 			// We don't emit nodes for leafs
 			if (!inNode->HasChildren())
 				return (uint)ioBuffer.size();
-				
+
 			// Align the buffer
 			ioBuffer.Align(Alignment);
 			uint node_start = (uint)ioBuffer.size();
@@ -110,7 +110,7 @@ public:
 				else
 				{
 					// Make this an invalid triangle node
-					node->mNodeProperties[i] = uint32(TRIANGLE_COUNT_MASK) << TRIANGLE_COUNT_SHIFT; 
+					node->mNodeProperties[i] = uint32(TRIANGLE_COUNT_MASK) << TRIANGLE_COUNT_SHIFT;
 
 					// Make bounding box invalid
 					node->mBoundsMinX[i] = HALF_FLT_MAX;
@@ -188,7 +188,7 @@ public:
 			}
 
 			return true;
-		}		
+		}
 	};
 
 	/// This class decodes and decompresses quad tree nodes
@@ -231,7 +231,7 @@ public:
 					UVec4 bounds_minxy = UVec4::sLoadInt4(reinterpret_cast<const uint32 *>(&node->mBoundsMinX[0]));
 					Vec4 bounds_minx = HalfFloatConversion::ToFloat(bounds_minxy);
 					Vec4 bounds_miny = HalfFloatConversion::ToFloat(bounds_minxy.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
-					
+
 					UVec4 bounds_minzmaxx = UVec4::sLoadInt4(reinterpret_cast<const uint32 *>(&node->mBoundsMinZ[0]));
 					Vec4 bounds_minz = HalfFloatConversion::ToFloat(bounds_minzmaxx);
 					Vec4 bounds_maxx = HalfFloatConversion::ToFloat(bounds_minzmaxx.Swizzle<SWIZZLE_Z, SWIZZLE_W, SWIZZLE_UNUSED, SWIZZLE_UNUSED>());
@@ -252,7 +252,7 @@ public:
 					mTop += num_results;
 				}
 				else if (tri_count != TRIANGLE_COUNT_MASK) // TRIANGLE_COUNT_MASK indicates a padding node, normally we shouldn't visit these nodes but when querying with a big enough box you could touch HALF_FLT_MAX (about 65K)
-				{	
+				{
 					// Node contains triangles, do individual tests
 					uint32 triangle_block_id = node_properties & OFFSET_MASK;
 					const void *triangles = sGetTriangleBlockStart(inBufferStart, triangle_block_id);
@@ -265,7 +265,7 @@ public:
 					break;
 
 				// Fetch next node until we find one that the visitor wants to see
-				do 
+				do
 					--mTop;
 				while (mTop >= 0 && !ioVisitor.ShouldVisitNode(mTop));
 			}

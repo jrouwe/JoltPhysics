@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledCylinderShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledCylinderShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledCylinderShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledCylinderShapeTest, Test)
 }
 
 void ScaledCylinderShapeTest::Initialize()

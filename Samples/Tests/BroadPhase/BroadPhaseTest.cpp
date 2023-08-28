@@ -11,9 +11,9 @@
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseQuadTree.h>
 #include <random>
 
-JPH_IMPLEMENT_RTTI_ABSTRACT(BroadPhaseTest) 
-{ 
-	JPH_ADD_BASE_CLASS(BroadPhaseTest, Test) 
+JPH_IMPLEMENT_RTTI_ABSTRACT(BroadPhaseTest)
+{
+	JPH_ADD_BASE_CLASS(BroadPhaseTest, Test)
 }
 
 #define NUM_BODIES		10000
@@ -56,7 +56,7 @@ void BroadPhaseTest::Initialize()
 	// Create body manager
 	mBodyManager = new BodyManager();
 	mBodyManager->Init(NUM_BODIES, 0, mBroadPhaseLayerInterface);
-		
+
 	// Crate broadphase
 	mBroadPhase = new BROAD_PHASE;
 	mBroadPhase->Init(mBodyManager, mBroadPhaseLayerInterface);

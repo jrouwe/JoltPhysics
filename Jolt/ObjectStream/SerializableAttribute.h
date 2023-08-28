@@ -19,7 +19,7 @@ enum class EOSDataType
 	Instance,																		///< Used in attribute declaration, indicates that an object is an instanced attribute (no pointer)
 	Pointer,																		///< Used in attribute declaration, indicates that an object is a pointer attribute
 	Array,																			///< Used in attribute declaration, indicates that this is an array of objects
-		
+
 	// Basic types (primitives)
 	#define JPH_DECLARE_PRIMITIVE(name)	T_##name,
 

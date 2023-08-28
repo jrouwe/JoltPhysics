@@ -33,9 +33,9 @@
 //
 // Fractal Noise:
 //
-// Three common fractal noise functions are included, which produce 
-// a wide variety of nice effects depending on the parameters 
-// provided. Note that each function will call PerlinNoise3 
+// Three common fractal noise functions are included, which produce
+// a wide variety of nice effects depending on the parameters
+// provided. Note that each function will call PerlinNoise3
 // 'octaves' times, so this parameter will affect runtime.
 //
 // float PerlinRidgeNoise3(float x, float y, float z,

@@ -29,7 +29,7 @@ public:
 };
 
 /// Runtime character object.
-/// This object usually represents the player or a humanoid AI. It uses a single rigid body, 
+/// This object usually represents the player or a humanoid AI. It uses a single rigid body,
 /// usually with a capsule shape to simulate movement and collision for the character.
 /// The character is a keyframed object, the application controls it by setting the velocity.
 class JPH_EXPORT Character : public CharacterBase
@@ -94,7 +94,7 @@ public:
 
 	/// Get the rotation of the character
 	Quat								GetRotation(bool inLockBodies = true) const;
-	
+
 	/// Set the rotation of the character, optionally activating it.
 	void								SetRotation(QuatArg inRotation, EActivation inActivationMode = EActivation::Activate, bool inLockBodies = true);
 

@@ -41,7 +41,7 @@ TEST_SUITE("QuatTests")
 		CHECK(Quat(0, 0, numeric_limits<float>::quiet_NaN(), 0).IsNaN());
 		CHECK(Quat(0, 0, 0, numeric_limits<float>::quiet_NaN()).IsNaN());
 	}
-	
+
 	TEST_CASE("TestQuatOperators")
 	{
 		CHECK(-Quat(1, 2, 3, 4) == Quat(-1, -2, -3, -4));

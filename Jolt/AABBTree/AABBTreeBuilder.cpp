@@ -9,15 +9,15 @@
 JPH_NAMESPACE_BEGIN
 
 AABBTreeBuilder::Node::Node()
-{ 
-	mChild[0] = nullptr; 
-	mChild[1] = nullptr; 
+{
+	mChild[0] = nullptr;
+	mChild[1] = nullptr;
 }
 
-AABBTreeBuilder::Node::~Node() 
-{ 
-	delete mChild[0]; 
-	delete mChild[1]; 
+AABBTreeBuilder::Node::~Node()
+{
+	delete mChild[0];
+	delete mChild[1];
 }
 
 uint AABBTreeBuilder::Node::GetMinDepth() const
@@ -106,7 +106,7 @@ void AABBTreeBuilder::Node::GetNChildren(uint inN, Array<const Node *> &outChild
 		{
 			// If there only triangle nodes left, we have to terminate
 			if (all_triangles)
-				return; 
+				return;
 			next = 0;
 			all_triangles = true;
 		}
@@ -130,8 +130,8 @@ void AABBTreeBuilder::Node::GetNChildren(uint inN, Array<const Node *> &outChild
 float AABBTreeBuilder::Node::CalculateSAHCostInternal(float inCostTraversalDivSurfaceArea, float inCostLeafDivSurfaceArea) const
 {
 	if (HasChildren())
-		return inCostTraversalDivSurfaceArea * mBounds.GetSurfaceArea() 
-			+ mChild[0]->CalculateSAHCostInternal(inCostTraversalDivSurfaceArea, inCostLeafDivSurfaceArea) 
+		return inCostTraversalDivSurfaceArea * mBounds.GetSurfaceArea()
+			+ mChild[0]->CalculateSAHCostInternal(inCostTraversalDivSurfaceArea, inCostLeafDivSurfaceArea)
 			+ mChild[1]->CalculateSAHCostInternal(inCostTraversalDivSurfaceArea, inCostLeafDivSurfaceArea);
 	else
 		return inCostLeafDivSurfaceArea * mBounds.GetSurfaceArea() * GetTriangleCount();
@@ -153,10 +153,10 @@ void AABBTreeBuilder::Node::GetTriangleCountPerNodeInternal(float &outAverage, u
 	}
 }
 
-AABBTreeBuilder::AABBTreeBuilder(TriangleSplitter &inSplitter, uint inMaxTrianglesPerLeaf) : 
+AABBTreeBuilder::AABBTreeBuilder(TriangleSplitter &inSplitter, uint inMaxTrianglesPerLeaf) :
 	mTriangleSplitter(inSplitter),
-	mMaxTrianglesPerLeaf(inMaxTrianglesPerLeaf) 
-{ 
+	mMaxTrianglesPerLeaf(inMaxTrianglesPerLeaf)
+{
 }
 
 AABBTreeBuilder::Node *AABBTreeBuilder::Build(AABBTreeBuilderStats &outStats)

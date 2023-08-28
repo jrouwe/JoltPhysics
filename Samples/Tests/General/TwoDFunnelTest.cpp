@@ -11,9 +11,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(TwoDFunnelTest) 
-{ 
-	JPH_ADD_BASE_CLASS(TwoDFunnelTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(TwoDFunnelTest)
+{
+	JPH_ADD_BASE_CLASS(TwoDFunnelTest, Test)
 }
 
 void TwoDFunnelTest::Initialize()

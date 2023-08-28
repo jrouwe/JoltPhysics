@@ -49,7 +49,7 @@ TEST_SUITE("CharacterVirtualTests")
 			{
 				// Assume velocity of ground when on ground
 				new_velocity = ground_velocity;
-		
+
 				// Jump
 				new_velocity += Vec3(0, mJumpSpeed, 0);
 				mJumpSpeed = 0.0f;
@@ -415,7 +415,7 @@ TEST_SUITE("CharacterVirtualTests")
 		Body &box = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
 		box.SetAllowSleeping(false);
 
-		// Create character so that it is touching the box at the 
+		// Create character so that it is touching the box at the
 		Character character(c);
 		character.mInitialPosition = RVec3(cCharacterPosition, cFloorHalfHeight, 0);
 		character.Create();
@@ -445,14 +445,14 @@ TEST_SUITE("CharacterVirtualTests")
 		constexpr float cFloorHalfHeight = 1.0f;
 		constexpr float cFloorHalfWidth = 10.0f;
 		constexpr float cLinearVelocity = 0.5f;
-		
+
 		PhysicsTestContext c;
 
 		// Create box
 		Body &box = c.CreateBox(RVec3::sZero(), Quat::sIdentity(), EMotionType::Kinematic, EMotionQuality::Discrete, Layers::MOVING, Vec3(cFloorHalfWidth, cFloorHalfHeight, cFloorHalfWidth));
 		box.SetAllowSleeping(false);
 
-		// Create character so that it is touching the box at the 
+		// Create character so that it is touching the box at the
 		Character character(c);
 		character.mInitialPosition = RVec3(0, cFloorHalfHeight, 0);
 		character.Create();

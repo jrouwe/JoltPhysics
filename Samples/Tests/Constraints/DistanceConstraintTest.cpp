@@ -10,16 +10,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(DistanceConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(DistanceConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(DistanceConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(DistanceConstraintTest, Test)
 }
 
 void DistanceConstraintTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	float half_cylinder_height = 2.5f;
 
 	// Variation 0: Fixed distance

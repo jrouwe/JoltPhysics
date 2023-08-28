@@ -13,9 +13,9 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ConvexHullTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ConvexHullTest)
+{
+	JPH_ADD_BASE_CLASS(ConvexHullTest, Test)
 }
 
 void ConvexHullTest::Initialize()
@@ -169,33 +169,33 @@ void ConvexHullTest::Initialize()
 			Vec3(-0.0946691483f, 1.07357991f, -0.0185115524f)
 		},
 		{
-			Vec3(0.0283679180f, 0.0443800166f, -0.00569444988f), 
-			Vec3(0.0327114500f, -0.0221119970f, 0.0232404359f), 
-			Vec3(0.0374971032f, 0.0148781445f, -0.0245264377f), 
-			Vec3(0.0439460576f, 0.0126368264f, 0.0197663195f), 
-			Vec3(-0.0327170566f, 0.0423904508f, 0.0181609988f), 
-			Vec3(-0.0306955911f, 0.0311534479f, -0.0281516202f), 
-			Vec3(-0.0262422040f, 0.0248970203f, 0.0450032614f), 
-			Vec3(-0.0262093470f, 0.00906597450f, 0.0481815264f), 
-			Vec3(-0.0256845430f, -0.00607067533f, -0.0401362479f), 
-			Vec3(-0.0179684199f, 0.0266145933f, -0.0394567028f), 
-			Vec3(-0.00567848794f, -0.0313231349f, -0.0263656937f), 
-			Vec3(-0.00444967486f, -0.0383231938f, 0.0206601117f), 
-			Vec3(-0.00329093798f, 0.0464436933f, 0.0343827978f), 
-			Vec3(-0.00225042878f, 0.0550651476f, -0.00304153794f), 
-			Vec3(0.00310287252f, 0.00219658483f, 0.0542362332f), 
-			Vec3(0.00435558241f, 0.00644031307f, -0.0455060303f), 
-			Vec3(0.00495047215f, -0.0144955292f, 0.0482611060f), 
-			Vec3(0.00510909408f, 0.0300753452f, -0.0415933356f), 
-			Vec3(0.00619197031f, 0.0269140154f, 0.0500008501f), 
-			Vec3(0.0190936550f, -0.0106478147f, 0.0453430638f), 
-			Vec3(0.0202461667f, 0.00821140409f, 0.0500608832f), 
-			Vec3(0.0199985132f, 0.0353404805f, 0.0413853638f), 
-			Vec3(0.0267947838f, -0.0155944452f, -0.0300960485f), 
-			Vec3(0.0274163429f, 0.0318853259f, -0.0288569275f), 
-			Vec3(-0.0404368788f, -0.0213200711f, -0.00530833099f), 
-			Vec3(-0.0383560173f, -0.0111571737f, 0.0346816145f), 
-			Vec3(-0.0453024730f, 0.00178011740f, -0.0218658112f), 
+			Vec3(0.0283679180f, 0.0443800166f, -0.00569444988f),
+			Vec3(0.0327114500f, -0.0221119970f, 0.0232404359f),
+			Vec3(0.0374971032f, 0.0148781445f, -0.0245264377f),
+			Vec3(0.0439460576f, 0.0126368264f, 0.0197663195f),
+			Vec3(-0.0327170566f, 0.0423904508f, 0.0181609988f),
+			Vec3(-0.0306955911f, 0.0311534479f, -0.0281516202f),
+			Vec3(-0.0262422040f, 0.0248970203f, 0.0450032614f),
+			Vec3(-0.0262093470f, 0.00906597450f, 0.0481815264f),
+			Vec3(-0.0256845430f, -0.00607067533f, -0.0401362479f),
+			Vec3(-0.0179684199f, 0.0266145933f, -0.0394567028f),
+			Vec3(-0.00567848794f, -0.0313231349f, -0.0263656937f),
+			Vec3(-0.00444967486f, -0.0383231938f, 0.0206601117f),
+			Vec3(-0.00329093798f, 0.0464436933f, 0.0343827978f),
+			Vec3(-0.00225042878f, 0.0550651476f, -0.00304153794f),
+			Vec3(0.00310287252f, 0.00219658483f, 0.0542362332f),
+			Vec3(0.00435558241f, 0.00644031307f, -0.0455060303f),
+			Vec3(0.00495047215f, -0.0144955292f, 0.0482611060f),
+			Vec3(0.00510909408f, 0.0300753452f, -0.0415933356f),
+			Vec3(0.00619197031f, 0.0269140154f, 0.0500008501f),
+			Vec3(0.0190936550f, -0.0106478147f, 0.0453430638f),
+			Vec3(0.0202461667f, 0.00821140409f, 0.0500608832f),
+			Vec3(0.0199985132f, 0.0353404805f, 0.0413853638f),
+			Vec3(0.0267947838f, -0.0155944452f, -0.0300960485f),
+			Vec3(0.0274163429f, 0.0318853259f, -0.0288569275f),
+			Vec3(-0.0404368788f, -0.0213200711f, -0.00530833099f),
+			Vec3(-0.0383560173f, -0.0111571737f, 0.0346816145f),
+			Vec3(-0.0453024730f, 0.00178011740f, -0.0218658112f),
 			Vec3(-0.0482929349f, 0.0101582557f, 0.0191618335f)
 		},
 		{
@@ -563,7 +563,7 @@ void ConvexHullTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	if (max_error > 4.0f * max(tolerance, coplanar_distance))
 	{
 		Trace("Iteration %d: max_error=%g", mIteration - 1, (double)max_error);
-		
+
 		// Draw point that had the max error
 		Vec3 point = display_scale * (points[max_error_point] - com);
 		DrawMarkerSP(mDebugRenderer, point, Color::sRed, 1.0f);
@@ -579,10 +579,10 @@ void ConvexHullTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		const Edge *e = max_error_face->mFirstEdge;
 		Vec3 prev = display_scale * (points[e->mStartIdx] - com);
 		do
-		{ 
+		{
 			const Edge *next = e->mNextEdge;
 			Vec3 cur = display_scale * (points[next->mStartIdx] - com);
-			DrawArrowSP(mDebugRenderer, prev, cur, Color::sYellow, 0.01f);			
+			DrawArrowSP(mDebugRenderer, prev, cur, Color::sYellow, 0.01f);
 			DrawText3DSP(mDebugRenderer, prev, ConvertToString(e->mStartIdx), Color::sYellow);
 			e = next;
 			prev = cur;

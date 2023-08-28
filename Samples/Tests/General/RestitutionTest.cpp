@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(RestitutionTest) 
-{ 
-	JPH_ADD_BASE_CLASS(RestitutionTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(RestitutionTest)
+{
+	JPH_ADD_BASE_CLASS(RestitutionTest, Test)
 }
 
 void RestitutionTest::Initialize()

@@ -53,16 +53,16 @@ inline void HashCombineHelper(size_t &ioSeed, const T &inValue)
 ///
 /// Usage:
 ///
-///		struct SomeHashKey 
+///		struct SomeHashKey
 ///		{
 ///		    std::string key1;
 ///		    std::string key2;
 ///		    bool key3;
 ///		};
-/// 
+///
 ///		JPH_MAKE_HASHABLE(SomeHashKey, t.key1, t.key2, t.key3)
 template <typename... Values>
-inline void HashCombine(std::size_t &ioSeed, Values... inValues) 
+inline void HashCombine(std::size_t &ioSeed, Values... inValues)
 {
 	// Hash all values together using a fold expression
 	(HashCombineHelper(ioSeed, inValues), ...);

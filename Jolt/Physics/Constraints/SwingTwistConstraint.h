@@ -40,7 +40,7 @@ public:
 	RVec3						mPosition2 = RVec3::sZero();
 	Vec3						mTwistAxis2 = Vec3::sAxisX();
 	Vec3						mPlaneAxis2 = Vec3::sAxisY();
-	
+
 	///@name Swing rotation limits
 	float						mNormalHalfConeAngle = 0.0f;								///< See image. Angle in radians.
 	float						mPlaneHalfConeAngle = 0.0f;									///< See image. Angle in radians.
@@ -157,7 +157,7 @@ private:
 	// Local space constraint positions
 	Vec3						mLocalSpacePosition1;
 	Vec3						mLocalSpacePosition2;
-	
+
 	// Transforms from constraint space to body space
 	Quat						mConstraintToBody1;
 	Quat						mConstraintToBody2;

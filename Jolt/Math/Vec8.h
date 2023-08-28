@@ -20,7 +20,7 @@ public:
 
 	/// Set 256 bit vector from 2 128 bit vectors
 	JPH_INLINE					Vec8(Vec4Arg inLo, Vec4Arg inHi);
-	
+
 	/// Vector with all zeros
 	static JPH_INLINE Vec8		sZero();
 
@@ -53,7 +53,7 @@ public:
 
 	/// Greater than
 	static JPH_INLINE UVec8		sGreater(Vec8Arg inV1, Vec8Arg inV2);
-	
+
 	/// Load from memory
 	static JPH_INLINE Vec8		sLoadFloat8(const float *inV);
 
@@ -63,7 +63,7 @@ public:
 	/// Get float component by index
 	JPH_INLINE float			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 8); return mF32[inCoordinate]; }
 	JPH_INLINE float &			operator [] (uint inCoordinate)					{ JPH_ASSERT(inCoordinate < 8); return mF32[inCoordinate]; }
-	
+
 	/// Multiply two float vectors
 	JPH_INLINE Vec8				operator * (Vec8Arg inV2) const;
 
@@ -88,7 +88,7 @@ public:
 
 	/// Get absolute value of all components
 	JPH_INLINE Vec8				Abs() const;
-	
+
 	/// Fetch the lower 128 bit from a 256 bit variable
 	JPH_INLINE Vec4				LowerVec4() const;
 

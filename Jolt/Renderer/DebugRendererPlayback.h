@@ -23,7 +23,7 @@ public:
 
 	/// Parse a stream of frames
 	void								Parse(StreamIn &inStream);
-	
+
 	/// Get the number of parsed frames
 	uint								GetNumFrames() const				{ return (uint)mFrames.size(); }
 

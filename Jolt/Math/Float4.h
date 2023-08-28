@@ -16,10 +16,10 @@ public:
 				Float4(const Float4 &inRHS) = default;
 				Float4(float inX, float inY, float inZ, float inW) : x(inX), y(inY), z(inZ), w(inW) { }
 
-	float		operator [] (int inCoordinate) const	
-	{ 
-		JPH_ASSERT(inCoordinate < 4); 
-		return *(&x + inCoordinate); 
+	float		operator [] (int inCoordinate) const
+	{
+		JPH_ASSERT(inCoordinate < 4);
+		return *(&x + inCoordinate);
 	}
 
 	float		x;

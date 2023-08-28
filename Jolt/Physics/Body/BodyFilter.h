@@ -36,7 +36,7 @@ class IgnoreSingleBodyFilter : public BodyFilter
 {
 public:
 	/// Constructor, pass the body you want to ignore
-	explicit				IgnoreSingleBodyFilter(const BodyID &inBodyID) : 
+	explicit				IgnoreSingleBodyFilter(const BodyID &inBodyID) :
 		mBodyID(inBodyID)
 	{
 	}
@@ -46,7 +46,7 @@ public:
 	{
 		return mBodyID != inBodyID;
 	}
-		
+
 private:
 	BodyID					mBodyID;
 };
@@ -72,7 +72,7 @@ public:
 	{
 		mBodyIDs.push_back(inBodyID);
 	}
-		
+
 	/// Filter function. Returns true if we should collide with inBodyID
 	virtual bool			ShouldCollide(const BodyID &inBodyID) const override
 	{

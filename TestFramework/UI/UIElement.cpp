@@ -76,7 +76,7 @@ UIElement *UIElement::Clone() const
 
 void UIElement::SetHighlighted(bool inHighlighted)
 {
-	mIsHighlighted = inHighlighted; 
+	mIsHighlighted = inHighlighted;
 
 	for (UIElement *e : mChildren)
 		e->SetHighlighted(inHighlighted);
@@ -84,7 +84,7 @@ void UIElement::SetHighlighted(bool inHighlighted)
 
 void UIElement::SetSelected(bool inSelected)
 {
-	mIsSelected = inSelected; 
+	mIsSelected = inSelected;
 
 	for (UIElement *e : mChildren)
 		e->SetSelected(inSelected);
@@ -92,7 +92,7 @@ void UIElement::SetSelected(bool inSelected)
 
 void UIElement::SetDisabled(bool inDisabled)
 {
-	mIsDisabled = inDisabled; 
+	mIsDisabled = inDisabled;
 
 	for (UIElement *e : mChildren)
 		e->SetDisabled(inDisabled);
@@ -184,7 +184,7 @@ bool UIElement::MouseMove(int inX, int inY)
 		if (e->IsVisible() && !e->mIsDisabled)
 			if (e->MouseMove(inX, inY))
 				return true;
-	
+
 	return false;
 }
 

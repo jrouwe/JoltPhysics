@@ -32,7 +32,7 @@ Ref<Surface> LoadTGA(istream &inStream)
 	bool loaded = true;
 
 	// Read header
-	TGAHeader header;	
+	TGAHeader header;
 	inStream.read((char *)&header, sizeof(header));
 	if (inStream.fail())
 		return nullptr;
@@ -40,7 +40,7 @@ Ref<Surface> LoadTGA(istream &inStream)
 	// Get properties
 	int bytes_per_pixel = (header.mPixelDepth + 7) >> 3;
 	int scan_width = bytes_per_pixel * header.mWidth;
-	
+
 	// Check type
 	if (header.mImageType < 1 || header.mImageType > 2)
 	{
@@ -56,7 +56,7 @@ Ref<Surface> LoadTGA(istream &inStream)
 	}
 
 	Ref<Surface> surface;
-	
+
 	if (header.mPixelDepth == 8)
 	{
 		// Determine pixel format
@@ -73,7 +73,7 @@ Ref<Surface> LoadTGA(istream &inStream)
 
 		// Seek to beginning of palette
 		inStream.seekg(sizeof(TGAHeader) + header.mIDLength);
-		
+
 		// Load palette
 		int pal_bytes = pixel_size * header.mColorMapLength;
 		uint8 *palette = new uint8 [pal_bytes];

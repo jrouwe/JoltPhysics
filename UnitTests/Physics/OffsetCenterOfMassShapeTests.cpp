@@ -78,7 +78,7 @@ TEST_SUITE("OffsetCenterOfMassShapeTests")
 		CHECK_APPROX_EQUAL(body.GetLinearVelocity(), Vec3::sZero());
 		CHECK_APPROX_EQUAL(body.GetAngularVelocity(), Vec3(0, delta_v, 0));
 	}
-	
+
 	TEST_CASE("TestAddTorqueCOMZero")
 	{
 		PhysicsTestContext c;

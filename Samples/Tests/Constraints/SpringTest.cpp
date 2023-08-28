@@ -10,16 +10,16 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(SpringTest) 
-{ 
-	JPH_ADD_BASE_CLASS(SpringTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(SpringTest)
+{
+	JPH_ADD_BASE_CLASS(SpringTest, Test)
 }
 
 void SpringTest::Initialize()
 {
 	// Floor
 	CreateFloor();
-		
+
 	// Top fixed body
 	RVec3 position(0, 75, 0);
 	Body &top = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(100.0f, 1.0f, 1.0f)), position, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
@@ -79,7 +79,7 @@ void SpringTest::Initialize()
 		body.GetMotionProperties()->SetAngularDamping(0.0f);
 		body.GetMotionProperties()->SetLinearDamping(0.0f);
 		mBodyInterface->AddBody(body.GetID(), EActivation::Activate);
-			
+
 		// Attach spring
 		DistanceConstraintSettings settings;
 		settings.mPoint1 = attachment_point;

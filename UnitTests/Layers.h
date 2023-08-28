@@ -58,7 +58,7 @@ public:
 namespace BroadPhaseLayers
 {
 	static constexpr BroadPhaseLayer NON_MOVING(0);
-	static constexpr BroadPhaseLayer MOVING(1); 
+	static constexpr BroadPhaseLayer MOVING(1);
 	static constexpr BroadPhaseLayer LQ_DEBRIS(2);
 	static constexpr BroadPhaseLayer UNUSED(3);
 	static constexpr BroadPhaseLayer SENSOR(4);

@@ -17,16 +17,16 @@
 #include <random>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(FunnelTest) 
-{ 
-	JPH_ADD_BASE_CLASS(FunnelTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(FunnelTest)
+{
+	JPH_ADD_BASE_CLASS(FunnelTest, Test)
 }
 
 void FunnelTest::Initialize()
 {
 	RefConst<Shape> box = new BoxShape(Vec3(50, 1, 50), 0.0f);
 
-	// Funnel 
+	// Funnel
 	for (int i = 0; i < 4; ++i)
 	{
 		Quat rotation = Quat::sRotation(Vec3::sAxisY(), 0.5f * JPH_PI * i);
@@ -75,7 +75,7 @@ void FunnelTest::Initialize()
 
 		case 3:
 			{
-				shape = new CapsuleShape(0.5f * feature_size(random), feature_size(random));				
+				shape = new CapsuleShape(0.5f * feature_size(random), feature_size(random));
 				scale = scale.Swizzle<SWIZZLE_X, SWIZZLE_X, SWIZZLE_X>(); // Only uniform scale supported
 				break;
 			}

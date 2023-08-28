@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// 3 component vector of doubles (stored as 4 vectors). 
+/// 3 component vector of doubles (stored as 4 vectors).
 /// Note that we keep the 4th component the same as the 3rd component to avoid divisions by zero when JPH_FLOATING_POINT_EXCEPTIONS_ENABLED defined
 class [[nodiscard]] alignas(JPH_DVECTOR_ALIGNMENT) DVec3
 {
@@ -57,7 +57,7 @@ public:
 
 	/// Replicate inV across all components
 	static JPH_INLINE DVec3		sReplicate(double inV);
-		
+
 	/// Vector with all NaN's
 	static JPH_INLINE DVec3		sNaN();
 
@@ -148,12 +148,12 @@ public:
 	JPH_INLINE double			GetY() const									{ return mF64[1]; }
 	JPH_INLINE double			GetZ() const									{ return mF64[2]; }
 #endif
-	
+
 	/// Set individual components
 	JPH_INLINE void				SetX(double inX)								{ mF64[0] = inX; }
 	JPH_INLINE void				SetY(double inY)								{ mF64[1] = inY; }
 	JPH_INLINE void				SetZ(double inZ)								{ mF64[2] = mF64[3] = inZ; } // Assure Z and W are the same
-	
+
 	/// Get double component by index
 	JPH_INLINE double			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 3); return mF64[inCoordinate]; }
 
@@ -263,7 +263,7 @@ public:
 
 	/// Internal helper function that checks that W is equal to Z, so e.g. dividing by it should not generate div by 0
 	JPH_INLINE void				CheckW() const;
-	
+
 	/// Internal helper function that ensures that the Z component is replicated to the W component to prevent divisions by zero
 	static JPH_INLINE Type		sFixW(TypeArg inValue);
 

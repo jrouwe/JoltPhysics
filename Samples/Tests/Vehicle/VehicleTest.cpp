@@ -17,9 +17,9 @@
 #include <Utils/Log.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleTest) 
-{ 
-	JPH_ADD_BASE_CLASS(VehicleTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(VehicleTest)
+{
+	JPH_ADD_BASE_CLASS(VehicleTest, Test)
 }
 
 const char *VehicleTest::sScenes[] =
@@ -96,7 +96,7 @@ void VehicleTest::Initialize()
 		CreateWall();
 
 		CreateRubble();
-	}	
+	}
 	else
 	{
 		// Load scene
@@ -200,7 +200,7 @@ void VehicleTest::LoadRaceTrack(const char *inFileName)
 	// Open the track file
 	std::ifstream stream;
 	stream.open(inFileName, std::ifstream::in);
-	if (!stream.is_open()) 
+	if (!stream.is_open())
 		return;
 
 	// Ignore header line
@@ -264,7 +264,7 @@ void VehicleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 void VehicleTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
-	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() { 
+	inUI->CreateTextButton(inSubMenu, "Select Scene", [this, inUI]() {
 		UIElement *scene_name = inUI->CreateMenu();
 		for (uint i = 0; i < size(sScenes); ++i)
 			inUI->CreateTextButton(scene_name, sScenes[i], [this, i]() { sSceneName = sScenes[i]; RestartTest(); });

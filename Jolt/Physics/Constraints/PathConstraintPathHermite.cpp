@@ -32,7 +32,7 @@ static inline void sCalculatePositionAndTangent(Vec3Arg inP1, Vec3Arg inM1, Vec3
 	// Calculate factors for Cubic Hermite Spline
 	// See: https://en.wikipedia.org/wiki/Cubic_Hermite_spline
 	float t2 = inT * inT;
-	float t3 = inT * t2;	
+	float t3 = inT * t2;
 	float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
 	float h10 = t3 - 2.0f * t2 + inT;
 	float h01 = -2.0f * t3 + 3.0f * t2;
@@ -49,7 +49,7 @@ static inline void sCalculatePositionAndTangent(Vec3Arg inP1, Vec3Arg inM1, Vec3
 }
 
 // Calculate the closest point to the origin for a Cubic Hermite Spline segment
-// This is used to get an estimate for the interval in which the closest point can be found, 
+// This is used to get an estimate for the interval in which the closest point can be found,
 // the interval [0, 1] is too big for Newton Raphson to work on because it is solving a 5th degree polynomial which may
 // have multiple local minima that are not the root. This happens especially when the path is straight (tangents aligned with inP2 - inP1).
 // Based on the bisection method: https://en.wikipedia.org/wiki/Bisection_method
@@ -122,7 +122,7 @@ static inline float sCalculateClosestPointThroughNewtonRaphson(Vec3Arg inP1, Vec
 	float interval = inTMax - inTMin;
 
 	// Start in the middle of the interval
-	float t = 0.5f * (inTMin + inTMax); 
+	float t = 0.5f * (inTMin + inTMax);
 
 	// Do max 10 iterations to prevent taking too much CPU time
 	for (int iteration = 0; iteration < 10; ++iteration)
@@ -132,7 +132,7 @@ static inline float sCalculateClosestPointThroughNewtonRaphson(Vec3Arg inP1, Vec
 		sCalculatePositionAndTangent(inP1, inM1, inP2, inM2, t, position, tangent);
 		float ddt = position.Dot(tangent); // Leaving out factor 2, we're only interested in the root
 
-		// Calculate derivative of ddt: d^2/dt P(t) . P(t) = d/dt (2 P(t) . Tangent(t)) 
+		// Calculate derivative of ddt: d^2/dt P(t) . P(t) = d/dt (2 P(t) . Tangent(t))
 		// = 2 (d/dt P(t)) . Tangent(t) + P(t) . d/dt Tangent(t)) = 2 (Tangent(t) . Tangent(t) + P(t) . d/dt Tangent(t))
 		float d2dt_h00 = 12.0f * t - 6.0f;
 		float d2dt_h10 = 6.0f * t - 4.0f;
@@ -292,7 +292,7 @@ void PathConstraintPathHermite::GetPointOnPath(float inFraction, Vec3 &outPathPo
 }
 
 void PathConstraintPathHermite::SaveBinaryState(StreamOut &inStream) const
-{ 
+{
 	PathConstraintPath::SaveBinaryState(inStream);
 
 	inStream.Write(mPoints);

@@ -27,13 +27,13 @@ public:
 
 	/// Initialization
 	/// @param inNumMutexes The amount of mutexes to allocate
-	void					Init(uint inNumMutexes) 
-	{ 
-		JPH_ASSERT(mMutexStorage == nullptr); 
+	void					Init(uint inNumMutexes)
+	{
+		JPH_ASSERT(mMutexStorage == nullptr);
 		JPH_ASSERT(inNumMutexes > 0 && IsPowerOf2(inNumMutexes));
 
-		mMutexStorage = new MutexStorage[inNumMutexes]; 
-		mNumMutexes = inNumMutexes; 
+		mMutexStorage = new MutexStorage[inNumMutexes];
+		mNumMutexes = inNumMutexes;
 	}
 
 	/// Get the number of mutexes that were allocated

@@ -77,7 +77,7 @@ TEST_SUITE("ClosestPointTests")
 		// Vertex C
 		TestClosestPointToTriangle(a, b, c, Vec3(-101, 0, 0), c, 0b0100);
 	}
-	
+
 	TEST_CASE("TestNearColinearTriangle")
 	{
 		// A very long triangle that is nearly colinear

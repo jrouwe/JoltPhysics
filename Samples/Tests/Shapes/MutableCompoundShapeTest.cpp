@@ -14,17 +14,17 @@
 #include <Jolt/Core/StreamWrapper.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(MutableCompoundShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(MutableCompoundShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(MutableCompoundShapeTest)
+{
+	JPH_ADD_BASE_CLASS(MutableCompoundShapeTest, Test)
 }
 
-void MutableCompoundShapeTest::Initialize() 
+void MutableCompoundShapeTest::Initialize()
 {
 	// Floor (extra thick because we can randomly add sub shapes that then may stick out underneath the floor and cause objects to be pushed through)
 	Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(100.0f, 10.0f, 100.0f), 0.0f), RVec3(0.0f, -10.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
-		
+
 	// Compound with sub compound and rotation
 	StaticCompoundShapeSettings sub_compound_settings;
 	sub_compound_settings.AddShape(Vec3(0, 1.5f, 0), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), new BoxShape(Vec3(1.5f, 0.25f, 0.2f)));
@@ -66,7 +66,7 @@ void MutableCompoundShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			Vec3 old_com = shape->GetCenterOfMass();
 
 			// Consistently seeded random engine so that bodies move in a predictable way
-			default_random_engine consistent_random; 
+			default_random_engine consistent_random;
 
 			// Simulate an engine data structure with strided positions/rotations
 			struct PositionRotation

@@ -14,9 +14,9 @@
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ContactListenerTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ContactListenerTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ContactListenerTest)
+{
+	JPH_ADD_BASE_CLASS(ContactListenerTest, Test)
 }
 
 void ContactListenerTest::Initialize()
@@ -49,7 +49,7 @@ void ContactListenerTest::Initialize()
 	Body &body4 = *mBodyInterface->CreateBody(BodyCreationSettings(compound_shape, RVec3(15, 10, 0), Quat::sRotation(Vec3::sAxisX(), 0.25f * JPH_PI), EMotionType::Dynamic, Layers::MOVING));
 	body4.SetAllowSleeping(false);
 	mBodyInterface->AddBody(body4.GetID(), EActivation::Activate);
-	
+
 	// Store bodies for later use
 	mBody[0] = &body1;
 	mBody[1] = &body2;

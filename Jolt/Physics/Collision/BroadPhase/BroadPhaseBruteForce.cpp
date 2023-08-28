@@ -14,9 +14,9 @@
 #include <Jolt/Core/QuickSort.h>
 
 JPH_NAMESPACE_BEGIN
-	
+
 void BroadPhaseBruteForce::AddBodiesFinalize(BodyID *ioBodies, int inNumber, AddState inAddState)
-{ 
+{
 	lock_guard lock(mMutex);
 
 	BodyVector &bodies = mBodyManager->GetBodies();
@@ -45,9 +45,9 @@ void BroadPhaseBruteForce::AddBodiesFinalize(BodyID *ioBodies, int inNumber, Add
 	// Resort
 	QuickSort(mBodyIDs.begin(), mBodyIDs.end());
 }
-	
-void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber) 
-{ 
+
+void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber)
+{
 	lock_guard lock(mMutex);
 
 	BodyVector &bodies = mBodyManager->GetBodies();
@@ -75,7 +75,7 @@ void BroadPhaseBruteForce::RemoveBodies(BodyID *ioBodies, int inNumber)
 	}
 }
 
-void BroadPhaseBruteForce::NotifyBodiesAABBChanged(BodyID *ioBodies, int inNumber, bool inTakeLock) 
+void BroadPhaseBruteForce::NotifyBodiesAABBChanged(BodyID *ioBodies, int inNumber, bool inTakeLock)
 {
 	// Do nothing, we directly reference the body
 }
@@ -86,7 +86,7 @@ void BroadPhaseBruteForce::NotifyBodiesLayerChanged(BodyID * ioBodies, int inNum
 }
 
 void BroadPhaseBruteForce::CastRay(const RayCast &inRay, RayCastBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
-{ 
+{
 	shared_lock lock(mMutex);
 
 	// Load ray
@@ -118,7 +118,7 @@ void BroadPhaseBruteForce::CastRay(const RayCast &inRay, RayCastBodyCollector &i
 	}
 }
 
-void BroadPhaseBruteForce::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
+void BroadPhaseBruteForce::CollideAABox(const AABox &inBox, CollideShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
 {
 	shared_lock lock(mMutex);
 
@@ -220,7 +220,7 @@ void BroadPhaseBruteForce::CollideOrientedBox(const OrientedBox &inBox, CollideS
 	}
 }
 
-void BroadPhaseBruteForce::CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const 
+void BroadPhaseBruteForce::CastAABoxNoLock(const AABoxCast &inBox, CastShapeBodyCollector &ioCollector, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter) const
 {
 	shared_lock lock(mMutex);
 

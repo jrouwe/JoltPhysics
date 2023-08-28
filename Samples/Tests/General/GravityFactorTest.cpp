@@ -9,9 +9,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(GravityFactorTest) 
-{ 
-	JPH_ADD_BASE_CLASS(GravityFactorTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(GravityFactorTest)
+{
+	JPH_ADD_BASE_CLASS(GravityFactorTest, Test)
 }
 
 void GravityFactorTest::Initialize()

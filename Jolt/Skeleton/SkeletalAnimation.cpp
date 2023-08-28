@@ -78,7 +78,7 @@ void SkeletalAnimation::Sample(float inTime, SkeletonPose &ioPose) const
 		}
 
 		JointState &state = ioPose.GetJoint(ioPose.GetSkeleton()->GetJointIndex(aj.mJointName));
-		
+
 		if (low == -1)
 		{
 			// Before first key, return first key
@@ -97,7 +97,7 @@ void SkeletalAnimation::Sample(float inTime, SkeletonPose &ioPose) const
 
 			float fraction = (time - s1.mTime) / (s2.mTime - s1.mTime);
 			JPH_ASSERT(fraction >= 0.0f && fraction <= 1.0f);
-			
+
 			state.mTranslation = (1.0f - fraction) * s1.mTranslation + fraction * s2.mTranslation;
 			JPH_ASSERT(s1.mRotation.IsNormalized());
 			JPH_ASSERT(s2.mRotation.IsNormalized());

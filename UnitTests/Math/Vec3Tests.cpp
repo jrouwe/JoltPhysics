@@ -180,7 +180,7 @@ TEST_SUITE("Vec3Tests")
 		CHECK(Vec3(2, 4, 8).Reciprocal() == Vec3(0.5f, 0.25f, 0.125f));
 	}
 
-	TEST_CASE("TestVec3Swizzle")	
+	TEST_CASE("TestVec3Swizzle")
 	{
 		Vec3 v(1, 2, 3);
 
@@ -231,7 +231,7 @@ TEST_SUITE("Vec3Tests")
 		CHECK(Vec3(1, 2, 3).DotV(Vec3(4, 5, 6)) == Vec3::sReplicate(1 * 4 + 2 * 5 + 3 * 6));
 		CHECK(Vec3(1, 2, 3).DotV4(Vec3(4, 5, 6)) == Vec4::sReplicate(1 * 4 + 2 * 5 + 3 * 6));
 	}
-		
+
 	TEST_CASE("TestVec3Length")
 	{
 		CHECK(Vec3(1, 2, 3).LengthSq() == float(1 + 4 + 9));

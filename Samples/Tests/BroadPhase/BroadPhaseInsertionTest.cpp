@@ -12,9 +12,9 @@
 #include <Utils/Log.h>
 #include <Utils/DebugRendererSP.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(BroadPhaseInsertionTest) 
-{ 
-	JPH_ADD_BASE_CLASS(BroadPhaseInsertionTest, BroadPhaseTest) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(BroadPhaseInsertionTest)
+{
+	JPH_ADD_BASE_CLASS(BroadPhaseInsertionTest, BroadPhaseTest)
 }
 
 void BroadPhaseInsertionTest::Initialize()
@@ -133,7 +133,7 @@ void BroadPhaseInsertionTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				break;
 			}
 
-		if (b->IsInBroadPhase() 
+		if (b->IsInBroadPhase()
 			&& RayAABoxHits(ray.mOrigin, ray.mDirection, b->GetWorldSpaceBounds().mMin, b->GetWorldSpaceBounds().mMax))
 		{
 			if (!found)
@@ -145,7 +145,7 @@ void BroadPhaseInsertionTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 				FatalError("BroadPhaseInsertionTest: Is not intersecting but was found");
 		}
 	}
-	
+
 	if (mDirection > 0)
 		mCurrentBody += num_this_step;
 }

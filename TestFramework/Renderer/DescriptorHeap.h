@@ -39,7 +39,7 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE			Allocate()
 	{
 		JPH_ASSERT(!mFreeList.empty());
-		
+
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = mHeap->GetCPUDescriptorHandleForHeapStart();
 
 		uint index = mFreeList.back();

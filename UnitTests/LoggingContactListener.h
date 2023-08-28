@@ -51,7 +51,7 @@ public:
 	}
 
 	virtual void					OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
-	{ 
+	{
 		// Check contract that body 1 < body 2
 		CHECK(inBody1.GetID() < inBody2.GetID());
 
@@ -62,7 +62,7 @@ public:
 	}
 
 	virtual void					OnContactRemoved(const SubShapeIDPair &inSubShapePair) override
-	{ 
+	{
 		// Check contract that body 1 < body 2
 		CHECK(inSubShapePair.GetBody1ID() < inSubShapePair.GetBody2ID());
 
@@ -88,7 +88,7 @@ public:
 	{
 		return mLog[inIdx];
 	}
-	   
+
 	// Find first event with a particular type and involving two particular bodies
 	int								Find(EType inType, const BodyID &inBody1, const BodyID &inBody2) const
 	{

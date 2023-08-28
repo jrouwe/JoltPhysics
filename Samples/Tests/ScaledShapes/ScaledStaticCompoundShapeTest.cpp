@@ -11,9 +11,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledStaticCompoundShapeTest) 
-{ 
-	JPH_ADD_BASE_CLASS(ScaledStaticCompoundShapeTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(ScaledStaticCompoundShapeTest)
+{
+	JPH_ADD_BASE_CLASS(ScaledStaticCompoundShapeTest, Test)
 }
 
 void ScaledStaticCompoundShapeTest::Initialize()
@@ -56,7 +56,7 @@ void ScaledStaticCompoundShapeTest::Initialize()
 	center.push_back(Vec3(10, 1, 0));
 	center.push_back(Vec3(10, 1, 1));
 	RefConst<ShapeSettings> center_shape = new ConvexHullShapeSettings(center);
-		
+
 	// Create compound
 	Ref<StaticCompoundShapeSettings> compound_shape = new StaticCompoundShapeSettings;
 	compound_shape->AddShape(Vec3(-5, -1.5f, -0.5f), Quat::sRotation(Vec3::sAxisZ(), 0.5f * JPH_PI), end1_shape);

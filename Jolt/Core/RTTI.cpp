@@ -34,41 +34,41 @@ RTTI::RTTI(const char *inName, int inSize, pCreateObjectFunction inCreateObject,
 }
 
 int RTTI::GetBaseClassCount() const
-{ 
-	return (int)mBaseClasses.size(); 
+{
+	return (int)mBaseClasses.size();
 }
 
-const RTTI *RTTI::GetBaseClass(int inIdx) const								
-{ 
-	return mBaseClasses[inIdx].mRTTI; 
+const RTTI *RTTI::GetBaseClass(int inIdx) const
+{
+	return mBaseClasses[inIdx].mRTTI;
 }
 
 uint32 RTTI::GetHash() const
-{ 
+{
 	// Perform diffusion step to get from 64 to 32 bits (see https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function)
 	uint64 hash = HashString(mName);
 	return (uint32)(hash ^ (hash >> 32));
 }
 
 void *RTTI::CreateObject() const
-{ 
-	return IsAbstract()? nullptr : mCreate(); 
+{
+	return IsAbstract()? nullptr : mCreate();
 }
 
 void RTTI::DestructObject(void *inObject) const
-{ 
-	mDestruct(inObject); 
+{
+	mDestruct(inObject);
 }
 
 void RTTI::AddBaseClass(const RTTI *inRTTI, int inOffset)
-{ 
+{
 	JPH_ASSERT(inOffset >= 0 && inOffset < mSize, "Base class not contained in derived class");
 
 	// Add base class
 	BaseClass base;
 	base.mRTTI = inRTTI;
 	base.mOffset = inOffset;
-	mBaseClasses.push_back(base); 
+	mBaseClasses.push_back(base);
 
 	// Add attributes of base class
 	for (const SerializableAttribute &a : inRTTI->mAttributes)
@@ -76,9 +76,9 @@ void RTTI::AddBaseClass(const RTTI *inRTTI, int inOffset)
 }
 
 bool RTTI::operator == (const RTTI &inRHS) const
-{ 
-	// Compare addresses 
-	if (this == &inRHS) 
+{
+	// Compare addresses
+	if (this == &inRHS)
 		return true;
 
 	// Check that the names differ (if that is the case we probably have two instances
@@ -104,7 +104,7 @@ bool RTTI::IsKindOf(const RTTI *inRTTI) const
 const void *RTTI::CastTo(const void *inObject, const RTTI *inRTTI) const
 {
 	JPH_ASSERT(inObject != nullptr);
-	
+
 	// Check if this is the same type
 	if (this == inRTTI)
 		return inObject;
@@ -126,18 +126,18 @@ const void *RTTI::CastTo(const void *inObject, const RTTI *inRTTI) const
 }
 
 void RTTI::AddAttribute(const SerializableAttribute &inAttribute)
-{ 
-	mAttributes.push_back(inAttribute); 
+{
+	mAttributes.push_back(inAttribute);
 }
 
-int RTTI::GetAttributeCount() const									
-{ 
-	return (int)mAttributes.size(); 
+int RTTI::GetAttributeCount() const
+{
+	return (int)mAttributes.size();
 }
 
 const SerializableAttribute &RTTI::GetAttribute(int inIdx) const
-{ 
-	return mAttributes[inIdx]; 
+{
+	return mAttributes[inIdx];
 }
 
 JPH_NAMESPACE_END

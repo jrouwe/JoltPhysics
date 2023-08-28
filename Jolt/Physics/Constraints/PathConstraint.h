@@ -99,7 +99,7 @@ public:
 
 	/// Access to the current fraction along the path e [0, GetPath()->GetMaxPathFraction()]
 	float							GetPathFraction() const									{ return mPathFraction; }
-	
+
 	/// Friction control
 	void							SetMaxFrictionForce(float inFrictionForce)				{ mMaxFrictionForce = inFrictionForce; }
 	float							GetMaxFrictionForce() const								{ return mMaxFrictionForce; }

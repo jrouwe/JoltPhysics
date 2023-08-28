@@ -10,9 +10,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(KinematicTest) 
-{ 
-	JPH_ADD_BASE_CLASS(KinematicTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(KinematicTest)
+{
+	JPH_ADD_BASE_CLASS(KinematicTest, Test)
 }
 
 void KinematicTest::Initialize()
@@ -39,7 +39,7 @@ void KinematicTest::Initialize()
 }
 
 void KinematicTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
-{ 
+{
 	for (int i = 0; i < 2; ++i)
 	{
 		RVec3 com = mKinematic[i]->GetCenterOfMassPosition();

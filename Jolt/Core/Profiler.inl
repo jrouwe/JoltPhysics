@@ -23,7 +23,7 @@ ProfileThread::~ProfileThread()
 // ProfileMeasurement
 //////////////////////////////////////////////////////////////////////////////////////////
 
-ProfileMeasurement::ProfileMeasurement(const char *inName, uint32 inColor)	
+ProfileMeasurement::ProfileMeasurement(const char *inName, uint32 inColor)
 {
 	ProfileThread *current_thread = ProfileThread::sGetInstance();
 	if (current_thread == nullptr)

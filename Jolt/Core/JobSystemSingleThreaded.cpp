@@ -19,10 +19,10 @@ JobHandle JobSystemSingleThreaded::CreateJob(const char *inJobName, ColorArg inC
 	uint32 index = mJobs.ConstructObject(inJobName, inColor, this, inJobFunction, inNumDependencies);
 	JPH_ASSERT(index != AvailableJobs::cInvalidObjectIndex);
 	Job *job = &mJobs.Get(index);
-	
+
 	// Construct handle to keep a reference, the job is queued below and will immediately complete
 	JobHandle handle(job);
-	
+
 	// If there are no dependencies, queue the job now
 	if (inNumDependencies == 0)
 		QueueJob(job);

@@ -14,9 +14,9 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(GearConstraintTest) 
-{ 
-	JPH_ADD_BASE_CLASS(GearConstraintTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(GearConstraintTest)
+{
+	JPH_ADD_BASE_CLASS(GearConstraintTest, Test)
 }
 
 void GearConstraintTest::Initialize()

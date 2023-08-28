@@ -6,7 +6,7 @@ JPH_NAMESPACE_BEGIN
 
 UVec8::UVec8(UVec4Arg inLo, UVec4Arg inHi) :
 	mValue(_mm256_insertf128_si256(_mm256_castsi128_si256(inLo.mValue), inHi.mValue, 1))
-{		
+{
 }
 
 bool UVec8::operator == (UVec8Arg inV2) const

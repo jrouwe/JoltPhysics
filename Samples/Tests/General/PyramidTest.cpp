@@ -9,12 +9,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(PyramidTest) 
-{ 
-	JPH_ADD_BASE_CLASS(PyramidTest, Test) 
+JPH_IMPLEMENT_RTTI_VIRTUAL(PyramidTest)
+{
+	JPH_ADD_BASE_CLASS(PyramidTest, Test)
 }
 
-void PyramidTest::Initialize() 
+void PyramidTest::Initialize()
 {
 	// Floor
 	CreateFloor();

@@ -48,9 +48,9 @@ void UIStaticText::AutoLayout()
 		Float2 size = mFont->MeasureText(GetWrappedText());
 		int w = int(size.x * mFont->GetCharHeight()) + mTextPadLeft + mTextPadRight;
 		int h = int(size.y * mFont->GetCharHeight()) + mTextPadTop + mTextPadBottom;
-		if (GetWidth() <= 0) 
+		if (GetWidth() <= 0)
 			mWidth.Set(w, PIXELS);
-		if (GetHeight() <= 0) 
+		if (GetHeight() <= 0)
 			mHeight.Set(h, PIXELS);
 	}
 }

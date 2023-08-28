@@ -19,10 +19,10 @@ public:
 	Float3 &	operator = (const Float3 &inRHS) = default;
 				Float3(float inX, float inY, float inZ) : x(inX), y(inY), z(inZ) { }
 
-	float		operator [] (int inCoordinate) const	
-	{ 
-		JPH_ASSERT(inCoordinate < 3); 
-		return *(&x + inCoordinate); 
+	float		operator [] (int inCoordinate) const
+	{
+		JPH_ASSERT(inCoordinate < 3);
+		return *(&x + inCoordinate);
 	}
 
 	bool		operator == (const Float3 &inRHS) const

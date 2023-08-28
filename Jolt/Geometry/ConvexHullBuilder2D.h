@@ -10,16 +10,16 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// A convex hull builder that tries to create 2D hulls as accurately as possible. Used for offline processing. 
+/// A convex hull builder that tries to create 2D hulls as accurately as possible. Used for offline processing.
 class JPH_EXPORT ConvexHullBuilder2D : public NonCopyable
 {
 public:
-	using Positions = Array<Vec3>; 
+	using Positions = Array<Vec3>;
 	using Edges = Array<int>;
 
 	/// Constructor
 	/// @param inPositions Positions used to make the hull. Uses X and Y component of Vec3 only!
-	explicit			ConvexHullBuilder2D(const Positions &inPositions); 
+	explicit			ConvexHullBuilder2D(const Positions &inPositions);
 
 	/// Destructor
 						~ConvexHullBuilder2D();
