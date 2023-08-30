@@ -657,6 +657,15 @@ public:
 		mOffset += Vec3(5.0f, 0.0f, 0.0f);
 	}
 
+	/// Draw geometry for debugging purposes
+	void				DrawGeometry(const DebugRenderer::GeometryRef &inGeometry, ColorArg inColor)
+	{
+		RMat44 origin = RMat44::sScale(Vec3::sReplicate(cDrawScale)) * RMat44::sTranslation(mOffset);
+		DebugRenderer::sInstance->DrawGeometry(origin, inGeometry->mBounds.Transformed(origin), inGeometry->mBounds.GetExtent().LengthSq(), inColor, inGeometry);
+
+		mOffset += Vec3(inGeometry->mBounds.GetSize().GetX(), 0, 0);
+	}
+
 	/// Draw a triangle for debugging purposes
 	void				DrawWireTriangle(const Triangle &inTriangle, ColorArg inColor)
 	{

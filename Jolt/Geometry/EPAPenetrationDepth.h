@@ -221,6 +221,13 @@ public:
 		}
 
 #ifdef JPH_EPA_CONVEX_BUILDER_DRAW
+		hull.DrawLabel("Complete hull");
+
+		// Generate the hull of the Minkowski difference for visualization
+		MinkowskiDifference diff(inAIncludingConvexRadius, inBIncludingConvexRadius);
+		DebugRenderer::GeometryRef geometry = DebugRenderer::sInstance->CreateTriangleGeometryForConvex([&diff](Vec3Arg inDirection) { return diff.GetSupport(inDirection); });
+		hull.DrawGeometry(geometry, Color::sYellow);
+
 		hull.DrawLabel("Ensure origin in hull");
 #endif
 
