@@ -330,11 +330,6 @@ public:
 			if (t->mClosestLenSq >= closest_dist_sq)
 				break;
 
-			// Replace last good with this triangle
-			if (last != nullptr)
-				hull.FreeTriangle(last);
-			last = t;
-
 			// Add support point in direction of normal of the plane
 			// Note that the article uses the closest point between the origin and plane, but this always has the exact same direction as the normal (if the origin is behind the plane)
 			// and this way we do less calculations and lose less precision
@@ -370,6 +365,9 @@ public:
 #ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
 				Trace("Converged");
 #endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
+
+				// Replace last good with this triangle
+				last = t;
 				break;
 			}
 
@@ -382,6 +380,9 @@ public:
 #ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
 				Trace("Not facing triangle");
 #endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
+
+				// Replace last good with this triangle
+				last = t;
 				break;
 			}
 
@@ -392,6 +393,9 @@ public:
 #ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
 				Trace("Could not add point");
 #endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
+
+				// Replace last good with this triangle
+				last = t;
 				break;
 			}
 
@@ -410,6 +414,11 @@ public:
 #endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
 				break;
 			}
+
+			// Replace last good with this triangle
+			if (last != nullptr)
+				hull.FreeTriangle(last);
+			last = t;
 		}
 		while (hull.HasNextTriangle() && support_points.mY.size() < cMaxPoints);
 
