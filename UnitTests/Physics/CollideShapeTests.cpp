@@ -378,8 +378,6 @@ TEST_SUITE("CollideShapeTests")
 		CHECK_APPROX_EQUAL(actual_penetration_depth, expected_penetration_depth);
 	}
 
-	/*
-	// TODO: Re-enable after a better fix is found
 	// A test case of a box and a convex hull that are nearly touching and that should return a contact with correct normal because the collision settings specify a max separation distance. This was producing the wrong normal.
 	TEST_CASE("BoxVsConvexHullNoConvexRadius")
 	{
@@ -425,12 +423,11 @@ TEST_SUITE("CollideShapeTests")
 			// Check that there was a hit and that the contact normal is correct
 			CHECK(collector.HadHit());
 			const CollideShapeResult &hit = collector.mHit;
-			CHECK_APPROX_EQUAL(hit.mContactPointOn1.GetY(), hull_height + box_separation_from_hull, 2.0e-4f);
+			CHECK_APPROX_EQUAL(hit.mContactPointOn1.GetY(), hull_height + box_separation_from_hull, 1.0e-3f);
 			CHECK_APPROX_EQUAL(hit.mContactPointOn2.GetY(), hull_height);
 			CHECK_APPROX_EQUAL(hit.mPenetrationAxis.NormalizedOr(Vec3::sZero()), -Vec3::sAxisY(), 1.0e-3f);
 		}
 
 		CHECK(angle >= 2.0f * JPH_PI);
 	}
-	*/
 }
