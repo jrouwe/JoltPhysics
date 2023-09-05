@@ -266,6 +266,9 @@ protected:
 		/// Test if the job finished executing
 		inline bool			IsDone() const								{ return mNumDependencies.load(memory_order_relaxed) == cDoneState; }
 
+		/// Get the name of the job
+		const char *		GetName() const								{ return mJobName; }
+
 		static constexpr uint32 cExecutingState = 0xe0e0e0e0;			///< Value of mNumDependencies when job is executing
 		static constexpr uint32 cDoneState		= 0xd0d0d0d0;			///< Value of mNumDependencies when job is done executing
 
