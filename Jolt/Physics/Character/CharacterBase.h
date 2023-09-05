@@ -80,6 +80,9 @@ public:
 		InAir,							///< Character is in the air and is not touching anything.
 	};
 
+	/// Debug function to convert enum values to string
+	static const char *					sToString(EGroundState inState);
+
 	///@name Properties of the ground this character is standing on
 
 	/// Current ground state
