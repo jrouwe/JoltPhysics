@@ -303,6 +303,9 @@ public:
 		// Remember last good triangle
 		Triangle *last = nullptr;
 
+		// If we want to flip the penetration depth
+		bool flip_v_sign = false;
+
 		// Loop until closest point found
 		do
 		{
@@ -408,6 +411,13 @@ public:
 #ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
 				Trace("Has defect");
 #endif // JPH_EPA_PENETRATION_DEPTH_DEBUG
+				// When the hull has defects it is possible that the origin has been classified on the wrong side of the triangle
+				// so we do an additional check to see if the penetration in the -triangle normal direction is smaller than
+				// the penetration in the triangle normal direction. If so we must flip the sign of the penetration depth.
+				Vec3 w2 = inAIncludingConvexRadius.GetSupport(-t->mNormal) - inBIncludingConvexRadius.GetSupport(t->mNormal);
+				float dot2 = -t->mNormal.Dot(w2);
+				if (dot2 < dot)
+					flip_v_sign = true;
 				break;
 			}
 		}
@@ -431,6 +441,10 @@ public:
 		// If penetration is near zero, treat this as a non collision since we cannot find a good normal
 		if (outV.IsNearZero())
 			return false;
+
+		// Check if we have to flip the sign of the penetration depth
+		if (flip_v_sign)
+			outV = -outV;
 
 		// Use the barycentric coordinates for the closest point to the origin to find the contact points on A and B
 		Vec3 p0 = support_points.mP[last->mEdge[0].mStartIdx];
