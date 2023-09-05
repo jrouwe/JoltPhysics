@@ -402,6 +402,9 @@ void CharacterVirtual::DetermineConstraints(TempContactList &inContacts, float i
 			float dot = c.mContactNormal.Dot(mUp);
 			if (dot > 1.0e-3f) // Add a little slack, if the normal is perfectly horizontal we already have our vertical plane.
 			{
+				// Mark the slope constraint as steep
+				constraint.mIsSteepSlope = true;
+
 				// Make horizontal normal
 				Vec3 normal = (c.mContactNormal - dot * mUp).Normalized();
 
@@ -627,6 +630,20 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 
 		// Get the normal of the plane we're hitting
 		Vec3 plane_normal = constraint->mPlane.GetNormal();
+
+		// If we're hitting a steep slope we cancel the velocity towards the slope first so that we don't end up slidinng up the slope
+		// (we may hit the slope before the vertical wall constraint we added which will result in a small movement up causing jitter in the character movement)
+		if (constraint->mIsSteepSlope)
+		{
+			// We're hitting a steep slope, create a vertical plane that blocks any further movement up the slope (note: not normalized)
+			Vec3 vertical_plane_normal = plane_normal - plane_normal.Dot(mUp) * mUp;
+
+			// Get the relative velocity between the character and the constraint
+			Vec3 relative_velocity = velocity - constraint->mLinearVelocity;
+
+			// Remove velocity towards the slope
+			velocity = velocity - min(0.0f, relative_velocity.Dot(vertical_plane_normal)) * vertical_plane_normal / vertical_plane_normal.LengthSq();
+		}
 
 		// Get the relative velocity between the character and the constraint
 		Vec3 relative_velocity = velocity - constraint->mLinearVelocity;

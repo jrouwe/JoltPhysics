@@ -333,6 +333,7 @@ private:
 		float							mProjectedVelocity;										///< Velocity of the contact projected on the contact normal (negative if separating)
 		Vec3							mLinearVelocity;										///< Velocity of the contact (can contain a corrective velocity to resolve penetration)
 		Plane							mPlane;													///< Plane around the origin that describes how far we can displace (from the origin)
+		bool							mIsSteepSlope = false;									///< If this constraint belongs to a steep slope
 	};
 
 	using ConstraintList = std::vector<Constraint, STLTempAllocator<Constraint>>;
