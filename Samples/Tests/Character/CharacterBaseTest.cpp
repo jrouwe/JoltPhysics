@@ -121,6 +121,17 @@ void CharacterBaseTest::Initialize()
 		}
 
 		{
+			// Create ramps with different inclinations intersecting with a steep slope
+			Ref<Shape> ramp = RotatedTranslatedShapeSettings(Vec3(0, 0, -2.5f), Quat::sIdentity(), new BoxShape(Vec3(1.0f, 0.05f, 2.5f))).Create().Get();
+			Ref<Shape> ramp2 = RotatedTranslatedShapeSettings(Vec3(0, 2.0f, 0), Quat::sIdentity(), new BoxShape(Vec3(0.05f, 2.0f, 1.0f))).Create().Get();
+			for (int angle = 0; angle < 9; ++angle)
+			{
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(ramp, RVec3(-15.0f + angle * 2.0f, 0, -20.0f - angle * 0.1f), Quat::sRotation(Vec3::sAxisX(), DegreesToRadians(10.0f * angle)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+				mBodyInterface->CreateAndAddBody(BodyCreationSettings(ramp2, RVec3(-15.0f + angle * 2.0f, 0, -21.0f), Quat::sRotation(Vec3::sAxisZ(), DegreesToRadians(20.0f)), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+			}
+		}
+
+		{
 			// Create wall consisting of vertical pillars
 			// Note: Convex radius 0 because otherwise it will be a bumpy wall
 			Ref<Shape> wall = new BoxShape(Vec3(0.1f, 2.5f, 0.1f), 0.0f);
@@ -648,27 +659,8 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, RMa
 	// Drawing prior to update since the physics system state is also that prior to the simulation step (so that all detected collisions etc. make sense)
 	mDebugRenderer->DrawCoordinateSystem(inCharacterTransform, 0.1f);
 
-	// Determine color
-	CharacterBase::EGroundState ground_state = inCharacter->GetGroundState();
-	Color color;
-	switch (ground_state)
-	{
-	case CharacterBase::EGroundState::OnGround:
-		color = Color::sGreen;
-		break;
-	case CharacterBase::EGroundState::OnSteepGround:
-		color = Color::sYellow;
-		break;
-	case CharacterBase::EGroundState::NotSupported:
-		color = Color::sOrange;
-		break;
-	case CharacterBase::EGroundState::InAir:
-	default:
-		color = Color::sRed;
-		break;
-	}
-
 	// Draw the state of the ground contact
+	CharacterBase::EGroundState ground_state = inCharacter->GetGroundState();
 	if (ground_state != CharacterBase::EGroundState::InAir)
 	{
 		RVec3 ground_position = inCharacter->GetGroundPosition();
@@ -692,5 +684,5 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, RMa
 	const PhysicsMaterial *ground_material = inCharacter->GetGroundMaterial();
 	Vec3 horizontal_velocity = inCharacterVelocity;
 	horizontal_velocity.SetY(0);
-	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("State: %s\nMat: %s\nHorizontal Vel: %.1f m/s\nVertical Vel: %.1f m/s", CharacterBase::sToString(ground_state), ground_material->GetDebugName(), (double)horizontal_velocity.Length(), (double)inCharacterVelocity.GetY()), color, 0.25f);
+	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("State: %s\nMat: %s\nHorizontal Vel: %.1f m/s\nVertical Vel: %.1f m/s", CharacterBase::sToString(ground_state), ground_material->GetDebugName(), (double)horizontal_velocity.Length(), (double)inCharacterVelocity.GetY()), Color::sWhite, 0.25f);
 }
