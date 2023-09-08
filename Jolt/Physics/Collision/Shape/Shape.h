@@ -123,7 +123,7 @@ static constexpr EShapeSubType sCompoundSubShapeTypes[] = { EShapeSubType::Stati
 static constexpr EShapeSubType sDecoratorSubShapeTypes[] = { EShapeSubType::RotatedTranslated, EShapeSubType::Scaled, EShapeSubType::OffsetCenterOfMass };
 
 /// How many shape types we support
-static constexpr uint NumSubShapeTypes = (uint)size(sAllSubShapeTypes);
+static constexpr uint NumSubShapeTypes = uint(size(sAllSubShapeTypes));
 
 /// Names of sub shape types
 static constexpr const char *sSubShapeTypeNames[] = { "Sphere", "Box", "Triangle", "Capsule", "TaperedCapsule", "Cylinder", "ConvexHull", "StaticCompound", "MutableCompound", "RotatedTranslated", "Scaled", "OffsetCenterOfMass", "Mesh", "HeightField", "SoftBody", "User1", "User2", "User3", "User4", "User5", "User6", "User7", "User8", "UserConvex1", "UserConvex2", "UserConvex3", "UserConvex4", "UserConvex5", "UserConvex6", "UserConvex7", "UserConvex8" };
@@ -163,7 +163,7 @@ public:
 	Color							mColor = Color::sBlack;
 
 	/// Get an entry in the registry for a particular sub type
-	static inline ShapeFunctions &	sGet(EShapeSubType inSubType)										{ return sRegistry[(int)inSubType]; }
+	static inline ShapeFunctions &	sGet(EShapeSubType inSubType)										{ return sRegistry[int(inSubType)]; }
 
 private:
 	static ShapeFunctions 			sRegistry[NumSubShapeTypes];

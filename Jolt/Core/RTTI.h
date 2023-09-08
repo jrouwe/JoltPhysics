@@ -192,7 +192,7 @@ protected:
 public:																												\
 	JPH_OVERRIDE_NEW_DELETE																							\
 	friend linkage RTTI *		GetRTTIOfType(class_name *);														\
-	friend inline const RTTI *	GetRTTI([[maybe_unused]] const class_name *inObject) { return GetRTTIOfType((class_name *)nullptr); }\
+	friend inline const RTTI *	GetRTTI([[maybe_unused]] const class_name *inObject) { return GetRTTIOfType(static_cast<class_name *>(nullptr)); }\
 	static void					sCreateRTTI(RTTI &inRTTI);															\
 
 // JPH_IMPLEMENT_RTTI_NON_VIRTUAL
@@ -312,7 +312,7 @@ public:																												\
 // Find the RTTI of a class
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#define JPH_RTTI(class_name)	GetRTTIOfType((class_name *)nullptr)
+#define JPH_RTTI(class_name)	GetRTTIOfType(static_cast<class_name *>(nullptr))
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Macro to rename a class, useful for embedded classes:

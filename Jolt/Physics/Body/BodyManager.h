@@ -43,7 +43,7 @@ public:
 	uint							GetNumBodies() const;
 
 	/// Gets the max bodies that we can support
-	uint							GetMaxBodies() const						{ return (uint)mBodies.capacity(); }
+	uint							GetMaxBodies() const						{ return uint(mBodies.capacity()); }
 
 	/// Helper struct that counts the number of bodies of each type
 	struct BodyStats
@@ -102,10 +102,10 @@ public:
 	void							GetActiveBodies(EBodyType inType, BodyIDVector &outBodyIDs) const;
 
 	/// Get the list of active bodies. Note: Not thread safe. The active bodies list can change at any moment.
-	const BodyID *					GetActiveBodiesUnsafe(EBodyType inType) const { return mActiveBodies[(int)inType]; }
+	const BodyID *					GetActiveBodiesUnsafe(EBodyType inType) const { return mActiveBodies[int(inType)]; }
 
 	/// Get the number of active bodies.
-	uint32							GetNumActiveBodies(EBodyType inType) const	{ return mNumActiveBodies[(int)inType]; }
+	uint32							GetNumActiveBodies(EBodyType inType) const	{ return mNumActiveBodies[int(inType)]; }
 
 	/// Get the number of active bodies that are using continuous collision detection
 	uint32							GetNumActiveCCDBodies() const				{ return mNumActiveCCDBodies; }

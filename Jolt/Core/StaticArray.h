@@ -211,7 +211,7 @@ public:
 	{
 		size_type rhs_size = inRHS.size();
 
-		if ((void *)this != (void *)&inRHS)
+		if (static_cast<const void *>(this) != static_cast<const void *>(&inRHS))
 		{
 			clear();
 
@@ -232,7 +232,7 @@ public:
 		size_type rhs_size = inRHS.size();
 		JPH_ASSERT(rhs_size <= N);
 
-		if ((void *)this != (void *)&inRHS)
+		if (static_cast<const void *>(this) != static_cast<const void *>(&inRHS))
 		{
 			clear();
 

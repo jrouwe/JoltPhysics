@@ -76,7 +76,7 @@ void				SaveObjectReference(StreamOut &inStream, const Type *inObject, ObjectToI
 		else
 		{
 			// New object, write the ID
-			uint32 new_id = (uint32)ioObjectToIDMap->size();
+			uint32 new_id = uint32(ioObjectToIDMap->size());
 			(*ioObjectToIDMap)[inObject] = new_id;
 			inStream.Write(new_id);
 
@@ -126,7 +126,7 @@ Result<Ref<Type>>	RestoreObjectReference(StreamIn &inStream, IDToObjectMap<Type>
 template <class ArrayType, class ValueType>
 void				SaveObjectArray(StreamOut &inStream, const ArrayType &inArray, ObjectToIDMap<ValueType> *ioObjectToIDMap)
 {
-	inStream.Write((size_t)inArray.size());
+	inStream.Write(size_t(inArray.size()));
 	for (const ValueType *value: inArray)
 		SaveObjectReference(inStream, value, ioObjectToIDMap);
 }

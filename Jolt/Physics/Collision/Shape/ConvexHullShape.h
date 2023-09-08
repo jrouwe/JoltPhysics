@@ -114,13 +114,13 @@ public:
 	const Array<Plane> &	GetPlanes() const													{ return mPlanes; }
 
 	/// Get the number of vertices in this convex hull
-	inline uint				GetNumPoints() const												{ return (uint)mPoints.size(); }
+	inline uint				GetNumPoints() const												{ return uint(mPoints.size()); }
 
 	/// Get a vertex of this convex hull relative to the center of mass
 	inline Vec3				GetPoint(uint inIndex) const										{ return mPoints[inIndex].mPosition; }
 
 	/// Get the number of faces in this convex hull
-	inline uint				GetNumFaces() const													{ return (uint)mFaces.size(); }
+	inline uint				GetNumFaces() const													{ return uint(mFaces.size()); }
 
 	/// Get the number of vertices in a face
 	inline uint				GetNumVerticesInFace(uint inFaceIndex) const						{ return mFaces[inFaceIndex].mNumVertices; }

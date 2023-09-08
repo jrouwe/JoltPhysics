@@ -89,7 +89,7 @@ public:
 
 	/// Get individual components
 #if defined(JPH_USE_SSE)
-	JPH_INLINE uint32			GetX() const										{ return (uint32)_mm_cvtsi128_si32(mValue); }
+	JPH_INLINE uint32			GetX() const										{ return uint32(_mm_cvtsi128_si32(mValue)); }
 	JPH_INLINE uint32			GetY() const										{ return mU32[1]; }
 	JPH_INLINE uint32			GetZ() const										{ return mU32[2]; }
 	JPH_INLINE uint32			GetW() const										{ return mU32[3]; }

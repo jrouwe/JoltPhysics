@@ -244,7 +244,7 @@ public:
 	const SubShapes &				GetSubShapes() const									{ return mSubShapes; }
 
 	/// Get the total number of sub shapes
-	uint							GetNumSubShapes() const									{ return (uint)mSubShapes.size(); }
+	uint							GetNumSubShapes() const									{ return uint(mSubShapes.size()); }
 
 	/// Access to a particular sub shape
 	const SubShape &				GetSubShape(uint inIdx) const							{ return mSubShapes[inIdx]; }
@@ -319,7 +319,7 @@ protected:
 	inline uint						GetSubShapeIDBits() const
 	{
 		// Ensure we have enough bits to encode our shape [0, n - 1]
-		uint32 n = (uint32)mSubShapes.size() - 1;
+		uint32 n = uint32(mSubShapes.size()) - 1;
 		return 32 - CountLeadingZeros(n);
 	}
 

@@ -38,9 +38,9 @@ public:
 	inline pointer			allocate(size_type inN)
 	{
 		if constexpr (alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16))
-			return (pointer)AlignedAllocate(inN * sizeof(value_type), alignof(T));
+			return pointer(AlignedAllocate(inN * sizeof(value_type), alignof(T)));
 		else
-			return (pointer)Allocate(inN * sizeof(value_type));
+			return pointer(Allocate(inN * sizeof(value_type)));
 	}
 
 	/// Free memory

@@ -193,8 +193,8 @@ public:
 	/// Create a batch of triangles that can be drawn efficiently
 	virtual Batch						CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount) = 0;
 	virtual Batch						CreateTriangleBatch(const Vertex *inVertices, int inVertexCount, const uint32 *inIndices, int inIndexCount) = 0;
-	Batch								CreateTriangleBatch(const Array<Triangle> &inTriangles) { return CreateTriangleBatch(inTriangles.empty()? nullptr : &inTriangles[0], (int)inTriangles.size()); }
-	Batch								CreateTriangleBatch(const Array<Vertex> &inVertices, const Array<uint32> &inIndices) { return CreateTriangleBatch(inVertices.empty()? nullptr : &inVertices[0], (int)inVertices.size(), inIndices.empty()? nullptr : &inIndices[0], (int)inIndices.size()); }
+	Batch								CreateTriangleBatch(const Array<Triangle> &inTriangles) { return CreateTriangleBatch(inTriangles.empty()? nullptr : &inTriangles[0], int(inTriangles.size())); }
+	Batch								CreateTriangleBatch(const Array<Vertex> &inVertices, const Array<uint32> &inIndices) { return CreateTriangleBatch(inVertices.empty()? nullptr : &inVertices[0], int(inVertices.size()), inIndices.empty()? nullptr : &inIndices[0], int(inIndices.size())); }
 	Batch								CreateTriangleBatch(const VertexList &inVertices, const IndexedTriangleNoMaterialList &inTriangles);
 
 	/// Create a primitive for a convex shape using its support function
