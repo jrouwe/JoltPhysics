@@ -121,31 +121,31 @@ public:
 template <class T>
 bool OSIsType(Array<T> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
-	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName));
+	return (inArrayDepth > 0 && OSIsType(static_cast<T *>(nullptr), inArrayDepth - 1, inDataType, inClassName));
 }
 
 template <class T, uint N>
 bool OSIsType(StaticArray<T, N> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
-	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName));
+	return (inArrayDepth > 0 && OSIsType(static_cast<T *>(nullptr), inArrayDepth - 1, inDataType, inClassName));
 }
 
 template <class T, uint N>
 bool OSIsType(T (*)[N], int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
-	return (inArrayDepth > 0 && OSIsType((T *)nullptr, inArrayDepth - 1, inDataType, inClassName));
+	return (inArrayDepth > 0 && OSIsType(static_cast<T *>(nullptr), inArrayDepth - 1, inDataType, inClassName));
 }
 
 template <class T>
 bool OSIsType(Ref<T> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
-	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
+	return OSIsType(static_cast<T *>(nullptr), inArrayDepth, inDataType, inClassName);
 }
 
 template <class T>
 bool OSIsType(RefConst<T> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
-	return OSIsType((T *)nullptr, inArrayDepth, inDataType, inClassName);
+	return OSIsType(static_cast<T *>(nullptr), inArrayDepth, inDataType, inClassName);
 }
 
 /// Define serialization templates for dynamic arrays
@@ -233,7 +233,7 @@ template <class T>
 void OSWriteDataType(IObjectStreamOut &ioStream, Array<T> *)
 {
 	ioStream.WriteDataType(EOSDataType::Array);
-	OSWriteDataType(ioStream, (T *)nullptr);
+	OSWriteDataType(ioStream, static_cast<T *>(nullptr));
 }
 
 template <class T>
@@ -241,7 +241,7 @@ void OSWriteData(IObjectStreamOut &ioStream, const Array<T> &inArray)
 {
 	// Write size of array
 	ioStream.HintNextItem();
-	ioStream.WriteCount((uint32)inArray.size());
+	ioStream.WriteCount(static_cast<uint32>(inArray.size()));
 
 	// Write data in array
 	ioStream.HintIndentUp();
@@ -255,7 +255,7 @@ template <class T, uint N>
 void OSWriteDataType(IObjectStreamOut &ioStream, StaticArray<T, N> *)
 {
 	ioStream.WriteDataType(EOSDataType::Array);
-	OSWriteDataType(ioStream, (T *)nullptr);
+	OSWriteDataType(ioStream, static_cast<T *>(nullptr));
 }
 
 template <class T, uint N>
@@ -277,7 +277,7 @@ template <class T, uint N>
 void OSWriteDataType(IObjectStreamOut &ioStream, T (*)[N])
 {
 	ioStream.WriteDataType(EOSDataType::Array);
-	OSWriteDataType(ioStream, (T *)nullptr);
+	OSWriteDataType(ioStream, static_cast<T *>(nullptr));
 }
 
 template <class T, uint N>
@@ -285,7 +285,7 @@ void OSWriteData(IObjectStreamOut &ioStream, const T (&inArray)[N])
 {
 	// Write size of array
 	ioStream.HintNextItem();
-	ioStream.WriteCount((uint32)N);
+	ioStream.WriteCount(uint32(N));
 
 	// Write data in array
 	ioStream.HintIndentUp();
@@ -298,7 +298,7 @@ void OSWriteData(IObjectStreamOut &ioStream, const T (&inArray)[N])
 template <class T>
 void OSWriteDataType(IObjectStreamOut &ioStream, Ref<T> *)
 {
-	OSWriteDataType(ioStream, (T *)nullptr);
+	OSWriteDataType(ioStream, static_cast<T *>(nullptr));
 }
 
 template <class T>
@@ -313,7 +313,7 @@ void OSWriteData(IObjectStreamOut &ioStream, const Ref<T> &inRef)
 template <class T>
 void OSWriteDataType(IObjectStreamOut &ioStream, RefConst<T> *)
 {
-	OSWriteDataType(ioStream, (T *)nullptr);
+	OSWriteDataType(ioStream, static_cast<T *>(nullptr));
 }
 
 template <class T>

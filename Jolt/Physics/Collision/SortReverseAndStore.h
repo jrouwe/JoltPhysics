@@ -26,7 +26,7 @@ JPH_INLINE int SortReverseAndStore(Vec4Arg inValues, float inMaxValue, UVec4 &io
 	ioIdentifiers = ioIdentifiers.ShiftComponents4Minus(num_results);
 
 	// Store the values
-	inValues.StoreFloat4((Float4 *)outValues);
+	inValues.StoreFloat4(reinterpret_cast<Float4 *>(outValues));
 
 	return num_results;
 }

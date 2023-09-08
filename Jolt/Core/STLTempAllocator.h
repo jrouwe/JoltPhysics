@@ -37,7 +37,7 @@ public:
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
 	{
-		return (pointer)mAllocator.Allocate(uint(inN * sizeof(value_type)));
+		return pointer(mAllocator.Allocate(uint(inN * sizeof(value_type))));
 	}
 
 	/// Free memory
