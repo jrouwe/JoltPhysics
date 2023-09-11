@@ -4,13 +4,23 @@
 
 #pragma once
 
+#include <Jolt/Core/Core.h>
+
 JPH_NAMESPACE_BEGIN
+
+JPH_EXPORT extern bool VerifyJoltVersionIDInternal(uint64);
+
+/// This function can be used to verify the library ABI is compatible with your
+/// application.
+/// Use it in this way: `assert(VerifyJoltVersionID());`.
+/// Returns `false` if the library used is not compatible with your app.
+JPH_INLINE bool VerifyJoltVersionID() { return VerifyJoltVersionIDInternal(JPH_VERSION_ID); }
 
 /// Internal helper function
 JPH_EXPORT extern void RegisterTypesInternal(uint64 inVersionID);
 
 /// Register all physics types with the factory
-inline void RegisterTypes() { RegisterTypesInternal(JPH_VERSION_ID); }
+JPH_INLINE void RegisterTypes() { RegisterTypesInternal(JPH_VERSION_ID); }
 
 /// Unregisters all types with the factory and cleans up the default material
 JPH_EXPORT extern void UnregisterTypes();

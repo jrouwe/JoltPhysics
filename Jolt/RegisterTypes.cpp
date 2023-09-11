@@ -69,10 +69,15 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SoftBodyCreationSet
 
 JPH_NAMESPACE_BEGIN
 
+bool VerifyJoltVersionIDInternal(uint64 inVersionID)
+{
+	return inVersionID == JPH_VERSION_ID;
+}
+
 void RegisterTypesInternal(uint64 inVersionID)
 {
 	// Version check
-	if (inVersionID != JPH_VERSION_ID)
+	if (!VerifyJoltVersionIDInternal(inVersionID))
 	{
 		JPH_ASSERT(false, "Version mismatch, make sure you compile the client code with the same Jolt version and compiler definitions!");
 		JPH_CRASH;
