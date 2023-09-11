@@ -40,7 +40,7 @@ bool NarrowPhaseQuery::CastRay(const RRayCast &inRay, RayCastResult &ioHit, cons
 			{
 				// Lock the body
 				BodyLockRead lock(mBodyLockInterface, inResult.mBodyID);
-				if (lock.Succeeded())
+				if (lock.SucceededAndIsInBroadPhase()) // Race condition: body could have been removed since it has been found in the broadphase, ensures body is in the broadphase while we call the callbacks
 				{
 					const Body &body = lock.GetBody();
 
@@ -106,7 +106,7 @@ void NarrowPhaseQuery::CastRay(const RRayCast &inRay, const RayCastSettings &inR
 			{
 				// Lock the body
 				BodyLockRead lock(mBodyLockInterface, inResult.mBodyID);
-				if (lock.Succeeded())
+				if (lock.SucceededAndIsInBroadPhase()) // Race condition: body could have been removed since it has been found in the broadphase, ensures body is in the broadphase while we call the callbacks
 				{
 					const Body &body = lock.GetBody();
 
@@ -169,7 +169,7 @@ void NarrowPhaseQuery::CollidePoint(RVec3Arg inPoint, CollidePointCollector &ioC
 			{
 				// Lock the body
 				BodyLockRead lock(mBodyLockInterface, inResult);
-				if (lock.Succeeded())
+				if (lock.SucceededAndIsInBroadPhase()) // Race condition: body could have been removed since it has been found in the broadphase, ensures body is in the broadphase while we call the callbacks
 				{
 					const Body &body = lock.GetBody();
 
@@ -235,7 +235,7 @@ void NarrowPhaseQuery::CollideShape(const Shape *inShape, Vec3Arg inShapeScale, 
 			{
 				// Lock the body
 				BodyLockRead lock(mBodyLockInterface, inResult);
-				if (lock.Succeeded())
+				if (lock.SucceededAndIsInBroadPhase()) // Race condition: body could have been removed since it has been found in the broadphase, ensures body is in the broadphase while we call the callbacks
 				{
 					const Body &body = lock.GetBody();
 
@@ -309,7 +309,7 @@ void NarrowPhaseQuery::CastShape(const RShapeCast &inShapeCast, const ShapeCastS
 			{
 				// Lock the body
 				BodyLockRead lock(mBodyLockInterface, inResult.mBodyID);
-				if (lock.Succeeded())
+				if (lock.SucceededAndIsInBroadPhase()) // Race condition: body could have been removed since it has been found in the broadphase, ensures body is in the broadphase while we call the callbacks
 				{
 					const Body &body = lock.GetBody();
 
@@ -371,7 +371,7 @@ void NarrowPhaseQuery::CollectTransformedShapes(const AABox &inBox, TransformedS
 			{
 				// Lock the body
 				BodyLockRead lock(mBodyLockInterface, inResult);
-				if (lock.Succeeded())
+				if (lock.SucceededAndIsInBroadPhase()) // Race condition: body could have been removed since it has been found in the broadphase, ensures body is in the broadphase while we call the callbacks
 				{
 					const Body &body = lock.GetBody();
 
