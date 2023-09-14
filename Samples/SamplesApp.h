@@ -15,6 +15,11 @@
 #include <Jolt/Physics/StateRecorderImpl.h>
 #include <Layers.h>
 
+// STL includes
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <chrono>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 namespace JPH {
 	class JobSystem;
 	class TempAllocator;
@@ -222,5 +227,5 @@ private:
 
 	// Timing
 	uint					mStepNumber = 0;											// Which step number we're accumulating
-	uint64					mTotalTime = 0;												// How many tick we spent
+	chrono::microseconds	mTotalTime { 0 };											// How many nano seconds we spent simulating
 };

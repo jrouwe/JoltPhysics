@@ -2347,8 +2347,8 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 		mTest->PrePhysicsUpdate(pre_update);
 	}
 
-	// Remember start tick
-	uint64 start_tick = GetProcessorTickCount();
+	// Remember start time
+	chrono::high_resolution_clock::time_point clock_start = chrono::high_resolution_clock::now();
 
 	// Step the world (with fixed frequency)
 	mPhysicsSystem->Update(delta_time, mCollisionSteps, mTempAllocator, inJobSystem);
@@ -2357,16 +2357,17 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 #endif // JPH_DISABLE_TEMP_ALLOCATOR
 
 	// Accumulate time
-	mTotalTime += GetProcessorTickCount() - start_tick;
+	chrono::high_resolution_clock::time_point clock_end = chrono::high_resolution_clock::now();
+	chrono::microseconds duration = chrono::duration_cast<chrono::microseconds>(clock_end - clock_start);
+	mTotalTime += duration;
 	mStepNumber++;
 
 	// Print timing information
 	constexpr int cNumSteps = 60;
 	if (mStepNumber % cNumSteps == 0)
 	{
-		double us_per_step = double(mTotalTime / cNumSteps) / double(GetProcessorTicksPerSecond()) * 1.0e6;
-		Trace("Timing: %d, %.0f", mStepNumber / cNumSteps, us_per_step);
-		mTotalTime = 0;
+		Trace("Timing: %d, %d", mStepNumber / cNumSteps, mTotalTime.count() / cNumSteps);
+		mTotalTime = chrono::microseconds(0);
 	}
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
