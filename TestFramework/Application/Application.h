@@ -8,6 +8,11 @@
 #include <Input/Mouse.h>
 #include <Jolt/Core/Reference.h>
 
+// STL includes
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <chrono>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 class UIManager;
 class DebugUI;
 namespace JPH {
@@ -91,7 +96,7 @@ private:
 	/// Draw the frame rate counter
 	void						DrawFPS(float inDeltaTime);
 
-	uint64						mLastUpdateTicks;
+	chrono::high_resolution_clock::time_point mLastUpdateTime;
 	bool						mIsPaused = false;
 	bool						mSingleStep = false;
 	bool						mDebugRendererCleared = true;

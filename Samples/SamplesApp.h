@@ -15,11 +15,6 @@
 #include <Jolt/Physics/StateRecorderImpl.h>
 #include <Layers.h>
 
-// STL includes
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <chrono>
-JPH_SUPPRESS_WARNINGS_STD_END
-
 namespace JPH {
 	class JobSystem;
 	class TempAllocator;
