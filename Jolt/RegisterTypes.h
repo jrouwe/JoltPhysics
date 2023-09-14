@@ -4,11 +4,10 @@
 
 #pragma once
 
-#include <Jolt/Core/Core.h>
-
 JPH_NAMESPACE_BEGIN
 
-JPH_EXPORT extern bool VerifyJoltVersionIDInternal(uint64);
+/// Internal helper function
+JPH_EXPORT extern bool VerifyJoltVersionIDInternal(uint64 inVersionID);
 
 /// This function can be used to verify the library ABI is compatible with your
 /// application.
