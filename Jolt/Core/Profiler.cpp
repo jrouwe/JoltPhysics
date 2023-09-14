@@ -53,6 +53,8 @@ void Profiler::NextFrame()
 
 	for (ProfileThread *t : mThreads)
 		t->mCurrentSample = 0;
+
+	UpdateReferenceTime();
 }
 
 void Profiler::Dump(const string_view &inTag)

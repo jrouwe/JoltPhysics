@@ -42,6 +42,9 @@ JPH_INLINE uint64 GetProcessorTickCount()
 
 #endif // JPH_PLATFORM_WINDOWS_UWP || (JPH_PLATFORM_WINDOWS && JPH_CPU_ARM)
 
+/// We measure the amount of ticks per second, this function resets the reference time point
+JPH_EXPORT void UpdateReferenceTime();
+
 /// Get the amount of ticks per second, note that this number will never be fully accurate as the amound of ticks per second may vary with CPU load, so this number is only to be used to give an indication of time for profiling purposes
 JPH_EXPORT uint64 GetProcessorTicksPerSecond();
 
