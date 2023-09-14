@@ -7,6 +7,7 @@
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/TickCounter.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
@@ -88,6 +89,9 @@ void RegisterTypesInternal(uint64 inVersionID)
 #endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
 
 	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");
+
+	// Set the initial reference time
+	UpdateReferenceTime();
 
 	// Initialize dispatcher
 	CollisionDispatch::sInit();

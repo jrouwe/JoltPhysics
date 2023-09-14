@@ -80,7 +80,7 @@ Application::Application() :
 	}
 
 	// Get initial time
-	mLastUpdateTicks = GetProcessorTickCount();
+	mLastUpdateTime = chrono::high_resolution_clock::now();
 }
 
 // Destructor
@@ -163,10 +163,10 @@ void Application::Run()
 				}
 
 			// Calculate delta time
-			uint64 ticks = GetProcessorTickCount();
-			uint64 delta = ticks - mLastUpdateTicks;
-			mLastUpdateTicks = ticks;
-			float clock_delta_time = float(delta) / float(GetProcessorTicksPerSecond());
+			chrono::high_resolution_clock::time_point time = chrono::high_resolution_clock::now();
+			chrono::microseconds delta = chrono::duration_cast<chrono::microseconds>(time - mLastUpdateTime);
+			mLastUpdateTime = time;
+			float clock_delta_time = 1.0e-6f * delta.count();
 			float world_delta_time = !mIsPaused || mSingleStep? clock_delta_time : 0.0f;
 			mSingleStep = false;
 

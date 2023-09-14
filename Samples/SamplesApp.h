@@ -222,5 +222,5 @@ private:
 
 	// Timing
 	uint					mStepNumber = 0;											// Which step number we're accumulating
-	uint64					mTotalTime = 0;												// How many tick we spent
+	chrono::microseconds	mTotalTime { 0 };											// How many nano seconds we spent simulating
 };
