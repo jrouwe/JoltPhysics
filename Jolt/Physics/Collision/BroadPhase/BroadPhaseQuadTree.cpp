@@ -583,9 +583,14 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 
 void BroadPhaseQuadTree::ReportStats()
 {
-	Trace("Query Type, Filter Description, Tree Name, Num Queries, Total Time (ms), Total Time Excl. Collector (ms), Nodes Visited, Bodies Visited, Hits Reported, Hits Reported vs Bodies Visited (%%), Hits Reported vs Nodes Visited");
+	Trace("Query Type, Filter Description, Tree Name, Num Queries, Total Time (%%), Total Time Excl. Collector (%%), Nodes Visited, Bodies Visited, Hits Reported, Hits Reported vs Bodies Visited (%%), Hits Reported vs Nodes Visited");
+
+	uint64 total_ticks = 0;
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
-		mLayers[l].ReportStats();
+		total_ticks += mLayers[l].GetTicks100Pct();
+		
+	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
+		mLayers[l].ReportStats(total_ticks);
 }
 
 #endif // JPH_TRACK_BROADPHASE_STATS

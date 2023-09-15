@@ -41,6 +41,20 @@ Profiler *Profiler::sInstance = nullptr;
 
 bool ProfileMeasurement::sOutOfSamplesReported = false;
 
+void Profiler::UpdateReferenceTime()
+{
+	mReferenceTick = GetProcessorTickCount();
+	mReferenceTime = std::chrono::high_resolution_clock::now();
+}
+
+uint64 Profiler::GetProcessorTicksPerSecond() const
+{
+	uint64 ticks = GetProcessorTickCount();
+	std::chrono::high_resolution_clock::time_point time = std::chrono::high_resolution_clock::now();
+
+	return (ticks - mReferenceTick) * 1000000000ULL / std::chrono::duration_cast<std::chrono::nanoseconds>(time - mReferenceTime).count();
+}
+
 void Profiler::NextFrame()
 {
 	std::lock_guard lock(mLock);

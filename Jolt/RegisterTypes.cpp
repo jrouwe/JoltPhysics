@@ -90,9 +90,6 @@ void RegisterTypesInternal(uint64 inVersionID)
 
 	JPH_ASSERT(Factory::sInstance != nullptr, "Need to create a factory first!");
 
-	// Set the initial reference time
-	UpdateReferenceTime();
-
 	// Initialize dispatcher
 	CollisionDispatch::sInit();
 

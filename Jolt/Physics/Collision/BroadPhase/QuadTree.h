@@ -249,8 +249,11 @@ public:
 	void						FindCollidingPairs(const BodyVector &inBodies, const BodyID *inActiveBodies, int inNumActiveBodies, float inSpeculativeContactDistance, BodyPairCollector &ioPairCollector, const ObjectLayerPairFilter &inObjectLayerPairFilter) const;
 
 #ifdef JPH_TRACK_BROADPHASE_STATS
+	/// Sum up all the ticks spent in the various layers
+	uint64						GetTicks100Pct() const;
+
 	/// Trace the stats of this tree to the TTY
-	void						ReportStats() const;
+	void						ReportStats(uint64 inTicks100Pct) const;
 #endif // JPH_TRACK_BROADPHASE_STATS
 
 private:
@@ -335,8 +338,11 @@ private:
 
 	using LayerToStats = UnorderedMap<String, Stat>;
 
+	/// Sum up all the ticks in a layer
+	uint64						GetTicks100Pct(const LayerToStats &inLayer) const;
+
 	/// Trace the stats of a single query type to the TTY
-	void						ReportStats(const char *inName, const LayerToStats &inLayer) const;
+	void						ReportStats(const char *inName, const LayerToStats &inLayer, uint64 inTicks100Pct) const;
 
 	mutable LayerToStats		mCastRayStats;
 	mutable LayerToStats		mCollideAABoxStats;
