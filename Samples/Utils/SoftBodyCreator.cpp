@@ -81,6 +81,10 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSize, float inGridSpacing, bo
 			settings->AddFace(f);
 		}
 
+	// Optimize the settings
+	SoftBodySharedSettings::OptimizationResults results;
+	settings->Optimize(results);
+
 	return settings;
 }
 
@@ -221,6 +225,10 @@ Ref<SoftBodySharedSettings> CreateCube(uint inGridSize, float inGridSpacing)
 			settings->AddFace(f);
 		}
 
+	// Optimize the settings
+	SoftBodySharedSettings::OptimizationResults results;
+	settings->Optimize(results);
+
 	return settings;
 }
 
@@ -302,6 +310,10 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 		f.mVertex[2] = vertex_index(inNumTheta - 1, 0);
 		settings->AddFace(f);
 	}
+
+	// Optimize the settings
+	SoftBodySharedSettings::OptimizationResults results;
+	settings->Optimize(results);
 
 	return settings;
 }

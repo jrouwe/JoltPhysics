@@ -8,6 +8,7 @@
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/QuickSort.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -71,6 +72,64 @@ void SoftBodySharedSettings::CalculateVolumeConstraintVolumes()
 
 		v.mSixRestVolume = abs(x1x2.Cross(x1x3).Dot(x1x4));
 	}
+}
+
+void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
+{
+	const uint cNonParallelSplitIdx = 31;
+	const uint cMinimumSize = 64;
+
+	// Assign edges to non-overlapping groups
+	Array<uint32> masks;
+	masks.resize(mVertices.size(), 0);
+	Array<uint> edge_groups[32];
+	for (Edge &e : mEdgeConstraints)
+	{
+		uint32 &mask1 = masks[e.mVertex[0]];
+		uint32 &mask2 = masks[e.mVertex[1]];
+		uint split = min(CountTrailingZeros((~mask1) & (~mask2)), cNonParallelSplitIdx);
+		uint32 mask = uint32(1U << split);
+		mask1 |= mask;
+		mask2 |= mask;
+		edge_groups[split].push_back(uint(&e - mEdgeConstraints.data()));
+	}
+
+	// Merge groups that are too small into the non-parallel group
+	for (uint i = 0; i < cNonParallelSplitIdx; ++i)
+		if (edge_groups[i].size() < cMinimumSize)
+		{
+			edge_groups[cNonParallelSplitIdx].insert(edge_groups[cNonParallelSplitIdx].end(), edge_groups[i].begin(), edge_groups[i].end());
+			edge_groups[i].clear();
+		}
+
+	// Order the edges so that the ones with the smallest index go first (hoping to get better cache locality when we process the edges).
+	// Note we could also re-order the vertices but that would be much more of a burden to the end user
+	for (Array<uint> &group : edge_groups)
+		QuickSort(group.begin(), group.end(), [this](uint inLHS, uint inRHS)
+			{
+				const Edge &e1 = mEdgeConstraints[inLHS];
+				const Edge &e2 = mEdgeConstraints[inRHS];
+				return min(e1.mVertex[0], e1.mVertex[1]) < min(e2.mVertex[0], e2.mVertex[1]);
+			});
+
+	// Assign the edges to groups and reorder them
+	Array<Edge> temp_edges;
+	temp_edges.swap(mEdgeConstraints);
+	mEdgeConstraints.reserve(temp_edges.size());
+	for (Array<uint> &group : edge_groups)
+		if (!group.empty())
+		{
+			for (uint idx : group)
+			{
+				mEdgeConstraints.push_back(temp_edges[idx]);
+				outResults.mEdgeRemap.push_back(idx);
+			}
+			mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
+		}
+
+	// If there is no non-parallel group then add an empty group at the end
+	if (edge_groups[cNonParallelSplitIdx].empty())
+		mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
 }
 
 void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
