@@ -315,13 +315,13 @@
 	// Configuration for a popular game console.
 	// This file is not distributed because it would violate an NDA.
 	// Creating one should only be a couple of minutes of work if you have the documentation for the platform
-	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS and JPH_PLATFORM_BLUE_GET_TICK_FREQUENCY and include the right header).
+	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS, JPH_PLATFORM_BLUE_MUTEX*, JPH_PLATFORM_BLUE_RWLOCK* and include the right header).
 	#include <Jolt/Core/PlatformBlue.h>
 #elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
 	#if defined(JPH_CPU_X86)
-		#define JPH_BREAKPOINT		__asm volatile ("int $0x3")
+		#define JPH_BREAKPOINT	__asm volatile ("int $0x3")
 	#elif defined(JPH_CPU_ARM)
-		#define JPH_BREAKPOINT		__builtin_trap()
+		#define JPH_BREAKPOINT	__builtin_trap()
 	#endif
 #elif defined(JPH_PLATFORM_WASM)
 	#define JPH_BREAKPOINT		do { } while (false) // Not supported
