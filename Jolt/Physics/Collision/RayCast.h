@@ -27,6 +27,12 @@ struct RayCastT
 		return { ray_origin, ray_direction };
 	}
 
+	/// Translate ray using inTranslation
+	RayCastType					Translated(typename Vec::ArgType inTranslation) const
+	{
+		return { inTranslation + mOrigin, mDirection };
+	}
+
 	/// Get point with fraction inFraction on ray (0 = start of ray, 1 = end of ray)
 	inline Vec					GetPointOnRay(float inFraction) const
 	{
