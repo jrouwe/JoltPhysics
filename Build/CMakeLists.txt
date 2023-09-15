@@ -44,6 +44,12 @@ option(USE_FMADD "Enable FMADD" ON)
 # Enable all warnings
 option(ENABLE_ALL_WARNINGS "Enable all warnings and warnings as errors" ON)
 
+# Setting to periodically trace broadphase stats to help determine if the broadphase layer configuration is optimal
+option(TRACK_BROADPHASE_STATS "Track Broadphase Stats" OFF)
+
+# Setting to periodically trace narrowphase stats to help determine which collision queries could be optimized
+option(TRACK_NARROWPHASE_STATS "Track Narrowphase Stats" OFF)
+
 include(CMakeDependentOption)
 
 # Ability to toggle between the static and DLL versions of the MSVC runtime library

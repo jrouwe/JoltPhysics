@@ -18,14 +18,7 @@
 	JPH_SUPPRESS_WARNING_POP
 #endif
 
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <chrono>
-JPH_SUPPRESS_WARNINGS_STD_END
-
 JPH_NAMESPACE_BEGIN
-
-static uint64 sReferenceTick;
-static std::chrono::high_resolution_clock::time_point sReferenceTime;
 
 #if defined(JPH_PLATFORM_WINDOWS_UWP) || (defined(JPH_PLATFORM_WINDOWS) && defined(JPH_CPU_ARM))
 
@@ -37,19 +30,5 @@ uint64 GetProcessorTickCount()
 }
 
 #endif // JPH_PLATFORM_WINDOWS_UWP || (JPH_PLATFORM_WINDOWS && JPH_CPU_ARM)
-
-void UpdateReferenceTime()
-{
-	sReferenceTick = GetProcessorTickCount();
-	sReferenceTime = std::chrono::high_resolution_clock::now();
-}
-
-uint64 GetProcessorTicksPerSecond()
-{
-	uint64 ticks = GetProcessorTickCount();
-	std::chrono::high_resolution_clock::time_point time = std::chrono::high_resolution_clock::now();
-
-	return (ticks - sReferenceTick) * 1000000000ULL / std::chrono::duration_cast<std::chrono::nanoseconds>(time - sReferenceTime).count();
-}
 
 JPH_NAMESPACE_END
