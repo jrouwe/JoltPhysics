@@ -340,10 +340,14 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	settings.mUseShrunkenShapeAndConvexRadius = true;
 	settings.mReturnDeepestPoint = false;
 
+	// Calculate how much extra fraction we need to add to the cast to account for the character padding
+	float character_padding_fraction = mCharacterPadding / sqrt(displacement_len_sq);
+
 	// Cast shape
 	Contact contact;
-	contact.mFraction = 1.0f + FLT_EPSILON;
+	contact.mFraction = 1.0f + character_padding_fraction;
 	ContactCastCollector collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, start.GetTranslation(), contact);
+	collector.ResetEarlyOutFraction(contact.mFraction);
 	RShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
 	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, start.GetTranslation(), collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 	if (contact.mBodyB.IsInvalid())
@@ -371,8 +375,11 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	{
 		// When there's only a single contact point or when we were unable to correct the fraction,
 		// we can just move the fraction back so that the character and its padding don't hit the contact point anymore
-		outContact.mFraction = max(0.0f, outContact.mFraction - mCharacterPadding / sqrt(displacement_len_sq));
+		outContact.mFraction = max(0.0f, outContact.mFraction - character_padding_fraction);
 	}
+
+	// Ensure that we never return a fraction that's bigger than 1 (which could happen due to float precision issues).
+	outContact.mFraction = min(outContact.mFraction, 1.0f);
 
 	return true;
 }
@@ -1237,9 +1244,8 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 #endif // JPH_DEBUG_RENDERER
 
 	// Move down towards the floor.
-	// Note that we travel the same amount down as we travelled up with the character padding and the specified extra
-	// If we don't add the character padding, we may miss the floor (note that GetFirstContactForSweep will subtract the padding when it finds a hit)
-	Vec3 down = -up - mCharacterPadding * mUp + inStepDownExtra;
+	// Note that we travel the same amount down as we travelled up with the specified extra
+	Vec3 down = -up + inStepDownExtra;
 	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 		return false; // No floor found, we're in mid air, cancel stair walk
 
