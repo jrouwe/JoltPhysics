@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Jolt/Geometry/AABox.h>
+#include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Body/MotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
 #include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
@@ -13,6 +14,7 @@ JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
 class Body;
+class Shape;
 class SoftBodyCreationSettings;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
@@ -89,11 +91,73 @@ public:
 	void								RestoreState(StateRecorder &inStream);
 
 private:
+	// Temporary data used by the update of a soft body
+	struct UpdateContext
+	{
+		RMat44							mCenterOfMassTransform;						///< Transform of the body relative to the soft body
+		Vec3							mGravity;									///< Gravity vector in local space of the soft body
+		float							mSubStepDeltaTime;							///< Delta time for each sub step
+		Vec3							mDisplacementDueToGravity;					///< Displacement of the center of mass due to gravity in the current time step
+	};
+
+	// Collect information about the colliding bodies
+	struct CollidingShape
+	{
+		/// Get the velocity of a point on this body
+		Vec3			GetPointVelocity(Vec3Arg inPointRelativeToCOM) const
+		{
+			return mLinearVelocity + mAngularVelocity.Cross(inPointRelativeToCOM);
+		}
+
+		Mat44							mCenterOfMassTransform;						///< Transform of the body relative to the soft body
+		RefConst<Shape>					mShape;										///< Shape of the body we hit
+		BodyID							mBodyID;									///< Body ID of the body we hit
+		EMotionType						mMotionType;								///< Motion type of the body we hit
+		float							mInvMass;									///< Inverse mass of the body we hit
+		float							mFriction;									///< Combined friction of the two bodies
+		float							mRestitution;								///< Combined restitution of the two bodies
+		bool 							mUpdateVelocities;							///< If the linear/angular velocity changed and the body needs to be updated
+		Mat44							mInvInertia;								///< Inverse inertia in local space to the soft body
+		Vec3							mLinearVelocity;							///< Linear velocity of the body in local space to the soft body
+		Vec3							mAngularVelocity;							///< Angular velocity of the body in local space to the soft body
+	};
+
+	/// Do a broad phase check and collect all bodies that can possibly collide with this soft body
+	void								DetermineCollidingShapes(const UpdateContext &inContext, Body &inSoftBody, PhysicsSystem &inSystem);
+
+	/// Do a narrow phase check and determine the closest feature that we can collide with
+	void								DetermineCollisionPlanes(const UpdateContext &inContext, float inDeltaTime);
+
+	/// Apply pressure force and update the vertex velocities
+	void								ApplyPressure(const UpdateContext &inContext);
+
+	/// Integrate the positions of all vertices by 1 sub step
+	void								IntegratePositions(const UpdateContext &inContext);
+
+	/// Enforce all volume constraints
+	void								ApplyVolumeConstraints(const UpdateContext &inContext);
+
+	/// Enforce all edge constraints
+	void								ApplyEdgeConstraints(const UpdateContext &inContext);
+
+	/// Enforce all collision constraints
+	void								ApplyCollisionConstraints();
+
+	/// Update all velocities according the the XPBD algorithm
+	void								UpdateVelocities(const UpdateContext &inContext);
+
+	/// Update the velocities of all rigid bodies that we collided with
+	void								UpdateRigidBodyVelocities(const UpdateContext &inContext, PhysicsSystem &inSystem);
+
+	/// Update the state of the soft body (position, velocity, bounds)
+	ECanSleep							UpdateSoftBodyState(const UpdateContext &inContext, float inDeltaTime, Vec3 &outDeltaPosition, PhysicsSystem &inSystem);
+
 	/// Returns 6 times the volume of the soft body
 	float								GetVolumeTimesSix() const;
 
 	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints
 	Array<Vertex>						mVertices;									///< Current state of all vertices in the simulation
+	Array<CollidingShape>				mCollidingShapes;							///< List of colliding shapes retrieved during the last update
 	AABox								mLocalBounds;								///< Bounding box of all vertices
 	AABox								mLocalPredictedBounds;						///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time
 	uint32								mNumIterations;								///< Number of solver iterations
