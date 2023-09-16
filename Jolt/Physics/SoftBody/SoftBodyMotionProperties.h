@@ -140,11 +140,8 @@ private:
 	/// Enforce all edge constraints
 	void								ApplyEdgeConstraints(const UpdateContext &inContext);
 
-	/// Enforce all collision constraints
-	void								ApplyCollisionConstraints();
-
-	/// Update all velocities according the the XPBD algorithm
-	void								UpdateVelocities(const UpdateContext &inContext);
+	/// Enforce all collision constraints & update all velocities according the the XPBD algorithm
+	void								ApplyCollisionConstraintsAndUpdateVelocities(const UpdateContext &inContext);
 
 	/// Update the velocities of all rigid bodies that we collided with
 	void								UpdateRigidBodyVelocities(const UpdateContext &inContext, PhysicsSystem &inSystem);

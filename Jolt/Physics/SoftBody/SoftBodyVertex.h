@@ -22,7 +22,6 @@ public:
 	int				mCollidingShapeIndex;				///< Index in the colliding shapes list of the body we may collide with
 	float			mLargestPenetration;				///< Used while finding the collision plane, stores the largest penetration found so far
 	float			mInvMass;							///< Inverse mass (1 / mass)
-	float			mProjectedDistance;					///< Distance along the normal of the collision plane along which the particle was moved to resolve the collision
 };
 
 JPH_NAMESPACE_END
