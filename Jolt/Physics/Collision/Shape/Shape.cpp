@@ -290,7 +290,7 @@ void Shape::sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg 
 			if (inShape.CastRay(ray.Transformed(inverse_transform), SubShapeIDCreator(), hit))
 			{
 				// Calculate penetration
-				float penetration = (hit.mFraction - 0.5f) * movement.Length();
+				float penetration = (0.5f - hit.mFraction) * movement.Length();
 				if (penetration > v.mLargestPenetration)
 				{
 					v.mLargestPenetration = penetration;
