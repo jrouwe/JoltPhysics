@@ -224,16 +224,16 @@ void BoxShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShape
 		ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void BoxShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void BoxShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
 	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
 	Vec3 half_extent = inScale.Abs() * mHalfExtent;
 
-	for (SoftBodyVertex &v : ioVertices)
-		if (v.mInvMass > 0.0f)
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
 		{
 			// Convert to local space
-			Vec3 local_pos = inverse_transform * v.mPosition;
+			Vec3 local_pos = inverse_transform * v->mPosition;
 
 			// Clamp point to inside box
 			Vec3 clamped_point = Vec3::sMax(Vec3::sMin(local_pos, half_extent), -half_extent);
@@ -245,9 +245,9 @@ void BoxShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg
 				Vec3 delta = half_extent - local_pos.Abs();
 				int index = delta.GetLowestComponentIndex();
 				float penetration = delta[index];
-				if (penetration > v.mLargestPenetration)
+				if (penetration > v->mLargestPenetration)
 				{
-					v.mLargestPenetration = penetration;
+					v->mLargestPenetration = penetration;
 
 					// Calculate contact point and normal
 					Vec3 possible_normals[] = { Vec3::sAxisX(), Vec3::sAxisY(), Vec3::sAxisZ() };
@@ -255,8 +255,8 @@ void BoxShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg
 					Vec3 point = normal * half_extent;
 
 					// Store collision
-					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
-					v.mCollidingShapeIndex = inCollidingShapeIndex;
+					v->mCollisionPlane = Plane::sFromPointAndNormal(point, normal).GetTransformed(inCenterOfMassTransform);
+					v->mCollidingShapeIndex = inCollidingShapeIndex;
 				}
 			}
 			else
@@ -267,15 +267,15 @@ void BoxShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg
 
 				// Penetration will be negative since we're not penetrating
 				float penetration = -normal_length;
-				if (penetration > v.mLargestPenetration)
+				if (penetration > v->mLargestPenetration)
 				{
 					normal /= normal_length;
 
-					v.mLargestPenetration = penetration;
+					v->mLargestPenetration = penetration;
 
 					// Store collision
-					v.mCollisionPlane = Plane::sFromPointAndNormal(clamped_point, normal).GetTransformed(inCenterOfMassTransform);
-					v.mCollidingShapeIndex = inCollidingShapeIndex;
+					v->mCollisionPlane = Plane::sFromPointAndNormal(clamped_point, normal).GetTransformed(inCenterOfMassTransform);
+					v->mCollidingShapeIndex = inCollidingShapeIndex;
 				}
 			}
 		}

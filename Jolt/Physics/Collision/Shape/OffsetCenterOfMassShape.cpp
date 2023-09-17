@@ -127,9 +127,9 @@ void OffsetCenterOfMassShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCrea
 	mInnerShape->CollidePoint(inPoint + mOffset, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void OffsetCenterOfMassShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void OffsetCenterOfMassShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
-	mInnerShape->CollideSoftBodyVertices(inCenterOfMassTransform.PreTranslated(-inScale * mOffset), inScale, ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+	mInnerShape->CollideSoftBodyVertices(inCenterOfMassTransform.PreTranslated(-inScale * mOffset), inScale, ioVertices, inNumVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
 }
 
 void OffsetCenterOfMassShape::CollectTransformedShapes(const AABox &inBox, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, const SubShapeIDCreator &inSubShapeIDCreator, TransformedShapeCollector &ioCollector, const ShapeFilter &inShapeFilter) const

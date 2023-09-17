@@ -259,7 +259,7 @@ void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 	// Can't be inside a triangle
 }
 
-void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
 	Vec3 v1 = inCenterOfMassTransform * (inScale * mV1);
 	Vec3 v2 = inCenterOfMassTransform * (inScale * mV2);
@@ -270,26 +270,26 @@ void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 
 	Vec3 triangle_normal = (v2 - v1).Cross(v3 - v1).NormalizedOr(Vec3::sAxisY());
 
-	for (SoftBodyVertex &v : ioVertices)
-		if (v.mInvMass > 0.0f)
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
 		{
 			// Get the closest point from the vertex to the triangle
 			uint32 set;
-			Vec3 v1_minus_position = v1 - v.mPosition;
-			Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(v1_minus_position, v2 - v.mPosition, v3 - v.mPosition, set);
+			Vec3 v1_minus_position = v1 - v->mPosition;
+			Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(v1_minus_position, v2 - v->mPosition, v3 - v->mPosition, set);
 
 			if (set == 0b111)
 			{
 				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 10cm penetration
 				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
 				float penetration = min(triangle_normal.Dot(v1_minus_position), 0.1f);
-				if (penetration > v.mLargestPenetration)
+				if (penetration > v->mLargestPenetration)
 				{
-					v.mLargestPenetration = penetration;
+					v->mLargestPenetration = penetration;
 
 					// Store collision
-					v.mCollisionPlane = Plane::sFromPointAndNormal(v1, triangle_normal);
-					v.mCollidingShapeIndex = inCollidingShapeIndex;
+					v->mCollisionPlane = Plane::sFromPointAndNormal(v1, triangle_normal);
+					v->mCollidingShapeIndex = inCollidingShapeIndex;
 				}
 			}
 			else if (closest_point.Dot(triangle_normal) < 0.0f) // Ignore back facing edges
@@ -297,17 +297,17 @@ void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 				// Closest point is on an edge or vertex, use closest point as collision plane
 				float closest_point_length = closest_point.Length();
 				float penetration = -closest_point_length;
-				if (penetration > v.mLargestPenetration)
+				if (penetration > v->mLargestPenetration)
 				{
-					v.mLargestPenetration = penetration;
+					v->mLargestPenetration = penetration;
 
 					// Calculate contact point and normal
-					Vec3 point = v.mPosition + closest_point;
+					Vec3 point = v->mPosition + closest_point;
 					Vec3 normal = -closest_point / closest_point_length;
 
 					// Store collision
-					v.mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-					v.mCollidingShapeIndex = inCollidingShapeIndex;
+					v->mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
+					v->mCollidingShapeIndex = inCollidingShapeIndex;
 				}
 			}
 		}

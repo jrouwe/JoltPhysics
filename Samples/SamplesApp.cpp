@@ -1406,29 +1406,28 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			// Create a soft body vertex
 			const float fraction = 0.2f;
 			const float max_distance = 10.0f;
-			SoftBodyVertex tmp_vertex;
-			tmp_vertex.mInvMass = 1.0f;
-			tmp_vertex.mPosition = fraction * direction;
-			tmp_vertex.mVelocity = 10.0f * direction;
-			tmp_vertex.mCollidingShapeIndex = -1;
-			tmp_vertex.mLargestPenetration = -FLT_MAX;
-			Array<SoftBodyVertex> vertices = { tmp_vertex };
+			SoftBodyVertex vertex;
+			vertex.mInvMass = 1.0f;
+			vertex.mPosition = fraction * direction;
+			vertex.mVelocity = 10.0f * direction;
+			vertex.mCollidingShapeIndex = -1;
+			vertex.mLargestPenetration = -FLT_MAX;
 
 			// Get shapes in a large radius around the start position
-			AABox box(Vec3(start + vertices[0].mPosition), max_distance);
+			AABox box(Vec3(start + vertex.mPosition), max_distance);
 			AllHitCollisionCollector<TransformedShapeCollector> collector;
 			mPhysicsSystem->GetNarrowPhaseQuery().CollectTransformedShapes(box, collector);
 
 			// Closest point found using CollideShape, position relative to 'start'
-			Vec3 closest_point = vertices[0].mPosition;
+			Vec3 closest_point = vertex.mPosition;
 			float closest_point_penetration = 0;
 
 			// Test against each shape
 			for (const TransformedShape &ts : collector.mHits)
 			{
 				int colliding_shape_index = int(&ts - collector.mHits.data());
-				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), ts.GetShapeScale(), vertices, 1.0f / 60.0f, Vec3::sZero(), colliding_shape_index);
-				if (vertices[0].mCollidingShapeIndex == colliding_shape_index)
+				ts.mShape->CollideSoftBodyVertices((RMat44::sTranslation(-start) * ts.GetCenterOfMassTransform()).ToMat44(), ts.GetShapeScale(), &vertex, 1, 1.0f / 60.0f, Vec3::sZero(), colliding_shape_index);
+				if (vertex.mCollidingShapeIndex == colliding_shape_index)
 				{
 					// To draw a plane, we need a point but CollideSoftBodyVertices doesn't provide one, so we use CollideShape with a tiny sphere to get the closest point and then project that onto the plane to draw the plane
 					SphereShape point_sphere(1.0e-6f);
@@ -1436,7 +1435,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					CollideShapeSettings settings;
 					settings.mMaxSeparationDistance = max_distance;
 					ClosestHitCollisionCollector<CollideShapeCollector> collide_shape_collector;
-					ts.CollideShape(&point_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(start + vertices[0].mPosition), settings, start, collide_shape_collector);
+					ts.CollideShape(&point_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(start + vertex.mPosition), settings, start, collide_shape_collector);
 					if (collide_shape_collector.HadHit())
 					{
 						closest_point = collide_shape_collector.mHit.mContactPointOn2;
@@ -1446,17 +1445,17 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			}
 
 			// Draw test point
-			mDebugRenderer->DrawMarker(start + vertices[0].mPosition, Color::sYellow, 0.1f);
+			mDebugRenderer->DrawMarker(start + vertex.mPosition, Color::sYellow, 0.1f);
 			mDebugRenderer->DrawMarker(start + closest_point, Color::sRed, 0.1f);
 
 			// Draw collision plane
-			if (vertices[0].mCollidingShapeIndex != -1)
+			if (vertex.mCollidingShapeIndex != -1)
 			{
-				RVec3 plane_point = start + closest_point - vertices[0].mCollisionPlane.GetNormal() * vertices[0].mCollisionPlane.SignedDistance(closest_point);
-				mDebugRenderer->DrawPlane(plane_point, vertices[0].mCollisionPlane.GetNormal(), Color::sGreen, 2.0f);
+				RVec3 plane_point = start + closest_point - vertex.mCollisionPlane.GetNormal() * vertex.mCollisionPlane.SignedDistance(closest_point);
+				mDebugRenderer->DrawPlane(plane_point, vertex.mCollisionPlane.GetNormal(), Color::sGreen, 2.0f);
 
-				if (abs(closest_point_penetration - vertices[0].mLargestPenetration) > 0.001f)
-					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", (double)vertices[0].mLargestPenetration, (double)closest_point_penetration));
+				if (abs(closest_point_penetration - vertex.mLargestPenetration) > 0.001f)
+					mDebugRenderer->DrawText3D(plane_point, StringFormat("Pen %f (exp %f)", (double)vertex.mLargestPenetration, (double)closest_point_penetration));
 			}
 		}
 		break;
