@@ -12,6 +12,7 @@
 #include <Layers.h>
 
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <commdlg.h>
 #include <fstream>
 JPH_SUPPRESS_WARNINGS_STD_END
 
@@ -22,9 +23,22 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(LoadSnapshotTest)
 
 void LoadSnapshotTest::Initialize()
 {
-	ifstream stream("snapshot.bin", ifstream::in | ifstream::binary);
+	// Let user browse for a file
+	char file_name[MAX_PATH] = "";
+	OPENFILENAMEA ofn;
+	memset(&ofn, 0, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.lpstrFilter = "Snapshots\0*.bin\0";
+	ofn.lpstrFile = file_name;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrTitle = "Select a Jolt Binary Snapshot";
+	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
+	if (!GetOpenFileNameA(&ofn))
+		return;
+
+	ifstream stream(file_name, ifstream::in | ifstream::binary);
 	if (!stream.is_open())
-		FatalError("Unable to open 'snapshot.bin'");
+		FatalError("Unable to open file");
 
 	StreamInWrapper wrapper(stream);
 	PhysicsScene::PhysicsSceneResult result = PhysicsScene::sRestoreFromBinaryState(wrapper);
@@ -41,9 +55,19 @@ void LoadSnapshotTest::Initialize()
 	default:	up_rotation = Quat::sIdentity();								break;
 	}
 
+	// Determine if we are forced to override the object layers because one of the bodies has a layer number that is invalid in the context of this application
+	bool override_layers = sOverrideLayers;
+	if (!override_layers)
+		for (BodyCreationSettings &settings : scene->GetBodies())
+			if (settings.mObjectLayer >= Layers::NUM_LAYERS)
+			{
+				override_layers = true;
+				break;
+			}
+
 	for (BodyCreationSettings &settings : scene->GetBodies())
 	{
-		if (sOverrideLayers)
+		if (override_layers)
 		{
 			// Override the layer so that all static objects are in the non-moving layer and everything else is in the moving layer
 			if (settings.mMotionType == EMotionType::Static)
