@@ -58,7 +58,10 @@ static const Color cColorResolveCCDContacts = Color::sGetDistinctColor(16);
 static const Color cColorSolvePositionConstraints = Color::sGetDistinctColor(17);
 static const Color cColorFindCCDContacts = Color::sGetDistinctColor(18);
 static const Color cColorStepListeners = Color::sGetDistinctColor(19);
-static const Color cColorUpdateSoftBodies = Color::sGetDistinctColor(20);
+static const Color cColorSoftBodyPrepare = Color::sGetDistinctColor(20);
+static const Color cColorSoftBodyCollide = Color::sGetDistinctColor(21);
+static const Color cColorSoftBodySimulate = Color::sGetDistinctColor(22);
+static const Color cColorSoftBodyFinalize = Color::sGetDistinctColor(23);
 
 PhysicsSystem::~PhysicsSystem()
 {
@@ -485,21 +488,63 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						context.mPhysicsSystem->JobSolvePositionConstraints(&context, &step);
 
 						// Kick the next step
-						if (step.mUpdateSoftBodies.IsValid())
-							step.mUpdateSoftBodies.RemoveDependency();
+						if (step.mSoftBodyPrepare.IsValid())
+							step.mSoftBodyPrepare.RemoveDependency();
 					}, 2); // depends on: resolve ccd contacts, finish building jobs.
 
 			// Unblock previous job.
 			step.mResolveCCDContacts.RemoveDependency();
 
-			step.mUpdateSoftBodies = inJobSystem->CreateJob("UpdateSoftBodies", cColorUpdateSoftBodies, [&context, &step]()
+			// The soft body prepare job will create other jobs if needed
+			step.mSoftBodyPrepare = inJobSystem->CreateJob("SoftBodyPrepare", cColorSoftBodyPrepare, [&context, &step]()
+				{
+					// Prepare soft body jobs, if no jobs the function will return false
+					if (context.mPhysicsSystem->JobSoftBodyPrepare(&context))
 					{
-						context.mPhysicsSystem->JobUpdateSoftBodies(&context);
+						// Get max number of concurrent jobs
+						int max_concurrency = context.GetMaxConcurrency();
 
-						// Kick the next step
+						// Create finalize job
+						step.mSoftBodyFinalize = context.mJobSystem->CreateJob("SoftBodyFinalize", cColorSoftBodyFinalize, [&context, &step]()
+						{
+							context.mPhysicsSystem->JobSoftBodyFinalize(&context);
+
+							// Kick the next step
+							if (step.mStartNextStep.IsValid())
+								step.mStartNextStep.RemoveDependency();
+						}, max_concurrency); // depends on: soft body simulate
+						context.mBarrier->AddJob(step.mSoftBodyFinalize);
+
+						// Create simulate jobs
+						step.mSoftBodySimulate.resize(max_concurrency);
+						for (int i = 0; i < max_concurrency; ++i)
+							step.mSoftBodySimulate[i] = context.mJobSystem->CreateJob("SoftBodySimulate", cColorSoftBodySimulate, [&context, &step]()
+								{
+									context.mPhysicsSystem->JobSoftBodySimulate(&context);
+
+									step.mSoftBodyFinalize.RemoveDependency();
+								}, max_concurrency); // depends on: soft body collide
+						context.mBarrier->AddJobs(step.mSoftBodySimulate.data(), step.mSoftBodySimulate.size());
+
+						// Create collision jobs
+						step.mSoftBodyCollide.resize(max_concurrency);
+						for (int i = 0; i < max_concurrency; ++i)
+							step.mSoftBodyCollide[i] = context.mJobSystem->CreateJob("SoftBodyCollide", cColorSoftBodyCollide, [&context, &step]()
+								{
+									context.mPhysicsSystem->JobSoftBodyCollide(&context);
+
+									for (JobHandle &h : step.mSoftBodySimulate)
+										h.RemoveDependency();
+								}); // depends on: nothing
+						context.mBarrier->AddJobs(step.mSoftBodyCollide.data(), step.mSoftBodyCollide.size());
+					}
+					else
+					{
+						// No active soft bodies: Kick the next step
 						if (step.mStartNextStep.IsValid())
 							step.mStartNextStep.RemoveDependency();
-					}, max_concurrency); // depends on: solve position constraints.
+					}
+				}, max_concurrency); // depends on: solve position constraints.
 
 			// Unblock previous jobs
 			JobHandle::sRemoveDependencies(step.mSolvePositionConstraints);
@@ -540,8 +585,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 			for (const JobHandle &h : step.mSolvePositionConstraints)
 				handles.push_back(h);
 			handles.push_back(step.mContactRemovedCallbacks);
-			if (step.mUpdateSoftBodies.IsValid())
-				handles.push_back(step.mUpdateSoftBodies);
+			if (step.mSoftBodyPrepare.IsValid())
+				handles.push_back(step.mSoftBodyPrepare);
 			if (step.mStartNextStep.IsValid())
 				handles.push_back(step.mStartNextStep);
 		}
@@ -2340,12 +2385,71 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 	while (check_islands || check_split_islands);
 }
 
-void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
+bool PhysicsSystem::JobSoftBodyPrepare(PhysicsUpdateContext *ioContext)
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Get the active soft bodies
+	BodyIDVector active_bodies;
+	mBodyManager.GetActiveBodies(EBodyType::SoftBody, active_bodies);
+
+	// Quit if there are no active soft bodies
+	if (active_bodies.empty())
+		return false;
+
+	// Sort to get a deterministic update order
+	QuickSort(active_bodies.begin(), active_bodies.end());
+
+	// Allocate soft body contexts
+	ioContext->mNumSoftBodies = (uint)active_bodies.size();
+	ioContext->mSoftBodyUpdateContexts = (SoftBodyUpdateContext *)ioContext->mTempAllocator->Allocate(ioContext->mNumSoftBodies * sizeof(SoftBodyUpdateContext));
+
+	// Initialize soft body contexts
+	for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
+	{
+		new (sb_ctx) SoftBodyUpdateContext;
+		Body &body = mBodyManager.GetBody(active_bodies[sb_ctx - ioContext->mSoftBodyUpdateContexts]);
+		SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
+		mp->InitializeUpdateContext(ioContext->mStepDeltaTime, body, *this, *sb_ctx);
+	}
+
+	// We're ready to collide the first soft body
+	ioContext->mSoftBodyToCollide.store(0, memory_order_release);
+	return true;
+}
+
+void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext)
+{
+	for (;;)
+	{
+		// Fetch the next soft body
+		uint sb_idx = ioContext->mSoftBodyToCollide.fetch_add(1, std::memory_order_acquire);
+		if (sb_idx >= ioContext->mNumSoftBodies)
+			break;
+
+		// Do a broadphase check
+		SoftBodyUpdateContext &sb_ctx = ioContext->mSoftBodyUpdateContexts[sb_idx];
+		sb_ctx.mMotionProperties->DetermineCollidingShapes(sb_ctx, *this);
+	}
+}
+
+void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext)
+{
+	// Keep running partial updates until everything has been updated
+	bool is_done;
+	do
+	{
+		is_done = true;
+		for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
+			is_done &= sb_ctx->mMotionProperties->PartialUpdate(*sb_ctx, mPhysicsSettings);
+	}
+	while (!is_done);
+}
+
+void PhysicsSystem::JobSoftBodyFinalize(PhysicsUpdateContext *ioContext)
+{
 #ifdef JPH_ENABLE_ASSERTS
-	// Can activate bodies only
+	// Can activate and deactivate bodies
 	BodyManager::GrantActiveBodiesAccess grant_active(true, true);
 #endif
 
@@ -2355,20 +2459,16 @@ void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
 	BodyID *bodies_to_put_to_sleep = (BodyID *)JPH_STACK_ALLOC(cBodiesBatch * sizeof(BodyID));
 	int num_bodies_to_put_to_sleep = 0;
 
-	// Loop through active bodies
-	BodyIDVector active_bodies;
-	mBodyManager.GetActiveBodies(EBodyType::SoftBody, active_bodies);
-	for (BodyID b : active_bodies)
+	for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
 	{
-		Body &body = mBodyManager.GetBody(b);
-		SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
+		// Apply the rigid body velocity deltas
+		sb_ctx->mMotionProperties->UpdateRigidBodyVelocities(*sb_ctx, *this);
 
-		// Update the soft body
-		Vec3 delta_position;
-		ECanSleep can_sleep = mp->Update(ioContext->mStepDeltaTime, body, delta_position, *this);
-		body.SetPositionAndRotationInternal(body.GetPosition() + delta_position, body.GetRotation(), false);
+		// Update the position
+		sb_ctx->mBody->SetPositionAndRotationInternal(sb_ctx->mBody->GetPosition() + sb_ctx->mDeltaPosition, sb_ctx->mBody->GetRotation(), false);
 
-		bodies_to_update_bounds[num_bodies_to_update_bounds++] = b;
+		BodyID id = sb_ctx->mBody->GetID();
+		bodies_to_update_bounds[num_bodies_to_update_bounds++] = id;
 		if (num_bodies_to_update_bounds == cBodiesBatch)
 		{
 			// Buffer full, flush now
@@ -2376,10 +2476,10 @@ void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
 			num_bodies_to_update_bounds = 0;
 		}
 
-		if (can_sleep == ECanSleep::CanSleep)
+		if (sb_ctx->mCanSleep == ECanSleep::CanSleep)
 		{
 			// This body should go to sleep
-			bodies_to_put_to_sleep[num_bodies_to_put_to_sleep++] = b;
+			bodies_to_put_to_sleep[num_bodies_to_put_to_sleep++] = id;
 			if (num_bodies_to_put_to_sleep == cBodiesBatch)
 			{
 				mBodyManager.DeactivateBodies(bodies_to_put_to_sleep, num_bodies_to_put_to_sleep);
@@ -2395,6 +2495,9 @@ void PhysicsSystem::JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext)
 	// Notify bodies to go to sleep
 	if (num_bodies_to_put_to_sleep > 0)
 		mBodyManager.DeactivateBodies(bodies_to_put_to_sleep, num_bodies_to_put_to_sleep);
+
+	// Free soft body contexts
+	ioContext->mTempAllocator->Free(ioContext->mSoftBodyUpdateContexts, ioContext->mNumSoftBodies * sizeof(SoftBodyUpdateContext));
 }
 
 void PhysicsSystem::SaveState(StateRecorder &inStream, EStateRecorderState inState, const StateRecorderFilter *inFilter) const

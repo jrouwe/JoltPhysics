@@ -90,7 +90,7 @@ float SoftBodyMotionProperties::GetVolumeTimesSix() const
 	return six_volume;
 }
 
-void SoftBodyMotionProperties::DetermineCollidingShapes(const UpdateContext &inContext, Body &inSoftBody, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -128,8 +128,8 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const UpdateContext &inC
 						const MotionProperties *mp = body.GetMotionProperties();
 						cs.mInvMass = mp->GetInverseMass();
 						cs.mInvInertia = mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
-						cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
-						cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
+						cs.mOriginalLinearVelocity = cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
+						cs.mOriginalAngularVelocity = cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
 					}
 					mHits.push_back(cs);
 				}
@@ -145,25 +145,26 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const UpdateContext &inC
 		Array<CollidingShape> &		mHits;
 	};
 
-	Collector collector(inSoftBody, inContext.mCenterOfMassTransform, inSystem, mCollidingShapes);
+	Collector collector(*inContext.mBody, inContext.mCenterOfMassTransform, inSystem, mCollidingShapes);
 	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
 	bounds = bounds.Transformed(inContext.mCenterOfMassTransform);
-	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inSystem.GetDefaultBroadPhaseLayerFilter(inSoftBody.GetObjectLayer());
-	DefaultObjectLayerFilter object_layer_filter = inSystem.GetDefaultLayerFilter(inSoftBody.GetObjectLayer());
+	ObjectLayer layer = inContext.mBody->GetObjectLayer();
+	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inSystem.GetDefaultBroadPhaseLayerFilter(layer);
+	DefaultObjectLayerFilter object_layer_filter = inSystem.GetDefaultLayerFilter(layer);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector, broadphase_layer_filter, object_layer_filter);
 }
 
-void SoftBodyMotionProperties::DetermineCollisionPlanes(const UpdateContext &inContext, float inDeltaTime, uint inVertexStart, uint inNumVertices)
+void SoftBodyMotionProperties::DetermineCollisionPlanes(const SoftBodyUpdateContext &inContext, uint inVertexStart, uint inNumVertices)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Generate collision planes
 	for (const CollidingShape &cs : mCollidingShapes)
-		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data() + inVertexStart, inNumVertices, inDeltaTime, inContext.mDisplacementDueToGravity, int(&cs - mCollidingShapes.data()));
+		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data() + inVertexStart, inNumVertices, inContext.mDeltaTime, inContext.mDisplacementDueToGravity, int(&cs - mCollidingShapes.data()));
 }
 
-void SoftBodyMotionProperties::ApplyPressure(const UpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyPressure(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -197,7 +198,7 @@ void SoftBodyMotionProperties::ApplyPressure(const UpdateContext &inContext)
 	}
 }
 
-void SoftBodyMotionProperties::IntegratePositions(const UpdateContext &inContext)
+void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -227,7 +228,7 @@ void SoftBodyMotionProperties::IntegratePositions(const UpdateContext &inContext
 		}
 }
 
-void SoftBodyMotionProperties::ApplyVolumeConstraints(const UpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -273,7 +274,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const UpdateContext &inCon
 	}
 }
 
-void SoftBodyMotionProperties::ApplyEdgeConstraints(const UpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -298,7 +299,7 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const UpdateContext &inConte
 	}
 }
 
-void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(const UpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -408,14 +409,12 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 		}
 }
 
-ECanSleep SoftBodyMotionProperties::UpdateSoftBodyState(const UpdateContext &inContext, float inDeltaTime, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Clear colliding shapes to avoid hanging on to references to shapes
-	mCollidingShapes.clear();
-
 	// Loop through vertices once more to update the global state
+	float dt = ioContext.mDeltaTime;
 	float max_linear_velocity_sq = Square(GetMaxLinearVelocity());
 	float max_v_sq = 0.0f;
 	Vec3 linear_velocity = Vec3::sZero(), angular_velocity = Vec3::sZero();
@@ -438,7 +437,7 @@ ECanSleep SoftBodyMotionProperties::UpdateSoftBodyState(const UpdateContext &inC
 		mLocalBounds.Encapsulate(v.mPosition);
 
 		// Create predicted position for the next frame in order to detect collisions before they happen
-		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + inContext.mDisplacementDueToGravity);
+		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * dt + ioContext.mDisplacementDueToGravity);
 
 		// Reset collision data for the next iteration
 		v.mCollidingShapeIndex = -1;
@@ -447,14 +446,14 @@ ECanSleep SoftBodyMotionProperties::UpdateSoftBodyState(const UpdateContext &inC
 
 	// Calculate linear/angular velocity of the body by averaging all vertices and bringing the value to world space
 	float num_vertices_divider = float(max(int(mVertices.size()), 1));
-	SetLinearVelocity(inContext.mCenterOfMassTransform.Multiply3x3(linear_velocity / num_vertices_divider));
-	SetAngularVelocity(inContext.mCenterOfMassTransform.Multiply3x3(angular_velocity / num_vertices_divider));
+	SetLinearVelocity(ioContext.mCenterOfMassTransform.Multiply3x3(linear_velocity / num_vertices_divider));
+	SetAngularVelocity(ioContext.mCenterOfMassTransform.Multiply3x3(angular_velocity / num_vertices_divider));
 
 	if (mUpdatePosition)
 	{
 		// Shift the body so that the position is the center of the local bounds
 		Vec3 delta = mLocalBounds.GetCenter();
-		outDeltaPosition = inContext.mCenterOfMassTransform.Multiply3x3(delta);
+		ioContext.mDeltaPosition = ioContext.mCenterOfMassTransform.Multiply3x3(delta);
 		for (Vertex &v : mVertices)
 			v.mPosition -= delta;
 
@@ -463,77 +462,102 @@ ECanSleep SoftBodyMotionProperties::UpdateSoftBodyState(const UpdateContext &inC
 		mLocalPredictedBounds.Translate(-delta);
 	}
 	else
-		outDeltaPosition = Vec3::sZero();
+		ioContext.mDeltaPosition = Vec3::sZero();
 
 	// Test if we should go to sleep
-	if (!GetAllowSleeping())
-		return ECanSleep::CannotSleep;
-
-	const PhysicsSettings &physics_settings = inSystem.GetPhysicsSettings();
-	if (max_v_sq > physics_settings.mPointVelocitySleepThreshold)
+	if (GetAllowSleeping())
 	{
-		ResetSleepTestTimer();
-		return ECanSleep::CannotSleep;
+		if (max_v_sq > inPhysicsSettings.mPointVelocitySleepThreshold)
+		{
+			ResetSleepTestTimer();
+			ioContext.mCanSleep = ECanSleep::CannotSleep;
+		}
+		else
+			ioContext.mCanSleep = AccumulateSleepTime(dt, inPhysicsSettings.mTimeBeforeSleep);
 	}
-
-	return AccumulateSleepTime(inDeltaTime, physics_settings.mTimeBeforeSleep);
+	else
+		ioContext.mCanSleep = ECanSleep::CannotSleep;
 }
 
-void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const UpdateContext &inContext, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem)
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Write back velocities
+	// Write back velocity deltas
 	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
 	for (const CollidingShape &cs : mCollidingShapes)
 		if (cs.mUpdateVelocities)
-			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, inContext.mCenterOfMassTransform.Multiply3x3(cs.mLinearVelocity), inContext.mCenterOfMassTransform.Multiply3x3(cs.mAngularVelocity));
+			body_interface.AddLinearAndAngularVelocity(cs.mBodyID, inContext.mCenterOfMassTransform.Multiply3x3(cs.mLinearVelocity - cs.mOriginalLinearVelocity), inContext.mCenterOfMassTransform.Multiply3x3(cs.mAngularVelocity - cs.mOriginalAngularVelocity));
+
+	// Clear colliding shapes to avoid hanging on to references to shapes
+	mCollidingShapes.clear();
 }
 
-ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &inSoftBody, PhysicsSystem &inSystem, SoftBodyUpdateContext &ioContext)
 {
 	JPH_PROFILE_FUNCTION();
 
-	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
-	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
-
-	UpdateContext context;
+	// Store body
+	ioContext.mBody = &inSoftBody;
+	ioContext.mMotionProperties = this;
 
 	// Convert gravity to local space
-	context.mCenterOfMassTransform = inSoftBody.GetCenterOfMassTransform();
-	context.mGravity = context.mCenterOfMassTransform.Multiply3x3Transposed(GetGravityFactor() * inSystem.GetGravity());
+	ioContext.mCenterOfMassTransform = inSoftBody.GetCenterOfMassTransform();
+	ioContext.mGravity = ioContext.mCenterOfMassTransform.Multiply3x3Transposed(GetGravityFactor() * inSystem.GetGravity());
 
 	// Calculate delta time for sub step
-	context.mSubStepDeltaTime = inDeltaTime / mNumIterations;
+	ioContext.mDeltaTime = inDeltaTime;
+	ioContext.mSubStepDeltaTime = inDeltaTime / mNumIterations;
 
 	// Calculate total displacement we'll have due to gravity over all sub steps
 	// The total displacement as produced by our integrator can be written as: Sum(i * g * dt^2, i = 0..mNumIterations).
 	// This is bigger than 0.5 * g * dt^2 because we first increment the velocity and then update the position
 	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
-	context.mDisplacementDueToGravity = (0.5f * mNumIterations * (mNumIterations + 1) * Square(context.mSubStepDeltaTime)) * context.mGravity;
+	ioContext.mDisplacementDueToGravity = (0.5f * mNumIterations * (mNumIterations + 1) * Square(ioContext.mSubStepDeltaTime)) * ioContext.mGravity;
+}
 
-	DetermineCollidingShapes(context, inSoftBody, inSystem);
+bool SoftBodyMotionProperties::PartialUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+{
+	// Determine collision planes
+	uint num_vertices = (uint)mVertices.size();
+	if (ioContext.mNextCollisionVertex.load(memory_order_relaxed) < num_vertices)
+	{
+		uint next_vertex = ioContext.mNextCollisionVertex.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_acquire);
+		if (next_vertex < num_vertices)
+		{
+			DetermineCollisionPlanes(ioContext, next_vertex, min(SoftBodyUpdateContext::cVertexCollisionBatch, num_vertices - next_vertex));
+			ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_release);
+			return false;
+		}
+	}
 
-	constexpr uint cVerticesPerIteration = 64;
-	for (uint v = 0; v < (uint)mVertices.size(); v += cVerticesPerIteration)
-		DetermineCollisionPlanes(context, inDeltaTime, v, min(cVerticesPerIteration, (uint)mVertices.size() - v));
+	// Check if we're waiting for all vertices to be processed
+	if (ioContext.mNumCollisionVerticesProcessed.load(memory_order_relaxed) < num_vertices)
+		return false;
+
+	// Check if this bodies had its iterations
+	if (!ioContext.mShouldIterate.load(memory_order_relaxed))
+		return true;
+	bool expected = true;
+	if (!ioContext.mShouldIterate.compare_exchange_strong(expected, false))
+		return true;
 
 	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
 	{
-		ApplyPressure(context);
+		ApplyPressure(ioContext);
 
-		IntegratePositions(context);
+		IntegratePositions(ioContext);
 
-		ApplyVolumeConstraints(context);
+		ApplyVolumeConstraints(ioContext);
 
-		ApplyEdgeConstraints(context);
+		ApplyEdgeConstraints(ioContext);
 
-		ApplyCollisionConstraintsAndUpdateVelocities(context);
+		ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 	}
 
-	UpdateRigidBodyVelocities(context, inSystem);
+	UpdateSoftBodyState(ioContext, inPhysicsSettings);
 
-	return UpdateSoftBodyState(context, inDeltaTime, outDeltaPosition, inSystem);
+	return true;
 }
 
 #ifdef JPH_DEBUG_RENDERER
