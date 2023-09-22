@@ -154,13 +154,13 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const UpdateContext &inC
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector, broadphase_layer_filter, object_layer_filter);
 }
 
-void SoftBodyMotionProperties::DetermineCollisionPlanes(const UpdateContext &inContext, float inDeltaTime)
+void SoftBodyMotionProperties::DetermineCollisionPlanes(const UpdateContext &inContext, float inDeltaTime, uint inVertexStart, uint inNumVertices)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Generate collision planes
 	for (const CollidingShape &cs : mCollidingShapes)
-		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data(), (uint)mVertices.size(), inDeltaTime, inContext.mDisplacementDueToGravity, int(&cs - mCollidingShapes.data()));
+		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data() + inVertexStart, inNumVertices, inDeltaTime, inContext.mDisplacementDueToGravity, int(&cs - mCollidingShapes.data()));
 }
 
 void SoftBodyMotionProperties::ApplyPressure(const UpdateContext &inContext)
@@ -514,7 +514,9 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 
 	DetermineCollidingShapes(context, inSoftBody, inSystem);
 
-	DetermineCollisionPlanes(context, inDeltaTime);
+	constexpr uint cVerticesPerIteration = 64;
+	for (uint v = 0; v < (uint)mVertices.size(); v += cVerticesPerIteration)
+		DetermineCollisionPlanes(context, inDeltaTime, v, min(cVerticesPerIteration, (uint)mVertices.size() - v));
 
 	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
 	{

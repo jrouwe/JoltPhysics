@@ -126,7 +126,7 @@ private:
 	void								DetermineCollidingShapes(const UpdateContext &inContext, Body &inSoftBody, PhysicsSystem &inSystem);
 
 	/// Do a narrow phase check and determine the closest feature that we can collide with
-	void								DetermineCollisionPlanes(const UpdateContext &inContext, float inDeltaTime);
+	void								DetermineCollisionPlanes(const UpdateContext &inContext, float inDeltaTime, uint inVertexStart, uint inNumVertices);
 
 	/// Apply pressure force and update the vertex velocities
 	void								ApplyPressure(const UpdateContext &inContext);
