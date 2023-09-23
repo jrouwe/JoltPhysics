@@ -518,9 +518,12 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						// Create simulate jobs
 						step.mSoftBodySimulate.resize(max_concurrency);
 						for (int i = 0; i < max_concurrency; ++i)
-							step.mSoftBodySimulate[i] = context.mJobSystem->CreateJob("SoftBodySimulate", cColorSoftBodySimulate, [&context, &step]()
+							step.mSoftBodySimulate[i] = context.mJobSystem->CreateJob("SoftBodySimulate", cColorSoftBodySimulate, [&step, i]()
 								{
-									context.mPhysicsSystem->JobSoftBodySimulate(&context);
+									// Instead of capturing context, we get it again. This is to avoid accidentally going through the memory allocating path of std::function.
+									PhysicsUpdateContext &context = *step.mContext;
+
+									context.mPhysicsSystem->JobSoftBodySimulate(&context, i);
 
 									step.mSoftBodyFinalize.RemoveDependency();
 								}, max_concurrency); // depends on: soft body collide
@@ -2433,17 +2436,39 @@ void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext)
 	}
 }
 
-void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext)
+void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint inThreadIndex)
 {
+	// Calculate at which body we start to distribute the workload across the threads
+	uint num_soft_bodies = ioContext->mNumSoftBodies;
+	uint start_idx = inThreadIndex * num_soft_bodies / ioContext->GetMaxConcurrency();
+
 	// Keep running partial updates until everything has been updated
-	bool is_done;
+	uint status;
 	do
 	{
-		is_done = true;
-		for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
-			is_done &= sb_ctx->mMotionProperties->PartialUpdate(*sb_ctx, mPhysicsSettings);
+		// Reset status
+		status = 0;
+
+		// Update all soft bodies
+		for (uint i = 0; i < num_soft_bodies; ++i)
+		{
+			// Fetch the soft body context
+			SoftBodyUpdateContext &sb_ctx = ioContext->mSoftBodyUpdateContexts[(start_idx + i) % num_soft_bodies];
+
+			// To avoid trashing the cache too much, we prefer to stick to one soft body until we cannot progress it any further
+			uint sb_status;
+			do
+			{
+				sb_status = (uint)sb_ctx.mMotionProperties->PartialUpdate(sb_ctx, mPhysicsSettings);
+				status |= sb_status;
+			} while (sb_status == (uint)SoftBodyMotionProperties::EStatus::DidWork);
+		}
+
+		// If we didn't perform any work, yield the thread so that something else can run
+		if (!(status & (uint)SoftBodyMotionProperties::EStatus::DidWork))
+			std::this_thread::yield();
 	}
-	while (!is_done);
+	while (status != (uint)SoftBodyMotionProperties::EStatus::Done);
 }
 
 void PhysicsSystem::JobSoftBodyFinalize(PhysicsUpdateContext *ioContext)

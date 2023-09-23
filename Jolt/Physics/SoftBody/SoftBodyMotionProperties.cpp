@@ -516,7 +516,7 @@ void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &
 	ioContext.mDisplacementDueToGravity = (0.5f * mNumIterations * (mNumIterations + 1) * Square(ioContext.mSubStepDeltaTime)) * ioContext.mGravity;
 }
 
-bool SoftBodyMotionProperties::PartialUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::PartialUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
 {
 	// Determine collision planes
 	uint num_vertices = (uint)mVertices.size();
@@ -527,20 +527,20 @@ bool SoftBodyMotionProperties::PartialUpdate(SoftBodyUpdateContext &ioContext, c
 		{
 			DetermineCollisionPlanes(ioContext, next_vertex, min(SoftBodyUpdateContext::cVertexCollisionBatch, num_vertices - next_vertex));
 			ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_release);
-			return false;
+			return EStatus::DidWork;
 		}
 	}
 
 	// Check if we're waiting for all vertices to be processed
 	if (ioContext.mNumCollisionVerticesProcessed.load(memory_order_relaxed) < num_vertices)
-		return false;
+		return EStatus::NoWork;
 
 	// Check if this bodies had its iterations
 	if (!ioContext.mShouldIterate.load(memory_order_relaxed))
-		return true;
+		return EStatus::Done;
 	bool expected = true;
 	if (!ioContext.mShouldIterate.compare_exchange_strong(expected, false))
-		return true;
+		return EStatus::Done;
 
 	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
 	{
@@ -557,7 +557,7 @@ bool SoftBodyMotionProperties::PartialUpdate(SoftBodyUpdateContext &ioContext, c
 
 	UpdateSoftBodyState(ioContext, inPhysicsSettings);
 
-	return true;
+	return EStatus::Done;
 }
 
 #ifdef JPH_DEBUG_RENDERER

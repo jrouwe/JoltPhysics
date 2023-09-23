@@ -98,8 +98,16 @@ public:
 	/// Do a broad phase check and collect all bodies that can possibly collide with this soft body
 	void								DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem);
 
+	/// Return code for PartialUpdate
+	enum class EStatus
+	{
+		NoWork	= 1 << 0,
+		DidWork	= 1 << 1,
+		Done	= 1 << 2,
+	};
+
 	/// Update the soft body, will process a batch of work and return true if there is more work to do
-	bool								PartialUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
+	EStatus								PartialUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
 
 	/// Update the velocities of all rigid bodies that we collided with
 	void								UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem);
