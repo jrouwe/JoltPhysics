@@ -301,7 +301,6 @@ Soft bodies try to implement as much as possible of the normal Body interface, b
 
 Soft bodies are currently in development, please note the following:
 
-* Soft bodies are currently executed on a single CPU core and collision checks are not as efficient as they could be.
 * Soft bodies can only collide with rigid bodies, collisions between soft bodies are not implemented yet.
 * ContactListener callbacks are not triggered for soft bodies.
 * AddForce/AddTorque/SetLinearVelocity/SetLinearVelocityClamped/SetAngularVelocity/SetAngularVelocityClamped/AddImpulse/AddAngularImpulse have no effect on soft bodies as the velocity is stored per particle rather than per body.
