@@ -85,7 +85,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	Array<uint32> masks;
 	masks.resize(mVertices.size(), 0);
 	Array<uint> edge_groups[cMaxNumGroups];
-	for (Edge &e : mEdgeConstraints)
+	for (const Edge &e : mEdgeConstraints)
 	{
 		uint32 &mask1 = masks[e.mVertex[0]];
 		uint32 &mask2 = masks[e.mVertex[1]];
@@ -118,7 +118,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	Array<Edge> temp_edges;
 	temp_edges.swap(mEdgeConstraints);
 	mEdgeConstraints.reserve(temp_edges.size());
-	for (Array<uint> &group : edge_groups)
+	for (const Array<uint> &group : edge_groups)
 		if (!group.empty())
 		{
 			for (uint idx : group)

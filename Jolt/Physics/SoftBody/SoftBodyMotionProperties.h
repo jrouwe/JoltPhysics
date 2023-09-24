@@ -93,10 +93,10 @@ public:
 	void								RestoreState(StateRecorder &inStream);
 
 	/// Initialize the update context (used internally by the PhysicsSystem)
-	void								InitializeUpdateContext(float inDeltaTime, Body &inSoftBody, PhysicsSystem &inSystem, SoftBodyUpdateContext &ioContext);
+	void								InitializeUpdateContext(float inDeltaTime, Body &inSoftBody, const PhysicsSystem &inSystem, SoftBodyUpdateContext &ioContext);
 
 	/// Do a broad phase check and collect all bodies that can possibly collide with this soft body
-	void								DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem);
+	void								DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem);
 
 	/// Return code for ParallelUpdate
 	enum class EStatus
@@ -159,7 +159,7 @@ private:
 	void								UpdateSoftBodyState(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
 
 	/// Executes tasks that need to run on the start of an iteration (i.e. the stuff that can't run in parallel)
-	void								StartNextIteration(SoftBodyUpdateContext &ioContext);
+	void								StartNextIteration(const SoftBodyUpdateContext &ioContext);
 
 	/// Helper function for ParallelUpdate that works on batches of collision planes
 	EStatus								ParallelDetermineCollisionPlanes(SoftBodyUpdateContext &ioContext);

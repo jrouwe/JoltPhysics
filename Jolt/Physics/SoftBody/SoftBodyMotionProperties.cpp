@@ -90,7 +90,7 @@ float SoftBodyMotionProperties::GetVolumeTimesSix() const
 	return six_volume;
 }
 
-void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -495,7 +495,7 @@ void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const SoftBodyUpdateCon
 	mCollidingShapes.clear();
 }
 
-void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &inSoftBody, PhysicsSystem &inSystem, SoftBodyUpdateContext &ioContext)
+void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &inSoftBody, const PhysicsSystem &inSystem, SoftBodyUpdateContext &ioContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -518,7 +518,7 @@ void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &
 	ioContext.mDisplacementDueToGravity = (0.5f * mNumIterations * (mNumIterations + 1) * Square(ioContext.mSubStepDeltaTime)) * ioContext.mGravity;
 }
 
-void SoftBodyMotionProperties::StartNextIteration(SoftBodyUpdateContext &ioContext)
+void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &ioContext)
 {
 	ApplyPressure(ioContext);
 
