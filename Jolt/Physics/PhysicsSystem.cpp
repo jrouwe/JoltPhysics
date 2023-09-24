@@ -2344,6 +2344,11 @@ void PhysicsSystem::JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsU
 {
 	JPH_PROFILE_FUNCTION();
 
+#ifdef JPH_ENABLE_ASSERTS
+	// Reading soft body positions
+	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
+#endif
+
 	// Get the active soft bodies
 	BodyIDVector active_bodies;
 	mBodyManager.GetActiveBodies(EBodyType::SoftBody, active_bodies);
@@ -2416,6 +2421,11 @@ void PhysicsSystem::JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsU
 
 void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const
 {
+#ifdef JPH_ENABLE_ASSERTS
+	// Reading rigid body positions and velocities
+	BodyAccess::Grant grant(BodyAccess::EAccess::Read, BodyAccess::EAccess::Read);
+#endif
+
 	for (;;)
 	{
 		// Fetch the next soft body
@@ -2431,6 +2441,11 @@ void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const
 
 void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint inThreadIndex) const
 {
+#ifdef JPH_ENABLE_ASSERTS
+	// Updating velocities of soft bodies
+	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::None);
+#endif
+
 	// Calculate at which body we start to distribute the workload across the threads
 	uint num_soft_bodies = ioContext->mNumSoftBodies;
 	uint start_idx = inThreadIndex * num_soft_bodies / ioContext->GetMaxConcurrency();
@@ -2467,6 +2482,9 @@ void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint in
 void PhysicsSystem::JobSoftBodyFinalize(PhysicsUpdateContext *ioContext)
 {
 #ifdef JPH_ENABLE_ASSERTS
+	// Updating rigid body velocities and soft body positions / velocities
+	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::ReadWrite);
+
 	// Can activate and deactivate bodies
 	BodyManager::GrantActiveBodiesAccess grant_active(true, true);
 #endif
