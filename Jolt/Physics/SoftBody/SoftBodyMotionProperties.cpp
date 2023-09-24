@@ -634,10 +634,11 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 
 	case SoftBodyUpdateContext::EState::Done:
 		return EStatus::Done;
-	}
 
-	JPH_ASSERT(false);
-	return EStatus::NoWork;
+	default:
+		JPH_ASSERT(false);
+		return EStatus::NoWork;
+	}
 }
 
 #ifdef JPH_DEBUG_RENDERER
