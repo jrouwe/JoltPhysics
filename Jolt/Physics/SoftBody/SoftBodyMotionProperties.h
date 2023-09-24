@@ -98,18 +98,18 @@ public:
 	/// Do a broad phase check and collect all bodies that can possibly collide with this soft body
 	void								DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem);
 
-	/// Return code for PartialUpdate
+	/// Return code for ParallelUpdate
 	enum class EStatus
 	{
-		NoWork	= 1 << 0,
-		DidWork	= 1 << 1,
-		Done	= 1 << 2,
+		NoWork	= 1 << 0,				///< No work was done because other threads were still working on a batch that cannot run concurrently
+		DidWork	= 1 << 1,				///< Work was done to progress the update
+		Done	= 1 << 2,				///< All work is done
 	};
 
-	/// Update the soft body, will process a batch of work and return true if there is more work to do
-	EStatus								PartialUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
+	/// Update the soft body, will process a batch of work. Used internally.
+	EStatus								ParallelUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
 
-	/// Update the velocities of all rigid bodies that we collided with
+	/// Update the velocities of all rigid bodies that we collided with. Used internally.
 	void								UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem);
 
 private:
@@ -150,13 +150,22 @@ private:
 	void								ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext);
 
 	/// Enforce all edge constraints
-	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext);
+	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all collision constraints & update all velocities according the the XPBD algorithm
 	void								ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext);
 
 	/// Update the state of the soft body (position, velocity, bounds)
 	void								UpdateSoftBodyState(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
+
+	/// Executes tasks that need to run on the start of an iteration (i.e. the stuff that can't run in parallel)
+	void								StartNextIteration(SoftBodyUpdateContext &ioContext);
+
+	/// Helper function for ParallelUpdate that works on batches of collision planes
+	EStatus								ParallelDetermineCollisionPlanes(SoftBodyUpdateContext &ioContext);
+
+	/// Helper function for ParallelUpdate that works on batches of edges
+	EStatus								ParallelApplyEdgeConstraints(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
 
 	/// Returns 6 times the volume of the soft body
 	float								GetVolumeTimesSix() const;

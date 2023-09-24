@@ -274,15 +274,17 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 	}
 }
 
-void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
 {
 	JPH_PROFILE_FUNCTION();
 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
 	// Satisfy edge constraints
-	for (const Edge &e : mSettings->mEdgeConstraints)
+	const Array<Edge> &edge_constraints = mSettings->mEdgeConstraints;
+	for (uint i = inStartIndex; i < inEndIndex; ++i)
 	{
+		const Edge &e = edge_constraints[i];
 		Vertex &v0 = mVertices[e.mVertex[0]];
 		Vertex &v1 = mVertices[e.mVertex[1]];
 
@@ -516,48 +518,126 @@ void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &
 	ioContext.mDisplacementDueToGravity = (0.5f * mNumIterations * (mNumIterations + 1) * Square(ioContext.mSubStepDeltaTime)) * ioContext.mGravity;
 }
 
-SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::PartialUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+void SoftBodyMotionProperties::StartNextIteration(SoftBodyUpdateContext &ioContext)
 {
-	// Determine collision planes
+	ApplyPressure(ioContext);
+
+	IntegratePositions(ioContext);
+
+	ApplyVolumeConstraints(ioContext);
+}
+
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCollisionPlanes(SoftBodyUpdateContext &ioContext)
+{
+	// Do a relaxed read first to see if there is any work to do (this prevents us from doing expensive atomic operations and also prevents us from continuously incrementing the counter and overflowing it)
 	uint num_vertices = (uint)mVertices.size();
 	if (ioContext.mNextCollisionVertex.load(memory_order_relaxed) < num_vertices)
 	{
+		// Fetch next batch of vertices to process
 		uint next_vertex = ioContext.mNextCollisionVertex.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_acquire);
 		if (next_vertex < num_vertices)
 		{
-			DetermineCollisionPlanes(ioContext, next_vertex, min(SoftBodyUpdateContext::cVertexCollisionBatch, num_vertices - next_vertex));
-			ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_release);
+			// Process collision planes
+			uint num_vertices_to_process = min(SoftBodyUpdateContext::cVertexCollisionBatch, num_vertices - next_vertex);
+			DetermineCollisionPlanes(ioContext, next_vertex, num_vertices_to_process);
+			uint vertices_processed = ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_release) + num_vertices_to_process;
+			if (vertices_processed >= num_vertices)
+			{
+				// Start the first iteration
+				JPH_IF_ENABLE_ASSERTS(uint iteration =) ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+				JPH_ASSERT(iteration == 0);
+				StartNextIteration(ioContext);
+				ioContext.mState.store(SoftBodyUpdateContext::EState::ApplyEdgeConstraints, memory_order_release);
+			}
 			return EStatus::DidWork;
 		}
 	}
+	return EStatus::NoWork;
+}
 
-	// Check if we're waiting for all vertices to be processed
-	if (ioContext.mNumCollisionVerticesProcessed.load(memory_order_relaxed) < num_vertices)
-		return EStatus::NoWork;
-
-	// Check if this bodies had its iterations
-	if (!ioContext.mShouldIterate.load(memory_order_relaxed))
-		return EStatus::Done;
-	bool expected = true;
-	if (!ioContext.mShouldIterate.compare_exchange_strong(expected, false))
-		return EStatus::Done;
-
-	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeConstraints(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+{
+	// Do a relaxed read first to see if there is any work to do (this prevents us from doing expensive atomic operations and also prevents us from continuously incrementing the counter and overflowing it)
+	uint num_groups = (uint)mSettings->mEdgeGroupEndIndices.size();
+	JPH_ASSERT(num_groups > 0, "SoftBodySharedSettings::Optimize should have been called!");
+	uint32 edge_group, edge_start_idx;
+	SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(ioContext.mNextEdgeConstraint.load(memory_order_relaxed), edge_group, edge_start_idx);
+	if (edge_group < num_groups && edge_start_idx < mSettings->GetEdgeGroupSize(edge_group))
 	{
-		ApplyPressure(ioContext);
+		// Fetch the next batch of edges to process
+		uint64 next_edge_batch = ioContext.mNextEdgeConstraint.fetch_add(SoftBodyUpdateContext::cEdgeConstraintBatch, memory_order_acquire);
+		SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(next_edge_batch, edge_group, edge_start_idx);
+		if (edge_group < num_groups)
+		{
+			bool non_parallel_group = edge_group == num_groups - 1; // Last group is the non-parallel group and goes as a whole
+			uint edge_group_size = mSettings->GetEdgeGroupSize(edge_group);
+			if (non_parallel_group? edge_start_idx == 0 : edge_start_idx < edge_group_size)
+			{
+				// Process edges
+				uint num_edges_to_process = non_parallel_group? edge_group_size : min(SoftBodyUpdateContext::cEdgeConstraintBatch, edge_group_size - edge_start_idx);
+				if (edge_group > 0)
+					edge_start_idx += mSettings->mEdgeGroupEndIndices[edge_group - 1];
+				ApplyEdgeConstraints(ioContext, edge_start_idx, edge_start_idx + num_edges_to_process);
 
-		IntegratePositions(ioContext);
+				// Test if we're at the end of this group
+				uint edge_constraints_processed = ioContext.mNumEdgeConstraintsProcessed.fetch_add(num_edges_to_process, memory_order_relaxed) + num_edges_to_process;
+				if (edge_constraints_processed >= edge_group_size)
+				{
+					// Non parallel group is the last group (which is also the only group that can be empty)
+					if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
+					{
+						// Finish the iteration
+						ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
-		ApplyVolumeConstraints(ioContext);
+						uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+						if (iteration < mNumIterations)
+						{
+							// Start a new iteration
+							StartNextIteration(ioContext);
 
-		ApplyEdgeConstraints(ioContext);
+							// Reset next edge to process
+							ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
+							ioContext.mNextEdgeConstraint.store(0, memory_order_release);
+						}
+						else
+						{
+							// On final iteration we update the state
+							UpdateSoftBodyState(ioContext, inPhysicsSettings);
 
-		ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
+							ioContext.mState.store(SoftBodyUpdateContext::EState::Done, memory_order_release);
+							return EStatus::Done;
+						}
+					}
+					else
+					{
+						// Next group
+						ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
+						ioContext.mNextEdgeConstraint.store(SoftBodyUpdateContext::sGetEdgeGroupStart(edge_group + 1), memory_order_release);
+					}
+				}
+				return EStatus::DidWork;
+			}
+		}
+	}
+	return EStatus::NoWork;
+}
+
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+{
+	switch (ioContext.mState.load(memory_order_relaxed))
+	{
+	case SoftBodyUpdateContext::EState::DetermineCollisionPlanes:
+		return ParallelDetermineCollisionPlanes(ioContext);
+
+	case SoftBodyUpdateContext::EState::ApplyEdgeConstraints:
+		return ParallelApplyEdgeConstraints(ioContext, inPhysicsSettings);
+
+	case SoftBodyUpdateContext::EState::Done:
+		return EStatus::Done;
 	}
 
-	UpdateSoftBodyState(ioContext, inPhysicsSettings);
-
-	return EStatus::Done;
+	JPH_ASSERT(false);
+	return EStatus::NoWork;
 }
 
 #ifdef JPH_DEBUG_RENDERER

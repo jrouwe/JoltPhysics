@@ -5,6 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/SoftBody/SoftBodySharedSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyUpdateContext.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
@@ -76,29 +77,30 @@ void SoftBodySharedSettings::CalculateVolumeConstraintVolumes()
 
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 {
-	const uint cNonParallelSplitIdx = 31;
-	const uint cMinimumSize = 64;
+	const uint cMaxNumGroups = 32;
+	const uint cNonParallelGroupIdx = cMaxNumGroups - 1;
+	const uint cMinimumSize = 2 * SoftBodyUpdateContext::cEdgeConstraintBatch; // There should be at least 2 batches, otherwise there's no point in parallelizing
 
 	// Assign edges to non-overlapping groups
 	Array<uint32> masks;
 	masks.resize(mVertices.size(), 0);
-	Array<uint> edge_groups[32];
+	Array<uint> edge_groups[cMaxNumGroups];
 	for (Edge &e : mEdgeConstraints)
 	{
 		uint32 &mask1 = masks[e.mVertex[0]];
 		uint32 &mask2 = masks[e.mVertex[1]];
-		uint split = min(CountTrailingZeros((~mask1) & (~mask2)), cNonParallelSplitIdx);
-		uint32 mask = uint32(1U << split);
+		uint group = min(CountTrailingZeros((~mask1) & (~mask2)), cNonParallelGroupIdx);
+		uint32 mask = uint32(1U << group);
 		mask1 |= mask;
 		mask2 |= mask;
-		edge_groups[split].push_back(uint(&e - mEdgeConstraints.data()));
+		edge_groups[group].push_back(uint(&e - mEdgeConstraints.data()));
 	}
 
 	// Merge groups that are too small into the non-parallel group
-	for (uint i = 0; i < cNonParallelSplitIdx; ++i)
+	for (uint i = 0; i < cNonParallelGroupIdx; ++i)
 		if (edge_groups[i].size() < cMinimumSize)
 		{
-			edge_groups[cNonParallelSplitIdx].insert(edge_groups[cNonParallelSplitIdx].end(), edge_groups[i].begin(), edge_groups[i].end());
+			edge_groups[cNonParallelGroupIdx].insert(edge_groups[cNonParallelGroupIdx].end(), edge_groups[i].begin(), edge_groups[i].end());
 			edge_groups[i].clear();
 		}
 
@@ -128,7 +130,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 		}
 
 	// If there is no non-parallel group then add an empty group at the end
-	if (edge_groups[cNonParallelSplitIdx].empty())
+	if (edge_groups[cNonParallelGroupIdx].empty())
 		mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
 }
 

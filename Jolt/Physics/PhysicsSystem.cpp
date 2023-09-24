@@ -2459,7 +2459,7 @@ void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint in
 			uint sb_status;
 			do
 			{
-				sb_status = (uint)sb_ctx.mMotionProperties->PartialUpdate(sb_ctx, mPhysicsSettings);
+				sb_status = (uint)sb_ctx.mMotionProperties->ParallelUpdate(sb_ctx, mPhysicsSettings);
 				status |= sb_status;
 			} while (sb_status == (uint)SoftBodyMotionProperties::EStatus::DidWork);
 		}

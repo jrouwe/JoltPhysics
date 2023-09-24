@@ -113,6 +113,9 @@ public:
 	/// Add a face to this soft body
 	void				AddFace(const Face &inFace)					{ JPH_ASSERT(!inFace.IsDegenerate()); mFaces.push_back(inFace); }
 
+	/// Get the size of an edge group (edge groups can run in parallel)
+	uint				GetEdgeGroupSize(uint inGroupIdx) const		{ return inGroupIdx == 0? mEdgeGroupEndIndices[0] : mEdgeGroupEndIndices[inGroupIdx] - mEdgeGroupEndIndices[inGroupIdx - 1]; }
+
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
