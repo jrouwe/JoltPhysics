@@ -306,6 +306,7 @@ public:
 	/// @param inCenterOfMassTransform Center of mass transform for this shape relative to the vertices.
 	/// @param inScale The scale to use for this shape
 	/// @param ioVertices The vertices of the soft body
+	/// @param inNumVertices The number of vertices in ioVertices
 	/// @param inDeltaTime Delta time of this time step (can be used to extrapolate the position using the velocity of the particle)
 	/// @param inDisplacementDueToGravity Displacement due to gravity during this time step
 	/// @param inCollidingShapeIndex Value to store in SoftBodyVertex::mCollidingShapeIndex when a collision was found

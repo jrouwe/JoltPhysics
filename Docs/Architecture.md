@@ -559,3 +559,19 @@ A number of these jobs will run in parallel. Each job takes the next unprocessed
 It will also notify the broad phase of the new body positions / AABBs.
 
 When objects move too little the body will be put to sleep. This is detected by taking the biggest two axis of the local space bounding box of the shape together with the center of mass of the shape (all points in world space) and keep track of 3 bounding spheres for those points over time. If the bounding spheres become too big, the bounding spheres are reset and the timer restarted. When the timer reaches a certain time, the object has is considered non-moving and is put to sleep.
+
+## Soft Body Prepare
+
+If there are any active soft bodies, this job will create the Soft Body Collide, Simulate and Finalize Jobs. It will also create a list of sorted SoftBodyUpdateContext objects that forms the context for those jobs.
+
+## Soft Body Collide
+
+These jobs will do broadphase checks for all of the soft bodies. A thread picks up a single soft body and uses the bounding box of the soft body to find intersecting rigid bodies. Once found, information will be collected about that rigid body so that Simulate can run in parallel.
+
+## Soft Body Simulate
+
+These jobs will do the actual simulation of the soft bodies. They first collide batches of soft body vertices with the rigid bodies found during during the Collide job (multiple threads can work on a single soft body) and then perform the simulation using XPBD (also partially distributing a single soft body on multiple threads).
+
+## Soft Body Finalize
+
+This job writes back all the rigid body velocity changes and updates the positions and velocities of the soft bodies. It can activate/deactivate bodies as needed.
