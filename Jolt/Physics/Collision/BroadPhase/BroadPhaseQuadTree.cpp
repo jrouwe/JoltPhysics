@@ -588,7 +588,7 @@ void BroadPhaseQuadTree::ReportStats()
 	uint64 total_ticks = 0;
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
 		total_ticks += mLayers[l].GetTicks100Pct();
-		
+
 	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
 		mLayers[l].ReportStats(total_ticks);
 }
