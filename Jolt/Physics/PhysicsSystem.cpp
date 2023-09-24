@@ -501,8 +501,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 					// Prepare soft body jobs, if no jobs the function will return false
 					if (context.mPhysicsSystem->JobSoftBodyPrepare(&context))
 					{
-						// Get max number of concurrent jobs
-						int max_concurrency = context.GetMaxConcurrency();
+						// Determine number of jobs to spawn
+						int num_soft_body_jobs = context.GetMaxConcurrency();
 
 						// Create finalize job
 						step.mSoftBodyFinalize = context.mJobSystem->CreateJob("SoftBodyFinalize", cColorSoftBodyFinalize, [&context, &step]()
@@ -512,26 +512,23 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 							// Kick the next step
 							if (step.mStartNextStep.IsValid())
 								step.mStartNextStep.RemoveDependency();
-						}, max_concurrency); // depends on: soft body simulate
+						}, num_soft_body_jobs); // depends on: soft body simulate
 						context.mBarrier->AddJob(step.mSoftBodyFinalize);
 
 						// Create simulate jobs
-						step.mSoftBodySimulate.resize(max_concurrency);
-						for (int i = 0; i < max_concurrency; ++i)
+						step.mSoftBodySimulate.resize(num_soft_body_jobs);
+						for (int i = 0; i < num_soft_body_jobs; ++i)
 							step.mSoftBodySimulate[i] = context.mJobSystem->CreateJob("SoftBodySimulate", cColorSoftBodySimulate, [&step, i]()
 								{
-									// Instead of capturing context, we get it again. This is to avoid accidentally going through the memory allocating path of std::function.
-									PhysicsUpdateContext &context = *step.mContext;
-
-									context.mPhysicsSystem->JobSoftBodySimulate(&context, i);
+									step.mContext->mPhysicsSystem->JobSoftBodySimulate(step.mContext, i);
 
 									step.mSoftBodyFinalize.RemoveDependency();
-								}, max_concurrency); // depends on: soft body collide
+								}, num_soft_body_jobs); // depends on: soft body collide
 						context.mBarrier->AddJobs(step.mSoftBodySimulate.data(), step.mSoftBodySimulate.size());
 
 						// Create collision jobs
-						step.mSoftBodyCollide.resize(max_concurrency);
-						for (int i = 0; i < max_concurrency; ++i)
+						step.mSoftBodyCollide.resize(num_soft_body_jobs);
+						for (int i = 0; i < num_soft_body_jobs; ++i)
 							step.mSoftBodyCollide[i] = context.mJobSystem->CreateJob("SoftBodyCollide", cColorSoftBodyCollide, [&context, &step]()
 								{
 									context.mPhysicsSystem->JobSoftBodyCollide(&context);
