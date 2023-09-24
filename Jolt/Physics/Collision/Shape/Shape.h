@@ -306,10 +306,11 @@ public:
 	/// @param inCenterOfMassTransform Center of mass transform for this shape relative to the vertices.
 	/// @param inScale The scale to use for this shape
 	/// @param ioVertices The vertices of the soft body
+	/// @param inNumVertices The number of vertices in ioVertices
 	/// @param inDeltaTime Delta time of this time step (can be used to extrapolate the position using the velocity of the particle)
 	/// @param inDisplacementDueToGravity Displacement due to gravity during this time step
 	/// @param inCollidingShapeIndex Value to store in SoftBodyVertex::mCollidingShapeIndex when a collision was found
-	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const = 0;
+	virtual void					CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const = 0;
 
 	/// Collect the leaf transformed shapes of all leaf shapes of this shape.
 	/// inBox is the world space axis aligned box which leaf shapes should collide with.
@@ -423,7 +424,7 @@ protected:
 	static void						sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter);
 
 	/// A fallback version of CollideSoftBodyVertices that uses a raycast to collide the vertices with the shape.
-	static void						sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex);
+	static void						sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex);
 
 private:
 	uint64							mUserData = 0;

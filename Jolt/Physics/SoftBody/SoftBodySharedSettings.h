@@ -23,6 +23,16 @@ public:
 	/// Calculates the initial volume of all tetrahedra of this soft body
 	void				CalculateVolumeConstraintVolumes();
 
+	/// Information about the optimization of the soft body, the indices of certain elements may have changed.
+	class OptimizationResults
+	{
+	public:
+		Array<uint>		mEdgeRemap;									///< Maps old edge index to new edge index
+	};
+
+	/// Optimize the soft body settings for simulation. This will reorder constraints so they can be executed in parallel.
+	void				Optimize(OptimizationResults &outResults);
+
 	/// Saves the state of this object in binary form to inStream. Doesn't store the material list.
 	void				SaveBinaryState(StreamOut &inStream) const;
 
@@ -103,9 +113,13 @@ public:
 	/// Add a face to this soft body
 	void				AddFace(const Face &inFace)					{ JPH_ASSERT(!inFace.IsDegenerate()); mFaces.push_back(inFace); }
 
+	/// Get the size of an edge group (edge groups can run in parallel)
+	uint				GetEdgeGroupSize(uint inGroupIdx) const		{ return inGroupIdx == 0? mEdgeGroupEndIndices[0] : mEdgeGroupEndIndices[inGroupIdx] - mEdgeGroupEndIndices[inGroupIdx - 1]; }
+
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
+	Array<uint>			mEdgeGroupEndIndices;						///< The start index of each group of edges that can be solved in parallel
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	PhysicsMaterialList mMaterials { PhysicsMaterial::sDefault };	///< The materials of the faces of the body, referenced by Face::mMaterialIndex
 };

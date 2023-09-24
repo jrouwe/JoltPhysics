@@ -213,7 +213,10 @@ private:
 	void						JobResolveCCDContacts(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobContactRemovedCallbacks(const PhysicsUpdateContext::Step *ioStep);
 	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
-	void						JobUpdateSoftBodies(const PhysicsUpdateContext *ioContext);
+	void						JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
+	void						JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const;
+	void						JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint inThreadIndex) const;
+	void						JobSoftBodyFinalize(PhysicsUpdateContext *ioContext);
 
 	/// Tries to spawn a new FindCollisions job if max concurrency hasn't been reached yet
 	void						TrySpawnJobFindCollisions(PhysicsUpdateContext::Step *ioStep) const;

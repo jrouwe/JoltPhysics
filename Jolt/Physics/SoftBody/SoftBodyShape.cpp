@@ -106,7 +106,7 @@ void SoftBodyShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 	sCollidePointUsingRayCast(*this, inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void SoftBodyShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void SoftBodyShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
 	/* Not implemented */
 }

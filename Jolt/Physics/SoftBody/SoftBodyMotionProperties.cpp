@@ -68,7 +68,6 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 		out_vertex.mCollidingShapeIndex = -1;
 		out_vertex.mLargestPenetration = -FLT_MAX;
 		out_vertex.mInvMass = in_vertex.mInvMass;
-		out_vertex.mProjectedDistance = 0.0f;
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
 	}
 
@@ -91,44 +90,19 @@ float SoftBodyMotionProperties::GetVolumeTimesSix() const
 	return six_volume;
 }
 
-ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, Vec3 &outDeltaPosition, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem)
 {
-	// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
-	// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
+	JPH_PROFILE_FUNCTION();
 
-	// Convert gravity to local space
-	RMat44 body_transform = inSoftBody.GetCenterOfMassTransform();
-	Vec3 gravity = body_transform.Multiply3x3Transposed(GetGravityFactor() * inSystem.GetGravity());
-
-	// Collect information about the colliding bodies
-	struct CollidingShape
-	{
-		/// Get the velocity of a point on this body
-		Vec3			GetPointVelocity(Vec3Arg inPointRelativeToCOM) const
-		{
-			return mLinearVelocity + mAngularVelocity.Cross(inPointRelativeToCOM);
-		}
-
-		Mat44			mCenterOfMassTransform;				///< Transform of the body relative to the soft body
-		RefConst<Shape>	mShape;
-		BodyID			mBodyID;							///< Body ID of the body we hit
-		EMotionType		mMotionType;						///< Motion type of the body we hit
-		float			mInvMass;							///< Inverse mass of the body we hit
-		float			mFriction;							///< Combined friction of the two bodies
-		float			mRestitution;						///< Combined restitution of the two bodies
-		bool 			mUpdateVelocities;					///< If the linear/angular velocity changed and the body needs to be updated
-		Mat44			mInvInertia;						///< Inverse inertia in local space to the soft body
-		Vec3			mLinearVelocity;					///< Linear velocity of the body in local space to the soft body
-		Vec3			mAngularVelocity;					///< Angular velocity of the body in local space to the soft body
-	};
 	struct Collector : public CollideShapeBodyCollector
 	{
-									Collector(Body &inSoftBody, RMat44Arg inTransform, const PhysicsSystem &inSystem) :
+									Collector(Body &inSoftBody, RMat44Arg inTransform, const PhysicsSystem &inSystem, Array<CollidingShape> &ioHits) :
 										mSoftBody(inSoftBody),
 										mInverseTransform(inTransform.InversedRotationTranslation()),
 										mBodyLockInterface(inSystem.GetBodyLockInterfaceNoLock()),
 										mCombineFriction(inSystem.GetCombineFriction()),
-										mCombineRestitution(inSystem.GetCombineRestitution())
+										mCombineRestitution(inSystem.GetCombineRestitution()),
+										mHits(ioHits)
 		{
 		}
 
@@ -154,187 +128,206 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 						const MotionProperties *mp = body.GetMotionProperties();
 						cs.mInvMass = mp->GetInverseMass();
 						cs.mInvInertia = mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
-						cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
-						cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
+						cs.mOriginalLinearVelocity = cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
+						cs.mOriginalAngularVelocity = cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
 					}
 					mHits.push_back(cs);
 				}
 			}
 		}
 
+	private:
 		Body &						mSoftBody;
 		RMat44						mInverseTransform;
 		const BodyLockInterface &	mBodyLockInterface;
 		ContactConstraintManager::CombineFunction mCombineFriction;
 		ContactConstraintManager::CombineFunction mCombineRestitution;
-		Array<CollidingShape>		mHits;
+		Array<CollidingShape> &		mHits;
 	};
-	Collector collector(inSoftBody, body_transform, inSystem);
+
+	Collector collector(*inContext.mBody, inContext.mCenterOfMassTransform, inSystem, mCollidingShapes);
 	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
-	bounds = bounds.Transformed(body_transform);
-	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inSystem.GetDefaultBroadPhaseLayerFilter(inSoftBody.GetObjectLayer());
-	DefaultObjectLayerFilter object_layer_filter = inSystem.GetDefaultLayerFilter(inSoftBody.GetObjectLayer());
+	bounds = bounds.Transformed(inContext.mCenterOfMassTransform);
+	ObjectLayer layer = inContext.mBody->GetObjectLayer();
+	DefaultBroadPhaseLayerFilter broadphase_layer_filter = inSystem.GetDefaultBroadPhaseLayerFilter(layer);
+	DefaultObjectLayerFilter object_layer_filter = inSystem.GetDefaultLayerFilter(layer);
 	inSystem.GetBroadPhaseQuery().CollideAABox(bounds, collector, broadphase_layer_filter, object_layer_filter);
+}
 
-	// Calculate delta time for sub step
-	float dt = inDeltaTime / mNumIterations;
-	float dt_sq = Square(dt);
-
-	// Calculate total displacement we'll have due to gravity over all sub steps
-	// The total displacement as produced by our integrator can be written as: Sum(i * g * dt^2, i = 0..mNumIterations).
-	// This is bigger than 0.5 * g * dt^2 because we first increment the velocity and then update the position
-	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
-	Vec3 displacement_due_to_gravity = (0.5f * mNumIterations * (mNumIterations + 1) * dt_sq) * gravity;
+void SoftBodyMotionProperties::DetermineCollisionPlanes(const SoftBodyUpdateContext &inContext, uint inVertexStart, uint inNumVertices)
+{
+	JPH_PROFILE_FUNCTION();
 
 	// Generate collision planes
-	for (const CollidingShape &cs : collector.mHits)
-		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices, inDeltaTime, displacement_due_to_gravity, int(&cs - collector.mHits.data()));
+	for (const CollidingShape &cs : mCollidingShapes)
+		cs.mShape->CollideSoftBodyVertices(cs.mCenterOfMassTransform, Vec3::sReplicate(1.0f), mVertices.data() + inVertexStart, inNumVertices, inContext.mDeltaTime, inContext.mDisplacementDueToGravity, int(&cs - mCollidingShapes.data()));
+}
 
-	float inv_dt_sq = 1.0f / dt_sq;
+void SoftBodyMotionProperties::ApplyPressure(const SoftBodyUpdateContext &inContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	float dt = inContext.mSubStepDeltaTime;
+	float pressure_coefficient = mPressure;
+	if (pressure_coefficient > 0.0f)
+	{
+		// Calculate total volume
+		float six_volume = GetVolumeTimesSix();
+		if (six_volume > 0.0f)
+		{
+			// Apply pressure
+			// p = F / A = n R T / V (see https://en.wikipedia.org/wiki/Pressure)
+			// Our pressure coefficient is n R T so the impulse is:
+			// P = F dt = pressure_coefficient / V * A * dt
+			float coefficient = pressure_coefficient * dt / six_volume; // Need to still multiply by 6 for the volume
+			for (const Face &f : mSettings->mFaces)
+			{
+				Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
+				Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
+				Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
+
+				Vec3 impulse = coefficient * (x2 - x1).Cross(x3 - x1); // Area is half the cross product so need to still divide by 2
+				for (uint32 i : f.mVertex)
+				{
+					Vertex &v = mVertices[i];
+					v.mVelocity += v.mInvMass * impulse; // Want to divide by 3 because we spread over 3 vertices
+				}
+			}
+		}
+	}
+}
+
+void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &inContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	float dt = inContext.mSubStepDeltaTime;
 	float linear_damping = max(0.0f, 1.0f - GetLinearDamping() * dt); // See: MotionProperties::ApplyForceTorqueAndDragInternal
 
-	for (uint iteration = 0; iteration < mNumIterations; ++iteration)
+	// Integrate
+	Vec3 sub_step_gravity = inContext.mGravity * dt;
+	for (Vertex &v : mVertices)
+		if (v.mInvMass > 0.0f)
+		{
+			// Gravity
+			v.mVelocity += sub_step_gravity;
+
+			// Damping
+			v.mVelocity *= linear_damping;
+
+			// Integrate
+			v.mPreviousPosition = v.mPosition;
+			v.mPosition += v.mVelocity * dt;
+		}
+		else
+		{
+			// Integrate
+			v.mPreviousPosition = v.mPosition;
+			v.mPosition += v.mVelocity * dt;
+		}
+}
+
+void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
+
+	// Satisfy volume constraints
+	for (const Volume &v : mSettings->mVolumeConstraints)
 	{
-		float pressure_coefficient = mPressure;
-		if (pressure_coefficient > 0.0f)
+		Vertex &v1 = mVertices[v.mVertex[0]];
+		Vertex &v2 = mVertices[v.mVertex[1]];
+		Vertex &v3 = mVertices[v.mVertex[2]];
+		Vertex &v4 = mVertices[v.mVertex[3]];
+
+		Vec3 x1 = v1.mPosition;
+		Vec3 x2 = v2.mPosition;
+		Vec3 x3 = v3.mPosition;
+		Vec3 x4 = v4.mPosition;
+
+		// Calculate constraint equation
+		Vec3 x1x2 = x2 - x1;
+		Vec3 x1x3 = x3 - x1;
+		Vec3 x1x4 = x4 - x1;
+		float c = abs(x1x2.Cross(x1x3).Dot(x1x4)) - v.mSixRestVolume;
+
+		// Calculate gradient of constraint equation
+		Vec3 d1c = (x4 - x2).Cross(x3 - x2);
+		Vec3 d2c = x1x3.Cross(x1x4);
+		Vec3 d3c = x1x4.Cross(x1x2);
+		Vec3 d4c = x1x2.Cross(x1x3);
+
+		float w1 = v1.mInvMass;
+		float w2 = v2.mInvMass;
+		float w3 = v3.mInvMass;
+		float w4 = v4.mInvMass;
+		JPH_ASSERT(w1 > 0.0f || w2 > 0.0f || w3 > 0.0f || w4 > 0.0f);
+
+		// Apply correction
+		float lambda = -c / (w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v.mCompliance * inv_dt_sq);
+		v1.mPosition += lambda * w1 * d1c;
+		v2.mPosition += lambda * w2 * d2c;
+		v3.mPosition += lambda * w3 * d3c;
+		v4.mPosition += lambda * w4 * d4c;
+	}
+}
+
+void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
+{
+	JPH_PROFILE_FUNCTION();
+
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
+
+	// Satisfy edge constraints
+	const Array<Edge> &edge_constraints = mSettings->mEdgeConstraints;
+	for (uint i = inStartIndex; i < inEndIndex; ++i)
+	{
+		const Edge &e = edge_constraints[i];
+		Vertex &v0 = mVertices[e.mVertex[0]];
+		Vertex &v1 = mVertices[e.mVertex[1]];
+
+		// Calculate current length
+		Vec3 delta = v1.mPosition - v0.mPosition;
+		float length = delta.Length();
+		if (length > 0.0f)
 		{
-			// Calculate total volume
-			float six_volume = GetVolumeTimesSix();
-			if (six_volume > 0.0f)
-			{
-				// Apply pressure
-				// p = F / A = n R T / V (see https://en.wikipedia.org/wiki/Pressure)
-				// Our pressure coefficient is n R T so the impulse is:
-				// P = F dt = pressure_coefficient / V * A * dt
-				float coefficient = pressure_coefficient * dt / six_volume; // Need to still multiply by 6 for the volume
-				for (const Face &f : mSettings->mFaces)
-				{
-					Vec3 x1 = mVertices[f.mVertex[0]].mPosition;
-					Vec3 x2 = mVertices[f.mVertex[1]].mPosition;
-					Vec3 x3 = mVertices[f.mVertex[2]].mPosition;
-
-					Vec3 impulse = coefficient * (x2 - x1).Cross(x3 - x1); // Area is half the cross product so need to still divide by 2
-					for (uint32 i : f.mVertex)
-					{
-						Vertex &v = mVertices[i];
-						v.mVelocity += v.mInvMass * impulse; // Want to divide by 3 because we spread over 3 vertices
-					}
-				}
-			}
-		}
-
-		// Integrate
-		Vec3 sub_step_gravity = gravity * dt;
-		for (Vertex &v : mVertices)
-			if (v.mInvMass > 0.0f)
-			{
-				// Gravity
-				v.mVelocity += sub_step_gravity;
-
-				// Damping
-				v.mVelocity *= linear_damping;
-
-				// Integrate
-				v.mPreviousPosition = v.mPosition;
-				v.mPosition += v.mVelocity * dt;
-
-				// Reset projected distance
-				v.mProjectedDistance = 0.0f;
-			}
-			else
-			{
-				// Integrate
-				v.mPreviousPosition = v.mPosition;
-				v.mPosition += v.mVelocity * dt;
-			}
-
-		// Satisfy volume constraints
-		for (const Volume &v : mSettings->mVolumeConstraints)
-		{
-			Vertex &v1 = mVertices[v.mVertex[0]];
-			Vertex &v2 = mVertices[v.mVertex[1]];
-			Vertex &v3 = mVertices[v.mVertex[2]];
-			Vertex &v4 = mVertices[v.mVertex[3]];
-
-			Vec3 x1 = v1.mPosition;
-			Vec3 x2 = v2.mPosition;
-			Vec3 x3 = v3.mPosition;
-			Vec3 x4 = v4.mPosition;
-
-			// Calculate constraint equation
-			Vec3 x1x2 = x2 - x1;
-			Vec3 x1x3 = x3 - x1;
-			Vec3 x1x4 = x4 - x1;
-			float c = abs(x1x2.Cross(x1x3).Dot(x1x4)) - v.mSixRestVolume;
-
-			// Calculate gradient of constraint equation
-			Vec3 d1c = (x4 - x2).Cross(x3 - x2);
-			Vec3 d2c = x1x3.Cross(x1x4);
-			Vec3 d3c = x1x4.Cross(x1x2);
-			Vec3 d4c = x1x2.Cross(x1x3);
-
-			float w1 = v1.mInvMass;
-			float w2 = v2.mInvMass;
-			float w3 = v3.mInvMass;
-			float w4 = v4.mInvMass;
-			JPH_ASSERT(w1 > 0.0f || w2 > 0.0f || w3 > 0.0f || w4 > 0.0f);
-
 			// Apply correction
-			float lambda = -c / (w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v.mCompliance * inv_dt_sq);
-			v1.mPosition += lambda * w1 * d1c;
-			v2.mPosition += lambda * w2 * d2c;
-			v3.mPosition += lambda * w3 * d3c;
-			v4.mPosition += lambda * w4 * d4c;
+			Vec3 correction = delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq));
+			v0.mPosition += v0.mInvMass * correction;
+			v1.mPosition -= v1.mInvMass * correction;
 		}
+	}
+}
 
-		// Satisfy edge constraints
-		for (const Edge &e : mSettings->mEdgeConstraints)
+void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	float dt = inContext.mSubStepDeltaTime;
+	float restitution_treshold = -2.0f * inContext.mGravity.Length() * dt;
+	for (Vertex &v : mVertices)
+		if (v.mInvMass > 0.0f)
 		{
-			Vertex &v0 = mVertices[e.mVertex[0]];
-			Vertex &v1 = mVertices[e.mVertex[1]];
+			// Remember previous velocity for restitution calculations
+			Vec3 prev_v = v.mVelocity;
 
-			// Calculate current length
-			Vec3 delta = v1.mPosition - v0.mPosition;
-			float length = delta.Length();
-			if (length > 0.0f)
-			{
-				// Apply correction
-				Vec3 correction = delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq));
-				v0.mPosition += v0.mInvMass * correction;
-				v1.mPosition -= v1.mInvMass * correction;
-			}
-		}
+			// XPBD velocity update
+			v.mVelocity = (v.mPosition - v.mPreviousPosition) / dt;
 
-		// Satisfy collision
-		for (Vertex &v : mVertices)
+			// Satisfy collision constraint
 			if (v.mCollidingShapeIndex >= 0)
 			{
-				float distance = v.mCollisionPlane.SignedDistance(v.mPosition);
-				if (distance < 0.0f)
+				// Check if there is a collision
+				float projected_distance = -v.mCollisionPlane.SignedDistance(v.mPosition);
+				if (projected_distance > 0.0f)
 				{
-					Vec3 delta = v.mCollisionPlane.GetNormal() * distance;
-					v.mPosition -= delta;
-					v.mPreviousPosition -= delta; // Apply delta to previous position so that we will not accumulate velocity by being pushed out of collision
-					v.mProjectedDistance -= distance; // For friction calculation
-				}
-			}
+					// Note that we already calculated the velocity, so this does not affect the velocity (next iteration starts by setting previous position to current position)
+					Vec3 contact_normal = v.mCollisionPlane.GetNormal();
+					v.mPosition += contact_normal * projected_distance;
 
-		// Update velocity
-		float restitution_treshold = -2.0f * gravity.Length() * dt;
-		for (Vertex &v : mVertices)
-			if (v.mInvMass > 0.0f)
-			{
-				Vec3 prev_v = v.mVelocity;
-
-				// XPBD velocity update
-				v.mVelocity = (v.mPosition - v.mPreviousPosition) / dt;
-
-				// If there was a collision
-				if (v.mProjectedDistance > 0.0f)
-				{
-					JPH_ASSERT(v.mCollidingShapeIndex >= 0);
-					CollidingShape &cs = collector.mHits[v.mCollidingShapeIndex];
+					CollidingShape &cs = mCollidingShapes[v.mCollidingShapeIndex];
 
 					// Apply friction as described in Detailed Rigid Body Simulation with Extended Position Based Dynamics - Matthias Muller et al.
 					// See section 3.6:
@@ -353,7 +346,6 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 					// v1 = v1 + p / m1
 					// v2 = v2 - p / m2 (no change when colliding with a static body)
 					// w2 = w2 - I^-1 (r2 x p) (no change when colliding with a static body)
-					Vec3 contact_normal = v.mCollisionPlane.GetNormal();
 					if (cs.mMotionType == EMotionType::Dynamic)
 					{
 						// Calculate normal and tangential velocity (equation 30)
@@ -372,7 +364,7 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 						// Calculate delta relative velocity due to friction (modified equation 31)
 						Vec3 dv;
 						if (v_tangential_length > 0.0f)
-							dv = v_tangential * min(cs.mFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
+							dv = v_tangential * min(cs.mFriction * projected_distance / (v_tangential_length * dt), 1.0f);
 						else
 							dv = Vec3::sZero();
 
@@ -406,7 +398,7 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 
 						// Apply friction (modified equation 31)
 						if (v_tangential_length > 0.0f)
-							v.mVelocity -= v_tangential * min(cs.mFriction * v.mProjectedDistance / (v_tangential_length * dt), 1.0f);
+							v.mVelocity -= v_tangential * min(cs.mFriction * projected_distance / (v_tangential_length * dt), 1.0f);
 
 						// Apply restitution (equation 35)
 						v.mVelocity -= v_normal;
@@ -417,8 +409,14 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 				}
 			}
 		}
+}
+
+void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+{
+	JPH_PROFILE_FUNCTION();
 
 	// Loop through vertices once more to update the global state
+	float dt = ioContext.mDeltaTime;
 	float max_linear_velocity_sq = Square(GetMaxLinearVelocity());
 	float max_v_sq = 0.0f;
 	Vec3 linear_velocity = Vec3::sZero(), angular_velocity = Vec3::sZero();
@@ -441,7 +439,7 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 		mLocalBounds.Encapsulate(v.mPosition);
 
 		// Create predicted position for the next frame in order to detect collisions before they happen
-		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * inDeltaTime + displacement_due_to_gravity);
+		mLocalPredictedBounds.Encapsulate(v.mPosition + v.mVelocity * dt + ioContext.mDisplacementDueToGravity);
 
 		// Reset collision data for the next iteration
 		v.mCollidingShapeIndex = -1;
@@ -450,14 +448,14 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 
 	// Calculate linear/angular velocity of the body by averaging all vertices and bringing the value to world space
 	float num_vertices_divider = float(max(int(mVertices.size()), 1));
-	SetLinearVelocity(body_transform.Multiply3x3(linear_velocity / num_vertices_divider));
-	SetAngularVelocity(body_transform.Multiply3x3(angular_velocity / num_vertices_divider));
+	SetLinearVelocity(ioContext.mCenterOfMassTransform.Multiply3x3(linear_velocity / num_vertices_divider));
+	SetAngularVelocity(ioContext.mCenterOfMassTransform.Multiply3x3(angular_velocity / num_vertices_divider));
 
 	if (mUpdatePosition)
 	{
 		// Shift the body so that the position is the center of the local bounds
 		Vec3 delta = mLocalBounds.GetCenter();
-		outDeltaPosition = body_transform.Multiply3x3(delta);
+		ioContext.mDeltaPosition = ioContext.mCenterOfMassTransform.Multiply3x3(delta);
 		for (Vertex &v : mVertices)
 			v.mPosition -= delta;
 
@@ -466,26 +464,181 @@ ECanSleep SoftBodyMotionProperties::Update(float inDeltaTime, Body &inSoftBody, 
 		mLocalPredictedBounds.Translate(-delta);
 	}
 	else
-		outDeltaPosition = Vec3::sZero();
-
-	// Write back velocities
-	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
-	for (const CollidingShape &cs : collector.mHits)
-		if (cs.mUpdateVelocities)
-			body_interface.SetLinearAndAngularVelocity(cs.mBodyID, body_transform.Multiply3x3(cs.mLinearVelocity), body_transform.Multiply3x3(cs.mAngularVelocity));
+		ioContext.mDeltaPosition = Vec3::sZero();
 
 	// Test if we should go to sleep
-	if (!GetAllowSleeping())
-		return ECanSleep::CannotSleep;
-
-	const PhysicsSettings &physics_settings = inSystem.GetPhysicsSettings();
-	if (max_v_sq > physics_settings.mPointVelocitySleepThreshold)
+	if (GetAllowSleeping())
 	{
-		ResetSleepTestTimer();
-		return ECanSleep::CannotSleep;
+		if (max_v_sq > inPhysicsSettings.mPointVelocitySleepThreshold)
+		{
+			ResetSleepTestTimer();
+			ioContext.mCanSleep = ECanSleep::CannotSleep;
+		}
+		else
+			ioContext.mCanSleep = AccumulateSleepTime(dt, inPhysicsSettings.mTimeBeforeSleep);
 	}
+	else
+		ioContext.mCanSleep = ECanSleep::CannotSleep;
+}
 
-	return AccumulateSleepTime(inDeltaTime, physics_settings.mTimeBeforeSleep);
+void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem)
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Write back velocity deltas
+	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
+	for (const CollidingShape &cs : mCollidingShapes)
+		if (cs.mUpdateVelocities)
+			body_interface.AddLinearAndAngularVelocity(cs.mBodyID, inContext.mCenterOfMassTransform.Multiply3x3(cs.mLinearVelocity - cs.mOriginalLinearVelocity), inContext.mCenterOfMassTransform.Multiply3x3(cs.mAngularVelocity - cs.mOriginalAngularVelocity));
+
+	// Clear colliding shapes to avoid hanging on to references to shapes
+	mCollidingShapes.clear();
+}
+
+void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &inSoftBody, const PhysicsSystem &inSystem, SoftBodyUpdateContext &ioContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Store body
+	ioContext.mBody = &inSoftBody;
+	ioContext.mMotionProperties = this;
+
+	// Convert gravity to local space
+	ioContext.mCenterOfMassTransform = inSoftBody.GetCenterOfMassTransform();
+	ioContext.mGravity = ioContext.mCenterOfMassTransform.Multiply3x3Transposed(GetGravityFactor() * inSystem.GetGravity());
+
+	// Calculate delta time for sub step
+	ioContext.mDeltaTime = inDeltaTime;
+	ioContext.mSubStepDeltaTime = inDeltaTime / mNumIterations;
+
+	// Calculate total displacement we'll have due to gravity over all sub steps
+	// The total displacement as produced by our integrator can be written as: Sum(i * g * dt^2, i = 0..mNumIterations).
+	// This is bigger than 0.5 * g * dt^2 because we first increment the velocity and then update the position
+	// Using Sum(i, i = 0..n) = n * (n + 1) / 2 we can write this as:
+	ioContext.mDisplacementDueToGravity = (0.5f * mNumIterations * (mNumIterations + 1) * Square(ioContext.mSubStepDeltaTime)) * ioContext.mGravity;
+}
+
+void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &ioContext)
+{
+	ApplyPressure(ioContext);
+
+	IntegratePositions(ioContext);
+
+	ApplyVolumeConstraints(ioContext);
+}
+
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCollisionPlanes(SoftBodyUpdateContext &ioContext)
+{
+	// Do a relaxed read first to see if there is any work to do (this prevents us from doing expensive atomic operations and also prevents us from continuously incrementing the counter and overflowing it)
+	uint num_vertices = (uint)mVertices.size();
+	if (ioContext.mNextCollisionVertex.load(memory_order_relaxed) < num_vertices)
+	{
+		// Fetch next batch of vertices to process
+		uint next_vertex = ioContext.mNextCollisionVertex.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_acquire);
+		if (next_vertex < num_vertices)
+		{
+			// Process collision planes
+			uint num_vertices_to_process = min(SoftBodyUpdateContext::cVertexCollisionBatch, num_vertices - next_vertex);
+			DetermineCollisionPlanes(ioContext, next_vertex, num_vertices_to_process);
+			uint vertices_processed = ioContext.mNumCollisionVerticesProcessed.fetch_add(SoftBodyUpdateContext::cVertexCollisionBatch, memory_order_release) + num_vertices_to_process;
+			if (vertices_processed >= num_vertices)
+			{
+				// Start the first iteration
+				JPH_IF_ENABLE_ASSERTS(uint iteration =) ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+				JPH_ASSERT(iteration == 0);
+				StartNextIteration(ioContext);
+				ioContext.mState.store(SoftBodyUpdateContext::EState::ApplyEdgeConstraints, memory_order_release);
+			}
+			return EStatus::DidWork;
+		}
+	}
+	return EStatus::NoWork;
+}
+
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeConstraints(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+{
+	// Do a relaxed read first to see if there is any work to do (this prevents us from doing expensive atomic operations and also prevents us from continuously incrementing the counter and overflowing it)
+	uint num_groups = (uint)mSettings->mEdgeGroupEndIndices.size();
+	JPH_ASSERT(num_groups > 0, "SoftBodySharedSettings::Optimize should have been called!");
+	uint32 edge_group, edge_start_idx;
+	SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(ioContext.mNextEdgeConstraint.load(memory_order_relaxed), edge_group, edge_start_idx);
+	if (edge_group < num_groups && edge_start_idx < mSettings->GetEdgeGroupSize(edge_group))
+	{
+		// Fetch the next batch of edges to process
+		uint64 next_edge_batch = ioContext.mNextEdgeConstraint.fetch_add(SoftBodyUpdateContext::cEdgeConstraintBatch, memory_order_acquire);
+		SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(next_edge_batch, edge_group, edge_start_idx);
+		if (edge_group < num_groups)
+		{
+			bool non_parallel_group = edge_group == num_groups - 1; // Last group is the non-parallel group and goes as a whole
+			uint edge_group_size = mSettings->GetEdgeGroupSize(edge_group);
+			if (non_parallel_group? edge_start_idx == 0 : edge_start_idx < edge_group_size)
+			{
+				// Process edges
+				uint num_edges_to_process = non_parallel_group? edge_group_size : min(SoftBodyUpdateContext::cEdgeConstraintBatch, edge_group_size - edge_start_idx);
+				if (edge_group > 0)
+					edge_start_idx += mSettings->mEdgeGroupEndIndices[edge_group - 1];
+				ApplyEdgeConstraints(ioContext, edge_start_idx, edge_start_idx + num_edges_to_process);
+
+				// Test if we're at the end of this group
+				uint edge_constraints_processed = ioContext.mNumEdgeConstraintsProcessed.fetch_add(num_edges_to_process, memory_order_relaxed) + num_edges_to_process;
+				if (edge_constraints_processed >= edge_group_size)
+				{
+					// Non parallel group is the last group (which is also the only group that can be empty)
+					if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
+					{
+						// Finish the iteration
+						ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
+
+						uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+						if (iteration < mNumIterations)
+						{
+							// Start a new iteration
+							StartNextIteration(ioContext);
+
+							// Reset next edge to process
+							ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
+							ioContext.mNextEdgeConstraint.store(0, memory_order_release);
+						}
+						else
+						{
+							// On final iteration we update the state
+							UpdateSoftBodyState(ioContext, inPhysicsSettings);
+
+							ioContext.mState.store(SoftBodyUpdateContext::EState::Done, memory_order_release);
+							return EStatus::Done;
+						}
+					}
+					else
+					{
+						// Next group
+						ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
+						ioContext.mNextEdgeConstraint.store(SoftBodyUpdateContext::sGetEdgeGroupStart(edge_group + 1), memory_order_release);
+					}
+				}
+				return EStatus::DidWork;
+			}
+		}
+	}
+	return EStatus::NoWork;
+}
+
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+{
+	switch (ioContext.mState.load(memory_order_relaxed))
+	{
+	case SoftBodyUpdateContext::EState::DetermineCollisionPlanes:
+		return ParallelDetermineCollisionPlanes(ioContext);
+
+	case SoftBodyUpdateContext::EState::ApplyEdgeConstraints:
+		return ParallelApplyEdgeConstraints(ioContext, inPhysicsSettings);
+
+	case SoftBodyUpdateContext::EState::Done:
+		return EStatus::Done;
+
+	default:
+		JPH_ASSERT(false);
+		return EStatus::NoWork;
+	}
 }
 
 #ifdef JPH_DEBUG_RENDERER

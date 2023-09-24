@@ -1058,7 +1058,7 @@ void ConvexHullShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inS
 	ioCollector.AddHit({ TransformedShape::sGetBodyID(ioCollector.GetContext()), inSubShapeIDCreator.GetID() });
 }
 
-void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
 	Mat44 inverse_transform = inCenterOfMassTransform.InversedRotationTranslation();
 
@@ -1066,10 +1066,10 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 	bool is_not_scaled = ScaleHelpers::IsNotScaled(inScale);
 	float scale_flip = ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f;
 
-	for (SoftBodyVertex &v : ioVertices)
-		if (v.mInvMass > 0.0f)
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
 		{
-			Vec3 local_pos = inverse_transform * v.mPosition;
+			Vec3 local_pos = inverse_transform * v->mPosition;
 
 			// Find most facing plane
 			float max_distance = -FLT_MAX;
@@ -1151,17 +1151,17 @@ void ConvexHullShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, 
 				penetration = -penetration;
 			else
 				normal = -normal;
-			if (penetration > v.mLargestPenetration)
+			if (penetration > v->mLargestPenetration)
 			{
-				v.mLargestPenetration = penetration;
+				v->mLargestPenetration = penetration;
 
 				// Calculate contact plane
 				normal = normal_length > 0.0f? normal / normal_length : max_plane_normal;
 				Plane plane = Plane::sFromPointAndNormal(closest_point, normal);
 
 				// Store collision
-				v.mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
-				v.mCollidingShapeIndex = inCollidingShapeIndex;
+				v->mCollisionPlane = plane.GetTransformed(inCenterOfMassTransform);
+				v->mCollidingShapeIndex = inCollidingShapeIndex;
 			}
 		}
 }

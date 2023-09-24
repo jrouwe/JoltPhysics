@@ -779,9 +779,9 @@ void MeshShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShap
 	sCollidePointUsingRayCast(*this, inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, Array<SoftBodyVertex> &ioVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
-	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, inScale, ioVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, inScale, ioVertices, inNumVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
 }
 
 void MeshShape::sCastConvexVsMesh(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
