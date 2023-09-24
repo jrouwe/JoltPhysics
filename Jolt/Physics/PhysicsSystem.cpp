@@ -2414,7 +2414,7 @@ void PhysicsSystem::JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsU
 	ioContext->mBarrier->AddJobs(ioStep->mSoftBodyCollide.data(), ioStep->mSoftBodyCollide.size());
 }
 
-void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext)
+void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const
 {
 	for (;;)
 	{

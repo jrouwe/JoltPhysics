@@ -214,7 +214,7 @@ private:
 	void						JobContactRemovedCallbacks(const PhysicsUpdateContext::Step *ioStep);
 	void						JobSolvePositionConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
 	void						JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep);
-	void						JobSoftBodyCollide(PhysicsUpdateContext *ioContext);
+	void						JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const;
 	void						JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint inThreadIndex) const;
 	void						JobSoftBodyFinalize(PhysicsUpdateContext *ioContext);
 
