@@ -308,6 +308,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyPressureTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyGravityFactorTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyKinematicTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyUpdatePositionTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyStressTest)
 
 static TestNameAndRTTI sSoftBodyTests[] =
 {
@@ -318,6 +319,7 @@ static TestNameAndRTTI sSoftBodyTests[] =
 	{ "Soft Body Gravity Factor",		JPH_RTTI(SoftBodyGravityFactorTest) },
 	{ "Soft Body Kinematic",			JPH_RTTI(SoftBodyKinematicTest) },
 	{ "Soft Body Update Position",		JPH_RTTI(SoftBodyUpdatePositionTest) },
+	{ "Soft Body Stress Test",			JPH_RTTI(SoftBodyStressTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
