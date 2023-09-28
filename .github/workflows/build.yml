@@ -14,13 +14,13 @@ on:
 
 jobs:
   linux-clang:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Linux Clang
     strategy:
         fail-fast: false
         matrix:
             build_type: [Debug, Release, Distribution, ReleaseASAN, ReleaseUBSAN]
-            clang_version: [clang++-12, clang++-14]
+            clang_version: [clang++-13, clang++-14]
             double_precision: [No, Yes]
 
     steps:
@@ -35,7 +35,7 @@ jobs:
       run: ctest --output-on-failure
 
   linux-clang-so:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Linux Clang Shared Library
     strategy:
         fail-fast: false
@@ -55,7 +55,7 @@ jobs:
       run: ctest --output-on-failure
 
   linux-gcc:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Linux GCC
     strategy:
         fail-fast: false
@@ -246,7 +246,7 @@ jobs:
       run: ctest --output-on-failure
 
   android:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Android
     strategy:
         fail-fast: false
