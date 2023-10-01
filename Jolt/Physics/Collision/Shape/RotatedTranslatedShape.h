@@ -49,7 +49,7 @@ public:
 	Quat							GetRotation() const										{ return mRotation; }
 
 	/// Access the translation that has been applied to the inner shape
-	Vec3							GetPosition() const										{ return mCenterOfMass - mRotation.InverseRotate(mInnerShape->GetCenterOfMass()); }
+	Vec3							GetPosition() const										{ return mCenterOfMass - mRotation * mInnerShape->GetCenterOfMass(); }
 
 	// See Shape::GetCenterOfMass
 	virtual Vec3					GetCenterOfMass() const override						{ return mCenterOfMass; }
