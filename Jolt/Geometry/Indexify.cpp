@@ -68,7 +68,7 @@ static void sIndexifyVerticesRecursively(const TriangleList &inTriangles, uint32
 
 	// Calculate bounds
 	AABox bounds;
-	for (uint32 *v = ioVertexIndices, *v_end = ioVertexIndices + inNumVertices; v < v_end; ++v)
+	for (const uint32 *v = ioVertexIndices, *v_end = ioVertexIndices + inNumVertices; v < v_end; ++v)
 		bounds.Encapsulate(sIndexifyGetVec3(inTriangles, *v));
 
 	// Determine split plane
