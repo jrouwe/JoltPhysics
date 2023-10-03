@@ -160,6 +160,7 @@ void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedT
 	}
 
 	// Collect the vertices
+	outVertices.clear();
 	outVertices.reserve(num_resulting_vertices);
 	for (uint i = 0; i < num_vertices; ++i)
 		if (welded_vertices[i] == i)
@@ -175,6 +176,7 @@ void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedT
 		}
 
 	// Create indexed triangles
+	outTriangles.clear();
 	outTriangles.reserve(num_triangles);
 	for (uint t = 0; t < num_triangles; ++t)
 	{
@@ -191,8 +193,11 @@ void Deindexify(const VertexList &inVertices, const IndexedTriangleList &inTrian
 {
 	outTriangles.resize(inTriangles.size());
 	for (size_t t = 0; t < inTriangles.size(); ++t)
+	{
+		outTriangles[t].mMaterialIndex = inTriangles[t].mMaterialIndex;
 		for (int v = 0; v < 3; ++v)
 			outTriangles[t].mV[v] = inVertices[inTriangles[t].mIdx[v]];
+	}
 }
 
 JPH_NAMESPACE_END
