@@ -45,6 +45,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mFaces)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeGroupEndIndices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 }
@@ -139,6 +140,7 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mVertices);
 	inStream.Write(mFaces);
 	inStream.Write(mEdgeConstraints);
+	inStream.Write(mEdgeGroupEndIndices);
 	inStream.Write(mVolumeConstraints);
 }
 
@@ -147,6 +149,7 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mVertices);
 	inStream.Read(mFaces);
 	inStream.Read(mEdgeConstraints);
+	inStream.Read(mEdgeGroupEndIndices);
 	inStream.Read(mVolumeConstraints);
 }
 
