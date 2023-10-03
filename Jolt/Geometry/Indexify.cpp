@@ -4,7 +4,6 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Geometry/Indexify.h>
 #include <Jolt/Geometry/AABox.h>
 
