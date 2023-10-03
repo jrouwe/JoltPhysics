@@ -6,6 +6,8 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v3.0.1 and latest
 
+* 20231003 - *SBS* - Bug fix in serialization of SoftBodySharedSettings breaks binary serialization format. (ccb250747eee4dedebfa02d950775478fb52f786)
+* 20230914 - Removed GetProcessorTicksPerSecond as it was not correctly implemented for all platforms. (d44f4bad0872075d5cef2779742c89203d4f4488)
 * 20230819 - *SBS* - RagdollSettings got the ability to have constraints that do not follow the skeleton. This changes the binary serialization format for this class. (08fc49d2d7abfa1a69e21971785d37724c748bb6)
 * 20230807 - Renamed ContactSettings::mRelativeSurfaceVelocity to mRelativeLinearSurfaceVelocity. (76b809ddb1abf96641acc587fffa70101323d323)
 * 20230807 - *SBS* - PhysicsScene is now able to load/save soft bodies. This changes the binary serialization format. (779ba3673beebdc4021842516f4ff6aa7c1e09b4)
