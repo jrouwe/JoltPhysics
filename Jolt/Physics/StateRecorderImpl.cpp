@@ -18,6 +18,12 @@ void StateRecorderImpl::Rewind()
 	mStream.seekg(0, std::stringstream::beg);
 }
 
+void StateRecorderImpl::Clear()
+{
+	mStream.clear();
+	mStream.str({});
+}
+
 void StateRecorderImpl::ReadBytes(void *outData, size_t inNumBytes)
 {
 	if (IsValidating())
