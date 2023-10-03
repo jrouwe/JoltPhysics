@@ -56,10 +56,11 @@ static void sIndexifyVerticesBruteForce(const TriangleList &inTriangles, const u
 	}
 }
 
-static void sIndexifyVerticesRecursively(const TriangleList &inTriangles, uint32 *ioVertexIndices, uint inNumVertices, uint32 *ioScratch, Array<uint32> &ioWeldedVertices, float inVertexWeldDistance)
+static void sIndexifyVerticesRecursively(const TriangleList &inTriangles, uint32 *ioVertexIndices, uint inNumVertices, uint32 *ioScratch, Array<uint32> &ioWeldedVertices, float inVertexWeldDistance, uint inMaxRecursion)
 {
 	// Check if we have few enough vertices to do a brute force search
-	if (inNumVertices <= 8)
+	// Or if we've recursed too deep (this means we chipped off a few vertices each iteration because all points are very close)
+	if (inNumVertices <= 8 || inMaxRecursion == 0)
 	{
 		sIndexifyVerticesBruteForce(inTriangles, ioVertexIndices, ioVertexIndices + inNumVertices, ioWeldedVertices, inVertexWeldDistance);
 		return;
@@ -116,8 +117,9 @@ static void sIndexifyVerticesRecursively(const TriangleList &inTriangles, uint32
 	memcpy(v_write, ioScratch, num_vertices_on_both_sides * sizeof(uint32));
 
 	// Recurse
-	sIndexifyVerticesRecursively(inTriangles, ioVertexIndices, num_vertices_left + num_vertices_on_both_sides, ioScratch, ioWeldedVertices, inVertexWeldDistance);
-	sIndexifyVerticesRecursively(inTriangles, ioVertexIndices + num_vertices_left, num_vertices_right + num_vertices_on_both_sides, ioScratch, ioWeldedVertices, inVertexWeldDistance);
+	uint max_recursion = inMaxRecursion - 1;
+	sIndexifyVerticesRecursively(inTriangles, ioVertexIndices, num_vertices_left + num_vertices_on_both_sides, ioScratch, ioWeldedVertices, inVertexWeldDistance, max_recursion);
+	sIndexifyVerticesRecursively(inTriangles, ioVertexIndices + num_vertices_left, num_vertices_right + num_vertices_on_both_sides, ioScratch, ioWeldedVertices, inVertexWeldDistance, max_recursion);
 }
 
 void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedTriangleList &outTriangles, float inVertexWeldDistance)
@@ -144,7 +146,7 @@ void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedT
 		scratch.resize(num_vertices);
 
 		// Recursively split the vertices
-		sIndexifyVerticesRecursively(inTriangles, vertex_indices.data(), num_vertices, scratch.data(), welded_vertices, inVertexWeldDistance);
+		sIndexifyVerticesRecursively(inTriangles, vertex_indices.data(), num_vertices, scratch.data(), welded_vertices, inVertexWeldDistance, 32);
 	}
 
 	// Do a pass to complete the welding, linking each vertex to the vertex it is welded to
