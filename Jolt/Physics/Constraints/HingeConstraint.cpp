@@ -199,7 +199,10 @@ void HingeConstraint::CalculateMotorConstraintProperties(float inDeltaTime)
 		break;
 
 	case EMotorState::Position:
-		mMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mA1, 0.0f, CenterAngleAroundZero(mTheta - mTargetAngle), mMotorSettings.mSpringSettings);
+		if (mMotorSettings.mSpringSettings.HasStiffness())
+			mMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, mA1, 0.0f, CenterAngleAroundZero(mTheta - mTargetAngle), mMotorSettings.mSpringSettings);
+		else
+			mMotorConstraintPart.Deactivate();
 		break;
 	}
 }

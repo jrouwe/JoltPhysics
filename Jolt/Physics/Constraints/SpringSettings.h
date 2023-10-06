@@ -36,6 +36,9 @@ public:
 	/// Restores contents from the binary stream inStream.
 	void						RestoreBinaryState(StreamIn &inStream);
 
+	/// Check if the spring has a valid frequency / stiffness, if not the spring will be hard
+	inline bool					HasStiffness() const							{ return mFrequency > 0.0f; }
+
 	/// Selects the way in which the spring is defined
 	/// If the mode is StiffnessAndDamping then mFrequency becomes the stiffness (k) and mDamping becomes the damping ratio (c) in the spring equation F = -k * x - c * v. Otherwise the properties are as documented.
 	ESpringMode 				mMode = ESpringMode::FrequencyAndDamping;
@@ -44,12 +47,12 @@ public:
 	{
 		/// Valid when mSpringMode = ESpringMode::FrequencyAndDamping.
 		/// If mFrequency > 0 the constraint will be soft and mFrequency specifies the oscillation frequency in Hz.
-		/// If mFrequency <= 0, mDamping is ignored and the distance constraint will have hard limits (as hard as the time step / the number of velocity / position solver steps allows).
+		/// If mFrequency <= 0, mDamping is ignored and the constraint will have hard limits (as hard as the time step / the number of velocity / position solver steps allows).
 		float					mFrequency = 0.0f;
 
 		/// Valid when mSpringMode = ESpringMode::StiffnessAndDamping.
 		/// If mStiffness > 0 the constraint will be soft and mStiffness specifies the stiffness (k) in the spring equation F = -k * x - c * v for a linear or T = -k * theta - c * w for an angular spring.
-		/// If mStiffness <= 0, mDamping is ignored and the distance constraint will have hard limits (as hard as the time step / the number of velocity / position solver steps allows).
+		/// If mStiffness <= 0, mDamping is ignored and the constraint will have hard limits (as hard as the time step / the number of velocity / position solver steps allows).
 		float					mStiffness;
 	};
 

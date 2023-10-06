@@ -196,6 +196,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 		break;
 
 	case EMotorState::Position:
+		if (mPositionMotorSettings.mSpringSettings.HasStiffness())
 		{
 			// Calculate constraint value to drive to
 			float c;
@@ -212,8 +213,10 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 			else
 				c = mPathFraction - mTargetPathFraction;
 			mPositionMotorConstraintPart.CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, mR1 + mU, *mBody2, mR2, mPathTangent, 0.0f, c, mPositionMotorSettings.mSpringSettings);
-			break;
 		}
+		else
+			mPositionMotorConstraintPart.Deactivate();
+		break;
 	}
 }
 

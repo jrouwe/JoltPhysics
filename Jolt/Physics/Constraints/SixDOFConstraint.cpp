@@ -379,8 +379,14 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 				break;
 
 			case EMotorState::Position:
-				mMotorTranslationConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis, 0.0f, translation_axis.Dot(u) - mTargetPosition[i], mMotorSettings[i].mSpringSettings);
-				break;
+				{
+					const SpringSettings &spring_settings = mMotorSettings[i].mSpringSettings;
+					if (spring_settings.HasStiffness())
+						mMotorTranslationConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, r1_plus_u, *mBody2, r2, translation_axis, 0.0f, translation_axis.Dot(u) - mTargetPosition[i], spring_settings);
+					else
+						mMotorTranslationConstraintPart[i].Deactivate();
+					break;
+				}
 			}
 		}
 	}
@@ -504,8 +510,14 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 					break;
 
 				case EMotorState::Position:
-					mMotorRotationConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, rotation_axis, 0.0f, rotation_error[i], mMotorSettings[axis].mSpringSettings);
-					break;
+					{
+						const SpringSettings &spring_settings = mMotorSettings[axis].mSpringSettings;
+						if (spring_settings.HasStiffness())
+							mMotorRotationConstraintPart[i].CalculateConstraintPropertiesWithSettings(inDeltaTime, *mBody1, *mBody2, rotation_axis, 0.0f, rotation_error[i], spring_settings);
+						else
+							mMotorRotationConstraintPart[i].Deactivate();
+						break;
+					}
 				}
 			}
 		}
