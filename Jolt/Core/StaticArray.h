@@ -156,6 +156,19 @@ public:
 		return reinterpret_cast<const T &>(mElements[inIdx]);
 	}
 
+	/// Access element
+	T &					at(size_type inIdx)
+	{
+		JPH_ASSERT(inIdx < mSize);
+		return reinterpret_cast<T &>(mElements[inIdx]);
+	}
+
+	const T &			at(size_type inIdx) const
+	{
+		JPH_ASSERT(inIdx < mSize);
+		return reinterpret_cast<const T &>(mElements[inIdx]);
+	}
+
 	/// First element in the array
 	const T &			front() const
 	{
