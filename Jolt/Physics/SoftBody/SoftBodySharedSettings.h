@@ -33,6 +33,9 @@ public:
 	/// Optimize the soft body settings for simulation. This will reorder constraints so they can be executed in parallel.
 	void				Optimize(OptimizationResults &outResults);
 
+	/// Optimize the soft body settings without results
+	void				Optimize()									{ OptimizationResults results; Optimize(results); }
+
 	/// Saves the state of this object in binary form to inStream. Doesn't store the material list.
 	void				SaveBinaryState(StreamOut &inStream) const;
 

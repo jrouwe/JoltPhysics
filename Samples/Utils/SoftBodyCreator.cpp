@@ -82,8 +82,7 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSize, float inGridSpacing, bo
 		}
 
 	// Optimize the settings
-	SoftBodySharedSettings::OptimizationResults results;
-	settings->Optimize(results);
+	settings->Optimize();
 
 	return settings;
 }
@@ -226,8 +225,7 @@ Ref<SoftBodySharedSettings> CreateCube(uint inGridSize, float inGridSpacing)
 		}
 
 	// Optimize the settings
-	SoftBodySharedSettings::OptimizationResults results;
-	settings->Optimize(results);
+	settings->Optimize();
 
 	return settings;
 }
@@ -312,8 +310,7 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 	}
 
 	// Optimize the settings
-	SoftBodySharedSettings::OptimizationResults results;
-	settings->Optimize(results);
+	settings->Optimize();
 
 	return settings;
 }
