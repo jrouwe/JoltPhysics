@@ -121,6 +121,12 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 		for (int i = 0; i < 6; ++i)
 			inUI->CreateSlider(configuration_settings, "Max Friction " + labels[i], sSettings->mMaxFriction[i], 0.0f, 500.0f, 1.0f, [=](float inValue) { sSettings->mMaxFriction[i] = inValue; });
 
+		for (int i = 0; i < 6; ++i)
+			inUI->CreateSlider(configuration_settings, "Motor Frequency " + labels[i] + " (Hz)", sSettings->mMotorSettings[i].mSpringSettings.mFrequency, 0.0f, 20.0f, 0.1f, [i](float inValue) { sSettings->mMotorSettings[i].mSpringSettings.mFrequency = inValue; });
+
+		for (int i = 0; i < 6; ++i)
+			inUI->CreateSlider(configuration_settings, "Motor Damping " + labels[i], sSettings->mMotorSettings[i].mSpringSettings.mDamping, 0.0f, 2.0f, 0.01f, [i](float inValue) { sSettings->mMotorSettings[i].mSpringSettings.mDamping = inValue; });
+
 		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
 
 		inUI->ShowMenu(configuration_settings);
