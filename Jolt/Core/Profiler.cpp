@@ -106,7 +106,6 @@ void Profiler::sAggregate(int inDepth, uint32 inColor, ProfileSample *&ioSample,
 
 	// Start accumulating totals
 	uint64 cycles_this_with_children = ioSample->mEndCycle - ioSample->mStartCycle;
-	uint64 cycles_in_children = 0;
 
 	// Loop over following samples until we find a sample that starts on or after our end
 	ProfileSample *sample;
@@ -115,9 +114,6 @@ void Profiler::sAggregate(int inDepth, uint32 inColor, ProfileSample *&ioSample,
 		JPH_ASSERT(sample[-1].mStartCycle <= sample->mStartCycle);
 		JPH_ASSERT(sample->mStartCycle >= ioSample->mStartCycle);
 		JPH_ASSERT(sample->mEndCycle <= ioSample->mEndCycle);
-
-		// This is a direct child of us, accumulate time
-		cycles_in_children += sample->mEndCycle - sample->mStartCycle;
 
 		// Recurse and skip over the children of this child
 		sAggregate(inDepth + 1, inColor, sample, inEnd, ioAggregators, ioKeyToAggregator);
@@ -140,7 +136,7 @@ void Profiler::sAggregate(int inDepth, uint32 inColor, ProfileSample *&ioSample,
 	}
 
 	// Add the measurement to the aggregator
-	aggregator->AccumulateMeasurement(cycles_this_with_children, cycles_in_children);
+	aggregator->AccumulateMeasurement(cycles_this_with_children);
 
 	// Update ioSample to the last child of ioSample
 	JPH_ASSERT(sample[-1].mStartCycle <= ioSample->mEndCycle);
@@ -193,9 +189,6 @@ void Profiler::DumpInternal()
 		for (ProfileSample *s = t.mSamplesBegin, *end = t.mSamplesEnd; s < end; ++s)
 			sAggregate(0, Color::sGetDistinctColor(0).GetUInt32(), s, end, aggregators, key_to_aggregators);
 
-	// Dump as list
-	DumpList(tag.c_str(), aggregators);
-
 	// Dump as chart
 	DumpChart(tag.c_str(), threads, key_to_aggregators, aggregators);
 }
@@ -206,86 +199,6 @@ static String sHTMLEncode(const char *inString)
 	StringReplace(str, "<", "&lt;");
 	StringReplace(str, ">", "&gt;");
 	return str;
-}
-
-void Profiler::DumpList(const char *inTag, const Aggregators &inAggregators)
-{
-	// Open file
-	std::ofstream f;
-	f.open(StringFormat("profile_list_%s.html", inTag).c_str(), std::ofstream::out | std::ofstream::trunc);
-	if (!f.is_open())
-		return;
-
-	// Write header
-	f << R"(<!DOCTYPE html>
-<html>
-	<head>
-		<title>Profile List</title>
-		<link rel="stylesheet" href="WebIncludes/semantic.min.css">
-		<script type="text/javascript" src="WebIncludes/jquery-3.6.4.min.js"></script>
-		<script type="text/javascript" src="WebIncludes/semantic.min.js"></script>
-		<script type="text/javascript" src="WebIncludes/tablesort.js"></script>
-		<script type="text/javascript">$(document).ready(function() { $('table').tablesort({ compare: function(a, b) { return isNaN(a) || isNaN(b)? a.localeCompare(b) : Number(a) - Number(b); } }); });</script>
-	</head>
-	<body class="minimal pushable">
-		<table id="profile" class="ui sortable celled striped table">
-			<thead>
-				<tr>
-					<th>Description</th>
-					<th class="sorted descending">Total time with children (%)</th>
-					<th>Total time (%)</th>
-					<th>Calls</th>
-					<th>&micro;s / call with children</th>
-					<th>&micro;s / call</th>
-					<th>Min. &micro;s / call</th>
-					<th>Max. &micro;s / call</th>
-				</tr>
-			</thead>
-			<tbody style="text-align: right;">
-)";
-
-	// Get total time
-	uint64 total_time = 0;
-	for (const Aggregator &item : inAggregators)
-		total_time += item.mTotalCyclesInCallWithChildren - item.mTotalCyclesInChildren;
-
-	// Get cycles per second
-	uint64 cycles_per_second = GetProcessorTicksPerSecond();
-
-	// Sort the list
-	Aggregators aggregators = inAggregators;
-	QuickSort(aggregators.begin(), aggregators.end());
-
-	// Write all aggregators
-	for (const Aggregator &item : aggregators)
-	{
-		uint64 cycles_in_call_no_children = item.mTotalCyclesInCallWithChildren - item.mTotalCyclesInChildren;
-
-		char str[2048];
-		snprintf(str, sizeof(str), R"(<tr>
-	<td style="text-align: left;">%s</td>
-	<td>%.1f</td>
-	<td>%.1f</td>
-	<td>%u</td>
-	<td>%.2f</td>
-	<td>%.2f</td>
-	<td>%.2f</td>
-	<td>%.2f</td>
-</tr>)",
-			sHTMLEncode(item.mName).c_str(),															// Description
-			100.0 * item.mTotalCyclesInCallWithChildren / total_time,									// Total time with children
-			100.0 * cycles_in_call_no_children / total_time,											// Total time no children
-			item.mCallCounter,																			// Calls
-			1000000.0 * item.mTotalCyclesInCallWithChildren / cycles_per_second / item.mCallCounter,	// us / call with children
-			1000000.0 * cycles_in_call_no_children / cycles_per_second / item.mCallCounter,				// us / call no children
-			1000000.0 * item.mMinCyclesInCallWithChildren / cycles_per_second,							// Min. us / call with children
-			1000000.0 * item.mMaxCyclesInCallWithChildren / cycles_per_second);							// Max. us / call with children
-
-		f << str;
-	}
-
-	// End table
-	f << R"(</tbody></table></body></html>)";
 }
 
 void Profiler::DumpChart(const char *inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators)

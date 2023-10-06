@@ -116,11 +116,10 @@ private:
 								Aggregator(const char *inName)										: mName(inName) { }
 
 		/// Accumulate results for a measurement
-		void					AccumulateMeasurement(uint64 inCyclesInCallWithChildren, uint64 inCyclesInChildren)
+		void					AccumulateMeasurement(uint64 inCyclesInCallWithChildren)
 		{
 			mCallCounter++;
 			mTotalCyclesInCallWithChildren += inCyclesInCallWithChildren;
-			mTotalCyclesInChildren += inCyclesInChildren;
 			mMinCyclesInCallWithChildren = min(inCyclesInCallWithChildren, mMinCyclesInCallWithChildren);
 			mMaxCyclesInCallWithChildren = max(inCyclesInCallWithChildren, mMaxCyclesInCallWithChildren);
 		}
@@ -137,7 +136,6 @@ private:
 		/// Statistics
 		uint32					mCallCounter = 0;													///< Number of times AccumulateMeasurement was called
 		uint64					mTotalCyclesInCallWithChildren = 0;									///< Total amount of cycles spent in this scope
-		uint64					mTotalCyclesInChildren = 0;											///< Total amount of cycles spent in children of this scope
 		uint64					mMinCyclesInCallWithChildren = 0xffffffffffffffffUL;				///< Minimum amount of cycles spent per call
 		uint64					mMaxCyclesInCallWithChildren = 0;									///< Maximum amount of cycles spent per call
 	};
@@ -157,7 +155,6 @@ private:
 
 	/// Dump profiling statistics
 	void						DumpInternal();
-	void						DumpList(const char *inTag, const Aggregators &inAggregators);
 	void						DumpChart(const char *inTag, const Threads &inThreads, const KeyToAggregator &inKeyToAggregators, const Aggregators &inAggregators);
 
 	std::mutex					mLock;																///< Lock that protects mThreads
