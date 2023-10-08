@@ -145,7 +145,7 @@ public:
 	float						GetMaxFriction(EAxis inAxis) const							{ return mMaxFriction[inAxis]; }
 
 	/// Get rotation of constraint in constraint space
-	inline Quat					GetRotationInConstraintSpace() const;
+	Quat						GetRotationInConstraintSpace() const;
 
 	/// Motor settings
 	MotorSettings &				GetMotorSettings(EAxis inAxis)								{ return mMotorSettings[inAxis]; }
