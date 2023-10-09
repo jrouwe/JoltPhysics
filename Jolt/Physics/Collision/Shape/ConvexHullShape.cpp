@@ -129,6 +129,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	for (BuilderFace *builder_face : builder_faces)
 	{
 		// Determine where the vertices go
+		JPH_ASSERT(mVertexIdx.size() <= 0xFFFF);
 		uint16 first_vertex = (uint16)mVertexIdx.size();
 		uint16 num_vertices = 0;
 
