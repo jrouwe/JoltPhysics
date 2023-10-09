@@ -1290,7 +1290,7 @@ void ConvexHullBuilder::GetCenterOfMassAndVolume(Vec3 &outCenterOfMass, float &o
 
 			// Update v2 for next triangle
 			v2 = v3;
-		} while (e != f->mFirstEdge);
+		}
 	}
 
 	// Calculate center of mass, fall back to average point in case there is no volume (everything is on a plane in this case)
