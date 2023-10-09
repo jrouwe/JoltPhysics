@@ -449,7 +449,7 @@ void RagdollSettings::CalculateConstraintIndexToBodyIdxPair()
 		if (p.mToParent != nullptr)
 		{
 			int parent_joint_idx = mSkeleton->GetJoint(joint_idx).mParentJointIndex;
-			mConstraintIndexToBodyIdxPair.push_back(BodyIdxPair(parent_joint_idx, joint_idx));
+			mConstraintIndexToBodyIdxPair.emplace_back(parent_joint_idx, joint_idx);
 		}
 
 		++joint_idx;
@@ -457,7 +457,7 @@ void RagdollSettings::CalculateConstraintIndexToBodyIdxPair()
 
 	// Add additional constraints
 	for (const AdditionalConstraint &c : mAdditionalConstraints)
-		mConstraintIndexToBodyIdxPair.push_back(BodyIdxPair(c.mBodyIdx[0], c.mBodyIdx[1]));
+		mConstraintIndexToBodyIdxPair.emplace_back(c.mBodyIdx[0], c.mBodyIdx[1]);
 }
 
 Ragdoll::~Ragdoll()

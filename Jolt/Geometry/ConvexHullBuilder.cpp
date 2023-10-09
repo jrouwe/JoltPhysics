@@ -408,7 +408,7 @@ ConvexHullBuilder::EResult ConvexHullBuilder::Initialize(int inMaxVertices, floa
 		Array<Vec3> positions_2d;
 		positions_2d.reserve(mPositions.size());
 		for (Vec3 v : mPositions)
-			positions_2d.push_back(Vec3(base1.Dot(v), base2.Dot(v), 0));
+			positions_2d.emplace_back(base1.Dot(v), base2.Dot(v), 0);
 
 		// Build hull
 		Array<int> edges_2d;
