@@ -352,7 +352,8 @@ public:
 	///@name Binary serialization of the shape. Note that this saves the 'cooked' shape in a format which will not be backwards compatible for newer library versions.
 	/// In this case you need to recreate the shape from the ShapeSettings object and save it again. The user is expected to call SaveBinaryState followed by SaveMaterialState and SaveSubShapeState.
 	/// The stream should be stored as is and the material and shape list should be saved using the applications own serialization system (e.g. by assigning an ID to each pointer).
-	/// When restoring data, call sRestoreFromBinararyState to get the shape and then call RestoreMaterialState and RestoreSubShapeState to restore the pointers to the external objects.
+	/// When restoring data, call sRestoreFromBinaryState to get the shape and then call RestoreMaterialState and RestoreSubShapeState to restore the pointers to the external objects.
+	/// Alternatively you can use SaveWithChildren and sRestoreWithChildren to save and restore the shape and all its child shapes and materials in a single stream.
 	///@{
 
 	/// Saves the contents of the shape in binary form to inStream.
