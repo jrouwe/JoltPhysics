@@ -2364,10 +2364,10 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 	mStepNumber++;
 
 	// Print timing information
-	constexpr int cNumSteps = 60;
+	constexpr uint cNumSteps = 60;
 	if (mStepNumber % cNumSteps == 0)
 	{
-		Trace("Timing: %d, %d", mStepNumber / cNumSteps, mTotalTime.count() / cNumSteps);
+		Trace("Timing: %u, %llu", mStepNumber / cNumSteps, static_cast<unsigned long long>(mTotalTime.count()) / cNumSteps);
 		mTotalTime = chrono::microseconds(0);
 	}
 
