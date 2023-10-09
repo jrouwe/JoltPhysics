@@ -413,11 +413,11 @@ bool ObjectStreamIn::ReadPointerData(const RTTI *inRTTI, void **inPointer, int i
 		else
 		{
 			// Put pointer on the list to be resolved later on
-			mUnresolvedLinks.emplace_back();
-			mUnresolvedLinks.back().mPointer = inPointer;
-			mUnresolvedLinks.back().mRefCountOffset = inRefCountOffset;
-			mUnresolvedLinks.back().mIdentifier = identifier;
-			mUnresolvedLinks.back().mRTTI = inRTTI;
+			Link &link = mUnresolvedLinks.emplace_back();
+			link.mPointer = inPointer;
+			link.mRefCountOffset = inRefCountOffset;
+			link.mIdentifier = identifier;
+			link.mRTTI = inRTTI;
 		}
 
 		return true;
