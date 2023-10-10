@@ -339,7 +339,7 @@ void LockFreeHashMap<Key, Value>::TraceStats() const
 		histogram[min(objects_in_bucket, cMaxPerBucket - 1)]++;
 	}
 
-	Trace("max_objects_per_bucket = %d, num_buckets = %d, num_objects = %d", max_objects_per_bucket, mNumBuckets, num_objects);
+	Trace("max_objects_per_bucket = %d, num_buckets = %u, num_objects = %d", max_objects_per_bucket, mNumBuckets, num_objects);
 
 	for (int i = 0; i < cMaxPerBucket; ++i)
 		if (histogram[i] != 0)

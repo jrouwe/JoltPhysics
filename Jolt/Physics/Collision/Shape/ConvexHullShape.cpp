@@ -129,6 +129,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	for (BuilderFace *builder_face : builder_faces)
 	{
 		// Determine where the vertices go
+		JPH_ASSERT(mVertexIdx.size() <= 0xFFFF);
 		uint16 first_vertex = (uint16)mVertexIdx.size();
 		uint16 num_vertices = 0;
 
@@ -180,7 +181,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	// Test if GetSupportFunction can support this many points
 	if (mPoints.size() > cMaxPointsInHull)
 	{
-		outResult.SetError(StringFormat("Internal error: Too many points in hull (%d), max allowed %d", mPoints.size(), cMaxPointsInHull));
+		outResult.SetError(StringFormat("Internal error: Too many points in hull (%u), max allowed %d", (uint)mPoints.size(), cMaxPointsInHull));
 		return;
 	}
 
@@ -205,60 +206,57 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 			return;
 		}
 
-		if (faces.size() > 1)
+		// Find the 3 normals that form the largest tetrahedron
+		// The largest tetrahedron we can get is ((1, 0, 0) x (0, 1, 0)) . (0, 0, 1) = 1, if the volume is only 5% of that,
+		// the three vectors are too coplanar and we fall back to using only 2 plane normals
+		float biggest_volume = 0.05f;
+		int best3[3] = { -1, -1, -1 };
+
+		// When using 2 normals, we get the two with the biggest angle between them with a minimal difference of 1 degree
+		// otherwise we fall back to just using 1 plane normal
+		float smallest_dot = Cos(DegreesToRadians(1.0f));
+		int best2[2] = { -1, -1 };
+
+		for (int face1 = 0; face1 < (int)faces.size(); ++face1)
 		{
-			// Find the 3 normals that form the largest tetrahedron
-			// The largest tetrahedron we can get is ((1, 0, 0) x (0, 1, 0)) . (0, 0, 1) = 1, if the volume is only 5% of that,
-			// the three vectors are too coplanar and we fall back to using only 2 plane normals
-			float biggest_volume = 0.05f;
-			int best3[3] = { -1, -1, -1 };
-
-			// When using 2 normals, we get the two with the biggest angle between them with a minimal difference of 1 degree
-			// otherwise we fall back to just using 1 plane normal
-			float smallest_dot = Cos(DegreesToRadians(1.0f));
-			int best2[2] = { -1, -1 };
-
-			for (int face1 = 0; face1 < (int)faces.size(); ++face1)
+			Vec3 normal1 = mPlanes[faces[face1]].GetNormal();
+			for (int face2 = face1 + 1; face2 < (int)faces.size(); ++face2)
 			{
-				Vec3 normal1 = mPlanes[faces[face1]].GetNormal();
-				for (int face2 = face1 + 1; face2 < (int)faces.size(); ++face2)
+				Vec3 normal2 = mPlanes[faces[face2]].GetNormal();
+				Vec3 cross = normal1.Cross(normal2);
+
+				// Determine the 2 face normals that are most apart
+				float dot = normal1.Dot(normal2);
+				if (dot < smallest_dot)
 				{
-					Vec3 normal2 = mPlanes[faces[face2]].GetNormal();
-					Vec3 cross = normal1.Cross(normal2);
+					smallest_dot = dot;
+					best2[0] = faces[face1];
+					best2[1] = faces[face2];
+				}
 
-					// Determine the 2 face normals that are most apart
-					float dot = normal1.Dot(normal2);
-					if (dot < smallest_dot)
+				// Determine the 3 face normals that form the largest tetrahedron
+				for (int face3 = face2 + 1; face3 < (int)faces.size(); ++face3)
+				{
+					Vec3 normal3 = mPlanes[faces[face3]].GetNormal();
+					float volume = abs(cross.Dot(normal3));
+					if (volume > biggest_volume)
 					{
-						smallest_dot = dot;
-						best2[0] = faces[face1];
-						best2[1] = faces[face2];
-					}
-
-					// Determine the 3 face normals that form the largest tetrahedron
-					for (int face3 = face2 + 1; face3 < (int)faces.size(); ++face3)
-					{
-						Vec3 normal3 = mPlanes[faces[face3]].GetNormal();
-						float volume = abs(cross.Dot(normal3));
-						if (volume > biggest_volume)
-						{
-							biggest_volume = volume;
-							best3[0] = faces[face1];
-							best3[1] = faces[face2];
-							best3[2] = faces[face3];
-						}
+						biggest_volume = volume;
+						best3[0] = faces[face1];
+						best3[1] = faces[face2];
+						best3[2] = faces[face3];
 					}
 				}
 			}
-
-			// If we didn't find 3 planes, use 2, if we didn't find 2 use 1
-			if (best3[0] != -1)
-				faces = { best3[0], best3[1], best3[2] };
-			else if (best2[0] != -1)
-				faces = { best2[0], best2[1] };
-			else
-				faces = { faces[0] };
 		}
+
+		// If we didn't find 3 planes, use 2, if we didn't find 2 use 1
+		if (best3[0] != -1)
+			faces = { best3[0], best3[1], best3[2] };
+		else if (best2[0] != -1)
+			faces = { best2[0], best2[1] };
+		else
+			faces = { faces[0] };
 
 		// Copy the faces to the points buffer
 		Point &point = mPoints[p];

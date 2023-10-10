@@ -192,7 +192,7 @@ AABBTreeBuilder::Node *AABBTreeBuilder::BuildInternal(const TriangleSplitter::Ra
 		TriangleSplitter::Range left, right;
 		if (!mTriangleSplitter.Split(inTriangles, left, right))
 		{
-			JPH_IF_DEBUG(Trace("AABBTreeBuilder: Doing random split for %d triangles (max per node: %d)!", (int)inTriangles.Count(), mMaxTrianglesPerLeaf);)
+			JPH_IF_DEBUG(Trace("AABBTreeBuilder: Doing random split for %d triangles (max per node: %u)!", (int)inTriangles.Count(), mMaxTrianglesPerLeaf);)
 			int half = inTriangles.Count() / 2;
 			JPH_ASSERT(half > 0);
 			left = TriangleSplitter::Range(inTriangles.mBegin, inTriangles.mBegin + half);

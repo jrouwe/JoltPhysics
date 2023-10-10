@@ -59,12 +59,12 @@ static const std::vector<Vec3> sUnitCylinderTriangles = []() {
 		Vec3 b2 = cTopFace[(i + 1) % num_verts] + bottom_offset;
 
 		// Top
-		verts.push_back(Vec3(0.0f, 1.0f, 0.0f));
+		verts.emplace_back(0.0f, 1.0f, 0.0f);
 		verts.push_back(t1);
 		verts.push_back(t2);
 
 		// Bottom
-		verts.push_back(Vec3(0.0f, -1.0f, 0.0f));
+		verts.emplace_back(0.0f, -1.0f, 0.0f);
 		verts.push_back(b2);
 		verts.push_back(b1);
 

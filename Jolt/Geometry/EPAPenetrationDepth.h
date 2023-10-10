@@ -201,7 +201,7 @@ public:
 		hull.DrawLabel("Build initial hull");
 #endif
 #ifdef JPH_EPA_PENETRATION_DEPTH_DEBUG
-		Trace("Init: num_points = %d", support_points.mY.size());
+		Trace("Init: num_points = %u", (uint)support_points.mY.size());
 #endif
 		hull.Initialize(0, 1, 2);
 		for (typename Points::size_type i = 3; i < support_points.mY.size(); ++i)

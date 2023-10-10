@@ -218,7 +218,7 @@ int SoftBodyShape::GetTrianglesNext(GetTrianglesContext &ioContext, int inMaxTri
 
 Shape::Stats SoftBodyShape::GetStats() const
 {
-	return Stats(sizeof(this), (uint)mSoftBodyMotionProperties->GetFaces().size());
+	return Stats(sizeof(*this), (uint)mSoftBodyMotionProperties->GetFaces().size());
 }
 
 float SoftBodyShape::GetVolume() const
