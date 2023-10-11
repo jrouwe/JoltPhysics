@@ -83,6 +83,15 @@ public:
 	/// Get the quaternion as a Vec4
 	JPH_INLINE Vec4 			GetXYZW() const													{ return mValue; }
 
+	/// Set individual components
+	JPH_INLINE void				SetX(float inX)													{ mValue.SetX(inX); }
+	JPH_INLINE void				SetY(float inY)													{ mValue.SetY(inY); }
+	JPH_INLINE void				SetZ(float inZ)													{ mValue.SetZ(inZ); }
+	JPH_INLINE void				SetW(float inW)													{ mValue.SetW(inW); }
+
+	/// Set all components
+	JPH_INLINE void				Set(float inX, float inY, float inZ, float inW)					{ mValue.Set(inX, inY, inZ, inW); }
+
 	///@}
 	///@name Default quaternions
 	///@{

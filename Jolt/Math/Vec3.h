@@ -130,6 +130,9 @@ public:
 	JPH_INLINE void				SetY(float inY)									{ mF32[1] = inY; }
 	JPH_INLINE void				SetZ(float inZ)									{ mF32[2] = mF32[3] = inZ; } // Assure Z and W are the same
 
+	/// Set all components
+	JPH_INLINE void				Set(float inX, float inY, float inZ)			{ *this = Vec3(inX, inY, inZ); }
+
 	/// Get float component by index
 	JPH_INLINE float			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 3); return mF32[inCoordinate]; }
 
