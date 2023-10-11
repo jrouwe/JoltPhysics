@@ -122,6 +122,9 @@ public:
 	JPH_INLINE void				SetZ(float inZ)									{ mF32[2] = inZ; }
 	JPH_INLINE void				SetW(float inW)									{ mF32[3] = inW; }
 
+	/// Set all components
+	JPH_INLINE void				Set(float inX, float inY, float inZ, float inW)	{ *this = Vec4(inX, inY, inZ, inW); }
+
 	/// Get float component by index
 	JPH_INLINE float			operator [] (uint inCoordinate) const			{ JPH_ASSERT(inCoordinate < 4); return mF32[inCoordinate]; }
 	JPH_INLINE float &			operator [] (uint inCoordinate)					{ JPH_ASSERT(inCoordinate < 4); return mF32[inCoordinate]; }

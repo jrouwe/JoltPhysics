@@ -119,6 +119,13 @@ public:
 		return v;
 	}
 
+	inline Vector &				operator /= (float inV2)
+	{
+		for (uint r = 0; r < Rows; ++r)
+			mF32[r] /= inV2;
+		return *this;
+	}
+
 	/// Add two float vectors (component wise)
 	inline Vector				operator + (const Vector &inV2) const
 	{
