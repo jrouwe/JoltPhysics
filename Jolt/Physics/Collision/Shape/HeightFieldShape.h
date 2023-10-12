@@ -19,19 +19,19 @@ class CollideShapeSettings;
 namespace HeightFieldShapeConstants
 {
 	/// Value used to create gaps in the height field
-	constexpr float			cNoCollisionValue = FLT_MAX;
+	constexpr float					cNoCollisionValue = FLT_MAX;
 
 	/// Stack size to use during WalkHeightField
-	constexpr int			cStackSize = 128;
+	constexpr int					cStackSize = 128;
 
 	/// A position in the hierarchical grid is defined by a level (which grid), x and y position. We encode this in a single uint32 as: level << 28 | y << 14 | x
-	constexpr uint			cNumBitsXY = 14;
-	constexpr uint			cMaskBitsXY = (1 << cNumBitsXY) - 1;
-	constexpr uint			cLevelShift = 2 * cNumBitsXY;
+	constexpr uint					cNumBitsXY = 14;
+	constexpr uint					cMaskBitsXY = (1 << cNumBitsXY) - 1;
+	constexpr uint					cLevelShift = 2 * cNumBitsXY;
 
 	/// When height samples are converted to 16 bit:
-	constexpr uint16		cNoCollisionValue16 = 0xffff;		///< This is the magic value for 'no collision'
-	constexpr uint16		cMaxHeightValue16 = 0xfffe;			///< This is the maximum allowed height value
+	constexpr uint16				cNoCollisionValue16 = 0xffff;		///< This is the magic value for 'no collision'
+	constexpr uint16				cMaxHeightValue16 = 0xfffe;			///< This is the maximum allowed height value
 };
 
 /// Class that constructs a HeightFieldShape
@@ -81,7 +81,10 @@ public:
 	/// Also note that increasing mBlockSize saves more memory than reducing the amount of bits per sample.
 	uint32							mBitsPerSample = 8;
 
+	/// An array of mSampleCount^2 height samples. Samples are stored in row major order, so the sample at (x, y) is at index y * mSampleCount + x.
 	Array<float>					mHeightSamples;
+
+	/// An array of (mSampleCount - 1)^2 material indices.
 	Array<uint8>					mMaterialIndices;
 
 	/// The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
