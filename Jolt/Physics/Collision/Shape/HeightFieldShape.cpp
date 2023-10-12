@@ -743,6 +743,63 @@ bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurf
 	}
 }
 
+void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights) const
+{
+	JPH_ASSERT(inX % mBlockSize == 0 && inY % mBlockSize == 0);
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX <= mSampleCount && inY + inSizeY <= mSampleCount);
+
+	// Test if there are any samples
+	if (mHeightSamples.empty())
+	{
+		// No samples, return the offset
+		float y = mOffset.GetY();
+		for (float *h = outHeights, *h_end = outHeights + inSizeX * inSizeY; h < h_end; ++h)
+			*h = y;
+	}
+	else
+	{
+		// Calculate offset and stride
+		uint num_blocks = GetNumBlocks();
+		uint range_block_offset, range_block_stride;
+		sGetRangeBlockOffsetAndStride(num_blocks, sGetMaxLevel(num_blocks), range_block_offset, range_block_stride);
+
+		// Loop over blocks
+		uint block_start_x = inX / mBlockSize;
+		uint block_start_y = inY / mBlockSize;
+		uint num_blocks_x = inSizeX / mBlockSize;
+		uint num_blocks_y = inSizeY / mBlockSize;
+		for (uint block_y = 0; block_y < num_blocks_y; ++block_y)
+			for (uint block_x = 0; block_x < num_blocks_x; ++block_x)
+			{
+				// Get offset and scale for block
+				float offset, scale;
+				GetBlockOffsetAndScale(block_start_x + block_x, block_start_y + block_y, range_block_offset, range_block_stride, offset, scale);
+
+				// Adjust by global offset and scale
+				// Note: This is the math applied in GetPosition() written out to reduce calculations in the inner loop
+				scale *= mScale.GetY();
+				offset = mOffset.GetY() + mScale.GetY() * offset + 0.5f * scale;
+
+				// Loop over samples in block
+				for (uint sample_y = 0; sample_y < mBlockSize; ++sample_y)
+					for (uint sample_x = 0; sample_x < mBlockSize; ++sample_x)
+					{
+						// Calculate output coordinate
+						uint output_x = block_x * mBlockSize + sample_x;
+						uint output_y = block_y * mBlockSize + sample_y;
+
+						// Get quantized value
+						uint8 height_sample = GetHeightSample(inX + output_x, inY + output_y);
+
+						// Dequantize
+						float h = height_sample != mSampleMask? offset + height_sample * scale : cNoCollisionValue;
+						outHeights[output_y * inSizeX + output_x] = h;
+					}
+			}
+	}
+}
+
 MassProperties HeightFieldShape::GetMassProperties() const
 {
 	// Object should always be static, return default mass properties

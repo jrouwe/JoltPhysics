@@ -196,4 +196,56 @@ TEST_SUITE("HeightFieldShapeTests")
 		CHECK(stats.mNumTriangles == 0);
 		CHECK(stats.mSizeBytes == sizeof(HeightFieldShape));
 	}
+
+	TEST_CASE("TestGetHeights")
+	{
+		const float cMinHeight = -5.0f;
+		const float cMaxHeight = 10.0f;
+		const uint cSampleCount = 32;
+		const uint cNoCollisionIndex = 10;
+
+		UnitTestRandom random;
+		uniform_real_distribution<float> height_distribution(cMinHeight, cMaxHeight);
+
+		// Create height field with random samples
+		HeightFieldShapeSettings settings;
+		settings.mOffset = Vec3(0.3f, 0.5f, 0.7f);
+		settings.mScale = Vec3(1.1f, 1.2f, 1.3f);
+		settings.mSampleCount = cSampleCount;
+		settings.mBitsPerSample = 8;
+		settings.mBlockSize = 4;
+		settings.mHeightSamples.resize(Square(cSampleCount));
+		for (float &h : settings.mHeightSamples)
+			h = height_distribution(random);
+
+		// Add 1 sample that has no collision
+		settings.mHeightSamples[cNoCollisionIndex] = HeightFieldShapeConstants::cNoCollisionValue;
+
+		// Create shape
+		ShapeRefC shape = settings.Create().Get();
+		const HeightFieldShape *height_field = static_cast<const HeightFieldShape *>(shape.GetPtr());
+
+		{
+			// Check that the GetHeights function returns the same values as the original height samples
+			Array<float> sampled_heights;
+			sampled_heights.resize(Square(cSampleCount));
+			height_field->GetHeights(0, 0, cSampleCount, cSampleCount, sampled_heights.data());
+			for (uint i = 0; i < Square(cSampleCount); ++i)
+				if (i == cNoCollisionIndex)
+					CHECK(sampled_heights[i] == HeightFieldShapeConstants::cNoCollisionValue);
+				else
+					CHECK_APPROX_EQUAL(sampled_heights[i], settings.mOffset.GetY() + settings.mScale.GetY() * settings.mHeightSamples[i], 0.05f);
+		}
+
+		{
+			// Check a sub rect of the height field
+			uint sx = 4, sy = 8, cx = 16, cy = 8;
+			Array<float> sampled_heights;
+			sampled_heights.resize(cx * cy);
+			height_field->GetHeights(sx, sy, cx, cy, sampled_heights.data());
+			for (uint y = 0; y < cy; ++y)
+				for (uint x = 0; x < cx; ++x)
+					CHECK_APPROX_EQUAL(sampled_heights[y * cx + x], settings.mOffset.GetY() + settings.mScale.GetY() * settings.mHeightSamples[(sy + y) * cSampleCount + sx + x], 0.05f);
+		}
+	}
 }
