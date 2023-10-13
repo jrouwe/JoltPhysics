@@ -238,6 +238,9 @@ TEST_SUITE("HeightFieldShapeTests")
 		}
 
 		{
+			// With a random height field the max error is going to be limited by the amount of bits we have per sample as we will not get any benefit from a reduced range per block
+			float tolerance = (cMaxHeight - cMinHeight) / ((1 << settings.mBitsPerSample) - 2);
+
 			// Check a sub rect of the height field
 			uint sx = 4, sy = 8, cx = 16, cy = 8;
 			Array<float> sampled_heights;
@@ -245,7 +248,73 @@ TEST_SUITE("HeightFieldShapeTests")
 			height_field->GetHeights(sx, sy, cx, cy, sampled_heights.data());
 			for (uint y = 0; y < cy; ++y)
 				for (uint x = 0; x < cx; ++x)
-					CHECK_APPROX_EQUAL(sampled_heights[y * cx + x], settings.mOffset.GetY() + settings.mScale.GetY() * settings.mHeightSamples[(sy + y) * cSampleCount + sx + x], 0.05f);
+					CHECK_APPROX_EQUAL(sampled_heights[y * cx + x], settings.mOffset.GetY() + settings.mScale.GetY() * settings.mHeightSamples[(sy + y) * cSampleCount + sx + x], tolerance);
 		}
+	}
+
+	TEST_CASE("TestSetHeights")
+	{
+		const float cMinHeight = -5.0f;
+		const float cMaxHeight = 10.0f;
+		const uint cSampleCount = 32;
+
+		UnitTestRandom random;
+		uniform_real_distribution<float> height_distribution(cMinHeight, cMaxHeight);
+
+		// Create height field with random samples
+		HeightFieldShapeSettings settings;
+		settings.mOffset = Vec3(0.3f, 0.5f, 0.7f);
+		settings.mScale = Vec3(1.1f, 1.2f, 1.3f);
+		settings.mSampleCount = cSampleCount;
+		settings.mBitsPerSample = 8;
+		settings.mBlockSize = 4;
+		settings.mHeightSamples.resize(Square(cSampleCount));
+		settings.mMinHeightValue = cMinHeight;
+		settings.mMaxHeightValue = cMaxHeight;
+		for (float &h : settings.mHeightSamples)
+			h = height_distribution(random);
+
+		// Create shape
+		Ref<Shape> shape = settings.Create().Get();
+		HeightFieldShape *height_field = static_cast<HeightFieldShape *>(shape.GetPtr());
+
+		// Get the original (quantized) heights
+		Array<float> original_heights;
+		original_heights.resize(Square(cSampleCount));
+		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, original_heights.data());
+
+		// Create new data for height field
+		Array<float> patched_heights;
+		uint sx = 4, sy = 16, cx = 16, cy = 8;
+		patched_heights.resize(cx * cy);
+		for (uint y = 0; y < cy; ++y)
+			for (uint x = 0; x < cx; ++x)
+				patched_heights[y * cx + x] = height_distribution(random);
+
+		// Add 1 sample that has no collision
+		uint no_collision_idx = (sy + 1) * cSampleCount + sx + 2;
+		patched_heights[1 * cx + 2] = HeightFieldShapeConstants::cNoCollisionValue;
+
+		// Update the height field
+		height_field->SetHeights(sx, sy, cx, cy, patched_heights.data());
+
+		// With a random height field the max error is going to be limited by the amount of bits we have per sample as we will not get any benefit from a reduced range per block
+		float tolerance = (cMaxHeight - cMinHeight) / ((1 << settings.mBitsPerSample) - 2);
+
+		// Check a sub rect of the height field
+		Array<float> verify_heights;
+		verify_heights.resize(cSampleCount * cSampleCount);
+		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, verify_heights.data());
+		for (uint y = 0; y < cSampleCount; ++y)
+			for (uint x = 0; x < cSampleCount; ++x)
+			{
+				uint idx = y * cSampleCount + x;
+				if (idx == no_collision_idx)
+					CHECK(verify_heights[idx] == HeightFieldShapeConstants::cNoCollisionValue);
+				else if (x >= sx && x < sx + cx && y >= sy && y < sy + cy)
+					CHECK_APPROX_EQUAL(verify_heights[y * cSampleCount + x], patched_heights[(y - sy) * cx + x - sx], tolerance);
+				else
+					CHECK(verify_heights[idx] == original_heights[idx]); // We didn't modify this
+			}
 	}
 }
