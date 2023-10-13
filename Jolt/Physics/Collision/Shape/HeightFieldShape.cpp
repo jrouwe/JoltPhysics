@@ -48,6 +48,8 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(HeightFieldShapeSettings)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mHeightSamples)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mOffset)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mScale)
+	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mMinHeightValue)
+	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mMaxHeightValue)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mSampleCount)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mBlockSize)
 	JPH_ADD_ATTRIBUTE(HeightFieldShapeSettings, mBitsPerSample)
@@ -106,8 +108,8 @@ ShapeSettings::ShapeResult HeightFieldShapeSettings::Create() const
 void HeightFieldShapeSettings::DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue, float &outQuantizationScale) const
 {
 	// Determine min and max value
-	outMinValue = FLT_MAX;
-	outMaxValue = -FLT_MAX;
+	outMinValue = mMinHeightValue;
+	outMaxValue = mMaxHeightValue;
 	for (float h : mHeightSamples)
 		if (h != cNoCollisionValue)
 		{
@@ -615,6 +617,18 @@ inline void HeightFieldShape::sGetRangeBlockOffsetAndStride(uint inNumBlocks, ui
 	outRangeBlockStride = (inNumBlocks + 1) >> 1;
 }
 
+inline void HeightFieldShape::GetRangeBlock(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, RangeBlock *&outBlock, uint &outIndexInBlock)
+{
+	JPH_ASSERT(inBlockX < GetNumBlocks() && inBlockY < GetNumBlocks());
+
+	// Convert to location of range block
+	uint rbx = inBlockX >> 1;
+	uint rby = inBlockY >> 1;
+	outIndexInBlock = ((inBlockY & 1) << 1) + (inBlockX & 1);
+
+	outBlock = &mRangeBlocks[inRangeBlockOffset + rby * inRangeBlockStride + rbx];
+}
+
 inline void HeightFieldShape::GetBlockOffsetAndScale(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, float &outBlockOffset, float &outBlockScale) const
 {
 	JPH_ASSERT(inBlockX < GetNumBlocks() && inBlockY < GetNumBlocks());
@@ -798,6 +812,92 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 					}
 			}
 	}
+}
+
+void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights)
+{
+	JPH_ASSERT(!mHeightSamples.empty());
+	JPH_ASSERT(inX % mBlockSize == 0 && inY % mBlockSize == 0);
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX <= mSampleCount && inY + inSizeY <= mSampleCount);
+
+	// Calculate offset and stride
+	uint num_blocks = GetNumBlocks();
+	uint range_block_offset, range_block_stride;
+	sGetRangeBlockOffsetAndStride(num_blocks, sGetMaxLevel(num_blocks), range_block_offset, range_block_stride);
+
+	// Loop over blocks
+	uint block_start_x = inX / mBlockSize;
+	uint block_start_y = inY / mBlockSize;
+	uint num_blocks_x = inSizeX / mBlockSize;
+	uint num_blocks_y = inSizeY / mBlockSize;
+	for (uint block_y = 0; block_y < num_blocks_y; ++block_y)
+		for (uint block_x = 0; block_x < num_blocks_x; ++block_x)
+		{
+			// Determine quantized min and max value for block
+			int min_value = 0xffff;
+			int max_value = 0;
+			for (uint sample_y = 0; sample_y < mBlockSize; ++sample_y)
+				for (uint sample_x = 0; sample_x < mBlockSize; ++sample_x)
+				{
+					float h = inHeights[(block_y * mBlockSize + sample_y) * inSizeX + block_x * mBlockSize + sample_x];
+					if (h != cNoCollisionValue)
+					{
+						int quantized_height = Clamp((int)floor((h - mOffset.GetY()) / mScale.GetY()), 0, int(cMaxHeightValue16 - 1));
+						min_value = min(min_value, quantized_height);
+						max_value = max(max_value, quantized_height + 1);
+					}
+				}
+			if (min_value > max_value)
+				min_value = max_value = cNoCollisionValue16;
+
+			// Update range for block
+			RangeBlock *range_block;
+			uint index_in_block;
+			GetRangeBlock(block_start_x + block_x, block_start_y + block_y, range_block_offset, range_block_stride, range_block, index_in_block);
+			range_block->mMin[index_in_block] = uint16(min_value);
+			range_block->mMax[index_in_block] = uint16(max_value);
+
+			// Get offset and scale for block
+			float offset_block = float(min_value);
+			float scale_block = float(max_value - min_value) / float(mSampleMask);
+
+			// Calculate scale and offset using the formula used in GetPosition() solved for the quantized height (excluding 0.5 because we round down while quantizing)
+			float scale = scale_block * mScale.GetY();
+			float offset = mOffset.GetY() + offset_block * mScale.GetY();
+
+			// Loop over samples in block
+			for (uint sample_y = 0; sample_y < mBlockSize; ++sample_y)
+				for (uint sample_x = 0; sample_x < mBlockSize; ++sample_x)
+				{
+					// Calculate output coordinate
+					uint output_x = block_x * mBlockSize + sample_x;
+					uint output_y = block_y * mBlockSize + sample_y;
+
+					// Quantize height
+					float h = inHeights[output_y * inSizeX + output_x];
+					uint8 quantized_height = h != cNoCollisionValue? uint8(Clamp((int)floor((h - offset) / scale), 0, int(mSampleMask) - 1)) : mSampleMask;
+
+					// Determine bit position of sample
+					uint sample = ((inY + output_y) * mSampleCount + inX + output_x) * uint(mBitsPerSample);
+					uint byte_pos = sample >> 3;
+					uint bit_pos = sample & 0b111;
+
+					// Update the height value sample
+					JPH_ASSERT(byte_pos + 1 < mHeightSamples.size());
+					uint8 *height_samples = mHeightSamples.data() + byte_pos;
+					uint16 height_sample = uint16(height_samples[0]) | uint16(uint16(height_samples[1]) << 8);
+					height_sample &= ~mSampleMask << bit_pos;
+					height_sample |= uint16(quantized_height) << bit_pos;
+					height_samples[0] = uint8(height_sample);
+					height_samples[1] = uint8(height_sample >> 8);
+				}
+		}
+
+#ifdef JPH_DEBUG_RENDERER
+	// Invalidate temporary rendering data
+	mGeometry.clear();
+#endif
 }
 
 MassProperties HeightFieldShape::GetMassProperties() const

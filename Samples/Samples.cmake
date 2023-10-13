@@ -211,6 +211,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Shapes/BoxShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/CapsuleShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/CapsuleShapeTest.h
+	${SAMPLES_ROOT}/Tests/Shapes/DeformedHeightFieldShapeTest.cpp
+	${SAMPLES_ROOT}/Tests/Shapes/DeformedHeightFieldShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/StaticCompoundShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Shapes/StaticCompoundShapeTest.h
 	${SAMPLES_ROOT}/Tests/Shapes/MutableCompoundShapeTest.cpp

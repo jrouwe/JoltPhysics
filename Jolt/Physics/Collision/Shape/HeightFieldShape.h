@@ -71,6 +71,12 @@ public:
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 	uint32							mSampleCount = 0;
 
+	/// Artifical minimal value of mHeightSamples, used for compression and can be used to update the terrain after creating with lower height values. If there are any lower values in mHeightSamples, this value will be ignored.
+	float							mMinHeightValue = FLT_MAX;
+
+	/// Artifical maximum value of mHeightSamples, used for compression and can be used to update the terrain after creating with higher height values. If there are any higher values in mHeightSamples, this value will be ignored.
+	float							mMaxHeightValue = -FLT_MAX;
+
 	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only,
 	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [2, 8], does not need to be
 	/// a power of 2. Note that at run-time we'll perform one more grid subdivision, so the effective block size is half of what is provided here.
@@ -109,7 +115,7 @@ public:
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override				{ return true; }
 
-	/// Get the size of the height field
+	/// Get the size of the height field. Note that this will always be rounded up to the nearest multiple of GetBlockSize().
 	inline uint						GetSampleCount() const						{ return mSampleCount; }
 
 	/// Get the size of a block
@@ -181,6 +187,14 @@ public:
 	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param outHeights Returned height values, must be at least inSizeX * inSizeY floats. Values are returned in x-major order and can be cNoCollisionValue.
 	void							GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights) const;
+
+	/// Set the height values of a block of data.
+	/// @param inX Start X position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
+	/// @param inY Start Y position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
+	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
+	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
+	/// @param inHeights The new height values to set, must be an array of inSizeX * inSizeY floats, can be cNoCollisionValue.
+	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights);
 
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
@@ -262,6 +276,9 @@ private:
 		uint16						mMin[4];
 		uint16						mMax[4];
 	};
+
+	/// For block (inBlockX, inBlockY) get get the range block and the entry in the range block
+	inline void						GetRangeBlock(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, RangeBlock *&outBlock, uint &outIndexInBlock);
 
 	/// Offset of first RangedBlock in grid per level
 	static const uint				sGridOffsets[];
