@@ -187,7 +187,8 @@ public:
 	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param outHeights Returned height values, must be at least inSizeX * inSizeY floats. Values are returned in x-major order and can be cNoCollisionValue.
-	void							GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights) const;
+	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights.
+	void							GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, uint inHeightsStride) const;
 
 	/// Set the height values of a block of data.
 	/// @param inX Start X position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
@@ -195,8 +196,9 @@ public:
 	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inHeights The new height values to set, must be an array of inSizeX * inSizeY floats, can be cNoCollisionValue.
+	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights.
 	/// @param inAllocator Allocator to use for temporary memory
-	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, TempAllocator &inAllocator);
+	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator);
 
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;

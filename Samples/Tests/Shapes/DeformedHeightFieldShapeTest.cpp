@@ -50,7 +50,7 @@ void DeformedHeightFieldShapeTest::Initialize()
 	for (int y = 0; y < s; ++y)
 		for (int x = 0; x < s; ++x)
 			patched_heights[y * s + x] = 0.1f * (x - sx) + 0.2f * (y - sy);
-	mHeightField->SetHeights(sx, sy, s, s, patched_heights.data(), *mTempAllocator);
+	mHeightField->SetHeights(sx, sy, s, s, patched_heights.data(), s, *mTempAllocator);
 
 	// Notify the shape that it has changed its bounding box
 	mBodyInterface->NotifyShapeChanged(terrain_id, old_com, false, EActivation::DontActivate);
@@ -58,7 +58,7 @@ void DeformedHeightFieldShapeTest::Initialize()
 	// Verify that the update succeeded
 	Array<float> verification;
 	verification.resize(s * s);
-	mHeightField->GetHeights(sx, sy, s, s, verification.data());
+	mHeightField->GetHeights(sx, sy, s, s, verification.data(), s);
 	float delta = 0.0f;
 	for (int i = 0; i < s * s; ++i)
 		delta = max(delta, abs(verification[i] - patched_heights[i]));

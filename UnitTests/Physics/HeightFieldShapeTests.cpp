@@ -229,7 +229,7 @@ TEST_SUITE("HeightFieldShapeTests")
 			// Check that the GetHeights function returns the same values as the original height samples
 			Array<float> sampled_heights;
 			sampled_heights.resize(Square(cSampleCount));
-			height_field->GetHeights(0, 0, cSampleCount, cSampleCount, sampled_heights.data());
+			height_field->GetHeights(0, 0, cSampleCount, cSampleCount, sampled_heights.data(), cSampleCount);
 			for (uint i = 0; i < Square(cSampleCount); ++i)
 				if (i == cNoCollisionIndex)
 					CHECK(sampled_heights[i] == HeightFieldShapeConstants::cNoCollisionValue);
@@ -245,7 +245,7 @@ TEST_SUITE("HeightFieldShapeTests")
 			uint sx = 4, sy = 8, cx = 16, cy = 8;
 			Array<float> sampled_heights;
 			sampled_heights.resize(cx * cy);
-			height_field->GetHeights(sx, sy, cx, cy, sampled_heights.data());
+			height_field->GetHeights(sx, sy, cx, cy, sampled_heights.data(), cx);
 			for (uint y = 0; y < cy; ++y)
 				for (uint x = 0; x < cx; ++x)
 					CHECK_APPROX_EQUAL(sampled_heights[y * cx + x], settings.mOffset.GetY() + settings.mScale.GetY() * settings.mHeightSamples[(sy + y) * cSampleCount + sx + x], tolerance);
@@ -281,7 +281,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		// Get the original (quantized) heights
 		Array<float> original_heights;
 		original_heights.resize(Square(cSampleCount));
-		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, original_heights.data());
+		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, original_heights.data(), cSampleCount);
 
 		// Create new data for height field
 		Array<float> patched_heights;
@@ -297,7 +297,7 @@ TEST_SUITE("HeightFieldShapeTests")
 
 		// Update the height field
 		TempAllocatorMalloc temp_allocator;
-		height_field->SetHeights(sx, sy, cx, cy, patched_heights.data(), temp_allocator);
+		height_field->SetHeights(sx, sy, cx, cy, patched_heights.data(), cx, temp_allocator);
 
 		// With a random height field the max error is going to be limited by the amount of bits we have per sample as we will not get any benefit from a reduced range per block
 		float tolerance = (cMaxHeight - cMinHeight) / ((1 << settings.mBitsPerSample) - 2);
@@ -305,7 +305,7 @@ TEST_SUITE("HeightFieldShapeTests")
 		// Check a sub rect of the height field
 		Array<float> verify_heights;
 		verify_heights.resize(cSampleCount * cSampleCount);
-		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, verify_heights.data());
+		height_field->GetHeights(0, 0, cSampleCount, cSampleCount, verify_heights.data(), cSampleCount);
 		for (uint y = 0; y < cSampleCount; ++y)
 			for (uint x = 0; x < cSampleCount; ++x)
 			{

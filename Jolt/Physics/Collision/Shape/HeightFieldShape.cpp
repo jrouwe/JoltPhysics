@@ -758,8 +758,11 @@ bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurf
 	}
 }
 
-void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights) const
+void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, uint inHeightsStride) const
 {
+	if (inSizeX == 0 || inSizeY == 0)
+		return;
+
 	JPH_ASSERT(inX % mBlockSize == 0 && inY % mBlockSize == 0);
 	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
 	JPH_ASSERT(inX + inSizeX <= mSampleCount && inY + inSizeY <= mSampleCount);
@@ -768,9 +771,10 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	if (mHeightSamples.empty())
 	{
 		// No samples, return the offset
-		float y = mOffset.GetY();
-		for (float *h = outHeights, *h_end = outHeights + inSizeX * inSizeY; h < h_end; ++h)
-			*h = y;
+		float offset = mOffset.GetY();
+		for (uint y = 0; y < inSizeY; ++y, outHeights += inHeightsStride)
+			for (uint x = 0; x < inSizeX; ++x)
+				outHeights[x] = offset;
 	}
 	else
 	{
@@ -809,13 +813,13 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 
 						// Dequantize
 						float h = height_sample != mSampleMask? offset + height_sample * scale : cNoCollisionValue;
-						outHeights[output_y * inSizeX + output_x] = h;
+						outHeights[output_y * inHeightsStride + output_x] = h;
 					}
 			}
 	}
 }
 
-void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, TempAllocator &inAllocator)
+void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator)
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return;
@@ -847,21 +851,51 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	{
 		// Fetch the surrounding height data (note we're forced to recompress this data with a potentially different range so there will be some precision loss here)
 		temp_heights = (float *)inAllocator.Allocate(heights_size_x * heights_size_y * sizeof(float));
-		GetHeights(affected_x, affected_y, heights_size_x, heights_size_y, temp_heights);
+		heights = temp_heights;
 
-		// Patch in new heights
+		// We need to fill in the following areas:
+		// 
+		// +-----------------+
+		// |        2        |
+		// |---+---------+---|
+		// |   |         |   |
+		// | 3 |    1    | 4 |
+		// |   |         |   |
+		// |---+---------+---|
+		// |        5        |
+		// +-----------------+
+		//
+		// 1. The area that is affected by the new heights (we just copy these)
+		// 2-5. These areas are either needed to calculate the range of the affected blocks or they need to be recompressed with a different range
 		uint offset_x = inX - affected_x;
 		uint offset_y = inY - affected_y;
-		for (uint y = 0; y < inSizeY; ++y)
-			for (uint x = 0; x < inSizeX; ++x)
-				temp_heights[(offset_y + y) * heights_size_x + offset_x + x] = inHeights[y * inSizeX + x];
 
-		heights = temp_heights;
+		// Area 2
+		GetHeights(affected_x, affected_y, heights_size_x, offset_y, temp_heights, heights_size_x);
+		float *area3_start = temp_heights + offset_y * heights_size_x;
+
+		// Area 3
+		GetHeights(affected_x, inY, offset_x, inSizeY, area3_start, heights_size_x);
+
+		// Area 1
+		float *area1_start = area3_start + offset_x;
+		for (uint y = 0; y < inSizeY; ++y, area1_start += heights_size_x, inHeights += inHeightsStride)
+			memcpy(area1_start, inHeights, inSizeX * sizeof(float));
+
+		// Area 4
+		uint area4_x = inX + inSizeX;
+		GetHeights(area4_x, inY, affected_x + heights_size_x - area4_x, inSizeY, area3_start + area4_x - affected_x, heights_size_x);
+
+		// Area 5
+		uint area5_y = inY + inSizeY;
+		float *area5_start = temp_heights + (area5_y - affected_y) * heights_size_x;
+		GetHeights(affected_x, area5_y, heights_size_x, affected_y + heights_size_y - area5_y, area5_start, heights_size_x);
 	}
 	else
 	{
 		// We can directly use the input buffer because there are no extra edges to take into account
 		heights = inHeights;
+		heights_size_x = inHeightsStride;
 		temp_heights = nullptr;
 	}
 
