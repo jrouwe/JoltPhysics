@@ -14,6 +14,7 @@ JPH_NAMESPACE_BEGIN
 
 class ConvexShape;
 class CollideShapeSettings;
+class TempAllocator;
 
 /// Constants for HeightFieldShape, this was moved out of the HeightFieldShape because of a linker bug
 namespace HeightFieldShapeConstants
@@ -194,7 +195,8 @@ public:
 	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
 	/// @param inHeights The new height values to set, must be an array of inSizeX * inSizeY floats, can be cNoCollisionValue.
-	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights);
+	/// @param inAllocator Allocator to use for temporary memory
+	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, TempAllocator &inAllocator);
 
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;

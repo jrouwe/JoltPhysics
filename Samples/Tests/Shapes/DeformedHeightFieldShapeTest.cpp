@@ -38,24 +38,31 @@ void DeformedHeightFieldShapeTest::Initialize()
 	settings.mMinHeightValue = -10.0f;
 	settings.mMaxHeightValue = 10.0f;
 	mHeightField = static_cast<HeightFieldShape *>(settings.Create().Get().GetPtr());
-	mBodyInterface->CreateAndAddBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	BodyID terrain_id = mBodyInterface->CreateAndAddBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+	// Remember COM before we change the height field
+	Vec3 old_com = mHeightField->GetCenterOfMass();
 
 	// Update the height field
+	int s = 32, sx = 4, sy = 8;
 	Array<float> patched_heights;
-	patched_heights.resize(32 * 32);
-	for (int y = 0; y < 32; ++y)
-		for (int x = 0; x < 32; ++x)
-			patched_heights[y * 32 + x] = 0.1f * x + 0.2f * y;
-	mHeightField->SetHeights(4, 4, 32, 32, patched_heights.data());
+	patched_heights.resize(s * s);
+	for (int y = 0; y < s; ++y)
+		for (int x = 0; x < s; ++x)
+			patched_heights[y * s + x] = 0.1f * (x - sx) + 0.2f * (y - sy);
+	mHeightField->SetHeights(sx, sy, s, s, patched_heights.data(), *mTempAllocator);
+
+	// Notify the shape that it has changed its bounding box
+	mBodyInterface->NotifyShapeChanged(terrain_id, old_com, false, EActivation::DontActivate);
 
 	// Verify that the update succeeded
 	Array<float> verification;
-	verification.resize(32 * 32);
-	mHeightField->GetHeights(4, 4, 32, 32, verification.data());
+	verification.resize(s * s);
+	mHeightField->GetHeights(sx, sy, s, s, verification.data());
 	float delta = 0.0f;
-	for (int i = 0; i < 32 * 32; ++i)
+	for (int i = 0; i < s * s; ++i)
 		delta = max(delta, abs(verification[i] - patched_heights[i]));
-	JPH_ASSERT(delta < 2.0e-3f);
+	JPH_ASSERT(delta < 0.02f);
 }
 
 void DeformedHeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

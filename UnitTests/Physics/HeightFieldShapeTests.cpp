@@ -296,7 +296,8 @@ TEST_SUITE("HeightFieldShapeTests")
 		patched_heights[1 * cx + 2] = HeightFieldShapeConstants::cNoCollisionValue;
 
 		// Update the height field
-		height_field->SetHeights(sx, sy, cx, cy, patched_heights.data());
+		TempAllocatorMalloc temp_allocator;
+		height_field->SetHeights(sx, sy, cx, cy, patched_heights.data(), temp_allocator);
 
 		// With a random height field the max error is going to be limited by the amount of bits we have per sample as we will not get any benefit from a reduced range per block
 		float tolerance = (cMaxHeight - cMinHeight) / ((1 << settings.mBitsPerSample) - 2);
@@ -313,8 +314,10 @@ TEST_SUITE("HeightFieldShapeTests")
 					CHECK(verify_heights[idx] == HeightFieldShapeConstants::cNoCollisionValue);
 				else if (x >= sx && x < sx + cx && y >= sy && y < sy + cy)
 					CHECK_APPROX_EQUAL(verify_heights[y * cSampleCount + x], patched_heights[(y - sy) * cx + x - sx], tolerance);
+				else if (x >= sx - settings.mBlockSize && x < sx + cx && y >= sy - settings.mBlockSize && y < sy + cy)
+					CHECK_APPROX_EQUAL(verify_heights[idx], original_heights[idx], tolerance); // We didn't modify this but it has been quantized again
 				else
-					CHECK(verify_heights[idx] == original_heights[idx]); // We didn't modify this
+					CHECK(verify_heights[idx] == original_heights[idx]); // We didn't modify this and it is outside of the affected range
 			}
 	}
 }

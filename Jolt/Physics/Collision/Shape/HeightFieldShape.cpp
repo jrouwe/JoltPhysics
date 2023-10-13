@@ -25,6 +25,7 @@
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
+#include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/RayTriangle.h>
 #include <Jolt/Geometry/RayAABox.h>
@@ -814,33 +815,80 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	}
 }
 
-void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights)
+void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, TempAllocator &inAllocator)
 {
+	if (inSizeX == 0 || inSizeY == 0)
+		return;
+
 	JPH_ASSERT(!mHeightSamples.empty());
 	JPH_ASSERT(inX % mBlockSize == 0 && inY % mBlockSize == 0);
 	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
 	JPH_ASSERT(inX + inSizeX <= mSampleCount && inY + inSizeY <= mSampleCount);
 
+	// If we have a block in negative x/y direction, we will affect its range so we need to take it into account
+	bool need_temp_heights = false;
+	uint affected_x = inX;
+	uint affected_y = inY;
+	uint affected_size_x = inSizeX;
+	uint affected_size_y = inSizeY;
+	if (inX > 0) { affected_x -= mBlockSize; affected_size_x += mBlockSize; need_temp_heights = true; }
+	if (inY > 0) { affected_y -= mBlockSize; affected_size_y += mBlockSize; need_temp_heights = true; }
+
+	// If we have a block in positive x/y direction, our ranges are affected by it so we need to take it into account
+	uint heights_size_x = affected_size_x;
+	uint heights_size_y = affected_size_y;
+	if (inX + inSizeX < mSampleCount) { heights_size_x += mBlockSize; need_temp_heights = true; }
+	if (inY + inSizeY < mSampleCount) { heights_size_y += mBlockSize; need_temp_heights = true; }
+
+	// Get heights for affected area
+	const float *heights;
+	float *temp_heights;
+	if (need_temp_heights)
+	{
+		// Fetch the surrounding height data (note we're forced to recompress this data with a potentially different range so there will be some precision loss here)
+		temp_heights = (float *)inAllocator.Allocate(heights_size_x * heights_size_y * sizeof(float));
+		GetHeights(affected_x, affected_y, heights_size_x, heights_size_y, temp_heights);
+
+		// Patch in new heights
+		uint offset_x = inX - affected_x;
+		uint offset_y = inY - affected_y;
+		for (uint y = 0; y < inSizeY; ++y)
+			for (uint x = 0; x < inSizeX; ++x)
+				temp_heights[(offset_y + y) * heights_size_x + offset_x + x] = inHeights[y * inSizeX + x];
+
+		heights = temp_heights;
+	}
+	else
+	{
+		// We can directly use the input buffer because there are no extra edges to take into account
+		heights = inHeights;
+		temp_heights = nullptr;
+	}
+
 	// Calculate offset and stride
 	uint num_blocks = GetNumBlocks();
 	uint range_block_offset, range_block_stride;
-	sGetRangeBlockOffsetAndStride(num_blocks, sGetMaxLevel(num_blocks), range_block_offset, range_block_stride);
+	uint max_level = sGetMaxLevel(num_blocks);
+	sGetRangeBlockOffsetAndStride(num_blocks, max_level, range_block_offset, range_block_stride);
 
 	// Loop over blocks
-	uint block_start_x = inX / mBlockSize;
-	uint block_start_y = inY / mBlockSize;
-	uint num_blocks_x = inSizeX / mBlockSize;
-	uint num_blocks_y = inSizeY / mBlockSize;
-	for (uint block_y = 0; block_y < num_blocks_y; ++block_y)
-		for (uint block_x = 0; block_x < num_blocks_x; ++block_x)
+	uint block_start_x = affected_x / mBlockSize;
+	uint block_start_y = affected_y / mBlockSize;
+	uint num_blocks_x = affected_size_x / mBlockSize;
+	uint num_blocks_y = affected_size_y / mBlockSize;
+	for (uint block_y = 0, sample_start_y = 0; block_y < num_blocks_y; ++block_y, sample_start_y += mBlockSize)
+		for (uint block_x = 0, sample_start_x = 0; block_x < num_blocks_x; ++block_x, sample_start_x += mBlockSize)
 		{
 			// Determine quantized min and max value for block
+			// Note that we need to include 1 extra row in the positive x/y direction to account for connecting triangles
 			int min_value = 0xffff;
 			int max_value = 0;
-			for (uint sample_y = 0; sample_y < mBlockSize; ++sample_y)
-				for (uint sample_x = 0; sample_x < mBlockSize; ++sample_x)
+			uint sample_x_end = min(sample_start_x + mBlockSize + 1, mSampleCount - affected_x);
+			uint sample_y_end = min(sample_start_y + mBlockSize + 1, mSampleCount - affected_y);
+			for (uint sample_y = sample_start_y; sample_y < sample_y_end; ++sample_y)
+				for (uint sample_x = sample_start_x; sample_x < sample_x_end; ++sample_x)
 				{
-					float h = inHeights[(block_y * mBlockSize + sample_y) * inSizeX + block_x * mBlockSize + sample_x];
+					float h = heights[sample_y * heights_size_x + sample_x];
 					if (h != cNoCollisionValue)
 					{
 						int quantized_height = Clamp((int)floor((h - mOffset.GetY()) / mScale.GetY()), 0, int(cMaxHeightValue16 - 1));
@@ -867,19 +915,17 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 			float offset = mOffset.GetY() + offset_block * mScale.GetY();
 
 			// Loop over samples in block
-			for (uint sample_y = 0; sample_y < mBlockSize; ++sample_y)
-				for (uint sample_x = 0; sample_x < mBlockSize; ++sample_x)
+			sample_x_end = sample_start_x + mBlockSize;
+			sample_y_end = sample_start_y + mBlockSize;
+			for (uint sample_y = sample_start_y; sample_y < sample_y_end; ++sample_y)
+				for (uint sample_x = sample_start_x; sample_x < sample_x_end; ++sample_x)
 				{
-					// Calculate output coordinate
-					uint output_x = block_x * mBlockSize + sample_x;
-					uint output_y = block_y * mBlockSize + sample_y;
-
 					// Quantize height
-					float h = inHeights[output_y * inSizeX + output_x];
+					float h = heights[sample_y * heights_size_x + sample_x];
 					uint8 quantized_height = h != cNoCollisionValue? uint8(Clamp((int)floor((h - offset) / scale), 0, int(mSampleMask) - 1)) : mSampleMask;
 
 					// Determine bit position of sample
-					uint sample = ((inY + output_y) * mSampleCount + inX + output_x) * uint(mBitsPerSample);
+					uint sample = ((affected_y + sample_y) * mSampleCount + affected_x + sample_x) * uint(mBitsPerSample);
 					uint byte_pos = sample >> 3;
 					uint bit_pos = sample & 0b111;
 
@@ -892,6 +938,67 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 					height_samples[0] = uint8(height_sample);
 					height_samples[1] = uint8(height_sample >> 8);
 				}
+		}
+
+	// Free temporary buffer
+	if (temp_heights != nullptr)
+		inAllocator.Free(temp_heights, heights_size_x * heights_size_y * sizeof(float));
+
+	// Update hierarchy of range blocks
+	while (max_level > 1)
+	{
+		// Get offset and stride for destination blocks
+		uint dst_range_block_offset, dst_range_block_stride;
+		sGetRangeBlockOffsetAndStride(num_blocks >> 1, max_level - 1, dst_range_block_offset, dst_range_block_stride);
+
+		// Loop over all affected blocks
+		for (uint block_y = 0; block_y < num_blocks_y; ++block_y)
+			for (uint block_x = 0; block_x < num_blocks_x; ++block_x)
+			{
+				// Get source range block
+				RangeBlock *src_range_block;
+				uint index_in_src_block;
+				GetRangeBlock(block_start_x + block_x, block_start_y + block_y, range_block_offset, range_block_stride, src_range_block, index_in_src_block);
+
+				// Determine quantized min and max value for the entire block
+				uint16 min_value = 0xffff;
+				uint16 max_value = 0;
+				for (uint i = 0; i < 4; ++i)
+					if (src_range_block->mMin[i] != cNoCollisionValue16)
+					{
+						min_value = min(min_value, src_range_block->mMin[i]);
+						max_value = max(max_value, src_range_block->mMax[i]);
+					}
+
+				// Write to destination block
+				RangeBlock *dst_range_block;
+				uint index_in_dst_block;
+				GetRangeBlock((block_start_x + block_x) >> 1, (block_start_y + block_y) >> 1, dst_range_block_offset, dst_range_block_stride, dst_range_block, index_in_dst_block);
+				dst_range_block->mMin[index_in_dst_block] = uint16(min_value);
+				dst_range_block->mMax[index_in_dst_block] = uint16(max_value);
+			}
+
+		// Go up one level
+		--max_level;
+		num_blocks >>= 1;
+		block_start_x >>= 1;
+		block_start_y >>= 1;
+		num_blocks_x = min((num_blocks_x + 1) >> 1, num_blocks);
+		num_blocks_y = min((num_blocks_y + 1) >> 1, num_blocks);
+
+		// Update stride and offset for source to old destination
+		range_block_offset = dst_range_block_offset;
+		range_block_stride = dst_range_block_stride;
+	}
+
+	// Calculate new min and max sample for the entire height field
+	mMinSample = 0xffff;
+	mMaxSample = 0;
+	for (uint i = 0; i < 4; ++i)
+		if (mRangeBlocks[0].mMin[i] != cNoCollisionValue16)
+		{
+			mMinSample = min(mMinSample, mRangeBlocks[0].mMin[i]);
+			mMaxSample = max(mMaxSample, mRangeBlocks[0].mMax[i]);
 		}
 
 #ifdef JPH_DEBUG_RENDERER
