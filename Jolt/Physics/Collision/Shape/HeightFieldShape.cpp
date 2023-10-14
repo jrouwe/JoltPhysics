@@ -305,12 +305,14 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 	// therefore we only need to store (mSampleCount - 1)^2 * 3-bit
 	// The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
 	// Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
-	uint count_min_1 = mSampleCount - 1;
-	uint count_min_1_sq = Square(count_min_1);
-	mActiveEdges.resize((count_min_1_sq * 3 + 7) / 8 + 1);
+	mActiveEdges.resize((Square(mSampleCount - 1) * 3 + 7) / 8 + 1);
 
+	// Make all edges active (if mSampleCount is bigger than inSettings.mSampleCount we need to fill up the padding)
+	memset(mActiveEdges.data(), 0xff, mActiveEdges.size());
+
+	// Now clear the edges that are not active
 	TempAllocatorMalloc allocator;
-	CalculateActiveEdges(0, 0, count_min_1, count_min_1, inSettings.mHeightSamples.data(), 0, 0, inSettings.mSampleCount, inSettings.mScale.GetY(), inSettings.mActiveEdgeCosThresholdAngle, allocator);
+	CalculateActiveEdges(0, 0, inSettings.mSampleCount - 1, inSettings.mSampleCount - 1, inSettings.mHeightSamples.data(), 0, 0, inSettings.mSampleCount, inSettings.mScale.GetY(), inSettings.mActiveEdgeCosThresholdAngle, allocator);
 }
 
 void HeightFieldShape::StoreMaterialIndices(const HeightFieldShapeSettings &inSettings)
