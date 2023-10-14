@@ -219,13 +219,12 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 	uint count_min_1 = mSampleCount - 1;
 	uint count_min_1_sq = Square(count_min_1);
 	mActiveEdges.resize((count_min_1_sq * 3 + 7) / 8 + 1);
-	memset(&mActiveEdges[0], 0, mActiveEdges.size());
 
 	// Calculate triangle normals and make normals zero for triangles that are missing
 	Array<Vec3> normals;
 	normals.resize(2 * count_min_1_sq);
-	memset(&normals[0], 0, normals.size() * sizeof(Vec3));
 	float sample_scale = inSettings.mScale.GetY();
+	Vec3 *out_normal = normals.data();
 	for (uint y = 0; y < count_min_1; ++y)
 		for (uint x = 0; x < count_min_1; ++x)
 		{
@@ -236,25 +235,36 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 			{
 				x1y1_h = sample_scale * x1y1_h;
 				x2y2_h = sample_scale * x2y2_h;
-				uint normal_offset = 2 * (count_min_1 * y + x);
 
 				float x1y2_h = height_samples[mSampleCount];
 				if (x1y2_h != cNoCollisionValue)
 				{
 					x1y2_h = sample_scale * x1y2_h;
-					normals[normal_offset] = Vec3(mScale.GetX(), x2y2_h - x1y2_h, 0).Cross(Vec3(0, x1y1_h - x1y2_h, -mScale.GetZ())).Normalized();
+					out_normal[0] = Vec3(mScale.GetX(), x2y2_h - x1y2_h, 0).Cross(Vec3(0, x1y1_h - x1y2_h, -mScale.GetZ())).Normalized();
 				}
+				else
+					out_normal[0] = Vec3::sZero();
 
 				float x2y1_h = height_samples[1];
 				if (x2y1_h != cNoCollisionValue)
 				{
 					x2y1_h = sample_scale * x2y1_h;
-					normals[normal_offset + 1] = Vec3(-mScale.GetX(), x1y1_h - x2y1_h, 0).Cross(Vec3(0, x2y2_h - x2y1_h, mScale.GetZ())).Normalized();
+					out_normal[1] = Vec3(-mScale.GetX(), x1y1_h - x2y1_h, 0).Cross(Vec3(0, x2y2_h - x2y1_h, mScale.GetZ())).Normalized();
 				}
+				else
+					out_normal[1] = Vec3::sZero();
 			}
+			else
+			{
+				out_normal[0] = Vec3::sZero();
+				out_normal[1] = Vec3::sZero();
+			}
+
+			out_normal += 2;
 		}
 
 	// Calculate active edges
+	uint global_bit_pos = 0;
 	for (uint y = 0; y < count_min_1; ++y)
 		for (uint x = 0; x < count_min_1; ++x)
 		{
@@ -275,12 +285,16 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
 
 			// Store the edge flags in the array
-			uint bit_pos = 3 * (y * count_min_1 + x);
-			uint byte_pos = bit_pos >> 3;
-			bit_pos &= 0b111;
-			edge_flags <<= bit_pos;
-			mActiveEdges[byte_pos] |= uint8(edge_flags);
-			mActiveEdges[byte_pos + 1] |= uint8(edge_flags >> 8);
+			uint byte_pos = global_bit_pos >> 3;
+			uint bit_pos = global_bit_pos & 0b111;
+			uint8 *edge_flags_ptr = &mActiveEdges[byte_pos];
+			uint16 combined_edge_flags = edge_flags_ptr[0] | (edge_flags_ptr[1] << 8);
+			combined_edge_flags &= ~(uint16(0b111) << bit_pos);
+			combined_edge_flags |= uint16(edge_flags) << bit_pos;
+			edge_flags_ptr[0] = uint8(combined_edge_flags);
+			edge_flags_ptr[1] = uint8(combined_edge_flags >> 8);
+
+			global_bit_pos += 3;
 		}
 }
 
