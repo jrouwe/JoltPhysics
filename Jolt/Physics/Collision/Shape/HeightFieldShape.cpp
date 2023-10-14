@@ -261,18 +261,32 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 			bool x2y2_valid = x2y2_h != cNoCollisionValue;
 
 			// Calculate the edge flags (3 bits)
-			bool edge0_active = x == 0 || (x1y2_valid && x1y1_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[-1], Vec3(0, inHeightsScale * (x1y2_h - x1y1_h), mScale.GetZ()), inActiveEdgeCosThresholdAngle));
-			bool edge1_active = y == mSampleCount - 2 || (x2y2_valid && x1y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[2 * inSizeY + 1], Vec3(mScale.GetX(), inHeightsScale * (x2y2_h - x1y2_h), 0), inActiveEdgeCosThresholdAngle));
-			bool edge2_active = x1y1_valid && x2y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[1], Vec3(-mScale.GetX(), inHeightsScale * (x1y1_h - x2y2_h), -mScale.GetZ()), inActiveEdgeCosThresholdAngle);
-			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
+			uint16 edge_mask = 0b111;
+			uint16 edge_flags = 0;
+
+			// Edge 0
+			if (x == 0)
+				edge_mask &= 0b110; // We need normal x - 1 which we didn't calculate, don't update this edge
+			else if (x1y1_valid && x1y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[-1], Vec3(0, inHeightsScale * (x1y2_h - x1y1_h), mScale.GetZ()), inActiveEdgeCosThresholdAngle))
+				edge_flags |= 0b001;
+
+			// Edge 1
+			if (y == inSizeY - 1)
+				edge_mask &= 0b101; // We need normal y + 1 which we didn't calculate, don't update this edge
+			else if (x1y2_valid && x2y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[2 * inSizeX + 1], Vec3(mScale.GetX(), inHeightsScale * (x2y2_h - x1y2_h), 0), inActiveEdgeCosThresholdAngle))
+				edge_flags |= 0b010;
+
+			// Edge 2
+			if (x1y1_valid && x2y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[1], Vec3(-mScale.GetX(), inHeightsScale * (x1y1_h - x2y2_h), -mScale.GetZ()), inActiveEdgeCosThresholdAngle))
+				edge_flags |= 0b100;
 
 			// Store the edge flags in the array
 			uint byte_pos = global_bit_pos >> 3;
 			uint bit_pos = global_bit_pos & 0b111;
 			uint8 *edge_flags_ptr = &mActiveEdges[byte_pos];
 			uint16 combined_edge_flags = edge_flags_ptr[0] | (edge_flags_ptr[1] << 8);
-			combined_edge_flags &= ~(uint16(0b111) << bit_pos);
-			combined_edge_flags |= uint16(edge_flags) << bit_pos;
+			combined_edge_flags &= ~(edge_mask << bit_pos);
+			combined_edge_flags |= edge_flags << bit_pos;
 			edge_flags_ptr[0] = uint8(combined_edge_flags);
 			edge_flags_ptr[1] = uint8(combined_edge_flags >> 8);
 
