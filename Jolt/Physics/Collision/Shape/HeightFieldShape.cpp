@@ -310,7 +310,7 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 	mActiveEdges.resize((count_min_1_sq * 3 + 7) / 8 + 1);
 
 	TempAllocatorMalloc allocator;
-	CalculateActiveEdges(0, 0, count_min_1, count_min_1, inSettings.mHeightSamples.data(), 0, 0, mSampleCount, inSettings.mScale.GetY(), inSettings.mActiveEdgeCosThresholdAngle, allocator);
+	CalculateActiveEdges(0, 0, count_min_1, count_min_1, inSettings.mHeightSamples.data(), 0, 0, inSettings.mSampleCount, inSettings.mScale.GetY(), inSettings.mActiveEdgeCosThresholdAngle, allocator);
 }
 
 void HeightFieldShape::StoreMaterialIndices(const HeightFieldShapeSettings &inSettings)
