@@ -1066,16 +1066,20 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 		uint dst_range_block_offset, dst_range_block_stride;
 		sGetRangeBlockOffsetAndStride(num_blocks >> 1, max_level - 1, dst_range_block_offset, dst_range_block_stride);
 
+		// If we're starting halfway through a 2x2 block, we need to process one extra block since we take steps of 2 blocks below
+		uint block_x_end = (block_start_x & 1) && block_start_x + num_blocks_x < num_blocks? num_blocks_x + 1 : num_blocks_x;
+		uint block_y_end = (block_start_y & 1) && block_start_y + num_blocks_y < num_blocks? num_blocks_y + 1 : num_blocks_y;
+
 		// Loop over all affected blocks
-		for (uint block_y = 0; block_y < num_blocks_y; ++block_y)
-			for (uint block_x = 0; block_x < num_blocks_x; ++block_x)
+		for (uint block_y = 0; block_y < block_y_end; block_y += 2)
+			for (uint block_x = 0; block_x < block_x_end; block_x += 2)
 			{
 				// Get source range block
 				RangeBlock *src_range_block;
 				uint index_in_src_block;
 				GetRangeBlock(block_start_x + block_x, block_start_y + block_y, range_block_offset, range_block_stride, src_range_block, index_in_src_block);
 
-				// Determine quantized min and max value for the entire block
+				// Determine quantized min and max value for the entire 2x2 block
 				uint16 min_value = 0xffff;
 				uint16 max_value = 0;
 				for (uint i = 0; i < 4; ++i)
