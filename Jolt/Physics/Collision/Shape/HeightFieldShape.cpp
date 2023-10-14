@@ -259,16 +259,19 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 		for (uint x = 0; x < count_min_1; ++x)
 		{
 			// Calculate vertex positions.
-			// We don't check 'no colliding' since those normals will be zero and sIsEdgeActive will return true
-			Vec3 x1y1 = GetPosition(x, y);
-			Vec3 x1y2 = GetPosition(x, y + 1);
-			Vec3 x2y2 = GetPosition(x + 1, y + 1);
+			const float *height_samples = inSettings.mHeightSamples.data() + y * mSampleCount + x;
+			float x1y1_h = height_samples[0];
+			x1y1_h = x1y1_h != cNoCollisionValue? sample_scale * x1y1_h : 0.0f;
+			float x1y2_h = height_samples[mSampleCount];
+			x1y2_h = x1y2_h != cNoCollisionValue? sample_scale * x1y2_h : 0.0f;
+			float x2y2_h = height_samples[mSampleCount + 1];
+			x2y2_h = x2y2_h != cNoCollisionValue? sample_scale * x2y2_h : 0.0f;
 
 			// Calculate the edge flags (3 bits)
 			uint offset = 2 * (count_min_1 * y + x);
-			bool edge0_active = x == 0 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset - 1], x1y2 - x1y1, inSettings.mActiveEdgeCosThresholdAngle);
-			bool edge1_active = y == count_min_1 - 1 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 2 * count_min_1 + 1], x2y2 - x1y2, inSettings.mActiveEdgeCosThresholdAngle);
-			bool edge2_active = ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 1], x1y1 - x2y2, inSettings.mActiveEdgeCosThresholdAngle);
+			bool edge0_active = x == 0 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset - 1], Vec3(0, x1y2_h - x1y1_h, mScale.GetZ()), inSettings.mActiveEdgeCosThresholdAngle);
+			bool edge1_active = y == count_min_1 - 1 || ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 2 * count_min_1 + 1], Vec3(mScale.GetX(), x2y2_h - x1y2_h, 0), inSettings.mActiveEdgeCosThresholdAngle);
+			bool edge2_active = ActiveEdges::IsEdgeActive(normals[offset], normals[offset + 1], Vec3(-mScale.GetX(), x1y1_h - x2y2_h, -mScale.GetZ()), inSettings.mActiveEdgeCosThresholdAngle);
 			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
 
 			// Store the edge flags in the array
