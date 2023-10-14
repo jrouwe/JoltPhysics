@@ -225,27 +225,34 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 	Array<Vec3> normals;
 	normals.resize(2 * count_min_1_sq);
 	memset(&normals[0], 0, normals.size() * sizeof(Vec3));
+	float sample_scale = inSettings.mScale.GetY();
 	for (uint y = 0; y < count_min_1; ++y)
 		for (uint x = 0; x < count_min_1; ++x)
-			if (!IsNoCollision(x, y) && !IsNoCollision(x + 1, y + 1))
+		{
+			const float *height_samples = inSettings.mHeightSamples.data() + y * mSampleCount + x;
+			float x1y1_h = height_samples[0];
+			float x2y2_h = height_samples[mSampleCount + 1];
+			if (x1y1_h != cNoCollisionValue && x2y2_h != cNoCollisionValue)
 			{
-				Vec3 x1y1 = GetPosition(x, y);
-				Vec3 x2y2 = GetPosition(x + 1, y + 1);
+				x1y1_h = sample_scale * x1y1_h;
+				x2y2_h = sample_scale * x2y2_h;
+				uint normal_offset = 2 * (count_min_1 * y + x);
 
-				uint offset = 2 * (count_min_1 * y + x);
-
-				if (!IsNoCollision(x, y + 1))
+				float x1y2_h = height_samples[mSampleCount];
+				if (x1y2_h != cNoCollisionValue)
 				{
-					Vec3 x1y2 = GetPosition(x, y + 1);
-					normals[offset] = (x2y2 - x1y2).Cross(x1y1 - x1y2).Normalized();
+					x1y2_h = sample_scale * x1y2_h;
+					normals[normal_offset] = Vec3(mScale.GetX(), x2y2_h - x1y2_h, 0).Cross(Vec3(0, x1y1_h - x1y2_h, -mScale.GetZ())).Normalized();
 				}
 
-				if (!IsNoCollision(x + 1, y))
+				float x2y1_h = height_samples[1];
+				if (x2y1_h != cNoCollisionValue)
 				{
-					Vec3 x2y1 = GetPosition(x + 1, y);
-					normals[offset + 1] = (x1y1 - x2y1).Cross(x2y2 - x2y1).Normalized();
+					x2y1_h = sample_scale * x2y1_h;
+					normals[normal_offset + 1] = Vec3(-mScale.GetX(), x1y1_h - x2y1_h, 0).Cross(Vec3(0, x2y2_h - x2y1_h, mScale.GetZ())).Normalized();
 				}
 			}
+		}
 
 	// Calculate active edges
 	for (uint y = 0; y < count_min_1; ++y)
