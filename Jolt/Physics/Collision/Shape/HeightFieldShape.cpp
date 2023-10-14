@@ -1216,6 +1216,8 @@ void HeightFieldShape::GetSupportingFace(const SubShapeID &inSubShapeID, Vec3Arg
 
 inline uint8 HeightFieldShape::GetEdgeFlags(uint inX, uint inY, uint inTriangle) const
 {
+	JPH_ASSERT(inX < mSampleCount - 1 && inY < mSampleCount - 1);
+
 	if (inTriangle == 0)
 	{
 		// The edge flags for this triangle are directly stored, find the right 3 bits
@@ -1231,7 +1233,7 @@ inline uint8 HeightFieldShape::GetEdgeFlags(uint inX, uint inY, uint inTriangle)
 	{
 		// We don't store this triangle directly, we need to look at our three neighbours to construct the edge flags
 		uint8 edge0 = (GetEdgeFlags(inX, inY, 0) & 0b100) != 0? 0b001 : 0; // Diagonal edge
-		uint8 edge1 = inX == mSampleCount - 1 || (GetEdgeFlags(inX + 1, inY, 0) & 0b001) != 0? 0b010 : 0; // Vertical edge
+		uint8 edge1 = inX == mSampleCount - 2 || (GetEdgeFlags(inX + 1, inY, 0) & 0b001) != 0? 0b010 : 0; // Vertical edge
 		uint8 edge2 = inY == 0 || (GetEdgeFlags(inX, inY - 1, 0) & 0b010) != 0? 0b100 : 0; // Horizontal edge
 		return edge0 | edge1 | edge2;
 	}
