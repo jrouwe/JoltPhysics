@@ -198,7 +198,8 @@ public:
 	/// @param inHeights The new height values to set, must be an array of inSizeX * inSizeY floats, can be cNoCollisionValue.
 	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights.
 	/// @param inAllocator Allocator to use for temporary memory
-	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator);
+	/// @param inActiveEdgeCosThresholdAngle Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive).
+	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle = 0.996195f);
 
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
@@ -229,6 +230,9 @@ private:
 
 	/// Calculate commonly used values and store them in the shape
 	void							CacheValues();
+
+	/// Calculate bit mask for all active edges in the heightfield for a specific region
+	void							CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, uint inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator);
 
 	/// Calculate bit mask for all active edges in the heightfield
 	void							CalculateActiveEdges(const HeightFieldShapeSettings &inSettings);

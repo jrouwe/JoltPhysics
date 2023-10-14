@@ -198,6 +198,95 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 	return bits_per_sample;
 }
 
+void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, uint inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator)
+{
+	// Allocate temporary buffer for normals
+	uint normals_size = 2 * inSizeX * inSizeY * sizeof(Vec3);
+	Vec3 *normals = (Vec3 *)inAllocator.Allocate(normals_size);
+
+	// Calculate triangle normals and make normals zero for triangles that are missing
+	Vec3 *out_normal = normals;
+	for (uint y = 0; y < inSizeY; ++y)
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			const float *height_samples = inHeights + (inY - inHeightsStartY + y) * inHeightsStride + (inX - inHeightsStartX + x);
+			float x1y1_h = height_samples[0];
+			float x2y2_h = height_samples[inHeightsStride + 1];
+			if (x1y1_h != cNoCollisionValue && x2y2_h != cNoCollisionValue)
+			{
+				x1y1_h = inHeightsScale * x1y1_h;
+				x2y2_h = inHeightsScale * x2y2_h;
+
+				float x1y2_h = height_samples[inHeightsStride];
+				if (x1y2_h != cNoCollisionValue)
+				{
+					x1y2_h = inHeightsScale * x1y2_h;
+					out_normal[0] = Vec3(mScale.GetX(), x2y2_h - x1y2_h, 0).Cross(Vec3(0, x1y1_h - x1y2_h, -mScale.GetZ())).Normalized();
+				}
+				else
+					out_normal[0] = Vec3::sZero();
+
+				float x2y1_h = height_samples[1];
+				if (x2y1_h != cNoCollisionValue)
+				{
+					x2y1_h = inHeightsScale * x2y1_h;
+					out_normal[1] = Vec3(-mScale.GetX(), x1y1_h - x2y1_h, 0).Cross(Vec3(0, x2y2_h - x2y1_h, mScale.GetZ())).Normalized();
+				}
+				else
+					out_normal[1] = Vec3::sZero();
+			}
+			else
+			{
+				out_normal[0] = Vec3::sZero();
+				out_normal[1] = Vec3::sZero();
+			}
+
+			out_normal += 2;
+		}
+
+	// Calculate active edges
+	const Vec3 *in_normal = normals;
+	uint global_bit_pos = 3 * (inY * (mSampleCount - 1) + inX);
+	for (uint y = 0; y < inSizeY; ++y)
+	{
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			// Get vertex heights
+			const float *height_samples = inHeights + (inY - inHeightsStartY + y) * inHeightsStride + (inX - inHeightsStartX + x);
+			float x1y1_h = height_samples[0];
+			float x1y2_h = height_samples[inHeightsStride];
+			float x2y2_h = height_samples[inHeightsStride + 1];
+			bool x1y1_valid = x1y1_h != cNoCollisionValue;
+			bool x1y2_valid = x1y2_h != cNoCollisionValue;
+			bool x2y2_valid = x2y2_h != cNoCollisionValue;
+
+			// Calculate the edge flags (3 bits)
+			bool edge0_active = x == 0 || (x1y2_valid && x1y1_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[-1], Vec3(0, inHeightsScale * (x1y2_h - x1y1_h), mScale.GetZ()), inActiveEdgeCosThresholdAngle));
+			bool edge1_active = y == mSampleCount - 2 || (x2y2_valid && x1y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[2 * inSizeY + 1], Vec3(mScale.GetX(), inHeightsScale * (x2y2_h - x1y2_h), 0), inActiveEdgeCosThresholdAngle));
+			bool edge2_active = x1y1_valid && x2y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[1], Vec3(-mScale.GetX(), inHeightsScale * (x1y1_h - x2y2_h), -mScale.GetZ()), inActiveEdgeCosThresholdAngle);
+			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
+
+			// Store the edge flags in the array
+			uint byte_pos = global_bit_pos >> 3;
+			uint bit_pos = global_bit_pos & 0b111;
+			uint8 *edge_flags_ptr = &mActiveEdges[byte_pos];
+			uint16 combined_edge_flags = edge_flags_ptr[0] | (edge_flags_ptr[1] << 8);
+			combined_edge_flags &= ~(uint16(0b111) << bit_pos);
+			combined_edge_flags |= uint16(edge_flags) << bit_pos;
+			edge_flags_ptr[0] = uint8(combined_edge_flags);
+			edge_flags_ptr[1] = uint8(combined_edge_flags >> 8);
+
+			in_normal += 2;
+			global_bit_pos += 3;
+		}
+
+		global_bit_pos += 3 * (mSampleCount - 1 - inSizeX);
+	}
+
+	// Free temporary buffer for normals
+	inAllocator.Free(normals, normals_size);
+}
+
 void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSettings)
 {
 	// Store active edges. The triangles are organized like this:
@@ -220,83 +309,8 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 	uint count_min_1_sq = Square(count_min_1);
 	mActiveEdges.resize((count_min_1_sq * 3 + 7) / 8 + 1);
 
-	// Calculate triangle normals and make normals zero for triangles that are missing
-	Array<Vec3> normals;
-	normals.resize(2 * count_min_1_sq);
-	float sample_scale = inSettings.mScale.GetY();
-	Vec3 *out_normal = normals.data();
-	for (uint y = 0; y < count_min_1; ++y)
-		for (uint x = 0; x < count_min_1; ++x)
-		{
-			const float *height_samples = inSettings.mHeightSamples.data() + y * mSampleCount + x;
-			float x1y1_h = height_samples[0];
-			float x2y2_h = height_samples[mSampleCount + 1];
-			if (x1y1_h != cNoCollisionValue && x2y2_h != cNoCollisionValue)
-			{
-				x1y1_h = sample_scale * x1y1_h;
-				x2y2_h = sample_scale * x2y2_h;
-
-				float x1y2_h = height_samples[mSampleCount];
-				if (x1y2_h != cNoCollisionValue)
-				{
-					x1y2_h = sample_scale * x1y2_h;
-					out_normal[0] = Vec3(mScale.GetX(), x2y2_h - x1y2_h, 0).Cross(Vec3(0, x1y1_h - x1y2_h, -mScale.GetZ())).Normalized();
-				}
-				else
-					out_normal[0] = Vec3::sZero();
-
-				float x2y1_h = height_samples[1];
-				if (x2y1_h != cNoCollisionValue)
-				{
-					x2y1_h = sample_scale * x2y1_h;
-					out_normal[1] = Vec3(-mScale.GetX(), x1y1_h - x2y1_h, 0).Cross(Vec3(0, x2y2_h - x2y1_h, mScale.GetZ())).Normalized();
-				}
-				else
-					out_normal[1] = Vec3::sZero();
-			}
-			else
-			{
-				out_normal[0] = Vec3::sZero();
-				out_normal[1] = Vec3::sZero();
-			}
-
-			out_normal += 2;
-		}
-
-	// Calculate active edges
-	const Vec3 *in_normal = normals.data();
-	uint global_bit_pos = 0;
-	for (uint y = 0; y < count_min_1; ++y)
-		for (uint x = 0; x < count_min_1; ++x)
-		{
-			// Get vertex heights
-			const float *height_samples = inSettings.mHeightSamples.data() + y * mSampleCount + x;
-			float x1y1_h = height_samples[0];
-			float x1y2_h = height_samples[mSampleCount];
-			float x2y2_h = height_samples[mSampleCount + 1];
-			bool x1y1_valid = x1y1_h != cNoCollisionValue;
-			bool x1y2_valid = x1y2_h != cNoCollisionValue;
-			bool x2y2_valid = x2y2_h != cNoCollisionValue;
-
-			// Calculate the edge flags (3 bits)
-			bool edge0_active = x == 0 || (x1y2_valid && x1y1_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[-1], Vec3(0, sample_scale * (x1y2_h - x1y1_h), mScale.GetZ()), inSettings.mActiveEdgeCosThresholdAngle));
-			bool edge1_active = y == count_min_1 - 1 || (x2y2_valid && x1y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[2 * count_min_1 + 1], Vec3(mScale.GetX(), sample_scale * (x2y2_h - x1y2_h), 0), inSettings.mActiveEdgeCosThresholdAngle));
-			bool edge2_active = x1y1_valid && x2y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[1], Vec3(-mScale.GetX(), sample_scale * (x1y1_h - x2y2_h), -mScale.GetZ()), inSettings.mActiveEdgeCosThresholdAngle);
-			uint16 edge_flags = (edge0_active? 0b001 : 0) | (edge1_active? 0b010 : 0) | (edge2_active? 0b100 : 0);
-
-			// Store the edge flags in the array
-			uint byte_pos = global_bit_pos >> 3;
-			uint bit_pos = global_bit_pos & 0b111;
-			uint8 *edge_flags_ptr = &mActiveEdges[byte_pos];
-			uint16 combined_edge_flags = edge_flags_ptr[0] | (edge_flags_ptr[1] << 8);
-			combined_edge_flags &= ~(uint16(0b111) << bit_pos);
-			combined_edge_flags |= uint16(edge_flags) << bit_pos;
-			edge_flags_ptr[0] = uint8(combined_edge_flags);
-			edge_flags_ptr[1] = uint8(combined_edge_flags >> 8);
-
-			in_normal += 2;
-			global_bit_pos += 3;
-		}
+	TempAllocatorMalloc allocator;
+	CalculateActiveEdges(0, 0, count_min_1, count_min_1, inSettings.mHeightSamples.data(), 0, 0, mSampleCount, inSettings.mScale.GetY(), inSettings.mActiveEdgeCosThresholdAngle, allocator);
 }
 
 void HeightFieldShape::StoreMaterialIndices(const HeightFieldShapeSettings &inSettings)
@@ -844,7 +858,7 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	}
 }
 
-void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator)
+void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle)
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return;
@@ -998,6 +1012,13 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 					height_samples[1] = uint8(height_sample >> 8);
 				}
 		}
+
+	// Update active edges
+	uint ae_x = inX > 1? inX - 2 : 0;
+	uint ae_y = inY > 1? inY - 2 : 0;
+	uint ae_sx = min(inX + inSizeX + 1, mSampleCount - 1) - ae_x;
+	uint ae_sy = min(inY + inSizeY + 1, mSampleCount - 1) - ae_y;
+	CalculateActiveEdges(ae_x, ae_y, ae_sx, ae_sy, heights, affected_x, affected_y, heights_size_x, 1.0f, inActiveEdgeCosThresholdAngle, inAllocator);
 
 	// Free temporary buffer
 	if (temp_heights != nullptr)
