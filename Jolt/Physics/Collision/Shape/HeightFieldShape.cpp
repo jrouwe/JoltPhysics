@@ -209,28 +209,30 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 	for (uint y = 0; y < inSizeY; ++y)
 		for (uint x = 0; x < inSizeX; ++x)
 		{
+			// Get height on diagonal
 			const float *height_samples = inHeights + (inY - inHeightsStartY + y) * inHeightsStride + (inX - inHeightsStartX + x);
 			float x1y1_h = height_samples[0];
 			float x2y2_h = height_samples[inHeightsStride + 1];
 			if (x1y1_h != cNoCollisionValue && x2y2_h != cNoCollisionValue)
 			{
-				x1y1_h = inHeightsScale * x1y1_h;
-				x2y2_h = inHeightsScale * x2y2_h;
-
+				// Calculate normal for lower left triangle (e.g. T1A)
 				float x1y2_h = height_samples[inHeightsStride];
 				if (x1y2_h != cNoCollisionValue)
 				{
-					x1y2_h = inHeightsScale * x1y2_h;
-					out_normal[0] = Vec3(mScale.GetX(), x2y2_h - x1y2_h, 0).Cross(Vec3(0, x1y1_h - x1y2_h, -mScale.GetZ())).Normalized();
+					Vec3 x2y2_minus_x1y2(mScale.GetX(), inHeightsScale * (x2y2_h - x1y2_h), 0);
+					Vec3 x1y1_minus_x1y2(0, inHeightsScale * (x1y1_h - x1y2_h), -mScale.GetZ());
+					out_normal[0] = x2y2_minus_x1y2.Cross(x1y1_minus_x1y2).Normalized();
 				}
 				else
 					out_normal[0] = Vec3::sZero();
 
+				// Calculate normal for upper right triangle (e.g. T1B)
 				float x2y1_h = height_samples[1];
 				if (x2y1_h != cNoCollisionValue)
 				{
-					x2y1_h = inHeightsScale * x2y1_h;
-					out_normal[1] = Vec3(-mScale.GetX(), x1y1_h - x2y1_h, 0).Cross(Vec3(0, x2y2_h - x2y1_h, mScale.GetZ())).Normalized();
+					Vec3 x1y1_minus_x2y1(-mScale.GetX(), inHeightsScale * (x1y1_h - x2y1_h), 0);
+					Vec3 x2y2_minus_x2y1(0, inHeightsScale * (x2y2_h - x2y1_h), mScale.GetZ());
+					out_normal[1] = x1y1_minus_x2y1.Cross(x2y2_minus_x2y1).Normalized();
 				}
 				else
 					out_normal[1] = Vec3::sZero();
@@ -261,24 +263,37 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 			bool x2y2_valid = x2y2_h != cNoCollisionValue;
 
 			// Calculate the edge flags (3 bits)
+			// See diagram in the next function for the edge numbering
 			uint16 edge_mask = 0b111;
 			uint16 edge_flags = 0;
 
 			// Edge 0
 			if (x == 0)
 				edge_mask &= 0b110; // We need normal x - 1 which we didn't calculate, don't update this edge
-			else if (x1y1_valid && x1y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[-1], Vec3(0, inHeightsScale * (x1y2_h - x1y1_h), mScale.GetZ()), inActiveEdgeCosThresholdAngle))
-				edge_flags |= 0b001;
+			else if (x1y1_valid && x1y2_valid)
+			{
+				Vec3 edge0_direction(0, inHeightsScale * (x1y2_h - x1y1_h), mScale.GetZ());
+				if (ActiveEdges::IsEdgeActive(in_normal[0], in_normal[-1], edge0_direction, inActiveEdgeCosThresholdAngle))
+					edge_flags |= 0b001;
+			}
 
 			// Edge 1
 			if (y == inSizeY - 1)
 				edge_mask &= 0b101; // We need normal y + 1 which we didn't calculate, don't update this edge
-			else if (x1y2_valid && x2y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[2 * inSizeX + 1], Vec3(mScale.GetX(), inHeightsScale * (x2y2_h - x1y2_h), 0), inActiveEdgeCosThresholdAngle))
-				edge_flags |= 0b010;
+			else if (x1y2_valid && x2y2_valid)
+			{
+				Vec3 edge1_direction(mScale.GetX(), inHeightsScale * (x2y2_h - x1y2_h), 0);
+				if (ActiveEdges::IsEdgeActive(in_normal[0], in_normal[2 * inSizeX + 1], edge1_direction, inActiveEdgeCosThresholdAngle))
+					edge_flags |= 0b010;
+			}
 
 			// Edge 2
-			if (x1y1_valid && x2y2_valid && ActiveEdges::IsEdgeActive(in_normal[0], in_normal[1], Vec3(-mScale.GetX(), inHeightsScale * (x1y1_h - x2y2_h), -mScale.GetZ()), inActiveEdgeCosThresholdAngle))
-				edge_flags |= 0b100;
+			if (x1y1_valid && x2y2_valid)
+			{
+				Vec3 edge2_direction(-mScale.GetX(), inHeightsScale * (x1y1_h - x2y2_h), -mScale.GetZ());
+				if (ActiveEdges::IsEdgeActive(in_normal[0], in_normal[1], edge2_direction, inActiveEdgeCosThresholdAngle))
+					edge_flags |= 0b100;
+			}
 
 			// Store the edge flags in the array
 			uint byte_pos = global_bit_pos >> 3;
@@ -304,15 +319,17 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSettings)
 {
 	// Store active edges. The triangles are organized like this:
-	//  +       +
-	//  | \ T1B | \ T2B
-	// e0   e2  |   \
-	//  | T1A \ | T2A \
-	//  +--e1---+-------+
-	//  | \ T3B | \ T4B
-	//  |   \   |   \
-	//  | T3A \ | T4A \
-	//  +-------+-------+
+	//     x --->
+	// 
+	// y   +       +
+	//     | \ T1B | \ T2B
+	// |  e0   e2  |   \
+	// |   | T1A \ | T2A \
+	// V   +--e1---+-------+
+	//     | \ T3B | \ T4B
+	//     |   \   |   \
+	//     | T3A \ | T4A \
+	//     +-------+-------+
 	// We store active edges e0 .. e2 as bits 0 .. 2.
 	// We store triangles horizontally then vertically (order T1A, T2A, T3A and T4A).
 	// The top edge and right edge of the heightfield are always active so we do not need to store them,
@@ -321,7 +338,8 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 	// Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
 	mActiveEdges.resize((Square(mSampleCount - 1) * 3 + 7) / 8 + 1);
 
-	// Make all edges active (if mSampleCount is bigger than inSettings.mSampleCount we need to fill up the padding)
+	// Make all edges active (if mSampleCount is bigger than inSettings.mSampleCount we need to fill up the padding,
+	// also edges at x = 0 and y = inSettings.mSampleCount - 1 are not updated)
 	memset(mActiveEdges.data(), 0xff, mActiveEdges.size());
 
 	// Now clear the edges that are not active
@@ -1030,6 +1048,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 		}
 
 	// Update active edges
+	// Note that we must take an extra row on all sides to account for connecting triangles
 	uint ae_x = inX > 1? inX - 2 : 0;
 	uint ae_y = inY > 1? inY - 2 : 0;
 	uint ae_sx = min(inX + inSizeX + 1, mSampleCount - 1) - ae_x;
