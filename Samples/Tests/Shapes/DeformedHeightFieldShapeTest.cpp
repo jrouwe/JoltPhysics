@@ -44,23 +44,23 @@ void DeformedHeightFieldShapeTest::Initialize()
 	Vec3 old_com = mHeightField->GetCenterOfMass();
 
 	// Update the height field
-	int s = 32, sx = 4, sy = 8;
+	int sx = 4, sy = 8, cx = 32, cy = 16;
 	Array<float> patched_heights;
-	patched_heights.resize(s * s);
-	for (int y = 0; y < s; ++y)
-		for (int x = 0; x < s; ++x)
-			patched_heights[y * s + x] = 0.1f * (x - sx) + 0.2f * (y - sy);
-	mHeightField->SetHeights(sx, sy, s, s, patched_heights.data(), s, *mTempAllocator);
+	patched_heights.resize(cx * cy);
+	for (int y = 0; y < cy; ++y)
+		for (int x = 0; x < cx; ++x)
+			patched_heights[y * cx + x] = 0.1f * (x - sx) + 0.2f * (y - sy);
+	mHeightField->SetHeights(sx, sy, cx, cy, patched_heights.data(), cx, *mTempAllocator);
 
 	// Notify the shape that it has changed its bounding box
 	mBodyInterface->NotifyShapeChanged(terrain_id, old_com, false, EActivation::DontActivate);
 
 	// Verify that the update succeeded
 	Array<float> verification;
-	verification.resize(s * s);
-	mHeightField->GetHeights(sx, sy, s, s, verification.data(), s);
+	verification.resize(cx * cy);
+	mHeightField->GetHeights(sx, sy, cx, cy, verification.data(), cx);
 	float delta = 0.0f;
-	for (int i = 0; i < s * s; ++i)
+	for (int i = 0; i < cx * cy; ++i)
 		delta = max(delta, abs(verification[i] - patched_heights[i]));
 	JPH_ASSERT(delta < 0.02f);
 }
