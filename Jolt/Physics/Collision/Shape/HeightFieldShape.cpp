@@ -1040,7 +1040,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 					JPH_ASSERT(byte_pos + 1 < mHeightSamples.size());
 					uint8 *height_samples = mHeightSamples.data() + byte_pos;
 					uint16 height_sample = uint16(height_samples[0]) | uint16(uint16(height_samples[1]) << 8);
-					height_sample &= ~mSampleMask << bit_pos;
+					height_sample &= ~(uint16(mSampleMask) << bit_pos);
 					height_sample |= uint16(quantized_height) << bit_pos;
 					height_samples[0] = uint8(height_sample);
 					height_samples[1] = uint8(height_sample >> 8);
