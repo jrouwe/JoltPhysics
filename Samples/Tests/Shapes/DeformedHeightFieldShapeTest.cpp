@@ -7,6 +7,7 @@
 #include <Tests/Shapes/DeformedHeightFieldShapeTest.h>
 #include <Math/Perlin.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Layers.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(DeformedHeightFieldShapeTest)
@@ -16,56 +17,84 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(DeformedHeightFieldShapeTest)
 
 void DeformedHeightFieldShapeTest::Initialize()
 {
-	const int n = 128;
-	const float cell_size = 1.0f;
-	const float max_height = 5.0f;
+	const float cCellSize = 1.0f;
+	const float cMaxHeight = 2.5f;
 
 	// Create height samples
-	Array<float> height_samples;
-	height_samples.resize(n * n);
-	for (int y = 0; y < n; ++y)
-		for (int x = 0; x < n; ++x)
-			height_samples[y * n + x] = max_height * PerlinNoise3(float(x) * 8.0f / n, 0, float(y) * 8.0f / n, 256, 256, 256);
+	mHeightSamples.resize(cSampleCount * cSampleCount);
+	for (int y = 0; y < cSampleCount; ++y)
+		for (int x = 0; x < cSampleCount; ++x)
+			mHeightSamples[y * cSampleCount + x] = cMaxHeight * PerlinNoise3(float(x) * 8.0f / cSampleCount, 0, float(y) * 8.0f / cSampleCount, 256, 256, 256);
 
-	// Determine scale and offset (deliberately apply extra offset and scale in Y direction)
-	Vec3 offset(-0.5f * cell_size * n, -2.0f, -0.5f * cell_size * n);
-	Vec3 scale(cell_size, 1.5f, cell_size);
+	// Determine scale and offset
+	Vec3 offset(-0.5f * cCellSize * cSampleCount, 0, -0.5f * cCellSize * cSampleCount);
+	Vec3 scale(cCellSize, 1.0f, cCellSize);
 
 	// Create height field
-	HeightFieldShapeSettings settings(height_samples.data(), offset, scale, n);
-	settings.mBlockSize = 4;
+	HeightFieldShapeSettings settings(mHeightSamples.data(), offset, scale, cSampleCount);
+	settings.mBlockSize = cBlockSize;
 	settings.mBitsPerSample = 8;
-	settings.mMinHeightValue = -10.0f;
-	settings.mMaxHeightValue = 10.0f;
+	settings.mMinHeightValue = -15.0f;
 	mHeightField = static_cast<HeightFieldShape *>(settings.Create().Get().GetPtr());
-	BodyID terrain_id = mBodyInterface->CreateAndAddBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mTerrainID = mBodyInterface->CreateAndAddBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
-	// Remember COM before we change the height field
-	Vec3 old_com = mHeightField->GetCenterOfMass();
-
-	// Update the height field
-	int sx = 4, sy = 8, cx = 32, cy = 16;
-	Array<float> patched_heights;
-	patched_heights.resize(cx * cy);
-	for (int y = 0; y < cy; ++y)
-		for (int x = 0; x < cx; ++x)
-			patched_heights[y * cx + x] = 0.1f * (x - sx) + 0.2f * (y - sy);
-	mHeightField->SetHeights(sx, sy, cx, cy, patched_heights.data(), cx, *mTempAllocator);
-
-	// Notify the shape that it has changed its bounding box
-	mBodyInterface->NotifyShapeChanged(terrain_id, old_com, false, EActivation::DontActivate);
-
-	// Verify that the update succeeded
-	Array<float> verification;
-	verification.resize(cx * cy);
-	mHeightField->GetHeights(sx, sy, cx, cy, verification.data(), cx);
-	float delta = 0.0f;
-	for (int i = 0; i < cx * cy; ++i)
-		delta = max(delta, abs(verification[i] - patched_heights[i]));
-	JPH_ASSERT(delta < 0.02f);
+	// Spheres on top of the terrain
+	RefConst<Shape> sphere_shape = new SphereShape(2.0f);
+	for (int z = 0; z < 11; ++z)
+		for (int x = 0; x < 11; ++x)
+		{
+			BodyCreationSettings bcs(sphere_shape, RVec3(-50.0f + 10.0f * x, 2.0f + cMaxHeight, -50.0f + 10.0f * z), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+			bcs.mAllowSleeping = false;
+			mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
+		}
 }
 
 void DeformedHeightFieldShapeTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	// TODO: Deform over time
+	constexpr float cSpeedScale = 2.0f;
+	constexpr float cRadiusX = 60.0f;
+	constexpr float cRadiusY = 30.0f;
+	constexpr float cBumpRadius = 4.0f;
+	constexpr float cBumpHeight = 1.0f;
+	constexpr float cFallOff = 0.1f;
+	constexpr float cAngularSpeed = 2.0f;
+	constexpr float cDisplacementSpeed = 10.0f;
+	constexpr int cBlockMask = cBlockSize - 1;
+
+	// Calculate center of bump
+	float time = cSpeedScale * mTime;
+	float fall_off = exp(-cFallOff * time);
+	float angle = cAngularSpeed * time;
+	float center_x = cRadiusX * Cos(angle) * fall_off + 64.0f;
+	float center_y = cRadiusY * Sin(angle) * fall_off + cDisplacementSpeed * time;
+	mTime += inParams.mDeltaTime;
+
+	// Calculate affected area
+	int sx = max((int)floor(center_x - cBumpRadius) & ~cBlockMask, 0);
+	int sy = max((int)floor(center_y - cBumpRadius) & ~cBlockMask, 0);
+	int sx_end = min(((int)ceil(center_x + cBumpRadius) + cBlockMask) & ~cBlockMask, cSampleCount);
+	int sy_end = min(((int)ceil(center_y + cBumpRadius) + cBlockMask) & ~cBlockMask, cSampleCount);
+	int cx = sx_end - sx;
+	int cy = sy_end - sy;
+
+	if (cx > 0 && cy > 0)
+	{
+		// Remember COM before we change the height field
+		Vec3 old_com = mHeightField->GetCenterOfMass();
+
+		constexpr float cHalfPi = 0.5f * JPH_PI;
+		auto bump_shape = [=](float inDistance) { return Cos(min(abs(inDistance) * cHalfPi / cBumpRadius, cHalfPi)); };
+
+		// Update the height field
+		for (int y = 0; y < cy; ++y)
+			for (int x = 0; x < cx; ++x)
+			{
+				float delta = bump_shape(float(sx) + x - center_x) * bump_shape(float(sy) + y - center_y) * cBumpHeight;
+				mHeightSamples[(sy + y) * cSampleCount + sx + x] -= delta;
+			}
+		mHeightField->SetHeights(sx, sy, cx, cy, mHeightSamples.data() + sy * cSampleCount + sx, cSampleCount, *mTempAllocator);
+
+		// Notify the shape that it has changed its bounding box
+		mBodyInterface->NotifyShapeChanged(mTerrainID, old_com, false, EActivation::DontActivate);
+	}
 }

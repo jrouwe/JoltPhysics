@@ -14,11 +14,20 @@ public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, DeformedHeightFieldShapeTest)
 
 	// Initialize the test
-	virtual void		Initialize() override;
+	virtual void			Initialize() override;
 
 	// Update the test, called before the physics update
-	virtual void		PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+
+	// Test will never be deterministic since we're modifying the height field shape and not saving it
+	virtual bool			IsDeterministic() const override							{ return false; }
 
 private:
-	Ref<HeightFieldShape> mHeightField;
+	static constexpr int	cSampleCount = 128;
+	static constexpr int	cBlockSize = 4;
+
+	Array<float>			mHeightSamples;
+	Ref<HeightFieldShape>	mHeightField;
+	BodyID					mTerrainID;
+	float					mTime = 0.0f;
 };
