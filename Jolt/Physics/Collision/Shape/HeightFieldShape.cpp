@@ -299,7 +299,7 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 			uint byte_pos = global_bit_pos >> 3;
 			uint bit_pos = global_bit_pos & 0b111;
 			uint8 *edge_flags_ptr = &mActiveEdges[byte_pos];
-			uint16 combined_edge_flags = edge_flags_ptr[0] | (edge_flags_ptr[1] << 8);
+			uint16 combined_edge_flags = uint16(edge_flags_ptr[0]) | uint16(uint16(edge_flags_ptr[1]) << 8);
 			combined_edge_flags &= ~(edge_mask << bit_pos);
 			combined_edge_flags |= edge_flags << bit_pos;
 			edge_flags_ptr[0] = uint8(combined_edge_flags);
