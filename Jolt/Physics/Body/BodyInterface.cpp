@@ -5,6 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhase.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Body/BodyManager.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
@@ -216,6 +217,13 @@ void BodyInterface::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 	BodyLockMultiWrite lock(*mBodyLockInterface, inBodyIDs, inNumber);
 
 	mBodyManager->ActivateBodies(inBodyIDs, inNumber);
+}
+
+void BodyInterface::ActivateBodiesInAABox(const AABox &inBox, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter)
+{
+	AllHitCollisionCollector<CollideShapeBodyCollector> collector;
+	mBroadPhase->CollideAABox(inBox, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
+	ActivateBodies(collector.mHits.data(), (int)collector.mHits.size());
 }
 
 void BodyInterface::DeactivateBody(const BodyID &inBodyID)

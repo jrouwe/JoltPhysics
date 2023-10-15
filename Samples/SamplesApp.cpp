@@ -198,6 +198,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TriangleShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ConvexHullShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MeshShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, HeightFieldShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DeformedHeightFieldShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, RotatedTranslatedShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, OffsetCenterOfMassShapeTest)
 
@@ -211,6 +212,7 @@ static TestNameAndRTTI sShapeTests[] =
 	{ "Convex Hull Shape",					JPH_RTTI(ConvexHullShapeTest) },
 	{ "Mesh Shape",							JPH_RTTI(MeshShapeTest) },
 	{ "Height Field Shape",					JPH_RTTI(HeightFieldShapeTest) },
+	{ "Deformed Height Field Shape",		JPH_RTTI(DeformedHeightFieldShapeTest) },
 	{ "Static Compound Shape",				JPH_RTTI(StaticCompoundShapeTest) },
 	{ "Mutable Compound Shape",				JPH_RTTI(MutableCompoundShapeTest) },
 	{ "Triangle Shape",						JPH_RTTI(TriangleShapeTest) },

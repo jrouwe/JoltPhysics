@@ -26,6 +26,8 @@ class SubShapeID;
 class Shape;
 class TwoBodyConstraintSettings;
 class TwoBodyConstraint;
+class BroadPhaseLayerFilter;
+class AABox;
 
 /// Class that provides operations on bodies using a body ID. Note that if you need to do multiple operations on a single body, it is more efficient to lock the body once and combine the operations.
 /// All quantities are in world space unless otherwise specified.
@@ -123,6 +125,7 @@ public:
 	///@{
 	void						ActivateBody(const BodyID &inBodyID);
 	void						ActivateBodies(const BodyID *inBodyIDs, int inNumber);
+	void						ActivateBodiesInAABox(const AABox &inBox, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter);
 	void						DeactivateBody(const BodyID &inBodyID);
 	void						DeactivateBodies(const BodyID *inBodyIDs, int inNumber);
 	bool						IsActive(const BodyID &inBodyID) const;

@@ -14,24 +14,25 @@ JPH_NAMESPACE_BEGIN
 
 class ConvexShape;
 class CollideShapeSettings;
+class TempAllocator;
 
 /// Constants for HeightFieldShape, this was moved out of the HeightFieldShape because of a linker bug
 namespace HeightFieldShapeConstants
 {
 	/// Value used to create gaps in the height field
-	constexpr float			cNoCollisionValue = FLT_MAX;
+	constexpr float					cNoCollisionValue = FLT_MAX;
 
 	/// Stack size to use during WalkHeightField
-	constexpr int			cStackSize = 128;
+	constexpr int					cStackSize = 128;
 
 	/// A position in the hierarchical grid is defined by a level (which grid), x and y position. We encode this in a single uint32 as: level << 28 | y << 14 | x
-	constexpr uint			cNumBitsXY = 14;
-	constexpr uint			cMaskBitsXY = (1 << cNumBitsXY) - 1;
-	constexpr uint			cLevelShift = 2 * cNumBitsXY;
+	constexpr uint					cNumBitsXY = 14;
+	constexpr uint					cMaskBitsXY = (1 << cNumBitsXY) - 1;
+	constexpr uint					cLevelShift = 2 * cNumBitsXY;
 
 	/// When height samples are converted to 16 bit:
-	constexpr uint16		cNoCollisionValue16 = 0xffff;		///< This is the magic value for 'no collision'
-	constexpr uint16		cMaxHeightValue16 = 0xfffe;			///< This is the maximum allowed height value
+	constexpr uint16				cNoCollisionValue16 = 0xffff;				///< This is the magic value for 'no collision'
+	constexpr uint16				cMaxHeightValue16 = 0xfffe;					///< This is the maximum allowed height value
 };
 
 /// Class that constructs a HeightFieldShape
@@ -71,6 +72,12 @@ public:
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 	uint32							mSampleCount = 0;
 
+	/// Artifical minimal value of mHeightSamples, used for compression and can be used to update the terrain after creating with lower height values. If there are any lower values in mHeightSamples, this value will be ignored.
+	float							mMinHeightValue = FLT_MAX;
+
+	/// Artifical maximum value of mHeightSamples, used for compression and can be used to update the terrain after creating with higher height values. If there are any higher values in mHeightSamples, this value will be ignored.
+	float							mMaxHeightValue = -FLT_MAX;
+
 	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only,
 	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [2, 8], does not need to be
 	/// a power of 2. Note that at run-time we'll perform one more grid subdivision, so the effective block size is half of what is provided here.
@@ -81,7 +88,10 @@ public:
 	/// Also note that increasing mBlockSize saves more memory than reducing the amount of bits per sample.
 	uint32							mBitsPerSample = 8;
 
+	/// An array of mSampleCount^2 height samples. Samples are stored in row major order, so the sample at (x, y) is at index y * mSampleCount + x.
 	Array<float>					mHeightSamples;
+
+	/// An array of (mSampleCount - 1)^2 material indices.
 	Array<uint8>					mMaterialIndices;
 
 	/// The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
@@ -90,7 +100,7 @@ public:
 	/// Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive).
 	/// Setting this value too small can cause ghost collisions with edges, setting it too big can cause depenetration artifacts (objects not depenetrating quickly).
 	/// Valid ranges are between cos(0 degrees) and cos(90 degrees). The default value is cos(5 degrees).
-	float							mActiveEdgeCosThresholdAngle = 0.996195f;							// cos(5 degrees)
+	float							mActiveEdgeCosThresholdAngle = 0.996195f;	// cos(5 degrees)
 };
 
 /// A height field shape. Cannot be used as a dynamic object.
@@ -104,16 +114,22 @@ public:
 									HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult);
 
 	// See Shape::MustBeStatic
-	virtual bool					MustBeStatic() const override										{ return true; }
+	virtual bool					MustBeStatic() const override				{ return true; }
+
+	/// Get the size of the height field. Note that this will always be rounded up to the nearest multiple of GetBlockSize().
+	inline uint						GetSampleCount() const						{ return mSampleCount; }
+
+	/// Get the size of a block
+	inline uint						GetBlockSize() const						{ return mBlockSize; }
 
 	// See Shape::GetLocalBounds
 	virtual AABox					GetLocalBounds() const override;
 
 	// See Shape::GetSubShapeIDBitsRecursive
-	virtual uint					GetSubShapeIDBitsRecursive() const override							{ return GetSubShapeIDBits(); }
+	virtual uint					GetSubShapeIDBitsRecursive() const override	{ return GetSubShapeIDBits(); }
 
 	// See Shape::GetInnerRadius
-	virtual float					GetInnerRadius() const override										{ return 0.0f; }
+	virtual float					GetInnerRadius() const override				{ return 0.0f; }
 
 	// See Shape::GetMassProperties
 	virtual MassProperties			GetMassProperties() const override;
@@ -165,6 +181,28 @@ public:
 	/// When there is no surface position (because of a hole or because the point is outside the heightfield) the function will return false.
 	bool							ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurfacePosition, SubShapeID &outSubShapeID) const;
 
+	/// Get the height values of a block of data.
+	/// Note that the height values are decompressed so will be slightly different from what the shape was originally created with.
+	/// @param inX Start X position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
+	/// @param inY Start Y position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
+	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
+	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
+	/// @param outHeights Returned height values, must be at least inSizeX * inSizeY floats. Values are returned in x-major order and can be cNoCollisionValue.
+	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights.
+	void							GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, uint inHeightsStride) const;
+
+	/// Set the height values of a block of data.
+	/// Note that this requires decompressing and recompressing a border of size mBlockSize in the negative x/y direction so will cause some precision loss.
+	/// @param inX Start X position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
+	/// @param inY Start Y position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
+	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
+	/// @param inSizeY Number of samples in Y direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
+	/// @param inHeights The new height values to set, must be an array of inSizeX * inSizeY floats, can be cNoCollisionValue.
+	/// @param inHeightsStride Stride in floats between two consecutive rows of outHeights.
+	/// @param inAllocator Allocator to use for temporary memory
+	/// @param inActiveEdgeCosThresholdAngle Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive).
+	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle = 0.996195f);
+
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;
@@ -174,7 +212,7 @@ public:
 	virtual Stats					GetStats() const override;
 
 	// See Shape::GetVolume
-	virtual float					GetVolume() const override											{ return 0; }
+	virtual float					GetVolume() const override					{ return 0; }
 
 #ifdef JPH_DEBUG_RENDERER
 	// Settings
@@ -189,11 +227,14 @@ protected:
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
 
 private:
-	class							DecodingContext;						///< Context class for walking through all nodes of a heightfield
-	struct							HSGetTrianglesContext;					///< Context class for GetTrianglesStart/Next
+	class							DecodingContext;							///< Context class for walking through all nodes of a heightfield
+	struct							HSGetTrianglesContext;						///< Context class for GetTrianglesStart/Next
 
 	/// Calculate commonly used values and store them in the shape
 	void							CacheValues();
+
+	/// Calculate bit mask for all active edges in the heightfield for a specific region
+	void							CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, uint inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator);
 
 	/// Calculate bit mask for all active edges in the heightfield
 	void							CalculateActiveEdges(const HeightFieldShapeSettings &inSettings);
@@ -202,10 +243,10 @@ private:
 	void							StoreMaterialIndices(const HeightFieldShapeSettings &inSettings);
 
 	/// Get the amount of horizontal/vertical blocks
-	inline uint						GetNumBlocks() const					{ return mSampleCount / mBlockSize; }
+	inline uint						GetNumBlocks() const						{ return mSampleCount / mBlockSize; }
 
 	/// Get the maximum level (amount of grids) of the tree
-	static inline uint				sGetMaxLevel(uint inNumBlocks)			{ return 32 - CountLeadingZeros(inNumBlocks - 1); }
+	static inline uint				sGetMaxLevel(uint inNumBlocks)				{ return 32 - CountLeadingZeros(inNumBlocks - 1); }
 
 	/// Get the range block offset and stride for GetBlockOffsetAndScale
 	static inline void				sGetRangeBlockOffsetAndStride(uint inNumBlocks, uint inMaxLevel, uint &outRangeBlockOffset, uint &outRangeBlockStride);
@@ -246,6 +287,9 @@ private:
 		uint16						mMax[4];
 	};
 
+	/// For block (inBlockX, inBlockY) get get the range block and the entry in the range block
+	inline void						GetRangeBlock(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, RangeBlock *&outBlock, uint &outIndexInBlock);
+
 	/// Offset of first RangedBlock in grid per level
 	static const uint				sGridOffsets[];
 
@@ -255,25 +299,25 @@ private:
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 
 	/// Height data
-	uint32							mSampleCount = 0;					///< See HeightFieldShapeSettings::mSampleCount
-	uint32							mBlockSize = 2;						///< See HeightFieldShapeSettings::mBlockSize
-	uint8							mBitsPerSample = 8;					///< See HeightFieldShapeSettings::mBitsPerSample
-	uint8							mSampleMask = 0xff;					///< All bits set for a sample: (1 << mBitsPerSample) - 1, used to indicate that there's no collision
-	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16;	///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
+	uint32							mSampleCount = 0;							///< See HeightFieldShapeSettings::mSampleCount
+	uint32							mBlockSize = 2;								///< See HeightFieldShapeSettings::mBlockSize
+	uint8							mBitsPerSample = 8;							///< See HeightFieldShapeSettings::mBitsPerSample
+	uint8							mSampleMask = 0xff;							///< All bits set for a sample: (1 << mBitsPerSample) - 1, used to indicate that there's no collision
+	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16; ///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
-	Array<RangeBlock>				mRangeBlocks;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
-	Array<uint8>					mHeightSamples;						///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
-	Array<uint8>					mActiveEdges;						///< (mSampleCount - 1)^2 * 3-bit active edge flags.
+	Array<RangeBlock>				mRangeBlocks;								///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
+	Array<uint8>					mHeightSamples;								///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
+	Array<uint8>					mActiveEdges;								///< (mSampleCount - 1)^2 * 3-bit active edge flags.
 
 	/// Materials
-	PhysicsMaterialList				mMaterials;							///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
-	Array<uint8>					mMaterialIndices;					///< Compressed to the minimum amount of bits per material index (mSampleCount - 1) * (mSampleCount - 1) * mNumBitsPerMaterialIndex bits of data
-	uint32							mNumBitsPerMaterialIndex = 0;		///< Number of bits per material index
+	PhysicsMaterialList				mMaterials;									///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
+	Array<uint8>					mMaterialIndices;							///< Compressed to the minimum amount of bits per material index (mSampleCount - 1) * (mSampleCount - 1) * mNumBitsPerMaterialIndex bits of data
+	uint32							mNumBitsPerMaterialIndex = 0;				///< Number of bits per material index
 
 #ifdef JPH_DEBUG_RENDERER
 	/// Temporary rendering data
 	mutable Array<DebugRenderer::GeometryRef> mGeometry;
-	mutable bool					mCachedUseMaterialColors = false;	///< This is used to regenerate the triangle batch if the drawing settings change
+	mutable bool					mCachedUseMaterialColors = false;			///< This is used to regenerate the triangle batch if the drawing settings change
 #endif // JPH_DEBUG_RENDERER
 };
 
