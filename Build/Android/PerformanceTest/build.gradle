@@ -4,7 +4,7 @@ plugins {
 
 android {
     compileSdk 33
-    ndkVersion "25.0.8775105"
+    ndkVersion "26.1.10909125"
 
     defaultConfig {
         applicationId "com.joltphysics.performancetest"
