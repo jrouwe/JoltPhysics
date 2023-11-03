@@ -4,10 +4,12 @@
 
 #pragma once
 
+#include <Jolt/Core/NonCopyable.h>
+
 JPH_NAMESPACE_BEGIN
 
 /// Simple binary input stream
-class JPH_EXPORT StreamIn
+class JPH_EXPORT StreamIn : public NonCopyable
 {
 public:
 	/// Virtual destructor

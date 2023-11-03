@@ -5,11 +5,12 @@
 #pragma once
 
 #include <Jolt/Geometry/IndexedTriangle.h>
+#include <Jolt/Core/NonCopyable.h>
 
 JPH_NAMESPACE_BEGIN
 
 /// A class that splits a triangle list into two parts for building a tree
-class JPH_EXPORT TriangleSplitter
+class JPH_EXPORT TriangleSplitter : public NonCopyable
 {
 public:
 	/// Constructor

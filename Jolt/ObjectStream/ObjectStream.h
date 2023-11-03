@@ -6,13 +6,14 @@
 
 #include <Jolt/Core/StaticArray.h>
 #include <Jolt/Core/Reference.h>
-#include <Jolt/ObjectStream/SerializableAttribute.h>
 #include <Jolt/Core/RTTI.h>
+#include <Jolt/Core/NonCopyable.h>
+#include <Jolt/ObjectStream/SerializableAttribute.h>
 
 JPH_NAMESPACE_BEGIN
 
 /// Base class for object stream input and output streams.
-class JPH_EXPORT ObjectStream
+class JPH_EXPORT ObjectStream : public NonCopyable
 {
 public:
 	/// Stream type
@@ -23,7 +24,7 @@ public:
 	};
 
 protected:
-	/// Constructor
+	/// Destructor
 	virtual							~ObjectStream() = default;
 
 	/// Identifier for objects

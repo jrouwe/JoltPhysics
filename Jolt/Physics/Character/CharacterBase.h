@@ -22,6 +22,11 @@ class JPH_EXPORT CharacterBaseSettings : public RefTarget<CharacterBaseSettings>
 public:
 	JPH_OVERRIDE_NEW_DELETE
 
+	/// Constructor
+										CharacterBaseSettings() = default;
+										CharacterBaseSettings(const CharacterBaseSettings &inSettings) = default;
+	CharacterBaseSettings &				operator = (const CharacterBaseSettings &inSettings) = default;
+
 	/// Virtual destructor
 	virtual								~CharacterBaseSettings() = default;
 
