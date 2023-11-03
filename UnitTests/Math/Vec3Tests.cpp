@@ -262,8 +262,8 @@ TEST_SUITE("Vec3Tests")
 
 	TEST_CASE("TestVec3Cast")
 	{
-		CHECK(Vec3(1, 2, 3).ToInt() == UVec4(1, 2, 3, 3));
-		CHECK(Vec3(1, 2, 3).ReinterpretAsInt() == UVec4(0x3f800000U, 0x40000000U, 0x40400000U, 0x40400000U));
+		CHECK(UVec4::sEquals(Vec3(1, 2, 3).ToInt(), UVec4(1, 2, 3, 0)).TestAllXYZTrue());
+		CHECK(UVec4::sEquals(Vec3(1, 2, 3).ReinterpretAsInt(), UVec4(0x3f800000U, 0x40000000U, 0x40400000U, 0)).TestAllXYZTrue());
 	}
 
 	TEST_CASE("TestVec3NormalizedPerpendicular")
