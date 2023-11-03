@@ -36,7 +36,7 @@ JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAllocate)(size_t inSize, size_t inAlig
 	return _aligned_malloc(inSize, inAlignment);
 #else
 	void *block = nullptr;
-	(void)posix_memalign(&block, inAlignment, AlignUp(inSize, inAlignment));
+	(void)posix_memalign(&block, inAlignment, inSize);
 	return block;
 #endif
 }
