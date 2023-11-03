@@ -15,7 +15,7 @@ JPH_NAMESPACE_BEGIN
 class VehicleConstraint;
 
 /// Base class for wheel settings, each VehicleController can implement a derived class of this
-class JPH_EXPORT WheelSettings : public SerializableObject, public RefTarget<WheelSettings>, public NonCopyable
+class JPH_EXPORT WheelSettings : public SerializableObject, public RefTarget<WheelSettings>
 {
 public:
 	JPH_DECLARE_SERIALIZABLE_VIRTUAL(JPH_EXPORT, WheelSettings)
@@ -42,7 +42,7 @@ public:
 };
 
 /// Base class for runtime data for a wheel, each VehicleController can implement a derived class of this
-class JPH_EXPORT Wheel
+class JPH_EXPORT Wheel : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

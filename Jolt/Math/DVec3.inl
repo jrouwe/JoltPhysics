@@ -65,7 +65,7 @@ DVec3::DVec3(const Double3 &inV)
 	Type xy = _mm256_unpacklo_pd(x, y);
 	mValue = _mm256_blend_pd(xy, z, 0b1100); // Assure Z and W are the same
 #elif defined(JPH_USE_SSE)
-	mValue.mLow = _mm_load_pd(&inV.x);
+	mValue.mLow = _mm_loadu_pd(&inV.x);
 	mValue.mHigh = _mm_set_pd1(inV.z);
 #elif defined(JPH_USE_NEON)
 	mValue.val[0] = vld1q_f64(&inV.x);
