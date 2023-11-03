@@ -143,7 +143,7 @@ public:																												\
 /// Classes must be derived from SerializableObject if you want to be able to save pointers or
 /// reference counting pointers to objects of this or derived classes. The type will automatically
 /// be determined during serialization and upon deserialization it will be restored correctly.
-class JPH_EXPORT SerializableObject
+class JPH_EXPORT SerializableObject : public NonCopyable
 {
 	JPH_DECLARE_SERIALIZABLE_ABSTRACT_BASE(JPH_EXPORT, SerializableObject)
 

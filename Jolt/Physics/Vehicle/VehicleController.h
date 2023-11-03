@@ -37,7 +37,7 @@ public:
 };
 
 /// Runtime data for interface that controls acceleration / decelleration of the vehicle
-class JPH_EXPORT VehicleController : public RefTarget<VehicleController>
+class JPH_EXPORT VehicleController : public RefTarget<VehicleController>, public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
