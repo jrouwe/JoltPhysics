@@ -598,7 +598,6 @@ public:
 				mY[i] = x - mP[i];
 
 			// Determine the new closest point from Y to origin
-			bool needs_restart = false;
 			uint32 set;						// Set of points that form the new simplex
 			if (!GetClosest<false>(v_len_sq, v, v_len_sq, set))
 			{
@@ -606,26 +605,6 @@ public:
 				Trace("Failed to converge");
 #endif
 
-				// We failed to converge, restart
-				needs_restart = true;
-			}
-			else if (set == 0xf)
-			{
-#ifdef JPH_GJK_DEBUG
-				Trace("Full simplex");
-#endif
-
-				// If there are 4 points, x is inside the tetrahedron and we've found a hit
-				// Double check if this is indeed the case
-				if (v_len_sq <= tolerance_sq)
-					break;
-
-				// We failed to converge, restart
-				needs_restart = true;
-			}
-
-			if (needs_restart)
-			{
 				// Only allow 1 restart, if we still can't get a closest point
 				// we're so close that we return this as a hit
 				if (!allow_restart)
@@ -641,6 +620,16 @@ public:
 				v = x - p;
 				v_len_sq = FLT_MAX;
 				continue;
+			}
+			else if (set == 0xf)
+			{
+#ifdef JPH_GJK_DEBUG
+				Trace("Full simplex");
+#endif
+
+				// We're inside the tetrahedron, we have a hit (verify that length of v is 0)
+				JPH_ASSERT(v_len_sq == 0.0f);
+				break;
 			}
 
 			// Update the points P to form the new simplex
@@ -807,7 +796,6 @@ public:
 				mY[i] = x - (mQ[i] - mP[i]);
 
 			// Determine the new closest point from Y to origin
-			bool needs_restart = false;
 			uint32 set;						// Set of points that form the new simplex
 			if (!GetClosest<false>(v_len_sq, v, v_len_sq, set))
 			{
@@ -815,26 +803,6 @@ public:
 				Trace("Failed to converge");
 #endif
 
-				// We failed to converge, restart
-				needs_restart = true;
-			}
-			else if (set == 0xf)
-			{
-#ifdef JPH_GJK_DEBUG
-				Trace("Full simplex");
-#endif
-
-				// If there are 4 points, x is inside the tetrahedron and we've found a hit
-				// Double check that A and B are indeed touching according to our tolerance
-				if (v_len_sq <= tolerance_sq)
-					break;
-
-				// We failed to converge, restart
-				needs_restart = true;
-			}
-
-			if (needs_restart)
-			{
 				// Only allow 1 restart, if we still can't get a closest point
 				// we're so close that we return this as a hit
 				if (!allow_restart)
@@ -851,6 +819,16 @@ public:
 				v = x - q;
 				v_len_sq = FLT_MAX;
 				continue;
+			}
+			else if (set == 0xf)
+			{
+#ifdef JPH_GJK_DEBUG
+				Trace("Full simplex");
+#endif
+
+				// We're inside the tetrahedron, we have a hit (verify that length of v is 0)
+				JPH_ASSERT(v_len_sq == 0.0f);
+				break;
 			}
 
 			// Update the points P and Q to form the new simplex
