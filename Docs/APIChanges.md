@@ -4,7 +4,7 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
 
-## Changes between v3.0.1 and latest
+## Changes between v3.0.1 and v4.0.0
 
 * 20231003 - *SBS* - Bug fix in serialization of SoftBodySharedSettings breaks binary serialization format. (ccb250747eee4dedebfa02d950775478fb52f786)
 * 20230914 - Removed GetProcessorTicksPerSecond as it was not correctly implemented for all platforms. (d44f4bad0872075d5cef2779742c89203d4f4488)
