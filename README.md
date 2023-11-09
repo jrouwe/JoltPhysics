@@ -106,7 +106,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 * It doesn't make use of compiler generated RTTI or exceptions.
 * If you want to run on Platform Blue you'll need to provide your own build environment and PlatformBlue.h file due to NDA requirements (see Core.h for further info).
 
-For build instructions go to the [Build](Build/README.md) section. When upgrading from an older version of the library go to the [API Changes](Docs/APIChanges.md) section.
+For build instructions go to the [Build](Build/README.md) section. When upgrading from an older version of the library go to the [Release Notes](Docs/ReleaseNotes.md) or [API Changes](Docs/APIChanges.md) sections.
 
 ## Folder Structure
 
