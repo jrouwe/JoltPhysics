@@ -205,15 +205,16 @@ namespace ClosestPoint
 				}
 
 				// Edge AB
+				ab = inB - inA;
 				float ab_len_sq = ab.LengthSq();
 				if (ab_len_sq > Square(FLT_EPSILON))
 				{
-					float v = Clamp(-a.Dot(ab) / ab_len_sq, 0.0f, 1.0f);
-					Vec3 q = a + v * ab;
+					float v = Clamp(-inA.Dot(ab) / ab_len_sq, 0.0f, 1.0f);
+					Vec3 q = inA + v * ab;
 					float dist_sq = q.LengthSq();
 					if (dist_sq < best_dist_sq)
 					{
-						closest_set = swap_ac.GetX()? 0b0110 : 0b0011;
+						closest_set = 0b0011;
 						closest_point = q;
 						best_dist_sq = dist_sq;
 					}
@@ -236,7 +237,7 @@ namespace ClosestPoint
 			}
 
 			// Edge BC
-			Vec3 bc = c - inB;
+			Vec3 bc = inC - inB;
 			float bc_len_sq = bc.LengthSq();
 			if (bc_len_sq > Square(FLT_EPSILON))
 			{
@@ -245,7 +246,7 @@ namespace ClosestPoint
 				float dist_sq = q.LengthSq();
 				if (dist_sq < best_dist_sq)
 				{
-					closest_set = swap_ac.GetX()? 0b0011 : 0b0110;
+					closest_set = 0b0110;
 					closest_point = q;
 					best_dist_sq = dist_sq;
 				}
