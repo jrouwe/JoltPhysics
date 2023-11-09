@@ -14,7 +14,7 @@ JPH_NAMESPACE_BEGIN
 class AABox;
 
 /// Oriented box
-class [[nodiscard]] JPH_EXPORT OrientedBox
+class [[nodiscard]] JPH_EXPORT_TYPE OrientedBox
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE

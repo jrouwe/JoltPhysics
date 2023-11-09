@@ -166,7 +166,7 @@ private:
 };
 
 // Class that contains the information of a single scoped measurement
-class alignas(16) JPH_EXPORT ProfileSample : public NonCopyable
+class alignas(16) JPH_EXPORT_TYPE ProfileSample : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
