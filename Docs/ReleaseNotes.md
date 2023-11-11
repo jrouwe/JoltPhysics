@@ -45,7 +45,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * CharacterVirtual reported to be on ground for one more frame after jumping against a wall.
 * Added missing delta time term in CharacterVirtual::DetermineConstraints.
 * CastShape had incorrect early out condition which could cause it to miss the deepest penetration.
-* Pitch/roll limit constraint didn't work when local vehicle up did not match world up (#510)
+* Pitch/roll limit constraint for vehicles didn't work when local vehicle up did not match world up.
 * Wheel contact point did not return deepest point in certain cases.
 * Fix for engine RPM being much higher than wheel RPM when measured at clutch. Before we were ignoring bake and wheel torques in engine RPM calculation.
 * Don't allow the vehicle to sleep when the transmission is switching.
