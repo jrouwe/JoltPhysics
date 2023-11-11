@@ -183,6 +183,29 @@ namespace ClosestPoint
 			Vec3 closest_point = inC;
 			float best_dist_sq = inC.LengthSq();
 
+			// If the closest point must include C then A or B cannot be closest
+			// Note that we test vertices first because we want to prefer a closest vertex over a closest edge (this results in an outSet with fewer bits set)
+			if constexpr (!MustIncludeC)
+			{
+				// Try vertex A
+				float a_len_sq = inA.LengthSq();
+				if (a_len_sq < best_dist_sq)
+				{
+					closest_set = 0b0001;
+					closest_point = inA;
+					best_dist_sq = a_len_sq;
+				}
+
+				// Try vertex B
+				float b_len_sq = inB.LengthSq();
+				if (b_len_sq < best_dist_sq)
+				{
+					closest_set = 0b0010;
+					closest_point = inB;
+					best_dist_sq = b_len_sq;
+				}
+			}
+
 			// Edge AC
 			float ac_len_sq = ac.LengthSq();
 			if (ac_len_sq > Square(FLT_EPSILON))
@@ -214,27 +237,9 @@ namespace ClosestPoint
 				}
 			}
 
-			// If the closest point must include C then A or B cannot be closest
+			// If the closest point must include C then AB cannot be closest
 			if constexpr (!MustIncludeC)
 			{
-				// Try vertex A
-				float a_len_sq = inA.LengthSq();
-				if (a_len_sq < best_dist_sq)
-				{
-					closest_set = 0b0001;
-					closest_point = inA;
-					best_dist_sq = a_len_sq;
-				}
-
-				// Try vertex B
-				float b_len_sq = inB.LengthSq();
-				if (b_len_sq < best_dist_sq)
-				{
-					closest_set = 0b0010;
-					closest_point = inB;
-					best_dist_sq = b_len_sq;
-				}
-
 				// Edge AB
 				ab = inB - inA;
 				float ab_len_sq = ab.LengthSq();
