@@ -1984,18 +1984,19 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 
 					// Calculate velocity bias due to restitution
 					float normal_velocity_bias;
-					if (ccd_body->mContactSettings.mCombinedRestitution > 0.0f && normal_velocity < -mPhysicsSettings.mMinVelocityForRestitution)
-						normal_velocity_bias = ccd_body->mContactSettings.mCombinedRestitution * normal_velocity;
+					const ContactSettings &contact_settings = ccd_body->mContactSettings;
+					if (contact_settings.mCombinedRestitution > 0.0f && normal_velocity < -mPhysicsSettings.mMinVelocityForRestitution)
+						normal_velocity_bias = contact_settings.mCombinedRestitution * normal_velocity;
 					else
 						normal_velocity_bias = 0.0f;
 
 					// Solve contact constraint
 					AxisConstraintPart contact_constraint;
-					contact_constraint.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, ccd_body->mContactNormal, normal_velocity_bias);
+					contact_constraint.CalculateConstraintPropertiesWithMassScale(body1, contact_settings.mInvMassScale1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, contact_settings.mInvMassScale2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias);
 					contact_constraint.SolveVelocityConstraint(body1, body2, ccd_body->mContactNormal, -FLT_MAX, FLT_MAX);
 
 					// Apply friction
-					if (ccd_body->mContactSettings.mCombinedFriction > 0.0f)
+					if (contact_settings.mCombinedFriction > 0.0f)
 					{
 						// Calculate friction direction by removing normal velocity from the relative velocity
 						Vec3 friction_direction = relative_velocity - normal_velocity * ccd_body->mContactNormal;
@@ -2006,10 +2007,10 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 							friction_direction /= sqrt(friction_direction_len_sq);
 
 							// Calculate max friction impulse
-							float max_lambda_f = ccd_body->mContactSettings.mCombinedFriction * contact_constraint.GetTotalLambda();
+							float max_lambda_f = contact_settings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
 							AxisConstraintPart friction;
-							friction.CalculateConstraintProperties(body1, r1_plus_u, body2, r2, friction_direction);
+							friction.CalculateConstraintPropertiesWithMassScale(body1, contact_settings.mInvMassScale1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, contact_settings.mInvMassScale2, contact_settings.mInvInertiaScale2, r2, friction_direction);
 							friction.SolveVelocityConstraint(body1, body2, friction_direction, -max_lambda_f, max_lambda_f);
 						}
 					}
