@@ -518,4 +518,88 @@ TEST_SUITE("ContactListenerTests")
 						CHECK_APPROX_EQUAL(body2.GetLinearVelocity(), Vec3(v2, 0, 0));
 					}
 	}
+
+	TEST_CASE("TestInfiniteMassOverride")
+	{
+		for (bool do_swap : { false, true })
+			for (EMotionQuality quality : { EMotionQuality::Discrete, EMotionQuality::LinearCast })
+			{
+				// A contact listener that makes a body have infinite mass
+				class ContactListenerImpl : public ContactListener
+				{
+				public:
+									ContactListenerImpl(const BodyID &inBodyID) : mBodyID(inBodyID) { }
+
+					virtual void	OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+					{
+						if (mBodyID == inBody1.GetID())
+						{
+							ioSettings.mInvInertiaScale1 = 0.0f;
+							ioSettings.mInvMassScale1 = 0.0f;
+						}
+						else if (mBodyID == inBody2.GetID())
+						{
+							ioSettings.mInvInertiaScale2 = 0.0f;
+							ioSettings.mInvMassScale2 = 0.0f;
+						}
+					}
+
+					virtual void	OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+					{
+						OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
+					}
+
+				private:
+					BodyID			mBodyID;
+				};
+
+				PhysicsTestContext c;
+				c.ZeroGravity();
+
+				// Create a box
+				const RVec3 cInitialBoxPos(0, 2, 0);
+				BodyCreationSettings box_settings(new BoxShape(Vec3::sReplicate(2)), cInitialBoxPos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				box_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+				box_settings.mMassPropertiesOverride.mMass = 1.0f;
+
+				// Create a sphere
+				BodyCreationSettings sphere_settings(new SphereShape(2), RVec3(30, 2, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+				sphere_settings.mLinearVelocity = Vec3(-100, 0, 0);
+				sphere_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+				sphere_settings.mMassPropertiesOverride.mMass = 10.0f;
+				sphere_settings.mRestitution = 0.1f;
+				sphere_settings.mLinearDamping = 0.0f;
+				sphere_settings.mMotionQuality = quality;
+
+				BodyID box_id, sphere_id;
+				if (do_swap)
+				{
+					// Swap the bodies so that the contact listener will receive the bodies in the opposite order
+					sphere_id = c.GetBodyInterface().CreateAndAddBody(sphere_settings, EActivation::Activate);
+					box_id = c.GetBodyInterface().CreateAndAddBody(box_settings, EActivation::Activate);
+				}
+				else
+				{
+					box_id = c.GetBodyInterface().CreateAndAddBody(box_settings, EActivation::Activate);
+					sphere_id = c.GetBodyInterface().CreateAndAddBody(sphere_settings, EActivation::Activate);
+				}
+
+				// Add listener that will make the box have infinite mass
+				ContactListenerImpl listener(box_id);
+				c.GetSystem()->SetContactListener(&listener);
+
+				// Simulate
+				const float cSimulationTime = 0.3f;
+				c.Simulate(cSimulationTime);
+
+				// Check that the box didn't move
+				BodyInterface &bi = c.GetBodyInterface();
+				CHECK(bi.GetPosition(box_id) == cInitialBoxPos);
+				CHECK(bi.GetLinearVelocity(box_id) == Vec3::sZero());
+				CHECK(bi.GetAngularVelocity(box_id) == Vec3::sZero());
+
+				// Check that the sphere bounced off the box
+				CHECK_APPROX_EQUAL(bi.GetLinearVelocity(sphere_id), -sphere_settings.mLinearVelocity * sphere_settings.mRestitution);
+			}
+		}
 }
