@@ -268,7 +268,6 @@ public:
 	/// @param inInvInertiaScale2 Scale factor for the inverse inertia of body 2
 	/// @param inR1PlusU See equations above (r1 + u)
 	/// @param inR2 See equations above (r2)
-	/// @param inR2 See equations above (r2)
 	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
 	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
 	inline void					CalculateConstraintPropertiesWithMassScale(const Body &inBody1, float inInvMassScale1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMassScale2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
