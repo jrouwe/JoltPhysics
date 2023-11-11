@@ -33,14 +33,14 @@ bool ContactConstraintManager::sDrawContactManifolds = false;
 // ContactConstraintManager::WorldContactPoint
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstraintProperties(const Body &inBody1, const Body &inBody2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal)
+void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMassScale1, float inInvInertiaScale1, const Body &inBody2, float inInvMassScale2, float inInvInertiaScale2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal)
 {
 	// Calculate collision points relative to body
 	RVec3 p = 0.5_r * (inWorldSpacePosition1 + inWorldSpacePosition2);
 	Vec3 r1 = Vec3(p - inBody1.GetCenterOfMassPosition());
 	Vec3 r2 = Vec3(p - inBody2.GetCenterOfMassPosition());
 
-	mNonPenetrationConstraint.CalculateConstraintProperties(inBody1, r1, inBody2, r2, inWorldSpaceNormal);
+	mNonPenetrationConstraint.CalculateConstraintPropertiesWithMassScale(inBody1, inInvMassScale1, inInvInertiaScale1, r1, inBody2, inInvMassScale2, inInvInertiaScale2, r2, inWorldSpaceNormal);
 }
 
 template <EMotionType Type1, EMotionType Type2>
@@ -894,6 +894,10 @@ void ContactConstraintManager::GetContactsFromCache(ContactAllocator &ioContactA
 			constraint.mSortKey = input_hash;
 			world_space_normal.StoreFloat3(&constraint.mWorldSpaceNormal);
 			constraint.mCombinedFriction = settings.mCombinedFriction;
+			constraint.mInvMassScale1 = settings.mInvMassScale1;
+			constraint.mInvInertiaScale1 = settings.mInvInertiaScale1;
+			constraint.mInvMassScale2 = settings.mInvMassScale2;
+			constraint.mInvInertiaScale2 = settings.mInvInertiaScale2;
 			constraint.mContactPoints.resize(output_cm->mNumContactPoints);
 			for (uint32 i = 0; i < output_cm->mNumContactPoints; ++i)
 			{
@@ -1085,6 +1089,10 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		constraint.mSortKey = key_hash;
 		inManifold.mWorldSpaceNormal.StoreFloat3(&constraint.mWorldSpaceNormal);
 		constraint.mCombinedFriction = settings.mCombinedFriction;
+		constraint.mInvMassScale1 = settings.mInvMassScale1;
+		constraint.mInvInertiaScale1 = settings.mInvInertiaScale1;
+		constraint.mInvMassScale2 = settings.mInvMassScale2;
+		constraint.mInvInertiaScale2 = settings.mInvInertiaScale2;
 
 		JPH_DET_LOG("TemplatedAddContactConstraint: id1: " << constraint.mBody1->GetID() << " id2: " << constraint.mBody2->GetID() << " key: " << constraint.mSortKey);
 
@@ -1349,6 +1357,14 @@ void ContactConstraintManager::OnCCDContactAdded(ContactAllocator &ioContactAllo
 			// Already found this contact this physics update.
 			// Note that we can trigger OnContactPersisted multiple times per physics update, but otherwise we have no way of obtaining the settings
 			mContactListener->OnContactPersisted(*body1, *body2, *manifold, outSettings);
+		}
+
+		// If we swapped body1 and body2 we need to swap the mass scales back
+		if (manifold == &temp)
+		{
+			swap(outSettings.mInvMassScale1, outSettings.mInvMassScale2);
+			swap(outSettings.mInvInertiaScale1, outSettings.mInvInertiaScale2);
+			// Note we do not need to negate the relative surface velocity as it is not applied by the CCD collision constraint
 		}
 	}
 
@@ -1650,7 +1666,7 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 			if (separation < 0.0f)
 			{
 				// Update constraint properties (bodies may have moved)
-				wcp.CalculateNonPenetrationConstraintProperties(body1, body2, p1, p2, ws_normal);
+				wcp.CalculateNonPenetrationConstraintProperties(body1, constraint.mInvMassScale1, constraint.mInvInertiaScale1, body2, constraint.mInvMassScale2, constraint.mInvInertiaScale2, p1, p2, ws_normal);
 
 				// Solve position errors
 				if (wcp.mNonPenetrationConstraint.SolvePositionConstraint(body1, body2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
