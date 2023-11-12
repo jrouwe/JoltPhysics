@@ -1450,16 +1450,20 @@ JPH_INLINE void ContactConstraintManager::sWarmStartConstraint(ContactConstraint
 
 	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
 
+	// Fetch inverse masses
+	float invm1 = ioMotionProperties1 != nullptr? ioConstraint.mInvMassScale1 * ioMotionProperties1->GetInverseMassUnchecked() : 0.0f;
+	float invm2 = ioMotionProperties2 != nullptr? ioConstraint.mInvMassScale2 * ioMotionProperties2->GetInverseMassUnchecked() : 0.0f;
+
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
 	{
 		// Warm starting: Apply impulse from last frame
 		if (wcp.mFrictionConstraint1.IsActive())
 		{
 			JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
-			wcp.mFrictionConstraint1.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t1, inWarmStartImpulseRatio);
-			wcp.mFrictionConstraint2.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t2, inWarmStartImpulseRatio);
+			wcp.mFrictionConstraint1.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, invm1, ioMotionProperties2, invm2, t1, inWarmStartImpulseRatio);
+			wcp.mFrictionConstraint2.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, invm1, ioMotionProperties2, invm2, t2, inWarmStartImpulseRatio);
 		}
-		wcp.mNonPenetrationConstraint.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, ws_normal, inWarmStartImpulseRatio);
+		wcp.mNonPenetrationConstraint.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, invm1, ioMotionProperties2, invm2, ws_normal, inWarmStartImpulseRatio);
 	}
 }
 
@@ -1506,6 +1510,10 @@ JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstr
 	Vec3 t1, t2;
 	ioConstraint.GetTangents(t1, t2);
 
+	// Fetch inverse masses
+	float invm1 = ioMotionProperties1 != nullptr? ioConstraint.mInvMassScale1 * ioMotionProperties1->GetInverseMassUnchecked() : 0.0f;
+	float invm2 = ioMotionProperties2 != nullptr? ioConstraint.mInvMassScale2 * ioMotionProperties2->GetInverseMassUnchecked() : 0.0f;
+
 	// First apply all friction constraints (non-penetration is more important than friction)
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
 	{
@@ -1533,9 +1541,9 @@ JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstr
 			}
 
 			// Apply the friction impulse
-			if (wcp.mFrictionConstraint1.TemplatedSolveVelocityConstraintApplyLambda<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t1, lambda1))
+			if (wcp.mFrictionConstraint1.TemplatedSolveVelocityConstraintApplyLambda<Type1, Type2>(ioMotionProperties1, invm1, ioMotionProperties2, invm2, t1, lambda1))
 				any_impulse_applied = true;
-			if (wcp.mFrictionConstraint2.TemplatedSolveVelocityConstraintApplyLambda<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t2, lambda2))
+			if (wcp.mFrictionConstraint2.TemplatedSolveVelocityConstraintApplyLambda<Type1, Type2>(ioMotionProperties1, invm1, ioMotionProperties2, invm2, t2, lambda2))
 				any_impulse_applied = true;
 		}
 	}
@@ -1546,7 +1554,7 @@ JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstr
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
 	{
 		// Solve non penetration velocities
-		if (wcp.mNonPenetrationConstraint.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, ws_normal, 0.0f, FLT_MAX))
+		if (wcp.mNonPenetrationConstraint.TemplatedSolveVelocityConstraint<Type1, Type2>(ioMotionProperties1, invm1, ioMotionProperties2, invm2, ws_normal, 0.0f, FLT_MAX))
 			any_impulse_applied = true;
 	}
 
@@ -1651,6 +1659,12 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 
 		Vec3 ws_normal = constraint.GetWorldSpaceNormal();
 
+		// Fetch inverse masses
+		const MotionProperties *mp1 = body1.GetMotionPropertiesUnchecked();
+		const MotionProperties *mp2 = body2.GetMotionPropertiesUnchecked();
+		float invm1 = mp1 != nullptr? constraint.mInvMassScale1 * mp1->GetInverseMassUnchecked() : 0.0f;
+		float invm2 = mp2 != nullptr? constraint.mInvMassScale2 * mp2->GetInverseMassUnchecked() : 0.0f;
+		
 		for (WorldContactPoint &wcp : constraint.mContactPoints)
 		{
 			// Calculate new contact point positions in world space (the bodies may have moved)
@@ -1669,7 +1683,7 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 				wcp.CalculateNonPenetrationConstraintProperties(body1, constraint.mInvMassScale1, constraint.mInvInertiaScale1, body2, constraint.mInvMassScale2, constraint.mInvInertiaScale2, p1, p2, ws_normal);
 
 				// Solve position errors
-				if (wcp.mNonPenetrationConstraint.SolvePositionConstraint(body1, body2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
+				if (wcp.mNonPenetrationConstraint.SolvePositionConstraintWithMassOverride(body1, invm1, body2, invm2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
 					any_impulse_applied = true;
 			}
 		}
