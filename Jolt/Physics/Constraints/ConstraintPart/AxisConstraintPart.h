@@ -180,26 +180,24 @@ class AxisConstraintPart
 	}
 
 	/// Internal helper function to calculate the inverse effective mass, version that supports mass scaling
-	JPH_INLINE float			CalculateInverseEffectiveMassWithMassScale(const Body &inBody1, float inInvMassScale1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMassScale2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
+	JPH_INLINE float			CalculateInverseEffectiveMassWithMassOverride(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis)
 	{
 		// Dispatch to the correct templated form
 		switch (inBody1.GetMotionType())
 		{
 		case EMotionType::Dynamic:
 			{
-				const MotionProperties *mp1 = inBody1.GetMotionPropertiesUnchecked();
-				float invm1 = inInvMassScale1 * mp1->GetInverseMass();
 				Mat44 invi1 = inInvInertiaScale1 * inBody1.GetInverseInertia();
 				switch (inBody2.GetMotionType())
 				{
 				case EMotionType::Dynamic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Dynamic>(invm1, invi1, inR1PlusU, inInvMassScale2 * inBody2.GetMotionPropertiesUnchecked()->GetInverseMass(), inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Dynamic>(inInvMass1, invi1, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
 
 				case EMotionType::Kinematic:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Kinematic>(invm1, invi1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
+					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Kinematic>(inInvMass1, invi1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
 
 				case EMotionType::Static:
-					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Static>(invm1, invi1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
+					return TemplatedCalculateInverseEffectiveMass<EMotionType::Dynamic, EMotionType::Static>(inInvMass1, invi1, inR1PlusU, 0 /* Will not be used */, Mat44() /* Will not be used */, inR2, inWorldSpaceAxis);
 
 				default:
 					break;
@@ -209,11 +207,11 @@ class AxisConstraintPart
 
 		case EMotionType::Kinematic:
 			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Kinematic, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMassScale2 * inBody2.GetMotionPropertiesUnchecked()->GetInverseMass(), inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+			return TemplatedCalculateInverseEffectiveMass<EMotionType::Kinematic, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
 
 		case EMotionType::Static:
 			JPH_ASSERT(inBody2.IsDynamic());
-			return TemplatedCalculateInverseEffectiveMass<EMotionType::Static, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMassScale2 * inBody2.GetMotionPropertiesUnchecked()->GetInverseMass(), inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
+			return TemplatedCalculateInverseEffectiveMass<EMotionType::Static, EMotionType::Dynamic>(0 /* Will not be used */, Mat44() /* Will not be used */, inR1PlusU, inInvMass2, inInvInertiaScale2 * inBody2.GetInverseInertia(), inR2, inWorldSpaceAxis);
 
 		default:
 			break;
@@ -258,17 +256,17 @@ public:
 	/// Calculate properties used during the functions below, version that supports mass scaling
 	/// @param inBody1 The first body that this constraint is attached to
 	/// @param inBody2 The second body that this constraint is attached to
-	/// @param inInvMassScale1 Scale factor for the inverse mass of body 1
-	/// @param inInvMassScale2 Scale factor for the inverse mass of body 2
+	/// @param inInvMass1 The inverse mass of body 1 (only used when body 1 is dynamic)
+	/// @param inInvMass2 The inverse mass of body 2 (only used when body 2 is dynamic)
 	/// @param inInvInertiaScale1 Scale factor for the inverse inertia of body 1
 	/// @param inInvInertiaScale2 Scale factor for the inverse inertia of body 2
 	/// @param inR1PlusU See equations above (r1 + u)
 	/// @param inR2 See equations above (r2)
 	/// @param inWorldSpaceAxis Axis along which the constraint acts (normalized, pointing from body 1 to 2)
 	/// @param inBias Bias term (b) for the constraint impulse: lambda = J v + b
-	inline void					CalculateConstraintPropertiesWithMassScale(const Body &inBody1, float inInvMassScale1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMassScale2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
+	inline void					CalculateConstraintPropertiesWithMassOverride(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, Vec3Arg inR1PlusU, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
-		float inv_effective_mass = CalculateInverseEffectiveMassWithMassScale(inBody1, inInvMassScale1, inInvInertiaScale1, inR1PlusU, inBody2, inInvMassScale2, inInvInertiaScale2, inR2, inWorldSpaceAxis);
+		float inv_effective_mass = CalculateInverseEffectiveMassWithMassOverride(inBody1, inInvMass1, inInvInertiaScale1, inR1PlusU, inBody2, inInvMass2, inInvInertiaScale2, inR2, inWorldSpaceAxis);
 
 		if (inv_effective_mass == 0.0f)
 			Deactivate();

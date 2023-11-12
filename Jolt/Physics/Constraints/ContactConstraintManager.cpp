@@ -33,14 +33,14 @@ bool ContactConstraintManager::sDrawContactManifolds = false;
 // ContactConstraintManager::WorldContactPoint
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMassScale1, float inInvInertiaScale1, const Body &inBody2, float inInvMassScale2, float inInvInertiaScale2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal)
+void ContactConstraintManager::WorldContactPoint::CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal)
 {
 	// Calculate collision points relative to body
 	RVec3 p = 0.5_r * (inWorldSpacePosition1 + inWorldSpacePosition2);
 	Vec3 r1 = Vec3(p - inBody1.GetCenterOfMassPosition());
 	Vec3 r2 = Vec3(p - inBody2.GetCenterOfMassPosition());
 
-	mNonPenetrationConstraint.CalculateConstraintPropertiesWithMassScale(inBody1, inInvMassScale1, inInvInertiaScale1, r1, inBody2, inInvMassScale2, inInvInertiaScale2, r2, inWorldSpaceNormal);
+	mNonPenetrationConstraint.CalculateConstraintPropertiesWithMassOverride(inBody1, inInvMass1, inInvInertiaScale1, r1, inBody2, inInvMass2, inInvInertiaScale2, r2, inWorldSpaceNormal);
 }
 
 template <EMotionType Type1, EMotionType Type2>
@@ -1680,7 +1680,7 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 			if (separation < 0.0f)
 			{
 				// Update constraint properties (bodies may have moved)
-				wcp.CalculateNonPenetrationConstraintProperties(body1, constraint.mInvMassScale1, constraint.mInvInertiaScale1, body2, constraint.mInvMassScale2, constraint.mInvInertiaScale2, p1, p2, ws_normal);
+				wcp.CalculateNonPenetrationConstraintProperties(body1, invm1, constraint.mInvInertiaScale1, body2, invm2, constraint.mInvInertiaScale2, p1, p2, ws_normal);
 
 				// Solve position errors
 				if (wcp.mNonPenetrationConstraint.SolvePositionConstraintWithMassOverride(body1, invm1, body2, invm2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
