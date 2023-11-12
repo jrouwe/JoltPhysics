@@ -90,12 +90,12 @@ public:
 		if (inBody1.IsDynamic())
 		{
 			const MotionProperties *mp1 = inBody1.GetMotionProperties();
-			Mat44 invi1 = mp1->GetInverseInertiaForRotation(inRotation1);
+			Mat44 inv_i1 = mp1->GetInverseInertiaForRotation(inRotation1);
 			summed_inv_mass = mp1->GetInverseMass();
 
 			Mat44 r1x = Mat44::sCrossProduct(mR1);
-			mInvI1_R1X = invi1.Multiply3x3(r1x);
-			inv_effective_mass = r1x.Multiply3x3(invi1).Multiply3x3RightTransposed(r1x);
+			mInvI1_R1X = inv_i1.Multiply3x3(r1x);
+			inv_effective_mass = r1x.Multiply3x3(inv_i1).Multiply3x3RightTransposed(r1x);
 		}
 		else
 		{
@@ -108,12 +108,12 @@ public:
 		if (inBody2.IsDynamic())
 		{
 			const MotionProperties *mp2 = inBody2.GetMotionProperties();
-			Mat44 invi2 = mp2->GetInverseInertiaForRotation(inRotation2);
+			Mat44 inv_i2 = mp2->GetInverseInertiaForRotation(inRotation2);
 			summed_inv_mass += mp2->GetInverseMass();
 
 			Mat44 r2x = Mat44::sCrossProduct(mR2);
-			mInvI2_R2X = invi2.Multiply3x3(r2x);
-			inv_effective_mass += r2x.Multiply3x3(invi2).Multiply3x3RightTransposed(r2x);
+			mInvI2_R2X = inv_i2.Multiply3x3(r2x);
+			inv_effective_mass += r2x.Multiply3x3(inv_i2).Multiply3x3RightTransposed(r2x);
 		}
 		else
 		{

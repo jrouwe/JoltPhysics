@@ -1991,13 +1991,13 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 						normal_velocity_bias = 0.0f;
 
 					// Get inverse masses
-					float invm1 = contact_settings.mInvMassScale1 * body_mp->GetInverseMass();
-					float invm2 = body2.GetMotionPropertiesUnchecked() != nullptr? contact_settings.mInvMassScale2 * body2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked() : 0.0f;
+					float inv_m1 = contact_settings.mInvMassScale1 * body_mp->GetInverseMass();
+					float inv_m2 = body2.GetMotionPropertiesUnchecked() != nullptr? contact_settings.mInvMassScale2 * body2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked() : 0.0f;
 
 					// Solve contact constraint
 					AxisConstraintPart contact_constraint;
-					contact_constraint.CalculateConstraintPropertiesWithMassOverride(body1, invm1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, invm2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias);
-					contact_constraint.SolveVelocityConstraintWithMassOverride(body1, invm1, body2, invm2, ccd_body->mContactNormal, -FLT_MAX, FLT_MAX);
+					contact_constraint.CalculateConstraintPropertiesWithMassOverride(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias);
+					contact_constraint.SolveVelocityConstraintWithMassOverride(body1, inv_m1, body2, inv_m2, ccd_body->mContactNormal, -FLT_MAX, FLT_MAX);
 
 					// Apply friction
 					if (contact_settings.mCombinedFriction > 0.0f)
@@ -2014,8 +2014,8 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 							float max_lambda_f = contact_settings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
 							AxisConstraintPart friction;
-							friction.CalculateConstraintPropertiesWithMassOverride(body1, invm1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, invm2, contact_settings.mInvInertiaScale2, r2, friction_direction);
-							friction.SolveVelocityConstraintWithMassOverride(body1, invm1, body2, invm2, friction_direction, -max_lambda_f, max_lambda_f);
+							friction.CalculateConstraintPropertiesWithMassOverride(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, friction_direction);
+							friction.SolveVelocityConstraintWithMassOverride(body1, inv_m1, body2, inv_m2, friction_direction, -max_lambda_f, max_lambda_f);
 						}
 					}
 

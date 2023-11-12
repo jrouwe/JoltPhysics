@@ -464,9 +464,9 @@ private:
 		uint64					mSortKey;
 		Float3					mWorldSpaceNormal;
 		float					mCombinedFriction;
-		float					mInvMassScale1;
+		float					mInvMass1;
 		float					mInvInertiaScale1;
-		float					mInvMassScale2;
+		float					mInvMass2;
 		float					mInvInertiaScale2;
 		WorldContactPoints		mContactPoints;
 	};

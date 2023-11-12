@@ -132,15 +132,15 @@ public:
 		Mat44 jp = (Mat44::sQuatLeftMultiply(0.5f * inBody1.GetRotation().Conjugated()) * Mat44::sQuatRightMultiply(inBody2.GetRotation() * inInvInitialOrientation)).GetRotationSafe();
 
 		// Calculate properties used during constraint solving
-		Mat44 invi1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inRotation1) : Mat44::sZero();
-		Mat44 invi2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inRotation2) : Mat44::sZero();
-		mInvI1_JPT = invi1.Multiply3x3RightTransposed(jp);
-		mInvI2_JPT = invi2.Multiply3x3RightTransposed(jp);
+		Mat44 inv_i1 = inBody1.IsDynamic()? inBody1.GetMotionProperties()->GetInverseInertiaForRotation(inRotation1) : Mat44::sZero();
+		Mat44 inv_i2 = inBody2.IsDynamic()? inBody2.GetMotionProperties()->GetInverseInertiaForRotation(inRotation2) : Mat44::sZero();
+		mInvI1_JPT = inv_i1.Multiply3x3RightTransposed(jp);
+		mInvI2_JPT = inv_i2.Multiply3x3RightTransposed(jp);
 
 		// Calculate effective mass: K^-1 = (J M^-1 J^T)^-1
 		// = (JP * I1^-1 * JP^T + JP * I2^-1 * JP^T)^-1
 		// = (JP * (I1^-1 + I2^-1) * JP^T)^-1
-		if (!mEffectiveMass.SetInversed3x3(jp.Multiply3x3(invi1 + invi2).Multiply3x3RightTransposed(jp)))
+		if (!mEffectiveMass.SetInversed3x3(jp.Multiply3x3(inv_i1 + inv_i2).Multiply3x3RightTransposed(jp)))
 			Deactivate();
 		else
 			mEffectiveMass_JP = mEffectiveMass.Multiply3x3(jp);
