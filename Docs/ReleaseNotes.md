@@ -1,5 +1,11 @@
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
+# Unreleased changes
+
+## Bug fixes
+
+* Fixed mass scaling (as provided by the ContactListener) not applied correctly to CCD objects & during solve position constraints.
+
 # v4.0.0
 
 ## New functionality
