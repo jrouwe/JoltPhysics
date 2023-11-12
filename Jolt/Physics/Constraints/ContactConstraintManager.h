@@ -420,7 +420,7 @@ private:
 	{
 	public:
 		/// Calculate constraint properties below
-		void					CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMassScale1, float inInvInertiaScale1, const Body &inBody2, float inInvMassScale2, float inInvInertiaScale2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal);
+		void					CalculateNonPenetrationConstraintProperties(const Body &inBody1, float inInvMass1, float inInvInertiaScale1, const Body &inBody2, float inInvMass2, float inInvInertiaScale2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal);
 
 		template <EMotionType Type1, EMotionType Type2>
 		JPH_INLINE void			TemplatedCalculateFrictionAndNonPenetrationConstraintProperties(float inDeltaTime, const Body &inBody1, const Body &inBody2, float inInvM1, float inInvM2, Mat44Arg inInvI1, Mat44Arg inInvI2, RVec3Arg inWorldSpacePosition1, RVec3Arg inWorldSpacePosition2, Vec3Arg inWorldSpaceNormal, Vec3Arg inWorldSpaceTangent1, Vec3Arg inWorldSpaceTangent2, const ContactSettings &inSettings, float inMinVelocityForRestitution);
@@ -464,9 +464,9 @@ private:
 		uint64					mSortKey;
 		Float3					mWorldSpaceNormal;
 		float					mCombinedFriction;
-		float					mInvMassScale1;
+		float					mInvMass1;
 		float					mInvInertiaScale1;
-		float					mInvMassScale2;
+		float					mInvMass2;
 		float					mInvInertiaScale2;
 		WorldContactPoints		mContactPoints;
 	};
