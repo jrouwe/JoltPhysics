@@ -193,8 +193,8 @@
 		#else
 			#define JPH_EXPORT __attribute__ ((visibility ("default")))
 			#if defined(JPH_COMPILER_GCC)
-				// Prevents an issue with GCC attribute parsing
-				#define JPH_EXPORT_TYPE [[gnu::visibility("default")]]
+				// Prevents an issue with GCC attribute parsing (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69585)
+				#define JPH_EXPORT_GCC_BUG_WORKAROUND [[gnu::visibility("default")]]
 			#endif
 		#endif
 	#else
@@ -204,8 +204,8 @@
 		#else
 			#define JPH_EXPORT __attribute__ ((visibility ("default")))
 			#if defined(JPH_COMPILER_GCC)
-				// Prevents an issue with GCC attribute parsing
-				#define JPH_EXPORT_TYPE [[gnu::visibility("default")]]
+				// Prevents an issue with GCC attribute parsing (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69585)
+				#define JPH_EXPORT_GCC_BUG_WORKAROUND [[gnu::visibility("default")]]
 			#endif
 		#endif
 	#endif
@@ -214,8 +214,8 @@
 	#define JPH_EXPORT
 #endif
 
-#ifndef JPH_EXPORT_TYPE
-	#define JPH_EXPORT_TYPE JPH_EXPORT
+#ifndef JPH_EXPORT_GCC_BUG_WORKAROUND
+	#define JPH_EXPORT_GCC_BUG_WORKAROUND JPH_EXPORT
 #endif
 
 // Macro used by the RTTI macros to not export a function
