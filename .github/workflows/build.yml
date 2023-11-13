@@ -74,6 +74,26 @@ jobs:
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
       run: ctest --output-on-failure
 
+  linux-gcc-so:
+    runs-on: ubuntu-latest
+    name: Linux GCC Shared Library
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution]
+            clang_version: [g++]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DBUILD_SHARED_LIBS=Yes Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      run: ctest --output-on-failure
+
   msys2_mingw_gcc:
     runs-on: windows-latest
     defaults:

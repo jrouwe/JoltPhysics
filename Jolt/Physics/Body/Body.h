@@ -31,7 +31,7 @@ class SoftBodyCreationSettings;
 /// The functions that get/set the position of the body all indicate if they are relative to the center of mass or to the original position in which the shape was created.
 ///
 /// The linear velocity is also velocity of the center of mass, to correct for this: \f$VelocityCOM = Velocity - AngularVelocity \times ShapeCOM\f$.
-class alignas(JPH_RVECTOR_ALIGNMENT) JPH_EXPORT Body : public NonCopyable
+class alignas(JPH_RVECTOR_ALIGNMENT) JPH_EXPORT_GCC_BUG_WORKAROUND Body : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
