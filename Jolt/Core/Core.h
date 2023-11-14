@@ -372,6 +372,9 @@
 	JPH_SUPPRESS_WARNING_POP
 
 // Standard C++ includes
+#include <float.h>
+#include <limits.h>
+#include <string.h>
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <vector>
 #include <utility>
@@ -381,9 +384,6 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <algorithm>
 #include <cstdint>
 JPH_SUPPRESS_WARNINGS_STD_END
-#include <limits.h>
-#include <float.h>
-#include <string.h>
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)
