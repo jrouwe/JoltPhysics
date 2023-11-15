@@ -284,7 +284,7 @@ public:
 			if (!t->IsFacing(w) || !hull.AddPoint(t, new_index, FLT_MAX, new_triangles))
 				return false;
 
-			// The triangle is facing the origin and can now be safely removed
+			// The triangle is facing the support point "w" and can now be safely removed
 			JPH_ASSERT(t->mRemoved);
 			hull.FreeTriangle(t);
 
