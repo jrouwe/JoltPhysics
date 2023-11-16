@@ -284,9 +284,9 @@ public:
 			if (!t->IsFacing(w) || !hull.AddPoint(t, new_index, FLT_MAX, new_triangles))
 				return false;
 
-			// If the triangle was removed we can free it now
-			if (t->mRemoved)
-				hull.FreeTriangle(t);
+			// The triangle is facing the support point "w" and can now be safely removed
+			JPH_ASSERT(t->mRemoved);
+			hull.FreeTriangle(t);
 
 			// If we run out of triangles or points, we couldn't include the origin in the hull so there must be very little penetration and we report no collision.
 			if (!hull.HasNextTriangle() || support_points.mY.size() >= cMaxPointsToIncludeOriginInHull)

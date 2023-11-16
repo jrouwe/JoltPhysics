@@ -209,7 +209,7 @@ public:
 		/// Get next closest triangle
 		Triangle *		PopClosest()
 		{
-			// Move largest to end
+			// Move closest to end
 			std::pop_heap(begin(), end(), sTriangleSorter);
 
 			// Remove last triangle
