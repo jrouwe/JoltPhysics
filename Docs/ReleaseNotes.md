@@ -2,9 +2,22 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 # Unreleased changes
 
+* None
+
+# v4.0.1
+
+## New functionality
+
+* Ability to stop overriding CMAKE_CXX_FLAGS_DEBUG/CMAKE_CXX_FLAGS_RELEASE which is important for Android as it uses a lot of extra flags. Set the OVERRIDE_CXX_FLAGS=NO cmake flag to enable this.
+* Reduced size of a contact constraint which saves a bit of memory during simulation.
+* Can now build a linux shared library using GCC.
+
 ## Bug fixes
 
-* Fixed mass scaling (as provided by the ContactListener) not applied correctly to CCD objects & during solve position constraints.
+* Fixed mass scaling (as provided by the ContactListener) not applied correctly to CCD objects & during solve position constraints. This led to kinematic objects being pushed by dynamic objects.
+* Workaround for MSVC 17.8, limits.h doesn't include corecrt.h and triggers an error that \_\_STDC_WANT_SECURE_LIB\_\_ is not defined.
+* Fixed bug in MustIncludeC logic in GetClosestPointOnTriangle.
+* Removed the need for specifying -Wno-comment when compiling with GCC.
 
 # v4.0.0
 
