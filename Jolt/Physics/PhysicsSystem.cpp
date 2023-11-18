@@ -2349,38 +2349,40 @@ void PhysicsSystem::JobSoftBodyPrepare(PhysicsUpdateContext *ioContext, PhysicsU
 {
 	JPH_PROFILE_FUNCTION();
 
-#ifdef JPH_ENABLE_ASSERTS
-	// Reading soft body positions
-	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
-#endif
-
-	// Get the active soft bodies
-	BodyIDVector active_bodies;
-	mBodyManager.GetActiveBodies(EBodyType::SoftBody, active_bodies);
-
-	// Quit if there are no active soft bodies
-	if (active_bodies.empty())
 	{
-		// Kick the next step
-		if (ioStep->mStartNextStep.IsValid())
-			ioStep->mStartNextStep.RemoveDependency();
-		return;
-	}
+	#ifdef JPH_ENABLE_ASSERTS
+		// Reading soft body positions
+		BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
+	#endif
 
-	// Sort to get a deterministic update order
-	QuickSort(active_bodies.begin(), active_bodies.end());
+		// Get the active soft bodies
+		BodyIDVector active_bodies;
+		mBodyManager.GetActiveBodies(EBodyType::SoftBody, active_bodies);
 
-	// Allocate soft body contexts
-	ioContext->mNumSoftBodies = (uint)active_bodies.size();
-	ioContext->mSoftBodyUpdateContexts = (SoftBodyUpdateContext *)ioContext->mTempAllocator->Allocate(ioContext->mNumSoftBodies * sizeof(SoftBodyUpdateContext));
+		// Quit if there are no active soft bodies
+		if (active_bodies.empty())
+		{
+			// Kick the next step
+			if (ioStep->mStartNextStep.IsValid())
+				ioStep->mStartNextStep.RemoveDependency();
+			return;
+		}
 
-	// Initialize soft body contexts
-	for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
-	{
-		new (sb_ctx) SoftBodyUpdateContext;
-		Body &body = mBodyManager.GetBody(active_bodies[sb_ctx - ioContext->mSoftBodyUpdateContexts]);
-		SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
-		mp->InitializeUpdateContext(ioContext->mStepDeltaTime, body, *this, *sb_ctx);
+		// Sort to get a deterministic update order
+		QuickSort(active_bodies.begin(), active_bodies.end());
+
+		// Allocate soft body contexts
+		ioContext->mNumSoftBodies = (uint)active_bodies.size();
+		ioContext->mSoftBodyUpdateContexts = (SoftBodyUpdateContext *)ioContext->mTempAllocator->Allocate(ioContext->mNumSoftBodies * sizeof(SoftBodyUpdateContext));
+
+		// Initialize soft body contexts
+		for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
+		{
+			new (sb_ctx) SoftBodyUpdateContext;
+			Body &body = mBodyManager.GetBody(active_bodies[sb_ctx - ioContext->mSoftBodyUpdateContexts]);
+			SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(body.GetMotionProperties());
+			mp->InitializeUpdateContext(ioContext->mStepDeltaTime, body, *this, *sb_ctx);
+		}
 	}
 
 	// We're ready to collide the first soft body
