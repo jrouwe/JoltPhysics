@@ -11,33 +11,35 @@
 
 JPH_NAMESPACE_BEGIN
 
-/// Constrains rotation around 2 axis so that it only allows rotation around 1 axis
-///
-/// Based on: "Constraints Derivation for Rigid Body Simulation in 3D" - Daniel Chappuis, section 2.4.1
-///
-/// Constraint equation (eq 87):
-///
-/// \f[C = \begin{bmatrix}a_1 \cdot b_2 \\ a_1 \cdot c_2\end{bmatrix}\f]
-///
-/// Jacobian (eq 90):
-///
-///	\f[J = \begin{bmatrix}
-/// 0	& -b_2 \times a_1	& 0		& b_2 \times a_1	\\
-/// 0	& -c_2 \times a_1	& 0		& c2 \times a_1
-/// \end{bmatrix}\f]
-///
-/// Used terms (here and below, everything in world space):\n
-/// a1 = hinge axis on body 1.\n
-/// b2, c2 = axis perpendicular to hinge axis on body 2.\n
-/// x1, x2 = center of mass for the bodies.\n
-/// v = [v1, w1, v2, w2].\n
-/// v1, v2 = linear velocity of body 1 and 2.\n
-/// w1, w2 = angular velocity of body 1 and 2.\n
-/// M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].\n
-/// \f$K^{-1} = \left( J M^{-1} J^T \right)^{-1}\f$ = effective mass.\n
-/// b = velocity bias.\n
-/// \f$\beta\f$ = baumgarte constant.\n
-/// E = identity matrix.
+/**
+	Constrains rotation around 2 axis so that it only allows rotation around 1 axis
+
+	Based on: "Constraints Derivation for Rigid Body Simulation in 3D" - Daniel Chappuis, section 2.4.1
+
+	Constraint equation (eq 87):
+
+	\f[C = \begin{bmatrix}a_1 \cdot b_2 \\ a_1 \cdot c_2\end{bmatrix}\f]
+
+	Jacobian (eq 90):
+
+	\f[J = \begin{bmatrix}
+	0	& -b_2 \times a_1	& 0		& b_2 \times a_1	\\
+	0	& -c_2 \times a_1	& 0		& c2 \times a_1
+	\end{bmatrix}\f]
+
+	Used terms (here and below, everything in world space):\n
+	a1 = hinge axis on body 1.\n
+	b2, c2 = axis perpendicular to hinge axis on body 2.\n
+	x1, x2 = center of mass for the bodies.\n
+	v = [v1, w1, v2, w2].\n
+	v1, v2 = linear velocity of body 1 and 2.\n
+	w1, w2 = angular velocity of body 1 and 2.\n
+	M = mass matrix, a diagonal matrix of the mass and inertia with diagonal [m1, I1, m2, I2].\n
+	\f$K^{-1} = \left( J M^{-1} J^T \right)^{-1}\f$ = effective mass.\n
+	b = velocity bias.\n
+	\f$\beta\f$ = baumgarte constant.\n
+	E = identity matrix.
+**/
 class HingeRotationConstraintPart
 {
 public:

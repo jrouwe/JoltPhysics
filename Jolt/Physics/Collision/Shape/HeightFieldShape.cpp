@@ -318,24 +318,26 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 
 void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSettings)
 {
-	// Store active edges. The triangles are organized like this:
-	//     x --->
-	// 
-	// y   +       +
-	//     | \ T1B | \ T2B
-	// |  e0   e2  |   \
-	// |   | T1A \ | T2A \
-	// V   +--e1---+-------+
-	//     | \ T3B | \ T4B
-	//     |   \   |   \
-	//     | T3A \ | T4A \
-	//     +-------+-------+
-	// We store active edges e0 .. e2 as bits 0 .. 2.
-	// We store triangles horizontally then vertically (order T1A, T2A, T3A and T4A).
-	// The top edge and right edge of the heightfield are always active so we do not need to store them,
-	// therefore we only need to store (mSampleCount - 1)^2 * 3-bit
-	// The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
-	// Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
+	/*
+		Store active edges. The triangles are organized like this:
+			x --->
+	
+		y   +       +
+			| \ T1B | \ T2B
+		|  e0   e2  |   \
+		|   | T1A \ | T2A \
+		V   +--e1---+-------+
+			| \ T3B | \ T4B
+			|   \   |   \
+			| T3A \ | T4A \
+			+-------+-------+
+		We store active edges e0 .. e2 as bits 0 .. 2.
+		We store triangles horizontally then vertically (order T1A, T2A, T3A and T4A).
+		The top edge and right edge of the heightfield are always active so we do not need to store them,
+		therefore we only need to store (mSampleCount - 1)^2 * 3-bit
+		The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
+		Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
+	*/
 	mActiveEdges.resize((Square(mSampleCount - 1) * 3 + 7) / 8 + 1);
 
 	// Make all edges active (if mSampleCount is bigger than inSettings.mSampleCount we need to fill up the padding,
