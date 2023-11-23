@@ -1,7 +1,9 @@
 # Projects Using Jolt
 
+* [Dagor Engine](https://github.com/GaijinEntertainment/DagorEngine) - An open source engine used by War Thunder. See [here](https://github.com/GaijinEntertainment/DagorEngine/tree/main/prog/engine/phys/physJolt).
 * [Godot Jolt](https://github.com/godot-jolt/godot-jolt) - Godot extension that integrates the Jolt physics engine
 * [Horizon Forbidden West](https://www.playstation.com/en-us/games/horizon-forbidden-west/) - An open world action RPG adventure.
+* [HypeHype](https://www.hypehype.com/) - A mobile app to create, remix and play games. See [this](https://twitter.com/SebAaltonen/status/1726871354228482237) X post.
 * [Light Tracer Render](https://lighttracer.org/) - A rendering tool, uses Jolt for object placement. See [this](https://lighttracer.org/blog/light-tracer-render-2-4-0/) announcement.
 * [NeoAxis Engine](https://www.neoaxis.com/) - A 3D game engine. See [this](https://www.neoaxis.com/news/neoaxis_engine_2023_1_released) announcement.
 * [Sceneri](https://www.sceneri.com/) - A mobile app for creating and sharing 3D games and experiences. See [this](https://www.sceneri.com/blog/2023-07-27-jolt-physics-bringing-sceneris-worlds-to-life) blog post.
