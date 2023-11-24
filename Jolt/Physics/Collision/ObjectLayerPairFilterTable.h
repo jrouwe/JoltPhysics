@@ -8,7 +8,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Filter class to test if two objects can collide based on their object layer. Used while finding collision pairs.
 /// This implementation uses a table to determine if two layers can collide.
-class JPH_EXPORT ObjectLayerPairFilterTable : public ObjectLayerPairFilter
+class ObjectLayerPairFilterTable : public ObjectLayerPairFilter
 {
 private:
 	/// Get which bit corresponds to the pair (inLayer1, inLayer2)

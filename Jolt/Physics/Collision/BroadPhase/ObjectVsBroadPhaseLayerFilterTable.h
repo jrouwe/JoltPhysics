@@ -8,7 +8,7 @@ JPH_NAMESPACE_BEGIN
 
 /// Class that determines if an object layer can collide with a broadphase layer.
 /// This implementation uses a table and constructs itself from an ObjectLayerPairFilter and a BroadPhaseLayerInterface.
-class JPH_EXPORT ObjectVsBroadPhaseLayerFilterTable : public ObjectVsBroadPhaseLayerFilter
+class ObjectVsBroadPhaseLayerFilterTable : public ObjectVsBroadPhaseLayerFilter
 {
 private:
 	/// Get which bit corresponds to the pair (inLayer1, inLayer2)

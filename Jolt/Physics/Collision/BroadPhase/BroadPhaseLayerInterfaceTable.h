@@ -9,7 +9,7 @@ JPH_NAMESPACE_BEGIN
 /// BroadPhaseLayerInterface implementation.
 /// This defines a mapping between object and broadphase layers.
 /// This implementation uses a simple table
-class JPH_EXPORT BroadPhaseLayerInterfaceTable : public BroadPhaseLayerInterface
+class BroadPhaseLayerInterfaceTable : public BroadPhaseLayerInterface
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
