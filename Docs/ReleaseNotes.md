@@ -2,7 +2,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 # Unreleased changes
 
-* None
+* Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers which object layers collide.
+* Support for compiling with ninja on Windows.
 
 # v4.0.1
 
