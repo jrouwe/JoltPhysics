@@ -103,4 +103,31 @@ TEST_SUITE("ObjectLayerPairFilterTableTests")
 		CHECK(!obj_vs_bp_filter.ShouldCollide(Layers::SENSOR, BroadPhaseLayers::LQ_DEBRIS));
 		CHECK(!obj_vs_bp_filter.ShouldCollide(Layers::SENSOR, BroadPhaseLayers::SENSOR));
 	}
+
+	TEST_CASE("ObjectLayerPairFilterTableTest2")
+	{
+		const int n = 10;
+
+		std::pair<ObjectLayer, ObjectLayer> pairs[] = {
+			{ ObjectLayer(0), ObjectLayer(0) },
+			{ ObjectLayer(9), ObjectLayer(9) },
+			{ ObjectLayer(1), ObjectLayer(3) },
+			{ ObjectLayer(3), ObjectLayer(1) },
+			{ ObjectLayer(5), ObjectLayer(7) },
+			{ ObjectLayer(7), ObjectLayer(5) }
+		};
+
+		for (auto &p : pairs)
+		{
+			ObjectLayerPairFilterTable obj_vs_obj_filter(n);
+			obj_vs_obj_filter.EnableCollision(p.first, p.second);
+
+			for (ObjectLayer i = 0; i < n; ++i)
+				for (ObjectLayer j = 0; j < n; ++j)
+				{
+					bool should_collide = (i == p.first && j == p.second) || (i == p.second && j == p.first);
+					CHECK(obj_vs_obj_filter.ShouldCollide(i, j) == should_collide);
+				}
+		}
+	}
 }

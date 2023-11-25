@@ -21,9 +21,9 @@ private:
 		JPH_ASSERT(inLayer2 < mNumObjectLayers);
 
 		// Calculate at which bit the entry for this pair resides
-		// We use the fact that a row always starts at inLayer2 * inLayer2 / 2
+		// We use the fact that a row always starts at inLayer2 * (inLayer2 + 1) / 2
 		// (this is the amount of bits needed to store a table of inLayer2 entries)
-		return (inLayer2 * inLayer2) / 2 + inLayer1;
+		return (inLayer2 * (inLayer2 + 1)) / 2 + inLayer1;
 	}
 
 public:
@@ -33,8 +33,10 @@ public:
 	explicit				ObjectLayerPairFilterTable(uint inNumObjectLayers) :
 		mNumObjectLayers(inNumObjectLayers)
 	{
-		// By default everything collides
-		int table_size = (inNumObjectLayers * inNumObjectLayers / 2 + 7) / 8;
+		// By default nothing collides
+		// For the first layer we only need to store 1 bit, for the second 2 bits, for the third 3 bits, etc.
+		// We use the formula Sum_i=1^N i = N * (N + 1) / 2 to calculate the size of the table
+		int table_size = (inNumObjectLayers * (inNumObjectLayers + 1) / 2 + 7) / 8;
 		mTable.resize(table_size, 0);
 	}
 
