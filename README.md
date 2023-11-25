@@ -132,7 +132,6 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 
 ## Integrations in Other Engines
 
-* [ezEngine](https://github.com/ezEngine/ezEngine)
 * [Godot](https://github.com/godot-jolt/godot-jolt)
 * [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
 
