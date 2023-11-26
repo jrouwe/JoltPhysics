@@ -911,6 +911,11 @@ WARN_LOGFILE           =
 INPUT                  = ./Jolt \
                          ./Docs/Architecture.md \
                          ./Docs/Samples.md \
+                         ./Docs/PerformanceTest.md \
+                         ./Docs/ReleaseNotes.md \
+                         ./Docs/APIChanges.md \
+                         ./Build/README.md \
+                         ./Docs/ProjectsUsingJolt.md \
                          ./Docs/PhysicsSystemUpdate.svg
 
 # This tag can be used to specify the character encoding of the source files

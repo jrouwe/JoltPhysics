@@ -137,6 +137,12 @@ Note that you can also follow the steps in the 'Linux' section if you wish to bu
 - This will open XCode with a newly generated project
 - Build and run the project (note that this will only work in the simulator as the code signing information is not set up)
 
+## Other Build Tools
+
+* A vcpkg package is available [here](https://github.com/microsoft/vcpkg/tree/master/ports/joltphysics).
+* A xmake package is available [here](https://github.com/xmake-io/xmake-repo/tree/dev/packages/j/joltphysics).
+* Jolt has been verified to build with [ninja](https://ninja-build.org/) through CMake.
+
 ## Link Errors
 
 If you receive the following error when linking:
