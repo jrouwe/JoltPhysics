@@ -4,6 +4,10 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
 
+## Changes between v4.0.1 and latest
+
+* 20231203 - VehicleConstraint::CombineFunction got two additional parameters to identify which wheel is requesting friction (8d80155f93d0d0c3ffe3dd46550650b9c830d304)
+
 ## Changes between v4.0.0 and v4.0.1
 
 * No breaking changes.

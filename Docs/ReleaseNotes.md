@@ -6,6 +6,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 * Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers which object layers collide.
 * Support for compiling with ninja on Windows.
+* Added wheel index and friction direction to VehicleConstraint::CombineFunction friction callback so you can have more differentiation between wheels.
+* Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
 
 ## v4.0.1
 
