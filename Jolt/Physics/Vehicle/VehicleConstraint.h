@@ -78,13 +78,20 @@ public:
 	/// Set the interface that tests collision between wheel and ground
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
+	/// Tire friction direction
+	enum class ETireFrictionDirection : uint8
+	{
+		Longitudinal,			///< Longitudinal friction direction
+		Lateral,				///< Lateral friction direction
+	};
+
 	/// Callback function to combine the friction of a tire with the friction of the body it is colliding with.
-	using CombineFunction = float (*)(float inTireFriction, const Body &inBody2, const SubShapeID &inSubShapeID2);
+	using CombineFunction = function<float(uint inWheelIndex, ETireFrictionDirection inTireFrictionDirection, float inTireFriction, const Body &inBody2, const SubShapeID &inSubShapeID2)>;
 
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
-	void						SetCombineFriction(CombineFunction inCombineFriction) { mCombineFriction = inCombineFriction; }
-	CombineFunction				GetCombineFriction() const					{ return mCombineFriction; }
+	void						SetCombineFriction(const CombineFunction &inCombineFriction) { mCombineFriction = inCombineFriction; }
+	const CombineFunction &		GetCombineFriction() const					{ return mCombineFriction; }
 
 	/// Callback function to notify of current stage in PhysicsStepListener::OnStep.
 	using StepCallback = function<void(VehicleConstraint &inVehicle, float inDeltaTime, PhysicsSystem &inPhysicsSystem)>;
@@ -199,7 +206,7 @@ private:
 
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
-	CombineFunction				mCombineFriction = [](float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
+	CombineFunction				mCombineFriction = [](uint, ETireFrictionDirection, float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
 
 	// Callbacks
 	StepCallback				mPreStepCallback;

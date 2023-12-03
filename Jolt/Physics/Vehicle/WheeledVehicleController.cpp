@@ -85,7 +85,7 @@ WheelWV::WheelWV(const WheelSettingsWV &inSettings) :
 	JPH_ASSERT(inSettings.mMaxHandBrakeTorque >= 0.0f);
 }
 
-void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
+void WheelWV::Update(uint inWheelIndex, float inDeltaTime, const VehicleConstraint &inConstraint)
 {
 	const WheelSettingsWV *settings = GetSettings();
 
@@ -122,8 +122,8 @@ void WheelWV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 
 		// Tire friction
 		VehicleConstraint::CombineFunction combine_friction = inConstraint.GetCombineFriction();
-		mCombinedLongitudinalFriction = combine_friction(longitudinal_slip_friction, *mContactBody, mContactSubShapeID);
-		mCombinedLateralFriction = combine_friction(lateral_slip_friction, *mContactBody, mContactSubShapeID);
+		mCombinedLongitudinalFriction = combine_friction(inWheelIndex, VehicleConstraint::ETireFrictionDirection::Longitudinal, longitudinal_slip_friction, *mContactBody, mContactSubShapeID);
+		mCombinedLateralFriction = combine_friction(inWheelIndex, VehicleConstraint::ETireFrictionDirection::Lateral, lateral_slip_friction, *mContactBody, mContactSubShapeID);
 	}
 	else
 	{
@@ -265,10 +265,10 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	Wheels &wheels = mConstraint.GetWheels();
 
 	// Update wheel angle, do this before applying torque to the wheels (as friction will slow them down again)
-	for (Wheel *w_base : wheels)
+	for (uint wheel_index = 0, num_wheels = (uint)wheels.size(); wheel_index < num_wheels; ++wheel_index)
 	{
-		WheelWV *w = static_cast<WheelWV *>(w_base);
-		w->Update(inDeltaTime, mConstraint);
+		WheelWV *w = static_cast<WheelWV *>(wheels[wheel_index]);
+		w->Update(wheel_index, inDeltaTime, mConstraint);
 	}
 
 	// In auto transmission mode, don't accelerate the engine when switching gears
