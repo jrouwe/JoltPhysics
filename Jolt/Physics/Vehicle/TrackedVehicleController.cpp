@@ -57,7 +57,7 @@ void WheelTV::CalculateAngularVelocity(const VehicleConstraint &inConstraint)
 	mAngularVelocity = track.mAngularVelocity * wheels[track.mDrivenWheel]->GetSettings()->mRadius / settings->mRadius;
 }
 
-void WheelTV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
+void WheelTV::Update(uint inWheelIndex, float inDeltaTime, const VehicleConstraint &inConstraint)
 {
 	CalculateAngularVelocity(inConstraint);
 
@@ -72,8 +72,8 @@ void WheelTV::Update(float inDeltaTime, const VehicleConstraint &inConstraint)
 		// Friction at the point of this wheel between track and floor
 		const WheelSettingsTV *settings = GetSettings();
 		VehicleConstraint::CombineFunction combine_friction = inConstraint.GetCombineFriction();
-		mCombinedLongitudinalFriction = combine_friction(settings->mLongitudinalFriction, *mContactBody, mContactSubShapeID);
-		mCombinedLateralFriction = combine_friction(settings->mLateralFriction, *mContactBody, mContactSubShapeID);
+		mCombinedLongitudinalFriction = combine_friction(inWheelIndex, VehicleConstraint::ETireFrictionDirection::Longitudinal, settings->mLongitudinalFriction, *mContactBody, mContactSubShapeID);
+		mCombinedLateralFriction = combine_friction(inWheelIndex, VehicleConstraint::ETireFrictionDirection::Lateral, settings->mLateralFriction, *mContactBody, mContactSubShapeID);
 	}
 	else
 	{
@@ -206,10 +206,10 @@ void TrackedVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 	Wheels &wheels = mConstraint.GetWheels();
 
 	// Update wheel angle, do this before applying torque to the wheels (as friction will slow them down again)
-	for (Wheel *w_base : wheels)
+	for (uint wheel_index = 0, num_wheels = (uint)wheels.size(); wheel_index < num_wheels; ++wheel_index)
 	{
-		WheelTV *w = static_cast<WheelTV *>(w_base);
-		w->Update(inDeltaTime, mConstraint);
+		WheelTV *w = static_cast<WheelTV *>(wheels[wheel_index]);
+		w->Update(wheel_index, inDeltaTime, mConstraint);
 	}
 
 	// First calculate engine speed based on speed of all wheels

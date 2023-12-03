@@ -56,7 +56,7 @@ public:
 	}
 
 	/// Update the wheel rotation based on the current angular velocity
-	void						Update(float inDeltaTime, const VehicleConstraint &inConstraint);
+	void						Update(uint inWheelIndex, float inDeltaTime, const VehicleConstraint &inConstraint);
 
 	float						mLongitudinalSlip = 0.0f;					///< Velocity difference between ground and wheel relative to ground velocity
 	float						mLateralSlip = 0.0f;						///< Angular difference (in radians) between ground and wheel relative to ground velocity

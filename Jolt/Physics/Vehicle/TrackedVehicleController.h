@@ -44,7 +44,7 @@ public:
 	void						CalculateAngularVelocity(const VehicleConstraint &inConstraint);
 
 	/// Update the wheel rotation based on the current angular velocity
-	void						Update(float inDeltaTime, const VehicleConstraint &inConstraint);
+	void						Update(uint inWheelIndex, float inDeltaTime, const VehicleConstraint &inConstraint);
 
 	int							mTrackIndex = -1;							///< Index in mTracks to which this wheel is attached (calculated on initialization)
 	float						mCombinedLongitudinalFriction = 0.0f;		///< Combined friction coefficient in longitudinal direction (combines terrain and track)
