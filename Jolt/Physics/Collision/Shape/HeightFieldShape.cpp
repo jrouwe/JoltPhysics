@@ -321,7 +321,7 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 	/*
 		Store active edges. The triangles are organized like this:
 			x --->
-	
+
 		y   +       +
 			| \ T1B | \ T2B
 		|  e0   e2  |   \
@@ -929,7 +929,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 		heights = temp_heights;
 
 		// We need to fill in the following areas:
-		// 
+		//
 		// +-----------------+
 		// |        2        |
 		// |---+---------+---|

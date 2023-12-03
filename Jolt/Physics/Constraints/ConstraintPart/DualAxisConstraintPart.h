@@ -13,22 +13,22 @@ JPH_NAMESPACE_BEGIN
 
 /**
 	Constrains movement on 2 axis
-	
+
 	@see "Constraints Derivation for Rigid Body Simulation in 3D" - Daniel Chappuis, section 2.3.1
-	
+
 	Constraint equation (eq 51):
-	
+
 	\f[C = \begin{bmatrix} (p_2 - p_1) \cdot n_1 \\ (p_2 - p_1) \cdot n_2\end{bmatrix}\f]
-	
+
 	Jacobian (transposed) (eq 55):
-	
+
 	\f[J^T = \begin{bmatrix}
 	-n_1					& -n_2					\\
 	-(r_1 + u) \times n_1	& -(r_1 + u) \times n_2	\\
 	n_1						& n_2					\\
 	r_2 \times n_1			& r_2 \times n_2
 	\end{bmatrix}\f]
-	
+
 	Used terms (here and below, everything in world space):\n
 	n1, n2 = constraint axis (normalized).\n
 	p1, p2 = constraint points.\n
