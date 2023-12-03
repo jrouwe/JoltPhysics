@@ -85,7 +85,8 @@ public:
 	/// Check if this sensor detects static objects entering it.
 	inline bool				SensorDetectsStatic() const										{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::SensorDetectsStatic)) != 0; }
 
-	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body. Manifold reduction by default will combine contacts that come from different SubShapeIDs (e.g. different triangles or different compound shapes).
+	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body.
+	/// Manifold reduction by default will combine contacts with similar normals that come from different SubShapeIDs (e.g. different triangles in a mesh shape or different compound shapes).
 	/// If the application requires tracking exactly which SubShapeIDs are in contact, you can turn off manifold reduction. Note that this comes at a performance cost.
 	inline void				SetUseManifoldReduction(bool inUseReduction)					{ JPH_ASSERT(IsRigidBody()); if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
 

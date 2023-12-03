@@ -101,7 +101,7 @@ struct PhysicsSettings
 	/// Whether or not to use the body pair cache, which removes the need for narrow phase collision detection when orientation between two bodies didn't change
 	bool		mUseBodyPairContactCache = true;
 
-	/// Whether or not to reduce manifolds with similar contact normals into one contact manifold
+	/// Whether or not to reduce manifolds with similar contact normals into one contact manifold (see description at Body::SetUseManifoldReduction)
 	bool		mUseManifoldReduction = true;
 
 	/// If we split up large islands into smaller parallel batches of work (to improve performance)
