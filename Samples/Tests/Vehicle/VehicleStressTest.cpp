@@ -91,6 +91,8 @@ void VehicleStressTest::Initialize()
 
 			// Create constraint
 			VehicleConstraint *c = new VehicleConstraint(*car_body, vehicle);
+			c->SetNumStepsBetweenCollisionTestActive(2); // Only test collision every other step to speed up simulation
+			c->SetNumStepsBetweenCollisionTestInactive(0); // Disable collision testing when inactive
 
 			// Set the collision tester
 			VehicleCollisionTester *tester = new VehicleCollisionTesterCastCylinder(Layers::MOVING);
@@ -128,7 +130,7 @@ void VehicleStressTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	for (VehicleConstraint *c : mVehicles)
 	{
 		// On user input, assure that the car is active
-		if (right != 0.0f || forward != 0.0f || hand_brake != 0.0f)
+		if (right != 0.0f || forward != 0.0f)
 			mBodyInterface->ActivateBody(c->GetVehicleBody()->GetID());
 
 		// Pass the input on to the constraint

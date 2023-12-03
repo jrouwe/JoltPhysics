@@ -106,6 +106,9 @@ VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstrain
 	mWheels.resize(inSettings.mWheels.size());
 	for (uint i = 0; i < mWheels.size(); ++i)
 		mWheels[i] = mController->ConstructWheel(*inSettings.mWheels[i]);
+
+	// Use the body ID as a seed for the step counter so that not all vehicles will update at the same time
+	mCurrentStep = uint32(Hash64(inVehicleBody.GetID().GetIndex()));
 }
 
 VehicleConstraint::~VehicleConstraint()
@@ -171,6 +174,32 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 	// Calculate if this constraint is active by checking if our main vehicle body is active or any of the bodies we touch are active
 	mIsActive = mBody->IsActive();
 
+	// Helper function to check if the colliding body of a wheel is still valid
+	auto update_wheel_body = [&lock_interface = inPhysicsSystem.GetBodyLockInterfaceNoLock()](Wheel *ioWheel) {
+			if (!ioWheel->mContactBodyID.IsInvalid())
+			{
+				// Test if the body is still valid
+				ioWheel->mContactBody = lock_interface.TryGetBody(ioWheel->mContactBodyID);
+				if (ioWheel->mContactBody == nullptr)
+				{
+					// It's not, forget the contact
+					ioWheel->mContactBodyID = BodyID();
+					ioWheel->mContactSubShapeID = SubShapeID();
+					ioWheel->mSuspensionLength = ioWheel->mSettings->mSuspensionMaxLength;
+				}
+			}
+		};
+
+	// Test how often we need to update the wheels
+	uint num_steps_between_collisions = mIsActive? mNumStepsBetweenCollisionTestActive : mNumStepsBetweenCollisionTestInactive;
+	if (num_steps_between_collisions == 0)
+	{
+		// Nothing to update, reset contact body since we cannot trust the pointer anymore
+		for (Wheel *w : mWheels)
+			update_wheel_body(w);
+		return;
+	}
+
 	RMat44 body_transform = mBody->GetWorldTransform();
 
 	// Test collision for wheels
@@ -178,6 +207,13 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 	{
 		Wheel *w = mWheels[wheel_index];
 		const WheelSettings *settings = w->mSettings;
+
+		// Test if we need to update this wheel
+		if ((mCurrentStep + wheel_index) % num_steps_between_collisions != 0)
+		{
+			update_wheel_body(w);
+			continue;
+		}
 
 		// Reset contact
 		w->mContactBodyID = BodyID();
@@ -266,6 +302,9 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 			}
 	if (mBody->GetAllowSleeping() != allow_sleep)
 		mBody->SetAllowSleeping(allow_sleep);
+
+	// Increment step counter
+	++mCurrentStep;
 }
 
 void VehicleConstraint::BuildIslands(uint32 inConstraintIndex, IslandBuilder &ioBuilder, BodyManager &inBodyManager)
@@ -586,6 +625,7 @@ void VehicleConstraint::SaveState(StateRecorder &inStream) const
 
 	inStream.Write(mPitchRollRotationAxis); // When rotation is too small we use last frame so we need to store it
 	mPitchRollPart.SaveState(inStream);
+	inStream.Write(mCurrentStep);
 }
 
 void VehicleConstraint::RestoreState(StateRecorder &inStream)
@@ -611,6 +651,7 @@ void VehicleConstraint::RestoreState(StateRecorder &inStream)
 
 	inStream.Read(mPitchRollRotationAxis);
 	mPitchRollPart.RestoreState(inStream);
+	inStream.Read(mCurrentStep);
 }
 
 Ref<ConstraintSettings> VehicleConstraint::GetConstraintSettings() const
