@@ -250,6 +250,12 @@ public:
 	float						GetGravityFactor(const BodyID &inBodyID) const;
 	///@}
 
+	///@name Manifold reduction
+	///@{
+	void						SetUseManifoldReduction(const BodyID &inBodyID, bool inUseReduction);
+	bool						GetUseManifoldReduction(const BodyID &inBodyID) const;
+	///@}
+
 	/// Get transform and shape for this body, used to perform collision detection
 	TransformedShape			GetTransformedShape(const BodyID &inBodyID) const;
 
