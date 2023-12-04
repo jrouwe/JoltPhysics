@@ -108,6 +108,27 @@ public:
 		return Find(inType, inBody1, inBody2) >= 0;
 	}
 
+	// Find first event with a particular type and involving two particular bodies and sub shape IDs
+	int								Find(EType inType, const BodyID &inBody1, const SubShapeID &inSubShapeID1, const BodyID &inBody2, const SubShapeID &inSubShapeID2) const
+	{
+		for (size_t i = 0; i < mLog.size(); ++i)
+		{
+			const LogEntry &e = mLog[i];
+			if (e.mType == inType
+				&& ((e.mBody1 == inBody1 && e.mManifold.mSubShapeID1 == inSubShapeID1 && e.mBody2 == inBody2 && e.mManifold.mSubShapeID2 == inSubShapeID2)
+					|| (e.mBody1 == inBody2 && e.mManifold.mSubShapeID1 == inSubShapeID2 && e.mBody2 == inBody1 && e.mManifold.mSubShapeID2 == inSubShapeID1)))
+				return int(i);
+		}
+
+		return -1;
+	}
+
+	// Check if event with a particular type and involving two particular bodies and sub shape IDs exists
+	bool							Contains(EType inType, const BodyID &inBody1, const SubShapeID &inSubShapeID1, const BodyID &inBody2, const SubShapeID &inSubShapeID2) const
+	{
+		return Find(inType, inBody1, inSubShapeID1, inBody2, inSubShapeID2) >= 0;
+	}
+
 private:
 	Mutex							mLogMutex; // Callbacks are made from a thread, make sure we don't corrupt the log
 	Array<LogEntry>					mLog;
