@@ -324,8 +324,8 @@ public:
 	/// @param ioCollector The transformed shapes will be passed to this collector
 	virtual void					TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const;
 
-	/// Scale this shape. Note that not all shapes support all scales, this will return a shape that matches the scale as accurately as possible.
-	/// @param inScale The scale to use for this shape (note: this scale is applied to the entire shape in the space it was created, most function apply the scale in the space of the leaf shapes and from the center of mass!)
+	/// Scale this shape. Note that not all shapes support all scales, this will return a shape that matches the scale as accurately as possible. See Shape::IsValidScale for more information.
+	/// @param inScale The scale to use for this shape (note: this scale is applied to the entire shape in the space it was created, most other functions apply the scale in the space of the leaf shapes and from the center of mass!)
 	ShapeResult						ScaleShape(Vec3Arg inScale) const;
 
 	/// An opaque buffer that holds shape specific information during GetTrianglesStart/Next.
@@ -409,7 +409,17 @@ public:
 	virtual float					GetVolume() const = 0;
 
 	/// Test if inScale is a valid scale for this shape. Some shapes can only be scaled uniformly, compound shapes cannot handle shapes
-	/// being rotated and scaled (this would cause shearing). In this case this function will return false.
+	/// being rotated and scaled (this would cause shearing), scale can never be zero. When the scale is invalid, the function will return false.
+	///
+	/// Here's a list of supported scales:
+	/// * SphereShape: Scale must be uniform (signs of scale are ignored).
+	/// * BoxShape: Any scale supported (signs of scale are ignored).
+	/// * TriangleShape: Any scale supported when convex radius is zero, otherwise only uniform scale supported.
+	/// * CapsuleShape: Scale must be uniform (signs of scale are ignored).
+	/// * TaperedCapsuleShape: Scale must be uniform (sign of Y scale can be used to flip the capsule).
+	/// * CylinderShape: Scale must be uniform in XZ plane, Y can scale independently (signs of scale are ignored).
+	/// * RotatedTranslatedShape: Scale must not cause shear in the child shape.
+	/// * CompoundShape: Scale must not cause shear in any of the child shapes.
 	virtual bool					IsValidScale(Vec3Arg inScale) const									{ return !inScale.IsNearZero(); }
 
 #ifdef JPH_DEBUG_RENDERER
