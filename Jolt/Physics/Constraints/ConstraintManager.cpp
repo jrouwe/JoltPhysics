@@ -133,19 +133,22 @@ void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConst
 	}
 }
 
-void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, uint inDefaultNumVelocitySteps, uint &ioNumVelocitySteps)
+void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, uint inDefaultNumVelocitySteps, uint inDefaultNumPositionSteps, uint &ioNumVelocitySteps, uint &ioNumPositionSteps)
 {
 	JPH_PROFILE_FUNCTION();
 
-	bool apply_default = false;
+	bool apply_default_velocity = false, apply_default_position = false;
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
 		Constraint *c = inActiveConstraints[*constraint_idx];
-		c->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default);
+		c->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default_velocity);
+		c->CombineNumPositionSteps(ioNumPositionSteps, apply_default_position);
 		c->WarmStartVelocityConstraint(inWarmStartImpulseRatio);
 	}
-	if (apply_default)
+	if (apply_default_velocity)
 		ioNumVelocitySteps = max(ioNumVelocitySteps, inDefaultNumVelocitySteps);
+	if (apply_default_position)
+		ioNumPositionSteps = max(ioNumPositionSteps, inDefaultNumPositionSteps);
 }
 
 bool ConstraintManager::sSolveVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
@@ -174,25 +177,6 @@ bool ConstraintManager::sSolvePositionConstraints(Constraint **inActiveConstrain
 		Constraint *c = inActiveConstraints[*constraint_idx];
 		any_impulse_applied |= c->SolvePositionConstraint(inDeltaTime, inBaumgarte);
 	}
-
-	return any_impulse_applied;
-}
-
-bool ConstraintManager::sSolvePositionConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime, float inBaumgarte, uint inDefaultNumPositionSteps, uint &ioNumPositionSteps)
-{
-	JPH_PROFILE_FUNCTION();
-
-	bool any_impulse_applied = false;
-
-	bool apply_default = false;
-	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
-	{
-		Constraint *c = inActiveConstraints[*constraint_idx];
-		c->CombineNumPositionSteps(ioNumPositionSteps, apply_default);
-		any_impulse_applied |= c->SolvePositionConstraint(inDeltaTime, inBaumgarte);
-	}
-	if (apply_default)
-		ioNumPositionSteps = max(ioNumPositionSteps, inDefaultNumPositionSteps);
 
 	return any_impulse_applied;
 }

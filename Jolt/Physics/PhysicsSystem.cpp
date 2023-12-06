@@ -1363,14 +1363,18 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			}
 
 			// Split up large islands
+			uint default_num_velocity_steps = mPhysicsSettings.mNumVelocitySteps, default_num_position_steps = mPhysicsSettings.mNumPositionSteps;
 			if (mPhysicsSettings.mUseLargeIslandSplitter
-				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, mPhysicsSettings.mNumVelocitySteps, mPhysicsSettings.mNumPositionSteps))
+				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, default_num_velocity_steps, default_num_position_steps))
 				continue; // Loop again to try to fetch the newly split island
 
 			// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
-			uint num_velocity_steps = 0;
-			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, mPhysicsSettings.mNumVelocitySteps, num_velocity_steps);
-			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, mPhysicsSettings.mNumVelocitySteps, num_velocity_steps);
+			uint num_velocity_steps = 0, num_position_steps = 0;
+			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, default_num_velocity_steps, default_num_position_steps, num_velocity_steps, num_position_steps);
+			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, default_num_velocity_steps, default_num_position_steps, num_velocity_steps, num_position_steps);
+
+			// Store the number of position steps for later
+			mIslandBuilder.SetNumPositionSteps(island_idx, num_position_steps);
 
 			// Solve velocity constraints
 			for (uint velocity_step = 0; velocity_step < num_velocity_steps; ++velocity_step)
@@ -2301,32 +2305,8 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 			// Check if this island needs solving
 			if (num_items > 0)
 			{
-				// First iteration
-				uint num_position_steps = 0, default_num_position_steps = mPhysicsSettings.mNumPositionSteps;
-				if (default_num_position_steps > 0)
-				{
-					// In the first iteration also calculate the number of position steps (this way we avoid pulling all constraints into the cache twice)
-					bool applied_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte, default_num_position_steps, num_position_steps);
-					applied_impulse |= mContactManager.SolvePositionConstraints(contacts_begin, contacts_end, default_num_position_steps, num_position_steps);
-
-					// If no impulses were applied we can stop, otherwise we already did 1 iteration
-					if (!applied_impulse)
-						num_position_steps = 0;
-					else
-						--num_position_steps;
-				}
-				else
-				{
-					// Iterate the constraints to see if they override the number of position steps
-					bool apply_default = false;
-					for (const uint32 *c = constraints_begin; c < constraints_end; ++c)
-						active_constraints[*c]->CombineNumPositionSteps(num_position_steps, apply_default);
-					// TODO: Contacts
-					if (apply_default)
-						num_position_steps = max(num_position_steps, default_num_position_steps);
-				}
-
-				// Further iterations
+				// Iterate
+				uint num_position_steps = mIslandBuilder.GetNumPositionSteps(island_idx);
 				for (uint position_step = 0; position_step < num_position_steps; ++position_step)
 				{
 					bool applied_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);

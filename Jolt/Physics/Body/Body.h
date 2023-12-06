@@ -301,10 +301,6 @@ public:
 	/// Update eligibility for sleeping
 	ECanSleep				UpdateSleepStateInternal(float inDeltaTime, float inMaxMovement, float inTimeBeforeSleep);
 
-	/// Update the number of velocity / position steps for solving an island containing this body
-	JPH_INLINE void			CombineNumVelocitySteps(uint &ioCurrentValue, bool &ioApplyDefault) const { if (IsDynamic()) mMotionProperties->CombineNumVelocitySteps(ioCurrentValue, ioApplyDefault); }
-	JPH_INLINE void			CombineNumPositionSteps(uint &ioCurrentValue, bool &ioApplyDefault) const { if (IsDynamic()) mMotionProperties->CombineNumPositionSteps(ioCurrentValue, ioApplyDefault); }
-
 	/// Saving state for replay
 	void					SaveState(StateRecorder &inStream) const;
 

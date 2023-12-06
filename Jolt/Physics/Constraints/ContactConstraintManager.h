@@ -170,7 +170,9 @@ public:
 
 	/// Apply last frame's impulses as an initial guess for this frame's impulses
 	void						WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio);
-	void						WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, uint inDefaultNumVelocitySteps, uint &ioNumVelocitySteps);
+	
+	/// Same as above but also calculates the number of velocity/position steps
+	void						WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, uint inDefaultNumVelocitySteps, uint inDefaultNumPositionSteps, uint &ioNumVelocitySteps, uint &ioNumPositionSteps);
 
 	/// Solve velocity constraints, when almost nothing changes this should only apply very small impulses
 	/// since we're warm starting with the total impulse applied in the last frame above.
@@ -224,7 +226,6 @@ public:
 	/// beta = baumgarte stabilization factor.
 	/// dt = delta time.
 	bool						SolvePositionConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd);
-	bool						SolvePositionConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, uint inDefaultNumPositionSteps, uint &ioNumPositionSteps);
 
 	/// Recycle the constraint buffer. Should be called between collision simulation steps.
 	void						RecycleConstraintBuffer();
@@ -491,9 +492,6 @@ private:
 	/// Internal helper function to solve a single contact constraint. Templated to the motion type to reduce the amount of branches and calculations.
 	template <EMotionType Type1, EMotionType Type2>
 	JPH_INLINE static bool		sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2);
-
-	/// Internal helper function to solve a single position constraint
-	JPH_INLINE bool				SolvePositionConstraint(ContactConstraint &ioConstraint);
 
 	/// The main physics settings instance
 	const PhysicsSettings &		mPhysicsSettings;

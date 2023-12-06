@@ -50,6 +50,10 @@ public:
 	bool					GetConstraintsInIsland(uint32 inIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd) const;
 	bool					GetContactsInIsland(uint32 inIslandIndex, uint32 *&outContactsBegin, uint32 *&outContactsEnd) const;
 
+	/// The number of position iterations for each island
+	void					SetNumPositionSteps(uint32 inIslandIndex, uint inNumPositionSteps)	{ JPH_ASSERT(inIslandIndex < mNumIslands); JPH_ASSERT(inNumPositionSteps < 256); mNumPositionSteps[inIslandIndex] = uint8(inNumPositionSteps); }
+	uint					GetNumPositionSteps(uint32 inIslandIndex) const						{ JPH_ASSERT(inIslandIndex < mNumIslands); return mNumPositionSteps[inIslandIndex]; }
+
 	/// After you're done calling the three functions above, call this function to free associated data
 	void					ResetIslands(TempAllocator *inTempAllocator);
 
@@ -94,6 +98,8 @@ private:
 	uint32 *				mContactIslandEnds = nullptr;					///< End index of each contact island
 
 	uint32 *				mIslandsSorted = nullptr;						///< A list of island indices in order of most constraints first
+
+	uint8 *					mNumPositionSteps = nullptr;					///< Number of position steps for each island
 
 	// Counters
 	uint32					mMaxActiveBodies;								///< Maximum size of the active bodies list (see BodyManager::mActiveBodies)
