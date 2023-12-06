@@ -104,7 +104,9 @@ public:
 	float					mAngularDamping = 0.05f;										///< Angular damping: dw/dt = -c * w. c must be between 0 and 1 but is usually close to 0.
 	float					mMaxLinearVelocity = 500.0f;									///< Maximum linear velocity that this body can reach (m/s)
 	float					mMaxAngularVelocity = 0.25f * JPH_PI * 60.0f;					///< Maximum angular velocity that this body can reach (rad/s)
-	float					mGravityFactor = 1.0f;											///< Value to multiply gravity with for this body
+	float					mGravityFactor = 1.0f;											///< Value to multiply gravity with for this body	
+	uint					mNumVelocityStepsOverride = 0;									///< Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
+	uint					mNumPositionStepsOverride = 0;									///< Override for the number of solver position iterations to run, 0 means use the default in PhysicsSettings::mNumPositionSteps. The number of iterations to use is the max of all contacts and constraints in the island.
 
 	///@name Mass properties of the body (by default calculated by the shape)
 	EOverrideMassProperties	mOverrideMassProperties = EOverrideMassProperties::CalculateMassAndInertia; ///< Determines how mMassPropertiesOverride will be used

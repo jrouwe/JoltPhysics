@@ -1491,6 +1491,52 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 	}
 }
 
+void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, uint inDefaultNumVelocitySteps, uint &ioNumVelocitySteps)
+{
+	JPH_PROFILE_FUNCTION();
+
+	bool apply_default = false;
+	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
+	{
+		ContactConstraint &constraint = mConstraints[*constraint_idx];
+
+		// Fetch bodies
+		Body &body1 = *constraint.mBody1;
+		EMotionType motion_type1 = body1.GetMotionType();
+		MotionProperties *motion_properties1 = body1.GetMotionPropertiesUnchecked();
+
+		Body &body2 = *constraint.mBody2;
+		EMotionType motion_type2 = body2.GetMotionType();
+		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
+
+		// Dispatch to the correct templated form
+		// Note: Warm starting doesn't differentiate between kinematic/static bodies so we handle both as static bodies
+		if (motion_type1 == EMotionType::Dynamic)
+		{
+			if (motion_type2 == EMotionType::Dynamic)
+			{
+				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
+
+				motion_properties2->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default);
+			}
+			else
+				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
+
+			motion_properties1->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default);
+		}
+		else
+		{
+			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
+			
+			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
+
+			motion_properties2->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default);
+		}
+	}
+	if (apply_default)
+		ioNumVelocitySteps = max(ioNumVelocitySteps, inDefaultNumVelocitySteps);
+}
+
 template <EMotionType Type1, EMotionType Type2>
 JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2)
 {
@@ -1625,6 +1671,46 @@ void ContactConstraintManager::StoreAppliedImpulses(const uint32 *inConstraintId
 	}
 }
 
+bool ContactConstraintManager::SolvePositionConstraint(ContactConstraint &ioConstraint)
+{
+	bool any_impulse_applied = false;
+
+	// Fetch bodies
+	Body &body1 = *ioConstraint.mBody1;
+	Body &body2 = *ioConstraint.mBody2;
+
+	// Get transforms
+	RMat44 transform1 = body1.GetCenterOfMassTransform();
+	RMat44 transform2 = body2.GetCenterOfMassTransform();
+
+	Vec3 ws_normal = ioConstraint.GetWorldSpaceNormal();
+
+	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
+	{
+		// Calculate new contact point positions in world space (the bodies may have moved)
+		RVec3 p1 = transform1 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition1);
+		RVec3 p2 = transform2 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition2);
+
+		// Calculate separation along the normal (negative if interpenetrating)
+		// Allow a little penetration by default (PhysicsSettings::mPenetrationSlop) to avoid jittering between contact/no-contact which wipes out the contact cache and warm start impulses
+		// Clamp penetration to a max PhysicsSettings::mMaxPenetrationDistance so that we don't apply a huge impulse if we're penetrating a lot
+		float separation = max(Vec3(p2 - p1).Dot(ws_normal) + mPhysicsSettings.mPenetrationSlop, -mPhysicsSettings.mMaxPenetrationDistance);
+
+		// Only enforce constraint when separation < 0 (otherwise we're apart)
+		if (separation < 0.0f)
+		{
+			// Update constraint properties (bodies may have moved)
+			wcp.CalculateNonPenetrationConstraintProperties(body1, ioConstraint.mInvMass1, ioConstraint.mInvInertiaScale1, body2, ioConstraint.mInvMass2, ioConstraint.mInvInertiaScale2, p1, p2, ws_normal);
+
+			// Solve position errors
+			if (wcp.mNonPenetrationConstraint.SolvePositionConstraintWithMassOverride(body1, ioConstraint.mInvMass1, body2, ioConstraint.mInvMass2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
+				any_impulse_applied = true;
+		}
+	}
+
+	return false;
+}
+
 bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd)
 {
 	JPH_PROFILE_FUNCTION();
@@ -1634,40 +1720,29 @@ bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstrai
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
-
-		// Fetch bodies
-		Body &body1 = *constraint.mBody1;
-		Body &body2 = *constraint.mBody2;
-
-		// Get transforms
-		RMat44 transform1 = body1.GetCenterOfMassTransform();
-		RMat44 transform2 = body2.GetCenterOfMassTransform();
-
-		Vec3 ws_normal = constraint.GetWorldSpaceNormal();
-
-		for (WorldContactPoint &wcp : constraint.mContactPoints)
-		{
-			// Calculate new contact point positions in world space (the bodies may have moved)
-			RVec3 p1 = transform1 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition1);
-			RVec3 p2 = transform2 * Vec3::sLoadFloat3Unsafe(wcp.mContactPoint->mPosition2);
-
-			// Calculate separation along the normal (negative if interpenetrating)
-			// Allow a little penetration by default (PhysicsSettings::mPenetrationSlop) to avoid jittering between contact/no-contact which wipes out the contact cache and warm start impulses
-			// Clamp penetration to a max PhysicsSettings::mMaxPenetrationDistance so that we don't apply a huge impulse if we're penetrating a lot
-			float separation = max(Vec3(p2 - p1).Dot(ws_normal) + mPhysicsSettings.mPenetrationSlop, -mPhysicsSettings.mMaxPenetrationDistance);
-
-			// Only enforce constraint when separation < 0 (otherwise we're apart)
-			if (separation < 0.0f)
-			{
-				// Update constraint properties (bodies may have moved)
-				wcp.CalculateNonPenetrationConstraintProperties(body1, constraint.mInvMass1, constraint.mInvInertiaScale1, body2, constraint.mInvMass2, constraint.mInvInertiaScale2, p1, p2, ws_normal);
-
-				// Solve position errors
-				if (wcp.mNonPenetrationConstraint.SolvePositionConstraintWithMassOverride(body1, constraint.mInvMass1, body2, constraint.mInvMass2, ws_normal, separation, mPhysicsSettings.mBaumgarte))
-					any_impulse_applied = true;
-			}
-		}
+		any_impulse_applied |= SolvePositionConstraint(constraint);
 	}
+
+	return any_impulse_applied;
+}
+
+bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, uint inDefaultNumPositionSteps, uint &ioNumPositionSteps)
+{
+	JPH_PROFILE_FUNCTION();
+
+	bool any_impulse_applied = false;
+
+	bool apply_default = false;
+	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
+	{
+		ContactConstraint &constraint = mConstraints[*constraint_idx];		
+		any_impulse_applied |= SolvePositionConstraint(constraint);
+
+		constraint.mBody1->CombineNumPositionSteps(ioNumPositionSteps, apply_default);
+		constraint.mBody2->CombineNumPositionSteps(ioNumPositionSteps, apply_default);
+	}
+	if (apply_default)
+		ioNumPositionSteps = max(ioNumPositionSteps, inDefaultNumPositionSteps);
 
 	return any_impulse_applied;
 }

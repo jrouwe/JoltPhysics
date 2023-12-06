@@ -1363,17 +1363,17 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			}
 
 			// Split up large islands
-			int num_velocity_steps = mPhysicsSettings.mNumVelocitySteps;
 			if (mPhysicsSettings.mUseLargeIslandSplitter
-				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, num_velocity_steps, mPhysicsSettings.mNumPositionSteps))
+				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, mPhysicsSettings.mNumVelocitySteps, mPhysicsSettings.mNumPositionSteps))
 				continue; // Loop again to try to fetch the newly split island
 
 			// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
-			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, num_velocity_steps);
-			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
+			uint num_velocity_steps = 0;
+			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, mPhysicsSettings.mNumVelocitySteps, num_velocity_steps);
+			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, mPhysicsSettings.mNumVelocitySteps, num_velocity_steps);
 
 			// Solve velocity constraints
-			for (int velocity_step = 0; velocity_step < num_velocity_steps; ++velocity_step)
+			for (uint velocity_step = 0; velocity_step < num_velocity_steps; ++velocity_step)
 			{
 				bool applied_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
 				applied_impulse |= mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);
@@ -2302,12 +2302,12 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 			if (num_items > 0)
 			{
 				// First iteration
-				int num_position_steps = mPhysicsSettings.mNumPositionSteps;
-				if (num_position_steps > 0)
+				uint num_position_steps = 0, default_num_position_steps = mPhysicsSettings.mNumPositionSteps;
+				if (default_num_position_steps > 0)
 				{
 					// In the first iteration also calculate the number of position steps (this way we avoid pulling all constraints into the cache twice)
-					bool applied_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte, num_position_steps);
-					applied_impulse |= mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
+					bool applied_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte, default_num_position_steps, num_position_steps);
+					applied_impulse |= mContactManager.SolvePositionConstraints(contacts_begin, contacts_end, default_num_position_steps, num_position_steps);
 
 					// If no impulses were applied we can stop, otherwise we already did 1 iteration
 					if (!applied_impulse)
@@ -2318,12 +2318,16 @@ void PhysicsSystem::JobSolvePositionConstraints(PhysicsUpdateContext *ioContext,
 				else
 				{
 					// Iterate the constraints to see if they override the number of position steps
+					bool apply_default = false;
 					for (const uint32 *c = constraints_begin; c < constraints_end; ++c)
-						num_position_steps = max(num_position_steps, active_constraints[*c]->GetNumPositionStepsOverride());
+						active_constraints[*c]->CombineNumPositionSteps(num_position_steps, apply_default);
+					// TODO: Contacts
+					if (apply_default)
+						num_position_steps = max(num_position_steps, default_num_position_steps);
 				}
 
 				// Further iterations
-				for (int position_step = 0; position_step < num_position_steps; ++position_step)
+				for (uint position_step = 0; position_step < num_position_steps; ++position_step)
 				{
 					bool applied_impulse = ConstraintManager::sSolvePositionConstraints(active_constraints, constraints_begin, constraints_end, delta_time, baumgarte);
 					applied_impulse |= mContactManager.SolvePositionConstraints(contacts_begin, contacts_end);
