@@ -1708,7 +1708,7 @@ bool ContactConstraintManager::SolvePositionConstraint(ContactConstraint &ioCons
 		}
 	}
 
-	return false;
+	return any_impulse_applied;
 }
 
 bool ContactConstraintManager::SolvePositionConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd)
