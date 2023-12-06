@@ -1529,7 +1529,7 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 		else
 		{
 			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			
+
 			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 
 			motion_properties2->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default_velocity);
