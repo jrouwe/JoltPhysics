@@ -19,6 +19,7 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Jolt/Physics/DeterminismLog.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
@@ -1287,8 +1288,9 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 					if (first_iteration)
 					{
 						// Iteration 0 is used to warm start the batch (we added 1 to the number of iterations in LargeIslandSplitter::SplitIsland)
-						ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio);
-						mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio);
+						DummyCalculateSolverSteps dummy;
+						ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, dummy);
+						mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, dummy);
 					}
 					else
 					{
@@ -1363,21 +1365,21 @@ void PhysicsSystem::JobSolveVelocityConstraints(PhysicsUpdateContext *ioContext,
 			}
 
 			// Split up large islands
-			uint default_num_velocity_steps = mPhysicsSettings.mNumVelocitySteps, default_num_position_steps = mPhysicsSettings.mNumPositionSteps;
+			CalculateSolverSteps steps_calculator(mPhysicsSettings);
 			if (mPhysicsSettings.mUseLargeIslandSplitter
-				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, default_num_velocity_steps, default_num_position_steps))
+				&& mLargeIslandSplitter.SplitIsland(island_idx, mIslandBuilder, mBodyManager, mContactManager, active_constraints, steps_calculator))
 				continue; // Loop again to try to fetch the newly split island
 
 			// We didn't create a split, just run the solver now for this entire island. Begin by warm starting.
-			uint num_velocity_steps = 0, num_position_steps = 0;
-			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, default_num_velocity_steps, default_num_position_steps, num_velocity_steps, num_position_steps);
-			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, default_num_velocity_steps, default_num_position_steps, num_velocity_steps, num_position_steps);
+			ConstraintManager::sWarmStartVelocityConstraints(active_constraints, constraints_begin, constraints_end, warm_start_impulse_ratio, steps_calculator);
+			mContactManager.WarmStartVelocityConstraints(contacts_begin, contacts_end, warm_start_impulse_ratio, steps_calculator);
+			steps_calculator.Finalize();
 
 			// Store the number of position steps for later
-			mIslandBuilder.SetNumPositionSteps(island_idx, num_position_steps);
+			mIslandBuilder.SetNumPositionSteps(island_idx, steps_calculator.GetNumPositionSteps());
 
 			// Solve velocity constraints
-			for (uint velocity_step = 0; velocity_step < num_velocity_steps; ++velocity_step)
+			for (uint velocity_step = 0; velocity_step < steps_calculator.GetNumVelocitySteps(); ++velocity_step)
 			{
 				bool applied_impulse = ConstraintManager::sSolveVelocityConstraints(active_constraints, constraints_begin, constraints_end, delta_time);
 				applied_impulse |= mContactManager.SolveVelocityConstraints(contacts_begin, contacts_end);

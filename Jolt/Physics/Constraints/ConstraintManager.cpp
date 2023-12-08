@@ -5,6 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Constraints/ConstraintManager.h>
+#include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/IslandBuilder.h>
 #include <Jolt/Physics/StateRecorder.h>
 #include <Jolt/Physics/PhysicsLock.h>
@@ -122,34 +123,22 @@ void ConstraintManager::sSetupVelocityConstraints(Constraint **inActiveConstrain
 		(*c)->SetupVelocityConstraint(inDeltaTime);
 }
 
-void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio)
+template <class ConstraintCallback>
+void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, ConstraintCallback &ioCallback)
 {
 	JPH_PROFILE_FUNCTION();
 
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
 		Constraint *c = inActiveConstraints[*constraint_idx];
+		ioCallback(c);
 		c->WarmStartVelocityConstraint(inWarmStartImpulseRatio);
 	}
 }
 
-void ConstraintManager::sWarmStartVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, uint inDefaultNumVelocitySteps, uint inDefaultNumPositionSteps, uint &ioNumVelocitySteps, uint &ioNumPositionSteps)
-{
-	JPH_PROFILE_FUNCTION();
-
-	bool apply_default_velocity = false, apply_default_position = false;
-	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
-	{
-		Constraint *c = inActiveConstraints[*constraint_idx];
-		c->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default_velocity);
-		c->CombineNumPositionSteps(ioNumPositionSteps, apply_default_position);
-		c->WarmStartVelocityConstraint(inWarmStartImpulseRatio);
-	}
-	if (apply_default_velocity)
-		ioNumVelocitySteps = max(ioNumVelocitySteps, inDefaultNumVelocitySteps);
-	if (apply_default_position)
-		ioNumPositionSteps = max(ioNumPositionSteps, inDefaultNumPositionSteps);
-}
+// Specialize for the two constraint callback types
+template void ConstraintManager::sWarmStartVelocityConstraints<CalculateSolverSteps>(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, CalculateSolverSteps &ioCallback);
+template void ConstraintManager::sWarmStartVelocityConstraints<DummyCalculateSolverSteps>(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, DummyCalculateSolverSteps &ioCallback);
 
 bool ConstraintManager::sSolveVelocityConstraints(Constraint **inActiveConstraints, const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inDeltaTime)
 {

@@ -5,6 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Physics/Constraints/ContactConstraintManager.h>
+#include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/PhysicsUpdateContext.h>
 #include <Jolt/Physics/PhysicsSettings.h>
@@ -1457,45 +1458,11 @@ JPH_INLINE void ContactConstraintManager::sWarmStartConstraint(ContactConstraint
 	}
 }
 
-void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio)
+template <class MotionPropertiesCallback>
+void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, MotionPropertiesCallback &ioCallback)
 {
 	JPH_PROFILE_FUNCTION();
 
-	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
-	{
-		ContactConstraint &constraint = mConstraints[*constraint_idx];
-
-		// Fetch bodies
-		Body &body1 = *constraint.mBody1;
-		EMotionType motion_type1 = body1.GetMotionType();
-		MotionProperties *motion_properties1 = body1.GetMotionPropertiesUnchecked();
-
-		Body &body2 = *constraint.mBody2;
-		EMotionType motion_type2 = body2.GetMotionType();
-		MotionProperties *motion_properties2 = body2.GetMotionPropertiesUnchecked();
-
-		// Dispatch to the correct templated form
-		// Note: Warm starting doesn't differentiate between kinematic/static bodies so we handle both as static bodies
-		if (motion_type1 == EMotionType::Dynamic)
-		{
-			if (motion_type2 == EMotionType::Dynamic)
-				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-			else
-				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-		}
-		else
-		{
-			JPH_ASSERT(motion_type2 == EMotionType::Dynamic);
-			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
-		}
-	}
-}
-
-void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, uint inDefaultNumVelocitySteps, uint inDefaultNumPositionSteps, uint &ioNumVelocitySteps, uint &ioNumPositionSteps)
-{
-	JPH_PROFILE_FUNCTION();
-
-	bool apply_default_velocity = false, apply_default_position = false;
 	for (const uint32 *constraint_idx = inConstraintIdxBegin; constraint_idx < inConstraintIdxEnd; ++constraint_idx)
 	{
 		ContactConstraint &constraint = mConstraints[*constraint_idx];
@@ -1517,14 +1484,12 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 			{
 				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 
-				motion_properties2->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default_velocity);
-				motion_properties2->CombineNumPositionSteps(ioNumPositionSteps, apply_default_position);
+				ioCallback(motion_properties2);
 			}
 			else
 				sWarmStartConstraint<EMotionType::Dynamic, EMotionType::Static>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 
-			motion_properties1->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default_velocity);
-			motion_properties1->CombineNumPositionSteps(ioNumPositionSteps, apply_default_position);
+			ioCallback(motion_properties1);
 		}
 		else
 		{
@@ -1532,15 +1497,14 @@ void ContactConstraintManager::WarmStartVelocityConstraints(const uint32 *inCons
 
 			sWarmStartConstraint<EMotionType::Static, EMotionType::Dynamic>(constraint, motion_properties1, motion_properties2, inWarmStartImpulseRatio);
 
-			motion_properties2->CombineNumVelocitySteps(ioNumVelocitySteps, apply_default_velocity);
-			motion_properties2->CombineNumPositionSteps(ioNumPositionSteps, apply_default_position);
+			ioCallback(motion_properties2);
 		}
 	}
-	if (apply_default_velocity)
-		ioNumVelocitySteps = max(ioNumVelocitySteps, inDefaultNumVelocitySteps);
-	if (apply_default_position)
-		ioNumPositionSteps = max(ioNumPositionSteps, inDefaultNumPositionSteps);
 }
+
+// Specialize for the two body callback types
+template void ContactConstraintManager::WarmStartVelocityConstraints<CalculateSolverSteps>(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, CalculateSolverSteps &ioCallback);
+template void ContactConstraintManager::WarmStartVelocityConstraints<DummyCalculateSolverSteps>(const uint32 *inConstraintIdxBegin, const uint32 *inConstraintIdxEnd, float inWarmStartImpulseRatio, DummyCalculateSolverSteps &ioCallback);
 
 template <EMotionType Type1, EMotionType Type2>
 JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstraint &ioConstraint, MotionProperties *ioMotionProperties1, MotionProperties *ioMotionProperties2)

@@ -5,6 +5,7 @@
 
 #include <Jolt/Physics/LargeIslandSplitter.h>
 #include <Jolt/Physics/IslandBuilder.h>
+#include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/Constraint.h>
 #include <Jolt/Physics/Constraints/ContactConstraintManager.h>
 #include <Jolt/Physics/Body/BodyManager.h>
@@ -279,7 +280,7 @@ uint LargeIslandSplitter::AssignToNonParallelSplit(const Body *inBody)
 	return cNonParallelSplitIdx;
 }
 
-bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, uint inDefaultNumVelocitySteps, uint inDefaultNumPositionSteps)
+bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, CalculateSolverSteps &ioStepsCalulator)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -316,9 +317,6 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	uint32 *contact_split_idx = mContactAndConstaintsSplitIdx + offset;
 	uint32 *constraint_split_idx = contact_split_idx + num_contacts_in_island;
 
-	uint num_velocity_steps = 0, num_position_steps = 0;
-	bool apply_default_velocity = false, apply_default_position = false;
-
 	// Assign the contacts to a split
 	uint32 *cur_contact_split_idx = contact_split_idx;
 	for (const uint32 *c = contacts_start; c < contacts_end; ++c)
@@ -330,15 +328,9 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		*cur_contact_split_idx++ = split;
 
 		if (body1->IsDynamic())
-		{
-			body1->GetMotionPropertiesUnchecked()->CombineNumVelocitySteps(num_velocity_steps, apply_default_velocity);
-			body1->GetMotionPropertiesUnchecked()->CombineNumPositionSteps(num_position_steps, apply_default_position);
-		}
+			ioStepsCalulator(body1->GetMotionPropertiesUnchecked());
 		if (body2->IsDynamic())
-		{
-			body2->GetMotionPropertiesUnchecked()->CombineNumVelocitySteps(num_velocity_steps, apply_default_velocity);
-			body2->GetMotionPropertiesUnchecked()->CombineNumPositionSteps(num_position_steps, apply_default_position);
-		}
+			ioStepsCalulator(body2->GetMotionPropertiesUnchecked());
 	}
 
 	// Assign the constraints to a split
@@ -350,13 +342,10 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		num_constraints_in_split[split]++;
 		*cur_constraint_split_idx++ = split;
 
-		constraint->CombineNumVelocitySteps(num_velocity_steps, apply_default_velocity);
-		constraint->CombineNumPositionSteps(num_position_steps, apply_default_position);
+		ioStepsCalulator(constraint);
 	}
-	if (apply_default_velocity)
-		num_velocity_steps = max(num_velocity_steps, inDefaultNumVelocitySteps);
-	if (apply_default_position)
-		num_position_steps = max(num_position_steps, inDefaultNumPositionSteps);
+
+	ioStepsCalulator.Finalize();
 
 	// Start with 0 splits
 	uint split_remap_table[cNumSplits];
@@ -365,9 +354,9 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	Splits &splits = mSplitIslands[new_split_idx];
 	splits.mIslandIndex = inIslandIndex;
 	splits.mNumSplits = 0;
-	splits.mNumIterations = num_velocity_steps + 1; // Iteration 0 is used for warm starting
-	splits.mNumVelocitySteps = num_velocity_steps;
-	splits.mNumPositionSteps = num_position_steps;
+	splits.mNumIterations = ioStepsCalulator.GetNumVelocitySteps() + 1; // Iteration 0 is used for warm starting
+	splits.mNumVelocitySteps = ioStepsCalulator.GetNumVelocitySteps();
+	splits.mNumPositionSteps = ioStepsCalulator.GetNumPositionSteps();
 	splits.mItemsProcessed.store(0, memory_order_release);
 
 	// Allocate space to store the sorted constraint and contact indices per split
