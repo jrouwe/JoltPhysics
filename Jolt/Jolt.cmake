@@ -296,6 +296,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/SortReverseAndStore.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/TransformedShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/TransformedShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/CalculateSolverSteps.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConeConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConeConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/Constraint.cpp

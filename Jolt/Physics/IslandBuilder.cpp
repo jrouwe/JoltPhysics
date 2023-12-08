@@ -382,6 +382,8 @@ void IslandBuilder::Finalize(const BodyID *inActiveBodies, uint32 inNumActiveBod
 	BuildConstraintIslands(mConstraintLinks, mNumConstraints, mConstraintIslands, mConstraintIslandEnds, inTempAllocator);
 	BuildConstraintIslands(mContactLinks, mNumContacts, mContactIslands, mContactIslandEnds, inTempAllocator);
 	SortIslands(inTempAllocator);
+
+	mNumPositionSteps = (uint8 *)inTempAllocator->Allocate(mNumIslands * sizeof(uint8));
 }
 
 void IslandBuilder::GetBodiesInIsland(uint32 inIslandIndex, BodyID *&outBodiesBegin, BodyID *&outBodiesEnd) const
@@ -431,6 +433,8 @@ bool IslandBuilder::GetContactsInIsland(uint32 inIslandIndex, uint32 *&outContac
 void IslandBuilder::ResetIslands(TempAllocator *inTempAllocator)
 {
 	JPH_PROFILE_FUNCTION();
+
+	inTempAllocator->Free(mNumPositionSteps, mNumIslands * sizeof(uint8));
 
 	if (mIslandsSorted != nullptr)
 	{
