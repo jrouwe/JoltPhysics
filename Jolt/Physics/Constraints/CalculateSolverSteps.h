@@ -13,7 +13,7 @@ class CalculateSolverSteps
 {
 public:
 	/// Constructor
-	JPH_INLINE					CalculateSolverSteps(const PhysicsSettings &inSettings) : mSettings(inSettings) { }
+	JPH_INLINE explicit			CalculateSolverSteps(const PhysicsSettings &inSettings) : mSettings(inSettings) { }
 
 	/// Combine the number of velocity and position steps for this body/constraint with the current values
 	template <class Type>
@@ -57,8 +57,9 @@ class DummyCalculateSolverSteps
 {
 public:
 	template <class Type>
-	JPH_INLINE void				operator () (const Type *inObject)
+	JPH_INLINE void				operator () (const Type *) const
 	{
+		/* Nothing to do */
 	}
 };
 
