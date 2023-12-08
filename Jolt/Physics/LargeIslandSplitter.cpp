@@ -280,7 +280,7 @@ uint LargeIslandSplitter::AssignToNonParallelSplit(const Body *inBody)
 	return cNonParallelSplitIdx;
 }
 
-bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, CalculateSolverSteps &ioStepsCalulator)
+bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, CalculateSolverSteps &ioStepsCalculator)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -328,9 +328,9 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		*cur_contact_split_idx++ = split;
 
 		if (body1->IsDynamic())
-			ioStepsCalulator(body1->GetMotionPropertiesUnchecked());
+			ioStepsCalculator(body1->GetMotionPropertiesUnchecked());
 		if (body2->IsDynamic())
-			ioStepsCalulator(body2->GetMotionPropertiesUnchecked());
+			ioStepsCalculator(body2->GetMotionPropertiesUnchecked());
 	}
 
 	// Assign the constraints to a split
@@ -342,10 +342,10 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		num_constraints_in_split[split]++;
 		*cur_constraint_split_idx++ = split;
 
-		ioStepsCalulator(constraint);
+		ioStepsCalculator(constraint);
 	}
 
-	ioStepsCalulator.Finalize();
+	ioStepsCalculator.Finalize();
 
 	// Start with 0 splits
 	uint split_remap_table[cNumSplits];
@@ -354,9 +354,9 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	Splits &splits = mSplitIslands[new_split_idx];
 	splits.mIslandIndex = inIslandIndex;
 	splits.mNumSplits = 0;
-	splits.mNumIterations = ioStepsCalulator.GetNumVelocitySteps() + 1; // Iteration 0 is used for warm starting
-	splits.mNumVelocitySteps = ioStepsCalulator.GetNumVelocitySteps();
-	splits.mNumPositionSteps = ioStepsCalulator.GetNumPositionSteps();
+	splits.mNumIterations = ioStepsCalculator.GetNumVelocitySteps() + 1; // Iteration 0 is used for warm starting
+	splits.mNumVelocitySteps = ioStepsCalculator.GetNumVelocitySteps();
+	splits.mNumPositionSteps = ioStepsCalculator.GetNumPositionSteps();
 	splits.mItemsProcessed.store(0, memory_order_release);
 
 	// Allocate space to store the sorted constraint and contact indices per split
