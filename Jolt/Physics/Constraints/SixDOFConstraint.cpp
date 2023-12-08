@@ -82,7 +82,7 @@ TwoBodyConstraint *SixDOFConstraintSettings::Create(Body &inBody1, Body &inBody2
 void SixDOFConstraint::UpdateRotationLimits()
 {
 	// Make values sensible
-	float center[3];
+	Vec3 center;
 	for (int i = 3; i < 6; ++i)
 		if (IsFixedAxis((EAxis)i))
 		{
@@ -90,7 +90,7 @@ void SixDOFConstraint::UpdateRotationLimits()
 
 			// Center the limits
 			int axis = i - 3;
-			center[axis] = 0.0f;
+			center.SetComponent(axis, 0.0f);
 			mCenteredLimits[axis] = 0.0f;
 		}
 		else
@@ -99,12 +99,13 @@ void SixDOFConstraint::UpdateRotationLimits()
 
 			// Center the limits
 			int axis = i - 3;
-			center[axis] = (mLimitMin[i] + mLimitMax[i]) * 0.5f;
-			mCenteredLimits[axis] = min(JPH_PI, mLimitMax[i] - center[axis]);
+			float value = (mLimitMin[i] + mLimitMax[i]) * 0.5f;
+			center.SetComponent(axis, value);
+			mCenteredLimits[axis] = min(JPH_PI, mLimitMax[i] - value);
 		}
 
 	// Calculate rotation needed to go from constraint space where the limit is centered to constraint space
-	mCenteredLimitsToConstraint = Quat::sRotation(Vec3::sAxisZ(), center[2]) * Quat::sRotation(Vec3::sAxisY(), center[1]) * Quat::sRotation(Vec3::sAxisX(), center[0]);
+	mCenteredLimitsToConstraint = Quat::sEulerAngles(center);
 
 	// Pass limits on to constraint part
 	mSwingTwistConstraintPart.SetLimits(-mCenteredLimits[0], mCenteredLimits[0], mCenteredLimits[1], mCenteredLimits[2]);
