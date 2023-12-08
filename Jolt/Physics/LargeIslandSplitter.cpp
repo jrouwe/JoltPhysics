@@ -316,6 +316,9 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	uint32 *contact_split_idx = mContactAndConstaintsSplitIdx + offset;
 	uint32 *constraint_split_idx = contact_split_idx + num_contacts_in_island;
 
+	uint num_velocity_steps = 0, num_position_steps = 0;
+	bool apply_default_velocity = false, apply_default_position = false;
+
 	// Assign the contacts to a split
 	uint32 *cur_contact_split_idx = contact_split_idx;
 	for (const uint32 *c = contacts_start; c < contacts_end; ++c)
@@ -325,22 +328,30 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		uint split = AssignSplit(body1, body2);
 		num_contacts_in_split[split]++;
 		*cur_contact_split_idx++ = split;
+
+		if (body1->IsDynamic())
+		{
+			body1->GetMotionPropertiesUnchecked()->CombineNumVelocitySteps(num_velocity_steps, apply_default_velocity);
+			body1->GetMotionPropertiesUnchecked()->CombineNumPositionSteps(num_position_steps, apply_default_position);
+		}
+		if (body2->IsDynamic())
+		{
+			body2->GetMotionPropertiesUnchecked()->CombineNumVelocitySteps(num_velocity_steps, apply_default_velocity);
+			body2->GetMotionPropertiesUnchecked()->CombineNumPositionSteps(num_position_steps, apply_default_position);
+		}
 	}
 
 	// Assign the constraints to a split
-	uint num_velocity_steps = 0, num_position_steps = 0;
-	bool apply_default_velocity = false, apply_default_position = false;
 	uint32 *cur_constraint_split_idx = constraint_split_idx;
 	for (const uint32 *c = constraints_start; c < constraints_end; ++c)
 	{
 		const Constraint *constraint = inActiveConstraints[*c];
 		uint split = constraint->BuildIslandSplits(*this);
+		num_constraints_in_split[split]++;
+		*cur_constraint_split_idx++ = split;
 
 		constraint->CombineNumVelocitySteps(num_velocity_steps, apply_default_velocity);
 		constraint->CombineNumPositionSteps(num_position_steps, apply_default_position);
-
-		num_constraints_in_split[split]++;
-		*cur_constraint_split_idx++ = split;
 	}
 	if (apply_default_velocity)
 		num_velocity_steps = max(num_velocity_steps, inDefaultNumVelocitySteps);
