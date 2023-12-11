@@ -191,6 +191,9 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	// Leave 1 thread for update broadphase prepare and 1 for apply gravity
 	int num_determine_active_constraints_jobs = max(1, min(((int)mConstraintManager.GetNumConstraints() + cDetermineActiveConstraintsBatchSize - 1) / cDetermineActiveConstraintsBatchSize, max_concurrency - 2));
 
+	// Number of setup velocity constraints jobs to run depends on number of constraints.
+	int num_setup_velocity_constraints_jobs = max(1, min(((int)mConstraintManager.GetNumConstraints() + cSetupVelocityConstraintsBatchSize - 1) / cSetupVelocityConstraintsBatchSize, max_concurrency));
+
 	// Number of find collisions jobs to run depends on number of active bodies.
 	// Note that when we have more than 1 thread, we always spawn at least 2 find collisions jobs so that the first job can wait for build islands from constraints
 	// (which may activate additional bodies that need to be processed) while the second job can start processing collision work.
@@ -292,12 +295,14 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 
 			// This job will setup velocity constraints for non-collision constraints
-			step.mSetupVelocityConstraints = inJobSystem->CreateJob("SetupVelocityConstraints", cColorSetupVelocityConstraints, [&context, &step]()
-				{
-					context.mPhysicsSystem->JobSetupVelocityConstraints(context.mStepDeltaTime, &step);
+			step.mSetupVelocityConstraints.resize(num_setup_velocity_constraints_jobs);
+			for (int i = 0; i < num_setup_velocity_constraints_jobs; ++i)
+				step.mSetupVelocityConstraints[i] = inJobSystem->CreateJob("SetupVelocityConstraints", cColorSetupVelocityConstraints, [&context, &step]()
+					{
+						context.mPhysicsSystem->JobSetupVelocityConstraints(context.mStepDeltaTime, &step);
 
-					JobHandle::sRemoveDependencies(step.mSolveVelocityConstraints);
-				}, num_determine_active_constraints_jobs + 1); // depends on: determine active constraints, finish building jobs
+						JobHandle::sRemoveDependencies(step.mSolveVelocityConstraints);
+					}, num_determine_active_constraints_jobs + 1); // depends on: determine active constraints, finish building jobs
 
 			// This job will build islands from constraints
 			step.mBuildIslandsFromConstraints = inJobSystem->CreateJob("BuildIslandsFromConstraints", cColorBuildIslandsFromConstraints, [&context, &step]()
@@ -315,10 +320,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 					{
 						context.mPhysicsSystem->JobDetermineActiveConstraints(&step);
 
-						step.mSetupVelocityConstraints.RemoveDependency();
 						step.mBuildIslandsFromConstraints.RemoveDependency();
 
-						// Kick find collisions last as they will use up all CPU cores leaving no space for the previous 2 jobs
+						// Kick these jobs last as they will use up all CPU cores leaving no space for the previous job, we prefer setup velocity constraints to finish first so we kick it first
+						JobHandle::sRemoveDependencies(step.mSetupVelocityConstraints);
 						JobHandle::sRemoveDependencies(step.mFindCollisions);
 					}, num_step_listener_jobs > 0? num_step_listener_jobs : previous_step_dependency_count); // depends on: step listeners (or previous step if no step listeners)
 
@@ -425,10 +430,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						context.mPhysicsSystem->JobSolveVelocityConstraints(&context, &step);
 
 						step.mPreIntegrateVelocity.RemoveDependency();
-					}, 3); // depends on: finalize islands, setup velocity constraints, finish building jobs.
+					}, num_setup_velocity_constraints_jobs + 2); // depends on: finalize islands, setup velocity constraints, finish building jobs.
 
-			// Kick find collisions after setup velocity constraints because the former job will use up all CPU cores
-			step.mSetupVelocityConstraints.RemoveDependency();
+			// We prefer setup velocity constraints to finish first so we kick it first
+			JobHandle::sRemoveDependencies(step.mSetupVelocityConstraints);
 			JobHandle::sRemoveDependencies(step.mFindCollisions);
 
 			// Finalize islands is a dependency on find collisions so it can go last
@@ -527,7 +532,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 				handles.push_back(h);
 			if (step.mUpdateBroadphaseFinalize.IsValid())
 				handles.push_back(step.mUpdateBroadphaseFinalize);
-			handles.push_back(step.mSetupVelocityConstraints);
+			for (const JobHandle &h : step.mSetupVelocityConstraints)
+				handles.push_back(h);
 			handles.push_back(step.mBuildIslandsFromConstraints);
 			handles.push_back(step.mFinalizeIslands);
 			handles.push_back(step.mBodySetIslandIndex);
@@ -643,7 +649,7 @@ void PhysicsSystem::JobDetermineActiveConstraints(PhysicsUpdateContext::Step *io
 	for (;;)
 	{
 		// Atomically fetch a batch of constraints
-		uint32 constraint_idx = ioStep->mConstraintReadIdx.fetch_add(cDetermineActiveConstraintsBatchSize);
+		uint32 constraint_idx = ioStep->mDetermineActiveConstraintReadIdx.fetch_add(cDetermineActiveConstraintsBatchSize);
 		if (constraint_idx >= num_constraints)
 			break;
 
@@ -708,7 +714,17 @@ void PhysicsSystem::JobSetupVelocityConstraints(float inDeltaTime, PhysicsUpdate
 	BodyAccess::Grant grant(BodyAccess::EAccess::None, BodyAccess::EAccess::Read);
 #endif
 
-	ConstraintManager::sSetupVelocityConstraints(ioStep->mContext->mActiveConstraints, ioStep->mNumActiveConstraints, inDeltaTime);
+	uint32 num_constraints = ioStep->mNumActiveConstraints;
+
+	for (;;)
+	{
+		// Atomically fetch a batch of constraints
+		uint32 constraint_idx = ioStep->mSetupVelocityConstraintsReadIdx.fetch_add(cSetupVelocityConstraintsBatchSize);
+		if (constraint_idx >= num_constraints)
+			break;
+
+		ConstraintManager::sSetupVelocityConstraints(ioStep->mContext->mActiveConstraints + constraint_idx, min<uint32>(cSetupVelocityConstraintsBatchSize, num_constraints - constraint_idx), inDeltaTime);
+	}
 }
 
 void PhysicsSystem::JobBuildIslandsFromConstraints(PhysicsUpdateContext *ioContext, PhysicsUpdateContext::Step *ioStep)
