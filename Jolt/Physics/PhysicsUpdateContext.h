@@ -62,20 +62,23 @@ public:
 
 		uint32				mNumActiveBodiesAtStepStart;							///< Number of bodies that were active at the start of the physics update step. Only these bodies will receive gravity (they are the first N in the active body list).
 
-		atomic<uint32>		mConstraintReadIdx { 0 };								///< Next constraint for determine active constraints
+		atomic<uint32>		mDetermineActiveConstraintReadIdx { 0 };				///< Next constraint for determine active constraints
 		uint8				mPadding1[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
 		atomic<uint32>		mNumActiveConstraints { 0 };							///< Number of constraints in the mActiveConstraints array
 		uint8				mPadding2[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
-		atomic<uint32>		mStepListenerReadIdx { 0 };								///< Next step listener to call
+		atomic<uint32>		mSetupVelocityConstraintsReadIdx { 0 };					///< Next constraint for setting up velocity constraints
 		uint8				mPadding3[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
-		atomic<uint32>		mApplyGravityReadIdx { 0 };								///< Next body to apply gravity to
+		atomic<uint32>		mStepListenerReadIdx { 0 };								///< Next step listener to call
 		uint8				mPadding4[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
-		atomic<uint32>		mActiveBodyReadIdx { 0 };								///< Index of fist active body that has not yet been processed by the broadphase
+		atomic<uint32>		mApplyGravityReadIdx { 0 };								///< Next body to apply gravity to
 		uint8				mPadding5[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
+
+		atomic<uint32>		mActiveBodyReadIdx { 0 };								///< Index of fist active body that has not yet been processed by the broadphase
+		uint8				mPadding6[JPH_CACHE_LINE_SIZE - sizeof(atomic<uint32>)];///< Padding to avoid sharing cache line with the next atomic
 
 		BodyPairQueues		mBodyPairQueues;										///< Queues in which to put body pairs that need to be tested by the narrowphase
 
@@ -120,7 +123,7 @@ public:
 		JobHandleArray		mApplyGravity;											///< Update velocities of bodies with gravity
 		JobHandleArray		mFindCollisions;										///< Find all collisions between active bodies an the world
 		JobHandle			mUpdateBroadphaseFinalize;								///< Swap the newly built tree with the current tree
-		JobHandle			mSetupVelocityConstraints;								///< Calculate properties for all constraints in the constraint manager
+		JobHandleArray		mSetupVelocityConstraints;								///< Calculate properties for all constraints in the constraint manager
 		JobHandle			mBuildIslandsFromConstraints;							///< Go over all constraints and assign the bodies they're attached to to an island
 		JobHandle			mFinalizeIslands;										///< Finalize calculation simulation islands
 		JobHandle			mBodySetIslandIndex;									///< Set the current island index on each body (not used by the simulation, only for drawing purposes)
