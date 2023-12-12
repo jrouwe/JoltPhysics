@@ -63,17 +63,15 @@ void CharacterVirtualTest::FetchNewInput(const PreUpdateParams &inParams, Vec3Ar
 			mCharacter->RestoreState(recorder);
 			mNonDeterministicFrames.clear();
 		}
-		else
+
+		// Validate the frame state by comparing it with the one recorded previously.
+		StateRecorderImpl recorder;
+		mCharacter->SaveState(recorder);
+		const string data = recorder.GetData();
+		const bool is_valid = data == snapshot.mInitialState;
+		if (!is_valid)
 		{
-			// On all the other frames we check the state is exactly like the one initially recorded.
-			StateRecorderImpl recorder;
-			mCharacter->SaveState(recorder);
-			const string data = recorder.GetData();
-			const bool is_valid = data == snapshot.mInitialState;
-			if (!is_valid)
-			{
-				mNonDeterministicFrames.push_back(mReplayingFrame);
-			}
+			mNonDeterministicFrames.push_back(mReplayingFrame);
 		}
 
 		// Set the recorded input.
@@ -333,7 +331,7 @@ const char* CharacterVirtualTest::GetAdditionalCharacterStateInfo() const
 		}
 	}
 
-	str += "\nNON DETERMINISTIC FRAMES";
+	str += "\nNON DETERMINISTIC FRAMES: ";
 	int c = 0;
 	for (int frame_index : mNonDeterministicFrames)
 	{
