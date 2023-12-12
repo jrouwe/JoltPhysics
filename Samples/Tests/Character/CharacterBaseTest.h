@@ -19,6 +19,9 @@ public:
 	// Initialize the test
 	virtual void			Initialize() override;
 
+	// Fetches the character input to use on the next frame.
+	virtual void			FetchNewInput(const PreUpdateParams &inParams, Vec3Arg& outMovementDirection, bool &outJump, bool &outSwitchStance);
+
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
@@ -45,6 +48,7 @@ protected:
 
 	// Draw the character state
 	void					DrawCharacterState(const CharacterBase *inCharacter, RMat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity);
+	virtual const char*		GetAdditionalCharacterStateInfo() const { return ""; }
 
 	// Add character movement settings
 	virtual void			AddCharacterMovementSettings(DebugUI* inUI, UIElement* inSubMenu) { /* Nothing by default */ }

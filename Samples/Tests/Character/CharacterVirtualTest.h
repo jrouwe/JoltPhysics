@@ -6,15 +6,30 @@
 
 #include <Tests/Character/CharacterBaseTest.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
+#include <Jolt/Physics/StateRecorderImpl.h>
 
 // Simple test that test the CharacterVirtual class. Allows the user to move around with the arrow keys and jump with the J button.
 class CharacterVirtualTest : public CharacterBaseTest, public CharacterContactListener
 {
 public:
+	// Stores the frame information captured. See `mIsRecordingInput`.
+	struct FrameSnapshot
+	{
+		string mInitialState;
+
+		Vec3 mMovementDirection = Vec3::sZero();
+		bool mJump = false;
+		bool mSwitchStance = false;
+	};
+
+public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterVirtualTest)
 
 	// Initialize the test
 	virtual void			Initialize() override;
+
+	// Fetches the character input to use on the next frame.
+	virtual void			FetchNewInput(const PreUpdateParams &inParams, Vec3Arg& outMovementDirection, bool &outJump, bool &outSwitchStance);
 
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
@@ -31,6 +46,8 @@ public:
 
 	// Called whenever the character movement is solved and a constraint is hit. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
 	virtual void			OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) override;
+
+	virtual const char*		GetAdditionalCharacterStateInfo() const override;
 
 protected:
 	// Get position of the character
@@ -69,4 +86,16 @@ private:
 
 	// True when the player is pressing movement controls
 	bool					mAllowSliding = false;
+
+	// The player can toggle this by pressing M and record the next inputs until Y is pressed again.
+	bool					mIsRecordingInput = false;
+
+	// Used to track the current replaying frame. `-1` is used when the replay is off. The player can toggle this by pressing `U`.
+	int						mReplayingFrame = -1;
+
+	// The recorded frames, used to re-play.
+	Array<FrameSnapshot>	mRecordedFrames;
+
+	// Contains all the non deterministic frames, and it's used to print it on UI.
+	Array<int>				mNonDeterministicFrames;
 };

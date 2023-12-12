@@ -31,6 +31,7 @@ void Keyboard::Reset()
 void Keyboard::ResetKeyboard()
 {
 	memset(&mKeyPressed, 0, sizeof(mKeyPressed));
+	memset(&mKeyJustReleased, 0, sizeof(mKeyJustReleased));
 	memset(&mTimeKeyLastReleased, 0, sizeof(mTimeKeyLastReleased));
 	memset(&mKeyDoubleClicked, 0, sizeof(mKeyDoubleClicked));
 	memset(&mDOD, 0, sizeof(mDOD));
@@ -117,6 +118,10 @@ void Keyboard::Poll()
 {
 	JPH_PROFILE_FUNCTION();
 
+
+	char previously_pressed_keys[256];
+	memcpy(&previously_pressed_keys, &mKeyPressed, sizeof(previously_pressed_keys));
+
 	// Get the state of the keyboard
 	if (FAILED(mKeyboard->GetDeviceState(sizeof(mKeyPressed), mKeyPressed)))
 	{
@@ -127,6 +132,12 @@ void Keyboard::Poll()
 			ResetKeyboard();
 			return;
 		}
+	}
+
+	// Check the just released
+	for(int key = 0; key < 256; key += 1)
+	{
+		mKeyJustReleased[key] = previously_pressed_keys[key] && !mKeyPressed[key];
 	}
 
 	// Get the state in a buffer

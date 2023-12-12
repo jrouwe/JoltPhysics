@@ -27,6 +27,7 @@ public:
 
 	/// Checks if a key is pressed or not, use one of the DIK_* constants
 	bool							IsKeyPressed(int inKey) const		{ return mKeyPressed[inKey] != 0; }
+	bool							IsKeyJustReleased(int inKey) const	{ return mKeyJustReleased[inKey] != 0; }
 	bool							IsKeyDoubleClicked(int inKey) const	{ return mKeyDoubleClicked[inKey] != 0; }
 
 	/// Buffered keyboard input, returns 0 for none or one of the DIK_* constants
@@ -49,6 +50,7 @@ private:
 	ComPtr<IDirectInput8>			mDI;
 	ComPtr<IDirectInputDevice8>		mKeyboard;
 	char							mKeyPressed[256];
+	char							mKeyJustReleased[256];
 	int								mKeyDoubleClicked[256];
 	int								mTimeKeyLastReleased[256];
 	DIDEVICEOBJECTDATA				mDOD[BUFFERSIZE];

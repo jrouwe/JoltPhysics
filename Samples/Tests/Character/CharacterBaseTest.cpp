@@ -529,11 +529,8 @@ void CharacterBaseTest::Initialize()
 	}
 }
 
-void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void CharacterBaseTest::FetchNewInput(const PreUpdateParams &inParams, Vec3Arg& outMovementDirection, bool &outJump, bool &outSwitchStance)
 {
-	// Update scene time
-	mTime += inParams.mDeltaTime;
-
 	// Determine controller input
 	Vec3 control_input = Vec3::sZero();
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
@@ -560,6 +557,21 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		else if (key == DIK_RCONTROL)
 			jump = true;
 	}
+
+	outMovementDirection = control_input;
+	outJump = jump;
+	outSwitchStance = switch_stance;
+}
+
+void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	// Update scene time
+	mTime += inParams.mDeltaTime;
+
+	Vec3 control_input = Vec3::sZero();
+	bool jump = false;
+	bool switch_stance = false;
+	FetchNewInput(inParams, control_input, jump, switch_stance);
 
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
@@ -684,5 +696,5 @@ void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, RMa
 	const PhysicsMaterial *ground_material = inCharacter->GetGroundMaterial();
 	Vec3 horizontal_velocity = inCharacterVelocity;
 	horizontal_velocity.SetY(0);
-	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("State: %s\nMat: %s\nHorizontal Vel: %.1f m/s\nVertical Vel: %.1f m/s", CharacterBase::sToString(ground_state), ground_material->GetDebugName(), (double)horizontal_velocity.Length(), (double)inCharacterVelocity.GetY()), Color::sWhite, 0.25f);
+	mDebugRenderer->DrawText3D(inCharacterTransform.GetTranslation(), StringFormat("State: %s\nMat: %s\nHorizontal Vel: %.1f m/s\nVertical Vel: %.1f m/s\n%s", CharacterBase::sToString(ground_state), ground_material->GetDebugName(), (double)horizontal_velocity.Length(), (double)inCharacterVelocity.GetY(), GetAdditionalCharacterStateInfo()), Color::sWhite, 0.25f);
 }

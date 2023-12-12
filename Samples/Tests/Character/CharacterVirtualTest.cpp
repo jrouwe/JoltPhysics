@@ -5,6 +5,7 @@
 #include <TestFramework.h>
 
 #include <Tests/Character/CharacterVirtualTest.h>
+#include <Jolt/Core/StringTools.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Layers.h>
@@ -32,6 +33,84 @@ void CharacterVirtualTest::Initialize()
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
 	mCharacter->SetListener(this);
+}
+
+void CharacterVirtualTest::FetchNewInput(const PreUpdateParams &inParams, Vec3Arg& outMovementDirection, bool &outJump, bool &outSwitchStance)
+{
+	if (inParams.mKeyboard->IsKeyJustReleased(DIK_U))
+	{
+		if (mReplayingFrame < 0)
+		{
+			// The replay is not active, activate it.
+			mReplayingFrame = 0;
+		}
+		else
+		{
+			// The replay is active, deactivate it.
+			mReplayingFrame = -1;
+		}
+	}
+
+	if (mReplayingFrame >= 0 && mReplayingFrame < int(mRecordedFrames.size()))
+	{
+		const FrameSnapshot& snapshot = mRecordedFrames[mReplayingFrame];
+		if (mReplayingFrame == 0)
+		{
+			// On the first frame we reset the `Character` state.
+			StateRecorderImpl recorder;
+			recorder.WriteBytes(snapshot.mInitialState.data(), snapshot.mInitialState.size());
+			recorder.SetValidating(false);
+			mCharacter->RestoreState(recorder);
+			mNonDeterministicFrames.clear();
+		}
+		else
+		{
+			// On all the other frames we check the state is exactly like the one initially recorded.
+			StateRecorderImpl recorder;
+			mCharacter->SaveState(recorder);
+			const string data = recorder.GetData();
+			const bool is_valid = data == snapshot.mInitialState;
+			if (!is_valid)
+			{
+				mNonDeterministicFrames.push_back(mReplayingFrame);
+			}
+		}
+
+		// Set the recorded input.
+		outMovementDirection = snapshot.mMovementDirection;
+		outJump = snapshot.mJump;
+		outSwitchStance = snapshot.mSwitchStance;
+		mReplayingFrame += 1;
+	}
+	else
+	{
+		mReplayingFrame = -1;
+
+		if (inParams.mKeyboard->IsKeyJustReleased(DIK_Y))
+		{
+			mIsRecordingInput = !mIsRecordingInput;
+			const bool start_frame_recording = mIsRecordingInput;
+			if (start_frame_recording)
+			{
+				mRecordedFrames.clear();
+			}
+		}
+
+		CharacterBaseTest::FetchNewInput(inParams, outMovementDirection, outJump, outSwitchStance);
+
+		if (mIsRecordingInput)
+		{
+			StateRecorderImpl recorder;
+			mCharacter->SaveState(recorder);
+
+			FrameSnapshot frame_snapshot;
+			frame_snapshot.mInitialState = recorder.GetData();
+			frame_snapshot.mMovementDirection = outMovementDirection;
+			frame_snapshot.mJump = outJump;
+			frame_snapshot.mSwitchStance = outSwitchStance;
+			mRecordedFrames.push_back(frame_snapshot);
+		}
+	}
 }
 
 void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -233,4 +312,43 @@ void CharacterVirtualTest::OnContactSolve(const CharacterVirtual *inCharacter, c
 	// Don't allow the player to slide down static not-too-steep surfaces when not actively moving and when not on a moving platform
 	if (!mAllowSliding && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))
 		ioNewCharacterVelocity = Vec3::sZero();
+}
+
+const char* CharacterVirtualTest::GetAdditionalCharacterStateInfo() const
+{
+	String str;
+	if (mIsRecordingInput)
+	{
+		str += StringFormat("[RECORDING IN PROGRESS - Press Y to stop]\nINPUT COUNT: %i", mRecordedFrames.size());
+	}
+	else
+	{
+		if (mReplayingFrame >= 0)
+		{
+			str += StringFormat("[REPLAYING - Press U to stop] INPUT %i", mReplayingFrame);
+		}
+		else
+		{
+			str += StringFormat("Press `Y` to record inputs or `U` to replay %i inputs.", mRecordedFrames.size());
+		}
+	}
+
+	str += "\nNON DETERMINISTIC FRAMES";
+	int c = 0;
+	for (int frame_index : mNonDeterministicFrames)
+	{
+		c += 1;
+		if ((c %  5) == 0)
+		{
+			str += "\n";
+		}
+		if (c >= 15)
+		{
+			str += ", ...";
+			break;
+		}
+		str += StringFormat("%i, ", frame_index);
+	}
+
+	return str.data();
 }
