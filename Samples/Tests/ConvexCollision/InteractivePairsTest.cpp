@@ -17,7 +17,7 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(InteractivePairsTest)
 	JPH_ADD_BASE_CLASS(InteractivePairsTest, Test)
 }
 
-void InteractivePairsTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void InteractivePairsTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Keyboard controls
 	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
@@ -44,7 +44,10 @@ void InteractivePairsTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		mDistance = 4.0f;
 	if (mDistance > 4.0f)
 		mDistance = -4.0f;
+}
 
+void InteractivePairsTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
 	float z = 0.0f;
 
 	const float r1 = 0.25f * JPH_PI;
