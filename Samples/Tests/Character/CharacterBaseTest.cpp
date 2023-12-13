@@ -648,12 +648,14 @@ void CharacterBaseTest::SaveState(StateRecorder &inStream) const
 {
 	inStream.Write(mTime);
 	inStream.Write(mRampBlocksTimeLeft);
+	inStream.Write(mReversingVerticallyMovingVelocity);
 }
 
 void CharacterBaseTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
 	inStream.Read(mRampBlocksTimeLeft);
+	inStream.Read(mReversingVerticallyMovingVelocity);
 }
 
 void CharacterBaseTest::SaveInputState(StateRecorder &inStream) const
