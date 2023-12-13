@@ -61,6 +61,7 @@ void CharacterVirtualTest::FetchNewInput(const PreUpdateParams &inParams, Vec3Ar
 			recorder.WriteBytes(snapshot.mInitialState.data(), snapshot.mInitialState.size());
 			recorder.SetValidating(false);
 			mCharacter->RestoreState(recorder);
+			recorder.Read(mAllowSliding);
 			recorder.Read(mDesiredVelocity);
 			mNonDeterministicFrames.clear();
 		}
@@ -68,6 +69,7 @@ void CharacterVirtualTest::FetchNewInput(const PreUpdateParams &inParams, Vec3Ar
 		// Validate the frame state by comparing it with the one recorded previously.
 		StateRecorderImpl recorder;
 		mCharacter->SaveState(recorder);
+		recorder.Write(mAllowSliding);
 		recorder.Write(mDesiredVelocity);
 		const string data = recorder.GetData();
 		const bool is_valid = data == snapshot.mInitialState;
@@ -102,6 +104,7 @@ void CharacterVirtualTest::FetchNewInput(const PreUpdateParams &inParams, Vec3Ar
 		{
 			StateRecorderImpl recorder;
 			mCharacter->SaveState(recorder);
+			recorder.Write(mAllowSliding);
 			recorder.Write(mDesiredVelocity);
 
 			FrameSnapshot frame_snapshot;
