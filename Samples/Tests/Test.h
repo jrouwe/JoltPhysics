@@ -102,6 +102,10 @@ public:
 	virtual void	SaveState(StateRecorder &inStream) const					{ }
 	virtual void	RestoreState(StateRecorder &inStream)						{ }
 
+	// Saving / restoring controller input state for replay
+	virtual void	SaveInputState(StateRecorder &inStream) const				{ }
+	virtual void	RestoreInputState(StateRecorder &inStream)					{ }
+
 	// Return a string that is displayed in the top left corner of the screen
 	virtual String	GetStatusString() const										{ return String(); }
 

@@ -34,6 +34,10 @@ public:
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;
 
+	// Saving / restoring controller input state for replay
+	virtual void			SaveInputState(StateRecorder &inStream) const override;
+	virtual void			RestoreInputState(StateRecorder &inStream) override;
+
 private:
 	// Calculate new ship velocity
 	void					UpdateShipVelocity();

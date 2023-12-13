@@ -180,6 +180,18 @@ void CharacterSpaceShipTest::RestoreState(StateRecorder &inStream)
 	UpdateShipVelocity();
 }
 
+void CharacterSpaceShipTest::SaveInputState(StateRecorder &inStream) const
+{
+	inStream.Write(mControlInput);
+	inStream.Write(mJump);
+}
+
+void CharacterSpaceShipTest::RestoreInputState(StateRecorder &inStream)
+{
+	inStream.Read(mControlInput);
+	inStream.Read(mJump);
+}
+
 void CharacterSpaceShipTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)
 {
 	// Cancel out velocity of space ship, we move relative to this which means we don't feel any of the acceleration of the ship (= engage inertial dampeners!)

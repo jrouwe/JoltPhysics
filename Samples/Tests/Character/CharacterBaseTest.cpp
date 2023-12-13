@@ -646,27 +646,28 @@ RMat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPi
 
 void CharacterBaseTest::SaveState(StateRecorder &inStream) const
 {
-	// Save input state
-	inStream.Write(mControlInput);
-	inStream.Write(mJump);
-	inStream.Write(mSwitchStance);
-
 	inStream.Write(mTime);
 	inStream.Write(mRampBlocksTimeLeft);
 }
 
 void CharacterBaseTest::RestoreState(StateRecorder &inStream)
 {
-	// Restore input state, note that we have to turn validation off here since we don't know what keys the user pressed at the beginning of the next step
-	bool was_validating = inStream.IsValidating();
-	inStream.SetValidating(false);
+	inStream.Read(mTime);
+	inStream.Read(mRampBlocksTimeLeft);
+}
+
+void CharacterBaseTest::SaveInputState(StateRecorder &inStream) const
+{
+	inStream.Write(mControlInput);
+	inStream.Write(mJump);
+	inStream.Write(mSwitchStance);
+}
+
+void CharacterBaseTest::RestoreInputState(StateRecorder &inStream)
+{
 	inStream.Read(mControlInput);
 	inStream.Read(mJump);
 	inStream.Read(mSwitchStance);
-	inStream.SetValidating(was_validating);
-
-	inStream.Read(mTime);
-	inStream.Read(mRampBlocksTimeLeft);
 }
 
 void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, RMat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity)
