@@ -2138,6 +2138,16 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			// Debugging functionality like shooting a ball and dragging objects
 			UpdateDebug(inDeltaTime);
 
+			{
+				// Pocess input, this is done once and before we save the state so that we can save the input state
+				JPH_PROFILE("ProcessInput");
+				Test::ProcessInputParams handle_input;
+				handle_input.mDeltaTime = 1.0f / mUpdateFrequency;
+				handle_input.mKeyboard = mKeyboard;
+				handle_input.mCameraState = GetCamera();
+				mTest->ProcessInput(handle_input);
+			}
+
 			if (mRecordState || check_determinism)
 			{
 				// Record the state prior to the step

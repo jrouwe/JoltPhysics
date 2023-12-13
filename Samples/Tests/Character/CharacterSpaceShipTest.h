@@ -18,6 +18,9 @@ public:
 	// Initialize the test
 	virtual void			Initialize() override;
 
+	// Process input
+	void					ProcessInput(const ProcessInputParams &inParams) override;
+
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
@@ -59,6 +62,10 @@ private:
 
 	// Global time
 	float					mTime = 0.0f;
+
+	// Player input
+	Vec3					mControlInput = Vec3::sZero();
+	bool					mJump = false;
 
 	// Smoothed value of the player input
 	Vec3					mDesiredVelocity = Vec3::sZero();

@@ -48,6 +48,19 @@ public:
 	// If this test implements a contact listener, it should be returned here
 	virtual ContactListener *GetContactListener()								{ return nullptr; }
 
+	class ProcessInputParams
+	{
+	public:
+		float								mDeltaTime;
+		Keyboard *							mKeyboard;
+		CameraState							mCameraState;
+	};
+
+	// Process input, this is called before the state is saved so you should change the state of the test
+	// so that on state restore, the correct input will be applied again and the simulation will remain deterministic
+	// even if the user has since released a keyboard key / pressed a new key.
+	virtual void	ProcessInput(const ProcessInputParams &inParams)			{ }
+
 	class PreUpdateParams
 	{
 	public:
