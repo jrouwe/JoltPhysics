@@ -313,6 +313,18 @@ public:
 	const ContactList &					GetActiveContacts() const								{ return mActiveContacts; }
 
 private:
+	// Sorting predicate for making contact order deterministic
+	struct ContactOrderingPredicate
+	{
+		inline bool						operator () (const Contact &inLHS, const Contact &inRHS) const
+		{
+			if (inLHS.mBodyB != inRHS.mBodyB)
+				return inLHS.mBodyB < inRHS.mBodyB;
+
+			return inLHS.mSubShapeIDB.GetValue() < inRHS.mSubShapeIDB.GetValue();
+		}
+	};
+
 	// A contact that needs to be ignored
 	struct IgnoredContact
 	{

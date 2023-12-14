@@ -240,6 +240,10 @@ void CharacterVirtual::GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMove
 	ContactCollector collector(mSystem, this, mMaxNumHits, mHitReductionCosMaxAngle, mUp, mPosition, outContacts);
 	CheckCollision(inPosition, mRotation, inMovementDirection, mPredictiveContactDistance, inShape, mPosition, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 
+	// The broadphase bounding boxes will not be deterministic, which means that the order in which the contacts are received by the collector is not deterministic.
+	// Therefore we need to sort the contacts to preserve determinism. Note that currently this will fail if we exceed mMaxNumHits hits.
+	QuickSort(outContacts.begin(), outContacts.end(), ContactOrderingPredicate());
+
 	// Flag if we exceeded the max number of hits
 	mMaxHitsExceeded = collector.mMaxHitsExceeded;
 
@@ -937,15 +941,24 @@ void CharacterVirtual::MoveShape(RVec3 &ioPosition, Vec3Arg inVelocity, float in
 #endif // JPH_DEBUG_RENDERER
 	) const
 {
+	JPH_DET_LOG("CharacterVirtual::MoveShape: pos: " << ioPosition << " vel: " << inVelocity << " dt: " << inDeltaTime);
+
 	Vec3 movement_direction = inVelocity.NormalizedOr(Vec3::sZero());
 
 	float time_remaining = inDeltaTime;
 	for (uint iteration = 0; iteration < mMaxCollisionIterations && time_remaining >= mMinTimeRemaining; iteration++)
 	{
+		JPH_DET_LOG("iter: " << iteration << " time: " << time_remaining);
+
 		// Determine contacts in the neighborhood
 		TempContactList contacts(inAllocator);
 		contacts.reserve(mMaxNumHits);
 		GetContactsAtPosition(ioPosition, movement_direction, mShape, contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+
+#ifdef JPH_ENABLE_DETERMINISM_LOG
+		for (const Contact &c : contacts)
+			JPH_DET_LOG("contact: " << c.mPosition << " vel: " << c.mLinearVelocity << " cnormal: " << c.mContactNormal << " snormal: " << c.mSurfaceNormal << " dist: " << c.mDistance << " fraction: " << c.mFraction << " body: " << c.mBodyB << " subshape: " << c.mSubShapeIDB);
+#endif // JPH_ENABLE_DETERMINISM_LOG
 
 		// Remove contacts with the same body that have conflicting normals
 		IgnoredContactList ignored_contacts(inAllocator);
