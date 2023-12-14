@@ -68,9 +68,6 @@ private:
 	float					mTime = 0.0f;
 
 	// Player input
-	Vec3					mControlInput = Vec3::sZero();
-	bool					mJump = false;
-
-	// Smoothed value of the player input
 	Vec3					mDesiredVelocity = Vec3::sZero();
+	bool					mJump = false;
 };

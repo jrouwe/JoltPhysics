@@ -47,20 +47,23 @@ void CharacterSpaceShipTest::Initialize()
 void CharacterSpaceShipTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Determine controller input
-	mControlInput = Vec3::sZero();
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		mControlInput.SetZ(-1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	mControlInput.SetZ(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		mControlInput.SetX(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		mControlInput.SetX(-1);
-	if (mControlInput != Vec3::sZero())
-		mControlInput = mControlInput.Normalized();
+	Vec3 control_input = Vec3::sZero();
+	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	control_input.SetZ(1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		control_input.SetX(1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		control_input.SetX(-1);
+	if (control_input != Vec3::sZero())
+		control_input = control_input.Normalized();
 
 	// Rotate controls to align with the camera
 	Vec3 cam_fwd = inParams.mCameraState.mForward;
 	cam_fwd.SetY(0.0f);
 	cam_fwd = cam_fwd.NormalizedOr(Vec3::sAxisX());
 	Quat rotation = Quat::sFromTo(Vec3::sAxisX(), cam_fwd);
-	mControlInput = rotation * mControlInput;
+	control_input = rotation * control_input;
+
+	// Smooth the player input in local space to the ship
+	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
 
 	// Check actions
 	mJump = false;
@@ -87,9 +90,6 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 #ifdef JPH_DEBUG_RENDERER
 	mCharacter->GetShape()->Draw(mDebugRenderer, mCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sGreen, false, true);
 #endif // JPH_DEBUG_RENDERER
-
-	// Smooth the player input in local space to the ship
-	mDesiredVelocity = 0.25f * mControlInput * cCharacterSpeed + 0.75f * mDesiredVelocity;
 
 	// Determine new character velocity
 	Vec3 current_vertical_velocity = mCharacter->GetLinearVelocity().Dot(mSpaceShipPrevTransform.GetAxisY()) * mCharacter->GetUp();
@@ -164,7 +164,6 @@ void CharacterSpaceShipTest::SaveState(StateRecorder &inStream) const
 	mCharacter->SaveState(inStream);
 
 	inStream.Write(mTime);
-	inStream.Write(mDesiredVelocity);
 	inStream.Write(mSpaceShipPrevTransform);
 }
 
@@ -173,7 +172,6 @@ void CharacterSpaceShipTest::RestoreState(StateRecorder &inStream)
 	mCharacter->RestoreState(inStream);
 
 	inStream.Read(mTime);
-	inStream.Read(mDesiredVelocity);
 	inStream.Read(mSpaceShipPrevTransform);
 
 	// Calculate new velocity
@@ -182,13 +180,13 @@ void CharacterSpaceShipTest::RestoreState(StateRecorder &inStream)
 
 void CharacterSpaceShipTest::SaveInputState(StateRecorder &inStream) const
 {
-	inStream.Write(mControlInput);
+	inStream.Write(mDesiredVelocity);
 	inStream.Write(mJump);
 }
 
 void CharacterSpaceShipTest::RestoreInputState(StateRecorder &inStream)
 {
-	inStream.Read(mControlInput);
+	inStream.Read(mDesiredVelocity);
 	inStream.Read(mJump);
 }
 
