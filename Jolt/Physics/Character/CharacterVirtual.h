@@ -316,7 +316,7 @@ private:
 	// Sorting predicate for making contact order deterministic
 	struct ContactOrderingPredicate
 	{
-		inline bool						operator () (const Contact &inLHS, const Contact &inRHS)
+		inline bool						operator () (const Contact &inLHS, const Contact &inRHS) const
 		{
 			if (inLHS.mBodyB != inRHS.mBodyB)
 				return inLHS.mBodyB < inRHS.mBodyB;
