@@ -123,7 +123,8 @@ void VehicleSixDOFTest::ProcessInput(const ProcessInputParams &inParams)
 	const float max_rotation_speed = 10.0f * JPH_PI;
 
 	// Determine steering and speed
-	mSteeringAngle = 0.0f, mSpeed = 0.0f;
+	mSteeringAngle = 0.0f;
+	mSpeed = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		mSteeringAngle = cMaxSteeringAngle;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	mSteeringAngle = -cMaxSteeringAngle;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		mSpeed = max_rotation_speed;

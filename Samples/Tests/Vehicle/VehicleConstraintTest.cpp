@@ -159,13 +159,14 @@ void VehicleConstraintTest::Initialize()
 void VehicleConstraintTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Determine acceleration and brake
-	mForward = 0.0f, mRight = 0.0f, mBrake = 0.0f, mHandBrake = 0.0f;
+	mForward = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
 		mForward = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
 		mForward = -1.0f;
 
 	// Check if we're reversing direction
+	mBrake = 0.0f;
 	if (mPreviousForward * mForward < 0.0f)
 	{
 		// Get vehicle velocity in local space to the body of the vehicle
@@ -184,6 +185,7 @@ void VehicleConstraintTest::ProcessInput(const ProcessInputParams &inParams)
 	}
 
 	// Hand brake will cancel gas pedal
+	mHandBrake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
 	{
 		mForward = 0.0f;
@@ -191,6 +193,7 @@ void VehicleConstraintTest::ProcessInput(const ProcessInputParams &inParams)
 	}
 
 	// Steering
+	mRight = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
 		mRight = -1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))

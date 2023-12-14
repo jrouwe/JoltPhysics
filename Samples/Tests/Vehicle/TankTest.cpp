@@ -167,7 +167,8 @@ void TankTest::ProcessInput(const ProcessInputParams &inParams)
 	const float min_velocity_pivot_turn = 1.0f;
 
 	// Determine acceleration and brake
-	mForward = 0.0f, mLeftRatio = 1.0f, mRightRatio = 1.0f, mBrake = 0.0f;
+	mForward = 0.0f;
+	mBrake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_RSHIFT))
 		mBrake = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
@@ -176,6 +177,8 @@ void TankTest::ProcessInput(const ProcessInputParams &inParams)
 		mForward = -1.0f;
 
 	// Steering
+	mLeftRatio = 1.0f;
+	mRightRatio = 1.0f;
 	float velocity = (mTankBody->GetRotation().Conjugated() * mTankBody->GetLinearVelocity()).GetZ();
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
 	{

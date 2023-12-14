@@ -130,7 +130,8 @@ void MotorcycleTest::Initialize()
 void MotorcycleTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Determine acceleration and brake
-	mForward = 0.0f, mBrake = 0.0f;
+	mForward = 0.0f;
+	mBrake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
 		mBrake = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
