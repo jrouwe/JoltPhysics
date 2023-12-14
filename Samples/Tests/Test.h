@@ -65,7 +65,6 @@ public:
 	{
 	public:
 		float								mDeltaTime;
-		Keyboard *							mKeyboard;
 		CameraState							mCameraState;
 #ifdef JPH_DEBUG_RENDERER
 		const SkeletonPose::DrawSettings *	mPoseDrawSettings;

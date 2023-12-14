@@ -2364,7 +2364,6 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 		JPH_PROFILE("PrePhysicsUpdate");
 		Test::PreUpdateParams pre_update;
 		pre_update.mDeltaTime = delta_time;
-		pre_update.mKeyboard = mKeyboard;
 		pre_update.mCameraState = GetCamera();
 	#ifdef JPH_DEBUG_RENDERER
 		pre_update.mPoseDrawSettings = &mPoseDrawSettings;
