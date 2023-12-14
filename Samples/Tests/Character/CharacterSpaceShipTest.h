@@ -19,7 +19,7 @@ public:
 	virtual void			Initialize() override;
 
 	// Process input
-	void					ProcessInput(const ProcessInputParams &inParams) override;
+	virtual void			ProcessInput(const ProcessInputParams &inParams) override;
 
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
