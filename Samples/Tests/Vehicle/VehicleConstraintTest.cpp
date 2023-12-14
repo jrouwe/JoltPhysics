@@ -243,11 +243,11 @@ void VehicleConstraintTest::SaveInputState(StateRecorder &inStream) const
 
 void VehicleConstraintTest::RestoreInputState(StateRecorder &inStream)
 {
-	inStream.Write(mForward);
-	inStream.Write(mPreviousForward);
-	inStream.Write(mRight);
-	inStream.Write(mBrake);
-	inStream.Write(mHandBrake);
+	inStream.Read(mForward);
+	inStream.Read(mPreviousForward);
+	inStream.Read(mRight);
+	inStream.Read(mBrake);
+	inStream.Read(mHandBrake);
 }
 
 void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const
