@@ -17,8 +17,8 @@ public:
 	virtual void				Initialize() override;
 	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 	virtual void				PostPhysicsUpdate(float inDeltaTime) override;
-	virtual void				SaveState(StateRecorder& inStream) const override;
-	virtual void				RestoreState(StateRecorder& inStream) override;
+	virtual void				SaveState(StateRecorder &inStream) const override;
+	virtual void				RestoreState(StateRecorder &inStream) override;
 
 	// If this test implements a contact listener, it should be returned here
 	virtual ContactListener *	GetContactListener() override		{ return this; }

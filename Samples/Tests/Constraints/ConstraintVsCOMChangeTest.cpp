@@ -78,12 +78,12 @@ void ConstraintVsCOMChangeTest::PrePhysicsUpdate(const PreUpdateParams& inParams
 	UpdateShapes();
 }
 
-void ConstraintVsCOMChangeTest::SaveState(StateRecorder& inStream) const
+void ConstraintVsCOMChangeTest::SaveState(StateRecorder &inStream) const
 {
 	inStream.Write(mTime);
 }
 
-void ConstraintVsCOMChangeTest::RestoreState(StateRecorder& inStream)
+void ConstraintVsCOMChangeTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
 
