@@ -55,8 +55,9 @@ void CharacterSpaceShipTest::ProcessInput(const ProcessInputParams &inParams)
 	if (control_input != Vec3::sZero())
 		control_input = control_input.Normalized();
 
-	// Rotate controls to align with the camera
-	Vec3 cam_fwd = inParams.mCameraState.mForward;
+	// Calculate the desired velocity in local space to the ship based on the camera forward
+	RMat44 new_space_ship_transform = mBodyInterface->GetCenterOfMassTransform(mSpaceShip);
+	Vec3 cam_fwd = new_space_ship_transform.GetRotation().Multiply3x3Transposed(inParams.mCameraState.mForward);
 	cam_fwd.SetY(0.0f);
 	cam_fwd = cam_fwd.NormalizedOr(Vec3::sAxisX());
 	Quat rotation = Quat::sFromTo(Vec3::sAxisX(), cam_fwd);
