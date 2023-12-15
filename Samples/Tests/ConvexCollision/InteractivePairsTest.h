@@ -12,6 +12,9 @@ class InteractivePairsTest : public Test
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, InteractivePairsTest)
 
+	// Process input
+	virtual void	ProcessInput(const ProcessInputParams &inParams) override;
+
 	// Update the test, called before the physics update
 	virtual void	PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 

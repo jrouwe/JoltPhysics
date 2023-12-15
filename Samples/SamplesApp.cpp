@@ -2095,8 +2095,12 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			ClearDebugRenderer();
 
 			// Restore state to what it was during that time
-			StateRecorderImpl &recorder = mPlaybackFrames[mCurrentPlaybackFrame];
-			RestoreState(recorder);
+			PlayBackFrame &frame = mPlaybackFrames[mCurrentPlaybackFrame];
+			RestoreState(frame.mState);
+
+			// Also restore input back to what it was at the time
+			frame.mInputState.Rewind();
+			mTest->RestoreInputState(frame.mInputState);
 
 			// Physics world is drawn using debug lines, when not paused
 			// Draw state prior to step so that debug lines are created from the same state
@@ -2114,7 +2118,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 
 			// Validate that update result is the same as the previously recorded state
 			if (check_determinism && mCurrentPlaybackFrame < (int)mPlaybackFrames.size() - 1)
-				ValidateState(mPlaybackFrames[mCurrentPlaybackFrame + 1]);
+				ValidateState(mPlaybackFrames[mCurrentPlaybackFrame + 1].mState);
 		}
 
 		// On the last frame go back to play mode
@@ -2138,11 +2142,24 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			// Debugging functionality like shooting a ball and dragging objects
 			UpdateDebug(inDeltaTime);
 
+			{
+				// Pocess input, this is done once and before we save the state so that we can save the input state
+				JPH_PROFILE("ProcessInput");
+				Test::ProcessInputParams handle_input;
+				handle_input.mDeltaTime = 1.0f / mUpdateFrequency;
+				handle_input.mKeyboard = mKeyboard;
+				handle_input.mCameraState = GetCamera();
+				mTest->ProcessInput(handle_input);
+			}
+
 			if (mRecordState || check_determinism)
 			{
 				// Record the state prior to the step
-				mPlaybackFrames.push_back(StateRecorderImpl());
-				SaveState(mPlaybackFrames.back());
+				mPlaybackFrames.push_back(PlayBackFrame());
+				SaveState(mPlaybackFrames.back().mState);
+
+				// Save input too
+				mTest->SaveInputState(mPlaybackFrames.back().mInputState);
 			}
 
 			// Physics world is drawn using debug lines, when not paused
@@ -2166,7 +2183,12 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 				SaveState(post_step_state);
 
 				// Restore to the previous state
-				RestoreState(mPlaybackFrames.back());
+				PlayBackFrame &frame = mPlaybackFrames.back();
+				RestoreState(frame.mState);
+
+				// Also restore input back to what it was at the time
+				frame.mInputState.Rewind();
+				mTest->RestoreInputState(frame.mInputState);
 
 				// Step again
 				StepPhysics(mJobSystemValidating);
@@ -2342,7 +2364,6 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 		JPH_PROFILE("PrePhysicsUpdate");
 		Test::PreUpdateParams pre_update;
 		pre_update.mDeltaTime = delta_time;
-		pre_update.mKeyboard = mKeyboard;
 		pre_update.mCameraState = GetCamera();
 	#ifdef JPH_DEBUG_RENDERER
 		pre_update.mPoseDrawSettings = &mPoseDrawSettings;
