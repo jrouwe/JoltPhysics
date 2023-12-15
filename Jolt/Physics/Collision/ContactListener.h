@@ -61,7 +61,7 @@ enum class ValidateResult
 	RejectAllContactsForThisBodyPair							///< Rejects this and any further contact points for this body pair
 };
 
-/// A listener class that receives collision contact events events.
+/// A listener class that receives collision contact events.
 /// It can be registered with the ContactConstraintManager (or PhysicsSystem).
 /// Note that contact listener callbacks are called from multiple threads at the same time when all bodies are locked, you're only allowed to read from the bodies and you can't change physics state.
 class ContactListener
