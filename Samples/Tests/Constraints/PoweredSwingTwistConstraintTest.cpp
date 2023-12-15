@@ -101,14 +101,14 @@ void PoweredSwingTwistConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElemen
 	Array<String> axis_label = { "X", "Y", "Z" };
 	Array<String> constraint_label = { "Twist", "Plane", "Normal" };
 
-	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
+	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI, axis_label]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
 
 		for (int body = 0; body < 2; ++body)
 			for (int axis = 0; axis < 3; ++axis)
 				inUI->CreateSlider(configuration_settings, "Body " + ConvertToString(body + 1) + " Rotation " + axis_label[axis] + " (deg)", RadiansToDegrees(sBodyRotation[body][axis]), -180.0f, 180.0f, 1.0f, [=](float inValue) { sBodyRotation[body].SetComponent(axis, DegreesToRadians(inValue)); });
 
-		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
+		inUI->CreateTextButton(configuration_settings, "Accept Changes", [this]() { RestartTest(); });
 
 		inUI->ShowMenu(configuration_settings);
 	});
