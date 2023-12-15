@@ -196,6 +196,9 @@ private:
 	// Cache the state of mRotationMotorActive
 	void						CacheRotationMotorActive();
 
+	// Cache the state of mRotationPositionMotorActive
+	void						CacheRotationPositionMotorActive();
+
 	/// Cache the state of mHasSpringLimits
 	void						CacheHasSpringLimits();
 
