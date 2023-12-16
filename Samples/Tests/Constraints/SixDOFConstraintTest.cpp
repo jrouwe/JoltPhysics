@@ -92,7 +92,7 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 	Array<String> labels = { "Translation X", "Translation Y", "Translation Z", "Rotation X", "Rotation Y", "Rotation Z" };
 	Array<String> motor_states = { "Off", "Velocity", "Position" };
 
-	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
+	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI, labels]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
 
 		for (int i = 0; i < 3; ++i)
@@ -127,28 +127,28 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 		for (int i = 0; i < 6; ++i)
 			inUI->CreateSlider(configuration_settings, "Motor Damping " + labels[i], sSettings->mMotorSettings[i].mSpringSettings.mDamping, 0.0f, 2.0f, 0.01f, [i](float inValue) { sSettings->mMotorSettings[i].mSpringSettings.mDamping = inValue; });
 
-		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
+		inUI->CreateTextButton(configuration_settings, "Accept Changes", [this]() { RestartTest(); });
 
 		inUI->ShowMenu(configuration_settings);
 	});
 
-	inUI->CreateTextButton(inSubMenu, "Runtime Settings", [=]() {
+	inUI->CreateTextButton(inSubMenu, "Runtime Settings", [this, inUI, labels, motor_states]() {
 		UIElement *runtime_settings = inUI->CreateMenu();
 
 		for (int i = 0; i < 3; ++i)
 		{
 			EAxis axis = EAxis(EAxis::TranslationX + i);
 
-			UIComboBox *combo = inUI->CreateComboBox(runtime_settings, "Motor " + labels[i], motor_states, (int)mConstraint->GetMotorState(axis), [=](int inItem) { mConstraint->SetMotorState(axis, (EMotorState)inItem); });
+			UIComboBox *combo = inUI->CreateComboBox(runtime_settings, "Motor " + labels[i], motor_states, (int)mConstraint->GetMotorState(axis), [this, axis](int inItem) { mConstraint->SetMotorState(axis, (EMotorState)inItem); });
 			combo->SetDisabled(sSettings->IsFixedAxis(axis));
 
-			UISlider *velocity = inUI->CreateSlider(runtime_settings, "Target Velocity", mConstraint->GetTargetVelocityCS()[i], -10.0f, 10.0f, 0.1f, [=](float inValue) {
+			UISlider *velocity = inUI->CreateSlider(runtime_settings, "Target Velocity", mConstraint->GetTargetVelocityCS()[i], -10.0f, 10.0f, 0.1f, [this, i](float inValue) {
 				Vec3 v = mConstraint->GetTargetVelocityCS();
 				v.SetComponent(i, inValue);
 				mConstraint->SetTargetVelocityCS(v); });
 			velocity->SetDisabled(sSettings->IsFixedAxis(axis));
 
-			UISlider *position = inUI->CreateSlider(runtime_settings, "Target Position", mConstraint->GetTargetPositionCS()[i], -10.0f, 10.0f, 0.1f, [=](float inValue) {
+			UISlider *position = inUI->CreateSlider(runtime_settings, "Target Position", mConstraint->GetTargetPositionCS()[i], -10.0f, 10.0f, 0.1f, [this, i](float inValue) {
 				Vec3 v = mConstraint->GetTargetPositionCS();
 				v.SetComponent(i, inValue);
 				mConstraint->SetTargetPositionCS(v); });
@@ -159,7 +159,7 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 		{
 			EAxis axis = EAxis(EAxis::RotationX + i);
 
-			inUI->CreateComboBox(runtime_settings, "Motor " + labels[axis], motor_states, (int)mConstraint->GetMotorState(axis), [=](int inItem) { mConstraint->SetMotorState(axis, (EMotorState)inItem); });
+			inUI->CreateComboBox(runtime_settings, "Motor " + labels[axis], motor_states, (int)mConstraint->GetMotorState(axis), [this, axis](int inItem) { mConstraint->SetMotorState(axis, (EMotorState)inItem); });
 
 			inUI->CreateSlider(runtime_settings, "Target Velocity", RadiansToDegrees(mConstraint->GetTargetAngularVelocityCS()[i]), -90.0f, 90.0f, 1.0f, [this, i](float inValue) {
 				Vec3 v = mConstraint->GetTargetAngularVelocityCS();
