@@ -408,10 +408,10 @@ SamplesApp::SamplesApp()
 			UIElement *tests = mDebugUI->CreateMenu();
 			for (TestCategory &c : sAllCategories)
 			{
-				mDebugUI->CreateTextButton(tests, c.mName, [=]() {
+				mDebugUI->CreateTextButton(tests, c.mName, [this, &c]() {
 					UIElement *category = mDebugUI->CreateMenu();
 					for (uint j = 0; j < c.mNumTests; ++j)
-						mDebugUI->CreateTextButton(category, c.mTests[j].mName, [=]() { StartTest(c.mTests[j].mRTTI); });
+						mDebugUI->CreateTextButton(category, c.mTests[j].mName, [this, &c, j]() { StartTest(c.mTests[j].mRTTI); });
 					mDebugUI->ShowMenu(category);
 				});
 			}
@@ -503,14 +503,14 @@ SamplesApp::SamplesApp()
 		mDebugUI->CreateTextButton(main_menu, "Mouse Probe", [this]() {
 			UIElement *probe_options = mDebugUI->CreateMenu();
 			mDebugUI->CreateComboBox(probe_options, "Mode", { "Pick", "Ray", "RayCollector", "CollidePoint", "CollideShape", "CastShape", "CollideSoftBody", "TransfShape", "GetTriangles", "BP Ray", "BP Box", "BP Sphere", "BP Point", "BP OBox", "BP Cast Box" }, (int)mProbeMode, [this](int inItem) { mProbeMode = (EProbeMode)inItem; });
-			mDebugUI->CreateComboBox(probe_options, "Shape", { "Sphere", "Box", "ConvexHull", "Capsule", "TaperedCapsule", "Cylinder", "Triangle", "StaticCompound", "StaticCompound2", "MutableCompound", "Mesh" }, (int)mProbeShape, [=](int inItem) { mProbeShape = (EProbeShape)inItem; });
+			mDebugUI->CreateComboBox(probe_options, "Shape", { "Sphere", "Box", "ConvexHull", "Capsule", "TaperedCapsule", "Cylinder", "Triangle", "StaticCompound", "StaticCompound2", "MutableCompound", "Mesh" }, (int)mProbeShape, [this](int inItem) { mProbeShape = (EProbeShape)inItem; });
 			mDebugUI->CreateCheckBox(probe_options, "Scale Shape", mScaleShape, [this](UICheckBox::EState inState) { mScaleShape = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateSlider(probe_options, "Scale X", mShapeScale.GetX(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetX(inValue); });
 			mDebugUI->CreateSlider(probe_options, "Scale Y", mShapeScale.GetY(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetY(inValue); });
 			mDebugUI->CreateSlider(probe_options, "Scale Z", mShapeScale.GetZ(), -5.0f, 5.0f, 0.1f, [this](float inValue) { mShapeScale.SetZ(inValue); });
-			mDebugUI->CreateComboBox(probe_options, "Back Face Cull", { "On", "Off" }, (int)mBackFaceMode, [=](int inItem) { mBackFaceMode = (EBackFaceMode)inItem; });
-			mDebugUI->CreateComboBox(probe_options, "Active Edge Mode", { "Only Active", "All" }, (int)mActiveEdgeMode, [=](int inItem) { mActiveEdgeMode = (EActiveEdgeMode)inItem; });
-			mDebugUI->CreateComboBox(probe_options, "Collect Faces Mode", { "Collect Faces", "No Faces" }, (int)mCollectFacesMode, [=](int inItem) { mCollectFacesMode = (ECollectFacesMode)inItem; });
+			mDebugUI->CreateComboBox(probe_options, "Back Face Cull", { "On", "Off" }, (int)mBackFaceMode, [this](int inItem) { mBackFaceMode = (EBackFaceMode)inItem; });
+			mDebugUI->CreateComboBox(probe_options, "Active Edge Mode", { "Only Active", "All" }, (int)mActiveEdgeMode, [this](int inItem) { mActiveEdgeMode = (EActiveEdgeMode)inItem; });
+			mDebugUI->CreateComboBox(probe_options, "Collect Faces Mode", { "Collect Faces", "No Faces" }, (int)mCollectFacesMode, [this](int inItem) { mCollectFacesMode = (ECollectFacesMode)inItem; });
 			mDebugUI->CreateSlider(probe_options, "Max Separation Distance", mMaxSeparationDistance, 0.0f, 5.0f, 0.1f, [this](float inValue) { mMaxSeparationDistance = inValue; });
 			mDebugUI->CreateCheckBox(probe_options, "Treat Convex As Solid", mTreatConvexAsSolid, [this](UICheckBox::EState inState) { mTreatConvexAsSolid = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(probe_options, "Return Deepest Point", mReturnDeepestPoint, [this](UICheckBox::EState inState) { mReturnDeepestPoint = inState == UICheckBox::STATE_CHECKED; });
@@ -521,10 +521,10 @@ SamplesApp::SamplesApp()
 		});
 		mDebugUI->CreateTextButton(main_menu, "Shoot Object", [this]() {
 			UIElement *shoot_options = mDebugUI->CreateMenu();
-			mDebugUI->CreateTextButton(shoot_options, "Shoot Object (B)", [=]() { ShootObject(); });
+			mDebugUI->CreateTextButton(shoot_options, "Shoot Object (B)", [this]() { ShootObject(); });
 			mDebugUI->CreateSlider(shoot_options, "Initial Velocity", mShootObjectVelocity, 0.0f, 500.0f, 10.0f, [this](float inValue) { mShootObjectVelocity = inValue; });
-			mDebugUI->CreateComboBox(shoot_options, "Shape", { "Sphere", "ConvexHull", "Thin Bar", "Soft Body Cube" }, (int)mShootObjectShape, [=](int inItem) { mShootObjectShape = (EShootObjectShape)inItem; });
-			mDebugUI->CreateComboBox(shoot_options, "Motion Quality", { "Discrete", "LinearCast" }, (int)mShootObjectMotionQuality, [=](int inItem) { mShootObjectMotionQuality = (EMotionQuality)inItem; });
+			mDebugUI->CreateComboBox(shoot_options, "Shape", { "Sphere", "ConvexHull", "Thin Bar", "Soft Body Cube" }, (int)mShootObjectShape, [this](int inItem) { mShootObjectShape = (EShootObjectShape)inItem; });
+			mDebugUI->CreateComboBox(shoot_options, "Motion Quality", { "Discrete", "LinearCast" }, (int)mShootObjectMotionQuality, [this](int inItem) { mShootObjectMotionQuality = (EMotionQuality)inItem; });
 			mDebugUI->CreateSlider(shoot_options, "Friction", mShootObjectFriction, 0.0f, 1.0f, 0.05f, [this](float inValue) { mShootObjectFriction = inValue; });
 			mDebugUI->CreateSlider(shoot_options, "Restitution", mShootObjectRestitution, 0.0f, 1.0f, 0.05f, [this](float inValue) { mShootObjectRestitution = inValue; });
 			mDebugUI->CreateCheckBox(shoot_options, "Scale Shape", mShootObjectScaleShape, [this](UICheckBox::EState inState) { mShootObjectScaleShape = inState == UICheckBox::STATE_CHECKED; });
@@ -2095,8 +2095,12 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			ClearDebugRenderer();
 
 			// Restore state to what it was during that time
-			StateRecorderImpl &recorder = mPlaybackFrames[mCurrentPlaybackFrame];
-			RestoreState(recorder);
+			PlayBackFrame &frame = mPlaybackFrames[mCurrentPlaybackFrame];
+			RestoreState(frame.mState);
+
+			// Also restore input back to what it was at the time
+			frame.mInputState.Rewind();
+			mTest->RestoreInputState(frame.mInputState);
 
 			// Physics world is drawn using debug lines, when not paused
 			// Draw state prior to step so that debug lines are created from the same state
@@ -2114,7 +2118,7 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 
 			// Validate that update result is the same as the previously recorded state
 			if (check_determinism && mCurrentPlaybackFrame < (int)mPlaybackFrames.size() - 1)
-				ValidateState(mPlaybackFrames[mCurrentPlaybackFrame + 1]);
+				ValidateState(mPlaybackFrames[mCurrentPlaybackFrame + 1].mState);
 		}
 
 		// On the last frame go back to play mode
@@ -2138,11 +2142,24 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 			// Debugging functionality like shooting a ball and dragging objects
 			UpdateDebug(inDeltaTime);
 
+			{
+				// Pocess input, this is done once and before we save the state so that we can save the input state
+				JPH_PROFILE("ProcessInput");
+				Test::ProcessInputParams handle_input;
+				handle_input.mDeltaTime = 1.0f / mUpdateFrequency;
+				handle_input.mKeyboard = mKeyboard;
+				handle_input.mCameraState = GetCamera();
+				mTest->ProcessInput(handle_input);
+			}
+
 			if (mRecordState || check_determinism)
 			{
 				// Record the state prior to the step
-				mPlaybackFrames.push_back(StateRecorderImpl());
-				SaveState(mPlaybackFrames.back());
+				mPlaybackFrames.push_back(PlayBackFrame());
+				SaveState(mPlaybackFrames.back().mState);
+
+				// Save input too
+				mTest->SaveInputState(mPlaybackFrames.back().mInputState);
 			}
 
 			// Physics world is drawn using debug lines, when not paused
@@ -2166,7 +2183,12 @@ bool SamplesApp::RenderFrame(float inDeltaTime)
 				SaveState(post_step_state);
 
 				// Restore to the previous state
-				RestoreState(mPlaybackFrames.back());
+				PlayBackFrame &frame = mPlaybackFrames.back();
+				RestoreState(frame.mState);
+
+				// Also restore input back to what it was at the time
+				frame.mInputState.Rewind();
+				mTest->RestoreInputState(frame.mInputState);
 
 				// Step again
 				StepPhysics(mJobSystemValidating);
@@ -2342,7 +2364,6 @@ void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 		JPH_PROFILE("PrePhysicsUpdate");
 		Test::PreUpdateParams pre_update;
 		pre_update.mDeltaTime = delta_time;
-		pre_update.mKeyboard = mKeyboard;
 		pre_update.mCameraState = GetCamera();
 	#ifdef JPH_DEBUG_RENDERER
 		pre_update.mPoseDrawSettings = &mPoseDrawSettings;

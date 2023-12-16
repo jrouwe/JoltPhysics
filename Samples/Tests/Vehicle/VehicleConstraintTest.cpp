@@ -156,50 +156,56 @@ void VehicleConstraintTest::Initialize()
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
 }
 
-void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void VehicleConstraintTest::ProcessInput(const ProcessInputParams &inParams)
 {
-	VehicleTest::PrePhysicsUpdate(inParams);
-
 	// Determine acceleration and brake
-	float forward = 0.0f, right = 0.0f, brake = 0.0f, hand_brake = 0.0f;
+	mForward = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
-		forward = 1.0f;
+		mForward = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
-		forward = -1.0f;
+		mForward = -1.0f;
 
 	// Check if we're reversing direction
-	if (mPreviousForward * forward < 0.0f)
+	mBrake = 0.0f;
+	if (mPreviousForward * mForward < 0.0f)
 	{
 		// Get vehicle velocity in local space to the body of the vehicle
 		float velocity = (mCarBody->GetRotation().Conjugated() * mCarBody->GetLinearVelocity()).GetZ();
-		if ((forward > 0.0f && velocity < -0.1f) || (forward < 0.0f && velocity > 0.1f))
+		if ((mForward > 0.0f && velocity < -0.1f) || (mForward < 0.0f && velocity > 0.1f))
 		{
 			// Brake while we've not stopped yet
-			forward = 0.0f;
-			brake = 1.0f;
+			mForward = 0.0f;
+			mBrake = 1.0f;
 		}
 		else
 		{
 			// When we've come to a stop, accept the new direction
-			mPreviousForward = forward;
+			mPreviousForward = mForward;
 		}
 	}
 
 	// Hand brake will cancel gas pedal
+	mHandBrake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
 	{
-		forward = 0.0f;
-		hand_brake = 1.0f;
+		mForward = 0.0f;
+		mHandBrake = 1.0f;
 	}
 
 	// Steering
+	mRight = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
-		right = -1.0f;
+		mRight = -1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
-		right = 1.0f;
+		mRight = 1.0f;
+}
+
+void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	VehicleTest::PrePhysicsUpdate(inParams);
 
 	// On user input, assure that the car is active
-	if (right != 0.0f || forward != 0.0f || brake != 0.0f || hand_brake != 0.0f)
+	if (mRight != 0.0f || mForward != 0.0f || mBrake != 0.0f || mHandBrake != 0.0f)
 		mBodyInterface->ActivateBody(mCarBody->GetID());
 
 	WheeledVehicleController *controller = static_cast<WheeledVehicleController *>(mVehicleConstraint->GetController());
@@ -215,7 +221,7 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		d.mLimitedSlipRatio = limited_slip_ratio;
 
 	// Pass the input on to the constraint
-	controller->SetDriverInput(forward, right, brake, hand_brake);
+	controller->SetDriverInput(mForward, mRight, mBrake, mHandBrake);
 
 	// Set the collision tester
 	mVehicleConstraint->SetVehicleCollisionTester(mTesters[sCollisionMode]);
@@ -229,18 +235,22 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 }
 
-void VehicleConstraintTest::SaveState(StateRecorder& inStream) const
+void VehicleConstraintTest::SaveInputState(StateRecorder &inStream) const
 {
-	VehicleTest::SaveState(inStream);
-
+	inStream.Write(mForward);
 	inStream.Write(mPreviousForward);
+	inStream.Write(mRight);
+	inStream.Write(mBrake);
+	inStream.Write(mHandBrake);
 }
 
-void VehicleConstraintTest::RestoreState(StateRecorder& inStream)
+void VehicleConstraintTest::RestoreInputState(StateRecorder &inStream)
 {
-	VehicleTest::RestoreState(inStream);
-
+	inStream.Read(mForward);
 	inStream.Read(mPreviousForward);
+	inStream.Read(mRight);
+	inStream.Read(mBrake);
+	inStream.Read(mHandBrake);
 }
 
 void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const

@@ -235,6 +235,9 @@ private:
 	/// Number of constraints to process at once in JobDetermineActiveConstraints
 	static constexpr int		cDetermineActiveConstraintsBatchSize = 64;
 
+	/// Number of constraints to process at once in JobSetupVelocityConstraints, we want a low number of threads working on this so we take fairly large batches
+	static constexpr int		cSetupVelocityConstraintsBatchSize = 256;
+
 	/// Number of bodies to process at once in JobApplyGravity
 	static constexpr int		cApplyGravityBatchSize = 64;
 

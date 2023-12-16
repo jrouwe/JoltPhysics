@@ -255,6 +255,14 @@ void SixDOFConstraint::CacheRotationMotorActive()
 		|| HasFriction(EAxis::RotationZ);
 }
 
+void SixDOFConstraint::CacheRotationPositionMotorActive()
+{
+	mRotationPositionMotorActive = 0;
+	for (int i = 0; i < 3; ++i)
+		if (mMotorState[EAxis::RotationX + i] == EMotorState::Position)
+			mRotationPositionMotorActive |= 1 << i;
+}
+
 void SixDOFConstraint::CacheHasSpringLimits()
 {
 	mHasSpringLimits = mLimitsSpringSettings[EAxis::TranslationX].mFrequency > 0.0f
@@ -284,11 +292,7 @@ void SixDOFConstraint::SetMotorState(EAxis inAxis, EMotorState inState)
 			mMotorRotationConstraintPart[inAxis - EAxis::RotationX].Deactivate();
 
 			CacheRotationMotorActive();
-
-			mRotationPositionMotorActive = 0;
-			for (int i = 0; i < 3; ++i)
-				if (mMotorState[EAxis::RotationX + i] == EMotorState::Position)
-					mRotationPositionMotorActive |= 1 << i;
+			CacheRotationPositionMotorActive();
 		}
 	}
 }
@@ -816,6 +820,10 @@ void SixDOFConstraint::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTargetAngularVelocity);
 	inStream.Read(mTargetPosition);
 	inStream.Read(mTargetOrientation);
+
+	CacheTranslationMotorActive();
+	CacheRotationMotorActive();
+	CacheRotationPositionMotorActive();
 }
 
 Ref<ConstraintSettings> SixDOFConstraint::GetConstraintSettings() const

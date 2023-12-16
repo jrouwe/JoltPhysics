@@ -16,8 +16,11 @@
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Core/StreamWrapper.h>
 
 TEST_SUITE("ShapeTests")
@@ -619,5 +622,59 @@ TEST_SUITE("ShapeTests")
 		// Check that get world space bounds returns an invalid bounding box for double precision parameters
 		AABox bounds3 = mutable_compound->GetWorldSpaceBounds(DMat44::sRotationTranslation(rotation, DVec3(100, 200, 300)), Vec3(1, 2, 3));
 		CHECK(!bounds3.IsValid());
+	}
+
+	TEST_CASE("TestSaveMeshShape")
+	{
+		// Create an n x n grid of triangles
+		const int n = 10;
+		const float s = 0.1f;
+		TriangleList triangles;
+		for (int z = 0; z < n; ++z)
+			for (int x = 0; x < n; ++x)
+			{
+				float fx = s * x - s * n / 2, fz = s * z - s * n / 2;
+				triangles.push_back(Triangle(Vec3(fx, 0, fz), Vec3(fx, 0, fz + s), Vec3(fx + s, 0, fz + s)));
+				triangles.push_back(Triangle(Vec3(fx, 0, fz), Vec3(fx + s, 0, fz + s), Vec3(fx + s, 0, fz)));
+			}
+		MeshShapeSettings mesh_settings(triangles);
+		mesh_settings.SetEmbedded();
+		RefConst<Shape> shape = mesh_settings.Create().Get();
+
+		// Calculate expected bounds
+		AABox expected_bounds;
+		for (const Triangle &t : triangles)
+			for (const Float3 &v : t.mV)
+				expected_bounds.Encapsulate(Vec3(v));
+
+		stringstream stream;
+
+		{
+			// Write mesh to stream
+			StreamOutWrapper wrapper(stream);
+			shape->SaveBinaryState(wrapper);
+		}
+
+		{
+			// Read back mesh
+			StreamInWrapper iwrapper(stream);
+			Shape::ShapeResult result = Shape::sRestoreFromBinaryState(iwrapper);
+			CHECK(result.IsValid());
+			RefConst<MeshShape> mesh_shape = static_cast<const MeshShape *>(result.Get().GetPtr());
+
+			// Test if it contains the same amount of triangles
+			Shape::Stats stats = mesh_shape->GetStats();
+			CHECK(stats.mNumTriangles == triangles.size());
+
+			// Check bounding box
+			CHECK(mesh_shape->GetLocalBounds() == expected_bounds);
+
+			// Check if we can hit it with a ray
+			RayCastResult hit;
+			RayCast ray(Vec3(0.5f * s, 1, 0.25f * s), Vec3(0, -2, 0)); // Hit in the center of a triangle
+			CHECK(mesh_shape->CastRay(ray, SubShapeIDCreator(), hit));
+			CHECK(hit.mFraction == 0.5f);
+			CHECK(mesh_shape->GetSurfaceNormal(hit.mSubShapeID2, ray.GetPointOnRay(hit.mFraction)) == Vec3::sAxisY());
+		}
 	}
 }

@@ -15,7 +15,10 @@ public:
 
 	// See: Test
 	virtual void			Initialize() override;
+	virtual void			ProcessInput(const ProcessInputParams &inParams) override;
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+	virtual void			SaveInputState(StateRecorder &inStream) const override;
+	virtual void			RestoreInputState(StateRecorder &inStream) override;
 
 	virtual void			GetInitialCamera(CameraState &ioState) const override;
 	virtual RMat44			GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
@@ -39,4 +42,8 @@ private:
 
 	Body *					mCarBody;
 	Ref<SixDOFConstraint>	mWheels[int(EWheel::Num)];
+
+	// Player input
+	float					mSteeringAngle = 0.0f;
+	float					mSpeed = 0.0f;
 };

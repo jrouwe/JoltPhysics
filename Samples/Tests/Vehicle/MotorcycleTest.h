@@ -19,9 +19,10 @@ public:
 
 	// See: Test
 	virtual void				Initialize() override;
+	virtual void				ProcessInput(const ProcessInputParams &inParams) override;
 	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
-	virtual void				SaveState(StateRecorder& inStream) const override;
-	virtual void				RestoreState(StateRecorder& inStream) override;
+	virtual void				SaveInputState(StateRecorder &inStream) const override;
+	virtual void				RestoreInputState(StateRecorder &inStream) override;
 
 	virtual void				GetInitialCamera(CameraState &ioState) const override;
 	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
@@ -35,6 +36,10 @@ private:
 
 	Body *						mMotorcycleBody;							///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint
+
+	// Player input
+	float						mForward = 0.0f;
 	float						mPreviousForward = 1.0f;					///< Keeps track of last motorcycle direction so we know when to brake and when to accelerate
-	float						mCurrentRight = 0.0f;						///< Keeps track of the current steering angle (radians)
+	float						mRight = 0.0f;								///< Keeps track of the current steering angle
+	float						mBrake = 0.0f;
 };

@@ -19,6 +19,9 @@ public:
 	// Initialize the test
 	virtual void			Initialize() override;
 
+	// Process input
+	virtual void			ProcessInput(const ProcessInputParams &inParams) override;
+
 	// Update the test, called before the physics update
 	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
@@ -35,6 +38,10 @@ public:
 	// Saving / restoring state for replay
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;
+
+	// Saving / restoring controller input state for replay
+	virtual void			SaveInputState(StateRecorder &inStream) const override;
+	virtual void			RestoreInputState(StateRecorder &inStream) override;
 
 protected:
 	// Get position of the character
@@ -106,4 +113,9 @@ private:
 	BodyID					mReversingVerticallyMovingBody;
 	float					mReversingVerticallyMovingVelocity = 1.0f;
 	BodyID					mHorizontallyMovingBody;
+
+	// Player input
+	Vec3					mControlInput = Vec3::sZero();
+	bool					mJump = false;
+	bool					mSwitchStance = false;
 };

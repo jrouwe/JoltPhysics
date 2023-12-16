@@ -260,14 +260,14 @@ bool MotorcycleController::SolveLongitudinalAndLateralConstraints(float inDeltaT
 	return impulse;
 }
 
-void MotorcycleController::SaveState(StateRecorder& inStream) const
+void MotorcycleController::SaveState(StateRecorder &inStream) const
 {
 	WheeledVehicleController::SaveState(inStream);
 
 	inStream.Write(mTargetLean);
 }
 
-void MotorcycleController::RestoreState(StateRecorder& inStream)
+void MotorcycleController::RestoreState(StateRecorder &inStream)
 {
 	WheeledVehicleController::RestoreState(inStream);
 
