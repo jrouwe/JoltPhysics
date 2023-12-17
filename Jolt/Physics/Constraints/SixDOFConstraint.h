@@ -59,6 +59,9 @@ public:
 	/// For rotation: Max friction torque in Nm. 0 = no friction.
 	float						mMaxFriction[EAxis::Num] = { 0, 0, 0, 0, 0, 0 };
 
+	/// The type of swing constraint that we want to use.
+	ESwingType					mSwingType = ESwingType::Cone;
+
 	/// Limits.
 	/// For translation: Min and max linear limits in m (0 is frame of body 1 and 2 coincide).
 	/// For rotation: Min and max angular limits in rad (0 is frame of body 1 and 2 coincide). See comments at Axis enum for limit ranges.
@@ -229,7 +232,7 @@ private:
 	bool						mHasSpringLimits = false;									// If any of the limit springs have a non-zero frequency/stiffness
 	float						mLimitMin[EAxis::Num];
 	float						mLimitMax[EAxis::Num];
-	float						mCenteredLimits[3];											// Rotation limits centered so that min = -max
+	float						mCenteredLimits[2];											// Rotation limits centered so that min = -max for axis Y and Z
 	SpringSettings				mLimitsSpringSettings[EAxis::NumTranslation];
 
 	// Motor settings for each axis

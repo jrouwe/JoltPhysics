@@ -28,6 +28,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SixDOFConstraintSettings)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mAxisX2)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mAxisY2)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mMaxFriction)
+	JPH_ADD_ENUM_ATTRIBUTE(SixDOFConstraintSettings, mSwingType)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mLimitMin)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mLimitMax)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mLimitsSpringSettings)
@@ -46,6 +47,7 @@ void SixDOFConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mAxisX2);
 	inStream.Write(mAxisY2);
 	inStream.Write(mMaxFriction);
+	inStream.Write(mSwingType);
 	inStream.Write(mLimitMin);
 	inStream.Write(mLimitMax);
 	for (const SpringSettings &s : mLimitsSpringSettings)
@@ -66,6 +68,7 @@ void SixDOFConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mAxisX2);
 	inStream.Read(mAxisY2);
 	inStream.Read(mMaxFriction);
+	inStream.Read(mSwingType);
 	inStream.Read(mLimitMin);
 	inStream.Read(mLimitMax);
 	for (SpringSettings &s : mLimitsSpringSettings)
@@ -82,38 +85,39 @@ TwoBodyConstraint *SixDOFConstraintSettings::Create(Body &inBody1, Body &inBody2
 void SixDOFConstraint::UpdateRotationLimits()
 {
 	// Make values sensible
-	Vec3 center;
+	Vec3 center = Vec3::sZero();
+	mCenteredLimits[0] = mCenteredLimits[1] = 0.0f;
 	for (int i = 3; i < 6; ++i)
 		if (IsFixedAxis((EAxis)i))
 		{
 			mLimitMin[i] = mLimitMax[i] = 0.0f;
-
-			// Center the limits
-			int axis = i - 3;
-			center.SetComponent(axis, 0.0f);
-			mCenteredLimits[axis] = 0.0f;
 		}
 		else
 		{
 			JPH_ASSERT(mLimitMin[i] < mLimitMax[i]);
 
-			// Center the limits
-			int axis = i - 3;
-			float value = (mLimitMin[i] + mLimitMax[i]) * 0.5f;
-			center.SetComponent(axis, value);
-			mCenteredLimits[axis] = min(JPH_PI, mLimitMax[i] - value);
+			if (i > 3)
+			{
+				// Center the limits for Y and Z axis
+				float value = (mLimitMin[i] + mLimitMax[i]) * 0.5f;
+				center.SetComponent(i - 3, value);
+				mCenteredLimits[i - 4] = min(JPH_PI, mLimitMax[i] - value);
+			}
 		}
 
 	// Calculate rotation needed to go from constraint space where the limit is centered to constraint space
 	mCenteredLimitsToConstraint = Quat::sEulerAngles(center);
 
 	// Pass limits on to constraint part
-	mSwingTwistConstraintPart.SetLimits(-mCenteredLimits[0], mCenteredLimits[0], mCenteredLimits[1], mCenteredLimits[2]);
+	mSwingTwistConstraintPart.SetLimits(mLimitMin[3], mLimitMax[3], mCenteredLimits[0], mCenteredLimits[1]);
 }
 
 SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {
+	// Override swing type
+	mSwingTwistConstraintPart.SetSwingType(inSettings.mSwingType);
+
 	// Calculate rotation needed to go from constraint space to body1 local space
 	Vec3 axis_z1 = inSettings.mAxisX1.Cross(inSettings.mAxisY1);
 	Mat44 c_to_b1(Vec4(inSettings.mAxisX1, 0), Vec4(inSettings.mAxisY1, 0), Vec4(axis_z1, 0), Vec4(0, 0, 0, 1));
@@ -775,8 +779,8 @@ void SixDOFConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	RMat44 constraint_body1_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1 * mCenteredLimitsToConstraint, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	inRenderer->DrawSwingLimits(constraint_body1_to_world, mCenteredLimits[1], mCenteredLimits[2], false, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
-	inRenderer->DrawPie(constraint_body1_to_world.GetTranslation(), mDrawConstraintSize, constraint_body1_to_world.GetAxisX(), constraint_body1_to_world.GetAxisY(), -mCenteredLimits[0], mCenteredLimits[0], Color::sPurple, DebugRenderer::ECastShadow::Off);
+	inRenderer->DrawSwingLimits(constraint_body1_to_world, mCenteredLimits[0], mCenteredLimits[1], mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	inRenderer->DrawPie(constraint_body1_to_world.GetTranslation(), mDrawConstraintSize, constraint_body1_to_world.GetAxisX(), constraint_body1_to_world.GetAxisY(), mLimitMin[3], mLimitMax[3], Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER
 

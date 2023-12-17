@@ -10,6 +10,13 @@
 
 JPH_NAMESPACE_BEGIN
 
+/// How the swing limit behaves
+enum class ESwingType : uint8
+{
+	Cone,						///< Swing is limited by a cone shape, note that this cone starts to deform for larger swing angles
+	Pyramid,					///< Swing is limited by a pyramid shape, note that this pyramid starts to deform for larger swing angles
+};
+
 /// Quaternion based constraint that decomposes the rotation in constraint space in swing and twist: q = q_swing * q_twist
 /// where q_swing.x = 0 and where q_twist.y = q_twist.z = 0
 ///
@@ -25,6 +32,18 @@ JPH_NAMESPACE_BEGIN
 class SwingTwistConstraintPart
 {
 public:
+	/// Override the swing type
+	void						SetSwingType(ESwingType inSwingType)
+	{
+		mSwingType = inSwingType;
+	}
+
+	/// Get the swing type for this part
+	ESwingType					GetSwingType() const
+	{
+		return mSwingType;
+	}
+
 	/// Set limits for this constraint (see description above for parameters)
 	void						SetLimits(float inTwistMinAngle, float inTwistMaxAngle, float inSwingYHalfAngle, float inSwingZHalfAngle)
 	{
@@ -38,8 +57,13 @@ public:
 		JPH_ASSERT(inSwingZHalfAngle >= 0.0f && inSwingZHalfAngle <= JPH_PI);
 
 		// Calculate the sine and cosine of the half angles
+		Vec4 quarter_angle = 0.5f * Vec4(inTwistMinAngle, inTwistMaxAngle, inSwingYHalfAngle, inSwingZHalfAngle);
 		Vec4 s, c;
-		(0.5f * Vec4(inTwistMinAngle, inTwistMaxAngle, inSwingYHalfAngle, inSwingZHalfAngle)).SinCos(s, c);
+		quarter_angle.SinCos(s, c);
+
+		// Store quarter angles for pyramid limit
+		mSwingYQuarterAngle = quarter_angle.GetZ();
+		mSwingZQuarterAngle = quarter_angle.GetW();
 
 		// Store axis flags which are used at runtime to quickly decided which contraints to apply
 		mRotationFlags = 0;
@@ -186,15 +210,46 @@ public:
 		}
 		else
 		{
-			// Two degrees of freedom, use ellipse to solve limits
-			Ellipse ellipse(mSinSwingYQuarterAngle, mSinSwingZQuarterAngle);
-			Float2 point(ioSwing.GetY(), ioSwing.GetZ());
-			if (!ellipse.IsInside(point))
+			// Two degrees of freedom
+			if (mSwingType == ESwingType::Cone)
 			{
-				Float2 closest = ellipse.GetClosestPoint(point);
-				ioSwing = Quat(0, closest.x, closest.y, sqrt(max(0.0f, 1.0f - Square(closest.x) - Square(closest.y))));
-				outSwingYClamped = true;
-				outSwingZClamped = true;
+				// Use ellipse to solve limits
+				Ellipse ellipse(mSinSwingYQuarterAngle, mSinSwingZQuarterAngle);
+				Float2 point(ioSwing.GetY(), ioSwing.GetZ());
+				if (!ellipse.IsInside(point))
+				{
+					Float2 closest = ellipse.GetClosestPoint(point);
+					ioSwing = Quat(0, closest.x, closest.y, sqrt(max(0.0f, 1.0f - Square(closest.x) - Square(closest.y))));
+					outSwingYClamped = true;
+					outSwingZClamped = true;
+				}
+			}
+			else
+			{
+				// Use pyramid to solve limits
+				// The quaterion rotating by angle y around the Y axis then rotating by angle z around the Z axis is:
+				// q = Quat::sRotation(Vec3::sAxisZ(), z) * Quat::sRotation(Vec3::sAxisY(), y)
+				// [q.x, q.y, q.z, q.w] = [-sin(y / 2) * sin(z / 2), sin(y / 2) * cos(z / 2), cos(y / 2) * sin(z / 2), cos(y / 2) * cos(z / 2)]
+				// So we can calculate y / 2 = atan2(q.y, q.w) and z / 2 = atan2(q.z, q.w)
+				Vec4 half_angle = Vec4::sATan2(ioSwing.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_Z>(), ioSwing.GetXYZW().SplatW());
+				Vec4 max_half_angle(mSwingYQuarterAngle, mSwingYQuarterAngle, mSwingZQuarterAngle, mSwingZQuarterAngle);
+				UVec4 must_be_clamped = Vec4::sGreater(half_angle.Abs(), max_half_angle);
+				int must_be_clamped_i = must_be_clamped.GetTrues();
+				if (must_be_clamped_i != 0)
+				{
+					// We're outside of the limits
+					outSwingYClamped = (must_be_clamped_i & 0b010) != 0;
+					outSwingZClamped = (must_be_clamped_i & 0b100) != 0;
+
+					// Update half angle to be within limits
+					half_angle = Vec4::sSelect(half_angle, half_angle.GetSign() * max_half_angle, must_be_clamped);
+
+					// We now calculate the quaternion again using the formula for q above,
+					// but we leave out the x component in order to not introduce twist
+					Vec4 s, c;
+					half_angle.SinCos(s, c);
+					ioSwing = Quat(0, s.GetY() * c.GetZ(), c.GetY() * s.GetZ(), c.GetY() * c.GetZ()).Normalized();
+				}
 			}
 		}
 
@@ -442,10 +497,13 @@ private:
 	uint8						mRotationFlags;
 
 	// Constants
+	ESwingType					mSwingType = ESwingType::Cone;
 	float						mSinTwistHalfMinAngle;
 	float						mSinTwistHalfMaxAngle;
 	float						mCosTwistHalfMinAngle;
 	float						mCosTwistHalfMaxAngle;
+	float						mSwingYQuarterAngle;
+	float						mSwingZQuarterAngle;
 	float						mSinSwingYQuarterAngle;
 	float						mSinSwingZQuarterAngle;
 
