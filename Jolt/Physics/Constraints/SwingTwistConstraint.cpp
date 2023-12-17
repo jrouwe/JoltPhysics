@@ -26,6 +26,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SwingTwistConstraintSettings)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPosition2)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mTwistAxis2)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPlaneAxis2)
+	JPH_ADD_ENUM_ATTRIBUTE(SwingTwistConstraintSettings, mSwingType)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mNormalHalfConeAngle)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPlaneHalfConeAngle)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mTwistMinAngle)
@@ -46,6 +47,7 @@ void SwingTwistConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mPosition2);
 	inStream.Write(mTwistAxis2);
 	inStream.Write(mPlaneAxis2);
+	inStream.Write(mSwingType);
 	inStream.Write(mNormalHalfConeAngle);
 	inStream.Write(mPlaneHalfConeAngle);
 	inStream.Write(mTwistMinAngle);
@@ -66,6 +68,7 @@ void SwingTwistConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mPosition2);
 	inStream.Read(mTwistAxis2);
 	inStream.Read(mPlaneAxis2);
+	inStream.Read(mSwingType);
 	inStream.Read(mNormalHalfConeAngle);
 	inStream.Read(mPlaneHalfConeAngle);
 	inStream.Read(mTwistMinAngle);
@@ -96,6 +99,9 @@ SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const S
 	mSwingMotorSettings(inSettings.mSwingMotorSettings),
 	mTwistMotorSettings(inSettings.mTwistMotorSettings)
 {
+	// Override swing type
+	mSwingTwistConstraintPart.SetSwingType(inSettings.mSwingType);
+
 	// Calculate rotation needed to go from constraint space to body1 local space
 	Vec3 normal_axis1 = inSettings.mPlaneAxis1.Cross(inSettings.mTwistAxis1);
 	Mat44 c_to_b1(Vec4(inSettings.mTwistAxis1, 0), Vec4(normal_axis1, 0), Vec4(inSettings.mPlaneAxis1, 0), Vec4(0, 0, 0, 1));
@@ -447,7 +453,7 @@ void SwingTwistConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	RMat44 constraint_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	inRenderer->DrawSwingLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, false, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	inRenderer->DrawSwingLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
 	inRenderer->DrawPie(constraint_to_world.GetTranslation(), mDrawConstraintSize, constraint_to_world.GetAxisX(), constraint_to_world.GetAxisY(), mTwistMinAngle, mTwistMaxAngle, Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER

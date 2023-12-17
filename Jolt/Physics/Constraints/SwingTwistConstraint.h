@@ -41,6 +41,9 @@ public:
 	Vec3						mTwistAxis2 = Vec3::sAxisX();
 	Vec3						mPlaneAxis2 = Vec3::sAxisY();
 
+	/// The type of swing constraint that we want to use.
+	ESwingType					mSwingType = ESwingType::Cone;
+
 	///@name Swing rotation limits
 	float						mNormalHalfConeAngle = 0.0f;								///< See image at Detailed Description. Angle in radians.
 	float						mPlaneHalfConeAngle = 0.0f;									///< See image at Detailed Description. Angle in radians.
