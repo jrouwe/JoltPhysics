@@ -447,7 +447,7 @@ void SwingTwistConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	RMat44 constraint_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	inRenderer->DrawSwingLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	inRenderer->DrawSwingLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, false, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
 	inRenderer->DrawPie(constraint_to_world.GetTranslation(), mDrawConstraintSize, constraint_to_world.GetAxisX(), constraint_to_world.GetAxisY(), mTwistMinAngle, mTwistMaxAngle, Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER

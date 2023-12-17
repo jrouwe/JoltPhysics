@@ -114,11 +114,12 @@ public:
 	/// @param inMatrix Matrix that transforms from constraint space to world space
 	/// @param inSwingYHalfAngle See SwingTwistConstraintPart
 	/// @param inSwingZHalfAngle See SwingTwistConstraintPart
+	/// @param inPyramidShape If true, the shape will be a pyramid, otherwise it will be a cone.
 	/// @param inEdgeLength Size of the edge of the cone shape
 	/// @param inColor Color to use for drawing the cone.
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
-	void								DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, bool inPyramidShape, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draw a pie (part of a circle).
 	/// @param inCenter The center of the circle.
@@ -251,13 +252,14 @@ private:
 
 	struct SwingLimits
 	{
-		bool							operator == (const SwingLimits &inRHS) const	{ return mSwingYHalfAngle == inRHS.mSwingYHalfAngle && mSwingZHalfAngle == inRHS.mSwingZHalfAngle; }
+		bool							operator == (const SwingLimits &inRHS) const	{ return mSwingYHalfAngle == inRHS.mSwingYHalfAngle && mSwingZHalfAngle == inRHS.mSwingZHalfAngle && mPyramidShape == inRHS.mPyramidShape; }
 
 		float							mSwingYHalfAngle;
 		float							mSwingZHalfAngle;
+		bool							mPyramidShape;
 	};
 
-	JPH_MAKE_HASH_STRUCT(SwingLimits, SwingLimitsHasher, t.mSwingYHalfAngle, t.mSwingZHalfAngle)
+	JPH_MAKE_HASH_STRUCT(SwingLimits, SwingLimitsHasher, t.mSwingYHalfAngle, t.mSwingZHalfAngle, t.mPyramidShape)
 
 	using SwingBatches = UnorderedMap<SwingLimits, GeometryRef, SwingLimitsHasher>;
 	SwingBatches						mSwingLimits;

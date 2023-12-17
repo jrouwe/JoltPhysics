@@ -797,7 +797,7 @@ void DebugRenderer::DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpe
 	}
 }
 
-void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, bool inPyramidShape, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -807,25 +807,12 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 	JPH_ASSERT(inEdgeLength > 0.0f);
 
 	// Check cache
-	SwingLimits limits { inSwingYHalfAngle, inSwingZHalfAngle };
+	SwingLimits limits { inSwingYHalfAngle, inSwingZHalfAngle, inPyramidShape };
 	GeometryRef &geometry = mSwingLimits[limits];
 	if (geometry == nullptr)
 	{
 		// Number of segments to draw the cone with
 		const int num_segments = 64;
-		int half_num_segments = num_segments / 2;
-
-		// The y and z values of the quaternion are limited to an ellipse, e1 and e2 are the radii of this ellipse
-		float e1 = Sin(0.5f * inSwingZHalfAngle);
-		float e2 = Sin(0.5f * inSwingYHalfAngle);
-
-		// Check if the limits will draw something
-		if ((e1 <= 0.0f && e2 <= 0.0f) || (e2 >= 1.0f && e1 >= 1.0f))
-			return;
-
-		// Calculate squared values
-		float e1_sq = Square(e1);
-		float e2_sq = Square(e2);
 
 		// Allocate space for vertices
 		int num_vertices = 2 * num_segments;
@@ -834,45 +821,82 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 
 		// Calculate local space vertices for shape
 		Vec3 ls_vertices[num_segments];
-		int tgt_vertex = 0;
-		for (int side_iter = 0; side_iter < 2; ++side_iter)
-			for (int segment_iter = 0; segment_iter < half_num_segments; ++segment_iter)
-			{
-				float y, z;
-				if (e2_sq > e1_sq)
+		if (inPyramidShape)
+		{
+			// Check if this will draw anything
+			if (((inSwingYHalfAngle <= 0.0f && inSwingZHalfAngle <= 0.0f) || (inSwingYHalfAngle >= JPH_PI && inSwingZHalfAngle >= JPH_PI)))
+				return;
+
+			int quarter_num_segments = num_segments / 4;
+
+			// Calculate local space vertices for shape
+			auto get_axis = [](float inY, float inZ) { return (Quat::sRotation(Vec3::sAxisZ(), inZ) * Quat::sRotation(Vec3::sAxisY(), inY)).RotateAxisX(); };
+			int tgt_vertex = 0;
+			for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+				ls_vertices[tgt_vertex++] = get_axis(-inSwingYHalfAngle, inSwingZHalfAngle - 2.0f * inSwingZHalfAngle * segment_iter / quarter_num_segments);
+			for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+				ls_vertices[tgt_vertex++] = get_axis(-inSwingYHalfAngle + 2.0f * inSwingYHalfAngle * segment_iter / quarter_num_segments, -inSwingZHalfAngle);
+			for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+				ls_vertices[tgt_vertex++] = get_axis(inSwingYHalfAngle, -inSwingZHalfAngle + 2.0f * inSwingZHalfAngle * segment_iter / quarter_num_segments);
+			for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+				ls_vertices[tgt_vertex++] = get_axis(inSwingYHalfAngle - 2.0f * inSwingYHalfAngle * segment_iter / quarter_num_segments, inSwingZHalfAngle);
+		}
+		else
+		{
+			// The y and z values of the quaternion are limited to an ellipse, e1 and e2 are the radii of this ellipse
+			float e1 = Sin(0.5f * inSwingZHalfAngle);
+			float e2 = Sin(0.5f * inSwingYHalfAngle);
+
+			// Check if the limits will draw something
+			if ((e1 <= 0.0f && e2 <= 0.0f) || (e2 >= 1.0f && e1 >= 1.0f))
+				return;
+
+			// Calculate squared values
+			float e1_sq = Square(e1);
+			float e2_sq = Square(e2);
+
+			int half_num_segments = num_segments / 2;
+
+			int tgt_vertex = 0;
+			for (int side_iter = 0; side_iter < 2; ++side_iter)
+				for (int segment_iter = 0; segment_iter < half_num_segments; ++segment_iter)
 				{
-					// Trace the y value of the quaternion
-					y = e2 - 2.0f * segment_iter * e2 / half_num_segments;
+					float y, z;
+					if (e2_sq > e1_sq)
+					{
+						// Trace the y value of the quaternion
+						y = e2 - 2.0f * segment_iter * e2 / half_num_segments;
 
-					// Calculate the corresponding z value of the quaternion
-					float z_sq = e1_sq - e1_sq / e2_sq * Square(y);
-					z = z_sq <= 0.0f? 0.0f : sqrt(z_sq);
+						// Calculate the corresponding z value of the quaternion
+						float z_sq = e1_sq - e1_sq / e2_sq * Square(y);
+						z = z_sq <= 0.0f? 0.0f : sqrt(z_sq);
+					}
+					else
+					{
+						// Trace the z value of the quaternion
+						z = -e1 + 2.0f * segment_iter * e1 / half_num_segments;
+
+						// Calculate the corresponding y value of the quaternion
+						float y_sq = e2_sq - e2_sq / e1_sq * Square(z);
+						y = y_sq <= 0.0f? 0.0f : sqrt(y_sq);
+					}
+
+					// If we're tracing the opposite side, flip the values
+					if (side_iter == 1)
+					{
+						z = -z;
+						y = -y;
+					}
+
+					// Create quaternion
+					Vec3 q_xyz(0, y, z);
+					float w = sqrt(1.0f - q_xyz.LengthSq());
+					Quat q(Vec4(q_xyz, w));
+
+					// Store vertex
+					ls_vertices[tgt_vertex++] = q.RotateAxisX();
 				}
-				else
-				{
-					// Trace the z value of the quaternion
-					z = -e1 + 2.0f * segment_iter * e1 / half_num_segments;
-
-					// Calculate the corresponding y value of the quaternion
-					float y_sq = e2_sq - e2_sq / e1_sq * Square(z);
-					y = y_sq <= 0.0f? 0.0f : sqrt(y_sq);
-				}
-
-				// If we're tracing the opposite side, flip the values
-				if (side_iter == 1)
-				{
-					z = -z;
-					y = -y;
-				}
-
-				// Create quaternion
-				Vec3 q_xyz(0, y, z);
-				float w = sqrt(1.0f - q_xyz.LengthSq());
-				Quat q(Vec4(q_xyz, w));
-
-				// Store vertex
-				ls_vertices[tgt_vertex++] = q.RotateAxisX();
-			}
+		}
 
 		for (int i = 0; i < num_segments; ++i)
 		{
@@ -886,7 +910,7 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 			// Get local normal
 			Vec3 &prev_pos = ls_vertices[(i + num_segments - 1) % num_segments];
 			Vec3 &next_pos = ls_vertices[(i + 1) % num_segments];
-			Vec3 normal = 0.5f * (next_pos.Cross(pos).Normalized() + pos.Cross(prev_pos).Normalized());
+			Vec3 normal = 0.5f * (next_pos.Cross(pos).NormalizedOr(Vec3::sZero()) + pos.Cross(prev_pos).NormalizedOr(Vec3::sZero()));
 
 			// Store top vertex
 			top.mPosition = { 0, 0, 0 };
@@ -925,7 +949,6 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 
 	DrawGeometry(inMatrix * Mat44::sScale(inEdgeLength), inColor, geometry, ECullMode::Off, inCastShadow, inDrawMode);
 }
-
 
 void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
