@@ -292,10 +292,10 @@ void SixDOFConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 	Quat q_swing, q_twist;
 	inOrientation.GetSwingTwist(q_swing, q_twist);
 
-	bool swing_y_clamped, swing_z_clamped, twist_clamped_to_min, twist_clamped_to_max;
-	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped_to_min, twist_clamped_to_max);
+	bool swing_y_clamped, swing_z_clamped, twist_clamped;
+	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped);
 
-	if (swing_y_clamped || swing_z_clamped || twist_clamped_to_min || twist_clamped_to_max)
+	if (swing_y_clamped || swing_z_clamped || twist_clamped)
 		mTargetOrientation = q_swing * q_twist;
 	else
 		mTargetOrientation = inOrientation;
@@ -761,7 +761,9 @@ void SixDOFConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	RMat44 constraint_body1_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	if (mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid)
+	if (mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid
+		|| mLimitMin[EAxis::RotationY] >= mLimitMax[EAxis::RotationY]
+		|| mLimitMin[EAxis::RotationZ] >= mLimitMax[EAxis::RotationZ])
 		inRenderer->DrawSwingPyramidLimits(constraint_body1_to_world, mLimitMin[EAxis::RotationY], mLimitMax[EAxis::RotationY], mLimitMin[EAxis::RotationZ], mLimitMax[EAxis::RotationZ], mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
 	else
 		inRenderer->DrawSwingConeLimits(constraint_body1_to_world, mLimitMax[EAxis::RotationY], mLimitMax[EAxis::RotationZ], mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);

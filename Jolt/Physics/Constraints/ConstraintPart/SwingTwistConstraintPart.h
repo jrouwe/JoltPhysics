@@ -45,26 +45,31 @@ public:
 	}
 
 	/// Set limits for this constraint (see description above for parameters)
-	void						SetLimits(float inTwistMinAngle, float inTwistMaxAngle, float inMinSwingYAngle, float inMaxSwingYAngle, float inMinSwingZAngle, float inMaxSwingZAngle)
+	void						SetLimits(float inTwistMinAngle, float inTwistMaxAngle, float inSwingYMinAngle, float inSwingYMaxAngle, float inSwingZMinAngle, float inSwingZMaxAngle)
 	{
 		constexpr float cLockedAngle = DegreesToRadians(0.5f);
 		constexpr float cFreeAngle = DegreesToRadians(179.5f);
 
 		// Assume sane input
 		JPH_ASSERT(inTwistMinAngle <= inTwistMinAngle);
-		JPH_ASSERT(inMaxSwingYAngle >= 0.0f && inMaxSwingYAngle <= JPH_PI);
-		JPH_ASSERT(inMaxSwingZAngle >= 0.0f && inMaxSwingZAngle <= JPH_PI);
+		JPH_ASSERT(inSwingYMinAngle <= inSwingYMaxAngle);
+		JPH_ASSERT(inSwingZMinAngle <= inSwingZMaxAngle);
+		JPH_ASSERT(inSwingYMinAngle >= -JPH_PI && inSwingYMaxAngle <= JPH_PI);
+		JPH_ASSERT(inSwingZMinAngle >= -JPH_PI && inSwingZMaxAngle <= JPH_PI);
 
 		// Calculate the sine and cosine of the half angles
-		Vec4 quarter_angle = 0.5f * Vec4(inTwistMinAngle, inTwistMaxAngle, inMaxSwingYAngle, inMaxSwingZAngle);
-		Vec4 s, c;
-		quarter_angle.SinCos(s, c);
+		Vec4 half_twist = 0.5f * Vec4(inTwistMinAngle, inTwistMaxAngle, 0, 0);
+		Vec4 twist_s, twist_c;
+		half_twist.SinCos(twist_s, twist_c);
+		Vec4 half_swing = 0.5f * Vec4(inSwingYMinAngle, inSwingYMaxAngle, inSwingZMinAngle, inSwingZMaxAngle);
+		Vec4 swing_s, swing_c;
+		half_swing.SinCos(swing_s, swing_c);
 
 		// Store half angles for pyramid limit
-		mMinSwingYHalfAngle = 0.5f * inMinSwingYAngle;
-		mMaxSwingYHalfAngle = 0.5f * inMaxSwingYAngle;
-		mMinSwingZHalfAngle = 0.5f * inMinSwingZAngle;
-		mMaxSwingZHalfAngle = 0.5f * inMaxSwingZAngle;
+		mSwingYHalfMinAngle = half_swing.GetX();
+		mSwingYHalfMaxAngle = half_swing.GetY();
+		mSwingZHalfMinAngle = half_swing.GetZ();
+		mSwingZHalfMaxAngle = half_swing.GetW();
 
 		// Store axis flags which are used at runtime to quickly decided which contraints to apply
 		mRotationFlags = 0;
@@ -86,49 +91,56 @@ public:
 		}
 		else
 		{
-			mSinTwistHalfMinAngle = s.GetX();
-			mSinTwistHalfMaxAngle = s.GetY();
-			mCosTwistHalfMinAngle = c.GetX();
-			mCosTwistHalfMaxAngle = c.GetY();
+			mSinTwistHalfMinAngle = twist_s.GetX();
+			mSinTwistHalfMaxAngle = twist_s.GetY();
+			mCosTwistHalfMinAngle = twist_c.GetX();
+			mCosTwistHalfMaxAngle = twist_c.GetY();
 		}
 
-		if (inMaxSwingYAngle < cLockedAngle)
+		if (inSwingYMinAngle > -cLockedAngle && inSwingYMaxAngle < cLockedAngle)
 		{
 			mRotationFlags |= SwingYLocked;
-			mSinSwingYQuarterAngle = 0.0f;
+			mSinSwingYHalfMinAngle = 0.0f;
+			mSinSwingYHalfMaxAngle = 0.0f;
 		}
-		else if (inMaxSwingYAngle > cFreeAngle)
+		else if (inSwingYMinAngle < -cFreeAngle && inSwingYMaxAngle > cFreeAngle)
 		{
 			mRotationFlags |= SwingYFree;
-			mSinSwingYQuarterAngle = 1.0f;
+			mSinSwingYHalfMinAngle = -1.0f;
+			mSinSwingYHalfMaxAngle = 1.0f;
 		}
 		else
 		{
-			mSinSwingYQuarterAngle = s.GetZ();
+			mSinSwingYHalfMinAngle = swing_s.GetX();
+			mSinSwingYHalfMaxAngle = swing_s.GetY();
+			JPH_ASSERT(mSinSwingYHalfMinAngle < mSinSwingYHalfMaxAngle);
 		}
 
-		if (inMaxSwingZAngle < cLockedAngle)
+		if (inSwingZMinAngle > -cLockedAngle && inSwingZMaxAngle < cLockedAngle)
 		{
 			mRotationFlags |= SwingZLocked;
-			mSinSwingZQuarterAngle = 0.0f;
+			mSinSwingZHalfMinAngle = 0.0f;
+			mSinSwingZHalfMaxAngle = 0.0f;
 		}
-		else if (inMaxSwingZAngle > cFreeAngle)
+		else if (inSwingZMinAngle < -cFreeAngle && inSwingZMaxAngle > cFreeAngle)
 		{
 			mRotationFlags |= SwingZFree;
-			mSinSwingZQuarterAngle = 1.0f;
+			mSinSwingZHalfMinAngle = -1.0f;
+			mSinSwingZHalfMaxAngle = 1.0f;
 		}
 		else
 		{
-			mSinSwingZQuarterAngle = s.GetW();
+			mSinSwingZHalfMinAngle = swing_s.GetZ();
+			mSinSwingZHalfMaxAngle = swing_s.GetW();
+			JPH_ASSERT(mSinSwingZHalfMinAngle < mSinSwingZHalfMaxAngle);
 		}
 	}
 
 	/// Clamp twist and swing against the constraint limits, returns which parts were clamped (everything assumed in constraint space)
-	inline void					ClampSwingTwist(Quat &ioSwing, bool &outSwingYClamped, bool &outSwingZClamped, Quat &ioTwist, bool &outTwistClampedToMin, bool &outTwistClampedToMax) const
+	inline void					ClampSwingTwist(Quat &ioSwing, bool &outSwingYClamped, bool &outSwingZClamped, Quat &ioTwist, bool &outTwistClamped) const
 	{
 		// Start with not clamped
-		outTwistClampedToMin = false;
-		outTwistClampedToMax = false;
+		outTwistClamped = false;
 		outSwingYClamped = false;
 		outSwingZClamped = false;
 
@@ -151,7 +163,7 @@ public:
 			if (ioTwist.GetX() != 0.0f)
 			{
 				ioTwist = Quat::sIdentity();
-				outTwistClampedToMin = outTwistClampedToMax = true;
+				outTwistClamped = true;
 			}
 		}
 		else if ((mRotationFlags & TwistXFree) == 0)
@@ -173,15 +185,10 @@ public:
 
 				// Pick the twist that corresponds to the smallest delta
 				if (delta_min < delta_max)
-				{
 					ioTwist = Quat(mSinTwistHalfMinAngle, 0, 0, mCosTwistHalfMinAngle);
-					outTwistClampedToMin = true;
-				}
 				else
-				{
 					ioTwist = Quat(mSinTwistHalfMaxAngle, 0, 0, mCosTwistHalfMaxAngle);
-					outTwistClampedToMax = true;
-				}
+				outTwistClamped = true;
 			}
 		}
 
@@ -199,7 +206,7 @@ public:
 			else
 			{
 				// Swing Y angle disabled, only 1 degree of freedom in swing
-				float z = Clamp(ioSwing.GetZ(), -mSinSwingZQuarterAngle, mSinSwingZQuarterAngle);
+				float z = Clamp(ioSwing.GetZ(), mSinSwingZHalfMinAngle, mSinSwingZHalfMaxAngle);
 				outSwingYClamped = ioSwing.GetY() != 0.0f;
 				outSwingZClamped = z != ioSwing.GetZ();
 				if (outSwingYClamped || outSwingZClamped)
@@ -209,7 +216,7 @@ public:
 		else if (mRotationFlags & SwingZLocked)
 		{
 			// Swing Z angle disabled, only 1 degree of freedom in swing
-			float y = Clamp(ioSwing.GetY(), -mSinSwingYQuarterAngle, mSinSwingYQuarterAngle);
+			float y = Clamp(ioSwing.GetY(), mSinSwingYHalfMinAngle, mSinSwingYHalfMaxAngle);
 			outSwingYClamped = y != ioSwing.GetY();
 			outSwingZClamped = ioSwing.GetZ() != 0.0f;
 			if (outSwingYClamped || outSwingZClamped)
@@ -221,7 +228,7 @@ public:
 			if (mSwingType == ESwingType::Cone)
 			{
 				// Use ellipse to solve limits
-				Ellipse ellipse(mSinSwingYQuarterAngle, mSinSwingZQuarterAngle);
+				Ellipse ellipse(mSinSwingYHalfMaxAngle, mSinSwingZHalfMaxAngle);
 				Float2 point(ioSwing.GetY(), ioSwing.GetZ());
 				if (!ellipse.IsInside(point))
 				{
@@ -239,8 +246,8 @@ public:
 				// [q.x, q.y, q.z, q.w] = [-sin(y / 2) * sin(z / 2), sin(y / 2) * cos(z / 2), cos(y / 2) * sin(z / 2), cos(y / 2) * cos(z / 2)]
 				// So we can calculate y / 2 = atan2(q.y, q.w) and z / 2 = atan2(q.z, q.w)
 				Vec4 half_angle = Vec4::sATan2(ioSwing.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_Z>(), ioSwing.GetXYZW().SplatW());
-				Vec4 min_half_angle(mMinSwingYHalfAngle, mMinSwingYHalfAngle, mMinSwingZHalfAngle, mMinSwingZHalfAngle);
-				Vec4 max_half_angle(mMaxSwingYHalfAngle, mMaxSwingYHalfAngle, mMaxSwingZHalfAngle, mMaxSwingZHalfAngle);
+				Vec4 min_half_angle(mSwingYHalfMinAngle, mSwingYHalfMinAngle, mSwingZHalfMinAngle, mSwingZHalfMinAngle);
+				Vec4 max_half_angle(mSwingYHalfMaxAngle, mSwingYHalfMaxAngle, mSwingZHalfMaxAngle, mSwingZHalfMaxAngle);
 				Vec4 clamped_half_angle = Vec4::sMin(Vec4::sMax(half_angle, min_half_angle), max_half_angle);
 				UVec4 unclamped = Vec4::sEquals(half_angle, clamped_half_angle);
 				int unclamped_i = unclamped.GetTrues();
@@ -282,8 +289,8 @@ public:
 
 		// Clamp against joint limits
 		Quat q_clamped_swing = q_swing, q_clamped_twist = q_twist;
-		bool swing_y_clamped, swing_z_clamped, twist_clamped_to_min, twist_clamped_to_max;
-		ClampSwingTwist(q_clamped_swing, swing_y_clamped, swing_z_clamped, q_clamped_twist, twist_clamped_to_min, twist_clamped_to_max);
+		bool swing_y_clamped, swing_z_clamped, twist_clamped;
+		ClampSwingTwist(q_clamped_swing, swing_y_clamped, swing_z_clamped, q_clamped_twist, twist_clamped);
 
 		if (mRotationFlags & SwingYLocked)
 		{
@@ -303,8 +310,8 @@ public:
 				mSwingLimitYConstraintPart.CalculateConstraintProperties(inBody1, inBody2, mWorldSpaceSwingLimitYRotationAxis);
 				if (swing_z_clamped)
 				{
-					if (Sign(q_swing.GetW()) * q_swing.GetZ() < 0.0f)
-						mWorldSpaceSwingLimitZRotationAxis = -mWorldSpaceSwingLimitZRotationAxis; // Flip axis if angle is negative because the impulse limit is going to be between [-FLT_MAX, 0]
+					if (Sign(q_swing.GetW()) * q_swing.GetZ() <= mSinSwingZHalfMinAngle)
+						mWorldSpaceSwingLimitZRotationAxis = -mWorldSpaceSwingLimitZRotationAxis; // Flip axis if hitting min limit because the impulse limit is going to be between [-FLT_MAX, 0]
 					mSwingLimitZConstraintPart.CalculateConstraintProperties(inBody1, inBody2, mWorldSpaceSwingLimitZRotationAxis);
 				}
 				else
@@ -320,8 +327,8 @@ public:
 
 			if (swing_y_clamped)
 			{
-				if (Sign(q_swing.GetW()) * q_swing.GetY() < 0.0f)
-					mWorldSpaceSwingLimitYRotationAxis = -mWorldSpaceSwingLimitYRotationAxis; // Flip axis if angle is negative because the impulse limit is going to be between [-FLT_MAX, 0]
+				if (Sign(q_swing.GetW()) * q_swing.GetY() <= mSinSwingYHalfMinAngle)
+					mWorldSpaceSwingLimitYRotationAxis = -mWorldSpaceSwingLimitYRotationAxis; // Flip axis if hitting min limit because the impulse limit is going to be between [-FLT_MAX, 0]
 				mSwingLimitYConstraintPart.CalculateConstraintProperties(inBody1, inBody2, mWorldSpaceSwingLimitYRotationAxis);
 			}
 			else
@@ -366,10 +373,10 @@ public:
 		else if ((mRotationFlags & TwistXFree) == 0)
 		{
 			// Twist has limits
-			if (twist_clamped_to_min || twist_clamped_to_max)
+			if (twist_clamped)
 			{
 				mWorldSpaceTwistLimitRotationAxis = (inConstraintToWorld * q_swing).RotateAxisX();
-				if (twist_clamped_to_min)
+				if (Sign(q_twist.GetW()) * q_twist.GetX() <= mSinTwistHalfMinAngle)
 					mWorldSpaceTwistLimitRotationAxis = -mWorldSpaceTwistLimitRotationAxis; // Flip axis if hittin min limit because the impulse limit is going to be between [-FLT_MAX, 0]
 				mTwistLimitConstraintPart.CalculateConstraintProperties(inBody1, inBody2, mWorldSpaceTwistLimitRotationAxis);
 			}
@@ -435,11 +442,11 @@ public:
 		Quat q_swing, q_twist;
 		inConstraintRotation.GetSwingTwist(q_swing, q_twist);
 
-		bool swing_y_clamped, swing_z_clamped, twist_clamped_to_min, twist_clamped_to_max;
-		ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped_to_min, twist_clamped_to_max);
+		bool swing_y_clamped, swing_z_clamped, twist_clamped;
+		ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped);
 
 		// Solve rotation violations
-		if (swing_y_clamped || swing_z_clamped || twist_clamped_to_min || twist_clamped_to_max)
+		if (swing_y_clamped || swing_z_clamped || twist_clamped)
 		{
 			RotationEulerConstraintPart part;
 			Quat inv_initial_orientation = inConstraintToBody2 * (inConstraintToBody1 * q_swing * q_twist).Conjugated();
@@ -508,12 +515,14 @@ private:
 	float						mSinTwistHalfMaxAngle;
 	float						mCosTwistHalfMinAngle;
 	float						mCosTwistHalfMaxAngle;
-	float						mMinSwingYHalfAngle;
-	float						mMaxSwingYHalfAngle;
-	float						mMinSwingZHalfAngle;
-	float						mMaxSwingZHalfAngle;
-	float						mSinSwingYQuarterAngle;
-	float						mSinSwingZQuarterAngle;
+	float						mSwingYHalfMinAngle;
+	float						mSwingYHalfMaxAngle;
+	float						mSwingZHalfMinAngle;
+	float						mSwingZHalfMaxAngle;
+	float						mSinSwingYHalfMinAngle;
+	float						mSinSwingYHalfMaxAngle;
+	float						mSinSwingZHalfMinAngle;
+	float						mSinSwingZHalfMaxAngle;
 
 	// RUN TIME PROPERTIES FOLLOW
 
