@@ -18,6 +18,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
 
 ### Bug fixes
+* Fixed bug in Indexify function that caused it to be really slow when passing 10K identical vertices. Also fixed a problem that could have led to some vertices not being welded.
 * Fixed bug in SixDOFConstraint::RestoreState that would cause motors to not properly turn on.
 * Fixed a determinism issue in CharacterVirtual. The order of the contacts returned by GetActiveContacts() was not deterministic.
 
