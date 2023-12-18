@@ -36,21 +36,35 @@ static void sIndexifyVerticesBruteForce(const TriangleList &inTriangles, const u
 			// If they're weldable
 			if ((v2 - v1).LengthSq() <= weld_dist_sq)
 			{
-				// Order the vertices
-				uint32 lowest = min(*v1_idx, *v2_idx);
-				uint32 highest = max(*v1_idx, *v2_idx);
-
-				// Find the lowest vertex
-				uint32 new_lowest = ioWeldedVertices[lowest];
-				while (new_lowest < lowest)
+				// Find the lowest indices both indices link to
+				uint32 idx1 = *v1_idx;
+				for (;;)
 				{
-					ioWeldedVertices[lowest] = new_lowest;
-					lowest = new_lowest;
-					new_lowest = ioWeldedVertices[lowest];
+					uint32 new_idx1 = ioWeldedVertices[idx1];
+					if (new_idx1 >= idx1)
+						break;
+					idx1 = new_idx1;
 				}
+				uint32 idx2 = *v2_idx;
+				for (;;)
+				{
+					uint32 new_idx2 = ioWeldedVertices[idx2];
+					if (new_idx2 >= idx2)
+						break;
+					idx2 = new_idx2;
+				}
+
+				// Order the vertices
+				uint32 lowest = min(idx1, idx2);
+				uint32 highest = max(idx1, idx2);
 
 				// Link highest to lowest
 				ioWeldedVertices[highest] = lowest;
+
+				// Also update the vertices we started from to avoid creating long chains
+				ioWeldedVertices[*v1_idx] = lowest;
+				ioWeldedVertices[*v2_idx] = lowest;
+				break;
 			}
 		}
 	}
@@ -154,6 +168,7 @@ void Indexify(const TriangleList &inTriangles, VertexList &outVertices, IndexedT
 	uint num_resulting_vertices = 0;
 	for (uint i = 0; i < num_vertices; ++i)
 	{
+		JPH_ASSERT(welded_vertices[welded_vertices[i]] <= welded_vertices[i]);
 		welded_vertices[i] = welded_vertices[welded_vertices[i]];
 		if (welded_vertices[i] == i)
 			++num_resulting_vertices;
