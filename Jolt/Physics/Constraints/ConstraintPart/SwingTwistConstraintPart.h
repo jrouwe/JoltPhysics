@@ -45,24 +45,26 @@ public:
 	}
 
 	/// Set limits for this constraint (see description above for parameters)
-	void						SetLimits(float inTwistMinAngle, float inTwistMaxAngle, float inSwingYHalfAngle, float inSwingZHalfAngle)
+	void						SetLimits(float inTwistMinAngle, float inTwistMaxAngle, float inMinSwingYAngle, float inMaxSwingYAngle, float inMinSwingZAngle, float inMaxSwingZAngle)
 	{
 		constexpr float cLockedAngle = DegreesToRadians(0.5f);
 		constexpr float cFreeAngle = DegreesToRadians(179.5f);
 
 		// Assume sane input
 		JPH_ASSERT(inTwistMinAngle <= inTwistMinAngle);
-		JPH_ASSERT(inSwingYHalfAngle >= 0.0f && inSwingYHalfAngle <= JPH_PI);
-		JPH_ASSERT(inSwingZHalfAngle >= 0.0f && inSwingZHalfAngle <= JPH_PI);
+		JPH_ASSERT(inMaxSwingYAngle >= 0.0f && inMaxSwingYAngle <= JPH_PI);
+		JPH_ASSERT(inMaxSwingZAngle >= 0.0f && inMaxSwingZAngle <= JPH_PI);
 
 		// Calculate the sine and cosine of the half angles
-		Vec4 quarter_angle = 0.5f * Vec4(inTwistMinAngle, inTwistMaxAngle, inSwingYHalfAngle, inSwingZHalfAngle);
+		Vec4 quarter_angle = 0.5f * Vec4(inTwistMinAngle, inTwistMaxAngle, inMaxSwingYAngle, inMaxSwingZAngle);
 		Vec4 s, c;
 		quarter_angle.SinCos(s, c);
 
-		// Store quarter angles for pyramid limit
-		mSwingYQuarterAngle = quarter_angle.GetZ();
-		mSwingZQuarterAngle = quarter_angle.GetW();
+		// Store half angles for pyramid limit
+		mMinSwingYHalfAngle = 0.5f * inMinSwingYAngle;
+		mMaxSwingYHalfAngle = 0.5f * inMaxSwingYAngle;
+		mMinSwingZHalfAngle = 0.5f * inMinSwingZAngle;
+		mMaxSwingZHalfAngle = 0.5f * inMaxSwingZAngle;
 
 		// Store axis flags which are used at runtime to quickly decided which contraints to apply
 		mRotationFlags = 0;
@@ -90,12 +92,12 @@ public:
 			mCosTwistHalfMaxAngle = c.GetY();
 		}
 
-		if (inSwingYHalfAngle < cLockedAngle)
+		if (inMaxSwingYAngle < cLockedAngle)
 		{
 			mRotationFlags |= SwingYLocked;
 			mSinSwingYQuarterAngle = 0.0f;
 		}
-		else if (inSwingYHalfAngle > cFreeAngle)
+		else if (inMaxSwingYAngle > cFreeAngle)
 		{
 			mRotationFlags |= SwingYFree;
 			mSinSwingYQuarterAngle = 1.0f;
@@ -105,12 +107,12 @@ public:
 			mSinSwingYQuarterAngle = s.GetZ();
 		}
 
-		if (inSwingZHalfAngle < cLockedAngle)
+		if (inMaxSwingZAngle < cLockedAngle)
 		{
 			mRotationFlags |= SwingZLocked;
 			mSinSwingZQuarterAngle = 0.0f;
 		}
-		else if (inSwingZHalfAngle > cFreeAngle)
+		else if (inMaxSwingZAngle > cFreeAngle)
 		{
 			mRotationFlags |= SwingZFree;
 			mSinSwingZQuarterAngle = 1.0f;
@@ -237,22 +239,21 @@ public:
 				// [q.x, q.y, q.z, q.w] = [-sin(y / 2) * sin(z / 2), sin(y / 2) * cos(z / 2), cos(y / 2) * sin(z / 2), cos(y / 2) * cos(z / 2)]
 				// So we can calculate y / 2 = atan2(q.y, q.w) and z / 2 = atan2(q.z, q.w)
 				Vec4 half_angle = Vec4::sATan2(ioSwing.GetXYZW().Swizzle<SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_Z>(), ioSwing.GetXYZW().SplatW());
-				Vec4 max_half_angle(mSwingYQuarterAngle, mSwingYQuarterAngle, mSwingZQuarterAngle, mSwingZQuarterAngle);
-				UVec4 must_be_clamped = Vec4::sGreater(half_angle.Abs(), max_half_angle);
-				int must_be_clamped_i = must_be_clamped.GetTrues();
-				if (must_be_clamped_i != 0)
+				Vec4 min_half_angle(mMinSwingYHalfAngle, mMinSwingYHalfAngle, mMinSwingZHalfAngle, mMinSwingZHalfAngle);
+				Vec4 max_half_angle(mMaxSwingYHalfAngle, mMaxSwingYHalfAngle, mMaxSwingZHalfAngle, mMaxSwingZHalfAngle);
+				Vec4 clamped_half_angle = Vec4::sMin(Vec4::sMax(half_angle, min_half_angle), max_half_angle);
+				UVec4 unclamped = Vec4::sEquals(half_angle, clamped_half_angle);
+				int unclamped_i = unclamped.GetTrues();
+				if (unclamped_i != 0b1111)
 				{
 					// We're outside of the limits
-					outSwingYClamped = (must_be_clamped_i & 0b010) != 0;
-					outSwingZClamped = (must_be_clamped_i & 0b100) != 0;
-
-					// Update half angle to be within limits
-					half_angle = Vec4::sSelect(half_angle, half_angle.GetSign() * max_half_angle, must_be_clamped);
+					outSwingYClamped = (unclamped_i & 0b010) == 0;
+					outSwingZClamped = (unclamped_i & 0b100) == 0;
 
 					// We now calculate the quaternion again using the formula for q above,
 					// but we leave out the x component in order to not introduce twist
 					Vec4 s, c;
-					half_angle.SinCos(s, c);
+					clamped_half_angle.SinCos(s, c);
 					ioSwing = Quat(0, s.GetY() * c.GetZ(), c.GetY() * s.GetZ(), c.GetY() * c.GetZ()).Normalized();
 				}
 			}
@@ -507,8 +508,10 @@ private:
 	float						mSinTwistHalfMaxAngle;
 	float						mCosTwistHalfMinAngle;
 	float						mCosTwistHalfMaxAngle;
-	float						mSwingYQuarterAngle;
-	float						mSwingZQuarterAngle;
+	float						mMinSwingYHalfAngle;
+	float						mMaxSwingYHalfAngle;
+	float						mMinSwingZHalfAngle;
+	float						mMaxSwingZHalfAngle;
 	float						mSinSwingYQuarterAngle;
 	float						mSinSwingZQuarterAngle;
 

@@ -110,16 +110,27 @@ public:
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
-	/// Draws rotation limits as used by the SwingTwistConstraintPart.
+	/// Draws cone rotation limits as used by the SwingTwistConstraintPart.
 	/// @param inMatrix Matrix that transforms from constraint space to world space
 	/// @param inSwingYHalfAngle See SwingTwistConstraintPart
 	/// @param inSwingZHalfAngle See SwingTwistConstraintPart
-	/// @param inPyramidShape If true, the shape will be a pyramid, otherwise it will be a cone.
 	/// @param inEdgeLength Size of the edge of the cone shape
 	/// @param inColor Color to use for drawing the cone.
 	/// @param inCastShadow determins if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
-	void								DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, bool inPyramidShape, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+	void								DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
+
+	/// Draws rotation limits as used by the SwingTwistConstraintPart.
+	/// @param inMatrix Matrix that transforms from constraint space to world space
+	/// @param inMinSwingYAngle See SwingTwistConstraintPart
+	/// @param inMaxSwingYAngle See SwingTwistConstraintPart
+	/// @param inMinSwingZAngle See SwingTwistConstraintPart
+	/// @param inMaxSwingZAngle See SwingTwistConstraintPart
+	/// @param inEdgeLength Size of the edge of the cone shape
+	/// @param inColor Color to use for drawing the cone.
+	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
+	void								DrawSwingPyramidLimits(RMat44Arg inMatrix, float inMinSwingYAngle, float inMaxSwingYAngle, float inMinSwingZAngle, float inMaxSwingZAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
 	/// Draw a pie (part of a circle).
 	/// @param inCenter The center of the circle.
@@ -250,19 +261,43 @@ private:
 	GeometryRef							mOpenCone;
 	GeometryRef							mCylinder;
 
-	struct SwingLimits
+	struct SwingConeLimits
 	{
-		bool							operator == (const SwingLimits &inRHS) const	{ return mSwingYHalfAngle == inRHS.mSwingYHalfAngle && mSwingZHalfAngle == inRHS.mSwingZHalfAngle && mPyramidShape == inRHS.mPyramidShape; }
+		bool							operator == (const SwingConeLimits &inRHS) const
+		{ 
+			return mSwingYHalfAngle == inRHS.mSwingYHalfAngle
+				&& mSwingZHalfAngle == inRHS.mSwingZHalfAngle; 
+		}
 
 		float							mSwingYHalfAngle;
 		float							mSwingZHalfAngle;
-		bool							mPyramidShape;
 	};
 
-	JPH_MAKE_HASH_STRUCT(SwingLimits, SwingLimitsHasher, t.mSwingYHalfAngle, t.mSwingZHalfAngle, t.mPyramidShape)
+	JPH_MAKE_HASH_STRUCT(SwingConeLimits, SwingConeLimitsHasher, t.mSwingYHalfAngle, t.mSwingZHalfAngle)
 
-	using SwingBatches = UnorderedMap<SwingLimits, GeometryRef, SwingLimitsHasher>;
-	SwingBatches						mSwingLimits;
+	using SwingConeBatches = UnorderedMap<SwingConeLimits, GeometryRef, SwingConeLimitsHasher>;
+	SwingConeBatches					mSwingConeLimits;
+
+	struct SwingPyramidLimits
+	{
+		bool							operator == (const SwingPyramidLimits &inRHS) const
+		{
+			return mMinSwingYAngle == inRHS.mMinSwingYAngle
+				&& mMaxSwingYAngle == inRHS.mMaxSwingYAngle
+				&& mMinSwingZAngle == inRHS.mMinSwingZAngle
+				&& mMaxSwingZAngle == inRHS.mMaxSwingZAngle;
+		}
+
+		float							mMinSwingYAngle;
+		float							mMaxSwingYAngle;
+		float							mMinSwingZAngle;
+		float							mMaxSwingZAngle;
+	};
+
+	JPH_MAKE_HASH_STRUCT(SwingPyramidLimits, SwingPyramidLimitsHasher, t.mMinSwingYAngle, t.mMaxSwingYAngle, t.mMinSwingZAngle, t.mMaxSwingZAngle)
+
+	using SwingPyramidBatches = UnorderedMap<SwingPyramidLimits, GeometryRef, SwingPyramidLimitsHasher>;
+	SwingPyramidBatches					mSwingPyramidLimits;
 
 	using PieBatces = UnorderedMap<float, GeometryRef>;
 	PieBatces							mPieLimits;

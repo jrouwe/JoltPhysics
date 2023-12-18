@@ -28,8 +28,8 @@ public:
 		TranslationZ,
 
 		RotationX,				///< When limited: Should be \f$\in [-\pi, \pi]\f$. Can by asymmetric.
-		RotationY,				///< Forms a cone shaped limit with Z. Should be \f$\in [-\pi, \pi]\f$.
-		RotationZ,				///< Forms a cone shaped limit with Y. Should be \f$\in [-\pi, \pi]\f$.
+		RotationY,				///< Forms a pyramid or cone shaped limit with Z. For pyramid, should be \f$\in [-\pi, \pi]\f$, for cone \f$\in [0, \pi]\f$.
+		RotationZ,				///< Forms a pyramid or cone shaped limit with Y. For pyramid, should be \f$\in [-\pi, \pi]\f$, for cone \f$\in [0, \pi]\f$.
 
 		Num,
 		NumTranslation = TranslationZ + 1,
@@ -220,7 +220,6 @@ private:
 
 	// Transforms from constraint space to body space
 	Quat						mConstraintToBody1;
-	Quat						mCenteredLimitsToConstraint;								// For rotation, we center the limits before we pass it on to mSwingTwistConstraintPart, when communicating with mSwingTwistConstraintPart we should therefore use mConstraintToBody1 * mCenteredLimitsToConstraint instead of mConstraintToBody1
 	Quat						mConstraintToBody2;
 
 	// Limits
@@ -232,7 +231,6 @@ private:
 	bool						mHasSpringLimits = false;									// If any of the limit springs have a non-zero frequency/stiffness
 	float						mLimitMin[EAxis::Num];
 	float						mLimitMax[EAxis::Num];
-	float						mCenteredLimits[2];											// Rotation limits centered so that min = -max for axis Y and Z
 	SpringSettings				mLimitsSpringSettings[EAxis::NumTranslation];
 
 	// Motor settings for each axis

@@ -86,7 +86,7 @@ TwoBodyConstraint *SwingTwistConstraintSettings::Create(Body &inBody1, Body &inB
 void SwingTwistConstraint::UpdateLimits()
 {
 	// Pass limits on to swing twist constraint part
-	mSwingTwistConstraintPart.SetLimits(mTwistMinAngle, mTwistMaxAngle, mPlaneHalfConeAngle, mNormalHalfConeAngle);
+	mSwingTwistConstraintPart.SetLimits(mTwistMinAngle, mTwistMaxAngle, -mPlaneHalfConeAngle, mPlaneHalfConeAngle, -mNormalHalfConeAngle, mNormalHalfConeAngle);
 }
 
 SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const SwingTwistConstraintSettings &inSettings) :
@@ -453,7 +453,10 @@ void SwingTwistConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	RMat44 constraint_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	inRenderer->DrawSwingLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	if (mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid)
+		inRenderer->DrawSwingPyramidLimits(constraint_to_world, -mPlaneHalfConeAngle, mPlaneHalfConeAngle, -mNormalHalfConeAngle, mNormalHalfConeAngle, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	else
+		inRenderer->DrawSwingConeLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
 	inRenderer->DrawPie(constraint_to_world.GetTranslation(), mDrawConstraintSize, constraint_to_world.GetAxisX(), constraint_to_world.GetAxisY(), mTwistMinAngle, mTwistMaxAngle, Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER

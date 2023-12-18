@@ -85,31 +85,17 @@ TwoBodyConstraint *SixDOFConstraintSettings::Create(Body &inBody1, Body &inBody2
 void SixDOFConstraint::UpdateRotationLimits()
 {
 	// Make values sensible
-	Vec3 center = Vec3::sZero();
-	mCenteredLimits[0] = mCenteredLimits[1] = 0.0f;
 	for (int i = 3; i < 6; ++i)
 		if (IsFixedAxis((EAxis)i))
-		{
 			mLimitMin[i] = mLimitMax[i] = 0.0f;
-		}
 		else
 		{
-			JPH_ASSERT(mLimitMin[i] < mLimitMax[i]);
-
-			if (i > 3)
-			{
-				// Center the limits for Y and Z axis
-				float value = (mLimitMin[i] + mLimitMax[i]) * 0.5f;
-				center.SetComponent(i - 3, value);
-				mCenteredLimits[i - 4] = min(JPH_PI, mLimitMax[i] - value);
-			}
+			mLimitMin[i] = max(-JPH_PI, mLimitMin[i]);
+			mLimitMax[i] = min(JPH_PI, mLimitMax[i]);
 		}
 
-	// Calculate rotation needed to go from constraint space where the limit is centered to constraint space
-	mCenteredLimitsToConstraint = Quat::sEulerAngles(center);
-
 	// Pass limits on to constraint part
-	mSwingTwistConstraintPart.SetLimits(mLimitMin[3], mLimitMax[3], mCenteredLimits[0], mCenteredLimits[1]);
+	mSwingTwistConstraintPart.SetLimits(mLimitMin[EAxis::RotationX], mLimitMax[EAxis::RotationX], mLimitMin[EAxis::RotationY], mLimitMax[EAxis::RotationY], mLimitMin[EAxis::RotationZ], mLimitMax[EAxis::RotationZ]);
 }
 
 SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFConstraintSettings &inSettings) :
@@ -304,13 +290,13 @@ void SixDOFConstraint::SetMotorState(EAxis inAxis, EMotorState inState)
 void SixDOFConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 {
 	Quat q_swing, q_twist;
-	(inOrientation * mCenteredLimitsToConstraint.Conjugated()).GetSwingTwist(q_swing, q_twist);
+	inOrientation.GetSwingTwist(q_swing, q_twist);
 
 	bool swing_y_clamped, swing_z_clamped, twist_clamped_to_min, twist_clamped_to_max;
 	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped_to_min, twist_clamped_to_max);
 
 	if (swing_y_clamped || swing_z_clamped || twist_clamped_to_min || twist_clamped_to_max)
-		mTargetOrientation = q_swing * q_twist * mCenteredLimitsToConstraint;
+		mTargetOrientation = q_swing * q_twist;
 	else
 		mTargetOrientation = inOrientation;
 }
@@ -421,10 +407,7 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 
 		// Use swing twist constraint part
 		if (IsRotationConstrained())
-		{
-			// We need to replace mConstraintToBody1 with mConstraintToBody1 * mCenteredLimitsToConstraint (see comment at mCenteredLimitsToConstraint) so that's where the extra conjugated term comes from
-			mSwingTwistConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, mCenteredLimitsToConstraint.Conjugated() * q, constraint_body1_to_world * mCenteredLimitsToConstraint);
-		}
+			mSwingTwistConstraintPart.CalculateConstraintProperties(*mBody1, *mBody2, q, constraint_body1_to_world);
 		else
 			mSwingTwistConstraintPart.Deactivate();
 
@@ -676,8 +659,7 @@ bool SixDOFConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumga
 
 		// Solve rotation violations
 		Quat q = GetRotationInConstraintSpace();
-		// We need to replace mConstraintToBody1 with mConstraintToBody1 * mCenteredLimitsToConstraint (see comment at mCenteredLimitsToConstraint) so that's where the extra conjugated term comes from
-		impulse |= mSwingTwistConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mCenteredLimitsToConstraint.Conjugated() * q, mConstraintToBody1 * mCenteredLimitsToConstraint, mConstraintToBody2, inBaumgarte);
+		impulse |= mSwingTwistConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, q, mConstraintToBody1, mConstraintToBody2, inBaumgarte);
 	}
 
 	// Solve position violations
@@ -776,11 +758,14 @@ void SixDOFConstraint::DrawConstraint(DebugRenderer *inRenderer) const
 void SixDOFConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 {
 	// Get matrix that transforms from constraint space to world space
-	RMat44 constraint_body1_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1 * mCenteredLimitsToConstraint, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
+	RMat44 constraint_body1_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	inRenderer->DrawSwingLimits(constraint_body1_to_world, mCenteredLimits[0], mCenteredLimits[1], mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
-	inRenderer->DrawPie(constraint_body1_to_world.GetTranslation(), mDrawConstraintSize, constraint_body1_to_world.GetAxisX(), constraint_body1_to_world.GetAxisY(), mLimitMin[3], mLimitMax[3], Color::sPurple, DebugRenderer::ECastShadow::Off);
+	if (mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid)
+		inRenderer->DrawSwingPyramidLimits(constraint_body1_to_world, mLimitMin[EAxis::RotationY], mLimitMax[EAxis::RotationY], mLimitMin[EAxis::RotationZ], mLimitMax[EAxis::RotationZ], mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	else
+		inRenderer->DrawSwingConeLimits(constraint_body1_to_world, mLimitMax[EAxis::RotationY], mLimitMax[EAxis::RotationZ], mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	inRenderer->DrawPie(constraint_body1_to_world.GetTranslation(), mDrawConstraintSize, constraint_body1_to_world.GetAxisX(), constraint_body1_to_world.GetAxisY(), mLimitMin[EAxis::RotationX], mLimitMax[EAxis::RotationX], Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER
 
