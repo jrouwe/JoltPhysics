@@ -27,9 +27,9 @@ public:
 		TranslationY,
 		TranslationZ,
 
-		RotationX,				///< This is the twist axis.
-		RotationY,				///< Forms a cone shaped limit with Z.
-		RotationZ,				///< Forms a cone shaped limit with Y.
+		RotationX,				///< When limited: Should be \f$\in [-\pi, \pi]\f$. Can by asymmetric.
+		RotationY,				///< Forms a cone shaped limit with Z. Should be \f$\in [-\pi, \pi]\f$.
+		RotationZ,				///< Forms a cone shaped limit with Y. Should be \f$\in [-\pi, \pi]\f$.
 
 		Num,
 		NumTranslation = TranslationZ + 1,

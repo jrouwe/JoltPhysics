@@ -116,8 +116,8 @@ void PoweredSwingTwistConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElemen
 	inUI->CreateTextButton(inSubMenu, "Runtime Settings", [=]() {
 		UIElement *runtime_settings = inUI->CreateMenu();
 
-		inUI->CreateSlider(runtime_settings, "Min Twist Angle (deg)", RadiansToDegrees(sTwistMinAngle), -180.0f, 0.0f, 1.0f, [=](float inValue) { sTwistMinAngle = DegreesToRadians(inValue); });
-		inUI->CreateSlider(runtime_settings, "Max Twist Angle (deg)", RadiansToDegrees(sTwistMaxAngle), 0.0f, 180.0f, 1.0f, [=](float inValue) { sTwistMaxAngle = DegreesToRadians(inValue); });
+		inUI->CreateSlider(runtime_settings, "Min Twist Angle (deg)", RadiansToDegrees(sTwistMinAngle), -180.0f, 180.0f, 1.0f, [=](float inValue) { sTwistMinAngle = DegreesToRadians(inValue); });
+		inUI->CreateSlider(runtime_settings, "Max Twist Angle (deg)", RadiansToDegrees(sTwistMaxAngle), -180.0f, 180.0f, 1.0f, [=](float inValue) { sTwistMaxAngle = DegreesToRadians(inValue); });
 		inUI->CreateSlider(runtime_settings, "Normal Half Cone Angle (deg)", RadiansToDegrees(sNormalHalfConeAngle), 0.0f, 180.0f, 1.0f, [=](float inValue) { sNormalHalfConeAngle = DegreesToRadians(inValue); });
 		inUI->CreateSlider(runtime_settings, "Plane Half Cone Angle (deg)", RadiansToDegrees(sPlaneHalfConeAngle), 0.0f, 180.0f, 1.0f, [=](float inValue) { sPlaneHalfConeAngle = DegreesToRadians(inValue); });
 

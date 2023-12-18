@@ -51,8 +51,7 @@ public:
 		constexpr float cFreeAngle = DegreesToRadians(179.5f);
 
 		// Assume sane input
-		JPH_ASSERT(inTwistMinAngle <= 0.0f && inTwistMinAngle >= -JPH_PI);
-		JPH_ASSERT(inTwistMaxAngle >= 0.0f && inTwistMaxAngle <= JPH_PI);
+		JPH_ASSERT(inTwistMinAngle <= inTwistMinAngle);
 		JPH_ASSERT(inSwingYHalfAngle >= 0.0f && inSwingYHalfAngle <= JPH_PI);
 		JPH_ASSERT(inSwingZHalfAngle >= 0.0f && inSwingZHalfAngle <= JPH_PI);
 
@@ -123,10 +122,11 @@ public:
 	}
 
 	/// Clamp twist and swing against the constraint limits, returns which parts were clamped (everything assumed in constraint space)
-	inline void					ClampSwingTwist(Quat &ioSwing, bool &outSwingYClamped, bool &outSwingZClamped, Quat &ioTwist, bool &outTwistClamped) const
+	inline void					ClampSwingTwist(Quat &ioSwing, bool &outSwingYClamped, bool &outSwingZClamped, Quat &ioTwist, bool &outTwistClampedToMin, bool &outTwistClampedToMax) const
 	{
 		// Start with not clamped
-		outTwistClamped = false;
+		outTwistClampedToMin = false;
+		outTwistClampedToMax = false;
 		outSwingYClamped = false;
 		outSwingZClamped = false;
 
@@ -149,7 +149,7 @@ public:
 			if (ioTwist.GetX() != 0.0f)
 			{
 				ioTwist = Quat::sIdentity();
-				outTwistClamped = true;
+				outTwistClampedToMin = outTwistClampedToMax = true;
 			}
 		}
 		else if ((mRotationFlags & TwistXFree) == 0)
@@ -171,10 +171,15 @@ public:
 
 				// Pick the twist that corresponds to the smallest delta
 				if (delta_min < delta_max)
+				{
 					ioTwist = Quat(mSinTwistHalfMinAngle, 0, 0, mCosTwistHalfMinAngle);
+					outTwistClampedToMin = true;
+				}
 				else
+				{
 					ioTwist = Quat(mSinTwistHalfMaxAngle, 0, 0, mCosTwistHalfMaxAngle);
-				outTwistClamped = true;
+					outTwistClampedToMax = true;
+				}
 			}
 		}
 
@@ -276,8 +281,8 @@ public:
 
 		// Clamp against joint limits
 		Quat q_clamped_swing = q_swing, q_clamped_twist = q_twist;
-		bool swing_y_clamped, swing_z_clamped, twist_clamped;
-		ClampSwingTwist(q_clamped_swing, swing_y_clamped, swing_z_clamped, q_clamped_twist, twist_clamped);
+		bool swing_y_clamped, swing_z_clamped, twist_clamped_to_min, twist_clamped_to_max;
+		ClampSwingTwist(q_clamped_swing, swing_y_clamped, swing_z_clamped, q_clamped_twist, twist_clamped_to_min, twist_clamped_to_max);
 
 		if (mRotationFlags & SwingYLocked)
 		{
@@ -360,11 +365,11 @@ public:
 		else if ((mRotationFlags & TwistXFree) == 0)
 		{
 			// Twist has limits
-			if (twist_clamped)
+			if (twist_clamped_to_min || twist_clamped_to_max)
 			{
 				mWorldSpaceTwistLimitRotationAxis = (inConstraintToWorld * q_swing).RotateAxisX();
-				if (Sign(q_twist.GetW()) * q_twist.GetX() < 0.0f)
-					mWorldSpaceTwistLimitRotationAxis = -mWorldSpaceTwistLimitRotationAxis; // Flip axis if angle is negative because the impulse limit is going to be between [-FLT_MAX, 0]
+				if (twist_clamped_to_min)
+					mWorldSpaceTwistLimitRotationAxis = -mWorldSpaceTwistLimitRotationAxis; // Flip axis if hittin min limit because the impulse limit is going to be between [-FLT_MAX, 0]
 				mTwistLimitConstraintPart.CalculateConstraintProperties(inBody1, inBody2, mWorldSpaceTwistLimitRotationAxis);
 			}
 			else
@@ -429,11 +434,11 @@ public:
 		Quat q_swing, q_twist;
 		inConstraintRotation.GetSwingTwist(q_swing, q_twist);
 
-		bool swing_y_clamped, swing_z_clamped, twist_clamped;
-		ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped);
+		bool swing_y_clamped, swing_z_clamped, twist_clamped_to_min, twist_clamped_to_max;
+		ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped_to_min, twist_clamped_to_max);
 
 		// Solve rotation violations
-		if (swing_y_clamped || swing_z_clamped || twist_clamped)
+		if (swing_y_clamped || swing_z_clamped || twist_clamped_to_min || twist_clamped_to_max)
 		{
 			RotationEulerConstraintPart part;
 			Quat inv_initial_orientation = inConstraintToBody2 * (inConstraintToBody1 * q_swing * q_twist).Conjugated();
