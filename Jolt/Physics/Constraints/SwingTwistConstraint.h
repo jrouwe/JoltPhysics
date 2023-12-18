@@ -46,8 +46,8 @@ public:
 	float						mPlaneHalfConeAngle = 0.0f;									///< See image at Detailed Description. Angle in radians.
 
 	///@name Twist rotation limits
-	float						mTwistMinAngle = 0.0f;										///< See image at Detailed Description. Angle in radians. Rotation will be limited between [mLimitsMin, mLimitsMax] where mLimitsMin \f$\in [-\pi, 0]\f$ and mLimitsMax \f$\in [0, \pi]\f$
-	float						mTwistMaxAngle = 0.0f;										///< See image at Detailed Description. Angle in radians.
+	float						mTwistMinAngle = 0.0f;										///< See image at Detailed Description. Angle in radians. Should be \f$\in [-\pi, \pi]\f$.
+	float						mTwistMaxAngle = 0.0f;										///< See image at Detailed Description. Angle in radians. Should be \f$\in [-\pi, \pi]\f$.
 
 	///@name Friction
 	float						mMaxFrictionTorque = 0.0f;									///< Maximum amount of torque (N m) to apply as friction when the constraint is not powered by a motor

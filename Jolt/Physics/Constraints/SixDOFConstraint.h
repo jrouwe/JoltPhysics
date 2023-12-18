@@ -27,9 +27,9 @@ public:
 		TranslationY,
 		TranslationZ,
 
-		RotationX,				///< When limited: MinLimit needs to be [-PI, 0], MaxLimit needs to be [0, PI]
-		RotationY,				///< When limited: MaxLimit between [0, PI]. MinLimit = -MaxLimit. Forms a cone shaped limit with Z.
-		RotationZ,				///< When limited: MaxLimit between [0, PI]. MinLimit = -MaxLimit. Forms a cone shaped limit with Y.
+		RotationX,				///< When limited: Should be \f$\in [-\pi, \pi]\f$. Can by asymmetric.
+		RotationY,				///< When limited: MaxLimit \f$\in [0, \pi]\f$. MinLimit = -MaxLimit. Forms a cone shaped limit with Z.
+		RotationZ,				///< When limited: MaxLimit \f$\in [0, \pi]\f$. MinLimit = -MaxLimit. Forms a cone shaped limit with Y.
 
 		Num,
 		NumTranslation = TranslationZ + 1,
@@ -82,7 +82,7 @@ public:
 	bool						IsFixedAxis(EAxis inAxis) const								{ return mLimitMin[inAxis] >= mLimitMax[inAxis]; }
 
 	/// Set a valid range for the constraint
-	void						SetLimitedAxis(EAxis inAxis, float inMin, float inMax)		{ JPH_ASSERT(inMin < inMax); JPH_ASSERT(inMin <= 0.0f); JPH_ASSERT(inMax >= 0.0f); mLimitMin[inAxis] = inMin; mLimitMax[inAxis] = inMax; }
+	void						SetLimitedAxis(EAxis inAxis, float inMin, float inMax)		{ JPH_ASSERT(inMin < inMax); mLimitMin[inAxis] = inMin; mLimitMax[inAxis] = inMax; }
 
 	/// Motor settings for each axis
 	MotorSettings				mMotorSettings[EAxis::Num];
