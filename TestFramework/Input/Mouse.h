@@ -42,6 +42,7 @@ public:
 	void							SetExclusive(bool inExclusive = true);
 
 private:
+	void							DetectParsecRunning();
 	void							Reset();
 	void							ResetMouse();
 
@@ -54,6 +55,7 @@ private:
 	Renderer *						mRenderer;
 	ComPtr<IDirectInput8>			mDI;
 	ComPtr<IDirectInputDevice8>		mMouse;
+	bool							mIsParsecRunning;					///< If the Parsec remote desktop solution is running, if so we can't trust the mouse movement information from DX and it will make the mouse too sensitive
 	DIMOUSESTATE					mMouseState;
 	bool							mMousePosInitialized = false;
 	POINT							mMousePos;
