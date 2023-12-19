@@ -948,7 +948,15 @@ void DebugRenderer::DrawSwingPyramidLimits(RMat44Arg inMatrix, float inMinSwingY
 		Vertex *vertices_start = (Vertex *)JPH_STACK_ALLOC(num_vertices * sizeof(Vertex));
 		Vertex *vertices = vertices_start;
 
-		auto get_axis = [](float inY, float inZ) { return (Quat::sRotation(Vec3::sAxisZ(), inZ) * Quat::sRotation(Vec3::sAxisY(), inY)).RotateAxisX(); };
+		// Note that this is q = Quat::sRotation(Vec3::sAxisZ(), z) * Quat::sRotation(Vec3::sAxisY(), y) with q.x set to zero so we don't introduce twist
+		// This matches the calculation in SwingTwistConstraintPart::ClampSwingTwist
+		auto get_axis = [](float inY, float inZ) {
+			float hy = 0.5f * inY;
+			float hz = 0.5f * inZ;
+			float cos_hy = Cos(hy);
+			float cos_hz = Cos(hz);
+			return Quat(0, Sin(hy) * cos_hz, cos_hy * Sin(hz), cos_hy * cos_hz).Normalized().RotateAxisX();
+		};
 
 		// Calculate local space vertices for shape
 		Vec3 ls_vertices[num_segments];
