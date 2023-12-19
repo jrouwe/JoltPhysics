@@ -91,9 +91,12 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 {
 	Array<String> labels = { "Translation X", "Translation Y", "Translation Z", "Rotation X", "Rotation Y", "Rotation Z" };
 	Array<String> motor_states = { "Off", "Velocity", "Position" };
+	Array<String> swing_types = { "Cone", "Pyramid" };
 
-	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI, labels]() {
+	inUI->CreateTextButton(inSubMenu, "Configuration Settings (Limits)", [this, inUI, labels, swing_types]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
+
+		inUI->CreateComboBox(configuration_settings, "Swing Type", swing_types, (int)sSettings->mSwingType, [](int inItem) { sSettings->mSwingType = (ESwingType)inItem; });
 
 		for (int i = 0; i < 3; ++i)
 		{
@@ -107,17 +110,18 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 		for (int i = 3; i < 6; ++i)
 		{
 			inUI->CreateCheckBox(configuration_settings, "Enable Limits " + labels[i], sEnableLimits[i], [=](UICheckBox::EState inState) { sEnableLimits[i] = inState == UICheckBox::STATE_CHECKED; });
-			if (i == 3)
-			{
-				inUI->CreateSlider(configuration_settings, "Limit Min", RadiansToDegrees(sLimitMin[i]), -180.0f, 180.0f, 1.0f, [=](float inValue) { sLimitMin[i] = DegreesToRadians(inValue); });
-				inUI->CreateSlider(configuration_settings, "Limit Max", RadiansToDegrees(sLimitMax[i]), -180.0f, 180.0f, 1.0f, [=](float inValue) { sLimitMax[i] = DegreesToRadians(inValue); });
-			}
-			else
-			{
-				inUI->CreateSlider(configuration_settings, "Limit Max", RadiansToDegrees(sLimitMax[i]), 0.0f, 180.0f, 1.0f, [=](float inValue) { sLimitMin[i] = -DegreesToRadians(inValue); sLimitMax[i] = DegreesToRadians(inValue); });
-			}
+			inUI->CreateSlider(configuration_settings, "Limit Min", RadiansToDegrees(sLimitMin[i]), -180.0f, 180.0f, 1.0f, [=](float inValue) { sLimitMin[i] = DegreesToRadians(inValue); });
+			inUI->CreateSlider(configuration_settings, "Limit Max", RadiansToDegrees(sLimitMax[i]), -180.0f, 180.0f, 1.0f, [=](float inValue) { sLimitMax[i] = DegreesToRadians(inValue); });
 		}
 
+		inUI->CreateTextButton(configuration_settings, "Accept Changes", [this]() { RestartTest(); });
+
+		inUI->ShowMenu(configuration_settings);
+	});
+
+	inUI->CreateTextButton(inSubMenu, "Configuration Settings (Other)", [this, inUI, labels]() {
+		UIElement *configuration_settings = inUI->CreateMenu();
+				
 		for (int i = 0; i < 6; ++i)
 			inUI->CreateSlider(configuration_settings, "Max Friction " + labels[i], sSettings->mMaxFriction[i], 0.0f, 500.0f, 1.0f, [=](float inValue) { sSettings->mMaxFriction[i] = inValue; });
 

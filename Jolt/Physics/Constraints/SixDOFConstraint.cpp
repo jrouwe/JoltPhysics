@@ -28,6 +28,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SixDOFConstraintSettings)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mAxisX2)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mAxisY2)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mMaxFriction)
+	JPH_ADD_ENUM_ATTRIBUTE(SixDOFConstraintSettings, mSwingType)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mLimitMin)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mLimitMax)
 	JPH_ADD_ATTRIBUTE(SixDOFConstraintSettings, mLimitsSpringSettings)
@@ -46,6 +47,7 @@ void SixDOFConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mAxisX2);
 	inStream.Write(mAxisY2);
 	inStream.Write(mMaxFriction);
+	inStream.Write(mSwingType);
 	inStream.Write(mLimitMin);
 	inStream.Write(mLimitMax);
 	for (const SpringSettings &s : mLimitsSpringSettings)
@@ -66,6 +68,7 @@ void SixDOFConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mAxisX2);
 	inStream.Read(mAxisY2);
 	inStream.Read(mMaxFriction);
+	inStream.Read(mSwingType);
 	inStream.Read(mLimitMin);
 	inStream.Read(mLimitMax);
 	for (SpringSettings &s : mLimitsSpringSettings)
@@ -91,20 +94,15 @@ void SixDOFConstraint::UpdateRotationLimits()
 			mLimitMax[i] = min(JPH_PI, mLimitMax[i]);
 		}
 
-	// The swing twist constraint part requires symmetrical rotations around Y and Z
-	JPH_ASSERT(mLimitMin[EAxis::RotationY] == -mLimitMax[EAxis::RotationY]);
-	JPH_ASSERT(mLimitMin[EAxis::RotationZ] == -mLimitMax[EAxis::RotationZ]);
-
 	// Pass limits on to constraint part
-	mSwingTwistConstraintPart.SetLimits(mLimitMin[EAxis::RotationX], mLimitMax[EAxis::RotationX], mLimitMax[EAxis::RotationY], mLimitMax[EAxis::RotationZ]);
+	mSwingTwistConstraintPart.SetLimits(mLimitMin[EAxis::RotationX], mLimitMax[EAxis::RotationX], mLimitMin[EAxis::RotationY], mLimitMax[EAxis::RotationY], mLimitMin[EAxis::RotationZ], mLimitMax[EAxis::RotationZ]);
 }
 
 SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFConstraintSettings &inSettings) :
 	TwoBodyConstraint(inBody1, inBody2, inSettings)
 {
-	// Assert that input adheres to the limitations of this class
-	JPH_ASSERT(inSettings.mLimitMin[EAxis::RotationY] == -inSettings.mLimitMax[EAxis::RotationY]);
-	JPH_ASSERT(inSettings.mLimitMin[EAxis::RotationZ] == -inSettings.mLimitMax[EAxis::RotationZ]);
+	// Override swing type
+	mSwingTwistConstraintPart.SetSwingType(inSettings.mSwingType);
 
 	// Calculate rotation needed to go from constraint space to body1 local space
 	Vec3 axis_z1 = inSettings.mAxisX1.Cross(inSettings.mAxisY1);
@@ -294,10 +292,10 @@ void SixDOFConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 	Quat q_swing, q_twist;
 	inOrientation.GetSwingTwist(q_swing, q_twist);
 
-	bool swing_y_clamped, swing_z_clamped, twist_clamped_to_min, twist_clamped_to_max;
-	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped_to_min, twist_clamped_to_max);
+	uint clamped_axis;
+	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, q_twist, clamped_axis);
 
-	if (swing_y_clamped || swing_z_clamped || twist_clamped_to_min || twist_clamped_to_max)
+	if (clamped_axis != 0)
 		mTargetOrientation = q_swing * q_twist;
 	else
 		mTargetOrientation = inOrientation;
@@ -763,7 +761,12 @@ void SixDOFConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	RMat44 constraint_body1_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	inRenderer->DrawSwingLimits(constraint_body1_to_world, mLimitMax[EAxis::RotationY], mLimitMax[EAxis::RotationZ], mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	if (mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid
+		|| mLimitMin[EAxis::RotationY] >= mLimitMax[EAxis::RotationY]
+		|| mLimitMin[EAxis::RotationZ] >= mLimitMax[EAxis::RotationZ])
+		inRenderer->DrawSwingPyramidLimits(constraint_body1_to_world, mLimitMin[EAxis::RotationY], mLimitMax[EAxis::RotationY], mLimitMin[EAxis::RotationZ], mLimitMax[EAxis::RotationZ], mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	else
+		inRenderer->DrawSwingConeLimits(constraint_body1_to_world, mLimitMax[EAxis::RotationY], mLimitMax[EAxis::RotationZ], mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
 	inRenderer->DrawPie(constraint_body1_to_world.GetTranslation(), mDrawConstraintSize, constraint_body1_to_world.GetAxisX(), constraint_body1_to_world.GetAxisY(), mLimitMin[EAxis::RotationX], mLimitMax[EAxis::RotationX], Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER

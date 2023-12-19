@@ -28,8 +28,8 @@ public:
 		TranslationZ,
 
 		RotationX,				///< When limited: Should be \f$\in [-\pi, \pi]\f$. Can by asymmetric.
-		RotationY,				///< When limited: MaxLimit \f$\in [0, \pi]\f$. MinLimit = -MaxLimit. Forms a cone shaped limit with Z.
-		RotationZ,				///< When limited: MaxLimit \f$\in [0, \pi]\f$. MinLimit = -MaxLimit. Forms a cone shaped limit with Y.
+		RotationY,				///< Forms a pyramid or cone shaped limit with Z. For pyramid, should be \f$\in [-\pi, \pi]\f$, for cone \f$\in [0, \pi]\f$.
+		RotationZ,				///< Forms a pyramid or cone shaped limit with Y. For pyramid, should be \f$\in [-\pi, \pi]\f$, for cone \f$\in [0, \pi]\f$.
 
 		Num,
 		NumTranslation = TranslationZ + 1,
@@ -58,6 +58,9 @@ public:
 	/// For translation: Max friction force in N. 0 = no friction.
 	/// For rotation: Max friction torque in Nm. 0 = no friction.
 	float						mMaxFriction[EAxis::Num] = { 0, 0, 0, 0, 0, 0 };
+
+	/// The type of swing constraint that we want to use.
+	ESwingType					mSwingType = ESwingType::Cone;
 
 	/// Limits.
 	/// For translation: Min and max linear limits in m (0 is frame of body 1 and 2 coincide).
