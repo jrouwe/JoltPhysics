@@ -168,6 +168,9 @@ public:
 	inline void				SubAngularVelocityStep(Vec3Arg inAngularVelocityChange) 		{ JPH_DET_LOG("SubAngularVelocityStep: " << inAngularVelocityChange); JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); mAngularVelocity -= inAngularVelocityChange; JPH_ASSERT(!mAngularVelocity.IsNaN()); }
 	///@}
 
+	/// Apply the gyroscopic force (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
+	inline void				ApplyGyroscopicForceInternal(QuatArg inBodyRotation, float inDeltaTime);
+
 	/// Apply all accumulated forces, torques and drag (should only be called by the PhysicsSystem)
 	inline void				ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime);
 

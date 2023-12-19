@@ -202,6 +202,8 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		body->SetSensorDetectsStatic(true);
 	if (inBodyCreationSettings.mUseManifoldReduction)
 		body->SetUseManifoldReduction(true);
+	if (inBodyCreationSettings.mApplyGyroscopicForce)
+		body->SetApplyGyroscopicForce(true);
 	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
 	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
