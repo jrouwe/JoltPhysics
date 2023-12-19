@@ -188,10 +188,10 @@ void SwingTwistConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 	Quat q_swing, q_twist;
 	inOrientation.GetSwingTwist(q_swing, q_twist);
 
-	bool swing_y_clamped, swing_z_clamped, twist_clamped;
-	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped);
+	uint clamped_axis;
+	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, q_twist, clamped_axis);
 
-	if (swing_y_clamped || swing_z_clamped || twist_clamped)
+	if (clamped_axis != 0)
 		mTargetOrientation = q_swing * q_twist;
 	else
 		mTargetOrientation = inOrientation;
