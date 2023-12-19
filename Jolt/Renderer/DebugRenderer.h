@@ -252,6 +252,9 @@ private:
 	void								Create8thSphereRecursive(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inDir1, uint32 &ioIdx1, Vec3Arg inDir2, uint32 &ioIdx2, Vec3Arg inDir3, uint32 &ioIdx3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
 	void								Create8thSphere(Array<uint32> &ioIndices, Array<Vertex> &ioVertices, Vec3Arg inDir1, Vec3Arg inDir2, Vec3Arg inDir3, const Float2 &inUV, SupportFunction inGetSupport, int inLevel);
 
+	/// Helper function for DrawSwingConeLimits and DrawSwingPyramidLimits
+	Geometry *							CreateSwingLimitGeometry(int inNumSegments, const Vec3 *inVertices);
+
 	// Predefined shapes
 	GeometryRef							mBox;
 	GeometryRef							mSphere;
