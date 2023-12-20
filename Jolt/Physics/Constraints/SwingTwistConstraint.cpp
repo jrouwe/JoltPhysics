@@ -502,6 +502,7 @@ Ref<ConstraintSettings> SwingTwistConstraint::GetConstraintSettings() const
 	settings->mPosition2 = RVec3(mLocalSpacePosition2);
 	settings->mTwistAxis2 = mConstraintToBody2.RotateAxisX();
 	settings->mPlaneAxis2 = mConstraintToBody2.RotateAxisZ();
+	settings->mSwingType = mSwingTwistConstraintPart.GetSwingType();
 	settings->mNormalHalfConeAngle = mNormalHalfConeAngle;
 	settings->mPlaneHalfConeAngle = mPlaneHalfConeAngle;
 	settings->mTwistMinAngle = mTwistMinAngle;

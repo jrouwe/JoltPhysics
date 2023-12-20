@@ -828,6 +828,7 @@ Ref<ConstraintSettings> SixDOFConstraint::GetConstraintSettings() const
 	settings->mPosition2 = RVec3(mLocalSpacePosition2);
 	settings->mAxisX2 = mConstraintToBody2.RotateAxisX();
 	settings->mAxisY2 = mConstraintToBody2.RotateAxisY();
+	settings->mSwingType = mSwingTwistConstraintPart.GetSwingType();
 	memcpy(settings->mLimitMin, mLimitMin, sizeof(mLimitMin));
 	memcpy(settings->mLimitMax, mLimitMax, sizeof(mLimitMax));
 	memcpy(settings->mMaxFriction, mMaxFriction, sizeof(mMaxFriction));
