@@ -90,6 +90,7 @@ void MotionProperties::ApplyGyroscopicForceInternal(QuatArg inBodyRotation, floa
 	Vec3 local_angular_velocity = inertia_space_to_world_space.Conjugated() * mAngularVelocity;
 	Vec3 local_momentum = local_inertia * local_angular_velocity;
 
+	// The gyroscopic force applies a torque: T = -w x I w where w is angular velocity and I the inertia tensor
 	// Calculate the new angular momentum by applying the gyroscopic force and make sure the new magnitude is the same as the old one
 	// to avoid introducing energy into the system due to the Euler step
 	Vec3 new_local_momentum = local_momentum - inDeltaTime * local_angular_velocity.Cross(local_momentum);
