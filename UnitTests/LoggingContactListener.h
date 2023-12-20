@@ -5,6 +5,9 @@
 #pragma once
 
 #include <Jolt/Physics/Collision/ContactListener.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Core/Mutex.h>
+#include <Jolt/Core/UnorderedSet.h>
 
 // Contact listener that just logs the calls made to it for later validation
 class LoggingContactListener : public ContactListener

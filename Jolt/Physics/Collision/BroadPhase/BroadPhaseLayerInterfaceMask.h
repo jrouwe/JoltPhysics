@@ -58,10 +58,10 @@ public:
 	/// Returns true if an object layer should collide with a broadphase layer, this function is being called from ObjectVsBroadPhaseLayerFilterMask
 	inline bool				ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const
 	{
-		uint32 group = ObjectLayerPairFilterMask::sGetGroup(inLayer1);
+		uint32 mask = ObjectLayerPairFilterMask::sGetMask(inLayer1);
 		const Mapping &m = mMapping[(BroadPhaseLayer::Type)inLayer2];
 		return &m == &mMapping.back() // Last layer may collide with anything
-			|| ((m.mGroupsToInclude & group) != 0 && (m.mGroupsToExclude & group) == 0);
+			|| (m.mGroupsToInclude & mask) != 0; // Mask allows it to collide with objects that could reside in this layer
 	}
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
