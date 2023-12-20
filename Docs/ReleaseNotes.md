@@ -5,6 +5,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 ## Unreleased changes
 
 ### New functionality
+* Created an object layer filter implementation that is similar to Bullet's group & mask filtering, see ObjectLayerPairFilterMask.
 * Ability to enable gyroscopic forces on bodies to create the [Dzhanibekov effect](https://en.wikipedia.org/wiki/Tennis_racket_theorem).
 * Swing limits do not need to be symmetrical anymore for SixDOFConstraints. This requires using the new pyramid shaped swing limits (ESwingType::Pyramid). SwingTwistConstraints still requires symmetrical limits but can use the pyramid swing limits too. These are cheaper to evaluate but are less smooth.
 * Twist limits no longer need to be centered around zero for SixDOFConstraints and SwingTwistConstraints, any value between -PI and PI is supported now.
