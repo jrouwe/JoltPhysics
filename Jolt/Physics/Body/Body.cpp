@@ -336,6 +336,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mIsSensor = IsSensor();
 	result.mSensorDetectsStatic = SensorDetectsStatic();
 	result.mUseManifoldReduction = GetUseManifoldReduction();
+	result.mApplyGyroscopicForce = GetApplyGyroscopicForce();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;
 	result.mAllowSleeping = mMotionProperties != nullptr? GetAllowSleeping() : true;
 	result.mFriction = GetFriction();

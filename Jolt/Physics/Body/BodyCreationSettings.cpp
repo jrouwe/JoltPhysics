@@ -27,6 +27,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mIsSensor)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mSensorDetectsStatic)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mUseManifoldReduction)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mApplyGyroscopicForce)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mMotionQuality)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowSleeping)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mFriction)
@@ -57,6 +58,7 @@ void BodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mIsSensor);
 	inStream.Write(mSensorDetectsStatic);
 	inStream.Write(mUseManifoldReduction);
+	inStream.Write(mApplyGyroscopicForce);
 	inStream.Write(mMotionQuality);
 	inStream.Write(mAllowSleeping);
 	inStream.Write(mFriction);
@@ -87,6 +89,7 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mIsSensor);
 	inStream.Read(mSensorDetectsStatic);
 	inStream.Read(mUseManifoldReduction);
+	inStream.Read(mApplyGyroscopicForce);
 	inStream.Read(mMotionQuality);
 	inStream.Read(mAllowSleeping);
 	inStream.Read(mFriction);

@@ -701,7 +701,15 @@ void PhysicsSystem::JobApplyGravity(const PhysicsUpdateContext *ioContext, Physi
 		{
 			Body &body = mBodyManager.GetBody(active_bodies[active_body_idx]);
 			if (body.IsDynamic())
-				body.GetMotionProperties()->ApplyForceTorqueAndDragInternal(body.GetRotation(), mGravity, delta_time);
+			{
+				MotionProperties *mp = body.GetMotionProperties();
+				Quat rotation = body.GetRotation();
+
+				if (body.GetApplyGyroscopicForce())
+					mp->ApplyGyroscopicForceInternal(rotation, delta_time);
+
+				mp->ApplyForceTorqueAndDragInternal(rotation, mGravity, delta_time);
+			}
 			active_body_idx++;
 		}
 	}
