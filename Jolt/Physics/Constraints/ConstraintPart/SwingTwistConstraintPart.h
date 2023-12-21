@@ -13,8 +13,8 @@ JPH_NAMESPACE_BEGIN
 /// How the swing limit behaves
 enum class ESwingType : uint8
 {
-	Cone,						///< Swing is limited by a cone shape, note that this cone starts to deform for larger swing angles
-	Pyramid,					///< Swing is limited by a pyramid shape, note that this pyramid starts to deform for larger swing angles
+	Cone,						///< Swing is limited by a cone shape, note that this cone starts to deform for larger swing angles. Cone limits only support limits that are symmetric around 0.
+	Pyramid,					///< Swing is limited by a pyramid shape, note that this pyramid starts to deform for larger swing angles.
 };
 
 /// Quaternion based constraint that decomposes the rotation in constraint space in swing and twist: q = q_swing * q_twist
@@ -119,7 +119,7 @@ public:
 			mSinSwingYHalfMaxAngle = swing_s.GetY();
 			mCosSwingYHalfMinAngle = swing_c.GetX();
 			mCosSwingYHalfMaxAngle = swing_c.GetY();
-			JPH_ASSERT(mSinSwingYHalfMinAngle < mSinSwingYHalfMaxAngle);
+			JPH_ASSERT(mSinSwingYHalfMinAngle <= mSinSwingYHalfMaxAngle);
 		}
 
 		if (inSwingZMinAngle > -cLockedAngle && inSwingZMaxAngle < cLockedAngle)
@@ -144,7 +144,7 @@ public:
 			mSinSwingZHalfMaxAngle = swing_s.GetW();
 			mCosSwingZHalfMinAngle = swing_c.GetZ();
 			mCosSwingZHalfMaxAngle = swing_c.GetW();
-			JPH_ASSERT(mSinSwingZHalfMinAngle < mSinSwingZHalfMaxAngle);
+			JPH_ASSERT(mSinSwingZHalfMinAngle <= mSinSwingZHalfMaxAngle);
 		}
 	}
 
@@ -472,14 +472,14 @@ public:
 
 		// Solve swing constraint
 		if (mSwingLimitYConstraintPart.IsActive())
-			impulse |= mSwingLimitYConstraintPart.SolveVelocityConstraint(ioBody1, ioBody2, mWorldSpaceSwingLimitYRotationAxis, -FLT_MAX, (mRotationFlags & SwingYLocked)? FLT_MAX : 0.0f);
+			impulse |= mSwingLimitYConstraintPart.SolveVelocityConstraint(ioBody1, ioBody2, mWorldSpaceSwingLimitYRotationAxis, -FLT_MAX, mSinSwingYHalfMinAngle == mSinSwingYHalfMaxAngle? FLT_MAX : 0.0f);
 
 		if (mSwingLimitZConstraintPart.IsActive())
-			impulse |= mSwingLimitZConstraintPart.SolveVelocityConstraint(ioBody1, ioBody2, mWorldSpaceSwingLimitZRotationAxis, -FLT_MAX, (mRotationFlags & SwingZLocked)? FLT_MAX : 0.0f);
+			impulse |= mSwingLimitZConstraintPart.SolveVelocityConstraint(ioBody1, ioBody2, mWorldSpaceSwingLimitZRotationAxis, -FLT_MAX, mSinSwingZHalfMinAngle == mSinSwingZHalfMaxAngle? FLT_MAX : 0.0f);
 
 		// Solve twist constraint
 		if (mTwistLimitConstraintPart.IsActive())
-			impulse |= mTwistLimitConstraintPart.SolveVelocityConstraint(ioBody1, ioBody2, mWorldSpaceTwistLimitRotationAxis, -FLT_MAX, (mRotationFlags & TwistXLocked)? FLT_MAX : 0.0f);
+			impulse |= mTwistLimitConstraintPart.SolveVelocityConstraint(ioBody1, ioBody2, mWorldSpaceTwistLimitRotationAxis, -FLT_MAX, mSinTwistHalfMinAngle == mSinTwistHalfMaxAngle? FLT_MAX : 0.0f);
 
 		return impulse;
 	}

@@ -38,16 +38,9 @@ void SixDOFConstraintTest::Initialize()
 	// Convert limits to settings class
 	for (int i = 0; i < EAxis::Num; ++i)
 		if (sEnableLimits[i])
-		{
-			if (sLimitMax[i] - sLimitMin[i] < 1.0e-3f)
-				sSettings->MakeFixedAxis((EAxis)i);
-			else
-				sSettings->SetLimitedAxis((EAxis)i, sLimitMin[i], sLimitMax[i]);
-		}
+			sSettings->SetLimitedAxis((EAxis)i, sLimitMin[i], sLimitMax[i]);
 		else
-		{
 			sSettings->MakeFreeAxis((EAxis)i);
-		}
 
 	// Create group filter
 	Ref<GroupFilterTable> group_filter = new GroupFilterTable;
@@ -101,8 +94,8 @@ void SixDOFConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMen
 		for (int i = 0; i < 3; ++i)
 		{
 			inUI->CreateCheckBox(configuration_settings, "Enable Limits " + labels[i], sEnableLimits[i], [=](UICheckBox::EState inState) { sEnableLimits[i] = inState == UICheckBox::STATE_CHECKED; });
-			inUI->CreateSlider(configuration_settings, "Limit Min", sLimitMin[i], -10.0f, 0.0f, 0.1f, [=](float inValue) { sLimitMin[i] = inValue; });
-			inUI->CreateSlider(configuration_settings, "Limit Max", sLimitMax[i], 0.0f, 10.0f, 0.1f, [=](float inValue) { sLimitMax[i] = inValue; });
+			inUI->CreateSlider(configuration_settings, "Limit Min", sLimitMin[i], -5.0f, 5.0f, 0.1f, [=](float inValue) { sLimitMin[i] = inValue; });
+			inUI->CreateSlider(configuration_settings, "Limit Max", sLimitMax[i], -5.0f, 5.0f, 0.1f, [=](float inValue) { sLimitMax[i] = inValue; });
 			inUI->CreateSlider(configuration_settings, "Limit Frequency (Hz)", sSettings->mLimitsSpringSettings[i].mFrequency, 0.0f, 20.0f, 0.1f, [=](float inValue) { sSettings->mLimitsSpringSettings[i].mFrequency = inValue; });
 			inUI->CreateSlider(configuration_settings, "Limit Damping", sSettings->mLimitsSpringSettings[i].mDamping, 0.0f, 2.0f, 0.01f, [=](float inValue) { sSettings->mLimitsSpringSettings[i].mDamping = inValue; });
 		}
