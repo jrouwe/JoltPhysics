@@ -120,6 +120,9 @@ void SixDOFConstraint::UpdateRotationLimits()
 
 void SixDOFConstraint::UpdateFixedFreeAxis()
 {
+	uint8 old_free_axis = mFreeAxis;
+	uint8 old_fixed_axis = mFixedAxis;
+
 	// Cache which axis are fixed and which ones are free
 	mFreeAxis = 0;
 	mFixedAxis = 0;
@@ -132,6 +135,20 @@ void SixDOFConstraint::UpdateFixedFreeAxis()
 		else if (mLimitMin[a] <= -limit && mLimitMax[a] >= limit)
 			mFreeAxis |= 1 << a;
 	}
+
+	// On change we deactivate all constraints to reset warm starting
+	if (old_free_axis != mFreeAxis || old_fixed_axis != mFixedAxis)
+	{
+		for (AxisConstraintPart &c : mTranslationConstraintPart)
+			c.Deactivate();
+		mPointConstraintPart.Deactivate();
+		mSwingTwistConstraintPart.Deactivate();
+		mRotationConstraintPart.Deactivate();
+		for (AxisConstraintPart &c : mMotorTranslationConstraintPart)
+			c.Deactivate();
+		for (AngleConstraintPart &c : mMotorRotationConstraintPart)
+			c.Deactivate();
+	}	
 }
 
 SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFConstraintSettings &inSettings) :
