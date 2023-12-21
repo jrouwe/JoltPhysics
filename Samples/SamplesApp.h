@@ -105,6 +105,7 @@ private:
 	bool					mDrawConstraints = false;									// If the constraints should be drawn
 	bool					mDrawConstraintLimits = false;								// If the constraint limits should be drawn
 	bool					mDrawConstraintReferenceFrame = false;						// If the constraint reference frames should be drawn
+	bool					mDrawPhysicsSystemBounds = false;							// If the bounds of the physics system should be drawn
 	BodyManager::DrawSettings mBodyDrawSettings;										// Settings for how to draw bodies from the body manager
 	SkeletonPose::DrawSettings mPoseDrawSettings;										// Settings for drawing skeletal poses
 #endif // JPH_DEBUG_RENDERER
