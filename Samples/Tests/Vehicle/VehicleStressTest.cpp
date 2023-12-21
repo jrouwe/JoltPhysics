@@ -105,37 +105,42 @@ void VehicleStressTest::Initialize()
 		}
 }
 
-void VehicleStressTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void VehicleStressTest::ProcessInput(const ProcessInputParams &inParams)
 {
 	// Determine acceleration and brake
-	float forward = 0.0f, right = 0.0f, hand_brake = 0.0f;
+	mForward = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
-		forward = 1.0f;
+		mForward = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
-		forward = -1.0f;
+		mForward = -1.0f;
 
 	// Steering
+	mRight = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
-		right = -1.0f;
+		mRight = -1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
-		right = 1.0f;
+		mRight = 1.0f;
 
 	// Hand brake will cancel gas pedal
+	mHandBrake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
 	{
-		forward = 0.0f;
-		hand_brake = 1.0f;
+		mForward = 0.0f;
+		mHandBrake = 1.0f;
 	}
+}
 
+void VehicleStressTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
 	for (VehicleConstraint *c : mVehicles)
 	{
 		// On user input, assure that the car is active
-		if (right != 0.0f || forward != 0.0f)
+		if (mRight != 0.0f || mForward != 0.0f)
 			mBodyInterface->ActivateBody(c->GetVehicleBody()->GetID());
 
 		// Pass the input on to the constraint
 		WheeledVehicleController *controller = static_cast<WheeledVehicleController *>(c->GetController());
-		controller->SetDriverInput(forward, right, 0.0f, hand_brake);
+		controller->SetDriverInput(mForward, mRight, 0.0f, mHandBrake);
 
 		// Draw our wheels (this needs to be done in the pre update since we draw the bodies too in the state before the step)
 		for (uint w = 0; w < 4; ++w)

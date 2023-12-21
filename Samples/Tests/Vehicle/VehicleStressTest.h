@@ -18,8 +18,14 @@ public:
 
 	// See: Test
 	virtual void					Initialize() override;
+	virtual void					ProcessInput(const ProcessInputParams &inParams) override;
 	virtual void					PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
 private:
 	Array<Ref<VehicleConstraint>>	mVehicles;							///< The vehicle constraints
+
+	// Player input
+	float							mForward = 0.0f;
+	float							mRight = 0.0f;
+	float							mHandBrake = 0.0f;
 };
