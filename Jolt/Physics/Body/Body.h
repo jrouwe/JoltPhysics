@@ -124,6 +124,9 @@ public:
 	bool					GetAllowSleeping() const										{ return mMotionProperties->mAllowSleeping; }
 	void					SetAllowSleeping(bool inAllow);
 
+	/// Resets the sleep timer. This does not wake up the body if it is sleeping, but allows resetting the system that detects when a body is sleeping.
+	inline void				ResetSleepTimer();												
+
 	/// Friction (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
 	inline float			GetFriction() const												{ return mFriction; }
 	void					SetFriction(float inFriction)									{ mFriction = inFriction; }
@@ -289,7 +292,7 @@ public:
 	void					CalculateWorldSpaceBoundsInternal();
 
 	/// Function to update body's position (should only be called by the BodyInterface since it also requires updating the broadphase)
-	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTestSpheres = true);
+	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTimer = true);
 
 	/// Updates the center of mass and optionally mass propertes after shifting the center of mass or changes to the shape (should only be called by the BodyInterface since it also requires updating the broadphase)
 	/// @param inPreviousCenterOfMass Center of mass of the shape before the alterations
@@ -323,7 +326,6 @@ private:
 	explicit				Body(bool);														///< Alternative constructor that initializes all members
 
 	inline void				GetSleepTestPoints(RVec3 *outPoints) const;						///< Determine points to test for checking if body is sleeping: COM, COM + largest bounding box axis, COM + second largest bounding box axis
-	inline void				ResetSleepTestSpheres();										///< Reset spheres to current position as returned by GetSleepTestPoints
 
 	enum class EFlags : uint8
 	{
