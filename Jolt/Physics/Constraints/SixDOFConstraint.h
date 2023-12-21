@@ -240,8 +240,8 @@ private:
 	Quat						mConstraintToBody2;
 
 	// Limits
-	uint8						mFreeAxis;													// Bitmask of free axis (bit 0 = TranslationX)
-	uint8						mFixedAxis;													// Bitmask of fixed axis (bit 0 = TranslationX)
+	uint8						mFreeAxis = 0;												// Bitmask of free axis (bit 0 = TranslationX)
+	uint8						mFixedAxis = 0;												// Bitmask of fixed axis (bit 0 = TranslationX)
 	bool						mTranslationMotorActive = false;							// If any of the translational frictions / motors are active
 	bool						mRotationMotorActive = false;								// If any of the rotational frictions / motors are active
 	uint8						mRotationPositionMotorActive = 0;							// Bitmask of axis that have position motor active (bit 0 = RotationX)
