@@ -75,7 +75,7 @@ void Body::SetAllowSleeping(bool inAllow)
 {
 	mMotionProperties->mAllowSleeping = inAllow;
 	if (inAllow)
-		ResetSleepTestSpheres();
+		ResetSleepTimer();
 }
 
 void Body::MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
@@ -99,7 +99,7 @@ void Body::CalculateWorldSpaceBoundsInternal()
 	mBounds = mShape->GetWorldSpaceBounds(GetCenterOfMassTransform(), Vec3::sReplicate(1.0f));
 }
 
-void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTestSpheres)
+void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTimer)
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite));
 
@@ -110,8 +110,8 @@ void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotatio
 	CalculateWorldSpaceBoundsInternal();
 
 	// Reset sleeping test
-	if (inResetSleepTestSpheres && mMotionProperties != nullptr)
-		ResetSleepTestSpheres();
+	if (inResetSleepTimer && mMotionProperties != nullptr)
+		ResetSleepTimer();
 }
 
 void Body::UpdateCenterOfMassInternal(Vec3Arg inPreviousCenterOfMass, bool inUpdateMassProperties)
@@ -336,6 +336,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mIsSensor = IsSensor();
 	result.mSensorDetectsStatic = SensorDetectsStatic();
 	result.mUseManifoldReduction = GetUseManifoldReduction();
+	result.mApplyGyroscopicForce = GetApplyGyroscopicForce();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;
 	result.mAllowSleeping = mMotionProperties != nullptr? GetAllowSleeping() : true;
 	result.mFriction = GetFriction();
@@ -345,6 +346,8 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mMaxLinearVelocity = mMotionProperties != nullptr? mMotionProperties->GetMaxLinearVelocity() : 0.0f;
 	result.mMaxAngularVelocity = mMotionProperties != nullptr? mMotionProperties->GetMaxAngularVelocity() : 0.0f;
 	result.mGravityFactor = mMotionProperties != nullptr? mMotionProperties->GetGravityFactor() : 1.0f;
+	result.mNumVelocityStepsOverride = mMotionProperties != nullptr? mMotionProperties->GetNumVelocityStepsOverride() : 0;
+	result.mNumPositionStepsOverride = mMotionProperties != nullptr? mMotionProperties->GetNumPositionStepsOverride() : 0;
 	result.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
 	result.mMassPropertiesOverride.mMass = mMotionProperties != nullptr? 1.0f / mMotionProperties->GetInverseMassUnchecked() : FLT_MAX;
 	result.mMassPropertiesOverride.mInertia = mMotionProperties != nullptr? mMotionProperties->GetLocalSpaceInverseInertiaUnchecked().Inversed3x3() : Mat44::sIdentity();

@@ -48,11 +48,22 @@ public:
 	// If this test implements a contact listener, it should be returned here
 	virtual ContactListener *GetContactListener()								{ return nullptr; }
 
-	class PreUpdateParams
+	class ProcessInputParams
 	{
 	public:
 		float								mDeltaTime;
 		Keyboard *							mKeyboard;
+		CameraState							mCameraState;
+	};
+
+	// Process input, this is called before SaveInputState is called. This allows you to determine the player input and adjust internal state accordingly.
+	// This state should not be applied until PrePhysicsUpdate because on replay you will receive a call to RestoreInputState to restore the stored player input state before receiging another PrePhysicsUpdate.
+	virtual void	ProcessInput(const ProcessInputParams &inParams)			{ }
+
+	class PreUpdateParams
+	{
+	public:
+		float								mDeltaTime;
 		CameraState							mCameraState;
 #ifdef JPH_DEBUG_RENDERER
 		const SkeletonPose::DrawSettings *	mPoseDrawSettings;
@@ -88,6 +99,10 @@ public:
 	// Saving / restoring state for replay
 	virtual void	SaveState(StateRecorder &inStream) const					{ }
 	virtual void	RestoreState(StateRecorder &inStream)						{ }
+
+	// Saving / restoring controller input state for replay
+	virtual void	SaveInputState(StateRecorder &inStream) const				{ }
+	virtual void	RestoreInputState(StateRecorder &inStream)					{ }
 
 	// Return a string that is displayed in the top left corner of the screen
 	virtual String	GetStatusString() const										{ return String(); }

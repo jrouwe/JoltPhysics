@@ -529,37 +529,40 @@ void CharacterBaseTest::Initialize()
 	}
 }
 
-void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void CharacterBaseTest::ProcessInput(const ProcessInputParams &inParams)
 {
-	// Update scene time
-	mTime += inParams.mDeltaTime;
-
 	// Determine controller input
-	Vec3 control_input = Vec3::sZero();
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	control_input.SetZ(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		control_input.SetX(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		control_input.SetX(-1);
-	if (control_input != Vec3::sZero())
-		control_input = control_input.Normalized();
+	mControlInput = Vec3::sZero();
+	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		mControlInput.SetZ(-1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	mControlInput.SetZ(1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		mControlInput.SetX(1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		mControlInput.SetX(-1);
+	if (mControlInput != Vec3::sZero())
+		mControlInput = mControlInput.Normalized();
 
 	// Rotate controls to align with the camera
 	Vec3 cam_fwd = inParams.mCameraState.mForward;
 	cam_fwd.SetY(0.0f);
 	cam_fwd = cam_fwd.NormalizedOr(Vec3::sAxisX());
 	Quat rotation = Quat::sFromTo(Vec3::sAxisX(), cam_fwd);
-	control_input = rotation * control_input;
+	mControlInput = rotation * mControlInput;
 
 	// Check actions
-	bool jump = false;
-	bool switch_stance = false;
+	mJump = false;
+	mSwitchStance = false;
 	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
 	{
 		if (key == DIK_RSHIFT)
-			switch_stance = true;
+			mSwitchStance = true;
 		else if (key == DIK_RCONTROL)
-			jump = true;
+			mJump = true;
 	}
+}
+
+void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	// Update scene time
+	mTime += inParams.mDeltaTime;
 
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
@@ -595,7 +598,7 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	}
 
 	// Call handle input after new velocities have been set to avoid frame delay
-	HandleInput(control_input, jump, switch_stance, inParams.mDeltaTime);
+	HandleInput(mControlInput, mJump, mSwitchStance, inParams.mDeltaTime);
 }
 
 void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
@@ -607,7 +610,7 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 		inUI->ShowMenu(scene_name);
 	});
 
-	inUI->CreateTextButton(inSubMenu, "Character Movement Settings", [=]() {
+	inUI->CreateTextButton(inSubMenu, "Character Movement Settings", [this, inUI]() {
 		UIElement *movement_settings = inUI->CreateMenu();
 
 		inUI->CreateCheckBox(movement_settings, "Control Movement During Jump", sControlMovementDuringJump, [](UICheckBox::EState inState) { sControlMovementDuringJump = inState == UICheckBox::STATE_CHECKED; });
@@ -617,12 +620,12 @@ void CharacterBaseTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 		inUI->ShowMenu(movement_settings);
 	});
 
-	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [=]() {
+	inUI->CreateTextButton(inSubMenu, "Configuration Settings", [this, inUI]() {
 		UIElement *configuration_settings = inUI->CreateMenu();
 
 		inUI->CreateComboBox(configuration_settings, "Shape Type", { "Capsule", "Cylinder", "Box" }, (int)sShapeType, [](int inItem) { sShapeType = (EType)inItem; });
 		AddConfigurationSettings(inUI, configuration_settings);
-		inUI->CreateTextButton(configuration_settings, "Accept Changes", [=]() { RestartTest(); });
+		inUI->CreateTextButton(configuration_settings, "Accept Changes", [this]() { RestartTest(); });
 		inUI->ShowMenu(configuration_settings);
 	});
 }
@@ -645,12 +648,28 @@ void CharacterBaseTest::SaveState(StateRecorder &inStream) const
 {
 	inStream.Write(mTime);
 	inStream.Write(mRampBlocksTimeLeft);
+	inStream.Write(mReversingVerticallyMovingVelocity);
 }
 
 void CharacterBaseTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
 	inStream.Read(mRampBlocksTimeLeft);
+	inStream.Read(mReversingVerticallyMovingVelocity);
+}
+
+void CharacterBaseTest::SaveInputState(StateRecorder &inStream) const
+{
+	inStream.Write(mControlInput);
+	inStream.Write(mJump);
+	inStream.Write(mSwitchStance);
+}
+
+void CharacterBaseTest::RestoreInputState(StateRecorder &inStream)
+{
+	inStream.Read(mControlInput);
+	inStream.Read(mJump);
+	inStream.Read(mSwitchStance);
 }
 
 void CharacterBaseTest::DrawCharacterState(const CharacterBase *inCharacter, RMat44Arg inCharacterTransform, Vec3Arg inCharacterVelocity)

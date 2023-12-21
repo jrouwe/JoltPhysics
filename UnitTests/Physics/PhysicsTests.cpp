@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 #include <Jolt/Physics/Constraints/PointConstraint.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
@@ -1681,5 +1682,74 @@ TEST_SUITE("PhysicsTests")
 			CHECK(box2.IsActive());
 			CHECK(!sphere2.IsActive());
 		}
+	}
+
+	// This tests that when switching UseManifoldReduction on/off we get the correct contact callbacks
+	TEST_CASE("TestSwitchUseManifoldReduction")
+	{
+		PhysicsTestContext c;
+
+		// Install listener
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create floor
+		Body &floor = c.CreateFloor();
+
+		// Create a compound with 4 boxes
+		Ref<BoxShape> box_shape = new BoxShape(Vec3::sReplicate(2));
+		Ref<StaticCompoundShapeSettings> shape_settings = new StaticCompoundShapeSettings();
+		shape_settings->AddShape(Vec3(5, 0, 0), Quat::sIdentity(), box_shape);
+		shape_settings->AddShape(Vec3(-5, 0, 0), Quat::sIdentity(), box_shape);
+		shape_settings->AddShape(Vec3(0, 0, 5), Quat::sIdentity(), box_shape);
+		shape_settings->AddShape(Vec3(0, 0, -5), Quat::sIdentity(), box_shape);
+		RefConst<StaticCompoundShape> compound_shape = static_cast<const StaticCompoundShape *>(shape_settings->Create().Get().GetPtr());
+		SubShapeID sub_shape_ids[] = {
+			compound_shape->GetSubShapeIDFromIndex(0, SubShapeIDCreator()).GetID(),
+			compound_shape->GetSubShapeIDFromIndex(1, SubShapeIDCreator()).GetID(),
+			compound_shape->GetSubShapeIDFromIndex(2, SubShapeIDCreator()).GetID(),
+			compound_shape->GetSubShapeIDFromIndex(3, SubShapeIDCreator()).GetID()
+		};
+
+		// Embed body a little bit into the floor so we immediately get contact callbacks
+		BodyCreationSettings body_settings(compound_shape, RVec3(0, 1.99_r, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		body_settings.mUseManifoldReduction = true;
+		BodyID body_id = c.GetBodyInterface().CreateAndAddBody(body_settings, EActivation::Activate);
+
+		// Trigger contact callbacks
+		c.SimulateSingleStep();
+
+		// Since manifold reduction is on and the contacts will be coplanar we should only get 1 contact with the floor
+		// Note that which sub shape ID we get is deterministic but not guaranteed to be a particular value, sub_shape_ids[3] is the one it currently returns!!
+		CHECK(contact_listener.GetEntryCount() == 5); // 4x validate + 1x add
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[3]));
+		contact_listener.Clear();
+
+		// Now disable manifold reduction
+		c.GetBodyInterface().SetUseManifoldReduction(body_id, false);
+
+		// Trigger contact callbacks
+		c.SimulateSingleStep();
+
+		// Now manifold reduction is off so we should get collisions with each of the sub shapes
+		CHECK(contact_listener.GetEntryCount() == 8); // 4x validate + 1x persist + 3x add
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Persist, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[3]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[0]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[1]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[2]));
+		contact_listener.Clear();
+
+		// Now enable manifold reduction again
+		c.GetBodyInterface().SetUseManifoldReduction(body_id, true);
+
+		// Trigger contact callbacks
+		c.SimulateSingleStep();
+
+		// We should be back to the first state now where we only have 1 contact
+		CHECK(contact_listener.GetEntryCount() == 8); // 4x validate + 1x persist + 3x remove
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Persist, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[3]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[0]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[1]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[2]));
 	}
 }

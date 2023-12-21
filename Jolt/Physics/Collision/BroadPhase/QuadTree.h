@@ -197,6 +197,9 @@ public:
 	/// Will throw away the previous frame's nodes so that we can start building a new tree in the background
 	void						DiscardOldTree();
 
+	/// Get the bounding box for this tree
+	AABox						GetBounds() const;
+
 	/// Update the broadphase, needs to be called regularly to achieve a tight fit of the tree when bodies have been modified.
 	/// UpdatePrepare() will build the tree, UpdateFinalize() will lock the root of the tree shortly and swap the trees and afterwards clean up temporary data structures.
 	void						UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState, bool inFullRebuild);

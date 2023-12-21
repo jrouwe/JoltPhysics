@@ -202,6 +202,8 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		body->SetSensorDetectsStatic(true);
 	if (inBodyCreationSettings.mUseManifoldReduction)
 		body->SetUseManifoldReduction(true);
+	if (inBodyCreationSettings.mApplyGyroscopicForce)
+		body->SetApplyGyroscopicForce(true);
 	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
 	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;
@@ -216,6 +218,8 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		mp->SetLinearVelocity(inBodyCreationSettings.mLinearVelocity); // Needs to happen after setting the max linear/angular velocity
 		mp->SetAngularVelocity(inBodyCreationSettings.mAngularVelocity);
 		mp->SetGravityFactor(inBodyCreationSettings.mGravityFactor);
+		mp->SetNumVelocityStepsOverride(inBodyCreationSettings.mNumVelocityStepsOverride);
+		mp->SetNumPositionStepsOverride(inBodyCreationSettings.mNumPositionStepsOverride);
 		mp->mMotionQuality = inBodyCreationSettings.mMotionQuality;
 		mp->mAllowSleeping = inBodyCreationSettings.mAllowSleeping;
 		JPH_IF_ENABLE_ASSERTS(mp->mCachedBodyType = body->mBodyType;)
@@ -554,7 +558,7 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 				&& body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
 			{
 				// Reset sleeping
-				body.ResetSleepTestSpheres();
+				body.ResetSleepTimer();
 
 				AddBodyToActiveBodies(body);
 

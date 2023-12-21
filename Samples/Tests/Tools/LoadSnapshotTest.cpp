@@ -88,5 +88,5 @@ void LoadSnapshotTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
 	inUI->CreateComboBox(inSubMenu, "Up Axis", { "X", "Y", "Z" }, sUpAxis, [](int inItem) { sUpAxis = inItem; });
 	inUI->CreateCheckBox(inSubMenu, "Override Object Layers", sOverrideLayers, [](UICheckBox::EState inState) { sOverrideLayers = inState == UICheckBox::STATE_CHECKED; });
-	inUI->CreateTextButton(inSubMenu, "Accept Changes", [=]() { RestartTest(); });
+	inUI->CreateTextButton(inSubMenu, "Accept Changes", [this]() { RestartTest(); });
 }

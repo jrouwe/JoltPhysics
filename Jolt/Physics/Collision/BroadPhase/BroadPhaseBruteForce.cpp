@@ -300,4 +300,14 @@ void BroadPhaseBruteForce::FindCollidingPairs(BodyID *ioActiveBodies, int inNumA
 	}
 }
 
+AABox BroadPhaseBruteForce::GetBounds() const
+{
+	shared_lock lock(mMutex);
+
+	AABox bounds;
+	for (BodyID b : mBodyIDs)
+		bounds.Encapsulate(mBodyManager->GetBody(b).GetWorldSpaceBounds());
+	return bounds;
+}
+
 JPH_NAMESPACE_END

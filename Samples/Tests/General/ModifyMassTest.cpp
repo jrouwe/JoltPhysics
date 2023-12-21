@@ -94,14 +94,14 @@ void ModifyMassTest::OnContactPersisted(const Body &inBody1, const Body &inBody2
 	OnContactAdded(inBody1, inBody2, inManifold, ioSettings);
 }
 
-void ModifyMassTest::SaveState(StateRecorder& inStream) const
+void ModifyMassTest::SaveState(StateRecorder &inStream) const
 {
 	Test::SaveState(inStream);
 
 	inStream.Write(mTime);
 }
 
-void ModifyMassTest::RestoreState(StateRecorder& inStream)
+void ModifyMassTest::RestoreState(StateRecorder &inStream)
 {
 	Test::RestoreState(inStream);
 

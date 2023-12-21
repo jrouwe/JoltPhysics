@@ -111,6 +111,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/FunnelTest.h
 	${SAMPLES_ROOT}/Tests/General/GravityFactorTest.cpp
 	${SAMPLES_ROOT}/Tests/General/GravityFactorTest.h
+	${SAMPLES_ROOT}/Tests/General/GyroscopicForceTest.cpp
+	${SAMPLES_ROOT}/Tests/General/GyroscopicForceTest.h
 	${SAMPLES_ROOT}/Tests/General/HeavyOnLightTest.cpp
 	${SAMPLES_ROOT}/Tests/General/HeavyOnLightTest.h
 	${SAMPLES_ROOT}/Tests/General/HighSpeedTest.cpp

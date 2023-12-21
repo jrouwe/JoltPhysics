@@ -44,6 +44,35 @@ void CharacterSpaceShipTest::Initialize()
 	mSpaceShipPrevTransform = mBodyInterface->GetCenterOfMassTransform(mSpaceShip);
 }
 
+void CharacterSpaceShipTest::ProcessInput(const ProcessInputParams &inParams)
+{
+	// Determine controller input
+	Vec3 control_input = Vec3::sZero();
+	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	control_input.SetZ(1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		control_input.SetX(1);
+	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		control_input.SetX(-1);
+	if (control_input != Vec3::sZero())
+		control_input = control_input.Normalized();
+
+	// Calculate the desired velocity in local space to the ship based on the camera forward
+	RMat44 new_space_ship_transform = mBodyInterface->GetCenterOfMassTransform(mSpaceShip);
+	Vec3 cam_fwd = new_space_ship_transform.GetRotation().Multiply3x3Transposed(inParams.mCameraState.mForward);
+	cam_fwd.SetY(0.0f);
+	cam_fwd = cam_fwd.NormalizedOr(Vec3::sAxisX());
+	Quat rotation = Quat::sFromTo(Vec3::sAxisX(), cam_fwd);
+	control_input = rotation * control_input;
+
+	// Smooth the player input in local space to the ship
+	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
+
+	// Check actions
+	mJump = false;
+	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
+		if (key == DIK_RCONTROL)
+			mJump = true;
+}
+
 void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Update scene time
@@ -63,33 +92,6 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	mCharacter->GetShape()->Draw(mDebugRenderer, mCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sGreen, false, true);
 #endif // JPH_DEBUG_RENDERER
 
-	// Determine controller input
-	Vec3 control_input = Vec3::sZero();
-	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))		control_input.SetZ(-1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))	control_input.SetZ(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_UP))		control_input.SetX(1);
-	if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))		control_input.SetX(-1);
-	if (control_input != Vec3::sZero())
-		control_input = control_input.Normalized();
-
-	// Calculate the desired velocity in local space to the ship based on the camera forward
-	Vec3 cam_fwd = new_space_ship_transform.GetRotation().Multiply3x3Transposed(inParams.mCameraState.mForward);
-	cam_fwd.SetY(0.0f);
-	cam_fwd = cam_fwd.NormalizedOr(Vec3::sAxisX());
-	Quat rotation = Quat::sFromTo(Vec3::sAxisX(), cam_fwd);
-	control_input = rotation * control_input;
-
-	// Smooth the player input in local space to the ship
-	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
-
-	// Check jump
-	bool jump = false;
-	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
-	{
-		if (key == DIK_RCONTROL)
-			jump = true;
-	}
-
 	// Determine new character velocity
 	Vec3 current_vertical_velocity = mCharacter->GetLinearVelocity().Dot(mSpaceShipPrevTransform.GetAxisY()) * mCharacter->GetUp();
 	Vec3 ground_velocity = mCharacter->GetGroundVelocity();
@@ -101,7 +103,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		new_velocity = ground_velocity;
 
 		// Jump
-		if (jump)
+		if (mJump)
 			new_velocity += cJumpSpeed * mCharacter->GetUp();
 	}
 	else
@@ -163,7 +165,6 @@ void CharacterSpaceShipTest::SaveState(StateRecorder &inStream) const
 	mCharacter->SaveState(inStream);
 
 	inStream.Write(mTime);
-	inStream.Write(mDesiredVelocity);
 	inStream.Write(mSpaceShipPrevTransform);
 }
 
@@ -172,11 +173,22 @@ void CharacterSpaceShipTest::RestoreState(StateRecorder &inStream)
 	mCharacter->RestoreState(inStream);
 
 	inStream.Read(mTime);
-	inStream.Read(mDesiredVelocity);
 	inStream.Read(mSpaceShipPrevTransform);
 
 	// Calculate new velocity
 	UpdateShipVelocity();
+}
+
+void CharacterSpaceShipTest::SaveInputState(StateRecorder &inStream) const
+{
+	inStream.Write(mDesiredVelocity);
+	inStream.Write(mJump);
+}
+
+void CharacterSpaceShipTest::RestoreInputState(StateRecorder &inStream)
+{
+	inStream.Read(mDesiredVelocity);
+	inStream.Read(mJump);
 }
 
 void CharacterSpaceShipTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharacter, const Body &inBody2, Vec3 &ioLinearVelocity, Vec3 &ioAngularVelocity)

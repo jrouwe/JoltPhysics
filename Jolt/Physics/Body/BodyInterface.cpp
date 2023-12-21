@@ -933,6 +933,31 @@ float BodyInterface::GetGravityFactor(const BodyID &inBodyID) const
 		return 1.0f;
 }
 
+void BodyInterface::SetUseManifoldReduction(const BodyID &inBodyID, bool inUseReduction)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+	{
+		Body &body = lock.GetBody();
+		if (body.GetUseManifoldReduction() != inUseReduction)
+		{
+			body.SetUseManifoldReduction(inUseReduction);
+
+			// Flag collision cache invalid for this body
+			mBodyManager->InvalidateContactCacheForBody(body);
+		}
+	}
+}
+
+bool BodyInterface::GetUseManifoldReduction(const BodyID &inBodyID) const
+{
+	BodyLockRead lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		return lock.GetBody().GetUseManifoldReduction();
+	else
+		return true;
+}
+
 TransformedShape BodyInterface::GetTransformedShape(const BodyID &inBodyID) const
 {
 	BodyLockRead lock(*mBodyLockInterface, inBodyID);

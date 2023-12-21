@@ -579,6 +579,17 @@ void BroadPhaseQuadTree::FindCollidingPairs(BodyID *ioActiveBodies, int inNumAct
 	}
 }
 
+AABox BroadPhaseQuadTree::GetBounds() const
+{
+	// Prevent this from running in parallel with node deletion in FrameSync(), see notes there
+	shared_lock lock(mQueryLocks[mQueryLockIdx]);
+
+	AABox bounds;
+	for (BroadPhaseLayer::Type l = 0; l < mNumLayers; ++l)
+		bounds.Encapsulate(mLayers[l].GetBounds());
+	return bounds;
+}
+
 #ifdef JPH_TRACK_BROADPHASE_STATS
 
 void BroadPhaseQuadTree::ReportStats()

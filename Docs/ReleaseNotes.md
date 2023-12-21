@@ -4,19 +4,34 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ## Unreleased changes
 
+### New functionality
+* Created an object layer filter implementation that is similar to Bullet's group & mask filtering, see ObjectLayerPairFilterMask.
+* Ability to enable gyroscopic forces on bodies to create the [Dzhanibekov effect](https://en.wikipedia.org/wiki/Tennis_racket_theorem).
+* Swing limits do not need to be symmetrical anymore for SixDOFConstraints. This requires using the new pyramid shaped swing limits (ESwingType::Pyramid). SwingTwistConstraints still requires symmetrical limits but can use the pyramid swing limits too. These are cheaper to evaluate but are less smooth.
+* Twist limits no longer need to be centered around zero for SixDOFConstraints and SwingTwistConstraints, any value between -PI and PI is supported now.
+* Changed the meaning of Constraint::mNumVelocity/PositionStepsOverride. Before the number of steps would be the maximum of all constraints and the default value, now an overridden value of 0 means that the constraint uses the default value, otherwise it will use the value as specified. This means that if all constraints in an island have a lower value than the default, we will now use the lower value instead of the default. This allows simulating an island at a lower precision than the default.
+* Bodies can now also override the default number of solver iterations. This value is used when the body collides with another body and a contact constraint is created (for constraints, the constraint override is always used).
+* Added BodyInterface::SetUseManifoldReduction which will clear the contact cache and ensure that you get consistent contact callbacks in case the body that you're changing already has contacts.
 * Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers which object layers collide.
 * Support for compiling with ninja on Windows.
 * Added wheel index and friction direction to VehicleConstraint::CombineFunction friction callback so you can have more differentiation between wheels.
 * Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
+* Added function to query the bounding box of all bodies in the physics system, see PhysicsSystem::GetBounds.
+
+### Improvements
+* Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
+
+### Bug fixes
+* Fixed bug in Indexify function that caused it to be really slow when passing 10K identical vertices. Also fixed a problem that could have led to some vertices not being welded.
+* Fixed bug in SixDOFConstraint::RestoreState that would cause motors to not properly turn on.
+* Fixed a determinism issue in CharacterVirtual. The order of the contacts returned by GetActiveContacts() was not deterministic.
 
 ## v4.0.1
 
 ### New functionality
-
 * Ability to stop overriding CMAKE_CXX_FLAGS_DEBUG/CMAKE_CXX_FLAGS_RELEASE which is important for Android as it uses a lot of extra flags. Set the OVERRIDE_CXX_FLAGS=NO cmake flag to enable this.
 * Reduced size of a contact constraint which saves a bit of memory during simulation.
 * Can now build a linux shared library using GCC.
-
 ### Bug fixes
 
 * Fixed mass scaling (as provided by the ContactListener) not applied correctly to CCD objects & during solve position constraints. This led to kinematic objects being pushed by dynamic objects.

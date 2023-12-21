@@ -105,6 +105,7 @@ private:
 	bool					mDrawConstraints = false;									// If the constraints should be drawn
 	bool					mDrawConstraintLimits = false;								// If the constraint limits should be drawn
 	bool					mDrawConstraintReferenceFrame = false;						// If the constraint reference frames should be drawn
+	bool					mDrawPhysicsSystemBounds = false;							// If the bounds of the physics system should be drawn
 	BodyManager::DrawSettings mBodyDrawSettings;										// Settings for how to draw bodies from the body manager
 	SkeletonPose::DrawSettings mPoseDrawSettings;										// Settings for drawing skeletal poses
 #endif // JPH_DEBUG_RENDERER
@@ -130,7 +131,12 @@ private:
 	// State recording and determinism checks
 	bool					mRecordState = false;										// When true, the state of the physics system is recorded in mPlaybackFrames every physics update
 	bool					mCheckDeterminism = false;									// When true, the physics state is rolled back after every update and run again to verify that the state is the same
-	Array<StateRecorderImpl> mPlaybackFrames;											// A list of recorded world states, one per physics simulation step
+	struct PlayBackFrame
+	{
+		StateRecorderImpl	mInputState;												// State of the player inputs at the beginning of the step
+		StateRecorderImpl	mState;														// Main simulation state
+	};
+	Array<PlayBackFrame>	mPlaybackFrames;											// A list of recorded world states, one per physics simulation step
 	enum class EPlaybackMode
 	{
 		Rewind,
@@ -173,6 +179,7 @@ private:
 		TaperedCapsule,
 		Cylinder,
 		Triangle,
+		RotatedTranslated,
 		StaticCompound,
 		StaticCompound2,
 		MutableCompound,

@@ -85,8 +85,10 @@ public:
 	/// Check if this sensor detects static objects entering it.
 	inline bool				SensorDetectsStatic() const										{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::SensorDetectsStatic)) != 0; }
 
-	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body. Manifold reduction by default will combine contacts that come from different SubShapeIDs (e.g. different triangles or different compound shapes).
+	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body.
+	/// Manifold reduction by default will combine contacts with similar normals that come from different SubShapeIDs (e.g. different triangles in a mesh shape or different compound shapes).
 	/// If the application requires tracking exactly which SubShapeIDs are in contact, you can turn off manifold reduction. Note that this comes at a performance cost.
+	/// Consider using BodyInterface::SetUseManifoldReduction if the body could already be in contact with other bodies to ensure that the contact cache is invalidated and you get the correct contact callbacks.
 	inline void				SetUseManifoldReduction(bool inUseReduction)					{ JPH_ASSERT(IsRigidBody()); if (inUseReduction) mFlags.fetch_or(uint8(EFlags::UseManifoldReduction), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::UseManifoldReduction)), memory_order_relaxed); }
 
 	/// Check if this body can use manifold reduction.
@@ -95,8 +97,16 @@ public:
 	/// Checks if the combination of this body and inBody2 should use manifold reduction
 	inline bool				GetUseManifoldReductionWithBody(const Body &inBody2) const		{ return ((mFlags.load(memory_order_relaxed) & inBody2.mFlags.load(memory_order_relaxed)) & uint8(EFlags::UseManifoldReduction)) != 0; }
 
-	/// Motion type of this body
+	/// Set to indicate that the gyroscopic force should be applied to this body (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
+	inline void				SetApplyGyroscopicForce(bool inApply)							{ JPH_ASSERT(IsRigidBody()); if (inApply) mFlags.fetch_or(uint8(EFlags::ApplyGyroscopicForce), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::ApplyGyroscopicForce)), memory_order_relaxed); }
+
+	/// Check if the gyroscopic force is being applied for this body
+	inline bool				GetApplyGyroscopicForce() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::ApplyGyroscopicForce)) != 0; }
+
+	/// Get the bodies motion type.
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
+
+	/// Set the motion type of this body. Consider using BodyInterface::SetMotionType instead of this function if the body may be active or if it needs to be activated.
 	void					SetMotionType(EMotionType inMotionType);
 
 	/// Get broadphase layer, this determines in which broad phase sub-tree the object is placed
@@ -113,6 +123,9 @@ public:
 	/// If this body can go to sleep. Note that disabling sleeping on a sleeping object wil not wake it up.
 	bool					GetAllowSleeping() const										{ return mMotionProperties->mAllowSleeping; }
 	void					SetAllowSleeping(bool inAllow);
+
+	/// Resets the sleep timer. This does not wake up the body if it is sleeping, but allows resetting the system that detects when a body is sleeping.
+	inline void				ResetSleepTimer();												
 
 	/// Friction (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
 	inline float			GetFriction() const												{ return mFriction; }
@@ -279,7 +292,7 @@ public:
 	void					CalculateWorldSpaceBoundsInternal();
 
 	/// Function to update body's position (should only be called by the BodyInterface since it also requires updating the broadphase)
-	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTestSpheres = true);
+	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTimer = true);
 
 	/// Updates the center of mass and optionally mass propertes after shifting the center of mass or changes to the shape (should only be called by the BodyInterface since it also requires updating the broadphase)
 	/// @param inPreviousCenterOfMass Center of mass of the shape before the alterations
@@ -313,7 +326,6 @@ private:
 	explicit				Body(bool);														///< Alternative constructor that initializes all members
 
 	inline void				GetSleepTestPoints(RVec3 *outPoints) const;						///< Determine points to test for checking if body is sleeping: COM, COM + largest bounding box axis, COM + second largest bounding box axis
-	inline void				ResetSleepTestSpheres();										///< Reset spheres to current position as returned by GetSleepTestPoints
 
 	enum class EFlags : uint8
 	{
@@ -322,6 +334,7 @@ private:
 		IsInBroadPhase			= 1 << 2,													///< Set this bit to indicate that the body is in the broadphase
 		InvalidateContactCache	= 1 << 3,													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
 		UseManifoldReduction	= 1 << 4,													///< Set this bit to indicate that this body can use manifold reduction (if PhysicsSettings::mUseManifoldReduction is true)
+		ApplyGyroscopicForce	= 1 << 5,													///< Set this bit to indicate that the gyroscopic force should be applied to this body (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
 	};
 
 	// 16 byte aligned

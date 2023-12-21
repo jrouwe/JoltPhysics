@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2023 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
+#pragma once
+
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 
 JPH_NAMESPACE_BEGIN

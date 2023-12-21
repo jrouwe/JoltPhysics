@@ -196,7 +196,7 @@ void Body::GetSleepTestPoints(RVec3 *outPoints) const
 	}
 }
 
-void Body::ResetSleepTestSpheres()
+void Body::ResetSleepTimer()
 {
 	RVec3 points[3];
 	GetSleepTestPoints(points);
