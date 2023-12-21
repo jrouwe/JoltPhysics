@@ -221,6 +221,17 @@ void QuadTree::DiscardOldTree()
 	}
 }
 
+AABox QuadTree::GetBounds() const
+{
+	uint32 node_idx = GetCurrentRoot().mIndex;
+	JPH_ASSERT(node_idx != cInvalidNodeIndex);
+	const Node &node = mAllocator->Get(node_idx);
+
+	AABox bounds;
+	node.GetNodeBounds(bounds);
+	return bounds;
+}
+
 void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState, bool inFullRebuild)
 {
 #ifdef JPH_ENABLE_ASSERTS
