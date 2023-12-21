@@ -178,6 +178,7 @@ private:
 		TaperedCapsule,
 		Cylinder,
 		Triangle,
+		RotatedTranslated,
 		StaticCompound,
 		StaticCompound2,
 		MutableCompound,
