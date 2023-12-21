@@ -16,6 +16,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Support for compiling with ninja on Windows.
 * Added wheel index and friction direction to VehicleConstraint::CombineFunction friction callback so you can have more differentiation between wheels.
 * Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
+* Added function to query the bounding box of all bodies in the physics system, see PhysicsSystem::GetBounds.
 
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
