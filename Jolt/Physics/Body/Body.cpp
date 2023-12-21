@@ -75,7 +75,7 @@ void Body::SetAllowSleeping(bool inAllow)
 {
 	mMotionProperties->mAllowSleeping = inAllow;
 	if (inAllow)
-		ResetSleepTestSpheres();
+		ResetSleepTimer();
 }
 
 void Body::MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime)
@@ -99,7 +99,7 @@ void Body::CalculateWorldSpaceBoundsInternal()
 	mBounds = mShape->GetWorldSpaceBounds(GetCenterOfMassTransform(), Vec3::sReplicate(1.0f));
 }
 
-void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTestSpheres)
+void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTimer)
 {
 	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::ReadWrite));
 
@@ -110,8 +110,8 @@ void Body::SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotatio
 	CalculateWorldSpaceBoundsInternal();
 
 	// Reset sleeping test
-	if (inResetSleepTestSpheres && mMotionProperties != nullptr)
-		ResetSleepTestSpheres();
+	if (inResetSleepTimer && mMotionProperties != nullptr)
+		ResetSleepTimer();
 }
 
 void Body::UpdateCenterOfMassInternal(Vec3Arg inPreviousCenterOfMass, bool inUpdateMassProperties)

@@ -558,7 +558,7 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 				&& body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
 			{
 				// Reset sleeping
-				body.ResetSleepTestSpheres();
+				body.ResetSleepTimer();
 
 				AddBodyToActiveBodies(body);
 
