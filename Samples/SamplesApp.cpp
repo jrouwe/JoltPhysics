@@ -297,6 +297,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, VehicleSixDOFTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, VehicleConstraintTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MotorcycleTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, TankTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, VehicleStressTest)
 
 static TestNameAndRTTI sVehicleTests[] =
 {
@@ -304,6 +305,7 @@ static TestNameAndRTTI sVehicleTests[] =
 	{ "Motorcycle (VehicleConstraint)",		JPH_RTTI(MotorcycleTest) },
 	{ "Tank (VehicleConstraint)",			JPH_RTTI(TankTest) },
 	{ "Car (SixDOFConstraint)",				JPH_RTTI(VehicleSixDOFTest) },
+	{ "Vehicle Stress Test",				JPH_RTTI(VehicleStressTest) },
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyShapesTest)
