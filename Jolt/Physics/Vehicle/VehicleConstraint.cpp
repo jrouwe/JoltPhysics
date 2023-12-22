@@ -174,31 +174,8 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 	// Calculate if this constraint is active by checking if our main vehicle body is active or any of the bodies we touch are active
 	mIsActive = mBody->IsActive();
 
-	// Helper function to check if the colliding body of a wheel is still valid
-	auto update_wheel_body = [&lock_interface = inPhysicsSystem.GetBodyLockInterfaceNoLock()](Wheel *ioWheel) {
-			if (!ioWheel->mContactBodyID.IsInvalid())
-			{
-				// Test if the body is still valid
-				ioWheel->mContactBody = lock_interface.TryGetBody(ioWheel->mContactBodyID);
-				if (ioWheel->mContactBody == nullptr)
-				{
-					// It's not, forget the contact
-					ioWheel->mContactBodyID = BodyID();
-					ioWheel->mContactSubShapeID = SubShapeID();
-					ioWheel->mSuspensionLength = ioWheel->mSettings->mSuspensionMaxLength;
-				}
-			}
-		};
-
 	// Test how often we need to update the wheels
 	uint num_steps_between_collisions = mIsActive? mNumStepsBetweenCollisionTestActive : mNumStepsBetweenCollisionTestInactive;
-	if (num_steps_between_collisions == 0)
-	{
-		// Nothing to update, reset contact body since we cannot trust the pointer anymore
-		for (Wheel *w : mWheels)
-			update_wheel_body(w);
-		return;
-	}
 
 	RMat44 body_transform = mBody->GetWorldTransform();
 
@@ -208,27 +185,51 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 		Wheel *w = mWheels[wheel_index];
 		const WheelSettings *settings = w->mSettings;
 
-		// Test if we need to update this wheel
-		if ((mCurrentStep + wheel_index) % num_steps_between_collisions != 0)
-		{
-			update_wheel_body(w);
-			continue;
-		}
-
-		// Reset contact
-		w->mContactBodyID = BodyID();
-		w->mContactBody = nullptr;
-		w->mContactSubShapeID = SubShapeID();
-		w->mSuspensionLength = settings->mSuspensionMaxLength;
-
-		// Test collision to find the floor
+		// Calculate suspension origin and direction
 		RVec3 ws_origin = body_transform * settings->mPosition;
 		Vec3 ws_direction = body_transform.Multiply3x3(settings->mSuspensionDirection);
-		if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
-		{
-			// Store ID (pointer is not valid outside of the simulation step)
-			w->mContactBodyID = w->mContactBody->GetID();
 
+		// Test if we need to update this wheel
+		if (num_steps_between_collisions == 0
+			|| (mCurrentStep + wheel_index) % num_steps_between_collisions != 0)
+		{
+			// Simplified wheel contact test
+			if (!w->mContactBodyID.IsInvalid())
+			{
+				// Test if the body is still valid
+				w->mContactBody = inPhysicsSystem.GetBodyLockInterfaceNoLock().TryGetBody(w->mContactBodyID);
+				if (w->mContactBody == nullptr)
+				{
+					// It's not, forget the contact
+					w->mContactBodyID = BodyID();
+					w->mContactSubShapeID = SubShapeID();
+					w->mSuspensionLength = settings->mSuspensionMaxLength;
+				}
+				else
+				{
+					// Extrapolate the wheel contact properties
+					mVehicleCollisionTester->PredictContactProperties(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength);
+				}
+			}
+		}
+		else
+		{
+			// Full wheel contact test, start by resetting the contact data
+			w->mContactBodyID = BodyID();
+			w->mContactBody = nullptr;
+			w->mContactSubShapeID = SubShapeID();
+			w->mSuspensionLength = settings->mSuspensionMaxLength;
+
+			// Test collision to find the floor
+			if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
+			{
+				// Store ID (pointer is not valid outside of the simulation step)
+				w->mContactBodyID = w->mContactBody->GetID();
+			}
+		}
+
+		if (w->mContactBody != nullptr)
+		{
 			// Store contact velocity, cache this as the contact body may be removed
 			w->mContactPointVelocity = w->mContactBody->GetPointVelocity(w->mContactPosition);
 
