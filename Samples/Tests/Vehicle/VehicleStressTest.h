@@ -20,6 +20,8 @@ public:
 	virtual void					Initialize() override;
 	virtual void					ProcessInput(const ProcessInputParams &inParams) override;
 	virtual void					PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+	virtual void					SaveInputState(StateRecorder &inStream) const override;
+	virtual void					RestoreInputState(StateRecorder &inStream) override;
 
 private:
 	Array<Ref<VehicleConstraint>>	mVehicles;							///< The vehicle constraints

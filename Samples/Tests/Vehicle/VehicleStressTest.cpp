@@ -151,3 +151,17 @@ void VehicleStressTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		}
 	}
 }
+
+void VehicleStressTest::SaveInputState(StateRecorder &inStream) const
+{
+	inStream.Write(mForward);
+	inStream.Write(mRight);
+	inStream.Write(mHandBrake);
+}
+
+void VehicleStressTest::RestoreInputState(StateRecorder &inStream)
+{
+	inStream.Read(mForward);
+	inStream.Read(mRight);
+	inStream.Read(mHandBrake);
+}

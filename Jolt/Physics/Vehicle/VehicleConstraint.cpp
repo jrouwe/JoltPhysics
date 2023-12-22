@@ -615,8 +615,10 @@ void VehicleConstraint::SaveState(StateRecorder &inStream) const
 		inStream.Write(w->mAngularVelocity);
 		inStream.Write(w->mAngle);
 		inStream.Write(w->mContactBodyID); // Used by MotorcycleController::PreCollide
+		inStream.Write(w->mContactPosition); // Used by VehicleCollisionTester::PredictContactProperties
 		inStream.Write(w->mContactNormal); // Used by MotorcycleController::PreCollide
 		inStream.Write(w->mContactLateral); // Used by MotorcycleController::PreCollide
+		inStream.Write(w->mSuspensionLength); // Used by VehicleCollisionTester::PredictContactProperties
 
 		w->mSuspensionPart.SaveState(inStream);
 		w->mSuspensionMaxUpPart.SaveState(inStream);
@@ -640,8 +642,10 @@ void VehicleConstraint::RestoreState(StateRecorder &inStream)
 		inStream.Read(w->mAngularVelocity);
 		inStream.Read(w->mAngle);
 		inStream.Read(w->mContactBodyID);
+		inStream.Read(w->mContactPosition);
 		inStream.Read(w->mContactNormal);
 		inStream.Read(w->mContactLateral);
+		inStream.Read(w->mSuspensionLength);
 		w->mContactBody = nullptr; // No longer valid
 
 		w->mSuspensionPart.RestoreState(inStream);
