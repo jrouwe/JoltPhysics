@@ -163,12 +163,16 @@ public:
 
 	/// Number of simulation steps between wheel collision tests when the vehicle is active. Default is 1. 0 = never, 1 = every step, 2 = every other step, etc.
 	/// Note that if a vehicle has multiple wheels and the number of steps > 1, the wheels will be tested in a round robin fashion.
-	/// If you set active vehicle wheels to test less than every other frame, you'll see large simulation artifacts.
+	/// If there are multiple vehicles, the tests will be spread out based on the BodyID of the vehicle.
+	/// If you set this to test less than every step, you may see simulation artifacts. This setting can be used to reduce the cost of simulating vehicles in the distance.
 	void						SetNumStepsBetweenCollisionTestActive(uint inSteps) { mNumStepsBetweenCollisionTestActive = inSteps; }
 	uint						GetNumStepsBetweenCollisionTestActive() const { return mNumStepsBetweenCollisionTestActive; }
 
 	/// Number of simulation steps between wheel collision tests when the vehicle is inactive. Default is 1. 0 = never, 1 = every step, 2 = every other step, etc.
 	/// Note that if a vehicle has multiple wheels and the number of steps > 1, the wheels will be tested in a round robin fashion.
+	/// If there are multiple vehicles, the tests will be spread out based on the BodyID of the vehicle.
+	/// This number can be lower than the number of steps when the vehicle is active as the only purpose of this test is
+	/// to allow the vehicle to wake up in response to bodies moving into the wheels but not touching the body of the vehicle.
 	void						SetNumStepsBetweenCollisionTestInactive(uint inSteps) { mNumStepsBetweenCollisionTestInactive = inSteps; }
 	uint						GetNumStepsBetweenCollisionTestInactive() const { return mNumStepsBetweenCollisionTestInactive; }
 

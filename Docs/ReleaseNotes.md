@@ -14,6 +14,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added BodyInterface::SetUseManifoldReduction which will clear the contact cache and ensure that you get consistent contact callbacks in case the body that you're changing already has contacts.
 * Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers which object layers collide.
 * Support for compiling with ninja on Windows.
+* Added support for less than 1 collision test per simulation step for vehicle wheels. This behavior can be configured differently when the vehicle is active / inactive. This can be used for LODding vehicles.
 * Added wheel index and friction direction to VehicleConstraint::CombineFunction friction callback so you can have more differentiation between wheels.
 * Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
 * Added function to query the bounding box of all bodies in the physics system, see PhysicsSystem::GetBounds.
@@ -32,8 +33,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Ability to stop overriding CMAKE_CXX_FLAGS_DEBUG/CMAKE_CXX_FLAGS_RELEASE which is important for Android as it uses a lot of extra flags. Set the OVERRIDE_CXX_FLAGS=NO cmake flag to enable this.
 * Reduced size of a contact constraint which saves a bit of memory during simulation.
 * Can now build a linux shared library using GCC.
-### Bug fixes
 
+### Bug fixes
 * Fixed mass scaling (as provided by the ContactListener) not applied correctly to CCD objects & during solve position constraints. This led to kinematic objects being pushed by dynamic objects.
 * Workaround for MSVC 17.8, limits.h doesn't include corecrt.h and triggers an error that \_\_STDC_WANT_SECURE_LIB\_\_ is not defined.
 * Fixed bug in MustIncludeC logic in GetClosestPointOnTriangle.
