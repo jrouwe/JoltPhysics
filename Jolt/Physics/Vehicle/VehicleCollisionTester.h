@@ -65,6 +65,7 @@ public:
 	/// @param inWheelIndex Index of the wheel that we're testing collision for
 	/// @param inOrigin Origin for the test, corresponds to the world space position for the suspension attachment point
 	/// @param inDirection Direction for the test (unit vector, world space)
+	/// @param inVehicleBodyID The body ID for the vehicle itself
 	/// @param ioBody Body that the wheel previously collided with
 	/// @param ioSubShapeID Sub shape ID that the wheel collided with during the last check
 	/// @param ioContactPosition Contact point between wheel and floor during the last check, in world space
