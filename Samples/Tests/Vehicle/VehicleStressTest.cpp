@@ -24,7 +24,13 @@ VehicleStressTest::~VehicleStressTest()
 
 void VehicleStressTest::Initialize()
 {
-	CreateFloor();
+	CreateMeshTerrain();
+
+	// Create walls so the vehicles don't fall off
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(50.0f, 5.0f, 0.5f)), RVec3(0, 0, -50), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(50.0f, 5.0f, 0.5f)), RVec3(0, 0, 50), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 5.0f, 50.0f)), RVec3(-50, 0, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3(0.5f, 5.0f, 50.0f)), RVec3(50, 0, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	const float wheel_radius = 0.3f;
 	const float wheel_width = 0.1f;
@@ -75,17 +81,18 @@ void VehicleStressTest::Initialize()
 	// Controller
 	WheeledVehicleControllerSettings *controller = new WheeledVehicleControllerSettings;
 	vehicle.mController = controller;
+	vehicle.mMaxPitchRollAngle = DegreesToRadians(60.0f);
 
 	// Differential
 	controller->mDifferentials.resize(1);
 	controller->mDifferentials[0].mLeftWheel = 0;
 	controller->mDifferentials[0].mRightWheel = 1;
 
-	for (int x = 0; x < 10; ++x)
-		for (int y = 0; y < 10; ++y)
+	for (int x = 0; x < 15; ++x)
+		for (int y = 0; y < 15; ++y)
 		{
 			// Create body
-			car_body_settings.mPosition = RVec3(-20.0f + x * 4.0f, 2.0f, -25.0f + y * 5.0f);
+			car_body_settings.mPosition = RVec3(-28.0f + x * 4.0f, 2.0f, -35.0f + y * 5.0f);
 			Body *car_body = mBodyInterface->CreateBody(car_body_settings);
 			mBodyInterface->AddBody(car_body->GetID(), EActivation::Activate);
 
@@ -95,7 +102,7 @@ void VehicleStressTest::Initialize()
 			c->SetNumStepsBetweenCollisionTestInactive(0); // Disable collision testing when inactive
 
 			// Set the collision tester
-			VehicleCollisionTester *tester = new VehicleCollisionTesterCastCylinder(Layers::MOVING);
+			VehicleCollisionTester *tester = new VehicleCollisionTesterRay(Layers::MOVING);
 			c->SetVehicleCollisionTester(tester);
 
 			// Add the vehicle
