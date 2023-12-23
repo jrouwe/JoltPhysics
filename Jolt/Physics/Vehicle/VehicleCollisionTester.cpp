@@ -335,15 +335,36 @@ void VehicleCollisionTesterCastCylinder::PredictContactProperties(PhysicsSystem 
 	float d_dot_n = inDirection.Dot(ioContactNormal);
 	if (d_dot_n < -1.0e-6f)
 	{
-		// Reproject the contact position using the suspension cast sphere and the plane formed by the contact position and normal
-		// This solves x = inOrigin + fraction * inDirection and (x - ioContactPosition) . ioContactNormal = wheel_radius for fraction
-		float wheel_radius = wheel_settings->mRadius;
-		float oc_dot_n = Vec3(ioContactPosition - inOrigin).Dot(ioContactNormal);
-		float fraction = (wheel_radius + oc_dot_n) / d_dot_n;
-		ioContactPosition = inOrigin + fraction * inDirection - wheel_radius * ioContactNormal;
+		// Wheel size
+		float half_width = 0.5f * wheel_settings->mWidth;
+		float radius = wheel_settings->mRadius;
 
-		// We're treating the wheel as a sphere instead of a cylinder to calculate the new suspension length
-		ioSuspensionLength = Clamp(fraction, 0.0f, wheel_settings->mSuspensionMaxLength);
+		// Get the inverse local space contact normal for a cylinder pointing along Y
+		RMat44 wheel_transform = inVehicleConstraint.GetWheelWorldTransform(inWheelIndex, Vec3::sAxisY(), Vec3::sAxisX());
+		Vec3 inverse_local_normal = -wheel_transform.Multiply3x3Transposed(ioContactNormal);
+
+		// Get the support point of this normal in local space of the cylinder
+		// See CylinderShape::Cylinder::GetSupport
+		float x = inverse_local_normal.GetX(), y = inverse_local_normal.GetY(), z = inverse_local_normal.GetZ();
+		float o = sqrt(Square(x) + Square(z));
+		Vec3 support_point;
+		if (o > 0.0f)
+			support_point = Vec3((radius * x) / o, Sign(y) * half_width, (radius * z) / o);
+		else
+			support_point = Vec3(0, Sign(y) * half_width, 0);
+
+		// Rotate back to world space
+		support_point = wheel_transform.Multiply3x3(support_point);
+
+		// Now we can use inOrigin + support_point as the start of a ray of our suspension to the contact plane
+		// as know that it is the first point on the wheel that will hit the plane
+		RVec3 origin = inOrigin + support_point;
+
+		// Calculate contact position and suspension length, the is the same as VehicleCollisionTesterRay
+		// but we don't need to take the radius into account anymore
+		Vec3 oc(ioContactPosition - origin);
+		ioContactPosition = origin + oc.Dot(ioContactNormal) / d_dot_n * inDirection;
+		ioSuspensionLength = Clamp(oc.Dot(inDirection), 0.0f, wheel_settings->mSuspensionMaxLength);
 	}
 	else
 	{
