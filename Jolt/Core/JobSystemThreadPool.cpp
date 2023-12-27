@@ -261,7 +261,14 @@ static void SetThreadName(const char *inName)
 	{
 	}
 }
-
+#elif defined(JPH_PLATFORM_LINUX)
+	#include <sys/prctl.h>
+	static void SetThreadName(const char *inName)
+	{
+		char truncatedName[16] = {0};
+		strncpy(truncatedName, inName, std::min(sizeof(truncatedName), 15ul));
+		prctl(PR_SET_NAME, truncatedName, 0, 0, 0);
+	}
 #endif // JPH_PLATFORM_WINDOWS && !JPH_COMPILER_MINGW
 
 void JobSystemThreadPool::ThreadMain(int inThreadIndex)
@@ -270,7 +277,7 @@ void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 	char name[64];
 	snprintf(name, sizeof(name), "Worker %d", int(inThreadIndex + 1));
 
-#if defined(JPH_PLATFORM_WINDOWS) && !defined(JPH_COMPILER_MINGW)
+#if defined(JPH_PLATFORM_WINDOWS) && !defined(JPH_COMPILER_MINGW) || defined(JPH_PLATFORM_LINUX)
 	SetThreadName(name);
 #endif // JPH_PLATFORM_WINDOWS && !JPH_COMPILER_MINGW
 
