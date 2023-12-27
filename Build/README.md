@@ -52,7 +52,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 	<summary>Windows 10+</summary>
 	<ul>
 		<details>
-			<summary>(CL - Default compiler)</summary>
+			<summary>MSVC CL (default compiler)</summary>
 			<ul>
 				<li>Download Visual Studio 2022 (Community or other edition)</li>
 				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
@@ -62,7 +62,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			</ul>
 		</details>
 		<details>
-			<summary>10+ (CL - 32 bit)</summary>
+			<summary>MSVC CL - 32 bit</summary>
 			<ul>
 				<li>Download Visual Studio 2022 (Community or other edition)</li>
 				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
@@ -72,7 +72,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			</ul>
 		</details>
 		<details>
-			<summary>(Clang compiler)</summary>
+			<summary>MSVC Clang compiler</summary>
 			<ul>
 				<li>Download Visual Studio 2022 (Community or other edition)</li>
 				<li>Make sure to install "C++ Clang Compiler for Windows 11.0.0+" and "C++ Clang-cl for v142+ build tools (x64/x86)" using the Visual Studio Installer</li>
@@ -83,7 +83,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			</ul>
 		</details>
 		<details>
-			<summary>(Universal Windows Platform)</summary>
+			<summary>MSVC Universal Windows Platform</summary>
 			<ul>
 				<li>Download Visual Studio 2022+ (Community or other edition)</li>
 				<li>Make sure to install "Universal Windows Platform development" using the Visual Studio Installer</li>
@@ -94,7 +94,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			</ul>
 		</details>
 		<details>
-			<summary>(MinGW)</summary>
+			<summary>MinGW</summary>
 			<ul>
 				<li>Follow download instructions for MSYS2 (https://www.msys2.org/)</li>
 				<li>From the MSYS2 MSYS app run: pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake</li>
@@ -110,7 +110,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 	<summary>Linux</summary>
 	<ul>
 		<details>
-			<summary>(Debian flavor, x64 or ARM64)</summary>
+			<summary>Debian flavor, x64 or ARM64</summary>
 			<ul>
 				<li>Install clang (apt-get install clang)</li>
 				<li>Install cmake (apt-get install cmake)</li>
@@ -120,7 +120,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 			</ul>
 		</details>
 		<details>
-			<summary>(Debian flavor, MinGW Cross Compile)</summary>
+			<summary>Debian flavor, MinGW Cross Compile</summary>
 			<ul>
 				<li>This setup can be used to run samples on Linux using wine and vkd3d. Tested on Ubuntu 22.04</li>
 				<li>Graphics card must support Vulkan and related drivers must be installed</li>
