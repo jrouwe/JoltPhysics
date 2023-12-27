@@ -38,7 +38,7 @@ JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAllocate)(size_t inSize, size_t inAlig
 	void *block = nullptr;
 	JPH_SUPPRESS_WARNING_PUSH
 	JPH_GCC_SUPPRESS_WARNING("-Wunused-result")
-	posix_memalign(&block, inAlignment, inSize);
+	(void)posix_memalign(&block, inAlignment, inSize);
 	JPH_SUPPRESS_WARNING_POP
 	return block;
 #endif
