@@ -50,7 +50,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 
 <details>
 	<summary>Windows 10+</summary>
-	<ul>
+	<ul style="list-style: none"><li>
 		<details>
 			<summary>MSVC CL (default compiler)</summary>
 			<ul>
@@ -103,12 +103,12 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 				<li>Run: MinGW_Debug/UnitTests.exe</li>
 			</ul>
 		</details>
-	</ul>	
+	</li></ul>
 </details>
 
 <details>
 	<summary>Linux</summary>
-	<ul>
+	<ul style="list-style: none"><li>
 		<details>
 			<summary>Debian flavor, x64 or ARM64</summary>
 			<ul>
@@ -135,7 +135,7 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 				<li>Run: wine Samples.exe</li>
 			</ul>
 		</details>
-	</ul>
+	</li></ul>
 </details>
 
 <details>
