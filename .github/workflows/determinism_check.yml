@@ -6,12 +6,12 @@ env:
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, 4.x ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
   pull_request:
-    branches: [ master ]
+    branches: [ master, 4.x ]
     paths-ignore:
       - 'Docs/**'
       - '**.md'
