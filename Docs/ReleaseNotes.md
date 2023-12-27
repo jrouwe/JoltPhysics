@@ -1,8 +1,13 @@
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
-# Unreleased changes
+# v4.0.2
 
-* None
+### Bug fixes
+* Fixed bug in Indexify function that caused it to be really slow when passing 10K identical vertices. Also fixed a problem that could have led to some vertices not being welded.
+* Fixed bug in SixDOFConstraint::RestoreState that would cause motors to not properly turn on.
+* Fixed a determinism issue in CharacterVirtual. The order of the contacts returned by GetActiveContacts() was not deterministic.
+* Fixed issue in sample application that mouse is very sensitive when viewing with Parsec.
+* Support for compiling with ninja on Windows.
 
 # v4.0.1
 
