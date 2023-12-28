@@ -13,7 +13,6 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Bodies can now also override the default number of solver iterations. This value is used when the body collides with another body and a contact constraint is created (for constraints, the constraint override is always used).
 * Added BodyInterface::SetUseManifoldReduction which will clear the contact cache and ensure that you get consistent contact callbacks in case the body that you're changing already has contacts.
 * Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers which object layers collide.
-* Support for compiling with ninja on Windows.
 * Added support for less than 1 collision test per simulation step for vehicle wheels. This behavior can be configured differently when the vehicle is active / inactive. This can be used for LODding vehicles.
 * Added wheel index and friction direction to VehicleConstraint::CombineFunction friction callback so you can have more differentiation between wheels.
 * Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
@@ -22,10 +21,14 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
 
+# v4.0.2
+
 ### Bug fixes
 * Fixed bug in Indexify function that caused it to be really slow when passing 10K identical vertices. Also fixed a problem that could have led to some vertices not being welded.
 * Fixed bug in SixDOFConstraint::RestoreState that would cause motors to not properly turn on.
 * Fixed a determinism issue in CharacterVirtual. The order of the contacts returned by GetActiveContacts() was not deterministic.
+* Fixed issue in sample application that mouse is very sensitive when viewing with Parsec.
+* Support for compiling with ninja on Windows.
 
 ## v4.0.1
 

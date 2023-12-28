@@ -5,9 +5,9 @@
 #pragma once
 
 // Jolt library version
-#define JPH_VERSION_MAJOR 3
+#define JPH_VERSION_MAJOR 5
 #define JPH_VERSION_MINOR 0
-#define JPH_VERSION_PATCH 1
+#define JPH_VERSION_PATCH 0
 
 // Determine which features the library was compiled with
 #ifdef JPH_DOUBLE_PRECISION

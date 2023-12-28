@@ -4,7 +4,7 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
 
-## Changes between v4.0.1 and latest
+## Changes between v4.0.2 and latest
 
 * 20231220 - *SBS* - Added ability to enable gyroscopic forces on BodyCreationSettings. This breaks the binary serialization format for this class. (9d7748eaa91341adc17554f32bf991bfed04e47e)
 * 20231219 - *SBS* - Added a 'swing type' attribute to SixDOFConstraint and SwingTwistConstraint. This breaks the binary serialization format. (41016256e2cf1262ec05cff3cfa7645668ee0bf0)
@@ -12,7 +12,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 * 20231208 - *SBS* - Bodies can now also override the default number of solver iterations. This breaks the binary serialization format. (0771808a03b850d16f1c64156f0aee827ca3706b)
 * 20231203 - VehicleConstraint::CombineFunction got two additional parameters to identify which wheel is requesting friction. (8d80155f93d0d0c3ffe3dd46550650b9c830d304)
 
-## Changes between v4.0.0 and v4.0.1
+## Changes between v4.0.0 and v4.0.2
 
 * No breaking changes.
 
