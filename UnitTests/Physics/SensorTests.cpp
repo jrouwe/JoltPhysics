@@ -336,8 +336,8 @@ TEST_SUITE("SensorTests")
 			c.SimulateSingleStep();
 			CHECK(listener.GetEntryCount() == 0);
 
-			// After half a second the sensors should be touching
-			c.Simulate(0.5f);
+			// After half a second and one step the sensors should be touching
+			c.Simulate(0.5f + c.GetDeltaTime());
 			if (sensor_detects_sensor)
 				CHECK(listener.Contains(EType::Add, sensor_id1, sensor_id2));
 			else
@@ -356,7 +356,7 @@ TEST_SUITE("SensorTests")
 			listener.Clear();
 
 			// After 2 more seconds we should have left the sensor at the bottom side
-			c.Simulate(2.0f + c.GetDeltaTime());
+			c.Simulate(2.0f);
 			if (sensor_detects_sensor)
 				CHECK(listener.Contains(EType::Remove, sensor_id1, sensor_id2));
 			else
