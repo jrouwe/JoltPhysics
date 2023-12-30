@@ -97,7 +97,7 @@ To learn more about Jolt go to the [Architecture and API documentation](https://
 
 To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example. A [HelloWorld example using CMake FetchContent](https://github.com/jrouwe/JoltPhysicsHelloWorld) is also available to show how you can integrate Jolt Physics in a CMake project.
 
-Some algorithms used by Jolt are described in detail in my GDC 2022 talk Architecting Jolt Physics for 'Horizon Forbidden West' ([slides](https://gdcvault.com/play/1027560/Architecting-Jolt-Physics-for-Horizon), [video](https://gdcvault.com/play/1027891/Architecting-Jolt-Physics-for-Horizon)).
+Some algorithms used by Jolt are described in detail in my GDC 2022 talk Architecting Jolt Physics for 'Horizon Forbidden West' ([slides](https://gdcvault.com/play/1027560/Architecting-Jolt-Physics-for-Horizon), [slides with speaker notes](https://jrouwe.nl/architectingjolt/ArchitectingJoltPhysics_Rouwe_Jorrit_Notes.pdf), [video](https://gdcvault.com/play/1027891/Architecting-Jolt-Physics-for-Horizon)).
 
 ## Compiling
 
