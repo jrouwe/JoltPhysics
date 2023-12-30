@@ -28,7 +28,7 @@ public:
 
 	RVec3					mBaseOffset;						///< Offset to which all the contact points are relative
 	Vec3					mWorldSpaceNormal;					///< Normal for this manifold, direction along which to move body 2 out of collision along the shortest path
-	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision)
+	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision). If this value is negative, this is a speculative contact point and may not actually result in a velocity change as during solving the bodies may not actually collide.
 	SubShapeID				mSubShapeID1;						///< Sub shapes that formed this manifold (note that when multiple manifolds are combined because they're coplanar, we lose some information here because we only keep track of one sub shape pair that we encounter, see description at Body::SetUseManifoldReduction)
 	SubShapeID				mSubShapeID2;
 	ContactPoints			mRelativeContactPointsOn1;			///< Contact points on the surface of shape 1 relative to mBaseOffset.
