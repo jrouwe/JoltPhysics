@@ -930,6 +930,48 @@ TEST_SUITE("PhysicsTests")
 		CHECK_APPROX_EQUAL(-sphere.GetLinearVelocity(), cVelocity);
 	}
 
+	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceSensor")
+	{
+		PhysicsTestContext c;
+		Body &floor = c.CreateFloor();
+		c.ZeroGravity();
+
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create a sphere sensor just inside the speculative contact distance
+		const float cSpeculativeContactDistance = c.GetSystem()->GetPhysicsSettings().mSpeculativeContactDistance;
+		const float cRadius = 1.0f;
+		const float cDistanceAboveFloor = 0.9f * cSpeculativeContactDistance;
+		const RVec3 cInitialPosSphere(5, cRadius + cDistanceAboveFloor, 0);
+
+		// Make it move 1 m per step down
+		const Vec3 cVelocity(0, -1.0f / c.GetDeltaTime(), 0);
+
+		Body &sphere = c.CreateSphere(cInitialPosSphere, cRadius, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+		sphere.SetIsSensor(true);
+		sphere.SetLinearVelocity(cVelocity);
+
+		// Simulate a step
+		c.SimulateSingleStep();
+
+		CHECK(contact_listener.GetEntryCount() == 0); // We're inside the speculative contact distance but we're a sensor so we shouldn't trigger any contacts
+
+		// Simulate a step
+		c.SimulateSingleStep();
+
+		// Check that we're now actually intersecting
+		CHECK(contact_listener.GetEntryCount() == 2); // 1 validates and 1 contact
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Validate, sphere.GetID(), floor.GetID()));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, sphere.GetID(), floor.GetID()));
+		contact_listener.Clear();
+
+		// Sensor should not be affected by the floor
+		CHECK_APPROX_EQUAL(sphere.GetPosition(), cInitialPosSphere + 2.0f * c.GetDeltaTime() * cVelocity);
+		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cVelocity);
+		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero());
+	}
+
 	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceMovingAway")
 	{
 		PhysicsTestContext c;
