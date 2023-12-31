@@ -267,9 +267,9 @@ private:
 	struct SwingConeLimits
 	{
 		bool							operator == (const SwingConeLimits &inRHS) const
-		{ 
+		{
 			return mSwingYHalfAngle == inRHS.mSwingYHalfAngle
-				&& mSwingZHalfAngle == inRHS.mSwingZHalfAngle; 
+				&& mSwingZHalfAngle == inRHS.mSwingZHalfAngle;
 		}
 
 		float							mSwingYHalfAngle;

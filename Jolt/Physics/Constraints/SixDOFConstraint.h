@@ -69,9 +69,9 @@ public:
 	/// Remove degree of freedom by setting min = FLT_MAX and max = -FLT_MAX. The constraint will be driven to 0 for this axis.
 	///
 	/// Free movement over an axis is allowed when min = -FLT_MAX and max = FLT_MAX.
-	/// 
+	///
 	/// Rotation limit around X-Axis: When limited, should be \f$\in [-\pi, \pi]\f$. Can be asymmetric around zero.
-	/// 
+	///
 	/// Rotation limit around Y-Z Axis: Forms a pyramid or cone shaped limit:
 	/// * For pyramid, should be \f$\in [-\pi, \pi]\f$ and does not need to be symmetrical around zero.
 	/// * For cone should be \f$\in [0, \pi]\f$ and needs to be symmetrical around zero (min limit is assumed to be -max limit).

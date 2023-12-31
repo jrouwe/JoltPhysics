@@ -125,7 +125,7 @@ public:
 	void					SetAllowSleeping(bool inAllow);
 
 	/// Resets the sleep timer. This does not wake up the body if it is sleeping, but allows resetting the system that detects when a body is sleeping.
-	inline void				ResetSleepTimer();												
+	inline void				ResetSleepTimer();
 
 	/// Friction (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
 	inline float			GetFriction() const												{ return mFriction; }

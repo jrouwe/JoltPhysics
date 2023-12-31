@@ -148,7 +148,7 @@ void SixDOFConstraint::UpdateFixedFreeAxis()
 			c.Deactivate();
 		for (AngleConstraintPart &c : mMotorRotationConstraintPart)
 			c.Deactivate();
-	}	
+	}
 }
 
 SixDOFConstraint::SixDOFConstraint(Body &inBody1, Body &inBody2, const SixDOFConstraintSettings &inSettings) :
