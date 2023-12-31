@@ -127,6 +127,7 @@ private:
 	void						CalculateRotationLimitsConstraintProperties(float inDeltaTime);
 	void						CalculateMotorConstraintProperties(float inDeltaTime);
 	inline float				GetSmallestAngleToLimit() const;
+	inline bool					IsMinLimitClosest() const;
 
 	// CONFIGURATION PROPERTIES FOLLOW
 

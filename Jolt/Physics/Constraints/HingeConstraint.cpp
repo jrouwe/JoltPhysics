@@ -235,6 +235,13 @@ float HingeConstraint::GetSmallestAngleToLimit() const
 	return abs(dist_to_min) < abs(dist_to_max)? dist_to_min : dist_to_max;
 }
 
+bool HingeConstraint::IsMinLimitClosest() const
+{
+	float dist_to_min = CenterAngleAroundZero(mTheta - mLimitsMin);
+	float dist_to_max = CenterAngleAroundZero(mTheta - mLimitsMax);
+	return abs(dist_to_min) < abs(dist_to_max);
+}
+
 bool HingeConstraint::SolveVelocityConstraint(float inDeltaTime)
 {
 	// Solve motor
@@ -273,7 +280,7 @@ bool HingeConstraint::SolveVelocityConstraint(float inDeltaTime)
 			min_lambda = -FLT_MAX;
 			max_lambda = FLT_MAX;
 		}
-		else if (GetSmallestAngleToLimit() < 0.0f)
+		else if (IsMinLimitClosest())
 		{
 			min_lambda = 0.0f;
 			max_lambda = FLT_MAX;
