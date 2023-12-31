@@ -20,7 +20,7 @@ You can use Jolt/Jolt.h in your precompiled header to speed up compilation.
 
 There are a number of user configurable defines that turn on/off certain features:
 <details>
-	<summary><h3>Jolt Engine Options</h3> (click to see more)</summary>
+	<summary>General Options (click to see more)</summary>
 	<ul>
 		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
 		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).</li>
@@ -34,35 +34,19 @@ There are a number of user configurable defines that turn on/off certain feature
 </details>
 
 <details>
-	<summary><h3>Compilation Options</h3> (click to see more)</summary>
+	<summary>CPU Instruction Sets (click to see more)</summary>
 	<ul>
-		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x86/x64 only)</li>
-		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x86/x64 only)</li>
-		<li>JPH_USE_F16C - Enable half float CPU instructions (x86/x64 only)</li>
-		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x86/x64 only)</li>
-		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x86/x64 only)</li>
-		<li>JPH_USE_AVX - Enable AVX CPU instructions (x86/x64 only)</li>
-		<li>JPH_USE_AVX2 - Enable AVX2 CPU instructions (x86/x64 only)</li>
-		<li>JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (x86/x64 only)</li>
-		<li>JPH_USE_FMADD - Enable fused multiply add CPU instructions (x86/x64 only)</li>
+		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_F16C - Enable half float CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX - Enable AVX CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX2 - Enable AVX2 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (default: off, x86/x64 only)</li>
+		<li>JPH_USE_FMADD - Enable fused multiply add CPU instructions (default: on, x86/x64 only)</li>
 	</ul>
 </details>
-
-## Older Hardware
-
-By default when you build jolt, all of the compilation options are turned on, so if your CPU doesn't support all of the instructions you'll get the following message:
-
-```
-Illegal instruction signal
-```
-On linux to see what instructions your cpu supports run `lscpu` and then look at the flags section, on windows you can use a program like [`coreinfo`](https://learn.microsoft.com/en-us/sysinternals/downloads/coreinfo). You can disable all special instructions by passing these options during compilation:
-
-```
--DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
-```
-
-Once you know what instructions your cpu supports you can modify the above to suit your situation
-
 
 ## Logging & Asserting
 
@@ -197,8 +181,6 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 	</ul>
 </details>
 
-
-
 ## Other Build Tools
 
 * A vcpkg package is available [here](https://github.com/microsoft/vcpkg/tree/master/ports/joltphysics).
@@ -214,6 +196,18 @@ If you receive the following error when linking:
 ```
 
 Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
+
+## Illegal Instruction Error
+
+If your CPU doesn't support all of the instructions you'll get an `Illegal instruction` exception.
+
+On Linux to see what instructions your CPU supports run `lscpu` and then look at the flags section, on Windows you can use a program like [`coreinfo`](https://learn.microsoft.com/en-us/sysinternals/downloads/coreinfo). Once you know what instructions your cpu supports you can configure the project through cmake and for example disable all special instructions:
+
+```
+./cmake_linux_clang_gcc.sh Release clang++ -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+```
+
+Note that this example is for Linux but the cmake settings work on Windows too.
 
 ## Doxygen on Windows
 
