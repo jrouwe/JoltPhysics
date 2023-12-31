@@ -19,24 +19,50 @@ You can use Jolt/Jolt.h in your precompiled header to speed up compilation.
 ## Defines
 
 There are a number of user configurable defines that turn on/off certain features:
+<details>
+	<summary><h3>Jolt Engine Options</h3> (click to see more)</summary>
+	<ul>
+		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
+		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).</li>
+		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
+		<li>JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.</li>
+		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
+		<li>JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).</li>
+		<li>JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.</li>
+		<li>JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.</li>
+	</ul>
+</details>
 
-- JPH_PROFILE_ENABLED - Turns on the internal profiler.
-- JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).
-- JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.
-- JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.
-- JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.
-- JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).
-- JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.
-- JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.
-- JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x86/x64 only)
-- JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x86/x64 only)
-- JPH_USE_F16C - Enable half float CPU instructions (x86/x64 only)
-- JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x86/x64 only)
-- JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x86/x64 only)
-- JPH_USE_AVX - Enable AVX CPU instructions (x86/x64 only)
-- JPH_USE_AVX2 - Enable AVX2 CPU instructions (x86/x64 only)
-- JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (x86/x64 only)
-- JPH_USE_FMADD - Enable fused multiply add CPU instructions (x86/x64 only)
+<details>
+	<summary><h3>Compilation Options</h3> (click to see more)</summary>
+	<ul>
+		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x86/x64 only)</li>
+		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x86/x64 only)</li>
+		<li>JPH_USE_F16C - Enable half float CPU instructions (x86/x64 only)</li>
+		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x86/x64 only)</li>
+		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x86/x64 only)</li>
+		<li>JPH_USE_AVX - Enable AVX CPU instructions (x86/x64 only)</li>
+		<li>JPH_USE_AVX2 - Enable AVX2 CPU instructions (x86/x64 only)</li>
+		<li>JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (x86/x64 only)</li>
+		<li>JPH_USE_FMADD - Enable fused multiply add CPU instructions (x86/x64 only)</li>
+	</ul>
+</details>
+
+## Older Hardware
+
+By default when you build jolt, all of the compilation options are turned on, so if your CPU doesn't support all of the instructions you'll get the following message:
+
+```
+Illegal instruction signal
+```
+On linux to see what instructions your cpu supports run `lscpu` and then look at the flags section, on windows you can use a program like [`coreinfo`](https://learn.microsoft.com/en-us/sysinternals/downloads/coreinfo). You can disable all special instructions by passing these options during compilation:
+
+```
+-DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+```
+
+Once you know what instructions your cpu supports you can modify the above to suit your situation
+
 
 ## Logging & Asserting
 
