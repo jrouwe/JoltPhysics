@@ -23,6 +23,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ### Bug fixes
 * Sensors will no longer use speculative contacts, so will no longer report contacts before an actual contact is detected.
+* Hinge limit constraint forces were clamped wrongly when the hinge was exactly at the minimum limit, making it harder to push the hinge towards the maximum limit.
 
 # v4.0.2
 
