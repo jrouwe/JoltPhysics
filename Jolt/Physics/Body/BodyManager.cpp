@@ -198,8 +198,8 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 	body->mMotionType = inBodyCreationSettings.mMotionType;
 	if (inBodyCreationSettings.mIsSensor)
 		body->SetIsSensor(true);
-	if (inBodyCreationSettings.mAllowKinematicVsStatic)
-		body->SetAllowKinematicVsStatic(true);
+	if (inBodyCreationSettings.mAllowKinematicVsNonDynamic)
+		body->SetAllowKinematicVsNonDynamic(true);
 	if (inBodyCreationSettings.mUseManifoldReduction)
 		body->SetUseManifoldReduction(true);
 	if (inBodyCreationSettings.mApplyGyroscopicForce)

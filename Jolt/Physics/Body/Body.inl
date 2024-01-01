@@ -29,7 +29,7 @@ RMat44 Body::GetInverseCenterOfMassTransform() const
 
 inline static bool sIsValidBodyPair(const Body &inBody1, const Body &inBody2)
 {
-	if (inBody1.GetAllowKinematicVsStatic())
+	if (inBody1.GetAllowKinematicVsNonDynamic())
 		return !inBody2.IsDynamic(); // If the other body is dynamic, the pair will be handled when the bodies are swapped, otherwise we'll detect the collision twice
 	else
 		return inBody2.IsDynamic();
