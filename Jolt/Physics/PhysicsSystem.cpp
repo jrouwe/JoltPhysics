@@ -974,13 +974,12 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		return;
 	}
 
-	// Ensure that body1 is dynamic, this ensures that we do the collision detection in the space of a moving body, which avoids accuracy problems when testing a very large static object against a small dynamic object
-	// Ensure that body1 id < body2 id for dynamic vs dynamic
-	// Keep body order unchanged when colliding with a sensor
-	if ((!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA))
-		&& !body2->IsSensor())
+	// Ensure that body1 has the higher motion type (i.e. dynamic trumps kinematic), this ensures that we do the collision detection in the space of a moving body,
+	// which avoids accuracy problems when testing a very large static object against a small dynamic object
+	// Ensure that body1 id < body2 id when motion types are the same.
+	if (body1->GetMotionType() < body2->GetMotionType()
+		|| (body1->GetMotionType() == body2->GetMotionType() && inBodyPair.mBodyB < inBodyPair.mBodyA))
 		swap(body1, body2);
-	JPH_ASSERT(body1->IsDynamic() || body2->IsSensor());
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, constraint_created = false;
@@ -1035,10 +1034,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// One of the following should be true:
-					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
-					// - Body 1 is not dynamic in which case body 2 should be a sensor
-					JPH_ASSERT(mBody1->IsDynamic() || mBody2->IsSensor());
+					// The first body should be the one with the highest motion type
+					JPH_ASSERT(mBody1->GetMotionType() >= mBody2->GetMotionType());
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit
@@ -1160,10 +1157,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// One of the following should be true:
-					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
-					// - Body 1 is not dynamic in which case body 2 should be a sensor
-					JPH_ASSERT(mBody1->IsDynamic() || mBody2->IsSensor());
+					// The first body should be the one with the highest motion type
+					JPH_ASSERT(mBody1->GetMotionType() >= mBody2->GetMotionType());
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit
