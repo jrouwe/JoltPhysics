@@ -23,7 +23,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mObjectLayer)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mMotionType)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mAllowedDOFs)
-	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowDynamicOrKinematic)
+	JPH_ADD_ATTRIBUTE_WITH_ALIAS(BodyCreationSettings, mAllowDynamicOrKinematic, "mSensorDetectsStatic") // This is the old name to keep backwards compatibility
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mIsSensor)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowKinematicVsStatic)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mUseManifoldReduction)
