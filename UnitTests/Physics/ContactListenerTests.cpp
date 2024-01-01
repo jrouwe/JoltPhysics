@@ -603,7 +603,7 @@ TEST_SUITE("ContactListenerTests")
 			}
 		}
 
-	TEST_CASE("TestAllowKinematicVsNonDynamic")
+	TEST_CASE("TestCollideKinematicVsNonDynamic")
 	{
 		for (EMotionType m1 = EMotionType::Static; m1 <= EMotionType::Dynamic; m1 = EMotionType((int)m1 + 1))
 			for (int allow1 = 0; allow1 < 2; ++allow1)
@@ -623,7 +623,7 @@ TEST_SUITE("ContactListenerTests")
 									BodyCreationSettings bcs(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), m1, m1 != EMotionType::Static? Layers::MOVING : Layers::NON_MOVING);
 									bcs.mPosition = RVec3(-0.5_r, 0, 0);
 									bcs.mLinearVelocity = cInitialVelocity1;
-									bcs.mAllowKinematicVsNonDynamic = allow1 != 0;
+									bcs.mCollideKinematicVsNonDynamic = allow1 != 0;
 									Body &body1 = *c.GetBodyInterface().CreateBody(bcs);
 									c.GetBodyInterface().AddBody(body1.GetID(), active1 != 0? EActivation::Activate : EActivation::DontActivate);
 
@@ -631,7 +631,7 @@ TEST_SUITE("ContactListenerTests")
 									bcs.mObjectLayer = m2 != EMotionType::Static? Layers::MOVING : Layers::NON_MOVING;
 									bcs.mPosition = RVec3(0.5_r, 0, 0);
 									bcs.mLinearVelocity = cInitialVelocity2;
-									bcs.mAllowKinematicVsNonDynamic = allow2 != 0;
+									bcs.mCollideKinematicVsNonDynamic = allow2 != 0;
 									Body &body2 = *c.GetBodyInterface().CreateBody(bcs);
 									c.GetBodyInterface().AddBody(body2.GetID(), active2 != 0? EActivation::Activate : EActivation::DontActivate);
 

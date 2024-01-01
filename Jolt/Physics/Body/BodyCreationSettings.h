@@ -94,7 +94,7 @@ public:
 	EAllowedDOFs			mAllowedDOFs = EAllowedDOFs::All;								///< Which degrees of freedom this body has (can be used to limit simulation to 2D)
 	bool					mAllowDynamicOrKinematic = false;								///< When this body is created as static, this setting tells the system to create a MotionProperties object so that the object can be switched to kinematic or dynamic
 	bool					mIsSensor = false;												///< If this body is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume. See description at Body::SetIsSensor.
-	bool					mAllowKinematicVsNonDynamic = false;							///< If kinematic objects can generate contact points against other kinematic or static objects. See description at Body::SetAllowKinematicVsNonDynamic.
+	bool					mCollideKinematicVsNonDynamic = false;							///< If kinematic objects can generate contact points against other kinematic or static objects. See description at Body::SetCollideKinematicVsNonDynamic.
 	bool					mUseManifoldReduction = true;									///< If this body should use manifold reduction (see description at Body::SetUseManifoldReduction)
 	bool					mApplyGyroscopicForce = false;									///< Set to indicate that the gyroscopic force should be applied to this body (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
 	EMotionQuality			mMotionQuality = EMotionQuality::Discrete;						///< Motion quality, or how well it detects collisions when it has a high velocity
