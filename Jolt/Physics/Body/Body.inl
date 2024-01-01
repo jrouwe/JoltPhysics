@@ -27,16 +27,12 @@ RMat44 Body::GetInverseCenterOfMassTransform() const
 	return RMat44::sInverseRotationTranslation(mRotation, mPosition);
 }
 
-inline static bool sIsValidSensorBodyPair(const Body &inSensor, const Body &inOther)
+inline static bool sIsValidBodyPair(const Body &inBody1, const Body &inBody2)
 {
-	// If the sensor is not an actual sensor then this is not a valid pair
-	if (!inSensor.IsSensor())
-		return false;
-
-	if (inSensor.SensorDetectsStatic())
-		return !inOther.IsDynamic(); // If the other body is dynamic, the pair will be handled when the bodies are swapped, otherwise we'll detect the collision twice
+	if (inBody1.GetAllowKinematicVsStatic())
+		return !inBody2.IsDynamic(); // If the other body is dynamic, the pair will be handled when the bodies are swapped, otherwise we'll detect the collision twice
 	else
-		return inOther.IsKinematic(); // Only kinematic bodies are valid
+		return inBody2.IsDynamic();
 }
 
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
@@ -44,12 +40,8 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 	// First body should never be a soft body
 	JPH_ASSERT(!inBody1.IsSoftBody());
 
-	// One of these conditions must be true
-	// - One of the bodies must be dynamic to collide
-	// - A sensor can collide with non-dynamic bodies
-	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic())
-		&& !sIsValidSensorBodyPair(inBody1, inBody2)
-		&& !sIsValidSensorBodyPair(inBody2, inBody1))
+	// Quick filtering out of pairs that cannot collide
+	if (!sIsValidBodyPair(inBody1, inBody2) && !sIsValidBodyPair(inBody2, inBody1))
 		return false;
 
 	// Check that body 1 is active

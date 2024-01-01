@@ -25,7 +25,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mAllowedDOFs)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowDynamicOrKinematic)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mIsSensor)
-	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mSensorDetectsStatic)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowKinematicVsStatic)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mUseManifoldReduction)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mApplyGyroscopicForce)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mMotionQuality)
@@ -56,7 +56,7 @@ void BodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mAllowedDOFs);
 	inStream.Write(mAllowDynamicOrKinematic);
 	inStream.Write(mIsSensor);
-	inStream.Write(mSensorDetectsStatic);
+	inStream.Write(mAllowKinematicVsStatic);
 	inStream.Write(mUseManifoldReduction);
 	inStream.Write(mApplyGyroscopicForce);
 	inStream.Write(mMotionQuality);
@@ -87,7 +87,7 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mAllowedDOFs);
 	inStream.Read(mAllowDynamicOrKinematic);
 	inStream.Read(mIsSensor);
-	inStream.Read(mSensorDetectsStatic);
+	inStream.Read(mAllowKinematicVsStatic);
 	inStream.Read(mUseManifoldReduction);
 	inStream.Read(mApplyGyroscopicForce);
 	inStream.Read(mMotionQuality);

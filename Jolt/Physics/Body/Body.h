@@ -79,11 +79,12 @@ public:
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
 
-	// If this sensor detects static objects entering it. Note that the sensor must be kinematic and active for it to detect static objects.
-	inline void				SetSensorDetectsStatic(bool inDetectsStatic)					{ JPH_ASSERT(IsRigidBody()); if (inDetectsStatic) mFlags.fetch_or(uint8(EFlags::SensorDetectsStatic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::SensorDetectsStatic)), memory_order_relaxed); }
+	/// If kinematic objects can generate contact points against other kinematic or static objects. This can be used to make sensors detect objects of these types.
+	/// Note that turning this on can be CPU intensive as much more collision detection work will be done which will not affect the simulation (kinematic objects are not affected by other kinematic/static objects).
+	inline void				SetAllowKinematicVsStatic(bool inDetectsStatic)					{ JPH_ASSERT(IsRigidBody()); if (inDetectsStatic) mFlags.fetch_or(uint8(EFlags::AllowKinematicVsStatic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::AllowKinematicVsStatic)), memory_order_relaxed); }
 
-	/// Check if this sensor detects static objects entering it.
-	inline bool				SensorDetectsStatic() const										{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::SensorDetectsStatic)) != 0; }
+	/// Check if kinematic objects can generate contact points against other kinematic or static objects.
+	inline bool				GetAllowKinematicVsStatic() const								{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::AllowKinematicVsStatic)) != 0; }
 
 	/// If PhysicsSettings::mUseManifoldReduction is true, this allows turning off manifold reduction for this specific body.
 	/// Manifold reduction by default will combine contacts with similar normals that come from different SubShapeIDs (e.g. different triangles in a mesh shape or different compound shapes).
@@ -330,7 +331,7 @@ private:
 	enum class EFlags : uint8
 	{
 		IsSensor				= 1 << 0,													///< If this object is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume.
-		SensorDetectsStatic		= 1 << 1,													///< If this sensor detects static objects entering it.
+		AllowKinematicVsStatic	= 1 << 1,													///< If kinematic objects can generate contact points against other kinematic or static objects. This can be used to make sensors detect objects of these types.
 		IsInBroadPhase			= 1 << 2,													///< Set this bit to indicate that the body is in the broadphase
 		InvalidateContactCache	= 1 << 3,													///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
 		UseManifoldReduction	= 1 << 4,													///< Set this bit to indicate that this body can use manifold reduction (if PhysicsSettings::mUseManifoldReduction is true)

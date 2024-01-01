@@ -631,7 +631,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// Start detecting static
-		sensor.SetSensorDetectsStatic(true);
+		sensor.SetAllowKinematicVsStatic(true);
 
 		// After a single step we should detect both static bodies
 		c.SimulateSingleStep();
@@ -641,7 +641,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// Stop detecting static
-		sensor.SetSensorDetectsStatic(false);
+		sensor.SetAllowKinematicVsStatic(false);
 
 		// After a single step we should stop detecting both static bodies
 		c.SimulateSingleStep();

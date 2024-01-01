@@ -334,7 +334,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mAllowedDOFs = mMotionProperties != nullptr? mMotionProperties->GetAllowedDOFs() : EAllowedDOFs::All;
 	result.mAllowDynamicOrKinematic = mMotionProperties != nullptr;
 	result.mIsSensor = IsSensor();
-	result.mSensorDetectsStatic = SensorDetectsStatic();
+	result.mAllowKinematicVsStatic = GetAllowKinematicVsStatic();
 	result.mUseManifoldReduction = GetUseManifoldReduction();
 	result.mApplyGyroscopicForce = GetApplyGyroscopicForce();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;
