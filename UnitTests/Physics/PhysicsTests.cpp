@@ -1522,6 +1522,44 @@ TEST_SUITE("PhysicsTests")
 		}
 	}
 
+	TEST_CASE("TestAllowedDOFsVsCollision")
+	{
+		PhysicsTestContext c;
+		Body &floor = c.CreateFloor();
+		floor.SetFriction(1.0f);
+
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create box that can only rotate around Y that intersects with the floor
+		RVec3 initial_position(0, 0.99f, 0);
+		BodyCreationSettings box_settings(new BoxShape(Vec3::sReplicate(1.0f)), initial_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		box_settings.mAllowedDOFs = EAllowedDOFs::RotationY;
+		box_settings.mAngularDamping = 0.0f; // No damping to make the calculation for expected angular velocity simple
+		box_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+		box_settings.mMassPropertiesOverride.mMass = 1.0f;
+		box_settings.mFriction = 1.0f; // High friction so that if the collision is processed, we'll slow down the rotation
+		Body *body = c.GetBodyInterface().CreateBody(box_settings);
+		c.GetBodyInterface().AddBody(body->GetID(), EActivation::Activate);
+
+		// Make the box rotate around Y
+		const Vec3 torque(0, 100.0f, 0);
+		body->AddTorque(torque);
+
+		// Simulate a step, this will make the box collide with the floor but should not result in the floor stopping the body
+		// but will cause the effective mass of the contact to become infinite so is a test if we are properly ignoring the contact in this case
+		c.SimulateSingleStep();
+
+		// Check that we did detect the collision
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), body->GetID()));
+
+		// Check that we have the correct angular velocity
+		Vec3 expected_angular_velocity = torque * c.GetDeltaTime() * body->GetInverseInertia()(1, 1);
+		CHECK_APPROX_EQUAL(body->GetAngularVelocity(), expected_angular_velocity);
+		CHECK(body->GetLinearVelocity() == Vec3::sZero());
+		CHECK(body->GetPosition() == initial_position);
+	}
+
 	TEST_CASE("TestSelectiveStateSaveAndRestore")
 	{
 		class MyFilter : public StateRecorderFilter
