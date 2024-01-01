@@ -77,7 +77,7 @@ public:
 	/// This is a rather expensive time to reject a contact point since a lot of the collision detection has happened already, make sure you
 	/// filter out the majority of undesired body pairs through the ObjectLayerPairFilter that is registered on the PhysicsSystem.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// The order of body 1 and 2 is undefined, but when one of the two bodies is dynamic it will be body 1.
+	/// Body 1 will have a motion type that is larger or equal than body 2's motion type (order from large to small: dynamic -> kinematic -> static). When motion types are equal, they are ordered by BodyID.
 	/// The collision result (inCollisionResult) is reported relative to inBaseOffset.
 	virtual ValidateResult	OnContactValidate([[maybe_unused]] const Body &inBody1, [[maybe_unused]] const Body &inBody2, [[maybe_unused]] RVec3Arg inBaseOffset, [[maybe_unused]] const CollideShapeResult &inCollisionResult) { return ValidateResult::AcceptAllContactsForThisBodyPair; }
 

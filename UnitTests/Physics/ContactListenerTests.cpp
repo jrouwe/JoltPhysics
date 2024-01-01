@@ -602,4 +602,76 @@ TEST_SUITE("ContactListenerTests")
 				CHECK_APPROX_EQUAL(bi.GetLinearVelocity(sphere_id), -sphere_settings.mLinearVelocity * sphere_settings.mRestitution);
 			}
 		}
+
+	TEST_CASE("TestCollideKinematicVsNonDynamic")
+	{
+		for (EMotionType m1 = EMotionType::Static; m1 <= EMotionType::Dynamic; m1 = EMotionType((int)m1 + 1))
+			for (int allow1 = 0; allow1 < 2; ++allow1)
+				for (int active1 = 0; active1 < 2; ++active1)
+					for (EMotionType m2 = EMotionType::Static; m2 <= EMotionType::Dynamic; m2 = EMotionType((int)m2 + 1))
+						for (int allow2 = 0; allow2 < 2; ++allow2)
+							for (int active2 = 0; active2 < 2; ++active2)
+								if ((m1 != EMotionType::Static && active1) || (m2 != EMotionType::Static && active2))
+								{
+									PhysicsTestContext c;
+									c.ZeroGravity();
+
+									const Vec3 cInitialVelocity1(m1 != EMotionType::Static && active1 != 0? 1.0f : 0.0f, 0, 0);
+									const Vec3 cInitialVelocity2(m2 != EMotionType::Static && active2 != 0? -1.0f : 0.0f, 0, 0);
+
+									// Create two spheres that are colliding initially
+									BodyCreationSettings bcs(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), m1, m1 != EMotionType::Static? Layers::MOVING : Layers::NON_MOVING);
+									bcs.mPosition = RVec3(-0.5_r, 0, 0);
+									bcs.mLinearVelocity = cInitialVelocity1;
+									bcs.mCollideKinematicVsNonDynamic = allow1 != 0;
+									Body &body1 = *c.GetBodyInterface().CreateBody(bcs);
+									c.GetBodyInterface().AddBody(body1.GetID(), active1 != 0? EActivation::Activate : EActivation::DontActivate);
+
+									bcs.mMotionType = m2;
+									bcs.mObjectLayer = m2 != EMotionType::Static? Layers::MOVING : Layers::NON_MOVING;
+									bcs.mPosition = RVec3(0.5_r, 0, 0);
+									bcs.mLinearVelocity = cInitialVelocity2;
+									bcs.mCollideKinematicVsNonDynamic = allow2 != 0;
+									Body &body2 = *c.GetBodyInterface().CreateBody(bcs);
+									c.GetBodyInterface().AddBody(body2.GetID(), active2 != 0? EActivation::Activate : EActivation::DontActivate);
+
+									// Set listener
+									LoggingContactListener listener;
+									c.GetSystem()->SetContactListener(&listener);
+
+									// Step
+									c.SimulateSingleStep();
+
+									if ((allow1 || allow2) // In this case we always get a callback
+										|| (m1 == EMotionType::Dynamic || m2 == EMotionType::Dynamic)) // Otherwise we only get a callback when one of the bodies is dynamic
+									{
+										// Check that we received a callback
+										CHECK(listener.GetEntryCount() == 2);
+										CHECK(listener.Contains(EType::Validate, body1.GetID(), body2.GetID()));
+										CHECK(listener.Contains(EType::Add, body1.GetID(), body2.GetID()));
+									}
+									else
+									{
+										// No collision events should have been received
+										CHECK(listener.GetEntryCount() == 0);
+									}
+
+									// Velocities should only change if the body is dynamic
+									if (m1 == EMotionType::Dynamic)
+									{
+										CHECK(body1.GetLinearVelocity() != cInitialVelocity1);
+										CHECK(body1.IsActive());
+									}
+									else
+										CHECK(body1.GetLinearVelocity() == cInitialVelocity1);
+
+									if (m2 == EMotionType::Dynamic)
+									{
+										CHECK(body2.GetLinearVelocity() != cInitialVelocity2);
+										CHECK(body2.IsActive());
+									}
+									else
+										CHECK(body2.GetLinearVelocity() == cInitialVelocity2);
+								}
+	}
 }
