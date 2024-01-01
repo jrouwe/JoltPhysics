@@ -38,7 +38,7 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 	// - A kinematic object can collide with a sensor
 	if (!inBody1.GetCollideKinematicVsNonDynamic()
 		&& !inBody2.GetCollideKinematicVsNonDynamic()
-		&& (!inBody1.IsDynamic() && !inBody2.IsDynamic()) 
+		&& (!inBody1.IsDynamic() && !inBody2.IsDynamic())
 		&& !(inBody1.IsKinematic() && inBody2.IsSensor())
 		&& !(inBody2.IsKinematic() && inBody1.IsSensor()))
 		return false;

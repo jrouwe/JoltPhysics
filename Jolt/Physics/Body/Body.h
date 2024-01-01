@@ -79,7 +79,7 @@ public:
 	/// Check if this body is a sensor.
 	inline bool				IsSensor() const												{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::IsSensor)) != 0; }
 
-	/// If kinematic objects can generate contact points against other kinematic or static objects. 
+	/// If kinematic objects can generate contact points against other kinematic or static objects.
 	/// Note that turning this on can be CPU intensive as much more collision detection work will be done without any effect on the simulation (kinematic objects are not affected by other kinematic/static objects).
 	/// This can be used to make sensors detect static objects. Note that the sensor must be kinematic and active for it to detect static objects.
 	inline void				SetCollideKinematicVsNonDynamic(bool inCollide)					{ JPH_ASSERT(IsRigidBody()); if (inCollide) mFlags.fetch_or(uint8(EFlags::CollideKinematicVsNonDynamic), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::CollideKinematicVsNonDynamic)), memory_order_relaxed); }
