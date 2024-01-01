@@ -141,10 +141,20 @@ public:
 	JPH_INLINE void			ResetTorque()													{ mTorque = Float3(0, 0, 0); }
 
 	/// Takes a translation vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
-	JPH_INLINE Vec3			LockTranslation(Vec3Arg inV)
+	/// Interfaces like Body::AddForce and Body::SetLinearVelocity don't automatically clear the components that are not allowed by mAllowedDOFs so this function can be used to do that.
+	JPH_INLINE Vec3			LockTranslation(Vec3Arg inV) const
 	{
 		uint32 allowed_dofs = uint32(mAllowedDOFs);
 		UVec4 allowed_dofs_mask = UVec4(allowed_dofs << 31, allowed_dofs << 30, allowed_dofs << 29, 0).ArithmeticShiftRight<31>();
+		return Vec3::sAnd(inV, Vec3(allowed_dofs_mask.ReinterpretAsFloat()));
+	}
+
+	/// Takes an angular velocity / torque vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
+	/// Interfaces like Body::AddTorque and Body::SetAngularVelocity don't automatically clear the components that are not allowed by mAllowedDOFs so this function can be used to do that.
+	JPH_INLINE Vec3			LockAngular(Vec3Arg inV) const
+	{
+		uint32 allowed_dofs = uint32(mAllowedDOFs);
+		UVec4 allowed_dofs_mask = UVec4(allowed_dofs << 28, allowed_dofs << 27, allowed_dofs << 26, 0).ArithmeticShiftRight<31>();
 		return Vec3::sAnd(inV, Vec3(allowed_dofs_mask.ReinterpretAsFloat()));
 	}
 
