@@ -12,8 +12,10 @@
 
 ValidateResult ContactListenerImpl::OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult)
 {
-	// Expect body 1 to be dynamic (or one of the bodies must be a sensor)
-	if (!inBody1.IsDynamic() && !inBody1.IsSensor() && !inBody2.IsSensor())
+	// Check ordering contract between body 1 and body 2
+	bool contract = inBody1.GetMotionType() >= inBody2.GetMotionType()
+		|| (inBody1.GetMotionType() == inBody2.GetMotionType() && inBody1.GetID() < inBody2.GetID());
+	if (!contract)
 		JPH_BREAKPOINT;
 
 	ValidateResult result;
