@@ -233,9 +233,11 @@ void JobSystemThreadPool::QueueJobs(Job **inJobs, uint inNumJobs)
 	mSemaphore.Release(min(inNumJobs, (uint)mThreads.size()));
 }
 
-#if defined(JPH_PLATFORM_WINDOWS) && !defined(JPH_COMPILER_MINGW) // MinGW doesn't support __try/__except
+#if defined(JPH_PLATFORM_WINDOWS)
+
+#if !defined(JPH_COMPILER_MINGW) // MinGW doesn't support __try/__except)
 	// Sets the current thread name in MSVC debugger
-	static void SetThreadName(const char *inName)
+	static void RaiseThreadNameException(const char *inName)
 	{
 		#pragma pack(push, 8)
 
@@ -263,6 +265,35 @@ void JobSystemThreadPool::QueueJobs(Job **inJobs, uint inNumJobs)
 		{
 		}
 	}
+#endif // !JPH_COMPILER_MINGW
+
+	static void SetThreadName(const char* inName)
+	{
+		JPH_SUPPRESS_WARNING_PUSH
+
+		// Suppress casting warning, it's fine here as GetProcAddress doesn't really return a FARPROC
+		JPH_CLANG_SUPPRESS_WARNING("-Wcast-function-type") // error : cast from 'FARPROC' (aka 'long long (*)()') to 'SetThreadDescriptionFunc' (aka 'long (*)(void *, const wchar_t *)') converts to incompatible function type
+		JPH_CLANG_SUPPRESS_WARNING("-Wcast-function-type-strict") // error : cast from 'FARPROC' (aka 'long long (*)()') to 'SetThreadDescriptionFunc' (aka 'long (*)(void *, const wchar_t *)') converts to incompatible function type
+		JPH_MSVC_SUPPRESS_WARNING(4191) // reinterpret_cast' : unsafe conversion from 'FARPROC' to 'SetThreadDescriptionFunc'. Calling this function through the result pointer may cause your program to fail
+
+		using SetThreadDescriptionFunc = HRESULT(WINAPI*)(HANDLE hThread, PCWSTR lpThreadDescription);
+		static SetThreadDescriptionFunc SetThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(GetProcAddress(GetModuleHandleW(L"Kernel32.dll"), "SetThreadDescription"));
+
+		JPH_SUPPRESS_WARNING_POP
+
+		if (SetThreadDescription)
+		{
+			wchar_t name_buffer[64] = { 0 };
+			if (MultiByteToWideChar(CP_UTF8, 0, inName, -1, name_buffer, sizeof(name_buffer) / sizeof(wchar_t) - 1) == 0)
+				return;
+
+			SetThreadDescription(GetCurrentThread(), name_buffer);
+		}
+#if !defined(JPH_COMPILER_MINGW)
+		else if (IsDebuggerPresent())
+			RaiseThreadNameException(inName);
+#endif // !JPH_COMPILER_MINGW
+	}
 #elif defined(JPH_PLATFORM_LINUX)
 	static void SetThreadName(const char *inName)
 	{
@@ -278,7 +309,7 @@ void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 	char name[64];
 	snprintf(name, sizeof(name), "Worker %d", int(inThreadIndex + 1));
 
-#if (defined(JPH_PLATFORM_WINDOWS) && !defined(JPH_COMPILER_MINGW)) || defined(JPH_PLATFORM_LINUX)
+#if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_PLATFORM_LINUX)
 	SetThreadName(name);
 #endif // JPH_PLATFORM_WINDOWS && !JPH_COMPILER_MINGW
 
