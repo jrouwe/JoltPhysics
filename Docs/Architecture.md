@@ -214,7 +214,7 @@ When you make a sensor Kinematic or Dynamic and activate it, it will also detect
 
 To create a sensor, either set [BodyCreationSettings::mIsSensor](@ref BodyCreationSettings::mIsSensor) to true when constructing a body or set it after construction through [Body::SetIsSensor](@ref Body::SetIsSensor). A sensor can only use the discrete motion quality type at this moment.
 
-To make sensors detect collisions with static objects, set the [BodyCreationSettings::mSensorDetectsStatic](@ref BodyCreationSettings::mSensorDetectsStatic) to true or call [Body::SetSensorDetectsStatic](@ref Body::SetSensorDetectsStatic). Note that it can place a large burden on the collision detection system if you have a large sensor intersect with e.g. a large mesh terrain or a height field as you will get many contact callbacks and these contacts will take up a lot of space in the contact cache. Ensure that your sensor is in an object layer that collides with as few static bodies as possible.
+To make sensors detect collisions with static objects, set the [BodyCreationSettings::mCollideKinematicVsNonDynamic](@ref BodyCreationSettings::mCollideKinematicVsNonDynamic) to true or call [Body::SetCollideKinematicVsNonDynamic](@ref Body::SetCollideKinematicVsNonDynamic). Note that it can place a large burden on the collision detection system if you have a large sensor intersect with e.g. a large mesh terrain or a height field as you will get many contact callbacks and these contacts will take up a lot of space in the contact cache. Ensure that your sensor is in an object layer that collides with as few static bodies as possible.
 
 ## Constraints
 
