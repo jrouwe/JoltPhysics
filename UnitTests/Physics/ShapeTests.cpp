@@ -64,6 +64,59 @@ TEST_SUITE("ShapeTests")
 		CHECK_APPROX_EQUAL(shape->GetInnerRadius(), 2.5f);
 	}
 
+	// Test inertia calculations for a capsule vs that of a convex hull of a capsule
+	TEST_CASE("TestCapsuleVsConvexHullInertia")
+	{
+		const float half_height = 5.0f;
+		const float radius = 3.0f;
+
+		// Create a capsule
+		CapsuleShape capsule(half_height, radius);
+		capsule.SetDensity(7.0f);
+		capsule.SetEmbedded();
+		MassProperties mp_capsule = capsule.GetMassProperties();
+
+		// Verify mass
+		float mass_cylinder = 2.0f * half_height * JPH_PI * Square(radius) * capsule.GetDensity();
+		float mass_sphere = 4.0f / 3.0f * JPH_PI * Cubed(radius) * capsule.GetDensity();
+		CHECK_APPROX_EQUAL(mp_capsule.mMass, mass_cylinder + mass_sphere);
+
+		// Extract support points
+		ConvexShape::SupportBuffer buffer;
+		const ConvexShape::Support *support = capsule.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		Array<Vec3> capsule_points;
+		capsule_points.reserve(Vec3::sUnitSphere.size());
+		for (const Vec3 &v : Vec3::sUnitSphere)
+			capsule_points.push_back(support->GetSupport(v));
+
+		// Create a convex hull using the support points
+		ConvexHullShapeSettings capsule_hull(capsule_points);
+		capsule_hull.SetDensity(capsule.GetDensity());
+		RefConst<Shape> capsule_hull_shape = capsule_hull.Create().Get();
+		MassProperties mp_capsule_hull = capsule_hull_shape->GetMassProperties();
+
+		// Check that the mass and inertia of the convex hull match that of the capsule (within certain tolerance since the convex hull is an approximation)
+		float mass_error = (mp_capsule_hull.mMass - mp_capsule.mMass) / mp_capsule.mMass;
+		CHECK(mass_error > -0.05f);
+		CHECK(mass_error < 0.0f); // Mass is smaller since the convex hull is smaller
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+			{
+				if (i == j)
+				{
+					float inertia_error = (mp_capsule_hull.mInertia(i, j) - mp_capsule.mInertia(i, j)) / mp_capsule.mInertia(i, j);
+					CHECK(inertia_error > -0.05f);
+					CHECK(inertia_error < 0.0f); // Inertia is smaller since the convex hull is smaller
+				}
+				else
+				{
+					CHECK(mp_capsule.mInertia(i, j) == 0.0f);
+					float scaled_inertia = mp_capsule_hull.mInertia(i, j) / mp_capsule_hull.mMass;
+					CHECK_APPROX_EQUAL(scaled_inertia, 0.0f, 1.0e-3f);
+				}
+			}
+	}
+
 	// Test IsValidScale function
 	TEST_CASE("TestIsValidScale")
 	{
