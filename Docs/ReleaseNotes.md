@@ -26,7 +26,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Hinge limit constraint forces were clamped wrongly when the hinge was exactly at the minimum limit, making it harder to push the hinge towards the maximum limit.
 * Fixed bug when a body with limited DOFs collides with static. If the resulting contact had an infinite effective mass, we would divide by zero and crash.
 
-# v4.0.2
+## v4.0.2
 
 ### New functionality
 * Support for compiling with ninja on Windows.
