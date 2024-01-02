@@ -32,7 +32,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
-      run: ctest --output-on-failure
+      run: ctest --output-on-failure --verbose
 
   linux-clang-so:
     runs-on: ubuntu-latest
@@ -52,7 +52,29 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
-      run: ctest --output-on-failure
+      run: ctest --output-on-failure --verbose
+
+  linux-clang-32-bit:
+    runs-on: ubuntu-latest
+    name: Linux Clang 32-bit
+    strategy:
+        fail-fast: false
+        matrix:
+            build_type: [Debug, Release, Distribution]
+            clang_version: [clang++-14]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Install G++-Multilib
+      run: sudo apt -y install g++-multilib
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.clang_version}} -DCMAKE_CXX_FLAGS="-m32 -msse2 -mfpmath=sse" -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF Build
+    - name: Build
+      run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
+    - name: Test
+      working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
+      run: ctest --output-on-failure --verbose
 
   linux-gcc:
     runs-on: ubuntu-latest
@@ -72,7 +94,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
-      run: ctest --output-on-failure
+      run: ctest --output-on-failure --verbose
 
   linux-gcc-so:
     runs-on: ubuntu-latest
@@ -92,7 +114,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
     - name: Test
       working-directory: ${{github.workspace}}/Build/Linux_${{matrix.build_type}}_${{matrix.clang_version}}
-      run: ctest --output-on-failure
+      run: ctest --output-on-failure --verbose
 
   msys2_mingw_gcc:
     runs-on: windows-latest
@@ -120,7 +142,7 @@ jobs:
       run: cmake --build Build/MSYS2_MinGW_GCC -j 2
     - name: Test
       working-directory: Build/MSYS2_MinGW_GCC
-      run: ctest --output-on-failure
+      run: ctest --output-on-failure --verbose
       
   msvc_cl:
     runs-on: windows-latest
@@ -263,7 +285,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}} -j 2
     - name: Test
       working-directory: ${{github.workspace}}/Build/MacOS_${{matrix.build_type}}_${{matrix.clang_version}}
-      run: ctest --output-on-failure
+      run: ctest --output-on-failure --verbose
 
   android:
     runs-on: ubuntu-latest
