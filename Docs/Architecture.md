@@ -1,3 +1,5 @@
+[TOC]
+
 # Architecture of Jolt Physics
 
 For demos and videos go to the [Samples](Samples.md) section.
