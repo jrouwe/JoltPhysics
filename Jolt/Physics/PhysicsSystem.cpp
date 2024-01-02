@@ -1527,6 +1527,7 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 					{
 						// This body needs a cast
 						uint32 ccd_body_idx = ioStep->mNumCCDBodies++;
+						JPH_ASSERT(active_body_idx < ioStep->mNumActiveBodyToCCDBody);
 						ioStep->mActiveBodyToCCDBody[active_body_idx] = ccd_body_idx;
 						new (&ioStep->mCCDBodies[ccd_body_idx]) CCDBody(body_id, delta_pos, linear_cast_threshold_sq, min(mPhysicsSettings.mPenetrationSlop, mPhysicsSettings.mLinearCastMaxPenetration * inner_radius));
 
@@ -1614,6 +1615,10 @@ inline static Vec3 sCalculateBodyMotion(const Body &inBody, float inDeltaTime)
 // Helper function that finds the CCD body corresponding to a body (if it exists)
 inline static PhysicsUpdateContext::Step::CCDBody *sGetCCDBody(const Body &inBody, PhysicsUpdateContext::Step *inStep)
 {
+	// Only rigid bodies can have a CCD body
+	if (!inBody.IsRigidBody())
+		return nullptr;
+
 	// If the body has no motion properties it cannot have a CCD body
 	const MotionProperties *motion_properties = inBody.GetMotionPropertiesUnchecked();
 	if (motion_properties == nullptr)
