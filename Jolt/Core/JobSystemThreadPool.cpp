@@ -298,7 +298,7 @@ void JobSystemThreadPool::QueueJobs(Job **inJobs, uint inNumJobs)
 	static void SetThreadName(const char *inName)
 	{
 		char truncated_name[16] = { 0 };
-		strncpy(truncated_name, inName, min(sizeof(truncated_name), 15ul));
+		strncpy(truncated_name, inName, min<size_t>(sizeof(truncated_name), 15));
 		prctl(PR_SET_NAME, truncated_name, 0, 0, 0);
 	}
 #endif // JPH_PLATFORM_LINUX
