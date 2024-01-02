@@ -596,6 +596,12 @@ else()
 		if (USE_FMADD AND NOT CROSS_PLATFORM_DETERMINISTIC)
 			target_compile_options(Jolt PUBLIC -mfma)
 		endif()
+
+		# On 32-bit builds we need to default to using SSE instructions, the x87 FPU instructions have higher intermediate precision
+		# which will cause problems in the collision detection code (the effect is similar to leaving FMA on, search for
+		# JPH_PRECISE_MATH_ON for the locations where this is a problem).
+		target_compile_options(Jolt PUBLIC -mfpmath=sse)
+
 		EMIT_X86_INSTRUCTION_SET_DEFINITIONS()
 	endif()
 endif()
