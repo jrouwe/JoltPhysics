@@ -33,7 +33,7 @@ You cannot use BodyLockRead to lock multiple bodies (if two threads lock the sam
 
 Note that a lot of convenience functions are exposed through the BodyInterface, but not all functionality is available, so you may need to lock the body to get the pointer and then call the function directly on the body.
 
-## Body Pointers vs Body ID's
+### Body Pointers vs Body ID's
 
 If you're only accessing the physics system from a single thread, you can use Body pointers instead of BodyID's. In this case you can also use the non-locking variant of the body interface.
 
@@ -188,7 +188,7 @@ will return a box of size 2x2x2 centered around the origin, so in order to get i
 
 Note that when you work with interface of [BroadPhaseQuery](@ref BroadPhaseQuery), [NarrowPhaseQuery](@ref NarrowPhaseQuery) or [TransformedShape](@ref TransformedShape) this transformation is done for you.
 
-## Creating Custom Shapes
+### Creating Custom Shapes
 
 If the defined Shape classes are not sufficient, or if your application can make a more efficient implementation because it has specific domain knowledge, it is possible to create a custom collision shape:
 
@@ -246,7 +246,7 @@ Adding and removing constraints can be done from multiple threads, but the const
 
 Contact constraints (when bodies collide) are not handled through the [Constraint](@ref Constraint) class but through the [ContactConstraintManager](@ref ContactConstraintManager) which is considered an internal class.
 
-## Constraint Motors
+### Constraint Motors
 
 Most of the constraints support motors (see [MotorSettings](@ref MotorSettings)) which allow you to apply forces/torques on two constrained bodies to drive them to a relative position/orientation. There are two types of motors:
 * Linear motors: These motors drive the relative position between two bodies. A linear motor would, for example, slide a body along a straight line when you use a slider constraint.
@@ -285,7 +285,7 @@ Sensible values for damping are [0, 1] but higher values are also possible. When
 
 Because Jolt Physics uses a Symplectic Euler integrator, there will still be a small amount of damping when damping is 0, so you cannot get infinite oscillation (allowing this would make it very likely for the system to become unstable).
 
-## Breakable Constraints
+### Breakable Constraints
 
 Constraints can be turned on / off by calling Constraint::SetEnabled. After every simulation step, check the total 'lambda' applied on each constraint and disable the constraint if the value goes over a certain threshold. Use e.g. SliderConstraint::GetTotalLambdaPosition / HingeConstraint::GetTotalLambdaRotation. You can see 'lambda' as the linear/angular impulse applied at the constraint in the last physics step to keep the constraint together.
 
@@ -310,7 +310,9 @@ Soft bodies are currently in development, please note the following:
 * Constraints cannot operate on soft bodies, set the inverse mass of a particle to zero and move it by setting a velocity to constrain a soft body to something else.
 * When calculating friction / restitution an empty SubShapeID will be passed to the ContactConstraintManager::CombineFunction because this is called once per body pair rather than once per sub shape as is common for rigid bodies.
 
-## Broad Phase
+## Collision Detection
+
+### Broad Phase
 
 When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body.
 
@@ -320,7 +322,7 @@ Since we want to access bodies concurrently the broad phase has special behavior
 
 When doing a query against the broad phase ([BroadPhaseQuery](@ref BroadPhaseQuery)), you generally will get a body ID for intersecting objects. If a collision query takes a long time to process the resulting bodies (e.g. across multiple simulation steps), you can safely keep using the body ID's as specified in the "Bodies" section.
 
-## Narrow Phase
+### Narrow Phase
 
 A narrow phase query ([NarrowPhaseQuery](@ref NarrowPhaseQuery)) will first query the broad phase for intersecting bodies and will under the protection of a body lock construct a transformed shape ([TransformedShape](@ref TransformedShape)) object. This object contains the transform, a reference counted shape and a body ID. Since the shape will not be deleted until you destroy the TransformedShape object, it is a consistent snapshot of the collision information of the body. This ensures that the body is only locked for a short time frame and makes it possible to do the bulk of the collision detection work outside the protection of a lock.
 
@@ -328,7 +330,7 @@ For very long running jobs (e.g. navigation mesh creation) it is possible to que
 
 The narrow phase queries are all handled through the [GJK](@ref GJKClosestPoint) and [EPA](@ref EPAPenetrationDepth) algorithms.
 
-## Collision filtering
+### Collision filtering
 
 As touched upon in the Broad Phase section, there are various collision filtering functions:
 
@@ -343,6 +345,20 @@ The filter functions are listed in the order they're called. To avoid work, try 
 For convenience two filtering implementations are provided:
 * ObjectLayerPairFilterTable, ObjectVsBroadPhaseLayerFilterTable and BroadPhaseLayerInterfaceTable: These three implement collision layers as a simple table. You construct ObjectLayerPairFilterTable with a fixed number of object layers and then call ObjectLayerPairFilterTable::EnableCollision or ObjectLayerPairFilterTable::DisableCollision to selectively enable or disable collisions between layers. BroadPhaseLayerInterfaceTable is constructed with a number of broad phase layers. You can then map each object layer to a broad phase layer through BroadPhaseLayerInterfaceTable::MapObjectToBroadPhaseLayer.
 * ObjectLayerPairFilterMask, ObjectVsBroadPhaseLayerFilterMask and BroadPhaseLayerInterfaceMask: These split an ObjectLayer in an equal amount of bits for group and mask. Two objects collide if (object1.group & object2.mask) != 0 && (object2.group & object1.mask) != 0. This behavior is similar to e.g. Bullet. In order to map groups to broad phase layers, you call BroadPhaseLayerInterfaceMask::ConfigureLayer for each broad phase layer. You determine which groups can be put in that layer and which group must be excluded from that layer. E.g. a broad phase layer could include everything that has the STATIC group but should exclude everything that has the SENSOR group, so that if an object has both STATIC and SENSOR bits set, this broad phase layer will not be used. The broad phase layers are checked one by one and the first one that meets the condition is the one that the body will be put in. If you use this implementation, consider setting the cmake option OBJECT_LAYER_BITS to 32 to get a 32-bit ObjectLayer instead of a 16-bit one.
+
+### Continuous Collision Detection
+
+Each body has a motion quality setting ([EMotionQuality](@ref EMotionQuality)). By default the motion quality is [Discrete](@ref Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented.
+
+|![Motion Quality](Images/MotionQuality.jpg)|
+|:-|
+|*With the Discrete motion quality the blue object tunnels through the green object in a single time step. With motion quality LinearCast it doesn't.*|
+
+Fast rotating long objects are also to be avoided, as the LinearCast motion quality will fully rotate the object at the beginning of the time step and from that orientation perform the CastShape, there is a chance that the object misses a collision because it rotated through it.
+
+|![Long and Thin](Images/LongAndThin.jpg)|
+|:-|
+|*Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.*|
 
 ## The Simulation Step
 
@@ -380,20 +396,6 @@ Keep in mind that:
 * The effectiveness of the broad phase (which works in floats) will become less at large distances from the origin, e.g. at 10000 km from the origin, the resolution of the broad phase is reduced to 1 m which means that everything that's closer than 1 m will be considered colliding. This will not impact the quality of the simulation but it will result in extra collision tests in the narrow phase so will hurt performance.
 
 Because of the minimal use of doubles, the simulation runs 5-10% slower in double precision mode compared to float precision mode.
-
-## Continuous Collision Detection
-
-Each body has a motion quality setting ([EMotionQuality](@ref EMotionQuality)). By default the motion quality is [Discrete](@ref Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented.
-
-|![Motion Quality](Images/MotionQuality.jpg)|
-|:-|
-|*With the Discrete motion quality the blue object tunnels through the green object in a single time step. With motion quality LinearCast it doesn't.*|
-
-Fast rotating long objects are also to be avoided, as the LinearCast motion quality will fully rotate the object at the beginning of the time step and from that orientation perform the CastShape, there is a chance that the object misses a collision because it rotated through it.
-
-|![Long and Thin](Images/LongAndThin.jpg)|
-|:-|
-|*Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.*|
 
 ## Deterministic Simulation
 
