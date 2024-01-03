@@ -26,6 +26,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Sensors will no longer use speculative contacts, so will no longer report contacts before an actual contact is detected.
 * Hinge limit constraint forces were clamped wrongly when the hinge was exactly at the minimum limit, making it harder to push the hinge towards the maximum limit.
 * Fixed bug when a body with limited DOFs collides with static. If the resulting contact had an infinite effective mass, we would divide by zero and crash.
+* Fixed unit tests failing when compiling for 32-bit Linux. The compiler defaults to using x87 instructions in this case which does not work well with the collision detection pipeline. Now defaulting to the SSE instructions.
+* Fixed assert and improved interaction between a fast moving rigid body of quality LinearCast and a soft body.
 
 ## v4.0.2
 
