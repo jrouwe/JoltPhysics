@@ -102,6 +102,7 @@ public:
 			RVec3			mContactPointOn2;										///< World space contact point on body 2 of closest hit (only valid if mFractionPlusSlop < 1)
 			BodyID			mBodyID1;												///< Body 1 (the body that is performing collision detection)
 			BodyID			mBodyID2;												///< Body 2 (the body of the closest hit, only valid if mFractionPlusSlop < 1)
+			SubShapeID		mSubShapeID2;											///< Sub shape of body 2 that was hit (only valid if mFractionPlusSlop < 1)
 			float			mFraction = 1.0f;										///< Fraction at which the hit occurred
 			float			mFractionPlusSlop = 1.0f;								///< Fraction at which the hit occurred + extra delta to allow body to penetrate by mMaxPenetration
 			float			mLinearCastThresholdSq;									///< Maximum allowed squared movement before doing a linear cast (determined by inner radius of shape)
