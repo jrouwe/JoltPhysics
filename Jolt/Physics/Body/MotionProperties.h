@@ -43,10 +43,10 @@ public:
 	inline Vec3				GetLinearVelocity() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::Read)); return mLinearVelocity; }
 
 	/// Set world space linear velocity of the center of mass
-	void					SetLinearVelocity(Vec3Arg inLinearVelocity)						{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); JPH_ASSERT(inLinearVelocity.Length() <= mMaxLinearVelocity); mLinearVelocity = inLinearVelocity; }
+	void					SetLinearVelocity(Vec3Arg inLinearVelocity)						{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite)); JPH_ASSERT(inLinearVelocity.Length() <= mMaxLinearVelocity); mLinearVelocity = LockTranslation(inLinearVelocity); }
 
 	/// Set world space linear velocity of the center of mass, will make sure the value is clamped against the maximum linear velocity
-	void					SetLinearVelocityClamped(Vec3Arg inLinearVelocity)				{ mLinearVelocity = inLinearVelocity; ClampLinearVelocity(); }
+	void					SetLinearVelocityClamped(Vec3Arg inLinearVelocity)				{ mLinearVelocity = LockTranslation(inLinearVelocity); ClampLinearVelocity(); }
 
 	/// Get world space angular velocity of the center of mass
 	inline Vec3				GetAngularVelocity() const										{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::Read)); return mAngularVelocity; }
@@ -141,7 +141,6 @@ public:
 	JPH_INLINE void			ResetTorque()													{ mTorque = Float3(0, 0, 0); }
 
 	/// Takes a translation vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
-	/// Interfaces like Body::AddForce and Body::SetLinearVelocity don't automatically clear the components that are not allowed by mAllowedDOFs so this function can be used to do that.
 	JPH_INLINE Vec3			LockTranslation(Vec3Arg inV) const
 	{
 		uint32 allowed_dofs = uint32(mAllowedDOFs);
