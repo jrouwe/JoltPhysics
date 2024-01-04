@@ -314,9 +314,7 @@ Soft bodies are currently in development, please note the following:
 
 ### Broad Phase {#broad-phase}
 
-When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body.
-
-The broad phase is divided in layers (BroadPhaseLayer), each layer has an AABB quad tree associated with it. When constructing the physics system an ObjectVsBroadPhaseLayerFilter, ObjectVsBroadPhaseLayerFilter and BroadPhaseLayerInterface need to be provided. These determine which object layers ([ObjectLayer](@ref ObjectLayer)) collide with which broad phase/object layer. If two layers don't collide, the objects inside those layers cannot collide. A standard setup would be to have a MOVING and a NON_MOVING layer, where NON_MOVING doesn't collide with NON_MOVING and all other permutations collide. This ensures that all static bodies are in one tree (which is infrequently updated) and all dynamic bodies are in another (which is updated every simulation step). It is possible to create more layers like a BULLET layer for high detail collision bodies that are attached to lower detail simulation bodies, the MOVING layer would not collide with the BULLET layer, but when performing e.g. weapon collision queries you can quickly test against only objects in the BULLET layer. In general you can have as many object layers as you want, but you should only have a few broad phase layers as there is overhead in maintaining many different broad phase trees.
+When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body. The broad phase is divided in layers (BroadPhaseLayer), each broad phase layer has an AABB quad tree associated with it. A standard setup would be to have at least 2 broad phase layers: One for all static bodies (which is infrequently updated but is expensive to update since it usually contains most bodies) and one for all dynamic bodies (which is updated every simulation step but cheaper to update since it contains fewer objects). In general you should only have a few broad phase layers as there is overhead in querying and maintaining many different broad phase trees.
 
 Since we want to access bodies concurrently the broad phase has special behavior. When a body moves, all nodes in the AABB tree from root to the node where the body resides will be expanded using a lock-free approach. This way multiple threads can move bodies at the same time without requiring a lock on the broad phase. Nodes that have been expanded are marked and during the next physics step a new tight-fitting tree will be built in the background while the physics step is running. This new tree will replace the old tree before the end of the simulation step. This is possible since no bodies can be added/removed during the physics step.
 
@@ -332,15 +330,53 @@ The narrow phase queries are all handled through the [GJK](@ref GJKClosestPoint)
 
 ### Collision Filtering {#collision-filtering}
 
-As touched upon in the @ref broad-phase section, there are various collision filtering functions:
+Each Body is in an [ObjectLayer](@ref ObjectLayer). If two object layers don't collide, the bodies inside those layers cannot collide. You can define object layers in any way you like, it could be a simple number from 0 to N or it could be a bitmask. Jolt supports 16 or 32 bit ObjectLayers through the JPH_OBJECT_LAYER_BITS define and you're free to define as many as you like as they don't incur any overhead in the system.
 
-* Broadphase layer: Each broad phase layer will result in it's own quad tree so you should not have too many of them. See the @ref broad-phase section for more information. At this stage, the object layer is tested against the broad phase trees that are relevant by checking the [ObjectVsBroadPhaseLayerFilter](@ref ObjectVsBroadPhaseLayerFilter).
-* Object layer: Once the broad phase layer test succeeds, we will test object layers vs object layers through [ObjectLayerPairFilter](@ref ObjectLayerPairFilter) (used for simulation) and [ObjectLayerFilter](@ref ObjectLayerFilter) (used for collision queries).
+When constructing the PhysicsSystem you need to provide a number of filtering interfaces:
+* BroadPhaseLayerInterface: This class defines a mapping from ObjectLayer to BroadPhaseLayer through the BroadPhaseLayerInterface::GetBroadPhaseLayer function. Each Body can only be in 1 BroadPhaseLayer and in general there will be multiple ObjectLayers mapping to the same BroadPhaseLayer (because each broad phase layer comes at a cost). If there are multiple object layers in a single broad phase layer, they are stored in the same tree. When a query visits the tree it will visit all objects whose AABB overlaps with the query and only when the overlap is detected, the actual object layer will be checked. This means that you should carefully design which object layers end up in which broad phase layer, balancing the requirement of having few broad phase layers with the number of needless objects that are visited because multiple object layers share the same broad phase layer. You can define JPH_TRACK_BROADPHASE_STATS to let Jolt print out some statistics about the query patterns your application is using. In general it is wise to start with only 2 broad phase layers as listed in the \ref broad-phase section.
+* ObjectVsBroadPhaseLayerFilter: This class defines a ObjectVsBroadPhaseLayerFilter::ShouldCollide function that checks if an ObjectLayer collides with objects that reside in a particular BroadPhaseLayer. ObjectLayers can collide with as many BroadPhaseLayers as needed, so it is possible for a collision query to visit multiple broad phase trees.
+* ObjectLayerPairFilter: This class defines a ObjectLayerPairFilter::ShouldCollide function that checks if an ObjectLayer collides with another ObjectLayer.
+
+As an example we will use a simple enum as ObjectLayer:
+* NON_MOVING - Layer for all static objects.
+* MOVING - Layer for all regular dynamic bodies.
+* DEBRIS - Layer for all debris dynamic bodies, we want to test these only against the static geometry because we want to save some simulation cost.
+* BULLET - Layer for high detail collision bodies that we attach to regular dynamic bodies. These are not used for simulation but we want extra precision when we shoot with bullets.
+* WEAPON - This is a query layer so we don't create any bodies with this layer but we use it when doing ray cast querying for our weapon system.
+
+We define the following object layers to collide:
+* MOVING vs NON_MOVING, MOVING vs MOVING - These are for our regular dynamic objects that need to collide with the static world and with each other.
+* DEBRIS vs NON_MOVING - As said, we only want debris to collide with the static world and not with anything else.
+* WEAPON vs BULLET, WEAPON vs NON_MOVING - We want our weapon ray cast to hit the high detail BULLET collision instead of the normal MOVING collision and we want bullets to be blocked by the static world (obviously the static world could also have a high detail version, but not in this example).
+
+This means that we need to implement a ObjectLayerPairFilter::ShouldCollide that returns true for the permutations listed above. Note that if ShouldCollide(A, B) returns true, ShouldCollide(B, A) should return true too.
+
+We define the following broad phase layers:
+* BP_NON_MOVING - For everything static (contains object layer: NON_MOVING).
+* BP_MOVING - The default layer for dynamic objects (contains object layers: MOVING, BULLET).
+* BP_DEBRIS - An extra layer that contains only debris (contains object layers: DEBRIS).
+
+This means we now implement a BroadPhaseLayerInterface::GetBroadPhaseLayer that maps: NON_MOVING -> BP_NON_MOVING, MOVING -> BP_MOVING, BULLET -> BP_MOVING and DEBRIS -> BP_DEBRIS. We can map WEAPON to anything as we won't create any objects with this layer.
+
+We also need to implement a ObjectVsBroadPhaseLayerFilter::ShouldCollide that determines which object layer should collide with what broad phase layers, these can be deduced from the two lists above:
+* NON_MOVING: BP_MOVING, BP_DEBRIS
+* MOVING: BP_NON_MOVING, BP_MOVING
+* DEBRIS: BP_NON_MOVING
+* BULLET: None (these are not simulated so need no collision with other objects)
+* WEAPON: BP_NON_MOVING, BP_MOVING
+
+So you can see now that when we simulate DEBRIS we only need to visit a single broad phase tree to check for collision, we did this because in our example we know that there are going to be 1000s of debris objects so it is important that their queries are as fast as possible. We could have moved the BULLET layer to its own broad phase layer too because now BP_MOVING contains a lot of bodies that WEAPON is not interested in, but in this example we didn't because we know that there are not enough of these objects for this to be a performance problem.
+
+Now that we know about the basics, we list the order in which the collision detection pipeline goes through the various collision filters:
+
+* Broadphase layer: At this stage, the object layer is tested against the broad phase trees that are relevant by checking the [ObjectVsBroadPhaseLayerFilter](@ref ObjectVsBroadPhaseLayerFilter).
+* Object layer: Once the broad phase layer test succeeds, we will test object layers vs object layers through [ObjectLayerPairFilter](@ref ObjectLayerPairFilter) (used for simulation) and [ObjectLayerFilter](@ref ObjectLayerFilter) (used for collision queries). The default implementation of ObjectLayerFilter is DefaultObjectLayerFilter and uses ObjectLayerPairFilter so the behavior is consistent between simulation and collision queries.
 * Group filter: Most expensive filtering (bounding boxes already overlap), used only during simulation. Allows you fine tune collision e.g. by discarding collisions between bodies connected by a constraint. See [GroupFilter](@ref GroupFilter) and implementation for ragdolls [GroupFilterTable](@ref GroupFilterTable).
 * Body filter: This filter is used instead of the group filter if you do collision queries like CastRay. See [BodyFilter](@ref BodyFilter).
 * Shape filter: This filter is used only during collision queries and can be used to filter out individual (sub)shapes. See [ShapeFilter](@ref ShapeFilter).
+* Contact listener: During simulation, after all collision detection work has been performed you can still choose to discard a contact point. This is a very expensive way of rejecting collisions as most of the work is already done. See [ContactListener](@ref ContactListener).
 
-The filter functions are listed in the order they're called. To avoid work, try to filter out collisions as early as possible.
+To avoid work, try to filter out collisions as early as possible.
 
 For convenience two filtering implementations are provided:
 * ObjectLayerPairFilterTable, ObjectVsBroadPhaseLayerFilterTable and BroadPhaseLayerInterfaceTable: These three implement collision layers as a simple table. You construct ObjectLayerPairFilterTable with a fixed number of object layers and then call ObjectLayerPairFilterTable::EnableCollision or ObjectLayerPairFilterTable::DisableCollision to selectively enable or disable collisions between layers. BroadPhaseLayerInterfaceTable is constructed with a number of broad phase layers. You can then map each object layer to a broad phase layer through BroadPhaseLayerInterfaceTable::MapObjectToBroadPhaseLayer.
