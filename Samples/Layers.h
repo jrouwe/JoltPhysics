@@ -116,7 +116,7 @@ public:
 		switch (inLayer1)
 		{
 		case Layers::NON_MOVING:
-			return inLayer2 == BroadPhaseLayers::MOVING;
+			return inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::DEBRIS;
 		case Layers::MOVING:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
 		case Layers::DEBRIS:
