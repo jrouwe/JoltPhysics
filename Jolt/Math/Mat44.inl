@@ -213,6 +213,15 @@ Mat44 Mat44::sLookAt(Vec3Arg inPos, Vec3Arg inTarget, Vec3Arg inUp)
 	return Mat44(Vec4(right, 0), Vec4(up, 0), Vec4(-direction, 0), Vec4(inPos, 1)).InversedRotationTranslation();
 }
 
+Mat44 Mat44::sPerspective(float inFovY, float inAspect, float inNear, float inFar)
+{
+	float height = 1.0f / Tan(0.5f * inFovY);
+	float width = height / inAspect;
+	float range = inFar / (inNear - inFar);
+
+	return Mat44(Vec4(width, 0.0f, 0.0f, 0.0f), Vec4(0.0f, height, 0.0f, 0.0f), Vec4(0.0f, 0.0f, range, -1.0f), Vec4(0.0f, 0.0f, range * inNear, 0.0f));
+}
+
 bool Mat44::operator == (Mat44Arg inM2) const
 {
 	return UVec4::sAnd(
