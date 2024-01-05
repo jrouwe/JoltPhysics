@@ -219,7 +219,7 @@ Mat44 Mat44::sPerspective(float inFovY, float inAspect, float inNear, float inFa
 	float width = height / inAspect;
 	float range = inFar / (inNear - inFar);
 
-	return Mat44(Vec4(width, 0.0f, 0.0f, 0.0f),Vec4(0.0f, height, 0.0f, 0.0f), Vec4(0.0f, 0.0f, range, -1.0f), Vec4(0.0f, 0.0f, range * inNear, 0.0f));
+	return Mat44(Vec4(width, 0.0f, 0.0f, 0.0f), Vec4(0.0f, height, 0.0f, 0.0f), Vec4(0.0f, 0.0f, range, -1.0f), Vec4(0.0f, 0.0f, range * inNear, 0.0f));
 }
 
 bool Mat44::operator == (Mat44Arg inM2) const
