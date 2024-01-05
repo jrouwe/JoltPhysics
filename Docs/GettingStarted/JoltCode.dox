@@ -1,0 +1,111 @@
+/** \page jolt-code Jolt Code
+
+\tableofcontents
+
+\section prerequisites Prerequisites
+
+Jolt is written in c plus plus, if you've never used a compiled language then we suggest you pick up "C++ Primer" by Stanley B. Lippman, Josee Lajoie and Barbara E. Moo. 
+
+Before you can really start using Jolt, you need a basic understanding of c++, you should at least understand the following:
+- What a compiled language is
+- Header files (.hpp) and Implementation Files (.cpp)
+- Object Oriented Programming
+- Memory, pointers and references
+- Classes and Inheritance
+- How to read source code, learning how a system works without running it directly
+
+The book should be able to cover the first four points above, the last bullet point comes with time, the doxygen documentation should help 
+
+In terms of Jolt, for pointers and references, you should be able to understand why the output of this program is 0, 1, 2:
+
+\code{.cpp}
+#include <cstdio>
+
+void regular_arg_inc(int x) {
+	x += 1;
+}
+
+void pointer_arg_inc(int *p) {
+	*p = *p + 1;
+}
+
+void reference_arg_inc(int &r) {
+	r += 1;
+}
+
+int main() {
+	int y = 0;
+	regular_arg_inc(y);
+	printf("%d\n", y);
+
+	pointer_arg_inc(&y);
+	printf("%d\n", y);
+
+	reference_arg_inc(y);
+	printf("%d\n", y);
+}
+\endcode
+
+\section conventions Conventions
+
+\subsection in-out-functions In Out Functions
+
+In out functions represent functions that pass in some information along with a pointer or reference argument where the result of the function stores information into this argument. We name these variables like `out...` concretely we have methods like MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult) .
+
+\subsection variable-naming Variable Naming
+
+Firstly Jolt uses camel case for variables and title case for classes.
+
+As you start looking through Jolt's source code you'll notice that variable names are sometimes prefaced by single characters. In c++ we can reference class member attributes through `this.attributeName` or simply `attributeName`, the former becomes a little unwieldy if we have to reference attributes a lot, for a line that references `N` class attributes it adds `5 * N` extra characters for each `this.` , the latter can be confusing as it can be hard to differentiate between class attributes and local variables. 
+
+Jolt deals with this situation by appending a lowercase `m` to the front of the class attributes to denote that it's a member variable, so we would have `mAttributeName`, if our member variable is a `constexpr`, then we instead write `cAttributeName`
+
+\subsection terminology Terminology
+
+- RTTI: run-time type information
+- SIMD: single instruction/multiple data
+
+\subsection instantiation Instatiation
+
+When using Jolt classes, some of them will have constructors to which you pass in all the information directly into them, if the arguments to the constructor are complicated enough you'll have to spend some time constructing the relevant arguments before you get there, this will be a common pattern.
+
+Additionally some classes will not have constructors, but they will have `Init` methods, which do act as a constructor.
+
+\subsection results Results
+
+A \ref Result is a helper class which allows us to return something which is either a valid result or an error, this allows us to safely handle the construction of objects and easily check what has gone wrong. 
+
+\todo specify the benefits and more motivation behind why we have these
+
+\section navigating-the-code-base Navigating the Code Base
+
+While looking through doxygen is a great way to learn about the code base, sometimes you'll want to look search through the actual source code files to find usages of certain classes quickly, the benefit of interacting with the filesystem directly is that we can use tools like `grep` to find usages.
+
+For example, when I wanted to know of the name of the cmake target for the Jolt library I created the following script:
+
+`recursively_find_files.sh`
+\code{.sh}
+#!/bin/bash
+
+path_to_search=$1
+search_query=$2
+
+grep --color=always -Rn "$path_to_search" -e "$search_query"
+\endcode
+
+and then ran  
+
+```
+recursively_find_files_by_contents.sh . (Jolt
+```
+
+which lead me to the following result:
+
+```
+./Jolt/Jolt.cmake:455:add_library(Jolt ${JOLT_PHYSICS_SRC_FILES})
+```
+
+A script like this can be a great way to find examples of something you're interested in throughout the entire code base.
+
+
+*/

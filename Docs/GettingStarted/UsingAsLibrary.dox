@@ -1,0 +1,479 @@
+/** \page using-as-library Using As Library
+
+After learning how to build jolt directly using instructions found in the build section, you might be curious on how you can add Jolt into your own cpp project as a library.
+
+We'll start with a minimally working example which you can incorporate into your project. To get set up we'll start with this:
+
+- Create a new directory and move into that directory
+- Clone down Jolt Physics from github
+- Create a new file called `jal.cpp` which contains the contents of the hello world example
+- Create a `CMakeLists.txt` in this directory and give it the following content
+
+\code{.cpp}
+cmake_minimum_required(VERSION 3.10)
+
+project(jolt_as_library)
+
+include_directories(JoltPhysics) # 1
+add_subdirectory(JoltPhysics/Build) #2
+
+# Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
+set(USE_SSE4_1 OFF)
+set(USE_SSE4_2 OFF)
+set(USE_AVX OFF)
+set(USE_AVX2 OFF)
+set(USE_AVX512 OFF)
+set(USE_LZCNT OFF)
+set(USE_TZCNT OFF)
+set(USE_F16C OFF)
+set(USE_FMADD OFF)
+
+add_executable(jolt_as_library jal.cpp)
+
+target_link_libraries(jolt_as_library Jolt) # 3
+\endcode
+
+\note Here I've disabled various cpu instructions as I'm on an old computer, on a newer computer you can remove the off switches.  Read more in the building section
+
+This won't be a tutorial on how cmake works, but we'll mention a few things:
+
+1. Adds the src directory as the include directory, this means that when you write something like `#include <Jolt/Jolt.h>` our compiler knows where to find this file. 
+2. Tells cmake to also build bullet when we build this directory
+3. Tells the linker to link the following cmake targets against our project
+
+If you don't know what any of that means you should read about the basics of how static libraries work in cpp, and the compliation process.
+
+If you're curious about how we knew that the name of the Jolt physics library was `Jolt`, inside of "Jolt/Jolt.cmake" there is a line which reads
+
+```
+add_library(Jolt ${JOLT_PHYSICS_SRC_FILES})
+```
+This defines a library by the name of `Jolt`, more specifically it creates a cmake target which we can reference later on. Read more about `add_library` on cmake's docs.
+
+With that set up, in the root of your project dir you can now run `cmake -S . -B build` and `cmake --build build` to compile your code, using Jolt as a library.
+
+\section as-a-class As a Class
+
+While the above setup will work for small projects, if your goal is to integrate this into an interactive system, then you'll probably want to separate the physics stuff into it's own section and not have the hello world set up code in your main file.
+
+We'll start by moving our jolt implementations into a new file, these are the definitions that we need for the layer and filtering structures required for initializing the physics system.
+
+`jolt_implementation.cpp`
+\code{.cpp}
+// The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
+// You can use Jolt.h in your precompiled header to speed up compilation.
+#include <Jolt/Jolt.h>
+ 
+// Jolt includes
+#include <Jolt/RegisterTypes.h>
+#include <Jolt/Core/Factory.h>
+#include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/JobSystemThreadPool.h>
+#include <Jolt/Physics/PhysicsSettings.h>
+#include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/BodyActivationListener.h>
+ 
+// STL includes
+#include <iostream>
+#include <cstdarg>
+#include <thread>
+ 
+// Disable common warnings triggered by Jolt, you can use JPH_SUPPRESS_WARNING_PUSH / JPH_SUPPRESS_WARNING_POP to store and restore the warning state
+JPH_SUPPRESS_WARNINGS
+ 
+// All Jolt symbols are in the JPH namespace
+using namespace JPH;
+ 
+// If you want your code to compile using single or double precision write 0.0_r to get a Real value that compiles to double or float depending if JPH_DOUBLE_PRECISION is set or not.
+using namespace JPH::literals;
+ 
+// We're also using STL classes in this example
+using namespace std;
+ 
+// Callback for traces, connect this to your own trace function if you have one
+static void TraceImpl(const char *inFMT, ...)
+{
+    // Format the message
+    va_list list;
+    va_start(list, inFMT);
+    char buffer[1024];
+    vsnprintf(buffer, sizeof(buffer), inFMT, list);
+    va_end(list);
+ 
+    // Print to the TTY
+    cout << buffer << endl;
+}
+ 
+#ifdef JPH_ENABLE_ASSERTS
+ 
+// Callback for asserts, connect this to your own assert handler if you have one
+static bool AssertFailedImpl(const char *inExpression, const char *inMessage, const char *inFile, uint inLine)
+{
+    // Print to the TTY
+    cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr? inMessage : "") << endl;
+ 
+    // Breakpoint
+    return true;
+};
+ 
+#endif // JPH_ENABLE_ASSERTS
+ 
+// Layer that objects can be in, determines which other objects it can collide with
+// Typically you at least want to have 1 layer for moving bodies and 1 layer for static bodies, but you can have more
+// layers if you want. E.g. you could have a layer for high detail collision (which is not used by the physics simulation
+// but only if you do collision testing).
+namespace Layers
+{
+    static constexpr ObjectLayer NON_MOVING = 0;
+    static constexpr ObjectLayer MOVING = 1;
+    static constexpr ObjectLayer NUM_LAYERS = 2;
+};
+ 
+class ObjectLayerPairFilterImpl : public ObjectLayerPairFilter
+{
+public:
+    virtual bool                    ShouldCollide(ObjectLayer inObject1, ObjectLayer inObject2) const override
+    {
+        switch (inObject1)
+        {
+        case Layers::NON_MOVING:
+            return inObject2 == Layers::MOVING; // Non moving only collides with moving
+        case Layers::MOVING:
+            return true; // Moving collides with everything
+        default:
+            JPH_ASSERT(false);
+            return false;
+        }
+    }
+};
+ 
+// Each broadphase layer results in a separate bounding volume tree in the broad phase. You at least want to have
+// a layer for non-moving and moving objects to avoid having to update a tree full of static objects every frame.
+// You can have a 1-on-1 mapping between object layers and broadphase layers (like in this case) but if you have
+// many object layers you'll be creating many broad phase trees, which is not efficient. If you want to fine tune
+// your broadphase layers define JPH_TRACK_BROADPHASE_STATS and look at the stats reported on the TTY.
+namespace BroadPhaseLayers
+{
+    static constexpr BroadPhaseLayer NON_MOVING(0);
+    static constexpr BroadPhaseLayer MOVING(1);
+    static constexpr uint NUM_LAYERS(2);
+};
+ 
+// BroadPhaseLayerInterface implementation
+// This defines a mapping between object and broadphase layers.
+class BPLayerInterfaceImpl final : public BroadPhaseLayerInterface
+{
+public:
+                                    BPLayerInterfaceImpl()
+    {
+        // Create a mapping table from object to broad phase layer
+        mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
+        mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+    }
+ 
+    virtual uint                    GetNumBroadPhaseLayers() const override
+    {
+        return BroadPhaseLayers::NUM_LAYERS;
+    }
+ 
+    virtual BroadPhaseLayer         GetBroadPhaseLayer(ObjectLayer inLayer) const override
+    {
+        JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
+        return mObjectToBroadPhase[inLayer];
+    }
+ 
+#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
+    virtual const char *            GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
+    {
+        switch ((BroadPhaseLayer::Type)inLayer)
+        {
+        case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:   return "NON_MOVING";
+        case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:       return "MOVING";
+        default:                                                    JPH_ASSERT(false); return "INVALID";
+        }
+    }
+#endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
+ 
+private:
+    BroadPhaseLayer                 mObjectToBroadPhase[Layers::NUM_LAYERS];
+};
+ 
+class ObjectVsBroadPhaseLayerFilterImpl : public ObjectVsBroadPhaseLayerFilter
+{
+public:
+    virtual bool                ShouldCollide(ObjectLayer inLayer1, BroadPhaseLayer inLayer2) const override
+    {
+        switch (inLayer1)
+        {
+        case Layers::NON_MOVING:
+            return inLayer2 == BroadPhaseLayers::MOVING;
+        case Layers::MOVING:
+            return true;
+        default:
+            JPH_ASSERT(false);
+            return false;
+        }
+    }
+};
+ 
+// An example contact listener
+class MyContactListener : public ContactListener
+{
+public:
+    // See: ContactListener
+    virtual ValidateResult  OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) override
+    {
+        cout << "Contact validate callback" << endl;
+ 
+        // Allows you to ignore a contact before it is created (using layers to not make objects collide is cheaper!)
+        return ValidateResult::AcceptAllContactsForThisBodyPair;
+    }
+ 
+    virtual void            OnContactAdded(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+    {
+        cout << "A contact was added" << endl;
+    }
+ 
+    virtual void            OnContactPersisted(const Body &inBody1, const Body &inBody2, const ContactManifold &inManifold, ContactSettings &ioSettings) override
+    {
+        cout << "A contact was persisted" << endl;
+    }
+ 
+    virtual void            OnContactRemoved(const SubShapeIDPair &inSubShapePair) override
+    {
+        cout << "A contact was removed" << endl;
+    }
+};
+ 
+// An example activation listener
+class MyBodyActivationListener : public BodyActivationListener
+{
+public:
+    virtual void        OnBodyActivated(const BodyID &inBodyID, uint64 inBodyUserData) override
+    {
+        cout << "A body got activated" << endl;
+    }
+ 
+    virtual void        OnBodyDeactivated(const BodyID &inBodyID, uint64 inBodyUserData) override
+    {
+        cout << "A body went to sleep" << endl;
+    }
+};
+\endcode
+
+Now that we have our jolt implementations, we can create a physics class that wraps around jolt:
+
+header: `physics.hpp`
+
+\code{.cpp}
+#ifndef PHYSICS_H
+#define PHYSICS_H
+
+#include "jolt_implementation.hpp"
+
+class Physics {
+	public:
+		Physics();
+		~Physics();
+
+		PhysicsSystem physics_system;
+		void update(float delta_time);
+
+		BodyID sphere_id; // should be removed in a real program
+
+	private:
+		void initialize_engine();
+		void initialize_world_objects();
+		void clean_up_world();
+
+		const uint cMaxBodies = 1024;
+		const uint cNumBodyMutexes = 0;
+		const uint cMaxBodyPairs = 1024;
+		const uint cMaxContactConstraints = 1024;
+        const int cCollisionSteps = 1;
+
+		TempAllocatorImpl *temp_allocator;
+		JobSystemThreadPool *job_system;
+		MyBodyActivationListener *body_activation_listener;
+		MyContactListener *contact_listener;
+
+		BPLayerInterfaceImpl broad_phase_layer_interface;
+		ObjectVsBroadPhaseLayerFilterImpl object_vs_broadphase_layer_filter;
+		ObjectLayerPairFilterImpl object_vs_object_layer_filter;
+
+		std::vector<BodyID> created_body_ids;
+
+};
+
+#endif 
+\endcode
+
+Now we define the implementation for those methods:
+
+\code{.cpp}
+#include "physics.hpp"
+ 
+// The Jolt headers don't include Jolt.h. Always include Jolt.h before including any other Jolt header.
+// You can use Jolt.h in your precompiled header to speed up compilation.
+#include <Jolt/Jolt.h>
+ 
+// Disable common warnings triggered by Jolt, you can use JPH_SUPPRESS_WARNING_PUSH / JPH_SUPPRESS_WARNING_POP to store and restore the warning state
+JPH_SUPPRESS_WARNINGS
+ 
+// All Jolt symbols are in the JPH namespace
+using namespace JPH;
+ 
+// If you want your code to compile using single or double precision write 0.0_r to get a Real value that compiles to double or float depending if JPH_DOUBLE_PRECISION is set or not.
+using namespace JPH::literals;
+ 
+// We're also using STL classes in this example
+using namespace std;
+
+Physics::Physics() {
+	this->initialize_engine();
+	this->initialize_world_objects();
+}
+
+Physics::~Physics() {
+	this->clean_up_world();
+}
+
+void Physics::initialize_engine() {
+    RegisterDefaultAllocator();
+ 
+    Trace = TraceImpl;
+    JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
+ 
+    Factory::sInstance = new Factory();
+    RegisterTypes();
+
+	// dynamic allocation, we don't worry about the rule of three since we never copy the physics system, there is only ever one instance
+    temp_allocator = new TempAllocatorImpl(10 * 1024 * 1024);
+    job_system = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
+ 
+    physics_system.Init(cMaxBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, broad_phase_layer_interface, object_vs_broadphase_layer_filter, object_vs_object_layer_filter);
+
+	body_activation_listener = new MyBodyActivationListener();
+	contact_listener = new MyContactListener();
+
+    physics_system.SetBodyActivationListener(body_activation_listener);
+    physics_system.SetContactListener(contact_listener);
+
+}
+
+void Physics::initialize_world_objects() {
+    BodyInterface &body_interface = physics_system.GetBodyInterface();
+ 
+    BoxShapeSettings floor_shape_settings(Vec3(100.0f, 1.0f, 100.0f));
+ 
+    ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
+    ShapeRefC floor_shape = floor_shape_result.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
+													  //
+    BodyCreationSettings floor_settings(floor_shape, RVec3(0.0_r, -1.0_r, 0.0_r), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+
+    Body *floor = body_interface.CreateBody(floor_settings); // Note that if we run out of bodies this can return nullptr
+ 
+    body_interface.AddBody(floor->GetID(), EActivation::DontActivate);
+
+	created_body_ids.push_back(floor->GetID());
+ 
+    BodyCreationSettings sphere_settings(new SphereShape(0.5f), RVec3(0.0_r, 2.0_r, 0.0_r), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+    sphere_id = body_interface.CreateAndAddBody(sphere_settings, EActivation::Activate);
+
+	created_body_ids.push_back(sphere_id);
+ 
+    body_interface.SetLinearVelocity(sphere_id, Vec3(0.0f, -5.0f, 0.0f));
+}
+
+void Physics::update(float delta_time) {
+	physics_system.Update(delta_time, cCollisionSteps, temp_allocator, job_system);
+}
+
+void Physics::clean_up_world() {
+    BodyInterface &body_interface = physics_system.GetBodyInterface();
+
+	for (auto body_id : created_body_ids) {
+		body_interface.RemoveBody(body_id);
+		body_interface.DestroyBody(body_id);
+	}
+ 
+    UnregisterTypes();
+
+	// de-allocate dynamic memory
+	delete temp_allocator;
+	delete job_system;
+	delete body_activation_listener;
+	delete contact_listener;
+ 
+    delete Factory::sInstance;
+    Factory::sInstance = nullptr;
+
+	cout << "successfully cleaned up world" << endl;
+}
+\endcode
+
+Finally we have our driver code, which would be relevant to your main loop in your game:
+
+`jal.cpp`
+
+\code{.cpp}
+
+#include "physics.hpp"
+
+int main() {
+	Physics physics = Physics();
+
+    BodyInterface &body_interface = physics.physics_system.GetBodyInterface();
+    const float cDeltaTime = 1.0f / 60.0f;
+ 
+    physics.physics_system.OptimizeBroadPhase();
+ 
+    uint step = 0;
+    while (body_interface.IsActive(physics.sphere_id)) // should be replaced with game logic for when simulation ends
+    {
+        ++step;
+ 
+        RVec3 position = body_interface.GetCenterOfMassPosition(physics.sphere_id);
+        Vec3 velocity = body_interface.GetLinearVelocity(physics.sphere_id);
+        cout << "Step " << step << ": Position = (" << position.GetX() << ", " << position.GetY() << ", " << position.GetZ() << "), Velocity = (" << velocity.GetX() << ", " << velocity.GetY() << ", " << velocity.GetZ() << ")" << endl;
+ 
+        physics.update(cDeltaTime);
+    }
+
+	return 0;
+}
+\endcode
+
+We've also modified the `CMakeLists.txt` file a bit to support the new files:
+
+\code{.cpp}
+cmake_minimum_required(VERSION 3.10)
+
+project(jolt_as_library)
+
+# jolt physics
+
+include_directories(JoltPhysics)
+add_subdirectory(JoltPhysics/Build)
+
+# Select X86 processor features to use, by default the library compiles with AVX2, if everything is off it will be SSE2 compatible.
+set(USE_SSE4_1 OFF)
+set(USE_SSE4_2 OFF)
+set(USE_AVX OFF)
+set(USE_AVX2 OFF)
+set(USE_AVX512 OFF)
+set(USE_LZCNT OFF)
+set(USE_TZCNT OFF)
+set(USE_F16C OFF)
+set(USE_FMADD OFF)
+
+add_executable(jolt_as_library jal.cpp physics.cpp)
+
+target_link_libraries(jolt_as_library Jolt)
+\endcode
+
+*/
+

@@ -910,6 +910,10 @@ WARN_LOGFILE           =
 
 INPUT                  = ./Jolt \
                          ./Docs/Architecture.md \
+                         ./Docs/GettingStarted/Index.dox \
+                         ./Docs/GettingStarted/Basics.dox \
+                         ./Docs/GettingStarted/JoltCode.dox \
+                         ./Docs/GettingStarted/UsingAsLibrary.dox \
                          ./Docs/Samples.md \
                          ./Docs/PerformanceTest.md \
                          ./Docs/ReleaseNotes.md \

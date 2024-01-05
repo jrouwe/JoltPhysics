@@ -1,0 +1,12 @@
+/** \page getting-started Getting Started
+
+\tableofcontents
+
+Becoming familiar with a new api is always a process, while you can always go through a point and click adventure through the api, this article stands as a friendly welcome and should bootstrap the process of learning Jolt. We'll also dive into specific examples of things you might want to do with the api.
+
+- \subpage basics Learn the basics of how a physics engine works
+- \subpage jolt-code Learn about what Jolt code looks like
+- \subpage using-as-library Learn how to incorporate Jolt into your project with cmake
+- \subpage architecture-jolt-physics Specifics on how Jolt works
+
+*/
