@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v4.0.2 and latest
 
+* 20240105 - CharacterVirtual will now receive an OnContactAdded callback when it collides with a sensor (but will have no further interaction). You may need to update the logic in your CharacterContactListener to ignore those contacts. (fb778c568d3ba14556559324671ffec172957f5c)
 * 20240101 - Renamed SensorDetectsStatic to CollideKinematicVsNonDynamic and made it work for non-sensors. This means that kinematic bodies can now get collision callbacks when they collide with other static / kinematic objects. It can also affect the order in which bodies are passed in the ContactListener::OnContactValidate callback. (2d607c4161a65201d66558a2cc76d1265aea527e)
 * 20231220 - *SBS* - Added ability to enable gyroscopic forces on BodyCreationSettings. This breaks the binary serialization format for this class. (9d7748eaa91341adc17554f32bf991bfed04e47e)
 * 20231219 - *SBS* - Added a 'swing type' attribute to SixDOFConstraint and SwingTwistConstraint. This breaks the binary serialization format. (41016256e2cf1262ec05cff3cfa7645668ee0bf0)
