@@ -96,6 +96,7 @@ void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacte
 	outContact.mBodyB = inResult.mBodyID2;
 	outContact.mSubShapeIDB = inResult.mSubShapeID2;
 	outContact.mMotionTypeB = inBody.GetMotionType();
+	outContact.mIsSensorB = inBody.IsSensor();
 	outContact.mUserData = inBody.GetUserData();
 	outContact.mMaterial = inCollector.GetContext()->GetMaterial(inResult.mSubShapeID2);
 }
@@ -159,16 +160,10 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 	BodyLockRead lock(mSystem->GetBodyLockInterface(), inResult.mBodyID2);
 	if (lock.SucceededAndIsInBroadPhase())
 	{
-		// We don't collide with sensors, note that you should set up your collision layers so that sensors don't collide with the character.
-		// Rejecting the contact here means a lot of extra work for the collision detection system.
-		const Body &body = lock.GetBody();
-		if (!body.IsSensor())
-		{
-			mContacts.emplace_back();
-			Contact &contact = mContacts.back();
-			sFillContactProperties(mCharacter, contact, body, mUp, mBaseOffset, *this, inResult);
-			contact.mFraction = 0.0f;
-		}
+		mContacts.emplace_back();
+		Contact &contact = mContacts.back();
+		sFillContactProperties(mCharacter, contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
+		contact.mFraction = 0.0f;
 	}
 }
 
@@ -193,8 +188,7 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 			if (!lock.SucceededAndIsInBroadPhase())
 				return;
 
-			// We don't collide with sensors, note that you should set up your collision layers so that sensors don't collide with the character.
-			// Rejecting the contact here means a lot of extra work for the collision detection system.
+			// Sweeps don't result in OnContactAdded callbacks so we can ignore sensors here
 			const Body &body = lock.GetBody();
 			if (body.IsSensor())
 				return;
@@ -443,6 +437,10 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	if (mListener != nullptr)
 		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
 	contact.mCanPushCharacter = settings.mCanPushCharacter;
+
+	// We don't have any further interaction with sensors beyond an OnContactAdded notification
+	if (contact.mIsSensorB)
+		return false;
 
 	// If body B cannot receive an impulse, we're done
 	if (!settings.mCanReceiveImpulses || contact.mMotionTypeB != EMotionType::Dynamic)
@@ -762,7 +760,7 @@ void CharacterVirtual::UpdateSupportingContact(bool inSkipContactVelocityCheck, 
 			&& c.mDistance < mCollisionTolerance
 			&& (inSkipContactVelocityCheck || c.mSurfaceNormal.Dot(mLinearVelocity - c.mLinearVelocity) <= 1.0e-4f))
 		{
-			if (ValidateContact(c))
+			if (ValidateContact(c) && !c.mIsSensorB)
 				c.mHadCollision = true;
 			else
 				c.mWasDiscarded = true;

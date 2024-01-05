@@ -214,6 +214,13 @@ void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharac
 
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
+	// Draw a box around the character when it enters the sensor
+	if (inBodyID2 == mSensorBody)
+	{
+		AABox box = inCharacter->GetShape()->GetWorldSpaceBounds(inCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f));
+		mDebugRenderer->DrawBox(box, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	}
+
 	// Dynamic boxes on the ramp go through all permutations
 	Array<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
 	if (i != mRampBlocks.end())

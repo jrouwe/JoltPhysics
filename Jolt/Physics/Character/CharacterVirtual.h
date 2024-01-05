@@ -299,6 +299,7 @@ public:
 		BodyID							mBodyB;													///< ID of body we're colliding with
 		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body we're colliding with
 		EMotionType						mMotionTypeB;											///< Motion type of B, used to determine the priority of the contact
+		bool							mIsSensorB;												///< If B is a sensor
 		uint64							mUserData;												///< User data of B
 		const PhysicsMaterial *			mMaterial;												///< Material of B
 		bool							mHadCollision = false;									///< If the character actually collided with the contact (can be false if a predictive contact never becomes a real one)
