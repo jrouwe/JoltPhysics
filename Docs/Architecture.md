@@ -329,7 +329,7 @@ Constraints can be turned on / off by calling Constraint::SetEnabled. After ever
 
 ## Spatial Partitioning
 
-As we mentioned in \ref basics "the basics", one method that can be used in the broadphase is spatial partitioning, the idea is simple enough, in simple terms suppose two players are in different rooms, then there is no possible way for them to collide with eachother, so we would never had to check for collisions between those two players.
+One method that can be used in the broadphase is spatial partitioning, the idea is simple enough, in simple terms suppose two players are in different rooms, then there is no possible way for them to collide with eachother, so we would never had to check for collisions between those two players.
 
 ### Fixed Grids
 
@@ -339,21 +339,6 @@ Note that there is a bit more complexity that arises when a player resides insid
 
 Another issue that arises with this system is that you'll have to tweak the size of shapes to best fit your game. For example if we pick our partitioning size to be to big, then when we go through the broadphase we won't gain much perfomance increase because many of the objects will be in the same partition. If our partition size is too small, then many of our objects will riside on the edges of our partition shapes causing us to have to check in many different places for collisions. 
 
-
-### Quad/Oct Trees
-
-We'll start with quad trees because everything that applies quad trees will apply to oct trees, and thinking about 2D will be easier. We can start our understanding by thinking of a quad tree as a dynamic grid, which can recursively add new smaller grids to itself based on some rule. Start by watching this video:
-
-https://www.youtube.com/watch?v=e1wOWTT7fYk
-
-Based on the video you just watched you should see that this structure is not static like a grid. On each update of a players position, the structure changes. You might be able to see how this structure is changing if you watch long enough. The tree starts as a single node, which represents no grid at all, then it checks how many objects are inside of that grid, if it exceeds a certain count the structure creates a grid centered at it's center which consists of four quadrants, each one representing a new node. 
-
-The quadtree will recursively do this up to a certain predefined depth. The point of splitting like this is so that we can say if two objects reside in different quadrants (at the deepesting nesting), then they cannot collide with eachother. 
-
-In the code this manifests as an iteration over all players, and then a query against the quadtree that asks, "what could I possibly collide with", this operation is now cheap because the quadtree can figure out in which quadtree leaf node you reside in at most `depth` iterations, and then it will return all other objects in that leaf, as those are the only objects it could have collided with.
-
-We should note that it's entirely possible for all your players to be located in a leaf node, which would make this approach as fast as our brute search approach, but by choosing a good depth value and knowing the average area/volume of your objects you can come up with a good average case.
-
 ### Axis Aligned Bounding Box {#AABB}
 
 Given an arbitrary shape, we can simply put a box around it. The reason why is that it is much simpler to check if a box is intersecting something than an arbitrary mesh. AABB is an acronym for Axis Aligned Bounding Box, meaning that the box we put around a shape is aligned with the axis, as follows:
@@ -361,6 +346,22 @@ Given an arbitrary shape, we can simply put a box around it. The reason why is t
 ![Ellipsoid AABB](Images/EllipsoidAABB.png)
 
 These objects are useful because if two different AABB's are not colliding then we know that the underlying objects cannot collide, sometimes false positives can occur when the AABB's are colliding but the underlying objects are not, but those cases should be rare and can be dealt with.
+
+### QuadTrees
+
+#### Splitting Structure
+
+Our broad phase is a quad tree, which means each node has 4 children. In the following image you see a random collection of spheres and triangles and a possible way to split the tree.
+
+![QuadTree Example](Images/QuadTreeExample.png)
+
+ At the highest level we split all objects in 4 mostly disjoint sets. Note that nodes are allowed to overlap, but for efficiency reasons you want the amount of overlap to be minimal. The example split here is indicated by a red, blue, green and yellow box and you can see them appear in the tree on the right. Three out of four nodes: blue, yellow and red, have 4 or less shapes in them, so the tree can directly point at the shapes rather than at a next. One node: green, has more than 4 shapes in it so needs a further split. Three shapes can be added directly to the node and we need to create a new node, dotted green, to hold the last two shapes. The reason why we pick 4 children is that modern CPUs support doing 4 math operations in a single instruction, so when we walk the tree from top to bottom during a collision query, we can handle 4 children at the same time.
+
+#### Nodes
+
+![QuadTree Node](Images/QuadTreeNode.png)
+
+To give some context, this is the layout of a quad tree node. First of all, we have the axis aligned bounding box of 4 child nodes arranged in such a way that we can easily load the same quantity for 4 children at the same time: MinX, Y and Z then MaxX, Y and Z. They are initialized so that they are inside out and are filled with a value, 10^30 to be exact (we’ll call this LargeFloat), that is large enough to cover the entire world but not too large to create overflows to infinity when we work with the values.  As the bounds are initialized inside out, the collision queries that we do on a node will not find a hit. Next, we store the node indices of the 4 children. These can be an index in the node array or (when a specific bit is set) they indicate that they point to a body index instead. Each quad tree node points to its parent node through an index.  Finally, each node tracks if any changes were being made to it or its children since the last rebuild of the tree. As we will see later, the bounding boxes will become larger over time and parts of the tree need to be rebuilt. All members are stored as atomics to make it possible to modify them concurrently from multiple threads
 
 ## Collision Detection {#collision-detection}
 
