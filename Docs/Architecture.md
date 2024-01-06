@@ -4,11 +4,26 @@
 
 For demos and videos go to the [Samples](Samples.md) section.
 
-## Bodies {#bodies}
+# Bodies {#bodies}
 
-We use a pretty traditional physics engine setup. We have rigid bodies ([Body](@ref Body)) that have attached collision volumes ([Shape](@ref Shape)). Bodies can either be static (not simulating), dynamic (moved by forces) or kinematic (moved by velocities only). Each moving body has a [MotionProperties](@ref MotionProperties) object that contains information about the movement of the object. Static bodies do not have this to save space (but they can be configured to have it if a static body needs to become dynamic during its lifetime by setting [BodyCreationSettings::mAllowDynamicOrKinematic](@ref BodyCreationSettings::mAllowDynamicOrKinematic)).
+We use a pretty traditional physics engine setup, so \ref Body "bodies" in our simulation are objects which have attached collision \ref Shape "shapes"
 
-Bodies are inserted into the [PhysicsSystem](@ref PhysicsSystem) and interacted with through the [BodyInterface](@ref BodyInterface). Jolt is designed to be accessed from multiple threads so the body interface comes in two flavors: A locking and a non-locking variant. The locking variant uses a mutex array (a fixed size array of mutexes, bodies are associated with a mutex through hashing and multiple bodies use the same mutex, see [MutexArray](@ref MutexArray)) to prevent concurrent access to the same body. The non-locking variant doesn't use mutexes, so requires the user to be careful.
+## Types {#body-types}
+
+Bodies can either be :
+- static (not moving or simulating)
+- dynamic (moved by forces) or 
+- kinematic (moved by velocities only). 
+
+Moving bodies have a [MotionProperties](@ref MotionProperties) object that contains information about the movement of the object. Static bodies do not have this to save space (but they can be configured to have it if a static body needs to become dynamic during its lifetime by setting [BodyCreationSettings::mAllowDynamicOrKinematic](@ref BodyCreationSettings::mAllowDynamicOrKinematic)).
+
+## Creating Bodies {#creating-bodies}
+
+Bodies are inserted into the [PhysicsSystem](@ref PhysicsSystem) and interacted with through the [BodyInterface](@ref BodyInterface). 
+
+## Multithreaded Access 
+
+Jolt is designed to be accessed from multiple threads so the body interface comes in two flavors: A locking and a non-locking variant. The locking variant uses a mutex array (a fixed size array of mutexes, bodies are associated with a mutex through hashing and multiple bodies use the same mutex, see [MutexArray](@ref MutexArray)) to prevent concurrent access to the same body. The non-locking variant doesn't use mutexes, so requires the user to be careful.
 
 In general, body ID's ([BodyID](@ref BodyID)) are used to refer to bodies. You can access a body through the following construct:
 
@@ -33,7 +48,7 @@ You cannot use BodyLockRead to lock multiple bodies (if two threads lock the sam
 
 Note that a lot of convenience functions are exposed through the BodyInterface, but not all functionality is available, so you may need to lock the body to get the pointer and then call the function directly on the body.
 
-### Body Pointers vs Body ID's {#body-pointers-vs-body-ids}
+## Single Threaded Access {#single-threaded-access}
 
 If you're only accessing the physics system from a single thread, you can use Body pointers instead of BodyID's. In this case you can also use the non-locking variant of the body interface.
 
@@ -188,7 +203,7 @@ will return a box of size 2x2x2 centered around the origin, so in order to get i
 
 Note that when you work with interface of [BroadPhaseQuery](@ref BroadPhaseQuery), [NarrowPhaseQuery](@ref NarrowPhaseQuery) or [TransformedShape](@ref TransformedShape) this transformation is done for you.
 
-### Creating Custom Shapes {#creating-custom-shapes}
+## Creating Custom Shapes {#creating-custom-shapes}
 
 If the defined Shape classes are not sufficient, or if your application can make a more efficient implementation because it has specific domain knowledge, it is possible to create a custom collision shape:
 
@@ -218,7 +233,28 @@ To create a sensor, either set [BodyCreationSettings::mIsSensor](@ref BodyCreati
 
 To make sensors detect collisions with static objects, set the [BodyCreationSettings::mCollideKinematicVsNonDynamic](@ref BodyCreationSettings::mCollideKinematicVsNonDynamic) to true or call [Body::SetCollideKinematicVsNonDynamic](@ref Body::SetCollideKinematicVsNonDynamic). Note that it can place a large burden on the collision detection system if you have a large sensor intersect with e.g. a large mesh terrain or a height field as you will get many contact callbacks and these contacts will take up a lot of space in the contact cache. Ensure that your sensor is in an object layer that collides with as few static bodies as possible.
 
-## Constraints {#constraints}
+## Soft Bodies {#soft-bodies}
+
+Soft bodies (also known as deformable bodies) can be used to create e.g. a soft ball or a piece of cloth. They are created in a very similar way to normal rigid bodies:
+
+* First allocate a new SoftBodySharedSettings object on the heap. This object will contain the initial positions of all particles and the constraints between the particles. This object can be shared between multiple soft bodies and should remain constant during its lifetime.
+* Then create a SoftBodyCreationSettings object (e.g. on the stack) and fill in the desired properties of the soft body.
+* Finally construct the body and add it to the world through BodyInterface::CreateAndAddSoftBody.
+
+Soft bodies use the Body class just like rigid bodies but can be identified by checking Body::IsSoftBody. To get to the soft body state, cast the result of Body::GetMotionProperties to SoftBodyMotionProperties and use its API.
+
+Soft bodies try to implement as much as possible of the normal Body interface, but this interface provides a simplified version of reality, e.g. Body::GetLinearVelocity will return the average particle speed and Body::GetPosition returns the average particle position. During simulation, a soft body will never update its rotation. Internally it stores particle velocities in local space, so if you rotate a soft body e.g. by calling BodyInterface::SetRotation, the body will rotate but its velocity will as well.
+
+Soft bodies are currently in development, please note the following:
+
+* Soft bodies can only collide with rigid bodies, collisions between soft bodies are not implemented yet.
+* ContactListener callbacks are not triggered for soft bodies.
+* AddForce/AddTorque/SetLinearVelocity/SetLinearVelocityClamped/SetAngularVelocity/SetAngularVelocityClamped/AddImpulse/AddAngularImpulse have no effect on soft bodies as the velocity is stored per particle rather than per body.
+* Buoyancy calculations have not been implemented yet.
+* Constraints cannot operate on soft bodies, set the inverse mass of a particle to zero and move it by setting a velocity to constrain a soft body to something else.
+* When calculating friction / restitution an empty SubShapeID will be passed to the ContactConstraintManager::CombineFunction because this is called once per body pair rather than once per sub shape as is common for rigid bodies.
+
+# Constraints {#constraints}
 
 Bodies can be connected to each other using constraints ([Constraint](@ref Constraint)).
 
@@ -246,7 +282,7 @@ Adding and removing constraints can be done from multiple threads, but the const
 
 Contact constraints (when bodies collide) are not handled through the [Constraint](@ref Constraint) class but through the [ContactConstraintManager](@ref ContactConstraintManager) which is considered an internal class.
 
-### Constraint Motors {#constraint-motors}
+## Constraint Motors {#constraint-motors}
 
 Most of the constraints support motors (see [MotorSettings](@ref MotorSettings)) which allow you to apply forces/torques on two constrained bodies to drive them to a relative position/orientation. There are two types of motors:
 * Linear motors: These motors drive the relative position between two bodies. A linear motor would, for example, slide a body along a straight line when you use a slider constraint.
@@ -285,30 +321,46 @@ Sensible values for damping are [0, 1] but higher values are also possible. When
 
 Because Jolt Physics uses a Symplectic Euler integrator, there will still be a small amount of damping when damping is 0, so you cannot get infinite oscillation (allowing this would make it very likely for the system to become unstable).
 
-### Breakable Constraints {#breakable-constraints}
+## Breakable Constraints {#breakable-constraints}
 
 Constraints can be turned on / off by calling Constraint::SetEnabled. After every simulation step, check the total 'lambda' applied on each constraint and disable the constraint if the value goes over a certain threshold. Use e.g. SliderConstraint::GetTotalLambdaPosition / HingeConstraint::GetTotalLambdaRotation. You can see 'lambda' as the linear/angular impulse applied at the constraint in the last physics step to keep the constraint together.
 
-## Soft Bodies {#soft-bodies}
+# Engine Structure {#engine-structure}
 
-Soft bodies (also known as deformable bodies) can be used to create e.g. a soft ball or a piece of cloth. They are created in a very similar way to normal rigid bodies:
+## Spatial Partitioning
 
-* First allocate a new SoftBodySharedSettings object on the heap. This object will contain the initial positions of all particles and the constraints between the particles. This object can be shared between multiple soft bodies and should remain constant during its lifetime.
-* Then create a SoftBodyCreationSettings object (e.g. on the stack) and fill in the desired properties of the soft body.
-* Finally construct the body and add it to the world through BodyInterface::CreateAndAddSoftBody.
+As we mentioned in \ref basics "the basics", one method that can be used in the broadphase is spatial partitioning, the idea is simple enough, in simple terms suppose two players are in different rooms, then there is no possible way for them to collide with eachother, so we would never had to check for collisions between those two players.
 
-Soft bodies use the Body class just like rigid bodies but can be identified by checking Body::IsSoftBody. To get to the soft body state, cast the result of Body::GetMotionProperties to SoftBodyMotionProperties and use its API.
+### Fixed Grids
 
-Soft bodies try to implement as much as possible of the normal Body interface, but this interface provides a simplified version of reality, e.g. Body::GetLinearVelocity will return the average particle speed and Body::GetPosition returns the average particle position. During simulation, a soft body will never update its rotation. Internally it stores particle velocities in local space, so if you rotate a soft body e.g. by calling BodyInterface::SetRotation, the body will rotate but its velocity will as well.
+We can bring this idea to light by partitioning our space into a 3d grid of cubes or rectangular prisms, if two players completely contained withing different shapes, then we don't have to check for collisions between them. 
 
-Soft bodies are currently in development, please note the following:
+Note that there is a bit more complexity that arises when a player resides inside more than one shape at once, for example a player could exist in 8 different cubes at once if they're at a corner of a cube, and then collisions could occur with a different player located in any of the 8 cubes.
 
-* Soft bodies can only collide with rigid bodies, collisions between soft bodies are not implemented yet.
-* ContactListener callbacks are not triggered for soft bodies.
-* AddForce/AddTorque/SetLinearVelocity/SetLinearVelocityClamped/SetAngularVelocity/SetAngularVelocityClamped/AddImpulse/AddAngularImpulse have no effect on soft bodies as the velocity is stored per particle rather than per body.
-* Buoyancy calculations have not been implemented yet.
-* Constraints cannot operate on soft bodies, set the inverse mass of a particle to zero and move it by setting a velocity to constrain a soft body to something else.
-* When calculating friction / restitution an empty SubShapeID will be passed to the ContactConstraintManager::CombineFunction because this is called once per body pair rather than once per sub shape as is common for rigid bodies.
+Another issue that arises with this system is that you'll have to tweak the size of shapes to best fit your game. For example if we pick our partitioning size to be to big, then when we go through the broadphase we won't gain much perfomance increase because many of the objects will be in the same partition. If our partition size is too small, then many of our objects will riside on the edges of our partition shapes causing us to have to check in many different places for collisions. 
+
+
+### Quad/Oct Trees
+
+We'll start with quad trees because everything that applies quad trees will apply to oct trees, and thinking about 2D will be easier. We can start our understanding by thinking of a quad tree as a dynamic grid, which can recursively add new smaller grids to itself based on some rule. Start by watching this video:
+
+https://www.youtube.com/watch?v=e1wOWTT7fYk
+
+Based on the video you just watched you should see that this structure is not static like a grid. On each update of a players position, the structure changes. You might be able to see how this structure is changing if you watch long enough. The tree starts as a single node, which represents no grid at all, then it checks how many objects are inside of that grid, if it exceeds a certain count the structure creates a grid centered at it's center which consists of four quadrants, each one representing a new node. 
+
+The quadtree will recursively do this up to a certain predefined depth. The point of splitting like this is so that we can say if two objects reside in different quadrants (at the deepesting nesting), then they cannot collide with eachother. 
+
+In the code this manifests as an iteration over all players, and then a query against the quadtree that asks, "what could I possibly collide with", this operation is now cheap because the quadtree can figure out in which quadtree leaf node you reside in at most `depth` iterations, and then it will return all other objects in that leaf, as those are the only objects it could have collided with.
+
+We should note that it's entirely possible for all your players to be located in a leaf node, which would make this approach as fast as our brute search approach, but by choosing a good depth value and knowing the average area/volume of your objects you can come up with a good average case.
+
+### Axis Aligned Bounding Box {#AABB}
+
+Given an arbitrary shape, we can simply put a box around it. The reason why is that it is much simpler to check if a box is intersecting something than an arbitrary mesh. AABB is an acronym for Axis Aligned Bounding Box, meaning that the box we put around a shape is aligned with the axis, as follows:
+
+![Ellipsoid AABB](Images/EllipsoidAABB.png)
+
+These objects are useful because if two different AABB's are not colliding then we know that the underlying objects cannot collide, sometimes false positives can occur when the AABB's are colliding but the underlying objects are not, but those cases should be rare and can be dealt with.
 
 ## Collision Detection {#collision-detection}
 
