@@ -2371,12 +2371,6 @@ void SamplesApp::DrawPhysics()
 	mShapeToGeometry = std::move(shape_to_geometry);
 }
 
-/** 
- * \brief Steps the physics simulation at a fixed rate
- *
- * \note This means the simulation is dependent on how fast 
- * your computer is.
- */
 void SamplesApp::StepPhysics(JobSystem *inJobSystem)
 {
 	float delta_time = 1.0f / mUpdateFrequency;
