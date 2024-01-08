@@ -72,10 +72,10 @@ public:
 	Vec3							mScale = Vec3::sReplicate(1.0f);
 	uint32							mSampleCount = 0;
 
-	/// Artifical minimal value of mHeightSamples, used for compression and can be used to update the terrain after creating with lower height values. If there are any lower values in mHeightSamples, this value will be ignored.
+	/// Artificial minimal value of mHeightSamples, used for compression and can be used to update the terrain after creating with lower height values. If there are any lower values in mHeightSamples, this value will be ignored.
 	float							mMinHeightValue = FLT_MAX;
 
-	/// Artifical maximum value of mHeightSamples, used for compression and can be used to update the terrain after creating with higher height values. If there are any higher values in mHeightSamples, this value will be ignored.
+	/// Artificial maximum value of mHeightSamples, used for compression and can be used to update the terrain after creating with higher height values. If there are any higher values in mHeightSamples, this value will be ignored.
 	float							mMaxHeightValue = -FLT_MAX;
 
 	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only,
