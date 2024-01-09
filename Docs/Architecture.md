@@ -10,7 +10,7 @@ We use a pretty traditional physics engine setup, so \ref Body "bodies" in our s
 
 ## Types {#body-types}
 
-Bodies can either be :
+Bodies can either be:
 - static (not moving or simulating)
 - dynamic (moved by forces) or 
 - kinematic (moved by velocities only). 
