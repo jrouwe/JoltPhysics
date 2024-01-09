@@ -87,7 +87,7 @@ private:
 
 	// Global settings
 	int						mMaxConcurrentJobs = thread::hardware_concurrency();		// How many jobs to run in parallel
-	float					mUpdateFrequency = 60.0f;									// Physics update frequency
+	float					mUpdateFrequency = 60.0f;									// Physics update frequency, measured in Hz (cycles per second)
 	int						mCollisionSteps = 1;										// How many collision detection steps per physics update
 	TempAllocator *			mTempAllocator = nullptr;									// Allocator for temporary allocations
 	JobSystem *				mJobSystem = nullptr;										// The job system that runs physics jobs
