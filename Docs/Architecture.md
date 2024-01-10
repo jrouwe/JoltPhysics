@@ -11,9 +11,9 @@ We use a pretty traditional physics engine setup, so \ref Body "bodies" in our s
 ## Types {#body-types}
 
 Bodies can either be:
-- static (not moving or simulating)
-- dynamic (moved by forces) or 
-- kinematic (moved by velocities only). 
+- [static](@ref EMotionType) (not moving or simulating)
+- [dynamic](@ref EMotionType) (moved by forces) or 
+- [kinematic](@ref EMotionType) (moved by velocities only).
 
 Moving bodies have a [MotionProperties](@ref MotionProperties) object that contains information about the movement of the object. Static bodies do not have this to save space (but they can be configured to have it if a static body needs to become dynamic during its lifetime by setting [BodyCreationSettings::mAllowDynamicOrKinematic](@ref BodyCreationSettings::mAllowDynamicOrKinematic)).
 
@@ -154,9 +154,7 @@ As the library does not offer an exporter from content creation packages and sin
 
 In order to speed up the collision detection system, all convex shapes use a convex radius. The provided shape will first be shrunken by the convex radius and then inflated again by the same amount, resulting in a rounded off shape:
 
-|![Convex Radius](Images/ConvexRadius.jpg)|
-|:-|
-|*In this example a box (green) was created with a fairly large convex radius. The shape is shrunken first (dashed green line) and then inflated again equally on all sides. The resulting shape as seen by the collision detection system is shown in blue. A larger convex radius results in better performance but a less accurate simulation. A convex radius of 0 is allowed.*|
+![In this example a box (green) was created with a fairly large convex radius. The shape is shrunken first (dashed green line) and then inflated again equally on all sides. The resulting shape as seen by the collision detection system is shown in blue. A larger convex radius results in better performance but a less accurate simulation. A convex radius of 0 is allowed.](Images/ConvexRadius.jpg)
 
 ### Center of Mass {#center-of-mass}
 
@@ -203,7 +201,7 @@ will return a box of size 2x2x2 centered around the origin, so in order to get i
 
 Note that when you work with interface of [BroadPhaseQuery](@ref BroadPhaseQuery), [NarrowPhaseQuery](@ref NarrowPhaseQuery) or [TransformedShape](@ref TransformedShape) this transformation is done for you.
 
-## Creating Custom Shapes {#creating-custom-shapes}
+### Creating Custom Shapes {#creating-custom-shapes}
 
 If the defined Shape classes are not sufficient, or if your application can make a more efficient implementation because it has specific domain knowledge, it is possible to create a custom collision shape:
 
@@ -305,17 +303,13 @@ Position motors have two additional parameters: Frequency (MotorSettings::mSprin
 
 You can see a position motor as a spring between the target position and the rigid body. The force applied to reach the target is linear with the distance between current position and target position. When there is no damping, the position motor will cause the rigid body to oscillate around its target.
 
-|![Motor Frequency](Images/MotorFrequency.jpg)|
-|:-|
-|*A rigid body on a slider constraint. The body starts at 1 and is driven to 0 with a position motor. Two different motor frequencies are shown. The higher the frequency, the faster the motor will reach its target, but without damping it will overshoot and oscillate forever.*|
+![A rigid body on a slider constraint. The body starts at 1 and is driven to 0 with a position motor. Two different motor frequencies are shown. The higher the frequency, the faster the motor will reach its target, but without damping it will overshoot and oscillate forever.](Images/MotorFrequency.jpg)
 
 Valid frequencies are in the range (0, 0.5 * simulation frequency]. A frequency of 0 results in no force being applied, a frequency larger than half of the physics simulation frequency will result in instability. For a 60 Hz physics simulation, 20 is a good value for a stiff spring (without damping it will reach its target in 1/(4 * 20) = 0.0125 s), 2 is good for a soft spring (will reach its target in 1/(4 * 2) = 0.125 s).
 
 In order to prevent the motor from overshooting its target, we use damping.
 
-|![Motor Damping](Images/MotorDamping.jpg)|
-|:-|
-|*A rigid body on a slider constraint. The body starts at 1 and is driven to 0 with a position motor. The frequency of the motor is 2 Hz and the lines correspond to different damping values.*|
+![A rigid body on a slider constraint. The body starts at 1 and is driven to 0 with a position motor. The frequency of the motor is 2 Hz and the lines correspond to different damping values.](Images/MotorDamping.jpg)
 
 Sensible values for damping are [0, 1] but higher values are also possible. When the damping is below 1, the body will still oscillate around its target, but that oscillation will die out. When the damping is 1 (called critical damping) there is no oscillation at all but it will take longer for the motor to reach its target. When damping is bigger than 1, the system is over dampened. There will not be any oscillation, but it will take even longer for the motor to reach its target.
 
@@ -325,55 +319,27 @@ Because Jolt Physics uses a Symplectic Euler integrator, there will still be a s
 
 Constraints can be turned on / off by calling Constraint::SetEnabled. After every simulation step, check the total 'lambda' applied on each constraint and disable the constraint if the value goes over a certain threshold. Use e.g. SliderConstraint::GetTotalLambdaPosition / HingeConstraint::GetTotalLambdaRotation. You can see 'lambda' as the linear/angular impulse applied at the constraint in the last physics step to keep the constraint together.
 
-# Engine Structure {#engine-structure}
+# Collision Detection {#collision-detection}
 
-## Spatial Partitioning
+## Broad Phase {#broad-phase}
 
-One method that can be used in the broadphase is spatial partitioning, the idea is simple enough, in simple terms suppose two players are in different rooms, then there is no possible way for them to collide with eachother, so we would never had to check for collisions between those two players.
+When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body. 
 
-### Fixed Grids
-
-We can bring this idea to light by partitioning our space into a 3d grid of cubes or rectangular prisms, if two players completely contained withing different shapes, then we don't have to check for collisions between them. 
-
-Note that there is a bit more complexity that arises when a player resides inside more than one shape at once, for example a player could exist in 8 different cubes at once if they're at a corner of a cube, and then collisions could occur with a different player located in any of the 8 cubes.
-
-Another issue that arises with this system is that you'll have to tweak the size of shapes to best fit your game. For example if we pick our partitioning size to be to big, then when we go through the broadphase we won't gain much perfomance increase because many of the objects will be in the same partition. If our partition size is too small, then many of our objects will riside on the edges of our partition shapes causing us to have to check in many different places for collisions. 
-
-### Axis Aligned Bounding Box {#AABB}
-
-Given an arbitrary shape, we can simply put a box around it. The reason why is that it is much simpler to check if a box is intersecting something than an arbitrary mesh. AABB is an acronym for Axis Aligned Bounding Box, meaning that the box we put around a shape is aligned with the axis, as follows:
-
-![Ellipsoid AABB](Images/EllipsoidAABB.png)
-
-These objects are useful because if two different AABB's are not colliding then we know that the underlying objects cannot collide, sometimes false positives can occur when the AABB's are colliding but the underlying objects are not, but those cases should be rare and can be dealt with.
-
-### QuadTrees
-
-#### Splitting Structure
+![To quickly test if two objects overlap you can check if their axis aligned bounding boxes overlap. If they do, a check between the actual shapes is needed to be sure.](Images/EllipsoidAABB.png)
 
 Our broad phase is a quad tree, which means each node has 4 children. In the following image you see a random collection of spheres and triangles and a possible way to split the tree.
 
 ![QuadTree Example](Images/QuadTreeExample.png)
 
- At the highest level we split all objects in 4 mostly disjoint sets. Note that nodes are allowed to overlap, but for efficiency reasons you want the amount of overlap to be minimal. The example split here is indicated by a red, blue, green and yellow box and you can see them appear in the tree on the right. Three out of four nodes: blue, yellow and red, have 4 or less shapes in them, so the tree can directly point at the shapes rather than at a next. One node: green, has more than 4 shapes in it so needs a further split. Three shapes can be added directly to the node and we need to create a new node, dotted green, to hold the last two shapes. The reason why we pick 4 children is that modern CPUs support doing 4 math operations in a single instruction, so when we walk the tree from top to bottom during a collision query, we can handle 4 children at the same time.
+ At the highest level we split all objects in 4 mostly disjoint sets. Note that nodes are allowed to overlap, but for efficiency reasons we want the amount of overlap to be minimal. The example split here is indicated by a red, blue, green and yellow box and you can see them appear in the tree on the right. Three out of four nodes: blue, yellow and red, have 4 or less shapes in them, so the tree can directly point at the shapes rather than at a next node. One node: green, has more than 4 shapes in it so needs a further split. The three shapes can be added directly to the node and we need to create a new node, dotted green, to hold the last two shapes. The reason why we pick 4 children is that modern CPUs support doing 4 math operations in a single instruction, so when we walk the tree from top to bottom during a collision query, we can handle 4 children at the same time and quickly get to a minimal set of colliding objects.
 
-#### Nodes
+Since we want to access bodies concurrently the broad phase has special behavior. When a body moves, all nodes in the AABB tree from root to the node where the body resides will be expanded using a lock-free approach. This way multiple threads can move bodies at the same time without requiring a lock on the broad phase. Nodes that have been expanded are marked and during the next physics step a new tight-fitting tree will be built in the background while the physics step is running. This new tree will replace the old tree before the end of the simulation step. This is possible since no bodies can be added/removed during the physics step. For more information about this see the [GDC 2022 talk](https://jrouwe.nl/architectingjolt/ArchitectingJoltPhysics_Rouwe_Jorrit_Notes.pdf).
 
-![QuadTree Node](Images/QuadTreeNode.png)
-
-To give some context, this is the layout of a quad tree node. First of all, we have the axis aligned bounding box of 4 child nodes arranged in such a way that we can easily load the same quantity for 4 children at the same time: MinX, Y and Z then MaxX, Y and Z. They are initialized so that they are inside out and are filled with a value, 10^30 to be exact (we’ll call this LargeFloat), that is large enough to cover the entire world but not too large to create overflows to infinity when we work with the values.  As the bounds are initialized inside out, the collision queries that we do on a node will not find a hit. Next, we store the node indices of the 4 children. These can be an index in the node array or (when a specific bit is set) they indicate that they point to a body index instead. Each quad tree node points to its parent node through an index.  Finally, each node tracks if any changes were being made to it or its children since the last rebuild of the tree. As we will see later, the bounding boxes will become larger over time and parts of the tree need to be rebuilt. All members are stored as atomics to make it possible to modify them concurrently from multiple threads
-
-## Collision Detection {#collision-detection}
-
-### Broad Phase {#broad-phase}
-
-When bodies are added to the PhysicsSystem, they are inserted in the broad phase ([BroadPhaseQuadTree](@ref BroadPhaseQuadTree)). This provides quick coarse collision detection based on the axis aligned bounding box (AABB) of a body. The broad phase is divided in layers (BroadPhaseLayer), each broad phase layer has an AABB quad tree associated with it. A standard setup would be to have at least 2 broad phase layers: One for all static bodies (which is infrequently updated but is expensive to update since it usually contains most bodies) and one for all dynamic bodies (which is updated every simulation step but cheaper to update since it contains fewer objects). In general you should only have a few broad phase layers as there is overhead in querying and maintaining many different broad phase trees.
-
-Since we want to access bodies concurrently the broad phase has special behavior. When a body moves, all nodes in the AABB tree from root to the node where the body resides will be expanded using a lock-free approach. This way multiple threads can move bodies at the same time without requiring a lock on the broad phase. Nodes that have been expanded are marked and during the next physics step a new tight-fitting tree will be built in the background while the physics step is running. This new tree will replace the old tree before the end of the simulation step. This is possible since no bodies can be added/removed during the physics step.
+The broad phase is divided in layers (BroadPhaseLayer), each broad phase layer has an AABB quad tree associated with it. A standard setup would be to have at least 2 broad phase layers: One for all static bodies (which is infrequently updated but is expensive to update since it usually contains most bodies) and one for all dynamic bodies (which is updated every simulation step but cheaper to update since it contains fewer objects). In general you should only have a few broad phase layers as there is overhead in querying and maintaining many different broad phase trees.
 
 When doing a query against the broad phase ([BroadPhaseQuery](@ref BroadPhaseQuery)), you generally will get a body ID for intersecting objects. If a collision query takes a long time to process the resulting bodies (e.g. across multiple simulation steps), you can safely keep using the body ID's as specified in the @ref bodies section.
 
-### Narrow Phase {#narrow-phase}
+## Narrow Phase {#narrow-phase}
 
 A narrow phase query ([NarrowPhaseQuery](@ref NarrowPhaseQuery)) will first query the broad phase for intersecting bodies and will under the protection of a body lock construct a transformed shape ([TransformedShape](@ref TransformedShape)) object. This object contains the transform, a reference counted shape and a body ID. Since the shape will not be deleted until you destroy the TransformedShape object, it is a consistent snapshot of the collision information of the body. This ensures that the body is only locked for a short time frame and makes it possible to do the bulk of the collision detection work outside the protection of a lock.
 
@@ -381,7 +347,7 @@ For very long running jobs (e.g. navigation mesh creation) it is possible to que
 
 The narrow phase queries are all handled through the [GJK](@ref GJKClosestPoint) and [EPA](@ref EPAPenetrationDepth) algorithms.
 
-### Collision Filtering {#collision-filtering}
+## Collision Filtering {#collision-filtering}
 
 Each Body is in an [ObjectLayer](@ref ObjectLayer). If two object layers don't collide, the bodies inside those layers cannot collide. You can define object layers in any way you like, it could be a simple number from 0 to N or it could be a bitmask. Jolt supports 16 or 32 bit ObjectLayers through the JPH_OBJECT_LAYER_BITS define and you're free to define as many as you like as they don't incur any overhead in the system.
 
@@ -435,21 +401,17 @@ Now that we know about the basics, we list the order in which the collision dete
 
 To avoid work, try to filter out collisions as early as possible.
 
-### Continuous Collision Detection {#continous-collision-detection}
+## Continuous Collision Detection {#continous-collision-detection}
 
 Each body has a motion quality setting ([EMotionQuality](@ref EMotionQuality)). By default the motion quality is [Discrete](@ref Discrete). This means that at the beginning of each simulation step we will perform collision detection and if no collision is found, the body is free to move according to its velocity. This usually works fine for big or slow moving objects. Fast and small objects can easily 'tunnel' through thin objects because they can completely move through them in a single time step. For these objects there is the motion quality [LinearCast](@ref LinearCast). Objects that have this motion quality setting will do the same collision detection at the beginning of the simulation step, but once their new position is known, they will do an additional CastShape to check for any collisions that may have been missed. If this is the case, the object is placed back to where the collision occurred and will remain there until the next time step. This is called 'time stealing' and has the disadvantage that an object may appear to move much slower for a single time step and then speed up again. The alternative, back stepping the entire simulation, is computationally heavy so was not implemented.
 
-|![Motion Quality](Images/MotionQuality.jpg)|
-|:-|
-|*With the Discrete motion quality the blue object tunnels through the green object in a single time step. With motion quality LinearCast it doesn't.*|
+![With the Discrete motion quality the blue object tunnels through the green object in a single time step. With motion quality LinearCast it doesn't.](Images/MotionQuality.jpg)
 
 Fast rotating long objects are also to be avoided, as the LinearCast motion quality will fully rotate the object at the beginning of the time step and from that orientation perform the CastShape, there is a chance that the object misses a collision because it rotated through it.
 
-|![Long and Thin](Images/LongAndThin.jpg)|
-|:-|
-|*Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.*|
+![Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.](Images/LongAndThin.jpg)
 
-## The Simulation Step {#the-simulation-step}
+# The Simulation Step {#the-simulation-step}
 
 The simulation step [PhysicsSystem::Update](@ref PhysicsSystem::Update) uses jobs ([JobSystem](@ref JobSystem)) to perform the needed work. This allows spreading the workload across multiple CPU's. We use a Sequential Impulse solver with warm starting as described in [Modeling and Solving Constraints - Erin Catto](https://box2d.org/files/ErinCatto_ModelingAndSolvingConstraints_GDC2009.pdf)
 
@@ -462,7 +424,7 @@ Each physics step can be divided into multiple collision steps. So if you run th
 
 In general, the system is stable when running at 60 Hz with 1 collision step.
 
-## Conventions and Limits {#conventions-and-limits}
+# Conventions and Limits {#conventions-and-limits}
 
 Jolt Physics uses a right handed coordinate system with Y-up. It is easy to use another axis as up axis by changing the gravity vector using [PhysicsSystem::SetGravity](@ref PhysicsSystem::SetGravity). Some shapes like the [HeightFieldShape](@ref HeightFieldShapeSettings) will need an additional [RotatedTranslatedShape](@ref RotatedTranslatedShapeSettings) to rotate it to the new up axis and vehicles ([VehicleConstraint](@ref VehicleConstraintSettings)) and characters ([CharacterBaseSettings](@ref CharacterBaseSettings)) will need their new up-axis specified too.
 
@@ -470,7 +432,7 @@ We use column-major vectors and matrices, this means that to transform a point y
 
 Note that the physics simulation works best if you use SI units (meters, radians, seconds, kg). In order for the simluation to be accurate, dynamic objects should be in the order [0.1, 10] meters long and have speeds in the order of [0, 500] m/s. Static object should be in the order [0.1, 2000] meter long. If you are using different units, consider scaling the objects before passing them on to the physics simulation.
 
-## Big Worlds {#big-worlds}
+# Big Worlds {#big-worlds}
 
 By default the library compiles using floats. This means that the simulation gets less accurate the further you go from the origin. If all simulation takes place within roughly 5 km from the origin, floating point precision is accurate enough.
 
@@ -486,7 +448,7 @@ Keep in mind that:
 
 Because of the minimal use of doubles, the simulation runs 5-10% slower in double precision mode compared to float precision mode.
 
-## Deterministic Simulation {#deterministic-simulation}
+# Deterministic Simulation {#deterministic-simulation}
 
 The physics simulation is deterministic provided that:
 
@@ -522,13 +484,13 @@ The most important things to look out for in your own application:
 
 When running the Samples Application you can press ESC, Physics Settings and check the 'Check Determinism' checkbox. Before every simulation step we will record the state using the [StateRecorder](@ref StateRecorder) interface, rewind the simulation and do the step again to validate that the simulation runs deterministically. Some of the tests (e.g. the MultiThreaded) test will explicitly disable the check because they randomly add/remove bodies from different threads. This violates the rule that the API calls must be done in the same order so will not result in a deterministic simulation.
 
-## Rolling Back a Simulation {#rolling-back-a-simulation}
+# Rolling Back a Simulation {#rolling-back-a-simulation}
 
 When synchronizing two simulations via a network, it is possible that a change that needed to be applied at frame N is received at frame N + M. This will require rolling back the simulation to the state of frame N and repeating the simulation with the new inputs. This can be implemented by saving the physics state using [SaveState](@ref PhysicsSystem::SaveState) at every frame. To roll back, call [RestoreState](@ref PhysicsSystem::RestoreState) with the state at frame N. SaveState only records the state that the physics engine modifies during its update step (positions, velocities etc.), so if you change anything else you need to restore this yourself. E.g. if you did a [SetFriction](@ref Body::SetFriction) on frame N + 2 then, when rewinding, you need to restore the friction to what is was on frame N and update it again on frame N + 2 when you replay. If you start adding/removing objects (e.g. bodies or constraints) during these frames, the RestoreState function will not work. If you added a body on frame N + 1, you'll need to remove it when rewinding and then add it back on frame N + 1 again (with the proper initial position/velocity etc. because it won't be contained in the snapshot at frame N).
 
 If you wish to share saved state between server and client, you need to ensure that all APIs that modify the state of the world are called in the exact same order. So if the client creates physics objects for player 1 then 2 and the server creates the objects for 2 then 1 you already have a problem (the body IDs will be different, which will render the save state snapshots incompatible). When rolling back a simulation, you'll also need to ensure that the BodyIDs are kept the same, so you need to remove/add the body from/to the physics system instead of destroy/re-create them or you need to create bodies with the same ID on both sides using [BodyInterface::CreateBodyWithID](@ref BodyInterface::CreateBodyWithID).
 
-## Working With Multiple Physics Systems {#working-with-multiple-physics-systems}
+# Working With Multiple Physics Systems {#working-with-multiple-physics-systems}
 
 You can create, simulate and interact with multiple PhysicsSystems at the same time provided that you do not share any objects (bodies, constraints) between the systems.
 When a Body is created it receives a BodyID that is unique for the PhysicsSystem that it was created for, so it cannot be shared. The only object that can be shared between PhysicsSystems is a Shape.
@@ -544,7 +506,7 @@ PhysicsSystems are not completely independent:
 
 These functions / systems need to be registered in advance.
 
-## The Simulation Step in Detail {#the-simulation-step-in-detail}
+# The Simulation Step in Detail {#the-simulation-step-in-detail}
 
 The job graph looks like this:
 
@@ -552,33 +514,33 @@ The job graph looks like this:
 
 Note that each job indicates if it reads/writes positions/velocities and if it deactivates/activates bodies. We do not allow jobs to read/write the same data concurrently. The arrows indicate the order in which jobs are executed. Yellow blocks mean that there are multiple jobs of this type. Dotted arrows have special meaning and are explained below.
 
-### Broad Phase Update Prepare {#broad-phase-update-prepare}
+## Broad Phase Update Prepare {#broad-phase-update-prepare}
 
 This job will refit the AABBs of the broad phase. It does this by building a new tree while keeping the old one available as described in the @ref broad-phase section.
 
-### Broad Phase Update Finalize {#broad-phase-update-finalize}
+## Broad Phase Update Finalize {#broad-phase-update-finalize}
 
 This job will simply swap the new tree with the old tree. The old tree will be discarded at the beginning of the next PhysicsSystem::Update call so that any broad phase query can continue to run.
 
-### Step Listeners {#step-listeners-update}
+## Step Listeners {#step-listeners-update}
 
 You can register one or more step listeners (See [PhysicsSystem::AddStepListener](@ref PhysicsSystem::AddStepListener)). This job will call [PhysicsStepListener::OnStep](@ref PhysicsStepListener::OnStep) for every listener. This can be used to do work that needs to be done at the beginning of each step, e.g. set velocities on ragdoll bodies.
 
-### Apply Gravity {#apply-gravity-update}
+## Apply Gravity {#apply-gravity-update}
 
 A number of these jobs run in parallel. Each job takes a batch of active bodies and applies gravity and damping (updating linear and angular velocity).
 
-### Determine Active Constraints {#determine-active-constraints}
+## Determine Active Constraints {#determine-active-constraints}
 
 This job will go through all non-contact constraints and determine which constraints are active based on if the bodies that the constraint connects to are active.
 
-### Build Islands from Constraints {#build-islands-from-constraints}
+## Build Islands from Constraints {#build-islands-from-constraints}
 
 This job will go through all non-contact constraints and assign the involved bodies and constraint to the same island. Since we allow concurrent insertion/removal of bodies we do not want to keep island data across multiple simulation steps, so we recreate the islands from scratch every simulation step. The operation is lock-free and O(N) where N is the number of constraints.
 
 If a constraint connects an active and a non-active body, the non-active body is woken up. One find collisions job will not start until this job has finished in order to pick up any collision testing for newly activated bodies.
 
-### Find Collisions {#find-collisions}
+## Find Collisions {#find-collisions}
 
 This job will do broad and narrow phase checks. Initially a number of jobs are started based on the amount of active bodies. The job will do the following:
 
@@ -599,56 +561,56 @@ Contacting bodies are also linked together to form islands. This is the same ope
 
 The narrow phase makes use of a lock free contact cache. We have 2 caches, one that is used for reading (which contains the contacts from the previous step) and one for writing new contact pairs. When a contact point is preserved from the last simulation step, it will be copied from the read cache to the write cache.
 
-### Setup Velocity Constraints {#setup-velocity-constraints}
+## Setup Velocity Constraints {#setup-velocity-constraints}
 
 This job will go through all non-contact constraints and prepare them for execution. This involves calculating Jacobians and effective masses for each constraint part.
 
-### Finalize Islands {#finalize-islands}
+## Finalize Islands {#finalize-islands}
 
 This job will finalize the building of the simulation islands. Each island contains bodies that interact with each other through a contact point or through a constraint. These islands will be simulated separately in different jobs later. The finalization of the islands is an O(N) operation where N is the amount of active bodies (see [IslandBuilder::Finalize](@ref IslandBuilder::Finalize)).
 
-### Set Body Island Idx {#set-body-island-idx}
+## Set Body Island Idx {#set-body-island-idx}
 
 This job does some housekeeping work that can be executed concurrent to the solver:
 
 * It will assign the island ID to all bodies (which is mainly used for debugging purposes)
 
-### Solve Velocity Constraints {#solve-velocity-constraints}
+## Solve Velocity Constraints {#solve-velocity-constraints}
 
 A number of these jobs will run in parallel. Each job takes the next unprocessed island and will run the iterative constraint solver for that island. It will first apply the impulses applied from the previous simulation step (which are stored in the contact cache) to warm start the solver. It will then repeatedly iterate over all contact and non-contact constraints until either the applied impulses are too small or a max iteration count is reached ([PhysicsSettings::mNumVelocitySteps](@ref PhysicsSettings::mNumVelocitySteps)). The result will be that the new velocities are known for all active bodies. The applied impulses are stored in the contact cache for the next step.
 
 When an island consists of more than LargeIslandSplitter::cLargeIslandTreshold contacts plus constraints it is considered a large island. In order to not do all work on a single thread, this island will be split up by the LargeIslandSplitter. This follows an algorithm described in High-Performance Physical Simulations on Next-Generation Architecture with Many Cores by Chen et al. This is basically a greedy algorithm that tries to group contacts and constraints into groups where no contact or constraint affects the same body. Within a group, the order of execution does not matter since every memory location is only read/written once, so we can parallelize the update. At the end of each group, we need to synchronize the CPU cores before starting on the next group. When the number of groups becomes too large, a final group is created that contains all other contacts and constraints and these are solved on a single thread. The groups are processed PhysicsSettings::mNumVelocitySteps times so the end result is almost the same as an island that was not split up (only the evalutation order changes in a consistent way).
 
-### Pre Integrate {#pre-integrate}
+## Pre Integrate {#pre-integrate}
 
 This job prepares the CCD buffers.
 
-### Integrate & Clamp Velocities {#integrate-and-clamp-velocities}
+## Integrate & Clamp Velocities {#integrate-and-clamp-velocities}
 
 This job will integrate the velocity and update the position. It will clamp the velocity to the max velocity.
 
 Depending on the motion quality ([EMotionQuality](@ref EMotionQuality)) of the body, it will schedule a body for continuous collision detection (CCD) if its movement is bigger than some treshold based on the [inner radius](@ref Shape::GetInnerRadius)) of the shape.
 
-### Post Integrate {#post-integrate}
+## Post Integrate {#post-integrate}
 
 Find CCD Contact jobs are created on the fly depending on how many CCD bodies were found. If there are no CCD bodies it will immediately start Resolve CCD Contacts.
 
-### Find CCD Contacts {#find-ccd-contacts}
+## Find CCD Contacts {#find-ccd-contacts}
 
 A number of jobs wil run in parallel and pick up bodies that have been scheduled for CCD and will do a linear cast to detect the first collision. It always allows movement of the object by a fraction if its inner radius in order to prevent it from getting fully stuck.
 
-### Resolve CCD Contacts {#resolve-ccd-contacts}
+## Resolve CCD Contacts {#resolve-ccd-contacts}
 
 This job will take the collision results from the previous job and update position and velocity of the involved bodies. If an object hits another object, its time will be 'stolen' (it will move less far than it should according to its velocity).
 
-### Finalize Contact Cache, Contact Removed Callbacks {#finalize-contact-cache}
+## Finalize Contact Cache, Contact Removed Callbacks {#finalize-contact-cache}
 
 This job will:
 
 * Swap the read/write contact cache and prepare the contact cache for the next step.
 * It will detect all contacts that existed previous step and do not exist anymore to fire callbacks for them through the [ContactListener](@ref ContactListener) interface.
 
-### Solve Position Constraints, Update Bodies Broad Phase {#solve-position-constraints}
+## Solve Position Constraints, Update Bodies Broad Phase {#solve-position-constraints}
 
 A number of these jobs will run in parallel. Each job takes the next unprocessed island and run the position based constraint solver. This fixes numerical drift that may have caused constrained bodies to separate (remember that the constraints are solved in the velocity domain, so errors get introduced when doing a linear integration step). It will run until either the applied position corrections are too small or until the max amount of iterations is reached ([PhysicsSettings::mNumPositionSteps](@ref PhysicsSettings::mNumPositionSteps)). Here there is also support for large islands, the island splits that were calculated in the Solve Velocity Constraints job are reused to solve partial islands in the same way as before.
 
@@ -656,18 +618,18 @@ It will also notify the broad phase of the new body positions / AABBs.
 
 When objects move too little the body will be put to sleep. This is detected by taking the biggest two axis of the local space bounding box of the shape together with the center of mass of the shape (all points in world space) and keep track of 3 bounding spheres for those points over time. If the bounding spheres become too big, the bounding spheres are reset and the timer restarted. When the timer reaches a certain time, the object has is considered non-moving and is put to sleep.
 
-### Soft Body Prepare {#soft-body-prepare}
+## Soft Body Prepare {#soft-body-prepare}
 
 If there are any active soft bodies, this job will create the Soft Body Collide, Simulate and Finalize Jobs. It will also create a list of sorted SoftBodyUpdateContext objects that forms the context for those jobs.
 
-### Soft Body Collide {#soft-body-collide}
+## Soft Body Collide {#soft-body-collide}
 
 These jobs will do broadphase checks for all of the soft bodies. A thread picks up a single soft body and uses the bounding box of the soft body to find intersecting rigid bodies. Once found, information will be collected about that rigid body so that Simulate can run in parallel.
 
-### Soft Body Simulate {#soft-body-simulate}
+## Soft Body Simulate {#soft-body-simulate}
 
 These jobs will do the actual simulation of the soft bodies. They first collide batches of soft body vertices with the rigid bodies found during during the Collide job (multiple threads can work on a single soft body) and then perform the simulation using XPBD (also partially distributing a single soft body on multiple threads).
 
-### Soft Body Finalize {#soft-body-finalize}
+## Soft Body Finalize {#soft-body-finalize}
 
 This job writes back all the rigid body velocity changes and updates the positions and velocities of the soft bodies. It can activate/deactivate bodies as needed.
