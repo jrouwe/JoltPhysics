@@ -66,6 +66,8 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+    - name: Update APT
+      run: sudo apt update
     - name: Install G++-Multilib
       run: sudo apt -y install g++-multilib
     - name: Configure CMake
