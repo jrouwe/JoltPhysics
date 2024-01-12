@@ -180,6 +180,13 @@
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
 	#define JPH_DISABLE_CUSTOM_ALLOCATOR
+#elif defined(__e2k__)
+	// Elbrus e2k architecture
+	#define JPH_CPU_E2K
+	#define JPH_CPU_ADDRESS_BITS 64
+	#define JPH_USE_SSE
+	#define JPH_VECTOR_ALIGNMENT 16
+	#define JPH_DVECTOR_ALIGNMENT 32
 #else
 	#error Unsupported CPU architecture
 #endif
@@ -333,6 +340,8 @@
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT	__asm volatile ("int $0x3")
 	#elif defined(JPH_CPU_ARM)
+		#define JPH_BREAKPOINT	__builtin_trap()
+	#elif defined(JPH_CPU_E2K)
 		#define JPH_BREAKPOINT	__builtin_trap()
 	#endif
 #elif defined(JPH_PLATFORM_WASM)
