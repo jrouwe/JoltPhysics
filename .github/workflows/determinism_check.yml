@@ -18,7 +18,7 @@ on:
 
 jobs:
   linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Linux Determinism Check
 
     steps:
@@ -95,7 +95,7 @@ jobs:
       run: ./PerformanceTest -q=LinearCast -t=2 -s=Ragdoll -validate_hash=${RAGDOLL_HASH}
 
   arm:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: ARM Determinism Check
     steps:
     - name: Checkout Code
