@@ -14,7 +14,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added BodyInterface::SetUseManifoldReduction which will clear the contact cache and ensure that you get consistent contact callbacks in case the body that you're changing already has contacts.
 * Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers and with which object layers they collide.
 * Added support for less than 1 collision test per simulation step for vehicle wheels. This behavior can be configured differently when the vehicle is active / inactive. This can be used for LODding vehicles.
-* Added wheel index and friction direction to VehicleConstraint::CombineFunction friction callback so you can have more differentiation between wheels.
+* Added wheel index to VehicleConstraint::CombineFunction friction callback and calculating longitudinal and lateral friction in the same call so you can have more differentiation between wheels.
 * Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
 * Added function to query the bounding box of all bodies in the physics system, see PhysicsSystem::GetBounds.
 * Renamed SensorDetectsStatic to CollideKinematicVsNonDynamic and made it work for non-sensors. This means that kinematic bodies can now get collision callbacks when they collide with other static / kinematic objects.
