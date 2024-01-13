@@ -65,6 +65,9 @@ protected:
 	/// Programmatically single step the simulation
 	void						SingleStep()									{ mIsPaused = true; mSingleStep = true; }
 
+	/// Set the frequency at which we want to render frames
+	void						SetRenderFrequency(float inFrequency)			{ mRequestedDeltaTime = 1.0f / inFrequency; }
+
 	/// Will restore camera position to that returned by GetInitialCamera
 	void						ResetCamera();
 
@@ -102,6 +105,8 @@ private:
 	bool						mDebugRendererCleared = true;
 	bool						mLeftMousePressed = false;
 	float						mFPS = 0.0f;
+	float						mRequestedDeltaTime = 0.0f;
+	float						mResidualDeltaTime = 0.0f;
 	float						mTotalDeltaTime = 0.0f;
 	int							mNumFrames = 0;
 };

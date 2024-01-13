@@ -167,7 +167,39 @@ void Application::Run()
 			chrono::microseconds delta = chrono::duration_cast<chrono::microseconds>(time - mLastUpdateTime);
 			mLastUpdateTime = time;
 			float clock_delta_time = 1.0e-6f * delta.count();
-			float world_delta_time = !mIsPaused || mSingleStep? clock_delta_time : 0.0f;
+			float world_delta_time = 0.0f;
+			if (mRequestedDeltaTime <= 0.0f)
+			{
+				// If no fixed frequency update is requested, update with variable time step
+				world_delta_time = !mIsPaused || mSingleStep? clock_delta_time : 0.0f;
+				mResidualDeltaTime = 0.0f;
+			}
+			else
+			{
+				// Else use fixed time steps
+				if (mSingleStep)
+				{
+					// Single step
+					world_delta_time = mRequestedDeltaTime;
+				}
+				else if (!mIsPaused)
+				{
+					// Calculate how much time has passed since the last render
+					world_delta_time = clock_delta_time + mResidualDeltaTime;
+					if (world_delta_time < mRequestedDeltaTime)
+					{
+						// Too soon, set the residual time and don't update
+						mResidualDeltaTime = world_delta_time;
+						world_delta_time = 0.0f;
+					}
+					else
+					{
+						// Update and clamp the residual time to a full update to avoid spiral of death
+						mResidualDeltaTime = min(mRequestedDeltaTime, world_delta_time - mRequestedDeltaTime);
+						world_delta_time = mRequestedDeltaTime;
+					}
+				}
+			}
 			mSingleStep = false;
 
 			// Clear debug lines if we're going to step
