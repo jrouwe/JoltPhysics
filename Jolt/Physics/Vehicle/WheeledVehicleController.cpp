@@ -694,10 +694,10 @@ bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 				float linear_impulse = (w->GetAngularVelocity() - desired_angular_velocity) * settings->mInertia / settings->mRadius;
 
 				// Limit the impulse by max tire friction
-				min_longitudinal_impulse = max_longitudinal_impulse = w->GetLongitudinalLambda() + Sign(linear_impulse) * min(abs(linear_impulse), max_longitudinal_friction_impulse);
+				float prev_lambda = w->GetLongitudinalLambda();
+				min_longitudinal_impulse = max_longitudinal_impulse = Clamp(prev_lambda + linear_impulse, -max_longitudinal_friction_impulse, max_longitudinal_friction_impulse);
 
 				// Longitudinal impulse
-				float prev_lambda = w->GetLongitudinalLambda();
 				impulse |= w->SolveLongitudinalConstraintPart(mConstraint, min_longitudinal_impulse, max_longitudinal_impulse);
 
 				// Update the angular velocity of the wheels according to the lambda that was applied
