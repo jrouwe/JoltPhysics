@@ -78,15 +78,9 @@ public:
 	/// Set the interface that tests collision between wheel and ground
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
-	/// Tire friction direction
-	enum class ETireFrictionDirection : uint8
-	{
-		Longitudinal,			///< Longitudinal friction direction
-		Lateral,				///< Lateral friction direction
-	};
-
 	/// Callback function to combine the friction of a tire with the friction of the body it is colliding with.
-	using CombineFunction = function<float(uint inWheelIndex, ETireFrictionDirection inTireFrictionDirection, float inTireFriction, const Body &inBody2, const SubShapeID &inSubShapeID2)>;
+	/// On input ioLongitudinalFriction and ioLateralFriction contain the friction of the tire, on output they should contain the combined friction with inBody2.
+	using CombineFunction = function<void(uint inWheelIndex, float &ioLongitudinalFriction, float &ioLateralFriction, const Body &inBody2, const SubShapeID &inSubShapeID2)>;
 
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
@@ -224,7 +218,13 @@ private:
 
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
-	CombineFunction				mCombineFriction = [](uint, ETireFrictionDirection, float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
+	CombineFunction				mCombineFriction = [](uint, float &ioLongitudinalFriction, float &ioLateralFriction, const Body &inBody2, const SubShapeID &)
+	{
+		float body_friction = inBody2.GetFriction();
+
+		ioLongitudinalFriction = sqrt(ioLongitudinalFriction * body_friction);
+		ioLateralFriction = sqrt(ioLateralFriction * body_friction);
+	};
 
 	// Callbacks
 	StepCallback				mPreStepCallback;

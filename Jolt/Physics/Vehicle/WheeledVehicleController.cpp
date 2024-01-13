@@ -122,8 +122,9 @@ void WheelWV::Update(uint inWheelIndex, float inDeltaTime, const VehicleConstrai
 
 		// Tire friction
 		VehicleConstraint::CombineFunction combine_friction = inConstraint.GetCombineFriction();
-		mCombinedLongitudinalFriction = combine_friction(inWheelIndex, VehicleConstraint::ETireFrictionDirection::Longitudinal, longitudinal_slip_friction, *mContactBody, mContactSubShapeID);
-		mCombinedLateralFriction = combine_friction(inWheelIndex, VehicleConstraint::ETireFrictionDirection::Lateral, lateral_slip_friction, *mContactBody, mContactSubShapeID);
+		mCombinedLongitudinalFriction = longitudinal_slip_friction;
+		mCombinedLateralFriction = lateral_slip_friction;
+		combine_friction(inWheelIndex, mCombinedLongitudinalFriction, mCombinedLateralFriction, *mContactBody, mContactSubShapeID);
 	}
 	else
 	{
