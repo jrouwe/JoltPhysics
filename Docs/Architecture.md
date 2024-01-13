@@ -429,6 +429,8 @@ CharacterVirtual has the following extra functionality:
 
 If you want CharacterVirtual to have presence in the world, it is recommended to pair it with a slightly smaller [Kinematic](@ref EMotionType) body (or Character). After each update, move this body using BodyInterface::MoveKinematic to the new location. This ensures that standard collision tests like ray casts are able to find the character in the world and that fast moving objects with motion quality [LinearCast](@ref EMotionQuality) will not pass through the character in 1 update. As an alternative to a Kinematic body, you can also use a regular Dynamic body with a [gravity factor](@ref BodyCreationSettings::mGravityFactor) of 0. Ensure that the character only collides with dynamic objects in this case. The advantage of this approach is that the paired body doesn't have infinite mass so is less strong.
 
+Characters are usually driven in a kinematic way (i.e. by calling Character::SetLinearVelocity or CharacterVirtual::SetLinearVelocity before their update).
+
 To get started take a look at the [Character](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterTest.cpp) and [CharacterVirtual](https://github.com/jrouwe/JoltPhysics/blob/master/Samples/Tests/Character/CharacterVirtualTest.cpp) examples.
 
 # The Simulation Step {#the-simulation-step}
