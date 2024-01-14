@@ -1456,7 +1456,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 					SphereShape point_sphere(1.0e-6f);
 					point_sphere.SetEmbedded();
 					CollideShapeSettings settings;
-					settings.mMaxSeparationDistance = max_distance;
+					settings.mMaxSeparationDistance = sqrt(3.0f) * max_distance; // Box is extended in all directions by max_distance
 					ClosestHitCollisionCollector<CollideShapeCollector> collide_shape_collector;
 					ts.CollideShape(&point_sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(start + vertex.mPosition), settings, start, collide_shape_collector);
 					if (collide_shape_collector.HadHit())
@@ -1474,7 +1474,7 @@ bool SamplesApp::CastProbe(float inProbeLength, float &outFraction, RVec3 &outPo
 			// Draw collision plane
 			if (vertex.mCollidingShapeIndex != -1)
 			{
-				RVec3 plane_point = start + closest_point - vertex.mCollisionPlane.GetNormal() * vertex.mCollisionPlane.SignedDistance(closest_point);
+				RVec3 plane_point = start + vertex.mPosition - vertex.mCollisionPlane.GetNormal() * vertex.mCollisionPlane.SignedDistance(vertex.mPosition);
 				mDebugRenderer->DrawPlane(plane_point, vertex.mCollisionPlane.GetNormal(), Color::sGreen, 2.0f);
 
 				if (abs(closest_point_penetration - vertex.mLargestPenetration) > 0.001f)
