@@ -113,6 +113,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 			{
 				const Body &body = lock.GetBody();
 				if (body.IsRigidBody() // TODO: We should support soft body vs soft body
+					&& !body.IsSensor()
 					&& mSoftBody.GetCollisionGroup().CanCollide(body.GetCollisionGroup()))
 				{
 					CollidingShape cs;
