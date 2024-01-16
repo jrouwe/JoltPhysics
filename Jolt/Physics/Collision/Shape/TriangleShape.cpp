@@ -280,9 +280,9 @@ void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Ve
 
 			if (set == 0b111)
 			{
-				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 10cm penetration
+				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 0.5 m penetration
 				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
-				float penetration = min(triangle_normal.Dot(v1_minus_position), 0.1f);
+				float penetration = min(triangle_normal.Dot(v1_minus_position), 0.5f);
 				if (penetration > v->mLargestPenetration)
 				{
 					v->mLargestPenetration = penetration;
