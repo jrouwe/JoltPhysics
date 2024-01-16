@@ -846,6 +846,8 @@ void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Ar
 	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
 	Visitor visitor(transform);
 
+	float normal_sign = ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f;
+
 	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
 		if (v->mInvMass > 0.0f)
 		{
@@ -857,7 +859,7 @@ void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Ar
 				Vec3 v0 = transform * visitor.mV0;
 				Vec3 v1 = transform * visitor.mV1;
 				Vec3 v2 = transform * visitor.mV2;
-				Vec3 triangle_normal = (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
+				Vec3 triangle_normal = normal_sign * (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
 
 				if (visitor.mSet == 0b111)
 				{

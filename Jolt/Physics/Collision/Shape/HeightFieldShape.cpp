@@ -21,6 +21,7 @@
 #include <Jolt/Physics/Collision/ActiveEdges.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/SortReverseAndStore.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
@@ -1944,7 +1945,115 @@ void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &in
 
 void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
-	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, inScale, ioVertices, inNumVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+	JPH_PROFILE_FUNCTION();
+
+	struct Visitor
+	{
+						Visitor(Mat44Arg inTransform) :
+			mInvTransform(inTransform.Inversed())
+		{
+		}
+
+		JPH_INLINE void	SetVertex(const SoftBodyVertex &inVertex)
+		{
+			mLocalPosition = mInvTransform * inVertex.mPosition;
+			mClosestDistanceSq = FLT_MAX;
+		}
+
+		JPH_INLINE bool	ShouldAbort() const
+		{
+			return false;
+		}
+
+		JPH_INLINE bool	ShouldVisitRangeBlock([[maybe_unused]] int inStackTop) const
+		{
+			return mDistanceStack[inStackTop] < mClosestDistanceSq;
+		}
+
+		JPH_INLINE int	VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
+		{
+			// Get distance to vertex
+			Vec4 dist_sq = AABox4DistanceSqToPoint(mLocalPosition, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
+
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			return SortReverseAndStore(dist_sq, mClosestDistanceSq, ioProperties, &mDistanceStack[inStackTop]);
+		}
+
+		JPH_INLINE void	VisitTriangle(uint inX, uint inY, uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
+		{
+			// Get the closest point from the vertex to the triangle
+			uint32 set;
+			Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(inV0 - mLocalPosition, inV1 - mLocalPosition, inV2 - mLocalPosition, set);
+			float dist_sq = closest_point.LengthSq();
+			if (dist_sq < mClosestDistanceSq)
+			{
+				mV0 = inV0;
+				mV1 = inV1;
+				mV2 = inV2;
+				mClosestPoint = closest_point;
+				mClosestDistanceSq = dist_sq;
+				mSet = set;
+			}
+		}
+
+		Mat44			mInvTransform;
+		Vec3			mLocalPosition;
+		Vec3			mV0, mV1, mV2;
+		Vec3			mClosestPoint;
+		float			mClosestDistanceSq;
+		uint32			mSet;
+		float			mDistanceStack[cStackSize];
+	};
+
+	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
+	Visitor visitor(transform);
+
+	float normal_sign = ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f;
+
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
+		{
+			visitor.SetVertex(*v);
+			WalkHeightField(visitor);
+			if (visitor.mClosestDistanceSq < FLT_MAX)
+			{
+				// Convert triangle to world space
+				Vec3 v0 = transform * visitor.mV0;
+				Vec3 v1 = transform * visitor.mV1;
+				Vec3 v2 = transform * visitor.mV2;
+				Vec3 triangle_normal = normal_sign * (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
+
+				if (visitor.mSet == 0b111)
+				{
+					// Closest is interior to the triangle, use plane as collision plane but don't allow more than 0.5 m penetration
+					// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
+					float penetration = min(triangle_normal.Dot(v0 - v->mPosition), 0.5f);
+					if (penetration > v->mLargestPenetration)
+					{
+						v->mLargestPenetration = penetration;
+						v->mCollisionPlane = Plane::sFromPointAndNormal(v0, triangle_normal);
+						v->mCollidingShapeIndex = inCollidingShapeIndex;
+					}
+				}
+				else
+				{
+					// Closest point is on an edge or vertex, use closest point as collision plane
+					Vec3 closest_point = transform * (visitor.mLocalPosition + visitor.mClosestPoint);
+					Vec3 normal = v->mPosition - closest_point;
+					if (normal.Dot(triangle_normal) > 0.0f) // Ignore back facing edges
+					{
+						float normal_length = normal.Length();
+						float penetration = -normal_length;
+						if (penetration > v->mLargestPenetration)
+						{
+							v->mLargestPenetration = penetration;
+							v->mCollisionPlane = Plane::sFromPointAndNormal(closest_point, normal_length > 0.0f? normal / normal_length : triangle_normal);
+							v->mCollidingShapeIndex = inCollidingShapeIndex;
+						}
+					}
+				}
+			}
+		}
 }
 
 void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
