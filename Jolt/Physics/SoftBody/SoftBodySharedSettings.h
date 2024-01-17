@@ -125,6 +125,7 @@ public:
 	Array<uint>			mEdgeGroupEndIndices;						///< The start index of each group of edges that can be solved in parallel
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	PhysicsMaterialList mMaterials { PhysicsMaterial::sDefault };	///< The materials of the faces of the body, referenced by Face::mMaterialIndex
+	float				mVertexRadius = 0.0f;						///< How big the particles are, can be used to push the vertices a little bit away from the surface of other bodies to prevent z-fighting
 };
 
 JPH_NAMESPACE_END

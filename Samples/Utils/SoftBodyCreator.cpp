@@ -236,6 +236,9 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 	SoftBodySharedSettings *settings = new SoftBodySharedSettings;
 
 	// Create vertices
+	// NOTE: This is not how you should create a soft body sphere, we explicitly use polar coordinates to make the vertices unevenly distributed.
+	// Doing it this way tests the pressure algorithm as it receives non-uniform triangles. Better is to use uniform triangles,
+	// see the use of DebugRenderer::Create8thSphere for an example.
 	SoftBodySharedSettings::Vertex v;
 	(inRadius * Vec3::sUnitSpherical(0, 0)).StoreFloat3(&v.mPosition);
 	settings->mVertices.push_back(v);

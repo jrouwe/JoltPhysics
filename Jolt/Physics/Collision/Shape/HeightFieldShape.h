@@ -277,8 +277,9 @@ private:
 	static void						sCastSphereVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector);
 
 	/// Visit the entire height field using a visitor pattern
+	/// Note: Used to be inlined but this triggers a bug in MSVC where it will not free the memory allocated by alloca which causes a stack overflow when WalkHeightField is called in a loop (clang does it correct)
 	template <class Visitor>
-	JPH_INLINE void					WalkHeightField(Visitor &ioVisitor) const;
+	void							WalkHeightField(Visitor &ioVisitor) const;
 
 	/// A block of 2x2 ranges used to form a hierarchical grid, ordered left top, right top, left bottom, right bottom
 	struct alignas(16) RangeBlock
