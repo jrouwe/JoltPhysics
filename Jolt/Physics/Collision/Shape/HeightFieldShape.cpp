@@ -1797,7 +1797,7 @@ private:
 };
 
 template <class Visitor>
-JPH_INLINE void HeightFieldShape::WalkHeightField(Visitor &ioVisitor) const
+void HeightFieldShape::WalkHeightField(Visitor &ioVisitor) const
 {
 	DecodingContext ctx(this);
 	ctx.WalkHeightField(ioVisitor);
