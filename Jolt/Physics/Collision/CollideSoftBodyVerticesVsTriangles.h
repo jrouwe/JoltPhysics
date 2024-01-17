@@ -43,7 +43,7 @@ public:
 		}
 	}
 
-	JPH_INLINE void		FinishVertex(SoftBodyVertex &ioVertex, int inCollidingShapeIndex)
+	JPH_INLINE void		FinishVertex(SoftBodyVertex &ioVertex, int inCollidingShapeIndex) const
 	{
 		if (mClosestDistanceSq < FLT_MAX)
 		{
