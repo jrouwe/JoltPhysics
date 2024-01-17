@@ -20,7 +20,7 @@
 #include <Jolt/Physics/Collision/ActiveEdges.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/SortReverseAndStore.h>
-#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVerticesVsTriangles.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
@@ -785,18 +785,9 @@ void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Ar
 {
 	JPH_PROFILE_FUNCTION();
 
-	struct Visitor
+	struct Visitor : public CollideSoftBodyVerticesVsTriangles
 	{
-						Visitor(Mat44Arg inTransform) :
-			mInvTransform(inTransform.Inversed())
-		{
-		}
-
-		JPH_INLINE void	SetVertex(const SoftBodyVertex &inVertex)
-		{
-			mLocalPosition = mInvTransform * inVertex.mPosition;
-			mClosestDistanceSq = FLT_MAX;
-		}
+		using CollideSoftBodyVerticesVsTriangles::CollideSoftBodyVerticesVsTriangles;
 
 		JPH_INLINE bool	ShouldAbort() const
 		{
@@ -819,78 +810,20 @@ void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Ar
 
 		JPH_INLINE void	VisitTriangle(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8 inActiveEdges, SubShapeID inSubShapeID2)
 		{
-			// Get the closest point from the vertex to the triangle
-			uint32 set;
-			Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(inV0 - mLocalPosition, inV1 - mLocalPosition, inV2 - mLocalPosition, set);
-			float dist_sq = closest_point.LengthSq();
-			if (dist_sq < mClosestDistanceSq)
-			{
-				mV0 = inV0;
-				mV1 = inV1;
-				mV2 = inV2;
-				mClosestPoint = closest_point;
-				mClosestDistanceSq = dist_sq;
-				mSet = set;
-			}
+			ProcessTriangle(inV0, inV1, inV2);
 		}
 
-		Mat44			mInvTransform;
-		Vec3			mLocalPosition;
-		Vec3			mV0, mV1, mV2;
-		Vec3			mClosestPoint;
-		float			mClosestDistanceSq;
-		uint32			mSet;
 		float			mDistanceStack[NodeCodec::StackSize];
 	};
 
-	Mat44 transform = inCenterOfMassTransform * Mat44::sScale(inScale);
-	Visitor visitor(transform);
-
-	float normal_sign = ScaleHelpers::IsInsideOut(inScale)? -1.0f : 1.0f;
+	Visitor visitor(inCenterOfMassTransform, inScale);
 
 	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
 		if (v->mInvMass > 0.0f)
 		{
-			visitor.SetVertex(*v);
+			visitor.StartVertex(*v);
 			WalkTreePerTriangle(SubShapeIDCreator(), visitor);
-			if (visitor.mClosestDistanceSq < FLT_MAX)
-			{
-				// Convert triangle to world space
-				Vec3 v0 = transform * visitor.mV0;
-				Vec3 v1 = transform * visitor.mV1;
-				Vec3 v2 = transform * visitor.mV2;
-				Vec3 triangle_normal = normal_sign * (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sAxisY());
-
-				if (visitor.mSet == 0b111)
-				{
-					// Closest is interior to the triangle, use plane as collision plane but don't allow more than 0.5 m penetration
-					// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
-					float penetration = min(triangle_normal.Dot(v0 - v->mPosition), 0.5f);
-					if (penetration > v->mLargestPenetration)
-					{
-						v->mLargestPenetration = penetration;
-						v->mCollisionPlane = Plane::sFromPointAndNormal(v0, triangle_normal);
-						v->mCollidingShapeIndex = inCollidingShapeIndex;
-					}
-				}
-				else
-				{
-					// Closest point is on an edge or vertex, use closest point as collision plane
-					Vec3 closest_point = transform * (visitor.mLocalPosition + visitor.mClosestPoint);
-					Vec3 normal = v->mPosition - closest_point;
-					if (normal.Dot(triangle_normal) > 0.0f) // Ignore back facing edges
-					{
-						float normal_length = normal.Length();
-						float penetration = -normal_length;
-						if (penetration > v->mLargestPenetration)
-						{
-							v->mLargestPenetration = penetration;
-							v->mCollisionPlane = Plane::sFromPointAndNormal(closest_point, normal_length > 0.0f? normal / normal_length : triangle_normal);
-							v->mCollidingShapeIndex = inCollidingShapeIndex;
-						}
-					}
-				}
-			}
+			visitor.FinishVertex(*v, inCollidingShapeIndex);
 		}
 }
 
