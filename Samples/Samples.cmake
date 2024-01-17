@@ -181,6 +181,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyStressTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyUpdatePositionTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyUpdatePositionTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyVertexRadiusTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyVertexRadiusTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyVsFastMovingTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyVsFastMovingTest.h
 	${SAMPLES_ROOT}/Tests/Test.cpp
