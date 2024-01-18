@@ -80,6 +80,7 @@ So why create yet another physics engine? First of all, this has been a personal
 
 * Windows (VS2019, VS2022) x86/x64/ARM32/ARM64 (Desktop/UWP)
 * Linux (tested on Ubuntu 22.04) x64/ARM64
+* FreeBSD
 * Android (tested on Android 14) x86/x64/ARM32/ARM64
 * Platform Blue (a popular game console) x64
 * macOS (tested on Monterey) x64/ARM64
