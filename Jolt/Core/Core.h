@@ -352,9 +352,6 @@
 	#error Unknown platform
 #endif
 
-// Crashes the application
-#define JPH_CRASH				do { int *ptr = nullptr; *ptr = 0; } while (false)
-
 // Begin the JPH namespace
 #define JPH_NAMESPACE_BEGIN																		\
 	JPH_SUPPRESS_WARNING_PUSH																	\

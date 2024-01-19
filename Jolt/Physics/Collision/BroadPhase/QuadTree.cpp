@@ -190,7 +190,7 @@ uint32 QuadTree::AllocateNode(bool inIsChanged)
 	if (index == Allocator::cInvalidObjectIndex)
 	{
 		Trace("QuadTree: Out of nodes!");
-		JPH_CRASH;
+		std::abort();
 	}
 	return index;
 }
