@@ -204,6 +204,8 @@ Body *BodyManager::AllocateBody(const BodyCreationSettings &inBodyCreationSettin
 		body->SetUseManifoldReduction(true);
 	if (inBodyCreationSettings.mApplyGyroscopicForce)
 		body->SetApplyGyroscopicForce(true);
+	if (inBodyCreationSettings.mEnhancedInternalEdgeRemoval)
+		body->SetEnhancedInternalEdgeRemoval(true);
 	SetBodyObjectLayerInternal(*body, inBodyCreationSettings.mObjectLayer);
 	body->mObjectLayer = inBodyCreationSettings.mObjectLayer;
 	body->mCollisionGroup = inBodyCreationSettings.mCollisionGroup;

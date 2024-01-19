@@ -19,6 +19,7 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Collision/InternalEdgeRemovingCollector.h>
 #include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Jolt/Physics/DeterminismLog.h>
@@ -1123,8 +1124,18 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			ReductionCollideShapeCollector collector(this, body1, body2);
 
 			// Perform collision detection between the two shapes
-			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			if (body1->GetEnhancedInternalEdgeRemoval() || body2->GetEnhancedInternalEdgeRemoval())
+			{
+				InternalEdgeRemovingCollector edge_removal_collector(collector);
+				SubShapeIDCreator part1, part2;
+				CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, edge_removal_collector);
+				edge_removal_collector.Flush();
+			}
+			else
+			{
+				SubShapeIDCreator part1, part2;
+				CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			}
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1223,8 +1234,18 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 			NonReductionCollideShapeCollector collector(this, ioContactAllocator, body1, body2, body_pair_handle);
 
 			// Perform collision detection between the two shapes
-			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			if (body1->GetEnhancedInternalEdgeRemoval() || body2->GetEnhancedInternalEdgeRemoval())
+			{
+				InternalEdgeRemovingCollector edge_removal_collector(collector);
+				SubShapeIDCreator part1, part2;
+				CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, edge_removal_collector);
+				edge_removal_collector.Flush();
+			}
+			else
+			{
+				SubShapeIDCreator part1, part2;
+				CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			}
 
 			constraint_created = collector.mConstraintCreated;
 		}

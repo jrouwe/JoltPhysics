@@ -1,0 +1,64 @@
+// Jolt Physics Library (https://github.com/jrouwe/JoltPhysics)
+// SPDX-FileCopyrightText: 2024 Jorrit Rouwe
+// SPDX-License-Identifier: MIT
+
+#include <TestFramework.h>
+
+#include <Tests/General/EnhancedActiveEdgeTest.h>
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Geometry/Triangle.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Layers.h>
+
+JPH_IMPLEMENT_RTTI_VIRTUAL(EnhancedActiveEdgeTest)
+{
+	JPH_ADD_BASE_CLASS(EnhancedActiveEdgeTest, Test)
+}
+
+void EnhancedActiveEdgeTest::Initialize()
+{
+	// Create a dense grid of triangles so that we have a large chance of hitting an internal edge
+	constexpr float size = 2.0f;
+	TriangleList triangles;
+	for (int x = -10; x < 10; ++x)
+		for (int z = -10; z < 10; ++z)
+		{
+			float x1 = size * x;
+			float z1 = size * z;
+			float x2 = x1 + size;
+			float z2 = z1 + size;
+
+			Float3 v1 = Float3(x1, 0, z1);
+			Float3 v2 = Float3(x2, 0, z1);
+			Float3 v3 = Float3(x1, 0, z2);
+			Float3 v4 = Float3(x2, 0, z2);
+
+			triangles.push_back(Triangle(v1, v3, v4));
+			triangles.push_back(Triangle(v1, v4, v2));
+		}
+	MeshShapeSettings mesh_settings(triangles);
+	mesh_settings.mActiveEdgeCosThresholdAngle = FLT_MAX; // Turn off regular active edge determination so that we only rely on the mEnhancedInternalEdgeRemoval flag
+	mesh_settings.SetEmbedded();
+	mBodyInterface->CreateAndAddBody(BodyCreationSettings(&mesh_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+	// Embed the shapes in the mesh to increase the effect of the internal edges
+	float z = -8.5f;
+	for (int enhanced_removal = 0; enhanced_removal < 2; ++enhanced_removal)
+	{
+		// A box
+		BodyCreationSettings box_bcs(new BoxShape(Vec3::sReplicate(2.0f)), RVec3(0, 1, z), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		box_bcs.mLinearVelocity = Vec3(20, 0, 0);
+		box_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
+		mBodyInterface->CreateAndAddBody(box_bcs, EActivation::Activate);
+		z += 5.0f;
+
+		// A sphere
+		BodyCreationSettings sphere_bcs(new SphereShape(2.0f), RVec3(0, 1, z), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		sphere_bcs.mLinearVelocity = Vec3(20, 0, 0);
+		sphere_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
+		mBodyInterface->CreateAndAddBody(sphere_bcs, EActivation::Activate);
+		z += 7.0f;
+	}
+}

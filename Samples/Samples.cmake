@@ -81,6 +81,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/AllowedDOFsTest.h
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.cpp
 	${SAMPLES_ROOT}/Tests/General/BigVsSmallTest.h
+	${SAMPLES_ROOT}/Tests/General/EnhancedActiveEdgeTest.cpp
+	${SAMPLES_ROOT}/Tests/General/EnhancedActiveEdgeTest.h
 	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ShapeFilterTest.h
 	${SAMPLES_ROOT}/Tests/General/CenterOfMassTest.cpp
