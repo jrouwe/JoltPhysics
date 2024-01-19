@@ -235,7 +235,6 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 			}
 
 			JPH_ASSERT(false);
-			JPH_CRASH;
 			return ~uint(0);
 		}
 

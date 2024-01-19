@@ -80,8 +80,8 @@ void RegisterTypesInternal(uint64 inVersionID)
 	// Version check
 	if (!VerifyJoltVersionIDInternal(inVersionID))
 	{
-		JPH_ASSERT(false, "Version mismatch, make sure you compile the client code with the same Jolt version and compiler definitions!");
-		JPH_CRASH;
+		Trace("Version mismatch, make sure you compile the client code with the same Jolt version and compiler definitions!");
+		std::abort();
 	}
 
 #ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
