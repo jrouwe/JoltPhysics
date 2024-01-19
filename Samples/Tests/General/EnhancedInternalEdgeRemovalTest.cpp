@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#include <Tests/General/EnhancedActiveEdgeTest.h>
+#include <Tests/General/EnhancedInternalEdgeRemovalTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
@@ -12,12 +12,12 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
 
-JPH_IMPLEMENT_RTTI_VIRTUAL(EnhancedActiveEdgeTest)
+JPH_IMPLEMENT_RTTI_VIRTUAL(EnhancedInternalEdgeRemovalTest)
 {
-	JPH_ADD_BASE_CLASS(EnhancedActiveEdgeTest, Test)
+	JPH_ADD_BASE_CLASS(EnhancedInternalEdgeRemovalTest, Test)
 }
 
-void EnhancedActiveEdgeTest::Initialize()
+void EnhancedInternalEdgeRemovalTest::Initialize()
 {
 	// Create a dense grid of triangles so that we have a large chance of hitting an internal edge
 	constexpr float size = 2.0f;
