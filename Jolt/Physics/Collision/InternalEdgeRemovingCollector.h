@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <Jolt/Physics/Collision/CollideShape.h>
-#include <Jolt/Physics/Collision/CollisionCollector.h>
+#include <Jolt/Core/QuickSort.h>
+#include <Jolt/Physics/Collision/CollisionDispatch.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -107,6 +107,14 @@ public:
 			// Void the features of this face
 			VoidFeatures(r);
 		}
+	}
+
+	/// Version of CollisionDispatch::sCollideShapeVsShape that removes internal edges
+	static void				sCollideShapeVsShape(const Shape *inShape1, const Shape *inShape2, Vec3Arg inScale1, Vec3Arg inScale2, Mat44Arg inCenterOfMassTransform1, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, const CollideShapeSettings &inCollideShapeSettings, CollideShapeCollector &ioCollector, const ShapeFilter &inShapeFilter = { })
+	{
+		InternalEdgeRemovingCollector wrapper(ioCollector);
+		CollisionDispatch::sCollideShapeVsShape(inShape1, inShape2, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, wrapper, inShapeFilter);
+		wrapper.Flush();
 	}
 
 private:
