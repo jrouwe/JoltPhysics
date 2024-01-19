@@ -19,8 +19,8 @@ class InternalEdgeRemovingCollector : public CollideShapeCollector
 	/// Check if a vertex is voided
 	inline bool				IsVoided(Vec3 inV) const
 	{
-		for (Vec3 vf : mVoidedFeatures)
-			if (inV.IsClose(vf, 1.0e-8f))
+		for (const Float3 &vf : mVoidedFeatures)
+			if (inV.IsClose(Vec3::sLoadFloat3Unsafe(vf), 1.0e-8f))
 				return true;
 		return false;
 	}
@@ -28,12 +28,14 @@ class InternalEdgeRemovingCollector : public CollideShapeCollector
 	/// Add all vertices of a face to the voided features
 	inline void				VoidFeatures(const CollideShapeResult &inResult)
 	{
-		for (Vec3 v : inResult.mShape2Face)
+		for (const Vec3 &v : inResult.mShape2Face)
 			if (!IsVoided(v))
 			{
 				if (mVoidedFeatures.size() == cMaxVoidedFeatures)
 					break;
-				mVoidedFeatures.push_back(v);
+				Float3 f;
+				v.StoreFloat3(&f);
+				mVoidedFeatures.push_back(f);
 			}
 	}
 
@@ -119,8 +121,8 @@ public:
 
 private:
 	CollideShapeCollector &	mChainedCollector;
+	StaticArray<Float3, cMaxVoidedFeatures> mVoidedFeatures; // Read with Vec3::sLoadFloat3Unsafe so must not be the last member
 	StaticArray<CollideShapeResult, cMaxDelayedResults> mDelayedResults;
-	StaticArray<Vec3, cMaxVoidedFeatures> mVoidedFeatures;
 };
 
 JPH_NAMESPACE_END
