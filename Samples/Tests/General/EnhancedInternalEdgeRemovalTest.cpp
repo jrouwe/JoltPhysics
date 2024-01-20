@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Geometry/Triangle.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Layers.h>
@@ -17,8 +18,44 @@ JPH_IMPLEMENT_RTTI_VIRTUAL(EnhancedInternalEdgeRemovalTest)
 	JPH_ADD_BASE_CLASS(EnhancedInternalEdgeRemovalTest, Test)
 }
 
+void EnhancedInternalEdgeRemovalTest::CreateSlidingObjects(RVec3Arg inStart)
+{
+	// Slide the shapes over the grid of boxes
+	RVec3 pos = inStart - RVec3(0, 0, 8.5_r);
+	for (int enhanced_removal = 0; enhanced_removal < 2; ++enhanced_removal)
+	{
+		// A box
+		BodyCreationSettings box_bcs(new BoxShape(Vec3::sReplicate(2.0f)), pos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		box_bcs.mLinearVelocity = Vec3(20, 0, 0);
+		box_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
+		mBodyInterface->CreateAndAddBody(box_bcs, EActivation::Activate);
+		pos += RVec3(0, 0, 5.0_r);
+
+		// A sphere
+		BodyCreationSettings sphere_bcs(new SphereShape(2.0f), pos, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		sphere_bcs.mLinearVelocity = Vec3(20, 0, 0);
+		sphere_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
+		mBodyInterface->CreateAndAddBody(sphere_bcs, EActivation::Activate);
+		pos += RVec3(0, 0, 7.0_r);
+	}
+}
+
 void EnhancedInternalEdgeRemovalTest::Initialize()
 {
+	// This test creates a grid of connected boxes and tests that objects don't hit the internal edges
+	{
+		StaticCompoundShapeSettings compound_settings;
+		compound_settings.SetEmbedded();
+		constexpr float size = 2.0f;
+		RefConst<Shape> box_shape = new BoxShape(Vec3::sReplicate(0.5f * size));
+		for (int x = -10; x < 10; ++x)
+			for (int z = -10; z < 10; ++z)
+				compound_settings.AddShape(Vec3(size * x, 0, size * z), Quat::sIdentity(), box_shape);
+		mBodyInterface->CreateAndAddBody(BodyCreationSettings(&compound_settings, RVec3(0, -1, -40), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
+
+		CreateSlidingObjects(RVec3(-18, 1.9_r, -40.0_r));
+	}
+
 	// This tests if objects do not collide with internal edges
 	{
 		// Create a dense grid of triangles so that we have a large chance of hitting an internal edge
@@ -46,24 +83,7 @@ void EnhancedInternalEdgeRemovalTest::Initialize()
 		mesh_settings.SetEmbedded();
 		mBodyInterface->CreateAndAddBody(BodyCreationSettings(&mesh_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
-		// Embed the shapes in the mesh to increase the effect of the internal edges
-		float z = -8.5f;
-		for (int enhanced_removal = 0; enhanced_removal < 2; ++enhanced_removal)
-		{
-			// A box
-			BodyCreationSettings box_bcs(new BoxShape(Vec3::sReplicate(2.0f)), RVec3(0, 1, z), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-			box_bcs.mLinearVelocity = Vec3(20, 0, 0);
-			box_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
-			mBodyInterface->CreateAndAddBody(box_bcs, EActivation::Activate);
-			z += 5.0f;
-
-			// A sphere
-			BodyCreationSettings sphere_bcs(new SphereShape(2.0f), RVec3(0, 1, z), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
-			sphere_bcs.mLinearVelocity = Vec3(20, 0, 0);
-			sphere_bcs.mEnhancedInternalEdgeRemoval = enhanced_removal == 1;
-			mBodyInterface->CreateAndAddBody(sphere_bcs, EActivation::Activate);
-			z += 7.0f;
-		}
+		CreateSlidingObjects(RVec3(-18, 1.9_r, 0));
 	}
 
 	// This test tests that we only ignore edges that are shared with voided triangles

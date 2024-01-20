@@ -14,4 +14,7 @@ public:
 
 	// See: Test
 	virtual void	Initialize() override;
+
+private:
+	void			CreateSlidingObjects(RVec3Arg inStart);
 };
