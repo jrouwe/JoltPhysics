@@ -111,6 +111,9 @@ public:
 	/// Check if enhanced internal edge removal is turned on
 	inline bool				GetEnhancedInternalEdgeRemoval() const							{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::EnhancedInternalEdgeRemoval)) != 0; }
 
+	/// Checks if the combination of this body and inBody2 should use enhanced internal edge removal
+	inline bool				GetEnhancedInternalEdgeRemovalWithBody(const Body &inBody2) const { return ((mFlags.load(memory_order_relaxed) | inBody2.mFlags.load(memory_order_relaxed)) & uint8(EFlags::EnhancedInternalEdgeRemoval)) != 0; }
+
 	/// Get the bodies motion type.
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
 
