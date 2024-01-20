@@ -19,8 +19,8 @@ JPH_NAMESPACE_BEGIN
 // Based on: Contact generation for meshes - Pierre Terdiman (https://www.codercorner.com/MeshContacts.pdf)
 class InternalEdgeRemovingCollector : public CollideShapeCollector
 {
-	inline static constexpr uint cMaxDelayedResults = 16;
-	inline static constexpr uint cMaxVoidedFeatures = 128;
+	static constexpr uint cMaxDelayedResults = 16;
+	static constexpr uint cMaxVoidedFeatures = 128;
 
 	/// Check if a vertex is voided
 	inline bool				IsVoided(Vec3 inV) const
@@ -65,7 +65,7 @@ class InternalEdgeRemovingCollector : public CollideShapeCollector
 
 public:
 	/// Constructor, configures a collector to be called with all the results that do not hit internal edges
-							InternalEdgeRemovingCollector(CollideShapeCollector &inChainedCollector) :
+	explicit				InternalEdgeRemovingCollector(CollideShapeCollector &inChainedCollector) :
 		mChainedCollector(inChainedCollector)
 	{
 	}
