@@ -19,6 +19,7 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Collision/InternalEdgeRemovingCollector.h>
 #include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Jolt/Physics/DeterminismLog.h>
@@ -1124,7 +1125,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			auto f = body1->GetEnhancedInternalEdgeRemovalWithBody(*body2)? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
+			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, { });
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1224,7 +1226,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			auto f = body1->GetEnhancedInternalEdgeRemovalWithBody(*body2)? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
+			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, { });
 
 			constraint_created = collector.mConstraintCreated;
 		}

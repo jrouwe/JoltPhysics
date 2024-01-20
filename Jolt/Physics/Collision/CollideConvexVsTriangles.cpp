@@ -136,11 +136,10 @@ void CollideConvexVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 		mShape1->GetSupportingFace(SubShapeID(), -penetration_axis, mScale1, mTransform1, result.mShape1Face);
 
 		// Get face of the triangle
-		triangle.GetSupportingFace(penetration_axis, result.mShape2Face);
-
-		// Convert to world space
-		for (Vec3 &p : result.mShape2Face)
-			p = mTransform1 * p;
+		result.mShape2Face.resize(3);
+		result.mShape2Face[0] = mTransform1 * v0;
+		result.mShape2Face[1] = mTransform1 * v1;
+		result.mShape2Face[2] = mTransform1 * v2;
 	}
 
 	// Notify the collector

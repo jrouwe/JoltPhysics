@@ -92,6 +92,7 @@ void ActiveEdgesTest::Initialize()
 
 	// Mesh
 	BodyCreationSettings mesh_settings(&mesh_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	// Instead of settting mActiveEdgeCosThresholdAngle you can also set: mesh_settings.mEnhancedInternalEdgeRemoval = true
 	mesh_settings.mFriction = 0.0f;
 	Body &mesh = *mBodyInterface->CreateBody(mesh_settings);
 	mBodyInterface->AddBody(mesh.GetID(), EActivation::DontActivate);
