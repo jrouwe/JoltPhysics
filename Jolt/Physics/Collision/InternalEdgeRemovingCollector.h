@@ -58,7 +58,7 @@ class InternalEdgeRemovingCollector : public CollideShapeCollector
 		VoidFeatures(inResult);
 
 	#ifdef JPH_INTERNAL_EDGE_REMOVING_COLLECTOR_DEBUG
-		DebugRenderer::sInstance->DrawWireTriangle(RVec3(inResult.mShape2Face[0]), RVec3(inResult.mShape2Face[1]), RVec3(inResult.mShape2Face[2]), Color::sGreen);
+		DebugRenderer::sInstance->DrawWirePolygon(RMat44::sIdentity(), inResult.mShape2Face, Color::sGreen);
 		DebugRenderer::sInstance->DrawArrow(RVec3(inResult.mContactPointOn2), RVec3(inResult.mContactPointOn2) + inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero()), Color::sGreen, 0.1f);
 	#endif // JPH_INTERNAL_EDGE_REMOVING_COLLECTOR_DEBUG
 	}
@@ -174,7 +174,7 @@ public:
 		#ifdef JPH_INTERNAL_EDGE_REMOVING_COLLECTOR_DEBUG
 			Color color = voided? Color::sRed : Color::sYellow;
 			DebugRenderer::sInstance->DrawText3D(RVec3(r.mContactPointOn2), StringFormat("%d: %g", i, r.mPenetrationDepth), color, 0.1f);
-			DebugRenderer::sInstance->DrawWireTriangle(RVec3(r.mShape2Face[0]), RVec3(r.mShape2Face[1]), RVec3(r.mShape2Face[2]), color);
+			DebugRenderer::sInstance->DrawWirePolygon(RMat44::sIdentity(), r.mShape2Face, color);
 			DebugRenderer::sInstance->DrawArrow(RVec3(r.mContactPointOn2), RVec3(r.mContactPointOn2) + r.mPenetrationAxis.NormalizedOr(Vec3::sZero()), color, 0.1f);
 			DebugRenderer::sInstance->DrawMarker(RVec3(r.mShape2Face[best_v1_idx]), IsVoided(r.mShape2Face[best_v1_idx])? Color::sRed : Color::sYellow, 0.1f);
 			DebugRenderer::sInstance->DrawMarker(RVec3(r.mShape2Face[best_v2_idx]), IsVoided(r.mShape2Face[best_v2_idx])? Color::sRed : Color::sYellow, 0.1f);
