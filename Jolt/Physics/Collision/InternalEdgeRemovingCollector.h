@@ -15,8 +15,8 @@
 
 JPH_NAMESPACE_BEGIN
 
-// Removes internal edges from collision results. Can be used to filter out 'ghost collisions'.
-// Based on: Contact generation for meshes - Pierre Terdiman (https://www.codercorner.com/MeshContacts.pdf)
+/// Removes internal edges from collision results. Can be used to filter out 'ghost collisions'.
+/// Based on: Contact generation for meshes - Pierre Terdiman (https://www.codercorner.com/MeshContacts.pdf)
 class InternalEdgeRemovingCollector : public CollideShapeCollector
 {
 	static constexpr uint cMaxDelayedResults = 16;

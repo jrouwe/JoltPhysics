@@ -411,6 +411,24 @@ Fast rotating long objects are also to be avoided, as the LinearCast motion qual
 
 ![Even with the LinearCast motion quality the blue object rotates through the green object in a single time step.](Images/LongAndThin.jpg)
 
+## Ghost Collisions {#ghost-collisions}
+
+A ghost collision can occur when a body slides over another body and hits an internal edge of that body. The most common case is where a body hits an edge of a triangle in a mesh shape but it can also happen on 2 box shapes as shown below.
+
+![A blue box sliding over 2 green boxes. Because the blue box can sink into the green box a little bit, it can hit the edge between the two boxes. This will cause the box to stop or jump up.](Images/GhostCollision.jpg)
+
+There are a couple of ways to avoid ghost collisions in Jolt. MeshShape and HeightFieldShape keep track of active edges during construction.
+
+![An inactive edge (concave) and an active edge (convex, angle > threshold angle).](Images/ActiveEdge.jpg)
+
+Whenever a body hits an inactive edge, the contact normal is the face normal. When it hits an active edge, it can be somewhere in between the connecting face normals so the movement of the body is impeded in the scenario below.
+
+![Contact normal (red) of hitting an active vs an inactive edge.](Images/ActiveVsInactiveContactNormal.jpg)
+
+By tweaking MeshShapeSettings::mActiveEdgeCosThresholdAngle or HeightFieldShapeSettings::mActiveEdgeCosThresholdAngle you can determine the angle at which an edge is considered an active edge. By default this is 5 degrees, making this bigger reduces the amount of ghost collisions but can create simulation artifacts if you hit the edge straight on.
+
+To further reduce ghost collisions, you can turn on BodyCreationSettings::mEnhancedInternalEdgeRemoval. When enabling this setting, additional checks will be made at run-time to detect if an edge is active or inactive based on all of the contact points between the two bodies. Beware that this algorithm only considers 2 bodies at a time, so if the two green boxes above belong to two different bodies, the ghost collision can still occur. Use a StaticCompoundShape to combine the boxes in a single body to allow the system to eliminate ghost collisions between the blue and the two green boxes. You can also use this functionality for your custom collision tests by making use of InternalEdgeRemovingCollector. 
+
 # Character Controllers {#character-controllers}
 
 The [Character](@ref Character) and [CharacterVirtual](@ref CharacterVirtual) classes can be used to create a character controller. These are usually used to represent the player as a simple capsule or tall box and perform collision detection while the character navigates through the world.
