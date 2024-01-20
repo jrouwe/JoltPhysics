@@ -48,7 +48,14 @@ class InternalEdgeRemovingCollector : public CollideShapeCollector
 	/// Call the chained collector
 	inline void				Chain(const CollideShapeResult &inResult)
 	{
+		// Make sure the chained collector has the same context as we do
+		mChainedCollector.SetContext(GetContext());
+
+		// Forward the hit
 		mChainedCollector.AddHit(inResult);
+
+		// If our chained collector updated its early out fraction, we need to follow
+		UpdateEarlyOutFraction(mChainedCollector.GetEarlyOutFraction());
 	}
 
 	/// Call the chained collector and void all features of inResult
@@ -68,6 +75,24 @@ public:
 	explicit				InternalEdgeRemovingCollector(CollideShapeCollector &inChainedCollector) :
 		mChainedCollector(inChainedCollector)
 	{
+	}
+
+	// See: CollideShapeCollector::Reset
+	virtual void			Reset() override
+	{
+		CollideShapeCollector::Reset();
+
+		mChainedCollector.Reset();
+
+		mVoidedFeatures.clear();
+		mDelayedResults.clear();
+	}
+
+	// See: CollideShapeCollector::OnBody
+	virtual void			OnBody(const Body &inBody) override
+	{
+		// Just forward the call to our chained collector
+		mChainedCollector.OnBody(inBody);
 	}
 
 	// See: CollideShapeCollector::AddHit
