@@ -379,8 +379,6 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 					context.mPhysicsSystem->JobBodySetIslandIndex();
 
 					JobHandle::sRemoveDependencies(step.mSolvePositionConstraints);
-					if (step.mStartNextStep.IsValid())
-						step.mStartNextStep.RemoveDependency();
 				}, 2); // depends on: finalize islands, finish building jobs
 
 			// Job to start the next collision step
@@ -423,7 +421,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 							// Kick the step listeners job first
 							JobHandle::sRemoveDependencies(next_step->mStepListeners);
 						}
-					}, 4); // depends on: update soft bodies, body set island index, contact removed callbacks, finish building the previous step
+					}, 3); // depends on: update soft bodies, contact removed callbacks, finish building the previous step
 			}
 
 			// This job will solve the velocity constraints
@@ -500,11 +498,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						// Kick the next step
 						if (step.mSoftBodyPrepare.IsValid())
 							step.mSoftBodyPrepare.RemoveDependency();
-					}, 3); // depends on: resolve ccd contacts, BodySetIslandIndex,  finish building jobs.
+					}, 3); // depends on: resolve ccd contacts, body set island index, finish building jobs.
 
-			// Unblock previous job.
+			// Unblock previous jobs.
 			step.mResolveCCDContacts.RemoveDependency();
-
 			step.mBodySetIslandIndex.RemoveDependency();
 
 			// The soft body prepare job will create other jobs if needed
