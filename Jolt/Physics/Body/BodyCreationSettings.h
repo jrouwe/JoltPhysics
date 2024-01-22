@@ -98,6 +98,7 @@ public:
 	bool					mUseManifoldReduction = true;									///< If this body should use manifold reduction (see description at Body::SetUseManifoldReduction)
 	bool					mApplyGyroscopicForce = false;									///< Set to indicate that the gyroscopic force should be applied to this body (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
 	EMotionQuality			mMotionQuality = EMotionQuality::Discrete;						///< Motion quality, or how well it detects collisions when it has a high velocity
+	bool					mEnhancedInternalEdgeRemoval = false;							///< Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). This is more expensive but makes bodies move smoother over a mesh with convex edges.
 	bool					mAllowSleeping = true;											///< If this body can go to sleep or not
 	float					mFriction = 0.2f;												///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
 	float					mRestitution = 0.0f;											///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response). Note that bodies can have negative restitution but the combined restitution (see PhysicsSystem::SetCombineRestitution) should never go below zero.

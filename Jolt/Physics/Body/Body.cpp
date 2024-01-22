@@ -338,6 +338,7 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mUseManifoldReduction = GetUseManifoldReduction();
 	result.mApplyGyroscopicForce = GetApplyGyroscopicForce();
 	result.mMotionQuality = mMotionProperties != nullptr? mMotionProperties->GetMotionQuality() : EMotionQuality::Discrete;
+	result.mEnhancedInternalEdgeRemoval = GetEnhancedInternalEdgeRemoval();
 	result.mAllowSleeping = mMotionProperties != nullptr? GetAllowSleeping() : true;
 	result.mFriction = GetFriction();
 	result.mRestitution = GetRestitution();

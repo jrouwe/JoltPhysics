@@ -105,6 +105,15 @@ public:
 	/// Check if the gyroscopic force is being applied for this body
 	inline bool				GetApplyGyroscopicForce() const									{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::ApplyGyroscopicForce)) != 0; }
 
+	/// Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). This is more expensive but makes bodies move smoother over a mesh with convex edges.
+	inline void				SetEnhancedInternalEdgeRemoval(bool inApply)					{ JPH_ASSERT(IsRigidBody()); if (inApply) mFlags.fetch_or(uint8(EFlags::EnhancedInternalEdgeRemoval), memory_order_relaxed); else mFlags.fetch_and(uint8(~uint8(EFlags::EnhancedInternalEdgeRemoval)), memory_order_relaxed); }
+
+	/// Check if enhanced internal edge removal is turned on
+	inline bool				GetEnhancedInternalEdgeRemoval() const							{ return (mFlags.load(memory_order_relaxed) & uint8(EFlags::EnhancedInternalEdgeRemoval)) != 0; }
+
+	/// Checks if the combination of this body and inBody2 should use enhanced internal edge removal
+	inline bool				GetEnhancedInternalEdgeRemovalWithBody(const Body &inBody2) const { return ((mFlags.load(memory_order_relaxed) | inBody2.mFlags.load(memory_order_relaxed)) & uint8(EFlags::EnhancedInternalEdgeRemoval)) != 0; }
+
 	/// Get the bodies motion type.
 	inline EMotionType		GetMotionType() const											{ return mMotionType; }
 
@@ -337,6 +346,7 @@ private:
 		InvalidateContactCache			= 1 << 3,											///< Set this bit to indicate that all collision caches for this body are invalid, will be reset the next simulation step.
 		UseManifoldReduction			= 1 << 4,											///< Set this bit to indicate that this body can use manifold reduction (if PhysicsSettings::mUseManifoldReduction is true)
 		ApplyGyroscopicForce			= 1 << 5,											///< Set this bit to indicate that the gyroscopic force should be applied to this body (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
+		EnhancedInternalEdgeRemoval		= 1 << 6,											///< Set this bit to indicate that enhanced internal edge removal should be used for this body (see BodyCreationSettings::mEnhancedInternalEdgeRemoval)
 	};
 
 	// 16 byte aligned

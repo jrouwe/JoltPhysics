@@ -238,6 +238,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilter.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilterTable.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilterTable.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/InternalEdgeRemovingCollector.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ManifoldBetweenTwoFaces.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ManifoldBetweenTwoFaces.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseQuery.cpp
