@@ -377,9 +377,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 				{
 					context.mPhysicsSystem->JobBodySetIslandIndex();
 
+					JobHandle::sRemoveDependencies(step.mSolvePositionConstraints);
 					if (step.mStartNextStep.IsValid())
 						step.mStartNextStep.RemoveDependency();
-				}, 1); // depends on: finalize islands
+				}, 2); // depends on: finalize islands, finish building jobs
 
 			// Job to start the next collision step
 			if (!is_last_step)
@@ -498,10 +499,12 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						// Kick the next step
 						if (step.mSoftBodyPrepare.IsValid())
 							step.mSoftBodyPrepare.RemoveDependency();
-					}, 2); // depends on: resolve ccd contacts, finish building jobs.
+					}, 3); // depends on: resolve ccd contacts, BodySetIslandIndex,  finish building jobs.
 
 			// Unblock previous job.
 			step.mResolveCCDContacts.RemoveDependency();
+
+			step.mBodySetIslandIndex.RemoveDependency();
 
 			// The soft body prepare job will create other jobs if needed
 			step.mSoftBodyPrepare = inJobSystem->CreateJob("SoftBodyPrepare", cColorSoftBodyPrepare, [&context, &step]()
