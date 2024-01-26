@@ -780,6 +780,11 @@ void WheeledVehicleController::Draw(DebugRenderer *inRenderer) const
 		inRenderer->DrawLine(wheel_pos, wheel_pos + wheel_right, Color::sBlue);
 		inRenderer->DrawLine(wheel_pos, wheel_pos + steering_axis, Color::sYellow);
 
+		// Draw wheel
+		RMat44 wheel_transform(Vec4(wheel_up, 0.0f), Vec4(wheel_right, 0.0f), Vec4(wheel_forward, 0.0f), wheel_pos);
+		wheel_transform.SetRotation(wheel_transform.GetRotation() * Mat44::sRotationY(-w->GetRotationAngle()));
+		inRenderer->DrawCylinder(wheel_transform, settings->mWidth * 0.5f, settings->mRadius, w->GetSuspensionLength() <= settings->mSuspensionMinLength? Color::sRed : Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+
 		if (w->HasContact())
 		{
 			// Draw contact
