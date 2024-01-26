@@ -183,8 +183,8 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 
 				// Check if this is an interior point
 				float u, v, w;
-				ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w);
-				if (u >= 0.0f && v >= 0.0f && w >= 0.0f)
+				if (ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w)
+					&& u >= 0.0f && v >= 0.0f && w >= 0.0f)
 				{
 					// Interior point, we found the collision point. We don't need to check active edges.
 					AddHit(back_facing, inSubShapeID2, plane_intersection, p, p, back_facing? triangle_normal : -triangle_normal);
