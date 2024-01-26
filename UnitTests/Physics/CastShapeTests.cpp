@@ -351,8 +351,11 @@ TEST_SUITE("CastShapeTests")
 	TEST_CASE("TestCastSphereVsDegenerateTriangle")
 	{
 		AllHitCollisionCollector<CastShapeCollector> collector;
-		ShapeCast cast(new SphereShape(0.2f), Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(14.8314590f, 8.19055080f, -4.30825043f)), Vec3(-0.0988006592f, 5.96046448e-08f, 0.000732421875f));
-		CastSphereVsTriangles caster(cast, { }, Vec3::sReplicate(1.0f), Mat44::sIdentity(), { }, collector);
+		SphereShape sphere(0.2f);
+		sphere.SetEmbedded();
+		ShapeCast cast(&sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(14.8314590f, 8.19055080f, -4.30825043f)), Vec3(-0.0988006592f, 5.96046448e-08f, 0.000732421875f));
+		ShapeCastSettings settings;
+		CastSphereVsTriangles caster(cast, settings, Vec3::sReplicate(1.0f), Mat44::sIdentity(), { }, collector);
 		caster.Cast(Vec3(14.5536213f, 10.5973721f, -0.00600051880f), Vec3(14.5536213f, 10.5969315f, -3.18638134f), Vec3(14.5536213f, 10.5969315f, -5.18637228f), 0b111, SubShapeID());
 		CHECK(!collector.HadHit());
 	}
