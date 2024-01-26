@@ -14,7 +14,8 @@ namespace ClosestPoint
 {
 	/// Compute barycentric coordinates of closest point to origin for infinite line defined by (inA, inB)
 	/// Point can then be computed as inA * outU + inB * outV
-	inline void GetBaryCentricCoordinates(Vec3Arg inA, Vec3Arg inB, float &outU, float &outV)
+	/// Returns false if the points inA, inB do not form a line (are at the same point)
+	inline bool GetBaryCentricCoordinates(Vec3Arg inA, Vec3Arg inB, float &outU, float &outV)
 	{
 		Vec3 ab = inB - inA;
 		float denominator = ab.LengthSq();
@@ -33,17 +34,20 @@ namespace ClosestPoint
 				outU = 0.0f;
 				outV = 1.0f;
 			}
+			return false;
 		}
 		else
 		{
 			outV = -inA.Dot(ab) / denominator;
 			outU = 1.0f - outV;
 		}
+		return true;
 	}
 
 	/// Compute barycentric coordinates of closest point to origin for plane defined by (inA, inB, inC)
 	/// Point can then be computed as inA * outU + inB * outV + inC * outW
-	inline void GetBaryCentricCoordinates(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, float &outU, float &outV, float &outW)
+	/// Returns false if the points inA, inB, inC do not form a plane (are on the same line or at the same point)
+	inline bool GetBaryCentricCoordinates(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, float &outU, float &outV, float &outW)
 	{
 		// Taken from: Real-Time Collision Detection - Christer Ericson (Section: Barycentric Coordinates)
 		// With p = 0
@@ -77,6 +81,7 @@ namespace ClosestPoint
 					GetBaryCentricCoordinates(inA, inC, outU, outW);
 					outV = 0.0f;
 				}
+				return false;
 			}
 			else
 			{
@@ -106,6 +111,7 @@ namespace ClosestPoint
 					GetBaryCentricCoordinates(inB, inC, outV, outW);
 					outU = 0.0f;
 				}
+				return false;
 			}
 			else
 			{
@@ -116,6 +122,7 @@ namespace ClosestPoint
 				outW = 1.0f - outU - outV;
 			}
 		}
+		return true;
 	}
 
 	/// Get the closest point to the origin of line (inA, inB)
