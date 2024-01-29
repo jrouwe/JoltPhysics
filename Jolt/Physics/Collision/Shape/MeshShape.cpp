@@ -90,6 +90,9 @@ MeshShapeSettings::MeshShapeSettings(VertexList inVertices, IndexedTriangleList 
 
 void MeshShapeSettings::Sanitize()
 {
+	// Calculate bounds for the TriangleCodec::sIsDegenerate check
+	AABox bounds = TriangleCodec::sCalculateBoundsForIsDegenerate(mIndexedTriangles, mTriangleVertices);
+
 	// Remove degenerate and duplicate triangles
 	UnorderedSet<IndexedTriangle> triangles;
 	triangles.reserve(mIndexedTriangles.size());
@@ -97,8 +100,9 @@ void MeshShapeSettings::Sanitize()
 	{
 		const IndexedTriangle &tri = mIndexedTriangles[t];
 
-		if (tri.IsDegenerate(mTriangleVertices)						// Degenerate triangle
-			|| !triangles.insert(tri.GetLowestIndexFirst()).second) // Duplicate triangle
+		if (tri.IsDegenerate(mTriangleVertices)								// Degenerate triangle
+			|| TriangleCodec::sIsDegenerate(tri, mTriangleVertices, bounds)	// Triangle is degenerate in the quantized space
+			|| !triangles.insert(tri.GetLowestIndexFirst()).second)			// Duplicate triangle
 		{
 			// The order of triangles doesn't matter (gets reordered while building the tree), so we can just swap the last triangle into this slot
 			mIndexedTriangles[t] = mIndexedTriangles.back();
@@ -124,11 +128,15 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 		return;
 	}
 
+	// Calculate bounds for the TriangleCodec::sIsDegenerate check
+	AABox bounds = TriangleCodec::sCalculateBoundsForIsDegenerate(inSettings.mIndexedTriangles, inSettings.mTriangleVertices);
+
 	// Check triangles
 	for (int t = (int)inSettings.mIndexedTriangles.size() - 1; t >= 0; --t)
 	{
 		const IndexedTriangle &triangle = inSettings.mIndexedTriangles[t];
-		if (triangle.IsDegenerate(inSettings.mTriangleVertices))
+		if (triangle.IsDegenerate(inSettings.mTriangleVertices)
+			|| TriangleCodec::sIsDegenerate(triangle, inSettings.mTriangleVertices, bounds))
 		{
 			outResult.SetError(StringFormat("Triangle %d is degenerate!", t));
 			return;
