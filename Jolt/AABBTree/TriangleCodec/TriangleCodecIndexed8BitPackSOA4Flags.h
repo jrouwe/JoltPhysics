@@ -103,7 +103,7 @@ public:
 		}
 
 		/// Test if a triangle will be degenerate after quantization
-		bool						IsDegenerate(const IndexedTriangle &inTriangle)
+		bool						IsDegenerate(const IndexedTriangle &inTriangle) const
 		{
 			// Quantize the triangle in the same way as EncodingContext::Finalize does
 			UVec4 quantized_vertex[3];
