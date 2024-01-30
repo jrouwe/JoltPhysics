@@ -34,6 +34,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed bug when a body with limited DOFs collides with static. If the resulting contact had an infinite effective mass, we would divide by zero and crash.
 * Fixed unit tests failing when compiling for 32-bit Linux. The compiler defaults to using x87 instructions in this case which does not work well with the collision detection pipeline. Now defaulting to the SSE instructions.
 * Fixed assert and improved interaction between a fast moving rigid body of quality LinearCast and a soft body.
+* When creating a MeshShape with triangles that have near identical positions it was possible that the degenerate check decided that a triangle was not degenerate while the triangle in fact would be degenerate after vertex quantization. The simulation would crash when colliding with this triangle.
 
 ## v4.0.2
 

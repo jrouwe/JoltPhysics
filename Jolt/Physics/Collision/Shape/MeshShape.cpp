@@ -93,11 +93,13 @@ void MeshShapeSettings::Sanitize()
 	// Remove degenerate and duplicate triangles
 	UnorderedSet<IndexedTriangle> triangles;
 	triangles.reserve(mIndexedTriangles.size());
+	TriangleCodec::ValidationContext validation_ctx(mIndexedTriangles, mTriangleVertices);
 	for (int t = (int)mIndexedTriangles.size() - 1; t >= 0; --t)
 	{
 		const IndexedTriangle &tri = mIndexedTriangles[t];
 
 		if (tri.IsDegenerate(mTriangleVertices)						// Degenerate triangle
+			|| validation_ctx.IsDegenerate(tri)						// Triangle is degenerate in the quantized space
 			|| !triangles.insert(tri.GetLowestIndexFirst()).second) // Duplicate triangle
 		{
 			// The order of triangles doesn't matter (gets reordered while building the tree), so we can just swap the last triangle into this slot
@@ -125,10 +127,12 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	}
 
 	// Check triangles
+	TriangleCodec::ValidationContext validation_ctx(inSettings.mIndexedTriangles, inSettings.mTriangleVertices);
 	for (int t = (int)inSettings.mIndexedTriangles.size() - 1; t >= 0; --t)
 	{
 		const IndexedTriangle &triangle = inSettings.mIndexedTriangles[t];
-		if (triangle.IsDegenerate(inSettings.mTriangleVertices))
+		if (triangle.IsDegenerate(inSettings.mTriangleVertices)
+			|| validation_ctx.IsDegenerate(triangle))
 		{
 			outResult.SetError(StringFormat("Triangle %d is degenerate!", t));
 			return;
