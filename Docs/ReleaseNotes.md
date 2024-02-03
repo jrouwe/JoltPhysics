@@ -21,6 +21,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * CharacterVirtual will now receive an OnContactAdded callback when it collides with a sensor (but will have no further interaction).
 * Added support for a vertex radius for soft bodies. This keeps the vertices a fixed distance away from the surface which can be used to avoid z-fighting while rendering the soft body.
 * Implemented enhanced internal edge removal algorithm. This should help reduce ghost collisions. See BodyCreationSettings::mEnhancedInternalEdgeRemoval.
+* Added ability to override the max tire impulse calculations for wheeled vehicles. See WheeledVehicleController::SetTireMaxImpulseCallback.
 
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
@@ -38,6 +39,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * A scaled compound shape with a center of mass of non zero would not apply the correct transform to its sub shapes when colliding with a soft body
 * A soft body without any edges would hang the solver
 * Fixed GCC 11.4 warning in JobSystemThreadPool.cpp: output may be truncated copying 15 bytes from a string of length 63
+* Longitudinal friction impulse for wheeled/tracked vehicles could become much higher than the calculated max because each iteration it was clamped to the max friction impulse which meant the total friction impulse could be PhysicsSettings::mNumVelocitySteps times too high.
+* Properly initializing current engine RPM to min RPM for wheeled/tracked vehicles. When min RPM was lower than the default min RPM the engine would not start at min RPM.
 
 ## v4.0.2
 
@@ -126,7 +129,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added functionality to estimate the collision impulse in the contact added callback
 * Added a JobSystemWithBarrier class that makes it easier to integrate with your own job system
 * Support for 32-bit object layers to allow easier integration with existing collision filtering systems
- 
+
 ## v2.0.1
 
 * Adds ARM 32-bit support to support vcpkg-tool

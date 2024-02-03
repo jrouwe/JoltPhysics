@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v4.0.2 and latest
 
+* 20240203 - Longitudinal friction impulse for wheeled/tracked vehicles could become much higher than the calculated max because each iteration it was clamped to the max friction impulse which meant the total friction impulse could be PhysicsSettings::mNumVelocitySteps times too high. In case this breaks your vehicle, the new max tire impulse callback can be used to restore the old behavior, see [the vehicle constraint test](https://github.com/jrouwe/JoltPhysics/blob/a456b244aa2ad2ce0a8124d27823377ed0b1c4b4/Samples/Tests/Vehicle/VehicleConstraintTest.cpp#L156-L164). (a456b244aa2ad2ce0a8124d27823377ed0b1c4b4)
 * 20240120 - *SBS* - Implemented enhanced internal edge removal algorithm. This breaks the binary serialization format for BodyCreationSettings. (94c1ad811b95c72f4d3bb6841c73c1c3461caa91)
 * 20240113 - VehicleConstraint::CombineFunction now calculates both longitudinal and lateral friction in 1 call so there can be dependencies between the two. (d6ed5b3e7b22904af555088b6ae4770f8fb0e00f)
 * 20240105 - CharacterVirtual will now receive an OnContactAdded callback when it collides with a sensor (but will have no further interaction). You may need to update the logic in your CharacterContactListener to ignore those contacts. (fb778c568d3ba14556559324671ffec172957f5c)
