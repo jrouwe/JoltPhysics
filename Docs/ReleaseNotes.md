@@ -37,6 +37,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * When creating a MeshShape with triangles that have near identical positions it was possible that the degenerate check decided that a triangle was not degenerate while the triangle in fact would be degenerate after vertex quantization. The simulation would crash when colliding with this triangle.
 * A scaled compound shape with a center of mass of non zero would not apply the correct transform to its sub shapes when colliding with a soft body
 * A soft body without any edges would hang the solver
+* Fixed GCC 11.4 warning in JobSystemThreadPool.cpp: output may be truncated copying 15 bytes from a string of length 63
 
 ## v4.0.2
 
