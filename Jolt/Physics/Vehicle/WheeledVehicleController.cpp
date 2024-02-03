@@ -176,6 +176,7 @@ WheeledVehicleController::WheeledVehicleController(const WheeledVehicleControlle
 	static_cast<VehicleEngineSettings &>(mEngine) = inSettings.mEngine;
 	JPH_ASSERT(inSettings.mEngine.mMinRPM >= 0.0f);
 	JPH_ASSERT(inSettings.mEngine.mMinRPM <= inSettings.mEngine.mMaxRPM);
+	mEngine.SetCurrentRPM(mEngine.mMinRPM);
 
 	// Copy transmission settings
 	static_cast<VehicleTransmissionSettings &>(mTransmission) = inSettings.mTransmission;
@@ -652,14 +653,21 @@ bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 {
 	bool impulse = false;
 
+	float *max_lateral_friction_impulse = (float *)JPH_STACK_ALLOC(mConstraint.GetWheels().size() * sizeof(float));
+
+	uint wheel_index = 0;
 	for (Wheel *w_base : mConstraint.GetWheels())
+	{
 		if (w_base->HasContact())
 		{
 			WheelWV *w = static_cast<WheelWV *>(w_base);
 			const WheelSettingsWV *settings = w->GetSettings();
 
 			// Calculate max impulse that we can apply on the ground
-			float max_longitudinal_friction_impulse = w->mCombinedLongitudinalFriction * w->GetSuspensionLambda();
+			float max_longitudinal_friction_impulse;
+			mTireMaxImpulseCallback(wheel_index,
+				max_longitudinal_friction_impulse, max_lateral_friction_impulse[wheel_index], w->GetSuspensionLambda(),
+				w->mCombinedLongitudinalFriction, w->mCombinedLateralFriction, w->mLongitudinalSlip, w->mLateralSlip, inDeltaTime);
 
 			// Calculate relative velocity between wheel contact point and floor in longitudinal direction
 			Vec3 relative_velocity = mConstraint.GetVehicleBody()->GetPointVelocity(w->GetContactPosition()) - w->GetContactPointVelocity();
@@ -694,26 +702,32 @@ bool WheeledVehicleController::SolveLongitudinalAndLateralConstraints(float inDe
 				float linear_impulse = (w->GetAngularVelocity() - desired_angular_velocity) * settings->mInertia / settings->mRadius;
 
 				// Limit the impulse by max tire friction
-				min_longitudinal_impulse = max_longitudinal_impulse = w->GetLongitudinalLambda() + Sign(linear_impulse) * min(abs(linear_impulse), max_longitudinal_friction_impulse);
+				float prev_lambda = w->GetLongitudinalLambda();
+				min_longitudinal_impulse = max_longitudinal_impulse = Clamp(prev_lambda + linear_impulse, -max_longitudinal_friction_impulse, max_longitudinal_friction_impulse);
 
 				// Longitudinal impulse
-				float prev_lambda = w->GetLongitudinalLambda();
 				impulse |= w->SolveLongitudinalConstraintPart(mConstraint, min_longitudinal_impulse, max_longitudinal_impulse);
 
 				// Update the angular velocity of the wheels according to the lambda that was applied
 				w->SetAngularVelocity(w->GetAngularVelocity() - (w->GetLongitudinalLambda() - prev_lambda) * settings->mRadius / settings->mInertia);
 			}
 		}
+		++wheel_index;
+	}
 
+	wheel_index = 0;
 	for (Wheel *w_base : mConstraint.GetWheels())
+	{
 		if (w_base->HasContact())
 		{
 			WheelWV *w = static_cast<WheelWV *>(w_base);
 
 			// Lateral friction
-			float max_lateral_friction_impulse = w->mCombinedLateralFriction * w->GetSuspensionLambda();
-			impulse |= w->SolveLateralConstraintPart(mConstraint, -max_lateral_friction_impulse, max_lateral_friction_impulse);
+			float max_lateral_impulse = max_lateral_friction_impulse[wheel_index];
+			impulse |= w->SolveLateralConstraintPart(mConstraint, -max_lateral_impulse, max_lateral_impulse);
 		}
+		++wheel_index;
+	}
 
 	return impulse;
 }

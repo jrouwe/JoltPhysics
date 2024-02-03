@@ -152,6 +152,17 @@ void VehicleConstraintTest::Initialize()
 	}
 
 	mVehicleConstraint = new VehicleConstraint(*mCarBody, vehicle);
+
+	// The vehicle settings were tweaked with a buggy implementation of the longitudinal tire impulses, this meant that PhysicsSettings::mNumVelocitySteps times more impulse
+	// could be applied than intended. To keep the behavior of the vehicle the same we increase the max longitudinal impulse by the same factor. In a future version the vehicle
+	// will be retweaked.
+	static_cast<WheeledVehicleController *>(mVehicleConstraint->GetController())->SetTireMaxImpulseCallback(
+		[](uint, float &outLongitudinalImpulse, float &outLateralImpulse, float inSuspensionImpulse, float inLongitudinalFriction, float inLateralFriction, float, float, float)
+		{
+			outLongitudinalImpulse = 10.0f * inLongitudinalFriction * inSuspensionImpulse;
+			outLateralImpulse = inLateralFriction * inSuspensionImpulse;
+		});
+
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
 }
