@@ -565,60 +565,64 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 	JPH_ASSERT(num_groups > 0, "SoftBodySharedSettings::Optimize should have been called!");
 	uint32 edge_group, edge_start_idx;
 	SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(ioContext.mNextEdgeConstraint.load(memory_order_relaxed), edge_group, edge_start_idx);
-	if (edge_group < num_groups && edge_start_idx < mSettings->GetEdgeGroupSize(edge_group))
+	if (edge_group < num_groups)
 	{
-		// Fetch the next batch of edges to process
-		uint64 next_edge_batch = ioContext.mNextEdgeConstraint.fetch_add(SoftBodyUpdateContext::cEdgeConstraintBatch, memory_order_acquire);
-		SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(next_edge_batch, edge_group, edge_start_idx);
-		if (edge_group < num_groups)
+		uint edge_group_size = mSettings->GetEdgeGroupSize(edge_group);
+		if (edge_start_idx < edge_group_size || edge_group_size == 0)
 		{
-			bool non_parallel_group = edge_group == num_groups - 1; // Last group is the non-parallel group and goes as a whole
-			uint edge_group_size = mSettings->GetEdgeGroupSize(edge_group);
-			if (non_parallel_group? edge_start_idx == 0 : edge_start_idx < edge_group_size)
+			// Fetch the next batch of edges to process
+			uint64 next_edge_batch = ioContext.mNextEdgeConstraint.fetch_add(SoftBodyUpdateContext::cEdgeConstraintBatch, memory_order_acquire);
+			SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(next_edge_batch, edge_group, edge_start_idx);
+			if (edge_group < num_groups)
 			{
-				// Process edges
-				uint num_edges_to_process = non_parallel_group? edge_group_size : min(SoftBodyUpdateContext::cEdgeConstraintBatch, edge_group_size - edge_start_idx);
-				if (edge_group > 0)
-					edge_start_idx += mSettings->mEdgeGroupEndIndices[edge_group - 1];
-				ApplyEdgeConstraints(ioContext, edge_start_idx, edge_start_idx + num_edges_to_process);
-
-				// Test if we're at the end of this group
-				uint edge_constraints_processed = ioContext.mNumEdgeConstraintsProcessed.fetch_add(num_edges_to_process, memory_order_relaxed) + num_edges_to_process;
-				if (edge_constraints_processed >= edge_group_size)
+				bool non_parallel_group = edge_group == num_groups - 1; // Last group is the non-parallel group and goes as a whole
+				edge_group_size = mSettings->GetEdgeGroupSize(edge_group);
+				if (non_parallel_group? edge_start_idx == 0 : edge_start_idx < edge_group_size)
 				{
-					// Non parallel group is the last group (which is also the only group that can be empty)
-					if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
+					// Process edges
+					uint num_edges_to_process = non_parallel_group? edge_group_size : min(SoftBodyUpdateContext::cEdgeConstraintBatch, edge_group_size - edge_start_idx);
+					if (edge_group > 0)
+						edge_start_idx += mSettings->mEdgeGroupEndIndices[edge_group - 1];
+					ApplyEdgeConstraints(ioContext, edge_start_idx, edge_start_idx + num_edges_to_process);
+
+					// Test if we're at the end of this group
+					uint edge_constraints_processed = ioContext.mNumEdgeConstraintsProcessed.fetch_add(num_edges_to_process, memory_order_relaxed) + num_edges_to_process;
+					if (edge_constraints_processed >= edge_group_size)
 					{
-						// Finish the iteration
-						ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
-
-						uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
-						if (iteration < mNumIterations)
+						// Non parallel group is the last group (which is also the only group that can be empty)
+						if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
 						{
-							// Start a new iteration
-							StartNextIteration(ioContext);
+							// Finish the iteration
+							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
-							// Reset next edge to process
-							ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
-							ioContext.mNextEdgeConstraint.store(0, memory_order_release);
+							uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+							if (iteration < mNumIterations)
+							{
+								// Start a new iteration
+								StartNextIteration(ioContext);
+
+								// Reset next edge to process
+								ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
+								ioContext.mNextEdgeConstraint.store(0, memory_order_release);
+							}
+							else
+							{
+								// On final iteration we update the state
+								UpdateSoftBodyState(ioContext, inPhysicsSettings);
+
+								ioContext.mState.store(SoftBodyUpdateContext::EState::Done, memory_order_release);
+								return EStatus::Done;
+							}
 						}
 						else
 						{
-							// On final iteration we update the state
-							UpdateSoftBodyState(ioContext, inPhysicsSettings);
-
-							ioContext.mState.store(SoftBodyUpdateContext::EState::Done, memory_order_release);
-							return EStatus::Done;
+							// Next group
+							ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
+							ioContext.mNextEdgeConstraint.store(SoftBodyUpdateContext::sGetEdgeGroupStart(edge_group + 1), memory_order_release);
 						}
 					}
-					else
-					{
-						// Next group
-						ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
-						ioContext.mNextEdgeConstraint.store(SoftBodyUpdateContext::sGetEdgeGroupStart(edge_group + 1), memory_order_release);
-					}
+					return EStatus::DidWork;
 				}
-				return EStatus::DidWork;
 			}
 		}
 	}
