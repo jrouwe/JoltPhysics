@@ -305,7 +305,7 @@ void JobSystemThreadPool::QueueJobs(Job **inJobs, uint inNumJobs)
 void JobSystemThreadPool::ThreadMain(int inThreadIndex)
 {
 	// Name the thread
-	char name[16];
+	char name[64];
 	snprintf(name, sizeof(name), "Worker %d", int(inThreadIndex + 1));
 
 #if defined(JPH_PLATFORM_WINDOWS) || defined(JPH_PLATFORM_LINUX)
