@@ -30,7 +30,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
-	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
+	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
 

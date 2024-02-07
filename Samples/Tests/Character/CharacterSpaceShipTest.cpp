@@ -32,7 +32,7 @@ void CharacterSpaceShipTest::Initialize()
 	Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
 	settings->mShape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cCharacterHeightStanding, cCharacterRadiusStanding)).Create().Get();
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
-	mCharacter = new CharacterVirtual(settings, cShipInitialPosition + Vec3(0, cSpaceShipHeight, 0), Quat::sIdentity(), mPhysicsSystem);
+	mCharacter = new CharacterVirtual(settings, cShipInitialPosition + Vec3(0, cSpaceShipHeight, 0), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->SetListener(this);
 
 	// Create the space ship

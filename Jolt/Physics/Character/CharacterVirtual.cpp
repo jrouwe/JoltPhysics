@@ -19,7 +19,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) :
+CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
 	mBackFaceMode(inSettings->mBackFaceMode),
 	mPredictiveContactDistance(inSettings->mPredictiveContactDistance),
@@ -33,7 +33,8 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed),
 	mShapeOffset(inSettings->mShapeOffset),
 	mPosition(inPosition),
-	mRotation(inRotation)
+	mRotation(inRotation),
+	mUserData(inUserData)
 {
 	// Copy settings
 	SetMaxStrength(inSettings->mMaxStrength);
