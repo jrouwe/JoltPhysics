@@ -101,8 +101,9 @@ public:
 	/// @param inSettings The settings for the character
 	/// @param inPosition Initial position for the character
 	/// @param inRotation Initial rotation for the character (usually only around the up-axis)
+	/// @param inUserData Application specific value
 	/// @param inSystem Physics system that this character will be added to later
-										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem);
+										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
@@ -166,6 +167,10 @@ public:
 	/// An extra offset applied to the shape in local space. This allows applying an extra offset to the shape in local space. Note that setting it on the fly can cause the shape to teleport into collision.
 	Vec3								GetShapeOffset() const									{ return mShapeOffset; }
 	void								SetShapeOffset(Vec3Arg inShapeOffset)					{ mShapeOffset = inShapeOffset; }
+
+	/// Access to the user data, can be used for anything by the application
+	uint64								GetUserData() const										{ return mUserData; }
+	void								SetUserData(uint64 inUserData)							{ mUserData = inUserData; }
 
 	/// This function can be called prior to calling Update() to convert a desired velocity into a velocity that won't make the character move further onto steep slopes.
 	/// This velocity can then be set on the character using SetLinearVelocity()
@@ -486,6 +491,9 @@ private:
 
 	// Remember if we exceeded the maximum number of hits and had to remove similar contacts
 	mutable bool						mMaxHitsExceeded = false;
+
+	// User data, can be used for anything by the application
+	uint64								mUserData = 0;
 };
 
 JPH_NAMESPACE_END

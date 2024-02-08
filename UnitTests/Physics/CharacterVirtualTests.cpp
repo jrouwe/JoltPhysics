@@ -30,7 +30,7 @@ TEST_SUITE("CharacterVirtualTests")
 			mCharacterSettings.mSupportingVolume = Plane(Vec3::sAxisY(), -mHeightStanding); // Accept contacts that touch the lower sphere of the capsule
 
 			// Create character
-			mCharacter = new CharacterVirtual(&mCharacterSettings, mInitialPosition, Quat::sIdentity(), mContext.GetSystem());
+			mCharacter = new CharacterVirtual(&mCharacterSettings, mInitialPosition, Quat::sIdentity(), 0, mContext.GetSystem());
 			mCharacter->SetListener(this);
 		}
 
