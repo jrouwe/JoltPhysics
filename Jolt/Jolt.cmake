@@ -487,11 +487,7 @@ target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
 target_precompile_headers(Jolt PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
-if (DEBUG_RENDERER_IN_DISTRIBUTION)
-	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Distribution>:NDEBUG;JPH_DEBUG_RENDERER>")
-else()
-	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Distribution>:NDEBUG>")
-endif()
+target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Distribution>:NDEBUG>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseASAN>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DISABLE_TEMP_ALLOCATOR;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseUBSAN>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
 target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseCoverage>:NDEBUG>")
@@ -525,6 +521,12 @@ endif()
 # Setting to periodically trace narrowphase stats to help determine which collision queries could be optimized
 if (TRACK_NARROWPHASE_STATS)
 	target_compile_definitions(Jolt PUBLIC JPH_TRACK_NARROWPHASE_STATS)
+endif()
+
+# Setting to enable the debug renderer. The debug renderer is enabled by default with Debug and Release builds.
+# Note that enabling this reduces the performance of the library even if you're not drawing anything.
+if (DEBUG_RENDERER_IN_DISTRIBUTION)
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Distribution>:JPH_DEBUG_RENDERER>")
 endif()
 
 # Emit the instruction set definitions to ensure that child projects use the same settings even if they override the used instruction sets (a mismatch causes link errors)
