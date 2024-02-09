@@ -53,6 +53,10 @@ option(TRACK_BROADPHASE_STATS "Track Broadphase Stats" OFF)
 # Setting to periodically trace narrowphase stats to help determine which collision queries could be optimized
 option(TRACK_NARROWPHASE_STATS "Track Narrowphase Stats" OFF)
 
+# Setting to enable the debug renderer. The debug renderer is enabled by default with Debug and Release builds.
+# Note that enabling this reduces the performance of the library even if you're not drawing anything.
+option(DEBUG_RENDERER_IN_DISTRIBUTION "Enable debug renderer in Distribution builds" OFF)
+
 include(CMakeDependentOption)
 
 # Ability to toggle between the static and DLL versions of the MSVC runtime library
