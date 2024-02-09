@@ -564,6 +564,9 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Update scene time
 	mTime += inParams.mDeltaTime;
 
+	// Update camera pivot
+	mCameraPivot = GetCharacterPosition();
+
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
 		mBodyInterface->MoveKinematic(mRotatingBody, cRotatingPosition, Quat::sRotation(Vec3::sAxisY(), JPH_PI * Sin(mTime)), inParams.mDeltaTime);
@@ -641,7 +644,7 @@ RMat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPi
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
-	return RMat44::sTranslation(GetCharacterPosition() + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
+	return RMat44::sTranslation(mCameraPivot + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
 }
 
 void CharacterBaseTest::SaveState(StateRecorder &inStream) const
