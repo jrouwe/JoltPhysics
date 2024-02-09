@@ -79,7 +79,7 @@ JoltViewer::JoltViewer()
 	mDebugUI->ShowMenu(main_menu);
 }
 
-bool JoltViewer::RenderFrame(float inDeltaTime)
+bool JoltViewer::UpdateFrame(float inDeltaTime)
 {
 	// If no frames were read, abort
 	if (mRendererPlayback.GetNumFrames() == 0)

@@ -404,6 +404,8 @@ void Renderer::Initialize()
 
 void Renderer::OnWindowResize()
 {
+	JPH_ASSERT(!mInFrame);
+
 	// Wait for the previous frame to be rendered
 	WaitForGpu();
 
@@ -441,6 +443,10 @@ void Renderer::OnWindowResize()
 void Renderer::BeginFrame(const CameraState &inCamera, float inWorldScale)
 {
 	JPH_PROFILE_FUNCTION();
+
+	// Mark that we're in the frame
+	JPH_ASSERT(!mInFrame);
+	mInFrame = true;
 
 	// Store state
 	mCameraState = inCamera;
@@ -543,6 +549,10 @@ void Renderer::EndFrame()
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Mark that we're no longer in the frame
+	JPH_ASSERT(mInFrame);
+	mInFrame = false;
+
 	// Indicate that the back buffer will now be used to present.
 	D3D12_RESOURCE_BARRIER barrier;
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -591,11 +601,15 @@ void Renderer::EndFrame()
 
 void Renderer::SetProjectionMode()
 {
+	JPH_ASSERT(mInFrame);
+
 	mVertexShaderConstantBufferProjection[mFrameIndex]->Bind(0);
 }
 
 void Renderer::SetOrthoMode()
 {
+	JPH_ASSERT(mInFrame);
+
 	mVertexShaderConstantBufferOrtho[mFrameIndex]->Bind(0);
 }
 
@@ -611,6 +625,8 @@ Ref<Texture> Renderer::CreateRenderTarget(int inWidth, int inHeight)
 
 void Renderer::SetRenderTarget(Texture *inRenderTarget)
 {
+	JPH_ASSERT(mInFrame);
+
 	// Unset the previous render target
 	if (mRenderTargetTexture != nullptr)
 		mRenderTargetTexture->SetAsRenderTarget(false);
