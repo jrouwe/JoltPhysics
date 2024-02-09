@@ -37,6 +37,7 @@ private:
 	Ref<HingeConstraint>		mTurretHinge;								///< Hinge connecting tank body and turret
 	Ref<HingeConstraint>		mBarrelHinge;								///< Hinge connecting tank turret and barrel
 	float						mReloadTime = 0.0f;							///< How long it still takes to reload the main gun
+	RVec3						mCameraPivot = RVec3::sZero();				///< The camera pivot, recorded before the physics update to align with the drawn world
 
 	// Player input
 	float						mForward = 0.0f;

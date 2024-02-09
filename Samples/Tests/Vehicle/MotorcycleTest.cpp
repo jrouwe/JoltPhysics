@@ -125,6 +125,8 @@ void MotorcycleTest::Initialize()
 	mVehicleConstraint->SetVehicleCollisionTester(new VehicleCollisionTesterCastCylinder(Layers::MOVING, 1.0f)); // Use half wheel width as convex radius so we get a rounded cyclinder
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
+
+	UpdateCameraPivot();
 }
 
 void MotorcycleTest::ProcessInput(const ProcessInputParams &inParams)
@@ -185,6 +187,8 @@ void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	VehicleTest::PrePhysicsUpdate(inParams);
 
+	UpdateCameraPivot();
+
 	// On user input, assure that the motorcycle is active
 	if (mRight != 0.0f || mForward != 0.0f || mBrake != 0.0f)
 		mBodyInterface->ActivateBody(mMotorcycleBody->GetID());
@@ -228,7 +232,7 @@ void MotorcycleTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 MotorcycleTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+void MotorcycleTest::UpdateCameraPivot()
 {
 	// Pivot is center of motorcycle and rotates with motorcycle around Y axis only
 	Vec3 fwd = mMotorcycleBody->GetRotation().RotateAxisZ();
@@ -240,7 +244,7 @@ RMat44 MotorcycleTest::GetCameraPivot(float inCameraHeading, float inCameraPitch
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mMotorcycleBody->GetPosition());
+	mCameraPivot = RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mMotorcycleBody->GetPosition());
 }
 
 void MotorcycleTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)

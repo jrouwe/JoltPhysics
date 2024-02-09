@@ -165,6 +165,8 @@ void VehicleConstraintTest::Initialize()
 
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
+
+	UpdateCameraPivot();
 }
 
 void VehicleConstraintTest::ProcessInput(const ProcessInputParams &inParams)
@@ -214,6 +216,8 @@ void VehicleConstraintTest::ProcessInput(const ProcessInputParams &inParams)
 void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	VehicleTest::PrePhysicsUpdate(inParams);
+
+	UpdateCameraPivot();
 
 	// On user input, assure that the car is active
 	if (mRight != 0.0f || mForward != 0.0f || mBrake != 0.0f || mHandBrake != 0.0f)
@@ -272,7 +276,7 @@ void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+void VehicleConstraintTest::UpdateCameraPivot()
 {
 	// Pivot is center of car and rotates with car around Y axis only
 	Vec3 fwd = mCarBody->GetRotation().RotateAxisZ();
@@ -284,7 +288,7 @@ RMat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCame
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
+	mCameraPivot = RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
 }
 
 void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
