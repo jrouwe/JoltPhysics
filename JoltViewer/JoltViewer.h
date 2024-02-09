@@ -26,8 +26,8 @@ public:
 	// Constructor / destructor
 							JoltViewer();
 
-	// Render the frame
-	virtual bool			RenderFrame(float inDeltaTime) override;
+	// Update the application
+	virtual bool			UpdateFrame(float inDeltaTime) override;
 
 private:
 	enum class EPlaybackMode

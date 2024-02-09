@@ -1945,7 +1945,7 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 	}
 }
 
-bool SamplesApp::RenderFrame(float inDeltaTime)
+bool SamplesApp::UpdateFrame(float inDeltaTime)
 {
 	// Reinitialize the job system if the concurrency setting changed
 	if (mMaxConcurrentJobs != mJobSystem->GetMaxConcurrency())

@@ -28,8 +28,8 @@ public:
 							SamplesApp();
 	virtual					~SamplesApp() override;
 
-	// Render the frame.
-	virtual bool			RenderFrame(float inDeltaTime) override;
+	// Update the application
+	virtual bool			UpdateFrame(float inDeltaTime) override;
 
 	// Override to specify the initial camera state (local to GetCameraPivot)
 	virtual void			GetInitialCamera(CameraState &ioState) const override;

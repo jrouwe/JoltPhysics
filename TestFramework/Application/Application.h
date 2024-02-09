@@ -56,8 +56,8 @@ public:
 	void						Run();
 
 protected:
-	/// Callback to render a frame
-	virtual bool				RenderFrame(float inDeltaTime)					{ return false; }
+	/// Update the application
+	virtual bool				UpdateFrame(float inDeltaTime)					{ return false; }
 
 	/// Pause / unpause the simulation
 	void						Pause(bool inPaused)							{ mIsPaused = inPaused; }

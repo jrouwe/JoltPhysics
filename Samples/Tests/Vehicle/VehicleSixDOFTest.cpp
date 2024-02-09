@@ -116,6 +116,8 @@ void VehicleSixDOFTest::Initialize()
 			wheel_constraint->SetMotorState(EAxis::RotationZ, EMotorState::Position);
 		}
 	}
+
+	UpdateCameraPivot();
 }
 
 void VehicleSixDOFTest::ProcessInput(const ProcessInputParams &inParams)
@@ -134,6 +136,8 @@ void VehicleSixDOFTest::ProcessInput(const ProcessInputParams &inParams)
 void VehicleSixDOFTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	VehicleTest::PrePhysicsUpdate(inParams);
+
+	UpdateCameraPivot();
 
 	// On user input, assure that the car is active
 	if (mSteeringAngle != 0.0f || mSpeed != 0.0f)
@@ -205,7 +209,7 @@ void VehicleSixDOFTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+void VehicleSixDOFTest::UpdateCameraPivot()
 {
 	// Pivot is center of car and rotates with car around Y axis only
 	Vec3 fwd = mCarBody->GetRotation().RotateAxisZ();
@@ -217,7 +221,7 @@ RMat44 VehicleSixDOFTest::GetCameraPivot(float inCameraHeading, float inCameraPi
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
+	mCameraPivot = RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
 }
 
 void VehicleSixDOFTest::SaveInputState(StateRecorder &inStream) const
