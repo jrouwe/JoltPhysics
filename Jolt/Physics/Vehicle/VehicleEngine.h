@@ -34,7 +34,7 @@ public:
 	float					mMaxTorque = 500.0f;						///< Max amount of torque (Nm) that the engine can deliver
 	float					mMinRPM = 1000.0f;							///< Min amount of revolutions per minute (rpm) the engine can produce without stalling
 	float					mMaxRPM = 6000.0f;							///< Max amount of revolutions per minute (rpm) the engine can generate
-	LinearCurve				mNormalizedTorque;							///< Curve that describes a ratio of the max torque the engine can produce vs the fraction of the max RPM of the engine
+	LinearCurve				mNormalizedTorque;							///< Y-axis: Curve that describes a ratio of the max torque the engine can produce (0 = 0, 1 = mMaxTorque). X-axis: the fraction of the RPM of the engine (0 = mMinRPM, 1 = mMaxRPM)
 	float					mInertia = 0.5f;							///< Moment of inertia (kg m^2) of the engine
 	float					mAngularDamping = 0.2f;						///< Angular damping factor of the wheel: dw/dt = -c * w
 };
