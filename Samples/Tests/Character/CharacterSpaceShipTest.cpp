@@ -67,10 +67,7 @@ void CharacterSpaceShipTest::ProcessInput(const ProcessInputParams &inParams)
 	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
 
 	// Check actions
-	mJump = false;
-	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
-		if (key == DIK_RCONTROL)
-			mJump = true;
+	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RCONTROL, mWasJump);
 }
 
 void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

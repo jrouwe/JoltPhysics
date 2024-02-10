@@ -548,15 +548,8 @@ void CharacterBaseTest::ProcessInput(const ProcessInputParams &inParams)
 	mControlInput = rotation * mControlInput;
 
 	// Check actions
-	mJump = false;
-	mSwitchStance = false;
-	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
-	{
-		if (key == DIK_RSHIFT)
-			mSwitchStance = true;
-		else if (key == DIK_RCONTROL)
-			mJump = true;
-	}
+	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RCONTROL, mWasJump);
+	mSwitchStance = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RSHIFT, mWasSwitchStance);
 }
 
 void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
