@@ -120,5 +120,7 @@ private:
 	// Player input
 	Vec3					mControlInput = Vec3::sZero();
 	bool					mJump = false;
+	bool					mWasJump = false;
 	bool					mSwitchStance = false;
+	bool					mWasSwitchStance = false;
 };
