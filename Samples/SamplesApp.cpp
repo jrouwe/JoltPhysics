@@ -1810,13 +1810,8 @@ void SamplesApp::UpdateDebug(float inDeltaTime)
 	BodyInterface &bi = mPhysicsSystem->GetBodyInterface();
 
 	// Handle keyboard input for which simulation needs to be running
-	for (int key = mKeyboard->GetFirstKey(); key != 0; key = mKeyboard->GetNextKey())
-		switch (key)
-		{
-		case DIK_B:
-			ShootObject();
-			break;
-		}
+	if (mKeyboard->IsKeyPressedAndTriggered(DIK_B, mWasShootKeyPressed))
+		ShootObject();
 
 	// Allow the user to drag rigid/soft bodies around
 	if (mDragConstraint == nullptr && mDragVertexIndex == ~uint(0))
