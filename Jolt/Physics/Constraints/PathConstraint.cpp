@@ -119,7 +119,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 	// Calculate new closest point on path
 	RVec3 position2 = path_to_world_2.GetTranslation();
 	Vec3 position2_local_to_path = Vec3(path_to_world_1.InversedRotationTranslation() * position2);
-	mPathFraction = mPath->GetClosestPoint(position2_local_to_path);
+	mPathFraction = mPath->GetClosestPoint(position2_local_to_path, mPathFraction);
 
 	// Get the point on the path for this fraction
 	Vec3 path_point, path_tangent, path_normal, path_binormal;

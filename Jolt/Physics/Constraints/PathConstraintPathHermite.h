@@ -18,7 +18,7 @@ public:
 	virtual float		GetPathMaxFraction() const override									{ return float(IsLooping()? mPoints.size() : mPoints.size() - 1); }
 
 	// See PathConstraintPath::GetClosestPoint
-	virtual float		GetClosestPoint(Vec3Arg inPosition) const override;
+	virtual float		GetClosestPoint(Vec3Arg inPosition, float inFractionHint) const override;
 
 	// See PathConstraintPath::GetPointOnPath
 	virtual void		GetPointOnPath(float inFraction, Vec3 &outPathPosition, Vec3 &outPathTangent, Vec3 &outPathNormal, Vec3 &outPathBinormal) const override;

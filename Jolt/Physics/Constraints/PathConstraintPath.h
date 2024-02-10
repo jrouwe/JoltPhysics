@@ -32,8 +32,9 @@ public:
 
 	/// Get the globally closest point on the curve (Could be slow!)
 	/// @param inPosition Position to find closest point for
+	/// @param inFractionHint Last known fraction along the path (can be used to speed up the search)
 	/// @return Fraction of closest point along the path
-	virtual float		GetClosestPoint(Vec3Arg inPosition) const = 0;
+	virtual float		GetClosestPoint(Vec3Arg inPosition, float inFractionHint) const = 0;
 
 	/// Given the fraction along the path, get the point, tangent and normal.
 	/// @param inFraction Fraction along the path [0, GetPathMaxFraction()].
