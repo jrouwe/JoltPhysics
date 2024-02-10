@@ -203,7 +203,7 @@ void PathConstraintPathHermite::GetIndexAndT(float inFraction, int &outIndex, fl
 	outT = t;
 }
 
-float PathConstraintPathHermite::GetClosestPoint(Vec3Arg inPosition) const
+float PathConstraintPathHermite::GetClosestPoint(Vec3Arg inPosition, float inFractionHint) const
 {
 	JPH_PROFILE_FUNCTION();
 
