@@ -105,6 +105,9 @@ public:
 	/// @param inSystem Physics system that this character will be added to later
 										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
 
+	/// Constructor without user data
+										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) : CharacterVirtual(inSettings, inPosition, inRotation, 0, inSystem) { }
+
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
 
