@@ -175,7 +175,7 @@ void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed, bool &
 LargeIslandSplitter::~LargeIslandSplitter()
 {
 	JPH_ASSERT(mSplitMasks == nullptr);
-	JPH_ASSERT(mContactAndConstaintsSplitIdx == nullptr);
+	JPH_ASSERT(mContactAndConstraintsSplitIdx == nullptr);
 	JPH_ASSERT(mContactAndConstraintIndices == nullptr);
 	JPH_ASSERT(mSplitIslands == nullptr);
 }
@@ -217,7 +217,7 @@ void LargeIslandSplitter::Prepare(const IslandBuilder &inIslandBuilder, uint32 i
 
 		// Allocate contact and constraint buffer
 		uint contact_and_constraint_indices_size = mContactAndConstraintsSize * sizeof(uint32);
-		mContactAndConstaintsSplitIdx = (uint32 *)inTempAllocator->Allocate(contact_and_constraint_indices_size);
+		mContactAndConstraintsSplitIdx = (uint32 *)inTempAllocator->Allocate(contact_and_constraint_indices_size);
 		mContactAndConstraintIndices = (uint32 *)inTempAllocator->Allocate(contact_and_constraint_indices_size);
 
 		// Allocate island split buffer
@@ -314,7 +314,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 
 	// Get space to store split indices
 	uint offset = mContactAndConstraintsNextFree.fetch_add(island_size, memory_order_relaxed);
-	uint32 *contact_split_idx = mContactAndConstaintsSplitIdx + offset;
+	uint32 *contact_split_idx = mContactAndConstraintsSplitIdx + offset;
 	uint32 *constraint_split_idx = contact_split_idx + num_contacts_in_island;
 
 	// Assign the contacts to a split
@@ -559,8 +559,8 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 		inTempAllocator->Free(mContactAndConstraintIndices, mContactAndConstraintsSize * sizeof(uint32));
 		mContactAndConstraintIndices = nullptr;
 
-		inTempAllocator->Free(mContactAndConstaintsSplitIdx, mContactAndConstraintsSize * sizeof(uint32));
-		mContactAndConstaintsSplitIdx = nullptr;
+		inTempAllocator->Free(mContactAndConstraintsSplitIdx, mContactAndConstraintsSize * sizeof(uint32));
+		mContactAndConstraintsSplitIdx = nullptr;
 
 		mContactAndConstraintsSize = 0;
 		mContactAndConstraintsNextFree.store(0, memory_order_relaxed);

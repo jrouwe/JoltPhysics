@@ -17,7 +17,7 @@ class JPH_EXPORT SkeletalAnimation : public RefTarget<SkeletalAnimation>
 public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SkeletalAnimation)
 
-	/// Constains the current state of a joint, a local space transformation relative to its parent joint
+	/// Contains the current state of a joint, a local space transformation relative to its parent joint
 	class JointState
 	{
 	public:
