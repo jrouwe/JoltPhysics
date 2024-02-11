@@ -350,8 +350,36 @@ BodyCreationSettings Body::GetBodyCreationSettings() const
 	result.mNumVelocityStepsOverride = mMotionProperties != nullptr? mMotionProperties->GetNumVelocityStepsOverride() : 0;
 	result.mNumPositionStepsOverride = mMotionProperties != nullptr? mMotionProperties->GetNumPositionStepsOverride() : 0;
 	result.mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
-	result.mMassPropertiesOverride.mMass = mMotionProperties != nullptr? 1.0f / mMotionProperties->GetInverseMassUnchecked() : FLT_MAX;
-	result.mMassPropertiesOverride.mInertia = mMotionProperties != nullptr? mMotionProperties->GetLocalSpaceInverseInertiaUnchecked().Inversed3x3() : Mat44::sIdentity();
+
+	// Invert inertia and mass
+	if (mMotionProperties != nullptr)
+	{
+		float inv_mass = mMotionProperties->GetInverseMassUnchecked();
+		Mat44 inv_inertia = mMotionProperties->GetLocalSpaceInverseInertiaUnchecked();
+
+		// Get mass
+		result.mMassPropertiesOverride.mMass = inv_mass != 0.0f? 1.0f / inv_mass : FLT_MAX;
+
+		// Get inertia
+		Mat44 inertia;
+		if (inertia.SetInversed3x3(inv_inertia))
+		{
+			// Inertia was invertible, we can use it
+			result.mMassPropertiesOverride.mInertia = inertia;
+		}
+		else
+		{
+			// Prevent division by zero
+			Vec3 diagonal = Vec3::sMax(inv_inertia.GetDiagonal3(), Vec3::sReplicate(FLT_MIN));
+			result.mMassPropertiesOverride.mInertia = Mat44::sScale(diagonal.Reciprocal());
+		}
+	}
+	else
+	{
+		result.mMassPropertiesOverride.mMass = FLT_MAX;
+		result.mMassPropertiesOverride.mInertia = Mat44::sScale(Vec3::sReplicate(FLT_MAX));
+	}
+
 	result.SetShape(GetShape());
 
 	return result;
