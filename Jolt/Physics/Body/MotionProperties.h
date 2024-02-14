@@ -151,16 +151,9 @@ public:
 	/// Takes an angular velocity / torque vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
 	JPH_INLINE Vec3			LockAngular(Vec3Arg inV) const
 	{
-		if ((mAllowedDOFs & EAllowedDOFs::RotationWS) != EAllowedDOFs::None)
-		{
-			uint32 allowed_dofs = uint32(mAllowedDOFs);
-			UVec4 allowed_dofs_mask = UVec4(allowed_dofs << 28, allowed_dofs << 27, allowed_dofs << 26, 0).ArithmeticShiftRight<31>();
-			return Vec3::sAnd(inV, Vec3(allowed_dofs_mask.ReinterpretAsFloat()));
-		}
-		else
-		{
-			return inV;
-		}
+		uint32 allowed_dofs = uint32(mAllowedDOFs);
+		UVec4 allowed_dofs_mask = UVec4(allowed_dofs << 28, allowed_dofs << 27, allowed_dofs << 26, 0).ArithmeticShiftRight<31>();
+		return Vec3::sAnd(inV, Vec3(allowed_dofs_mask.ReinterpretAsFloat()));
 	}
 
 	/// Used only when this body is dynamic and colliding. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
