@@ -157,6 +157,11 @@ else()
 		endif()
 	endif()
 
+	# See https://github.com/jrouwe/JoltPhysics/issues/922. When compiling with DOUBLE_PRECISION=YES and CMAKE_OSX_DEPLOYMENT_TARGET=10.12 clang triggers a warning that we silence here.
+	if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-allocation")
+	endif()
+
 	# Cross compiler flags
 	if (CROSS_COMPILE_ARM)
 		set(CMAKE_CXX_FLAGS "--target=aarch64-linux-gnu ${CMAKE_CXX_FLAGS}")
