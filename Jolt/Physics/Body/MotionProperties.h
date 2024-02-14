@@ -110,7 +110,7 @@ public:
 	/// Set the inverse inertia tensor in local space by setting the diagonal and the rotation: \f$I_{body}^{-1} = R \: D \: R^{-1}\f$.
 	/// Note that mass and inertia are linearly related (e.g. inertia of a sphere with mass m and radius r is \f$2/5 \: m \: r^2\f$).
 	/// If you change inertia, mass should probably change as well. See MassProperties::ScaleToMass.
-	/// If you don't allow all rotational degrees of freedom, make sure that the corresponding diagonal elements are zero (see EAllowedDOFs).
+	/// If all your rotation degrees of freedom are restricted, make sure this is zero (see EAllowedDOFs).
 	void					SetInverseInertia(Vec3Arg inDiagonal, QuatArg inRot)			{ mInvInertiaDiagonal = inDiagonal; mInertiaRotation = inRot; }
 
 	/// Get inverse inertia matrix (\f$I_{body}^{-1}\f$). Will be a matrix of zeros for a static or kinematic object.
