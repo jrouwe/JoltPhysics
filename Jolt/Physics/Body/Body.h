@@ -375,14 +375,9 @@ private:
 	atomic<uint8>			mFlags = 0;														///< See EFlags for possible flags
 
 	// 122 bytes up to here (64-bit mode, single precision, 16-bit ObjectLayer)
-
-#if JPH_CPU_ADDRESS_BITS == 32
-	// Padding for mShape, mMotionProperties, mCollisionGroup.mGroupFilter being 4 instead of 8 bytes in 32 bit mode
-	uint8					mPadding[12];
-#endif
 };
 
-static_assert(sizeof(Body) == JPH_IF_SINGLE_PRECISION_ELSE(128, 160), "Body size is incorrect");
+static_assert(JPH_CPU_ADDRESS_BITS != 64 || sizeof(Body) == JPH_IF_SINGLE_PRECISION_ELSE(128, 160), "Body size is incorrect");
 static_assert(alignof(Body) == JPH_RVECTOR_ALIGNMENT, "Body should properly align");
 
 JPH_NAMESPACE_END
