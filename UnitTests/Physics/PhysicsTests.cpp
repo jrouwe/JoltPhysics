@@ -1488,33 +1488,35 @@ TEST_SUITE("PhysicsTests")
 			// Apply a force and torque in 3D
 			Vec3 force(100000, 110000, 120000);
 			box.AddForce(force);
-			Vec3 local_torque(13000, 14000, 15000);
-			box.AddTorque(initial_rotation * local_torque);
+			Vec3 torque(13000, 14000, 15000);
+			box.AddTorque(torque);
 
 			// Simulate
 			c.SimulateSingleStep();
 
 			// Cancel components that should not be allowed by the allowed DOFs
+			Vec3 linear_lock = Vec3::sReplicate(1.0f), angular_lock = Vec3::sReplicate(1.0f);
 			for (uint axis = 0; axis < 3; ++axis)
 			{
 				if ((allowed_dofs & (1 << axis)) == 0)
-					force.SetComponent(axis, 0.0f);
+					linear_lock.SetComponent(axis, 0.0f);
 
 				if ((allowed_dofs & (0b1000 << axis)) == 0)
-					local_torque.SetComponent(axis, 0.0f);
+					angular_lock.SetComponent(axis, 0.0f);
 			}
 
 			// Check resulting linear velocity
 			MassProperties mp = box_shape->GetMassProperties();
-			Vec3 expected_linear_velocity = force / mp.mMass * c.GetDeltaTime();
-			CHECK((force == Vec3::sZero() || expected_linear_velocity.Length() > 1.0f)); // Just to check that we applied a high enough force
+			Vec3 expected_linear_velocity = linear_lock * (force / mp.mMass * c.GetDeltaTime());
+			CHECK((linear_lock == Vec3::sZero() || expected_linear_velocity.Length() > 1.0f)); // Just to check that we applied a high enough force
 			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), expected_linear_velocity);
 			RVec3 expected_position = initial_position + expected_linear_velocity * c.GetDeltaTime();
 			CHECK_APPROX_EQUAL(box.GetPosition(), expected_position);
 
 			// Check resulting angular velocity
-			Vec3 expected_angular_velocity = initial_rotation * (mp.mInertia.Inversed3x3() * local_torque) * c.GetDeltaTime();
-			CHECK((local_torque == Vec3::sZero() || expected_angular_velocity.Length() > 1.0f)); // Just to check that we applied a high enough torque
+			Mat44 inv_inertia = Mat44::sRotation(initial_rotation) * mp.mInertia.Inversed3x3() * Mat44::sRotation(initial_rotation.Conjugated());
+			Vec3 expected_angular_velocity = angular_lock * (inv_inertia * torque * c.GetDeltaTime());
+			CHECK((angular_lock == Vec3::sZero() || expected_angular_velocity.Length() > 1.0f)); // Just to check that we applied a high enough torque
 			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), expected_angular_velocity);
 			float expected_angular_velocity_len = expected_angular_velocity.Length();
 			Quat expected_rotation = expected_angular_velocity_len > 0.0f? Quat::sRotation(expected_angular_velocity / expected_angular_velocity_len, expected_angular_velocity_len * c.GetDeltaTime()) * initial_rotation : initial_rotation;
