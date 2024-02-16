@@ -62,7 +62,14 @@ Mat44 MotionProperties::GetInverseInertiaForRotation(Mat44Arg inRotation) const
 
 	Mat44 rotation = inRotation.Multiply3x3(Mat44::sRotation(mInertiaRotation));
 	Mat44 rotation_mul_scale_transposed(mInvInertiaDiagonal.SplatX() * rotation.GetColumn4(0), mInvInertiaDiagonal.SplatY() * rotation.GetColumn4(1), mInvInertiaDiagonal.SplatZ() * rotation.GetColumn4(2), Vec4(0, 0, 0, 1));
-	return rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
+	Mat44 inverse_inertia = rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
+
+	// Mask out the angular DOFs that are not allowed
+	Vec4 angular_dofs_mask = GetAngularDOFsMask().ReinterpretAsFloat();
+	for (int i = 0; i < 3; ++i)
+		inverse_inertia.SetColumn4(i, Vec4::sAnd(inverse_inertia.GetColumn4(i), angular_dofs_mask));
+
+	return inverse_inertia;
 }
 
 Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRotation, Vec3Arg inV) const
@@ -70,7 +77,10 @@ Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRo
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
 	Mat44 rotation = Mat44::sRotation(inBodyRotation * mInertiaRotation);
-	return rotation.Multiply3x3(mInvInertiaDiagonal * rotation.Multiply3x3Transposed(inV));
+	Vec3 result = rotation.Multiply3x3(mInvInertiaDiagonal * rotation.Multiply3x3Transposed(inV));
+
+	// Mask out the angular DOFs that are not allowed
+	return LockAngular(result);
 }
 
 void MotionProperties::ApplyGyroscopicForceInternal(QuatArg inBodyRotation, float inDeltaTime)

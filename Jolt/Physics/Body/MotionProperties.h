@@ -140,20 +140,30 @@ public:
 	// Reset the total accumulated torque, not that this will be done automatically after every time step.
 	JPH_INLINE void			ResetTorque()													{ mTorque = Float3(0, 0, 0); }
 
+	/// Returns a vector where the linear components that are not allowed by mAllowedDOFs are set to 0 and the rest to 0xffffffff
+	JPH_INLINE UVec4		GetLinearDOFsMask() const
+	{
+		uint32 allowed_dofs = uint32(mAllowedDOFs);
+		return UVec4(allowed_dofs << 31, allowed_dofs << 30, allowed_dofs << 29, 0).ArithmeticShiftRight<31>();
+	}
+
 	/// Takes a translation vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
 	JPH_INLINE Vec3			LockTranslation(Vec3Arg inV) const
 	{
+		return Vec3::sAnd(inV, Vec3(GetLinearDOFsMask().ReinterpretAsFloat()));
+	}
+
+	/// Returns a vector where the angular components that are not allowed by mAllowedDOFs are set to 0 and the rest to 0xffffffff
+	JPH_INLINE UVec4		GetAngularDOFsMask() const
+	{
 		uint32 allowed_dofs = uint32(mAllowedDOFs);
-		UVec4 allowed_dofs_mask = UVec4(allowed_dofs << 31, allowed_dofs << 30, allowed_dofs << 29, 0).ArithmeticShiftRight<31>();
-		return Vec3::sAnd(inV, Vec3(allowed_dofs_mask.ReinterpretAsFloat()));
+		return UVec4(allowed_dofs << 28, allowed_dofs << 27, allowed_dofs << 26, 0).ArithmeticShiftRight<31>();
 	}
 
 	/// Takes an angular velocity / torque vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
 	JPH_INLINE Vec3			LockAngular(Vec3Arg inV) const
 	{
-		uint32 allowed_dofs = uint32(mAllowedDOFs);
-		UVec4 allowed_dofs_mask = UVec4(allowed_dofs << 28, allowed_dofs << 27, allowed_dofs << 26, 0).ArithmeticShiftRight<31>();
-		return Vec3::sAnd(inV, Vec3(allowed_dofs_mask.ReinterpretAsFloat()));
+		return Vec3::sAnd(inV, Vec3(GetAngularDOFsMask().ReinterpretAsFloat()));
 	}
 
 	/// Used only when this body is dynamic and colliding. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
