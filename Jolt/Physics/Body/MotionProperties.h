@@ -143,8 +143,8 @@ public:
 	/// Returns a vector where the linear components that are not allowed by mAllowedDOFs are set to 0 and the rest to 0xffffffff
 	JPH_INLINE UVec4		GetLinearDOFsMask() const
 	{
-		uint32 allowed_dofs = uint32(mAllowedDOFs);
-		return UVec4(allowed_dofs << 31, allowed_dofs << 30, allowed_dofs << 29, 0).ArithmeticShiftRight<31>();
+		UVec4 mask(uint32(EAllowedDOFs::TranslationX), uint32(EAllowedDOFs::TranslationY), uint32(EAllowedDOFs::TranslationZ), 0);
+		return UVec4::sEquals(UVec4::sAnd(UVec4::sReplicate(uint32(mAllowedDOFs)), mask), mask);
 	}
 
 	/// Takes a translation vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
@@ -156,8 +156,8 @@ public:
 	/// Returns a vector where the angular components that are not allowed by mAllowedDOFs are set to 0 and the rest to 0xffffffff
 	JPH_INLINE UVec4		GetAngularDOFsMask() const
 	{
-		uint32 allowed_dofs = uint32(mAllowedDOFs);
-		return UVec4(allowed_dofs << 28, allowed_dofs << 27, allowed_dofs << 26, 0).ArithmeticShiftRight<31>();
+		UVec4 mask(uint32(EAllowedDOFs::RotationX), uint32(EAllowedDOFs::RotationY), uint32(EAllowedDOFs::RotationZ), 0);
+		return UVec4::sEquals(UVec4::sAnd(UVec4::sReplicate(uint32(mAllowedDOFs)), mask), mask);
 	}
 
 	/// Takes an angular velocity / torque vector inV and returns a vector where the components that are not allowed by mAllowedDOFs are set to 0
