@@ -529,4 +529,5 @@ void DebugRendererImp::Clear()
 	ClearLines();
 	ClearTriangles();
 	ClearTexts();
+	NextFrame();
 }

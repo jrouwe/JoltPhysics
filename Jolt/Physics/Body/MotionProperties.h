@@ -140,6 +140,14 @@ public:
 	// Reset the total accumulated torque, not that this will be done automatically after every time step.
 	JPH_INLINE void			ResetTorque()													{ mTorque = Float3(0, 0, 0); }
 
+	// Reset the current velocity and accumulated force and torque.
+	JPH_INLINE void			ResetMotion()
+	{
+		JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite));
+		mLinearVelocity = mAngularVelocity = Vec3::sZero();
+		mForce = mTorque = Float3(0, 0, 0);
+	}
+
 	/// Returns a vector where the linear components that are not allowed by mAllowedDOFs are set to 0 and the rest to 0xffffffff
 	JPH_INLINE UVec4		GetLinearDOFsMask() const
 	{
