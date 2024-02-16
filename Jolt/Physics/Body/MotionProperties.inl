@@ -14,13 +14,13 @@ void MotionProperties::MoveKinematic(Vec3Arg inDeltaPosition, QuatArg inDeltaRot
 	JPH_ASSERT(mCachedMotionType != EMotionType::Static);
 
 	// Calculate required linear velocity
-	mLinearVelocity = inDeltaPosition / inDeltaTime;
+	mLinearVelocity = LockTranslation(inDeltaPosition / inDeltaTime);
 
 	// Calculate required angular velocity
 	Vec3 axis;
 	float angle;
 	inDeltaRotation.GetAxisAngle(axis, angle);
-	mAngularVelocity = axis * (angle / inDeltaTime);
+	mAngularVelocity = LockAngular(axis * (angle / inDeltaTime));
 }
 
 void MotionProperties::ClampLinearVelocity()
@@ -121,7 +121,7 @@ void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, V
 	mLinearVelocity = LockTranslation(mLinearVelocity + inDeltaTime * (mGravityFactor * inGravity + mInvMass * GetAccumulatedForce()));
 
 	// Update angular velocity
-	mAngularVelocity = LockAngular(mAngularVelocity + inDeltaTime * MultiplyWorldSpaceInverseInertiaByVector(inBodyRotation, GetAccumulatedTorque()));
+	mAngularVelocity += inDeltaTime * MultiplyWorldSpaceInverseInertiaByVector(inBodyRotation, GetAccumulatedTorque());
 
 	// Linear damping: dv/dt = -c * v
 	// Solution: v(t) = v(0) * e^(-c * t) or v2 = v1 * e^(-c * dt)
