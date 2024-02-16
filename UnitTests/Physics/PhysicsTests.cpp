@@ -1515,7 +1515,8 @@ TEST_SUITE("PhysicsTests")
 
 			// Check resulting angular velocity
 			Mat44 inv_inertia = Mat44::sRotation(initial_rotation) * mp.mInertia.Inversed3x3() * Mat44::sRotation(initial_rotation.Conjugated());
-			Vec3 expected_angular_velocity = angular_lock * (inv_inertia * torque * c.GetDeltaTime());
+			inv_inertia = Mat44::sScale(angular_lock) * inv_inertia * Mat44::sScale(angular_lock); // Clear row and column for locked axes
+			Vec3 expected_angular_velocity = inv_inertia * torque * c.GetDeltaTime();
 			CHECK((angular_lock == Vec3::sZero() || expected_angular_velocity.Length() > 1.0f)); // Just to check that we applied a high enough torque
 			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), expected_angular_velocity);
 			float expected_angular_velocity_len = expected_angular_velocity.Length();
