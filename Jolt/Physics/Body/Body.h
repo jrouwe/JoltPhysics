@@ -191,6 +191,9 @@ public:
 	// Reset the total accumulated torque, not that this will be done automatically after every time step.
 	JPH_INLINE void			ResetTorque()													{ JPH_ASSERT(IsDynamic()); return mMotionProperties->ResetTorque(); }
 
+	// Reset the current velocity and accumulated force and torque.
+	JPH_INLINE void			ResetMotion()													{ JPH_ASSERT(!IsStatic()); return mMotionProperties->ResetMotion(); }
+
 	/// Get inverse inertia tensor in world space
 	inline Mat44			GetInverseInertia() const;
 

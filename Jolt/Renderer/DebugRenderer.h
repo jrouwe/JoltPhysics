@@ -35,6 +35,9 @@ public:
 										DebugRenderer();
 	virtual								~DebugRenderer();
 
+	/// Call once after frame is complete. Releases unused dynamically generated geometry assets.
+	void								NextFrame();
+
 	/// Draw line
 	virtual void						DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) = 0;
 
@@ -280,6 +283,7 @@ private:
 
 	using SwingConeBatches = UnorderedMap<SwingConeLimits, GeometryRef, SwingConeLimitsHasher>;
 	SwingConeBatches					mSwingConeLimits;
+	SwingConeBatches					mPrevSwingConeLimits;
 
 	struct SwingPyramidLimits
 	{
@@ -301,9 +305,11 @@ private:
 
 	using SwingPyramidBatches = UnorderedMap<SwingPyramidLimits, GeometryRef, SwingPyramidLimitsHasher>;
 	SwingPyramidBatches					mSwingPyramidLimits;
+	SwingPyramidBatches					mPrevSwingPyramidLimits;
 
 	using PieBatces = UnorderedMap<float, GeometryRef>;
 	PieBatces							mPieLimits;
+	PieBatces							mPrevPieLimits;
 };
 
 JPH_NAMESPACE_END
