@@ -22,9 +22,14 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added support for a vertex radius for soft bodies. This keeps the vertices a fixed distance away from the surface which can be used to avoid z-fighting while rendering the soft body.
 * Implemented enhanced internal edge removal algorithm. This should help reduce ghost collisions. See BodyCreationSettings::mEnhancedInternalEdgeRemoval.
 * Added ability to override the max tire impulse calculations for wheeled vehicles. See WheeledVehicleController::SetTireMaxImpulseCallback.
+* Added user data to CharacterVirtual.
+* Added fraction hint to PathConstraintPath::GetClosestPoint. This can be used to speed up the search along the curve and to disambiguate fractions in case a path reaches the same point multiple times (i.e. a figure-8).
 
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
+
+### Removed functionality
+* Ability to restrict rotational degrees of freedom in local space, instead this is now done in world space.
 
 ### Bug fixes
 * Fixed a bug in cast sphere vs triangle that could return a false positive hit against a degenerate triangle.
@@ -41,6 +46,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed GCC 11.4 warning in JobSystemThreadPool.cpp: output may be truncated copying 15 bytes from a string of length 63
 * Longitudinal friction impulse for wheeled/tracked vehicles could become much higher than the calculated max because each iteration it was clamped to the max friction impulse which meant the total friction impulse could be PhysicsSettings::mNumVelocitySteps times too high.
 * Properly initializing current engine RPM to min RPM for wheeled/tracked vehicles. When min RPM was lower than the default min RPM the engine would not start at min RPM.
+* Fixed a possible division by zero in Body::GetBodyCreationSettings when the inverse inertia diagonal had 0's.
+* When specifying a -1 for min/max distance of a distance constraint and the calculated distance is incompatible with the other limit, we'll clamp it to that value now instead of ending up with min > max.
 
 ## v4.0.2
 
