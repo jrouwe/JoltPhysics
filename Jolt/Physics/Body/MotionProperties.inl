@@ -64,10 +64,11 @@ Mat44 MotionProperties::GetInverseInertiaForRotation(Mat44Arg inRotation) const
 	Mat44 rotation_mul_scale_transposed(mInvInertiaDiagonal.SplatX() * rotation.GetColumn4(0), mInvInertiaDiagonal.SplatY() * rotation.GetColumn4(1), mInvInertiaDiagonal.SplatZ() * rotation.GetColumn4(2), Vec4(0, 0, 0, 1));
 	Mat44 inverse_inertia = rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
 
-	// Mask out the angular DOFs that are not allowed
+	// We need to mask out both the rows and columns of DOFs that are not allowed
 	Vec4 angular_dofs_mask = GetAngularDOFsMask().ReinterpretAsFloat();
-	for (int i = 0; i < 3; ++i)
-		inverse_inertia.SetColumn4(i, Vec4::sAnd(inverse_inertia.GetColumn4(i), angular_dofs_mask));
+	inverse_inertia.SetColumn4(0, Vec4::sAnd(inverse_inertia.GetColumn4(0), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatX())));
+	inverse_inertia.SetColumn4(1, Vec4::sAnd(inverse_inertia.GetColumn4(1), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatY())));
+	inverse_inertia.SetColumn4(2, Vec4::sAnd(inverse_inertia.GetColumn4(2), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatZ())));
 
 	return inverse_inertia;
 }
@@ -76,11 +77,16 @@ Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRo
 {
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
-	Mat44 rotation = Mat44::sRotation(inBodyRotation * mInertiaRotation);
-	Vec3 result = rotation.Multiply3x3(mInvInertiaDiagonal * rotation.Multiply3x3Transposed(inV));
+	// Mask out columns of DOFs that are not allowed
+	Vec3 angular_dofs_mask = Vec3(GetAngularDOFsMask().ReinterpretAsFloat());
+	Vec3 v = Vec3::sAnd(inV, angular_dofs_mask);
 
-	// Mask out the angular DOFs that are not allowed
-	return LockAngular(result);
+	// Multiply vector by inverse inertia
+	Mat44 rotation = Mat44::sRotation(inBodyRotation * mInertiaRotation);
+	Vec3 result = rotation.Multiply3x3(mInvInertiaDiagonal * rotation.Multiply3x3Transposed(v));
+
+	// Mask out rows of DOFs that are not allowed
+	return Vec3::sAnd(result, angular_dofs_mask);
 }
 
 void MotionProperties::ApplyGyroscopicForceInternal(QuatArg inBodyRotation, float inDeltaTime)
