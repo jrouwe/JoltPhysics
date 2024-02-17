@@ -1250,7 +1250,7 @@ bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 
 		// Loop through the array backwards to avoid overwriting data
 		int in_bit_pos = (count_min_1 * count_min_1 - 1) * mNumBitsPerMaterialIndex;
-		uint8 *in_indices = mMaterialIndices.data() + (in_bit_pos >> 3);
+		const uint8 *in_indices = mMaterialIndices.data() + (in_bit_pos >> 3);
 		in_bit_pos &= 0b111;
 		int out_bit_pos = (count_min_1 * count_min_1 - 1) * new_bits_per_material_index;
 		uint8 *out_indices = mMaterialIndices.data() + (out_bit_pos >> 3);
