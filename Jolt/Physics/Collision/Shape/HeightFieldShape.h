@@ -203,6 +203,30 @@ public:
 	/// @param inActiveEdgeCosThresholdAngle Cosine of the threshold angle (if the angle between the two triangles is bigger than this, the edge is active, note that a concave edge is always inactive).
 	void							SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle = 0.996195f);
 
+	/// Get the current list of materials, the indices returned by GetMaterials() will index into this list.
+	const PhysicsMaterialList &		GetMaterialList() const						{ return mMaterials; }
+
+	/// Get the material indices of a block of data.
+	/// @param inX Start X position, must in the range [0, mSampleCount - 1]
+	/// @param inY Start Y position, must in the range [0, mSampleCount - 1]
+	/// @param inSizeX Number of samples in X direction
+	/// @param inSizeY Number of samples in Y direction
+	/// @param outMaterials Returned material indices, must be at least inSizeX * inSizeY uint8s. Values are returned in x-major order.
+	/// @param inMaterialsStride Stride in uint8s between two consecutive rows of outMaterials.
+	void							GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, uint inMaterialsStride) const;
+
+	/// Set the material indices of a block of data.
+	/// @param inX Start X position, must in the range [0, mSampleCount - 1]
+	/// @param inY Start Y position, must in the range [0, mSampleCount - 1]
+	/// @param inSizeX Number of samples in X direction
+	/// @param inSizeY Number of samples in Y direction
+	/// @param inMaterials The new material indices, must be at least inSizeX * inSizeY uint8s. Values are returned in x-major order.
+	/// @param inMaterialsStride Stride in uint8s between two consecutive rows of inMaterials.
+	/// @param inMaterialList The material list to use for the new material indices or nullptr if the material list should not be updated
+	/// @param inAllocator Allocator to use for temporary memory
+	/// @return True if the material indices were set, false if the total number of materials exceeded 256
+	bool							SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator);
+
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 	virtual void					SaveMaterialState(PhysicsMaterialList &outMaterials) const override;

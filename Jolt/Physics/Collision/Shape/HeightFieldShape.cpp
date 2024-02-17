@@ -1129,6 +1129,193 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 #endif
 }
 
+void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, uint inMaterialsStride) const
+{
+	if (inSizeX == 0 || inSizeY == 0)
+		return;
+
+	if (mMaterialIndices.empty())
+	{
+		// Return all 0's
+		for (uint y = 0; y < inSizeY; ++y)
+		{
+			uint8 *out_indices = outMaterials + y * inMaterialsStride;
+			for (uint x = 0; x < inSizeX; ++x)
+				*out_indices++ = 0;
+		}
+		return;
+	}
+
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
+
+	uint count_min_1 = mSampleCount - 1;
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+
+	for (uint y = 0; y < inSizeY; ++y)
+	{
+		// Calculate input position
+		uint bit_pos = (inX + (inY + y) * count_min_1) * mNumBitsPerMaterialIndex;
+		const uint8 *in_indices = mMaterialIndices.data() + (bit_pos >> 3);
+		bit_pos &= 0b111;
+
+		// Calculate output position
+		uint8 *out_indices = outMaterials + y * inMaterialsStride;
+
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			// Get material index
+			uint16 material_index = uint16(in_indices[0]) + uint16(uint16(in_indices[1]) << 8);
+			material_index >>= bit_pos;
+			material_index &= material_index_mask;
+			*out_indices = uint8(material_index);
+
+			// Go to the next index
+			bit_pos += mNumBitsPerMaterialIndex;
+			in_indices += bit_pos >> 3;
+			bit_pos &= 0b111;
+			++out_indices;
+		}
+	}
+}
+
+bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator)
+{
+	if (inSizeX == 0 || inSizeY == 0)
+		return true;
+
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
+
+	// Remap materials
+	uint material_remap_table_size = uint(inMaterialList != nullptr? inMaterialList->size() : mMaterials.size());
+	uint8 *material_remap_table = (uint8 *)inAllocator.Allocate(material_remap_table_size);
+	if (inMaterialList != nullptr)
+	{
+		// Conservatively reserve more space if the incoming material list is bigger
+		if (inMaterialList->size() > mMaterials.size())
+			mMaterials.reserve(inMaterialList->size());
+
+		// Create a remap table
+		uint8 *remap_entry = material_remap_table;
+		for (const PhysicsMaterial *material : *inMaterialList)
+		{
+			// Try to find it in the existing list
+			PhysicsMaterialList::const_iterator it = std::find(mMaterials.begin(), mMaterials.end(), material);
+			if (it != mMaterials.end())
+			{
+				// Found it, calculate index
+				*remap_entry = uint8(it - mMaterials.begin());
+			}
+			else
+			{
+				// Not found, add it
+				if (mMaterials.size() >= 256)
+				{
+					// We can't have more than 256 materials since we use uint8 as indices
+					inAllocator.Free(material_remap_table, material_remap_table_size);
+					return false;
+				}
+				*remap_entry = uint8(mMaterials.size());
+				mMaterials.push_back(material);
+			}
+			++remap_entry;
+		}
+	}
+	else
+	{
+		// No remapping
+		for (uint i = 0; i < material_remap_table_size; ++i)
+			material_remap_table[i] = uint8(i);
+	}
+
+	if (mMaterials.size() == 1)
+	{
+		// Only 1 material, we don't need to store the material indices
+		return true;
+	}
+
+	// Check if we need to resize the material indices array
+	uint count_min_1 = mSampleCount - 1;
+	uint32 new_bits_per_material_index = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
+	JPH_ASSERT(mNumBitsPerMaterialIndex <= 8 && new_bits_per_material_index <= 8);
+	if (new_bits_per_material_index != mNumBitsPerMaterialIndex)
+	{
+		// Resize the material indices array
+		mMaterialIndices.resize(((Square(count_min_1) * new_bits_per_material_index + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
+
+		// Calculate old and new mask
+		uint16 old_material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+		uint16 new_material_index_mask = uint16((1 << new_bits_per_material_index) - 1);
+
+		// Loop through the array backwards to avoid overwriting data
+		int in_bit_pos = (count_min_1 * count_min_1 - 1) * mNumBitsPerMaterialIndex;
+		const uint8 *in_indices = mMaterialIndices.data() + (in_bit_pos >> 3);
+		in_bit_pos &= 0b111;
+		int out_bit_pos = (count_min_1 * count_min_1 - 1) * new_bits_per_material_index;
+		uint8 *out_indices = mMaterialIndices.data() + (out_bit_pos >> 3);
+		out_bit_pos &= 0b111;
+
+		while (out_indices >= mMaterialIndices.data())
+		{
+			// Read the material index
+			uint16 material_index = uint16(in_indices[0]) + uint16(uint16(in_indices[1]) << 8);
+			material_index >>= in_bit_pos;
+			material_index &= old_material_index_mask;
+
+			// Write the material index
+			uint16 output_data = uint16(out_indices[0]) + uint16(uint16(out_indices[1]) << 8);
+			output_data &= ~(new_material_index_mask << out_bit_pos);
+			output_data |= material_index << out_bit_pos;
+			out_indices[0] = uint8(output_data);
+			out_indices[1] = uint8(output_data >> 8);
+
+			// Go to the previous index
+			in_bit_pos -= int(mNumBitsPerMaterialIndex);
+			in_indices += in_bit_pos >> 3;
+			in_bit_pos &= 0b111;
+			out_bit_pos -= int(new_bits_per_material_index);
+			out_indices += out_bit_pos >> 3;
+			out_bit_pos &= 0b111;
+		}
+
+		// Accept the new bits per material index
+		mNumBitsPerMaterialIndex = new_bits_per_material_index;
+	}
+
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+	for (uint y = 0; y < inSizeY; ++y)
+	{
+		// Calculate input position
+		const uint8 *in_indices = inMaterials + y * inMaterialsStride;
+
+		// Calculate output position
+		uint bit_pos = (inX + (inY + y) * count_min_1) * mNumBitsPerMaterialIndex;
+		uint8 *out_indices = mMaterialIndices.data() + (bit_pos >> 3);
+		bit_pos &= 0b111;
+
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			// Update material
+			uint16 output_data = uint16(out_indices[0]) + uint16(uint16(out_indices[1]) << 8);
+			output_data &= ~(material_index_mask << bit_pos);
+			output_data |= material_remap_table[*in_indices] << bit_pos;
+			out_indices[0] = uint8(output_data);
+			out_indices[1] = uint8(output_data >> 8);
+
+			// Go to the next index
+			in_indices++;
+			bit_pos += mNumBitsPerMaterialIndex;
+			out_indices += bit_pos >> 3;
+			bit_pos &= 0b111;
+		}
+	}
+
+	// Free the remapping table
+	inAllocator.Free(material_remap_table, material_remap_table_size);
+	return true;
+}
+
 MassProperties HeightFieldShape::GetMassProperties() const
 {
 	// Object should always be static, return default mass properties
