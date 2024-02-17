@@ -224,7 +224,8 @@ public:
 	/// @param inMaterialsStride Stride in uint8s between two consecutive rows of inMaterials.
 	/// @param inMaterialList The material list to use for the new material indices or nullptr if the material list should not be updated
 	/// @param inAllocator Allocator to use for temporary memory
-	void							SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator);
+	/// @return True if the material indices were set, false if the total number of materials exceeded 256
+	bool							SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator);
 
 	// See Shape
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;

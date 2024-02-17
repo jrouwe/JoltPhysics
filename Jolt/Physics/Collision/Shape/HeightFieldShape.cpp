@@ -1179,10 +1179,10 @@ void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 	}
 }
 
-void HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator)
+bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator)
 {
 	if (inSizeX == 0 || inSizeY == 0)
-		return;
+		return true;
 
 	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
 	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
@@ -1210,6 +1210,12 @@ void HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 			else
 			{
 				// Not found, add it
+				if (mMaterials.size() >= 256)
+				{
+					// We can't have more than 256 materials since we use uint8 as indices
+					inAllocator.Free(material_remap_table, material_remap_table_size);
+					return false;
+				}
 				*remap_entry = uint8(mMaterials.size());
 				mMaterials.push_back(material);
 			}
@@ -1226,12 +1232,13 @@ void HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 	if (mMaterials.size() == 1)
 	{
 		// Only 1 material, we don't need to store the material indices
-		return;
+		return true;
 	}
 
 	// Check if we need to resize the material indices array
 	uint count_min_1 = mSampleCount - 1;
 	uint32 new_bits_per_material_index = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
+	JPH_ASSERT(mNumBitsPerMaterialIndex <= 8 && new_bits_per_material_index <= 8);
 	if (new_bits_per_material_index != mNumBitsPerMaterialIndex)
 	{
 		// Resize the material indices array
@@ -1264,10 +1271,10 @@ void HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 			out_indices[1] = uint8(output_data >> 8);
 
 			// Go to the previous index
-			in_bit_pos -= mNumBitsPerMaterialIndex;
+			in_bit_pos -= int(mNumBitsPerMaterialIndex);
 			in_indices += in_bit_pos >> 3;
 			in_bit_pos &= 0b111;
-			out_bit_pos -= new_bits_per_material_index;
+			out_bit_pos -= int(new_bits_per_material_index);
 			out_indices += out_bit_pos >> 3;
 			out_bit_pos &= 0b111;
 		}
@@ -1306,6 +1313,7 @@ void HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 
 	// Free the remapping table
 	inAllocator.Free(material_remap_table, material_remap_table_size);
+	return true;
 }
 
 MassProperties HeightFieldShape::GetMassProperties() const

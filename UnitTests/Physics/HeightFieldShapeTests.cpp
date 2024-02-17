@@ -393,7 +393,7 @@ TEST_SUITE("HeightFieldShapeTests")
 					// Update reference state
 					current_state[(inStartY + y) * sample_count_min_1 + inStartX + x] = material_list[index];
 				}
-			height_field->SetMaterials(inStartX, inStartY, inSizeX, inSizeY, patched_materials.data(), inSizeX, inMaterialList, temp_allocator);
+			CHECK(height_field->SetMaterials(inStartX, inStartY, inSizeX, inSizeY, patched_materials.data(), inSizeX, inMaterialList, temp_allocator));
 		};
 
 		{
@@ -455,5 +455,10 @@ TEST_SUITE("HeightFieldShapeTests")
 			update_materials(2, 5, 10, 15, nullptr);
 			check_materials();
 		}
+
+		// Check materials using GetMaterial call
+		for (uint y = 0; y < cSampleCount - 1; ++y)
+			for (uint x = 0; x < cSampleCount - 1; ++x)
+				CHECK(height_field->GetMaterial(x, y) == current_state[y * (cSampleCount - 1) + x]);
 	}
 }
