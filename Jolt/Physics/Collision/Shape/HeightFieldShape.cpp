@@ -1150,7 +1150,7 @@ void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
 
 	uint count_min_1 = mSampleCount - 1;
-	uint16 material_index_mask = (1 << mNumBitsPerMaterialIndex) - 1;
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
 
 	for (uint y = 0; y < inSizeY; ++y)
 	{
@@ -1238,8 +1238,8 @@ void HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 		mMaterialIndices.resize(((Square(count_min_1) * new_bits_per_material_index + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
 
 		// Calculate old and new mask
-		uint16 old_material_index_mask = (1 << mNumBitsPerMaterialIndex) - 1;
-		uint16 new_material_index_mask = (1 << new_bits_per_material_index) - 1;
+		uint16 old_material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+		uint16 new_material_index_mask = uint16((1 << new_bits_per_material_index) - 1);
 
 		// Loop through the array backwards to avoid overwriting data
 		int in_bit_pos = (count_min_1 * count_min_1 - 1) * mNumBitsPerMaterialIndex;
@@ -1276,7 +1276,7 @@ void HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 		mNumBitsPerMaterialIndex = new_bits_per_material_index;
 	}
 
-	uint16 material_index_mask = (1 << mNumBitsPerMaterialIndex) - 1;
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
 	for (uint y = 0; y < inSizeY; ++y)
 	{
 		// Calculate input position

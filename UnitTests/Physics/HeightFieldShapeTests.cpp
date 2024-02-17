@@ -323,7 +323,7 @@ TEST_SUITE("HeightFieldShapeTests")
 
 	TEST_CASE("TestSetMaterials")
 	{
-		const uint cSampleCount = 32;
+		constexpr uint cSampleCount = 32;
 
 		PhysicsMaterialRefC material_0 = new PhysicsMaterialSimple("Material 0", Color::sGetDistinctColor(0));
 		PhysicsMaterialRefC material_1 = new PhysicsMaterialSimple("Material 1", Color::sGetDistinctColor(1));
@@ -356,12 +356,14 @@ TEST_SUITE("HeightFieldShapeTests")
 		HeightFieldShape *height_field = static_cast<HeightFieldShape *>(shape.GetPtr());
 
 		// Check that the material is set
-		auto check_materials = [cSampleCount, height_field, &current_state]() {
+		auto check_materials = [height_field, &current_state]() {
 			const PhysicsMaterialList &material_list = height_field->GetMaterialList();
 
+			uint sample_count_min_1 = height_field->GetSampleCount() - 1;
+
 			Array<uint8> material_indices;
-			material_indices.resize(Square(cSampleCount - 1));
-			height_field->GetMaterials(0, 0, cSampleCount - 1, cSampleCount - 1, material_indices.data(), cSampleCount - 1);
+			material_indices.resize(Square(sample_count_min_1));
+			height_field->GetMaterials(0, 0, sample_count_min_1, sample_count_min_1, material_indices.data(), sample_count_min_1);
 
 			for (uint i = 0; i < (uint)current_state.size(); ++i)
 				CHECK(current_state[i] == material_list[material_indices[i]]);
@@ -369,13 +371,15 @@ TEST_SUITE("HeightFieldShapeTests")
 		check_materials();
 
 		// Function to randomize materials
-		auto update_materials = [cSampleCount, height_field, &current_state](uint inStartX, uint inStartY, uint inSizeX, uint inSizeY, const PhysicsMaterialList *inMaterialList) {
+		auto update_materials = [height_field, &current_state](uint inStartX, uint inStartY, uint inSizeX, uint inSizeY, const PhysicsMaterialList *inMaterialList) {
 			TempAllocatorMalloc temp_allocator;
 
 			const PhysicsMaterialList &material_list = inMaterialList != nullptr? *inMaterialList : height_field->GetMaterialList();
 
 			UnitTestRandom random;
 			uniform_int_distribution<uint> index_distribution(0, uint(material_list.size()) - 1);
+
+			uint sample_count_min_1 = height_field->GetSampleCount() - 1;
 
 			Array<uint8> patched_materials;
 			patched_materials.resize(inSizeX * inSizeY);
@@ -387,7 +391,7 @@ TEST_SUITE("HeightFieldShapeTests")
 					patched_materials[y * inSizeX + x] = index;
 
 					// Update reference state
-					current_state[(inStartY + y) * (cSampleCount - 1) + inStartX + x] = material_list[index];
+					current_state[(inStartY + y) * sample_count_min_1 + inStartX + x] = material_list[index];
 				}
 			height_field->SetMaterials(inStartX, inStartY, inSizeX, inSizeY, patched_materials.data(), inSizeX, inMaterialList, temp_allocator);
 		};
