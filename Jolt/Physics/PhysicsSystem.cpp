@@ -2529,8 +2529,8 @@ void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const
 void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint inThreadIndex) const
 {
 #ifdef JPH_ENABLE_ASSERTS
-	// Updating velocities of soft bodies
-	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::None);
+	// Updating velocities of soft bodies, allow the contact listener to read the soft body state
+	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::Read);
 #endif
 
 	// Calculate at which body we start to distribute the workload across the threads

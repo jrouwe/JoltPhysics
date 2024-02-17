@@ -6,6 +6,8 @@
 
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
 #include <Jolt/Physics/SoftBody/SoftBodyCreationSettings.h>
+#include <Jolt/Physics/SoftBody/SoftBodyContactListener.h>
+#include <Jolt/Physics/SoftBody/SoftBodyManifold.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
@@ -66,6 +68,7 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 		out_vertex.mPreviousPosition = out_vertex.mPosition = rotation * Vec3(in_vertex.mPosition);
 		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
 		out_vertex.mCollidingShapeIndex = -1;
+		out_vertex.mHasContact = false;
 		out_vertex.mLargestPenetration = -FLT_MAX;
 		out_vertex.mInvMass = in_vertex.mInvMass;
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
@@ -96,9 +99,9 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 
 	struct Collector : public CollideShapeBodyCollector
 	{
-									Collector(Body &inSoftBody, RMat44Arg inTransform, const PhysicsSystem &inSystem, Array<CollidingShape> &ioHits) :
-										mSoftBody(inSoftBody),
-										mInverseTransform(inTransform.InversedRotationTranslation()),
+									Collector(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem, Array<CollidingShape> &ioHits) :
+										mContext(inContext),
+										mInverseTransform(inContext.mCenterOfMassTransform.InversedRotationTranslation()),
 										mBodyLockInterface(inSystem.GetBodyLockInterfaceNoLock()),
 										mCombineFriction(inSystem.GetCombineFriction()),
 										mCombineRestitution(inSystem.GetCombineRestitution()),
@@ -111,34 +114,42 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 			BodyLockRead lock(mBodyLockInterface, inResult);
 			if (lock.Succeeded())
 			{
+				const Body &soft_body = *mContext.mBody;
 				const Body &body = lock.GetBody();
 				if (body.IsRigidBody() // TODO: We should support soft body vs soft body
 					&& !body.IsSensor()
-					&& mSoftBody.GetCollisionGroup().CanCollide(body.GetCollisionGroup()))
+					&& soft_body.GetCollisionGroup().CanCollide(body.GetCollisionGroup()))
 				{
-					CollidingShape cs;
-					cs.mCenterOfMassTransform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
-					cs.mShape = body.GetShape();
-					cs.mBodyID = inResult;
-					cs.mMotionType = body.GetMotionType();
-					cs.mUpdateVelocities = false;
-					cs.mFriction = mCombineFriction(mSoftBody, SubShapeID(), body, SubShapeID());
-					cs.mRestitution = mCombineRestitution(mSoftBody, SubShapeID(), body, SubShapeID());
-					if (cs.mMotionType == EMotionType::Dynamic)
+					// Call the contact listener to see if we should accept this contact
+					SoftBodyContactSettings settings;
+					if (mContext.mContactListener == nullptr
+						|| mContext.mContactListener->OnSoftBodyContactValidate(soft_body, body, settings) == SoftBodyValidateResult::AcceptContact)
 					{
-						const MotionProperties *mp = body.GetMotionProperties();
-						cs.mInvMass = mp->GetInverseMass();
-						cs.mInvInertia = mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
-						cs.mOriginalLinearVelocity = cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
-						cs.mOriginalAngularVelocity = cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
+						CollidingShape cs;
+						cs.mCenterOfMassTransform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
+						cs.mShape = body.GetShape();
+						cs.mBodyID = inResult;
+						cs.mMotionType = body.GetMotionType();
+						cs.mUpdateVelocities = false;
+						cs.mFriction = mCombineFriction(soft_body, SubShapeID(), body, SubShapeID());
+						cs.mRestitution = mCombineRestitution(soft_body, SubShapeID(), body, SubShapeID());
+						if (cs.mMotionType == EMotionType::Dynamic)
+						{
+							const MotionProperties *mp = body.GetMotionProperties();
+							cs.mInvMass = settings.mInvMassScale2 * mp->GetInverseMass();
+							cs.mInvInertia = settings.mInvInertiaScale2 * mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
+							cs.mSoftBodyInvMassScale = settings.mInvMassScale1;
+							cs.mOriginalLinearVelocity = cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
+							cs.mOriginalAngularVelocity = cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
+						}
+						mHits.push_back(cs);
 					}
-					mHits.push_back(cs);
 				}
 			}
 		}
 
 	private:
-		Body &						mSoftBody;
+		const SoftBodyUpdateContext &mContext;
 		RMat44						mInverseTransform;
 		const BodyLockInterface &	mBodyLockInterface;
 		ContactConstraintManager::CombineFunction mCombineFriction;
@@ -146,7 +157,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 		Array<CollidingShape> &		mHits;
 	};
 
-	Collector collector(*inContext.mBody, inContext.mCenterOfMassTransform, inSystem, mCollidingShapes);
+	Collector collector(inContext, inSystem, mCollidingShapes);
 	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
 	bounds = bounds.Transformed(inContext.mCenterOfMassTransform);
@@ -326,6 +337,10 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 				float projected_distance = -v.mCollisionPlane.SignedDistance(v.mPosition) + vertex_radius;
 				if (projected_distance > 0.0f)
 				{
+					// Remember that there was a collision
+					v.mHasContact = true;
+					mHasContact = true;
+
 					// Note that we already calculated the velocity, so this does not affect the velocity (next iteration starts by setting previous position to current position)
 					Vec3 contact_normal = v.mCollisionPlane.GetNormal();
 					v.mPosition += contact_normal * projected_distance;
@@ -359,10 +374,13 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 						Vec3 v_tangential = relative_velocity - v_normal;
 						float v_tangential_length = v_tangential.Length();
 
+						// Calculate resulting inverse mass of vertex
+						float vertex_inv_mass = cs.mSoftBodyInvMassScale * v.mInvMass;
+
 						// Calculate inverse effective mass
 						Vec3 r2_cross_n = r2.Cross(contact_normal);
 						float w2 = cs.mInvMass + r2_cross_n.Dot(cs.mInvInertia * r2_cross_n);
-						float w1_plus_w2 = v.mInvMass + w2;
+						float w1_plus_w2 = vertex_inv_mass + w2;
 
 						// Calculate delta relative velocity due to friction (modified equation 31)
 						Vec3 dv;
@@ -381,7 +399,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 						Vec3 p = dv / w1_plus_w2;
 
 						// Apply impulse to particle
-						v.mVelocity -= p * v.mInvMass;
+						v.mVelocity -= p * vertex_inv_mass;
 
 						// Apply impulse to rigid body
 						cs.mLinearVelocity += p * cs.mInvMass;
@@ -418,12 +436,17 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 {
 	JPH_PROFILE_FUNCTION();
 
+	// Contact callback
+	if (mHasContact && ioContext.mContactListener != nullptr)
+		ioContext.mContactListener->OnSoftBodyContactAdded(*ioContext.mBody, *ioContext.mBody, SoftBodyManifold(this));
+
 	// Loop through vertices once more to update the global state
 	float dt = ioContext.mDeltaTime;
 	float max_linear_velocity_sq = Square(GetMaxLinearVelocity());
 	float max_v_sq = 0.0f;
 	Vec3 linear_velocity = Vec3::sZero(), angular_velocity = Vec3::sZero();
 	mLocalPredictedBounds = mLocalBounds = { };
+	mHasContact = false;
 	for (Vertex &v : mVertices)
 	{
 		// Calculate max square velocity
@@ -446,6 +469,7 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 
 		// Reset collision data for the next iteration
 		v.mCollidingShapeIndex = -1;
+		v.mHasContact = false;
 		v.mLargestPenetration = -FLT_MAX;
 	}
 
@@ -505,6 +529,7 @@ void SoftBodyMotionProperties::InitializeUpdateContext(float inDeltaTime, Body &
 	// Store body
 	ioContext.mBody = &inSoftBody;
 	ioContext.mMotionProperties = this;
+	ioContext.mContactListener = inSystem.GetSoftBodyContactListener();
 
 	// Convert gravity to local space
 	ioContext.mCenterOfMassTransform = inSoftBody.GetCenterOfMassTransform();

@@ -20,6 +20,7 @@ public:
 	Vec3 			mVelocity;							///< Velocity, relative to the center of mass of the soft body
 	Plane			mCollisionPlane;					///< Nearest collision plane, relative to the center of mass of the soft body
 	int				mCollidingShapeIndex;				///< Index in the colliding shapes list of the body we may collide with
+	bool			mHasContact;						///< True if the vertex has collided with anything in the last update
 	float			mLargestPenetration;				///< Used while finding the collision plane, stores the largest penetration found so far
 	float			mInvMass;							///< Inverse mass (1 / mass)
 };
