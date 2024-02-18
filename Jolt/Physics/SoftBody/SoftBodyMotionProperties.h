@@ -129,6 +129,7 @@ private:
 		RefConst<Shape>					mShape;										///< Shape of the body we hit
 		BodyID							mBodyID;									///< Body ID of the body we hit
 		EMotionType						mMotionType;								///< Motion type of the body we hit
+		bool							mIsSensor;									///< If the contact should be treated as a sensor vs body contact (no collision response)
 		float							mInvMass;									///< Inverse mass of the body we hit
 		float							mFriction;									///< Combined friction of the two bodies
 		float							mRestitution;								///< Combined restitution of the two bodies

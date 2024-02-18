@@ -35,7 +35,7 @@ void SoftBodyContactListenerTest::Initialize()
 	bcs.mMassPropertiesOverride.mMass = 100.0f;
 
 	// Create variations in mass
-	for (int i = 0; i < 6; ++i)
+	for (int i = 0; i < 7; ++i)
 	{
 		RVec3 position = RVec3(-45.0f + 15.0f * i, 5.0f, 0.0f);
 
@@ -54,34 +54,40 @@ void SoftBodyContactListenerTest::Initialize()
 SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings)
 {
 	BodyID id = inOtherBody.GetID();
-	if (id == mBodies[1])
+	if (id == mBodies[2])
 	{
-		// 2nd one is normal
+		// 2nd one is a sensor contact
+		ioSettings.mIsSensor = true;
 		return SoftBodyValidateResult::AcceptContact;
 	}
 	else if (id == mBodies[2])
 	{
-		// 3rd one makes the sphere 10x as heavy
-		ioSettings.mInvMassScale2 = 0.1f;
-		ioSettings.mInvInertiaScale2 = 0.1f;
+		// 3nd one is normal
 		return SoftBodyValidateResult::AcceptContact;
 	}
 	else if (id == mBodies[3])
 	{
-		// 4th one makes the cloth 10x as heavy
-		ioSettings.mInvMassScale1 = 0.1f;
+		// 4rd one makes the sphere 10x as heavy
+		ioSettings.mInvMassScale2 = 0.1f;
+		ioSettings.mInvInertiaScale2 = 0.1f;
 		return SoftBodyValidateResult::AcceptContact;
 	}
 	else if (id == mBodies[4])
 	{
-		// 5th one makes the cloth react to the sphere but not vice versa
-		ioSettings.mInvMassScale2 = 0.0f;
-		ioSettings.mInvInertiaScale2 = 0.0f;
+		// 5th one makes the cloth 10x as heavy
+		ioSettings.mInvMassScale1 = 0.1f;
 		return SoftBodyValidateResult::AcceptContact;
 	}
 	else if (id == mBodies[5])
 	{
-		// 6th one makes the sphere react to the cloth but not vice versa
+		// 6th one makes the cloth react to the sphere but not vice versa
+		ioSettings.mInvMassScale2 = 0.0f;
+		ioSettings.mInvInertiaScale2 = 0.0f;
+		return SoftBodyValidateResult::AcceptContact;
+	}
+	else if (id == mBodies[6])
+	{
+		// 7th one makes the sphere react to the cloth but not vice versa
 		ioSettings.mInvMassScale1 = 0.0f;
 		return SoftBodyValidateResult::AcceptContact;
 	}

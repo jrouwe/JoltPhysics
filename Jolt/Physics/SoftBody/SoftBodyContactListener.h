@@ -24,6 +24,7 @@ public:
 	float							mInvMassScale1 = 1.0f;				///< Scale factor for the inverse mass of the soft body (0 = infinite mass, 1 = use original mass, 2 = body has half the mass). For the same contact pair, you should strive to keep the value the same over time.
 	float							mInvMassScale2 = 1.0f;				///< Scale factor for the inverse mass of the other body (0 = infinite mass, 1 = use original mass, 2 = body has half the mass). For the same contact pair, you should strive to keep the value the same over time.
 	float							mInvInertiaScale2 = 1.0f;			///< Scale factor for the inverse inertia of the other body (usually same as mInvMassScale2)
+	bool							mIsSensor;							///< If the contact should be treated as a sensor vs body contact (no collision response)
 };
 
 /// A listener class that receives collision contact events for soft bodies.
