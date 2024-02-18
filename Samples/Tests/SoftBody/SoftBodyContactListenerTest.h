@@ -15,11 +15,18 @@ public:
 
 	// See: Test
 	virtual void					Initialize() override;
+	virtual void					PrePhysicsUpdate(const PreUpdateParams &inParams) override;
+	virtual void					GetInitialCamera(CameraState &ioState) const override { ioState.mPos = RVec3(15, 10, 15); }
 
 	// See: SoftBodyContactListener
 	virtual SoftBodyValidateResult	OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings) override;
 	virtual void					OnSoftBodyContactAdded(const Body &inSoftBody, const Body &inOtherBody, const SoftBodyManifold &inManifold) override;
 
 private:
-	BodyIDVector					mBodies;
+	void							StartCycle();
+
+	float							mTime = 0.0f;
+	int								mCycle = 0;
+	BodyID							mSoftBodyID;
+	BodyID							mOtherBodyID;
 };

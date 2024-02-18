@@ -26,74 +26,91 @@ void SoftBodyContactListenerTest::Initialize()
 	// Floor
 	CreateFloor();
 
+	// Start the 1st cycle
+	StartCycle();
+}
+
+void SoftBodyContactListenerTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	mTime += inParams.mDeltaTime;
+	if (mTime > 2.5f)
+	{
+		// Next cycle
+		mCycle = (mCycle + 1) % 7;
+		mTime = 0.0f;
+
+		// Remove the old scene
+		mBodyInterface->RemoveBody(mSoftBodyID);
+		mBodyInterface->DestroyBody(mSoftBodyID);
+		mBodyInterface->RemoveBody(mOtherBodyID);
+		mBodyInterface->DestroyBody(mOtherBodyID);
+
+		// Start the new
+		StartCycle();
+	}
+
+	// Draw current state
+	const char *cycle_names[] = { "Accept contact", "Sphere 10x mass", "Cloth 10x mass", "Sphere infinite mass", "Cloth infinite mass", "Sensor contact", "Reject contact" };
+	mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mOtherBodyID), cycle_names[mCycle], Color::sWhite, 1.0f);
+}
+
+void SoftBodyContactListenerTest::StartCycle()
+{
 	// Create the cloth
 	Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(15);
 
-	// Create body creation settings
-	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	// Create cloth that's fixated at the corners
+	SoftBodyCreationSettings cloth(cloth_settings, RVec3(0, 5, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), Layers::MOVING);
+	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
+	cloth.mMakeRotationIdentity = false; // Test explicitly checks if soft bodies with a rotation collide with shapes properly
+	mSoftBodyID = mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
+
+	// Create sphere
+	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(0, 7, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 	bcs.mMassPropertiesOverride.mMass = 100.0f;
-
-	// Create variations in mass
-	for (int i = 0; i < 7; ++i)
-	{
-		RVec3 position = RVec3(-45.0f + 15.0f * i, 5.0f, 0.0f);
-
-		// Create cloth that's fixated at the corners
-		SoftBodyCreationSettings cloth(cloth_settings, position, Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), Layers::MOVING);
-		cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
-		cloth.mMakeRotationIdentity = false; // Test explicitly checks if soft bodies with a rotation collide with shapes properly
-		mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
-
-		// Create sphere
-		bcs.mPosition = position + Vec3(0, 2.0f, 0);
-		mBodies.push_back(mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate));
-	}
+	mOtherBodyID = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 }
 
 SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings)
 {
-	BodyID id = inOtherBody.GetID();
-	if (id == mBodies[2])
+	switch (mCycle)
 	{
-		// 2nd one is a sensor contact
-		ioSettings.mIsSensor = true;
+	case 0:
+		// Normal
 		return SoftBodyValidateResult::AcceptContact;
-	}
-	else if (id == mBodies[2])
-	{
-		// 3nd one is normal
-		return SoftBodyValidateResult::AcceptContact;
-	}
-	else if (id == mBodies[3])
-	{
-		// 4rd one makes the sphere 10x as heavy
+
+	case 1:
+		// Makes the sphere 10x as heavy
 		ioSettings.mInvMassScale2 = 0.1f;
 		ioSettings.mInvInertiaScale2 = 0.1f;
 		return SoftBodyValidateResult::AcceptContact;
-	}
-	else if (id == mBodies[4])
-	{
-		// 5th one makes the cloth 10x as heavy
+
+	case 2:
+		// Makes the cloth 10x as heavy
 		ioSettings.mInvMassScale1 = 0.1f;
 		return SoftBodyValidateResult::AcceptContact;
-	}
-	else if (id == mBodies[5])
-	{
-		// 6th one makes the cloth react to the sphere but not vice versa
+
+	case 3:
+		// Makes the sphere have infinite mass
 		ioSettings.mInvMassScale2 = 0.0f;
 		ioSettings.mInvInertiaScale2 = 0.0f;
 		return SoftBodyValidateResult::AcceptContact;
-	}
-	else if (id == mBodies[6])
-	{
-		// 7th one makes the sphere react to the cloth but not vice versa
+
+	case 4:
+		// Makes the cloth have infinite mass
 		ioSettings.mInvMassScale1 = 0.0f;
 		return SoftBodyValidateResult::AcceptContact;
-	}
 
-	// 1st one falls through
-	return SoftBodyValidateResult::RejectContact;
+	case 5:
+		// Sensor contact
+		ioSettings.mIsSensor = true;
+		return SoftBodyValidateResult::AcceptContact;
+
+	default:
+		// No contacts
+		return SoftBodyValidateResult::RejectContact;
+	}
 }
 
 void SoftBodyContactListenerTest::OnSoftBodyContactAdded(const Body &inSoftBody, const Body &inOtherBody, const SoftBodyManifold &inManifold)
