@@ -113,7 +113,7 @@ SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(co
 	}
 }
 
-void SoftBodyContactListenerTest::OnSoftBodyContactAdded(const Body &inSoftBody, const Body &inOtherBody, const SoftBodyManifold &inManifold)
+void SoftBodyContactListenerTest::OnSoftBodyContactAdded(const Body &inSoftBody, const SoftBodyManifold &inManifold)
 {
 	// Draw contacts
 	RMat44 com = inSoftBody.GetCenterOfMassTransform();

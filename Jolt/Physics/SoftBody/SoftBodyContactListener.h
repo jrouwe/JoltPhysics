@@ -48,9 +48,8 @@ public:
 	/// Called after all contact points for a soft body have been handled. You only receive one callback per body pair per simulation step and can use inManifold to iterate through all contacts.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
 	/// @param inSoftBody The soft body that collided. It is safe to access this as the soft body is only updated on the current thread.
-	/// @param inOtherBody The other body that collided. Note that accessing the position/orientation/velocity of inOtherBody may result in a race condition as other threads may be modifying the body at the same time.
 	/// @param inManifold The manifold that describes the contact surface between the two bodies.
-	virtual void					OnSoftBodyContactAdded([[maybe_unused]] const Body &inSoftBody, [[maybe_unused]] const Body &inOtherBody, const SoftBodyManifold &inManifold) { /* Do nothing */ }
+	virtual void					OnSoftBodyContactAdded([[maybe_unused]] const Body &inSoftBody, const SoftBodyManifold &inManifold) { /* Do nothing */ }
 };
 
 JPH_NAMESPACE_END

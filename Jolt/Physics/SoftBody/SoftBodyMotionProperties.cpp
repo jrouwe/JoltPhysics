@@ -442,7 +442,7 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 
 	// Contact callback
 	if (mHasContact && ioContext.mContactListener != nullptr)
-		ioContext.mContactListener->OnSoftBodyContactAdded(*ioContext.mBody, *ioContext.mBody, SoftBodyManifold(this));
+		ioContext.mContactListener->OnSoftBodyContactAdded(*ioContext.mBody, SoftBodyManifold(this));
 
 	// Loop through vertices once more to update the global state
 	float dt = ioContext.mDeltaTime;

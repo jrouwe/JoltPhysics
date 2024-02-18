@@ -20,7 +20,7 @@ public:
 
 	// See: SoftBodyContactListener
 	virtual SoftBodyValidateResult	OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings) override;
-	virtual void					OnSoftBodyContactAdded(const Body &inSoftBody, const Body &inOtherBody, const SoftBodyManifold &inManifold) override;
+	virtual void					OnSoftBodyContactAdded(const Body &inSoftBody, const SoftBodyManifold &inManifold) override;
 
 private:
 	void							StartCycle();
