@@ -71,7 +71,7 @@ public:
 	virtual					~ContactListener() = default;
 
 	/// Called after detecting a collision between a body pair, but before calling OnContactAdded and before adding the contact constraint.
-	/// If the function returns false, the contact will not be added and any other contacts between this body pair will not be processed.
+	/// If the function rejects the contact, the contact will not be added and any other contacts between this body pair will not be processed.
 	/// This function will only be called once per PhysicsSystem::Update per body pair and may not be called again the next update
 	/// if a contact persists and no new contact pairs between sub shapes are found.
 	/// This is a rather expensive time to reject a contact point since a lot of the collision detection has happened already, make sure you
