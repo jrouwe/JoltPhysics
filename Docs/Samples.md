@@ -75,9 +75,13 @@ This category demonstrates how ragdolls can be made and controlled using keyfram
 
 ### Soft Body
 
-|[![Character Demo](https://img.youtube.com/vi/vJX_3FNISkw/hqdefault.jpg)](https://www.youtube.com/watch?v=vJX_3FNISkw)|
+|[![Soft Body Demo](https://img.youtube.com/vi/vJX_3FNISkw/hqdefault.jpg)](https://www.youtube.com/watch?v=vJX_3FNISkw)|
 |:-|
 |*Demonstrates Soft Body physics as simulated by Jolt Physics. Soft body physics can be used for things like cloth and soft balls.*|
+
+|[![Soft Body Contact Listener Demo](https://img.youtube.com/vi/DmS_8d2bdOw/hqdefault.jpg)](https://www.youtube.com/watch?v=DmS_8d2bdOw)|
+|:-|
+|*Demonstrates the use of soft body contact listeners. You can use these to affect the collision response between a soft body and a rigid body by e.g. artificially making the mass of one of the two higher so that the other is less affected by the collision. Finally you can also turn a contact into a sensor contact which means you get the contact points but there will not be any collision response..*|
 
 ### Character
 
