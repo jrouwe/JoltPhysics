@@ -113,11 +113,14 @@ public:
 	void								UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem);
 
 private:
+	// SoftBodyManifold needs to have access to CollidingShape
+	friend class SoftBodyManifold;
+
 	// Collect information about the colliding bodies
 	struct CollidingShape
 	{
 		/// Get the velocity of a point on this body
-		Vec3			GetPointVelocity(Vec3Arg inPointRelativeToCOM) const
+		Vec3							GetPointVelocity(Vec3Arg inPointRelativeToCOM) const
 		{
 			return mLinearVelocity + mAngularVelocity.Cross(inPointRelativeToCOM);
 		}
@@ -126,9 +129,11 @@ private:
 		RefConst<Shape>					mShape;										///< Shape of the body we hit
 		BodyID							mBodyID;									///< Body ID of the body we hit
 		EMotionType						mMotionType;								///< Motion type of the body we hit
+		bool							mIsSensor;									///< If the contact should be treated as a sensor vs body contact (no collision response)
 		float							mInvMass;									///< Inverse mass of the body we hit
 		float							mFriction;									///< Combined friction of the two bodies
 		float							mRestitution;								///< Combined restitution of the two bodies
+		float							mSoftBodyInvMassScale;						///< Scale factor for the inverse mass of the soft body vertices
 		bool 							mUpdateVelocities;							///< If the linear/angular velocity changed and the body needs to be updated
 		Mat44							mInvInertia;								///< Inverse inertia in local space to the soft body
 		Vec3							mLinearVelocity;							///< Linear velocity of the body in local space to the soft body
@@ -178,6 +183,7 @@ private:
 	uint32								mNumIterations;								///< Number of solver iterations
 	float								mPressure;									///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	bool								mUpdatePosition;							///< Update the position of the body while simulating (set to false for something that is attached to the static world)
+	bool								mHasContact = false;						///< True if the soft body has collided with anything in the last update
 };
 
 JPH_NAMESPACE_END

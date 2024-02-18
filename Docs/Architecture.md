@@ -243,10 +243,21 @@ Soft bodies use the Body class just like rigid bodies but can be identified by c
 
 Soft bodies try to implement as much as possible of the normal Body interface, but this interface provides a simplified version of reality, e.g. Body::GetLinearVelocity will return the average particle speed and Body::GetPosition returns the average particle position. During simulation, a soft body will never update its rotation. Internally it stores particle velocities in local space, so if you rotate a soft body e.g. by calling BodyInterface::SetRotation, the body will rotate but its velocity will as well.
 
+### Soft Body Contact Listeners {#soft-body-contact-listener}
+
+Soft Bodies provide contacts with other bodies through the SoftBodyContactListener class. This contact listener works a little bit different from the normal contact listener as you will not receive a contact callback per colliding vertex.
+
+After the broad phase has detected an overlap and the normal layer / collision group filters have had a chance to reject the collision, you will receive a SoftBodyContactListener::OnSoftBodyContactValidate callback. This callback allows you to specify how the vertices of the soft body should interact with the other body. You can override the mass for both bodies and you can turn the contact into a sensor contact.
+
+The simulation will then proceed to do all collision detection and response and after that is finished, you will receive a SoftBodyContactListener::OnSoftBodyContactAdded callback that allows you to inspect all collisions that happened during the simulation step. In order to do this a SoftBodyManifold is provided which allows you to loop over the vertices and ask each vertex what it collided with.
+
+Note that at the time of the callback, multiple threads are operating at the same time. The soft body is stable and can be safely read. The other body that is collided with is not stable however, so you cannot safely read its position/orientation and velocity as it may be modified by another soft body collision at the same time. 
+
+### Soft Body Work In Progress {#soft-body-wip}
+
 Soft bodies are currently in development, please note the following:
 
 * Soft bodies can only collide with rigid bodies, collisions between soft bodies are not implemented yet.
-* ContactListener callbacks are not triggered for soft bodies.
 * AddForce/AddTorque/SetLinearVelocity/SetLinearVelocityClamped/SetAngularVelocity/SetAngularVelocityClamped/AddImpulse/AddAngularImpulse have no effect on soft bodies as the velocity is stored per particle rather than per body.
 * Buoyancy calculations have not been implemented yet.
 * Constraints cannot operate on soft bodies, set the inverse mass of a particle to zero and move it by setting a velocity to constrain a soft body to something else.
