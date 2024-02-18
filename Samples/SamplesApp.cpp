@@ -322,7 +322,6 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyVsFastMovingTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyVertexRadiusTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyContactListenerTest)
 
-
 static TestNameAndRTTI sSoftBodyTests[] =
 {
 	{ "Soft Body vs Shapes",			JPH_RTTI(SoftBodyShapesTest) },
