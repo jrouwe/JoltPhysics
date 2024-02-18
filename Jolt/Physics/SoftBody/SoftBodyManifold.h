@@ -44,7 +44,7 @@ private:
 	friend class SoftBodyMotionProperties;
 
 	/// Constructor
-									SoftBodyManifold(const SoftBodyMotionProperties *inMotionProperties) :
+	explicit						SoftBodyManifold(const SoftBodyMotionProperties *inMotionProperties) :
 										mVertices(inMotionProperties->mVertices),
 										mCollidingShapes(inMotionProperties->mCollidingShapes)
 	{
