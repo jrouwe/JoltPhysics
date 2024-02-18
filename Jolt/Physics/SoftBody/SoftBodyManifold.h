@@ -31,7 +31,7 @@ public:
 	JPH_INLINE Vec3					GetContactNormal(const SoftBodyVertex &inVertex) const
 	{
 		return -inVertex.mCollisionPlane.GetNormal();
-	}		
+	}
 
 	/// Get the body with which the vertex has collided in this update
 	JPH_INLINE BodyID				GetContactBodyID(const SoftBodyVertex &inVertex) const
