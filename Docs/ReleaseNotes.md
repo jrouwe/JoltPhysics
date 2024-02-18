@@ -25,6 +25,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added user data to CharacterVirtual.
 * Added fraction hint to PathConstraintPath::GetClosestPoint. This can be used to speed up the search along the curve and to disambiguate fractions in case a path reaches the same point multiple times (i.e. a figure-8).
 * Added ability to update the height field materials after creation.
+* Added SoftBodyContactListener which allows you to get callbacks for collisions between soft bodies and rigid bodies.
 
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
