@@ -196,7 +196,7 @@ public:
 	void					MoveKinematic(RVec3Arg inTargetPosition, QuatArg inTargetRotation, float inDeltaTime);
 
 	/// Applies an impulse to the body that simulates fluid buoyancy and drag
-	/// @param inSurfacePosition Position on the fluid surface in world space
+	/// @param inSurfacePosition Position of the fluid surface in world space
 	/// @param inSurfaceNormal Normal of the fluid surface (should point up)
 	/// @param inBuoyancy The buoyancy factor for the body. 1 = neutral body, < 1 sinks, > 1 floats. Note that we don't use the fluid density since it is harder to configure than a simple number between [0, 2]
 	/// @param inLinearDrag Linear drag factor that slows down the body when in the fluid (approx. 0.5)
