@@ -169,6 +169,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyContactListenerTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyContactListenerTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyCustomUpdateTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyCustomUpdateTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyFrictionTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyGravityFactorTest.cpp
