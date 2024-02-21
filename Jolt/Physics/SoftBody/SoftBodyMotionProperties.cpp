@@ -93,16 +93,16 @@ float SoftBodyMotionProperties::GetVolumeTimesSix() const
 	return six_volume;
 }
 
-void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem, const BodyLockInterface &inBodyLockInterface)
 {
 	JPH_PROFILE_FUNCTION();
 
 	struct Collector : public CollideShapeBodyCollector
 	{
-									Collector(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem, Array<CollidingShape> &ioHits) :
+									Collector(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem, const BodyLockInterface &inBodyLockInterface, Array<CollidingShape> &ioHits) :
 										mContext(inContext),
 										mInverseTransform(inContext.mCenterOfMassTransform.InversedRotationTranslation()),
-										mBodyLockInterface(inSystem.GetBodyLockInterfaceNoLock()),
+										mBodyLockInterface(inBodyLockInterface),
 										mCombineFriction(inSystem.GetCombineFriction()),
 										mCombineRestitution(inSystem.GetCombineRestitution()),
 										mHits(ioHits)
@@ -158,7 +158,7 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 		Array<CollidingShape> &		mHits;
 	};
 
-	Collector collector(inContext, inSystem, mCollidingShapes);
+	Collector collector(inContext, inSystem, inBodyLockInterface, mCollidingShapes);
 	AABox bounds = mLocalBounds;
 	bounds.Encapsulate(mLocalPredictedBounds);
 	bounds = bounds.Transformed(inContext.mCenterOfMassTransform);
@@ -512,15 +512,14 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 		ioContext.mCanSleep = ECanSleep::CannotSleep;
 }
 
-void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem)
+void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, BodyInterface &inBodyInterface)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Write back velocity deltas
-	BodyInterface &body_interface = inSystem.GetBodyInterfaceNoLock();
 	for (const CollidingShape &cs : mCollidingShapes)
 		if (cs.mUpdateVelocities)
-			body_interface.AddLinearAndAngularVelocity(cs.mBodyID, inContext.mCenterOfMassTransform.Multiply3x3(cs.mLinearVelocity - cs.mOriginalLinearVelocity), inContext.mCenterOfMassTransform.Multiply3x3(cs.mAngularVelocity - cs.mOriginalAngularVelocity));
+			inBodyInterface.AddLinearAndAngularVelocity(cs.mBodyID, inContext.mCenterOfMassTransform.Multiply3x3(cs.mLinearVelocity - cs.mOriginalLinearVelocity), inContext.mCenterOfMassTransform.Multiply3x3(cs.mAngularVelocity - cs.mOriginalAngularVelocity));
 
 	// Clear colliding shapes to avoid hanging on to references to shapes
 	mCollidingShapes.clear();
@@ -675,6 +674,32 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 		JPH_ASSERT(false);
 		return EStatus::NoWork;
 	}
+}
+
+void SoftBodyMotionProperties::CustomUpdate(float inDeltaTime, Body &ioSoftBody, PhysicsSystem &inSystem)
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Create update context
+	SoftBodyUpdateContext context;
+	InitializeUpdateContext(inDeltaTime, ioSoftBody, inSystem, context);
+
+	// Determine bodies we're colliding with
+	DetermineCollidingShapes(context, inSystem, inSystem.GetBodyLockInterface());
+
+	// Call the internal update until it finishes
+	EStatus status;
+	const PhysicsSettings &settings = inSystem.GetPhysicsSettings();
+	while ((status = ParallelUpdate(context, settings)) == EStatus::DidWork)
+		continue;
+	JPH_ASSERT(status == EStatus::Done);
+
+	// Update the state of the bodies we've collided with
+	UpdateRigidBodyVelocities(context, inSystem.GetBodyInterface());
+
+	// Update position of the soft body
+	if (mUpdatePosition)
+		inSystem.GetBodyInterface().SetPosition(ioSoftBody.GetID(), ioSoftBody.GetPosition() + context.mDeltaPosition, EActivation::DontActivate);
 }
 
 #ifdef JPH_DEBUG_RENDERER

@@ -14,6 +14,8 @@
 JPH_NAMESPACE_BEGIN
 
 class PhysicsSystem;
+class BodyInterface;
+class BodyLockInterface;
 struct PhysicsSettings;
 class Body;
 class Shape;
@@ -92,11 +94,28 @@ public:
 	/// Restoring state for replay
 	void								RestoreState(StateRecorder &inStream);
 
-	/// Initialize the update context (used internally by the PhysicsSystem)
+	/// This function allows you to update the soft body immediately without going through the PhysicsSystem.
+	/// This is useful if the soft body is teleported and needs to 'settle' or it can be used if a the soft body
+	/// is not added to the PhysicsSystem and needs to be updated manually. One reason for not adding it to the
+	/// PhyicsSystem is that you might want to update a soft body immediately after updating an animated object
+	/// that has the soft body attached to it. If the soft body is added to the PhysicsSystem it will be updated
+	/// by it, so calling this function will effectively update it twice. Note that when you use this function,
+	/// only the current thread will be used, whereas if you update through the PhysicsSystem, multiple threads may
+	/// be used.
+	/// Note that this will bypass any sleep checks. Since the dynamic objects that the soft body touches
+	/// will not move during this call, there can be simulation artifacts if you call this function multiple times
+	/// without running the physics simulation step.
+	void								CustomUpdate(float inDeltaTime, Body &ioSoftBody, PhysicsSystem &inSystem);
+
+	////////////////////////////////////////////////////////////
+	// FUNCTIONS BELOW THIS LINE ARE FOR INTERNAL USE ONLY
+	////////////////////////////////////////////////////////////
+
+	/// Initialize the update context. Not part of the public API.
 	void								InitializeUpdateContext(float inDeltaTime, Body &inSoftBody, const PhysicsSystem &inSystem, SoftBodyUpdateContext &ioContext);
 
-	/// Do a broad phase check and collect all bodies that can possibly collide with this soft body
-	void								DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem);
+	/// Do a broad phase check and collect all bodies that can possibly collide with this soft body. Not part of the public API.
+	void								DetermineCollidingShapes(const SoftBodyUpdateContext &inContext, const PhysicsSystem &inSystem, const BodyLockInterface &inBodyLockInterface);
 
 	/// Return code for ParallelUpdate
 	enum class EStatus
@@ -106,11 +125,11 @@ public:
 		Done	= 1 << 2,				///< All work is done
 	};
 
-	/// Update the soft body, will process a batch of work. Used internally.
+	/// Update the soft body, will process a batch of work. Not part of the public API.
 	EStatus								ParallelUpdate(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
 
-	/// Update the velocities of all rigid bodies that we collided with. Used internally.
-	void								UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, PhysicsSystem &inSystem);
+	/// Update the velocities of all rigid bodies that we collided with. Not part of the public API.
+	void								UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, BodyInterface &inBodyInterface);
 
 private:
 	// SoftBodyManifold needs to have access to CollidingShape
@@ -157,7 +176,7 @@ private:
 	/// Enforce all edge constraints
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
-	/// Enforce all collision constraints & update all velocities according the the XPBD algorithm
+	/// Enforce all collision constraints & update all velocities according the XPBD algorithm
 	void								ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext);
 
 	/// Update the state of the soft body (position, velocity, bounds)
@@ -181,7 +200,7 @@ private:
 	AABox								mLocalBounds;								///< Bounding box of all vertices
 	AABox								mLocalPredictedBounds;						///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time
 	uint32								mNumIterations;								///< Number of solver iterations
-	float								mPressure;									///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
+	float								mPressure;									///< n * R * T, amount of substance * ideal gas constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	bool								mUpdatePosition;							///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 	bool								mHasContact = false;						///< True if the soft body has collided with anything in the last update
 };

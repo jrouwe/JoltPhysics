@@ -2522,7 +2522,7 @@ void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const
 
 		// Do a broadphase check
 		SoftBodyUpdateContext &sb_ctx = ioContext->mSoftBodyUpdateContexts[sb_idx];
-		sb_ctx.mMotionProperties->DetermineCollidingShapes(sb_ctx, *this);
+		sb_ctx.mMotionProperties->DetermineCollidingShapes(sb_ctx, *this, GetBodyLockInterfaceNoLock());
 	}
 }
 
@@ -2585,7 +2585,7 @@ void PhysicsSystem::JobSoftBodyFinalize(PhysicsUpdateContext *ioContext)
 	for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
 	{
 		// Apply the rigid body velocity deltas
-		sb_ctx->mMotionProperties->UpdateRigidBodyVelocities(*sb_ctx, *this);
+		sb_ctx->mMotionProperties->UpdateRigidBodyVelocities(*sb_ctx, GetBodyInterfaceNoLock());
 
 		// Update the position
 		sb_ctx->mBody->SetPositionAndRotationInternal(sb_ctx->mBody->GetPosition() + sb_ctx->mDeltaPosition, sb_ctx->mBody->GetRotation(), false);
