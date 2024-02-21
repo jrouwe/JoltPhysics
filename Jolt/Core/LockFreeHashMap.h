@@ -38,7 +38,7 @@ public:
 	inline T *				FromOffset(uint32 inOffset) const;
 
 private:
-	uint8 *					mObjectStore = nullptr;			///< This contains a contigous list of objects (possibly of varying size)
+	uint8 *					mObjectStore = nullptr;			///< This contains a contiguous list of objects (possibly of varying size)
 	uint32					mObjectStoreSizeBytes = 0;		///< The size of mObjectStore in bytes
 	atomic<uint32>			mWriteOffset { 0 };				///< Next offset to write to in mObjectStore
 };

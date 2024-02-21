@@ -56,8 +56,8 @@ public:
 	virtual ShapeResult				Create() const override;
 
 	/// Determine the minimal and maximal value of mHeightSamples (will ignore cNoCollisionValue)
-	/// @param outMinValue The minimal value fo mHeightSamples or FLT_MAX if no samples have collision
-	/// @param outMaxValue The maximal value fo mHeightSamples or -FLT_MAX if no samples have collision
+	/// @param outMinValue The minimal value of mHeightSamples or FLT_MAX if no samples have collision
+	/// @param outMaxValue The maximal value of mHeightSamples or -FLT_MAX if no samples have collision
 	/// @param outQuantizationScale (value - outMinValue) * outQuantizationScale quantizes a height sample to 16 bits
 	void							DetermineMinAndMaxSample(float &outMinValue, float &outMaxValue, float &outQuantizationScale) const;
 
@@ -312,7 +312,7 @@ private:
 		uint16						mMax[4];
 	};
 
-	/// For block (inBlockX, inBlockY) get get the range block and the entry in the range block
+	/// For block (inBlockX, inBlockY) get the range block and the entry in the range block
 	inline void						GetRangeBlock(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, RangeBlock *&outBlock, uint &outIndexInBlock);
 
 	/// Offset of first RangedBlock in grid per level

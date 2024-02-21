@@ -21,7 +21,7 @@ enum class EPathRotationConstraintType
 	ConstrainAroundTangent,			///< Only allow rotation around the tangent vector (following the path)
 	ConstrainAroundNormal,			///< Only allow rotation around the normal vector (perpendicular to the path)
 	ConstrainAroundBinormal,		///< Only allow rotation around the binormal vector (perpendicular to the path)
-	ConstrainToPath,				///< Fully constrain the rotation of body 2 to the path (follwing the tangent and normal of the path)
+	ConstrainToPath,				///< Fully constrain the rotation of body 2 to the path (following the tangent and normal of the path)
 	FullyConstrained,				///< Fully constrain the rotation of the body 2 to the rotation of body 1
 };
 
@@ -34,7 +34,7 @@ public:
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void					SaveBinaryState(StreamOut &inStream) const override;
 
-	/// Create an an instance of this constraint
+	/// Create an instance of this constraint
 	virtual TwoBodyConstraint *		Create(Body &inBody1, Body &inBody2) const override;
 
 	/// The path that constrains the two bodies

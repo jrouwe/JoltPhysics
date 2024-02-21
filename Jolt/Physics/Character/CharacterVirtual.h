@@ -195,7 +195,7 @@ public:
 
 	/// This function will return true if the character has moved into a slope that is too steep (e.g. a vertical wall).
 	/// You would call WalkStairs to attempt to step up stairs.
-	/// @param inLinearVelocity The linear velocity that the player desired. This is used to determine if we're pusing into a step.
+	/// @param inLinearVelocity The linear velocity that the player desired. This is used to determine if we're pushing into a step.
 	bool								CanWalkStairs(Vec3Arg inLinearVelocity) const;
 
 	/// When stair walking is needed, you can call the WalkStairs function to cast up, forward and down again to try to find a valid position

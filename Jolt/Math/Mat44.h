@@ -94,7 +94,7 @@ public:
 	JPH_INLINE float			operator () (uint inRow, uint inColumn) const			{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
 	JPH_INLINE float &			operator () (uint inRow, uint inColumn)					{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
 
-	/// Comparsion
+	/// Comparison
 	JPH_INLINE bool				operator == (Mat44Arg inM2) const;
 	JPH_INLINE bool				operator != (Mat44Arg inM2) const						{ return !(*this == inM2); }
 

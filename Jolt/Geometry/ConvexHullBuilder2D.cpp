@@ -135,7 +135,7 @@ void ConvexHullBuilder2D::AssignPointToEdge(int inPositionIdx, const Array<Edge 
 	{
 		if (best_dist_sq > best_edge->mFurthestPointDistanceSq)
 		{
-			// This point is futher away than any others, update the distance and add point as last point
+			// This point is further away than any others, update the distance and add point as last point
 			best_edge->mFurthestPointDistanceSq = best_dist_sq;
 			best_edge->mConflictList.push_back(inPositionIdx);
 		}

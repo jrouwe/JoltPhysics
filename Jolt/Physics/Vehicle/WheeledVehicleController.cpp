@@ -431,7 +431,7 @@ void WheeledVehicleController::PostCollide(float inDeltaTime, PhysicsSystem &inP
 		// TW(i) is the torque applied to the wheel outside of the engine (brake + torque due to friction with the ground)
 		// F(i) is the fraction of the engine torque applied from engine to wheel i
 		//
-		// Because the angular accelaration and torque are connected through: Torque = I * dw/dt
+		// Because the angular acceleration and torque are connected through: Torque = I * dw/dt
 		//
 		// We have the angular acceleration of the engine at time t:
 		//

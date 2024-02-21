@@ -99,7 +99,7 @@ VehicleConstraint::VehicleConstraint(Body &inVehicleBody, const VehicleConstrain
 		JPH_ASSERT(r.mStiffness >= 0.0f);
 	}
 
-	// Construct our controler class
+	// Construct our controller class
 	mController = inSettings.mController->ConstructController(*this);
 
 	// Create wheels

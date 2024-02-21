@@ -609,7 +609,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 	// Return any errors
 	EPhysicsUpdateError errors = static_cast<EPhysicsUpdateError>(context.mErrors.load(memory_order_acquire));
-	JPH_ASSERT(errors == EPhysicsUpdateError::None, "An error occured during the physics update, see EPhysicsUpdateError for more information");
+	JPH_ASSERT(errors == EPhysicsUpdateError::None, "An error occurred during the physics update, see EPhysicsUpdateError for more information");
 	return errors;
 }
 
@@ -1497,12 +1497,12 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 			// For motion type discrete we need to do this anyway, for motion type linear cast we have multiple choices
 			// 1. Rotate the body first and then sweep
 			// 2. First sweep and then rotate the body at the end
-			// 3. Pick some inbetween rotation (e.g. half way), then sweep and finally rotate the remainder
+			// 3. Pick some in between rotation (e.g. half way), then sweep and finally rotate the remainder
 			// (1) has some clear advantages as when a long thin body hits a surface away from the center of mass, this will result in a large angular velocity and a limited reduction in linear velocity.
 			// When simulation the rotation first before doing the translation, the body will be able to rotate away from the contact point allowing the center of mass to approach the surface. When using
 			// approach (2) in this case what will happen is that we will immediately detect the same collision again (the body has not rotated and the body was already colliding at the end of the previous
 			// time step) resulting in a lot of stolen time and the body appearing to be frozen in an unnatural pose (like it is glued at an angle to the surface). (2) obviously has some negative side effects
-			// too as simulating the rotation first may cause it to tunnel through a small object that the linear cast might have otherwise dectected. In any case a linear cast is not good for detecting
+			// too as simulating the rotation first may cause it to tunnel through a small object that the linear cast might have otherwise detected. In any case a linear cast is not good for detecting
 			// tunneling due to angular rotation, so we don't care about that too much (you'd need a full cast to take angular effects into account).
 			body.AddRotationStep(body.GetAngularVelocity() * delta_time);
 
@@ -1526,7 +1526,7 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 					float inner_radius = body.GetShape()->GetInnerRadius();
 					JPH_ASSERT(inner_radius > 0.0f, "The shape has no inner radius, this makes the shape unsuitable for the linear cast motion quality as we cannot move it without risking tunneling.");
 
-					// Measure translation in this step and check if it above the treshold to perform a linear cast
+					// Measure translation in this step and check if it above the threshold to perform a linear cast
 					float linear_cast_threshold_sq = Square(mPhysicsSettings.mLinearCastThreshold * inner_radius);
 					if (delta_pos.LengthSq() > linear_cast_threshold_sq)
 					{
@@ -1583,12 +1583,12 @@ void PhysicsSystem::JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, Ph
 
 	if (ioStep->mNumCCDBodies == 0)
 	{
-		// No continous collision detection jobs -> kick the next job ourselves
+		// No continuous collision detection jobs -> kick the next job ourselves
 		ioStep->mContactRemovedCallbacks.RemoveDependency();
 	}
 	else
 	{
-		// Run the continous collision detection jobs
+		// Run the continuous collision detection jobs
 		int num_continuous_collision_jobs = min(int(ioStep->mNumCCDBodies + cNumCCDBodiesPerJob - 1) / cNumCCDBodiesPerJob, ioContext->GetMaxConcurrency());
 		ioStep->mResolveCCDContacts.AddDependency(num_continuous_collision_jobs);
 		ioStep->mContactRemovedCallbacks.AddDependency(num_continuous_collision_jobs - 1); // Already had 1 dependency
@@ -2001,7 +2001,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					// Check if the other body found a hit that is further away
 					if (ccd_body2->mFraction > ccd_body->mFraction)
 					{
-						// Reset the colliding body of the other CCD body. The other body will shorten its distance travelled and will not do any collision response (we'll do that).
+						// Reset the colliding body of the other CCD body. The other body will shorten its distance traveled and will not do any collision response (we'll do that).
 						// This means that at this point we have triggered a contact point add/persist for our further hit by accident for the other body.
 						// We accept this as calling the contact point callbacks here would require persisting the manifolds up to this point and doing the callbacks single threaded.
 						ccd_body2->mBodyID2 = BodyID();

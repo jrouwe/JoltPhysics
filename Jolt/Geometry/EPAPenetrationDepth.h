@@ -494,7 +494,7 @@ public:
 		return false;
 	}
 
-	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> instersects inB
+	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> intersects inB
 	///
 	/// @param inStart Start position and orientation of the convex object
 	/// @param inDirection Direction of the sweep (ioLambda * inDirection determines length)
@@ -504,7 +504,7 @@ public:
 	/// @param inB The convex object B, must support the GetSupport(Vec3) function.
 	/// @param inConvexRadiusA The convex radius of A, this will be added on all sides to pad A.
 	/// @param inConvexRadiusB The convex radius of B, this will be added on all sides to pad B.
-	/// @param inReturnDeepestPoint If the shapes are initially interesecting this determines if the EPA algorithm will run to find the deepest point
+	/// @param inReturnDeepestPoint If the shapes are initially intersecting this determines if the EPA algorithm will run to find the deepest point
 	/// @param ioLambda The max fraction along the sweep, on output updated with the actual collision fraction.
 	///	@param outPointA is the contact point on A
 	///	@param outPointB is the contact point on B

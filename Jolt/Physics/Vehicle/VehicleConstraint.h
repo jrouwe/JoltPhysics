@@ -33,7 +33,7 @@ public:
 	float						mMaxPitchRollAngle = JPH_PI;				///< Defines the maximum pitch/roll angle (rad), can be used to avoid the car from getting upside down. The vehicle up direction will stay within a cone centered around the up axis with half top angle mMaxPitchRollAngle, set to pi to turn off.
 	Array<Ref<WheelSettings>>	mWheels;									///< List of wheels and their properties
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< List of anti rollbars and their properties
-	Ref<VehicleControllerSettings> mController;								///< Defines how the vehicle can accelerate / decellerate
+	Ref<VehicleControllerSettings> mController;								///< Defines how the vehicle can accelerate / decelerate
 
 protected:
 	/// This function should not be called directly, it is used by sRestoreFromBinaryState.
@@ -120,10 +120,10 @@ public:
 	/// Access to the vehicle body
 	Body *						GetVehicleBody() const						{ return mBody; }
 
-	/// Access to the vehicle controller interface (determines acceleration / decelleration)
+	/// Access to the vehicle controller interface (determines acceleration / deceleration)
 	const VehicleController *	GetController() const						{ return mController; }
 
-	/// Access to the vehicle controller interface (determines acceleration / decelleration)
+	/// Access to the vehicle controller interface (determines acceleration / deceleration)
 	VehicleController *			GetController()								{ return mController; }
 
 	/// Get the state of the wheels
@@ -136,7 +136,7 @@ public:
 	Wheel *						GetWheel(uint inIdx)						{ return mWheels[inIdx]; }
 	const Wheel *				GetWheel(uint inIdx) const					{ return mWheels[inIdx]; }
 
-	/// Get the basis vectors for the wheel in local space to the vehicle body (note: basis does not rotate when the wheel rotates arounds its axis)
+	/// Get the basis vectors for the wheel in local space to the vehicle body (note: basis does not rotate when the wheel rotates around its axis)
 	/// @param inWheel Wheel to fetch basis for
 	/// @param outForward Forward vector for the wheel
 	/// @param outUp Up vector for the wheel
@@ -197,14 +197,14 @@ private:
 	// Calculate the constraint properties for mPitchRollPart
 	void						CalculatePitchRollConstraintProperties(RMat44Arg inBodyTransform);
 
-	// Simluation information
+	// Simulation information
 	Body *						mBody;										///< Body of the vehicle
 	Vec3						mForward;									///< Local space forward vector for the vehicle
 	Vec3						mUp;										///< Local space up vector for the vehicle
 	Vec3						mWorldUp;									///< Vector indicating the world space up direction (used to limit vehicle pitch/roll)
 	Wheels						mWheels;									///< Wheel states of the vehicle
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< Anti rollbars of the vehicle
-	VehicleController *			mController;								///< Controls the acceleration / declerration of the vehicle
+	VehicleController *			mController;								///< Controls the acceleration / deceleration of the vehicle
 	bool						mIsActive = false;							///< If this constraint is active
 	uint						mNumStepsBetweenCollisionTestActive = 1;	///< Number of simulation steps between wheel collision tests when the vehicle is active
 	uint						mNumStepsBetweenCollisionTestInactive = 1;	///< Number of simulation steps between wheel collision tests when the vehicle is inactive

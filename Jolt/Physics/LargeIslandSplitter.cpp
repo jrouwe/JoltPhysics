@@ -294,7 +294,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	inIslandBuilder.GetConstraintsInIsland(inIslandIndex, constraints_start, constraints_end);
 	uint num_constraints_in_island = uint(constraints_end - constraints_start);
 
-	// Check if it exceeds the treshold
+	// Check if it exceeds the threshold
 	uint island_size = num_contacts_in_island + num_constraints_in_island;
 	if (island_size < cLargeIslandTreshold)
 		return false;

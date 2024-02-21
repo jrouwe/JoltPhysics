@@ -19,7 +19,7 @@ public:
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 
-	/// Create an an instance of this constraint
+	/// Create an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
 	/// This determines in which space the constraint is setup, all properties below should be in the specified space
@@ -44,7 +44,7 @@ protected:
 };
 
 /// A fixed constraint welds two bodies together removing all degrees of freedom between them.
-/// This variant uses euler angles for the rotation constraint.
+/// This variant uses Euler angles for the rotation constraint.
 class JPH_EXPORT FixedConstraint final : public TwoBodyConstraint
 {
 public:

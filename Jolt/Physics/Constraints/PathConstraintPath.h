@@ -44,7 +44,7 @@ public:
 	/// @param outPathBinormal Returns the binormal to the path at outPathPosition (a vector so that normal cross tangent = binormal)
 	virtual void		GetPointOnPath(float inFraction, Vec3 &outPathPosition, Vec3 &outPathTangent, Vec3 &outPathNormal, Vec3 &outPathBinormal) const = 0;
 
-	/// If the path is looping or not. If a path is looping, the first and last point are automatically connected to eachother. They should not be the same points.
+	/// If the path is looping or not. If a path is looping, the first and last point are automatically connected to each other. They should not be the same points.
 	void				SetIsLooping(bool inIsLooping)						{ mIsLooping = inIsLooping; }
 	bool				IsLooping() const									{ return mIsLooping; }
 
@@ -64,7 +64,7 @@ protected:
 	virtual void		RestoreBinaryState(StreamIn &inStream);
 
 private:
-	/// If the path is looping or not. If a path is looping, the first and last point are automatically connected to eachother. They should not be the same points.
+	/// If the path is looping or not. If a path is looping, the first and last point are automatically connected to each other. They should not be the same points.
 	bool				mIsLooping = false;
 };
 

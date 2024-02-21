@@ -218,7 +218,7 @@ bool ConvexHullBuilder::AssignPointToFace(int inPositionIdx, const Faces &inFace
 			// This point is in front of the face, add it to the conflict list
 			if (best_dist_sq > best_face->mFurthestPointDistanceSq)
 			{
-				// This point is futher away than any others, update the distance and add point as last point
+				// This point is further away than any others, update the distance and add point as last point
 				best_face->mFurthestPointDistanceSq = best_dist_sq;
 				best_face->mConflictList.push_back(inPositionIdx);
 			}

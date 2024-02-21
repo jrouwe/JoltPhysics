@@ -32,7 +32,7 @@ class CollisionCollectorTraitsCollideShape
 {
 public:
 	/// For shape collisions we use -penetration depth to order hits.
-	static constexpr float InitialEarlyOutFraction = FLT_MAX;				///< Most shallow hit: Separatation is infinite
+	static constexpr float InitialEarlyOutFraction = FLT_MAX;				///< Most shallow hit: Separation is infinite
 	static constexpr float ShouldEarlyOutFraction = -FLT_MAX;				///< Deepest hit: Penetration is infinite
 };
 

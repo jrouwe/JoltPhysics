@@ -36,7 +36,7 @@ public:
 	/// Initialize the thread pool
 	/// @param inMaxJobs Max number of jobs that can be allocated at any time
 	/// @param inMaxBarriers Max number of barriers that can be allocated at any time
-	/// @param inNumThreads Number of threads to start (the number of concurrent jobs is 1 more because the main thread will also run jobs while waiting for a barrier to complete). Use -1 to autodetect the amount of CPU's.
+	/// @param inNumThreads Number of threads to start (the number of concurrent jobs is 1 more because the main thread will also run jobs while waiting for a barrier to complete). Use -1 to auto detect the amount of CPU's.
 	void					Init(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
 
 	// See JobSystem

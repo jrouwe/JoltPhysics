@@ -109,7 +109,7 @@ public:
 	/// @param inHalfAngle Specifies the cone angle in radians (angle measured between inAxis and cone surface).
 	/// @param inLength The length of the cone.
 	/// @param inColor Color to use for drawing the cone.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -119,7 +119,7 @@ public:
 	/// @param inSwingZHalfAngle See SwingTwistConstraintPart
 	/// @param inEdgeLength Size of the edge of the cone shape
 	/// @param inColor Color to use for drawing the cone.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -131,7 +131,7 @@ public:
 	/// @param inMaxSwingZAngle See SwingTwistConstraintPart
 	/// @param inEdgeLength Size of the edge of the cone shape
 	/// @param inColor Color to use for drawing the cone.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawSwingPyramidLimits(RMat44Arg inMatrix, float inMinSwingYAngle, float inMaxSwingYAngle, float inMinSwingZAngle, float inMaxSwingZAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -143,7 +143,7 @@ public:
 	/// @param inMinAngle The pie will be drawn between [inMinAngle, inMaxAngle] (in radians).
 	/// @param inMaxAngle The pie will be drawn between [inMinAngle, inMaxAngle] (in radians).
 	/// @param inColor Color to use for drawing the pie.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 

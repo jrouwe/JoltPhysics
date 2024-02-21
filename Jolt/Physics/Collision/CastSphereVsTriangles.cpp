@@ -111,7 +111,7 @@ float CastSphereVsTriangles::RayCylinder(Vec3Arg inRayDirection, Vec3Arg inCylin
 	if (t < 0.0f || t > 1.0f)
 		return FLT_MAX; // Intersection lies outside segment
 	if (start_dot_axis + t * direction_dot_axis < 0.0f || start_dot_axis + t * direction_dot_axis > axis_len_sq)
-		return FLT_MAX; // Intersection outside the end point of the cyclinder, stop processing, we will possibly hit a vertex
+		return FLT_MAX; // Intersection outside the end point of the cylinder, stop processing, we will possibly hit a vertex
 	return t;
 }
 

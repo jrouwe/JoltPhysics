@@ -15,7 +15,7 @@ class SpringPart
 private:
 	JPH_INLINE void				CalculateSpringPropertiesHelper(float inDeltaTime, float inInvEffectiveMass, float inBias, float inC, float inStiffness, float inDamping, float &outEffectiveMass)
 	{
-		// Soft constraints as per: Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011
+		// Soft constraints as per: Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011
 
 		// Note that the calculation of beta and gamma below are based on the solution of an implicit Euler integration scheme
 		// This scheme is unconditionally stable but has built in damping, so even when you set the damping ratio to 0 there will still

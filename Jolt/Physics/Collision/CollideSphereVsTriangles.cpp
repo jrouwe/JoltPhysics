@@ -21,7 +21,7 @@ static constexpr uint8 sClosestFeatureToActiveEdgesMask[] = {
 	0b001,		// 0b011: Vertex 1 & 2 -> edge 1
 	0b110,		// 0b100: Vertex 3 -> edge 2 or 3
 	0b100,		// 0b101: Vertex 1 & 3 -> edge 3
-	0b010,		// 0b110: Vertex 2 & 3 -> egde 2
+	0b010,		// 0b110: Vertex 2 & 3 -> edge 2
 	// 0b111: Vertex 1, 2 & 3 -> interior, guarded by an if
 };
 

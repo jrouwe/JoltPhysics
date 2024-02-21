@@ -641,7 +641,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 		// Get the normal of the plane we're hitting
 		Vec3 plane_normal = constraint->mPlane.GetNormal();
 
-		// If we're hitting a steep slope we cancel the velocity towards the slope first so that we don't end up slidinng up the slope
+		// If we're hitting a steep slope we cancel the velocity towards the slope first so that we don't end up sliding up the slope
 		// (we may hit the slope before the vertical wall constraint we added which will result in a small movement up causing jitter in the character movement)
 		if (constraint->mIsSteepSlope)
 		{
@@ -1256,7 +1256,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 #endif // JPH_DEBUG_RENDERER
 
 	// Move down towards the floor.
-	// Note that we travel the same amount down as we travelled up with the specified extra
+	// Note that we travel the same amount down as we traveled up with the specified extra
 	Vec3 down = -up + inStepDownExtra;
 	if (!GetFirstContactForSweep(new_position, down, contact, dummy_ignored_contacts, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter))
 		return false; // No floor found, we're in mid air, cancel stair walk

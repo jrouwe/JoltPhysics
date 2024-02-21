@@ -413,7 +413,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 						}
 						else
 						{
-							// Body is not moveable, equations are simpler
+							// Body is not movable, equations are simpler
 
 							// Calculate normal and tangential velocity (equation 30)
 							Vec3 v_normal = contact_normal * contact_normal.Dot(v.mVelocity);

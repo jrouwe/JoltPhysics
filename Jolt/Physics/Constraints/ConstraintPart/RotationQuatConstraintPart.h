@@ -121,7 +121,7 @@ public:
 		//
 		// q20 = initial orientation of body 2
 		// q10 = initial orientation of body 1
-		// r0 = initial rotation rotation from body 1 to body 2
+		// r0 = initial rotation from body 1 to body 2
 		return inBody2.GetRotation().Conjugated() * inBody1.GetRotation();
 	}
 

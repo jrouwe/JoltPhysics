@@ -567,7 +567,7 @@ private:
 	{
 		if (inT->mRemoved)
 		{
-			// Valdiate that removed triangles are not connected to anything
+			// Validate that removed triangles are not connected to anything
 			for (const Edge &my_edge : inT->mEdge)
 				JPH_ASSERT(my_edge.mNeighbourTriangle == nullptr);
 		}

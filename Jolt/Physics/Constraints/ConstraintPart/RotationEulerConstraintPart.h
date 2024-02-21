@@ -22,7 +22,7 @@ JPH_NAMESPACE_BEGIN
 /// \f[J = \begin{bmatrix}0 & -E & 0 & E\end{bmatrix}\f]
 ///
 /// Used terms (here and below, everything in world space):\n
-/// delta_theta_* = difference in rotation between initial rotation of bodyies 1 and 2.\n
+/// delta_theta_* = difference in rotation between initial rotation of bodies 1 and 2.\n
 /// x1, x2 = center of mass for the bodies.\n
 /// v = [v1, w1, v2, w2].\n
 /// v1, v2 = linear velocity of body 1 and 2.\n
@@ -70,7 +70,7 @@ public:
 		//
 		// q20 = initial orientation of body 2
 		// q10 = initial orientation of body 1
-		// r0 = initial rotation rotation from body 1 to body 2
+		// r0 = initial rotation from body 1 to body 2
 		return inBody2.GetRotation().Conjugated() * inBody1.GetRotation();
 	}
 
@@ -90,7 +90,7 @@ public:
 		// where:
 		//
 		// q10, q20 = world space initial orientation of body 1 and 2
-		// r0 = initial rotation rotation from body 1 to body 2 in local space of body 1
+		// r0 = initial rotation from body 1 to body 2 in local space of body 1
 		//
 		// We can also write this in terms of the constraint matrices:
 		//

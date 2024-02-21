@@ -211,7 +211,7 @@ void CompoundShape::GetSubmergedVolume(Mat44Arg inCenterOfMassTransform, Vec3Arg
 		outCenterOfBuoyancy /= outSubmergedVolume;
 
 #ifdef JPH_DEBUG_RENDERER
-	// Draw senter of buoyancy
+	// Draw center of buoyancy
 	if (sDrawSubmergedVolumes)
 		DebugRenderer::sInstance->DrawWireSphere(inBaseOffset + outCenterOfBuoyancy, 0.05f, Color::sRed, 1);
 #endif // JPH_DEBUG_RENDERER

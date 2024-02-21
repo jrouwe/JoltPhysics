@@ -75,7 +75,7 @@ public:
 		Vec3			mCentroid;							///< Center of the face
 		ConflictList	mConflictList;						///< Positions associated with this edge (that are closest to this edge). The last position in the list is the point that is furthest away from the face.
 		Edge *			mFirstEdge = nullptr;				///< First edge of this face
-		float			mFurthestPointDistanceSq = 0.0f;	///< Squared distance of furtest point from the conflict list to the face
+		float			mFurthestPointDistanceSq = 0.0f;	///< Squared distance of furthest point from the conflict list to the face
 		bool			mRemoved = false;					///< Flag that indicates that face has been removed (face will be freed later)
 #ifdef JPH_CONVEX_BUILDER_DEBUG
 		int				mIteration;							///< Iteration that this face was created
@@ -144,7 +144,7 @@ private:
 	public:
 		Edge *			mNeighbourEdge;						///< Edge that this edge is connected to
 		int				mStartIdx;							///< Vertex index in mPositions that indicates the start vertex of this edge
-		int				mEndIdx;							///< Vertex index in mPosition that indicats the end vertex of this edge
+		int				mEndIdx;							///< Vertex index in mPosition that indicates the end vertex of this edge
 	};
 
 	// Private typedefs

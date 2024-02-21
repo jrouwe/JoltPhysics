@@ -242,10 +242,10 @@ public:
 	/// Get vector that contains the sign of each element (returns 1.0f if positive, -1.0f if negative)
 	JPH_INLINE Vec4				GetSign() const;
 
-	/// Calcluate the sine and cosine for each element of this vector (input in radians)
+	/// Calculate the sine and cosine for each element of this vector (input in radians)
 	inline void					SinCos(Vec4 &outSin, Vec4 &outCos) const;
 
-	/// Calcluate the tangent for each element of this vector (input in radians)
+	/// Calculate the tangent for each element of this vector (input in radians)
 	inline Vec4					Tan() const;
 
 	/// Calculate the arc sine for each element of this vector (returns value in the range [-PI / 2, PI / 2])

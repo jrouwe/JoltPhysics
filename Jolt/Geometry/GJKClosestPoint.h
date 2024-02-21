@@ -244,7 +244,7 @@ public:
 			{
 				// Separating axis found
 #ifdef JPH_GJK_DEBUG
-				Trace("Seperating axis");
+				Trace("Separating axis");
 #endif
 				return false;
 			}
@@ -293,7 +293,7 @@ public:
 				return true;
 			}
 
-			// The next seperation axis to test is the negative of the closest point of the Minkowski sum to the origin
+			// The next separation axis to test is the negative of the closest point of the Minkowski sum to the origin
 			// Note: This must be done before terminating as converged since the separating axis is -v
 			ioV = -ioV;
 
@@ -456,7 +456,7 @@ public:
 				break;
 			}
 
-			// The next seperation axis to test is the negative of the closest point of the Minkowski sum to the origin
+			// The next separation axis to test is the negative of the closest point of the Minkowski sum to the origin
 			// Note: This must be done before terminating as converged since the separating axis is -v
 			ioV = -ioV;
 
@@ -508,7 +508,7 @@ public:
 		outNumPoints = mNumPoints;
 	}
 
-	/// Test if a ray inRayOrigin + lambda * inRayDirection for lambda e [0, ioLambda> instersects inA
+	/// Test if a ray inRayOrigin + lambda * inRayDirection for lambda e [0, ioLambda> intersects inA
 	///
 	/// Code based upon: Ray Casting against General Convex Objects with Application to Continuous Collision Detection - Gino van den Bergen
 	///
@@ -651,7 +651,7 @@ public:
 		return true;
 	}
 
-	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> instersects inB
+	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> intersects inB
 	///
 	/// @param inStart Start position and orientation of the convex object
 	/// @param inDirection Direction of the sweep (ioLambda * inDirection determines length)
@@ -675,7 +675,7 @@ public:
 		return CastRay(Vec3::sZero(), inDirection, inTolerance, difference, ioLambda);
 	}
 
-	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> instersects inB
+	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> intersects inB
 	///
 	/// @param inStart Start position and orientation of the convex object
 	/// @param inDirection Direction of the sweep (ioLambda * inDirection determines length)
@@ -697,7 +697,7 @@ public:
 	{
 		float tolerance_sq = Square(inTolerance);
 
-		// Calculate how close A and B (without their convex radius) need to be to eachother in order for us to consider this a collision
+		// Calculate how close A and B (without their convex radius) need to be to each other in order for us to consider this a collision
 		float sum_convex_radius = inConvexRadiusA + inConvexRadiusB;
 
 		// Transform the shape to be cast to the starting position

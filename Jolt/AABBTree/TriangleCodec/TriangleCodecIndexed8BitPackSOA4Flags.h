@@ -436,7 +436,7 @@ public:
 			return first_block[inTriangleIndex >> 2].mFlags[inTriangleIndex & 0b11];
 		}
 
-		/// Unpacks triangles and flags, convencience function
+		/// Unpacks triangles and flags, convenience function
 		JPH_INLINE void				Unpack(const void *inTriangleStart, uint32 inNumTriangles, Vec3 *outTriangles, uint8 *outTriangleFlags) const
 		{
 			Unpack(inTriangleStart, inNumTriangles, outTriangles);

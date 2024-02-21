@@ -131,7 +131,7 @@ public:
 	CollisionGroup &		GetCollisionGroup()												{ return mCollisionGroup; }
 	void					SetCollisionGroup(const CollisionGroup &inGroup)				{ mCollisionGroup = inGroup; }
 
-	/// If this body can go to sleep. Note that disabling sleeping on a sleeping object wil not wake it up.
+	/// If this body can go to sleep. Note that disabling sleeping on a sleeping object will not wake it up.
 	bool					GetAllowSleeping() const										{ return mMotionProperties->mAllowSleeping; }
 	void					SetAllowSleeping(bool inAllow);
 
@@ -216,7 +216,7 @@ public:
 	/// @param inLinearDrag Linear drag factor that slows down the body when in the fluid (approx. 0.5)
 	/// @param inAngularDrag Angular drag factor that slows down rotation when the body is in the fluid (approx. 0.01)
 	/// @param inFluidVelocity The average velocity of the fluid (in m/s) in which the body resides
-	/// @param inGravity The graviy vector (pointing down)
+	/// @param inGravity The gravity vector (pointing down)
 	/// @param inDeltaTime Delta time of the next simulation step (in s)
 	/// @return true if an impulse was applied, false if the body was not in the fluid
 	bool					ApplyBuoyancyImpulse(RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime);
@@ -308,7 +308,7 @@ public:
 	/// Function to update body's position (should only be called by the BodyInterface since it also requires updating the broadphase)
 	void					SetPositionAndRotationInternal(RVec3Arg inPosition, QuatArg inRotation, bool inResetSleepTimer = true);
 
-	/// Updates the center of mass and optionally mass propertes after shifting the center of mass or changes to the shape (should only be called by the BodyInterface since it also requires updating the broadphase)
+	/// Updates the center of mass and optionally mass properties after shifting the center of mass or changes to the shape (should only be called by the BodyInterface since it also requires updating the broadphase)
 	/// @param inPreviousCenterOfMass Center of mass of the shape before the alterations
 	/// @param inUpdateMassProperties When true, the mass and inertia tensor is recalculated
 	void					UpdateCenterOfMassInternal(Vec3Arg inPreviousCenterOfMass, bool inUpdateMassProperties);

@@ -174,7 +174,7 @@ protected:
 	float						mBrakeInput = 0.0f;							///< Value between 0 and 1 indicating how strong the brake pedal is pressed
 	float						mHandBrakeInput = 0.0f;						///< Value between 0 and 1 indicating how strong the hand brake is pulled
 
-	// Simluation information
+	// Simulation information
 	VehicleEngine				mEngine;									///< Engine state of the vehicle
 	VehicleTransmission			mTransmission;								///< Transmission state of the vehicle
 	Differentials				mDifferentials;								///< Differential states of the vehicle

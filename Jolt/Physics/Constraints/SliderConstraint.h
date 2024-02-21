@@ -21,7 +21,7 @@ public:
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 
-	/// Create an an instance of this constraint.
+	/// Create an instance of this constraint.
 	/// Note that the rotation constraint will be solved from body 1. This means that if body 1 and body 2 have different masses / inertias (kinematic body = infinite mass / inertia), body 1 should be the heaviest body.
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 

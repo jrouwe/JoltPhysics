@@ -297,7 +297,7 @@ void Shape::sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, con
 		RayCastSettings settings;
 		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 
-		// Cast a ray that's 10% longer than the heigth of our bounding box
+		// Cast a ray that's 10% longer than the height of our bounding box
 		inShape.CastRay(RayCast { inPoint, 1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, settings, inSubShapeIDCreator, collector, inShapeFilter);
 
 		// Odd amount of hits means inside
