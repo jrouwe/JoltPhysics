@@ -21,6 +21,12 @@ public:
 		return inVertex.mHasContact;
 	}
 
+	/// True if the vertex had contact during the previous simulation step, this allows you to detect if a vertex stopped colliding
+	JPH_INLINE bool					HadContactDuringPreviousStep(const SoftBodyVertex &inVertex) const
+	{
+		return inVertex.mHadContactDuringPreviousStep;
+	}
+
 	/// Get the local space contact point (multiply by GetCenterOfMassTransform() of the soft body to get world space)
 	JPH_INLINE Vec3					GetLocalContactPoint(const SoftBodyVertex &inVertex) const
 	{

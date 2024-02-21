@@ -21,6 +21,7 @@ public:
 	Plane			mCollisionPlane;					///< Nearest collision plane, relative to the center of mass of the soft body
 	int				mCollidingShapeIndex;				///< Index in the colliding shapes list of the body we may collide with
 	bool			mHasContact;						///< True if the vertex has collided with anything in the last update
+	bool			mHadContactDuringPreviousStep;		///< True if the vertex had contact during the previous simulation step, this allows you to detect if a vertex stopped colliding
 	float			mLargestPenetration;				///< Used while finding the collision plane, stores the largest penetration found so far
 	float			mInvMass;							///< Inverse mass (1 / mass)
 };

@@ -69,6 +69,7 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 		out_vertex.mVelocity = rotation.Multiply3x3(Vec3(in_vertex.mVelocity));
 		out_vertex.mCollidingShapeIndex = -1;
 		out_vertex.mHasContact = false;
+		out_vertex.mHadContactDuringPreviousStep = false;
 		out_vertex.mLargestPenetration = -FLT_MAX;
 		out_vertex.mInvMass = in_vertex.mInvMass;
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
@@ -441,8 +442,12 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 	JPH_PROFILE_FUNCTION();
 
 	// Contact callback
-	if (mHasContact && ioContext.mContactListener != nullptr)
+	if ((mHasContact || mHadContactDuringPreviousStep) && ioContext.mContactListener != nullptr)
 		ioContext.mContactListener->OnSoftBodyContactAdded(*ioContext.mBody, SoftBodyManifold(this));
+
+	// Update contact state
+	mHadContactDuringPreviousStep = mHasContact;
+	mHasContact = false;
 
 	// Loop through vertices once more to update the global state
 	float dt = ioContext.mDeltaTime;
@@ -450,7 +455,6 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 	float max_v_sq = 0.0f;
 	Vec3 linear_velocity = Vec3::sZero(), angular_velocity = Vec3::sZero();
 	mLocalPredictedBounds = mLocalBounds = { };
-	mHasContact = false;
 	for (Vertex &v : mVertices)
 	{
 		// Calculate max square velocity
@@ -473,6 +477,7 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 
 		// Reset collision data for the next iteration
 		v.mCollidingShapeIndex = -1;
+		v.mHadContactDuringPreviousStep = v.mHasContact;
 		v.mHasContact = false;
 		v.mLargestPenetration = -FLT_MAX;
 	}

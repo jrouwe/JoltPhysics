@@ -184,6 +184,7 @@ private:
 	float								mPressure;									///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	bool								mUpdatePosition;							///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 	bool								mHasContact = false;						///< True if the soft body has collided with anything in the last update
+	bool								mHadContactDuringPreviousStep = false;		///< True if the soft body has collided with anything in the before last update
 };
 
 JPH_NAMESPACE_END
