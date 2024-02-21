@@ -43,7 +43,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.3
+      uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
     - name: Build
@@ -63,7 +63,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.3
+      uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
       run: ./cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
