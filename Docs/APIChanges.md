@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v4.0.2 and latest
 
+* 20240223 - Added ConvexShape::ESupportMode::Default. If you have custom convex shapes you need to handle this in ConvexShape::GetSupportFunction. (0f67cc2915c5e34a4a38480580dad73888a1952e)
 * 20240216 - Restriction angular motion using EAllowedDOFs now works in world space rather than in local space. This change was made to be more in line with other physics engines and to fix some issues with constraints. If you need the old behavior then copy [this](https://github.com/jrouwe/JoltPhysics/blob/9631e217e54b8492ac36471f2aa966df40d6c2ad/Jolt/Physics/Body/MotionProperties.cpp#L33-L118) code into your own code base and call MotionProperties::SetInverseInertia(diagonal, rotation) where diagonal is called mInvInertiaDiagonal and rotation is called mInertiaRotation in the code snippet. (191536d51d71ee29147205aa09d1acab52789e5f)
 * 20240210 - Fixed spelling error EPathRotationConstraintType::ConstaintToPath to EPathRotationConstraintType::ConstrainToPath (6c095bbf7906b01f427b52d43212f5ebf760fc81)
 * 20240210 - Added extra parameter fraction hint to PathConstraintPath::GetClosestPoint. This can be used to speed up the search along the curve and to disambiguate fractions in case a path reaches the same point multiple times (i.e. a figure-8) (b91e729e6e2c34df16cc03f5ac3b3f6d3fa8b762)
