@@ -132,6 +132,7 @@ const ConvexShape::Support *SphereShape::GetSupportFunction(ESupportMode inMode,
 		return new (&inBuffer) SphereWithConvex(scaled_radius);
 
 	case ESupportMode::ExcludeConvexRadius:
+	case ESupportMode::Default:
 		return new (&inBuffer) SphereNoConvex(scaled_radius);
 	}
 

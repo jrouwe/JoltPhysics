@@ -165,6 +165,7 @@ const ConvexShape::Support *CapsuleShape::GetSupportFunction(ESupportMode inMode
 		return new (&inBuffer) CapsuleWithConvex(scaled_half_height_of_cylinder, scaled_radius);
 
 	case ESupportMode::ExcludeConvexRadius:
+	case ESupportMode::Default:
 		return new (&inBuffer) CapsuleNoConvex(scaled_half_height_of_cylinder, scaled_radius);
 	}
 

@@ -542,6 +542,7 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
+	case ESupportMode::Default:
 		if (ScaleHelpers::IsNotScaled(inScale))
 			return new (&inBuffer) HullWithConvex(this);
 		else

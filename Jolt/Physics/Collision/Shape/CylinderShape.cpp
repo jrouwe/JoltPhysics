@@ -177,6 +177,7 @@ const ConvexShape::Support *CylinderShape::GetSupportFunction(ESupportMode inMod
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
+	case ESupportMode::Default:
 		return new (&inBuffer) Cylinder(scaled_half_height, scaled_radius, 0.0f);
 
 	case ESupportMode::ExcludeConvexRadius:

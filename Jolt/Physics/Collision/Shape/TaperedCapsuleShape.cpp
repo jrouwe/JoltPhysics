@@ -196,6 +196,7 @@ const ConvexShape::Support *TaperedCapsuleShape::GetSupportFunction(ESupportMode
 		return new (&inBuffer) TaperedCapsule(scaled_top_center, scaled_bottom_center, scaled_top_radius, scaled_bottom_radius, 0.0f);
 
 	case ESupportMode::ExcludeConvexRadius:
+	case ESupportMode::Default:
 		{
 			// Get radii reduced by convex radius
 			float tr = scaled_top_radius - scaled_convex_radius;
