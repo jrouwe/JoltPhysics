@@ -51,7 +51,7 @@ public:
 		constexpr float cFreeAngle = DegreesToRadians(179.5f);
 
 		// Assume sane input
-		JPH_ASSERT(inTwistMinAngle <= inTwistMinAngle);
+		JPH_ASSERT(inTwistMinAngle <= inTwistMaxAngle);
 		JPH_ASSERT(inSwingYMinAngle <= inSwingYMaxAngle);
 		JPH_ASSERT(inSwingZMinAngle <= inSwingZMaxAngle);
 		JPH_ASSERT(inSwingYMinAngle >= -JPH_PI && inSwingYMaxAngle <= JPH_PI);
