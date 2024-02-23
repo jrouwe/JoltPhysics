@@ -146,6 +146,7 @@ const ConvexShape::Support *TriangleShape::GetSupportFunction(ESupportMode inMod
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
+	case ESupportMode::Default:
 		if (mConvexRadius > 0.0f)
 			return new (&inBuffer) TriangleWithConvex(inScale * mV1, inScale * mV2, inScale * mV3, mConvexRadius);
 		[[fallthrough]];

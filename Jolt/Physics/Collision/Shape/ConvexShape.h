@@ -90,8 +90,9 @@ public:
 	/// How the GetSupport function should behave
 	enum class ESupportMode
 	{
-		ExcludeConvexRadius,		///< Return the shape excluding the convex radius
-		IncludeConvexRadius,		///< Return the shape including the convex radius
+		ExcludeConvexRadius,		///< Return the shape excluding the convex radius, Support::GetConvexRadius will return the convex radius if there is one, but adding this radius may not result in the most accurate/efficient representation of shapes with sharp edges
+		IncludeConvexRadius,		///< Return the shape including the convex radius, Support::GetSupport includes the convex radius if there is one, Support::GetConvexRadius will return 0
+		Default,					///< Use both Support::GetSupport add Support::GetConvexRadius to get a support point that matches the original shape as accurately/efficiently as possible
 	};
 
 	/// Returns an object that provides the GetSupport function for this shape.
