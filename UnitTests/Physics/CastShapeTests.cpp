@@ -39,7 +39,7 @@ TEST_SUITE("CastShapeTests")
 		CHECK_APPROX_EQUAL(result.mContactPointOn2, inPosition, 1.0e-3f);
 	}
 
-	/// Helper function that tests a shere against a triangle centered on the origin with normal Z
+	/// Helper function that tests a sphere against a triangle centered on the origin with normal Z
 	static void sTestCastSphereTriangle(const Shape *inTriangle)
 	{
 		// Create sphere
@@ -273,7 +273,7 @@ TEST_SUITE("CastShapeTests")
 		}
 	}
 
-	// Test casting a capsule against a mesh that is interecting at fraction 0 and test that it returns the deepest penetration
+	// Test casting a capsule against a mesh that is intersecting at fraction 0 and test that it returns the deepest penetration
 	TEST_CASE("TestDeepestPenetrationAtFraction0")
 	{
 		// Create an n x n grid of triangles

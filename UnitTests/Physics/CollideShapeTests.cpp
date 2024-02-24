@@ -230,7 +230,7 @@ TEST_SUITE("CollideShapeTests")
 		}
 	}
 
-	// Test colliding a very long capsule vs a box that is intersecting with the linesegment inside the capsule
+	// Test colliding a very long capsule vs a box that is intersecting with the line segment inside the capsule
 	// This particular config reported the wrong penetration due to accuracy problems before
 	TEST_CASE("TestCollideShapeLongCapsuleVsEmbeddedBox")
 	{

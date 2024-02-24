@@ -448,7 +448,7 @@ TEST_SUITE("PhysicsTests")
 		TestPhysicsApplyForce(c2);
 	}
 
-	// Test angular accelartion for a box by applying torque every frame
+	// Test angular acceleration for a box by applying torque every frame
 	static void TestPhysicsApplyTorque(PhysicsTestContext &ioContext)
 	{
 		const RVec3 cInitialPos(0.0f, 10.0f, 0.0f);
@@ -492,7 +492,7 @@ TEST_SUITE("PhysicsTests")
 		TestPhysicsApplyTorque(c2);
 	}
 
-	// Let a sphere bounce on the floor with restition = 1
+	// Let a sphere bounce on the floor with restitution = 1
 	static void TestPhysicsCollisionElastic(PhysicsTestContext &ioContext)
 	{
 		const float cSimulationTime = 1.0f;
@@ -850,7 +850,7 @@ TEST_SUITE("PhysicsTests")
 		// Simulate a step
 		c.SimulateSingleStep();
 
-		// Check that it has triggered contact points and has bounced from it's initial position (effectively travelling the extra distance to the floor and back for free)
+		// Check that it has triggered contact points and has bounced from it's initial position (effectively traveling the extra distance to the floor and back for free)
 		CHECK(contact_listener.GetEntryCount() == 4); // 2 validates and 2 contacts
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Validate, box.GetID(), floor.GetID()));
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, box.GetID(), floor.GetID()));
@@ -1133,7 +1133,7 @@ TEST_SUITE("PhysicsTests")
 		// Step the world
 		ioContext.SimulateSingleStep();
 
-		// Other bodies should now be awake and each body should only collide with its neighbour
+		// Other bodies should now be awake and each body should only collide with its neighbor
 		CHECK(activation_listener.GetEntryCount() == cNumBodies - 1);
 		CHECK(contact_listener.GetEntryCount() == 2 * (cNumBodies - 1));
 

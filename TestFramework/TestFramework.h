@@ -6,7 +6,7 @@
 
 #include <Jolt/Jolt.h>
 
-// Targetting Windows 10 and above
+// Targeting Windows 10 and above
 #define WINVER 0x0A00
 #define _WIN32_WINNT 0x0A00
 

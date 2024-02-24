@@ -15,7 +15,7 @@
 // Format descriptions
 static FormatDescription sFormats[] =
 {
-	//				   Decription	BPP		#CMP	Closest 8 Bit				Closest Alpha				Red Mask	Green Mask	Blue Mask	Alpha Mask
+	//				   Description	BPP		#CMP	Closest 8 Bit				Closest Alpha				Red Mask	Green Mask	Blue Mask	Alpha Mask
 	FormatDescription("A4L4",		8,		2,		ESurfaceFormat::A8L8,		ESurfaceFormat::A4L4,		0x0000000f, 0x0000000f, 0x0000000f, 0x000000f0),
 	FormatDescription("L8",			8,		1,		ESurfaceFormat::L8,			ESurfaceFormat::A8L8,		0x000000ff,	0x000000ff,	0x000000ff, 0x00000000),
 	FormatDescription("A8",			8,		1,		ESurfaceFormat::A8,			ESurfaceFormat::A8,			0x00000000,	0x00000000,	0x00000000, 0x000000ff),

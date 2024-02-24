@@ -69,7 +69,7 @@ TEST_SUITE("SixDOFConstraintTests")
 				float dt = context.GetDeltaTime();
 				for (int i = 0; i < 120; ++i)
 				{
-					// Using the equations from page 32 of Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
+					// Using the equations from page 32 of Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
 					for (int axis = 0; axis < 3; ++axis)
 						if (((1 << axis) & spring_axis) != 0) // Only update velocity for axis where there is a spring
 							v.SetComponent(axis, (v[axis] - dt * k / m * float(x[axis])) / (1.0f + dt * c / m + Square(dt) * k / m));

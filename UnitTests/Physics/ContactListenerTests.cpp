@@ -18,7 +18,7 @@ TEST_SUITE("ContactListenerTests")
 	using LogEntry = LoggingContactListener::LogEntry;
 	using EType = LoggingContactListener::EType;
 
-	// Let a sphere bounce on the floor with restition = 1
+	// Let a sphere bounce on the floor with restitution = 1
 	TEST_CASE("TestContactListenerElastic")
 	{
 		PhysicsTestContext c;
@@ -89,7 +89,7 @@ TEST_SUITE("ContactListenerTests")
 		}
 	}
 
-	// Let a sphere fall on the floor with restition = 0, then give it horizontal velocity, then take it away from the floor
+	// Let a sphere fall on the floor with restitution = 0, then give it horizontal velocity, then take it away from the floor
 	TEST_CASE("TestContactListenerInelastic")
 	{
 		PhysicsTestContext c;

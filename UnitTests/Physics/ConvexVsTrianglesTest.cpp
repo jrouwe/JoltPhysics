@@ -196,7 +196,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 			CollideShapeSettings settings_no_bf;
 			settings_no_bf.mBackFaceMode = EBackFaceMode::IgnoreBackFaces;
 
-			// Settings with max seperation distance
+			// Settings with max separation distance
 			CollideShapeSettings settings_max_distance;
 			settings_max_distance.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 			settings_max_distance.mMaxSeparationDistance = cMaxSeparationDistance;
@@ -265,7 +265,7 @@ TEST_SUITE("ConvexVsTrianglesTest")
 				sCheckCollisionNoHit<Collider>(settings_no_bf, sphere_center, cRadius, active_edges);
 			}
 
-			// Loop over possibel active edge movement direction permutations
+			// Loop over possible active edge movement direction permutations
 			for (int movement_direction = 0; movement_direction < 3; ++movement_direction)
 			{
 				switch (movement_direction)

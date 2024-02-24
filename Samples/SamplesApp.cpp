@@ -2167,7 +2167,7 @@ bool SamplesApp::UpdateFrame(float inDeltaTime)
 			UpdateDebug(inDeltaTime);
 
 			{
-				// Pocess input, this is done once and before we save the state so that we can save the input state
+				// Process input, this is done once and before we save the state so that we can save the input state
 				JPH_PROFILE("ProcessInput");
 				Test::ProcessInputParams handle_input;
 				handle_input.mDeltaTime = 1.0f / mUpdateFrequency;

@@ -156,7 +156,7 @@ void ContactListenerImpl::RestoreState(StateRecorder &inStream)
 		QuickSort(keys.begin(), keys.end());
 	}
 
-	// Ensure we have the corect size
+	// Ensure we have the correct size
 	keys.resize(length);
 
 	for (size_t i = 0; i < length; ++i)
