@@ -301,6 +301,7 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 		const Edge &e = edge_constraints[i];
 		Vertex &v0 = mVertices[e.mVertex[0]];
 		Vertex &v1 = mVertices[e.mVertex[1]];
+		JPH_ASSERT(v0.mInvMass > 0.0f || v1.mInvMass > 0.0f);
 
 		// Calculate current length
 		Vec3 delta = v1.mPosition - v0.mPosition;
