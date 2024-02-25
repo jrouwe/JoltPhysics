@@ -10,6 +10,8 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/QuickSort.h>
+#include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/UnorderedSet.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -40,6 +42,26 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Volume)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Volume, mCompliance)
 }
 
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::InvBind)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::InvBind, mJointIndex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::InvBind, mInvBind)
+}
+
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::SkinWeight)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::SkinWeight, mInvBindIndex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::SkinWeight, mWeight)
+}
+
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Skinned)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mWeights)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mMaxDistance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStop)
+}
+
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertices)
@@ -47,6 +69,8 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeGroupEndIndices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
@@ -75,6 +99,48 @@ void SoftBodySharedSettings::CalculateVolumeConstraintVolumes()
 
 		v.mSixRestVolume = abs(x1x2.Cross(x1x3).Dot(x1x4));
 	}
+}
+
+void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
+{
+	// First collect all vertices that are skinned
+	UnorderedSet<uint32> skinned_vertices;
+	skinned_vertices.reserve(mSkinnedConstraints.size());
+	for (const Skinned &s : mSkinnedConstraints)
+		skinned_vertices.insert(s.mVertex);
+
+	// Now collect all faces that connect only to skinned vertices
+	UnorderedMap<uint32, UnorderedSet<uint32>> connected_faces;
+	connected_faces.reserve(mVertices.size());
+	for (const Face &f : mFaces)
+	{
+		// Must connect to only skinned vertices
+		bool valid = true;
+		for (uint32 v : f.mVertex)
+			valid &= skinned_vertices.find(v) != skinned_vertices.end();
+		if (!valid)
+			continue;
+
+		// Store faces that connect to vertices
+		for (uint32 v : f.mVertex)
+			connected_faces[v].insert(uint32(&f - mFaces.data()));
+	}
+
+	// Populate the list of connecting faces per skinned vertex
+	mSkinnedConstraintNormals.clear();
+	mSkinnedConstraintNormals.reserve(mFaces.size());
+	for (Skinned &s : mSkinnedConstraints)
+	{
+		uint32 start = uint32(mSkinnedConstraintNormals.size());
+		JPH_ASSERT((start >> 24) == 0);
+		const UnorderedSet<uint32> &faces = connected_faces[s.mVertex];
+		uint32 num = uint32(faces.size());
+		JPH_ASSERT(num < 256);
+		mSkinnedConstraintNormals.insert(mSkinnedConstraintNormals.end(), faces.begin(), faces.end());
+		QuickSort(mSkinnedConstraintNormals.begin() + start, mSkinnedConstraintNormals.begin() + start + num);
+		s.mNormalInfo = start + (num << 24);
+	}
+	mSkinnedConstraintNormals.shrink_to_fit();
 }
 
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
@@ -143,6 +209,9 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mEdgeConstraints);
 	inStream.Write(mEdgeGroupEndIndices);
 	inStream.Write(mVolumeConstraints);
+	inStream.Write(mSkinnedConstraints);
+	inStream.Write(mInvBindMatrices);
+	inStream.Write(mSkinnedConstraintNormals);
 	inStream.Write(mVertexRadius);
 }
 
@@ -153,6 +222,9 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mEdgeConstraints);
 	inStream.Read(mEdgeGroupEndIndices);
 	inStream.Read(mVolumeConstraints);
+	inStream.Read(mSkinnedConstraints);
+	inStream.Read(mInvBindMatrices);
+	inStream.Read(mSkinnedConstraintNormals);
 	inStream.Read(mVertexRadius);
 }
 

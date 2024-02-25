@@ -35,6 +35,9 @@ public:
 	using Edge = SoftBodySharedSettings::Edge;
 	using Face = SoftBodySharedSettings::Face;
 	using Volume = SoftBodySharedSettings::Volume;
+	using InvBind = SoftBodySharedSettings::InvBind;
+	using SkinWeight = SoftBodySharedSettings::SkinWeight;
+	using Skinned = SoftBodySharedSettings::Skinned;
 
 	/// Initialize the soft body motion properties
 	void								Initialize(const SoftBodyCreationSettings &inSettings);
@@ -85,6 +88,7 @@ public:
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
+	void								DrawSkinConstraints(DebugRenderer *inRenderer) const;
 	void								DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
 
@@ -93,6 +97,14 @@ public:
 
 	/// Restoring state for replay
 	void								RestoreState(StateRecorder &inStream);
+
+	/// Skin vertices to supplied joints, information is used by the skinned constraints.
+	/// @param inRootTransform Value of Body::GetCenterOfMassTransform().
+	/// @param inJointMatrices The joint matrices must be expressed relative to inRootTransform.
+	/// @param inNumJoints Indicates how large the inJointMatrices array is (used only for validating out of bounds).
+	/// @param inHardSkinAll Can be used to position all vertices on the skinned vertices and can be used to hard reset the soft body.
+	/// @param ioTempAllocator Allocator.
+	void								SkinVertices(RMat44Arg inRootTransform, const Mat44 *inJointMatrices, uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator);
 
 	/// This function allows you to update the soft body immediately without going through the PhysicsSystem.
 	/// This is useful if the soft body is teleported and needs to 'settle' or it can be used if a the soft body
@@ -161,6 +173,13 @@ private:
 		Vec3							mOriginalAngularVelocity;					///< Angular velocity of the body in local space to the soft body at start
 	};
 
+	// Information about the state of all skinned vertices
+	struct SkinState
+	{
+		Vec3							mPosition = Vec3::sNaN();
+		Vec3							mNormal = Vec3::sNaN();
+	};
+
 	/// Do a narrow phase check and determine the closest feature that we can collide with
 	void								DetermineCollisionPlanes(const SoftBodyUpdateContext &inContext, uint inVertexStart, uint inNumVertices);
 
@@ -172,6 +191,9 @@ private:
 
 	/// Enforce all volume constraints
 	void								ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext);
+
+	/// Enforce all skin constraints
+	void								ApplySkinConstraints(const SoftBodyUpdateContext &inContext);
 
 	/// Enforce all edge constraints
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
@@ -194,9 +216,11 @@ private:
 	/// Returns 6 times the volume of the soft body
 	float								GetVolumeTimesSix() const;
 
+	RMat44								mSkinStateTransform = RMat44::sIdentity();	///< The matrix that transforms mSkinState to world space
 	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints
 	Array<Vertex>						mVertices;									///< Current state of all vertices in the simulation
 	Array<CollidingShape>				mCollidingShapes;							///< List of colliding shapes retrieved during the last update
+	Array<SkinState>					mSkinState;									///< List of skinned positions (1-on-1 with mVertices but only those that are used by the skinning constraints are filled in)
 	AABox								mLocalBounds;								///< Bounding box of all vertices
 	AABox								mLocalPredictedBounds;						///< Predicted bounding box for all vertices using extrapolation of velocity by last step delta time
 	uint32								mNumIterations;								///< Number of solver iterations

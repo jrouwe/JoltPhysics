@@ -74,6 +74,10 @@ void SoftBodyMotionProperties::Initialize(const SoftBodyCreationSettings &inSett
 		mLocalBounds.Encapsulate(out_vertex.mPosition);
 	}
 
+	// Allocate space for skinned vertices
+	if (!inSettings.mSettings->mSkinnedConstraints.empty())
+		mSkinState.resize(mVertices.size());
+
 	// We don't know delta time yet, so we can't predict the bounds and use the local bounds as the predicted bounds
 	mLocalPredictedBounds = mLocalBounds;
 
@@ -285,6 +289,50 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 		v2.mPosition += lambda * w2 * d2c;
 		v3.mPosition += lambda * w3 * d3c;
 		v4.mPosition += lambda * w4 * d4c;
+	}
+}
+
+void SoftBodyMotionProperties::ApplySkinConstraints(const SoftBodyUpdateContext &inContext)
+{
+	// Early out if nothing to do
+	if (mSettings->mSkinnedConstraints.empty())
+		return;
+
+	JPH_ASSERT(mSkinStateTransform == inContext.mCenterOfMassTransform, "Skinning state is stale, artifacts will show!");
+
+	// Apply the constraints
+	Vertex *vertices = mVertices.data();
+	const SkinState *skin_states = mSkinState.data();
+	for (const Skinned &s : mSettings->mSkinnedConstraints)
+	{
+		Vertex &vertex = vertices[s.mVertex];
+		const SkinState &skin_state = skin_states[s.mVertex];
+		if (vertex.mInvMass > 0.0f)
+		{
+			// Clamp vertex distance to max distance from skinned position
+			if (s.mMaxDistance < FLT_MAX)
+			{
+				Vec3 delta = vertex.mPosition - skin_state.mPosition;
+				float delta_len_sq = delta.LengthSq();
+				float max_distane_sq = Square(s.mMaxDistance);
+				if (delta_len_sq > max_distane_sq)
+					vertex.mPosition = skin_state.mPosition + delta * (max_distane_sq / delta_len_sq);
+			}
+
+			// Move position if it violated the back stop
+			if (s.mBackStop < s.mMaxDistance)
+			{
+				Vec3 delta = vertex.mPosition - skin_state.mPosition;
+				float violation = -s.mBackStop - skin_state.mNormal.Dot(delta);
+				if (violation > 0.0f)
+					vertex.mPosition += violation * skin_state.mNormal;
+			}
+		}
+		else
+		{
+			// Kinematic: Just update the vertex position
+			vertex.mPosition = skin_state.mPosition;
+		}
 	}
 }
 
@@ -624,6 +672,8 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 							// Finish the iteration
 							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
+							ApplySkinConstraints(ioContext);
+
 							uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
 							if (iteration < mNumIterations)
 							{
@@ -674,6 +724,76 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 	default:
 		JPH_ASSERT(false);
 		return EStatus::NoWork;
+	}
+}
+
+void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat44 *inJointMatrices, uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
+{
+	// Calculate the skin matrices
+	uint num_skin_matrices = uint(mSettings->mInvBindMatrices.size());
+	uint skin_matrices_size = num_skin_matrices * sizeof(Mat44);
+	Mat44 *skin_matrices = (Mat44 *)ioTempAllocator.Allocate(skin_matrices_size);
+	const Mat44 *skin_matrices_end = skin_matrices + num_skin_matrices;	
+	const InvBind *inv_bind_matrix = mSettings->mInvBindMatrices.data();
+	for (Mat44 *s = skin_matrices; s < skin_matrices_end; ++s, ++inv_bind_matrix)
+		*s = inJointMatrices[inv_bind_matrix->mJointIndex] * inv_bind_matrix->mInvBind;
+
+	// Skin the vertices
+	mSkinStateTransform = inRootTransform;
+	uint num_vertices = uint(mSettings->mVertices.size());
+	JPH_ASSERT(mSkinState.size() == num_vertices);
+	const SoftBodySharedSettings::Vertex *in_vertices = mSettings->mVertices.data();
+	for (const Skinned &s : mSettings->mSkinnedConstraints)
+	{
+		// Get bind pose
+		JPH_ASSERT(s.mVertex < num_vertices);
+		Vec3 bind_pos = Vec3::sLoadFloat3Unsafe(in_vertices[s.mVertex].mPosition);
+
+		// Skin vertex
+		Vec3 pos = Vec3::sZero();
+		for (const SkinWeight &w : s.mWeights)
+		{
+			JPH_ASSERT(w.mInvBindIndex < num_skin_matrices);
+			pos += w.mWeight * (skin_matrices[w.mInvBindIndex] * bind_pos);
+		}
+		mSkinState[s.mVertex].mPosition = pos;
+	}
+
+	// Calculate the normals
+	for (const Skinned &s : mSettings->mSkinnedConstraints)
+	{
+		Vec3 normal = Vec3::sZero();
+		uint32 num_faces = s.mNormalInfo >> 24;
+		if (num_faces > 0)
+		{
+			// Calculate normal
+			const uint32 *f = &mSettings->mSkinnedConstraintNormals[s.mNormalInfo & 0xffffff];
+			const uint32 *f_end = f + num_faces;
+			while (f < f_end)
+			{
+				const Face &face = mSettings->mFaces[*f];
+				Vec3 v0 = mSkinState[face.mVertex[0]].mPosition;
+				Vec3 v1 = mSkinState[face.mVertex[1]].mPosition;
+				Vec3 v2 = mSkinState[face.mVertex[2]].mPosition;
+				normal += (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sZero());
+				++f;
+			}
+			normal /= float(num_faces);
+		}
+		mSkinState[s.mVertex].mNormal = normal;
+	}
+
+	ioTempAllocator.Free(skin_matrices, skin_matrices_size);
+
+	if (inHardSkinAll)
+	{
+		// Hard skin all vertices and reset their velocities
+		for (const Skinned &s : mSettings->mSkinnedConstraints)
+		{
+			Vertex &vertex = mVertices[s.mVertex];
+			vertex.mPosition = mSkinState[s.mVertex].mPosition;
+			vertex.mVelocity = Vec3::sZero();
+		}
 	}
 }
 
@@ -730,6 +850,15 @@ void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, 
 		inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
 		inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow, DebugRenderer::ECastShadow::On);
 		inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
+	}
+}
+
+void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer) const
+{
+	for (const Skinned &s : mSettings->mSkinnedConstraints)
+	{
+		const SkinState &skin_state = mSkinState[s.mVertex];
+		DebugRenderer::sInstance->DrawArrow(mSkinStateTransform * skin_state.mPosition, mSkinStateTransform * (skin_state.mPosition + 0.1f * skin_state.mNormal), Color::sOrange, 0.01f);
 	}
 }
 
