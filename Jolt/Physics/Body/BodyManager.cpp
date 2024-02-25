@@ -1085,6 +1085,9 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 				if (inDrawSettings.mDrawSoftBodyVolumeConstraints)
 					mp->DrawVolumeConstraints(inRenderer, com);
 
+				if (inDrawSettings.mDrawSoftBodySkinConstraints)
+					mp->DrawSkinConstraints(inRenderer);
+
 				if (inDrawSettings.mDrawSoftBodyPredictedBounds)
 					mp->DrawPredictedBounds(inRenderer, com);
 			}
