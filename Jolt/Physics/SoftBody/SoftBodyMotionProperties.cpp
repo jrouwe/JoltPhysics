@@ -246,7 +246,7 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 }
 
-void SoftBodyMotionProperties::ApplyVolumeConstraints([[maybe_unused]] const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -292,7 +292,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints([[maybe_unused]] const Sof
 	}
 }
 
-void SoftBodyMotionProperties::ApplySkinConstraints(const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftBodyUpdateContext &inContext)
 {
 	// Early out if nothing to do
 	if (mSettings->mSkinnedConstraints.empty())
