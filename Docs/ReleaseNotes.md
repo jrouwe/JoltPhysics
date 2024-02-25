@@ -26,6 +26,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added fraction hint to PathConstraintPath::GetClosestPoint. This can be used to speed up the search along the curve and to disambiguate fractions in case a path reaches the same point multiple times (i.e. a figure-8).
 * Added ability to update the height field materials after creation.
 * Added SoftBodyContactListener which allows you to get callbacks for collisions between soft bodies and rigid bodies.
+* Added soft body skinning constraints. This can be used to limit the movement of soft body vertices based on a skinned mesh. You can specify a 'backstop' which is the max distance behind the plane formed by the skinned vertex and the averaged normal based on adjacent faces and a 'max distance' which stops the vertex when it moves more than this distance away from the vertex. This is mainly suitable for simulating clothing where you don't want to use highly detailed collision volumes to limit the movement of the soft body.
 
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
