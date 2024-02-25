@@ -733,7 +733,7 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat
 	uint num_skin_matrices = uint(mSettings->mInvBindMatrices.size());
 	uint skin_matrices_size = num_skin_matrices * sizeof(Mat44);
 	Mat44 *skin_matrices = (Mat44 *)ioTempAllocator.Allocate(skin_matrices_size);
-	const Mat44 *skin_matrices_end = skin_matrices + num_skin_matrices;	
+	const Mat44 *skin_matrices_end = skin_matrices + num_skin_matrices;
 	const InvBind *inv_bind_matrix = mSettings->mInvBindMatrices.data();
 	for (Mat44 *s = skin_matrices; s < skin_matrices_end; ++s, ++inv_bind_matrix)
 		*s = inJointMatrices[inv_bind_matrix->mJointIndex] * inv_bind_matrix->mInvBind;
