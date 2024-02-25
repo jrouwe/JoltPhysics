@@ -20,6 +20,7 @@ struct PhysicsSettings;
 class Body;
 class Shape;
 class SoftBodyCreationSettings;
+class TempAllocator;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
 #endif // JPH_DEBUG_RENDERER

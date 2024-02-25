@@ -740,7 +740,7 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat
 
 	// Skin the vertices
 	mSkinStateTransform = inRootTransform;
-	uint num_vertices = uint(mSettings->mVertices.size());
+	JPH_IF_ENABLE_ASSERTS(uint num_vertices = uint(mSettings->mVertices.size());)
 	JPH_ASSERT(mSkinState.size() == num_vertices);
 	const SoftBodySharedSettings::Vertex *in_vertices = mSettings->mVertices.data();
 	for (const Skinned &s : mSettings->mSkinnedConstraints)

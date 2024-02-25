@@ -103,6 +103,13 @@ void SoftBodySharedSettings::CalculateVolumeConstraintVolumes()
 
 void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 {
+	// Clear any previous results
+	mSkinnedConstraintNormals.clear();
+
+	// If there are no skinned constraints, we're done
+	if (mSkinnedConstraints.empty())
+		return;
+
 	// First collect all vertices that are skinned
 	UnorderedSet<uint32> skinned_vertices;
 	skinned_vertices.reserve(mSkinnedConstraints.size());
@@ -127,7 +134,6 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 	}
 
 	// Populate the list of connecting faces per skinned vertex
-	mSkinnedConstraintNormals.clear();
 	mSkinnedConstraintNormals.reserve(mFaces.size());
 	for (Skinned &s : mSkinnedConstraints)
 	{
