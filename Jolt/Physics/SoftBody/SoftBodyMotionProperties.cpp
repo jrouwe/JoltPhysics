@@ -246,7 +246,7 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 }
 
-void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyVolumeConstraints([[maybe_unused]] const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -314,9 +314,9 @@ void SoftBodyMotionProperties::ApplySkinConstraints(const SoftBodyUpdateContext 
 			{
 				Vec3 delta = vertex.mPosition - skin_state.mPosition;
 				float delta_len_sq = delta.LengthSq();
-				float max_distane_sq = Square(s.mMaxDistance);
-				if (delta_len_sq > max_distane_sq)
-					vertex.mPosition = skin_state.mPosition + delta * (max_distane_sq / delta_len_sq);
+				float max_distance_sq = Square(s.mMaxDistance);
+				if (delta_len_sq > max_distance_sq)
+					vertex.mPosition = skin_state.mPosition + delta * sqrt(max_distance_sq / delta_len_sq);
 			}
 
 			// Move position if it violated the back stop
@@ -727,7 +727,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 	}
 }
 
-void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat44 *inJointMatrices, uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
+void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat44 *inJointMatrices, [[maybe_unused]] uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
 {
 	// Calculate the skin matrices
 	uint num_skin_matrices = uint(mSettings->mInvBindMatrices.size());
