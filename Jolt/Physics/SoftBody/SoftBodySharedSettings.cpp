@@ -216,9 +216,16 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mEdgeGroupEndIndices);
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
-	inStream.Write(mInvBindMatrices);
 	inStream.Write(mSkinnedConstraintNormals);
 	inStream.Write(mVertexRadius);
+
+	// Can't write mInvBindMatrices directly because the class contains padding
+	inStream.Write(uint32(mInvBindMatrices.size()));
+	for (const InvBind &ib : mInvBindMatrices)
+	{
+		inStream.Write(ib.mJointIndex);
+		inStream.Write(ib.mInvBind);
+	}
 }
 
 void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
@@ -229,9 +236,17 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mEdgeGroupEndIndices);
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
-	inStream.Read(mInvBindMatrices);
 	inStream.Read(mSkinnedConstraintNormals);
 	inStream.Read(mVertexRadius);
+
+	uint32 num_inv_bind_matrices = 0;
+	inStream.Read(num_inv_bind_matrices);
+	mInvBindMatrices.resize(num_inv_bind_matrices);
+	for (InvBind &ib : mInvBindMatrices)
+	{
+		inStream.Read(ib.mJointIndex);
+		inStream.Read(ib.mInvBind);
+	}
 }
 
 void SoftBodySharedSettings::SaveWithMaterials(StreamOut &inStream, SharedSettingsToIDMap &ioSettingsMap, MaterialToIDMap &ioMaterialMap) const
