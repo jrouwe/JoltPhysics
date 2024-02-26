@@ -778,7 +778,7 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat
 				normal += (v1 - v0).Cross(v2 - v0).NormalizedOr(Vec3::sZero());
 				++f;
 			}
-			normal /= float(num_faces);
+			normal = normal.NormalizedOr(Vec3::sZero());
 		}
 		mSkinState[s.mVertex].mNormal = normal;
 	}
