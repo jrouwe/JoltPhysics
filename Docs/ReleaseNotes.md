@@ -26,6 +26,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added fraction hint to PathConstraintPath::GetClosestPoint. This can be used to speed up the search along the curve and to disambiguate fractions in case a path reaches the same point multiple times (i.e. a figure-8).
 * Added ability to update the height field materials after creation.
 * Added SoftBodyContactListener which allows you to get callbacks for collisions between soft bodies and rigid bodies.
+* Added ability to update a soft body outside of the physics simulation step. This is e.g. useful if the soft body is teleported and needs to 'settle'.
 * Added soft body skinning constraints. This can be used to limit the movement of soft body vertices based on a skinned mesh. You can specify a 'backstop' which is the max distance behind the plane formed by the skinned vertex and the averaged normal based on adjacent faces and a 'max distance' which stops the vertex when it moves more than this distance away from the vertex. This is mainly suitable for simulating clothing where you don't want to use highly detailed collision volumes to limit the movement of the soft body.
 
 ### Improvements
@@ -51,6 +52,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Properly initializing current engine RPM to min RPM for wheeled/tracked vehicles. When min RPM was lower than the default min RPM the engine would not start at min RPM.
 * Fixed a possible division by zero in Body::GetBodyCreationSettings when the inverse inertia diagonal had 0's.
 * When specifying a -1 for min/max distance of a distance constraint and the calculated distance is incompatible with the other limit, we'll clamp it to that value now instead of ending up with min > max.
+* Fixed bug that contact cache was partially uninitialized when colliding two objects with inv mass override of 0. When the contact listener would report a non zero inv mass override the next simulation step this would mean that the simulation would read garbage and potentially crash due to NaNs.
 
 ## v4.0.2
 
