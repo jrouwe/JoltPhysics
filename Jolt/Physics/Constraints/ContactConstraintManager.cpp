@@ -1173,7 +1173,7 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 			p1.StoreFloat3(&cp.mPosition1);
 			p2.StoreFloat3(&cp.mPosition2);
 
-			// We don't use this, but reset them anyway for determinism check
+			// Reset contact impulses, we haven't applied any
 			cp.mNonPenetrationLambda = 0.0f;
 			cp.mFrictionLambda[0] = 0.0f;
 			cp.mFrictionLambda[1] = 0.0f;
