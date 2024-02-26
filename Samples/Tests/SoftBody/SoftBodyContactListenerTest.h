@@ -16,7 +16,10 @@ public:
 	// See: Test
 	virtual void					Initialize() override;
 	virtual void					PrePhysicsUpdate(const PreUpdateParams &inParams) override;
-	virtual void					GetInitialCamera(CameraState &ioState) const override { ioState.mPos = RVec3(15, 10, 15); }
+	virtual void					GetInitialCamera(CameraState &ioState) const override		{ ioState.mPos = RVec3(15, 10, 15); }
+
+	// Test is not deterministic as it creates/removes bodies in a way that's not compatible with the determinism check
+	virtual bool					IsDeterministic() const override							{ return false; }
 
 	// See: SoftBodyContactListener
 	virtual SoftBodyValidateResult	OnSoftBodyContactValidate(const Body &inSoftBody, const Body &inOtherBody, SoftBodyContactSettings &ioSettings) override;

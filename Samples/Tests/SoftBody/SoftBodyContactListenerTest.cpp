@@ -40,10 +40,10 @@ void SoftBodyContactListenerTest::PrePhysicsUpdate(const PreUpdateParams &inPara
 		mTime = 0.0f;
 
 		// Remove the old scene
-		mBodyInterface->RemoveBody(mSoftBodyID);
-		mBodyInterface->DestroyBody(mSoftBodyID);
 		mBodyInterface->RemoveBody(mOtherBodyID);
 		mBodyInterface->DestroyBody(mOtherBodyID);
+		mBodyInterface->RemoveBody(mSoftBodyID);
+		mBodyInterface->DestroyBody(mSoftBodyID);
 
 		// Start the new
 		StartCycle();
