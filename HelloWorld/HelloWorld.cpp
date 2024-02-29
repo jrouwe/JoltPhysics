@@ -210,17 +210,21 @@ public:
 // Program entry point
 int main(int argc, char** argv)
 {
-	// Register allocation hook
+	// Register allocation hook. In this example we'll just let Jolt use malloc / free but you can override these if you want (see Memory.h).
+	// This needs to be done before any other Jolt function is called.
 	RegisterDefaultAllocator();
 
-	// Install callbacks
+	// Install trace and assert callbacks
 	Trace = TraceImpl;
 	JPH_IF_ENABLE_ASSERTS(AssertFailed = AssertFailedImpl;)
 
-	// Create a factory
+	// Create a factory, this class is responsible for creating instances of classes based on their name or hash and is mainly used for deserialization of saved data.
+	// It is not directly used in this example but still required.
 	Factory::sInstance = new Factory();
 
-	// Register all Jolt physics types
+	// Register all physics types with the factory and install their collision handlers with the CollisionDispatch class.
+	// If you have your own custom shape types you probably need to register their handlers with the CollisionDispatch before calling this function.
+	// If you implement your own default material (PhysicsMaterial::sDefault) make sure to initialize it before this function or else this function will create one for you.
 	RegisterTypes();
 
 	// We need a temp allocator for temporary allocations during the physics update. We're
