@@ -259,6 +259,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Vehicle/VehicleStressTest.h
 	${SAMPLES_ROOT}/Tests/Vehicle/VehicleTest.cpp
 	${SAMPLES_ROOT}/Tests/Vehicle/VehicleTest.h
+	${SAMPLES_ROOT}/Tests/Water/BoatTest.cpp
+	${SAMPLES_ROOT}/Tests/Water/BoatTest.h
 	${SAMPLES_ROOT}/Tests/Water/WaterShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/Water/WaterShapeTest.h
 	${SAMPLES_ROOT}/Utils/ContactListenerImpl.cpp
