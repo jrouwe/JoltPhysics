@@ -48,28 +48,22 @@ bool Skeleton::AreJointsCorrectlyOrdered() const
 
 void Skeleton::SaveBinaryState(StreamOut &inStream) const
 {
-	inStream.Write((uint32)mJoints.size());
-	for (const Joint &j : mJoints)
-	{
-		inStream.Write(j.mName);
-		inStream.Write(j.mParentJointIndex);
-		inStream.Write(j.mParentName);
-	}
+	inStream.Write(mJoints, [](const Joint &inElement, StreamOut &inStream) {
+		inStream.Write(inElement.mName);
+		inStream.Write(inElement.mParentJointIndex);
+		inStream.Write(inElement.mParentName);
+	});
 }
 
 Skeleton::SkeletonResult Skeleton::sRestoreFromBinaryState(StreamIn &inStream)
 {
 	Ref<Skeleton> skeleton = new Skeleton;
 
-	uint32 len = 0;
-	inStream.Read(len);
-	skeleton->mJoints.resize(len);
-	for (Joint &j : skeleton->mJoints)
-	{
-		inStream.Read(j.mName);
-		inStream.Read(j.mParentJointIndex);
-		inStream.Read(j.mParentName);
-	}
+	inStream.Read(skeleton->mJoints, [](StreamIn &inStream, Joint &outElement) {
+		inStream.Read(outElement.mName);
+		inStream.Read(outElement.mParentJointIndex);
+		inStream.Read(outElement.mParentName);
+	});
 
 	SkeletonResult result;
 	if (inStream.IsEOF() || inStream.IsFailed())
