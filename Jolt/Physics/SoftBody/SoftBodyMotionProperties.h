@@ -39,6 +39,7 @@ public:
 	using InvBind = SoftBodySharedSettings::InvBind;
 	using SkinWeight = SoftBodySharedSettings::SkinWeight;
 	using Skinned = SoftBodySharedSettings::Skinned;
+	using LRA = SoftBodySharedSettings::LRA;
 
 	/// Initialize the soft body motion properties
 	void								Initialize(const SoftBodyCreationSettings &inSettings);
@@ -198,6 +199,9 @@ private:
 
 	/// Enforce all edge constraints
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
+
+	/// Enforce all LRA constraints
+	void								ApplyLRAConstraints(const SoftBodyUpdateContext &inContext);
 
 	/// Enforce all collision constraints & update all velocities according the XPBD algorithm
 	void								ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext);

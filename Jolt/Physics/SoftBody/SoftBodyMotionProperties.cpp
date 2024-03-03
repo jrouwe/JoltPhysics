@@ -364,6 +364,26 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 	}
 }
 
+void SoftBodyMotionProperties::ApplyLRAConstraints(const SoftBodyUpdateContext &inContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Satisfy LRA constraints
+	Vertex *vertices = mVertices.data();
+	for (const LRA &lra : mSettings->mLRAConstraints)
+	{
+		JPH_ASSERT(lra.mVertex[0] < mVertices.size());
+		JPH_ASSERT(lra.mVertex[1] < mVertices.size());
+		Vertex &vertex0 = vertices[lra.mVertex[0]];
+		Vertex &vertex1 = vertices[lra.mVertex[1]];
+
+		Vec3 delta = vertex1.mPosition - vertex0.mPosition;
+		float delta_len_sq = delta.LengthSq();
+		if (delta_len_sq > Square(lra.mMaxDistance))
+			vertex1.mPosition = vertex0.mPosition + delta * lra.mMaxDistance / sqrt(delta_len_sq);
+	}
+}
+
 void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
@@ -670,6 +690,8 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 						if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
 						{
 							// Finish the iteration
+							ApplyLRAConstraints(ioContext);
+
 							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
 							ApplySkinConstraints(ioContext);

@@ -12,6 +12,7 @@
 #include <Jolt/Core/QuickSort.h>
 #include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Core/UnorderedSet.h>
+#include <Jolt/Core/HashCombine.h>
 
 JPH_NAMESPACE_BEGIN
 
@@ -62,6 +63,12 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Skinned)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStop)
 }
 
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::LRA)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::LRA, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::LRA, mMaxDistance)
+}
+
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertices)
@@ -71,8 +78,51 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mLRAConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
+}
+
+void SoftBodySharedSettings::CreateEdges(float inCompliance)
+{
+	// A struct to hold the two vertex indices of an edge
+	struct EdgeIndices
+	{
+				EdgeIndices(int inIdx1, int inIdx2) : mIdx1(min(inIdx1, inIdx2)), mIdx2(max(inIdx1, inIdx2)) { }
+
+		bool	operator == (const EdgeIndices &inRHS) const
+		{
+			return mIdx1 == inRHS.mIdx1 && mIdx2 == inRHS.mIdx2;
+		}
+
+		int		mIdx1;
+		int		mIdx2;
+	};
+
+	JPH_MAKE_HASH_STRUCT(EdgeIndices, EdgeIndicesHash, t.mIdx1, t.mIdx2)
+
+	// Create a map of edges
+	UnorderedSet<EdgeIndices, EdgeIndicesHash> edge_set;
+	for (const Face &f : mFaces)
+	{
+		// Create edges
+		for (uint32 i = 0; i < 3; ++i)
+		{
+			uint32 v1 = f.mVertex[i];
+			uint32 v2 = f.mVertex[(i + 1) % 3];
+			if (v1 > v2)
+				swap(v1, v2);
+			if (edge_set.insert(EdgeIndices(v1, v2)).second)
+			{
+				Edge edge;
+				edge.mVertex[0] = v1;
+				edge.mVertex[1] = v2;
+				edge.mRestLength = (Vec3(mVertices[v2].mPosition) - Vec3(mVertices[v1].mPosition)).Length();
+				edge.mCompliance = inCompliance;
+				mEdgeConstraints.push_back(edge);
+			}
+		}
+	}
 }
 
 void SoftBodySharedSettings::CalculateEdgeLengths()
@@ -217,6 +267,7 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
+	inStream.Write(mLRAConstraints);
 	inStream.Write(mVertexRadius);
 
 	// Can't write mInvBindMatrices directly because the class contains padding
@@ -235,6 +286,7 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
+	inStream.Read(mLRAConstraints);
 	inStream.Read(mVertexRadius);
 
 	inStream.Read(mInvBindMatrices, [](StreamIn &inStream, InvBind &outElement) {
