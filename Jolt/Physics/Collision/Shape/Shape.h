@@ -145,6 +145,10 @@ public:
 	/// Create a shape according to the settings specified by this object.
 	virtual ShapeResult				Create() const = 0;
 
+	/// When creating a shape, the result is cached so that calling Create() again will return the same shape.
+	/// If you make changes to the ShapeSettings you need to call this function to clear the cached result to allow Create() to build a new shape.
+	void							ClearCachedResult()													{ mCachedResult.Clear(); }
+
 	/// User data (to be used freely by the application)
 	uint64							mUserData = 0;
 

@@ -357,6 +357,24 @@ TEST_SUITE("ShapeTests")
 		}
 	}
 
+	// Test re-creating shape using the same settings object
+	TEST_CASE("TestClearCachedResult")
+	{
+		// Create a sphere and check radius
+		SphereShapeSettings sphere_settings(1.0f);
+		RefConst<SphereShape> sphere1 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		CHECK(sphere1->GetRadius() == 1.0f);
+
+		// Modify radius and check that creating the shape again returns the cached result
+		sphere_settings.mRadius = 2.0f;
+		RefConst<SphereShape> sphere2 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		CHECK(sphere2 == sphere1);
+
+		sphere_settings.ClearCachedResult();
+		RefConst<SphereShape> sphere3 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		CHECK(sphere3->GetRadius() == 2.0f);
+	}
+
 	// Test submerged volume calculation
 	TEST_CASE("TestGetSubmergedVolume")
 	{
