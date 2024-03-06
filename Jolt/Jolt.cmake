@@ -500,6 +500,11 @@ if (FLOATING_POINT_EXCEPTIONS_ENABLED AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "M
 	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>")
 endif()
 
+# Setting the disable custom allocator flag
+if (DISABLE_CUSTOM_ALLOCATOR)
+	target_compile_definitions(Jolt PUBLIC JPH_DISABLE_CUSTOM_ALLOCATOR)
+endif()
+
 # Setting double precision flag
 if (DOUBLE_PRECISION)
 	target_compile_definitions(Jolt PUBLIC JPH_DOUBLE_PRECISION)

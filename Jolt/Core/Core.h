@@ -181,7 +181,6 @@
 	#define JPH_CPU_ADDRESS_BITS 32
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
-	#define JPH_DISABLE_CUSTOM_ALLOCATOR
 #elif defined(__e2k__)
 	// Elbrus e2k architecture
 	#define JPH_CPU_E2K
