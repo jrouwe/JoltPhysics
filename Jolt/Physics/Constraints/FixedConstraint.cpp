@@ -130,6 +130,12 @@ void FixedConstraint::SetupVelocityConstraint(float inDeltaTime)
 	mPointConstraintPart.CalculateConstraintProperties(*mBody1, rotation1, mLocalSpacePosition1, *mBody2, rotation2, mLocalSpacePosition2);
 }
 
+void FixedConstraint::ResetWarmStart()
+{
+	mRotationConstraintPart.Deactivate();
+	mPointConstraintPart.Deactivate();
+}
+
 void FixedConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse

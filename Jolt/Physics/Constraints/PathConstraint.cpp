@@ -225,6 +225,15 @@ void PathConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculateConstraintProperties(inDeltaTime);
 }
 
+void PathConstraint::ResetWarmStart()
+{
+	mPositionMotorConstraintPart.Deactivate();
+	mPositionConstraintPart.Deactivate();
+	mPositionLimitsConstraintPart.Deactivate();
+	mHingeConstraintPart.Deactivate();
+	mRotationConstraintPart.Deactivate();
+}
+
 void PathConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse

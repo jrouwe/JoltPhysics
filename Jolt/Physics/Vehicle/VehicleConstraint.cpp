@@ -506,6 +506,19 @@ void VehicleConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculatePitchRollConstraintProperties(body_transform);
 }
 
+void VehicleConstraint::ResetWarmStart()
+{
+	for (Wheel *w : mWheels)
+	{
+		w->mSuspensionPart.Deactivate();
+		w->mSuspensionMaxUpPart.Deactivate();
+		w->mLongitudinalPart.Deactivate();
+		w->mLateralPart.Deactivate();
+	}
+
+	mPitchRollPart.Deactivate();
+}
+
 void VehicleConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	for (Wheel *w : mWheels)
