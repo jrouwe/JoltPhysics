@@ -565,6 +565,12 @@ void Ragdoll::GetPose(SkeletonPose &outPose, bool inLockBodies)
 	outPose.SetRootOffset(root_offset);
 }
 
+void Ragdoll::ResetWarmStart()
+{
+	for (TwoBodyConstraint *c : mConstraints)
+		c->ResetWarmStart();
+}
+
 void Ragdoll::GetPose(RVec3 &outRootOffset, Mat44 *outJointMatrices, bool inLockBodies)
 {
 	// Lock the bodies

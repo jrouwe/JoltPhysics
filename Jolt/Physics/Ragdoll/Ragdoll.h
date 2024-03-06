@@ -169,6 +169,9 @@ public:
 	/// Lower level version of GetPose that directly returns the world space joint matrices
 	void								GetPose(RVec3 &outRootOffset, Mat44 *outJointMatrices, bool inLockBodies = true);
 
+	/// This function calls ResetWarmStart on all constraints. It can be used after calling SetPose to reset previous frames impulses. See: Constraint::ResetWarmStart.
+	void								ResetWarmStart();
+
 	/// Drive the ragdoll to a specific pose by setting velocities on each of the bodies so that it will reach inPose in inDeltaTime
 	void								DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies = true);
 
