@@ -161,6 +161,11 @@ void DistanceConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculateConstraintProperties(inDeltaTime);
 }
 
+void DistanceConstraint::ResetWarmStart()
+{
+	mAxisConstraint.Deactivate();
+}
+
 void DistanceConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	mAxisConstraint.WarmStart(*mBody1, *mBody2, mWorldSpaceNormal, inWarmStartImpulseRatio);

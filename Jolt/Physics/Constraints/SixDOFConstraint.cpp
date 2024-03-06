@@ -573,6 +573,19 @@ void SixDOFConstraint::SetupVelocityConstraint(float inDeltaTime)
 	}
 }
 
+void SixDOFConstraint::ResetWarmStart()
+{
+	for (AxisConstraintPart &c : mMotorTranslationConstraintPart)
+		c.Deactivate();
+	for (AngleConstraintPart &c : mMotorRotationConstraintPart)
+		c.Deactivate();
+	mRotationConstraintPart.Deactivate();
+	mSwingTwistConstraintPart.Deactivate();
+	mPointConstraintPart.Deactivate();
+	for (AxisConstraintPart &c : mTranslationConstraintPart)
+		c.Deactivate();
+}
+
 void SixDOFConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm start translation motors

@@ -219,6 +219,14 @@ void HingeConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculateMotorConstraintProperties(inDeltaTime);
 }
 
+void HingeConstraint::ResetWarmStart()
+{
+	mMotorConstraintPart.Deactivate();
+	mPointConstraintPart.Deactivate();
+	mRotationConstraintPart.Deactivate();
+	mRotationLimitsConstraintPart.Deactivate();
+}
+
 void HingeConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse
