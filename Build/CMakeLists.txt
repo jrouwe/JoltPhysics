@@ -57,6 +57,9 @@ option(TRACK_NARROWPHASE_STATS "Track Narrowphase Stats" OFF)
 # Note that enabling this reduces the performance of the library even if you're not drawing anything.
 option(DEBUG_RENDERER_IN_DISTRIBUTION "Enable debug renderer in Distribution builds" OFF)
 
+# Setting this option will force the library to use malloc/free instead of allowing the user to override the memory allocator
+option(DISABLE_CUSTOM_ALLOCATOR "Disable support for a custom memory allocator" OFF)
+
 include(CMakeDependentOption)
 
 # Ability to toggle between the static and DLL versions of the MSVC runtime library
