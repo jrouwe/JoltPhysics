@@ -565,12 +565,6 @@ void Ragdoll::GetPose(SkeletonPose &outPose, bool inLockBodies)
 	outPose.SetRootOffset(root_offset);
 }
 
-void Ragdoll::ResetWarmStart()
-{
-	for (TwoBodyConstraint *c : mConstraints)
-		c->ResetWarmStart();
-}
-
 void Ragdoll::GetPose(RVec3 &outRootOffset, Mat44 *outJointMatrices, bool inLockBodies)
 {
 	// Lock the bodies
@@ -592,6 +586,12 @@ void Ragdoll::GetPose(RVec3 &outRootOffset, Mat44 *outJointMatrices, bool inLock
 		RMat44 transform = body->GetWorldTransform();
 		outJointMatrices[b] = Mat44(transform.GetColumn4(0), transform.GetColumn4(1), transform.GetColumn4(2), Vec4(Vec3(transform.GetTranslation() - outRootOffset), 1));
 	}
+}
+
+void Ragdoll::ResetWarmStart()
+{
+	for (TwoBodyConstraint *c : mConstraints)
+		c->ResetWarmStart();
 }
 
 void Ragdoll::DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies)
