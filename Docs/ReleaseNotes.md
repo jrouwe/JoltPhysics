@@ -29,6 +29,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added ability to update a soft body outside of the physics simulation step. This is e.g. useful if the soft body is teleported and needs to 'settle'.
 * Added soft body skinning constraints. This can be used to limit the movement of soft body vertices based on a skinned mesh. You can specify a 'backstop' which is the max distance behind the plane formed by the skinned vertex and the averaged normal based on adjacent faces and a 'max distance' which stops the vertex when it moves more than this distance away from the vertex. This is mainly suitable for simulating clothing where you don't want to use highly detailed collision volumes to limit the movement of the soft body.
 * Added Constraint::ResetWarmStart and Ragdoll::ResetWarmStart. Used to notify the system that the configuration of the bodies and/or constraint has changed enough so that the warm start impulses should not be applied the next frame. You can use this function for example when repositioning a ragdoll through Ragdoll::SetPose in such a way that the orientation of the bodies completely changes so that the previous frame impulses are no longer a good approximation of what the impulses will be in the next frame.
+* Supporting SIMD for WASM build. Use -msimd128 -msse4.2 options with emscripten to enable this.
 
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
