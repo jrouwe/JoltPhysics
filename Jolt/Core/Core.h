@@ -181,6 +181,11 @@
 	#define JPH_CPU_ADDRESS_BITS 32
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
+	#ifdef __wasm_simd128__
+		#define JPH_USE_SSE
+		#define JPH_USE_SSE4_1
+		#define JPH_USE_SSE4_2
+	#endif
 #elif defined(__e2k__)
 	// Elbrus e2k architecture
 	#define JPH_CPU_E2K
