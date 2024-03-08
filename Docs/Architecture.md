@@ -107,7 +107,7 @@ Creating a convex hull for example looks like:
 			... // Error handling
 	}
 
-Note that after you call Create, the shape is cached and ShapeSettings keeps a reference to your shape. If you call Create again, the same shape will be returned regardless of what changed to the settings object.
+Note that after you call Create, the shape is cached and ShapeSettings keeps a reference to your shape (see @ref memory-management). If you call Create again, the same shape will be returned regardless of what changed to the settings object.
 
 ### Saving Shapes {#saving-shapes}
 
@@ -560,6 +560,43 @@ These functions / systems need to be registered in advance.
 # Debug Rendering {#debug-rendering}
 
 When the define JPH_DEBUG_RENDERER is defined (which by default is defined in Debug and Release but not Distribution), Jolt is able to render its internal state. To integrate this into your own application you must inherit from the DebugRenderer class and implement the pure virtual functions DebugRenderer::DrawLine, DebugRenderer::DrawTriangle, DebugRenderer::CreateTriangleBatch, DebugRenderer::DrawGeometry and DebugRenderer::DrawText3D. The CreateTriangleBatch is used to prepare a batch of triangles to be drawn by a single DrawGeometry call, which means that Jolt can render a complex scene much more efficiently than when each triangle in that scene would have been drawn through DrawTriangle. At run-time create an instance of your DebugRenderer which will internally assign itself to DebugRenderer::sInstance. Finally call for example PhysicsSystem::DrawBodies or PhysicsSystem::DrawConstraints to draw the state of the simulation. For an example implementation see [the DebugRenderer from the Samples application](https://github.com/jrouwe/JoltPhysics/blob/master/TestFramework/Renderer/DebugRendererImp.h).
+
+# Memory Management {#memory-management}
+
+Jolt uses reference counting for a number of its classes (everything that inherits from RefTarget). The most important classes are:
+
+* ShapeSettings
+* Shape
+* ConstraintSettings
+* Constraint
+* PhysicsMaterial
+* GroupFilter
+* PhysicsScene
+* SoftBodySharedSettings
+* VehicleCollisionTester
+* VehicleController
+* WheelSettings
+* CharacterBaseSettings
+* CharacterBase
+* RagdollSettings
+* Ragdoll
+* Skeleton
+* SkeletalAnimation
+* SkeletonMapper
+
+Reference counting objects start with a reference count of 0. If you want to keep ownership of the object, you need to call [object->AddRef()](@ref RefTarget::AddRef), this will increment the reference count. If you want to release ownership you call [object->ReleaseRef()](@ref RefTarget::Release), this will decrement the reference count and if the reference count reaches 0 the object will be destroyed. If, after newing, you pass a reference counted object on to another object (e.g. a ShapeSettings to a CompoundShapeSettings or a Shape to a Body) then that other object will take a reference, in that case it is not needed take a reference yourself beforehand so you can skip the calls to ```AddRef/Release```. Note that it is also possible to do ```auto x = new XXX``` followed by ```delete x``` for a reference counted object if no one ever took a reference. The safest way of working with reference counting objects is to use the Ref or RefConst classes, these automatically manage the reference count for you when assigning a new value or on destruction:
+
+```
+// Calls 'AddRef' to keep a reference the shape
+JPH::Ref<Shape> shape = new JPH::SphereShape(1.0f);
+
+// Calls 'Release' to release and delete the shape (note that this also happens if JPH::Ref goes out of scope)
+shape = nullptr;
+```
+
+The Body class is a special case, it is destroyed through BodyInterface::DestroyBody (which internally destroys the Body).
+
+Jolt also supports routing all of its internal allocations through a custom allocation function. See: [Allocate](@ref Allocate), [Free](@ref Free), [AlignedAllocate](@ref AlignedAllocate) and [AlignedFree](@ref AlignedFree).
 
 # The Simulation Step in Detail {#the-simulation-step-in-detail}
 
