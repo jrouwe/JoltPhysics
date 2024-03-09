@@ -875,12 +875,13 @@ void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, 
 	}
 }
 
-void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer) const
+void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	for (const Skinned &s : mSettings->mSkinnedConstraints)
 	{
 		const SkinState &skin_state = mSkinState[s.mVertex];
 		DebugRenderer::sInstance->DrawArrow(mSkinStateTransform * skin_state.mPosition, mSkinStateTransform * (skin_state.mPosition + 0.1f * skin_state.mNormal), Color::sOrange, 0.01f);
+		DebugRenderer::sInstance->DrawLine(mSkinStateTransform * skin_state.mPosition, inCenterOfMassTransform * mVertices[s.mVertex].mPosition, Color::sBlue);
 	}
 }
 

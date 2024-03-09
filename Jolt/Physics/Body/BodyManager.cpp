@@ -1086,7 +1086,7 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 					mp->DrawVolumeConstraints(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodySkinConstraints)
-					mp->DrawSkinConstraints(inRenderer);
+					mp->DrawSkinConstraints(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodyLRAConstraints)
 					mp->DrawLRAConstraints(inRenderer, com);
