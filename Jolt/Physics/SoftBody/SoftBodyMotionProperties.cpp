@@ -775,6 +775,10 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inCenterOfMassTransform, c
 		Vec3 pos = Vec3::sZero();
 		for (const SkinWeight &w : s.mWeights)
 		{
+			// We assume that the first zero weight is the end of the list
+			if (w.mWeight == 0.0f)
+				break;
+
 			JPH_ASSERT(w.mInvBindIndex < num_skin_matrices);
 			pos += w.mWeight * (skin_matrices[w.mInvBindIndex] * bind_pos);
 		}
