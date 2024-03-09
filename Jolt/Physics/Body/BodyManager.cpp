@@ -1088,6 +1088,9 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 				if (inDrawSettings.mDrawSoftBodySkinConstraints)
 					mp->DrawSkinConstraints(inRenderer);
 
+				if (inDrawSettings.mDrawSoftBodyLRAConstraints)
+					mp->DrawLRAConstraints(inRenderer, com);
+
 				if (inDrawSettings.mDrawSoftBodyPredictedBounds)
 					mp->DrawPredictedBounds(inRenderer, com);
 			}

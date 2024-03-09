@@ -23,6 +23,9 @@ public:
 	/// Calculate the initial lengths of all springs of the edges of this soft body
 	void				CalculateEdgeLengths();
 
+	/// Calculate the max lengths for the long range attachment constraints
+	void				CalculateLRALengths();
+
 	/// Calculates the initial volume of all tetrahedra of this soft body
 	void				CalculateVolumeConstraintVolumes();
 
@@ -159,6 +162,10 @@ public:
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, LRA)
 
 	public:
+		/// Constructor
+						LRA() = default;
+						LRA(uint32 inVertex1, uint32 inVertex2, float inMaxDistance) : mVertex { inVertex1, inVertex2 }, mMaxDistance(inMaxDistance) { }
+
 		uint32			mVertex[2];									///< The vertices that are connected. The first vertex should be kinematic, the 2nd dynamic.
 		float			mMaxDistance = 0.0f;						///< The maximum distance between the vertices
 	};

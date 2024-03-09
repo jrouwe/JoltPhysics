@@ -134,6 +134,15 @@ void SoftBodySharedSettings::CalculateEdgeLengths()
 	}
 }
 
+void SoftBodySharedSettings::CalculateLRALengths()
+{
+	for (LRA &l : mLRAConstraints)
+	{
+		l.mMaxDistance = (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
+		JPH_ASSERT(l.mMaxDistance > 0.0f);
+	}
+}
+
 void SoftBodySharedSettings::CalculateVolumeConstraintVolumes()
 {
 	for (Volume &v : mVolumeConstraints)

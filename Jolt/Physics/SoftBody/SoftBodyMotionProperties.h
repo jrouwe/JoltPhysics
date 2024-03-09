@@ -91,6 +91,7 @@ public:
 	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawSkinConstraints(DebugRenderer *inRenderer) const;
+	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
 

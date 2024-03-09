@@ -884,6 +884,12 @@ void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer) co
 	}
 }
 
+void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (const LRA &l : mSettings->mLRAConstraints)
+		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[l.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[l.mVertex[1]].mPosition, Color::sGrey);
+}
+
 void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	inRenderer->DrawWireBox(inCenterOfMassTransform, mLocalPredictedBounds, Color::sRed);
