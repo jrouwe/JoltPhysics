@@ -17,7 +17,7 @@ class JPH_EXPORT SoftBodySharedSettings : public RefTarget<SoftBodySharedSetting
 public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
-	/// Create edges based on the faces and calculate their lengths
+	/// Create edges based on the faces and calculate the eges lengths (as if CalculateEdgeLengths() was called)
 	void				CreateEdges(float inCompliance = 0.0f);
 
 	/// Calculate the initial lengths of all springs of the edges of this soft body
@@ -188,20 +188,24 @@ public:
 	/// Add a face to this soft body
 	void				AddFace(const Face &inFace)					{ JPH_ASSERT(!inFace.IsDegenerate()); mFaces.push_back(inFace); }
 
-	/// Get the size of an edge group (edge groups can run in parallel)
-	uint				GetEdgeGroupSize(uint inGroupIdx) const		{ return inGroupIdx == 0? mEdgeGroupEndIndices[0] : mEdgeGroupEndIndices[inGroupIdx] - mEdgeGroupEndIndices[inGroupIdx - 1]; }
-
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
-	Array<uint>			mEdgeGroupEndIndices;						///< The start index of each group of edges that can be solved in parallel
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	Array<Skinned>		mSkinnedConstraints;						///< The list of vertices that are constrained to a skinned vertex
-	Array<uint32>		mSkinnedConstraintNormals;					///< A list of indices in the mFaces array used by mSkinnedConstraints and calculated by CalculateSkinnedConstraintNormals()
 	Array<InvBind>		mInvBindMatrices;							///< The list of inverse bind matrices for skinning vertices
 	Array<LRA>			mLRAConstraints;							///< The list of long range attachment constraints
 	PhysicsMaterialList mMaterials { PhysicsMaterial::sDefault };	///< The materials of the faces of the body, referenced by Face::mMaterialIndex
 	float				mVertexRadius = 0.0f;						///< How big the particles are, can be used to push the vertices a little bit away from the surface of other bodies to prevent z-fighting
+
+private:
+	friend class SoftBodyMotionProperties;
+
+	/// Get the size of an edge group (edge groups can run in parallel)
+	uint				GetEdgeGroupSize(uint inGroupIdx) const		{ return inGroupIdx == 0? mEdgeGroupEndIndices[0] : mEdgeGroupEndIndices[inGroupIdx] - mEdgeGroupEndIndices[inGroupIdx - 1]; }
+
+	Array<uint>			mEdgeGroupEndIndices;						///< The start index of each group of edges that can be solved in parallel, calculated by Optimize()
+	Array<uint32>		mSkinnedConstraintNormals;					///< A list of indices in the mFaces array used by mSkinnedConstraints, calculated by CalculateSkinnedConstraintNormals()
 };
 
 JPH_NAMESPACE_END
