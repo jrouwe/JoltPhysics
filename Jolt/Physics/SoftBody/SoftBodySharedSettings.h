@@ -17,9 +17,6 @@ class JPH_EXPORT SoftBodySharedSettings : public RefTarget<SoftBodySharedSetting
 public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
-	/// Create edges based on the faces and calculate the eges lengths (as if CalculateEdgeLengths() was called)
-	void				CreateEdges(float inCompliance = 0.0f);
-
 	/// Calculate the initial lengths of all springs of the edges of this soft body
 	void				CalculateEdgeLengths();
 
