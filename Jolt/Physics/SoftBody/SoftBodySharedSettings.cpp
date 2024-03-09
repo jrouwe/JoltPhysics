@@ -267,6 +267,23 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 		mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
 }
 
+Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const
+{
+	Ref<SoftBodySharedSettings> clone = new SoftBodySharedSettings;
+	clone->mVertices = mVertices;
+	clone->mFaces = mFaces;
+	clone->mEdgeConstraints = mEdgeConstraints;
+	clone->mEdgeGroupEndIndices = mEdgeGroupEndIndices;
+	clone->mVolumeConstraints = mVolumeConstraints;
+	clone->mSkinnedConstraints = mSkinnedConstraints;
+	clone->mSkinnedConstraintNormals = mSkinnedConstraintNormals;
+	clone->mInvBindMatrices = mInvBindMatrices;
+	clone->mLRAConstraints = mLRAConstraints;
+	clone->mMaterials = mMaterials;
+	clone->mVertexRadius = mVertexRadius;
+	return clone;
+}
+
 void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 {
 	inStream.Write(mVertices);

@@ -29,9 +29,7 @@ void SoftBodyLRAConstraintTest::Initialize()
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 
 	// Cloth with LRA constraints
-	Ref<SoftBodySharedSettings> lra_cloth_settings = SoftBodyCreator::CreateCloth(num_x, num_z, 0.5f, inv_mass);
-	for (SoftBodySharedSettings::Edge &e : lra_cloth_settings->mEdgeConstraints)
-		e.mCompliance = 1.0e-3f;
+	Ref<SoftBodySharedSettings> lra_cloth_settings = cloth_settings->Clone();
 	auto get_vertex = [num_x](uint inX, uint inZ) { return inX + inZ * num_x; };
 	for (int z = 1; z < num_z; ++z)
 		for (int x = 0; x < num_x; ++x)

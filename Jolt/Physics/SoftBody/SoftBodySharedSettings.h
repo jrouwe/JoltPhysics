@@ -45,6 +45,9 @@ public:
 	/// Optimize the soft body settings without results
 	void				Optimize()									{ OptimizationResults results; Optimize(results); }
 
+	/// Clone this object
+	Ref<SoftBodySharedSettings> Clone() const;
+
 	/// Saves the state of this object in binary form to inStream. Doesn't store the material list.
 	void				SaveBinaryState(StreamOut &inStream) const;
 
@@ -128,6 +131,10 @@ public:
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, InvBind)
 
 	public:
+		/// Constructor
+						InvBind() = default;
+						InvBind(uint32 inJointIndex, Mat44Arg inInvBind) : mJointIndex(inJointIndex), mInvBind(inInvBind) { }
+
 		uint32			mJointIndex = 0;							///< Joint index to which this is attached
 		Mat44			mInvBind = Mat44::sIdentity();				///< The inverse bind matrix, this takes a vertex in its bind pose (Vertex::mPosition) to joint local space
 	};
@@ -138,6 +145,10 @@ public:
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SkinWeight)
 
 	public:
+		/// Constructor
+						SkinWeight() = default;
+						SkinWeight(uint32 inInvBindIndex, float inWeight) : mInvBindIndex(inInvBindIndex), mWeight(inWeight) { }
+
 		uint32			mInvBindIndex = 0;							///< Index in mInvBindMatrices
 		float			mWeight = 0.0f;								///< Weight with which it is skinned
 	};
@@ -148,6 +159,10 @@ public:
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Skinned)
 
 	public:
+		/// Constructor
+						Skinned() = default;
+						Skinned(uint32 inVertex, float inMaxDistance, float inBackStop) : mVertex(inVertex), mMaxDistance(inMaxDistance), mBackStop(inBackStop) { }
+
 		uint32			mVertex = 0;								///< Index in mVertices which indicates which vertex is being skinned
 		SkinWeight		mWeights[4];								///< Skin weights, the bind pose of the vertex is assumed to be stored in Vertex::mPosition
 		float			mMaxDistance = FLT_MAX;						///< Maximum distance that this vertex can reach from the skinned vertex, disabled when FLT_MAX

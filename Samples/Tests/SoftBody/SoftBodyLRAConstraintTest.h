@@ -6,7 +6,7 @@
 
 #include <Tests/Test.h>
 
-// This test shows the effect of LRA constraints in a soft body. The left cloth uses no LRA constraints and the right one does.
+// This test shows the effect of LRA constraints in a soft body which can help reduce stretch of the cloth. The left cloth uses no LRA constraints and the right one does.
 class SoftBodyLRAConstraintTest : public Test
 {
 public:
