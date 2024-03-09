@@ -325,6 +325,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyVertexRadiusTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyContactListenerTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyCustomUpdateTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodyLRAConstraintTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SoftBodySkinnedConstraintTest)
 
 static TestNameAndRTTI sSoftBodyTests[] =
 {
@@ -340,7 +341,8 @@ static TestNameAndRTTI sSoftBodyTests[] =
 	{ "Soft Body Vertex Radius Test",	JPH_RTTI(SoftBodyVertexRadiusTest) },
 	{ "Soft Body Contact Listener",		JPH_RTTI(SoftBodyContactListenerTest) },
 	{ "Soft Body Custom Update",		JPH_RTTI(SoftBodyCustomUpdateTest) },
-	{ "Soft Body LRA Constraint",		JPH_RTTI(SoftBodyLRAConstraintTest) }
+	{ "Soft Body LRA Constraint",		JPH_RTTI(SoftBodyLRAConstraintTest) },
+	{ "Soft Body Skinned Constraint",	JPH_RTTI(SoftBodySkinnedConstraintTest) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BroadPhaseCastRayTest)
