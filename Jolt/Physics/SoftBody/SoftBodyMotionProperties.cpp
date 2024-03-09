@@ -749,7 +749,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 	}
 }
 
-void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat44 *inJointMatrices, [[maybe_unused]] uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
+void SoftBodyMotionProperties::SkinVertices(RMat44Arg inCenterOfMassTransform, const Mat44 *inJointMatrices, [[maybe_unused]] uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
 {
 	// Calculate the skin matrices
 	uint num_skin_matrices = uint(mSettings->mInvBindMatrices.size());
@@ -761,7 +761,7 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat
 		*s = inJointMatrices[inv_bind_matrix->mJointIndex] * inv_bind_matrix->mInvBind;
 
 	// Skin the vertices
-	mSkinStateTransform = inRootTransform;
+	mSkinStateTransform = inCenterOfMassTransform;
 	JPH_IF_ENABLE_ASSERTS(uint num_vertices = uint(mSettings->mVertices.size());)
 	JPH_ASSERT(mSkinState.size() == num_vertices);
 	const SoftBodySharedSettings::Vertex *in_vertices = mSettings->mVertices.data();

@@ -163,6 +163,20 @@ public:
 						Skinned() = default;
 						Skinned(uint32 inVertex, float inMaxDistance, float inBackStop) : mVertex(inVertex), mMaxDistance(inMaxDistance), mBackStop(inBackStop) { }
 
+		/// Normalize the weights so that they add up to 1
+		void			NormalizeWeights()
+		{
+			// Get the total weight
+			float total = 0.0f;
+			for (const SkinWeight &w : mWeights)
+				total += w.mWeight;
+
+			// Normalize
+			if (total > 0.0f)
+				for (SkinWeight &w : mWeights)
+					w.mWeight /= total;
+		}
+
 		uint32			mVertex = 0;								///< Index in mVertices which indicates which vertex is being skinned
 		SkinWeight		mWeights[4];								///< Skin weights, the bind pose of the vertex is assumed to be stored in Vertex::mPosition
 		float			mMaxDistance = FLT_MAX;						///< Maximum distance that this vertex can reach from the skinned vertex, disabled when FLT_MAX
