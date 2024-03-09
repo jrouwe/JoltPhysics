@@ -8,76 +8,75 @@
 
 namespace SoftBodyCreator {
 
-Ref<SoftBodySharedSettings> CreateCloth(uint inGridSize, float inGridSpacing, bool inFixateCorners)
+Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, float inGridSpacing, const function<float(uint, uint)> &inVertexGetInvMass)
 {
-	const float cOffset = -0.5f * inGridSpacing * (inGridSize - 1);
+	const float cOffsetX = -0.5f * inGridSpacing * (inGridSizeX - 1);
+	const float cOffsetZ = -0.5f * inGridSpacing * (inGridSizeZ - 1);
 
 	// Create settings
 	SoftBodySharedSettings *settings = new SoftBodySharedSettings;
-	for (uint y = 0; y < inGridSize; ++y)
-		for (uint x = 0; x < inGridSize; ++x)
+	for (uint z = 0; z < inGridSizeZ; ++z)
+		for (uint x = 0; x < inGridSizeX; ++x)
 		{
 			SoftBodySharedSettings::Vertex v;
-			v.mPosition = Float3(cOffset + x * inGridSpacing, 0.0f, cOffset + y * inGridSpacing);
+			v.mPosition = Float3(cOffsetX + x * inGridSpacing, 0.0f, cOffsetZ + z * inGridSpacing);
+			v.mInvMass = inVertexGetInvMass(x, z);
 			settings->mVertices.push_back(v);
 		}
 
 	// Function to get the vertex index of a point on the cloth
-	auto vertex_index = [inGridSize](uint inX, uint inY) -> uint
+	auto vertex_index = [inGridSizeX](uint inX, uint inY) -> uint
 	{
-		return inX + inY * inGridSize;
+		return inX + inY * inGridSizeX;
 	};
 
-	if (inFixateCorners)
-	{
-		// Fixate corners
-		settings->mVertices[vertex_index(0, 0)].mInvMass = 0.0f;
-		settings->mVertices[vertex_index(inGridSize - 1, 0)].mInvMass = 0.0f;
-		settings->mVertices[vertex_index(0, inGridSize - 1)].mInvMass = 0.0f;
-		settings->mVertices[vertex_index(inGridSize - 1, inGridSize - 1)].mInvMass = 0.0f;
-	}
+	// Only add edges if one of the vertices is moveable
+	auto add_edge = [settings](const SoftBodySharedSettings::Edge &inEdge) {
+		if (settings->mVertices[inEdge.mVertex[0]].mInvMass > 0.0f || settings->mVertices[inEdge.mVertex[1]].mInvMass > 0.0f)
+			settings->mEdgeConstraints.push_back(inEdge);
+	};
 
 	// Create edges
-	for (uint y = 0; y < inGridSize; ++y)
-		for (uint x = 0; x < inGridSize; ++x)
+	for (uint z = 0; z < inGridSizeZ; ++z)
+		for (uint x = 0; x < inGridSizeX; ++x)
 		{
 			SoftBodySharedSettings::Edge e;
 			e.mCompliance = 0.00001f;
-			e.mVertex[0] = vertex_index(x, y);
-			if (x < inGridSize - 1)
+			e.mVertex[0] = vertex_index(x, z);
+			if (x < inGridSizeX - 1)
 			{
-				e.mVertex[1] = vertex_index(x + 1, y);
-				settings->mEdgeConstraints.push_back(e);
+				e.mVertex[1] = vertex_index(x + 1, z);
+				add_edge(e);
 			}
-			if (y < inGridSize - 1)
+			if (z < inGridSizeZ - 1)
 			{
-				e.mVertex[1] = vertex_index(x, y + 1);
-				settings->mEdgeConstraints.push_back(e);
+				e.mVertex[1] = vertex_index(x, z + 1);
+				add_edge(e);
 			}
-			if (x < inGridSize - 1 && y < inGridSize - 1)
+			if (x < inGridSizeX - 1 && z < inGridSizeZ - 1)
 			{
-				e.mVertex[1] = vertex_index(x + 1, y + 1);
-				settings->mEdgeConstraints.push_back(e);
+				e.mVertex[1] = vertex_index(x + 1, z + 1);
+				add_edge(e);
 
-				e.mVertex[0] = vertex_index(x + 1, y);
-				e.mVertex[1] = vertex_index(x, y + 1);
-				settings->mEdgeConstraints.push_back(e);
+				e.mVertex[0] = vertex_index(x + 1, z);
+				e.mVertex[1] = vertex_index(x, z + 1);
+				add_edge(e);
 			}
 		}
 	settings->CalculateEdgeLengths();
 
 	// Create faces
-	for (uint y = 0; y < inGridSize - 1; ++y)
-		for (uint x = 0; x < inGridSize - 1; ++x)
+	for (uint z = 0; z < inGridSizeZ - 1; ++z)
+		for (uint x = 0; x < inGridSizeX - 1; ++x)
 		{
 			SoftBodySharedSettings::Face f;
-			f.mVertex[0] = vertex_index(x, y);
-			f.mVertex[1] = vertex_index(x, y + 1);
-			f.mVertex[2] = vertex_index(x + 1, y + 1);
+			f.mVertex[0] = vertex_index(x, z);
+			f.mVertex[1] = vertex_index(x, z + 1);
+			f.mVertex[2] = vertex_index(x + 1, z + 1);
 			settings->AddFace(f);
 
-			f.mVertex[1] = vertex_index(x + 1, y + 1);
-			f.mVertex[2] = vertex_index(x + 1, y);
+			f.mVertex[1] = vertex_index(x + 1, z + 1);
+			f.mVertex[2] = vertex_index(x + 1, z);
 			settings->AddFace(f);
 		}
 
@@ -85,6 +84,18 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSize, float inGridSpacing, bo
 	settings->Optimize();
 
 	return settings;
+}
+
+Ref<SoftBodySharedSettings> CreateClothWithFixatedCorners(uint inGridSizeX, uint inGridSizeZ, float inGridSpacing)
+{
+	auto inv_mass = [inGridSizeX, inGridSizeZ](uint inX, uint inZ) {
+		return (inX == 0 && inZ == 0)
+			|| (inX == inGridSizeX - 1 && inZ == 0)
+			|| (inX == 0 && inZ == inGridSizeZ - 1)
+			|| (inX == inGridSizeX - 1 && inZ == inGridSizeZ - 1)? 0.0f : 1.0f;
+	};
+
+	return CreateCloth(inGridSizeX, inGridSizeZ, inGridSpacing, inv_mass);
 }
 
 Ref<SoftBodySharedSettings> CreateCube(uint inGridSize, float inGridSpacing)

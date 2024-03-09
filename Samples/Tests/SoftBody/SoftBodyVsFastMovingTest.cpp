@@ -30,7 +30,7 @@ void SoftBodyVsFastMovingTest::Initialize()
 	mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 
 	// Create cloth that's fixated at the corners
-	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(), RVec3(0, 15, 0), Quat::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), Layers::MOVING);
+	SoftBodyCreationSettings cloth(SoftBodyCreator::CreateClothWithFixatedCorners(), RVec3(0, 15, 0), Quat::sRotation(Vec3::sAxisX(), 0.1f * JPH_PI) * Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), Layers::MOVING);
 	cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
 	cloth.mMakeRotationIdentity = false; // Test explicitly checks if soft bodies with a rotation collide with shapes properly
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);

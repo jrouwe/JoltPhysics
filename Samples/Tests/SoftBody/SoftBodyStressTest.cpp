@@ -57,7 +57,7 @@ void SoftBodyStressTest::Initialize()
 		CreateFloor();
 
 		// Create cloth that's fixated at the corners
-		SoftBodyCreationSettings cloth(SoftBodyCreator::CreateCloth(100, 0.25f), RVec3(0, 15.0f, 0), Quat::sIdentity(), Layers::MOVING);
+		SoftBodyCreationSettings cloth(SoftBodyCreator::CreateClothWithFixatedCorners(100, 100, 0.25f), RVec3(0, 15.0f, 0), Quat::sIdentity(), Layers::MOVING);
 		cloth.mUpdatePosition = false; // Don't update the position of the cloth as it is fixed to the world
 		mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 

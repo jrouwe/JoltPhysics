@@ -177,6 +177,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyGravityFactorTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyLRAConstraintTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyLRAConstraintTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.cpp
