@@ -177,12 +177,16 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyGravityFactorTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyKinematicTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyLRAConstraintTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyLRAConstraintTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyPressureTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyRestitutionTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyShapesTest.h
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodySkinnedConstraintTest.cpp
+	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodySkinnedConstraintTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyStressTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyStressTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyUpdatePositionTest.cpp

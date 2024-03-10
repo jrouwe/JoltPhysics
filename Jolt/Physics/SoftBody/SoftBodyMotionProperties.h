@@ -39,6 +39,7 @@ public:
 	using InvBind = SoftBodySharedSettings::InvBind;
 	using SkinWeight = SoftBodySharedSettings::SkinWeight;
 	using Skinned = SoftBodySharedSettings::Skinned;
+	using LRA = SoftBodySharedSettings::LRA;
 
 	/// Initialize the soft body motion properties
 	void								Initialize(const SoftBodyCreationSettings &inSettings);
@@ -87,9 +88,11 @@ public:
 #ifdef JPH_DEBUG_RENDERER
 	/// Draw the state of a soft body
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
+	void								DrawVertexVelocities(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
-	void								DrawSkinConstraints(DebugRenderer *inRenderer) const;
+	void								DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
+	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
 
@@ -100,12 +103,12 @@ public:
 	void								RestoreState(StateRecorder &inStream);
 
 	/// Skin vertices to supplied joints, information is used by the skinned constraints.
-	/// @param inRootTransform Value of Body::GetCenterOfMassTransform().
-	/// @param inJointMatrices The joint matrices must be expressed relative to inRootTransform.
+	/// @param inCenterOfMassTransform Value of Body::GetCenterOfMassTransform().
+	/// @param inJointMatrices The joint matrices must be expressed relative to inCenterOfMassTransform.
 	/// @param inNumJoints Indicates how large the inJointMatrices array is (used only for validating out of bounds).
 	/// @param inHardSkinAll Can be used to position all vertices on the skinned vertices and can be used to hard reset the soft body.
 	/// @param ioTempAllocator Allocator.
-	void								SkinVertices(RMat44Arg inRootTransform, const Mat44 *inJointMatrices, uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator);
+	void								SkinVertices(RMat44Arg inCenterOfMassTransform, const Mat44 *inJointMatrices, uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator);
 
 	/// This function allows you to update the soft body immediately without going through the PhysicsSystem.
 	/// This is useful if the soft body is teleported and needs to 'settle' or it can be used if a the soft body
@@ -198,6 +201,9 @@ private:
 
 	/// Enforce all edge constraints
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
+
+	/// Enforce all LRA constraints
+	void								ApplyLRAConstraints();
 
 	/// Enforce all collision constraints & update all velocities according the XPBD algorithm
 	void								ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext);

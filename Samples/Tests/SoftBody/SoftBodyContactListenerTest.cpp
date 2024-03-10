@@ -57,7 +57,7 @@ void SoftBodyContactListenerTest::PrePhysicsUpdate(const PreUpdateParams &inPara
 void SoftBodyContactListenerTest::StartCycle()
 {
 	// Create the cloth
-	Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(15);
+	Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateClothWithFixatedCorners(15, 15, 0.75f);
 
 	// Create cloth that's fixated at the corners
 	SoftBodyCreationSettings cloth(cloth_settings, RVec3(0, 5, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), Layers::MOVING);

@@ -26,7 +26,7 @@ void SoftBodyVertexRadiusTest::Initialize()
 	mBodyInterface->CreateAndAddBody(BodyCreationSettings(new SphereShape(2.0f), RVec3(0, 0, 0), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Create cloth with specified vertex radius
-	mSharedSettings = SoftBodyCreator::CreateCloth(30, 0.5f, false);
+	mSharedSettings = SoftBodyCreator::CreateCloth(30, 30, 0.5f);
 	mSharedSettings->mVertexRadius = sVertexRadius;
 	SoftBodyCreationSettings cloth(mSharedSettings, RVec3(0, 5, 0), Quat::sRotation(Vec3::sAxisY(), 0.25f * JPH_PI), Layers::MOVING);
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);

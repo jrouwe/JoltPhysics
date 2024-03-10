@@ -62,6 +62,22 @@ public:
 			outString.clear();
 	}
 
+	/// Read a vector of primitives from the binary stream using a custom function to read the elements
+	template <class T, class A, typename F>
+	void				Read(std::vector<T, A> &outT, const F &inReadElement)
+	{
+		typename Array<T>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
+		Read(len);
+		if (!IsEOF() && !IsFailed())
+		{
+			outT.resize(len);
+			for (typename Array<T>::size_type i = 0; i < len; ++i)
+				inReadElement(*this, outT[i]);
+		}
+		else
+			outT.clear();
+	}
+
 	/// Read a Vec3 (don't read W)
 	void				Read(Vec3 &outVec)
 	{

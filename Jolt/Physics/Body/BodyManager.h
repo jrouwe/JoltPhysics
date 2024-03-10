@@ -230,9 +230,11 @@ public:
 		bool						mDrawMassAndInertia = false;					///< Draw the mass and inertia (as the box equivalent) for each body
 		bool						mDrawSleepStats = false;						///< Draw stats regarding the sleeping algorithm of each body
 		bool						mDrawSoftBodyVertices = false;					///< Draw the vertices of soft bodies
+		bool						mDrawSoftBodyVertexVelocities = false;			///< Draw the velocities of the vertices of soft bodies
 		bool						mDrawSoftBodyEdgeConstraints = false;			///< Draw the edge constraints of soft bodies
 		bool						mDrawSoftBodyVolumeConstraints = false;			///< Draw the volume constraints of soft bodies
 		bool						mDrawSoftBodySkinConstraints = false;			///< Draw the skin constraints of soft bodies
+		bool						mDrawSoftBodyLRAConstraints = false;			///< Draw the LRA constraints of soft bodies
 		bool						mDrawSoftBodyPredictedBounds = false;			///< Draw the predicted bounds of soft bodies
 	};
 

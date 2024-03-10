@@ -59,7 +59,14 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Skinned)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mWeights)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mMaxDistance)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStop)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStopDistance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStopRadius)
+}
+
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::LRA)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::LRA, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::LRA, mMaxDistance)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
@@ -71,6 +78,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mLRAConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
@@ -81,6 +89,15 @@ void SoftBodySharedSettings::CalculateEdgeLengths()
 	{
 		e.mRestLength = (Vec3(mVertices[e.mVertex[1]].mPosition) - Vec3(mVertices[e.mVertex[0]].mPosition)).Length();
 		JPH_ASSERT(e.mRestLength > 0.0f);
+	}
+}
+
+void SoftBodySharedSettings::CalculateLRALengths()
+{
+	for (LRA &l : mLRAConstraints)
+	{
+		l.mMaxDistance = (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
+		JPH_ASSERT(l.mMaxDistance > 0.0f);
 	}
 }
 
@@ -208,6 +225,23 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 		mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
 }
 
+Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const
+{
+	Ref<SoftBodySharedSettings> clone = new SoftBodySharedSettings;
+	clone->mVertices = mVertices;
+	clone->mFaces = mFaces;
+	clone->mEdgeConstraints = mEdgeConstraints;
+	clone->mEdgeGroupEndIndices = mEdgeGroupEndIndices;
+	clone->mVolumeConstraints = mVolumeConstraints;
+	clone->mSkinnedConstraints = mSkinnedConstraints;
+	clone->mSkinnedConstraintNormals = mSkinnedConstraintNormals;
+	clone->mInvBindMatrices = mInvBindMatrices;
+	clone->mLRAConstraints = mLRAConstraints;
+	clone->mMaterials = mMaterials;
+	clone->mVertexRadius = mVertexRadius;
+	return clone;
+}
+
 void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 {
 	inStream.Write(mVertices);
@@ -217,15 +251,14 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
+	inStream.Write(mLRAConstraints);
 	inStream.Write(mVertexRadius);
 
 	// Can't write mInvBindMatrices directly because the class contains padding
-	inStream.Write(uint32(mInvBindMatrices.size()));
-	for (const InvBind &ib : mInvBindMatrices)
-	{
-		inStream.Write(ib.mJointIndex);
-		inStream.Write(ib.mInvBind);
-	}
+	inStream.Write(mInvBindMatrices, [](const InvBind &inElement, StreamOut &inS) {
+		inS.Write(inElement.mJointIndex);
+		inS.Write(inElement.mInvBind);
+	});
 }
 
 void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
@@ -237,16 +270,13 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
+	inStream.Read(mLRAConstraints);
 	inStream.Read(mVertexRadius);
 
-	uint32 num_inv_bind_matrices = 0;
-	inStream.Read(num_inv_bind_matrices);
-	mInvBindMatrices.resize(num_inv_bind_matrices);
-	for (InvBind &ib : mInvBindMatrices)
-	{
-		inStream.Read(ib.mJointIndex);
-		inStream.Read(ib.mInvBind);
-	}
+	inStream.Read(mInvBindMatrices, [](StreamIn &inS, InvBind &outElement) {
+		inS.Read(outElement.mJointIndex);
+		inS.Read(outElement.mInvBind);
+	});
 }
 
 void SoftBodySharedSettings::SaveWithMaterials(StreamOut &inStream, SharedSettingsToIDMap &ioSettingsMap, MaterialToIDMap &ioMaterialMap) const

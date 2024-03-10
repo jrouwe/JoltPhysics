@@ -1079,6 +1079,9 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 				if (inDrawSettings.mDrawSoftBodyVertices)
 					mp->DrawVertices(inRenderer, com);
 
+				if (inDrawSettings.mDrawSoftBodyVertexVelocities)
+					mp->DrawVertexVelocities(inRenderer, com);
+
 				if (inDrawSettings.mDrawSoftBodyEdgeConstraints)
 					mp->DrawEdgeConstraints(inRenderer, com);
 
@@ -1086,7 +1089,10 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 					mp->DrawVolumeConstraints(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodySkinConstraints)
-					mp->DrawSkinConstraints(inRenderer);
+					mp->DrawSkinConstraints(inRenderer, com);
+
+				if (inDrawSettings.mDrawSoftBodyLRAConstraints)
+					mp->DrawLRAConstraints(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodyPredictedBounds)
 					mp->DrawPredictedBounds(inRenderer, com);

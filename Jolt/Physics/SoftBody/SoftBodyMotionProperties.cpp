@@ -307,8 +307,27 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 	{
 		Vertex &vertex = vertices[s.mVertex];
 		const SkinState &skin_state = skin_states[s.mVertex];
-		if (vertex.mInvMass > 0.0f)
+		if (s.mMaxDistance > 0.0f)
 		{
+			// Move vertex if it violated the back stop
+			if (s.mBackStopDistance < s.mMaxDistance)
+			{
+				// Center of the back stop sphere
+				Vec3 center = skin_state.mPosition - skin_state.mNormal * (s.mBackStopDistance + s.mBackStopRadius);
+
+				// Check if we're inside the back stop sphere
+				Vec3 delta = vertex.mPosition - center;
+				float delta_len_sq = delta.LengthSq();
+				if (delta_len_sq < Square(s.mBackStopRadius))
+				{
+					// Push the vertex to the surface of the back stop sphere
+					float delta_len = sqrt(delta_len_sq);
+					vertex.mPosition = delta_len > 0.0f?
+						center + delta * (s.mBackStopRadius / delta_len)
+						: center + skin_state.mNormal * s.mBackStopRadius;
+				}
+			}
+
 			// Clamp vertex distance to max distance from skinned position
 			if (s.mMaxDistance < FLT_MAX)
 			{
@@ -317,15 +336,6 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 				float max_distance_sq = Square(s.mMaxDistance);
 				if (delta_len_sq > max_distance_sq)
 					vertex.mPosition = skin_state.mPosition + delta * sqrt(max_distance_sq / delta_len_sq);
-			}
-
-			// Move position if it violated the back stop
-			if (s.mBackStop < s.mMaxDistance)
-			{
-				Vec3 delta = vertex.mPosition - skin_state.mPosition;
-				float violation = -s.mBackStop - skin_state.mNormal.Dot(delta);
-				if (violation > 0.0f)
-					vertex.mPosition += violation * skin_state.mNormal;
 			}
 		}
 		else
@@ -361,6 +371,26 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 			v0.mPosition += v0.mInvMass * correction;
 			v1.mPosition -= v1.mInvMass * correction;
 		}
+	}
+}
+
+void SoftBodyMotionProperties::ApplyLRAConstraints()
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Satisfy LRA constraints
+	Vertex *vertices = mVertices.data();
+	for (const LRA &lra : mSettings->mLRAConstraints)
+	{
+		JPH_ASSERT(lra.mVertex[0] < mVertices.size());
+		JPH_ASSERT(lra.mVertex[1] < mVertices.size());
+		const Vertex &vertex0 = vertices[lra.mVertex[0]];
+		Vertex &vertex1 = vertices[lra.mVertex[1]];
+
+		Vec3 delta = vertex1.mPosition - vertex0.mPosition;
+		float delta_len_sq = delta.LengthSq();
+		if (delta_len_sq > Square(lra.mMaxDistance))
+			vertex1.mPosition = vertex0.mPosition + delta * lra.mMaxDistance / sqrt(delta_len_sq);
 	}
 }
 
@@ -670,6 +700,8 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 						if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
 						{
 							// Finish the iteration
+							ApplyLRAConstraints();
+
 							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
 							ApplySkinConstraints(ioContext);
@@ -727,7 +759,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 	}
 }
 
-void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat44 *inJointMatrices, [[maybe_unused]] uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
+void SoftBodyMotionProperties::SkinVertices(RMat44Arg inCenterOfMassTransform, const Mat44 *inJointMatrices, [[maybe_unused]] uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
 {
 	// Calculate the skin matrices
 	uint num_skin_matrices = uint(mSettings->mInvBindMatrices.size());
@@ -739,7 +771,7 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat
 		*s = inJointMatrices[inv_bind_matrix->mJointIndex] * inv_bind_matrix->mInvBind;
 
 	// Skin the vertices
-	mSkinStateTransform = inRootTransform;
+	mSkinStateTransform = inCenterOfMassTransform;
 	JPH_IF_ENABLE_ASSERTS(uint num_vertices = uint(mSettings->mVertices.size());)
 	JPH_ASSERT(mSkinState.size() == num_vertices);
 	const SoftBodySharedSettings::Vertex *in_vertices = mSettings->mVertices.data();
@@ -753,6 +785,10 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inRootTransform, const Mat
 		Vec3 pos = Vec3::sZero();
 		for (const SkinWeight &w : s.mWeights)
 		{
+			// We assume that the first zero weight is the end of the list
+			if (w.mWeight == 0.0f)
+				break;
+
 			JPH_ASSERT(w.mInvBindIndex < num_skin_matrices);
 			pos += w.mWeight * (skin_matrices[w.mInvBindIndex] * bind_pos);
 		}
@@ -831,6 +867,12 @@ void SoftBodyMotionProperties::DrawVertices(DebugRenderer *inRenderer, RMat44Arg
 		inRenderer->DrawMarker(inCenterOfMassTransform * v.mPosition, v.mInvMass > 0.0f? Color::sGreen : Color::sRed, 0.05f);
 }
 
+void SoftBodyMotionProperties::DrawVertexVelocities(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (const Vertex &v : mVertices)
+		inRenderer->DrawArrow(inCenterOfMassTransform * v.mPosition, inCenterOfMassTransform * (v.mPosition + v.mVelocity), Color::sYellow, 0.01f);
+}
+
 void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	for (const Edge &e : mSettings->mEdgeConstraints)
@@ -853,13 +895,20 @@ void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, 
 	}
 }
 
-void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer) const
+void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
 	for (const Skinned &s : mSettings->mSkinnedConstraints)
 	{
 		const SkinState &skin_state = mSkinState[s.mVertex];
 		DebugRenderer::sInstance->DrawArrow(mSkinStateTransform * skin_state.mPosition, mSkinStateTransform * (skin_state.mPosition + 0.1f * skin_state.mNormal), Color::sOrange, 0.01f);
+		DebugRenderer::sInstance->DrawLine(mSkinStateTransform * skin_state.mPosition, inCenterOfMassTransform * mVertices[s.mVertex].mPosition, Color::sBlue);
 	}
+}
+
+void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (const LRA &l : mSettings->mLRAConstraints)
+		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[l.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[l.mVertex[1]].mPosition, Color::sGrey);
 }
 
 void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
