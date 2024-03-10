@@ -307,7 +307,7 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 	{
 		Vertex &vertex = vertices[s.mVertex];
 		const SkinState &skin_state = skin_states[s.mVertex];
-		if (vertex.mInvMass > 0.0f)
+		if (s.mMaxDistance > 0.0f)
 		{
 			// Move vertex if it violated the back stop
 			if (s.mBackStopDistance < s.mMaxDistance)
