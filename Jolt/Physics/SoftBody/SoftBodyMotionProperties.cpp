@@ -692,10 +692,9 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 							// Finish the iteration
 							ApplyLRAConstraints(ioContext);
 
-							ApplySkinConstraints(ioContext);
-
-							// Needs to happen last because it updates the velocities
 							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
+
+							ApplySkinConstraints(ioContext);
 
 							uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
 							if (iteration < mNumIterations)
