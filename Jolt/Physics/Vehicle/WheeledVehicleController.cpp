@@ -143,16 +143,29 @@ VehicleController *WheeledVehicleControllerSettings::ConstructController(Vehicle
 void WheeledVehicleControllerSettings::SaveBinaryState(StreamOut &inStream) const
 {
 	mEngine.SaveBinaryState(inStream);
+
 	mTransmission.SaveBinaryState(inStream);
-	inStream.Write(mDifferentials, [](const VehicleDifferentialSettings &inElement, StreamOut &inStream) { inElement.SaveBinaryState(inStream); });
+
+	uint32 num_differentials = (uint32)mDifferentials.size();
+	inStream.Write(num_differentials);
+	for (const VehicleDifferentialSettings &d : mDifferentials)
+		d.SaveBinaryState(inStream);
+
 	inStream.Write(mDifferentialLimitedSlipRatio);
 }
 
 void WheeledVehicleControllerSettings::RestoreBinaryState(StreamIn &inStream)
 {
 	mEngine.RestoreBinaryState(inStream);
+
 	mTransmission.RestoreBinaryState(inStream);
-	inStream.Read(mDifferentials, [](StreamIn &inStream, VehicleDifferentialSettings &outElement) { outElement.RestoreBinaryState(inStream); });
+
+	uint32 num_differentials = 0;
+	inStream.Read(num_differentials);
+	mDifferentials.resize(num_differentials);
+	for (VehicleDifferentialSettings &d : mDifferentials)
+		d.RestoreBinaryState(inStream);
+
 	inStream.Read(mDifferentialLimitedSlipRatio);
 }
 
