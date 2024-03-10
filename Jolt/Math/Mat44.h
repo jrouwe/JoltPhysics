@@ -91,8 +91,8 @@ public:
 	static JPH_INLINE Mat44		sPerspective(float inFovY, float inAspect, float inNear, float inFar);
 
 	/// Get float component by element index
-	JPH_INLINE float			operator () (uint inRow, uint inColumn) const			{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
-	JPH_INLINE float &			operator () (uint inRow, uint inColumn)					{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
+	JPH_INLINE float			operator () (uint inRow, uint inColumn) const			{ JPH_ASSERT(0 <= inRow and inRow < 4); JPH_ASSERT(0 <= inColumn and inColumn < 4); return mCol[inColumn].mF32[inRow]; }
+	JPH_INLINE float &			operator () (uint inRow, uint inColumn)					{ JPH_ASSERT(0 <= inRow and inRow < 4); JPH_ASSERT(0 <= inColumn and inColumn < 4); return mCol[inColumn].mF32[inRow]; }
 
 	/// Comparison
 	JPH_INLINE bool				operator == (Mat44Arg inM2) const;
@@ -155,10 +155,10 @@ public:
 	JPH_INLINE void				SetDiagonal3(Vec3Arg inV)								{ mCol[0][0] = inV.GetX(); mCol[1][1] = inV.GetY(); mCol[2][2] = inV.GetZ(); }
 	JPH_INLINE Vec4				GetDiagonal4() const									{ return Vec4(mCol[0][0], mCol[1][1], mCol[2][2], mCol[3][3]); }
 	JPH_INLINE void				SetDiagonal4(Vec4Arg inV)								{ mCol[0][0] = inV.GetX(); mCol[1][1] = inV.GetY(); mCol[2][2] = inV.GetZ(); mCol[3][3] = inV.GetW(); }
-	JPH_INLINE Vec3				GetColumn3(uint inCol) const							{ JPH_ASSERT(inCol < 4); return Vec3(mCol[inCol]); }
-	JPH_INLINE void				SetColumn3(uint inCol, Vec3Arg inV)						{ JPH_ASSERT(inCol < 4); mCol[inCol] = Vec4(inV, inCol == 3? 1.0f : 0.0f); }
-	JPH_INLINE Vec4				GetColumn4(uint inCol) const							{ JPH_ASSERT(inCol < 4); return mCol[inCol]; }
-	JPH_INLINE void				SetColumn4(uint inCol, Vec4Arg inV)						{ JPH_ASSERT(inCol < 4); mCol[inCol] = inV; }
+	JPH_INLINE Vec3				GetColumn3(uint inCol) const							{ JPH_ASSERT(0 <= inCol and inCol < 4); return Vec3(mCol[inCol]); }
+	JPH_INLINE void				SetColumn3(uint inCol, Vec3Arg inV)						{ JPH_ASSERT(0 <= inCol and inCol < 4); mCol[inCol] = Vec4(inV, inCol == 3? 1.0f : 0.0f); }
+	JPH_INLINE Vec4				GetColumn4(uint inCol) const							{ JPH_ASSERT(0 <= inCol and inCol < 4); return mCol[inCol]; }
+	JPH_INLINE void				SetColumn4(uint inCol, Vec4Arg inV)						{ JPH_ASSERT(0 <= inCol and inCol < 4); mCol[inCol] = inV; }
 
 	/// Store matrix to memory
 	JPH_INLINE void				StoreFloat4x4(Float4 *outV) const;
