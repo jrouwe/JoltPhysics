@@ -251,7 +251,17 @@ After the broad phase has detected an overlap and the normal layer / collision g
 
 The simulation will then proceed to do all collision detection and response and after that is finished, you will receive a SoftBodyContactListener::OnSoftBodyContactAdded callback that allows you to inspect all collisions that happened during the simulation step. In order to do this a SoftBodyManifold is provided which allows you to loop over the vertices and ask each vertex what it collided with.
 
-Note that at the time of the callback, multiple threads are operating at the same time. The soft body is stable and can be safely read. The other body that is collided with is not stable however, so you cannot safely read its position/orientation and velocity as it may be modified by another soft body collision at the same time. 
+Note that at the time of the callback, multiple threads are operating at the same time. The soft body is stable and can be safely read. The other body that is collided with is not stable however, so you cannot safely read its position/orientation and velocity as it may be modified by another soft body collision at the same time.
+
+### Skinning Soft Bodies {#skinning-soft-bodies}
+
+Using the [skinning](@ref SoftBodySharedSettings::Skinned) constraints, a soft body can be (partially) skinned to joints. This can be used e.g. to partially drive cloth with a character animation. The [vertices](@ref SoftBodySharedSettings::Vertex::mPosition) of the soft body need to be placed in the neutral pose of the character and the joints for this pose need to be calculated in model space (relative to these vertices). The inverted matrices of this neutral pose need to be stored as the [inverse bind matrices](@ref SoftBodySharedSettings::InvBind) and the skinning constraints can then be [weighted](@ref SoftBodySharedSettings::SkinWeight) to these joints. SoftBodySharedSettings::CalculateSkinnedConstraintNormals must be called to gather information needed to calculate the face normals at run-time.
+
+At run-time, you need to provide the animated joints every simulation step through the SoftBodyMotionProperties::SkinVertices call. During simulation, each skinned vertex will calculate its position and this position will be used to limit the movement of its simulated counterpart.
+
+![A Skinned Constraint](Images/SoftBodySkinnedConstraint.jpg)
+
+The adjacent faces of the soft body will be used to calculate the normal of each vertex (shown in red), the vertex is then free to move inside the sphere formed by the skinned vertex position with radius [MaxDistance](@ref SoftBodySharedSettings::Skinned::mMaxDistance) (green sphere). To prevent the vertex from intersecting with the character, it is possible to specify a [BackStopDistance](@ref SoftBodySharedSettings::Skinned::mBackStopDistance) and [BackStopRadius](@ref SoftBodySharedSettings::Skinned::mBackStopRadius), together these form the red sphere. The vertex is not allowed to move inside this sphere.
 
 ### Soft Body Work In Progress {#soft-body-wip}
 
