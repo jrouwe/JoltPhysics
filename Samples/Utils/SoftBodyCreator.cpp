@@ -30,40 +30,6 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		return inX + inY * inGridSizeX;
 	};
 
-	// Only add edges if one of the vertices is moveable
-	auto add_edge = [settings](const SoftBodySharedSettings::Edge &inEdge) {
-		if (settings->mVertices[inEdge.mVertex[0]].mInvMass > 0.0f || settings->mVertices[inEdge.mVertex[1]].mInvMass > 0.0f)
-			settings->mEdgeConstraints.push_back(inEdge);
-	};
-
-	// Create edges
-	for (uint z = 0; z < inGridSizeZ; ++z)
-		for (uint x = 0; x < inGridSizeX; ++x)
-		{
-			SoftBodySharedSettings::Edge e;
-			e.mVertex[0] = vertex_index(x, z);
-			if (x < inGridSizeX - 1)
-			{
-				e.mVertex[1] = vertex_index(x + 1, z);
-				add_edge(e);
-			}
-			if (z < inGridSizeZ - 1)
-			{
-				e.mVertex[1] = vertex_index(x, z + 1);
-				add_edge(e);
-			}
-			if (x < inGridSizeX - 1 && z < inGridSizeZ - 1)
-			{
-				e.mVertex[1] = vertex_index(x + 1, z + 1);
-				add_edge(e);
-
-				e.mVertex[0] = vertex_index(x + 1, z);
-				e.mVertex[1] = vertex_index(x, z + 1);
-				add_edge(e);
-			}
-		}
-	settings->CalculateEdgeLengths();
-
 	// Create faces
 	for (uint z = 0; z < inGridSizeZ - 1; ++z)
 		for (uint x = 0; x < inGridSizeX - 1; ++x)
@@ -78,6 +44,9 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 			f.mVertex[2] = vertex_index(x + 1, z);
 			settings->AddFace(f);
 		}
+
+	// Create edges
+	settings->CreateEdges(0.00001f);
 
 	// Optimize the settings
 	settings->Optimize();

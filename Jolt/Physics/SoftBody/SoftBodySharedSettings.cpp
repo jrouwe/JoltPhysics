@@ -83,6 +83,81 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
 
+void SoftBodySharedSettings::CreateEdges(float inCompliance)
+{
+	struct EdgeHelper
+	{
+		uint32	mVertex[2];
+		uint32	mEdgeIdx;
+	};
+
+	// Create list of all edges
+	Array<EdgeHelper> edges;
+	edges.reserve(mFaces.size() * 3);
+	for (const Face &f : mFaces)
+		for (int i = 0; i < 3; ++i)
+		{
+			uint32 v0 = f.mVertex[i];
+			uint32 v1 = f.mVertex[(i + 1) % 3];
+
+			EdgeHelper e;
+			e.mVertex[0] = min(v0, v1);
+			e.mVertex[1] = max(v0, v1);
+			e.mEdgeIdx = uint32(&f - mFaces.data()) * 3 + i;
+			edges.push_back(e);
+		}
+
+	// Sort the edges
+	QuickSort(edges.begin(), edges.end(), [](const EdgeHelper &inLHS, const EdgeHelper &inRHS) { return inLHS.mVertex[0] < inRHS.mVertex[0] || (inLHS.mVertex[0] == inRHS.mVertex[0] && inLHS.mVertex[1] < inRHS.mVertex[1]); });
+
+	// Only add edges if one of the vertices is movable
+	Edge temp_edge;
+	temp_edge.mCompliance = inCompliance;
+	auto add_edge = [&temp_edge, this](uint32 inVtx1, uint32 inVtx2) {
+		if (mVertices[inVtx1].mInvMass > 0.0f || mVertices[inVtx2].mInvMass > 0.0f)
+		{
+			temp_edge.mVertex[0] = inVtx1;
+			temp_edge.mVertex[1] = inVtx2;
+			temp_edge.mRestLength = (Vec3(mVertices[inVtx2].mPosition) - Vec3(mVertices[inVtx1].mPosition)).Length();
+			JPH_ASSERT(temp_edge.mRestLength > 0.0f);
+			mEdgeConstraints.push_back(temp_edge);
+		}
+	};
+
+	// Create the constraints
+	mEdgeConstraints.clear();
+	mEdgeConstraints.reserve(edges.size());
+	for (Array<EdgeHelper>::size_type i = 0; i < edges.size(); ++i)
+	{
+		const EdgeHelper &e0 = edges[i];
+
+		// Create a regular edge constraint
+		add_edge(e0.mVertex[0], e0.mVertex[1]);
+
+		// Test if there are any shared edges
+		for (Array<EdgeHelper>::size_type j = i + 1; j < edges.size(); ++j)
+		{
+			const EdgeHelper &e1 = edges[j];
+			if (e0.mVertex[0] == e1.mVertex[0] && e0.mVertex[1] == e1.mVertex[1])
+			{
+				// Shared edges get a bend constraint
+				const Face &f0 = mFaces[e0.mEdgeIdx / 3];
+				const Face &f1 = mFaces[e1.mEdgeIdx / 3];
+				uint32 v0 = f0.mVertex[(e0.mEdgeIdx + 2) % 3];
+				uint32 v1 = f1.mVertex[(e1.mEdgeIdx + 2) % 3];
+				add_edge(min(v0, v1), max(v0, v1));
+			}
+			else
+			{
+				// Start iterating from the first non-shared edge
+				i = j - 1;
+				break;
+			}
+		}
+	}
+	mEdgeConstraints.shrink_to_fit();
+}
+
 void SoftBodySharedSettings::CalculateEdgeLengths()
 {
 	for (Edge &e : mEdgeConstraints)
