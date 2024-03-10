@@ -309,6 +309,25 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 		const SkinState &skin_state = skin_states[s.mVertex];
 		if (vertex.mInvMass > 0.0f)
 		{
+			// Move vertex if it violated the back stop
+			if (s.mBackStopDistance < s.mMaxDistance)
+			{
+				// Center of the back stop sphere
+				Vec3 center = skin_state.mPosition - skin_state.mNormal * (s.mBackStopDistance + s.mBackStopRadius);
+
+				// Check if we're inside the back stop sphere
+				Vec3 delta = vertex.mPosition - center;
+				float delta_len_sq = delta.LengthSq();
+				if (delta_len_sq < Square(s.mBackStopRadius))
+				{
+					// Push the vertex to the surface of the back stop sphere
+					float delta_len = sqrt(delta_len_sq);
+					vertex.mPosition = delta_len > 0.0f?
+						center + delta * (s.mBackStopRadius / delta_len)
+						: center + skin_state.mNormal * s.mBackStopRadius;
+				}
+			}
+
 			// Clamp vertex distance to max distance from skinned position
 			if (s.mMaxDistance < FLT_MAX)
 			{
@@ -317,15 +336,6 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 				float max_distance_sq = Square(s.mMaxDistance);
 				if (delta_len_sq > max_distance_sq)
 					vertex.mPosition = skin_state.mPosition + delta * sqrt(max_distance_sq / delta_len_sq);
-			}
-
-			// Move position if it violated the back stop
-			if (s.mBackStop < s.mMaxDistance)
-			{
-				Vec3 delta = vertex.mPosition - skin_state.mPosition;
-				float violation = -s.mBackStop - skin_state.mNormal.Dot(delta);
-				if (violation > 0.0f)
-					vertex.mPosition += violation * skin_state.mNormal;
 			}
 		}
 		else

@@ -81,7 +81,7 @@ void SoftBodySkinnedConstraintTest::Initialize()
 		for (int x = 0; x < cNumVerticesX; ++x)
 		{
 			uint vertex_idx = get_vertex(x, z);
-			SoftBodySharedSettings::Skinned skinned(vertex_idx, 2.0f, 0.1f);
+			SoftBodySharedSettings::Skinned skinned(vertex_idx, 2.0f, 0.1f, 40.0f);
 
 			// Find closest joints
 			int closest_joint = -1, prev_closest_joint = -1;

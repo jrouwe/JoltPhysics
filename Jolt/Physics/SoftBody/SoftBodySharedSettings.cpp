@@ -59,7 +59,8 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Skinned)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mWeights)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mMaxDistance)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStop)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStopDistance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Skinned, mBackStopRadius)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::LRA)
