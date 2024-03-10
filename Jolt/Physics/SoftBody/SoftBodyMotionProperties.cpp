@@ -692,9 +692,10 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 							// Finish the iteration
 							ApplyLRAConstraints(ioContext);
 
-							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
-
 							ApplySkinConstraints(ioContext);
+
+							// Needs to happen last because it updates the velocities
+							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
 							uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
 							if (iteration < mNumIterations)
@@ -855,6 +856,12 @@ void SoftBodyMotionProperties::DrawVertices(DebugRenderer *inRenderer, RMat44Arg
 {
 	for (const Vertex &v : mVertices)
 		inRenderer->DrawMarker(inCenterOfMassTransform * v.mPosition, v.mInvMass > 0.0f? Color::sGreen : Color::sRed, 0.05f);
+}
+
+void SoftBodyMotionProperties::DrawVertexVelocities(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (const Vertex &v : mVertices)
+		inRenderer->DrawArrow(inCenterOfMassTransform * v.mPosition, inCenterOfMassTransform * (v.mPosition + v.mVelocity), Color::sYellow, 0.01f);
 }
 
 void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const

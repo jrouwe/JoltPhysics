@@ -1079,6 +1079,9 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 				if (inDrawSettings.mDrawSoftBodyVertices)
 					mp->DrawVertices(inRenderer, com);
 
+				if (inDrawSettings.mDrawSoftBodyVertexVelocities)
+					mp->DrawVertexVelocities(inRenderer, com);
+
 				if (inDrawSettings.mDrawSoftBodyEdgeConstraints)
 					mp->DrawEdgeConstraints(inRenderer, com);
 
