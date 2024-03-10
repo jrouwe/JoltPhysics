@@ -13,5 +13,11 @@ public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, SoftBodyLRAConstraintTest)
 
 	// See: Test
-	virtual void		Initialize() override;
+	virtual void			Initialize() override;
+
+private:
+	// Size and spacing of the cloth
+	static constexpr int	cNumVerticesX = 10;
+	static constexpr int	cNumVerticesZ = 50;
+	static constexpr float	cVertexSpacing = 0.5f;
 };

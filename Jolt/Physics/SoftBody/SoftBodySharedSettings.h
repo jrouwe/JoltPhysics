@@ -183,7 +183,7 @@ public:
 	};
 
 	/// A long range attachment constraint, this is a constraint that sets a max distance between a kinematic vertex and a dynamic vertex
-	/// See: "Long Range Attachments - A Method to Simulate Inextensible Clothing in Computer Games", Tae-Yong Kim, Nuttapong Chentanez and Matthias Müller-Fischer
+	/// See: "Long Range Attachments - A Method to Simulate Inextensible Clothing in Computer Games", Tae-Yong Kim, Nuttapong Chentanez and Matthias Mueller-Fischer
 	class JPH_EXPORT LRA
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, LRA)

@@ -255,9 +255,9 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mVertexRadius);
 
 	// Can't write mInvBindMatrices directly because the class contains padding
-	inStream.Write(mInvBindMatrices, [](const InvBind &inElement, StreamOut &inStream) {
-		inStream.Write(inElement.mJointIndex);
-		inStream.Write(inElement.mInvBind);
+	inStream.Write(mInvBindMatrices, [](const InvBind &inElement, StreamOut &inS) {
+		inS.Write(inElement.mJointIndex);
+		inS.Write(inElement.mInvBind);
 	});
 }
 
@@ -273,9 +273,9 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mLRAConstraints);
 	inStream.Read(mVertexRadius);
 
-	inStream.Read(mInvBindMatrices, [](StreamIn &inStream, InvBind &outElement) {
-		inStream.Read(outElement.mJointIndex);
-		inStream.Read(outElement.mInvBind);
+	inStream.Read(mInvBindMatrices, [](StreamIn &inS, InvBind &outElement) {
+		inS.Read(outElement.mJointIndex);
+		inS.Read(outElement.mInvBind);
 	});
 }
 

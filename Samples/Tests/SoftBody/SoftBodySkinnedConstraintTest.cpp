@@ -133,14 +133,12 @@ void SoftBodySkinnedConstraintTest::Initialize()
 void SoftBodySkinnedConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Draw the pose pre step
-#ifdef JPH_DEBUG_RENDERER
 	Array<Mat44> pose = GetWorldSpacePose(mTime);
 	for (int i = 1; i < cNumJoints; ++i)
 	{
 		mDebugRenderer->DrawArrow(RVec3(pose[i - 1].GetTranslation()), RVec3(pose[i].GetTranslation()), Color::sGreen, 0.1f);
 		mDebugRenderer->DrawCoordinateSystem(RMat44(pose[i]), 0.5f);
 	}
-#endif // JPH_DEBUG_RENDERER
 
 	// Update time
 	mTime += inParams.mDeltaTime;
