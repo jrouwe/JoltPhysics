@@ -203,7 +203,7 @@ private:
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all LRA constraints
-	void								ApplyLRAConstraints(const SoftBodyUpdateContext &inContext);
+	void								ApplyLRAConstraints();
 
 	/// Enforce all collision constraints & update all velocities according the XPBD algorithm
 	void								ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext);

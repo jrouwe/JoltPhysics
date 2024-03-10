@@ -374,7 +374,7 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 	}
 }
 
-void SoftBodyMotionProperties::ApplyLRAConstraints(const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyLRAConstraints()
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -384,7 +384,7 @@ void SoftBodyMotionProperties::ApplyLRAConstraints(const SoftBodyUpdateContext &
 	{
 		JPH_ASSERT(lra.mVertex[0] < mVertices.size());
 		JPH_ASSERT(lra.mVertex[1] < mVertices.size());
-		Vertex &vertex0 = vertices[lra.mVertex[0]];
+		const Vertex &vertex0 = vertices[lra.mVertex[0]];
 		Vertex &vertex1 = vertices[lra.mVertex[1]];
 
 		Vec3 delta = vertex1.mPosition - vertex0.mPosition;
@@ -700,7 +700,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 						if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
 						{
 							// Finish the iteration
-							ApplyLRAConstraints(ioContext);
+							ApplyLRAConstraints();
 
 							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
 
