@@ -46,7 +46,7 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		}
 
 	// Create edges
-	settings->CreateEdges(0.00001f);
+	settings->CreateEdges();
 
 	// Optimize the settings
 	settings->Optimize();
