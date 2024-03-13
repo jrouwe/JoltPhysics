@@ -193,13 +193,13 @@ private:
 	void								IntegratePositions(const SoftBodyUpdateContext &inContext);
 
 	/// Enforce all volume constraints
-	void								ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext);
+	void								ApplyVolumeConstraints();
 
 	/// Enforce all skin constraints
 	void								ApplySkinConstraints(const SoftBodyUpdateContext &inContext);
 
 	/// Enforce all edge constraints
-	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
+	void								ApplyEdgeConstraints(uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all LRA constraints
 	void								ApplyLRAConstraints();

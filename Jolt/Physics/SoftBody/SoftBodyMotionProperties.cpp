@@ -246,7 +246,7 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 }
 
-void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyVolumeConstraints()
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -344,7 +344,7 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 	}
 }
 
-void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
+void SoftBodyMotionProperties::ApplyEdgeConstraints(uint inStartIndex, uint inEndIndex)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -630,7 +630,7 @@ void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &i
 
 	IntegratePositions(ioContext);
 
-	ApplyVolumeConstraints(ioContext);
+	ApplyVolumeConstraints();
 }
 
 SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCollisionPlanes(SoftBodyUpdateContext &ioContext)
@@ -686,7 +686,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 					uint num_edges_to_process = non_parallel_group? edge_group_size : min(SoftBodyUpdateContext::cEdgeConstraintBatch, edge_group_size - edge_start_idx);
 					if (edge_group > 0)
 						edge_start_idx += mSettings->mEdgeGroupEndIndices[edge_group - 1];
-					ApplyEdgeConstraints(ioContext, edge_start_idx, edge_start_idx + num_edges_to_process);
+					ApplyEdgeConstraints(edge_start_idx, edge_start_idx + num_edges_to_process);
 
 					// Test if we're at the end of this group
 					uint edge_constraints_processed = ioContext.mNumEdgeConstraintsProcessed.fetch_add(num_edges_to_process, memory_order_relaxed) + num_edges_to_process;
