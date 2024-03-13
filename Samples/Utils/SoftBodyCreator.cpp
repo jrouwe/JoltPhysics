@@ -41,7 +41,6 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		for (uint x = 0; x < inGridSizeX; ++x)
 		{
 			SoftBodySharedSettings::Edge e;
-			e.mCompliance = 0.00001f;
 			e.mVertex[0] = vertex_index(x, z);
 			if (x < inGridSizeX - 1)
 			{
@@ -279,7 +278,6 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 		for (uint theta = 0; theta < inNumTheta - 1; ++theta)
 		{
 			SoftBodySharedSettings::Edge e;
-			e.mCompliance = 0.0001f;
 			e.mVertex[0] = vertex_index(theta, phi);
 
 			e.mVertex[1] = vertex_index(theta + 1, phi);

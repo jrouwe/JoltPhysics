@@ -250,8 +250,6 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 {
 	JPH_PROFILE_FUNCTION();
 
-	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
-
 	// Satisfy volume constraints
 	for (const Volume &v : mSettings->mVolumeConstraints)
 	{
@@ -284,7 +282,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 		JPH_ASSERT(w1 > 0.0f || w2 > 0.0f || w3 > 0.0f || w4 > 0.0f);
 
 		// Apply correction
-		float lambda = -c / (w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v.mCompliance * inv_dt_sq);
+		float lambda = -v.mStiffness * c / (w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq());
 		v1.mPosition += lambda * w1 * d1c;
 		v2.mPosition += lambda * w2 * d2c;
 		v3.mPosition += lambda * w3 * d3c;
@@ -350,8 +348,6 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 {
 	JPH_PROFILE_FUNCTION();
 
-	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
-
 	// Satisfy edge constraints
 	const Array<Edge> &edge_constraints = mSettings->mEdgeConstraints;
 	for (uint i = inStartIndex; i < inEndIndex; ++i)
@@ -367,7 +363,7 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 		if (length > 0.0f)
 		{
 			// Apply correction
-			Vec3 correction = delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq));
+			Vec3 correction = e.mStiffness * delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass));
 			v0.mPosition += v0.mInvMass * correction;
 			v1.mPosition -= v1.mInvMass * correction;
 		}
@@ -407,7 +403,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 			// Remember previous velocity for restitution calculations
 			Vec3 prev_v = v.mVelocity;
 
-			// XPBD velocity update
+			// Verlet velocity update
 			v.mVelocity = (v.mPosition - v.mPreviousPosition) / dt;
 
 			// Satisfy collision constraint

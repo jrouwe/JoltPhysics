@@ -32,14 +32,14 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Edge)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mRestLength)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mCompliance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mStiffness)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Volume)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Volume, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Volume, mSixRestVolume)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Volume, mCompliance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Volume, mStiffness)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::InvBind)

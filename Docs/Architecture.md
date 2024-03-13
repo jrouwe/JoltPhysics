@@ -738,7 +738,7 @@ These jobs will do broadphase checks for all of the soft bodies. A thread picks 
 
 ## Soft Body Simulate {#soft-body-simulate}
 
-These jobs will do the actual simulation of the soft bodies. They first collide batches of soft body vertices with the rigid bodies found during the Collide job (multiple threads can work on a single soft body) and then perform the simulation using XPBD (also partially distributing a single soft body on multiple threads).
+These jobs will do the actual simulation of the soft bodies. They first collide batches of soft body vertices with the rigid bodies found during the Collide job (multiple threads can work on a single soft body) and then perform the simulation using PBD (also partially distributing a single soft body on multiple threads).
 
 ## Soft Body Finalize {#soft-body-finalize}
 

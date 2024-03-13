@@ -101,11 +101,11 @@ public:
 
 		/// Constructor
 						Edge() = default;
-						Edge(uint32 inVertex1, uint32 inVertex2, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2 }, mCompliance(inCompliance) { }
+						Edge(uint32 inVertex1, uint32 inVertex2, float inStiffness = 0.9f) : mVertex { inVertex1, inVertex2 }, mStiffness(inStiffness) { }
 
 		uint32			mVertex[2];									///< Indices of the vertices that form the edge
 		float			mRestLength = 1.0f;							///< Rest length of the spring
-		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
+		float			mStiffness = 0.9f;							///< The stiffness of the spring. This value is normalized between 0 and 1. 1 means that the spring is completely stiff. Note that stiffness depends on the time step and the number of iterations, the smaller the time step or the higher the number of iterations, the stiffer the edge.
 	};
 
 	/// Volume constraint, keeps the volume of a tetrahedron constant
@@ -115,11 +115,11 @@ public:
 
 		/// Constructor
 						Volume() = default;
-						Volume(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
+						Volume(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inStiffness = 0.9f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mStiffness(inStiffness) { }
 
-		uint32			mVertex[4];									///< Indices of the vertices that form the tetrhedron
+		uint32			mVertex[4];									///< Indices of the vertices that form the tetrahedron
 		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron
-		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
+		float			mStiffness = 0.9f;							///< The stiffness of the constraint. This value is normalized between 0 and 1. 1 means that the volume is completely stiff. Note that stiffness depends on the time step and the number of iterations, the smaller the time step or the higher the number of iterations, the stiffer the volume.
 	};
 
 	/// An inverse bind matrix take a skinned vertex from its bind pose into joint local space

@@ -27,8 +27,7 @@ class DebugRenderer;
 
 /// This class contains the runtime information of a soft body.
 //
-// Based on: XPBD, Extended Position Based Dynamics, Matthias Muller, Ten Minute Physics
-// See: https://matthias-research.github.io/pages/tenMinutePhysics/09-xpbd.pdf
+// Using a classic PBD simulation with sub stepping instead of running multiple Gauss-Seidel iterations before stepping.
 class JPH_EXPORT SoftBodyMotionProperties : public MotionProperties
 {
 public:
@@ -205,7 +204,7 @@ private:
 	/// Enforce all LRA constraints
 	void								ApplyLRAConstraints();
 
-	/// Enforce all collision constraints & update all velocities according the XPBD algorithm
+	/// Enforce all collision constraints & update all velocities
 	void								ApplyCollisionConstraintsAndUpdateVelocities(const SoftBodyUpdateContext &inContext);
 
 	/// Update the state of the soft body (position, velocity, bounds)
