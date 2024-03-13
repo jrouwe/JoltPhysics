@@ -170,19 +170,19 @@ public:
 	/// Velocity of point inPoint (in world space, e.g. on the surface of the body) of the body (unit: m/s)
 	inline Vec3				GetPointVelocity(RVec3Arg inPoint) const						{ JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sPositionAccess, BodyAccess::EAccess::Read)); return GetPointVelocityCOM(Vec3(inPoint - mPosition)); }
 
-	/// Add force (unit: N) at center of mass for the next time step, will be reset after the next call to PhysicsSimulation::Update
+	/// Add force (unit: N) at center of mass for the next time step, will be reset after the next call to PhysicsSystem::Update
 	inline void				AddForce(Vec3Arg inForce)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mForce) + inForce).StoreFloat3(&mMotionProperties->mForce); }
 
-	/// Add force (unit: N) at inPosition for the next time step, will be reset after the next call to PhysicsSimulation::Update
+	/// Add force (unit: N) at inPosition for the next time step, will be reset after the next call to PhysicsSystem::Update
 	inline void				AddForce(Vec3Arg inForce, RVec3Arg inPosition);
 
-	/// Add torque (unit: N m) for the next time step, will be reset after the next call to PhysicsSimulation::Update
+	/// Add torque (unit: N m) for the next time step, will be reset after the next call to PhysicsSystem::Update
 	inline void				AddTorque(Vec3Arg inTorque)										{ JPH_ASSERT(IsDynamic()); (Vec3::sLoadFloat3Unsafe(mMotionProperties->mTorque) + inTorque).StoreFloat3(&mMotionProperties->mTorque); }
 
-	// Get the total amount of force applied to the center of mass this time step (through AddForce calls). Note that it will reset to zero after PhysicsSimulation::Update.
+	// Get the total amount of force applied to the center of mass this time step (through AddForce calls). Note that it will reset to zero after PhysicsSystem::Update.
 	inline Vec3				GetAccumulatedForce() const										{ JPH_ASSERT(IsDynamic()); return mMotionProperties->GetAccumulatedForce(); }
 
-	// Get the total amount of torque applied to the center of mass this time step (through AddForce/AddTorque calls). Note that it will reset to zero after PhysicsSimulation::Update.
+	// Get the total amount of torque applied to the center of mass this time step (through AddForce/AddTorque calls). Note that it will reset to zero after PhysicsSystem::Update.
 	inline Vec3				GetAccumulatedTorque() const									{ JPH_ASSERT(IsDynamic()); return mMotionProperties->GetAccumulatedTorque(); }
 
 	// Reset the total accumulated force, not that this will be done automatically after every time step.
