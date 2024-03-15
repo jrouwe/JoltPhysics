@@ -111,13 +111,13 @@ void SoftBodySharedSettings::CreateEdges(float inStiffness, float inAngleToleran
 	QuickSort(edges.begin(), edges.end(), [](const EdgeHelper &inLHS, const EdgeHelper &inRHS) { return inLHS.mVertex[0] < inRHS.mVertex[0] || (inLHS.mVertex[0] == inRHS.mVertex[0] && inLHS.mVertex[1] < inRHS.mVertex[1]); });
 
 	// Only add edges if one of the vertices is movable
-	auto add_edge = [this](uint32 inVtx1, uint32 inVtx2, float inStiffness) {
+	auto add_edge = [this](uint32 inVtx1, uint32 inVtx2, float inStiffnessParam) {
 		if (mVertices[inVtx1].mInvMass > 0.0f || mVertices[inVtx2].mInvMass > 0.0f)
 		{
 			Edge temp_edge;
 			temp_edge.mVertex[0] = inVtx1;
 			temp_edge.mVertex[1] = inVtx2;
-			temp_edge.mStiffness = inStiffness;
+			temp_edge.mStiffness = inStiffnessParam;
 			temp_edge.mRestLength = (Vec3(mVertices[inVtx2].mPosition) - Vec3(mVertices[inVtx1].mPosition)).Length();
 			JPH_ASSERT(temp_edge.mRestLength > 0.0f);
 			mEdgeConstraints.push_back(temp_edge);
