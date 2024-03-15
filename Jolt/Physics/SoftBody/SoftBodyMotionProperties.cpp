@@ -246,9 +246,11 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 }
 
-void SoftBodyMotionProperties::ApplyVolumeConstraints()
+void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
+
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
 	// Satisfy volume constraints
 	for (const Volume &v : mSettings->mVolumeConstraints)
@@ -282,7 +284,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints()
 		JPH_ASSERT(w1 > 0.0f || w2 > 0.0f || w3 > 0.0f || w4 > 0.0f);
 
 		// Apply correction
-		float lambda = -v.mStiffness * c / (w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq());
+		float lambda = -c / (w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v.mCompliance * inv_dt_sq);
 		v1.mPosition += lambda * w1 * d1c;
 		v2.mPosition += lambda * w2 * d2c;
 		v3.mPosition += lambda * w3 * d3c;
@@ -344,9 +346,11 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 	}
 }
 
-void SoftBodyMotionProperties::ApplyEdgeConstraints(uint inStartIndex, uint inEndIndex)
+void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
 {
 	JPH_PROFILE_FUNCTION();
+
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
 	// Satisfy edge constraints
 	const Array<Edge> &edge_constraints = mSettings->mEdgeConstraints;
@@ -363,7 +367,7 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(uint inStartIndex, uint inEn
 		if (length > 0.0f)
 		{
 			// Apply correction
-			Vec3 correction = e.mStiffness * delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass));
+			Vec3 correction = delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq));
 			v0.mPosition += v0.mInvMass * correction;
 			v1.mPosition -= v1.mInvMass * correction;
 		}
@@ -403,7 +407,7 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 			// Remember previous velocity for restitution calculations
 			Vec3 prev_v = v.mVelocity;
 
-			// Verlet velocity update
+			// XPBD velocity update
 			v.mVelocity = (v.mPosition - v.mPreviousPosition) / dt;
 
 			// Satisfy collision constraint
@@ -630,7 +634,7 @@ void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &i
 
 	IntegratePositions(ioContext);
 
-	ApplyVolumeConstraints();
+	ApplyVolumeConstraints(ioContext);
 }
 
 SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCollisionPlanes(SoftBodyUpdateContext &ioContext)
@@ -686,7 +690,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeCon
 					uint num_edges_to_process = non_parallel_group? edge_group_size : min(SoftBodyUpdateContext::cEdgeConstraintBatch, edge_group_size - edge_start_idx);
 					if (edge_group > 0)
 						edge_start_idx += mSettings->mEdgeGroupEndIndices[edge_group - 1];
-					ApplyEdgeConstraints(edge_start_idx, edge_start_idx + num_edges_to_process);
+					ApplyEdgeConstraints(ioContext, edge_start_idx, edge_start_idx + num_edges_to_process);
 
 					// Test if we're at the end of this group
 					uint edge_constraints_processed = ioContext.mNumEdgeConstraintsProcessed.fetch_add(num_edges_to_process, memory_order_relaxed) + num_edges_to_process;
