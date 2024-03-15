@@ -18,10 +18,9 @@ public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
 	/// Automatically create all edges based on the faces
-	/// @param inCompliance The compliance of the edges
-	/// @param inBendAngleThreshold Shear edges will be created between adjacent triangles, but only if the angle between the shared edge and the direction between the opposing vertices is max this amount of radians from 90 degrees
-	/// @param inBendCompliance The compliance of the bend edges. FLT_MAX to disable bend edges.
-	void				CreateEdges(float inCompliance = 1.0e-4f, float inBendAngleThreshold = DegreesToRadians(10), float inBendCompliance = FLT_MAX);
+	/// @param inStiffness The stiffness of the edges
+	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
+	void				CreateEdges(float inStiffness = 0.9f, float inAngleTolerance = DegreesToRadians(8.0f));
 
 	/// Calculate the initial lengths of all springs of the edges of this soft body
 	void				CalculateEdgeLengths();

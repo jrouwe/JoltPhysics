@@ -241,30 +241,6 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 			return 2 + (inTheta - 1) * inNumPhi + inPhi % inNumPhi;
 	};
 
-	// Create edge constraints
-	for (uint phi = 0; phi < inNumPhi; ++phi)
-	{
-		for (uint theta = 0; theta < inNumTheta - 1; ++theta)
-		{
-			SoftBodySharedSettings::Edge e;
-			e.mVertex[0] = vertex_index(theta, phi);
-
-			e.mVertex[1] = vertex_index(theta + 1, phi);
-			settings->mEdgeConstraints.push_back(e);
-
-			e.mVertex[1] = vertex_index(theta + 1, phi + 1);
-			settings->mEdgeConstraints.push_back(e);
-
-			if (theta > 0)
-			{
-				e.mVertex[1] =  vertex_index(theta, phi + 1);
-				settings->mEdgeConstraints.push_back(e);
-			}
-		}
-	}
-
-	settings->CalculateEdgeLengths();
-
 	// Create faces
 	SoftBodySharedSettings::Face f;
 	for (uint phi = 0; phi < inNumPhi; ++phi)
@@ -289,6 +265,9 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 		f.mVertex[2] = vertex_index(inNumTheta - 1, 0);
 		settings->AddFace(f);
 	}
+
+	// Create edges
+	settings->CreateEdges(0.1f);
 
 	// Optimize the settings
 	settings->Optimize();
