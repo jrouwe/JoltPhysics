@@ -30,40 +30,6 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		return inX + inY * inGridSizeX;
 	};
 
-	// Only add edges if one of the vertices is moveable
-	auto add_edge = [settings](const SoftBodySharedSettings::Edge &inEdge) {
-		if (settings->mVertices[inEdge.mVertex[0]].mInvMass > 0.0f || settings->mVertices[inEdge.mVertex[1]].mInvMass > 0.0f)
-			settings->mEdgeConstraints.push_back(inEdge);
-	};
-
-	// Create edges
-	for (uint z = 0; z < inGridSizeZ; ++z)
-		for (uint x = 0; x < inGridSizeX; ++x)
-		{
-			SoftBodySharedSettings::Edge e;
-			e.mVertex[0] = vertex_index(x, z);
-			if (x < inGridSizeX - 1)
-			{
-				e.mVertex[1] = vertex_index(x + 1, z);
-				add_edge(e);
-			}
-			if (z < inGridSizeZ - 1)
-			{
-				e.mVertex[1] = vertex_index(x, z + 1);
-				add_edge(e);
-			}
-			if (x < inGridSizeX - 1 && z < inGridSizeZ - 1)
-			{
-				e.mVertex[1] = vertex_index(x + 1, z + 1);
-				add_edge(e);
-
-				e.mVertex[0] = vertex_index(x + 1, z);
-				e.mVertex[1] = vertex_index(x, z + 1);
-				add_edge(e);
-			}
-		}
-	settings->CalculateEdgeLengths();
-
 	// Create faces
 	for (uint z = 0; z < inGridSizeZ - 1; ++z)
 		for (uint x = 0; x < inGridSizeX - 1; ++x)
@@ -78,6 +44,9 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 			f.mVertex[2] = vertex_index(x + 1, z);
 			settings->AddFace(f);
 		}
+
+	// Create edges
+	settings->CreateEdges();
 
 	// Optimize the settings
 	settings->Optimize();
@@ -272,30 +241,6 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 			return 2 + (inTheta - 1) * inNumPhi + inPhi % inNumPhi;
 	};
 
-	// Create edge constraints
-	for (uint phi = 0; phi < inNumPhi; ++phi)
-	{
-		for (uint theta = 0; theta < inNumTheta - 1; ++theta)
-		{
-			SoftBodySharedSettings::Edge e;
-			e.mVertex[0] = vertex_index(theta, phi);
-
-			e.mVertex[1] = vertex_index(theta + 1, phi);
-			settings->mEdgeConstraints.push_back(e);
-
-			e.mVertex[1] = vertex_index(theta + 1, phi + 1);
-			settings->mEdgeConstraints.push_back(e);
-
-			if (theta > 0)
-			{
-				e.mVertex[1] =  vertex_index(theta, phi + 1);
-				settings->mEdgeConstraints.push_back(e);
-			}
-		}
-	}
-
-	settings->CalculateEdgeLengths();
-
 	// Create faces
 	SoftBodySharedSettings::Face f;
 	for (uint phi = 0; phi < inNumPhi; ++phi)
@@ -320,6 +265,9 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 		f.mVertex[2] = vertex_index(inNumTheta - 1, 0);
 		settings->AddFace(f);
 	}
+
+	// Create edges
+	settings->CreateEdges(0.1f);
 
 	// Optimize the settings
 	settings->Optimize();

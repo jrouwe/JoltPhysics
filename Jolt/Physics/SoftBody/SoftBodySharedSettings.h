@@ -17,6 +17,11 @@ class JPH_EXPORT SoftBodySharedSettings : public RefTarget<SoftBodySharedSetting
 public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
+	/// Automatically create all edges based on the faces
+	/// @param inStiffness The stiffness of the edges
+	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
+	void				CreateEdges(float inStiffness = 0.9f, float inAngleTolerance = DegreesToRadians(8.0f));
+
 	/// Calculate the initial lengths of all springs of the edges of this soft body
 	void				CalculateEdgeLengths();
 
