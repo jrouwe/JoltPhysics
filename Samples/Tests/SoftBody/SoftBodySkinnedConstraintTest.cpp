@@ -65,7 +65,7 @@ void SoftBodySkinnedConstraintTest::Initialize()
 
 	// Make edges soft
 	for (SoftBodySharedSettings::Edge &e : settings->mEdgeConstraints)
-		e.mStiffness = 0.1f;
+		e.mCompliance = 1.0e-3f;
 
 	// Create inverse bind matrices by moving the bind pose to the center of mass space for the body
 	Array<Mat44> bind_pose = GetWorldSpacePose(0.0f);

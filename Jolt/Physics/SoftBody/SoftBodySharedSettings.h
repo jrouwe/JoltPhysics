@@ -18,9 +18,9 @@ public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
 	/// Automatically create all edges based on the faces
-	/// @param inStiffness The stiffness of the edges
+	/// @param inCompliance The compliance of the edges
 	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
-	void				CreateEdges(float inStiffness = 0.9f, float inAngleTolerance = DegreesToRadians(8.0f));
+	void				CreateEdges(float inCompliance, float inAngleTolerance = DegreesToRadians(8.0f));
 
 	/// Calculate the initial lengths of all springs of the edges of this soft body
 	void				CalculateEdgeLengths();
@@ -106,11 +106,11 @@ public:
 
 		/// Constructor
 						Edge() = default;
-						Edge(uint32 inVertex1, uint32 inVertex2, float inStiffness = 0.9f) : mVertex { inVertex1, inVertex2 }, mStiffness(inStiffness) { }
+						Edge(uint32 inVertex1, uint32 inVertex2, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2 }, mCompliance(inCompliance) { }
 
 		uint32			mVertex[2];									///< Indices of the vertices that form the edge
 		float			mRestLength = 1.0f;							///< Rest length of the spring
-		float			mStiffness = 0.9f;							///< The stiffness of the spring. This value is normalized between 0 and 1. 1 means that the spring is completely stiff. Note that stiffness depends on the time step and the number of iterations, the smaller the time step or the higher the number of iterations, the stiffer the edge.
+		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
 	};
 
 	/// Volume constraint, keeps the volume of a tetrahedron constant
@@ -120,11 +120,11 @@ public:
 
 		/// Constructor
 						Volume() = default;
-						Volume(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inStiffness = 0.9f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mStiffness(inStiffness) { }
+						Volume(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
 
-		uint32			mVertex[4];									///< Indices of the vertices that form the tetrahedron
+		uint32			mVertex[4];									///< Indices of the vertices that form the tetrhedron
 		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron
-		float			mStiffness = 0.9f;							///< The stiffness of the constraint. This value is normalized between 0 and 1. 1 means that the volume is completely stiff. Note that stiffness depends on the time step and the number of iterations, the smaller the time step or the higher the number of iterations, the stiffer the volume.
+		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
 	};
 
 	/// An inverse bind matrix take a skinned vertex from its bind pose into joint local space

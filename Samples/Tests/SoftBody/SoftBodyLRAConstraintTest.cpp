@@ -22,7 +22,7 @@ void SoftBodyLRAConstraintTest::Initialize()
 	auto inv_mass = [](uint, uint inZ) { return inZ == 0? 0.0f : 1.0f; };
 	Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass);
 	for (SoftBodySharedSettings::Edge &e : cloth_settings->mEdgeConstraints)
-		e.mStiffness = 0.1f; // Soften the edges a bit so that the effect of the LRA constraints is more visible
+		e.mCompliance = 1.0e-3f; // Soften the edges a bit so that the effect of the LRA constraints is more visible
 	SoftBodyCreationSettings cloth(cloth_settings, RVec3(-10.0f, 25.0f, 0), Quat::sIdentity(), Layers::MOVING);
 	mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 

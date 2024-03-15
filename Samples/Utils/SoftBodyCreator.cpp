@@ -46,7 +46,7 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		}
 
 	// Create edges
-	settings->CreateEdges();
+	settings->CreateEdges(0.00001f);
 
 	// Optimize the settings
 	settings->Optimize();
@@ -267,7 +267,7 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 	}
 
 	// Create edges
-	settings->CreateEdges(0.1f);
+	settings->CreateEdges(0.0001f);
 
 	// Optimize the settings
 	settings->Optimize();
