@@ -83,7 +83,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
 
-void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolerance)
+void SoftBodySharedSettings::CreateEdges(float inRegularCompliance, float inShearCompliance, float inAngleTolerance)
 {
 	struct EdgeHelper
 	{
@@ -111,7 +111,7 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 	QuickSort(edges.begin(), edges.end(), [](const EdgeHelper &inLHS, const EdgeHelper &inRHS) { return inLHS.mVertex[0] < inRHS.mVertex[0] || (inLHS.mVertex[0] == inRHS.mVertex[0] && inLHS.mVertex[1] < inRHS.mVertex[1]); });
 
 	// Only add edges if one of the vertices is movable
-	auto add_edge = [this, inCompliance](uint32 inVtx1, uint32 inVtx2) {
+	auto add_edge = [this](uint32 inVtx1, uint32 inVtx2, float inCompliance) {
 		if (mVertices[inVtx1].mInvMass > 0.0f || mVertices[inVtx2].mInvMass > 0.0f)
 		{
 			Edge temp_edge;
@@ -133,8 +133,8 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 	{
 		const EdgeHelper &e0 = edges[i];
 
-		// Create a regular edge constraint
-		add_edge(e0.mVertex[0], e0.mVertex[1]);
+		// Flag that indicates if this edge is a shear edge (if 2 triangles form a quad-like shape and this edge is on the diagonal)
+		bool is_shear = false;
 
 		// Test if there are any shared edges
 		for (Array<EdgeHelper>::size_type j = i + 1; j < edges.size(); ++j)
@@ -159,7 +159,8 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 					if (Square(e0_dir.Dot(e1_dir)) < sq_sin_tolerance * e0_dir.LengthSq() * e1_dir.LengthSq())
 					{
 						// Shear constraint
-						add_edge(min(v0, v1), max(v0, v1));
+						add_edge(min(v0, v1), max(v0, v1), inShearCompliance);
+						is_shear = true;
 					}
 				}
 			}
@@ -170,6 +171,9 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 				break;
 			}
 		}
+
+		// Create a edge constraint for the current edge
+		add_edge(e0.mVertex[0], e0.mVertex[1], is_shear? inShearCompliance : inRegularCompliance);
 	}
 	mEdgeConstraints.shrink_to_fit();
 }
