@@ -112,7 +112,8 @@ void SoftBodySharedSettings::CreateEdges(float inRegularCompliance, float inShea
 
 	// Only add edges if one of the vertices is movable
 	auto add_edge = [this](uint32 inVtx1, uint32 inVtx2, float inCompliance) {
-		if (mVertices[inVtx1].mInvMass > 0.0f || mVertices[inVtx2].mInvMass > 0.0f)
+		if ((mVertices[inVtx1].mInvMass > 0.0f || mVertices[inVtx2].mInvMass > 0.0f)
+			&& inCompliance < FLT_MAX)
 		{
 			Edge temp_edge;
 			temp_edge.mVertex[0] = inVtx1;
