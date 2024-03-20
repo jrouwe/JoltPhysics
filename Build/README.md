@@ -199,7 +199,7 @@ Then you have not enabled interprocedural optimizations (link time optimizations
 
 ## DirectX Error
 
-The samples use DirectX for the graphics implementation, if this is not already installed on your computer then you may get a DirectX error pop-up which may say "The GPU device instance has been suspended", in your debugger you may see the message "Using the Redistributable D3D12 SDKLayers dll also requires that the latest SDKLayers for Windows 10 is installed.". 
+The samples use DirectX for the graphics implementation, when attempting to run the samples you may get a DirectX error pop-up which may say "The GPU device instance has been suspended", in your debugger you may see the message "Using the Redistributable D3D12 SDKLayers dll also requires that the latest SDKLayers for Windows 10 is installed.". 
 
 Fix this by enabling "Graphics Tools" which is an optional windows settings. To enable it you have to press the windows key, search for `manage optional features`, and then click `add a feature`, and install Graphics Tools.
 
