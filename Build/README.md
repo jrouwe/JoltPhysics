@@ -197,6 +197,26 @@ If you receive the following error when linking:
 
 Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
 
+## DirectX Error
+
+The samples use DirectX for the graphics implementation, if this is not already installed on your computer then you may get a DirectX error pop-up which may say "The GPU device instance has been suspended", in your debugger you may see the message "Using the Redistributable D3D12 SDKLayers dll also requires that the latest SDKLayers for Windows 10 is installed.". 
+
+Fix this by enabling "Graphics Tools" which is an optional windows settings. To enable it you have to press the windows key, search for `manage optional features`, and then click `add a feature`, and install Graphics Tools.
+
+--- 
+
+It's also possible that on your machine you get an error like this: 
+
+```
+[New Thread 7636.0x2ce4]
+warning: Created font "Arial" with height 24 in a 512x256 surface
+warning: D3D12 ERROR: ID3D12Device::CreateShaderResourceView: The Format (0x29, R32_FLOAT) is invalid when creating a View; the Resource was already created with a fully qualified Format, which is not castable (0x28, D32_FLOAT). [ STATE_CREATION ERROR #28: CREATESHADERRESOURCEVIEW_INVALIDFORMAT]
+warning: D3D12: **BREAK** enabled for the previous message, which was: [ ERROR STATE_CREATION #28: CREATESHADERRESOURCEVIEW_INVALIDFORMAT ]
+gdb: unknown target exception 0x0000087a at 0x7ffc1578cf19
+```
+
+We are not yet sure what the cause of this error is, but we know it may occurs on at least one other windows computer. This error happens during shadow pass of rendering, and thus by disabling shadows we can sidestep this error. See the branch [no-shadows](https://github.com/jrouwe/JoltPhysics/tree/test/no_shadows) which does this.
+
 ## Illegal Instruction Error
 
 If your CPU doesn't support all of the instructions you'll get an `Illegal instruction` exception.
