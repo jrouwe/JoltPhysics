@@ -47,7 +47,7 @@ void SkeletonPose::CalculateJointStates()
 
 		JointState &joint = mJoints[i];
 		joint.mTranslation = local_transform.GetTranslation();
-		joint.mRotation = local_transform.GetRotation().GetQuaternion();
+		joint.mRotation = local_transform.GetQuaternion();
 	}
 }
 

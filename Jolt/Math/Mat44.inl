@@ -782,8 +782,6 @@ bool Mat44::SetInversed3x3(Mat44Arg inM)
 
 Quat Mat44::GetQuaternion() const
 {
-	JPH_ASSERT(mCol[3] == Vec4(0, 0, 0, 1));
-
 	float tr = mCol[0].mF32[0] + mCol[1].mF32[1] + mCol[2].mF32[2];
 
 	if (tr >= 0.0f)
