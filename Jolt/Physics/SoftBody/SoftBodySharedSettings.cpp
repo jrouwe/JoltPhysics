@@ -39,7 +39,6 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Bend)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mCompliance)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ00)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ01)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ02)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ03)
@@ -298,7 +297,7 @@ void SoftBodySharedSettings::CalculateBendConstraintQs()
 		Vec4 k0(c03 + c04, c01 + c02, -c01 - c03, -c02 - c04);
 		Mat44 k0_dot_k0_t(k0.GetX() * k0, k0.GetY() * k0, k0.GetZ() * k0, k0.GetW() * k0);
 		Mat44 q = (6.0f / (two_a0 + two_a1)) * k0_dot_k0_t;
-		b.mQ00 = q(0, 0);
+		// q00 is not used since we set x0 to be the origin
 		b.mQ01 = q(0, 1);
 		b.mQ02 = q(0, 2);
 		b.mQ03 = q(0, 3);

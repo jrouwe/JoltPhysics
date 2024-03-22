@@ -162,9 +162,9 @@ public:
 
 		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
-		float			mQ00 { 0 }, mQ01 { 0 }, mQ02 { 0 };			///< The Q matrix that defines the rest shape of the bend constraint and is calculated by CalculateBendConstraintQs()
-		float			mQ03 { 0 }, mQ11 { 0 }, mQ12 { 0 };
-		float			mQ13 { 0 }, mQ22 { 0 }, mQ23 { 0 }, mQ33 { 0 };
+		float			mQ01 { 0 }, mQ02 { 0 }, mQ03 { 0 };			///< The Q matrix that defines the rest shape of the bend constraint and is calculated by CalculateBendConstraintQs()
+		float			mQ11 { 0 }, mQ12 { 0 }, mQ13 { 0 };
+		float			mQ22 { 0 }, mQ23 { 0 }, mQ33 { 0 };
 	};
 
 	/// Volume constraint, keeps the volume of a tetrahedron constant
