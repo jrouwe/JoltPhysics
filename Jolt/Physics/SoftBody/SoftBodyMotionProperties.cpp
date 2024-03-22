@@ -274,6 +274,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 			continue;
 
 		// Calculate gradient of constraint equation, again using Q_ij = Q_ji
+		// del C = Sum_j(Q_ij * x_j)
 		Vec3 d0c = b.mQ01 * x1 + b.mQ02 * x2 + b.mQ03 * x3;
 		Vec3 d1c = b.mQ11 * x1 + b.mQ12 * x2 + b.mQ13 * x3;
 		Vec3 d2c = b.mQ12 * x1 + b.mQ22 * x2 + b.mQ23 * x3;
