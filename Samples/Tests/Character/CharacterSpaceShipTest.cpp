@@ -81,7 +81,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Update the character rotation and its up vector to match the new up vector of the ship
 	mCharacter->SetUp(new_space_ship_transform.GetAxisY());
-	mCharacter->SetRotation(new_space_ship_transform.GetRotation().GetQuaternion());
+	mCharacter->SetRotation(new_space_ship_transform.GetQuaternion());
 
 	// Draw character pre update (the sim is also drawn pre update)
 	// Note that we have first updated the position so that it matches the new position of the ship

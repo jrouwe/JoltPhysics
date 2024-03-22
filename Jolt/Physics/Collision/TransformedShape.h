@@ -108,7 +108,7 @@ public:
 	{
 		Vec3 scale;
 		RMat44 rot_trans = inTransform.Decompose(scale);
-		SetWorldTransform(rot_trans.GetTranslation(), rot_trans.GetRotation().GetQuaternion(), scale);
+		SetWorldTransform(rot_trans.GetTranslation(), rot_trans.GetQuaternion(), scale);
 	}
 
 	/// Calculates the world transform including scale of this shape (not from the center of mass but in the space the shape was created)
