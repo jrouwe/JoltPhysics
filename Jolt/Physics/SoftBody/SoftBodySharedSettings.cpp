@@ -39,7 +39,16 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Bend)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mCompliance)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ00)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ01)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ02)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ03)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ11)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ12)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ13)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ22)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ23)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ33)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Volume)
@@ -285,10 +294,20 @@ void SoftBodySharedSettings::CalculateBendConstraintQs()
 		const float two_a0 = e0.Cross(e1).Length();
 		const float two_a1 = e0.Cross(e2).Length();
 
-		// Calculate Q, note that this matrix is symmetric
+		// Calculate Q, note that this matrix is symmetric so we don't need to store all elements
 		Vec4 k0(c03 + c04, c01 + c02, -c01 - c03, -c02 - c04);
 		Mat44 k0_dot_k0_t(k0.GetX() * k0, k0.GetY() * k0, k0.GetZ() * k0, k0.GetW() * k0);
-		b.mQ = (6.0f / (two_a0 + two_a1)) * k0_dot_k0_t;
+		Mat44 q = (6.0f / (two_a0 + two_a1)) * k0_dot_k0_t;
+		b.mQ00 = q(0, 0);
+		b.mQ01 = q(0, 1);
+		b.mQ02 = q(0, 2);
+		b.mQ03 = q(0, 3);
+		b.mQ11 = q(1, 1);
+		b.mQ12 = q(1, 2);
+		b.mQ13 = q(1, 3);
+		b.mQ22 = q(2, 2);
+		b.mQ23 = q(2, 3);
+		b.mQ33 = q(3, 3);
 	}
 }
 
@@ -439,6 +458,7 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mFaces);
 	inStream.Write(mEdgeConstraints);
 	inStream.Write(mEdgeGroupEndIndices);
+	inStream.Write(mBendConstraints);
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
@@ -450,13 +470,6 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 		inS.Write(inElement.mJointIndex);
 		inS.Write(inElement.mInvBind);
 	});
-
-	// Can't write mBendConstraints directly because the class contains padding
-	inStream.Write(mBendConstraints, [](const Bend &inElement, StreamOut &inS) {
-		inS.Write(inElement.mVertex);
-		inS.Write(inElement.mCompliance);
-		inS.Write(inElement.mQ);
-	});
 }
 
 void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
@@ -465,6 +478,7 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mFaces);
 	inStream.Read(mEdgeConstraints);
 	inStream.Read(mEdgeGroupEndIndices);
+	inStream.Read(mBendConstraints);
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
@@ -474,12 +488,6 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mInvBindMatrices, [](StreamIn &inS, InvBind &outElement) {
 		inS.Read(outElement.mJointIndex);
 		inS.Read(outElement.mInvBind);
-	});
-
-	inStream.Read(mBendConstraints, [](StreamIn &inS, Bend &outElement) {
-		inS.Read(outElement.mVertex);
-		inS.Read(outElement.mCompliance);
-		inS.Read(outElement.mQ);
 	});
 }
 
