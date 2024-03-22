@@ -17,11 +17,19 @@ class JPH_EXPORT SoftBodySharedSettings : public RefTarget<SoftBodySharedSetting
 public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
-	/// Automatically create all edges based on the faces
-	/// @param inRegularCompliance The compliance of the normal edges. Set to FLT_MAX to disable regular edges.
-	/// @param inShearCompliance The compliance of the shear edges. Set to FLT_MAX to disable shear edges.
+	/// Per vertex attributes used during the CreateConstraints function
+	struct VertexAttributes
+	{
+		float			mCompliance = 0.0f;							///< The compliance of the normal edges. Set to FLT_MAX to disable regular edges.
+		float			mShearCompliance = 0.0f;					///< The compliance of the shear edges. Set to FLT_MAX to disable shear edges.
+		float			mBendCompliance = FLT_MAX;					///< The compliance of the bend edges. Set to FLT_MAX to disable bend edges.
+	};
+
+	/// Automatically create constraints based on the faces of the soft body
+	/// @param inVertexAttributes A list of attributes for each vertex (1-on-1 with mVertices, note that if the list is smaller than mVertices the last element will be repeated). This defines the properties of the constraints that are created.
+	/// @param inVertexAttributesLength The length of inVertexAttributes
 	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
-	void				CreateEdges(float inRegularCompliance, float inShearCompliance, float inAngleTolerance = DegreesToRadians(8.0f));
+	void				CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, float inAngleTolerance = DegreesToRadians(8.0f));
 
 	/// Calculate the initial lengths of all springs of the edges of this soft body
 	void				CalculateEdgeLengths();

@@ -46,7 +46,9 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		}
 
 	// Create edges
-	settings->CreateEdges(1.0e-5f, 1.0e-5f);
+	SoftBodySharedSettings::VertexAttributes va;
+	va.mCompliance = va.mShearCompliance = 1.0e-5f;
+	settings->CreateConstraints(&va, 1);
 
 	// Optimize the settings
 	settings->Optimize();
@@ -267,7 +269,9 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 	}
 
 	// Create edges
-	settings->CreateEdges(1.0e-4f, 1.0e-4f);
+	SoftBodySharedSettings::VertexAttributes va;
+	va.mCompliance = va.mShearCompliance = 1.0e-4f;
+	settings->CreateConstraints(&va, 1);
 
 	// Optimize the settings
 	settings->Optimize();
