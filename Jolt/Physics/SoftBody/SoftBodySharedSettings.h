@@ -17,12 +17,24 @@ class JPH_EXPORT SoftBodySharedSettings : public RefTarget<SoftBodySharedSetting
 public:
 	JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, SoftBodySharedSettings)
 
-	/// Per vertex attributes used during the CreateConstraints function
-	struct VertexAttributes
+	/// Which type of bend constraint should be created
+	enum class EBendType
 	{
+		Distance,													///< A simple distance constraint
+		Isometric,													///< An isometric bend constraint (better but much more expensive)
+	};
+
+	/// Per vertex attributes used during the CreateConstraints function
+	struct JPH_EXPORT VertexAttributes
+	{
+		/// Constructor
+						VertexAttributes() = default;
+						VertexAttributes(float inCompliance, float inShearCompliance, float inBendCompliance, EBendType inBendType) : mCompliance(inCompliance), mShearCompliance(inShearCompliance), mBendCompliance(inBendCompliance), mBendType(inBendType) { }
+
 		float			mCompliance = 0.0f;							///< The compliance of the normal edges. Set to FLT_MAX to disable regular edges.
 		float			mShearCompliance = 0.0f;					///< The compliance of the shear edges. Set to FLT_MAX to disable shear edges.
 		float			mBendCompliance = FLT_MAX;					///< The compliance of the bend edges. Set to FLT_MAX to disable bend edges.
+		EBendType		mBendType = EBendType::Distance;			///< Which type of bend constraint we want
 	};
 
 	/// Automatically create constraints based on the faces of the soft body
@@ -31,11 +43,14 @@ public:
 	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
 	void				CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, float inAngleTolerance = DegreesToRadians(8.0f));
 
-	/// Calculate the initial lengths of all springs of the edges of this soft body
+	/// Calculate the initial lengths of all springs of the edges of this soft body (if you use CreateConstraint, this is already done)
 	void				CalculateEdgeLengths();
 
 	/// Calculate the max lengths for the long range attachment constraints
 	void				CalculateLRALengths();
+
+	/// Calculate the Q values for the isometric bend constraints (if you use CreateConstraint, this is already done)
+	void				CalculateBendConstraintQs();
 
 	/// Calculates the initial volume of all tetrahedra of this soft body
 	void				CalculateVolumeConstraintVolumes();
@@ -122,6 +137,34 @@ public:
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
 	};
 
+	/// An isometric bend constraint keeps the angle between 2 triangles that share an edge constant:
+	/// 
+	///    x2
+	///   /  \
+	///  / t0 \
+	/// x0----x1
+	///  \ t1 /
+	///   \  /
+	///    x3
+	/// 
+	/// x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
+	/// 
+	/// Based on:
+	/// - "Discrete Quadratic Curvature Energies" - Max Wardetzky et al.
+	/// - "A Quadratic Bending Model for Inextensible Surfaces" - Miklos Bergou et al.
+	struct JPH_EXPORT Bend
+	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Bend)
+
+		/// Constructor
+						Bend() = default;
+						Bend(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
+
+		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
+		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
+		Mat44			mQ = Mat44::sZero();						///< The Q matrix that defines the rest shape of the bend constraint and is calculated by CalculateBendConstraintQs()
+	};
+
 	/// Volume constraint, keeps the volume of a tetrahedron constant
 	struct JPH_EXPORT Volume
 	{
@@ -132,7 +175,7 @@ public:
 						Volume(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
 
 		uint32			mVertex[4];									///< Indices of the vertices that form the tetrhedron
-		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron
+		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron (calculated by CalculateVolumeConstraintVolumes())
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
 	};
 
@@ -217,6 +260,7 @@ public:
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
+	Array<Bend>			mBendConstraints;							///< The list of bend constraints of the body
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	Array<Skinned>		mSkinnedConstraints;						///< The list of vertices that are constrained to a skinned vertex
 	Array<InvBind>		mInvBindMatrices;							///< The list of inverse bind matrices for skinning vertices

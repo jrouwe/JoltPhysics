@@ -246,6 +246,60 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 }
 
+void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext &inContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
+
+	for (const Bend &b : mSettings->mBendConstraints)
+	{
+		Vertex &v0 = mVertices[b.mVertex[0]];
+		Vertex &v1 = mVertices[b.mVertex[1]];
+		Vertex &v2 = mVertices[b.mVertex[2]];
+		Vertex &v3 = mVertices[b.mVertex[3]];
+
+		Vec3 x[] = {
+			v0.mPosition,
+			v1.mPosition,
+			v2.mPosition,
+			v3.mPosition
+		};
+
+		// Calculate constraint equation
+		float c = 0.0f;
+		for (int i = 0; i < 4; ++i)
+			for (int j = 0; j < 4; ++j)
+			  c += b.mQ(i, j) * x[i].Dot(x[j]);
+		c *= 0.5f;
+		if (abs(c) < 1.0e-10f)
+			continue;
+
+		// Calculate gradient of constraint equation
+		Vec3 d0c = b.mQ(0, 0) * x[0] + b.mQ(1, 0) * x[1] + b.mQ(2, 0) * x[2] + b.mQ(3, 0) * x[3];
+		Vec3 d1c = b.mQ(0, 1) * x[0] + b.mQ(1, 1) * x[1] + b.mQ(2, 1) * x[2] + b.mQ(3, 1) * x[3];
+		Vec3 d2c = b.mQ(0, 2) * x[0] + b.mQ(1, 2) * x[1] + b.mQ(2, 2) * x[2] + b.mQ(3, 2) * x[3];
+		Vec3 d3c = b.mQ(0, 3) * x[0] + b.mQ(1, 3) * x[1] + b.mQ(2, 3) * x[2] + b.mQ(3, 3) * x[3];
+
+		// Get masses
+		float w0 = v0.mInvMass;
+		float w1 = v1.mInvMass;
+		float w2 = v2.mInvMass;
+		float w3 = v3.mInvMass;
+		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
+
+		// Apply correction
+		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d2c.LengthSq() + b.mCompliance * inv_dt_sq;
+		if (denom == 0.0f)
+			continue;
+		float lambda = -c / denom;
+		v0.mPosition += lambda * w0 * d0c;
+		v1.mPosition += lambda * w1 * d1c;
+		v2.mPosition += lambda * w2 * d2c;
+		v3.mPosition += lambda * w3 * d3c;
+	}
+}
+
 void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
@@ -277,6 +331,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 		Vec3 d3c = x1x4.Cross(x1x2);
 		Vec3 d4c = x1x2.Cross(x1x3);
 
+		// Get masses
 		float w1 = v1.mInvMass;
 		float w2 = v2.mInvMass;
 		float w3 = v3.mInvMass;
@@ -634,6 +689,8 @@ void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &i
 
 	IntegratePositions(ioContext);
 
+	ApplyBendConstraints(ioContext);
+
 	ApplyVolumeConstraints(ioContext);
 }
 
@@ -877,6 +934,24 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 {
 	for (const Edge &e : mSettings->mEdgeConstraints)
 		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+}
+
+void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (const Bend &b : mSettings->mBendConstraints)
+	{
+		RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
+		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
+		RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
+		RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
+		RVec3 c_edge = 0.5f * (x0 + x1);
+		RVec3 c0 = (x0 + x1 + x2) / 3.0f;
+		RVec3 c1 = (x0 + x1 + x3) / 3.0f;
+
+		inRenderer->DrawArrow(0.9f * x0 + 0.1f * x1, 0.1f * x0 + 0.9f * x1, Color::sDarkGreen, 0.01f);
+		inRenderer->DrawLine(c_edge, 0.1f * c_edge + 0.9f * c0, Color::sGreen);
+		inRenderer->DrawLine(c_edge, 0.1f * c_edge + 0.9f * c1, Color::sGreen);
+	}
 }
 
 void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
