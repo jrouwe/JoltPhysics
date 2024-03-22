@@ -259,27 +259,25 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vertex &v2 = mVertices[b.mVertex[2]];
 		Vertex &v3 = mVertices[b.mVertex[3]];
 
-		Vec3 x[] = {
-			v0.mPosition,
-			v1.mPosition,
-			v2.mPosition,
-			v3.mPosition
-		};
+		// Get positions
+		Vec3 x0 = v0.mPosition;
+		Vec3 x1 = v1.mPosition;
+		Vec3 x2 = v2.mPosition;
+		Vec3 x3 = v3.mPosition;
 
 		// Calculate constraint equation
-		float c = 0.0f;
-		for (int i = 0; i < 4; ++i)
-			for (int j = 0; j < 4; ++j)
-			  c += b.mQ(i, j) * x[i].Dot(x[j]);
-		c *= 0.5f;
+		// C = 0.5 * Sum_i,j(Q_ij * x_i . x_j)
+		// Note that Q is symmetric so we can optimize this to:
+		float c = b.mQ(0, 1) * x0.Dot(x1) + b.mQ(0, 2) * x0.Dot(x2) + b.mQ(0, 3) * x0.Dot(x3) + b.mQ(1, 2) * x1.Dot(x2) + b.mQ(1, 3) * x1.Dot(x3) + b.mQ(2, 3) * x2.Dot(x3) // Off diagonal elements occur twice
+				+ 0.5f * (b.mQ(0, 0) * x0.LengthSq() + b.mQ(1, 1) * x1.LengthSq() + b.mQ(2, 2) * x2.LengthSq() + b.mQ(3, 3) * x3.LengthSq()); // Diagonal elements need to be multiplied by 0.5
 		if (abs(c) < 1.0e-10f)
 			continue;
 
 		// Calculate gradient of constraint equation
-		Vec3 d0c = b.mQ(0, 0) * x[0] + b.mQ(1, 0) * x[1] + b.mQ(2, 0) * x[2] + b.mQ(3, 0) * x[3];
-		Vec3 d1c = b.mQ(0, 1) * x[0] + b.mQ(1, 1) * x[1] + b.mQ(2, 1) * x[2] + b.mQ(3, 1) * x[3];
-		Vec3 d2c = b.mQ(0, 2) * x[0] + b.mQ(1, 2) * x[1] + b.mQ(2, 2) * x[2] + b.mQ(3, 2) * x[3];
-		Vec3 d3c = b.mQ(0, 3) * x[0] + b.mQ(1, 3) * x[1] + b.mQ(2, 3) * x[2] + b.mQ(3, 3) * x[3];
+		Vec3 d0c = b.mQ(0, 0) * x0 + b.mQ(1, 0) * x1 + b.mQ(2, 0) * x2 + b.mQ(3, 0) * x3;
+		Vec3 d1c = b.mQ(0, 1) * x0 + b.mQ(1, 1) * x1 + b.mQ(2, 1) * x2 + b.mQ(3, 1) * x3;
+		Vec3 d2c = b.mQ(0, 2) * x0 + b.mQ(1, 2) * x1 + b.mQ(2, 2) * x2 + b.mQ(3, 2) * x3;
+		Vec3 d3c = b.mQ(0, 3) * x0 + b.mQ(1, 3) * x1 + b.mQ(2, 3) * x2 + b.mQ(3, 3) * x3;
 
 		// Get masses
 		float w0 = v0.mInvMass;
