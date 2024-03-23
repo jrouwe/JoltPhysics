@@ -35,19 +35,19 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Edge)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mCompliance)
 }
 
-JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Bend)
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::IsometricBend)
 {
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mVertex)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mCompliance)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ01)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ02)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ03)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ11)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ12)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ13)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ22)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ23)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Bend, mQ33)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mCompliance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ01)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ02)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ03)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ11)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ12)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ13)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ22)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ23)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ33)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Volume)
@@ -90,7 +90,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mFaces)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeGroupEndIndices)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mBendConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mIsometricBendConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
@@ -209,7 +209,7 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 						uint32 vedge1 = f0.mVertex[(e0.mEdgeIdx + 1) % 3];
 
 						// Create a bend constraint
-						mBendConstraints.emplace_back(vedge0, vedge1, vopposite0, vopposite1, 0.5f * (a_min.mBendCompliance + a_max.mBendCompliance));
+						mIsometricBendConstraints.emplace_back(vedge0, vedge1, vopposite0, vopposite1, 0.5f * (a_min.mBendCompliance + a_max.mBendCompliance));
 					}
 					break;
 				}
@@ -259,7 +259,7 @@ static float sCotangent(Vec3Arg inV1, Vec3Arg inV2)
 
 void SoftBodySharedSettings::CalculateBendConstraintQs()
 {
-	for (Bend &b : mBendConstraints)
+	for (IsometricBend &b : mIsometricBendConstraints)
 	{
 		// Get positions
 		Vec3 x0 = Vec3(mVertices[b.mVertex[0]].mPosition);
@@ -457,7 +457,7 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mFaces);
 	inStream.Write(mEdgeConstraints);
 	inStream.Write(mEdgeGroupEndIndices);
-	inStream.Write(mBendConstraints);
+	inStream.Write(mIsometricBendConstraints);
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
@@ -477,7 +477,7 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mFaces);
 	inStream.Read(mEdgeConstraints);
 	inStream.Read(mEdgeGroupEndIndices);
-	inStream.Read(mBendConstraints);
+	inStream.Read(mIsometricBendConstraints);
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);

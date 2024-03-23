@@ -252,7 +252,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
-	for (const Bend &b : mSettings->mBendConstraints)
+	for (const IsometricBend &b : mSettings->mIsometricBendConstraints)
 	{
 		Vertex &v0 = mVertices[b.mVertex[0]];
 		Vertex &v1 = mVertices[b.mVertex[1]];
@@ -937,7 +937,7 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 
 void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
-	for (const Bend &b : mSettings->mBendConstraints)
+	for (const IsometricBend &b : mSettings->mIsometricBendConstraints)
 	{
 		RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
 		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;

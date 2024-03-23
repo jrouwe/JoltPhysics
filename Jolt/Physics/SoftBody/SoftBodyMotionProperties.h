@@ -35,7 +35,7 @@ public:
 	using Vertex = SoftBodyVertex;
 	using Edge = SoftBodySharedSettings::Edge;
 	using Face = SoftBodySharedSettings::Face;
-	using Bend = SoftBodySharedSettings::Bend;
+	using IsometricBend = SoftBodySharedSettings::IsometricBend;
 	using Volume = SoftBodySharedSettings::Volume;
 	using InvBind = SoftBodySharedSettings::InvBind;
 	using SkinWeight = SoftBodySharedSettings::SkinWeight;

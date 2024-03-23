@@ -152,13 +152,13 @@ public:
 	/// Based on:
 	/// - "Discrete Quadratic Curvature Energies" - Max Wardetzky et al.
 	/// - "A Quadratic Bending Model for Inextensible Surfaces" - Miklos Bergou et al.
-	struct JPH_EXPORT Bend
+	struct JPH_EXPORT IsometricBend
 	{
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, Bend)
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, IsometricBend)
 
 		/// Constructor
-						Bend() = default;
-						Bend(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
+						IsometricBend() = default;
+						IsometricBend(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
 
 		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
@@ -262,7 +262,7 @@ public:
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
-	Array<Bend>			mBendConstraints;							///< The list of bend constraints of the body
+	Array<IsometricBend>mIsometricBendConstraints;					///< The list of isometric bend constraints of the body
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	Array<Skinned>		mSkinnedConstraints;						///< The list of vertices that are constrained to a skinned vertex
 	Array<InvBind>		mInvBindMatrices;							///< The list of inverse bind matrices for skinning vertices
