@@ -152,6 +152,8 @@ public:
 	/// Based on:
 	/// - "Discrete Quadratic Curvature Energies" - Max Wardetzky et al.
 	/// - "A Quadratic Bending Model for Inextensible Surfaces" - Miklos Bergou et al.
+	///
+	/// Warning: Only works when the rest pose of the triangles is in a plane. Also assumes no stretching.
 	struct JPH_EXPORT IsometricBend
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, IsometricBend)
