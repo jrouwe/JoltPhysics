@@ -22,6 +22,7 @@ public:
 	{
 		Distance,													///< A simple distance constraint
 		Isometric,													///< An isometric bend constraint (better but much more expensive)
+		Dihedral,													///< A dihedral bend constraint (most expensive, but also supports triangles that are initially not in the same plane)
 	};
 
 	/// Per vertex attributes used during the CreateConstraints function
@@ -50,7 +51,7 @@ public:
 	void				CalculateLRALengths();
 
 	/// Calculate the Q values for the isometric bend constraints (if you use CreateConstraint, this is already done)
-	void				CalculateBendConstraintQs();
+	void				CalculateBendConstraintConstants();
 
 	/// Calculates the initial volume of all tetrahedra of this soft body
 	void				CalculateVolumeConstraintVolumes();
@@ -169,6 +170,20 @@ public:
 		float			mQ22 { 0 }, mQ23 { 0 }, mQ33 { 0 };
 	};
 
+	/// A dihedral bend constraint
+	struct JPH_EXPORT DihedralBend
+	{
+		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, DihedralBend)
+
+		/// Constructor
+						DihedralBend() = default;
+						DihedralBend(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
+
+		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
+		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
+		float			mTheta0 = 0.0f;								///< Initial angle between the normals of the two triangles
+	};
+
 	/// Volume constraint, keeps the volume of a tetrahedron constant
 	struct JPH_EXPORT Volume
 	{
@@ -265,6 +280,7 @@ public:
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
 	Array<IsometricBend>mIsometricBendConstraints;					///< The list of isometric bend constraints of the body
+	Array<DihedralBend>	mDihedralBendConstraints;					///< The list of dihedral bend constraints of the body
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	Array<Skinned>		mSkinnedConstraints;						///< The list of vertices that are constrained to a skinned vertex
 	Array<InvBind>		mInvBindMatrices;							///< The list of inverse bind matrices for skinning vertices

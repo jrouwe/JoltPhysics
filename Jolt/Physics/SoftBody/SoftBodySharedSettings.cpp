@@ -50,6 +50,13 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::IsometricBend)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ33)
 }
 
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::DihedralBend)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mCompliance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mTheta0)
+}
+
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Volume)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Volume, mVertex)
@@ -91,6 +98,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeGroupEndIndices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mIsometricBendConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mDihedralBendConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
@@ -212,6 +220,20 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 						mIsometricBendConstraints.emplace_back(vedge0, vedge1, vopposite0, vopposite1, 0.5f * (a_min.mBendCompliance + a_max.mBendCompliance));
 					}
 					break;
+
+				case EBendType::Dihedral:
+					// Test if both opposite vertices are free to move
+					if ((mVertices[vopposite0].mInvMass > 0.0f || mVertices[vopposite1].mInvMass > 0.0f)
+						&& a_min.mBendCompliance < FLT_MAX && a_max.mBendCompliance < FLT_MAX)
+					{
+						// Get the vertices that form the common edge
+						uint32 vedge0 = f0.mVertex[e0.mEdgeIdx % 3];
+						uint32 vedge1 = f0.mVertex[(e0.mEdgeIdx + 1) % 3];
+
+						// Create a bend constraint
+						mDihedralBendConstraints.emplace_back(vedge0, vedge1, vopposite0, vopposite1, 0.5f * (a_min.mBendCompliance + a_max.mBendCompliance));
+					}
+					break;
 				}
 			}
 			else
@@ -229,7 +251,7 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 	}
 	mEdgeConstraints.shrink_to_fit();
 
-	CalculateBendConstraintQs();
+	CalculateBendConstraintConstants();
 }
 
 void SoftBodySharedSettings::CalculateEdgeLengths()
@@ -257,7 +279,7 @@ static float sCotangent(Vec3Arg inV1, Vec3Arg inV2)
 	return dot / cross;
 }
 
-void SoftBodySharedSettings::CalculateBendConstraintQs()
+void SoftBodySharedSettings::CalculateBendConstraintConstants()
 {
 	for (IsometricBend &b : mIsometricBendConstraints)
 	{
@@ -284,14 +306,14 @@ void SoftBodySharedSettings::CalculateBendConstraintQs()
 		Vec3 e4 = x3 - x1;
 
 		// Calculate cotangents
-		const float c01 = sCotangent(e0, e1);
-		const float c02 = sCotangent(e0, e2);
-		const float c03 = sCotangent(-e0, e3);
-		const float c04 = sCotangent(-e0, e4);
+		float c02 = sCotangent(e0, e2);
+		float c03 = sCotangent(-e0, e3);
+		float c04 = sCotangent(-e0, e4);
+		float c01 = sCotangent(e0, e1);
 
 		// 2x area of both triangles
-		const float two_a0 = e0.Cross(e1).Length();
-		const float two_a1 = e0.Cross(e2).Length();
+		float two_a0 = e0.Cross(e1).Length();
+		float two_a1 = e0.Cross(e2).Length();
 
 		// Calculate Q, note that this matrix is symmetric so we don't need to store all elements
 		Vec4 k0(c03 + c04, c01 + c02, -c01 - c03, -c02 - c04);
@@ -307,6 +329,37 @@ void SoftBodySharedSettings::CalculateBendConstraintQs()
 		b.mQ22 = q(2, 2);
 		b.mQ23 = q(2, 3);
 		b.mQ33 = q(3, 3);
+	}
+
+	for (DihedralBend &b : mDihedralBendConstraints)
+	{
+		// Get positions
+		Vec3 x0 = Vec3(mVertices[b.mVertex[0]].mPosition);
+		Vec3 x1 = Vec3(mVertices[b.mVertex[1]].mPosition);
+		Vec3 x2 = Vec3(mVertices[b.mVertex[2]].mPosition);
+		Vec3 x3 = Vec3(mVertices[b.mVertex[3]].mPosition);
+
+		///    x2
+		/// e1/  \e3
+		///  /    \
+		/// x0----x1
+		///  \ e0 /
+		/// e2\  /e4
+		///    x3
+
+		// Calculate edges
+		Vec3 e0 = x1 - x0;
+		Vec3 e1 = x2 - x0;
+		Vec3 e2 = x3 - x0;
+
+		// Normals of both triangles
+		Vec3 n0 = e0.Cross(e1);
+		Vec3 n1 = e2.Cross(e0);
+		float denom = n0.Length() * n1.Length();
+		if (denom == 0.0f)
+			b.mTheta0 = 0.0f;
+		else
+			b.mTheta0 = ACos(Clamp(n0.Dot(n1) / denom, -1.0f, 1.0f));
 	}
 }
 
@@ -458,6 +511,7 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mEdgeConstraints);
 	inStream.Write(mEdgeGroupEndIndices);
 	inStream.Write(mIsometricBendConstraints);
+	inStream.Write(mDihedralBendConstraints);
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
@@ -478,6 +532,7 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mEdgeConstraints);
 	inStream.Read(mEdgeGroupEndIndices);
 	inStream.Read(mIsometricBendConstraints);
+	inStream.Read(mDihedralBendConstraints);
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
