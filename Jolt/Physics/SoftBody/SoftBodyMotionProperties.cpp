@@ -334,11 +334,11 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		float c = ACos(d) - b.mInitialAngle;
 
 		// Calculate gradient of constraint equation
-		float x1_cross_x2 = x1.Cross(x2).Length();
-		float x1_cross_x3 = x1.Cross(x3).Length();
-		Vec3 d2c = (x1.Cross(n1) + n0.Cross(x1) * d) / x1_cross_x2;
-		Vec3 d3c = (x1.Cross(n0) + n1.Cross(x1) * d) / x1_cross_x3;
-		Vec3 d1c = -(x2.Cross(n1) + n0.Cross(x2) * d) / x1_cross_x2 - (x3.Cross(n0) + n1.Cross(x3) * d) / x1_cross_x3;
+		Vec3 x1_cross_n0 = x1.Cross(n0);
+		Vec3 x1_cross_n1 = x1.Cross(n1);
+		Vec3 d3c = (x1_cross_n0 - x1_cross_n1 * d) / n1_len;
+		Vec3 d2c = (x1_cross_n1 - x1_cross_n0 * d) / n0_len;
+		Vec3 d1c = -(x2.Cross(n1) - x2.Cross(n0) * d) / n0_len - (x3.Cross(n0) - x3.Cross(n1) * d) / n1_len;
 		Vec3 d0c = -d1c - d2c - d3c;
 
 		// Get masses
