@@ -278,7 +278,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vec3 d0c = b.mQ01 * x1 + b.mQ02 * x2 + b.mQ03 * x3;
 		Vec3 d1c = b.mQ11 * x1 + b.mQ12 * x2 + b.mQ13 * x3;
 		Vec3 d2c = b.mQ12 * x1 + b.mQ22 * x2 + b.mQ23 * x3;
-		Vec3 d3c = b.mQ13 * x1 + b.mQ23 * x2 + b.mQ33 * x3;
+		Vec3 d3c = -d0c - d1c - d2c; // The sum of the gradients needs to be zero
 
 		// Get masses
 		float w0 = v0.mInvMass;
@@ -288,7 +288,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
 
 		// Apply correction
-		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d2c.LengthSq() + b.mCompliance * inv_dt_sq;
+		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
 		if (denom == 0.0f)
 			continue;
 		float lambda = -c / denom;
