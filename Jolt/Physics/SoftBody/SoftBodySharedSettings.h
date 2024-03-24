@@ -181,7 +181,7 @@ public:
 
 		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
-		float			mTheta0 = 0.0f;								///< Initial angle between the normals of the two triangles
+		float			mInitialAngle = 0.0f;						///< Initial angle between the triangles, pi = triangles in same plane.
 	};
 
 	/// Volume constraint, keeps the volume of a tetrahedron constant

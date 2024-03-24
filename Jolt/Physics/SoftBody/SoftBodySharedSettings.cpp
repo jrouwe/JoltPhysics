@@ -54,7 +54,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::DihedralBend)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mVertex)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mCompliance)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mTheta0)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mInitialAngle)
 }
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Volume)
@@ -354,12 +354,12 @@ void SoftBodySharedSettings::CalculateBendConstraintConstants()
 
 		// Normals of both triangles
 		Vec3 n0 = e0.Cross(e1);
-		Vec3 n1 = e2.Cross(e0);
+		Vec3 n1 = e0.Cross(e2);
 		float denom = n0.Length() * n1.Length();
 		if (denom == 0.0f)
-			b.mTheta0 = 0.0f;
+			b.mInitialAngle = 0.0f;
 		else
-			b.mTheta0 = ACos(Clamp(n0.Dot(n1) / denom, -1.0f, 1.0f));
+			b.mInitialAngle = ACos(Clamp(n0.Dot(n1) / denom, -1.0f, 1.0f));
 	}
 }
 

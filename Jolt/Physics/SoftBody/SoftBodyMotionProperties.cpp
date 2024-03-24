@@ -297,6 +297,67 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		v2.mPosition += lambda * w2 * d2c;
 		v3.mPosition += lambda * w3 * d3c;
 	}
+
+	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
+	{
+		Vertex &v0 = mVertices[b.mVertex[0]];
+		Vertex &v1 = mVertices[b.mVertex[1]];
+		Vertex &v2 = mVertices[b.mVertex[2]];
+		Vertex &v3 = mVertices[b.mVertex[3]];
+
+		// Get positions
+		// Setting x0 as origin
+		Vec3 x1 = v1.mPosition - v0.mPosition;
+		Vec3 x2 = v2.mPosition - v0.mPosition;
+		Vec3 x3 = v3.mPosition - v0.mPosition;
+
+		///    x2
+		/// e1/  \e3
+		///  /    \
+		/// x0----x1
+		///  \ e0 /
+		/// e2\  /e4
+		///    x3
+
+		// Normals of both triangles
+		Vec3 n0 = x1.Cross(x2);
+		Vec3 n1 = x1.Cross(x3);
+		float n0_len = n0.Length();
+		float n1_len = n1.Length();
+		if (n0_len == 0.0f || n1_len == 0.0f)
+			continue;
+		n0 /= n0_len;
+		n1 /= n1_len;
+		float d = Clamp(n0.Dot(n1), -1.0f, 1.0f);
+
+		// Calculate constraint equation
+		float c = ACos(d) - b.mInitialAngle;
+
+		// Calculate gradient of constraint equation
+		float x1_cross_x2 = x1.Cross(x2).Length();
+		float x1_cross_x3 = x1.Cross(x3).Length();
+		Vec3 d2c = (x1.Cross(n1) + n0.Cross(x1) * d) / x1_cross_x2;
+		Vec3 d3c = (x1.Cross(n0) + n1.Cross(x1) * d) / x1_cross_x3;
+		Vec3 d1c = -(x2.Cross(n1) + n0.Cross(x2) * d) / x1_cross_x2 - (x3.Cross(n0) + n1.Cross(x3) * d) / x1_cross_x3;
+		Vec3 d0c = -d1c - d2c - d3c;
+
+		// Get masses
+		float w0 = v0.mInvMass;
+		float w1 = v1.mInvMass;
+		float w2 = v2.mInvMass;
+		float w3 = v3.mInvMass;
+		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
+
+		// Apply correction
+		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d2c.LengthSq() + b.mCompliance * inv_dt_sq;
+		if (denom == 0.0f)
+			continue;
+		float lambda = -c * sqrt(1 - Square(d)) / denom;
+		v0.mPosition += lambda * w0 * d0c;
+		v1.mPosition += lambda * w1 * d1c;
+		v2.mPosition += lambda * w2 * d2c;
+		v3.mPosition += lambda * w3 * d3c;
+	}
 }
 
 void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
