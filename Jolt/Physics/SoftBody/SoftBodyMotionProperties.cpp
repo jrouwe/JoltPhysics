@@ -350,7 +350,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
 
 		// Apply correction
-		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d2c.LengthSq() + b.mCompliance * inv_dt_sq;
+		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
 		if (denom == 0.0f)
 			continue;
 		float lambda = -c * sqrt(1.0f - Square(d)) / denom;
