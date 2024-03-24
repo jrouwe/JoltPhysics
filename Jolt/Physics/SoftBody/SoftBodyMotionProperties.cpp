@@ -324,7 +324,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vec3 n1 = x1.Cross(x3);
 		float n0_len = n0.Length();
 		float n1_len = n1.Length();
-		if (n0_len == 0.0f || n1_len == 0.0f)
+		if (n0_len < 1.0e-12f || n1_len < 1.0e-12f)
 			continue;
 		n0 /= n0_len;
 		n1 /= n1_len;
@@ -352,7 +352,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d2c.LengthSq() + b.mCompliance * inv_dt_sq;
 		if (denom == 0.0f)
 			continue;
-		float lambda = -c * sqrt(1 - Square(d)) / denom;
+		float lambda = -c * sqrt(1.0f - Square(d)) / denom;
 		v0.mPosition += lambda * w0 * d0c;
 		v1.mPosition += lambda * w1 * d1c;
 		v2.mPosition += lambda * w2 * d2c;
