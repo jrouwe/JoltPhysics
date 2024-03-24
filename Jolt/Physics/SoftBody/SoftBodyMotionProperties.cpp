@@ -320,8 +320,8 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		///    x3
 
 		// Normals of both triangles
-		Vec3 n0 = x1.Cross(x2);
-		Vec3 n1 = x1.Cross(x3);
+		Vec3 n0 = x1.Cross(x2); // Pointing out of the screen
+		Vec3 n1 = x1.Cross(x3); // Pointing in the screen
 		float n0_len = n0.Length();
 		float n1_len = n1.Length();
 		if (n0_len < 1.0e-12f || n1_len < 1.0e-12f)
@@ -331,14 +331,15 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		float d = Clamp(n0.Dot(n1), -1.0f, 1.0f);
 
 		// Calculate constraint equation
+		// See: "Position Based Dynamics" - Matthias Muller et al. appendix A
 		float c = ACos(d) - b.mInitialAngle;
 
 		// Calculate gradient of constraint equation
-		Vec3 x1_cross_n0 = x1.Cross(n0);
-		Vec3 x1_cross_n1 = x1.Cross(n1);
-		Vec3 d3c = (x1_cross_n0 - x1_cross_n1 * d) / n1_len;
-		Vec3 d2c = (x1_cross_n1 - x1_cross_n0 * d) / n0_len;
-		Vec3 d1c = -(x2.Cross(n1) - x2.Cross(n0) * d) / n0_len - (x3.Cross(n0) - x3.Cross(n1) * d) / n1_len;
+		Vec3 n0_min_n1_d_div_n1_len = (n0 - n1 * d) / n1_len;
+		Vec3 n1_min_n0_d_div_n0_len = (n1 - n0 * d) / n0_len;
+		Vec3 d3c = x1.Cross(n0_min_n1_d_div_n1_len);
+		Vec3 d2c = x1.Cross(n1_min_n0_d_div_n0_len);
+		Vec3 d1c = n1_min_n0_d_div_n0_len.Cross(x2) + n0_min_n1_d_div_n1_len.Cross(x3);
 		Vec3 d0c = -d1c - d2c - d3c;
 
 		// Get masses

@@ -171,6 +171,18 @@ public:
 	};
 
 	/// A dihedral bend constraint
+	/// 
+	///    x2
+	///   /  \
+	///  / t0 \
+	/// x0----x1
+	///  \ t1 /
+	///   \  /
+	///    x3
+	/// 
+	/// x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
+	/// 
+	/// Based on "Position Based Dynamics" - Matthias Muller et al. section 4.1 and appendix A
 	struct JPH_EXPORT DihedralBend
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, DihedralBend)
