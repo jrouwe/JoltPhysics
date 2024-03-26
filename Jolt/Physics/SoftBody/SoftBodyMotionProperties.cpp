@@ -333,7 +333,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vec3 x1x2 = x2 - x1;
 		Vec3 x1x3 = x3 - x1;
 		Vec3 n1 = (x2 - x0).Cross(x1x2);
-		Vec3 n2 = (x1x3).Cross(x3 - x0);
+		Vec3 n2 = x1x3.Cross(x3 - x0);
 		float n1_len_sq = n1.LengthSq();
 		float n2_len_sq = n2.LengthSq();
 		if (n1_len_sq < 1.0e-12f || n2_len_sq < 1.0e-12f)
