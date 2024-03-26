@@ -36,7 +36,7 @@ void SoftBodyBendConstraintTest::Initialize()
 
 	{
 		// Cloth with isometric bend constraints
-		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, { 1.0e-5f, 1.0e-5f, 1.0e-5f, SoftBodySharedSettings::EBendType::Isometric });
+		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, { 1.0e-5f, 1.0e-5f, 1.0e-5f, SoftBodySharedSettings::EBendType::Dihedral });
 		SoftBodyCreationSettings cloth(cloth_settings, RVec3(5.0f, 5.0f, 0), Quat::sIdentity(), Layers::MOVING);
 		mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 	}
