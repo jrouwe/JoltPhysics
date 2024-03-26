@@ -15,6 +15,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+using namespace JPH::literals;
+
 void SoftBodyMotionProperties::CalculateMassAndInertia()
 {
 	MassProperties mp;
@@ -1023,13 +1025,13 @@ void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RM
 		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
 		RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
 		RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
-		RVec3 c_edge = 0.5f * (x0 + x1);
-		RVec3 c0 = (x0 + x1 + x2) / 3.0f;
-		RVec3 c1 = (x0 + x1 + x3) / 3.0f;
+		RVec3 c_edge = 0.5_r * (x0 + x1);
+		RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
+		RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
 
-		inRenderer->DrawArrow(0.9f * x0 + 0.1f * x1, 0.1f * x0 + 0.9f * x1, Color::sDarkGreen, 0.01f);
-		inRenderer->DrawLine(c_edge, 0.1f * c_edge + 0.9f * c0, Color::sGreen);
-		inRenderer->DrawLine(c_edge, 0.1f * c_edge + 0.9f * c1, Color::sGreen);
+		inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, Color::sDarkGreen, 0.01f);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, Color::sGreen);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, Color::sGreen);
 	}
 
 	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
@@ -1038,13 +1040,13 @@ void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RM
 		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
 		RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
 		RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
-		RVec3 c_edge = 0.5f * (x0 + x1);
-		RVec3 c0 = (x0 + x1 + x2) / 3.0f;
-		RVec3 c1 = (x0 + x1 + x3) / 3.0f;
+		RVec3 c_edge = 0.5_r * (x0 + x1);
+		RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
+		RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
 
-		inRenderer->DrawArrow(0.9f * x0 + 0.1f * x1, 0.1f * x0 + 0.9f * x1, Color::sDarkOrange, 0.01f);
-		inRenderer->DrawLine(c_edge, 0.1f * c_edge + 0.9f * c0, Color::sOrange);
-		inRenderer->DrawLine(c_edge, 0.1f * c_edge + 0.9f * c1, Color::sOrange);
+		inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, Color::sDarkOrange, 0.01f);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, Color::sOrange);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, Color::sOrange);
 	}
 }
 
