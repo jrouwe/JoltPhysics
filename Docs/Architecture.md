@@ -107,7 +107,7 @@ Creating a convex hull for example looks like:
 			... // Error handling
 	}
 
-Note that after you call Create, the shape is cached and ShapeSettings keeps a reference to your shape (see @ref memory-management). If you call Create again, the same shape will be returned regardless of what changed to the settings object.
+Note that after you call Create, the shape is cached and ShapeSettings keeps a reference to your shape (see @ref memory-management). If you call Create again, the same shape will be returned regardless of what changed to the settings object (unless you call [ClearCachedResult](@ref ShapeSettings::ClearCachedResult) to clear the cache).
 
 ### Saving Shapes {#saving-shapes}
 
