@@ -182,7 +182,10 @@ public:
 	/// 
 	/// x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
 	/// 
-	/// Based on "Position Based Dynamics" - Matthias Muller et al. section 4.1 and appendix A
+	/// Based on:
+	/// - "Position Based Dynamics" - Matthias Muller et al.
+	/// - "Strain Based Dynamics" - Matthias Muller et al.
+	/// - "Simulation of Clothing with Folds and Wrinkles" - R. Bridson et al.
 	struct JPH_EXPORT DihedralBend
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, DihedralBend)
@@ -193,7 +196,7 @@ public:
 
 		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
-		float			mInitialAngle = 0.0f;						///< Initial angle between the triangles, pi = triangles in same plane.
+		float			mInitialAngle = 0.0f;						///< Initial angle between the normals of the triangles (pi - dihedral angle).
 	};
 
 	/// Volume constraint, keeps the volume of a tetrahedron constant

@@ -354,12 +354,12 @@ void SoftBodySharedSettings::CalculateBendConstraintConstants()
 
 		// Normals of both triangles
 		Vec3 n0 = e0.Cross(e1);
-		Vec3 n1 = e0.Cross(e2);
-		float denom = n0.Length() * n1.Length();
+		Vec3 n1 = e2.Cross(e0);
+		float denom = sqrt(n0.LengthSq() * n1.LengthSq());
 		if (denom == 0.0f)
 			b.mInitialAngle = 0.0f;
 		else
-			b.mInitialAngle = ACos(Clamp(n0.Dot(n1) / denom, -1.0f, 1.0f));
+			b.mInitialAngle = ACos(n0.Dot(n1) / denom);
 	}
 }
 

@@ -306,10 +306,10 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vertex &v3 = mVertices[b.mVertex[3]];
 
 		// Get positions
-		// Setting x0 as origin
-		Vec3 x1 = v1.mPosition - v0.mPosition;
-		Vec3 x2 = v2.mPosition - v0.mPosition;
-		Vec3 x3 = v3.mPosition - v0.mPosition;
+		Vec3 x0 = v0.mPosition;
+		Vec3 x1 = v1.mPosition;
+		Vec3 x2 = v2.mPosition;
+		Vec3 x3 = v3.mPosition;
 
 		///    x2
 		/// e1/  \e3
@@ -319,28 +319,38 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		/// e2\  /e4
 		///    x3
 
-		// Normals of both triangles
-		Vec3 n0 = x1.Cross(x2); // Pointing out of the screen
-		Vec3 n1 = x1.Cross(x3); // Pointing in the screen
-		float n0_len = n0.Length();
-		float n1_len = n1.Length();
-		if (n0_len < 1.0e-12f || n1_len < 1.0e-12f)
+		// Calculate the shared edge of the triangles
+		Vec3 e = x1 - x0;
+		float e_len = e.Length();
+		if (e_len < 1.0e-6f)
 			continue;
-		n0 /= n0_len;
-		n1 /= n1_len;
-		float d = Clamp(n0.Dot(n1), -1.0f, 1.0f);
+
+		// Calculate the normals of the triangles
+		Vec3 x1x2 = x2 - x1;
+		Vec3 x1x3 = x3 - x1;
+		Vec3 n1 = (x2 - x0).Cross(x1x2);
+		Vec3 n2 = (x1x3).Cross(x3 - x0);
+		float n1_len_sq = n1.LengthSq();
+		float n2_len_sq = n2.LengthSq();
+		if (n1_len_sq < 1.0e-12f || n2_len_sq < 1.0e-12f)
+			continue;
 
 		// Calculate constraint equation
-		// See: "Position Based Dynamics" - Matthias Muller et al. appendix A
+		float d = n1.Dot(n2) / sqrt(n1_len_sq * n2_len_sq);
 		float c = ACos(d) - b.mInitialAngle;
 
 		// Calculate gradient of constraint equation
-		Vec3 n0_min_n1_d_div_n1_len = (n0 - n1 * d) / n1_len;
-		Vec3 n1_min_n0_d_div_n0_len = (n1 - n0 * d) / n0_len;
-		Vec3 d3c = x1.Cross(n0_min_n1_d_div_n1_len);
-		Vec3 d2c = x1.Cross(n1_min_n0_d_div_n0_len);
-		Vec3 d1c = n1_min_n0_d_div_n0_len.Cross(x2) + n0_min_n1_d_div_n1_len.Cross(x3);
-		Vec3 d0c = -d1c - d2c - d3c;
+		// Taken from "Strain Based Dynamics" - Matthias Muller et al. (Appendix A)
+		// with p1 = x2, p2 = x3, p3 = x0 and p4 = x1
+		// which in turn is based on "Simulation of Clothing with Folds and Wrinkles" - R. Bridson et al. (Section 4)
+		n1 /= n1_len_sq;
+		n2 /= n2_len_sq;
+		Vec3 d0c = (x1x2.Dot(e) * n1 + x1x3.Dot(e) * n2) / e_len;
+		Vec3 d2c = e_len * n1;
+		Vec3 d3c = e_len * n2;
+		
+		// The sum of the gradients must be zero (see "Strain Based Dynamics" section 4)
+		Vec3 d1c = -d0c - d2c - d3c;
 
 		// Get masses
 		float w0 = v0.mInvMass;
@@ -349,15 +359,21 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		float w3 = v3.mInvMass;
 		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
 
-		// Apply correction
+		// Calculate -lambda
 		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
-		if (denom == 0.0f)
+		if (denom < 1.0e-12f)
 			continue;
-		float lambda = -c * sqrt(1.0f - Square(d)) / denom;
-		v0.mPosition += lambda * w0 * d0c;
-		v1.mPosition += lambda * w1 * d1c;
-		v2.mPosition += lambda * w2 * d2c;
-		v3.mPosition += lambda * w3 * d3c;
+		float minus_lambda = c / denom;
+
+		// Negate the gradients (in this case we apply the sign flip in lambda) as per "Strain Based Dynamics" Appendix A
+		if (n1.Cross(n2).Dot(e) > 0.0f)
+			minus_lambda = -minus_lambda;
+
+		// Apply correction
+		v0.mPosition -= minus_lambda * w0 * d0c;
+		v1.mPosition -= minus_lambda * w1 * d1c;
+		v2.mPosition -= minus_lambda * w2 * d2c;
+		v3.mPosition -= minus_lambda * w3 * d3c;
 	}
 }
 
