@@ -289,14 +289,16 @@ void SoftBodySharedSettings::CalculateBendConstraintConstants()
 		Vec3 x2 = Vec3(mVertices[b.mVertex[2]].mPosition);
 		Vec3 x3 = Vec3(mVertices[b.mVertex[3]].mPosition);
 
-		/// Figure in section 2 of "A Quadratic Bending Model for Inextensible Surfaces"
-		///    x2
-		/// e1/  \e3
-		///  /    \
-		/// x0----x1
-		///  \ e0 /
-		/// e2\  /e4
-		///    x3
+		/*
+		Figure in section 2 of "A Quadratic Bending Model for Inextensible Surfaces"
+		   x2
+		e1/  \e3
+		 /    \
+		x0----x1
+		 \ e0 /
+		e2\  /e4
+		   x3
+		*/
 
 		// Calculate edges
 		Vec3 e0 = x1 - x0;
@@ -339,13 +341,15 @@ void SoftBodySharedSettings::CalculateBendConstraintConstants()
 		Vec3 x2 = Vec3(mVertices[b.mVertex[2]].mPosition);
 		Vec3 x3 = Vec3(mVertices[b.mVertex[3]].mPosition);
 
-		///    x2
-		/// e1/  \e3
-		///  /    \
-		/// x0----x1
-		///  \ e0 /
-		/// e2\  /e4
-		///    x3
+		/*
+		   x2
+		e1/  \e3
+		 /    \
+		x0----x1
+		 \ e0 /
+		e2\  /e4
+		   x3
+		*/
 
 		// Calculate edges
 		Vec3 e0 = x1 - x0;

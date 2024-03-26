@@ -311,13 +311,15 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vec3 x2 = v2.mPosition;
 		Vec3 x3 = v3.mPosition;
 
-		///    x2
-		/// e1/  \e3
-		///  /    \
-		/// x0----x1
-		///  \ e0 /
-		/// e2\  /e4
-		///    x3
+		/*
+		   x2
+		e1/  \e3
+		 /    \
+		x0----x1
+		 \ e0 /
+		e2\  /e4
+		   x3
+		*/
 
 		// Calculate the shared edge of the triangles
 		Vec3 e = x1 - x0;

@@ -138,23 +138,25 @@ public:
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
 	};
 
-	/// An isometric bend constraint keeps the angle between 2 triangles that share an edge constant:
-	/// 
-	///    x2
-	///   /  \
-	///  / t0 \
-	/// x0----x1
-	///  \ t1 /
-	///   \  /
-	///    x3
-	/// 
-	/// x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
-	/// 
-	/// Based on:
-	/// - "Discrete Quadratic Curvature Energies" - Max Wardetzky et al.
-	/// - "A Quadratic Bending Model for Inextensible Surfaces" - Miklos Bergou et al.
-	///
-	/// Warning: Only works when the rest pose of the triangles is in a plane. Also assumes no stretching.
+	/**
+	 * An isometric bend constraint keeps the angle between 2 triangles that share an edge constant:
+	 * 
+	 *        x2
+	 *       /  \
+	 *      / t0 \
+	 *     x0----x1
+	 *      \ t1 /
+	 *       \  /
+	 *        x3
+	 * 
+	 * x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
+	 * 
+	 * Based on:
+	 * - "Discrete Quadratic Curvature Energies" - Max Wardetzky et al.
+	 * - "A Quadratic Bending Model for Inextensible Surfaces" - Miklos Bergou et al.
+	 * 
+	 * Warning: Only works when the rest pose of the triangles is in a plane. Also assumes no stretching.
+	 */
 	struct JPH_EXPORT IsometricBend
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, IsometricBend)
@@ -170,22 +172,24 @@ public:
 		float			mQ22 { 0 }, mQ23 { 0 }, mQ33 { 0 };
 	};
 
-	/// A dihedral bend constraint
-	/// 
-	///    x2
-	///   /  \
-	///  / t0 \
-	/// x0----x1
-	///  \ t1 /
-	///   \  /
-	///    x3
-	/// 
-	/// x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
-	/// 
-	/// Based on:
-	/// - "Position Based Dynamics" - Matthias Muller et al.
-	/// - "Strain Based Dynamics" - Matthias Muller et al.
-	/// - "Simulation of Clothing with Folds and Wrinkles" - R. Bridson et al.
+	/**
+	 * A dihedral bend constraint
+	 * 
+	 *        x2
+	 *       /  \
+	 *      / t0 \
+	 *     x0----x1
+	 *      \ t1 /
+	 *       \  /
+	 *        x3
+	 * 
+	 * x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
+	 * 
+	 * Based on:
+	 * - "Position Based Dynamics" - Matthias Muller et al.
+	 * - "Strain Based Dynamics" - Matthias Muller et al.
+	 * - "Simulation of Clothing with Folds and Wrinkles" - R. Bridson et al.
+	 */
 	struct JPH_EXPORT DihedralBend
 	{
 		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, DihedralBend)
