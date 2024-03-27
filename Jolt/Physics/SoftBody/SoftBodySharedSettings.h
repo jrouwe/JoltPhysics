@@ -22,7 +22,6 @@ public:
 	{
 		None,														///< No bend constraints will be created
 		Distance,													///< A simple distance constraint
-		Isometric,													///< An isometric bend constraint (better but much more expensive)
 		Dihedral,													///< A dihedral bend constraint (most expensive, but also supports triangles that are initially not in the same plane)
 	};
 
@@ -51,7 +50,7 @@ public:
 	/// Calculate the max lengths for the long range attachment constraints
 	void				CalculateLRALengths();
 
-	/// Calculate the Q values for the isometric bend constraints (if you use CreateConstraint, this is already done)
+	/// Calculate the constants for the bend constraints (if you use CreateConstraints, this is already done)
 	void				CalculateBendConstraintConstants();
 
 	/// Calculates the initial volume of all tetrahedra of this soft body
@@ -138,41 +137,7 @@ public:
 		float			mRestLength = 1.0f;							///< Rest length of the spring
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
 	};
-
-	/**
-	 * An isometric bend constraint keeps the angle between 2 triangles that share an edge constant:
-	 * 
-	 *        x2
-	 *       /  \
-	 *      / t0 \
-	 *     x0----x1
-	 *      \ t1 /
-	 *       \  /
-	 *        x3
-	 * 
-	 * x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
-	 * 
-	 * Based on:
-	 * - "Discrete Quadratic Curvature Energies" - Max Wardetzky et al.
-	 * - "A Quadratic Bending Model for Inextensible Surfaces" - Miklos Bergou et al.
-	 * 
-	 * Warning: Only works when the rest pose of the triangles is in a plane. Also assumes no stretching.
-	 */
-	struct JPH_EXPORT IsometricBend
-	{
-		JPH_DECLARE_SERIALIZABLE_NON_VIRTUAL(JPH_EXPORT, IsometricBend)
-
-		/// Constructor
-						IsometricBend() = default;
-						IsometricBend(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
-
-		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
-		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
-		float			mQ01 { 0 }, mQ02 { 0 }, mQ03 { 0 };			///< The Q matrix that defines the rest shape of the bend constraint and is calculated by CalculateBendConstraintQs()
-		float			mQ11 { 0 }, mQ12 { 0 }, mQ13 { 0 };
-		float			mQ22 { 0 }, mQ23 { 0 }, mQ33 { 0 };
-	};
-
+		
 	/**
 	 * A dihedral bend constraint
 	 * 
@@ -299,7 +264,6 @@ public:
 	Array<Vertex>		mVertices;									///< The list of vertices or particles of the body
 	Array<Face>			mFaces;										///< The list of faces of the body
 	Array<Edge>			mEdgeConstraints;							///< The list of edges or springs of the body
-	Array<IsometricBend>mIsometricBendConstraints;					///< The list of isometric bend constraints of the body
 	Array<DihedralBend>	mDihedralBendConstraints;					///< The list of dihedral bend constraints of the body
 	Array<Volume>		mVolumeConstraints;							///< The list of volume constraints of the body that keep the volume of tetrahedra in the soft body constant
 	Array<Skinned>		mSkinnedConstraints;						///< The list of vertices that are constrained to a skinned vertex

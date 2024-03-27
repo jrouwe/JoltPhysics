@@ -254,52 +254,6 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
-	for (const IsometricBend &b : mSettings->mIsometricBendConstraints)
-	{
-		Vertex &v0 = mVertices[b.mVertex[0]];
-		Vertex &v1 = mVertices[b.mVertex[1]];
-		Vertex &v2 = mVertices[b.mVertex[2]];
-		Vertex &v3 = mVertices[b.mVertex[3]];
-
-		// Get positions
-		// Setting x0 as origin
-		Vec3 x1 = v1.mPosition - v0.mPosition;
-		Vec3 x2 = v2.mPosition - v0.mPosition;
-		Vec3 x3 = v3.mPosition - v0.mPosition;
-
-		// Calculate constraint equation
-		// C = 0.5 * Sum_i,j(Q_ij * x_i . x_j)
-		// Note that Q is symmetric so we can optimize this to:
-		float c = b.mQ12 * x1.Dot(x2) + b.mQ13 * x1.Dot(x3) + b.mQ23 * x2.Dot(x3) // Off diagonal elements occur twice
-				+ 0.5f * (b.mQ11 * x1.LengthSq() + b.mQ22 * x2.LengthSq() + b.mQ33 * x3.LengthSq()); // Diagonal elements only once
-		if (abs(c) < 1.0e-6f)
-			continue;
-
-		// Calculate gradient of constraint equation, again using Q_ij = Q_ji
-		// del C = Sum_j(Q_ij * x_j)
-		Vec3 d0c = b.mQ01 * x1 + b.mQ02 * x2 + b.mQ03 * x3;
-		Vec3 d1c = b.mQ11 * x1 + b.mQ12 * x2 + b.mQ13 * x3;
-		Vec3 d2c = b.mQ12 * x1 + b.mQ22 * x2 + b.mQ23 * x3;
-		Vec3 d3c = -d0c - d1c - d2c; // The sum of the gradients needs to be zero
-
-		// Get masses
-		float w0 = v0.mInvMass;
-		float w1 = v1.mInvMass;
-		float w2 = v2.mInvMass;
-		float w3 = v3.mInvMass;
-		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
-
-		// Apply correction
-		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
-		if (denom == 0.0f)
-			continue;
-		float lambda = -c / denom;
-		v0.mPosition += lambda * w0 * d0c;
-		v1.mPosition += lambda * w1 * d1c;
-		v2.mPosition += lambda * w2 * d2c;
-		v3.mPosition += lambda * w3 * d3c;
-	}
-
 	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
 	{
 		Vertex &v0 = mVertices[b.mVertex[0]];
@@ -1019,7 +973,7 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 
 void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
-	for (const IsometricBend &b : mSettings->mIsometricBendConstraints)
+	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
 	{
 		RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
 		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
@@ -1032,21 +986,6 @@ void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RM
 		inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, Color::sDarkGreen, 0.01f);
 		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, Color::sGreen);
 		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, Color::sGreen);
-	}
-
-	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
-	{
-		RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
-		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
-		RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
-		RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
-		RVec3 c_edge = 0.5_r * (x0 + x1);
-		RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
-		RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
-
-		inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, Color::sDarkOrange, 0.01f);
-		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, Color::sOrange);
-		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, Color::sOrange);
 	}
 }
 
