@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v4.0.2 and latest
 
+* 20240327 - *SBS* - SoftBodySharedSettings::CreateEdges was renamed to CreateConstraints and can now also create shear and bend constraints. This also breaks the serialization format for SoftBodySharedSettings. (8e4bf3fa03f59cff6af7394d69cdf62abaf7a1d2)
 * 20240310 - *SBS* - Soft body skinned constraints now use a sphere as backstop instead of an infinite plane. This also breaks the serialization format for SoftBodySharedSettings. (17db6d3f245d2198319c3787f62498fe5935b7c8)
 * 20240225 - *SBS* - Changes were made to SoftBodySharedSettings that break the binary serialization format of that class. (277b818ffefed4f15477ff1e6d0cc07065899903)
 * 20240223 - Added ConvexShape::ESupportMode::Default. If you have custom convex shapes you need to handle this in ConvexShape::GetSupportFunction. (0f67cc2915c5e34a4a38480580dad73888a1952e)

@@ -29,6 +29,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added ability to update a soft body outside of the physics simulation step. This is e.g. useful if the soft body is teleported and needs to 'settle'.
 * Added soft body skinning constraints. This can be used to limit the movement of soft body vertices based on a skinned mesh. See [documentation](https://jrouwe.github.io/JoltPhysics/index.html#skinning-soft-bodies) for more info.
 * Added Long Range Attachment constraints for soft bodies.
+* Added dihedral bend constraints for soft bodies.
+* Added SoftBodySharedSettings::CreateConstraints function that can automatically generate constraints based on the faces of the soft body.
 * Added Constraint::ResetWarmStart and Ragdoll::ResetWarmStart. Used to notify the system that the configuration of the bodies and/or constraint has changed enough so that the warm start impulses should not be applied the next frame. You can use this function for example when repositioning a ragdoll through Ragdoll::SetPose in such a way that the orientation of the bodies completely changes so that the previous frame impulses are no longer a good approximation of what the impulses will be in the next frame.
 * Supporting SIMD for WASM build. Use -msimd128 -msse4.2 options with emscripten to enable this.
 
