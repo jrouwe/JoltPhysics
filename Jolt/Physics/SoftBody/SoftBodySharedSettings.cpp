@@ -35,6 +35,28 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Edge)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Edge, mCompliance)
 }
 
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::IsometricBend)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mCompliance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ01)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ02)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ03)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ11)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ12)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ13)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ22)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ23)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::IsometricBend, mQ33)
+}
+
+JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::DihedralBend)
+{
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mVertex)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mCompliance)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::DihedralBend, mInitialAngle)
+}
+
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Volume)
 {
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings::Volume, mVertex)
@@ -75,6 +97,8 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mFaces)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeGroupEndIndices)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mIsometricBendConstraints)
+	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mDihedralBendConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mInvBindMatrices)
@@ -83,7 +107,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
 
-void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolerance)
+void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, EBendType inBendType, float inAngleTolerance)
 {
 	struct EdgeHelper
 	{
@@ -111,17 +135,23 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 	QuickSort(edges.begin(), edges.end(), [](const EdgeHelper &inLHS, const EdgeHelper &inRHS) { return inLHS.mVertex[0] < inRHS.mVertex[0] || (inLHS.mVertex[0] == inRHS.mVertex[0] && inLHS.mVertex[1] < inRHS.mVertex[1]); });
 
 	// Only add edges if one of the vertices is movable
-	auto add_edge = [this, inCompliance](uint32 inVtx1, uint32 inVtx2) {
-		if (mVertices[inVtx1].mInvMass > 0.0f || mVertices[inVtx2].mInvMass > 0.0f)
+	auto add_edge = [this](uint32 inVtx1, uint32 inVtx2, float inCompliance1, float inCompliance2) {
+		if ((mVertices[inVtx1].mInvMass > 0.0f || mVertices[inVtx2].mInvMass > 0.0f)
+			&& inCompliance1 < FLT_MAX && inCompliance2 < FLT_MAX)
 		{
 			Edge temp_edge;
 			temp_edge.mVertex[0] = inVtx1;
 			temp_edge.mVertex[1] = inVtx2;
-			temp_edge.mCompliance = inCompliance;
+			temp_edge.mCompliance = 0.5f * (inCompliance1 + inCompliance2);
 			temp_edge.mRestLength = (Vec3(mVertices[inVtx2].mPosition) - Vec3(mVertices[inVtx1].mPosition)).Length();
 			JPH_ASSERT(temp_edge.mRestLength > 0.0f);
 			mEdgeConstraints.push_back(temp_edge);
 		}
+	};
+
+	// Helper function to get the attributes of a vertex
+	auto attr = [inVertexAttributes, inVertexAttributesLength](uint32 inVertex) {
+		return inVertexAttributes[min(inVertex, inVertexAttributesLength - 1)];
 	};
 
 	// Create the constraints
@@ -133,8 +163,8 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 	{
 		const EdgeHelper &e0 = edges[i];
 
-		// Create a regular edge constraint
-		add_edge(e0.mVertex[0], e0.mVertex[1]);
+		// Flag that indicates if this edge is a shear edge (if 2 triangles form a quad-like shape and this edge is on the diagonal)
+		bool is_shear = false;
 
 		// Test if there are any shared edges
 		for (Array<EdgeHelper>::size_type j = i + 1; j < edges.size(); ++j)
@@ -142,25 +172,72 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 			const EdgeHelper &e1 = edges[j];
 			if (e0.mVertex[0] == e1.mVertex[0] && e0.mVertex[1] == e1.mVertex[1])
 			{
-				// Faces should be roughly in a plane
+				// Get opposing vertices
 				const Face &f0 = mFaces[e0.mEdgeIdx / 3];
 				const Face &f1 = mFaces[e1.mEdgeIdx / 3];
+				uint32 vopposite0 = f0.mVertex[(e0.mEdgeIdx + 2) % 3];
+				uint32 vopposite1 = f1.mVertex[(e1.mEdgeIdx + 2) % 3];
+				uint32 v_min = min(vopposite0, vopposite1);
+				uint32 v_max = max(vopposite0, vopposite1);
+				const VertexAttributes &a_min = attr(v_min);
+				const VertexAttributes &a_max = attr(v_max);
+
+				// Faces should be roughly in a plane
 				Vec3 n0 = (Vec3(mVertices[f0.mVertex[2]].mPosition) - Vec3(mVertices[f0.mVertex[0]].mPosition)).Cross(Vec3(mVertices[f0.mVertex[1]].mPosition) - Vec3(mVertices[f0.mVertex[0]].mPosition));
 				Vec3 n1 = (Vec3(mVertices[f1.mVertex[2]].mPosition) - Vec3(mVertices[f1.mVertex[0]].mPosition)).Cross(Vec3(mVertices[f1.mVertex[1]].mPosition) - Vec3(mVertices[f1.mVertex[0]].mPosition));
 				if (Square(n0.Dot(n1)) > sq_cos_tolerance * n0.LengthSq() * n1.LengthSq())
 				{
-					// Get opposing vertices
-					uint32 v0 = f0.mVertex[(e0.mEdgeIdx + 2) % 3];
-					uint32 v1 = f1.mVertex[(e1.mEdgeIdx + 2) % 3];
-
 					// Faces should approximately form a quad
-					Vec3 e0_dir = Vec3(mVertices[v0].mPosition) - Vec3(mVertices[e0.mVertex[0]].mPosition);
-					Vec3 e1_dir = Vec3(mVertices[v1].mPosition) - Vec3(mVertices[e0.mVertex[0]].mPosition);
+					Vec3 e0_dir = Vec3(mVertices[vopposite0].mPosition) - Vec3(mVertices[e0.mVertex[0]].mPosition);
+					Vec3 e1_dir = Vec3(mVertices[vopposite1].mPosition) - Vec3(mVertices[e0.mVertex[0]].mPosition);
 					if (Square(e0_dir.Dot(e1_dir)) < sq_sin_tolerance * e0_dir.LengthSq() * e1_dir.LengthSq())
 					{
 						// Shear constraint
-						add_edge(min(v0, v1), max(v0, v1));
+						add_edge(v_min, v_max, a_min.mShearCompliance, a_max.mShearCompliance);
+						is_shear = true;
 					}
+				}
+
+				// Bend constraint
+				switch (inBendType)
+				{
+				case EBendType::None:
+					// Do nothing
+					break;
+
+				case EBendType::Distance:
+					// Create an edge constraint to represent the bend constraint
+					if (!is_shear)
+						add_edge(v_min, v_max, a_min.mBendCompliance, a_max.mBendCompliance);
+					break;
+
+				case EBendType::Isometric:
+					// Test if both opposite vertices are free to move
+					if ((mVertices[vopposite0].mInvMass > 0.0f || mVertices[vopposite1].mInvMass > 0.0f)
+						&& a_min.mBendCompliance < FLT_MAX && a_max.mBendCompliance < FLT_MAX)
+					{
+						// Get the vertices that form the common edge
+						uint32 vedge0 = f0.mVertex[e0.mEdgeIdx % 3];
+						uint32 vedge1 = f0.mVertex[(e0.mEdgeIdx + 1) % 3];
+
+						// Create a bend constraint
+						mIsometricBendConstraints.emplace_back(vedge0, vedge1, vopposite0, vopposite1, 0.5f * (a_min.mBendCompliance + a_max.mBendCompliance));
+					}
+					break;
+
+				case EBendType::Dihedral:
+					// Test if both opposite vertices are free to move
+					if ((mVertices[vopposite0].mInvMass > 0.0f || mVertices[vopposite1].mInvMass > 0.0f)
+						&& a_min.mBendCompliance < FLT_MAX && a_max.mBendCompliance < FLT_MAX)
+					{
+						// Get the vertices that form the common edge
+						uint32 vedge0 = f0.mVertex[e0.mEdgeIdx % 3];
+						uint32 vedge1 = f0.mVertex[(e0.mEdgeIdx + 1) % 3];
+
+						// Create a bend constraint
+						mDihedralBendConstraints.emplace_back(vedge0, vedge1, vopposite0, vopposite1, 0.5f * (a_min.mBendCompliance + a_max.mBendCompliance));
+					}
+					break;
 				}
 			}
 			else
@@ -170,8 +247,15 @@ void SoftBodySharedSettings::CreateEdges(float inCompliance, float inAngleTolera
 				break;
 			}
 		}
+
+		// Create a edge constraint for the current edge
+		const VertexAttributes &a0 = attr(e0.mVertex[0]);
+		const VertexAttributes &a1 = attr(e0.mVertex[1]);
+		add_edge(e0.mVertex[0], e0.mVertex[1], is_shear? a0.mShearCompliance : a0.mCompliance, is_shear? a1.mShearCompliance : a1.mCompliance);
 	}
 	mEdgeConstraints.shrink_to_fit();
+
+	CalculateBendConstraintConstants();
 }
 
 void SoftBodySharedSettings::CalculateEdgeLengths()
@@ -189,6 +273,101 @@ void SoftBodySharedSettings::CalculateLRALengths()
 	{
 		l.mMaxDistance = (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
 		JPH_ASSERT(l.mMaxDistance > 0.0f);
+	}
+}
+
+static float sCotangent(Vec3Arg inV1, Vec3Arg inV2)
+{
+	float dot = inV1.Dot(inV2);
+	float cross = inV1.Cross(inV2).Length();
+	return dot / cross;
+}
+
+void SoftBodySharedSettings::CalculateBendConstraintConstants()
+{
+	for (IsometricBend &b : mIsometricBendConstraints)
+	{
+		// Get positions
+		Vec3 x0 = Vec3(mVertices[b.mVertex[0]].mPosition);
+		Vec3 x1 = Vec3(mVertices[b.mVertex[1]].mPosition);
+		Vec3 x2 = Vec3(mVertices[b.mVertex[2]].mPosition);
+		Vec3 x3 = Vec3(mVertices[b.mVertex[3]].mPosition);
+
+		/*
+		Figure in section 2 of "A Quadratic Bending Model for Inextensible Surfaces"
+		   x2
+		e1/  \e3
+		 /    \
+		x0----x1
+		 \ e0 /
+		e2\  /e4
+		   x3
+		*/
+
+		// Calculate edges
+		Vec3 e0 = x1 - x0;
+		Vec3 e1 = x2 - x0;
+		Vec3 e2 = x3 - x0;
+		Vec3 e3 = x2 - x1;
+		Vec3 e4 = x3 - x1;
+
+		// Calculate cotangents
+		float c02 = sCotangent(e0, e2);
+		float c03 = sCotangent(-e0, e3);
+		float c04 = sCotangent(-e0, e4);
+		float c01 = sCotangent(e0, e1);
+
+		// 2x area of both triangles
+		float two_a0 = e0.Cross(e1).Length();
+		float two_a1 = e0.Cross(e2).Length();
+
+		// Calculate Q, note that this matrix is symmetric so we don't need to store all elements
+		Vec4 k0(c03 + c04, c01 + c02, -c01 - c03, -c02 - c04);
+		Mat44 k0_dot_k0_t(k0.GetX() * k0, k0.GetY() * k0, k0.GetZ() * k0, k0.GetW() * k0);
+		Mat44 q = (6.0f / (two_a0 + two_a1)) * k0_dot_k0_t;
+		// q00 is not used since we set x0 to be the origin
+		b.mQ01 = q(0, 1);
+		b.mQ02 = q(0, 2);
+		b.mQ03 = q(0, 3);
+		b.mQ11 = q(1, 1);
+		b.mQ12 = q(1, 2);
+		b.mQ13 = q(1, 3);
+		b.mQ22 = q(2, 2);
+		b.mQ23 = q(2, 3);
+		b.mQ33 = q(3, 3);
+	}
+
+	for (DihedralBend &b : mDihedralBendConstraints)
+	{
+		// Get positions
+		Vec3 x0 = Vec3(mVertices[b.mVertex[0]].mPosition);
+		Vec3 x1 = Vec3(mVertices[b.mVertex[1]].mPosition);
+		Vec3 x2 = Vec3(mVertices[b.mVertex[2]].mPosition);
+		Vec3 x3 = Vec3(mVertices[b.mVertex[3]].mPosition);
+
+		/*
+		   x2
+		e1/  \e3
+		 /    \
+		x0----x1
+		 \ e0 /
+		e2\  /e4
+		   x3
+		*/
+
+		// Calculate edges
+		Vec3 e0 = x1 - x0;
+		Vec3 e1 = x2 - x0;
+		Vec3 e2 = x3 - x0;
+
+		// Normals of both triangles
+		Vec3 n0 = e0.Cross(e1);
+		Vec3 n1 = e2.Cross(e0);
+		float denom = sqrt(n0.LengthSq() * n1.LengthSq());
+		if (denom == 0.0f)
+			b.mInitialAngle = 0.0f;
+		else
+			b.mInitialAngle = ACos(n0.Dot(n1) / denom);
 	}
 }
 
@@ -339,6 +518,8 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mFaces);
 	inStream.Write(mEdgeConstraints);
 	inStream.Write(mEdgeGroupEndIndices);
+	inStream.Write(mIsometricBendConstraints);
+	inStream.Write(mDihedralBendConstraints);
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
@@ -358,6 +539,8 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mFaces);
 	inStream.Read(mEdgeConstraints);
 	inStream.Read(mEdgeGroupEndIndices);
+	inStream.Read(mIsometricBendConstraints);
+	inStream.Read(mDihedralBendConstraints);
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);

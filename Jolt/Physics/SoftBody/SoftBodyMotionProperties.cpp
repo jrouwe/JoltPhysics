@@ -15,6 +15,8 @@
 
 JPH_NAMESPACE_BEGIN
 
+using namespace JPH::literals;
+
 void SoftBodyMotionProperties::CalculateMassAndInertia()
 {
 	MassProperties mp;
@@ -246,6 +248,139 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 }
 
+void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext &inContext)
+{
+	JPH_PROFILE_FUNCTION();
+
+	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
+
+	for (const IsometricBend &b : mSettings->mIsometricBendConstraints)
+	{
+		Vertex &v0 = mVertices[b.mVertex[0]];
+		Vertex &v1 = mVertices[b.mVertex[1]];
+		Vertex &v2 = mVertices[b.mVertex[2]];
+		Vertex &v3 = mVertices[b.mVertex[3]];
+
+		// Get positions
+		// Setting x0 as origin
+		Vec3 x1 = v1.mPosition - v0.mPosition;
+		Vec3 x2 = v2.mPosition - v0.mPosition;
+		Vec3 x3 = v3.mPosition - v0.mPosition;
+
+		// Calculate constraint equation
+		// C = 0.5 * Sum_i,j(Q_ij * x_i . x_j)
+		// Note that Q is symmetric so we can optimize this to:
+		float c = b.mQ12 * x1.Dot(x2) + b.mQ13 * x1.Dot(x3) + b.mQ23 * x2.Dot(x3) // Off diagonal elements occur twice
+				+ 0.5f * (b.mQ11 * x1.LengthSq() + b.mQ22 * x2.LengthSq() + b.mQ33 * x3.LengthSq()); // Diagonal elements only once
+		if (abs(c) < 1.0e-6f)
+			continue;
+
+		// Calculate gradient of constraint equation, again using Q_ij = Q_ji
+		// del C = Sum_j(Q_ij * x_j)
+		Vec3 d0c = b.mQ01 * x1 + b.mQ02 * x2 + b.mQ03 * x3;
+		Vec3 d1c = b.mQ11 * x1 + b.mQ12 * x2 + b.mQ13 * x3;
+		Vec3 d2c = b.mQ12 * x1 + b.mQ22 * x2 + b.mQ23 * x3;
+		Vec3 d3c = -d0c - d1c - d2c; // The sum of the gradients needs to be zero
+
+		// Get masses
+		float w0 = v0.mInvMass;
+		float w1 = v1.mInvMass;
+		float w2 = v2.mInvMass;
+		float w3 = v3.mInvMass;
+		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
+
+		// Apply correction
+		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
+		if (denom == 0.0f)
+			continue;
+		float lambda = -c / denom;
+		v0.mPosition += lambda * w0 * d0c;
+		v1.mPosition += lambda * w1 * d1c;
+		v2.mPosition += lambda * w2 * d2c;
+		v3.mPosition += lambda * w3 * d3c;
+	}
+
+	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
+	{
+		Vertex &v0 = mVertices[b.mVertex[0]];
+		Vertex &v1 = mVertices[b.mVertex[1]];
+		Vertex &v2 = mVertices[b.mVertex[2]];
+		Vertex &v3 = mVertices[b.mVertex[3]];
+
+		// Get positions
+		Vec3 x0 = v0.mPosition;
+		Vec3 x1 = v1.mPosition;
+		Vec3 x2 = v2.mPosition;
+		Vec3 x3 = v3.mPosition;
+
+		/*
+		   x2
+		e1/  \e3
+		 /    \
+		x0----x1
+		 \ e0 /
+		e2\  /e4
+		   x3
+		*/
+
+		// Calculate the shared edge of the triangles
+		Vec3 e = x1 - x0;
+		float e_len = e.Length();
+		if (e_len < 1.0e-6f)
+			continue;
+
+		// Calculate the normals of the triangles
+		Vec3 x1x2 = x2 - x1;
+		Vec3 x1x3 = x3 - x1;
+		Vec3 n1 = (x2 - x0).Cross(x1x2);
+		Vec3 n2 = x1x3.Cross(x3 - x0);
+		float n1_len_sq = n1.LengthSq();
+		float n2_len_sq = n2.LengthSq();
+		if (n1_len_sq < 1.0e-12f || n2_len_sq < 1.0e-12f)
+			continue;
+
+		// Calculate constraint equation
+		float d = n1.Dot(n2) / sqrt(n1_len_sq * n2_len_sq);
+		float c = ACos(d) - b.mInitialAngle;
+
+		// Calculate gradient of constraint equation
+		// Taken from "Strain Based Dynamics" - Matthias Muller et al. (Appendix A)
+		// with p1 = x2, p2 = x3, p3 = x0 and p4 = x1
+		// which in turn is based on "Simulation of Clothing with Folds and Wrinkles" - R. Bridson et al. (Section 4)
+		n1 /= n1_len_sq;
+		n2 /= n2_len_sq;
+		Vec3 d0c = (x1x2.Dot(e) * n1 + x1x3.Dot(e) * n2) / e_len;
+		Vec3 d2c = e_len * n1;
+		Vec3 d3c = e_len * n2;
+		
+		// The sum of the gradients must be zero (see "Strain Based Dynamics" section 4)
+		Vec3 d1c = -d0c - d2c - d3c;
+
+		// Get masses
+		float w0 = v0.mInvMass;
+		float w1 = v1.mInvMass;
+		float w2 = v2.mInvMass;
+		float w3 = v3.mInvMass;
+		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
+
+		// Calculate -lambda
+		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
+		if (denom < 1.0e-12f)
+			continue;
+		float minus_lambda = c / denom;
+
+		// Negate the gradients (in this case we apply the sign flip in lambda) as per "Strain Based Dynamics" Appendix A
+		if (n1.Cross(n2).Dot(e) > 0.0f)
+			minus_lambda = -minus_lambda;
+
+		// Apply correction
+		v0.mPosition -= minus_lambda * w0 * d0c;
+		v1.mPosition -= minus_lambda * w1 * d1c;
+		v2.mPosition -= minus_lambda * w2 * d2c;
+		v3.mPosition -= minus_lambda * w3 * d3c;
+	}
+}
+
 void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
 {
 	JPH_PROFILE_FUNCTION();
@@ -277,6 +412,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 		Vec3 d3c = x1x4.Cross(x1x2);
 		Vec3 d4c = x1x2.Cross(x1x3);
 
+		// Get masses
 		float w1 = v1.mInvMass;
 		float w2 = v2.mInvMass;
 		float w3 = v3.mInvMass;
@@ -634,6 +770,8 @@ void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &i
 
 	IntegratePositions(ioContext);
 
+	ApplyBendConstraints(ioContext);
+
 	ApplyVolumeConstraints(ioContext);
 }
 
@@ -877,6 +1015,39 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 {
 	for (const Edge &e : mSettings->mEdgeConstraints)
 		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+}
+
+void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+{
+	for (const IsometricBend &b : mSettings->mIsometricBendConstraints)
+	{
+		RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
+		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
+		RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
+		RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
+		RVec3 c_edge = 0.5_r * (x0 + x1);
+		RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
+		RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
+
+		inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, Color::sDarkGreen, 0.01f);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, Color::sGreen);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, Color::sGreen);
+	}
+
+	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
+	{
+		RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
+		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
+		RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
+		RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
+		RVec3 c_edge = 0.5_r * (x0 + x1);
+		RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
+		RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
+
+		inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, Color::sDarkOrange, 0.01f);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, Color::sOrange);
+		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, Color::sOrange);
+	}
 }
 
 void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const

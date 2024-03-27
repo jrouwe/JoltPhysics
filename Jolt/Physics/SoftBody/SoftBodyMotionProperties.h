@@ -35,6 +35,8 @@ public:
 	using Vertex = SoftBodyVertex;
 	using Edge = SoftBodySharedSettings::Edge;
 	using Face = SoftBodySharedSettings::Face;
+	using IsometricBend = SoftBodySharedSettings::IsometricBend;
+	using DihedralBend = SoftBodySharedSettings::DihedralBend;
 	using Volume = SoftBodySharedSettings::Volume;
 	using InvBind = SoftBodySharedSettings::InvBind;
 	using SkinWeight = SoftBodySharedSettings::SkinWeight;
@@ -90,6 +92,7 @@ public:
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVertexVelocities(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
+	void								DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
@@ -192,6 +195,9 @@ private:
 
 	/// Integrate the positions of all vertices by 1 sub step
 	void								IntegratePositions(const SoftBodyUpdateContext &inContext);
+
+	/// Enforce all bend constraints
+	void								ApplyBendConstraints(const SoftBodyUpdateContext &inContext);
 
 	/// Enforce all volume constraints
 	void								ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext);
