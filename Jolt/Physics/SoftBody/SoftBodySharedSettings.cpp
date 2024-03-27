@@ -107,7 +107,7 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
 }
 
-void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, float inAngleTolerance)
+void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, EBendType inBendType, float inAngleTolerance)
 {
 	struct EdgeHelper
 	{
@@ -199,8 +199,12 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 				}
 
 				// Bend constraint
-				switch ((EBendType)min((int)a_min.mBendType, (int)a_max.mBendType))
+				switch (inBendType)
 				{
+				case EBendType::None:
+					// Do nothing
+					break;
+
 				case EBendType::Distance:
 					// Create an edge constraint to represent the bend constraint
 					if (!is_shear)

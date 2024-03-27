@@ -22,21 +22,21 @@ void SoftBodyBendConstraintTest::Initialize()
 
 	{
 		// Cloth without bend constraints
-		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, { 1.0e-5f, 1.0e-5f, FLT_MAX, SoftBodySharedSettings::EBendType::Distance });
+		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, SoftBodySharedSettings::EBendType::None);
 		SoftBodyCreationSettings cloth(cloth_settings, RVec3(-5.0f, 5.0f, 0), Quat::sIdentity(), Layers::MOVING);
 		mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 	}
 
 	{
 		// Cloth with edge bend constraints
-		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, { 1.0e-5f, 1.0e-5f, 1.0e-5f, SoftBodySharedSettings::EBendType::Distance });
+		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, SoftBodySharedSettings::EBendType::Distance);
 		SoftBodyCreationSettings cloth(cloth_settings, RVec3(0.0f, 5.0f, 0), Quat::sIdentity(), Layers::MOVING);
 		mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 	}
 
 	{
 		// Cloth with isometric bend constraints
-		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, { 1.0e-5f, 1.0e-5f, 1.0e-5f, SoftBodySharedSettings::EBendType::Dihedral });
+		Ref<SoftBodySharedSettings> cloth_settings = SoftBodyCreator::CreateCloth(cNumVerticesX, cNumVerticesZ, cVertexSpacing, inv_mass, SoftBodySharedSettings::EBendType::Dihedral);
 		SoftBodyCreationSettings cloth(cloth_settings, RVec3(5.0f, 5.0f, 0), Quat::sIdentity(), Layers::MOVING);
 		mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 	}

@@ -8,7 +8,7 @@
 
 namespace SoftBodyCreator {
 
-Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, float inGridSpacing, const function<float(uint, uint)> &inVertexGetInvMass, const SoftBodySharedSettings::VertexAttributes &inVertexAttributes)
+Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, float inGridSpacing, const function<float(uint, uint)> &inVertexGetInvMass, SoftBodySharedSettings::EBendType inBendType, const SoftBodySharedSettings::VertexAttributes &inVertexAttributes)
 {
 	const float cOffsetX = -0.5f * inGridSpacing * (inGridSizeX - 1);
 	const float cOffsetZ = -0.5f * inGridSpacing * (inGridSizeZ - 1);
@@ -46,7 +46,7 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		}
 
 	// Create edges
-	settings->CreateConstraints(&inVertexAttributes, 1);
+	settings->CreateConstraints(&inVertexAttributes, 1, inBendType);
 
 	// Optimize the settings
 	settings->Optimize();

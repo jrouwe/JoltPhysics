@@ -20,6 +20,7 @@ public:
 	/// Which type of bend constraint should be created
 	enum class EBendType
 	{
+		None,														///< No bend constraints will be created
 		Distance,													///< A simple distance constraint
 		Isometric,													///< An isometric bend constraint (better but much more expensive)
 		Dihedral,													///< A dihedral bend constraint (most expensive, but also supports triangles that are initially not in the same plane)
@@ -30,19 +31,19 @@ public:
 	{
 		/// Constructor
 						VertexAttributes() = default;
-						VertexAttributes(float inCompliance, float inShearCompliance, float inBendCompliance, EBendType inBendType) : mCompliance(inCompliance), mShearCompliance(inShearCompliance), mBendCompliance(inBendCompliance), mBendType(inBendType) { }
+						VertexAttributes(float inCompliance, float inShearCompliance, float inBendCompliance) : mCompliance(inCompliance), mShearCompliance(inShearCompliance), mBendCompliance(inBendCompliance) { }
 
 		float			mCompliance = 0.0f;							///< The compliance of the normal edges. Set to FLT_MAX to disable regular edges.
 		float			mShearCompliance = 0.0f;					///< The compliance of the shear edges. Set to FLT_MAX to disable shear edges.
 		float			mBendCompliance = FLT_MAX;					///< The compliance of the bend edges. Set to FLT_MAX to disable bend edges.
-		EBendType		mBendType = EBendType::Distance;			///< Which type of bend constraint we want
 	};
 
 	/// Automatically create constraints based on the faces of the soft body
 	/// @param inVertexAttributes A list of attributes for each vertex (1-on-1 with mVertices, note that if the list is smaller than mVertices the last element will be repeated). This defines the properties of the constraints that are created.
 	/// @param inVertexAttributesLength The length of inVertexAttributes
 	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
-	void				CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, float inAngleTolerance = DegreesToRadians(8.0f));
+	/// @param inBendType The type of bend constraint to create
+	void				CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, EBendType inBendType = EBendType::Distance, float inAngleTolerance = DegreesToRadians(8.0f));
 
 	/// Calculate the initial lengths of all springs of the edges of this soft body (if you use CreateConstraint, this is already done)
 	void				CalculateEdgeLengths();
