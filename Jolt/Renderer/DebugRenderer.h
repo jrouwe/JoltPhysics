@@ -26,6 +26,22 @@ JPH_NAMESPACE_BEGIN
 class OrientedBox;
 
 /// Simple triangle renderer for debugging purposes.
+///
+/// Inherit from this class to provide your own implementation.
+///
+/// Implement the following virtual functions:
+/// - DrawLine
+/// - DrawTriangle
+/// - DrawText3D
+/// - CreateTriangleBatch
+/// - DrawGeometry
+///
+/// Make sure you call Initialize() from the constructor of your implementation.
+///
+/// The CreateTriangleBatch is used to prepare a batch of triangles to be drawn by a single DrawGeometry call,
+/// which means that Jolt can render a complex scene much more efficiently than when each triangle in that scene would have been drawn through DrawTriangle.
+///
+/// Note that an implementation that implements CreateTriangleBatch and DrawGeometry is provided by DebugRendererSimple which can be used to start quickly.
 class JPH_DEBUG_RENDERER_EXPORT DebugRenderer
 {
 public:
