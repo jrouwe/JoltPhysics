@@ -21,12 +21,12 @@ JPH_NAMESPACE_BEGIN
 ///			{
 ///				// Implement
 ///			}
-///		
+///
 ///			virtual void DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor, JPH::ECastShadow inCastShadow) override
 ///			{
 ///				// Implement
 ///			}
-///		
+///
 ///			virtual void DrawText3D(JPH::RVec3Arg inPosition, const string_view &inString, JPH::ColorArg inColor, float inHeight) override
 ///			{
 ///				// Implement
