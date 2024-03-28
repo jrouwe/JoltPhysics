@@ -17,6 +17,7 @@
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/HashCombine.h>
 #include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Math/Float2.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <Jolt/Geometry/AABox.h>
@@ -42,7 +43,7 @@ class OrientedBox;
 /// which means that Jolt can render a complex scene much more efficiently than when each triangle in that scene would have been drawn through DrawTriangle.
 ///
 /// Note that an implementation that implements CreateTriangleBatch and DrawGeometry is provided by DebugRendererSimple which can be used to start quickly.
-class JPH_DEBUG_RENDERER_EXPORT DebugRenderer
+class JPH_DEBUG_RENDERER_EXPORT DebugRenderer : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
