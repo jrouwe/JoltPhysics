@@ -46,7 +46,13 @@ DebugRenderer::Batch DebugRendererSimple::CreateTriangleBatch(const Vertex *inVe
 
 void DebugRendererSimple::DrawGeometry(RMat44Arg inModelMatrix, const AABox &inWorldSpaceBounds, float inLODScaleSq, ColorArg inModelColor, const GeometryRef &inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
-	const BatchImpl *batch = static_cast<const BatchImpl *>(inGeometry->mLODs[0].mTriangleBatch.GetPtr());
+	// Figure out which LOD to use
+	const LOD *lod = inGeometry->mLODs.data();
+	if (mCameraPosSet)
+		lod = &inGeometry->GetLOD(Vec3(mCameraPos), inWorldSpaceBounds, inLODScaleSq);
+
+	// Draw the batch
+	const BatchImpl *batch = static_cast<const BatchImpl *>(lod->mTriangleBatch.GetPtr());
 	for (const Triangle &triangle : batch->mTriangles)
 	{
 		RVec3 v0 = inModelMatrix * Vec3(triangle.mV[0].mPosition);

@@ -208,6 +208,21 @@ public:
 										Geometry(const AABox &inBounds) : mBounds(inBounds) { }
 										Geometry(const Batch &inBatch, const AABox &inBounds) : mBounds(inBounds) { mLODs.push_back({ inBatch, FLT_MAX }); }
 
+		/// Determine which LOD to render
+		/// @param inCameraPosition Current position of the camera
+		/// @param inWorldSpaceBounds World space bounds for this geometry (transform mBounds by model space matrix)
+		/// @param inLODScaleSq is the squared scale of the model matrix, it is multiplied with the LOD distances in inGeometry to calculate the real LOD distance (so a number > 1 will force a higher LOD).
+		/// @return The selected LOD.
+		const LOD &						GetLOD(Vec3Arg inCameraPosition, const AABox &inWorldSpaceBounds, float inLODScaleSq) const
+		{
+			float dist_sq = inWorldSpaceBounds.GetSqDistanceTo(inCameraPosition);
+			for (const LOD &lod : mLODs)
+				if (dist_sq <= inLODScaleSq * Square(lod.mDistance))
+					return lod;
+
+			return mLODs.back();
+		}
+
 		/// All level of details for this mesh
 		Array<LOD>						mLODs;
 

@@ -42,6 +42,14 @@ public:
 	/// Constructor
 								DebugRendererSimple();
 
+	/// Should be called every frame by the application to provide the camera position.
+	/// This is used to determine the correct LOD for rendering.
+	void						SetCameraPos(RVec3Arg inCameraPos)
+	{
+		mCameraPos = inCameraPos;
+		mCameraPosSet = true;
+	}
+
 protected:
 	/// Implementation of DebugRenderer interface
 	virtual Batch				CreateTriangleBatch(const Triangle *inTriangles, int inTriangleCount) override;
@@ -63,6 +71,10 @@ private:
 	private:
 		atomic<uint32>			mRefCount = 0;
 	};
+
+	/// Last provided camera position
+	RVec3						mCameraPos;
+	bool						mCameraPosSet = false;
 };
 
 JPH_NAMESPACE_END
