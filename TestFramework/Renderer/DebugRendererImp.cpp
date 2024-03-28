@@ -334,17 +334,14 @@ void DebugRendererImp::DrawTriangles()
 					if (light_overlaps || camera_overlaps)
 					{
 						// Figure out which LOD to use
-						float dist_sq = src_instance.mWorldSpaceBounds.GetSqDistanceTo(camera_pos);
-						for (size_t lod = 0; lod < num_lods; ++lod)
-							if (dist_sq <= src_instance.mLODScaleSq * Square(geometry_lods[lod].mDistance))
-							{
-								// Store which index goes in which LOD
-								if (light_overlaps)
-									lod_indices[0][lod].push_back((int)i);
-								if (camera_overlaps)
-									lod_indices[1][lod].push_back((int)i);
-								break;
-							}
+						const LOD &lod = v.first->GetLOD(camera_pos, src_instance.mWorldSpaceBounds, src_instance.mLODScaleSq);
+						size_t lod_index = &lod - geometry_lods.data();
+
+						// Store which index goes in which LOD
+						if (light_overlaps)
+							lod_indices[0][lod_index].push_back((int)i);
+						if (camera_overlaps)
+							lod_indices[1][lod_index].push_back((int)i);
 					}
 				}
 
