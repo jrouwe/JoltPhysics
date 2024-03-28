@@ -137,10 +137,10 @@ public:
 		float			mRestLength = 1.0f;							///< Rest length of the spring
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
 	};
-		
+
 	/**
 	 * A dihedral bend constraint
-	 * 
+	 *
 	 *        x2
 	 *       /  \
 	 *      / t0 \
@@ -148,9 +148,9 @@ public:
 	 *      \ t1 /
 	 *       \  /
 	 *        x3
-	 * 
+	 *
 	 * x0..x3 are the vertices, t0 and t1 are the triangles that share the edge x0..x1
-	 * 
+	 *
 	 * Based on:
 	 * - "Position Based Dynamics" - Matthias Muller et al.
 	 * - "Strain Based Dynamics" - Matthias Muller et al.

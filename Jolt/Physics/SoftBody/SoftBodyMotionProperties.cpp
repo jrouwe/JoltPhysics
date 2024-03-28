@@ -306,7 +306,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vec3 d0c = (x1x2.Dot(e) * n1 + x1x3.Dot(e) * n2) / e_len;
 		Vec3 d2c = e_len * n1;
 		Vec3 d3c = e_len * n2;
-		
+
 		// The sum of the gradients must be zero (see "Strain Based Dynamics" section 4)
 		Vec3 d1c = -d0c - d2c - d3c;
 
