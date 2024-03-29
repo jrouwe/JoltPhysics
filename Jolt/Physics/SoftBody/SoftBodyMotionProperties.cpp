@@ -290,12 +290,21 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		Vec3 n2 = x1x3.Cross(x3 - x0);
 		float n1_len_sq = n1.LengthSq();
 		float n2_len_sq = n2.LengthSq();
-		if (n1_len_sq < 1.0e-12f || n2_len_sq < 1.0e-12f)
+		float n1_len_sq_n2_len_sq = n1_len_sq * n2_len_sq;
+		if (n1_len_sq_n2_len_sq < 1.0e-24f)
 			continue;
 
 		// Calculate constraint equation
-		float d = n1.Dot(n2) / sqrt(n1_len_sq * n2_len_sq);
-		float c = ACos(d) - b.mInitialAngle;
+		// As per "Strain Based Dynamics" Appendix A we need to negate the gradients when (n1 x n2) . e > 0, instead we make sure that the sign of the constraint equation is correct
+		float sign = Sign(n2.Cross(n1).Dot(e));
+		float d = n1.Dot(n2) / sqrt(n1_len_sq_n2_len_sq);
+		float c = sign * ACos(d) - b.mInitialAngle;
+
+		// Ensure the range is -PI to PI
+		if (c > JPH_PI)
+			c -= 2.0f * JPH_PI;
+		else if (c < -JPH_PI)
+			c += 2.0f * JPH_PI;
 
 		// Calculate gradient of constraint equation
 		// Taken from "Strain Based Dynamics" - Matthias Muller et al. (Appendix A)
@@ -315,7 +324,6 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		float w1 = v1.mInvMass;
 		float w2 = v2.mInvMass;
 		float w3 = v3.mInvMass;
-		JPH_ASSERT(w0 > 0.0f || w1 > 0.0f || w2 > 0.0f || w3 > 0.0f);
 
 		// Calculate -lambda
 		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
@@ -323,15 +331,11 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 			continue;
 		float minus_lambda = c / denom;
 
-		// Negate the gradients (in this case we apply the sign flip in lambda) as per "Strain Based Dynamics" Appendix A
-		if (n1.Cross(n2).Dot(e) > 0.0f)
-			minus_lambda = -minus_lambda;
-
 		// Apply correction
-		v0.mPosition -= minus_lambda * w0 * d0c;
-		v1.mPosition -= minus_lambda * w1 * d1c;
-		v2.mPosition -= minus_lambda * w2 * d2c;
-		v3.mPosition -= minus_lambda * w3 * d3c;
+		v0.mPosition = x0 - minus_lambda * w0 * d0c;
+		v1.mPosition = x1 - minus_lambda * w1 * d1c;
+		v2.mPosition = x2 - minus_lambda * w2 * d2c;
+		v3.mPosition = x3 - minus_lambda * w3 * d3c;
 	}
 }
 
@@ -371,14 +375,18 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 		float w2 = v2.mInvMass;
 		float w3 = v3.mInvMass;
 		float w4 = v4.mInvMass;
-		JPH_ASSERT(w1 > 0.0f || w2 > 0.0f || w3 > 0.0f || w4 > 0.0f);
+
+		// Calculate -lambda
+		float denom = w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v.mCompliance * inv_dt_sq;
+		if (denom < 1.0e-12f)
+			continue;
+		float minus_lambda = c / denom;
 
 		// Apply correction
-		float lambda = -c / (w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v.mCompliance * inv_dt_sq);
-		v1.mPosition += lambda * w1 * d1c;
-		v2.mPosition += lambda * w2 * d2c;
-		v3.mPosition += lambda * w3 * d3c;
-		v4.mPosition += lambda * w4 * d4c;
+		v1.mPosition = x1 - minus_lambda * w1 * d1c;
+		v2.mPosition = x2 - minus_lambda * w2 * d2c;
+		v3.mPosition = x3 - minus_lambda * w3 * d3c;
+		v4.mPosition = x4 - minus_lambda * w4 * d4c;
 	}
 }
 
@@ -449,18 +457,22 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 		const Edge &e = edge_constraints[i];
 		Vertex &v0 = mVertices[e.mVertex[0]];
 		Vertex &v1 = mVertices[e.mVertex[1]];
-		JPH_ASSERT(v0.mInvMass > 0.0f || v1.mInvMass > 0.0f);
+
+		// Get positions
+		Vec3 x0 = v0.mPosition;
+		Vec3 x1 = v1.mPosition;
 
 		// Calculate current length
-		Vec3 delta = v1.mPosition - v0.mPosition;
+		Vec3 delta = x1 - x0;
 		float length = delta.Length();
-		if (length > 0.0f)
-		{
-			// Apply correction
-			Vec3 correction = delta * (length - e.mRestLength) / (length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq));
-			v0.mPosition += v0.mInvMass * correction;
-			v1.mPosition -= v1.mInvMass * correction;
-		}
+
+		// Apply correction
+		float denom = length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq);
+		if (denom < 1.0e-12f)
+			continue;
+		Vec3 correction = delta * (length - e.mRestLength) / denom;
+		v0.mPosition = x0 + v0.mInvMass * correction;
+		v1.mPosition = x1 - v1.mInvMass * correction;
 	}
 }
 
@@ -477,10 +489,11 @@ void SoftBodyMotionProperties::ApplyLRAConstraints()
 		const Vertex &vertex0 = vertices[lra.mVertex[0]];
 		Vertex &vertex1 = vertices[lra.mVertex[1]];
 
-		Vec3 delta = vertex1.mPosition - vertex0.mPosition;
+		Vec3 x0 = vertex0.mPosition;
+		Vec3 delta = vertex1.mPosition - x0;
 		float delta_len_sq = delta.LengthSq();
 		if (delta_len_sq > Square(lra.mMaxDistance))
-			vertex1.mPosition = vertex0.mPosition + delta * lra.mMaxDistance / sqrt(delta_len_sq);
+			vertex1.mPosition = x0 + delta * lra.mMaxDistance / sqrt(delta_len_sq);
 	}
 }
 

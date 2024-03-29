@@ -14,6 +14,7 @@ public:
 
 	// See: Test
 	virtual void			Initialize() override;
+	virtual void			PrePhysicsUpdate(const PreUpdateParams &inParams) override;
 
 private:
 	// Size and spacing of the cloth

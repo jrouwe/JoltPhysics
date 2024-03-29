@@ -8,7 +8,7 @@
 
 namespace SoftBodyCreator {
 
-Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, float inGridSpacing, const function<float(uint, uint)> &inVertexGetInvMass, SoftBodySharedSettings::EBendType inBendType, const SoftBodySharedSettings::VertexAttributes &inVertexAttributes)
+Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, float inGridSpacing, const function<float(uint, uint)> &inVertexGetInvMass, const function<Vec3(uint, uint)> &inVertexPerturbation, SoftBodySharedSettings::EBendType inBendType, const SoftBodySharedSettings::VertexAttributes &inVertexAttributes)
 {
 	const float cOffsetX = -0.5f * inGridSpacing * (inGridSizeX - 1);
 	const float cOffsetZ = -0.5f * inGridSpacing * (inGridSizeZ - 1);
@@ -19,7 +19,8 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 		for (uint x = 0; x < inGridSizeX; ++x)
 		{
 			SoftBodySharedSettings::Vertex v;
-			v.mPosition = Float3(cOffsetX + x * inGridSpacing, 0.0f, cOffsetZ + z * inGridSpacing);
+			Vec3 position = inVertexPerturbation(x, z) + Vec3(cOffsetX + x * inGridSpacing, 0.0f, cOffsetZ + z * inGridSpacing);
+			position.StoreFloat3(&v.mPosition);
 			v.mInvMass = inVertexGetInvMass(x, z);
 			settings->mVertices.push_back(v);
 		}
@@ -45,7 +46,7 @@ Ref<SoftBodySharedSettings> CreateCloth(uint inGridSizeX, uint inGridSizeZ, floa
 			settings->AddFace(f);
 		}
 
-	// Create edges
+	// Create constraints
 	settings->CreateConstraints(&inVertexAttributes, 1, inBendType);
 
 	// Optimize the settings
@@ -209,7 +210,7 @@ Ref<SoftBodySharedSettings> CreateCube(uint inGridSize, float inGridSpacing)
 	return settings;
 }
 
-Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint inNumPhi)
+Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint inNumPhi, SoftBodySharedSettings::EBendType inBendType, const SoftBodySharedSettings::VertexAttributes &inVertexAttributes)
 {
 	// Create settings
 	SoftBodySharedSettings *settings = new SoftBodySharedSettings;
@@ -266,10 +267,8 @@ Ref<SoftBodySharedSettings> CreateSphere(float inRadius, uint inNumTheta, uint i
 		settings->AddFace(f);
 	}
 
-	// Create edges
-	SoftBodySharedSettings::VertexAttributes va;
-	va.mCompliance = va.mShearCompliance = 1.0e-4f;
-	settings->CreateConstraints(&va, 1);
+	// Create constraints
+	settings->CreateConstraints(&inVertexAttributes, 1, inBendType);
 
 	// Optimize the settings
 	settings->Optimize();
