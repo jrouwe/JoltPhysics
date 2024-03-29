@@ -22,7 +22,7 @@ JPH_NAMESPACE_BEGIN
 ///				// Implement
 ///			}
 ///
-///			virtual void DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor, JPH::ECastShadow inCastShadow) override
+///			virtual void DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor, ECastShadow inCastShadow) override
 ///			{
 ///				// Implement
 ///			}
@@ -48,6 +48,14 @@ public:
 	{
 		mCameraPos = inCameraPos;
 		mCameraPosSet = true;
+	}
+
+	/// Fallback implementation that uses DrawLine to draw a triangle (override this if you have a version that renders solid triangles)
+	virtual void				DrawTriangle(RVec3Arg inV1, RVec3Arg inV2, RVec3Arg inV3, ColorArg inColor, ECastShadow inCastShadow) override
+	{
+		DrawLine(inV1, inV2, inColor);
+		DrawLine(inV2, inV3, inColor);
+		DrawLine(inV3, inV1, inColor);
 	}
 
 protected:
