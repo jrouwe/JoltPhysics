@@ -10,6 +10,7 @@
 #include <Utils/SoftBodyCreator.h>
 #include <Layers.h>
 #include <Renderer/DebugRendererImp.h>
+#include <Application/DebugUI.h>
 
 JPH_IMPLEMENT_RTTI_VIRTUAL(SoftBodySkinnedConstraintTest)
 {
@@ -49,6 +50,8 @@ void SoftBodySkinnedConstraintTest::SkinVertices(bool inHardSkinAll)
 		m = offset * m;
 
 	SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(mBody->GetMotionProperties());
+	mp->SetEnableSkinConstraints(sEnableSkinConstraints);
+	mp->SetSkinnedMaxDistanceMultiplier(sMaxDistanceMultiplier);
 	mp->SkinVertices(com, pose.data(), cNumJoints, inHardSkinAll, *mTempAllocator);
 }
 
@@ -155,4 +158,10 @@ void SoftBodySkinnedConstraintTest::SaveState(StateRecorder &inStream) const
 void SoftBodySkinnedConstraintTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
+}
+
+void SoftBodySkinnedConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
+{
+	inUI->CreateCheckBox(inSubMenu, "Enable Skin Constraints", sEnableSkinConstraints, [](UICheckBox::EState inState) { sEnableSkinConstraints = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateSlider(inSubMenu, "Max Distance Multiplier", sMaxDistanceMultiplier, 0.0f, 10.0f, 0.1f, [](float inValue) { sMaxDistanceMultiplier = inValue; });
 }

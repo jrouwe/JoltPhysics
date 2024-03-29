@@ -19,6 +19,8 @@ public:
 	virtual void			GetInitialCamera(CameraState &ioState) const override		{ ioState.mPos = RVec3(15, 30, 15); }
 	virtual void			SaveState(StateRecorder &inStream) const override;
 	virtual void			RestoreState(StateRecorder &inStream) override;
+	virtual bool			HasSettingsMenu() const override							{ return true; }
+	virtual void			CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
 	// Size and spacing of the cloth
@@ -43,4 +45,8 @@ private:
 
 	// Current time
 	float					mTime = 0.0f;
+
+	// Settings
+	static inline bool		sEnableSkinConstraints = true;
+	static inline float		sMaxDistanceMultiplier = 1.0f;
 };
