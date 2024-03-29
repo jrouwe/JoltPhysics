@@ -393,7 +393,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftBodyUpdateContext &inContext)
 {
 	// Early out if nothing to do
-	if (mSettings->mSkinnedConstraints.empty())
+	if (mSettings->mSkinnedConstraints.empty() || !mEnableSkinConstraints)
 		return;
 
 	JPH_ASSERT(mSkinStateTransform == inContext.mCenterOfMassTransform, "Skinning state is stale, artifacts will show!");
@@ -405,10 +405,11 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 	{
 		Vertex &vertex = vertices[s.mVertex];
 		const SkinState &skin_state = skin_states[s.mVertex];
-		if (s.mMaxDistance > 0.0f)
+		float max_distance = s.mMaxDistance * mSkinnedMaxDistanceMultiplier;
+		if (max_distance > 0.0f)
 		{
 			// Move vertex if it violated the back stop
-			if (s.mBackStopDistance < s.mMaxDistance)
+			if (s.mBackStopDistance < max_distance)
 			{
 				// Center of the back stop sphere
 				Vec3 center = skin_state.mPosition - skin_state.mNormal * (s.mBackStopDistance + s.mBackStopRadius);
@@ -427,11 +428,11 @@ void SoftBodyMotionProperties::ApplySkinConstraints([[maybe_unused]] const SoftB
 			}
 
 			// Clamp vertex distance to max distance from skinned position
-			if (s.mMaxDistance < FLT_MAX)
+			if (max_distance < FLT_MAX)
 			{
 				Vec3 delta = vertex.mPosition - skin_state.mPosition;
 				float delta_len_sq = delta.LengthSq();
-				float max_distance_sq = Square(s.mMaxDistance);
+				float max_distance_sq = Square(max_distance);
 				if (delta_len_sq > max_distance_sq)
 					vertex.mPosition = skin_state.mPosition + delta * sqrt(max_distance_sq / delta_len_sq);
 			}
@@ -935,6 +936,16 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inCenterOfMassTransform, c
 			vertex.mPosition = mSkinState[s.mVertex].mPosition;
 			vertex.mVelocity = Vec3::sZero();
 		}
+	}
+	else if (!mEnableSkinConstraints)
+	{
+		// Hard skin only the kinematic vertices as we will not solve the skin constraints later
+		for (const Skinned &s : mSettings->mSkinnedConstraints)
+			if (s.mMaxDistance == 0.0f)
+			{
+				Vertex &vertex = mVertices[s.mVertex];
+				vertex.mPosition = mSkinState[s.mVertex].mPosition;
+			}
 	}
 }
 
