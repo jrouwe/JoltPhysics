@@ -28,11 +28,13 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added SoftBodyContactListener which allows you to get callbacks for collisions between soft bodies and rigid bodies.
 * Added ability to update a soft body outside of the physics simulation step. This is e.g. useful if the soft body is teleported and needs to 'settle'.
 * Added soft body skinning constraints. This can be used to limit the movement of soft body vertices based on a skinned mesh. See [documentation](https://jrouwe.github.io/JoltPhysics/index.html#skinning-soft-bodies) for more info.
+* Added ability to turn on/off skinning constraints and to update the max distance for all constraints with a distance multiplier.
 * Added Long Range Attachment constraints for soft bodies.
 * Added dihedral bend constraints for soft bodies.
 * Added SoftBodySharedSettings::CreateConstraints function that can automatically generate constraints based on the faces of the soft body.
 * Added Constraint::ResetWarmStart and Ragdoll::ResetWarmStart. Used to notify the system that the configuration of the bodies and/or constraint has changed enough so that the warm start impulses should not be applied the next frame. You can use this function for example when repositioning a ragdoll through Ragdoll::SetPose in such a way that the orientation of the bodies completely changes so that the previous frame impulses are no longer a good approximation of what the impulses will be in the next frame.
 * Supporting SIMD for WASM build. Use -msimd128 -msse4.2 options with emscripten to enable this.
+* Added DebugRendererSimple which can be used to simplify the creation of your own DebugRenderer implementation. It only requires a DrawLine, DrawTriangle and DrawText3D function to be implemented (which can be left empty).
 
 ### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
@@ -59,6 +61,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed a possible division by zero in Body::GetBodyCreationSettings when the inverse inertia diagonal had 0's.
 * When specifying a -1 for min/max distance of a distance constraint and the calculated distance is incompatible with the other limit, we'll clamp it to that value now instead of ending up with min > max.
 * Fixed bug that contact cache was partially uninitialized when colliding two objects with inv mass override of 0. When the contact listener would report a non zero inv mass override the next simulation step this would mean that the simulation would read garbage and potentially crash due to NaNs.
+* Fixed bug where colliding a cyclinder against a large triangle could return an incorrect contact point.
 
 ## v4.0.2
 
