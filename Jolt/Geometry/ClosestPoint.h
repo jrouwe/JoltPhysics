@@ -59,16 +59,18 @@ namespace ClosestPoint
 		Vec3 v2 = inC - inB;
 
 		// Make sure that the shortest edge is included in the calculation to keep the products a * b - c * d as small as possible to preserve accuracy
-		float d00 = v0.Dot(v0);
-		float d11 = v1.Dot(v1);
-		float d22 = v2.Dot(v2);
+		float d00 = v0.LengthSq();
+		float d11 = v1.LengthSq();
+		float d22 = v2.LengthSq();
 		if (d00 <= d22)
 		{
 			// Use v0 and v1 to calculate barycentric coordinates
 			float d01 = v0.Dot(v1);
 
+			// Denominator must be positive:
+			// |v0|^2 * |v1|^2 - (v0 . v1)^2 = |v0|^2 * |v1|^2 * (1 - cos(angle)^2) >= 0
 			float denominator = d00 * d11 - d01 * d01;
-			if (abs(denominator) < 1.0e-12f)
+			if (denominator < 1.0e-12f)
 			{
 				// Degenerate triangle, return coordinates along longest edge
 				if (d00 > d11)
@@ -98,7 +100,7 @@ namespace ClosestPoint
 			float d12 = v1.Dot(v2);
 
 			float denominator = d11 * d22 - d12 * d12;
-			if (abs(denominator) < 1.0e-12f)
+			if (denominator < 1.0e-12f)
 			{
 				// Degenerate triangle, return coordinates along longest edge
 				if (d11 > d22)
