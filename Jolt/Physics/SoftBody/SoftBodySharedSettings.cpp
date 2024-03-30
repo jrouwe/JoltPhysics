@@ -416,6 +416,7 @@ Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const
 	clone->mFaces = mFaces;
 	clone->mEdgeConstraints = mEdgeConstraints;
 	clone->mEdgeGroupEndIndices = mEdgeGroupEndIndices;
+	clone->mDihedralBendConstraints = mDihedralBendConstraints;
 	clone->mVolumeConstraints = mVolumeConstraints;
 	clone->mSkinnedConstraints = mSkinnedConstraints;
 	clone->mSkinnedConstraintNormals = mSkinnedConstraintNormals;
