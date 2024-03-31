@@ -13,7 +13,13 @@
 #include <Jolt/Core/UnorderedMap.h>
 #include <Jolt/Core/UnorderedSet.h>
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <queue>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 JPH_NAMESPACE_BEGIN
+
+template<class T, class Container = Array<T>, class Compare = std::less<typename Container::value_type>> using PriorityQueue = std::priority_queue<T, Container, Compare>;
 
 JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings::Vertex)
 {
@@ -89,6 +95,70 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mLRAConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertexRadius)
+}
+
+void SoftBodySharedSettings::CalculateClosestKinematic()
+{
+	// Check if we already calculated this
+	if (!mClosestKinematic.empty())
+		return;
+
+	// Reserve output size
+	mClosestKinematic.resize(mVertices.size());
+
+	// Create a list of connected vertices
+	Array<Array<uint32>> connectivity;
+	connectivity.resize(mVertices.size());
+	for (const Edge &e : mEdgeConstraints)
+	{
+		connectivity[e.mVertex[0]].push_back(e.mVertex[1]);
+		connectivity[e.mVertex[1]].push_back(e.mVertex[0]);
+	}
+
+	// An element in the open list
+	struct Open
+	{
+		// Order so that we get the shortest distance first
+		bool	operator < (const Open &inRHS) const
+		{
+			return mDistance > inRHS.mDistance;
+		}
+
+		uint32	mVertex;
+		float	mDistance;
+	};
+
+	// Start with all kinematic elements
+	PriorityQueue<Open> to_visit;
+	for (uint32 v = 0; v < mVertices.size(); ++v)
+		if (mVertices[v].mInvMass == 0.0f)
+		{
+			mClosestKinematic[v].mVertex = v;
+			mClosestKinematic[v].mDistance = 0.0f;
+			to_visit.push({ v, 0.0f });
+		}
+
+	// Visit all vertices remembering the closest kinematic vertex and its distance
+	while (!to_visit.empty())
+	{
+		// Pop element from the open list
+		Open current = to_visit.top();
+		to_visit.pop();
+
+		// Loop through all of its connected vertices
+		for (uint32 v : connectivity[current.mVertex])
+		{
+			// Calculate distance from the current vertex to this target vertex and check if it is smaller
+			float new_distance = current.mDistance + (Vec3(mVertices[v].mPosition) - Vec3(mVertices[current.mVertex].mPosition)).Length();
+			if (new_distance < mClosestKinematic[v].mDistance)
+			{
+				// Remember new closest vertex
+				mClosestKinematic[v].mVertex = mClosestKinematic[current.mVertex].mVertex;
+				mClosestKinematic[v].mDistance = new_distance;
+				to_visit.push({ v, new_distance });
+			}
+		}
+	}
 }
 
 void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, EBendType inBendType, float inAngleTolerance)
@@ -225,7 +295,48 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 	}
 	mEdgeConstraints.shrink_to_fit();
 
+	// Calculate the initial angle for all bend constraints
 	CalculateBendConstraintConstants();
+
+	// Check if any vertices have LRA constraints
+	bool has_lra_constraints = false;
+	for (const VertexAttributes *va = inVertexAttributes; va < inVertexAttributes + inVertexAttributesLength; ++va)
+		if (va->mLRAType != ELRAType::None)
+		{
+			has_lra_constraints = true;
+			break;
+		}
+	if (has_lra_constraints)
+	{
+		// Ensure we have calculated the closest kinematic vertex for each vertex
+		CalculateClosestKinematic();
+
+		// Find non-kinematic vertices
+		for (uint32 v = 0; v < (uint32)mVertices.size(); ++v)
+			if (mVertices[v].mInvMass > 0.0f)			
+			{
+				// Check if a closest vertex was found
+				uint32 closest = mClosestKinematic[v].mVertex;
+				if (closest != 0xffffffff)
+				{
+					// Check which LRA constraint to create
+					const VertexAttributes &va = attr(v);
+					switch (va.mLRAType)
+					{
+					case ELRAType::None:
+						break;
+
+					case ELRAType::EuclideanDistance:
+						mLRAConstraints.emplace_back(closest, v, (Vec3(mVertices[closest].mPosition) - Vec3(mVertices[v].mPosition)).Length());
+						break;
+
+					case ELRAType::GeodesicDistance:
+						mLRAConstraints.emplace_back(closest, v, mClosestKinematic[v].mDistance);
+						break;
+					}
+				}
+			}
+	}
 }
 
 void SoftBodySharedSettings::CalculateEdgeLengths()
@@ -407,6 +518,10 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	// If there is no non-parallel group then add an empty group at the end
 	if (edge_groups[cNonParallelGroupIdx].empty())
 		mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
+
+	// Free closest kinematic buffer
+	mClosestKinematic.clear();
+	mClosestKinematic.shrink_to_fit();
 }
 
 Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const

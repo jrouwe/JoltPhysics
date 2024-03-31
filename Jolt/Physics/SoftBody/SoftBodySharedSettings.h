@@ -25,6 +25,14 @@ public:
 		Dihedral,													///< A dihedral bend constraint (most expensive, but also supports triangles that are initially not in the same plane)
 	};
 
+	/// The type of long range attachment constraint to create
+	enum class ELRAType
+	{
+		None,														///< Don't create an LRA constraint
+		EuclideanDistance,											///< Create an LRA constraint based on euclidean distance between the closest kinematic vertex and this vertex
+		GeodesicDistance,											///< Create an LRA constraint based on the geodesic distance between the closest kinematic vertex and this vertex (follows the edge constraints)
+	};
+
 	/// Per vertex attributes used during the CreateConstraints function
 	struct JPH_EXPORT VertexAttributes
 	{
@@ -35,6 +43,7 @@ public:
 		float			mCompliance = 0.0f;							///< The compliance of the normal edges. Set to FLT_MAX to disable regular edges.
 		float			mShearCompliance = 0.0f;					///< The compliance of the shear edges. Set to FLT_MAX to disable shear edges.
 		float			mBendCompliance = FLT_MAX;					///< The compliance of the bend edges. Set to FLT_MAX to disable bend edges.
+		ELRAType		mLRAType = ELRAType::None;					///< The type of long range attachment constraint to create
 	};
 
 	/// Automatically create constraints based on the faces of the soft body
@@ -47,7 +56,7 @@ public:
 	/// Calculate the initial lengths of all springs of the edges of this soft body (if you use CreateConstraint, this is already done)
 	void				CalculateEdgeLengths();
 
-	/// Calculate the max lengths for the long range attachment constraints
+	/// Calculate the max lengths for the long range attachment constraints based on euclidean distance (if you use CreateConstraints, this is already done)
 	void				CalculateLRALengths();
 
 	/// Calculate the constants for the bend constraints (if you use CreateConstraints, this is already done)
@@ -275,9 +284,20 @@ public:
 private:
 	friend class SoftBodyMotionProperties;
 
+	/// Tracks the closest kinematic vertex
+	struct ClosestKinematic
+	{
+		uint32			mVertex = 0xffffffff;						///< Vertex index of closest kinematic vertex
+		float			mDistance = FLT_MAX;						///< Distance to the closest kinematic vertex
+	};
+
+	/// Calculate te closest kinematic vertex array
+	void				CalculateClosestKinematic();
+
 	/// Get the size of an edge group (edge groups can run in parallel)
 	uint				GetEdgeGroupSize(uint inGroupIdx) const		{ return inGroupIdx == 0? mEdgeGroupEndIndices[0] : mEdgeGroupEndIndices[inGroupIdx] - mEdgeGroupEndIndices[inGroupIdx - 1]; }
 
+	Array<ClosestKinematic> mClosestKinematic;						///< The closest kinematic vertex to each vertex in mVertices
 	Array<uint>			mEdgeGroupEndIndices;						///< The start index of each group of edges that can be solved in parallel, calculated by Optimize()
 	Array<uint32>		mSkinnedConstraintNormals;					///< A list of indices in the mFaces array used by mSkinnedConstraints, calculated by CalculateSkinnedConstraintNormals()
 };
