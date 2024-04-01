@@ -295,7 +295,7 @@ private:
 		float			mDistance = FLT_MAX;						///< Distance to the closest kinematic vertex
 	};
 
-	/// Calculate te closest kinematic vertex array
+	/// Calculate the closest kinematic vertex array
 	void				CalculateClosestKinematic();
 
 	/// Get the size of an edge group (edge groups can run in parallel)

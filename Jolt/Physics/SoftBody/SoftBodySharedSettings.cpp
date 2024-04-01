@@ -493,13 +493,24 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			edge_groups[i].clear();
 		}
 
-	// Order the edges so that the ones with the smallest index go first (hoping to get better cache locality when we process the edges).
-	// Note we could also re-order the vertices but that would be much more of a burden to the end user
+	// Make sure we know the closest kinematic vertex so we can sort
+	CalculateClosestKinematic();
+
+	// Sort the edge constraints
 	for (Array<uint> &group : edge_groups)
 		QuickSort(group.begin(), group.end(), [this](uint inLHS, uint inRHS)
 			{
 				const Edge &e1 = mEdgeConstraints[inLHS];
 				const Edge &e2 = mEdgeConstraints[inRHS];
+
+				// First sort so that the edge with the smallest distance to a kinematic vertex comes first
+				float d1 = min(mClosestKinematic[e1.mVertex[0]].mDistance, mClosestKinematic[e1.mVertex[1]].mDistance);
+				float d2 = min(mClosestKinematic[e2.mVertex[0]].mDistance, mClosestKinematic[e2.mVertex[1]].mDistance);
+				if (d1 != d2)
+					return d1 < d2;
+
+				// Order the edges so that the ones with the smallest index go first (hoping to get better cache locality when we process the edges).
+				// Note we could also re-order the vertices but that would be much more of a burden to the end user
 				return min(e1.mVertex[0], e1.mVertex[1]) < min(e2.mVertex[0], e2.mVertex[1]);
 			});
 
