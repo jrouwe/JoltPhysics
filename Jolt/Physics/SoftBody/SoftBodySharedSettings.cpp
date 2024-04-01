@@ -117,7 +117,7 @@ void SoftBodySharedSettings::CalculateClosestKinematic()
 
 	// Use Dijkstra's algorithm to find the closest kinematic vertex for each vertex
 	// See: https://en.wikipedia.org/wiki/Dijkstra's_algorithm
-	// 
+	//
 	// An element in the open list
 	struct Open
 	{
@@ -316,7 +316,7 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 
 		// Find non-kinematic vertices
 		for (uint32 v = 0; v < (uint32)mVertices.size(); ++v)
-			if (mVertices[v].mInvMass > 0.0f)			
+			if (mVertices[v].mInvMass > 0.0f)
 			{
 				// Check if a closest vertex was found
 				uint32 closest = mClosestKinematic[v].mVertex;

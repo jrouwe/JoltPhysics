@@ -28,13 +28,14 @@ public:
 	/// The type of long range attachment constraint to create
 	enum class ELRAType
 	{
-		None,														///< Don't create an LRA constraint
-		EuclideanDistance,											///< Create an LRA constraint based on euclidean distance between the closest kinematic vertex and this vertex
-		GeodesicDistance,											///< Create an LRA constraint based on the geodesic distance between the closest kinematic vertex and this vertex (follows the edge constraints)
+		None,														///< Don't create a LRA constraint
+		EuclideanDistance,											///< Create a LRA constraint based on Euclidean distance between the closest kinematic vertex and this vertex
+		GeodesicDistance,											///< Create a LRA constraint based on the geodesic distance between the closest kinematic vertex and this vertex (follows the edge constraints)
 	};
 
 	/// Per vertex attributes used during the CreateConstraints function.
-	/// When a constraint is created, the compliance of the two attached vertices is averaged (for a bend constraint the vertices that are not on the shared edge are used).
+	/// When a constraint is created, the compliance of the two attached vertices is averaged
+	/// to get the compliance for the constraint (for a bend constraint the vertices that are not on the shared edge are used).
 	struct JPH_EXPORT VertexAttributes
 	{
 		/// Constructor
@@ -58,7 +59,7 @@ public:
 	/// Calculate the initial lengths of all springs of the edges of this soft body (if you use CreateConstraint, this is already done)
 	void				CalculateEdgeLengths();
 
-	/// Calculate the max lengths for the long range attachment constraints based on euclidean distance (if you use CreateConstraints, this is already done)
+	/// Calculate the max lengths for the long range attachment constraints based on Euclidean distance (if you use CreateConstraints, this is already done)
 	/// @param inMaxDistanceMultiplier Multiplier for the max distance of the LRA constraint, e.g. 1.01 means the max distance is 1% longer than the calculated distance in the rest pose.
 	void				CalculateLRALengths(float inMaxDistanceMultiplier = 1.0f);
 
