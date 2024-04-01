@@ -77,6 +77,7 @@ public:
 	{
 	public:
 		Array<uint>		mEdgeRemap;									///< Maps old edge index to new edge index
+		Array<uint>		mDihedralBendRemap;							///< Maps old dihedral bend index to new dihedral bend index
 	};
 
 	/// Optimize the soft body settings for simulation. This will reorder constraints so they can be executed in parallel.
@@ -146,6 +147,9 @@ public:
 						Edge() = default;
 						Edge(uint32 inVertex1, uint32 inVertex2, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2 }, mCompliance(inCompliance) { }
 
+		/// Return the lowest vertex index of this constraint
+		uint32			GetMinVertexIndex() const					{ return min(mVertex[0], mVertex[1]); }
+
 		uint32			mVertex[2];									///< Indices of the vertices that form the edge
 		float			mRestLength = 1.0f;							///< Rest length of the spring
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the spring
@@ -177,6 +181,9 @@ public:
 						DihedralBend() = default;
 						DihedralBend(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
 
+		/// Return the lowest vertex index of this constraint
+		uint32			GetMinVertexIndex() const					{ return min(min(mVertex[0], mVertex[1]), min(mVertex[2], mVertex[3])); }
+
 		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
 		float			mInitialAngle = 0.0f;						///< Initial angle between the normals of the triangles (pi - dihedral angle).
@@ -190,6 +197,9 @@ public:
 		/// Constructor
 						Volume() = default;
 						Volume(uint32 inVertex1, uint32 inVertex2, uint32 inVertex3, uint32 inVertex4, float inCompliance = 0.0f) : mVertex { inVertex1, inVertex2, inVertex3, inVertex4 }, mCompliance(inCompliance) { }
+
+		/// Return the lowest vertex index of this constraint
+		uint32			GetMinVertexIndex() const					{ return min(min(mVertex[0], mVertex[1]), min(mVertex[2], mVertex[3])); }
 
 		uint32			mVertex[4];									///< Indices of the vertices that form the tetrhedron
 		float			mSixRestVolume = 1.0f;						///< 6 times the rest volume of the tetrahedron (calculated by CalculateVolumeConstraintVolumes())
@@ -266,6 +276,9 @@ public:
 		/// Constructor
 						LRA() = default;
 						LRA(uint32 inVertex1, uint32 inVertex2, float inMaxDistance) : mVertex { inVertex1, inVertex2 }, mMaxDistance(inMaxDistance) { }
+
+		/// Return the lowest vertex index of this constraint
+		uint32			GetMinVertexIndex() const					{ return min(mVertex[0], mVertex[1]); }
 
 		uint32			mVertex[2];									///< The vertices that are connected. The first vertex should be kinematic, the 2nd dynamic.
 		float			mMaxDistance = 0.0f;						///< The maximum distance between the vertices

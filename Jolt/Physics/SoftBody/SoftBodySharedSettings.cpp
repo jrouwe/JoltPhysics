@@ -511,7 +511,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 
 				// Order the edges so that the ones with the smallest index go first (hoping to get better cache locality when we process the edges).
 				// Note we could also re-order the vertices but that would be much more of a burden to the end user
-				return min(e1.mVertex[0], e1.mVertex[1]) < min(e2.mVertex[0], e2.mVertex[1]);
+				return e1.GetMinVertexIndex() < e2.GetMinVertexIndex();
 			});
 
 	// Assign the edges to groups and reorder them
@@ -532,6 +532,36 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	// If there is no non-parallel group then add an empty group at the end
 	if (edge_groups[cNonParallelGroupIdx].empty())
 		mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
+
+	// Sort the bend constraints
+	outResults.mDihedralBendRemap.resize(mDihedralBendConstraints.size());
+	for (int i = 0; i < (int)mDihedralBendConstraints.size(); ++i)
+		outResults.mDihedralBendRemap[i] = i;
+	QuickSort(outResults.mDihedralBendRemap.begin(), outResults.mDihedralBendRemap.end(), [this](uint inLHS, uint inRHS)
+		{
+			const DihedralBend &b1 = mDihedralBendConstraints[inLHS];
+			const DihedralBend &b2 = mDihedralBendConstraints[inRHS];
+
+			// First sort so that the constraint with the smallest distance to a kinematic vertex comes first
+			float d1 = min(
+						min(mClosestKinematic[b1.mVertex[0]].mDistance, mClosestKinematic[b1.mVertex[1]].mDistance),
+						min(mClosestKinematic[b1.mVertex[2]].mDistance, mClosestKinematic[b1.mVertex[3]].mDistance));
+			float d2 = min(
+						min(mClosestKinematic[b2.mVertex[0]].mDistance, mClosestKinematic[b2.mVertex[1]].mDistance),
+						min(mClosestKinematic[b2.mVertex[2]].mDistance, mClosestKinematic[b2.mVertex[3]].mDistance));
+			if (d1 != d2)
+				return d1 < d2;
+
+			// Order constraints so that the ones with the smallest index go first
+			return b1.GetMinVertexIndex() < b2.GetMinVertexIndex();
+		});
+
+	// Reorder the bend constraints
+	Array<DihedralBend> temp_bends;
+	temp_bends.swap(mDihedralBendConstraints);
+	mDihedralBendConstraints.reserve(temp_bends.size());
+	for (uint idx : outResults.mDihedralBendRemap)
+		mDihedralBendConstraints.push_back(temp_bends[idx]);
 
 	// Free closest kinematic buffer
 	mClosestKinematic.clear();
