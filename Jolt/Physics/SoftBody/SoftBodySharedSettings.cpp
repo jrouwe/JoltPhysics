@@ -220,6 +220,10 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 	{
 		const EdgeHelper &e0 = edges[i];
 
+		// Get attributes for the vertices of the edge
+		const VertexAttributes &a0 = attr(e0.mVertex[0]);
+		const VertexAttributes &a1 = attr(e0.mVertex[1]);
+
 		// Flag that indicates if this edge is a shear edge (if 2 triangles form a quad-like shape and this edge is on the diagonal)
 		bool is_shear = false;
 
@@ -234,10 +238,8 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 				const Face &f1 = mFaces[e1.mEdgeIdx / 3];
 				uint32 vopposite0 = f0.mVertex[(e0.mEdgeIdx + 2) % 3];
 				uint32 vopposite1 = f1.mVertex[(e1.mEdgeIdx + 2) % 3];
-				uint32 v_min = min(vopposite0, vopposite1);
-				uint32 v_max = max(vopposite0, vopposite1);
-				const VertexAttributes &a_min = attr(v_min);
-				const VertexAttributes &a_max = attr(v_max);
+				const VertexAttributes &a_opposite0 = attr(vopposite0);
+				const VertexAttributes &a_opposite1 = attr(vopposite1);
 
 				// Faces should be roughly in a plane
 				Vec3 n0 = (Vec3(mVertices[f0.mVertex[2]].mPosition) - Vec3(mVertices[f0.mVertex[0]].mPosition)).Cross(Vec3(mVertices[f0.mVertex[1]].mPosition) - Vec3(mVertices[f0.mVertex[0]].mPosition));
@@ -250,7 +252,7 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 					if (Square(e0_dir.Dot(e1_dir)) < sq_sin_tolerance * e0_dir.LengthSq() * e1_dir.LengthSq())
 					{
 						// Shear constraint
-						add_edge(v_min, v_max, a_min.mShearCompliance, a_max.mShearCompliance);
+						add_edge(vopposite0, vopposite1, a_opposite0.mShearCompliance, a_opposite1.mShearCompliance);
 						is_shear = true;
 					}
 				}
@@ -264,21 +266,19 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 
 				case EBendType::Distance:
 					// Create an edge constraint to represent the bend constraint
+					// Use the bend compliance of the shared edge
 					if (!is_shear)
-						add_edge(v_min, v_max, a_min.mBendCompliance, a_max.mBendCompliance);
+						add_edge(vopposite0, vopposite1, a0.mBendCompliance, a1.mBendCompliance);
 					break;
 
 				case EBendType::Dihedral:
 					// Test if both opposite vertices are free to move
 					if ((mVertices[vopposite0].mInvMass > 0.0f || mVertices[vopposite1].mInvMass > 0.0f)
-						&& a_min.mBendCompliance < FLT_MAX && a_max.mBendCompliance < FLT_MAX)
+						&& a0.mBendCompliance < FLT_MAX && a1.mBendCompliance < FLT_MAX)
 					{
-						// Get the vertices that form the common edge
-						uint32 vedge0 = f0.mVertex[e0.mEdgeIdx % 3];
-						uint32 vedge1 = f0.mVertex[(e0.mEdgeIdx + 1) % 3];
-
 						// Create a bend constraint
-						mDihedralBendConstraints.emplace_back(vedge0, vedge1, vopposite0, vopposite1, 0.5f * (a_min.mBendCompliance + a_max.mBendCompliance));
+						// Use the bend compliance of the shared edge
+						mDihedralBendConstraints.emplace_back(e0.mVertex[0], e0.mVertex[1], vopposite0, vopposite1, 0.5f * (a0.mBendCompliance + a1.mBendCompliance));
 					}
 					break;
 				}
@@ -292,8 +292,6 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 		}
 
 		// Create a edge constraint for the current edge
-		const VertexAttributes &a0 = attr(e0.mVertex[0]);
-		const VertexAttributes &a1 = attr(e0.mVertex[1]);
 		add_edge(e0.mVertex[0], e0.mVertex[1], is_shear? a0.mShearCompliance : a0.mCompliance, is_shear? a1.mShearCompliance : a1.mCompliance);
 	}
 	mEdgeConstraints.shrink_to_fit();

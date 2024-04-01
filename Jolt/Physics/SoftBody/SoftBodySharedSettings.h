@@ -34,8 +34,8 @@ public:
 	};
 
 	/// Per vertex attributes used during the CreateConstraints function.
-	/// When a constraint is created, the compliance of the two attached vertices is averaged
-	/// to get the compliance for the constraint (for a bend constraint the vertices that are not on the shared edge are used).
+	/// For an edge or shear constraint, the compliance is averaged between the two attached vertices.
+	/// For a bend constraint, the compliance is averaged between the two vertices on the shared edge.
 	struct JPH_EXPORT VertexAttributes
 	{
 		/// Constructor
@@ -156,7 +156,7 @@ public:
 	};
 
 	/**
-	 * A dihedral bend constraint
+	 * A dihedral bend constraint keeps the angle between two triangles constant along their shared edge.
 	 *
 	 *        x2
 	 *       /  \
