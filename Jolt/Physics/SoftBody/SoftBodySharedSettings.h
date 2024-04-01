@@ -33,31 +33,34 @@ public:
 		GeodesicDistance,											///< Create an LRA constraint based on the geodesic distance between the closest kinematic vertex and this vertex (follows the edge constraints)
 	};
 
-	/// Per vertex attributes used during the CreateConstraints function
+	/// Per vertex attributes used during the CreateConstraints function.
+	/// When a constraint is created, the compliance of the two attached vertices is averaged (for a bend constraint the vertices that are not on the shared edge are used).
 	struct JPH_EXPORT VertexAttributes
 	{
 		/// Constructor
 						VertexAttributes() = default;
-						VertexAttributes(float inCompliance, float inShearCompliance, float inBendCompliance) : mCompliance(inCompliance), mShearCompliance(inShearCompliance), mBendCompliance(inBendCompliance) { }
+						VertexAttributes(float inCompliance, float inShearCompliance, float inBendCompliance, ELRAType inLRAType = ELRAType::None, float inLRAMaxDistanceMultiplier = 1.0f) : mCompliance(inCompliance), mShearCompliance(inShearCompliance), mBendCompliance(inBendCompliance), mLRAType(inLRAType), mLRAMaxDistanceMultiplier(inLRAMaxDistanceMultiplier) { }
 
-		float			mCompliance = 0.0f;							///< The compliance of the normal edges. Set to FLT_MAX to disable regular edges.
-		float			mShearCompliance = 0.0f;					///< The compliance of the shear edges. Set to FLT_MAX to disable shear edges.
-		float			mBendCompliance = FLT_MAX;					///< The compliance of the bend edges. Set to FLT_MAX to disable bend edges.
-		ELRAType		mLRAType = ELRAType::None;					///< The type of long range attachment constraint to create
+		float			mCompliance = 0.0f;							///< The compliance of the normal edges. Set to FLT_MAX to disable regular edges for any edge involving this vertex.
+		float			mShearCompliance = 0.0f;					///< The compliance of the shear edges. Set to FLT_MAX to disable shear edges for any edge involving this vertex.
+		float			mBendCompliance = FLT_MAX;					///< The compliance of the bend edges. Set to FLT_MAX to disable bend edges for any bend constraint involving this vertex.
+		ELRAType		mLRAType = ELRAType::None;					///< The type of long range attachment constraint to create.
+		float			mLRAMaxDistanceMultiplier = 1.0f;			///< Multiplier for the max distance of the LRA constraint, e.g. 1.01 means the max distance is 1% longer than the calculated distance in the rest pose.
 	};
 
 	/// Automatically create constraints based on the faces of the soft body
 	/// @param inVertexAttributes A list of attributes for each vertex (1-on-1 with mVertices, note that if the list is smaller than mVertices the last element will be repeated). This defines the properties of the constraints that are created.
 	/// @param inVertexAttributesLength The length of inVertexAttributes
-	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
 	/// @param inBendType The type of bend constraint to create
+	/// @param inAngleTolerance Shear edges are created when two connected triangles form a quad (are roughly in the same plane and form a square with roughly 90 degree angles). This defines the tolerance (in radians).
 	void				CreateConstraints(const VertexAttributes *inVertexAttributes, uint inVertexAttributesLength, EBendType inBendType = EBendType::Distance, float inAngleTolerance = DegreesToRadians(8.0f));
 
 	/// Calculate the initial lengths of all springs of the edges of this soft body (if you use CreateConstraint, this is already done)
 	void				CalculateEdgeLengths();
 
 	/// Calculate the max lengths for the long range attachment constraints based on euclidean distance (if you use CreateConstraints, this is already done)
-	void				CalculateLRALengths();
+	/// @param inMaxDistanceMultiplier Multiplier for the max distance of the LRA constraint, e.g. 1.01 means the max distance is 1% longer than the calculated distance in the rest pose.
+	void				CalculateLRALengths(float inMaxDistanceMultiplier = 1.0f);
 
 	/// Calculate the constants for the bend constraints (if you use CreateConstraints, this is already done)
 	void				CalculateBendConstraintConstants();

@@ -115,6 +115,9 @@ void SoftBodySharedSettings::CalculateClosestKinematic()
 		connectivity[e.mVertex[1]].push_back(e.mVertex[0]);
 	}
 
+	// Use Dijkstra's algorithm to find the closest kinematic vertex for each vertex
+	// See: https://en.wikipedia.org/wiki/Dijkstra's_algorithm
+	// 
 	// An element in the open list
 	struct Open
 	{
@@ -327,11 +330,11 @@ void SoftBodySharedSettings::CreateConstraints(const VertexAttributes *inVertexA
 						break;
 
 					case ELRAType::EuclideanDistance:
-						mLRAConstraints.emplace_back(closest, v, (Vec3(mVertices[closest].mPosition) - Vec3(mVertices[v].mPosition)).Length());
+						mLRAConstraints.emplace_back(closest, v, va.mLRAMaxDistanceMultiplier * (Vec3(mVertices[closest].mPosition) - Vec3(mVertices[v].mPosition)).Length());
 						break;
 
 					case ELRAType::GeodesicDistance:
-						mLRAConstraints.emplace_back(closest, v, mClosestKinematic[v].mDistance);
+						mLRAConstraints.emplace_back(closest, v, va.mLRAMaxDistanceMultiplier * mClosestKinematic[v].mDistance);
 						break;
 					}
 				}
@@ -348,11 +351,11 @@ void SoftBodySharedSettings::CalculateEdgeLengths()
 	}
 }
 
-void SoftBodySharedSettings::CalculateLRALengths()
+void SoftBodySharedSettings::CalculateLRALengths(float inMaxDistanceMultiplier)
 {
 	for (LRA &l : mLRAConstraints)
 	{
-		l.mMaxDistance = (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
+		l.mMaxDistance = inMaxDistanceMultiplier * (Vec3(mVertices[l.mVertex[1]].mPosition) - Vec3(mVertices[l.mVertex[0]].mPosition)).Length();
 		JPH_ASSERT(l.mMaxDistance > 0.0f);
 	}
 }
