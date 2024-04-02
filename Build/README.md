@@ -187,7 +187,9 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 * A xmake package is available [here](https://github.com/xmake-io/xmake-repo/tree/dev/packages/j/joltphysics).
 * Jolt has been verified to build with [ninja](https://ninja-build.org/) through CMake.
 
-## Link Errors
+## Errors
+
+### Link Error: File Format Not Recognized
 
 If you receive the following error when linking:
 
@@ -197,13 +199,25 @@ If you receive the following error when linking:
 
 Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
 
-## DirectX Error
+### Link Error: Unresolved External Symbol
+
+If you receive a link error that looks like:
+
+```
+error LNK2001: unresolved external symbol "public: virtual void __cdecl JPH::ConvexShape::GetSubmergedVolume(...) const"
+```
+
+you have a mismatch in defines between your own code and the Jolt library. In this case the mismatch is in the define `JPH_DEBUG_RENDERER` which is most likely defined in `Jolt.lib` and not in your own project. In `Debug` and `Release` builds, Jolt by default has `JPH_DEBUG_RENDERER` defined, in `Distribution` it is not defined. The cmake options `DEBUG_RENDERER_IN_DEBUG_AND_RELEASE` and `DEBUG_RENDERER_IN_DISTRIBUTION` override this behavior.
+
+The `RegisterTypes` function (which you have to call to initialize the library) checks the other important defines and will trace and abort if there are more mismatches.
+
+### DirectX Error
 
 The samples use DirectX for the graphics implementation, when attempting to run the samples you may get a DirectX error pop-up which may say "The GPU device instance has been suspended", in your debugger you may see the message "Using the Redistributable D3D12 SDKLayers dll also requires that the latest SDKLayers for Windows 10 is installed.". 
 
 Fix this by enabling "Graphics Tools" which is an optional Windows settings. To enable it you have to press the windows key, search for "Manage Optional Features", and then click "Add a Feature", and install "Graphics Tools".
 
-## Illegal Instruction Error
+### Illegal Instruction Error
 
 If your CPU doesn't support all of the instructions you'll get an `Illegal instruction` exception.
 
