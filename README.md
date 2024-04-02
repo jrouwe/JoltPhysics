@@ -73,6 +73,14 @@ So why create yet another physics engine? First of all, this has been a personal
 	* Tracked vehicles.
 	* Motorcycles.
 * Soft body simulation (e.g. a soft ball or piece of cloth).
+	* Edge constraints.
+	* Dihedral bend constraints.
+	* Tetrahedron volume constraints.
+	* Long range attachment constraints (also called tethers).
+	* Limiting the simulation to stay within a certain range of a skinned vertex.
+	* Internal pressure.
+	* Collision with simulated rigid bodies.
+	* Collision tests against soft bodies.
 * Water buoyancy calculations.
 * An optional double precision mode that allows large worlds.
 
