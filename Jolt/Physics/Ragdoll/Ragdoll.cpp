@@ -616,7 +616,7 @@ void Ragdoll::DriveToPoseUsingMotors(const SkeletonPose &inPose)
 {
 	JPH_ASSERT(inPose.GetSkeleton() == mRagdollSettings->mSkeleton);
 
-	// Move bodies into the correct position using kinematics
+	// Move bodies into the correct position using constraints
 	for (int i = 0; i < (int)inPose.GetJointMatrices().size(); ++i)
 	{
 		int constraint_idx = mRagdollSettings->GetConstraintIndexForBodyIndex(i);
