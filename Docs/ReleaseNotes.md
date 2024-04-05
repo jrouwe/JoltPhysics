@@ -2,50 +2,71 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
-## Unreleased changes
+## v5.0.0
 
-### New functionality
-* Created an object layer filter implementation that is similar to Bullet's group & mask filtering, see ObjectLayerPairFilterMask.
-* Ability to enable gyroscopic forces on bodies to create the [Dzhanibekov effect](https://en.wikipedia.org/wiki/Tennis_racket_theorem).
+### New Functionality
+
+#### Soft Body
+
+* Added soft body skinning constraints. This can be used to limit the movement of soft body vertices based on a skinned mesh. See [documentation](https://jrouwe.github.io/JoltPhysics/index.html#skinning-soft-bodies) for more info or watch this [movie](https://www.youtube.com/watch?v=NXw8yMczHJg).
+* Added ability to turn on/off skinning constraints and to update the max distance for all constraints with a distance multiplier.
+* Added dihedral bend constraints for soft bodies. See [movie](https://www.youtube.com/watch?v=A1iswelnGH4).
+* Added long range attachment constraints (also called tethers) for soft bodies.
+* Added SoftBodyContactListener which allows you to get callbacks for collisions between soft bodies and rigid bodies. See [movie](https://www.youtube.com/watch?v=DmS_8d2bdOw).
+* Added support for a vertex radius for soft bodies. This keeps the vertices a fixed distance away from the surface which can be used to avoid z-fighting while rendering the soft body.
+* Added SoftBodySharedSettings::CreateConstraints function that can automatically generate constraints based on the faces of the soft body.
+* Added ability to update a soft body outside of the physics simulation step using SoftBodyMotionProperties::CustomUpdate. This is e.g. useful if the soft body is teleported and needs to 'settle'.
+
+#### Vehicles
+
+* Added support for less than 1 collision test per simulation step for vehicle wheels. This behavior can be configured differently when the vehicle is active / inactive. This can be used for LODding vehicles.
+* Added wheel index to VehicleConstraint::CombineFunction friction callback and calculating longitudinal and lateral friction in the same call so you can have more differentiation between wheels.
+* Added ability to override the max tire impulse calculations for wheeled vehicles. See WheeledVehicleController::SetTireMaxImpulseCallback.
+* Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
+
+#### Character
+
+* CharacterVirtual will now receive an OnContactAdded callback when it collides with a sensor (but will have no further interaction).
+* Added user data to CharacterVirtual.
+
+#### Constraints
+
 * Swing limits do not need to be symmetrical anymore for SixDOFConstraints. This requires using the new pyramid shaped swing limits (ESwingType::Pyramid). SwingTwistConstraints still requires symmetrical limits but can use the pyramid swing limits too. These are cheaper to evaluate but are less smooth.
 * Twist limits no longer need to be centered around zero for SixDOFConstraints and SwingTwistConstraints, any value between -PI and PI is supported now.
 * Changed the meaning of Constraint::mNumVelocity/PositionStepsOverride. Before the number of steps would be the maximum of all constraints and the default value, now an overridden value of 0 means that the constraint uses the default value, otherwise it will use the value as specified. This means that if all constraints in an island have a lower value than the default, we will now use the lower value instead of the default. This allows simulating an island at a lower precision than the default.
 * Bodies can now also override the default number of solver iterations. This value is used when the body collides with another body and a contact constraint is created (for constraints, the constraint override is always used).
-* Added BodyInterface::SetUseManifoldReduction which will clear the contact cache and ensure that you get consistent contact callbacks in case the body that you're changing already has contacts.
-* Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers and with which object layers they collide.
-* Added support for less than 1 collision test per simulation step for vehicle wheels. This behavior can be configured differently when the vehicle is active / inactive. This can be used for LODding vehicles.
-* Added wheel index to VehicleConstraint::CombineFunction friction callback and calculating longitudinal and lateral friction in the same call so you can have more differentiation between wheels.
-* Added ability to disable the lean steering limit for the motorcycle, turning this off makes the motorcycle more unstable, but gives you more control over the final steering angle.
-* Added function to query the bounding box of all bodies in the physics system, see PhysicsSystem::GetBounds.
-* Renamed SensorDetectsStatic to CollideKinematicVsNonDynamic and made it work for non-sensors. This means that kinematic bodies can now get collision callbacks when they collide with other static / kinematic objects.
-* CharacterVirtual will now receive an OnContactAdded callback when it collides with a sensor (but will have no further interaction).
-* Added support for a vertex radius for soft bodies. This keeps the vertices a fixed distance away from the surface which can be used to avoid z-fighting while rendering the soft body.
-* Implemented enhanced internal edge removal algorithm. This should help reduce ghost collisions. See BodyCreationSettings::mEnhancedInternalEdgeRemoval.
-* Added ability to override the max tire impulse calculations for wheeled vehicles. See WheeledVehicleController::SetTireMaxImpulseCallback.
-* Added user data to CharacterVirtual.
 * Added fraction hint to PathConstraintPath::GetClosestPoint. This can be used to speed up the search along the curve and to disambiguate fractions in case a path reaches the same point multiple times (i.e. a figure-8).
-* Added ability to update the height field materials after creation.
-* Added SoftBodyContactListener which allows you to get callbacks for collisions between soft bodies and rigid bodies.
-* Added ability to update a soft body outside of the physics simulation step. This is e.g. useful if the soft body is teleported and needs to 'settle'.
-* Added soft body skinning constraints. This can be used to limit the movement of soft body vertices based on a skinned mesh. See [documentation](https://jrouwe.github.io/JoltPhysics/index.html#skinning-soft-bodies) for more info.
-* Added ability to turn on/off skinning constraints and to update the max distance for all constraints with a distance multiplier.
-* Added Long Range Attachment constraints for soft bodies.
-* Added dihedral bend constraints for soft bodies.
-* Added SoftBodySharedSettings::CreateConstraints function that can automatically generate constraints based on the faces of the soft body.
 * Added Constraint::ResetWarmStart and Ragdoll::ResetWarmStart. Used to notify the system that the configuration of the bodies and/or constraint has changed enough so that the warm start impulses should not be applied the next frame. You can use this function for example when repositioning a ragdoll through Ragdoll::SetPose in such a way that the orientation of the bodies completely changes so that the previous frame impulses are no longer a good approximation of what the impulses will be in the next frame.
-* Supporting SIMD for WASM build. Use -msimd128 -msse4.2 options with emscripten to enable this.
-* Added DebugRendererSimple which can be used to simplify the creation of your own DebugRenderer implementation. It only requires a DrawLine, DrawTriangle and DrawText3D function to be implemented (which can be left empty).
-
-### Improvements
 * Multithreading the SetupVelocityConstraints job. This was causing a bottleneck in the case that there are a lot of constraints but very few possible collisions.
+
+#### Collision Detection
+
+* Created an object layer filter implementation that is similar to Bullet's group & mask filtering, see ObjectLayerPairFilterMask.
+* Created implementations of BroadPhaseLayerInterface, ObjectVsBroadPhaseLayerFilter and ObjectLayerPairFilter that use a bit table internally. These make it easier to define ObjectLayers and with which object layers they collide.
+* Renamed SensorDetectsStatic to CollideKinematicVsNonDynamic and made it work for non-sensors. This means that kinematic bodies can now get collision callbacks when they collide with other static / kinematic objects.
+* Added function to query the bounding box of all bodies in the physics system, see PhysicsSystem::GetBounds.
+
+#### Simulation
+
+* Implemented enhanced internal edge removal algorithm. This should help reduce ghost collisions. See BodyCreationSettings::mEnhancedInternalEdgeRemoval and [movie](https://www.youtube.com/watch?v=Wh5MIiiPVDE).
+* Added BodyInterface::SetUseManifoldReduction which will clear the contact cache and ensure that you get consistent contact callbacks in case the body that you're changing already has contacts.
+
+#### Various
+
+* Ability to enable gyroscopic forces on bodies to create the [Dzhanibekov effect](https://en.wikipedia.org/wiki/Tennis_racket_theorem).
+* Supporting SIMD for WASM build. Use -msimd128 -msse4.2 options with emscripten to enable this.
 * Allowing WASM build to use a custom memory allocator.
+* Added DebugRendererSimple which can be used to simplify the creation of your own DebugRenderer implementation. It only requires a DrawLine, DrawTriangle and DrawText3D function to be implemented (which can be left empty).
+* Added ability to update the height field materials after creation.
 
 ### Removed functionality
 * Ability to restrict rotational degrees of freedom in local space, instead this is now done in world space.
 
 ### Bug fixes
+
 * Fixed a bug in cast sphere vs triangle that could return a false positive hit against a degenerate triangle.
 * Fixed bug in soft body vs tapered capsule. The calculations were slightly off causing a normal on the top or bottom sphere to be returned while the tapered part was actually closest.
+* Fixed bug where colliding a cyclinder against a large triangle could return an incorrect contact point.
 * Fixed bug where soft bodies would collide with sensors as if they were normal bodies.
 * Sensors will no longer use speculative contacts, so will no longer report contacts before an actual contact is detected.
 * Hinge limit constraint forces were clamped wrongly when the hinge was exactly at the minimum limit, making it harder to push the hinge towards the maximum limit.
@@ -61,7 +82,6 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed a possible division by zero in Body::GetBodyCreationSettings when the inverse inertia diagonal had 0's.
 * When specifying a -1 for min/max distance of a distance constraint and the calculated distance is incompatible with the other limit, we'll clamp it to that value now instead of ending up with min > max.
 * Fixed bug that contact cache was partially uninitialized when colliding two objects with inv mass override of 0. When the contact listener would report a non zero inv mass override the next simulation step this would mean that the simulation would read garbage and potentially crash due to NaNs.
-* Fixed bug where colliding a cyclinder against a large triangle could return an incorrect contact point.
 
 ## v4.0.2
 

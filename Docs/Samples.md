@@ -83,6 +83,14 @@ This category demonstrates how ragdolls can be made and controlled using keyfram
 |:-|
 |*Demonstrates the use of soft body contact listeners. You can use these to affect the collision response between a soft body and a rigid body by e.g. artificially making the mass of one of the two higher so that the other is less affected by the collision. Finally you can also turn a contact into a sensor contact which means you get the contact points but there will not be any collision response..*|
 
+|[![Soft Body Bend Constraints Demo](https://img.youtube.com/vi/A1iswelnGH4/hqdefault.jpg)](https://www.youtube.com/watch?v=A1iswelnGH4)|
+|:-|
+|*This video shows the effect of bend constraints on a wrinkled cloth. The left most patch has no constraints to preserve the wrinkles, the middle uses distance constrains ('sticks') to preserve the wrinkles and the last one uses dihedral angle constraints to preserve the angle between two triangles on their shared edge.*|
+
+|[![Soft Body Skin Constraints Demo](https://img.youtube.com/vi/NXw8yMczHJg/hqdefault.jpg)](https://www.youtube.com/watch?v=NXw8yMczHJg)|
+|:-|
+|*This demo shows a soft body that is connected to a skinned mesh via distance constraints. Each simulated vertex can deviate from its skinned position by a fixed length. The green lines indicate the animated joints of the skinned mesh.*|
+
 ### Character
 
 This category shows how you can simulate a (humanoid) character using a capsule.
