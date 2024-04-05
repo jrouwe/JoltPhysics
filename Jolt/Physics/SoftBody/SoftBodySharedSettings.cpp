@@ -509,7 +509,12 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 
 				// Order the edges so that the ones with the smallest index go first (hoping to get better cache locality when we process the edges).
 				// Note we could also re-order the vertices but that would be much more of a burden to the end user
-				return e1.GetMinVertexIndex() < e2.GetMinVertexIndex();
+				uint32 m1 = e1.GetMinVertexIndex();
+				uint32 m2 = e2.GetMinVertexIndex();
+				if (m1 != m2)
+					return m1 < m2;
+
+				return inLHS < inRHS;
 			});
 
 	// Assign the edges to groups and reorder them
@@ -551,7 +556,12 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 				return d1 < d2;
 
 			// Order constraints so that the ones with the smallest index go first
-			return b1.GetMinVertexIndex() < b2.GetMinVertexIndex();
+			uint32 m1 = b1.GetMinVertexIndex();
+			uint32 m2 = b2.GetMinVertexIndex();
+			if (m1 != m2)
+				return m1 < m2;
+
+			return inLHS < inRHS;
 		});
 
 	// Reorder the bend constraints
