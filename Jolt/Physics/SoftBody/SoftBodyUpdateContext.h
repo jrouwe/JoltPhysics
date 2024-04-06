@@ -38,26 +38,13 @@ public:
 		Done																		///< Update is finished
 	};
 
-	/// Construct the edge constraint iterator starting at a new group
-	static inline uint64				sGetEdgeGroupStart(uint32 inGroup)
-	{
-		return uint64(inGroup) << 32;
-	}
-
-	/// Get the group and start index from the edge constraint iterator
-	static inline void					sGetEdgeGroupAndStartIdx(uint64 inNextEdgeConstraint, uint32 &outGroup, uint32 &outStartIdx)
-	{
-		outGroup = uint32(inNextEdgeConstraint >> 32);
-		outStartIdx = uint32(inNextEdgeConstraint);
-	}
-
 	// State of the update
 	atomic<EState>						mState { EState::DetermineCollisionPlanes };///< Current state of the update
 	atomic<uint>						mNextCollisionVertex { 0 };					///< Next vertex to process for DetermineCollisionPlanes
 	atomic<uint>						mNumCollisionVerticesProcessed { 0 };		///< Number of vertices processed by DetermineCollisionPlanes, used to determine if we can start simulating
 	atomic<uint>						mNextIteration { 0 };						///< Next simulation iteration to process
-	atomic<uint64>						mNextEdgeConstraint { 0 };					///< Next edge constraint group and start index to process
-	atomic<uint>						mNumEdgeConstraintsProcessed { 0 };			///< Number of edge constraints processed by ApplyEdgeConstraints, used to determine if we can go to the next group / iteration
+	atomic<uint>						mNextConstraintGroup { 0 };					///< Next constraint group to process
+	atomic<uint>						mNumConstraintGroupsProcessed { 0 };		///< Number of groups processed, used to determine if we can go to the next iteration
 
 	// Output
 	Vec3								mDeltaPosition;								///< Delta position of the body in the current time step, should be applied after the update
