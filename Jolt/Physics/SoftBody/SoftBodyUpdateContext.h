@@ -18,7 +18,7 @@ class SoftBodyUpdateContext : public NonCopyable
 {
 public:
 	static constexpr uint				cVertexCollisionBatch = 64;					///< Number of vertices to process in a batch in DetermineCollisionPlanes
-	static constexpr uint				cEdgeConstraintBatch = 128;					///< Number of edge constraints to process in a batch in ApplyEdgeConstraints
+	static constexpr uint				cVertexConstraintBatch = 256;				///< Number of vertices to group for processing batches of constraints in ApplyEdgeConstraints
 
 	// Input
 	Body *								mBody;										///< Body that is being updated

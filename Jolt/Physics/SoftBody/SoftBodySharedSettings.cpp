@@ -599,8 +599,8 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			}
 
 			// Create a new group?
-			if (current_group.size() >= SoftBodyUpdateContext::cEdgeConstraintBatch // If full, yes
-				|| (current_group.size() > SoftBodyUpdateContext::cEdgeConstraintBatch / 2 && best_vertex == UINT_MAX)) // If half full and we found no connected vertex, yes
+			if (current_group.size() >= SoftBodyUpdateContext::cVertexConstraintBatch // If full, yes
+				|| (current_group.size() > SoftBodyUpdateContext::cVertexConstraintBatch / 2 && best_vertex == UINT_MAX)) // If half full and we found no connected vertex, yes
 			{
 				current_group.clear();
 				current_group_idx++;
@@ -614,7 +614,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	}
 
 	// If the last group is more than half full, we'll keep it as a separate group, otherwise we merge it with the 'non parallel' group
-	if (current_group.size() > SoftBodyUpdateContext::cEdgeConstraintBatch / 2)
+	if (current_group.size() > SoftBodyUpdateContext::cVertexConstraintBatch / 2)
 		++current_group_idx;
 
 	// We no longer need the current group array, free the memory
