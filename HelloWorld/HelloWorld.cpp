@@ -293,6 +293,7 @@ int main(int argc, char** argv)
 	// Create the settings for the collision volume (the shape).
 	// Note that for simple shapes (like boxes) you can also directly construct a BoxShape.
 	BoxShapeSettings floor_shape_settings(Vec3(100.0f, 1.0f, 100.0f));
+	floor_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
 
 	// Create the shape
 	ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
