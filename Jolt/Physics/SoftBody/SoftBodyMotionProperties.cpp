@@ -991,8 +991,17 @@ void SoftBodyMotionProperties::DrawVertexVelocities(DebugRenderer *inRenderer, R
 
 void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
 {
-	for (const Edge &e : mSettings->mEdgeConstraints)
-		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, Color::sWhite);
+	uint idx = 0;
+	for (uint i = 0; i < (uint)mSettings->mEdgeGroupEndIndices.size(); ++i)
+	{
+		uint end = mSettings->mEdgeGroupEndIndices[i];
+		Color color = Color::sGetDistinctColor((uint)mSettings->mEdgeGroupEndIndices.size() - i - 1); // Ensure that color 0 is always the last group
+		for (; idx < end; ++idx)
+		{
+			const Edge &e = mSettings->mEdgeConstraints[idx];
+			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, color);
+		}
+	}
 }
 
 void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const

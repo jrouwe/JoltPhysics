@@ -464,32 +464,180 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 {
-	const uint cMaxNumGroups = 32;
-	const uint cNonParallelGroupIdx = cMaxNumGroups - 1;
-	const uint cMinimumSize = 2 * SoftBodyUpdateContext::cEdgeConstraintBatch; // There should be at least 2 batches, otherwise there's no point in parallelizing
-
-	// Assign edges to non-overlapping groups
-	Array<uint32> masks;
-	masks.resize(mVertices.size(), 0);
-	Array<uint> edge_groups[cMaxNumGroups];
-	for (const Edge &e : mEdgeConstraints)
+	// Create a list of connected vertices
+	Array<Array<uint32>> connectivity;
+	connectivity.resize(mVertices.size());
+	for (const Edge &c : mEdgeConstraints)
 	{
-		uint32 &mask1 = masks[e.mVertex[0]];
-		uint32 &mask2 = masks[e.mVertex[1]];
-		uint group = min(CountTrailingZeros((~mask1) & (~mask2)), cNonParallelGroupIdx);
-		uint32 mask = uint32(1U << group);
-		mask1 |= mask;
-		mask2 |= mask;
-		edge_groups[group].push_back(uint(&e - mEdgeConstraints.data()));
+		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
+	}
+	for (const LRA &c : mLRAConstraints)
+	{
+		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
+	}
+	for (const DihedralBend &c : mDihedralBendConstraints)
+	{
+		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[0]].push_back(c.mVertex[2]);
+		connectivity[c.mVertex[0]].push_back(c.mVertex[3]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[2]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[3]);
+		connectivity[c.mVertex[2]].push_back(c.mVertex[0]);
+		connectivity[c.mVertex[2]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[2]].push_back(c.mVertex[3]);
+		connectivity[c.mVertex[3]].push_back(c.mVertex[0]);
+		connectivity[c.mVertex[3]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[3]].push_back(c.mVertex[2]);
+	}
+	for (const Volume &c : mVolumeConstraints)
+	{
+		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[0]].push_back(c.mVertex[2]);
+		connectivity[c.mVertex[0]].push_back(c.mVertex[3]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[2]);
+		connectivity[c.mVertex[1]].push_back(c.mVertex[3]);
+		connectivity[c.mVertex[2]].push_back(c.mVertex[0]);
+		connectivity[c.mVertex[2]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[2]].push_back(c.mVertex[3]);
+		connectivity[c.mVertex[3]].push_back(c.mVertex[0]);
+		connectivity[c.mVertex[3]].push_back(c.mVertex[1]);
+		connectivity[c.mVertex[3]].push_back(c.mVertex[2]);
 	}
 
-	// Merge groups that are too small into the non-parallel group
-	for (uint i = 0; i < cNonParallelGroupIdx; ++i)
-		if (edge_groups[i].size() < cMinimumSize)
+	// Maps each of the vertices to a group index
+	Array<int> group_idx;
+	group_idx.resize(mVertices.size(), -1);
+
+	// Which group we are currently filling and its vertices
+	int current_group_idx = 0;
+	Array<uint> current_group;
+
+	// Start greedy algorithm to group vertices
+	for (;;)
+	{
+		// Find the bounding box of the ungrouped vertices
+		AABox bounds;
+		for (uint i = 0; i < (uint)mVertices.size(); ++i)
+			if (group_idx[i] == -1)
+				bounds.Encapsulate(Vec3(mVertices[i].mPosition));
+
+		// Determine longest and shortest axis
+		Vec3 bounds_size = bounds.GetSize();
+		uint max_axis = bounds_size.GetHighestComponentIndex();
+		uint min_axis = bounds_size.GetLowestComponentIndex();
+		if (min_axis == max_axis)
+			min_axis = (min_axis + 1) % 3;
+		uint mid_axis = 3 - min_axis - max_axis;
+
+		// Find the vertex that has the lowest value on the axis with the largest extent
+		uint current_vertex = UINT_MAX;
+		Float3 current_vertex_position { FLT_MAX, FLT_MAX, FLT_MAX };
+		for (uint i = 0; i < (uint)mVertices.size(); ++i)
+			if (group_idx[i] == -1)
+			{
+				const Float3 &vertex_position = mVertices[i].mPosition;
+				float max_axis_value = vertex_position[max_axis];
+				float mid_axis_value = vertex_position[mid_axis];
+				float min_axis_value = vertex_position[min_axis];
+
+				if (max_axis_value < current_vertex_position[max_axis]
+					|| (max_axis_value == current_vertex_position[max_axis]
+						&& (mid_axis_value < current_vertex_position[mid_axis]
+							|| (mid_axis_value == current_vertex_position[mid_axis]
+								&& min_axis_value < current_vertex_position[min_axis]))))
+				{
+					current_vertex_position = mVertices[i].mPosition;
+					current_vertex = i;
+				}
+			}
+		if (current_vertex == UINT_MAX)
+			break;
+
+		// Initialize the current group with 1 vertex
+		current_group.push_back(current_vertex);
+		group_idx[current_vertex] = current_group_idx;
+
+		// Fill up the group
+		for (;;)
 		{
-			edge_groups[cNonParallelGroupIdx].insert(edge_groups[cNonParallelGroupIdx].end(), edge_groups[i].begin(), edge_groups[i].end());
-			edge_groups[i].clear();
+			// Find the vertex that is most connected to the current group
+			uint best_vertex = UINT_MAX;
+			uint best_num_connections = 0;
+			float best_dist_sq = FLT_MAX;
+			for (uint i = 0; i < (uint)current_group.size(); ++i) // For all vertices in the current group
+				for (uint v : connectivity[current_group[i]]) // For all connections to other vertices
+					if (group_idx[v] == -1) // Ungrouped vertices only
+					{
+						// Count the number of connections to this group
+						uint num_connections = 0;
+						for (uint v2 : connectivity[v])
+							if (group_idx[v2] == current_group_idx)
+								++num_connections;
+
+						// Calculate distance to group centroid
+						float dist_sq = (Vec3(mVertices[v].mPosition) - Vec3(mVertices[current_group.front()].mPosition)).LengthSq();
+
+						if (best_vertex == UINT_MAX
+							|| num_connections > best_num_connections
+							|| (num_connections == best_num_connections && dist_sq < best_dist_sq))
+						{
+							best_vertex = v;
+							best_num_connections = num_connections;
+							best_dist_sq = dist_sq;
+						}
+					}
+
+			// Add the best vertex to the current group
+			if (best_vertex != UINT_MAX)
+			{
+				current_group.push_back(best_vertex);
+				group_idx[best_vertex] = current_group_idx;
+			}
+
+			// Create a new group?
+			if (current_group.size() >= SoftBodyUpdateContext::cEdgeConstraintBatch // If full, yes
+				|| (current_group.size() > SoftBodyUpdateContext::cEdgeConstraintBatch / 2 && best_vertex == UINT_MAX)) // If half full and we found no connected vertex, yes
+			{
+				current_group.clear();
+				current_group_idx++;
+				break;
+			}
+
+			// If we didn't find a connected vertex, we need to find a new starting vertex
+			if (best_vertex == UINT_MAX)
+				break;
 		}
+	}
+
+	// If the last group is more than half full, we'll keep it as a separate group, otherwise we merge it with the 'non parallel' group
+	if (current_group.size() > SoftBodyUpdateContext::cEdgeConstraintBatch / 2)
+		++current_group_idx;
+
+	// We no longer need the current group array, free the memory
+	current_group.clear();
+	current_group.shrink_to_fit();
+
+	// We're done with the connectivity list, free the memory
+	connectivity.clear();
+	connectivity.shrink_to_fit();
+
+	// Assign the edges to their groups
+	Array<Array<uint>> edge_groups;
+	edge_groups.resize(current_group_idx + 1); // + non parallel group
+	for (const Edge &e : mEdgeConstraints)
+	{
+		int g1 = group_idx[e.mVertex[0]];
+		int g2 = group_idx[e.mVertex[1]];
+		JPH_ASSERT(g1 >= 0 && g2 >= 0);
+		if (g1 == g2) // In the same group
+			edge_groups[g1].push_back(uint(&e - mEdgeConstraints.data()));
+		else // In different groups -> parallel group
+			edge_groups.back().push_back(uint(&e - mEdgeConstraints.data()));
+	}
 
 	// Make sure we know the closest kinematic vertex so we can sort
 	CalculateClosestKinematic();
@@ -531,10 +679,6 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			}
 			mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
 		}
-
-	// If there is no non-parallel group then add an empty group at the end
-	if (edge_groups[cNonParallelGroupIdx].empty())
-		mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
 
 	// Sort the bend constraints
 	outResults.mDihedralBendRemap.resize(mDihedralBendConstraints.size());
