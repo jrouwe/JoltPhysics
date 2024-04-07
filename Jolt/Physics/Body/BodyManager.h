@@ -203,6 +203,7 @@ public:
 	/// Save the state of a single body for replay
 	void							RestoreBodyState(Body &inBody, StateRecorder &inStream);
 
+#ifdef JPH_DEBUG_RENDERER
 	enum class EShapeColor
 	{
 		InstanceColor,				///< Random color per instance
@@ -213,7 +214,12 @@ public:
 		MaterialColor,				///< Color as defined by the PhysicsMaterial of the shape
 	};
 
-#ifdef JPH_DEBUG_RENDERER
+	enum class ESoftBodyConstraintColor
+	{
+		ConstraintType,				/// Draw different types of constraints in different colors
+		ConstraintGroup,			/// Draw constraints in the same group in the same color, non-parallel group will be red
+	};
+
 	/// Draw settings
 	struct DrawSettings
 	{
@@ -237,6 +243,7 @@ public:
 		bool						mDrawSoftBodySkinConstraints = false;			///< Draw the skin constraints of soft bodies
 		bool						mDrawSoftBodyLRAConstraints = false;			///< Draw the LRA constraints of soft bodies
 		bool						mDrawSoftBodyPredictedBounds = false;			///< Draw the predicted bounds of soft bodies
+		ESoftBodyConstraintColor	mDrawSoftBodyConstraintColor = ESoftBodyConstraintColor::ConstraintType; ///< Coloring scheme to use for soft body constraints
 	};
 
 	/// Draw the state of the bodies (debugging purposes)

@@ -77,7 +77,9 @@ public:
 	{
 	public:
 		Array<uint>		mEdgeRemap;									///< Maps old edge index to new edge index
+		Array<uint>		mLRARemap;									///< Maps old LRA index to new LRA index
 		Array<uint>		mDihedralBendRemap;							///< Maps old dihedral bend index to new dihedral bend index
+		Array<uint>		mVolumeRemap;								///< Maps old volume constraint index to new volume constraint index
 	};
 
 	/// Optimize the soft body settings for simulation. This will reorder constraints so they can be executed in parallel.
@@ -301,6 +303,9 @@ public:
 private:
 	friend class SoftBodyMotionProperties;
 
+	/// Calculate the closest kinematic vertex array
+	void				CalculateClosestKinematic();
+
 	/// Tracks the closest kinematic vertex
 	struct ClosestKinematic
 	{
@@ -308,14 +313,17 @@ private:
 		float			mDistance = FLT_MAX;						///< Distance to the closest kinematic vertex
 	};
 
-	/// Calculate the closest kinematic vertex array
-	void				CalculateClosestKinematic();
-
-	/// Get the size of an edge group (edge groups can run in parallel)
-	uint				GetEdgeGroupSize(uint inGroupIdx) const		{ return inGroupIdx == 0? mEdgeGroupEndIndices[0] : mEdgeGroupEndIndices[inGroupIdx] - mEdgeGroupEndIndices[inGroupIdx - 1]; }
+	/// Tracks the end indices of the various constraint groups
+	struct UpdateGroup
+	{
+		uint			mEdgeEndIndex;								///< The end index of the edge constraints in this group
+		uint			mLRAEndIndex;								///< The end index of the LRA constraints in this group
+		uint			mDihedralBendEndIndex;						///< The end index of the dihedral bend constraints in this group
+		uint			mVolumeEndIndex;							///< The end index of the volume constraints in this group
+	};
 
 	Array<ClosestKinematic> mClosestKinematic;						///< The closest kinematic vertex to each vertex in mVertices
-	Array<uint>			mEdgeGroupEndIndices;						///< The start index of each group of edges that can be solved in parallel, calculated by Optimize()
+	Array<UpdateGroup>	mUpdateGroups;								///< The end indices for each group of constraints that can be updated in parallel
 	Array<uint32>		mSkinnedConstraintNormals;					///< A list of indices in the mFaces array used by mSkinnedConstraints, calculated by CalculateSkinnedConstraintNormals()
 };
 

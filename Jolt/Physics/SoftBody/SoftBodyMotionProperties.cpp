@@ -248,18 +248,18 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 		}
 }
 
-void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyDihedralBendConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
 {
 	JPH_PROFILE_FUNCTION();
 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
-	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
+	for (const DihedralBend *b = mSettings->mDihedralBendConstraints.data() + inStartIndex; b < mSettings->mDihedralBendConstraints.data() + inEndIndex; ++b)
 	{
-		Vertex &v0 = mVertices[b.mVertex[0]];
-		Vertex &v1 = mVertices[b.mVertex[1]];
-		Vertex &v2 = mVertices[b.mVertex[2]];
-		Vertex &v3 = mVertices[b.mVertex[3]];
+		Vertex &v0 = mVertices[b->mVertex[0]];
+		Vertex &v1 = mVertices[b->mVertex[1]];
+		Vertex &v2 = mVertices[b->mVertex[2]];
+		Vertex &v3 = mVertices[b->mVertex[3]];
 
 		// Get positions
 		Vec3 x0 = v0.mPosition;
@@ -298,7 +298,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		// As per "Strain Based Dynamics" Appendix A we need to negate the gradients when (n1 x n2) . e > 0, instead we make sure that the sign of the constraint equation is correct
 		float sign = Sign(n2.Cross(n1).Dot(e));
 		float d = n1.Dot(n2) / sqrt(n1_len_sq_n2_len_sq);
-		float c = sign * ACos(d) - b.mInitialAngle;
+		float c = sign * ACos(d) - b->mInitialAngle;
 
 		// Ensure the range is -PI to PI
 		if (c > JPH_PI)
@@ -326,7 +326,7 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 		float w3 = v3.mInvMass;
 
 		// Calculate -lambda
-		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b.mCompliance * inv_dt_sq;
+		float denom = w0 * d0c.LengthSq() + w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + b->mCompliance * inv_dt_sq;
 		if (denom < 1.0e-12f)
 			continue;
 		float minus_lambda = c / denom;
@@ -339,19 +339,19 @@ void SoftBodyMotionProperties::ApplyBendConstraints(const SoftBodyUpdateContext 
 	}
 }
 
-void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext)
+void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex)
 {
 	JPH_PROFILE_FUNCTION();
 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
 	// Satisfy volume constraints
-	for (const Volume &v : mSettings->mVolumeConstraints)
+	for (const Volume *v = mSettings->mVolumeConstraints.data() + inStartIndex; v < mSettings->mVolumeConstraints.data() + inEndIndex; ++v)
 	{
-		Vertex &v1 = mVertices[v.mVertex[0]];
-		Vertex &v2 = mVertices[v.mVertex[1]];
-		Vertex &v3 = mVertices[v.mVertex[2]];
-		Vertex &v4 = mVertices[v.mVertex[3]];
+		Vertex &v1 = mVertices[v->mVertex[0]];
+		Vertex &v2 = mVertices[v->mVertex[1]];
+		Vertex &v3 = mVertices[v->mVertex[2]];
+		Vertex &v4 = mVertices[v->mVertex[3]];
 
 		Vec3 x1 = v1.mPosition;
 		Vec3 x2 = v2.mPosition;
@@ -362,7 +362,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 		Vec3 x1x2 = x2 - x1;
 		Vec3 x1x3 = x3 - x1;
 		Vec3 x1x4 = x4 - x1;
-		float c = abs(x1x2.Cross(x1x3).Dot(x1x4)) - v.mSixRestVolume;
+		float c = abs(x1x2.Cross(x1x3).Dot(x1x4)) - v->mSixRestVolume;
 
 		// Calculate gradient of constraint equation
 		Vec3 d1c = (x4 - x2).Cross(x3 - x2);
@@ -377,7 +377,7 @@ void SoftBodyMotionProperties::ApplyVolumeConstraints(const SoftBodyUpdateContex
 		float w4 = v4.mInvMass;
 
 		// Calculate -lambda
-		float denom = w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v.mCompliance * inv_dt_sq;
+		float denom = w1 * d1c.LengthSq() + w2 * d2c.LengthSq() + w3 * d3c.LengthSq() + w4 * d4c.LengthSq() + v->mCompliance * inv_dt_sq;
 		if (denom < 1.0e-12f)
 			continue;
 		float minus_lambda = c / denom;
@@ -452,12 +452,10 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 	float inv_dt_sq = 1.0f / Square(inContext.mSubStepDeltaTime);
 
 	// Satisfy edge constraints
-	const Array<Edge> &edge_constraints = mSettings->mEdgeConstraints;
-	for (uint i = inStartIndex; i < inEndIndex; ++i)
+	for (const Edge *e = mSettings->mEdgeConstraints.data() + inStartIndex; e < mSettings->mEdgeConstraints.data() + inEndIndex; ++e)
 	{
-		const Edge &e = edge_constraints[i];
-		Vertex &v0 = mVertices[e.mVertex[0]];
-		Vertex &v1 = mVertices[e.mVertex[1]];
+		Vertex &v0 = mVertices[e->mVertex[0]];
+		Vertex &v1 = mVertices[e->mVertex[1]];
 
 		// Get positions
 		Vec3 x0 = v0.mPosition;
@@ -468,33 +466,33 @@ void SoftBodyMotionProperties::ApplyEdgeConstraints(const SoftBodyUpdateContext 
 		float length = delta.Length();
 
 		// Apply correction
-		float denom = length * (v0.mInvMass + v1.mInvMass + e.mCompliance * inv_dt_sq);
+		float denom = length * (v0.mInvMass + v1.mInvMass + e->mCompliance * inv_dt_sq);
 		if (denom < 1.0e-12f)
 			continue;
-		Vec3 correction = delta * (length - e.mRestLength) / denom;
+		Vec3 correction = delta * (length - e->mRestLength) / denom;
 		v0.mPosition = x0 + v0.mInvMass * correction;
 		v1.mPosition = x1 - v1.mInvMass * correction;
 	}
 }
 
-void SoftBodyMotionProperties::ApplyLRAConstraints()
+void SoftBodyMotionProperties::ApplyLRAConstraints(uint inStartIndex, uint inEndIndex)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Satisfy LRA constraints
 	Vertex *vertices = mVertices.data();
-	for (const LRA &lra : mSettings->mLRAConstraints)
+	for (const LRA *lra = mSettings->mLRAConstraints.data() + inStartIndex; lra < mSettings->mLRAConstraints.data() + inEndIndex; ++lra)
 	{
-		JPH_ASSERT(lra.mVertex[0] < mVertices.size());
-		JPH_ASSERT(lra.mVertex[1] < mVertices.size());
-		const Vertex &vertex0 = vertices[lra.mVertex[0]];
-		Vertex &vertex1 = vertices[lra.mVertex[1]];
+		JPH_ASSERT(lra->mVertex[0] < mVertices.size());
+		JPH_ASSERT(lra->mVertex[1] < mVertices.size());
+		const Vertex &vertex0 = vertices[lra->mVertex[0]];
+		Vertex &vertex1 = vertices[lra->mVertex[1]];
 
 		Vec3 x0 = vertex0.mPosition;
 		Vec3 delta = vertex1.mPosition - x0;
 		float delta_len_sq = delta.LengthSq();
-		if (delta_len_sq > Square(lra.mMaxDistance))
-			vertex1.mPosition = x0 + delta * lra.mMaxDistance / sqrt(delta_len_sq);
+		if (delta_len_sq > Square(lra->mMaxDistance))
+			vertex1.mPosition = x0 + delta * lra->mMaxDistance / sqrt(delta_len_sq);
 	}
 }
 
@@ -737,10 +735,6 @@ void SoftBodyMotionProperties::StartNextIteration(const SoftBodyUpdateContext &i
 	ApplyPressure(ioContext);
 
 	IntegratePositions(ioContext);
-
-	ApplyBendConstraints(ioContext);
-
-	ApplyVolumeConstraints(ioContext);
 }
 
 SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCollisionPlanes(SoftBodyUpdateContext &ioContext)
@@ -763,7 +757,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCol
 				JPH_IF_ENABLE_ASSERTS(uint iteration =) ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
 				JPH_ASSERT(iteration == 0);
 				StartNextIteration(ioContext);
-				ioContext.mState.store(SoftBodyUpdateContext::EState::ApplyEdgeConstraints, memory_order_release);
+				ioContext.mState.store(SoftBodyUpdateContext::EState::ApplyConstraints, memory_order_release);
 			}
 			return EStatus::DidWork;
 		}
@@ -771,76 +765,83 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCol
 	return EStatus::NoWork;
 }
 
-SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyEdgeConstraints(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+void SoftBodyMotionProperties::ProcessGroup(const SoftBodyUpdateContext &ioContext, uint inGroupIndex)
 {
-	// Do a relaxed read first to see if there is any work to do (this prevents us from doing expensive atomic operations and also prevents us from continuously incrementing the counter and overflowing it)
-	uint num_groups = (uint)mSettings->mEdgeGroupEndIndices.size();
+	// Determine start and end
+	SoftBodySharedSettings::UpdateGroup start { 0, 0, 0, 0 };
+	const SoftBodySharedSettings::UpdateGroup &prev = inGroupIndex > 0? mSettings->mUpdateGroups[inGroupIndex - 1] : start;
+	const SoftBodySharedSettings::UpdateGroup &current = mSettings->mUpdateGroups[inGroupIndex];
+
+	// Process volume constraints
+	ApplyVolumeConstraints(ioContext, prev.mVolumeEndIndex, current.mVolumeEndIndex);
+
+	// Process bend constraints
+	ApplyDihedralBendConstraints(ioContext, prev.mDihedralBendEndIndex, current.mDihedralBendEndIndex);
+
+	// Process edges
+	ApplyEdgeConstraints(ioContext, prev.mEdgeEndIndex, current.mEdgeEndIndex);
+
+	// Process LRA constraints
+	ApplyLRAConstraints(prev.mLRAEndIndex, current.mLRAEndIndex);
+}
+
+SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelApplyConstraints(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings)
+{
+	uint num_groups = (uint)mSettings->mUpdateGroups.size();
 	JPH_ASSERT(num_groups > 0, "SoftBodySharedSettings::Optimize should have been called!");
-	uint32 edge_group, edge_start_idx;
-	SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(ioContext.mNextEdgeConstraint.load(memory_order_relaxed), edge_group, edge_start_idx);
-	if (edge_group < num_groups)
+	--num_groups; // Last group is the non-parallel group, we don't want to execute it in parallel
+		
+	// Do a relaxed read first to see if there is any work to do (this prevents us from doing expensive atomic operations and also prevents us from continuously incrementing the counter and overflowing it)
+	uint next_group = ioContext.mNextConstraintGroup.load(memory_order_relaxed);
+	if (next_group < num_groups || (num_groups == 0 && next_group == 0))
 	{
-		uint edge_group_size = mSettings->GetEdgeGroupSize(edge_group);
-		if (edge_start_idx < edge_group_size || edge_group_size == 0)
+		// Fetch the next group process
+		next_group = ioContext.mNextConstraintGroup.fetch_add(1, memory_order_acquire);
+		if (next_group < num_groups || (num_groups == 0 && next_group == 0))
 		{
-			// Fetch the next batch of edges to process
-			uint64 next_edge_batch = ioContext.mNextEdgeConstraint.fetch_add(SoftBodyUpdateContext::cEdgeConstraintBatch, memory_order_acquire);
-			SoftBodyUpdateContext::sGetEdgeGroupAndStartIdx(next_edge_batch, edge_group, edge_start_idx);
-			if (edge_group < num_groups)
+			uint num_groups_processed = 0;
+			if (num_groups > 0)
 			{
-				bool non_parallel_group = edge_group == num_groups - 1; // Last group is the non-parallel group and goes as a whole
-				edge_group_size = mSettings->GetEdgeGroupSize(edge_group);
-				if (non_parallel_group? edge_start_idx == 0 : edge_start_idx < edge_group_size)
+				// Process this group
+				ProcessGroup(ioContext, next_group);
+
+				// Increment total number of groups processed
+				num_groups_processed = ioContext.mNumConstraintGroupsProcessed.fetch_add(1, memory_order_relaxed) + 1;
+			}
+
+			if (num_groups_processed >= num_groups)
+			{
+				// Finish the iteration
+				JPH_PROFILE("FinishIteration");
+
+				// Process non-parallel group
+				ProcessGroup(ioContext, num_groups);
+
+				ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
+
+				ApplySkinConstraints(ioContext);
+
+				uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
+				if (iteration < mNumIterations)
 				{
-					// Process edges
-					uint num_edges_to_process = non_parallel_group? edge_group_size : min(SoftBodyUpdateContext::cEdgeConstraintBatch, edge_group_size - edge_start_idx);
-					if (edge_group > 0)
-						edge_start_idx += mSettings->mEdgeGroupEndIndices[edge_group - 1];
-					ApplyEdgeConstraints(ioContext, edge_start_idx, edge_start_idx + num_edges_to_process);
+					// Start a new iteration
+					StartNextIteration(ioContext);
 
-					// Test if we're at the end of this group
-					uint edge_constraints_processed = ioContext.mNumEdgeConstraintsProcessed.fetch_add(num_edges_to_process, memory_order_relaxed) + num_edges_to_process;
-					if (edge_constraints_processed >= edge_group_size)
-					{
-						// Non parallel group is the last group (which is also the only group that can be empty)
-						if (non_parallel_group || mSettings->GetEdgeGroupSize(edge_group + 1) == 0)
-						{
-							// Finish the iteration
-							ApplyLRAConstraints();
+					// Reset group logic
+					ioContext.mNumConstraintGroupsProcessed.store(0, memory_order_relaxed);
+					ioContext.mNextConstraintGroup.store(0, memory_order_release);
+				}
+				else
+				{
+					// On final iteration we update the state
+					UpdateSoftBodyState(ioContext, inPhysicsSettings);
 
-							ApplyCollisionConstraintsAndUpdateVelocities(ioContext);
-
-							ApplySkinConstraints(ioContext);
-
-							uint iteration = ioContext.mNextIteration.fetch_add(1, memory_order_relaxed);
-							if (iteration < mNumIterations)
-							{
-								// Start a new iteration
-								StartNextIteration(ioContext);
-
-								// Reset next edge to process
-								ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
-								ioContext.mNextEdgeConstraint.store(0, memory_order_release);
-							}
-							else
-							{
-								// On final iteration we update the state
-								UpdateSoftBodyState(ioContext, inPhysicsSettings);
-
-								ioContext.mState.store(SoftBodyUpdateContext::EState::Done, memory_order_release);
-								return EStatus::Done;
-							}
-						}
-						else
-						{
-							// Next group
-							ioContext.mNumEdgeConstraintsProcessed.store(0, memory_order_relaxed);
-							ioContext.mNextEdgeConstraint.store(SoftBodyUpdateContext::sGetEdgeGroupStart(edge_group + 1), memory_order_release);
-						}
-					}
-					return EStatus::DidWork;
+					ioContext.mState.store(SoftBodyUpdateContext::EState::Done, memory_order_release);
+					return EStatus::Done;
 				}
 			}
+
+			return EStatus::DidWork;
 		}
 	}
 	return EStatus::NoWork;
@@ -853,8 +854,8 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 	case SoftBodyUpdateContext::EState::DetermineCollisionPlanes:
 		return ParallelDetermineCollisionPlanes(ioContext);
 
-	case SoftBodyUpdateContext::EState::ApplyEdgeConstraints:
-		return ParallelApplyEdgeConstraints(ioContext, inPhysicsSettings);
+	case SoftBodyUpdateContext::EState::ApplyConstraints:
+		return ParallelApplyConstraints(ioContext, inPhysicsSettings);
 
 	case SoftBodyUpdateContext::EState::Done:
 		return EStatus::Done;
@@ -989,43 +990,86 @@ void SoftBodyMotionProperties::DrawVertexVelocities(DebugRenderer *inRenderer, R
 		inRenderer->DrawArrow(inCenterOfMassTransform * v.mPosition, inCenterOfMassTransform * (v.mPosition + v.mVelocity), Color::sYellow, 0.01f);
 }
 
-void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
 {
-	for (const Edge &e : mSettings->mEdgeConstraints)
-		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, Color::sWhite);
-}
-
-void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
-{
-	for (const DihedralBend &b : mSettings->mDihedralBendConstraints)
+	uint idx = 0;
+	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
 	{
-		RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
-		RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
-		RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
-		RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
-		RVec3 c_edge = 0.5_r * (x0 + x1);
-		RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
-		RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
+		uint end = mSettings->mUpdateGroups[i].mEdgeEndIndex;
 
-		inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, Color::sDarkGreen, 0.01f);
-		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, Color::sGreen);
-		inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, Color::sGreen);
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sWhite;
+
+		for (; idx < end; ++idx)
+		{
+			const Edge &e = mSettings->mEdgeConstraints[idx];
+			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, color);
+		}
 	}
 }
 
-void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
 {
-	for (const Volume &v : mSettings->mVolumeConstraints)
+	uint idx = 0;
+	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
 	{
-		RVec3 x1 = inCenterOfMassTransform * mVertices[v.mVertex[0]].mPosition;
-		RVec3 x2 = inCenterOfMassTransform * mVertices[v.mVertex[1]].mPosition;
-		RVec3 x3 = inCenterOfMassTransform * mVertices[v.mVertex[2]].mPosition;
-		RVec3 x4 = inCenterOfMassTransform * mVertices[v.mVertex[3]].mPosition;
+		uint end = mSettings->mUpdateGroups[i].mDihedralBendEndIndex;
 
-		inRenderer->DrawTriangle(x1, x3, x2, Color::sYellow, DebugRenderer::ECastShadow::On);
-		inRenderer->DrawTriangle(x2, x3, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
-		inRenderer->DrawTriangle(x1, x4, x3, Color::sYellow, DebugRenderer::ECastShadow::On);
-		inRenderer->DrawTriangle(x1, x2, x4, Color::sYellow, DebugRenderer::ECastShadow::On);
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sGreen;
+
+		for (; idx < end; ++idx)
+		{
+			const DihedralBend &b = mSettings->mDihedralBendConstraints[idx];
+
+			RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
+			RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
+			RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
+			RVec3 x3 = inCenterOfMassTransform * mVertices[b.mVertex[3]].mPosition;
+			RVec3 c_edge = 0.5_r * (x0 + x1);
+			RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
+			RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
+
+			inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, color, 0.01f);
+			inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, color);
+			inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, color);
+		}
+	}
+}
+
+void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
+{
+	uint idx = 0;
+	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
+	{
+		uint end = mSettings->mUpdateGroups[i].mVolumeEndIndex;
+
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sYellow;
+
+		for (; idx < end; ++idx)
+		{
+			const Volume &v = mSettings->mVolumeConstraints[idx];
+
+			RVec3 x1 = inCenterOfMassTransform * mVertices[v.mVertex[0]].mPosition;
+			RVec3 x2 = inCenterOfMassTransform * mVertices[v.mVertex[1]].mPosition;
+			RVec3 x3 = inCenterOfMassTransform * mVertices[v.mVertex[2]].mPosition;
+			RVec3 x4 = inCenterOfMassTransform * mVertices[v.mVertex[3]].mPosition;
+
+			inRenderer->DrawTriangle(x1, x3, x2, color, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x2, x3, x4, color, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x1, x4, x3, color, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x1, x2, x4, color, DebugRenderer::ECastShadow::On);
+		}
 	}
 }
 
@@ -1039,10 +1083,25 @@ void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer, RM
 	}
 }
 
-void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
 {
-	for (const LRA &l : mSettings->mLRAConstraints)
-		inRenderer->DrawLine(inCenterOfMassTransform * mVertices[l.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[l.mVertex[1]].mPosition, Color::sGrey);
+	uint idx = 0;
+	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
+	{
+		uint end = mSettings->mUpdateGroups[i].mLRAEndIndex;
+
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sGrey;
+
+		for (; idx < end; ++idx)
+		{
+			const LRA &l = mSettings->mLRAConstraints[idx];
+			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[l.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[l.mVertex[1]].mPosition, color);
+		}
+	}
 }
 
 void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
