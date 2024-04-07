@@ -2,6 +2,10 @@
 
 For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysics/blob/master/Docs/APIChanges.md).
 
+## Unreleased changes
+
+* Implemented better algorithm to split soft body constraints into parallel groups. This makes the soft body simulation 10-20% faster and also enables multithreading LRA, bend and volume constraints.
+
 ## v5.0.0
 
 ### New Functionality
