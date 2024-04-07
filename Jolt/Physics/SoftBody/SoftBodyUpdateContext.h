@@ -34,7 +34,7 @@ public:
 	enum class EState
 	{
 		DetermineCollisionPlanes,													///< Determine collision planes for vertices in parallel
-		ApplyEdgeConstraints,														///< Apply edge constraints in parallel
+		ApplyConstraints,															///< Apply constraints in parallel
 		Done																		///< Update is finished
 	};
 

@@ -87,7 +87,6 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(SoftBodySharedSettings)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVertices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mFaces)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeConstraints)
-	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mEdgeGroupEndIndices)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mDihedralBendConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mVolumeConstraints)
 	JPH_ADD_ATTRIBUTE(SoftBodySharedSettings, mSkinnedConstraints)
@@ -465,47 +464,46 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 {
 	// Create a list of connected vertices
-	Array<Array<uint32>> connectivity;
+	Array<Array<std::pair<uint32, uint32>>> connectivity;
 	connectivity.resize(mVertices.size());
+	auto add_connection = [&connectivity](uint inV1, uint inV2) {
+			for (int i = 0; i < 2; ++i)
+			{
+				bool found = false;
+				for (std::pair<uint32, uint32> &c : connectivity[inV1])
+					if (c.first == inV2)
+					{
+						c.second++;
+						found = true;
+						break;
+					}
+				if (!found)
+					connectivity[inV1].push_back({ inV2, 1 });
+
+				swap(inV1, inV2);
+			}
+		}; 
 	for (const Edge &c : mEdgeConstraints)
-	{
-		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
-	}
+		add_connection(c.mVertex[0], c.mVertex[1]);
 	for (const LRA &c : mLRAConstraints)
-	{
-		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
-	}
+		add_connection(c.mVertex[0], c.mVertex[1]);
 	for (const DihedralBend &c : mDihedralBendConstraints)
 	{
-		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[0]].push_back(c.mVertex[2]);
-		connectivity[c.mVertex[0]].push_back(c.mVertex[3]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[2]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[3]);
-		connectivity[c.mVertex[2]].push_back(c.mVertex[0]);
-		connectivity[c.mVertex[2]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[2]].push_back(c.mVertex[3]);
-		connectivity[c.mVertex[3]].push_back(c.mVertex[0]);
-		connectivity[c.mVertex[3]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[3]].push_back(c.mVertex[2]);
+		add_connection(c.mVertex[0], c.mVertex[1]);
+		add_connection(c.mVertex[0], c.mVertex[2]);
+		add_connection(c.mVertex[0], c.mVertex[3]);
+		add_connection(c.mVertex[1], c.mVertex[2]);
+		add_connection(c.mVertex[1], c.mVertex[3]);
+		add_connection(c.mVertex[2], c.mVertex[3]);
 	}
 	for (const Volume &c : mVolumeConstraints)
 	{
-		connectivity[c.mVertex[0]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[0]].push_back(c.mVertex[2]);
-		connectivity[c.mVertex[0]].push_back(c.mVertex[3]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[0]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[2]);
-		connectivity[c.mVertex[1]].push_back(c.mVertex[3]);
-		connectivity[c.mVertex[2]].push_back(c.mVertex[0]);
-		connectivity[c.mVertex[2]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[2]].push_back(c.mVertex[3]);
-		connectivity[c.mVertex[3]].push_back(c.mVertex[0]);
-		connectivity[c.mVertex[3]].push_back(c.mVertex[1]);
-		connectivity[c.mVertex[3]].push_back(c.mVertex[2]);
+		add_connection(c.mVertex[0], c.mVertex[1]);
+		add_connection(c.mVertex[0], c.mVertex[2]);
+		add_connection(c.mVertex[0], c.mVertex[3]);
+		add_connection(c.mVertex[1], c.mVertex[2]);
+		add_connection(c.mVertex[1], c.mVertex[3]);
+		add_connection(c.mVertex[2], c.mVertex[3]);
 	}
 
 	// Maps each of the vertices to a group index
@@ -569,14 +567,16 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			uint best_num_connections = 0;
 			float best_dist_sq = FLT_MAX;
 			for (uint i = 0; i < (uint)current_group.size(); ++i) // For all vertices in the current group
-				for (uint v : connectivity[current_group[i]]) // For all connections to other vertices
+				for (pair<uint32, uint32> &c : connectivity[current_group[i]]) // For all connections to other vertices
+				{
+					uint v = c.first;
 					if (group_idx[v] == -1) // Ungrouped vertices only
 					{
 						// Count the number of connections to this group
 						uint num_connections = 0;
-						for (uint v2 : connectivity[v])
-							if (group_idx[v2] == current_group_idx)
-								++num_connections;
+						for (pair <uint32, uint32> &v2 : connectivity[v])
+							if (group_idx[v2.first] == current_group_idx)
+								num_connections += v2.second;
 
 						// Calculate distance to group centroid
 						float dist_sq = (Vec3(mVertices[v].mPosition) - Vec3(mVertices[current_group.front()].mPosition)).LengthSq();
@@ -590,6 +590,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 							best_dist_sq = dist_sq;
 						}
 					}
+				}
 
 			// Add the best vertex to the current group
 			if (best_vertex != UINT_MAX)
@@ -625,26 +626,77 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	connectivity.clear();
 	connectivity.shrink_to_fit();
 
-	// Assign the edges to their groups
-	Array<Array<uint>> edge_groups;
-	edge_groups.resize(current_group_idx + 1); // + non parallel group
+	// Assign the constraints to their groups
+	struct Group
+	{
+		uint			GetSize() const
+		{
+			return (uint)mEdgeConstraints.size() + (uint)mLRAConstraints.size() + (uint)mDihedralBendConstraints.size() + (uint)mVolumeConstraints.size();
+		}
+
+		Array<uint>		mEdgeConstraints;
+		Array<uint>		mLRAConstraints;
+		Array<uint>		mDihedralBendConstraints;
+		Array<uint>		mVolumeConstraints;
+	};
+	Array<Group> groups;
+	groups.resize(current_group_idx + 1); // + non parallel group
 	for (const Edge &e : mEdgeConstraints)
 	{
 		int g1 = group_idx[e.mVertex[0]];
 		int g2 = group_idx[e.mVertex[1]];
 		JPH_ASSERT(g1 >= 0 && g2 >= 0);
 		if (g1 == g2) // In the same group
-			edge_groups[g1].push_back(uint(&e - mEdgeConstraints.data()));
+			groups[g1].mEdgeConstraints.push_back(uint(&e - mEdgeConstraints.data()));
 		else // In different groups -> parallel group
-			edge_groups.back().push_back(uint(&e - mEdgeConstraints.data()));
+			groups.back().mEdgeConstraints.push_back(uint(&e - mEdgeConstraints.data()));
 	}
+	for (const LRA &l : mLRAConstraints)
+	{
+		int g1 = group_idx[l.mVertex[0]];
+		int g2 = group_idx[l.mVertex[1]];
+		JPH_ASSERT(g1 >= 0 && g2 >= 0);
+		if (g1 == g2) // In the same group
+			groups[g1].mLRAConstraints.push_back(uint(&l - mLRAConstraints.data()));
+		else // In different groups -> parallel group
+			groups.back().mLRAConstraints.push_back(uint(&l - mLRAConstraints.data()));
+	}
+	for (const DihedralBend &d : mDihedralBendConstraints)
+	{
+		int g1 = group_idx[d.mVertex[0]];
+		int g2 = group_idx[d.mVertex[1]];
+		int g3 = group_idx[d.mVertex[2]];
+		int g4 = group_idx[d.mVertex[3]];
+		JPH_ASSERT(g1 >= 0 && g2 >= 0 && g3 >= 0 && g4 >= 0);
+		if (g1 == g2 && g1 == g3 && g1 == g4) // In the same group
+			groups[g1].mDihedralBendConstraints.push_back(uint(&d - mDihedralBendConstraints.data()));
+		else // In different groups -> parallel group
+			groups.back().mDihedralBendConstraints.push_back(uint(&d - mDihedralBendConstraints.data()));
+	}
+	for (const Volume &v : mVolumeConstraints)
+	{
+		int g1 = group_idx[v.mVertex[0]];
+		int g2 = group_idx[v.mVertex[1]];
+		int g3 = group_idx[v.mVertex[2]];
+		int g4 = group_idx[v.mVertex[3]];
+		JPH_ASSERT(g1 >= 0 && g2 >= 0 && g3 >= 0 && g4 >= 0);
+		if (g1 == g2 && g1 == g3 && g1 == g4) // In the same group
+			groups[g1].mVolumeConstraints.push_back(uint(&v - mVolumeConstraints.data()));
+		else // In different groups -> parallel group
+			groups.back().mVolumeConstraints.push_back(uint(&v - mVolumeConstraints.data()));
+	}
+
+	// Sort the groups from big to small (this means the big groups will be scheduled first and have more time to complete)
+	QuickSort(groups.begin(), groups.end(), [](const Group &inLHS, const Group &inRHS) { return inLHS.GetSize() > inRHS.GetSize(); });
 
 	// Make sure we know the closest kinematic vertex so we can sort
 	CalculateClosestKinematic();
 
-	// Sort the edge constraints
-	for (Array<uint> &group : edge_groups)
-		QuickSort(group.begin(), group.end(), [this](uint inLHS, uint inRHS)
+	// Sort within each group
+	for (Group &group : groups)
+	{
+		// Sort the edge constraints
+		QuickSort(group.mEdgeConstraints.begin(), group.mEdgeConstraints.end(), [this](uint inLHS, uint inRHS)
 			{
 				const Edge &e1 = mEdgeConstraints[inLHS];
 				const Edge &e2 = mEdgeConstraints[inRHS];
@@ -665,26 +717,29 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 				return inLHS < inRHS;
 			});
 
-	// Assign the edges to groups and reorder them
-	Array<Edge> temp_edges;
-	temp_edges.swap(mEdgeConstraints);
-	mEdgeConstraints.reserve(temp_edges.size());
-	for (const Array<uint> &group : edge_groups)
-		if (!group.empty())
-		{
-			for (uint idx : group)
+		// Sort the LRA constraints
+		QuickSort(group.mLRAConstraints.begin(), group.mLRAConstraints.end(), [this](uint inLHS, uint inRHS)
 			{
-				mEdgeConstraints.push_back(temp_edges[idx]);
-				outResults.mEdgeRemap.push_back(idx);
-			}
-			mEdgeGroupEndIndices.push_back((uint)mEdgeConstraints.size());
-		}
+				const LRA &l1 = mLRAConstraints[inLHS];
+				const LRA &l2 = mLRAConstraints[inRHS];
 
-	// Sort the bend constraints
-	outResults.mDihedralBendRemap.resize(mDihedralBendConstraints.size());
-	for (int i = 0; i < (int)mDihedralBendConstraints.size(); ++i)
-		outResults.mDihedralBendRemap[i] = i;
-	QuickSort(outResults.mDihedralBendRemap.begin(), outResults.mDihedralBendRemap.end(), [this](uint inLHS, uint inRHS)
+				// First sort so that the edge with the smallest distance to a kinematic vertex comes first
+				float d1 = min(mClosestKinematic[l1.mVertex[0]].mDistance, mClosestKinematic[l1.mVertex[1]].mDistance);
+				float d2 = min(mClosestKinematic[l2.mVertex[0]].mDistance, mClosestKinematic[l2.mVertex[1]].mDistance);
+				if (d1 != d2)
+					return d1 < d2;
+
+				// Order constraints so that the ones with the smallest index go first
+				uint32 m1 = l1.GetMinVertexIndex();
+				uint32 m2 = l2.GetMinVertexIndex();
+				if (m1 != m2)
+					return m1 < m2;
+
+				return inLHS < inRHS;
+			});
+
+		// Sort the dihedral bend constraints
+		QuickSort(group.mDihedralBendConstraints.begin(), group.mDihedralBendConstraints.end(), [this](uint inLHS, uint inRHS)
 		{
 			const DihedralBend &b1 = mDihedralBendConstraints[inLHS];
 			const DihedralBend &b2 = mDihedralBendConstraints[inRHS];
@@ -708,12 +763,87 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			return inLHS < inRHS;
 		});
 
-	// Reorder the bend constraints
-	Array<DihedralBend> temp_bends;
-	temp_bends.swap(mDihedralBendConstraints);
-	mDihedralBendConstraints.reserve(temp_bends.size());
-	for (uint idx : outResults.mDihedralBendRemap)
-		mDihedralBendConstraints.push_back(temp_bends[idx]);
+		// Sort the volume constraints
+		QuickSort(group.mVolumeConstraints.begin(), group.mVolumeConstraints.end(), [this](uint inLHS, uint inRHS)
+		{
+			const Volume &v1 = mVolumeConstraints[inLHS];
+			const Volume &v2 = mVolumeConstraints[inRHS];
+
+			// First sort so that the constraint with the smallest distance to a kinematic vertex comes first
+			float d1 = min(
+						min(mClosestKinematic[v1.mVertex[0]].mDistance, mClosestKinematic[v1.mVertex[1]].mDistance),
+						min(mClosestKinematic[v1.mVertex[2]].mDistance, mClosestKinematic[v1.mVertex[3]].mDistance));
+			float d2 = min(
+						min(mClosestKinematic[v2.mVertex[0]].mDistance, mClosestKinematic[v2.mVertex[1]].mDistance),
+						min(mClosestKinematic[v2.mVertex[2]].mDistance, mClosestKinematic[v2.mVertex[3]].mDistance));
+			if (d1 != d2)
+				return d1 < d2;
+
+			// Order constraints so that the ones with the smallest index go first
+			uint32 m1 = v1.GetMinVertexIndex();
+			uint32 m2 = v2.GetMinVertexIndex();
+			if (m1 != m2)
+				return m1 < m2;
+
+			return inLHS < inRHS;
+		});
+	}
+
+	// Temporary store constraints as we reorder them
+	Array<Edge> temp_edges;
+	temp_edges.swap(mEdgeConstraints);
+	mEdgeConstraints.reserve(temp_edges.size());
+	outResults.mEdgeRemap.reserve(temp_edges.size());
+
+	Array<LRA> temp_lra;
+	temp_lra.swap(mLRAConstraints);
+	mLRAConstraints.reserve(temp_lra.size());
+	outResults.mLRARemap.reserve(temp_lra.size());
+
+	Array<DihedralBend> temp_dihedral_bend;
+	temp_dihedral_bend.swap(mDihedralBendConstraints);
+	mDihedralBendConstraints.reserve(temp_dihedral_bend.size());
+	outResults.mDihedralBendRemap.reserve(temp_dihedral_bend.size());
+
+	Array<Volume> temp_volume;
+	temp_volume.swap(mVolumeConstraints);
+	mVolumeConstraints.reserve(temp_volume.size());
+	outResults.mVolumeRemap.reserve(temp_volume.size());
+
+	// Finalize update groups
+	for (const Group &group : groups)
+	{
+		// Reorder edge constraints for this group
+		for (uint idx : group.mEdgeConstraints)
+		{
+			mEdgeConstraints.push_back(temp_edges[idx]);
+			outResults.mEdgeRemap.push_back(idx);
+		}
+
+		// Reorder LRA constraints for this group
+		for (uint idx : group.mLRAConstraints)
+		{
+			mLRAConstraints.push_back(temp_lra[idx]);
+			outResults.mLRARemap.push_back(idx);
+		}
+
+		// Reorder dihedral bend constraints for this group
+		for (uint idx : group.mDihedralBendConstraints)
+		{
+			mDihedralBendConstraints.push_back(temp_dihedral_bend[idx]);
+			outResults.mDihedralBendRemap.push_back(idx);
+		}
+
+		// Reorder volume constraints for this group
+		for (uint idx : group.mVolumeConstraints)
+		{
+			mVolumeConstraints.push_back(temp_volume[idx]);
+			outResults.mVolumeRemap.push_back(idx);
+		}
+
+		// Store end indices
+		mUpdateGroups.push_back({ (uint)mEdgeConstraints.size(), (uint)mLRAConstraints.size(), (uint)mDihedralBendConstraints.size(), (uint)mVolumeConstraints.size() });
+	}
 
 	// Free closest kinematic buffer
 	mClosestKinematic.clear();
@@ -726,7 +856,6 @@ Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const
 	clone->mVertices = mVertices;
 	clone->mFaces = mFaces;
 	clone->mEdgeConstraints = mEdgeConstraints;
-	clone->mEdgeGroupEndIndices = mEdgeGroupEndIndices;
 	clone->mDihedralBendConstraints = mDihedralBendConstraints;
 	clone->mVolumeConstraints = mVolumeConstraints;
 	clone->mSkinnedConstraints = mSkinnedConstraints;
@@ -735,6 +864,7 @@ Ref<SoftBodySharedSettings> SoftBodySharedSettings::Clone() const
 	clone->mLRAConstraints = mLRAConstraints;
 	clone->mMaterials = mMaterials;
 	clone->mVertexRadius = mVertexRadius;
+	clone->mUpdateGroups = mUpdateGroups;
 	return clone;
 }
 
@@ -743,13 +873,13 @@ void SoftBodySharedSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mVertices);
 	inStream.Write(mFaces);
 	inStream.Write(mEdgeConstraints);
-	inStream.Write(mEdgeGroupEndIndices);
 	inStream.Write(mDihedralBendConstraints);
 	inStream.Write(mVolumeConstraints);
 	inStream.Write(mSkinnedConstraints);
 	inStream.Write(mSkinnedConstraintNormals);
 	inStream.Write(mLRAConstraints);
 	inStream.Write(mVertexRadius);
+	inStream.Write(mUpdateGroups);
 
 	// Can't write mInvBindMatrices directly because the class contains padding
 	inStream.Write(mInvBindMatrices, [](const InvBind &inElement, StreamOut &inS) {
@@ -763,13 +893,13 @@ void SoftBodySharedSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mVertices);
 	inStream.Read(mFaces);
 	inStream.Read(mEdgeConstraints);
-	inStream.Read(mEdgeGroupEndIndices);
 	inStream.Read(mDihedralBendConstraints);
 	inStream.Read(mVolumeConstraints);
 	inStream.Read(mSkinnedConstraints);
 	inStream.Read(mSkinnedConstraintNormals);
 	inStream.Read(mLRAConstraints);
 	inStream.Read(mVertexRadius);
+	inStream.Read(mUpdateGroups);
 
 	inStream.Read(mInvBindMatrices, [](StreamIn &inS, InvBind &outElement) {
 		inS.Read(outElement.mJointIndex);
