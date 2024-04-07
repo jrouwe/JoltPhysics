@@ -4,6 +4,10 @@ This document lists all breaking API changes by date and by release tag. Note th
 
 Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
 
+## Changes between v5.0.0 and latest
+
+* 20240407 - *SBS* - The binary format of SoftBodySharedSettings changed due to an optimization pass. Also the results of the Optimize() call are no longer serialized when using an ObjectStream. (22739d900b4d92905ecccf2d81f18dece4a42595)
+
 ## Changes between v4.0.2 and v5.0.0
 
 * 20240327 - *SBS* - SoftBodySharedSettings::CreateEdges was renamed to CreateConstraints and can now also create shear and bend constraints. This also breaks the serialization format for SoftBodySharedSettings. (8e4bf3fa03f59cff6af7394d69cdf62abaf7a1d2)
