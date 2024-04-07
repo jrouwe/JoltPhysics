@@ -686,8 +686,8 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			groups.back().mVolumeConstraints.push_back(uint(&v - mVolumeConstraints.data()));
 	}
 
-	// Sort the groups from big to small (this means the big groups will be scheduled first and have more time to complete)
-	QuickSort(groups.begin(), groups.end(), [](const Group &inLHS, const Group &inRHS) { return inLHS.GetSize() > inRHS.GetSize(); });
+	// Sort the parallel groups from big to small (this means the big groups will be scheduled first and have more time to complete)
+	QuickSort(groups.begin(), groups.end() - 1, [](const Group &inLHS, const Group &inRHS) { return inLHS.GetSize() > inRHS.GetSize(); });
 
 	// Make sure we know the closest kinematic vertex so we can sort
 	CalculateClosestKinematic();
