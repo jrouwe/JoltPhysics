@@ -990,13 +990,19 @@ void SoftBodyMotionProperties::DrawVertexVelocities(DebugRenderer *inRenderer, R
 		inRenderer->DrawArrow(inCenterOfMassTransform * v.mPosition, inCenterOfMassTransform * (v.mPosition + v.mVelocity), Color::sYellow, 0.01f);
 }
 
-void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
 {
 	uint idx = 0;
 	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
 	{
 		uint end = mSettings->mUpdateGroups[i].mEdgeEndIndex;
-		Color color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sWhite;
+
 		for (; idx < end; ++idx)
 		{
 			const Edge &e = mSettings->mEdgeConstraints[idx];
@@ -1005,16 +1011,23 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 	}
 }
 
-void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
 {
 	uint idx = 0;
 	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
 	{
 		uint end = mSettings->mUpdateGroups[i].mDihedralBendEndIndex;
-		Color color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sGreen;
+
 		for (; idx < end; ++idx)
 		{
 			const DihedralBend &b = mSettings->mDihedralBendConstraints[idx];
+
 			RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
 			RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
 			RVec3 x2 = inCenterOfMassTransform * mVertices[b.mVertex[2]].mPosition;
@@ -1030,16 +1043,23 @@ void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RM
 	}
 }
 
-void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
 {
 	uint idx = 0;
 	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
 	{
 		uint end = mSettings->mUpdateGroups[i].mVolumeEndIndex;
-		Color color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sYellow;
+
 		for (; idx < end; ++idx)
 		{
 			const Volume &v = mSettings->mVolumeConstraints[idx];
+
 			RVec3 x1 = inCenterOfMassTransform * mVertices[v.mVertex[0]].mPosition;
 			RVec3 x2 = inCenterOfMassTransform * mVertices[v.mVertex[1]].mPosition;
 			RVec3 x3 = inCenterOfMassTransform * mVertices[v.mVertex[2]].mPosition;
@@ -1063,13 +1083,19 @@ void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer, RM
 	}
 }
 
-void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
+void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
 {
 	uint idx = 0;
 	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
 	{
 		uint end = mSettings->mUpdateGroups[i].mLRAEndIndex;
-		Color color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+
+		Color color;
+		if (inDrawConstraintGroupColor)
+			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		else
+			color = Color::sGrey;
+
 		for (; idx < end; ++idx)
 		{
 			const LRA &l = mSettings->mLRAConstraints[idx];

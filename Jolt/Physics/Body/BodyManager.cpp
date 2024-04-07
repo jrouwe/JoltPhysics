@@ -1083,19 +1083,19 @@ void BodyManager::Draw(const DrawSettings &inDrawSettings, const PhysicsSettings
 					mp->DrawVertexVelocities(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodyEdgeConstraints)
-					mp->DrawEdgeConstraints(inRenderer, com);
+					mp->DrawEdgeConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor == BodyManager::ESoftBodyConstraintColor::ConstraintGroup);
 
 				if (inDrawSettings.mDrawSoftBodyBendConstraints)
-					mp->DrawBendConstraints(inRenderer, com);
+					mp->DrawBendConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor == BodyManager::ESoftBodyConstraintColor::ConstraintGroup);
 
 				if (inDrawSettings.mDrawSoftBodyVolumeConstraints)
-					mp->DrawVolumeConstraints(inRenderer, com);
+					mp->DrawVolumeConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor == BodyManager::ESoftBodyConstraintColor::ConstraintGroup);
 
 				if (inDrawSettings.mDrawSoftBodySkinConstraints)
 					mp->DrawSkinConstraints(inRenderer, com);
 
 				if (inDrawSettings.mDrawSoftBodyLRAConstraints)
-					mp->DrawLRAConstraints(inRenderer, com);
+					mp->DrawLRAConstraints(inRenderer, com, inDrawSettings.mDrawSoftBodyConstraintColor == BodyManager::ESoftBodyConstraintColor::ConstraintGroup);
 
 				if (inDrawSettings.mDrawSoftBodyPredictedBounds)
 					mp->DrawPredictedBounds(inRenderer, com);

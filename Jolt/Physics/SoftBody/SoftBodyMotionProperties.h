@@ -98,11 +98,11 @@ public:
 	/// Draw the state of a soft body
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVertexVelocities(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
-	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
-	void								DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
-	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
+	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
+	void								DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
+	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
 	void								DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
-	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
+	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
 	void								DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
 
