@@ -234,7 +234,7 @@ private:
 	EStatus								ParallelApplyConstraints(SoftBodyUpdateContext &ioContext, const PhysicsSettings &inPhysicsSettings);
 
 	/// Helper function to update a single group of constraints
-	void								ProcessGroup(SoftBodyUpdateContext &ioContext, uint inGroupIndex);
+	void								ProcessGroup(const SoftBodyUpdateContext &ioContext, uint inGroupIndex);
 
 	/// Returns 6 times the volume of the soft body
 	float								GetVolumeTimesSix() const;

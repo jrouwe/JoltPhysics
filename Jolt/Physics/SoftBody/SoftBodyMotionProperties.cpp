@@ -765,7 +765,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelDetermineCol
 	return EStatus::NoWork;
 }
 
-void SoftBodyMotionProperties::ProcessGroup(SoftBodyUpdateContext &ioContext, uint inGroupIndex)
+void SoftBodyMotionProperties::ProcessGroup(const SoftBodyUpdateContext &ioContext, uint inGroupIndex)
 {
 	// Determine start and end
 	SoftBodySharedSettings::UpdateGroup start { 0, 0, 0, 0 };

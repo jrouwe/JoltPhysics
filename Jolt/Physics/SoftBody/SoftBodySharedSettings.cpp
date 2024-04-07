@@ -464,16 +464,21 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 {
 	// Create a list of connected vertices
-	Array<Array<std::pair<uint32, uint32>>> connectivity;
+	struct Connection
+	{
+		uint32	mVertex;
+		uint32	mCount;
+	};
+	Array<Array<Connection>> connectivity;
 	connectivity.resize(mVertices.size());
 	auto add_connection = [&connectivity](uint inV1, uint inV2) {
 			for (int i = 0; i < 2; ++i)
 			{
 				bool found = false;
-				for (std::pair<uint32, uint32> &c : connectivity[inV1])
-					if (c.first == inV2)
+				for (Connection &c : connectivity[inV1])
+					if (c.mVertex == inV2)
 					{
-						c.second++;
+						c.mCount++;
 						found = true;
 						break;
 					}
@@ -567,16 +572,16 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			uint best_num_connections = 0;
 			float best_dist_sq = FLT_MAX;
 			for (uint i = 0; i < (uint)current_group.size(); ++i) // For all vertices in the current group
-				for (pair<uint32, uint32> &c : connectivity[current_group[i]]) // For all connections to other vertices
+				for (const Connection &c : connectivity[current_group[i]]) // For all connections to other vertices
 				{
-					uint v = c.first;
+					uint v = c.mVertex;
 					if (group_idx[v] == -1) // Ungrouped vertices only
 					{
 						// Count the number of connections to this group
 						uint num_connections = 0;
-						for (pair <uint32, uint32> &v2 : connectivity[v])
-							if (group_idx[v2.first] == current_group_idx)
-								num_connections += v2.second;
+						for (const Connection &v2 : connectivity[v])
+							if (group_idx[v2.mVertex] == current_group_idx)
+								num_connections += v2.mCount;
 
 						// Calculate distance to group centroid
 						float dist_sq = (Vec3(mVertices[v].mPosition) - Vec3(mVertices[current_group.front()].mPosition)).LengthSq();
