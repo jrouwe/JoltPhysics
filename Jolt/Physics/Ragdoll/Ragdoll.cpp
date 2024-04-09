@@ -622,15 +622,21 @@ void Ragdoll::DriveToPoseUsingMotors(const SkeletonPose &inPose)
 		int constraint_idx = mRagdollSettings->GetConstraintIndexForBodyIndex(i);
 		if (constraint_idx >= 0)
 		{
-			SwingTwistConstraint *constraint = (SwingTwistConstraint *)mConstraints[constraint_idx].GetPtr();
-
 			// Get desired rotation of this body relative to its parent
-			Quat joint_transform = inPose.GetJoint(i).mRotation;
+			const SkeletalAnimation::JointState &joint_state = inPose.GetJoint(i);
 
 			// Drive constraint to target
-			constraint->SetSwingMotorState(EMotorState::Position);
-			constraint->SetTwistMotorState(EMotorState::Position);
-			constraint->SetTargetOrientationBS(joint_transform);
+			TwoBodyConstraint *constraint = mConstraints[constraint_idx];
+			EConstraintSubType sub_type = constraint->GetSubType();
+			if (sub_type == EConstraintSubType::SwingTwist)
+			{
+				SwingTwistConstraint *st_constraint = static_cast<SwingTwistConstraint *>(constraint);
+				st_constraint->SetSwingMotorState(EMotorState::Position);
+				st_constraint->SetTwistMotorState(EMotorState::Position);
+				st_constraint->SetTargetOrientationBS(joint_state.mRotation);
+			}
+			else
+				JPH_ASSERT(false, "Constraint type not implemented!");
 		}
 	}
 }
