@@ -484,7 +484,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 #endif
 
 // Shorthand for #ifdef JPH_DEBUG / #endif
-#ifndef JPH_DEBUG
+#ifdef JPH_DEBUG
 	#define JPH_IF_DEBUG(...)	__VA_ARGS__
 	#define JPH_IF_NOT_DEBUG(...)
 #else
