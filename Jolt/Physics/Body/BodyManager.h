@@ -275,10 +275,10 @@ public:
 	};
 #endif
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	/// Validate if the cached bounding boxes are correct for all active bodies
 	void							ValidateActiveBodyBounds();
-#endif // _DEBUG
+#endif // JPH_DEBUG
 
 private:
 	/// Increment and get the sequence number of the body
@@ -299,10 +299,10 @@ private:
 	/// Helper function to delete a body (which could actually be a BodyWithMotionProperties)
 	inline static void				sDeleteBody(Body *inBody);
 
-#if defined(_DEBUG) && defined(JPH_ENABLE_ASSERTS)
+#if defined(JPH_DEBUG) && defined(JPH_ENABLE_ASSERTS)
 	/// Function to check that the free list is not corrupted
 	void							ValidateFreeList() const;
-#endif // defined(_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
+#endif // defined(JPH_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
 
 	/// List of pointers to all bodies. Contains invalid pointers for deleted bodies, check with sIsValidBodyPointer. Note that this array is reserved to the max bodies that is passed in the Init function so that adding bodies will not reallocate the array.
 	BodyVector						mBodies;

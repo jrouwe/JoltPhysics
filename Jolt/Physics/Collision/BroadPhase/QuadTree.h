@@ -314,7 +314,7 @@ private:
 	/// After the function returns ioNodeIDs and ioNodeCenters will be shuffled
 	static void					sPartition4(NodeID *ioNodeIDs, Vec3 *ioNodeCenters, int inBegin, int inEnd, int *outSplit);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	/// Validate that the tree is consistent.
 	/// Note: This function only works if the tree is not modified while we're traversing it.
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;

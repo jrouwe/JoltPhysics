@@ -478,8 +478,13 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 // Stack allocation
 #define JPH_STACK_ALLOC(n)		alloca(n)
 
-// Shorthand for #ifdef _DEBUG / #endif
-#ifdef _DEBUG
+// Determine if we want extra debugging code to be active
+#if !defined(NDEBUG) && !defined(JPH_NO_DEBUG)
+	#define JPH_DEBUG
+#endif
+
+// Shorthand for #ifdef JPH_DEBUG / #endif
+#ifndef JPH_DEBUG
 	#define JPH_IF_DEBUG(...)	__VA_ARGS__
 	#define JPH_IF_NOT_DEBUG(...)
 #else

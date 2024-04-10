@@ -86,7 +86,7 @@ class AxisConstraintPart
 		}
 		else
 		{
-		#ifdef _DEBUG
+		#ifdef JPH_DEBUG
 			Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis);
 		#endif
 		}
@@ -99,7 +99,7 @@ class AxisConstraintPart
 		}
 		else
 		{
-		#ifdef _DEBUG
+		#ifdef JPH_DEBUG
 			Vec3::sNaN().StoreFloat3(&mR2xAxis);
 		#endif
 		}

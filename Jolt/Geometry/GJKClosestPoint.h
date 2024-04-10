@@ -192,7 +192,7 @@ private:
 			break;
 
 		case 4:
-		#ifdef _DEBUG
+		#ifdef JPH_DEBUG
 			memset(&outPointA, 0xcd, sizeof(outPointA));
 			memset(&outPointB, 0xcd, sizeof(outPointB));
 		#endif
@@ -393,7 +393,7 @@ public:
 #ifdef JPH_GJK_DEBUG
 				Trace("Distance bigger than max");
 #endif
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 				memset(&outPointA, 0xcd, sizeof(outPointA));
 				memset(&outPointB, 0xcd, sizeof(outPointB));
 #endif

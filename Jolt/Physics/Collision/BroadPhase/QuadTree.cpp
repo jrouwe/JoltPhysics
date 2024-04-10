@@ -253,7 +253,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 #endif
 
 	// Assert sane data
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	ValidateTree(inBodies, ioTracking, root_node.mIndex, mNumBodies);
 #endif
 
@@ -386,7 +386,7 @@ void QuadTree::UpdateFinalize([[maybe_unused]] const BodyVector &inBodies, [[may
 	DumpTree(new_root_node.GetNodeID(), StringFormat("%s_POST", mName).c_str());
 #endif
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	ValidateTree(inBodies, inTracking, new_root_node.mIndex, mNumBodies);
 #endif
 }
@@ -801,7 +801,7 @@ void QuadTree::AddBodiesPrepare(const BodyVector &inBodies, TrackingVector &ioTr
 	// so they will stay together as a batch and will make the tree rebuild cheaper
 	outState.mLeafID = BuildTree(inBodies, ioTracking, (NodeID *)ioBodyIDs, inNumber, 0, outState.mLeafBounds);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	if (outState.mLeafID.IsNode())
 		ValidateTree(inBodies, ioTracking, outState.mLeafID.GetNodeIndex(), inNumber);
 #endif
@@ -1454,7 +1454,7 @@ void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inAc
 	JPH_ASSERT(&root_node == &GetCurrentRoot());
 }
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 
 void QuadTree::ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const
 {

@@ -387,10 +387,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 				PhysicsUpdateContext::Step *next_step = &context.mSteps[step_idx + 1];
 				step.mStartNextStep = inJobSystem->CreateJob("StartNextStep", cColorStartNextStep, [this, next_step]()
 					{
-					#ifdef _DEBUG
+					#ifdef JPH_DEBUG
 						// Validate that the cached bounds are correct
 						mBodyManager.ValidateActiveBodyBounds();
-					#endif // _DEBUG
+					#endif // JPH_DEBUG
 
 						// Store the number of active bodies at the start of the step
 						next_step->mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
@@ -568,10 +568,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	// We're done with the barrier for this update
 	inJobSystem->DestroyBarrier(barrier);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	// Validate that the cached bounds are correct
 	mBodyManager.ValidateActiveBodyBounds();
-#endif // _DEBUG
+#endif // JPH_DEBUG
 
 	// Clear the large island splitter
 	mLargeIslandSplitter.Reset(inTempAllocator);

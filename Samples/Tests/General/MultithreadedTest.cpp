@@ -66,7 +66,7 @@ void MultithreadedTest::BoxSpawner()
 {
 	JPH_PROFILE_THREAD_START("BoxSpawner");
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	const int cMaxObjects = 100;
 #else
 	const int cMaxObjects = 1000;
@@ -129,7 +129,7 @@ void MultithreadedTest::RagdollSpawner()
 {
 	JPH_PROFILE_THREAD_START("RagdollSpawner");
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	const int cMaxRagdolls = 10;
 #else
 	const int cMaxRagdolls = 50;
