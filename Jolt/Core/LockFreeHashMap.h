@@ -160,7 +160,7 @@ public:
 	Iterator				begin();
 	Iterator				end();
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	/// Output stats about this map to the log
 	void					TraceStats() const;
 #endif

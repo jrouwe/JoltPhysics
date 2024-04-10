@@ -13,7 +13,7 @@
 
 #include <d3dcompiler.h>
 #include <shellscalingapi.h>
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	#include <d3d12sdklayers.h>
 #endif
 
@@ -189,7 +189,7 @@ void Renderer::Initialize()
 	// Show window
 	ShowWindow(mhWnd, SW_SHOW);
 
-#if defined(_DEBUG)
+#if defined(JPH_DEBUG)
 	// Enable the D3D12 debug layer
 	ComPtr<ID3D12Debug> debug_controller;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller))))
@@ -245,7 +245,7 @@ void Renderer::Initialize()
 	// Check if we managed to obtain a device
 	FatalErrorIfFailed(result);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	// Enable breaking on errors
 	ComPtr<ID3D12InfoQueue> info_queue;
 	if (SUCCEEDED(mDevice.As(&info_queue)))
@@ -265,7 +265,7 @@ void Renderer::Initialize()
 		filter.DenyList.pIDList = hide;
 		info_queue->AddStorageFilterEntries( &filter );
 	}
-#endif // _DEBUG
+#endif // JPH_DEBUG
 
 	// Disable full screen transitions
 	FatalErrorIfFailed(mDXGIFactory->MakeWindowAssociation(mhWnd, DXGI_MWA_NO_ALT_ENTER));
@@ -656,7 +656,7 @@ void Renderer::SetRenderTarget(Texture *inRenderTarget)
 ComPtr<ID3DBlob> Renderer::CreateVertexShader(const char *inFileName)
 {
 	UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
@@ -695,7 +695,7 @@ ComPtr<ID3DBlob> Renderer::CreateVertexShader(const char *inFileName)
 ComPtr<ID3DBlob> Renderer::CreatePixelShader(const char *inFileName)
 {
 	UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 

@@ -34,7 +34,7 @@ void RandomRayTest::TestRay(const char *inTestName, RVec3Arg inRenderOffset, con
 	default_random_engine random(12345);
 	uniform_real_distribution<float> random_scale(-2.0f, 2.0f);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	const int count = 1000;
 #else
 	const int count = 10000;
