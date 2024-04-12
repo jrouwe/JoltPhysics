@@ -370,13 +370,13 @@ public:
 	virtual void					SaveMaterialState([[maybe_unused]] PhysicsMaterialList &outMaterials) const			{ /* By default do nothing */ }
 
 	/// Restore the material references after calling sRestoreFromBinaryState. Note that the exact same materials need to be provided in the same order as returned by SaveMaterialState.
-	virtual void					RestoreMaterialState([[maybe_unused]] const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) { JPH_ASSERT(inNumMaterials == 0); }
+	virtual void					RestoreMaterialState([[maybe_unused]] const PhysicsMaterialRefC *inMaterials, [[maybe_unused]] uint inNumMaterials) { JPH_ASSERT(inNumMaterials == 0); }
 
 	/// Outputs the shape references that this shape has to outSubShapes.
 	virtual void					SaveSubShapeState([[maybe_unused]] ShapeList &outSubShapes) const					{ /* By default do nothing */ }
 
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
-	virtual void					RestoreSubShapeState([[maybe_unused]] const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
+	virtual void					RestoreSubShapeState([[maybe_unused]] const ShapeRefC *inSubShapes, [[maybe_unused]] uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
 	using ShapeToIDMap = StreamUtils::ObjectToIDMap<Shape>;
 	using IDToShapeMap = StreamUtils::IDToObjectMap<Shape>;
