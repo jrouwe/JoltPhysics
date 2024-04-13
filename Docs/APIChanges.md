@@ -6,7 +6,8 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.0.0 and latest
 
-* 20240407 - *SBS* - The binary format of SoftBodySharedSettings changed due to an optimization pass. Also the results of the Optimize() call are no longer serialized when using an ObjectStream. (22739d900b4d92905ecccf2d81f18dece4a42595)
+* 20240413 - *SBS* - Skinned constraints are now processed in parallel, this means that they are reordered when Optimize() is called (see SoftBodySharedSettings::OptimizationResults::mSkinnedRemap). This also caused a change to the binary serialization format of SoftBodySharedSettings. (744900a4becb4dc69ee2bd70d6b26ee46da3e64a)
+* 20240407 - *SBS* - The binary format of SoftBodySharedSettings changed due to an optimization pass. Also the results of the Optimize() call are no longer serialized when using an ObjectStream. Finally the Optimize() call will reorder the constraints (see SoftBodySharedSettings::OptimizationResults). (22739d900b4d92905ecccf2d81f18dece4a42595)
 
 ## Changes between v4.0.2 and v5.0.0
 

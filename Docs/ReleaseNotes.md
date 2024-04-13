@@ -4,7 +4,25 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 ## Unreleased changes
 
-* Implemented better algorithm to split soft body constraints into parallel groups. This makes the soft body simulation 10-20% faster and also enables multithreading LRA, bend and volume constraints.
+### New functionality
+
+#### Soft Body
+
+* Implemented better algorithm to split soft body constraints into parallel groups. This makes the soft body simulation 10-20% faster and also enables multithreading LRA, bend, volume and skinned constraints.
+* Improved sorting of LRA soft body constraints to improve convergence.
+* Added ability to draw soft body constraint evaluation order.
+
+#### Various
+
+* Added HeightFieldShape::GetMinHeightValue/GetMaxHeightValue that can be used to know which range of heights are accepted by SetHeights.
+* Switch from using _DEBUG to NDEBUG to detect debug mode. NDEBUG is defined in the standard while _DEBUG is Visual Studio specific.
+
+#### Bug fixes
+
+* Fixed bug where the the skinned position of a soft body would update in the first sub-iteration, causing a large velocity spike and jittery behavior.
+* Fixed bug where the velocity of soft body vertices would increase indefinitely when resting on the back stop of a skinned constraint.
+* Fixed crash in Ragdoll::DriveToPoseUsingMotors when using constraints other than SwingTwistConstraint.
+* Fixed -Wunused-parameter warning on GCC when building in Release mode with -Wextra.
 
 ## v5.0.0
 
