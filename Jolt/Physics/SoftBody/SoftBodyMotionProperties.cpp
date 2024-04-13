@@ -9,6 +9,7 @@
 #include <Jolt/Physics/SoftBody/SoftBodyContactListener.h>
 #include <Jolt/Physics/SoftBody/SoftBodyManifold.h>
 #include <Jolt/Physics/PhysicsSystem.h>
+#include <Jolt/Physics/Body/BodyManager.h>
 #ifdef JPH_DEBUG_RENDERER
 	#include <Jolt/Renderer/DebugRenderer.h>
 #endif // JPH_DEBUG_RENDERER
@@ -990,43 +991,51 @@ void SoftBodyMotionProperties::DrawVertexVelocities(DebugRenderer *inRenderer, R
 		inRenderer->DrawArrow(inCenterOfMassTransform * v.mPosition, inCenterOfMassTransform * (v.mPosition + v.mVelocity), Color::sYellow, 0.01f);
 }
 
-void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
+template <typename GetEndIndex, typename DrawConstraint>
+inline void SoftBodyMotionProperties::DrawConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const
 {
-	uint idx = 0;
+	uint start = 0;
 	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
 	{
-		uint end = mSettings->mUpdateGroups[i].mEdgeEndIndex;
+		uint end = inGetEndIndex(mSettings->mUpdateGroups[i]);
 
-		Color color;
-		if (inDrawConstraintGroupColor)
-			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
+		Color base_color;
+		if (inConstraintColor != ESoftBodyConstraintColor::ConstraintType)
+			base_color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
 		else
-			color = Color::sWhite;
+			base_color = inBaseColor;
 
-		for (; idx < end; ++idx)
+		for (uint idx = start; idx < end; ++idx)
 		{
-			const Edge &e = mSettings->mEdgeConstraints[idx];
-			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, color);
+			Color color = inConstraintColor == ESoftBodyConstraintColor::ConstraintOrder? base_color * (float(idx - start) / (end - start)) : base_color;
+			inDrawConstraint(inRenderer, inCenterOfMassTransform, idx, color);
 		}
+
+		start = end;
 	}
 }
 
-void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
+void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	uint idx = 0;
-	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
-	{
-		uint end = mSettings->mUpdateGroups[i].mDihedralBendEndIndex;
+	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
+			return inGroup.mEdgeEndIndex;
+		},
+		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+			const Edge &e = mSettings->mEdgeConstraints[inIndex];
+			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, inColor);
+		},
+		Color::sWhite);
+}
 
-		Color color;
-		if (inDrawConstraintGroupColor)
-			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
-		else
-			color = Color::sGreen;
-
-		for (; idx < end; ++idx)
-		{
-			const DihedralBend &b = mSettings->mDihedralBendConstraints[idx];
+void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
+{
+	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
+			return inGroup.mDihedralBendEndIndex;
+		},
+		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+			const DihedralBend &b = mSettings->mDihedralBendConstraints[inIndex];
 
 			RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
 			RVec3 x1 = inCenterOfMassTransform * mVertices[b.mVertex[1]].mPosition;
@@ -1036,41 +1045,33 @@ void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RM
 			RVec3 c0 = (x0 + x1 + x2) / 3.0_r;
 			RVec3 c1 = (x0 + x1 + x3) / 3.0_r;
 
-			inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, color, 0.01f);
-			inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, color);
-			inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, color);
-		}
-	}
+			inRenderer->DrawArrow(0.9_r * x0 + 0.1_r * x1, 0.1_r * x0 + 0.9_r * x1, inColor, 0.01f);
+			inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c0, inColor);
+			inRenderer->DrawLine(c_edge, 0.1_r * c_edge + 0.9_r * c1, inColor);
+		},
+		Color::sGreen);
 }
 
-void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
+void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	uint idx = 0;
-	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
-	{
-		uint end = mSettings->mUpdateGroups[i].mVolumeEndIndex;
-
-		Color color;
-		if (inDrawConstraintGroupColor)
-			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
-		else
-			color = Color::sYellow;
-
-		for (; idx < end; ++idx)
-		{
-			const Volume &v = mSettings->mVolumeConstraints[idx];
+	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
+			return inGroup.mVolumeEndIndex;
+		},
+		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+			const Volume &v = mSettings->mVolumeConstraints[inIndex];
 
 			RVec3 x1 = inCenterOfMassTransform * mVertices[v.mVertex[0]].mPosition;
 			RVec3 x2 = inCenterOfMassTransform * mVertices[v.mVertex[1]].mPosition;
 			RVec3 x3 = inCenterOfMassTransform * mVertices[v.mVertex[2]].mPosition;
 			RVec3 x4 = inCenterOfMassTransform * mVertices[v.mVertex[3]].mPosition;
 
-			inRenderer->DrawTriangle(x1, x3, x2, color, DebugRenderer::ECastShadow::On);
-			inRenderer->DrawTriangle(x2, x3, x4, color, DebugRenderer::ECastShadow::On);
-			inRenderer->DrawTriangle(x1, x4, x3, color, DebugRenderer::ECastShadow::On);
-			inRenderer->DrawTriangle(x1, x2, x4, color, DebugRenderer::ECastShadow::On);
-		}
-	}
+			inRenderer->DrawTriangle(x1, x3, x2, inColor, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x2, x3, x4, inColor, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x1, x4, x3, inColor, DebugRenderer::ECastShadow::On);
+			inRenderer->DrawTriangle(x1, x2, x4, inColor, DebugRenderer::ECastShadow::On);
+		},
+		Color::sYellow);
 }
 
 void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
@@ -1083,25 +1084,17 @@ void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer, RM
 	}
 }
 
-void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const
+void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	uint idx = 0;
-	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
-	{
-		uint end = mSettings->mUpdateGroups[i].mLRAEndIndex;
-
-		Color color;
-		if (inDrawConstraintGroupColor)
-			color = Color::sGetDistinctColor((uint)mSettings->mUpdateGroups.size() - i - 1); // Ensure that color 0 is always the last group
-		else
-			color = Color::sGrey;
-
-		for (; idx < end; ++idx)
-		{
-			const LRA &l = mSettings->mLRAConstraints[idx];
-			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[l.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[l.mVertex[1]].mPosition, color);
-		}
-	}
+	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
+			return inGroup.mLRAEndIndex;
+		},
+		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+			const LRA &l = mSettings->mLRAConstraints[inIndex];
+			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[l.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[l.mVertex[1]].mPosition, inColor);
+		},
+		Color::sGrey);
 }
 
 void SoftBodyMotionProperties::DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const
