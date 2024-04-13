@@ -23,6 +23,7 @@ class SoftBodyCreationSettings;
 class TempAllocator;
 #ifdef JPH_DEBUG_RENDERER
 class DebugRenderer;
+enum class ESoftBodyConstraintColor;
 #endif // JPH_DEBUG_RENDERER
 
 /// This class contains the runtime information of a soft body.
@@ -98,11 +99,11 @@ public:
 	/// Draw the state of a soft body
 	void								DrawVertices(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 	void								DrawVertexVelocities(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
-	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
-	void								DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
-	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
+	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
+	void								DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
+	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
-	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, bool inDrawConstraintGroupColor) const;
+	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
 
@@ -238,6 +239,12 @@ private:
 
 	/// Returns 6 times the volume of the soft body
 	float								GetVolumeTimesSix() const;
+
+#ifdef JPH_DEBUG_RENDERER
+	/// Helper function to draw constraints
+	template <typename GetEndIndex, typename DrawConstraint>
+		inline void						DrawConstraints(ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const;
+#endif // JPH_DEBUG_RENDERER
 
 	RMat44								mSkinStateTransform = RMat44::sIdentity();	///< The matrix that transforms mSkinState to world space
 	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints

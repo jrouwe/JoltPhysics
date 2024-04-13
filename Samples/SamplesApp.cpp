@@ -531,7 +531,7 @@ SamplesApp::SamplesApp()
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Skin Constraints", mBodyDrawSettings.mDrawSoftBodySkinConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodySkinConstraints = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body LRA Constraints", mBodyDrawSettings.mDrawSoftBodyLRAConstraints, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyLRAConstraints = inState == UICheckBox::STATE_CHECKED; });
 			mDebugUI->CreateCheckBox(drawing_options, "Draw Soft Body Predicted Bounds", mBodyDrawSettings.mDrawSoftBodyPredictedBounds, [this](UICheckBox::EState inState) { mBodyDrawSettings.mDrawSoftBodyPredictedBounds = inState == UICheckBox::STATE_CHECKED; });
-			mDebugUI->CreateComboBox(drawing_options, "Draw Soft Body Constraint Color", { "Constraint Type", "Constraint Group" }, (int)mBodyDrawSettings.mDrawSoftBodyConstraintColor, [this](int inItem) { mBodyDrawSettings.mDrawSoftBodyConstraintColor = (BodyManager::ESoftBodyConstraintColor)inItem; });
+			mDebugUI->CreateComboBox(drawing_options, "Draw Soft Body Constraint Color", { "Constraint Type", "Constraint Group", "Constraint Order" }, (int)mBodyDrawSettings.mDrawSoftBodyConstraintColor, [this](int inItem) { mBodyDrawSettings.mDrawSoftBodyConstraintColor = (ESoftBodyConstraintColor)inItem; });
 			mDebugUI->ShowMenu(drawing_options);
 		});
 	#endif // JPH_DEBUG_RENDERER

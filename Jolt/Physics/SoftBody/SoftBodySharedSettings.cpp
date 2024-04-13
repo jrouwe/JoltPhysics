@@ -728,11 +728,11 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 				const LRA &l1 = mLRAConstraints[inLHS];
 				const LRA &l2 = mLRAConstraints[inRHS];
 
-				// First sort so that the edge with the smallest distance to a kinematic vertex comes first
-				float d1 = min(mClosestKinematic[l1.mVertex[0]].mDistance, mClosestKinematic[l1.mVertex[1]].mDistance);
-				float d2 = min(mClosestKinematic[l2.mVertex[0]].mDistance, mClosestKinematic[l2.mVertex[1]].mDistance);
-				if (d1 != d2)
-					return d1 < d2;
+				// First sort so that the longest constraint comes first (meaning the shortest constraint has the most influence on the end result)
+				// Most of the time there will be a single LRA constraint per vertex and since the LRA constraint only modifies a single vertex,
+				// updating one constraint will not violate another constraint.
+				if (l1.mMaxDistance != l2.mMaxDistance)
+					return l1.mMaxDistance > l2.mMaxDistance;
 
 				// Order constraints so that the ones with the smallest index go first
 				uint32 m1 = l1.GetMinVertexIndex();

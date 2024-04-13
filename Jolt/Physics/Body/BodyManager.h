@@ -21,6 +21,18 @@ class DebugRenderer;
 class BodyDrawFilter;
 #endif // JPH_DEBUG_RENDERER
 
+#ifdef JPH_DEBUG_RENDERER
+
+/// Defines how to color soft body constraints
+enum class ESoftBodyConstraintColor
+{
+	ConstraintType,				/// Draw different types of constraints in different colors
+	ConstraintGroup,			/// Draw constraints in the same group in the same color, non-parallel group will be red
+	ConstraintOrder,			/// Draw constraints in the same group in the same color, non-parallel group will be red, and order within each group will be indicated with gradient
+};
+
+#endif // JPH_DEBUG_RENDERER
+
 /// Array of bodies
 using BodyVector = Array<Body *>;
 
@@ -212,12 +224,6 @@ public:
 		SleepColor,					///< Static = grey, keyframed = green, dynamic = yellow, sleeping = red
 		IslandColor,				///< Static = grey, active = random color per island, sleeping = light grey
 		MaterialColor,				///< Color as defined by the PhysicsMaterial of the shape
-	};
-
-	enum class ESoftBodyConstraintColor
-	{
-		ConstraintType,				/// Draw different types of constraints in different colors
-		ConstraintGroup,			/// Draw constraints in the same group in the same color, non-parallel group will be red
 	};
 
 	/// Draw settings
