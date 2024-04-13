@@ -124,6 +124,10 @@ void SoftBodySkinnedConstraintTest::Initialize()
 	// Calculate the information needed for skinned constraints
 	settings->CalculateSkinnedConstraintNormals();
 
+	// Optimize the settings (note that this is the second time we call this, the first time was in SoftBodyCreator::CreateCloth,
+	// this is a bit wasteful but we must do it because we added more constraints)
+	settings->Optimize();
+
 	// Create the body
 	SoftBodyCreationSettings cloth(settings, body_translation, Quat::sIdentity(), Layers::MOVING);
 	mBody = mBodyInterface->CreateSoftBody(cloth);

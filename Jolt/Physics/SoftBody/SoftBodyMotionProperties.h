@@ -102,7 +102,7 @@ public:
 	void								DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
-	void								DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
+	void								DrawSkinConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const;
 	void								DrawPredictedBounds(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform) const;
 #endif // JPH_DEBUG_RENDERER
@@ -191,6 +191,7 @@ private:
 	// Information about the state of all skinned vertices
 	struct SkinState
 	{
+		Vec3							mPreviousPosition = Vec3::sNaN();
 		Vec3							mPosition = Vec3::sNaN();
 		Vec3							mNormal = Vec3::sNaN();
 	};
@@ -211,7 +212,7 @@ private:
 	void								ApplyVolumeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all skin constraints
-	void								ApplySkinConstraints(const SoftBodyUpdateContext &inContext);
+	void								ApplySkinConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);
 
 	/// Enforce all edge constraints
 	void								ApplyEdgeConstraints(const SoftBodyUpdateContext &inContext, uint inStartIndex, uint inEndIndex);

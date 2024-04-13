@@ -463,6 +463,9 @@ void SoftBodySharedSettings::CalculateSkinnedConstraintNormals()
 
 void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 {
+	// Clear any previous results
+	mUpdateGroups.clear();
+
 	// Create a list of connected vertices
 	struct Connection
 	{
@@ -487,7 +490,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 
 				swap(inV1, inV2);
 			}
-		}; 
+		};
 	for (const Edge &c : mEdgeConstraints)
 		add_connection(c.mVertex[0], c.mVertex[1]);
 	for (const LRA &c : mLRAConstraints)
@@ -510,6 +513,7 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 		add_connection(c.mVertex[1], c.mVertex[3]);
 		add_connection(c.mVertex[2], c.mVertex[3]);
 	}
+	// Skinned constraints only update 1 vertex, so we don't need special logic here
 
 	// Maps each of the vertices to a group index
 	Array<int> group_idx;
@@ -636,13 +640,14 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	{
 		uint			GetSize() const
 		{
-			return (uint)mEdgeConstraints.size() + (uint)mLRAConstraints.size() + (uint)mDihedralBendConstraints.size() + (uint)mVolumeConstraints.size();
+			return (uint)mEdgeConstraints.size() + (uint)mLRAConstraints.size() + (uint)mDihedralBendConstraints.size() + (uint)mVolumeConstraints.size() + (uint)mSkinnedConstraints.size();
 		}
 
 		Array<uint>		mEdgeConstraints;
 		Array<uint>		mLRAConstraints;
 		Array<uint>		mDihedralBendConstraints;
 		Array<uint>		mVolumeConstraints;
+		Array<uint>		mSkinnedConstraints;
 	};
 	Array<Group> groups;
 	groups.resize(current_group_idx + 1); // + non parallel group
@@ -689,6 +694,12 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			groups[g1].mVolumeConstraints.push_back(uint(&v - mVolumeConstraints.data()));
 		else // In different groups -> parallel group
 			groups.back().mVolumeConstraints.push_back(uint(&v - mVolumeConstraints.data()));
+	}
+	for (const Skinned &s : mSkinnedConstraints)
+	{
+		int g1 = group_idx[s.mVertex];
+		JPH_ASSERT(g1 >= 0);
+		groups[g1].mSkinnedConstraints.push_back(uint(&s - mSkinnedConstraints.data()));
 	}
 
 	// Sort the parallel groups from big to small (this means the big groups will be scheduled first and have more time to complete)
@@ -792,6 +803,19 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 
 			return inLHS < inRHS;
 		});
+
+		// Sort the skinned constraints
+		QuickSort(group.mSkinnedConstraints.begin(), group.mSkinnedConstraints.end(), [this](uint inLHS, uint inRHS)
+			{
+				const Skinned &s1 = mSkinnedConstraints[inLHS];
+				const Skinned &s2 = mSkinnedConstraints[inRHS];
+
+				// Order the skinned constraints so that the ones with the smallest index go first (hoping to get better cache locality when we process the edges).
+				if (s1.mVertex != s2.mVertex)
+					return s1.mVertex < s2.mVertex;
+
+				return inLHS < inRHS;
+			});
 	}
 
 	// Temporary store constraints as we reorder them
@@ -814,6 +838,11 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 	temp_volume.swap(mVolumeConstraints);
 	mVolumeConstraints.reserve(temp_volume.size());
 	outResults.mVolumeRemap.reserve(temp_volume.size());
+
+	Array<Skinned> temp_skinned;
+	temp_skinned.swap(mSkinnedConstraints);
+	mSkinnedConstraints.reserve(temp_skinned.size());
+	outResults.mSkinnedRemap.reserve(temp_skinned.size());
 
 	// Finalize update groups
 	for (const Group &group : groups)
@@ -846,8 +875,15 @@ void SoftBodySharedSettings::Optimize(OptimizationResults &outResults)
 			outResults.mVolumeRemap.push_back(idx);
 		}
 
+		// Reorder skinned constraints for this group
+		for (uint idx : group.mSkinnedConstraints)
+		{
+			mSkinnedConstraints.push_back(temp_skinned[idx]);
+			outResults.mSkinnedRemap.push_back(idx);
+		}
+
 		// Store end indices
-		mUpdateGroups.push_back({ (uint)mEdgeConstraints.size(), (uint)mLRAConstraints.size(), (uint)mDihedralBendConstraints.size(), (uint)mVolumeConstraints.size() });
+		mUpdateGroups.push_back({ (uint)mEdgeConstraints.size(), (uint)mLRAConstraints.size(), (uint)mDihedralBendConstraints.size(), (uint)mVolumeConstraints.size(), (uint)mSkinnedConstraints.size() });
 	}
 
 	// Free closest kinematic buffer
