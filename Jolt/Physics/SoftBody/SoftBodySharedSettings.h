@@ -80,6 +80,7 @@ public:
 		Array<uint>		mLRARemap;									///< Maps old LRA index to new LRA index
 		Array<uint>		mDihedralBendRemap;							///< Maps old dihedral bend index to new dihedral bend index
 		Array<uint>		mVolumeRemap;								///< Maps old volume constraint index to new volume constraint index
+		Array<uint>		mSkinnedRemap;								///< Maps old skinned constraint index to new skinned constraint index
 	};
 
 	/// Optimize the soft body settings for simulation. This will reorder constraints so they can be executed in parallel.
@@ -320,6 +321,7 @@ private:
 		uint			mLRAEndIndex;								///< The end index of the LRA constraints in this group
 		uint			mDihedralBendEndIndex;						///< The end index of the dihedral bend constraints in this group
 		uint			mVolumeEndIndex;							///< The end index of the volume constraints in this group
+		uint			mSkinnedEndIndex;							///< The end index of the skinned constraints in this group
 	};
 
 	Array<ClosestKinematic> mClosestKinematic;						///< The closest kinematic vertex to each vertex in mVertices
