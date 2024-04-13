@@ -992,7 +992,7 @@ void SoftBodyMotionProperties::DrawVertexVelocities(DebugRenderer *inRenderer, R
 }
 
 template <typename GetEndIndex, typename DrawConstraint>
-inline void SoftBodyMotionProperties::DrawConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const
+inline void SoftBodyMotionProperties::DrawConstraints(ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const
 {
 	uint start = 0;
 	for (uint i = 0; i < (uint)mSettings->mUpdateGroups.size(); ++i)
@@ -1008,7 +1008,7 @@ inline void SoftBodyMotionProperties::DrawConstraints(DebugRenderer *inRenderer,
 		for (uint idx = start; idx < end; ++idx)
 		{
 			Color color = inConstraintColor == ESoftBodyConstraintColor::ConstraintOrder? base_color * (float(idx - start) / (end - start)) : base_color;
-			inDrawConstraint(inRenderer, inCenterOfMassTransform, idx, color);
+			inDrawConstraint(idx, color);
 		}
 
 		start = end;
@@ -1017,11 +1017,11 @@ inline void SoftBodyMotionProperties::DrawConstraints(DebugRenderer *inRenderer,
 
 void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+	DrawConstraints(inConstraintColor, 
 		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
 			return inGroup.mEdgeEndIndex;
 		},
-		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
 			const Edge &e = mSettings->mEdgeConstraints[inIndex];
 			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[e.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[e.mVertex[1]].mPosition, inColor);
 		},
@@ -1030,11 +1030,11 @@ void SoftBodyMotionProperties::DrawEdgeConstraints(DebugRenderer *inRenderer, RM
 
 void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+	DrawConstraints(inConstraintColor, 
 		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
 			return inGroup.mDihedralBendEndIndex;
 		},
-		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
 			const DihedralBend &b = mSettings->mDihedralBendConstraints[inIndex];
 
 			RVec3 x0 = inCenterOfMassTransform * mVertices[b.mVertex[0]].mPosition;
@@ -1054,11 +1054,11 @@ void SoftBodyMotionProperties::DrawBendConstraints(DebugRenderer *inRenderer, RM
 
 void SoftBodyMotionProperties::DrawVolumeConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+	DrawConstraints(inConstraintColor, 
 		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
 			return inGroup.mVolumeEndIndex;
 		},
-		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
 			const Volume &v = mSettings->mVolumeConstraints[inIndex];
 
 			RVec3 x1 = inCenterOfMassTransform * mVertices[v.mVertex[0]].mPosition;
@@ -1086,11 +1086,11 @@ void SoftBodyMotionProperties::DrawSkinConstraints(DebugRenderer *inRenderer, RM
 
 void SoftBodyMotionProperties::DrawLRAConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor) const
 {
-	DrawConstraints(inRenderer, inCenterOfMassTransform, inConstraintColor, 
+	DrawConstraints(inConstraintColor, 
 		[](const SoftBodySharedSettings::UpdateGroup &inGroup) {
 			return inGroup.mLRAEndIndex;
 		},
-		[this](DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, uint inIndex, ColorArg inColor) {
+		[this, inRenderer, &inCenterOfMassTransform](uint inIndex, ColorArg inColor) {
 			const LRA &l = mSettings->mLRAConstraints[inIndex];
 			inRenderer->DrawLine(inCenterOfMassTransform * mVertices[l.mVertex[0]].mPosition, inCenterOfMassTransform * mVertices[l.mVertex[1]].mPosition, inColor);
 		},

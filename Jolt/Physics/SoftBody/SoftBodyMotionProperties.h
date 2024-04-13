@@ -243,7 +243,7 @@ private:
 #ifdef JPH_DEBUG_RENDERER
 	/// Helper function to draw constraints
 	template <typename GetEndIndex, typename DrawConstraint>
-		inline void						DrawConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const;
+		inline void						DrawConstraints(ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const;
 #endif // JPH_DEBUG_RENDERER
 
 	RMat44								mSkinStateTransform = RMat44::sIdentity();	///< The matrix that transforms mSkinState to world space
