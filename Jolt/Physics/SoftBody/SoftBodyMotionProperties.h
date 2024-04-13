@@ -244,7 +244,7 @@ private:
 	/// Helper function to draw constraints
 	template <typename GetEndIndex, typename DrawConstraint>
 		inline void						DrawConstraints(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const;
-#endif JPH_DEBUG_RENDERER
+#endif // JPH_DEBUG_RENDERER
 
 	RMat44								mSkinStateTransform = RMat44::sIdentity();	///< The matrix that transforms mSkinState to world space
 	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints
