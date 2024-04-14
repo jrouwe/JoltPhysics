@@ -401,7 +401,7 @@ void SoftBodyMotionProperties::ApplySkinConstraints(const SoftBodyUpdateContext 
 
 	// We're going to iterate multiple times over the skin constraints, update the skinned position accordingly.
 	// If we don't do this, the simulation will see a big jump and the first iteration will cause a big velocity change in the system.
-	float factor = inContext.mNextIteration.load(std::memory_order_relaxed) / float(mNumIterations);
+	float factor = mSkinStatePreviousPositionValid? inContext.mNextIteration.load(std::memory_order_relaxed) / float(mNumIterations) : 1.0f;
 	float prev_factor = 1.0f - factor;
 
 	// Apply the constraints
@@ -684,7 +684,7 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 		// Update the skin state too since we will use this position as the previous position in the next update
 		for (SkinState &s : mSkinState)
 			s.mPosition -= delta;
-		mSkinStateTransform.SetTranslation(mSkinStateTransform.GetTranslation() - delta);
+		JPH_IF_DEBUG_RENDERER(mSkinStateTransform.SetTranslation(mSkinStateTransform.GetTranslation() + ioContext.mDeltaPosition);)
 
 		// Offset bounds to match new position
 		mLocalBounds.Translate(-delta);
@@ -706,6 +706,9 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 	}
 	else
 		ioContext.mCanSleep = ECanSleep::CannotSleep;
+
+	// If SkinVertices is not called after this then don't use the previous position as the skin is static
+	mSkinStatePreviousPositionValid = false;
 }
 
 void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, BodyInterface &inBodyInterface)
@@ -882,7 +885,7 @@ SoftBodyMotionProperties::EStatus SoftBodyMotionProperties::ParallelUpdate(SoftB
 	}
 }
 
-void SoftBodyMotionProperties::SkinVertices(RMat44Arg inCenterOfMassTransform, const Mat44 *inJointMatrices, [[maybe_unused]] uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
+void SoftBodyMotionProperties::SkinVertices([[maybe_unused]] RMat44Arg inCenterOfMassTransform, const Mat44 *inJointMatrices, [[maybe_unused]] uint inNumJoints, bool inHardSkinAll, TempAllocator &ioTempAllocator)
 {
 	// Calculate the skin matrices
 	uint num_skin_matrices = uint(mSettings->mInvBindMatrices.size());
@@ -894,7 +897,7 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inCenterOfMassTransform, c
 		*s = inJointMatrices[inv_bind_matrix->mJointIndex] * inv_bind_matrix->mInvBind;
 
 	// Skin the vertices
-	mSkinStateTransform = inCenterOfMassTransform;
+	JPH_IF_DEBUG_RENDERER(mSkinStateTransform = inCenterOfMassTransform;)
 	JPH_IF_ENABLE_ASSERTS(uint num_vertices = uint(mSettings->mVertices.size());)
 	JPH_ASSERT(mSkinState.size() == num_vertices);
 	const SoftBodySharedSettings::Vertex *in_vertices = mSettings->mVertices.data();
@@ -968,6 +971,9 @@ void SoftBodyMotionProperties::SkinVertices(RMat44Arg inCenterOfMassTransform, c
 				vertex.mPosition = mSkinState[s.mVertex].mPosition;
 			}
 	}
+
+	// Indicate that the previous positions are valid for the coming update
+	mSkinStatePreviousPositionValid = true;
 }
 
 void SoftBodyMotionProperties::CustomUpdate(float inDeltaTime, Body &ioSoftBody, PhysicsSystem &inSystem)

@@ -191,9 +191,9 @@ private:
 	// Information about the state of all skinned vertices
 	struct SkinState
 	{
-		Vec3							mPreviousPosition = Vec3::sNaN();
-		Vec3							mPosition = Vec3::sNaN();
-		Vec3							mNormal = Vec3::sNaN();
+		Vec3							mPreviousPosition = Vec3::sZero();			///< Previous position of the skinned vertex, used to interpolate between the previous and current position
+		Vec3							mPosition = Vec3::sNaN();					///< Current position of the skinned vertex
+		Vec3							mNormal = Vec3::sNaN();						///< Normal of the skinned vertex
 	};
 
 	/// Do a narrow phase check and determine the closest feature that we can collide with
@@ -245,9 +245,10 @@ private:
 	/// Helper function to draw constraints
 	template <typename GetEndIndex, typename DrawConstraint>
 		inline void						DrawConstraints(ESoftBodyConstraintColor inConstraintColor, const GetEndIndex &inGetEndIndex, const DrawConstraint &inDrawConstraint, ColorArg inBaseColor) const;
-#endif // JPH_DEBUG_RENDERER
 
 	RMat44								mSkinStateTransform = RMat44::sIdentity();	///< The matrix that transforms mSkinState to world space
+#endif // JPH_DEBUG_RENDERER
+
 	RefConst<SoftBodySharedSettings>	mSettings;									///< Configuration of the particles and constraints
 	Array<Vertex>						mVertices;									///< Current state of all vertices in the simulation
 	Array<CollidingShape>				mCollidingShapes;							///< List of colliding shapes retrieved during the last update
@@ -260,6 +261,7 @@ private:
 	bool								mUpdatePosition;							///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 	bool								mHasContact = false;						///< True if the soft body has collided with anything in the last update
 	bool								mEnableSkinConstraints = true;				///< If skin constraints are enabled
+	bool								mSkinStatePreviousPositionValid = false;	///< True if the skinning was updated in the last update so that the previous position of the skin state is valid
 };
 
 JPH_NAMESPACE_END

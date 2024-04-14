@@ -52,7 +52,8 @@ void SoftBodySkinnedConstraintTest::SkinVertices(bool inHardSkinAll)
 	SoftBodyMotionProperties *mp = static_cast<SoftBodyMotionProperties *>(mBody->GetMotionProperties());
 	mp->SetEnableSkinConstraints(sEnableSkinConstraints);
 	mp->SetSkinnedMaxDistanceMultiplier(sMaxDistanceMultiplier);
-	mp->SkinVertices(com, pose.data(), cNumJoints, inHardSkinAll, *mTempAllocator);
+	if (sUpdateSkinning || inHardSkinAll)
+		mp->SkinVertices(com, pose.data(), cNumJoints, inHardSkinAll, *mTempAllocator);
 }
 
 void SoftBodySkinnedConstraintTest::Initialize()
@@ -148,7 +149,7 @@ void SoftBodySkinnedConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inPa
 	}
 
 	// Update time
-	mTime += inParams.mDeltaTime;
+	mTime += sTimeScale * inParams.mDeltaTime;
 
 	// Calculate skinned vertices but do not hard skin them
 	SkinVertices(false);
@@ -166,6 +167,8 @@ void SoftBodySkinnedConstraintTest::RestoreState(StateRecorder &inStream)
 
 void SoftBodySkinnedConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 {
+	inUI->CreateSlider(inSubMenu, "Time Scale", sTimeScale, 0.0f, 10.0f, 0.1f, [](float inValue) { sTimeScale = inValue; });
+	inUI->CreateCheckBox(inSubMenu, "Update Skinning", sUpdateSkinning, [](UICheckBox::EState inState) { sUpdateSkinning = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Enable Skin Constraints", sEnableSkinConstraints, [](UICheckBox::EState inState) { sEnableSkinConstraints = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateSlider(inSubMenu, "Max Distance Multiplier", sMaxDistanceMultiplier, 0.0f, 10.0f, 0.1f, [](float inValue) { sMaxDistanceMultiplier = inValue; });
 }
