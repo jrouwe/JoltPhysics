@@ -17,7 +17,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added HeightFieldShape::GetMinHeightValue/GetMaxHeightValue that can be used to know which range of heights are accepted by SetHeights.
 * Switch from using _DEBUG to NDEBUG to detect debug mode. NDEBUG is defined in the standard while _DEBUG is Visual Studio specific.
 
-#### Bug fixes
+### Bug fixes
 
 * Fixed bug where the the skinned position of a soft body would update in the first sub-iteration, causing a large velocity spike and jittery behavior.
 * Fixed bug where the velocity of soft body vertices would increase indefinitely when resting on the back stop of a skinned constraint.
