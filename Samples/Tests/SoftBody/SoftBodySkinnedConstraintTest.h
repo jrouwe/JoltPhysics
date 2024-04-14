@@ -47,6 +47,8 @@ private:
 	float					mTime = 0.0f;
 
 	// Settings
+	static inline float		sTimeScale = 1.0f;
+	static inline bool		sUpdateSkinning = true;
 	static inline bool		sEnableSkinConstraints = true;
 	static inline float		sMaxDistanceMultiplier = 1.0f;
 };
