@@ -391,7 +391,7 @@ void SoftBodySharedSettings::CalculateBendConstraintConstants()
 		else
 		{
 			float sign = Sign(n2.Cross(n1).Dot(e0));
-			b.mInitialAngle = sign * ACosApproximate(n1.Dot(n2) / denom);
+			b.mInitialAngle = sign * ACosApproximate(n1.Dot(n2) / denom); // Runtime uses the approximation too
 		}
 	}
 }
