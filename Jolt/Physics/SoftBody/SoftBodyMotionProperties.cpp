@@ -299,7 +299,7 @@ void SoftBodyMotionProperties::ApplyDihedralBendConstraints(const SoftBodyUpdate
 		// As per "Strain Based Dynamics" Appendix A we need to negate the gradients when (n1 x n2) . e > 0, instead we make sure that the sign of the constraint equation is correct
 		float sign = Sign(n2.Cross(n1).Dot(e));
 		float d = n1.Dot(n2) / sqrt(n1_len_sq_n2_len_sq);
-		float c = sign * SoftBodySharedSettings::DihedralBend::sACosApproximation(d) - b->mInitialAngle;
+		float c = sign * ACosApproximate(d) - b->mInitialAngle; // Runtime uses the approximation too
 
 		// Ensure the range is -PI to PI
 		if (c > JPH_PI)

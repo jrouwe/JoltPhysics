@@ -187,21 +187,6 @@ public:
 		/// Return the lowest vertex index of this constraint
 		uint32			GetMinVertexIndex() const					{ return min(min(mVertex[0], mVertex[1]), min(mVertex[2], mVertex[3])); }
 
-		/// Returns an approximation of ACos to be used to calculate the angle from the dot product of the normals of the triangles
-		static JPH_INLINE float sACosApproximation(float inX)
-		{
-			// See: https://www.johndcook.com/blog/2022/09/06/inverse-cosine-near-1/
-			// Taylor of cos(x) = 1 - x^2 / 2 + ...
-			// Substitute x = sqrt(2 y) we get: cos(sqrt(2 y)) = 1 - y
-			// Substitute z = 1 - y we get: cos(sqrt(2 (1 - z))) = z <=> acos(z) = sqrt(2 (1 - z))
-			// A Taylor expansion of acos(x) / sqrt(2 (1 - x)) = 1 + (1 - x) / 12 + ...
-			// Note that this is the same as doing a Taylor expansion of acos(1 - x) around 0
-			// Our approximation is valid in the range [0, 1] but acos(x) is anti-symmetric around 0 so we can extend it to [-1, 1]
-			float one_minus_x = max(1.0f - abs(inX), 0.0f); // Ensure that we don't get a negative value
-			float val = sqrt(2.0f * one_minus_x) * (1.0f + one_minus_x / 12.0f);
-			return inX < 0? JPH_PI - val : val;
-		}
-
 		uint32			mVertex[4];									///< Indices of the vertices of the 2 triangles that share an edge (the first 2 vertices are the shared edge)
 		float			mCompliance = 0.0f;							///< Inverse of the stiffness of the constraint
 		float			mInitialAngle = 0.0f;						///< Initial angle between the normals of the triangles (pi - dihedral angle).
