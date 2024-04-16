@@ -29,6 +29,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Math/MatrixTests.cpp
 	${UNIT_TESTS_ROOT}/Math/QuatTests.cpp
 	${UNIT_TESTS_ROOT}/Math/UVec4Tests.cpp
+	${UNIT_TESTS_ROOT}/Math/TrigonometryTests.cpp
 	${UNIT_TESTS_ROOT}/Math/Vec3Tests.cpp
 	${UNIT_TESTS_ROOT}/Math/Vec4Tests.cpp
 	${UNIT_TESTS_ROOT}/Math/VectorTests.cpp
