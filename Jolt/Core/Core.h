@@ -187,12 +187,16 @@
 		#define JPH_USE_SSE4_2
 	#endif
 #elif defined(__e2k__)
-	// Elbrus e2k architecture
+	// E2K CPU architecture (MCST Elbrus 2000)
 	#define JPH_CPU_E2K
 	#define JPH_CPU_ADDRESS_BITS 64
-	#define JPH_USE_SSE
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
+
+	// Compiler flags on e2k arch determine CPU features
+	#if defined(__SSE__) && !defined(JPH_USE_SSE)
+		#define JPH_USE_SSE
+	#endif
 #else
 	#error Unsupported CPU architecture
 #endif
