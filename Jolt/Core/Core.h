@@ -111,10 +111,6 @@
 	#define JPH_COMPILER_MINGW
 #endif
 
-#if defined(__LCC__) && defined (__MCST__)
-	#define JPH_COMPILER_MCST_LCC
-#endif
-
 // Detect CPU architecture
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 	// X86 CPU architecture
