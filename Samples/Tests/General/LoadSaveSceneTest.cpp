@@ -215,6 +215,10 @@ void LoadSaveSceneTest::Initialize()
 	if (!ObjectStreamIn::sReadObject(data, scene))
 		FatalError("Failed to load scene");
 
+	// Ensure that the soft body shared settings have been optimized (this is not saved to a text file)
+	for (SoftBodyCreationSettings &soft_body : scene->GetSoftBodies())
+		const_cast<SoftBodySharedSettings *>(soft_body.mSettings.GetPtr())->Optimize();
+
 	// Instantiate scene
 	scene->CreateBodies(mPhysicsSystem);
 }
