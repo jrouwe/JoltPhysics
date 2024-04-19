@@ -48,6 +48,7 @@ JPH_INLINE float ACos(float inX)
 JPH_INLINE float ACosApproximate(float inX)
 {
 	// See: https://www.johndcook.com/blog/2022/09/06/inverse-cosine-near-1/
+	// See also: https://seblagarde.wordpress.com/2014/12/01/inverse-trigonometric-functions-gpu-optimization-for-amd-gcn-architecture/
 	// Taylor of cos(x) = 1 - x^2 / 2 + ...
 	// Substitute x = sqrt(2 y) we get: cos(sqrt(2 y)) = 1 - y
 	// Substitute z = 1 - y we get: cos(sqrt(2 (1 - z))) = z <=> acos(z) = sqrt(2 (1 - z))
