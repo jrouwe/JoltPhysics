@@ -210,6 +210,7 @@ public:
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse); ///< Applied at center of mass
 	void						AddImpulse(const BodyID &inBodyID, Vec3Arg inImpulse, RVec3Arg inPoint); ///< Applied at inPoint
 	void						AddAngularImpulse(const BodyID &inBodyID, Vec3Arg inAngularImpulse);
+	bool						ApplyBuoyancyImpulse(const BodyID &inBodyID, RVec3Arg inSurfacePosition, Vec3Arg inSurfaceNormal, float inBuoyancy, float inLinearDrag, float inAngularDrag, Vec3Arg inFluidVelocity, Vec3Arg inGravity, float inDeltaTime);
 	///@}
 
 	///@name Body type
