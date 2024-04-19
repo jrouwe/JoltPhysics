@@ -47,6 +47,11 @@ private:
 	/// The GJK algorithm, used to start the EPA algorithm
 	GJKClosestPoint		mGJK;
 
+#ifdef JPH_ENABLE_ASSERTS
+	/// Tolerance as passed to the GJK algorithm, used for asserting.
+	float				mGJKTolerance = 0.0f;
+#endif // JPH_ENABLE_ASSERTS
+
 	/// A list of support points for the EPA algorithm
 	class SupportPoints
 	{
@@ -99,6 +104,8 @@ public:
 	EStatus				GetPenetrationDepthStepGJK(const AE &inAExcludingConvexRadius, float inConvexRadiusA, const BE &inBExcludingConvexRadius, float inConvexRadiusB, float inTolerance, Vec3 &ioV, Vec3 &outPointA, Vec3 &outPointB)
 	{
 		JPH_PROFILE_FUNCTION();
+
+		JPH_IF_ENABLE_ASSERTS(mGJKTolerance = inTolerance;)
 
 		// Don't supply a zero ioV, we only want to get points on the hull of the Minkowsky sum and not internal points
 		JPH_ASSERT(!ioV.IsNearZero());
@@ -154,7 +161,7 @@ public:
 		case 1:
 			{
 				// 1 vertex, which must be at the origin, which is useless for our purpose
-				JPH_ASSERT(support_points.mY[0].IsNearZero(1.0e-8f));
+				JPH_ASSERT(support_points.mY[0].IsNearZero(Square(mGJKTolerance)));
 				support_points.mY.pop_back();
 
 				// Add support points in 4 directions to form a tetrahedron around the origin
