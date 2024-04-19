@@ -521,6 +521,8 @@ public:
 	template <typename A, typename B>
 	bool				CastShape(Mat44Arg inStart, Vec3Arg inDirection, float inCollisionTolerance, float inPenetrationTolerance, const A &inA, const B &inB, float inConvexRadiusA, float inConvexRadiusB, bool inReturnDeepestPoint, float &ioLambda, Vec3 &outPointA, Vec3 &outPointB, Vec3 &outContactNormal)
 	{
+		JPH_IF_ENABLE_ASSERTS(mGJKTolerance = inCollisionTolerance;)
+
 		// First determine if there's a collision at all
 		if (!mGJK.CastShape(inStart, inDirection, inCollisionTolerance, inA, inB, inConvexRadiusA, inConvexRadiusB, ioLambda, outPointA, outPointB, outContactNormal))
 			return false;
