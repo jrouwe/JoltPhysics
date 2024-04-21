@@ -228,11 +228,12 @@ void SoftBodyMotionProperties::IntegratePositions(const SoftBodyUpdateContext &i
 
 	// Integrate
 	Vec3 sub_step_gravity = inContext.mGravity * dt;
+	Vec3 sub_step_impulse = GetAccumulatedForce() * dt;
 	for (Vertex &v : mVertices)
 		if (v.mInvMass > 0.0f)
 		{
 			// Gravity
-			v.mVelocity += sub_step_gravity;
+			v.mVelocity += sub_step_gravity + sub_step_impulse * v.mInvMass;
 
 			// Damping
 			v.mVelocity *= linear_damping;
@@ -709,6 +710,9 @@ void SoftBodyMotionProperties::UpdateSoftBodyState(SoftBodyUpdateContext &ioCont
 
 	// If SkinVertices is not called after this then don't use the previous position as the skin is static
 	mSkinStatePreviousPositionValid = false;
+
+	// Reset force accumulator
+	ResetForce();
 }
 
 void SoftBodyMotionProperties::UpdateRigidBodyVelocities(const SoftBodyUpdateContext &inContext, BodyInterface &inBodyInterface)
