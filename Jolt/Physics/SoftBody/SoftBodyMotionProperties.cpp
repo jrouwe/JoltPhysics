@@ -138,7 +138,6 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 					else
 					{
 						// Call the contact listener to see if we should accept this contact
-						// If there is no contact listener then we can ignore the contact if the other body is a sensor
 						if (mContext.mContactListener->OnSoftBodyContactValidate(soft_body, body, settings) != SoftBodyValidateResult::AcceptContact)
 							return;
 
