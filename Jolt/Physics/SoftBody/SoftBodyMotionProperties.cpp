@@ -126,32 +126,48 @@ void SoftBodyMotionProperties::DetermineCollidingShapes(const SoftBodyUpdateCont
 				if (body.IsRigidBody() // TODO: We should support soft body vs soft body
 					&& soft_body.GetCollisionGroup().CanCollide(body.GetCollisionGroup()))
 				{
-					// Call the contact listener to see if we should accept this contact
-					// If there is no contact listener then we can ignore the contact if the other body is a sensor
 					SoftBodyContactSettings settings;
 					settings.mIsSensor = body.IsSensor();
-					if (mContext.mContactListener == nullptr? !settings.mIsSensor : mContext.mContactListener->OnSoftBodyContactValidate(soft_body, body, settings) == SoftBodyValidateResult::AcceptContact)
+
+					if (mContext.mContactListener == nullptr)
 					{
-						CollidingShape cs;
-						cs.mCenterOfMassTransform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
-						cs.mShape = body.GetShape();
-						cs.mBodyID = inResult;
-						cs.mMotionType = body.GetMotionType();
-						cs.mIsSensor = settings.mIsSensor;
-						cs.mUpdateVelocities = false;
-						cs.mFriction = mCombineFriction(soft_body, SubShapeID(), body, SubShapeID());
-						cs.mRestitution = mCombineRestitution(soft_body, SubShapeID(), body, SubShapeID());
-						if (cs.mMotionType == EMotionType::Dynamic)
-						{
-							const MotionProperties *mp = body.GetMotionProperties();
-							cs.mInvMass = settings.mInvMassScale2 * mp->GetInverseMass();
-							cs.mInvInertia = settings.mInvInertiaScale2 * mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
-							cs.mSoftBodyInvMassScale = settings.mInvMassScale1;
-							cs.mOriginalLinearVelocity = cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
-							cs.mOriginalAngularVelocity = cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
-						}
-						mHits.push_back(cs);
+						// If we have no contact listener, we can ignore sensors
+						if (settings.mIsSensor)
+							return;
 					}
+					else
+					{
+						// Call the contact listener to see if we should accept this contact
+						// If there is no contact listener then we can ignore the contact if the other body is a sensor
+						if (mContext.mContactListener->OnSoftBodyContactValidate(soft_body, body, settings) != SoftBodyValidateResult::AcceptContact)
+							return;
+
+						// Check if there will be any interaction
+						if (!settings.mIsSensor
+							&& settings.mInvMassScale1 == 0.0f
+							&& (body.GetMotionType() != EMotionType::Dynamic || settings.mInvMassScale2 == 0.0f))
+							return;
+					}
+
+					CollidingShape cs;
+					cs.mCenterOfMassTransform = (mInverseTransform * body.GetCenterOfMassTransform()).ToMat44();
+					cs.mShape = body.GetShape();
+					cs.mBodyID = inResult;
+					cs.mMotionType = body.GetMotionType();
+					cs.mIsSensor = settings.mIsSensor;
+					cs.mUpdateVelocities = false;
+					cs.mFriction = mCombineFriction(soft_body, SubShapeID(), body, SubShapeID());
+					cs.mRestitution = mCombineRestitution(soft_body, SubShapeID(), body, SubShapeID());
+					cs.mSoftBodyInvMassScale = settings.mInvMassScale1;
+					if (cs.mMotionType == EMotionType::Dynamic)
+					{
+						const MotionProperties *mp = body.GetMotionProperties();
+						cs.mInvMass = settings.mInvMassScale2 * mp->GetInverseMass();
+						cs.mInvInertia = settings.mInvInertiaScale2 * mp->GetInverseInertiaForRotation(cs.mCenterOfMassTransform.GetRotation());
+						cs.mOriginalLinearVelocity = cs.mLinearVelocity = mInverseTransform.Multiply3x3(mp->GetLinearVelocity());
+						cs.mOriginalAngularVelocity = cs.mAngularVelocity = mInverseTransform.Multiply3x3(mp->GetAngularVelocity());
+					}
+					mHits.push_back(cs);
 				}
 			}
 		}
@@ -576,34 +592,36 @@ void SoftBodyMotionProperties::ApplyCollisionConstraintsAndUpdateVelocities(cons
 							Vec3 r2_cross_n = r2.Cross(contact_normal);
 							float w2 = cs.mInvMass + r2_cross_n.Dot(cs.mInvInertia * r2_cross_n);
 							float w1_plus_w2 = vertex_inv_mass + w2;
+							if (w1_plus_w2 > 0.0f)
+							{
+								// Calculate delta relative velocity due to friction (modified equation 31)
+								Vec3 dv;
+								if (v_tangential_length > 0.0f)
+									dv = v_tangential * min(cs.mFriction * projected_distance / (v_tangential_length * dt), 1.0f);
+								else
+									dv = Vec3::sZero();
 
-							// Calculate delta relative velocity due to friction (modified equation 31)
-							Vec3 dv;
-							if (v_tangential_length > 0.0f)
-								dv = v_tangential * min(cs.mFriction * projected_distance / (v_tangential_length * dt), 1.0f);
-							else
-								dv = Vec3::sZero();
+								// Calculate delta relative velocity due to restitution (equation 35)
+								dv += v_normal;
+								float prev_v_normal = (prev_v - v2).Dot(contact_normal);
+								if (prev_v_normal < restitution_treshold)
+									dv += cs.mRestitution * prev_v_normal * contact_normal;
 
-							// Calculate delta relative velocity due to restitution (equation 35)
-							dv += v_normal;
-							float prev_v_normal = (prev_v - v2).Dot(contact_normal);
-							if (prev_v_normal < restitution_treshold)
-								dv += cs.mRestitution * prev_v_normal * contact_normal;
+								// Calculate impulse
+								Vec3 p = dv / w1_plus_w2;
 
-							// Calculate impulse
-							Vec3 p = dv / w1_plus_w2;
+								// Apply impulse to particle
+								v.mVelocity -= p * vertex_inv_mass;
 
-							// Apply impulse to particle
-							v.mVelocity -= p * vertex_inv_mass;
+								// Apply impulse to rigid body
+								cs.mLinearVelocity += p * cs.mInvMass;
+								cs.mAngularVelocity += cs.mInvInertia * r2.Cross(p);
 
-							// Apply impulse to rigid body
-							cs.mLinearVelocity += p * cs.mInvMass;
-							cs.mAngularVelocity += cs.mInvInertia * r2.Cross(p);
-
-							// Mark that the velocities of the body we hit need to be updated
-							cs.mUpdateVelocities = true;
+								// Mark that the velocities of the body we hit need to be updated
+								cs.mUpdateVelocities = true;
+							}
 						}
-						else
+						else if (cs.mSoftBodyInvMassScale > 0.0f)
 						{
 							// Body is not movable, equations are simpler
 

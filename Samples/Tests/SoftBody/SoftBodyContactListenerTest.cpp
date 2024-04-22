@@ -36,7 +36,7 @@ void SoftBodyContactListenerTest::PrePhysicsUpdate(const PreUpdateParams &inPara
 	if (mTime > 2.5f)
 	{
 		// Next cycle
-		mCycle = (mCycle + 1) % 7;
+		mCycle = (mCycle + 1) % 10;
 		mTime = 0.0f;
 
 		// Remove the old scene
@@ -50,7 +50,7 @@ void SoftBodyContactListenerTest::PrePhysicsUpdate(const PreUpdateParams &inPara
 	}
 
 	// Draw current state
-	const char *cycle_names[] = { "Accept contact", "Sphere 10x mass", "Cloth 10x mass", "Sphere infinite mass", "Cloth infinite mass", "Sensor contact", "Reject contact" };
+	const char *cycle_names[] = { "Accept contact", "Sphere 10x mass", "Cloth 10x mass", "Sphere infinite mass", "Cloth infinite mass", "Sensor contact", "Reject contact", "Kinematic Sphere", "Kinematic Sphere, cloth infinite mass", "Kinematic sphere, sensor contact", "Kinematic Sphere, reject contact" };
 	mDebugRenderer->DrawText3D(mBodyInterface->GetPosition(mOtherBodyID), cycle_names[mCycle], Color::sWhite, 1.0f);
 }
 
@@ -65,10 +65,15 @@ void SoftBodyContactListenerTest::StartCycle()
 	cloth.mMakeRotationIdentity = false; // Test explicitly checks if soft bodies with a rotation collide with shapes properly
 	mSoftBodyID = mBodyInterface->CreateAndAddSoftBody(cloth, EActivation::Activate);
 
+	// If we want a kinematic sphere
+	bool kinematic = mCycle > 6;
+
 	// Create sphere
-	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(0, 7, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+	BodyCreationSettings bcs(new SphereShape(1.0f), RVec3(0, 7, 0), Quat::sIdentity(), kinematic? EMotionType::Kinematic : EMotionType::Dynamic, Layers::MOVING);
 	bcs.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
 	bcs.mMassPropertiesOverride.mMass = 100.0f;
+	if (kinematic)
+		bcs.mLinearVelocity = Vec3(0, -2.5f, 0);
 	mOtherBodyID = mBodyInterface->CreateAndAddBody(bcs, EActivation::Activate);
 }
 
@@ -104,6 +109,24 @@ SoftBodyValidateResult SoftBodyContactListenerTest::OnSoftBodyContactValidate(co
 
 	case 5:
 		// Sensor contact
+		ioSettings.mIsSensor = true;
+		return SoftBodyValidateResult::AcceptContact;
+
+	case 6:
+		// No contacts
+		return SoftBodyValidateResult::RejectContact;
+
+	case 7:
+		// Kinematic sphere
+		return SoftBodyValidateResult::AcceptContact;
+
+	case 8:
+		// Kinematic sphere, cloth infinite mass
+		ioSettings.mInvMassScale1 = 0.0f;
+		return SoftBodyValidateResult::AcceptContact;
+
+	case 9:
+		// Kinematic sphere, sensor contact
 		ioSettings.mIsSensor = true;
 		return SoftBodyValidateResult::AcceptContact;
 
