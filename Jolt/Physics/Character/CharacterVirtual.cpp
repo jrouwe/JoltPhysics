@@ -1156,7 +1156,8 @@ bool CharacterVirtual::SetShape(const Shape *inShape, float inMaxPenetrationDept
 
 			// Test if this results in penetration, if so cancel the transition
 			for (const Contact &c : contacts)
-				if (c.mDistance < -inMaxPenetrationDepth)
+				if (c.mDistance < -inMaxPenetrationDepth
+					&& !c.mIsSensorB)
 					return false;
 
 			StoreActiveContacts(contacts, inAllocator);
