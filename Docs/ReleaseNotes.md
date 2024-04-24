@@ -8,21 +8,27 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 #### Soft Body
 
+* Added support for applying a global force to a soft body through Body::AddForce.
 * Implemented better algorithm to split soft body constraints into parallel groups. This makes the soft body simulation 10-20% faster and also enables multithreading LRA, bend, volume and skinned constraints.
+* Added approximate ACos function which speeds up dihedral bend constraints by approx. 10%.
 * Improved sorting of LRA soft body constraints to improve convergence.
 * Added ability to draw soft body constraint evaluation order.
 
 #### Various
 
 * Added HeightFieldShape::GetMinHeightValue/GetMaxHeightValue that can be used to know which range of heights are accepted by SetHeights.
+* Added option to get a callback when a JobSystemThreadPool thread starts/stops. This allows you to e.g. set application specific thread locals.
 * Switch from using _DEBUG to NDEBUG to detect debug mode. NDEBUG is defined in the standard while _DEBUG is Visual Studio specific.
 
 ### Bug fixes
 
 * Fixed bug where the the skinned position of a soft body would update in the first sub-iteration, causing a large velocity spike and jittery behavior.
 * Fixed bug where the velocity of soft body vertices would increase indefinitely when resting on the back stop of a skinned constraint.
+* Fixed bug when SkinVertices for a soft body is not called every frame, the previous position of the skin was still used causing a replay of the motion of the previous frame.
+* Fixed handling of mass override from SoftBodyContactListener. Previously if the inverse mass of both of the soft body and the colliding body were set to 0, the soft body would still react.
 * Fixed crash in Ragdoll::DriveToPoseUsingMotors when using constraints other than SwingTwistConstraint.
 * Fixed -Wunused-parameter warning on GCC when building in Release mode with -Wextra.
+* Fixed tolerance in assert in GetPenetrationDepthStepEPA.
 
 ## v5.0.0
 
