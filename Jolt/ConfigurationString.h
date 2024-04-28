@@ -6,9 +6,6 @@
 
 JPH_NAMESPACE_BEGIN
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 /// Construct a string that lists the most important configuration settings
 inline const char *GetConfigurationString()
 {
@@ -66,24 +63,23 @@ inline const char *GetConfigurationString()
 		"(FP Exceptions) "
 #endif
 #ifdef JPH_DEBUG_RENDERER
-	"(Debug Renderer) "
-#endif
-#ifdef JPH_ENABLE_ASSERTS
-	"(Assertion Enabled) "
+		"(Debug Renderer) "
 #endif
 #ifdef JPH_PROFILE_ENABLED
-	"(Profile Enabled) "
+		"(Profile) "
 #endif
-	"(Object Layer Bits "
-TOSTRING(JPH_OBJECT_LAYER_BITS)
-	")"
+#if defined(JPH_OBJECT_LAYER_BITS) && JPH_OBJECT_LAYER_BITS == 32
+		"(32-bit ObjectLayer) "
+#else
+		"(16-bit ObjectLayer) "
+#endif
+#ifdef JPH_ENABLE_ASSERTS
+		"(Assertions) "
+#endif
 #ifdef JPH_DEBUG
 		"(Debug) "
 #endif
 		;
 }
-
-#undef STRINGIFY
-#undef TOSTRING
 
 JPH_NAMESPACE_END
