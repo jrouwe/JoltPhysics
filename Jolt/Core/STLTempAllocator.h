@@ -27,6 +27,9 @@ public:
 	using size_type = size_t;
 	using difference_type = ptrdiff_t;
 
+	/// The allocator is not stateless (depends on the temp allocator)
+	using is_always_equal = std::false_type;
+
 	/// Constructor
 	inline					STLTempAllocator(TempAllocator &inAllocator) : mAllocator(inAllocator) { }
 
@@ -46,15 +49,15 @@ public:
 		mAllocator.Free(inPointer, uint(inN * sizeof(value_type)));
 	}
 
-	/// Allocators are stateless so assumed to be equal
-	inline bool				operator == (const STLTempAllocator<T> &) const
+	/// Allocators are not-stateless, assume if allocator address matches that the allocators are the same
+	inline bool				operator == (const STLTempAllocator<T> &inRHS) const
 	{
-		return true;
+		return &mAllocator == &inRHS.mAllocator;
 	}
 
-	inline bool				operator != (const STLTempAllocator<T> &) const
+	inline bool				operator != (const STLTempAllocator<T> &inRHS) const
 	{
-		return false;
+		return &mAllocator != &inRHS.mAllocator;
 	}
 
 	/// Converting to allocator for other type
