@@ -507,6 +507,11 @@ if (DISABLE_CUSTOM_ALLOCATOR)
 	target_compile_definitions(Jolt PUBLIC JPH_DISABLE_CUSTOM_ALLOCATOR)
 endif()
 
+# Setting enable asserts flag
+if (USE_ASSERTS)
+	target_compile_definitions(Jolt PUBLIC JPH_ENABLE_ASSERTS)
+endif()
+
 # Setting double precision flag
 if (DOUBLE_PRECISION)
 	target_compile_definitions(Jolt PUBLIC JPH_DOUBLE_PRECISION)
