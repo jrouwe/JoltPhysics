@@ -6,6 +6,11 @@
 
 JPH_NAMESPACE_BEGIN
 
+/// String that lists the most important configuration settings this binary is compiled.
+/// Useful to get a human-readable list with all the preprocessor defines the Jolt binary is compiled with.
+/// You can use `JPH::GetConfigurationString();` to retrieve the list of all the preprocessor defines your project is compiled with. (Both should match)
+JPH_EXPORT extern const char *BinaryConfigurationString;
+
 /// Internal helper function
 JPH_EXPORT extern bool VerifyJoltVersionIDInternal(uint64 inVersionID);
 

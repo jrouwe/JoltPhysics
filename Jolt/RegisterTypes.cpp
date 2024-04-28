@@ -5,6 +5,7 @@
 #include <Jolt/Jolt.h>
 
 #include <Jolt/RegisterTypes.h>
+#include <Jolt/ConfigurationString.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/RTTI.h>
 #include <Jolt/Core/TickCounter.h>
@@ -69,6 +70,8 @@ JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, BodyCreationSetting
 JPH_DECLARE_RTTI_WITH_NAMESPACE_FOR_FACTORY(JPH_EXPORT, JPH, SoftBodyCreationSettings)
 
 JPH_NAMESPACE_BEGIN
+
+const char *BinaryConfigurationString = GetConfigurationString();
 
 bool VerifyJoltVersionIDInternal(uint64 inVersionID)
 {
