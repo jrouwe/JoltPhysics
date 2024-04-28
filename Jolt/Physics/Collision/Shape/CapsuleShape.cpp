@@ -165,6 +165,7 @@ const ConvexShape::Support *CapsuleShape::GetSupportFunction(ESupportMode inMode
 		return new (&inBuffer) CapsuleWithConvex(scaled_half_height_of_cylinder, scaled_radius);
 
 	case ESupportMode::ExcludeConvexRadius:
+	case ESupportMode::Default:
 		return new (&inBuffer) CapsuleNoConvex(scaled_half_height_of_cylinder, scaled_radius);
 	}
 
@@ -219,29 +220,27 @@ MassProperties CapsuleShape::GetMassProperties() const
 
 	// Calculate inertia and mass according to:
 	// https://www.gamedev.net/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
-	float radius_sq = mRadius * mRadius;
+	// Note that there is an error in eq 14, H^2/2 should be H^2/4 in Ixx and Izz, eq 12 does contain the correct value
+	float radius_sq = Square(mRadius);
 	float height = 2.0f * mHalfHeightOfCylinder;
 	float cylinder_mass = JPH_PI * height * radius_sq * density;
 	float hemisphere_mass = (2.0f * JPH_PI / 3.0f) * radius_sq * mRadius * density;
 
 	// From cylinder
+	float height_sq = Square(height);
 	float inertia_y = radius_sq * cylinder_mass * 0.5f;
-	float inertia_x = inertia_y * 0.5f + cylinder_mass * height * height / 12.0f;
-	float inertia_z = inertia_x;
+	float inertia_xz = inertia_y * 0.5f + cylinder_mass * height_sq / 12.0f;
 
 	// From hemispheres
-	float temp0 = hemisphere_mass * 2.0f * radius_sq / 5.0f;
-	inertia_y += temp0  *  2.0f;
-	float temp1 = mHalfHeightOfCylinder;
-	float temp2 = temp0 + hemisphere_mass * (temp1 * temp1 + (3.0f / 8.0f) * height * mRadius);
-	inertia_x += temp2 * 2.0f;
-	inertia_z += temp2 * 2.0f;
+	float temp = hemisphere_mass * 4.0f * radius_sq / 5.0f;
+	inertia_y += temp;
+	inertia_xz += temp + hemisphere_mass * (0.5f * height_sq + (3.0f / 4.0f) * height * mRadius);
 
 	// Mass is cylinder + hemispheres
 	p.mMass = cylinder_mass + hemisphere_mass * 2.0f;
 
 	// Set inertia
-	p.mInertia = Mat44::sScale(Vec3(inertia_x, inertia_y, inertia_z));
+	p.mInertia = Mat44::sScale(Vec3(inertia_xz, inertia_y, inertia_xz));
 
 	return p;
 }
@@ -385,7 +384,7 @@ void CapsuleShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedS
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(ScaleHelpers::MakeUniformScale(scale.Abs()));
 	ioCollector.AddHit(ts);
 }

@@ -27,29 +27,20 @@ RMat44 Body::GetInverseCenterOfMassTransform() const
 	return RMat44::sInverseRotationTranslation(mRotation, mPosition);
 }
 
-inline static bool sIsValidSensorBodyPair(const Body &inSensor, const Body &inOther)
-{
-	// If the sensor is not an actual sensor then this is not a valid pair
-	if (!inSensor.IsSensor())
-		return false;
-
-	if (inSensor.SensorDetectsStatic())
-		return !inOther.IsDynamic(); // If the other body is dynamic, the pair will be handled when the bodies are swapped, otherwise we'll detect the collision twice
-	else
-		return inOther.IsKinematic(); // Only kinematic bodies are valid
-}
-
 inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body &inBody2)
 {
 	// First body should never be a soft body
 	JPH_ASSERT(!inBody1.IsSoftBody());
 
 	// One of these conditions must be true
+	// - We always allow detecting collisions between kinematic and non-dynamic bodies
 	// - One of the bodies must be dynamic to collide
-	// - A sensor can collide with non-dynamic bodies
-	if ((!inBody1.IsDynamic() && !inBody2.IsDynamic())
-		&& !sIsValidSensorBodyPair(inBody1, inBody2)
-		&& !sIsValidSensorBodyPair(inBody2, inBody1))
+	// - A kinematic object can collide with a sensor
+	if (!inBody1.GetCollideKinematicVsNonDynamic()
+		&& !inBody2.GetCollideKinematicVsNonDynamic()
+		&& (!inBody1.IsDynamic() && !inBody2.IsDynamic())
+		&& !(inBody1.IsKinematic() && inBody2.IsSensor())
+		&& !(inBody2.IsKinematic() && inBody1.IsSensor()))
 		return false;
 
 	// Check that body 1 is active
@@ -58,9 +49,9 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 
 	// If the pair A, B collides we need to ensure that the pair B, A does not collide or else we will handle the collision twice.
 	// If A is the same body as B we don't want to collide (1)
-	// If A is dynamic and B is static we should collide (2)
-	// If A is dynamic / kinematic and B is dynamic / kinematic we should only collide if (kinematic vs kinematic is ruled out by the if above)
-	//	- A is active and B is not yet active (3)
+	// If A is dynamic / kinematic and B is static we should collide (2)
+	// If A is dynamic / kinematic and B is dynamic / kinematic we should only collide if
+	//	- A is active and B is not active (3)
 	//	- A is active and B will become active during this simulation step (4)
 	//	- A is active and B is active, we require a condition that makes A, B collide and B, A not (5)
 	//
@@ -80,7 +71,7 @@ inline bool Body::sFindCollidingPairsCanCollide(const Body &inBody1, const Body 
 		return false;
 	JPH_ASSERT(inBody1.GetID() != inBody2.GetID(), "Read the comment above, A and B are the same body which should not be possible!");
 
-	// Bodies in the same group don't collide
+	// Check collision group filter
 	if (!inBody1.GetCollisionGroup().CanCollide(inBody2.GetCollisionGroup()))
 		return false;
 
@@ -196,7 +187,7 @@ void Body::GetSleepTestPoints(RVec3 *outPoints) const
 	}
 }
 
-void Body::ResetSleepTestSpheres()
+void Body::ResetSleepTimer()
 {
 	RVec3 points[3];
 	GetSleepTestPoints(points);

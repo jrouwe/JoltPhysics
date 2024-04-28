@@ -15,6 +15,7 @@ class TempAllocator;
 class Constraint;
 class BodyManager;
 class ContactConstraintManager;
+class CalculateSolverSteps;
 
 /// Assigns bodies in large islands to multiple groups that can run in parallel
 ///
@@ -142,7 +143,7 @@ public:
 	uint					AssignToNonParallelSplit(const Body *inBody);
 
 	/// Splits up an island, the created splits will be added to the list of batches and can be fetched with FetchNextBatch. Returns false if the island did not need splitting.
-	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumVelocitySteps, int inNumPositionSteps);
+	bool					SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, CalculateSolverSteps &ioStepsCalculator);
 
 	/// Fetch the next batch to process, returns a handle in outSplitIslandIndex that must be provided to MarkBatchProcessed when complete
 	EStatus					FetchNextBatch(uint &outSplitIslandIndex, uint32 *&outConstraintsBegin, uint32 *&outConstraintsEnd, uint32 *&outContactsBegin, uint32 *&outContactsEnd, bool &outFirstIteration);
@@ -171,7 +172,7 @@ private:
 
 	SplitMask *				mSplitMasks = nullptr;								///< Bits that indicate for each body in the BodyManager::mActiveBodies list which split they already belong to
 
-	uint32 *				mContactAndConstaintsSplitIdx = nullptr;			///< Buffer to store the split index per constraint or contact
+	uint32 *				mContactAndConstraintsSplitIdx = nullptr;			///< Buffer to store the split index per constraint or contact
 	uint32 *				mContactAndConstraintIndices = nullptr;				///< Buffer to store the ordered constraint indices per split
 	uint					mContactAndConstraintsSize = 0;						///< Total size of mContactAndConstraintsSplitIdx and mContactAndConstraintIndices
 	atomic<uint>			mContactAndConstraintsNextFree { 0 };				///< Next element that is free in both buffers

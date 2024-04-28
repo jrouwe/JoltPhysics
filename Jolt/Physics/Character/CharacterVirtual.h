@@ -32,7 +32,7 @@ public:
 
 	///@name Movement settings
 	EBackFaceMode						mBackFaceMode = EBackFaceMode::CollideWithBackFaces;	///< When colliding with back faces, the character will not be able to move through back facing triangles. Use this if you have triangles that need to collide on both sides.
-	float								mPredictiveContactDistance = 0.1f;						///< How far to scan outside of the shape for predictive contacts. A value of 0 will most likely cause the character to get stuck as it properly calculate a sliding direction anymore. A value that's too high will cause ghost collisions.
+	float								mPredictiveContactDistance = 0.1f;						///< How far to scan outside of the shape for predictive contacts. A value of 0 will most likely cause the character to get stuck as it cannot properly calculate a sliding direction anymore. A value that's too high will cause ghost collisions.
 	uint								mMaxCollisionIterations = 5;							///< Max amount of collision loops
 	uint								mMaxConstraintIterations = 15;							///< How often to try stepping in the constraint solving
 	float								mMinTimeRemaining = 1.0e-4f;							///< Early out condition: If this much time is left to simulate we are done
@@ -65,7 +65,7 @@ public:
 	/// Checks if a character can collide with specified body. Return true if the contact is valid.
 	virtual bool						OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) { return true; }
 
-	/// Called whenever the character collides with a body. Returns true if the contact can push the character.
+	/// Called whenever the character collides with a body.
 	/// @param inCharacter Character that is being solved
 	/// @param inBodyID2 Body ID of body that is being hit
 	/// @param inSubShapeID2 Sub shape ID of shape that is being hit
@@ -101,8 +101,12 @@ public:
 	/// @param inSettings The settings for the character
 	/// @param inPosition Initial position for the character
 	/// @param inRotation Initial rotation for the character (usually only around the up-axis)
+	/// @param inUserData Application specific value
 	/// @param inSystem Physics system that this character will be added to later
-										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem);
+										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
+
+	/// Constructor without user data
+										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) : CharacterVirtual(inSettings, inPosition, inRotation, 0, inSystem) { }
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
@@ -167,6 +171,10 @@ public:
 	Vec3								GetShapeOffset() const									{ return mShapeOffset; }
 	void								SetShapeOffset(Vec3Arg inShapeOffset)					{ mShapeOffset = inShapeOffset; }
 
+	/// Access to the user data, can be used for anything by the application
+	uint64								GetUserData() const										{ return mUserData; }
+	void								SetUserData(uint64 inUserData)							{ mUserData = inUserData; }
+
 	/// This function can be called prior to calling Update() to convert a desired velocity into a velocity that won't make the character move further onto steep slopes.
 	/// This velocity can then be set on the character using SetLinearVelocity()
 	/// @param inDesiredVelocity Velocity to clamp against steep walls
@@ -187,7 +195,7 @@ public:
 
 	/// This function will return true if the character has moved into a slope that is too steep (e.g. a vertical wall).
 	/// You would call WalkStairs to attempt to step up stairs.
-	/// @param inLinearVelocity The linear velocity that the player desired. This is used to determine if we're pusing into a step.
+	/// @param inLinearVelocity The linear velocity that the player desired. This is used to determine if we're pushing into a step.
 	bool								CanWalkStairs(Vec3Arg inLinearVelocity) const;
 
 	/// When stair walking is needed, you can call the WalkStairs function to cast up, forward and down again to try to find a valid position
@@ -299,6 +307,7 @@ public:
 		BodyID							mBodyB;													///< ID of body we're colliding with
 		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body we're colliding with
 		EMotionType						mMotionTypeB;											///< Motion type of B, used to determine the priority of the contact
+		bool							mIsSensorB;												///< If B is a sensor
 		uint64							mUserData;												///< User data of B
 		const PhysicsMaterial *			mMaterial;												///< Material of B
 		bool							mHadCollision = false;									///< If the character actually collided with the contact (can be false if a predictive contact never becomes a real one)
@@ -313,6 +322,18 @@ public:
 	const ContactList &					GetActiveContacts() const								{ return mActiveContacts; }
 
 private:
+	// Sorting predicate for making contact order deterministic
+	struct ContactOrderingPredicate
+	{
+		inline bool						operator () (const Contact &inLHS, const Contact &inRHS) const
+		{
+			if (inLHS.mBodyB != inRHS.mBodyB)
+				return inLHS.mBodyB < inRHS.mBodyB;
+
+			return inLHS.mSubShapeIDB.GetValue() < inRHS.mSubShapeIDB.GetValue();
+		}
+	};
+
 	// A contact that needs to be ignored
 	struct IgnoredContact
 	{
@@ -437,7 +458,7 @@ private:
 
 	// Movement settings
 	EBackFaceMode						mBackFaceMode;											// When colliding with back faces, the character will not be able to move through back facing triangles. Use this if you have triangles that need to collide on both sides.
-	float								mPredictiveContactDistance;								// How far to scan outside of the shape for predictive contacts. A value of 0 will most likely cause the character to get stuck as it properly calculate a sliding direction anymore. A value that's too high will cause ghost collisions.
+	float								mPredictiveContactDistance;								// How far to scan outside of the shape for predictive contacts. A value of 0 will most likely cause the character to get stuck as it cannot properly calculate a sliding direction anymore. A value that's too high will cause ghost collisions.
 	uint								mMaxCollisionIterations;								// Max amount of collision loops
 	uint								mMaxConstraintIterations;								// How often to try stepping in the constraint solving
 	float								mMinTimeRemaining;										// Early out condition: If this much time is left to simulate we are done
@@ -473,6 +494,9 @@ private:
 
 	// Remember if we exceeded the maximum number of hits and had to remove similar contacts
 	mutable bool						mMaxHitsExceeded = false;
+
+	// User data, can be used for anything by the application
+	uint64								mUserData = 0;
 };
 
 JPH_NAMESPACE_END

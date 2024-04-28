@@ -12,24 +12,24 @@ JPH_NAMESPACE_BEGIN
 /// Implementation of GroupFilter that stores a bit table with one bit per sub shape ID pair to determine if they collide or not
 ///
 /// The collision rules:
-/// - If one of the objects is in the cInvalidGroup the objects will collide
-/// - If the objects are in different groups they will collide
-/// - If they're in the same group but their collision filter is different they will not collide
-/// - If they're in the same group and their collision filters match, we'll use the SubGroupID and the table below:
+/// - If one of the objects is in the cInvalidGroup the objects will collide.
+/// - If the objects are in different groups they will collide.
+/// - If they're in the same group but their collision filter is different they will not collide.
+/// - If they're in the same group and their collision filters match, we'll use the SubGroupID and the table below.
 ///
-/// For N = 6 sub shapes the table will look like:
+/// For N = 6 sub groups the table will look like:
 ///
-///         group 1 --->
-/// group 2 x.....
-///   |     ox....
-///   |     oox...
-///   V     ooox..
-///         oooox.
-///         ooooox
+///		            sub group 1 --->
+///		sub group 2 x.....
+///		     |      ox....
+///		     |      oox...
+///		     V      ooox..
+///		            oooox.
+///		            ooooox
 ///
-/// x means group 1 == group 2 and we define this to never collide
-/// o is a bit that we have to store
-/// . is a bit we don't need to store because the table is symmetric, we take care that group 2 > group 1 always by swapping the elements if needed
+/// * 'x' means sub group 1 == sub group 2 and we define this to never collide.
+/// * 'o' is a bit that we have to store that defines if the sub groups collide or not.
+/// * '.' is a bit we don't need to store because the table is symmetric, we take care that group 2 > group 1 by swapping sub group 1 and sub group 2 if needed.
 ///
 /// The total number of bits we need to store is (N * (N - 1)) / 2
 class JPH_EXPORT GroupFilterTable final : public GroupFilter

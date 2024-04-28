@@ -26,6 +26,7 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(SwingTwistConstraintSettings)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPosition2)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mTwistAxis2)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPlaneAxis2)
+	JPH_ADD_ENUM_ATTRIBUTE(SwingTwistConstraintSettings, mSwingType)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mNormalHalfConeAngle)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mPlaneHalfConeAngle)
 	JPH_ADD_ATTRIBUTE(SwingTwistConstraintSettings, mTwistMinAngle)
@@ -46,6 +47,7 @@ void SwingTwistConstraintSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mPosition2);
 	inStream.Write(mTwistAxis2);
 	inStream.Write(mPlaneAxis2);
+	inStream.Write(mSwingType);
 	inStream.Write(mNormalHalfConeAngle);
 	inStream.Write(mPlaneHalfConeAngle);
 	inStream.Write(mTwistMinAngle);
@@ -66,6 +68,7 @@ void SwingTwistConstraintSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mPosition2);
 	inStream.Read(mTwistAxis2);
 	inStream.Read(mPlaneAxis2);
+	inStream.Read(mSwingType);
 	inStream.Read(mNormalHalfConeAngle);
 	inStream.Read(mPlaneHalfConeAngle);
 	inStream.Read(mTwistMinAngle);
@@ -83,7 +86,7 @@ TwoBodyConstraint *SwingTwistConstraintSettings::Create(Body &inBody1, Body &inB
 void SwingTwistConstraint::UpdateLimits()
 {
 	// Pass limits on to swing twist constraint part
-	mSwingTwistConstraintPart.SetLimits(mTwistMinAngle, mTwistMaxAngle, mPlaneHalfConeAngle, mNormalHalfConeAngle);
+	mSwingTwistConstraintPart.SetLimits(mTwistMinAngle, mTwistMaxAngle, -mPlaneHalfConeAngle, mPlaneHalfConeAngle, -mNormalHalfConeAngle, mNormalHalfConeAngle);
 }
 
 SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const SwingTwistConstraintSettings &inSettings) :
@@ -96,6 +99,9 @@ SwingTwistConstraint::SwingTwistConstraint(Body &inBody1, Body &inBody2, const S
 	mSwingMotorSettings(inSettings.mSwingMotorSettings),
 	mTwistMotorSettings(inSettings.mTwistMotorSettings)
 {
+	// Override swing type
+	mSwingTwistConstraintPart.SetSwingType(inSettings.mSwingType);
+
 	// Calculate rotation needed to go from constraint space to body1 local space
 	Vec3 normal_axis1 = inSettings.mPlaneAxis1.Cross(inSettings.mTwistAxis1);
 	Mat44 c_to_b1(Vec4(inSettings.mTwistAxis1, 0), Vec4(normal_axis1, 0), Vec4(inSettings.mPlaneAxis1, 0), Vec4(0, 0, 0, 1));
@@ -182,10 +188,10 @@ void SwingTwistConstraint::SetTargetOrientationCS(QuatArg inOrientation)
 	Quat q_swing, q_twist;
 	inOrientation.GetSwingTwist(q_swing, q_twist);
 
-	bool swing_y_clamped, swing_z_clamped, twist_clamped;
-	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, swing_y_clamped, swing_z_clamped, q_twist, twist_clamped);
+	uint clamped_axis;
+	mSwingTwistConstraintPart.ClampSwingTwist(q_swing, q_twist, clamped_axis);
 
-	if (swing_y_clamped || swing_z_clamped || twist_clamped)
+	if (clamped_axis != 0)
 		mTargetOrientation = q_swing * q_twist;
 	else
 		mTargetOrientation = inOrientation;
@@ -323,6 +329,14 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 	}
 }
 
+void SwingTwistConstraint::ResetWarmStart()
+{
+	for (AngleConstraintPart &c : mMotorConstraintPart)
+		c.Deactivate();
+	mSwingTwistConstraintPart.Deactivate();
+	mPointConstraintPart.Deactivate();
+}
+
 void SwingTwistConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse
@@ -447,7 +461,10 @@ void SwingTwistConstraint::DrawConstraintLimits(DebugRenderer *inRenderer) const
 	RMat44 constraint_to_world = RMat44::sRotationTranslation(mBody1->GetRotation() * mConstraintToBody1, mBody1->GetCenterOfMassTransform() * mLocalSpacePosition1);
 
 	// Draw limits
-	inRenderer->DrawSwingLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	if (mSwingTwistConstraintPart.GetSwingType() == ESwingType::Pyramid)
+		inRenderer->DrawSwingPyramidLimits(constraint_to_world, -mPlaneHalfConeAngle, mPlaneHalfConeAngle, -mNormalHalfConeAngle, mNormalHalfConeAngle, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
+	else
+		inRenderer->DrawSwingConeLimits(constraint_to_world, mPlaneHalfConeAngle, mNormalHalfConeAngle, mDrawConstraintSize, Color::sGreen, DebugRenderer::ECastShadow::Off);
 	inRenderer->DrawPie(constraint_to_world.GetTranslation(), mDrawConstraintSize, constraint_to_world.GetAxisX(), constraint_to_world.GetAxisY(), mTwistMinAngle, mTwistMaxAngle, Color::sPurple, DebugRenderer::ECastShadow::Off);
 }
 #endif // JPH_DEBUG_RENDERER
@@ -493,6 +510,7 @@ Ref<ConstraintSettings> SwingTwistConstraint::GetConstraintSettings() const
 	settings->mPosition2 = RVec3(mLocalSpacePosition2);
 	settings->mTwistAxis2 = mConstraintToBody2.RotateAxisX();
 	settings->mPlaneAxis2 = mConstraintToBody2.RotateAxisZ();
+	settings->mSwingType = mSwingTwistConstraintPart.GetSwingType();
 	settings->mNormalHalfConeAngle = mNormalHalfConeAngle;
 	settings->mPlaneHalfConeAngle = mPlaneHalfConeAngle;
 	settings->mTwistMinAngle = mTwistMinAngle;

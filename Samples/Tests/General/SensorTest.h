@@ -38,7 +38,7 @@ private:
 
 	enum
 	{
-		StaticAttractor,									// A static sensor that attrects dynamic bodies that enter its area
+		StaticAttractor,									// A static sensor that attracts dynamic bodies that enter its area
 		StaticSensor,										// A static sensor that only detects active bodies
 		KinematicSensor,									// A kinematic sensor that also detects sleeping bodies
 		SensorDetectingStatic,								// A kinematic sensor that detects static bodies

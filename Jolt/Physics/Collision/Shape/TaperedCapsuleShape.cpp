@@ -196,6 +196,7 @@ const ConvexShape::Support *TaperedCapsuleShape::GetSupportFunction(ESupportMode
 		return new (&inBuffer) TaperedCapsule(scaled_top_center, scaled_bottom_center, scaled_top_radius, scaled_bottom_radius, 0.0f);
 
 	case ESupportMode::ExcludeConvexRadius:
+	case ESupportMode::Default:
 		{
 			// Get radii reduced by convex radius
 			float tr = scaled_top_radius - scaled_convex_radius;
@@ -311,8 +312,8 @@ void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransfo
 	float scale_y = abs_scale.GetY();
 	float scale_xz = abs_scale.GetX();
 	Vec3 scale_y_flip(1, Sign(inScale.GetY()), 1);
-	float scaled_top_center = scale_y * mTopCenter;
-	float scaled_bottom_center = scale_y * mBottomCenter;
+	Vec3 scaled_top_center(0, scale_y * mTopCenter, 0);
+	Vec3 scaled_bottom_center(0, scale_y * mBottomCenter, 0);
 	float scaled_top_radius = scale_xz * mTopRadius;
 	float scaled_bottom_radius = scale_xz * mBottomRadius;
 
@@ -321,29 +322,39 @@ void TaperedCapsuleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransfo
 		{
 			Vec3 local_pos = scale_y_flip * (inverse_transform * v->mPosition);
 
-			// See comments at TaperedCapsuleShape::GetSurfaceNormal for rationale behind the math
 			Vec3 position, normal;
-			if (local_pos.GetY() > scaled_top_center + mSinAlpha * scaled_top_radius)
+
+			// If the vertex is inside the cone starting at the top center pointing along the y-axis with angle PI/2 - alpha then the closest point is on the top sphere
+			// This corresponds to: Dot(y-axis, (local_pos - top_center) / |local_pos - top_center|) >= cos(PI/2 - alpha)
+			// <=> (local_pos - top_center).y >= sin(alpha) * |local_pos - top_center|
+			Vec3 top_center_to_local_pos = local_pos - scaled_top_center;
+			float top_center_to_local_pos_len = top_center_to_local_pos.Length();
+			if (top_center_to_local_pos.GetY() >= mSinAlpha * top_center_to_local_pos_len)
 			{
 				// Top sphere
-				Vec3 top = Vec3(0, scaled_top_center, 0);
-				normal = (local_pos - top).NormalizedOr(Vec3::sAxisY());
-				position = top + scaled_top_radius * normal;
-			}
-			else if (local_pos.GetY() < scaled_bottom_center + mSinAlpha * scaled_bottom_radius)
-			{
-				// Bottom sphere
-				Vec3 bottom(0, scaled_bottom_center, 0);
-				normal = (local_pos - bottom).NormalizedOr(-Vec3::sAxisY());
-				position = bottom + scaled_bottom_radius * normal;
+				normal = top_center_to_local_pos_len != 0.0f? top_center_to_local_pos / top_center_to_local_pos_len : Vec3::sAxisY();
+				position = scaled_top_center + scaled_top_radius * normal;
 			}
 			else
 			{
-				// Tapered cylinder
-				normal = Vec3(local_pos.GetX(), 0, local_pos.GetZ()).NormalizedOr(Vec3::sAxisX());
-				normal.SetY(mTanAlpha);
-				normal = normal.NormalizedOr(Vec3::sAxisX());
-				position = Vec3(0, scaled_bottom_center, 0) + scaled_bottom_radius * normal;
+				// If the vertex is outside the cone starting at the bottom center pointing along the y-axis with angle PI/2 - alpha then the closest point is on the bottom sphere
+				// This corresponds to: Dot(y-axis, (local_pos - bottom_center) / |local_pos - bottom_center|) <= cos(PI/2 - alpha)
+				// <=> (local_pos - bottom_center).y <= sin(alpha) * |local_pos - bottom_center|
+				Vec3 bottom_center_to_local_pos = local_pos - scaled_bottom_center;
+				float bottom_center_to_local_pos_len = bottom_center_to_local_pos.Length();
+				if (bottom_center_to_local_pos.GetY() <= mSinAlpha * bottom_center_to_local_pos_len)
+				{
+					// Bottom sphere
+					normal = bottom_center_to_local_pos_len != 0.0f? bottom_center_to_local_pos / bottom_center_to_local_pos_len : -Vec3::sAxisY();
+				}
+				else
+				{
+					// Tapered cylinder
+					normal = Vec3(local_pos.GetX(), 0, local_pos.GetZ()).NormalizedOr(Vec3::sAxisX());
+					normal.SetY(mTanAlpha);
+					normal = normal.NormalizedOr(Vec3::sAxisX());
+				}
+				position = scaled_bottom_center + scaled_bottom_radius * normal;
 			}
 
 			Plane plane = Plane::sFromPointAndNormal(position, normal);
@@ -399,7 +410,7 @@ void TaperedCapsuleShape::TransformShape(Mat44Arg inCenterOfMassTransform, Trans
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs()));
 	ioCollector.AddHit(ts);
 }

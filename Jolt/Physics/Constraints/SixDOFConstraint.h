@@ -27,9 +27,9 @@ public:
 		TranslationY,
 		TranslationZ,
 
-		RotationX,				///< When limited: MinLimit needs to be [-PI, 0], MaxLimit needs to be [0, PI]
-		RotationY,				///< When limited: MaxLimit between [0, PI]. MinLimit = -MaxLimit. Forms a cone shaped limit with Z.
-		RotationZ,				///< When limited: MaxLimit between [0, PI]. MinLimit = -MaxLimit. Forms a cone shaped limit with Y.
+		RotationX,
+		RotationY,
+		RotationZ,
 
 		Num,
 		NumTranslation = TranslationZ + 1,
@@ -38,7 +38,7 @@ public:
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 
-	/// Create an an instance of this constraint
+	/// Create an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
 	/// This determines in which space the constraint is setup, all properties below should be in the specified space
@@ -59,6 +59,9 @@ public:
 	/// For rotation: Max friction torque in Nm. 0 = no friction.
 	float						mMaxFriction[EAxis::Num] = { 0, 0, 0, 0, 0, 0 };
 
+	/// The type of swing constraint that we want to use.
+	ESwingType					mSwingType = ESwingType::Cone;
+
 	/// Limits.
 	/// For translation: Min and max linear limits in m (0 is frame of body 1 and 2 coincide).
 	/// For rotation: Min and max angular limits in rad (0 is frame of body 1 and 2 coincide). See comments at Axis enum for limit ranges.
@@ -66,6 +69,12 @@ public:
 	/// Remove degree of freedom by setting min = FLT_MAX and max = -FLT_MAX. The constraint will be driven to 0 for this axis.
 	///
 	/// Free movement over an axis is allowed when min = -FLT_MAX and max = FLT_MAX.
+	///
+	/// Rotation limit around X-Axis: When limited, should be \f$\in [-\pi, \pi]\f$. Can be asymmetric around zero.
+	///
+	/// Rotation limit around Y-Z Axis: Forms a pyramid or cone shaped limit:
+	/// * For pyramid, should be \f$\in [-\pi, \pi]\f$ and does not need to be symmetrical around zero.
+	/// * For cone should be \f$\in [0, \pi]\f$ and needs to be symmetrical around zero (min limit is assumed to be -max limit).
 	float						mLimitMin[EAxis::Num] = { -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX };
 	float						mLimitMax[EAxis::Num] = { FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX };
 
@@ -81,8 +90,8 @@ public:
 	void						MakeFixedAxis(EAxis inAxis)									{ mLimitMin[inAxis] = FLT_MAX; mLimitMax[inAxis] = -FLT_MAX; }
 	bool						IsFixedAxis(EAxis inAxis) const								{ return mLimitMin[inAxis] >= mLimitMax[inAxis]; }
 
-	/// Set a valid range for the constraint
-	void						SetLimitedAxis(EAxis inAxis, float inMin, float inMax)		{ JPH_ASSERT(inMin < inMax); JPH_ASSERT(inMin <= 0.0f); JPH_ASSERT(inMax >= 0.0f); mLimitMin[inAxis] = inMin; mLimitMax[inAxis] = inMax; }
+	/// Set a valid range for the constraint (if inMax < inMin, the axis will become fixed)
+	void						SetLimitedAxis(EAxis inAxis, float inMin, float inMax)		{ mLimitMin[inAxis] = inMin; mLimitMax[inAxis] = inMax; }
 
 	/// Motor settings for each axis
 	MotorSettings				mMotorSettings[EAxis::Num];
@@ -108,6 +117,7 @@ public:
 	virtual EConstraintSubType	GetSubType() const override									{ return EConstraintSubType::SixDOF; }
 	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override;
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
+	virtual void				ResetWarmStart() override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
 	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;
@@ -123,16 +133,21 @@ public:
 	virtual Mat44				GetConstraintToBody1Matrix() const override					{ return Mat44::sRotationTranslation(mConstraintToBody1, mLocalSpacePosition1); }
 	virtual Mat44				GetConstraintToBody2Matrix() const override					{ return Mat44::sRotationTranslation(mConstraintToBody2, mLocalSpacePosition2); }
 
-	/// Update the translation limits for this constraint, note that this won't change if axis are free or not.
+	/// Update the translation limits for this constraint
 	void						SetTranslationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax);
 
-	/// Update the rotational limits for this constraint, note that this won't change if axis are free or not.
+	/// Update the rotational limits for this constraint
 	void						SetRotationLimits(Vec3Arg inLimitMin, Vec3Arg inLimitMax);
 
 	/// Get constraint Limits
 	float						GetLimitsMin(EAxis inAxis) const							{ return mLimitMin[inAxis]; }
 	float						GetLimitsMax(EAxis inAxis) const							{ return mLimitMax[inAxis]; }
+	Vec3						GetTranslationLimitsMin() const								{ return Vec3::sLoadFloat3Unsafe(*reinterpret_cast<const Float3 *>(&mLimitMin[EAxis::TranslationX])); }
+	Vec3						GetTranslationLimitsMax() const								{ return Vec3::sLoadFloat3Unsafe(*reinterpret_cast<const Float3 *>(&mLimitMax[EAxis::TranslationX])); }
+	Vec3						GetRotationLimitsMin() const								{ return Vec3::sLoadFloat3Unsafe(*reinterpret_cast<const Float3 *>(&mLimitMin[EAxis::RotationX])); }
+	Vec3						GetRotationLimitsMax() const								{ return Vec3::sLoadFloat3Unsafe(*reinterpret_cast<const Float3 *>(&mLimitMax[EAxis::RotationX])); }
 
+	/// Check which axis are fixed/free
 	inline bool					IsFixedAxis(EAxis inAxis) const								{ return (mFixedAxis & (1 << inAxis)) != 0; }
 	inline bool					IsFreeAxis(EAxis inAxis) const								{ return (mFreeAxis & (1 << inAxis)) != 0; }
 
@@ -187,14 +202,23 @@ private:
 	// Calculate properties needed for the position constraint
 	inline void					GetPositionConstraintProperties(Vec3 &outR1PlusU, Vec3 &outR2, Vec3 &outU) const;
 
+	// Sanitize the translation limits
+	inline void					UpdateTranslationLimits();
+
 	// Propagate the rotation limits to the constraint part
 	inline void					UpdateRotationLimits();
+
+	// Update the cached state of which axis are free and which ones are fixed
+	inline void					UpdateFixedFreeAxis();
 
 	// Cache the state of mTranslationMotorActive
 	void						CacheTranslationMotorActive();
 
 	// Cache the state of mRotationMotorActive
 	void						CacheRotationMotorActive();
+
+	// Cache the state of mRotationPositionMotorActive
+	void						CacheRotationPositionMotorActive();
 
 	/// Cache the state of mHasSpringLimits
 	void						CacheHasSpringLimits();
@@ -217,8 +241,8 @@ private:
 	Quat						mConstraintToBody2;
 
 	// Limits
-	uint8						mFreeAxis;													// Bitmask of free axis (bit 0 = TranslationX)
-	uint8						mFixedAxis;													// Bitmask of fixed axis (bit 0 = TranslationX)
+	uint8						mFreeAxis = 0;												// Bitmask of free axis (bit 0 = TranslationX)
+	uint8						mFixedAxis = 0;												// Bitmask of fixed axis (bit 0 = TranslationX)
 	bool						mTranslationMotorActive = false;							// If any of the translational frictions / motors are active
 	bool						mRotationMotorActive = false;								// If any of the rotational frictions / motors are active
 	uint8						mRotationPositionMotorActive = 0;							// Bitmask of axis that have position motor active (bit 0 = RotationX)

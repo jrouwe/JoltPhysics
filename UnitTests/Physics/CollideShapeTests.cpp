@@ -11,9 +11,11 @@
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
+#include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Geometry/EPAPenetrationDepth.h>
 #include "Layers.h"
 
@@ -230,7 +232,7 @@ TEST_SUITE("CollideShapeTests")
 		}
 	}
 
-	// Test colliding a very long capsule vs a box that is intersecting with the linesegment inside the capsule
+	// Test colliding a very long capsule vs a box that is intersecting with the line segment inside the capsule
 	// This particular config reported the wrong penetration due to accuracy problems before
 	TEST_CASE("TestCollideShapeLongCapsuleVsEmbeddedBox")
 	{
@@ -376,6 +378,57 @@ TEST_SUITE("CollideShapeTests")
 
 		CHECK_APPROX_EQUAL(actual_penetration_axis, expected_penetration_axis);
 		CHECK_APPROX_EQUAL(actual_penetration_depth, expected_penetration_depth);
+	}
+
+	// A test case of a triangle that's nearly parallel to a capsule and almost penetrating it. This one was causing numerical issues.
+	TEST_CASE("TestCollideParallelTriangleVsCapsule3")
+	{
+		Vec3 v1(-0.474807739f, 17.2921791f, 0.212532043f);
+		Vec3 v2(-0.474807739f, -2.70782185f, 0.212535858f);
+		Vec3 v3(-0.857490540f, -2.70782185f, -0.711341858f);
+		TriangleShape triangle(v1, v2, v3);
+		triangle.SetEmbedded();
+
+		float capsule_radius = 0.5f;
+		float capsule_half_height = 0.649999976f;
+		CapsuleShape capsule(capsule_half_height, capsule_radius);
+		capsule.SetEmbedded();
+
+		CollideShapeSettings settings;
+		settings.mMaxSeparationDistance = 0.120000005f;
+		ClosestHitCollisionCollector<CollideShapeCollector> collector;
+		CollisionDispatch::sCollideShapeVsShape(&capsule, &triangle, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), Mat44::sIdentity(), Mat44::sIdentity(), SubShapeIDCreator(), SubShapeIDCreator(), settings, collector);
+
+		CHECK(collector.HadHit());
+		Vec3 expected_normal = (v2 - v1).Cross(v3 - v1).Normalized();
+		Vec3 actual_normal = -collector.mHit.mPenetrationAxis.Normalized();
+		CHECK_APPROX_EQUAL(actual_normal, expected_normal, 1.0e-6f);
+		float expected_penetration_depth = capsule.GetRadius() + v1.Dot(expected_normal);
+		CHECK_APPROX_EQUAL(collector.mHit.mPenetrationDepth, expected_penetration_depth, 1.0e-6f);
+	}
+
+	// A test case of a triangle that's nearly parallel to a cylinder and is just penetrating it. This one was causing numerical issues. See issue #1008.
+	TEST_CASE("TestCollideParallelTriangleVsCylinder")
+	{
+		CylinderShape cylinder(0.85f, 0.25f, 0.02f);
+		cylinder.SetEmbedded();
+
+		Mat44 cylinder_transform = Mat44::sTranslation(Vec3(-42.8155518f, -4.32299995f, 12.1734285f));
+
+		CollideShapeSettings settings;
+		settings.mMaxSeparationDistance = 0.001f;
+		ClosestHitCollisionCollector<CollideShapeCollector> collector;
+		CollideConvexVsTriangles c(&cylinder, Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), cylinder_transform, Mat44::sIdentity(), SubShapeID(), settings, collector);
+
+		Vec3 v0(-42.7954292f, -0.647318780f, 12.4227943f);
+		Vec3 v1(-29.9111290f, -0.647318780f, 12.4227943f);
+		Vec3 v2(-42.7954292f, -4.86970234f, 12.4227943f);
+		c.Collide(v0, v1, v2, 0, SubShapeID());
+
+		// Check there was a hit
+		CHECK(collector.HadHit());
+		CHECK(collector.mHit.mPenetrationDepth < 1.0e-4f);
+		CHECK(collector.mHit.mPenetrationAxis.Normalized().IsClose(Vec3::sAxisZ()));
 	}
 
 	// A test case of a box and a convex hull that are nearly touching and that should return a contact with correct normal because the collision settings specify a max separation distance. This was producing the wrong normal.

@@ -28,6 +28,7 @@ const char *VehicleTest::sScenes[] =
 	"Flat With Slope",
 	"Steep Slope",
 	"Step",
+	"Dynamic Step",
 	"Playground",
 	"Terrain1",
 };
@@ -84,6 +85,19 @@ void VehicleTest::Initialize()
 		Body &step = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(5.0f, 0.5f * cStepHeight, 5.0f), 0.0f), RVec3(-2.0f, 0.5f * cStepHeight, 60.0f), Quat::sRotation(Vec3::sAxisY(), -0.3f * JPH_PI), EMotionType::Static, Layers::NON_MOVING));
 		step.SetFriction(1.0f);
 		mBodyInterface->AddBody(step.GetID(), EActivation::DontActivate);
+	}
+	else if (strcmp(sSceneName, "Dynamic Step") == 0)
+	{
+		// Flat test floor
+		Body &floor = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(1000.0f, 1.0f, 1000.0f), 0.0f), RVec3(0.0f, -1.0f, 0.0f), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		floor.SetFriction(1.0f);
+		mBodyInterface->AddBody(floor.GetID(), EActivation::DontActivate);
+
+		// A dynamic body that acts as a step to test sleeping behavior
+		constexpr float cStepHeight = 0.05f;
+		Body &step = *mBodyInterface->CreateBody(BodyCreationSettings(new BoxShape(Vec3(15.0f, 0.5f * cStepHeight, 15.0f), 0.0f), RVec3(-2.0f, 0.5f * cStepHeight, 30.0f), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING));
+		step.SetFriction(1.0f);
+		mBodyInterface->AddBody(step.GetID(), EActivation::Activate);
 	}
 	else if (strcmp(sSceneName, "Playground") == 0)
 	{

@@ -23,6 +23,9 @@ public:
 	/// Determine amount of bits needed to encode sub shape id
 	uint							GetSubShapeIDBits() const;
 
+	/// Convert a sub shape ID back to a face index
+	uint32							GetFaceIndex(const SubShapeID &inSubShapeID) const;
+
 	// See Shape
 	virtual bool					MustBeStatic() const override							{ return false; }
 	virtual Vec3					GetCenterOfMass() const override						{ return Vec3::sZero(); }

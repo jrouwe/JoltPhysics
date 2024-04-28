@@ -85,7 +85,7 @@ public:
 		sCreateUnitSphereHelper(ioVertices, -Vec3::sAxisY(), -Vec3::sAxisX(), -Vec3::sAxisZ(), inDetailLevel);
 	}
 
-	/// Helper function that creates an open cyclinder of half height 1 and radius 1
+	/// Helper function that creates an open cylinder of half height 1 and radius 1
 	static void		sCreateUnitOpenCylinder(std::vector<Vec3> &ioVertices, int inDetailLevel)
 	{
 		const Vec3 bottom_offset(0.0f, -2.0f, 0.0f);

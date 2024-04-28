@@ -5,7 +5,7 @@
 #pragma once
 
 // Jolt library version
-#define JPH_VERSION_MAJOR 3
+#define JPH_VERSION_MAJOR 5
 #define JPH_VERSION_MINOR 0
 #define JPH_VERSION_PATCH 1
 
@@ -78,6 +78,8 @@
 	#define JPH_PLATFORM_ANDROID
 #elif defined(__linux__)
 	#define JPH_PLATFORM_LINUX
+#elif defined(__FreeBSD__)
+	#define JPH_PLATFORM_FREEBSD
 #elif defined(__APPLE__)
     #include <TargetConditionals.h>
     #if defined(TARGET_OS_IPHONE) && !TARGET_OS_IPHONE
@@ -179,7 +181,22 @@
 	#define JPH_CPU_ADDRESS_BITS 32
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
-	#define JPH_DISABLE_CUSTOM_ALLOCATOR
+	#ifdef __wasm_simd128__
+		#define JPH_USE_SSE
+		#define JPH_USE_SSE4_1
+		#define JPH_USE_SSE4_2
+	#endif
+#elif defined(__e2k__)
+	// E2K CPU architecture (MCST Elbrus 2000)
+	#define JPH_CPU_E2K
+	#define JPH_CPU_ADDRESS_BITS 64
+	#define JPH_VECTOR_ALIGNMENT 16
+	#define JPH_DVECTOR_ALIGNMENT 32
+
+	// Compiler flags on e2k arch determine CPU features
+	#if defined(__SSE__) && !defined(JPH_USE_SSE)
+		#define JPH_USE_SSE
+	#endif
 #else
 	#error Unsupported CPU architecture
 #endif
@@ -192,6 +209,10 @@
 			#define JPH_EXPORT __declspec(dllexport)
 		#else
 			#define JPH_EXPORT __attribute__ ((visibility ("default")))
+			#if defined(JPH_COMPILER_GCC)
+				// Prevents an issue with GCC attribute parsing (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69585)
+				#define JPH_EXPORT_GCC_BUG_WORKAROUND [[gnu::visibility("default")]]
+			#endif
 		#endif
 	#else
 		// When linking against Jolt, we must import these symbols
@@ -199,11 +220,19 @@
 			#define JPH_EXPORT __declspec(dllimport)
 		#else
 			#define JPH_EXPORT __attribute__ ((visibility ("default")))
+			#if defined(JPH_COMPILER_GCC)
+				// Prevents an issue with GCC attribute parsing (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69585)
+				#define JPH_EXPORT_GCC_BUG_WORKAROUND [[gnu::visibility("default")]]
+			#endif
 		#endif
 	#endif
 #else
 	// If the define is not set, we use static linking and symbols don't need to be imported or exported
 	#define JPH_EXPORT
+#endif
+
+#ifndef JPH_EXPORT_GCC_BUG_WORKAROUND
+	#define JPH_EXPORT_GCC_BUG_WORKAROUND JPH_EXPORT
 #endif
 
 // Macro used by the RTTI macros to not export a function
@@ -282,6 +311,8 @@
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
 	JPH_GCC_SUPPRESS_WARNING("-Winvalid-offsetof")												\
 	JPH_GCC_SUPPRESS_WARNING("-Wclass-memaccess")												\
+	JPH_GCC_SUPPRESS_WARNING("-Wpedantic")														\
+	JPH_GCC_SUPPRESS_WARNING("-Wunused-parameter")												\
 																								\
 	JPH_MSVC_SUPPRESS_WARNING(4619) /* #pragma warning: there is no warning number 'XXXX' */	\
 	JPH_MSVC_SUPPRESS_WARNING(4514) /* 'X' : unreferenced inline function has been removed */	\
@@ -317,10 +348,12 @@
 	// Creating one should only be a couple of minutes of work if you have the documentation for the platform
 	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS, JPH_PLATFORM_BLUE_MUTEX*, JPH_PLATFORM_BLUE_RWLOCK* and include the right header).
 	#include <Jolt/Core/PlatformBlue.h>
-#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_FREEBSD)
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT	__asm volatile ("int $0x3")
 	#elif defined(JPH_CPU_ARM)
+		#define JPH_BREAKPOINT	__builtin_trap()
+	#elif defined(JPH_CPU_E2K)
 		#define JPH_BREAKPOINT	__builtin_trap()
 	#endif
 #elif defined(JPH_PLATFORM_WASM)
@@ -328,9 +361,6 @@
 #else
 	#error Unknown platform
 #endif
-
-// Crashes the application
-#define JPH_CRASH				do { int *ptr = nullptr; *ptr = 0; } while (false)
 
 // Begin the JPH namespace
 #define JPH_NAMESPACE_BEGIN																		\
@@ -361,6 +391,9 @@
 
 // Standard C++ includes
 JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <float.h>
+#include <limits.h>
+#include <string.h>
 #include <vector>
 #include <utility>
 #include <cmath>
@@ -368,10 +401,6 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <functional>
 #include <algorithm>
 #include <cstdint>
-JPH_SUPPRESS_WARNINGS_STD_END
-#include <limits.h>
-#include <float.h>
-#include <string.h>
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)
@@ -382,6 +411,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 		#include <arm_neon.h>
 	#endif
 #endif
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -453,8 +483,13 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 // Stack allocation
 #define JPH_STACK_ALLOC(n)		alloca(n)
 
-// Shorthand for #ifdef _DEBUG / #endif
-#ifdef _DEBUG
+// Determine if we want extra debugging code to be active
+#if !defined(NDEBUG) && !defined(JPH_NO_DEBUG)
+	#define JPH_DEBUG
+#endif
+
+// Shorthand for #ifdef JPH_DEBUG / #endif
+#ifdef JPH_DEBUG
 	#define JPH_IF_DEBUG(...)	__VA_ARGS__
 	#define JPH_IF_NOT_DEBUG(...)
 #else

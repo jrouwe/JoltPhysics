@@ -14,13 +14,13 @@ void MotionProperties::MoveKinematic(Vec3Arg inDeltaPosition, QuatArg inDeltaRot
 	JPH_ASSERT(mCachedMotionType != EMotionType::Static);
 
 	// Calculate required linear velocity
-	mLinearVelocity = inDeltaPosition / inDeltaTime;
+	mLinearVelocity = LockTranslation(inDeltaPosition / inDeltaTime);
 
 	// Calculate required angular velocity
 	Vec3 axis;
 	float angle;
 	inDeltaRotation.GetAxisAngle(axis, angle);
-	mAngularVelocity = axis * (angle / inDeltaTime);
+	mAngularVelocity = LockAngular(axis * (angle / inDeltaTime));
 }
 
 void MotionProperties::ClampLinearVelocity()
@@ -62,15 +62,59 @@ Mat44 MotionProperties::GetInverseInertiaForRotation(Mat44Arg inRotation) const
 
 	Mat44 rotation = inRotation.Multiply3x3(Mat44::sRotation(mInertiaRotation));
 	Mat44 rotation_mul_scale_transposed(mInvInertiaDiagonal.SplatX() * rotation.GetColumn4(0), mInvInertiaDiagonal.SplatY() * rotation.GetColumn4(1), mInvInertiaDiagonal.SplatZ() * rotation.GetColumn4(2), Vec4(0, 0, 0, 1));
-	return rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
+	Mat44 inverse_inertia = rotation.Multiply3x3RightTransposed(rotation_mul_scale_transposed);
+
+	// We need to mask out both the rows and columns of DOFs that are not allowed
+	Vec4 angular_dofs_mask = GetAngularDOFsMask().ReinterpretAsFloat();
+	inverse_inertia.SetColumn4(0, Vec4::sAnd(inverse_inertia.GetColumn4(0), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatX())));
+	inverse_inertia.SetColumn4(1, Vec4::sAnd(inverse_inertia.GetColumn4(1), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatY())));
+	inverse_inertia.SetColumn4(2, Vec4::sAnd(inverse_inertia.GetColumn4(2), Vec4::sAnd(angular_dofs_mask, angular_dofs_mask.SplatZ())));
+
+	return inverse_inertia;
 }
 
 Vec3 MotionProperties::MultiplyWorldSpaceInverseInertiaByVector(QuatArg inBodyRotation, Vec3Arg inV) const
 {
 	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
 
+	// Mask out columns of DOFs that are not allowed
+	Vec3 angular_dofs_mask = Vec3(GetAngularDOFsMask().ReinterpretAsFloat());
+	Vec3 v = Vec3::sAnd(inV, angular_dofs_mask);
+
+	// Multiply vector by inverse inertia
 	Mat44 rotation = Mat44::sRotation(inBodyRotation * mInertiaRotation);
-	return rotation.Multiply3x3(mInvInertiaDiagonal * rotation.Multiply3x3Transposed(inV));
+	Vec3 result = rotation.Multiply3x3(mInvInertiaDiagonal * rotation.Multiply3x3Transposed(v));
+
+	// Mask out rows of DOFs that are not allowed
+	return Vec3::sAnd(result, angular_dofs_mask);
+}
+
+void MotionProperties::ApplyGyroscopicForceInternal(QuatArg inBodyRotation, float inDeltaTime)
+{
+	JPH_ASSERT(BodyAccess::sCheckRights(BodyAccess::sVelocityAccess, BodyAccess::EAccess::ReadWrite));
+	JPH_ASSERT(mCachedBodyType == EBodyType::RigidBody);
+	JPH_ASSERT(mCachedMotionType == EMotionType::Dynamic);
+
+	// Calculate local space inertia tensor (a diagonal in local space)
+	UVec4 is_zero = Vec3::sEquals(mInvInertiaDiagonal, Vec3::sZero());
+	Vec3 denominator = Vec3::sSelect(mInvInertiaDiagonal, Vec3::sReplicate(1.0f), is_zero);
+	Vec3 nominator = Vec3::sSelect(Vec3::sReplicate(1.0f), Vec3::sZero(), is_zero);
+	Vec3 local_inertia = nominator / denominator; // Avoid dividing by zero, inertia in this axis will be zero
+
+	// Calculate local space angular momentum
+	Quat inertia_space_to_world_space = inBodyRotation * mInertiaRotation;
+	Vec3 local_angular_velocity = inertia_space_to_world_space.Conjugated() * mAngularVelocity;
+	Vec3 local_momentum = local_inertia * local_angular_velocity;
+
+	// The gyroscopic force applies a torque: T = -w x I w where w is angular velocity and I the inertia tensor
+	// Calculate the new angular momentum by applying the gyroscopic force and make sure the new magnitude is the same as the old one
+	// to avoid introducing energy into the system due to the Euler step
+	Vec3 new_local_momentum = local_momentum - inDeltaTime * local_angular_velocity.Cross(local_momentum);
+	float new_local_momentum_len_sq = new_local_momentum.LengthSq();
+	new_local_momentum = new_local_momentum_len_sq > 0.0f? new_local_momentum * sqrt(local_momentum.LengthSq() / new_local_momentum_len_sq) : Vec3::sZero();
+
+	// Convert back to world space angular velocity
+	mAngularVelocity = inertia_space_to_world_space * (mInvInertiaDiagonal * new_local_momentum);
 }
 
 void MotionProperties::ApplyForceTorqueAndDragInternal(QuatArg inBodyRotation, Vec3Arg inGravity, float inDeltaTime)

@@ -2,7 +2,36 @@
 
 This document lists all breaking API changes by date and by release tag. Note that not all API changes are listed here, trivial changes (that cause a compile error and require an obvious fix) are not listed.
 
-Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See 'Saving Shapes' in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for further information.
+Changes that make some state saved through SaveBinaryState from a prior version of the library unreadable by the new version is marked as *SBS*. See [Saving Shapes](https://jrouwe.github.io/JoltPhysics/#saving-shapes) for further information.
+
+## Changes between v5.0.0 and latest
+
+* 20240413 - *SBS* - Skinned constraints are now processed in parallel, this means that they are reordered when Optimize() is called (see SoftBodySharedSettings::OptimizationResults::mSkinnedRemap). This also caused a change to the binary serialization format of SoftBodySharedSettings. (744900a4becb4dc69ee2bd70d6b26ee46da3e64a)
+* 20240407 - *SBS* - The binary format of SoftBodySharedSettings changed due to an optimization pass. Also the results of the Optimize() call are no longer serialized when using an ObjectStream. Finally the Optimize() call will reorder the constraints (see SoftBodySharedSettings::OptimizationResults). (22739d900b4d92905ecccf2d81f18dece4a42595)
+
+## Changes between v4.0.2 and v5.0.0
+
+* 20240327 - *SBS* - SoftBodySharedSettings::CreateEdges was renamed to CreateConstraints and can now also create shear and bend constraints. This also breaks the serialization format for SoftBodySharedSettings. (8e4bf3fa03f59cff6af7394d69cdf62abaf7a1d2)
+* 20240310 - *SBS* - Soft body skinned constraints now use a sphere as backstop instead of an infinite plane. This also breaks the serialization format for SoftBodySharedSettings. (17db6d3f245d2198319c3787f62498fe5935b7c8)
+* 20240225 - *SBS* - Changes were made to SoftBodySharedSettings that break the binary serialization format of that class. (277b818ffefed4f15477ff1e6d0cc07065899903)
+* 20240223 - Added ConvexShape::ESupportMode::Default. If you have custom convex shapes you need to handle this in ConvexShape::GetSupportFunction. (0f67cc2915c5e34a4a38480580dad73888a1952e)
+* 20240216 - Restriction angular motion using EAllowedDOFs now works in world space rather than in local space. This change was made to be more in line with other physics engines and to fix some issues with constraints. If you need the old behavior then copy [this](https://github.com/jrouwe/JoltPhysics/blob/9631e217e54b8492ac36471f2aa966df40d6c2ad/Jolt/Physics/Body/MotionProperties.cpp#L33-L118) code into your own code base and call MotionProperties::SetInverseInertia(diagonal, rotation) where diagonal is called mInvInertiaDiagonal and rotation is called mInertiaRotation in the code snippet. (191536d51d71ee29147205aa09d1acab52789e5f)
+* 20240210 - Fixed spelling error EPathRotationConstraintType::ConstaintToPath to EPathRotationConstraintType::ConstrainToPath (6c095bbf7906b01f427b52d43212f5ebf760fc81)
+* 20240210 - Added extra parameter fraction hint to PathConstraintPath::GetClosestPoint. This can be used to speed up the search along the curve and to disambiguate fractions in case a path reaches the same point multiple times (i.e. a figure-8) (b91e729e6e2c34df16cc03f5ac3b3f6d3fa8b762)
+* 20240203 - Longitudinal friction impulse for wheeled/tracked vehicles could become much higher than the calculated max because each iteration it was clamped to the max friction impulse which meant the total friction impulse could be PhysicsSettings::mNumVelocitySteps times too high. In case this breaks your vehicle, the new max tire impulse callback can be used to restore the old behavior, see [the vehicle constraint test](https://github.com/jrouwe/JoltPhysics/blob/a456b244aa2ad2ce0a8124d27823377ed0b1c4b4/Samples/Tests/Vehicle/VehicleConstraintTest.cpp#L156-L164). (a456b244aa2ad2ce0a8124d27823377ed0b1c4b4)
+* 20240120 - *SBS* - Implemented enhanced internal edge removal algorithm. This breaks the binary serialization format for BodyCreationSettings. (94c1ad811b95c72f4d3bb6841c73c1c3461caa91)
+* 20240113 - VehicleConstraint::CombineFunction now calculates both longitudinal and lateral friction in 1 call so there can be dependencies between the two. (d6ed5b3e7b22904af555088b6ae4770f8fb0e00f)
+* 20240105 - CharacterVirtual will now receive an OnContactAdded callback when it collides with a sensor (but will have no further interaction). You may need to update the logic in your CharacterContactListener to ignore those contacts. (fb778c568d3ba14556559324671ffec172957f5c)
+* 20240101 - Renamed SensorDetectsStatic to CollideKinematicVsNonDynamic and made it work for non-sensors. This means that kinematic bodies can now get collision callbacks when they collide with other static / kinematic objects. It can also affect the order in which bodies are passed in the ContactListener::OnContactValidate callback. (2d607c4161a65201d66558a2cc76d1265aea527e)
+* 20231220 - *SBS* - Added ability to enable gyroscopic forces on BodyCreationSettings. This breaks the binary serialization format for this class. (9d7748eaa91341adc17554f32bf991bfed04e47e)
+* 20231219 - *SBS* - Added a 'swing type' attribute to SixDOFConstraint and SwingTwistConstraint. This breaks the binary serialization format. (41016256e2cf1262ec05cff3cfa7645668ee0bf0)
+* 20231208 - Changed the meaning of Constraint::mNumVelocity/PositionStepsOverride. Before the number of steps would be the maximum of all constraints and the default value, now an overridden value of 0 means that the constraint uses the default value, otherwise it will use the value as specified. This means that if all constraints in an island have a lower value than the default, we will now use the lower value instead of the default. (0771808a03b850d16f1c64156f0aee827ca3706b)
+* 20231208 - *SBS* - Bodies can now also override the default number of solver iterations. This breaks the binary serialization format. (0771808a03b850d16f1c64156f0aee827ca3706b)
+* 20231203 - VehicleConstraint::CombineFunction got two additional parameters to identify which wheel is requesting friction. (8d80155f93d0d0c3ffe3dd46550650b9c830d304)
+
+## Changes between v4.0.0 and v4.0.2
+
+* No breaking changes.
 
 ## Changes between v3.0.1 and v4.0.0
 
@@ -37,7 +66,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 * 20221204 - Changes related to double precision support for positions (a2c1c22059fa031faf0208258e654bcff79a63e4)
 	* In many places in the public API Vec3 has been replaced by RVec3 (a Vec3 of Real values which can either be double or float depending on if JPH_DOUBLE_PRECISION is defined). In the same way RMat44 replaces Mat44. When compiling in single precision mode (the default) you should not notice a change.
 	* Shape::GetSubmergedVolume now takes a plane that's relative to inCenterOfMassTransform instead of one in world space
-	* Many of the NarrowPhaseQuery and TransformedShape collision queries now have a 'base offset' that you need to specify. Read the Big Worlds section in [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) for more info.
+	* Many of the NarrowPhaseQuery and TransformedShape collision queries now have a 'base offset' that you need to specify. Go to [Big Worlds](https://jrouwe.github.io/JoltPhysics/#big-worlds) for more info.
 	* The NarrowPhaseQuery/TransformedShape CastRay / CastShape functions now take a RRayCast / RShapeCast struct as input. When compiling in single precision mode this is the same as a RayCast or ShapeCast so only the type name needs to be updated.
 	* If you implement your own TempAllocator and want to compile in double precision, make sure you align to JPH_RVECTOR_ALIGNMENT bytes (instead of 16)
 	* The SkeletonPose got a 'root offset' member, this means that the ragdoll will now make the joint transform of the first body zero and put that offset in the 'root offset'.
@@ -51,7 +80,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 * 20221027 - *SBS* (vehicles only) - Rewrote engine model for wheeled vehicle. Before engine inertia was only used when the clutch was pressed, now it is always used, so you may want to use a lower value. The way torque is distributed over the wheels has also changed and may require tweaking the vehicle parameters. (5ac751cee9afcc097fd4f884308f5e4dc9fdaeaf)
 * 20220903 - *SBS* - Added overrides for number of position/velocity solver iterations. Only affects serialization. (38ec33942ead4968a83409bd13d868f60e6397c4)
 * 20220826 - *SBS* - Removed FixedConstraintSettings and SliderConstraintSettings SetPoint functions. If you were calling this function replace it by setting mAutoDetectPoint = true. (d16a0b05bfeed42b1618e3774a9c953e6922d22b)
-* 20220614 - It is now possible to override the memory allocator, register the default using RegisterDefaultAllocator(). This means that the public API now takes STL containers that use a custom memory allocator so use Array instead of vector, UnorderedMap instead of unordered_map etc. If you're using placement new, replace new (x) y with ::new (x) y. Define JPH_DISABLE_CUSTOM_ALLOCATOR to disable this new behavior (b68097f582148d6f66c18a6ff95c5ca9b40b48cc)
+* 20220614 - It is now possible to override the memory allocator, register the default using RegisterDefaultAllocator(). This means that the public API now takes STL containers that use a custom memory allocator so use Array instead of vector, UnorderedMap instead of unordered_map etc. If you're using placement new, add ```::``` in front of new. Define JPH_DISABLE_CUSTOM_ALLOCATOR to disable this new behavior (b68097f582148d6f66c18a6ff95c5ca9b40b48cc)
 * 20220606 - *SBS* - The slider constraint now has frequency and damping for its limits (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
 * 20220606 - *SBS* - The rack and pinion and gear constraints were added (09d6d9d51c46fbd159bf98abfd43cc639f6c0403)
 * 20220517 - Note: Superseded by d16a0b05bfeed42b1618e3774a9c953e6922d22b. When constructing a FixedConstraint you now need to call FixedConstraintSettings::SetPoint to configure the point where the bodies attach (4f7c925c31f39eda1d8d68e4e72456b5def93d9b)
@@ -62,7 +91,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 * 20220502 - ContactConstraintManager::CombineFunction has additional parameters: the SubShapeIDs from both bodies (6b873563739dfd3d77263c2c50af2f3f418ec15b)
 * 20220415 - Removed Body::GetDebugName / SetDebugName, keep this info in a lookaside table if you need it (6db4d3beac6760e55f65102db00f93dfbc56ac26)
 * 20220406 - Renamed CollisionDispatch::sCastShapeVsShape to sCastShapeVsShapeLocalSpace (6ba21f50dcf17bd506080ec30759724a7f3097d8)
-* 20220327 - Changed the default include path, #include <xxx> must be replaced by #include <Jolt/xxx> (06e9d17d385814cd24d3b77d689c0a29d854e194)
+* 20220327 - Changed the default include path, ```#include <xxx>``` must be replaced by ```#include <Jolt/xxx>``` (06e9d17d385814cd24d3b77d689c0a29d854e194)
 * 20220318 - Added support for SSE2. If you want to use later versions of SSE make sure you have JPH_USE_SSE4_1 and JPH_USE_SSE4_2 defined (28f363856a007d03f657e46e8f6d90ccd7c6487a)
 * 20220303 - Note: Partially superseded by d16a0b05bfeed42b1618e3774a9c953e6922d22b. When constructing a SliderConstraint you now need to call SliderConstraintSettings::SetPoint to configure the point where the bodies attach. Also replace mSliderAxis = x with SetSliderAxis(x) (5a327ec182d0436d435c62d0bccb4e76c6324659)
 * 20220228 - PointConstraint::mCommonPoint is now mPoint1 / mPoint2. Replace mCommonPoint = x with mPoint1 = mPoint2 = x (066dfb8940ba3e7dbf8ed47e9a1eeb194730e04b)

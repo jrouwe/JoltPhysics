@@ -259,7 +259,7 @@ void ConvexShape::sCastConvexVsConvex(const ShapeCast &inShapeCast, const ShapeC
 	const ConvexShape *shape = static_cast<const ConvexShape *>(inShape);
 
 	// Determine if we want to use the actual shape or a shrunken shape with convex radius
-	ConvexShape::ESupportMode support_mode = inShapeCastSettings.mUseShrunkenShapeAndConvexRadius? ConvexShape::ESupportMode::ExcludeConvexRadius : ConvexShape::ESupportMode::IncludeConvexRadius;
+	ConvexShape::ESupportMode support_mode = inShapeCastSettings.mUseShrunkenShapeAndConvexRadius? ConvexShape::ESupportMode::ExcludeConvexRadius : ConvexShape::ESupportMode::Default;
 
 	// Create support function for shape to cast
 	SupportBuffer cast_buffer;

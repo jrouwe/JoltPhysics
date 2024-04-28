@@ -145,7 +145,7 @@ public:
 				uint offset = node->mNodeProperties[i] != 0? inChildrenTrianglesStart[i] : inChildrenNodeStart[i];
 				if (offset & OFFSET_NON_SIGNIFICANT_MASK)
 				{
-					outError = "NodeCodecQuadTreeHalfFloat: Internal Error: Offset has non-signifiant bits set";
+					outError = "NodeCodecQuadTreeHalfFloat: Internal Error: Offset has non-significant bits set";
 					return false;
 				}
 				offset >>= OFFSET_NON_SIGNIFICANT_BITS;
@@ -168,7 +168,7 @@ public:
 			uint offset = inRoot->HasChildren()? inRootNodeStart : inRootTrianglesStart;
 			if (offset & OFFSET_NON_SIGNIFICANT_MASK)
 			{
-				outError = "NodeCodecQuadTreeHalfFloat: Internal Error: Offset has non-signifiant bits set";
+				outError = "NodeCodecQuadTreeHalfFloat: Internal Error: Offset has non-significant bits set";
 				return false;
 			}
 			offset >>= OFFSET_NON_SIGNIFICANT_BITS;

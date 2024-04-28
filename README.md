@@ -16,12 +16,6 @@ A multi core friendly rigid body physics and collision detection library suitabl
 
 For more demos and [videos](https://www.youtube.com/watch?v=pwyCW0yNKMA&list=PLYXVwtOr1CBxbA50jVg2dKUQvHW_5OOom) go to the [Samples](Docs/Samples.md) section.
 
-To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example. A [HelloWorld example using CMake FetchContent](https://github.com/jrouwe/JoltPhysicsHelloWorld) is also available to show how you can integrate Jolt Physics in a CMake project.
-
-If you're interested in how Jolt scales with multiple CPUs and compares to other physics engines, take a look at [this document](https://jrouwe.nl/jolt/JoltPhysicsMulticoreScaling.pdf).
-
-The slides for my GDC 2022 talk [Architecting Jolt Physics for 'Horizon Forbidden West'](https://gdcvault.com/play/1027560/Architecting-Jolt-Physics-for-Horizon) are now available ([video here](https://gdcvault.com/play/1027891/Architecting-Jolt-Physics-for-Horizon))!
-
 ## Design Considerations
 
 So why create yet another physics engine? First of all, this has been a personal learning project and secondly I wanted to address some issues that I had with existing physics engines:
@@ -31,10 +25,8 @@ So why create yet another physics engine? First of all, this has been a personal
 	* Collision queries can run in parallel with other operations like insertion / removal of bodies. The query code is guaranteed to see a body in a consistent state, but when a body is changed during a collision query there is no guarantee if the change is visible to the query or not. If a thread modifies the position of a body and then does a collision query, it will immediately see the updated state (this is often a problem when working with a read version and a write version of the world).
 	* It is also possible to run collision queries in parallel to the main physics simulation by doing the broad phase query before the simulation step. This way, long running processes (like navigation mesh generation) can be spread out across multiple frames while still running the physics simulation every frame.
 * One of the main sources of performance problems we found was waking up too many bodies while loading / unloading content. Therefore, bodies will not automatically wake up when created and neighboring bodies will not be woken up when bodies are removed. This can be triggered manually if desired.
-* The simulation runs deterministically, so you could replicate a simulation to a remote client by merely replicating the inputs to the simulation. Read the [Deterministic Simulation](https://jrouwe.github.io/JoltPhysics/) section to understand the limits of this.
+* The simulation runs deterministically, so you could replicate a simulation to a remote client by merely replicating the inputs to the simulation. Read the [Deterministic Simulation](https://jrouwe.github.io/JoltPhysics/#deterministic-simulation) section to understand the limits of this.
 * The simulation of this physics engine tries to simulate behavior of rigid bodies in the real world but makes approximations in the simulation so should mainly be used for games or VR simulations.
-
-For more information see the [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/) section.
 
 ## Features
 
@@ -81,6 +73,14 @@ For more information see the [Architecture and API documentation](https://jrouwe
 	* Tracked vehicles.
 	* Motorcycles.
 * Soft body simulation (e.g. a soft ball or piece of cloth).
+	* Edge constraints.
+	* Dihedral bend constraints.
+	* Tetrahedron volume constraints.
+	* Long range attachment constraints (also called tethers).
+	* Limiting the simulation to stay within a certain range of a skinned vertex.
+	* Internal pressure.
+	* Collision with simulated rigid bodies.
+	* Collision tests against soft bodies.
 * Water buoyancy calculations.
 * An optional double precision mode that allows large worlds.
 
@@ -88,6 +88,7 @@ For more information see the [Architecture and API documentation](https://jrouwe
 
 * Windows (VS2019, VS2022) x86/x64/ARM32/ARM64 (Desktop/UWP)
 * Linux (tested on Ubuntu 22.04) x64/ARM64
+* FreeBSD
 * Android (tested on Android 14) x86/x64/ARM32/ARM64
 * Platform Blue (a popular game console) x64
 * macOS (tested on Monterey) x64/ARM64
@@ -97,7 +98,15 @@ For more information see the [Architecture and API documentation](https://jrouwe
 ## Required CPU features
 
 * On x86 the minimal requirements are SSE2 but the library can be compiled using SSE4.1, SSE4.2, AVX, AVX2, or AVX512.
-* On ARM64 the library requires NEON with FP16 support.
+* On ARM64 the library by default compiles with NEON and FP16, on ARM32 it can be compiled without any special CPU instructions.
+
+## Documentation
+
+To learn more about Jolt go to the [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/).
+
+To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example. A [HelloWorld example using CMake FetchContent](https://github.com/jrouwe/JoltPhysicsHelloWorld) is also available to show how you can integrate Jolt Physics in a CMake project.
+
+Some algorithms used by Jolt are described in detail in my GDC 2022 talk Architecting Jolt Physics for 'Horizon Forbidden West' ([slides](https://gdcvault.com/play/1027560/Architecting-Jolt-Physics-for-Horizon), [slides with speaker notes](https://jrouwe.nl/architectingjolt/ArchitectingJoltPhysics_Rouwe_Jorrit_Notes.pdf), [video](https://gdcvault.com/play/1027891/Architecting-Jolt-Physics-for-Horizon)).
 
 ## Compiling
 
@@ -107,6 +116,10 @@ For more information see the [Architecture and API documentation](https://jrouwe
 * If you want to run on Platform Blue you'll need to provide your own build environment and PlatformBlue.h file due to NDA requirements (see Core.h for further info).
 
 For build instructions go to the [Build](Build/README.md) section. When upgrading from an older version of the library go to the [Release Notes](Docs/ReleaseNotes.md) or [API Changes](Docs/APIChanges.md) sections.
+
+## Performance
+
+If you're interested in how Jolt scales with multiple CPUs and compares to other physics engines, take a look at [this document](https://jrouwe.nl/jolt/JoltPhysicsMulticoreScaling.pdf).
 
 ## Folder Structure
 
@@ -132,7 +145,6 @@ For build instructions go to the [Build](Build/README.md) section. When upgradin
 
 ## Integrations in Other Engines
 
-* [ezEngine](https://github.com/ezEngine/ezEngine)
 * [Godot](https://github.com/godot-jolt/godot-jolt)
 * [Source Engine](https://github.com/Joshua-Ashton/VPhysics-Jolt)
 

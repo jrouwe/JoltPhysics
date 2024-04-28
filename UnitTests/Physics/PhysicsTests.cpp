@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Body/BodyLockMulti.h>
 #include <Jolt/Physics/Constraints/PointConstraint.h>
 #include <Jolt/Physics/StateRecorderImpl.h>
@@ -447,7 +448,7 @@ TEST_SUITE("PhysicsTests")
 		TestPhysicsApplyForce(c2);
 	}
 
-	// Test angular accelartion for a box by applying torque every frame
+	// Test angular acceleration for a box by applying torque every frame
 	static void TestPhysicsApplyTorque(PhysicsTestContext &ioContext)
 	{
 		const RVec3 cInitialPos(0.0f, 10.0f, 0.0f);
@@ -491,7 +492,7 @@ TEST_SUITE("PhysicsTests")
 		TestPhysicsApplyTorque(c2);
 	}
 
-	// Let a sphere bounce on the floor with restition = 1
+	// Let a sphere bounce on the floor with restitution = 1
 	static void TestPhysicsCollisionElastic(PhysicsTestContext &ioContext)
 	{
 		const float cSimulationTime = 1.0f;
@@ -849,7 +850,7 @@ TEST_SUITE("PhysicsTests")
 		// Simulate a step
 		c.SimulateSingleStep();
 
-		// Check that it has triggered contact points and has bounced from it's initial position (effectively travelling the extra distance to the floor and back for free)
+		// Check that it has triggered contact points and has bounced from it's initial position (effectively traveling the extra distance to the floor and back for free)
 		CHECK(contact_listener.GetEntryCount() == 4); // 2 validates and 2 contacts
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Validate, box.GetID(), floor.GetID()));
 		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, box.GetID(), floor.GetID()));
@@ -927,6 +928,48 @@ TEST_SUITE("PhysicsTests")
 
 		// It should have bounced back up and inverted velocity due to restitution being 1
 		CHECK_APPROX_EQUAL(-sphere.GetLinearVelocity(), cVelocity);
+	}
+
+	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceSensor")
+	{
+		PhysicsTestContext c;
+		Body &floor = c.CreateFloor();
+		c.ZeroGravity();
+
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create a sphere sensor just inside the speculative contact distance
+		const float cSpeculativeContactDistance = c.GetSystem()->GetPhysicsSettings().mSpeculativeContactDistance;
+		const float cRadius = 1.0f;
+		const float cDistanceAboveFloor = 0.9f * cSpeculativeContactDistance;
+		const RVec3 cInitialPosSphere(5, cRadius + cDistanceAboveFloor, 0);
+
+		// Make it move 1 m per step down
+		const Vec3 cVelocity(0, -1.0f / c.GetDeltaTime(), 0);
+
+		Body &sphere = c.CreateSphere(cInitialPosSphere, cRadius, EMotionType::Dynamic, EMotionQuality::Discrete, Layers::MOVING);
+		sphere.SetIsSensor(true);
+		sphere.SetLinearVelocity(cVelocity);
+
+		// Simulate a step
+		c.SimulateSingleStep();
+
+		CHECK(contact_listener.GetEntryCount() == 0); // We're inside the speculative contact distance but we're a sensor so we shouldn't trigger any contacts
+
+		// Simulate a step
+		c.SimulateSingleStep();
+
+		// Check that we're now actually intersecting
+		CHECK(contact_listener.GetEntryCount() == 2); // 1 validates and 1 contact
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Validate, sphere.GetID(), floor.GetID()));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, sphere.GetID(), floor.GetID()));
+		contact_listener.Clear();
+
+		// Sensor should not be affected by the floor
+		CHECK_APPROX_EQUAL(sphere.GetPosition(), cInitialPosSphere + 2.0f * c.GetDeltaTime() * cVelocity);
+		CHECK_APPROX_EQUAL(sphere.GetLinearVelocity(), cVelocity);
+		CHECK_APPROX_EQUAL(sphere.GetAngularVelocity(), Vec3::sZero());
 	}
 
 	TEST_CASE("TestPhysicsInsideSpeculativeContactDistanceMovingAway")
@@ -1090,7 +1133,7 @@ TEST_SUITE("PhysicsTests")
 		// Step the world
 		ioContext.SimulateSingleStep();
 
-		// Other bodies should now be awake and each body should only collide with its neighbour
+		// Other bodies should now be awake and each body should only collide with its neighbor
 		CHECK(activation_listener.GetEntryCount() == cNumBodies - 1);
 		CHECK(contact_listener.GetEntryCount() == 2 * (cNumBodies - 1));
 
@@ -1445,38 +1488,79 @@ TEST_SUITE("PhysicsTests")
 			// Apply a force and torque in 3D
 			Vec3 force(100000, 110000, 120000);
 			box.AddForce(force);
-			Vec3 local_torque(13000, 14000, 15000);
-			box.AddTorque(initial_rotation * local_torque);
+			Vec3 torque(13000, 14000, 15000);
+			box.AddTorque(torque);
 
 			// Simulate
 			c.SimulateSingleStep();
 
 			// Cancel components that should not be allowed by the allowed DOFs
+			Vec3 linear_lock = Vec3::sReplicate(1.0f), angular_lock = Vec3::sReplicate(1.0f);
 			for (uint axis = 0; axis < 3; ++axis)
 			{
 				if ((allowed_dofs & (1 << axis)) == 0)
-					force.SetComponent(axis, 0.0f);
+					linear_lock.SetComponent(axis, 0.0f);
 
 				if ((allowed_dofs & (0b1000 << axis)) == 0)
-					local_torque.SetComponent(axis, 0.0f);
+					angular_lock.SetComponent(axis, 0.0f);
 			}
 
 			// Check resulting linear velocity
 			MassProperties mp = box_shape->GetMassProperties();
-			Vec3 expected_linear_velocity = force / mp.mMass * c.GetDeltaTime();
-			CHECK((force == Vec3::sZero() || expected_linear_velocity.Length() > 1.0f)); // Just to check that we applied a high enough force
+			Vec3 expected_linear_velocity = linear_lock * (force / mp.mMass * c.GetDeltaTime());
+			CHECK((linear_lock == Vec3::sZero() || expected_linear_velocity.Length() > 1.0f)); // Just to check that we applied a high enough force
 			CHECK_APPROX_EQUAL(box.GetLinearVelocity(), expected_linear_velocity);
 			RVec3 expected_position = initial_position + expected_linear_velocity * c.GetDeltaTime();
 			CHECK_APPROX_EQUAL(box.GetPosition(), expected_position);
 
 			// Check resulting angular velocity
-			Vec3 expected_angular_velocity = initial_rotation * (mp.mInertia.Inversed3x3() * local_torque) * c.GetDeltaTime();
-			CHECK((local_torque == Vec3::sZero() || expected_angular_velocity.Length() > 1.0f)); // Just to check that we applied a high enough torque
+			Mat44 inv_inertia = Mat44::sRotation(initial_rotation) * mp.mInertia.Inversed3x3() * Mat44::sRotation(initial_rotation.Conjugated());
+			inv_inertia = Mat44::sScale(angular_lock) * inv_inertia * Mat44::sScale(angular_lock); // Clear row and column for locked axes
+			Vec3 expected_angular_velocity = inv_inertia * torque * c.GetDeltaTime();
+			CHECK((angular_lock == Vec3::sZero() || expected_angular_velocity.Length() > 1.0f)); // Just to check that we applied a high enough torque
 			CHECK_APPROX_EQUAL(box.GetAngularVelocity(), expected_angular_velocity);
 			float expected_angular_velocity_len = expected_angular_velocity.Length();
 			Quat expected_rotation = expected_angular_velocity_len > 0.0f? Quat::sRotation(expected_angular_velocity / expected_angular_velocity_len, expected_angular_velocity_len * c.GetDeltaTime()) * initial_rotation : initial_rotation;
 			CHECK_APPROX_EQUAL(box.GetRotation(), expected_rotation);
 		}
+	}
+
+	TEST_CASE("TestAllowedDOFsVsCollision")
+	{
+		PhysicsTestContext c;
+		Body &floor = c.CreateFloor();
+		floor.SetFriction(1.0f);
+
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create box that can only rotate around Y that intersects with the floor
+		RVec3 initial_position(0, 0.99f, 0);
+		BodyCreationSettings box_settings(new BoxShape(Vec3::sReplicate(1.0f)), initial_position, Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		box_settings.mAllowedDOFs = EAllowedDOFs::RotationY;
+		box_settings.mAngularDamping = 0.0f; // No damping to make the calculation for expected angular velocity simple
+		box_settings.mOverrideMassProperties = EOverrideMassProperties::CalculateInertia;
+		box_settings.mMassPropertiesOverride.mMass = 1.0f;
+		box_settings.mFriction = 1.0f; // High friction so that if the collision is processed, we'll slow down the rotation
+		Body *body = c.GetBodyInterface().CreateBody(box_settings);
+		c.GetBodyInterface().AddBody(body->GetID(), EActivation::Activate);
+
+		// Make the box rotate around Y
+		const Vec3 torque(0, 100.0f, 0);
+		body->AddTorque(torque);
+
+		// Simulate a step, this will make the box collide with the floor but should not result in the floor stopping the body
+		// but will cause the effective mass of the contact to become infinite so is a test if we are properly ignoring the contact in this case
+		c.SimulateSingleStep();
+
+		// Check that we did detect the collision
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), body->GetID()));
+
+		// Check that we have the correct angular velocity
+		Vec3 expected_angular_velocity = torque * c.GetDeltaTime() * body->GetInverseInertia()(1, 1);
+		CHECK_APPROX_EQUAL(body->GetAngularVelocity(), expected_angular_velocity);
+		CHECK(body->GetLinearVelocity() == Vec3::sZero());
+		CHECK(body->GetPosition() == initial_position);
 	}
 
 	TEST_CASE("TestSelectiveStateSaveAndRestore")
@@ -1681,5 +1765,74 @@ TEST_SUITE("PhysicsTests")
 			CHECK(box2.IsActive());
 			CHECK(!sphere2.IsActive());
 		}
+	}
+
+	// This tests that when switching UseManifoldReduction on/off we get the correct contact callbacks
+	TEST_CASE("TestSwitchUseManifoldReduction")
+	{
+		PhysicsTestContext c;
+
+		// Install listener
+		LoggingContactListener contact_listener;
+		c.GetSystem()->SetContactListener(&contact_listener);
+
+		// Create floor
+		Body &floor = c.CreateFloor();
+
+		// Create a compound with 4 boxes
+		Ref<BoxShape> box_shape = new BoxShape(Vec3::sReplicate(2));
+		Ref<StaticCompoundShapeSettings> shape_settings = new StaticCompoundShapeSettings();
+		shape_settings->AddShape(Vec3(5, 0, 0), Quat::sIdentity(), box_shape);
+		shape_settings->AddShape(Vec3(-5, 0, 0), Quat::sIdentity(), box_shape);
+		shape_settings->AddShape(Vec3(0, 0, 5), Quat::sIdentity(), box_shape);
+		shape_settings->AddShape(Vec3(0, 0, -5), Quat::sIdentity(), box_shape);
+		RefConst<StaticCompoundShape> compound_shape = static_cast<const StaticCompoundShape *>(shape_settings->Create().Get().GetPtr());
+		SubShapeID sub_shape_ids[] = {
+			compound_shape->GetSubShapeIDFromIndex(0, SubShapeIDCreator()).GetID(),
+			compound_shape->GetSubShapeIDFromIndex(1, SubShapeIDCreator()).GetID(),
+			compound_shape->GetSubShapeIDFromIndex(2, SubShapeIDCreator()).GetID(),
+			compound_shape->GetSubShapeIDFromIndex(3, SubShapeIDCreator()).GetID()
+		};
+
+		// Embed body a little bit into the floor so we immediately get contact callbacks
+		BodyCreationSettings body_settings(compound_shape, RVec3(0, 1.99_r, 0), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
+		body_settings.mUseManifoldReduction = true;
+		BodyID body_id = c.GetBodyInterface().CreateAndAddBody(body_settings, EActivation::Activate);
+
+		// Trigger contact callbacks
+		c.SimulateSingleStep();
+
+		// Since manifold reduction is on and the contacts will be coplanar we should only get 1 contact with the floor
+		// Note that which sub shape ID we get is deterministic but not guaranteed to be a particular value, sub_shape_ids[3] is the one it currently returns!!
+		CHECK(contact_listener.GetEntryCount() == 5); // 4x validate + 1x add
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[3]));
+		contact_listener.Clear();
+
+		// Now disable manifold reduction
+		c.GetBodyInterface().SetUseManifoldReduction(body_id, false);
+
+		// Trigger contact callbacks
+		c.SimulateSingleStep();
+
+		// Now manifold reduction is off so we should get collisions with each of the sub shapes
+		CHECK(contact_listener.GetEntryCount() == 8); // 4x validate + 1x persist + 3x add
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Persist, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[3]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[0]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[1]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Add, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[2]));
+		contact_listener.Clear();
+
+		// Now enable manifold reduction again
+		c.GetBodyInterface().SetUseManifoldReduction(body_id, true);
+
+		// Trigger contact callbacks
+		c.SimulateSingleStep();
+
+		// We should be back to the first state now where we only have 1 contact
+		CHECK(contact_listener.GetEntryCount() == 8); // 4x validate + 1x persist + 3x remove
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Persist, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[3]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[0]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[1]));
+		CHECK(contact_listener.Contains(LoggingContactListener::EType::Remove, floor.GetID(), SubShapeID(), body_id, sub_shape_ids[2]));
 	}
 }

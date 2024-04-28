@@ -27,7 +27,7 @@ void MotorcycleTest::Initialize()
 {
 	VehicleTest::Initialize();
 
-	// Loosly based on: https://www.whitedogbikes.com/whitedogblog/yamaha-xj-900-specs/
+	// Loosely based on: https://www.whitedogbikes.com/whitedogblog/yamaha-xj-900-specs/
 	const float back_wheel_radius = 0.31f;
 	const float back_wheel_width = 0.05f;
 	const float back_wheel_pos_z = -0.75f;
@@ -122,96 +122,106 @@ void MotorcycleTest::Initialize()
 	controller->mDifferentials[0].mDifferentialRatio = 1.93f * 40.0f / 16.0f; // Combining primary and final drive (back divided by front sprockets) from: https://www.blocklayer.com/rpm-gear-bikes
 
 	mVehicleConstraint = new VehicleConstraint(*mMotorcycleBody, vehicle);
-	mVehicleConstraint->SetVehicleCollisionTester(new VehicleCollisionTesterCastCylinder(Layers::MOVING, 1.0f)); // Use half wheel width as convex radius so we get a rounded cyclinder
+	mVehicleConstraint->SetVehicleCollisionTester(new VehicleCollisionTesterCastCylinder(Layers::MOVING, 1.0f)); // Use half wheel width as convex radius so we get a rounded cylinder
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
+
+	UpdateCameraPivot();
 }
 
-void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+void MotorcycleTest::ProcessInput(const ProcessInputParams &inParams)
 {
-	VehicleTest::PrePhysicsUpdate(inParams);
-
 	// Determine acceleration and brake
-	float forward = 0.0f, right = 0.0f, brake = 0.0f;
+	mForward = 0.0f;
+	mBrake = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_Z))
-		brake = 1.0f;
+		mBrake = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_UP))
-		forward = 1.0f;
+		mForward = 1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_DOWN))
-		forward = -1.0f;
+		mForward = -1.0f;
 
 	// Check if we're reversing direction
-	if (mPreviousForward * forward < 0.0f)
+	if (mPreviousForward * mForward < 0.0f)
 	{
 		// Get vehicle velocity in local space to the body of the vehicle
 		float velocity = (mMotorcycleBody->GetRotation().Conjugated() * mMotorcycleBody->GetLinearVelocity()).GetZ();
-		if ((forward > 0.0f && velocity < -0.1f) || (forward < 0.0f && velocity > 0.1f))
+		if ((mForward > 0.0f && velocity < -0.1f) || (mForward < 0.0f && velocity > 0.1f))
 		{
 			// Brake while we've not stopped yet
-			forward = 0.0f;
-			brake = 1.0f;
+			mForward = 0.0f;
+			mBrake = 1.0f;
 		}
 		else
 		{
 			// When we've come to a stop, accept the new direction
-			mPreviousForward = forward;
+			mPreviousForward = mForward;
 		}
 	}
 
 	// Steering
+	float right = 0.0f;
 	if (inParams.mKeyboard->IsKeyPressed(DIK_LEFT))
 		right = -1.0f;
 	else if (inParams.mKeyboard->IsKeyPressed(DIK_RIGHT))
 		right = 1.0f;
 	const float steer_speed = 4.0f;
-	if (right > mCurrentRight)
-		mCurrentRight = min(mCurrentRight + steer_speed * inParams.mDeltaTime, right);
-	else if (right < mCurrentRight)
-		mCurrentRight = max(mCurrentRight - steer_speed * inParams.mDeltaTime, right);
+	if (right > mRight)
+		mRight = min(mRight + steer_speed * inParams.mDeltaTime, right);
+	else if (right < mRight)
+		mRight = max(mRight - steer_speed * inParams.mDeltaTime, right);
 
 	// When leaned, we don't want to use the brakes fully as we'll spin out
-	if (brake > 0.0f)
+	if (mBrake > 0.0f)
 	{
 		Vec3 world_up = -mPhysicsSystem->GetGravity().Normalized();
 		Vec3 up = mMotorcycleBody->GetRotation() * mVehicleConstraint->GetLocalUp();
 		Vec3 fwd = mMotorcycleBody->GetRotation() * mVehicleConstraint->GetLocalForward();
 		float sin_lean_angle = abs(world_up.Cross(up).Dot(fwd));
 		float brake_multiplier = Square(1.0f - sin_lean_angle);
-		brake *= brake_multiplier;
+		mBrake *= brake_multiplier;
 	}
+}
+
+void MotorcycleTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
+{
+	VehicleTest::PrePhysicsUpdate(inParams);
+
+	UpdateCameraPivot();
 
 	// On user input, assure that the motorcycle is active
-	if (mCurrentRight != 0.0f || forward != 0.0f || brake != 0.0f)
+	if (mRight != 0.0f || mForward != 0.0f || mBrake != 0.0f)
 		mBodyInterface->ActivateBody(mMotorcycleBody->GetID());
 
 	// Pass the input on to the constraint
 	MotorcycleController *controller = static_cast<MotorcycleController *>(mVehicleConstraint->GetController());
-	controller->SetDriverInput(forward, mCurrentRight, brake, false);
+	controller->SetDriverInput(mForward, mRight, mBrake, false);
 	controller->EnableLeanController(sEnableLeanController);
 
 	// Draw our wheels (this needs to be done in the pre update since we draw the bodies too in the state before the step)
 	for (uint w = 0; w < 2; ++w)
 	{
 		const WheelSettings *settings = mVehicleConstraint->GetWheels()[w]->GetSettings();
-		RMat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cyclinder we draw is aligned with Y so we specify that as rotational axis
+		RMat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cylinder we draw is aligned with Y so we specify that as rotational axis
 		mDebugRenderer->DrawCylinder(wheel_transform, 0.5f * settings->mWidth, settings->mRadius, Color::sGreen);
 	}
 }
 
-void MotorcycleTest::SaveState(StateRecorder& inStream) const
-{
-	VehicleTest::SaveState(inStream);
 
+void MotorcycleTest::SaveInputState(StateRecorder &inStream) const
+{
+	inStream.Write(mForward);
 	inStream.Write(mPreviousForward);
-	inStream.Write(mCurrentRight);
+	inStream.Write(mRight);
+	inStream.Write(mBrake);
 }
 
-void MotorcycleTest::RestoreState(StateRecorder& inStream)
+void MotorcycleTest::RestoreInputState(StateRecorder &inStream)
 {
-	VehicleTest::RestoreState(inStream);
-
+	inStream.Read(mForward);
 	inStream.Read(mPreviousForward);
-	inStream.Read(mCurrentRight);
+	inStream.Read(mRight);
+	inStream.Read(mBrake);
 }
 
 void MotorcycleTest::GetInitialCamera(CameraState &ioState) const
@@ -222,7 +232,7 @@ void MotorcycleTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 MotorcycleTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+void MotorcycleTest::UpdateCameraPivot()
 {
 	// Pivot is center of motorcycle and rotates with motorcycle around Y axis only
 	Vec3 fwd = mMotorcycleBody->GetRotation().RotateAxisZ();
@@ -234,7 +244,7 @@ RMat44 MotorcycleTest::GetCameraPivot(float inCameraHeading, float inCameraPitch
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mMotorcycleBody->GetPosition());
+	mCameraPivot = RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mMotorcycleBody->GetPosition());
 }
 
 void MotorcycleTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)

@@ -28,8 +28,8 @@ public:
 							SamplesApp();
 	virtual					~SamplesApp() override;
 
-	// Render the frame.
-	virtual bool			RenderFrame(float inDeltaTime) override;
+	// Update the application
+	virtual bool			UpdateFrame(float inDeltaTime) override;
 
 	// Override to specify the initial camera state (local to GetCameraPivot)
 	virtual void			GetInitialCamera(CameraState &ioState) const override;
@@ -87,7 +87,7 @@ private:
 
 	// Global settings
 	int						mMaxConcurrentJobs = thread::hardware_concurrency();		// How many jobs to run in parallel
-	float					mUpdateFrequency = 60.0f;									// Physics update frequency
+	float					mUpdateFrequency = 60.0f;									// Physics update frequency, measured in Hz (cycles per second)
 	int						mCollisionSteps = 1;										// How many collision detection steps per physics update
 	TempAllocator *			mTempAllocator = nullptr;									// Allocator for temporary allocations
 	JobSystem *				mJobSystem = nullptr;										// The job system that runs physics jobs
@@ -105,6 +105,7 @@ private:
 	bool					mDrawConstraints = false;									// If the constraints should be drawn
 	bool					mDrawConstraintLimits = false;								// If the constraint limits should be drawn
 	bool					mDrawConstraintReferenceFrame = false;						// If the constraint reference frames should be drawn
+	bool					mDrawPhysicsSystemBounds = false;							// If the bounds of the physics system should be drawn
 	BodyManager::DrawSettings mBodyDrawSettings;										// Settings for how to draw bodies from the body manager
 	SkeletonPose::DrawSettings mPoseDrawSettings;										// Settings for drawing skeletal poses
 #endif // JPH_DEBUG_RENDERER
@@ -130,7 +131,12 @@ private:
 	// State recording and determinism checks
 	bool					mRecordState = false;										// When true, the state of the physics system is recorded in mPlaybackFrames every physics update
 	bool					mCheckDeterminism = false;									// When true, the physics state is rolled back after every update and run again to verify that the state is the same
-	Array<StateRecorderImpl> mPlaybackFrames;											// A list of recorded world states, one per physics simulation step
+	struct PlayBackFrame
+	{
+		StateRecorderImpl	mInputState;												// State of the player inputs at the beginning of the step
+		StateRecorderImpl	mState;														// Main simulation state
+	};
+	Array<PlayBackFrame>	mPlaybackFrames;											// A list of recorded world states, one per physics simulation step
 	enum class EPlaybackMode
 	{
 		Rewind,
@@ -173,6 +179,7 @@ private:
 		TaperedCapsule,
 		Cylinder,
 		Triangle,
+		RotatedTranslated,
 		StaticCompound,
 		StaticCompound2,
 		MutableCompound,
@@ -211,6 +218,7 @@ private:
 	float					mShootObjectRestitution = 0.0f;								// Restitution for the object that is shot
 	bool					mShootObjectScaleShape = false;								// If the shape should be scaled
 	Vec3					mShootObjectShapeScale = Vec3::sReplicate(1.0f);			// Scale of the object to shoot
+	bool					mWasShootKeyPressed = false;								// Remembers if the shoot key was pressed last frame
 
 	// Mouse dragging
 	Body *					mDragAnchor = nullptr;										// Rigid bodies only: A anchor point for the distance constraint. Corresponds to the current crosshair position.

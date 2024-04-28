@@ -94,9 +94,11 @@ public:
 	EAllowedDOFs			mAllowedDOFs = EAllowedDOFs::All;								///< Which degrees of freedom this body has (can be used to limit simulation to 2D)
 	bool					mAllowDynamicOrKinematic = false;								///< When this body is created as static, this setting tells the system to create a MotionProperties object so that the object can be switched to kinematic or dynamic
 	bool					mIsSensor = false;												///< If this body is a sensor. A sensor will receive collision callbacks, but will not cause any collision responses and can be used as a trigger volume. See description at Body::SetIsSensor.
-	bool					mSensorDetectsStatic = false;									///< If this sensor detects static objects entering it. Note that the sensor must be kinematic and active for it to detect static objects.
+	bool					mCollideKinematicVsNonDynamic = false;							///< If kinematic objects can generate contact points against other kinematic or static objects. See description at Body::SetCollideKinematicVsNonDynamic.
 	bool					mUseManifoldReduction = true;									///< If this body should use manifold reduction (see description at Body::SetUseManifoldReduction)
+	bool					mApplyGyroscopicForce = false;									///< Set to indicate that the gyroscopic force should be applied to this body (aka Dzhanibekov effect, see https://en.wikipedia.org/wiki/Tennis_racket_theorem)
 	EMotionQuality			mMotionQuality = EMotionQuality::Discrete;						///< Motion quality, or how well it detects collisions when it has a high velocity
+	bool					mEnhancedInternalEdgeRemoval = false;							///< Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). This is more expensive but makes bodies move smoother over a mesh with convex edges.
 	bool					mAllowSleeping = true;											///< If this body can go to sleep or not
 	float					mFriction = 0.2f;												///< Friction of the body (dimensionless number, usually between 0 and 1, 0 = no friction, 1 = friction force equals force that presses the two bodies together). Note that bodies can have negative friction but the combined friction (see PhysicsSystem::SetCombineFriction) should never go below zero.
 	float					mRestitution = 0.0f;											///< Restitution of body (dimensionless number, usually between 0 and 1, 0 = completely inelastic collision response, 1 = completely elastic collision response). Note that bodies can have negative restitution but the combined restitution (see PhysicsSystem::SetCombineRestitution) should never go below zero.
@@ -105,6 +107,8 @@ public:
 	float					mMaxLinearVelocity = 500.0f;									///< Maximum linear velocity that this body can reach (m/s)
 	float					mMaxAngularVelocity = 0.25f * JPH_PI * 60.0f;					///< Maximum angular velocity that this body can reach (rad/s)
 	float					mGravityFactor = 1.0f;											///< Value to multiply gravity with for this body
+	uint					mNumVelocityStepsOverride = 0;									///< Used only when this body is dynamic and colliding. Override for the number of solver velocity iterations to run, 0 means use the default in PhysicsSettings::mNumVelocitySteps. The number of iterations to use is the max of all contacts and constraints in the island.
+	uint					mNumPositionStepsOverride = 0;									///< Used only when this body is dynamic and colliding. Override for the number of solver position iterations to run, 0 means use the default in PhysicsSettings::mNumPositionSteps. The number of iterations to use is the max of all contacts and constraints in the island.
 
 	///@name Mass properties of the body (by default calculated by the shape)
 	EOverrideMassProperties	mOverrideMassProperties = EOverrideMassProperties::CalculateMassAndInertia; ///< Determines how mMassPropertiesOverride will be used

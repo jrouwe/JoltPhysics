@@ -46,7 +46,7 @@ struct PhysicsSettings
 	/// step which may not be the actual closest points by the time the two objects hit (unit: meters)
 	float		mSpeculativeContactDistance = 0.02f;
 
-	/// How much bodies are allowed to sink into eachother (unit: meters)
+	/// How much bodies are allowed to sink into each other (unit: meters)
 	float		mPenetrationSlop = 0.02f;
 
 	/// Fraction of its inner radius a body must move per step to enable casting for the LinearCast motion quality
@@ -75,10 +75,10 @@ struct PhysicsSettings
 
 	/// Number of solver velocity iterations to run
 	/// Note that this needs to be >= 2 in order for friction to work (friction is applied using the non-penetration impulse from the previous iteration)
-	int			mNumVelocitySteps = 10;
+	uint		mNumVelocitySteps = 10;
 
 	/// Number of solver position iterations to run
-	int			mNumPositionSteps = 2;
+	uint		mNumPositionSteps = 2;
 
 	/// Minimal velocity needed before a collision can be elastic (unit: m)
 	float		mMinVelocityForRestitution = 1.0f;
@@ -101,7 +101,7 @@ struct PhysicsSettings
 	/// Whether or not to use the body pair cache, which removes the need for narrow phase collision detection when orientation between two bodies didn't change
 	bool		mUseBodyPairContactCache = true;
 
-	/// Whether or not to reduce manifolds with similar contact normals into one contact manifold
+	/// Whether or not to reduce manifolds with similar contact normals into one contact manifold (see description at Body::SetUseManifoldReduction)
 	bool		mUseManifoldReduction = true;
 
 	/// If we split up large islands into smaller parallel batches of work (to improve performance)

@@ -21,6 +21,7 @@
 #include <Jolt/Physics/Collision/ActiveEdges.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/SortReverseAndStore.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVerticesVsTriangles.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
@@ -318,24 +319,26 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 
 void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSettings)
 {
-	// Store active edges. The triangles are organized like this:
-	//     x --->
-	// 
-	// y   +       +
-	//     | \ T1B | \ T2B
-	// |  e0   e2  |   \
-	// |   | T1A \ | T2A \
-	// V   +--e1---+-------+
-	//     | \ T3B | \ T4B
-	//     |   \   |   \
-	//     | T3A \ | T4A \
-	//     +-------+-------+
-	// We store active edges e0 .. e2 as bits 0 .. 2.
-	// We store triangles horizontally then vertically (order T1A, T2A, T3A and T4A).
-	// The top edge and right edge of the heightfield are always active so we do not need to store them,
-	// therefore we only need to store (mSampleCount - 1)^2 * 3-bit
-	// The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
-	// Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
+	/*
+		Store active edges. The triangles are organized like this:
+			x --->
+
+		y   +       +
+			| \ T1B | \ T2B
+		|  e0   e2  |   \
+		|   | T1A \ | T2A \
+		V   +--e1---+-------+
+			| \ T3B | \ T4B
+			|   \   |   \
+			| T3A \ | T4A \
+			+-------+-------+
+		We store active edges e0 .. e2 as bits 0 .. 2.
+		We store triangles horizontally then vertically (order T1A, T2A, T3A and T4A).
+		The top edge and right edge of the heightfield are always active so we do not need to store them,
+		therefore we only need to store (mSampleCount - 1)^2 * 3-bit
+		The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
+		Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
+	*/
 	mActiveEdges.resize((Square(mSampleCount - 1) * 3 + 7) / 8 + 1);
 
 	// Make all edges active (if mSampleCount is bigger than inSettings.mSampleCount we need to fill up the padding,
@@ -927,7 +930,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 		heights = temp_heights;
 
 		// We need to fill in the following areas:
-		// 
+		//
 		// +-----------------+
 		// |        2        |
 		// |---+---------+---|
@@ -1124,6 +1127,193 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	// Invalidate temporary rendering data
 	mGeometry.clear();
 #endif
+}
+
+void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, uint inMaterialsStride) const
+{
+	if (inSizeX == 0 || inSizeY == 0)
+		return;
+
+	if (mMaterialIndices.empty())
+	{
+		// Return all 0's
+		for (uint y = 0; y < inSizeY; ++y)
+		{
+			uint8 *out_indices = outMaterials + y * inMaterialsStride;
+			for (uint x = 0; x < inSizeX; ++x)
+				*out_indices++ = 0;
+		}
+		return;
+	}
+
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
+
+	uint count_min_1 = mSampleCount - 1;
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+
+	for (uint y = 0; y < inSizeY; ++y)
+	{
+		// Calculate input position
+		uint bit_pos = (inX + (inY + y) * count_min_1) * mNumBitsPerMaterialIndex;
+		const uint8 *in_indices = mMaterialIndices.data() + (bit_pos >> 3);
+		bit_pos &= 0b111;
+
+		// Calculate output position
+		uint8 *out_indices = outMaterials + y * inMaterialsStride;
+
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			// Get material index
+			uint16 material_index = uint16(in_indices[0]) + uint16(uint16(in_indices[1]) << 8);
+			material_index >>= bit_pos;
+			material_index &= material_index_mask;
+			*out_indices = uint8(material_index);
+
+			// Go to the next index
+			bit_pos += mNumBitsPerMaterialIndex;
+			in_indices += bit_pos >> 3;
+			bit_pos &= 0b111;
+			++out_indices;
+		}
+	}
+}
+
+bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator)
+{
+	if (inSizeX == 0 || inSizeY == 0)
+		return true;
+
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
+
+	// Remap materials
+	uint material_remap_table_size = uint(inMaterialList != nullptr? inMaterialList->size() : mMaterials.size());
+	uint8 *material_remap_table = (uint8 *)inAllocator.Allocate(material_remap_table_size);
+	if (inMaterialList != nullptr)
+	{
+		// Conservatively reserve more space if the incoming material list is bigger
+		if (inMaterialList->size() > mMaterials.size())
+			mMaterials.reserve(inMaterialList->size());
+
+		// Create a remap table
+		uint8 *remap_entry = material_remap_table;
+		for (const PhysicsMaterial *material : *inMaterialList)
+		{
+			// Try to find it in the existing list
+			PhysicsMaterialList::const_iterator it = std::find(mMaterials.begin(), mMaterials.end(), material);
+			if (it != mMaterials.end())
+			{
+				// Found it, calculate index
+				*remap_entry = uint8(it - mMaterials.begin());
+			}
+			else
+			{
+				// Not found, add it
+				if (mMaterials.size() >= 256)
+				{
+					// We can't have more than 256 materials since we use uint8 as indices
+					inAllocator.Free(material_remap_table, material_remap_table_size);
+					return false;
+				}
+				*remap_entry = uint8(mMaterials.size());
+				mMaterials.push_back(material);
+			}
+			++remap_entry;
+		}
+	}
+	else
+	{
+		// No remapping
+		for (uint i = 0; i < material_remap_table_size; ++i)
+			material_remap_table[i] = uint8(i);
+	}
+
+	if (mMaterials.size() == 1)
+	{
+		// Only 1 material, we don't need to store the material indices
+		return true;
+	}
+
+	// Check if we need to resize the material indices array
+	uint count_min_1 = mSampleCount - 1;
+	uint32 new_bits_per_material_index = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
+	JPH_ASSERT(mNumBitsPerMaterialIndex <= 8 && new_bits_per_material_index <= 8);
+	if (new_bits_per_material_index != mNumBitsPerMaterialIndex)
+	{
+		// Resize the material indices array
+		mMaterialIndices.resize(((Square(count_min_1) * new_bits_per_material_index + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
+
+		// Calculate old and new mask
+		uint16 old_material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+		uint16 new_material_index_mask = uint16((1 << new_bits_per_material_index) - 1);
+
+		// Loop through the array backwards to avoid overwriting data
+		int in_bit_pos = (count_min_1 * count_min_1 - 1) * mNumBitsPerMaterialIndex;
+		const uint8 *in_indices = mMaterialIndices.data() + (in_bit_pos >> 3);
+		in_bit_pos &= 0b111;
+		int out_bit_pos = (count_min_1 * count_min_1 - 1) * new_bits_per_material_index;
+		uint8 *out_indices = mMaterialIndices.data() + (out_bit_pos >> 3);
+		out_bit_pos &= 0b111;
+
+		while (out_indices >= mMaterialIndices.data())
+		{
+			// Read the material index
+			uint16 material_index = uint16(in_indices[0]) + uint16(uint16(in_indices[1]) << 8);
+			material_index >>= in_bit_pos;
+			material_index &= old_material_index_mask;
+
+			// Write the material index
+			uint16 output_data = uint16(out_indices[0]) + uint16(uint16(out_indices[1]) << 8);
+			output_data &= ~(new_material_index_mask << out_bit_pos);
+			output_data |= material_index << out_bit_pos;
+			out_indices[0] = uint8(output_data);
+			out_indices[1] = uint8(output_data >> 8);
+
+			// Go to the previous index
+			in_bit_pos -= int(mNumBitsPerMaterialIndex);
+			in_indices += in_bit_pos >> 3;
+			in_bit_pos &= 0b111;
+			out_bit_pos -= int(new_bits_per_material_index);
+			out_indices += out_bit_pos >> 3;
+			out_bit_pos &= 0b111;
+		}
+
+		// Accept the new bits per material index
+		mNumBitsPerMaterialIndex = new_bits_per_material_index;
+	}
+
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+	for (uint y = 0; y < inSizeY; ++y)
+	{
+		// Calculate input position
+		const uint8 *in_indices = inMaterials + y * inMaterialsStride;
+
+		// Calculate output position
+		uint bit_pos = (inX + (inY + y) * count_min_1) * mNumBitsPerMaterialIndex;
+		uint8 *out_indices = mMaterialIndices.data() + (bit_pos >> 3);
+		bit_pos &= 0b111;
+
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			// Update material
+			uint16 output_data = uint16(out_indices[0]) + uint16(uint16(out_indices[1]) << 8);
+			output_data &= ~(material_index_mask << bit_pos);
+			output_data |= material_remap_table[*in_indices] << bit_pos;
+			out_indices[0] = uint8(output_data);
+			out_indices[1] = uint8(output_data >> 8);
+
+			// Go to the next index
+			in_indices++;
+			bit_pos += mNumBitsPerMaterialIndex;
+			out_indices += bit_pos >> 3;
+			bit_pos &= 0b111;
+		}
+	}
+
+	// Free the remapping table
+	inAllocator.Free(material_remap_table, material_remap_table_size);
+	return true;
 }
 
 MassProperties HeightFieldShape::GetMassProperties() const
@@ -1794,7 +1984,7 @@ private:
 };
 
 template <class Visitor>
-JPH_INLINE void HeightFieldShape::WalkHeightField(Visitor &ioVisitor) const
+void HeightFieldShape::WalkHeightField(Visitor &ioVisitor) const
 {
 	DecodingContext ctx(this);
 	ctx.WalkHeightField(ioVisitor);
@@ -1940,9 +2130,50 @@ void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &in
 	// A height field doesn't have volume, so we can't test insideness
 }
 
-void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
-	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, inScale, ioVertices, inNumVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+	JPH_PROFILE_FUNCTION();
+
+	struct Visitor : public CollideSoftBodyVerticesVsTriangles
+	{
+		using CollideSoftBodyVerticesVsTriangles::CollideSoftBodyVerticesVsTriangles;
+
+		JPH_INLINE bool	ShouldAbort() const
+		{
+			return false;
+		}
+
+		JPH_INLINE bool	ShouldVisitRangeBlock([[maybe_unused]] int inStackTop) const
+		{
+			return mDistanceStack[inStackTop] < mClosestDistanceSq;
+		}
+
+		JPH_INLINE int	VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
+		{
+			// Get distance to vertex
+			Vec4 dist_sq = AABox4DistanceSqToPoint(mLocalPosition, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
+
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			return SortReverseAndStore(dist_sq, mClosestDistanceSq, ioProperties, &mDistanceStack[inStackTop]);
+		}
+
+		JPH_INLINE void	VisitTriangle([[maybe_unused]] uint inX, [[maybe_unused]] uint inY, [[maybe_unused]] uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
+		{
+			ProcessTriangle(inV0, inV1, inV2);
+		}
+
+		float			mDistanceStack[cStackSize];
+	};
+
+	Visitor visitor(inCenterOfMassTransform, inScale);
+
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
+		{
+			visitor.StartVertex(*v);
+			WalkHeightField(visitor);
+			visitor.FinishVertex(*v, inCollidingShapeIndex);
+		}
 }
 
 void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)

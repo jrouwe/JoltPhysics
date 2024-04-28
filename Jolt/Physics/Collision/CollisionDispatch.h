@@ -39,7 +39,7 @@ public:
 			sCollideShape[(int)inShape1->GetSubType()][(int)inShape2->GetSubType()](inShape1, inShape2, inScale1, inScale2, inCenterOfMassTransform1, inCenterOfMassTransform2, inSubShapeIDCreator1, inSubShapeIDCreator2, inCollideShapeSettings, ioCollector, inShapeFilter);
 	}
 
-	/// Cast a shape againt this shape, passes any hits found to ioCollector.
+	/// Cast a shape against this shape, passes any hits found to ioCollector.
 	/// Note: This version takes the shape cast in local space relative to the center of mass of inShape, take a look at sCastShapeVsShapeWorldSpace if you have a shape cast in world space.
 	/// @param inShapeCastLocal The shape to cast against the other shape and its start and direction.
 	/// @param inShapeCastSettings Settings for performing the cast

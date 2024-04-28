@@ -42,7 +42,7 @@ DVec3::DVec3(double inX, double inY, double inZ)
 	mValue = _mm256_set_pd(inZ, inZ, inY, inX); // Assure Z and W are the same
 #elif defined(JPH_USE_SSE)
 	mValue.mLow = _mm_set_pd(inY, inX);
-	mValue.mHigh = _mm_set_pd1(inZ);
+	mValue.mHigh = _mm_set1_pd(inZ);
 #elif defined(JPH_USE_NEON)
 	mValue.val[0] = vcombine_f64(vcreate_f64(*reinterpret_cast<uint64 *>(&inX)), vcreate_f64(*reinterpret_cast<uint64 *>(&inY)));
 	mValue.val[1] = vdupq_n_f64(inZ);
@@ -66,7 +66,7 @@ DVec3::DVec3(const Double3 &inV)
 	mValue = _mm256_blend_pd(xy, z, 0b1100); // Assure Z and W are the same
 #elif defined(JPH_USE_SSE)
 	mValue.mLow = _mm_loadu_pd(&inV.x);
-	mValue.mHigh = _mm_set_pd1(inV.z);
+	mValue.mHigh = _mm_set1_pd(inV.z);
 #elif defined(JPH_USE_NEON)
 	mValue.val[0] = vld1q_f64(&inV.x);
 	mValue.val[1] = vdupq_n_f64(inV.z);

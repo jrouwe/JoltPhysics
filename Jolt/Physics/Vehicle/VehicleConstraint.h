@@ -33,7 +33,7 @@ public:
 	float						mMaxPitchRollAngle = JPH_PI;				///< Defines the maximum pitch/roll angle (rad), can be used to avoid the car from getting upside down. The vehicle up direction will stay within a cone centered around the up axis with half top angle mMaxPitchRollAngle, set to pi to turn off.
 	Array<Ref<WheelSettings>>	mWheels;									///< List of wheels and their properties
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< List of anti rollbars and their properties
-	Ref<VehicleControllerSettings> mController;								///< Defines how the vehicle can accelerate / decellerate
+	Ref<VehicleControllerSettings> mController;								///< Defines how the vehicle can accelerate / decelerate
 
 protected:
 	/// This function should not be called directly, it is used by sRestoreFromBinaryState.
@@ -79,12 +79,13 @@ public:
 	void						SetVehicleCollisionTester(const VehicleCollisionTester *inTester) { mVehicleCollisionTester = inTester; }
 
 	/// Callback function to combine the friction of a tire with the friction of the body it is colliding with.
-	using CombineFunction = float (*)(float inTireFriction, const Body &inBody2, const SubShapeID &inSubShapeID2);
+	/// On input ioLongitudinalFriction and ioLateralFriction contain the friction of the tire, on output they should contain the combined friction with inBody2.
+	using CombineFunction = function<void(uint inWheelIndex, float &ioLongitudinalFriction, float &ioLateralFriction, const Body &inBody2, const SubShapeID &inSubShapeID2)>;
 
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
-	void						SetCombineFriction(CombineFunction inCombineFriction) { mCombineFriction = inCombineFriction; }
-	CombineFunction				GetCombineFriction() const					{ return mCombineFriction; }
+	void						SetCombineFriction(const CombineFunction &inCombineFriction) { mCombineFriction = inCombineFriction; }
+	const CombineFunction &		GetCombineFriction() const					{ return mCombineFriction; }
 
 	/// Callback function to notify of current stage in PhysicsStepListener::OnStep.
 	using StepCallback = function<void(VehicleConstraint &inVehicle, float inDeltaTime, PhysicsSystem &inPhysicsSystem)>;
@@ -119,10 +120,10 @@ public:
 	/// Access to the vehicle body
 	Body *						GetVehicleBody() const						{ return mBody; }
 
-	/// Access to the vehicle controller interface (determines acceleration / decelleration)
+	/// Access to the vehicle controller interface (determines acceleration / deceleration)
 	const VehicleController *	GetController() const						{ return mController; }
 
-	/// Access to the vehicle controller interface (determines acceleration / decelleration)
+	/// Access to the vehicle controller interface (determines acceleration / deceleration)
 	VehicleController *			GetController()								{ return mController; }
 
 	/// Get the state of the wheels
@@ -135,7 +136,7 @@ public:
 	Wheel *						GetWheel(uint inIdx)						{ return mWheels[inIdx]; }
 	const Wheel *				GetWheel(uint inIdx) const					{ return mWheels[inIdx]; }
 
-	/// Get the basis vectors for the wheel in local space to the vehicle body (note: basis does not rotate when the wheel rotates arounds its axis)
+	/// Get the basis vectors for the wheel in local space to the vehicle body (note: basis does not rotate when the wheel rotates around its axis)
 	/// @param inWheel Wheel to fetch basis for
 	/// @param outForward Forward vector for the wheel
 	/// @param outUp Up vector for the wheel
@@ -154,10 +155,26 @@ public:
 	/// @param inWheelUp Unit vector that indicates up in model space of the wheel
 	RMat44						GetWheelWorldTransform(uint inWheelIndex, Vec3Arg inWheelRight, Vec3Arg inWheelUp) const;
 
+	/// Number of simulation steps between wheel collision tests when the vehicle is active. Default is 1. 0 = never, 1 = every step, 2 = every other step, etc.
+	/// Note that if a vehicle has multiple wheels and the number of steps > 1, the wheels will be tested in a round robin fashion.
+	/// If there are multiple vehicles, the tests will be spread out based on the BodyID of the vehicle.
+	/// If you set this to test less than every step, you may see simulation artifacts. This setting can be used to reduce the cost of simulating vehicles in the distance.
+	void						SetNumStepsBetweenCollisionTestActive(uint inSteps) { mNumStepsBetweenCollisionTestActive = inSteps; }
+	uint						GetNumStepsBetweenCollisionTestActive() const { return mNumStepsBetweenCollisionTestActive; }
+
+	/// Number of simulation steps between wheel collision tests when the vehicle is inactive. Default is 1. 0 = never, 1 = every step, 2 = every other step, etc.
+	/// Note that if a vehicle has multiple wheels and the number of steps > 1, the wheels will be tested in a round robin fashion.
+	/// If there are multiple vehicles, the tests will be spread out based on the BodyID of the vehicle.
+	/// This number can be lower than the number of steps when the vehicle is active as the only purpose of this test is
+	/// to allow the vehicle to wake up in response to bodies moving into the wheels but not touching the body of the vehicle.
+	void						SetNumStepsBetweenCollisionTestInactive(uint inSteps) { mNumStepsBetweenCollisionTestInactive = inSteps; }
+	uint						GetNumStepsBetweenCollisionTestInactive() const { return mNumStepsBetweenCollisionTestInactive; }
+
 	// Generic interface of a constraint
 	virtual bool				IsActive() const override					{ return mIsActive && Constraint::IsActive(); }
 	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override { /* Do nothing */ }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
+	virtual void				ResetWarmStart() override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
 	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;
@@ -181,15 +198,18 @@ private:
 	// Calculate the constraint properties for mPitchRollPart
 	void						CalculatePitchRollConstraintProperties(RMat44Arg inBodyTransform);
 
-	// Simluation information
+	// Simulation information
 	Body *						mBody;										///< Body of the vehicle
 	Vec3						mForward;									///< Local space forward vector for the vehicle
 	Vec3						mUp;										///< Local space up vector for the vehicle
 	Vec3						mWorldUp;									///< Vector indicating the world space up direction (used to limit vehicle pitch/roll)
 	Wheels						mWheels;									///< Wheel states of the vehicle
 	Array<VehicleAntiRollBar>	mAntiRollBars;								///< Anti rollbars of the vehicle
-	VehicleController *			mController;								///< Controls the acceleration / declerration of the vehicle
+	VehicleController *			mController;								///< Controls the acceleration / deceleration of the vehicle
 	bool						mIsActive = false;							///< If this constraint is active
+	uint						mNumStepsBetweenCollisionTestActive = 1;	///< Number of simulation steps between wheel collision tests when the vehicle is active
+	uint						mNumStepsBetweenCollisionTestInactive = 1;	///< Number of simulation steps between wheel collision tests when the vehicle is inactive
+	uint						mCurrentStep = 0;							///< Current step number, used to determine when to test a wheel
 
 	// Prevent vehicle from toppling over
 	float						mCosMaxPitchRollAngle;						///< Cos of the max pitch/roll angle
@@ -199,7 +219,13 @@ private:
 
 	// Interfaces
 	RefConst<VehicleCollisionTester> mVehicleCollisionTester;				///< Class that performs testing of collision for the wheels
-	CombineFunction				mCombineFriction = [](float inTireFriction, const Body &inBody2, const SubShapeID &) { return sqrt(inTireFriction * inBody2.GetFriction()); };
+	CombineFunction				mCombineFriction = [](uint, float &ioLongitudinalFriction, float &ioLateralFriction, const Body &inBody2, const SubShapeID &)
+	{
+		float body_friction = inBody2.GetFriction();
+
+		ioLongitudinalFriction = sqrt(ioLongitudinalFriction * body_friction);
+		ioLateralFriction = sqrt(ioLateralFriction * body_friction);
+	};
 
 	// Callbacks
 	StepCallback				mPreStepCallback;

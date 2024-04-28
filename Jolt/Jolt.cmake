@@ -203,9 +203,13 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseBruteForce.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseBruteForce.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseLayer.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseLayerInterfaceMask.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseLayerInterfaceTable.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseQuadTree.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseQuadTree.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/BroadPhaseQuery.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterTable.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/QuadTree.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/BroadPhase/QuadTree.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CastConvexVsTriangles.cpp
@@ -218,6 +222,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideConvexVsTriangles.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollidePointResult.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSoftBodyVerticesVsTriangles.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSphereVsTriangles.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollideSphereVsTriangles.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/CollisionCollector.h
@@ -233,6 +238,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilter.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilterTable.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/GroupFilterTable.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/InternalEdgeRemovingCollector.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ManifoldBetweenTwoFaces.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ManifoldBetweenTwoFaces.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseQuery.cpp
@@ -240,6 +246,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseStats.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/NarrowPhaseStats.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/ObjectLayer.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/ObjectLayerPairFilterMask.h
+	${JOLT_PHYSICS_ROOT}/Physics/Collision/ObjectLayerPairFilterTable.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/PhysicsMaterial.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/PhysicsMaterial.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/PhysicsMaterialSimple.cpp
@@ -293,6 +301,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/SortReverseAndStore.h
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/TransformedShape.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Collision/TransformedShape.h
+	${JOLT_PHYSICS_ROOT}/Physics/Constraints/CalculateSolverSteps.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConeConstraint.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/ConeConstraint.h
 	${JOLT_PHYSICS_ROOT}/Physics/Constraints/Constraint.cpp
@@ -365,8 +374,10 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Physics/PhysicsUpdateContext.h
 	${JOLT_PHYSICS_ROOT}/Physics/Ragdoll/Ragdoll.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/Ragdoll/Ragdoll.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyContactListener.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyCreationSettings.h
+	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyManifold.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.h
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyMotionProperties.cpp
 	${JOLT_PHYSICS_ROOT}/Physics/SoftBody/SoftBodyShape.cpp
@@ -409,6 +420,8 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererPlayback.h
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.cpp
 	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererRecorder.h
+	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.cpp
+	${JOLT_PHYSICS_ROOT}/Renderer/DebugRendererSimple.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.cpp
 	${JOLT_PHYSICS_ROOT}/Skeleton/SkeletalAnimation.h
 	${JOLT_PHYSICS_ROOT}/Skeleton/Skeleton.cpp
@@ -476,17 +489,22 @@ endif()
 
 target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
 target_precompile_headers(Jolt PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Distribution>:NDEBUG>")
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseASAN>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DISABLE_TEMP_ALLOCATOR;JPH_DISABLE_CUSTOM_ALLOCATOR;JPH_DEBUG_RENDERER>")
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseUBSAN>:NDEBUG;JPH_PROFILE_ENABLED;JPH_DEBUG_RENDERER>")
-target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseCoverage>:NDEBUG>")
+
+# Set the debug/non-debug build flags
+target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:_DEBUG>")
+target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release,Distribution,ReleaseASAN,ReleaseUBSAN,ReleaseCoverage>:NDEBUG>")
+
+# ASAN should use the default allocators
+target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:ReleaseASAN>:JPH_DISABLE_TEMP_ALLOCATOR;JPH_DISABLE_CUSTOM_ALLOCATOR>")
 
 # Setting floating point exceptions
 if (FLOATING_POINT_EXCEPTIONS_ENABLED AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>")
-	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Release>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>")
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release>:JPH_FLOATING_POINT_EXCEPTIONS_ENABLED>")
+endif()
+
+# Setting the disable custom allocator flag
+if (DISABLE_CUSTOM_ALLOCATOR)
+	target_compile_definitions(Jolt PUBLIC JPH_DISABLE_CUSTOM_ALLOCATOR)
 endif()
 
 # Setting enable asserts flag
@@ -517,6 +535,20 @@ endif()
 # Setting to periodically trace narrowphase stats to help determine which collision queries could be optimized
 if (TRACK_NARROWPHASE_STATS)
 	target_compile_definitions(Jolt PUBLIC JPH_TRACK_NARROWPHASE_STATS)
+endif()
+
+# Enable the debug renderer
+if (DEBUG_RENDERER_IN_DISTRIBUTION)
+	target_compile_definitions(Jolt PUBLIC "JPH_DEBUG_RENDERER")
+elseif (DEBUG_RENDERER_IN_DEBUG_AND_RELEASE)
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN>:JPH_DEBUG_RENDERER>")
+endif()
+
+# Enable the profiler
+if (PROFILER_IN_DISTRIBUTION)
+	target_compile_definitions(Jolt PUBLIC "JPH_PROFILE_ENABLED")
+elseif (PROFILER_IN_DEBUG_AND_RELEASE)
+	target_compile_definitions(Jolt PUBLIC "$<$<CONFIG:Debug,Release,ReleaseASAN,ReleaseUBSAN>:JPH_PROFILE_ENABLED>")
 endif()
 
 # Emit the instruction set definitions to ensure that child projects use the same settings even if they override the used instruction sets (a mismatch causes link errors)
@@ -594,6 +626,14 @@ else()
 		if (USE_FMADD AND NOT CROSS_PLATFORM_DETERMINISTIC)
 			target_compile_options(Jolt PUBLIC -mfma)
 		endif()
+
+		# On 32-bit builds we need to default to using SSE instructions, the x87 FPU instructions have higher intermediate precision
+		# which will cause problems in the collision detection code (the effect is similar to leaving FMA on, search for
+		# JPH_PRECISE_MATH_ON for the locations where this is a problem).
+		if (NOT MSVC)
+			target_compile_options(Jolt PUBLIC -mfpmath=sse)
+		endif()
+
 		EMIT_X86_INSTRUCTION_SET_DEFINITIONS()
 	endif()
 endif()

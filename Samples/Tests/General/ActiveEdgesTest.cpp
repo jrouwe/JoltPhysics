@@ -21,7 +21,7 @@ void ActiveEdgesTest::Initialize()
 	const float cWidth = 5.0f;
 	const float cLength = 10.0f;
 
-	// Setings for a frictionless box
+	// Settings for a frictionless box
 	Ref<BoxShape> box_shape = new BoxShape(Vec3(1.0f, 1.0f, 1.0f), cDefaultConvexRadius);
 	BodyCreationSettings box_settings(box_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Dynamic, Layers::MOVING);
 	box_settings.mFriction = 0.0f;
@@ -92,6 +92,7 @@ void ActiveEdgesTest::Initialize()
 
 	// Mesh
 	BodyCreationSettings mesh_settings(&mesh_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING);
+	// Instead of setting mActiveEdgeCosThresholdAngle you can also set: mesh_settings.mEnhancedInternalEdgeRemoval = true
 	mesh_settings.mFriction = 0.0f;
 	Body &mesh = *mBodyInterface->CreateBody(mesh_settings);
 	mBodyInterface->AddBody(mesh.GetID(), EActivation::DontActivate);

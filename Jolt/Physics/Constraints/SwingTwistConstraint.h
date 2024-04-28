@@ -25,7 +25,7 @@ public:
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 
-	/// Create an an instance of this constraint
+	/// Create an instance of this constraint
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
 	/// This determines in which space the constraint is setup, all properties below should be in the specified space
@@ -41,13 +41,16 @@ public:
 	Vec3						mTwistAxis2 = Vec3::sAxisX();
 	Vec3						mPlaneAxis2 = Vec3::sAxisY();
 
+	/// The type of swing constraint that we want to use.
+	ESwingType					mSwingType = ESwingType::Cone;
+
 	///@name Swing rotation limits
-	float						mNormalHalfConeAngle = 0.0f;								///< See image. Angle in radians.
-	float						mPlaneHalfConeAngle = 0.0f;									///< See image. Angle in radians.
+	float						mNormalHalfConeAngle = 0.0f;								///< See image at Detailed Description. Angle in radians.
+	float						mPlaneHalfConeAngle = 0.0f;									///< See image at Detailed Description. Angle in radians.
 
 	///@name Twist rotation limits
-	float						mTwistMinAngle = 0.0f;										///< See image. Angle in radians. Rotation will be limited between [mLimitsMin, mLimitsMax] where mLimitsMin \f$\in [-\pi, 0]\f$ and mLimitsMax \f$\in [0, \pi]\f$
-	float						mTwistMaxAngle = 0.0f;										///< See image. Angle in radians.
+	float						mTwistMinAngle = 0.0f;										///< See image at Detailed Description. Angle in radians. Should be \f$\in [-\pi, \pi]\f$.
+	float						mTwistMaxAngle = 0.0f;										///< See image at Detailed Description. Angle in radians. Should be \f$\in [-\pi, \pi]\f$.
 
 	///@name Friction
 	float						mMaxFrictionTorque = 0.0f;									///< Maximum amount of torque (N m) to apply as friction when the constraint is not powered by a motor
@@ -76,6 +79,7 @@ public:
 	virtual EConstraintSubType	GetSubType() const override									{ return EConstraintSubType::SwingTwist; }
 	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override;
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
+	virtual void				ResetWarmStart() override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
 	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;

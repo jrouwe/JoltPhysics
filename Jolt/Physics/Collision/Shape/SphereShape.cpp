@@ -132,6 +132,7 @@ const ConvexShape::Support *SphereShape::GetSupportFunction(ESupportMode inMode,
 		return new (&inBuffer) SphereWithConvex(scaled_radius);
 
 	case ESupportMode::ExcludeConvexRadius:
+	case ESupportMode::Default:
 		return new (&inBuffer) SphereNoConvex(scaled_radius);
 	}
 
@@ -306,7 +307,7 @@ void SphereShape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedSh
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(ScaleHelpers::MakeUniformScale(scale.Abs()));
 	ioCollector.AddHit(ts);
 }

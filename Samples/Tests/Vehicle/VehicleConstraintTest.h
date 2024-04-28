@@ -18,16 +18,19 @@ public:
 
 	// See: Test
 	virtual void				Initialize() override;
+	virtual void				ProcessInput(const ProcessInputParams &inParams) override;
 	virtual void				PrePhysicsUpdate(const PreUpdateParams &inParams) override;
-	virtual void				SaveState(StateRecorder& inStream) const override;
-	virtual void				RestoreState(StateRecorder& inStream) override;
+	virtual void				SaveInputState(StateRecorder &inStream) const override;
+	virtual void				RestoreInputState(StateRecorder &inStream) override;
 
 	virtual void				GetInitialCamera(CameraState &ioState) const override;
-	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override { return mCameraPivot; }
 
 	virtual void				CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
+	void						UpdateCameraPivot();
+
 	static inline float			sInitialRollAngle = 0;
 	static inline float			sMaxRollAngle = DegreesToRadians(60.0f);
 	static inline float			sMaxSteeringAngle = DegreesToRadians(30.0f);
@@ -61,5 +64,12 @@ private:
 	Body *						mCarBody;									///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint
 	Ref<VehicleCollisionTester>	mTesters[3];								///< Collision testers for the wheel
+	RMat44						mCameraPivot = RMat44::sIdentity();			///< The camera pivot, recorded before the physics update to align with the drawn world
+
+	// Player input
+	float						mForward = 0.0f;
 	float						mPreviousForward = 1.0f;					///< Keeps track of last car direction so we know when to brake and when to accelerate
+	float						mRight = 0.0f;
+	float						mBrake = 0.0f;
+	float						mHandBrake = 0.0f;
 };

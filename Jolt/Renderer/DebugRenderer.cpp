@@ -797,7 +797,63 @@ void DebugRenderer::DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpe
 	}
 }
 
-void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+DebugRenderer::Geometry *DebugRenderer::CreateSwingLimitGeometry(int inNumSegments, const Vec3 *inVertices)
+{
+	// Allocate space for vertices
+	int num_vertices = 2 * inNumSegments;
+	Vertex *vertices_start = (Vertex *)JPH_STACK_ALLOC(num_vertices * sizeof(Vertex));
+	Vertex *vertices = vertices_start;
+
+	for (int i = 0; i < inNumSegments; ++i)
+	{
+		// Get output vertices
+		Vertex &top = *(vertices++);
+		Vertex &bottom = *(vertices++);
+
+		// Get local position
+		const Vec3 &pos = inVertices[i];
+
+		// Get local normal
+		const Vec3 &prev_pos = inVertices[(i + inNumSegments - 1) % inNumSegments];
+		const Vec3 &next_pos = inVertices[(i + 1) % inNumSegments];
+		Vec3 normal = 0.5f * (next_pos.Cross(pos).NormalizedOr(Vec3::sZero()) + pos.Cross(prev_pos).NormalizedOr(Vec3::sZero()));
+
+		// Store top vertex
+		top.mPosition = { 0, 0, 0 };
+		normal.StoreFloat3(&top.mNormal);
+		top.mColor = Color::sWhite;
+		top.mUV = { 0, 0 };
+
+		// Store bottom vertex
+		pos.StoreFloat3(&bottom.mPosition);
+		normal.StoreFloat3(&bottom.mNormal);
+		bottom.mColor = Color::sWhite;
+		bottom.mUV = { 0, 0 };
+	}
+
+	// Allocate space for indices
+	int num_indices = 3 * inNumSegments;
+	uint32 *indices_start = (uint32 *)JPH_STACK_ALLOC(num_indices * sizeof(uint32));
+	uint32 *indices = indices_start;
+
+	// Calculate indices
+	for (int i = 0; i < inNumSegments; ++i)
+	{
+		int first = 2 * i;
+		int second = (first + 3) % num_vertices;
+		int third = first + 1;
+
+		// Triangle
+		*indices++ = first;
+		*indices++ = second;
+		*indices++ = third;
+	}
+
+	// Convert to triangle batch
+	return new Geometry(CreateTriangleBatch(vertices_start, num_vertices, indices_start, num_indices), sCalculateBounds(vertices_start, num_vertices));
+}
+
+void DebugRenderer::DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -807,8 +863,14 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 	JPH_ASSERT(inEdgeLength > 0.0f);
 
 	// Check cache
-	SwingLimits limits { inSwingYHalfAngle, inSwingZHalfAngle };
-	GeometryRef &geometry = mSwingLimits[limits];
+	SwingConeLimits limits { inSwingYHalfAngle, inSwingZHalfAngle };
+	GeometryRef &geometry = mSwingConeLimits[limits];
+	if (geometry == nullptr)
+	{
+		SwingConeBatches::iterator it = mPrevSwingConeLimits.find(limits);
+		if (it != mPrevSwingConeLimits.end())
+			geometry = it->second;
+	}
 	if (geometry == nullptr)
 	{
 		// Number of segments to draw the cone with
@@ -826,11 +888,6 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 		// Calculate squared values
 		float e1_sq = Square(e1);
 		float e2_sq = Square(e2);
-
-		// Allocate space for vertices
-		int num_vertices = 2 * num_segments;
-		Vertex *vertices_start = (Vertex *)JPH_STACK_ALLOC(num_vertices * sizeof(Vertex));
-		Vertex *vertices = vertices_start;
 
 		// Calculate local space vertices for shape
 		Vec3 ls_vertices[num_segments];
@@ -874,58 +931,62 @@ void DebugRenderer::DrawSwingLimits(RMat44Arg inMatrix, float inSwingYHalfAngle,
 				ls_vertices[tgt_vertex++] = q.RotateAxisX();
 			}
 
-		for (int i = 0; i < num_segments; ++i)
-		{
-			// Get output vertices
-			Vertex &top = *(vertices++);
-			Vertex &bottom = *(vertices++);
-
-			// Get local position
-			Vec3 &pos = ls_vertices[i];
-
-			// Get local normal
-			Vec3 &prev_pos = ls_vertices[(i + num_segments - 1) % num_segments];
-			Vec3 &next_pos = ls_vertices[(i + 1) % num_segments];
-			Vec3 normal = 0.5f * (next_pos.Cross(pos).Normalized() + pos.Cross(prev_pos).Normalized());
-
-			// Store top vertex
-			top.mPosition = { 0, 0, 0 };
-			normal.StoreFloat3(&top.mNormal);
-			top.mColor = Color::sWhite;
-			top.mUV = { 0, 0 };
-
-			// Store bottom vertex
-			pos.StoreFloat3(&bottom.mPosition);
-			normal.StoreFloat3(&bottom.mNormal);
-			bottom.mColor = Color::sWhite;
-			bottom.mUV = { 0, 0 };
-		}
-
-		// Allocate space for indices
-		int num_indices = 3 * num_segments;
-		uint32 *indices_start = (uint32 *)JPH_STACK_ALLOC(num_indices * sizeof(uint32));
-		uint32 *indices = indices_start;
-
-		// Calculate indices
-		for (int i = 0; i < num_segments; ++i)
-		{
-			int first = 2 * i;
-			int second = (first + 3) % num_vertices;
-			int third = first + 1;
-
-			// Triangle
-			*indices++ = first;
-			*indices++ = second;
-			*indices++ = third;
-		}
-
-		// Convert to triangle batch
-		geometry = new Geometry(CreateTriangleBatch(vertices_start, num_vertices, indices_start, num_indices), sCalculateBounds(vertices_start, num_vertices));
+		geometry = CreateSwingLimitGeometry(num_segments, ls_vertices);
 	}
 
 	DrawGeometry(inMatrix * Mat44::sScale(inEdgeLength), inColor, geometry, ECullMode::Off, inCastShadow, inDrawMode);
 }
 
+void DebugRenderer::DrawSwingPyramidLimits(RMat44Arg inMatrix, float inMinSwingYAngle, float inMaxSwingYAngle, float inMinSwingZAngle, float inMaxSwingZAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
+{
+	JPH_PROFILE_FUNCTION();
+
+	// Assert sane input
+	JPH_ASSERT(inMinSwingYAngle <= inMaxSwingYAngle && inMinSwingZAngle <= inMaxSwingZAngle);
+	JPH_ASSERT(inEdgeLength > 0.0f);
+
+	// Check cache
+	SwingPyramidLimits limits { inMinSwingYAngle, inMaxSwingYAngle, inMinSwingZAngle, inMaxSwingZAngle };
+	GeometryRef &geometry = mSwingPyramidLimits[limits];
+	if (geometry == nullptr)
+	{
+		SwingPyramidBatches::iterator it = mPrevSwingPyramidLimits.find(limits);
+		if (it != mPrevSwingPyramidLimits.end())
+			geometry = it->second;
+	}
+	if (geometry == nullptr)
+	{
+		// Number of segments to draw the cone with
+		const int num_segments = 64;
+		int quarter_num_segments = num_segments / 4;
+
+		// Note that this is q = Quat::sRotation(Vec3::sAxisZ(), z) * Quat::sRotation(Vec3::sAxisY(), y) with q.x set to zero so we don't introduce twist
+		// This matches the calculation in SwingTwistConstraintPart::ClampSwingTwist
+		auto get_axis = [](float inY, float inZ) {
+			float hy = 0.5f * inY;
+			float hz = 0.5f * inZ;
+			float cos_hy = Cos(hy);
+			float cos_hz = Cos(hz);
+			return Quat(0, Sin(hy) * cos_hz, cos_hy * Sin(hz), cos_hy * cos_hz).Normalized().RotateAxisX();
+		};
+
+		// Calculate local space vertices for shape
+		Vec3 ls_vertices[num_segments];
+		int tgt_vertex = 0;
+		for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+			ls_vertices[tgt_vertex++] = get_axis(inMinSwingYAngle, inMaxSwingZAngle - (inMaxSwingZAngle - inMinSwingZAngle) * segment_iter / quarter_num_segments);
+		for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+			ls_vertices[tgt_vertex++] = get_axis(inMinSwingYAngle + (inMaxSwingYAngle - inMinSwingYAngle) * segment_iter / quarter_num_segments, inMinSwingZAngle);
+		for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+			ls_vertices[tgt_vertex++] = get_axis(inMaxSwingYAngle, inMinSwingZAngle + (inMaxSwingZAngle - inMinSwingZAngle) * segment_iter / quarter_num_segments);
+		for (int segment_iter = 0; segment_iter < quarter_num_segments; ++segment_iter)
+			ls_vertices[tgt_vertex++] = get_axis(inMaxSwingYAngle - (inMaxSwingYAngle - inMinSwingYAngle) * segment_iter / quarter_num_segments, inMaxSwingZAngle);
+
+		geometry = CreateSwingLimitGeometry(num_segments, ls_vertices);
+	}
+
+	DrawGeometry(inMatrix * Mat44::sScale(inEdgeLength), inColor, geometry, ECullMode::Off, inCastShadow, inDrawMode);
+}
 
 void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
@@ -941,6 +1002,12 @@ void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal,
 	// Pies have a unique batch based on the difference between min and max angle
 	float delta_angle = inMaxAngle - inMinAngle;
 	GeometryRef &geometry = mPieLimits[delta_angle];
+	if (geometry == nullptr)
+	{
+		PieBatces::iterator it = mPrevPieLimits.find(delta_angle);
+		if (it != mPrevPieLimits.end())
+			geometry = it->second;
+	}
 	if (geometry == nullptr)
 	{
 		int num_parts = (int)ceil(64.0f * delta_angle / (2.0f * JPH_PI));
@@ -985,6 +1052,18 @@ void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal,
 	RMat44 matrix = RMat44(Vec4(inRadius * inAxis, 0), Vec4(inRadius * inNormal, 0), Vec4(inRadius * inNormal.Cross(inAxis), 0), inCenter) * Mat44::sRotationY(-inMinAngle);
 
 	DrawGeometry(matrix, inColor, geometry, ECullMode::Off, inCastShadow, inDrawMode);
+}
+
+void DebugRenderer::NextFrame()
+{
+	mPrevSwingConeLimits.clear();
+	std::swap(mSwingConeLimits, mPrevSwingConeLimits);
+
+	mPrevSwingPyramidLimits.clear();
+	std::swap(mSwingPyramidLimits, mPrevSwingPyramidLimits);
+
+	mPrevPieLimits.clear();
+	std::swap(mPieLimits, mPrevPieLimits);
 }
 
 JPH_NAMESPACE_END

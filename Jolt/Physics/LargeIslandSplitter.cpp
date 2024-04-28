@@ -5,6 +5,7 @@
 
 #include <Jolt/Physics/LargeIslandSplitter.h>
 #include <Jolt/Physics/IslandBuilder.h>
+#include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/Constraint.h>
 #include <Jolt/Physics/Constraints/ContactConstraintManager.h>
 #include <Jolt/Physics/Body/BodyManager.h>
@@ -174,7 +175,7 @@ void LargeIslandSplitter::Splits::MarkBatchProcessed(uint inNumProcessed, bool &
 LargeIslandSplitter::~LargeIslandSplitter()
 {
 	JPH_ASSERT(mSplitMasks == nullptr);
-	JPH_ASSERT(mContactAndConstaintsSplitIdx == nullptr);
+	JPH_ASSERT(mContactAndConstraintsSplitIdx == nullptr);
 	JPH_ASSERT(mContactAndConstraintIndices == nullptr);
 	JPH_ASSERT(mSplitIslands == nullptr);
 }
@@ -216,7 +217,7 @@ void LargeIslandSplitter::Prepare(const IslandBuilder &inIslandBuilder, uint32 i
 
 		// Allocate contact and constraint buffer
 		uint contact_and_constraint_indices_size = mContactAndConstraintsSize * sizeof(uint32);
-		mContactAndConstaintsSplitIdx = (uint32 *)inTempAllocator->Allocate(contact_and_constraint_indices_size);
+		mContactAndConstraintsSplitIdx = (uint32 *)inTempAllocator->Allocate(contact_and_constraint_indices_size);
 		mContactAndConstraintIndices = (uint32 *)inTempAllocator->Allocate(contact_and_constraint_indices_size);
 
 		// Allocate island split buffer
@@ -279,7 +280,7 @@ uint LargeIslandSplitter::AssignToNonParallelSplit(const Body *inBody)
 	return cNonParallelSplitIdx;
 }
 
-bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, int inNumVelocitySteps, int inNumPositionSteps)
+bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder &inIslandBuilder, const BodyManager &inBodyManager, const ContactConstraintManager &inContactManager, Constraint **inActiveConstraints, CalculateSolverSteps &ioStepsCalculator)
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -293,7 +294,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	inIslandBuilder.GetConstraintsInIsland(inIslandIndex, constraints_start, constraints_end);
 	uint num_constraints_in_island = uint(constraints_end - constraints_start);
 
-	// Check if it exceeds the treshold
+	// Check if it exceeds the threshold
 	uint island_size = num_contacts_in_island + num_constraints_in_island;
 	if (island_size < cLargeIslandTreshold)
 		return false;
@@ -313,7 +314,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 
 	// Get space to store split indices
 	uint offset = mContactAndConstraintsNextFree.fetch_add(island_size, memory_order_relaxed);
-	uint32 *contact_split_idx = mContactAndConstaintsSplitIdx + offset;
+	uint32 *contact_split_idx = mContactAndConstraintsSplitIdx + offset;
 	uint32 *constraint_split_idx = contact_split_idx + num_contacts_in_island;
 
 	// Assign the contacts to a split
@@ -325,6 +326,11 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		uint split = AssignSplit(body1, body2);
 		num_contacts_in_split[split]++;
 		*cur_contact_split_idx++ = split;
+
+		if (body1->IsDynamic())
+			ioStepsCalculator(body1->GetMotionPropertiesUnchecked());
+		if (body2->IsDynamic())
+			ioStepsCalculator(body2->GetMotionPropertiesUnchecked());
 	}
 
 	// Assign the constraints to a split
@@ -333,11 +339,13 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	{
 		const Constraint *constraint = inActiveConstraints[*c];
 		uint split = constraint->BuildIslandSplits(*this);
-		inNumVelocitySteps = max(inNumVelocitySteps, constraint->GetNumVelocityStepsOverride());
-		inNumPositionSteps = max(inNumPositionSteps, constraint->GetNumPositionStepsOverride());
 		num_constraints_in_split[split]++;
 		*cur_constraint_split_idx++ = split;
+
+		ioStepsCalculator(constraint);
 	}
+
+	ioStepsCalculator.Finalize();
 
 	// Start with 0 splits
 	uint split_remap_table[cNumSplits];
@@ -346,9 +354,9 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 	Splits &splits = mSplitIslands[new_split_idx];
 	splits.mIslandIndex = inIslandIndex;
 	splits.mNumSplits = 0;
-	splits.mNumIterations = inNumVelocitySteps + 1; // Iteration 0 is used for warm starting
-	splits.mNumVelocitySteps = inNumVelocitySteps;
-	splits.mNumPositionSteps = inNumPositionSteps;
+	splits.mNumIterations = ioStepsCalculator.GetNumVelocitySteps() + 1; // Iteration 0 is used for warm starting
+	splits.mNumVelocitySteps = ioStepsCalculator.GetNumVelocitySteps();
+	splits.mNumPositionSteps = ioStepsCalculator.GetNumPositionSteps();
 	splits.mItemsProcessed.store(0, memory_order_release);
 
 	// Allocate space to store the sorted constraint and contact indices per split
@@ -439,7 +447,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 		JPH_ASSERT(constraint_buffer_cur[s] == mContactAndConstraintIndices + split.mConstraintBufferEnd);
 	}
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	// Validate that the splits are indeed not touching the same body
 	for (uint s = 0; s < splits.mNumSplits; ++s)
 	{
@@ -468,7 +476,7 @@ bool LargeIslandSplitter::SplitIsland(uint32 inIslandIndex, const IslandBuilder 
 			}
 		}
 	}
-#endif // _DEBUG
+#endif // JPH_DEBUG
 #endif // JPH_ENABLE_ASSERTS
 
 	// Allow other threads to pick up this split island now
@@ -551,8 +559,8 @@ void LargeIslandSplitter::Reset(TempAllocator *inTempAllocator)
 		inTempAllocator->Free(mContactAndConstraintIndices, mContactAndConstraintsSize * sizeof(uint32));
 		mContactAndConstraintIndices = nullptr;
 
-		inTempAllocator->Free(mContactAndConstaintsSplitIdx, mContactAndConstraintsSize * sizeof(uint32));
-		mContactAndConstaintsSplitIdx = nullptr;
+		inTempAllocator->Free(mContactAndConstraintsSplitIdx, mContactAndConstraintsSize * sizeof(uint32));
+		mContactAndConstraintsSplitIdx = nullptr;
 
 		mContactAndConstraintsSize = 0;
 		mContactAndConstraintsNextFree.store(0, memory_order_relaxed);

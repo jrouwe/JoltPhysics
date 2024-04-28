@@ -32,7 +32,7 @@ class CollisionCollectorTraitsCollideShape
 {
 public:
 	/// For shape collisions we use -penetration depth to order hits.
-	static constexpr float InitialEarlyOutFraction = FLT_MAX;				///< Most shallow hit: Separatation is infinite
+	static constexpr float InitialEarlyOutFraction = FLT_MAX;				///< Most shallow hit: Separation is infinite
 	static constexpr float ShouldEarlyOutFraction = -FLT_MAX;				///< Deepest hit: Penetration is infinite
 };
 
@@ -77,7 +77,7 @@ public:
 	inline void				UpdateEarlyOutFraction(float inFraction)		{ JPH_ASSERT(inFraction <= mEarlyOutFraction); mEarlyOutFraction = inFraction; }
 
 	/// Reset the early out fraction to a specific value
-	inline void				ResetEarlyOutFraction(float inFraction)			{ mEarlyOutFraction = inFraction; }
+	inline void				ResetEarlyOutFraction(float inFraction = TraitsType::InitialEarlyOutFraction) { mEarlyOutFraction = inFraction; }
 
 	/// Force the collision detection algorithm to terminate as soon as possible. Call this from the AddHit function when a satisfying hit is found.
 	inline void				ForceEarlyOut()									{ mEarlyOutFraction = TraitsType::ShouldEarlyOutFraction; }

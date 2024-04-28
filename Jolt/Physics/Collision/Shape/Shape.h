@@ -145,6 +145,10 @@ public:
 	/// Create a shape according to the settings specified by this object.
 	virtual ShapeResult				Create() const = 0;
 
+	/// When creating a shape, the result is cached so that calling Create() again will return the same shape.
+	/// If you make changes to the ShapeSettings you need to call this function to clear the cached result to allow Create() to build a new shape.
+	void							ClearCachedResult()													{ mCachedResult.Clear(); }
+
 	/// User data (to be used freely by the application)
 	uint64							mUserData = 0;
 
@@ -324,8 +328,8 @@ public:
 	/// @param ioCollector The transformed shapes will be passed to this collector
 	virtual void					TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCollector &ioCollector) const;
 
-	/// Scale this shape. Note that not all shapes support all scales, this will return a shape that matches the scale as accurately as possible.
-	/// @param inScale The scale to use for this shape (note: this scale is applied to the entire shape in the space it was created, most function apply the scale in the space of the leaf shapes and from the center of mass!)
+	/// Scale this shape. Note that not all shapes support all scales, this will return a shape that matches the scale as accurately as possible. See Shape::IsValidScale for more information.
+	/// @param inScale The scale to use for this shape (note: this scale is applied to the entire shape in the space it was created, most other functions apply the scale in the space of the leaf shapes and from the center of mass!)
 	ShapeResult						ScaleShape(Vec3Arg inScale) const;
 
 	/// An opaque buffer that holds shape specific information during GetTrianglesStart/Next.
@@ -366,13 +370,13 @@ public:
 	virtual void					SaveMaterialState([[maybe_unused]] PhysicsMaterialList &outMaterials) const			{ /* By default do nothing */ }
 
 	/// Restore the material references after calling sRestoreFromBinaryState. Note that the exact same materials need to be provided in the same order as returned by SaveMaterialState.
-	virtual void					RestoreMaterialState([[maybe_unused]] const PhysicsMaterialRefC *inMaterials, uint inNumMaterials) { JPH_ASSERT(inNumMaterials == 0); }
+	virtual void					RestoreMaterialState([[maybe_unused]] const PhysicsMaterialRefC *inMaterials, [[maybe_unused]] uint inNumMaterials) { JPH_ASSERT(inNumMaterials == 0); }
 
 	/// Outputs the shape references that this shape has to outSubShapes.
 	virtual void					SaveSubShapeState([[maybe_unused]] ShapeList &outSubShapes) const					{ /* By default do nothing */ }
 
 	/// Restore the shape references after calling sRestoreFromBinaryState. Note that the exact same shapes need to be provided in the same order as returned by SaveSubShapeState.
-	virtual void					RestoreSubShapeState([[maybe_unused]] const ShapeRefC *inSubShapes, uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
+	virtual void					RestoreSubShapeState([[maybe_unused]] const ShapeRefC *inSubShapes, [[maybe_unused]] uint inNumShapes) { JPH_ASSERT(inNumShapes == 0); }
 
 	using ShapeToIDMap = StreamUtils::ObjectToIDMap<Shape>;
 	using IDToShapeMap = StreamUtils::IDToObjectMap<Shape>;
@@ -409,7 +413,17 @@ public:
 	virtual float					GetVolume() const = 0;
 
 	/// Test if inScale is a valid scale for this shape. Some shapes can only be scaled uniformly, compound shapes cannot handle shapes
-	/// being rotated and scaled (this would cause shearing). In this case this function will return false.
+	/// being rotated and scaled (this would cause shearing), scale can never be zero. When the scale is invalid, the function will return false.
+	///
+	/// Here's a list of supported scales:
+	/// * SphereShape: Scale must be uniform (signs of scale are ignored).
+	/// * BoxShape: Any scale supported (signs of scale are ignored).
+	/// * TriangleShape: Any scale supported when convex radius is zero, otherwise only uniform scale supported.
+	/// * CapsuleShape: Scale must be uniform (signs of scale are ignored).
+	/// * TaperedCapsuleShape: Scale must be uniform (sign of Y scale can be used to flip the capsule).
+	/// * CylinderShape: Scale must be uniform in XZ plane, Y can scale independently (signs of scale are ignored).
+	/// * RotatedTranslatedShape: Scale must not cause shear in the child shape.
+	/// * CompoundShape: Scale must not cause shear in any of the child shapes.
 	virtual bool					IsValidScale(Vec3Arg inScale) const									{ return !inScale.IsNearZero(); }
 
 #ifdef JPH_DEBUG_RENDERER
@@ -423,9 +437,6 @@ protected:
 
 	/// A fallback version of CollidePoint that uses a ray cast and counts the number of hits to determine if the point is inside the shape. Odd number of hits means inside, even number of hits means outside.
 	static void						sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter);
-
-	/// A fallback version of CollideSoftBodyVertices that uses a raycast to collide the vertices with the shape.
-	static void						sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex);
 
 private:
 	uint64							mUserData = 0;

@@ -32,7 +32,7 @@ const char *RigPileTest::sScenes[] =
 	"Terrain2",
 };
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	const char *RigPileTest::sSceneName = "PerlinMesh";
 	int RigPileTest::sPileSize = 5;
 	int RigPileTest::sNumPilesPerAxis = 2;

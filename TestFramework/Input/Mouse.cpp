@@ -37,6 +37,26 @@ void Mouse::ResetMouse()
 	mDODLength = 0;
 	mTimeLeftButtonLastReleased = 0;
 	mLeftButtonDoubleClicked = false;
+
+}
+
+void Mouse::DetectParsecRunning()
+{
+	mIsParsecRunning = false;
+
+	if (SC_HANDLE manager = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT))
+	{
+		if (SC_HANDLE service = OpenServiceA(manager, "Parsec", SERVICE_QUERY_STATUS))
+		{
+			SERVICE_STATUS status;
+			if (QueryServiceStatus(service, &status))
+			{
+				mIsParsecRunning = status.dwCurrentState == SERVICE_RUNNING;
+			}
+			CloseServiceHandle(service);
+		}
+		CloseServiceHandle(manager);
+	}
 }
 
 bool Mouse::Initialize(Renderer *inRenderer)
@@ -91,6 +111,9 @@ bool Mouse::Initialize(Renderer *inRenderer)
 		Trace("Unable to set mouse buffer size");
 		return false;
 	}
+
+	// Check if the parsec service is running
+	DetectParsecRunning();
 
 	return true;
 }
@@ -149,8 +172,8 @@ void Mouse::Poll()
 		}
 	}
 
-	// If we're connected through remote desktop then GetDeviceState returns faulty data for lX and lY so we need to use a fallback
-	if (GetSystemMetrics(SM_REMOTESESSION))
+	// If we're connected through remote desktop or Parsec then GetDeviceState returns faulty data for lX and lY so we need to use a fallback
+	if (GetSystemMetrics(SM_REMOTESESSION) || mIsParsecRunning)
 	{
 		// Just use the delta between the current and last mouse position.
 		// Note that this has the disadvantage that you can no longer rotate any further if you're at the edge of the screen,

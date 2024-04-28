@@ -197,6 +197,9 @@ public:
 	/// Will throw away the previous frame's nodes so that we can start building a new tree in the background
 	void						DiscardOldTree();
 
+	/// Get the bounding box for this tree
+	AABox						GetBounds() const;
+
 	/// Update the broadphase, needs to be called regularly to achieve a tight fit of the tree when bodies have been modified.
 	/// UpdatePrepare() will build the tree, UpdateFinalize() will lock the root of the tree shortly and swap the trees and afterwards clean up temporary data structures.
 	void						UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTracking, UpdateState &outUpdateState, bool inFullRebuild);
@@ -311,7 +314,7 @@ private:
 	/// After the function returns ioNodeIDs and ioNodeCenters will be shuffled
 	static void					sPartition4(NodeID *ioNodeIDs, Vec3 *ioNodeCenters, int inBegin, int inEnd, int *outSplit);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	/// Validate that the tree is consistent.
 	/// Note: This function only works if the tree is not modified while we're traversing it.
 	void						ValidateTree(const BodyVector &inBodies, const TrackingVector &inTracking, uint32 inNodeIndex, uint32 inNumExpectedBodies) const;

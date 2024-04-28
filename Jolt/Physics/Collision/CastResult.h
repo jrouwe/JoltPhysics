@@ -18,6 +18,9 @@ public:
 	/// Function required by the CollisionCollector. A smaller fraction is considered to be a 'better hit'. For rays/cast shapes we can just use the collision fraction.
 	inline float	GetEarlyOutFraction() const			{ return mFraction; }
 
+	/// Reset this result so it can be reused for a new cast.
+	inline void		Reset()								{ mBodyID = BodyID(); mFraction = 1.0f + FLT_EPSILON; }
+
 	BodyID			mBodyID;							///< Body that was hit
 	float			mFraction = 1.0f + FLT_EPSILON;		///< Hit fraction of the ray/object [0, 1], HitPoint = Start + mFraction * (End - Start)
 };

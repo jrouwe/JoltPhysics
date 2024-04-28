@@ -29,6 +29,14 @@ public:
 	bool							IsKeyPressed(int inKey) const		{ return mKeyPressed[inKey] != 0; }
 	bool							IsKeyDoubleClicked(int inKey) const	{ return mKeyDoubleClicked[inKey] != 0; }
 
+	/// Checks if a key is pressed and was not pressed the last time this function was called (state is stored in ioPrevState)
+	bool							IsKeyPressedAndTriggered(int inKey, bool &ioPrevState) const
+	{
+		bool prev_state = ioPrevState;
+		ioPrevState = IsKeyPressed(inKey);
+		return ioPrevState && !prev_state;
+	}
+
 	/// Buffered keyboard input, returns 0 for none or one of the DIK_* constants
 	int								GetFirstKey();
 	int								GetNextKey();

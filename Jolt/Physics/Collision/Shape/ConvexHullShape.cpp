@@ -123,7 +123,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 	// Calculate inertia matrix assuming density is 1, note that element (3, 3) is garbage
 	mInertia = Mat44::sIdentity() * (covariance_matrix(0, 0) + covariance_matrix(1, 1) + covariance_matrix(2, 2)) - covariance_matrix;
 
-	// Convert polygons fron the builder to our internal representation
+	// Convert polygons from the builder to our internal representation
 	using VtxMap = UnorderedMap<int, uint8>;
 	VtxMap vertex_map;
 	for (BuilderFace *builder_face : builder_faces)
@@ -324,7 +324,7 @@ ConvexHullShape::ConvexHullShape(const ConvexHullShapeSettings &inSettings, Shap
 				// |n2x n2y n2z| |y| = - | r + c2 | <=> n point = -r (1, 1, 1) - (c1, c2, c3)
 				// |n3x n3y n3z| |z|     | r + c3 |
 				// Where point = (x, y, z), n1x is the x component of the first plane, c1 = plane constant of plane 1, etc.
-				// The relation between how much the interesection point shifts as a function of r is: -r * n^-1 (1, 1, 1) = r * offset
+				// The relation between how much the intersection point shifts as a function of r is: -r * n^-1 (1, 1, 1) = r * offset
 				// Where offset = -n^-1 (1, 1, 1) or -n^-1 (1, 1, 0) in case only the first 2 planes are offset
 				// The error that is introduced by a convex radius r is: error = r * |offset| - r
 				// So the max convex radius given error is: r = error / (|offset| - 1)
@@ -542,6 +542,7 @@ const ConvexShape::Support *ConvexHullShape::GetSupportFunction(ESupportMode inM
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
+	case ESupportMode::Default:
 		if (ScaleHelpers::IsNotScaled(inScale))
 			return new (&inBuffer) HullWithConvex(this);
 		else

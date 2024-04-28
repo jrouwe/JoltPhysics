@@ -84,7 +84,17 @@ DistanceConstraint::DistanceConstraint(Body &inBody1, Body &inBody2, const Dista
 
 	// Store distance we want to keep between the world space points
 	float distance = Vec3(mWorldSpacePosition2 - mWorldSpacePosition1).Length();
-	SetDistance(mMinDistance < 0.0f? distance : mMinDistance, mMaxDistance < 0.0f? distance : mMaxDistance);
+	float min_distance, max_distance;
+	if (mMinDistance < 0.0f && mMaxDistance < 0.0f)
+	{
+		min_distance = max_distance = distance;
+	}
+	else
+	{
+		min_distance = mMinDistance < 0.0f? min(distance, mMaxDistance) : mMinDistance;
+		max_distance = mMaxDistance < 0.0f? max(distance, mMinDistance) : mMaxDistance;
+	}
+	SetDistance(min_distance, max_distance);
 
 	// Most likely gravity is going to tear us apart (this is only used when the distance between the points = 0)
 	mWorldSpaceNormal = Vec3::sAxisY();
@@ -149,6 +159,11 @@ void DistanceConstraint::CalculateConstraintProperties(float inDeltaTime)
 void DistanceConstraint::SetupVelocityConstraint(float inDeltaTime)
 {
 	CalculateConstraintProperties(inDeltaTime);
+}
+
+void DistanceConstraint::ResetWarmStart()
+{
+	mAxisConstraint.Deactivate();
 }
 
 void DistanceConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)

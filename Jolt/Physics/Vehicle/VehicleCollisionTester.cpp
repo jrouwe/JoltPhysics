@@ -102,6 +102,26 @@ bool VehicleCollisionTesterRay::Collide(PhysicsSystem &inPhysicsSystem, const Ve
 	return true;
 }
 
+void VehicleCollisionTesterRay::PredictContactProperties(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&ioBody, SubShapeID &ioSubShapeID, RVec3 &ioContactPosition, Vec3 &ioContactNormal, float &ioSuspensionLength) const
+{
+	// Recalculate the contact points assuming the contact point is on an infinite plane
+	const WheelSettings *wheel_settings = inVehicleConstraint.GetWheel(inWheelIndex)->GetSettings();
+	float d_dot_n = inDirection.Dot(ioContactNormal);
+	if (d_dot_n < -1.0e-6f)
+	{
+		// Reproject the contact position using the suspension ray and the plane formed by the contact position and normal
+		ioContactPosition = inOrigin + Vec3(ioContactPosition - inOrigin).Dot(ioContactNormal) / d_dot_n * inDirection;
+
+		// The suspension length is simply the distance between the contact position and the suspension origin excluding the wheel radius
+		ioSuspensionLength = Clamp(Vec3(ioContactPosition - inOrigin).Dot(inDirection) - wheel_settings->mRadius, 0.0f, wheel_settings->mSuspensionMaxLength);
+	}
+	else
+	{
+		// If the normal is pointing away we assume there's no collision anymore
+		ioSuspensionLength = wheel_settings->mSuspensionMaxLength;
+	}
+}
+
 bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
 {
 	const DefaultBroadPhaseLayerFilter default_broadphase_layer_filter = inPhysicsSystem.GetDefaultBroadPhaseLayerFilter(mObjectLayer);
@@ -195,6 +215,29 @@ bool VehicleCollisionTesterCastSphere::Collide(PhysicsSystem &inPhysicsSystem, c
 	return true;
 }
 
+void VehicleCollisionTesterCastSphere::PredictContactProperties(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&ioBody, SubShapeID &ioSubShapeID, RVec3 &ioContactPosition, Vec3 &ioContactNormal, float &ioSuspensionLength) const
+{
+	// Recalculate the contact points assuming the contact point is on an infinite plane
+	const WheelSettings *wheel_settings = inVehicleConstraint.GetWheel(inWheelIndex)->GetSettings();
+	float d_dot_n = inDirection.Dot(ioContactNormal);
+	if (d_dot_n < -1.0e-6f)
+	{
+		// Reproject the contact position using the suspension cast sphere and the plane formed by the contact position and normal
+		// This solves x = inOrigin + fraction * inDirection and (x - ioContactPosition) . ioContactNormal = mRadius for fraction
+		float oc_dot_n = Vec3(ioContactPosition - inOrigin).Dot(ioContactNormal);
+		float fraction = (mRadius + oc_dot_n) / d_dot_n;
+		ioContactPosition = inOrigin + fraction * inDirection - mRadius * ioContactNormal;
+
+		// Calculate the new suspension length in the same way as the cast sphere normally does
+		ioSuspensionLength = Clamp(fraction + mRadius - wheel_settings->mRadius, 0.0f, wheel_settings->mSuspensionMaxLength);
+	}
+	else
+	{
+		// If the normal is pointing away we assume there's no collision anymore
+		ioSuspensionLength = wheel_settings->mSuspensionMaxLength;
+	}
+}
+
 bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&outBody, SubShapeID &outSubShapeID, RVec3 &outContactPosition, Vec3 &outContactNormal, float &outSuspensionLength) const
 {
 	const DefaultBroadPhaseLayerFilter default_broadphase_layer_filter = inPhysicsSystem.GetDefaultBroadPhaseLayerFilter(mObjectLayer);
@@ -283,6 +326,51 @@ bool VehicleCollisionTesterCastCylinder::Collide(PhysicsSystem &inPhysicsSystem,
 	outSuspensionLength = max_suspension_length * collector.mFraction;
 
 	return true;
+}
+
+void VehicleCollisionTesterCastCylinder::PredictContactProperties(PhysicsSystem &inPhysicsSystem, const VehicleConstraint &inVehicleConstraint, uint inWheelIndex, RVec3Arg inOrigin, Vec3Arg inDirection, const BodyID &inVehicleBodyID, Body *&ioBody, SubShapeID &ioSubShapeID, RVec3 &ioContactPosition, Vec3 &ioContactNormal, float &ioSuspensionLength) const
+{
+	// Recalculate the contact points assuming the contact point is on an infinite plane
+	const WheelSettings *wheel_settings = inVehicleConstraint.GetWheel(inWheelIndex)->GetSettings();
+	float d_dot_n = inDirection.Dot(ioContactNormal);
+	if (d_dot_n < -1.0e-6f)
+	{
+		// Wheel size
+		float half_width = 0.5f * wheel_settings->mWidth;
+		float radius = wheel_settings->mRadius;
+
+		// Get the inverse local space contact normal for a cylinder pointing along Y
+		RMat44 wheel_transform = inVehicleConstraint.GetWheelWorldTransform(inWheelIndex, Vec3::sAxisY(), Vec3::sAxisX());
+		Vec3 inverse_local_normal = -wheel_transform.Multiply3x3Transposed(ioContactNormal);
+
+		// Get the support point of this normal in local space of the cylinder
+		// See CylinderShape::Cylinder::GetSupport
+		float x = inverse_local_normal.GetX(), y = inverse_local_normal.GetY(), z = inverse_local_normal.GetZ();
+		float o = sqrt(Square(x) + Square(z));
+		Vec3 support_point;
+		if (o > 0.0f)
+			support_point = Vec3((radius * x) / o, Sign(y) * half_width, (radius * z) / o);
+		else
+			support_point = Vec3(0, Sign(y) * half_width, 0);
+
+		// Rotate back to world space
+		support_point = wheel_transform.Multiply3x3(support_point);
+
+		// Now we can use inOrigin + support_point as the start of a ray of our suspension to the contact plane
+		// as know that it is the first point on the wheel that will hit the plane
+		RVec3 origin = inOrigin + support_point;
+
+		// Calculate contact position and suspension length, the is the same as VehicleCollisionTesterRay
+		// but we don't need to take the radius into account anymore
+		Vec3 oc(ioContactPosition - origin);
+		ioContactPosition = origin + oc.Dot(ioContactNormal) / d_dot_n * inDirection;
+		ioSuspensionLength = Clamp(oc.Dot(inDirection), 0.0f, wheel_settings->mSuspensionMaxLength);
+	}
+	else
+	{
+		// If the normal is pointing away we assume there's no collision anymore
+		ioSuspensionLength = wheel_settings->mSuspensionMaxLength;
+	}
 }
 
 JPH_NAMESPACE_END

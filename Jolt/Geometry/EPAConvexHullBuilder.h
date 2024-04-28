@@ -152,7 +152,7 @@ public:
 		{
 			// Destruct triangle
 			inT->~Triangle();
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 			memset(inT, 0xcd, sizeof(Triangle));
 #endif
 
@@ -209,7 +209,7 @@ public:
 		/// Get next closest triangle
 		Triangle *		PopClosest()
 		{
-			// Move largest to end
+			// Move closest to end
 			std::pop_heap(begin(), end(), sTriangleSorter);
 
 			// Remove last triangle
@@ -567,7 +567,7 @@ private:
 	{
 		if (inT->mRemoved)
 		{
-			// Valdiate that removed triangles are not connected to anything
+			// Validate that removed triangles are not connected to anything
 			for (const Edge &my_edge : inT->mEdge)
 				JPH_ASSERT(my_edge.mNeighbourTriangle == nullptr);
 		}

@@ -29,6 +29,14 @@ uint SoftBodyShape::GetSubShapeIDBits() const
 	return 32 - CountLeadingZeros(n);
 }
 
+uint32 SoftBodyShape::GetFaceIndex(const SubShapeID &inSubShapeID) const
+{
+	SubShapeID remainder;
+	uint32 face_index = inSubShapeID.PopID(GetSubShapeIDBits(), remainder);
+	JPH_ASSERT(remainder.IsEmpty());
+	return face_index;
+}
+
 AABox SoftBodyShape::GetLocalBounds() const
 {
 	return mSoftBodyMotionProperties->GetLocalBounds();

@@ -267,6 +267,14 @@ void SliderConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculateMotorConstraintProperties(inDeltaTime);
 }
 
+void SliderConstraint::ResetWarmStart()
+{
+	mMotorConstraintPart.Deactivate();
+	mPositionConstraintPart.Deactivate();
+	mRotationConstraintPart.Deactivate();
+	mPositionLimitsConstraintPart.Deactivate();
+}
+
 void SliderConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse

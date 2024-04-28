@@ -9,7 +9,7 @@
 
 /// Settings for blitting one surface to another with possibly different formats and dimensions. The blit
 /// routine can use filtering or blurring on the fly. Also it can perform some other
-/// basic opertions like converting an image to grayscale or alpha only surfaces.
+/// basic operations like converting an image to grayscale or alpha only surfaces.
 class BlitSettings
 {
 public:

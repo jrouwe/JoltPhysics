@@ -28,9 +28,9 @@ TEST_SUITE("PathConstraintTests")
 		path->AddPoint(p2, t2, n2);
 
 		// Test that positions before and after the line return 0 and 1
-		float before_start = path->GetClosestPoint(p1 - 0.01f * t1);
+		float before_start = path->GetClosestPoint(p1 - 0.01f * t1, 0.0f);
 		CHECK(before_start == 0.0f);
-		float after_end = path->GetClosestPoint(p2 + 0.01f * t2);
+		float after_end = path->GetClosestPoint(p2 + 0.01f * t2, 0.0f);
 		CHECK(after_end == 1.0f);
 
 		for (int i = 0; i <= 10; ++i)
@@ -41,7 +41,7 @@ TEST_SUITE("PathConstraintTests")
 			path->GetPointOnPath(fraction, pos, tgt, nrm, bin);
 
 			// Let the path determine the fraction of the closest point
-			float closest_fraction = path->GetClosestPoint(pos);
+			float closest_fraction = path->GetClosestPoint(pos, 0.0f);
 
 			// Validate that it is equal to what we put in
 			CHECK_APPROX_EQUAL(fraction, closest_fraction, 1.0e-4f);

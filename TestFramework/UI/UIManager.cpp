@@ -287,7 +287,7 @@ void UIManager::DrawQuad(int inX, int inY, int inWidth, int inHeight, const UITe
 			float ix2 = float(inX + inWidth - (inQuad.mWidth - inQuad.mInnerWidth - (inQuad.mInnerX - inQuad.mX)));
 			float iy2 = float(inY + inHeight - (inQuad.mHeight - inQuad.mInnerHeight - (inQuad.mInnerY - inQuad.mY)));
 
-			// Inner area - texture coordiantes
+			// Inner area - texture coordinates
 			float itx1 = float(inQuad.mInnerX);
 			float ity1 = float(inQuad.mInnerY);
 			float itx2 = float(inQuad.mInnerX + inQuad.mInnerWidth);

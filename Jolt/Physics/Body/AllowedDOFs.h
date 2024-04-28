@@ -11,12 +11,12 @@ enum class EAllowedDOFs : uint8
 {
 	None				= 0b000000,									///< No degrees of freedom are allowed. Note that this is not valid and will crash. Use a static body instead.
 	All					= 0b111111,									///< All degrees of freedom are allowed
-	TranslationX		= 0b000001,									///< Body cannot move in world space X axis
-	TranslationY		= 0b000010,									///< Body cannot move in world space Y axis
-	TranslationZ		= 0b000100,									///< Body cannot move in world space Z axis
-	RotationX			= 0b001000,									///< Body cannot rotate around local space X axis
-	RotationY			= 0b010000,									///< Body cannot rotate around local space Y axis
-	RotationZ			= 0b100000,									///< Body cannot rotate around local space Z axis
+	TranslationX		= 0b000001,									///< Body can move in world space X axis
+	TranslationY		= 0b000010,									///< Body can move in world space Y axis
+	TranslationZ		= 0b000100,									///< Body can move in world space Z axis
+	RotationX			= 0b001000,									///< Body can rotate around world space X axis
+	RotationY			= 0b010000,									///< Body can rotate around world space Y axis
+	RotationZ			= 0b100000,									///< Body can rotate around world space Z axis
 	Plane2D				= TranslationX | TranslationY | RotationZ,	///< Body can only move in X and Y axis and rotate around Z axis
 };
 

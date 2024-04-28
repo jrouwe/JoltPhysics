@@ -320,4 +320,145 @@ TEST_SUITE("HeightFieldShapeTests")
 					CHECK(verify_heights[idx] == original_heights[idx]); // We didn't modify this and it is outside of the affected range
 			}
 	}
+
+	TEST_CASE("TestSetMaterials")
+	{
+		constexpr uint cSampleCount = 32;
+
+		PhysicsMaterialRefC material_0 = new PhysicsMaterialSimple("Material 0", Color::sGetDistinctColor(0));
+		PhysicsMaterialRefC material_1 = new PhysicsMaterialSimple("Material 1", Color::sGetDistinctColor(1));
+		PhysicsMaterialRefC material_2 = new PhysicsMaterialSimple("Material 2", Color::sGetDistinctColor(2));
+		PhysicsMaterialRefC material_3 = new PhysicsMaterialSimple("Material 3", Color::sGetDistinctColor(3));
+		PhysicsMaterialRefC material_4 = new PhysicsMaterialSimple("Material 4", Color::sGetDistinctColor(4));
+		PhysicsMaterialRefC material_5 = new PhysicsMaterialSimple("Material 5", Color::sGetDistinctColor(5));
+
+		// Create height field with a single material
+		HeightFieldShapeSettings settings;
+		settings.mSampleCount = cSampleCount;
+		settings.mBitsPerSample = 8;
+		settings.mBlockSize = 4;
+		settings.mHeightSamples.resize(Square(cSampleCount));
+		for (float &h : settings.mHeightSamples)
+			h = 0.0f;
+		settings.mMaterials.push_back(material_0);
+		settings.mMaterialIndices.resize(Square(cSampleCount - 1));
+		for (uint8 &m : settings.mMaterialIndices)
+			m = 0;
+
+		// Store the current state
+		Array<const PhysicsMaterial *> current_state;
+		current_state.resize(Square(cSampleCount - 1));
+		for (const PhysicsMaterial *&m : current_state)
+			m = material_0;
+
+		// Create shape
+		Ref<Shape> shape = settings.Create().Get();
+		HeightFieldShape *height_field = static_cast<HeightFieldShape *>(shape.GetPtr());
+
+		// Check that the material is set
+		auto check_materials = [height_field, &current_state]() {
+			const PhysicsMaterialList &material_list = height_field->GetMaterialList();
+
+			uint sample_count_min_1 = height_field->GetSampleCount() - 1;
+
+			Array<uint8> material_indices;
+			material_indices.resize(Square(sample_count_min_1));
+			height_field->GetMaterials(0, 0, sample_count_min_1, sample_count_min_1, material_indices.data(), sample_count_min_1);
+
+			for (uint i = 0; i < (uint)current_state.size(); ++i)
+				CHECK(current_state[i] == material_list[material_indices[i]]);
+		};
+		check_materials();
+
+		// Function to randomize materials
+		auto update_materials = [height_field, &current_state](uint inStartX, uint inStartY, uint inSizeX, uint inSizeY, const PhysicsMaterialList *inMaterialList) {
+			TempAllocatorMalloc temp_allocator;
+
+			const PhysicsMaterialList &material_list = inMaterialList != nullptr? *inMaterialList : height_field->GetMaterialList();
+
+			UnitTestRandom random;
+			uniform_int_distribution<uint> index_distribution(0, uint(material_list.size()) - 1);
+
+			uint sample_count_min_1 = height_field->GetSampleCount() - 1;
+
+			Array<uint8> patched_materials;
+			patched_materials.resize(inSizeX * inSizeY);
+			for (uint y = 0; y < inSizeY; ++y)
+				for (uint x = 0; x < inSizeX; ++x)
+				{
+					// Initialize the patch
+					uint8 index = uint8(index_distribution(random));
+					patched_materials[y * inSizeX + x] = index;
+
+					// Update reference state
+					current_state[(inStartY + y) * sample_count_min_1 + inStartX + x] = material_list[index];
+				}
+			CHECK(height_field->SetMaterials(inStartX, inStartY, inSizeX, inSizeY, patched_materials.data(), inSizeX, inMaterialList, temp_allocator));
+		};
+
+		{
+			// Add material 1
+			PhysicsMaterialList patched_materials_list;
+			patched_materials_list.push_back(material_1);
+			patched_materials_list.push_back(material_0);
+			update_materials(4, 16, 16, 8, &patched_materials_list);
+			check_materials();
+		}
+
+		{
+			// Add material 2
+			PhysicsMaterialList patched_materials_list;
+			patched_materials_list.push_back(material_0);
+			patched_materials_list.push_back(material_2);
+			update_materials(8, 16, 16, 8, &patched_materials_list);
+			check_materials();
+		}
+
+		{
+			// Add material 3
+			PhysicsMaterialList patched_materials_list;
+			patched_materials_list.push_back(material_0);
+			patched_materials_list.push_back(material_1);
+			patched_materials_list.push_back(material_2);
+			patched_materials_list.push_back(material_3);
+			update_materials(8, 8, 16, 8, &patched_materials_list);
+			check_materials();
+		}
+
+		{
+			// Add material 4
+			PhysicsMaterialList patched_materials_list;
+			patched_materials_list.push_back(material_0);
+			patched_materials_list.push_back(material_1);
+			patched_materials_list.push_back(material_4);
+			patched_materials_list.push_back(material_2);
+			patched_materials_list.push_back(material_3);
+			update_materials(0, 0, 30, 30, &patched_materials_list);
+			check_materials();
+		}
+
+		{
+			// Add material 5
+			PhysicsMaterialList patched_materials_list;
+			patched_materials_list.push_back(material_4);
+			patched_materials_list.push_back(material_3);
+			patched_materials_list.push_back(material_0);
+			patched_materials_list.push_back(material_1);
+			patched_materials_list.push_back(material_2);
+			patched_materials_list.push_back(material_5);
+			update_materials(1, 1, 30, 30, &patched_materials_list);
+			check_materials();
+		}
+
+		{
+			// Update materials without new material list
+			update_materials(2, 5, 10, 15, nullptr);
+			check_materials();
+		}
+
+		// Check materials using GetMaterial call
+		for (uint y = 0; y < cSampleCount - 1; ++y)
+			for (uint x = 0; x < cSampleCount - 1; ++x)
+				CHECK(height_field->GetMaterial(x, y) == current_state[y * (cSampleCount - 1) + x]);
+	}
 }

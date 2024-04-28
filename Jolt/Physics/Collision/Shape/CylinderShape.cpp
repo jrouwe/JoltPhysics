@@ -177,6 +177,7 @@ const ConvexShape::Support *CylinderShape::GetSupportFunction(ESupportMode inMod
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
+	case ESupportMode::Default:
 		return new (&inBuffer) Cylinder(scaled_half_height, scaled_radius, 0.0f);
 
 	case ESupportMode::ExcludeConvexRadius:
@@ -363,7 +364,7 @@ void CylinderShape::TransformShape(Mat44Arg inCenterOfMassTransform, Transformed
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	Vec3 abs_scale = scale.Abs();
 	float xz = 0.5f * (abs_scale.GetX() + abs_scale.GetZ());
 	ts.SetShapeScale(Vec3(xz, abs_scale.GetY(), xz));

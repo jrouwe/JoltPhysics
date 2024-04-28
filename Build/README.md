@@ -19,25 +19,35 @@ You can use Jolt/Jolt.h in your precompiled header to speed up compilation.
 ## Defines
 
 There are a number of user configurable defines that turn on/off certain features:
+<details>
+	<summary>General Options (click to see more)</summary>
+	<ul>
+		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
+		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).</li>
+		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
+		<li>JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.</li>
+		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
+		<li>JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).</li>
+		<li>JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.</li>
+		<li>JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.</li>
+		<li>JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.</li>
+	</ul>
+</details>
 
-- JPH_PROFILE_ENABLED - Turns on the internal profiler.
-- JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).
-- JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.
-- JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.
-- JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.
-- JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).
-- JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.
-- JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.
-- JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.
-- JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x86/x64 only)
-- JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x86/x64 only)
-- JPH_USE_F16C - Enable half float CPU instructions (x86/x64 only)
-- JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x86/x64 only)
-- JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x86/x64 only)
-- JPH_USE_AVX - Enable AVX CPU instructions (x86/x64 only)
-- JPH_USE_AVX2 - Enable AVX2 CPU instructions (x86/x64 only)
-- JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (x86/x64 only)
-- JPH_USE_FMADD - Enable fused multiply add CPU instructions (x86/x64 only)
+<details>
+	<summary>CPU Instruction Sets (click to see more)</summary>
+	<ul>
+		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_F16C - Enable half float CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX - Enable AVX CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX2 - Enable AVX2 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (default: off, x86/x64 only)</li>
+		<li>JPH_USE_FMADD - Enable fused multiply add CPU instructions (default: on, x86/x64 only)</li>
+	</ul>
+</details>
 
 ## Logging & Asserting
 
@@ -49,96 +59,138 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 
 ## Building
 
-### Windows 10+ (CL - Default compiler)
+<details>
+	<summary>Windows 10+</summary>
+	<ul style="list-style: none"><li>
+		<details>
+			<summary>MSVC CL (default compiler)</summary>
+			<ul>
+				<li>Download Visual Studio 2022 (Community or other edition)</li>
+				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Run cmake_vs2022_cl.bat</li>
+				<li>Open the resulting project file VS2022_CL\JoltPhysics.sln</li>
+				<li>Compile and run either 'Samples' or 'UnitTests'</li>
+			</ul>
+		</details>
+		<details>
+			<summary>MSVC CL - 32 bit</summary>
+			<ul>
+				<li>Download Visual Studio 2022 (Community or other edition)</li>
+				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Run cmake_vs2022_cl_32bit.bat</li>
+				<li>Open the resulting project file VS2022_CL_32BIT\JoltPhysics.sln</li>
+				<li>Compile and run either 'Samples' or 'UnitTests'</li>
+			</ul>
+		</details>
+		<details>
+			<summary>MSVC Clang compiler</summary>
+			<ul>
+				<li>Download Visual Studio 2022 (Community or other edition)</li>
+				<li>Make sure to install "C++ Clang Compiler for Windows 11.0.0+" and "C++ Clang-cl for v142+ build tools (x64/x86)" using the Visual Studio Installer</li>
+				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Run cmake_vs2022_clang.bat</li>
+				<li>Open the resulting project file VS2022_Clang\JoltPhysics.sln</li>
+				<li>Compile and run either 'Samples' or 'UnitTests'</li>
+			</ul>
+		</details>
+		<details>
+			<summary>MSVC Universal Windows Platform</summary>
+			<ul>
+				<li>Download Visual Studio 2022+ (Community or other edition)</li>
+				<li>Make sure to install "Universal Windows Platform development" using the Visual Studio Installer</li>
+				<li>Download CMake 3.15+ (https://cmake.org/download/)</li>
+				<li>Run cmake_vs2022_uwp.bat</li>
+				<li>Open the resulting project file VS2022_UWP\JoltPhysics.sln</li>
+				<li>Compile and run 'UnitTests'</li>
+			</ul>
+		</details>
+		<details>
+			<summary>MinGW</summary>
+			<ul>
+				<li>Follow download instructions for MSYS2 (https://www.msys2.org/)</li>
+				<li>From the MSYS2 MSYS app run: pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake</li>
+				<li>From the MSYS2 MINGW x64 app, in the Build folder run: ./cmake_windows_mingw.sh</li>
+				<li>Run: cmake --build MinGW_Debug</li>
+				<li>Run: MinGW_Debug/UnitTests.exe</li>
+			</ul>
+		</details>
+	</li></ul>
+</details>
 
-- Download Visual Studio 2022 (Community or other edition)
-- Download CMake 3.15+ (https://cmake.org/download/)
-- Run cmake_vs2022_cl.bat
-- Open the resulting project file VS2022_CL\JoltPhysics.sln
-- Compile and run either 'Samples' or 'UnitTests'
+<details>
+	<summary>Linux</summary>
+	<ul style="list-style: none"><li>
+		<details>
+			<summary>Debian flavor, x64 or ARM64</summary>
+			<ul>
+				<li>Install clang (apt-get install clang)</li>
+				<li>Install cmake (apt-get install cmake)</li>
+				<li>Run: ./cmake_linux_clang_gcc.sh</li>
+				<li>Go to the Linux_Debug folder</li>
+				<li>Run: make -j$(nproc) && ./UnitTests</li>
+			</ul>
+		</details>
+		<details>
+			<summary>Debian flavor, MinGW Cross Compile</summary>
+			<ul>
+				<li>This setup can be used to run samples on Linux using wine and vkd3d. Tested on Ubuntu 22.04</li>
+				<li>Graphics card must support Vulkan and related drivers must be installed</li>
+				<li>Install mingw-w64 (apt-get install mingw-w64)</li>
+				<li>Run: update-alternatives --config x86_64-w64-mingw32-g++ (Select /usr/bin/x86_64-w64-mingw32-g++-posix)</li>
+				<li>Install cmake (apt-get install cmake)</li>
+				<li>Install wine64 (apt-get install wine64)</li>
+				<li>Run: export WINEPATH="/usr/x86_64-w64-mingw32/lib;/usr/lib/gcc/x86_64-w64-mingw32/10-posix" (change it based on your environment)</li>
+				<li>Run: ./cmake_linux_mingw.sh Release (Debug doesn't work)</li>
+				<li>Go to the MinGW_Release folder</li>
+				<li>Run: make -j$(nproc) && wine UnitTests.exe</li>
+				<li>Run: wine Samples.exe</li>
+			</ul>
+		</details>
+	</li></ul>
+</details>
 
-### Windows 10+ (CL - 32 bit)
+<details>
+	<summary>Android</summary>
+	<ul>
+		<li>Install Android Studio 2020.3.1+ (https://developer.android.com/studio/)</li>
+		<li>Open the 'Android' folder in Android Studio and wait until gradle finishes</li>
+		<li>Select 'Run' / 'Run...' and 'UnitTests'</li>
+		<li>If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)</li>
+	</ul>
+</details>
 
-- Download Visual Studio 2022 (Community or other edition)
-- Download CMake 3.15+ (https://cmake.org/download/)
-- Run cmake_vs2022_cl_32bit.bat
-- Open the resulting project file VS2022_CL_32BIT\JoltPhysics.sln
-- Compile and run either 'Samples' or 'UnitTests'
+<details>
+	<summary>macOS</summary>
+	<ul>
+		<li>Install XCode</li>
+		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
+		<li>Run: ./cmake_xcode_macos.sh</li>
+		<li>This will open XCode with a newly generated project</li>
+		<li>Build and run the project</li>
+		<li>Note that you can also follow the steps in the 'Linux' section if you wish to build without XCode.</li>
+	</ul>
+</details>
 
-### Windows 10+ (Clang compiler)
+<details>
+	<summary>iOS</summary>
+	<ul>
+		<li>Install XCode</li>
+		<li>Download CMake 3.23+ (https://cmake.org/download/)</li>
+		<li>Run: ./cmake_xcode.ios.sh</li>
+		<li>This will open XCode with a newly generated project</li>
+		<li>Build and run the project (note that this will only work in the simulator as the code signing information is not set up)</li>
+	</ul>
+</details>
 
-- Download Visual Studio 2022 (Community or other edition)
-- Make sure to install "C++ Clang Compiler for Windows 11.0.0+" and "C++ Clang-cl for v142+ build tools (x64/x86)" using the Visual Studio Installer
-- Download CMake 3.15+ (https://cmake.org/download/)
-- Run cmake_vs2022_clang.bat
-- Open the resulting project file VS2022_Clang\JoltPhysics.sln
-- Compile and run either 'Samples' or 'UnitTests'
+## Other Build Tools
 
-### Windows 10+ (Universal Windows Platform)
+* A vcpkg package is available [here](https://github.com/microsoft/vcpkg/tree/master/ports/joltphysics).
+* A xmake package is available [here](https://github.com/xmake-io/xmake-repo/tree/dev/packages/j/joltphysics).
+* Jolt has been verified to build with [ninja](https://ninja-build.org/) through CMake.
 
-- Download Visual Studio 2022+ (Community or other edition)
-- Make sure to install "Universal Windows Platform development" using the Visual Studio Installer
-- Download CMake 3.15+ (https://cmake.org/download/)
-- Run cmake_vs2022_uwp.bat
-- Open the resulting project file VS2022_UWP\JoltPhysics.sln
-- Compile and run 'UnitTests'
+## Errors
 
-### Windows 10+ (MinGW)
-
-- Follow download instructions for MSYS2 (https://www.msys2.org/)
-- From the MSYS2 MSYS app run: pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake
-- From the MSYS2 MINGW x64 app, in the Build folder run: ./cmake_windows_mingw.sh
-- Run: cmake --build MinGW_Debug
-- Run: MinGW_Debug/UnitTests.exe
-
-### Linux (Debian flavor, x64 or ARM64)
-
-- Install clang (apt-get install clang)
-- Install cmake (apt-get install cmake)
-- Run: ./cmake_linux_clang_gcc.sh
-- Go to the Linux_Debug folder
-- Run: make -j$(nproc) && ./UnitTests
-
-### Linux (Debian flavor, MinGW Cross Compile)
-
-- This setup can be used to run samples on Linux using wine and vkd3d. Tested on Ubuntu 22.04
-- Graphics card must support Vulkan and related drivers must be installed
-- Install mingw-w64 (apt-get install mingw-w64)
-- Run: update-alternatives --config x86_64-w64-mingw32-g++ (Select /usr/bin/x86_64-w64-mingw32-g++-posix)
-- Install cmake (apt-get install cmake)
-- Install wine64 (apt-get install wine64)
-- Run: export WINEPATH="/usr/x86_64-w64-mingw32/lib;/usr/lib/gcc/x86_64-w64-mingw32/10-posix" (change it based on your environment)
-- Run: ./cmake_linux_mingw.sh Release (Debug doesn't work)
-- Go to the MinGW_Release folder
-- Run: make -j$(nproc) && wine UnitTests.exe
-- Run: wine Samples.exe
-
-### Android
-
-- Install Android Studio 2020.3.1+ (https://developer.android.com/studio/)
-- Open the 'Android' folder in Android Studio and wait until gradle finishes
-- Select 'Run' / 'Run...' and 'UnitTests'
-- If the screen turns green after a while the unit tests succeeded, when red they failed (see the android log for details)
-
-### macOS
-
-- Install XCode
-- Download CMake 3.23+ (https://cmake.org/download/)
-- Run: ./cmake_xcode_macos.sh
-- This will open XCode with a newly generated project
-- Build and run the project
-
-Note that you can also follow the steps in the 'Linux' section if you wish to build without XCode.
-
-### iOS
-
-- Install XCode
-- Download CMake 3.23+ (https://cmake.org/download/)
-- Run: ./cmake_xcode.ios.sh
-- This will open XCode with a newly generated project
-- Build and run the project (note that this will only work in the simulator as the code signing information is not set up)
-
-## Link Errors
+### Link Error: File Format Not Recognized
 
 If you receive the following error when linking:
 
@@ -147,6 +199,36 @@ If you receive the following error when linking:
 ```
 
 Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
+
+### Link Error: Unresolved External Symbol
+
+If you receive a link error that looks like:
+
+```
+error LNK2001: unresolved external symbol "public: virtual void __cdecl JPH::ConvexShape::GetSubmergedVolume(...) const"
+```
+
+you have a mismatch in defines between your own code and the Jolt library. In this case the mismatch is in the define `JPH_DEBUG_RENDERER` which is most likely defined in `Jolt.lib` and not in your own project. In `Debug` and `Release` builds, Jolt by default has `JPH_DEBUG_RENDERER` defined, in `Distribution` it is not defined. The cmake options `DEBUG_RENDERER_IN_DEBUG_AND_RELEASE` and `DEBUG_RENDERER_IN_DISTRIBUTION` override this behavior.
+
+The `RegisterTypes` function (which you have to call to initialize the library) checks the other important defines and will trace and abort if there are more mismatches.
+
+### DirectX Error
+
+The samples use DirectX for the graphics implementation, when attempting to run the samples you may get a DirectX error pop-up which may say "The GPU device instance has been suspended", in your debugger you may see the message "Using the Redistributable D3D12 SDKLayers dll also requires that the latest SDKLayers for Windows 10 is installed.". 
+
+Fix this by enabling "Graphics Tools" which is an optional Windows settings. To enable it you have to press the windows key, search for "Manage Optional Features", and then click "Add a Feature", and install "Graphics Tools".
+
+### Illegal Instruction Error
+
+If your CPU doesn't support all of the instructions you'll get an `Illegal instruction` exception.
+
+On Linux to see what instructions your CPU supports run `lscpu` and then look at the flags section, on Windows you can use a program like [`coreinfo`](https://learn.microsoft.com/en-us/sysinternals/downloads/coreinfo). Once you know what instructions your cpu supports you can configure the project through cmake and for example disable all special instructions:
+
+```
+./cmake_linux_clang_gcc.sh Release clang++ -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+```
+
+Note that this example is for Linux but the cmake settings work on Windows too.
 
 ## Doxygen on Windows
 

@@ -33,10 +33,15 @@ public:
 							JobSystemThreadPool() = default;
 	virtual					~JobSystemThreadPool() override;
 
+	/// Functions to call when a thread is initialized or exits, must be set before calling Init()
+	using InitExitFunction = function<void(int)>;
+	void					SetThreadInitFunction(const InitExitFunction &inInitFunction)	{ mThreadInitFunction = inInitFunction; }
+	void					SetThreadExitFunction(const InitExitFunction &inExitFunction)	{ mThreadExitFunction = inExitFunction; }
+
 	/// Initialize the thread pool
 	/// @param inMaxJobs Max number of jobs that can be allocated at any time
 	/// @param inMaxBarriers Max number of barriers that can be allocated at any time
-	/// @param inNumThreads Number of threads to start (the number of concurrent jobs is 1 more because the main thread will also run jobs while waiting for a barrier to complete). Use -1 to autodetect the amount of CPU's.
+	/// @param inNumThreads Number of threads to start (the number of concurrent jobs is 1 more because the main thread will also run jobs while waiting for a barrier to complete). Use -1 to auto detect the amount of CPU's.
 	void					Init(uint inMaxJobs, uint inMaxBarriers, int inNumThreads = -1);
 
 	// See JobSystem
@@ -65,6 +70,10 @@ private:
 
 	/// Internal helper function to queue a job
 	inline void				QueueJobInternal(Job *inJob);
+
+	/// Functions to call when initializing or exiting a thread
+	InitExitFunction		mThreadInitFunction = [](int) { };
+	InitExitFunction		mThreadExitFunction = [](int) { };
 
 	/// Array of jobs (fixed size)
 	using AvailableJobs = FixedSizeFreeList<Job>;

@@ -111,7 +111,7 @@ float CastSphereVsTriangles::RayCylinder(Vec3Arg inRayDirection, Vec3Arg inCylin
 	if (t < 0.0f || t > 1.0f)
 		return FLT_MAX; // Intersection lies outside segment
 	if (start_dot_axis + t * direction_dot_axis < 0.0f || start_dot_axis + t * direction_dot_axis > axis_len_sq)
-		return FLT_MAX; // Intersection outside the end point of the cyclinder, stop processing, we will possibly hit a vertex
+		return FLT_MAX; // Intersection outside the end point of the cylinder, stop processing, we will possibly hit a vertex
 	return t;
 }
 
@@ -183,8 +183,8 @@ void CastSphereVsTriangles::Cast(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2, uint8
 
 				// Check if this is an interior point
 				float u, v, w;
-				ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w);
-				if (u >= 0.0f && v >= 0.0f && w >= 0.0f)
+				if (ClosestPoint::GetBaryCentricCoordinates(v0 - p, v1 - p, v2 - p, u, v, w)
+					&& u >= 0.0f && v >= 0.0f && w >= 0.0f)
 				{
 					// Interior point, we found the collision point. We don't need to check active edges.
 					AddHit(back_facing, inSubShapeID2, plane_intersection, p, p, back_facing? triangle_normal : -triangle_normal);

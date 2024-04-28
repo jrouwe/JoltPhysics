@@ -227,7 +227,7 @@ UVec4 UVec4::sSort4True(UVec4Arg inValue, UVec4Arg inIndex)
 	// If inValue.y is false then shift Z and further to Y and further
 	v = UVec4::sSelect(v.Swizzle<SWIZZLE_X, SWIZZLE_Z, SWIZZLE_W, SWIZZLE_W>(), v, inValue.SplatY());
 
-	// If inValue.x is false then shift X and furhter to Y and furhter
+	// If inValue.x is false then shift X and further to Y and further
 	v = UVec4::sSelect(v.Swizzle<SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W, SWIZZLE_W>(), v, inValue.SplatX());
 
 	return v;

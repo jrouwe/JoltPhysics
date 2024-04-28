@@ -185,7 +185,7 @@ void EstimateCollisionResponse(const Body &inBody1, const Body &inBody2, const C
 				float lambda1 = impulse.mFrictionImpulse1 + constraint.mFriction1.SolveGetLambda(outResult.mTangent1, outResult);
 				float lambda2 = impulse.mFrictionImpulse2 + constraint.mFriction2.SolveGetLambda(outResult.mTangent2, outResult);
 
-				// Caclulate max impulse based on contact impulse
+				// Calculate max impulse based on contact impulse
 				float max_impulse = inCombinedFriction * impulse.mContactImpulse;
 
 				// If the total lambda that we will apply is too large, scale it back

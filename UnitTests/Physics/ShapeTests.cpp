@@ -16,8 +16,11 @@
 #include <Jolt/Physics/Collision/Shape/TriangleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Core/StreamWrapper.h>
 
 TEST_SUITE("ShapeTests")
@@ -59,6 +62,59 @@ TEST_SUITE("ShapeTests")
 
 		// Check inner radius
 		CHECK_APPROX_EQUAL(shape->GetInnerRadius(), 2.5f);
+	}
+
+	// Test inertia calculations for a capsule vs that of a convex hull of a capsule
+	TEST_CASE("TestCapsuleVsConvexHullInertia")
+	{
+		const float half_height = 5.0f;
+		const float radius = 3.0f;
+
+		// Create a capsule
+		CapsuleShape capsule(half_height, radius);
+		capsule.SetDensity(7.0f);
+		capsule.SetEmbedded();
+		MassProperties mp_capsule = capsule.GetMassProperties();
+
+		// Verify mass
+		float mass_cylinder = 2.0f * half_height * JPH_PI * Square(radius) * capsule.GetDensity();
+		float mass_sphere = 4.0f / 3.0f * JPH_PI * Cubed(radius) * capsule.GetDensity();
+		CHECK_APPROX_EQUAL(mp_capsule.mMass, mass_cylinder + mass_sphere);
+
+		// Extract support points
+		ConvexShape::SupportBuffer buffer;
+		const ConvexShape::Support *support = capsule.GetSupportFunction(ConvexShape::ESupportMode::IncludeConvexRadius, buffer, Vec3::sReplicate(1.0f));
+		Array<Vec3> capsule_points;
+		capsule_points.reserve(Vec3::sUnitSphere.size());
+		for (const Vec3 &v : Vec3::sUnitSphere)
+			capsule_points.push_back(support->GetSupport(v));
+
+		// Create a convex hull using the support points
+		ConvexHullShapeSettings capsule_hull(capsule_points);
+		capsule_hull.SetDensity(capsule.GetDensity());
+		RefConst<Shape> capsule_hull_shape = capsule_hull.Create().Get();
+		MassProperties mp_capsule_hull = capsule_hull_shape->GetMassProperties();
+
+		// Check that the mass and inertia of the convex hull match that of the capsule (within certain tolerance since the convex hull is an approximation)
+		float mass_error = (mp_capsule_hull.mMass - mp_capsule.mMass) / mp_capsule.mMass;
+		CHECK(mass_error > -0.05f);
+		CHECK(mass_error < 0.0f); // Mass is smaller since the convex hull is smaller
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+			{
+				if (i == j)
+				{
+					float inertia_error = (mp_capsule_hull.mInertia(i, j) - mp_capsule.mInertia(i, j)) / mp_capsule.mInertia(i, j);
+					CHECK(inertia_error > -0.05f);
+					CHECK(inertia_error < 0.0f); // Inertia is smaller since the convex hull is smaller
+				}
+				else
+				{
+					CHECK(mp_capsule.mInertia(i, j) == 0.0f);
+					float scaled_inertia = mp_capsule_hull.mInertia(i, j) / mp_capsule_hull.mMass;
+					CHECK_APPROX_EQUAL(scaled_inertia, 0.0f, 1.0e-3f);
+				}
+			}
 	}
 
 	// Test IsValidScale function
@@ -299,6 +355,24 @@ TEST_SUITE("ShapeTests")
 			shape.SetEmbedded();
 			CHECK(!result.IsValid());
 		}
+	}
+
+	// Test re-creating shape using the same settings object
+	TEST_CASE("TestClearCachedResult")
+	{
+		// Create a sphere and check radius
+		SphereShapeSettings sphere_settings(1.0f);
+		RefConst<SphereShape> sphere1 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		CHECK(sphere1->GetRadius() == 1.0f);
+
+		// Modify radius and check that creating the shape again returns the cached result
+		sphere_settings.mRadius = 2.0f;
+		RefConst<SphereShape> sphere2 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		CHECK(sphere2 == sphere1);
+
+		sphere_settings.ClearCachedResult();
+		RefConst<SphereShape> sphere3 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		CHECK(sphere3->GetRadius() == 2.0f);
 	}
 
 	// Test submerged volume calculation
@@ -619,5 +693,59 @@ TEST_SUITE("ShapeTests")
 		// Check that get world space bounds returns an invalid bounding box for double precision parameters
 		AABox bounds3 = mutable_compound->GetWorldSpaceBounds(DMat44::sRotationTranslation(rotation, DVec3(100, 200, 300)), Vec3(1, 2, 3));
 		CHECK(!bounds3.IsValid());
+	}
+
+	TEST_CASE("TestSaveMeshShape")
+	{
+		// Create an n x n grid of triangles
+		const int n = 10;
+		const float s = 0.1f;
+		TriangleList triangles;
+		for (int z = 0; z < n; ++z)
+			for (int x = 0; x < n; ++x)
+			{
+				float fx = s * x - s * n / 2, fz = s * z - s * n / 2;
+				triangles.push_back(Triangle(Vec3(fx, 0, fz), Vec3(fx, 0, fz + s), Vec3(fx + s, 0, fz + s)));
+				triangles.push_back(Triangle(Vec3(fx, 0, fz), Vec3(fx + s, 0, fz + s), Vec3(fx + s, 0, fz)));
+			}
+		MeshShapeSettings mesh_settings(triangles);
+		mesh_settings.SetEmbedded();
+		RefConst<Shape> shape = mesh_settings.Create().Get();
+
+		// Calculate expected bounds
+		AABox expected_bounds;
+		for (const Triangle &t : triangles)
+			for (const Float3 &v : t.mV)
+				expected_bounds.Encapsulate(Vec3(v));
+
+		stringstream stream;
+
+		{
+			// Write mesh to stream
+			StreamOutWrapper wrapper(stream);
+			shape->SaveBinaryState(wrapper);
+		}
+
+		{
+			// Read back mesh
+			StreamInWrapper iwrapper(stream);
+			Shape::ShapeResult result = Shape::sRestoreFromBinaryState(iwrapper);
+			CHECK(result.IsValid());
+			RefConst<MeshShape> mesh_shape = static_cast<const MeshShape *>(result.Get().GetPtr());
+
+			// Test if it contains the same amount of triangles
+			Shape::Stats stats = mesh_shape->GetStats();
+			CHECK(stats.mNumTriangles == triangles.size());
+
+			// Check bounding box
+			CHECK(mesh_shape->GetLocalBounds() == expected_bounds);
+
+			// Check if we can hit it with a ray
+			RayCastResult hit;
+			RayCast ray(Vec3(0.5f * s, 1, 0.25f * s), Vec3(0, -2, 0)); // Hit in the center of a triangle
+			CHECK(mesh_shape->CastRay(ray, SubShapeIDCreator(), hit));
+			CHECK(hit.mFraction == 0.5f);
+			CHECK(mesh_shape->GetSurfaceNormal(hit.mSubShapeID2, ray.GetPointOnRay(hit.mFraction)) == Vec3::sAxisY());
+		}
 	}
 }

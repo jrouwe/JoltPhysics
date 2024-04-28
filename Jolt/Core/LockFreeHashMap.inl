@@ -189,7 +189,7 @@ inline typename LockFreeHashMap<Key, Value>::KeyValue *LockFreeHashMap<Key, Valu
 	// Construct the key/value pair
 	KeyValue *kv = mAllocator.template FromOffset<KeyValue>(write_offset);
 	JPH_ASSERT(intptr_t(kv) % alignof(KeyValue) == 0);
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	memset(kv, 0xcd, size);
 #endif
 	kv->mKey = inKey;
@@ -311,7 +311,7 @@ typename LockFreeHashMap<Key, Value>::Iterator &LockFreeHashMap<Key, Value>::Ite
 	}
 }
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 
 template <class Key, class Value>
 void LockFreeHashMap<Key, Value>::TraceStats() const

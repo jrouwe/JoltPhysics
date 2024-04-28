@@ -38,7 +38,7 @@ using RMat44Arg = Mat44Arg;
 // Put the 'real' operator in a namespace so that users can opt in to use it:
 // using namespace JPH::literals;
 namespace literals {
-	constexpr Real operator "" _r (long double inValue) { return Real(inValue); }
+	constexpr Real operator ""_r (long double inValue) { return Real(inValue); }
 };
 
 JPH_NAMESPACE_END
