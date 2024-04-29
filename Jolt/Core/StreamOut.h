@@ -30,7 +30,7 @@ public:
 
 	/// Write a vector of primitives to the binary stream
 	template <class T, class A>
-	void				Write(const std::vector<T, A> &inT)
+	void				Write(const Array<T, A> &inT)
 	{
 		typename Array<T>::size_type len = inT.size();
 		Write(len);
@@ -51,12 +51,12 @@ public:
 
 	/// Write a vector of primitives to the binary stream using a custom write function
 	template <class T, class A, typename F>
-	void				Write(const std::vector<T, A> &inT, const F &inWriteElement)
+	void				Write(const Array<T, A> &inT, const F &inWriteElement)
 	{
-		typename Array<T>::size_type len = inT.size();
+		typename Array<T, A>::size_type len = inT.size();
 		Write(len);
 		if (!IsFailed())
-			for (typename Array<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 				inWriteElement(inT[i], *this);
 	}
 

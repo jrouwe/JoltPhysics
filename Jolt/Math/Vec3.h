@@ -104,7 +104,7 @@ public:
 	static JPH_INLINE Vec3		sUnitSpherical(float inTheta, float inPhi);
 
 	/// A set of vectors uniformly spanning the surface of a unit sphere, usable for debug purposes
-	JPH_EXPORT static const std::vector<Vec3> sUnitSphere;
+	JPH_EXPORT static const Array<Vec3, std::allocator<Vec3>> sUnitSphere;
 
 	/// Get random unit vector
 	template <class Random>

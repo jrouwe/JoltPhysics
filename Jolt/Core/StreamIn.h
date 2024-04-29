@@ -33,14 +33,14 @@ public:
 
 	/// Read a vector of primitives from the binary stream
 	template <class T, class A>
-	void				Read(std::vector<T, A> &outT)
+	void				Read(Array<T, A> &outT)
 	{
-		typename Array<T>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
+		typename Array<T, A>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
 			outT.resize(len);
-			for (typename Array<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 				Read(outT[i]);
 		}
 		else
@@ -64,14 +64,14 @@ public:
 
 	/// Read a vector of primitives from the binary stream using a custom function to read the elements
 	template <class T, class A, typename F>
-	void				Read(std::vector<T, A> &outT, const F &inReadElement)
+	void				Read(Array<T, A> &outT, const F &inReadElement)
 	{
-		typename Array<T>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
+		typename Array<T, A>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
 			outT.resize(len);
-			for (typename Array<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 				inReadElement(*this, outT[i]);
 		}
 		else

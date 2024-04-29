@@ -132,7 +132,7 @@ protected:
 	virtual void					RestoreBinaryState(StreamIn &inStream) override;
 
 	/// Vertex list that forms a unit sphere
-	static const std::vector<Vec3>	sUnitSphereTriangles;
+	static const Array<Vec3, std::allocator<Vec3>> sUnitSphereTriangles;
 
 private:
 	// Class for GetTrianglesStart/Next

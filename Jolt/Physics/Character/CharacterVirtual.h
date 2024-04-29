@@ -315,7 +315,7 @@ public:
 		bool							mCanPushCharacter = true;								///< When true, the velocity of the contact point can push the character
 	};
 
-	using TempContactList = std::vector<Contact, STLTempAllocator<Contact>>;
+	using TempContactList = Array<Contact, STLTempAllocator<Contact>>;
 	using ContactList = Array<Contact>;
 
 	/// Access to the internal list of contacts that the character has found.
@@ -344,7 +344,7 @@ private:
 		SubShapeID						mSubShapeID;											///< Sub shape of body we're colliding with
 	};
 
-	using IgnoredContactList = std::vector<IgnoredContact, STLTempAllocator<IgnoredContact>>;
+	using IgnoredContactList = Array<IgnoredContact, STLTempAllocator<IgnoredContact>>;
 
 	// A constraint that limits the movement of the character
 	struct Constraint
@@ -357,7 +357,7 @@ private:
 		bool							mIsSteepSlope = false;									///< If this constraint belongs to a steep slope
 	};
 
-	using ConstraintList = std::vector<Constraint, STLTempAllocator<Constraint>>;
+	using ConstraintList = Array<Constraint, STLTempAllocator<Constraint>>;
 
 	// Collision collector that collects hits for CollideShape
 	class ContactCollector : public CollideShapeCollector

@@ -509,7 +509,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 	}
 
 	// Create array that holds the constraints in order of time of impact (sort will happen later)
-	std::vector<Constraint *, STLTempAllocator<Constraint *>> sorted_constraints(inAllocator);
+	Array<Constraint *, STLTempAllocator<Constraint *>> sorted_constraints(inAllocator);
 	sorted_constraints.resize(ioConstraints.size());
 	for (size_t index = 0; index < sorted_constraints.size(); index++)
 		sorted_constraints[index] = &ioConstraints[index];
@@ -525,7 +525,7 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 	outTimeSimulated = 0.0f;
 
 	// These are the contacts that we hit previously without moving a significant distance
-	std::vector<Constraint *, STLTempAllocator<Constraint *>> previous_contacts(inAllocator);
+	Array<Constraint *, STLTempAllocator<Constraint *>> previous_contacts(inAllocator);
 	previous_contacts.resize(mMaxConstraintIterations);
 	int num_previous_contacts = 0;
 
@@ -1217,7 +1217,7 @@ bool CharacterVirtual::WalkStairs(float inDeltaTime, Vec3Arg inStepUp, Vec3Arg i
 	// We need to do this before calling MoveShape because it will update mActiveContacts.
 	Vec3 character_velocity = inStepForward / inDeltaTime;
 	Vec3 horizontal_velocity = character_velocity - character_velocity.Dot(mUp) * mUp;
-	std::vector<Vec3, STLTempAllocator<Vec3>> steep_slope_normals(inAllocator);
+	Array<Vec3, STLTempAllocator<Vec3>> steep_slope_normals(inAllocator);
 	steep_slope_normals.reserve(mActiveContacts.size());
 	for (const Contact &c : mActiveContacts)
 		if (c.mHadCollision

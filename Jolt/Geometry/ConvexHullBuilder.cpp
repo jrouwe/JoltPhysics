@@ -265,7 +265,7 @@ bool ConvexHullBuilder::ContainsFace(const Array<int> &inIndices) const
 	for (Face *f : mFaces)
 	{
 		Edge *e = f->mFirstEdge;
-		Array<int>::const_iterator index = find(inIndices.begin(), inIndices.end(), e->mStartIdx);
+		Array<int>::const_iterator index = std::find(inIndices.begin(), inIndices.end(), e->mStartIdx);
 		if (index != inIndices.end())
 		{
 			size_t matches = 0;
@@ -1007,7 +1007,7 @@ void ConvexHullBuilder::MergeCoplanarOrConcaveFaces(Face *inFace, float inCoplan
 
 void ConvexHullBuilder::sMarkAffected(Face *inFace, Faces &ioAffectedFaces)
 {
-	if (find(ioAffectedFaces.begin(), ioAffectedFaces.end(), inFace) == ioAffectedFaces.end())
+	if (std::find(ioAffectedFaces.begin(), ioAffectedFaces.end(), inFace) == ioAffectedFaces.end())
 		ioAffectedFaces.push_back(inFace);
 }
 

@@ -88,8 +88,8 @@ void SkeletonMapper::Initialize(const Skeleton *inSkeleton1, const Mat44 *inNeut
 			if (cur == start)
 			{
 				// Reverse the chains
-				reverse(chain1.begin(), chain1.end());
-				reverse(chain2.begin(), chain2.end());
+				std::reverse(chain1.begin(), chain1.end());
+				std::reverse(chain2.begin(), chain2.end());
 
 				// Mark elements mapped
 				for (int j1 : chain1)
