@@ -31,7 +31,7 @@ JPH_NAMESPACE_BEGIN
 /// - Array capacity can only grow, only shrinks if shrink_to_fit is called
 /// - Not all functions have been implemented
 template <class T, class Allocator = STLAllocator<T>>
-class [[nodiscard]] Array
+class [[nodiscard]] Array : private Allocator
 {
 public:
 	using value_type = T;
@@ -49,20 +49,20 @@ public:
 
 	/// Constructor with allocator
 	explicit			Array(const Allocator &inAllocator) :
-		mAllocator(inAllocator)
+		Allocator(inAllocator)
 	{
 	}
 
 	/// Constructor with length
 	explicit			Array(size_type inLength, const Allocator &inAllocator = { }) :
-		mAllocator(inAllocator)
+		Allocator(inAllocator)
 	{
 		resize(inLength);
 	}
 
 	/// Constructor with length and value
-						Array(size_type inLength, const T &inValue, const Allocator &inAllocator = { })
-		: mAllocator(inAllocator)
+						Array(size_type inLength, const T &inValue, const Allocator &inAllocator = { }) :
+		Allocator(inAllocator)
 	{
 		reserve(inLength);
 
@@ -71,8 +71,8 @@ public:
 	}
 
 	/// Constructor from initializer list
-						Array(std::initializer_list<T> inList, const Allocator &inAllocator = { })
-		: mAllocator(inAllocator)
+						Array(std::initializer_list<T> inList, const Allocator &inAllocator = { }) :
+		Allocator(inAllocator)
 	{
 		reserve(size_type(inList.size()));
 
@@ -81,8 +81,8 @@ public:
 	}
 
 	/// Constructor from iterator
-						Array(const_iterator inBegin, const_iterator inEnd, const Allocator &inAllocator = { })
-		: mAllocator(inAllocator)
+						Array(const_iterator inBegin, const_iterator inEnd, const Allocator &inAllocator = { }) :
+		Allocator(inAllocator)
 	{
 		reserve(size_type(inEnd - inBegin));
 
@@ -91,7 +91,8 @@ public:
 	}
 
 	/// Copy constructor
-						Array(const Array<T, Allocator> &inRHS)
+						Array(const Array<T, Allocator> &inRHS) :
+		Allocator(inRHS.get_allocator())
 	{
 		while (mSize < inRHS.mSize)
 		{
@@ -104,6 +105,8 @@ public:
 						Array(Array<T, Allocator> &&inRHS)
 	{
 		destroy();
+
+		get_allocator() = std::move(inRHS.get_allocator());
 
 		mSize = inRHS.mSize;
 		mCapacity = inRHS.mCapacity;
@@ -119,6 +122,17 @@ public:
 						~Array()
 	{
 		destroy();
+	}
+
+	/// Get the allocator
+	Allocator &			get_allocator()
+	{
+		return *this;
+	}
+
+	const Allocator &	get_allocator() const
+	{
+		return *this;
 	}
 
 	/// Destruct all elements and set length to zero
@@ -188,11 +202,11 @@ public:
 	{
 		if (mCapacity < inNewSize)
 		{
-			pointer pointer = mAllocator.allocate(inNewSize);
+			pointer pointer = get_allocator().allocate(inNewSize);
 			if (mElements != nullptr)
 			{
 				memcpy(pointer, mElements, mSize * sizeof(T));
-				mAllocator.deallocate(mElements, mCapacity);
+				get_allocator().deallocate(mElements, mCapacity);
 			}
 			mElements = pointer;
 			mCapacity = inNewSize;
@@ -234,9 +248,9 @@ public:
 	{
 		if (mCapacity > mSize)
 		{
-			pointer pointer = mAllocator.allocate(mSize);
+			pointer pointer = get_allocator().allocate(mSize);
 			memcpy(pointer, mElements, mSize * sizeof(T));
-			mAllocator.deallocate(mElements, mCapacity);
+			get_allocator().deallocate(mElements, mCapacity);
 			mCapacity = mSize;
 		}
 	}
@@ -267,8 +281,7 @@ public:
 	/// Swap the contents of two arrays
 	void				swap(Array<T, Allocator> &inRHS)
 	{
-		JPH_ASSERT(mAllocator == inRHS.mAllocator);
-
+		std::swap(get_allocator(), inRHS.get_allocator());
 		std::swap(mSize, inRHS.mSize);
 		std::swap(mCapacity, inRHS.mCapacity);
 		std::swap(mElements, inRHS.mElements);
@@ -459,13 +472,12 @@ private:
 		{
 			clear();
 
-			mAllocator.deallocate(mElements, mCapacity);
+			get_allocator().deallocate(mElements, mCapacity);
 			mElements = nullptr;
 			mCapacity = 0;
 		}
 	}
 
-	Allocator			mAllocator;
 	size_type			mSize = 0;
 	size_type			mCapacity = 0;
 	T *					mElements = nullptr;
