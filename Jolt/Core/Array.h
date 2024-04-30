@@ -22,7 +22,14 @@ JPH_NAMESPACE_END
 
 JPH_NAMESPACE_BEGIN
 
-/// Simple variable length array backed by the heap
+/// Simple replacement for std::vector
+///
+/// Major differences:
+/// - Memory is not initialized to zero (this was causing a lot of page faults)
+/// - When resizing, we memcpy all elements to the new memory location instead of moving them using a move constructor (this is cheap and works for the classes in Jolt)
+/// - Iterators are simple pointers (for now)
+/// - Array capacity can only grow, only shrinks if shrink_to_fit is called
+/// - Not all functions have been implemented
 template <class T, class Allocator = STLAllocator<T>>
 class [[nodiscard]] Array
 {
