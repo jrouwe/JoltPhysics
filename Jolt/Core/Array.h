@@ -41,11 +41,14 @@ public:
 						Array() = default;
 
 	/// Constructor with allocator
-	explicit			Array(const Allocator &inAllocator) : mAllocator(inAllocator) { }
+	explicit			Array(const Allocator &inAllocator) :
+		mAllocator(inAllocator)
+	{
+	}
 
 	/// Constructor with length
-	explicit			Array(size_type inLength, const Allocator &inAllocator = { })
-		: mAllocator(inAllocator)
+	explicit			Array(size_type inLength, const Allocator &inAllocator = { }) :
+		mAllocator(inAllocator)
 	{
 		resize(inLength);
 	}
@@ -65,6 +68,7 @@ public:
 		: mAllocator(inAllocator)
 	{
 		reserve(size_type(inList.size()));
+
 		for (typename std::initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)
 			::new (&mElements[mSize++]) T(*i);
 	}
@@ -74,6 +78,7 @@ public:
 		: mAllocator(inAllocator)
 	{
 		reserve(size_type(inEnd - inBegin));
+
 		for (const_iterator element = inBegin; element < inEnd; ++element)
 			::new (&mElements[mSize++]) T(*element);
 	}
@@ -88,34 +93,49 @@ public:
 		}
 	}
 
+	/// Move constructor
+						Array(Array<T, Allocator> &&inRHS)
+	{
+		destroy();
+
+		mSize = inRHS.mSize;
+		mCapacity = inRHS.mCapacity;
+		mElements = inRHS.mElements;
+
+		inRHS.mSize = 0;
+		inRHS.mCapacity = 0;
+		inRHS.mElements = nullptr;
+
+	}
+
 	/// Destruct all elements
 						~Array()
 	{
-		if constexpr (!is_trivially_destructible<T>())
-			for (T *e = mElements, *end = e + mSize; e < end; ++e)
-				e->~T();
+		destroy();
 	}
 
 	/// Destruct all elements and set length to zero
 	void				clear()
 	{
 		if constexpr (!is_trivially_destructible<T>())
-			for (T *e = mElements, *end = e + mSize; e < end; ++e)
-				e->~T();
+			for (T *element = mElements, *end = element + mSize; element < end; ++element)
+				element->~T();
 		mSize = 0;
 	}
 
 	/// Add element to the back of the array
 	void				push_back(const T &inElement)
 	{
-		JPH_ASSERT(mSize < mCapacity);
+		grow();
+
 		T *element = mElements + mSize++;
 		::new (element) T(inElement);
 	}
 
 	void				push_back(T &&inElement)
 	{
-		JPH_ASSERT(mSize < mCapacity);
+		grow();
+
 		T *element = mElements + mSize++;
 		::new (element) T(std::move(inElement));
 	}
@@ -124,7 +144,8 @@ public:
 	template <class... A>
 	T &					emplace_back(A &&... inElement)
 	{
-		JPH_ASSERT(mSize < mCapacity);
+		grow();
+
 		T *element = mElements + mSize++;
 		::new (element) T(std::forward<A>(inElement)...);
 		return *element;
@@ -166,6 +187,7 @@ public:
 				memcpy(pointer, mElements, mSize * sizeof(T));
 				mAllocator.deallocate(mElements, mCapacity);
 			}
+			mElements = pointer;
 			mCapacity = inNewSize;
 		}
 	}
@@ -177,8 +199,7 @@ public:
 			for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
 				element->~T();
 
-		if (mCapacity < inNewSize)
-			reserve(inNewSize);
+		reserve(inNewSize);
 
 		if constexpr (!is_trivially_constructible<T>())
 			for (T *element = mElements + mSize, *element_end = mElements + inNewSize; element < element_end; ++element)
@@ -193,8 +214,7 @@ public:
 			for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
 				element->~T();
 
-		if (mCapacity < inNewSize)
-			reserve(inNewSize);
+		reserve(inNewSize);
 
 		if constexpr (!is_trivially_constructible<T>())
 			for (T *element = mElements + mSize, *element_end = mElements + inNewSize; element < element_end; ++element)
@@ -202,6 +222,7 @@ public:
 		mSize = inNewSize;
 	}
 
+	/// Reduce the capacity of the array to match its size
 	void				shrink_to_fit()
 	{
 		if (mCapacity > mSize)
@@ -213,10 +234,27 @@ public:
 		}
 	}
 
+	/// Replace the contents of this array with inBegin .. inEnd
 	template <class Iterator>
 	void				assign(const Iterator &inBegin, const Iterator &inEnd)
 	{
-		// ...
+		clear();
+
+		reserve(size_type(std::distance(inBegin, inEnd)));
+
+		for (Iterator element = inBegin; element != inEnd; ++element)
+			::new (&mElements[mSize++]) T(*element);
+	}
+
+	/// Replace the contents of this array with inList
+	void				assign(std::initializer_list<T> inList)
+	{
+		clear();
+
+		reserve(size_type(inList.size()));
+
+		for (typename std::initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)
+			::new (&mElements[mSize++]) T(*i);
 	}
 
 	/// Swap the contents of two arrays
@@ -360,18 +398,8 @@ public:
 	/// Assignment operator
 	Array<T, Allocator> &	operator = (const Array<T, Allocator> &inRHS)
 	{
-		size_type rhs_size = inRHS.size();
-
 		if (static_cast<const void *>(this) != static_cast<const void *>(&inRHS))
-		{
-			clear();
-
-			while (mSize < rhs_size)
-			{
-				::new (&mElements[mSize]) T(inRHS[mSize]);
-				++mSize;
-			}
-		}
+			assign(inRHS.begin(), inRHS.end());
 
 		return *this;
 	}
@@ -379,7 +407,7 @@ public:
 	/// Assignment operator
 	Array<T, Allocator> &	operator = (std::initializer_list<T> inRHS)
 	{
-		// ...
+		assign(inRHS);
 
 		return *this;
 	}
@@ -405,7 +433,31 @@ public:
 		return false;
 	}
 
-protected:
+private:
+	/// Grow the array by at least inAmount elements
+	inline void			grow(size_type inAmount = 1)
+	{
+		size_type min_size = mSize + inAmount;
+		if (min_size > mCapacity)
+		{
+			size_type new_capacity = max(min_size, mCapacity * 2);
+			reserve(new_capacity);
+		}
+	}
+
+	/// Destroy all elements and free memory
+	inline void			destroy()
+	{
+		if (mElements != nullptr)
+		{
+			clear();
+
+			mAllocator.deallocate(mElements, mCapacity);
+			mElements = nullptr;
+			mCapacity = 0;
+		}
+	}
+
 	Allocator			mAllocator;
 	size_type			mSize = 0;
 	size_type			mCapacity = 0;
