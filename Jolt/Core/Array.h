@@ -8,6 +8,10 @@
 
 #ifdef JPH_USE_STD_VECTOR
 
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
+#include <vector>
+JPH_SUPPRESS_WARNINGS_STD_END
+
 JPH_NAMESPACE_BEGIN
 
 template <class T, class Allocator = STLAllocator<T>> using Array = std::vector<T, Allocator>;
