@@ -29,6 +29,7 @@ JPH_NAMESPACE_BEGIN
 /// - When resizing, we memcpy all elements to the new memory location instead of moving them using a move constructor (this is cheap and works for the classes in Jolt)
 /// - Iterators are simple pointers (for now)
 /// - Array capacity can only grow, only shrinks if shrink_to_fit is called
+/// - No exception safety
 /// - Not all functions have been implemented
 template <class T, class Allocator = STLAllocator<T>>
 class [[nodiscard]] Array : private Allocator
@@ -66,8 +67,9 @@ public:
 	{
 		reserve(inLength);
 
-		for (iterator element = begin(); element < end(); ++element)
-			::new (&element) T(inValue);
+		for (T *element = mElements, *element_end = mElements + inLength; element < element_end; ++element)
+			::new (element) T(inValue);
+		mSize = inLength;
 	}
 
 	/// Constructor from initializer list
@@ -94,6 +96,8 @@ public:
 						Array(const Array<T, Allocator> &inRHS) :
 		Allocator(inRHS.get_allocator())
 	{
+		reserve(inRHS.mSize);
+
 		while (mSize < inRHS.mSize)
 		{
 			::new (&mElements[mSize]) T(inRHS[mSize]);
@@ -251,13 +255,14 @@ public:
 			pointer pointer = get_allocator().allocate(mSize);
 			memcpy(pointer, mElements, mSize * sizeof(T));
 			get_allocator().deallocate(mElements, mCapacity);
+			mElements = pointer;
 			mCapacity = mSize;
 		}
 	}
 
 	/// Replace the contents of this array with inBegin .. inEnd
 	template <class Iterator>
-	void				assign(const Iterator &inBegin, const Iterator &inEnd)
+	void				assign(Iterator inBegin, Iterator inEnd)
 	{
 		clear();
 
@@ -288,14 +293,36 @@ public:
 	}
 
 	template <class Iterator>
-	void				insert(const_iterator inPos, const Iterator &inBegin, const Iterator &inEnd)
+	void				insert(const_iterator inPos, Iterator inBegin, Iterator inEnd)
 	{
-		// ...
+		// After grow() inPos may be invalid
+		size_type first_element = inPos - mElements;
+
+		size_type num_elements = size_type(std::distance(inBegin, inEnd));
+		grow(num_elements);
+
+		T *element_begin = mElements + first_element;
+		T *element_end = element_begin + num_elements;
+		memmove(element_end, element_begin, (mSize - first_element) * sizeof(T));
+
+		for (T *element = element_begin; element < element_end; ++element, ++inBegin)
+			::new (element) T(*inBegin);
+
+		mSize += num_elements;
 	}
 
 	void				insert(const_iterator inPos, const T &inValue)
 	{
-		// ...
+		// After grow() inPos may be invalid
+		size_type first_element = inPos - mElements;
+
+		grow();
+
+		T *element = mElements + first_element;
+		memmove(element + 1, element, (mSize - first_element) * sizeof(T));
+
+		::new (element) T(inValue);
+		mSize++;
 	}
 
 	/// Iterators
