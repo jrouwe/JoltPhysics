@@ -13,7 +13,7 @@ class [[nodiscard]] Vector
 public:
 	/// Constructor
 	inline						Vector() = default;
-	inline						Vector(const Vector &inRHS)								{ *this = inRHS; }
+	inline						Vector(const Vector &) = default;
 
 	/// Dimensions
 	inline uint					GetRows() const											{ return Rows; }
@@ -81,12 +81,7 @@ public:
 	}
 
 	/// Assignment
-	inline Vector &				operator = (const Vector &inV2)
-	{
-		for (uint r = 0; r < Rows; ++r)
-			mF32[r] = inV2.mF32[r];
-		return *this;
-	}
+	inline Vector &				operator = (const Vector &) = default;
 
 	/// Multiply vector with float
 	inline Vector				operator * (const float inV2) const
