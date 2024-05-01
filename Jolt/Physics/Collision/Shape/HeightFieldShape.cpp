@@ -199,7 +199,7 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 	return bits_per_sample;
 }
 
-void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, uint inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator)
+void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, intptr_t inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator)
 {
 	// Allocate temporary buffer for normals
 	uint normals_size = 2 * inSizeX * inSizeY * sizeof(Vec3);
@@ -834,7 +834,7 @@ bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurf
 	}
 }
 
-void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, uint inHeightsStride) const
+void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, intptr_t inHeightsStride) const
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return;
@@ -895,7 +895,7 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	}
 }
 
-void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle)
+void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, intptr_t inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle)
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return;
@@ -922,12 +922,14 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 
 	// Get heights for affected area
 	const float *heights;
+	intptr_t heights_stride;
 	float *temp_heights;
 	if (need_temp_heights)
 	{
 		// Fetch the surrounding height data (note we're forced to recompress this data with a potentially different range so there will be some precision loss here)
 		temp_heights = (float *)inAllocator.Allocate(heights_size_x * heights_size_y * sizeof(float));
 		heights = temp_heights;
+		heights_stride = heights_size_x;
 
 		// We need to fill in the following areas:
 		//
@@ -971,7 +973,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	{
 		// We can directly use the input buffer because there are no extra edges to take into account
 		heights = inHeights;
-		heights_size_x = inHeightsStride;
+		heights_stride = inHeightsStride;
 		temp_heights = nullptr;
 	}
 
@@ -998,7 +1000,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 			for (uint sample_y = sample_start_y; sample_y < sample_y_end; ++sample_y)
 				for (uint sample_x = sample_start_x; sample_x < sample_x_end; ++sample_x)
 				{
-					float h = heights[sample_y * heights_size_x + sample_x];
+					float h = heights[sample_y * heights_stride + sample_x];
 					if (h != cNoCollisionValue)
 					{
 						int quantized_height = Clamp((int)floor((h - mOffset.GetY()) / mScale.GetY()), 0, int(cMaxHeightValue16 - 1));
@@ -1031,7 +1033,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 				for (uint sample_x = sample_start_x; sample_x < sample_x_end; ++sample_x)
 				{
 					// Quantize height
-					float h = heights[sample_y * heights_size_x + sample_x];
+					float h = heights[sample_y * heights_stride + sample_x];
 					uint8 quantized_height = h != cNoCollisionValue? uint8(Clamp((int)floor((h - offset) / scale), 0, int(mSampleMask) - 1)) : mSampleMask;
 
 					// Determine bit position of sample
@@ -1056,7 +1058,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	uint ae_y = inY > 1? inY - 2 : 0;
 	uint ae_sx = min(inX + inSizeX + 1, mSampleCount - 1) - ae_x;
 	uint ae_sy = min(inY + inSizeY + 1, mSampleCount - 1) - ae_y;
-	CalculateActiveEdges(ae_x, ae_y, ae_sx, ae_sy, heights, affected_x, affected_y, heights_size_x, 1.0f, inActiveEdgeCosThresholdAngle, inAllocator);
+	CalculateActiveEdges(ae_x, ae_y, ae_sx, ae_sy, heights, affected_x, affected_y, heights_stride, 1.0f, inActiveEdgeCosThresholdAngle, inAllocator);
 
 	// Free temporary buffer
 	if (temp_heights != nullptr)
@@ -1129,7 +1131,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 #endif
 }
 
-void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, uint inMaterialsStride) const
+void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, intptr_t inMaterialsStride) const
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return;
@@ -1179,7 +1181,7 @@ void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 	}
 }
 
-bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, uint inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator)
+bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, intptr_t inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator)
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return true;
