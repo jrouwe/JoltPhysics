@@ -43,7 +43,7 @@ public:
 			if constexpr (std::is_same_v<T, Vec3> || std::is_same_v<T, DVec3> || std::is_same_v<T, DMat44>)
 			{
 				// These types have unused components that we don't want to read
-				for (typename Array<T, S>::size_type i = 0; i < len; ++i)
+				for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 					Read(outT[i]);
 			}
 			else
