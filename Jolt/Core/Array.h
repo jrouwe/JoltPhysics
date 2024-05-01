@@ -151,6 +151,8 @@ public:
 	/// Add element to the back of the array
 	void				push_back(const T &inElement)
 	{
+		JPH_ASSERT(&inElement < mElements || &inElement >= mElements + mSize, "Can't pass an element from the array to push_back");
+
 		grow();
 
 		T *element = mElements + mSize++;
@@ -235,6 +237,8 @@ public:
 	/// Resize array to new length and initialize all elements with inValue
 	void				resize(size_type inNewSize, const T &inValue)
 	{
+		JPH_ASSERT(&inValue < mElements || &inValue >= mElements + mSize, "Can't pass an element from the array to resize");
+
 		if constexpr (!is_trivially_destructible<T>())
 			for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
 				element->~T();
@@ -313,6 +317,8 @@ public:
 
 	void				insert(const_iterator inPos, const T &inValue)
 	{
+		JPH_ASSERT(&inValue < mElements || &inValue >= mElements + mSize, "Can't pass an element from the array to insert");
+
 		// After grow() inPos may be invalid
 		size_type first_element = inPos - mElements;
 

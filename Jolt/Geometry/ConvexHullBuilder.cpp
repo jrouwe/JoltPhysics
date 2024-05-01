@@ -225,7 +225,8 @@ bool ConvexHullBuilder::AssignPointToFace(int inPositionIdx, const Faces &inFace
 			else
 			{
 				// Not the furthest point, add it as the before last point
-				best_face->mConflictList.push_back(best_face->mConflictList.back());
+				int last = best_face->mConflictList.back();
+				best_face->mConflictList.push_back(last);
 				best_face->mConflictList[best_face->mConflictList.size() - 2] = inPositionIdx;
 			}
 
