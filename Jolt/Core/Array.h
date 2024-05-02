@@ -149,32 +149,32 @@ public:
 	}
 
 	/// Add element to the back of the array
-	void				push_back(const T &inElement)
+	void				push_back(const T &inValue)
 	{
-		JPH_ASSERT(&inElement < mElements || &inElement >= mElements + mSize, "Can't pass an element from the array to push_back");
+		JPH_ASSERT(&inValue < mElements || &inValue >= mElements + mSize, "Can't pass an element from the array to push_back");
 
 		grow();
 
 		T *element = mElements + mSize++;
-		::new (element) T(inElement);
+		::new (element) T(inValue);
 	}
 
-	void				push_back(T &&inElement)
+	void				push_back(T &&inValue)
 	{
 		grow();
 
 		T *element = mElements + mSize++;
-		::new (element) T(std::move(inElement));
+		::new (element) T(std::move(inValue));
 	}
 
 	/// Construct element at the back of the array
 	template <class... A>
-	T &					emplace_back(A &&... inElement)
+	T &					emplace_back(A &&... inValue)
 	{
 		grow();
 
 		T *element = mElements + mSize++;
-		::new (element) T(std::forward<A>(inElement)...);
+		::new (element) T(std::forward<A>(inValue)...);
 		return *element;
 	}
 
@@ -245,9 +245,8 @@ public:
 
 		reserve(inNewSize);
 
-		if constexpr (!is_trivially_constructible<T>())
-			for (T *element = mElements + mSize, *element_end = mElements + inNewSize; element < element_end; ++element)
-				::new (element) T(inValue);
+		for (T *element = mElements + mSize, *element_end = mElements + inNewSize; element < element_end; ++element)
+			::new (element) T(inValue);
 		mSize = inNewSize;
 	}
 

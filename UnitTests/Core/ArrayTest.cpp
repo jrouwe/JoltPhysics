@@ -16,11 +16,8 @@ TEST_SUITE("ArrayTest")
 	{
 		Array<int> arr(5, 55);
 		CHECK(arr.size() == 5);
-		CHECK(arr[0] == 55);
-		CHECK(arr[1] == 55);
-		CHECK(arr[2] == 55);
-		CHECK(arr[3] == 55);
-		CHECK(arr[4] == 55);
+		for (int i = 0; i < 5; ++i)
+			CHECK(arr[i] == 55);
 	}
 
 	TEST_CASE("TestConstructIterator")
@@ -139,6 +136,7 @@ TEST_SUITE("ArrayTest")
 	TEST_CASE("TestResize")
 	{
 		Array<int> arr;
+		CHECK(arr.size() == 0);
 		CHECK(arr.capacity() == 0);
 
 		arr.resize(123);
@@ -156,6 +154,16 @@ TEST_SUITE("ArrayTest")
 		arr.resize(10);
 		CHECK(arr.size() == 10);
 		CHECK(arr.capacity() >= 10);
+	}
+
+	TEST_CASE("TestResizeWithValue")
+	{
+		Array<int> arr;
+		arr.resize(10, 55);
+		CHECK(arr.size() == 10);
+		CHECK(arr.capacity() == 10);
+		for (int i = 0; i < 10; ++i)
+			CHECK(arr[i] == 55);
 	}
 
 	TEST_CASE("TestShrinkToFit")

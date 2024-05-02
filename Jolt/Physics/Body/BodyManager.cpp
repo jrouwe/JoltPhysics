@@ -120,7 +120,7 @@ void BodyManager::Init(uint inMaxBodies, uint inNumBodyMutexes, const BroadPhase
 	}
 
 	// Allocate space for sequence numbers
-	mBodySequenceNumbers.resize(inMaxBodies);
+	mBodySequenceNumbers.resize(inMaxBodies, 0);
 
 	// Keep layer interface
 	mBroadPhaseLayerInterface = &inLayerInterface;
