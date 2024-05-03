@@ -528,6 +528,10 @@ if (OBJECT_LAYER_BITS)
 	target_compile_definitions(Jolt PUBLIC JPH_OBJECT_LAYER_BITS=${OBJECT_LAYER_BITS})
 endif()
 
+if (USE_STD_VECTOR)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_STD_VECTOR)
+endif()
+
 # Setting to periodically trace broadphase stats to help determine if the broadphase layer configuration is optimal
 if (TRACK_BROADPHASE_STATS)
 	target_compile_definitions(Jolt PUBLIC JPH_TRACK_BROADPHASE_STATS)
