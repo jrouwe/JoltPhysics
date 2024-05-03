@@ -32,7 +32,7 @@ public:
 	template <class T, class A, std::enable_if_t<std::is_trivially_copyable_v<T>, bool> = true>
 	void				Write(const Array<T, A> &inT)
 	{
-		typename Array<T>::size_type len = inT.size();
+		typename Array<T, A>::size_type len = inT.size();
 		Write(len);
 		if (!IsFailed())
 		{

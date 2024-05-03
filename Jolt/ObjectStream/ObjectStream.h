@@ -119,8 +119,8 @@ public:
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 // Define serialization templates
-template <class T>
-bool OSIsType(Array<T> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)
+template <class T, class A>
+bool OSIsType(Array<T, A> *, int inArrayDepth, EOSDataType inDataType, const char *inClassName)
 {
 	return (inArrayDepth > 0 && OSIsType(static_cast<T *>(nullptr), inArrayDepth - 1, inDataType, inClassName));
 }
@@ -150,8 +150,8 @@ bool OSIsType(RefConst<T> *, int inArrayDepth, EOSDataType inDataType, const cha
 }
 
 /// Define serialization templates for dynamic arrays
-template <class T>
-bool OSReadData(IObjectStreamIn &ioStream, Array<T> &inArray)
+template <class T, class A>
+bool OSReadData(IObjectStreamIn &ioStream, Array<T, A> &inArray)
 {
 	bool continue_reading = true;
 
@@ -230,15 +230,15 @@ bool OSReadData(IObjectStreamIn &ioStream, RefConst<T> &inRef)
 }
 
 // Define serialization templates for dynamic arrays
-template <class T>
-void OSWriteDataType(IObjectStreamOut &ioStream, Array<T> *)
+template <class T, class A>
+void OSWriteDataType(IObjectStreamOut &ioStream, Array<T, A> *)
 {
 	ioStream.WriteDataType(EOSDataType::Array);
 	OSWriteDataType(ioStream, static_cast<T *>(nullptr));
 }
 
-template <class T>
-void OSWriteData(IObjectStreamOut &ioStream, const Array<T> &inArray)
+template <class T, class A>
+void OSWriteData(IObjectStreamOut &ioStream, const Array<T, A> &inArray)
 {
 	// Write size of array
 	ioStream.HintNextItem();
