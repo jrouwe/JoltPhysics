@@ -26,7 +26,6 @@ JPH_NAMESPACE_BEGIN
 ///
 /// Major differences:
 /// - Memory is not initialized to zero (this was causing a lot of page faults)
-/// - When resizing, we memcpy all elements to the new memory location instead of moving them using a move constructor (this is cheap and works for the classes in Jolt)
 /// - Iterators are simple pointers (for now)
 /// - Array capacity can only grow, only shrinks if shrink_to_fit is called
 /// - No exception safety
@@ -46,28 +45,14 @@ public:
 	using iterator = T *;
 
 private:
-	/// Grow the array by at least inAmount elements
-	inline void				grow(size_type inAmount = 1)
+	/// Move elements from one location to another
+	inline void				move(pointer inDestination, pointer inSource, size_type inCount)
 	{
-		size_type min_size = mSize + inAmount;
-		if (min_size > mCapacity)
-		{
-			size_type new_capacity = max(min_size, mCapacity * 2);
-			reserve(new_capacity);
-		}
-	}
-
-	/// Destroy all elements and free memory
-	inline void				destroy()
-	{
-		if (mElements != nullptr)
-		{
-			clear();
-
-			get_allocator().deallocate(mElements, mCapacity);
-			mElements = nullptr;
-			mCapacity = 0;
-		}
+		if constexpr (std::is_trivially_copyable<T>())
+			memmove(inDestination, inSource, inCount * sizeof(T));
+		else
+			for (T *destination_end = inDestination + inCount; inDestination < destination_end; ++inDestination, ++inSource)
+				::new (inDestination) T(std::move(*inSource));
 	}
 
 public:
@@ -79,7 +64,7 @@ public:
 			pointer pointer = get_allocator().allocate(inNewSize);
 			if (mElements != nullptr)
 			{
-				memcpy(pointer, mElements, mSize * sizeof(T));
+				move(pointer, mElements, mSize);
 				get_allocator().deallocate(mElements, mCapacity);
 			}
 			mElements = pointer;
@@ -127,6 +112,32 @@ public:
 		mSize = 0;
 	}
 
+private:
+	/// Grow the array by at least inAmount elements
+	inline void				grow(size_type inAmount = 1)
+	{
+		size_type min_size = mSize + inAmount;
+		if (min_size > mCapacity)
+		{
+			size_type new_capacity = max(min_size, mCapacity * 2);
+			reserve(new_capacity);
+		}
+	}
+
+	/// Destroy all elements and free memory
+	inline void				destroy()
+	{
+		if (mElements != nullptr)
+		{
+			clear();
+
+			get_allocator().deallocate(mElements, mCapacity);
+			mElements = nullptr;
+			mCapacity = 0;
+		}
+	}
+
+public:
 	/// Replace the contents of this array with inBegin .. inEnd
 	template <class Iterator>
 	inline void				assign(Iterator inBegin, Iterator inEnd)
@@ -241,8 +252,6 @@ public:
 
 	inline void				push_back(T &&inValue)
 	{
-		JPH_ASSERT(&inValue < mElements || &inValue >= mElements + mSize, "Can't pass an element from the array to push_back");
-
 		grow();
 
 		T *element = mElements + mSize++;
@@ -318,7 +327,7 @@ public:
 
 		T *element_begin = mElements + first_element;
 		T *element_end = element_begin + num_elements;
-		memmove(element_end, element_begin, (mSize - first_element) * sizeof(T));
+		move(element_end, element_begin, mSize - first_element);
 
 		for (T *element = element_begin; element < element_end; ++element, ++inBegin)
 			::new (element) T(*inBegin);
@@ -336,7 +345,7 @@ public:
 		grow();
 
 		T *element = mElements + first_element;
-		memmove(element + 1, element, (mSize - first_element) * sizeof(T));
+		move(element + 1, element, mSize - first_element);
 
 		::new (element) T(inValue);
 		mSize++;
@@ -349,7 +358,7 @@ public:
 		JPH_ASSERT(p < mSize);
 		mElements[p].~T();
 		if (p + 1 < mSize)
-			memmove(mElements + p, mElements + p + 1, (mSize - p - 1) * sizeof(T));
+			move(mElements + p, mElements + p + 1, mSize - p - 1);
 		--mSize;
 	}
 
@@ -362,7 +371,7 @@ public:
 		for (size_type i = 0; i < n; ++i)
 			mElements[p + i].~T();
 		if (p + n < mSize)
-			memmove(mElements + p, mElements + p + n, (mSize - p - n) * sizeof(T));
+			move(mElements + p, mElements + p + n, mSize - p - n);
 		mSize -= n;
 	}
 
