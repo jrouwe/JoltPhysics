@@ -77,8 +77,9 @@ public:
 	inline void				resize(size_type inNewSize)
 	{
 		if constexpr (!is_trivially_destructible<T>())
-			for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
-				element->~T();
+			if (inNewSize < mSize)
+				for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
+					element->~T();
 
 		reserve(inNewSize);
 
@@ -320,20 +321,23 @@ public:
 	template <class Iterator>
 	void					insert(const_iterator inPos, Iterator inBegin, Iterator inEnd)
 	{
-		// After grow() inPos may be invalid
-		size_type first_element = inPos - mElements;
-
 		size_type num_elements = size_type(std::distance(inBegin, inEnd));
-		grow(num_elements);
+		if (num_elements > 0)
+		{
+			// After grow() inPos may be invalid
+			size_type first_element = inPos - mElements;
 
-		T *element_begin = mElements + first_element;
-		T *element_end = element_begin + num_elements;
-		move(element_end, element_begin, mSize - first_element);
+			grow(num_elements);
 
-		for (T *element = element_begin; element < element_end; ++element, ++inBegin)
-			::new (element) T(*inBegin);
+			T *element_begin = mElements + first_element;
+			T *element_end = element_begin + num_elements;
+			move(element_end, element_begin, mSize - first_element);
 
-		mSize += num_elements;
+			for (T *element = element_begin; element < element_end; ++element, ++inBegin)
+				::new (element) T(*inBegin);
+
+			mSize += num_elements;
+		}
 	}
 
 	void					insert(const_iterator inPos, const T &inValue)
