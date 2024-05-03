@@ -300,7 +300,7 @@ public:
 		if (mCapacity > mSize)
 		{
 			pointer pointer = get_allocator().allocate(mSize);
-			memcpy(pointer, mElements, mSize * sizeof(T));
+			move(pointer, mElements, mSize);
 			get_allocator().deallocate(mElements, mCapacity);
 			mElements = pointer;
 			mCapacity = mSize;
