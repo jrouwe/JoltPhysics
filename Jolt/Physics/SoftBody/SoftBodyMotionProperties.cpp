@@ -1166,6 +1166,13 @@ void SoftBodyMotionProperties::SaveState(StateRecorder &inStream) const
 		inStream.Write(v.mVelocity);
 	}
 
+	for (const SkinState &s : mSkinState)
+	{
+		inStream.Write(s.mPreviousPosition);
+		inStream.Write(s.mPosition);
+		inStream.Write(s.mNormal);
+	}
+
 	inStream.Write(mLocalBounds.mMin);
 	inStream.Write(mLocalBounds.mMax);
 	inStream.Write(mLocalPredictedBounds.mMin);
@@ -1181,6 +1188,13 @@ void SoftBodyMotionProperties::RestoreState(StateRecorder &inStream)
 		inStream.Read(v.mPreviousPosition);
 		inStream.Read(v.mPosition);
 		inStream.Read(v.mVelocity);
+	}
+
+	for (SkinState &s : mSkinState)
+	{
+		inStream.Read(s.mPreviousPosition);
+		inStream.Read(s.mPosition);
+		inStream.Read(s.mNormal);
 	}
 
 	inStream.Read(mLocalBounds.mMin);
