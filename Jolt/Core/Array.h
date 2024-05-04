@@ -86,11 +86,19 @@ public:
 	{
 		if (mCapacity < inNewSize)
 		{
-			pointer pointer = get_allocator().allocate(inNewSize);
-			if (mElements != nullptr)
+			pointer pointer;
+			if constexpr (std::is_trivially_copyable<T>() && !std::is_same<Allocator, std::allocator<T>>())
 			{
-				move(pointer, mElements, mSize);
-				get_allocator().deallocate(mElements, mCapacity);
+				pointer = get_allocator().reallocate(mElements, mCapacity, inNewSize);
+			}
+			else
+			{
+				pointer = get_allocator().allocate(inNewSize);
+				if (mElements != nullptr)
+				{
+					move(pointer, mElements, mSize);
+					get_allocator().deallocate(mElements, mCapacity);
+				}
 			}
 			mElements = pointer;
 			mCapacity = inNewSize;

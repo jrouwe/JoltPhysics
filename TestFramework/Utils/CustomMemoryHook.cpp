@@ -62,6 +62,12 @@ static void *AllocateHook(size_t inSize)
 	return TagAllocation(malloc(inSize + 16), 16, 'U');
 }
 
+static void *ReallocateHook(void *inBlock, size_t inSize)
+{
+	InCustomAllocator ica;
+	return TagAllocation(realloc(UntagAllocation(inBlock, 16, 'U'), inSize + 16), 16, 'U');
+}
+
 static void FreeHook(void *inBlock)
 {
 	InCustomAllocator ica;
@@ -91,6 +97,7 @@ static int MyAllocHook(int nAllocType, void *pvData, size_t nSize, int nBlockUse
 void RegisterCustomMemoryHook()
 {
 	Allocate = AllocateHook;
+	Reallocate = ReallocateHook;
 	Free = FreeHook;
 	AlignedAllocate = AlignedAllocateHook;
 	AlignedFree = AlignedFreeHook;
