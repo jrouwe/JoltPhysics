@@ -5,6 +5,7 @@
 #include <TestFramework.h>
 
 #include <Tests/Water/BoatTest.h>
+#include <Jolt/Core/QuickSort.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CylinderShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
@@ -212,6 +213,7 @@ void BoatTest::OnContactAdded(const Body &inBody1, const Body &inBody2, const Co
 		mBodiesInWater.push_back(inBody2.GetID());
 	else if (inBody2.GetID() == mWaterSensor)
 		mBodiesInWater.push_back(inBody1.GetID());
+	QuickSort(mBodiesInWater.begin(), mBodiesInWater.end()); // Sort to make deterministic (OnContactAdded is called from multiple threads and the order is not guaranteed)
 }
 
 void BoatTest::OnContactRemoved(const SubShapeIDPair &inSubShapePair)
