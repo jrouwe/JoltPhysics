@@ -15,8 +15,6 @@ JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
-fail
-
 template <class T, class Allocator = STLAllocator<T>> using Array = std::vector<T, Allocator>;
 
 JPH_NAMESPACE_END

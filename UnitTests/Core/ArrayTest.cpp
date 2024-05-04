@@ -10,7 +10,7 @@ TEST_SUITE("ArrayTest")
 	class NonTriv
 	{
 	public:
-							NonTriv() : mValue(0)										{ ++sNumConstructors; }	
+							NonTriv() : mValue(0)										{ ++sNumConstructors; }
 		explicit			NonTriv(int inValue) : mValue(inValue)						{ ++sNumConstructors; }
 							NonTriv(const NonTriv &inValue) : mValue(inValue.mValue)	{ ++sNumCopyConstructors; }
 							NonTriv(NonTriv &&inValue) : mValue(inValue.mValue)			{ inValue.mValue = 0; ++sNumMoveConstructors; }
