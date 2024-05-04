@@ -53,12 +53,31 @@ private:
 		else
 		{
 			if (inDestination < inSource)
+			{
 				for (T *destination_end = inDestination + inCount; inDestination < destination_end; ++inDestination, ++inSource)
+				{
 					::new (inDestination) T(std::move(*inSource));
+					inSource->~T();
+				}
+			}
 			else
+			{
 				for (T *destination = inDestination + inCount - 1, *source = inSource + inCount - 1; destination >= inDestination; --destination, --source)
+				{
 					::new (destination) T(std::move(*source));
+					source->~T();
+				}
+			}
 		}
+	}
+
+	/// Destruct elements [inStart, inEnd - 1]
+	inline void				destruct(size_type inStart, size_type inEnd)
+	{
+		if constexpr (!is_trivially_destructible<T>())
+			if (inStart < inEnd)
+				for (T *element = mElements + inStart, *element_end = mElements + inEnd; element < element_end; ++element)
+					element->~T();
 	}
 
 public:
@@ -81,11 +100,7 @@ public:
 	/// Resize array to new length
 	inline void				resize(size_type inNewSize)
 	{
-		if constexpr (!is_trivially_destructible<T>())
-			if (inNewSize < mSize)
-				for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
-					element->~T();
-
+		destruct(inNewSize, mSize);
 		reserve(inNewSize);
 
 		if constexpr (!is_trivially_constructible<T>())
@@ -99,11 +114,7 @@ public:
 	{
 		JPH_ASSERT(&inValue < mElements || &inValue >= mElements + mSize, "Can't pass an element from the array to resize");
 
-		if constexpr (!is_trivially_destructible<T>())
-			if (inNewSize < mSize)
-				for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
-					element->~T();
-
+		destruct(inNewSize, mSize);
 		reserve(inNewSize);
 
 		for (T *element = mElements + mSize, *element_end = mElements + inNewSize; element < element_end; ++element)
@@ -114,9 +125,7 @@ public:
 	/// Destruct all elements and set length to zero
 	inline void				clear()
 	{
-		if constexpr (!is_trivially_destructible<T>())
-			for (T *element = mElements, *end = element + mSize; element < end; ++element)
-				element->~T();
+		destruct(0, mSize);
 		mSize = 0;
 	}
 
@@ -138,7 +147,6 @@ private:
 		if (mElements != nullptr)
 		{
 			clear();
-
 			get_allocator().deallocate(mElements, mCapacity);
 			mElements = nullptr;
 			mCapacity = 0;
@@ -151,7 +159,6 @@ public:
 	inline void				assign(Iterator inBegin, Iterator inEnd)
 	{
 		clear();
-
 		reserve(size_type(std::distance(inBegin, inEnd)));
 
 		for (Iterator element = inBegin; element != inEnd; ++element)
@@ -162,7 +169,6 @@ public:
 	inline void				assign(std::initializer_list<T> inList)
 	{
 		clear();
-
 		reserve(size_type(inList.size()));
 
 		for (typename std::initializer_list<T>::iterator i = inList.begin(); i != inList.end(); ++i)
@@ -378,8 +384,7 @@ public:
 		size_type p = size_type(inBegin - begin());
 		size_type n = size_type(inEnd - inBegin);
 		JPH_ASSERT(inEnd <= end());
-		for (size_type i = 0; i < n; ++i)
-			mElements[p + i].~T();
+		destruct(p, p + n);
 		if (p + n < mSize)
 			move(mElements + p, mElements + p + n, mSize - p - n);
 		mSize -= n;

@@ -23,13 +23,12 @@ TEST_SUITE("ArrayTest")
 
 		int					Value() const												{ return mValue; }
 
-		static void			sReset()													{ sNumConstructors = 0; sNumCopyConstructors = 0; sNumMoveConstructors = 0; sNumDestructors = 0; sNumMoves = 0; }
+		static void			sReset()													{ sNumConstructors = 0; sNumCopyConstructors = 0; sNumMoveConstructors = 0; sNumDestructors = 0; }
 
 		static inline int	sNumConstructors = 0;
 		static inline int	sNumCopyConstructors = 0;
 		static inline int	sNumMoveConstructors = 0;
 		static inline int	sNumDestructors = 0;
-		static inline int	sNumMoves = 0;
 
 		int					mValue;
 	};
@@ -46,6 +45,8 @@ TEST_SUITE("ArrayTest")
 		Array<NonTriv> arr(55);
 		CHECK(arr.size() == 55);
 		CHECK(NonTriv::sNumConstructors == 55);
+		CHECK(NonTriv::sNumCopyConstructors == 0);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
@@ -67,6 +68,7 @@ TEST_SUITE("ArrayTest")
 			CHECK(arr[i].Value() == 55);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 5);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
@@ -93,6 +95,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr[2].Value() == 3);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 3);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
@@ -115,6 +118,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr[2].Value() == 3);
 		CHECK(NonTriv::sNumConstructors == 3); // For the initializer list
 		CHECK(NonTriv::sNumCopyConstructors == 3); // Initializing the array
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 3); // For the initializer list
 	}
 
@@ -139,6 +143,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr2[2].Value() == 3);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 3);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
@@ -186,12 +191,14 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr.size() == 3);
 		CHECK(NonTriv::sNumConstructors == 3); // For initializer list
 		CHECK(NonTriv::sNumCopyConstructors == 3); // To move into array
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 3); // For initializer list
 		NonTriv::sReset();
 		arr.clear();
 		CHECK(arr.size() == 0);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 0);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 3);
 	}
 
@@ -229,6 +236,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr.capacity() == 0);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 0);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 0);
 
 		NonTriv::sReset();
@@ -237,6 +245,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr[0].Value() == 1);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 1);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 0);
 
 		NonTriv::sReset();
@@ -246,13 +255,15 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr[1].Value() == 2);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 1);
-		CHECK(NonTriv::sNumDestructors == 0);
+		CHECK(NonTriv::sNumMoveConstructors == 1); // Array resizes from 1 to 2
+		CHECK(NonTriv::sNumDestructors == 1); // Array resizes from 1 to 2
 
 		NonTriv::sReset();
 		arr.pop_back();
 		CHECK(arr.size() == 1);
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 0);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 1);
 
 		NonTriv::sReset();
@@ -261,6 +272,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr.empty());
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 0);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
 		CHECK(NonTriv::sNumDestructors == 1);
 	}
 
@@ -379,7 +391,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(NonTriv::sNumConstructors == 456 - 123);
 		CHECK(NonTriv::sNumCopyConstructors == 0);
 		CHECK(NonTriv::sNumMoveConstructors == 123);
-		CHECK(NonTriv::sNumDestructors == 0);
+		CHECK(NonTriv::sNumDestructors == 123); // Switched to a new block, all old elements are destroyed after being moved
 
 		NonTriv::sReset();
 		arr.resize(10);
@@ -449,7 +461,7 @@ TEST_SUITE("ArrayTest")
 		CHECK(NonTriv::sNumConstructors == 0);
 		CHECK(NonTriv::sNumCopyConstructors == 0);
 		CHECK(NonTriv::sNumMoveConstructors == 5);
-		CHECK(NonTriv::sNumDestructors == 0);
+		CHECK(NonTriv::sNumDestructors == 5); // Switched to a new block, all old elements are destroyed after being moved
 	}
 
 	TEST_CASE("TestAssignIterator")
