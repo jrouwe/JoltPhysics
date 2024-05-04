@@ -6,10 +6,45 @@
 
 TEST_SUITE("ArrayTest")
 {
+	// A test class that is non-trivially copyable to test if the Array class correctly constructs/destructs/copies and moves elements.
+	class NonTriv
+	{
+	public:
+							NonTriv() : mValue(0)										{ ++sNumConstructors; }	
+		explicit			NonTriv(int inValue) : mValue(inValue)						{ ++sNumConstructors; }
+							NonTriv(const NonTriv &inValue) : mValue(inValue.mValue)	{ ++sNumCopyConstructors; }
+							NonTriv(NonTriv &&inValue) : mValue(inValue.mValue)			{ inValue.mValue = 0; ++sNumMoveConstructors; }
+							~NonTriv()													{ ++sNumDestructors; }
+
+		bool				operator == (const NonTriv &inRHS) const					{ return mValue == inRHS.mValue; }
+		bool				operator != (const NonTriv &inRHS) const					{ return mValue != inRHS.mValue; }
+
+		int					Value() const												{ return mValue; }
+
+		static void			sReset()													{ sNumConstructors = 0; sNumCopyConstructors = 0; sNumMoveConstructors = 0; sNumDestructors = 0; sNumMoves = 0; }
+
+		static inline int	sNumConstructors = 0;
+		static inline int	sNumCopyConstructors = 0;
+		static inline int	sNumMoveConstructors = 0;
+		static inline int	sNumDestructors = 0;
+		static inline int	sNumMoves = 0;
+
+		int					mValue;
+	};
+
 	TEST_CASE("TestConstructLength")
 	{
 		Array<int> arr(55);
 		CHECK(arr.size() == 55);
+	}
+
+	TEST_CASE("TestConstructLengthNonTriv")
+	{
+		NonTriv::sReset();
+		Array<NonTriv> arr(55);
+		CHECK(arr.size() == 55);
+		CHECK(NonTriv::sNumConstructors == 55);
+		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
 	TEST_CASE("TestConstructValue")
@@ -18,6 +53,19 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr.size() == 5);
 		for (int i = 0; i < 5; ++i)
 			CHECK(arr[i] == 55);
+	}
+
+	TEST_CASE("TestConstructValueNonTriv")
+	{
+		NonTriv v(55);
+		NonTriv::sReset();
+		Array<NonTriv> arr(5, v);
+		CHECK(arr.size() == 5);
+		for (int i = 0; i < 5; ++i)
+			CHECK(arr[i].Value() == 55);
+		CHECK(NonTriv::sNumConstructors == 0);
+		CHECK(NonTriv::sNumCopyConstructors == 5);
+		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
 	TEST_CASE("TestConstructIterator")
@@ -31,6 +79,21 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr[2] == 3);
 	}
 
+	TEST_CASE("TestConstructIteratorNonTriv")
+	{
+		NonTriv values[] = { NonTriv(1), NonTriv(2), NonTriv(3) };
+
+		NonTriv::sReset();
+		Array<NonTriv> arr(values, values + 3);
+		CHECK(arr.size() == 3);
+		CHECK(arr[0].Value() == 1);
+		CHECK(arr[1].Value() == 2);
+		CHECK(arr[2].Value() == 3);
+		CHECK(NonTriv::sNumConstructors == 0);
+		CHECK(NonTriv::sNumCopyConstructors == 3);
+		CHECK(NonTriv::sNumDestructors == 0);
+	}
+
 	TEST_CASE("TestConstructInitializerList")
 	{
 		Array<int> arr({ 1, 2, 3 });
@@ -38,6 +101,19 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr[0] == 1);
 		CHECK(arr[1] == 2);
 		CHECK(arr[2] == 3);
+	}
+
+	TEST_CASE("TestConstructInitializerListNonTriv")
+	{
+		NonTriv::sReset();
+		Array<NonTriv> arr({ NonTriv(1), NonTriv(2), NonTriv(3) });
+		CHECK(arr.size() == 3);
+		CHECK(arr[0].Value() == 1);
+		CHECK(arr[1].Value() == 2);
+		CHECK(arr[2].Value() == 3);
+		CHECK(NonTriv::sNumConstructors == 3); // For the initializer list
+		CHECK(NonTriv::sNumCopyConstructors == 3); // Initializing the array
+		CHECK(NonTriv::sNumDestructors == 3); // For the initializer list
 	}
 
 	TEST_CASE("TestConstructFromArray")
@@ -48,6 +124,20 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr2[0] == 1);
 		CHECK(arr2[1] == 2);
 		CHECK(arr2[2] == 3);
+	}
+
+	TEST_CASE("TestConstructFromArrayNonTriv")
+	{
+		Array<NonTriv> arr = { NonTriv(1), NonTriv(2), NonTriv(3) };
+		NonTriv::sReset();
+		Array<NonTriv> arr2(arr);
+		CHECK(arr2.size() == 3);
+		CHECK(arr2[0].Value() == 1);
+		CHECK(arr2[1].Value() == 2);
+		CHECK(arr2[2].Value() == 3);
+		CHECK(NonTriv::sNumConstructors == 0);
+		CHECK(NonTriv::sNumCopyConstructors == 3);
+		CHECK(NonTriv::sNumDestructors == 0);
 	}
 
 	TEST_CASE("TestMoveFromArray")
@@ -62,12 +152,45 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr.capacity() == 0);
 	}
 
+	TEST_CASE("TestMoveFromArrayNonTriv")
+	{
+		Array<NonTriv> arr = { NonTriv(1), NonTriv(2), NonTriv(3) };
+		NonTriv::sReset();
+		Array<NonTriv> arr2(std::move(arr)); // This just updates the mElements pointer so should not call any constructors/destructors etc.
+		CHECK(arr2.size() == 3);
+		CHECK(arr2[0].Value() == 1);
+		CHECK(arr2[1].Value() == 2);
+		CHECK(arr2[2].Value() == 3);
+		CHECK(arr.size() == 0);
+		CHECK(arr.capacity() == 0);
+		CHECK(NonTriv::sNumConstructors == 0);
+		CHECK(NonTriv::sNumCopyConstructors == 0);
+		CHECK(NonTriv::sNumMoveConstructors == 0);
+		CHECK(NonTriv::sNumDestructors == 0);
+	}
+
 	TEST_CASE("TestClear")
 	{
 		Array<int> arr({ 1, 2, 3 });
 		CHECK(arr.size() == 3);
 		arr.clear();
 		CHECK(arr.size() == 0);
+	}
+
+	TEST_CASE("TestClearNonTriv")
+	{
+		NonTriv::sReset();
+		Array<NonTriv> arr({ NonTriv(1), NonTriv(2), NonTriv(3) });
+		CHECK(arr.size() == 3);
+		CHECK(NonTriv::sNumConstructors == 3); // For initializer list
+		CHECK(NonTriv::sNumCopyConstructors == 3); // To move into array
+		CHECK(NonTriv::sNumDestructors == 3); // For initializer list
+		NonTriv::sReset();
+		arr.clear();
+		CHECK(arr.size() == 0);
+		CHECK(NonTriv::sNumConstructors == 0);
+		CHECK(NonTriv::sNumCopyConstructors == 0);
+		CHECK(NonTriv::sNumDestructors == 3);
 	}
 
 	TEST_CASE("TestPushBack")

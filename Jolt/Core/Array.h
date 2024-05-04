@@ -26,9 +26,8 @@ JPH_NAMESPACE_BEGIN
 /// Simple replacement for std::vector
 ///
 /// Major differences:
-/// - Memory is not initialized to zero (this was causing a lot of page faults)
+/// - Memory is not initialized to zero (this was causing a lot of page faults when deserializing large MeshShapes / HeightFieldShapes)
 /// - Iterators are simple pointers (for now)
-/// - Array capacity can only grow, only shrinks if shrink_to_fit is called
 /// - No exception safety
 /// - Not all functions have been implemented
 template <class T, class Allocator = STLAllocator<T>>
@@ -52,8 +51,14 @@ private:
 		if constexpr (std::is_trivially_copyable<T>())
 			memmove(inDestination, inSource, inCount * sizeof(T));
 		else
-			for (T *destination_end = inDestination + inCount; inDestination < destination_end; ++inDestination, ++inSource)
-				::new (inDestination) T(std::move(*inSource));
+		{
+			if (inDestination < inSource)
+				for (T *destination_end = inDestination + inCount; inDestination < destination_end; ++inDestination, ++inSource)
+					::new (inDestination) T(std::move(*inSource));
+			else
+				for (T *destination = inDestination + inCount - 1, *source = inSource + inCount - 1; destination >= inDestination; --destination, --source)
+					::new (destination) T(std::move(*source));
+		}
 	}
 
 public:
@@ -221,7 +226,6 @@ public:
 		inRHS.mSize = 0;
 		inRHS.mCapacity = 0;
 		inRHS.mElements = nullptr;
-
 	}
 
 	/// Destruct all elements
