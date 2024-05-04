@@ -29,7 +29,7 @@ static void sCreateVertices(std::unordered_set<Vec3> &ioVertices, Vec3Arg inDir1
 	}
 }
 
-const std::vector<Vec3> Vec3::sUnitSphere = []() {
+const Array<Vec3, std::allocator<Vec3>> Vec3::sUnitSphere = []() {
 
 	const int level = 3;
 
@@ -53,7 +53,9 @@ const std::vector<Vec3> Vec3::sUnitSphere = []() {
 	sCreateVertices(verts, Vec3::sAxisX(), -Vec3::sAxisY(), -Vec3::sAxisZ(), level);
 	sCreateVertices(verts, -Vec3::sAxisX(), -Vec3::sAxisY(), -Vec3::sAxisZ(), level);
 
-	return std::vector<Vec3>(verts.begin(), verts.end());
+	Array<Vec3, std::allocator<Vec3>> array;
+	array.assign(verts.begin(), verts.end());
+	return array;
 }();
 
 JPH_NAMESPACE_END

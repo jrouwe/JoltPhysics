@@ -1570,7 +1570,7 @@ TEST_SUITE("PhysicsTests")
 		public:
 			bool						ShouldSaveBody(const BodyID &inBodyID) const
 			{
-				return find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
+				return std::find(mIgnoreBodies.cbegin(), mIgnoreBodies.cend(), inBodyID) == mIgnoreBodies.cend();
 			}
 
 			virtual bool				ShouldSaveBody(const Body &inBody) const override

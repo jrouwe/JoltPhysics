@@ -33,9 +33,9 @@ public:
 
 	/// Read a vector of primitives from the binary stream
 	template <class T, class A, std::enable_if_t<std::is_trivially_copyable_v<T>, bool> = true>
-	void				Read(std::vector<T, A> &outT)
+	void				Read(Array<T, A> &outT)
 	{
-		typename Array<T>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
+		typename Array<T, A>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
@@ -43,7 +43,7 @@ public:
 			if constexpr (std::is_same_v<T, Vec3> || std::is_same_v<T, DVec3> || std::is_same_v<T, DMat44>)
 			{
 				// These types have unused components that we don't want to read
-				for (typename Array<T>::size_type i = 0; i < len; ++i)
+				for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 					Read(outT[i]);
 			}
 			else
@@ -73,14 +73,14 @@ public:
 
 	/// Read a vector of primitives from the binary stream using a custom function to read the elements
 	template <class T, class A, typename F>
-	void				Read(std::vector<T, A> &outT, const F &inReadElement)
+	void				Read(Array<T, A> &outT, const F &inReadElement)
 	{
-		typename Array<T>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
+		typename Array<T, A>::size_type len = outT.size(); // Initialize to previous array size, this is used for validation in the StateRecorder class
 		Read(len);
 		if (!IsEOF() && !IsFailed())
 		{
 			outT.resize(len);
-			for (typename Array<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 				inReadElement(*this, outT[i]);
 		}
 		else

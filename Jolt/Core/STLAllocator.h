@@ -49,6 +49,24 @@ public:
 			return pointer(Allocate(inN * sizeof(value_type)));
 	}
 
+	/// Reallocate memory
+	inline pointer			reallocate(pointer inOldPointer, size_type inOldSize, size_type inNewSize)
+	{
+		if constexpr (alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16))
+		{
+			// Can't reallocate aligned blocks
+			pointer new_pointer = allocate(inNewSize);
+			if (inOldPointer != nullptr)
+			{
+				memcpy(new_pointer, inOldPointer, inOldSize * sizeof(value_type));
+				deallocate(inOldPointer, inOldSize);
+			}
+			return new_pointer;
+		}
+		else
+			return pointer(Reallocate(inOldPointer, inNewSize * sizeof(value_type)));
+	}
+
 	/// Free memory
 	inline void				deallocate(pointer inPointer, size_type)
 	{
@@ -84,7 +102,6 @@ template <typename T> using STLAllocator = std::allocator<T>;
 #endif // !JPH_DISABLE_CUSTOM_ALLOCATOR
 
 // Declare STL containers that use our allocator
-template <class T> using Array = std::vector<T, STLAllocator<T>>;
 using String = std::basic_string<char, std::char_traits<char>, STLAllocator<char>>;
 using IStringStream = std::basic_istringstream<char, std::char_traits<char>, STLAllocator<char>>;
 

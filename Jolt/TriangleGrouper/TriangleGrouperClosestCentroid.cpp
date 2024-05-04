@@ -29,7 +29,7 @@ void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const I
 		outGroupedTriangleIndices[t] = t;
 	}
 
-	Array<uint>::iterator triangles_end = outGroupedTriangleIndices.end();
+	Array<uint>::const_iterator triangles_end = outGroupedTriangleIndices.end();
 
 	// Sort per batch
 	for (uint b = 0; b < num_batches - 1; ++b)
@@ -82,7 +82,7 @@ void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const I
 					{
 						return inLHS < (centroids[inRHS] - first_centroid).LengthSq();
 					});
-				copy_backward(upper, batch_end_minus_1, batch_end);
+				std::copy_backward(upper, batch_end_minus_1, batch_end);
 				*upper = other_val;
 
 				// Calculate new furthest distance

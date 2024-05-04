@@ -14,6 +14,7 @@ set(JOLT_PHYSICS_SRC_FILES
 	${JOLT_PHYSICS_ROOT}/AABBTree/NodeCodec/NodeCodecQuadTreeHalfFloat.h
 	${JOLT_PHYSICS_ROOT}/AABBTree/TriangleCodec/TriangleCodecIndexed8BitPackSOA4Flags.h
 	${JOLT_PHYSICS_ROOT}/Core/ARMNeon.h
+	${JOLT_PHYSICS_ROOT}/Core/Array.h
 	${JOLT_PHYSICS_ROOT}/Core/Atomics.h
 	${JOLT_PHYSICS_ROOT}/Core/ByteBuffer.h
 	${JOLT_PHYSICS_ROOT}/Core/Color.cpp
@@ -525,6 +526,10 @@ endif()
 # Setting to determine number of bits in ObjectLayer
 if (OBJECT_LAYER_BITS)
 	target_compile_definitions(Jolt PUBLIC JPH_OBJECT_LAYER_BITS=${OBJECT_LAYER_BITS})
+endif()
+
+if (USE_STD_VECTOR)
+	target_compile_definitions(Jolt PUBLIC JPH_USE_STD_VECTOR)
 endif()
 
 # Setting to periodically trace broadphase stats to help determine if the broadphase layer configuration is optimal

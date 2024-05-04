@@ -30,16 +30,16 @@ public:
 
 	/// Write a vector of primitives to the binary stream
 	template <class T, class A, std::enable_if_t<std::is_trivially_copyable_v<T>, bool> = true>
-	void				Write(const std::vector<T, A> &inT)
+	void				Write(const Array<T, A> &inT)
 	{
-		typename Array<T>::size_type len = inT.size();
+		typename Array<T, A>::size_type len = inT.size();
 		Write(len);
 		if (!IsFailed())
 		{
 			if constexpr (std::is_same_v<T, Vec3> || std::is_same_v<T, DVec3> || std::is_same_v<T, DMat44>)
 			{
 				// These types have unused components that we don't want to write
-				for (typename Array<T>::size_type i = 0; i < len; ++i)
+				for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 					Write(inT[i]);
 			}
 			else
@@ -62,12 +62,12 @@ public:
 
 	/// Write a vector of primitives to the binary stream using a custom write function
 	template <class T, class A, typename F>
-	void				Write(const std::vector<T, A> &inT, const F &inWriteElement)
+	void				Write(const Array<T, A> &inT, const F &inWriteElement)
 	{
-		typename Array<T>::size_type len = inT.size();
+		typename Array<T, A>::size_type len = inT.size();
 		Write(len);
 		if (!IsFailed())
-			for (typename Array<T>::size_type i = 0; i < len; ++i)
+			for (typename Array<T, A>::size_type i = 0; i < len; ++i)
 				inWriteElement(inT[i], *this);
 	}
 

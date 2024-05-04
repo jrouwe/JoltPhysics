@@ -24,6 +24,11 @@ JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Allocate)(size_t inSize)
 	return malloc(inSize);
 }
 
+JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Reallocate)(void *inBlock, size_t inSize)
+{
+	return realloc(inBlock, inSize);
+}
+
 JPH_ALLOC_SCOPE void JPH_ALLOC_FN(Free)(void *inBlock)
 {
 	free(inBlock);
@@ -57,6 +62,7 @@ JPH_ALLOC_SCOPE void JPH_ALLOC_FN(AlignedFree)(void *inBlock)
 #ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 
 AllocateFunction Allocate = nullptr;
+ReallocateFunction Reallocate = nullptr;
 FreeFunction Free = nullptr;
 AlignedAllocateFunction AlignedAllocate = nullptr;
 AlignedFreeFunction AlignedFree = nullptr;
@@ -64,6 +70,7 @@ AlignedFreeFunction AlignedFree = nullptr;
 void RegisterDefaultAllocator()
 {
 	Allocate = AllocateImpl;
+	Reallocate = ReallocateImpl;
 	Free = FreeImpl;
 	AlignedAllocate = AlignedAllocateImpl;
 	AlignedFree = AlignedFreeImpl;

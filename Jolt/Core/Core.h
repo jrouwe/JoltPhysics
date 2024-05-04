@@ -394,7 +394,6 @@ JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <float.h>
 #include <limits.h>
 #include <string.h>
-#include <vector>
 #include <utility>
 #include <cmath>
 #include <sstream>

@@ -88,7 +88,7 @@ void Profiler::RemoveThread(ProfileThread *inThread)
 {
 	std::lock_guard lock(mLock);
 
-	Array<ProfileThread *>::iterator i = find(mThreads.begin(), mThreads.end(), inThread);
+	Array<ProfileThread *>::iterator i = std::find(mThreads.begin(), mThreads.end(), inThread);
 	JPH_ASSERT(i != mThreads.end());
 	mThreads.erase(i);
 }

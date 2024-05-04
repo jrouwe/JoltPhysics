@@ -33,10 +33,10 @@ JPH_IMPLEMENT_SERIALIZABLE_ABSTRACT(ConvexShapeSettings)
 	JPH_ADD_ATTRIBUTE(ConvexShapeSettings, mMaterial)
 }
 
-const std::vector<Vec3> ConvexShape::sUnitSphereTriangles = []() {
+const Array<Vec3, std::allocator<Vec3>> ConvexShape::sUnitSphereTriangles = []() {
 	const int level = 2;
 
-	std::vector<Vec3> verts;
+	Array<Vec3, std::allocator<Vec3>> verts;
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereTop(verts, level);
 	GetTrianglesContextVertexList::sCreateHalfUnitSphereBottom(verts, level);
 	return verts;

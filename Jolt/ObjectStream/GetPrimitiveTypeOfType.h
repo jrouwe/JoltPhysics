@@ -33,8 +33,8 @@ const RTTI *GetPrimitiveTypeOfType(RefConst<T> *)
 	return GetRTTIOfType((T *)nullptr);
 }
 
-template <class T>
-const RTTI *GetPrimitiveTypeOfType(Array<T> *)
+template <class T, class A>
+const RTTI *GetPrimitiveTypeOfType(Array<T, A> *)
 {
 	return GetPrimitiveTypeOfType((T *)nullptr);
 }

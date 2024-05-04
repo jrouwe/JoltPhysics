@@ -84,13 +84,11 @@ HeightFieldShapeSettings::HeightFieldShapeSettings(const float *inSamples, Vec3A
 	mScale(inScale),
 	mSampleCount(inSampleCount)
 {
-	mHeightSamples.resize(inSampleCount * inSampleCount);
-	memcpy(&mHeightSamples[0], inSamples, inSampleCount * inSampleCount * sizeof(float));
+	mHeightSamples.assign(inSamples, inSamples + inSampleCount * inSampleCount);
 
 	if (!inMaterialList.empty() && inMaterialIndices != nullptr)
 	{
-		mMaterialIndices.resize(Square(inSampleCount - 1));
-		memcpy(&mMaterialIndices[0], inMaterialIndices, Square(inSampleCount - 1) * sizeof(uint8));
+		mMaterialIndices.assign(inMaterialIndices, inMaterialIndices + Square(inSampleCount - 1));
 		mMaterials = inMaterialList;
 	}
 	else
@@ -339,11 +337,10 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 		The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
 		Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
 	*/
-	mActiveEdges.resize((Square(mSampleCount - 1) * 3 + 7) / 8 + 1);
 
 	// Make all edges active (if mSampleCount is bigger than inSettings.mSampleCount we need to fill up the padding,
 	// also edges at x = 0 and y = inSettings.mSampleCount - 1 are not updated)
-	memset(mActiveEdges.data(), 0xff, mActiveEdges.size());
+	mActiveEdges.resize((Square(mSampleCount - 1) * 3 + 7) / 8 + 1, 0xff);
 
 	// Now clear the edges that are not active
 	TempAllocatorMalloc allocator;
@@ -357,7 +354,7 @@ void HeightFieldShape::StoreMaterialIndices(const HeightFieldShapeSettings &inSe
 	uint out_count_min_1 = mSampleCount - 1;
 
 	mNumBitsPerMaterialIndex = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
-	mMaterialIndices.resize(((Square(out_count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
+	mMaterialIndices.resize(((Square(out_count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1, 0); // Add 1 byte so we don't read out of bounds when reading an uint16
 
 	for (uint y = 0; y < out_count_min_1; ++y)
 		for (uint x = 0; x < out_count_min_1; ++x)
@@ -639,7 +636,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[ranges.size() - 1] + Square(max_stride));
 
 	// Quantize height samples
-	mHeightSamples.resize((mSampleCount * mSampleCount * inSettings.mBitsPerSample + 7) / 8 + 1);
+	mHeightSamples.resize((mSampleCount * mSampleCount * inSettings.mBitsPerSample + 7) / 8 + 1, 0);
 	int sample = 0;
 	for (uint y = 0; y < mSampleCount; ++y)
 		for (uint x = 0; x < mSampleCount; ++x)
@@ -1244,7 +1241,7 @@ bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 	if (new_bits_per_material_index != mNumBitsPerMaterialIndex)
 	{
 		// Resize the material indices array
-		mMaterialIndices.resize(((Square(count_min_1) * new_bits_per_material_index + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
+		mMaterialIndices.resize(((Square(count_min_1) * new_bits_per_material_index + 7) >> 3) + 1, 0); // Add 1 byte so we don't read out of bounds when reading an uint16
 
 		// Calculate old and new mask
 		uint16 old_material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
