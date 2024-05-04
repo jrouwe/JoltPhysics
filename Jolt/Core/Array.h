@@ -100,8 +100,9 @@ public:
 		JPH_ASSERT(&inValue < mElements || &inValue >= mElements + mSize, "Can't pass an element from the array to resize");
 
 		if constexpr (!is_trivially_destructible<T>())
-			for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
-				element->~T();
+			if (inNewSize < mSize)
+				for (T *element = mElements + inNewSize, *element_end = mElements + mSize; element < element_end; ++element)
+					element->~T();
 
 		reserve(inNewSize);
 
@@ -213,7 +214,7 @@ public:
 	}
 
 	/// Move constructor
-	inline					Array(Array<T, Allocator> &&inRHS)
+	inline					Array(Array<T, Allocator> &&inRHS) noexcept
 	{
 		destroy();
 
@@ -314,7 +315,7 @@ public:
 	}
 
 	/// Swap the contents of two arrays
-	void					swap(Array<T, Allocator> &inRHS)
+	void					swap(Array<T, Allocator> &inRHS) noexcept
 	{
 		std::swap(get_allocator(), inRHS.get_allocator());
 		std::swap(mSize, inRHS.mSize);

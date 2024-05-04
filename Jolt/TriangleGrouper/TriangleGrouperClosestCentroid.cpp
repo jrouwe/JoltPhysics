@@ -29,7 +29,7 @@ void TriangleGrouperClosestCentroid::Group(const VertexList &inVertices, const I
 		outGroupedTriangleIndices[t] = t;
 	}
 
-	Array<uint>::iterator triangles_end = outGroupedTriangleIndices.end();
+	Array<uint>::const_iterator triangles_end = outGroupedTriangleIndices.end();
 
 	// Sort per batch
 	for (uint b = 0; b < num_batches - 1; ++b)
