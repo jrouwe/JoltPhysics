@@ -497,7 +497,7 @@ public:
 	}
 
 	/// Assignment move operator
-	Array<T, Allocator> &	operator = (Array<T, Allocator> &&inRHS)
+	Array<T, Allocator> &	operator = (Array<T, Allocator> &&inRHS) noexcept
 	{
 		if (static_cast<const void *>(this) != static_cast<const void *>(&inRHS))
 		{
