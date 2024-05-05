@@ -29,6 +29,7 @@ JPH_NAMESPACE_BEGIN
 /// - Memory is not initialized to zero (this was causing a lot of page faults when deserializing large MeshShapes / HeightFieldShapes)
 /// - Iterators are simple pointers (for now)
 /// - No exception safety
+/// - No specialization like std::vector<bool> has
 /// - Not all functions have been implemented
 template <class T, class Allocator = STLAllocator<T>>
 class [[nodiscard]] Array : private Allocator
