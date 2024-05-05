@@ -566,6 +566,15 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr == Array<int>({ 7, 8, 9 }));
 	}
 
+	TEST_CASE("TestAssignMove")
+	{
+		Array<int> arr({ 1, 2, 3 });
+		Array<int> arr2({ 4, 5, 6 });
+		arr = std::move(arr2);
+		CHECK(arr == Array<int>({ 4, 5, 6 }));
+		CHECK(arr2.empty());
+	}
+
 	TEST_CASE("TestEraseBegin")
 	{
 		Array<int> arr({ 1, 2, 3 });
