@@ -228,16 +228,12 @@ public:
 	}
 
 	/// Move constructor
-	inline					Array(Array<T, Allocator> &&inRHS) noexcept
+	inline					Array(Array<T, Allocator> &&inRHS) noexcept :
+		Allocator(std::move(inRHS.get_allocator())),
+		mSize(inRHS.mSize),
+		mCapacity(inRHS.mCapacity),
+		mElements(inRHS.mElements)
 	{
-		destroy();
-
-		get_allocator() = std::move(inRHS.get_allocator());
-
-		mSize = inRHS.mSize;
-		mCapacity = inRHS.mCapacity;
-		mElements = inRHS.mElements;
-
 		inRHS.mSize = 0;
 		inRHS.mCapacity = 0;
 		inRHS.mElements = nullptr;
@@ -496,6 +492,27 @@ public:
 	{
 		if (static_cast<const void *>(this) != static_cast<const void *>(&inRHS))
 			assign(inRHS.begin(), inRHS.end());
+
+		return *this;
+	}
+
+	/// Assignment move operator
+	Array<T, Allocator> &	operator = (Array<T, Allocator> &&inRHS) noexcept
+	{
+		if (static_cast<const void *>(this) != static_cast<const void *>(&inRHS))
+		{
+			destroy();
+
+			get_allocator() = std::move(inRHS.get_allocator());
+
+			mSize = inRHS.mSize;
+			mCapacity = inRHS.mCapacity;
+			mElements = inRHS.mElements;
+
+			inRHS.mSize = 0;
+			inRHS.mCapacity = 0;
+			inRHS.mElements = nullptr;
+		}
 
 		return *this;
 	}
