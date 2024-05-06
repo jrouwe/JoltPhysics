@@ -315,8 +315,19 @@ public:
 	/// Reduce the capacity of the array to match its size
 	void					shrink_to_fit()
 	{
-		if (mCapacity > mSize)
+		if (mSize == 0)
 		{
+			// Free memory block
+			if (mElements != nullptr)
+			{
+				get_allocator().deallocate(mElements, mCapacity);
+				mElements = nullptr;
+				mCapacity = 0;
+			}
+		}
+		else if (mCapacity > mSize)
+		{
+			// Reallocate memory block
 			pointer pointer = get_allocator().allocate(mSize);
 			move(pointer, mElements, mSize);
 			get_allocator().deallocate(mElements, mCapacity);

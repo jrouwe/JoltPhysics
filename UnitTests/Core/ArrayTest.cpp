@@ -344,6 +344,12 @@ TEST_SUITE("ArrayTest")
 		Array<int> arr;
 		CHECK(arr.size() == 0);
 		CHECK(arr.capacity() == 0);
+		CHECK(arr.data() == nullptr);
+
+		arr.resize(0);
+		CHECK(arr.size() == 0);
+		CHECK(arr.capacity() == 0);
+		CHECK(arr.data() == nullptr);
 
 		arr.resize(123);
 		CHECK(arr.size() == 123);
@@ -446,6 +452,14 @@ TEST_SUITE("ArrayTest")
 		CHECK(arr.size() == 5);
 		for (int i = 0; i < 5; ++i)
 			CHECK(arr[i] == i);
+
+		arr.clear();
+		CHECK(arr.capacity() == 5);
+		CHECK(arr.size() == 0);
+
+		arr.shrink_to_fit();
+		CHECK(arr.capacity() == 0);
+		CHECK(arr.data() == nullptr);
 	}
 
 	TEST_CASE("TestShrinkToFitNonTriv")
