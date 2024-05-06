@@ -21,11 +21,13 @@ JPH_NAMESPACE_BEGIN
 
 JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Allocate)(size_t inSize)
 {
+	JPH_ASSERT(inSize > 0);
 	return malloc(inSize);
 }
 
 JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(Reallocate)(void *inBlock, size_t inSize)
 {
+	JPH_ASSERT(inSize > 0);
 	return realloc(inBlock, inSize);
 }
 
@@ -36,6 +38,8 @@ JPH_ALLOC_SCOPE void JPH_ALLOC_FN(Free)(void *inBlock)
 
 JPH_ALLOC_SCOPE void *JPH_ALLOC_FN(AlignedAllocate)(size_t inSize, size_t inAlignment)
 {
+	JPH_ASSERT(inSize > 0 && inAlignment > 0);
+
 #if defined(JPH_PLATFORM_WINDOWS)
 	// Microsoft doesn't implement posix_memalign
 	return _aligned_malloc(inSize, inAlignment);
