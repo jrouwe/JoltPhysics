@@ -212,6 +212,10 @@ public:
 			// Void the features of this face
 			VoidFeatures(r);
 		}
+
+		// All delayed results have been processed
+		mVoidedFeatures.clear();
+		mDelayedResults.clear();
 	}
 
 	/// Version of CollisionDispatch::sCollideShapeVsShape that removes internal edges

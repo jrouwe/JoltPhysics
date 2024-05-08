@@ -30,6 +30,7 @@ void CharacterVirtualTest::Initialize()
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
+	settings->mEnhancedInternalEdgeRemoval = sEnhancedInternalEdgeRemoval;
 	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
@@ -176,6 +177,7 @@ void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *in
 	inUI->CreateSlider(inSubMenu, "Predictive Contact Distance", sPredictiveContactDistance, 0.01f, 1.0f, 0.01f, [](float inValue) { sPredictiveContactDistance = inValue; });
 	inUI->CreateCheckBox(inSubMenu, "Enable Walk Stairs", sEnableWalkStairs, [](UICheckBox::EState inState) { sEnableWalkStairs = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Enable Stick To Floor", sEnableStickToFloor, [](UICheckBox::EState inState) { sEnableStickToFloor = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Enhanced Internal Edge Removal", sEnhancedInternalEdgeRemoval, [](UICheckBox::EState inState) { sEnhancedInternalEdgeRemoval = inState == UICheckBox::STATE_CHECKED; });
 }
 
 void CharacterVirtualTest::SaveState(StateRecorder &inStream) const
