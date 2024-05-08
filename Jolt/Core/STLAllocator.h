@@ -59,7 +59,7 @@ public:
 	static constexpr bool	has_reallocate = std::is_trivially_copyable<T>() && !needs_aligned_allocate;
 
 	/// Reallocate memory
-	template <typename = std::enable_if_t<has_reallocate>>
+	template <bool has_reallocate_v = has_reallocate, typename = std::enable_if_t<has_reallocate_v>>
 	inline pointer			reallocate(pointer inOldPointer, size_type inOldSize, size_type inNewSize)
 	{
 		JPH_ASSERT(inNewSize > 0); // Reallocating to zero size is implementation dependent, so we don't allow it
