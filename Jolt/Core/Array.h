@@ -72,6 +72,31 @@ private:
 		}
 	}
 
+	/// Reallocate the data block to inNewCapacity
+	inline void				reallocate(size_type inNewCapacity)
+	{
+		JPH_ASSERT(inNewCapacity > 0 && inNewCapacity >= mSize);
+
+		pointer pointer;
+		if constexpr (AllocatorHasReallocate<Allocator>::sValue)
+		{
+			// Reallocate data block
+			pointer = get_allocator().reallocate(mElements, mCapacity, inNewCapacity);
+		}
+		else
+		{
+			// Copy data to a new location
+			pointer = get_allocator().allocate(inNewCapacity);
+			if (mElements != nullptr)
+			{
+				move(pointer, mElements, mSize);
+				get_allocator().deallocate(mElements, mCapacity);
+			}
+		}
+		mElements = pointer;
+		mCapacity = inNewCapacity;
+	}
+
 	/// Destruct elements [inStart, inEnd - 1]
 	inline void				destruct(size_type inStart, size_type inEnd)
 	{
@@ -86,24 +111,7 @@ public:
 	inline void				reserve(size_type inNewSize)
 	{
 		if (mCapacity < inNewSize)
-		{
-			pointer pointer;
-			if constexpr (std::is_trivially_copyable<T>() && !std::is_same<Allocator, std::allocator<T>>())
-			{
-				pointer = get_allocator().reallocate(mElements, mCapacity, inNewSize);
-			}
-			else
-			{
-				pointer = get_allocator().allocate(inNewSize);
-				if (mElements != nullptr)
-				{
-					move(pointer, mElements, mSize);
-					get_allocator().deallocate(mElements, mCapacity);
-				}
-			}
-			mElements = pointer;
-			mCapacity = inNewSize;
-		}
+			reallocate(inNewSize);
 	}
 
 	/// Resize array to new length
@@ -150,15 +158,21 @@ private:
 		}
 	}
 
+	/// Free memory
+	inline void				free()
+	{
+		get_allocator().deallocate(mElements, mCapacity);
+		mElements = nullptr;
+		mCapacity = 0;
+	}
+
 	/// Destroy all elements and free memory
 	inline void				destroy()
 	{
 		if (mElements != nullptr)
 		{
 			clear();
-			get_allocator().deallocate(mElements, mCapacity);
-			mElements = nullptr;
-			mCapacity = 0;
+			free();
 		}
 	}
 
@@ -315,24 +329,12 @@ public:
 	/// Reduce the capacity of the array to match its size
 	void					shrink_to_fit()
 	{
-		if (mSize == 0)
+		if (mElements != nullptr)
 		{
-			// Free memory block
-			if (mElements != nullptr)
-			{
-				get_allocator().deallocate(mElements, mCapacity);
-				mElements = nullptr;
-				mCapacity = 0;
-			}
-		}
-		else if (mCapacity > mSize)
-		{
-			// Reallocate memory block
-			pointer pointer = get_allocator().allocate(mSize);
-			move(pointer, mElements, mSize);
-			get_allocator().deallocate(mElements, mCapacity);
-			mElements = pointer;
-			mCapacity = mSize;
+			if (mSize == 0)
+				free();
+			else if (mCapacity > mSize)
+				reallocate(mSize);
 		}
 	}
 

@@ -43,18 +43,6 @@ public:
 		return pointer(mAllocator.Allocate(uint(inN * sizeof(value_type))));
 	}
 
-	/// Reallocate memory
-	inline pointer			reallocate(pointer inOldPointer, size_type inOldSize, size_type inNewSize)
-	{
-		pointer new_pointer = allocate(inNewSize);
-		if (inOldPointer != nullptr)
-		{
-			memcpy(new_pointer, inOldPointer, inOldSize * sizeof(value_type));
-			deallocate(inOldPointer, inOldSize);
-		}
-		return new_pointer;
-	}
-
 	/// Free memory
 	inline void				deallocate(pointer inPointer, size_type inN)
 	{
