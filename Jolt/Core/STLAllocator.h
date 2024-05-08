@@ -6,6 +6,9 @@
 
 JPH_NAMESPACE_BEGIN
 
+/// Default implementation of AllocatorHasReallocate which tells if an allocator has a reallocate function
+template <class T> struct AllocatorHasReallocate { static constexpr bool sValue = false; };
+
 #ifndef JPH_DISABLE_CUSTOM_ALLOCATOR
 
 /// STL allocator that forwards to our allocation functions
@@ -40,37 +43,33 @@ public:
 	template <typename T2>
 	inline					STLAllocator(const STLAllocator<T2> &) { }
 
+	/// If this allocator needs to fall back to aligned allocations because the type requires it
+	static constexpr bool	needs_aligned_allocate = alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16);
+
 	/// Allocate memory
 	inline pointer			allocate(size_type inN)
 	{
-		if constexpr (alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16))
+		if constexpr (needs_aligned_allocate)
 			return pointer(AlignedAllocate(inN * sizeof(value_type), alignof(T)));
 		else
 			return pointer(Allocate(inN * sizeof(value_type)));
 	}
 
+	/// Should we expose a reallocate function?
+	static constexpr bool	has_reallocate = std::is_trivially_copyable<T>() && !needs_aligned_allocate;
+
 	/// Reallocate memory
+	template <typename = std::enable_if_t<has_reallocate>>
 	inline pointer			reallocate(pointer inOldPointer, size_type inOldSize, size_type inNewSize)
 	{
-		if constexpr (alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16))
-		{
-			// Can't reallocate aligned blocks
-			pointer new_pointer = allocate(inNewSize);
-			if (inOldPointer != nullptr)
-			{
-				memcpy(new_pointer, inOldPointer, inOldSize * sizeof(value_type));
-				deallocate(inOldPointer, inOldSize);
-			}
-			return new_pointer;
-		}
-		else
-			return pointer(Reallocate(inOldPointer, inNewSize * sizeof(value_type)));
+		JPH_ASSERT(inNewSize > 0); // Reallocating to zero size is implementation dependent, so we don't allow it
+		return pointer(Reallocate(inOldPointer, inNewSize * sizeof(value_type)));
 	}
 
 	/// Free memory
 	inline void				deallocate(pointer inPointer, size_type)
 	{
-		if constexpr (alignof(T) > (JPH_CPU_ADDRESS_BITS == 32? 8 : 16))
+		if constexpr (needs_aligned_allocate)
 			AlignedFree(inPointer);
 		else
 			Free(inPointer);
@@ -94,6 +93,9 @@ public:
 		using other = STLAllocator<T2>;
 	};
 };
+
+/// The STLAllocator implements the reallocate function if the alignment of the class is smaller or equal to the default alignment for the platform
+template <class T> struct AllocatorHasReallocate<STLAllocator<T>> { static constexpr bool sValue = STLAllocator<T>::has_reallocate; };
 
 #else
 
