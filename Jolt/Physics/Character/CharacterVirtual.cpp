@@ -225,18 +225,73 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	settings.mMaxSeparationDistance = mCharacterPadding + inMaxSeparationDistance;
 
 	// Collide shape
-	Vec3 scale = Vec3::sReplicate(1.0f);
-	const NarrowPhaseQuery &npq = mSystem->GetNarrowPhaseQuery();
 	if (mEnhancedInternalEdgeRemoval)
 	{
 		// Version that does additional work to remove internal edges
 		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
-		InternalEdgeRemovingCollector wrapper(ioCollector);
-		npq.CollideShape(inShape, scale, transform, settings, inBaseOffset, wrapper, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
-		wrapper.Flush();
+
+		// This is a copy of NarrowPhaseQuery::CollideShape with additional logic to wrap the collector in an InternalEdgeRemovingCollector and flushing that collector after every body
+		class MyCollector : public CollideShapeBodyCollector
+		{
+		public:
+								MyCollector(const Shape *inShape, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector, const BodyLockInterface &inBodyLockInterface, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) :
+				CollideShapeBodyCollector(ioCollector),
+				mShape(inShape),
+				mCenterOfMassTransform(inCenterOfMassTransform),
+				mBaseOffset(inBaseOffset),
+				mCollideShapeSettings(inCollideShapeSettings),
+				mBodyLockInterface(inBodyLockInterface),
+				mBodyFilter(inBodyFilter),
+				mShapeFilter(inShapeFilter),
+				mCollector(ioCollector)
+			{
+			}
+
+			virtual void		AddHit(const ResultType &inResult) override
+			{
+				// See NarrowPhaseQuery::CollideShape
+				if (mBodyFilter.ShouldCollide(inResult))
+				{
+					BodyLockRead lock(mBodyLockInterface, inResult);
+					if (lock.SucceededAndIsInBroadPhase())
+					{
+						const Body &body = lock.GetBody();
+						if (mBodyFilter.ShouldCollideLocked(body))
+						{
+							TransformedShape ts = body.GetTransformedShape();
+							mCollector.OnBody(body);
+							lock.ReleaseLock();
+							ts.CollideShape(mShape, Vec3::sReplicate(1.0f), mCenterOfMassTransform, mCollideShapeSettings, mBaseOffset, mCollector, mShapeFilter);
+
+							// After each body, we need to flush the InternalEdgeRemovingCollector because it uses 'ts' as context and it will go out of scope at the end of this block
+							mCollector.Flush();
+
+							UpdateEarlyOutFraction(mCollector.GetEarlyOutFraction());
+						}
+					}
+				}
+			}
+
+			const Shape *					mShape;
+			RMat44							mCenterOfMassTransform;
+			RVec3							mBaseOffset;
+			const CollideShapeSettings &	mCollideShapeSettings;
+			const BodyLockInterface &		mBodyLockInterface;
+			const BodyFilter &				mBodyFilter;
+			const ShapeFilter &				mShapeFilter;
+			InternalEdgeRemovingCollector	mCollector;
+		};
+
+		// Calculate bounds for shape and expand by max separation distance
+		AABox bounds = inShape->GetWorldSpaceBounds(transform, Vec3::sReplicate(1.0f));
+		bounds.ExpandBy(Vec3::sReplicate(settings.mMaxSeparationDistance));
+
+		// Do broadphase test
+		MyCollector collector(inShape, transform, settings, inBaseOffset, ioCollector, mSystem->GetBodyLockInterface(), inBodyFilter, inShapeFilter);
+		mSystem->GetBroadPhaseQuery().CollideAABox(bounds, collector, inBroadPhaseLayerFilter, inObjectLayerFilter);
 	}
 	else
-		npq.CollideShape(inShape, scale, transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+		mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 }
 
 void CharacterVirtual::GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
