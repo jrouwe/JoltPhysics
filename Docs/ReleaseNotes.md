@@ -14,11 +14,18 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Improved sorting of LRA soft body constraints to improve convergence.
 * Added ability to draw soft body constraint evaluation order.
 
-#### Various
+#### HeightField Shape
 
 * Sped up deserialization of HeightFieldShape/MeshShape classes by optimizing reading a vector of data in StreamIn and by switching std::vector out for a custom Array class.
 * Added HeightFieldShape::GetMinHeightValue/GetMaxHeightValue that can be used to know which range of heights are accepted by SetHeights.
 * Allowing negative stride when getting/setting height field shape heights or materials. This improves performance if your data happens to be layed out the wrong way around.
+
+#### Character
+
+* Added CharacterBaseSettings::mEnhancedInternalEdgeRemoval (default false) that allows smoother movement for both the Character and CharacterVirtual class.
+
+#### Various
+
 * Added option to get a callback when a JobSystemThreadPool thread starts/stops. This allows you to e.g. set application specific thread locals.
 * Added cmake option USE_ASSERTS to turn on asserts in builds other than the Debug build.
 * Switch from using _DEBUG to NDEBUG to detect debug mode. NDEBUG is defined in the standard while _DEBUG is Visual Studio specific.
