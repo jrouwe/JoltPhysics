@@ -231,8 +231,9 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	{
 		// Version that does additional work to remove internal edges
 		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
-		InternalEdgeRemovingCollector edge_removing_collector(ioCollector);
-		npq.CollideShape(inShape, scale, transform, settings, inBaseOffset, edge_removing_collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+		InternalEdgeRemovingCollector wrapper(ioCollector);
+		npq.CollideShape(inShape, scale, transform, settings, inBaseOffset, wrapper, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+		wrapper.Flush();
 	}
 	else
 		npq.CollideShape(inShape, scale, transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
