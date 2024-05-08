@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/ShapeCast.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/InternalEdgeRemovingCollector.h>
 #include <Jolt/Core/QuickSort.h>
 #include <Jolt/Geometry/ConvexSupport.h>
 #include <Jolt/Geometry/GJKClosestPoint.h>
@@ -31,6 +32,7 @@ CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, R
 	mMaxNumHits(inSettings->mMaxNumHits),
 	mHitReductionCosMaxAngle(inSettings->mHitReductionCosMaxAngle),
 	mPenetrationRecoverySpeed(inSettings->mPenetrationRecoverySpeed),
+	mEnhancedInternalEdgeRemoval(inSettings->mEnhancedInternalEdgeRemoval),
 	mShapeOffset(inSettings->mShapeOffset),
 	mPosition(inPosition),
 	mRotation(inRotation),
@@ -223,7 +225,17 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	settings.mMaxSeparationDistance = mCharacterPadding + inMaxSeparationDistance;
 
 	// Collide shape
-	mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+	Vec3 scale = Vec3::sReplicate(1.0f);
+	const NarrowPhaseQuery &npq = mSystem->GetNarrowPhaseQuery();
+	if (mEnhancedInternalEdgeRemoval)
+	{
+		// Version that does additional work to remove internal edges
+		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
+		InternalEdgeRemovingCollector edge_removing_collector(ioCollector);
+		npq.CollideShape(inShape, scale, transform, settings, inBaseOffset, edge_removing_collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+	}
+	else
+		npq.CollideShape(inShape, scale, transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
 }
 
 void CharacterVirtual::GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
