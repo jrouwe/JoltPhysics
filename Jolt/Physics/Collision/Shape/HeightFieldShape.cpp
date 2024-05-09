@@ -84,7 +84,7 @@ HeightFieldShapeSettings::HeightFieldShapeSettings(const float *inSamples, Vec3A
 	mScale(inScale),
 	mSampleCount(inSampleCount)
 {
-	mHeightSamples.assign(inSamples, inSamples + inSampleCount * inSampleCount);
+	mHeightSamples.assign(inSamples, inSamples + Square(inSampleCount));
 
 	if (!inMaterialList.empty() && inMaterialIndices != nullptr)
 	{
