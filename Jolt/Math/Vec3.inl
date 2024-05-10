@@ -473,9 +473,17 @@ Vec3 Vec3::operator - () const
 #if defined(JPH_USE_SSE)
 	return _mm_sub_ps(_mm_setzero_ps(), mValue);
 #elif defined(JPH_USE_NEON)
-	return vnegq_f32(mValue);
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		return vsubq_f32(vdupq_n_f32(0), mValue);
+	#else
+		return vnegq_f32(mValue);
+	#endif
 #else
-	return Vec3(-mF32[0], -mF32[1], -mF32[2]);
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		return Vec3(0.0f - mF32[0], 0.0f - mF32[1], 0.0f - mF32[2]);
+	#else
+		return Vec3(-mF32[0], -mF32[1], -mF32[2]);
+	#endif
 #endif
 }
 

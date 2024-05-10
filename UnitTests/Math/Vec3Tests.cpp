@@ -155,6 +155,17 @@ TEST_SUITE("Vec3Tests")
 	{
 		CHECK(-Vec3(1, 2, 3) == Vec3(-1, -2, -3));
 
+		Vec3 neg_zero = -Vec3::sZero();
+		CHECK(neg_zero == Vec3::sZero());
+
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		// When cross platform deterministic, we want to make sure that -0 is represented as 0
+		UVec4 neg_zero_bin = neg_zero.ReinterpretAsInt();
+		CHECK(neg_zero_bin.GetX() == 0);
+		CHECK(neg_zero_bin.GetY() == 0);
+		CHECK(neg_zero_bin.GetZ() == 0);
+	#endif // JPH_CROSS_PLATFORM_DETERMINISTIC
+
 		CHECK(Vec3(1, 2, 3) + Vec3(4, 5, 6) == Vec3(5, 7, 9));
 		CHECK(Vec3(1, 2, 3) - Vec3(6, 5, 4) == Vec3(-5, -3, -1));
 
