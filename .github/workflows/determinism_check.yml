@@ -25,9 +25,12 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
@@ -45,9 +48,12 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+      run: cmake -B ${{github.workspace}}/Build/VS2022_CL -G "Visual Studio 17 2022" -A x64 Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
       run: msbuild Build\VS2022_CL\JoltPhysics.sln /property:Configuration=Distribution
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
+      run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL/Distribution
       run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
@@ -66,9 +72,12 @@ jobs:
       uses: microsoft/setup-msbuild@v2
     - name: Configure CMake
       working-directory: ${{github.workspace}}/Build
-      run: ./cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF
+      run: ./cmake_vs2022_cl_32bit.bat -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
       run: msbuild Build\VS2022_CL_32BIT\JoltPhysics.sln /property:Configuration=Distribution
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
+      run: ./UnitTests.exe
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/VS2022_CL_32BIT/Distribution
       run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh "-validate_hash=$env:CONVEX_VS_MESH_HASH"
@@ -84,9 +93,12 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF
+      run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
+    - name: Unit Tests
+      working-directory: ${{github.workspace}}/Build/Linux_Distribution
+      run: ctest --output-on-failure --verbose
     - name: Test ConvexVsMesh
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: ./PerformanceTest -q=LinearCast -t=2 -s=ConvexVsMesh -validate_hash=${CONVEX_VS_MESH_HASH}
@@ -108,7 +120,7 @@ jobs:
       run: cmake -B ${{github.workspace}}/Build/Linux_Distribution -DCMAKE_BUILD_TYPE=Distribution -DCMAKE_CXX_COMPILER=clang++ Build -DCROSS_PLATFORM_DETERMINISTIC=ON -DCROSS_COMPILE_ARM=ON -DTARGET_VIEWER=OFF -DTARGET_SAMPLES=OFF -DTARGET_HELLO_WORLD=OFF -DTARGET_UNIT_TESTS=ON
     - name: Build
       run: cmake --build ${{github.workspace}}/Build/Linux_Distribution
-    - name: Test
+    - name: Unit Tests
       working-directory: ${{github.workspace}}/Build/Linux_Distribution
       run: qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./UnitTests
     - name: Test ConvexVsMesh

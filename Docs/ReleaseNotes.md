@@ -44,6 +44,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Fixed crash in Ragdoll::DriveToPoseUsingMotors when using constraints other than SwingTwistConstraint.
 * Fixed -Wunused-parameter warning on GCC when building in Release mode with -Wextra.
 * Fixed tolerance in assert in GetPenetrationDepthStepEPA.
+* Due to a difference between the used instructions in NEON and SSE -Vec3::sZero() returned different binary results on ARM vs x86. When JPH_CROSS_PLATFORM_DETERMINISTIC is defined, we ensure that the calculation is the same now.
 
 ## v5.0.0
 
