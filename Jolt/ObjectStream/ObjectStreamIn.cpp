@@ -4,6 +4,8 @@
 
 #include <Jolt/Jolt.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/UnorderedSet.h>
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
@@ -615,3 +617,5 @@ bool ObjectStreamIn::SkipAttributeData(int inArrayDepth, EOSDataType inDataType,
 }
 
 JPH_NAMESPACE_END
+
+#endif // !JPH_NO_OBJECT_STREAM

@@ -90,12 +90,14 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeMotionQualityTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeMotionTypeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ChangeObjectLayerTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveSceneTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveBinaryTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigVsSmallTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActiveEdgesTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, EnhancedInternalEdgeRemovalTest)
+#ifndef JPH_NO_OBJECT_STREAM
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveSceneTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MultithreadedTest)
+#endif // !JPH_NO_OBJECT_STREAM
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ContactListenerTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ModifyMassTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActivateDuringUpdateTest)
@@ -131,12 +133,16 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Change Motion Type",					JPH_RTTI(ChangeMotionTypeTest) },
 	{ "Change Shape",						JPH_RTTI(ChangeShapeTest) },
 	{ "Change Object Layer",				JPH_RTTI(ChangeObjectLayerTest) },
+#ifndef JPH_NO_OBJECT_STREAM
 	{ "Load/Save Scene",					JPH_RTTI(LoadSaveSceneTest) },
+#endif // !JPH_NO_OBJECT_STREAM
 	{ "Load/Save Binary",					JPH_RTTI(LoadSaveBinaryTest) },
 	{ "Big vs Small",						JPH_RTTI(BigVsSmallTest) },
 	{ "Active Edges",						JPH_RTTI(ActiveEdgesTest) },
 	{ "Enhanced Internal Edge Removal",		JPH_RTTI(EnhancedInternalEdgeRemovalTest) },
+#ifndef JPH_NO_OBJECT_STREAM
 	{ "Multithreaded",						JPH_RTTI(MultithreadedTest) },
+#endif // !JPH_NO_OBJECT_STREAM
 	{ "Contact Listener",					JPH_RTTI(ContactListenerTest) },
 	{ "Modify Mass",						JPH_RTTI(ModifyMassTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },
@@ -255,6 +261,7 @@ static TestNameAndRTTI sScaledShapeTests[] =
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CreateRigTest)
+#ifndef JPH_NO_OBJECT_STREAM
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, KinematicRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, PoweredRigTest)
@@ -263,10 +270,12 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveBinaryRigTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, SkeletonMapperTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigWorldTest)
+#endif // !JPH_NO_OBJECT_STREAM
 
 static TestNameAndRTTI sRigTests[] =
 {
 	{ "Create Rig",							JPH_RTTI(CreateRigTest) },
+#ifndef JPH_NO_OBJECT_STREAM
 	{ "Load Rig",							JPH_RTTI(LoadRigTest) },
 	{ "Load / Save Rig",					JPH_RTTI(LoadSaveRigTest) },
 	{ "Load / Save Binary Rig",				JPH_RTTI(LoadSaveBinaryRigTest) },
@@ -275,6 +284,7 @@ static TestNameAndRTTI sRigTests[] =
 	{ "Skeleton Mapper",					JPH_RTTI(SkeletonMapperTest) },
 	{ "Rig Pile",							JPH_RTTI(RigPileTest) },
 	{ "Big World",							JPH_RTTI(BigWorldTest) }
+#endif // !JPH_NO_OBJECT_STREAM
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CharacterTest)
@@ -589,6 +599,12 @@ SamplesApp::SamplesApp()
 		mDebugUI->ShowMenu(main_menu);
 	}
 
+#ifndef JPH_NO_OBJECT_STREAM
+	const RTTI *default_test = JPH_RTTI(LoadRigTest);
+#else
+	const RTTI *default_test = JPH_RTTI(SimpleTest);
+#endif // !JPH_NO_OBJECT_STREAM
+
 	// Get test name from commandline
 	String cmd_line = ToLower(GetCommandLineA());
 	Array<String> args;
@@ -606,7 +622,7 @@ SamplesApp::SamplesApp()
 		else
 		{
 			// Search for the test
-			const RTTI *test = JPH_RTTI(LoadRigTest);
+			const RTTI *test = default_test;
 			for (TestCategory &c : sAllCategories)
 				for (uint i = 0; i < c.mNumTests; ++i)
 				{
@@ -626,7 +642,7 @@ SamplesApp::SamplesApp()
 	else
 	{
 		// Otherwise start default test
-		StartTest(JPH_RTTI(LoadRigTest));
+		StartTest(default_test);
 	}
 }
 

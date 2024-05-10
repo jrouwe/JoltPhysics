@@ -74,7 +74,11 @@ int main(int argc, char** argv)
 	RegisterDefaultAllocator();
 
 	// Helper function that creates the default scene
+#ifndef JPH_NO_OBJECT_STREAM
 	auto create_ragdoll_scene = []{ return unique_ptr<PerformanceTestScene>(new RagdollScene(4, 10, 0.6f)); };
+#else
+	auto create_ragdoll_scene = []{ return unique_ptr<PerformanceTestScene>(new ConvexVsMeshScene); };
+#endif // !JPH_NO_OBJECT_STREAM
 
 	// Parse command line parameters
 	int specified_quality = -1;
@@ -100,8 +104,10 @@ int main(int argc, char** argv)
 			// Parse scene
 			if (strcmp(arg + 3, "Ragdoll") == 0)
 				scene = create_ragdoll_scene();
+#ifndef JPH_NO_OBJECT_STREAM
 			else if (strcmp(arg + 3, "RagdollSinglePile") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new RagdollScene(1, 160, 0.4f));
+#endif // !JPH_NO_OBJECT_STREAM
 			else if (strcmp(arg + 3, "ConvexVsMesh") == 0)
 				scene = unique_ptr<PerformanceTestScene>(new ConvexVsMeshScene);
 			else if (strcmp(arg + 3, "Pyramid") == 0)

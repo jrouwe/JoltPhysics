@@ -4,6 +4,8 @@
 
 #include <TestFramework.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 #include <Tests/Rig/RigPileTest.h>
 #include <Jolt/Physics/PhysicsScene.h>
 #include <Jolt/Physics/Collision/RayCast.h>
@@ -146,3 +148,5 @@ void RigPileTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 	inUI->CreateSlider(inSubMenu, "Num Ragdolls Per Pile", float(sPileSize), 1, 160, 1, [](float inValue) { sPileSize = (int)inValue; });
 	inUI->CreateSlider(inSubMenu, "Num Piles Per Axis", float(sNumPilesPerAxis), 1, 4, 1, [](float inValue) { sNumPilesPerAxis = (int)inValue; });
 }
+
+#endif // !JPH_NO_OBJECT_STREAM

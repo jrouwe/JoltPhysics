@@ -6,6 +6,8 @@
 
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 /// Implementation of ObjectStream text output stream.
@@ -54,3 +56,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // !JPH_NO_OBJECT_STREAM

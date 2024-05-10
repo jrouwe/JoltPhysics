@@ -11,6 +11,8 @@
 #include <Utils/RagdollLoader.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 // This test tests a kinematic ragdoll moving towards a wall of boxes
 class KinematicRigTest : public Test
 {
@@ -47,3 +49,5 @@ private:
 	Ref<SkeletalAnimation>	mAnimation;
 	SkeletonPose			mPose;
 };
+
+#endif // !JPH_NO_OBJECT_STREAM

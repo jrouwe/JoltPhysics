@@ -31,8 +31,10 @@ const char *CharacterBaseTest::sScenes[] =
 	"PerlinHeightField",
 	"ObstacleCourse",
 	"InitiallyIntersecting",
+#ifndef JPH_NO_OBJECT_STREAM
 	"Terrain1",
 	"Terrain2",
+#endif // !JPH_NO_OBJECT_STREAM
 };
 
 const char *CharacterBaseTest::sSceneName = "ObstacleCourse";
@@ -494,6 +496,7 @@ void CharacterBaseTest::Initialize()
 			mSensorBody = mBodyInterface->CreateAndAddBody(sensor, EActivation::Activate);
 		}
 	}
+#ifndef JPH_NO_OBJECT_STREAM
 	else
 	{
 		// Load scene
@@ -508,6 +511,8 @@ void CharacterBaseTest::Initialize()
 		}
 		scene->CreateBodies(mPhysicsSystem);
 	}
+#endif // !JPH_NO_OBJECT_STREAM
+
 
 	// Create capsule shapes for all stances
 	switch (sShapeType)

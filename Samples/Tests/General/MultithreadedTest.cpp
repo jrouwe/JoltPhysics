@@ -4,6 +4,8 @@
 
 #include <TestFramework.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 #include <Tests/General/MultithreadedTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/RayCast.h>
@@ -253,3 +255,5 @@ void MultithreadedTest::CasterMain()
 
 	JPH_PROFILE_THREAD_END();
 }
+
+#endif // !JPH_NO_OBJECT_STREAM

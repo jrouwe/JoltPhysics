@@ -7,6 +7,8 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 // This test loads a ragdoll from disc, writes it to an object stream, loads it again and simulates it
 class LoadSaveRigTest : public Test
 {
@@ -25,3 +27,5 @@ private:
 	// Our ragdoll
 	Ref<Ragdoll>					mRagdoll;
 };
+
+#endif // !JPH_NO_OBJECT_STREAM

@@ -4,6 +4,8 @@
 
 #include <TestFramework.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 #include <Tests/Rig/KinematicRigTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/StateRecorder.h>
@@ -109,3 +111,5 @@ void KinematicRigTest::RestoreState(StateRecorder &inStream)
 {
 	inStream.Read(mTime);
 }
+
+#endif // !JPH_NO_OBJECT_STREAM

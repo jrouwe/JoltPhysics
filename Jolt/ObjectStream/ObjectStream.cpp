@@ -6,6 +6,8 @@
 
 #include <Jolt/ObjectStream/ObjectStream.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 // Define macro to declare functions for a specific primitive type
@@ -32,3 +34,5 @@ JPH_NAMESPACE_BEGIN
 #include <Jolt/ObjectStream/ObjectStreamTypes.h>
 
 JPH_NAMESPACE_END
+
+#endif // !JPH_NO_OBJECT_STREAM

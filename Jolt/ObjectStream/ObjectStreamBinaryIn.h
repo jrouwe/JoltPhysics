@@ -6,6 +6,8 @@
 
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 
+#ifndef JPH_NO_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 /// Implementation of ObjectStream binary input stream.
@@ -49,3 +51,5 @@ private:
 };
 
 JPH_NAMESPACE_END
+
+#endif // !JPH_NO_OBJECT_STREAM

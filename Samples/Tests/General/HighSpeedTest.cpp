@@ -328,6 +328,7 @@ void HighSpeedTest::CreateConvexOnLargeTriangles()
 
 void HighSpeedTest::CreateConvexOnTerrain1()
 {
+#ifndef JPH_NO_OBJECT_STREAM
 	// Load scene
 	Ref<PhysicsScene> scene;
 	if (!ObjectStreamIn::sReadObject("Assets/terrain1.bof", scene))
@@ -336,6 +337,9 @@ void HighSpeedTest::CreateConvexOnTerrain1()
 		body.mObjectLayer = Layers::NON_MOVING;
 	scene->FixInvalidScales();
 	scene->CreateBodies(mPhysicsSystem);
+#else
+	CreateFloor();
+#endif // !JPH_NO_OBJECT_STREAM
 
 	CreateFastSmallConvexObjects();
 }
