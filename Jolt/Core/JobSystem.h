@@ -173,7 +173,7 @@ protected:
 		JPH_OVERRIDE_NEW_DELETE
 
 		/// Constructor
-							Job([[maybe_unused]] const char *inJobName, [[maybe_unused]] ColorArg inColor, JobSystem *inJobSystem, const JobFunction &inJobFunction, uint32 inNumDependencies) :
+		Job([[maybe_unused]] const char *inJobName, [[maybe_unused]] ColorArg inColor, JobSystem *inJobSystem, const JobFunction &inJobFunction, uint32 inNumDependencies) :
 		#if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 			mJobName(inJobName),
 			mColor(inColor),
@@ -183,6 +183,9 @@ protected:
 			mNumDependencies(inNumDependencies)
 		{
 		}
+
+		/// Destructor
+		virtual ~Job() = default;
 
 		/// Get the jobs system to which this job belongs
 		inline JobSystem *	GetJobSystem()								{ return mJobSystem; }
