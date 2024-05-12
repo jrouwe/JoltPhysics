@@ -58,12 +58,14 @@ static void *UntagAllocation(void *inPointer, size_t inAlignment, char inMode)
 
 static void *AllocateHook(size_t inSize)
 {
+	JPH_ASSERT(inSize > 0);
 	InCustomAllocator ica;
 	return TagAllocation(malloc(inSize + 16), 16, 'U');
 }
 
 static void *ReallocateHook(void *inBlock, size_t inSize)
 {
+	JPH_ASSERT(inSize > 0);
 	InCustomAllocator ica;
 	return TagAllocation(realloc(UntagAllocation(inBlock, 16, 'U'), inSize + 16), 16, 'U');
 }
@@ -76,8 +78,7 @@ static void FreeHook(void *inBlock)
 
 static void *AlignedAllocateHook(size_t inSize, size_t inAlignment)
 {
-	JPH_ASSERT(inAlignment <= 64);
-
+	JPH_ASSERT(inSize > 0 && inAlignment > 0 && inAlignment <= 64);
 	InCustomAllocator ica;
 	return TagAllocation(_aligned_malloc(inSize + 64, inAlignment), 64, 'A');
 }
