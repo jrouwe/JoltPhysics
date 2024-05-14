@@ -30,7 +30,9 @@ const char *VehicleTest::sScenes[] =
 	"Step",
 	"Dynamic Step",
 	"Playground",
+#ifdef JPH_OBJECT_STREAM
 	"Terrain1",
+#endif // JPH_OBJECT_STREAM
 };
 
 const char *VehicleTest::sSceneName = "Playground";
@@ -111,6 +113,7 @@ void VehicleTest::Initialize()
 
 		CreateRubble();
 	}
+#ifdef JPH_OBJECT_STREAM
 	else
 	{
 		// Load scene
@@ -122,6 +125,7 @@ void VehicleTest::Initialize()
 		scene->FixInvalidScales();
 		scene->CreateBodies(mPhysicsSystem);
 	}
+#endif // JPH_OBJECT_STREAM
 }
 
 void VehicleTest::CreateBridge()

@@ -31,6 +31,7 @@ There are a number of user configurable defines that turn on/off certain feature
 		<li>JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.</li>
 		<li>JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.</li>
 		<li>JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.</li>
+		<li>JPH_OBJECT_STREAM - Includes the code to serialize physics data in the ObjectStream format (mostly used by the examples).</li>
 	</ul>
 </details>
 

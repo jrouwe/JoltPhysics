@@ -10,6 +10,8 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 
+#ifdef JPH_OBJECT_STREAM
+
 JPH_NAMESPACE_BEGIN
 
 /// Base class for object stream input and output streams.
@@ -327,3 +329,5 @@ void OSWriteData(IObjectStreamOut &ioStream, const RefConst<T> &inRef)
 }
 
 JPH_NAMESPACE_END
+
+#endif // JPH_OBJECT_STREAM

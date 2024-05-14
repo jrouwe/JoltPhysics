@@ -93,6 +93,7 @@ void RegisterTypesInternal(uint64 inVersionID)
 		check_bit(8, "JPH_DISABLE_CUSTOM_ALLOCATOR");
 		check_bit(9, "JPH_OBJECT_LAYER_BITS");
 		check_bit(10, "JPH_ENABLE_ASSERTS");
+		check_bit(11, "JPH_OBJECT_STREAM");
 		std::abort();
 	}
 

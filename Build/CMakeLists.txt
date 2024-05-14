@@ -76,6 +76,9 @@ option(DISABLE_CUSTOM_ALLOCATOR "Disable support for a custom memory allocator" 
 # Setting this option will force the library to use the STL vector instead of the custom Array class
 option(USE_STD_VECTOR "Use std::vector instead of own Array class" OFF)
 
+# Setting this option will compile the ObjectStream class and RTTI attribute information
+option(ENABLE_OBJECT_STREAM "Compile the ObjectStream class and RTTI attribute information" ON)
+
 include(CMakeDependentOption)
 
 # Ability to toggle between the static and DLL versions of the MSVC runtime library

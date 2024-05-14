@@ -60,7 +60,12 @@
 #else
 	#define JPH_VERSION_FEATURE_BIT_10 0
 #endif
-#define JPH_VERSION_FEATURES (uint64(JPH_VERSION_FEATURE_BIT_1) | (JPH_VERSION_FEATURE_BIT_2 << 1) | (JPH_VERSION_FEATURE_BIT_3 << 2) | (JPH_VERSION_FEATURE_BIT_4 << 3) | (JPH_VERSION_FEATURE_BIT_5 << 4) | (JPH_VERSION_FEATURE_BIT_6 << 5) | (JPH_VERSION_FEATURE_BIT_7 << 6) | (JPH_VERSION_FEATURE_BIT_8 << 7) | (JPH_VERSION_FEATURE_BIT_9 << 8) | (JPH_VERSION_FEATURE_BIT_10 << 9))
+#ifdef JPH_OBJECT_STREAM
+	#define JPH_VERSION_FEATURE_BIT_11 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_11 0
+#endif
+#define JPH_VERSION_FEATURES (uint64(JPH_VERSION_FEATURE_BIT_1) | (JPH_VERSION_FEATURE_BIT_2 << 1) | (JPH_VERSION_FEATURE_BIT_3 << 2) | (JPH_VERSION_FEATURE_BIT_4 << 3) | (JPH_VERSION_FEATURE_BIT_5 << 4) | (JPH_VERSION_FEATURE_BIT_6 << 5) | (JPH_VERSION_FEATURE_BIT_7 << 6) | (JPH_VERSION_FEATURE_BIT_8 << 7) | (JPH_VERSION_FEATURE_BIT_9 << 8) | (JPH_VERSION_FEATURE_BIT_10 << 9) | (JPH_VERSION_FEATURE_BIT_11 << 10))
 
 // Combine the version and features in a single ID
 #define JPH_VERSION_ID ((JPH_VERSION_FEATURES << 24) | (JPH_VERSION_MAJOR << 16) | (JPH_VERSION_MINOR << 8) | JPH_VERSION_PATCH)
@@ -467,7 +472,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 #elif defined(JPH_COMPILER_GCC)
 	// On gcc 14 using always_inline in debug mode causes error: "inlining failed in call to 'always_inline' 'XXX': function not considered for inlining"
 	// See: https://github.com/jrouwe/JoltPhysics/issues/1096
-	#if __GNUC__ >= 14 && defined(JPH_DEBUG) 
+	#if __GNUC__ >= 14 && defined(JPH_DEBUG)
 		#define JPH_INLINE inline
 	#else
 		#define JPH_INLINE __inline__ __attribute__((always_inline))
