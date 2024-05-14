@@ -597,12 +597,6 @@ SamplesApp::SamplesApp()
 		mDebugUI->ShowMenu(main_menu);
 	}
 
-#ifdef JPH_OBJECT_STREAM
-	const RTTI *default_test = JPH_RTTI(LoadRigTest);
-#else
-	const RTTI *default_test = JPH_RTTI(SimpleTest);
-#endif // JPH_OBJECT_STREAM
-
 	// Get test name from commandline
 	String cmd_line = ToLower(GetCommandLineA());
 	Array<String> args;
@@ -620,7 +614,7 @@ SamplesApp::SamplesApp()
 		else
 		{
 			// Search for the test
-			const RTTI *test = default_test;
+			const RTTI *test = JPH_RTTI(CreateRigTest);
 			for (TestCategory &c : sAllCategories)
 				for (uint i = 0; i < c.mNumTests; ++i)
 				{
@@ -640,7 +634,7 @@ SamplesApp::SamplesApp()
 	else
 	{
 		// Otherwise start default test
-		StartTest(default_test);
+		StartTest(JPH_RTTI(CreateRigTest));
 	}
 }
 
