@@ -6,6 +6,7 @@ Changes that make some state saved through SaveBinaryState from a prior version 
 
 ## Changes between v5.0.0 and latest
 
+* 20240514 - Added macro JPH_OBJECT_STREAM that controls if ObjectStream is compiled or not. By default this is turned on, so you should not see a change, but if you compile without cmake you may need to define JPH_OBJECT_STREAM. (dc3ea787223d45855987e32b8bef7f9a59f6fcd2)
 * 20240504 - Replaced std::vector with a custom Array class. It can be turned off by enabling the JPH_USE_STD_VECTOR define (or the USE_STD_VECTOR cmake option). (bdc1695a643457db86b72119b1393ae69b9a182e)
 * 20240504 - Added a Reallocate function that needs to be implemented when you override the memory allocators and a reallocate function that you need to implement if you have a custom array allocator. The behavior is the same as the C realloc function. It is used to reallocate a block of memory for simple types instead of always going through a alloc, copy, free cycle. (bdc1695a643457db86b72119b1393ae69b9a182e)
 * 20240413 - *SBS* - Skinned constraints are now processed in parallel, this means that they are reordered when Optimize() is called (see SoftBodySharedSettings::OptimizationResults::mSkinnedRemap). This also caused a change to the binary serialization format of SoftBodySharedSettings. (744900a4becb4dc69ee2bd70d6b26ee46da3e64a)
