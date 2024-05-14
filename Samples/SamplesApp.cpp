@@ -94,6 +94,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveBinaryTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, BigVsSmallTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActiveEdgesTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, EnhancedInternalEdgeRemovalTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MultithreadedTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ContactListenerTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ModifyMassTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ActivateDuringUpdateTest)
@@ -105,7 +106,6 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ShapeFilterTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, GyroscopicForceTest)
 #ifdef JPH_OBJECT_STREAM
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, LoadSaveSceneTest)
-JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, MultithreadedTest)
 #endif // JPH_OBJECT_STREAM
 
 static TestNameAndRTTI sGeneralTests[] =
@@ -140,9 +140,7 @@ static TestNameAndRTTI sGeneralTests[] =
 	{ "Big vs Small",						JPH_RTTI(BigVsSmallTest) },
 	{ "Active Edges",						JPH_RTTI(ActiveEdgesTest) },
 	{ "Enhanced Internal Edge Removal",		JPH_RTTI(EnhancedInternalEdgeRemovalTest) },
-#ifdef JPH_OBJECT_STREAM
 	{ "Multithreaded",						JPH_RTTI(MultithreadedTest) },
-#endif // JPH_OBJECT_STREAM
 	{ "Contact Listener",					JPH_RTTI(ContactListenerTest) },
 	{ "Modify Mass",						JPH_RTTI(ModifyMassTest) },
 	{ "Activate During Update",				JPH_RTTI(ActivateDuringUpdateTest) },

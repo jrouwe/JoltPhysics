@@ -4,8 +4,6 @@
 
 #include <TestFramework.h>
 
-#ifdef JPH_OBJECT_STREAM
-
 #include <Tests/General/MultithreadedTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/RayCast.h>
@@ -137,6 +135,7 @@ void MultithreadedTest::RagdollSpawner()
 	const int cMaxRagdolls = 50;
 #endif
 
+#ifdef JPH_OBJECT_STREAM
 	// Load ragdoll
 	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
 	if (ragdoll_settings == nullptr)
@@ -146,11 +145,23 @@ void MultithreadedTest::RagdollSpawner()
 	Ref<SkeletalAnimation> animation;
 	if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
 		FatalError("Could not open animation");
+#else
+	// Create a ragdoll from code
+	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sCreate();
+#endif // JPH_OBJECT_STREAM
 
 	// Create pose
 	SkeletonPose ragdoll_pose;
 	ragdoll_pose.SetSkeleton(ragdoll_settings->GetSkeleton());
+#ifdef JPH_OBJECT_STREAM
 	animation->Sample(0.0f, ragdoll_pose);
+#else
+	{
+		Ref<Ragdoll> temp_ragdoll = ragdoll_settings->CreateRagdoll(0, 0, mPhysicsSystem);
+		temp_ragdoll->GetPose(ragdoll_pose);
+		ragdoll_pose.CalculateJointStates();
+	}
+#endif // JPH_OBJECT_STREAM
 
 	default_random_engine random;
 	uniform_real_distribution<float> from_y(0, 10);
@@ -255,5 +266,3 @@ void MultithreadedTest::CasterMain()
 
 	JPH_PROFILE_THREAD_END();
 }
-
-#endif // JPH_OBJECT_STREAM
