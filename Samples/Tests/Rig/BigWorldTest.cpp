@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include <Tests/Rig/BigWorldTest.h>
 #include <Jolt/Physics/PhysicsScene.h>
@@ -172,4 +172,4 @@ RVec3 BigWorldTest::GetDrawOffset() const
 	return sPivot;
 }
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

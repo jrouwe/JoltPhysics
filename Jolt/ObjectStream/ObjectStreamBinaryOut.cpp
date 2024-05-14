@@ -4,7 +4,7 @@
 
 #include <Jolt/Jolt.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include <Jolt/ObjectStream/ObjectStreamBinaryOut.h>
 #include <Jolt/Core/StringTools.h>
@@ -151,5 +151,5 @@ void ObjectStreamBinaryOut::WritePrimitiveData(const DMat44 &inPrimitive)
 
 JPH_NAMESPACE_END
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM
 

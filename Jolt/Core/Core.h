@@ -4,8 +4,6 @@
 
 #pragma once
 
-#define JPH_NO_OBJECT_STREAM
-
 // Jolt library version
 #define JPH_VERSION_MAJOR 5
 #define JPH_VERSION_MINOR 0

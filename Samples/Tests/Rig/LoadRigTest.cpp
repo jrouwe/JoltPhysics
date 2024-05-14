@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include <Tests/Rig/LoadRigTest.h>
 #include <Application/DebugUI.h>
@@ -54,4 +54,4 @@ void LoadRigTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
 	});
 }
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

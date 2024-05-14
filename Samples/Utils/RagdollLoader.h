@@ -4,7 +4,7 @@
 
 #pragma once
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 namespace JPH {
 	class RagdollSettings;
@@ -27,4 +27,4 @@ public:
 	static RagdollSettings *		sLoad(const char *inFileName, EMotionType inMotionType, EConstraintOverride inConstraintOverride = EConstraintOverride::TypeRagdoll);
 };
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

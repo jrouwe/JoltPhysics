@@ -6,7 +6,7 @@
 
 #include <Tests/Test.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 // This test spawns boxes and ragdolls and performs ray cast tests from threads / jobs to see if the simulation is thread safe.
 class MultithreadedTest : public Test
@@ -45,4 +45,4 @@ private:
 	atomic<bool>			mIsQuitting = false;
 };
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

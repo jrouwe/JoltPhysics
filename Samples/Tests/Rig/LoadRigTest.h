@@ -8,7 +8,7 @@
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 #include <Utils/RagdollLoader.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 // This test loads a ragdoll from disc and simulates it
 class LoadRigTest : public Test
@@ -46,4 +46,4 @@ private:
 	static EConstraintOverride		sConstraintType;
 };
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

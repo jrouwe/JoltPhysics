@@ -7,7 +7,7 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 // This test tests the performance of a pile of ragdolls on a terrain.
 class RigPileTest : public Test
@@ -44,4 +44,4 @@ private:
 	Array<Ref<Ragdoll>>		mRagdolls;
 };
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

@@ -6,7 +6,7 @@
 
 #include <Jolt/ObjectStream/ObjectStreamIn.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 JPH_NAMESPACE_BEGIN
 
@@ -52,4 +52,4 @@ private:
 
 JPH_NAMESPACE_END
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

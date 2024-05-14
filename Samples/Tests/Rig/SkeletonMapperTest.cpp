@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include <Tests/Rig/SkeletonMapperTest.h>
 #include <Jolt/Physics/StateRecorder.h>
@@ -145,4 +145,4 @@ void SkeletonMapperTest::RestoreState(StateRecorder &inStream)
 	inStream.Read(mTime);
 }
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

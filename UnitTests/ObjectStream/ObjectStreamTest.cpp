@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2021 Jorrit Rouwe
 // SPDX-License-Identifier: MIT
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include "UnitTestFramework.h"
 #include <Jolt/Core/Factory.h>
@@ -246,4 +246,4 @@ TEST_SUITE("ObjectStreamTest")
 	}
 }
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

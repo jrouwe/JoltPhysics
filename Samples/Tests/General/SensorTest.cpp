@@ -69,7 +69,7 @@ void SensorTest::Initialize()
 	for (const RVec3 &p : static_positions)
 		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), p, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::Activate);
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 	// Load ragdoll
 	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
 	if (ragdoll_settings == nullptr)
@@ -91,7 +91,7 @@ void SensorTest::Initialize()
 	mRagdoll = ragdoll_settings->CreateRagdoll(1, 0, mPhysicsSystem);
 	mRagdoll->SetPose(ragdoll_pose);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM
 
 	// Create kinematic body
 	BodyCreationSettings kinematic_settings(new BoxShape(Vec3(0.25f, 0.5f, 1.0f)), RVec3(-20, 10, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING);

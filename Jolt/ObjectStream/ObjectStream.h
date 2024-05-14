@@ -10,7 +10,7 @@
 #include <Jolt/Core/NonCopyable.h>
 #include <Jolt/ObjectStream/SerializableAttribute.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 JPH_NAMESPACE_BEGIN
 
@@ -330,4 +330,4 @@ void OSWriteData(IObjectStreamOut &ioStream, const RefConst<T> &inRef)
 
 JPH_NAMESPACE_END
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

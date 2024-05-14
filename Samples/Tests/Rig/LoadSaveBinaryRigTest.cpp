@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include <Tests/Rig/LoadSaveBinaryRigTest.h>
 #include <Jolt/Core/StreamWrapper.h>
@@ -58,4 +58,4 @@ void LoadSaveBinaryRigTest::Initialize()
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 }
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

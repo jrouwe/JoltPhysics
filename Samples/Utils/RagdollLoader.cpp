@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include <Utils/RagdollLoader.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
@@ -114,4 +114,4 @@ RagdollSettings *RagdollLoader::sLoad(const char *inFileName, EMotionType inMoti
 	return ragdoll;
 }
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

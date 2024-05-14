@@ -12,7 +12,7 @@ JPH_NAMESPACE_BEGIN
 // Helper macros
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 // JPH_DECLARE_SERIALIZATION_FUNCTIONS
 #define JPH_DECLARE_SERIALIZATION_FUNCTIONS(linkage, prefix, class_name)											\
@@ -70,7 +70,7 @@ JPH_NAMESPACE_BEGIN
 #define JPH_DECLARE_SERIALIZATION_FUNCTIONS(...)
 #define JPH_IMPLEMENT_SERIALIZATION_FUNCTIONS(...)
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Use these macros on non-virtual objects to make them serializable

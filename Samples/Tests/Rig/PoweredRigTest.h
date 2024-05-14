@@ -10,7 +10,7 @@
 #include <Jolt/Skeleton/SkeletonPose.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 // This test demonstrates powered constraints. It can either show a ragdoll in a static pose or in an animated pose (e.g. walk).
 class PoweredRigTest : public Test
@@ -49,4 +49,4 @@ private:
 	SkeletonPose			mPose;
 };
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

@@ -4,7 +4,7 @@
 
 #include <TestFramework.h>
 
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 
 #include <Tests/Rig/LoadSaveRigTest.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
@@ -62,4 +62,4 @@ void LoadSaveRigTest::Initialize()
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 }
 
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM

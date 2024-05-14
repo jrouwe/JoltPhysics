@@ -200,7 +200,7 @@ Ref<PhysicsScene> LoadSaveSceneTest::sCreateScene()
 
 void LoadSaveSceneTest::Initialize()
 {
-#ifndef JPH_NO_OBJECT_STREAM
+#ifdef JPH_OBJECT_STREAM
 	Ref<PhysicsScene> scene = sCreateScene();
 
 	stringstream data;
@@ -222,5 +222,5 @@ void LoadSaveSceneTest::Initialize()
 
 	// Instantiate scene
 	scene->CreateBodies(mPhysicsSystem);
-#endif // !JPH_NO_OBJECT_STREAM
+#endif // JPH_OBJECT_STREAM
 }
