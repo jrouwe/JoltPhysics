@@ -472,7 +472,7 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 #elif defined(JPH_COMPILER_GCC)
 	// On gcc 14 using always_inline in debug mode causes error: "inlining failed in call to 'always_inline' 'XXX': function not considered for inlining"
 	// See: https://github.com/jrouwe/JoltPhysics/issues/1096
-	#if __GNUC__ >= 14 && defined(JPH_DEBUG) 
+	#if __GNUC__ >= 14 && defined(JPH_DEBUG)
 		#define JPH_INLINE inline
 	#else
 		#define JPH_INLINE __inline__ __attribute__((always_inline))
