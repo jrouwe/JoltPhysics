@@ -4,8 +4,6 @@
 
 #include <TestFramework.h>
 
-#ifdef JPH_OBJECT_STREAM
-
 #include <Tests/Rig/LoadSaveBinaryRigTest.h>
 #include <Jolt/Core/StreamWrapper.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
@@ -57,5 +55,3 @@ void LoadSaveBinaryRigTest::Initialize()
 	mRagdoll = result.Get()->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 }
-
-#endif // JPH_OBJECT_STREAM

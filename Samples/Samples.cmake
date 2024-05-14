@@ -149,24 +149,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/General/WallTest.h
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.cpp
 	${SAMPLES_ROOT}/Tests/General/ActivateDuringUpdateTest.h
-	${SAMPLES_ROOT}/Tests/Rig/BigWorldTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/BigWorldTest.h
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.cpp
 	${SAMPLES_ROOT}/Tests/Rig/CreateRigTest.h
-	${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.h
-	${SAMPLES_ROOT}/Tests/Rig/LoadSaveBinaryRigTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/LoadSaveBinaryRigTest.h
-	${SAMPLES_ROOT}/Tests/Rig/LoadSaveRigTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/LoadSaveRigTest.h
-	${SAMPLES_ROOT}/Tests/Rig/LoadRigTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/LoadRigTest.h
-	${SAMPLES_ROOT}/Tests/Rig/PoweredRigTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/PoweredRigTest.h
-	${SAMPLES_ROOT}/Tests/Rig/RigPileTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/RigPileTest.h
-	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.cpp
-	${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyBendConstraintTest.cpp
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyBendConstraintTest.h
 	${SAMPLES_ROOT}/Tests/SoftBody/SoftBodyContactListenerTest.cpp
@@ -281,6 +265,28 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Utils/SoftBodyCreator.cpp
 	${SAMPLES_ROOT}/Utils/SoftBodyCreator.h
 )
+
+if (ENABLE_OBJECT_STREAM)
+	set(SAMPLES_SRC_FILES
+		${SAMPLES_SRC_FILES}
+		${SAMPLES_ROOT}/Tests/Rig/BigWorldTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/BigWorldTest.h
+		${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/KinematicRigTest.h
+		${SAMPLES_ROOT}/Tests/Rig/LoadSaveBinaryRigTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/LoadSaveBinaryRigTest.h
+		${SAMPLES_ROOT}/Tests/Rig/LoadSaveRigTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/LoadSaveRigTest.h
+		${SAMPLES_ROOT}/Tests/Rig/LoadRigTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/LoadRigTest.h
+		${SAMPLES_ROOT}/Tests/Rig/PoweredRigTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/PoweredRigTest.h
+		${SAMPLES_ROOT}/Tests/Rig/RigPileTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/RigPileTest.h
+		${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.cpp
+		${SAMPLES_ROOT}/Tests/Rig/SkeletonMapperTest.h
+	)
+endif()
 
 # Group source files
 source_group(TREE ${SAMPLES_ROOT} FILES ${SAMPLES_SRC_FILES})

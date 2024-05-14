@@ -7,8 +7,6 @@
 #include <Tests/Test.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-#ifdef JPH_OBJECT_STREAM
-
 // This test tests the performance of a pile of ragdolls on a terrain at various distances from the origin.
 class BigWorldTest : public Test
 {
@@ -57,5 +55,3 @@ private:
 	};
 	Array<Pile>				mPiles;
 };
-
-#endif // JPH_OBJECT_STREAM

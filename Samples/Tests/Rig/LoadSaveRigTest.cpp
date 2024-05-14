@@ -4,8 +4,6 @@
 
 #include <TestFramework.h>
 
-#ifdef JPH_OBJECT_STREAM
-
 #include <Tests/Rig/LoadSaveRigTest.h>
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/ObjectStream/ObjectStreamOut.h>
@@ -61,5 +59,3 @@ void LoadSaveRigTest::Initialize()
 	mRagdoll = settings->CreateRagdoll(0, 0, mPhysicsSystem);
 	mRagdoll->AddToPhysicsSystem(EActivation::Activate);
 }
-
-#endif // JPH_OBJECT_STREAM

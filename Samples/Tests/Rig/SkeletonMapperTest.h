@@ -12,8 +12,6 @@
 #include <Utils/RagdollLoader.h>
 #include <Jolt/Physics/Ragdoll/Ragdoll.h>
 
-#ifdef JPH_OBJECT_STREAM
-
 // This test takes shows how you can map a high detail animation skeleton on a low detail physics skeleton and back
 class SkeletonMapperTest : public Test
 {
@@ -50,5 +48,3 @@ private:
 	SkeletonPose			mAnimatedPose;
 	SkeletonPose			mRagdollPose;
 };
-
-#endif // JPH_OBJECT_STREAM
