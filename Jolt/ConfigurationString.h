@@ -76,6 +76,9 @@ inline const char *GetConfigurationString()
 #ifdef JPH_ENABLE_ASSERTS
 		"(Assertions) "
 #endif
+#ifdef JPH_OBJECT_STREAM
+		"(ObjectStream) "
+#endif
 #ifdef JPH_DEBUG
 		"(Debug) "
 #endif
