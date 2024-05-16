@@ -23,7 +23,7 @@ public:
 
 		// Calculate new size and resize buffer
 		size_t s = AlignUp(size(), inSize);
-		resize(s);
+		resize(s, 0);
 
 		return s;
 	}
