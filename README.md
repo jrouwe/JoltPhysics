@@ -102,7 +102,7 @@ So why create yet another physics engine? First of all, this has been a personal
 
 ## Documentation
 
-To learn more about Jolt go to the [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/).
+To learn more about Jolt go to the latest [Architecture and API documentation](https://jrouwe.github.io/JoltPhysics/). Documentation for [a specific release is also available](https://jrouwe.github.io/JoltPhysicsDocs/).
 
 To get started, look at the [HelloWorld](HelloWorld/HelloWorld.cpp) example. A [HelloWorld example using CMake FetchContent](https://github.com/jrouwe/JoltPhysicsHelloWorld) is also available to show how you can integrate Jolt Physics in a CMake project.
 
