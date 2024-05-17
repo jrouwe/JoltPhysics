@@ -112,7 +112,7 @@ public:
 	/// Constructor
 									HeightFieldShape() : Shape(EShapeType::HeightField, EShapeSubType::HeightField) { }
 									HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult);
-	virtual							~HeightFieldShape();
+	virtual							~HeightFieldShape() override;
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override				{ return true; }
