@@ -112,6 +112,7 @@ public:
 	/// Constructor
 									HeightFieldShape() : Shape(EShapeType::HeightField, EShapeSubType::HeightField) { }
 									HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult);
+	virtual							~HeightFieldShape() override;
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override				{ return true; }
@@ -261,6 +262,9 @@ private:
 	/// Calculate commonly used values and store them in the shape
 	void							CacheValues();
 
+	/// Allocate the mRangeBlocks, mHeightSamples and mActiveEdges buffers as a single data block
+	void							AllocateBuffers();
+
 	/// Calculate bit mask for all active edges in the heightfield for a specific region
 	void							CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, intptr_t inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator);
 
@@ -330,13 +334,16 @@ private:
 	/// Height data
 	uint32							mSampleCount = 0;							///< See HeightFieldShapeSettings::mSampleCount
 	uint32							mBlockSize = 2;								///< See HeightFieldShapeSettings::mBlockSize
+	uint32							mHeightSamplesSize = 0;						///< Size of mHeightSamples in bytes
+	uint32							mRangeBlocksSize = 0;						///< Size of mRangeBlocks in elements
+	uint32							mActiveEdgesSize = 0;						///< Size of mActiveEdges in bytes
 	uint8							mBitsPerSample = 8;							///< See HeightFieldShapeSettings::mBitsPerSample
 	uint8							mSampleMask = 0xff;							///< All bits set for a sample: (1 << mBitsPerSample) - 1, used to indicate that there's no collision
 	uint16							mMinSample = HeightFieldShapeConstants::cNoCollisionValue16; ///< Min and max value in mHeightSamples quantized to 16 bit, for calculating bounding box
 	uint16							mMaxSample = HeightFieldShapeConstants::cNoCollisionValue16;
-	Array<RangeBlock>				mRangeBlocks;								///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
-	Array<uint8>					mHeightSamples;								///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
-	Array<uint8>					mActiveEdges;								///< (mSampleCount - 1)^2 * 3-bit active edge flags.
+	RangeBlock *					mRangeBlocks = nullptr;						///< Hierarchical grid of range data describing the height variations within 1 block. The grid for level <level> starts at offset sGridOffsets[<level>]
+	uint8 *							mHeightSamples = nullptr;					///< mBitsPerSample-bit height samples. Value [0, mMaxHeightValue] maps to highest detail grid in mRangeBlocks [mMin, mMax]. mNoCollisionValue is reserved to indicate no collision.
+	uint8 *							mActiveEdges = nullptr;						///< (mSampleCount - 1)^2 * 3-bit active edge flags.
 
 	/// Materials
 	PhysicsMaterialList				mMaterials;									///< The materials of square at (x, y) is: mMaterials[mMaterialIndices[x + y * (mSampleCount - 1)]]
