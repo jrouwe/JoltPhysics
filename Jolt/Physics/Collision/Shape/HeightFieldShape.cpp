@@ -629,7 +629,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 	RangeBlock *current_block = mRangeBlocks;
 	for (uint level = 0; level < ranges.size(); ++level)
 	{
-		JPH_ASSERT(current_block - mRangeBlocks == sGridOffsets[level]);
+		JPH_ASSERT(uint(current_block - mRangeBlocks) == sGridOffsets[level]);
 
 		uint in_n = 1 << level;
 		uint out_n = min(in_n, max_stride); // At the most detailed level we store a non-power of 2 number of blocks
@@ -649,7 +649,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 					}
 			}
 	}
-	JPH_ASSERT(current_block - mRangeBlocks == mRangeBlocksSize);
+	JPH_ASSERT(uint32(current_block - mRangeBlocks) == mRangeBlocksSize);
 
 	// Quantize height samples
 	memset(mHeightSamples, 0, mHeightSamplesSize);
