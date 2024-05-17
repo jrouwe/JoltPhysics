@@ -22,6 +22,7 @@ There are a number of user configurable defines that turn on/off certain feature
 <details>
 	<summary>General Options (click to see more)</summary>
 	<ul>
+		<li>JPH_SHARED_LIBRARY - Use the Jolt library as a shared library. Use JPH_BUILD_SHARED_LIBRARY to build Jolt as a shared library.</li>
 		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
 		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).</li>
 		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
@@ -29,9 +30,13 @@ There are a number of user configurable defines that turn on/off certain feature
 		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
 		<li>JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).</li>
 		<li>JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.</li>
+		<li>JPH_DET_LOG - Turn on a lot of extra logging to help debug determinism issues when JPH_CROSS_PLATFORM_DETERMINISTIC is turned on.</li>
 		<li>JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.</li>
 		<li>JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.</li>
+		<li>JPH_OBJECT_LAYER_BITS - Defines the size of ObjectLayer, must be 16 or 32 bits.</li>
 		<li>JPH_OBJECT_STREAM - Includes the code to serialize physics data in the ObjectStream format (mostly used by the examples).</li>
+		<li>JPH_NO_FORCE_INLINE - Don't use force inlining but fall back to a regular 'inline'.</li>
+		<li>JPH_USE_STD_VECTOR - Use std::vector instead of Jolt's own Array class.</li>
 	</ul>
 </details>
 
@@ -56,7 +61,7 @@ To override the default trace and assert mechanism install your own custom handl
 
 ## Custom Memory Allocator
 
-To implement your custom memory allocator override Allocate, Free, AlignedAllocate and AlignedFree (see Memory.h).
+To implement your custom memory allocator override Allocate, Free, Reallocate, AlignedAllocate and AlignedFree (see Memory.h).
 
 ## Building
 
