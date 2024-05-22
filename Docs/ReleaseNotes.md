@@ -24,6 +24,11 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 * Added CharacterBaseSettings::mEnhancedInternalEdgeRemoval (default false) that allows smoother movement for both the Character and CharacterVirtual class.
 
+
+#### Vehicles
+
+* Added ability to override the gravity vector per vehicle. This allows creating vehicles that can e.g. stick to the surface of a track and drive upside down. See VehicleConstraint::OverrideGravity.
+
 #### Various
 
 * Replaced std::vector with a custom Array class. std::vector initializes memory to zero which causes an undesired performance overhead.
