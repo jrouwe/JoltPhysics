@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Constraints/DistanceConstraint.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/GroupFilterTable.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/PhysicsScene.h>
@@ -30,6 +31,7 @@ const char *VehicleTest::sScenes[] =
 	"Step",
 	"Dynamic Step",
 	"Playground",
+	"Loop",
 #ifdef JPH_OBJECT_STREAM
 	"Terrain1",
 #endif // JPH_OBJECT_STREAM
@@ -112,6 +114,34 @@ void VehicleTest::Initialize()
 		CreateWall();
 
 		CreateRubble();
+	}
+	else if (strcmp(sSceneName, "Loop") == 0)
+	{
+		CreateFloor();
+
+		TriangleList triangles;
+		const int cNumSegments = 100;
+		const float cLoopWidth = 20.0f;
+		const float cLoopRadius = 20.0f;
+		Vec3 prev_center = Vec3::sZero();
+		for (int i = 0; i < cNumSegments; ++i)
+		{
+			float angle = i * 2.0f * JPH_PI / (cNumSegments - 1);
+			Vec3 center(-i * cLoopWidth / (cNumSegments - 1), cLoopRadius * (1.0f - Cos(angle)), cLoopRadius * (1.0f + Sin(angle)));
+			Vec3 delta(0.5f * cLoopWidth, 0, 0);
+			if (i > 0)
+			{
+				triangles.push_back(Triangle(prev_center + delta, prev_center - delta, center - delta));
+				triangles.push_back(Triangle(prev_center + delta, center - delta, center + delta));
+			}
+			prev_center = center;
+		}
+		MeshShapeSettings mesh(triangles);
+		mesh.SetEmbedded();
+
+		Body &loop = *mBodyInterface->CreateBody(BodyCreationSettings(&mesh, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+		loop.SetFriction(1.0f);
+		mBodyInterface->AddBody(loop.GetID(), EActivation::Activate);
 	}
 #ifdef JPH_OBJECT_STREAM
 	else

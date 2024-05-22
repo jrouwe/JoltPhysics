@@ -38,6 +38,7 @@ private:
 	static inline bool			sFourWheelDrive = false;
 	static inline bool			sAntiRollbar = true;
 	static inline bool			sLimitedSlipDifferentials = true;
+	static inline bool			sOverrideGravity = false;					///< If true, gravity is overridden to always oppose the ground normal
 	static inline float			sMaxEngineTorque = 500.0f;
 	static inline float			sClutchStrength = 10.0f;
 	static inline float			sFrontCasterAngle = 0.0f;
