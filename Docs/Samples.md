@@ -45,6 +45,10 @@ This categories shows vehicles created through the VehicleConstraint. These vehi
 |:-|
 |*Demonstrates a motor cycle.*|
 
+|[![Vehicle Gravity Override](https://img.youtube.com/vi/AJPS31S6ZO8/hqdefault.jpg)](https://www.youtube.com/watch?v=AJPS31S6ZO8)|
+|:-|
+|*Applying a custom gravity override to a vehicle to create weird gameplay.*|
+
 ### Rig (Ragdolls)
 
 This category demonstrates how ragdolls can be made and controlled using keyframing or motors.
