@@ -129,6 +129,7 @@ public:
 	void						DeactivateBody(const BodyID &inBodyID);
 	void						DeactivateBodies(const BodyID *inBodyIDs, int inNumber);
 	bool						IsActive(const BodyID &inBodyID) const;
+	void						ResetSleepTimer(const BodyID &inBodyID);
 	///@}
 
 	/// Create a two body constraint

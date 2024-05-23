@@ -251,6 +251,13 @@ bool BodyInterface::IsActive(const BodyID &inBodyID) const
 	return lock.Succeeded() && lock.GetBody().IsActive();
 }
 
+void BodyInterface::ResetSleepTimer(const BodyID &inBodyID)
+{
+	BodyLockWrite lock(*mBodyLockInterface, inBodyID);
+	if (lock.Succeeded())
+		lock.GetBody().ResetSleepTimer();
+}
+
 TwoBodyConstraint *BodyInterface::CreateConstraint(const TwoBodyConstraintSettings *inSettings, const BodyID &inBodyID1, const BodyID &inBodyID2)
 {
 	BodyID constraint_bodies[] = { inBodyID1, inBodyID2 };
