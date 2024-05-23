@@ -123,18 +123,34 @@ void VehicleTest::Initialize()
 		const int cNumSegments = 100;
 		const float cLoopWidth = 20.0f;
 		const float cLoopRadius = 20.0f;
+		const float cLoopThickness = 0.5f;
 		Vec3 prev_center = Vec3::sZero();
+		Vec3 prev_center_bottom = Vec3::sZero();
 		for (int i = 0; i < cNumSegments; ++i)
 		{
 			float angle = i * 2.0f * JPH_PI / (cNumSegments - 1);
-			Vec3 center(-i * cLoopWidth / (cNumSegments - 1), cLoopRadius * (1.0f - Cos(angle)), cLoopRadius * (1.0f + Sin(angle)));
-			Vec3 delta(0.5f * cLoopWidth, 0, 0);
+			Vec3 radial(0, -Cos(angle), Sin(angle));
+			Vec3 center = Vec3(-i * cLoopWidth / (cNumSegments - 1), cLoopRadius, cLoopRadius) + cLoopRadius * radial;
+			Vec3 half_width(0.5f * cLoopWidth, 0, 0);
+			Vec3 center_bottom = center + cLoopThickness * radial;
 			if (i > 0)
 			{
-				triangles.push_back(Triangle(prev_center + delta, prev_center - delta, center - delta));
-				triangles.push_back(Triangle(prev_center + delta, center - delta, center + delta));
+				// Top surface
+				triangles.push_back(Triangle(prev_center + half_width, prev_center - half_width, center - half_width));
+				triangles.push_back(Triangle(prev_center + half_width, center - half_width, center + half_width));
+
+				// Bottom surface
+				triangles.push_back(Triangle(prev_center_bottom + half_width, center_bottom - half_width, prev_center_bottom - half_width));
+				triangles.push_back(Triangle(prev_center_bottom + half_width, center_bottom + half_width, center_bottom - half_width));
+
+				// Sides
+				triangles.push_back(Triangle(prev_center + half_width, center + half_width, prev_center_bottom + half_width));
+				triangles.push_back(Triangle(prev_center_bottom + half_width, center + half_width, center_bottom + half_width));
+				triangles.push_back(Triangle(prev_center - half_width, prev_center_bottom - half_width, center - half_width));
+				triangles.push_back(Triangle(prev_center_bottom - half_width, center_bottom - half_width, center - half_width));
 			}
 			prev_center = center;
+			prev_center_bottom = center_bottom;
 		}
 		MeshShapeSettings mesh(triangles);
 		mesh.SetEmbedded();
