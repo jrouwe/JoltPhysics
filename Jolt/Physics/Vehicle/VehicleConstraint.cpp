@@ -165,8 +165,24 @@ void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem
 	if (mPreStepCallback != nullptr)
 		mPreStepCallback(*this, inDeltaTime, inPhysicsSystem);
 
-	// Calculate new world up vector by inverting gravity
-	mWorldUp = (-inPhysicsSystem.GetGravity()).NormalizedOr(mWorldUp);
+	if (mIsGravityOverridden)
+	{
+		// If gravity is overridden, we replace the normal gravity calculations
+		if (mBody->IsActive())
+		{
+			MotionProperties *mp = mBody->GetMotionProperties();
+			mp->SetGravityFactor(0.0f);
+			mBody->AddForce(mGravityOverride / mp->GetInverseMass());
+		}
+
+		// And we calculate the world up using the custom gravity
+		mWorldUp = (-mGravityOverride).NormalizedOr(mWorldUp);
+	}
+	else
+	{
+		// Calculate new world up vector by inverting gravity
+		mWorldUp = (-inPhysicsSystem.GetGravity()).NormalizedOr(mWorldUp);
+	}
 
 	// Callback on our controller
 	mController->PreCollide(inDeltaTime, inPhysicsSystem);

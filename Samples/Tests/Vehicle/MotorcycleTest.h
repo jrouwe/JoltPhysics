@@ -35,6 +35,7 @@ private:
 	static inline bool			sOverrideFrontSuspensionForcePoint = false;	///< If true, the front suspension force point is overridden
 	static inline bool			sOverrideRearSuspensionForcePoint = false;	///< If true, the rear suspension force point is overridden
 	static inline bool			sEnableLeanController = true;				///< If true, the lean controller is enabled
+	static inline bool			sOverrideGravity = false;					///< If true, gravity is overridden to always oppose the ground normal
 
 	Body *						mMotorcycleBody;							///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint

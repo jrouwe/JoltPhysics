@@ -146,7 +146,7 @@ void MotorcycleController::PreCollide(float inDeltaTime, PhysicsSystem &inPhysic
 	// TurnRadius = WheelBase / (Sin(SteerAngle) * Cos(CasterAngle))
 	// => SteerAngle = ASin(WheelBase * Tan(LeanAngle) * Gravity / (Velocity^2 * Cos(CasterAngle))
 	// The caster angle is different for each wheel so we can only calculate part of the equation here
-	float max_steer_angle_factor = wheel_base * Tan(mMaxLeanAngle) * inPhysicsSystem.GetGravity().Length();
+	float max_steer_angle_factor = wheel_base * Tan(mMaxLeanAngle) * (mConstraint.IsGravityOverridden()? mConstraint.GetGravityOverride() : inPhysicsSystem.GetGravity()).Length();
 
 	// Calculate forward velocity
 	float velocity = body->GetLinearVelocity().Dot(forward);
