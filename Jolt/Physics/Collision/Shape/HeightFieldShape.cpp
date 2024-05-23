@@ -481,7 +481,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		outResult.Set(this);
 		return;
 	}
-	
+
 	// Allocate space for this shape
 	AllocateBuffers();
 
@@ -2581,9 +2581,9 @@ void HeightFieldShape::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mMaxSample);
 	inStream.Write(mMaterialIndices);
 	inStream.Write(mNumBitsPerMaterialIndex);
-	
+
 	if (mRangeBlocks != nullptr)
-	{	
+	{
 		inStream.Write(true);
 		inStream.WriteBytes(mRangeBlocks, mRangeBlocksSize * sizeof(RangeBlock) + mHeightSamplesSize + mActiveEdgesSize);
 	}
@@ -2608,7 +2608,7 @@ void HeightFieldShape::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mNumBitsPerMaterialIndex);
 
 	CacheValues();
-	
+
 	bool has_heights = false;
 	inStream.Read(has_heights);
 	if (has_heights)
