@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <Jolt/Core/HashCombine.h>
+
 JPH_NAMESPACE_BEGIN
 
 /// Simple variable length array backed by a fixed size buffer

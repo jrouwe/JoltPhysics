@@ -8,8 +8,8 @@
 #include <Jolt/Core/Core.h>
 #include <Jolt/Core/ARMNeon.h>
 #include <Jolt/Core/Memory.h>
-#include <Jolt/Core/STLAllocator.h>
 #include <Jolt/Core/IssueReporting.h>
+#include <Jolt/Core/Array.h>
 #include <Jolt/Math/Math.h>
 #include <Jolt/Math/Vec4.h>
 #include <Jolt/Math/Mat44.h>

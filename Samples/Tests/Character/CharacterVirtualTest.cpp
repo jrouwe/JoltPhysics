@@ -30,7 +30,8 @@ void CharacterVirtualTest::Initialize()
 	settings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	settings->mPredictiveContactDistance = sPredictiveContactDistance;
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
-	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), mPhysicsSystem);
+	settings->mEnhancedInternalEdgeRemoval = sEnhancedInternalEdgeRemoval;
+	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->SetListener(this);
 }
 
@@ -176,6 +177,7 @@ void CharacterVirtualTest::AddConfigurationSettings(DebugUI *inUI, UIElement *in
 	inUI->CreateSlider(inSubMenu, "Predictive Contact Distance", sPredictiveContactDistance, 0.01f, 1.0f, 0.01f, [](float inValue) { sPredictiveContactDistance = inValue; });
 	inUI->CreateCheckBox(inSubMenu, "Enable Walk Stairs", sEnableWalkStairs, [](UICheckBox::EState inState) { sEnableWalkStairs = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Enable Stick To Floor", sEnableStickToFloor, [](UICheckBox::EState inState) { sEnableStickToFloor = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Enhanced Internal Edge Removal", sEnhancedInternalEdgeRemoval, [](UICheckBox::EState inState) { sEnhancedInternalEdgeRemoval = inState == UICheckBox::STATE_CHECKED; });
 }
 
 void CharacterVirtualTest::SaveState(StateRecorder &inStream) const
@@ -214,6 +216,13 @@ void CharacterVirtualTest::OnAdjustBodyVelocity(const CharacterVirtual *inCharac
 
 void CharacterVirtualTest::OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings)
 {
+	// Draw a box around the character when it enters the sensor
+	if (inBodyID2 == mSensorBody)
+	{
+		AABox box = inCharacter->GetShape()->GetWorldSpaceBounds(inCharacter->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f));
+		mDebugRenderer->DrawBox(box, Color::sGreen, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	}
+
 	// Dynamic boxes on the ramp go through all permutations
 	Array<BodyID>::const_iterator i = find(mRampBlocks.begin(), mRampBlocks.end(), inBodyID2);
 	if (i != mRampBlocks.end())

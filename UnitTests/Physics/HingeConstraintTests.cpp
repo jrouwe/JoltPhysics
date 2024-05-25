@@ -60,7 +60,7 @@ TEST_SUITE("HingeConstraintTests")
 			float dt = context.GetDeltaTime();
 			for (int i = 0; i < 120; ++i)
 			{
-				// Using the equations from page 32 of Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
+				// Using the equations from page 32 of Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
 				angular_v = (angular_v - dt * k / inertia * angle) / (1.0f + dt * c / inertia + Square(dt) * k / inertia);
 				angle += angular_v * dt;
 

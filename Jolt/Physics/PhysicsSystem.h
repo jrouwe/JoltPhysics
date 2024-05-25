@@ -20,6 +20,7 @@ class JobSystem;
 class StateRecorder;
 class TempAllocator;
 class PhysicsStepListener;
+class SoftBodyContactListener;
 
 /// The main class for the physics system. It contains all rigid bodies and simulates them.
 ///
@@ -50,6 +51,10 @@ public:
 	/// Listener that is notified whenever a contact point between two bodies is added/updated/removed
 	void						SetContactListener(ContactListener *inListener)				{ mContactManager.SetContactListener(inListener); }
 	ContactListener *			GetContactListener() const									{ return mContactManager.GetContactListener(); }
+
+	/// Listener that is notified whenever a contact point between a soft body and another body
+	void						SetSoftBodyContactListener(SoftBodyContactListener *inListener) { mSoftBodyContactListener = inListener; }
+	SoftBodyContactListener *	GetSoftBodyContactListener() const							{ return mSoftBodyContactListener; }
 
 	/// Set the function that combines the friction of two bodies and returns it
 	/// Default method is the geometric mean: sqrt(friction1 * friction2).
@@ -279,6 +284,9 @@ private:
 
 	/// The broadphase does quick collision detection between body pairs
 	BroadPhase *				mBroadPhase = nullptr;
+
+	/// The soft body contact listener
+	SoftBodyContactListener *	mSoftBodyContactListener = nullptr;
 
     /// Simulation settings
 	PhysicsSettings				mPhysicsSettings;

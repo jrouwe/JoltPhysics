@@ -189,16 +189,29 @@ JPH_INLINE UVec4 AABox4VsBox(const OrientedBox &inBox, Vec4Arg inBoxMinX, Vec4Ar
 	return AABox4VsBox(inBox.mOrientation, inBox.mHalfExtents, inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ, inEpsilon);
 }
 
+/// Get the squared distance between 4 AABoxes and a point
+JPH_INLINE Vec4 AABox4DistanceSqToPoint(Vec4Arg inPointX, Vec4Arg inPointY, Vec4Arg inPointZ, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
+{
+	// Get closest point on box
+	Vec4 closest_x = Vec4::sMin(Vec4::sMax(inPointX, inBoxMinX), inBoxMaxX);
+	Vec4 closest_y = Vec4::sMin(Vec4::sMax(inPointY, inBoxMinY), inBoxMaxY);
+	Vec4 closest_z = Vec4::sMin(Vec4::sMax(inPointZ, inBoxMinZ), inBoxMaxZ);
+
+	// Return the squared distance between the box and point
+	return Square(closest_x - inPointX) + Square(closest_y - inPointY) + Square(closest_z - inPointZ);
+}
+
+/// Get the squared distance between 4 AABoxes and a point
+JPH_INLINE Vec4 AABox4DistanceSqToPoint(Vec3 inPoint, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
+{
+	return AABox4DistanceSqToPoint(inPoint.SplatX(), inPoint.SplatY(), inPoint.SplatZ(), inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ);
+}
+
 /// Test 4 AABoxes vs a sphere
 JPH_INLINE UVec4 AABox4VsSphere(Vec4Arg inCenterX, Vec4Arg inCenterY, Vec4Arg inCenterZ, Vec4Arg inRadiusSq, Vec4Arg inBoxMinX, Vec4Arg inBoxMinY, Vec4Arg inBoxMinZ, Vec4Arg inBoxMaxX, Vec4Arg inBoxMaxY, Vec4Arg inBoxMaxZ)
 {
-	// Get closest point on box
-	Vec4 closest_x = Vec4::sMin(Vec4::sMax(inCenterX, inBoxMinX), inBoxMaxX);
-	Vec4 closest_y = Vec4::sMin(Vec4::sMax(inCenterY, inBoxMinY), inBoxMaxY);
-	Vec4 closest_z = Vec4::sMin(Vec4::sMax(inCenterZ, inBoxMinZ), inBoxMaxZ);
-
 	// Test the distance from the center of the sphere to the box is smaller than the radius
-	Vec4 distance_sq = Square(closest_x - inCenterX) + Square(closest_y - inCenterY) + Square(closest_z - inCenterZ);
+	Vec4 distance_sq = AABox4DistanceSqToPoint(inCenterX, inCenterY, inCenterZ, inBoxMinX, inBoxMinY, inBoxMinZ, inBoxMaxX, inBoxMaxY, inBoxMaxZ);
 	return Vec4::sLessOrEqual(distance_sq, inRadiusSq);
 }
 

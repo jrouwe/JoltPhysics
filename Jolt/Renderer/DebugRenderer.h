@@ -17,6 +17,7 @@
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/HashCombine.h>
 #include <Jolt/Core/UnorderedMap.h>
+#include <Jolt/Core/NonCopyable.h>
 #include <Jolt/Math/Float2.h>
 #include <Jolt/Geometry/IndexedTriangle.h>
 #include <Jolt/Geometry/AABox.h>
@@ -26,7 +27,23 @@ JPH_NAMESPACE_BEGIN
 class OrientedBox;
 
 /// Simple triangle renderer for debugging purposes.
-class JPH_DEBUG_RENDERER_EXPORT DebugRenderer
+///
+/// Inherit from this class to provide your own implementation.
+///
+/// Implement the following virtual functions:
+/// - DrawLine
+/// - DrawTriangle
+/// - DrawText3D
+/// - CreateTriangleBatch
+/// - DrawGeometry
+///
+/// Make sure you call Initialize() from the constructor of your implementation.
+///
+/// The CreateTriangleBatch is used to prepare a batch of triangles to be drawn by a single DrawGeometry call,
+/// which means that Jolt can render a complex scene much more efficiently than when each triangle in that scene would have been drawn through DrawTriangle.
+///
+/// Note that an implementation that implements CreateTriangleBatch and DrawGeometry is provided by DebugRendererSimple which can be used to start quickly.
+class JPH_DEBUG_RENDERER_EXPORT DebugRenderer : public NonCopyable
 {
 public:
 	JPH_OVERRIDE_NEW_DELETE
@@ -34,6 +51,9 @@ public:
 	/// Constructor
 										DebugRenderer();
 	virtual								~DebugRenderer();
+
+	/// Call once after frame is complete. Releases unused dynamically generated geometry assets.
+	void								NextFrame();
 
 	/// Draw line
 	virtual void						DrawLine(RVec3Arg inFrom, RVec3Arg inTo, ColorArg inColor) = 0;
@@ -106,7 +126,7 @@ public:
 	/// @param inHalfAngle Specifies the cone angle in radians (angle measured between inAxis and cone surface).
 	/// @param inLength The length of the cone.
 	/// @param inColor Color to use for drawing the cone.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawOpenCone(RVec3Arg inTop, Vec3Arg inAxis, Vec3Arg inPerpendicular, float inHalfAngle, float inLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -116,7 +136,7 @@ public:
 	/// @param inSwingZHalfAngle See SwingTwistConstraintPart
 	/// @param inEdgeLength Size of the edge of the cone shape
 	/// @param inColor Color to use for drawing the cone.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAngle, float inSwingZHalfAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -128,7 +148,7 @@ public:
 	/// @param inMaxSwingZAngle See SwingTwistConstraintPart
 	/// @param inEdgeLength Size of the edge of the cone shape
 	/// @param inColor Color to use for drawing the cone.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawSwingPyramidLimits(RMat44Arg inMatrix, float inMinSwingYAngle, float inMaxSwingYAngle, float inMinSwingZAngle, float inMaxSwingZAngle, float inEdgeLength, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -140,7 +160,7 @@ public:
 	/// @param inMinAngle The pie will be drawn between [inMinAngle, inMaxAngle] (in radians).
 	/// @param inMaxAngle The pie will be drawn between [inMinAngle, inMaxAngle] (in radians).
 	/// @param inColor Color to use for drawing the pie.
-	/// @param inCastShadow determins if this geometry should cast a shadow or not.
+	/// @param inCastShadow determines if this geometry should cast a shadow or not.
 	/// @param inDrawMode determines if we draw the geometry solid or in wireframe.
 	void								DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal, Vec3Arg inAxis, float inMinAngle, float inMaxAngle, ColorArg inColor, ECastShadow inCastShadow = ECastShadow::On, EDrawMode inDrawMode = EDrawMode::Solid);
 
@@ -188,6 +208,21 @@ public:
 		/// Constructor
 										Geometry(const AABox &inBounds) : mBounds(inBounds) { }
 										Geometry(const Batch &inBatch, const AABox &inBounds) : mBounds(inBounds) { mLODs.push_back({ inBatch, FLT_MAX }); }
+
+		/// Determine which LOD to render
+		/// @param inCameraPosition Current position of the camera
+		/// @param inWorldSpaceBounds World space bounds for this geometry (transform mBounds by model space matrix)
+		/// @param inLODScaleSq is the squared scale of the model matrix, it is multiplied with the LOD distances in inGeometry to calculate the real LOD distance (so a number > 1 will force a higher LOD).
+		/// @return The selected LOD.
+		const LOD &						GetLOD(Vec3Arg inCameraPosition, const AABox &inWorldSpaceBounds, float inLODScaleSq) const
+		{
+			float dist_sq = inWorldSpaceBounds.GetSqDistanceTo(inCameraPosition);
+			for (const LOD &lod : mLODs)
+				if (dist_sq <= inLODScaleSq * Square(lod.mDistance))
+					return lod;
+
+			return mLODs.back();
+		}
 
 		/// All level of details for this mesh
 		Array<LOD>						mLODs;
@@ -267,9 +302,9 @@ private:
 	struct SwingConeLimits
 	{
 		bool							operator == (const SwingConeLimits &inRHS) const
-		{ 
+		{
 			return mSwingYHalfAngle == inRHS.mSwingYHalfAngle
-				&& mSwingZHalfAngle == inRHS.mSwingZHalfAngle; 
+				&& mSwingZHalfAngle == inRHS.mSwingZHalfAngle;
 		}
 
 		float							mSwingYHalfAngle;
@@ -280,6 +315,7 @@ private:
 
 	using SwingConeBatches = UnorderedMap<SwingConeLimits, GeometryRef, SwingConeLimitsHasher>;
 	SwingConeBatches					mSwingConeLimits;
+	SwingConeBatches					mPrevSwingConeLimits;
 
 	struct SwingPyramidLimits
 	{
@@ -301,9 +337,11 @@ private:
 
 	using SwingPyramidBatches = UnorderedMap<SwingPyramidLimits, GeometryRef, SwingPyramidLimitsHasher>;
 	SwingPyramidBatches					mSwingPyramidLimits;
+	SwingPyramidBatches					mPrevSwingPyramidLimits;
 
 	using PieBatces = UnorderedMap<float, GeometryRef>;
 	PieBatces							mPieLimits;
+	PieBatces							mPrevPieLimits;
 };
 
 JPH_NAMESPACE_END

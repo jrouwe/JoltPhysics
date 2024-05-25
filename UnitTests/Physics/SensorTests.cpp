@@ -36,8 +36,8 @@ TEST_SUITE("SensorTests")
 		c.SimulateSingleStep();
 		CHECK(listener.GetEntryCount() == 0);
 
-		// After half a second we should be touching the sensor
-		c.Simulate(0.5f);
+		// After half a second and one step we should be touching the sensor
+		c.Simulate(0.5f + c.GetStepDeltaTime());
 		CHECK(listener.Contains(EType::Add, dynamic.GetID(), sensor_id));
 		listener.Clear();
 
@@ -48,7 +48,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// After 3 more seconds we should have left the sensor at the bottom side
-		c.Simulate(3.0f + c.GetDeltaTime());
+		c.Simulate(3.0f);
 		CHECK(listener.Contains(EType::Remove, dynamic.GetID(), sensor_id));
 		CHECK_APPROX_EQUAL(dynamic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
@@ -74,8 +74,8 @@ TEST_SUITE("SensorTests")
 		c.SimulateSingleStep();
 		CHECK(listener.GetEntryCount() == 0);
 
-		// After half a second we should be touching the sensor
-		c.Simulate(0.5f);
+		// After half a second and one step we should be touching the sensor
+		c.Simulate(0.5f + c.GetStepDeltaTime());
 		CHECK(listener.Contains(EType::Add, kinematic.GetID(), sensor_id));
 		listener.Clear();
 
@@ -86,7 +86,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// After 3 more seconds we should have left the sensor at the bottom side
-		c.Simulate(3.0f + c.GetDeltaTime());
+		c.Simulate(3.0f);
 		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
 		CHECK_APPROX_EQUAL(kinematic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
@@ -114,8 +114,8 @@ TEST_SUITE("SensorTests")
 		c.SimulateSingleStep();
 		CHECK(listener.GetEntryCount() == 0);
 
-		// After half a second we should be touching the sensor
-		c.Simulate(0.5f);
+		// After half a second and one step we should be touching the sensor
+		c.Simulate(0.5f + c.GetStepDeltaTime());
 		CHECK(listener.Contains(EType::Add, kinematic.GetID(), sensor_id));
 		listener.Clear();
 
@@ -126,7 +126,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// After 3 more seconds we should have left the sensor at the bottom side
-		c.Simulate(3.0f + c.GetDeltaTime());
+		c.Simulate(3.0f);
 		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
 		CHECK_APPROX_EQUAL(kinematic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
@@ -154,8 +154,8 @@ TEST_SUITE("SensorTests")
 		c.SimulateSingleStep();
 		CHECK(listener.GetEntryCount() == 0);
 
-		// After half a second we should be touching the sensor
-		c.Simulate(0.5f);
+		// After half a second and one step we should be touching the sensor
+		c.Simulate(0.5f + c.GetStepDeltaTime());
 		CHECK(listener.Contains(EType::Add, kinematic.GetID(), sensor_id));
 		listener.Clear();
 
@@ -166,7 +166,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// After 3 more seconds we should have left the sensor at the bottom side
-		c.Simulate(3.0f + c.GetDeltaTime());
+		c.Simulate(3.0f);
 		CHECK(listener.Contains(EType::Remove, kinematic.GetID(), sensor_id));
 		CHECK_APPROX_EQUAL(kinematic.GetPosition(), RVec3(0, -1.5f - 3.0f * c.GetDeltaTime(), 0), 1.0e-4f);
 	}
@@ -336,8 +336,8 @@ TEST_SUITE("SensorTests")
 			c.SimulateSingleStep();
 			CHECK(listener.GetEntryCount() == 0);
 
-			// After half a second the sensors should be touching
-			c.Simulate(0.5f);
+			// After half a second and one step the sensors should be touching
+			c.Simulate(0.5f + c.GetDeltaTime());
 			if (sensor_detects_sensor)
 				CHECK(listener.Contains(EType::Add, sensor_id1, sensor_id2));
 			else
@@ -356,7 +356,7 @@ TEST_SUITE("SensorTests")
 			listener.Clear();
 
 			// After 2 more seconds we should have left the sensor at the bottom side
-			c.Simulate(2.0f + c.GetDeltaTime());
+			c.Simulate(2.0f);
 			if (sensor_detects_sensor)
 				CHECK(listener.Contains(EType::Remove, sensor_id1, sensor_id2));
 			else
@@ -631,7 +631,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// Start detecting static
-		sensor.SetSensorDetectsStatic(true);
+		sensor.SetCollideKinematicVsNonDynamic(true);
 
 		// After a single step we should detect both static bodies
 		c.SimulateSingleStep();
@@ -641,7 +641,7 @@ TEST_SUITE("SensorTests")
 		listener.Clear();
 
 		// Stop detecting static
-		sensor.SetSensorDetectsStatic(false);
+		sensor.SetCollideKinematicVsNonDynamic(false);
 
 		// After a single step we should stop detecting both static bodies
 		c.SimulateSingleStep();

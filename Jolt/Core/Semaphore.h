@@ -26,7 +26,7 @@ public:
 						Semaphore();
 						~Semaphore();
 
-	/// Release the semaphore, signalling the thread waiting on the barrier that there may be work
+	/// Release the semaphore, signaling the thread waiting on the barrier that there may be work
 	void				Release(uint inNumber = 1);
 
 	/// Acquire the semaphore inNumber times

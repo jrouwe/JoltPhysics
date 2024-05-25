@@ -17,7 +17,7 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/CollideSphereVsTriangles.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
-#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVerticesVsTriangles.h>
 #include <Jolt/Geometry/ConvexSupport.h>
 #include <Jolt/Geometry/RayTriangle.h>
 #include <Jolt/Geometry/ClosestPoint.h>
@@ -146,6 +146,7 @@ const ConvexShape::Support *TriangleShape::GetSupportFunction(ESupportMode inMod
 	switch (inMode)
 	{
 	case ESupportMode::IncludeConvexRadius:
+	case ESupportMode::Default:
 		if (mConvexRadius > 0.0f)
 			return new (&inBuffer) TriangleWithConvex(inScale * mV1, inScale * mV2, inScale * mV3, mConvexRadius);
 		[[fallthrough]];
@@ -259,57 +260,16 @@ void TriangleShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSub
 	// Can't be inside a triangle
 }
 
-void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void TriangleShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
-	Vec3 v1 = inCenterOfMassTransform * (inScale * mV1);
-	Vec3 v2 = inCenterOfMassTransform * (inScale * mV2);
-	Vec3 v3 = inCenterOfMassTransform * (inScale * mV3);
-
-	if (ScaleHelpers::IsInsideOut(inScale))
-		swap(v1, v2);
-
-	Vec3 triangle_normal = (v2 - v1).Cross(v3 - v1).NormalizedOr(Vec3::sAxisY());
+	CollideSoftBodyVerticesVsTriangles collider(inCenterOfMassTransform, inScale);
 
 	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
 		if (v->mInvMass > 0.0f)
 		{
-			// Get the closest point from the vertex to the triangle
-			uint32 set;
-			Vec3 v1_minus_position = v1 - v->mPosition;
-			Vec3 closest_point = ClosestPoint::GetClosestPointOnTriangle(v1_minus_position, v2 - v->mPosition, v3 - v->mPosition, set);
-
-			if (set == 0b111)
-			{
-				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 10cm penetration
-				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
-				float penetration = min(triangle_normal.Dot(v1_minus_position), 0.1f);
-				if (penetration > v->mLargestPenetration)
-				{
-					v->mLargestPenetration = penetration;
-
-					// Store collision
-					v->mCollisionPlane = Plane::sFromPointAndNormal(v1, triangle_normal);
-					v->mCollidingShapeIndex = inCollidingShapeIndex;
-				}
-			}
-			else if (closest_point.Dot(triangle_normal) < 0.0f) // Ignore back facing edges
-			{
-				// Closest point is on an edge or vertex, use closest point as collision plane
-				float closest_point_length = closest_point.Length();
-				float penetration = -closest_point_length;
-				if (penetration > v->mLargestPenetration)
-				{
-					v->mLargestPenetration = penetration;
-
-					// Calculate contact point and normal
-					Vec3 point = v->mPosition + closest_point;
-					Vec3 normal = -closest_point / closest_point_length;
-
-					// Store collision
-					v->mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-					v->mCollidingShapeIndex = inCollidingShapeIndex;
-				}
-			}
+			collider.StartVertex(*v);
+			collider.ProcessTriangle(mV1, mV2, mV3);
+			collider.FinishVertex(*v, inCollidingShapeIndex);
 		}
 }
 
@@ -357,7 +317,7 @@ void TriangleShape::TransformShape(Mat44Arg inCenterOfMassTransform, Transformed
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(mConvexRadius == 0.0f? scale : scale.GetSign() * ScaleHelpers::MakeUniformScale(scale.Abs()));
 	ioCollector.AddHit(ts);
 }

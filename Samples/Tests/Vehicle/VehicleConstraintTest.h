@@ -24,11 +24,13 @@ public:
 	virtual void				RestoreInputState(StateRecorder &inStream) override;
 
 	virtual void				GetInitialCamera(CameraState &ioState) const override;
-	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override;
+	virtual RMat44				GetCameraPivot(float inCameraHeading, float inCameraPitch) const override { return mCameraPivot; }
 
 	virtual void				CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu) override;
 
 private:
+	void						UpdateCameraPivot();
+
 	static inline float			sInitialRollAngle = 0;
 	static inline float			sMaxRollAngle = DegreesToRadians(60.0f);
 	static inline float			sMaxSteeringAngle = DegreesToRadians(30.0f);
@@ -36,6 +38,7 @@ private:
 	static inline bool			sFourWheelDrive = false;
 	static inline bool			sAntiRollbar = true;
 	static inline bool			sLimitedSlipDifferentials = true;
+	static inline bool			sOverrideGravity = false;					///< If true, gravity is overridden to always oppose the ground normal
 	static inline float			sMaxEngineTorque = 500.0f;
 	static inline float			sClutchStrength = 10.0f;
 	static inline float			sFrontCasterAngle = 0.0f;
@@ -62,6 +65,7 @@ private:
 	Body *						mCarBody;									///< The vehicle
 	Ref<VehicleConstraint>		mVehicleConstraint;							///< The vehicle constraint
 	Ref<VehicleCollisionTester>	mTesters[3];								///< Collision testers for the wheel
+	RMat44						mCameraPivot = RMat44::sIdentity();			///< The camera pivot, recorded before the physics update to align with the drawn world
 
 	// Player input
 	float						mForward = 0.0f;

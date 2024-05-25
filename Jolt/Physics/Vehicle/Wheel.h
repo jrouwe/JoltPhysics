@@ -87,7 +87,7 @@ public:
 	/// Velocity of the contact point (m / s, not relative to the wheel but in world space)
 	Vec3					GetContactPointVelocity() const				{ JPH_ASSERT(HasContact()); return mContactPointVelocity; }
 
-	/// Returns the current contact mormal in world space (note by the time you call this the vehicle has moved)
+	/// Returns the current contact normal in world space (note by the time you call this the vehicle has moved)
 	Vec3					GetContactNormal() const					{ JPH_ASSERT(HasContact()); return mContactNormal; }
 
 	/// Returns longitudinal direction (direction along the wheel relative to floor) in world space (note by the time you call this the vehicle has moved)

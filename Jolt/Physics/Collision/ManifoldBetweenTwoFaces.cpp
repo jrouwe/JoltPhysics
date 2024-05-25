@@ -134,7 +134,7 @@ void PruneContactPoints(Vec3Arg inPenetrationAxis, ContactPoints &ioContactPoint
 	ioContactPointsOn2 = points_to_keep_on_2;
 }
 
-void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inSpeculativeContactDistanceSq, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
+void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, Vec3Arg inPenetrationAxis, float inMaxContactDistanceSq	, const ConvexShape::SupportingFace &inShape1Face, const ConvexShape::SupportingFace &inShape2Face, ContactPoints &outContactPoints1, ContactPoints &outContactPoints2 JPH_IF_DEBUG_RENDERER(, RVec3Arg inCenterOfMass))
 {
 #ifdef JPH_DEBUG_RENDERER
 	if (ContactConstraintManager::sDrawContactPoint)
@@ -188,7 +188,7 @@ void ManifoldBetweenTwoFaces(Vec3Arg inContactPoint1, Vec3Arg inContactPoint2, V
 			for (Vec3 p2 : clipped_face)
 			{
 				float distance = (p2 - plane_origin).Dot(plane_normal); // Note should divide by length of plane_normal (unnormalized here)
-				if (distance <= 0.0f || Square(distance) < inSpeculativeContactDistanceSq * plane_normal_len_sq) // Must be close enough to plane, note we correct for not dividing by plane normal length here
+				if (distance <= 0.0f || Square(distance) < inMaxContactDistanceSq * plane_normal_len_sq) // Must be close enough to plane, note we correct for not dividing by plane normal length here
 				{
 					// Project point back on shape 1 using the normal, note we correct for not dividing by plane normal length here:
 					// p1 = p2 - (distance / sqrt(plane_normal_len_sq)) * (plane_normal / sqrt(plane_normal_len_sq));

@@ -160,6 +160,9 @@ void TankTest::Initialize()
 	mBarrelHinge = static_cast<HingeConstraint *>(barrel_hinge.Create(*mTurretBody, *mBarrelBody));
 	mBarrelHinge->SetMotorState(EMotorState::Position);
 	mPhysicsSystem->AddConstraint(mBarrelHinge);
+
+	// Update camera pivot
+	mCameraPivot = mTankBody->GetPosition();
 }
 
 void TankTest::ProcessInput(const ProcessInputParams &inParams)
@@ -257,6 +260,9 @@ void TankTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	const float bullet_mass = 40.0f; // Normal projectile weight is around 7 kg, use an increased value so the momentum is more realistic (with the lower exit velocity)
 	const float bullet_reload_time = 2.0f;
 
+	// Update camera pivot
+	mCameraPivot = mTankBody->GetPosition();
+
 	// Assure the tank stays active as we're controlling the turret with the mouse
 	mBodyInterface->ActivateBody(mTankBody->GetID());
 
@@ -347,5 +353,5 @@ RMat44 TankTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) cons
 {
 	// Pivot is center of tank + a distance away from the tank based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
-	return RMat44::sTranslation(mTankBody->GetPosition() - 10.0f * fwd);
+	return RMat44::sTranslation(mCameraPivot - 10.0f * fwd);
 }

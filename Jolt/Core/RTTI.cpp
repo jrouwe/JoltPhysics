@@ -70,9 +70,11 @@ void RTTI::AddBaseClass(const RTTI *inRTTI, int inOffset)
 	base.mOffset = inOffset;
 	mBaseClasses.push_back(base);
 
+#ifdef JPH_OBJECT_STREAM
 	// Add attributes of base class
 	for (const SerializableAttribute &a : inRTTI->mAttributes)
 		mAttributes.push_back(SerializableAttribute(a, inOffset));
+#endif // JPH_OBJECT_STREAM
 }
 
 bool RTTI::operator == (const RTTI &inRHS) const
@@ -125,6 +127,8 @@ const void *RTTI::CastTo(const void *inObject, const RTTI *inRTTI) const
 	return nullptr;
 }
 
+#ifdef JPH_OBJECT_STREAM
+
 void RTTI::AddAttribute(const SerializableAttribute &inAttribute)
 {
 	mAttributes.push_back(inAttribute);
@@ -139,5 +143,7 @@ const SerializableAttribute &RTTI::GetAttribute(int inIdx) const
 {
 	return mAttributes[inIdx];
 }
+
+#endif // JPH_OBJECT_STREAM
 
 JPH_NAMESPACE_END

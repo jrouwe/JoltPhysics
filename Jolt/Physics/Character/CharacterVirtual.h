@@ -65,7 +65,7 @@ public:
 	/// Checks if a character can collide with specified body. Return true if the contact is valid.
 	virtual bool						OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) { return true; }
 
-	/// Called whenever the character collides with a body. Returns true if the contact can push the character.
+	/// Called whenever the character collides with a body.
 	/// @param inCharacter Character that is being solved
 	/// @param inBodyID2 Body ID of body that is being hit
 	/// @param inSubShapeID2 Sub shape ID of shape that is being hit
@@ -101,8 +101,12 @@ public:
 	/// @param inSettings The settings for the character
 	/// @param inPosition Initial position for the character
 	/// @param inRotation Initial rotation for the character (usually only around the up-axis)
+	/// @param inUserData Application specific value
 	/// @param inSystem Physics system that this character will be added to later
-										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem);
+										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem);
+
+	/// Constructor without user data
+										CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, PhysicsSystem *inSystem) : CharacterVirtual(inSettings, inPosition, inRotation, 0, inSystem) { }
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
@@ -146,6 +150,10 @@ public:
 	float								GetPenetrationRecoverySpeed() const						{ return mPenetrationRecoverySpeed; }
 	void								SetPenetrationRecoverySpeed(float inSpeed)				{ mPenetrationRecoverySpeed = inSpeed; }
 
+	/// Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). This is more expensive but makes bodies move smoother over a mesh with convex edges.
+	bool								GetEnhancedInternalEdgeRemoval() const					{ return mEnhancedInternalEdgeRemoval; }
+	void								SetEnhancedInternalEdgeRemoval(bool inApply)			{ mEnhancedInternalEdgeRemoval = inApply; }
+
 	/// Character padding
 	float								GetCharacterPadding() const								{ return mCharacterPadding; }
 
@@ -167,6 +175,10 @@ public:
 	Vec3								GetShapeOffset() const									{ return mShapeOffset; }
 	void								SetShapeOffset(Vec3Arg inShapeOffset)					{ mShapeOffset = inShapeOffset; }
 
+	/// Access to the user data, can be used for anything by the application
+	uint64								GetUserData() const										{ return mUserData; }
+	void								SetUserData(uint64 inUserData)							{ mUserData = inUserData; }
+
 	/// This function can be called prior to calling Update() to convert a desired velocity into a velocity that won't make the character move further onto steep slopes.
 	/// This velocity can then be set on the character using SetLinearVelocity()
 	/// @param inDesiredVelocity Velocity to clamp against steep walls
@@ -187,7 +199,7 @@ public:
 
 	/// This function will return true if the character has moved into a slope that is too steep (e.g. a vertical wall).
 	/// You would call WalkStairs to attempt to step up stairs.
-	/// @param inLinearVelocity The linear velocity that the player desired. This is used to determine if we're pusing into a step.
+	/// @param inLinearVelocity The linear velocity that the player desired. This is used to determine if we're pushing into a step.
 	bool								CanWalkStairs(Vec3Arg inLinearVelocity) const;
 
 	/// When stair walking is needed, you can call the WalkStairs function to cast up, forward and down again to try to find a valid position
@@ -299,6 +311,7 @@ public:
 		BodyID							mBodyB;													///< ID of body we're colliding with
 		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body we're colliding with
 		EMotionType						mMotionTypeB;											///< Motion type of B, used to determine the priority of the contact
+		bool							mIsSensorB;												///< If B is a sensor
 		uint64							mUserData;												///< User data of B
 		const PhysicsMaterial *			mMaterial;												///< Material of B
 		bool							mHadCollision = false;									///< If the character actually collided with the contact (can be false if a predictive contact never becomes a real one)
@@ -306,7 +319,7 @@ public:
 		bool							mCanPushCharacter = true;								///< When true, the velocity of the contact point can push the character
 	};
 
-	using TempContactList = std::vector<Contact, STLTempAllocator<Contact>>;
+	using TempContactList = Array<Contact, STLTempAllocator<Contact>>;
 	using ContactList = Array<Contact>;
 
 	/// Access to the internal list of contacts that the character has found.
@@ -335,7 +348,7 @@ private:
 		SubShapeID						mSubShapeID;											///< Sub shape of body we're colliding with
 	};
 
-	using IgnoredContactList = std::vector<IgnoredContact, STLTempAllocator<IgnoredContact>>;
+	using IgnoredContactList = Array<IgnoredContact, STLTempAllocator<IgnoredContact>>;
 
 	// A constraint that limits the movement of the character
 	struct Constraint
@@ -348,7 +361,7 @@ private:
 		bool							mIsSteepSlope = false;									///< If this constraint belongs to a steep slope
 	};
 
-	using ConstraintList = std::vector<Constraint, STLTempAllocator<Constraint>>;
+	using ConstraintList = Array<Constraint, STLTempAllocator<Constraint>>;
 
 	// Collision collector that collects hits for CollideShape
 	class ContactCollector : public CollideShapeCollector
@@ -458,6 +471,7 @@ private:
 	uint								mMaxNumHits;											// Max num hits to collect in order to avoid excess of contact points collection
 	float								mHitReductionCosMaxAngle;								// Cos(angle) where angle is the maximum angle between two hits contact normals that are allowed to be merged during hit reduction. Default is around 2.5 degrees. Set to -1 to turn off.
 	float								mPenetrationRecoverySpeed;								// This value governs how fast a penetration will be resolved, 0 = nothing is resolved, 1 = everything in one update
+	bool								mEnhancedInternalEdgeRemoval;							// Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). This is more expensive but makes bodies move smoother over a mesh with convex edges.
 
 	// Character mass (kg)
 	float								mMass;
@@ -485,6 +499,9 @@ private:
 
 	// Remember if we exceeded the maximum number of hits and had to remove similar contacts
 	mutable bool						mMaxHitsExceeded = false;
+
+	// User data, can be used for anything by the application
+	uint64								mUserData = 0;
 };
 
 JPH_NAMESPACE_END

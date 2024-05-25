@@ -83,6 +83,11 @@ void RackAndPinionConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculateConstraintProperties(rotation1, rotation2);
 }
 
+void RackAndPinionConstraint::ResetWarmStart()
+{
+	mRackAndPinionConstraintPart.Deactivate();
+}
+
 void RackAndPinionConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse

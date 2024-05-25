@@ -150,7 +150,7 @@ private:
 	/// We measure the amount of ticks per second, this function resets the reference time point
 	void						UpdateReferenceTime();
 
-	/// Get the amount of ticks per second, note that this number will never be fully accurate as the amound of ticks per second may vary with CPU load, so this number is only to be used to give an indication of time for profiling purposes
+	/// Get the amount of ticks per second, note that this number will never be fully accurate as the amount of ticks per second may vary with CPU load, so this number is only to be used to give an indication of time for profiling purposes
 	uint64						GetProcessorTicksPerSecond() const;
 
 	/// Dump profiling statistics

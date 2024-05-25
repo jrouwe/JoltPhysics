@@ -30,7 +30,7 @@ TEST_SUITE("ActiveEdgesTest")
 		return capsule.Create().Get();
 	}
 
-	// Create a flat mesh shape consting of 7 x 7 quads, we know that only the outer edges of this shape are active
+	// Create a flat mesh shape consisting of 7 x 7 quads, we know that only the outer edges of this shape are active
 	static Ref<ShapeSettings> sCreateMeshShape()
 	{
 		TriangleList triangles;

@@ -7,7 +7,7 @@
 // Jolt library version
 #define JPH_VERSION_MAJOR 5
 #define JPH_VERSION_MINOR 0
-#define JPH_VERSION_PATCH 0
+#define JPH_VERSION_PATCH 1
 
 // Determine which features the library was compiled with
 #ifdef JPH_DOUBLE_PRECISION
@@ -60,7 +60,12 @@
 #else
 	#define JPH_VERSION_FEATURE_BIT_10 0
 #endif
-#define JPH_VERSION_FEATURES (uint64(JPH_VERSION_FEATURE_BIT_1) | (JPH_VERSION_FEATURE_BIT_2 << 1) | (JPH_VERSION_FEATURE_BIT_3 << 2) | (JPH_VERSION_FEATURE_BIT_4 << 3) | (JPH_VERSION_FEATURE_BIT_5 << 4) | (JPH_VERSION_FEATURE_BIT_6 << 5) | (JPH_VERSION_FEATURE_BIT_7 << 6) | (JPH_VERSION_FEATURE_BIT_8 << 7) | (JPH_VERSION_FEATURE_BIT_9 << 8) | (JPH_VERSION_FEATURE_BIT_10 << 9))
+#ifdef JPH_OBJECT_STREAM
+	#define JPH_VERSION_FEATURE_BIT_11 1
+#else
+	#define JPH_VERSION_FEATURE_BIT_11 0
+#endif
+#define JPH_VERSION_FEATURES (uint64(JPH_VERSION_FEATURE_BIT_1) | (JPH_VERSION_FEATURE_BIT_2 << 1) | (JPH_VERSION_FEATURE_BIT_3 << 2) | (JPH_VERSION_FEATURE_BIT_4 << 3) | (JPH_VERSION_FEATURE_BIT_5 << 4) | (JPH_VERSION_FEATURE_BIT_6 << 5) | (JPH_VERSION_FEATURE_BIT_7 << 6) | (JPH_VERSION_FEATURE_BIT_8 << 7) | (JPH_VERSION_FEATURE_BIT_9 << 8) | (JPH_VERSION_FEATURE_BIT_10 << 9) | (JPH_VERSION_FEATURE_BIT_11 << 10))
 
 // Combine the version and features in a single ID
 #define JPH_VERSION_ID ((JPH_VERSION_FEATURES << 24) | (JPH_VERSION_MAJOR << 16) | (JPH_VERSION_MINOR << 8) | JPH_VERSION_PATCH)
@@ -78,6 +83,8 @@
 	#define JPH_PLATFORM_ANDROID
 #elif defined(__linux__)
 	#define JPH_PLATFORM_LINUX
+#elif defined(__FreeBSD__)
+	#define JPH_PLATFORM_FREEBSD
 #elif defined(__APPLE__)
     #include <TargetConditionals.h>
     #if defined(TARGET_OS_IPHONE) && !TARGET_OS_IPHONE
@@ -179,7 +186,22 @@
 	#define JPH_CPU_ADDRESS_BITS 32
 	#define JPH_VECTOR_ALIGNMENT 16
 	#define JPH_DVECTOR_ALIGNMENT 32
-	#define JPH_DISABLE_CUSTOM_ALLOCATOR
+	#ifdef __wasm_simd128__
+		#define JPH_USE_SSE
+		#define JPH_USE_SSE4_1
+		#define JPH_USE_SSE4_2
+	#endif
+#elif defined(__e2k__)
+	// E2K CPU architecture (MCST Elbrus 2000)
+	#define JPH_CPU_E2K
+	#define JPH_CPU_ADDRESS_BITS 64
+	#define JPH_VECTOR_ALIGNMENT 16
+	#define JPH_DVECTOR_ALIGNMENT 32
+
+	// Compiler flags on e2k arch determine CPU features
+	#if defined(__SSE__) && !defined(JPH_USE_SSE)
+		#define JPH_USE_SSE
+	#endif
 #else
 	#error Unsupported CPU architecture
 #endif
@@ -294,6 +316,8 @@
 	JPH_GCC_SUPPRESS_WARNING("-Wcomment")														\
 	JPH_GCC_SUPPRESS_WARNING("-Winvalid-offsetof")												\
 	JPH_GCC_SUPPRESS_WARNING("-Wclass-memaccess")												\
+	JPH_GCC_SUPPRESS_WARNING("-Wpedantic")														\
+	JPH_GCC_SUPPRESS_WARNING("-Wunused-parameter")												\
 																								\
 	JPH_MSVC_SUPPRESS_WARNING(4619) /* #pragma warning: there is no warning number 'XXXX' */	\
 	JPH_MSVC_SUPPRESS_WARNING(4514) /* 'X' : unreferenced inline function has been removed */	\
@@ -329,10 +353,12 @@
 	// Creating one should only be a couple of minutes of work if you have the documentation for the platform
 	// (you only need to define JPH_BREAKPOINT, JPH_PLATFORM_BLUE_GET_TICKS, JPH_PLATFORM_BLUE_MUTEX*, JPH_PLATFORM_BLUE_RWLOCK* and include the right header).
 	#include <Jolt/Core/PlatformBlue.h>
-#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS)
+#elif defined(JPH_PLATFORM_LINUX) || defined(JPH_PLATFORM_ANDROID) || defined(JPH_PLATFORM_MACOS) || defined(JPH_PLATFORM_IOS) || defined(JPH_PLATFORM_FREEBSD)
 	#if defined(JPH_CPU_X86)
 		#define JPH_BREAKPOINT	__asm volatile ("int $0x3")
 	#elif defined(JPH_CPU_ARM)
+		#define JPH_BREAKPOINT	__builtin_trap()
+	#elif defined(JPH_CPU_E2K)
 		#define JPH_BREAKPOINT	__builtin_trap()
 	#endif
 #elif defined(JPH_PLATFORM_WASM)
@@ -340,9 +366,6 @@
 #else
 	#error Unknown platform
 #endif
-
-// Crashes the application
-#define JPH_CRASH				do { int *ptr = nullptr; *ptr = 0; } while (false)
 
 // Begin the JPH namespace
 #define JPH_NAMESPACE_BEGIN																		\
@@ -372,18 +395,16 @@
 	JPH_SUPPRESS_WARNING_POP
 
 // Standard C++ includes
+JPH_SUPPRESS_WARNINGS_STD_BEGIN
 #include <float.h>
 #include <limits.h>
 #include <string.h>
-JPH_SUPPRESS_WARNINGS_STD_BEGIN
-#include <vector>
 #include <utility>
 #include <cmath>
 #include <sstream>
 #include <functional>
 #include <algorithm>
 #include <cstdint>
-JPH_SUPPRESS_WARNINGS_STD_END
 #if defined(JPH_USE_SSE)
 	#include <immintrin.h>
 #elif defined(JPH_USE_NEON)
@@ -394,6 +415,7 @@ JPH_SUPPRESS_WARNINGS_STD_END
 		#include <arm_neon.h>
 	#endif
 #endif
+JPH_SUPPRESS_WARNINGS_STD_END
 
 JPH_NAMESPACE_BEGIN
 
@@ -437,11 +459,24 @@ static_assert(sizeof(uint32) == 4, "Invalid size of uint32");
 static_assert(sizeof(uint64) == 8, "Invalid size of uint64");
 static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid size of pointer" );
 
+// Determine if we want extra debugging code to be active
+#if !defined(NDEBUG) && !defined(JPH_NO_DEBUG)
+	#define JPH_DEBUG
+#endif
+
 // Define inline macro
 #if defined(JPH_NO_FORCE_INLINE)
 	#define JPH_INLINE inline
-#elif defined(JPH_COMPILER_CLANG) || defined(JPH_COMPILER_GCC)
+#elif defined(JPH_COMPILER_CLANG)
 	#define JPH_INLINE __inline__ __attribute__((always_inline))
+#elif defined(JPH_COMPILER_GCC)
+	// On gcc 14 using always_inline in debug mode causes error: "inlining failed in call to 'always_inline' 'XXX': function not considered for inlining"
+	// See: https://github.com/jrouwe/JoltPhysics/issues/1096
+	#if __GNUC__ >= 14 && defined(JPH_DEBUG)
+		#define JPH_INLINE inline
+	#else
+		#define JPH_INLINE __inline__ __attribute__((always_inline))
+	#endif
 #elif defined(JPH_COMPILER_MSVC)
 	#define JPH_INLINE __forceinline
 #else
@@ -465,8 +500,8 @@ static_assert(sizeof(void *) == (JPH_CPU_ADDRESS_BITS == 64? 8 : 4), "Invalid si
 // Stack allocation
 #define JPH_STACK_ALLOC(n)		alloca(n)
 
-// Shorthand for #ifdef _DEBUG / #endif
-#ifdef _DEBUG
+// Shorthand for #ifdef JPH_DEBUG / #endif
+#ifdef JPH_DEBUG
 	#define JPH_IF_DEBUG(...)	__VA_ARGS__
 	#define JPH_IF_NOT_DEBUG(...)
 #else

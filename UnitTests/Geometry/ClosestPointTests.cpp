@@ -10,7 +10,7 @@ TEST_SUITE("ClosestPointTests")
 	// Test closest point from inPoint to triangle (inA, inB, inC)
 	inline static void TestClosestPointToTriangle(Vec3Arg inA, Vec3Arg inB, Vec3Arg inC, Vec3Arg inPoint, Vec3Arg inExpectedClosestPoint, uint32 inExpectedSet)
 	{
-		// Make triangle relative to inPoint so we can get the closest poin to the origin
+		// Make triangle relative to inPoint so we can get the closest point to the origin
 		Vec3 a = inA - inPoint;
 		Vec3 b = inB - inPoint;
 		Vec3 c = inC - inPoint;

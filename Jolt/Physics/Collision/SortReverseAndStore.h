@@ -15,18 +15,19 @@ JPH_NAMESPACE_BEGIN
 JPH_INLINE int SortReverseAndStore(Vec4Arg inValues, float inMaxValue, UVec4 &ioIdentifiers, float *outValues)
 {
 	// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
-	Vec4::sSort4Reverse(inValues, ioIdentifiers);
+	Vec4 values = inValues;
+	Vec4::sSort4Reverse(values, ioIdentifiers);
 
 	// Count how many results are less than the max value
-	UVec4 closer = Vec4::sLess(inValues, Vec4::sReplicate(inMaxValue));
+	UVec4 closer = Vec4::sLess(values, Vec4::sReplicate(inMaxValue));
 	int num_results = closer.CountTrues();
 
 	// Shift the values so that only the ones that are less than max are kept
-	inValues = inValues.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
+	values = values.ReinterpretAsInt().ShiftComponents4Minus(num_results).ReinterpretAsFloat();
 	ioIdentifiers = ioIdentifiers.ShiftComponents4Minus(num_results);
 
 	// Store the values
-	inValues.StoreFloat4(reinterpret_cast<Float4 *>(outValues));
+	values.StoreFloat4(reinterpret_cast<Float4 *>(outValues));
 
 	return num_results;
 }

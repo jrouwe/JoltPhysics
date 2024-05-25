@@ -31,8 +31,8 @@ public:
 	float						mInertia = 0.9f;							///< Moment of inertia (kg m^2), for a cylinder this would be 0.5 * M * R^2 which is 0.9 for a wheel with a mass of 20 kg and radius 0.3 m
 	float						mAngularDamping = 0.2f;						///< Angular damping factor of the wheel: dw/dt = -c * w
 	float						mMaxSteerAngle = DegreesToRadians(70.0f);	///< How much this wheel can steer (radians)
-	LinearCurve					mLongitudinalFriction;						///< Friction in forward direction of tire as a function of the slip ratio (fraction): (omega_wheel * r_wheel - v_longitudinal) / |v_longitudinal|
-	LinearCurve					mLateralFriction;							///< Friction in sideway direction of tire as a function of the slip angle (degrees): angle between relative contact velocity and vehicle direction
+	LinearCurve					mLongitudinalFriction;						///< On the Y-axis: friction in the forward direction of the tire. Friction is normally between 0 (no friction) and 1 (full friction) although friction can be a little bit higher than 1 because of the profile of a tire. On the X-axis: the slip ratio (fraction) defined as (omega_wheel * r_wheel - v_longitudinal) / |v_longitudinal|. You can see slip ratio as the amount the wheel is spinning relative to the floor: 0 means the wheel has full traction and is rolling perfectly in sync with the ground, 1 is for example when the wheel is locked and sliding over the ground.
+	LinearCurve					mLateralFriction;							///< On the Y-axis: friction in the sideways direction of the tire. Friction is normally between 0 (no friction) and 1 (full friction) although friction can be a little bit higher than 1 because of the profile of a tire. On the X-axis: the slip angle (degrees) defined as angle between relative contact velocity and tire direction.
 	float						mMaxBrakeTorque = 1500.0f;					///< How much torque (Nm) the brakes can apply to this wheel
 	float						mMaxHandBrakeTorque = 4000.0f;				///< How much torque (Nm) the hand brake can apply to this wheel (usually only applied to the rear wheels)
 };
@@ -145,6 +145,11 @@ public:
 	/// Get the average wheel speed of all driven wheels (measured at the clutch)
 	float						GetWheelSpeedAtClutch() const;
 
+	/// Calculate max tire impulses by combining friction, slip, and suspension impulse. Note that the actual applied impulse may be lower (e.g. when the vehicle is stationary on a horizontal surface the actual impulse applied will be 0).
+	using TireMaxImpulseCallback = function<void(uint inWheelIndex, float &outLongitudinalImpulse, float &outLateralImpulse, float inSuspensionImpulse, float inLongitudinalFriction, float inLateralFriction, float inLongitudinalSlip, float inLateralSlip, float inDeltaTime)>;
+	const TireMaxImpulseCallback&GetTireMaxImpulseCallback() const			{ return mTireMaxImpulseCallback; }
+	void						SetTireMaxImpulseCallback(const TireMaxImpulseCallback &inTireMaxImpulseCallback)	{ mTireMaxImpulseCallback = inTireMaxImpulseCallback; }
+
 #ifdef JPH_DEBUG_RENDERER
 	/// Debug drawing of RPM meter
 	void						SetRPMMeter(Vec3Arg inPosition, float inSize) { mRPMMeterPosition = inPosition; mRPMMeterSize = inSize; }
@@ -169,12 +174,20 @@ protected:
 	float						mBrakeInput = 0.0f;							///< Value between 0 and 1 indicating how strong the brake pedal is pressed
 	float						mHandBrakeInput = 0.0f;						///< Value between 0 and 1 indicating how strong the hand brake is pulled
 
-	// Simluation information
+	// Simulation information
 	VehicleEngine				mEngine;									///< Engine state of the vehicle
 	VehicleTransmission			mTransmission;								///< Transmission state of the vehicle
 	Differentials				mDifferentials;								///< Differential states of the vehicle
 	float						mDifferentialLimitedSlipRatio;				///< Ratio max / min average wheel speed of each differential (measured at the clutch).
 	float						mPreviousDeltaTime = 0.0f;					///< Delta time of the last step
+
+	// Callback that calculates the max impulse that the tire can apply to the ground
+	TireMaxImpulseCallback		mTireMaxImpulseCallback =
+		[](uint, float &outLongitudinalImpulse, float &outLateralImpulse, float inSuspensionImpulse, float inLongitudinalFriction, float inLateralFriction, float, float, float)
+		{
+			outLongitudinalImpulse = inLongitudinalFriction * inSuspensionImpulse;
+			outLateralImpulse = inLateralFriction * inSuspensionImpulse;
+		};
 
 #ifdef JPH_DEBUG_RENDERER
 	// Debug settings

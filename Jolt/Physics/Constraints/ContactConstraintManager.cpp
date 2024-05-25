@@ -1039,28 +1039,9 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 
 	// If one of the bodies is a sensor, don't actually create the constraint
 	JPH_ASSERT(settings.mIsSensor || !(inBody1.IsSensor() || inBody2.IsSensor()), "Sensors cannot be converted into regular bodies by a contact callback!");
-	if (settings.mIsSensor)
-	{
-		// Store the contact manifold in the cache
-		for (int i = 0; i < num_contact_points; ++i)
-		{
-			// Convert to local space to the body
-			Vec3 p1 = Vec3(inverse_transform_body1 * (inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn1[i]));
-			Vec3 p2 = Vec3(inverse_transform_body2 * (inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn2[i]));
-
-			// Create new contact point
-			CachedContactPoint &cp = new_manifold->mContactPoints[i];
-			p1.StoreFloat3(&cp.mPosition1);
-			p2.StoreFloat3(&cp.mPosition2);
-
-			// We don't use this, but reset them anyway for determinism check
-			cp.mNonPenetrationLambda = 0.0f;
-			cp.mFrictionLambda[0] = 0.0f;
-			cp.mFrictionLambda[1] = 0.0f;
-		}
-	}
-	else if ((inBody1.IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
-			|| (inBody2.IsDynamic() && settings.mInvMassScale2 != 0.0f))
+	if (!settings.mIsSensor
+		&& ((inBody1.IsDynamic() && settings.mInvMassScale1 != 0.0f) // One of the bodies must have mass to be able to create a contact constraint
+			|| (inBody2.IsDynamic() && settings.mInvMassScale2 != 0.0f)))
 	{
 		// Add contact constraint
 		uint32 constraint_idx = mNumConstraints++;
@@ -1177,6 +1158,26 @@ bool ContactConstraintManager::TemplatedAddContactConstraint(ContactAllocator &i
 		if (sDrawContactManifolds)
 			constraint.Draw(DebugRenderer::sInstance, Color::sOrange);
 	#endif // JPH_DEBUG_RENDERER
+	}
+	else
+	{
+		// Store the contact manifold in the cache
+		for (int i = 0; i < num_contact_points; ++i)
+		{
+			// Convert to local space to the body
+			Vec3 p1 = Vec3(inverse_transform_body1 * (inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn1[i]));
+			Vec3 p2 = Vec3(inverse_transform_body2 * (inManifold.mBaseOffset + inManifold.mRelativeContactPointsOn2[i]));
+
+			// Create new contact point
+			CachedContactPoint &cp = new_manifold->mContactPoints[i];
+			p1.StoreFloat3(&cp.mPosition1);
+			p2.StoreFloat3(&cp.mPosition2);
+
+			// Reset contact impulses, we haven't applied any
+			cp.mNonPenetrationLambda = 0.0f;
+			cp.mFrictionLambda[0] = 0.0f;
+			cp.mFrictionLambda[1] = 0.0f;
+		}
 	}
 
 	// Store cached contact point in body pair cache
@@ -1448,9 +1449,8 @@ JPH_INLINE void ContactConstraintManager::sWarmStartConstraint(ContactConstraint
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
 	{
 		// Warm starting: Apply impulse from last frame
-		if (wcp.mFrictionConstraint1.IsActive())
+		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
 		{
-			JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
 			wcp.mFrictionConstraint1.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, t1, inWarmStartImpulseRatio);
 			wcp.mFrictionConstraint2.TemplatedWarmStart<Type1, Type2>(ioMotionProperties1, ioConstraint.mInvMass1, ioMotionProperties2, ioConstraint.mInvMass2, t2, inWarmStartImpulseRatio);
 		}
@@ -1519,10 +1519,8 @@ JPH_INLINE bool ContactConstraintManager::sSolveVelocityConstraint(ContactConstr
 	for (WorldContactPoint &wcp : ioConstraint.mContactPoints)
 	{
 		// Check if friction is enabled
-		if (wcp.mFrictionConstraint1.IsActive())
+		if (wcp.mFrictionConstraint1.IsActive() || wcp.mFrictionConstraint2.IsActive())
 		{
-			JPH_ASSERT(wcp.mFrictionConstraint2.IsActive());
-
 			// Calculate impulse to stop motion in tangential direction
 			float lambda1 = wcp.mFrictionConstraint1.TemplatedSolveVelocityConstraintGetTotalLambda<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t1);
 			float lambda2 = wcp.mFrictionConstraint2.TemplatedSolveVelocityConstraintGetTotalLambda<Type1, Type2>(ioMotionProperties1, ioMotionProperties2, t2);

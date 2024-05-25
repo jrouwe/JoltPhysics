@@ -25,10 +25,11 @@ JPH_IMPLEMENT_SERIALIZABLE_NON_VIRTUAL(BodyCreationSettings)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mAllowedDOFs)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowDynamicOrKinematic)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mIsSensor)
-	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mSensorDetectsStatic)
+	JPH_ADD_ATTRIBUTE_WITH_ALIAS(BodyCreationSettings, mCollideKinematicVsNonDynamic, "mSensorDetectsStatic") // This is the old name to keep backwards compatibility
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mUseManifoldReduction)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mApplyGyroscopicForce)
 	JPH_ADD_ENUM_ATTRIBUTE(BodyCreationSettings, mMotionQuality)
+	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mEnhancedInternalEdgeRemoval)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mAllowSleeping)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mFriction)
 	JPH_ADD_ATTRIBUTE(BodyCreationSettings, mRestitution)
@@ -56,10 +57,11 @@ void BodyCreationSettings::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mAllowedDOFs);
 	inStream.Write(mAllowDynamicOrKinematic);
 	inStream.Write(mIsSensor);
-	inStream.Write(mSensorDetectsStatic);
+	inStream.Write(mCollideKinematicVsNonDynamic);
 	inStream.Write(mUseManifoldReduction);
 	inStream.Write(mApplyGyroscopicForce);
 	inStream.Write(mMotionQuality);
+	inStream.Write(mEnhancedInternalEdgeRemoval);
 	inStream.Write(mAllowSleeping);
 	inStream.Write(mFriction);
 	inStream.Write(mRestitution);
@@ -87,10 +89,11 @@ void BodyCreationSettings::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mAllowedDOFs);
 	inStream.Read(mAllowDynamicOrKinematic);
 	inStream.Read(mIsSensor);
-	inStream.Read(mSensorDetectsStatic);
+	inStream.Read(mCollideKinematicVsNonDynamic);
 	inStream.Read(mUseManifoldReduction);
 	inStream.Read(mApplyGyroscopicForce);
 	inStream.Read(mMotionQuality);
+	inStream.Read(mEnhancedInternalEdgeRemoval);
 	inStream.Read(mAllowSleeping);
 	inStream.Read(mFriction);
 	inStream.Read(mRestitution);

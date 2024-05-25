@@ -119,7 +119,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 	// Calculate new closest point on path
 	RVec3 position2 = path_to_world_2.GetTranslation();
 	Vec3 position2_local_to_path = Vec3(path_to_world_1.InversedRotationTranslation() * position2);
-	mPathFraction = mPath->GetClosestPoint(position2_local_to_path);
+	mPathFraction = mPath->GetClosestPoint(position2_local_to_path, mPathFraction);
 
 	// Get the point on the path for this fraction
 	Vec3 path_point, path_tangent, path_normal, path_binormal;
@@ -168,7 +168,7 @@ void PathConstraint::CalculateConstraintProperties(float inDeltaTime)
 		mHingeConstraintPart.CalculateConstraintProperties(*mBody1, transform1.GetRotation(), mPathBinormal, *mBody2, transform2.GetRotation(), path_to_world_2.GetAxisY());
 		break;
 
-	case EPathRotationConstraintType::ConstaintToPath:
+	case EPathRotationConstraintType::ConstrainToPath:
 		// We need to calculate the inverse of the rotation from body 1 to body 2 for the current path position (see: RotationEulerConstraintPart::sGetInvInitialOrientation)
 		// RotationBody2 = RotationBody1 * InitialOrientation <=> InitialOrientation^-1 = RotationBody2^-1 * RotationBody1
 		// We can express RotationBody2 in terms of RotationBody1: RotationBody2 = RotationBody1 * PathToBody1 * RotationClosestPointOnPath * PathToBody2^-1
@@ -225,6 +225,15 @@ void PathConstraint::SetupVelocityConstraint(float inDeltaTime)
 	CalculateConstraintProperties(inDeltaTime);
 }
 
+void PathConstraint::ResetWarmStart()
+{
+	mPositionMotorConstraintPart.Deactivate();
+	mPositionConstraintPart.Deactivate();
+	mPositionLimitsConstraintPart.Deactivate();
+	mHingeConstraintPart.Deactivate();
+	mRotationConstraintPart.Deactivate();
+}
+
 void PathConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse
@@ -244,7 +253,7 @@ void PathConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 		mHingeConstraintPart.WarmStart(*mBody1, *mBody2, inWarmStartImpulseRatio);
 		break;
 
-	case EPathRotationConstraintType::ConstaintToPath:
+	case EPathRotationConstraintType::ConstrainToPath:
 	case EPathRotationConstraintType::FullyConstrained:
 		mRotationConstraintPart.WarmStart(*mBody1, *mBody2, inWarmStartImpulseRatio);
 		break;
@@ -306,7 +315,7 @@ bool PathConstraint::SolveVelocityConstraint(float inDeltaTime)
 		rot = mHingeConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2);
 		break;
 
-	case EPathRotationConstraintType::ConstaintToPath:
+	case EPathRotationConstraintType::ConstrainToPath:
 	case EPathRotationConstraintType::FullyConstrained:
 		rot = mRotationConstraintPart.SolveVelocityConstraint(*mBody1, *mBody2);
 		break;
@@ -350,7 +359,7 @@ bool PathConstraint::SolvePositionConstraint(float inDeltaTime, float inBaumgart
 		rot = mHingeConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, inBaumgarte);
 		break;
 
-	case EPathRotationConstraintType::ConstaintToPath:
+	case EPathRotationConstraintType::ConstrainToPath:
 	case EPathRotationConstraintType::FullyConstrained:
 		rot = mRotationConstraintPart.SolvePositionConstraint(*mBody1, *mBody2, mInvInitialOrientation, inBaumgarte);
 		break;

@@ -31,8 +31,10 @@ const char *CharacterBaseTest::sScenes[] =
 	"PerlinHeightField",
 	"ObstacleCourse",
 	"InitiallyIntersecting",
+#ifdef JPH_OBJECT_STREAM
 	"Terrain1",
 	"Terrain2",
+#endif // JPH_OBJECT_STREAM
 };
 
 const char *CharacterBaseTest::sSceneName = "ObstacleCourse";
@@ -494,6 +496,7 @@ void CharacterBaseTest::Initialize()
 			mSensorBody = mBodyInterface->CreateAndAddBody(sensor, EActivation::Activate);
 		}
 	}
+#ifdef JPH_OBJECT_STREAM
 	else
 	{
 		// Load scene
@@ -508,6 +511,8 @@ void CharacterBaseTest::Initialize()
 		}
 		scene->CreateBodies(mPhysicsSystem);
 	}
+#endif // JPH_OBJECT_STREAM
+
 
 	// Create capsule shapes for all stances
 	switch (sShapeType)
@@ -548,21 +553,17 @@ void CharacterBaseTest::ProcessInput(const ProcessInputParams &inParams)
 	mControlInput = rotation * mControlInput;
 
 	// Check actions
-	mJump = false;
-	mSwitchStance = false;
-	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
-	{
-		if (key == DIK_RSHIFT)
-			mSwitchStance = true;
-		else if (key == DIK_RCONTROL)
-			mJump = true;
-	}
+	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RCONTROL, mWasJump);
+	mSwitchStance = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RSHIFT, mWasSwitchStance);
 }
 
 void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	// Update scene time
 	mTime += inParams.mDeltaTime;
+
+	// Update camera pivot
+	mCameraPivot = GetCharacterPosition();
 
 	// Animate bodies
 	if (!mRotatingBody.IsInvalid())
@@ -641,7 +642,7 @@ RMat44 CharacterBaseTest::GetCameraPivot(float inCameraHeading, float inCameraPi
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
-	return RMat44::sTranslation(GetCharacterPosition() + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
+	return RMat44::sTranslation(mCameraPivot + Vec3(0, cCharacterHeightStanding + cCharacterRadiusStanding, 0) - 5.0f * fwd);
 }
 
 void CharacterBaseTest::SaveState(StateRecorder &inStream) const

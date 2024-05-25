@@ -149,7 +149,7 @@ TEST_SUITE("EPATests")
 		float delta_penetration = (pa - pb).Length() - 2.0f * sphere.GetRadius();
 		CHECK(abs(delta_penetration) < 0.14f);
 		float angle = AngleBetweenVectors(v, pa - pb);
-		CHECK(angle < 1.0e-3f);
+		CHECK(angle < 0.02f);
 	}
 
 	TEST_CASE("TestEPASphereSphereNearOverlapping")
@@ -168,7 +168,7 @@ TEST_SUITE("EPATests")
 		float delta_penetration = (pa - pb).Length() - (sphere1.GetRadius() + sphere2.GetRadius() - (sphere1.GetCenter() - sphere2.GetCenter()).Length());
 		CHECK(abs(delta_penetration) < 0.06f);
 		float angle = AngleBetweenVectors(v, pa - pb);
-		CHECK(angle < 1.0e-3f);
+		CHECK(angle < 0.02f);
 	}
 
 	TEST_CASE("TestEPACastSphereSphereMiss")

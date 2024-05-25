@@ -552,7 +552,7 @@ void Ragdoll::SetPose(RVec3Arg inRootOffset, const Mat44 *inJointMatrices, bool 
 	for (int i = 0; i < (int)mBodyIDs.size(); ++i)
 	{
 		const Mat44 &joint = inJointMatrices[i];
-		bi.SetPositionAndRotation(mBodyIDs[i], inRootOffset + joint.GetTranslation(), joint.GetRotation().GetQuaternion(), EActivation::DontActivate);
+		bi.SetPositionAndRotation(mBodyIDs[i], inRootOffset + joint.GetTranslation(), joint.GetQuaternion(), EActivation::DontActivate);
 	}
 }
 
@@ -588,6 +588,12 @@ void Ragdoll::GetPose(RVec3 &outRootOffset, Mat44 *outJointMatrices, bool inLock
 	}
 }
 
+void Ragdoll::ResetWarmStart()
+{
+	for (TwoBodyConstraint *c : mConstraints)
+		c->ResetWarmStart();
+}
+
 void Ragdoll::DriveToPoseUsingKinematics(const SkeletonPose &inPose, float inDeltaTime, bool inLockBodies)
 {
 	JPH_ASSERT(inPose.GetSkeleton() == mRagdollSettings->mSkeleton);
@@ -602,7 +608,7 @@ void Ragdoll::DriveToPoseUsingKinematics(RVec3Arg inRootOffset, const Mat44 *inJ
 	for (int i = 0; i < (int)mBodyIDs.size(); ++i)
 	{
 		const Mat44 &joint = inJointMatrices[i];
-		bi.MoveKinematic(mBodyIDs[i], inRootOffset + joint.GetTranslation(), joint.GetRotation().GetQuaternion(), inDeltaTime);
+		bi.MoveKinematic(mBodyIDs[i], inRootOffset + joint.GetTranslation(), joint.GetQuaternion(), inDeltaTime);
 	}
 }
 
@@ -610,21 +616,27 @@ void Ragdoll::DriveToPoseUsingMotors(const SkeletonPose &inPose)
 {
 	JPH_ASSERT(inPose.GetSkeleton() == mRagdollSettings->mSkeleton);
 
-	// Move bodies into the correct position using kinematics
+	// Move bodies into the correct position using constraints
 	for (int i = 0; i < (int)inPose.GetJointMatrices().size(); ++i)
 	{
 		int constraint_idx = mRagdollSettings->GetConstraintIndexForBodyIndex(i);
 		if (constraint_idx >= 0)
 		{
-			SwingTwistConstraint *constraint = (SwingTwistConstraint *)mConstraints[constraint_idx].GetPtr();
-
 			// Get desired rotation of this body relative to its parent
-			Quat joint_transform = inPose.GetJoint(i).mRotation;
+			const SkeletalAnimation::JointState &joint_state = inPose.GetJoint(i);
 
 			// Drive constraint to target
-			constraint->SetSwingMotorState(EMotorState::Position);
-			constraint->SetTwistMotorState(EMotorState::Position);
-			constraint->SetTargetOrientationBS(joint_transform);
+			TwoBodyConstraint *constraint = mConstraints[constraint_idx];
+			EConstraintSubType sub_type = constraint->GetSubType();
+			if (sub_type == EConstraintSubType::SwingTwist)
+			{
+				SwingTwistConstraint *st_constraint = static_cast<SwingTwistConstraint *>(constraint);
+				st_constraint->SetSwingMotorState(EMotorState::Position);
+				st_constraint->SetTwistMotorState(EMotorState::Position);
+				st_constraint->SetTargetOrientationBS(joint_state.mRotation);
+			}
+			else
+				JPH_ASSERT(false, "Constraint type not implemented!");
 		}
 	}
 }

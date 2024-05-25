@@ -87,11 +87,14 @@ public:
 	/// @param inUp Up vector
 	static JPH_INLINE Mat44		sLookAt(Vec3Arg inPos, Vec3Arg inTarget, Vec3Arg inUp);
 
+	/// Returns a right-handed perspective projection matrix
+	static JPH_INLINE Mat44		sPerspective(float inFovY, float inAspect, float inNear, float inFar);
+
 	/// Get float component by element index
 	JPH_INLINE float			operator () (uint inRow, uint inColumn) const			{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
 	JPH_INLINE float &			operator () (uint inRow, uint inColumn)					{ JPH_ASSERT(inRow < 4); JPH_ASSERT(inColumn < 4); return mCol[inColumn].mF32[inRow]; }
 
-	/// Comparsion
+	/// Comparison
 	JPH_INLINE bool				operator == (Mat44Arg inM2) const;
 	JPH_INLINE bool				operator != (Mat44Arg inM2) const						{ return !(*this == inM2); }
 

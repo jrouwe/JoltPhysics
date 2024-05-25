@@ -151,7 +151,7 @@ protected:
 	float						mRightRatio = 1.0f;							///< Value between -1 and 1 indicating an extra multiplier to the rotation rate of the right track (used for steering)
 	float						mBrakeInput = 0.0f;							///< Value between 0 and 1 indicating how strong the brake pedal is pressed
 
-	// Simluation information
+	// Simulation information
 	VehicleEngine				mEngine;									///< Engine state of the vehicle
 	VehicleTransmission			mTransmission;								///< Transmission state of the vehicle
 	VehicleTracks				mTracks;									///< Tracks of the vehicle

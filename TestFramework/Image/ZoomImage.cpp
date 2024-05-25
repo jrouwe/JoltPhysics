@@ -455,7 +455,7 @@ bool ZoomImage(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &
 	else
 		tmp_format = dst_format;
 
-	// Create temporary source buffer if nessecary
+	// Create temporary source buffer if necessary
 	RefConst<Surface> src = inSrc;
 	if (inSrc->GetFormat() != tmp_format)
 	{
@@ -465,7 +465,7 @@ bool ZoomImage(RefConst<Surface> inSrc, Ref<Surface> ioDst, const ZoomSettings &
 		src = tmp;
 	}
 
-	// Create temporary destination buffer if nessecary
+	// Create temporary destination buffer if necessary
 	Ref<Surface> dst = ioDst;
 	if (ioDst->GetFormat() != tmp_format)
 		dst = new SoftwareSurface(ioDst->GetWidth(), ioDst->GetHeight(), tmp_format);

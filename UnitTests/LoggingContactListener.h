@@ -33,8 +33,9 @@ public:
 
 	virtual ValidateResult			OnContactValidate(const Body &inBody1, const Body &inBody2, RVec3Arg inBaseOffset, const CollideShapeResult &inCollisionResult) override
 	{
-		// Check contract that body 1 is dynamic or that body2 is not dynamic
-		bool contract = inBody1.IsDynamic() || !inBody2.IsDynamic();
+		// Check ordering contract between body 1 and body 2
+		bool contract = inBody1.GetMotionType() >= inBody2.GetMotionType()
+			|| (inBody1.GetMotionType() == inBody2.GetMotionType() && inBody1.GetID() < inBody2.GetID());
 		CHECK(contract);
 
 		lock_guard lock(mLogMutex);

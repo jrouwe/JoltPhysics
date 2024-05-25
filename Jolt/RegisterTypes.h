@@ -18,7 +18,9 @@ JPH_INLINE bool VerifyJoltVersionID() { return VerifyJoltVersionIDInternal(JPH_V
 /// Internal helper function
 JPH_EXPORT extern void RegisterTypesInternal(uint64 inVersionID);
 
-/// Register all physics types with the factory
+/// Register all physics types with the factory and install their collision handlers with the CollisionDispatch class.
+/// If you have your own custom shape types you probably need to register their handlers with the CollisionDispatch before calling this function.
+/// If you implement your own default material (PhysicsMaterial::sDefault) make sure to initialize it before this function or else this function will create one for you.
 JPH_INLINE void RegisterTypes() { RegisterTypesInternal(JPH_VERSION_ID); }
 
 /// Unregisters all types with the factory and cleans up the default material

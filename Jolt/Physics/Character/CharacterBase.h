@@ -41,6 +41,9 @@ public:
 	/// Maximum angle of slope that character can still walk on (radians).
 	float								mMaxSlopeAngle = DegreesToRadians(50.0f);
 
+	/// Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). This is more expensive but makes bodies move smoother over a mesh with convex edges.
+	bool								mEnhancedInternalEdgeRemoval = false;
+
 	/// Initial shape that represents the character's volume.
 	/// Usually this is a capsule, make sure the shape is made so that the bottom of the shape is at (0, 0, 0).
 	RefConst<Shape>						mShape;

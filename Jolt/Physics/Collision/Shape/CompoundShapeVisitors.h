@@ -175,7 +175,7 @@ struct CompoundShape::CastShapeVisitor
 		return mCollector.ShouldEarlyOut();
 	}
 
-	/// Tests the shape cast against 4 boundign boxes, returns the distance along the shape cast where the shape first enters the bounding box
+	/// Tests the shape cast against 4 bounding boxes, returns the distance along the shape cast where the shape first enters the bounding box
 	JPH_INLINE Vec4		TestBounds(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ) const
 	{
 		// Scale the bounding boxes

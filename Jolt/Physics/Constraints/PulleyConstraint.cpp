@@ -156,6 +156,11 @@ void PulleyConstraint::SetupVelocityConstraint(float inDeltaTime)
 		mIndependentAxisConstraintPart.Deactivate();
 }
 
+void PulleyConstraint::ResetWarmStart()
+{
+	mIndependentAxisConstraintPart.Deactivate();
+}
+
 void PulleyConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	mIndependentAxisConstraintPart.WarmStart(*mBody1, *mBody2, mWorldSpaceNormal1, mWorldSpaceNormal2, mRatio, inWarmStartImpulseRatio);

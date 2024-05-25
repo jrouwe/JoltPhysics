@@ -21,7 +21,7 @@ static constexpr uint8 sClosestFeatureToActiveEdgesMask[] = {
 	0b001,		// 0b011: Vertex 1 & 2 -> edge 1
 	0b110,		// 0b100: Vertex 3 -> edge 2 or 3
 	0b100,		// 0b101: Vertex 1 & 3 -> edge 3
-	0b010,		// 0b110: Vertex 2 & 3 -> egde 2
+	0b010,		// 0b110: Vertex 2 & 3 -> edge 2
 	// 0b111: Vertex 1, 2 & 3 -> interior, guarded by an if
 };
 
@@ -103,7 +103,17 @@ void CollideSphereVsTriangles::Collide(Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2,
 	// Create collision result
 	CollideShapeResult result(point1, point2, penetration_axis_world, penetration_depth, mSubShapeID1, inSubShapeID2, TransformedShape::sGetBodyID(mCollector.GetContext()));
 
-	// Note: We don't gather faces here because that's only useful if both shapes have a face. Since the sphere always has only 1 contact point, the manifold is always a point.
+	// Gather faces
+	if (mCollideShapeSettings.mCollectFacesMode == ECollectFacesMode::CollectFaces)
+	{
+		// The sphere doesn't have a supporting face
+
+		// Get face of triangle 2
+		result.mShape2Face.resize(3);
+		result.mShape2Face[0] = mTransform2 * (mSphereCenterIn2 + v0);
+		result.mShape2Face[1] = mTransform2 * (mSphereCenterIn2 + v1);
+		result.mShape2Face[2] = mTransform2 * (mSphereCenterIn2 + v2);
+	}
 
 	// Notify the collector
 	JPH_IF_TRACK_NARROWPHASE_STATS(TrackNarrowPhaseCollector track;)

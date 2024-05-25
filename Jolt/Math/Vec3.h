@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <Jolt/Core/StaticArray.h>
 #include <Jolt/Math/Float3.h>
 #include <Jolt/Math/Swizzle.h>
 #include <Jolt/Math/MathTypes.h>
@@ -104,7 +105,7 @@ public:
 	static JPH_INLINE Vec3		sUnitSpherical(float inTheta, float inPhi);
 
 	/// A set of vectors uniformly spanning the surface of a unit sphere, usable for debug purposes
-	JPH_EXPORT static const std::vector<Vec3> sUnitSphere;
+	JPH_EXPORT static const StaticArray<Vec3, 1026> sUnitSphere;
 
 	/// Get random unit vector
 	template <class Random>

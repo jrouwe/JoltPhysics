@@ -63,7 +63,7 @@ public:
 	float				mMaxLinearVelocity = 500.0f;		///< Maximum linear velocity that a vertex can reach (m/s)
 	float				mRestitution = 0.0f;				///< Restitution when colliding
 	float				mFriction = 0.2f;					///< Friction coefficient when colliding
-	float				mPressure = 0.0f;					///< n * R * T, amount of substance * ideal gass constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
+	float				mPressure = 0.0f;					///< n * R * T, amount of substance * ideal gas constant * absolute temperature, see https://en.wikipedia.org/wiki/Pressure
 	float				mGravityFactor = 1.0f;				///< Value to multiply gravity with for this body
 	bool				mUpdatePosition = true;				///< Update the position of the body while simulating (set to false for something that is attached to the static world)
 	bool				mMakeRotationIdentity = true;		///< Bake specified mRotation in the vertices and set the body rotation to identity (simulation is slightly more accurate if the rotation of a soft body is kept to identity)

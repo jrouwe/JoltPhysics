@@ -19,11 +19,14 @@
 #include <Jolt/Physics/Collision/CollideConvexVsTriangles.h>
 #include <Jolt/Physics/Collision/ManifoldBetweenTwoFaces.h>
 #include <Jolt/Physics/Collision/Shape/ConvexShape.h>
+#include <Jolt/Physics/Collision/InternalEdgeRemovingCollector.h>
 #include <Jolt/Physics/Constraints/CalculateSolverSteps.h>
 #include <Jolt/Physics/Constraints/ConstraintPart/AxisConstraintPart.h>
 #include <Jolt/Physics/DeterminismLog.h>
 #include <Jolt/Physics/SoftBody/SoftBodyMotionProperties.h>
+#include <Jolt/Physics/SoftBody/SoftBodyShape.h>
 #include <Jolt/Geometry/RayAABox.h>
+#include <Jolt/Geometry/ClosestPoint.h>
 #include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Core/QuickSort.h>
@@ -106,7 +109,7 @@ void PhysicsSystem::AddStepListener(PhysicsStepListener *inListener)
 {
 	lock_guard lock(mStepListenersMutex);
 
-	JPH_ASSERT(find(mStepListeners.begin(), mStepListeners.end(), inListener) == mStepListeners.end());
+	JPH_ASSERT(std::find(mStepListeners.begin(), mStepListeners.end(), inListener) == mStepListeners.end());
 	mStepListeners.push_back(inListener);
 }
 
@@ -114,7 +117,7 @@ void PhysicsSystem::RemoveStepListener(PhysicsStepListener *inListener)
 {
 	lock_guard lock(mStepListenersMutex);
 
-	StepListeners::iterator i = find(mStepListeners.begin(), mStepListeners.end(), inListener);
+	StepListeners::iterator i = std::find(mStepListeners.begin(), mStepListeners.end(), inListener);
 	JPH_ASSERT(i != mStepListeners.end());
 	*i = mStepListeners.back();
 	mStepListeners.pop_back();
@@ -375,9 +378,8 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 				{
 					context.mPhysicsSystem->JobBodySetIslandIndex();
 
-					if (step.mStartNextStep.IsValid())
-						step.mStartNextStep.RemoveDependency();
-				}, 1); // depends on: finalize islands
+					JobHandle::sRemoveDependencies(step.mSolvePositionConstraints);
+				}, 2); // depends on: finalize islands, finish building jobs
 
 			// Job to start the next collision step
 			if (!is_last_step)
@@ -385,10 +387,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 				PhysicsUpdateContext::Step *next_step = &context.mSteps[step_idx + 1];
 				step.mStartNextStep = inJobSystem->CreateJob("StartNextStep", cColorStartNextStep, [this, next_step]()
 					{
-					#ifdef _DEBUG
+					#ifdef JPH_DEBUG
 						// Validate that the cached bounds are correct
 						mBodyManager.ValidateActiveBodyBounds();
-					#endif // _DEBUG
+					#endif // JPH_DEBUG
 
 						// Store the number of active bodies at the start of the step
 						next_step->mNumActiveBodiesAtStepStart = mBodyManager.GetNumActiveBodies(EBodyType::RigidBody);
@@ -419,7 +421,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 							// Kick the step listeners job first
 							JobHandle::sRemoveDependencies(next_step->mStepListeners);
 						}
-					}, 4); // depends on: update soft bodies, body set island index, contact removed callbacks, finish building the previous step
+					}, 3); // depends on: update soft bodies, contact removed callbacks, finish building the previous step
 			}
 
 			// This job will solve the velocity constraints
@@ -496,10 +498,11 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 						// Kick the next step
 						if (step.mSoftBodyPrepare.IsValid())
 							step.mSoftBodyPrepare.RemoveDependency();
-					}, 2); // depends on: resolve ccd contacts, finish building jobs.
+					}, 3); // depends on: resolve ccd contacts, body set island index, finish building jobs.
 
-			// Unblock previous job.
+			// Unblock previous jobs.
 			step.mResolveCCDContacts.RemoveDependency();
+			step.mBodySetIslandIndex.RemoveDependency();
 
 			// The soft body prepare job will create other jobs if needed
 			step.mSoftBodyPrepare = inJobSystem->CreateJob("SoftBodyPrepare", cColorSoftBodyPrepare, [&context, &step]()
@@ -565,10 +568,10 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 	// We're done with the barrier for this update
 	inJobSystem->DestroyBarrier(barrier);
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	// Validate that the cached bounds are correct
 	mBodyManager.ValidateActiveBodyBounds();
-#endif // _DEBUG
+#endif // JPH_DEBUG
 
 	// Clear the large island splitter
 	mLargeIslandSplitter.Reset(inTempAllocator);
@@ -606,7 +609,7 @@ EPhysicsUpdateError PhysicsSystem::Update(float inDeltaTime, int inCollisionStep
 
 	// Return any errors
 	EPhysicsUpdateError errors = static_cast<EPhysicsUpdateError>(context.mErrors.load(memory_order_acquire));
-	JPH_ASSERT(errors == EPhysicsUpdateError::None, "An error occured during the physics update, see EPhysicsUpdateError for more information");
+	JPH_ASSERT(errors == EPhysicsUpdateError::None, "An error occurred during the physics update, see EPhysicsUpdateError for more information");
 	return errors;
 }
 
@@ -974,13 +977,12 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		return;
 	}
 
-	// Ensure that body1 is dynamic, this ensures that we do the collision detection in the space of a moving body, which avoids accuracy problems when testing a very large static object against a small dynamic object
-	// Ensure that body1 id < body2 id for dynamic vs dynamic
-	// Keep body order unchanged when colliding with a sensor
-	if ((!body1->IsDynamic() || (body2->IsDynamic() && inBodyPair.mBodyB < inBodyPair.mBodyA))
-		&& !body2->IsSensor())
+	// Ensure that body1 has the higher motion type (i.e. dynamic trumps kinematic), this ensures that we do the collision detection in the space of a moving body,
+	// which avoids accuracy problems when testing a very large static object against a small dynamic object
+	// Ensure that body1 id < body2 id when motion types are the same.
+	if (body1->GetMotionType() < body2->GetMotionType()
+		|| (body1->GetMotionType() == body2->GetMotionType() && inBodyPair.mBodyB < inBodyPair.mBodyA))
 		swap(body1, body2);
-	JPH_ASSERT(body1->IsDynamic() || body2->IsSensor());
 
 	// Check if the contact points from the previous frame are reusable and if so copy them
 	bool pair_handled = false, constraint_created = false;
@@ -1000,7 +1002,7 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 		CollideShapeSettings settings;
 		settings.mCollectFacesMode = ECollectFacesMode::CollectFaces;
 		settings.mActiveEdgeMode = mPhysicsSettings.mCheckActiveEdges? EActiveEdgeMode::CollideOnlyWithActive : EActiveEdgeMode::CollideWithAll;
-		settings.mMaxSeparationDistance = mPhysicsSettings.mSpeculativeContactDistance;
+		settings.mMaxSeparationDistance = body1->IsSensor() || body2->IsSensor()? 0.0f : mPhysicsSettings.mSpeculativeContactDistance;
 		settings.mActiveEdgeMovementDirection = body1->GetLinearVelocity() - body2->GetLinearVelocity();
 
 		// Get transforms relative to body1
@@ -1035,10 +1037,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// One of the following should be true:
-					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
-					// - Body 1 is not dynamic in which case body 2 should be a sensor
-					JPH_ASSERT(mBody1->IsDynamic() || mBody2->IsSensor());
+					// The first body should be the one with the highest motion type
+					JPH_ASSERT(mBody1->GetMotionType() >= mBody2->GetMotionType());
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit
@@ -1125,7 +1125,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			auto f = body1->GetEnhancedInternalEdgeRemovalWithBody(*body2)? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
+			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, { });
 
 			// Add the contacts
 			for (ContactManifold &manifold : collector.mManifolds)
@@ -1160,10 +1161,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 				virtual void	AddHit(const CollideShapeResult &inResult) override
 				{
-					// One of the following should be true:
-					// - Body 1 is dynamic and body 2 may be dynamic, static or kinematic
-					// - Body 1 is not dynamic in which case body 2 should be a sensor
-					JPH_ASSERT(mBody1->IsDynamic() || mBody2->IsSensor());
+					// The first body should be the one with the highest motion type
+					JPH_ASSERT(mBody1->GetMotionType() >= mBody2->GetMotionType());
 					JPH_ASSERT(!ShouldEarlyOut());
 
 					// Test if we want to accept this hit
@@ -1227,7 +1226,8 @@ void PhysicsSystem::ProcessBodyPair(ContactAllocator &ioContactAllocator, const 
 
 			// Perform collision detection between the two shapes
 			SubShapeIDCreator part1, part2;
-			CollisionDispatch::sCollideShapeVsShape(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector);
+			auto f = body1->GetEnhancedInternalEdgeRemovalWithBody(*body2)? InternalEdgeRemovingCollector::sCollideShapeVsShape : CollisionDispatch::sCollideShapeVsShape;
+			f(body1->GetShape(), body2->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, part1, part2, settings, collector, { });
 
 			constraint_created = collector.mConstraintCreated;
 		}
@@ -1497,12 +1497,12 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 			// For motion type discrete we need to do this anyway, for motion type linear cast we have multiple choices
 			// 1. Rotate the body first and then sweep
 			// 2. First sweep and then rotate the body at the end
-			// 3. Pick some inbetween rotation (e.g. half way), then sweep and finally rotate the remainder
+			// 3. Pick some in between rotation (e.g. half way), then sweep and finally rotate the remainder
 			// (1) has some clear advantages as when a long thin body hits a surface away from the center of mass, this will result in a large angular velocity and a limited reduction in linear velocity.
 			// When simulation the rotation first before doing the translation, the body will be able to rotate away from the contact point allowing the center of mass to approach the surface. When using
 			// approach (2) in this case what will happen is that we will immediately detect the same collision again (the body has not rotated and the body was already colliding at the end of the previous
 			// time step) resulting in a lot of stolen time and the body appearing to be frozen in an unnatural pose (like it is glued at an angle to the surface). (2) obviously has some negative side effects
-			// too as simulating the rotation first may cause it to tunnel through a small object that the linear cast might have otherwise dectected. In any case a linear cast is not good for detecting
+			// too as simulating the rotation first may cause it to tunnel through a small object that the linear cast might have otherwise detected. In any case a linear cast is not good for detecting
 			// tunneling due to angular rotation, so we don't care about that too much (you'd need a full cast to take angular effects into account).
 			body.AddRotationStep(body.GetAngularVelocity() * delta_time);
 
@@ -1526,12 +1526,13 @@ void PhysicsSystem::JobIntegrateVelocity(const PhysicsUpdateContext *ioContext, 
 					float inner_radius = body.GetShape()->GetInnerRadius();
 					JPH_ASSERT(inner_radius > 0.0f, "The shape has no inner radius, this makes the shape unsuitable for the linear cast motion quality as we cannot move it without risking tunneling.");
 
-					// Measure translation in this step and check if it above the treshold to perform a linear cast
+					// Measure translation in this step and check if it above the threshold to perform a linear cast
 					float linear_cast_threshold_sq = Square(mPhysicsSettings.mLinearCastThreshold * inner_radius);
 					if (delta_pos.LengthSq() > linear_cast_threshold_sq)
 					{
 						// This body needs a cast
 						uint32 ccd_body_idx = ioStep->mNumCCDBodies++;
+						JPH_ASSERT(active_body_idx < ioStep->mNumActiveBodyToCCDBody);
 						ioStep->mActiveBodyToCCDBody[active_body_idx] = ccd_body_idx;
 						new (&ioStep->mCCDBodies[ccd_body_idx]) CCDBody(body_id, delta_pos, linear_cast_threshold_sq, min(mPhysicsSettings.mPenetrationSlop, mPhysicsSettings.mLinearCastMaxPenetration * inner_radius));
 
@@ -1582,12 +1583,12 @@ void PhysicsSystem::JobPostIntegrateVelocity(PhysicsUpdateContext *ioContext, Ph
 
 	if (ioStep->mNumCCDBodies == 0)
 	{
-		// No continous collision detection jobs -> kick the next job ourselves
+		// No continuous collision detection jobs -> kick the next job ourselves
 		ioStep->mContactRemovedCallbacks.RemoveDependency();
 	}
 	else
 	{
-		// Run the continous collision detection jobs
+		// Run the continuous collision detection jobs
 		int num_continuous_collision_jobs = min(int(ioStep->mNumCCDBodies + cNumCCDBodiesPerJob - 1) / cNumCCDBodiesPerJob, ioContext->GetMaxConcurrency());
 		ioStep->mResolveCCDContacts.AddDependency(num_continuous_collision_jobs);
 		ioStep->mContactRemovedCallbacks.AddDependency(num_continuous_collision_jobs - 1); // Already had 1 dependency
@@ -1619,6 +1620,10 @@ inline static Vec3 sCalculateBodyMotion(const Body &inBody, float inDeltaTime)
 // Helper function that finds the CCD body corresponding to a body (if it exists)
 inline static PhysicsUpdateContext::Step::CCDBody *sGetCCDBody(const Body &inBody, PhysicsUpdateContext::Step *inStep)
 {
+	// Only rigid bodies can have a CCD body
+	if (!inBody.IsRigidBody())
+		return nullptr;
+
 	// If the body has no motion properties it cannot have a CCD body
 	const MotionProperties *motion_properties = inBody.GetMotionPropertiesUnchecked();
 	if (motion_properties == nullptr)
@@ -1751,6 +1756,7 @@ void PhysicsSystem::JobFindCCDContacts(const PhysicsUpdateContext *ioContext, Ph
 							// This is the earliest hit so far, store it
 							mCCDBody.mContactNormal = normal;
 							mCCDBody.mBodyID2 = inResult.mBodyID2;
+							mCCDBody.mSubShapeID2 = inResult.mSubShapeID2;
 							mCCDBody.mFraction = fraction;
 							mCCDBody.mFractionPlusSlop = fraction_plus_slop;
 							mResult = inResult;
@@ -1995,7 +2001,7 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 					// Check if the other body found a hit that is further away
 					if (ccd_body2->mFraction > ccd_body->mFraction)
 					{
-						// Reset the colliding body of the other CCD body. The other body will shorten its distance travelled and will not do any collision response (we'll do that).
+						// Reset the colliding body of the other CCD body. The other body will shorten its distance traveled and will not do any collision response (we'll do that).
 						// This means that at this point we have triggered a contact point add/persist for our further hit by accident for the other body.
 						// We accept this as calling the contact point callbacks here would require persisting the manifolds up to this point and doing the callbacks single threaded.
 						ccd_body2->mBodyID2 = BodyID();
@@ -2007,73 +2013,132 @@ void PhysicsSystem::JobResolveCCDContacts(PhysicsUpdateContext *ioContext, Physi
 				// We'll just move to the collision position anyway (as that's the last position we know is good), but we won't do any collision response.
 				if (ccd_body2 == nullptr || ccd_body2->mFraction >= ccd_body->mFraction)
 				{
-					// Calculate contact points relative to center of mass of both bodies
-					Vec3 r1_plus_u = Vec3(ccd_body->mContactPointOn2 - (body1.GetCenterOfMassPosition() + ccd_body->mFraction * ccd_body->mDeltaPosition));
-					Vec3 r2 = Vec3(ccd_body->mContactPointOn2 - body2.GetCenterOfMassPosition());
-
-					// Calculate velocity of collision points
-					Vec3 v1 = body1.GetPointVelocityCOM(r1_plus_u);
-					Vec3 v2 = body2.GetPointVelocityCOM(r2);
-					Vec3 relative_velocity = v2 - v1;
-					float normal_velocity = relative_velocity.Dot(ccd_body->mContactNormal);
-
-					// Calculate velocity bias due to restitution
-					float normal_velocity_bias;
 					const ContactSettings &contact_settings = ccd_body->mContactSettings;
-					if (contact_settings.mCombinedRestitution > 0.0f && normal_velocity < -mPhysicsSettings.mMinVelocityForRestitution)
-						normal_velocity_bias = contact_settings.mCombinedRestitution * normal_velocity;
-					else
-						normal_velocity_bias = 0.0f;
 
-					// Get inverse masses
+					// Calculate contact point velocity for body 1
+					Vec3 r1_plus_u = Vec3(ccd_body->mContactPointOn2 - (body1.GetCenterOfMassPosition() + ccd_body->mFraction * ccd_body->mDeltaPosition));
+					Vec3 v1 = body1.GetPointVelocityCOM(r1_plus_u);
+
+					// Calculate inverse mass for body 1
 					float inv_m1 = contact_settings.mInvMassScale1 * body_mp->GetInverseMass();
-					float inv_m2 = body2.GetMotionPropertiesUnchecked() != nullptr? contact_settings.mInvMassScale2 * body2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked() : 0.0f;
 
-					// Solve contact constraint
-					AxisConstraintPart contact_constraint;
-					contact_constraint.CalculateConstraintPropertiesWithMassOverride(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias);
-					contact_constraint.SolveVelocityConstraintWithMassOverride(body1, inv_m1, body2, inv_m2, ccd_body->mContactNormal, -FLT_MAX, FLT_MAX);
-
-					// Apply friction
-					if (contact_settings.mCombinedFriction > 0.0f)
+					if (body2.IsRigidBody())
 					{
-						// Calculate friction direction by removing normal velocity from the relative velocity
-						Vec3 friction_direction = relative_velocity - normal_velocity * ccd_body->mContactNormal;
-						float friction_direction_len_sq = friction_direction.LengthSq();
-						if (friction_direction_len_sq > 1.0e-12f)
+						// Calculate contact point velocity for body 2
+						Vec3 r2 = Vec3(ccd_body->mContactPointOn2 - body2.GetCenterOfMassPosition());
+						Vec3 v2 = body2.GetPointVelocityCOM(r2);
+
+						// Calculate relative contact velocity
+						Vec3 relative_velocity = v2 - v1;
+						float normal_velocity = relative_velocity.Dot(ccd_body->mContactNormal);
+
+						// Calculate velocity bias due to restitution
+						float normal_velocity_bias;
+						if (contact_settings.mCombinedRestitution > 0.0f && normal_velocity < -mPhysicsSettings.mMinVelocityForRestitution)
+							normal_velocity_bias = contact_settings.mCombinedRestitution * normal_velocity;
+						else
+							normal_velocity_bias = 0.0f;
+
+						// Get inverse mass of body 2
+						float inv_m2 = body2.GetMotionPropertiesUnchecked() != nullptr? contact_settings.mInvMassScale2 * body2.GetMotionPropertiesUnchecked()->GetInverseMassUnchecked() : 0.0f;
+
+						// Solve contact constraint
+						AxisConstraintPart contact_constraint;
+						contact_constraint.CalculateConstraintPropertiesWithMassOverride(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, ccd_body->mContactNormal, normal_velocity_bias);
+						contact_constraint.SolveVelocityConstraintWithMassOverride(body1, inv_m1, body2, inv_m2, ccd_body->mContactNormal, -FLT_MAX, FLT_MAX);
+
+						// Apply friction
+						if (contact_settings.mCombinedFriction > 0.0f)
 						{
-							// Normalize friction direction
-							friction_direction /= sqrt(friction_direction_len_sq);
+							// Calculate friction direction by removing normal velocity from the relative velocity
+							Vec3 friction_direction = relative_velocity - normal_velocity * ccd_body->mContactNormal;
+							float friction_direction_len_sq = friction_direction.LengthSq();
+							if (friction_direction_len_sq > 1.0e-12f)
+							{
+								// Normalize friction direction
+								friction_direction /= sqrt(friction_direction_len_sq);
 
-							// Calculate max friction impulse
-							float max_lambda_f = contact_settings.mCombinedFriction * contact_constraint.GetTotalLambda();
+								// Calculate max friction impulse
+								float max_lambda_f = contact_settings.mCombinedFriction * contact_constraint.GetTotalLambda();
 
-							AxisConstraintPart friction;
-							friction.CalculateConstraintPropertiesWithMassOverride(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, friction_direction);
-							friction.SolveVelocityConstraintWithMassOverride(body1, inv_m1, body2, inv_m2, friction_direction, -max_lambda_f, max_lambda_f);
+								AxisConstraintPart friction;
+								friction.CalculateConstraintPropertiesWithMassOverride(body1, inv_m1, contact_settings.mInvInertiaScale1, r1_plus_u, body2, inv_m2, contact_settings.mInvInertiaScale2, r2, friction_direction);
+								friction.SolveVelocityConstraintWithMassOverride(body1, inv_m1, body2, inv_m2, friction_direction, -max_lambda_f, max_lambda_f);
+							}
+						}
+
+						// Clamp velocity of body 2
+						if (body2.IsDynamic())
+						{
+							MotionProperties *body2_mp = body2.GetMotionProperties();
+							body2_mp->ClampLinearVelocity();
+							body2_mp->ClampAngularVelocity();
 						}
 					}
+					else
+					{
+						SoftBodyMotionProperties *soft_mp = static_cast<SoftBodyMotionProperties *>(body2.GetMotionProperties());
+						const SoftBodyShape *soft_shape = static_cast<const SoftBodyShape *>(body2.GetShape());
 
-					// Clamp velocities
+						// Convert the sub shape ID of the soft body to a face
+						uint32 face_idx = soft_shape->GetFaceIndex(ccd_body->mSubShapeID2);
+						const SoftBodyMotionProperties::Face &face = soft_mp->GetFace(face_idx);
+
+						// Get vertices of the face
+						SoftBodyMotionProperties::Vertex &vtx0 = soft_mp->GetVertex(face.mVertex[0]);
+						SoftBodyMotionProperties::Vertex &vtx1 = soft_mp->GetVertex(face.mVertex[1]);
+						SoftBodyMotionProperties::Vertex &vtx2 = soft_mp->GetVertex(face.mVertex[2]);
+
+						// Inverse mass of the face
+						float vtx0_mass = vtx0.mInvMass > 0.0f? 1.0f / vtx0.mInvMass : 1.0e10f;
+						float vtx1_mass = vtx1.mInvMass > 0.0f? 1.0f / vtx1.mInvMass : 1.0e10f;
+						float vtx2_mass = vtx2.mInvMass > 0.0f? 1.0f / vtx2.mInvMass : 1.0e10f;
+						float inv_m2 = 1.0f / (vtx0_mass + vtx1_mass + vtx2_mass);
+
+						// Calculate barycentric coordinates of the contact point on the soft body's face
+						float u, v, w;
+						RMat44 inv_body2_transform = body2.GetInverseCenterOfMassTransform();
+						Vec3 local_contact = Vec3(inv_body2_transform * ccd_body->mContactPointOn2);
+						ClosestPoint::GetBaryCentricCoordinates(vtx0.mPosition - local_contact, vtx1.mPosition - local_contact, vtx2.mPosition - local_contact, u, v, w);
+
+						// Calculate contact point velocity for the face
+						Vec3 v2 = inv_body2_transform.Multiply3x3Transposed(u * vtx0.mVelocity + v * vtx1.mVelocity + w * vtx2.mVelocity);
+						float normal_velocity = (v2 - v1).Dot(ccd_body->mContactNormal);
+
+						// Calculate velocity bias due to restitution
+						float normal_velocity_bias;
+						if (contact_settings.mCombinedRestitution > 0.0f && normal_velocity < -mPhysicsSettings.mMinVelocityForRestitution)
+							normal_velocity_bias = contact_settings.mCombinedRestitution * normal_velocity;
+						else
+							normal_velocity_bias = 0.0f;
+
+						// Calculate resulting velocity change (the math here is similar to AxisConstraintPart but without an inertia term for body 2 as we treat it as a point mass)
+						Vec3 r1_plus_u_x_n = r1_plus_u.Cross(ccd_body->mContactNormal);
+						Vec3 invi1_r1_plus_u_x_n = contact_settings.mInvInertiaScale1 * body1.GetInverseInertia().Multiply3x3(r1_plus_u_x_n);
+						float jv = r1_plus_u_x_n.Dot(body_mp->GetAngularVelocity()) - normal_velocity - normal_velocity_bias;
+						float inv_effective_mass = inv_m1 + inv_m2 + invi1_r1_plus_u_x_n.Dot(r1_plus_u_x_n);
+						float lambda = jv / inv_effective_mass;
+						body_mp->SubLinearVelocityStep((lambda * inv_m1) * ccd_body->mContactNormal);
+						body_mp->SubAngularVelocityStep(lambda * invi1_r1_plus_u_x_n);
+						Vec3 delta_v2 = inv_body2_transform.Multiply3x3(lambda * ccd_body->mContactNormal);
+						vtx0.mVelocity += delta_v2 * vtx0.mInvMass;
+						vtx1.mVelocity += delta_v2 * vtx1.mInvMass;
+						vtx2.mVelocity += delta_v2 * vtx2.mInvMass;
+					}
+
+					// Clamp velocity of body 1
 					body_mp->ClampLinearVelocity();
 					body_mp->ClampAngularVelocity();
 
-					if (body2.IsDynamic())
+					// Activate the 2nd body if it is not already active
+					if (body2.IsDynamic() && !body2.IsActive())
 					{
-						MotionProperties *body2_mp = body2.GetMotionProperties();
-						body2_mp->ClampLinearVelocity();
-						body2_mp->ClampAngularVelocity();
-
-						// Activate the body if it is not already active
-						if (!body2.IsActive())
+						bodies_to_activate[num_bodies_to_activate++] = ccd_body->mBodyID2;
+						if (num_bodies_to_activate == cBodiesBatch)
 						{
-							bodies_to_activate[num_bodies_to_activate++] = ccd_body->mBodyID2;
-							if (num_bodies_to_activate == cBodiesBatch)
-							{
-								// Batch is full, activate now
-								mBodyManager.ActivateBodies(bodies_to_activate, num_bodies_to_activate);
-								num_bodies_to_activate = 0;
-							}
+							// Batch is full, activate now
+							mBodyManager.ActivateBodies(bodies_to_activate, num_bodies_to_activate);
+							num_bodies_to_activate = 0;
 						}
 					}
 
@@ -2457,15 +2522,15 @@ void PhysicsSystem::JobSoftBodyCollide(PhysicsUpdateContext *ioContext) const
 
 		// Do a broadphase check
 		SoftBodyUpdateContext &sb_ctx = ioContext->mSoftBodyUpdateContexts[sb_idx];
-		sb_ctx.mMotionProperties->DetermineCollidingShapes(sb_ctx, *this);
+		sb_ctx.mMotionProperties->DetermineCollidingShapes(sb_ctx, *this, GetBodyLockInterfaceNoLock());
 	}
 }
 
 void PhysicsSystem::JobSoftBodySimulate(PhysicsUpdateContext *ioContext, uint inThreadIndex) const
 {
 #ifdef JPH_ENABLE_ASSERTS
-	// Updating velocities of soft bodies
-	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::None);
+	// Updating velocities of soft bodies, allow the contact listener to read the soft body state
+	BodyAccess::Grant grant(BodyAccess::EAccess::ReadWrite, BodyAccess::EAccess::Read);
 #endif
 
 	// Calculate at which body we start to distribute the workload across the threads
@@ -2520,7 +2585,7 @@ void PhysicsSystem::JobSoftBodyFinalize(PhysicsUpdateContext *ioContext)
 	for (SoftBodyUpdateContext *sb_ctx = ioContext->mSoftBodyUpdateContexts, *sb_ctx_end = ioContext->mSoftBodyUpdateContexts + ioContext->mNumSoftBodies; sb_ctx < sb_ctx_end; ++sb_ctx)
 	{
 		// Apply the rigid body velocity deltas
-		sb_ctx->mMotionProperties->UpdateRigidBodyVelocities(*sb_ctx, *this);
+		sb_ctx->mMotionProperties->UpdateRigidBodyVelocities(*sb_ctx, GetBodyInterfaceNoLock());
 
 		// Update the position
 		sb_ctx->mBody->SetPositionAndRotationInternal(sb_ctx->mBody->GetPosition() + sb_ctx->mDeltaPosition, sb_ctx->mBody->GetRotation(), false);

@@ -108,7 +108,7 @@ public:
 	{
 		Vec3 scale;
 		RMat44 rot_trans = inTransform.Decompose(scale);
-		SetWorldTransform(rot_trans.GetTranslation(), rot_trans.GetRotation().GetQuaternion(), scale);
+		SetWorldTransform(rot_trans.GetTranslation(), rot_trans.GetQuaternion(), scale);
 	}
 
 	/// Calculates the world transform including scale of this shape (not from the center of mass but in the space the shape was created)
@@ -188,7 +188,7 @@ public:
 	SubShapeIDCreator			mSubShapeIDCreator;							///< Optional sub shape ID creator for the shape (can be used when expanding compound shapes into multiple transformed shapes)
 };
 
-static_assert(sizeof(TransformedShape) == JPH_IF_SINGLE_PRECISION_ELSE(64, 96), "Not properly packed");
+static_assert(JPH_CPU_ADDRESS_BITS != 64 || sizeof(TransformedShape) == JPH_IF_SINGLE_PRECISION_ELSE(64, 96), "Not properly packed");
 static_assert(alignof(TransformedShape) == JPH_RVECTOR_ALIGNMENT, "Not properly aligned");
 
 JPH_NAMESPACE_END

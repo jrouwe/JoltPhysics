@@ -153,7 +153,7 @@ void VehicleStressTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		for (uint w = 0; w < 4; ++w)
 		{
 			const WheelSettings *settings = c->GetWheels()[w]->GetSettings();
-			RMat44 wheel_transform = c->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cyclinder we draw is aligned with Y so we specify that as rotational axis
+			RMat44 wheel_transform = c->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cylinder we draw is aligned with Y so we specify that as rotational axis
 			mDebugRenderer->DrawCylinder(wheel_transform, 0.5f * settings->mWidth, settings->mRadius, Color::sGreen);
 		}
 	}

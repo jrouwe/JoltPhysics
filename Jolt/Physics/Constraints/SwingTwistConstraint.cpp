@@ -329,6 +329,14 @@ void SwingTwistConstraint::SetupVelocityConstraint(float inDeltaTime)
 	}
 }
 
+void SwingTwistConstraint::ResetWarmStart()
+{
+	for (AngleConstraintPart &c : mMotorConstraintPart)
+		c.Deactivate();
+	mSwingTwistConstraintPart.Deactivate();
+	mPointConstraintPart.Deactivate();
+}
+
 void SwingTwistConstraint::WarmStartVelocityConstraint(float inWarmStartImpulseRatio)
 {
 	// Warm starting: Apply previous frame impulse

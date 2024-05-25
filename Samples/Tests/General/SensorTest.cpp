@@ -32,7 +32,7 @@ void SensorTest::Initialize()
 	CreateFloor(400.0f);
 
 	{
-		// A static sensor that attrects dynamic bodies that enter its area
+		// A static sensor that attracts dynamic bodies that enter its area
 		BodyCreationSettings sensor_settings(new SphereShape(10.0f), RVec3(0, 10, 0), Quat::sIdentity(), EMotionType::Static, Layers::SENSOR);
 		sensor_settings.mIsSensor = true;
 		mSensorID[StaticAttractor] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::DontActivate);
@@ -56,7 +56,7 @@ void SensorTest::Initialize()
 		// A kinematic sensor that also detects static bodies
 		BodyCreationSettings sensor_settings(new BoxShape(Vec3::sReplicate(5.0f)), RVec3(25, 5.1f, 0), Quat::sIdentity(), EMotionType::Kinematic, Layers::MOVING); // Put in a layer that collides with static
 		sensor_settings.mIsSensor = true;
-		sensor_settings.mSensorDetectsStatic = true;
+		sensor_settings.mCollideKinematicVsNonDynamic = true;
 		mSensorID[SensorDetectingStatic] = mBodyInterface->CreateAndAddBody(sensor_settings, EActivation::Activate);
 	}
 
@@ -69,20 +69,30 @@ void SensorTest::Initialize()
 	for (const RVec3 &p : static_positions)
 		mBodyInterface->CreateAndAddBody(BodyCreationSettings(new BoxShape(Vec3::sReplicate(0.5f)), p, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::Activate);
 
+#ifdef JPH_OBJECT_STREAM
 	// Load ragdoll
 	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
 	if (ragdoll_settings == nullptr)
 		FatalError("Could not load ragdoll");
-
-	// Load animation
-	Ref<SkeletalAnimation> animation;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
-		FatalError("Could not open animation");
+#else
+	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sCreate();
+#endif // JPH_OBJECT_STREAM
 
 	// Create pose
 	SkeletonPose ragdoll_pose;
 	ragdoll_pose.SetSkeleton(ragdoll_settings->GetSkeleton());
-	animation->Sample(0.0f, ragdoll_pose);
+	{
+#ifdef JPH_OBJECT_STREAM
+		Ref<SkeletalAnimation> animation;
+		if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
+			FatalError("Could not open animation");
+		animation->Sample(0.0f, ragdoll_pose);
+#else
+		Ref<Ragdoll> temp_ragdoll = ragdoll_settings->CreateRagdoll(0, 0, mPhysicsSystem);
+		temp_ragdoll->GetPose(ragdoll_pose);
+		ragdoll_pose.CalculateJointStates();
+#endif // JPH_OBJECT_STREAM
+	}
 	ragdoll_pose.SetRootOffset(RVec3(0, 30, 0));
 	ragdoll_pose.CalculateJointMatrices();
 

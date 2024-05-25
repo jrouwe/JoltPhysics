@@ -26,7 +26,7 @@ private:
 	// Get the center of the path at time inTime, this follows a path that resembles the Jolt logo
 	Vec3					GetPathCenter(float inTime) const;
 
-	// Size of the terrarin
+	// Size of the terrain
 	static constexpr int	cSampleCount = 128;
 
 	// Size of a block in the terrain

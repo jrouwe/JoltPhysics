@@ -51,7 +51,7 @@ public:
 		constexpr float cFreeAngle = DegreesToRadians(179.5f);
 
 		// Assume sane input
-		JPH_ASSERT(inTwistMinAngle <= inTwistMinAngle);
+		JPH_ASSERT(inTwistMinAngle <= inTwistMaxAngle);
 		JPH_ASSERT(inSwingYMinAngle <= inSwingYMaxAngle);
 		JPH_ASSERT(inSwingZMinAngle <= inSwingZMaxAngle);
 		JPH_ASSERT(inSwingYMinAngle >= -JPH_PI && inSwingYMaxAngle <= JPH_PI);
@@ -71,7 +71,7 @@ public:
 		mSwingZHalfMinAngle = half_swing.GetZ();
 		mSwingZHalfMaxAngle = half_swing.GetW();
 
-		// Store axis flags which are used at runtime to quickly decided which contraints to apply
+		// Store axis flags which are used at runtime to quickly decided which constraints to apply
 		mRotationFlags = 0;
 		if (inTwistMinAngle > -cLockedAngle && inTwistMaxAngle < cLockedAngle)
 		{
@@ -298,7 +298,7 @@ public:
 			else
 			{
 				// Use pyramid to solve limits
-				// The quaterion rotating by angle y around the Y axis then rotating by angle z around the Z axis is:
+				// The quaternion rotating by angle y around the Y axis then rotating by angle z around the Z axis is:
 				// q = Quat::sRotation(Vec3::sAxisZ(), z) * Quat::sRotation(Vec3::sAxisY(), y)
 				// [q.x, q.y, q.z, q.w] = [-sin(y / 2) * sin(z / 2), sin(y / 2) * cos(z / 2), cos(y / 2) * sin(z / 2), cos(y / 2) * cos(z / 2)]
 				// So we can calculate y / 2 = atan2(q.y, q.w) and z / 2 = atan2(q.z, q.w)
@@ -430,7 +430,7 @@ public:
 			{
 				mWorldSpaceTwistLimitRotationAxis = (inConstraintToWorld * q_swing).RotateAxisX();
 				if ((clamped_axis & cClampedTwistMin) != 0)
-					mWorldSpaceTwistLimitRotationAxis = -mWorldSpaceTwistLimitRotationAxis; // Flip axis if hittin min limit because the impulse limit is going to be between [-FLT_MAX, 0]
+					mWorldSpaceTwistLimitRotationAxis = -mWorldSpaceTwistLimitRotationAxis; // Flip axis if hitting min limit because the impulse limit is going to be between [-FLT_MAX, 0]
 				mTwistLimitConstraintPart.CalculateConstraintProperties(inBody1, inBody2, mWorldSpaceTwistLimitRotationAxis);
 			}
 			else

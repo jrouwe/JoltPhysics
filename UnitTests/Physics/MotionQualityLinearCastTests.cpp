@@ -37,7 +37,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 
 		c.SimulateSingleStep();
 
-		// No collisions should be reported and the bodies should have moved according to their velocity (tunneling through eachother)
+		// No collisions should be reported and the bodies should have moved according to their velocity (tunneling through each other)
 		CHECK(listener.GetEntryCount() == 0);
 		CHECK_APPROX_EQUAL(box1.GetPosition(), cPos1 + cVelocity / cFrequency);
 		CHECK_APPROX_EQUAL(box1.GetLinearVelocity(), cVelocity);
@@ -330,7 +330,7 @@ TEST_SUITE("MotionQualityLinearCastTests")
 
 		c.SimulateSingleStep();
 
-		// No collisions should be reported and the bodies should have moved according to their velocity (tunneling through eachother)
+		// No collisions should be reported and the bodies should have moved according to their velocity (tunneling through each other)
 		CHECK(listener.GetEntryCount() == 0);
 		CHECK_APPROX_EQUAL(box1.GetPosition(), cPos1 + cVelocity / cFrequency);
 		CHECK_APPROX_EQUAL(box1.GetLinearVelocity(), cVelocity);

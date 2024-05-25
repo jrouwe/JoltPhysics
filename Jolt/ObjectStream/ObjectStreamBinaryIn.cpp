@@ -4,6 +4,8 @@
 
 #include <Jolt/Jolt.h>
 
+#ifdef JPH_OBJECT_STREAM
+
 #include <Jolt/ObjectStream/ObjectStreamBinaryIn.h>
 
 JPH_NAMESPACE_BEGIN
@@ -228,3 +230,5 @@ bool ObjectStreamBinaryIn::ReadPrimitiveData(DMat44 &outPrimitive)
 }
 
 JPH_NAMESPACE_END
+
+#endif // JPH_OBJECT_STREAM

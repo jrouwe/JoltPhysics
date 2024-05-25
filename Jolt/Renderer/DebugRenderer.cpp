@@ -867,6 +867,12 @@ void DebugRenderer::DrawSwingConeLimits(RMat44Arg inMatrix, float inSwingYHalfAn
 	GeometryRef &geometry = mSwingConeLimits[limits];
 	if (geometry == nullptr)
 	{
+		SwingConeBatches::iterator it = mPrevSwingConeLimits.find(limits);
+		if (it != mPrevSwingConeLimits.end())
+			geometry = it->second;
+	}
+	if (geometry == nullptr)
+	{
 		// Number of segments to draw the cone with
 		const int num_segments = 64;
 		int half_num_segments = num_segments / 2;
@@ -944,6 +950,12 @@ void DebugRenderer::DrawSwingPyramidLimits(RMat44Arg inMatrix, float inMinSwingY
 	GeometryRef &geometry = mSwingPyramidLimits[limits];
 	if (geometry == nullptr)
 	{
+		SwingPyramidBatches::iterator it = mPrevSwingPyramidLimits.find(limits);
+		if (it != mPrevSwingPyramidLimits.end())
+			geometry = it->second;
+	}
+	if (geometry == nullptr)
+	{
 		// Number of segments to draw the cone with
 		const int num_segments = 64;
 		int quarter_num_segments = num_segments / 4;
@@ -992,6 +1004,12 @@ void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal,
 	GeometryRef &geometry = mPieLimits[delta_angle];
 	if (geometry == nullptr)
 	{
+		PieBatces::iterator it = mPrevPieLimits.find(delta_angle);
+		if (it != mPrevPieLimits.end())
+			geometry = it->second;
+	}
+	if (geometry == nullptr)
+	{
 		int num_parts = (int)ceil(64.0f * delta_angle / (2.0f * JPH_PI));
 
 		Float3 normal = { 0, 1, 0 };
@@ -1034,6 +1052,18 @@ void DebugRenderer::DrawPie(RVec3Arg inCenter, float inRadius, Vec3Arg inNormal,
 	RMat44 matrix = RMat44(Vec4(inRadius * inAxis, 0), Vec4(inRadius * inNormal, 0), Vec4(inRadius * inNormal.Cross(inAxis), 0), inCenter) * Mat44::sRotationY(-inMinAngle);
 
 	DrawGeometry(matrix, inColor, geometry, ECullMode::Off, inCastShadow, inDrawMode);
+}
+
+void DebugRenderer::NextFrame()
+{
+	mPrevSwingConeLimits.clear();
+	std::swap(mSwingConeLimits, mPrevSwingConeLimits);
+
+	mPrevSwingPyramidLimits.clear();
+	std::swap(mSwingPyramidLimits, mPrevSwingPyramidLimits);
+
+	mPrevPieLimits.clear();
+	std::swap(mPieLimits, mPrevPieLimits);
 }
 
 JPH_NAMESPACE_END

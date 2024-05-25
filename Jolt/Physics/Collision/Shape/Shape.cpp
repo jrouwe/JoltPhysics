@@ -12,7 +12,6 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/CollidePointResult.h>
-#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/Factory.h>
@@ -59,7 +58,7 @@ void Shape::TransformShape(Mat44Arg inCenterOfMassTransform, TransformedShapeCol
 {
 	Vec3 scale;
 	Mat44 transform = inCenterOfMassTransform.Decompose(scale);
-	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetRotation().GetQuaternion(), this, BodyID(), SubShapeIDCreator());
+	TransformedShape ts(RVec3(transform.GetTranslation()), transform.GetQuaternion(), this, BodyID(), SubShapeIDCreator());
 	ts.SetShapeScale(scale);
 	ioCollector.AddHit(ts);
 }
@@ -271,42 +270,6 @@ Shape::ShapeResult Shape::ScaleShape(Vec3Arg inScale) const
 	return compound.Create();
 }
 
-void Shape::sCollideSoftBodyVerticesUsingRayCast(const Shape &inShape, Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex)
-{
-	Mat44 inverse_transform = Mat44::sScale(inScale.Reciprocal()) * inCenterOfMassTransform.InversedRotationTranslation();
-	Mat44 direction_preserving_transform = inverse_transform.Transposed3x3(); // To transform normals: transpose of the inverse
-
-	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
-		if (v->mInvMass > 0.0f)
-		{
-			// Calculate the distance we will move this frame
-			Vec3 movement = v->mVelocity * inDeltaTime + inDisplacementDueToGravity;
-
-			RayCastResult hit;
-			hit.mFraction = 2.0f; // Add a little extra distance in case the particle speeds up
-
-			RayCast ray(v->mPosition - 0.5f * movement, movement); // Start a little early in case we penetrated before
-
-			if (inShape.CastRay(ray.Transformed(inverse_transform), SubShapeIDCreator(), hit))
-			{
-				// Calculate penetration
-				float penetration = (0.5f - hit.mFraction) * movement.Length();
-				if (penetration > v->mLargestPenetration)
-				{
-					v->mLargestPenetration = penetration;
-
-					// Calculate contact point and normal
-					Vec3 point = ray.GetPointOnRay(hit.mFraction);
-					Vec3 normal = direction_preserving_transform.Multiply3x3(inShape.GetSurfaceNormal(hit.mSubShapeID2, inverse_transform * point)).Normalized();
-
-					// Store collision
-					v->mCollisionPlane = Plane::sFromPointAndNormal(point, normal);
-					v->mCollidingShapeIndex = inCollidingShapeIndex;
-				}
-			}
-		}
-}
-
 void Shape::sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, const SubShapeIDCreator &inSubShapeIDCreator, CollidePointCollector &ioCollector, const ShapeFilter &inShapeFilter)
 {
 	// First test if we're inside our bounding box
@@ -334,7 +297,7 @@ void Shape::sCollidePointUsingRayCast(const Shape &inShape, Vec3Arg inPoint, con
 		RayCastSettings settings;
 		settings.mBackFaceMode = EBackFaceMode::CollideWithBackFaces;
 
-		// Cast a ray that's 10% longer than the heigth of our bounding box
+		// Cast a ray that's 10% longer than the height of our bounding box
 		inShape.CastRay(RayCast { inPoint, 1.1f * bounds.GetSize().GetY() * Vec3::sAxisY() }, settings, inSubShapeIDCreator, collector, inShapeFilter);
 
 		// Odd amount of hits means inside

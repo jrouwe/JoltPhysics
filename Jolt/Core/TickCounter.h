@@ -9,6 +9,8 @@
 	#include <intrin.h>
 #elif defined(JPH_CPU_X86) && defined(JPH_COMPILER_GCC)
 	#include <x86intrin.h>
+#elif defined(JPH_CPU_E2K)
+	#include <x86intrin.h>
 #endif
 
 JPH_NAMESPACE_BEGIN
@@ -26,6 +28,8 @@ JPH_INLINE uint64 GetProcessorTickCount()
 #if defined(JPH_PLATFORM_BLUE)
 	return JPH_PLATFORM_BLUE_GET_TICKS();
 #elif defined(JPH_CPU_X86)
+	return __rdtsc();
+#elif defined(JPH_CPU_E2K)
 	return __rdtsc();
 #elif defined(JPH_CPU_ARM) && defined(JPH_USE_NEON)
 	uint64 val;

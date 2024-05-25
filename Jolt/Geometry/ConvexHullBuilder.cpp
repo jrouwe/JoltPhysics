@@ -218,15 +218,14 @@ bool ConvexHullBuilder::AssignPointToFace(int inPositionIdx, const Faces &inFace
 			// This point is in front of the face, add it to the conflict list
 			if (best_dist_sq > best_face->mFurthestPointDistanceSq)
 			{
-				// This point is futher away than any others, update the distance and add point as last point
+				// This point is further away than any others, update the distance and add point as last point
 				best_face->mFurthestPointDistanceSq = best_dist_sq;
 				best_face->mConflictList.push_back(inPositionIdx);
 			}
 			else
 			{
 				// Not the furthest point, add it as the before last point
-				best_face->mConflictList.push_back(best_face->mConflictList.back());
-				best_face->mConflictList[best_face->mConflictList.size() - 2] = inPositionIdx;
+				best_face->mConflictList.insert(best_face->mConflictList.begin() + best_face->mConflictList.size() - 1, inPositionIdx);
 			}
 
 			return true;
@@ -265,7 +264,7 @@ bool ConvexHullBuilder::ContainsFace(const Array<int> &inIndices) const
 	for (Face *f : mFaces)
 	{
 		Edge *e = f->mFirstEdge;
-		Array<int>::const_iterator index = find(inIndices.begin(), inIndices.end(), e->mStartIdx);
+		Array<int>::const_iterator index = std::find(inIndices.begin(), inIndices.end(), e->mStartIdx);
 		if (index != inIndices.end())
 		{
 			size_t matches = 0;
@@ -1007,7 +1006,7 @@ void ConvexHullBuilder::MergeCoplanarOrConcaveFaces(Face *inFace, float inCoplan
 
 void ConvexHullBuilder::sMarkAffected(Face *inFace, Faces &ioAffectedFaces)
 {
-	if (find(ioAffectedFaces.begin(), ioAffectedFaces.end(), inFace) == ioAffectedFaces.end())
+	if (std::find(ioAffectedFaces.begin(), ioAffectedFaces.end(), inFace) == ioAffectedFaces.end())
 		ioAffectedFaces.push_back(inFace);
 }
 

@@ -6,7 +6,7 @@
 
 #include <UI/UIElement.h>
 
-/// Layout class that will horizontally place elements next to eachother according to their widths
+/// Layout class that will horizontally place elements next to each other according to their widths
 class UIHorizontalStack : public UIElement
 {
 public:

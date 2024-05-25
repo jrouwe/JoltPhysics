@@ -18,7 +18,7 @@ public:
 	// See: ConstraintSettings::SaveBinaryState
 	virtual void				SaveBinaryState(StreamOut &inStream) const override;
 
-	/// Create an an instance of this constraint.
+	/// Create an instance of this constraint.
 	/// Body1 should be the pinion (gear) and body 2 the rack (slider).
 	virtual TwoBodyConstraint *	Create(Body &inBody1, Body &inBody2) const override;
 
@@ -63,6 +63,7 @@ public:
 	virtual EConstraintSubType	GetSubType() const override												{ return EConstraintSubType::RackAndPinion; }
 	virtual void				NotifyShapeChanged(const BodyID &inBodyID, Vec3Arg inDeltaCOM) override { /* Nothing */ }
 	virtual void				SetupVelocityConstraint(float inDeltaTime) override;
+	virtual void				ResetWarmStart() override;
 	virtual void				WarmStartVelocityConstraint(float inWarmStartImpulseRatio) override;
 	virtual bool				SolveVelocityConstraint(float inDeltaTime) override;
 	virtual bool				SolvePositionConstraint(float inDeltaTime, float inBaumgarte) override;

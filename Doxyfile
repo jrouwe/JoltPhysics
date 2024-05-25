@@ -361,7 +361,7 @@ MARKDOWN_SUPPORT       = YES
 # Minimum value: 0, maximum value: 99, default value: 5.
 # This tag requires that the tag MARKDOWN_SUPPORT is set to YES.
 
-TOC_INCLUDE_HEADINGS   = 0
+TOC_INCLUDE_HEADINGS   = 5
 
 # When enabled doxygen tries to link words that correspond to documented
 # classes, or namespaces to their corresponding documentation. Such a link can
@@ -2369,6 +2369,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = _WIN32 \
                          JPH_PROFILE_ENABLED \
                          JPH_DEBUG_RENDERER \
+                         JPH_OBJECT_STREAM \
                          JPH_PLATFORM_DOXYGEN
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this

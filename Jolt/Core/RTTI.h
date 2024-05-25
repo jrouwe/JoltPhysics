@@ -162,10 +162,12 @@ public:
 	/// Cast inObject of this type to object of type inRTTI, returns nullptr if the cast is unsuccessful
 	const void *				CastTo(const void *inObject, const RTTI *inRTTI) const;
 
+#ifdef JPH_OBJECT_STREAM
 	/// Attribute access
 	void						AddAttribute(const SerializableAttribute &inAttribute);
 	int							GetAttributeCount() const;
 	const SerializableAttribute & GetAttribute(int inIdx) const;
+#endif // JPH_OBJECT_STREAM
 
 protected:
 	/// Base class information
@@ -180,7 +182,9 @@ protected:
 	StaticArray<BaseClass, 4>	mBaseClasses;												///< Names of base classes
 	pCreateObjectFunction		mCreate;													///< Pointer to a function that will create a new instance of this class
 	pDestructObjectFunction		mDestruct;													///< Pointer to a function that will destruct an object of this class
+#ifdef JPH_OBJECT_STREAM
 	StaticArray<SerializableAttribute, 32> mAttributes;										///< All attributes of this class
+#endif // JPH_OBJECT_STREAM
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////

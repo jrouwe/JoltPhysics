@@ -6,7 +6,10 @@
 
 #include <Tests/Vehicle/VehicleConstraintTest.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
+#include <Jolt/Physics/Collision/ShapeCast.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Vehicle/WheeledVehicleController.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Application/DebugUI.h>
@@ -152,8 +155,21 @@ void VehicleConstraintTest::Initialize()
 	}
 
 	mVehicleConstraint = new VehicleConstraint(*mCarBody, vehicle);
+
+	// The vehicle settings were tweaked with a buggy implementation of the longitudinal tire impulses, this meant that PhysicsSettings::mNumVelocitySteps times more impulse
+	// could be applied than intended. To keep the behavior of the vehicle the same we increase the max longitudinal impulse by the same factor. In a future version the vehicle
+	// will be retweaked.
+	static_cast<WheeledVehicleController *>(mVehicleConstraint->GetController())->SetTireMaxImpulseCallback(
+		[](uint, float &outLongitudinalImpulse, float &outLateralImpulse, float inSuspensionImpulse, float inLongitudinalFriction, float inLateralFriction, float, float, float)
+		{
+			outLongitudinalImpulse = 10.0f * inLongitudinalFriction * inSuspensionImpulse;
+			outLateralImpulse = inLateralFriction * inSuspensionImpulse;
+		});
+
 	mPhysicsSystem->AddConstraint(mVehicleConstraint);
 	mPhysicsSystem->AddStepListener(mVehicleConstraint);
+
+	UpdateCameraPivot();
 }
 
 void VehicleConstraintTest::ProcessInput(const ProcessInputParams &inParams)
@@ -204,6 +220,8 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
 	VehicleTest::PrePhysicsUpdate(inParams);
 
+	UpdateCameraPivot();
+
 	// On user input, assure that the car is active
 	if (mRight != 0.0f || mForward != 0.0f || mBrake != 0.0f || mHandBrake != 0.0f)
 		mBodyInterface->ActivateBody(mCarBody->GetID());
@@ -226,11 +244,26 @@ void VehicleConstraintTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Set the collision tester
 	mVehicleConstraint->SetVehicleCollisionTester(mTesters[sCollisionMode]);
 
+	if (sOverrideGravity)
+	{
+		// When overriding gravity is requested, we cast a sphere downwards (opposite to the previous up position) and use the contact normal as the new gravity direction
+		SphereShape sphere(0.5f);
+		sphere.SetEmbedded();
+		RShapeCast shape_cast(&sphere, Vec3::sReplicate(1.0f), RMat44::sTranslation(mCarBody->GetPosition()), -3.0f * mVehicleConstraint->GetWorldUp());
+		ShapeCastSettings settings;
+		ClosestHitCollisionCollector<CastShapeCollector> collector;
+		mPhysicsSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, mCarBody->GetPosition(), collector, SpecifiedBroadPhaseLayerFilter(BroadPhaseLayers::NON_MOVING), SpecifiedObjectLayerFilter(Layers::NON_MOVING));
+		if (collector.HadHit())
+			mVehicleConstraint->OverrideGravity(9.81f * collector.mHit.mPenetrationAxis.Normalized());
+		else
+			mVehicleConstraint->ResetGravityOverride();
+	}
+
 	// Draw our wheels (this needs to be done in the pre update since we draw the bodies too in the state before the step)
 	for (uint w = 0; w < 4; ++w)
 	{
 		const WheelSettings *settings = mVehicleConstraint->GetWheels()[w]->GetSettings();
-		RMat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cyclinder we draw is aligned with Y so we specify that as rotational axis
+		RMat44 wheel_transform = mVehicleConstraint->GetWheelWorldTransform(w, Vec3::sAxisY(), Vec3::sAxisX()); // The cylinder we draw is aligned with Y so we specify that as rotational axis
 		mDebugRenderer->DrawCylinder(wheel_transform, 0.5f * settings->mWidth, settings->mRadius, Color::sGreen);
 	}
 }
@@ -261,7 +294,7 @@ void VehicleConstraintTest::GetInitialCamera(CameraState &ioState) const
 	ioState.mForward = Vec3(cam_tgt - ioState.mPos).Normalized();
 }
 
-RMat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
+void VehicleConstraintTest::UpdateCameraPivot()
 {
 	// Pivot is center of car and rotates with car around Y axis only
 	Vec3 fwd = mCarBody->GetRotation().RotateAxisZ();
@@ -273,7 +306,7 @@ RMat44 VehicleConstraintTest::GetCameraPivot(float inCameraHeading, float inCame
 		fwd = Vec3::sAxisZ();
 	Vec3 up = Vec3::sAxisY();
 	Vec3 right = up.Cross(fwd);
-	return RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
+	mCameraPivot = RMat44(Vec4(right, 0), Vec4(up, 0), Vec4(fwd, 0), mCarBody->GetPosition());
 }
 
 void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMenu)
@@ -287,6 +320,7 @@ void VehicleConstraintTest::CreateSettingsMenu(DebugUI *inUI, UIElement *inSubMe
 	inUI->CreateCheckBox(inSubMenu, "4 Wheel Drive", sFourWheelDrive, [](UICheckBox::EState inState) { sFourWheelDrive = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Anti Rollbars", sAntiRollbar, [](UICheckBox::EState inState) { sAntiRollbar = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateCheckBox(inSubMenu, "Limited Slip Differentials", sLimitedSlipDifferentials, [](UICheckBox::EState inState) { sLimitedSlipDifferentials = inState == UICheckBox::STATE_CHECKED; });
+	inUI->CreateCheckBox(inSubMenu, "Override Gravity", sOverrideGravity, [](UICheckBox::EState inState) { sOverrideGravity = inState == UICheckBox::STATE_CHECKED; });
 	inUI->CreateSlider(inSubMenu, "Max Engine Torque", float(sMaxEngineTorque), 100.0f, 2000.0f, 10.0f, [](float inValue) { sMaxEngineTorque = inValue; });
 	inUI->CreateSlider(inSubMenu, "Clutch Strength", float(sClutchStrength), 1.0f, 40.0f, 1.0f, [](float inValue) { sClutchStrength = inValue; });
 	inUI->CreateSlider(inSubMenu, "Front Caster Angle", RadiansToDegrees(sFrontCasterAngle), -89.0f, 89.0f, 1.0f, [](float inValue) { sFrontCasterAngle = DegreesToRadians(inValue); });

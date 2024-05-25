@@ -172,7 +172,7 @@ private:
 
 	SplitMask *				mSplitMasks = nullptr;								///< Bits that indicate for each body in the BodyManager::mActiveBodies list which split they already belong to
 
-	uint32 *				mContactAndConstaintsSplitIdx = nullptr;			///< Buffer to store the split index per constraint or contact
+	uint32 *				mContactAndConstraintsSplitIdx = nullptr;			///< Buffer to store the split index per constraint or contact
 	uint32 *				mContactAndConstraintIndices = nullptr;				///< Buffer to store the ordered constraint indices per split
 	uint					mContactAndConstraintsSize = 0;						///< Total size of mContactAndConstraintsSplitIdx and mContactAndConstraintIndices
 	atomic<uint>			mContactAndConstraintsNextFree { 0 };				///< Next element that is free in both buffers

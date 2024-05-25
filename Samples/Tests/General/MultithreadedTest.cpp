@@ -66,7 +66,7 @@ void MultithreadedTest::BoxSpawner()
 {
 	JPH_PROFILE_THREAD_START("BoxSpawner");
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	const int cMaxObjects = 100;
 #else
 	const int cMaxObjects = 1000;
@@ -129,26 +129,37 @@ void MultithreadedTest::RagdollSpawner()
 {
 	JPH_PROFILE_THREAD_START("RagdollSpawner");
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	const int cMaxRagdolls = 10;
 #else
 	const int cMaxRagdolls = 50;
 #endif
 
+#ifdef JPH_OBJECT_STREAM
 	// Load ragdoll
 	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sLoad("Assets/Human.tof", EMotionType::Dynamic);
 	if (ragdoll_settings == nullptr)
 		FatalError("Could not load ragdoll");
-
-	// Load animation
-	Ref<SkeletalAnimation> animation;
-	if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
-		FatalError("Could not open animation");
+#else
+	// Create a ragdoll from code
+	Ref<RagdollSettings> ragdoll_settings = RagdollLoader::sCreate();
+#endif // JPH_OBJECT_STREAM
 
 	// Create pose
 	SkeletonPose ragdoll_pose;
 	ragdoll_pose.SetSkeleton(ragdoll_settings->GetSkeleton());
-	animation->Sample(0.0f, ragdoll_pose);
+	{
+#ifdef JPH_OBJECT_STREAM
+		Ref<SkeletalAnimation> animation;
+		if (!ObjectStreamIn::sReadObject("Assets/Human/Dead_Pose1.tof", animation))
+			FatalError("Could not open animation");
+		animation->Sample(0.0f, ragdoll_pose);
+#else
+		Ref<Ragdoll> temp_ragdoll = ragdoll_settings->CreateRagdoll(0, 0, mPhysicsSystem);
+		temp_ragdoll->GetPose(ragdoll_pose);
+		ragdoll_pose.CalculateJointStates();
+#endif // JPH_OBJECT_STREAM
+	}
 
 	default_random_engine random;
 	uniform_real_distribution<float> from_y(0, 10);

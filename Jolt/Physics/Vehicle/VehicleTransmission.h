@@ -50,7 +50,7 @@ public:
 	/// @param inClutchFriction Value between 0 and 1 indicating how much friction the clutch gives (0 = no friction, 1 = full friction)
 	void					Set(int inCurrentGear, float inClutchFriction) { mCurrentGear = inCurrentGear; mClutchFriction = inClutchFriction; }
 
-	/// Update the current gear and clutch friction if the transmission is in aut mode
+	/// Update the current gear and clutch friction if the transmission is in auto mode
 	/// @param inDeltaTime Time step delta time in s
 	/// @param inCurrentRPM Current RPM for engine
 	/// @param inForwardInput Hint if the user wants to drive forward (> 0) or backwards (< 0)

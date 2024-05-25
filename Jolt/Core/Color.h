@@ -34,6 +34,12 @@ public:
 	inline uint8			operator () (uint inIdx) const											{ JPH_ASSERT(inIdx < 4); return (&r)[inIdx]; }
 	inline uint8 &			operator () (uint inIdx)												{ JPH_ASSERT(inIdx < 4); return (&r)[inIdx]; }
 
+	/// Multiply two colors
+	inline Color			operator * (const Color &inRHS) const									{ return Color(uint8((uint32(r) * inRHS.r) >> 8), uint8((uint32(g) * inRHS.g) >> 8), uint8((uint32(b) * inRHS.b) >> 8), uint8((uint32(a) * inRHS.a) >> 8)); }
+
+	/// Multiply color with intensity in the range [0, 1]
+	inline Color			operator * (float inIntensity) const									{ return Color(uint8(r * inIntensity), uint8(g * inIntensity), uint8(b * inIntensity), a); }
+
 	/// Convert to Vec4 with range [0, 1]
 	inline Vec4				ToVec4() const															{ return Vec4(r, g, b, a) / 255.0f; }
 

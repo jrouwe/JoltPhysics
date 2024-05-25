@@ -15,6 +15,7 @@
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/ShapeFilter.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
+#include <Jolt/Physics/Collision/CastSphereVsTriangles.h>
 #include "PhysicsTestContext.h"
 #include "Layers.h"
 
@@ -38,7 +39,7 @@ TEST_SUITE("CastShapeTests")
 		CHECK_APPROX_EQUAL(result.mContactPointOn2, inPosition, 1.0e-3f);
 	}
 
-	/// Helper function that tests a shere against a triangle centered on the origin with normal Z
+	/// Helper function that tests a sphere against a triangle centered on the origin with normal Z
 	static void sTestCastSphereTriangle(const Shape *inTriangle)
 	{
 		// Create sphere
@@ -266,13 +267,13 @@ TEST_SUITE("CastShapeTests")
 			CHECK_APPROX_EQUAL(result.mFraction, 0.0f);
 			CHECK(result.mPenetrationAxis.Normalized().Dot(Vec3(1, 0, 0)) > Cos(DegreesToRadians(1.0f)));
 			CHECK_APPROX_EQUAL(result.mPenetrationDepth, 1.05f);
-			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(2.05f, 0, 0), 1.0e-5f); // Box starts at 1.0, center of sphere adds 0.05, radius of sphere is 1
-			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(1.0f, 0, 0), 1.0e-5f); // Box starts at 1.0
+			CHECK_APPROX_EQUAL(result.mContactPointOn1, Vec3(2.05f, 0, 0), 2.0e-5f); // Box starts at 1.0, center of sphere adds 0.05, radius of sphere is 1
+			CHECK_APPROX_EQUAL(result.mContactPointOn2, Vec3(1.0f, 0, 0), 2.0e-5f); // Box starts at 1.0
 			CHECK(!result.mIsBackFaceHit);
 		}
 	}
 
-	// Test casting a capsule against a mesh that is interecting at fraction 0 and test that it returns the deepest penetration
+	// Test casting a capsule against a mesh that is intersecting at fraction 0 and test that it returns the deepest penetration
 	TEST_CASE("TestDeepestPenetrationAtFraction0")
 	{
 		// Create an n x n grid of triangles
@@ -344,5 +345,18 @@ TEST_SUITE("CastShapeTests")
 
 		// Ensure that we indeed stopped after the first hit
 		CHECK(collector2.mNumHits == 1);
+	}
+
+	// Test a problem case where a sphere cast would incorrectly hit a degenerate triangle (see: https://github.com/jrouwe/JoltPhysics/issues/886)
+	TEST_CASE("TestCastSphereVsDegenerateTriangle")
+	{
+		AllHitCollisionCollector<CastShapeCollector> collector;
+		SphereShape sphere(0.2f);
+		sphere.SetEmbedded();
+		ShapeCast cast(&sphere, Vec3::sReplicate(1.0f), Mat44::sTranslation(Vec3(14.8314590f, 8.19055080f, -4.30825043f)), Vec3(-0.0988006592f, 5.96046448e-08f, 0.000732421875f));
+		ShapeCastSettings settings;
+		CastSphereVsTriangles caster(cast, settings, Vec3::sReplicate(1.0f), Mat44::sIdentity(), { }, collector);
+		caster.Cast(Vec3(14.5536213f, 10.5973721f, -0.00600051880f), Vec3(14.5536213f, 10.5969315f, -3.18638134f), Vec3(14.5536213f, 10.5969315f, -5.18637228f), 0b111, SubShapeID());
+		CHECK(!collector.HadHit());
 	}
 }

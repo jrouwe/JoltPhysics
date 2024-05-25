@@ -55,7 +55,7 @@ public:
 	/// Convert to Mat44 rounding to nearest
 	JPH_INLINE Mat44			ToMat44() const											{ return Mat44(mCol[0], mCol[1], mCol[2], Vec3(mCol3)); }
 
-	/// Comparsion
+	/// Comparison
 	JPH_INLINE bool				operator == (DMat44Arg inM2) const;
 	JPH_INLINE bool				operator != (DMat44Arg inM2) const						{ return !(*this == inM2); }
 

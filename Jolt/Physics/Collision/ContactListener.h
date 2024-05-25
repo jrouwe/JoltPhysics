@@ -28,7 +28,7 @@ public:
 
 	RVec3					mBaseOffset;						///< Offset to which all the contact points are relative
 	Vec3					mWorldSpaceNormal;					///< Normal for this manifold, direction along which to move body 2 out of collision along the shortest path
-	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision)
+	float					mPenetrationDepth;					///< Penetration depth (move shape 2 by this distance to resolve the collision). If this value is negative, this is a speculative contact point and may not actually result in a velocity change as during solving the bodies may not actually collide.
 	SubShapeID				mSubShapeID1;						///< Sub shapes that formed this manifold (note that when multiple manifolds are combined because they're coplanar, we lose some information here because we only keep track of one sub shape pair that we encounter, see description at Body::SetUseManifoldReduction)
 	SubShapeID				mSubShapeID2;
 	ContactPoints			mRelativeContactPointsOn1;			///< Contact points on the surface of shape 1 relative to mBaseOffset.
@@ -71,13 +71,13 @@ public:
 	virtual					~ContactListener() = default;
 
 	/// Called after detecting a collision between a body pair, but before calling OnContactAdded and before adding the contact constraint.
-	/// If the function returns false, the contact will not be added and any other contacts between this body pair will not be processed.
+	/// If the function rejects the contact, the contact will not be added and any other contacts between this body pair will not be processed.
 	/// This function will only be called once per PhysicsSystem::Update per body pair and may not be called again the next update
 	/// if a contact persists and no new contact pairs between sub shapes are found.
 	/// This is a rather expensive time to reject a contact point since a lot of the collision detection has happened already, make sure you
 	/// filter out the majority of undesired body pairs through the ObjectLayerPairFilter that is registered on the PhysicsSystem.
 	/// Note that this callback is called when all bodies are locked, so don't use any locking functions!
-	/// The order of body 1 and 2 is undefined, but when one of the two bodies is dynamic it will be body 1.
+	/// Body 1 will have a motion type that is larger or equal than body 2's motion type (order from large to small: dynamic -> kinematic -> static). When motion types are equal, they are ordered by BodyID.
 	/// The collision result (inCollisionResult) is reported relative to inBaseOffset.
 	virtual ValidateResult	OnContactValidate([[maybe_unused]] const Body &inBody1, [[maybe_unused]] const Body &inBody2, [[maybe_unused]] RVec3Arg inBaseOffset, [[maybe_unused]] const CollideShapeResult &inCollisionResult) { return ValidateResult::AcceptAllContactsForThisBodyPair; }
 

@@ -21,6 +21,18 @@ class DebugRenderer;
 class BodyDrawFilter;
 #endif // JPH_DEBUG_RENDERER
 
+#ifdef JPH_DEBUG_RENDERER
+
+/// Defines how to color soft body constraints
+enum class ESoftBodyConstraintColor
+{
+	ConstraintType,				/// Draw different types of constraints in different colors
+	ConstraintGroup,			/// Draw constraints in the same group in the same color, non-parallel group will be red
+	ConstraintOrder,			/// Draw constraints in the same group in the same color, non-parallel group will be red, and order within each group will be indicated with gradient
+};
+
+#endif // JPH_DEBUG_RENDERER
+
 /// Array of bodies
 using BodyVector = Array<Body *>;
 
@@ -203,6 +215,7 @@ public:
 	/// Save the state of a single body for replay
 	void							RestoreBodyState(Body &inBody, StateRecorder &inStream);
 
+#ifdef JPH_DEBUG_RENDERER
 	enum class EShapeColor
 	{
 		InstanceColor,				///< Random color per instance
@@ -213,7 +226,6 @@ public:
 		MaterialColor,				///< Color as defined by the PhysicsMaterial of the shape
 	};
 
-#ifdef JPH_DEBUG_RENDERER
 	/// Draw settings
 	struct DrawSettings
 	{
@@ -230,9 +242,14 @@ public:
 		bool						mDrawMassAndInertia = false;					///< Draw the mass and inertia (as the box equivalent) for each body
 		bool						mDrawSleepStats = false;						///< Draw stats regarding the sleeping algorithm of each body
 		bool						mDrawSoftBodyVertices = false;					///< Draw the vertices of soft bodies
+		bool						mDrawSoftBodyVertexVelocities = false;			///< Draw the velocities of the vertices of soft bodies
 		bool						mDrawSoftBodyEdgeConstraints = false;			///< Draw the edge constraints of soft bodies
+		bool						mDrawSoftBodyBendConstraints = false;			///< Draw the bend constraints of soft bodies
 		bool						mDrawSoftBodyVolumeConstraints = false;			///< Draw the volume constraints of soft bodies
+		bool						mDrawSoftBodySkinConstraints = false;			///< Draw the skin constraints of soft bodies
+		bool						mDrawSoftBodyLRAConstraints = false;			///< Draw the LRA constraints of soft bodies
 		bool						mDrawSoftBodyPredictedBounds = false;			///< Draw the predicted bounds of soft bodies
+		ESoftBodyConstraintColor	mDrawSoftBodyConstraintColor = ESoftBodyConstraintColor::ConstraintType; ///< Coloring scheme to use for soft body constraints
 	};
 
 	/// Draw the state of the bodies (debugging purposes)
@@ -264,10 +281,10 @@ public:
 	};
 #endif
 
-#ifdef _DEBUG
+#ifdef JPH_DEBUG
 	/// Validate if the cached bounding boxes are correct for all active bodies
 	void							ValidateActiveBodyBounds();
-#endif // _DEBUG
+#endif // JPH_DEBUG
 
 private:
 	/// Increment and get the sequence number of the body
@@ -288,10 +305,10 @@ private:
 	/// Helper function to delete a body (which could actually be a BodyWithMotionProperties)
 	inline static void				sDeleteBody(Body *inBody);
 
-#if defined(_DEBUG) && defined(JPH_ENABLE_ASSERTS)
+#if defined(JPH_DEBUG) && defined(JPH_ENABLE_ASSERTS)
 	/// Function to check that the free list is not corrupted
 	void							ValidateFreeList() const;
-#endif // defined(_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
+#endif // defined(JPH_DEBUG) && _defined(JPH_ENABLE_ASSERTS)
 
 	/// List of pointers to all bodies. Contains invalid pointers for deleted bodies, check with sIsValidBodyPointer. Note that this array is reserved to the max bodies that is passed in the Init function so that adding bodies will not reallocate the array.
 	BodyVector						mBodies;

@@ -195,7 +195,7 @@ TEST_SUITE("SliderConstraintTests")
 		CHECK_APPROX_EQUAL(cMotorPos, body2.GetPosition(), 1.0e-4f);
 	}
 
-	// Test a box attached to a slider constraint, give it initial velocity and test that the friction provides the correct decelleration
+	// Test a box attached to a slider constraint, give it initial velocity and test that the friction provides the correct deceleration
 	TEST_CASE("TestSliderConstraintFriction")
 	{
 		const RVec3 cInitialPos(3.0f, 0, 0);
@@ -490,7 +490,7 @@ TEST_SUITE("SliderConstraintTests")
 			float dt = context.GetDeltaTime();
 			for (int i = 0; i < 120; ++i)
 			{
-				// Using the equations from page 32 of Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
+				// Using the equations from page 32 of Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
 				v = (v - dt * k / m * float(x)) / (1.0f + dt * c / m + Square(dt) * k / m);
 				x += v * dt;
 

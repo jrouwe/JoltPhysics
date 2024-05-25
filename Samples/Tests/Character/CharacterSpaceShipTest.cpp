@@ -32,7 +32,7 @@ void CharacterSpaceShipTest::Initialize()
 	Ref<CharacterVirtualSettings> settings = new CharacterVirtualSettings();
 	settings->mShape = RotatedTranslatedShapeSettings(Vec3(0, 0.5f * cCharacterHeightStanding + cCharacterRadiusStanding, 0), Quat::sIdentity(), new CapsuleShape(0.5f * cCharacterHeightStanding, cCharacterRadiusStanding)).Create().Get();
 	settings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
-	mCharacter = new CharacterVirtual(settings, cShipInitialPosition + Vec3(0, cSpaceShipHeight, 0), Quat::sIdentity(), mPhysicsSystem);
+	mCharacter = new CharacterVirtual(settings, cShipInitialPosition + Vec3(0, cSpaceShipHeight, 0), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->SetListener(this);
 
 	// Create the space ship
@@ -67,10 +67,7 @@ void CharacterSpaceShipTest::ProcessInput(const ProcessInputParams &inParams)
 	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
 
 	// Check actions
-	mJump = false;
-	for (int key = inParams.mKeyboard->GetFirstKey(); key != 0; key = inParams.mKeyboard->GetNextKey())
-		if (key == DIK_RCONTROL)
-			mJump = true;
+	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RCONTROL, mWasJump);
 }
 
 void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
@@ -84,7 +81,7 @@ void CharacterSpaceShipTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 
 	// Update the character rotation and its up vector to match the new up vector of the ship
 	mCharacter->SetUp(new_space_ship_transform.GetAxisY());
-	mCharacter->SetRotation(new_space_ship_transform.GetRotation().GetQuaternion());
+	mCharacter->SetRotation(new_space_ship_transform.GetQuaternion());
 
 	// Draw character pre update (the sim is also drawn pre update)
 	// Note that we have first updated the position so that it matches the new position of the ship

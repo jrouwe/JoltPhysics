@@ -21,6 +21,7 @@
 #include <Jolt/Physics/Collision/ActiveEdges.h>
 #include <Jolt/Physics/Collision/CollisionDispatch.h>
 #include <Jolt/Physics/Collision/SortReverseAndStore.h>
+#include <Jolt/Physics/Collision/CollideSoftBodyVerticesVsTriangles.h>
 #include <Jolt/Core/Profiler.h>
 #include <Jolt/Core/StringTools.h>
 #include <Jolt/Core/StreamIn.h>
@@ -83,13 +84,11 @@ HeightFieldShapeSettings::HeightFieldShapeSettings(const float *inSamples, Vec3A
 	mScale(inScale),
 	mSampleCount(inSampleCount)
 {
-	mHeightSamples.resize(inSampleCount * inSampleCount);
-	memcpy(&mHeightSamples[0], inSamples, inSampleCount * inSampleCount * sizeof(float));
+	mHeightSamples.assign(inSamples, inSamples + Square(inSampleCount));
 
 	if (!inMaterialList.empty() && inMaterialIndices != nullptr)
 	{
-		mMaterialIndices.resize(Square(inSampleCount - 1));
-		memcpy(&mMaterialIndices[0], inMaterialIndices, Square(inSampleCount - 1) * sizeof(uint8));
+		mMaterialIndices.assign(inMaterialIndices, inMaterialIndices + Square(inSampleCount - 1));
 		mMaterials = inMaterialList;
 	}
 	else
@@ -198,7 +197,7 @@ uint32 HeightFieldShapeSettings::CalculateBitsPerSampleForError(float inMaxError
 	return bits_per_sample;
 }
 
-void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, uint inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator)
+void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStartX, uint inHeightsStartY, intptr_t inHeightsStride, float inHeightsScale, float inActiveEdgeCosThresholdAngle, TempAllocator &inAllocator)
 {
 	// Allocate temporary buffer for normals
 	uint normals_size = 2 * inSizeX * inSizeY * sizeof(Vec3);
@@ -298,6 +297,7 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 			// Store the edge flags in the array
 			uint byte_pos = global_bit_pos >> 3;
 			uint bit_pos = global_bit_pos & 0b111;
+			JPH_ASSERT(byte_pos < mActiveEdgesSize);
 			uint8 *edge_flags_ptr = &mActiveEdges[byte_pos];
 			uint16 combined_edge_flags = uint16(edge_flags_ptr[0]) | uint16(uint16(edge_flags_ptr[1]) << 8);
 			combined_edge_flags &= ~(edge_mask << bit_pos);
@@ -338,11 +338,10 @@ void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSe
 		The triangles T1B, T2B, T3B and T4B do not need to be stored, their active edges can be constructed from adjacent triangles.
 		Add 1 byte padding so we can always read 1 uint16 to get the bits that cross an 8 bit boundary
 	*/
-	mActiveEdges.resize((Square(mSampleCount - 1) * 3 + 7) / 8 + 1);
 
 	// Make all edges active (if mSampleCount is bigger than inSettings.mSampleCount we need to fill up the padding,
 	// also edges at x = 0 and y = inSettings.mSampleCount - 1 are not updated)
-	memset(mActiveEdges.data(), 0xff, mActiveEdges.size());
+	memset(mActiveEdges, 0xff, mActiveEdgesSize);
 
 	// Now clear the edges that are not active
 	TempAllocatorMalloc allocator;
@@ -356,7 +355,7 @@ void HeightFieldShape::StoreMaterialIndices(const HeightFieldShapeSettings &inSe
 	uint out_count_min_1 = mSampleCount - 1;
 
 	mNumBitsPerMaterialIndex = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
-	mMaterialIndices.resize(((Square(out_count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1); // Add 1 byte so we don't read out of bounds when reading an uint16
+	mMaterialIndices.resize(((Square(out_count_min_1) * mNumBitsPerMaterialIndex + 7) >> 3) + 1, 0); // Add 1 byte so we don't read out of bounds when reading an uint16
 
 	for (uint y = 0; y < out_count_min_1; ++y)
 		for (uint x = 0; x < out_count_min_1; ++x)
@@ -381,6 +380,21 @@ void HeightFieldShape::StoreMaterialIndices(const HeightFieldShapeSettings &inSe
 void HeightFieldShape::CacheValues()
 {
 	mSampleMask = uint8((uint32(1) << mBitsPerSample) - 1);
+}
+
+void HeightFieldShape::AllocateBuffers()
+{
+	uint num_blocks = GetNumBlocks();
+	uint max_stride = (num_blocks + 1) >> 1;
+	mRangeBlocksSize = sGridOffsets[sGetMaxLevel(num_blocks) - 1] + Square(max_stride);
+	mHeightSamplesSize = (mSampleCount * mSampleCount * mBitsPerSample + 7) / 8 + 1;
+	mActiveEdgesSize = (Square(mSampleCount - 1) * 3 + 7) / 8 + 1; // See explanation at HeightFieldShape::CalculateActiveEdges
+
+	JPH_ASSERT(mRangeBlocks == nullptr && mHeightSamples == nullptr && mActiveEdges == nullptr);
+	void *data = AlignedAllocate(mRangeBlocksSize * sizeof(RangeBlock) + mHeightSamplesSize + mActiveEdgesSize, alignof(RangeBlock));
+	mRangeBlocks = reinterpret_cast<RangeBlock *>(data);
+	mHeightSamples = reinterpret_cast<uint8 *>(mRangeBlocks + mRangeBlocksSize);
+	mActiveEdges = mHeightSamples + mHeightSamplesSize;
 }
 
 HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult) :
@@ -467,6 +481,9 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		outResult.Set(this);
 		return;
 	}
+
+	// Allocate space for this shape
+	AllocateBuffers();
 
 	// Quantize to uint16
 	Array<uint16> quantized_samples;
@@ -609,10 +626,10 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 
 	// Create blocks
 	uint max_stride = (num_blocks + 1) >> 1;
-	mRangeBlocks.reserve(sGridOffsets[ranges.size()]);
+	RangeBlock *current_block = mRangeBlocks;
 	for (uint level = 0; level < ranges.size(); ++level)
 	{
-		JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[level]);
+		JPH_ASSERT(uint(current_block - mRangeBlocks) == sGridOffsets[level]);
 
 		uint in_n = 1 << level;
 		uint out_n = min(in_n, max_stride); // At the most detailed level we store a non-power of 2 number of blocks
@@ -621,7 +638,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 			for (uint x = 0; x < out_n; ++x)
 			{
 				// Convert from 2x2 Range structure to 1 RangeBlock structure
-				RangeBlock rb;
+				RangeBlock &rb = *current_block++;
 				for (uint by = 0; by < 2; ++by)
 					for (uint bx = 0; bx < 2; ++bx)
 					{
@@ -630,15 +647,12 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 						rb.mMin[dst_pos] = ranges[level][src_pos].mMin;
 						rb.mMax[dst_pos] = ranges[level][src_pos].mMax;
 					}
-
-				// Add this block
-				mRangeBlocks.push_back(rb);
 			}
 	}
-	JPH_ASSERT(mRangeBlocks.size() == sGridOffsets[ranges.size() - 1] + Square(max_stride));
+	JPH_ASSERT(uint32(current_block - mRangeBlocks) == mRangeBlocksSize);
 
 	// Quantize height samples
-	mHeightSamples.resize((mSampleCount * mSampleCount * inSettings.mBitsPerSample + 7) / 8 + 1);
+	memset(mHeightSamples, 0, mHeightSamplesSize);
 	int sample = 0;
 	for (uint y = 0; y < mSampleCount; ++y)
 		for (uint x = 0; x < mSampleCount; ++x)
@@ -672,6 +686,7 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 			uint byte_pos = sample >> 3;
 			uint bit_pos = sample & 0b111;
 			output_value <<= bit_pos;
+			JPH_ASSERT(byte_pos + 1 < mHeightSamplesSize);
 			mHeightSamples[byte_pos] |= uint8(output_value);
 			mHeightSamples[byte_pos + 1] |= uint8(output_value >> 8);
 			sample += inSettings.mBitsPerSample;
@@ -685,6 +700,12 @@ HeightFieldShape::HeightFieldShape(const HeightFieldShapeSettings &inSettings, S
 		StoreMaterialIndices(inSettings);
 
 	outResult.Set(this);
+}
+
+HeightFieldShape::~HeightFieldShape()
+{
+	if (mRangeBlocks != nullptr)
+		AlignedFree(mRangeBlocks);
 }
 
 inline void HeightFieldShape::sGetRangeBlockOffsetAndStride(uint inNumBlocks, uint inMaxLevel, uint &outRangeBlockOffset, uint &outRangeBlockStride)
@@ -702,7 +723,9 @@ inline void HeightFieldShape::GetRangeBlock(uint inBlockX, uint inBlockY, uint i
 	uint rby = inBlockY >> 1;
 	outIndexInBlock = ((inBlockY & 1) << 1) + (inBlockX & 1);
 
-	outBlock = &mRangeBlocks[inRangeBlockOffset + rby * inRangeBlockStride + rbx];
+	uint offset = inRangeBlockOffset + rby * inRangeBlockStride + rbx;
+	JPH_ASSERT(offset < mRangeBlocksSize);
+	outBlock = mRangeBlocks + offset;
 }
 
 inline void HeightFieldShape::GetBlockOffsetAndScale(uint inBlockX, uint inBlockY, uint inRangeBlockOffset, uint inRangeBlockStride, float &outBlockOffset, float &outBlockScale) const
@@ -715,7 +738,9 @@ inline void HeightFieldShape::GetBlockOffsetAndScale(uint inBlockX, uint inBlock
 	uint n = ((inBlockY & 1) << 1) + (inBlockX & 1);
 
 	// Calculate offset and scale
-	const RangeBlock &block = mRangeBlocks[inRangeBlockOffset + rby * inRangeBlockStride + rbx];
+	uint offset = inRangeBlockOffset + rby * inRangeBlockStride + rbx;
+	JPH_ASSERT(offset < mRangeBlocksSize);
+	const RangeBlock &block = mRangeBlocks[offset];
 	outBlockOffset = float(block.mMin[n]);
 	outBlockScale = float(block.mMax[n] - block.mMin[n]) / float(mSampleMask);
 }
@@ -731,8 +756,8 @@ inline uint8 HeightFieldShape::GetHeightSample(uint inX, uint inY) const
 	uint bit_pos = sample & 0b111;
 
 	// Fetch the height sample value
-	JPH_ASSERT(byte_pos + 1 < mHeightSamples.size());
-	const uint8 *height_samples = mHeightSamples.data() + byte_pos;
+	JPH_ASSERT(byte_pos + 1 < mHeightSamplesSize);
+	const uint8 *height_samples = mHeightSamples + byte_pos;
 	uint16 height_sample = uint16(height_samples[0]) | uint16(uint16(height_samples[1]) << 8);
 	return uint8(height_sample >> bit_pos) & mSampleMask;
 }
@@ -750,7 +775,7 @@ inline Vec3 HeightFieldShape::GetPosition(uint inX, uint inY, float inBlockOffse
 Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
 {
 	// Test if there are any samples
-	if (mHeightSamples.empty())
+	if (mHeightSamplesSize == 0)
 		return mOffset + mScale * Vec3(float(inX), 0.0f, float(inY));
 
 	// Get block location
@@ -771,13 +796,13 @@ Vec3 HeightFieldShape::GetPosition(uint inX, uint inY) const
 
 bool HeightFieldShape::IsNoCollision(uint inX, uint inY) const
 {
-	return mHeightSamples.empty() || GetHeightSample(inX, inY) == mSampleMask;
+	return mHeightSamplesSize == 0 || GetHeightSample(inX, inY) == mSampleMask;
 }
 
 bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurfacePosition, SubShapeID &outSubShapeID) const
 {
 	// Check if we have collision
-	if (mHeightSamples.empty())
+	if (mHeightSamplesSize == 0)
 		return false;
 
 	// Convert coordinate to integer space
@@ -833,7 +858,7 @@ bool HeightFieldShape::ProjectOntoSurface(Vec3Arg inLocalPosition, Vec3 &outSurf
 	}
 }
 
-void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, uint inHeightsStride) const
+void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, float *outHeights, intptr_t inHeightsStride) const
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return;
@@ -843,7 +868,7 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	JPH_ASSERT(inX + inSizeX <= mSampleCount && inY + inSizeY <= mSampleCount);
 
 	// Test if there are any samples
-	if (mHeightSamples.empty())
+	if (mHeightSamplesSize == 0)
 	{
 		// No samples, return the offset
 		float offset = mOffset.GetY();
@@ -894,12 +919,12 @@ void HeightFieldShape::GetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	}
 }
 
-void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, uint inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle)
+void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY, const float *inHeights, intptr_t inHeightsStride, TempAllocator &inAllocator, float inActiveEdgeCosThresholdAngle)
 {
 	if (inSizeX == 0 || inSizeY == 0)
 		return;
 
-	JPH_ASSERT(!mHeightSamples.empty());
+	JPH_ASSERT(mHeightSamplesSize > 0);
 	JPH_ASSERT(inX % mBlockSize == 0 && inY % mBlockSize == 0);
 	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
 	JPH_ASSERT(inX + inSizeX <= mSampleCount && inY + inSizeY <= mSampleCount);
@@ -921,12 +946,14 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 
 	// Get heights for affected area
 	const float *heights;
+	intptr_t heights_stride;
 	float *temp_heights;
 	if (need_temp_heights)
 	{
 		// Fetch the surrounding height data (note we're forced to recompress this data with a potentially different range so there will be some precision loss here)
 		temp_heights = (float *)inAllocator.Allocate(heights_size_x * heights_size_y * sizeof(float));
 		heights = temp_heights;
+		heights_stride = heights_size_x;
 
 		// We need to fill in the following areas:
 		//
@@ -970,7 +997,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	{
 		// We can directly use the input buffer because there are no extra edges to take into account
 		heights = inHeights;
-		heights_size_x = inHeightsStride;
+		heights_stride = inHeightsStride;
 		temp_heights = nullptr;
 	}
 
@@ -997,7 +1024,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 			for (uint sample_y = sample_start_y; sample_y < sample_y_end; ++sample_y)
 				for (uint sample_x = sample_start_x; sample_x < sample_x_end; ++sample_x)
 				{
-					float h = heights[sample_y * heights_size_x + sample_x];
+					float h = heights[sample_y * heights_stride + sample_x];
 					if (h != cNoCollisionValue)
 					{
 						int quantized_height = Clamp((int)floor((h - mOffset.GetY()) / mScale.GetY()), 0, int(cMaxHeightValue16 - 1));
@@ -1030,7 +1057,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 				for (uint sample_x = sample_start_x; sample_x < sample_x_end; ++sample_x)
 				{
 					// Quantize height
-					float h = heights[sample_y * heights_size_x + sample_x];
+					float h = heights[sample_y * heights_stride + sample_x];
 					uint8 quantized_height = h != cNoCollisionValue? uint8(Clamp((int)floor((h - offset) / scale), 0, int(mSampleMask) - 1)) : mSampleMask;
 
 					// Determine bit position of sample
@@ -1039,8 +1066,8 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 					uint bit_pos = sample & 0b111;
 
 					// Update the height value sample
-					JPH_ASSERT(byte_pos + 1 < mHeightSamples.size());
-					uint8 *height_samples = mHeightSamples.data() + byte_pos;
+					JPH_ASSERT(byte_pos + 1 < mHeightSamplesSize);
+					uint8 *height_samples = mHeightSamples + byte_pos;
 					uint16 height_sample = uint16(height_samples[0]) | uint16(uint16(height_samples[1]) << 8);
 					height_sample &= ~(uint16(mSampleMask) << bit_pos);
 					height_sample |= uint16(quantized_height) << bit_pos;
@@ -1055,7 +1082,7 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	uint ae_y = inY > 1? inY - 2 : 0;
 	uint ae_sx = min(inX + inSizeX + 1, mSampleCount - 1) - ae_x;
 	uint ae_sy = min(inY + inSizeY + 1, mSampleCount - 1) - ae_y;
-	CalculateActiveEdges(ae_x, ae_y, ae_sx, ae_sy, heights, affected_x, affected_y, heights_size_x, 1.0f, inActiveEdgeCosThresholdAngle, inAllocator);
+	CalculateActiveEdges(ae_x, ae_y, ae_sx, ae_sy, heights, affected_x, affected_y, heights_stride, 1.0f, inActiveEdgeCosThresholdAngle, inAllocator);
 
 	// Free temporary buffer
 	if (temp_heights != nullptr)
@@ -1126,6 +1153,193 @@ void HeightFieldShape::SetHeights(uint inX, uint inY, uint inSizeX, uint inSizeY
 	// Invalidate temporary rendering data
 	mGeometry.clear();
 #endif
+}
+
+void HeightFieldShape::GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, intptr_t inMaterialsStride) const
+{
+	if (inSizeX == 0 || inSizeY == 0)
+		return;
+
+	if (mMaterialIndices.empty())
+	{
+		// Return all 0's
+		for (uint y = 0; y < inSizeY; ++y)
+		{
+			uint8 *out_indices = outMaterials + y * inMaterialsStride;
+			for (uint x = 0; x < inSizeX; ++x)
+				*out_indices++ = 0;
+		}
+		return;
+	}
+
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
+
+	uint count_min_1 = mSampleCount - 1;
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+
+	for (uint y = 0; y < inSizeY; ++y)
+	{
+		// Calculate input position
+		uint bit_pos = (inX + (inY + y) * count_min_1) * mNumBitsPerMaterialIndex;
+		const uint8 *in_indices = mMaterialIndices.data() + (bit_pos >> 3);
+		bit_pos &= 0b111;
+
+		// Calculate output position
+		uint8 *out_indices = outMaterials + y * inMaterialsStride;
+
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			// Get material index
+			uint16 material_index = uint16(in_indices[0]) + uint16(uint16(in_indices[1]) << 8);
+			material_index >>= bit_pos;
+			material_index &= material_index_mask;
+			*out_indices = uint8(material_index);
+
+			// Go to the next index
+			bit_pos += mNumBitsPerMaterialIndex;
+			in_indices += bit_pos >> 3;
+			bit_pos &= 0b111;
+			++out_indices;
+		}
+	}
+}
+
+bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, const uint8 *inMaterials, intptr_t inMaterialsStride, const PhysicsMaterialList *inMaterialList, TempAllocator &inAllocator)
+{
+	if (inSizeX == 0 || inSizeY == 0)
+		return true;
+
+	JPH_ASSERT(inX < mSampleCount && inY < mSampleCount);
+	JPH_ASSERT(inX + inSizeX < mSampleCount && inY + inSizeY < mSampleCount);
+
+	// Remap materials
+	uint material_remap_table_size = uint(inMaterialList != nullptr? inMaterialList->size() : mMaterials.size());
+	uint8 *material_remap_table = (uint8 *)inAllocator.Allocate(material_remap_table_size);
+	if (inMaterialList != nullptr)
+	{
+		// Conservatively reserve more space if the incoming material list is bigger
+		if (inMaterialList->size() > mMaterials.size())
+			mMaterials.reserve(inMaterialList->size());
+
+		// Create a remap table
+		uint8 *remap_entry = material_remap_table;
+		for (const PhysicsMaterial *material : *inMaterialList)
+		{
+			// Try to find it in the existing list
+			PhysicsMaterialList::const_iterator it = std::find(mMaterials.begin(), mMaterials.end(), material);
+			if (it != mMaterials.end())
+			{
+				// Found it, calculate index
+				*remap_entry = uint8(it - mMaterials.begin());
+			}
+			else
+			{
+				// Not found, add it
+				if (mMaterials.size() >= 256)
+				{
+					// We can't have more than 256 materials since we use uint8 as indices
+					inAllocator.Free(material_remap_table, material_remap_table_size);
+					return false;
+				}
+				*remap_entry = uint8(mMaterials.size());
+				mMaterials.push_back(material);
+			}
+			++remap_entry;
+		}
+	}
+	else
+	{
+		// No remapping
+		for (uint i = 0; i < material_remap_table_size; ++i)
+			material_remap_table[i] = uint8(i);
+	}
+
+	if (mMaterials.size() == 1)
+	{
+		// Only 1 material, we don't need to store the material indices
+		return true;
+	}
+
+	// Check if we need to resize the material indices array
+	uint count_min_1 = mSampleCount - 1;
+	uint32 new_bits_per_material_index = 32 - CountLeadingZeros((uint32)mMaterials.size() - 1);
+	JPH_ASSERT(mNumBitsPerMaterialIndex <= 8 && new_bits_per_material_index <= 8);
+	if (new_bits_per_material_index != mNumBitsPerMaterialIndex)
+	{
+		// Resize the material indices array
+		mMaterialIndices.resize(((Square(count_min_1) * new_bits_per_material_index + 7) >> 3) + 1, 0); // Add 1 byte so we don't read out of bounds when reading an uint16
+
+		// Calculate old and new mask
+		uint16 old_material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+		uint16 new_material_index_mask = uint16((1 << new_bits_per_material_index) - 1);
+
+		// Loop through the array backwards to avoid overwriting data
+		int in_bit_pos = (count_min_1 * count_min_1 - 1) * mNumBitsPerMaterialIndex;
+		const uint8 *in_indices = mMaterialIndices.data() + (in_bit_pos >> 3);
+		in_bit_pos &= 0b111;
+		int out_bit_pos = (count_min_1 * count_min_1 - 1) * new_bits_per_material_index;
+		uint8 *out_indices = mMaterialIndices.data() + (out_bit_pos >> 3);
+		out_bit_pos &= 0b111;
+
+		while (out_indices >= mMaterialIndices.data())
+		{
+			// Read the material index
+			uint16 material_index = uint16(in_indices[0]) + uint16(uint16(in_indices[1]) << 8);
+			material_index >>= in_bit_pos;
+			material_index &= old_material_index_mask;
+
+			// Write the material index
+			uint16 output_data = uint16(out_indices[0]) + uint16(uint16(out_indices[1]) << 8);
+			output_data &= ~(new_material_index_mask << out_bit_pos);
+			output_data |= material_index << out_bit_pos;
+			out_indices[0] = uint8(output_data);
+			out_indices[1] = uint8(output_data >> 8);
+
+			// Go to the previous index
+			in_bit_pos -= int(mNumBitsPerMaterialIndex);
+			in_indices += in_bit_pos >> 3;
+			in_bit_pos &= 0b111;
+			out_bit_pos -= int(new_bits_per_material_index);
+			out_indices += out_bit_pos >> 3;
+			out_bit_pos &= 0b111;
+		}
+
+		// Accept the new bits per material index
+		mNumBitsPerMaterialIndex = new_bits_per_material_index;
+	}
+
+	uint16 material_index_mask = uint16((1 << mNumBitsPerMaterialIndex) - 1);
+	for (uint y = 0; y < inSizeY; ++y)
+	{
+		// Calculate input position
+		const uint8 *in_indices = inMaterials + y * inMaterialsStride;
+
+		// Calculate output position
+		uint bit_pos = (inX + (inY + y) * count_min_1) * mNumBitsPerMaterialIndex;
+		uint8 *out_indices = mMaterialIndices.data() + (bit_pos >> 3);
+		bit_pos &= 0b111;
+
+		for (uint x = 0; x < inSizeX; ++x)
+		{
+			// Update material
+			uint16 output_data = uint16(out_indices[0]) + uint16(uint16(out_indices[1]) << 8);
+			output_data &= ~(material_index_mask << bit_pos);
+			output_data |= material_remap_table[*in_indices] << bit_pos;
+			out_indices[0] = uint8(output_data);
+			out_indices[1] = uint8(output_data >> 8);
+
+			// Go to the next index
+			in_indices++;
+			bit_pos += mNumBitsPerMaterialIndex;
+			out_indices += bit_pos >> 3;
+			bit_pos &= 0b111;
+		}
+	}
+
+	// Free the remapping table
+	inAllocator.Free(material_remap_table, material_remap_table_size);
+	return true;
 }
 
 MassProperties HeightFieldShape::GetMassProperties() const
@@ -1265,8 +1479,8 @@ inline uint8 HeightFieldShape::GetEdgeFlags(uint inX, uint inY, uint inTriangle)
 		uint bit_pos = 3 * (inX + inY * (mSampleCount - 1));
 		uint byte_pos = bit_pos >> 3;
 		bit_pos &= 0b111;
-		JPH_ASSERT(byte_pos + 1 < mActiveEdges.size());
-		const uint8 *active_edges = mActiveEdges.data() + byte_pos;
+		JPH_ASSERT(byte_pos + 1 < mActiveEdgesSize);
+		const uint8 *active_edges = mActiveEdges + byte_pos;
 		uint16 edge_flags = uint16(active_edges[0]) + uint16(uint16(active_edges[1]) << 8);
 		return uint8(edge_flags >> bit_pos) & 0b111;
 	}
@@ -1301,7 +1515,7 @@ AABox HeightFieldShape::GetLocalBounds() const
 void HeightFieldShape::Draw(DebugRenderer *inRenderer, RMat44Arg inCenterOfMassTransform, Vec3Arg inScale, ColorArg inColor, bool inUseMaterialColors, bool inDrawWireframe) const
 {
 	// Don't draw anything if we don't have any collision
-	if (mHeightSamples.empty())
+	if (mHeightSamplesSize == 0)
 		return;
 
 	// Reset the batch if we switch coloring mode
@@ -1466,7 +1680,7 @@ public:
 	JPH_INLINE void				WalkHeightField(Visitor &ioVisitor)
 	{
 		// Early out if there's no collision
-		if (mShape->mHeightSamples.empty())
+		if (mShape->mHeightSamplesSize == 0)
 			return;
 
 		// Precalculate values relating to sample count
@@ -1733,6 +1947,7 @@ public:
 				uint32 offset = sGridOffsets[level] + stride * y + x;
 
 				// Decode min/max height
+				JPH_ASSERT(offset < mShape->mRangeBlocksSize);
 				UVec4 block = UVec4::sLoadInt4Aligned(reinterpret_cast<const uint32 *>(&mShape->mRangeBlocks[offset]));
 				Vec4 bounds_miny = oy + sy * block.Expand4Uint16Lo().ToFloat();
 				Vec4 bounds_maxy = oy + sy * block.Expand4Uint16Hi().ToFloat();
@@ -1796,7 +2011,7 @@ private:
 };
 
 template <class Visitor>
-JPH_INLINE void HeightFieldShape::WalkHeightField(Visitor &ioVisitor) const
+void HeightFieldShape::WalkHeightField(Visitor &ioVisitor) const
 {
 	DecodingContext ctx(this);
 	ctx.WalkHeightField(ioVisitor);
@@ -1942,9 +2157,50 @@ void HeightFieldShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &in
 	// A height field doesn't have volume, so we can't test insideness
 }
 
-void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, float inDeltaTime, Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
+void HeightFieldShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
-	sCollideSoftBodyVerticesUsingRayCast(*this, inCenterOfMassTransform, inScale, ioVertices, inNumVertices, inDeltaTime, inDisplacementDueToGravity, inCollidingShapeIndex);
+	JPH_PROFILE_FUNCTION();
+
+	struct Visitor : public CollideSoftBodyVerticesVsTriangles
+	{
+		using CollideSoftBodyVerticesVsTriangles::CollideSoftBodyVerticesVsTriangles;
+
+		JPH_INLINE bool	ShouldAbort() const
+		{
+			return false;
+		}
+
+		JPH_INLINE bool	ShouldVisitRangeBlock([[maybe_unused]] int inStackTop) const
+		{
+			return mDistanceStack[inStackTop] < mClosestDistanceSq;
+		}
+
+		JPH_INLINE int	VisitRangeBlock(Vec4Arg inBoundsMinX, Vec4Arg inBoundsMinY, Vec4Arg inBoundsMinZ, Vec4Arg inBoundsMaxX, Vec4Arg inBoundsMaxY, Vec4Arg inBoundsMaxZ, UVec4 &ioProperties, int inStackTop)
+		{
+			// Get distance to vertex
+			Vec4 dist_sq = AABox4DistanceSqToPoint(mLocalPosition, inBoundsMinX, inBoundsMinY, inBoundsMinZ, inBoundsMaxX, inBoundsMaxY, inBoundsMaxZ);
+
+			// Sort so that highest values are first (we want to first process closer hits and we process stack top to bottom)
+			return SortReverseAndStore(dist_sq, mClosestDistanceSq, ioProperties, &mDistanceStack[inStackTop]);
+		}
+
+		JPH_INLINE void	VisitTriangle([[maybe_unused]] uint inX, [[maybe_unused]] uint inY, [[maybe_unused]] uint inTriangle, Vec3Arg inV0, Vec3Arg inV1, Vec3Arg inV2)
+		{
+			ProcessTriangle(inV0, inV1, inV2);
+		}
+
+		float			mDistanceStack[cStackSize];
+	};
+
+	Visitor visitor(inCenterOfMassTransform, inScale);
+
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
+		{
+			visitor.StartVertex(*v);
+			WalkHeightField(visitor);
+			visitor.FinishVertex(*v, inCollidingShapeIndex);
+		}
 }
 
 void HeightFieldShape::sCastConvexVsHeightField(const ShapeCast &inShapeCast, const ShapeCastSettings &inShapeCastSettings, const Shape *inShape, Vec3Arg inScale, [[maybe_unused]] const ShapeFilter &inShapeFilter, Mat44Arg inCenterOfMassTransform2, const SubShapeIDCreator &inSubShapeIDCreator1, const SubShapeIDCreator &inSubShapeIDCreator2, CastShapeCollector &ioCollector)
@@ -2323,11 +2579,18 @@ void HeightFieldShape::SaveBinaryState(StreamOut &inStream) const
 	inStream.Write(mBitsPerSample);
 	inStream.Write(mMinSample);
 	inStream.Write(mMaxSample);
-	inStream.Write(mRangeBlocks);
-	inStream.Write(mHeightSamples);
-	inStream.Write(mActiveEdges);
 	inStream.Write(mMaterialIndices);
 	inStream.Write(mNumBitsPerMaterialIndex);
+
+	if (mRangeBlocks != nullptr)
+	{
+		inStream.Write(true);
+		inStream.WriteBytes(mRangeBlocks, mRangeBlocksSize * sizeof(RangeBlock) + mHeightSamplesSize + mActiveEdgesSize);
+	}
+	else
+	{
+		inStream.Write(false);
+	}
 }
 
 void HeightFieldShape::RestoreBinaryState(StreamIn &inStream)
@@ -2341,13 +2604,18 @@ void HeightFieldShape::RestoreBinaryState(StreamIn &inStream)
 	inStream.Read(mBitsPerSample);
 	inStream.Read(mMinSample);
 	inStream.Read(mMaxSample);
-	inStream.Read(mRangeBlocks);
-	inStream.Read(mHeightSamples);
-	inStream.Read(mActiveEdges);
 	inStream.Read(mMaterialIndices);
 	inStream.Read(mNumBitsPerMaterialIndex);
 
 	CacheValues();
+
+	bool has_heights = false;
+	inStream.Read(has_heights);
+	if (has_heights)
+	{
+		AllocateBuffers();
+		inStream.ReadBytes(mRangeBlocks, mRangeBlocksSize * sizeof(RangeBlock) + mHeightSamplesSize + mActiveEdgesSize);
+	}
 }
 
 void HeightFieldShape::SaveMaterialState(PhysicsMaterialList &outMaterials) const
@@ -2365,11 +2633,11 @@ Shape::Stats HeightFieldShape::GetStats() const
 	return Stats(
 		sizeof(*this)
 			+ mMaterials.size() * sizeof(Ref<PhysicsMaterial>)
-			+ mRangeBlocks.size() * sizeof(RangeBlock)
-			+ mHeightSamples.size() * sizeof(uint8)
-			+ mActiveEdges.size() * sizeof(uint8)
+			+ mRangeBlocksSize * sizeof(RangeBlock)
+			+ mHeightSamplesSize * sizeof(uint8)
+			+ mActiveEdgesSize * sizeof(uint8)
 			+ mMaterialIndices.size() * sizeof(uint8),
-		mHeightSamples.empty()? 0 : Square(mSampleCount - 1) * 2);
+		mHeightSamplesSize == 0? 0 : Square(mSampleCount - 1) * 2);
 }
 
 void HeightFieldShape::sRegister()

@@ -86,10 +86,10 @@ private:
 		Vec3			mNormal;									///< Normal of the edge (not normalized)
 		Vec3			mCenter;									///< Center of the edge
 		ConflictList	mConflictList;								///< Positions associated with this edge (that are closest to this edge). Last entry is the one furthest away from the edge, remainder is unsorted.
-		Edge *			mPrevEdge = nullptr;						///< Previous edge in cicular list
+		Edge *			mPrevEdge = nullptr;						///< Previous edge in circular list
 		Edge *			mNextEdge = nullptr;						///< Next edge in circular list
 		int				mStartIdx;									///< Position index of start of this edge
-		float			mFurthestPointDistanceSq = 0.0f;			///< Squared distance of furtest point from the conflict list to the edge
+		float			mFurthestPointDistanceSq = 0.0f;			///< Squared distance of furthest point from the conflict list to the edge
 	};
 
 	const Positions &	mPositions;									///< List of positions (some of them are part of the hull)

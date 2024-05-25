@@ -47,6 +47,11 @@ private:
 	/// The GJK algorithm, used to start the EPA algorithm
 	GJKClosestPoint		mGJK;
 
+#ifdef JPH_ENABLE_ASSERTS
+	/// Tolerance as passed to the GJK algorithm, used for asserting.
+	float				mGJKTolerance = 0.0f;
+#endif // JPH_ENABLE_ASSERTS
+
 	/// A list of support points for the EPA algorithm
 	class SupportPoints
 	{
@@ -99,6 +104,8 @@ public:
 	EStatus				GetPenetrationDepthStepGJK(const AE &inAExcludingConvexRadius, float inConvexRadiusA, const BE &inBExcludingConvexRadius, float inConvexRadiusB, float inTolerance, Vec3 &ioV, Vec3 &outPointA, Vec3 &outPointB)
 	{
 		JPH_PROFILE_FUNCTION();
+
+		JPH_IF_ENABLE_ASSERTS(mGJKTolerance = inTolerance;)
 
 		// Don't supply a zero ioV, we only want to get points on the hull of the Minkowsky sum and not internal points
 		JPH_ASSERT(!ioV.IsNearZero());
@@ -154,7 +161,7 @@ public:
 		case 1:
 			{
 				// 1 vertex, which must be at the origin, which is useless for our purpose
-				JPH_ASSERT(support_points.mY[0].IsNearZero(1.0e-8f));
+				JPH_ASSERT(support_points.mY[0].IsNearZero(Square(mGJKTolerance)));
 				support_points.mY.pop_back();
 
 				// Add support points in 4 directions to form a tetrahedron around the origin
@@ -494,7 +501,7 @@ public:
 		return false;
 	}
 
-	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> instersects inB
+	/// Test if a cast shape inA moving from inStart to lambda * inStart.GetTranslation() + inDirection where lambda e [0, ioLambda> intersects inB
 	///
 	/// @param inStart Start position and orientation of the convex object
 	/// @param inDirection Direction of the sweep (ioLambda * inDirection determines length)
@@ -504,7 +511,7 @@ public:
 	/// @param inB The convex object B, must support the GetSupport(Vec3) function.
 	/// @param inConvexRadiusA The convex radius of A, this will be added on all sides to pad A.
 	/// @param inConvexRadiusB The convex radius of B, this will be added on all sides to pad B.
-	/// @param inReturnDeepestPoint If the shapes are initially interesecting this determines if the EPA algorithm will run to find the deepest point
+	/// @param inReturnDeepestPoint If the shapes are initially intersecting this determines if the EPA algorithm will run to find the deepest point
 	/// @param ioLambda The max fraction along the sweep, on output updated with the actual collision fraction.
 	///	@param outPointA is the contact point on A
 	///	@param outPointB is the contact point on B
@@ -514,6 +521,8 @@ public:
 	template <typename A, typename B>
 	bool				CastShape(Mat44Arg inStart, Vec3Arg inDirection, float inCollisionTolerance, float inPenetrationTolerance, const A &inA, const B &inB, float inConvexRadiusA, float inConvexRadiusB, bool inReturnDeepestPoint, float &ioLambda, Vec3 &outPointA, Vec3 &outPointB, Vec3 &outContactNormal)
 	{
+		JPH_IF_ENABLE_ASSERTS(mGJKTolerance = inCollisionTolerance;)
+
 		// First determine if there's a collision at all
 		if (!mGJK.CastShape(inStart, inDirection, inCollisionTolerance, inA, inB, inConvexRadiusA, inConvexRadiusB, ioLambda, outPointA, outPointB, outContactNormal))
 			return false;

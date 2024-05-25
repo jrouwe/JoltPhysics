@@ -57,7 +57,7 @@ TEST_SUITE("DistanceConstraintTests")
 			float dt = context.GetDeltaTime();
 			for (int i = 0; i < 120; ++i)
 			{
-				// Using the equations from page 32 of Soft Contraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
+				// Using the equations from page 32 of Soft Constraints: Reinventing The Spring - Erin Catto - GDC 2011 for an implicit euler spring damper
 				v = (v - dt * k / m * float(x)) / (1.0f + dt * c / m + Square(dt) * k / m);
 				x += v * dt;
 

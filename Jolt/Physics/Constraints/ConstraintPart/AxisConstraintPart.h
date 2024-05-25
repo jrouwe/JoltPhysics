@@ -86,7 +86,7 @@ class AxisConstraintPart
 		}
 		else
 		{
-		#ifdef _DEBUG
+		#ifdef JPH_DEBUG
 			Vec3::sNaN().StoreFloat3(&mR1PlusUxAxis);
 		#endif
 		}
@@ -99,7 +99,7 @@ class AxisConstraintPart
 		}
 		else
 		{
-		#ifdef _DEBUG
+		#ifdef JPH_DEBUG
 			Vec3::sNaN().StoreFloat3(&mR2xAxis);
 		#endif
 		}
@@ -226,9 +226,15 @@ public:
 	template <EMotionType Type1, EMotionType Type2>
 	JPH_INLINE void				TemplatedCalculateConstraintProperties(float inInvMass1, Mat44Arg inInvI1, Vec3Arg inR1PlusU, float inInvMass2, Mat44Arg inInvI2, Vec3Arg inR2, Vec3Arg inWorldSpaceAxis, float inBias = 0.0f)
 	{
-		mEffectiveMass = 1.0f / TemplatedCalculateInverseEffectiveMass<Type1, Type2>(inInvMass1, inInvI1, inR1PlusU, inInvMass2, inInvI2, inR2, inWorldSpaceAxis);
+		float inv_effective_mass = TemplatedCalculateInverseEffectiveMass<Type1, Type2>(inInvMass1, inInvI1, inR1PlusU, inInvMass2, inInvI2, inR2, inWorldSpaceAxis);
 
-		mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+		if (inv_effective_mass == 0.0f)
+			Deactivate();
+		else
+		{
+			mEffectiveMass = 1.0f / inv_effective_mass;
+			mSpringPart.CalculateSpringPropertiesWithBias(inBias);
+		}
 
 		JPH_DET_LOG("TemplatedCalculateConstraintProperties: invM1: " << inInvMass1 << " invI1: " << inInvI1 << " r1PlusU: " << inR1PlusU << " invM2: " << inInvMass2 << " invI2: " << inInvI2 << " r2: " << inR2 << " bias: " << inBias << " r1PlusUxAxis: " << mR1PlusUxAxis << " r2xAxis: " << mR2xAxis << " invI1_R1PlusUxAxis: " << mInvI1_R1PlusUxAxis << " invI2_R2xAxis: " << mInvI2_R2xAxis << " effectiveMass: " << mEffectiveMass << " totalLambda: " << mTotalLambda);
 	}

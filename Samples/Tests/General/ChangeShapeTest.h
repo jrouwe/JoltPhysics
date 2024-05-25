@@ -8,7 +8,7 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
 
-// This test will make a dynamic body cyle through various shapes
+// This test will make a dynamic body cycle through various shapes
 class ChangeShapeTest : public Test
 {
 public:

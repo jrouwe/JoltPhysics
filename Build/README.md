@@ -19,24 +19,41 @@ You can use Jolt/Jolt.h in your precompiled header to speed up compilation.
 ## Defines
 
 There are a number of user configurable defines that turn on/off certain features:
+<details>
+	<summary>General Options (click to see more)</summary>
+	<ul>
+		<li>JPH_SHARED_LIBRARY - Use the Jolt library as a shared library. Use JPH_BUILD_SHARED_LIBRARY to build Jolt as a shared library.</li>
+		<li>JPH_PROFILE_ENABLED - Turns on the internal profiler.</li>
+		<li>JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).</li>
+		<li>JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.</li>
+		<li>JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.</li>
+		<li>JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.</li>
+		<li>JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).</li>
+		<li>JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.</li>
+		<li>JPH_DET_LOG - Turn on a lot of extra logging to help debug determinism issues when JPH_CROSS_PLATFORM_DETERMINISTIC is turned on.</li>
+		<li>JPH_ENABLE_ASSERTS - Compiles the library so that it rises an assert in case of failures. The library ignores these failures otherwise.</li>
+		<li>JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.</li>
+		<li>JPH_OBJECT_LAYER_BITS - Defines the size of ObjectLayer, must be 16 or 32 bits.</li>
+		<li>JPH_OBJECT_STREAM - Includes the code to serialize physics data in the ObjectStream format (mostly used by the examples).</li>
+		<li>JPH_NO_FORCE_INLINE - Don't use force inlining but fall back to a regular 'inline'.</li>
+		<li>JPH_USE_STD_VECTOR - Use std::vector instead of Jolt's own Array class.</li>
+	</ul>
+</details>
 
-- JPH_PROFILE_ENABLED - Turns on the internal profiler.
-- JPH_EXTERNAL_PROFILE - Turns on the internal profiler but forwards the information to a user defined external system (see Profiler.h).
-- JPH_DEBUG_RENDERER - Adds support to draw lines and triangles, used to be able to debug draw the state of the world.
-- JPH_DISABLE_TEMP_ALLOCATOR - Disables the temporary memory allocator, used mainly to allow ASAN to do its job.
-- JPH_DISABLE_CUSTOM_ALLOCATOR - Disables the ability to override the memory allocator.
-- JPH_FLOATING_POINT_EXCEPTIONS_ENABLED - Turns on division by zero and invalid floating point exception support in order to detect bugs (Windows only).
-- JPH_CROSS_PLATFORM_DETERMINISTIC - Turns on behavior to attempt cross platform determinism. If this is set, JPH_USE_FMADD is ignored.
-- JPH_DOUBLE_PRECISION - Compiles the library so that all positions are stored in doubles instead of floats. This makes larger worlds possible.
-- JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (x86/x64 only)
-- JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (x86/x64 only)
-- JPH_USE_F16C - Enable half float CPU instructions (x86/x64 only)
-- JPH_USE_LZCNT - Enable the lzcnt CPU instruction (x86/x64 only)
-- JPH_USE_TZCNT - Enable the tzcnt CPU instruction (x86/x64 only)
-- JPH_USE_AVX - Enable AVX CPU instructions (x86/x64 only)
-- JPH_USE_AVX2 - Enable AVX2 CPU instructions (x86/x64 only)
-- JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (x86/x64 only)
-- JPH_USE_FMADD - Enable fused multiply add CPU instructions (x86/x64 only)
+<details>
+	<summary>CPU Instruction Sets (click to see more)</summary>
+	<ul>
+		<li>JPH_USE_SSE4_1 - Enable SSE4.1 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_SSE4_2 - Enable SSE4.2 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_F16C - Enable half float CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_LZCNT - Enable the lzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_TZCNT - Enable the tzcnt CPU instruction (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX - Enable AVX CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX2 - Enable AVX2 CPU instructions (default: on, x86/x64 only)</li>
+		<li>JPH_USE_AVX512 - Enable AVX512F+AVX512VL CPU instructions (default: off, x86/x64 only)</li>
+		<li>JPH_USE_FMADD - Enable fused multiply add CPU instructions (default: on, x86/x64 only)</li>
+	</ul>
+</details>
 
 ## Logging & Asserting
 
@@ -44,7 +61,7 @@ To override the default trace and assert mechanism install your own custom handl
 
 ## Custom Memory Allocator
 
-To implement your custom memory allocator override Allocate, Free, AlignedAllocate and AlignedFree (see Memory.h).
+To implement your custom memory allocator override Allocate, Free, Reallocate, AlignedAllocate and AlignedFree (see Memory.h).
 
 ## Building
 
@@ -171,15 +188,15 @@ To implement your custom memory allocator override Allocate, Free, AlignedAlloca
 	</ul>
 </details>
 
-
-
 ## Other Build Tools
 
 * A vcpkg package is available [here](https://github.com/microsoft/vcpkg/tree/master/ports/joltphysics).
 * A xmake package is available [here](https://github.com/xmake-io/xmake-repo/tree/dev/packages/j/joltphysics).
 * Jolt has been verified to build with [ninja](https://ninja-build.org/) through CMake.
 
-## Link Errors
+## Errors
+
+### Link Error: File Format Not Recognized
 
 If you receive the following error when linking:
 
@@ -188,6 +205,36 @@ If you receive the following error when linking:
 ```
 
 Then you have not enabled interprocedural optimizations (link time optimizations) for your own application. See the INTERPROCEDURAL_OPTIMIZATION option in CMakeLists.txt.
+
+### Link Error: Unresolved External Symbol
+
+If you receive a link error that looks like:
+
+```
+error LNK2001: unresolved external symbol "public: virtual void __cdecl JPH::ConvexShape::GetSubmergedVolume(...) const"
+```
+
+you have a mismatch in defines between your own code and the Jolt library. In this case the mismatch is in the define `JPH_DEBUG_RENDERER` which is most likely defined in `Jolt.lib` and not in your own project. In `Debug` and `Release` builds, Jolt by default has `JPH_DEBUG_RENDERER` defined, in `Distribution` it is not defined. The cmake options `DEBUG_RENDERER_IN_DEBUG_AND_RELEASE` and `DEBUG_RENDERER_IN_DISTRIBUTION` override this behavior.
+
+The `RegisterTypes` function (which you have to call to initialize the library) checks the other important defines and will trace and abort if there are more mismatches.
+
+### DirectX Error
+
+The samples use DirectX for the graphics implementation, when attempting to run the samples you may get a DirectX error pop-up which may say "The GPU device instance has been suspended", in your debugger you may see the message "Using the Redistributable D3D12 SDKLayers dll also requires that the latest SDKLayers for Windows 10 is installed.". 
+
+Fix this by enabling "Graphics Tools" which is an optional Windows settings. To enable it you have to press the windows key, search for "Manage Optional Features", and then click "Add a Feature", and install "Graphics Tools".
+
+### Illegal Instruction Error
+
+If your CPU doesn't support all of the instructions you'll get an `Illegal instruction` exception.
+
+On Linux to see what instructions your CPU supports run `lscpu` and then look at the flags section, on Windows you can use a program like [`coreinfo`](https://learn.microsoft.com/en-us/sysinternals/downloads/coreinfo). Once you know what instructions your cpu supports you can configure the project through cmake and for example disable all special instructions:
+
+```
+./cmake_linux_clang_gcc.sh Release clang++ -DUSE_SSE4_1=OFF -DUSE_SSE4_2=OFF -DUSE_AVX=OFF -DUSE_AVX2=OFF -DUSE_AVX512=OFF -DUSE_LZCNT=OFF -DUSE_TZCNT=OFF -DUSE_F16C=OFF -DUSE_FMADD=OFF
+```
+
+Note that this example is for Linux but the cmake settings work on Windows too.
 
 ## Doxygen on Windows
 

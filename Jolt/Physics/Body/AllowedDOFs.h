@@ -14,9 +14,9 @@ enum class EAllowedDOFs : uint8
 	TranslationX		= 0b000001,									///< Body can move in world space X axis
 	TranslationY		= 0b000010,									///< Body can move in world space Y axis
 	TranslationZ		= 0b000100,									///< Body can move in world space Z axis
-	RotationX			= 0b001000,									///< Body can rotate around local space X axis
-	RotationY			= 0b010000,									///< Body can rotate around local space Y axis
-	RotationZ			= 0b100000,									///< Body can rotate around local space Z axis
+	RotationX			= 0b001000,									///< Body can rotate around world space X axis
+	RotationY			= 0b010000,									///< Body can rotate around world space Y axis
+	RotationZ			= 0b100000,									///< Body can rotate around world space Z axis
 	Plane2D				= TranslationX | TranslationY | RotationZ,	///< Body can only move in X and Y axis and rotate around Z axis
 };
 

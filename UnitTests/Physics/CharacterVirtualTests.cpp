@@ -30,7 +30,7 @@ TEST_SUITE("CharacterVirtualTests")
 			mCharacterSettings.mSupportingVolume = Plane(Vec3::sAxisY(), -mHeightStanding); // Accept contacts that touch the lower sphere of the capsule
 
 			// Create character
-			mCharacter = new CharacterVirtual(&mCharacterSettings, mInitialPosition, Quat::sIdentity(), mContext.GetSystem());
+			mCharacter = new CharacterVirtual(&mCharacterSettings, mInitialPosition, Quat::sIdentity(), 0, mContext.GetSystem());
 			mCharacter->SetListener(this);
 		}
 
@@ -236,7 +236,7 @@ TEST_SUITE("CharacterVirtualTests")
 			// Cancel movement in slope direction
 			expected_translation -= expected_translation.Dot(slope_normal) * slope_normal;
 
-			// Check that we travelled the right amount
+			// Check that we traveled the right amount
 			CHECK_APPROX_EQUAL(translation, expected_translation, 1.0e-4f);
 		}
 	}
@@ -305,7 +305,7 @@ TEST_SUITE("CharacterVirtualTests")
 				}
 			}
 
-			// Check that we travelled the right amount
+			// Check that we traveled the right amount
 			CHECK_APPROX_EQUAL(translation, expected_translation, 1.0e-4f);
 		}
 	}
@@ -373,7 +373,7 @@ TEST_SUITE("CharacterVirtualTests")
 
 			// Calculate time it should take to move up the stairs at constant speed
 			float movement_time = (cNumSteps * cStepHeight + radius_and_padding) / character.mHorizontalSpeed.GetZ();
-			int max_steps = int(1.5f * round(movement_time / time_step)); // In practise there is a bit of slowdown while stair stepping, so add a bit of slack
+			int max_steps = int(1.5f * round(movement_time / time_step)); // In practice there is a bit of slowdown while stair stepping, so add a bit of slack
 
 			// Step until we reach the top of the stairs
 			RVec3 last_position = character.mCharacter->GetPosition();
@@ -502,7 +502,7 @@ TEST_SUITE("CharacterVirtualTests")
 		character.mUpdateSettings.mWalkStairsStepUp = Vec3::sZero();
 		character.Create();
 
-		// Radius including pading
+		// Radius including padding
 		const float character_radius = character.mRadiusStanding + character.mCharacterSettings.mCharacterPadding;
 
 		// Create a half cylinder with caps for testing contact point limit

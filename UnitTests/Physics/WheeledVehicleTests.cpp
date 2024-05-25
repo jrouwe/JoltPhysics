@@ -178,7 +178,7 @@ TEST_SUITE("WheeledVehicleTests")
 		// Start driving forward
 		controller->SetDriverInput(1.0f, 0.0f, 0.0f, 0.0f);
 		c.GetBodyInterface().ActivateBody(body->GetID());
-		c.Simulate(1.0f);
+		c.Simulate(2.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		RVec3 pos2 = body->GetPosition();
 		CHECK_APPROX_EQUAL(pos2.GetX(), 0, 1.0e-2_r); // Not moving left/right
@@ -228,7 +228,7 @@ TEST_SUITE("WheeledVehicleTests")
 		// Turn right
 		controller->SetDriverInput(1.0f, 1.0f, 0.0f, 0.0f);
 		c.GetBodyInterface().ActivateBody(body->GetID());
-		c.Simulate(1.0f);
+		c.Simulate(2.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		Vec3 omega = body->GetAngularVelocity();
 		CHECK(omega.GetY() < -0.4f); // Rotating right
@@ -237,7 +237,7 @@ TEST_SUITE("WheeledVehicleTests")
 		// Hand brake
 		controller->SetDriverInput(0.0f, 0.0f, 0.0f, 1.0f);
 		c.GetBodyInterface().ActivateBody(body->GetID());
-		c.Simulate(5.0f);
+		c.Simulate(7.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		CHECK(!body->IsActive()); // Car should have gone to sleep
 		vel = body->GetLinearVelocity();
@@ -246,7 +246,7 @@ TEST_SUITE("WheeledVehicleTests")
 		// Turn left
 		controller->SetDriverInput(1.0f, -1.0f, 0.0f, 0.0f);
 		c.GetBodyInterface().ActivateBody(body->GetID());
-		c.Simulate(1.0f);
+		c.Simulate(2.0f);
 		CheckOnGround(constraint, settings, floor_id);
 		omega = body->GetAngularVelocity();
 		CHECK(omega.GetY() > 0.4f); // Rotating left
@@ -304,6 +304,14 @@ TEST_SUITE("WheeledVehicleTests")
 			VehicleConstraint *constraint = AddVehicle(c, settings);
 			Body *body = constraint->GetVehicleBody();
 			WheeledVehicleController *controller = static_cast<WheeledVehicleController *>(constraint->GetController());
+
+			// Give the wheels extra grip
+			controller->SetTireMaxImpulseCallback(
+				[](uint, float &outLongitudinalImpulse, float &outLateralImpulse, float inSuspensionImpulse, float inLongitudinalFriction, float inLateralFriction, float, float, float)
+				{
+					outLongitudinalImpulse = 10.0f * inLongitudinalFriction * inSuspensionImpulse;
+					outLateralImpulse = inLateralFriction * inSuspensionImpulse;
+				});
 
 			// Simulate till vehicle rests on block
 			bool vehicle_on_floor = false;

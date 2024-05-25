@@ -57,7 +57,7 @@ public:
 	};
 
 	// Process input, this is called before SaveInputState is called. This allows you to determine the player input and adjust internal state accordingly.
-	// This state should not be applied until PrePhysicsUpdate because on replay you will receive a call to RestoreInputState to restore the stored player input state before receiging another PrePhysicsUpdate.
+	// This state should not be applied until PrePhysicsUpdate because on replay you will receive a call to RestoreInputState to restore the stored player input state before receiving another PrePhysicsUpdate.
 	virtual void	ProcessInput(const ProcessInputParams &inParams)			{ }
 
 	class PreUpdateParams
@@ -111,7 +111,7 @@ protected:
 	// Utility function to create a static floor body
 	Body &			CreateFloor(float inSize = 200.0f);
 
-	// Utiltity function to create a floor consisting of very large triangles
+	// Utility function to create a floor consisting of very large triangles
 	Body &			CreateLargeTriangleFloor();
 
 	// Create an uneven terrain floor body

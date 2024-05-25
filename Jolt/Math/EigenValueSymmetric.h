@@ -92,7 +92,7 @@ bool EigenValueSymmetric(const Matrix &inMatrix, Matrix &outEigVec, Vector &outE
 			return true;
 		}
 
-		// On the first three sweeps use a fraction of the sum of the off diagonal elements as treshold
+		// On the first three sweeps use a fraction of the sum of the off diagonal elements as threshold
 		float tresh = sweep < 4? 0.2f * sm / Square(n) : 0.0f;
 
 		for (uint ip = 0; ip < n - 1; ++ip)
