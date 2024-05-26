@@ -42,6 +42,7 @@ public:
 
 	/// Original list of indexed triangles (triangles will be reordered internally in the mesh shape).
 	/// Triangles must be provided in counter clockwise order.
+	/// Degenerate triangles will automatically be removed during mesh creation but no other mesh simplifications are performed, use an external library if this is desired.
 	/// For simulation, the triangles are considered to be single sided.
 	/// For ray casts you can choose to make triangles double sided by setting RayCastSettings::mBackFaceMode to EBackFaceMode::CollideWithBackFaces.
 	/// For collide shape tests you can use CollideShapeSettings::mBackFaceMode and for shape casts you can use ShapeCastSettings::mBackFaceModeTriangles.
