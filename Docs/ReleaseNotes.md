@@ -24,7 +24,6 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 
 * Added CharacterBaseSettings::mEnhancedInternalEdgeRemoval (default false) that allows smoother movement for both the Character and CharacterVirtual class.
 
-
 #### Vehicles
 
 * Added ability to override the gravity vector per vehicle. This allows creating vehicles that can e.g. stick to the surface of a track and drive upside down. See VehicleConstraint::OverrideGravity.
@@ -37,6 +36,8 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Added cmake option USE_ASSERTS to turn on asserts in builds other than the Debug build.
 * Switch from using _DEBUG to NDEBUG to detect debug mode. NDEBUG is defined in the standard while _DEBUG is Visual Studio specific.
 * The OVERRIDE_CXX_FLAGS cmake flag will now also work for MSVC and allow you to specify your own CMAKE_CXX_FLAGS_DEBUG/CMAKE_CXX_FLAGS_RELEASE flags
+* BodyInterface::AddForce/Torque functions now take an optional EActivation parameter that makes it optional to activate the body. This can be used e.g. to not let the body wake up if you're applying custom gravity to a body.
+* Activating bodies now resets the sleep timer when the body is already active. This prevents the body from going to sleep in the next frame and can avoid quick 1 frame naps.
 
 ### Bug fixes
 
