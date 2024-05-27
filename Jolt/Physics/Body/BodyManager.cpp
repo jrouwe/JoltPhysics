@@ -556,17 +556,20 @@ void BodyManager::ActivateBodies(const BodyID *inBodyIDs, int inNumber)
 			JPH_ASSERT(body.GetID() == body_id);
 			JPH_ASSERT(body.IsInBroadPhase());
 
-			if (!body.IsStatic()
-				&& body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
+			if (!body.IsStatic())
 			{
-				// Reset sleeping
+				// Reset sleeping timer so that we don't immediately go to sleep again
 				body.ResetSleepTimer();
 
-				AddBodyToActiveBodies(body);
+				// Check if we're sleeping
+				if (body.mMotionProperties->mIndexInActiveBodies == Body::cInactiveIndex)
+				{
+					AddBodyToActiveBodies(body);
 
-				// Call activation listener
-				if (mActivationListener != nullptr)
-					mActivationListener->OnBodyActivated(body_id, body.GetUserData());
+					// Call activation listener
+					if (mActivationListener != nullptr)
+						mActivationListener->OnBodyActivated(body_id, body.GetUserData());
+				}
 			}
 		}
 }
