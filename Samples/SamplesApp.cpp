@@ -241,6 +241,7 @@ JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledStaticCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledMutableCompoundShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledTriangleShapeTest)
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, ScaledOffsetCenterOfMassShapeTest)
+JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, DynamicScaledShape)
 
 static TestNameAndRTTI sScaledShapeTests[] =
 {
@@ -255,7 +256,8 @@ static TestNameAndRTTI sScaledShapeTests[] =
 	{ "Static Compound Shape",				JPH_RTTI(ScaledStaticCompoundShapeTest) },
 	{ "Mutable Compound Shape",				JPH_RTTI(ScaledMutableCompoundShapeTest) },
 	{ "Triangle Shape",						JPH_RTTI(ScaledTriangleShapeTest) },
-	{ "Offset Center Of Mass Shape",		JPH_RTTI(ScaledOffsetCenterOfMassShapeTest) }
+	{ "Offset Center Of Mass Shape",		JPH_RTTI(ScaledOffsetCenterOfMassShapeTest) },
+	{ "Dynamic Scaled Shape",				JPH_RTTI(DynamicScaledShape) }
 };
 
 JPH_DECLARE_RTTI_FOR_FACTORY(JPH_NO_EXPORT, CreateRigTest)

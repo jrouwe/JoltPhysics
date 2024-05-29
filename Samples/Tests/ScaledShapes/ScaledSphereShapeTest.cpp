@@ -20,7 +20,7 @@ void ScaledSphereShapeTest::Initialize()
 	// Floor
 	CreateFloor();
 
-	// Create box
+	// Create sphere
 	RefConst<SphereShape> sphere_shape = new SphereShape(2.0f);
 
 	// Original shape

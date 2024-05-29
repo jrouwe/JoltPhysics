@@ -187,6 +187,8 @@ set(SAMPLES_SRC_FILES
 	${SAMPLES_ROOT}/Tests/Test.h
 	${SAMPLES_ROOT}/Tests/Tools/LoadSnapshotTest.cpp
 	${SAMPLES_ROOT}/Tests/Tools/LoadSnapshotTest.h
+	${SAMPLES_ROOT}/Tests/ScaledShapes/DynamicScaledShape.cpp
+	${SAMPLES_ROOT}/Tests/ScaledShapes/DynamicScaledShape.h
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledBoxShapeTest.cpp
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledBoxShapeTest.h
 	${SAMPLES_ROOT}/Tests/ScaledShapes/ScaledCapsuleShapeTest.cpp
