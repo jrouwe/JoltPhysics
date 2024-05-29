@@ -59,7 +59,7 @@ struct ShapeCastT
 	}
 
 	const Shape *				mShape;								///< Shape that's being cast (cannot be mesh shape). Note that this structure does not assume ownership over the shape for performance reasons.
-	const Vec3					mScale;								///< Scale in local space of the shape being cast
+	const Vec3					mScale;								///< Scale in local space of the shape being cast (scales relative to its center of mass)
 	const Mat					mCenterOfMassStart;					///< Start position and orientation of the center of mass of the shape (construct using sFromWorldTransform if you have a world transform for your shape)
 	const Vec3					mDirection;							///< Direction and length of the cast (anything beyond this length will not be reported as a hit)
 	const AABox					mShapeWorldBounds;					///< Cached shape's world bounds, calculated in constructor

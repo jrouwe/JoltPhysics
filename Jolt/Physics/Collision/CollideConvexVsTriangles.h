@@ -19,7 +19,7 @@ class JPH_EXPORT CollideConvexVsTriangles
 public:
 	/// Constructor
 	/// @param inShape1 The convex shape to collide against triangles
-	/// @param inScale1 Local space scale for the convex object
+	/// @param inScale1 Local space scale for the convex object (scales relative to its center of mass)
 	/// @param inScale2 Local space scale for the triangles
 	/// @param inCenterOfMassTransform1 Transform that takes the center of mass of 1 into world space
 	/// @param inCenterOfMassTransform2 Transform that takes the center of mass of 2 into world space

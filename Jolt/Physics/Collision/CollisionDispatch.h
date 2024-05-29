@@ -21,8 +21,8 @@ public:
 	/// Collide 2 shapes and pass any collision on to ioCollector
 	/// @param inShape1 The first shape
 	/// @param inShape2 The second shape
-	/// @param inScale1 Local space scale of shape 1
-	/// @param inScale2 Local space scale of shape 2
+	/// @param inScale1 Local space scale of shape 1 (scales relative to its center of mass)
+	/// @param inScale2 Local space scale of shape 2 (scales relative to its center of mass)
 	/// @param inCenterOfMassTransform1 Transform to transform center of mass of shape 1 into world space
 	/// @param inCenterOfMassTransform2 Transform to transform center of mass of shape 2 into world space
 	/// @param inSubShapeIDCreator1 Class that tracks the current sub shape ID for shape 1
@@ -44,7 +44,7 @@ public:
 	/// @param inShapeCastLocal The shape to cast against the other shape and its start and direction.
 	/// @param inShapeCastSettings Settings for performing the cast
 	/// @param inShape The shape to cast against.
-	/// @param inScale Local space scale for the shape to cast against.
+	/// @param inScale Local space scale for the shape to cast against (scales relative to its center of mass).
 	/// @param inShapeFilter allows selectively disabling collisions between pairs of (sub) shapes.
 	/// @param inCenterOfMassTransform2 Is the center of mass transform of shape 2 (excluding scale), this is used to provide a transform to the shape cast result so that local hit result quantities can be transformed into world space.
 	/// @param inSubShapeIDCreator1 Class that tracks the current sub shape ID for the casting shape

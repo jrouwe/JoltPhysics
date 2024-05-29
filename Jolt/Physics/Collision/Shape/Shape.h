@@ -247,7 +247,7 @@ public:
 	/// @param inSubShapeID Sub shape ID of target shape
 	/// @param inDirection Direction that the face should be facing (in local space to this shape)
 	/// @param inCenterOfMassTransform Transform to transform outVertices with
-	/// @param inScale Scale of this shape
+	/// @param inScale Scale in local space of the shape (scales relative to its center of mass)
 	/// @param outVertices Resulting face. The returned face can be empty if the shape doesn't have polygons to return (e.g. because it's a sphere). The face will be returned in world space.
 	virtual void					GetSupportingFace([[maybe_unused]] const SubShapeID &inSubShapeID, [[maybe_unused]] Vec3Arg inDirection, [[maybe_unused]] Vec3Arg inScale, [[maybe_unused]] Mat44Arg inCenterOfMassTransform, [[maybe_unused]] SupportingFace &outVertices) const { /* Nothing */ }
 
@@ -258,14 +258,14 @@ public:
 	/// @param inSubShapeID Sub shape ID that indicates the path to the leaf shape
 	/// @param inPositionCOM The position of the center of mass of this shape
 	/// @param inRotation The orientation of this shape
-	/// @param inScale Scale of this shape
+	/// @param inScale Scale in local space of the shape (scales relative to its center of mass)
 	/// @param outRemainder The remainder of the sub shape ID after removing the sub shape
 	/// @return Direct child sub shape and its transform, note that the body ID and sub shape ID will be invalid
 	virtual TransformedShape		GetSubShapeTransformedShape(const SubShapeID &inSubShapeID, Vec3Arg inPositionCOM, QuatArg inRotation, Vec3Arg inScale, SubShapeID &outRemainder) const;
 
 	/// Gets the properties needed to do buoyancy calculations for a body using this shape
 	/// @param inCenterOfMassTransform Transform that takes this shape (centered around center of mass) to world space (or a desired other space)
-	/// @param inScale Scale in local space of the shape
+	/// @param inScale Scale in local space of the shape (scales relative to its center of mass)
 	/// @param inSurface The surface plane of the liquid relative to inCenterOfMassTransform
 	/// @param outTotalVolume On return this contains the total volume of the shape
 	/// @param outSubmergedVolume On return this contains the submerged volume of the shape
@@ -308,7 +308,7 @@ public:
 
 	/// Collides all vertices of a soft body with this shape and updates SoftBodyVertex::mCollisionPlane, SoftBodyVertex::mCollidingShapeIndex and SoftBodyVertex::mLargestPenetration if a collision with more penetration was found.
 	/// @param inCenterOfMassTransform Center of mass transform for this shape relative to the vertices.
-	/// @param inScale The scale to use for this shape
+	/// @param inScale Scale in local space of the shape (scales relative to its center of mass)
 	/// @param ioVertices The vertices of the soft body
 	/// @param inNumVertices The number of vertices in ioVertices
 	/// @param inDeltaTime Delta time of this time step (can be used to extrapolate the position using the velocity of the particle)
