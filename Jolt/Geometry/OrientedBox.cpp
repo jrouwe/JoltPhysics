@@ -4,8 +4,8 @@
 
 #include <Jolt/Jolt.h>
 
-#include <Jolt/Geometry/AABox.h>
 #include <Jolt/Geometry/OrientedBox.h>
+#include <Jolt/Geometry/AABox.h>
 
 JPH_NAMESPACE_BEGIN
 
