@@ -4,10 +4,10 @@
 
 #include <Jolt/Jolt.h>
 
+#include <Jolt/Physics/Character/Character.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
-#include <Jolt/Physics/Character/Character.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/ObjectStream/TypeDeclarations.h>
 
