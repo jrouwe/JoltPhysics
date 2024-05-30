@@ -6,9 +6,9 @@
 
 #ifdef JPH_OBJECT_STREAM
 
+#include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Jolt/Core/Factory.h>
 #include <Jolt/Core/UnorderedSet.h>
-#include <Jolt/ObjectStream/ObjectStreamIn.h>
 #include <Jolt/ObjectStream/ObjectStreamTextIn.h>
 #include <Jolt/ObjectStream/ObjectStreamBinaryIn.h>
 #include <Jolt/ObjectStream/SerializableObject.h>
