@@ -78,6 +78,10 @@ public:
 	/// Artificial maximum value of mHeightSamples, used for compression and can be used to update the terrain after creating with higher height values. If there are any higher values in mHeightSamples, this value will be ignored.
 	float							mMaxHeightValue = -FLT_MAX;
 
+	/// When bigger than mMaterials.size() the internal material list will be preallocated to support this number of materials.
+	/// This avoids reallocations when calling HeightFieldShape::SetMaterials with new materials later.
+	uint32							mMaterialsCapacity = 0;
+
 	/// The heightfield is divided in blocks of mBlockSize * mBlockSize * 2 triangles and the acceleration structure culls blocks only,
 	/// bigger block sizes reduce memory consumption but also reduce query performance. Sensible values are [2, 8], does not need to be
 	/// a power of 2. Note that at run-time we'll perform one more grid subdivision, so the effective block size is half of what is provided here.

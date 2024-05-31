@@ -19,6 +19,7 @@ For breaking API changes see [this document](https://github.com/jrouwe/JoltPhysi
 * Sped up deserialization of HeightFieldShape/MeshShape classes by optimizing reading a vector of data in StreamIn, by switching std::vector out for a custom Array class and by combining a number of allocations into one.
 * Added HeightFieldShape::GetMinHeightValue/GetMaxHeightValue that can be used to know which range of heights are accepted by SetHeights.
 * Allowing negative stride when getting/setting height field shape heights or materials. This improves performance if your data happens to be layed out the wrong way around.
+* Added HeightFieldShapeSettings::mMaterialsCapacity which can enlarge the internal materials array capacity to avoid resizing when HeightFieldShape::SetMaterials is called with materials that weren't in use by the height field yet.
 
 #### Character
 
