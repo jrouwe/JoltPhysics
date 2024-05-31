@@ -610,9 +610,18 @@ DVec3 DVec3::operator - () const
 	__m128d zero = _mm_setzero_pd();
 	return DVec3({ _mm_sub_pd(zero, mValue.mLow), _mm_sub_pd(zero, mValue.mHigh) });
 #elif defined(JPH_USE_NEON)
-	return DVec3({ vnegq_f64(mValue.val[0]), vnegq_f64(mValue.val[1]) });
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		float64x2_t zero = vdupq_n_f64(0);
+		return DVec3({ vsubq_f64(zero, mValue.val[0]), vsubq_f64(zero, mValue.val[1]) });
+	#else
+		return DVec3({ vnegq_f64(mValue.val[0]), vnegq_f64(mValue.val[1]) });
+	#endif
 #else
-	return DVec3(-mF64[0], -mF64[1], -mF64[2]);
+	#ifdef JPH_CROSS_PLATFORM_DETERMINISTIC
+		return DVec3(0.0 - mF64[0], 0.0 - mF64[1], 0.0 - mF64[2]);
+	#else
+		return DVec3(-mF64[0], -mF64[1], -mF64[2]);
+	#endif
 #endif
 }
 
