@@ -30,7 +30,7 @@ public:
 	}
 
 	/// No longer call the exit function when going out of scope
-	JPH_INLINE void		Dismiss()
+	JPH_INLINE void		Release()
 	{
 		mInvoked = true;
 	}

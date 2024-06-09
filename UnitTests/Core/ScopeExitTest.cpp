@@ -19,14 +19,14 @@ TEST_SUITE("ScopeExitTest")
 		CHECK(value == 2);
 	}
 
-	TEST_CASE("TestScopeExitDismiss")
+	TEST_CASE("TestScopeExitRelease")
 	{
 		int value = 0;
 		{
 			ScopeExit scope_exit([&value]{ value++; });
 			CHECK(value == 0);
 			// Don't call the exit function anymore
-			scope_exit.Dismiss();
+			scope_exit.Release();
 		}
 		CHECK(value == 0);
 	}
