@@ -108,6 +108,10 @@ public:
 };
 
 /// A height field shape. Cannot be used as a dynamic object.
+///
+/// Note: If you're using HeightFieldShape and are querying data while modifying the shape you'll have a race condition.
+/// In this case it is best to create a new HeightFieldShape using the Clone function. You replace the shape on a body using BodyInterface::SetShape.
+/// If a query is still working on the old shape, it will have taken a reference and keep the old shape alive until the query finishes.
 class JPH_EXPORT HeightFieldShape final : public Shape
 {
 public:
@@ -117,6 +121,9 @@ public:
 									HeightFieldShape() : Shape(EShapeType::HeightField, EShapeSubType::HeightField) { }
 									HeightFieldShape(const HeightFieldShapeSettings &inSettings, ShapeResult &outResult);
 	virtual							~HeightFieldShape() override;
+
+	/// Clone this shape. Can be used to avoid race conditions. See the documentation of this class for more information.
+	Ref<HeightFieldShape>			Clone() const;
 
 	// See Shape::MustBeStatic
 	virtual bool					MustBeStatic() const override				{ return true; }
@@ -202,6 +209,7 @@ public:
 
 	/// Set the height values of a block of data.
 	/// Note that this requires decompressing and recompressing a border of size mBlockSize in the negative x/y direction so will cause some precision loss.
+	/// Beware this can create a race condition if you're running collision queries in parallel. See class documentation for more information.
 	/// @param inX Start X position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
 	/// @param inY Start Y position, must be a multiple of mBlockSize and in the range [0, mSampleCount - 1]
 	/// @param inSizeX Number of samples in X direction, must be a multiple of mBlockSize and in the range [0, mSampleCount - inX]
@@ -225,6 +233,7 @@ public:
 	void							GetMaterials(uint inX, uint inY, uint inSizeX, uint inSizeY, uint8 *outMaterials, intptr_t inMaterialsStride) const;
 
 	/// Set the material indices of a block of data.
+	/// Beware this can create a race condition if you're running collision queries in parallel. See class documentation for more information.
 	/// @param inX Start X position, must in the range [0, mSampleCount - 1]
 	/// @param inY Start Y position, must in the range [0, mSampleCount - 1]
 	/// @param inSizeX Number of samples in X direction
