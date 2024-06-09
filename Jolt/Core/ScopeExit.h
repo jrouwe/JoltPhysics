@@ -14,7 +14,7 @@ class ScopeExit : public NonCopyable
 {
 public:
 	/// Constructor specifies the exit function
-	JPH_INLINE			ScopeExit(F &&inFunction) : mFunction(inFunction) { }
+	JPH_INLINE explicit	ScopeExit(F &&inFunction) : mFunction(std::move(inFunction)) { }
 
 	/// Destructor calls the exit function
 	JPH_INLINE			~ScopeExit() { if (!mInvoked) mFunction(); }
