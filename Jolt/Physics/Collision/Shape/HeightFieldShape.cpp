@@ -714,6 +714,36 @@ HeightFieldShape::~HeightFieldShape()
 		AlignedFree(mRangeBlocks);
 }
 
+Ref<HeightFieldShape> HeightFieldShape::Clone() const
+{
+	Ref<HeightFieldShape> clone = new HeightFieldShape;
+	clone->SetUserData(GetUserData());
+
+	clone->mOffset = mOffset;
+	clone->mScale = mScale;
+	clone->mSampleCount = mSampleCount;
+	clone->mBlockSize = mBlockSize;
+	clone->mBitsPerSample = mBitsPerSample;
+	clone->mSampleMask = mSampleMask;
+	clone->mMinSample = mMinSample;
+	clone->mMaxSample = mMaxSample;
+
+	clone->AllocateBuffers();
+	memcpy(clone->mRangeBlocks, mRangeBlocks, mRangeBlocksSize * sizeof(RangeBlock) + mHeightSamplesSize + mActiveEdgesSize); // Copy the entire buffer in 1 go
+
+	clone->mMaterials.reserve(mMaterials.capacity()); // Ensure we keep the capacity of the original
+	clone->mMaterials = mMaterials;
+	clone->mMaterialIndices = mMaterialIndices;
+	clone->mNumBitsPerMaterialIndex = mNumBitsPerMaterialIndex;
+
+#ifdef JPH_DEBUG_RENDERER
+	clone->mGeometry = mGeometry;
+	clone->mCachedUseMaterialColors = mCachedUseMaterialColors;
+#endif // JPH_DEBUG_RENDERER
+
+	return clone;
+}
+
 inline void HeightFieldShape::sGetRangeBlockOffsetAndStride(uint inNumBlocks, uint inMaxLevel, uint &outRangeBlockOffset, uint &outRangeBlockStride)
 {
 	outRangeBlockOffset = sGridOffsets[inMaxLevel - 1];
