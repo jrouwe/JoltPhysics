@@ -27,6 +27,7 @@
 #include <Jolt/Core/StreamIn.h>
 #include <Jolt/Core/StreamOut.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Core/ScopeExit.h>
 #include <Jolt/Geometry/AABox4.h>
 #include <Jolt/Geometry/RayTriangle.h>
 #include <Jolt/Geometry/RayAABox.h>
@@ -203,6 +204,7 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 	// Allocate temporary buffer for normals
 	uint normals_size = 2 * inSizeX * inSizeY * sizeof(Vec3);
 	Vec3 *normals = (Vec3 *)inAllocator.Allocate(normals_size);
+	JPH_SCOPE_EXIT([&inAllocator, normals, normals_size]{ inAllocator.Free(normals, normals_size); });
 
 	// Calculate triangle normals and make normals zero for triangles that are missing
 	Vec3 *out_normal = normals;
@@ -312,9 +314,6 @@ void HeightFieldShape::CalculateActiveEdges(uint inX, uint inY, uint inSizeX, ui
 
 		global_bit_pos += 3 * (mSampleCount - 1 - inSizeX);
 	}
-
-	// Free temporary buffer for normals
-	inAllocator.Free(normals, normals_size);
 }
 
 void HeightFieldShape::CalculateActiveEdges(const HeightFieldShapeSettings &inSettings)
@@ -1252,6 +1251,7 @@ bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 	// Remap materials
 	uint material_remap_table_size = uint(inMaterialList != nullptr? inMaterialList->size() : mMaterials.size());
 	uint8 *material_remap_table = (uint8 *)inAllocator.Allocate(material_remap_table_size);
+	JPH_SCOPE_EXIT([&inAllocator, material_remap_table, material_remap_table_size]{ inAllocator.Free(material_remap_table, material_remap_table_size); });
 	if (inMaterialList != nullptr)
 	{
 		// Conservatively reserve more space if the incoming material list is bigger
@@ -1275,7 +1275,6 @@ bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 				if (mMaterials.size() >= 256)
 				{
 					// We can't have more than 256 materials since we use uint8 as indices
-					inAllocator.Free(material_remap_table, material_remap_table_size);
 					return false;
 				}
 				*remap_entry = uint8(mMaterials.size());
@@ -1294,7 +1293,6 @@ bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 	if (mMaterials.size() == 1)
 	{
 		// Only 1 material, we don't need to store the material indices
-		inAllocator.Free(material_remap_table, material_remap_table_size);
 		return true;
 	}
 
@@ -1374,8 +1372,6 @@ bool HeightFieldShape::SetMaterials(uint inX, uint inY, uint inSizeX, uint inSiz
 		}
 	}
 
-	// Free the remapping table
-	inAllocator.Free(material_remap_table, material_remap_table_size);
 	return true;
 }
 

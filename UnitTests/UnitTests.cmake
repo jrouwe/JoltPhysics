@@ -9,6 +9,7 @@ set(UNIT_TESTS_SRC_FILES
 	${UNIT_TESTS_ROOT}/Core/JobSystemTest.cpp
 	${UNIT_TESTS_ROOT}/Core/LinearCurveTest.cpp
 	${UNIT_TESTS_ROOT}/Core/PreciseMathTest.cpp
+	${UNIT_TESTS_ROOT}/Core/ScopeExitTest.cpp
 	${UNIT_TESTS_ROOT}/Core/StringToolsTest.cpp
 	${UNIT_TESTS_ROOT}/Core/QuickSortTest.cpp
 	${UNIT_TESTS_ROOT}/doctest.h
