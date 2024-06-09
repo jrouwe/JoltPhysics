@@ -23,7 +23,7 @@ TEST_SUITE("ScopeExitTest")
 	{
 		int value = 0;
 		{
-			ScopeExit scope_exit(std::move([&value]{ value++; }));
+			ScopeExit scope_exit([&value]{ value++; });
 			CHECK(value == 0);
 			// Don't call the exit function anymore
 			scope_exit.Dismiss();
@@ -35,7 +35,7 @@ TEST_SUITE("ScopeExitTest")
 	{
 		int value = 0;
 		{
-			ScopeExit scope_exit(std::move([&value]{ value++; }));
+			ScopeExit scope_exit([&value]{ value++; });
 			CHECK(value == 0);
 			scope_exit.Invoke();
 			CHECK(value == 1);

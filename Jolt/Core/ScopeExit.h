@@ -44,6 +44,6 @@ private:
 #define JPH_SCOPE_EXIT_TAG(line)			JPH_SCOPE_EXIT_TAG2(line)
 
 /// Usage: JPH_SCOPE_EXIT([]{ code to call on scope exit });
-#define JPH_SCOPE_EXIT(...) ScopeExit JPH_SCOPE_EXIT_TAG(__LINE__)(std::move(__VA_ARGS__))
+#define JPH_SCOPE_EXIT(...) ScopeExit JPH_SCOPE_EXIT_TAG(__LINE__)(__VA_ARGS__)
 
 JPH_NAMESPACE_END
