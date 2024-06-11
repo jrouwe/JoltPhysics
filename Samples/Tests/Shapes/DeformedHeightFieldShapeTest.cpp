@@ -38,7 +38,7 @@ void DeformedHeightFieldShapeTest::Initialize()
 	settings.mBlockSize = cBlockSize;
 	settings.mBitsPerSample = 8;
 	settings.mMinHeightValue = -15.0f;
-	mHeightField = static_cast<HeightFieldShape *>(settings.Create().Get().GetPtr());
+	mHeightField = StaticCast<HeightFieldShape>(settings.Create().Get());
 	mHeightFieldID = mBodyInterface->CreateAndAddBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING), EActivation::DontActivate);
 
 	// Spheres on top of the terrain

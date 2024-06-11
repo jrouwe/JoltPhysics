@@ -137,7 +137,7 @@ void HeightFieldShapeTest::Initialize()
 	HeightFieldShapeSettings settings(mTerrain.data(), mTerrainOffset, mTerrainScale, mTerrainSize, mMaterialIndices.data(), mMaterials);
 	settings.mBlockSize = 1 << sBlockSizeShift;
 	settings.mBitsPerSample = sBitsPerSample;
-	mHeightField = static_cast<const HeightFieldShape *>(settings.Create().Get().GetPtr());
+	mHeightField = StaticCast<HeightFieldShape>(settings.Create().Get());
 	Body &terrain = *mBodyInterface->CreateBody(BodyCreationSettings(mHeightField, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	mBodyInterface->AddBody(terrain.GetID(), EActivation::DontActivate);
 

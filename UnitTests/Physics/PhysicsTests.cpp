@@ -1786,7 +1786,7 @@ TEST_SUITE("PhysicsTests")
 		shape_settings->AddShape(Vec3(-5, 0, 0), Quat::sIdentity(), box_shape);
 		shape_settings->AddShape(Vec3(0, 0, 5), Quat::sIdentity(), box_shape);
 		shape_settings->AddShape(Vec3(0, 0, -5), Quat::sIdentity(), box_shape);
-		RefConst<StaticCompoundShape> compound_shape = static_cast<const StaticCompoundShape *>(shape_settings->Create().Get().GetPtr());
+		RefConst<StaticCompoundShape> compound_shape = StaticCast<StaticCompoundShape>(shape_settings->Create().Get());
 		SubShapeID sub_shape_ids[] = {
 			compound_shape->GetSubShapeIDFromIndex(0, SubShapeIDCreator()).GetID(),
 			compound_shape->GetSubShapeIDFromIndex(1, SubShapeIDCreator()).GetID(),
