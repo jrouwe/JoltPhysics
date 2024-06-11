@@ -132,7 +132,7 @@ void ConvexHullShrinkTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 		Trace("%d: %s", mIteration - 1, result.GetError().c_str());
 		return;
 	}
-	RefConst<ConvexHullShape> shape = static_cast<const ConvexHullShape *>(result.Get().GetPtr());
+	RefConst<ConvexHullShape> shape = StaticCast<ConvexHullShape>(result.Get());
 
 	// Shape creation may have reduced the convex radius, fetch the result
 	const float convex_radius = shape->GetConvexRadius();

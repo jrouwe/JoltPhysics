@@ -362,16 +362,16 @@ TEST_SUITE("ShapeTests")
 	{
 		// Create a sphere and check radius
 		SphereShapeSettings sphere_settings(1.0f);
-		RefConst<SphereShape> sphere1 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		RefConst<SphereShape> sphere1 = StaticCast<SphereShape>(sphere_settings.Create().Get());
 		CHECK(sphere1->GetRadius() == 1.0f);
 
 		// Modify radius and check that creating the shape again returns the cached result
 		sphere_settings.mRadius = 2.0f;
-		RefConst<SphereShape> sphere2 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		RefConst<SphereShape> sphere2 = StaticCast<SphereShape>(sphere_settings.Create().Get());
 		CHECK(sphere2 == sphere1);
 
 		sphere_settings.ClearCachedResult();
-		RefConst<SphereShape> sphere3 = static_cast<const SphereShape *>(sphere_settings.Create().Get().GetPtr());
+		RefConst<SphereShape> sphere3 = StaticCast<SphereShape>(sphere_settings.Create().Get());
 		CHECK(sphere3->GetRadius() == 2.0f);
 	}
 
@@ -599,20 +599,20 @@ TEST_SUITE("ShapeTests")
 		CHECK(sphere->GetType() == EShapeType::Convex);
 		CHECK(sphere->GetSubType() == EShapeSubType::Sphere);
 		CHECK(sphere->GetUserData() == 0x5678123443218765);
-		CHECK(static_cast<SphereShape *>(sphere.GetPtr())->GetRadius() == cRadius);
+		CHECK(StaticCast<SphereShape>(sphere)->GetRadius() == cRadius);
 	}
 
 	// Test setting user data on shapes
 	TEST_CASE("TestIsValidSubShapeID")
 	{
 		MutableCompoundShapeSettings shape1_settings;
-		RefConst<CompoundShape> shape1 = static_cast<const CompoundShape *>(shape1_settings.Create().Get().GetPtr());
+		RefConst<CompoundShape> shape1 = StaticCast<CompoundShape>(shape1_settings.Create().Get());
 
 		MutableCompoundShapeSettings shape2_settings;
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));
 		shape2_settings.AddShape(Vec3::sZero(), Quat::sIdentity(), new SphereShape(1.0f));
-		RefConst<CompoundShape> shape2 = static_cast<const CompoundShape *>(shape2_settings.Create().Get().GetPtr());
+		RefConst<CompoundShape> shape2 = StaticCast<CompoundShape>(shape2_settings.Create().Get());
 
 		// Get sub shape IDs of shape 2 and test if they're valid
 		SubShapeID sub_shape1 = shape2->GetSubShapeIDFromIndex(0, SubShapeIDCreator()).GetID();
@@ -731,7 +731,7 @@ TEST_SUITE("ShapeTests")
 			StreamInWrapper iwrapper(stream);
 			Shape::ShapeResult result = Shape::sRestoreFromBinaryState(iwrapper);
 			CHECK(result.IsValid());
-			RefConst<MeshShape> mesh_shape = static_cast<const MeshShape *>(result.Get().GetPtr());
+			RefConst<MeshShape> mesh_shape = StaticCast<MeshShape>(result.Get());
 
 			// Test if it contains the same amount of triangles
 			Shape::Stats stats = mesh_shape->GetStats();

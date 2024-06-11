@@ -42,7 +42,7 @@ void ConstraintPriorityTest::Initialize()
 			settings.mConstraintPriority = priority == 0? i : num_bodies - i; // Priority is reversed for one chain compared to the other
 			Ref<Constraint> c = settings.Create(*prev, segment);
 			mPhysicsSystem->AddConstraint(c);
-			mConstraints.push_back(static_cast<FixedConstraint *>(c.GetPtr()));
+			mConstraints.push_back(StaticCast<FixedConstraint>(c));
 
 			prev = &segment;
 		}

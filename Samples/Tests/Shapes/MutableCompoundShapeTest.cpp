@@ -160,7 +160,7 @@ void MutableCompoundShapeTest::RestoreState(StateRecorder &inStream)
 			stringstream data(str);
 			StreamInWrapper stream_in(data);
 			Shape::ShapeResult result = Shape::sRestoreFromBinaryState(stream_in);
-			MutableCompoundShape *shape = static_cast<MutableCompoundShape *>(result.Get().GetPtr());
+			MutableCompoundShape *shape = StaticCast<MutableCompoundShape>(result.Get());
 
 			// Restore the pointers to the sub compound
 			ShapeList sub_shapes(shape->GetNumSubShapes(), mSubCompound);
