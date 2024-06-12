@@ -55,7 +55,7 @@ private:
 	/// Mutex that is used to allocate a new page if the storage runs out
 	/// This variable is aligned to the cache line to prevent false sharing with
 	/// the constants used to index into the list via `Get()`.
-	alignas(JPH_CACHE_LINE_SIZE) Mutex					mPageMutex;
+	alignas(JPH_CACHE_LINE_SIZE) Mutex mPageMutex;
 
 	/// Number of objects that we currently have in the free list / new pages
 #ifdef JPH_ENABLE_ASSERTS

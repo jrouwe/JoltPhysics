@@ -334,7 +334,7 @@ private:
 	/// Number of bodies currently in the tree
 	/// This is aligned to be in a different cache line from the `Allocator` pointer to prevent cross-thread syncs
 	/// when reading nodes.
-	alignas(JPH_CACHE_LINE_SIZE) atomic<uint32>				mNumBodies { 0 };
+	alignas(JPH_CACHE_LINE_SIZE) atomic<uint32> mNumBodies { 0 };
 
 	/// We alternate between two tree root nodes. When updating, we activate the new tree and we keep the old tree alive.
 	/// for queries that are in progress until the next time DiscardOldTree() is called.
@@ -385,7 +385,6 @@ private:
 	/// Name of this tree for debugging purposes
 	const char *				mName = "Layer";
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
-
 };
 
 JPH_NAMESPACE_END
