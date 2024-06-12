@@ -296,7 +296,7 @@ TEST_SUITE("CollideShapeTests")
 			Vec3(-132.543304f, 164.551971f, 617.646362f)
 		};
 		ConvexHullShapeSettings hull_settings(obox_points, 0.0f);
-		RefConst<ConvexShape> convex_hull = static_cast<const ConvexShape *>(hull_settings.Create().Get().GetPtr());
+		RefConst<ConvexShape> convex_hull = StaticCast<ConvexShape>(hull_settings.Create().Get());
 
 		// Create triangle support function
 		TriangleConvexSupport triangle(v0, v1, v2);
