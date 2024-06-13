@@ -495,7 +495,10 @@ if (BUILD_SHARED_LIBS)
 	target_compile_definitions(Jolt PRIVATE JPH_BUILD_SHARED_LIBRARY)
 endif()
 
-target_include_directories(Jolt PUBLIC ${PHYSICS_REPO_ROOT})
+# Use repository as include directory when building, install directory when installing
+target_include_directories(Jolt PUBLIC
+	$<BUILD_INTERFACE:${PHYSICS_REPO_ROOT}>
+	$<INSTALL_INTERFACE:include/>)
 target_precompile_headers(Jolt PRIVATE ${JOLT_PHYSICS_ROOT}/Jolt.h)
 
 # Set the debug/non-debug build flags
