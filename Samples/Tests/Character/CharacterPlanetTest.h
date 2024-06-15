@@ -58,6 +58,7 @@ private:
 
 	// Player input
 	Vec3					mDesiredVelocity = Vec3::sZero();
+	Vec3					mDesiredVelocityWS = Vec3::sZero();
 	bool					mJump = false;
 	bool					mWasJump = false;
 };

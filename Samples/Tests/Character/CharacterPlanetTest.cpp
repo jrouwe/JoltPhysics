@@ -61,20 +61,25 @@ void CharacterPlanetTest::ProcessInput(const ProcessInputParams &inParams)
 	// Smooth the player input
 	mDesiredVelocity = 0.25f * control_input * cCharacterSpeed + 0.75f * mDesiredVelocity;
 
+	// Convert player input to world space
+	Vec3 up = mCharacter->GetUp();
+	Vec3 right = inParams.mCameraState.mForward.Cross(up).NormalizedOr(Vec3::sAxisZ());
+	Vec3 forward = up.Cross(right).NormalizedOr(Vec3::sAxisX());
+	mDesiredVelocityWS = right * mDesiredVelocity.GetZ() + forward * mDesiredVelocity.GetX();
+
 	// Check actions
 	mJump = inParams.mKeyboard->IsKeyPressedAndTriggered(DIK_RCONTROL, mWasJump);
 }
 
 void CharacterPlanetTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 {
-	// Calculate up vector based on position on planet
+	// Calculate up vector based on position on planet surface
+	Vec3 old_up = mCharacter->GetUp();
 	Vec3 up = Vec3(mCharacter->GetPosition()).Normalized();
 	mCharacter->SetUp(up);
 
-	// Rotate capsule so it points up.
-	// Note that you probably want to define the rotation around the up vector based on the camera
-	// forward, but this creates a feedback loop in the demo frame work camera system so we don't do that.
-	mCharacter->SetRotation(Quat::sFromTo(Vec3::sAxisY(), up));
+	// Rotate capsule so it points up relative to the planet surface
+	mCharacter->SetRotation((Quat::sFromTo(old_up, up) * mCharacter->GetRotation()).Normalized());
 
 	// Draw character pre update (the sim is also drawn pre update)
 #ifdef JPH_DEBUG_RENDERER
@@ -102,10 +107,8 @@ void CharacterPlanetTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	Vec3 gravity = -up * mPhysicsSystem->GetGravity().Length();
 	new_velocity += gravity * inParams.mDeltaTime;
 
-	// Apply player input relative to the camera
-	Vec3 right = inParams.mCameraState.mForward.Cross(up).NormalizedOr(Vec3::sAxisZ());
-	Vec3 forward = up.Cross(right).NormalizedOr(Vec3::sAxisX());
-	new_velocity += right * mDesiredVelocity.GetZ() + forward * mDesiredVelocity.GetX();
+	// Apply player input
+	new_velocity += mDesiredVelocityWS;
 
 	// Update character velocity
 	mCharacter->SetLinearVelocity(new_velocity);
@@ -131,8 +134,6 @@ void CharacterPlanetTest::GetInitialCamera(CameraState& ioState) const
 RMat44 CharacterPlanetTest::GetCameraPivot(float inCameraHeading, float inCameraPitch) const
 {
 	// Pivot is center of character + distance behind based on the heading and pitch of the camera.
-	// Note that this has a singularity on the south pole of the planet which causes the camera to behave erratically as you get close.
-	// The demo framework camera system wasn't really made to deal with cameras that are upside down.
 	Vec3 fwd = Vec3(Cos(inCameraPitch) * Cos(inCameraHeading), Sin(inCameraPitch), Cos(inCameraPitch) * Sin(inCameraHeading));
 	RVec3 cam_pos = mCharacter->GetPosition() - 5.0f * (mCharacter->GetRotation() * fwd);
 	return RMat44::sRotationTranslation(mCharacter->GetRotation(), cam_pos);
@@ -141,22 +142,31 @@ RMat44 CharacterPlanetTest::GetCameraPivot(float inCameraHeading, float inCamera
 void CharacterPlanetTest::SaveState(StateRecorder &inStream) const
 {
 	mCharacter->SaveState(inStream);
+
+	// Save character up, it's not stored by default but we use it in this case update the rotation of the character
+	inStream.Write(mCharacter->GetUp());
 }
 
 void CharacterPlanetTest::RestoreState(StateRecorder &inStream)
 {
 	mCharacter->RestoreState(inStream);
+
+	Vec3 up = mCharacter->GetUp();
+	inStream.Read(up);
+	mCharacter->SetUp(up);
 }
 
 void CharacterPlanetTest::SaveInputState(StateRecorder &inStream) const
 {
 	inStream.Write(mDesiredVelocity);
+	inStream.Write(mDesiredVelocityWS);
 	inStream.Write(mJump);
 }
 
 void CharacterPlanetTest::RestoreInputState(StateRecorder &inStream)
 {
 	inStream.Read(mDesiredVelocity);
+	inStream.Read(mDesiredVelocityWS);
 	inStream.Read(mJump);
 }
 
