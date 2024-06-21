@@ -14,6 +14,7 @@
 JPH_NAMESPACE_BEGIN
 
 class CharacterVirtual;
+class CollideShapeSettings;
 
 /// Contains the configuration of a character
 class JPH_EXPORT CharacterVirtualSettings : public CharacterBaseSettings
@@ -87,6 +88,29 @@ public:
 	virtual void						OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) { /* Default do nothing */ }
 };
 
+/// Interface class that allows a CharacterVirtual to check collision with other CharacterVirtual instances.
+/// Since CharacterVirtual instances are not registered anywhere, it is up to the application to test collision against relevant characters.
+/// The characters could be stored in a tree structure to make this more efficient.
+class JPH_EXPORT CharacterVsCharacterCollision
+{
+public:
+	virtual								~CharacterVsCharacterCollision() = default;
+
+	virtual void						CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const = 0;
+};
+
+/// Simple collision checker that loops over all registered characters.
+/// Note that this is not thread safe, so make sure that only one CharacterVirtual is checking collision at a time.
+class JPH_EXPORT CharacterVsCharacterCollisionSimple : public CharacterVsCharacterCollision
+{
+public:
+	void								Add(CharacterVirtual *inCharacter)						{ mCharacters.push_back(inCharacter); }
+
+	virtual void						CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const override;
+
+	Array<CharacterVirtual *>			mCharacters;
+};
+
 /// Runtime character object.
 /// This object usually represents the player. Contrary to the Character class it doesn't use a rigid body but moves doing collision checks only (hence the name virtual).
 /// The advantage of this is that you can determine when the character moves in the frame (usually this has to happen at a very particular point in the frame)
@@ -110,6 +134,9 @@ public:
 
 	/// Set the contact listener
 	void								SetListener(CharacterContactListener *inListener)		{ mListener = inListener; }
+
+	/// Set the character vs character collision interface
+	void								SetCharacterVsCharacterCollision(CharacterVsCharacterCollision *inCharacterVsCharacterCollision) { mCharacterVsCharacterCollision = inCharacterVsCharacterCollision; }
 
 	/// Get the current contact listener
 	CharacterContactListener *			GetListener() const										{ return mListener; }
@@ -271,7 +298,8 @@ public:
 	/// @return Returns true if the switch succeeded.
 	bool								SetShape(const Shape *inShape, float inMaxPenetrationDepth, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator);
 
-	/// @brief Get all contacts for the character at a particular location
+	/// @brief Get all contacts for the character at a particular location.
+	/// When colliding with another character virtual, this pointer will be provided through CollideShapeCollector::SetUserContext before adding a hit.
 	/// @param inPosition Position to test, note that this position will be corrected for the character padding.
 	/// @param inRotation Rotation at which to test the shape.
 	/// @param inMovementDirection A hint in which direction the character is moving, will be used to calculate a proper normal.
@@ -302,13 +330,17 @@ public:
 		void							SaveState(StateRecorder &inStream) const;
 		void							RestoreState(StateRecorder &inStream);
 
+		// Checks if two contacts refer to the same body (or virtual character)
+		inline bool						IsSameBody(const Contact &inOther) const				{ return mBodyB == inOther.mBodyB && mCharacterB == inOther.mCharacterB; }
+
 		RVec3							mPosition;												///< Position where the character makes contact
 		Vec3							mLinearVelocity;										///< Velocity of the contact point
 		Vec3							mContactNormal;											///< Contact normal, pointing towards the character
 		Vec3							mSurfaceNormal;											///< Surface normal of the contact
 		float							mDistance;												///< Distance to the contact <= 0 means that it is an actual contact, > 0 means predictive
 		float							mFraction;												///< Fraction along the path where this contact takes place
-		BodyID							mBodyB;													///< ID of body we're colliding with
+		BodyID							mBodyB;													///< ID of body we're colliding with (if not invalid)
+		CharacterVirtual *				mCharacterB;											///< Character we're colliding with (if not null)
 		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body we're colliding with
 		EMotionType						mMotionTypeB;											///< Motion type of B, used to determine the priority of the contact
 		bool							mIsSensorB;												///< If B is a sensor
@@ -369,12 +401,15 @@ private:
 	public:
 										ContactCollector(PhysicsSystem *inSystem, const CharacterVirtual *inCharacter, uint inMaxHits, float inHitReductionCosMaxAngle, Vec3Arg inUp, RVec3Arg inBaseOffset, TempContactList &outContacts) : mBaseOffset(inBaseOffset), mUp(inUp), mSystem(inSystem), mCharacter(inCharacter), mContacts(outContacts), mMaxHits(inMaxHits), mHitReductionCosMaxAngle(inHitReductionCosMaxAngle) { }
 
+		virtual void					SetUserData(uint64 inUserData) override					{ mOtherCharacter = reinterpret_cast<CharacterVirtual *>(inUserData); }
+
 		virtual void					AddHit(const CollideShapeResult &inResult) override;
 
 		RVec3							mBaseOffset;
 		Vec3							mUp;
 		PhysicsSystem *					mSystem;
 		const CharacterVirtual *		mCharacter;
+		CharacterVirtual *				mOtherCharacter = nullptr;
 		TempContactList &				mContacts;
 		uint							mMaxHits;
 		float							mHitReductionCosMaxAngle;
@@ -459,6 +494,9 @@ private:
 
 	// Our main listener for contacts
 	CharacterContactListener *			mListener = nullptr;
+
+	// Interface to detect collision between characters
+	CharacterVsCharacterCollision *		mCharacterVsCharacterCollision = nullptr;
 
 	// Movement settings
 	EBackFaceMode						mBackFaceMode;											// When colliding with back faces, the character will not be able to move through back facing triangles. Use this if you have triangles that need to collide on both sides.
