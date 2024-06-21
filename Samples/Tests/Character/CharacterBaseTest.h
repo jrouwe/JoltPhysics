@@ -5,13 +5,17 @@
 #pragma once
 
 #include <Tests/Test.h>
-#include <Jolt/Physics/Character/CharacterBase.h>
+#include <Jolt/Physics/Character/Character.h>
+#include <Jolt/Physics/Character/CharacterVirtual.h>
 
 // Base class for the character tests, initializes the test scene.
 class CharacterBaseTest : public Test
 {
 public:
 	JPH_DECLARE_RTTI_VIRTUAL(JPH_NO_EXPORT, CharacterBaseTest)
+
+	// Destructor
+	virtual					~CharacterBaseTest() override;
 
 	// Number used to scale the terrain and camera movement to the scene
 	virtual float			GetWorldScale() const override								{ return 0.2f; }
@@ -47,6 +51,9 @@ protected:
 	// Get position of the character
 	virtual RVec3			GetCharacterPosition() const = 0;
 
+	// Get the collision interface that allows collision with other characters
+	CharacterVsCharacterCollision &GetCharacterVsCharacterCollision()					{ return mCharacterVsCharacterCollision; }
+
 	// Handle user input to the character
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) = 0;
 
@@ -66,7 +73,7 @@ protected:
 	static constexpr float	cCharacterRadiusCrouching = 0.3f;
 
 	// Character movement properties
-	inline static bool		sControlMovementDuringJump = true;					///< If false the character cannot change movement direction in mid air
+	inline static bool		sControlMovementDuringJump = true;							///< If false the character cannot change movement direction in mid air
 	inline static float		sCharacterSpeed = 6.0f;
 	inline static float		sJumpSpeed = 4.0f;
 
@@ -116,6 +123,11 @@ private:
 	BodyID					mReversingVerticallyMovingBody;
 	float					mReversingVerticallyMovingVelocity = 1.0f;
 	BodyID					mHorizontallyMovingBody;
+
+	// Moving characters
+	Ref<Character>			mAnimatedCharacter;
+	Ref<CharacterVirtual>	mAnimatedCharacterVirtual;
+	CharacterVsCharacterCollisionSimple mCharacterVsCharacterCollision;
 
 	// Player input
 	Vec3					mControlInput = Vec3::sZero();

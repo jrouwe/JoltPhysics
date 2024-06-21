@@ -20,6 +20,22 @@
 
 JPH_NAMESPACE_BEGIN
 
+void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const
+{
+	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();
+	const Shape *shape = inCharacter->GetShape();
+
+	// Iterate over all characters
+	for (const CharacterVirtual *c : mCharacters)
+		if (!ioCollector.ShouldEarlyOut())
+		{
+			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
+			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
+			CollisionDispatch::sCollideShapeVsShape(shape, c->GetShape(), Vec3::sReplicate(1.0f), Vec3::sReplicate(1.0f), transform1, transform2, SubShapeIDCreator(), SubShapeIDCreator(), inCollideShapeSettings, ioCollector);
+		}
+	ioCollector.SetUserData(0);
+}
+
 CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
 	mBackFaceMode(inSettings->mBackFaceMode),
@@ -122,7 +138,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 				for (int j = i - 1; j >= 0; --j)
 				{
 					Contact &contact_j = mContacts[j];
-					if (contact_i.mBodyB == contact_j.mBodyB // Same body
+					if (contact_i.IsSameBody(contact_j)
 						&& contact_i.mContactNormal.Dot(contact_j.mContactNormal) > mHitReductionCosMaxAngle) // Very similar contact normals
 					{
 						// Remove the contact with the biggest distance
@@ -160,13 +176,37 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 		}
 	}
 
-	BodyLockRead lock(mSystem->GetBodyLockInterface(), inResult.mBodyID2);
-	if (lock.SucceededAndIsInBroadPhase())
+	if (inResult.mBodyID2.IsInvalid())
 	{
+		// Assuming this is a hit against another character
+		JPH_ASSERT(mOtherCharacter != nullptr);
+
+		// Create contact with other character
 		mContacts.emplace_back();
 		Contact &contact = mContacts.back();
-		sFillContactProperties(mCharacter, contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
+		contact.mPosition = mBaseOffset + inResult.mContactPointOn2;
+		contact.mLinearVelocity = mOtherCharacter->GetLinearVelocity();
+		contact.mSurfaceNormal = contact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
+		contact.mDistance = -inResult.mPenetrationDepth;
+		contact.mCharacterB = mOtherCharacter;
+		contact.mSubShapeIDB = inResult.mSubShapeID2;
+		contact.mMotionTypeB = EMotionType::Dynamic;
+		contact.mIsSensorB = false;
+		contact.mUserData = mOtherCharacter->GetUserData();
+		contact.mMaterial = PhysicsMaterial::sDefault;
 		contact.mFraction = 0.0f;
+	}
+	else
+	{
+		// Create contact with other body
+		BodyLockRead lock(mSystem->GetBodyLockInterface(), inResult.mBodyID2);
+		if (lock.SucceededAndIsInBroadPhase())
+		{
+			mContacts.emplace_back();
+			Contact &contact = mContacts.back();
+			sFillContactProperties(mCharacter, contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
+			contact.mFraction = 0.0f;
+		}
 	}
 }
 
@@ -292,6 +332,13 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	}
 	else
 		mSystem->GetNarrowPhaseQuery().CollideShape(inShape, Vec3::sReplicate(1.0f), transform, settings, inBaseOffset, ioCollector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+
+	// Also collide with other characters
+	if (mCharacterVsCharacterCollision != nullptr)
+	{
+		ioCollector.SetContext(nullptr);
+		mCharacterVsCharacterCollision->CollideCharacter(this, transform, settings, inBaseOffset, ioCollector);
+	}
 }
 
 void CharacterVirtual::GetContactsAtPosition(RVec3Arg inPosition, Vec3Arg inMovementDirection, const Shape *inShape, TempContactList &outContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter) const
@@ -330,7 +377,7 @@ void CharacterVirtual::RemoveConflictingContacts(TempContactList &ioContacts, Ig
 			for (size_t c2 = c1 + 1; c2 < ioContacts.size(); c2++)
 			{
 				Contact &contact2 = ioContacts[c2];
-				if (contact1.mBodyB == contact2.mBodyB // Only same body
+				if (contact1.IsSameBody(contact2)
 					&& contact2.mDistance <= -cMinRequiredPenetration // Only for penetrations
 					&& contact1.mContactNormal.Dot(contact2.mContactNormal) < 0.0f) // Only opposing normals
 				{

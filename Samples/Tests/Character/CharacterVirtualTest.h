@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Tests/Character/CharacterBaseTest.h>
-#include <Jolt/Physics/Character/CharacterVirtual.h>
 
 // Simple test that test the CharacterVirtual class. Allows the user to move around with the arrow keys and jump with the J button.
 class CharacterVirtualTest : public CharacterBaseTest, public CharacterContactListener
