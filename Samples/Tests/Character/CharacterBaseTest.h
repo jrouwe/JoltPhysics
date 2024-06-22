@@ -51,9 +51,6 @@ protected:
 	// Get position of the character
 	virtual RVec3			GetCharacterPosition() const = 0;
 
-	// Get the collision interface that allows collision with other characters
-	CharacterVsCharacterCollision &GetCharacterVsCharacterCollision()					{ return mCharacterVsCharacterCollision; }
-
 	// Handle user input to the character
 	virtual void			HandleInput(Vec3Arg inMovementDirection, bool inJump, bool inSwitchStance, float inDeltaTime) = 0;
 
@@ -91,6 +88,9 @@ protected:
 	// Sensor body
 	BodyID					mSensorBody;
 
+	// List of active characters in the scene so they can collide
+	CharacterVsCharacterCollisionSimple mCharacterVsCharacterCollision;
+
 private:
 	// Shape types
 	enum class EType
@@ -127,7 +127,6 @@ private:
 	// Moving characters
 	Ref<Character>			mAnimatedCharacter;
 	Ref<CharacterVirtual>	mAnimatedCharacterVirtual;
-	CharacterVsCharacterCollisionSimple mCharacterVsCharacterCollision;
 
 	// Player input
 	Vec3					mControlInput = Vec3::sZero();

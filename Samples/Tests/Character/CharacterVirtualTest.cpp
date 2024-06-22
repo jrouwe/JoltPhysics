@@ -33,7 +33,8 @@ void CharacterVirtualTest::Initialize()
 	settings->mEnhancedInternalEdgeRemoval = sEnhancedInternalEdgeRemoval;
 	mCharacter = new CharacterVirtual(settings, RVec3::sZero(), Quat::sIdentity(), 0, mPhysicsSystem);
 	mCharacter->SetListener(this);
-	mCharacter->SetCharacterVsCharacterCollision(&GetCharacterVsCharacterCollision());
+	mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
+	mCharacterVsCharacterCollision.Add(mCharacter);
 }
 
 void CharacterVirtualTest::PrePhysicsUpdate(const PreUpdateParams &inParams)

@@ -66,6 +66,9 @@ public:
 	/// Checks if a character can collide with specified body. Return true if the contact is valid.
 	virtual bool						OnContactValidate(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2) { return true; }
 
+	/// Same as OnContactValidate but when colliding with a CharacterVirtual
+	virtual bool						OnCharacterContactValidate(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2) { return true; }
+
 	/// Called whenever the character collides with a body.
 	/// @param inCharacter Character that is being solved
 	/// @param inBodyID2 Body ID of body that is being hit
@@ -74,6 +77,9 @@ public:
 	/// @param inContactNormal World space contact normal
 	/// @param ioSettings Settings returned by the contact callback to indicate how the character should behave
 	virtual void						OnContactAdded(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, CharacterContactSettings &ioSettings) { /* Default do nothing */ }
+
+	/// Same as OnContactAdded but when colliding with a CharacterVirtual
+	virtual void						OnCharacterContactAdded(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal) { /* Default do nothing */ }
 
 	/// Called whenever a contact is being used by the solver. Allows the listener to override the resulting character velocity (e.g. by preventing sliding along certain surfaces).
 	/// @param inCharacter Character that is being solved
@@ -86,6 +92,9 @@ public:
 	/// @param inCharacterVelocity World space velocity of the character prior to hitting this contact
 	/// @param ioNewCharacterVelocity Contains the calculated world space velocity of the character after hitting this contact, this velocity slides along the surface of the contact. Can be modified by the listener to provide an alternative velocity.
 	virtual void						OnContactSolve(const CharacterVirtual *inCharacter, const BodyID &inBodyID2, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) { /* Default do nothing */ }
+
+	/// Same as OnContactSolve but when colliding with a CharacterVirtual
+	virtual void						OnCharacterContactSolve(const CharacterVirtual *inCharacter, const CharacterVirtual *inOtherCharacter, const SubShapeID &inSubShapeID2, RVec3Arg inContactPosition, Vec3Arg inContactNormal, Vec3Arg inContactVelocity, const PhysicsMaterial *inContactMaterial, Vec3Arg inCharacterVelocity, Vec3 &ioNewCharacterVelocity) { /* Default do nothing */ }
 };
 
 /// Interface class that allows a CharacterVirtual to check collision with other CharacterVirtual instances.
@@ -96,6 +105,12 @@ class JPH_EXPORT CharacterVsCharacterCollision
 public:
 	virtual								~CharacterVsCharacterCollision() = default;
 
+	/// Collide a character against other CharacterVirtuals.
+	/// @param inCharacter The character to collide.
+	/// @param inCenterOfMassTransform Center of mass transform for this character.
+	/// @param inCollideShapeSettings Settings for the collision check.
+	/// @param inBaseOffset All hit results will be returned relative to this offset, can be zero to get results in world position, but when you're testing far from the origin you get better precision by picking a position that's closer e.g. GetPosition() since floats are most accurate near the origin
+	/// @param ioCollector Collision collector that receives the collision results.
 	virtual void						CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const = 0;
 };
 
@@ -104,11 +119,13 @@ public:
 class JPH_EXPORT CharacterVsCharacterCollisionSimple : public CharacterVsCharacterCollision
 {
 public:
+	/// Add a character to the list of characters to check collision against.
 	void								Add(CharacterVirtual *inCharacter)						{ mCharacters.push_back(inCharacter); }
 
+	// See: CharacterVsCharacterCollision
 	virtual void						CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const override;
 
-	Array<CharacterVirtual *>			mCharacters;
+	Array<CharacterVirtual *>			mCharacters;											///< The list of characters to check collision against
 };
 
 /// Runtime character object.

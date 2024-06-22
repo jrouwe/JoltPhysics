@@ -27,7 +27,8 @@ void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtua
 
 	// Iterate over all characters
 	for (const CharacterVirtual *c : mCharacters)
-		if (!ioCollector.ShouldEarlyOut())
+		if (c != inCharacter
+			&& !ioCollector.ShouldEarlyOut())
 		{
 			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
 			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
@@ -190,7 +191,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 		contact.mDistance = -inResult.mPenetrationDepth;
 		contact.mCharacterB = mOtherCharacter;
 		contact.mSubShapeIDB = inResult.mSubShapeID2;
-		contact.mMotionTypeB = EMotionType::Dynamic;
+		contact.mMotionTypeB = EMotionType::Kinematic; // Other character is kinematic, we can't directly move it
 		contact.mIsSensorB = false;
 		contact.mUserData = mOtherCharacter->GetUserData();
 		contact.mMaterial = PhysicsMaterial::sDefault;
@@ -205,6 +206,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 			mContacts.emplace_back();
 			Contact &contact = mContacts.back();
 			sFillContactProperties(mCharacter, contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
+			contact.mCharacterB = nullptr;
 			contact.mFraction = 0.0f;
 		}
 	}
@@ -407,7 +409,10 @@ bool CharacterVirtual::ValidateContact(const Contact &inContact) const
 	if (mListener == nullptr)
 		return true;
 
-	return mListener->OnContactValidate(this, inContact.mBodyB, inContact.mSubShapeIDB);
+	if (inContact.mCharacterB != nullptr)
+		return mListener->OnCharacterContactValidate(this, inContact.mCharacterB, inContact.mSubShapeIDB);
+	else
+		return mListener->OnContactValidate(this, inContact.mBodyB, inContact.mSubShapeIDB);
 }
 
 template <class T>
@@ -551,7 +556,12 @@ bool CharacterVirtual::HandleContact(Vec3Arg inVelocity, Constraint &ioConstrain
 	// Send contact added event
 	CharacterContactSettings settings;
 	if (mListener != nullptr)
-		mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
+	{
+		if (contact.mCharacterB != nullptr)
+			mListener->OnCharacterContactAdded(this, contact.mCharacterB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal);
+		else
+			mListener->OnContactAdded(this, contact.mBodyB, contact.mSubShapeIDB, contact.mPosition, -contact.mContactNormal, settings);
+	}
 	contact.mCanPushCharacter = settings.mCanPushCharacter;
 
 	// We don't have any further interaction with sensors beyond an OnContactAdded notification
@@ -823,7 +833,12 @@ void CharacterVirtual::SolveConstraints(Vec3Arg inVelocity, float inDeltaTime, f
 
 		// Allow application to modify calculated velocity
 		if (mListener != nullptr)
-			mListener->OnContactSolve(this, constraint->mContact->mBodyB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mContactNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
+		{
+			if (constraint->mContact->mCharacterB != nullptr)
+				mListener->OnCharacterContactSolve(this, constraint->mContact->mCharacterB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mContactNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
+			else
+				mListener->OnContactSolve(this, constraint->mContact->mBodyB, constraint->mContact->mSubShapeIDB, constraint->mContact->mPosition, constraint->mContact->mContactNormal, constraint->mContact->mLinearVelocity, constraint->mContact->mMaterial, velocity, new_velocity);
+		}
 
 #ifdef JPH_DEBUG_RENDERER
 		if (inDrawConstraints)
