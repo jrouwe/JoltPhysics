@@ -532,7 +532,6 @@ void CharacterBaseTest::Initialize()
 			settings.mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 			mAnimatedCharacter = new Character(&settings, cCharacterPosition, Quat::sIdentity(), 0, mPhysicsSystem);
 			mAnimatedCharacter->AddToPhysicsSystem();
-
 		}
 
 		// Create CharacterVirtual
