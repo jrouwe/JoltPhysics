@@ -37,6 +37,24 @@ void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtua
 	ioCollector.SetUserData(0);
 }
 
+void CharacterVsCharacterCollisionSimple::CastCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, Vec3Arg inDirection, const ShapeCastSettings &inShapeCastSettings, RVec3Arg inBaseOffset, CastShapeCollector &ioCollector) const
+{
+	// Convert shape cast relative to inBaseOffset
+	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();
+	ShapeCast shape_cast(inCharacter->GetShape(), Vec3::sReplicate(1.0f), transform1, inDirection);
+
+	// Iterate over all characters
+	for (const CharacterVirtual *c : mCharacters)
+		if (c != inCharacter
+			&& !ioCollector.ShouldEarlyOut())
+		{
+			ioCollector.SetUserData(reinterpret_cast<uint64>(c));
+			Mat44 transform2 = c->GetCenterOfMassTransform().PostTranslated(-inBaseOffset).ToMat44();
+			CollisionDispatch::sCastShapeVsShapeWorldSpace(shape_cast, inShapeCastSettings, c->GetShape(), Vec3::sReplicate(1.0f), { }, transform2, SubShapeIDCreator(), SubShapeIDCreator(), ioCollector);
+		}
+	ioCollector.SetUserData(0);
+}
+
 CharacterVirtual::CharacterVirtual(const CharacterVirtualSettings *inSettings, RVec3Arg inPosition, QuatArg inRotation, uint64 inUserData, PhysicsSystem *inSystem) :
 	CharacterBase(inSettings, inSystem),
 	mBackFaceMode(inSettings->mBackFaceMode),
@@ -121,6 +139,21 @@ void CharacterVirtual::sFillContactProperties(const CharacterVirtual *inCharacte
 	outContact.mMaterial = inCollector.GetContext()->GetMaterial(inResult.mSubShapeID2);
 }
 
+template <class taCollector>
+void CharacterVirtual::sFillCharacterContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult)
+{
+	outContact.mPosition = inBaseOffset + inResult.mContactPointOn2;
+	outContact.mLinearVelocity = inOtherCharacter->GetLinearVelocity();
+	outContact.mSurfaceNormal = outContact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
+	outContact.mDistance = -inResult.mPenetrationDepth;
+	outContact.mCharacterB = inOtherCharacter;
+	outContact.mSubShapeIDB = inResult.mSubShapeID2;
+	outContact.mMotionTypeB = EMotionType::Kinematic; // Other character is kinematic, we can't directly move it
+	outContact.mIsSensorB = false;
+	outContact.mUserData = inOtherCharacter->GetUserData();
+	outContact.mMaterial = PhysicsMaterial::sDefault;
+}
+
 void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResult)
 {
 	// If we exceed our contact limit, try to clean up near-duplicate contacts
@@ -185,16 +218,7 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 		// Create contact with other character
 		mContacts.emplace_back();
 		Contact &contact = mContacts.back();
-		contact.mPosition = mBaseOffset + inResult.mContactPointOn2;
-		contact.mLinearVelocity = mOtherCharacter->GetLinearVelocity();
-		contact.mSurfaceNormal = contact.mContactNormal = -inResult.mPenetrationAxis.NormalizedOr(Vec3::sZero());
-		contact.mDistance = -inResult.mPenetrationDepth;
-		contact.mCharacterB = mOtherCharacter;
-		contact.mSubShapeIDB = inResult.mSubShapeID2;
-		contact.mMotionTypeB = EMotionType::Kinematic; // Other character is kinematic, we can't directly move it
-		contact.mIsSensorB = false;
-		contact.mUserData = mOtherCharacter->GetUserData();
-		contact.mMaterial = PhysicsMaterial::sDefault;
+		sFillCharacterContactProperties(mCharacter, contact, mOtherCharacter, mBaseOffset, *this, inResult);
 		contact.mFraction = 0.0f;
 	}
 	else
@@ -206,7 +230,6 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 			mContacts.emplace_back();
 			Contact &contact = mContacts.back();
 			sFillContactProperties(mCharacter, contact, lock.GetBody(), mUp, mBaseOffset, *this, inResult);
-			contact.mCharacterB = nullptr;
 			contact.mFraction = 0.0f;
 		}
 	}
@@ -214,10 +237,8 @@ void CharacterVirtual::ContactCollector::AddHit(const CollideShapeResult &inResu
 
 void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inResult)
 {
-	// Should not have gotten here without a lower fraction
-	JPH_ASSERT(inResult.mFraction < mContact.mFraction);
-
-	if (inResult.mFraction > 0.0f // Ignore collisions at fraction = 0
+	if (inResult.mFraction < mContact.mFraction // Since we're doing checks against the world and against characters, we may get a hit with a higher fraction than the previous hit
+		&& inResult.mFraction > 0.0f // Ignore collisions at fraction = 0
 		&& inResult.mPenetrationAxis.Dot(mDisplacement) > 0.0f) // Ignore penetrations that we're moving away from
 	{
 		// Test if this contact should be ignored
@@ -227,8 +248,17 @@ void CharacterVirtual::ContactCastCollector::AddHit(const ShapeCastResult &inRes
 
 		Contact contact;
 
-		// Lock body only while we fetch contact properties
+		if (inResult.mBodyID2.IsInvalid())
 		{
+			// Assuming this is a hit against another character
+			JPH_ASSERT(mOtherCharacter != nullptr);
+
+			// Create contact with other character
+			sFillCharacterContactProperties(mCharacter, contact, mOtherCharacter, mBaseOffset, *this, inResult);
+		}
+		else
+		{
+			// Lock body only while we fetch contact properties
 			BodyLockRead lock(mSystem->GetBodyLockInterface(), inResult.mBodyID2);
 			if (!lock.SucceededAndIsInBroadPhase())
 				return;
@@ -465,20 +495,41 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	// Cast shape
 	Contact contact;
 	contact.mFraction = 1.0f + character_padding_fraction;
-	ContactCastCollector collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, start.GetTranslation(), contact);
+	RVec3 base_offset = start.GetTranslation();
+	ContactCastCollector collector(mSystem, this, inDisplacement, mUp, inIgnoredContacts, base_offset, contact);
 	collector.ResetEarlyOutFraction(contact.mFraction);
 	RShapeCast shape_cast(mShape, Vec3::sReplicate(1.0f), start, inDisplacement);
-	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, start.GetTranslation(), collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
-	if (contact.mBodyB.IsInvalid())
+	mSystem->GetNarrowPhaseQuery().CastShape(shape_cast, settings, base_offset, collector, inBroadPhaseLayerFilter, inObjectLayerFilter, inBodyFilter, inShapeFilter);
+
+	// Also collide with other characters
+	if (mCharacterVsCharacterCollision != nullptr)
+	{
+		collector.SetContext(nullptr);
+		mCharacterVsCharacterCollision->CastCharacter(this, start, inDisplacement, settings, base_offset, collector);
+	}
+
+	if (contact.mBodyB.IsInvalid() && contact.mCharacterB == nullptr)
 		return false;
 
 	// Store contact
 	outContact = contact;
 
+	TransformedShape ts;
+	if (outContact.mCharacterB != nullptr)
+	{
+		// Create a transformed shape for the character
+		RMat44 com = outContact.mCharacterB->GetCenterOfMassTransform();
+		ts = TransformedShape(com.GetTranslation(), com.GetQuaternion(), outContact.mCharacterB->GetShape(), BodyID(), SubShapeIDCreator());
+	}
+	else
+	{
+		// Create a transformed shape for the body
+		ts = mSystem->GetBodyInterface().GetTransformedShape(outContact.mBodyB);
+	}
+
 	// Fetch the face we're colliding with
-	TransformedShape ts = mSystem->GetBodyInterface().GetTransformedShape(outContact.mBodyB);
 	Shape::SupportingFace face;
-	ts.GetSupportingFace(outContact.mSubShapeIDB, -outContact.mContactNormal, start.GetTranslation(), face);
+	ts.GetSupportingFace(outContact.mSubShapeIDB, -outContact.mContactNormal, base_offset, face);
 
 	bool corrected = false;
 	if (face.size() >= 2)
