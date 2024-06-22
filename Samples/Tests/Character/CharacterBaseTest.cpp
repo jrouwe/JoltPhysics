@@ -621,6 +621,12 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 	// Animate character virtual
 	if (mAnimatedCharacterVirtual != nullptr)
 	{
+	#ifdef JPH_DEBUG_RENDERER
+		mAnimatedCharacterVirtual->GetShape()->Draw(mDebugRenderer, mAnimatedCharacterVirtual->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
+	#else
+		mDebugRenderer->DrawCapsule(mAnimatedCharacterVirtual->GetCenterOfMassTransform(), 0.5f * cCharacterHeightStanding, cCharacterRadiusStanding + mAnimatedCharacterVirtual->GetCharacterPadding(), Color::sOrange, DebugRenderer::ECastShadow::Off, DebugRenderer::EDrawMode::Wireframe);
+	#endif // JPH_DEBUG_RENDERER
+
 		mAnimatedCharacterVirtual->SetLinearVelocity(Sin(mTime) * cCharacterVelocity);
 		mAnimatedCharacterVirtual->Update(inParams.mDeltaTime, mPhysicsSystem->GetGravity(),
 			mPhysicsSystem->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
@@ -629,10 +635,6 @@ void CharacterBaseTest::PrePhysicsUpdate(const PreUpdateParams &inParams)
 			{ },
 			*mTempAllocator);
 	}
-
-#ifdef JPH_DEBUG_RENDERER
-	mAnimatedCharacterVirtual->GetShape()->Draw(mDebugRenderer, mAnimatedCharacterVirtual->GetCenterOfMassTransform(), Vec3::sReplicate(1.0f), Color::sOrange, false, true);
-#endif // JPH_DEBUG_RENDERER
 
 	// Reset ramp blocks
 	mRampBlocksTimeLeft -= inParams.mDeltaTime;
