@@ -540,6 +540,7 @@ void CharacterBaseTest::Initialize()
 			settings.mShape = mStandingShape;
 			settings.mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 			mAnimatedCharacterVirtual = new CharacterVirtual(&settings, cCharacterVirtualPosition, Quat::sIdentity(), 0, mPhysicsSystem);
+			mAnimatedCharacterVirtual->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
 			mCharacterVsCharacterCollision.Add(mAnimatedCharacterVirtual);
 		}
 	}
