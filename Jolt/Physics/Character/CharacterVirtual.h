@@ -112,6 +112,15 @@ public:
 	/// @param inBaseOffset All hit results will be returned relative to this offset, can be zero to get results in world position, but when you're testing far from the origin you get better precision by picking a position that's closer e.g. GetPosition() since floats are most accurate near the origin
 	/// @param ioCollector Collision collector that receives the collision results.
 	virtual void						CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const = 0;
+
+	/// Cast a character against other CharacterVirtuals.
+	/// @param inCharacter The character to cast.
+	/// @param inCenterOfMassTransform Center of mass transform for this character.
+	/// @param inDirection Direction and length to cast in.
+	/// @param inShapeCastSettings Settings for the shape cast.
+	/// @param inBaseOffset All hit results will be returned relative to this offset, can be zero to get results in world position, but when you're testing far from the origin you get better precision by picking a position that's closer e.g. GetPosition() since floats are most accurate near the origin
+	/// @param ioCollector Collision collector that receives the collision results.
+	virtual void						CastCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, Vec3Arg inDirection, const ShapeCastSettings &inShapeCastSettings, RVec3Arg inBaseOffset, CastShapeCollector &ioCollector) const = 0;
 };
 
 /// Simple collision checker that loops over all registered characters.
@@ -124,6 +133,7 @@ public:
 
 	// See: CharacterVsCharacterCollision
 	virtual void						CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const override;
+	virtual void						CastCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, Vec3Arg inDirection, const ShapeCastSettings &inShapeCastSettings, RVec3Arg inBaseOffset, CastShapeCollector &ioCollector) const override;
 
 	Array<CharacterVirtual *>			mCharacters;											///< The list of characters to check collision against
 };
@@ -357,7 +367,7 @@ public:
 		float							mDistance;												///< Distance to the contact <= 0 means that it is an actual contact, > 0 means predictive
 		float							mFraction;												///< Fraction along the path where this contact takes place
 		BodyID							mBodyB;													///< ID of body we're colliding with (if not invalid)
-		CharacterVirtual *				mCharacterB;											///< Character we're colliding with (if not null)
+		CharacterVirtual *				mCharacterB = nullptr;									///< Character we're colliding with (if not null)
 		SubShapeID						mSubShapeIDB;											///< Sub shape ID of body we're colliding with
 		EMotionType						mMotionTypeB;											///< Motion type of B, used to determine the priority of the contact
 		bool							mIsSensorB;												///< If B is a sensor
@@ -439,6 +449,8 @@ private:
 	public:
 										ContactCastCollector(PhysicsSystem *inSystem, const CharacterVirtual *inCharacter, Vec3Arg inDisplacement, Vec3Arg inUp, const IgnoredContactList &inIgnoredContacts, RVec3Arg inBaseOffset, Contact &outContact) : mBaseOffset(inBaseOffset), mDisplacement(inDisplacement), mUp(inUp), mSystem(inSystem), mCharacter(inCharacter), mIgnoredContacts(inIgnoredContacts), mContact(outContact) { }
 
+		virtual void					SetUserData(uint64 inUserData) override					{ mOtherCharacter = reinterpret_cast<CharacterVirtual *>(inUserData); }
+
 		virtual void					AddHit(const ShapeCastResult &inResult) override;
 
 		RVec3							mBaseOffset;
@@ -446,6 +458,7 @@ private:
 		Vec3							mUp;
 		PhysicsSystem *					mSystem;
 		const CharacterVirtual *		mCharacter;
+		CharacterVirtual *				mOtherCharacter = nullptr;
 		const IgnoredContactList &		mIgnoredContacts;
 		Contact &						mContact;
 	};
@@ -453,6 +466,8 @@ private:
 	// Helper function to convert a Jolt collision result into a contact
 	template <class taCollector>
 	inline static void					sFillContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, const Body &inBody, Vec3Arg inUp, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult);
+	template <class taCollector>
+	inline static void					sFillCharacterContactProperties(const CharacterVirtual *inCharacter, Contact &outContact, CharacterVirtual *inOtherCharacter, RVec3Arg inBaseOffset, const taCollector &inCollector, const CollideShapeResult &inResult);
 
 	// Move the shape from ioPosition and try to displace it by inVelocity * inDeltaTime, this will try to slide the shape along the world geometry
 	void								MoveShape(RVec3 &ioPosition, Vec3Arg inVelocity, float inDeltaTime, ContactList *outActiveContacts, const BroadPhaseLayerFilter &inBroadPhaseLayerFilter, const ObjectLayerFilter &inObjectLayerFilter, const BodyFilter &inBodyFilter, const ShapeFilter &inShapeFilter, TempAllocator &inAllocator
