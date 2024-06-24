@@ -368,7 +368,7 @@ void CharacterVirtual::CheckCollision(RVec3Arg inPosition, QuatArg inRotation, V
 	// Also collide with other characters
 	if (mCharacterVsCharacterCollision != nullptr)
 	{
-		ioCollector.SetContext(nullptr);
+		ioCollector.SetContext(nullptr); // We're no longer colliding with a transformed shape, reset
 		mCharacterVsCharacterCollision->CollideCharacter(this, transform, settings, inBaseOffset, ioCollector);
 	}
 }
@@ -504,7 +504,7 @@ bool CharacterVirtual::GetFirstContactForSweep(RVec3Arg inPosition, Vec3Arg inDi
 	// Also collide with other characters
 	if (mCharacterVsCharacterCollision != nullptr)
 	{
-		collector.SetContext(nullptr);
+		collector.SetContext(nullptr); // We're no longer colliding with a transformed shape, reset
 		mCharacterVsCharacterCollision->CastCharacter(this, start, inDisplacement, settings, base_offset, collector);
 	}
 
