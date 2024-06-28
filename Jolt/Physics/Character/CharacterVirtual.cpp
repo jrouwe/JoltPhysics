@@ -20,6 +20,13 @@
 
 JPH_NAMESPACE_BEGIN
 
+void CharacterVsCharacterCollisionSimple::Remove(const CharacterVirtual *inCharacter)
+{
+	Array<CharacterVirtual *>::iterator i = std::find(mCharacters.begin(), mCharacters.end(), inCharacter);
+	if (i != mCharacters.end())
+		mCharacters.erase(i);
+}
+
 void CharacterVsCharacterCollisionSimple::CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const
 {
 	Mat44 transform1 = inCenterOfMassTransform.PostTranslated(-inBaseOffset).ToMat44();

@@ -131,6 +131,9 @@ public:
 	/// Add a character to the list of characters to check collision against.
 	void								Add(CharacterVirtual *inCharacter)						{ mCharacters.push_back(inCharacter); }
 
+	/// Remove a character from the list of characters to check collision against.
+	void								Remove(const CharacterVirtual *inCharacter);
+
 	// See: CharacterVsCharacterCollision
 	virtual void						CollideCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, const CollideShapeSettings &inCollideShapeSettings, RVec3Arg inBaseOffset, CollideShapeCollector &ioCollector) const override;
 	virtual void						CastCharacter(const CharacterVirtual *inCharacter, RMat44Arg inCenterOfMassTransform, Vec3Arg inDirection, const ShapeCastSettings &inShapeCastSettings, RVec3Arg inBaseOffset, CastShapeCollector &ioCollector) const override;
